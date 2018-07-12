@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE>V Simple examples: H2O</TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.1  (Linux)">
+	<META NAME="CREATED" CONTENT="0;0">
+	<META NAME="CHANGEDBY" CONTENT="Mamadou Ndong">
+	<META NAME="CHANGED" CONTENT="20120207;15134700">
+	<STYLE TYPE="text/css">
+	<!--
+		@page { margin-right: 2.5cm; margin-top: 1.27cm; margin-bottom: 1.27cm }
+		P { margin-bottom: 0.21cm; direction: ltr; color: #000000 }
+		P.western { font-family: "Times New Roman", serif; font-size: 12pt; so-language: fr-FR }
+		P.cjk { font-family: "Times New Roman", serif; font-size: 12pt }
+		P.ctl { font-family: "Times New Roman", serif; font-size: 12pt; so-language: fr-FR }
+		H3 { margin-bottom: 0.11cm; direction: ltr; color: #000000 }
+		H3.western { font-family: "Arial", sans-serif; font-size: 13pt; so-language: fr-FR; font-style: italic; font-weight: normal }
+		H3.cjk { font-family: "Times New Roman", serif; font-size: 13pt; font-style: italic; font-weight: normal }
+		H3.ctl { font-family: "Times New Roman", serif; font-size: 13pt; so-language: fr-FR; font-weight: normal }
+		H2 { margin-bottom: 0.11cm; direction: ltr; color: #000000 }
+		H2.western { font-family: "Arial", sans-serif; font-size: 14pt; so-language: fr-FR; font-style: italic }
+		H2.cjk { font-family: "Times New Roman", serif; font-size: 14pt; font-style: italic }
+		H2.ctl { font-family: "Times New Roman", serif; font-size: 14pt; so-language: fr-FR; font-weight: normal }
+		H1 { margin-bottom: 0.11cm; direction: ltr; color: #000000 }
+		H1.western { font-family: "Arial", sans-serif; font-size: 16pt; so-language: fr-FR }
+		H1.cjk { font-family: "Times New Roman", serif; font-size: 16pt }
+		H1.ctl { font-family: "Times New Roman", serif; font-size: 16pt; so-language: fr-FR; font-weight: normal }
+		A:link { so-language: zxx }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="fr-FR" TEXT="#000000" DIR="LTR">
+<BR>
+</P>
+<TABLE WIDTH=614 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=292>
+	<COL WIDTH=293>
+	<TR VALIGN=TOP>
+	<TR VALIGN=TOP>
+		<TD WIDTH=292>
+			<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><FONT FACE="Times New Roman, serif">O</FONT></FONT></P>
+			<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><FONT FACE="Times New Roman, serif">H
+			1</FONT></FONT></P>
+			<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><FONT FACE="Times New Roman, serif">H
+			1 2</FONT></FONT></P>
+			<P LANG="en-US"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=293>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">For
+			H</SPAN><SUB><SPAN LANG="en-US">2</SPAN></SUB><SPAN LANG="en-US">O,
+			you have 3 lines (one per atom). The first line defines the
+			Oxygen, the second and third lines define the Hydrogen atoms.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			The internal coordinates are defined in the following order:</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+			<FONT COLOR="#ff0000"><SPAN LANG="en-US">R</SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><SPAN LANG="en-US">:
+			distance between the oxygen and the first Hydrogen.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+			<FONT COLOR="#ff0000"><SPAN LANG="en-US">R</SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><SPAN LANG="en-US">:
+			distance between the oxygen and the second Hydrogen.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+			<FONT COLOR="#ff0000"><SPAN LANG="en-US">a</SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><SPAN LANG="en-US">:
+			valence angle, HOH.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=292>
+			<P LANG="en-US"><FONT COLOR="#0000ff"><FONT FACE="Times New Roman, serif">1
+			 1 1</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=293>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">This
+			line defines the &quot;</SPAN><SPAN LANG="en-US"><I>type</I></SPAN><SPAN LANG="en-US">&quot;
+			of the dynamical coordinates. You should give as many integers as
+			curvilinear coordinates (</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">).</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+			<SPAN LANG="en-US">-Coordinates associated with </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">1</SPAN></FONT><SPAN LANG="en-US">
+			are actives.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+			<SPAN LANG="en-US">-Coordinates associated with </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">0</SPAN></FONT><SPAN LANG="en-US">
+			are inactives (rigid constraints)</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">For
+			H</SPAN><SUB><SPAN LANG="en-US">2</SPAN></SUB><SPAN LANG="en-US">O,
+			the 3 internal coordinates, [</SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">R</SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><SPAN LANG="en-US">,
+			</SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">R</SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><SPAN LANG="en-US">,
+			</SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">a</SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><SPAN LANG="en-US">],
+			are actives.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000"><SPAN LANG="en-US">Remark:
+			</SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>one
+			and only one</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US">
+			blank line should be present after the end of the z-matrix.</SPAN></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=292>
+			<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><FONT FACE="Times New Roman, serif">&amp;minimum
+			read_nameQ=t /</FONT></FONT></P>
+			<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><FONT FACE="Courier"><FONT COLOR="#ff0000"><FONT FACE="Times New Roman, serif">R1</FONT></FONT><FONT FACE="Times New Roman, serif">
+			1.</FONT></FONT></FONT></P>
+			<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><FONT FACE="Courier"><FONT COLOR="#ff0000"><FONT FACE="Times New Roman, serif">R2</FONT></FONT><FONT FACE="Times New Roman, serif">
+			1.</FONT></FONT></FONT></P>
+			<P LANG="en-US"><FONT COLOR="#0000ff"><FONT FACE="Courier"><FONT COLOR="#ff0000"><FONT FACE="Times New Roman, serif">a2</FONT></FONT><FONT FACE="Times New Roman, serif">
+			1.83</FONT></FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>

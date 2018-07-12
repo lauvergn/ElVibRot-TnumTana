@@ -1,0 +1,32 @@
+
+file=res8
+
+#list="%masses %d0sm %mat %mat_inv %d0 %E_harm %d0b %d1b %d2b %x %w %wrho %rho %A %B %Q0 %scaleQ %Qdyn0 %Qact0 %Qdyn %Qact %Qxyz %Qread %QOp Qana %nDweight %Tab_Norm"
+#list="tbasiswrho matS v10_lect %Rvec d0bc d1bc d2bc bi biF bcci %Tab_Wrho %Mat_cte %Grid Mat_bhe_Grid %d0 %d1 %d2 %d3 RTempG RTempB RG RB %RvecB %RvecG %tab_norme1D %tab_normeADA" 
+list="%RvecB %RvecG %tab_norme1D %tab_normeADA" 
+
+for typeVar in  $list
+do
+ mem=`awk '{print $2 " " $4}' $file | grep $typeVar | awk '{s=s+$1} END {print s}'`
+ echo $typeVar $mem
+done
+
+
+exit
+file=fort.999
+list="real8 integer complex8 logical"
+
+
+for typeVar in  $list
+do
+ mem=`awk '{print $2 " " $3}' $file | grep var_type=$typeVar | awk '{s=s+$1} END {print s}'`
+ echo $typeVar $mem
+done
+
+list="constant param_Op param_OpGrid param_psi basis P_basis Type_SymAbelian Type_ReducedDensity Type_nDindex Type_dnS Type_dnVec Type_dnMat Type_dnCplxMat Type_IntVec Type_IntMat Type_Qtransfo Type_ActiveTransfo Type_BFTransfo  Type_NMTransfo Type_RPHTransfo Type_RPHpara_AT_Qact1 Type_oneDTransfo"
+
+for typeVar in  $list
+do
+ mem=`awk '{print $2 " " $3}' $file | grep var_type=$typeVar | awk '{s=s+$1} END {print s}'`
+ echo $typeVar $mem
+done

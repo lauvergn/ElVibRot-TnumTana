@@ -1,0 +1,25 @@
+#!/bin/ksh
+
+ ici=`pwd`
+ cd ..
+ make tnum-dist
+ cd $ici
+
+../Tnum90.exe << ** > res
+ &variables Gdiago=f zmat=T nat=3 nrho=2 num_x=t num_A=t num_H=f stepT=1.e-4 /
+5.
+1.            1
+1.            1  2
+
+1  1 1
+ &minimum read_nameQ=t /
+R1 0.25
+R2 0.25
+the 1.318116072 cost 0.25
+
+ &calculation calc_Tnum=t calc_gG=t nderivGg=0 calc_grad=t /
+grad
+O 0. 0. 0.
+H 0. 0. 0.1
+H 0. 0. -0.1
+**

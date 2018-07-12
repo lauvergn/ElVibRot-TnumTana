@@ -1,0 +1,79 @@
+#
+# For WP propagation (relaxation, GS)
+#
+
+ SYSTEM=sub_system_cos_hcn.f
+ SYSTEM=sub_system_murrell.f
+
+ici=`pwd`
+DIR_vib=$ici/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $ici
+
+ x1=0.538516066
+ x2=0.461483933
+
+
+#export OMP_NUM_THREADS=1
+
+LB=0
+LG=0
+
+
+nice $DIR_vib/vib << ** >res
+ &system POpPsi_omp=1 OpPsi_test=f GridTOBasis_test=f printlevel=2 /
+ &constantes /
+ &variables 
+         zmat=T
+         nat=4
+         sym=T
+         nrho=0
+ /
+C
+0.0     1
+N     2  1
+H     2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 1 1 0    0 0 0
+ &minimum pot0=-0.499465823200 pot_act=f pot_cplx=f
+          read_Qsym0=t read_nameQ=t unit='bohr' /
+cosa .999d0
+R 3.187
+r 2.179
+x 0.
+pi 3.141592653589793238462643383279d0
+dh 0.0
+
+ &basis_nD nb_basis=2 name="direct_prod"  L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=4 /
+    &basis_nD iQdyn(1)=1 name="Pl0"                   L_TO_nq_A=7 L_TO_nb_A=5 /
+    &basis_nD iQdyn(1)=2 name="Hm" Q0=3.2 scaleQ=5.1  L_TO_nq_A=4 L_TO_nb_A=2 /
+ &inactives /
+
+ &actives test=f direct=2 Type_HamilOp=10 direct_KEO=t /
+ &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t /
+ &propa
+        WPTmax=100.d0 WPdeltaT=10.d0 nb_micro=1
+        n_WPecri = 1 WPpsi2 =t WPpsi=f
+        type_WPpropa=2 max_poly=5000 npoly=300 poly_tol=1.d-18
+        DHmax=0.0d0 auto_Hmax=f
+        WP0n_h=1 lect_WP0FBR=f
+
+        TFnexp2=20
+        TFmaxE=20000.
+ /
+ &defWP0 sigma=0.6 Qeq=3.187 imp_k=0.0 /
+ &defWP0 sigma=0.6 Qeq=2.179 imp_k=0.0 /
+**

@@ -1,0 +1,27 @@
+\begin{eqnarray}
+ \hat{T} & = &
++0.5250000000  \left(R_2^{(BF)}\right)^{-2} \cos ^{2}\theta_2^{(BF)} \sin ^{-2}\theta_2^{(BF)} \hat {J}_z^2
+\nonumber \\
++0.5250000000  \left(R_2^{(BF)}\right)^{-2} \hat{P}_{\theta_2^{(BF)}}^{2}
+\nonumber \\
++0.5250000000  \left(R_2^{(BF)}\right)^{-2} \hat {J}_z^2
+\nonumber \\
++0.1000000000  \cos ^{2}\theta_2^{(BF)} \sin ^{-2}\theta_2^{(BF)} \hat {J}_z^2
+\nonumber \\
++0.1000000000  \hat{P}_{\theta_2^{(BF)}}^{2}
+\nonumber \\
++0.1000000000  \cos \theta_2^{(BF)} \sin ^{-1}\theta_2^{(BF)} \hat{J}_z \hat {J}_x
+\nonumber \\
+-0.2000000000  \hat{J}_y \hat{P}_{\theta_2^{(BF)}}
+\nonumber \\
++0.1000000000  \cos \theta_2^{(BF)} \sin ^{-1}\theta_2^{(BF)} \hat {J}_x \hat{J}_z
+\nonumber \\
++0.1000000000  \hat {J}_x^2
+\nonumber \\
++0.1000000000  \hat {J}_y^2
+\nonumber \\
++0.5250000000  \hat{P}_{R_2^{(BF)}}^{2}
+  \label{eq:name}
+\end{eqnarray}
+
+

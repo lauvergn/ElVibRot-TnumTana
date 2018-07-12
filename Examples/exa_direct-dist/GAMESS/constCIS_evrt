@@ -1,0 +1,140 @@
+name=$1
+nb_elec=$2
+
+nstate=`echo $nb_elec | awk '{print $1-1}'`
+
+echo "
+ \$CONTRL
+   EXETYP=RUN UNITS=BOHR NOSYM=1
+   COORD=UNIQUE 
+   SCFTYP=RHF  CITYP=CIS
+   ICHARG=           0
+   MULT=           1
+   RUNTYP=energy
+ \$END
+ \$cis    hamtyp=saps mult=1 nacore=1 nstate="$nstate " iroot=1 \$end
+ \$BASIS
+   GBASIS=STO  NGAUSS=3                              
+ \$END
+ \$DATA
+   xx
+ C1" > $name.inp
+
+grep -v geom $name.evrti |  awk '{print $1" "$2". "$3" "$4" "$5}' >> $name.inp
+
+ echo "\$END" >> $name.inp
+
+
+#==================================================================================
+# GAMESS calculation (CIS)
+#==================================================================================
+ gms $name > err
+
+
+conv_e=1.000000000000000000000
+conv_mu=2.54175775687438576786
+
+#==================================================================================
+# first nb_elec
+#==================================================================================
+e0=`grep "RHF REFERENCE ENERGY  =" $name.log | LANG=C awk -v conv=$conv_e '{OFMT="%.10f";print $5*conv}'`
+e=`grep "STATE ENERGY =" $name.log | LANG=C awk -v conv=$conv_e '{OFMT="%.10f";print $4*conv}'`
+i=0
+for ene in $e0 $e
+do
+  i=`echo $i | awk '{print $1+1}'`
+done
+nb_elec=$i
+echo nb_elec $nb_elec >> $name.evrto
+#==================================================================================
+
+#==================================================================================
+# the energies
+#==================================================================================
+echo energy  > $name.evrto
+i=0
+for ene in $e0 $e
+do
+  i=`echo $i | awk '{print $1+1}'`
+  echo $i $i $ene >> $name.evrto
+done
+echo end energy >> $name.evrto
+
+#==================================================================================
+# dipole moment mux
+#==================================================================================
+echo mux >> $name.evrto
+m0x=`grep "GROUND STATE (SCF) DIPOLE=" $name.log | grep DEBYE | LANG=C awk -v conv=$conv_mu '{OFMT="%.10f";print $5*conv}'`
+mx=`grep "STATE DIPOLE =" $name.log | grep DEBYE  | LANG=C awk -v conv=$conv_mu '{OFMT="%.10f";print $4*conv}'`
+i=0
+for mu in $m0x $mx
+do
+  i=`echo $i | awk '{print $1+1}'`
+  echo $i $i $mu >> $name.evrto
+done
+
+mijx=`grep "TRANSITION DIPOLE =" $name.log | grep DEBYE | LANG=C awk -v conv=$conv_mu '{OFMT="%.10f";print $4*conv}'`
+ij="1 1"
+for mu in $mijx
+do
+ ji=`echo $ij | awk -v ne=$nb_elec '{i=$1;j=$2+1;if (j>ne) {i=i+1;j=i+1}; print j" "i}'`
+ echo $ji $mu >> $name.evrto
+ ij=`echo $ij | awk -v ne=$nb_elec '{i=$1;j=$2+1;if (j>ne) {i=i+1;j=i+1}; print i" "j}'`
+ echo $ij $mu >> $name.evrto
+done
+echo end mux >> $name.evrto
+
+
+#==================================================================================
+# dipole moment muy
+#==================================================================================
+echo muy >> $name.evrto
+m0x=`grep "GROUND STATE (SCF) DIPOLE=" $name.log | grep DEBYE | LANG=C awk -v conv=$conv_mu '{OFMT="%.10f";print $6*conv}'`
+mx=`grep "STATE DIPOLE =" $name.log | grep DEBYE  | LANG=C awk -v conv=$conv_mu '{OFMT="%.10f";print $5*conv}'`
+i=0
+for mu in $m0x $mx
+do
+  i=`echo $i | awk '{print $1+1}'`
+  echo $i $i $mu >> $name.evrto
+done
+
+mijx=`grep "TRANSITION DIPOLE =" $name.log | grep DEBYE | LANG=C awk -v conv=$conv_mu '{OFMT="%.10f";print $5*conv}'`
+ij="1 1"
+for mu in $mijx
+do
+ ji=`echo $ij | awk -v ne=$nb_elec '{i=$1;j=$2+1;if (j>ne) {i=i+1;j=i+1}; print j" "i}'`
+ echo $ji $mu >> $name.evrto
+ ij=`echo $ij | awk -v ne=$nb_elec '{i=$1;j=$2+1;if (j>ne) {i=i+1;j=i+1}; print i" "j}'`
+ echo $ij $mu >> $name.evrto
+done
+echo end muy >> $name.evrto
+
+#==================================================================================
+# dipole moment muz
+#==================================================================================
+echo muz >> $name.evrto
+m0x=`grep "GROUND STATE (SCF) DIPOLE=" $name.log | grep DEBYE | LANG=C awk -v conv=$conv_mu '{OFMT="%.10f";print $7*conv}'`
+mx=`grep "STATE DIPOLE =" $name.log | grep DEBYE  | LANG=C awk -v conv=$conv_mu '{OFMT="%.10f";print $6*conv}'`
+i=0
+for mu in $m0x $mx
+do
+  i=`echo $i | awk '{print $1+1}'`
+  echo $i $i $mu >> $name.evrto
+done
+
+mijx=`grep "TRANSITION DIPOLE =" $name.log | grep DEBYE | LANG=C awk -v conv=$conv_mu '{OFMT="%.10f";print $6*conv}'`
+ij="1 1"
+for mu in $mijx
+do
+ ji=`echo $ij | awk -v ne=$nb_elec '{i=$1;j=$2+1;if (j>ne) {i=i+1;j=i+1}; print j" "i}'`
+ echo $ji $mu >> $name.evrto
+ ij=`echo $ij | awk -v ne=$nb_elec '{i=$1;j=$2+1;if (j>ne) {i=i+1;j=i+1}; print i" "j}'`
+ echo $ij $mu >> $name.evrto
+done
+echo end muz >> $name.evrto
+
+#==================================================================================
+# calculation done
+#==================================================================================
+echo calculation done >> $name.evrto
+

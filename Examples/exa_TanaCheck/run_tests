@@ -1,0 +1,105 @@
+here=`pwd`
+EVRT=../..
+
+cd $EVRT
+  make Tnum_MCTDH
+cd $here
+
+v=$1
+if test -z "$1"
+then
+  v=4
+fi
+
+./clean
+
+gfortran -o split_block.exe split_block.f90
+
+type100=f
+
+for zmat_order in f t
+do
+for nrho in 0 1 2
+do
+for type_vec in 0 1 2
+do
+
+ cos_th=t
+ cart=f
+ frame0vec=t
+ echo max_vec: $v nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$type_vec type100=$type100 zmat_order=$zmat_order
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order
+
+ cos_th=f
+ cart=f
+ frame0vec=f
+ echo max_vec: $v nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$type_vec type100=$type100 zmat_order=$zmat_order
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order
+
+ cos_th=t
+ cart=t
+ frame0vec=f
+ echo max_vec: $v nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$type_vec type100=$type100 zmat_order=$zmat_order
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order
+
+ cos_th=f
+ cart=t
+ frame0vec=t
+ echo max_vec: $v nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$type_vec type100=$type100 zmat_order=$zmat_order
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order
+
+done
+done
+done
+
+
+# calculations with type100=t and nhro=0 are not possible with Tana
+type100=t
+
+for zmat_order in f t
+do
+for nrho in 1 2
+do
+for type_vec in 0 1 2
+do
+
+ cos_th=t
+ cart=f
+ frame0vec=t
+ echo max_vec: $v nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$type_vec type100=$type100 zmat_order=$zmat_order
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order
+
+ cos_th=f
+ cart=f
+ frame0vec=f
+ echo max_vec: $v nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$type_vec type100=$type100 zmat_order=$zmat_order
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order
+
+ cos_th=t
+ cart=t
+ frame0vec=f
+ echo max_vec: $v nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$type_vec type100=$type100 zmat_order=$zmat_order
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order
+
+ cos_th=f
+ cart=t
+ frame0vec=t
+ echo max_vec: $v nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$type_vec type100=$type100 zmat_order=$zmat_order
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order
+
+done
+done
+done
+
+
+err=`LANG=C awk '/max error:/ {if ($4 > 1.e-10) print $0}' res_all`
+
+
+echo "number of vectors: "$v
+echo "  number of calculations: " `grep -c dat res_all`
+if test -z "$err"
+then
+     echo "No error!"
+else
+     echo "Error(s) detected!!"
+fi

@@ -1,0 +1,23 @@
+#!/bin/ksh
+
+ ici=`pwd`
+ cd ..
+ make Tnum_MCTDH
+ cd $ici
+
+../Tnum90_MCTDH.exe << ** > res
+ &variables  nrho=2 zmat=T nat=4 /
+O
+O 1
+H 1 2
+H 2 1 3
+
+0  0 0    0 0 1
+ &minimum read_nameQ=t unit='angs' /
+ROO 1.4673182
+R1 0.9685485
+t1 98.6194741
+R2 0.9685485
+t2 98.6194741
+phi 120.2798835
+**

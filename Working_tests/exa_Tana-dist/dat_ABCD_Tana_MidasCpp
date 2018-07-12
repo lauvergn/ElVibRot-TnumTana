@@ -1,0 +1,37 @@
+
+ ici=`pwd`
+ cd ../..
+ make Tnum_MidasCpp
+ cd $ici
+
+../../Tnum90_MidasCpp.exe << ** > res
+ &variables 
+         nrho=2
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+         Tana=t
+         MidasCppForm=t
+ /
+ &Coord_transfo name_transfo='bunch_poly' nb_vect=3 nb_X=0 inTOout=f /
+C O H H
+
+ &Coord_transfo name_transfo='poly' cos_th=f /
+     &vector nb_vect=2 Frame=t iAtA=1 iAtB=2 / : R1 (CO)
+       &vector iAtA=1 iAtB=3 /                 : R2 (OH)
+       &vector iAtA=1 iAtB=4 /                 : R2 (OH)
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1  1 1 1
+
+ &minimum read_Qsym0=t /
+ 2.7
+ 2.0
+ 2.09
+ 1.95
+ 2.08
+ 3.1
+
+ &newQ /
+2.8
+**
+

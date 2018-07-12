@@ -1,0 +1,66 @@
+#
+# You should get the result of the Eh_exact (column 4 of table II).
+# Lauvergnat et al, JCP, v114 (2001) p6592
+#
+
+ SYSTEM=sub_system_cos_hcn.f
+
+ici=`pwd`
+DIR_vib=$ici/..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $ici
+
+ x1=0.538516066
+ x2=0.461483933
+
+
+export OMP_NUM_THREADS=1
+
+
+nice $DIR_vib/vib << ** >res
+ &system printlevel=1 /
+ &constantes /
+ &variables 
+         zmat=T
+         nat=4
+         sym=T
+         nrho=2
+ /
+C
+0.0     1
+N     2  1
+H     2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 1 21  21    0 0 0
+ &minimum pot0=-0.499465823200 HarD=t /
+.999d0
+3.187
+2.179
+0.
+3.141592653589793238462643383279d0
+0.0
+
+ &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
+ &inactives
+           isort=2
+           max_excit=4
+           tab_nq(1:2)=8,8
+           contrac_ba_ON_HAC=t max_nb_ba_ON_HAC=30
+/
+ &actives Read_Grid=f test=f comput_S=t JJ=0 /
+ &analyse max_ana=40 print=f print_psi=10 nb_harm_ana=1 /
+**
+

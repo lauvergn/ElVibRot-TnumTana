@@ -1,0 +1,9 @@
+#fich='Source*/*.f90 Source*/*/*.f90 Source*/*/*/*.f9 sub*/*.f90 sub*/*.f'
+ fich=' Source*/*/*/*.f90'
+
+for i in $fich
+do
+ echo $i
+ sed "s/GNU General Public License/GNU Lesser General Public License/" $i > $i.temp
+ mv $i.temp $i
+done

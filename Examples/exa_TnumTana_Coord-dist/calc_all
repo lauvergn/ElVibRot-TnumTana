@@ -1,0 +1,12 @@
+clean
+rm res_all
+
+for i in dat*
+do
+  $i
+  cat res >> res_all
+done
+
+echo Number of 'END Tnum'
+grep -c "END Tnum" res_all
+grep "frequencies" res_all

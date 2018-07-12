@@ -1,0 +1,56 @@
+T=300.
+test=t
+
+ SYSTEM=sub_system_h2o.f
+
+ici=`pwd`
+DIR_vib=../../..
+DIR_pot=$DIR_vib/sub_pot
+VIBEXE=vib
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $ici
+
+
+nice $DIR_vib/$VIBEXE << ** > $ici/res
+ &system PGrid_omp=0 intensity_only=f /
+ &constantes /
+ &variables 
+         zmat=T nat=3 
+         sym=f NM=t NM_TO_sym=t
+         hessian_old=f hessian_onthefly=t file_hessian='h2o_freq.fchk' hessian_cart=t
+         charge=0 multiplicity=1 
+         commande_unix='gauss09.run xx >err' 
+         ab_initio_prog='g09 '
+         ab_initio_meth='hf'
+         ab_initio_basis='sto-3g'
+
+         Cart_Transfo=f
+ /
+O
+H   1
+H   1 2
+
+1 1 1
+
+
+ &Coord_transfo name_transfo='Cartesian' /
+    &Cartesian Eckart=t /
+
+ &minimum pot0=-74.9659012077 OnTheFly=t pot_act=f read_Qsym0=f read_nameQ=t unit='angs' /
+RH 0.9895
+RH 0.9895
+A  100.015
+
+ &basis_nD iQdyn(1)=1  name="Hm" nq=5 nb=5 auto_basis=t /
+ &basis_nD iQdyn(1)=2  name="Hm" nq=5 nb=5 auto_basis=t /
+ &basis_nD iQdyn(1)=3  name="Hm" nq=5 nb=5 auto_basis=t /
+
+ &inactives /
+ &actives test=$test lect=$lect restart=f JJ=0 pack_op=t comput_S=f /
+ &analyse max_ana=90 print=f print_psi=0 propa=f control=f intensity=t /
+ &intensity l_Int=t l_IntVR=f l_Tau=f l_IntVR=f Temp=300. Ewidth=1. Emax=6000. Emin=0.0 /
+**

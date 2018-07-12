@@ -1,0 +1,81 @@
+#
+# For WP propagation (relaxation, GS)
+#
+
+ SYSTEM=sub_system_cos_hcn.f
+ SYSTEM=sub_system_murrell.f
+ SYSTEM=sub_system_theta_murrell.f
+
+ici=`pwd`
+DIR_vib=$ici/..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $ici
+
+export OMP_NUM_THREADS=1
+
+ x1=0.538516066
+ x2=0.461483933
+
+
+nb=10
+nq=15
+pi=3.14159265358979323844d0
+
+a=0.1
+A=-1.13
+B=0.92
+nq=2048
+
+test=f
+
+nice $DIR_vib/vib << ** >res
+ &system PGrid_omp=1 /
+ &constantes /
+ &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 /
+ &Coord_transfo name_transfo='zmat' nat=4 /
+C
+X     1
+N     2  1
+H     2   1 3
+
+ &Coord_transfo name_transfo='linear' /
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ &Coord_transfo name_transfo='oneD' nb_transfo=2 /
+   &oneD iQin=2 name_oneD='200' cte(1:4)=3.187 $a 0. /
+   &oneD iQin=3 name_oneD='200' cte(1:4)=2.179 $a 0. /
+
+ &Coord_transfo name_transfo='active' /
+ 0 1 0    0 0 0
+
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2 read_Qsym0=t read_nameQ=t unit='bohr' /
+th 0.1
+R  0.
+r  0.
+x 0.
+pi $pi
+dh 0.0
+
+
+ &basis_nD iQdyn(1)=2 name="cosAB" A=$A B=$B nb=256 nq=$nq /
+ &inactives /
+
+ &actives test=$test comput_S=t direct=0 /
+ &analyse max_ana=-1 max_ene=10000.d0 /
+**
+
+exit
+ &basis_nD iQdyn(1)=2 name="cosAB" A=1. B=20. nb=256 nq=256 /
+ &basis_nD iQdyn(1)=2 name="boxAB" A=-1 B=1. nb=256  nq=256  /

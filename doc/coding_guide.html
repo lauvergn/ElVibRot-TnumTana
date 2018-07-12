@@ -1,0 +1,26 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>Coding Guidelines</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <h2>Coding Guidelines</h2>
+    <ul>
+      <li>Indent with two spaces per indentation level. Do not use tabs</li>
+      <!--Settings for Vim/Emacs-->
+      <li>Inside subroutines, all strings must be declared with
+          &quot;len=*&quot;</li>
+      <li>Separate subroutines/functions with two blank lines</li>
+      <li>At the very beginning of a subroutine, declare all dummy variables in
+          one block. Align the intent declarations and the variable names in
+          this block. Separate the block from the following declaration of
+          local variables by a blank line</li>
+      <li>Always check the error code from allocations. Every call to allocate
+          should be followed by a call to allocerror</li>
+      <li>Every routine and data structure must be documented</li>
+      <li>Every module must be appropriately tested</li>
+    </ul>
+  </body>
+</html>

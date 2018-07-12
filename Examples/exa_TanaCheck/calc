@@ -1,0 +1,8 @@
+here=`pwd`
+EVRT=../..
+
+cd $EVRT
+  make Tnum_MCTDH
+cd $here
+
+    $EVRT/Tnum90_MCTDH.exe < $1 > res_$1

@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>Introduction to Tnum-Tana</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="ASCIIMathML.js" type="text/javascript"></script>
+  </head>
+  <body>
+\section{Introduction to the program Tnum-Tana}
+The derivation or computation of the kinetic energy operator (KEO) using curvilinear
+coordinates for large systems is a difficult task. With this program,
+you can calculate the KEO of a given system by using
+a numerical approach (Tnum) or an analytical approach (Tana). 
+\subsection{Tnum branch}
+<p> The Tnum program enables ones to calculate numerically and exactly kinetic
+energy operator (KEO), $\hat{T}$, or
+the metric tensor (covariant, $\mathbf{g}$, or contravariant, $\mathbf{G}$,
+components) using several
+kinds of curvilinear coordinates for a molecular system of any size, without
+build in limitation.
+It can deal with reduced dimensionality KEO (rigid or flexible constraints or
+other approximations).
+</p>
+<p>
+The molecular system has <FONT color='red'> ${N_{at}}$ atoms </FONT>.
+Let $\mathbf{Q}_{dyn} = [Q_{dyn}^1, Q_{dyn}^2, \cdots, Q_{dyn}^{n+m}]$ be the curvilinear coordinates 
+associated with the internal deformation.
+Where $\textcolor{red}{n}$ is the number of active coordinates 
+and $m$ is the number of inactive coordinates, 
+<FONT color='red'> $n+m = 3N_{at}-6$ </FONT>. 
+$n$ can be smaller than $3N_{at}-6$ when
+ reduced dimensionality is used, i.e. the quantum dynamics is performed only
+ with <FONT color='red'>$n$</FONT> coordinates.
+ In full dimensionality <FONT color='red'>$m=0$ </FONT>.
+The exact KEO, including the deformation, the Coriolis coupling and the overall
+rotation is given by,
+</p>
+<p>
+<FONT color='red'>
+$\hat{T} = 
+\underbrace{\hat{T}_\mathrm{def}}_\mathrm{Deformation} + 
+\underbrace{\hat{T}_\mathrm{cor}}_\mathrm{Corlioris} + 
+\underbrace{\hat{T}_\mathrm{rot}}_\mathrm{Rotation} 
+$
+</FONT>
+</p>
+<p>
+ There are several equivalent expressions for the deformation term of the KEO,
+ <FONT color='red'>$\hat{T}_\mathrm{def }$</FONT>, see Eqs.(1-3):
+</p>
+<p>
+<FONT color='red'>
+$
+  \hat{T}_\mathrm{def}= -\frac{\hbar^2}{2}\sum_{i,j} \Sigma^{ij}(\mathbf{Q}_{dyn})
+         \frac{\partial^2 \mathbf{g}}{\partial Q_{dyn}^i \partial Q_{dyn}^j}
+         -\frac{\hbar^2}{2}\sum_{i,j} 
+         \left(\Sigma^{ij}(\mathbf{Q}_{dyn})
+         \frac{\partial ln\left(\rho(\mathbf{Q}_{dyn})\right)}{\partial Q_{dyn}^i}
+         +\frac{\partial \Sigma^{ij}(\mathbf{Q}_{dyn})}{\partial Q_{dyn}^i}
+         \right) 
+         \frac{\partial \mathbf{g}}{\partial Q_{dyn}^j}
+         + v_{\mathrm{ext}}(\mathbf{Q}_{dyn})
+$
+</FONT>         
+</p>
+ or
+
+ <p>
+ <FONT color='red'> 
+$
+  \hat{T}_\mathrm{def}= \sum_{i\le j} f_2^{ij}(\mathbf{Q}_{dyn})
+           \frac{\partial^2 \mathbf{g}}{\partial Q_{dyn}^i \partial Q_{dyn}^j}
+           +\sum_{j} f_1^{j}(\mathbf{Q}_{dyn})
+         \frac{\partial \mathbf{g}}{\partial Q_{dyn}^j}
+         + v_{\mathrm{ext}}(\mathbf{Q}_{dyn})\,,$
+ </FONT>
+ </p>
+ or
+ <p>
+ <FONT color='red'>
+$
+  \hat{T}_\mathrm{def}= -\frac{\hbar^2}{2}\sum_{i, j} \frac{1} {\rho(\mathbf{Q}_{dyn})}
+           \frac{\partial \mathbf{g}}{ \partial Q_{dyn}^i} 
+           \left(  \Sigma^{ij}(\mathbf{Q}_{dyn}) \rho(\mathbf{Q}_{dyn})\right)
+           \frac{\partial \mathbf{g}}{ \partial Q_{dyn}^j} 
+         + v_{\mathrm{ext}}(\mathbf{Q}_{dyn})\,.
+$
+ </FONT>
+</p>         
+<p>         
+The Coriolis term, <FONT color='red'>$\hat{T}_\mathrm{cor}$</FONT>, is given by
+</p>         
+<p>         
+ <FONT color='red'>
+$
+  \hat{T}_\mathrm{cor}= -i\hbar \sum_{j, \alpha} \Gamma^{\alpha j} (\mathbf{Q}_{dyn})
+  \frac{\partial \mathbf{g}}{\partial {Q}_{dyn}^j} \hat{J}_\alpha
+  -i\frac{\hbar}{2} \sum_{j, \alpha} \left(\Gamma^{\alpha j} (\mathbf{Q}_{dyn})
+  \frac{\partial ln(\rho(\mathbf{Q}_{dyn}))}{\partial {Q}_{dyn}^j}+ 
+  \frac{\partial \Gamma(\mathbf{Q}_{dyn})}{\partial {Q}_{dyn}^j} 
+  \right)
+  \hat{J}_\alpha\,.
+  $
+ </FONT>
+</p>         
+The rotational term, <FONT color='red'>$\hat{T}_\mathrm{rot}$</FONT>, is given by
+<p>         
+ <FONT color='red'>
+$
+  \hat{T}_\mathrm{rot}= \frac{1}{2} \sum_{\alpha, \beta} \mu^{\alpha \beta} (\mathbf{Q}_{dyn})
+  \hat{J}_\alpha
+  \hat{J}_\beta\,.
+$
+ </FONT>
+</p>         
+<p>         
+Where <FONT color='red'>$i, j = 1, \cdots, n$, $\alpha, \beta = x,y,z$
+ </FONT>
+ and 
+ <FONT color='red'>
+ $d\tau_\mathrm{def}
+= \rho(\mathbf{Q}_{dyn})d{Q}_{dyn}^1 d {Q}_{dyn}^2\cdots{Q}_{dyn}^n$.
+ </FONT>
+ 
+</p>         
+
+<h4> What can you do with Tnum?</h4>
+ For a given geometry in the BF frame known with the internal coordinates, 
+ $\mathbf{Q}_{dyn}$ (active and inactive ones) Tnum can give the values of the following 
+ expression:
+ <ul>
+   <li> $\mathbf{G}(\mathbf{Q}_{dyn})$ or $\mathbf{g}(\mathbf{Q}_{dyn})$
+   and also the first and the second derivatives with respect 
+   the active coordinates (all of them).
+   </li>
+   <li> $f_2^{ij}(\mathbf{Q}_{dyn})$, $f_1^{i}(\mathbf{Q}_{dyn})$ and 
+   $V_\mathrm{ext}(\mathbf{Q}_{dyn})$ and
+   the Coriolis contribution.
+   </li>
+   <li> the value of $\rho(\mathbf{Q}_{dyn})$ and $J(\mathbf{Q}_{dyn})$ (the Jacobian) are also given.
+   </li> 
+   <li> the Cartesian coordinates of the atoms, $\mathbf{x}(\mathbf{Q}_{dyn})$, can be obtained. Gradient and Hessian
+   expressed in Cartesian coordinates can be transformed into internal coordinnates.
+   </li>
+ </ul>
+\subsection{Tana branch}
+<p>         
+The Tana program  is an extension of the Tnum code. The two programs share the same data structure. 
+The branch enables to compute the analytical expression of the KEO using the
+polyspherical coordinates. 
+This expression is expression as,
+</p>         
+<p>         
+ <FONT color='red'> 
+$ 
+\hat{T} = \frac{1}{2}\sum_{i,j=1}^{N_{at}-1}  M_{ij}
+  \vec{\hat{P}}_i^\dagger \cdot \vec{\hat{P}}_{j}\, 
+$
+</FONT>
+</p>         
+where $\mathbf{M}$ is the mass-matrix. For more details on the 
+theoretical description of the approach se 
+<h4> What can you do with Tana?</h4>
+ For a given geometry in the BF frame known with the internal coordinates, 
+ $\mathbf{Q}_{dyn}$ (active and inactive ones) Tana can give the values of the following 
+ expression:
+ <ul>
+   <li> the analytical expression of the KEO (deformation+Coriolis+rotation) 
+   exported in in latex 
+   equation or in a MCTDH format file. 
+   </li>
+   <li> $f_2^{ij}(\mathbf{Q}_{dyn})$ and
+   $V_\mathrm{ext}(\mathbf{Q}_{dyn})$.
+   </li>
+   If you are interested to the theoritical study of the polyspherical method,
+   see this paper <a href="http://link.aip.org/link/doi/10.1063/1.3675163" 
+     target="bottom">JCP 136, 034107 (2012)</a> and
+   the references therein. 
+  </body>
+</html>

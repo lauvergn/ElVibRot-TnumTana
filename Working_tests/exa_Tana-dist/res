@@ -1,0 +1,829 @@
+ ===============================================
+ ===============================================
+ Working with ElVibRot90.47-Tnum30.32-Tana7.8
+ Compiled on "kruck" the Mer 15 mar 2017 - 10:06:16
+ EVRT_path: /Users/lauvergn/git/ElVibRot
+ -----------------------------------------------
+ ElVibRot is written by David Lauvergnat [1] 
+      with contributions of Josep Maria Luis [2]
+ ElVibRot is under GNU LGPL3 license.
+
+ Tnum is written David Lauvergnat [1]
+ Tana is written by Mamadou Ndong 
+      with contributions of David Lauvergnat
+ Tnum and Tana are under GNU LGPL3 license.
+
+ [1]: Laboratoire de Chimie Physique, UMR 8000, CNRS-Université Paris-Sud, France
+ [2]: Institut de Química Computacional and Departament de Química Universitat de Girona, Catalonia, Spain
+ ===============================================
+ ===============================================
+ =================================================
+ =================================================
+ BEGINNING Read_mole
+ EVRT_path: /Users/lauvergn/git/ElVibRot                                                                                                                                                                                                                                   
+ PHYSICAL CONSTANTS, version: CODATA 2006
+ MASSES, version: NIST2012            
+   The unit "cm-1" is already present
+ energy unit: cm-1                
+ auTOenergy   219474.63144319772     
+ Ta (fs)=           0.024189
+ auTOcm_inv =      219474.631443
+ auTOeV     =          27.211384
+ =================================================
+ =================================================
+ New Coordinates transformation           3
+ =================================================
+ ==========================================
+ ==========================================
+ transfo:               bunch               
+ Option of the transfo: 0
+ Skip the transfo:      F
+ num_transfo:           1
+ inTOout:               F
+------------------------------------------
+   Read the atoms
+   nb_vect           6
+   nat           8
+   nat_act           7
+   Read the vector connectivities
+   nat_act,ncart_act           7          21
+   M_Tana (without the center-of-mass contribution)
+ 1        1.1000000000       0.1000000000       0.1000000000       0.1000000000       0.1000000000
+ 2        0.1000000000       1.1000000000       0.1000000000       0.1000000000       0.1000000000
+ 3        0.1000000000       0.1000000000       1.1000000000       0.1000000000       0.1000000000
+ 4        0.1000000000       0.1000000000       0.1000000000       1.1000000000       0.1000000000
+ 5        0.1000000000       0.1000000000       0.1000000000       0.1000000000       1.1000000000
+ 6        0.1000000000       0.1000000000       0.1000000000       0.1000000000       0.1000000000
+
+ 1        0.1000000000
+ 2        0.1000000000
+ 3        0.1000000000
+ 4        0.1000000000
+ 5        0.1000000000
+ 6        1.1000000000
+ ==========================================
+ ==========================================
+ ==========================================
+ ==========================================
+ transfo:               poly                
+ Option of the transfo: 0
+ Skip the transfo:      F
+ num_transfo:           2
+ inTOout:               T
+------------------------------------------
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type T           0
+ num_vect_in_Frame           1
+ num_vect_in_BF           2
+ num_Frame_in_BF           2
+ num_Frame_in_Container           1
+ name_Frame: F(1,BF)             
+ tab_num_Frame           1           1
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           1           0
+ BF,local Frame,euler F T F T F
+ Cart F
+ Def_cos_th,cos_th F F
+  Elementary operators for Tana:
+    1           2           1           2             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    1           7           1           3             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+ type_Qin           2           2           3   536870912         180   536870912    62934720       32736  1391893616       32767           0           1           0           0           0
+ name_Qin: R1_F(BF) 
+ list_Qpoly_TO_Qprim           1           2           3           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3   536870912         153   536870912    62935248       32736  1391893592       32767           0           4           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           3
+ num_vect_in_BF           3
+ num_Frame_in_BF           2
+ num_Frame_in_Container           1
+ name_Frame: F(BF)               
+ tab_num_Frame           1
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F T T T
+ Cart F
+ Def_cos_th,cos_th F F
+  Elementary operators for Tana:
+    1           2           1           4             Id                     0.1000E+01 Ix    0.0000E+00
+    1           3           1           5             Id                     0.1000E+01 Ix    0.0000E+00
+    1           4           1           6             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+ type_Qin           2           2           3           2           3           4    62934720       32736  1391893616       32767           0           1           0           0           0
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6    62935248       32736  1391893592       32767           0           4           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           2
+ num_vect_in_BF           5
+ num_Frame_in_BF           3
+ num_Frame_in_Container           2
+ name_Frame: F(2,BF)             
+ tab_num_Frame           1           2
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F F T T
+ Cart F
+ Def_cos_th,cos_th F F
+  Elementary operators for Tana:
+    1           2           1           8             Id                     0.1000E+01 Ix    0.0000E+00
+    1           3           1           9             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+ type_Qin           2           2           3           2           3           4           2           2           3       32767           0           1           0           0           0
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9       32767           0           4           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type T           0
+ num_vect_in_Frame           1
+ num_vect_in_BF           6
+ num_Frame_in_BF           4
+ num_Frame_in_Container           1
+ name_Frame: F(1,2,BF)           
+ tab_num_Frame           1           2           1
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           1           0
+ BF,local Frame,euler F T T T F
+ Cart F
+ Def_cos_th,cos_th F F
+  Elementary operators for Tana:
+    1           2           1          10             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    1           6           1          11             Id                     0.1000E+01 Ix    0.0000E+00
+    1           7           1          12             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+ type_Qin           2           2           3           2           3           4           2           2           3           2           4           3           0           0           0
+ name_Qin: R1_F(BF) 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          11          12           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10          11          12           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type T           0
+ num_vect_in_Frame           1
+ num_vect_in_BF           4
+ num_Frame_in_BF           3
+ num_Frame_in_Container           2
+ name_Frame: F(2,BF)             
+ tab_num_Frame           1           2
+ nb_vect,nb_vect_tot           2           3
+ nb_var,nb_var_Rot           6           0
+ BF,local Frame,euler F T T T T
+ Cart F
+ Def_cos_th,cos_th F F
+  Elementary operators for Tana:
+    1           2           1           7             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    1           6           1          13             Id                     0.1000E+01 Ix    0.0000E+00
+    1           7           1          14             Id                     0.1000E+01 Ix    0.0000E+00
+    1           7           1          15             Id                     0.1000E+01 Ix    0.0000E+00
+ type_Qin           2           2           3           2           3           4           2           2           3           2           4           3           4           3           4
+ name_Qin: R1_F(BF) R1_F(1,BF) beta_F(1,BF) R3_F(BF) th3_F(BF) phi3_F(BF) 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          11          12          13          14          15
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10          11          12          13          14          15
+ END RecWrite_BFTransfo
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          11          12          13          14          15
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10          11          12          13          14          15
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type T           0
+ num_vect_in_Frame           1
+ num_vect_in_BF           1
+ num_Frame_in_BF           1
+ num_Frame_in_Container           1
+ name_Frame: F(BF)               
+ tab_num_Frame           1
+ nb_vect,nb_vect_tot           3           6
+ nb_var,nb_var_Rot          15           0
+ BF,local Frame,euler T T F F F
+ Cart F
+ Def_cos_th,cos_th F F
+  Elementary operators for Tana:
+    1           2           1           1             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+ type_Qin           2           2           3           2           3           4           2           2           3           2           4           3           4           3           4
+ name_Qin: R1_F(BF) R1_F(1,BF) beta_F(1,BF) R3_F(BF) th3_F(BF) phi3_F(BF) R1_F(2,BF) R2_F(2,BF) th2_F(2,BF) R1_F(1,2,BF) alpha_F(1,2,BF) beta_F(1,2,BF) alpha_F(2,BF) beta_F(2,BF) gamma_F(2,BF) 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          11          12          13          14          15
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10          11          12          13          14          15
+ END RecWrite_BFTransfo
+ ==========================================
+ ==========================================
+ ==========================================
+ ==========================================
+ transfo:               active              
+ Option of the transfo: 0
+ Skip the transfo:      F
+ num_transfo:           3
+ inTOout:               T
+------------------------------------------
+ list_act_OF_Qdyn or type_var           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1
+ ==========================================
+ ==========================================
+ Parameter(s) to be optimized?:            0
+ =================================================
+ =================================================
+ END New Coordinates transformation
+ =================================================
+ =================================================
+ END Read_mole
+ =================================================
+ =================================================
+ BEGINNING read_RefGeom
+ pot_itQtransfo           3
+ Operators (pot...) with Qact coordinates
+ read_itQtransfo_OF_Qin0           2
+ Qdyn0 coordinates (not transformed): [bohr]/[rad or cos(angle)]
+R1_F1                       1.200000
+R2_F1                       1.300000
+u2_F1                       0.250000
+R1_F3F1                     1.350000
+R2_F3F1                     1.450000
+u2_F3F1                     0.550000
+a_F3F1                      0.650000
+cb_F3F1                     0.750000
+g_F3F1                      0.850000
+R1_F5F1                     1.250000
+R2_F5F1                     2.250000
+u2_F5F1                     0.250000
+a_F5F1                      0.250000
+cb_F5F1                     0.500000
+g_F5F1                      0.950000
+ Qact0 coordinates (not transformed): [bohr]/[rad or cos(angle)]
+R1_F(BF)                    1.200000
+R1_F(1,BF)                  1.300000
+beta_F(1,BF)                0.250000
+R3_F(BF)                    1.350000
+th3_F(BF)                   1.450000
+phi3_F(BF)                  0.550000
+R1_F(2,BF)                  0.650000
+R2_F(2,BF)                  0.750000
+th2_F(2,BF)                 0.850000
+R1_F(1,2,BF)                1.250000
+alpha_F(1,2,BF)             2.250000
+beta_F(1,2,BF)              0.250000
+alpha_F(2,BF)               0.250000
+beta_F(2,BF)                0.500000
+gamma_F(2,BF)               0.950000
+ -----------------------------------------
+ Qdyn0 coordinates (transformed):
+R1_F1               1     1.200000 au     0.635013 Angs
+R2_F1               2     1.300000 au     0.687930 Angs
+u2_F1               3     0.250000 Rad     14.323945 °
+R1_F3F1             4     1.350000 au     0.714389 Angs
+R2_F3F1             5     1.450000 Rad     83.078880 °
+u2_F3F1             6     0.550000 Rad     31.512679 °
+a_F3F1              7     0.650000 au     0.343965 Angs
+cb_F3F1             8     0.750000 au     0.396883 Angs
+g_F3F1              9     0.850000 Rad     48.701413 °
+R1_F5F1             10     1.250000 au     0.661472 Angs
+R2_F5F1             11     2.250000 Rad     128.915504 °
+u2_F5F1             12     0.250000 Rad     14.323945 °
+a_F5F1              13     0.250000 Rad     14.323945 °
+cb_F5F1             14     0.500000 Rad     28.647890 °
+g_F5F1              15     0.950000 Rad     54.430991 °
+ -----------------------------------------
+ -----------------------------------------
+ Qact0 coordinates (transformed):
+R1_F(BF)            1     1.200000 au     0.635013 Angs
+R1_F(1,BF)          2     1.300000 au     0.687930 Angs
+beta_F(1,BF)        3     0.250000 Rad     14.323945 °
+R3_F(BF)            4     1.350000 au     0.714389 Angs
+th3_F(BF)           5     1.450000 Rad     83.078880 °
+phi3_F(BF)          6     0.550000 Rad     31.512679 °
+R1_F(2,BF)          7     0.650000 au     0.343965 Angs
+R2_F(2,BF)          8     0.750000 au     0.396883 Angs
+th2_F(2,BF)         9     0.850000 Rad     48.701413 °
+R1_F(1,2,BF)        10     1.250000 au     0.661472 Angs
+alpha_F(1,2,BF)     11     2.250000 Rad     128.915504 °
+beta_F(1,2,BF)      12     0.250000 Rad     14.323945 °
+alpha_F(2,BF)       13     0.250000 Rad     14.323945 °
+beta_F(2,BF)        14     0.500000 Rad     28.647890 °
+gamma_F(2,BF)       15     0.950000 Rad     54.430991 °
+ -----------------------------------------
+ END read_RefGeom
+ BEGINNING Finalyze_TnumTana_Coord_PrimOp
+ =================================================
+  BEGINNING Tana
+ =================================================
+ vectors indices in their subsystem to the indice in th BF
+ =================================================
+ variables indices in their subsystem to the indices in th BF
+ begin systems_(           1 )
+ nb_var, nvec           4           2
+ tab_euler F F F
+ begin systems_(           1           1 )
+ nb_var, nvec           2           1
+ tab_euler F T F
+ end system
+
+
+ begin systems_(           1           2 )
+ nb_var, nvec           6           2
+ tab_euler T T T
+ begin systems_(           1           2           1 )
+ nb_var, nvec           3           1
+ tab_euler T T F
+ end system
+
+
+ end system
+
+
+ end system
+
+
+ =================================================
+ Initialization of the coordinates associated with each subsystem
+ ************************************
+ begin sub_system           1
+ nvec=           2
+ nsub_syt=           2
+ i_var_F= R           1 i_var_BF=           1 qval=   1.2000000000000000     
+ ************************************
+ begin sub_system           1           1
+ nvec=           1
+ nsub_syt=           0
+ i_var_F= R           1 i_var_BF=           2 qval=   1.3000000000000000     
+ i_var_F euler =           2 i_var_BF=           3 qval=  0.25000000000000000     
+ end sub_system           1           1
+ ************************************
+
+
+ i_var_F R=           2 i_var_BF=           4 qval=   1.3500000000000001     
+ i_var_F th=           3 i_var_BF=           5 qval=   1.4500000000000000     
+ i_var_F phi=           4 i_var_BF=           6 qval=  0.55000000000000004     
+ ************************************
+ begin sub_system           1           2
+ nvec=           2
+ nsub_syt=           1
+ i_var_F= R           1 i_var_BF=           7 qval=  0.65000000000000002     
+ i_var_F= R           2 i_var_BF=           8 qval=  0.75000000000000000     
+ i_var_F th=           3 i_var_BF=           9 qval=  0.84999999999999998     
+ ************************************
+ begin sub_system           1           2           1
+ nvec=           1
+ nsub_syt=           0
+ i_var_F= R           1 i_var_BF=          10 qval=   1.2500000000000000     
+ i_var_F euler =           2 i_var_BF=          11 qval=   2.2500000000000000     
+ i_var_F euler =           3 i_var_BF=          12 qval=  0.25000000000000000     
+ end sub_system           1           2           1
+ ************************************
+
+
+ i_var_F euler =           4 i_var_BF=          13 qval=  0.25000000000000000     
+ i_var_F euler =           5 i_var_BF=          14 qval=  0.50000000000000000     
+ i_var_F euler =           6 i_var_BF=          15 qval=  0.94999999999999996     
+ end sub_system           1           2
+ ************************************
+
+
+ end sub_system           1
+ ************************************
+
+
+ =================================================
+ Initialization of the M_mass matrix of each subsystem
+ =================================================
+  Computation of the 2xKEO (in full dimension)
+ entree S_(           1 )
+ entree S_(           1           2 )
+ entree S_(           1           2           1 )
+ sub_system S_(           1           2           1 )
+ processing S_(           1           2           1 )
+ system S_r, r=           1           2           1
+ size before simplify           3
+ size after simplify           3
+ sub_system S_(           1           2 )
+ init elementaries op. for S_(           1           2 )
+ system S_r, r=           1           2
+ size before simplify         286
+ size after simplify         268
+ entree S_(           1           1 )
+ sub_system S_(           1           1 )
+ processing S_(           1           1 )
+ system S_r, r=           1           1
+ size before simplify          24
+ size after simplify          20
+ sub_system S_(           1 )
+ init elementaries op. for S_(           1 )
+ system S_r, r=           1
+ size before simplify        3905
+ size after simplify        3295
+ =================================================
+  Add the extra potential term  KEO
+ =================================================
+ number of terms before adding Vextr=        3586
+ number of terms after  adding Vextr=        3639
+ =================================================
+  Computation of the 2xKEO (in reduced dimension)
+ =================================================
+ =================================================
+  output of the analytical  KEO
+  MCTDH    Form:  F
+  VSCF     Form:  F
+  MidasCpp Form:  F
+  LaTex    Form:  F
+ =================================================
+ =================================================
+  Expand 2xKEO (in reduced dimension)
+ =================================================
+ =================================================
+  BEGINNING comparison_G_FROM_Tnum_Tana
+          max diff G:    1.2079226507921703E-013
+ Relative max diff G:    1.9291787242999950E-015
+        max diff vep:    1.5454304502782179E-013
+
+            vep Tana:   -1.0146142850157207     
+            vep Tnum:   -1.0146142850158753     
+          max diff f2:    1.0658141036401503E-013
+ Relative max diff f2:    3.4044330428823438E-015
+          max diff f1:    2.5202062658991053E-014
+ Relative max diff f1:    4.1671655925269308E-015
+         max diff vep:    1.5476508963274682E-013
+
+         max error: 0.15E-12
+  END comparison_G_FROM_Tnum_Tana
+ =================================================
+ =================================================
+ =================================================
+ END Finalyze_TnumTana_Coord_PrimOp
+ ======================================
+ ======================================
+ ======================================
+ ======================================
+ ======================================
+     Time and date in dnx : 10h:17m:59.100s, the 15/ 3/2017
+        real (s):              0.000 in dnx
+        real    :   0d  0h  0m  0s in dnx
+        cpu (s):              0.000 in dnx
+  Total real (s):              0.000
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.000
+  Total memory:          0 in dnx
+ -----------------------------------------
+Qact,it_Qtransfo: 3  1.2000 1.3000 .2500 1.3500 1.4500 .5500
+Qact,it_Qtransfo: 3  .6500 .7500 .8500 1.2500 2.2500 .2500
+Qact,it_Qtransfo: 3  .2500 .5000 .9500
+ -----------------------------------------
+ -----------------------------------------
+Qin (Qact),it_Qtransfo: 3  1.2000 1.3000 .2500 1.3500 1.4500 .5500
+Qin (Qact),it_Qtransfo: 3  .6500 .7500 .8500 1.2500 2.2500 .2500
+Qin (Qact),it_Qtransfo: 3  .2500 .5000 .9500
+ -----------------------------------------
+ name_transfo           3 active              
+ -----------------------------------------
+Qin ,it_Qtransfo: 3  1.2000 1.3000 .2500 1.3500 1.4500 .5500
+Qin ,it_Qtransfo: 3  .6500 .7500 .8500 1.2500 2.2500 .2500
+Qin ,it_Qtransfo: 3  .2500 .5000 .9500
+ -----------------------------------------
+ -----------------------------------------
+Qout,it_Qtransfo: 3  1.2000 1.3000 .2500 1.3500 1.4500 .5500
+Qout,it_Qtransfo: 3  .6500 .7500 .8500 1.2500 2.2500 .2500
+Qout,it_Qtransfo: 3  .2500 .5000 .9500
+ -----------------------------------------
+ name_transfo           2 poly                
+ -----------------------------------------
+Qin ,it_Qtransfo: 2  1.2000 1.3000 .2500 1.3500 1.4500 .5500
+Qin ,it_Qtransfo: 2  .6500 .7500 .8500 1.2500 2.2500 .2500
+Qin ,it_Qtransfo: 2  .2500 .5000 .9500
+ -----------------------------------------
+ -----------------------------------------
+Qout,it_Qtransfo: 2  .0000 .0000 1.2000 .3216 .0000 1.2596
+Qout,it_Qtransfo: 2  1.1425 .7005 .1627 .3019 .0771 .5704
+Qout,it_Qtransfo: 2  .3952 .5740 .2773 .3046 .0591 1.2109
+ -----------------------------------------
+ name_transfo           1 bunch               
+ -----------------------------------------
+Qin ,it_Qtransfo: 1  .0000 .0000 1.2000 .3216 .0000 1.2596
+Qin ,it_Qtransfo: 1  1.1425 .7005 .1627 .3019 .0771 .5704
+Qin ,it_Qtransfo: 1  .3952 .5740 .2773 .3046 .0591 1.2109
+ -----------------------------------------
+ -----------------------------------------
+Qxyz,it_Qtransfo: 1  -.1541 -.0882 -.2926
+Qxyz,it_Qtransfo: 1  -.1541 -.0882 .9074
+Qxyz,it_Qtransfo: 1  .1675 -.0882 .9670
+Qxyz,it_Qtransfo: 1  .9884 .6123 -.1299
+Qxyz,it_Qtransfo: 1  .1478 -.0111 .2779
+Qxyz,it_Qtransfo: 1  .2411 .4858 -.0153
+Qxyz,it_Qtransfo: 1  .1504 -.0290 .9183
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+ -----------------------------------------
+  Cartesian coordinates (au):
+ d0x =
+           -0.154116991          -0.088166837          -0.292552453
+           -0.154116991          -0.088166837           0.907447547
+            0.167508156          -0.088166837           0.967033695
+            0.988404436           0.612319007          -0.129873715
+            0.147821893          -0.011069182           0.277876212
+            0.241113779           0.485784939          -0.015294454
+            0.150438634          -0.029032726           0.918335249
+            0.000000000           0.000000000           0.000000000
+  Cartesian coordinates (ang):
+ ==============================================
+ = Gaussian CC ================================
+     -1     0          -0.081555199          -0.046655880          -0.154812091
+     -1     0          -0.081555199          -0.046655880           0.480200559
+     -1     0           0.088641498          -0.046655880           0.511732191
+     -1     0           0.523041100           0.324025263          -0.068726210
+     -1     0           0.078223977          -0.005857559           0.147045758
+     -1     0           0.127591916           0.257066318          -0.008093477
+     -1     0           0.079608696          -0.015363457           0.485962083
+     -1     0           0.000000000           0.000000000           0.000000000
+ = END Gaussian CC ============================
+ ==============================================
+ ==============================================
+ = XYZ format =================================
+           7
+
+     -1          -0.081555199          -0.046655880          -0.154812091
+     -1          -0.081555199          -0.046655880           0.480200559
+     -1           0.088641498          -0.046655880           0.511732191
+     -1           0.523041100           0.324025263          -0.068726210
+     -1           0.078223977          -0.005857559           0.147045758
+     -1           0.127591916           0.257066318          -0.008093477
+     -1           0.079608696          -0.015363457           0.485962083
+ = END XYZ format =============================
+ ==============================================
+     Time and date in dnx : 10h:17m:59.101s, the 15/ 3/2017
+        real (s):              0.000 in dnx
+        real    :   0d  0h  0m  0s in dnx
+        cpu (s):              0.000 in dnx
+  Total real (s):              0.000
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.000
+  Total memory:          0 in dnx
+ ======================================
+ dnx:           24
+ d0x =
+           -0.154116991          -0.088166837          -0.292552453
+           -0.154116991          -0.088166837           0.907447547
+            0.167508156          -0.088166837           0.967033695
+            0.988404436           0.612319007          -0.129873715
+            0.147821893          -0.011069182           0.277876212
+            0.241113779           0.485784939          -0.015294454
+            0.150438634          -0.029032726           0.918335249
+            0.000000000           0.000000000           0.000000000
+ -----------------------------------------
+Qact,it_Qtransfo: 3  1.2000 1.3000 .2500 1.3500 1.4500 .5500
+Qact,it_Qtransfo: 3  .6500 .7500 .8500 1.2500 2.2500 .2500
+Qact,it_Qtransfo: 3  .2500 .5000 .9500
+ -----------------------------------------
+ -----------------------------------------
+Qin (Qact),it_Qtransfo: 3  1.2000 1.3000 .2500 1.3500 1.4500 .5500
+Qin (Qact),it_Qtransfo: 3  .6500 .7500 .8500 1.2500 2.2500 .2500
+Qin (Qact),it_Qtransfo: 3  .2500 .5000 .9500
+ -----------------------------------------
+ name_transfo           3 active              
+ -----------------------------------------
+Qin ,it_Qtransfo: 3  1.2000 1.3000 .2500 1.3500 1.4500 .5500
+Qin ,it_Qtransfo: 3  .6500 .7500 .8500 1.2500 2.2500 .2500
+Qin ,it_Qtransfo: 3  .2500 .5000 .9500
+ -----------------------------------------
+ -----------------------------------------
+Qout,it_Qtransfo: 3  1.2000 1.3000 .2500 1.3500 1.4500 .5500
+Qout,it_Qtransfo: 3  .6500 .7500 .8500 1.2500 2.2500 .2500
+Qout,it_Qtransfo: 3  .2500 .5000 .9500
+ -----------------------------------------
+ name_transfo           2 poly                
+ -----------------------------------------
+Qin ,it_Qtransfo: 2  1.2000 1.3000 .2500 1.3500 1.4500 .5500
+Qin ,it_Qtransfo: 2  .6500 .7500 .8500 1.2500 2.2500 .2500
+Qin ,it_Qtransfo: 2  .2500 .5000 .9500
+ -----------------------------------------
+ -----------------------------------------
+Qout,it_Qtransfo: 2  .0000 .0000 1.2000 .3216 .0000 1.2596
+Qout,it_Qtransfo: 2  1.1425 .7005 .1627 .3019 .0771 .5704
+Qout,it_Qtransfo: 2  .3952 .5740 .2773 .3046 .0591 1.2109
+ -----------------------------------------
+ name_transfo           1 bunch               
+ -----------------------------------------
+Qin ,it_Qtransfo: 1  .0000 .0000 1.2000 .3216 .0000 1.2596
+Qin ,it_Qtransfo: 1  1.1425 .7005 .1627 .3019 .0771 .5704
+Qin ,it_Qtransfo: 1  .3952 .5740 .2773 .3046 .0591 1.2109
+ -----------------------------------------
+ -----------------------------------------
+Qxyz,it_Qtransfo: 1  -.1541 -.0882 -.2926
+Qxyz,it_Qtransfo: 1  -.1541 -.0882 .9074
+Qxyz,it_Qtransfo: 1  .1675 -.0882 .9670
+Qxyz,it_Qtransfo: 1  .9884 .6123 -.1299
+Qxyz,it_Qtransfo: 1  .1478 -.0111 .2779
+Qxyz,it_Qtransfo: 1  .2411 .4858 -.0153
+Qxyz,it_Qtransfo: 1  .1504 -.0290 .9183
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+ -----------------------------------------
+  Cartesian coordinates (au):
+ d0x =
+           -0.154116991          -0.088166837          -0.292552453
+           -0.154116991          -0.088166837           0.907447547
+            0.167508156          -0.088166837           0.967033695
+            0.988404436           0.612319007          -0.129873715
+            0.147821893          -0.011069182           0.277876212
+            0.241113779           0.485784939          -0.015294454
+            0.150438634          -0.029032726           0.918335249
+            0.000000000           0.000000000           0.000000000
+  Cartesian coordinates (ang):
+ ==============================================
+ = Gaussian CC ================================
+     -1     0          -0.081555199          -0.046655880          -0.154812091
+     -1     0          -0.081555199          -0.046655880           0.480200559
+     -1     0           0.088641498          -0.046655880           0.511732191
+     -1     0           0.523041100           0.324025263          -0.068726210
+     -1     0           0.078223977          -0.005857559           0.147045758
+     -1     0           0.127591916           0.257066318          -0.008093477
+     -1     0           0.079608696          -0.015363457           0.485962083
+     -1     0           0.000000000           0.000000000           0.000000000
+ = END Gaussian CC ============================
+ ==============================================
+ ==============================================
+ = XYZ format =================================
+           7
+
+     -1          -0.081555199          -0.046655880          -0.154812091
+     -1          -0.081555199          -0.046655880           0.480200559
+     -1           0.088641498          -0.046655880           0.511732191
+     -1           0.523041100           0.324025263          -0.068726210
+     -1           0.078223977          -0.005857559           0.147045758
+     -1           0.127591916           0.257066318          -0.008093477
+     -1           0.079608696          -0.015363457           0.485962083
+ = END XYZ format =============================
+ ==============================================
+  Cartesian coordinates with respect to the COM (au):
+ d0x =
+           -0.154116991          -0.088166837          -0.292552453
+           -0.154116991          -0.088166837           0.907447547
+            0.167508156          -0.088166837           0.967033695
+            0.988404436           0.612319007          -0.129873715
+            0.147821893          -0.011069182           0.277876212
+            0.241113779           0.485784939          -0.015294454
+            0.150438634          -0.029032726           0.918335249
+            0.000000000           0.000000000           0.000000000
+  Cartesian coordinates with respect to the COM (ang):
+ ==============================================
+ = Gaussian CC ================================
+     -1     0          -0.081555199          -0.046655880          -0.154812091
+     -1     0          -0.081555199          -0.046655880           0.480200559
+     -1     0           0.088641498          -0.046655880           0.511732191
+     -1     0           0.523041100           0.324025263          -0.068726210
+     -1     0           0.078223977          -0.005857559           0.147045758
+     -1     0           0.127591916           0.257066318          -0.008093477
+     -1     0           0.079608696          -0.015363457           0.485962083
+     -1     0           0.000000000           0.000000000           0.000000000
+ = END Gaussian CC ============================
+ ==============================================
+ ==============================================
+ = XYZ format =================================
+           7
+
+     -1          -0.081555199          -0.046655880          -0.154812091
+     -1          -0.081555199          -0.046655880           0.480200559
+     -1           0.088641498          -0.046655880           0.511732191
+     -1           0.523041100           0.324025263          -0.068726210
+     -1           0.078223977          -0.005857559           0.147045758
+     -1           0.127591916           0.257066318          -0.008093477
+     -1           0.079608696          -0.015363457           0.485962083
+ = END XYZ format =============================
+ ==============================================
+ dnx (mass weighted):           24
+ d0x =
+           -0.487360717          -0.278808018          -0.925132088
+           -0.154116991          -0.088166837           0.907447547
+            0.167508156          -0.088166837           0.967033695
+            0.988404436           0.612319007          -0.129873715
+            0.147821893          -0.011069182           0.277876212
+            0.241113779           0.485784939          -0.015294454
+            0.150438634          -0.029032726           0.918335249
+            0.000000000           0.000000000           0.000000000
+ ======================================
+ ======================================
+ ======================================
+ ======================================
+           1  evaluation of sub_QactTOdnx
+ ======================================
+ ======================================
+ ======================================
+ ======================================
+           1  evaluation of calc3_f2_f1Q_num
+ ======================================
+     Time and date in f2 : 10h:17m:59.102s, the 15/ 3/2017
+        real (s):              0.001 in f2
+        real    :   0d  0h  0m  0s in f2
+        cpu (s):              0.000 in f2
+  Total real (s):              0.001
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.001
+  Total memory:          0 in f2
+ BEGINNING calc3_f2_f1Q_num
+ ndimG          18
+ WriteCC F
+ Qact   1.2000000000000000        1.3000000000000000       0.25000000000000000        1.3500000000000001        1.4500000000000000       0.55000000000000004       0.65000000000000002       0.75000000000000000       0.84999999999999998        1.2500000000000000        2.2500000000000000       0.25000000000000000       0.25000000000000000       0.50000000000000000       0.94999999999999996     
+
+ num_GG,num_g F F
+ num_x,nrho F           2
+ JJ           1
+
+  f2,f1,vep with Tana
+ nb_act          15
+ vep rho =             -1.014614285015721             0.021885688960200
+
+  f1i =       0.3452576816       0.3984485220      -2.6142041568       0.2674955703      -0.5532830377       0.0325429560       0.3544037679       0.2774896320      -2.3046910816       0.4020592042
+  f1i =       0.2539144285      -6.0477708647       0.1889793613      -2.9883088918      -0.0934925832
+
+  f2ij
+  1       -0.5500000000      -0.0968912422       0.0190310738      -0.0120502769
+  2       -0.0968912422      -0.5500000000       0.0206169966      -0.0326137611
+  3        0.0190310738       0.0206169966      -0.6452784608       0.0097422055
+  4       -0.0120502769      -0.0326137611       0.0097422055      -0.5500000000
+  5        0.0735342956       0.0869421064      -0.6116084934       0.0827260826
+  6        0.0000000000       0.0083410955       0.0410934182      -0.0080108696
+  7       -0.0877582562      -0.0965225069       0.0207898737      -0.0560426297
+  8       -0.0369677332      -0.0488560502       0.0116735786      -0.0887613529
+  9        0.0695446886       0.0836740018      -0.0190308672       0.1015174448
+ 10       -0.0968710162      -0.0998873923       0.0205800581      -0.0347478293
+ 11        0.0086929446       0.0201588282      -0.0058295885      -0.0885752582
+ 12        0.0539030539       0.0387440457      -0.0054615326      -0.0492346895
+ 13        0.0000000000       0.0103048689       0.3108269472      -0.0574009878
+ 14        0.0737577752       0.0590766200      -0.6824855347      -0.0401234020
+ 15       -0.0165053236      -0.0138408557      -0.3559870791       0.0510648950
+
+  1        0.0735342956       0.0000000000      -0.0877582562      -0.0369677332
+  2        0.0869421064       0.0083410955      -0.0965225069      -0.0488560502
+  3       -0.6116084934       0.0410934182       0.0207898737       0.0116735786
+  4        0.0827260826      -0.0080108696      -0.0560426297      -0.0887613529
+  5       -0.6762892666       1.4275384952       0.0986118600       0.0903746445
+  6        1.4275384952     -10.1916726145       0.0073074424      -0.0361301073
+  7        0.0986118600       0.0073074424      -0.5500000000      -0.0659983146
+  8        0.0903746445      -0.0361301073      -0.0659983146      -0.5500000000
+  9       -0.1209486220       0.0285745727       0.1001707207       0.1155816008
+ 10        0.0885286166       0.0048825645      -0.0968912422      -0.0522707396
+ 11        0.0607830163      -0.1921320582       0.0000000000      -0.1631789512
+ 12        0.0021344098       0.0053344176       0.0197923167      -0.0229616589
+ 13        1.0889010416     -15.5004725632      -0.0018312257      -0.1146978658
+ 14       -0.6809296593       0.7056442520       0.0399521282      -0.0089049800
+ 15        0.4004303225      -5.2693392113       0.0000000000       0.0658734700
+
+  1        0.0695446886      -0.0968710162       0.0086929446       0.0539030539
+  2        0.0836740018      -0.0998873923       0.0201588282       0.0387440457
+  3       -0.0190308672       0.0205800581      -0.0058295885      -0.0054615326
+  4        0.1015174448      -0.0347478293      -0.0885752582      -0.0492346895
+  5       -0.1209486220       0.0885286166       0.0607830163       0.0021344098
+  6        0.0285745727       0.0048825645      -0.1921320582       0.0053344176
+  7        0.1001707207      -0.0968912422       0.0000000000       0.0197923167
+  8        0.1155816008      -0.0522707396      -0.1631789512      -0.0229616589
+  9       -2.1441717676       0.0868229816       7.3552875452       1.4985499905
+ 10        0.0868229816      -0.5500000000       0.0081473718       0.0380621476
+ 11        7.3552875452       0.0081473718     -31.3066548884       1.5926612413
+ 12        1.4985499905       0.0380621476       1.5926612413      -1.5345243883
+ 13        4.1170362933       0.0017010310     -22.2904540792      -0.2985460587
+ 14        1.3676602827       0.0586450925       2.2177415071      -2.4322420174
+ 15       -3.5818720675      -0.0097041373      29.4615050609      -1.3349511804
+
+  1        0.0000000000       0.0737577752      -0.0165053236
+  2        0.0103048689       0.0590766200      -0.0138408557
+  3        0.3108269472      -0.6824855347      -0.3559870791
+  4       -0.0574009878      -0.0401234020       0.0510648950
+  5        1.0889010416      -0.6809296593       0.4004303225
+  6      -15.5004725632       0.7056442520      -5.2693392113
+  7       -0.0018312257       0.0399521282       0.0000000000
+  8       -0.1146978658      -0.0089049800       0.0658734700
+  9        4.1170362933       1.3676602827      -3.5818720675
+ 10        0.0017010310       0.0586450925      -0.0097041373
+ 11      -22.2904540792       2.2177415071      29.4615050609
+ 12       -0.2985460587      -2.4322420174      -1.3349511804
+ 13      -11.8158455891       0.6708818904       8.8682799652
+ 14        0.6708818904      -1.5712090075      -1.6634961670
+ 15        8.8682799652      -1.6634961670     -10.2185228262
+
+ END calc3_f2_f1Q_num
+     Time and date in f2 : 10h:17m:59.107s, the 15/ 3/2017
+        real (s):              0.005 in f2
+        real    :   0d  0h  0m  0s in f2
+        cpu (s):              0.005 in f2
+  Total real (s):              0.006
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.006
+  Total memory:          0 in f2
+ ======================================
+ ======================================
+ ======================================
+           1  evaluation of calc3_f2_f1Q_num
+ ======================================
+ mem_tot,max_mem_used                    0                    0
+ nb_alloc,nb_dealloc           0           0
+ END Tnum

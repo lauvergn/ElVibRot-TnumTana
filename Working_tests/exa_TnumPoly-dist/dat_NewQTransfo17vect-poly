@@ -1,0 +1,117 @@
+
+ ici=`pwd`
+ cd ..
+ make Tnum_MCTDH
+ cd $ici
+
+
+x15=0.504761904d0
+
+../Tnum90_MCTDH.exe << ** > res
+ &variables 
+         nrho=2
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+ /
+ &Coord_transfo name_transfo='bunch' nb_G=4 nb_vect=17 /
+ 1  1  0.                   X   X     (2 3: 17)
+ 3  2  $x15                 X   X     (4 5: 15)
+ 2  4  0.5                  X   X     (6 7: 16)
+ 4  1  0.                  12. 12.    (8 9: 6)
+ 5  9  0.                   X   1.    (10 11: 5)
+ 6  8  0.                   X   1.    (12 13: 4)
+ 7  1  0.                  12. 12.    (14 15: 3)
+ 8 14  0.                   X   1.    (16 17: 2)
+ 9 15  0.                   X   1.    (18 19: 1)
+10  1  0.                  12. 12.    (20 21: 10)
+11 21  0.                   X  16.    (22 23: 9)
+12 20  0.                   X  12.    (24 25: 8)
+13 25  0.                   X   1.    (26 27: 7)
+14  1  0.                  12. 12.    (28 29: 14)
+15 28  0.                   X   1.    (30 31: 13)
+16 29  0.                   X   1.    (32 33: 12)
+17 29  0.                   X   1.    (34 35: 11)
+  &recenterG tab_At_TO_G(1)=8,9,10,11,12,13         Gat=6 /
+  &recenterG tab_At_TO_G(1)=14,15,16,17,18,19       Gat=7 /
+  &recenterG tab_At_TO_G(1)=20,21,22,23,24,25,26,27 Gat=5 /
+  &recenterG tab_At_TO_G(1)=28,29,30,31,32,33,34,35 Gat=3 /
+
+ &Coord_transfo name_transfo='poly' /
+   &vector nb_vect=2 Frame=t name_Frame='BF' /  #17 zS0
+     &vector nb_vect=4 Frame=t / #16 xS0 et zS1
+       &vector Frame=f /         #15 xS1
+       &vector nb_vect=2 Frame=t / #6 zS3
+          &vector Frame=f /        #5 xS3
+          &vector Frame=f /        #4
+       &vector nb_vect=2 Frame=t / #3 z4
+          &vector Frame=f /        #2 xS4
+          &vector Frame=f /        #1
+       &vector nb_vect=3 Frame=t / #10 zS6
+          &vector Frame=f /        #9  xS6
+          &vector Frame=f /        #8
+          &vector Frame=f /        #7
+     &vector nb_vect=3 Frame=t / #14 zS2
+          &vector Frame=f /      #13 xS2
+          &vector Frame=f /      #12
+          &vector Frame=f /      #11
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1    1 1 1   1 1 1    1 1 1  1 1 1    1 1 1  1 1 1    1 1 1  1 1 1    1 1 1  1 1 1    1 1 1  1 1 1    1 1 1   1 1 1  1 1 1
+
+ &minimum Read_nameQ=f unit='angs' /
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+**
+
+#  &recenterG tab_At_TO_G(1)=4,5 tab_At_recenter(1)=4,5 Gat=2 /

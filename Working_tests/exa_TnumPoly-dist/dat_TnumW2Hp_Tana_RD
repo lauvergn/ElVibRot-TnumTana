@@ -1,0 +1,70 @@
+
+ ici=`pwd`
+ cd ../..
+ make Tnum_MCTDH
+ cd $ici
+#   (H2O)2H+
+#                                             R2B (9)
+#                                          H1B---GH2B-->H2B
+#                                 H+(7)    (5)    ^     (6)
+#                                  ^            /  R1B
+#                      (1)         | R+       /
+#                      OA----------G--------->OB
+#                     /       R   (10)       (4)
+#              R1A  /
+#         (2)     v    (3)
+#         H1A---GH2A-->H2A
+#            R2A (8)
+
+
+
+../../Tnum90_MCTDH.exe << ** > res
+ &variables
+         LaTeXForm=t
+         Tana=t
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+ /
+ &Coord_transfo name_transfo='bunch' nb_vect=6 nb_X=3 inTOout=f /
+O H H   O H H  H  GH2A GH2B GOO
+  &dummyX tab_At_TO_X=2,3 type_dummyX='COM' /
+  &dummyX tab_At_TO_X=5,6 type_dummyX='COM' /
+  &dummyX tab_At_TO_X=1,4 type_dummyX='COM' /
+1 4   OA->OB   : R
+2 3   H1A->H2A : R2A
+1 8   OA->GH2A : R1A
+5 6   H1B->H2B : R2B
+4 9   OB->GH2B : R1B
+10 7  GO2->H+  : R+
+
+ &Coord_transfo name_transfo='poly' /
+   &vector nb_vect=3 Frame=t / R, BF
+     &vector nb_vect=1 Frame=t / R2A,BFA
+       &vector Frame=f / R1A
+     &vector nb_vect=1 Frame=t / R2B,BFA
+       &vector Frame=f / R1B
+     &vector Frame=f cart=t / proton
+
+ &Coord_transfo name_transfo='active' /
+1  100 100   100 100 100   100 100 100   100 100 100   1 1 100
+
+ &minimum  read_nameQ=t /
+R 5.5
+r2a 3.
+r1a 1.1
+ua -0.5
+va 0.1
+la 2.
+r2b 3.2
+r1b 1.0
+ub 0.2
+vb -0.3
+lb 0.1
+a 0.2
+x 1.
+y 0.4
+z -0.3
+
+ &MCTDH epsi_MCTDH=1e-8 /
+**
+

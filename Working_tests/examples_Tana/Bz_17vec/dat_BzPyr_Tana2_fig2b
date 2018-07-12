@@ -1,0 +1,66 @@
+EVRT=../../..
+
+ ici=`pwd`
+ cd $EVRT
+ make Tnum_MCTDH
+ cd $ici
+
+$EVRT/Tnum90_MCTDH.exe << ** > res_BzPyr_Tana2_fig2b
+ &variables 
+         nrho=2
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+         Tana=t
+ /
+ &Coord_transfo name_transfo='bunch_poly' nb_vect=17 nb_X=4 inTOout=f /
+O C C C C C   C C C C    H  H  H  H     H  H  H  H  G111 G211  Gy Gx
+1 2 3 4 5 6   7 8 9 10  11 12 13 14    14 16 17 18   19   20   21 22
+
+  &dummyX tab_At_TO_X=7,8,15,16  type_dummyX='COM' / !G111
+  &dummyX tab_At_TO_X=9,10,17,18 type_dummyX='COM' / !G2111
+  &dummyX tab_At_TO_X=19,20      type_dummyX='COM' / !Gy
+  &dummyX tab_At_TO_X=2,3      type_dummyX='COM' / !Gx
+
+ &Coord_transfo name_transfo='poly' cos_th=t  /
+     &vector nb_vect=5 Frame=t iAtA=4 iAtB=5 zmat_order=t / : R1(1)
+       &vector Frame=f iAtA=3 iAtB=4  /                     : R2(1)
+       &vector Frame=f iAtA=4 iAtB=11 /                     : R3(1)
+       &vector Frame=f iAtA=5 iAtB=12 /                     : R4(1)
+       &vector nb_vect=5 Frame=t iAtA=21 iAtB=22  /         : R1(1,1)
+         &vector Frame=f iAtA=19 iAtB=20 /                  : R2(1,1)
+         &vector Frame=f iAtA=3 iAtB=2 /                    : R3(1,1)
+         &vector Frame=f iAtA=2 iAtB=1 /                    : R4(1,1)
+         &vector nb_vect=2 Frame=t iAtA=8 iAtB=7  /         : R1(1,1,1)
+           &vector Frame=f iAtA=8 iAtB=16 /                 : R2(1,1,1)
+           &vector Frame=f iAtA=7 iAtB=15 /                 : R3(1,1,1)
+         &vector nb_vect=2 Frame=t iAtA=9 iAtB=10 /         : R1(2,1,1)
+           &vector Frame=f iAtA=9 iAtB=17 /                 : R2(2,1,1)
+           &vector Frame=f iAtA=10 iAtB=18 /                : R3(2,1,1)
+       &vector nb_vect=2 Frame=t iAtA=5 iAtB=6  /           : R1(2,1)
+         &vector Frame=f iAtA=6 iAtB=13 /                   : R2(2,1)
+         &vector Frame=f iAtA=6 iAtB=14 /                   : R3(2,1)
+
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1   1 1 1       1 1 1   1 1 1  1 1 1  1 1 1    1 1 1  1 1 1  1 1 1    1 1 1  1 1 1  1 1 1     1 1 1 1 1 1  1 1 1  1 1 1 
+
+ &minimum read_Qsym0=f read_xyz0=t unit='angs' /
+O    1.3386193228    0.2498674063    1.1131555070
+C    0.6499541116    0.0480065571    -0.0369256876
+C   -0.7529122324    0.0623253425   -0.0566123267
+C   -1.4523939684    0.2662736585    1.2177039711
+C   -0.7662216710    0.1950248352    2.3676634512
+C    0.6961831144   -0.1522412277    2.3444620106
+C   -1.4119163395   -0.0880306335   -1.2826236849
+C   -0.6918826634   -0.2442644005   -2.4668632353
+C    0.7048411742   -0.2412043913   -2.4300509749
+C    1.3781552130   -0.0937535851   -1.2161049971
+H   -2.5056348887    0.4836831765    1.2039929991
+H   -1.2407788059    0.3295644787    3.3232041332
+H    0.8450983838   -1.2210093785    2.4789755235
+H    1.2414255267    0.3635272771    3.1215547593
+H   -2.4878271066   -0.0765053047   -1.3035069249
+H   -1.2095559218   -0.3605811780   -3.4016236491
+H    1.2684821670   -0.3568449361   -3.3382725540
+H    2.4513222685   -0.0836976844   -1.1694594350
+**

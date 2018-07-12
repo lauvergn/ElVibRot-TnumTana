@@ -1,0 +1,70 @@
+max_v=$1
+max_b=$1
+cos_th=$2
+max_layer=4
+cart=$3
+frame0vec=$4
+tv=$5
+nrho=$6
+type100=$7
+zmat_order=$8
+
+
+here=`pwd`
+EVRT=../..
+
+#cd $EVRT
+#  make Tnum_MCTDH
+#cd $here
+
+#./clean
+
+ gfortran -o split_block.exe split_block.f90
+
+
+ ./split_block.exe -tv $tv -vec $max_v -block $max_b -layer $max_layer << ** > res_gene_v$v
+ &rec_vec
+  nrho=$nrho
+  cart=$cart
+  frame0vec=$frame0vec
+  cos_th=$cos_th
+  type100=$type100
+  zmat_order=$zmat_order
+ /
+**
+
+ for dat_name in dat_*
+ do
+    echo "================================== ">> res_all
+    echo $dat_name >> res_all
+    echo nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$tv type100=$type100 zmat_order=$zmat_order >> res_all
+
+    res_name="res_cos_th-"$cos_th"_cart-"$cart"_"$dat_name
+
+    $EVRT/Tnum90_MCTDH.exe < $dat_name > $res_name
+
+    err=`grep -a "max error" $res_name`
+    echo $dat_name $err >> res_all
+    Large_err=`echo $err | LANG=C awk '{if ($3 > 1.e-10) print $0}'`
+
+    #echo Large_err=$Large_err
+    if test -z "$Large_err"
+    then
+      continue
+    else
+      echo $dat_name $err
+    fi
+
+ done
+
+exit
+
+err=`LANG=C awk '/max error:/ {if ($4 > 1.e-10) print $0}' res_all`
+
+
+if test -z "$err"
+then
+     echo "No error!"
+else
+     echo "Error(s) detected!!"
+fi

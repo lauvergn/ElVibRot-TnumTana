@@ -1,0 +1,585 @@
+Mar 12 aoû 2014 16:04:40 CEST
+=======================================
+dat_Davidson
+lev: 1 1 3483.7379841872 0.0000000000
+  Total real (s):             19.807
+  Total cpu (s):             52.688
+  ElVibRot-Tnum AU REVOIR!!!
+    1673    5776   74776 res
+=======================================
+dat_Davidson-dir1GF
+lev: 1 1 3483.1879348457 0.0000000000
+  Total real (s):             11.274
+  Total cpu (s):             28.763
+  ElVibRot-Tnum AU REVOIR!!!
+    1604    5479   71778 res
+=======================================
+dat_Davidson-dir2GF
+lev: 1 1 3483.1879348457 0.0000000000
+  Total real (s):             11.388
+  Total cpu (s):             28.885
+  ElVibRot-Tnum AU REVOIR!!!
+    1604    5479   71778 res
+=======================================
+dat_Davidson-dir4
+lev: 1 1 3483.1917938008 0.0000000000
+  Total real (s):             10.405
+  Total cpu (s):             27.562
+  ElVibRot-Tnum AU REVOIR!!!
+    1485    4984   64808 res
+=======================================
+dat_Davidson2
+lev: 1 1 3483.1879199053 0.0000000000
+  Total real (s):             10.698
+  Total cpu (s):             27.863
+  ElVibRot-Tnum AU REVOIR!!!
+    3526   13334  196721 res
+=======================================
+dat_Davidson3
+lev: 1 1 3483.1874256353 0.0000000000
+  Total real (s):             11.450
+  Total cpu (s):             28.874
+  ElVibRot-Tnum AU REVOIR!!!
+    3711   14349  209120 res
+=======================================
+dat_Davidson4
+lev: 1 1 3483.1866484590 0.0000000000
+  Total real (s):              8.766
+  Total cpu (s):             26.110
+  ElVibRot-Tnum AU REVOIR!!!
+    3177   11654  179305 res
+=======================================
+dat_Davidson5
+lev: 1 1 3483.1855732446 0.0000000000
+  Total real (s):             16.437
+  Total cpu (s):             26.012
+  ElVibRot-Tnum AU REVOIR!!!
+    1628    6306   79234 res
+=======================================
+dat_Davidson6
+lev: 1 1 3483.1879348457 0.0000000000
+  Total real (s):             49.541
+  Total cpu (s):             59.252
+  ElVibRot-Tnum AU REVOIR!!!
+    3636   13662  201043 res
+=======================================
+dat_Davidson7
+lev: 1 1 3483.1879348457 0.0000000000
+  Total real (s):             50.810
+  Total cpu (s):             61.532
+  ElVibRot-Tnum AU REVOIR!!!
+    1619    5595   72017 res
+=======================================
+dat_Davidson_AutoContract
+lev: 1 1 3483.2037967344 0.0000000000
+  Total real (s):              7.201
+  Total cpu (s):              6.956
+  ElVibRot-Tnum AU REVOIR!!!
+    8646  104750 1783022 res
+=======================================
+dat_Davidson_Eckart
+  Total real (s):              1.149
+  Total cpu (s):              1.119
+ElVibRot ERROR !!!!
+ 51710581 175278031 3069707669 res
+=======================================
+dat_Davidson_JacTransfo
+lev: 1 1 3483.1856207759 0.0000000000
+  Total real (s):             37.246
+  Total cpu (s):             36.782
+  ElVibRot-Tnum AU REVOIR!!!
+    1832    6511   81305 res
+=======================================
+dat_Davidson_analysis_Only
+lev: 1 1 0.0000000000 0.0000000000
+  Total real (s):              0.937
+  Total cpu (s):              0.910
+ElVibRot ERROR !!!!
+    1099    3119   46382 res
+=======================================
+dat_Davidson_cart
+lev: 1 1 3483.1879268092 0.0000000000
+  Total real (s):             11.786
+  Total cpu (s):             30.374
+  ElVibRot-Tnum AU REVOIR!!!
+    1604    5471   71778 res
+=======================================
+dat_Davidson_cart0
+lev: 1 1 3483.1882318370 0.0000000000
+  Total real (s):             11.456
+  Total cpu (s):             29.234
+  ElVibRot-Tnum AU REVOIR!!!
+    1652    5677   75481 res
+=======================================
+dat_Davidson_sym
+lev: 1 1 3483.1879348457 0.0000000000
+  Total real (s):             18.224
+  Total cpu (s):             17.951
+  ElVibRot-Tnum AU REVOIR!!!
+    3484   13126  194589 res
+=======================================
+dat_Davidson_symab
+lev: 1 1 3543.1240711397 0.0000000000
+  Total real (s):             56.610
+  Total cpu (s):             90.673
+  ElVibRot-Tnum AU REVOIR!!!
+    3082   12522  143586 res
+=======================================
+dat_Davidson_theta
+lev: 1 1 3483.1879348457 0.0000000000
+  Total real (s):             11.665
+  Total cpu (s):             29.152
+  ElVibRot-Tnum AU REVOIR!!!
+    1604    5473   71773 res
+=======================================
+dat_DirProd
+lev: 1 1 3483.1906185527 0.0000000000
+  Total real (s):             88.965
+  Total cpu (s):            106.122
+  ElVibRot-Tnum AU REVOIR!!!
+    1525    7575   95368 res
+=======================================
+dat_DirProd2
+lev: 1 1 3483.1897721094 0.0000000000
+  Total real (s):              3.780
+  Total cpu (s):              3.750
+  ElVibRot-Tnum AU REVOIR!!!
+    3507   37036  608916 res
+=======================================
+dat_DirProd3
+lev: 1 1 3483.1856359052 0.0000000000
+  Total real (s):             19.772
+  Total cpu (s):             37.115
+  ElVibRot-Tnum AU REVOIR!!!
+    1490    7399   92767 res
+=======================================
+dat_DirProd_AutoContract
+lev: 1 1 3483.1904578501 0.0000000000
+  Total real (s):             98.150
+  Total cpu (s):            115.610
+  ElVibRot-Tnum AU REVOIR!!!
+    1967   10799  146785 res
+=======================================
+dat_DirProd_AutoContract2
+lev: 1 1 3483.1904578467 0.0000000000
+  Total real (s):             95.730
+  Total cpu (s):            115.220
+  ElVibRot-Tnum AU REVOIR!!!
+    1967   10803  146785 res
+=======================================
+dat_DirProd_AutoContract3
+lev: 1 1 3483.1904755286 0.0000000000
+  Total real (s):             66.719
+  Total cpu (s):             85.248
+  ElVibRot-Tnum AU REVOIR!!!
+    2015   10903  148324 res
+=======================================
+dat_DirProd_AutoContract_dir2
+lev: 1 1 3483.1904578501 0.0000000000
+  Total real (s):             27.568
+  Total cpu (s):             46.855
+  ElVibRot-Tnum AU REVOIR!!!
+    1962   10780  146599 res
+=======================================
+dat_DirProd_SG
+lev: 1 1 3483.1888870599 0.0000000000
+  Total real (s):             25.525
+  Total cpu (s):             44.608
+  ElVibRot-Tnum AU REVOIR!!!
+    1722    7905  101236 res
+=======================================
+dat_DirProd_SG2
+lev: 1 1 3483.2117297576 0.0000000000
+  Total real (s):             18.980
+  Total cpu (s):             18.950
+  ElVibRot-Tnum AU REVOIR!!!
+    8766  104402 1776959 res
+=======================================
+dat_DirProd_SGNested
+lev: 1 1 3483.1888752540 0.0000000000
+  Total real (s):             12.153
+  Total cpu (s):             11.921
+  ElVibRot-Tnum AU REVOIR!!!
+    8130  100587 1710251 res
+=======================================
+dat_DirProd_SGSG
+lev: 1 1 3483.2117297577 0.0000000000
+  Total real (s):             14.616
+  Total cpu (s):             14.593
+  ElVibRot-Tnum AU REVOIR!!!
+    8261  103417 1746680 res
+=======================================
+dat_DirProd_SG_readWP
+lev: 1 1 3483.1892881930 0.0000000000
+  Total real (s):              5.089
+  Total cpu (s):             12.519
+  ElVibRot-Tnum AU REVOIR!!!
+  ElVibRot-Tnum AU REVOIR!!!
+   13188  160818 2747844 res
+=======================================
+dat_DirProd_basisRecu
+lev: 1 1 3745.5813069741 0.0000000000
+  Total real (s):              0.181
+  Total cpu (s):              0.140
+  ElVibRot-Tnum AU REVOIR!!!
+    1452    6552   96513 res
+=======================================
+dat_DirProd_cuba
+lev: 1 1 2838.1426969195 0.0000000000
+  Total real (s):              0.283
+  Total cpu (s):              0.036
+  ElVibRot-Tnum AU REVOIR!!!
+     953    2998   41770 res
+=======================================
+dat_DirProd_cuba_test3D
+  Total real (s):              0.000
+  Total cpu (s):              0.000
+ElVibRot ERROR !!!!
+     943    2597   38856 res
+=======================================
+dat_NLO
+lev: 1 1 0.350756102992528E+04 0.000000000000000E+00
+  Total real (s):             67.428
+  Total cpu (s):             73.090
+  ElVibRot-Tnum AU REVOIR!!!
+    3261   18079  261959 res
+=======================================
+dat_NewQTransfo
+lev: 1 1 724.2981189645 0.0000000000
+  Total real (s):              0.130
+  Total cpu (s):              0.092
+  ElVibRot-Tnum AU REVOIR!!!
+    1177    5014   65369 res
+=======================================
+dat_NewQTransfo-OneD
+  Total real (s):              0.000
+  Total cpu (s):              0.000
+ElVibRot ERROR !!!!
+     786    2023   31591 res
+=======================================
+dat_NewQTransfo-RPH
+lev: 1 1 4659.8960617876 0.0000000000
+  Total real (s):             51.933
+  Total cpu (s):             51.596
+  ElVibRot-Tnum AU REVOIR!!!
+   38420   99960 1823597 res
+=======================================
+dat_NewQTransfo-RPH2
+lev: 1 1 3478.3610058952 0.0000000000
+  Total real (s):             64.837
+  Total cpu (s):             64.494
+  ElVibRot-Tnum AU REVOIR!!!
+    2604   11236  127288 res
+=======================================
+dat_NewQTransfo-RPH_HarD
+lev: 1 1 3507.4542350134 0.0000000000
+  Total real (s):             55.826
+  Total cpu (s):             55.476
+  ElVibRot-Tnum AU REVOIR!!!
+   38415  100260 1827689 res
+=======================================
+dat_NewQTransfo-bunch
+lev: 1 1 721.7849468111 0.0000000000
+  Total real (s):              0.118
+  Total cpu (s):              0.105
+  ElVibRot-Tnum AU REVOIR!!!
+    1211    5130   66966 res
+=======================================
+dat_NewQTransfo-bunch2
+lev: 1 1 3507.5610144368 0.0000000000
+  Total real (s):              3.737
+  Total cpu (s):              7.726
+  ElVibRot-Tnum AU REVOIR!!!
+    1785    9781  105378 res
+=======================================
+dat_NewQTransfo-flex
+lev: 1 1 721.7849546397 0.0000000000
+  Total real (s):              0.110
+  Total cpu (s):              0.103
+  ElVibRot-Tnum AU REVOIR!!!
+    1160    5070   65568 res
+=======================================
+dat_NewQTransfo-flex3D
+lev: 1 1 3483.1856108976 0.0000000000
+  Total real (s):             54.926
+  Total cpu (s):             74.050
+  ElVibRot-Tnum AU REVOIR!!!
+    2051    8717  103643 res
+=======================================
+dat_NewQTransfo-gen3D
+  Total real (s):              0.000
+  Total cpu (s):              0.000
+ElVibRot ERROR !!!!
+     489    1320   19455 res
+=======================================
+dat_NewQTransfo-lin3D
+lev: 1 1 3483.1855462540 0.0000000000
+  Total real (s):             68.818
+  Total cpu (s):             90.268
+  ElVibRot-Tnum AU REVOIR!!!
+    1381    6953   86863 res
+=======================================
+dat_NewQTransfo-poly
+lev: 1 1 721.7849468111 0.0000000000
+  Total real (s):              0.341
+  Total cpu (s):              0.114
+  ElVibRot-Tnum AU REVOIR!!!
+    1252    5189   67686 res
+=======================================
+dat_NewQTransfo-poly2
+lev: 1 1 725.9830538783 0.0000000000
+  Total real (s):              0.111
+  Total cpu (s):              0.119
+  ElVibRot-Tnum AU REVOIR!!!
+    1239    5294   68667 res
+=======================================
+dat_PartialGrid
+lev: 1 1 2379.8966443952 0.0000000000
+  Total real (s):              0.416
+  Total cpu (s):              0.410
+  ElVibRot-Tnum AU REVOIR!!!
+    2551    9452  119434 res
+=======================================
+dat_ScalarOp
+lev: 1 1 0.350756102992528E+04 0.000000000000000E+00
+  Total real (s):              5.400
+  Total cpu (s):             11.926
+  ElVibRot-Tnum AU REVOIR!!!
+    5193   29479  498039 res
+=======================================
+dat_Sparse
+lev: 1 1 3507.5610301349 0.0000000000
+  Total real (s):              3.330
+  Total cpu (s):              7.519
+  ElVibRot-Tnum AU REVOIR!!!
+    1866   10188  111015 res
+=======================================
+dat_WP-control-gate
+  Total real (s):              0.361
+  Total cpu (s):              0.732
+ElVibRot ERROR !!!!
+    1424    4569   59625 res
+=======================================
+dat_WP-control-gatebis
+  Total real (s):              0.346
+  Total cpu (s):              0.718
+ElVibRot ERROR !!!!
+    1418    4515   59294 res
+=======================================
+dat_WP-control-nogate
+  Total real (s):              0.360
+  Total cpu (s):              0.733
+ElVibRot ERROR !!!!
+    1420    4522   59278 res
+=======================================
+dat_WP-prop1
+  Total real (s):              2.295
+  Total cpu (s):              2.629
+  ElVibRot-Tnum AU REVOIR!!!
+    3463   24042  260755 res
+=======================================
+dat_WP-prop1-2elec
+  Total real (s):             16.918
+  Total cpu (s):             18.007
+  ElVibRot-Tnum AU REVOIR!!!
+    6892   54891  784436 res
+=======================================
+dat_WP-prop1-2elec-test
+  Total real (s):             18.245
+  Total cpu (s):             19.185
+ElVibRot ERROR !!!!
+   50144  602628 6525805 res
+=======================================
+dat_WP-prop1-bis
+  Total real (s):              1.875
+  Total cpu (s):              2.803
+ElVibRot ERROR !!!!
+    3667   29067  470030 res
+=======================================
+dat_WP-prop100
+  Total real (s):             34.404
+  Total cpu (s):             33.877
+  ElVibRot-Tnum AU REVOIR!!!
+   19242  111622 2229103 res
+=======================================
+dat_WP-prop2
+  Total real (s):             39.426
+  Total cpu (s):             39.347
+  ElVibRot-Tnum AU REVOIR!!!
+   62249  752216 7173165 res
+=======================================
+dat_WP-prop22
+  Total real (s):              1.430
+  Total cpu (s):              1.789
+  ElVibRot-Tnum AU REVOIR!!!
+    3440   25519  300069 res
+=======================================
+dat_WP-prop2bis
+  Total real (s):              8.174
+  Total cpu (s):              8.533
+  ElVibRot-Tnum AU REVOIR!!!
+   15183  166783 1690554 res
+=======================================
+dat_WP-prop2im
+  Total real (s):              0.508
+  Total cpu (s):              0.852
+  ElVibRot-Tnum AU REVOIR!!!
+    3418   24433  269095 res
+=======================================
+dat_WP-propRK4
+  Total real (s):              6.621
+  Total cpu (s):              6.608
+  ElVibRot-Tnum AU REVOIR!!!
+   15154  164158 1631113 res
+=======================================
+dat_WP-relax
+  Total real (s):              8.564
+  Total cpu (s):             13.872
+  ElVibRot-Tnum AU REVOIR!!!
+    2692   13596  170944 res
+=======================================
+dat_WP-relax-Hmax
+  Total real (s):             12.264
+  Total cpu (s):             17.677
+  ElVibRot-Tnum AU REVOIR!!!
+    2558   12274  158261 res
+=======================================
+dat_cHAC_Davidson-dir0
+lev: 1 1 0.350756102989674E+04 0.000000000000000E+00
+  Total real (s):              8.165
+  Total cpu (s):             13.117
+  ElVibRot-Tnum AU REVOIR!!!
+    2550   11161  130246 res
+=======================================
+dat_cHAC_Davidson-dir0-readGrid
+lev: 1 1 0.350756102989674E+04 0.000000000000000E+00
+  Total real (s):              6.042
+  Total cpu (s):              6.077
+  ElVibRot-Tnum AU REVOIR!!!
+    2203    9646  112674 res
+=======================================
+dat_cHAC_Davidson-dir1
+lev: 1 1 0.350756102989196E+04 0.000000000000000E+00
+  Total real (s):              3.995
+  Total cpu (s):              8.685
+  ElVibRot-Tnum AU REVOIR!!!
+    2515   10937  128731 res
+=======================================
+dat_cHAC_Davidson-dir2
+lev: 1 1 0.350756102989196E+04 0.000000000000000E+00
+  Total real (s):              3.629
+  Total cpu (s):              8.629
+  ElVibRot-Tnum AU REVOIR!!!
+    2515   10936  128731 res
+=======================================
+dat_cHAC_Davidson-dir2-Make_MatOp
+lev: 1 1 0.350756102989691E+04 0.000000000000000E+00
+  Total real (s):              4.222
+  Total cpu (s):              9.207
+  ElVibRot-Tnum AU REVOIR!!!
+    2426   10448  123030 res
+=======================================
+dat_cHAC_Davidson-dir3
+lev: 1 1 0.350756102989241E+04 0.000000000000000E+00
+  Total real (s):             40.394
+  Total cpu (s):             45.342
+  ElVibRot-Tnum AU REVOIR!!!
+    2515   10945  128841 res
+=======================================
+dat_cart
+lev: 1 1 1015.4376898336 0.0000000000
+  Total real (s):              0.088
+  Total cpu (s):              0.068
+  ElVibRot-Tnum AU REVOIR!!!
+     970    3612   48329 res
+=======================================
+dat_cubature_test
+lev: 1 1 ****************** 0.0000000000
+  Total real (s):              0.093
+  Total cpu (s):              0.084
+  ElVibRot-Tnum AU REVOIR!!!
+    1177    4220   61154 res
+=======================================
+dat_flex
+lev: 1 1 721.7849546396 0.0000000000
+  Total real (s):              0.091
+  Total cpu (s):              0.051
+  ElVibRot-Tnum AU REVOIR!!!
+    1690    7106  109598 res
+=======================================
+dat_flex2
+lev: 1 1 721.2546363544 0.0000000000
+  Total real (s):              0.110
+  Total cpu (s):              0.102
+  ElVibRot-Tnum AU REVOIR!!!
+    1129    4338   57933 res
+=======================================
+dat_flex_intensity
+lev: 1 1 721.7849546396 0.0000000000
+  Total real (s):              0.430
+  Total cpu (s):              0.389
+  ElVibRot-Tnum AU REVOIR!!!
+    2580   11998  184438 res
+=======================================
+dat_intensity
+lev: 1 1 0.350756102992528E+04 0.000000000000000E+00
+  Total real (s):             66.033
+  Total cpu (s):             71.923
+  ElVibRot-Tnum AU REVOIR!!!
+    2941   16193  211724 res
+=======================================
+dat_nQTTest
+  Total real (s):              0.057
+  Total cpu (s):              0.019
+ElVibRot ERROR !!!!
+     898    2310   35530 res
+=======================================
+dat_publi
+lev: 1 1 3507.5610298904 0.0000000000
+  Total real (s):              5.973
+  Total cpu (s):              6.044
+  ElVibRot-Tnum AU REVOIR!!!
+    3277   31042  502046 res
+=======================================
+dat_publi-Murrell
+lev: 1 1 3483.1889069763 0.0000000000
+  Total real (s):             71.261
+  Total cpu (s):            121.549
+  ElVibRot-Tnum AU REVOIR!!!
+   30008  241856 2918188 res
+=======================================
+dat_publi2
+lev: 1 1 3508.9028662493 0.0000000000
+  Total real (s):              3.143
+  Total cpu (s):              8.447
+  ElVibRot-Tnum AU REVOIR!!!
+    1467    5612   70997 res
+=======================================
+dat_publiTaylor
+lev: 1 1 3511.1899997490 0.0000000000
+  Total real (s):              3.691
+  Total cpu (s):              3.760
+  ElVibRot-Tnum AU REVOIR!!!
+    3287   31097  502516 res
+=======================================
+dat_publi_test
+lev: 1 1 3507.5610298905 0.0000000000
+  Total real (s):              4.681
+  Total cpu (s):              9.397
+  ElVibRot-Tnum AU REVOIR!!!
+    3263   30909  501346 res
+=======================================
+dat_rigid
+lev: 1 1 725.9830619816 0.0000000000
+  Total real (s):              0.099
+  Total cpu (s):              0.087
+  ElVibRot-Tnum AU REVOIR!!!
+    1134    4433   59092 res
+=======================================
+dat_vib2D
+lev: 1 1 2376.0944670496 0.0000000000
+  Total real (s):             17.850
+  Total cpu (s):             19.396
+  ElVibRot-Tnum AU REVOIR!!!
+    3562   28772  457894 res
+=======================================

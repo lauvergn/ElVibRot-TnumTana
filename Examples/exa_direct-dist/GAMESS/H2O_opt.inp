@@ -1,0 +1,20 @@
+ $CONTRL
+   SCFTYP=RHF NOSYM=1
+   CITYP=none
+   RUNTYP=hessian
+   COORD=zmt
+ $END
+ $BASIS  GBASIS=STO  NGAUSS=3 $END
+ $cis    hamtyp=saps mult=1 nacore=1 nstate=1 iroot=1 $end
+ $STATPT OPTTOL=0.00001 $END
+ $DATA
+   xx
+ C1
+O
+H  1 RH
+H  1 RH 2 A
+
+RH 0.9894095
+A  100.0271438
+
+ $END

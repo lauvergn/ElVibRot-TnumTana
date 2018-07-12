@@ -1,0 +1,1 @@
+trouv write | grep -vi WriteT | grep -v -i "write(6" | grep -v -i "write(out_unitp" | grep -v -i "write(nio" | grep -v -i write_ | grep -v -i _write

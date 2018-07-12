@@ -1,0 +1,62 @@
+
+ ici=`pwd`
+ cd ../..
+ make Tnum_MCTDH
+ cd $ici
+
+x3=0.33333333333333333333333333
+
+../../Tnum90_MCTDH.exe << ** > res
+ &variables 
+         nrho=2
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+         Tana=t
+ /
+ &Coord_transfo name_transfo='bunch' nb_vect=8 /
+1  1  $x3  X   X     (2 3: Gint G1)
+2  2  0.5  X   X     (4 5: G3 G2)
+3  3  $x3 X   1.    (6 7: GH1 O1)
+4  6  0.5  1.  1.    (8 9: H H)
+5  5  $x3 X   1.    (10 11: GH2 O2)
+6 10  0.5  1.  1.    (12 13: H H)
+7  4  $x3 X   1.    (14 15: GH3 O3)
+8 14  0.5  1.  1.    (16 17: H H)
+ &Coord_transfo name_transfo='poly' /
+   &vector nb_vect=3 Frame=t  /
+     &vector /
+     &vector nb_vect=1  Frame=t /
+       &vector /
+     &vector nb_vect=3  Frame=t /
+       &vector /
+       &vector cart=t /
+       &vector /
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1    1 1 1 1 1 1      1 1 1 1 1 1     1 1 1 1 1 1
+ &minimum Read_nameQ=t /
+R1_F1    1.d6
+R2_F1    1.d6
+u2_F1    0.25
+R1_F3F1  0.25
+R2_F3F1  0.25
+u2_F3F1  0.25
+a_F3F1   0.25
+cb_F3F1  0.25
+g_F3F1   0.25
+R1_F5F1  0.25
+R2_F5F1  0.25
+u2_F5F1  0.25
+a_F5F1   0.25
+cb_F5F1  0.25
+g_F5F1   0.25
+R1_F7F1  0.25
+R2_F7F1  0.25
+u2_F7F1  0.25
+a_F7F1   0.25
+cb_F7F1  0.25
+g_F7F1   0.25
+
+ &MCTDH grid1D=.FALSE. perio=f epsi_MCTDH=1e-10 /
+**
+

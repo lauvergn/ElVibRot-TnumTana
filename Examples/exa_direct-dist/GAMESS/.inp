@@ -1,0 +1,17 @@
+
+ $CONTRL
+   EXETYP=RUN UNITS=BOHR NOSYM=1
+   COORD=UNIQUE 
+   SCFTYP=RHF  CITYP=CIS
+   ICHARG=           0
+   MULT=           1
+   RUNTYP=energy
+ $END
+ $cis    hamtyp=saps mult=1 nacore=1 nstate=-1  iroot=1 $end
+ $BASIS
+   GBASIS=STO  NGAUSS=3                              
+ $END
+ $DATA
+   xx
+ C1
+$END

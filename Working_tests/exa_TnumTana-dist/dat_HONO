@@ -1,0 +1,24 @@
+
+ ici=`pwd`
+ cd ../..
+ make Tnum_MCTDH
+ cd $ici
+
+../../Tnum90_MCTDH.exe << ** > res
+ &variables  zmat=T nat=4 /
+O
+N 1
+O 2 0
+H 1 0 0
+
+1 1 1 1 1 1
+ &minimum read_nameQ=t /
+R1     1.5
+R2     1.8
+u2    -0.9
+R3     1.3
+u3    -0.95
+phi3   0.5
+
+ &MCTDH grid1D=.FALSE. perio=f /
+**

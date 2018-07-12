@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>Compilation and Installation</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <h2>Compilation and Generation of the documentation</h2>
+
+    <p>You can compile and generate the documentation of the Tnum-Tana program by using <tt>make </tt> while in
+    the top folder which contains the makefile.
+    <p>For compilation you have the following possibilities:
+    <table border=1>
+      <tr>
+        <td><tt>make clean install </tt></td>
+        <td> Clean up Compile and Install the documentation. 
+          The documentation will be installed in the
+          <tt>./doc</tt> folder. The excutable files (*.o and .mod) are
+          generated in the <tt>./point_o</tt> folder. </td>
+      </tr>
+      <tr>
+        <td><tt>make clean</tt></td>
+        <td>Clean up files files generated from compilation:
+          all the files  of  <tt>./point_o</tt> and the files *.html of 
+          <tt>./doc/reference </tt> .</td>
+      </tr>
+    </table>
+    </p>
+    <p>For development, you can also use the following make targets:
+    <table border=1>
+      <tr>
+        <td><tt>make</tt> or <tt>make all</tt></td>
+        <td>Compile everything (but don't generate the documentation)</td>
+      </tr>
+      <tr>
+        <td><tt>make clean</tt></td>
+        <td>Clean up files from compilation</td>
+      </tr>
+      <tr>
+        <td><tt>make doc</tt></td>
+        <td>Generate the documentation in <tt>./doc/</tt></td>
+      </tr>
+      <tr>
+        <td> <tt>make work</tt></td>
+        <td>Compile the main program whose name (whitout the .f90) is affected to the flag <tt> WORKMAIN </tt> 
+          of the makefile.  This will generate the executable file work.exe </td>
+      </tr>
+
+      <tr>
+        <td> <tt>make Tnum_MCTDH</tt></td>
+        <td>Compile the main program whose name  is affected to the flag <tt> TNUMMCTDHMAIN </tt> 
+          of the makefile. This will generate the executable file Tnum90_MCTDH.exe </td>
+      </tr>
+
+      <tr>
+        <td> <tt>make Tnum</tt></td>
+        <td>to be written</td>
+      </tr>
+      <tr>
+        <td> <tt>make GWP</tt></td>
+        <td>to be written</td>
+      </tr>
+    </table>
+    </p>
+    <p>The F90 compiler is used to compile *.f90 files. The F77 compiler is
+       used to compile *.f files.</p>
+    <p>For information on how to compile a program using the library, see
+       <a href="using.html">Using the Library</a></p>
+    <p>There are also additional details on the make process in the comments of
+    the  makefile.</p>
+  </body>
+</html>

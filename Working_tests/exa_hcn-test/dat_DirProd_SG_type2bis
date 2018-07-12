@@ -1,0 +1,64 @@
+#
+# For WP propagation (relaxation, GS)
+#
+
+ SYSTEM=sub_system_cos_hcn.f
+ SYSTEM=sub_system_murrell.f
+
+ici=`pwd`
+DIR_vib=$ici/..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $ici
+
+ x1=0.538516066
+ x2=0.461483933
+
+
+export OMP_NUM_THREADS=1
+
+
+nice $DIR_vib/vib << ** >res
+ &system POpPsi_omp=1 /
+ &constantes /
+ &variables 
+         zmat=T
+         nat=4
+         sym=T
+         nrho=2
+ /
+C
+0.0     1
+N     2  1
+H     2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 0 1 1    0 0 0
+ &minimum pot0=-0.499465823200 pot_act=f pot_cplx=f
+          read_Qsym0=t read_nameQ=t unit='bohr' /
+cosa .999d0
+R 3.187
+r 2.179
+x 0.
+pi 3.141592653589793238462643383279d0
+dh 0.0
+
+ &basis_nD nb_basis=2 name="direct_prod" Norm_OF_nDindB=4. packed=f L_SparseGrid=5 SparseGrid_type=2 /
+    &basis_nD iQdyn(1)=2 name="Hm" L_TO_nq_A=1 L_TO_nq_B=1 Q0=0. scaleQ=1. /
+    &basis_nD iQdyn(1)=3 name="Hm" L_TO_nq_A=1 L_TO_nq_B=1 Q0=0. scaleQ=1. /
+ &inactives /
+ &actives test=f direct=2 Make_MatOp=t comput_S=t /
+ &analyse max_ana=40 max_ene=20000.d0 print=f print_psi=0 propa=f /
+**
+exit

@@ -1,0 +1,53 @@
+test=f
+
+ SYSTEM=sub_system_h2o.f
+
+ici=`pwd`
+DIR_vib=/Users/lauvergn/EclipseWork_Mars/ElVibRot
+DIR_pot=$DIR_vib/sub_pot
+VIBEXE=vib
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $ici
+
+x=$1
+x1=5.7
+x2=$x1
+x3=5.4
+
+
+nb=4
+nq=4
+
+nice $DIR_vib/$VIBEXE << ** > $ici/res
+ &system PGrid_omp=0 /
+ &constantes /
+ &variables 
+         zmat=T nat=3 
+         charge=0 multiplicity=1 
+         commande_unix='constCIS_evrt xx ' 
+         ab_initio_prog='generic '
+ /
+O
+H   1
+H   1 2
+
+1 1 1
+ &minimum pot0=-74.9659012171 nb_elec=3 OnTheFly=t pot_act=f read_Qsym0=f read_nameQ=t unit='angs' /
+RH 0.9894095
+RH 0.9894095
+A  100.0271438
+
+ &basis_nD nb_basis=3 name="direct_prod" Type_OF_nDindB=0 Norm_OF_nDindB=7. /
+   &basis_nD iQdyn(1)=1  name="Hm" nq=$nq nb=$nb Q0=1.869713 scaleQ=$x1 /
+   &basis_nD iQdyn(1)=2  name="Hm" nq=$nq nb=$nb Q0=1.869713 scaleQ=$x2 /
+   &basis_nD iQdyn(1)=3  name="Hm" nq=$nq nb=$nb Q0=1.745803 scaleQ=$x3 /
+
+ &inactives /
+ &actives direct=0 read_Grid=f test=$test restart=f JJ=0 /
+ &analyse max_ana=-1 max_ene=350000. print=f intensity=t /
+ &intensity l_Int=t l_IntVR=f l_Tau=f l_IntVR=f Temp=300. Ewidth=100. Emax=350000. Emin=0.0 /
+**

@@ -1,0 +1,816 @@
+***********************************************************************
+***********OS:            Darwin
+***********COMPILER:      gfortran
+***********OPTIMIZATION:  0
+***********OpenMP:        -fopenmp
+***********Arpack:        0
+***********Lapack:        1
+***********F90FLAGS:      -O0 -g -fbacktrace -fopenmp -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized   
+***********F90LIB:        -framework Accelerate
+***********subsystem file:  sub_system.f
+***********DIR of potlib.a: 
+***********************************************************************
+cd /Users/lauvergn/git/ElVibRot/obj ; gfortran -O0 -g -fbacktrace -fopenmp -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized      -c /Users/lauvergn/git/ElVibRot/sub_pot/sub_system.f
+cd /Users/lauvergn/git/ElVibRot/obj ; gfortran -O0 -g -fbacktrace -fopenmp -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized      -c /Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:184:9:
+
+       end subroutine sub_quadra_hermite
+         1
+Erreur: Expecting END IF statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:191:6:
+
+       SUBROUTINE sub_quadra_hermitebox(base,paire)
+      1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:193:20:
+
+       USE mod_system
+                    1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:194:19:
+
+       USE mod_basis
+                   1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:195:19:
+
+       IMPLICIT NONE
+                   1
+Erreur: Duplicate IMPLICIT NONE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:199:26:
+
+       TYPE (basis) :: base
+                          1
+Erreur: Symbol « base » at (1) already has basic type of DERIVED
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:200:19:
+
+       integer paire
+                   1
+Erreur: Symbol « paire » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:201:17:
+
+       logical num
+                 1
+Erreur: Symbol « num » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:202:28:
+
+       real(kind=Rkind)  step
+                            1
+Erreur: Symbol « step » at (1) already has basic type of REAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:205:23:
+
+       logical  :: deriv
+                       1
+Erreur: Symbol « deriv » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:206:42:
+
+       real(kind=Rkind) :: A,B,xeq,scale,dx
+                                          1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:207:20:
+
+       integer  :: nq,i,j,nqo
+                    1
+Erreur: Symbol « nq » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:210:46:
+
+       character (len=*), parameter :: name_sub='sub_quadra_hermitebox'
+                                              1
+Erreur: Symbol « name_sub » at (1) already has basic type of CHARACTER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:212:33:
+
+       logical, parameter :: debug = .FALSE.
+                                 1
+Erreur: Symbol « debug » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:341:9:
+
+       end subroutine sub_quadra_hermitebox
+         1
+Erreur: Expecting END IF statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:348:6:
+
+       SUBROUTINE sub_quadra_HermiteNested1(base,paire)
+      1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:350:20:
+
+       USE mod_system
+                    1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:351:19:
+
+       USE mod_basis
+                   1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:352:19:
+
+       IMPLICIT NONE
+                   1
+Erreur: Duplicate IMPLICIT NONE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:356:26:
+
+       TYPE (basis) :: base
+                          1
+Erreur: Symbol « base » at (1) already has basic type of DERIVED
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:357:19:
+
+       integer paire
+                   1
+Erreur: Symbol « paire » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:358:17:
+
+       logical num
+                 1
+Erreur: Symbol « num » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:359:28:
+
+       real(kind=Rkind)  step
+                            1
+Erreur: Symbol « step » at (1) already has basic type of REAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:362:23:
+
+       logical  :: deriv
+                       1
+Erreur: Symbol « deriv » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:363:42:
+
+       real(kind=Rkind) :: A,B,xeq,scale,dx
+                                          1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:364:23:
+
+       integer  :: nb,nq,iq,i,j,nb_nosym,nq0,dnq,nqo
+                       1
+Erreur: Symbol « nq » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:365:47:
+
+       real(kind=Rkind), allocatable :: x_loc(:)
+                                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:366:47:
+
+       real(kind=Rkind), allocatable :: w_loc(:)
+                                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:370:31:
+
+       integer :: err_mem,memory
+                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:371:46:
+
+       character (len=*), parameter :: name_sub='sub_quadra_HermiteNested1'
+                                              1
+Erreur: Symbol « name_sub » at (1) already has basic type of CHARACTER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:373:33:
+
+       logical, parameter :: debug = .FALSE.
+                                 1
+Erreur: Symbol « debug » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:491:9:
+
+       END SUBROUTINE sub_quadra_HermiteNested1
+         1
+Erreur: Expecting END IF statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:493:6:
+
+       SUBROUTINE sub_quadra_HermiteNested1_old(base,paire)
+      1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:495:20:
+
+       USE mod_system
+                    1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:496:19:
+
+       USE mod_basis
+                   1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:497:19:
+
+       IMPLICIT NONE
+                   1
+Erreur: Duplicate IMPLICIT NONE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:501:26:
+
+       TYPE (basis) :: base
+                          1
+Erreur: Symbol « base » at (1) already has basic type of DERIVED
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:502:19:
+
+       integer paire
+                   1
+Erreur: Symbol « paire » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:503:17:
+
+       logical num
+                 1
+Erreur: Symbol « num » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:504:28:
+
+       real(kind=Rkind)  step
+                            1
+Erreur: Symbol « step » at (1) already has basic type of REAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:507:23:
+
+       logical  :: deriv
+                       1
+Erreur: Symbol « deriv » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:508:42:
+
+       real(kind=Rkind) :: A,B,xeq,scale,dx
+                                          1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:509:23:
+
+       integer  :: nb,nq,iq,i,j,nb_nosym,nq0,dnq,nqo
+                       1
+Erreur: Symbol « nq » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:510:47:
+
+       real(kind=Rkind), allocatable :: x_loc(:)
+                                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:511:47:
+
+       real(kind=Rkind), allocatable :: w_loc(:)
+                                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:515:31:
+
+       integer :: err_mem,memory
+                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:516:46:
+
+       character (len=*), parameter :: name_sub='sub_quadra_HermiteNested1'
+                                              1
+Erreur: Symbol « name_sub » at (1) already has basic type of CHARACTER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:518:33:
+
+       logical, parameter :: debug = .FALSE.
+                                 1
+Erreur: Symbol « debug » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:589:43:
+
+       CALL hercom(base%nq_max_Nested,x_loc(:),w_loc(:))
+                                           1
+Erreur: Syntax error in argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:592:33:
+
+       base%x(1,:) = x_loc(nq0-dnq:nq0+dnq)
+                                 1
+Erreur: Syntax error in argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:663:9:
+
+       END SUBROUTINE sub_quadra_HermiteNested1_old
+         1
+Erreur: Expecting END IF statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:666:6:
+
+       SUBROUTINE grid_HermiteNested1(x,w,nq,nqmax)
+      1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:668:20:
+
+       USE mod_system
+                    1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:669:19:
+
+       USE mod_basis
+                   1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:670:19:
+
+       IMPLICIT NONE
+                   1
+Erreur: Duplicate IMPLICIT NONE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:672:31:
+
+       integer, intent(in) :: nq,nqmax
+                               1
+Erreur: Symbol « nq » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:673:46:
+
+       real(kind=Rkind), intent(inout) :: x(nq)
+                                              1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:674:46:
+
+       real(kind=Rkind), intent(inout) :: w(nq)
+                                              1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:678:30:
+
+       TYPE (basis)     :: base
+                              1
+Erreur: Symbol « base » at (1) already has basic type of DERIVED
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:679:29:
+
+       logical          :: num,deriv
+                             1
+Erreur: Symbol « num » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:680:30:
+
+       real(kind=Rkind) :: step
+                              1
+Erreur: Symbol « step » at (1) already has basic type of REAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:685:47:
+
+       real(kind=Rkind), allocatable :: x_loc(:)
+                                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:686:47:
+
+       real(kind=Rkind), allocatable :: w_loc(:)
+                                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:687:21:
+
+       integer  :: dnb
+                     1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:691:31:
+
+       integer :: err_mem,memory
+                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:692:46:
+
+       character (len=*), parameter :: name_sub='grid_HermiteNested1'
+                                              1
+Erreur: Symbol « name_sub » at (1) already has basic type of CHARACTER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:694:33:
+
+       logical, parameter :: debug = .FALSE.
+                                 1
+Erreur: Symbol « debug » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:712:30:
+
+       CALL hercom(nqmax,x_loc(:),w_loc(:))
+                              1
+Erreur: Syntax error in argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:718:6:
+
+       x(:) = x_loc(1+dnb:nqmax-dnb)
+      1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:728:31:
+
+                              x(:),                               &
+                               1
+Erreur: Syntax error in argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:756:9:
+
+       END SUBROUTINE grid_HermiteNested1
+         1
+Erreur: Expecting END IF statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:758:6:
+
+       SUBROUTINE sub_quadra_HermiteNested2(base,paire)
+      1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:760:20:
+
+       USE mod_system
+                    1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:761:19:
+
+       USE mod_basis
+                   1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:762:19:
+
+       IMPLICIT NONE
+                   1
+Erreur: Duplicate IMPLICIT NONE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:766:26:
+
+       TYPE (basis) :: base
+                          1
+Erreur: Symbol « base » at (1) already has basic type of DERIVED
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:767:19:
+
+       integer paire
+                   1
+Erreur: Symbol « paire » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:768:17:
+
+       logical num
+                 1
+Erreur: Symbol « num » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:769:28:
+
+       real(kind=Rkind)  step
+                            1
+Erreur: Symbol « step » at (1) already has basic type of REAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:772:23:
+
+       logical  :: deriv
+                       1
+Erreur: Symbol « deriv » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:773:42:
+
+       real(kind=Rkind) :: A,B,xeq,scale,dx
+                                          1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:774:23:
+
+       integer  :: nb,nq,iq,i,j,nb_nosym,nq0,dnq,nq1,nq2,nqo
+                       1
+Erreur: Symbol « nq » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:775:47:
+
+       real(kind=Rkind), allocatable :: x_loc(:)
+                                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:776:47:
+
+       real(kind=Rkind), allocatable :: w_loc(:)
+                                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:780:31:
+
+       integer :: err_mem,memory
+                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:781:46:
+
+       character (len=*), parameter :: name_sub='sub_quadra_HermiteNested2'
+                                              1
+Erreur: Symbol « name_sub » at (1) already has basic type of CHARACTER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:783:33:
+
+       logical, parameter :: debug = .FALSE.
+                                 1
+Erreur: Symbol « debug » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:871:43:
+
+       CALL hercom(base%nq_max_Nested,x_loc(:),w_loc(:))
+                                           1
+Erreur: Syntax error in argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:874:29:
+
+       base%x(1,:) = x_loc(nq1:nq2)
+                             1
+Erreur: Syntax error in argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:943:9:
+
+       END SUBROUTINE sub_quadra_HermiteNested2
+         1
+Erreur: Expecting END IF statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:945:5:
+
+      SUBROUTINE sub_quadra_hermite_cuba(base)
+     1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:947:20:
+
+       USE mod_system
+                    1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:948:19:
+
+       USE mod_basis
+                   1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:949:19:
+
+       IMPLICIT NONE
+                   1
+Erreur: Duplicate IMPLICIT NONE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:953:30:
+
+       TYPE (basis)     :: base
+                              1
+Erreur: Symbol « base » at (1) already has basic type of DERIVED
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:954:29:
+
+       logical          :: num = .FALSE.
+                             1
+Erreur: Symbol « num » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:955:30:
+
+       real(kind=Rkind) :: step = ZERO
+                              1
+Erreur: Symbol « step » at (1) already has basic type of REAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:958:31:
+
+       logical          :: deriv = .TRUE.
+                               1
+Erreur: Symbol « deriv » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:959:36:
+
+       integer          :: p,d,option
+                                    1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:960:43:
+
+       integer          :: tab_nb(base%ndim)
+                                           1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:961:38:
+
+       real(kind=Rkind) :: x(base%ndim)
+                                      1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:962:39:
+
+       real(kind=Rkind) :: d0(base%ndim)
+                                       1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:963:39:
+
+       real(kind=Rkind) :: d1(base%ndim)
+                                       1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:964:39:
+
+       real(kind=Rkind) :: d2(base%ndim)
+                                       1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:965:27:
+
+       integer          :: i,iB,iQ,id,jd,nq,LB,LG
+                           1
+Erreur: Symbol « i » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:969:46:
+
+       character (len=*), parameter :: name_sub='sub_quadra_hermite_cuba'
+                                              1
+Erreur: Symbol « name_sub » at (1) already has basic type of CHARACTER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:971:33:
+
+       logical, parameter :: debug = .FALSE.
+                                 1
+Erreur: Symbol « debug » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1090:10:
+
+           x(:) = base%x(:,iQ)
+          1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1114:6:
+
+       tab_nb(:) = LB+1
+      1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1133:8:
+
+         x(:) = base%x(:,iQ)
+        1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1137:45:
+
+           base%tab_ndim_index(:,iB) = tab_nb(:)
+                                             1
+Erreur: Syntax error in argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1187:9:
+
+       END SUBROUTINE sub_quadra_hermite_cuba
+         1
+Erreur: Expecting END IF statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1188:6:
+
+       SUBROUTINE sub_quadra_hermite_cuba_DML(base,err_grid)
+      1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1190:20:
+
+       USE mod_system
+                    1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1191:19:
+
+       USE mod_basis
+                   1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1192:19:
+
+       IMPLICIT NONE
+                   1
+Erreur: Duplicate IMPLICIT NONE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1196:30:
+
+       TYPE (basis)     :: base
+                              1
+Erreur: Symbol « base » at (1) already has basic type of DERIVED
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1197:29:
+
+       logical          :: num = .FALSE.
+                             1
+Erreur: Symbol « num » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1198:30:
+
+       real(kind=Rkind) :: step = ZERO
+                              1
+Erreur: Symbol « step » at (1) already has basic type of REAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1201:31:
+
+       logical          :: deriv = .TRUE.
+                               1
+Erreur: Symbol « deriv » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1202:36:
+
+       integer          :: p,d,option
+                                    1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1203:43:
+
+       integer          :: tab_nb(base%ndim)
+                                           1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1204:38:
+
+       real(kind=Rkind) :: x(base%ndim)
+                                      1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1205:39:
+
+       real(kind=Rkind) :: d0(base%ndim)
+                                       1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1206:39:
+
+       real(kind=Rkind) :: d1(base%ndim)
+                                       1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1207:39:
+
+       real(kind=Rkind) :: d2(base%ndim)
+                                       1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1208:27:
+
+       integer          :: i,iB,iQ,id,jd,idum,nq
+                           1
+Erreur: Symbol « i » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1211:39:
+
+       integer                  :: LB,LG
+                                       1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1212:47:
+
+       character (len=Name_len) :: name_i,name_j
+                                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1213:44:
+
+       integer                  :: nio,err_io
+                                            1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1214:47:
+
+       TYPE (param_file)        :: cubature_file
+                                               1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1215:42:
+
+       logical                  :: err_grid
+                                          1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1218:46:
+
+       character (len=*), parameter :: name_sub='sub_quadra_hermite_cuba_DML'
+                                              1
+Erreur: Symbol « name_sub » at (1) already has basic type of CHARACTER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1220:33:
+
+       logical, parameter :: debug = .FALSE.
+                                 1
+Erreur: Symbol « debug » at (1) already has basic type of LOGICAL
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1270:24:
+
+           cubature_file%name = trim(EVRT_path) //                       &
+                        1
+Erreur: Symbol « cubature_file » at (1) has no IMPLICIT type
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1275:66:
+
+           write(out_unitp,*) 'cubature_file%name: ',cubature_file%name
+                                                                  1
+Erreur: Symbol « cubature_file » at (1) has no IMPLICIT type
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1282:75:
+
+             write(out_unitp,*) 'cannot find cubature file: ',cubature_file%name
+                                                                           1
+Erreur: Symbol « cubature_file » at (1) has no IMPLICIT type
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1324:12:
+
+       tab_nb(:) = LB+1
+            1
+Erreur: « tab_nb » at (1) is not a variable
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1341:9:
+
+         x(:) = base%x(:,iQ)
+         1
+Erreur: « x » at (1) is not a variable
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1345:45:
+
+           base%tab_ndim_index(:,iB) = tab_nb(:)
+                                             1
+Erreur: Syntax error in argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1395:9:
+
+       END SUBROUTINE sub_quadra_hermite_cuba_DML
+         1
+Erreur: Expecting END IF statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1397:6:
+
+       SUBROUTINE transfo_Q_TO_tQ(base)
+      1
+Erreur: Unclassifiable statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1398:20:
+
+       USE mod_system
+                    1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1399:19:
+
+       USE mod_basis
+                   1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1400:19:
+
+       USE mod_dnSVM
+                   1
+Erreur: Unexpected USE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1401:19:
+
+       IMPLICIT NONE
+                   1
+Erreur: Duplicate IMPLICIT NONE statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1405:26:
+
+       TYPE (basis) :: base
+                          1
+Erreur: Symbol « base » at (1) already has basic type of DERIVED
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1408:41:
+
+       TYPE (Type_dnS)    :: dntQ,dntQ_inv
+                                         1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1409:29:
+
+       integer            :: i
+                             1
+Erreur: Symbol « i » at (1) already has basic type of INTEGER
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1410:35:
+
+       real(kind=Rkind)   :: q,d1,d2
+                                   1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1411:37:
+
+       integer, parameter :: itype = 2
+                                     1
+Erreur: Unexpected déclaration de données statement at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1424:31:
+
+         base%x(1,i) = dntQ_inv%d0
+                               1
+Erreur: Symbol « dntq_inv » at (1) has no IMPLICIT type
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1426:42:
+
+         CALL sub_dntf(itype,dntQ,dntQ_inv%d0,base%cte_Transfo(:,1))
+                                          1
+Erreur: Symbol « dntq_inv » at (1) has no IMPLICIT type
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1427:10:
+
+         d1 = dntQ%d1(1)
+          1
+Erreur: « d1 » at (1) is not a variable
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1428:10:
+
+         d2 = dntQ%d2(1,1)
+          1
+Erreur: « d2 » at (1) is not a variable
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1431:46:
+
+         base%w(i)   = base%w(i)*base%rho(i)/d1
+                                              1
+Erreur: Function « d1 » requires an argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1432:24:
+
+         base%rho(i) = d1
+                        1
+Erreur: Function « d1 » requires an argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1437:36:
+
+         base%dnRGB%d2(i,:,1,1) = d2 * base%dnRGB%d1(i,:,1) + d1*d1 * base%dnRGB%d2(i,:,1,1)
+                                    1
+Erreur: Function « d2 » requires an argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1438:36:
+
+         base%dnRGB%d1(i,:,1)   = d1 * base%dnRGB%d1(i,:,1)
+                                    1
+Erreur: Function « d1 » requires an argument list at (1)
+/Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1445:9:
+
+       END SUBROUTINE transfo_Q_TO_tQ
+         1
+Erreur: Expecting END IF statement at (1)
+f951: Erreur: Unexpected end of file in « /Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90 »
+make: *** [/Users/lauvergn/git/ElVibRot/obj/sub_quadra_herm.o] Error 1

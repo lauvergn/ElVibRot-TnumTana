@@ -1,0 +1,37 @@
+
+nom=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v110.10-Tnum32.0-Tana8.7
+#nom=$1
+moi=`pwd`
+
+rm rdif
+
+if test -s $nom
+  then
+
+    echo le repertoire $nom existe !!
+
+    for i in Source*
+    do
+
+      for f in $i/*.f90 $i/*/*.f90 $i/*/*/*.f90
+      do
+        echo ========================================================= >> rdif
+        echo $f  $nom/$f >> rdif
+        if diff $f $nom/$f >> rdif
+        then
+#          echo 'fichiers identique',$f
+           echo 'fichiers identique',$f >> rdif
+        else
+           echo 'fichier diff',$f
+           echo 'fichier diff',$f >> rdif
+#          cp $f $nom/$f
+#          cp $nom/$f $f
+        fi
+        echo ========================================================= >> rdif
+      done
+
+    done
+
+  else
+    echo le repertoire $nom n existe pas
+fi

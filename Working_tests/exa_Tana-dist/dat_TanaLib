@@ -1,0 +1,30 @@
+
+ ici=`pwd`
+ cd ../..
+#make clean
+ make work
+ cd $ici
+
+../../work.exe << ** > res
+ &variables 
+         nrho=2
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+         Tana=t
+ /
+ &Coord_transfo name_transfo='bunch_poly' nb_vect=2 inTOout=f /
+10. 1. 1.
+
+ &Coord_transfo name_transfo='poly' cos_th=f /
+     &vector nb_vect=1 Frame=t iAtA=1 iAtB=2 / : R1: A1->A2
+       &vector iAtA=1 iAtB=3 /         : R2: A1->A3
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1 
+
+ &minimum Read_nameQ=t /
+R1 2.
+R2 1.1
+c2 0.5
+**
+

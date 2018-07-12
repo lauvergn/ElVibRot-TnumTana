@@ -1,0 +1,11 @@
+    doc_name="../test/test2.tex"
+    rm $doc_name
+    for i in . sub_* Tnum Tnum/zmat Tnum/Qtransfo sub_communf90/sub_io sub_communf90/sub_math sub_communf90/sub_memory
+    do
+
+      for f in $i/*.f90
+      do
+        awk '/LATEX-USER-DOC-Driver/,/END-LATEX-USER-DOC-Driver/ {n=length($0) ; print substr($0, 2, n)}' $f  >> $doc_name
+      done
+
+    done

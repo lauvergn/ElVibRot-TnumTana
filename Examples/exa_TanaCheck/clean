@@ -1,0 +1,3 @@
+rm -f res*
+rm -f dat*
+rm -f *.mod *.MOD Eq_KEO.tex a.out split_block.exe

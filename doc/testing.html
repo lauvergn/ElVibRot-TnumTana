@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>The Testing Framework</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <h2>The Testing Framework</h2>
+    <p>Tests can be written completely free form. Any single test is an
+    executable.  This may be a compiled Fortran program, a shell/perl script,
+    or anything else you like that the computer knows how to run. All these
+    small test programs can be organized in any way you like inside (or in
+    subdirectories of) the &#8216;tests&#8217; folder.</p>
+
+    <p>While you can organize the tests any way you like, I recommend the
+    following system for the testing of single routines: Say you have a test
+    for the &#8216;init_pulse_time&#8217; routine in pulse.f90. You should make
+    a folder &#8216;pulsetests&#8217; that contains all tests of the pulse.f90
+    module, and inside there you should create a program
+    &#8216;init_pulse_time_test&#8217; (or,
+    &#8216;init_pulse_time_test.sh&#8217;, &#8216;init_pulse_time_test.pl,
+    etc.). For bigger tests that go beyond testing a single routine,
+    you&#8217;re free to put them in their own folder, of course.</p>
+
+    <p>There is one requirement on the test programs: If they pass
+    successfully, they must print the string &#8216;PASSED TEST&#8217; (exactly
+    like that, with upper case) to the standard output. This indicates success.
+    An absence of the string in the output indicates failure.</p>
+
+    <p>Once you&#8217;ve written your test program, and organized it somewhere
+    in the tests folder, you have to add the name of the executable (with the
+    relative path) to the &#8216;test.lst&#8217; file. This file defines which
+    tests to run.</p>
+
+    <p>Any tests listed in test.lst are run automatically when you do
+    &#8216;make test&#8217;.</p>
+
+    <p>Note that if you write test code in Fortran which needs to be compiled,
+    the main Makefile will automatically locate the new test Makefile and use
+    it automatically when &#8216;make test&#8217; is called. For help writing
+    your Makefile, see below.</p>
+
+    <p>Lastly you should be aware that the working directory of any test
+    executable is the directory where that executable resides.</p>
+
+    <p>In summary, here are the steps for writing a test:</p>
+
+    <ul>
+      <li>write the test in any way you like, making sure that is prints
+          &#8216;PASSED TEST&#8217; on success</li>
+      <li>organize the test inside the &#8216;tests&#8217; folder</li>
+
+      <li>add the path and name of the executable to the tests.lst file</li>
+      <li>compilation as well as any temporary files that may have been created
+          from running the tests.</li>
+    </ul>
+
+    <h3>How to write Makefiles for tests</h3>
+
+    <p>As previously stated, the tests are completely freeform, meaning that
+    you can write the makefile for your test however you like, with one
+    exceptions &ndash; the &#8216;clean&#8217; target <em>must</em> be defined,
+    since the main Makefile will look for this when you call &#8216;make
+    clean&#8217; (or <tt>make test-clean</tt>).</p>
+
+    <p>While not required, since the test Makefile is called from the main
+    Makefile, we can make use of the exported variables FC, FFLAGS, and
+    LDFLAGS. This means that we don&#8216;t have to redefine these in every new
+    Makefile. Here is an example of a Makefile for a new test called
+    &#8216;mytest&#8216;:
+
+    <pre>
+    # Makefile for mytest, in folder tests/mytest/
+    all: mytest
+    mytest: mytest.f90
+          $(FC) $(FFLAGS) mytest.f90 $(LDFLAGS)
+    # make sure that the clean target exists
+    clean:
+          rm mytest *.mod a.out
+    </pre>
+
+    <p>Note that we haven&#8216;t had to redefine the variables: they were
+    already passed on by the main Makefile.</p>
+
+    <p>Almost all Makefiles actually look almost identical to each other, and
+    so to make writing the Makefiles even easier, there is a makefile
+    &#8216;tests.mk&#8217; which can (and should) be included to handle the
+    common part of all test Makefiles.  It contains the rules for building your
+    test programs, and also a standard cleaning routine. To use tests.mk, we
+    only need to include it in our Makefile.  When you use tests.mk, it will
+    look for a special variable named TESTS, where one can simply write the
+    names of all the source files that need to be compiled. For example, lets
+    say in a test folder we have two programs, &#8216;mytest1&#8217; and
+    &#8216;mytest2&#8217; that should be compiled from two source files
+    &#8216;mytest1.f90&#8217;  and &#8216;mystest2.f90&#8216;. Our Makefile in
+    that case is a simple as
+
+    <pre>
+    TESTS = mytest1 mytest2
+    QDYNPATH = ../../
+    include ../tests.mk
+    clean: clean-auto
+    </pre></p>
+
+    <p>We still need the &#8216;clean&#8217; target, but now we can simply
+    point it to a target called &#8216;clean-auto&#8216;, which removes all
+    *.o, *.mod, *.dat and *.out files, as well as the test programs themselves.
+    You can always add your own custom clean functions underneath.</p>
+
+    <p>The QDYNPATH should point to the root folder of the library. It is necessary
+    for compiling a test &#8216;standalone&#8217; (see below)</p>
+
+    <p>It is strongly recommended that you use this simple form for any tests.</p>
+
+    <p>For plenty of examples, check the &#8216;tests&#8217; folder.</p>
+
+
+    <h3>How to compile a standalone test</h3>
+
+    <p>Often, during development, you want to compile just one specific test.
+    If you are in the root folder (where the main Makefile resides), you can do
+    <tt>make tests/name/of/test/folder</tt> (no trailing slash!). If the
+    main Makefile controls the compilation, all variables are exported
+    properly, and everything will work.</p>
+
+    <p>Having to compile from the main Makefile is very inconvenient.  You
+    really want to be able to just do &#8216;make&#8217; and 
+    <tt>make clean<tt> inside of the test folder.  However, the necessary
+    environment variables are exported only if the compilation is controlled by
+    the main Makefile.  To remedy this, the tests.mk contains re-definitions of
+    the variables which are executed if the environment variable QDYNMAKEST is
+    set to 1: <pre>export QDYNMAKEST=1</pre></p> <p> Once this is done, you
+    should be able to do <tt>make</tt> and <tt>make clean</tt> directly in the
+    test folder. If you forget to set QDYNMAKEST, compilation will fail.</p>
+
+  </body>
+</html>

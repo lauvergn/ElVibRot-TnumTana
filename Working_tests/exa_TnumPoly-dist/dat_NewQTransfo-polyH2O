@@ -1,0 +1,31 @@
+
+ ici=`pwd`
+ cd ..
+ make Tnum_MCTDH
+ cd $ici
+
+../Tnum90_MCTDH.exe << ** > res
+ &variables
+         Tana=t
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+         nrho=2
+ /
+ &Coord_transfo name_transfo='bunch' inTOout=f nb_vect=2 /
+O H H
+1 2 (1->2 : ROH1)
+1 3 (1->3 : ROH2)
+
+ &Coord_transfo name_transfo='poly' /
+     &vector nb_vect=1 Frame=t cos_th=f /
+       &vector cos_th=f /
+
+ &Coord_transfo name_transfo='active' /
+1  1 1
+
+ &minimum read_nameQ=t /
+d1 1.
+d2 1.
+a2 1.83
+**
+

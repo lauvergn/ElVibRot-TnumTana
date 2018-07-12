@@ -1,0 +1,128 @@
+
+\documentclass[a4paper,10pt]{article}
+\usepackage{amssymb, amsmath, amsfonts, amsthm}
+\usepackage[numbers]{natbib}
+\usepackage[utf8]{inputenc}
+\usepackage[usenames,dvipsnames]{color}
+%\usepackage{tikz}
+\usepackage[
+      pdftitle={qtransfo},
+      pdfauthor={Mamadou Ndong},
+      colorlinks=true,
+      linkcolor=black,
+      urlcolor=black,
+      citecolor=black,
+      bookmarksopen=false,
+      breaklinks=true,
+      plainpages=false,
+      pdfpagelabels
+]{hyperref}
+\usepackage[margin = 2cm]{geometry}
+
+% externalization command
+\newcommand{\inputTikZ}[1]{%
+  \beginpgfgraphicnamed{#1-external}%
+    \input{#1.tikz}%
+   \endpgfgraphicnamed%
+}
+
+\title{Introduction to Tnum and Tana}
+%\date{\today}
+
+
+\begin{document}
+
+%\maketitle
+\section{Introduction to the program Tnum-Tana}
+The derivation or computation of the kinetic energy operator (KEO) using curvilinear
+coordinates for large systems is a difficult task. With this program,
+you can calculate the KEO of a given system by using
+a numerical approach (Tnum) or an analytical approach (Tana). 
+\subsection{Tnum branch}
+The Tnum program enables ones to calculate numerically and exactly kinetic
+energy operator (KEO), $\hat{T}$, or
+the metric tensor (covariant, $\mathbf{g}$, or contravariant, $\mathbf{G}$,
+components) using several
+kinds of curvilinear coordinates for a molecular system of any size, without
+build in limitation.
+It can deal with reduced dimensionality KEO (rigid or flexible constraints or
+other approximations).
+
+The molecular system has $\textcolor{blue}{N_{at}}$ atoms.
+Let $\mathbf{Q}_{dyn} = [Q_{dyn}^1, Q_{dyn}^2, \cdots, Q_{dyn}^{n+m}]$ be the curvilinear coordinates 
+associated with the internal deformation.
+Where $\textcolor{blue}{n}$ is the number of active coordinates 
+and $m$ is the number of inactive coordinates, 
+ $n+m = 3N_{at}-6$. 
+$n$ can be smaller than $3N_{at}-6$ when
+ reduced dimensionality is used, i.e. the quantum dynamics is performed only
+ with $n$ coordinates.
+ In full dimensionality $m=0$.
+The exact KEO, including the deformation, the Coriolis coupling and the overall
+rotation is given by,
+$$\hat{T} = 
+\underbrace{\hat{T}_\mathrm{def}}_\mathrm{Deformation} + 
+\underbrace{\hat{T}_\mathrm{cor}}_\mathrm{Corlioris} + 
+\underbrace{\hat{T}_\mathrm{rot}}_\mathrm{Rotation} 
+$$
+ There are several equivalent expressions for the deformation term of the KEO,
+ $\hat{T}_\mathrm{def }$, see Eqs.(1-3):
+\begin{equation}
+  \hat{T}_\mathrm{def}= -\frac{\hbar^2}{2}\sum_{i,j} \Sigma^{ij}(\mathbf{Q}_{dyn})
+         \frac{\partial^2 \mathbf{g}}{\partial Q_{dyn}^i \partial Q_{dyn}^j}
+         -\frac{\hbar^2}{2}\sum_{i,j} 
+         \left(\Sigma^{ij}(\mathbf{Q}_{dyn})
+         \frac{\partial ln\left(\rho(\mathbf{Q}_{dyn})\right)}{\partial Q_{dyn}^i}
+         +\frac{\partial \Sigma^{ij}(\mathbf{Q}_{dyn})}{\partial Q_{dyn}^i}
+         \right) 
+         \frac{\partial \mathbf{g}}{\partial Q_{dyn}^j}
+         + v_{\mathrm{ext}}(\mathbf{Q}_{dyn})
+ \end{equation}
+ or
+
+\begin{equation}
+  \hat{T}_\mathrm{def}= \sum_{i\le j} f_2^{ij}(\mathbf{Q}_{dyn})
+           \frac{\partial^2 \mathbf{g}}{\partial Q_{dyn}^i \partial Q_{dyn}^j}
+           +\sum_{j} f_1^{j}(\mathbf{Q}_{dyn})
+         \frac{\partial \mathbf{g}}{\partial Q_{dyn}^j}
+         + v_{\mathrm{ext}}(\mathbf{Q}_{dyn})
+ \end{equation}
+ or
+\begin{equation}
+  \hat{T}_\mathrm{def}= -\frac{\hbar^2}{2}\sum_{i, j} \frac{1} {\rho(\mathbf{Q}_{dyn})}
+           \frac{\partial \mathbf{g}}{ \partial Q_{dyn}^i} 
+           \left(  \Sigma^{ij}(\mathbf{Q}_{dyn}) \rho(\mathbf{Q}_{dyn})\right)
+           \frac{\partial \mathbf{g}}{ \partial Q_{dyn}^j} 
+         + v_{\mathrm{ext}}(\mathbf{Q}_{dyn})\,.
+ \end{equation}
+
+
+The Coriolis term, $\hat{T}_\mathrm{cor}$, is given by
+$$
+  \hat{T}_\mathrm{cor}= -i\hbar \sum_{j, \alpha} \Gamma^{\alpha j} (\mathbf{Q}_{dyn})
+  \frac{\partial \mathbf{g}}{\partial {Q}_{dyn}^j} \ddot{\mathcal{P}}_\alpha
+  -i\frac{\hbar}{2} \sum_{j, \alpha} \left(\Gamma^{\alpha j} (\mathbf{Q}_{dyn})
+  \frac{\partial ln(\rho(\mathbf{Q}_{dyn}))}{\partial {Q}_{dyn}^j}+ 
+  \frac{\partial \Gamma(\mathbf{Q}_{dyn})}{\partial {Q}_{dyn}^j} 
+  \right)
+  \ddot{\mathcal{P}}_\alpha\,.
+  $$
+The rotational term, $\hat{T}_\mathrm{rot}$, is given by
+$$
+  \hat{T}_\mathrm{rot}= \frac{1}{2} \sum_{\alpha, \beta} \mu^{\alpha \beta} (\mathbf{Q}_{dyn})
+  \ddot{\mathcal{P}}_\alpha
+  \ddot{\mathcal{P}}_\beta\,.
+$$
+Where $i, j = 1, \cdots, n$, $\alpha, \beta = x,y,z$ and $d\tau_\mathrm{def}
+= \rho(\mathbf{Q}_{dyn})d{Q}_{dyn}^1 d {Q}_{dyn}^2\cdots{Q}_{dyn}^n$.
+\subsection{Tana branch}
+The Tana program  is an extension of the Tnum code. The two programs share the same data structure. 
+The branch enables to compute the analytical expression of the KEO using the
+polyspherical coordinates. 
+This expression is expression as,
+$$ 
+\hat{T} = \frac{1}{2}\sum_{i,j=1}^{N_{at}-1}  M_{ij}
+  \vec{\hat{P}}_i^\dagger \cdot \vec{\hat{P}}_{j}\, 
+$$
+where $\mathbf{M}$ is the mass-matrix
+\end{document}

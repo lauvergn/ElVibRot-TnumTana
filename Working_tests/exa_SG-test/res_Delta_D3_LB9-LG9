@@ -1,0 +1,193 @@
+ ===============================================
+ ===============================================
+ Working with ElVibRot101.15-Tnum30.37-Tana8.7
+ Compiled on "kruck-2" the Dim  8 oct 2017 - 13:18:27
+ EVRT_path: /Users/lauvergn/git/ElVibRot
+ -----------------------------------------------
+ ElVibRot is written by David Lauvergnat [1] 
+      with contributions of Josep Maria Luis [2]
+ ElVibRot is under GNU LGPL3 license.
+
+ Tnum is written David Lauvergnat [1]
+ Tana is written by Mamadou Ndong 
+      with contributions of David Lauvergnat
+ Tnum and Tana are under GNU LGPL3 license.
+
+ [1]: Laboratoire de Chimie Physique, UMR 8000, CNRS-Université Paris-Sud, France
+ [2]: Institut de Química Computacional and Departament de Química Universitat de Girona, Catalonia, Spain
+ ===============================================
+ ===============================================
+ =========================================
+ OpenMP parameters:
+ Max number of threads:           1
+ MatOp_omp,      MatOp_maxth                 0           1
+ OpPsi_omp,      OpPsi_maxth                 0           1
+ BasisTOGrid_omp,BasisTOGrid_maxth           0           1
+ Grid_omp,       Grid_maxth                  1           1
+ =========================================
+ =========================================
+ =========================================
+  Smolyat test calculation
+ =========================================
+ ==== tab_DelatBa =========== nb,nq           1           1
+   ib_TO_lb           0
+ ===================== max_S:   0.0000000000000000     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           3
+   ib_TO_lb           1
+ ===================== max_S:  -1.4432899320127035E-015
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           5
+   ib_TO_lb           2
+ ===================== max_S:  0.24646744502558326     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           7
+   ib_TO_lb           3
+ ===================== max_S:  0.39816800594617296     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           9
+   ib_TO_lb           4
+ ===================== max_S:  0.28739828329628891     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          11
+   ib_TO_lb           5
+ ===================== max_S:  -9.3665225709058886E-002
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          13
+   ib_TO_lb           6
+ ===================== max_S: -0.55220741829009834     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          15
+   ib_TO_lb           7
+ ===================== max_S: -0.86356617118481294     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          17
+   ib_TO_lb           8
+ ===================== max_S: -0.97973202934701520     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          19
+   ib_TO_lb           9
+ ===================== max_S: -0.99916858622037363     
+ ==== tab_DelatBa =========== nb,nq           1           1
+   ib_TO_lb           0
+ ===================== max_S:   0.0000000000000000     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           3
+   ib_TO_lb           1
+ ===================== max_S:  -1.4432899320127035E-015
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           5
+   ib_TO_lb           2
+ ===================== max_S:  0.24646744502558326     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           7
+   ib_TO_lb           3
+ ===================== max_S:  0.39816800594617296     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           9
+   ib_TO_lb           4
+ ===================== max_S:  0.28739828329628891     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          11
+   ib_TO_lb           5
+ ===================== max_S:  -9.3665225709058886E-002
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          13
+   ib_TO_lb           6
+ ===================== max_S: -0.55220741829009834     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          15
+   ib_TO_lb           7
+ ===================== max_S: -0.86356617118481294     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          17
+   ib_TO_lb           8
+ ===================== max_S: -0.97973202934701520     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          19
+   ib_TO_lb           9
+ ===================== max_S: -0.99916858622037363     
+ ==== tab_DelatBa =========== nb,nq           1           1
+   ib_TO_lb           0
+ ===================== max_S:   0.0000000000000000     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           3
+   ib_TO_lb           1
+ ===================== max_S:  -1.4432899320127035E-015
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           5
+   ib_TO_lb           2
+ ===================== max_S:  0.24646744502558326     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           7
+   ib_TO_lb           3
+ ===================== max_S:  0.39816800594617296     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1           9
+   ib_TO_lb           4
+ ===================== max_S:  0.28739828329628891     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          11
+   ib_TO_lb           5
+ ===================== max_S:  -9.3665225709058886E-002
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          13
+   ib_TO_lb           6
+ ===================== max_S: -0.55220741829009834     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          15
+   ib_TO_lb           7
+ ===================== max_S: -0.86356617118481294     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          17
+   ib_TO_lb           8
+ ===================== max_S: -0.97973202934701520     
+ max diff x1 x2   0.0000000000000000     
+ ==== tab_DelatBa =========== nb,nq           1          19
+   ib_TO_lb           9
+ ===================== max_S: -0.99916858622037363     
+ D,LB,LG           3           9           9
+ Smolyak ind (old way): Basis
+
+ Smolyak ind (new way)
+ Weight of the Smolyak grids: ONE
+ size basis (old)         220
+ size Smolyak Rep (basis)         220
+     Time and date in sub_main_testSmat: B=>G : 14h:59m:17.873s, the  8/10/2017
+        real (s):              0.000 in sub_main_testSmat: B=>G
+        real    :   0d  0h  0m  0s in sub_main_testSmat: B=>G
+        cpu (s):              0.000 in sub_main_testSmat: B=>G
+  Total real (s):              0.000
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.000
+  Total memory:          0 in sub_main_testSmat: B=>G
+     Time and date in sub_main_testSmat: B=>G : 14h:59m:17.876s, the  8/10/2017
+        real (s):              0.003 in sub_main_testSmat: B=>G
+        real    :   0d  0h  0m  0s in sub_main_testSmat: B=>G
+        cpu (s):              0.002 in sub_main_testSmat: B=>G
+  Total real (s):              0.003
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.002
+  Total memory:          0 in sub_main_testSmat: B=>G
+     Time and date in sub_main_testSmat: G=>B : 14h:59m:17.876s, the  8/10/2017
+        real (s):              0.000 in sub_main_testSmat: G=>B
+        real    :   0d  0h  0m  0s in sub_main_testSmat: G=>B
+        cpu (s):              0.000 in sub_main_testSmat: G=>B
+  Total real (s):              0.003
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.002
+  Total memory:          0 in sub_main_testSmat: G=>B
+     Time and date in sub_main_testSmat: G=>B : 14h:59m:17.878s, the  8/10/2017
+        real (s):              0.002 in sub_main_testSmat: G=>B
+        real    :   0d  0h  0m  0s in sub_main_testSmat: G=>B
+        cpu (s):              0.002 in sub_main_testSmat: G=>B
+  Total real (s):              0.005
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.004
+  Total memory:          0 in sub_main_testSmat: G=>B
+ size basis (old)         220
+ size Smolyak Rep (basis + Grid)         220       20086
+ Write Smolyak Rep 1: Basis (after B=>G=>B)
+ Write Smolyak Rep 1: Basis max diff   1.4432899320127035E-015
+
+ nb_mult_BTOG,nb_mult_GTOB                26664                26664

@@ -1,0 +1,39 @@
+here=`pwd`
+DIR_vib=../..
+cd $DIR_vib
+  make Tnum_MCTDH
+cd $here
+
+
+ x1=0.5
+ x2=0.5
+
+
+$DIR_vib/Tnum90_MCTDH.exe << ** > res
+ &variables
+         zmat=T nat=4 sym=T nrho=0
+ /
+1.
+X     1
+1.    2  1
+1.    2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 100 1 100    0 0 0
+ &minimum pot0=-0.499465823200 pot_act=f pot_cplx=f read_Qsym0=t read_nameQ=t unit='bohr' /
+cosa .9
+R 3.
+r 2.
+x 0.
+pi 3.14159265358979323844d0
+dh 0.0
+
+**
+

@@ -1,0 +1,74 @@
+
+ SYSTEM=sub_system_h2o.f
+
+ici=`pwd`
+DIR_vib=../../..
+DIR_pot=$DIR_vib/sub_pot
+VIBEXE=vib
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $ici
+
+#        ab_initio_meth='hf scf=(conver=12) field=z4'
+#        ab_initio_meth='hf field=z4'
+
+echo "%MEM=500MB"       > xxx.header
+echo " 0.  0.   0.0004" > xxx.footer
+
+nice $DIR_vib/$VIBEXE << ** > $ici/res
+ &system PGrid_omp=0 optimization=1 /
+ &constantes /
+ &variables 
+         charge=0 multiplicity=1
+         file_name_OTF='xxx'
+         commande_unix='gauss09.run xxx >err'
+         ab_initio_prog='g09 '
+         ab_initio_meth='hf scf=(conver=12) field=read'
+         ab_initio_basis=' aug-cc-pvTZ 5D 7F '
+         file_name_fchk='Test.FChk'
+         footer=t header=t
+
+         Cart_Transfo=t
+         Old_Qtransfo=f nb_Qtransfo=3
+ /
+ &Coord_transfo name_transfo='zmat' nat=3 /
+O
+H   1
+H   1 2
+
+ &Coord_transfo name_transfo='linear' /
+sym    a         R+    R-
+3
+1      0.        1.    1.
+2      0.        1.   -1.
+3      1.        0.    0.
+
+ &Coord_transfo name_transfo='active' /
+0 1 1
+
+
+ &Coord_transfo name_transfo='Cartesian' /
+    &Cartesian ReadRefGeometry=t nat=3 unit='au' Eckart=t /
+      O  2.465190328815662E-32  1.479114197289397E-31  2.132571054000003E-01
+      H -9.860761315262648E-32  1.423133069999999E+00 -8.530284216000014E-01
+      H -1.742835358936245E-16 -1.423133069999999E+00 -8.530284216000014E-01
+
+ &minimum pot0=0. OnTheFly=t nb_scalar_Op=3 opt=t pot_act=f read_xyz0=t read_Qsym0=f read_nameQ=t unit='au' /
+      O  -1.540743955509789E-33 -1.540743955509789E-33  2.133965551144769E-01
+      H   0.000000000000000E+00  1.422731957384015E+00 -8.535862204579073E-01
+      H  -1.742344137654983E-16 -1.422731957384015E+00 -8.535862204579073E-01
+
+ &basis_nD iQdyn(1)=1  name="Hm" nq=5 nb=4 Q0=1.854650 scaleQ=4.6 /
+ &basis_nD iQdyn(1)=2  name="Hm" nq=5 nb=4 Q0=1.778375 scaleQ=5.5 /
+ &basis_nD iQdyn(1)=3  name="Hm" nq=5 nb=4 Q0=0. scaleQ=5.5 /
+
+ &inactives /
+ &actives test=f /
+ &analyse max_ana=90 print=f print_psi=0 propa=f control=f intensity=f /
+
+ &Optimization Optimization_method='BFGS' Optimization_param='geometry' /
+   &BFGS /
+**

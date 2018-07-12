@@ -1,0 +1,45 @@
+ initialisation 
+ lecture des commandes 
+fichiers
+controle
+ ene opt gra hes fre res ran
+  1   1   0   0   0   0   0 
+data
+param
+
+ sQ2 = 5.100000000000 bohr 1
+ sQ3 = 11.000000000000 bohr 1
+ d2 = 0.000000000000 bohr 0
+ d3 = 0.000000000000 bohr 0
+ c2 = 1.000000000000 bohr 0
+ c3 = 1.000000000000 bohr 0
+ a2 = 0.000000000000 bohr 0
+ a3 = 0.000000000000 bohr 0
+ b2 = 0.000000000000 bohr 0
+ b3 = 0.000000000000 bohr 0
+
+
+
+
+opt = 1
+ran = 0
+hess = 0
+grad = 0
+ene = 1
+ sQ2 = 5.178651965931 bohr 1
+ sQ3 = 11.224982755067 bohr 1
+ d2 = 0.000000000000 bohr 0
+ d3 = 0.000000000000 bohr 0
+ c2 = 1.000000000000 bohr 0
+ c3 = 1.000000000000 bohr 0
+ a2 = 0.000000000000 bohr 0
+ a3 = 0.000000000000 bohr 0
+ b2 = 0.000000000000 bohr 0
+ b3 = 0.000000000000 bohr 0
+
+ energie = 0.016201404823
+
+
+
+
+

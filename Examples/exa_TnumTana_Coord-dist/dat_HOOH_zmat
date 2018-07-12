@@ -1,0 +1,39 @@
+here=`pwd`
+DIR_vib=../..
+cd $DIR_vib
+  make Tnum
+cd $here
+
+$DIR_vib/Tnum90.exe << ** > res
+ &variables
+         Old_Qtransfo=f
+         nb_Qtransfo=2
+         nrho=2
+
+         charge=0 multiplicity=1
+         commande_unix='gauss09.run xx >err'
+         ab_initio_prog='g09 '
+         ab_initio_meth='hf'
+         ab_initio_basis='sto-3g'
+ /
+ &Coord_transfo name_transfo='zmat' nat=4 /
+O
+O 1
+H 1 2
+H 1 2 3
+
+ &Coord_transfo name_transfo='active' opt_transfo=1 /
+100 100 100 100 100 100
+1 2 4
+
+ &minimum OnTheFly=t read_itQ0transfo=1 read_nameQ=t unit='angs' /
+ ROO 1.4
+ RH1 1.0
+ A1  100.
+ RH2 1.0
+ A2  100.
+ D    60.
+
+ &calculation calc_QTOx=t calc_Tnum=t OnTheFly=t /
+**
+

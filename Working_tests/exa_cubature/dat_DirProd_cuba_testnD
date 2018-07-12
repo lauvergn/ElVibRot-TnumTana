@@ -1,0 +1,68 @@
+#
+# For WP propagation (relaxation, GS)
+#
+
+ SYSTEM=sub_system_cos_hcn.f
+ SYSTEM=sub_system_murrell.f
+
+ici=`pwd`
+DIR_vib=$ici/..
+DIR_pot=$DIR_vib/sub_pot
+
+#cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $ici
+
+ x1=0.538516066
+ x2=0.461483933
+
+
+export OMP_NUM_THREADS=2
+pack=t
+
+excit=$1
+nqc=$2
+
+
+nb=`echo $excit | awk '{print $1+1}'`
+nq=`echo $excit | awk '{print $1+2}'`
+
+
+nice $DIR_vib/vib << ** >res_nD
+ &system POpPsi_omp=1 /
+ &constantes /
+ &variables zmat=T nat=4 /
+H
+H 1
+H 1 2
+H 1 2 3
+
+ 1 1 1    1 0 0
+ &minimum pot0=0. pot_act=f pot_cplx=f read_Qsym0=t unit='bohr' /
+2.
+2.
+1.
+2.
+1.
+3.14
+
+ &basis_nD nb_basis=4 name="direct_prod" Type_OF_nDindB=0 nqc=$nqc Norm_OF_nDindB=$excit packed=t make_cubature=t /
+    &basis_nD iQdyn(1)=1 name="Hm" nb=$nb nq=$nq Q0=0.0 scaleQ=1.0 /
+    &basis_nD iQdyn(1)=2 name="Hm" nb=$nb nq=$nq Q0=0.0 scaleQ=1.0 /
+    &basis_nD iQdyn(1)=3 name="Hm" nb=$nb nq=$nq Q0=0.0 scaleQ=1.0 /
+    &basis_nD iQdyn(1)=4 name="Hm" nb=$nb nq=$nq Q0=0.0 scaleQ=1.0 /
+    &basis_nD iQdyn(1)=5 name="Hm" nb=$nb nq=$nq Q0=0.0 scaleQ=1.0 /
+    &basis_nD iQdyn(1)=6 name="Hm" nb=$nb nq=$nq Q0=0.0 scaleQ=1.0 /
+ &inactives /
+ &actives test=f direct=2 Make_MatOp=t /
+ &analyse max_ana=40 max_ene=20000.d0 print=f print_psi=0 propa=f /
+**
+
+optn=`grep "Optimal norm" res_nD`
+nbc=`grep "cuba%nb" res_nD | awk '{print $2}' | tail -1`
+echo $excit $nbc $nqc $optn
+
+#  &basis_nD iQdyn(1)=2 name="Hm" nb=3 nq=4 Q0=3.2 scaleQ=5.1  /
+#  &basis_nD iQdyn(1)=3 name="Hm" nb=3 nq=4 Q0=2.2 scaleQ=11.0 /

@@ -1,0 +1,46 @@
+#3.187 0.  1.  0.5
+dat_NewQTransfo-OneD 3.187 0.  1. -0.4
+dat_NewQTransfo-OneD 3.187 0.  1. -0.3
+dat_NewQTransfo-OneD 3.187 0.  1. -0.2
+dat_NewQTransfo-OneD 3.187 0.  1. -0.1
+dat_NewQTransfo-OneD 3.187 0.  1.  0.0
+dat_NewQTransfo-OneD 3.187 0.  1.  0.1
+dat_NewQTransfo-OneD 3.187 0.  1.  0.2
+dat_NewQTransfo-OneD 3.187 0.  1.  0.3
+dat_NewQTransfo-OneD 3.187 0.  1.  0.4
+
+exit
+
+
+
+
+
+ dat_DirProd_cuba_test 1 3
+exit
+ dat_DirProd_cuba_test 1 3
+ dat_DirProd_cuba_test 2 6
+ dat_DirProd_cuba_test 3 11
+ dat_DirProd_cuba_test 4 16
+ dat_DirProd_cuba_test 5 28
+ dat_DirProd_cuba_test 6 39
+exit
+ dat_DirProd_cuba_test 7 40
+ dat_DirProd_cuba_test 7 41
+ dat_DirProd_cuba_test 7 42
+ dat_DirProd_cuba_test 7 43
+ dat_DirProd_cuba_test 7 44
+ dat_DirProd_cuba_test 7 45
+ dat_DirProd_cuba_test 7 46
+ dat_DirProd_cuba_test 7 47
+ dat_DirProd_cuba_test 7 48
+ dat_DirProd_cuba_test 7 49
+ dat_DirProd_cuba_test 7 50
+ dat_DirProd_cuba_test 7 51
+ dat_DirProd_cuba_test 7 52
+ dat_DirProd_cuba_test 7 53
+ dat_DirProd_cuba_test 7 54
+ dat_DirProd_cuba_test 7 55
+ dat_DirProd_cuba_test 7 56
+ dat_DirProd_cuba_test 7 57
+ dat_DirProd_cuba_test 7 58
+ dat_DirProd_cuba_test 7 59

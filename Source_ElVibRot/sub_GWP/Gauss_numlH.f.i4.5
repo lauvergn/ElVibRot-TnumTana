@@ -1,0 +1,860 @@
+       PROGRAM Gauss_num
+       USE mod_Tnum
+       USE mod_constant
+       USE mod_poly
+       USE mod_GWP
+       IMPLICIT NONE
+
+!.....DECLARE ARRAY Tnum
+       TYPE (zmatrix) :: mole
+       TYPE (Tnum)    :: para_Tnum
+!      TYPE (table_atom), target :: mendeleev
+
+!-----PHYSICAL AND MATHEMATICAL CONSTANTS ----------------------------
+      TYPE (constant), target :: const_phys
+      real (kind=Rkind) :: vep,rho
+      integer :: ndimA
+      real (kind=Rkind), allocatable :: d0g(:,:),d1g(:,:,:),d2g(:,:,:,:)
+      real (kind=Rkind), allocatable :: d0GG(:,:),d1GG(:,:,:),d2GG(:,:,:,:)
+      real (kind=Rkind) ::  step
+      logical :: num_H,num_A,num_x,ecri
+      integer :: ecri_g,ecri_GG
+      logical :: calc_ADA,calc_Tnum,calc_gG
+
+!      - for the definition of d0d1d2d3_Qeq -------------
+      logical :: Qeq_sym,Q0_sym
+
+!       - for the namelist of the zmatrix ----------------
+      logical :: zmat,cart
+      integer :: nb_act
+      integer :: nat,nb_var
+
+!       - for the symmetry -------------------------------
+!       sym : .TRUE. if we use the symmetry
+      logical :: sym
+
+!       - for 1D transformation --------------------------
+      logical :: tsym,tzmat
+
+!       - end for the zmatrix ----------------------------
+
+!     - for the pot on the fly -------------------------
+      character (len=Name_len) :: ab_initio_level
+      character (len=Name_len) :: commande_unix
+      integer :: nderiv
+      real (kind=Rkind) :: ENE,ENE0
+!     ------------------------------------------------------
+
+      integer :: nrho
+!      total angular momentum
+      integer :: JJ
+      real (kind=Rkind), allocatable :: Qsym0(:)
+
+!.....DECLARE ARRAY Gauss
+       TYPE (para_GWP) :: GWP,GWP0
+       TYPE (para_poly) :: poly,poly0
+       
+       character(len=Name_len) pos,restarti,restartf
+       character(len=Name_len) imp,sig
+       character(len=Name_len) testenergy
+       integer NDUMP,NWP
+       integer NRS
+       integer :: NCOUNT,NFIN,NCO
+       integer :: ND,N,NDP,IREP,NGAMMA,NAK
+       integer :: INDEX,INDEXI,INDEXF
+       real(kind=Rkind) :: a0,X,XPAS,XEND,ENERGY,GAMMA
+       real(kind=Rkind) :: AK,X0,XFS,E,tgamma
+       real(kind=Rkind) :: BIDON,BID,PI
+       real(kind=Rkind),allocatable :: Y(:),FU(:),YOUT(:)
+       real(kind=Rkind),allocatable :: GR(:),HES(:,:)
+       real(kind=Rkind),allocatable :: arg(:),VTEMP(:)
+       real(kind=Rkind),allocatable :: G(:,:),DG(:,:,:)
+       real(kind=Rkind),allocatable :: deltaQ(:),sigma(:)
+       complex(kind=Rkind),allocatable :: ZI(:,:),ZS(:,:)
+       complex(kind=Rkind),allocatable :: trav(:) 
+       INTEGER,allocatable :: inverse_index(:) 
+       complex(kind=Rkind) :: EYE,gamma0,phase
+       complex(kind=Rkind) :: TRACE
+
+!.....DECLARE DIVERS ------------------------------------------
+       integer :: i,NN
+       integer :: j,k
+
+!.....NAMELIST Tnum
+      NAMELIST /niveau/nrho,step,num_H,num_A,num_x,ecri,JJ,
+     *                 commande_unix,ab_initio_level,nderiv,
+     *                 ecri_g,ecri_GG,calc_Tnum
+
+!.....NAMELIST Gauss
+      NAMELIST/file/pos,imp,sig,restartf,testenergy,restarti
+      NAMELIST/gauss/X0,XEND,XPAS,GAMMA,NAK,AK,NRS,NGAMMA,NWP
+
+!.....FILES
+
+       pos='Qmoy'
+       imp='Pmoy'
+       sig='sig'
+       testenergy='gaussiene_out'
+       restarti='rsi'
+       restartf='rsf'
+       read(5,file)
+
+        open(1,file='hessienne')
+        open(62,file='phase')
+        open(31,file=pos)
+        open(71,file=imp)
+        open(64,file='vecY')
+        open(32,file='matA')
+        open(41,file=sig)
+        open(8,file=restarti)
+        open(9,file=restartf)
+        open(10,file=testenergy)
+  3     FORMAT(22(E12.5,1X))
+
+!.....Tnum
+
+!-------------------------------------------------
+!     - read the zmatrix -------------------------
+!     --------------------------------------------
+      CALL sub_constantes(const_phys,.FALSE.)
+         mole%const_phys => const_phys
+         mole%mendeleev => const_phys%mendeleev
+         mole%link_const = .TRUE.
+         mole%link_mendeleev = .TRUE.
+      CALL lect0_zmat(mole)
+!     --------------------------------------------
+!-------------------------------------------------
+
+
+!-------------------------------------------------
+!     - read some parameter for Tnum -------------
+!     --------------------------------------------
+       ecri_g      = -1        !modif
+       ecri_GG     = -1        !modif
+
+      step = 0.001d0
+      num_H = .FALSE.
+      num_A = .FALSE.
+      num_x = .FALSE.
+      ecri  = .FALSE.
+      calc_Tnum= .FALSE.
+      JJ    = 0
+      nrho  = 1
+
+      read(5,niveau)
+
+      para_Tnum%JJ      = JJ
+      para_Tnum%stepT   = step
+      para_Tnum%num_H   = num_H
+      para_Tnum%num_A   = num_A
+      para_Tnum%num_x   = num_x
+      para_Tnum%nrho    = nrho
+      para_Tnum%ecri    = ecri
+      mole%para_OTF%ab_initio_level = ab_initio_level
+      mole%para_OTF%commande_unix   = commande_unix
+!     write(6,niveau)
+
+      allocate(Qsym0(mole%nb_var))
+      write(6,*) 'variables :'
+      DO i=1,mole%nb_var
+       read(5,*) Qsym0(i)
+       write(6,*) 'Qsym0(',i,')=',Qsym0(i)
+      END DO
+
+      IF (nrho .EQ. 0) write(6,*) 'euclidian normalization',nrho
+      IF (nrho .EQ. 1) write(6,*) 'Wilson normalization',nrho
+      IF (nrho .EQ. 2) write(6,*) 'analitical normalization',nrho
+      IF (nrho .EQ. 3) write(6,*) 'numerical normalization',nrho
+
+!......Allocation Tnum
+
+        ndimA = mole%nb_act+3
+
+        allocate(d0g(ndimA,ndimA))
+        allocate(d1g(ndimA,ndimA,mole%nb_act))
+        allocate(d2g(ndimA,ndimA,mole%nb_act,mole%nb_act))
+        allocate(d0GG(ndimA,ndimA))
+        allocate(d1GG(ndimA,ndimA,mole%nb_act))
+        allocate(d2GG(ndimA,ndimA,mole%nb_act,mole%nb_act))
+
+        IF (calc_Tnum) THEN
+          para_Tnum%ecri    = .TRUE.
+          CALL calc_f2_f1Q_num(Qsym0,
+     *                         d0g,d1g,vep,rho,
+     *                         d0GG,d1GG,d2GG,
+     *                         para_Tnum,mole)
+          STOP
+        END IF
+
+
+!......INPUT Gauss 
+!     NAMELIST/gauss/X0,XEND,XPAS,GAMMA,NAK,AK,NRS,NGAMMA,NWP
+       ngamma = 1
+       gamma  = 1.d0
+       nak    = 1
+       ak     = 0.d0
+       x0     = 0.d0
+       xend   = 100.d0
+       xpas   = 10.d0
+       nwp    = 5
+       nrs    = 0
+       read(5,gauss)
+
+!......Allocation Gauss
+       CALL init0_GWP(GWP)
+       CALL init0_GWP(GWP0)
+       CALL init0_poly(poly)
+       CALL init0_poly(poly0)
+       CALL alloc_GWP(GWP,ndim=mole%nb_act,
+     *                cplx=.TRUE.,linearization=.TRUE.)
+
+       ND=mole%nb_act
+       NDP=ND+1
+       N=2*ND+4*ND**2
+
+       allocate(Y(N),FU(N),YOUT(N))
+       allocate(ARG(ND))
+       allocate(deltaQ(ND),sigma(ND),GR(ND))
+       allocate(VTEMP(ND))
+       allocate(G(ND,ND),HES(ND,ND))
+       allocate(DG(ND,ND,ND))
+       allocate(ZI(ND,ND),ZS(ND,ND),TRAV(ND),INVERSE_INDEX(ND))
+
+!.....CONSTANT
+       pi=4.d0*datan(1.d0)
+       a0=0.529177249d0
+       eye=dcmplx(0.d0,1.d0)
+       irep=0
+       ndump=int((xend-X0)/xpas)/nwp     !AU PLUS 5 WP NWP = 5
+
+!....MICH
+!....Lee and Helle JCP 76 3035 1982
+
+!......INPUT Gauss
+!......INITIAL CONDITIONS
+
+       Y(:)=0.d0
+
+       IF(NRS == 0) then
+
+!...... variables Q    
+       DO i=1,ND
+         GWP%Qmean(i)=Qsym0(mole%liste_QactTOQsym(i))
+       END DO
+!    
+!...... variables P
+       GWP%Pmean(:)=0.d0
+       GWP%Pmean(nak)=ak
+
+!.....WIDTH AND CORRELATION MATRIX
+!.....ZERO FOR REAL PART OF THE A MATRIX
+!.....INPUT OF THE IMAGINARY PART OF THE A MATRIX        
+
+!....COMPUTATION OF  deltaQ
+
+       CALL time_perso('init')
+       CALL pot_onthefly(Qsym0,ENE,GR,HES,nderiv,mole)
+       write(6,*) 'ENE PREMIER APPEL',ENE
+
+       DO i=1,ND
+         deltaQ(i)=HES(i,i)
+       END DO
+
+       CALL calc_d0d1d2g_G_bis(Qsym0,
+     *
+     *                         d0g,d1g,d2g,
+     *                         d0GG,d1GG,d2GG,nderiv,
+     *
+     *                         para_Tnum,mole)
+
+       g(:,:) = d0gg(1:nd,1:nd)
+       CALL time_perso('init')
+
+
+!.........k*mu
+
+       DO i=1,ND
+         deltaQ(i)=deltaQ(i)/g(i,i)
+       END DO
+
+!.......deltaQ=sqrt(1/(2*sqrt(k*mu)))
+       deltaQ(:) = sqrt(deltaQ(:))*2.d0
+       deltaQ(:) = 1.d0/sqrt(deltaQ(:))
+
+
+       write(*,*)'   '
+       write(*,*)'hes(i,i), masse,  delta   '
+       write(*,*)'   '
+       DO i=1,nd
+c        read(1,*)k,hes(i,i),bid,deltaQ(i)
+         write(*,21)i,hes(i,i),1.d0/g(i,i),deltaQ(i)
+ 21      format(i3,3(1x,f18.6))
+       END DO
+
+!.....HERE VARIATION OF THE DELTA OF THE CHOSEN VARIABLE
+
+       deltaQ(ngamma)=deltaQ(ngamma)*gamma
+
+
+!.....COMPUTATION OF ALPHA   alpha=1/(sig)**2   sig = 2 deltaQ
+       ncount=2*ND+ND**2+1
+       bid = 1.d0
+       DO i=1,ND
+         Y(ncount)=1.d0/(2.d0*deltaQ(i))**2
+         GWP%CAmean(i,i) = cmplx(0.d0,1.d0/(2.d0*deltaQ(i))**2,kind=Rkind)
+         bid = bid * sqrt(sqrt(2.d0*Y(ncount)/pi))
+         ncount=ncount+ND+1
+       END DO
+!.......INITIALISATION OF THE PHASE
+       gamma0=-log(bid)*eye
+       GWP%Cphase = -log(bid)*eye
+       write(*,*)'gamma0  ',gamma0
+
+!INITIALISATION OF PZ_0 = 2 A_0
+       GWP%CPZ(:,:) = 2.d0 * GWP%CAmean(:,:)
+!INITIALISATION OF Z_0 = Identity 
+       GWP%CZ(:,:) = 0.d0
+       DO i=1,ND
+         GWP%CZ(i,i) = 1.d0
+       END DO
+
+c-----------------------------------------------------
+c      Qmean, Pmean, CZ, CPZ, gamma => Y(:)
+       CALL GWP_TO_Y(GWP,Y,N)
+       write(6,*) Y
+       write(8,*)Y
+c-----------------------------------------------------
+
+        YOUT(:) = Y(:)
+
+      ELSE
+
+        read(8,*)yout
+
+      ENDIF
+
+
+!......INITIALIZATION 
+
+
+      CALL GWP1_TO_GWP2(GWP,GWP0)
+      CALL GWP_TO_poly(GWP0,poly0)
+
+      tgamma=0.d0
+
+      write(60,*)'x,PZ'
+      write(61,*)'x,Z'
+      write(62,*)'x,Phase'
+      write(32,*)'x,xfs,A'
+
+      NFIN = int(XEND/XPAS)
+      DO  NCOUNT=0,NFIN
+        X = X0 + real(NCOUNT,kind=Rkind)*XPAS
+        Y(:) = YOUT(:)
+
+! CALCULATION OF G AND POT IN FCN
+
+        CALL FCN(X,Y,FU,G,DG,ND,N,NdimA,Qsym0,mole,ENE0,
+     *           GWP,
+     *           d0g,d1g,d2g,ecri_g,
+     *           d0GG,d1GG,d2GG,ecri_GG,
+     *           para_Tnum)
+
+c       -------------------------------------------------
+c       Y => Q P A PZ Z
+        CALL Y_TO_GWP(Y,GWP,N)
+        CALL GWP_TO_poly(GWP,poly)
+        write(64,*) x,Y
+        write(60,*) x,GWP%CPZ
+        write(61,*) x,GWP%CZ
+c       -------------------------------------------------
+
+
+!CALCUL DE LA PHASE
+        VTEMP(:) = MATMUL(G,GWP%Pmean)
+        E=0.5d0*DOT_PRODUCT(GWP%Pmean,VTEMP)-ENE0
+      
+!Calcul du terme integral dans l'expression de la phase
+        tgamma=tgamma+E*xpas
+        if(X==0.d0) tgamma=0.d0
+
+!! Argument terme diagonal (uniquement) du nbre complex Z
+c   P et PT partie reel et imag. de Z
+
+        TRACE=0.d0
+        do i=1,nd
+         TRACE = TRACE + log(GWP%CZ(i,i))
+        enddo
+
+        GWP%Cphase = gamma0+eye*0.5d0*trace -tgamma
+        write(6,*) 'phase',x,GWP%Cphase
+        write(62,*) x,GWP%Cphase
+
+!CALCUL DE A 
+          
+        ZS(:,:) = GWP%CZ(:,:)
+        CALL inversion_cplx(ZI,ZS,trav,inverse_index,nd)
+!!      checking: is ZS below=Id?
+        ZS(:,:) = MATMUL(GWP%CZ,ZI)
+
+        GWP%CAmean(:,:) = 0.5d0*MATMUL(GWP%CPZ,ZI)
+
+           
+        write(63,3) x,real(ZS)
+        write(63,*) 
+        write(63,*) 
+        write(63,3) x,dimag(ZS)
+
+! extract sigma
+        do i=1,ND
+          sigma(i)=1.d0/sqrt(imag(GWP%CAmean(i,i)))
+        enddo
+
+! output dynamical information
+        xfs=x*0.0241d0
+
+        write(31,3)x,xfs,Y(1:ND)
+        write(41,3)x,xfs,sigma(1:ND)
+        write(71,3)x,xfs,Y(ND+1:2*ND)
+        write(32,3)x,xfs,GWP%CAmean
+
+        CALL FLUSH(31)
+        CALL FLUSH(32)
+        CALL FLUSH(41)
+        CALL FLUSH(71)
+        CALL FLUSH(60)
+        CALL FLUSH(61)
+        CALL FLUSH(62)
+        CALL FLUSH(63)
+
+
+! check energy
+        VTEMP(:) = MATMUL(G,GWP%Pmean)
+        ENERGY=DOT_PRODUCT(GWP%Pmean,VTEMP)/2.d0
+        ENERGY=ENERGY+ENE0
+
+        WRITE(10,31)x,xfs,ene0,energy
+        WRITE(*,31)x,xfs,ene0,energy
+ 31     format('energy:',4(1x,f18.6))
+
+
+        CALL RK4(Y,FU,ND,N,X,XPAS,YOUT,G,DG,Qsym0,mole,ENE,
+     *           NdimA,GWP,
+     *           d0g,d1g,d2g,ecri_g,
+     *           d0GG,d1GG,d2GG,ecri_GG,
+     *           para_Tnum)
+
+
+
+
+        CALL FLUSH(6)
+      ENDDO
+
+      write(9,*) Y(:)
+
+      deallocate(d0g)
+      deallocate(d1g)
+      deallocate(d2g)
+      deallocate(d0GG)
+      deallocate(d1GG)
+      deallocate(d2GG)
+
+      CALL dealloc_zmat(mole)
+      deallocate(Qsym0)
+
+      END
+      SUBROUTINE FCN(X,Y,FU,G,DG,ND,N,NdimA,Qsym0,mole,ENE,
+     *               GWP,
+     *
+     *               d0g,d1g,d2g,ecri_g,
+     *               d0GG,d1GG,d2GG,ecri_GG,
+     *               para_Tnum)
+
+      USE mod_Tnum
+      USE mod_GWP
+      IMPLICIT NONE
+
+       TYPE (para_GWP) :: GWP
+       TYPE (zmatrix) :: mole
+       TYPE (Tnum)    :: para_Tnum
+
+       REAL(kind=Rkind) Qsym0(mole%nb_var)
+
+        INTEGER N,ND,NDP,NDFIN
+        INTEGER K,INDEX,I,j
+        INTEGER INDEXI,INDEXF
+        integer :: ncount
+        INTEGER NDERIV,NDIMA
+        INTEGER ecri_g,ecri_GG
+        REAL(kind=Rkind) ENE,VEP
+        REAL(kind=Rkind) X,TRHQP
+        REAL(kind=Rkind) E
+        REAL(kind=Rkind) Y(N),FU(N)
+        REAL(kind=Rkind) G(ND,ND),DG(ND,ND,ND),DDG(ND,ND,ND,ND)
+        REAL(kind=Rkind) d0g(ndimA,ndimA)
+        REAL(kind=Rkind) d1g(ndimA,ndimA,mole%nb_act)
+        REAL(kind=Rkind) d2g(ndimA,ndimA,mole%nb_act,mole%nb_act)
+        REAL(kind=Rkind) d0GG(ndimA,ndimA)
+        REAL(kind=Rkind) d1GG(ndimA,ndimA,mole%nb_act)
+        REAL(kind=Rkind) d2GG(ndimA,ndimA,mole%nb_act,mole%nb_act)
+        REAL(kind=Rkind) GR(ND),HES(ND,ND)
+
+        REAL(kind=Rkind) VTEMP(ND)
+        REAL(kind=Rkind) HQ(ND),HP(ND)
+        REAL(kind=Rkind) HQQ(ND,ND),HPP(ND,ND)
+        REAL(kind=Rkind) HQP(ND,ND),HPQ(ND,ND)
+        complex(kind=Rkind) TRACE,EYE
+        complex(kind=Rkind) ZP(ND,ND)
+        complex(kind=Rkind) PZP(ND,ND)
+
+
+        EYE=dcmplx(0.d0,1.d0)
+c       ------------------------------------------------
+c       Y => Q P PZ Z (A)
+        CALL Y_TO_GWP(Y,GWP,N)
+
+        DO i=1,ND
+          Qsym0(mole%liste_QactTOQsym(i))=GWP%Qmean(i)
+        END DO
+
+        nderiv=2
+        CALL pot_onthefly(Qsym0,ENE,GR,HES,nderiv,mole)
+        CALL calc_d0d1d2g_G_bis(Qsym0,
+     *
+     *                          d0g,d1g,d2g,
+     *                          d0GG,d1GG,d2GG,nderiv,
+     *
+     *                          para_Tnum,mole)
+        G(:,:)       = d0GG(1:nd,1:nd)
+        dG(:,:,:)    = d1GG(1:nd,1:nd,:)
+        ddG(:,:,:,:) = d2GG(1:nd,1:nd,:,:)
+
+!*****CALCUL DE HQ
+
+        DO k=1,ND
+          VTEMP(:) = MATMUL(dG(:,:,k),GWP%Pmean)
+          HQ(k)   =  DOT_PRODUCT(GWP%Pmean,VTEMP)/2.d0+GR(k)
+        END DO
+
+!*****CALCUL DE HP
+
+        HP(:) = MATMUL(G,GWP%Pmean)
+
+!*****CALCUL DE HQQ
+
+        DO j=1,ND
+        DO k=1,ND
+          vtemp(:) = MATMUL(ddG(:,:,j,k),GWP%Pmean)
+          HQQ(j,k) = DOT_PRODUCT(GWP%Pmean,VTEMP)/2.d0+HES(j,k)
+        END DO
+        END DO
+
+!****CALCUL DE HPP
+
+        HPP(:,:) = G(:,:)
+
+!****CALCUL DE HQP
+
+        DO j=1,ND
+        DO k=1,ND
+          HQP(j,k) = DOT_PRODUCT(dG(k,:,j),GWP%Pmean)
+          HPQ(k,j) = HQP(j,k)
+        END DO
+        END DO
+
+!!#### CALCUL DES VITESSES
+
+
+!*****CALCUL DE Q POINT
+
+        FU(1:ND) = HP(:)
+
+!*****CALCUL DE P POINT
+       
+       FU(ND+1:2*ND) = -HQ(:)
+
+!*****CALCUL DE PZ POINT
+
+         PZP(:,:) = -MATMUL(HQQ,GWP%CZ)-MATMUL(HQP,GWP%CPZ)
+     
+!*****CALCUL DE Z POINT
+
+         ZP(:,:) = MATMUL(HPP,GWP%CPZ)+MATMUL(HPQ,GWP%CZ)
+
+!
+
+c      Real part of PZP
+       ncount = 2*ND
+       FU(ncount+1:ncount+ND**2)   =
+     *       real(reshape(transpose(PZP(:,:)),(/ ND**2 /) ),kind=Rkind)
+c      Imaginary part of PZP
+       ncount = ncount + ND**2
+       FU(ncount+1:ncount+ND**2)   =
+     *       imag(reshape(transpose(PZP(:,:)),(/ ND**2 /) ))
+
+c      Real part of PZP
+       ncount = ncount + ND**2
+       FU(ncount+1:ncount+ND**2)   =
+     *       real(reshape(transpose(ZP(:,:)),(/ ND**2 /) ),kind=Rkind)
+c      Imaginary part of PZP
+       ncount = ncount + ND**2
+       FU(ncount+1:ncount+ND**2)   =
+     *       imag(reshape(transpose(ZP(:,:)),(/ ND**2 /) ))
+
+      END
+
+      SUBROUTINE RK4(Y,DYDX,ND,N,X,H,YOUT,G,DG,Qsym0,mole,ENE,
+     *                      NdimA,GWP,
+     *                      d0g,d1g,d2g,ecri_g,
+     *                      d0GG,d1GG,d2GG,ecri_GG,
+     *
+     *                      para_Tnum)
+
+      USE mod_Tnum
+      USE mod_GWP
+
+      IMPLICIT NONE
+
+       TYPE (para_GWP) :: GWP
+
+       TYPE (zmatrix) mole
+       TYPE (Tnum)    :: para_Tnum
+
+        REAL(kind=Rkind) Qsym0(mole%nb_var)
+        REAL(kind=Rkind) ENE
+
+      INTEGER N,ND,I,ndimA
+      INTEGER ecri_g,ecri_gg
+      REAL(kind=Rkind) H,HH,H6,X,XH,DQ1,dQ2
+      REAL(kind=Rkind) Y(N),DYDX(N),YOUT(N),YT(N),DYT(N),DYM(N)
+      REAL(kind=Rkind)  G(ND,ND),DG(ND,ND,ND)
+
+      REAL(kind=Rkind) d0g(ndimA,ndimA)
+      REAL(kind=Rkind)d1g(ndimA,ndimA,mole%nb_act)
+      REAL(kind=Rkind)d2g(ndimA,ndimA,mole%nb_act,mole%nb_act)
+      REAL(kind=Rkind)d0GG(ndimA,ndimA)
+      REAL(kind=Rkind)d1GG(ndimA,ndimA,mole%nb_act)
+      REAL(kind=Rkind)d2GG(ndimA,ndimA,mole%nb_act,mole%nb_act)
+
+
+      HH = H*0.5D0
+      H6 = H/6.D0
+      XH = X + HH
+
+      YT(:) = Y(:) + DYDX(:)*HH
+      
+      CALL FCN(XH,YT,DYT,G,DG,ND,N,NdimA,Qsym0,mole,ENE,
+     *         GWP,
+     *         d0g,d1g,d2g,ecri_g,
+     *         d0GG,d1GG,d2GG,ecri_GG,
+     *         para_Tnum)
+
+
+      YT(:) = Y(:) + DYT(:)*HH
+
+      CALL FCN(XH,YT,DYM,G,DG,ND,N,NdimA,Qsym0,mole,ENE,
+     *         GWP,
+     *         d0g,d1g,d2g,ecri_g,
+     *         d0GG,d1GG,d2GG,ecri_GG,
+     *         para_Tnum)
+
+      YT(:)  = Y(:)   + H*DYM(:)
+      DYM(:) = DYT(:) + DYM(:)
+
+      CALL FCN(X+H,YT,DYT,G,DG,ND,N,NdimA,Qsym0,mole,ENE,
+     *         GWP,
+     *         d0g,d1g,d2g,ecri_g,
+     *         d0GG,d1GG,d2GG,ecri_GG,
+     *         para_Tnum)
+
+      YOUT(:) = Y(:) + H6*( DYDX(:) + DYT(:) + 2.D0*DYM(:) )
+
+      END
+      SUBROUTINE GWP_TO_Y(GWP,Y,N)
+       USE mod_GWP
+       IMPLICIT NONE
+
+       TYPE (para_GWP) :: GWP
+       integer         :: N
+       real(kind=Rkind)    :: Y(N)
+       integer         :: ND,ncount
+
+       IF (.NOT. GWP%cplx .OR. .NOT. GWP%linearization) THEN
+         write(6,*) ' ERROR in GWP_TO_Y'
+         write(6,*) ' Real or without lineariztion impossible !'
+         write(6,*) ' cplx,linearization',GWP%cplx,GWP%linearization
+         STOP
+       END IF
+
+       ND = GWP%ndim
+       Y(:) = 0.d0
+
+       ncount = 0
+       Y(ncount+1:ncount+ND)      = GWP%Qmean(:)
+       ncount = ncount + ND
+       Y(ncount+1:ncount+ND)      = GWP%Pmean(:)
+
+c      Real part of PZ
+       ncount = ncount + ND
+       Y(ncount+1:ncount+ND**2)   =
+     *       real(reshape(transpose(GWP%CPZ(:,:)),(/ ND**2 /) ),kind=Rkind)
+c      Imaginary part of PZ
+       ncount = ncount + ND**2
+       Y(ncount+1:ncount+ND**2)   =
+     *       imag(reshape(transpose(GWP%CPZ(:,:)),(/ ND**2 /) ))
+
+c      Real part of Z
+       ncount = ncount + ND**2
+       Y(ncount+1:ncount+ND**2)   =
+     *       real(reshape(transpose(GWP%CZ(:,:)),(/ ND**2 /) ),kind=Rkind)
+c      Imaginary part of Z
+       ncount = ncount + ND**2
+       Y(ncount+1:ncount+ND**2)   =
+     *       imag(reshape(transpose(GWP%CZ(:,:)),(/ ND**2 /) ))
+
+       IF (N == 2*(ND+2*ND**2+1)) THEN
+c        phase
+         ncount = ncount + ND**2
+         Y(ncount+1) = GWP%Cphase
+       END IF
+      END
+      SUBROUTINE Y_TO_GWP(Y,GWP,N)
+       USE mod_GWP
+       IMPLICIT NONE
+
+       TYPE (para_GWP) :: GWP
+       integer         :: N
+       real(kind=Rkind)    :: Y(N)
+
+
+
+       integer         :: ND,ncount,i
+       real(kind=Rkind)    :: Rmat(GWP%ndim,GWP%ndim)
+       real(kind=Rkind)    :: Imat(GWP%ndim,GWP%ndim)
+
+       complex(kind=Rkind) :: ZI(GWP%ndim,GWP%ndim)
+       complex(kind=Rkind) :: ZS(GWP%ndim,GWP%ndim)
+       complex(kind=Rkind) :: trav(GWP%ndim) 
+       integer         :: inverse_index(GWP%ndim) 
+
+       IF (.NOT. GWP%cplx .OR. .NOT. GWP%linearization) THEN
+         write(6,*) ' ERROR in GWP_TO_Y'
+         write(6,*) ' Real or without lineariztion impossible !'
+         write(6,*) ' cplx,linearization',GWP%cplx,GWP%linearization
+         STOP
+       END IF
+
+       ND = GWP%ndim
+
+
+
+       ncount = 0
+       GWP%Qmean(:)       = Y(ncount+1:ncount+ND)
+       ncount = ncount + ND
+       GWP%Pmean(:)       = Y(ncount+1:ncount+ND)
+
+c      Real and imaginary parts of PZ
+       ncount = ncount + ND
+       Rmat(:,:) = reshape(Y(ncount+1:ncount+ND**2),(/ ND,ND /) )
+       ncount = ncount + ND**2
+       Imat(:,:) = reshape(Y(ncount+1:ncount+ND**2),(/ ND,ND /) )
+       GWP%CPZ(:,:) = transpose(cmplx(Rmat,Imat,kind=Rkind))
+
+c      Real and imaginary parts of Z
+       ncount = ncount + ND**2
+       Rmat(:,:) = reshape(Y(ncount+1:ncount+ND**2),(/ ND,ND /) )
+       ncount = ncount + ND**2
+       Imat(:,:) = reshape(Y(ncount+1:ncount+ND**2),(/ ND,ND /) )
+       GWP%CZ(:,:) = transpose(cmplx(Rmat,Imat,kind=Rkind))
+
+
+c      Calcul de A
+           
+        ZS(:,:) = GWP%CZ(:,:)
+        CALL inversion_cplx(ZI,ZS,trav,inverse_index,ND)
+!!      checking: is ZS below=Id?
+        ZS(:,:) = matmul(GWP%CZ,ZI)
+        DO i=1,ND
+         ZS(i,i) = ZS(i,i) - 1.d0
+        END DO
+        write(6,*) 'sum(CZ.ZI-Id):',sum(abs(ZS))
+        
+        GWP%CAmean(:,:) = 0.5d0 * matmul(GWP%CPZ,ZI)
+
+
+       IF (N == 2*(ND+2*ND**2+1)) THEN
+c        phase
+         ncount = ncount + ND**2
+         GWP%Cphase = Y(ncount+1)
+       END IF
+      END
+c==================================================
+C
+C     P2(Q) = eye*( DQt*A*DQ + P*DQ + phase) avec DQ=Q-Qmean
+C
+c==================================================
+      SUBROUTINE GWP_TO_poly(GWP,poly)
+       USE mod_poly
+       USE mod_GWP
+       IMPLICIT NONE
+
+       TYPE (para_GWP)  :: GWP
+       TYPE (para_poly) :: poly
+
+       integer :: ind_exp(GWP%ndim)
+       integer :: i,j,i_coef
+
+       complex (kind=Rkind) :: eye
+
+       eye = cmplx(0.d0,1.d0,kind=Rkind)
+
+       IF (.NOT. GWP%init0) THEN
+         write(6,*) ' ERROR in GWP_TO_poly'
+         write(6,*) ' GWP has NOT been initiated with init0_GWP'
+         STOP
+       END IF
+       IF (.NOT. poly%init0) THEN
+         write(6,*) ' ERROR in GWP_TO_poly'
+         write(6,*) ' poly has NOT been initiated with init0_poly'
+         STOP
+       END IF
+
+
+       CALL write_GWP(GWP)
+
+
+       CALL dealloc_poly(poly)
+       CALL alloc_poly(poly,npoly=2,ndim=GWP%ndim,cplx=GWP%cplx)
+
+c      - First step GWP => poly en DQ=Q-Qmean
+       IF (GWP%cplx) THEN
+c        phase
+         ind_exp(:) = 0
+         i_coef = locate(poly,ind_exp)
+         poly%Ccoef(i_coef) = eye * GWP%Cphase
+
+c        Pmean*DQ
+         DO i=1,GWP%ndim
+           ind_exp(:) = 0
+           ind_exp(i) = 1
+           i_coef = locate(poly,ind_exp)
+           poly%Ccoef(i_coef) = cmplx(0.d0,GWP%Pmean(i),kind=Rkind)
+         END DO
+
+c        DQ*Amean*DQ
+         DO i=1,GWP%ndim
+         DO j=1,GWP%ndim
+           ind_exp(:) = 0
+           ind_exp(i) = 1
+           ind_exp(j) = ind_exp(j) + 1
+           i_coef = locate(poly,ind_exp)
+           poly%Ccoef(i_coef) = poly%Ccoef(i_coef) + eye*GWP%CAmean(i,j)
+         END DO
+         END DO
+       ELSE
+         STOP
+       END IF
+
+       CALL write_poly(poly)
+
+      END SUBROUTINE GWP_TO_poly

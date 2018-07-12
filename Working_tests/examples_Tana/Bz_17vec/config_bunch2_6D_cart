@@ -1,0 +1,83 @@
+EVRT=../../..
+
+ ici=`pwd`
+ cd $EVRT
+ make Tnum_MCTDH
+ cd $ici
+
+$EVRT/Tnum90_MCTDH.exe << ** > res
+ &variables 
+         nrho=2
+         Old_Qtransfo=f
+         Tana=t
+         nb_Qtransfo=3
+ /
+ &Coord_transfo name_transfo='bunch' nb_G=6 nb_vect=17 inTOout=f /
+C C H H   C C H H   C C O C H   C C H H H    G1 G2  G5 G6 G3 G4
+  &recenterG tab_At_TO_G(1)=1,2,3,4,5,6,7,8,9,10,11,12,13 / G1
+  &recenterG tab_At_TO_G(1)=14,15,16,17,18 /  G2
+  &recenterG tab_At_TO_G(1)=1,2,3,4,5,6,7,8 / G5
+  &recenterG tab_At_TO_G(1)=9,10,11,12,13   / G6
+  &recenterG tab_At_TO_G(1)=1,2,3,4 / G3
+  &recenterG tab_At_TO_G(1)=5,6,7,8 / G4
+19 20 #17
+23 24 #16
+21 22 #15
+9 10  #10
+10 11 #9
+9 12  #8
+12 13 #7
+1 2   #6
+2 4   #4
+1 3   #5
+5 6   #3
+5 7   #2
+6 8   #1
+14 15 #14
+14 16 #13
+15 17 #12
+15 18 #11
+
+ &Coord_transfo name_transfo='poly' /
+  &vector nb_vect=2 Frame=t zmat_order=t /    #17 zS0
+     &vector nb_vect=3 Frame=t / #16 xS0 et zS1
+       &vector nb_vect=4 Frame=t / #15 xS1 et zS6
+          &vector Frame=f /        #10 xS6
+          &vector Frame=f /        #9
+          &vector Frame=f /        #8
+          &vector Frame=f /        #7
+       &vector nb_vect=2 Frame=t / #6 zS3
+          &vector Frame=f /        #5 xS3
+          &vector Frame=f /        #4
+       &vector nb_vect=2 Frame=t / #3 z4
+          &vector Frame=f /        #2 xS4
+          &vector Frame=f /        #1
+     &vector nb_vect=3 Frame=t / #14 zS2
+          &vector Frame=f /      #13 xS2
+          &vector Frame=f /      #12
+          &vector Frame=f /      #11
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1    100 100 100   100 100 100    100 100 100  100 100 100    100 100 100  100 100 100    100 100 100  100 100 100    100 100 100  100 100 100    100 1 1  100 100 100    100 100 1   100 100 100  100 100 100
+
+ &minimum read_Qsym0=f read_xyz0=t unit='bohr' /
+ 1         -1.306530478          -0.466391977          -4.661849016
+ 2         -2.667735396          -0.170681508          -2.424350325
+ 3         -2.284373676          -0.687801635          -6.428321183
+ 4         -4.700918378          -0.150143726          -2.464154374
+ 5          1.332879840          -0.458986610          -4.591861568
+ 6          2.604720883          -0.178262288          -2.297791656
+ 7          2.398415175          -0.677864176          -6.307853783
+ 8          4.632686682          -0.157992571          -2.209328185
+ 9         -1.422943176           0.115529690          -0.107487673
+10          1.228099716           0.090082247          -0.069842184
+11          2.528908124           0.473574578           2.103486315
+12         -2.745392137           0.501528777           2.300185751
+13         -4.735970788           0.911164644           2.273718361
+14         -1.448985175           0.368915843           4.473580452
+15          1.314959380          -0.285689711           4.430559412
+16         -2.346212315           0.623659912           6.278999398
+17          1.597538258          -2.305053128           4.685960593
+18          2.344496288           0.690433883           5.898656978
+
+**

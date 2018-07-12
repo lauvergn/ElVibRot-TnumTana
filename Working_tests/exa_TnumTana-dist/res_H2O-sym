@@ -1,0 +1,243 @@
+ BEGINNING sub_constantes
+   Atomic list:
+ 1 He 2                
+ 2 Li 3                
+ 3 Be 4                
+ 4 Ne 10               
+ 5 Na 11               
+ 6 Mg 12               
+ 7 Al 13               
+ 8 Si 14               
+ 9 Cl 17               
+ 10 Ar 18               
+ 11 Ca 20               
+ 12 Sc 21               
+ 13 Ti 22               
+ 14 Cr 24               
+ 15 Mn 25               
+ 16 Fe 26               
+ 17 Co 27               
+ 18 Ni 28               
+ 19 Cu 29               
+ 20 Zn 30               
+ 21 Ga 31               
+ 22 Ge 32               
+ 23 As 33               
+ 24 Se 34               
+ 25 Br 35               
+ 26 Kr 36               
+ 27 X 0                 
+ 28 H 1                 
+ 29 B 5                 
+ 30 C 6                 
+ 31 N 7                 
+ 32 O 8                 
+ 33 F 9                 
+ 34 P 15                
+ 35 S 16                
+ 36 K 19                
+ 37 V 23                
+ 38 D 2                 
+ 39 T 3                 
+   END Atomic list:
+ energy unit: cm-1                
+ auTOenergy 219474.6254016764
+ pi =  3.141592653589793
+ cos(pi) =  -1.
+ a0 (m-1) = 0.5291772575E-10
+ Eh (J) = 0.4359748150E-17
+ Ta (s)= 0.2418884392E-16
+ Ta (fs)=           0.024189
+ auTOcm_inv =      219474.625402
+ inv_Name =     1822888.493732
+ E0 (V cm-1) = 0.5142208088E+10
+ I0 (W cm-2) = 0.3509447353E+17
+ convAif =0.2142001114E+11
+ convIDif =0.3554193834E+10
+ convIQif =0.1419492442E+05
+ convIDif/convIQif =0.2503848368E+06
+ END sub_constantes
+ &GEOM NAT = 3, ZMAT = T, BUNCH = F, COS_TH = T, NB_VAR = 0, 
+ NB_ACT = 0, SYM = T, TZMAT = F, TSYM = F, HYPERSPHERICAL = 0, 
+ VAR_TRANSFO = T, QEQ_SYM = T, Q0_SYM = T, CART = F, MN = F, 
+ MN_TO_SYM = F, STEPT = 0.0010000000474974513, NUM_H = F, 
+ NUM_A = F, NUM_X = F, NRHO = 1, CHARGE = 0, MULTIPLICITY = -1, 
+ GAUSSIAN_FORMAT = F, HEADER = F, FILE_NAME_G98 = 'xx                  ', 
+ COMMANDE_UNIX = 'g98.run xx >err                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ', 
+ AB_INITIO_LEVEL = 'hf sto-3g           ', ECRICC = F, 
+ /
+ init0_param_OTF
+ END init0_param_OTF
+ zmat T
+ mole%ncart 12
+ mole%nb_var 3
+ BEGINNING lecture_zmat
+ nat0,nat 3 4
+ ================== 1
+ get_mass:  8 16 29156.946511715123
+ 1 8 29156.946511715123
+ ================== 2
+ get_mass:  1 1 1837.152596195059
+ 2 1 1837.152596195059 1
+ ================== 3
+ get_mass:  1 1 1837.152596195059
+ 3 1 1837.152596195059 1 2
+ END lecture_zmat
+
+  - check charge multiplicity -------------
+ nb_elec,charge,multiplicity 10 0 1
+ Z: 8 1 1
+  - End check charge multiplicity ----------
+ nbcol= 3
+ mat_QsymTOQzmat has been readed
+
+ - hyperspherical transformation ---------------
+ number of hypersphericals 0
+ - End hyperspherical transformation -----------
+ type_sym 2 2 3
+ type_zmat 2 2 3
+ - Check hyperspherical transformation ------
+ - End check hyperspherical transformation --
+ -analysis of the variable type ---
+ - End analysis of the variable type ---
+
+ BEGINNING ecriture_z
+
+
+ zmat,cart T F
+
+ ------------------------------------------
+ --- Number of variables ------------------
+
+ nb_act,nb_var 1 3
+
+ Number of variables of type...
+ type  1: active                       (nb_act1): 1
+ type 31: for gaussian WP           (nb_inact31): 0
+ type 21: inactive harmonic         (nb_inact21): 0
+ type 22: inactive non harmonic     (nb_inact22): 0
+ type 20: adiabatically constrained (nb_inact20): 0
+ type  0: rigid                      (nb_rigid0): 2
+ type100: rigid                    (nb_rigid100): 0
+
+ nb_inact2n = nb_inact21 + nb_inact22  : 0
+ nb_act= nb_act1+nb_inact31+nb_inact2n : 1
+ nb_inact   = nb_inact20 + nb_inact2n  : 0
+ nb_rigid   = nb_rigid0 + nb_rigid100  : 2
+ ------------------------------------------
+ ndimG = nb_act+3                      : 4
+ ------------------------------------------
+
+
+ ------------------------------------------
+ ------ Qzmat -----------------------------
+   variable type_zmat transfo Rtransfo
+        1         2       1    0.000000
+        2         2       1    0.000000
+        3         3       1    0.000000
+ ------------------------------------------
+
+
+ ------ Qsym ------------------------------
+   variable type_sym type_var transfo Rtransfo
+        1        2        1       1    0.000000
+        2        2        0       1    0.000000
+        3        3        0       1    0.000000
+ ------------------------------------------
+
+
+ ------ hyperspherical --------------------
+  hyperspherical : 0
+     liste of coordinates :
+ ------------------------------------------
+
+
+ liste_QactTOQsym 1 2 3 4 5 6 0 0 0 0 0 0
+ liste_QsymTOQact 1 2 3 4 5 6 0 0 0 0 0 0
+ ------------------------------------------
+ ------------------------------------------
+
+
+ ------------------------------------------
+ --- Masses ... ---------------------------
+
+ ncart,ncart_act 12 9
+ ATOM  mass    sqrt(mass) ...
+at  129156.946512     170.754053
+at  4 1837.152596      42.862018
+at  7 1837.152596      42.862018
+ Mtot_inv,Mtot 0.000030458783874967512 32831.25170410523
+ ------------------------------------------
+
+
+ ------------------------------------------
+ --- Z-matrix -----------------------------
+
+ nat,nat_act 4 3
+ zmat =
+ 1 1 0 0 0 0
+ 2 4 1 0 0 0
+ 3 7 1 4 0 0
+
+ ------------------------------------------
+
+
+ ------------------------------------------
+ --- Symmetrie ----------------------------
+
+ sym T
+ mat_QsymTOQzmat
+    1       1.0000000000       1.0000000000       0.0000000000
+    2       1.0000000000      -1.0000000000       0.0000000000
+    3       0.0000000000       0.0000000000       1.0000000000
+ mat_inv_QsymTOQzmat
+    1       0.5000000000       0.5000000000       0.0000000000
+    2       0.5000000000      -0.5000000000       0.0000000000
+    3       0.0000000000       0.0000000000       1.0000000000
+
+ ------------------------------------------
+
+ END ecriture_z
+ END lecture_coord
+ nat,nb_var,ncart 4 3 12
+ nat_act,nb_var,ncart_act 3 3 9
+ ndimG ou ndimA 4
+
+ analitical normalization 2
+
+ variables :
+ Qsym0( 1 )= 1.
+ Qsym0( 2 )= 0.
+ Qsym0( 3 )= 90.
+ BEGINNING calc_f2_f1Q_num
+ ndimG 4
+ ecriCC F
+ Qsym0 1.8897259581455923 0. 1.5707963267948966
+
+ num_H,num_A F F
+ num_x,nrho F 2
+ JJ 0
+
+ d0x =
+          -18.056253318           0.000000000         -18.056253318
+           -4.532410473           0.000000000          76.465057762
+           76.465057762           0.000000000          -4.532410473
+            0.000000000           0.000000000           0.000000000
+
+ ----------------------------------------------
+  definition of rho=rho(Qsym_1)*rho(Qsym_2)...
+  only for variables of type 1
+   Qsym_i type_t rho(Qsym_i)
+     1      2    1.                           
+ ----------------------------------------------
+
+ nb_act 1
+ vep rho =              0.000030273790899             1.000000000000000
+
+ f1i =         0.0000000000
+
+  f2ij
+    1      -0.0001441462
+
+ END calc_f2_f1Q_num
+ END Tnum

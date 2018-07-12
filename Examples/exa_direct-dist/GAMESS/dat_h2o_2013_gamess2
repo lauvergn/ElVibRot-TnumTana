@@ -1,0 +1,53 @@
+
+nq=5
+nb=5
+
+ SYSTEM=sub_system_h2o.f
+
+ici=`pwd`
+DIR_vib=/Users/lauvergn/EclipseWork_Mars/ElVibRot
+DIR_pot=$DIR_vib/sub_pot
+VIBEXE=vib
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $ici
+
+nice $DIR_vib/$VIBEXE << ** > $ici/res
+ &system PGrid_omp=0 /
+ &constantes /
+ &variables 
+         zmat=T nat=3 
+         Cart_Transfo=t
+
+         charge=0 multiplicity=1 
+         commande_unix='gms xx >err'
+         ab_initio_prog='gamess2014 '
+         ab_initio_meth='SCFTYP=RHF '
+         ab_initio_basis='GBASIS=STO  NGAUSS=3'
+ /
+O
+H   1
+H   1 2
+
+1 1 1
+
+ &Coord_transfo name_transfo='Cartesian' /
+    &Cartesian Eckart=t P_Axis_Ref=t /
+
+ &minimum pot0=-74.9659012171 OnTheFly=t pot_act=f read_Qsym0=f read_nameQ=t unit='angs' /
+RH   0.9894095
+RH   0.9894095
+A  100.0271438
+
+ &basis_nD iQdyn(1)=1  name="Hm" nq=$nq nb=$nb Q0=1.89 scaleQ=5.7 /
+ &basis_nD iQdyn(1)=2  name="Hm" nq=$nq nb=$nb Q0=1.89 scaleQ=5.7 /
+ &basis_nD iQdyn(1)=3  name="Hm" nq=$nq nb=$nb Q0=1.74 scaleQ=5.4 /
+
+ &inactives /
+ &actives test=f restart=f JJ=0 /
+ &analyse max_ana=90 print=f print_psi=0 propa=f control=f intensity=t /
+ &intensity l_Int=t l_IntVR=f l_Tau=f l_IntVR=f Temp=1. Ewidth=1. Emax=6000. Emin=0.0 /
+**

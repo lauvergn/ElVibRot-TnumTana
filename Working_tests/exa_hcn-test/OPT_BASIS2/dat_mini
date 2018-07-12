@@ -1,0 +1,33 @@
+/Users/lauvergn/trav/mini_ran_1/mini <<$ > res_mini
+fichiers
+  const = const_EVRT0
+end
+controle
+  test_opt = 1
+  test_ene = 1
+  test_grad = 0
+  test_hess = 0
+  test_freq = 0
+  restart = 0
+end
+data
+ sQ2 = 5.100000000000 bohr 1
+ sQ3 = 11.00000000000 bohr 1
+ d2 = 0.000000000000 bohr 0
+ d3 = 0.000000000000 bohr 0
+ c2 = 1.000000000000 bohr 0
+ c3 = 1.000000000000 bohr 0
+ a2 = 0.000000000000 bohr 0
+ a3 = 0.000000000000 bohr 0
+ b2 = 0.000000000000 bohr 0
+ b3 = 0.000000000000 bohr 0
+end
+param
+  deriv = 0.01
+  conv_energie = 1.e-4
+  min_energie = 1.e-7
+  conv_deplace = 1.e-2
+  max_deplace =  0.5
+  max_opt     = 100
+end
+$

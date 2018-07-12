@@ -1,0 +1,25 @@
+
+ ici=`pwd`
+ cd ../..
+ make Tnum_MCTDH
+ cd $ici
+
+../../Tnum90_MCTDH.exe << ** > res
+ &variables
+         Old_Qtransfo=t
+         nat=3
+ /
+O
+H 1
+H 1 2
+
+1  1 1
+ &minimum read_nameQ=t /
+d1 1.
+d2 1.
+a2 1.83
+
+ &MCTDH grid1D=.FALSE. perio=f epsi_MCTDH=1e-10 /
+
+**
+

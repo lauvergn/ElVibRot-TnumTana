@@ -1,0 +1,70 @@
+name=$1
+nb_elec=$2
+
+nstate=`echo $nb_elec | awk '{print $1-1}'`
+
+echo "
+ \$CONTRL
+   EXETYP=RUN UNITS=BOHR NOSYM=1
+   COORD=UNIQUE 
+   SCFTYP=RHF  CITYP=NONE                            
+   ICHARG=           0
+   MULT=           1
+   RUNTYP=energy
+ \$END
+ \$cis    hamtyp=saps mult=1 nacore=1 nstate="$nstate " iroot=1 \$end
+ \$BASIS
+   GBASIS=STO  NGAUSS=3                              
+ \$END
+ \$DATA
+   xx
+ C1" > $name.inp
+
+grep -v geom $name.evrti |  awk '{print $1" "$2". "$3" "$4" "$5}' >> $name.inp
+
+ echo "\$END" >> $name.inp
+
+
+#==================================================================================
+# GAMESS calculation (CIS)
+#==================================================================================
+ gms $name 2> err
+
+
+conv_e=1.000000000000000000000
+conv_mu=2.54175775687438576786
+
+#==================================================================================
+# the energies
+#==================================================================================
+echo energy  > $name.evrto
+grep "E(RHF)=" $name.pun | awk '{print "1 1 " $2}' | sed "s/,/ /" >> $name.evrto
+echo end energy >> $name.evrto
+
+#==================================================================================
+# dipole moment mux
+#==================================================================================
+echo mux >> $name.evrto
+grep "DIPOLE" $name.pun | awk '{print "1 1 " $2}' >> $name.evrto
+echo end mux >> $name.evrto
+
+
+#==================================================================================
+# dipole moment muy
+#==================================================================================
+echo muy >> $name.evrto
+grep "DIPOLE" $name.pun | awk '{print "1 1 " $3}' >> $name.evrto
+echo end muy >> $name.evrto
+
+#==================================================================================
+# dipole moment muz
+#==================================================================================
+echo muz >> $name.evrto
+grep "DIPOLE" $name.pun | awk '{print "1 1 " $4}' >> $name.evrto
+echo end muz >> $name.evrto
+
+#==================================================================================
+# calculation done
+#==================================================================================
+echo calculation done >> $name.evrto
+

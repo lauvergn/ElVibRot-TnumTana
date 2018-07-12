@@ -1,0 +1,346 @@
+<html>
+
+  <head>
+    <title>
+      SPHERE_LEBEDEV_RULE - Quadrature Rules for the Sphere
+    </title>
+  </head>
+
+  <body bgcolor="#EEEEEE" link="#CC0000" alink="#FF3300" vlink="#000055">
+
+    <h1 align = "center">
+      SPHERE_LEBEDEV_RULE <br> Quadrature Rules for the Sphere
+    </h1>
+
+    <hr>
+
+    <p>
+      <b>SPHERE_LEBEDEV_RULE</b> 
+      is a dataset directory which
+      contains files defining Lebedev rules on the unit sphere, which
+      can be used for quadrature, and have a known precision.
+    </p>
+
+    <p>
+      A Lebedev rule of precision <b>p</b> can be used to correctly integrate
+      any polynomial for which the highest degree term 
+      <b>x<sup>i</sup>y<sup>j</sup>z<sup>k</sup></b> satisfies <b>i+j+k &lt;= p</b>.
+    </p>
+
+    <p>
+      The approximation to the integral of <b>f(x)</b> has the form
+      <b>Integral f(x,y,z) = 
+      4 * pi * sum ( 1 <= i < n ) w<sub>i</sub> * f(x<sub>i</sub>,y<sub>i</sub>,z<sub>i</sub>)</b>
+      where
+      <pre>
+        x<sub>i</sub> = cos ( theta<sub>i</sub> ) * sin ( phi<sub>i</sub> )
+        y<sub>i</sub> = sin ( theta<sub>i</sub> ) * sin ( phi<sub>i</sub> )
+        z<sub>i</sub> =                  cos ( phi<sub>i</sub> )
+      </pre>
+    </p>
+
+    <p>
+      The data file for an <b>n</b> point rule includes <b>n</b> lines, where
+      the <b>i</b>-th line lists the values of
+      <pre>
+        theta<sub>i</sub> phi<sub>i</sub> w<sub>i</sub>
+      </pre>
+      The angles are measured in degrees, and chosen so that:
+      <pre>
+        - 180 &lt;= theta<sub>i</sub> &lt;= + 180
+            0 &lt;= phi<sub>i</sub> &lt;= + 180
+      </pre>
+      and the weights w<sub>i</sub> should sum to 1.
+    </p>
+
+    <h3 align = "center">
+      Licensing:
+    </h3>
+
+    <p>
+      The computer code and data files described and made available on this web page 
+      are distributed under
+      <a href = "../../txt/gnu_lgpl.txt">the GNU LGPL license.</a>
+    </p>
+
+    <h3 align = "center">
+      Related Data and Programs:
+    </h3>
+
+    <p>
+      <a href = "../../f_src/geometry/geometry.html">
+      GEOMETRY</a>,
+      a FORTRAN90 library which
+      computes various geometric
+      quantities, including grids on spheres.
+    </p>
+
+    <p>
+      <a href = "../../f_src/scvt/scvt.html">
+      SCVT</a>, 
+      a FORTRAN90 library which
+      can find a set
+      of well separated points on a sphere using Centroidal Voronoi
+      Tessellations.
+    </p>
+
+    <p>
+      <a href = "../../datasets/sphere_design_rule/sphere_design_rule.html">
+      SPHERE_DESIGN_RULE</a>,
+      a dataset directory which 
+      contains files defining point sets on the surface of the unit sphere, 
+      known as "designs", which can be useful for estimating integrals 
+      on the surface, among other uses.
+    </p>
+
+    <p>
+      <a href = "../../f_src/sphere_design_rule/sphere_design_rule.html">
+      SPHERE_DESIGN_RULE</a>,
+      a FORTRAN90 library which 
+      returns point sets on the surface of the unit sphere, known as "designs",
+      which can be useful for estimating integrals on the surface, among other uses.
+    </p>
+
+    <p>
+      <a href = "../../datasets/sphere_grid/sphere_grid.html">
+      SPHERE_GRID</a>, 
+      a dataset directory which 
+      contains grids of points, lines, triangles or quadrilaterals on a sphere;
+    </p>
+
+    <p>
+      <a href = "../../f_src/sphere_grid/sphere_grid.html">
+      SPHERE_GRID</a>, 
+      a FORTRAN90 library which 
+      provides a number of ways of generating grids of points, or of
+      points and lines, or of points and lines and faces, over the unit sphere.
+    </p>
+
+    <p>
+      <a href = "../../m_src/sphere_voronoi/sphere_voronoi.html">
+      SPHERE_VORONOI</a>, 
+      a MATLAB program which
+      computes the Voronoi diagram of points on a sphere.
+    </p>
+
+    <p>
+      <a href = "../../sphere_voronoi_display_opengl/sphere_voronoi_display_opengl.html">
+      SPHERE_VORONOI_DISPLAY_OPENGL</a>,
+      a C++ program which
+      displays a sphere and randomly selected generator points, and then
+      gradually colors in points in the sphere that are closest to each generator.
+    </p>
+
+    <p> 
+      <a href = "../../m_src/sphere_xyz_display/sphere_xyz_display.html">
+      SPHERE_XYZ_DISPLAY</a>,
+      a MATLAB program which
+      reads XYZ information defining points in 3D, 
+      and displays a unit sphere and the points in the MATLAB graphics window.
+    </p>
+
+    <p> 
+      <a href = "../../cpp_src/sphere_xyz_display_opengl/sphere_xyz_display_opengl.html">
+      SPHERE_XYZ_DISPLAY_OPENGL</a>, 
+      a C++ program which
+      reads XYZ information defining points in 3D, 
+      and displays a unit sphere and the points, using OpenGL.
+    </p>
+
+    <h3 align = "center">
+      Reference:
+    </h3>
+
+    <p>
+      <ol>
+        <li>
+          Thomas Ericson, Victor Zinoviev,<br>
+          Codes on Euclidean Spheres,<br>
+          Elsevier, 2001,<br>
+          ISBN: 0444503293,<br>
+          LC: QA166.7E75
+        </li>
+        <li>
+          Gerald Folland,<br>
+          How to Integrate a Polynomial Over a Sphere,<br>
+          American Mathematical Monthly,<br>
+          Volume 108, Number 5, May 2001, pages 446-448.
+        </li>
+        <li>
+          Vyacheslav Lebedev, Dmitri Laikov,<br>
+          A quadrature formula for the sphere of the 131st
+          algebraic order of accuracy,<br>
+          Russian Academy of Sciences Doklady Mathematics,<br>
+          Volume 59, Number 3, 1999, pages 477-481.
+        </li>
+        <li>
+          Vyacheslav Lebedev,<br>
+          A quadrature formula for the sphere of 59th algebraic
+          order of accuracy,<br>
+          Russian Academy of Sciences Doklady Mathematics, <br>
+          Volume 50, 1995, pages 283-286. 
+        </li>
+        <li>
+          Vyacheslav Lebedev, A.L. Skorokhodov,<br>
+          Quadrature formulas of orders 41, 47, and 53 for the sphere,<br>
+          Russian Academy of Sciences Doklady Mathematics, <br>
+          Volume 45, 1992, pages 587-592. 
+        </li>
+        <li>
+          Vyacheslav Lebedev,<br>
+          Spherical quadrature formulas exact to orders 25-29,<br>
+          Siberian Mathematical Journal, <br>
+          Volume 18, 1977, pages 99-107. 
+        </li>
+        <li>
+          Vyacheslav Lebedev,<br>
+          Quadratures on a sphere,<br>
+          Computational Mathematics and Mathematical Physics, <br>
+          Volume 16, 1976, pages 10-24. 
+        </li>
+        <li>
+          Vyacheslav Lebedev,<br>
+          Values of the nodes and weights of ninth to seventeenth 
+          order Gauss-Markov quadrature formulae invariant under the
+          octahedron group with inversion,<br>
+          Computational Mathematics and Mathematical Physics,<br>
+          Volume 15, 1975, pages 44-51.
+        </li>
+        <li>
+          AD McLaren,<br>
+          Optimal Numerical Integration on a Sphere,<br>
+          Mathematics of Computation,<br>
+          Volume 17, Number 84, October 1963, pages 361-383.
+        </li> 
+        <li>
+          Edward Saff, Arno Kuijlaars,<br>
+          Distributing Many Points on a Sphere,<br>
+          The Mathematical Intelligencer,<br>
+          Volume 19, Number 1, 1997, pages 5-11.
+        </li>
+      </ol>
+    </p>
+
+    <h3 align = "center">
+      Sample files
+    </h3>
+
+    <p>
+      <ul>
+        <li>
+          <a href = "lebedev_003.txt">lebedev_003.txt</a>, 6 point rule, precision 3.
+        </li>
+        <li>
+          <a href = "lebedev_005.txt">lebedev_005.txt</a>, 14 point rule, precision 5.
+        </li>
+        <li>
+          <a href = "lebedev_007.txt">lebedev_007.txt</a>, 26 point rule, precision 7.
+        </li>
+        <li>
+          <a href = "lebedev_009.txt">lebedev_009.txt</a>, 38 point rule, precision 9.
+        </li>
+        <li>
+          <a href = "lebedev_011.txt">lebedev_011.txt</a>, 50 point rule, precision 11.
+        </li>
+        <li>
+          <a href = "lebedev_013.txt">lebedev_013.txt</a>, 74 point rule, precision 13.
+        </li>
+        <li>
+          <a href = "lebedev_015.txt">lebedev_015.txt</a>, 86 point rule, precision 15.
+        </li>
+        <li>
+          <a href = "lebedev_017.txt">lebedev_017.txt</a>, 110 point rule, precision 17.
+        </li>
+        <li>
+          <a href = "lebedev_019.txt">lebedev_019.txt</a>, 146 point rule, precision 19.
+        </li>
+        <li>
+          <a href = "lebedev_021.txt">lebedev_021.txt</a>, 170 point rule, precision 21.
+        </li>
+        <li>
+          <a href = "lebedev_023.txt">lebedev_023.txt</a>, 194 point rule, precision 23.
+        </li>
+        <li>
+          <a href = "lebedev_025.txt">lebedev_025.txt</a>, 230 point rule, precision 25.
+        </li>
+        <li>
+          <a href = "lebedev_027.txt">lebedev_027.txt</a>, 266 point rule, precision 27.
+        </li>
+        <li>
+          <a href = "lebedev_029.txt">lebedev_029.txt</a>, 302 point rule, precision 29.
+        </li>
+        <li>
+          <a href = "lebedev_031.txt">lebedev_031.txt</a>, 350 point rule, precision 31.
+        </li>
+        <li>
+          <a href = "lebedev_035.txt">lebedev_035.txt</a>, 434 point rule, precision 35.
+        </li>
+        <li>
+          <a href = "lebedev_041.txt">lebedev_041.txt</a>, 590 point rule, precision 41.
+        </li>
+        <li>
+          <a href = "lebedev_047.txt">lebedev_047.txt</a>, 770 point rule, precision 47.
+        </li>
+        <li>
+          <a href = "lebedev_053.txt">lebedev_053.txt</a>, 974 point rule, precision 53.
+        </li>
+        <li>
+          <a href = "lebedev_059.txt">lebedev_059.txt</a>, 1202 point rule, precision 59.
+        </li>
+        <li>
+          <a href = "lebedev_065.txt">lebedev_065.txt</a>, 1454 point rule, precision 65.
+        </li>
+        <li>
+          <a href = "lebedev_071.txt">lebedev_071.txt</a>, 1730 point rule, precision 71.
+        </li>
+        <li>
+          <a href = "lebedev_077.txt">lebedev_077.txt</a>, 2030 point rule, precision 77.
+        </li>
+        <li>
+          <a href = "lebedev_083.txt">lebedev_083.txt</a>, 2354 point rule, precision 83.
+        </li>
+        <li>
+          <a href = "lebedev_089.txt">lebedev_089.txt</a>, 2702 point rule, precision 89.
+        </li>
+        <li>
+          <a href = "lebedev_095.txt">lebedev_095.txt</a>, 3074 point rule, precision 95.
+        </li>
+        <li>
+          <a href = "lebedev_101.txt">lebedev_101.txt</a>, 3470 point rule, precision 101.
+        </li>
+        <li>
+          <a href = "lebedev_107.txt">lebedev_107.txt</a>, 3890 point rule, precision 107.
+        </li>
+        <li>
+          <a href = "lebedev_113.txt">lebedev_113.txt</a>, 4334 point rule, precision 113.
+        </li>
+        <li>
+          <a href = "lebedev_119.txt">lebedev_119.txt</a>, 4802 point rule, precision 119.
+        </li>
+        <li>
+          <a href = "lebedev_125.txt">lebedev_125.txt</a>, 5294 point rule, precision 125.
+        </li>
+        <li>
+          <a href = "lebedev_131.txt">lebedev_131.txt</a>, 5810 point rule, precision 131.
+        </li>
+      </ul>
+    </p>
+
+    <p>
+      You can go up one level to 
+      <a href = "../datasets.html">the DATASETS page.</a>
+    </p>
+
+    <hr>
+
+    <i>
+      Last revised on 09 September 2010.
+    </i>
+
+    <!-- John Burkardt -->
+
+  </body>
+
+  <!-- Initial HTML skeleton created by HTMLINDEX. -->
+
+</html>

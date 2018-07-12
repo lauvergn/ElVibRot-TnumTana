@@ -1,0 +1,51 @@
+T=300.
+test=f
+
+ SYSTEM=sub_system_h2o.f
+
+ici=`pwd`
+DIR_vib=/Users/lauvergn/git/ElVibRot
+DIR_pot=$DIR_vib/sub_pot
+VIBEXE=vib
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $ici
+
+
+nice $DIR_vib/$VIBEXE << ** > $ici/res
+ &system PGrid_omp=0 intensity_only=f printlevel=1 /
+ &constantes /
+ &variables 
+         nrho=1 
+         zmat=T nat=3 
+         sym=f NM=t NM_TO_sym=t
+         hessian_old=f hessian_onthefly=t file_hessian='H2O.pun' hessian_cart=t
+         charge=0 multiplicity=1 
+         header=t
+         commande_unix='gms xx >err' 
+         ab_initio_prog='gamess2014 '
+         ab_initio_meth='SCFTYP=RHF MPLEVL=0'
+         ab_initio_basis='GBASIS=STO  NGAUSS=3'
+ /
+O
+H   1
+H   1 2
+
+1 1 1
+ &minimum pot0=-74.9659012171 OnTheFly=t pot_act=f read_Qsym0=f read_nameQ=t unit='angs' /
+RH 0.9894095 Angs
+RH 0.9894095 Angs
+A  100.0271438 °
+
+ &basis_nD iQdyn(1)=1  name="HO" nq=5 nb=5 auto_basis=t /
+ &basis_nD iQdyn(1)=2  name="HO" nq=5 nb=5 auto_basis=t /
+ &basis_nD iQdyn(1)=3  name="HO" nq=5 nb=5 auto_basis=t /
+
+ &inactives /
+ &actives test=$test restart=f JJ=0 pack_op=t comput_S=f /
+ &analyse max_ana=90 print=f print_psi=0 propa=f control=f intensity=t /
+ &intensity l_Int=t l_IntVR=f l_Tau=f l_IntVR=f Temp=300. Ewidth=1. Emax=6000. Emin=0.0 /
+**

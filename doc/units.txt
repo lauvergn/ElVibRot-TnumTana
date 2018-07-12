@@ -1,0 +1,32 @@
+# This file describes all the units and their conversion factors that the
+# library understands. You can add new units by appending to this file. The
+# data provided here will be incorporated during compilation.
+#
+# Notes: 
+# - It is not necessary to worry about double precision. Use 'e', not 'd'
+#   for exponents.
+# - Specifying any conversion between two units automatically implies the reverse
+#   conversion. E.g. if you have a line "au fs ...", you do not need to specify
+#   a line "fs au ..."
+# - Conversion can only occur between values that are directly connected via a
+#   conversion factor.
+
+au      fs       0.02418884327440855991  # atomictime to femtosecond
+au      ps       2.4188843274408560e-05  # atomictime to picosecond
+au      ns       2.4188843274408560e-08  # atomictime to nanosecond
+au      eV       27.2113834492829731459  # atomicenergy to electronvolt
+au      cminv    2.194746312856066506e5  # atomicenergy to inverse cm (wavenumbers)
+au      K        3.157746662555312504e5  # atomicenergy to Kelvin (E = kb T)
+au      J        4.3597438060897550e-18  # atomicenergy to Joule
+au      Hz       6.579683918175572e15    # 1/atomictime to 2 pi / second 
+au      MHz      6.579683918175572e9     # 1/atomictime to 10^6 2 pi / second 
+au      kHz      6.579683918175572e12    # 1/atomictime to 10^3 2 pi / second 
+au      Vpm      5.14220624463189208e11  # electric field strength: (atomicenergy/atomiccharge)/atomiclength to volt/meter
+au      m        5.2917720827883533e-11  # atomiclength to meter
+au      nm       5.2917720827883533e-2   # atomiclength to nanometer
+au      microm   5.2917720827883535e-05  # atomiclength to micrometer
+au      pm       52.917720827883533      # atomiclength to picometer
+au      angstrom 0.5291772082788353      # atomiclength to angstrom
+nm      cm       1.0e-7                  # nanometer to centimeter
+au      kg       9.1093818871545313e-31  # atomicmass to kg
+au      dalton   5.48579911000000039e-4  # atomicmass to dalton (unified atomic mass)

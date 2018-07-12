@@ -1,0 +1,94 @@
+#!/bin/bash -x
+
+
+a=$1
+b=$2
+c=$3
+web=$4
+nom_rep=/Users/lauvergn/trav/EVR-old
+
+if test $a = "+" -o $b = "+" -o $c = "+"
+then
+  echo avec +
+  aold=`grep EVR  version-EVR-T | awk '{print $3}' | awk -F. '{print $1 " " $2}'`
+  bold=`grep Tnum version-EVR-T | awk '{print $3}' | awk -F. '{print $1 " " $2}'`
+  cold=`grep Tana version-EVR-T | awk '{print $3}' | awk -F. '{print $1 " " $2}'`
+
+  if test $a = "+"
+  then
+    a=`echo $aold | awk '{print $1 "." $2+1}'`
+  else
+    a=`echo $aold | awk '{print $1 "." $2}'`
+  fi
+
+  if test $b = "+"
+  then
+    b=`echo $bold | awk '{print $1 "." $2+1}'`
+  else
+    b=`echo $bold | awk '{print $1 "." $2}'`
+  fi
+
+  if test $c = "+"
+  then
+    c=`echo $cold | awk '{print $1 "." $2+1}'`
+  else
+    c=`echo $cold | awk '{print $1 "." $2}'`
+  fi
+
+  echo $a $b $c
+
+fi
+nom_sd="ElVibRot_f90-v"$a"-Tnum"$b"-Tana"$c
+
+
+nom=$nom_rep/$nom_sd
+
+rm *.lst
+
+if test -s $nom  
+then
+    echo le repertoire $nom existe !!
+else
+    echo le repertoire $nom n existe pas
+    
+
+    #modifie la version dans versionEVR-T
+    echo "EVR =  "$a >  version-EVR-T
+    echo "Tnum = "$b >> version-EVR-T
+    echo "Tana = "$c >> version-EVR-T
+
+    cp Source_ElVibRot/sub_main/EVR-T.f90 EVR-T.f90.i
+    LANG=C sed "s/printlevel     = 1/printlevel     = 0/" EVR-T.f90.i > Source_ElVibRot/sub_main/EVR-T.f90
+    rm EVR-T.f90.i
+
+    mkdir $nom
+    cp    makefile* version-EVR-T save trouv $nom
+    cp -r Internal_data Source* sub_pot      $nom
+    cp -r Examples Working_tests             $nom
+    cp -r doc* EVR-doc*                      $nom
+    cp -r scripts                            $nom
+
+    mkdir $nom/obj
+
+    cd $nom
+    make clean
+
+
+fi
+
+cd $nom_rep
+
+nom_tar=E.$a.$b.$c
+echo $nom_tar.tar
+tar cvf $nom_tar.tar $nom_sd
+gzip $nom_tar.tar
+ scp $nom_tar.tar.gz styx2:/u/lauvergn/trav/ElVibRot-Tnum
+ scp $nom_tar.tar.gz styx2:/userTMP/lauvergn/EVR
+
+if test $web = "y"
+then
+ echo save $nom_tar.tar.gz on ElVibRot web page
+ scp $nom_tar.tar.gz styx2:/u/lauvergn/WWW/Pageperso/ElVibRot
+fi
+#scp $nom_tar.tar.gz lcp:/u/lauvergn/trav/ElVibRot-Tnum
+#scp $nom_tar.tar.gz lcp:/u/lauvergn/WWW/Pageperso/ElVibRot

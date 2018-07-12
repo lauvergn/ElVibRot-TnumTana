@@ -1,0 +1,6 @@
+for i in Bz_17vec Jhono dat_4vec_noncoupled_subsyst H2OP Vhono dat_4vec_coupled_subsyst
+do
+  cd $i
+  rm -f Eq_KEO.tex res mat_f2ij
+  cd ..
+done

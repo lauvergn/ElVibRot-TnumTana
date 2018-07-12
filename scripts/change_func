@@ -1,0 +1,31 @@
+a=$1
+
+test `grep -c "sub3_dnf1_PROD_dnf2TOdnf3" $a` -eq 0 && exit
+
+cp $a $a.i
+cp $a x.temp
+
+list=`grep -n -i "sub3_dnf1_PROD_dnf2TOdnf3" x.temp | sed 's/:/ /' | awk '{print $1}'`
+echo $list
+
+
+nbl=`wc x.temp | awk '{print $1}'`
+
+for i in $list
+do
+ im=$(($i-1))
+ it=$(($nbl-$i))
+ echo $i : $im $ip
+
+
+
+ head -$im x.temp > xx.temp
+
+ head -$i x.temp | tail -1 | sed 's/(/,/' | awk -F"," '{print "   CALL sub_dnS1_PROD_dnS2_TO_dnS3(" $3 "," $4 "," $2 ","$5}' >> xx.temp
+
+ tail -$it x.temp >> xx.temp
+
+ mv xx.temp x.temp
+done
+
+mv x.temp $a

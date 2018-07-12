@@ -1,0 +1,82 @@
+list1=' *.f sub_*/*.f sub_*/*.f* Tnum/*.f Tnum/*.f* Tnum/zmat/*.f Tnum/zmat/*.f*'
+list2=' sub_communf90/sub*/*f'
+list3=' exa_*/*f exa_*/*/*f '
+ for i in $list1 $list2 $list3
+do
+  echo ======================
+  echo $i
+  sed "s/cdsqrt/sqrt/g" $i > 11
+  mv 11 $i
+  sed "s/dsqrt/sqrt/g" $i > 11
+  mv 11 $i
+  sed "s/DSQRT/sqrt/g" $i > 11
+  mv 11 $i
+  sed "s/dcos/cos/g" $i > 11
+  mv 11 $i
+  sed "s/DCOS/cos/g" $i > 11
+  mv 11 $i
+  sed "s/dsin/sin/g" $i > 11
+  mv 11 $i
+  sed "s/DSIN/sin/g" $i > 11
+  mv 11 $i
+  sed "s/dtan/tan/g" $i > 11
+  mv 11 $i
+  sed "s/DTAN/tan/g" $i > 11
+  mv 11 $i
+  sed "s/dexp/exp/g" $i > 11
+  mv 11 $i
+  sed "s/DEXP/exp/g" $i > 11
+  mv 11 $i
+  sed "s/dlog/log/g" $i > 11
+  mv 11 $i
+  sed "s/DLOG/log/g" $i > 11
+  mv 11 $i
+
+
+  sed "s/KIND=8/kind=Rkind/g" $i > 11
+  mv 11 $i
+  sed "s/kind=8/kind=Rkind/g" $i > 11
+  mv 11 $i
+  sed "s/real\*8/real(kind=Rkind)/g" $i > 11
+  mv 11 $i
+  sed "s/Real\*8/real(kind=Rkind)/g" $i > 11
+  mv 11 $i
+  sed "s/REAL\*8/real(kind=Rkind)/g" $i > 11
+  mv 11 $i
+  sed "s/real(8)/real(kind=Rkind)/g" $i > 11
+  mv 11 $i
+  sed "s/Real(8)/real(kind=Rkind)/g" $i > 11
+  mv 11 $i
+  sed "s/REAL(8)/real(kind=Rkind)/g" $i > 11
+  mv 11 $i
+  sed "s/double precision/real(kind=Rkind)/g" $i > 11
+  mv 11 $i
+  sed "s/DOUBLE PRECISION/real(kind=Rkind)/g" $i > 11
+  mv 11 $i
+
+  sed "s/COMPLEX(8)/complex(kind=Rkind)/g" $i > 11
+  mv 11 $i
+  sed "s/complex(8)/complex(kind=Rkind)/g" $i > 11
+  mv 11 $i
+  sed "s/complex\*16/complex(kind=Rkind)/g" $i > 11
+  mv 11 $i
+  sed "s/Complex\*16/complex(kind=Rkind)/g" $i > 11
+  mv 11 $i
+  sed "s/COMPLEX\*16/complex(kind=Rkind)/g" $i > 11
+  mv 11 $i
+
+  sed "s/len=20/len=Name_len/g" $i > 11
+  mv 11 $i
+  sed "s/character(20)/character(len=Name_len)/g" $i > 11
+  mv 11 $i
+  sed "s/character\*20/character(len=Name_len)/g" $i > 11
+  mv 11 $i
+  sed "s/CHARACTER\*20/character(len=Name_len)/g" $i > 11
+  mv 11 $i
+  sed "s/CHARACTER(20)/character(len=Name_len)/g" $i > 11
+  mv 11 $i
+
+  sed "s/len=50/len=Name_longlen/g" $i > 11
+  mv 11 $i
+  echo ======================
+done

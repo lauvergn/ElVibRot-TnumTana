@@ -1,0 +1,197 @@
+ BEGINNING PhysicalConstants
+ EVRT_path: /Users/lauvergn/git/ElVibRot                                                                                                                                                                                                                                   
+ PHYSICAL CONSTANTS, version: HandBook70ed
+ MASSES, version: HandBook70ed
+   The unit "cm-1" is already present
+ energy unit: cm-1                
+ auTOenergy   219474.62540167637     
+ Ta (fs)=           0.024189
+ auTOcm_inv =      219474.625402
+ auTOeV     =          27.211396
+ ===========================================
+ = Usefull conversion factors or constants =
+
+ pi =                   3.1415926535897931     
+ cos(pi) =             -1.0000000000000000     
+
+au => m             0.5291772575E-10
+au => Angstrom      0.5291772575E+00
+
+ au => s            0.2418884392E-16
+ au => fs                    0.024189
+
+ au => J            0.4359748150E-17
+ au => cm-1             219474.625402
+ au => eV                   27.211396
+
+ g.mol-1 => au            1822.888494
+
+ au => V cm-1 (E0)  0.5142208088E+10
+ au => W cm-2 (I0)  0.3509447353E+17
+ Debye => au        0.3934300627E+00
+
+ ===========================================
+ ===========================================
+ ====== TEST to get masses =================
+  -------------------------------------- 
+ mass of X in au   0.0000000000000000     
+  -------------------------------------- 
+ mass 100. in au   100.00000000000000     
+  -------------------------------------- 
+ mass of H in au   1837.1525961950590     
+  -------------------------------------- 
+ mass of D ("1_2") in au   3671.2974263754604     
+  -------------------------------------- 
+ mass of D in au   3671.2974263754604     
+  -------------------------------------- 
+ mass of T in au   5497.9228415192201     
+  -------------------------------------- 
+  ERROR in : get_mass_Tnum
+ the mass of this isotope is NOT defined !
+ Z,A:           1           4
+ mass of "1_4" in au  -1.0000000000000000     
+  -------------------------------------- 
+ mass of He in au   7296.2934850101392     
+  -------------------------------------- 
+ mass of HE in au   7296.2934850101392     
+  -------------------------------------- 
+ mass of he in au   7296.2934850101392     
+  -------------------------------------- 
+ mass of He in au   7296.2934850101392       and then Z and A           2           4
+  -------------------------------------- 
+ mass of Z=6 in au   21874.661924779310       and then A          12
+  -------------------------------------- 
+  ERROR in : get_mass_Tnum
+ the mass of this isotope is NOT defined !
+ Z,A:           6          13
+ mass of Z=6,A=13 in au  -1.0000000000000000     
+ ===========================================
+ mass_name: 2000.
+ Tnum mass:    2000.0000000000000     
+  -------------------------------------- 
+ mass_name: 20.0.
+  ERROR in : get_mass_Tnum
+  I CANNOT read the mass in "20.0."
+ Tnum mass:   -1.0000000000000000     
+  -------------------------------------- 
+ mass_name: C
+ Tnum mass:    21874.661924779310     
+  -------------------------------------- 
+ mass_name: H
+ Tnum mass:    1837.1525961950590     
+  -------------------------------------- 
+ mass_name: Fe
+ Tnum mass:    101963.15670067945     
+  -------------------------------------- 
+ mass_name: Xe
+  ERROR : get_mass_Tnum
+  I CANNOT get the right atom
+  Your atom is NOT in my list !!
+  Your atom :Xe                  
+  My list:
+           1 He           2      
+           2 Li           3      
+           3 Be           4      
+           4 Ne          10      
+           5 Na          11      
+           6 Mg          12      
+           7 Al          13      
+           8 Si          14      
+           9 Cl          17      
+          10 Ar          18      
+          11 Ca          20      
+          12 Sc          21      
+          13 Ti          22      
+          14 Cr          24      
+          15 Mn          25      
+          16 Fe          26      
+          17 Co          27      
+          18 Ni          28      
+          19 Cu          29      
+          20 Zn          30      
+          21 Ga          31      
+          22 Ge          32      
+          23 As          33      
+          24 Se          34      
+          25 Br          35      
+          26 Kr          36      
+          27 Pt          78      
+          28 X           0       
+          29 H           1       
+          30 B           5       
+          31 C           6       
+          32 N           7       
+          33 O           8       
+          34 F           9       
+          35 P          15       
+          36 S          16       
+          37 K          19       
+          38 V          23       
+ Tnum mass:   -1.0000000000000000     
+  -------------------------------------- 
+ mass_name: O
+ Tnum mass:    29156.946511715123     
+  -------------------------------------- 
+ mass_name: 2H
+ Tnum mass:    3671.2974263754604     
+  -------------------------------------- 
+ mass_name: 13C
+  ERROR in : get_mass_Tnum
+ the mass of this isotope is NOT defined !
+ Z,A:           6          13
+ Tnum mass:   -1.0000000000000000     
+  -------------------------------------- 
+ mass_name: 6_14
+  ERROR in : get_mass_Tnum
+ the mass of this isotope is NOT defined !
+ Z,A:           6          14
+ Tnum mass:   -1.0000000000000000     
+  -------------------------------------- 
+ mass_name: XX
+  ERROR : get_mass_Tnum
+  I CANNOT get the right atom
+  Your atom is NOT in my list !!
+  Your atom :XX                  
+  My list:
+           1 He           2      
+           2 Li           3      
+           3 Be           4      
+           4 Ne          10      
+           5 Na          11      
+           6 Mg          12      
+           7 Al          13      
+           8 Si          14      
+           9 Cl          17      
+          10 Ar          18      
+          11 Ca          20      
+          12 Sc          21      
+          13 Ti          22      
+          14 Cr          24      
+          15 Mn          25      
+          16 Fe          26      
+          17 Co          27      
+          18 Ni          28      
+          19 Cu          29      
+          20 Zn          30      
+          21 Ga          31      
+          22 Ge          32      
+          23 As          33      
+          24 Se          34      
+          25 Br          35      
+          26 Kr          36      
+          27 Pt          78      
+          28 X           0       
+          29 H           1       
+          30 B           5       
+          31 C           6       
+          32 N           7       
+          33 O           8       
+          34 F           9       
+          35 P          15       
+          36 S          16       
+          37 K          19       
+          38 V          23       
+ Tnum mass:   -1.0000000000000000     
+  -------------------------------------- 
+ ===========================================
+ END PhysicalConstants

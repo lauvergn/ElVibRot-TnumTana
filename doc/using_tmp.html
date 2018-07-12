@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>Using the Library</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <h2>Using the Library</h2>
+    <p>
+    To easily use the program the user may use the following
+    templates for his own programs.
+    </p>
+
+    <h3>The makefile</h3>
+    <p>If you have two programs <tt>program1</tt> and <tt>program2</tt> in
+    files <tt>program1.f90</tt> and <tt>program2.f90</tt>, you should used the
+    following makefile:</p>
+    <pre>RUNF77 = gfortran -O -fbounds-check -llapack -lblas -Wuninitialized
+         LYNK77 = $(RUNF77)
+
+# === RULES ============================================================
+
+# How to make object files from Fortran 90 files.
+%.o: %.f90
+	$(FC) $(FFLAGS) -c -o $@ $<
+
+# How to make object files from Fortran 77 files.
+%.o: %.f %.for
+	$(FC) $(FFLAGS) -c -o $@ $<
+
+all: program1 program2
+
+
+program1: program1.o
+	$(FC) $(FFLAGS) -o $@ program1.o $(LDFLAGS)
+
+program2: program2.o
+	$(FC) $(FFLAGS) -o $@ program2.o $(LDFLAGS)
+
+clean:
+	rm -f *.o
+	rm -f program1 program2
+
+</pre>
+
+    <h3>Program Template</h3>
+    <pre>program example
+
+  use qdyn
+  implicit none
+
+  type(grid_t)  :: mol_grid, atomic_grid
+  type(ham_t)   :: mol_ham, atomic_ham
+  type(para_t)  :: para
+  type(pulse_t) :: pulse
+  type(work_t)  :: mol_work, atomic_work
+  type(proj_t)  :: mol_proj
+  type(psi_t)   :: mol_psi, atomic_psi
+  type(psi_t)   :: mol_psi_target, atomic_psi_target
+  character (len=file_l) :: runfolder
+
+  call getarg(1, runfolder)
+
+  call read_para(para, runfolder=runfolder, configfile='config')
+  call debug_para(para)
+
+  call init(para, &
+            grid          = mol_grid, &
+            psi           = mol_psi, &
+            psi_target    = mol_psi_target, &
+            ham           = mol_ham, &
+            work          = mol_work, &
+            proj          = mol_proj, &
+            pulse         = pulse, &
+            system        ='molecular')
+  call init_psi(mol_psi_target, mol_grid, nsurf=2, para=para, &
+  &             system='mol_target', proj=mol_proj)
+  call debug_system( &
+             psi             = mol_psi, &
+             psi_name        = "mol_psi", &
+             ham             = mol_ham, &
+             ham_name        = "mol_ham", &
+             work            = mol_work, &
+             work_name       = "mol_work", &
+             proj            = mol_proj, &
+             proj_name       = "mol_proj", &
+             pulse           = pulse)
+  call debug_system(psi = mol_psi_target, psi_name = "mol_psi_target")
+
+  call init(para, &
+            grid          = atomic_grid, &
+            psi           = atomic_psi, &
+            ham           = atomic_ham, &
+            work          = atomic_work, &
+            system        ='atomic')
+  call init_psi(atomic_psi_target, atomic_grid, nsurf=2, para=para, &
+  &             system='atomic_target', proj=atomic_proj)
+  call debug_stystem( &
+             psi             = atomic_psi, &
+             psi_name        = "atomic_psi", &
+             ham             = atomic_ham, &
+             ham_name        = "atomic_ham", &
+             work            = atomic_work, &
+             work_name       = "atomic_work", &
+             pulse           = pulse)
+  call debug_system(psi = atomic_psi_target, psi_name = "atomic_psi_target")
+
+  ! *** do your stuff here ***
+
+contains
+
+  ! *** your own routines ***
+
+end program example</pre>
+    <p>The program consists basically of three parts:
+    <ol>
+      <li>Read the parameter data from the config file to the para data
+          structure by calling the <tt>read_para</tt> routine</li>
+      <li>Initialize the various physical data structures from the data in
+          <tt>para</tt> by calling the init routine. You may do this once for
+          each system (molecular or atomic).
+      </li>
+      <li>Do whatever you want, e.g. call a propagation of a oct routine.</li>
+    </ol>
+    </p>
+    <p>Note that calling the debug routines (<tt>debug_para</tt> and
+       <tt>debug_model</tt> is optional, but recommended.</p>
+    <p>The line <tt>use qdyn</tt> gives you access to all the symbols defined
+       in the library (everything listed in the <a
+       href="reference/lib_index.html">index</a>). You do not need to include
+       individual modules. The modules are only for organizational purposes.
+    </p>
+
+  </body>
+</html>

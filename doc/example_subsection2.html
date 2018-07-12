@@ -1,0 +1,2206 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE>example of  transformations</TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.1  (Linux)">
+	<META NAME="CREATED" CONTENT="0;0">
+	<META NAME="CHANGEDBY" CONTENT="Mamadou Ndong">
+	<META NAME="CHANGED" CONTENT="20120207;15134800">
+    <link rel="stylesheet" type="text/css" href="style.css">
+	<!--
+		@page { margin-right: 2.5cm; margin-top: 1.27cm; margin-bottom: 1.27cm }
+		P { margin-bottom: 0.21cm; direction: ltr; color: #000000 }
+		P.western { font-family: "Times New Roman", serif; font-size: 12pt; so-language: fr-FR }
+		P.cjk { font-family: "Times New Roman", serif; font-size: 12pt }
+		P.ctl { font-family: "Times New Roman", serif; font-size: 12pt; so-language: fr-FR }
+		H3 { margin-bottom: 0.11cm; direction: ltr; color: #000000 }
+		H3.western { font-family: "Arial", sans-serif; font-size: 13pt; so-language: fr-FR; font-style: italic; font-weight: normal }
+		H3.cjk { font-family: "Times New Roman", serif; font-size: 13pt; font-style: italic; font-weight: normal }
+		H3.ctl { font-family: "Times New Roman", serif; font-size: 13pt; so-language: fr-FR; font-weight: normal }
+		H2 { margin-bottom: 0.11cm; direction: ltr; color: #000000 }
+		H2.western { font-family: "Arial", sans-serif; font-size: 14pt; so-language: fr-FR; font-style: italic }
+		H2.cjk { font-family: "Times New Roman", serif; font-size: 14pt; font-style: italic }
+		H2.ctl { font-family: "Times New Roman", serif; font-size: 14pt; so-language: fr-FR; font-weight: normal }
+		H1 { margin-bottom: 0.11cm; direction: ltr; color: #000000 }
+		H1.western { font-family: "Arial", sans-serif; font-size: 16pt; so-language: fr-FR }
+		H1.cjk { font-family: "Times New Roman", serif; font-size: 16pt }
+		H1.ctl { font-family: "Times New Roman", serif; font-size: 16pt; so-language: fr-FR; font-weight: normal }
+		A:link { so-language: zxx }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="fr-FR" TEXT="#000000" DIR="LTR">
+<H2 CLASS="western"><SPAN LANG="en-US"> Namelist
+&quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Coord_transfo</SPAN></FONT><SPAN LANG="en-US">&quot;</SPAN></H2>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Several
+coordinates transformations can be link together. The number is
+defined with 
+    </SPAN>
+    <FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>n
+b_transfo</I></SPAN></FONT>
+<SPAN LANG="en-US">
+in the previous namelist </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>variables</I></SPAN></FONT><SPAN LANG="en-US">.
+The following scheme gives an overview of the successive
+transformations, starting from the dynamical coordinates (</SPAN><SPAN LANG="en-US"><B><IMG SRC="img/tnum_html8_html_md7c8869.gif" NAME="Objet28" ALIGN=ABSMIDDLE WIDTH=29 HEIGHT=28></B></SPAN><SPAN LANG="en-US">)
+to the Cartesian coordinates of the atoms in the frame </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">F1</SPAN></FONT><SPAN LANG="en-US">,
+(</SPAN><SPAN LANG="en-US"><B><IMG SRC="img/tnum_html8_html_m205b8fd.gif" NAME="Objet29" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=29></B></SPAN><SPAN LANG="en-US">).
+</SPAN>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_m4b298e5d.gif" NAME="images7" ALIGN=BOTTOM WIDTH=602 HEIGHT=465 BORDER=0></P>
+<P LANG="en-US" CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm">
+<I>Scheme VII.2-1: Overview of the coordinate transformations.</I></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">In
+the input file, the transformations have to be given in the reverse
+order (from </SPAN><SPAN LANG="en-US"><B>
+<IMG SRC="img/tnum_html8_html_m205b8fd.gif" NAME="Objet30" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=29></B></SPAN><SPAN LANG="en-US">
+to </SPAN><SPAN LANG="en-US"><B>
+<IMG SRC="img/tnum_html8_html_md7c8869.gif" NAME="Objet31" ALIGN=ABSMIDDLE WIDTH=29 HEIGHT=28></B></SPAN><SPAN LANG="en-US">).
+Therefore, the first transformation has to give the values of the
+Cartesian coordinates in a frame (</SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">F1</SPAN></FONT><SPAN LANG="en-US">).
+This frame is parallel to the Body-fixed frame (BF). The
+transformation form </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">F1</SPAN></FONT><SPAN LANG="en-US">
+to BF is done automatically.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+The last transformation enables to define the &quot;active, inactive&quot;
+coordinates. It is not really a transformation, but it defines the
+coordinates used in the dynamics.</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Then,
+several other transformations can be added between the first and the
+last one, and each transformation is used in T</SPAN><SPAN LANG="en-US">num</SPAN><SPAN LANG="en-US">
+with an input set (</SPAN><SPAN LANG="en-US"><B><IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images8" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">)
+and an output set (</SPAN><SPAN LANG="en-US"><B><IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images9" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">)
+of coordinates (see Scheme VII.2-2)</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_m333cfc67.png" NAME="images10" ALIGN=BOTTOM WIDTH=432 HEIGHT=243 BORDER=0></P>
+<P LANG="en-US" CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm">
+<I>Scheme VII.2-2: Scheme of the input set and output set.</I></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+transformation is selected through the namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Coord_transfo</SPAN></FONT><SPAN LANG="en-US">&quot;
+with some parameters:</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">name_transfo </SPAN></FONT><SPAN LANG="en-US">:
+name of the transformation</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">nat</SPAN></FONT><SPAN LANG="en-US">
+or </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Nat</SPAN></FONT><SPAN LANG="en-US">:
+	number of atoms (for zmat and …) with dummy atoms.</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_vect </SPAN></FONT><SPAN LANG="en-US">:
+	number of vectors (for bunch).</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_transfo </SPAN></FONT><SPAN LANG="en-US">:
+	number of transformations (for oneD, </SPAN>hyperspherical …<SPAN LANG="en-US">).</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">cos_th</SPAN></FONT><SPAN LANG="en-US">:
+	if T (.TRUE.), it uses the cosine of the valence angle instead of
+the valence angle (for zmat). The default is .FALSE. (F).</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+The following table gives the list of all available transformations:</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<TABLE WIDTH=613 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=106>
+	<COL WIDTH=150>
+	<COL WIDTH=150>
+	<COL WIDTH=149>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Name of the
+			transformation</B></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Brief description</B></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Data of the input
+			file</B></P>
+		</TD>
+		<TD WIDTH=149>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Remarks</B></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">zmat</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			Define the usual z-matrix transformation like in most of the
+			quantum chemistry codes. 
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			Dummy atoms (without mass) can be used.</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>You can mix
+			spherical coordinates and Cartesian ones.</P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">nat</SPAN></FONT><SPAN LANG="en-US">
+			MUST be defined if and only if it is the first transformation.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">cos_th
+			</SPAN></FONT><SPAN LANG="en-US">is optional (default: F).</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">Then, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">nat</SPAN></FONT><SPAN LANG="en-US">
+			lines are read.</SPAN></P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images11" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">
+			primitive coordinates, 
+			<IMG SRC="img/tnum_html8_html_m13924add.gif" NAME="images12" ALIGN=ABSMIDDLE WIDTH=35 HEIGHT=28 BORDER=0>.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images13" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat</SPAN></FONT><SPAN LANG="en-US">
+			Cartesian coordinates of the atoms, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_m205b8fd.gif" NAME="Objet32" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=29></B></SPAN><SPAN LANG="en-US">.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Can
+			be the first read transformation or the second one after the
+			&quot;</SPAN><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">bunch</FONT></FONT><SPAN LANG="en-US">&quot;
+			one.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">bunch</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Defines
+			the Cartesian coordinates of the atoms, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_m205b8fd.gif" NAME="images14" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=29 BORDER=0></B></SPAN><SPAN LANG="en-US">,
+			as function of the Cartesian coordinates of the vectors, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_m30a40c7.gif" NAME="Objet33" ALIGN=ABSMIDDLE WIDTH=45 HEIGHT=25></B></SPAN><SPAN LANG="en-US">.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">The relation
+			between </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_m205b8fd.gif" NAME="images15" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=29 BORDER=0></B></SPAN><SPAN LANG="en-US">
+			and </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_m30a40c7.gif" NAME="Objet34" ALIGN=ABSMIDDLE WIDTH=45 HEIGHT=25>
+			</B></SPAN><SPAN LANG="en-US">is a linear transformation.</SPAN></P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_vect</SPAN></FONT><SPAN LANG="en-US">
+			MUST be defined.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">Then, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_vect</SPAN></FONT><SPAN LANG="en-US">
+			lines are read.</SPAN></P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images16" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3nb_vect</SPAN></FONT><SPAN LANG="en-US">
+			Cartesian coordinates of vectors, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_m30a40c7.gif" NAME="Objet35" ALIGN=ABSMIDDLE WIDTH=45 HEIGHT=25></B></SPAN><SPAN LANG="en-US">.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images17" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat</SPAN></FONT><SPAN LANG="en-US">
+			Cartesian coordinates of the atoms, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_m205b8fd.gif" NAME="images18" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=29 BORDER=0></B></SPAN><SPAN LANG="en-US">.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">Nat</SPAN></FONT><SPAN LANG="en-US">
+			= </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">2nb_vect+1</SPAN></FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#ff0000">Can be the first read transformation.</FONT></P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000"><SPAN LANG="en-US">After
+			this transformation, the </SPAN></FONT><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt"><U>zmat</U></FONT></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US">
+			or </SPAN></FONT><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">poly</FONT></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US">
+			transformation MUST follow.</SPAN></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">QTOX_ana</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>Trigger an
+			analytical transformation.</P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">nat</SPAN></FONT><SPAN LANG="en-US">
+			MUST be defined.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>Then, nothing is
+			read.</P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images19" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">
+			primitive coordinates, 
+			<IMG SRC="img/tnum_html8_html_m13924add.gif" NAME="images20" ALIGN=ABSMIDDLE WIDTH=35 HEIGHT=28 BORDER=0>.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images21" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat</SPAN></FONT><SPAN LANG="en-US">
+			Cartesian coordinates of atoms, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_m205b8fd.gif" NAME="images22" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=29 BORDER=0></B></SPAN><SPAN LANG="en-US">.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000">Not
+			yet implemented in the &quot;New transformation&quot;</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">poly</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			Defines the curvilinear coordinates of the vectors as
+			polyspherical coordinates.</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+			definition of subsystems or sub(sub)</SPAN><SUP><SPAN LANG="en-US">n</SPAN></SUP><SPAN LANG="en-US">systems
+			is possible.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_vect</SPAN></FONT><SPAN LANG="en-US">
+			namelists &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">vectors</SPAN></FONT><SPAN LANG="en-US">&quot;
+			are read.</SPAN></P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images23" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">
+			primitive coordinates, 
+			<IMG SRC="img/tnum_html8_html_m13924add.gif" NAME="images24" ALIGN=ABSMIDDLE WIDTH=35 HEIGHT=28 BORDER=0>.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images25" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3nb_vect</SPAN></FONT><SPAN LANG="en-US">
+			Cartesian coordinates of vectors,</SPAN><SPAN LANG="en-US"><B> 
+			<IMG SRC="img/tnum_html8_html_m30a40c7.gif" NAME="Objet36" ALIGN=ABSMIDDLE WIDTH=45 HEIGHT=25></B></SPAN><SPAN LANG="en-US">.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000"><SPAN LANG="en-US">In
+			the input, it follows the transformation &quot;</SPAN></FONT><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">bunch</FONT></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US">&quot;.</SPAN></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0cm; page-break-before: always">
+<BR>
+</P>
+<TABLE WIDTH=613 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=106>
+	<COL WIDTH=150>
+	<COL WIDTH=150>
+	<COL WIDTH=149>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Name of the
+			transformation</B></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Brief description</B></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Data of the input
+			file</B></P>
+		</TD>
+		<TD WIDTH=149>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Remarks</B></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">linear</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">The
+			coordinates, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images26" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">,
+			are defined as linear combinations of </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images27" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+						<IMG SRC="img/tnum_html8_html_m3d1458b4.gif" NAME="Objet37" ALIGN=ABSMIDDLE WIDTH=87 HEIGHT=25></SPAN></P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">A matrix, 
+			<IMG SRC="img/tnum_html8_html_3a6fb18e.gif" NAME="Objet38" ALIGN=ABSMIDDLE WIDTH=21 HEIGHT=16>,
+			is read (dimension=</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">).</SPAN></P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images28" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images29" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			 </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#ff0000">Be careful of the order: the unsymmetrized
+			coordinates are defined as function of the symmetrized ones.</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">linear_inv</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">The
+			coordinates, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images30" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">,
+			are defined as linear combinations of </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images31" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+						<IMG SRC="img/tnum_html8_html_76280e5a.gif" NAME="Objet39" ALIGN=ABSMIDDLE WIDTH=97 HEIGHT=27></SPAN></P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">A matrix, 
+			<IMG SRC="img/tnum_html8_html_m31fe159c.gif" NAME="Objet40" ALIGN=ABSMIDDLE WIDTH=32 HEIGHT=21>,
+			is read (dimension=</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">).</SPAN></P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images32" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images33" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			 </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">identity</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">Equality
+			between </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images34" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">and
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images35" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">.</SPAN></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>Nothing is read.</P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images36" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images37" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			 </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000">Checking
+			purpose</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">NM</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>Define curvilinear
+			normal modes.</P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			Nothing is read.</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>The Hessian matrix
+			has to be set up.</P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images38" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images39" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			 </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">It
+			is a particular case of the </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">linear</SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US">
+			</SPAN></FONT><SPAN LANG="en-US">transformation.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000">Not
+			yet implemented in the &quot;New transformation&quot;</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">hyperspherical</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images40" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images41" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			 </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000">Not
+			yet implemented in the &quot;New transformation&quot;</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">order</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			Change the order of the coordinates.</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">The
+			i<SUP>th</SUP> integer in the list gives the position of <SPAN LANG="en-US">
+			<IMG SRC="img/tnum_html8_html_7665af53.gif" NAME="Objet41" ALIGN=ABSMIDDLE WIDTH=41 HEIGHT=29></SPAN>
+			in <SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images42" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN>:
+			<SPAN LANG="en-US">
+			<IMG SRC="img/tnum_html8_html_2f143d1a.gif" NAME="Objet42" ALIGN=ABSMIDDLE WIDTH=132 HEIGHT=29></SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY>Qout( list(i) ) =&nbsp;Qin( i )</P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">It reads a
+			list of</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"> 3Nat-6</SPAN></FONT><SPAN LANG="en-US">
+			integers.</SPAN></P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images43" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images44" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			 </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">oneD</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>Perform
+			1D-coordinates transformation.</P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_transfo</SPAN></FONT><SPAN LANG="en-US">
+			namelist &quot;oneD&quot; are read.</SPAN></P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images45" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images46" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			 </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">flexible</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Define
+			the coordinates, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images47" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">,
+			such there are function of active coordinates, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images48" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><IMG SRC="img/tnum_html8_html_m27e07235.gif" NAME="Objet43" ALIGN=ABSMIDDLE WIDTH=135 HEIGHT=64></P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">
+			integers are read:</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">20</SPAN></FONT><SPAN LANG="en-US">:
+			flexible coord.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">0</SPAN></FONT><SPAN LANG="en-US">:
+			unchanged coord.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">1</SPAN></FONT><SPAN LANG="en-US">:
+			active coord.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			A subroutine is required, 
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><IMG SRC="img/tnum_html8_html_12b2ca29.gif" NAME="Objet44" ALIGN=ABSMIDDLE WIDTH=89 HEIGHT=31></P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images49" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images50" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			 </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#ff0000">Be careful, possible conflict with flexible
+			coordinates defined in the active transformation.</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000"><SPAN LANG="en-US">Need
+			a subroutine: </SPAN></FONT><FONT COLOR="#ff0000"><FONT SIZE=2 STYLE="font-size: 11pt">calc_dnQflex</FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0cm; page-break-before: always">
+<BR>
+</P>
+<TABLE WIDTH=613 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=106>
+	<COL WIDTH=150>
+	<COL WIDTH=150>
+	<COL WIDTH=149>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Name of the
+			transformation</B></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Brief description</B></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Data of the input
+			file</B></P>
+		</TD>
+		<TD WIDTH=149>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><B>Remarks</B></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">active</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>Define the active,
+			inactive (rigid, flexible) coordinates</P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">
+			integers are read:</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">20</SPAN></FONT><SPAN LANG="en-US">:
+			flexible coord.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">0</SPAN></FONT><SPAN LANG="en-US">:
+			rigid (frozen) coord.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">1</SPAN></FONT><SPAN LANG="en-US">:
+			active coord.</SPAN></P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input:
+			No input coordinates</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images51" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			 </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000"><SPAN LANG="en-US">Be
+			careful, possible conflict with flexible coordinates defined in
+			the </SPAN></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">flexible</SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US">
+			transformation.</SPAN></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><BR>
+</P>
+<H3 CLASS="western" STYLE="page-break-before: always"><SPAN LANG="en-US">VII.2a)
+Transformation &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">zmat</SPAN></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">This
+coordinate transformation can be the first one or the second (after
+the &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">bunch</SPAN></FONT><SPAN LANG="en-US">&quot;
+transformation, see scheme VII.2-1). The coordinates are defined like
+in many quantum </SPAN><SPAN LANG="en-US"><I>ab initio</I></SPAN><SPAN LANG="en-US">
+programs.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>Remarks:
+The input set of coordinates is the </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6</I></SPAN></FONT><SPAN LANG="en-US"><I>
+primitive coordinates, 
+<IMG SRC="img/tnum_html8_html_m13924add.gif" NAME="images52" ALIGN=ABSMIDDLE WIDTH=35 HEIGHT=28 BORDER=0>
+and the output set of coordinates is the </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat</I></SPAN></FONT><SPAN LANG="en-US"><I>
+Cartesian coordinates of the atoms,</I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_m205b8fd.gif" NAME="images53" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=29 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>.</I></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>The
+primitive coordinates are given in the following order: </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>R</I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>2</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>,
+  </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>R</I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>3</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>,
+</I></SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"><I></I></SPAN></FONT></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>3</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>,
+  </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>R</I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>4</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>,
+</I></SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"><I></I></SPAN></FONT></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>4</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>,
+</I></SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"><I></I></SPAN></FONT></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>4</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>,
+… , </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>R</I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>n</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>,
+</I></SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"><I></I></SPAN></FONT></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>n</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>,
+</I></SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"><I></I></SPAN></FONT></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>n</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>.</I></SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>The
+Cartesian coordinates are obtained in the atomic order: </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>A</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>1</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>,
+</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>A</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>2</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>,
+</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>A</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>3</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>,…
+</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>A</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>n</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>.</I></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+parameters of the namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Coord_transfo</SPAN></FONT><SPAN LANG="en-US">&quot;
+relevant to this transformation are:</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">name_transfo=&quot;zmat&quot;</SPAN></FONT><SPAN LANG="en-US">:
+	trigger the z-matrix transformation</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">nat</SPAN></FONT><SPAN LANG="en-US">
+or </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Nat</SPAN></FONT><SPAN LANG="en-US">:
+			number of atoms (with dummy atoms).</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 6.25cm; text-indent: -5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">cos_th</SPAN></FONT><SPAN LANG="en-US">:
+	if </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">T</SPAN></FONT><SPAN LANG="en-US">
+(.TRUE.), it uses the cosine of the valence angle instead of the
+valence angle. The default is .FALSE. (</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">F</SPAN></FONT><SPAN LANG="en-US">).</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Then
+the z-matix follows with &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">nat</SPAN></FONT><SPAN LANG="en-US">&quot;
+lines:</SPAN></P>
+<TABLE WIDTH=613 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=96>
+	<COL WIDTH=486>
+	<TR VALIGN=TOP>
+		<TD WIDTH=96>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT></P>
+		</TD>
+		<TD WIDTH=486>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Symbol
+			or mass (real) of the first atom, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><SPAN LANG="en-US">.
+			This atom is positioned at the origin of the frame </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">F1</SPAN></FONT><SPAN LANG="en-US">.
+			</SPAN>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm">
+			<IMG SRC="img/tnum_html8_html_6caa5e3c.gif" NAME="images54" ALIGN=BOTTOM WIDTH=85 HEIGHT=128 BORDER=0></P>
+			<P LANG="en-US" CLASS="western" ALIGN=CENTER><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=96>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			  1</SPAN></FONT></P>
+		</TD>
+		<TD WIDTH=486>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Symbol
+			or mass of the second atom, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><SPAN LANG="en-US">.
+			</SPAN>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Then,
+			an integer, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><SPAN LANG="en-US">.
+			This integer defines the distance, </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><B>R</B></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><B>2</B></SPAN></SUB></FONT><SPAN LANG="en-US">,
+			between </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><SPAN LANG="en-US">
+			and the n</SPAN><SUB><SPAN LANG="en-US">1</SPAN></SUB><SUP><SPAN LANG="en-US">th</SPAN></SUP><SPAN LANG="en-US">
+			atom previously defined (here only the first one, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">=1</SPAN></FONT><SPAN LANG="en-US">).</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+			atom, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><SPAN LANG="en-US">
+			is positioned along the z axis in </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">F1</SPAN></FONT><SPAN LANG="en-US">.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm">
+			<IMG SRC="img/tnum_html8_html_m478eb5c5.gif" NAME="images55" ALIGN=BOTTOM WIDTH=154 HEIGHT=128 BORDER=0></P>
+			<P LANG="en-US" CLASS="western" ALIGN=CENTER><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=96>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">3</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			 n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT></P>
+		</TD>
+		<TD WIDTH=486>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Symbol
+			or mass of the third atom, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">3</SPAN></SUB></FONT><SPAN LANG="en-US">.
+			</SPAN>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Then,
+			an integer, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><SPAN LANG="en-US">.
+			This integer defines the distance, </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><B>R</B></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><B>3</B></SPAN></SUB></FONT><SPAN LANG="en-US">,
+			between </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">3</SPAN></SUB></FONT><SPAN LANG="en-US">
+			and the n</SPAN><SUB><SPAN LANG="en-US">1</SPAN></SUB><SUP><SPAN LANG="en-US">th</SPAN></SUP><SPAN LANG="en-US">
+			atom previously defined (here, you have two choices a or b with
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">=1</SPAN></FONT><SPAN LANG="en-US">
+			or </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">=2</SPAN></FONT><SPAN LANG="en-US">,
+			respectively).</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Then
+			another integer, n</SPAN><SUB><SPAN LANG="en-US">2</SPAN></SUB><SPAN LANG="en-US">,
+			which enables ones to define the valence angle,</SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><B>
+			a</B></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><B>3</B></SPAN></SUB></FONT><SPAN LANG="en-US">
+			(or </SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"><B></B></SPAN></FONT></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><B>3</B></SPAN></SUB></FONT><SPAN LANG="en-US">),
+			between </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">3</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			 An</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			An</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><SPAN LANG="en-US">.</SPAN></P>
+			<P CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm"><IMG SRC="img/tnum_html8_html_2953a631.gif" NAME="images56" ALIGN=BOTTOM WIDTH=187 HEIGHT=127 BORDER=0>
+			                   
+			<IMG SRC="img/tnum_html8_html_3608888b.gif" NAME="images57" ALIGN=BOTTOM WIDTH=183 HEIGHT=127 BORDER=0></P>
+			<P CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">case
+			a: </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">3</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			1 2</SPAN></FONT><SPAN LANG="en-US">                              
+			          case b: </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">3</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			2 1</SPAN></FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<I>Remarks:</I></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>If
+			n</I></SPAN><SUB><SPAN LANG="en-US"><I>1</I></SPAN></SUB><SPAN LANG="en-US"><I>&gt;0,
+			n</I></SPAN><SUB><SPAN LANG="en-US"><I>2</I></SPAN></SUB><SPAN LANG="en-US"><I>=0,
+			the frame F</I></SPAN><SUB><SPAN LANG="en-US"><I>n</I></SPAN></SUB><SPAN LANG="en-US"><I>
+			is defined as </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>F1</I></SPAN></FONT><SPAN LANG="en-US"><I>.
+			For the case a, the coordinates are identical. However, for the
+			case b,</I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>
+			a</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>3</B></I></SPAN></SUB></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>'</B></I></SPAN></FONT><SPAN LANG="en-US"><I>
+			is </I></SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"><I><B></B></I></SPAN></FONT></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>-a</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>3</B></I></SPAN></SUB></FONT></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>If
+			n</I></SPAN><SUB><SPAN LANG="en-US"><I>2</I></SPAN></SUB><SPAN LANG="en-US"><I>&lt;0,
+			then the coordinate is </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>cos(a</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>3</B></I></SPAN></SUB></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>)</B></I></SPAN></FONT><SPAN LANG="en-US"><I>
+			instead of </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>a</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>3</B></I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>.</I></SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=96>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">n</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			 n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">3</SPAN></SUB></FONT></P>
+		</TD>
+		<TD WIDTH=486>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			The fourth and the following atoms:</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Symbol
+			or mass of the new atom, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">n</SPAN></SUB></FONT><SPAN LANG="en-US">.
+			</SPAN>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Then,
+			an integer, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><SPAN LANG="en-US">.
+			This integer defines the distance, </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><B>R</B></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><B>n</B></SPAN></SUB></FONT><SPAN LANG="en-US">,
+			between </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">n</SPAN></SUB></FONT><SPAN LANG="en-US">
+			and the n</SPAN><SUB><SPAN LANG="en-US">1</SPAN></SUB><SUP><SPAN LANG="en-US">th</SPAN></SUP><SPAN LANG="en-US">
+			atom previously defined.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Then
+			another integer, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><SPAN LANG="en-US">,
+			which enables ones to define the valence angle, </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><B>a</B></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><B>n</B></SPAN></SUB></FONT><SPAN LANG="en-US"><B>,
+			</B></SPAN><SPAN LANG="en-US">between </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">n</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			 An</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			An</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><SPAN LANG="en-US">.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Then
+			the last integer, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">n</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">3</SPAN></SUB></FONT><SPAN LANG="en-US">,
+			which enables ones to define the dihedral angle, </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><B>phi</B></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><B>n</B></SPAN></SUB></FONT><SPAN LANG="en-US">,(or</SPAN><SPAN LANG="en-US"><B>
+			</B></SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"><B></B></SPAN></FONT></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><B>n</B></SPAN></SUB></FONT><SPAN LANG="en-US"><B>)
+			</B></SPAN><SPAN LANG="en-US">between </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">3</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			 An</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">1</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			An</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">2</SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			A</SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US">n3</SPAN></SUB></FONT><SPAN LANG="en-US">.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+			coordinates are the spherical ones defined in the F</SPAN><SUB><SPAN LANG="en-US">n</SPAN></SUB><SPAN LANG="en-US">
+			frame. They are projected in </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">F1</SPAN></FONT><SPAN LANG="en-US">.</SPAN></P>
+			<P CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm"><IMG SRC="img/tnum_html8_html_6528fd02.gif" NAME="images58" ALIGN=BOTTOM WIDTH=253 HEIGHT=127 BORDER=0>
+			      
+			<IMG SRC="img/tnum_html8_html_5cf878a6.gif" NAME="images59" ALIGN=BOTTOM WIDTH=115 HEIGHT=133 BORDER=0></P>
+			<P LANG="en-US" CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<I>Remarks:</I></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>If</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>
+			n</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>2</I></SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>&lt;0</I></SPAN></FONT><SPAN LANG="en-US"><I>,
+			then the coordinate is </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>cos(a</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>n</B></I></SPAN></SUB></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>)</B></I></SPAN></FONT><SPAN LANG="en-US"><I>
+			instead of </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>a</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>n</B></I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>.</I></SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>If</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>
+			n</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>1</I></SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>&gt;0</I></SPAN></FONT><SPAN LANG="en-US"><I>
+			and </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>n</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>2</I></SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>=n</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>3</I></SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>=0</I></SPAN></FONT><SPAN LANG="en-US"><I>,
+			the frame F</I></SPAN><SUB><SPAN LANG="en-US"><I>n</I></SPAN></SUB><SPAN LANG="en-US"><I>
+			is defined as </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>F1</I></SPAN></FONT><SPAN LANG="en-US"><I>.</I></SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>If
+			all integers are zero (</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>n</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>1</I></SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>=n</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>2</I></SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>=n</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>3</I></SPAN></SUB></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>=0</I></SPAN></FONT><SPAN LANG="en-US"><I>),
+			the new atom is defined in Cartesian coordinates with respect to
+			the reference position (usually the first atom).</I></SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><BR>
+</P>
+<H3 CLASS="western" STYLE="page-break-before: always"><SPAN LANG="en-US">VII.2b)
+Transformation &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">bunch</SPAN></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">This
+coordinate transformation is one of the first transformations. It has
+to be followed by another transformation: &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">zmat</SPAN></FONT><SPAN LANG="en-US">&quot;
+or &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">poly</SPAN></FONT><SPAN LANG="en-US">&quot;.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>Remarks:
+The input set of coordinates is the </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3nb_vect
+(=3Nat-3)</I></SPAN></FONT><SPAN LANG="en-US"><I> Cartesian
+coordinates of vectors, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_m30a40c7.gif" NAME="Objet45" ALIGN=ABSMIDDLE WIDTH=45 HEIGHT=25></B></I></SPAN><SPAN LANG="en-US"><I>
+and the output set of coordinates is the </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3nb_vect+3
+(=3Nat) </I></SPAN></FONT><SPAN LANG="en-US"><I>Cartesian coordinates
+of the atoms,</I></SPAN><SPAN LANG="en-US"><I><B> 
+<IMG SRC="img/tnum_html8_html_m205b8fd.gif" NAME="images60" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=29 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>.</I></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+parameters of the namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Coord_transfo</SPAN></FONT><SPAN LANG="en-US">&quot;
+relevant to this transformation are:</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">name_transfo=&quot;bunch&quot;</SPAN></FONT><SPAN LANG="en-US">:
+	trigger the bunch of vectors transformation.</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_vect</SPAN></FONT><SPAN LANG="en-US">:
+			number of vectors.</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_G</SPAN></FONT><SPAN LANG="en-US">:
+			number of center-of-mass of groups of atoms.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Then,
+the namelist is followed by &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_vect</SPAN></FONT><SPAN LANG="en-US">&quot;
+lines and &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_vect</SPAN></FONT><SPAN LANG="en-US">&quot;
+namelist &quot;</SPAN><FONT COLOR="#3366ff"><SPAN LANG="en-US">recenterG</SPAN></FONT><SPAN LANG="en-US">&quot;:</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<I><B>i) Vectors definitions :</B></I></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>nv</I></SPAN></FONT><SPAN LANG="en-US">
+	</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>i</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>ref</I></SPAN></SUB></FONT><SPAN LANG="en-US">
+	</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>w</I></SPAN></FONT><SPAN LANG="en-US">
+	</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>A</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>new1</I></SPAN></SUB></FONT><SPAN LANG="en-US">	</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>A</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>new2</I></SPAN></SUB></FONT><SPAN LANG="en-US">	</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>comments</I></SPAN></FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+-The five or six columns are: 
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>nv</I></SPAN></FONT><SPAN LANG="en-US">:
+vector number.</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>i</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>ref</I></SPAN></SUB></FONT><SPAN LANG="en-US">:
+reference center</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>w</I></SPAN></FONT><SPAN LANG="en-US">:
+ratio (<IMG SRC="img/tnum_html8_html_m2ec05948.gif" NAME="Objet46" ALIGN=ABSMIDDLE WIDTH=70 HEIGHT=28>)</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>A</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>new1</I></SPAN></SUB></FONT><SPAN LANG="en-US">:
+atomic symbol or mass (in a.u.) of the first new atom, i</SPAN><SUB><SPAN LANG="en-US">new1</SPAN></SUB></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>A</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>new2</I></SPAN></SUB></FONT><SPAN LANG="en-US">:
+atomic symbol or mass (in a.u.) of the first new atom, i</SPAN><SUB><SPAN LANG="en-US">new2</SPAN></SUB></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>comments: </I></SPAN></FONT><SPAN LANG="en-US">then
+you can add comments at the end of the line.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+The Cartesian coordinates of the new atoms are:</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_68e91eb5.gif" NAME="images61" ALIGN=BOTTOM WIDTH=312 HEIGHT=152 BORDER=0></P>
+<P CLASS="western" ALIGN=CENTER STYLE="margin-left: 0.38cm; margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_m8112883.gif" NAME="Objet47" ALIGN=ABSMIDDLE WIDTH=122 HEIGHT=27><SPAN LANG="en-US">			<IMG SRC="img/tnum_html8_html_m5df2a780.gif" NAME="Objet48" ALIGN=ABSMIDDLE WIDTH=140 HEIGHT=27></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>Remarks:
+The first center (dummy) is at the origin of the frame</I></SPAN><SPAN LANG="en-US"><I>
+</I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>F1</I></SPAN></FONT><SPAN LANG="en-US"><I>.</I></SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.75cm; margin-bottom: 0cm">
+<SPAN LANG="en-US"><I>When </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>w=0.5</I></SPAN></FONT><SPAN LANG="en-US"><I>,
+the reference atom is in the middle of the new atoms.</I></SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.75cm; margin-bottom: 0cm">
+<SPAN LANG="en-US"><I>When </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>w=0.0
+(w=1.0)</I></SPAN></FONT><SPAN LANG="en-US"><I>, the reference atom
+and the first (second) new atom, </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>A</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>new1</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>
+(</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>A</I></SPAN></FONT><FONT COLOR="#0000ff"><SUB><SPAN LANG="en-US"><I>new2</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>),
+are at the same place. Therefore, at least one atom HAS to be a dummy
+atom (without mass).</I></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<I><B>ii) Center-of-mass definitions :</B></I></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+namelist &quot;</SPAN><FONT COLOR="#3366ff"><SPAN LANG="en-US">recenterG</SPAN></FONT><SPAN LANG="en-US">
+&quot; has the following parameter:</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#3366ff">&amp;recenterG tab_At_TO_G(1)=4,5
+tab_At_recenter(1)=4,5 Gat=2 /</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#3366ff"><SPAN LANG="en-US">tab_At_TO_G</SPAN></FONT><SPAN LANG="en-US">:
+this table of integer gives this list of atoms or centers giving a
+center-o-mass.</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#3366ff"><SPAN LANG="en-US">tab_At_recenter</SPAN></FONT><SPAN LANG="en-US">:
+this table of integer enables to define the list of recentered atoms.
+If this table is not given, we are using the previous list from
+</SPAN><FONT COLOR="#3366ff"><SPAN LANG="en-US">tab_At_TO_G</SPAN></FONT><SPAN LANG="en-US">.</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#3366ff"><SPAN LANG="en-US">Gat</SPAN></FONT><SPAN LANG="en-US">:
+one integer which link the center-of-mass to a center (necessarily a
+dummy atom).</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<I>Remark: If several COM are used, the order are be important when
+common atoms (centers) are used.</I></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<I><B>iii) Examples:</B></I></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+The molecular system, HD-FH, is described by 3 vectors, R1, R2 and R3
+as follows:</P>
+<P LANG="en-US" CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_md955a4c.gif" NAME="images62" ALIGN=BOTTOM WIDTH=277 HEIGHT=234 BORDER=0></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">In
+this first example, we are not using the &quot;</SPAN><FONT COLOR="#3366ff"><SPAN LANG="en-US">recenterG</SPAN></FONT><SPAN LANG="en-US">&quot;
+procedure, then the input data are given as follows:</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<TABLE WIDTH=613 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=370>
+	<COL WIDTH=212>
+	<TR VALIGN=TOP>
+		<TD WIDTH=370>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff">&amp;Coord_transfo name_transfo='bunch'
+			nb_vect=3 /</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff">1  1  0.5                                 X 
+			 X     (2 3: R1=X2-&gt;X3)</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff">2  2  0.3335153425496182   D   H     (4 5:
+			R2=D4-&gt;H5)</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff">3  3  0.0                                 F 
+			 H     (6 7: R3=F6-&gt;H7)</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+		<TD WIDTH=212>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			-The 2 first centers are dummy atoms, X2 and X3.</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			-Defined DH with respect to X2 (center of mass of DH)</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>-Defined FH with
+			respect to X3 (F and X3 are at the same position)</P>
+		</TD>
+	</TR>
+</TABLE>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">In
+the second example, we are using one &quot;</SPAN><FONT COLOR="#3366ff"><SPAN LANG="en-US">recenterG</SPAN></FONT><SPAN LANG="en-US">&quot;
+procedure for the group of atoms (D</SPAN><SUB><SPAN LANG="en-US">4</SPAN></SUB><SPAN LANG="en-US">,
+H</SPAN><SUB><SPAN LANG="en-US">5</SPAN></SUB><SPAN LANG="en-US">) to
+define the center-of-mass X</SPAN><SUB><SPAN LANG="en-US">2</SPAN></SUB><SPAN LANG="en-US">:</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<TABLE WIDTH=613 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=370>
+	<COL WIDTH=212>
+	<TR VALIGN=TOP>
+		<TD WIDTH=370>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff">&amp;Coord_transfo name_transfo='bunch'
+			nb_vect=3 /</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff">1  1  0.5                                 X 
+			 X     (2 3: R1=X2-&gt;X3)</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff"><B>2  1   0.0                              
+			D   H     (4 5: R2=D4-&gt;H5)</B></FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff">3  3  0.0                                 F 
+			 H     (6 7: R3=F6-&gt;H7)</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+		<TD WIDTH=212>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			-The 2 first centers are dummy atoms, X2 and X3.</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<B>-Defined DH with respect to X1 (the first center). Those atoms
+			will be recentered.</B></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>-Defined FH with
+			respect to X3 (F and X3 are at the same position)</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=370>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm">
+			<FONT COLOR="#0000ff">&amp;recenterG tab_At_TO_G(1)=4,5 Gat=2 /</FONT></P>
+		</TD>
+		<TD WIDTH=212>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">The COM will
+			be the second center (dummy atom, X2) and it is defined with the
+			centers 4 and 5 (D</SPAN><SUB><SPAN LANG="en-US">4</SPAN></SUB><SPAN LANG="en-US">
+			and H</SPAN><SUB><SPAN LANG="en-US">5</SPAN></SUB><SPAN LANG="en-US">).</SPAN></P>
+		</TD>
+	</TR>
+</TABLE>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<H3 CLASS="western" STYLE="page-break-before: always"><SPAN LANG="en-US">VII.2c)
+Transformation &quot;</SPAN><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">QTOX_ana</FONT></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">This
+coordinate transformation can be the first one (see scheme VII.2-1).
+The </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">
+primitive coordinates, 
+<IMG SRC="img/tnum_html8_html_m13924add.gif" NAME="images63" ALIGN=ABSMIDDLE WIDTH=35 HEIGHT=28 BORDER=0>,
+are defined directly in a fortran subroutine.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>Remarks:
+The input set of coordinates is the </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6</I></SPAN></FONT><SPAN LANG="en-US"><I>
+primitive coordinates, 
+<IMG SRC="img/tnum_html8_html_m13924add.gif" NAME="images64" ALIGN=ABSMIDDLE WIDTH=35 HEIGHT=28 BORDER=0>
+and the output set of coordinates is the </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat</I></SPAN></FONT><SPAN LANG="en-US"><I>
+Cartesian coordinates of the atoms,</I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_m205b8fd.gif" NAME="images65" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=29 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>.</I></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+parameters of the namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Coord_transfo</SPAN></FONT><SPAN LANG="en-US">&quot;
+relevant to this transformation are:</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">name_transfo=&quot;</SPAN></FONT><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">QTOX_ana</FONT></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">&quot;</SPAN></FONT><SPAN LANG="en-US">:
+	trigger the analitical transformation.</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">Nat</SPAN></FONT><SPAN LANG="en-US">:
+				number of atoms.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+Then nothing is read.</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<FONT COLOR="#ff0000">Not yet implemented in the &quot;New
+transformation&quot;.</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<H3 CLASS="western" STYLE="page-break-before: always"><SPAN LANG="en-US">VII.2d)
+Transformation &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">poly</SPAN></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">This
+coordinate transformation can be read just after the &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">poly</SPAN></FONT><SPAN LANG="en-US">&quot;
+one. It defines the primitive set of curvilinear coordinates as
+polyspherical (with or without subsystems) as defined in Gatti et al.
+publications [].</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<I>Remarks: </I>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>The
+</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>nb_vect</I></SPAN></FONT><SPAN LANG="en-US"><I>
+parameter is not given since is already known from the</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>
+bunch</I></SPAN></FONT><SPAN LANG="en-US"><I> transformation. </I></SPAN>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>The
+input set of coordinates is the </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3nb_vect-3</I></SPAN></FONT><SPAN LANG="en-US"><I>
+primitive coordinates, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_m13924add.gif" NAME="Objet49" ALIGN=ABSMIDDLE WIDTH=35 HEIGHT=28></B></I></SPAN><SPAN LANG="en-US"><I>,
+and the output set of coordinates is the </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3nb_vect</I></SPAN></FONT><SPAN LANG="en-US"><I>
+Cartesian coordinates of vectors, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_m30a40c7.gif" NAME="Objet50" ALIGN=ABSMIDDLE WIDTH=45 HEIGHT=25></B></I></SPAN><SPAN LANG="en-US"><I>.</I></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+parameters of the namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Coord_transfo</SPAN></FONT><SPAN LANG="en-US">&quot;
+relevant to this transformation is:</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 3.75cm; text-indent: -2.5cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">name_transfo=&quot;poly&quot;</SPAN></FONT><SPAN LANG="en-US">:
+trigger the polyspherical transformation.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Then,
+the namelist is followed by &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_vect</SPAN></FONT><SPAN LANG="en-US">&quot;
+namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">vector</SPAN></FONT><SPAN LANG="en-US">&quot;.
+This namelist has the following parameters:</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">Frame</SPAN></FONT><SPAN LANG="en-US">:
+it has to be set to .TRUE.</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+</SPAN></FONT><SPAN LANG="en-US">(</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">frame=t</SPAN></FONT><SPAN LANG="en-US">)
+for the first vector of a new frame (for </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">F1</SPAN></FONT><SPAN LANG="en-US">
+or a subsystem). The default is .FALSE..</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_vect</SPAN></FONT><SPAN LANG="en-US">:
+vector number added in the new frame. You do NOT count the vector in
+a subsystem of this frame except the first one.</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">cos_th</SPAN></FONT><SPAN LANG="en-US">:
+it enables one to use valence angle (</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">cos_th=f</SPAN></FONT><SPAN LANG="en-US">)
+or the cosine of the valence angle (</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">cos_th=t</SPAN></FONT><SPAN LANG="en-US">,
+default).</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">cart</SPAN></FONT><SPAN LANG="en-US">:
+it enables define the coordinates as Cartesian ones instead of
+spherical.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">In
+a new frame, </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">Fi</SPAN></FONT><SPAN LANG="en-US">:</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+curvilinear coordinates of the vector j in the frame </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">Fi</SPAN></FONT><SPAN LANG="en-US">
+can be:</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<SPAN LANG="en-US">spherical:</SPAN><SPAN LANG="en-US"> </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">R</SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">j</SPAN></SUB></FONT><SPAN LANG="en-US">,
+</SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"></SPAN></FONT></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">j</SPAN></SUB></FONT><SPAN LANG="en-US">,
+</SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"></SPAN></FONT></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">j</SPAN></SUB></FONT></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<SPAN LANG="en-US">Cartesian: </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">x</SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">j</SPAN></SUB></FONT><SPAN LANG="en-US">,
+</SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">y</SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">j</SPAN></SUB></FONT><SPAN LANG="en-US">,
+</SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">z</SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US">j</SPAN></SUB></FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<I>Remarks: </I>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<SPAN LANG="en-US"><I>When the first vector is defined in a frame,
+</I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>Fi</I></SPAN></FONT><SPAN LANG="en-US"><I>,
+(</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>frame=t</I></SPAN></FONT><SPAN LANG="en-US"><I>)
+only the coordinate </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>R</I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>j</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>
+is defined.</I></SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<SPAN LANG="en-US"><I>When the second vector is defined in a frame,
+</I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>Fi</I></SPAN></FONT><SPAN LANG="en-US"><I>,
+only the coordinate </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>R</I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>j</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>
+and </I></SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"><I></I></SPAN></FONT></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>j</I></SPAN></SUB></FONT><SPAN LANG="en-US"><I>
+are defined.</I></SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<SPAN LANG="en-US"><I>The Cartesian Coordinates cannot be used for
+the first and the second vector in a frame. </I></SPAN>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">When
+all the vectors of the frame, </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">Fi</SPAN></FONT><SPAN LANG="en-US">,
+(included all the subsystems) have been defined, some of the Euler
+angles (</SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"></SPAN></FONT></FONT><SPAN LANG="en-US">,
+</SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"></SPAN></FONT></FONT><SPAN LANG="en-US">,
+</SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"></SPAN></FONT></FONT><SPAN LANG="en-US">),
+which orient this frame with respect to another one (</SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">Fk</SPAN></FONT><SPAN LANG="en-US">),
+are added.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<I>Remarks: </I>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<SPAN LANG="en-US"><I>When</I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>
+Fi</I></SPAN></FONT><SPAN LANG="en-US"><I> is the first frame
+parallel to the true BF, the Euler angles are not required, because
+they correspond to the overall rotation and they are not part of the
+internal coordinates.</I></SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<SPAN LANG="en-US"><I>When only one vector is defined in a frame </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>Fi</I></SPAN></FONT><SPAN LANG="en-US"><I>,
+only two Euler angles are required: </I></SPAN><SPAN LANG="en-US">(</SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"></SPAN></FONT></FONT><SPAN LANG="en-US">,
+</SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"></SPAN></FONT></FONT><SPAN LANG="en-US">).</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 0.75cm; margin-bottom: 0cm">
+<SPAN LANG="en-US"><I>When </I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>Fk</I></SPAN></FONT><SPAN LANG="en-US"><I>
+has only one vector (</I></SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>Fk</I></SPAN></FONT><SPAN LANG="en-US"><I>
+is not fully defined or is similar to an E2 frame), only two Euler
+angles are required: </I></SPAN><SPAN LANG="en-US">(</SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"></SPAN></FONT></FONT><SPAN LANG="en-US">,
+</SPAN><FONT COLOR="#ff0000"><FONT FACE="Symbol"><SPAN LANG="en-US"></SPAN></FONT></FONT><SPAN LANG="en-US">).</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+order of the coordinates is the following: </SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_390cc767.gif" NAME="Objet51" ALIGN=ABSMIDDLE WIDTH=279 HEIGHT=35></B></I></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_m4b298e5d.gif" NAME="images66" ALIGN=BOTTOM WIDTH=602 HEIGHT=465 BORDER=0></P>
+<P CLASS="western" ALIGN=CENTER STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>Scheme
+VII.2c-1: Overview of an input part wit</I></SPAN><SPAN LANG="en-US"><I>h
+11 vectors (on the left) and the corresponding coordinates in each
+frame.</I></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<H3 CLASS="western" STYLE="page-break-before: always"> <SPAN LANG="en-US">VII.2e)
+Transformation &quot;</SPAN><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">linear</FONT></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">This
+coordinate transformation cannot be the first one (see scheme
+VII.2-1). It makes a linear transformation from </SPAN><SPAN LANG="en-US"><B>
+<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images67" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">
+to </SPAN><SPAN LANG="en-US"><B>
+<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images68" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_m661853ac.gif" NAME="Objet52" ALIGN=ABSMIDDLE WIDTH=188 HEIGHT=119></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I><B>M
+</B></I></SPAN><SPAN LANG="en-US">is a (</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">x</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">)
+matrix.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">After
+the namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Coord_transfo</SPAN></FONT><SPAN LANG="en-US">&quot;,
+the program reads:</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+- a comment line 
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+- one integer (the number of column of the matrix) 
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<SPAN LANG="en-US">-  several blocks of &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">nbcol</SPAN></FONT><SPAN LANG="en-US">&quot;
+columns of the matrix</SPAN><SPAN LANG="en-US"><I><B> M</B></I></SPAN><SPAN LANG="en-US">.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<I>Remarks: </I>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<FONT COLOR="#ff0000"><I>Remarks: you cannot mix coordinates of
+different types (distance, angle). You can mix only distances with
+distances, valence angles with valence angles and dihedral angles
+with dihedral angles.</I></FONT></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>Subroutine:
+Input, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images69" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates. Output, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images70" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+ </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates.</I></SPAN></P>
+<P LANG="en-US" CLASS="western" STYLE="margin-bottom: 0cm"><BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+Firstly, let takes the water molecule for which you want to use
+symmetrized coordinates:</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_m24e39cbb.gif" NAME="Objet53" ALIGN=ABSMIDDLE WIDTH=315 HEIGHT=124></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">R</SPAN><SUB><SPAN LANG="en-US">+</SPAN></SUB><SPAN LANG="en-US">,
+R</SPAN><SUB><SPAN LANG="en-US">-</SPAN></SUB><SPAN LANG="en-US"> and
+</SPAN><FONT FACE="Symbol"><SPAN LANG="en-US">q</SPAN></FONT><SPAN LANG="en-US">'
+are the 3 </SPAN><SPAN LANG="en-US"><I><B>Q</B></I></SPAN><SUB><SPAN LANG="en-US"><I><B>in</B></I></SPAN></SUB><SPAN LANG="en-US">
+coordinates (or the ones used in the dynamics) and R</SPAN><SUB><SPAN LANG="en-US">1</SPAN></SUB><SPAN LANG="en-US">,
+R</SPAN><SUB><SPAN LANG="en-US">2</SPAN></SUB><SPAN LANG="en-US"> and
+</SPAN><FONT FACE="Symbol"><SPAN LANG="en-US">q</SPAN></FONT><SPAN LANG="en-US">
+are the 3 </SPAN><SPAN LANG="en-US"><I><B>Q</B></I></SPAN><SUB><SPAN LANG="en-US"><I><B>out</B></I></SPAN></SUB><SPAN LANG="en-US">
+coordinates (or the ones of the z-matrix). Then, the matrix, </SPAN><SPAN LANG="en-US"><I><B>M</B></I></SPAN><SPAN LANG="en-US">,
+enables one to define the </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">unsymmetrized
+coordinates</SPAN></FONT><SPAN LANG="en-US"> (R</SPAN><SUB><SPAN LANG="en-US">1</SPAN></SUB><SPAN LANG="en-US">,
+R</SPAN><SUB><SPAN LANG="en-US">2</SPAN></SUB><SPAN LANG="en-US"> and
+</SPAN><FONT FACE="Symbol"><SPAN LANG="en-US">q</SPAN></FONT><SPAN LANG="en-US">)
+as function of </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">symmetrized
+ones</SPAN></FONT><SPAN LANG="en-US"> (R</SPAN><SUB><SPAN LANG="en-US">+</SPAN></SUB><SPAN LANG="en-US">,
+R</SPAN><SUB><SPAN LANG="en-US">-</SPAN></SUB><SPAN LANG="en-US"> and
+</SPAN><FONT FACE="Symbol"><SPAN LANG="en-US">q</SPAN></FONT><SPAN LANG="en-US">').</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_4d92f088.gif" NAME="Objet54" ALIGN=ABSMIDDLE WIDTH=303 HEIGHT=109></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+The input data of &quot;linear&quot; are:</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">&amp;Coord_transfo name_transfo='linear' /</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">    R+    R-    a'</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">3</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">1   1.    1.    0.</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">2   1.   -1.    0.</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">3   0.    0.    1.</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">For
+large dimension, the matrix can be split into &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">a</SPAN></FONT><SPAN LANG="en-US">&quot;
+blocks of &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">nbcol</SPAN></FONT><SPAN LANG="en-US">&quot;
+columns (the &quot;^&quot; stands for a blank line). However, it is
+easier to use </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">nbcol=3Nat-6</SPAN></FONT><SPAN LANG="en-US">
+(one block). The general input is the following (</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">N=3Nat-6</SPAN></FONT><SPAN LANG="en-US">):</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; text-indent: 1.25cm; margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_364bec71.gif" NAME="Objet55" ALIGN=ABSMIDDLE WIDTH=308 HEIGHT=541></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<H3 CLASS="western" STYLE="page-break-before: always"><SPAN LANG="en-US">VII.2f)
+Transformation &quot;</SPAN><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">linear_inv</FONT></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">This
+coordinate transformation cannot be the first one (see scheme
+VII.2-1). It makes a linear transformation from </SPAN><SPAN LANG="en-US"><B>
+<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images71" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">
+to </SPAN><SPAN LANG="en-US"><B>
+<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images72" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+like the transformation &quot;</SPAN><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">
+linear</FONT></FONT><SPAN LANG="en-US"> &quot;. However, the matrix
+</SPAN><SPAN LANG="en-US"><I><B>M</B></I></SPAN><SUP><SPAN LANG="en-US"><I><B>-1</B></I></SPAN></SUP><SPAN LANG="en-US">
+is read.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_m36f84366.gif" NAME="Objet56" ALIGN=ABSMIDDLE WIDTH=199 HEIGHT=119></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I><B>M</B></I></SPAN><SUP><SPAN LANG="en-US"><I><B>-1</B></I></SPAN></SUP><SPAN LANG="en-US"><I><B>
+</B></I></SPAN><SPAN LANG="en-US">is a (</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">x</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">)
+matrix.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">After
+the namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Coord_transfo</SPAN></FONT><SPAN LANG="en-US">&quot;,
+the program reads:</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+- a comment line 
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+- one integer (the number of column of the matrix) 
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<SPAN LANG="en-US">-  several blocks of &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">nbcol</SPAN></FONT><SPAN LANG="en-US">&quot;
+columns of the matrix</SPAN><SPAN LANG="en-US"><I><B> M</B></I></SPAN><SUP><SPAN LANG="en-US"><I><B>-1</B></I></SPAN></SUP><SPAN LANG="en-US">.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<I>Remarks: </I>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<FONT COLOR="#ff0000"><I>Remarks: you cannot mix coordinates of
+different types (distance, angle). You can mix only distances with
+distances, valence angles with valence angles and dihedral angles
+with dihedral angles.</I></FONT></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>Subroutine:
+Input, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images73" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates. Output, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images74" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+ </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates.</I></SPAN></P>
+<P LANG="en-US" CLASS="western" STYLE="margin-bottom: 0cm"><BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+Firstly, let takes the water molecule for which you want to use
+symmetrized coordinates:</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_m24e39cbb.gif" NAME="Objet57" ALIGN=ABSMIDDLE WIDTH=315 HEIGHT=124></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">R</SPAN><SUB><SPAN LANG="en-US">+</SPAN></SUB><SPAN LANG="en-US">,
+R</SPAN><SUB><SPAN LANG="en-US">-</SPAN></SUB><SPAN LANG="en-US"> and
+</SPAN><FONT FACE="Symbol"><SPAN LANG="en-US">q</SPAN></FONT><SPAN LANG="en-US">'
+are the 3 </SPAN><SPAN LANG="en-US"><I><B>Q</B></I></SPAN><SUB><SPAN LANG="en-US"><I><B>in</B></I></SPAN></SUB><SPAN LANG="en-US">
+coordinates (or the ones used in the dynamics) and R</SPAN><SUB><SPAN LANG="en-US">1</SPAN></SUB><SPAN LANG="en-US">,
+R</SPAN><SUB><SPAN LANG="en-US">2</SPAN></SUB><SPAN LANG="en-US"> and
+</SPAN><FONT FACE="Symbol"><SPAN LANG="en-US">q</SPAN></FONT><SPAN LANG="en-US">
+are the 3 </SPAN><SPAN LANG="en-US"><I><B>Q</B></I></SPAN><SUB><SPAN LANG="en-US"><I><B>out</B></I></SPAN></SUB><SPAN LANG="en-US">
+coordinates (or the ones of the z-matrix). </SPAN>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+The input data of &quot;linear&quot; are:</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">&amp;Coord_transfo name_transfo='linear_inv' /</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">    R1    R2   a</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">3</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">1   .5    .5    0.</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">2   .5   -.5    0.</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff">3   0.    0.    1.</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; page-break-before: always">
+<BR>
+</P>
+<H3 CLASS="western"><SPAN LANG="en-US">VII.2g) Transformation
+&quot;</SPAN><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">identity</FONT></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">This
+coordinate transformation cannot be the first one (see scheme
+VII.2-1). It makes just a copy of </SPAN><SPAN LANG="en-US"><B>
+<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images75" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">
+into </SPAN><SPAN LANG="en-US"><B>
+<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images76" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">	<IMG SRC="img/tnum_html8_html_m7e186119.gif" NAME="Objet58" ALIGN=ABSMIDDLE WIDTH=64 HEIGHT=25></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+No input is required.</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<I>Remarks: </I>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<FONT COLOR="#ff0000"><I>Checking purpose only.</I></FONT></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>Subroutine:
+Input, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images77" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates. Output, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images78" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+ </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates.</I></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<H3 CLASS="western"><SPAN LANG="en-US">VII.2h) Transformation &quot;</SPAN><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">NM</FONT></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+This coordinate transformation cannot be the first one (see scheme
+VII.2-1). It enables one to used curvilinear normal modes.</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<I>Remarks: </I>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>Subroutine:
+Input, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images79" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates. Output, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images80" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+ </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates.</I></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<FONT COLOR="#ff0000">Not yet</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<H3 CLASS="western"><SPAN LANG="en-US">VII.2i) Transformation
+&quot;</SPAN><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">hyperspherical</FONT></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+This coordinate transformation cannot be the first one (see scheme
+VII.2-1). It performs polar or hypersherical (not yet)
+transformation.</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<I>Remarks: </I>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>Subroutine:
+Input, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images81" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates. Output, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images82" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+ </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates.</I></SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<FONT COLOR="#ff0000">Not yet</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; page-break-before: always">
+<BR>
+</P>
+<H3 CLASS="western"><SPAN LANG="en-US">VII.2j) Transformation &quot;</SPAN><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">oneD</FONT></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+This coordinate transformation cannot be the first one (see scheme
+VII.2-1). It makes 1D-transformations on selected coordinates.</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="text-indent: 1.25cm; margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_m7af12bd4.gif" NAME="Objet59" ALIGN=ABSMIDDLE WIDTH=188 HEIGHT=79></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">After
+the namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Coord_transfo</SPAN></FONT><SPAN LANG="en-US">&quot;,
+the program reads </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">&quot;nb_transfo&quot;</SPAN></FONT><SPAN LANG="en-US">
+several namelists &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">oneD</SPAN></FONT><SPAN LANG="en-US">&quot;.
+This number is defined in the namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">Coord_transfo</SPAN></FONT><SPAN LANG="en-US">&quot;.
+The default is one (</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">nb_transfo=1</SPAN></FONT><SPAN LANG="en-US">).</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">The
+parameters of the </SPAN><SPAN LANG="en-US">namelists &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">oneD</SPAN></FONT><SPAN LANG="en-US">&quot;
+are:</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">iQin</SPAN></FONT><SPAN LANG="en-US">:
+		(default </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">0</SPAN></FONT><SPAN LANG="en-US">)
+index of the selected coordinate.</SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">
+Compulsory.</SPAN></FONT></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">name_oneD</SPAN></FONT><SPAN LANG="en-US">:
+	 (default </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">&quot;identity&quot;</SPAN></FONT><SPAN LANG="en-US">)
+name of the transformation.</SPAN></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">inTOout</SPAN></FONT><SPAN LANG="en-US">:
+	(default, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">T</SPAN></FONT><SPAN LANG="en-US">).
+If this variable is set to .TRUE. (</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">T</SPAN></FONT><SPAN LANG="en-US">),
+the transformation is:</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; text-indent: 1.25cm; margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_m47885ece.gif" NAME="Objet60" ALIGN=ABSMIDDLE WIDTH=188 HEIGHT=27></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<SPAN LANG="en-US">If this variable is set to .FALSE. (</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">F</SPAN></FONT><SPAN LANG="en-US">),
+the transformation is: </SPAN>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; text-indent: 1.25cm; margin-bottom: 0cm">
+<IMG SRC="img/tnum_html8_html_m5f05a70.gif" NAME="Objet61" ALIGN=ABSMIDDLE WIDTH=188 HEIGHT=27></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm">
+<FONT COLOR="#0000ff"><SPAN LANG="en-US">cte</SPAN></FONT><SPAN LANG="en-US">:
+		table of up to 20 reals. The parameters of the selected
+transformation if require.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+The input data are given as follows:</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<TABLE WIDTH=603 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=162>
+	<COL WIDTH=411>
+	<TR VALIGN=TOP>
+		<TD WIDTH=162>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><B>Name
+			of the oneD transformation (</B></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><B>name_oneD</B></SPAN></FONT><SPAN LANG="en-US"><B>)</B></SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+		<TD WIDTH=411>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US"><B>Function
+			and </B></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><B>cte(:)</B></SPAN></FONT><SPAN LANG="en-US"><B>
+			used</B></SPAN></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=162>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff">identity</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+		<TD WIDTH=411>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<IMG SRC="img/tnum_html8_html_31b5d02f.gif" NAME="Objet62" ALIGN=ABSMIDDLE WIDTH=76 HEIGHT=21></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>No parameter</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=162>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff">affine</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+		<TD WIDTH=411>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<IMG SRC="img/tnum_html8_html_mfdabf76.gif" NAME="Objet63" ALIGN=ABSMIDDLE WIDTH=327 HEIGHT=87></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Two
+			parameters, </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">cte(1)</SPAN></FONT><SPAN LANG="en-US">
+			and </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">cte(2)</SPAN></FONT><SPAN LANG="en-US">,
+			are required</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">Remark:
+			</SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US">10</SPAN></FONT><FONT COLOR="#ff0000"><SUP><SPAN LANG="en-US">4</SPAN></SUP></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US">
+			&gt;</SPAN></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			|cte(1)|</SPAN></FONT><SPAN LANG="en-US"> </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">&gt;
+			10</SPAN></FONT><FONT COLOR="#ff0000"><SUP><SPAN LANG="en-US">-4</SPAN></SUP></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US">
+			</SPAN></FONT>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=162>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff">cos</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+		<TD WIDTH=411>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<IMG SRC="img/tnum_html8_html_313551ca.gif" NAME="Objet64" ALIGN=ABSMIDDLE WIDTH=256 HEIGHT=81></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>No parameter</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=162>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#0000ff">acos</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><BR>
+			</P>
+		</TD>
+		<TD WIDTH=411>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<IMG SRC="img/tnum_html8_html_m1c5e3626.gif" NAME="Objet65" ALIGN=ABSMIDDLE WIDTH=249 HEIGHT=81></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>No parameter</P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<I>Remarks: </I>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>In
+the input namelist &quot;</I></SPAN></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+oneD</SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>&quot;,
+with the parameter &quot;</I></SPAN></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>inTOout</I></SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>&quot;
+you can define the transformation from</I></SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>
+Q</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>in</B></I></SPAN></SUB></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>
+to </I></SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>Q</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>out</B></I></SPAN></SUB></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>
+or </I></SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>Q</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>out</B></I></SPAN></SUB></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>
+to </I></SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>Q</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>in</B></I></SPAN></SUB></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>.
+However, it is ALWAYS used from</I></SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>
+Q</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>in</B></I></SPAN></SUB></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>
+to </I></SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I><B>Q</B></I></SPAN></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I><B>out</B></I></SPAN></SUB></FONT><FONT COLOR="#ff0000"><SUB><SPAN LANG="en-US"><I>.</I></SPAN></SUB></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US"><I>.</I></SPAN></FONT></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US"><I>Subroutine:
+Input, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images83" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+</I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates. Output, </I></SPAN><SPAN LANG="en-US"><I><B>
+<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images84" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></I></SPAN><SPAN LANG="en-US"><I>:
+ </I></SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US"><I>3Nat-6
+</I></SPAN></FONT><SPAN LANG="en-US"><I>coordinates.</I></SPAN></P>
+<H3 CLASS="western" STYLE="page-break-before: always"><SPAN LANG="en-US">VII.2k)
+Transformation &quot;</SPAN><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">flexible</FONT></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+This coordinate transformation cannot be the first one (see scheme
+VII.2-1). It makes 1D-transformations on selected coordinates.</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<TABLE WIDTH=613 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=106>
+	<COL WIDTH=150>
+	<COL WIDTH=150>
+	<COL WIDTH=149>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">flexible</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Define
+			the coordinates, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images85" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">,
+			such there are function of active coordinates, </SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images86" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><IMG SRC="img/tnum_html8_html_m27e07235.gif" NAME="Objet66" ALIGN=ABSMIDDLE WIDTH=135 HEIGHT=64></P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">
+			integers are read:</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">20</SPAN></FONT><SPAN LANG="en-US">:
+			flexible coord.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">0</SPAN></FONT><SPAN LANG="en-US">:
+			unchanged coord.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">1</SPAN></FONT><SPAN LANG="en-US">:
+			active coord.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			A subroutine is required, 
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><IMG SRC="img/tnum_html8_html_12b2ca29.gif" NAME="Objet67" ALIGN=ABSMIDDLE WIDTH=89 HEIGHT=31></P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_6d84952f.gif" NAME="images87" ALIGN=ABSMIDDLE WIDTH=23 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images88" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			 </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<FONT COLOR="#ff0000">Be careful, possible conflict with flexible
+			coordinates defined in the active transformation.</FONT></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000"><SPAN LANG="en-US">Need
+			a subroutine: </SPAN></FONT><FONT COLOR="#ff0000"><FONT SIZE=2 STYLE="font-size: 11pt">calc_dnQflex</FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<H3 CLASS="western"><SPAN LANG="en-US">VII.2l) Transformation
+&quot;</SPAN><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">active</FONT></FONT><SPAN LANG="en-US">&quot;</SPAN></H3>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+This coordinate transformation MUST be the last one (see scheme
+VII.2-1). It enables one to select the &quot;active&quot; coordinates
+(the one used during the dynamics).</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<TABLE WIDTH=613 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=106>
+	<COL WIDTH=150>
+	<COL WIDTH=150>
+	<COL WIDTH=149>
+	<TR VALIGN=TOP>
+		<TD WIDTH=106>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#2a00ff"><FONT SIZE=2 STYLE="font-size: 11pt">active</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=150>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>Define the active,
+			inactive (rigid, flexible) coordinates</P>
+		</TD>
+		<TD WIDTH=150>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6</SPAN></FONT><SPAN LANG="en-US">
+			integers are read:</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">20</SPAN></FONT><SPAN LANG="en-US">:
+			flexible coord.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">0</SPAN></FONT><SPAN LANG="en-US">:
+			rigid (frozen) coord.</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">1</SPAN></FONT><SPAN LANG="en-US">:
+			active coord.</SPAN></P>
+		</TD>
+		<TD WIDTH=149>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Input:
+			No input coordinates</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Output,
+			</SPAN><SPAN LANG="en-US"><B>
+			<IMG SRC="img/tnum_html8_html_md0df561.gif" NAME="images89" ALIGN=ABSMIDDLE WIDTH=28 HEIGHT=25 BORDER=0></B></SPAN><SPAN LANG="en-US">:
+			 </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">3Nat-6
+			</SPAN></FONT><SPAN LANG="en-US">coordinates.</SPAN></P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			<BR>
+			</P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000"><SPAN LANG="en-US">Be
+			careful, possible conflict with flexible coordinates defined in
+			the </SPAN></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">flexible</SPAN></FONT><FONT COLOR="#ff0000"><SPAN LANG="en-US">
+			transformation.</SPAN></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<H2 CLASS="western" STYLE="page-break-before: always"><SPAN LANG="en-US">VII.3)
+Namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+minimum</SPAN></FONT><SPAN LANG="en-US"> &quot;</SPAN></H2>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+Reads the reference geometry. In particular, this will be set-up the
+coordinates with rigid constraints  (rigid-0 or rigid-100).</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">If
+the curvilinear coordinates are not modified, the reference values
+are used when the following subroutines, </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">calc3_f2_f1Q_num</SPAN></FONT><SPAN LANG="en-US">,
+</SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">export3_MCTDH_T</SPAN></FONT><SPAN LANG="en-US">,
+</SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">sub3_QTOdnx</SPAN></FONT><SPAN LANG="en-US">
+… are called.</SPAN></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Related
+subroutines, types...: </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">read_para_Q(para_Q,mole,5,6),
+TYPE param_Q, </SPAN></FONT>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<TABLE WIDTH=619 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=202>
+	<COL WIDTH=188>
+	<COL WIDTH=185>
+	<TR VALIGN=TOP>
+		<TD WIDTH=202>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>Key word / parameter</P>
+		</TD>
+		<TD WIDTH=188>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>action</P>
+		</TD>
+		<TD WIDTH=185>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>default</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=202>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000c0"><FONT FACE="Monaco"><FONT SIZE=2 STYLE="font-size: 11pt">read_nameQ</FONT></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=188>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">Read the name
+			of the coordinate when the parameter is set to </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">T</SPAN></FONT></P>
+		</TD>
+		<TD WIDTH=185>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff">F</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=202>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000c0"><FONT FACE="Monaco"><FONT SIZE=2 STYLE="font-size: 11pt">unit</FONT></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=188>
+			<P CLASS="western" ALIGN=JUSTIFY><SPAN LANG="en-US">Set-up the
+			unit. The values of the coordinates are read in &quot;Angstrom and
+			degree&quot; when </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">unit=’angs’</SPAN></FONT><SPAN LANG="en-US">
+			instead of &quot;bohr radian&quot;</SPAN></P>
+		</TD>
+		<TD WIDTH=185>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff">'bohr'</FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">After
+reading the namelist, all (3N-6) the coordinate values are read in
+column with the coordinate names when </SPAN><FONT COLOR="#0000ff">read_nameQ=t</FONT></P>
+<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><FONT FACE="Courier"><FONT COLOR="#ff0000">R1</FONT>
+1.</FONT></FONT></P>
+<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><FONT FACE="Courier"><FONT COLOR="#ff0000">R2</FONT>
+1.</FONT></FONT></P>
+<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff">…</FONT></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#ff0000">a2</FONT>
+<FONT COLOR="#0000ff">1.83</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Or
+without the coordinate names when </SPAN><FONT COLOR="#0000ff">read_nameQ=f</FONT></P>
+<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><FONT FACE="Courier">1.</FONT></FONT></P>
+<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><FONT FACE="Courier">1.</FONT></FONT></P>
+<P LANG="en-US" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff">…</FONT></P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff">1.83</FONT></P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<DIV TYPE=FOOTER>
+	<P STYLE="margin-top: 1.13cm; margin-bottom: 0cm"><SPAN ID="Cadre1" DIR="LTR" STYLE="position: absolute; top: 0cm; left: 0cm; width: 0.72cm; height: 0.37cm; border: none; padding: 0cm; background: #ffffff">
+		<P STYLE="margin-bottom: 0cm"><SDFIELD TYPE=PAGE SUBTYPE=RANDOM FORMAT=PAGE>23</SDFIELD></P>
+	</SPAN><BR>
+	</P>
+</DIV>
+</BODY>
+</HTML>

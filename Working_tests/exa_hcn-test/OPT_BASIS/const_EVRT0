@@ -1,0 +1,7 @@
+#
+
+dat_NewQTransfo-OneD
+
+ grep zpe res_EVRT | awk '{print $2}' > energ
+#grep Average_ene res_EVRT | awk '{print $2}' > energ
+echo 1 >> energ

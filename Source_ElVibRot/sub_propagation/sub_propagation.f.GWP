@@ -1,0 +1,2691 @@
+!===========================================================================
+!===========================================================================
+!This file is part of ElVibRot.
+!
+!    ElVibRot is free software: you can redistribute it and/or modify
+!    it under the terms of the GNU General Public License as published by
+!    the Free Software Foundation, either version 3 of the License, or
+!    (at your option) any later version.
+!
+!    ElVibRot is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU General Public License for more details.
+!
+!    You should have received a copy of the GNU General Public License
+!    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
+!
+!    Copyright 2015  David Lauvergnat
+!      with contributions of Mamadou Ndong, Josep Maria Luis
+!
+!    ElVibRot includes:
+!        - Tnum-Tana under the GNU LGPL3 license
+!        - Somme subroutines of John Burkardt under GNU LGPL license
+!             http://people.sc.fsu.edu/~jburkardt/
+!        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
+!             http://shtools.ipgp.fr
+!===========================================================================
+!===========================================================================
+
+c================================================================
+c     WP propagation
+c
+c para_AllOp : table of operator
+c     
+c     para_H    = para_AllOp%tab_Op(1)
+c     para_Dipx = para_AllOp%tab_Op(2)
+c     para_Dipy = para_AllOp%tab_Op(3)
+c     para_Dipz = para_AllOp%tab_Op(4)
+c
+c     0 : spectral propagation (WP is projected on eigenvectors)
+c     1 : Cheby    propagation
+c     2 : nOD      propagation
+c     22: nOD      propagation + field
+c     3 : relaxation
+c     33: relaxation (n states)
+c
+c
+c     INTERFACE IN vib.f
+c================================================================
+      SUBROUTINE sub_propagation(WP0,para_AllOp,para_propa)
+      USE mod_system
+      USE mod_Op
+      USE mod_propa
+      USE mod_psi
+      IMPLICIT NONE
+
+c----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+      TYPE (param_psi)   :: WP0
+
+
+      integer                        :: nb_diago,max_diago
+      TYPE (param_psi),allocatable   :: psi(:)
+      real (kind=Rkind),allocatable  :: Ene0(:)
+
+c----- variables for H ---------------------------------------------
+      TYPE (param_AllOp), target :: para_AllOp
+      TYPE (param_Op), pointer   :: para_H
+      complex (kind=Rkind)       :: Et
+
+c----- for printing --------------------------------------------------
+      logical :: print_Op
+
+
+c------ working variables ---------------------------------
+      integer             :: i,j,jt
+      real (kind=Rkind)   :: dnE,T
+      real (kind=Rkind)   :: w,wmin,wmax,stepw
+      integer             :: iOp,iDip
+
+      TYPE (param_psi)    :: WP
+
+c----- for debuging --------------------------------------------------
+      logical, parameter :: debug = .FALSE.
+c     logical, parameter :: debug = .TRUE.
+c-----------------------------------------------------------
+      para_H => para_AllOp%tab_Op(1)
+      IF (debug) THEN
+        write(6,*) 'BEGINNING propagation'
+        write(6,*) 'n',WP0%nb_tot
+        write(6,*)
+        write(6,*) 'pot0',para_H%pot0
+        CALL norme_psi(WP0,.FALSE.,.TRUE.,.FALSE.)
+        write(6,*) 'normeWP0 FBR',WP0%norme,WP0%tab_normeADA
+
+        write(6,*) 'WP0 FBR'
+        CALL ecri_psi(psi=WP0,nioWP=6)
+        write(6,*)
+        CALL write_param_Op(para_H)
+      END IF
+c-----------------------------------------------------------
+
+
+      para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
+
+      para_propa%para_poly%Hmin = para_propa%Hmin
+      para_propa%para_poly%Hmax = para_propa%Hmax
+
+
+
+      write(6,*) 'Tmax,DeltaT (ua)=> ',
+     *       para_propa%WPTmax,para_propa%WPdeltaT
+      write(6,*) 'Tmax,DeltaT (fs)=> ',
+     *       para_propa%WPTmax*para_H%const_phys%Ta*TEN**15,
+     *       para_propa%WPdeltaT*para_H%const_phys%Ta*TEN**15
+      write(6,*) 'Tmax,DeltaT (ps)=> ',
+     *       para_propa%WPTmax*para_H%const_phys%Ta*TEN**12,
+     *       para_propa%WPdeltaT*para_H%const_phys%Ta*TEN**12
+      write(6,*) '... DeltaE,Emax (cm-1)',
+     *    TWO*para_H%const_phys%pi/para_propa%WPTmax * 
+     *                        para_H%const_phys%auTOcm_inv,
+     *    TWO*para_H%const_phys%pi/para_propa%WPdeltaT *
+     *                          para_H%const_phys%auTOcm_inv
+
+
+
+
+      CALL init0_psi(WP)
+      WP = WP0
+      WP%DVR = .TRUE.
+      CALL alloc_psi(WP)
+
+
+      IF (abs(para_propa%type_WPpropa) == 1 .OR.
+     *    abs(para_propa%type_WPpropa) == 2) THEN
+
+        CALL sub_propagation11(WP0,WP,para_H,para_propa)
+        CALL TF_autocorr(para_propa,para_H%const_phys)
+
+      ELSE IF (abs(para_propa%type_WPpropa) == 3) THEN
+
+        CALL sub_propagation3(Et,WP0,WP,para_H,para_propa)
+
+      ELSE IF (abs(para_propa%type_WPpropa) == 33) THEN
+
+
+        CALL read_Davidson(para_propa%para_Davidson)
+        IF (para_propa%para_Davidson%nb_WP < 1) 
+     *       para_propa%para_Davidson%nb_WP = para_propa%max_ana
+
+        nb_diago = min(para_propa%para_Davidson%nb_WP,para_H%nb_tot)
+        IF (para_propa%para_Davidson%max_WP == 0) THEN
+          max_diago = max(1000,para_propa%para_Davidson%nb_WP,
+     *                    para_H%nb_tot/10)
+        ELSE
+          max_diago = para_propa%para_Davidson%max_WP
+        END IF
+        max_diago = min(max_diago,para_H%nb_tot)
+        para_propa%para_Davidson%max_WP = max_diago
+        allocate(psi(max_diago))
+        allocate(Ene0(max_diago))
+        CALL sub_propagation_Davidson(psi,Ene0,nb_diago,max_diago,
+     *                                para_H,para_propa)
+
+        DO i=1,para_AllOp%nb_Op
+          iOp = para_AllOp%tab_Op(i)%n_Op
+          IF (iOp >=0 .AND. iOp <= 3) ! H, Dipx,Dipy,Dipz
+     *     CALL sub_buid_MatOp(psi,nb_diago,para_AllOp%tab_Op(i),.TRUE.)
+        END DO
+
+      ELSE IF (abs(para_propa%type_WPpropa) == 34) THEN
+
+        
+        nb_diago = min(para_propa%max_ana,para_H%nb_tot)
+        allocate(psi(nb_diago))
+        allocate(Ene0(nb_diago))
+        CALL sub_propagation34(psi,Ene0,nb_diago,
+     *                         para_H,para_propa)
+
+      ELSE IF (para_propa%type_WPpropa == 22 .OR. 
+     *         para_propa%type_WPpropa == 24 .OR.
+     *         para_propa%type_WPpropa == 50 .OR.
+     *         para_propa%type_WPpropa == 221 .OR.
+     *         para_propa%type_WPpropa == 222 .OR.
+     *         para_propa%type_WPpropa == 223) THEN
+
+c       - for initialization of field variables -----------
+c       - enable to do loop of the field ------------------
+        print_Op=.TRUE.
+        CALL init0_field(para_propa%para_field,para_propa%WPTmax)
+        CALL read_field(para_propa%para_field)
+
+c       - dipole moment on the FBR basis ---------------------
+        iOp = 3
+        DO i=iOp,iOp+2
+          iDip = para_AllOp%tab_Op(i)%n_Op
+          IF (para_propa%para_field%pola_xyz(iDip)) THEN
+            write(6,*) 'Propagation with ',
+     *             trim(para_AllOp%tab_Op(i)%name_Op),
+     *             para_AllOp%tab_Op(i)%n_Op
+          END IF
+        END DO
+
+        IF (para_propa%para_field%stepw == 0) THEN
+          write(6,*) 'propagation without scan in w'
+
+          WP = WP0
+          CALL sub_propagation24(WP,1,print_Op,
+     *                           para_propa%para_field,.FALSE.,
+     *                    para_H,para_AllOp%tab_Op(iOp),para_propa)
+
+        ELSE
+
+          write(6,*) 'propagation with scan in w'
+          wmin  = para_propa%para_field%wmin
+          wmax  = para_propa%para_field%wmax
+          stepw = para_propa%para_field%stepw
+          w     = wmin - stepw
+          print_Op = .FALSE.
+c         print_Op = .TRUE.
+
+          DO WHILE (w < wmax)
+            w = w + stepw
+
+            para_propa%para_field%w(:,:) = w
+
+            write(6,*) 'propagation with w =',w
+            WP = WP0
+            CALL sub_propagation24(WP,1,print_Op,
+     *                             para_propa%para_field,.FALSE.,
+     *                    para_H,para_AllOp%tab_Op(iOp),para_propa)
+
+          END DO
+        END IF
+      ELSE IF (para_propa%type_WPpropa == 100) THEN
+
+c       - for initialization of field variables -----------
+c       - enable to do loop of the field ------------------
+        print_Op=.TRUE.
+        CALL init0_field(para_propa%para_field,para_propa%WPTmax)
+        CALL read_field(para_propa%para_field)
+
+c       - dipole moment on the FBR basis ---------------------
+        iOp = 3
+        DO i=iOp,iOp+2
+          iDip = para_AllOp%tab_Op(i)%n_Op
+          IF (para_propa%para_field%pola_xyz(iDip)) THEN
+            write(6,*) 'Propagation with ',
+     *             trim(para_AllOp%tab_Op(i)%name_Op),
+     *             para_AllOp%tab_Op(i)%n_Op
+          END IF
+        END DO
+
+          CALL sub_propagation100(WP,1,print_Op,
+     *                           para_propa%para_field,.FALSE.,
+     *                    para_H,para_AllOp%tab_Op(iOp),para_propa)
+
+      ELSE
+
+        write(6,*) ' sub_propagation : NO propagation spectral'
+        STOP
+      END IF
+
+      CALL dealloc_psi(WP)
+
+c-----------------------------------------------------------
+      IF (debug) THEN
+        write(6,*) 'END propagation'
+      END IF
+c-----------------------------------------------------------
+      END
+c================================================================
+c
+c     3 : propagation in imaginary time => ground state
+c
+c================================================================
+      SUBROUTINE sub_propagation3(E0,psi0,psi,para_H,para_propa)
+      USE mod_system
+      USE mod_Op
+      USE mod_propa
+      USE mod_psi
+      IMPLICIT NONE
+
+c----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)   :: para_H
+
+c----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+      TYPE (param_psi)   :: psi0,psi,w1,w2
+
+c------ working parameters --------------------------------
+      complex (kind=Rkind) :: cdot
+
+      integer       :: it,no
+      integer       :: i,j
+      integer       :: max_ecri
+      real (kind=Rkind) :: T      ! time
+      real (kind=Rkind) :: T_Delta! time+deltaT
+      complex (kind=Rkind) :: E0,E1
+      real (kind=Rkind) :: DeltaE,epsi,RE0
+
+      logical       :: FOD
+      integer  ::   nioWP
+    
+
+
+c----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+c     logical, parameter :: debug=.TRUE.
+c-----------------------------------------------------------
+      IF (debug) THEN
+        write(6,*) 'BEGINNING sub_propagation3'
+        write(6,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
+        write(6,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,
+     *                          para_propa%para_poly%Hmax
+        write(6,*)
+        write(6,*) 'nb_ba,nb_qa',psi%nb_ba,psi%nb_qa
+        write(6,*) 'nb_bi',psi%nb_bi
+        write(6,*)
+
+        CALL norme_psi(psi0,.FALSE.,.TRUE.,.FALSE.)
+        write(6,*) 'normepsi0 FBR',psi0%norme,psi0%tab_normeADA
+        write(6,*) 'psi0%cplx ',psi0%cplx
+
+        write(6,*) 'psiFBR'
+        CALL ecri_psi(psi=psi,nioWP=6,ecri_DVR=.FALSE.,ecri_FBR=.TRUE.)
+        write(6,*) 'psiDVR'
+        CALL ecri_psi(psi=psi,nioWP=6,ecri_DVR=.TRUE.,ecri_FBR=.FALSE.)
+
+       END IF
+c-----------------------------------------------------------
+
+
+c-----------------------------------------------------------
+c     copy psi0 in psi
+      CALL init0_psi(w1)
+      CALL init0_psi(w2)
+      w1  = psi0
+      w2  = psi0
+      psi = psi0
+c-----------------------------------------------------------
+
+c-----------------------------------------------------------
+      write(6,*) ' vib : propagation',para_propa%name_WPpropa
+
+c     - parameters for poly (cheby and nOD) ... ------------
+      para_propa%lo_expH = .FALSE.
+      CALL initialisation1_poly(para_propa%para_poly,
+     *                          para_propa%WPdeltaT,para_H%pot0,
+     *                          para_propa%type_WPpropa)
+
+c     - scaling of H ---------------------------------------
+      para_H%scaled = .TRUE.
+      para_H%E0     = para_propa%para_poly%E0
+      para_H%Esc    = para_propa%para_poly%Esc
+c-----------------------------------------------------------
+
+
+
+
+c-----------------------------------------------------------
+      epsi = para_propa%para_poly%poly_tol
+      T    = ZERO
+      it   = 0
+
+      CALL norme_psi(psi,.FALSE.,.TRUE.,.FALSE.)
+
+      E1 = -para_H%pot0
+      CALL sub_PsiOpPsi(E0,psi,w1,para_H)
+      E0 = E0-para_H%pot0
+      E1 = E0-para_H%pot0
+      DeltaE = abs(para_H%Hmax - para_H%Hmin)
+      FOD = .NOT. (para_propa%type_WPpropa == -3)
+      CALL calc_1Dweight(psi,25,T,' ',.TRUE.)
+      write(6,21) T,E0*para_H%const_phys%auTOcm_inv,
+     *                       psi%norme,psi%tab_normeADA
+ 21   format('ImTimeProp ',f12.2,'(',2(1x,f18.4),')',1x,20(1x,f8.5))
+
+c-----------------------------------------------------------
+
+
+c------- propagation loop ---------------------------------
+      CALL file_open(para_propa%file_WP,nioWP)
+
+      DO WHILE (T <= para_propa%WPTmax .AND. DeltaE > epsi)
+
+c       - for the writting of the wp (DVR) ---------------------
+        IF ((para_propa%WPpsi2 .OR. para_propa%WPpsi) .AND.
+     *                mod(it,para_propa%n_WPecri) == 0) THEN
+
+          CALL sub_PsiFBR_TO_DVR(psi)
+          CALL ecri_psi(T=T,psi=psi,nioWP=nioWP,
+     *                  ecri_DVR=.TRUE.,ecri_FBR=.FALSE.)
+        END IF
+c       --------------------------------------------------------
+
+        IF (FOD) THEN
+          write(6,*) 'march FOD'
+          para_H%E0     = para_H%pot0
+          E1 = E0
+          CALL march_FOD_Opti_im(psi,RE0,T,it,para_H,para_propa)
+c         E0 = RE0
+c  normalement, RE0 doit etre l'energie....
+
+          CALL norme_psi(psi,Renorm=.TRUE.)
+          E1 = E0
+          CALL sub_PsiOpPsi(E0,psi,w1,para_H)
+          E0 = E0-para_H%pot0
+          DeltaE = abs(E1-E0)
+          FOD = (DeltaE > ONETENTH**6)  ! about 3 cm-1
+        ELSE
+          write(6,*) 'march nOD'
+          para_H%E0     = para_propa%para_poly%E0
+c         para_H%E0     = E0+para_H%pot0
+          CALL march_nOD_im(T,no,psi,psi0,w1,w2,para_H,para_propa)
+
+          CALL norme_psi(psi,Renorm=.TRUE.)
+          E1 = E0
+          CALL sub_PsiOpPsi(E0,psi,w1,para_H)
+          E0 = E0-para_H%pot0
+          DeltaE = abs(E1-E0)
+          T  = T + para_propa%WPdeltaT
+        END IF
+
+c       CALL calc_1Dweight(psi,25,T,' ',.TRUE.)
+        write(6,21) T,E0*para_H%const_phys%auTOcm_inv,psi%norme,
+     *               psi%tab_normeADA
+
+        it = it + 1
+
+        CALL flush_perso(6)
+
+      END DO
+c----------------------------------------------------------
+
+
+
+c----------------------------------------------------------
+c     - write the final WP---------------------------------
+      IF (T > para_propa%WPTmax) 
+     *    write(6,*) ' WARNING : the WP is not fully relaxed'
+
+c     for the writting of the wp (DVR)
+      CALL sub_PsiFBR_TO_DVR(psi)
+      CALL ecri_psi(T=T,psi=psi,nioWP=nioWP,
+     *              ecri_DVR=.TRUE.,ecri_FBR=.FALSE.)
+
+      IF (debug .OR. psi%nb_baie < 5000) THEN
+        write(6,*) 'WP (FBR) at T=',T
+        CALL ecri_psi(T=T,psi=psi,nioWP=6,
+     *                ecri_DVR=.FALSE.,ecri_FBR=.TRUE.)
+      END IF
+
+      close(nioWP)
+
+c----------------------------------------------------------
+      write(6,*)
+      write(6,*) 'Number of Hamiltonian operation',para_H%nb_OpPsi
+      write(6,*)
+      write(6,*) 'relaxed E/pot0 (ua)',E0
+      write(6,*) 'relaxed E (ua)',E0+para_H%pot0
+      write(6,*) 'relaxed En/pot0 (cm-1)',
+     *               E0*para_H%const_phys%auTOcm_inv
+      write(6,*) 
+      write(6,*) 'DHmax (ua)',E0+para_H%pot0 - 
+     *         para_propa%para_poly%Hmax + para_propa%para_poly%DHmax
+c----------------------------------------------------------
+
+
+      E0 = E0 + para_H%pot0
+
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+
+c----------------------------------------------------------
+       IF (debug) THEN
+         write(6,*) 'END sub_propagation3'
+       END IF
+c----------------------------------------------------------
+
+
+      END
+c================================================================
+c
+c     33: Davidson
+c
+c================================================================
+      SUBROUTINE sub_propagation_Davidson(psi,Ene,nb_diago,max_diago,
+     *                                    para_H,para_propa)
+      USE mod_system
+      USE mod_Op
+      USE mod_psi
+      USE mod_propa
+      IMPLICIT NONE
+
+c----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)   :: para_H
+
+c----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+
+      integer            :: nb_diago,nb_diagoR,max_diago
+      integer            :: nb_save
+      TYPE (param_psi)   :: psi(max_diago)
+      TYPE (param_psi)   :: Hpsi(max_diago)
+      TYPE (param_psi)   :: psiTemp,g
+      real (kind=Rkind)  :: Ene(max_diago),Ene0(max_diago)
+      real (kind=Rkind)  :: max_Ene,rms_Ene,Di
+      real (kind=Rkind),allocatable :: H(:,:),H0(:,:),trav(:),S(:,:)
+      real (kind=Rkind),allocatable :: Vec0(:,:),Vec(:,:)
+      real (kind=Rkind)  :: non_hermitic
+      integer            :: ierr,ndim,ndim0,iresidu,ndim_Vec0
+      logical            :: cplx
+      complex (kind=Rkind)   :: CS
+      real (kind=Rkind)      :: RS,a,max_Sii,max_Sij
+      real (kind=Rkind)      :: tab_normeg(nb_diago)
+
+
+c------ working parameters --------------------------------
+      complex (kind=Rkind) :: Overlap
+
+      integer       :: it,it_all,no
+      integer       :: i,ii,j,j_ini,j_end,iqa
+      integer       :: i1,i2,i3,ib
+      integer       :: err
+      integer       :: max_ecri
+      real (kind=Rkind) :: DeltaT,T      ! time
+      real (kind=Rkind) :: DeltaE,Deltapsi,epsi,normeg,th,Hcv
+      real (kind=Rkind) :: E1,RE0,DEne
+
+      logical       :: conv
+
+      integer  ::   nioWP
+      character (len=Name_len) :: info
+      integer  :: ilist,nb_readWP_file
+      integer  :: list_readWP(max_diago)
+      real (kind=Rkind) :: tab_scale_g(max_diago)
+      logical       :: read_listWP
+
+
+
+c----- for debuging --------------------------------------------------
+      character (len=*), parameter ::name_sub='sub_propagation_Davidson'
+      logical, parameter :: debug=.FALSE.
+c     logical, parameter :: debug=.TRUE.
+c-----------------------------------------------------------
+      IF (debug) THEN
+        write(6,*) 'BEGINNING ',name_sub
+        write(6,*) ' propagation33'
+        write(6,*) ' nb_diago',nb_diago
+        write(6,*) ' max_diago',max_diago
+        write(6,*) ' para_Davidson',para_propa%para_Davidson
+        write(6,*)
+      END IF
+
+
+c     - scaling of H ---------------------------------------
+      para_H%E0     = para_H%pot0
+      para_H%Esc    = ONE
+      para_H%scaled = .TRUE.
+c-----------------------------------------------------------
+
+
+c------ initialization -------------------------------------
+
+      cplx = para_H%cplx
+      tab_scale_g(:) = ONE
+
+      para_propa%para_Davidson%save_max_ene = 
+     *para_propa%para_Davidson%save_max_ene/para_H%const_phys%auTOcm_inv
+c     tab_scale_g(:) = ZERO
+c     tab_scale_g(4) = ONE
+
+      DO i=1,max_diago
+        CALL init0_psi(psi(i))
+        CALL init0_psi(Hpsi(i))
+      END DO
+
+      DO i=1,nb_diago
+        CALL init_psi(psi(i),para_H,cplx)
+        CALL alloc_psi(psi(i))
+        CALL init_psi(Hpsi(i),para_H,cplx)
+        CALL alloc_psi(Hpsi(i))
+      END DO
+
+      CALL init0_psi(psiTemp)
+      CALL init0_psi(g)
+      psiTemp = psi(1)
+      g = psi(1)
+
+
+c------ initialization -------------------------------------
+      para_propa%para_Davidson%max_it = 
+     *        min(max_diago,para_propa%para_Davidson%max_it)
+
+c------ read guess vectors ---------------------------------
+      IF (para_propa%para_Davidson%read_WP) THEN
+        IF (para_propa%para_Davidson%nb_readWP <0) 
+     *            para_propa%para_Davidson%nb_readWP = nb_diago
+        CALL file_open(para_propa%file_WP,nioWP)
+        read(nioWP,*) nb_readWP_file
+        write(6,*) ' nb_readWP_file',nb_readWP_file
+        IF (nb_readWP_file < para_propa%para_Davidson%nb_readWP) THEN
+           write(6,*) ' ERROR in ',name_sub
+           write(6,*) ' The number of WP in the file (',
+     *        trim(para_propa%file_WP%name),') is smaller than ',
+     *        'the request number'
+           write(6,*) 'nb_readWP,nb_readWP_file',
+     *        para_propa%para_Davidson%nb_readWP,nb_readWP_file
+           STOP
+        END IF
+        write(6,*) 'nb_diago',nb_diago
+        IF (para_propa%para_Davidson%read_listWP) THEN
+          list_readWP(:) = 0
+          read(5,*) list_readWP(1:nb_diago)
+          write(6,*) list_readWP(1:nb_diago)
+        CALL flush_perso(6)
+          ilist = 1 
+          DO i=1,nb_readWP_file
+            CALL lect_psiFBRnotall_nD(psiTemp,nioWP,cplx)
+            IF (list_readWP(ilist) == i) THEN
+              psi(ilist) = psiTemp
+              ilist = ilist + 1
+            END IF
+          END DO
+        ELSE
+          DO i=1,para_propa%para_Davidson%nb_readWP
+            CALL lect_psiFBRnotall_nD(psi(i),nioWP,cplx)
+          END DO
+        END IF
+        close(nioWP)
+      ELSE
+        DO i=1,nb_diago
+          CALL lect_psiFBRnotall_nD(psi(i),5,cplx)
+          write(info,*) i
+          CALL ecri_psiFBRnotall_nD(psi(i),6,1.d-4,info)
+        END DO
+      END IF
+      CALL flush_perso(6)
+c------ read guess vectors ---------------------------------
+
+
+      it = 0
+ 99   CONTINUE
+
+      epsi = para_propa%para_Davidson%Max_resi
+      normeg = HUNDRED * epsi
+      max_Ene = HUNDRED * epsi
+      tab_normeg(1:nb_diago) = normeg
+
+      ndim = nb_diago
+      conv = .TRUE.
+
+      allocate(H(ndim,ndim))
+      allocate(H0(ndim,ndim))
+      allocate(S(ndim,ndim))
+      allocate(Vec(ndim,ndim))
+      Vec(:,:) = ZERO
+      allocate(trav(ndim))
+
+c     - Schmidt ortho ------------------------------------
+      IF ( para_propa%para_Davidson%max_it > 0 ) 
+     *               CALL sub_Schmidt(psi,nb_diago)
+c     - Schmidt ortho ------------------------------------
+
+
+c     - Hpsi(:) ------------------------------------------
+      DO i=1,ndim
+        CALL sub_OpPsi(psi(i),Hpsi(i),para_H,.TRUE.)
+        IF ( para_propa%para_Davidson%max_it == 0 ) THEN
+          CALL Overlap_psi1_psi2(Overlap,psi(i),Hpsi(i))
+          Ene(i) = real(Overlap,kind=Rkind)
+        END IF
+      END DO
+c     - Hpsi(:) ------------------------------------------
+
+c------ initialization -------------------------------------
+
+
+
+
+c----------------------------------------------------------
+c----------------------------------------------------------
+      iresidu = 0
+      conv = .FALSE.
+      IF (para_propa%para_Davidson%num_resetH <0) 
+     *         para_propa%para_Davidson%num_resetH = 
+     *               2*para_propa%para_Davidson%max_it
+
+      DO
+        IF (normeg < epsi) EXIT
+        IF (max_Ene < para_propa%para_Davidson%Max_ene) EXIT
+        IF (it >= para_propa%para_Davidson%max_it) EXIT
+        IF (mod(it+1,para_propa%para_Davidson%num_resetH) == 0) EXIT
+
+        
+
+        deallocate(H)
+        deallocate(S)
+        deallocate(Vec)
+        deallocate(trav)
+
+        allocate(H(ndim,ndim))
+        allocate(S(ndim,ndim))
+        allocate(Vec(ndim,ndim))
+        allocate(trav(ndim))
+
+
+c       - check the orthogonality ------------------------
+        IF (mod(it,para_propa%para_Davidson%num_checkS) == 0) THEN
+          DO i=1,ndim
+          DO j=1,ndim
+            CALL Overlap_psi1_psi2(Overlap,psi(i),psi(j))
+            S(i,j) = real(Overlap,kind=Rkind)
+          END DO
+          END DO
+          CALL sub_ana_S(S,ndim,max_Sii,max_Sij)
+          write(6,11) max_Sii,max_Sij
+ 11       format(' Max Overlap:',2f15.12)
+c         CALL ecriture(S,ndim,ndim,5,.true.,ndim)
+        END IF
+c       - check the orthogonality ------------------------
+ 
+c       - built of H and diagonalization ------------------
+c       write(6,*) 'built of H',it
+        IF (it == 0 .OR. 
+     *     mod(it,para_propa%para_Davidson%num_resetH) == 0) THEN
+          ndim0 = 0
+          write(6,*) 'restart H',ndim0
+        ELSE
+          ndim0 = size(H0,dim=1)
+c         block 1,1: ndim0*ndim0
+          H(1:ndim0,1:ndim0) = H0(:,:)
+c         block: 2,1 (ndim0-ndim)*ndim0
+          DO i=1,ndim0
+          DO j=ndim0+1,ndim
+            CALL Overlap_psi1_psi2(Overlap,psi(j),Hpsi(i))
+            H(i,j) = real(Overlap,kind=Rkind)
+          END DO
+          END DO
+        END IF
+c       blocks: 1,2 ndim0*(ndim0-ndim) + 2,2: (ndim0-ndim)*(ndim0-ndim)
+        DO i=ndim0+1,ndim
+        DO j=1,ndim
+          CALL Overlap_psi1_psi2(Overlap,psi(j),Hpsi(i))
+          H(i,j) = real(Overlap,kind=Rkind)
+        END DO
+        END DO
+
+        deallocate(H0)
+        allocate(H0(ndim,ndim))
+        H0(:,:) = H(:,:)
+
+        CALL sub_hermitic_H(H,ndim,non_hermitic)
+c       CALL ecriture(H,ndim,ndim,5,.true.,ndim)
+
+        IF (non_hermitic > FOUR*ONETENTH**4) THEN
+          write(6,*) 'WARNING: non_hermitic is BIG'
+          write(6,31) non_hermitic
+ 31       format(' Hamiltonien: ',f16.12,' au')
+        END IF
+        epsi = max(para_propa%para_Davidson%Max_resi,
+     *             TEN**para_propa%para_Davidson%conv_hermitian *
+     *                                         non_hermitic)
+
+        Ene(:) = ZERO
+        CALL tred2(ndim,ndim,H,Ene,trav,Vec)
+        CALL tql2(ndim,ndim,Ene,trav,Vec,ierr)
+c       write(6,*)'ierr=',ierr
+        CALL trie(ndim,Ene,Vec,ndim)
+
+c       Save psi(:) on psi0(:)
+        IF (.NOT. para_propa%para_Davidson%lower_states) THEN
+          IF (it == 0 .OR. 
+     *     mod(it,para_propa%para_Davidson%num_resetH) == 0) THEN
+            ndim_Vec0 = size(Vec,dim=1)
+            IF (allocated(Vec0)) deallocate(Vec0)
+            allocate(Vec0(ndim_vec0,ndim_vec0))
+            Vec0(:,:) = Vec(:,:)
+            Ene0(:) = ZERO
+          ELSE
+            CALL sub_projec_Davidson(Ene,nb_diago,
+     *                               Vec,ndim,Vec0,ndim_Vec0)
+            IF (.NOT. para_propa%para_Davidson%project_WP0) THEN
+              IF (allocated(Vec0)) deallocate(Vec0)
+              ndim_Vec0 = size(Vec,dim=1)
+              allocate(Vec0(ndim_Vec0,ndim_Vec0))
+              Vec0(:,:) = Vec(:,:)
+            END IF
+          END IF
+        END IF
+        write(6,*) 'non_hermitic',non_hermitic
+        max_Ene = maxval(abs(Ene(1:nb_diago)-Ene0(1:nb_diago)))
+        write(6,41) 'convergence (it, normeg/epsi, max_Ene): ',
+     *               it,normeg/epsi,max_Ene
+        write(6,21) it,ndim,normeg/epsi,iresidu,
+     *             Ene(1:nb_diago)*para_H%const_phys%auTOcm_inv
+        write(6,41) 'it Diff Ene (cm-1): ',it,
+     *                 (Ene(1:nb_diago)-Ene0(1:nb_diago))*
+     *                 para_H%const_phys%auTOcm_inv
+c       CALL ecriture(Vec,ndim,ndim,5,.true.,ndim)
+        CALL flush_perso(6)
+
+c       - built of H and diagonalization ------------------
+
+c       - residual vector ---------------------------      
+        ndim0     = ndim
+        normeg    = -ONE
+        DO j=1,nb_diago
+          g = ZERO
+          DO i=1,ndim0
+            psiTemp = Hpsi(i) + psi(i) * (-Ene0(j))
+            g = g + psiTemp * Vec(i,j)
+          END DO
+          CALL norme_psi(g,Renorm=.FALSE.)
+          DEne = abs(Ene0(j) - Ene(j))
+          tab_normeg(j) = sqrt(g%norme) * tab_scale_g(j)
+          IF (DEne < para_propa%para_Davidson%Max_ene) 
+     *                                   tab_normeg(j) = ZERO
+          IF (tab_normeg(j) > normeg) THEN
+            iresidu = j
+            normeg = tab_normeg(iresidu)
+          END IF
+        END DO
+        Ene0(1:nb_diago) = Ene(1:nb_diago)
+c       - residual vector ---------------------------      
+        write(6,41) 'it tab_normeg ',it,tab_normeg
+ 41     format(a,i3,50(1x,e8.2))
+        CALL flush_perso(6)
+
+
+c       - new vectors -------------------------------      
+        IF (para_propa%para_Davidson%one_residue) THEN
+          j_ini = iresidu
+          j_end = iresidu
+        ELSE
+          j_ini = 1
+          j_end = nb_diago
+        END IF
+        DO j=j_ini,j_end
+          IF (ndim == max_diago) EXIT
+          IF (tab_normeg(j) > epsi .OR. iresidu == j ) THEN
+
+            CALL init_psi(psi(ndim+1),para_H,cplx)
+            psi(ndim+1) = ZERO
+
+            DO i=1,ndim0
+              Di = H0(i,i)
+c             Di = ONE
+              psiTemp = Hpsi(i) + psi(i) * (-Ene0(j))
+              a = Vec(i,j)
+              IF (abs(Di - Ene0(j)) > epsi) THEN
+                a = a / (Di - Ene0(j))
+              ELSE
+                a = a / (Di - 0.999_Rkind*Ene0(j))
+c               a = a / ONE
+c               a = a / (Di - (ONE-epsi)*Ene0(j))
+              END IF
+c             write(6,*) 'i,j',i,j,a
+              psi(ndim+1) = psi(ndim+1) + psiTemp * a
+            END DO
+c           - new vectors -------------------------------      
+
+
+c           - Schmidt ortho ------------------------------------
+c           write(6,*) 'Schmidt ortho',it
+            DO i=1,ndim
+              CALL Overlap_psi1_psi2(Overlap,psi(ndim+1),psi(i))
+              RS = real(Overlap,kind=Rkind)
+              psi(ndim+1) = psi(ndim+1) + psi(i) *(-RS)
+            END DO
+            CALL norme_psi(psi(ndim+1),Renorm=.TRUE.)
+            DO i=1,ndim
+              CALL Overlap_psi1_psi2(Overlap,psi(ndim+1),psi(i))
+              RS = real(Overlap,kind=Rkind)
+              psi(ndim+1) = psi(ndim+1) + psi(i) *(-RS)
+            END DO
+            CALL norme_psi(psi(ndim+1),Renorm=.TRUE.)
+c           - Schmidt ortho ------------------------------------
+
+c           - Hpsi(ndim+1) -------------------------------------
+c           write(6,*) 'Hpsi(ndim+1)',it
+            CALL init_psi(Hpsi(ndim+1),para_H,cplx)
+            CALL alloc_psi(Hpsi(ndim+1))
+
+            CALL sub_OpPsi(psi(ndim+1),Hpsi(ndim+1),para_H,.TRUE.)
+c           - Hpsi(ndim+1) -------------------------------------
+
+
+            ndim = ndim + 1
+
+          END IF
+        END DO
+c       write(6,*) 'it,ndim,conv',it,ndim,conv
+
+        it = it + 1
+      END DO
+      CALL flush_perso(6)
+
+c-----write eigenvectors ----------------------------------
+      ndim = size(Vec,dim=1)
+      nb_save = max(nb_diago,count(Ene(1:ndim)>
+     *            (Ene(1)+para_propa%para_Davidson%save_max_ene)))
+      IF (para_propa%para_Davidson%save_all) nb_save = ndim
+      write(6,*) 'nb_save,save_max_ene: ',
+     *          nb_save,para_propa%para_Davidson%save_max_ene
+      CALL sub_save_psi(psi,Vec,ndim,nb_save,para_propa%file_WP)
+      IF (normeg > epsi .AND. 
+     *    max_Ene > para_propa%para_Davidson%Max_ene .AND.
+     *    it < para_propa%para_Davidson%max_it
+     *    ) THEN
+
+        write(6,*) ' Restart with ',nb_diago,' WP'
+
+        deallocate(H,stat=err)
+        deallocate(H0,stat=err)
+        deallocate(S,stat=err)
+        deallocate(Vec,stat=err)
+        deallocate(trav,stat=err)
+        DO i=nb_diago+1,max_diago
+          CALL dealloc_psi(psi(i))
+        END DO
+        DO i=1,max_diago
+          CALL dealloc_psi(Hpsi(i))
+        END DO
+
+        IF (.NOT. para_propa%para_Davidson%lower_states) THEN
+          deallocate(Vec0,stat=err)
+          ndim_Vec0 = nb_diago
+          allocate(Vec0(ndim_Vec0,ndim_Vec0))
+          Vec0(:,:) = ZERO
+          DO i=1,nb_diago
+            Vec0(i,i) = ONE
+          END DO
+        END IF
+        Ene0(:) = Ene0(:) + ONE
+        it = it + 1
+        GOTO 99
+      END IF
+
+      
+c----------------------------------------------------------
+c----------------------------------------------------------
+
+
+
+c----------------------------------------------------------
+ 21   format(' Davidson: ',2(i5,1x),e9.3,i5,1x,50(1x,f18.4))
+      write(6,*)
+c----------------------------------------------------------
+
+
+      write(6,*)
+      write(6,*) '==========================================='
+      write(6,*) '==========================================='
+      IF (normeg > epsi .AND. 
+     *    max_Ene > para_propa%para_Davidson%Max_ene
+     *    ) THEN
+        write(6,*) ' WARNNING: Davidson has NOT converged'
+      ELSE
+        write(6,*) ' Davidson has converged'
+      END IF
+      write(6,*) '==========================================='
+      write(6,*)
+
+      IF (.NOT. para_propa%para_Davidson%lower_states) THEN
+        CALL sub_projec_Davidson(Ene,nb_diago,
+     *                           Vec,ndim,Vec0,ndim_Vec0)
+      END IF
+
+      DO j=1,nb_diago
+c     DO j=1,ndim
+        T = real(j-1,kind=Rkind)
+        write(6,*) j,Ene(j)*para_H%const_phys%auTOcm_inv,
+     *    (Ene(j)-minval(Ene(1:nb_diago)))*para_H%const_phys%auTOcm_inv
+        CALL calc_1Dweight(psi(j),25,T,' ',.TRUE.)
+      END DO
+
+c----------------------------------------------------------
+
+c----------------------------------------------------------
+      write(6,*)
+      write(6,*) 'Number of Hamiltonian operation',para_H%nb_OpPsi
+      write(6,*)
+      write(6,*) '==========================================='
+      write(6,*) '==========================================='
+      CALL flush_perso(6)
+c----------------------------------------------------------
+
+
+      deallocate(H,stat=err)
+      deallocate(H0,stat=err)
+      deallocate(S,stat=err)
+      deallocate(Vec,stat=err)
+      deallocate(trav,stat=err)
+      IF (.NOT. para_propa%para_Davidson%lower_states) 
+     *             deallocate(Vec0,stat=err)
+
+      DO i=1,size(Hpsi,dim=1)
+        CALL dealloc_psi(Hpsi(i))
+      END DO
+      CALL dealloc_psi(g)
+      CALL dealloc_psi(psitemp)
+
+      DO i=nb_diago+1,max_diago
+        CALL dealloc_psi(psi(i))
+      END DO
+
+c----------------------------------------------------------
+       IF (debug) THEN
+         write(6,*) 'END ',name_sub
+       END IF
+c----------------------------------------------------------
+
+      END
+c================================================================
+c
+c     34 : propagation in imaginary time => GC (gradient conjugate)
+c
+c================================================================
+      SUBROUTINE sub_propagation34(psi,Ene0,nb_diago,
+     *                             para_H,para_propa)
+      USE mod_system
+      USE mod_Op
+      USE mod_psi
+      USE mod_propa
+      IMPLICIT NONE
+
+c----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)   :: para_H
+
+c----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+
+      integer            :: nb_diago,nb_diagoR
+      TYPE (param_psi)   :: psi(nb_diago)
+      real (kind=Rkind)      :: Ene0(nb_diago)
+      TYPE (param_psi)   :: Hpsi,H2psi,g
+      logical            :: cplx
+      complex (kind=Rkind)   :: CS
+      real (kind=Rkind)      :: RS
+
+
+c------ working parameters --------------------------------
+      complex (kind=Rkind) :: CEne0,cdot
+
+      integer       :: it,it_all,no
+      integer       :: i,ii,j,iqa
+      integer       :: max_ecri
+      real (kind=Rkind) :: DeltaT,T      ! time
+      real (kind=Rkind) :: DeltaE,Deltapsi,epsi,normeg,th
+      real (kind=Rkind) :: avH1,avH2,avH3,A,B,C,D,DT1,DT2,S,E1,E2
+      real (kind=Rkind) :: Qact(para_H%mole%nb_act1)
+      real (kind=Rkind) :: psi_q(nb_diago)
+      complex (kind=Rkind)   :: CavH1,CavH2,CavH3
+
+      logical       :: lect = .FALSE.
+
+      integer  ::   nioWP
+
+
+c----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+c     logical, parameter :: debug=.TRUE.
+c-----------------------------------------------------------
+      IF (debug) THEN
+        write(6,*) 'BEGINNING sub_propagation34'
+        write(6,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
+        write(6,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,
+     *                          para_propa%para_poly%Hmax
+        write(6,*)
+       END IF
+c-----------------------------------------------------------
+
+c-----------------------------------------------------------
+      write(6,*) ' propagation34: ',para_propa%name_WPpropa
+      write(6,*) ' nb_diago',nb_diago
+      write(6,*)
+
+c     - scaling of H ---------------------------------------
+      para_H%E0     = para_H%pot0
+      para_H%Esc    = ONE
+      para_H%scaled = .TRUE.
+c-----------------------------------------------------------
+
+
+c------ initialization -------------------------------------
+      epsi = para_propa%para_poly%poly_tol
+
+      cplx = para_H%cplx
+      CALL init0_psi(Hpsi)
+      CALL init_psi(Hpsi,para_H,cplx)
+      CALL alloc_psi(Hpsi)
+      CALL init0_psi(H2psi)
+      CALL init_psi(H2psi,para_H,cplx)
+      CALL alloc_psi(H2psi)
+      CALL init0_psi(g)
+      CALL init_psi(g,para_H,cplx)
+      CALL alloc_psi(g)
+
+
+      IF (lect) THEN
+        read(99,*) nb_diagoR
+        write(6,*) ' nb_diagoR',nb_diagoR
+        nb_diago = min(nb_diagoR,nb_diago)
+        write(6,*) ' new nb_diago',nb_diago
+        DO i=1,nb_diago
+          CALL init0_psi(psi(i))
+          CALL init_psi(psi(i),para_H,cplx)
+          psi(i)%DVR=.TRUE.
+          CALL alloc_psi(psi(i))
+        END DO
+
+        IF (psi(1)%cplx) THEN
+          DO iqa=1,psi(1)%nb_qa
+            read(99,*) Qact,psi_q(1:nb_diago)
+            DO i=1,nb_diago
+              psi(i)%CvecDVR(iqa) = psi_q(i)
+            END DO
+          END DO
+        ELSE
+          DO iqa=1,psi(1)%nb_qa
+            read(99,*) Qact,psi_q(1:nb_diago)
+            DO i=1,nb_diago
+              psi(i)%RvecDVR(iqa) = psi_q(i)
+           END DO
+          END DO
+        END IF
+
+      
+        DO i=1,nb_diago
+          CALL sub_PsiDVR_TO_FBR(psi(i))
+        END DO
+
+
+      ELSE
+        DO i=1,nb_diago
+          CALL init0_psi(psi(i))
+          CALL init_psi(psi(i),para_H,cplx)
+          CALL alloc_psi(psi(i))
+          IF (psi(i)%cplx) THEN
+            psi(i)%CvecFBR(:) = ZERO
+            psi(i)%CvecFBR(i) = ONE
+c           DO j=1,psi(i)%nb_baie
+c             CALL random_number(a)
+c             psi(i)%CvecFBR(j) = cmplx(a-HALF,ZERO,kind=Rkind)
+c           END DO
+          ELSE
+            psi(i)%RvecFBR(:) = ZERO
+            psi(i)%RvecFBR(i) = ONE
+c           DO j=1,psi(i)%nb_baie
+c             CALL random_number(a)
+c             psi(i)%RvecFBR(j) = a-HALF
+c           END DO
+          END IF
+
+        END DO
+
+      END IF
+
+      DO i=1,nb_diago
+        CALL norme_psi(psi(i),Renorm=.TRUE.)
+        CALL sub_PsiOpPsi(CEne0,psi(i),Hpsi,para_H)
+        Ene0(i) = CEne0
+      END DO
+
+      CALL trie_psi(psi,Ene0,nb_diago)
+c------ initialization -------------------------------------
+
+
+c------- propagation loop ---------------------------------
+      CALL file_open(para_propa%file_WP,nioWP)
+      it_all = 0
+      DO i=1,nb_diago
+
+        T    = ZERO
+        it   = 0
+
+c       - Schmidt ortho ------------------------------------
+        DO j=1,i-1
+          CALL Overlap_psi1_psi2(CS,psi(i),psi(j))
+          RS = - real(CS,kind=Rkind)
+          psi(i) = psi(i) + psi(j) * RS
+        END DO
+        CALL norme_psi(psi(i),Renorm=.TRUE.)
+c         - Schmidt ortho ------------------------------------
+
+c       Hpsi = H.psi(i)
+        CALL sub_PsiOpPsi(CEne0,psi(i),Hpsi,para_H)
+        Ene0(i) = CEne0
+        DeltaE = para_H%Hmax-para_H%Hmin
+        normeg = para_H%Hmax-para_H%Hmin
+
+        write(6,*) '-------------------------------------------'
+        write(6,*) 'WP i, E',i,
+     *       Ene0(i)*para_H%const_phys%auTOcm_inv,DeltaE
+
+c       DO WHILE (T .LE. para_propa%WPTmax .AND. abs(DeltaE) .GT. epsi)
+        DO WHILE (T <= para_propa%WPTmax .AND. normeg > ONETENTH**5)
+
+c         - Schmidt ortho ------------------------------------
+          DO j=1,i-1
+            CALL Overlap_psi1_psi2(CS,psi(i),psi(j))
+            RS = - real(CS,kind=Rkind)
+            psi(i) = psi(i) + psi(j) * RS
+          END DO
+          CALL norme_psi(psi(i),Renorm=.TRUE.)
+c         - Schmidt ortho ------------------------------------
+
+c         - CG minimization ------------------------------------
+c         Hpsi = H.psi
+          CALL sub_OpPsi(psi(i),Hpsi,para_H,.TRUE.)
+
+c         H2psi = H.H.psi = H.Hpsi
+          CALL sub_OpPsi(Hpsi,H2psi,para_H,.TRUE.)
+
+c         H3psi = H.H.H.psi = H.H2psi
+c         <psi|H3|psi> = <Hspi|H2psi> when psi is real
+          CALL Overlap_psi1_psi2(CavH1,psi(i),Hpsi)
+          CALL Overlap_psi1_psi2(CavH2,psi(i),H2psi)
+          CALL Overlap_psi1_psi2(CavH3,Hpsi,H2psi)
+          avH1 = CavH1
+          avH2 = CavH2
+          avH3 = CavH3
+          
+
+          IF (debug) write(6,*) 'avH..',avH1,avH2,avH3
+
+c         |g> = H |psi> - E|psi> with E = <psi|H|psi> (E=avH1)
+c         Rq : <g|psi> = 0
+c         GC :  we optimize |psi+> = cos(th)*|psi> + sin(th)*|g>
+c               such the energy, E(th), is minimal
+c               E(th) = cos2(th)*A + sin2(th)*B + 2cos(th)sin(th)*C
+c               => tan(2th) = -2C/(B-A)
+          A = avH1
+          B = avH3-TWO*avH2*avH1+avH1**3
+          C = avH2 - avH1**2
+          B = B/C
+          C = sqrt(C)
+
+          write(6,*) 'A,B,C',A,B,C
+
+          th = HALF*atan( -TWO*C/(B-A) )
+          E1 = A*cos(th)**2 + B*sin(th)**2 + TWO*C*cos(th)*sin(th)
+          
+
+          write(6,*) 'it,th E',it,th,E1*para_H%const_phys%auTOcm_inv
+
+
+          Ene0(i) = E1
+          DeltaE = Ene0(i) - avH1
+
+c         - Optimal DeltaT and energy ----------------------------
+
+          IF (i == psi(i)%nb_baie) DeltaE = ZERO
+
+c         - propagation ------------------------------------------
+          g = Hpsi + psi(i) * (-avH1)
+          CALL norme_psi(g,Renorm=.FALSE.)
+          normeg = sqrt(g%norme)
+          CALL norme_psi(g,Renorm=.TRUE.)
+          write(6,*) 'it normeg C',it,normeg,C
+
+
+          H2psi  = psi(i) * cos(th)
+          psi(i) = H2psi + g * sin(th)
+
+
+          CALL norme_psi(psi(i),Renorm=.FALSE.)
+          write(6,*) 'it norme npsi',it,psi(i)%norme
+          CALL norme_psi(psi(i),Renorm=.TRUE.)
+          CALL sub_PsiOpPsi(CEne0,psi(i),Hpsi,para_H)
+          Ene0(i) = CEne0
+          write(6,*) 'it E with npsi',it,
+     *            Ene0(i)*para_H%const_phys%auTOcm_inv
+
+
+c         - propagation ------------------------------------------
+
+          IF (debug) THEN
+            write(6,*) 'WP it, E',it,
+     *                 Ene0(i)*para_H%const_phys%auTOcm_inv,
+     *                 DeltaE*para_H%const_phys%auTOcm_inv
+            write(6,*) 'WP it sqrt(norme g)',it,
+     *          sqrt(g%norme)*para_H%const_phys%auTOcm_inv
+            write(6,*) 'WP it, DeltaT,S',it,DeltaT,S
+          END IF
+
+          T = T + DeltaT
+          it = it + 1
+
+        END DO
+        IF (T> para_propa%WPTmax) write(6,*) ' WARNING: not converged!'
+        write(6,*) 'WP i, E',i,
+     *       Ene0(i)*para_H%const_phys%auTOcm_inv,DeltaE
+        write(6,*) 'it,T,Deltapsi',it,T,Deltapsi
+        it_all = it_all + it
+      END DO
+      write(6,*) '-------------------------------------------'
+      write(6,*) 'iterations for eigenvalues: ',it_all
+      write(6,*) '-------------------------------------------'
+c----------------------------------------------------------
+
+
+
+c----------------------------------------------------------
+c     - write the final WP---------------------------------
+c     DO i=1,nb_diago
+c       write(6,*) 'WP (i) (FBR) ',i
+c       CALL ecri_psi(T,psi(i),6,.FALSE.,.TRUE.,
+c    *               .TRUE.,.FALSE.,1,1,
+c    *               .FALSE.,.FALSE.)
+c     END DO
+c----------------------------------------------------------
+
+      close(nioWP)
+
+      CALL dealloc_psi(Hpsi)
+      CALL dealloc_psi(H2psi)
+      CALL dealloc_psi(g)
+
+c----------------------------------------------------------
+      write(6,21) T,DeltaE*para_H%const_phys%auTOcm_inv,
+     *             real(Ene0(:))*para_H%const_phys%auTOcm_inv
+ 21   format('ImTimeProp ',f12.2,f18.6,1x,20(1x,f18.4))
+      write(6,*) 
+c----------------------------------------------------------
+
+
+c----------------------------------------------------------
+       IF (debug) THEN
+         write(6,*) 'END sub_propagation34'
+       END IF
+c----------------------------------------------------------
+
+
+      END
+c================================================================
+c
+c     11 : Cheby or nOD propagation
+c          without H  (we use directly OpPsi)
+c          Hmin and Hmax are the parameter to scale H
+c          psi is the intial WP
+c          w1,w2,w3 are working WP
+c
+c================================================================
+      SUBROUTINE sub_propagation11(psi0,psi,para_H,para_propa)
+      USE mod_system
+      USE mod_Op
+      USE mod_psi
+      USE mod_propa
+      IMPLICIT NONE
+
+c----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)   :: para_H
+
+c----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+      TYPE (param_psi)   :: psi0,psi,w1,w2,w3
+
+c------ working parameters --------------------------------
+      complex (kind=Rkind) :: cdot
+
+      integer       :: it,no
+      integer       :: i,j
+      integer       :: max_ecri
+      real (kind=Rkind) :: T      ! time
+      complex (kind=Rkind) :: ET     ! energy at T
+      real (kind=Rkind) :: Qmean(psi0%nb_act1)
+
+      integer  ::   nioWP
+
+c----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+c     logical, parameter :: debug=.TRUE.
+c-----------------------------------------------------------
+      IF (debug) THEN
+        write(6,*) 'BEGINNING sub_propagation11'
+        write(6,*) 'Tmax,DeltaT',para_propa%WPTmax,para_propa%WPdeltaT
+        write(6,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,
+     *                          para_propa%para_poly%Hmax
+        write(6,*)
+        write(6,*) 'nb_ba,nb_qa',psi%nb_ba,psi%nb_qa
+        write(6,*) 'nb_bi',psi%nb_bi
+        write(6,*)
+
+        CALL norme_psi(psi0,.FALSE.,.TRUE.,.FALSE.)
+        write(6,*) 'normepsi0 FBR',psi0%norme,psi0%tab_normeADA
+
+        write(6,*) 'psiFBR'
+        CALL ecri_psi(T=ZERO,psi=psi,nioWP=6,
+     *                ecri_DVR=.FALSE.,ecri_FBR=.TRUE.)
+        write(6,*) 'psiDVR'
+        CALL ecri_psi(T=ZERO,psi=psi,nioWP=6,
+     *                ecri_DVR=.TRUE.,ecri_FBR=.FALSE.)
+      END IF
+c-----------------------------------------------------------
+
+c-----------------------------------------------------------
+c     copy psi0 in psi
+      CALL init0_psi(w1)
+      CALL init0_psi(w2)
+      CALL init0_psi(w3)
+      w1  = psi0
+      w2  = psi0
+      w3  = psi0
+      psi0 = psi
+c-----------------------------------------------------------
+
+c-----------------------------------------------------------
+      write(6,*) ' vib : propagation',para_propa%name_WPpropa
+
+c     - parameters for poly (cheby and nOD) ... ------------
+      CALL initialisation1_poly(para_propa%para_poly,
+     *                          para_propa%WPdeltaT,para_H%pot0,
+     *                          para_propa%type_WPpropa)
+
+c     - scaling of H ---------------------------------------
+      para_H%scaled = .TRUE.
+      para_H%E0     = para_propa%para_poly%E0
+      para_H%Esc    = para_propa%para_poly%Esc
+
+
+c     - IF lo_expH=T --------------------------------------
+      IF (para_H%direct .EQ. 0 .AND. para_propa%lo_expH) THEN
+        IF (.NOT. associated(para_H%Cmat) ) THEN
+          write(6,*) ' ERROR lo_expH works in complex !!'
+          write(6,*) ' asso Cmat',associated(para_H%Cmat)
+          STOP
+        END IF
+        IF (para_propa%type_WPpropa .EQ. 1)
+     *   CALL calc_cheby_expH(para_H%Cmat,para_H%nb_tot,
+     *                        para_propa%para_poly%npoly,
+     *                        para_propa%para_poly%coef_poly)
+        IF (para_propa%type_WPpropa .EQ. 2)
+     *     CALL calc_nOD_expH(para_H%Cmat,para_H%nb_tot,
+     *                        para_propa%para_poly%npoly,
+     *                        para_propa%WPdeltaT)
+      END IF
+c-----------------------------------------------------------
+
+
+c-----------------------------------------------------------
+      max_ecri = min(25,psi%nb_tot)
+      CALL norme_psi(psi,.FALSE.,.TRUE.,.FALSE.)
+      CALL sub_PsiOpPsi(ET,psi,w1,para_H)
+      ET = ET-para_H%pot0
+      T = ZERO
+      write(6,11) T,ET,psi%norme,psi%tab_normeADA
+      CALL calc_1Dweight(psi,25,T,' ',.TRUE.)
+ 11   format('normeWP ',f12.2,'(',2(1x,f20.6),')',1x,20(1x,f8.5))
+c     write(6,*) 'T',int(T),'w',int(10ZERO*
+c    *          abs(psi%CvecFBR(1:max_ecri))**2)
+      CALL psi_Qact_ie_psi(T,psi)
+c-----------------------------------------------------------
+
+
+c------- propagation loop ---------------------------------
+      CALL file_open(para_propa%file_WP,nioWP)
+      CALL file_open(para_propa%file_autocorr,no)
+
+      it   = 0
+      CALL Overlap_psi1_psi2(cdot,psi0,psi)
+      CALL ecri_AutoCor(no,T,cdot)
+
+
+       DO WHILE (T .LE. para_propa%WPTmax .AND.
+     *           psi%norme .LT. psi%max_norme)
+
+c        for the writting of the wp (DVR)
+         IF ((para_propa%WPpsi2 .OR. para_propa%WPpsi) .AND.
+     *                mod(it,para_propa%n_WPecri) == 0) THEN
+
+           CALL sub_PsiFBR_TO_DVR(psi)
+           CALL ecri_psi(T=T,psi=psi,nioWP=nioWP,
+     *                   ecri_DVR=.TRUE.,ecri_FBR=.FALSE.,
+     *                   ecri_psi2=para_propa%WPpsi2)
+
+         END IF
+
+
+         it = it + 1
+
+         IF (para_propa%lo_expH) THEN
+           CALL march_poly(T,no,psi%CvecFBR,psi0%CvecFBR,
+     *                     para_H%Cmat,para_H%nb_tot,
+     *                     para_propa%para_poly)
+         ELSE IF (para_propa%type_WPpropa .EQ. 1) THEN
+           CALL march_cheby(T,no,psi,psi0,w1,w2,w3,
+     *                      para_H,para_propa)
+         ELSE IF (para_propa%type_WPpropa .EQ. 2) THEN
+           CALL  march_noD(T,no,psi,psi0,w1,w2,
+     *                     para_H,para_propa)
+         END IF
+
+
+         CALL norme_psi(psi,.FALSE.,.TRUE.,.FALSE.)
+
+         CALL sub_PsiOpPsi(ET,psi,w1,para_H)
+         ET = ET-para_H%pot0
+
+         T  = T + para_propa%WPdeltaT
+         write(6,11) T,ET,psi%norme,psi%tab_normeADA
+         CALL psi_Qact_ie_psi(T,psi)
+         CALL calc_1Dweight(psi,25,T,' ',.TRUE.)
+
+       END DO
+
+c----------------------------------------------------------
+
+
+c----------------------------------------------------------
+c     - write the final WP---------------------------------
+      write(6,*) 'WP (FBR) at T=',T
+      CALL ecri_psi(T=T,psi=psi,nioWP=6,
+     *              ecri_DVR=.FALSE.,ecri_FBR=.TRUE.)
+
+c     for the writting of the wp (DVR)
+      CALL sub_PsiFBR_TO_DVR(psi)
+      CALL ecri_psi(T=T,psi=psi,nioWP=nioWP,
+     *              ecri_DVR=.TRUE.,ecri_FBR=.FALSE.)
+c----------------------------------------------------------
+
+
+
+      close(no)
+      close(nioWP)
+
+      IF (psi%norme .GE. psi%max_norme) STOP
+
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+c----------------------------------------------------------
+      IF (debug) THEN
+        write(6,*) 'END sub_propagation11'
+      END IF
+c----------------------------------------------------------
+
+
+      END
+c================================================================
+c
+c    24 : nOD propagation with
+c         a time dependant pulse in Hamiltonian (W(t))
+c         H is the square matrix (dimension n)
+c         Hmin and Hmax are the parameter to scale H
+c         WP and WPt are associated wth the inital WP and the target WP
+c
+c================================================================
+      SUBROUTINE sub_propagation24(WP,nb_WP,print_Op,
+     *                             para_field_new,make_field,
+     *                             para_H,para_Dip,para_propa)
+      USE mod_system
+      USE mod_Op
+      USE mod_propa
+      USE mod_psi
+      IMPLICIT NONE
+
+c----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)   :: para_H
+      TYPE (param_Op)   :: para_Dip(3)
+
+c----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+      TYPE (param_field) :: para_field_new
+      real (kind=Rkind)      :: E_new
+
+      integer            :: nb_WP
+      TYPE (param_psi)   :: WP(nb_WP)
+
+c----- physical and mathematical constants ---------------------------
+      TYPE (constant) :: const_phys
+
+c----- for printing --------------------------------------------------
+      logical ::print_Op 
+      logical ::print_Op_loc
+
+
+c------ working parameters --------------------------------
+      TYPE (param_psi)   :: w2
+
+      complex (kind=Rkind)   :: Overlap,cdot,rt,rti,fac_k,norm
+      real (kind=Rkind) :: limit
+
+      complex (kind=Rkind) :: ET  ! energy
+      real (kind=Rkind)    :: EE
+      complex (kind=Rkind) :: E0(nb_WP),avE(nb_WP)  ! energy
+
+      integer       :: it,it_max,no,max_der,nb_der
+      integer       :: i,j,k,jt,ip,iq
+      real (kind=Rkind) :: T      ! time
+      real (kind=Rkind) :: T_Delta! time+deltaT
+      integer       :: max_ecri
+      logical       :: test_max_norme
+
+      real (kind=Rkind) :: Qmean(WP(1)%nb_act1)
+      real (kind=Rkind) :: dphi,phi_w2,phi_wp
+
+
+
+      integer  ::   nioWP
+
+c----- for the field --------------------------------------------------
+      real (kind=Rkind), allocatable :: tab_dnE(:,:)
+      real (kind=Rkind)    :: ww(3)
+      real (kind=Rkind)    :: dnE(3)
+      logical :: make_field
+c----- for the field --------------------------------------------------
+
+
+c----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+c     logical, parameter :: debug=.TRUE.
+c-----------------------------------------------------------
+      IF (debug) THEN
+        write(6,*) 'BEGINNING sub_propagation24'
+        write(6,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
+        write(6,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,
+     *                          para_propa%para_poly%Hmax
+        write(6,*)
+        write(6,*) 'nb_ba,nb_qa',WP(1)%nb_ba,WP(1)%nb_qa
+        write(6,*) 'nb_bi',WP(1)%nb_bi
+        write(6,*)
+
+        CALL norme_psi(WP(1),.FALSE.,.TRUE.,.FALSE.)
+        write(6,*) 'normepsi0 FBR',WP(1)%norme,WP(1)%tab_normeADA
+
+        write(6,*) 'WP(1)%FBR'
+        CALL ecri_psi(T=ZERO,psi=WP(1),nioWP=6,
+     *                ecri_DVR=.FALSE.,ecri_FBR=.TRUE.)
+        write(6,*) 'WP(1)%DVR'
+        CALL ecri_psi(T=ZERO,psi=WP(1),nioWP=6,
+     *                ecri_DVR=.TRUE.,ecri_FBR=.FALSE.)
+       END IF
+c-----------------------------------------------------------
+
+
+c-----------------------------------------------------------
+      IF (print_Op) THEN
+        write(6,*) ' Propagation ',para_propa%name_WPpropa
+        IF (para_propa%para_field%pola_xyz(1)) write(6,*) 'with Dipx'
+        IF (para_propa%para_field%pola_xyz(2)) write(6,*) 'with Dipy'
+        IF (para_propa%para_field%pola_xyz(3)) write(6,*) 'with Dipz'
+      END IF
+
+c     - parameters for poly (cheby and nOD) ... ------------
+      CALL initialisation1_poly(para_propa%para_poly,
+     *                          para_propa%WPdeltaT,para_H%pot0,
+     *                          para_propa%type_WPpropa)
+
+      allocate(tab_dnE(0:para_propa%para_poly%npoly-1,3))
+
+c-----------------------------------------------------------
+      CALL init0_psi(w2)
+      w2 = WP(1)
+      w2%DVR=.TRUE.
+      IF (.NOT. associated(w2%CvecDVR)) CALL alloc_psi(w2)
+      write(6,*) 'w2 FBR and DVR'
+      CALL ecri_psi(psi=w2,nioWP=6,
+     *             ecri_DVR=.FALSE.,ecri_FBR=.TRUE.)
+
+      CALL ecri_psi(psi=w2,nioWP=6,
+     *              ecri_DVR=.TRUE.,ecri_FBR=.FALSE.)
+c-----------------------------------------------------------
+
+c     - scaling of H ---------------------------------------
+c     para_H%scaled = .FALSE.
+c     para_H%E0     = ZERO
+c     para_H%Esc    = ONE
+
+      para_H%scaled = .TRUE.
+      para_H%E0     = para_propa%para_poly%E0
+      para_H%Esc    = para_propa%para_poly%Esc
+
+      para_propa%para_poly%phase  = 
+     *           (para_H%E0-para_H%pot0)*para_propa%WPdeltaT
+      para_propa%para_poly%phase  = ZERO
+      write(6,*) 'para_H%E0,para_H%Esc',para_H%E0,para_H%Esc
+      write(6,*) 'phase',para_propa%para_poly%phase
+
+
+     
+c-----------------------------------------------------------
+
+
+c-----------------------------------------------------------
+      max_ecri = min(25,WP(1)%nb_tot)
+      T = ZERO
+      IF (para_propa%WPdeltaT < 0) T = para_propa%WPTmax
+      it   = 0
+      it_max = para_propa%WPTmax/abs(para_propa%WPdeltaT)-1
+
+
+
+      ww = para_propa%para_field%w(:,1)
+      IF (print_Op) THEN
+        write(6,*) 'For the first pulse'
+        write(6,*) '  nb_pulse',para_propa%para_field%nb_pulse
+        write(6,*) 'ww (ua),FieldE0 (ua)',ww,
+     *                    para_propa%para_field%E0(:,1)
+        write(6,*) 'ww (cm-1),FieldE0 (V cm-1)',
+     *            ww*para_H%const_phys%auTOcm_inv,
+     *            para_propa%para_field%E0(:,1)*para_H%const_phys%E0
+        write(6,11) para_H%const_phys%epsi0 * para_H%const_phys%c * 
+     *    (para_propa%para_field%E0(:,1)*para_H%const_phys%E0)**2/TWO
+ 11     format('G (W cm-2):  ',d16.8)
+        write(6,*)
+
+      END IF
+
+      CALL sub_dnE(dnE,0,T,para_propa%para_field)
+      DO j=1,nb_WP
+        CALL norme_psi(WP(j),.FALSE.,.TRUE.,.FALSE.)
+
+c       - WP energy -----------------------------------
+        CALL sub_PsiOpPsi(ET,WP(j),w2,para_H)
+        ET     = ET/WP(j)%norme - para_H%pot0
+        E0(j)  = ET
+c       para_H%E0     = ET
+c       para_propa%para_poly%phase  = 
+c    *           (para_H%E0-para_H%pot0)*para_propa%WPdeltaT
+        avE(j) = ZERO
+        IF (print_Op) THEN
+          CALL psi_Qact_ie_psi(T,WP(j))
+          write(6,21) T,j,real(ET,kind=Rkind),dnE(:),
+     *                WP(j)%norme,WP(j)%tab_normeADA
+          CALL calc_1Dweight(WP(j),max_ecri,T,' ',.TRUE.)
+        END IF
+      END DO
+
+ 21   format('normeWP ',f12.2,1x,i3,4(1x,f10.7),20(1x,f8.5))
+c-----------------------------------------------------------
+
+
+c------- propagation loop ---------------------------------
+      CALL file_open(para_propa%file_WP,nioWP)
+
+      DO WHILE (it <= it_max)
+        CALL flush_perso(6)
+        T_Delta = T + para_propa%WPdeltaT
+
+
+c        for the writting of the wp (DVR)
+         IF ((para_propa%WPpsi2 .OR. para_propa%WPpsi) .AND.
+     *        print_Op .AND. mod(it,para_propa%n_WPecri) .EQ. 0) THEN
+
+           DO j=1,nb_WP
+             CALL sub_PsiFBR_TO_DVR(WP(j))
+             w2%DVR=.TRUE.
+             IF (.NOT. associated(w2%CvecDVR)) CALL alloc_psi(w2)
+             DO iq=1,w2%nb_qa
+               CALL sub_GWP(EE,w2%CvecDVR(iq),
+     *                      w2%para_basis%tab_basis(1)%x(iq,1),T)
+             END DO
+             CALL Overlap_psi1_psi2(Overlap,w2,WP(j),
+     *                              DVR=.TRUE.,FBR=.FALSE.)
+             CALL Overlap_psi1_psi2(norm,WP(j),WP(j),
+     *                              DVR=.TRUE.,FBR=.FALSE.)
+             write(6,*) 'G_overlap',T,Overlap
+             write(6,*) 'GErr_overlap',T,abs(1.d0-abs(norm)),
+     *                                   abs(1.d0-abs(Overlap)),
+     *         atan2(aimag(Overlap),real(Overlap,kind=Rkind))
+             CALL ecri_psi(T=T,psi=WP(j),nioWP=nioWP,
+     *                     ecri_DVR=.TRUE.,ecri_FBR=.FALSE.,
+     *                     ecri_psi2=para_propa%WPpsi2)
+           END DO
+         END IF
+
+
+         it = it + 1
+
+         print_Op_loc = print_Op .AND. mod(it,para_propa%n_WPecri) == 0
+         CALL march_field(T,WP(:),nb_WP,print_Op_loc,
+     *                    para_H,para_Dip,para_propa%para_field,
+     *                    para_propa)
+
+         DO j=1,nb_WP
+c          - WP energy -----------------------------------
+           CALL sub_PsiOpPsi(ET,WP(j),w2,para_H)
+           ET = ET/WP(j)%norme - para_H%pot0
+c          para_H%E0     = ET
+c          para_propa%para_poly%phase  = 
+c    *           (para_H%E0-para_H%pot0)*para_propa%WPdeltaT
+           avE(j) = avE(j) + ET-E0(j)
+
+           IF ( print_Op .AND. mod(it,para_propa%n_WPecri) == 0 ) THEN
+             w2%DVR=.TRUE.
+             IF (.NOT. associated(w2%CvecDVR)) CALL alloc_psi(w2)
+             CALL sub_GWP(EE,w2%CvecDVR(1),
+     *                    w2%para_basis%tab_basis(1)%x(1,1),
+     *                    T_Delta)
+             write(6,*) 'EEE',T_Delta,
+     *                   real(ET,kind=Rkind),EE-real(ET,kind=Rkind)
+
+             write(6,*)
+             CALL sub_dnE(dnE,0,T_Delta,para_propa%para_field)
+             write(6,21) T_Delta,j,real(ET,kind=Rkind),dnE(:),
+     *                   WP(j)%norme,WP(j)%tab_normeADA
+             CALL psi_Qact_ie_psi(T_Delta,WP(j))
+             CALL calc_1Dweight(WP(j),max_ecri,T_Delta,' ',.TRUE.)
+
+           END IF
+
+         END DO ! j loop (nb_WP)
+
+
+         
+
+         T  = T_Delta
+
+       END DO ! loop on the Time iteration
+       CALL flush_perso(6)
+c----------------------------------------------------------
+c     - write the final WP---------------------------------
+
+      DO j=1,nb_WP
+        CALL norme_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.,Renorm=.TRUE.)
+
+        IF (print_Op) THEN
+          write(6,*) '=================================='
+          write(6,*) 'Final normalized WP'
+
+c         - WP energy -----------------------------------
+          CALL sub_PsiOpPsi(ET,WP(j),w2,para_H)
+          ET = ET/WP(j)%norme - para_H%pot0
+
+          write(6,21) T,j,real(ET,kind=Rkind),-tab_dnE(0,:),
+     *                   WP(j)%norme,WP(j)%tab_normeADA
+          CALL psi_Qact_ie_psi(T,WP(j))
+          CALL calc_1Dweight(WP(j),max_ecri,T,' ',.TRUE.)
+
+c         - WP FBR and DVR ------------------------------
+          write(6,*) 'WP (FBR) at T=',T,j
+          CALL ecri_psi(T=T,psi=WP(j),nioWP=6,
+     *                  ecri_DVR=.FALSE.,ecri_FBR=.TRUE.,
+     *                  ecri_psi2=.FALSE.)
+
+c         for the writting of the wp (DVR)
+          CALL sub_PsiFBR_TO_DVR(WP(j))
+          CALL ecri_psi(T=T,psi=WP(j),nioWP=6,
+     *                  ecri_DVR=.TRUE.,ecri_FBR=.FALSE.,
+     *                  ecri_psi2=.FALSE.)
+        END IF
+
+        avE(j) = avE(j)/real(it_max,kind=Rkind)
+        write(6,31) j,ww,real(avE,kind=Rkind)
+ 31     format('average absorbed energy at w ',i3,4(1x,f20.10))
+      END DO ! j loop (nb_WP)
+
+
+c     for the writting of the wp (DVR)
+      IF ((para_propa%WPpsi2 .OR. para_propa%WPpsi) .AND.
+     *        print_Op .AND. mod(it,para_propa%n_WPecri) == 0) THEN
+
+        DO j=1,nb_WP
+          CALL sub_PsiFBR_TO_DVR(WP(j))
+          CALL ecri_psi(T=T,psi=WP(j),nioWP=nioWP,
+     *                  ecri_DVR=.TRUE.,ecri_FBR=.FALSE.,
+     *                  ecri_psi2=para_propa%WPpsi2)
+        END DO
+      END IF
+c----------------------------------------------------------
+
+      close(nioWP)
+
+
+      CALL dealloc_psi(w2)
+
+c----------------------------------------------------------
+       IF (debug) THEN
+         write(6,*) 'END sub_propagation24'
+       END IF
+c----------------------------------------------------------
+
+
+      END
+c================================================================
+c
+c    25 : nOD propagation with
+c         a time dependant pulse in Hamiltonian (W(t))
+c         H is the square matrix (dimension n)
+c         Hmin and Hmax are the parameter to scale H
+c         WP and WPt are associated wth the inital WP and the target WP
+c
+c    for the control
+c================================================================
+      SUBROUTINE sub_propagation25(WP,nb_WP,WP0,nb_WP0,WPt,nb_WPt,
+     *                             print_Op,
+     *                             para_field_new,make_field,Obj0,
+     *                            
+     *                             para_H,para_Dip,para_propa)
+      USE mod_system
+      USE mod_Op
+      USE mod_propa
+      USE mod_psi
+      IMPLICIT NONE
+
+c----- Operator : H and Dip(:) ---------------------------------------
+      TYPE (param_Op)   :: para_H
+      TYPE (param_Op)   :: para_Dip(3)
+
+c----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+
+      integer            :: nb_WP,nb_WP0,nb_WPt
+      TYPE (param_psi)   :: WP(nb_WP),WP0(nb_WP0),WPt(nb_WPt)
+
+c----- for the fidelity or objectif --------------------------------
+      real (kind=Rkind)  :: Obj0(nb_WPt)
+      real (kind=Rkind) :: SObj,Obj(nb_WPt),alpha
+
+c----- for the field --------------------------------------------------
+      TYPE (param_field) :: para_field_new
+      logical :: make_field
+c----- for the field --------------------------------------------------
+
+c----- for printing --------------------------------------------------
+      logical :: print_Op, print_WP
+
+c------ working parameters --------------------------------
+      integer       :: i,j,it,it_max
+      real (kind=Rkind) :: T      ! time
+
+      integer  ::   nioWP
+
+
+c----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+c     logical, parameter :: debug=.TRUE.
+c-----------------------------------------------------------
+      IF (debug) THEN
+        write(6,*) 'BEGINNING sub_propagation25'
+        write(6,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
+        write(6,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,
+     *                          para_propa%para_poly%Hmax
+        write(6,*)
+        write(6,*) 'nb_ba,nb_qa',WP(1)%nb_ba,WP(1)%nb_qa
+        write(6,*) 'nb_bi',WP(1)%nb_bi
+        write(6,*)
+
+        DO j=1,nb_WP
+          CALL norme_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.,Renorm=.TRUE.)
+
+          write(6,*) 'WP0 (FBR)',j
+          CALL ecri_psi(T=ZERO,psi=WP(j),nioWP=6,
+     *                ecri_DVR=.FALSE.,ecri_FBR=.TRUE.,
+     *                ecri_psi2=.FALSE.)
+
+c         for the writting of the wp (DVR)
+          CALL sub_PsiFBR_TO_DVR(WP(j))
+          write(6,*) 'WP0 (DVR)',j
+          CALL ecri_psi(T=ZERO,psi=WP(j),nioWP=6,
+     *                ecri_DVR=.TRUE.,ecri_FBR=.FALSE.,
+     *                ecri_psi2=.FALSE.)
+
+        END DO ! j loop (nb_WP)
+
+      END IF
+c-----------------------------------------------------------
+
+
+c-----------------------------------------------------------
+      IF (print_Op .OR. debug) THEN
+        write(6,*) ' Propagation ',para_propa%name_WPpropa
+        IF (para_propa%para_field%pola_xyz(1)) write(6,*) 'with Dipx'
+        IF (para_propa%para_field%pola_xyz(2)) write(6,*) 'with Dipy'
+        IF (para_propa%para_field%pola_xyz(3)) write(6,*) 'with Dipz'
+      END IF
+
+c     - parameters for poly (cheby and nOD) ... ------------
+      CALL initialisation1_poly(para_propa%para_poly,
+     *                          para_propa%WPdeltaT,para_H%pot0,
+     *                          para_propa%type_WPpropa)
+
+c     - scaling of H ---------------------------------------
+      para_H%scaled = .TRUE.
+      para_H%E0     = para_propa%para_poly%E0
+      para_H%Esc    = para_propa%para_poly%Esc
+
+
+c-----------------------------------------------------------
+c------- propagation loop ---------------------------------
+      T = ZERO
+      IF (para_propa%WPdeltaT < 0) T = para_propa%WPTmax
+      it   = 0
+      it_max = para_propa%WPTmax/abs(para_propa%WPdeltaT)
+      CALL file_open(para_propa%file_WP,nioWP)
+      para_propa%test_max_norm = .FALSE.
+c     ------------------------------------------------------
+      DO
+c       - Build of the field ------------------------------
+        IF (make_field) 
+     *     CALL build_field(T,WP,nb_WP,para_field_new,Obj0,
+     *                      para_Dip,para_propa)
+
+        print_WP = (print_Op .AND. mod(it,para_propa%n_WPecri) == 0)
+
+        IF (print_Op .OR. debug) THEN
+          CALL sub_analyze_WP(T,WP,nb_WP,
+     *                        para_H,para_propa%para_field,para_propa)
+          IF (nb_WP == nb_WPt) THEN
+            alpha=ZERO
+            CALL calc_fidelity(nb_WPt,SObj,Obj,
+     *                         WP,WPt,T,0,alpha,.TRUE.)
+          END IF
+
+c         Write WP (FBR or DVR)
+          IF (para_propa%WPpsi2 .OR. para_propa%WPpsi) THEN
+            DO j=1,nb_WP/2
+              IF (para_propa%write_DVR) CALL sub_PsiFBR_TO_DVR(WP(j))
+              CALL ecri_psi(T=T,psi=WP(j),nioWP=nioWP,
+     *                      ecri_DVR=para_propa%write_DVR,
+     *                      ecri_FBR=para_propa%write_FBR,
+     *                      ecri_psi2=para_propa%WPpsi2)
+            END DO
+          END IF
+        END IF
+
+          
+        IF (it == it_max .OR. para_propa%march_error) EXIT  ! exit the propagation loop
+
+        IF (make_field .AND. para_propa%WPdeltaT > 0) THEN
+          CALL march_field(T,WP(1:nb_WP/2),nb_WP/2,print_WP,
+     *                         para_H,para_Dip,
+     *                         para_field_new,para_propa)
+          CALL march_field(T,WP(nb_WP/2+1:nb_WP),nb_WP/2,print_WP,
+     *                         para_H,para_Dip,
+     *                         para_propa%para_field,para_propa)
+        ELSE IF (make_field .AND. para_propa%WPdeltaT < 0) THEN
+          CALL march_field(T,WP(1:nb_WP/2),nb_WP/2,print_WP,
+     *                         para_H,para_Dip,
+     *                         para_propa%para_field,para_propa)
+          CALL march_field(T,WP(nb_WP/2+1:nb_WP),nb_WP/2,print_WP,
+     *                         para_H,para_Dip,
+     *                         para_field_new,para_propa)
+        ELSE
+          CALL march_field(T,WP(:),nb_WP,print_WP,
+     *                         para_H,para_Dip,
+     *                         para_propa%para_field,para_propa)
+        END IF
+
+         it = it + 1
+         T = real(it,kind=Rkind) * para_propa%WPdeltaT
+         IF (para_propa%WPdeltaT < ZERO) T = T + para_propa%WPTmax
+
+      END DO ! loop on the Time iteration
+      close(nioWP)
+c-----------------------------------------------------------
+c-----------------------------------------------------------
+
+
+
+c----------------------------------------------------------
+c     - write the final WP---------------------------------
+      IF (print_Op .OR. debug) THEN
+        DO j=1,nb_WP
+          CALL norme_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.,Renorm=.TRUE.)
+
+          write(6,*) 'WP (FBR)',j,' at T=',T
+          CALL ecri_psi(T=T,psi=WP(j),nioWP=6,
+     *                ecri_DVR=.FALSE.,ecri_FBR=.TRUE.,
+     *                ecri_psi2=.FALSE.)
+
+c         for the writting of the wp (DVR)
+          write(6,*) 'WP (DVR)',j,' at T=',T
+          CALL sub_PsiFBR_TO_DVR(WP(j))
+          CALL ecri_psi(T=T,psi=WP(j),nioWP=6,
+     *                ecri_DVR=.TRUE.,ecri_FBR=.FALSE.,
+     *                ecri_psi2=.FALSE.)
+
+        END DO ! j loop (nb_WP)
+      END IF
+      CALL flush_perso(6)
+
+c----------------------------------------------------------
+
+      IF (para_propa%march_error) THEN
+        write(6,*) ' ERROR in sub_propagation25'
+        write(6,*) ' March: norm too large, no convergence...'
+        IF (para_propa%test_max_norm) 
+     *   write(6,*) ' the norme is too large! ',WP(:)%norme
+        STOP
+      END IF
+
+
+
+c----------------------------------------------------------
+      IF (debug) THEN
+        write(6,*) 'END sub_propagation25'
+      END IF
+c----------------------------------------------------------
+
+
+      END
+c================================================================
+c    OLD OLD OLD
+c         a time dependant pulse in Hamiltonian (W(t))
+c         H is the square matrix (dimension n)
+c         Hmin and Hmax are the parameter to scale H
+c         WP and WPt are associated wth the inital WP and the target WP
+c
+c    for the control
+c================================================================
+      SUBROUTINE sub_propagation25_old(WP,nb_WP,WP0,nb_WP0,WPt,nb_WPt,
+     *                             print_Op,
+     *                             para_field_new,make_field,Obj0,
+     *                            
+     *                             para_H,para_Dip,para_propa)
+      USE mod_system
+      USE mod_Op
+      USE mod_propa
+      USE mod_psi
+      IMPLICIT NONE
+
+c----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)   :: para_H
+      TYPE (param_Op)   :: para_Dip(3)
+
+c----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+      TYPE (param_field) :: para_field_new
+      real (kind=Rkind)      :: E_new
+      real (kind=Rkind)      :: Obj0(nb_WPt)
+
+      integer            :: nb_WP,nb_WP0,nb_WPt
+      TYPE (param_psi)   :: WP(nb_WP),WP0(nb_WP0),WPt(nb_WPt)
+      TYPE (param_psi)   :: w1,w2
+      TYPE (param_psi), allocatable :: dnpsi(:)
+      integer            :: nb_WP_work
+      TYPE (param_psi), allocatable :: WP_work(:)
+
+c----- for printing --------------------------------------------------
+      logical ::print_Op 
+
+
+c------ working parameters --------------------------------
+
+      real (kind=Rkind) :: SObj,Obj(nb_WPt),alpha
+
+      complex (kind=Rkind)   :: cdot,rt,rti,fac_k,C12
+      real (kind=Rkind) :: limit
+
+      integer       :: it,it_max,no,max_der,nb_der
+      integer       :: i,j,k,jt,ip
+      real (kind=Rkind) :: T      ! time
+      real (kind=Rkind) :: T_Delta! time+deltaT
+      complex (kind=Rkind) :: ET  ! energy
+      integer       :: max_ecri
+      character (len=30) :: info
+      logical       :: test_max_norme
+
+      real (kind=Rkind) :: Qmean(WP(1)%nb_act1)
+
+
+
+      integer  ::   nioWP
+
+c----- for the field --------------------------------------------------
+      real (kind=Rkind), allocatable :: tab_dnE(:,:)
+      real (kind=Rkind)    :: ww(3)
+      real (kind=Rkind)    :: dnE(3)
+      logical :: make_field
+c----- for the field --------------------------------------------------
+
+
+c----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+c     logical, parameter :: debug=.TRUE.
+c-----------------------------------------------------------
+      IF (debug) THEN
+        write(6,*) 'BEGINNING sub_propagation25_old'
+        write(6,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
+        write(6,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,
+     *                          para_propa%para_poly%Hmax
+        write(6,*)
+        write(6,*) 'nb_ba,nb_qa',WP(1)%nb_ba,WP(1)%nb_qa
+        write(6,*) 'nb_bi',WP(1)%nb_bi
+        write(6,*)
+
+        CALL norme_psi(WP(1),.FALSE.,.TRUE.,.FALSE.)
+        write(6,*) 'normepsi0 FBR',WP(1)%norme,WP(1)%tab_normeADA
+
+        write(6,*) 'WP(1)%FBR'
+        CALL ecri_psi(T=ZERO,psi=WP(1),nioWP=6,
+     *                   ecri_DVR=.FALSE.,ecri_FBR=.TRUE.)
+        write(6,*) 'WP(1)%DVR'
+        CALL ecri_psi(T=ZERO,psi=WP(1),nioWP=6,
+     *                   ecri_DVR=.TRUE.,ecri_FBR=.FALSE.)
+       END IF
+c-----------------------------------------------------------
+
+
+c-----------------------------------------------------------
+      IF (print_Op .OR. debug) THEN
+        write(6,*) ' Propagation ',para_propa%name_WPpropa
+        IF (para_propa%para_field%pola_xyz(1)) write(6,*) 'with Dipx'
+        IF (para_propa%para_field%pola_xyz(2)) write(6,*) 'with Dipy'
+        IF (para_propa%para_field%pola_xyz(3)) write(6,*) 'with Dipz'
+      END IF
+
+c     - parameters for poly (cheby and nOD) ... ------------
+      CALL initialisation1_poly(para_propa%para_poly,
+     *                          para_propa%WPdeltaT,para_H%pot0,
+     *                          para_propa%type_WPpropa)
+
+       write(6,*) 'npoly',para_propa%para_poly%npoly
+
+      allocate(tab_dnE(0:para_propa%para_poly%npoly-1,3))
+      allocate(dnpsi(0:para_propa%para_poly%npoly))
+      nb_WP_work = max(6,para_propa%para_poly%npoly+1)
+      allocate(WP_work(nb_WP_work))
+
+      DO i=1,nb_WP_work
+        CALL init0_psi(WP_work(i))
+      END DO
+
+      DO i=0,para_propa%para_poly%npoly
+        CALL init0_psi(dnpsi(i))
+      END DO
+      CALL init0_psi(w1)
+      w1 = WP(1)
+      CALL init0_psi(w2)
+      w2 = WP(1)
+
+c     - scaling of H ---------------------------------------
+      para_H%scaled = .TRUE.
+      para_H%E0     = para_propa%para_poly%E0
+      para_H%Esc    = para_propa%para_poly%Esc
+
+
+c-----------------------------------------------------------
+      w2%DVR=.TRUE.
+      IF (.NOT. associated(w2%CvecDVR)) CALL alloc_psi(w2)
+c-----------------------------------------------------------
+
+
+c-----------------------------------------------------------
+      max_ecri = min(25,WP(1)%nb_tot)
+      T = ZERO
+      IF (para_propa%WPdeltaT < 0) T = para_propa%WPTmax
+      it   = 0
+      it_max = para_propa%WPTmax/abs(para_propa%WPdeltaT)-1
+      T_Delta = T + para_propa%WPdeltaT
+
+
+
+      CALL sub_dnE(dnE,0,T,para_propa%para_field)
+      tab_dnE(0,:) = -dnE(:)
+
+      IF (print_Op .OR. debug) THEN
+        DO j=1,nb_WP
+          write(info,'(a,i3)') '#WP ',j
+          CALL norme_psi(WP(j),.FALSE.,.TRUE.,.FALSE.)
+c         - WP energy -----------------------------------
+          CALL sub_PsiOpPsi(ET,WP(j),w2,para_H)
+          ET = ET/WP(j)%norme - para_H%pot0
+          write(6,21) T,real(ET,kind=Rkind),-tab_dnE(0,:),
+     *                WP(j)%norme,WP(j)%tab_normeADA
+          CALL calc_1Dweight(WP(j),max_ecri,T,info,.TRUE.)
+
+          CALL calc_DM(WP(j),max_ecri,T,info,.TRUE.)
+          C12 = WP(j)%CvecFBR(1)*conjg(WP(j)%CvecFBR(2))
+          write(6,31) T,j,C12,abs(C12)
+ 31       format('C12',f12.1,1x,i2,3(1x,f12.6))
+        END DO
+
+        IF (nb_WP == nb_WPt) THEN
+          alpha=ZERO
+          CALL calc_fidelity(nb_WPt,SObj,Obj,
+     *                       WP,WPt,T,0,alpha,.TRUE.)
+        END IF
+      END IF
+
+ 21   format('normeWP ',f12.2,2(1x,f8.5),20(1x,f8.5))
+c-----------------------------------------------------------
+
+
+c------- propagation loop ---------------------------------
+      CALL file_open(para_propa%file_WP,nioWP)
+
+      test_max_norme = .FALSE.
+      DO WHILE (it <= it_max)
+
+
+c        - Build of the field ------------------------------
+         IF (make_field) THEN
+           CALL build_field(T,WP,nb_WP,para_field_new,Obj0,
+     *                      para_Dip,para_propa)
+         END IF
+
+c        Write of the wp (DVR)
+         IF ((para_propa%WPpsi2 .OR. para_propa%WPpsi) .AND.
+     *        print_Op .AND. mod(it,para_propa%n_WPecri) .EQ. 0) THEN
+
+           DO j=1,nb_WP/2
+             IF (para_propa%write_DVR) CALL sub_PsiFBR_TO_DVR(WP(j))
+             CALL ecri_psi(T=T,psi=WP(j),nioWP=nioWP,
+     *                     ecri_DVR=para_propa%write_DVR,
+     *                     ecri_FBR=para_propa%write_FBR,
+     *                     ecri_psi2=para_propa%WPpsi2)
+           END DO
+         END IF
+
+
+         it = it + 1
+
+         DO j=1,nb_WP
+c          - propagation ----------------
+           tab_dnE(:,:) = ZERO
+           nb_der = para_propa%para_poly%npoly-1
+           IF (para_propa%para_field%max_der >= 0) 
+     *       nb_der = min(para_propa%para_field%max_der,
+     *                    para_propa%para_poly%npoly-1)
+
+           IF ((make_field .AND. 
+     *        para_propa%WPdeltaT > 0 .AND. j <= nb_WP/2) .OR.
+     *       (make_field .AND. 
+     *        para_propa%WPdeltaT < 0 .AND. j > nb_WP/2)) THEN
+
+c            propagation avant   : on utilise le nouveau champ pour le WP
+c     ou     propagation arriere : on utilise le nouveau champ pour la cible
+c            write(6,*) ' avec le nouveau',j
+             DO k=0,nb_der
+               CALL sub_dnE(dnE,k,T,para_field_new)
+               tab_dnE(k,:) = -dnE(:)
+             END DO
+           ELSE
+             DO k=0,nb_der
+               CALL sub_dnE(dnE,k,T,para_propa%para_field)
+               tab_dnE(k,:) = -dnE(:)
+             END DO
+           END IF
+
+           fac_k = para_propa%WPdeltaT
+           max_der = 0
+           DO k=1,nb_der
+             fac_k = fac_k * para_propa%WPdeltaT/real(k,kind=Rkind)
+             limit = maxval(abs(tab_dnE(k,:)))*fac_k
+             IF (limit > para_propa%para_poly%poly_tol) max_der=k
+c            write(6,*) 'k,max_der,limit',k,max_der,limit
+           END DO
+c          max_der=para_propa%para_poly%npoly-1
+c          write(6,*) 'max_der',max_der
+
+
+           dnpsi(0) = WP(j)
+           DO i=0,para_propa%para_poly%npoly-1
+
+             CALL sub_OpPsi(dnpsi(i),w2,para_H,.TRUE.)
+
+             dnpsi(i+1) = w2  ! H.psi(i)
+           
+
+             fac_k = cmplx(ZERO,-para_propa%WPdeltaT / 
+     *                          real(i+1,kind=Rkind),kind=Rkind)
+
+
+             dnpsi(i+1) = dnpsi(i+1) * fac_k
+
+             DO ip=1,3
+               IF (.NOT. para_propa%para_field%pola_xyz(ip)) CYCLE
+               fac_k = cmplx(ZERO,-para_propa%WPdeltaT / 
+     *                           real(i+1,kind=Rkind),kind=Rkind)
+
+               w1 = dnpsi(i) * (tab_dnE(0,ip)* fac_k)
+
+               DO k=1,min(i,max_der)
+                 fac_k = fac_k * para_propa%WPdeltaT/real(k,kind=Rkind)
+                 rt = tab_dnE(k,ip)*fac_k
+                 w1 = w1 + dnpsi(i-k) * rt
+               END DO
+
+
+               CALL sub_OpPsi(w1,w2,para_Dip(ip),.FALSE.)
+
+               dnpsi(i+1) = dnpsi(i+1) + w2
+             END DO
+             WP(j) = WP(j) + dnpsi(i+1)
+
+             CALL norme_psi(dnpsi(i+1),.FALSE.,.TRUE.,.FALSE.)
+
+c            write(6,*) 'norme psi i+1',i+1,dnpsi(i+1)%norme
+             IF (dnpsi(i+1)%norme < para_propa%para_poly%poly_tol) EXIT
+             IF (dnpsi(i+1)%norme > TEN**20) THEN
+                write(6,*) ' ERROR in sub_propagation25_old'
+                write(6,*) ' The norme of dnpsi(i+1) is huge !',
+     *                                              dnpsi(i+1)%norme
+                write(6,*) ' iteration i:',i
+                write(6,*) ' Reduce the time step, WPDeltaT:',
+     *                       para_propa%WPdeltaT
+
+                STOP
+             END IF
+
+           END DO
+
+
+c          - Phase Shift -----------------
+           WP(j) = WP(j) *
+     *        cmplx( cos(para_propa%para_poly%phase),
+     *              -sin(para_propa%para_poly%phase),kind=Rkind)
+
+c          - check norm ------------------
+           CALL norme_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.,Renorm=.FALSE.)
+           IF ( WP(j)%norme .GE. WP(j)%max_norme) THEN
+             T  = T + para_propa%WPdeltaT
+             T_Delta = T + para_propa%WPdeltaT
+             write(6,*) ' STOP propagation: norme > max_norme',
+     *                   WP(j)%norme
+             test_max_norme = .TRUE.
+             STOP
+           END IF
+
+         END DO ! j loop (nb_WP)
+
+         DO j=1,nb_WP
+
+
+           IF ( debug .OR. 
+     *          (print_Op .AND. mod(it,para_propa%n_WPecri) == 0) ) THEN
+
+             write(6,*) 'T,max_der,ipoly,norme',
+     *                         T,max_der,i,dnpsi(i+1)%norme
+c            - WP energy -----------------------------------
+             write(info,'(a,i3)') '#WP ',j
+             CALL sub_PsiOpPsi(ET,WP(j),w2,para_H)
+             ET = ET/WP(j)%norme - para_H%pot0
+
+             CALL psi_Qact_psi(Qmean,WP(j))
+             write(6,*) 'T Qmean',int(T_Delta),Qmean
+
+             write(6,21) T_Delta,real(ET,kind=Rkind),-tab_dnE(0,:),
+     *                   WP(j)%norme,WP(j)%tab_normeADA
+             CALL calc_1Dweight(WP(j),max_ecri,T_Delta,info,.TRUE.)
+
+             CALL calc_DM(WP(j),max_ecri,T_Delta,info,.TRUE.)
+             C12 = WP(j)%CvecFBR(1)*conjg(WP(j)%CvecFBR(2))
+             write(6,31) T_Delta,j,C12,abs(C12)
+           END IF
+
+         END DO ! j loop (nb_WP)
+
+         IF ( debug .OR. 
+     *          (print_Op .AND. mod(it,para_propa%n_WPecri) == 0) ) THEN
+           IF (nb_WP == nb_WPt) THEN
+              alpha=ZERO
+              CALL calc_fidelity(nb_WPt,SObj,Obj,
+     *                           WP,WPt,T_Delta,0,alpha,.TRUE.)
+           END IF
+         END IF
+
+
+         
+         T = real(it,kind=Rkind) * para_propa%WPdeltaT
+         IF (para_propa%WPdeltaT < ZERO) T = T + para_propa%WPTmax
+         T_Delta = T + para_propa%WPdeltaT
+
+       END DO ! loop on the Time iteration
+c----------------------------------------------------------
+      IF (make_field) THEN
+        CALL build_field(T,WP,nb_WP,para_field_new,Obj0,
+     *                   para_Dip,para_propa)
+      END IF
+
+       CALL flush_perso(6)
+c----------------------------------------------------------
+c     - write the final WP---------------------------------
+
+      DO j=1,nb_WP
+        CALL norme_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.,Renorm=.TRUE.)
+
+        IF (print_Op .OR. debug) THEN
+          write(6,*) 'WP (FBR) at T=',T
+          CALL ecri_psi(T=T,psi=WP(j),nioWP=6,
+     *                ecri_DVR=.FALSE.,ecri_FBR=.TRUE.,
+     *                ecri_psi2=.FALSE.)
+
+c         for the writting of the wp (DVR)
+          CALL sub_PsiFBR_TO_DVR(WP(j))
+          CALL ecri_psi(T=T,psi=WP(j),nioWP=6,
+     *                ecri_DVR=.TRUE.,ecri_FBR=.FALSE.,
+     *                ecri_psi2=.FALSE.)
+        END IF
+
+      END DO ! j loop (nb_WP)
+
+
+c     for the writting of the wp (DVR)
+      IF (mod(it,para_propa%n_WPecri) == 0) THEN
+
+        DO j=1,nb_WP/2
+          IF (para_propa%write_DVR) CALL sub_PsiFBR_TO_DVR(WP(j))
+          CALL ecri_psi(T=T,psi=WP(j),nioWP=nioWP,
+     *                  ecri_DVR=para_propa%write_DVR,
+     *                  ecri_FBR=para_propa%write_FBR,
+     *                  ecri_psi2=para_propa%WPpsi2)
+        END DO
+        IF (print_Op .OR. debug) write(6,*) 'T,max_der,ipoly,norme',
+     *                  T,max_der,i,dnpsi(i+1)%norme
+      END IF
+c----------------------------------------------------------
+
+      close(nioWP)
+
+
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+      DO i=0,para_propa%para_poly%npoly
+        CALL dealloc_psi(dnpsi(i))
+      END DO
+      deallocate(dnpsi)
+      deallocate(tab_dnE)
+
+      IF (test_max_norme) THEN
+        write(6,*) ' ERROR in sub_propagation25_old'
+        write(6,*) ' the norme is too large! ',WP(:)%norme
+        STOP
+      END IF
+
+
+
+c----------------------------------------------------------
+       IF (debug) THEN
+         write(6,*) 'END sub_propagation25_old'
+       END IF
+c----------------------------------------------------------
+
+
+      END
+c================================================================
+c
+c    24 : nOD propagation with
+c         a time dependant pulse in Hamiltonian (W(t))
+c         H is the square matrix (dimension n)
+c         Hmin and Hmax are the parameter to scale H
+c         WP and WPt are associated wth the inital WP and the target WP
+c
+c================================================================
+      SUBROUTINE sub_propagation100(WP,nb_WP,print_Op,
+     *                             para_field_new,make_field,
+     *                             para_H,para_Dip,para_propa)
+      USE mod_system
+      USE mod_Op
+      USE mod_propa
+      USE mod_psi
+      IMPLICIT NONE
+
+c----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)   :: para_H
+      TYPE (param_Op)   :: para_Dip(3)
+
+c----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+      TYPE (param_field) :: para_field_new
+      real (kind=Rkind)      :: E_new
+
+      integer            :: nb_WP
+      TYPE (param_psi)   :: WP(nb_WP)
+
+c----- physical and mathematical constants ---------------------------
+      TYPE (constant) :: const_phys
+
+c----- for printing --------------------------------------------------
+      logical ::print_Op 
+
+
+c------ working parameters --------------------------------
+      TYPE (param_psi)   :: w1,w2,w3
+
+      complex (kind=Rkind)   :: Overlap,cdot,rt,rti,fac_k,norm
+      real (kind=Rkind) :: limit
+
+      complex (kind=Rkind) :: ET  ! energy
+      real (kind=Rkind)    :: EE
+      complex (kind=Rkind) :: E0(nb_WP),avE(nb_WP)  ! energy
+
+      integer       :: it,it_max,no,max_der,nb_der
+      integer       :: i,j,k,jt,ip,iq
+      real (kind=Rkind) :: T      ! time
+      real (kind=Rkind) :: T_Delta! time+deltaT
+      integer       :: max_ecri
+      integer       :: tab_der(2)
+      logical       :: test_max_norme
+
+      real (kind=Rkind) :: Qmean(WP(1)%nb_act1)
+
+
+
+      integer  ::   nioWP
+
+c----- for the field --------------------------------------------------
+      real (kind=Rkind)    :: ww(3)
+      real (kind=Rkind)    :: dnE(3)
+      logical :: make_field
+c----- for the field --------------------------------------------------
+
+
+c----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+c     logical, parameter :: debug=.TRUE.
+c-----------------------------------------------------------
+      IF (debug) THEN
+        write(6,*) 'BEGINNING sub_propagation100'
+        write(6,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
+        write(6,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,
+     *                          para_propa%para_poly%Hmax
+        write(6,*)
+        write(6,*) 'nb_ba,nb_qa',WP(1)%nb_ba,WP(1)%nb_qa
+        write(6,*) 'nb_bi',WP(1)%nb_bi
+        write(6,*)
+
+        CALL norme_psi(WP(1),.FALSE.,.TRUE.,.FALSE.)
+        write(6,*) 'normepsi0 FBR',WP(1)%norme,WP(1)%tab_normeADA
+
+        write(6,*) 'WP(1)'
+        CALL ecri_psi(T=ZERO,psi=WP(1),nioWP=6)
+       END IF
+c-----------------------------------------------------------
+
+
+
+c-----------------------------------------------------------
+      IF (print_Op) THEN
+        write(6,*) ' Propagation ',para_propa%name_WPpropa
+        IF (para_propa%para_field%pola_xyz(1)) write(6,*) 'with Dipx'
+        IF (para_propa%para_field%pola_xyz(2)) write(6,*) 'with Dipy'
+        IF (para_propa%para_field%pola_xyz(3)) write(6,*) 'with Dipz'
+      END IF
+
+c     - parameters for poly (cheby and nOD) ... ------------
+      CALL initialisation1_poly(para_propa%para_poly,
+     *                          para_propa%WPdeltaT,para_H%pot0,
+     *                          para_propa%type_WPpropa)
+      write(6,*) 'E0,Esc,phase',para_propa%para_poly%E0,
+     *     para_propa%para_poly%Esc,para_propa%para_poly%phase
+c     - scaling of H ---------------------------------------
+      para_H%scaled = .TRUE.
+      para_H%E0     = para_propa%para_poly%E0
+      para_H%Esc    = para_propa%para_poly%Esc
+
+c-----------------------------------------------------------
+      it_max = para_propa%WPTmax/abs(para_propa%WPdeltaT)-1
+      T = ZERO
+      it = 0
+      write(6,*) 'para_H nb_tot',para_H%nb_tot
+      CALL flush_perso(6)
+      CALL init0_psi(w1)
+      CALL init_psi(w1,para_H,cplx=.FALSE.)
+c     CALL init_psi(w1,para_H,cplx=.TRUE.)
+      CALL alloc_psi(w1)
+      w1%RvecFBR(:) = real(WP(1)%CvecFBR(:),kind=Rkind)
+c     w1 = WP(1)
+      CALL init0_psi(w2)
+      w2 = w1
+      CALL init0_psi(w3)
+      w3 = w1
+
+
+      CALL time_perso('propa100')
+      write(6,*) "========================="
+      write(6,*) "cplx? ",w1%cplx
+      tab_der = (/ 1,0 /)
+      CALL sub_d0d1d2PsiFBR_TO_DVR(w1,tab_der)
+      CALL time_perso('F=>D')
+
+
+      STOP
+      write(6,*) "========================="
+
+      CALL sub2_PsiDVR_TO_FBR(w1)
+      CALL time_perso('2D=>F')
+      CALL sub_PsiDVR_TO_FBR(w2)
+      CALL time_perso('D=>F')
+
+      w3 = w2-w1
+      CALL norme_psi(w3,.FALSE.,.TRUE.,.FALSE.)
+      write(6,*) 'norm  diff',w3%norme
+
+      write(6,*) "========================="
+      STOP
+
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+
+c----------------------------------------------------------
+       IF (debug) THEN
+         write(6,*) 'END sub_propagation100'
+       END IF
+c----------------------------------------------------------
+
+      END 

@@ -1,0 +1,39 @@
+----------------------------------------------------------
+H2O: valence coordinates
+----------------------------------------------------------
+
+The files 
+
+dat_NewQTransfo-zmatH2O and dat_NewQTransfo-polyH2O 
+
+have different input, but they MUST give exactly the same KEO.
+----------------------------------------------------------
+
+
+
+----------------------------------------------------------
+H2 + H2 : Jacobi coordinates
+----------------------------------------------------------
+The files 
+
+
+dat_NewQTransfo-zmat3
+dat_NewQTransfo-poly1   dat_NewQTransfo-poly4 dat_NewQTransfo-poly2   dat_NewQTransfo-poly3
+
+have different input, but they MUST give exactly the same KEO.
+----------------------------------------------------------
+
+
+----------------------------------------------------------
+(H2O)2H+ : polyshperical coordinates
+----------------------------------------------------------
+
+The files
+
+dat_TnumW2Hp dat_TnumW2Hp3
+
+have different input, but they MUST give exactly the same KEO.
+
+The result should close to the output (res_geomOriol-test2010) obtained with Oriol subroutine (Q to x).
+----------------------------------------------------------
+

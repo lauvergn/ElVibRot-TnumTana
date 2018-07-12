@@ -1,0 +1,28 @@
+fich='exa*/*.f exa*/*/*.f'
+
+fich='Source*/*f90 Source*/*/*f90 Source*/*/*/*f90 sub*/*f90 sub*/*f '
+
+list1=' ifix idint float sngl dble aint dint anint dnint nint idnint iabs dabs cabs amod dmod isign dsign idim ddim max0 amax1 dmax1 amax0 max1  min0 amin1 dmin1 min1 amin0 '
+#list3=' imag conjg'
+ list2=' dsqrt csqrt dexp cexp alog clog dlog dsin csin dcos ccos dtan dasin dacos datan catan dsinh dcosh dtanh '
+list1=' 0\.d0 1\.d0 2\.d0 0\.5d0'
+list1=' kind\ =\ 8 '
+
+ list1=$1
+
+for i in $list1
+do
+echo ========================
+echo $i
+egrep -i "$i" $fich
+done
+
+exit
+
+egrep -i "float|dble" $fich
+egrep -i "sqrt" $fich
+egrep -i "exp|log|log10" $fich
+egrep -i "cos|sin|tan" $fich
+egrep -i "acos|asin|atan" $fich
+egrep -i "cosh|sinh|tanh" $fich
+egrep -i "acosh|asinh|atanh" $fich

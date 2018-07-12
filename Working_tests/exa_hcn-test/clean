@@ -1,0 +1,3 @@
+rm -f res* SH_HADA* file_OpBuilding spectrum file* fort.* Davidson.log
+rm -f Rho1D* Rho2D* psi1D* psi2D*
+rm -f Eq_KEO.tex mat_f2ij

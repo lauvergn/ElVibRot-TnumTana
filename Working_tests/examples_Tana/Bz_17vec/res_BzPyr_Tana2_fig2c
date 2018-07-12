@@ -1,0 +1,2973 @@
+ ===============================================
+ ===============================================
+ Working with ElVibRot90.47-Tnum30.33-Tana7.10
+ Compiled on "kruck" the Jeu 16 mar 2017 - 15:26:48
+ EVRT_path: /Users/lauvergn/git/ElVibRot
+ -----------------------------------------------
+ ElVibRot is written by David Lauvergnat [1] 
+      with contributions of Josep Maria Luis [2]
+ ElVibRot is under GNU LGPL3 license.
+
+ Tnum is written David Lauvergnat [1]
+ Tana is written by Mamadou Ndong 
+      with contributions of David Lauvergnat
+ Tnum and Tana are under GNU LGPL3 license.
+
+ [1]: Laboratoire de Chimie Physique, UMR 8000, CNRS-Université Paris-Sud, France
+ [2]: Institut de Química Computacional and Departament de Química Universitat de Girona, Catalonia, Spain
+ ===============================================
+ ===============================================
+ =================================================
+ =================================================
+ BEGINNING Read_mole
+ EVRT_path: /Users/lauvergn/git/ElVibRot                                                                                                                                                                                                                                   
+ PHYSICAL CONSTANTS, version: CODATA 2006
+ MASSES, version: NIST2012            
+   The unit "cm-1" is already present
+ energy unit: cm-1                
+ auTOenergy   219474.63144319772     
+ Ta (fs)=           0.024189
+ auTOcm_inv =      219474.631443
+ auTOeV     =          27.211384
+ =================================================
+ =================================================
+ New Coordinates transformation           3
+ =================================================
+ ==========================================
+ ==========================================
+ transfo:               bunch_poly          
+ Option of the transfo: 0
+ Skip the transfo:      F
+ num_transfo:           1
+ inTOout:               F
+------------------------------------------
+   Read the atoms
+   nb_vect          17
+   nat          23
+   nat_act          18
+   Read the dummy atoms, X
+   nat_act,ncart_act          18          54
+ ==========================================
+ ==========================================
+ ==========================================
+ ==========================================
+ transfo:               poly                
+ Option of the transfo: 0
+ Skip the transfo:      F
+ num_transfo:           2
+ inTOout:               T
+------------------------------------------
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           2
+ num_vect_in_BF           2
+ num_Frame_in_BF           1
+ num_Frame_in_Container           1
+ name_Frame: F(BF)               
+ tab_num_Frame           1
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F F T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1           2             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1           3             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1           3             qus                    0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1           3             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3 -1342177280  1352597563       32767           0           4           0           0           0           0           0           0           0           0           0           0   113267264      360337           2 -1342177280   113264368       32657  1352617492       32767           1           4           0           3           0           0           0           0           0           0           0           0   113267344      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3 -1342177280          35 -1342177280   275514479     1705977           2 -1342177280   113267680       32657  1352617016       32767           0           4           0           0           0           0           0           0           0           0           0           0   113267696       32657           0 -1342177280   275514479     2099193           2 -1342177280   113267776       32657  1352617184       32767           0           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           3
+ num_vect_in_BF           3
+ num_Frame_in_BF           1
+ num_Frame_in_Container           1
+ name_Frame: F(BF)               
+ tab_num_Frame           1
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F T T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1           4             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1           5             Id                     0.1000E+01 Ix    0.0000E+00
+    1           4           1           6             Id                     0.1000E+01 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1           5             qus                    0.1000E+01 Ix    0.0000E+00
+    5           4           1           6             cosqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1           5             qus                    0.1000E+01 Ix    0.0000E+00
+    6           4           1           6             sinqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1           5             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           0           4           0           0           0           0           0           0           0           0           0           0   113267264      360337           2 -1342177280   113264368       32657  1352617492       32767           1           4           0           3           0           0           0           0           0           0           0           0   113267344      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6   275514479     1705977           2 -1342177280   113267680       32657  1352617016       32767           0           4           0           0           0           0           0           0           0           0           0           0   113267696       32657           0 -1342177280   275514479     2099193           2 -1342177280   113267776       32657  1352617184       32767           0           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           4
+ num_vect_in_BF           4
+ num_Frame_in_BF           1
+ num_Frame_in_Container           1
+ name_Frame: F(BF)               
+ tab_num_Frame           1
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F T T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1           7             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1           8             Id                     0.1000E+01 Ix    0.0000E+00
+    1           4           1           9             Id                     0.1000E+01 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1           8             qus                    0.1000E+01 Ix    0.0000E+00
+    5           4           1           9             cosqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1           8             qus                    0.1000E+01 Ix    0.0000E+00
+    6           4           1           9             sinqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1           8             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           0           0           0           0           0           0           0           0           0   113267264      360337           2 -1342177280   113264368       32657  1352617492       32767           1           4           0           3           0           0           0           0           0           0           0           0   113267344      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9 -1342177280   113267680       32657  1352617016       32767           0           4           0           0           0           0           0           0           0           0           0           0   113267696       32657           0 -1342177280   275514479     2099193           2 -1342177280   113267776       32657  1352617184       32767           0           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           2
+ num_vect_in_BF           6
+ num_Frame_in_BF           2
+ num_Frame_in_Container           1
+ name_Frame: F(1,BF)             
+ tab_num_Frame           1           1
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F F T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          11             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1          12             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          12             qus                    0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1          12             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2           0           0           2          -3           0           0           0           0   113267264      360337           2 -1342177280   113264368       32657  1352617492       32767           1           4           0           3           0           0           0           0           0           0           0           0   113267344      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10   113267680       32657          11          12           0           4           0           0           0           0           0           0           0           0           0           0   113267696       32657           0 -1342177280   275514479     2099193           2 -1342177280   113267776       32657  1352617184       32767           0           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           3
+ num_vect_in_BF           7
+ num_Frame_in_BF           2
+ num_Frame_in_Container           1
+ name_Frame: F(1,BF)             
+ tab_num_Frame           1           1
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F T T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          13             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1          14             Id                     0.1000E+01 Ix    0.0000E+00
+    1           4           1          15             Id                     0.1000E+01 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          14             qus                    0.1000E+01 Ix    0.0000E+00
+    5           4           1          15             cosqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          14             qus                    0.1000E+01 Ix    0.0000E+00
+    6           4           1          15             sinqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1          14             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2           0           0           2          -3           0           2          -3           4   113267264      360337           2 -1342177280   113264368       32657  1352617492       32767           1           4           0           3           0           0           0           0           0           0           0           0   113267344      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10   113267680       32657          11          12           0          13          14          15           0           0           0           0           0           0           0           0   113267696       32657           0 -1342177280   275514479     2099193           2 -1342177280   113267776       32657  1352617184       32767           0           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           4
+ num_vect_in_BF           8
+ num_Frame_in_BF           2
+ num_Frame_in_Container           1
+ name_Frame: F(1,BF)             
+ tab_num_Frame           1           1
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F T T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          16             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1          17             Id                     0.1000E+01 Ix    0.0000E+00
+    1           4           1          18             Id                     0.1000E+01 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          17             qus                    0.1000E+01 Ix    0.0000E+00
+    5           4           1          18             cosqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          17             qus                    0.1000E+01 Ix    0.0000E+00
+    6           4           1          18             sinqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1          17             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2           0           0           2          -3           0           2          -3           4           2          -3           4 -1342177280   113264368       32657  1352617492       32767           1           4           0           3           0           0           0           0           0           0           0           0   113267344      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10   113267680       32657          11          12           0          13          14          15          16          17          18           0           0           0           0           0   113267696       32657           0 -1342177280   275514479     2099193           2 -1342177280   113267776       32657  1352617184       32767           0           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           2
+ num_vect_in_BF          10
+ num_Frame_in_BF           3
+ num_Frame_in_Container           1
+ name_Frame: F(1,1,BF)           
+ tab_num_Frame           1           1           1
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F F T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          20             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1          21             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          21             qus                    0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1          21             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2           0           0           2          -3           0           2          -3           4           2          -3           4           2   113264368       32657           2          -3           1           4           0           3           0           0           0           0           0           0           0           0   113267344      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10   113267680       32657          11          12           0          13          14          15          16          17          18          19           0           0          20          21   113267696       32657           0 -1342177280   275514479     2099193           2 -1342177280   113267776       32657  1352617184       32767           0           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           3
+ num_vect_in_BF          11
+ num_Frame_in_BF           3
+ num_Frame_in_Container           1
+ name_Frame: F(1,1,BF)           
+ tab_num_Frame           1           1           1
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F T T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          22             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1          23             Id                     0.1000E+01 Ix    0.0000E+00
+    1           4           1          24             Id                     0.1000E+01 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          23             qus                    0.1000E+01 Ix    0.0000E+00
+    5           4           1          24             cosqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          23             qus                    0.1000E+01 Ix    0.0000E+00
+    6           4           1          24             sinqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1          23             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2           0           0           2          -3           0           2          -3           4           2          -3           4           2   113264368       32657           2          -3           1           2          -3           4           0           0           0           0           0           0           0           0   113267344      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26          28          29          30           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10   113267680       32657          11          12           0          13          14          15          16          17          18          19           0           0          20          21   113267696          22          23          24   275514479     2099193           2 -1342177280   113267776       32657  1352617184       32767           0           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type T           0
+ num_vect_in_Frame           1
+ num_vect_in_BF           9
+ num_Frame_in_BF           3
+ num_Frame_in_Container           1
+ name_Frame: F(1,1,BF)           
+ tab_num_Frame           1           1           1
+ nb_vect,nb_vect_tot           2           3
+ nb_var,nb_var_Rot           6           0
+ BF,local Frame,euler F T T T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          19             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    1           6           1          25             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -7           1          26             Id                     0.1000E+01 Ix    0.0000E+00
+    1           8           1          27             Id                     0.1000E+01 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    1           0           1           0             Id                     0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2           0           0           2          -3           0           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           0           0           0           0           0           0           0           0   113267344      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: R1_F(BF) R2_F(BF) u2_F(BF) R3_F(BF) u3_F(BF) phi3_F(BF) 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26          28          29          30          24          23          27           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10   113267680       32657          11          12           0          13          14          15          16          17          18          19          26          25          20          21          27          22          23          24   275514479     2099193           2 -1342177280   113267776       32657  1352617184       32767           0           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           2
+ num_vect_in_BF          13
+ num_Frame_in_BF           4
+ num_Frame_in_Container           2
+ name_Frame: F(2,1,BF)           
+ tab_num_Frame           1           1           2
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F F T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          29             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1          30             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          30             qus                    0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1          30             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2           0           0           2          -3           0           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2           0           0           2          -3           0           0           0   113267344      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26          28          29          30          24          23          27          31          34          35           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10   113267680       32657          11          12           0          13          14          15          16          17          18          19          26          25          20          21          27          22          23          24          28     2099193           2          29          30       32657  1352617184       32767           0           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           3
+ num_vect_in_BF          14
+ num_Frame_in_BF           4
+ num_Frame_in_Container           2
+ name_Frame: F(2,1,BF)           
+ tab_num_Frame           1           1           2
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F T T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          31             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1          32             Id                     0.1000E+01 Ix    0.0000E+00
+    1           4           1          33             Id                     0.1000E+01 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          32             qus                    0.1000E+01 Ix    0.0000E+00
+    5           4           1          33             cosqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          32             qus                    0.1000E+01 Ix    0.0000E+00
+    6           4           1          33             sinqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1          32             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2           0           0           2          -3           0           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2           0           0           2          -3           0           2          -3           4      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26          28          29          30          24          23          27          31          34          35          37          38          39           0           0           0           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10   113267680       32657          11          12           0          13          14          15          16          17          18          19          26          25          20          21          27          22          23          24          28     2099193           2          29          30       32657          31          32          33           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type T           0
+ num_vect_in_Frame           1
+ num_vect_in_BF          12
+ num_Frame_in_BF           4
+ num_Frame_in_Container           2
+ name_Frame: F(2,1,BF)           
+ tab_num_Frame           1           1           2
+ nb_vect,nb_vect_tot           2           3
+ nb_var,nb_var_Rot           6           0
+ BF,local Frame,euler F T T T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          28             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    1           6           1          34             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -7           1          35             Id                     0.1000E+01 Ix    0.0000E+00
+    1           8           1          36             Id                     0.1000E+01 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    1           0           1           0             Id                     0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2           0           0           2          -3           0           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: R1_F(BF) R2_F(BF) u2_F(BF) R3_F(BF) u3_F(BF) phi3_F(BF) 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26          28          29          30          24          23          27          31          34          35          37          38          39          33          32          36           0           0           0           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10   113267680       32657          11          12           0          13          14          15          16          17          18          19          26          25          20          21          27          22          23          24          28          35          34          29          30          36          31          32          33           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type T           0
+ num_vect_in_Frame           1
+ num_vect_in_BF           5
+ num_Frame_in_BF           2
+ num_Frame_in_Container           1
+ name_Frame: F(1,BF)             
+ tab_num_Frame           1           1
+ nb_vect,nb_vect_tot           5          10
+ nb_var,nb_var_Rot          27           0
+ BF,local Frame,euler F T T T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          10             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    1           6           1          37             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -7           1          38             Id                     0.1000E+01 Ix    0.0000E+00
+    1           8           1          39             Id                     0.1000E+01 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    1           0           1           0             Id                     0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4      688017           1 -1342177280   113264432       32657  1352617048       32767           0           4
+ name_Qin: R1_F(BF) R2_F(BF) u2_F(BF) R3_F(BF) u3_F(BF) phi3_F(BF) R4_F(BF) u4_F(BF) phi4_F(BF) R1_F(1,BF) ubeta_F(1,BF) alpha_F(1,BF) R2_F(1,BF) u2_F(1,BF) gamma_F(1,BF) R3_F(1,BF) u3_F(1,BF) phi3_F(1,BF) R4_F(1,BF) u4_F(1,BF) phi4_F(1,BF) R1_F(1,1,BF) ubeta_F(1,1,BF) alpha_F(1,1,BF) R2_F(1,1,BF) u2_F(1,1,BF) gamma_F(1,1,BF) 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26          28          29          30          24          23          27          31          34          35          37          38          39          33          32          36          12          11          15           0           0           0           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10          38          37          11          12          39          13          14          15          16          17          18          19          26          25          20          21          27          22          23          24          28          35          34          29          30          36          31          32          33           4           0           0           0           0           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           2
+ num_vect_in_BF          16
+ num_Frame_in_BF           5
+ num_Frame_in_Container           2
+ name_Frame: F(2,BF)             
+ tab_num_Frame           1           2
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F F T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          41             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1          42             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          42             qus                    0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1          42             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2           1 -1342177280           2          -3  1352617048       32767           0           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26          28          29          30          24          23          27          31          34          35          37          38          39          33          32          36          12          11          15          40          43          44           0           0           0           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10          38          37          11          12          39          13          14          15          16          17          18          19          26          25          20          21          27          22          23          24          28          35          34          29          30          36          31          32          33          40           0           0          41          42           0           0           0           0
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type F           0
+ num_vect_in_Frame           3
+ num_vect_in_BF          17
+ num_Frame_in_BF           5
+ num_Frame_in_Container           2
+ name_Frame: F(2,BF)             
+ tab_num_Frame           1           2
+ nb_vect,nb_vect_tot           0           1
+ nb_var,nb_var_Rot           0           0
+ BF,local Frame,euler F F T T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          43             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -3           1          44             Id                     0.1000E+01 Ix    0.0000E+00
+    1           4           1          45             Id                     0.1000E+01 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          44             qus                    0.1000E+01 Ix    0.0000E+00
+    5           4           1          45             cosqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    3          -3           1          44             qus                    0.1000E+01 Ix    0.0000E+00
+    6           4           1          45             sinqf                  0.1000E+01 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    2          -3           1          44             u                      0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2           1 -1342177280           2          -3  1352617048           2          -3           4
+ name_Qin: 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26          28          29          30          24          23          27          31          34          35          37          38          39          33          32          36          12          11          15          40          43          44          46          47          48           0           0           0
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10          38          37          11          12          39          13          14          15          16          17          18          19          26          25          20          21          27          22          23          24          28          35          34          29          30          36          31          32          33          40           0           0          41          42           0          43          44          45
+ END RecWrite_BFTransfo
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type T           0
+ num_vect_in_Frame           1
+ num_vect_in_BF          15
+ num_Frame_in_BF           5
+ num_Frame_in_Container           2
+ name_Frame: F(2,BF)             
+ tab_num_Frame           1           2
+ nb_vect,nb_vect_tot           2           3
+ nb_var,nb_var_Rot           6           0
+ BF,local Frame,euler F T T T T
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1          40             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    1           6           1          46             Id                     0.1000E+01 Ix    0.0000E+00
+    1          -7           1          47             Id                     0.1000E+01 Ix    0.0000E+00
+    1           8           1          48             Id                     0.1000E+01 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    1           0           1           0             Id                     0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4
+ name_Qin: R1_F(BF) R2_F(BF) u2_F(BF) R3_F(BF) u3_F(BF) phi3_F(BF) 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26          28          29          30          24          23          27          31          34          35          37          38          39          33          32          36          12          11          15          40          43          44          46          47          48          42          41          45
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10          38          37          11          12          39          13          14          15          16          17          18          19          26          25          20          21          27          22          23          24          28          35          34          29          30          36          31          32          33          40          47          46          41          42          48          43          44          45
+ END RecWrite_BFTransfo
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26          28          29          30          24          23          27          31          34          35          37          38          39          33          32          36          12          11          15          40          43          44          46          47          48          42          41          45
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10          38          37          11          12          39          13          14          15          16          17          18          19          26          25          20          21          27          22          23          24          28          35          34          29          30          36          31          32          33          40          47          46          41          42          48          43          44          45
+ BEGINNING RecWrite_BFTransfo
+ Frame,Frame_type T           0
+ num_vect_in_Frame           1
+ num_vect_in_BF           1
+ num_Frame_in_BF           1
+ num_Frame_in_Container           1
+ name_Frame: F(BF)               
+ tab_num_Frame           1
+ nb_vect,nb_vect_tot           5          17
+ nb_var,nb_var_Rot          48           0
+ BF,local Frame,euler T T F F F
+ Cart F
+ Def_cos_th,cos_th T T
+  Elementary operators for Tana:
+  R, theta ( or u_theta), phi or x, y, z:
+    1           2           1           1             Id                     0.1000E+01 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  alpha, beta ( or u_beta), gamma:
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+    0           0           0           0             init0                  0.0000E+00 Ix    0.0000E+00
+  Unit_vector:
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+                                        ========== writing a vector of sum of nd operators ======== 
+
+                                        ============vector: component ============  1
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  2
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.0000E+00 Ix    0.0000E+00
+
+    0           0           1           0             op_zero                0.0000E+00 Ix    0.0000E+00
+
+
+
+                                        ============vector: component ============  3
+ ##################################################################################################################
+
+
+                                        ========== writing a sum of nd operators ======== 
+
+term      1   , C_I=    0.1000E+01 Ix    0.0000E+00
+
+    1           0           1           0             Id                     0.1000E+01 Ix    0.0000E+00
+
+
+
+ type_Qin           2           2          -3           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4           2          -3           4
+ name_Qin: R1_F(BF) R2_F(BF) u2_F(BF) R3_F(BF) u3_F(BF) phi3_F(BF) R4_F(BF) u4_F(BF) phi4_F(BF) R1_F(1,BF) ubeta_F(1,BF) alpha_F(1,BF) R2_F(1,BF) u2_F(1,BF) gamma_F(1,BF) R3_F(1,BF) u3_F(1,BF) phi3_F(1,BF) R4_F(1,BF) u4_F(1,BF) phi4_F(1,BF) R1_F(1,1,BF) ubeta_F(1,1,BF) alpha_F(1,1,BF) R2_F(1,1,BF) u2_F(1,1,BF) gamma_F(1,1,BF) R3_F(1,1,BF) u3_F(1,1,BF) phi3_F(1,1,BF) R1_F(2,1,BF) ubeta_F(2,1,BF) alpha_F(2,1,BF) R2_F(2,1,BF) u2_F(2,1,BF) gamma_F(2,1,BF) R3_F(2,1,BF) u3_F(2,1,BF) phi3_F(2,1,BF) R1_F(2,BF) ubeta_F(2,BF) alpha_F(2,BF) R2_F(2,BF) u2_F(2,BF) gamma_F(2,BF) R3_F(2,BF) u3_F(2,BF) phi3_F(2,BF) 
+ list_Qpoly_TO_Qprim           1           2           3           4           5           6           7           8           9          10          13          14          16          17          18          19          20          21          22          25          26          28          29          30          24          23          27          31          34          35          37          38          39          33          32          36          12          11          15          40          43          44          46          47          48          42          41          45
+ list_Qprim_TO_Qpoly           1           2           3           4           5           6           7           8           9          10          38          37          11          12          39          13          14          15          16          17          18          19          26          25          20          21          27          22          23          24          28          35          34          29          30          36          31          32          33          40          47          46          41          42          48          43          44          45
+ END RecWrite_BFTransfo
+   M_Tana (without the center-of-mass contribution)
+  1        0.0000914300      -0.0000457150       0.0000457150      -0.0000457150       0.0000000000
+  2       -0.0000457150       0.0000914300      -0.0000457150       0.0000000000      -0.0000228575
+  3        0.0000457150      -0.0000457150       0.0005900356       0.0000000000       0.0000000000
+  4       -0.0000457150       0.0000000000       0.0000000000       0.0005900356       0.0000000000
+  5        0.0000000000      -0.0000228575       0.0000000000       0.0000000000       0.0000342862
+  6        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  7        0.0000000000       0.0000457150       0.0000000000       0.0000000000       0.0000000000
+  8        0.0000000000       0.0000000000       0.0000000000       0.0000000000      -0.0000228575
+  9        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 10        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000114287
+ 11        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000114287
+ 12        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 13        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000114287
+ 14        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000114287
+ 15       -0.0000457150       0.0000000000       0.0000000000       0.0000457150       0.0000000000
+ 16        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 17        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+  1        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  2        0.0000000000       0.0000457150       0.0000000000       0.0000000000       0.0000000000
+  3        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  4        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  5        0.0000000000       0.0000000000      -0.0000228575       0.0000000000       0.0000114287
+  6        0.0000457150       0.0000000000       0.0000000000       0.0000000000       0.0000228575
+  7        0.0000000000       0.0000914300      -0.0000457150       0.0000000000       0.0000000000
+  8        0.0000000000      -0.0000457150       0.0000800121       0.0000000000       0.0000000000
+  9        0.0000000000       0.0000000000       0.0000000000       0.0000914300       0.0000457150
+ 10        0.0000228575       0.0000000000       0.0000000000       0.0000457150       0.0005900356
+ 11        0.0000228575       0.0000000000       0.0000000000      -0.0000457150       0.0000000000
+ 12        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 13       -0.0000228575       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 14       -0.0000228575       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 15        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 16        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 17        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+  1        0.0000000000       0.0000000000       0.0000000000       0.0000000000      -0.0000457150
+  2        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  3        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  4        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000457150
+  5        0.0000114287       0.0000000000       0.0000114287       0.0000114287       0.0000000000
+  6        0.0000228575       0.0000000000      -0.0000228575      -0.0000228575       0.0000000000
+  7        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  8        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  9       -0.0000457150       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 10        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 11        0.0005900356       0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 12        0.0000000000       0.0000914300       0.0000457150      -0.0000457150       0.0000000000
+ 13        0.0000000000       0.0000457150       0.0005900356       0.0000000000       0.0000000000
+ 14        0.0000000000      -0.0000457150       0.0000000000       0.0005900356       0.0000000000
+ 15        0.0000000000       0.0000000000       0.0000000000       0.0000000000       0.0000914300
+ 16        0.0000000000       0.0000000000       0.0000000000       0.0000000000      -0.0000457150
+ 17        0.0000000000       0.0000000000       0.0000000000       0.0000000000      -0.0000457150
+
+  1        0.0000000000       0.0000000000
+  2        0.0000000000       0.0000000000
+  3        0.0000000000       0.0000000000
+  4        0.0000000000       0.0000000000
+  5        0.0000000000       0.0000000000
+  6        0.0000000000       0.0000000000
+  7        0.0000000000       0.0000000000
+  8        0.0000000000       0.0000000000
+  9        0.0000000000       0.0000000000
+ 10        0.0000000000       0.0000000000
+ 11        0.0000000000       0.0000000000
+ 12        0.0000000000       0.0000000000
+ 13        0.0000000000       0.0000000000
+ 14        0.0000000000       0.0000000000
+ 15       -0.0000457150      -0.0000457150
+ 16        0.0005900356       0.0000457150
+ 17        0.0000457150       0.0005900356
+ ==========================================
+ ==========================================
+ ==========================================
+ ==========================================
+ transfo:               active              
+ Option of the transfo: 0
+ Skip the transfo:      F
+ num_transfo:           3
+ inTOout:               T
+------------------------------------------
+ list_act_OF_Qdyn or type_var           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1           1
+ ==========================================
+ ==========================================
+ Parameter(s) to be optimized?:            0
+ =================================================
+ =================================================
+ END New Coordinates transformation
+ =================================================
+ =================================================
+ END Read_mole
+ =================================================
+ =================================================
+ BEGINNING read_RefGeom
+ pot_itQtransfo           3
+ Operators (pot...) with Qact coordinates
+ read_itQtransfo_OF_Qin0           0
+ =============================================
+  Frame = T, iv_tot           1
+ R       :            1 :   2.5341471400237094        2.5341471400237094     
+ R       :            2 :   2.7739426579942257        2.7739426579942257     
+ th (u)  :            2 :   60.446851272128725       0.49323070773460354     
+ R       :            3 :   2.0324628980631432        2.0324628980631432     
+ th (u)  :            3 :   121.51679126949665      -0.52274841950662976     
+ phi     :            3 :   359.13979258467714        6.2681718555321320     
+ R       :            4 :   2.0321044879238293        2.0321044879238293     
+ th (u)  :            4 :   58.025784184130018       0.52953757290908099     
+ phi     :            4 :  0.53642439001834041        9.3623717938222453E-003
+ =============================================
+  Frame = T, iv_tot           5
+ R       :            5 :   3.4324060911983527        3.4324060911983527     
+ R       :            2 :   3.9571537574924109        3.9571537574924109     
+ th (u)  :            2 :   90.061252464060587       -1.0690569691821454E-003
+ R       :            3 :   2.6514322864014512        2.6514322864014512     
+ th (u)  :            3 :   90.733455833474707       -1.2800869589737023E-002
+ phi     :            3 :   359.53029294013953        6.2749873724651586     
+ R       :            4 :   2.5617426969235666        2.5617426969235666     
+ th (u)  :            4 :   32.113075603950769       0.84700062761012751     
+ phi     :            4 :   4.9648303144561137        8.6652635790084601E-002
+ =============================================
+  Frame = T, iv_tot           9
+ R       :            5 :   2.6356638441591036        2.6356638441591036     
+ R       :            2 :   2.0311630838761872        2.0311630838761872     
+ th (u)  :            2 :   120.12583494110493      -0.50190078707859365     
+ R       :            3 :   2.0336762775069208        2.0336762775069208     
+ th (u)  :            3 :   59.943861980271109       0.50084828573631823     
+ phi     :            3 :   359.55705394796558        6.2754544401628758     
+ alpha   :            5 :   179.35404636635451        3.1303186358674582     
+ beta (u):            5 :   29.624865999273791       0.86928048003840641     
+ gamma   :            5 :  0.56998361319438318        9.9480907326557795E-003
+ =============================================
+ =============================================
+  Frame = T, iv_tot          12
+ R       :            6 :   2.6380186777684704        2.6380186777684704     
+ R       :            2 :   2.0317239532779090        2.0317239532779090     
+ th (u)  :            2 :   119.54427012855068      -0.49309590164734696     
+ R       :            3 :   2.0299955488674533        2.0299955488674533     
+ th (u)  :            3 :   58.627715936511329       0.52059667906094542     
+ phi     :            3 :  0.59601690895948378        1.0402457458902283E-002
+ alpha   :            6 :   4.1246688451074959E-002   7.1989051901557807E-004
+ beta (u):            6 :   30.297407729409098       0.86341837639779895     
+ gamma   :            6 :   359.86764678311545        6.2808753077693451     
+ =============================================
+ alpha   :            5 :   353.51645670862865        6.1700261295495666     
+ beta (u):            5 :   33.768331873295494       0.83129181419166742     
+ gamma   :            5 :   196.25880313269212        3.4253623006888394     
+ =============================================
+ =============================================
+  Frame = T, iv_tot          15
+ R       :            6 :   2.8407303197280918        2.8407303197280918     
+ R       :            2 :   2.0549718233428913        2.0549718233428913     
+ th (u)  :            2 :   69.000893078966044       0.35835339762640844     
+ R       :            3 :   2.0415861431093223        2.0415861431093223     
+ th (u)  :            3 :   68.309928230024283       0.36958575135026067     
+ phi     :            3 :   239.24829503249217        4.1756704780997822     
+ alpha   :            6 :   177.30260185145826        3.0945141746605409     
+ beta (u):            6 :   60.210326519500214       0.49681755405693395     
+ gamma   :            6 :   266.43883980243396        4.6502350097461909     
+ =============================================
+ =============================================
+ Qdyn0 coordinates (not transformed): [bohr]/[rad or cos(angle)]
+R1_F(BF)                    2.534147
+R2_F(BF)                    2.773943
+u2_F(BF)                    0.493231
+R3_F(BF)                    2.032463
+u3_F(BF)                   -0.522748
+phi3_F(BF)                  6.268172
+R4_F(BF)                    2.032104
+u4_F(BF)                    0.529538
+phi4_F(BF)                  0.009362
+R1_F(1,BF)                  3.432406
+ubeta_F(1,BF)               0.831292
+alpha_F(1,BF)               6.170026
+R2_F(1,BF)                  3.957154
+u2_F(1,BF)                 -0.001069
+gamma_F(1,BF)               3.425362
+R3_F(1,BF)                  2.651432
+u3_F(1,BF)                 -0.012801
+phi3_F(1,BF)                6.274987
+R4_F(1,BF)                  2.561743
+u4_F(1,BF)                  0.847001
+phi4_F(1,BF)                0.086653
+R1_F(1,1,BF)                2.635664
+ubeta_F(1,1,BF)             0.869280
+alpha_F(1,1,BF)             3.130319
+R2_F(1,1,BF)                2.031163
+u2_F(1,1,BF)               -0.501901
+gamma_F(1,1,BF)             0.009948
+R3_F(1,1,BF)                2.033676
+u3_F(1,1,BF)                0.500848
+phi3_F(1,1,BF)              6.275454
+R1_F(2,1,BF)                2.638019
+ubeta_F(2,1,BF)             0.863418
+alpha_F(2,1,BF)             0.000720
+R2_F(2,1,BF)                2.031724
+u2_F(2,1,BF)               -0.493096
+gamma_F(2,1,BF)             6.280875
+R3_F(2,1,BF)                2.029996
+u3_F(2,1,BF)                0.520597
+phi3_F(2,1,BF)              0.010402
+R1_F(2,BF)                  2.840730
+ubeta_F(2,BF)               0.496818
+alpha_F(2,BF)               3.094514
+R2_F(2,BF)                  2.054972
+u2_F(2,BF)                  0.358353
+gamma_F(2,BF)               4.650235
+R3_F(2,BF)                  2.041586
+u3_F(2,BF)                  0.369586
+phi3_F(2,BF)                4.175670
+ Qact0 coordinates (not transformed): [bohr]/[rad or cos(angle)]
+R1_F(BF)                    2.534147
+R2_F(BF)                    2.773943
+u2_F(BF)                    0.493231
+R3_F(BF)                    2.032463
+u3_F(BF)                   -0.522748
+phi3_F(BF)                  6.268172
+R4_F(BF)                    2.032104
+u4_F(BF)                    0.529538
+phi4_F(BF)                  0.009362
+R1_F(1,BF)                  3.432406
+ubeta_F(1,BF)               0.831292
+alpha_F(1,BF)               6.170026
+R2_F(1,BF)                  3.957154
+u2_F(1,BF)                 -0.001069
+gamma_F(1,BF)               3.425362
+R3_F(1,BF)                  2.651432
+u3_F(1,BF)                 -0.012801
+phi3_F(1,BF)                6.274987
+R4_F(1,BF)                  2.561743
+u4_F(1,BF)                  0.847001
+phi4_F(1,BF)                0.086653
+R1_F(1,1,BF)                2.635664
+ubeta_F(1,1,BF)             0.869280
+alpha_F(1,1,BF)             3.130319
+R2_F(1,1,BF)                2.031163
+u2_F(1,1,BF)               -0.501901
+gamma_F(1,1,BF)             0.009948
+R3_F(1,1,BF)                2.033676
+u3_F(1,1,BF)                0.500848
+phi3_F(1,1,BF)              6.275454
+R1_F(2,1,BF)                2.638019
+ubeta_F(2,1,BF)             0.863418
+alpha_F(2,1,BF)             0.000720
+R2_F(2,1,BF)                2.031724
+u2_F(2,1,BF)               -0.493096
+gamma_F(2,1,BF)             6.280875
+R3_F(2,1,BF)                2.029996
+u3_F(2,1,BF)                0.520597
+phi3_F(2,1,BF)              0.010402
+R1_F(2,BF)                  2.840730
+ubeta_F(2,BF)               0.496818
+alpha_F(2,BF)               3.094514
+R2_F(2,BF)                  2.054972
+u2_F(2,BF)                  0.358353
+gamma_F(2,BF)               4.650235
+R3_F(2,BF)                  2.041586
+u3_F(2,BF)                  0.369586
+phi3_F(2,BF)                4.175670
+ -----------------------------------------
+ Qdyn0 coordinates (transformed):
+R1_F(BF)            1     2.534147 au     1.341013 Angs
+R2_F(BF)            2     2.773943 au     1.467907 Angs
+u2_F(BF)            3     1.054997 Rad     60.446851 °
+R3_F(BF)            4     2.032463 au     1.075533 Angs
+u3_F(BF)            5     2.120868 Rad     121.516791 °
+phi3_F(BF)          6     6.268172 Rad     359.139793 °
+R4_F(BF)            7     2.032104 au     1.075343 Angs
+u4_F(BF)            8     1.012741 Rad     58.025784 °
+phi4_F(BF)          9     0.009362 Rad     0.536424 °
+R1_F(1,BF)          10     3.432406 au     1.816351 Angs
+ubeta_F(1,BF)       11     0.589369 Rad     33.768332 °
+alpha_F(1,BF)       12     6.170026 Rad     353.516457 °
+R2_F(1,BF)          13     3.957154 au     2.094036 Angs
+u2_F(1,BF)          14     1.571865 Rad     90.061252 °
+gamma_F(1,BF)       15     3.425362 Rad     196.258803 °
+R3_F(1,BF)          16     2.651432 au     1.403078 Angs
+u3_F(1,BF)          17     1.583598 Rad     90.733456 °
+phi3_F(1,BF)        18     6.274987 Rad     359.530293 °
+R4_F(1,BF)          19     2.561743 au     1.355616 Angs
+u4_F(1,BF)          20     0.560479 Rad     32.113076 °
+phi4_F(1,BF)        21     0.086653 Rad     4.964830 °
+R1_F(1,1,BF)        22     2.635664 au     1.394733 Angs
+ubeta_F(1,1,BF)     23     0.517051 Rad     29.624866 °
+alpha_F(1,1,BF)     24     3.130319 Rad     179.354046 °
+R2_F(1,1,BF)        25     2.031163 au     1.074845 Angs
+u2_F(1,1,BF)        26     2.096591 Rad     120.125835 °
+gamma_F(1,1,BF)     27     0.009948 Rad     0.569984 °
+R3_F(1,1,BF)        28     2.033676 au     1.076175 Angs
+u3_F(1,1,BF)        29     1.046218 Rad     59.943862 °
+phi3_F(1,1,BF)      30     6.275454 Rad     359.557054 °
+R1_F(2,1,BF)        31     2.638019 au     1.395979 Angs
+ubeta_F(2,1,BF)     32     0.528790 Rad     30.297408 °
+alpha_F(2,1,BF)     33     0.000720 Rad     0.041247 °
+R2_F(2,1,BF)        34     2.031724 au     1.075142 Angs
+u2_F(2,1,BF)        35     2.086441 Rad     119.544270 °
+gamma_F(2,1,BF)     36     6.280875 Rad     359.867647 °
+R3_F(2,1,BF)        37     2.029996 au     1.074227 Angs
+u3_F(2,1,BF)        38     1.023247 Rad     58.627716 °
+phi3_F(2,1,BF)      39     0.010402 Rad     0.596017 °
+R1_F(2,BF)          40     2.840730 au     1.503250 Angs
+ubeta_F(2,BF)       41     1.050868 Rad     60.210327 °
+alpha_F(2,BF)       42     3.094514 Rad     177.302602 °
+R2_F(2,BF)          43     2.054972 au     1.087444 Angs
+u2_F(2,BF)          44     1.204293 Rad     69.000893 °
+gamma_F(2,BF)       45     4.650235 Rad     266.438840 °
+R3_F(2,BF)          46     2.041586 au     1.080361 Angs
+u3_F(2,BF)          47     1.192233 Rad     68.309928 °
+phi3_F(2,BF)        48     4.175670 Rad     239.248295 °
+ -----------------------------------------
+ -----------------------------------------
+ Qact0 coordinates (transformed):
+R1_F(BF)            1     2.534147 au     1.341013 Angs
+R2_F(BF)            2     2.773943 au     1.467907 Angs
+u2_F(BF)            3     1.054997 Rad     60.446851 °
+R3_F(BF)            4     2.032463 au     1.075533 Angs
+u3_F(BF)            5     2.120868 Rad     121.516791 °
+phi3_F(BF)          6     6.268172 Rad     359.139793 °
+R4_F(BF)            7     2.032104 au     1.075343 Angs
+u4_F(BF)            8     1.012741 Rad     58.025784 °
+phi4_F(BF)          9     0.009362 Rad     0.536424 °
+R1_F(1,BF)          10     3.432406 au     1.816351 Angs
+ubeta_F(1,BF)       11     0.589369 Rad     33.768332 °
+alpha_F(1,BF)       12     6.170026 Rad     353.516457 °
+R2_F(1,BF)          13     3.957154 au     2.094036 Angs
+u2_F(1,BF)          14     1.571865 Rad     90.061252 °
+gamma_F(1,BF)       15     3.425362 Rad     196.258803 °
+R3_F(1,BF)          16     2.651432 au     1.403078 Angs
+u3_F(1,BF)          17     1.583598 Rad     90.733456 °
+phi3_F(1,BF)        18     6.274987 Rad     359.530293 °
+R4_F(1,BF)          19     2.561743 au     1.355616 Angs
+u4_F(1,BF)          20     0.560479 Rad     32.113076 °
+phi4_F(1,BF)        21     0.086653 Rad     4.964830 °
+R1_F(1,1,BF)        22     2.635664 au     1.394733 Angs
+ubeta_F(1,1,BF)     23     0.517051 Rad     29.624866 °
+alpha_F(1,1,BF)     24     3.130319 Rad     179.354046 °
+R2_F(1,1,BF)        25     2.031163 au     1.074845 Angs
+u2_F(1,1,BF)        26     2.096591 Rad     120.125835 °
+gamma_F(1,1,BF)     27     0.009948 Rad     0.569984 °
+R3_F(1,1,BF)        28     2.033676 au     1.076175 Angs
+u3_F(1,1,BF)        29     1.046218 Rad     59.943862 °
+phi3_F(1,1,BF)      30     6.275454 Rad     359.557054 °
+R1_F(2,1,BF)        31     2.638019 au     1.395979 Angs
+ubeta_F(2,1,BF)     32     0.528790 Rad     30.297408 °
+alpha_F(2,1,BF)     33     0.000720 Rad     0.041247 °
+R2_F(2,1,BF)        34     2.031724 au     1.075142 Angs
+u2_F(2,1,BF)        35     2.086441 Rad     119.544270 °
+gamma_F(2,1,BF)     36     6.280875 Rad     359.867647 °
+R3_F(2,1,BF)        37     2.029996 au     1.074227 Angs
+u3_F(2,1,BF)        38     1.023247 Rad     58.627716 °
+phi3_F(2,1,BF)      39     0.010402 Rad     0.596017 °
+R1_F(2,BF)          40     2.840730 au     1.503250 Angs
+ubeta_F(2,BF)       41     1.050868 Rad     60.210327 °
+alpha_F(2,BF)       42     3.094514 Rad     177.302602 °
+R2_F(2,BF)          43     2.054972 au     1.087444 Angs
+u2_F(2,BF)          44     1.204293 Rad     69.000893 °
+gamma_F(2,BF)       45     4.650235 Rad     266.438840 °
+R3_F(2,BF)          46     2.041586 au     1.080361 Angs
+u3_F(2,BF)          47     1.192233 Rad     68.309928 °
+phi3_F(2,BF)        48     4.175670 Rad     239.248295 °
+ -----------------------------------------
+ END read_RefGeom
+ BEGINNING Finalyze_TnumTana_Coord_PrimOp
+ =================================================
+  BEGINNING Tana
+ =================================================
+ vectors indices in their subsystem to the indice in th BF
+ =================================================
+ variables indices in their subsystem to the indices in th BF
+ begin systems_(           1 )
+ nb_var, nvec           9           4
+ tab_euler F F F
+ begin systems_(           1           1 )
+ nb_var, nvec          12           4
+ tab_euler T T T
+ begin systems_(           1           1           1 )
+ nb_var, nvec           9           3
+ tab_euler T T T
+ end system
+
+
+ begin systems_(           1           1           2 )
+ nb_var, nvec           9           3
+ tab_euler T T T
+ end system
+
+
+ end system
+
+
+ begin systems_(           1           2 )
+ nb_var, nvec           9           3
+ tab_euler T T T
+ end system
+
+
+ end system
+
+
+ =================================================
+ Initialization of the coordinates associated with each subsystem
+ ************************************
+ begin sub_system           1
+ nvec=           4
+ nsub_syt=           2
+ i_var_F= R           1 i_var_BF=           1 qval=   2.5341471400237094     
+ i_var_F= R           2 i_var_BF=           2 qval=   2.7739426579942257     
+ i_var_F th=           3 i_var_BF=           3 qval=  0.49323070773460354     
+ i_var_F R=           4 i_var_BF=           4 qval=   2.0324628980631432     
+ i_var_F th=           5 i_var_BF=           5 qval= -0.52274841950662976     
+ i_var_F phi=           6 i_var_BF=           6 qval=   6.2681718555321320     
+ i_var_F R=           7 i_var_BF=           7 qval=   2.0321044879238293     
+ i_var_F th=           8 i_var_BF=           8 qval=  0.52953757290908099     
+ i_var_F phi=           9 i_var_BF=           9 qval=   9.3623717938222453E-003
+ ************************************
+ begin sub_system           1           1
+ nvec=           4
+ nsub_syt=           2
+ i_var_F= R           1 i_var_BF=          10 qval=   3.4324060911983527     
+ i_var_F= R           2 i_var_BF=          11 qval=   3.9571537574924109     
+ i_var_F th=           3 i_var_BF=          12 qval=  -1.0690569691821454E-003
+ i_var_F R=           4 i_var_BF=          13 qval=   2.6514322864014512     
+ i_var_F th=           5 i_var_BF=          14 qval=  -1.2800869589737023E-002
+ i_var_F phi=           6 i_var_BF=          15 qval=   6.2749873724651586     
+ i_var_F R=           7 i_var_BF=          16 qval=   2.5617426969235666     
+ i_var_F th=           8 i_var_BF=          17 qval=  0.84700062761012751     
+ i_var_F phi=           9 i_var_BF=          18 qval=   8.6652635790084601E-002
+ ************************************
+ begin sub_system           1           1           1
+ nvec=           3
+ nsub_syt=           0
+ i_var_F= R           1 i_var_BF=          19 qval=   2.6356638441591036     
+ i_var_F= R           2 i_var_BF=          20 qval=   2.0311630838761872     
+ i_var_F th=           3 i_var_BF=          21 qval= -0.50190078707859365     
+ i_var_F R=           4 i_var_BF=          22 qval=   2.0336762775069208     
+ i_var_F th=           5 i_var_BF=          23 qval=  0.50084828573631823     
+ i_var_F phi=           6 i_var_BF=          24 qval=   6.2754544401628758     
+ i_var_F euler =           7 i_var_BF=          25 qval=   3.1303186358674582     
+ i_var_F euler =           8 i_var_BF=          26 qval=  0.86928048003840641     
+ i_var_F euler =           9 i_var_BF=          27 qval=   9.9480907326557795E-003
+ end sub_system           1           1           1
+ ************************************
+
+
+ ************************************
+ begin sub_system           1           1           2
+ nvec=           3
+ nsub_syt=           0
+ i_var_F= R           1 i_var_BF=          28 qval=   2.6380186777684704     
+ i_var_F= R           2 i_var_BF=          29 qval=   2.0317239532779090     
+ i_var_F th=           3 i_var_BF=          30 qval= -0.49309590164734696     
+ i_var_F R=           4 i_var_BF=          31 qval=   2.0299955488674533     
+ i_var_F th=           5 i_var_BF=          32 qval=  0.52059667906094542     
+ i_var_F phi=           6 i_var_BF=          33 qval=   1.0402457458902283E-002
+ i_var_F euler =           7 i_var_BF=          34 qval=   7.1989051901557807E-004
+ i_var_F euler =           8 i_var_BF=          35 qval=  0.86341837639779895     
+ i_var_F euler =           9 i_var_BF=          36 qval=   6.2808753077693451     
+ end sub_system           1           1           2
+ ************************************
+
+
+ i_var_F euler =          10 i_var_BF=          37 qval=   6.1700261295495666     
+ i_var_F euler =          11 i_var_BF=          38 qval=  0.83129181419166742     
+ i_var_F euler =          12 i_var_BF=          39 qval=   3.4253623006888394     
+ end sub_system           1           1
+ ************************************
+
+
+ ************************************
+ begin sub_system           1           2
+ nvec=           3
+ nsub_syt=           0
+ i_var_F= R           1 i_var_BF=          40 qval=   2.8407303197280918     
+ i_var_F= R           2 i_var_BF=          41 qval=   2.0549718233428913     
+ i_var_F th=           3 i_var_BF=          42 qval=  0.35835339762640844     
+ i_var_F R=           4 i_var_BF=          43 qval=   2.0415861431093223     
+ i_var_F th=           5 i_var_BF=          44 qval=  0.36958575135026067     
+ i_var_F phi=           6 i_var_BF=          45 qval=   4.1756704780997822     
+ i_var_F euler =           7 i_var_BF=          46 qval=   3.0945141746605409     
+ i_var_F euler =           8 i_var_BF=          47 qval=  0.49681755405693395     
+ i_var_F euler =           9 i_var_BF=          48 qval=   4.6502350097461909     
+ end sub_system           1           2
+ ************************************
+
+
+ end sub_system           1
+ ************************************
+
+
+ =================================================
+ Initialization of the M_mass matrix of each subsystem
+ =================================================
+  Computation of the 2xKEO (in full dimension)
+ entree S_(           1 )
+ entree S_(           1           2 )
+ sub_system S_(           1           2 )
+ init elementaries op. for S_(           1           2 )
+ system S_r, r=           1           2
+ size before simplify         286
+ size after simplify         281
+ entree S_(           1           1 )
+ entree S_(           1           1           2 )
+ sub_system S_(           1           1           2 )
+ init elementaries op. for S_(           1           1           2 )
+ system S_r, r=           1           1           2
+ size before simplify         230
+ size after simplify         226
+ entree S_(           1           1           1 )
+ sub_system S_(           1           1           1 )
+ init elementaries op. for S_(           1           1           1 )
+ system S_r, r=           1           1           1
+ size before simplify         230
+ size after simplify         226
+ sub_system S_(           1           1 )
+ init elementaries op. for S_(           1           1 )
+ system S_r, r=           1           1
+ size before simplify        6227
+ size after simplify        5937
+ sub_system S_(           1 )
+ init elementaries op. for S_(           1 )
+ system S_r, r=           1
+ size before simplify        4548
+ size after simplify        4079
+ =================================================
+  Add the extra potential term  KEO
+ =================================================
+ number of terms before adding Vextr=       10749
+ number of terms after  adding Vextr=       10816
+ =================================================
+  Computation of the 2xKEO (in reduced dimension)
+ =================================================
+ =================================================
+  output of the analytical  KEO
+  MCTDH    Form:  F
+  VSCF     Form:  F
+  MidasCpp Form:  F
+  LaTex    Form:  F
+ =================================================
+ =================================================
+  Expand 2xKEO (in reduced dimension)
+ =================================================
+ =================================================
+  BEGINNING comparison_G_FROM_Tnum_Tana
+          max diff G:    1.2899870624344985E-018
+ Relative max diff G:    2.1862869216622021E-015
+        max diff vep:    1.0720048980450425E-017
+
+            vep Tana:    7.1737632641740530E-005
+            vep Tnum:    7.1737632641729810E-005
+          max diff f2:    1.2899870624344985E-018
+ Relative max diff f2:    4.3725738433244043E-015
+          max diff f1:    2.2056737946501981E-018
+ Relative max diff f1:    2.3466713086698175E-014
+         max diff vep:    1.0720048980450425E-017
+
+         max error: 0.11E-16
+  END comparison_G_FROM_Tnum_Tana
+ =================================================
+ =================================================
+ =================================================
+ END Finalyze_TnumTana_Coord_PrimOp
+ ======================================
+ ======================================
+ ======================================
+ ======================================
+ ======================================
+     Time and date in dnx : 16h:34m:46.615s, the 16/ 3/2017
+        real (s):              0.000 in dnx
+        real    :   0d  0h  0m  0s in dnx
+        cpu (s):              0.000 in dnx
+  Total real (s):              0.000
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.000
+  Total memory:          0 in dnx
+ -----------------------------------------
+Qact,it_Qtransfo: 3  2.5341 2.7739 .4932 2.0325 -.5227 6.2682
+Qact,it_Qtransfo: 3  2.0321 .5295 .0094 3.4324 .8313 6.1700
+Qact,it_Qtransfo: 3  3.9572 -.0011 3.4254 2.6514 -.0128 6.2750
+Qact,it_Qtransfo: 3  2.5617 .8470 .0867 2.6357 .8693 3.1303
+Qact,it_Qtransfo: 3  2.0312 -.5019 .0099 2.0337 .5008 6.2755
+Qact,it_Qtransfo: 3  2.6380 .8634 .0007 2.0317 -.4931 6.2809
+Qact,it_Qtransfo: 3  2.0300 .5206 .0104 2.8407 .4968 3.0945
+Qact,it_Qtransfo: 3  2.0550 .3584 4.6502 2.0416 .3696 4.1757
+ -----------------------------------------
+ -----------------------------------------
+Qin (Qact),it_Qtransfo: 3  2.5341 2.7739 .4932 2.0325 -.5227 6.2682
+Qin (Qact),it_Qtransfo: 3  2.0321 .5295 .0094 3.4324 .8313 6.1700
+Qin (Qact),it_Qtransfo: 3  3.9572 -.0011 3.4254 2.6514 -.0128 6.2750
+Qin (Qact),it_Qtransfo: 3  2.5617 .8470 .0867 2.6357 .8693 3.1303
+Qin (Qact),it_Qtransfo: 3  2.0312 -.5019 .0099 2.0337 .5008 6.2755
+Qin (Qact),it_Qtransfo: 3  2.6380 .8634 .0007 2.0317 -.4931 6.2809
+Qin (Qact),it_Qtransfo: 3  2.0300 .5206 .0104 2.8407 .4968 3.0945
+Qin (Qact),it_Qtransfo: 3  2.0550 .3584 4.6502 2.0416 .3696 4.1757
+ -----------------------------------------
+ name_transfo           3 active              
+ -----------------------------------------
+Qin ,it_Qtransfo: 3  2.5341 2.7739 .4932 2.0325 -.5227 6.2682
+Qin ,it_Qtransfo: 3  2.0321 .5295 .0094 3.4324 .8313 6.1700
+Qin ,it_Qtransfo: 3  3.9572 -.0011 3.4254 2.6514 -.0128 6.2750
+Qin ,it_Qtransfo: 3  2.5617 .8470 .0867 2.6357 .8693 3.1303
+Qin ,it_Qtransfo: 3  2.0312 -.5019 .0099 2.0337 .5008 6.2755
+Qin ,it_Qtransfo: 3  2.6380 .8634 .0007 2.0317 -.4931 6.2809
+Qin ,it_Qtransfo: 3  2.0300 .5206 .0104 2.8407 .4968 3.0945
+Qin ,it_Qtransfo: 3  2.0550 .3584 4.6502 2.0416 .3696 4.1757
+ -----------------------------------------
+ -----------------------------------------
+Qout,it_Qtransfo: 3  2.5341 2.7739 .4932 2.0325 -.5227 6.2682
+Qout,it_Qtransfo: 3  2.0321 .5295 .0094 3.4324 .8313 6.1700
+Qout,it_Qtransfo: 3  3.9572 -.0011 3.4254 2.6514 -.0128 6.2750
+Qout,it_Qtransfo: 3  2.5617 .8470 .0867 2.6357 .8693 3.1303
+Qout,it_Qtransfo: 3  2.0312 -.5019 .0099 2.0337 .5008 6.2755
+Qout,it_Qtransfo: 3  2.6380 .8634 .0007 2.0317 -.4931 6.2809
+Qout,it_Qtransfo: 3  2.0300 .5206 .0104 2.8407 .4968 3.0945
+Qout,it_Qtransfo: 3  2.0550 .3584 4.6502 2.0416 .3696 4.1757
+ -----------------------------------------
+ name_transfo           2 poly                
+ -----------------------------------------
+Qin ,it_Qtransfo: 2  2.5341 2.7739 .4932 2.0325 -.5227 6.2682
+Qin ,it_Qtransfo: 2  2.0321 .5295 .0094 3.4324 .8313 6.1700
+Qin ,it_Qtransfo: 2  3.9572 -.0011 3.4254 2.6514 -.0128 6.2750
+Qin ,it_Qtransfo: 2  2.5617 .8470 .0867 2.6357 .8693 3.1303
+Qin ,it_Qtransfo: 2  2.0312 -.5019 .0099 2.0337 .5008 6.2755
+Qin ,it_Qtransfo: 2  2.6380 .8634 .0007 2.0317 -.4931 6.2809
+Qin ,it_Qtransfo: 2  2.0300 .5206 .0104 2.8407 .4968 3.0945
+Qin ,it_Qtransfo: 2  2.0550 .3584 4.6502 2.0416 .3696 4.1757
+ -----------------------------------------
+ -----------------------------------------
+Qout,it_Qtransfo: 2  .0000 .0000 2.5341 2.4130 .0000 1.3682
+Qout,it_Qtransfo: 2  1.7325 -.0260 -1.0625 1.7237 .0161 1.0761
+Qout,it_Qtransfo: 2  1.8957 -.2154 2.8533 -3.2652 -.7440 2.1080
+Qout,it_Qtransfo: 2  -2.2074 -.4752 1.3898 .0941 -.5069 2.5093
+Qout,it_Qtransfo: 2  2.3414 .0868 1.2071 -.1260 .3084 -2.0037
+Qout,it_Qtransfo: 2  1.6876 .3628 -1.0753 .1607 -.3942 2.6034
+Qout,it_Qtransfo: 2  -1.8122 -.0784 -.9152 -1.6506 -.3993 1.1123
+Qout,it_Qtransfo: 2  -2.4626 .1160 1.4113 -.4891 1.9400 .4693
+Qout,it_Qtransfo: 2  .0732 -1.0740 1.7347
+ -----------------------------------------
+ name_transfo           1 bunch_poly          
+ -----------------------------------------
+Qin ,it_Qtransfo: 1  .0000 .0000 2.5341 2.4130 .0000 1.3682
+Qin ,it_Qtransfo: 1  1.7325 -.0260 -1.0625 1.7237 .0161 1.0761
+Qin ,it_Qtransfo: 1  1.8957 -.2154 2.8533 -3.2652 -.7440 2.1080
+Qin ,it_Qtransfo: 1  -2.2074 -.4752 1.3898 .0941 -.5069 2.5093
+Qin ,it_Qtransfo: 1  2.3414 .0868 1.2071 -.1260 .3084 -2.0037
+Qin ,it_Qtransfo: 1  1.6876 .3628 -1.0753 .1607 -.3942 2.6034
+Qin ,it_Qtransfo: 1  -1.8122 -.0784 -.9152 -1.6506 -.3993 1.1123
+Qin ,it_Qtransfo: 1  -2.4626 .1160 1.4113 -.4891 1.9400 .4693
+Qin ,it_Qtransfo: 1  .0732 -1.0740 1.7347
+ -----------------------------------------
+ -----------------------------------------
+Qxyz,it_Qtransfo: 1  -.9538 -.8315 3.0730
+Qxyz,it_Qtransfo: 1  -1.0479 -.3246 .5637
+Qxyz,it_Qtransfo: 1  1.1595 .1505 -.8262
+Qxyz,it_Qtransfo: 1  3.5726 .1505 .5420
+Qxyz,it_Qtransfo: 1  3.5726 .1505 3.0762
+Qxyz,it_Qtransfo: 1  1.1099 .2665 4.4875
+Qxyz,it_Qtransfo: 1  .9634 .5438 -3.4350
+Qxyz,it_Qtransfo: 1  -1.3779 .4569 -4.6422
+Qxyz,it_Qtransfo: 1  -3.5528 -.0465 -3.2323
+Qxyz,it_Qtransfo: 1  -3.3921 -.4407 -.6288
+Qxyz,it_Qtransfo: 1  5.3050 .1245 -.5204
+Qxyz,it_Qtransfo: 1  5.2963 .1667 4.1522
+Qxyz,it_Qtransfo: 1  .6208 2.2065 4.9568
+Qxyz,it_Qtransfo: 1  1.1831 -.8075 6.2222
+Qxyz,it_Qtransfo: 1  2.6510 .9066 -4.5104
+Qxyz,it_Qtransfo: 1  -1.5039 .7653 -6.6458
+Qxyz,it_Qtransfo: 1  -5.3651 -.1249 -4.1474
+Qxyz,it_Qtransfo: 1  -5.0427 -.8400 .4834
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+ -----------------------------------------
+  Cartesian coordinates (au):
+ d0x =
+           -0.953766172          -0.831500256           3.072985736
+           -1.047914795          -0.324642911           0.563651698
+            1.159502253           0.150527360          -0.826174319
+            3.572550920           0.150527360           0.542019381
+            3.572550920           0.150527360           3.076166521
+            1.109940448           0.266549045           4.487491211
+            0.963437828           0.543765339          -3.435043749
+           -1.377927752           0.456945924          -4.642186454
+           -3.552822882          -0.046512811          -3.232292705
+           -3.392126919          -0.440705848          -0.628846681
+            5.305003855           0.124515308          -0.520447386
+            5.296282143           0.166666045           4.152242200
+            0.620804598           2.206506220           4.956768817
+            1.183107007          -0.807464719           6.222200140
+            2.650989593           0.906608681          -4.510382277
+           -1.503914900           0.765342568          -6.645843666
+           -5.365071252          -0.124942203          -4.147446734
+           -5.042678816          -0.839984672           0.483419828
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+  Cartesian coordinates (ang):
+ ==============================================
+ = Gaussian CC ================================
+      8     0          -0.504711320          -0.440010984           1.626154013
+      6     0          -0.554532626          -0.171793629           0.298271632
+      6     0           0.613582166           0.079655648          -0.437192620
+      6     0           1.890512523           0.079655648           0.286824303
+      6     0           1.890512523           0.079655648           1.627837212
+      6     0           0.587355187           0.141051679           2.374678071
+      6     0           0.509829340           0.287748224          -1.817746862
+      6     0          -0.729167961           0.241805368          -2.456539268
+      6     0          -1.880072894          -0.024613519          -1.710455630
+      6     0          -1.795036254          -0.233211490          -0.332771331
+      1     0           2.807287131           0.065890663          -0.275408895
+      1     0           2.802671799           0.088195872           2.197271936
+      1     0           0.328515644           1.167632802           2.623009085
+      1     0           0.626073263          -0.427291926           3.292646500
+      1     0           1.402843272           0.479756651          -2.386791502
+      1     0          -0.795837489           0.405001843          -3.516828998
+      1     0          -2.839073428          -0.066116566          -2.194734285
+      1     0          -2.668470699          -0.444500744           0.255814755
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000           0.000000000
+ = END Gaussian CC ============================
+ ==============================================
+ ==============================================
+ = XYZ format =================================
+          18
+
+      8          -0.504711320          -0.440010984           1.626154013
+      6          -0.554532626          -0.171793629           0.298271632
+      6           0.613582166           0.079655648          -0.437192620
+      6           1.890512523           0.079655648           0.286824303
+      6           1.890512523           0.079655648           1.627837212
+      6           0.587355187           0.141051679           2.374678071
+      6           0.509829340           0.287748224          -1.817746862
+      6          -0.729167961           0.241805368          -2.456539268
+      6          -1.880072894          -0.024613519          -1.710455630
+      6          -1.795036254          -0.233211490          -0.332771331
+      1           2.807287131           0.065890663          -0.275408895
+      1           2.802671799           0.088195872           2.197271936
+      1           0.328515644           1.167632802           2.623009085
+      1           0.626073263          -0.427291926           3.292646500
+      1           1.402843272           0.479756651          -2.386791502
+      1          -0.795837489           0.405001843          -3.516828998
+      1          -2.839073428          -0.066116566          -2.194734285
+      1          -2.668470699          -0.444500744           0.255814755
+ = END XYZ format =============================
+ ==============================================
+     Time and date in dnx : 16h:34m:46.617s, the 16/ 3/2017
+        real (s):              0.001 in dnx
+        real    :   0d  0h  0m  0s in dnx
+        cpu (s):              0.002 in dnx
+  Total real (s):              0.001
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.002
+  Total memory:          0 in dnx
+ ======================================
+ dnx:           69
+ d0x =
+           -0.953766172          -0.831500256           3.072985736
+           -1.047914795          -0.324642911           0.563651698
+            1.159502253           0.150527360          -0.826174319
+            3.572550920           0.150527360           0.542019381
+            3.572550920           0.150527360           3.076166521
+            1.109940448           0.266549045           4.487491211
+            0.963437828           0.543765339          -3.435043749
+           -1.377927752           0.456945924          -4.642186454
+           -3.552822882          -0.046512811          -3.232292705
+           -3.392126919          -0.440705848          -0.628846681
+            5.305003855           0.124515308          -0.520447386
+            5.296282143           0.166666045           4.152242200
+            0.620804598           2.206506220           4.956768817
+            1.183107007          -0.807464719           6.222200140
+            2.650989593           0.906608681          -4.510382277
+           -1.503914900           0.765342568          -6.645843666
+           -5.365071252          -0.124942203          -4.147446734
+           -5.042678816          -0.839984672           0.483419828
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+ -----------------------------------------
+Qact,it_Qtransfo: 3  2.5341 2.7739 .4932 2.0325 -.5227 6.2682
+Qact,it_Qtransfo: 3  2.0321 .5295 .0094 3.4324 .8313 6.1700
+Qact,it_Qtransfo: 3  3.9572 -.0011 3.4254 2.6514 -.0128 6.2750
+Qact,it_Qtransfo: 3  2.5617 .8470 .0867 2.6357 .8693 3.1303
+Qact,it_Qtransfo: 3  2.0312 -.5019 .0099 2.0337 .5008 6.2755
+Qact,it_Qtransfo: 3  2.6380 .8634 .0007 2.0317 -.4931 6.2809
+Qact,it_Qtransfo: 3  2.0300 .5206 .0104 2.8407 .4968 3.0945
+Qact,it_Qtransfo: 3  2.0550 .3584 4.6502 2.0416 .3696 4.1757
+ -----------------------------------------
+ -----------------------------------------
+Qin (Qact),it_Qtransfo: 3  2.5341 2.7739 .4932 2.0325 -.5227 6.2682
+Qin (Qact),it_Qtransfo: 3  2.0321 .5295 .0094 3.4324 .8313 6.1700
+Qin (Qact),it_Qtransfo: 3  3.9572 -.0011 3.4254 2.6514 -.0128 6.2750
+Qin (Qact),it_Qtransfo: 3  2.5617 .8470 .0867 2.6357 .8693 3.1303
+Qin (Qact),it_Qtransfo: 3  2.0312 -.5019 .0099 2.0337 .5008 6.2755
+Qin (Qact),it_Qtransfo: 3  2.6380 .8634 .0007 2.0317 -.4931 6.2809
+Qin (Qact),it_Qtransfo: 3  2.0300 .5206 .0104 2.8407 .4968 3.0945
+Qin (Qact),it_Qtransfo: 3  2.0550 .3584 4.6502 2.0416 .3696 4.1757
+ -----------------------------------------
+ name_transfo           3 active              
+ -----------------------------------------
+Qin ,it_Qtransfo: 3  2.5341 2.7739 .4932 2.0325 -.5227 6.2682
+Qin ,it_Qtransfo: 3  2.0321 .5295 .0094 3.4324 .8313 6.1700
+Qin ,it_Qtransfo: 3  3.9572 -.0011 3.4254 2.6514 -.0128 6.2750
+Qin ,it_Qtransfo: 3  2.5617 .8470 .0867 2.6357 .8693 3.1303
+Qin ,it_Qtransfo: 3  2.0312 -.5019 .0099 2.0337 .5008 6.2755
+Qin ,it_Qtransfo: 3  2.6380 .8634 .0007 2.0317 -.4931 6.2809
+Qin ,it_Qtransfo: 3  2.0300 .5206 .0104 2.8407 .4968 3.0945
+Qin ,it_Qtransfo: 3  2.0550 .3584 4.6502 2.0416 .3696 4.1757
+ -----------------------------------------
+ -----------------------------------------
+Qout,it_Qtransfo: 3  2.5341 2.7739 .4932 2.0325 -.5227 6.2682
+Qout,it_Qtransfo: 3  2.0321 .5295 .0094 3.4324 .8313 6.1700
+Qout,it_Qtransfo: 3  3.9572 -.0011 3.4254 2.6514 -.0128 6.2750
+Qout,it_Qtransfo: 3  2.5617 .8470 .0867 2.6357 .8693 3.1303
+Qout,it_Qtransfo: 3  2.0312 -.5019 .0099 2.0337 .5008 6.2755
+Qout,it_Qtransfo: 3  2.6380 .8634 .0007 2.0317 -.4931 6.2809
+Qout,it_Qtransfo: 3  2.0300 .5206 .0104 2.8407 .4968 3.0945
+Qout,it_Qtransfo: 3  2.0550 .3584 4.6502 2.0416 .3696 4.1757
+ -----------------------------------------
+ name_transfo           2 poly                
+ -----------------------------------------
+Qin ,it_Qtransfo: 2  2.5341 2.7739 .4932 2.0325 -.5227 6.2682
+Qin ,it_Qtransfo: 2  2.0321 .5295 .0094 3.4324 .8313 6.1700
+Qin ,it_Qtransfo: 2  3.9572 -.0011 3.4254 2.6514 -.0128 6.2750
+Qin ,it_Qtransfo: 2  2.5617 .8470 .0867 2.6357 .8693 3.1303
+Qin ,it_Qtransfo: 2  2.0312 -.5019 .0099 2.0337 .5008 6.2755
+Qin ,it_Qtransfo: 2  2.6380 .8634 .0007 2.0317 -.4931 6.2809
+Qin ,it_Qtransfo: 2  2.0300 .5206 .0104 2.8407 .4968 3.0945
+Qin ,it_Qtransfo: 2  2.0550 .3584 4.6502 2.0416 .3696 4.1757
+ -----------------------------------------
+ -----------------------------------------
+Qout,it_Qtransfo: 2  .0000 .0000 2.5341 2.4130 .0000 1.3682
+Qout,it_Qtransfo: 2  1.7325 -.0260 -1.0625 1.7237 .0161 1.0761
+Qout,it_Qtransfo: 2  1.8957 -.2154 2.8533 -3.2652 -.7440 2.1080
+Qout,it_Qtransfo: 2  -2.2074 -.4752 1.3898 .0941 -.5069 2.5093
+Qout,it_Qtransfo: 2  2.3414 .0868 1.2071 -.1260 .3084 -2.0037
+Qout,it_Qtransfo: 2  1.6876 .3628 -1.0753 .1607 -.3942 2.6034
+Qout,it_Qtransfo: 2  -1.8122 -.0784 -.9152 -1.6506 -.3993 1.1123
+Qout,it_Qtransfo: 2  -2.4626 .1160 1.4113 -.4891 1.9400 .4693
+Qout,it_Qtransfo: 2  .0732 -1.0740 1.7347
+ -----------------------------------------
+ name_transfo           1 bunch_poly          
+ -----------------------------------------
+Qin ,it_Qtransfo: 1  .0000 .0000 2.5341 2.4130 .0000 1.3682
+Qin ,it_Qtransfo: 1  1.7325 -.0260 -1.0625 1.7237 .0161 1.0761
+Qin ,it_Qtransfo: 1  1.8957 -.2154 2.8533 -3.2652 -.7440 2.1080
+Qin ,it_Qtransfo: 1  -2.2074 -.4752 1.3898 .0941 -.5069 2.5093
+Qin ,it_Qtransfo: 1  2.3414 .0868 1.2071 -.1260 .3084 -2.0037
+Qin ,it_Qtransfo: 1  1.6876 .3628 -1.0753 .1607 -.3942 2.6034
+Qin ,it_Qtransfo: 1  -1.8122 -.0784 -.9152 -1.6506 -.3993 1.1123
+Qin ,it_Qtransfo: 1  -2.4626 .1160 1.4113 -.4891 1.9400 .4693
+Qin ,it_Qtransfo: 1  .0732 -1.0740 1.7347
+ -----------------------------------------
+ -----------------------------------------
+Qxyz,it_Qtransfo: 1  -.9538 -.8315 3.0730
+Qxyz,it_Qtransfo: 1  -1.0479 -.3246 .5637
+Qxyz,it_Qtransfo: 1  1.1595 .1505 -.8262
+Qxyz,it_Qtransfo: 1  3.5726 .1505 .5420
+Qxyz,it_Qtransfo: 1  3.5726 .1505 3.0762
+Qxyz,it_Qtransfo: 1  1.1099 .2665 4.4875
+Qxyz,it_Qtransfo: 1  .9634 .5438 -3.4350
+Qxyz,it_Qtransfo: 1  -1.3779 .4569 -4.6422
+Qxyz,it_Qtransfo: 1  -3.5528 -.0465 -3.2323
+Qxyz,it_Qtransfo: 1  -3.3921 -.4407 -.6288
+Qxyz,it_Qtransfo: 1  5.3050 .1245 -.5204
+Qxyz,it_Qtransfo: 1  5.2963 .1667 4.1522
+Qxyz,it_Qtransfo: 1  .6208 2.2065 4.9568
+Qxyz,it_Qtransfo: 1  1.1831 -.8075 6.2222
+Qxyz,it_Qtransfo: 1  2.6510 .9066 -4.5104
+Qxyz,it_Qtransfo: 1  -1.5039 .7653 -6.6458
+Qxyz,it_Qtransfo: 1  -5.3651 -.1249 -4.1474
+Qxyz,it_Qtransfo: 1  -5.0427 -.8400 .4834
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+ -----------------------------------------
+  Cartesian coordinates (au):
+ d0x =
+           -0.953766172          -0.831500256           3.072985736
+           -1.047914795          -0.324642911           0.563651698
+            1.159502253           0.150527360          -0.826174319
+            3.572550920           0.150527360           0.542019381
+            3.572550920           0.150527360           3.076166521
+            1.109940448           0.266549045           4.487491211
+            0.963437828           0.543765339          -3.435043749
+           -1.377927752           0.456945924          -4.642186454
+           -3.552822882          -0.046512811          -3.232292705
+           -3.392126919          -0.440705848          -0.628846681
+            5.305003855           0.124515308          -0.520447386
+            5.296282143           0.166666045           4.152242200
+            0.620804598           2.206506220           4.956768817
+            1.183107007          -0.807464719           6.222200140
+            2.650989593           0.906608681          -4.510382277
+           -1.503914900           0.765342568          -6.645843666
+           -5.365071252          -0.124942203          -4.147446734
+           -5.042678816          -0.839984672           0.483419828
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+  Cartesian coordinates (ang):
+ ==============================================
+ = Gaussian CC ================================
+      8     0          -0.504711320          -0.440010984           1.626154013
+      6     0          -0.554532626          -0.171793629           0.298271632
+      6     0           0.613582166           0.079655648          -0.437192620
+      6     0           1.890512523           0.079655648           0.286824303
+      6     0           1.890512523           0.079655648           1.627837212
+      6     0           0.587355187           0.141051679           2.374678071
+      6     0           0.509829340           0.287748224          -1.817746862
+      6     0          -0.729167961           0.241805368          -2.456539268
+      6     0          -1.880072894          -0.024613519          -1.710455630
+      6     0          -1.795036254          -0.233211490          -0.332771331
+      1     0           2.807287131           0.065890663          -0.275408895
+      1     0           2.802671799           0.088195872           2.197271936
+      1     0           0.328515644           1.167632802           2.623009085
+      1     0           0.626073263          -0.427291926           3.292646500
+      1     0           1.402843272           0.479756651          -2.386791502
+      1     0          -0.795837489           0.405001843          -3.516828998
+      1     0          -2.839073428          -0.066116566          -2.194734285
+      1     0          -2.668470699          -0.444500744           0.255814755
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000           0.000000000
+ = END Gaussian CC ============================
+ ==============================================
+ ==============================================
+ = XYZ format =================================
+          18
+
+      8          -0.504711320          -0.440010984           1.626154013
+      6          -0.554532626          -0.171793629           0.298271632
+      6           0.613582166           0.079655648          -0.437192620
+      6           1.890512523           0.079655648           0.286824303
+      6           1.890512523           0.079655648           1.627837212
+      6           0.587355187           0.141051679           2.374678071
+      6           0.509829340           0.287748224          -1.817746862
+      6          -0.729167961           0.241805368          -2.456539268
+      6          -1.880072894          -0.024613519          -1.710455630
+      6          -1.795036254          -0.233211490          -0.332771331
+      1           2.807287131           0.065890663          -0.275408895
+      1           2.802671799           0.088195872           2.197271936
+      1           0.328515644           1.167632802           2.623009085
+      1           0.626073263          -0.427291926           3.292646500
+      1           1.402843272           0.479756651          -2.386791502
+      1          -0.795837489           0.405001843          -3.516828998
+      1          -2.839073428          -0.066116566          -2.194734285
+      1          -2.668470699          -0.444500744           0.255814755
+ = END XYZ format =============================
+ ==============================================
+  Cartesian coordinates with respect to the COM (au):
+ d0x =
+           -0.953766172          -0.831500256           3.072985736
+           -1.047914795          -0.324642911           0.563651698
+            1.159502253           0.150527360          -0.826174319
+            3.572550920           0.150527360           0.542019381
+            3.572550920           0.150527360           3.076166521
+            1.109940448           0.266549045           4.487491211
+            0.963437828           0.543765339          -3.435043749
+           -1.377927752           0.456945924          -4.642186454
+           -3.552822882          -0.046512811          -3.232292705
+           -3.392126919          -0.440705848          -0.628846681
+            5.305003855           0.124515308          -0.520447386
+            5.296282143           0.166666045           4.152242200
+            0.620804598           2.206506220           4.956768817
+            1.183107007          -0.807464719           6.222200140
+            2.650989593           0.906608681          -4.510382277
+           -1.503914900           0.765342568          -6.645843666
+           -5.365071252          -0.124942203          -4.147446734
+           -5.042678816          -0.839984672           0.483419828
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000          -0.000000000
+  Cartesian coordinates with respect to the COM (ang):
+ ==============================================
+ = Gaussian CC ================================
+      8     0          -0.504711320          -0.440010984           1.626154013
+      6     0          -0.554532626          -0.171793629           0.298271632
+      6     0           0.613582166           0.079655648          -0.437192620
+      6     0           1.890512523           0.079655648           0.286824303
+      6     0           1.890512523           0.079655648           1.627837212
+      6     0           0.587355187           0.141051679           2.374678071
+      6     0           0.509829340           0.287748224          -1.817746862
+      6     0          -0.729167961           0.241805368          -2.456539268
+      6     0          -1.880072894          -0.024613519          -1.710455630
+      6     0          -1.795036254          -0.233211490          -0.332771331
+      1     0           2.807287131           0.065890663          -0.275408895
+      1     0           2.802671799           0.088195872           2.197271936
+      1     0           0.328515644           1.167632802           2.623009085
+      1     0           0.626073263          -0.427291926           3.292646500
+      1     0           1.402843272           0.479756651          -2.386791502
+      1     0          -0.795837489           0.405001843          -3.516828998
+      1     0          -2.839073428          -0.066116566          -2.194734285
+      1     0          -2.668470699          -0.444500744           0.255814755
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000           0.000000000
+     -1     0           0.000000000           0.000000000          -0.000000000
+ = END Gaussian CC ============================
+ ==============================================
+ ==============================================
+ = XYZ format =================================
+          18
+
+      8          -0.504711320          -0.440010984           1.626154013
+      6          -0.554532626          -0.171793629           0.298271632
+      6           0.613582166           0.079655648          -0.437192620
+      6           1.890512523           0.079655648           0.286824303
+      6           1.890512523           0.079655648           1.627837212
+      6           0.587355187           0.141051679           2.374678071
+      6           0.509829340           0.287748224          -1.817746862
+      6          -0.729167961           0.241805368          -2.456539268
+      6          -1.880072894          -0.024613519          -1.710455630
+      6          -1.795036254          -0.233211490          -0.332771331
+      1           2.807287131           0.065890663          -0.275408895
+      1           2.802671799           0.088195872           2.197271936
+      1           0.328515644           1.167632802           2.623009085
+      1           0.626073263          -0.427291926           3.292646500
+      1           1.402843272           0.479756651          -2.386791502
+      1          -0.795837489           0.405001843          -3.516828998
+      1          -2.839073428          -0.066116566          -2.194734285
+      1          -2.668470699          -0.444500744           0.255814755
+ = END XYZ format =============================
+ ==============================================
+ dnx (mass weighted):           69
+ d0x =
+         -162.859436811        -141.982036466         524.724760916
+         -154.987490246         -48.014962897          83.364566034
+          171.491370419          22.263124765        -122.191885147
+          528.383322548          22.263124765          80.165127940
+          528.383322548          22.263124765         454.967647365
+          164.161137131          39.422830615         663.703770410
+          142.493274966          80.423356558        -508.045894814
+         -203.796687555          67.582691136        -686.583328621
+         -525.465528860          -6.879284291        -478.058842809
+         -501.698459223         -65.180770103         -93.006959408
+          227.383174415           5.336977445         -22.307425602
+          227.009344197           7.143643119         177.973482783
+           26.608938301          94.575310864         212.457117680
+           50.710354670         -34.609567879         266.696058709
+          113.626765491          38.859078245        -193.324089472
+          -64.460828576          32.804127449        -284.854275424
+         -229.957784287          -5.355275034        -177.767939444
+         -216.139393677         -36.003438697          20.720349697
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000          -0.000000000
+ ======================================
+ ======================================
+ ======================================
+ ======================================
+           1  evaluation of sub_QactTOdnx
+ ======================================
+ ======================================
+ ======================================
+ ======================================
+           1  evaluation of calc3_f2_f1Q_num
+ ======================================
+     Time and date in f2 : 16h:34m:46.618s, the 16/ 3/2017
+        real (s):              0.001 in f2
+        real    :   0d  0h  0m  0s in f2
+        cpu (s):              0.001 in f2
+  Total real (s):              0.002
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.003
+  Total memory:          0 in f2
+ BEGINNING calc3_f2_f1Q_num
+ ndimG          51
+ WriteCC F
+ Qact   2.5341471400237094        2.7739426579942257       0.49323070773460354        2.0324628980631432      -0.52274841950662976        6.2681718555321320        2.0321044879238293       0.52953757290908099        9.3623717938222453E-003   3.4324060911983527       0.83129181419166742        6.1700261295495666        3.9571537574924109       -1.0690569691821454E-003   3.4253623006888394        2.6514322864014512       -1.2800869589737023E-002   6.2749873724651586        2.5617426969235666       0.84700062761012751        8.6652635790084601E-002   2.6356638441591036       0.86928048003840641        3.1303186358674582        2.0311630838761872      -0.50190078707859365        9.9480907326557795E-003   2.0336762775069208       0.50084828573631823        6.2754544401628758        2.6380186777684704       0.86341837639779895        7.1989051901557807E-004   2.0317239532779090      -0.49309590164734696        6.2808753077693451        2.0299955488674533       0.52059667906094542        1.0402457458902283E-002   2.8407303197280918       0.49681755405693395        3.0945141746605409        2.0549718233428913       0.35835339762640844        4.6502350097461909        2.0415861431093223       0.36958575135026067        4.1756704780997822     
+
+ num_GG,num_g F F
+ num_x,nrho F           2
+ JJ           0
+
+  f2,f1,vep with Tana
+ nb_act          48
+ vep rho =              0.000071737632642             1.000000000000000
+
+  f1i =      -0.0000397942      -0.0000337352       0.0000258630      -0.0000174009      -0.0000931030       0.0000003394      -0.0000171473       0.0000939916       0.0000014697      -0.0000244710
+  f1i =       0.0000140918       0.0000018558      -0.0000338175      -0.0000003321      -0.0000011816      -0.0000169240      -0.0000007364      -0.0000001781      -0.0000145771       0.0000194030
+  f1i =       0.0000014308      -0.0000225547       0.0000141097      -0.0000001929      -0.0000144863      -0.0000840967       0.0000002869      -0.0000144379       0.0000837601      -0.0000000954
+  f1i =      -0.0000228187       0.0000136453       0.0000001413      -0.0000143312      -0.0000824144      -0.0000002587      -0.0000147340       0.0000875673       0.0000001299      -0.0000358269
+  f1i =       0.0000163261       0.0000036936      -0.0000127334       0.0000584922      -0.0000122659      -0.0000128688       0.0000614075       0.0000226416
+
+  f2ij
+  1       -0.0000457150       0.0000225480       0.0000124709       0.0000238974
+  2        0.0000225480      -0.0000457150       0.0000136510       0.0000221104
+  3        0.0000124709       0.0000136510      -0.0000123098      -0.0000259226
+  4        0.0000238974       0.0000221104      -0.0000259226      -0.0002950178
+  5       -0.0000163460       0.0000301570      -0.0000134666      -0.0000131100
+  6        0.0000000000       0.0000004890      -0.0000003369       0.0000003734
+  7        0.0000242078       0.0000000000       0.0000133113       0.0000000000
+  8        0.0000161882       0.0000133113      -0.0000163411      -0.0000130415
+  9        0.0000000000       0.0000000917      -0.0000001739       0.0000001394
+ 10        0.0000000000       0.0000203534       0.0000032309       0.0000000000
+ 11        0.0000000000       0.0000070219      -0.0000073468      -0.0000085068
+ 12        0.0000000000      -0.0000014733       0.0000023535       0.0000026271
+ 13        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 14        0.0000000000      -0.0000030239       0.0000018187       0.0000000000
+ 15        0.0000000000       0.0000022099      -0.0000029093      -0.0000027111
+ 16        0.0000000000       0.0000212886      -0.0000124239       0.0000000000
+ 17        0.0000000000      -0.0000182752      -0.0000006752       0.0000000000
+ 18        0.0000000000      -0.0000004530       0.0000010164       0.0000000000
+ 19        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 20        0.0000000000      -0.0000015922       0.0000009443       0.0000000000
+ 21        0.0000000000      -0.0000007355       0.0000009008       0.0000000000
+ 22        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 23        0.0000000000       0.0000014958      -0.0000009012       0.0000000000
+ 24        0.0000000000       0.0000002924      -0.0000006831       0.0000000000
+ 25        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 26        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 27        0.0000000000      -0.0000003367       0.0000007864       0.0000000000
+ 28        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 29        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 30        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 31        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 32        0.0000000000      -0.0000015255       0.0000009174       0.0000000000
+ 33        0.0000000000      -0.0000003471       0.0000007031       0.0000000000
+ 34        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 35        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 36        0.0000000000       0.0000004018      -0.0000008138       0.0000000000
+ 37        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 38        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 39        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 40        0.0000227120       0.0000000000      -0.0000136038       0.0000000000
+ 41        0.0000121206      -0.0000136038       0.0000155345       0.0000133395
+ 42        0.0000000000       0.0000004228      -0.0000007084       0.0000000911
+ 43        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 44        0.0000008099       0.0000000000       0.0000004012       0.0000000000
+ 45        0.0000053505      -0.0000008510       0.0000020158       0.0000005681
+ 46        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 47        0.0000107189       0.0000000000       0.0000019679       0.0000000000
+ 48       -0.0000084819       0.0000000000      -0.0000017441       0.0000000000
+
+  1       -0.0000163460       0.0000000000       0.0000242078       0.0000161882
+  2        0.0000301570       0.0000004890       0.0000000000       0.0000133113
+  3       -0.0000134666      -0.0000003369       0.0000133113      -0.0000163411
+  4       -0.0000131100       0.0000003734       0.0000000000      -0.0000130415
+  5       -0.0000604465       0.0000002950       0.0000130415      -0.0000170453
+  6        0.0000002950      -0.0001480797       0.0000003099      -0.0000006000
+  7        0.0000130415       0.0000003099      -0.0002950178       0.0000129811
+  8       -0.0000170453      -0.0000006000       0.0000129811      -0.0000599144
+  9       -0.0000001673      -0.0000211257       0.0000000812      -0.0000001447
+ 10        0.0000000000       0.0000005945       0.0000000000       0.0000000000
+ 11       -0.0000089017       0.0000018745       0.0000084421      -0.0000088625
+ 12        0.0000026533      -0.0000084635      -0.0000027158       0.0000027917
+ 13        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 14        0.0000000000       0.0000005190       0.0000000000       0.0000000000
+ 15       -0.0000028369      -0.0000579624       0.0000033647      -0.0000035323
+ 16        0.0000000000      -0.0000033952       0.0000000000       0.0000000000
+ 17        0.0000000000       0.0000000319       0.0000000000       0.0000000000
+ 18        0.0000000000      -0.0000069829       0.0000000000       0.0000000000
+ 19        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 20        0.0000000000       0.0000003993       0.0000000000       0.0000000000
+ 21        0.0000000000      -0.0000042250       0.0000000000       0.0000000000
+ 22        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 23        0.0000000000      -0.0000002415       0.0000000000       0.0000000000
+ 24        0.0000000000       0.0000047638       0.0000000000       0.0000000000
+ 25        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 26        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 27        0.0000000000      -0.0000054835       0.0000000000       0.0000000000
+ 28        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 29        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 30        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 31        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 32        0.0000000000       0.0000002628       0.0000000000       0.0000000000
+ 33        0.0000000000      -0.0000046317       0.0000000000       0.0000000000
+ 34        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 35        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 36        0.0000000000       0.0000053610       0.0000000000       0.0000000000
+ 37        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 38        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 39        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 40       -0.0000133395       0.0000007255       0.0000215745      -0.0000300580
+ 41        0.0000162916      -0.0000012945      -0.0000255543       0.0000134781
+ 42       -0.0000002003      -0.0000835979       0.0000014627      -0.0000012448
+ 43        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 44        0.0000003176       0.0000069694      -0.0000015391       0.0000004406
+ 45        0.0000017195       0.0000439936      -0.0000068446       0.0000011260
+ 46        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 47        0.0000019722      -0.0000040348      -0.0000104696      -0.0000006549
+ 48       -0.0000016855      -0.0000021929       0.0000088385       0.0000001554
+
+  1        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  2        0.0000000917       0.0000203534       0.0000070219      -0.0000014733
+  3       -0.0000001739       0.0000032309      -0.0000073468       0.0000023535
+  4        0.0000001394       0.0000000000      -0.0000085068       0.0000026271
+  5       -0.0000001673       0.0000000000      -0.0000089017       0.0000026533
+  6       -0.0000211257       0.0000005945       0.0000018745      -0.0000084635
+  7        0.0000000812       0.0000000000       0.0000084421      -0.0000027158
+  8       -0.0000001447       0.0000000000      -0.0000088625       0.0000027917
+  9       -0.0001073283       0.0000005945      -0.0000004828      -0.0000236722
+ 10        0.0000005945      -0.0000171431       0.0000000000       0.0000005945
+ 11       -0.0000004828       0.0000000000      -0.0000026489       0.0000008319
+ 12       -0.0000236722       0.0000005945       0.0000008319      -0.0000168389
+ 13        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 14        0.0000005190       0.0000000000      -0.0000015529       0.0000019849
+ 15        0.0000108657       0.0000000000       0.0000000005       0.0000224532
+ 16       -0.0000033952       0.0000000000       0.0000000000      -0.0000033952
+ 17        0.0000000319       0.0000000000      -0.0000015564       0.0000014564
+ 18       -0.0000069829       0.0000000000       0.0000000052      -0.0000069238
+ 19        0.0000000000       0.0000193603       0.0000018342      -0.0000023056
+ 20        0.0000003993       0.0000025214      -0.0000014080       0.0000021692
+ 21       -0.0000042250       0.0000000000      -0.0000019175      -0.0000202078
+ 22        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 23       -0.0000002415       0.0000000000       0.0000007701      -0.0000009380
+ 24        0.0000047638       0.0000000000       0.0000007651       0.0000136259
+ 25        0.0000000000       0.0000098724       0.0000008936      -0.0000008618
+ 26        0.0000000000      -0.0000024517       0.0000006546      -0.0000006053
+ 27       -0.0000054835      -0.0000000320      -0.0000011730      -0.0000189604
+ 28        0.0000000000      -0.0000000860       0.0000017814      -0.0000016232
+ 29        0.0000000000      -0.0000048639      -0.0000000055       0.0000000079
+ 30        0.0000000000       0.0000000249       0.0000000074       0.0000000000
+ 31        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 32        0.0000002628       0.0000000000      -0.0000007833       0.0000010042
+ 33       -0.0000046317       0.0000000000      -0.0000007775      -0.0000132376
+ 34        0.0000000000       0.0000098817      -0.0000008935       0.0000008331
+ 35        0.0000000000      -0.0000024586      -0.0000006579       0.0000006197
+ 36        0.0000053610       0.0000000075       0.0000011918       0.0000185768
+ 37        0.0000000000      -0.0000002146      -0.0000017724       0.0000017207
+ 38        0.0000000000      -0.0000048060       0.0000000131      -0.0000000234
+ 39        0.0000000000      -0.0000000345       0.0000000150       0.0000000557
+ 40       -0.0000014319       0.0000000000      -0.0000086830       0.0000019639
+ 41        0.0000005628       0.0000000000       0.0000083714      -0.0000021987
+ 42        0.0000002082       0.0000005945       0.0000013996      -0.0000005380
+ 43        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 44       -0.0000090047       0.0000000000      -0.0000001157      -0.0000055018
+ 45       -0.0000095689       0.0000000000      -0.0000000596      -0.0000099629
+ 46        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 47        0.0000052928       0.0000000000       0.0000014651       0.0000027762
+ 48        0.0000027747       0.0000000000      -0.0000009917       0.0000020319
+
+  1        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  2        0.0000000000      -0.0000030239       0.0000022099       0.0000212886
+  3        0.0000000000       0.0000018187      -0.0000029093      -0.0000124239
+  4        0.0000000000       0.0000000000      -0.0000027111       0.0000000000
+  5        0.0000000000       0.0000000000      -0.0000028369       0.0000000000
+  6        0.0000000000       0.0000005190      -0.0000579624      -0.0000033952
+  7        0.0000000000       0.0000000000       0.0000033647       0.0000000000
+  8        0.0000000000       0.0000000000      -0.0000035323       0.0000000000
+  9        0.0000000000       0.0000005190       0.0000108657      -0.0000033952
+ 10        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 11        0.0000000000      -0.0000015529       0.0000000005       0.0000000000
+ 12        0.0000000000       0.0000019849       0.0000224532      -0.0000033952
+ 13       -0.0000228575       0.0000000000       0.0000000000       0.0000000000
+ 14        0.0000000000      -0.0000029148      -0.0000012186       0.0000000000
+ 15        0.0000000000      -0.0000012186      -0.0000277598       0.0000000000
+ 16        0.0000000000       0.0000000000       0.0000000000      -0.0000457150
+ 17        0.0000000000      -0.0000029099      -0.0000011842       0.0000000000
+ 18        0.0000000000      -0.0000000003       0.0000028702       0.0000000000
+ 19        0.0000000000       0.0000035268       0.0000019169       0.0000236948
+ 20        0.0000000000      -0.0000027073      -0.0000014715      -0.0000080628
+ 21        0.0000000000      -0.0000008245       0.0000162159      -0.0000031791
+ 22        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 23        0.0000000000       0.0000014385       0.0000005790       0.0000000000
+ 24        0.0000000000      -0.0000000577      -0.0000044531       0.0000000000
+ 25        0.0000114943       0.0000066702       0.0000007333       0.0000000000
+ 26        0.0000084131      -0.0000000121       0.0000004915       0.0000000000
+ 27        0.0000000342       0.0000000552       0.0000144994       0.0000000000
+ 28        0.0000228560       0.0000032921       0.0000012953       0.0000000000
+ 29       -0.0000000629      -0.0000024690      -0.0000000091       0.0000000000
+ 30        0.0000000871       0.0000000253      -0.0000000065       0.0000000000
+ 31        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 32        0.0000000000      -0.0000014682      -0.0000006163       0.0000000000
+ 33        0.0000000000      -0.0000000036       0.0000100788       0.0000000000
+ 34        0.0000115045      -0.0000066641      -0.0000007021       0.0000000000
+ 35        0.0000084574       0.0000000121      -0.0000005164       0.0000000000
+ 36        0.0000000165      -0.0000000021      -0.0000077265       0.0000000000
+ 37        0.0000228523      -0.0000032144      -0.0000013864       0.0000000000
+ 38       -0.0000001904       0.0000024552       0.0000000092       0.0000000000
+ 39       -0.0000001182       0.0000000346       0.0000000183       0.0000000000
+ 40        0.0000000000       0.0000000000      -0.0000018599       0.0000000000
+ 41        0.0000000000       0.0000000000       0.0000017931       0.0000000000
+ 42        0.0000000000       0.0000005190      -0.0000514570      -0.0000033952
+ 43        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 44        0.0000000000       0.0000000000       0.0000106440       0.0000000000
+ 45        0.0000000000       0.0000000000       0.0000358476       0.0000000000
+ 46        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 47        0.0000000000       0.0000000000      -0.0000056836       0.0000000000
+ 48        0.0000000000       0.0000000000      -0.0000037010       0.0000000000
+
+  1        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  2       -0.0000182752      -0.0000004530       0.0000000000      -0.0000015922
+  3       -0.0000006752       0.0000010164       0.0000000000       0.0000009443
+  4        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  5        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  6        0.0000000319      -0.0000069829       0.0000000000       0.0000003993
+  7        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  8        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  9        0.0000000319      -0.0000069829       0.0000000000       0.0000003993
+ 10        0.0000000000       0.0000000000       0.0000193603       0.0000025214
+ 11       -0.0000015564       0.0000000052       0.0000018342      -0.0000014080
+ 12        0.0000014564      -0.0000069238      -0.0000023056       0.0000021692
+ 13        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 14       -0.0000029099      -0.0000000003       0.0000035268      -0.0000027073
+ 15       -0.0000011842       0.0000028702       0.0000019169      -0.0000014715
+ 16        0.0000000000       0.0000000000       0.0000236948      -0.0000080628
+ 17       -0.0000079566      -0.0000000000       0.0000182419      -0.0000008420
+ 18       -0.0000000000      -0.0000079637       0.0000008721      -0.0000002901
+ 19        0.0000182419       0.0000008721      -0.0000400061       0.0000018819
+ 20       -0.0000008420      -0.0000002901       0.0000018819      -0.0000027561
+ 21       -0.0000009176       0.0000097969      -0.0000000003       0.0000000003
+ 22        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 23        0.0000014384      -0.0000000000      -0.0000017415       0.0000013369
+ 24       -0.0000000158      -0.0000029794       0.0000006083      -0.0000004670
+ 25        0.0000016772      -0.0000000166       0.0000000000       0.0000008888
+ 26        0.0000012247       0.0000000117       0.0000000000       0.0000006483
+ 27        0.0000000075      -0.0000031966      -0.0000007002       0.0000006273
+ 28        0.0000033293       0.0000000540       0.0000000000       0.0000017618
+ 29       -0.0000000107       0.0000000025       0.0000000000      -0.0000000057
+ 30        0.0000000127       0.0000000064       0.0000000000       0.0000000066
+ 31        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 32       -0.0000014680      -0.0000000002       0.0000017793      -0.0000013659
+ 33       -0.0000000444      -0.0000028609      -0.0000005203       0.0000003994
+ 34       -0.0000016726       0.0000000094       0.0000000000      -0.0000008857
+ 35       -0.0000012326       0.0000000012       0.0000000000      -0.0000006528
+ 36        0.0000000645      -0.0000033577       0.0000006023      -0.0000005503
+ 37       -0.0000033284      -0.0000000447       0.0000000000      -0.0000017642
+ 38        0.0000000262       0.0000000103       0.0000000000       0.0000000142
+ 39        0.0000000175      -0.0000000650       0.0000000000       0.0000000074
+ 40        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 41        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 42        0.0000000319      -0.0000069829       0.0000000000       0.0000003993
+ 43        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 44        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 45        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 46        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 47        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 48        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+  1        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  2       -0.0000007355       0.0000000000       0.0000014958       0.0000002924
+  3        0.0000009008       0.0000000000      -0.0000009012      -0.0000006831
+  4        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  5        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  6       -0.0000042250       0.0000000000      -0.0000002415       0.0000047638
+  7        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  8        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  9       -0.0000042250       0.0000000000      -0.0000002415       0.0000047638
+ 10        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 11       -0.0000019175       0.0000000000       0.0000007701       0.0000007651
+ 12       -0.0000202078       0.0000000000      -0.0000009380       0.0000136259
+ 13        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 14       -0.0000008245       0.0000000000       0.0000014385      -0.0000000577
+ 15        0.0000162159       0.0000000000       0.0000005790      -0.0000044531
+ 16       -0.0000031791       0.0000000000       0.0000000000       0.0000000000
+ 17       -0.0000009176       0.0000000000       0.0000014384      -0.0000000158
+ 18        0.0000097969       0.0000000000      -0.0000000000      -0.0000029794
+ 19       -0.0000000003       0.0000000000      -0.0000017415       0.0000006083
+ 20        0.0000000003       0.0000000000       0.0000013369      -0.0000004670
+ 21       -0.0000345278       0.0000000000       0.0000004605       0.0000137492
+ 22        0.0000000000      -0.0000457150       0.0000000000       0.0000000000
+ 23        0.0000004605       0.0000000000      -0.0000019636       0.0000000000
+ 24        0.0000137492       0.0000000000       0.0000000000      -0.0000328858
+ 25        0.0000001989       0.0000229444       0.0000065863      -0.0000002684
+ 26        0.0000001913      -0.0000168372       0.0000068539      -0.0000002796
+ 27       -0.0000254846       0.0000000000      -0.0000000780       0.0000217906
+ 28        0.0000005626       0.0000228963      -0.0000090668       0.0000001326
+ 29        0.0000000034       0.0000168402       0.0000074641      -0.0000000679
+ 30        0.0000000141       0.0000000000       0.0000000990       0.0000707627
+ 31        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 32       -0.0000004125       0.0000000000       0.0000007257      -0.0000000310
+ 33       -0.0000191799       0.0000000000       0.0000000295       0.0000058389
+ 34       -0.0000002299       0.0000000000       0.0000008269      -0.0000000140
+ 35       -0.0000001699       0.0000000000       0.0000006093      -0.0000000219
+ 36        0.0000185449       0.0000000000      -0.0000000435      -0.0000167159
+ 37       -0.0000004628       0.0000000000       0.0000016453      -0.0000001547
+ 38        0.0000000045       0.0000000000      -0.0000000129       0.0000000212
+ 39       -0.0000000031       0.0000000000      -0.0000000087      -0.0000001297
+ 40        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 41        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 42       -0.0000042250       0.0000000000      -0.0000002415       0.0000047638
+ 43        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 44        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 45        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 46        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 47        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 48        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+  1        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  2        0.0000000000       0.0000000000      -0.0000003367       0.0000000000
+  3        0.0000000000       0.0000000000       0.0000007864       0.0000000000
+  4        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  5        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  6        0.0000000000       0.0000000000      -0.0000054835       0.0000000000
+  7        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  8        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  9        0.0000000000       0.0000000000      -0.0000054835       0.0000000000
+ 10        0.0000098724      -0.0000024517      -0.0000000320      -0.0000000860
+ 11        0.0000008936       0.0000006546      -0.0000011730       0.0000017814
+ 12       -0.0000008618      -0.0000006053      -0.0000189604      -0.0000016232
+ 13        0.0000114943       0.0000084131       0.0000000342       0.0000228560
+ 14        0.0000066702      -0.0000000121       0.0000000552       0.0000032921
+ 15        0.0000007333       0.0000004915       0.0000144994       0.0000012953
+ 16        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 17        0.0000016772       0.0000012247       0.0000000075       0.0000033293
+ 18       -0.0000000166       0.0000000117      -0.0000031966       0.0000000540
+ 19        0.0000000000       0.0000000000      -0.0000007002       0.0000000000
+ 20        0.0000008888       0.0000006483       0.0000006273       0.0000017618
+ 21        0.0000001989       0.0000001913      -0.0000254846       0.0000005626
+ 22        0.0000229444      -0.0000168372       0.0000000000       0.0000228963
+ 23        0.0000065863       0.0000068539      -0.0000000780      -0.0000090668
+ 24       -0.0000002684      -0.0000002796       0.0000217906       0.0000001326
+ 25       -0.0002950178      -0.0000129755       0.0000002045       0.0000000000
+ 26       -0.0000129755      -0.0000616246       0.0000002497       0.0000129843
+ 27        0.0000002045       0.0000002497      -0.0001028813      -0.0000001388
+ 28        0.0000000000       0.0000129843      -0.0000001388      -0.0002950178
+ 29       -0.0000129843      -0.0000162589       0.0000001958       0.0000129939
+ 30        0.0000000671       0.0000001334       0.0001614100       0.0000000673
+ 31        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 32        0.0000008463       0.0000006179       0.0000000388       0.0000016796
+ 33       -0.0000000315       0.0000000247      -0.0000166151       0.0000001115
+ 34        0.0000000000       0.0000000000       0.0000000271       0.0000000000
+ 35        0.0000000000       0.0000000000       0.0000000266       0.0000000000
+ 36        0.0000000169      -0.0000000151       0.0000192364      -0.0000000665
+ 37        0.0000000000       0.0000000000       0.0000001273       0.0000000000
+ 38        0.0000000000       0.0000000000      -0.0000000126       0.0000000000
+ 39        0.0000000000       0.0000000000       0.0000000749       0.0000000000
+ 40        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 41        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 42        0.0000000000       0.0000000000      -0.0000054835       0.0000000000
+ 43        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 44        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 45        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 46        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 47        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 48        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+  1        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  2        0.0000000000       0.0000000000       0.0000000000      -0.0000015255
+  3        0.0000000000       0.0000000000       0.0000000000       0.0000009174
+  4        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  5        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  6        0.0000000000       0.0000000000       0.0000000000       0.0000002628
+  7        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  8        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  9        0.0000000000       0.0000000000       0.0000000000       0.0000002628
+ 10       -0.0000048639       0.0000000249       0.0000000000       0.0000000000
+ 11       -0.0000000055       0.0000000074       0.0000000000      -0.0000007833
+ 12        0.0000000079       0.0000000000       0.0000000000       0.0000010042
+ 13       -0.0000000629       0.0000000871       0.0000000000       0.0000000000
+ 14       -0.0000024690       0.0000000253       0.0000000000      -0.0000014682
+ 15       -0.0000000091      -0.0000000065       0.0000000000      -0.0000006163
+ 16        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 17       -0.0000000107       0.0000000127       0.0000000000      -0.0000014680
+ 18        0.0000000025       0.0000000064       0.0000000000      -0.0000000002
+ 19        0.0000000000       0.0000000000       0.0000000000       0.0000017793
+ 20       -0.0000000057       0.0000000066       0.0000000000      -0.0000013659
+ 21        0.0000000034       0.0000000141       0.0000000000      -0.0000004125
+ 22        0.0000168402       0.0000000000       0.0000000000       0.0000000000
+ 23        0.0000074641       0.0000000990       0.0000000000       0.0000007257
+ 24       -0.0000000679       0.0000707627       0.0000000000      -0.0000000310
+ 25       -0.0000129843       0.0000000671       0.0000000000       0.0000008463
+ 26       -0.0000162589       0.0000001334       0.0000000000       0.0000006179
+ 27        0.0000001958       0.0001614100       0.0000000000       0.0000000388
+ 28        0.0000129939       0.0000000673       0.0000000000       0.0000016796
+ 29       -0.0000615686      -0.0000001338       0.0000000000      -0.0000000054
+ 30       -0.0000001338      -0.0002225052       0.0000000000       0.0000000064
+ 31        0.0000000000       0.0000000000      -0.0000457150       0.0000000000
+ 32       -0.0000000054       0.0000000064       0.0000000000      -0.0000020422
+ 33        0.0000000050       0.0000000129       0.0000000000       0.0000000000
+ 34        0.0000000000       0.0000000000       0.0000225419       0.0000067618
+ 35        0.0000000000       0.0000000000      -0.0000170297       0.0000069902
+ 36       -0.0000000029      -0.0000000074       0.0000000000       0.0000000182
+ 37        0.0000000000       0.0000000000       0.0000237991      -0.0000091435
+ 38        0.0000000000       0.0000000000       0.0000164164       0.0000075863
+ 39        0.0000000000       0.0000000000       0.0000000000       0.0000000621
+ 40        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 41        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 42        0.0000000000       0.0000000000       0.0000000000       0.0000002628
+ 43        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 44        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 45        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 46        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 47        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 48        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+  1        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  2       -0.0000003471       0.0000000000       0.0000000000       0.0000004018
+  3        0.0000007031       0.0000000000       0.0000000000      -0.0000008138
+  4        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  5        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  6       -0.0000046317       0.0000000000       0.0000000000       0.0000053610
+  7        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  8        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  9       -0.0000046317       0.0000000000       0.0000000000       0.0000053610
+ 10        0.0000000000       0.0000098817      -0.0000024586       0.0000000075
+ 11       -0.0000007775      -0.0000008935      -0.0000006579       0.0000011918
+ 12       -0.0000132376       0.0000008331       0.0000006197       0.0000185768
+ 13        0.0000000000       0.0000115045       0.0000084574       0.0000000165
+ 14       -0.0000000036      -0.0000066641       0.0000000121      -0.0000000021
+ 15        0.0000100788      -0.0000007021      -0.0000005164      -0.0000077265
+ 16        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 17       -0.0000000444      -0.0000016726      -0.0000012326       0.0000000645
+ 18       -0.0000028609       0.0000000094       0.0000000012      -0.0000033577
+ 19       -0.0000005203       0.0000000000       0.0000000000       0.0000006023
+ 20        0.0000003994      -0.0000008857      -0.0000006528      -0.0000005503
+ 21       -0.0000191799      -0.0000002299      -0.0000001699       0.0000185449
+ 22        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 23        0.0000000295       0.0000008269       0.0000006093      -0.0000000435
+ 24        0.0000058389      -0.0000000140      -0.0000000219      -0.0000167159
+ 25       -0.0000000315       0.0000000000       0.0000000000       0.0000000169
+ 26        0.0000000247       0.0000000000       0.0000000000      -0.0000000151
+ 27       -0.0000166151       0.0000000271       0.0000000266       0.0000192364
+ 28        0.0000001115       0.0000000000       0.0000000000      -0.0000000665
+ 29        0.0000000050       0.0000000000       0.0000000000      -0.0000000029
+ 30        0.0000000129       0.0000000000       0.0000000000      -0.0000000074
+ 31        0.0000000000       0.0000225419      -0.0000170297       0.0000000000
+ 32        0.0000000000       0.0000067618       0.0000069902       0.0000000182
+ 33       -0.0000315379       0.0000000671       0.0000000676       0.0000202136
+ 34        0.0000000671      -0.0002950178      -0.0000131158      -0.0000000463
+ 35        0.0000000676      -0.0000131158      -0.0000622469      -0.0000000564
+ 36        0.0000202136      -0.0000000463      -0.0000000564      -0.0001012651
+ 37        0.0000002327       0.0000000000       0.0000128713      -0.0000001633
+ 38       -0.0000002406      -0.0000128713      -0.0000161830       0.0000000440
+ 39        0.0000698903      -0.0000000956      -0.0000001862       0.0001599579
+ 40        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 41        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 42       -0.0000046317       0.0000000000       0.0000000000       0.0000053610
+ 43        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 44        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 45        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 46        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 47        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 48        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+  1        0.0000000000       0.0000000000       0.0000000000       0.0000227120
+  2        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  3        0.0000000000       0.0000000000       0.0000000000      -0.0000136038
+  4        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+  5        0.0000000000       0.0000000000       0.0000000000      -0.0000133395
+  6        0.0000000000       0.0000000000       0.0000000000       0.0000007255
+  7        0.0000000000       0.0000000000       0.0000000000       0.0000215745
+  8        0.0000000000       0.0000000000       0.0000000000      -0.0000300580
+  9        0.0000000000       0.0000000000       0.0000000000      -0.0000014319
+ 10       -0.0000002146      -0.0000048060      -0.0000000345       0.0000000000
+ 11       -0.0000017724       0.0000000131       0.0000000150      -0.0000086830
+ 12        0.0000017207      -0.0000000234       0.0000000557       0.0000019639
+ 13        0.0000228523      -0.0000001904      -0.0000001182       0.0000000000
+ 14       -0.0000032144       0.0000024552       0.0000000346       0.0000000000
+ 15       -0.0000013864       0.0000000092       0.0000000183      -0.0000018599
+ 16        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 17       -0.0000033284       0.0000000262       0.0000000175       0.0000000000
+ 18       -0.0000000447       0.0000000103      -0.0000000650       0.0000000000
+ 19        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 20       -0.0000017642       0.0000000142       0.0000000074       0.0000000000
+ 21       -0.0000004628       0.0000000045      -0.0000000031       0.0000000000
+ 22        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 23        0.0000016453      -0.0000000129      -0.0000000087       0.0000000000
+ 24       -0.0000001547       0.0000000212      -0.0000001297       0.0000000000
+ 25        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 26        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 27        0.0000001273      -0.0000000126       0.0000000749       0.0000000000
+ 28        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 29        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 30        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 31        0.0000237991       0.0000164164       0.0000000000       0.0000000000
+ 32       -0.0000091435       0.0000075863       0.0000000621       0.0000000000
+ 33        0.0000002327      -0.0000002406       0.0000698903       0.0000000000
+ 34        0.0000000000      -0.0000128713      -0.0000000956       0.0000000000
+ 35        0.0000128713      -0.0000161830      -0.0000001862       0.0000000000
+ 36       -0.0000001633       0.0000000440       0.0001599579       0.0000000000
+ 37       -0.0002950178       0.0000126327      -0.0000000872       0.0000000000
+ 38        0.0000126327      -0.0000602167       0.0000001756       0.0000000000
+ 39       -0.0000000872       0.0000001756      -0.0002250265       0.0000000000
+ 40        0.0000000000       0.0000000000       0.0000000000      -0.0000457150
+ 41        0.0000000000       0.0000000000       0.0000000000       0.0000135869
+ 42        0.0000000000       0.0000000000       0.0000000000       0.0000004178
+ 43        0.0000000000       0.0000000000       0.0000000000       0.0000163821
+ 44        0.0000000000       0.0000000000       0.0000000000       0.0000193893
+ 45        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 46        0.0000000000       0.0000000000       0.0000000000       0.0000168956
+ 47        0.0000000000       0.0000000000       0.0000000000       0.0000193333
+ 48        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+  1        0.0000121206       0.0000000000       0.0000000000       0.0000008099
+  2       -0.0000136038       0.0000004228       0.0000000000       0.0000000000
+  3        0.0000155345      -0.0000007084       0.0000000000       0.0000004012
+  4        0.0000133395       0.0000000911       0.0000000000       0.0000000000
+  5        0.0000162916      -0.0000002003       0.0000000000       0.0000003176
+  6       -0.0000012945      -0.0000835979       0.0000000000       0.0000069694
+  7       -0.0000255543       0.0000014627       0.0000000000      -0.0000015391
+  8        0.0000134781      -0.0000012448       0.0000000000       0.0000004406
+  9        0.0000005628       0.0000002082       0.0000000000      -0.0000090047
+ 10        0.0000000000       0.0000005945       0.0000000000       0.0000000000
+ 11        0.0000083714       0.0000013996       0.0000000000      -0.0000001157
+ 12       -0.0000021987      -0.0000005380       0.0000000000      -0.0000055018
+ 13        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 14        0.0000000000       0.0000005190       0.0000000000       0.0000000000
+ 15        0.0000017931      -0.0000514570       0.0000000000       0.0000106440
+ 16        0.0000000000      -0.0000033952       0.0000000000       0.0000000000
+ 17        0.0000000000       0.0000000319       0.0000000000       0.0000000000
+ 18        0.0000000000      -0.0000069829       0.0000000000       0.0000000000
+ 19        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 20        0.0000000000       0.0000003993       0.0000000000       0.0000000000
+ 21        0.0000000000      -0.0000042250       0.0000000000       0.0000000000
+ 22        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 23        0.0000000000      -0.0000002415       0.0000000000       0.0000000000
+ 24        0.0000000000       0.0000047638       0.0000000000       0.0000000000
+ 25        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 26        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 27        0.0000000000      -0.0000054835       0.0000000000       0.0000000000
+ 28        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 29        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 30        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 31        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 32        0.0000000000       0.0000002628       0.0000000000       0.0000000000
+ 33        0.0000000000      -0.0000046317       0.0000000000       0.0000000000
+ 34        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 35        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 36        0.0000000000       0.0000053610       0.0000000000       0.0000000000
+ 37        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 38        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 39        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 40        0.0000135869       0.0000004178       0.0000163821       0.0000193893
+ 41       -0.0000120045      -0.0000007081       0.0000008099      -0.0000008702
+ 42       -0.0000007081      -0.0000414570      -0.0000172781       0.0000219113
+ 43        0.0000008099      -0.0000172781      -0.0002950178       0.0000140261
+ 44       -0.0000008702       0.0000219113       0.0000140261      -0.0000682733
+ 45       -0.0000120816       0.0000462161       0.0000085841      -0.0000143586
+ 46        0.0000107189       0.0000097128       0.0000142228      -0.0000178401
+ 47       -0.0000115884      -0.0000124493      -0.0000177370       0.0000000027
+ 48        0.0000190503      -0.0000136034      -0.0000244698       0.0000146888
+
+  1        0.0000053505       0.0000000000       0.0000107189      -0.0000084819
+  2       -0.0000008510       0.0000000000       0.0000000000       0.0000000000
+  3        0.0000020158       0.0000000000       0.0000019679      -0.0000017441
+  4        0.0000005681       0.0000000000       0.0000000000       0.0000000000
+  5        0.0000017195       0.0000000000       0.0000019722      -0.0000016855
+  6        0.0000439936       0.0000000000      -0.0000040348      -0.0000021929
+  7       -0.0000068446       0.0000000000      -0.0000104696       0.0000088385
+  8        0.0000011260       0.0000000000      -0.0000006549       0.0000001554
+  9       -0.0000095689       0.0000000000       0.0000052928       0.0000027747
+ 10        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 11       -0.0000000596       0.0000000000       0.0000014651      -0.0000009917
+ 12       -0.0000099629       0.0000000000       0.0000027762       0.0000020319
+ 13        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 14        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 15        0.0000358476       0.0000000000      -0.0000056836      -0.0000037010
+ 16        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 17        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 18        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 19        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 20        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 21        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 22        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 23        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 24        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 25        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 26        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 27        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 28        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 29        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 30        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 31        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 32        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 33        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 34        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 35        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 36        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 37        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 38        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 39        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 40        0.0000000000       0.0000168956       0.0000193333       0.0000000000
+ 41       -0.0000120816       0.0000107189      -0.0000115884       0.0000190503
+ 42        0.0000462161       0.0000097128      -0.0000124493      -0.0000136034
+ 43        0.0000085841       0.0000142228      -0.0000177370      -0.0000244698
+ 44       -0.0000143586      -0.0000178401       0.0000000027       0.0000146888
+ 45       -0.0000990785       0.0000191354      -0.0000064051       0.0001870144
+ 46        0.0000191354      -0.0002950178       0.0000138945      -0.0000239609
+ 47       -0.0000064051       0.0000138945      -0.0000685187       0.0000145088
+ 48        0.0001870144      -0.0000239609       0.0000145088      -0.0001811353
+
+ END calc3_f2_f1Q_num
+     Time and date in f2 : 16h:34m:46.638s, the 16/ 3/2017
+        real (s):              0.020 in f2
+        real    :   0d  0h  0m  0s in f2
+        cpu (s):              0.020 in f2
+  Total real (s):              0.022
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.023
+  Total memory:          0 in f2
+ ======================================
+ ======================================
+ ======================================
+           1  evaluation of calc3_f2_f1Q_num
+ ======================================
+ mem_tot,max_mem_used                    0                    0
+ nb_alloc,nb_dealloc           0           0
+ END Tnum

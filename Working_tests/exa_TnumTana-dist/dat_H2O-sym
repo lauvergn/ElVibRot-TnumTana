@@ -1,0 +1,26 @@
+#!/bin/ksh
+
+ ici=`pwd`
+ cd ..
+ make tnum-dist
+ cd $ici
+
+../Tnum90.exe << ** > res
+ &variables zmat=T nat=3 sym=t /
+O
+H 1
+H 1 2
+sym  R+   R-   a
+3
+1    1.   1.   0.
+2    1.  -1.   0.
+3    0.   0.   1.
+
+1  0 0
+ &minimum read_nameQ=t unit='angs' /
+R+ 1.
+R- 0.
+a 90.
+
+ &calculation /
+**

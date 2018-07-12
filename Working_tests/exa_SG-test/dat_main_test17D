@@ -1,0 +1,18 @@
+ici=`pwd`
+DIR_vib=$ici/../..
+
+cd $DIR_vib
+ make
+cd $ici
+
+ export OMP_NUM_THREADS=2
+
+D=6
+LB=$1
+LG=$2
+
+nice $DIR_vib/vib << ** >"res_"$D"D_L"$LB"-"$LG
+ &system PBasisTOGrid_omp=1 main_test=t /
+$D
+$LB $LG
+**

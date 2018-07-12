@@ -1,0 +1,112 @@
+EVRT=../../..
+
+ ici=`pwd`
+ cd $EVRT
+ make Tnum_MCTDH
+ cd $ici
+
+$EVRT/Tnum90_MCTDH.exe << ** > res_BzPyr_Tana2_fig2a
+ &variables 
+         nrho=2
+         Old_Qtransfo=f
+         Tana=t
+         nb_Qtransfo=3
+ /
+ &Coord_transfo name_transfo='bunch' nb_G=6 nb_vect=17 inTOout=f /
+C C H H   C C H H   C C O C H   C C H H H    G1 G2  G5 G6 G3 G4
+  &recenterG tab_At_TO_G(1)=1,2,3,4,5,6,7,8,9,10,11,12,13 / G1
+  &recenterG tab_At_TO_G(1)=14,15,16,17,18 /  G2
+  &recenterG tab_At_TO_G(1)=1,2,3,4,5,6,7,8 / G5
+  &recenterG tab_At_TO_G(1)=9,10,11,12,13   / G6
+  &recenterG tab_At_TO_G(1)=1,2,3,4 / G3
+  &recenterG tab_At_TO_G(1)=5,6,7,8 / G4
+19 20 #17
+23 24 #16
+21 22 #15
+9 10  #10
+10 11 #9
+9 12  #8
+12 13 #7
+1 2   #6
+2 4   #4
+1 3   #5
+5 6   #3
+5 7   #2
+6 8   #1
+14 15 #14
+14 16 #13
+15 17 #12
+15 18 #11
+
+ &Coord_transfo name_transfo='poly' /
+  &vector nb_vect=2 Frame=t /    #17 zS0
+     &vector nb_vect=3 Frame=t / #16 xS0 et zS1
+       &vector nb_vect=4 Frame=t / #15 xS1 et zS6
+          &vector Frame=f /        #10 xS6
+          &vector Frame=f /        #9
+          &vector Frame=f /        #8
+          &vector Frame=f /        #7
+       &vector nb_vect=2 Frame=t / #6 zS3
+          &vector Frame=f /        #5 xS3
+          &vector Frame=f /        #4
+       &vector nb_vect=2 Frame=t / #3 z4
+          &vector Frame=f /        #2 xS4
+          &vector Frame=f /        #1
+     &vector nb_vect=3 Frame=t / #14 zS2
+          &vector Frame=f /      #13 xS2
+          &vector Frame=f /      #12
+          &vector Frame=f /      #11
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1    1 1 1   1 1 1    1 1 1  1 1 1    1 1 1  1 1 1    1 1 1  1 1 1    1 1 1  1 1 1    1 1 1  1 1 1    1 1 1   1 1 1  1 1 1
+
+ &minimum Read_nameQ=t /
+R 5.7619730204120518
+R 4.1937373120611134
+R 4.7632331557509922
+R 2.6514322864014508
+th 1.59120943244569039E-002
+R 2.5617426969235662
+th 0.86244235631695820
+phi 7.69537786978438804E-002
+R 2.7739426579942257
+th 0.87731068759958242
+phi 3.1112854759570219
+R 2.0324628980631427
+th 1.13762494019456865E-002
+phi 2.9501808664917761
+beta 2.79999735026114117E-002
+gamma 3.1335614622670138
+R 2.6356638441591040
+R 2.0336762775069208
+th 0.50084828573631812
+R 2.0311630838761872
+th -0.50190078707859387
+phi 7.73086701671076883E-003
+alpha 6.74769001199795014E-003
+beta -0.49499869866639323
+gamma -1.07479585749580848E-002
+R 2.6380186777684709
+R 2.0317239532779081
+th -0.49309590164734673
+R 2.0299955488674524
+th 0.52059667906094542
+phi 1.04024574589024268E-002
+alpha 1.27309731614929037E-002
+beta 0.50378199785286326
+gamma 3.1401261250932184
+beta 2.50844490116916910E-002
+gamma 3.0053585143507555
+R 2.8407303197280918
+R 2.0321044879238284
+th -0.47193383258706556
+R 2.0549718233428909
+th 0.35835339762640839
+phi 1.4543385026342630
+R 2.0415861431093218
+th 0.36958575135026034
+phi -0.65317632644554080
+alpha -0.23255252487458686
+beta -1.51443592807930707E-002
+gamma 3.1186443972869609
+**

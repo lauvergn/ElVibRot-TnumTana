@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>Notes on the Input  File</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+
+    <h2>Notes on the Input File</h2>
+
+    <p>The purpose of the input file is to provide a description of the
+    entire physical model and its numerical representation. 
+    </p>
+
+    <p>The input file consists of two main sections.
+    <ul>
+      <li> The first section provide the definition of the transformations
+        which describe the numerical representation of the system. 
+        The project of the Tnum program started several years ago and 
+        has an historical evolution. There can exist two or severay ways to
+        perform the same transformation. Therefore, in the firts section
+        specify which routines will perform the defined transformations. 
+        The namelist syntaxis is used to list the variable of the section. It
+        starts with "&" followed by the keyword <tt>variable</tt> (namelist name). It ends with "/".
+        For example: 
+        <dl>
+          <dt><tt>&variable</tt></dt>
+          <dd>Starting line of the first section</dd>
+          <dt><tt>Old_Qtransfo</tt></dt>
+          <dd>Specify which routines will perform the transformations, 
+            <tt>Old_Qtransfo=t</tt> or 
+            <tt>Old_Qtransfo=f</tt>. By default  
+            <tt>Old_Qtransfo=t</tt>  
+          </dd>
+          <dt><tt>nb_transfo</tt></dt>
+          <dd>The number of transformations</dd>
+          <dt><tt>rho</tt></dt>
+          <dd>Enables to select the volume element</dd>
+          <dt><tt>Tana</tt></dt>
+          <dd>
+            Enable to select if the keo will computed numerically or analytically. If
+           <tt>Tana=t</tt>, the analytical keo is computed else it the numerical keo is computed. 
+            By default
+            <tt>Tana=f</tt> 
+          </dd>
+          <dt><tt>/</tt></dt>
+          <dd>
+            The end of the section
+          </dd>
+          For more details see an example 
+           <a href="example_section2.html">here</a>
+        </dl>
+        Each transformation is considered as a subsection of the first section. their number cooresponds
+        to the value affected to <tt>nb_transfo</tt>. As in the firts section, 
+        the namelist synstaxis is considered in order
+        to read the parameters of each aech transformation. 
+        For the definition of a given transformation, the first line of each transformation starts with <tt> &Coord_transfo</tt> followed
+        by the keyword <tt>name_transfo ="name"</tt>, the number of vectors <tt>nb_vect = n</tt>,
+        the number of atoms <tt> nat </tt>, etc,...<tt>/</tt>
+          The possible names are:
+          <ul>
+           <li>
+            <tt>identity </tt>: for the identity transformation
+           </li>
+           <li>
+            <tt>linear</tt> : for linear transformation 
+           </li>
+           <li>
+           <tt>active</tt>: for the specification of the active coordinates 
+           </li>
+           <li>
+           <tt>hyperspherical</tt>: for the hyperspherical transformation
+           </li>
+           <li>
+           <tt>poly</tt>: for the polyspherical transformation
+           </li>
+           <li>
+            <tt>bunch</tt>: for the bunch of vectors transformation
+           </li>
+           <li>
+            <tt>zmat</tt>: for the zmatrix transformation
+           </li>
+           <li>
+            <tt>flexible</tt>: "to be describe"
+           </li>
+           <li>
+           <tt>QTOX_ana</tt>: "to be describe"
+           </li>
+           <li>
+            <tt>order</tt>: "to be describe"
+           </li>
+           <li>
+           <tt>NM </tt>: "to be describe"
+           </li>
+           <li>
+           <tt>oneD </tt>: "to be describe"
+           </li>
+           <li>
+            <tt>linear_inv</tt>: "to be describe" 
+           </li>
+          </ul>
+          </ul>
+          For more details, see 
+           <a href="example_subsection2.html">here</a>
+      </li>
+      <li> The second and last section provides the values of the coordinates. It
+          starts by "&" followed by the keyword <tt>minimum</tt> and the section name <tt> Read_nameQ=t</tt> or
+          <tt>Read_nameQ=f</tt>. 
+      </li>
+    </ul>
+    </p>
+
+    <h3 id="grid"> Example</h3>
+    <ul>
+      <li><a href="#grid">H2O</a></li>
+    </ul>
+
+
+
+
+    <p>
+    description+figure
+    </p>
+    <pre>
+     details of the example
+    </pre>
+
+  </body>
+</html>

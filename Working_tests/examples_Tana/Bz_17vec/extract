@@ -1,0 +1,4 @@
+for i in 6D 9D1 9D2 9D3 12D
+do
+awk '/Op_DEFINE-SECTION/,/end-operator/' "res"$i > "BzPy"$i".op"
+done

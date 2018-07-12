@@ -1,0 +1,362 @@
+* Lists are easy to do:
+** start every line
+* with a star
+** more stars mean
+*** deeper levels
+
+
+h1(id).   ElVibRot
+
+
+h2. 1) Introduction
+
+This code enables to perform quantum dynamics calculations with curvilinear coordinates.
+
+* Time independent calculations: energy levels, spectrum with intensities...
+* Time dependent calculations (wavepacket propagations): propagations with time dependent field, relaxation, optimal control ...
+
+The main originality concerns the use of numerical kinetic energy operator (Tnum), which enables a large flexibility in the choice of the curvilinear coordinates.
+
+h2. 2) Input file
+
+The input file has four mains sections:
+# SYSTEM and CONSTANTS, which define general parameters for parallelization, printing levels, energy unit, physical constants...
+# COORDINATES, which defines the curvilinear coordinates, the coordinates transformations and some aspects of the physical models (constraints....). This section is part of Tnum.
+# OPERATORS and BASIS SETS, which define parameters of scalar operators (potential, dipole moments...) and the active and inactive basis set (contracted).
+# ANALYSIS, which defines parameters for time dependent (including optimal control) or independent calculations, intensities.
+
+h3. 2.1) &system namelist
+
+This namelist can be used without parameter. The default values should work for most of the situations. However, the following parameters can be used in this namelist:
+
+* <b>printlevel</b> (default <b>-1</b>): The value <b>-1</b> gives the minimal output. The value <b>0</b> gives more output and <b>1</b> gives even more.
+* <b>RMatFormat</b> (default <b>"f18.10"</b>): This parameter controls the format to print a REAL matrix.
+* <b>CMatFormat</b> (default <b>"f15.7"</b>): This parameter controls the format to print a COMPLEX matrix.
+* <b>EneFormat</b> (default <b>"f18.10"</b>): This parameter controls the format to print the energy.
+
+* <b>intensity_only</b> (default <b>F</b>): The value <b>T</b> (for true) enables to calculate only the intensities (for time independent calculation) with the restart file (<i>restart.int</i>). It is useful, when one want to change temperature.
+
+* <b>Popenmp</b> (default <b>T</b>): The value <b>T</b> (for true) enables OPENMP parallelization in some parts of the code. The value <b>F</b> disables OPENMP parallelization. When its value is <b>T</b>, the following parameters enable to control more precisely the OPENMP parallelization.
+** <b>PMatOp_omp</b> (default <b>1</b>): The value <b>1</b> enables parallelization in matrix calculation (direct=0). The value <b>0</b> disables this parallelization.
+** <b>POpPsi_omp</b> (default <b>0</b>): The value <b>1</b> or <b>2</b> enables parallelization in the action of an operator on a wavepacket. The value <b>0</b> disables this parallelization.
+** <b>PFBRDVR_omp</b> (default <b>0</b>): The value <b>1</b> enables parallelization in the FBR <-> DVR transformation. The value <b>0</b> disables this parallelization. <b>This feature is disabled</b>.
+** <b>PGrid_omp</b> (default <b>1</b>): The value <b>1</b> enables parallelization in grid calculation. The value <b>0</b> disables this parallelization.
+
+
+* <b>EVR</b> (default <b>T</b>): The value <b>T</b> (for true) enables to use <b>ElVibRot</b>. The value <b>F</b> disables the <b>ElVibRot</b> calculation (see <b>cart</b>).
+* <b>cart</b> (default <b>T</b>): The value <b>T</b> (for true) enables to use <b>cart</b>. The value <b>F</b> disables the <b>cart</b> calculation (see <b>EVR</b>).
+
+* <b>EVRT_path</b> (default <b>directory of compilation</b>): it enables to read the isotopic masses from an internal file (Internal_data/IsotopicMass.txt). This parameter can be change also in the namelist "constantes".
+
+h3. 2.2) &constantes namelist
+
+This namelist can be used without parameter, it enables to change energy unit and selects different version of physical constants or to redefine some of them. The following parameters can be used in this namelist:
+
+* <b>version</b> (default <b>"CODATA2006"</b>): The value <b>"CODATA2006"</b> enables to use physical constants defined in codat2006. Otherwise, the constants are the ones from the 70ed of the Physical chemistry Handbook. The atomic masses are from the Handbook.
+
+* <b>ene_unit</b> (default <b>"cm-1"</b>): This value stores the name of the printed energy unit and it enables to select some energy conversion (see <b>auTOenergy</b>). If the value of <b>ene_unit</b> is different from the following list, a personal unit is used and <b>ene_unit</b> is just the name of the unit. The conversion from atomic unit to the personal the unit is selected with <b>auTOenergy</b> parameter. The possible values are of <b>ene_unit</b> are:
+** <b>"cm-1"</b>: wave number unit (default).
+** <b>"au"</b> or <b>"hartree"</b>: atomic unit or Hartree unit (the working energy unit).
+** <b>"ev"</b> or <b>"eV"</b>: electron volt unit.
+* <b>auTOenergy</b>: This parameter enables to change printed energy unit conversion.
+
+The following parameters can be use to modify some physical constants (to reproduce calculations with wrong ones).
+
+* <b>auTOcm_inv</b> : This parameter enables to modify energy conversion factor to <b>"cm-1"</b>. It has an effect only if <b>ene_unit="cm-1"</b>.
+* <b>inv_Name</b> : This parameter enables to modify mass conversion factor (au <=> g/mol).
+
+* <b>EVRT_path</b> (default <b>directory of compilation</b>): it enables to read the isotopic masses from an internal file (Internal_data/IsotopicMass.txt). This parameter can be change also in the namelist "constantes".
+
+h3. 2.3) &variables namelist
+
+This namelist is part of <b>Tnum</b> and it enables to define the curvilinear coordinates used in the dynamics. It enables to set reduced dimensionality models (rigid or flexible constraints, some part of adiabatic approximation...). 
+See the <b>Tnum</b> manual.
+
+h3. 2.4) &minimun namelist
+
+The parameters of this namelist define two mains features: 
+
+a) The reference geometry (used to define rigid constraints for <b>Tnum</b>). The relevant parameters are the following:
+
+* <b>read_Qdyn0</b> (default <b>T</b>): When the value is <b>T</b> (for true), the reference geometry is defined with the dynamical coordinates (see <b>Tnum</b>). Remark, in previous version, this parameter was defined as <b>read_Qsym0</b>.
+* <b>read_Qact0</b> (default <b>F</b>): When the value is <b>T</b> (for true), the reference geometry is defined with the active coordinates (see <b>Tnum</b>).
+* <b>read_xyz0</b> (default <b>F</b>): When the value is <b>T</b> (for true), the reference geometry is defined with the Cartesian coordinates. Be careful, the transformation from Cartesian to dynamical coordinates is always possible with the present Tnum version.
+* <b>read_itQ0transfo</b> (default <b>-1</b>): The value defines the coordinate transformation number for which the reference geometry is read. Any numbers from <b>0</b> (for Cartesian coordinates), <b>nb_Qtransfo</b> (for dynanical coordinates) are possible (see <b>Tnum</b> for more details). This parameter should be used only when the parameters <b>Old_Qtransfo=f</b> and <b>nb_Qtransfo</b> are used in the <b>&variable</b> namelist.
+
+* <b>read_nameQ</b> (default <b>F</b>): When the value is <b>T</b> (for true), the coordinate names are read.
+* <b>unit</b> (default <b>"au"</b>): When the value is <b>"au"</b> (for atomic unit), the coordinate units are the "bohr" and the "radian". Otherwise, the units are the "�ngstr�m" and the "degree".
+
+b) Options for the scalar operators (part of <b>ElVibRot</b>). The relevant parameters are the following:
+
+* <b>nb_elec</b> (default <b>1</b>): This parameter defines the number of electronic (diabatic) surface used in the dynamic. All the operators calculated in <i>calcN_op</i> subroutine (<i>sub_system.f</i> or <i>sub_system.f90</i> files) are defined as matrices (nb_elec x nb_elec).
+* <b>nb_scalar_Op</b> (default <b>0</b>): This parameter defines the number of scalar operators (without the PES). It enables to calculate the spectral representation of these operators and it is used when intensities are calculated. Remark, when  <b>nb_scalar_Op=0</b> and when <b>intensity=t</b> is set up in the <b>&analysis</b> namelist, the <b>nb_scalar_Op</b> is modified to <b>3</b>.The scalar operators (<i>mat_ScalOp</i>) are calculated in <i>calcN_op</i>.
+* <b>pot_cplx</b> (default <b>F</b>): When the value is <b>T</b>, the potential energy surfaces are complex. The imaginary part (<i>mat_imV</i>) of the PES is calculate in <i>calcN_op</i> subroutine.
+* <b>OnTheFly</b> (default <b>F</b>): When the value is <b>T</b>, the scalar operators and the potential energy surfaces are calculated "on-the-fly" with quantum chemistry codes (only Gaussian and Gamess-US are defined). Only the 3 components of the dipole moment can be calculated (<b>nb_scalar_Op=3</b>).
+* <b>pot0</b> (default <b>0.</b>): This value is the energy reference of the PES. This value is not automatically defined from the PES grid, therefore it has to be set-up. Otherwise, the printed energy with respect to the <b>pot0</b> value might be not printable. Nevertheless, the quantum dynamics calculation will be correct.
+
+
+* <b>pot_act</b> (default <b>T</b>): When the value is <b>T</b>, the scalar operators and the potential energy surfaces are evaluated with dynamical coordinates in active order.
+* <b>pot_cart</b> (default <b>F</b>): When the value is <b>T</b>, the scalar operators and the potential energy surfaces are evaluated with Cartesian coordinates.
+
+Remark: when both values of <b>pot_act</b> and <b>pot_cart</b> are <b>F</b>, the scalar operators and the potential energy surfaces are evaluated with dynamical coordinates (not in active order).
+
+* <b>pot_itQtransfo</b> (default <b>-1</b>): The value defines the coordinate transformation number for which the scalar operators and the potential energy surfaces are evaluated. Any numbers from <b>0</b> (for Cartesian coordinates), <b>nb_Qtransfo</b> (for dynanical coordinates) are possible (see <b>Tnum</b> for more details). This parameter should be used only when the parameters <b>Old_Qtransfo=f</b> and <b>nb_Qtransfo</b> are used in the <b>&variable</b> namelist.
+
+* <b>HarD</b> (default <b>T</b>): This parameter is relevant only when Harmonic adiabatic separation is used (HADA or cHAC, coordinate types, 21 or 22). When the value is <b>T</b>, the scalar operators and the potential energy surfaces are evaluated only along the "active" coordinates (coordinate type, 1) and an harmonic contribution is added in <i>d0d1d2_h</i> subroutine (<i>sub_system.f</i> or <i>sub_system.f90</i> files).When the value is <b>F</b>, the scalar operators and the potential energy surfaces are evaluated only along all coordinates (coordinate types, 1, 21 or 22). It enables to recover exact calculation with coupled Harmonic Adiabatic Channels (cHAC).
+
+h3. 2.5) &basis_nD namelist
+
+This namelist enables to define mutidimensional basis sets associated with the active coordinates (type 1). The basis set associated with inactive coordinates (type 21 or 22) will be defined in the next namelist.
+The definition of the basis-set can be recursive without limitation in the recursivity level.
+
+For instance a 6D-basis-set can be define as a direct-product of 6 1D-basis-sets, or as a direct-product of 2 3D-basis-set and each of them can be defined from a direct-product of 3 1D-basis-set, or other contraction schemes.
+
+General parameters of the namelist:
+
+* <b>name</b> (no default): This parameter defines the basis-set (the list basis-sets is given below). It must be set up. All basis-functions are normalized to one and are real.
+
+* <b>iQdyn(:)</b> (default, <b>0</b>): The values of this table define the coordinate list (in dynamical order) of the basis-set (only for primitive basis-set).
+* <b>iQact(:)</b> (default, <b>0</b>): The values of this table define the coordinate list (in active order) of the basis-set (only for primitive basis-set). It is preferable to use <b>iQdyn(:)</b>.
+
+* <b>cplx</b> (default, <b>F</b>): The value <b>T</b> (for true) enables a complex basis-set (not used).
+
+* <b>nb</b> (default, <b>0</b>): The value defines the number of basis functions (only for primitive basis-set).
+* <b>nq</b> (default, <b>0</b>): The value defines the number of quadrature grid points (only for primitive basis-set).
+
+* <b>packed</b> (default, <b>F</b>): When the value is <b>T</b>, the basis functions is represented on a multidimensional grid. It only relevant for "direct product" basis set. All primitive and contracted basis sets are packed (<b>packed=T</b>).
+
+* <b>nb_basis</b> (default, <b>0</b>): The value enables to define the number of basis sets used for a "direct product" basis set or other ones derived from a "direct product" basis set (basis with Sparse Grid ...). This value can be different from the dimension of the basis set.
+
+* <b>A</b> and <b>B</b> (default, <b>0</b> and <b>0</b>): The values define the range [A:B] of some basis-set (<b>boxAB</b> and <b>cosAB</b>).
+* <b>Q0</b> and <b>scaleQ</b> (default, <b>0</b> and <b>0</b>): The values define the scaling parameters of Hermite (harmonic oscillator) basis functions: (<b>Qnew = Q0 + Qquadra / scaleQ</b>). For instance, <b>Q0</b> can be the equilibrium value of the coordinate.
+
+
+Parameters which control the basis set contraction:
+
+* <b>contrac</b> (default, <b>F</b>): The value <b>T</b> (for true) enables the contraction of the basis-set.
+* <b>name_contrac_file</b> (no default): when <b>contrac=T</b> and when <b>name_contrac_file</b> is not empty the contracted basis-functions are read from the <b>name_contrac_file</b> file. When the <b>name_contrac_file</b> is empty, the contracted basis-functions are read from the input data file. The contracted coefficients can be obtained from a previous calculation using the parameter <b>print_psi</b> in the namelist <b>&analyse</b>.
+* <b>nbc</b> (default, <b>-1</b>): The values defines the number of contracted basis functions.
+* <b>auto_contrac</b> (default, <b>F</b>): The value <b>T</b> (for true) enables an automatic contraction of a basis-set. It is working for multidimensional basis-set (recursive feature).
+* <b>max_ene_contrac</b> (default, <b>10000</b> cm-1): The value enables to define the number of contracted basis-functions for the automatic procedure (only if <b>nbc</b> is not defined).
+* <b>min_nbc</b> (default, <b>0</b>): The value enables to define the minimal number of contracted basis-functions for the automatic procedure (only if <b>nbc</b> is not defined).
+* <b>max_nbc</b> (default, <b>0</b>): The value enables to define the maximal number of contracted basis-functions for the automatic procedure (only if <b>nbc</b> is not defined).
+* <b>auto_contrac_type1_TO</b> (default, <b>100</b>): The value enables to define the constraints of the coordinates (of type 1) which are not the coordinates of the contracted basis set (automatic procedure). The possible values are <b>0</b> (rigid constraints) or <b>100</b> (see Tnum for more details).
+* <b>auto_contrac_type21_TO</b> (default, <b>200</b>): The value enables to define the constraints of the coordinates (of types 21 or 22) which are not the coordinates of the contracted basis set (automatic procedure). The possible values are <b>20</b> (flexible constraints) or <b>200</b> (see Tnum for more details).
+
+Parameters which control the grid contraction like PODVR. The basis set has to contracted with the automatic procedure (<b>auto_contrac=T</b>). This feature is experimental:
+
+* <b>PODVR</b> (default, <b>F</b>): The value <b>T</b> (for true) enables the definition of PODVR grid from a contracted 1D-basis set (be careful, it gives non-orthogonal basis functions).
+* <b>PODVR_polyortho</b> (default, <b>F</b>): The value <b>T</b> (for true) enables the definition of a new orthogonal polynomials from a contracted 1D-basis set (be careful, non-hermiticity issue).
+* <b>nqc</b> (default, <b>-1</b>): The values defines the number of PODVR grid points.
+* <b>nqPLUSnbc_TO_nqc</b> (default, <b>2</b>): The values enables to define the number of PODVR grid points from the number of contracted basis functions such that <b>nqc = nbc + nqPLUSnbc_TO_nqc</b>, (only if <b>nqc</b> is not defined ).
+
+
+There are two kind of basis-sets (i) the primitive ones. (ii) the direct product one (contracted or not).
+
+h4. 2.5.1) Primitive basis-set:
+
+* <b>name="Pl0"</b>: Legendre polynomials. The coordinate is x (x=cos(theta)).
+* <b>name="Pl0_0"</b>: Even Legendre polynomials. The coordinate is x (x=cos(theta)).
+* <b>name="Pl0_1"</b>: Odd Legendre polynomials. The coordinate is x (x=cos(theta)).
+* <b>name="Pl0_a"</b>: Legendre polynomials. The coordinate is theta, (x=cos(theta)).
+* <b>name="Pl0_a_0"</b>: Even Legendre polynomials. The coordinate is theta, (x=cos(theta)).
+* <b>name="Pl0_a_1"</b>: Odd Legendre polynomials. The coordinate is theta, (x=cos(theta)).
+* <b>name="Hm"</b>: Hermite polynomials (harmonic Oscillator basis-functions). It needs to define <b>Q0</b> and <b>scaleQ</b>.
+* <b>name="Hm_0"</b>: Even Hermite polynomials (harmonic Oscillator basis-functions). It needs to define <b>Q0</b> and <b>scaleQ</b>.
+* <b>name="Hm_1"</b>: Odd Hermite polynomials(harmonic Oscillator basis-functions).It needs to define <b>Q0</b> and <b>scaleQ</b>.
+* <b>name="cos"</b> or <b>name="sin"</b> or <b>name="fourier"</b>: Fourir series, in the range [-Pi:Pi]. The grid is symmetric with respect to 0, the first grid point is -Pi+dx/2. We are not using FFT.
+* <b>name="cosAB"</b>: Fourier series, in the range [A:B]. The grid is symmetric with respect to (A+B)/2, the first grid point is A+dx/2. We are not using FFT.
+* <b>name="cosABnosym"</b>: Fourier series, in the range [A:B]. The grid is not symmetric, the first grid point is A+dx. We are not using FFT.
+* <b>name="boxAB"</b>: Sine functions (particle-in-a-box basis-functions), in the range [A:B]. The grid is symmetric with respect to (A+B)/2, the first grid point is A+dx/2.
+* <b>name="boxABnosym"</b>: Sine functions (particle-in-a-box basis-functions). The grid is not symmetric, the first grid point is A+dx.
+* <b>name="Ylm"</b>: Sperical harmonic basis-functions (in theta and phi).
+* <b>name="Ylm_0a"</b>: Sperical harmonic basis-functions (in theta and phi) with even functions in x=cos(theta).
+* <b>name="Ylm_1a"</b>: Sperical harmonic basis-functions (in theta and phi) with odd functions in x=cos(theta).
+
+Parameters which control the symmetry (abelian group) of the primitive (1D) basis functions. One cannot have more than 3 elements of symmetry.
+
+* <b>symab</b> (default, <b>-1</b>): Enable to set up the symmetry with respect to one element of symmetry.
+** "-1": no symmetry
+** "0" equivalent to [0 0 0]: the basis functions are symmetric with respect to all elements of symmetry.
+** "1" equivalent to [0 0 1]: the odd (even) basis functions are symmetric (antisymmetric) with respect to the first element.
+** "2" equivalent to [0 1 0]: the odd (even) basis functions are symmetric (antisymmetric) with respect to the second element.
+** "4" equivalent to [1 0 0]: the odd (even) basis functions are symmetric (antisymmetric) with respect to the fird element.
+
+
+h4. 2.5.2) Direct product basis-set:
+
+* <b>name="direct_prod"</b>: Direct product basis-set. The number of basis-sets (<b>nb_basis</b>) which compose the direct product one, has to be defined. With this basis-set, you can defined mutlidimentional contracted basis-set, you can used sparse basis, sparse grid... 
+
+Parameters which control the sparse basis and sparse grid (experimental options):
+
+* <b>Type_OF_nDindB</b> (default, <b>1</b>): This parameter defines how the multidimensional index associated with the multidimensional basis set is defined and stored. Two values are possible:
+** <b>Type_OF_nDindB=0</b>: it enables to define a sparse basis from a direct-product basis set. A basis function is retained when the "norm" of its index is lower or equal to a threshold (<b>Norm_OF_nDindB</b>).
+** <b>Type_OF_nDindB=1</b>: it enables to define a direct-product basis set. Therefore, it is not a sparse basis (default).
+* <b>Norm_OF_nDindB</b> (default, <b>infinite</b>): This parameter defines the threshold of the index "norm" of a multidimensional basis function.
+* <b>weight_OF_nDindB</b> (default, <b>1.</b>): This parameter enables to add a weight for the calculation of index norm of a basis function.
+
+The "norm" of a multidimensional index(:) is calculated as follow: Norm = Sum((index(:)-1)*weight(:))
+
+* <b>L_SparseGrid</b> (default, <b>-1</b>): A value greater than "0" enables to define a basis with a sparse grid (Smolyak procedure). 
+* <b>SparseGrid</b> (default, <b>F</b>): The value <b>T</b> (for true) enables to define a basis with a sparse grid (Smolyak procedure). When L_SparseGrid is greater than "0", this parameter is automatically set up to "T". This parameters is used mainly when sparse grid is defined recursilvely (Sparse Grid of Sparse grid).
+
+When a sparse grid is used, you have to define <b>Type_OF_nDindB=0</b> and the value of <b>L_SparseGrid</b> has to be greater than <b>Norm_OF_nDindB</b>.
+
+
+h3. 2.6) &inactive namelist
+
+This namelist enables to control the calculation of Harmonic adiabatic channels along an active coordinates (type 1). The inactive coordinates (type 21) are transformed to normal coordinates along the active coordinates. This method is related to the Reaction Path or Surface Hamiltonian or the Movable Basis Method, but it is more closer to the adiabatic separation.
+This approach enables to define a compact multidimensional basis set for the inactive coordinates (type 21). This basis set is a direct product of selected harmonic oscillator basis functions. The selection of the basis functions are made in term of an energy threshold and in term of excitations.
+
+It requires 3 subroutines defined in the file <i>sub_system.f</i> or <i>sub_system.f90</i>:
+* <i>d0d1d2_h</i> subroutine: it enables to calculate the hessian matrix along the active coordinates (no derivative are required). 
+* <i>d0d1d2_g</i> subroutine: it enables to calculate the gradient along the active coordinates. It is usefull when it is difficult to calculate rigorously a minimun energy path (when the dynamical coordinates are defined with linear combinations of the primitive coordinates). This calculation is otpional (see below <b>gradTOpot0</b>).
+* <i>d0d1d2d3_Qeq</i> subroutine: it enables to calculate the "optimized" inactive coordiantes (types 21 or 22) along the active coordinates. This subroutine is related to <i>calc_dnQflex</i> subroutine used in Tnum.
+
+Remarks: in a near future, the name of these subroutines will change. 
+
+Parameters to select the multidimentional basis functions:
+
+* <b>max_excit</b> (default, <b>0</b>): The value of this parameter defines the largest excitation of the mutidimensional basis functions kept in the expansion.
+* <b>tab_nb(:)</b> (default, <b>0</b>): The value of tab_nb(i) defines the number of basis functions for the ith harmonic oscillator basis set.
+* <b>max_ene_h</b> (default, <b>infinite</b>): The value (in cm-1) enables to select the mutidimensional basis functions in term of the harmonic energy relatively to the harmonic ZPE (inactive coordinates type 21 or 22). The harmonic frequencies are obtained at the reference geometry defined in the <b>minimum</b> namelist.
+
+* <b>isort</b> (default, <b>1</b>): This parameter defines how the multidimensional basis functions are sorted. 
+** <b>isort=1</b>: they are sorted in term of harmonic energy levels.
+** <b>isort=2</b>: they are sorted in term excitations.
+
+* <b>n_h</b> (default, <b>-1</b>): This parameter enables to select the number of adiabatic channels used for the dynamics (it can be different from total number of channels).
+
+* <b>ADA</b> (default, <b>F</b>): When it value <b>T</b>, the channels are the true adiabatic channels and the are not the Harmonic adiabatic channels (do not use, not fully tested). 
+
+
+All defined parameters (<b>max_excit</b>, <b>tab_nb(:)</b> and <b>max_ene_h</b>) are considered to select the mutidimensional basis functions.
+
+Parameters for a direct-product grid:
+
+* <b>nb_quadrature</b> (default, <b>10</b>): This parameter defines the number of grid points for all the harmonic oscillator basis sets (used only if sparse grid is not used).
+* <b>tab_nq(:)</b> (default, <b>0</b>): The value of tab_nq(i) defines the number of grid points for the ith harmonic oscillator basis set. If both <b>nb_quadrature</b> and <b>tab_nq(:)</b> are defined, only the <b>tab_nq(:)</b> values are considered.
+
+Parameters for a sparse grid (Smolyak):
+
+* <b>SparseGrid</b> (default, <b>F</b>): When the value is <b>T</b>, a sparse grid is used instead of a direct-product one (the <b>nb_quadrature</b> and <b>tab_nq(:)</b> values are ignored). The <b>L_SparseGrid</b> parameter is required.
+* <b>L_SparseGrid</b> (default, <b>-1</b>): The value enables to select the level of the sparse grid (it is related to the norm of the multidimensional index).
+
+Parameters for the harmonic modes:
+
+* <b>order(:)</b> (default, <b>1,2,3...</b>): This list enables to change the frequencies order.
+* <b>H0_sym</b> (default, <b>F</b>): When the value is <b>T</b>, the hessian and the kinetic matrices are "symmetrized" (some coupling are forced to zero). It requires definition of the <b>Qinact2n_sym(:)</b> and <b>Qinact2n_eq(:,:)</b> parameters.
+* <b>Qinact2n_sym(:)</b> (default, <b>0</b>): Each value of the list is associated with an inactive coordinates (type 21 or 22). When the values are differents, the coordinates are uncoupled otherwise there coupled (with the default value, all coordinates are coupled).
+* <b>Qinact2n_eq(:)</b> (default, <b>0</b>): This table enables to set up equivalent coordinates (do not use).
+
+Parameters for the contraction on the (harmonic) adiabatic channels (HAC):
+* <b>contrac_ba_ON_HAC</b> (default, <b>F</b>): When the value is <b>T</b>, the active basis is contracted on each channels. The number of active basis functions is lower or equal to <b>max_nb_ba_ON_HAC</b> and also it is defined such the energy levels are lower than <b>max_ene_h</b> (cm-1).
+* <b>max_nb_ba_ON_HAC</b> (default, <b>infinite</b>): Largest number of contracted active basis functions.
+Warning: this contraction scheme does not work with direct=2. Instead, you have to use direct=0.
+
+
+Miscellaneous parameters:
+
+* <b>gradTOpot0</b> (default, <b>F</b>): When the value is <b>T</b>, the gradiant along the acitive coordinates (type 1) calculated in the "d0d1d2_g" subroutinea is taken into account in the caluclation of Harmonic channels. Using, the hessian and the gradiant along active path, a new minimum energy path is calculated. Therefore, the potential and the optimal inactive coordiantes along the active path are modified.
+
+* <b>num</b> (default, <b>T</b>): Actually our approach required the calculation of derivative (harmonic frequencies, normal modes) with respect to the active coordinates. Although, it can be done analitically, the derivatives are done numerically using finite-difference method. Be carrefull, the option <b>num=F</b> can not be used.
+* <b>setp</b> (default, <b0.0001</b> au): This parameter defines the step used in the finite-difference method (change the value with caution).
+
+
+
+h3. 2.7) &active namelist
+
+This namelist enables to control some features of the operators (scalars or the Hamiltonian) on active coordinates (type 1): 
+* Grid features: saving in memory or file, restart, reading from file
+* Operator representations: matrices (packed or not), without matrices.
+
+Main parameter:
+* <b>direct</b> (default, <b>0</b>): This parameter is controls the operator representation. The possibilities are the following:
+** <b>direct=0</b>: The grid is stored only in the file <b>name_Grid</b> but not in memory. The operator representations are matrices.
+** <b>direct=1</b>: The grid is stored in the file <b>name_Grid</b> and also in memory. The operator representation are grids. Matrices can be calculated with the option <b>make_MatOp=t</b>.
+** <b>direct=2</b>: The grid is not stored in the file <b>name_Grid</b> but is stored in memory. The operator representation are grids. Matrices can be calculated with the option <b>make_MatOp=t</b>.
+** <b>direct=3</b>: the grid is stored only in the file <b>name_Grid</b> but not in memory. The operator representation are grids.
+
+Remarks: Normally, one has to chose between <b>direct=0</b> and <b>direct=2</b> options.
+The <b>direct=0</b> option is used for operators which a small number of basis functions, including HAC (<10000) and when the grid calculation is taking time (adiabatic channels).
+The <b>direct=2</b> option is used for operators which a large number of basis functions, including HAC (>>10000) and when the grid can be stored in memory.
+
+Grid options:
+The following options are relevent, only when the grid is stored (<b>direct�2</b>). The openmp parallelization of the grid calculation is the default (see &system namelist).
+
+* <b>Read_Grid</b> (default, <b>F</b>): When the value is <b>T</b>, the grid of all the operators are read from a file (see <b>name_Grid</b>). Otherwise, the grid is calculated. The option <b>Read_Grid=t</b> is usefull only when HAC (type 21) are caluculated (long calculation).
+* <b>Restart_Grid</b> (default, <b>F</b>): When the value is <b>T</b> and when the grid is incomplete in the Grid file (see <b>name_Grid</b>), the grid calculation will be restarted. This option is incompatible with openmp parallelization.
+* <b>num_grid_i</b> and <b>num_grid_f</b> (default, <b>0</b> and <b>0</b>): When one want to calculate an incomplete grid, then the first and the last grid points are set up, respectively, with <b>num_grid_i</b> and <b>num_grid_f</b>. With the default value, the full grid is calculated. This option enables to perform some sort of parallelization.
+* <b>name_Grid</b> (default, <b>'SH_HADA'</b>): This parameter enables to change the name of the grid file. When openmp parallelization is on, the grid file will be spilt in several files:
+** <i>SH_HADA</i> (with just one line)
+** <i>SH_HADA.0</i> (for the grid points of the first thread)
+** <i>SH_HADA.1</i> (for the grid points of the second thread)
+** and so on, for all threads
+* <b>formatted_Grid</b> (default, <b>T</b>): When the value is <b>F</b>, the grid is stored unformatted.
+
+Operator options:
+The following options control the matrix representation of the operators.
+
+* <b>make_MatOp</b> (default, <b>F</b>): When the value is <b>T</b>, the operator representations are forced to be as a matrices (even when <b>direct>0</b>.
+* <b>read_Op</b> (default, <b>F</b>): When the value is <b>T</b>, the operator matrices are read from the input file.
+
+* <b>pack_Op</b> (default, <b>F</b>): When the value is <b>T</b>, the matrix operator is packed. Only the absolute values which are larger than a threshold (<b>tol_pack</b>) are used (action of the operator on a wavefunction).
+* <b>tol_pack</b> (default, <b>1.e-7</b>): This parameter is the threshold for packed an operator (see <b>pack_Op</b>).
+* <b>tol_npack</b> (default, <b>0.9</b>): This parameter is an option for packed an operator. When the ratio between the number matrix elemments larger than the threshold (<b>tol_pack</b>) and the total the number matrix elemments is larger than <b>tol_npack</b>, the matrix will be not packed.
+
+
+Miscellaneous parameters:
+
+* <b>test</b> (default, <b>T</b>): When the value is <b>T</b>, only one grid point (reference geometry), will be calculated (usefull, to check the subroutines in the file <i>sub_system.f</i> or <i>sub_system.f90</i>).
+* <b>comput_S</b> (default, <b>F</b>): When the value is <b>T</b> and when the operators are represented by matrices, the opverlap matrix is calculated. Then it is compared to the identity matrix.
+* <b>JJ</b> (default, <b>0</b>): Total angular momentum quantum number. When the value is larger than <b>0</b>, the rotational and coriolis contributinos are calculated along the grid (experimental feature).
+* <b>pot_only</b> (default, <b>F</b>): When the value is <b>T</b>, just the potential is included in the Hamiltonian (the kinetic energy contribution is not included).
+* <b>T_only</b> (default, <b>F</b>): When the value is <b>T</b>, just the kinetic energy contribution is included in the Hamiltonian (the potential is not included).
+
+h3. 2.8) &analyse namelist
+
+This namelist enables to specify the use of the program:
+* Energy levels with or without Davidson procedure
+* Intensities
+* Wavepackets propagation  
+* Optimal Control
+
+Without any option, the program calculates and makes an analysis of the energy levels. The relevent options are the following:
+* <b>max_ana</b> (default, <b>-1</b>): This parameter defines the number of levels to be analyzed (see <b>max_ene</b>). When the value is <b>-1</b>, all levels are considered.
+* <b>max_ene</b> (default, <b>10000</b> cm-1): This parameter enables to define the number of levels to be analyzed. All levels with an energy with respect to the ZPE below <b>max_ene</b>, will be analyzed.
+
+
+
+        print           = .FALSE.
+        psi2            = .FALSE.
+        propa           = .FALSE.
+        intensity       = .FALSE.
+        control         = .FALSE.
+        davidson        = .FALSE.
+        Spectral_ScalOp = .FALSE.
+
+        print_psi       = 0
+        max_ana         = 1
+        ene0            = huge(ONE)
+        Ezpe            = huge(ONE)
+        Temp            = -ONE
+        max_ene         = TEN**4
+
+h2. 3) Installation
+
+The installation is simple. However, we do not have an fully automatic procedure (like configure ...).
+In particular, you have to select or define your compilator in the "makefile"
+Then, you have to compile the program with the unix command "make".
+The program needs lapack library (mkl for ifort)
+
+Currently, the program can be compile on 
+* linux platform with 
+   - gfortran -fopenmp -g -O5  (version: 4.4.7)
+   - ifort -openmp -O3 -xHost -ipo -g -traceback -mkl -lpthread (version: 12.0.5)
+* osx platform with gfortran
+
+
+To check that the program has be compile correctly, you can run some tests from the directory: "exa_hcn-dist". Each input data starts with dat.... 
+To run the "dat_Davidson" example, just the type the "dat_Davidson" command. The output will be in the "res" file.
+ 
+

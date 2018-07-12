@@ -1,0 +1,32 @@
+
+ ici=`pwd`
+ cd ..
+ make Tnum_MCTDH
+ cd $ici
+
+../Tnum90_MCTDH.exe << ** > res
+ &variables Old_Qtransfo=f nb_Qtransfo=2 Cart_transfo=t /
+  &Coord_transfo name_transfo='zmat' nat=4 /
+    O
+    N   1
+    O   2 1
+    H   1 2 3
+
+  &Coord_transfo name_transfo='active' /
+    1 1 1    1 1 1   
+
+  &Coord_transfo name_transfo='Cartesian'  /
+    &Cartesian Eckart=t ReadRefGeometry=t nat=4 unit='angs' /
+      8           0.000000000           0.000000000           0.000000000
+      7           0.000000000           0.000000000           1.392383619
+      8           1.088466105           0.000000000           1.858239960
+      1           0.943910961           0.000000000          -0.242502154
+                       
+ &minimum read_xyz0=t read_Qsym0=f unit='angs' /
+      8           0.000000000           0.000000000           0.000000000
+      7           0.000000000           0.000000000           1.427049423
+      8           1.095867169           0.000000000           1.840428851
+      1          -0.944079716           0.000000000          -0.198117998
+
+ &MCTDH grid1D=.FALSE. perio=f epsi_MCTDH=1e-10 /
+**

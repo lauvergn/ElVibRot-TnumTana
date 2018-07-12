@@ -1,0 +1,10 @@
+file=fort.999
+
+list="dnS%d1"
+
+for typeVar in  $list
+do
+ mem=`awk '{print $3 " " $5}' $file | grep name_var=$typeVar | awk '{s=s+$1} END {print s}'`
+ echo $typeVar $mem
+done
+

@@ -1,0 +1,422 @@
+!===========================================================================
+!===========================================================================
+!This file is part of Tnum-Tana.
+!
+!    Tnum-Tana is a free software: you can redistribute it and/or modify
+!    it under the terms of the GNU Lesser General Public License as published by
+!    the Free Software Foundation, either version 3 of the License, or
+!    (at your option) any later version.
+!
+!    Tnum-Tana is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU Lesser General Public License for more details.
+!
+!    You should have received a copy of the GNU Lesser General Public License
+!    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
+!
+!    Copyright 2015  David Lauvergnat
+!      with contributions of Mamadou Ndong
+!
+!===========================================================================
+!===========================================================================
+      MODULE mod_system
+      USE mod_NumParameters
+      USE mod_string
+      USE mod_RealWithUnit
+      USE mod_RW_MatVec
+      USE mod_FracInteger
+      USE mod_memory
+      USE mod_memory_Pointer
+      USE mod_memory_NotPointer
+      !$ USE omp_lib
+      IMPLICIT NONE
+
+      !!@description: TODO
+      !!@param: TODO
+      INTERFACE compare_tab
+        MODULE PROCEDURE compare_la, compare_tab_int, compare_tab_real, &
+                         compare_tab_cmplx
+      END INTERFACE
+
+#if defined(__TNUM_VER)
+      character (len=Name_len) :: Tnum_version = __TNUM_VER
+#else
+      character (len=Name_len) :: Tnum_version = "unknown: -D__TNUM_VER=?"
+#endif
+
+#if defined(__TANA_VER)
+      character (len=Name_len) :: Tana_version = __TANA_VER
+#else
+      character (len=Name_len) :: Tana_version = "unknown: -D__TANA_VER=?"
+#endif
+
+#if defined(__EVR_VER)
+      character (len=Name_len) :: EVR_version = __EVR_VER
+#else
+      character (len=Name_len) :: EVR_version = "unknown: -D__EVR_VER=?"
+#endif
+
+#if defined(__EVRTPATH)
+      character (len=Line_len) :: EVRT_path   =                         &
+       __EVRTPATH
+#else
+      character (len=Line_len) :: EVRT_path   = '~/ElVibRot'
+#endif
+
+#if defined(__COMPILE_DATE)
+      character (len=Line_len) :: compile_date = __COMPILE_DATE
+#else
+      character (len=Line_len) :: compile_date = "unknown: -D__COMPILE_DATE=?"
+#endif
+
+#if defined(__COMPILE_HOST)
+      character (len=Line_len) :: compile_host = __COMPILE_HOST
+#else
+      character (len=Line_len) :: compile_host = "unknown: -D__COMPILE_HOST=?"
+#endif
+
+
+      character (len=Line_len) :: base_FileName = ''
+      logical :: openmp = .FALSE.
+      integer :: MatOp_omp,OpPsi_omp,BasisTOGrid_omp,Grid_omp
+      integer :: MatOp_maxth,OpPsi_maxth,BasisTOGrid_maxth,Grid_maxth
+
+      integer (kind=ILkind) :: nb_mult_BTOG  = 0
+      integer (kind=ILkind) :: nb_mult_GTOB  = 0
+      integer (kind=ILkind) :: nb_mult_OpPsi = 0
+
+      integer, parameter :: max_HADA = 5000
+      integer, parameter :: max_nb_G_FOR_print = 2000
+      integer :: SGtype = -1
+      integer :: FilePsiVersion = 0
+
+      TYPE param_FOR_optimization
+
+        integer                        :: nb_OptParam    = 0
+        integer                        :: i_OptParam     = 0
+
+        real (kind=Rkind), allocatable :: Val_RVec(:)
+        integer, allocatable           :: opt_RVec(:)
+
+        character (len=Name_len) :: Optimization_param  = 'geometry'
+
+      END TYPE param_FOR_optimization
+
+      TYPE param_EVRT_calc
+        integer :: optimization     = 0
+        logical :: EVR              = .TRUE.   ! ElVibRot (default)
+        logical :: analysis_only    = .FALSE.
+        logical :: intensity_only   = .FALSE.
+        logical :: cart             = .FALSE.
+        logical :: GridTOBasis_test = .FALSE.
+        logical :: OpPsi_test       = .FALSE.
+        logical :: nDfit            = .FALSE.
+        logical :: nDGrid           = .FALSE.
+        logical :: main_test        = .FALSE.
+
+      END TYPE param_EVRT_calc
+
+      TYPE (param_FOR_optimization), save :: para_FOR_optimization
+      TYPE (param_EVRT_calc),        save :: para_EVRT_calc
+
+      CONTAINS
+
+      !!@description: TODO
+      !!@param: TODO
+      SUBROUTINE time_perso(name)
+      IMPLICIT NONE
+
+        character (len=*) :: name
+
+
+        integer :: tab_time(8) = 0
+        real (kind=Rkind) :: t_real
+        integer       :: count,count_work,freq
+        real          :: t_cpu
+        integer, save :: count_old,count_ini
+        real, save    :: t_cpu_old,t_cpu_ini
+        integer       :: seconds,minutes,hours,days
+        logical, save :: begin = .TRUE.
+
+
+
+        CALL date_and_time(values=tab_time)
+        write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
+ 21     format('     Time and date in ',a,' : ',i2,'h:',                &
+               i2,'m:',i2,'.',i3,'s, the ',i2,'/',i2,'/',i4)
+
+        CALL system_clock(count=count,count_rate=freq)
+        call cpu_time(t_cpu)
+
+        IF (begin) THEN
+          begin = .FALSE.
+          count_old = count
+          count_ini = count
+          t_cpu_old = t_cpu
+          t_cpu_ini = t_cpu
+        END IF
+
+
+!       ============================================
+!       cpu time in the subroutine: "name"
+
+        count_work = count-count_old
+        seconds = count_work/freq
+
+        minutes = seconds/60
+        seconds = mod(seconds,60)
+        hours   = minutes/60
+        minutes = mod(minutes,60)
+        days    = hours/24
+        hours   = mod(hours,24)
+
+
+        t_real = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
+        write(out_unitp,31) t_real,name
+ 31     format('        real (s): ',f18.3,' in ',a)
+        write(out_unitp,32) days,hours,minutes,seconds,name
+ 32     format('        real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s in ',a)
+
+         write(out_unitp,33) t_cpu-t_cpu_old,name
+ 33     format('        cpu (s): ',f18.3,' in ',a)
+
+
+!       ============================================
+!       Total cpu time
+
+        count_work = count-count_ini
+        seconds = count_work/freq
+
+        minutes = seconds/60
+        seconds = mod(seconds,60)
+        hours   = minutes/60
+        minutes = mod(minutes,60)
+        days    = hours/24
+        hours   = mod(hours,24)
+
+        t_real = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
+        write(out_unitp,41) t_real
+ 41     format('  Total real (s): ',f18.3)
+        write(out_unitp,42) days,hours,minutes,seconds
+ 42     format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
+        write(out_unitp,43) t_cpu-t_cpu_ini
+ 43     format('  Total cpu (s): ',f18.3)
+
+        write(out_unitp,51) '  Total memory: ',para_mem%mem_tot,' in ',name
+ 51     format(a,i10,a,a)
+
+
+        CALL flush_perso(out_unitp)
+!       ============================================
+
+        count_old = count
+        t_cpu_old = t_cpu
+
+
+      END SUBROUTINE time_perso
+
+
+      !! @description: Compare two arrays of complex numbers
+      !!               L1 and L2 of equal size
+      !! @param: L1 First  array
+      !! @param: L2 Second array
+      logical FUNCTION compare_tab_cmplx(L1, L2)
+
+       complex(kind=Rkind), intent(in) :: L1(:), L2(:)
+
+       integer :: i
+
+       if (size(L1) /= size(L2)) then
+         compare_tab_cmplx = .false.
+         return
+       end if
+
+       compare_tab_cmplx = .true.
+       do i=1, size(L1)
+         if (abs(L1(i)-L2(i)) > ONETENTH**13) then
+           compare_tab_cmplx = .false.
+            return
+         end if
+       end do
+
+      END FUNCTION compare_tab_cmplx
+
+      !! @description: Compare two arrays of real L1 and L2 of equal size
+      !! @param: L1 First  array
+      !! @param: L2 Second array
+      logical FUNCTION compare_tab_real(L1, L2)
+
+       real(kind=Rkind), intent(in) :: L1(:), L2(:)
+
+       integer :: i
+
+       if (size(L1) /= size(L2)) then
+         compare_tab_real = .false.
+         return
+       end if
+
+       compare_tab_real = .true.
+       do i=1, size(L1)
+         if (abs(L1(i)-L2(i)) > ONETENTH**13) then
+           compare_tab_real = .false.
+            return
+         end if
+       end do
+
+      END FUNCTION compare_tab_real
+
+      !! @description: Compare two arrays of integer L1 and L2 of equal size
+      !! @param: L1 First  array
+      !! @param: L2 Second array
+      logical FUNCTION compare_tab_int(L1, L2)
+
+       integer, intent(in) :: L1(:), L2(:)
+
+       integer :: i
+
+       if (size(L1) /= size(L2)) then
+         compare_tab_int = .false.
+         return
+       end if
+
+       compare_tab_int = .true.
+       do i=1, size(L1)
+         if (abs(L1(i)-L2(i)) /= 0) then
+           compare_tab_int = .false.
+            return
+         end if
+       end do
+
+      END FUNCTION compare_tab_int
+
+      !! @description: Compare two logical arrays a and b of equal size
+      !! @param: L1 First logical array
+      !! @param: L2 Second logical array
+      logical FUNCTION compare_la(L1, L2)
+
+       logical, intent(in) :: L1(:), L2(:)
+
+       integer :: i
+
+       if (size(L1) /= size(L2)) then
+         compare_la = .false.
+         return
+       end if
+
+       compare_la = .true.
+       do i=1, size(L1)
+         if (L1(i) .neqv. L2(i)) then
+           compare_la = .false.
+            return
+         end if
+       end do
+
+      END FUNCTION compare_la
+
+      logical FUNCTION inferior_tab_real(x1,x2)
+      IMPLICIT NONE
+
+
+      logical :: inf_loc
+      integer       :: i
+      real (kind=Rkind), intent(in) :: x1(:),x2(:)
+
+
+       IF (size(x1) /= size(x2)) then
+         write(out_unitp,*) 'the size of the tab are different !!'
+         write(out_unitp,*) 'x1(:)',x1(:)
+         write(out_unitp,*) 'x2(:)',x2(:)
+         write(out_unitp,*) 'Check the fortran'
+         STOP
+       END IF
+
+      inf_loc = .FALSE.
+
+      DO i=1,size(x1)
+        inf_loc = (x1(i) < x2(i))
+        IF (x1(i) == x2(i)) CYCLE
+        EXIT
+      END DO
+
+!     write(out_unitp,*) 'x1,x2,inf_loc',x1,x2,inf_loc
+
+      inferior_tab_real = inf_loc
+
+      END FUNCTION inferior_tab_real
+      logical FUNCTION inferior_tab_int(x1,x2)
+      IMPLICIT NONE
+
+
+      logical :: inf_loc
+      integer       :: i
+      integer, intent(in) :: x1(:),x2(:)
+
+
+       IF (size(x1) /= size(x2)) then
+         write(out_unitp,*) 'the size of the tab are different !!'
+         write(out_unitp,*) 'x1(:)',x1(:)
+         write(out_unitp,*) 'x2(:)',x2(:)
+         write(out_unitp,*) 'Check the fortran'
+         STOP
+       END IF
+
+      inf_loc = .FALSE.
+
+      DO i=1,size(x1)
+        inf_loc = (x1(i) < x2(i))
+        IF (x1(i) == x2(i)) CYCLE
+        EXIT
+      END DO
+
+!     write(out_unitp,*) 'x1,x2,inf_loc',x1,x2,inf_loc
+
+      inferior_tab_int = inf_loc
+
+      END FUNCTION inferior_tab_int
+
+      !! @description: Join two path1 with path2. Return "path1/path2"
+      !!               If path2 is absolute (starting with /), return path2
+      !! @param: path1 First path
+      !! @param: path2 Second path
+      character(len=Name_longlen) function join_path(path1, path2)
+
+        character(len=*), intent(in) :: path1
+        character(len=*), intent(in) :: path2
+
+        character (len=*), parameter :: routine_name = 'join_path'
+
+        if (path2(1:1) == '/') then
+          join_path = path2
+          return
+        end if
+        if (path1(len_trim(path1):len_trim(path1)) == '/') then
+          join_path = trim(path1)//trim(path2)
+        else
+          join_path = trim(path1)//"/"//trim(path2)
+        end if
+
+      end function join_path
+      SUBROUTINE dihedral_range(angle,itype_dihedral)
+
+        real (kind=Rkind), intent(inout) :: angle
+        integer, optional :: itype_dihedral
+
+        integer :: itype_dihedral_loc
+
+        itype_dihedral_loc = 0
+        IF (present(itype_dihedral)) itype_dihedral_loc = itype_dihedral
+
+        SELECT CASE (itype_dihedral_loc)
+        CASE (1) ! [-pi:pi]
+          angle = modulo(angle,TWO*pi)
+          IF (angle > pi) angle = angle - TWO*pi
+        CASE (2) ! [0:2pi]
+          angle = modulo(angle,TWO*pi)
+        CASE Default
+          ! nothing
+        END SELECT
+
+      END SUBROUTINE dihedral_range
+      END MODULE mod_system
+

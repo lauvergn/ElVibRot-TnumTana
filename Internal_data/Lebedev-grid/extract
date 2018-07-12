@@ -1,0 +1,4 @@
+for i in 003 005 007 009 011 013 015 017 019 021 023 025 027 029 031 035 041 047 053 059 065 071 077 083 089 095 101 107 113 119 125 131
+do
+curl http://people.sc.fsu.edu/~jburkardt/datasets/sphere_lebedev_rule/lebedev_$i.txt > lebedev_$i.txt
+done

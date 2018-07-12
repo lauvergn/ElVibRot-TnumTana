@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE> first section</TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.1  (Linux)">
+	<META NAME="CREATED" CONTENT="0;0">
+	<META NAME="CHANGEDBY" CONTENT="Mamadou Ndong">
+	<META NAME="CHANGED" CONTENT="20120207;15134800">
+    <link rel="stylesheet" type="text/css" href="style.css">
+	<!--
+		@page { margin-right: 2.5cm; margin-top: 1.27cm; margin-bottom: 1.27cm }
+		P { margin-bottom: 0.21cm; direction: ltr; color: #000000 }
+		P.western { font-family: "Times New Roman", serif; font-size: 12pt; so-language: fr-FR }
+		P.cjk { font-family: "Times New Roman", serif; font-size: 12pt }
+		P.ctl { font-family: "Times New Roman", serif; font-size: 12pt; so-language: fr-FR }
+		H3 { margin-bottom: 0.11cm; direction: ltr; color: #000000 }
+		H3.western { font-family: "Arial", sans-serif; font-size: 13pt; so-language: fr-FR; font-style: italic; font-weight: normal }
+		H3.cjk { font-family: "Times New Roman", serif; font-size: 13pt; font-style: italic; font-weight: normal }
+		H3.ctl { font-family: "Times New Roman", serif; font-size: 13pt; so-language: fr-FR; font-weight: normal }
+		H2 { margin-bottom: 0.11cm; direction: ltr; color: #000000 }
+		H2.western { font-family: "Arial", sans-serif; font-size: 14pt; so-language: fr-FR; font-style: italic }
+		H2.cjk { font-family: "Times New Roman", serif; font-size: 14pt; font-style: italic }
+		H2.ctl { font-family: "Times New Roman", serif; font-size: 14pt; so-language: fr-FR; font-weight: normal }
+		H1 { margin-bottom: 0.11cm; direction: ltr; color: #000000 }
+		H1.western { font-family: "Arial", sans-serif; font-size: 16pt; so-language: fr-FR }
+		H1.cjk { font-family: "Times New Roman", serif; font-size: 16pt }
+		H1.ctl { font-family: "Times New Roman", serif; font-size: 16pt; so-language: fr-FR; font-weight: normal }
+		A:link { so-language: zxx }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="fr-FR" TEXT="#000000" DIR="LTR">
+<BR>
+</P>
+<H2 CLASS="western"><SPAN LANG="en-US"> Namelist &quot;</SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">variables</SPAN></FONT><SPAN LANG="en-US">&quot;</SPAN></H2>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+This namelist has numerous parameters, but most of them were used for
+the old coordinate transformation procedure (see . 
+           <a href="example_subsection2.html">section transformations</a>)
+They
+are kept for the compatibility with previous input data files.</P>
+<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">Related
+subroutines, types...: </SPAN><FONT COLOR="#ff0000"><SPAN LANG="en-US">TYPE
+zmatrix, TYPE Tnum, Read_mole(mole,para_Tnum)</SPAN></FONT></P>
+<TABLE WIDTH=603 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=202>
+	<COL WIDTH=230>
+	<COL WIDTH=127>
+	<TR VALIGN=TOP>
+		<TD WIDTH=202>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>Key word / parameter</P>
+		</TD>
+		<TD WIDTH=230>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>action</P>
+		</TD>
+		<TD WIDTH=127>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY>default</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=202>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><FONT SIZE=2 STYLE="font-size: 11pt">Old_Qtransfo</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=230>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			Trigged the old coordinate transformations</P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000"><SPAN LANG="en-US">You
+			MUST set this parameter to</SPAN></FONT><SPAN LANG="en-US"> </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">F</SPAN></FONT></P>
+		</TD>
+		<TD WIDTH=127>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">T</SPAN></FONT><SPAN LANG="en-US">
+			(.TRUE.)</SPAN></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=202>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><FONT SIZE=2 STYLE="font-size: 11pt">nb_Qtransfo</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=230>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			Number of new coordinate transformations</P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000"><SPAN LANG="en-US">The
+			minimum number is</SPAN></FONT><FONT COLOR="#0000ff"><SPAN LANG="en-US">
+			2</SPAN></FONT></P>
+		</TD>
+		<TD WIDTH=127>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff">0</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=202>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><FONT SIZE=2 STYLE="font-size: 11pt">nrho</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=230>
+			<P LANG="en-US" CLASS="western" STYLE="margin-bottom: 0cm">nrho
+			enables one to select the volume element:</P>
+			<P LANG="en-US" CLASS="western" STYLE="margin-bottom: 0cm"><BR>
+			</P>
+			<P CLASS="western" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">0</SPAN></FONT><SPAN LANG="en-US">:
+			Euclidian (rho=jacobian)</SPAN></P>
+			<P CLASS="western" STYLE="margin-bottom: 0cm"><FONT COLOR="#ff0000"><SPAN LANG="en-US">To
+			be use only for checking purpose</SPAN></FONT><SPAN LANG="en-US">.</SPAN></P>
+			<P CLASS="western" STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">1</SPAN></FONT><SPAN LANG="en-US">:
+			Wilson (rho=1)</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">2</SPAN></FONT><SPAN LANG="en-US">:
+			product of 1D-volume element: dR.dphi.sin(th)dth…</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT COLOR="#0000ff"><SPAN LANG="en-US">10</SPAN></FONT><SPAN LANG="en-US">:
+			same as 1, without extrapotential term</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">20</SPAN></FONT><SPAN LANG="en-US">:
+			same as 2, but without extrapotential term</SPAN></P>
+		</TD>
+		<TD WIDTH=127>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff">2</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=202>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><FONT SIZE=2 STYLE="font-size: 11pt">WriteT</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=230>
+			<P CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><SPAN LANG="en-US">When
+			the value is set to </SPAN><FONT COLOR="#0000ff"><SPAN LANG="en-US">T</SPAN></FONT><SPAN LANG="en-US">,
+			the subroutines write the KEO (f</SPAN><SUB><SPAN LANG="en-US">2</SPAN></SUB><SPAN LANG="en-US">,
+			f</SPAN><SUB><SPAN LANG="en-US">1</SPAN></SUB><SPAN LANG="en-US">
+			or GG, g …).</SPAN></P>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000"><SPAN LANG="en-US">To
+			be use only for checking purpose</SPAN></FONT><SPAN LANG="en-US">.</SPAN></P>
+		</TD>
+		<TD WIDTH=127>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><SPAN LANG="en-US">F</SPAN></FONT><SPAN LANG="en-US">
+			(.FALSE.)</SPAN></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=202>
+			<P CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff"><FONT SIZE=2 STYLE="font-size: 11pt">stepT,num_H,num_A,num_x</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=230>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">
+			Parameters to control how the derivatives will be performed.</P>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#ff0000">Do
+			not change.</FONT></P>
+		</TD>
+		<TD WIDTH=127>
+			<P LANG="en-US" CLASS="western" ALIGN=JUSTIFY><FONT COLOR="#0000ff">1e-3,
+			F, F, F</FONT></P>
+		</TD>
+	</TR>
+</TABLE>

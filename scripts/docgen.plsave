@@ -1,0 +1,729 @@
+# Copyright 2009 M. Goerz
+#
+use strict;
+use warnings;
+use CGI::Pretty; # core module, see http://perldoc.perl.org/CGI.html
+use Storable; # core module, see http://perldoc.perl.org/Storable.html
+
+my $debug = 0;
+
+if (@ARGV < 2) {
+    my $usage = "Usage: docgen.pl [OPTIONS] INFILE OUTFILE\n\n";
+    $usage   .= "OPTIONS\n";
+    $usage   .= "  --index=INDEXFILE   update index file with symbols in this\n";
+    $usage   .= "                      INFILE.\n";
+    die($usage);
+}
+my $infile = $ARGV[-2];
+my $outfile = $ARGV[-1];
+my $index_file = "";
+foreach my $arg (@ARGV){
+    if ($arg =~ m'--index=(\S+)'){
+        $index_file = $1;
+        print("using index $index_file\n") if ($debug);
+    }
+}
+print "Creating documentation for $infile to $outfile\n";
+
+# collection storage variables
+# these collect global information, which is then used to generate the docs
+my $module_name = "";
+my $module_description = "";
+my %routines = (); # routine_name => {longname, description, 
+                   #                  paramtable, external_interfaces}
+my %types = (); # type_name => {description, paramtable}
+my %interfaces = (); # interface_name => {description, [internal], [external]}
+my $privacy_default = 'public';
+my %private = (); # private symbols => 1
+my %public = (); # public symbols => 1
+our $global_index = {}; # public symbol (including from other files) => "kind;url"
+                       # This is filled during TOC generation
+if (-f $index_file){
+    $global_index = retrieve($index_file);
+    print ("Retrieved \$global_index from $index_file\n") if ($debug);
+}
+
+# dynamic variables
+# these change constantly as we parse
+my $line = "";
+my $description = ""; # contents of last @description tag
+my $in_data_env = 1; # module data environment ends with 'contains'
+my $in_external_interface = 0; # are we inside an external interface block?
+# ... External interface blocks describe dummy variables that are external
+# routines (i.e.  when you pass a function name to another routine)
+my $in_generic_interface = 0; # are we inside a generic interface block?
+my $interface_name = ""; # name of currently open interface
+my $long_routine_name = ""; # name of current routine
+my $type_name = ""; # name of currect type in type definition
+my $external_interfaces = ""; # code for external interfaces
+my @params = (); # list of parameters for current routine
+my %params_info = (); # for each param in @params, a dict of additional info
+
+my $cgi = new CGI;
+
+
+### Auxilliary Routines ###
+
+# delete fortran commmens and trailing spaces/newline from a line
+sub delete_comment{
+    my $line = shift;
+    chomp $line;
+    if ($line !~ m'^\s*!!'){
+        $line =~ s'!.*$'';
+    }
+    $line =~ s'\s*$'';
+    return $line;
+}
+
+# return 1 if name is listed as private, 0 otherwise
+sub is_private{
+    my $name = shift;
+    if (($privacy_default eq 'private') or 
+         ($privacy_default eq 'PRIVATE')){
+        if (not exists($public{$name})){
+            return 1;
+        }
+    } else {
+        if (exists($private{$name})){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+#  return $p1 with those leading parts of the path removed that are also
+#  present in $p2. E.g. 
+#  fix_path('doc/reference/oct.html', 'doc/lib_index.html')
+#  returns 'reference/oct.html'
+sub fix_path{
+    my $p1 = shift;
+    my $p2 = shift;
+    my @parts1 = split(/\//, $p1);
+    my @parts2 = split(/\//, $p2);
+    my $dir1 = $parts1[0];
+    my $dir2 = $parts2[0];
+    while ($dir1 eq $dir2){
+        $dir1 = shift(@parts1);
+        $dir2 = shift(@parts2);
+    }
+    my $result = $dir1.'/'.join("/", @parts1);
+    return $result;
+}
+
+# look up a type name in the global index and linkify the name
+sub linkify_type{
+    my $type = shift;
+    my $result = $type;
+    my $a = $type;
+    my $b = '';
+    if ($type =~ m'^(.*?)(, .*)$'){
+        $a = $1;
+        $b = $2;
+    }
+    my $entry = $global_index->{$a};
+    if (defined($entry)){
+        my ($kind, $url) = split(/;/, $entry);
+        if (($kind eq 'type') or
+             ($kind eq 'TYPE')){
+            $url = fix_path($url, $outfile);
+            $url =~ s'/$'';
+            $result = "<a href=\"$url\">$a</a>$b";
+        }
+    }
+    return $result;
+}
+
+### Parsing and Collection of Data ###
+open(INFILE, $infile) or die ("Couldn't open $infile\n");
+$line = <INFILE>;
+while (1){ # iterate over lines
+    last if (not defined($line)); # catch End Of File
+    chomp $line;
+    $line = delete_comment($line);
+    # collect continued lines
+    while ($line =~ m'&$'){
+        $line .= <INFILE>;
+        chomp $line;
+        $line = delete_comment($line);
+        if ($line =~ m'&\s*&'){
+            $line =~ s'&\s*&'';
+        } else {
+            $line =~ s'&'';
+        }
+    }
+    print("> $line\n") if ($debug);
+
+    # Deal with lines inside external interfaces
+    if ($in_external_interface) {
+        if (($line =~ m'^\s* end \s+ interface \s*$'x) or
+           ($line =~ m'^\s* END \s+ INTERFACE \s*$'x)){
+            print ("  (end external interface block)\n") if ($debug);
+            $in_external_interface = 0
+        } else {
+            print ("  (inside external_interface)\n") if ($debug);
+            $external_interfaces .= $line;
+            $external_interfaces .= "\n";
+            if ( ($line =~ m'^\s* subroutine \s+ (\w+) \s*\( (.*) \)\s*$'x) or
+            ($line =~ m'^\s* SUBROUTINE \s+ (\w+) \s*\( (.*) \)\s*$'x) or
+            ($line =~ m'^\s* .*\s* function \s+ (\w+) \s*\( (.*) \)\s*$'x)  or
+            ($line =~ m'^\s* .*\s* FUNCTION \s+ (\w+) \s*\( (.*) \)\s*$'x)  or
+            ($line =~ m'^\s* .*\s* SUBROUTINE \s+ (\w+) \s*\( (.*) \)\s*$'x)  or
+            ($line =~ m'^\s* .*\s* subroutine \s+ (\w+) \s*\( (.*) \)\s*$'x) ) {
+                print ("    (def of routine in interface block)\n") if ($debug);
+                my $if_routine_name = $1;
+                $params_info{$if_routine_name}{'type'} = 'external interface';
+                $params_info{$if_routine_name}{'TYPE'} = 'external interface';
+            }
+        }
+        $line = <INFILE>;
+
+    # Evaluate public/private declarations
+    } elsif (($line =~ m'^\s*(public|private)\s*$') or
+            ($line =~ m'^\s*(PUBLIC|PRIVATE)\s*$')){
+        if ($in_data_env){
+            print ("  (public/private default)\n") if ($debug);
+            $privacy_default = $1;
+        } else {
+            print ("  (skipped)\n") if ($debug);
+        }
+        $line = <INFILE>;
+    } elsif (($line =~ m'^\s*public\s*::\s*(.*)$') or 
+            ($line =~ m'^\s*PUBLIC\s*::\s*(.*)$')){
+        if ($in_data_env){
+            print ("  (public list)\n") if ($debug);
+            foreach my $symbol (split(/\s*,\s*/, $1)){
+                $public{$symbol} = 1
+            }
+        } else {
+            print ("  (skipped)\n") if ($debug);
+        }
+        $line = <INFILE>;
+    } elsif (($line =~ m'^\s*private\s*::\s*(.*)$') or
+            ($line =~ m'^\s*PRIVATE\s*::\s*(.*)$')){
+        if ($in_data_env){
+            print ("  (private list)\n") if ($debug);
+            foreach my $symbol (split(/\s*,\s*/, $1)){
+                $private{$symbol} = 1
+            }
+        } else {
+            print ("  (skipped)\n") if ($debug);
+        }
+        $line = <INFILE>;
+
+    # Evaluate start of module
+    # This handles such lines as
+    #   module map_mod
+    } elsif (($line =~ m'^\s*module\s+(\w+)\s*$') or
+            ($line =~ m'^\s*MODULE\s+(\w+)\s*$')){
+        print ("  (start of module)\n") if ($debug);
+        $module_name = $1;
+        $module_name = uc($module_name);
+        print ("  (set module_name to: $module_name)\n") if ($debug);
+        $line = <INFILE>;
+
+    # Evaluate @description:
+    # This handles such lines as
+    #   !! @description: The filter module contains methods for                                                                      
+    #   !!               initializing or modifying filters.                                                                          
+    } elsif ($line =~ m'^\s*!!\s*@description\s*:\s+(.+)$'){
+        print ("  (description tag)\n") if ($debug);
+        $description = $1;
+        $description =~ s'\s*$'';
+        while (1){ # process multiline description
+            $line = <INFILE>;
+            $line = delete_comment($line);
+            last if (($line !~ m'^\s*!!') or ($line =~ m'^\s*!!\s*@') );
+            $line =~ s'^[!\s]+'';
+            $description .= " ".$line;
+        }
+        if ($module_description eq "" and $in_data_env){
+            $module_description = $description;
+            print ("  (set module_description)\n") if ($debug);
+        }
+
+    # Evaluate @param:
+    # This handles such lines as
+    #   !! @param: t Time vector for the filter
+    # The line only gives the description of the parameter t. Additional
+    # information such as the type and intent will be extracted from the
+    # parameter descriptions directly (see below)
+    } elsif ($line =~ m'^\s*!!\s* @param.*: \s* (\w+) \s+ (.+)$'x){
+        print ("  (param tag)\n") if ($debug);
+        my $param_name = $1;
+        my $param_doc = $2;
+        $param_doc =~ s'\s*'';
+        while (1){ # process multiline param doc
+            $line = <INFILE>;
+            $line = delete_comment($line);
+            last if (($line !~ m'^\s*!!') or ($line =~ m'^\s*!!\s*@') );
+            $line =~ s'^[!\s]+'';
+            $param_doc .= " ".$line;
+        }
+        $params_info{$param_name}{'doc'} = $param_doc;
+
+    # Evaluate external interface blocks
+    } elsif (($line =~ m'^\s* interface \s*$'x) or
+            ($line =~ m'^\s* INTERFACE \s*$'x)){
+        print ("  (external interface block)\n") if ($debug);
+        $in_external_interface = 1;
+        $line = <INFILE>;
+
+    # Evaluate generic interface blocks
+    } elsif (($line =~ m'^\s* interface \s+ (\w+) \s*$'x) or
+            ($line =~ m'^\s* INTERFACE \s+ (\w+) \s*$'x)){
+        print ("  (generic interface block)\n") if ($debug);
+        $interface_name = $1;
+        if ($in_data_env){
+            $in_generic_interface = 1;
+            if ($description ne ""){
+                $interfaces{$interface_name}{'description'} = $description;
+                $interfaces{$interface_name}{'internal'} = [];
+                $interfaces{$interface_name}{'external'} = [];
+            }
+        } else {
+            print ("  (skipped)\n") if ($debug);
+        }
+        $line = <INFILE>;
+
+    # Evaluate assignment interface blocks
+    } elsif (($line =~ m'^\s* interface \s+ assignment \s+ \(\s=\s\)\s*$'x) or
+            ($line =~ m'^\s* INTERFACE \s+ assignment \s+ \(\s=\s\)\s*$'x)){
+        print ("  (assignment interface block)\n") if ($debug);
+        $interface_name = "assignment";
+        if ($in_data_env){
+            $in_generic_interface = 1;
+            if ($description ne ""){
+                $interfaces{$interface_name}{'description'} = $description;
+                $interfaces{$interface_name}{'internal'} = [];
+                $interfaces{$interface_name}{'external'} = [];
+            }
+        } else {
+            print ("  (skipped)\n") if ($debug);
+        }
+        $line = <INFILE>;
+
+    } elsif (($line =~ m'^\s* end \s+ interface'x) or
+            ($line =~ m'^\s* END \s+ INTERFACE'x)){
+        print ("  (end generic interface block)\n") if ($debug);
+        $interface_name = "";
+        if ($in_generic_interface){
+            $in_generic_interface = 0;
+        } else {
+            die("Expected generic interface to be open, but it isn't\n");
+        }
+        $line = <INFILE>;
+    } elsif (($line =~ m'^\s* module \s+ procedure \s+ (.*)$'x) or
+            ($line =~ m'^\s* MODULE \s+ PROCEDURE \s+ (.*)$'x)){
+        print ("  (interface - module procedure)\n") if ($debug);
+        if ($in_generic_interface and not $in_external_interface){
+            foreach my $module_procedure_name (split(/,\s*/, $1)){
+               push(@{$interfaces{$interface_name}{'internal'}}, 
+                    $module_procedure_name);
+               print "    (added $module_procedure_name as internal"
+                    ." implementation of $interface_name)\n" if ($debug);
+            }
+        } else {
+            print ("  (skipped)\n") if ($debug);
+        }
+        $line = <INFILE>;
+        # TODO: handle externals as well
+
+    # Evaluate routine definitions: 
+    # This handles such lines as
+    #   subroutine sum_op (F1, F2, Fres)
+    # or
+    #   character(len=datline_l) function truncstr_array(a, format)
+    # for the purpose of interfaces
+    # The line defines the routine name and list params
+    } elsif (
+    ($line =~ m'^\s* subroutine \s+ (\w+) \s*\( (.*) \)\s*$'x) or
+    ($line =~ m'^\s* SUBROUTINE \s+ (\w+) \s*\( (.*) \)\s*$'x) or
+    ($line =~ m'^\s* FUNCTION \s+ (\w+) \s*\( (.*) \)\s*$'x) or
+    ($line =~ m'^\s* function \s+ (\w+) \s*\( (.*) \)\s*$'x) or
+    ($line =~ m'^\s* (.*\s* subroutine \s+ \w+) \s*\( (.*) \)\s*$'x) or
+    ($line =~ m'^\s* (.*\s* SUBROUTINE \s+ \w+) \s*\( (.*) \)\s*$'x) or
+    ($line =~ m'^\s* (.*\s* FUNCTION \s+ \w+) \s*\( (.*) \)\s*$'x) or
+    ($line =~ m'^\s* (.*\s* function \s+ \w+) \s*\( (.*) \)\s*$'x)) {
+        print ("  (routine start)\n") if ($debug);
+        $long_routine_name = $1;
+        my $routine_params = $2;
+        $external_interfaces = "";
+        if (($long_routine_name =~ m'^\s* (.*) (function \s+ (\w+))'x) or
+           ($long_routine_name =~ m'^\s* (.*) (FUNCTION \s+ (\w+))'x)){
+            # functions should have their result type defined in the table of
+            # params
+            my $function_result_type = $1;
+            $long_routine_name = $2;
+            my $function_name = $3;
+            @params = ($function_name);
+            push(@params, split(/,\s*/, $routine_params));
+            $params_info{$function_name}{'type'} = $function_result_type;
+            $params_info{$function_name}{'TYPE'} = $function_result_type;
+            $params_info{$function_name}{'intent'} = '(out)';
+            $params_info{$function_name}{'doc'} = 'function result';
+        } else {
+            @params = split(/,\s*/, $routine_params);
+        }
+        $line = <INFILE>;
+    
+    # Evaluate type definitions: 
+    } elsif (($line =~ m'^\s* type \s+ (\w+) \s*$'x) or
+            ($line =~ m'^\s* TYPE \s+ (\w+) \s*$'x)){
+        print ("  (type def start)\n") if ($debug);
+        @params = ();
+        $type_name = $1;
+        $line = <INFILE>;
+
+    # Evaluate parameter definitions: 
+    # This handles such lines as
+    #     real (idp) :: an(0:n), alpha
+    # The line provides intent, shape, and type information
+    } elsif ($line =~ m'^\s* (.*) \s* :: \s* (.*)$'x){
+        print ("  (param definition)\n") if ($debug);
+        my $param_lhs = $1;
+        my $param_rhs = $2;
+        my $param_name = '';
+        my $param_shape = '';
+        if (($param_lhs =~ m'^(public|private)') or
+           ($param_lhs =~ m'^(PUBLIC|PRIVATE)')){
+            $line = <INFILE>;
+            print ("  (skipped)\n") if ($debug);
+            next;
+        }
+        foreach my $param_name (split(/\s*,\s\s*/, $param_rhs)){
+            if ($param_name =~ m'(\([\w,:.]+\))'){
+                $param_shape = $1;
+                $param_name =~ s'\([\w,:.]+\)\s*$'';
+                $params_info{$param_name}{'shape'} = $param_shape;
+                if ($debug){
+                    print ("    (shape: $param_shape for $param_name)\n");
+                }
+            }
+            if ($type_name ne '') {
+                # inside a type definitions, all defined params must be used,
+                # unlike with routines, where the list of params comes from the
+                # routine definition, i.e. filling @params is handled elsewhere
+                push(@params, $param_name);
+            }
+            my $param_type = $param_lhs;
+            if ($param_type =~ m'intent\(\s*(in|out|inout)\s*\)'){
+                $params_info{$param_name}{'intent'} = $1;
+                print ("    (intent: $1 for $param_name)\n") if ($debug);
+                $param_type =~ s',?\s*intent\(\s*(in|out|inout)\s*\)\s*'';
+            }
+            # after intent is removed, only the actual type information is left
+            $param_type =~ s'^\s+'';
+            $param_type =~ s'\s+$'';
+            # we can make this a bit prettier by leaving out len=* and type(...)
+            $param_type =~ s'character\s*\(\s*len=\*\s*\)'character';
+            $param_type =~ s"TYPE\s*\(\s*(\w+)\s*\)"$1";
+            $param_type =~ s"type\s*\(\s*(\w+)\s*\)"$1";
+            $params_info{$param_name}{'type'} = $param_type;
+            $params_info{$param_name}{'TYPE'} = $param_type;
+            print ("    (type: $param_type for $param_name)\n") if ($debug);
+            # line = <infile>;
+        }
+        $line = <INFILE>;
+
+    # 'contains' end data environment
+    } elsif (($line =~ m'^\s*contains\s*$'x) or
+            ($line =~ m'^\s*COINTAINS\s*$'x)){
+        print ("  (contains)\n") if ($debug);
+        $in_data_env = 0;
+        $description = '';
+        $line = <INFILE>;
+
+    # 'end type' is trigger for completing type documentation
+    } elsif (($line =~ m'^\s*end\s+type') or
+            ($line =~ m'^\s*END\s+TYPE')){
+        print ("  (end type)\n") if ($debug);
+        if ( ($type_name eq '') or ($description eq '') ){
+            $line = <INFILE>;
+            print ("  WARNING: There seems to be no documentation for ");
+            print ("type $type_name\n");
+            #print ("  (skipped)\n") if ($debug);
+            #next;
+        }
+        print ("    (writing param_table - params @params)\n") if ($debug);
+        my $param_table = $cgi->start_table({-class=>'type_param_table'});
+        $param_table .= $cgi->Tr(
+            $cgi->th('Name'),
+            $cgi->th('Type'),
+            $cgi->th('Description')
+        );
+        foreach my $param (@params){
+            my $param_name = $param;
+            my $param_intent = '';
+            if (exists($params_info{$param}{'shape'})){
+                $param_name .= $params_info{$param}{'shape'};
+            }
+            my $param_type = '';
+            if (exists($params_info{$param}{'type'})){
+                $param_type = $params_info{$param}{'type'};
+                # linkify
+                $param_type = linkify_type($param_type);
+            }elsif (exists($params_info{$param}{'TYPE'})){
+                $param_type = $params_info{$param}{'TYPE'};
+                # linkify
+                $param_type = linkify_type($param_type);
+            }
+            my $param_description = '';
+            if (exists($params_info{$param}{'doc'})){
+                $param_description = $params_info{$param}{'doc'};
+            }
+            $param_table .= $cgi->Tr(
+                $cgi->td($param_name),
+                $cgi->td($param_type),
+                $cgi->td($param_description)
+            );
+        }
+        $param_table .= $cgi->end_table();
+        $types{$type_name} = {
+            'description' => $cgi->p({-class=>'type_description'}, 
+                                    $description),
+            'param_table' => $param_table,
+        };
+        print ("  (set \$types{$type_name})\n") if ($debug); 
+        $type_name = '';
+        $description = '';
+        @params = ();
+        %params_info = ();
+        $line = <INFILE>;
+        
+    # 'end subroutine' or 'end function' is trigger for completing
+    # routine documentation
+    } elsif (($line =~ m'^\s*end\s+(subroutine|function)') or
+        ($line =~ m'^\s*END\s+(SUBROUTINE|FUNCTION)')){
+        print ("  (end routine)\n") if ($debug);
+        if ( ($long_routine_name eq '') or ($description eq '') ){
+            $line = <INFILE>;
+            print ("  WARNING: There seems to be no documentation for ");
+            print ("$long_routine_name\n");
+            #print ("  (skipped)\n") if ($debug);
+            #next;
+        }
+        print ("    (writing param_table)\n") if ($debug);
+        my $param_table = $cgi->start_table({-class=>'param_table'});
+        $param_table .= $cgi->Tr(
+            $cgi->th('Name'),
+            $cgi->th('Intent'),
+            $cgi->th('Type'),
+            $cgi->th('Description')
+        );
+        foreach my $param (@params){
+            my $param_name = $param;
+            my $param_intent = '';
+            if (exists($params_info{$param}{'shape'})){
+                $param_name .= $params_info{$param}{'shape'};
+            }
+            if (exists($params_info{$param}{'intent'})){
+                $param_intent = $params_info{$param}{'intent'};
+            }
+            my $param_type = '';
+            if (exists($params_info{$param}{'type'})){
+                $param_type = $params_info{$param}{'type'};
+                $param_type = linkify_type($param_type);
+            }elsif (exists($params_info{$param}{'TYPE'})){
+                $param_type = $params_info{$param}{'TYPE'};
+                $param_type = linkify_type($param_type);
+            }
+            my $param_description = '';
+            if (exists($params_info{$param}{'doc'})){
+                $param_description = $params_info{$param}{'doc'};
+            }
+            $param_table .= $cgi->Tr(
+                $cgi->td($param_name),
+                $cgi->td($param_intent),
+                $cgi->td($param_type),
+                $cgi->td($param_description)
+            );
+        }
+        $param_table .= $cgi->end_table();
+        my $routine_name = $long_routine_name;
+        if ($routine_name =~ m'\s*(function|subroutine)\s*'){
+            $routine_name =~ s'\s*(function|subroutine)\s*'';
+        }elsif ($routine_name =~ m'\s*(FUNCTION|SUBROUTINE)\s*'){
+            $routine_name =~ s'\s*(FUNCTION|SUBROUTINE)\s*'';
+        }elsif ($routine_name =~ m'^\s* (.*\s* SUBROUTINE \s+ \w+) \s*\( (.*) \)\s*'){
+            $routine_name =~ s'^\s* (.*\s* SUBROUTINE \s+ \w+) \s*\( (.*) \)\s*'';
+
+        } else {
+            
+            die ("\$routine_name '$routine_name' has unexpected format\n");
+        }
+        $routines{$routine_name} = {
+            'long_name'   => $long_routine_name,
+            'description' => $cgi->p({-class=>'routine_description'}, 
+                                    $description),
+            'param_table' => $param_table,
+            'external_interfaces' => $external_interfaces
+        };
+        print ("  (set \$routines{$routine_name})\n") if ($debug); 
+        $long_routine_name = '';
+        $description = '';
+        @params = ();
+        %params_info = ();
+        $line = <INFILE>;
+
+    } else {
+        $line = <INFILE>;
+        print ("  (not handled)\n") if ($debug);
+    }
+
+}
+close INFILE;
+print ("\n\n(done parsing)\n\n") if ($debug);
+
+### Filter public/private ###
+if ($debug){
+    print ("  (\$privacy_default = $privacy_default)\n");
+    print ("  (public items : ".join(", ", keys(%public)) .")\n");
+    print ("  (private items: ".join(", ", keys(%private)).")\n");
+}
+
+### Output ###
+open(OUTFILE, ">$outfile") or die ("Couldn't open $outfile\n");
+print OUTFILE $cgi->start_html(
+    -title=>"$module_name ($infile)",
+    -style=>{'src'=>'../style.css'}
+);
+print OUTFILE "<h1 class=\"module\">";
+my $filename = $outfile;
+$filename =~ s'^.*/'';
+print OUTFILE "<a target=\"_top\"href=\"$filename\">Module $module_name</a>";
+print OUTFILE "</h1>\n";
+print OUTFILE $cgi->p({-class=>'module'}, $module_description);
+
+# print table of contents for module, and add symbols to global index
+print OUTFILE "<div class='toc'>\n";
+if (keys(%types) > 0){
+    print OUTFILE "<div class='toc_types'>\n";
+    print OUTFILE "  Types:\n";
+    print OUTFILE "  <ul class='toc_types'>\n";
+    foreach my $type_name (keys(%types)){
+        next if (is_private($type_name));
+        $global_index->{$type_name} = "type;$outfile#$type_name";
+        print OUTFILE "    <li class='toc_types'>";
+        print OUTFILE "<a href='#$type_name'>$type_name</a>";
+        print OUTFILE "</li>\n";
+    }
+    print OUTFILE "  </ul>\n</div>\n";
+}
+if (keys(%interfaces) > 0){
+    print OUTFILE "<div class='toc_interfaces'>\n";
+    print OUTFILE "  Interfaces:\n";
+    print OUTFILE "  <ul class='toc_interfaces'>\n";
+    foreach my $interface_name (keys(%interfaces)){
+        next if (is_private($interface_name));
+        $global_index->{$interface_name} = "interface;$outfile#$interface_name";
+        print OUTFILE "    <li class='toc_interfaces'>";
+        print OUTFILE "<a href='#$interface_name'>$interface_name</a>";
+        print OUTFILE "</li>\n";
+    }
+    print OUTFILE "  </ul>\n</div>\n";
+}
+if (keys(%routines) > 0){
+    print OUTFILE "<div class='toc_routines'>";
+    print OUTFILE "  Routines:\n";
+    print OUTFILE "  <ul class='toc_routines'>\n";
+    foreach my $routine_name (keys(%routines)){
+        next if (is_private($routine_name));
+        if ($routines{$routine_name}{'long_name'} =~ /subroutine/){
+            $global_index->{$routine_name} = "subroutine;$outfile#$routine_name";
+        } elsif ($routines{$routine_name}{'long_name'} =~ /function/){
+            $global_index->{$routine_name} = "function;$outfile#$routine_name";
+        } else {
+            die("routine is neither a function nor a subroutine...?\n");
+        }
+        print OUTFILE "    <li class='toc_routines'>";
+        print OUTFILE "<a href='#$routine_name'>$routine_name</a>";
+        print OUTFILE "</li>\n";
+    }
+    print OUTFILE "  </ul>\n</div>\n";
+}
+print OUTFILE "</div>\n\n";
+
+# print types
+foreach my $type_name (keys(%types)){
+    if (is_private($type_name)){
+	print ("(skipping $type_name as private)\n") if ($debug);
+        next;
+    }
+    print ("  (writing type docs for $type_name)\n") if ($debug);
+    print OUTFILE "<div class='type'>\n";
+    print OUTFILE $cgi->a({-name=>$type_name},
+                          $cgi->h2({-class=>'type_name'}, 
+                          "type $type_name")
+                          ),
+                  $cgi->h3({-class=>'type'}, 'Description'),
+                  $cgi->p({-class=>'type_description'}, 
+                          $types{$type_name}{'description'});
+    print OUTFILE $cgi->h3({-class=>'type'}, 'Parameters');
+    print OUTFILE $types{$type_name}{'param_table'};
+    print OUTFILE "</div>\n\n";
+}
+    
+print OUTFILE "\n\n";
+
+# print interfaces
+foreach $interface_name (keys(%interfaces)){
+    if (is_private($interface_name)){
+	print ("(skipping $interface_name as private)\n") if ($debug);
+        next;
+    }
+    print ("  (writing interface docs for $interface_name)\n") if ($debug);
+    print OUTFILE "<div class='interface'>\n";
+    print OUTFILE  $cgi->a({-name=>$interface_name},
+                    $cgi->h2({-class=>'interface_name'}, 
+                             "interface $interface_name")
+                          );
+    print OUTFILE $cgi->h3({-class=>'interface'}, 'Description');
+    print OUTFILE $cgi->p({-class=>'interface_description'}, 
+                          $interfaces{$interface_name}{'description'});
+    print OUTFILE $cgi->h3({-class=>'interface'}, 'Implementations');
+    print OUTFILE "<ul class='interface_list'>\n";
+    foreach my $impl_routine (@{$interfaces{$interface_name}{'internal'}}){
+        print OUTFILE "  <li class='interface_list'>\n";
+        print ("    (implementation routine $impl_routine)\n") if ($debug);
+        print OUTFILE $routines{$impl_routine}{'param_table'};
+        print OUTFILE "  </li>\n";
+    }
+    print OUTFILE "</ul>\n";
+    print OUTFILE "</div>\n\n";
+}
+
+print OUTFILE "\n\n";
+
+# print routines
+foreach my $routine_name (keys(%routines)){
+    if (is_private($routine_name)){
+        next;
+        print ("(skipping $routine_name as private)\n") if ($debug);
+    }
+    print ("  (writing routine docs for $routine_name)\n") if ($debug);
+    print OUTFILE "<div class='routine'>\n";
+    print OUTFILE $cgi->a({-name=>$routine_name},
+                          $cgi->h2({-class=>'routine_name'}, 
+                          $routines{$routine_name}{'long_name'})
+                          ),
+                  $cgi->h3({-class=>'routine'}, 'Description'),
+                  $cgi->p({-class=>'routine_description'}, 
+                          $routines{$routine_name}{'description'});
+    print OUTFILE $cgi->h3({-class=>'routine'}, 'Parameters');
+    print OUTFILE $routines{$routine_name}{'param_table'};
+    if ($routines{$routine_name}{'external_interfaces'} ne ''){
+        print OUTFILE $cgi->h3({-class=>'routine'}, 'External Interfaces');
+        print OUTFILE "<pre class='external_interface'>";
+        print OUTFILE $routines{$routine_name}{'external_interfaces'};
+        print OUTFILE "</pre>\n";
+    }
+    print OUTFILE "</div>\n\n";
+}
+print OUTFILE $cgi->end_html();
+close OUTFILE;
+
+if ($index_file ne ''){
+    store $global_index, $index_file;
+}
+
+print ("\n\n(done)\n\n") if ($debug);

@@ -1,0 +1,36 @@
+here=`pwd`
+DIR_vib=../..
+
+cp Sub_X_TO_Q_ana.f90 $DIR_vib/Source_TnumTana_Coord/sub_operator_T
+
+cd $DIR_vib
+  make Tnum_MCTDH
+cd $here
+
+$DIR_vib/Tnum90_MCTDH.exe << ** > res
+ &variables 
+         nrho=2
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+         Tana=f
+         JJ=1
+         num_x=t num_g=t
+ /
+ &Coord_transfo name_transfo='QTOX_ana' nat=3 /
+2 2 -3  #type of coordinates
+8. 1. 1.
+
+ &Coord_transfo name_transfo='LC_projection_inv' nb_transfo=1 /
+1 0.5 0.5 0.0
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1
+
+ &minimum read_itQ0transfo=0 unit='bohr' /
+  O        -0.086602540           0.000000000          -0.150000000
+  H        -0.086602540           0.000000000           0.850000000
+  H         0.779422863           0.000000000           0.350000000
+
+&MCTDH epsi_MCTDH=1e-8 /
+**
+

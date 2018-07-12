@@ -1,0 +1,36 @@
+here=`pwd`
+DIR_vib=../..
+cd $DIR_vib
+  make Tnum_MCTDH
+cd $here
+
+$DIR_vib/Tnum90_MCTDH.exe << ** > res
+ &variables 
+         nrho=2
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+         Tana=t
+ /
+ &Coord_transfo name_transfo='bunch' nb_vect=3 /
+1  1  0.5                  X   X     (2 3: R1=X2->X3)
+2  2  0.3335153425496182   D   H     (4 5: R2=D4->H5)
+3  3  0.0                  F   H     (6 7: R3=F6->H7)
+
+
+ &Coord_transfo name_transfo='poly' /
+     &vector nb_vect=2 Frame=t /
+       &vector Frame=f /
+       &vector Frame=f /
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1    1 1 1
+
+ &minimum /
+R1 2.
+R2 1.
+c2 -0.1
+R3 1.1
+c3 0.5
+p3 1.3
+**
+

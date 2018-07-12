@@ -1,0 +1,2 @@
+!!! Be carrefull 
+You have to use COORD=UNIQUE, otherwise GAMESS will reorient the geometry

@@ -1,0 +1,17 @@
+ici=`pwd`
+DIR_vib=$ici/../..
+
+cd $DIR_vib
+ make
+cd $ici
+
+export OMP_NUM_THREADS=1
+
+D=$1
+LB=$2
+LG=$2
+ nice $DIR_vib/vib << ** >"res_Delta_D"$D"_LB"$LB"-LG"$LG
+ &system main_test=t /
+$D
+$LB $LG
+**

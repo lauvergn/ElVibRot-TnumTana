@@ -1,0 +1,535 @@
+!===========================================================================
+!===========================================================================
+!This file is part of ElVibRot.
+!
+!    ElVibRot is free software: you can redistribute it and/or modify
+!    it under the terms of the GNU Lesser General Public License as published by
+!    the Free Software Foundation, either version 3 of the License, or
+!    (at your option) any later version.
+!
+!    ElVibRot is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU Lesser General Public License for more details.
+!
+!    You should have received a copy of the GNU Lesser General Public License
+!    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
+!
+!    Copyright 2015  David Lauvergnat
+!      with contributions of Mamadou Ndong, Josep Maria Luis
+!
+!    ElVibRot includes:
+!        - Tnum-Tana under the GNU LGPL3 license
+!        - Somme subroutines of John Burkardt under GNU LGPL license
+!             http://people.sc.fsu.edu/~jburkardt/
+!        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
+!             http://shtools.ipgp.fr
+!===========================================================================
+!===========================================================================
+
+      MODULE mod_file
+      USE mod_system
+      IMPLICIT NONE
+
+      !!@description: TODO
+      !!@param: TODO
+      TYPE param_file
+        character (len=Line_len) :: name      = " "     ! name of the file
+        integer                  :: unit      = 0       ! unit of the file
+        logical                  :: formatted = .TRUE.
+        logical                  :: append    =.FALSE.
+        logical                  :: old       =.FALSE.
+        logical                  :: seq       = .TRUE.
+        integer                  :: frecl     = 0
+        logical                  :: init      = .FALSE.
+
+
+        ! to store/use data of several files using threads
+        integer                               :: nb_thread      = 0
+        character (len=Line_len), allocatable :: tab_name_th(:)
+        integer, allocatable                  :: tab_unit(:)
+
+      END TYPE param_file
+
+      INTERFACE assignment (=)
+          MODULE PROCEDURE file2TOfile1
+      END INTERFACE
+
+      CONTAINS
+
+      SUBROUTINE file2TOfile1(file1,file2)
+
+      TYPE(param_file), intent(inout)  :: file1
+      TYPE(param_file), intent(in)     :: file2
+
+
+      integer :: err_mem,memory
+      !write(out_unitp,*) 'BEGINNING file_GetUnit'
+
+      !IF (.NOT. file2%init) RETURN
+
+      file1%name      = file2%name
+      file1%unit      = file2%unit
+      file1%formatted = file2%formatted
+      file1%old       = file2%old
+      file1%seq       = file2%seq
+      file1%frecl     = file2%frecl
+      file1%init      = file2%init
+
+      file1%nb_thread = file2%nb_thread
+
+      IF (allocated(file2%tab_unit) .AND. allocated(file2%tab_name_th)) THEN
+        memory = file1%nb_thread
+        allocate(file1%tab_unit(0:file1%nb_thread-1),stat=err_mem) ! change alloc done
+
+        memory = file1%nb_thread
+        allocate(file1%tab_name_th(0:file1%nb_thread-1),stat=err_mem) ! change alloc done
+
+        file1%tab_unit       = file2%tab_unit
+        file1%tab_name_th    = file2%tab_name_th
+
+      END IF
+
+
+      END SUBROUTINE file2TOfile1
+
+
+      FUNCTION file_GetUnit(ffile,err_file)
+
+      integer           :: file_GetUnit
+      TYPE(param_file)  :: ffile
+      integer, optional :: err_file
+
+
+      logical                  :: unit_opened
+      integer                  :: ithread
+
+      !write(out_unitp,*) 'BEGINNING file_GetUnit'
+
+      IF (.NOT. ffile%init) THEN
+        file_GetUnit = 0 ! the file is not opened
+        RETURN
+      END IF
+
+
+!     - check if the file is already open ------------------
+      IF (ffile%nb_thread > 1) THEN
+         ithread      = 0
+!$       ithread      = OMP_GET_THREAD_NUM()
+
+        inquire(FILE=ffile%tab_name_th(ithread),OPENED=unit_opened)
+        IF (.NOT. unit_opened) THEN ! the file is not open
+          file_GetUnit = 0 ! the file is not opened
+        ELSE
+          file_GetUnit = ffile%tab_unit(ithread)
+        END IF
+
+      ELSE
+        inquire(FILE=ffile%name,OPENED=unit_opened)
+        IF (.NOT. unit_opened) THEN ! the file is not open
+          file_GetUnit = 0 ! the file is not opened
+        ELSE
+          file_GetUnit = ffile%unit
+        END IF
+      END IF
+
+      END FUNCTION file_GetUnit
+
+
+      !!@description: TODO
+      !!@param: TODO
+      SUBROUTINE file_open(ffile,iunit,lformatted,append,old,seq,lrecl,err_file)
+
+      TYPE(param_file)  :: ffile
+      integer           :: iunit
+      integer, optional :: lrecl
+      logical, optional :: lformatted,append,old,seq
+      integer, optional :: err_file
+
+
+      character (len=Name_len) :: fform,fstatus,fposition,faccess
+
+      logical                  :: unit_opened
+      integer                  :: ith
+
+      integer :: err_mem,memory
+      !write(out_unitp,*) 'BEGINNING file_open'
+
+!     - test if optional arguments are present ---------
+      IF (.NOT. ffile%init) THEN  ! IF init=.T., those parameters are already set-up
+
+
+        IF (present(lformatted)) THEN
+          ffile%formatted = lformatted
+        ELSE
+          ffile%formatted = .TRUE.
+        END IF
+
+        IF (present(old)) THEN
+          ffile%old = old
+        ELSE
+          ffile%old = .FALSE.
+        END IF
+
+        IF (present(append)) THEN
+          ffile%append = append
+        ELSE
+          ffile%append = .FALSE.
+        END IF
+
+
+        IF (present(seq)) THEN
+          IF (seq) THEN
+            ffile%seq = .TRUE.
+          ELSE
+            ffile%seq = .FALSE.
+            IF (present(lrecl)) THEN
+              ffile%frecl = lrecl
+            ELSE
+              write(out_unitp,*) 'ERROR in file_open'
+              write(out_unitp,*) 'The file access is DIRECT but lrecl is not present!'
+              STOP
+            END IF
+          END IF
+        ELSE
+          ffile%seq = .TRUE.
+        END IF
+
+
+
+        ffile%init  = .TRUE.
+      END IF
+      !-------------------------------------
+
+
+      !-------------------------------------
+      IF (ffile%formatted) THEN
+        fform = 'formatted'
+      ELSE
+        fform = 'unformatted'
+      END IF
+
+      IF (ffile%old) THEN
+        fstatus = 'old'
+      ELSE
+        fstatus = 'unknown'
+      END IF
+
+      IF (ffile%append) THEN
+        fposition = 'append'
+      ELSE
+        fposition = 'asis'
+      END IF
+
+      IF (ffile%seq) THEN
+        faccess = 'sequential'
+      ELSE
+        faccess = 'direct'
+      END IF
+      !-------------------------------------
+      !CALL file_Write(ffile)
+
+
+      IF (.NOT. ffile%seq) ffile%nb_thread = 0
+
+!     - check if the file is already open ------------------
+      inquire(FILE=ffile%name,NUMBER=iunit,OPENED=unit_opened)
+      IF (.NOT. unit_opened) THEN ! the file is not open
+
+        !- the file is not open, find an unused UNIT ---------
+        iunit = 9
+        DO
+          iunit = iunit + 1
+          inquire(UNIT=iunit,OPENED=unit_opened)
+          IF (.NOT. unit_opened) EXIT
+        END DO
+
+
+        !-- open the file
+        IF (ffile%seq) THEN
+          IF (present(err_file)) THEN
+            open(UNIT=iunit,FILE=trim(ffile%name),FORM=trim(fform),STATUS=trim(fstatus),  &
+                 POSITION=trim(fposition),ACCESS='SEQUENTIAL',IOSTAT=err_file)
+            IF (err_file /= 0) RETURN
+          ELSE
+            open(UNIT=iunit,FILE=trim(ffile%name),FORM=trim(fform),STATUS=trim(fstatus),  &
+                 POSITION=trim(fposition),ACCESS='SEQUENTIAL')
+          END IF
+        ELSE
+          IF (present(err_file)) THEN
+            open(UNIT=iunit,FILE=ffile%name,FORM=fform,STATUS=fstatus,  &
+                       ACCESS='DIRECT',RECL=ffile%frecl,IOSTAT=err_file)
+            IF (err_file /= 0) RETURN
+          ELSE
+            open(UNIT=iunit,FILE=ffile%name,FORM=fform,STATUS=fstatus,  &
+                 ACCESS='DIRECT',RECL=ffile%frecl)
+          END IF
+        END IF
+
+        ffile%unit = iunit
+      ELSE
+        ffile%unit = iunit
+      END IF
+
+      !write(out_unitp,*) 'open ',iunit,ffile%name
+
+      IF (ffile%nb_thread > 1) THEN
+        IF (allocated(ffile%tab_unit)) deallocate(ffile%tab_unit,stat=err_mem)
+        memory = ffile%nb_thread
+        allocate(ffile%tab_unit(0:ffile%nb_thread-1),stat=err_mem) ! change alloc done
+!        CALL error_memo_allo(err_mem,memory,"ffile%tab_unit",           &
+!                                                            "file_open")
+        IF (allocated(ffile%tab_name_th)) deallocate(ffile%tab_name_th,stat=err_mem)
+        memory = ffile%nb_thread
+        allocate(ffile%tab_name_th(0:ffile%nb_thread-1),stat=err_mem) ! change alloc done
+!        CALL error_memo_allo(err_mem,memory,"ffile%tab_name_th",        &
+!                                                            "file_open")
+
+        DO ith=0,ffile%nb_thread-1
+
+          ffile%tab_name_th(ith) = trim(adjustl(ffile%name)) //         &
+                                     "." // int_TO_char(ith)
+
+          inquire(FILE=ffile%tab_name_th(ith),NUMBER=iunit,OPENED=unit_opened)
+          IF (.NOT. unit_opened) THEN ! the file is not open
+
+            !- find an unused UNIT ---------
+            iunit = 9
+            DO
+              iunit = iunit + 1
+              inquire(UNIT=iunit,OPENED=unit_opened)
+              !write(out_unitp,*) 'name,iunit,unit_opened ',ffile%name,iunit,unit_opened
+              IF (.NOT. unit_opened) EXIT
+            END DO
+
+            !-- open the file
+            IF (ffile%seq) THEN
+              open(UNIT=iunit,FILE=ffile%tab_name_th(ith),FORM=fform,   &
+                STATUS=fstatus,POSITION=fposition,ACCESS='SEQUENTIAL')
+            ELSE
+              open(UNIT=iunit,FILE=ffile%tab_name_th(ith),FORM=fform,   &
+                STATUS=fstatus,ACCESS='DIRECT',RECL=ffile%frecl)
+            END IF
+
+            ffile%tab_unit(ith) = iunit
+            !write(out_unitp,*) 'open ',ffile%name,iunit
+          ELSE
+            ffile%tab_unit(ith) = iunit
+          END IF
+          !write(out_unitp,*) 'open ',ffile%tab_unit(ith),ffile%tab_name_th(ith)
+
+        END DO
+      END IF
+
+      iunit = ffile%unit
+      !write(out_unitp,*) 'END file_open'
+
+      END SUBROUTINE file_open
+
+      SUBROUTINE file_close(ffile)
+
+      TYPE(param_file)  :: ffile
+
+      integer                  :: ith
+
+      close(ffile%unit)
+      IF (ffile%nb_thread > 1) THEN
+        DO ith=0,ffile%nb_thread-1
+          close(ffile%tab_unit(ith))
+        END DO
+      END IF
+      ffile%init = .FALSE.
+
+      END SUBROUTINE file_close
+
+      !!@description: TODO
+      !!@param: TODO
+      SUBROUTINE file_open2(name_file,iunit,lformatted,append,old,err_file)
+
+      character (len=*) :: name_file
+      integer           :: iunit
+      logical, optional :: lformatted,append,old
+      integer, optional :: err_file
+
+      character (len=Name_len) :: fform,fstatus,fposition
+
+      logical           :: unit_opened
+      !logical           :: lformatted_loc,append_loc,old_loc
+
+!     - default for the open ---------------------------
+
+!     - test if optional arguments are present ---------
+      IF (present(lformatted)) THEN
+        IF (.NOT. lformatted) THEN
+          fform = 'unformatted'
+        ELSE
+          fform = 'formatted'
+        END IF
+      ELSE
+        fform = 'formatted'
+      END IF
+
+      IF (present(append)) THEN
+        IF (append) THEN
+          fposition = 'append'
+        ELSE
+          fposition = 'asis'
+        END IF
+      ELSE
+        fposition = 'asis'
+      END IF
+
+      IF (present(old)) THEN
+        IF (old) THEN
+          fstatus = 'old'
+        ELSE
+          fstatus = 'unknown'
+        END IF
+      ELSE
+          fstatus = 'unknown'
+      END IF
+
+!     - check if the file is already open ------------------
+!     write(out_unitp,*) 'name,unit,unit_opened ',name_file,unit,unit_opened
+
+      inquire(FILE=name_file,NUMBER=iunit,OPENED=unit_opened)
+!     write(out_unitp,*) 'name,unit,unit_opened ',name_file,unit,unit_opened
+
+
+!     - the file is not open, find an unused UNIT ---------
+      IF (unit_opened) RETURN ! the file is already open
+
+      iunit = 9
+      DO
+        iunit = iunit + 1
+        inquire(UNIT=iunit,OPENED=unit_opened)
+!       write(out_unitp,*) 'name,iunit,unit_opened ',name_file,iunit,unit_opened
+        IF (.NOT. unit_opened) exit
+      END DO
+
+
+!     -- open the file
+      IF (present(err_file)) THEN
+        open(UNIT=iunit,FILE=name_file,FORM=fform,STATUS=fstatus,       &
+             POSITION=fposition,ACCESS='SEQUENTIAL',IOSTAT=err_file)
+      ELSE
+        open(UNIT=iunit,FILE=name_file,FORM=fform,STATUS=fstatus,       &
+             POSITION=fposition,ACCESS='SEQUENTIAL')
+      END IF
+
+!     write(out_unitp,*) 'open ',name_file,iunit
+
+      END SUBROUTINE file_open2
+
+      !!@description: TODO
+      !!@param: TODO
+      SUBROUTINE file_delete(ffile)
+
+      TYPE(param_file)  :: ffile
+      integer           :: unit
+
+      integer                  :: ithread,nio
+      !integer :: err_mem,memory
+
+      !write(out_unitp,*) 'BEGINNING file_delete'
+
+      IF (len_trim(ffile%name) == 0) RETURN
+      CALL file_open(ffile,unit)
+
+      close(unit,status='delete')
+      !write(out_unitp,*) 'delete file: ',unit,file%name
+
+      IF (ffile%nb_thread > 1) THEN
+        DO ithread=0,ffile%nb_thread-1
+          nio = ffile%tab_unit(ithread)
+          close(nio,status='delete')
+          !write(out_unitp,*) 'delete file: ',nio,ffile%tab_name_th(ithread)
+        END DO
+      END IF
+      ffile%init = .FALSE.
+!      memory = ffile%nb_thread
+!      deallocate(ffile%tab_unit,stat=err_mem) ! change dealloc done
+!      CALL error_memo_allo(err_mem,-memory,"ffile%tab_unit","file_delete")
+!
+!      memory = ffile%nb_thread
+!      deallocate(ffile%tab_name_th,stat=err_mem) ! change dealloc done
+!      CALL error_memo_allo(err_mem,-memory,"ffile%tab_name_th","file_delete")
+
+      !write(out_unitp,*) 'END file_delete'
+
+
+      END SUBROUTINE file_delete
+
+      SUBROUTINE file_dealloc(ffile)
+
+      TYPE(param_file)  :: ffile
+
+      !write(out_unitp,*) 'BEGINNING file_dealloc'
+
+      ! first close the file
+      CALL file_close(ffile)
+
+      ffile%init = .FALSE.
+
+      ffile%nb_thread = 0
+      IF (allocated(ffile%tab_unit))    deallocate(ffile%tab_unit)
+      IF (allocated(ffile%tab_name_th)) deallocate(ffile%tab_name_th)
+
+      !write(out_unitp,*) 'END file_dealloc'
+
+      END SUBROUTINE file_dealloc
+
+      SUBROUTINE file_Write(ffile)
+
+      TYPE(param_file)  :: ffile
+
+      integer :: ith
+
+      write(out_unitp,*) 'BEGINNING file_Write'
+      write(out_unitp,*) 'name:    ',trim(adjustl(ffile%name))
+      write(out_unitp,*) 'unit     ',ffile%unit
+      write(out_unitp,*) 'formatted',ffile%formatted
+      write(out_unitp,*) 'old      ',ffile%old
+      write(out_unitp,*) 'seq      ',ffile%seq
+      write(out_unitp,*) 'frecl    ',ffile%frecl
+      write(out_unitp,*) 'init     ',ffile%init
+      write(out_unitp,*) 'nb_thread',ffile%nb_thread
+
+      IF (allocated(ffile%tab_name_th) .AND. allocated(ffile%tab_unit)) THEN
+        write(out_unitp,*) 'tab_name_th,tab_unit'
+        DO ith=0,ffile%nb_thread-1
+          write(out_unitp,*) 'name,unit: ',                             &
+                             trim(adjustl(ffile%tab_name_th(ith))),' ', &
+                             ffile%tab_unit(ith)
+        END DO
+      END IF
+
+      write(out_unitp,*) 'END file_Write'
+
+
+      END SUBROUTINE file_Write
+
+
+      FUNCTION make_FileName(FileName)
+        character(len=*), intent(in)    :: FileName
+
+        character (len=:), allocatable  :: make_FileName
+        integer :: ilast_char
+
+        ilast_char = len_trim(base_FileName)
+
+        IF (FileName(1:1) == "/" .OR. FileName(1:1) == "" .OR. ilast_char == 0) THEN
+          make_FileName = trim(adjustl(FileName))
+        ELSE
+          IF (base_FileName(ilast_char:ilast_char) == "/") THEN
+            make_FileName = trim(adjustl(base_FileName)) // trim(adjustl(FileName))
+          ELSE
+            make_FileName = trim(adjustl(base_FileName)) // '/' // trim(adjustl(FileName))
+          END IF
+        END IF
+
+
+      END FUNCTION make_FileName
+
+      END MODULE mod_file
+

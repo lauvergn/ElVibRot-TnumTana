@@ -1,0 +1,53 @@
+ SYSTEM=sub_system_cart_murrell.f
+ SYSTEM=sub_system_murrell-2.f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+export OMP_NUM_THREADS=1
+
+nice $DIR_vib/vib << ** >res
+ &system printlevel=2 /
+ &constantes /
+ &variables 
+         nrho=2
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+         Tana=t
+ /
+ &Coord_transfo name_transfo='bunch_poly' nb_X=1 nat=3 /
+  C N H GCN
+  &dummyX tab_At_TO_X=1,2 type_dummyX='COM' /
+
+ &Coord_transfo name_transfo='poly' cos_th=t /
+   &vector nb_vect=1 Frame=t iAtA=2 iAtB=1 / !N->C
+     &vector iAtA=4 iAtB=3 /                 !G->H
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1
+
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2 read_Qsym0=t unit='bohr' /
+r 2.179
+R 3.187
+cosa .9
+
+ &basis_nD iQdyn(1)=1 name="Hm"  nb=10 nq=15 Q0=2.2 scaleQ=11.0 /
+ &basis_nD iQdyn(1)=2 name="Hm"  nb=10 nq=15 Q0=3.2 scaleQ=5.1 /
+ &basis_nD iQact(1)=3 name="Pl0" nb=51 nq=80 /
+ &inactives /
+
+ &actives test=f direct=2 /
+ &analyse max_ana=40 max_ene=20000. 'cm-1' /
+**
+exit
+ &basis_nD iQdyn(1)=1 name="Hm"  nb=10 nq=15 Q0=2.2 scaleQ=11.0 /
+ &basis_nD iQdyn(1)=2 name="Hm"  nb=10 nq=15 Q0=3.2 scaleQ=5.1 /
+ &basis_nD iQact(1)=3 name="Pl0" nb=51 nq=80 /
+ &minimum pot0=-0.499465823200 pot_itQtransfo=0 read_Qsym0=t unit='bohr' /

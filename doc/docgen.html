@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>Automatic Doc Generation</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <h2>Automatic Doc Generation</h2>
+    <p>Documentation is generated automatically from the source code of the
+    modules.</p>
+    <p>All routines must have a documentation block directly before
+    the routine declaration, like in the following example:</p>
+    <pre>
+  !! @description: Read two columns from an ascii file.
+  !! @param: col1      Array for the first column
+  !! @param: col2      Array for the second column
+  !! @param: filename  File name
+  subroutine read_ascii_2col (col1, col2, filename)
+    
+    real (idp),        intent(inout) :: col1(:), col2(:)
+    character (len=*), intent(in)    :: filename
+    ...</pre>
+    <p>Note that each line in the documentation block starts with a
+    double exclamation mark. Private routines should have a documentation block
+    just like public routines. The docgen script can distinguish between
+    private and public symbols; only public symbols will show up in the
+    documentation. The parameter definitions inside the routine are evaluated
+    by the docgen script. Always declare intent!</p>
+
+    <p>If a module uses overloaded routines, there must be a documentation block
+    right before the interface, giving a description. In addition, the actual
+    implementations also need to have a documentation block, explaining the
+    parameters. The description given for the implementations is not used, but
+    it is still good style to supply it.</p>
+    <pre>
+  !! @description: Read data from a csv file. The columns in the file are
+  !!               separated by spaces. The data is read into arrays of reals,
+  !!               one array per column. There can be up to three columns. If
+  !!               there are less columns in the file than you try to read,
+  !!               the remaining columns are filled with zeros.
+  interface read_ascii
+    module procedure read_ascii_1col, read_ascii_2col, read_ascii_3col
+  end interface
+
+  ...
+
+  !! @description: Read two columns from an ascii file.
+  !!               If there are not enough columns in the file, fill the
+  !!               remaining ones with zero.
+  !! @param: col      Unallocated array for the column
+  !! @param: filename File name
+  subroutine read_ascii_1col (col, filename)
+
+    real (idp), allocatable, intent(inout) :: col(:)
+    character (len=*),       intent(in)    :: filename
+    ...
+    </pre>
+
+    <p>Type definitions also need a documentation block, very similar to routines:</p>
+    <pre>
+  !! @description: Information about spatial grid in the config file
+  !! @param: dim      number of spacial dimensions
+  !! @param: r_min    minimum r, through dimensions
+  !! @param: r_max    maximum r, through dimensions
+  !! @param: map      mapping, through dimensions
+  !! @param: maptype  type of mapping (diff, int)
+  !! @param: nr       numer of points, per dimension
+  type grid_pt
+    integer :: dim
+    real (idp), allocatable :: r_min(:), r_max(:)
+    logical, allocatable :: map(:)
+    character (len=5) :: maptype
+    integer, allocatable :: nr(:)
+  end type
+    </pre>
+
+  </body>
+</html>

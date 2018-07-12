@@ -1,0 +1,2 @@
+cd GAMESS ; ./clean ; cd ..
+cd GAUSSIAN ; ./clean ; cd ..
