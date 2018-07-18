@@ -246,9 +246,16 @@ CONTAINS
 !        | has been exceeded.                          |
 !        %---------------------------------------------%
 
+#if __ARPACK == 1
          call dnaupd ( ido, bmat, n, which, nev, tol, resid,            &
               ncv, v, ldv, iparam, ipntr, workd, workl, lworkl,         &
               info )
+#else
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' The ARPACK library is not present!'
+          write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+          STOP 'ARPACK has been removed'
+#endif
 
          IF (abs(ido) /= 1) EXIT
 
@@ -310,11 +317,17 @@ CONTAINS
 
          rvec = .true.
 
+#if __ARPACK == 1
          call dneupd ( rvec, 'A', select, d, d(1,2), v, ldv,            &
               sigmar, sigmai, workev, bmat, n, which, nev, tol,         &
               resid, ncv, v, ldv, iparam, ipntr, workd, workl,          &
               lworkl, ierr )
-
+#else
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' The ARPACK library is not present!'
+          write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+          STOP 'ARPACK has been removed'
+#endif
 !        %-----------------------------------------------%
 !        | The real part of the eigenvalue is returned   |
 !        | in the first column of the two dimensional    |
@@ -426,8 +439,15 @@ CONTAINS
 !            | Display computed residuals. |
 !            %-----------------------------%
 
+#if __ARPACK == 1
              call dmout(6, nconv, 3, d, maxncv, -6,                     &
                        'Ritz values (Real,Imag) and relative residuals')
+#else
+             write(out_unitp,*) 'ERROR in ',name_sub
+             write(out_unitp,*) ' The ARPACK library is not present!'
+             write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+             STOP 'ARPACK has been removed'
+#endif
           end if
 
 !        %-------------------------------------------%
