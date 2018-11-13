@@ -21,10 +21,18 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_dnM
-      USE mod_system
-      USE mod_dnS
-      USE mod_dnV
+      use mod_system, only: rkind, alloc_array, zero, out_unitp, &
+                            dealloc_array, write_error_not_null, &
+                            sub_test_tab_ub, sub_test_tab_lb,    &
+                            error_memo_allo, write_error_null,   &
+                            czero, write_vecmat, one, two
+      use mod_dnS, only: alloc_array, dealloc_array, type_dns,   &
+                         check_alloc_dns, alloc_dns, write_dns
+      use mod_dnV, only: alloc_array, dealloc_array, type_dnvec, &
+                         check_alloc_dnvec, alloc_dnvec
       IMPLICIT NONE
+
+      PRIVATE
 
       TYPE Type_dnMat
           logical                     :: alloc=.FALSE.
@@ -60,7 +68,6 @@
           MODULE PROCEDURE sub_dnMat2_TO_dnMat1,sub_dnCplxMat2_TO_dnCplxMat1
         END INTERFACE
 
-
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_dnMatdim1
         MODULE PROCEDURE alloc_array_OF_dnCplxMatdim1
@@ -69,6 +76,17 @@
         MODULE PROCEDURE dealloc_array_OF_dnMatdim1
         MODULE PROCEDURE dealloc_array_OF_dnCplxMatdim1
       END INTERFACE
+
+      PUBLIC :: Type_dnMat, alloc_dnMat, dealloc_dnMat, check_alloc_dnMat, Write_dnMat
+      PUBLIC :: Type_dnCplxMat, alloc_dnCplxMat, dealloc_dnCplxMat, check_alloc_dnCplxMat, Write_dnCplxMat
+
+      PUBLIC :: assignment (=), alloc_array, dealloc_array
+      PUBLIC :: sub_dnMat1_TO_dnMat2, sub_dnMat1_TO_LargerdnMat2, sub_dnMat1_TO_dnMat2_partial
+      PUBLIC :: dnVec_TO_dnMat, sub_dnMat_TO_dnS, sub_dnS_TO_dnMat
+      PUBLIC :: sub_ZERO_TO_dnMat, sub_ZERO_TO_dnCplxMat
+      PUBLIC :: dnVec1_wPLUS_dnMat2_TO_dnMat3,dnMat1_PLUS_dnMat2_TO_dnMat3
+      PUBLIC :: dnMat1_MUL_dnMat2_TO_dnMat3, dnVec1_MUL_dnMat2_TO_dnVec3,dnMat1_MUL_dnVec2_TO_dnVec3
+      PUBLIC :: TRANS_dnMat1_TO_dnMat2,INV_dnMat1_TO_dnMat2, Det_OF_dnMat_TO_dnS
 
       CONTAINS
 !

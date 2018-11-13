@@ -23,10 +23,20 @@
 
    !Description:
    MODULE mod_Tana_write_mctdh
-   USE mod_Tnum
+   use mod_system, only: rkind, string_to_string, int_to_char, chalf, eye, &
+                         name_longlen, zero, two, write_real_in_char,      &
+                         fracinteger, half, name_len, real_to_char,        &
+                         frac_to_real, rmatio_format, operator(==)
+   USE mod_Tnum,   only : zmatrix
+   USE mod_Tana_OpnD
    USE mod_Tana_sum_opnd
    IMPLICIT NONE
 
+   PRIVATE
+   PUBLIC :: write_keo_LatexForm
+   PUBLIC :: write_keo_VSCFForm
+   PUBLIC :: write_keo_MCTDH_Form
+   PUBLIC :: write_keo_MidasCppForm
 
    CONTAINS 
    !! @description: Write the deformation part of the total KEO in a MidasCpp format,

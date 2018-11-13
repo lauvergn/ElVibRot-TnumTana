@@ -21,18 +21,21 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_ThreeDTransfo
-      USE mod_system
+      use mod_system, only: name_len, error_memo_allo, in_unitp, out_unitp, one
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
       IMPLICIT NONE
+
+      PRIVATE
 
       TYPE Type_ThreeDTransfo
         integer                  :: Type_3D ! 0: cart: identity; 1: polar; 2: spherical, 3: R, x,z
         character (len=Name_len) :: name_Transfo_3D = ''
         integer                  :: list_ThreeD_coord(3) = (/ 0,0,0 /)
       END TYPE Type_ThreeDTransfo
+
+      PUBLIC :: Type_ThreeDTransfo, alloc_ThreeDTransfo, dealloc_ThreeDTransfo
+      PUBLIC :: Read_ThreeDTransfo, Write_ThreeDTransfo, calc_ThreeDTransfo
+      PUBLIC :: ThreeDTransfo1TOThreeDTransfo2
 
       CONTAINS
 

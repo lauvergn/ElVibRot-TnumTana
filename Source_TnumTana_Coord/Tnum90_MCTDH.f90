@@ -1,13 +1,8 @@
       PROGRAM Tnum_f90
       USE mod_system
-      USE mod_Tnum
-      USE mod_Tana_keo
-      USE mod_Tana_Tnum
-      USE mod_export_KEO
-      USE mod_PrimOp_def
-      USE mod_OTF
+      USE mod_dnSVM
+      USE mod_Coord_KEO
       USE mod_PrimOp
-      USE mod_Lib_QTransfo, only : write_dnx
       IMPLICIT NONE
 
 

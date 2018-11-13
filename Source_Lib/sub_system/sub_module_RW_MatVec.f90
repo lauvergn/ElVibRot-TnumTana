@@ -21,8 +21,11 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_RW_MatVec
-  USE mod_NumParameters
+  USE mod_NumParameters, only: out_unitp, cmatio_format, rmatio_format, rkind, line_len
+  USE mod_file, only : flush_perso
   IMPLICIT NONE
+
+  PRIVATE
 
   INTERFACE Write_VecMat
     MODULE PROCEDURE Write_RMat,Write_CMat,Write_RVec,Write_CVec
@@ -40,19 +43,11 @@ MODULE mod_RW_MatVec
     MODULE PROCEDURE Read_RVec,Read_CVec
   END INTERFACE
 
-  PRIVATE sub_Format_OF_Line
+  !PRIVATE sub_Format_OF_Line
+   PUBLIC :: Write_VecMat, Write_Mat, Write_Vec, Read_Mat, Read_Vec
+   PUBLIC :: sub_ReadRV, sub_WriteRV
 
   CONTAINS
-
-  !!@description: TODO
-  !!@param: TODO
-  SUBROUTINE flush_perso(nio)
-
-  integer, intent(in) :: nio
-
-    flush(nio)
-
-  END  SUBROUTINE flush_perso
 
       !!@description: Defined a format to write a line of a matrix
       !!@param: TODO
@@ -490,6 +485,154 @@ MODULE mod_RW_MatVec
 
       END SUBROUTINE Read_CVec
 
+
+SUBROUTINE sub_ReadRV(RV,FileName_RV,lformatted,err_sub)
+  USE mod_file
+  USE mod_NumParameters
+  USE mod_memory_NotPointer
+  IMPLICIT NONE
+
+  real (kind=Rkind), allocatable,  intent(inout)           :: RV(:)
+  character (len=Line_len),        intent(in)              :: FileName_RV
+  logical,                         intent(in)              :: lformatted
+  integer,                         intent(inout), optional :: err_sub
+
+  character (len=*),               parameter               :: Name_sub='sub_ReadRV'
+
+
+  integer :: nio,error,err_file,nvec
+
+!  !$OMP  CRITICAL (sub_ReadRV_CRIT)
+  error = 0
+  nvec  = 0
+
+  !write(out_unitp,*) 'lformatted',lformatted
+  !write(out_unitp,*) 'FileName_RV: ',FileName_RV
+
+
+  CALL file_open2(FileName_RV,nio,lformatted=lformatted,old=.TRUE.,err_file=err_file)
+  IF (err_file /= 0) THEN
+    write(out_unitp,*) ' ERROR in ',Name_sub
+    write(out_unitp,*) '   Problem with the file associated to RV'
+    write(out_unitp,*) '   file name: ',FileName_RV
+    write(out_unitp,*) '   err_file: ',err_file
+    CALL flush_perso(out_unitp)
+    error = 2
+  ELSE
+      IF (lformatted) THEN
+        read(nio,*,iostat=err_file) nvec
+      ELSE
+        read(nio,iostat=err_file) nvec
+      END IF
+    IF (err_file /= 0 .OR. nvec < 1) THEN
+      write(out_unitp,*) ' ERROR in ',Name_sub
+      write(out_unitp,*) '   Error while reading nvec',nvec
+      write(out_unitp,*) '   file name: ',FileName_RV
+      CALL flush_perso(out_unitp)
+      error = 3
+      nvec = 0
+    END IF
+  END IF
+
+  IF (error == 0) THEN
+    CALL alloc_NParray(RV,(/ nvec /),'RV',name_sub)
+    IF (lformatted) THEN
+      read(nio,*,iostat=err_file) RV
+    ELSE
+      read(nio,iostat=err_file) RV
+    END IF
+    IF (err_file /= 0) THEN
+      write(out_unitp,*) ' ERROR in ',Name_sub
+      write(out_unitp,*) '   Error while reading RV'
+      write(out_unitp,*) '   file name: ',FileName_RV
+      CALL flush_perso(out_unitp)
+      error = 4
+    END IF
+  END IF
+
+  close(nio,iostat=err_file)
+
+  IF (present(err_sub)) THEN
+    err_sub = error
+  ELSE
+    STOP ' in sub_ReadRV'
+  END IF
+!  !$OMP  END CRITICAL (sub_ReadRV_CRIT)
+
+END SUBROUTINE sub_ReadRV
+SUBROUTINE sub_WriteRV(RV,FileName_RV,lformatted,err_sub)
+  USE mod_file
+  USE mod_NumParameters
+  USE mod_memory_NotPointer
+  IMPLICIT NONE
+
+  real (kind=Rkind), allocatable,  intent(in)              :: RV(:)
+  character (len=Line_len),        intent(in)              :: FileName_RV
+  logical,                         intent(in)              :: lformatted
+  integer,                         intent(inout), optional :: err_sub
+
+  character (len=*),               parameter               :: Name_sub='sub_WriteRV'
+
+  integer :: nio,error,err_file,nvec
+
+!  !$OMP  CRITICAL (sub_WriteRV_CRIT)
+
+  error = 0
+  nvec  = size(RV)
+
+  IF (nvec < 1) THEN
+    error = 1
+  ELSE
+    CALL file_open2(FileName_RV,nio,lformatted=lformatted,old=.FALSE.,err_file=err_file)
+    IF (err_file /= 0) THEN
+      write(out_unitp,*) ' ERROR in ',Name_sub
+      write(out_unitp,*) '   Problem with the file associated to RV'
+      write(out_unitp,*) '   file name: ',FileName_RV
+      write(out_unitp,*) '   err_file: ',err_file
+      CALL flush_perso(out_unitp)
+      error = 2
+    ELSE
+      IF (lformatted) THEN
+        write(nio,*,iostat=err_file) nvec
+      ELSE
+        write(nio,iostat=err_file) nvec
+      END IF
+      IF (err_file /= 0 .OR. nvec < 1) THEN
+        write(out_unitp,*) ' ERROR in ',Name_sub
+        write(out_unitp,*) '   Error while writing nvec',nvec
+        write(out_unitp,*) '   file name: ',FileName_RV
+        CALL flush_perso(out_unitp)
+        error = 3
+        nvec = 0
+      ELSE
+        IF (lformatted) THEN
+          write(nio,*,iostat=err_file) RV
+        ELSE
+          write(nio,iostat=err_file) RV
+        END IF
+        IF (err_file /= 0) THEN
+          write(out_unitp,*) ' ERROR in ',Name_sub
+          write(out_unitp,*) '   Error while writing Rvec'
+          write(out_unitp,*) '   file name: ',FileName_RV
+          CALL flush_perso(out_unitp)
+          error = 4
+        END IF
+      END IF
+    END IF
+  END IF
+
+  close(nio,iostat=err_file)
+
+  IF (present(err_sub)) THEN
+    err_sub = error
+  ELSE
+    STOP ' in sub_WriteRV'
+  END IF
+
+!  !$OMP  END CRITICAL (sub_WriteRV_CRIT)
+
+
+END SUBROUTINE sub_WriteRV
 
 END MODULE mod_RW_MatVec
 

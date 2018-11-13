@@ -1,6 +1,3 @@
-
-
-
 PROGRAM CurviRPH
 USE mod_system
 USE CurviRPH_mod
@@ -31,7 +28,7 @@ implicit NONE
   IF (CurviRPH_param%gradient) write(6,*) 'Grad',Grad(:)
 
   write(6,*) 'Hess'
-  CALL Write_RMat(Hess,6,5)
+  CALL Write_Mat(Hess,6,5)
 
 END PROGRAM CurviRPH
 
@@ -89,16 +86,16 @@ END PROGRAM CurviRPH
 !    END DO
 !  END IF
 !  !read hessian
-!  CALL Read_RMat(hess(:,:,i),5,5,IOerr)
+!  CALL Read_Mat(hess(:,:,i),5,5,IOerr)
 !  write(6,*) 'IOerr',IOerr
-!  CALL Write_RMat(hess(:,:,i),6,5)
+!  CALL Write_Mat(hess(:,:,i),6,5)
 !
 !END DO
-!!CALL Write_RMat(fQ,6,5)
+!!CALL Write_Mat(fQ,6,5)
 !
 !CALL inv_m1_TO_m2(fQ,fQ_inv,nb_pts,0,ZERO)
 !
-!!CALL Write_RMat(fQ_inv,6,5)
+!!CALL Write_Mat(fQ_inv,6,5)
 !
 !!for the fit of Q
 !DO iq=1,ndim

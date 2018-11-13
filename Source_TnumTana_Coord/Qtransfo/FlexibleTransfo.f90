@@ -22,12 +22,14 @@
 !===========================================================================
 
       MODULE mod_FlexibleTransfo
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
+      use mod_system, only: alloc_nparray, dealloc_nparray, out_unitp, &
+                            in_unitp, rkind, flush_perso
+      use mod_dnSVM, only: type_dnvec, type_dns, check_alloc_dnvec,    &
+                           alloc_dnsvm, sub_dnvec1_to_dnvec2_withivec, &
+                           dealloc_dnsvm, write_dnvec
       IMPLICIT NONE
+
+      PRIVATE
 
       !!@description: TODO
       !!@param: TODO
@@ -40,6 +42,11 @@
             PROCEDURE :: Read_FlexibleTransfo
             GENERIC :: QtransfoRead => Read_FlexibleTransfo
       END TYPE Type_FlexibleTransfo
+
+      PUBLIC :: Type_FlexibleTransfo, Read_FlexibleTransfo
+      PUBLIC :: alloc_FlexibleTransfo, dealloc_FlexibleTransfo
+      PUBLIC :: FlexibleTransfo1TOFlexibleTransfo2
+      PUBLIC :: calc_FlexibleTransfo
 
       CONTAINS
 

@@ -21,13 +21,17 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_CartesianTransfo
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
-      USE mod_Lib_QTransfo
+      use mod_system, only: rkind, zero, dealloc_array, alloc_array, six, &
+                            name_len, out_unitp, in_unitp, flush_perso,   &
+                            three, string_uppercase_to_lowercase,         &
+                            read_name_advno, write_vecmat, half,          &
+                            name_longlen, rmatio_format, one, ten,        &
+                            write_mat, onetenth, two, pi, eight, five
+      use mod_dnSVM
+      use mod_Lib_QTransfo, only: write_dnx, calc_cross_product
       IMPLICIT NONE
+
+      PRIVATE
 
       !!@description: enables to change the BF frame orientation (Eckart or ....)
       !!@param: TODO
@@ -80,6 +84,14 @@ MODULE mod_CartesianTransfo
         real (kind=Rkind) :: dnTErr(0:3) = ZERO ! Error for the det(dnT)
 
       END TYPE Type_CartesianTransfo
+
+      PUBLIC :: Type_CartesianTransfo, alloc_CartesianTransfo, dealloc_CartesianTransfo
+      PUBLIC :: Read_CartesianTransfo, Write_CartesianTransfo
+      PUBLIC :: CartesianTransfo1TOCartesianTransfo2, calc_CartesianTransfo_new
+      PUBLIC :: P_Axis_CartesianTransfo
+      PUBLIC :: calc_dnTxdnXin_TO_dnXout, calc_EckartRot, calc_dnTEckart, dnX_MultiRef
+      PUBLIC :: centre_masse, sub3_dncentre_masse, sub3_NOdncentre_masse
+      PUBLIC :: sub_dnxMassWeight, sub_dnxNOMassWeight
 
       CONTAINS
 
@@ -1621,8 +1633,6 @@ MODULE mod_CartesianTransfo
       END SUBROUTINE calc_Analysis_dnXout
 
       SUBROUTINE calc_EckartRot(dnx,T,CartesianTransfo,Qact)
-        USE mod_ZmatTransfo
-
 
         TYPE (Type_dnVec), intent(inout)  :: dnx
         TYPE (Type_CartesianTransfo), intent(in) :: CartesianTransfo
@@ -1686,11 +1696,11 @@ MODULE mod_CartesianTransfo
 
         IF (debug) THEN
           write(out_unitp,*) 'A'
-          CALL Write_RMat(A,out_unitp,3)
+          CALL Write_Mat(A,out_unitp,3)
           write(out_unitp,*) 'A1'
-          CALL Write_RMat(A1,out_unitp,3)
+          CALL Write_Mat(A1,out_unitp,3)
           write(out_unitp,*) 'A2'
-          CALL Write_RMat(A2,out_unitp,3)
+          CALL Write_Mat(A2,out_unitp,3)
         END IF
 
         CALL diagonalization(A1,eig1,Vec1,3,1,1,.FALSE.) ! jacobi + sort
@@ -1705,9 +1715,9 @@ MODULE mod_CartesianTransfo
 
         IF (debug) THEN
           write(out_unitp,*) 'Vec1'
-          CALL Write_RMat(Vec1,out_unitp,3)
+          CALL Write_Mat(Vec1,out_unitp,3)
           write(out_unitp,*) 'Vec2'
-          CALL Write_RMat(Vec2,out_unitp,3)
+          CALL Write_Mat(Vec2,out_unitp,3)
         END IF
 
         T(1,1) = sum(Vec1(1,:)*Vec2(1,:))
@@ -1751,7 +1761,7 @@ MODULE mod_CartesianTransfo
           write(out_unitp,*) 'eig1 ',eig1
           write(out_unitp,*) 'eig2 ',eig2
           write(out_unitp,*) 'Eckart rotational matrix, T'
-          CALL Write_RMat(T,out_unitp,3)
+          CALL Write_Mat(T,out_unitp,3)
           write(out_unitp,*) 'END ',name_sub
         END IF
 

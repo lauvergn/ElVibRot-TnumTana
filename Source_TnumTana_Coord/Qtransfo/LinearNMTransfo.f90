@@ -21,12 +21,16 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_LinearNMTransfo
-      USE mod_system
+      use mod_system, only: rkind, param_file, dealloc_array, alloc_array, &
+                            zero, write_error_not_null, error_memo_allo,   &
+                            write_error_null, in_unitp, out_unitp,         &
+                            print_level, read_mat, onetenth, write_mat,    &
+                            flush_perso, one, name_len, dealloc_nparray,   &
+                            alloc_nparray, write_vecmat
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
       IMPLICIT NONE
+
+      PRIVATE
 
       !! @description: TODO
       !! @param: TODO
@@ -84,6 +88,12 @@
         ! for RPHTransfo
         MODULE PROCEDURE dealloc_array_OF_NMTransfodim0
       END INTERFACE
+
+
+      PUBLIC :: Type_LinearTransfo, alloc_LinearTransfo, dealloc_LinearTransfo, &
+                Read_linearTransfo, Read_LC_projectionTransfo, calc_LinearTransfo
+      PUBLIC :: Type_NMTransfo, alloc_array, dealloc_array, Read_NMTransfo,     &
+                Write_NMTransfo, NMTransfo1TONMTransfo2, dealloc_NMTransfo
 
       CONTAINS
 
@@ -236,7 +246,7 @@
 
       IF (LinearTransfo%inv) THEN
 
-        CALL Read_RMat(LinearTransfo%mat_inv,in_unitp,nbcol,err)
+        CALL Read_Mat(LinearTransfo%mat_inv,in_unitp,nbcol,err)
         IF (LinearTransfo%transp) THEN
            LinearTransfo%mat_inv = transpose(LinearTransfo%mat_inv)
         END IF
@@ -252,7 +262,7 @@
 
       ELSE
 
-        CALL Read_RMat(LinearTransfo%mat,in_unitp,nbcol,err)
+        CALL Read_Mat(LinearTransfo%mat,in_unitp,nbcol,err)
         IF (LinearTransfo%transp) THEN
            LinearTransfo%mat = transpose(LinearTransfo%mat)
         END IF
@@ -761,21 +771,21 @@
           NMTransfo%d0c(:,:) = ZERO
         END IF
 
-        CALL Read_RMat(NMTransfo%d0c(:,:),in_unitp,nb_col,err_read)
+        CALL Read_Mat(NMTransfo%d0c(:,:),in_unitp,nb_col,err_read)
         IF (err_read /= 0) THEN
           write(out_unitp,*) 'ERROR ',name_sub
           write(out_unitp,*) ' while reading the matrix "NMTransfo%d0c"'
           write(out_unitp,*) ' Check your data !!'
           STOP
         END IF
-        IF (debug) CALL Write_RMat(NMTransfo%d0c(:,:),out_unitp,nb_col,Rformat='f10.6')
+        IF (debug) CALL Write_Mat(NMTransfo%d0c(:,:),out_unitp,nb_col,Rformat='f10.6')
 
         IF (debug) THEN
           IF (allocated(mat)) CALL dealloc_NParray(mat,"mat",name_sub)
           CALL alloc_NParray(mat,(/nb_NM,nb_NM/),"mat",name_sub)
           mat = matmul(transpose(NMTransfo%d0c),NMTransfo%d0c)
           write(out_unitp,*) ' td0c.d0c'
-          CALL Write_RMat(mat,out_unitp,nb_col,Rformat='f10.6')
+          CALL Write_Mat(mat,out_unitp,nb_col,Rformat='f10.6')
           CALL dealloc_NParray(mat,"mat",name_sub)
         END IF
 
@@ -832,7 +842,7 @@
           END IF
 
 
-          CALL Read_RMat(mat,in_unitp,nb_col,err_read)
+          CALL Read_Mat(mat,in_unitp,nb_col,err_read)
           IF (err_read /= 0) THEN
             write(out_unitp,*) 'ERROR ',name_sub
             write(out_unitp,*) ' reading the matrix "NMTransfo%d0h"'
@@ -841,7 +851,7 @@
             write(out_unitp,*) ' Check your data !!'
             STOP
           END IF
-          IF (debug) CALL Write_RMat(mat,out_unitp,nb_col)
+          IF (debug) CALL Write_Mat(mat,out_unitp,nb_col)
 
           NMTransfo%d0h(:,:) = NMTransfo%d0h(:,:) + mat(:,:)
 
@@ -885,7 +895,7 @@
           END IF
 
 
-          CALL Read_RMat(mat,in_unitp,nb_col,err_read)
+          CALL Read_Mat(mat,in_unitp,nb_col,err_read)
           IF (err_read /= 0) THEN
             write(out_unitp,*) 'ERROR ',name_sub
             write(out_unitp,*) ' reading the matrix "NMTransfo%d0k"'
@@ -894,7 +904,7 @@
             write(out_unitp,*) ' Check your data !!'
             STOP
           END IF
-          IF (debug) CALL Write_RMat(mat,out_unitp,nb_col)
+          IF (debug) CALL Write_Mat(mat,out_unitp,nb_col)
 
           NMTransfo%d0k(:,:) = NMTransfo%d0k(:,:) + mat(:,:)
 

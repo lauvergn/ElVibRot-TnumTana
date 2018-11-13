@@ -20,13 +20,18 @@
 !
 !===========================================================================
 !===========================================================================
-      MODULE mod_ActiveTransfo
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
+MODULE mod_ActiveTransfo
+      use mod_system, only: rkind, alloc_array, zero, dealloc_array, &
+                            write_error_not_null, error_memo_allo,   &
+                            write_error_null, in_unitp, out_unitp,   &
+                            flush_perso, name_len, read_name_advno, one
+      use mod_dnSVM, only: alloc_array, dealloc_array, type_dnvec,   &
+                           type_dns, write_dnsvm, alloc_dnsvm,       &
+                           set_zero_to_dnsvm, sub_dns_to_dnvec,      &
+                           dealloc_dnsvm
       IMPLICIT NONE
+
+      PRIVATE
 
       !! @description: TODO
       !! @param: nb_var TODO
@@ -60,6 +65,13 @@
         ! for RPHTransfo
         MODULE PROCEDURE dealloc_array_OF_ActiveTransfodim0
       END INTERFACE
+
+      PUBLIC :: Type_ActiveTransfo, alloc_ActiveTransfo, dealloc_ActiveTransfo, ActiveTransfo1TOActiveTransfo2
+      PUBLIC :: alloc_array, dealloc_array
+      PUBLIC :: Read_ActiveTransfo, Read2_ActiveTransfo, Write_ActiveTransfo
+      PUBLIC :: calc_ActiveTransfo
+      PUBLIC :: get_Qact, get_Qact0, Set_AllActive
+      PUBLIC :: Qact_TO_Qdyn_FROM_ActiveTransfo, Qdyn_TO_Qact_FROM_ActiveTransfo, Qinact2n_TO_Qact_FROM_ActiveTransfo
 
       CONTAINS
 
@@ -234,7 +246,7 @@
 
       END SUBROUTINE Read_ActiveTransfo
 
-      SUBROUTINE Read_Active2Transfo(ActiveTransfo,nb_Qin)
+      SUBROUTINE Read2_ActiveTransfo(ActiveTransfo,nb_Qin)
 
       TYPE (Type_ActiveTransfo), intent(inout) :: ActiveTransfo
       integer, intent(in) :: nb_Qin
@@ -244,7 +256,7 @@
       integer, pointer :: list_Qact(:)
 
       integer :: err_io
-      character (len=*), parameter :: name_sub='Read_Active2Transfo'
+      character (len=*), parameter :: name_sub='Read2_ActiveTransfo'
 
       CALL alloc_ActiveTransfo(ActiveTransfo,nb_Qin)
 
@@ -303,7 +315,7 @@
 
       CALL flush_perso(out_unitp)
 
-      END SUBROUTINE Read_Active2Transfo
+      END SUBROUTINE Read2_ActiveTransfo
 
       SUBROUTINE Write_ActiveTransfo(ActiveTransfo)
 
@@ -365,8 +377,6 @@
       END SUBROUTINE Write_ActiveTransfo
 
       SUBROUTINE calc_ActiveTransfo(dnQact,dnQdyn,ActiveTransfo,nderiv,inTOout)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
         TYPE (Type_dnVec), intent(inout)        :: dnQact,dnQdyn
@@ -470,8 +480,6 @@
       END SUBROUTINE calc_ActiveTransfo
 
       SUBROUTINE get_Qact(Qact,ActiveTransfo,With_All)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
         real (kind=Rkind), intent(inout) :: Qact(:)
@@ -558,8 +566,6 @@
       END SUBROUTINE get_Qact
 
       SUBROUTINE get_Qact0(Qact0,ActiveTransfo)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
         real (kind=Rkind), intent(inout)      :: Qact0(:)
@@ -638,8 +644,6 @@
       END SUBROUTINE get_Qact0
 
       SUBROUTINE Set_AllActive(dnQact)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
         TYPE (Type_dnVec), intent(inout)        :: dnQact
@@ -740,7 +744,6 @@
 !=====================================================================
 !
       SUBROUTINE Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,ActiveTransfo)
-      USE mod_system
       IMPLICIT NONE
 
 
@@ -770,7 +773,6 @@
 
       END SUBROUTINE Qact_TO_Qdyn_FROM_ActiveTransfo
       SUBROUTINE Qdyn_TO_Qact_FROM_ActiveTransfo(Qdyn,Qact,ActiveTransfo)
-      USE mod_system
       IMPLICIT NONE
 
       real (kind=Rkind), intent(in)         :: Qdyn(:)
@@ -799,7 +801,6 @@
 
       END SUBROUTINE Qdyn_TO_Qact_FROM_ActiveTransfo
       SUBROUTINE Qinact2n_TO_Qact_FROM_ActiveTransfo(Qinact2n,Qact,ActiveTransfo)
-      USE mod_system
       IMPLICIT NONE
 
 
@@ -849,4 +850,4 @@
 
       END SUBROUTINE Qinact2n_TO_Qact_FROM_ActiveTransfo
 
-      END MODULE mod_ActiveTransfo
+END MODULE mod_ActiveTransfo

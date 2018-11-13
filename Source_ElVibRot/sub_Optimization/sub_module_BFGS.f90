@@ -117,7 +117,7 @@
                           para_Tnum,mole,ComOp,para_PES,Qact,para_BFGS)
 
       USE mod_system
-      USE mod_Tnum
+      use mod_Coord_KEO, only: zmatrix, tnum, alloc_array, dealloc_array
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -255,7 +255,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 !---------------------------------------------------------------------------
 !
  USE mod_system
- USE mod_Tnum
+ use mod_Coord_KEO, only: zmatrix, tnum, alloc_array, dealloc_array
  USE mod_PrimOp
  USE mod_basis
  USE mod_Op
@@ -420,7 +420,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 !---------------------------------------------------------------------
 !
  USE mod_system 
- USE mod_Tnum
+ USE mod_Coord_KEO, only: zmatrix, tnum, alloc_array, dealloc_array
  USE mod_PrimOp
  USE mod_basis
  USE mod_Op
@@ -504,7 +504,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
   SUBROUTINE dfunc(xt,df,f,dnMatOp,mole,para_PES,para_Tnum,nderiv_dnE)
 !---------------------------------------------------------------------------
  USE mod_system
- USE mod_Tnum
+ USE mod_Coord_KEO, only: zmatrix, tnum, alloc_array, dealloc_array
  USE mod_PrimOp
  USE mod_basis
  USE mod_Op

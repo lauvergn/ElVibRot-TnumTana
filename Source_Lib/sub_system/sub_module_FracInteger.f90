@@ -21,7 +21,6 @@
 !===========================================================================
 !===========================================================================
  MODULE mod_FracInteger
- USE mod_NumParameters
  IMPLICIT NONE
 
  ! fraction num/den
@@ -67,11 +66,16 @@
   MODULE PROCEDURE Int_TO_frac
  END INTERFACE
 
+PRIVATE
+PUBLIC :: FracInteger, test_FracInteger
+PUBLIC :: operator (+),operator (-),operator (*),operator (/)
+PUBLIC :: operator (==),operator (/=),operator (>),operator (<),operator (>=),operator (<=)
+PUBLIC :: assignment (=),frac_TO_string,frac_TO_real
+PUBLIC :: frac_simplification
 
  CONTAINS
 
   SUBROUTINE test_FracInteger()
-   USE mod_string
    TYPE(FracInteger) :: frac1,frac2
 
 
@@ -116,7 +120,7 @@
  END SUBROUTINE Int_TO_frac
 
   FUNCTION frac_TO_string(frac) RESULT(String)
-   USE mod_string
+   USE mod_string, only : String_TO_String,int_TO_char
    character (len=:), allocatable  :: String
    TYPE(FracInteger), intent(in) :: frac
 
@@ -128,6 +132,7 @@
 
  END FUNCTION frac_TO_string
  FUNCTION frac_TO_real(frac) RESULT(R)
+ USE mod_NumParameters, only : Rkind
    real(kind=Rkind)              :: R
    TYPE(FracInteger), intent(in) :: frac
 
@@ -324,5 +329,49 @@
    CALL frac_simplification(Frac%num, Frac%den)
 
  END FUNCTION frac1_DIVIDEBY_frac2
+
+!================================================================
+!    greatest common divisor
+!================================================================
+    FUNCTION gcd(a, b)
+    integer :: gcd
+    integer :: a,b
+
+    integer :: aa,bb,t
+
+    aa = a
+    bb = b
+    DO
+      IF (bb == 0) EXIT
+      t = bb
+      bb = mod(aa,bb)
+      aa = t
+    END DO
+    gcd = aa
+
+    END FUNCTION gcd
+!================================================================
+!    fraction simplification a/b
+!================================================================
+    SUBROUTINE frac_simplification(a, b)
+    !integer :: gcd
+    integer :: a,b
+
+    integer :: aa,bb,t
+
+    aa = a
+    bb = b
+    t = gcd(aa,bb)
+
+    a = aa/t
+    b = bb/t
+
+    IF (b < 0) THEN
+      b = -b
+      a = -a
+    END IF
+
+    END SUBROUTINE frac_simplification
+
  END MODULE mod_FracInteger
 

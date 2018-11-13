@@ -35,7 +35,7 @@
       SUBROUTINE read_basis5(BasisnD,mole)
       USE mod_system
       USE mod_basis
-      USE mod_Tnum
+      use mod_Coord_KEO, only: zmatrix, alloc_array, alloc_nparray, dealloc_nparray
       IMPLICIT NONE
 
       !----- for the active basis set ------------------------------------
@@ -219,7 +219,7 @@
 
       USE mod_system
       USE mod_basis
-      USE mod_Tnum
+      use mod_Coord_KEO, only: zmatrix
       IMPLICIT NONE
 
 !----- for the active basis set ---------------------------------------
@@ -319,8 +319,7 @@
       SUBROUTINE read5_basis_nD(basis_temp,mole)
       USE mod_system
       USE mod_basis
-      USE mod_file
-      USE mod_Tnum
+      use mod_Coord_KEO, only: zmatrix
       IMPLICIT NONE
 
 !----- for the active basis set ---------------------------------------
@@ -660,7 +659,7 @@
             write(out_unitp,*) ' Check your data !!'
             STOP
           END IF
-          write(out_unitp,*) 'dummy_name ',dummy_name,' ',Tab_L_TO_n
+          write(out_unitp,'(2a,11(x,i0))') 'dummy_name ',dummy_name,Tab_L_TO_n
           CALL Set_Basis_L_TO_n(basis_temp%L_TO_nb,max_n=max_nb,Tab_L_TO_n=Tab_L_TO_n)
 
 
@@ -676,7 +675,7 @@
             write(out_unitp,*) ' Check your data !!'
             STOP
           END IF
-          write(out_unitp,*) 'dummy_name ',dummy_name,' ',Tab_L_TO_n
+          write(out_unitp,'(2a,11(x,i0))') 'dummy_name ',dummy_name,Tab_L_TO_n
           CALL Set_Basis_L_TO_n(basis_temp%L_TO_nq,max_n=max_nq,Tab_L_TO_n=Tab_L_TO_n)
 
           CALL dealloc_NParray(Tab_L_TO_n,"Tab_L_TO_n",name_sub)
@@ -722,16 +721,16 @@
         IF (SparseGrid_type == 4) basis_temp%With_L = .TRUE.
 
         ! Be carefull we can deal with only one type of Sparse Grid in the same calculation
-        IF ( SGtype > 0 .AND. SparseGrid_type > 0) THEN
-        IF ( (SparseGrid_type-SGtype) /= 0) THEN
-          write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' There are two Smolyak types',SGtype,SparseGrid_type
-          write(out_unitp,*) ' ... in the same calculation'
-          write(out_unitp,*) ' You can use only one type!'
-          write(out_unitp,*) ' Check your data !'
-          STOP
-        END IF
-        END IF
+!        IF ( SGtype > 0 .AND. SparseGrid_type > 0) THEN
+!        IF ( (SparseGrid_type-SGtype) /= 0) THEN
+!          write(out_unitp,*) ' ERROR in ',name_sub
+!          write(out_unitp,*) ' There are two Smolyak types',SGtype,SparseGrid_type
+!          write(out_unitp,*) ' ... in the same calculation'
+!          write(out_unitp,*) ' You can use only one type!'
+!          write(out_unitp,*) ' Check your data !'
+!          STOP
+!        END IF
+!        END IF
         IF (SparseGrid_type == 1 .OR. SparseGrid_type == 2 .OR. SparseGrid_type == 4) SGtype = SparseGrid_type
 
 

@@ -20,10 +20,15 @@
 !
 !===========================================================================
 !===========================================================================
+MODULE mod_dnS
+      use mod_system, only: rkind, out_unitp, flush_perso, &
+                            sub_test_tab_ub, sub_test_tab_lb, error_memo_allo, &
+                            write_error_not_null, write_error_null, alloc_array, dealloc_array, &
+                            zero, one, three, two, nine, eight, pi, half, four, six, ten, onetenth
 
-      MODULE mod_dnS
-      USE mod_system
       IMPLICIT NONE
+
+      PRIVATE
 
       !!@description: TODO
       !!@param: TODO
@@ -47,6 +52,13 @@
         MODULE PROCEDURE dealloc_array_OF_dnSdim3
       END INTERFACE
 
+      PUBLIC :: Type_dnS, alloc_dnS, dealloc_dnS, check_alloc_dnS, Write_dnS
+      PUBLIC :: sub_dnS1_TO_dnS2, sub_dnS1_TO_dnS2_partial,sub_dnS1_TO_dnS2_partial_new
+      PUBLIC :: sub_dnS1_PLUS_dnS2_TO_dnS2,sub_ABSdnS1_PLUS_dnS2_TO_dnS2,sub_dnS1_wPLUS_dnS2_TO_dnS3,sub_dnS1_PLUS_dnS2_TO_dnS3
+      PUBLIC :: sub_dnS1_MINUS_dnS2_TO_dnS3,sub_dnS1_PROD_w_TO_dnS2,sub_dnS1_PROD_dnS2_TO_dnS3
+      PUBLIC :: sub_dnS1_TO_dntR2,sub_dntf,sub_dnf2_O_dnf3_TO_dnf1, sub_dntf_WITH_INV
+      PUBLIC :: sub_ZERO_TO_dnS,sub_Weight_dnS,sub_WeightDer_dnS
+      PUBLIC :: alloc_array, dealloc_array
 
       CONTAINS
 
@@ -472,7 +484,7 @@
       END SUBROUTINE sub_dnS1_TO_dnS2_partial_new
 
       SUBROUTINE sub_dnS1_PLUS_dnS2_TO_dnS2(dnS1,dnS2,nderiv)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
        TYPE (Type_dnS) :: dnS2,dnS1
@@ -529,7 +541,7 @@
 !      -----------------------------------------------------------------
       END SUBROUTINE sub_dnS1_PLUS_dnS2_TO_dnS2
       SUBROUTINE sub_ABSdnS1_PLUS_dnS2_TO_dnS2(dnS1,dnS2,nderiv)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
        TYPE (Type_dnS) :: dnS2,dnS1
@@ -589,7 +601,7 @@
       END SUBROUTINE sub_ABSdnS1_PLUS_dnS2_TO_dnS2
 
       SUBROUTINE sub_dnS1_wPLUS_dnS2_TO_dnS3(dnS1,w1,dnS2,w2,dnS3,nderiv)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
        TYPE (Type_dnS) :: dnS3,dnS2,dnS1
@@ -651,7 +663,7 @@
 !      -----------------------------------------------------------------
       END SUBROUTINE sub_dnS1_wPLUS_dnS2_TO_dnS3
       SUBROUTINE sub_dnS1_PLUS_dnS2_TO_dnS3(dnS1,dnS2,dnS3,nderiv)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
        TYPE (Type_dnS) :: dnS3,dnS2,dnS1
@@ -674,7 +686,7 @@
 
       END SUBROUTINE sub_dnS1_PLUS_dnS2_TO_dnS3
       SUBROUTINE sub_dnS1_MINUS_dnS2_TO_dnS3(dnS1,dnS2,dnS3,nderiv)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
        TYPE (Type_dnS) :: dnS3,dnS2,dnS1
@@ -701,7 +713,7 @@
 !       It works if dnS2 is dnS1
 !================================================================
       SUBROUTINE sub_dnS1_PROD_w_TO_dnS2(dnS1,w,dnS2,nderiv)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
        TYPE (Type_dnS)   :: dnS1,dnS2
@@ -760,7 +772,7 @@
       END SUBROUTINE sub_dnS1_PROD_w_TO_dnS2
 
       SUBROUTINE sub_dnS1_PROD_dnS2_TO_dnS3(dnS1,dnS2,dnS3,nderiv)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
        TYPE (Type_dnS) :: dnS3,dnS2,dnS1
@@ -864,6 +876,7 @@
       !!       equivalent to d0d1d2d3qTOtf
       !!@param: TODO
       SUBROUTINE sub_dnS1_TO_dntR2(dnS1,dntR2,transfo_1D,nderiv,cte,dnErr)
+      IMPLICIT NONE
 
        integer, intent(in)            :: transfo_1D
        TYPE (Type_dnS), intent(in)    :: dnS1
@@ -1008,7 +1021,7 @@
 !      -100 (affine) =>  (x - cte(2)) / cte(1) Rq: invers of -100
 !================================================================
       RECURSIVE SUBROUTINE sub_dntf(itype,dntf,x,cte,dnErr)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
 
@@ -1533,7 +1546,7 @@
 !       tf1"' = tf3"' * tf2' o tf3 + 3*tf3"*tf3'  tf2" o tf3 + tf3'^3 * tf2"'o tf3
 !================================================================
       SUBROUTINE sub_dnf2_O_dnf3_TO_dnf1(dnf1,dnf2,dnf3)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
 
@@ -1578,7 +1591,7 @@
 
       END SUBROUTINE sub_dnf2_O_dnf3_TO_dnf1
       RECURSIVE SUBROUTINE sub_dntf_WITH_INV(itype,dntf,x,cte,dnErr)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
       integer, intent(in)            :: itype
@@ -1684,6 +1697,8 @@
 !================================================================
 
       SUBROUTINE sub_ZERO_TO_dnS(dnS,nderiv)
+      IMPLICIT NONE
+
         TYPE (Type_dnS) :: dnS
         integer, optional :: nderiv
         integer :: nderiv_loc
@@ -1712,6 +1727,8 @@
       END SUBROUTINE sub_ZERO_TO_dnS
 
       SUBROUTINE sub_Weight_dnS(dnS,w,nderiv)
+      IMPLICIT NONE
+
         TYPE (Type_dnS) :: dnS
         real (kind=Rkind) :: w
         integer, optional :: nderiv
@@ -1740,6 +1757,8 @@
 
       END SUBROUTINE sub_Weight_dnS
       SUBROUTINE sub_WeightDer_dnS(dnS,w,der,nderiv)
+      IMPLICIT NONE
+
         TYPE (Type_dnS) :: dnS
         real (kind=Rkind) :: w
         integer, intent(in), optional :: der(:)
@@ -1798,5 +1817,5 @@
 
       END SUBROUTINE sub_WeightDer_dnS
 
-      END MODULE mod_dnS
+END MODULE mod_dnS
 

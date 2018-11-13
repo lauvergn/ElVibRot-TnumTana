@@ -31,6 +31,7 @@
 
       USE mod_system
       USE mod_dnSVM
+      USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact, qact_to_qdyn_from_activetransfo
       USE mod_basis
       USE mod_Op
       USE mod_PrimOp
@@ -403,6 +404,7 @@
 
       USE mod_system
       USE mod_dnSVM
+      USE mod_Coord_KEO, only : zmatrix, Tnum, Qinact2n_TO_Qact_FROM_ActiveTransfo
       USE mod_basis
       USE mod_Op
       USE mod_PrimOp

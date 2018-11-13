@@ -21,24 +21,27 @@
 !===========================================================================
 !===========================================================================
 
-   MODULE mod_Tana_Tnum
+MODULE mod_Tana_Tnum
    !!@description: 
-   USE mod_Tnum
-   USE mod_paramQ
-   USE mod_Tana_PiEulerRot
-   USE mod_Tana_sum_opnd
-   USE mod_Tana_op
-   USE mod_Tana_NumKEO
-   USE mod_Tana_write_mctdh
    IMPLICIT NONE
 
+   PRIVATE
+   PUBLIC :: comparison_G_FROM_Tnum_Tana
 
    CONTAINS
 
    SUBROUTINE comparison_G_FROM_Tnum_Tana(TWOxKEO,mole,para_Tnum,Qact)
-
-      USE mod_File
+      USE mod_system
+      USE mod_Tnum
+      USE mod_paramQ
+      USE mod_Tana_PiEulerRot
+      USE mod_Tana_sum_opnd
+      USE mod_Tana_op
+      USE mod_Tana_NumKEO
+      USE mod_Tana_write_mctdh
+      USE mod_dnSVM
       USE mod_dnGG_dng
+      USE mod_f2f2Vep
       IMPLICIT NONE
 
       TYPE(sum_opnd),        intent(inout)        :: TWOxKEO

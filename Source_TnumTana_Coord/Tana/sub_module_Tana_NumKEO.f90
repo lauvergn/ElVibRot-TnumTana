@@ -22,17 +22,19 @@
 !===========================================================================
 
  module mod_Tana_NumKEO
-   !! @description: This module defines the data structures. It contains also
-   !!               the some standard routine that initilize, 
-   !!               allocate and delete the data structure
- USE mod_system
+ use mod_system,   only: rkind, out_unitp, zero, half, chalf, write_mat, eye, write_vec
+ USE mod_Tnum,     only : zmatrix
+ USE mod_dnRho ! all
+
  USE mod_Tana_OpEl
  USE mod_Tana_Op1D
  USE mod_Tana_OpnD
  USE mod_Tana_sum_opnd
  USE mod_Tana_VecSumOpnD
- USE mod_Tnum
  IMPLICIT NONE
+
+ PRIVATE
+ PUBLIC  :: get_NumG_WITH_AnaKEO, get_Numf2f1vep_WITH_AnaKEO
 
  CONTAINS
 

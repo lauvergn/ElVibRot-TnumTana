@@ -21,9 +21,11 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_memory
-      USE mod_NumParameters
-      !$ USE omp_lib
+      USE mod_NumParameters, only : Rkind, ILkind, out_unitp
+    !  !$ USE omp_lib
       IMPLICIT NONE
+
+      PRIVATE
 
       TYPE param_memory
         integer (kind=ILkind)       :: max_mem      =  4000000000_ILkind/Rkind   ! (8GO) max_memory
@@ -41,6 +43,12 @@
       END TYPE param_memory
 
       TYPE (param_memory), save, public :: para_mem
+
+      PUBLIC :: param_memory
+      PUBLIC :: Write_error_NOT_null, Write_error_null, Write_mem_tot
+      PUBLIC :: sub_test_tab_ub, sub_test_tab_lb, sub_test_Bigtab_ub, sub_test_Bigtab_lb
+      PUBLIC :: Check_mem, UnCheck_mem
+      PUBLIC :: error_memo_allo, error_lmemo_allo
 
       CONTAINS
 

@@ -22,13 +22,15 @@
 !===========================================================================
 
  MODULE mod_Tana_Op1D
-   !! @description: This module defines the data structures. It contains also
-   !!               the some standard routine that initilize, 
-   !!               allocate and delete the data structure
- USE mod_system
- USE mod_Tana_OpEl
+ use mod_system, only: write_error_null, out_unitp, sub_test_tab_ub, &
+                       sub_test_tab_lb, error_memo_allo, czero,      &
+                       dealloc_nparray, alloc_nparray, rkind, zero,  &
+                       flush_perso, cone, eye, fracinteger, one,     &
+                       name_len, string_to_string,                   &
+                       operator (==), operator (>=), operator (+), operator (-)
+ use mod_Tana_OpEl ! all
  IMPLICIT NONE
-! PRIVATE
+ PRIVATE
 
         !-----------------------------------------------------------!
         !                PROD_OPEL = Op1D                           !
@@ -100,14 +102,6 @@
     module procedure  copy_F1_1d_into_F2_1d, copy_F1_el_into_F2_1d
   end interface
 
-   !!@description: Generic routine that evaluates the product of 1d-operators
-    interface get_F1_times_F2_to_F_1d
-    module procedure get_F1el_times_F2el_to_Fres_1d, &
-                     get_F1el_times_F2_1d_to_Fres_1d, &
-                     get_F1_1d_times_F2el_to_Fres_1d, &
-                     get_F1_1d_times_F2_1d_to_Fres_1d
-   end interface
-
    INTERFACE write_op
      module procedure write_op1d,write_Sum_OF_op1d
    END INTERFACE
@@ -131,6 +125,23 @@
      MODULE PROCEDURE Op1D2_TO_Op1D1,OpEl2_TO_Op1D1
      MODULE PROCEDURE C_TO_SumOp1D,Sum_OF_Op1D2_TO_Sum_OF_Op1D1,Op1D2_TO_Sum_OF_Op1D1
    END INTERFACE
+
+   PUBLIC :: op1d
+   PUBLIC :: Sum_OF_op1d
+   PUBLIC :: alloc_NParray, dealloc_NParray, check_NParray
+
+   PUBLIC :: check_allocate_op, allocate_op, init_to_opzero, delete_op, compare_op, write_op
+   PUBLIC :: compare_indexq
+   PUBLIC :: copy_F1_into_F2, F1_1d_times_F2_1d, operator (*), operator (+), assignment (=)
+   PUBLIC :: get_indexQ_OF_Op1D, get_coeff_OF_Op1D, get_idq_OF_Op1D, Der1_OF_d0Op1D
+
+   PUBLIC :: check_idq_in_F_1d, get_NumVal_Op1D, get_pqJL_OF_Op1D
+   PUBLIC :: Change_PQ_OF_Op1D_TO_Id_OF_Op1D, Expand_Op1D_TO_SumOp1D
+   PUBLIC :: Expand_Sin2_IN_Op1D_TO_SumOp1D
+   PUBLIC :: Export_Latex_Op1d, Export_Midas_Op1d
+   PUBLIC :: Export_MCTDH_Op1d, Export_VSCF_Op1d
+   PUBLIC :: present_op_zero_in_F_1d
+   PUBLIC :: remove_Idop_in_F_1d, Set_coeff_OF_Op1D_TO_ONE, set_pqORJORL
 
   CONTAINS
       SUBROUTINE check_NParray_OF_Op1Ddim1(tab,name_var,name_sub)
@@ -326,8 +337,7 @@
 
    compare_indexq_F1el_F2_1d = .true.
    do i = 1, size(F2_1d%prod_opel)
-     compare_indexq_F1el_F2_1d = &
-     &compare_indexq_F1el_F2el(F1_el,F2_1d%prod_opel(i))
+     compare_indexq_F1el_F2_1d = compare_op(F1_el,F2_1d%prod_opel(i))
      if(.NOT. compare_indexq_F1el_F2_1d) then
        exit
      end if
@@ -358,7 +368,7 @@
    compare_indexq_F1_1d_F2el = .true.
    DO i=1,size(F1_1d%prod_opel)
      compare_indexq_F1_1d_F2el =                                        &
-                     compare_indexq_F1el_F2el(F1_1d%prod_opel(i), F2_el)
+                     compare_op(F1_1d%prod_opel(i), F2_el)
      IF (.NOT. compare_indexq_F1_1d_F2el) THEN
        exit
      END IF
@@ -386,8 +396,7 @@
    compare_indexq_F1_1d_F2_1d = .true.
    do i = 1, size(F1_1d%prod_opel)
      do j = 1, size(F2_1d%prod_opel)
-       compare_indexq_F1_1d_F2_1d = &
-       &compare_indexq_F1el_F2el(F1_1d%prod_opel(i), F2_1d%prod_opel(j))
+       compare_indexq_F1_1d_F2_1d = compare_op(F1_1d%prod_opel(i), F2_1d%prod_opel(j))
        if(.NOT. compare_indexq_F1_1d_F2_1d) then
          exit
        end if
@@ -409,7 +418,7 @@
    IF (.NOT. compare_F1_1d_F2_1d) RETURN
 
    do i = 1, size(F1_1d%prod_opel)
-     compare_F1_1d_F2_1d = compare_F1el_F2el(F1_1d%prod_opel(i),F2_1d%prod_opel(i))
+     compare_F1_1d_F2_1d = compare_op(F1_1d%prod_opel(i),F2_1d%prod_opel(i))
      if(.NOT. compare_F1_1d_F2_1d) EXIT
    end do
 
@@ -704,50 +713,6 @@
    !! @param:    F2 second  op., with a type op1d.
    !! @param:   Fres_1d  Array of elementary ops. in which
    !!                 the result is saved.
-   subroutine get_F1_1d_times_F2_1d_to_Fres_1d(F1_1d, F2_1d, Fres_1d)
-     type(op1d),       intent(in)       :: F1_1d
-     type(op1d),       intent(in)       :: F2_1d
-     type(op1d),       intent(inout)    :: Fres_1d
-
-     integer                    :: i_opzero
-     integer                    :: ndim1, ndim2
-
-   character (len=*), parameter :: routine_name='get_F1_1d_times_F2_1d_to_Fres_1d'
-
-   CALL check_allocate_op(F1_1d)
-   CALL check_allocate_op(F2_1d)
-
-
-   call present_op_zero_in_F_1d(F1_1d, i_opzero, 'F1_1d from '//routine_name)
-   if(i_opzero /= -1) then ! zero Op is found
-       Fres_1d = czero
-       return
-   end  if
-
-   call present_op_zero_in_F_1d(F2_1d, i_opzero, 'F2_1d from '//routine_name)
-   if(i_opzero /= -1) then  ! zero Op is found
-       Fres_1d = czero
-       return
-   end  if
-
-   IF (.NOT. compare_indexq(F1_1d,F2_1d) ) THEN
-         write(out_unitp,*) ' ERROR in ',routine_name
-         write(out_unitp,*) "Input arrays F1_1d and F2_1d should have the same indexQ"
-         STOP
-   END IF
-
-   ndim1 = size(F1_1d%prod_opel)
-   ndim2 = size(F2_1d%prod_opel)
-
-   CALL allocate_op1d(Fres_1d, ndim1+ndim2)
-
-   Fres_1d%prod_opel(      1:ndim1)       = F1_1d%prod_opel(:)
-   Fres_1d%prod_opel(ndim1+1:ndim1+ndim2) = F2_1d%prod_opel(:)
-
-
-   CALL Simplify_Op1D(Fres_1d)
-
-   end subroutine get_F1_1d_times_F2_1d_to_Fres_1d
    function F1_1d_times_F2_1d(F1_1d, F2_1d) result(Fres_1d)
      type(op1d)    :: Fres_1d
      type(op1d),       intent(in)       :: F1_1d
@@ -798,47 +763,6 @@
    !! @param:  F2el     second  elementary op., with a type opel.
    !! @param:  Fres_1d  Array of elementary ops. in which
    !!                 the result is saved.
-   subroutine get_F1el_times_F2el_to_Fres_1d(F1el, F2el, Fres_1d)
-     type(opel),       intent(in)       :: F1el
-     type(opel),       intent(in)       :: F2el
-     type(op1d),       intent(inout)    :: Fres_1d
-
-     integer                    :: i
-     complex(kind=Rkind)        :: coeff
-
-   character (len=*), parameter :: routine_name='get_F1el_times_F2el_to_Fres_1d'
-
-     CALL delete_op(Fres_1d)
-
-     if (F1el%idf == 0 .OR. F2el%idf == 0) then ! zero
-       Fres_1d = czero
-       return
-     end if
-
-     IF (.NOT. compare_indexQ(F1el,F2el)) THEN
-       write(out_unitp,*) ' ERROR in ',routine_name
-       write(out_unitp,*) ' F1el'
-       CALL write_op(F1el,header=.TRUE.)
-       write(out_unitp,*) ' F2el'
-       CALL write_op(F2el,header=.TRUE.)
-       write(out_unitp,*) ' ERROR in ',routine_name
-       write(out_unitp,*) "Input arrays F1el and F2_1el should have the same indexQ"
-       STOP
-     END IF
-
-     IF (F1el%idf == F2el%idf) THEN ! coef1*coef2*f(Q)^(alpha1+alpha2)
-       call allocate_op(Fres_1d, 1)
-       call copy_F1_into_F2(F1el, Fres_1d%prod_opel(1),                 &
-          frac_alfa = F1el%alfa+F2el%alfa, coeff = F1el%coeff*F2el%coeff)
-     ELSE
-       call allocate_op(Fres_1d, 2)
-       Fres_1d%prod_opel(1) = F1el
-       Fres_1d%prod_opel(2) = F2el
-     END IF
-
-     CALL Simplify_Op1D(Fres_1d)
-
-   end subroutine get_F1el_times_F2el_to_Fres_1d
    RECURSIVE function F1el_times_F2el(F1el, F2el) result(Fres_1d)
      type(op1d)                         :: Fres_1d
      type(opel),       intent(in)       :: F1el
@@ -888,61 +812,6 @@
    !! @param:  F2_1d     Array of elementary ops., with a type op1d.
    !! @param:   Fres_1d  Array of elementary ops. in which
    !!                    the result is saved.
-   subroutine get_F1el_times_F2_1d_to_Fres_1d(F1el, F2_1d, Fres_1d)
-     type(opel),       intent(in)       :: F1el
-     type(op1d),       intent(in)       :: F2_1d
-     type(op1d),       intent(inout)    :: Fres_1d
-
-     integer                    ::  i, i_opzero
-     integer                    ::  m, n, p
-     integer                    :: ndim1, ndim2
-     logical                    :: l_idf, l_alfa
-     logical                    :: absent_Pqi
-     type(op1d)                 :: F1dtmp
-     real(kind=Rkind)           :: coeff
-
-   character (len=*), parameter :: routine_name='get_F1el_times_F2_1d_to_Fres_1d'
-
-   CALL check_allocate_op(F2_1d)
-
-   CALL delete_op(Fres_1d)
-
-
-   if(F1el%idf == 0) then
-     Fres_1d = czero
-     return
-   end  if
-
-   call present_op_zero_in_F_1d(F2_1d, i_opzero, 'F2_1d from '//routine_name)
-   if(i_opzero /= -1) then
-     Fres_1d = czero
-     return
-   end  if
-
-   if( .NOT. compare_indexq(F1el, F2_1d)) THEN
-     write(out_unitp,*) ' ERROR in ',routine_name
-     write(out_unitp,*) ' F1el'
-     CALL write_op(F1el)
-     write(out_unitp,*) ' F2_1d'
-     CALL write_op(F2_1d)
-     write(out_unitp,*) ' ERROR in ',routine_name
-     write(out_unitp,*) "Input arrays F1el and F2_1d should have the same indexq"
-     STOP
-   end if
-
-
-
-   call allocate_op(Fres_1d, size(F2_1d%prod_opel) + 1)
-
-   Fres_1d%prod_opel(1) = F1el
-
-   DO i=1,size(F2_1d%prod_opel)
-     Fres_1d%prod_opel(i+1) = F2_1d%prod_opel(i)
-   END DO
-
-   CALL Simplify_Op1D(Fres_1d)
-
-   end subroutine get_F1el_times_F2_1d_to_Fres_1d
    RECURSIVE function F1el_times_F2_1d(F1el, F2_1d) result(Fres_1d)
      type(op1d)                         :: Fres_1d
      type(opel),       intent(in)       :: F1el
@@ -999,62 +868,6 @@
    !! @param:   F2el     The elementary op., with a type opel.
    !! @param:   Fres_1d  Array of elementary ops. in which
    !!                    the result is saved.
-   subroutine get_F1_1d_times_F2el_to_Fres_1d(F1_1d, F2el, Fres_1d)
-     type(op1d)                         :: Fres_1d
-     type(op1d),       intent(in)       :: F1_1d
-     type(opel),       intent(in)       :: F2el
-
-     integer                    :: i_opzero
-     integer                    :: i, m, n, p
-     integer                    :: ndim1, ndim2
-     logical                    :: l_idf, l_alfa
-     logical                    :: absent_Pqi
-     type(op1d)                 :: F1dtmp
-     real(kind=Rkind)           :: coeff
-
-   character (len=*), parameter :: routine_name='get_F1_1d_times_F2el_to_Fres_1d'
-
-
-   CALL check_allocate_op(F1_1d)
-
-   CALL delete_op(Fres_1d)
-
-
-   if(F2el%idf == 0) then
-     Fres_1d = czero
-     return
-   end  if
-
-   call present_op_zero_in_F_1d(F1_1d, i_opzero, 'F1_1d from '//routine_name)
-   if(i_opzero /= -1) then
-     Fres_1d = czero
-     return
-   end  if
-
-   if( .NOT. compare_indexq(F2el, F1_1d)) THEN
-     write(out_unitp,*) ' ERROR in ',routine_name
-     write(out_unitp,*) ' F1_1d'
-     CALL write_op(F1_1d)
-     write(out_unitp,*) ' F2el'
-     CALL write_op(F2el)
-     write(out_unitp,*) ' ERROR in ',routine_name
-     write(out_unitp,*) "Input arrays F1_1d and F2el should have the same indexq"
-     STOP
-   end if
-
-
-
-   call allocate_op(Fres_1d, size(F1_1d%prod_opel) + 1)
-
-   DO i=1,size(F1_1d%prod_opel)
-     Fres_1d%prod_opel(i) = F1_1d%prod_opel(i)
-   END DO
-
-   Fres_1d%prod_opel(size(F1_1d%prod_opel) + 1) = F2el
-
-   CALL Simplify_Op1D(Fres_1d)
-
-   end subroutine get_F1_1d_times_F2el_to_Fres_1d
    RECURSIVE function F1_1d_times_F2el(F1_1d, F2el) result(Fres_1d)
      type(op1d)                         :: Fres_1d
      type(op1d),       intent(in)       :: F1_1d
@@ -2392,7 +2205,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
               &indexq           op_name                  coeff"
      end if
      do i = 1, size(F_1d%prod_opel)
-       call write_opel(F_1d%prod_opel(i), i_open)
+       call write_op(F_1d%prod_opel(i), i_open)
      end do
    END SUBROUTINE write_op1d
 

@@ -21,12 +21,11 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_GeneTransfo
-      USE mod_system
+      use mod_system, only: alloc_array, in_unitp, out_unitp, dealloc_array, flush_perso, zero
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
       IMPLICIT NONE
+
+      PRIVATE
 
       !!@description: TODO
       !!@param: TODO
@@ -36,6 +35,9 @@
         integer, pointer :: list_Coord_transfo(:) => null()
 
       END TYPE Type_GeneTransfo
+
+      PUBLIC :: Type_GeneTransfo, Read_GeneTransfo, Write_GeneTransfo, calc_GeneTransfo
+      PUBLIC :: alloc_GeneTransfo, dealloc_GeneTransfo, GeneTransfo1TOGeneTransfo2
 
       CONTAINS
 

@@ -59,6 +59,10 @@
           logical :: intensity                     ! flag for intensity (life time) calculations
           logical :: NLO                           ! flag for NLO calculations
           logical :: Psi_ScalOp                    ! flag for NLO calculations
+          integer :: CRP  = 0                      ! CRP=1, to CRP calculation
+          real (kind=Rkind) :: CRP_Ene = ZERO      ! Total energy for CRP
+          real (kind=Rkind) :: CRP_DEne = ZERO     ! Energy increment for the CRP
+          integer :: nb_CRP_Ene  = 1               ! Number of CRP calculation
 
           real (kind=Rkind) :: Temp                ! temperature (K) (for intensity)
 
@@ -117,10 +121,11 @@
       integer       :: nb_harm_ana,max_ana,print_psi,MaxWP_TO_Write_MatOp,JJmax
       logical       :: ana,print,propa,intensity,Psi_ScalOp
       logical       :: control,davidson,arpack,filter,NLO,VibRot
+      integer       :: CRP,nb_CRP_Ene
       logical       :: Rho1D,Rho2D,psi2,psi1D_Q0,psi2D_Q0,Wheight_rho
       logical       :: QTransfo,formatted_file_WP
       logical        :: Spectral_ScalOp
-      TYPE (REAL_WU) :: ene0,Ezpe,max_ene
+      TYPE (REAL_WU) :: CRP_Ene,CRP_DEne,ene0,Ezpe,max_ene
       real (kind=Rkind) :: Temp
 
       character (len=Line_len) :: name_file_spectralWP
@@ -137,7 +142,8 @@
                         propa,                                          &
                         print_psi,psi2,psi1D_Q0,psi2D_Q0,QTransfo,      &
                         Rho1D,Rho2D,Wheight_rho,                        &
-                        intensity,NLO,Psi_ScalOp,VibRot,JJmax,          &
+                        intensity,NLO,CRP,CRP_Ene,CRP_DEne,nb_CRP_Ene,  &
+                        Psi_ScalOp,VibRot,JJmax,                        &
                         ene0,Ezpe,Temp,                                 &
                 name_file_spectralWP,formatted_file_WP,FilePsiVersion,  &
                         control,davidson,arpack,filter,Spectral_ScalOp, &
@@ -158,6 +164,11 @@
       intensity            = .FALSE.
       Psi_ScalOp           = .FALSE.
       NLO                  = .FALSE.
+      CRP                  = 0
+      CRP_Ene              = REAL_WU(ZERO,'cm-1','E')
+      CRP_DEne             = REAL_WU(ZERO,'cm-1','E')
+      nb_CRP_Ene           = 1
+
       VibRot               = .FALSE.
       JJmax                = -1
       control              = .FALSE.
@@ -240,6 +251,17 @@
       para_ana%intensity       = intensity
       para_ana%Psi_ScalOp      = Psi_ScalOp
       para_ana%NLO             = NLO
+
+      para_ana%CRP             = CRP
+      para_ana%CRP_Ene         = convRWU_TO_R(CRP_Ene)
+      para_ana%CRP_DEne        = convRWU_TO_R(CRP_DEne)
+      para_ana%nb_CRP_Ene      = nb_CRP_Ene
+
+
+      write(out_unitp,*) 'CRP,E,DE,nb_E   : ',para_ana%CRP,             &
+                  para_ana%CRP_Ene,para_ana%CRP_DEne,para_ana%nb_CRP_Ene
+
+
       para_ana%Ezpe            = convRWU_TO_R(Ezpe)
       para_ana%Temp            = Temp
 

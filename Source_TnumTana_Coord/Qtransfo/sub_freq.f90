@@ -1,3 +1,37 @@
+!===========================================================================
+!===========================================================================
+!This file is part of Tnum-Tana.
+!
+!    Tnum-Tana is a free software: you can redistribute it and/or modify
+!    it under the terms of the GNU Lesser General Public License as published by
+!    the Free Software Foundation, either version 3 of the License, or
+!    (at your option) any later version.
+!
+!    Tnum-Tana is distributed in the hope that it will be useful,
+!    but WITHOUT ANY WARRANTY; without even the implied warranty of
+!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!    GNU Lesser General Public License for more details.
+!
+!    You should have received a copy of the GNU Lesser General Public License
+!    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
+!
+!    Copyright 2015  David Lauvergnat
+!      with contributions of Mamadou Ndong
+!
+!===========================================================================
+!===========================================================================
+MODULE mod_freq
+      use mod_system, only: rkind, onetenth, out_unitp, write_mat,      &
+                            flush_perso, get_conv_au_to_unit, zero,     &
+                            half, one, alloc_nparray, dealloc_nparray
+      IMPLICIT NONE
+
+      PRIVATE
+
+      PUBLIC :: calc_freq, calc_freq_block, calc_freq_WITH_d0c, calc_freqNM, calc_freq_width
+      PUBLIC :: H0_symmetrization, sort_with_Tab, gaussian_width
+
+      CONTAINS
 !
 !=====================================================================
 !
@@ -7,7 +41,6 @@
 !
       SUBROUTINE calc_freq(nb_var,d0h,d0k,d0eh,                         &
                            d0c,d0c_inv,norme,d0c_ini,diab_freq)
-      USE mod_system
       IMPLICIT NONE
 
       integer :: nb_var
@@ -294,7 +327,6 @@
       end subroutine calc_freq
       SUBROUTINE calc_freq_block(nb_var,d0h,d0k,d0eh,                   &
                                  d0c,d0c_inv,norme,d0c_ini,diab_freq,sym)
-      USE mod_system
       IMPLICIT NONE
 
 
@@ -515,7 +547,6 @@
 
       SUBROUTINE calc_freq_WITH_d0c(nb_var,d0h,d0k,d0eh,                &
                                     d0c,d0c_inv,norme)
-      USE mod_system
       IMPLICIT NONE
 
       integer :: nb_var
@@ -628,7 +659,6 @@
 !    SUBROUTINE H0 symmetrization
 !================================================================
       SUBROUTINE H0_symmetrization(h,n,sym,dim_equi,tab_equi)
-      USE mod_system
       IMPLICIT NONE
 
        integer       :: n
@@ -732,7 +762,6 @@
 !=====================================================================
 !
       SUBROUTINE calc_freqNM(nb_var,d0h,d0sm,d0eh,d0c,d0c_inv,print)
-      USE mod_system
       IMPLICIT NONE
 
       integer :: nb_var
@@ -865,7 +894,6 @@
 !=====================================================================
 !
       SUBROUTINE calc_freq_width(nb_var,A,d0c,d0eh,d0h,d0k)
-      USE mod_system
       IMPLICIT NONE
 
       integer :: nb_var
@@ -906,7 +934,6 @@
 !=====================================================================
 !
       SUBROUTINE gaussian_width(nb_var,A,d0c)
-      USE mod_system
       IMPLICIT NONE
 
 
@@ -961,7 +988,6 @@
 !=====================================================================
 !
       SUBROUTINE rota_denerated(v,c,n)
-      USE mod_system
       IMPLICIT NONE
 
       integer       :: n
@@ -1074,7 +1100,6 @@
 !=====================================================================
 !
       SUBROUTINE order_ini4(c,c_inv,e,c_ini,n,dia_freq)
-      USE mod_system
       IMPLICIT NONE
 
       logical       :: dia_freq
@@ -1216,7 +1241,6 @@
 !=====================================================================
 !
       SUBROUTINE sort_with_Tab(c,c_inv,e,tab_order,n)
-      USE mod_system
       IMPLICIT NONE
 
       integer           :: n
@@ -1291,3 +1315,4 @@
 !---------------------------------------------------------------------
 
       end subroutine sort_with_Tab
+END MODULE mod_freq

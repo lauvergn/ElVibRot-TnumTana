@@ -27,9 +27,14 @@
 !===========================================================================
 !===========================================================================
 
-      MODULE mod_file
-      USE mod_system
+MODULE mod_file
+      use mod_NumParameters, only: line_len, name_len, Name_longlen, out_unitp
+      !$ USE omp_lib, only : OMP_GET_THREAD_NUM
       IMPLICIT NONE
+
+      PRIVATE
+
+      character (len=Line_len), public :: base_FileName = ''
 
       !!@description: TODO
       !!@param: TODO
@@ -54,6 +59,10 @@
       INTERFACE assignment (=)
           MODULE PROCEDURE file2TOfile1
       END INTERFACE
+
+      PUBLIC :: param_file, assignment (=),file_GetUnit, file_open, file_open2
+      PUBLIC :: file_close, file_delete, file_dealloc, file_write, make_FileName
+      PUBLIC :: flush_perso,join_path
 
       CONTAINS
 
@@ -139,6 +148,7 @@
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE file_open(ffile,iunit,lformatted,append,old,seq,lrecl,err_file)
+      USE mod_string, ONLY : int_TO_char
 
       TYPE(param_file)  :: ffile
       integer           :: iunit
@@ -531,5 +541,38 @@
 
       END FUNCTION make_FileName
 
-      END MODULE mod_file
+  !!@description: TODO
+  !!@param: TODO
+  SUBROUTINE flush_perso(nio)
+
+  integer, intent(in) :: nio
+
+    flush(nio)
+
+  END  SUBROUTINE flush_perso
+
+      !! @description: Join two path1 with path2. Return "path1/path2"
+      !!               If path2 is absolute (starting with /), return path2
+      !! @param: path1 First path
+      !! @param: path2 Second path
+      character(len=Name_longlen) function join_path(path1, path2)
+
+        character(len=*), intent(in) :: path1
+        character(len=*), intent(in) :: path2
+
+        character (len=*), parameter :: routine_name = 'join_path'
+
+        if (path2(1:1) == '/') then
+          join_path = path2
+          return
+        end if
+        if (path1(len_trim(path1):len_trim(path1)) == '/') then
+          join_path = trim(path1)//trim(path2)
+        else
+          join_path = trim(path1)//"/"//trim(path2)
+        end if
+
+      end function join_path
+
+END MODULE mod_file
 

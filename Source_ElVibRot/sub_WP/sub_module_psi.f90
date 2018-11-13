@@ -145,7 +145,7 @@
             nDval0ib(:)  = nDval0(:)
             nDval0ib(ib) = 0
 
-            IF (compare_tab_int(nDval0ib,nDvalib)) THEN
+            IF (compare_tab(nDval0ib,nDvalib)) THEN
               Tab1D_psi2(ib)%d0(nDval(ib)) = val_psi2
               Tab1D_Rpsi(ib)%d0(nDval(ib)) = val_Rpsi
               Tab1D_Cpsi(ib)%d0(nDval(ib)) = val_Cpsi
@@ -156,7 +156,7 @@
               nDvalib(jb)  = 0
               nDval0ib(jb) = 0
 
-              IF (compare_tab_int(nDval0ib,nDvalib)) THEN
+              IF (compare_tab(nDval0ib,nDvalib)) THEN
                 Tab2D_psi2(ib,jb)%d0(nDval(ib),nDval(jb)) = val_psi2
                 Tab2D_Rpsi(ib,jb)%d0(nDval(ib),nDval(jb)) = val_Rpsi
                 Tab2D_Cpsi(ib,jb)%d0(nDval(ib),nDval(jb)) = val_Cpsi
@@ -184,7 +184,7 @@
             nDval0ib(:)  = nDval0(:)
             nDval0ib(ib) = 0
 
-            IF (compare_tab_int(nDval0ib,nDvalib)) THEN
+            IF (compare_tab(nDval0ib,nDvalib)) THEN
               Tab1D_psi2(ib)%d0(nDval(ib)) = val_psi2
               Tab1D_Rpsi(ib)%d0(nDval(ib)) = val_Rpsi
               Tab1D_Cpsi(ib)%d0(nDval(ib)) = val_Cpsi
@@ -195,7 +195,7 @@
               nDvalib(jb)  = 0
               nDval0ib(jb) = 0
 
-              IF (compare_tab_int(nDval0ib,nDvalib)) THEN
+              IF (compare_tab(nDval0ib,nDvalib)) THEN
                 Tab2D_psi2(ib,jb)%d0(nDval(ib),nDval(jb)) = val_psi2
                 Tab2D_Rpsi(ib,jb)%d0(nDval(ib),nDval(jb)) = val_Rpsi
                 Tab2D_Cpsi(ib,jb)%d0(nDval(ib),nDval(jb)) = val_Cpsi

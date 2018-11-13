@@ -1,10 +1,10 @@
 
  ici=`pwd`
- cd ..
+ cd ../..
  make Tnum_MCTDH
  cd $ici
 
-../Tnum90_MCTDH.exe << ** > res
+../../Tnum90_MCTDH.exe << ** > res
  &variables  zmat=T nat=4 sym=t /
 2.
 2. 1

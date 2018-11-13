@@ -32,17 +32,17 @@
  USE mod_Tana_sum_opnd
  USE mod_Tana_VecSumOpnD
  IMPLICIT NONE
-! PRIVATE
+ PRIVATE
  character (len=*), parameter, private :: mod_name = 'mod_Tana_PiEulerRot'
 
-        !!@description: TODO
-        !!@param: TODO
-        TYPE Type_PiEulerRot
-          type(vec_sum_opnd)           :: Pi                         ! conjugate  momentum
-          type(vec_sum_opnd)           :: Pidag                      ! adjoint of Pi
-          integer, pointer             :: Tab_num_Frame(:) => null() ! table of the frame numbers
-          integer                      :: i_project=0                ! index of the projection
-        END TYPE Type_PiEulerRot
+      !!@description: TODO
+      !!@param: TODO
+      TYPE Type_PiEulerRot
+        type(vec_sum_opnd)           :: Pi                         ! conjugate  momentum
+        type(vec_sum_opnd)           :: Pidag                      ! adjoint of Pi
+        integer, pointer             :: Tab_num_Frame(:) => null() ! table of the frame numbers
+        integer                      :: i_project=0                ! index of the projection
+      END TYPE Type_PiEulerRot
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_PiEulerRotdim1
@@ -50,6 +50,8 @@
       INTERFACE dealloc_array
         MODULE PROCEDURE dealloc_array_OF_PiEulerRotdim1
       END INTERFACE
+
+      PUBLIC :: Type_PiEulerRot, alloc_array, dealloc_array
 
    CONTAINS
 

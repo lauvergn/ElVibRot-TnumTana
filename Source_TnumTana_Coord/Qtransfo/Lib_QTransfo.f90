@@ -20,10 +20,25 @@
 !
 !===========================================================================
 !===========================================================================
-      MODULE mod_Lib_QTransfo
-      USE mod_system
-      USE mod_dnSVM
+MODULE mod_Lib_QTransfo
+      use mod_system, only: out_unitp, zero, onetenth, rkind, print_level, pi, one
+      use mod_dnSVM, only: type_dnvec, type_dns, write_dnsvm,        &
+                           sub_dnvec1_prod_dns2_to_dnvec3,           &
+                           sub_dns1_prod_dns2_to_dns3,               &
+                           sub_dnvec1_plus_dnvec2_to_dnvec3,         &
+                           sub_crossproduct_dnvec1_dnvec2_to_dnvec3, &
+                           sub_normalize_dnvec, sub_dns_to_dnvec,    &
+                           check_alloc_dnvec
       IMPLICIT NONE
+
+      PRIVATE
+      PUBLIC :: sub3_dnx_AT1, sub3_dnx_AT2_new, sub3_dnx_AT3_new
+      PUBLIC :: sub3_dnx_AT4, sub3_dnx_AT4_cart, sub3_dnx_AT4_poly
+      PUBLIC :: sub3_dnx_TO_dnVec, sub3_dnVec_PLUS_x1TOxf, sub3_dnVec_TOxf
+      PUBLIC :: Write_Cart, Write_dnx
+      PUBLIC :: calc_vector, calc_vector2, calc_cross_product
+      PUBLIC :: calc_angle, calc_angle_d, calc_OutOfPlane
+      PUBLIC :: check_Valence, func_ic, func_iat
 
       CONTAINS
 
@@ -31,8 +46,6 @@
 !       atom 1 : d0x(0 , 0, 0)
 !================================================================
       SUBROUTINE sub3_dnx_AT1(dnx,icf,nderiv)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
 
@@ -78,8 +91,6 @@
 !       atom 2 : d0x(0 , 0, d0d)
 !================================================================
       SUBROUTINE sub3_dnx_AT2_new(dnx,icf,ic1,dnd,dnz2,nderiv,check)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
       TYPE (Type_dnVec) :: dnx
@@ -144,8 +155,6 @@
 !=======================================================================
       SUBROUTINE sub3_dnx_AT3_new(dnx,icf,ic1,check,                    &
                                  dnd,dncval,dnsval,dnz3,dnx3,dnw,nderiv)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
 
@@ -240,8 +249,6 @@
                                dnd,dncval,dnsval,dncdih,dnsdih,         &
                                dnv1,dnv2,dnv3,dnf1,dnf2,dnf3,           &
                                nderiv)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
       TYPE (Type_dnVec) :: dnx
@@ -368,8 +375,6 @@
 !================================================================
 !
       SUBROUTINE sub3_dnx_AT4_cart(dnx,icf,dna,dnb,dnc,nderiv)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
       TYPE (Type_dnVec) :: dnx
@@ -438,8 +443,6 @@
                                    dnd,dncval,dnsval,dncdih,dnsdih,     &
                                    dnv1,dnf1,dnf2,dnf3,                 &
                                    nderiv)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
       TYPE (Type_dnVec) :: dnx
@@ -542,8 +545,6 @@
 !       vector d0v = d0x2 - d0x1
 !================================================================
       SUBROUTINE sub3_dnx_TO_dnVec(dnx,ic1,ic2,dnVec,nderiv)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
 
@@ -619,8 +620,6 @@
       SUBROUTINE sub3_dnVec123_TOx(dnx,icf,ic1,                         &
                                    dnVec1,dnVec2,dnVec3,                &
                                    nderiv)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
 
@@ -687,8 +686,6 @@
 !      dnx%d0(icf) = dnx%d0(ic1) + d0v1
 !================================================================
       SUBROUTINE sub3_dnVec_PLUS_x1TOxf(dnx,icf,ic1,dnVec,nderiv)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
 
@@ -741,8 +738,6 @@
 !      dnx%d0(icf:icf+2) = d0Vect(1:3)
 !================================================================
       SUBROUTINE sub3_dnVec_TOxf(dnx,icf,dnVec,nderiv)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
 
@@ -795,7 +790,6 @@
 !       Write Cartesian coordinates
 !================================================================
       SUBROUTINE Write_Cart(ncart,d0x)
-      USE mod_system
       IMPLICIT NONE
 
       integer           :: ncart
@@ -819,8 +813,6 @@
 
       END SUBROUTINE Write_Cart
       SUBROUTINE Write_dnx(ic,ncart_e,dnx,nderiv)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
 
@@ -879,7 +871,6 @@
 !       vector n1-n2
 !================================================================
       SUBROUTINE calc_vector(v,norm,n1,n2,x,ndim)
-      USE mod_system
       IMPLICIT NONE
 
       integer           :: n1,n2
@@ -901,7 +892,6 @@
 
       end subroutine calc_vector
       SUBROUTINE calc_vector2(v,norm,nc1,nc2,x,ndim)
-      USE mod_system
       IMPLICIT NONE
 
       integer           :: nc1,nc2
@@ -920,7 +910,6 @@
 !       angle
 !================================================================
       SUBROUTINE calc_angle(angle,v1,norm1,v2,norm2)
-      USE mod_system
       IMPLICIT NONE
 
       real (kind=Rkind) :: v1(3),norm1
@@ -945,7 +934,6 @@
 !       produit vectoriel
 !================================================================
       SUBROUTINE calc_cross_product(v1,norm1,v2,norm2,v3,norm3)
-      USE mod_system
       IMPLICIT NONE
 
       real (kind=Rkind) :: v1(3),norm1
@@ -964,7 +952,6 @@
 !       angle oriente (dihedre)
 !================================================================
       SUBROUTINE calc_angle_d(angle_d,v1,norm1,v2,norm2,v3,norm3)
-      USE mod_system
       IMPLICIT NONE
 
       real (kind=Rkind) :: v1(3),norm1
@@ -1018,7 +1005,6 @@
 !    v41 = v1 ; v42 = v2 ; v43 = v3
 !================================================================
       SUBROUTINE calc_OutOfPlane(theta,v1,norm1,v2,norm2,v3,norm3)
-      USE mod_system
       IMPLICIT NONE
 
       real (kind=Rkind) :: v1(3),norm1
@@ -1056,7 +1042,6 @@
 !     Check the range of the valence angle
 !================================================================
       SUBROUTINE check_Valence(iz,Q,type_Q)
-      USE mod_system
       IMPLICIT NONE
 
       integer :: iz,type_Q
@@ -1135,5 +1120,5 @@
 
       end function func_iat
 
-      END MODULE mod_Lib_QTransfo
+END MODULE mod_Lib_QTransfo
 

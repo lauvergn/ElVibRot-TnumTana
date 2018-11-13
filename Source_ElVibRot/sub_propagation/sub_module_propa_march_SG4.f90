@@ -42,7 +42,7 @@
  SUBROUTINE march_noD_SG4_BasisRep(T,no,psi,psi0,para_H,para_propa)
  USE mod_system
  USE mod_nDindex
- USE mod_Tnum,                     ONLY : zmatrix
+ USE mod_Coord_KEO,                ONLY : zmatrix
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_RCVec_SGType4
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
@@ -51,7 +51,7 @@
                   getbis_tab_nq,getbis_tab_nb
 
  USE mod_Op,              ONLY : param_Op,write_param_Op
- USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4,sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_old
+ USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : norme_psi,Overlap_psi1_psi2
  USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
@@ -131,19 +131,21 @@ STOP 'march_noD_SG4_BasisRep'
 ! 21 format(a,100(x,e12.5))
 !
 !!to be sure to have the correct number of threads
-!nb_thread = size(BasisnD%para_SGType2%nDind_SmolyakGrids%tab_nDval0,dim=2)
+!nb_thread = BasisnD%para_SGType2%nb_threads
 !nb_thread = 1
 !
 !
-! ith = 0
-! !$ ith = OMP_GET_THREAD_NUM()
-! tab_l(:) = BasisnD%para_SGType2%nDind_SmolyakGrids%tab_nDval0(:,ith+1)
+!!--------------------------------------------------------------
+!!-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
+!ith = 0
+!!$ ith = OMP_GET_THREAD_NUM()
+!tab_l(:) = BasisnD%para_SGType2%nDval_init(:,ith+1)
+!!--------------------------------------------------------------
+
+!! we are not using the parallel do, to be able to use the correct initialized tab_l with nDval_init
+!DO iG=BasisnD%para_SGType2%iG_th(ith+1),BasisnD%para_SGType2%fG_th(ith+1)
 !
-! ! we are not using the parallel do, to be able to use the correct initialized tab_l with tab_nDval0
-! DO iG=ith*BasisnD%para_SGType2%nDind_SmolyakGrids%max_nDI/nb_thread+1, &
-!       (ith+1)*BasisnD%para_SGType2%nDind_SmolyakGrids%max_nDI/nb_thread
-!
-!   CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakGrids,tab_l,iG=iG,err_sub=err_sub)
+!   CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG,err_sub=err_sub)
 !
 !   tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
 !   tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
@@ -293,7 +295,7 @@ STOP 'march_noD_SG4_BasisRep'
  SUBROUTINE march_noD_SG4_BasisRep_v0(T,no,psi,psi0,para_H,para_propa)
  USE mod_system
  USE mod_nDindex
- USE mod_Tnum,                     ONLY : zmatrix
+ USE mod_Coord_KEO,                ONLY : zmatrix
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                   tabR_AT_iG_TO_tabPackedBasis,TypeRVec,alloc_TypeRVec,dealloc_TypeRVec, &
@@ -301,7 +303,7 @@ STOP 'march_noD_SG4_BasisRep'
                   getbis_tab_nq,getbis_tab_nb
 
  USE mod_Op,              ONLY : param_Op,write_param_Op
- USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4,sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_old
+ USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : norme_psi,Overlap_psi1_psi2
  USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
@@ -400,19 +402,21 @@ STOP 'march_noD_SG4_BasisRep'
  21 format(a,100(x,e12.5))
 
 !to be sure to have the correct number of threads
-nb_thread = size(BasisnD%para_SGType2%nDind_SmolyakGrids%tab_nDval0,dim=2)
+nb_thread = BasisnD%para_SGType2%nb_threads
 nb_thread = 1
 
 
+ !--------------------------------------------------------------
+ !-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
  ith = 0
  !$ ith = OMP_GET_THREAD_NUM()
- tab_l(:) = BasisnD%para_SGType2%nDind_SmolyakGrids%tab_nDval0(:,ith+1)
+ tab_l(:) = BasisnD%para_SGType2%nDval_init(:,ith+1)
+ !--------------------------------------------------------------
 
- ! we are not using the parallel do, to be able to use the correct initialized tab_l with tab_nDval0
- DO iG=ith*BasisnD%para_SGType2%nDind_SmolyakGrids%max_nDI/nb_thread+1, &
-       (ith+1)*BasisnD%para_SGType2%nDind_SmolyakGrids%max_nDI/nb_thread
+ ! we are not using the parallel do, to be able to use the correct initialized tab_l with nDval_init
+ DO iG=BasisnD%para_SGType2%iG_th(ith+1),BasisnD%para_SGType2%fG_th(ith+1)
 
-   CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakGrids,tab_l,iG=iG,err_sub=err_sub)
+   CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG,err_sub=err_sub)
 
    tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
    tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
@@ -453,8 +457,6 @@ nb_thread = 1
 
      Rw2(1)%V(:)  = Rw1%V
      Iw2(1)%V(:)  = Iw1%V
-     !CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_old(Rw2,iG,para_H) ! in w2, we have H.Rw1
-     !CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_old(Iw2,iG,para_H) ! in w2, we have H.Iw1
 
      CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(Rw2,iG,tab_l,para_H) ! in w2, we have H.Rw1
      CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(Iw2,iG,tab_l,para_H) ! in w2, we have H.Iw1
@@ -605,9 +607,7 @@ nb_thread = 1
  USE mod_system
  USE mod_nDindex
 
-  USE mod_ActiveTransfo,           ONLY : get_Qact
- USE mod_Tnum,                     ONLY : zmatrix
- USE mod_dnGG_dng,                 ONLY : get_d0GG
+ USE mod_Coord_KEO,                ONLY : zmatrix, get_Qact, get_d0GG
 
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis,                    ONLY : Rec_WrhonD,Rec_Qact_SG4
@@ -688,7 +688,7 @@ nb_thread = 1
   mole    => para_H%mole
   BasisnD => para_H%BasisnD
 
-  D = size(BasisnD%para_SGType2%nDind_SmolyakGrids%Tab_nDval,dim=1)
+  D = size(BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,dim=1)
 
 
   IF (para_H%nb_bie /= 1) STOP 'nb_bie /= 1'
@@ -732,7 +732,7 @@ nb_thread = 1
 
  DO iG=1,BasisnD%para_SGType2%nb_SG
 
-   tab_l(:)  = BasisnD%para_SGType2%nDind_SmolyakGrids%Tab_nDval(:,iG)
+   tab_l(:)  = BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,iG)
    tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
    tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
 
@@ -997,9 +997,7 @@ STOP 'not yet !!!!'
  USE mod_system
  USE mod_nDindex
 
-  USE mod_ActiveTransfo,           ONLY : get_Qact
- USE mod_Tnum,                     ONLY : zmatrix
- USE mod_dnGG_dng,                 ONLY : get_d0GG
+ USE mod_Coord_KEO,                     ONLY : zmatrix, get_Qact, get_d0GG
 
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis,                    ONLY : Rec_WrhonD,Rec_Qact_SG4
@@ -1075,7 +1073,7 @@ STOP 'not yet !!!!'
   mole    => para_H%mole
   BasisnD => para_H%BasisnD
 
-  D = size(BasisnD%para_SGType2%nDind_SmolyakGrids%Tab_nDval,dim=1)
+  D = size(BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,dim=1)
 
 
   IF (para_H%nb_bie /= 1) STOP 'nb_bie /= 1'
@@ -1117,7 +1115,7 @@ STOP 'not yet !!!!'
 
  DO iG=1,BasisnD%para_SGType2%nb_SG
 
-   tab_l(:)  = BasisnD%para_SGType2%nDind_SmolyakGrids%Tab_nDval(:,iG)
+   tab_l(:)  = BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,iG)
    tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
    tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
 

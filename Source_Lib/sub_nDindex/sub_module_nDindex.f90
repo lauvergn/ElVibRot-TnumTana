@@ -28,10 +28,19 @@
 !===========================================================================
 
       MODULE mod_nDindex
-      USE mod_system
-      USE mod_module_DInd
-      USE mod_dnSVM
+      use mod_system, only: rkind, one, zero, out_unitp, alloc_nparray, alloc_array,   &
+                            flush_perso, dealloc_nparray, inferior_tab, dealloc_array, &
+                            write_error_not_null, error_memo_allo, write_error_null,   &
+                            sub_test_tab_ub, sub_test_tab_lb, name_longlen
+      use mod_module_DInd, only: typedind, set_ndind_01order, set_ndind_10order,       &
+                                 set_ndind_01order_l, set_ndind_10order_l,             &
+                                 dealloc_ndind, ndind2tondind1, write_tab_ndind
+      use mod_dnSVM, only: type_dnvec, type_intvec, alloc_array, alloc_dnsvm,          &
+                           sub_intvec1_to_intvec2, dealloc_dnsvm, dealloc_array,       &
+                           sub_dnvec1_to_dnvec2
       IMPLICIT NONE
+
+        PRIVATE
 
         integer, parameter :: err_Max_nDI = 1
         integer, parameter :: err_nDI     = 2
@@ -57,10 +66,6 @@
         integer, allocatable          :: Tab_nDval(:,:)            ! Tab_nDval(ndim,Max_nDI) table the individual indexes
         real(kind=Rkind), allocatable :: Tab_Norm(:)               ! TabNorm for the whole basis
         integer,  allocatable         :: Tab_L(:)                  ! Equivalent to Tab_Norm (but integer)
-
-        ! To intialize nDval(:) for each thread and when Tab_nDval is not allocated
-        integer, allocatable          :: Tab_nDval0(:,:)            ! Tab_nDval0(ndim,nb_threads) table the individual indexes
-
 
         integer                       :: Max_nDI         = 0       ! largest value of the multidimensional index
 
@@ -112,7 +117,6 @@
           MODULE PROCEDURE dealloc_NParray_OF_nDindexdim0,dealloc_NParray_OF_nDindexdim1
         END INTERFACE
 
-        PRIVATE
         PUBLIC :: Type_nDindex,alloc_nDindex,dealloc_nDindex,nDindex2TOnDindex1,Write_nDindex
         PUBLIC :: alloc_array,dealloc_array,alloc_NParray,dealloc_NParray
         PUBLIC :: init_nDindexPrim,init_nDindex_typeTAB
@@ -122,7 +126,6 @@
 
         PUBLIC :: ADD_ONE_TO_nDindex,ADD_ONE_TO_nDval_m1,ADD_ONE_TO_nDval_p1
         PUBLIC :: init_nDval_OF_nDindex
-
 
       CONTAINS
 
@@ -832,7 +835,7 @@
                                  Lmin,Lmax,tab_i_TO_l=nDindex%tab_i_TO_l)
           id = 0
         END IF
-        !CALL Write_nDInd(nDindex%Tab_DInd)
+        !CALL Write_Tab_nDInd(nDindex%Tab_DInd)
         ! tranfer the nDindex%Tab_DInd to nDindex parameters
 
         nDindex%Max_nDI = nDindex%Tab_DInd(id)%MaxnD
@@ -927,7 +930,7 @@
           CALL Set_nDInd_10order_L(nDindex%Tab_DInd,nDindex%ndim,Lmin,Lmax)
           id = 0
         END IF
-        !CALL Write_nDInd(nDindex%Tab_DInd)
+        !CALL Write_Tab_nDInd(nDindex%Tab_DInd)
         ! tranfer the nDindex%Tab_DInd to nDindex parameters
 
         nDindex%Max_nDI = nDindex%Tab_DInd(id)%MaxnD
@@ -1008,21 +1011,6 @@
         ! first the number of points
         CALL calc_Max_nDI_type5p(nDindex)
 
-        ! to deal with the number of threads more efficiently
-        maxth = size(nDindex%tab_nDval0,dim=2)
-
-        DO ith=0,maxth-1
-
-          iG = ith*nDindex%Max_nDI/maxth + 1
-          CALL init_nDval_OF_nDindex(nDindex,nDval)
-
-          DO iiG=1,iG-1
-            CALL ADD_ONE_TO_nDindex(nDindex,nDval)
-          END DO
-          nDindex%tab_nDval0(:,ith+1) = nDval(:)
-
-        END DO
-
         IF (nDindex%Write_Tab .OR. debug)                               &
                       write(out_unitp,*) 'nDindex%Max_nDI',nDindex%Max_nDI
 
@@ -1089,7 +1077,7 @@
 
         logical :: In_the_list
         integer :: i,L,L1,L2,nDI,nb_Coupling,nDval(nDindex%ndim)
-        integer :: iiG,iG,maxth,ith
+        integer :: iiG,iG
 
         real (kind=Rkind) :: Norm
 
@@ -1125,21 +1113,6 @@
 
         ! first the number of points
         CALL calc_Max_nDI_type5m(nDindex)
-
-        ! to deal with the number of threads more efficiently
-        maxth = size(nDindex%tab_nDval0,dim=2)
-
-        DO ith=0,maxth-1
-
-          iG = ith*nDindex%Max_nDI/maxth + 1
-          CALL init_nDval_OF_nDindex(nDindex,nDval)
-
-          DO iiG=1,iG-1
-            CALL ADD_ONE_TO_nDindex(nDindex,nDval)
-          END DO
-          nDindex%tab_nDval0(:,ith+1) = nDval(:)
-
-        END DO
 
         IF (nDindex%Write_Tab .OR. debug)                               &
                       write(out_unitp,*) 'nDindex%Max_nDI',nDindex%Max_nDI
@@ -1218,7 +1191,7 @@
               CALL calc_nDindex(nDindex,tab_Sort_nDI(nDI2),nDval2)
               nDval2(ibasis) = 0
 
-              IF (inferior_tab_int(nDval2,nDval1)) THEN
+              IF (inferior_tab(nDval2,nDval1)) THEN
                 nDI0               = tab_Sort_nDI(nDI1)
                 tab_Sort_nDI(nDI1) = tab_Sort_nDI(nDI2)
                 tab_Sort_nDI(nDI2) = nDI0
@@ -1279,7 +1252,7 @@
           !write(6,*) 'nDvali',nDvali
           !write(6,*) 'j,i',j,i
 
-          IF (inferior_tab_int(nDvali,nDval0)) THEN
+          IF (inferior_tab(nDvali,nDval0)) THEN
             !write(6,*) 'perm i,j',i,j
 
             itemp           = tab_Sort_nDI(i)
@@ -1361,15 +1334,6 @@
         nDindex%nDweight(:)     = ONE
         nDindex%nDinit(:)       = 1
         nDindex%nDend(:)        = -1
-
-
-        maxth              = 1
-        !$ maxth           = omp_get_max_threads()
-        IF (allocated(nDindex%tab_nDval0))     THEN
-          CALL dealloc_NParray(nDindex%tab_nDval0,"nDindex%tab_nDval0","alloc_nDindex")
-        END IF
-        CALL alloc_NParray(nDindex%tab_nDval0,(/ndim,maxth/),         &
-                          "nDindex%tab_nDval0","alloc_nDindex")
 
 
       END SUBROUTINE alloc_nDindex
@@ -1473,10 +1437,6 @@
         nDindex%Lmax            = Lmax
         nDindex%Lmin            = Lmin
         nDindex%With_L          = With_L
-
-        IF (allocated(nDindex%tab_nDval0))     THEN
-          CALL dealloc_NParray(nDindex%tab_nDval0,"nDindex%tab_nDval0","alloc_nDindex")
-        END IF
 
       END SUBROUTINE dealloc_nDindex
 
@@ -1952,11 +1912,6 @@
         nDindex1%packed         = nDindex2%packed
         nDindex1%packed_done    = nDindex2%packed_done
 
-        IF (allocated(nDindex2%tab_nDval0))     THEN
-          nDindex1%tab_nDval0(:,:) = nDindex2%tab_nDval0(:,:)
-        END IF
-
-
         IF (allocated(nDindex2%Tab_nDval)) THEN
           CALL alloc_NParray(nDindex1%Tab_nDval,                          &
                                    (/nDindex1%ndim,nDindex1%Max_nDI/),  &
@@ -2400,7 +2355,7 @@
     IF (debug) write(out_unitp,*) 'nDval (temp)',nDval,In_the_list
 
 
-    IF ( nDval(nDindex%ndim) > nDindex%nDend(nDindex%ndim) .OR. L > nDindex%Lmax) THEN
+    IF ( nDval(1) > nDindex%nDend(1) .OR. L > nDindex%Lmax) THEN
 
       DO i=1,nDindex%ndim-1
         nDval(i)   = nDindex%nDinit(i)
@@ -2409,7 +2364,7 @@
         In_the_list = InList_nDindex_type5(nDval,nDindex,L)
         IF (debug) write(out_unitp,*) 'nDval (temp)',nDval,In_the_list
 
-        IF (In_the_list) EXIT
+        IF (In_the_list .OR. L < nDindex%Lmin) EXIT
 
       END DO
     END IF
@@ -3186,7 +3141,7 @@ STOP 'in calc_nDI, type_OF_nDindex=3'
           END DO
         END IF
 
-        IF (allocated(nDindex%Tab_DInd)) CALL Write_nDInd(nDindex%Tab_DInd)
+        IF (allocated(nDindex%Tab_DInd)) CALL Write_Tab_nDInd(nDindex%Tab_DInd)
 
 
         write(out_unitp,*) trim(name_info_loc),'==============================================='

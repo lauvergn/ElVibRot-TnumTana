@@ -30,6 +30,8 @@
       USE mod_system
       IMPLICIT NONE
 
+        PRIVATE
+
         TYPE Type_SymAbelian
           PRIVATE
           integer :: Read_symab = -1
@@ -40,7 +42,6 @@
                                                        ! 1: => (0,0,1)
                                                        ! 2: => (0,1,0)
                                                        ! ....
-
         END TYPE Type_SymAbelian
 
       INTERFACE alloc_array
@@ -50,6 +51,17 @@
       INTERFACE dealloc_array
         MODULE PROCEDURE dealloc_array_OF_SymAbeliandim0
       END INTERFACE
+
+      PUBLIC  Type_SymAbelian, alloc_SymAbelian, dealloc_SymAbelian,     &
+              SymAbelian1_TO_SymAbelian2, Write_SymAbelian,              &
+              SymAbelian_IS_initialized, Get_Read_symabOFSymAbelian,     &
+              Get_symabOFSymAbelian_AT_ib, Set_symabOFSymAbelian_AT_ib,  &
+              Set_tab_symabOFSymAbelian_WITH_tab, Set_tab_SymAbelian,    &
+              Set_nbPERsym_FROM_SymAbelian, Get_nbPERsym_FROM_SymAbelian,&
+              Set_ReadsymabOFSymAbelian, Calc_symab1_EOR_symab2,         &
+              Write_symab, WriteTOstring_symab
+
+      PUBLIC  alloc_array, dealloc_array
 
 
       CONTAINS

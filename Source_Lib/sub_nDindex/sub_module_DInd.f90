@@ -27,9 +27,11 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_module_DInd
-USE mod_system
-USE mod_dnSVM
+use mod_system, only: out_unitp
+use mod_dnSVM, only: type_intvec, write_intvec
 IMPLICIT NONE
+
+PRIVATE
 
 TYPE TypeDInd
   integer :: ndim  = 0
@@ -49,11 +51,16 @@ END TYPE TypeTab_DInd
 INTERFACE assignment (=)
   MODULE PROCEDURE TypeDInd2TOTypeDInd1,nDInd2TOnDInd1
 END INTERFACE
+PUBLIC :: assignment (=)
+
+PUBLIC :: TypeDInd, alloc_TypeDInd, dealloc_TypeDInd, Write_TypeDInd
+PUBLIC :: TypeTab_DInd, Write_Tab_nDInd,dealloc_nDInd,nDInd2TOnDInd1
+PUBLIC :: Set_nDInd_01order,Set_nDInd_10order, Set_nDInd_01order_L,Set_nDInd_10order_L
+PUBLIC :: InD_TO_tabi,tabi_TO_InD
 
 CONTAINS
 
 SUBROUTINE alloc_TypeDInd(DInd,ndim,MaxnD)
-USE mod_system
 IMPLICIT NONE
 
 integer        :: ndim,MaxnD
@@ -74,7 +81,6 @@ allocate(DInd%tab_q(ndim))
 
 END SUBROUTINE alloc_TypeDInd
 SUBROUTINE dealloc_TypeDInd(DInd)
-USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeDInd) :: DInd
@@ -91,7 +97,6 @@ IF (allocated(DInd%tab_q))            deallocate(DInd%tab_q)
 
 END SUBROUTINE dealloc_TypeDInd
 SUBROUTINE TypeDInd2TOTypeDInd1(DInd1,DInd2)
-USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeDInd), intent(inout) :: DInd1
@@ -113,7 +118,6 @@ END IF
 
 END SUBROUTINE TypeDInd2TOTypeDInd1
 SUBROUTINE Write_TypeDInd(DInd)
-USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeDInd) :: DInd
@@ -137,7 +141,6 @@ flush(out_unitp)
 END SUBROUTINE Write_TypeDInd
 
 SUBROUTINE Set_nDInd_01order(nDind,D,Lmin,Lmax,tab_i_TO_l)
-USE mod_system
 IMPLICIT NONE
 
 integer                         :: D,Lmin,Lmax
@@ -239,7 +242,6 @@ END DO
 
 END SUBROUTINE Set_nDInd_01order
 SUBROUTINE Set_nDInd_10order(nDind,D,Lmin,Lmax,tab_i_TO_l)
-USE mod_system
 IMPLICIT NONE
 
 integer                         :: D,Lmin,Lmax
@@ -342,7 +344,6 @@ END DO
 END SUBROUTINE Set_nDInd_10order
 
 SUBROUTINE Set_nDInd_01order_L(nDind,D,Lmin,Lmax)
-USE mod_system
 IMPLICIT NONE
 
 integer                         :: D,Lmin,Lmax
@@ -421,7 +422,6 @@ END DO
 
 END SUBROUTINE Set_nDInd_01order_L
 SUBROUTINE Set_nDInd_10order_L(nDind,D,Lmin,Lmax)
-USE mod_system
 IMPLICIT NONE
 
 integer        :: D,Lmin,Lmax
@@ -503,7 +503,6 @@ END DO
 END SUBROUTINE Set_nDInd_10order_L
 
 SUBROUTINE dealloc_nDInd(nDind)
-USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeDInd), allocatable :: nDind(:)
@@ -524,7 +523,6 @@ END IF
 END SUBROUTINE dealloc_nDInd
 
 SUBROUTINE nDInd2TOnDInd1(nDInd1,nDInd2)
-USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeDInd), allocatable, intent(inout) :: nDInd1(:)
@@ -544,26 +542,24 @@ END IF
 
 END SUBROUTINE nDInd2TOnDInd1
 
-SUBROUTINE Write_nDInd(nDind)
-USE mod_system
+SUBROUTINE Write_Tab_nDInd(Tab_nDInd)
 IMPLICIT NONE
 
-TYPE(TypeDInd), allocatable :: nDind(:)
+TYPE(TypeDInd), allocatable :: Tab_nDInd(:)
 
 integer :: i
 
-write(out_unitp,*) 'BEGINNING Write_nDInd'
+write(out_unitp,*) 'BEGINNING Write_Tab_nDInd'
 
-DO i=lbound(nDind,dim=1),ubound(nDind,dim=1)
+DO i=lbound(Tab_nDInd,dim=1),ubound(Tab_nDInd,dim=1)
   write(out_unitp,*) 'index:',i
-  CALL Write_TypeDInd(nDind(i))
+  CALL Write_TypeDInd(Tab_nDInd(i))
 END DO
-write(out_unitp,*) 'END Write_nDInd'
+write(out_unitp,*) 'END Write_Tab_nDInd'
 
-END SUBROUTINE Write_nDInd
+END SUBROUTINE Write_Tab_nDInd
 
 SUBROUTINE InD_TO_tabi(InD,D,tabn,tabi)
-USE mod_system
 IMPLICIT NONE
 
 integer          :: D,InD
@@ -589,7 +585,6 @@ IF (II /= InD) STOP 'II /= InD'
 
 END SUBROUTINE InD_TO_tabi
 SUBROUTINE tabi_TO_InD(InD,D,tabn,tabi)
-USE mod_system
 IMPLICIT NONE
 
 integer          :: D,InD

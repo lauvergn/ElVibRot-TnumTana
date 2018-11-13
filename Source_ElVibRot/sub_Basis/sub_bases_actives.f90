@@ -32,7 +32,7 @@
       SUBROUTINE POGridRep_basis(basis_POGridRep,nb0,mole)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_basis
       IMPLICIT NONE
 
@@ -251,7 +251,7 @@
       SUBROUTINE POGridRep2_basis(basis_POGridRep,nb0,mole)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_basis
       IMPLICIT NONE
 

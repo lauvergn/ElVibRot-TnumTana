@@ -42,9 +42,8 @@
                               Basis2n,                                  &
                               wherm,Vinact,ScalOp)
       USE mod_system
+      use mod_PrimOp, only: param_pes, param_d0matop
       USE mod_basis
-      USE mod_SimpleOp
-      USE mod_PrimOp_def
       IMPLICIT NONE
 
 !----- variables for the construction of H ---------------------------

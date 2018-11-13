@@ -22,26 +22,24 @@
 !===========================================================================
 
  module mod_Tana_VecSumOpnD
-   !! @description: This module defines the data structures. It contains also
-   !!               the some standard routine that initilize, 
-   !!               allocate and delete the data structure
- USE mod_system
- USE mod_Tana_OpEl
- USE mod_Tana_Op1D
- USE mod_Tana_OpnD
+ use mod_system, only: write_error_not_null, sub_test_tab_ub,              &
+                       sub_test_tab_lb, error_memo_allo, write_error_null, &
+                       dealloc_nparray, alloc_nparray, czero, out_unitp,   &
+                       flush_perso
  USE mod_Tana_sum_opnd
  IMPLICIT NONE
 
-        !-----------------------------------------------------------!
-        !                        VEC_SUM_OPND                       !
-        !-----------------------------------------------------------!
-        !! @description: Definition of a type of a an array of sum of nd-operators.
-        !!               This type is used for the analytical
-        !!               computation of the KEO
-        !! @param: vec_sum             Array of sum_opnd operators
-        TYPE vec_sum_opnd
-          type(sum_opnd), allocatable        :: vec_sum(:) ! Array of opnd
-        END TYPE vec_sum_opnd
+ PRIVATE
+      !-----------------------------------------------------------!
+      !                        VEC_SUM_OPND                       !
+      !-----------------------------------------------------------!
+      !! @description: Definition of a type of a an array of sum of nd-operators.
+      !!               This type is used for the analytical
+      !!               computation of the KEO
+      !! @param: vec_sum             Array of sum_opnd operators
+      TYPE vec_sum_opnd
+        type(sum_opnd), allocatable        :: vec_sum(:) ! Array of opnd
+      END TYPE vec_sum_opnd
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_Vec_Sum_OpnDdim1
@@ -75,6 +73,16 @@
   interface copy_F1_into_F2
     module procedure  copy_V1_sum_nd_into_V2_sum_nd
   end interface
+
+  PUBLIC :: vec_sum_opnd, allocate_op, delete_op, write_op, copy_F1_into_F2
+  PUBLIC :: alloc_array, dealloc_array, alloc_NParray, dealloc_NParray
+  PUBLIC :: V1_scalar_V2_in_F_sum_nd
+  PUBLIC :: V1_cross_V2_in_Vres
+  PUBLIC :: V1_plus_V2_in_Vres,V1_PLUS_TO_Vres
+  PUBLIC :: V1_MINUS_TO_Vres
+  PUBLIC :: M1_times_M2_in_Mres, M_opnd_times_V_in_Vres, V_times_M_opnd_in_Vres
+  PUBLIC :: F_sum_nd_times_V_in_Vres
+  PUBLIC :: zero_TO_vec_sum_opnd
 
   contains
 
@@ -286,7 +294,7 @@
      end if
      do i = 1, size(V_sum_nd%vec_sum)
        write(i_open, '(40x, A, 1x, I2)') '============vector: component ============', i
-       call write_sum_opnd(V_sum_nd%vec_sum(i), i_open)
+       call write_op(V_sum_nd%vec_sum(i), i_open)
        write(i_open, *)
        write(i_open, *)
      end do
@@ -307,8 +315,7 @@
 
    call allocate_vec_sum_opnd(V2_sum_nd,size(V1_sum_nd%vec_sum))
    do i = 1, size(V1_sum_nd%vec_sum)
-     call copy_F1_sum_nd_into_F2_sum_nd(V1_sum_nd%vec_sum(i), &
-                                        V2_sum_nd%vec_sum(i))
+     call copy_F1_into_F2(V1_sum_nd%vec_sum(i),V2_sum_nd%vec_sum(i))
    end do
  end subroutine copy_V1_sum_nd_into_V2_sum_nd
 

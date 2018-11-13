@@ -35,7 +35,7 @@
 !=============================================================
       SUBROUTINE sub_quadra_inact(Basis2n,mole)
       USE mod_system
-      USE mod_Tnum
+      use mod_Coord_KEO, only: zmatrix, alloc_nparray
       USE mod_basis
       IMPLICIT NONE
 

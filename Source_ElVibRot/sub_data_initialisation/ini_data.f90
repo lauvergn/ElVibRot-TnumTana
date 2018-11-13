@@ -42,10 +42,14 @@ SUBROUTINE ini_data(const_phys,                                         &
                           para_ana,para_intensity,intensity_only,       &
                           para_propa,WP0)
 
-      USE mod_system
-      USE mod_constant
-      USE mod_paramQ
-      USE mod_PrimOp
+      use mod_system,    only: rkind, out_unitp, flush_perso, alloc_nparray,&
+                               dealloc_nparray, one, zero, alloc_array,     &
+                               int_to_char
+      USE mod_Coord_KEO, only : constant, sub_constantes, zmatrix, Tnum, &
+                                get_Qact0, read_RefGeom
+      use mod_PrimOp, only: param_otf, param_pes, write_typeop, param_typeop,&
+                            finalyze_tnumtana_coord_primop, init_typeop,     &
+                            derive_termqact_to_derive_termqdyn
       USE mod_basis
       USE mod_Op
       USE mod_analysis
@@ -145,7 +149,6 @@ SUBROUTINE ini_data(const_phys,                                         &
       CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
 !-----------------------------------------------------------------------
 
-CALL Write_mem_tot()
       write(out_unitp,*) "============================================================"
       write(out_unitp,*) "============================================================"
       write(out_unitp,*) "=== END COORDINATES (TNUM) ================================="
@@ -219,7 +222,6 @@ CALL Write_mem_tot()
       CALL flush_perso(out_unitp)
 
 !---------------------------------------------------------------------
-CALL Write_mem_tot()
 
 !---------------------------------------------------------------------
       write(out_unitp,*) "============================================================"
@@ -349,8 +351,6 @@ CALL Write_mem_tot()
       CALL Auto_basis(para_Tnum,mole,para_AllBasis,ComOp,para_PES,para_ReadOp)
 
 
-CALL Write_mem_tot()
-
       !CALL RecWrite_basis(para_AllBasis%BasisnD,write_all=.TRUE.) ; stop
       write(out_unitp,*) "============================================================"
       write(out_unitp,*) "============================================================"
@@ -382,7 +382,7 @@ CALL Write_mem_tot()
       write(out_unitp,*) "============================================================"
       write(out_unitp,*) "====== List of Operators ==================================="
       write(out_unitp,*)
-
+      write(out_unitp,*) 'para_PES%nb_scalar_Op : ',para_PES%nb_scalar_Op
 
       IF (debug) write(out_unitp,*) 'para_PES%nb_scalar_Op : ',para_PES%nb_scalar_Op
       IF (para_PES%nb_scalar_Op > 27) THEN
@@ -391,11 +391,15 @@ CALL Write_mem_tot()
         write(out_unitp,*) ' nb_scalar_Op must be < 28',para_PES%nb_scalar_Op
         STOP
       END IF
-      IF (para_PES%calc_scalar_Op .AND. para_PES%nb_scalar_Op < 3) THEN
+      IF (para_PES%calc_scalar_Op .AND. para_PES%nb_scalar_Op < 1) THEN
         para_PES%nb_scalar_Op = 3
         write(out_unitp,*) ' WARNING in ',name_sub
-        write(out_unitp,*) 'calc_scalar_Op=t and nb_scalar_Op < 3'
+        write(out_unitp,*) 'calc_scalar_Op=t and nb_scalar_Op < 1'
         write(out_unitp,*) ' You MUST set nb_scalar_Op in the namelis "minimun"'
+      END IF
+      IF (para_PES%calc_scalar_Op .AND. para_PES%nb_scalar_Op < 3) THEN
+        write(out_unitp,*) ' WARNING in ',name_sub
+        write(out_unitp,*) 'calc_scalar_Op=t and nb_scalar_Op < 3'
       END IF
 
       para_AllOp%nb_Op = para_PES%nb_scalar_Op + 2  ! for H and S
@@ -469,7 +473,6 @@ CALL Write_mem_tot()
       DO i=1,para_AllOp%nb_Op
         write(out_unitp,*) i,'Operator name: ',trim(para_AllOp%tab_Op(i)%name_Op)
       END DO
-CALL Write_mem_tot()
 
       write(out_unitp,*)
       write(out_unitp,*) "============================================================"
@@ -490,12 +493,11 @@ CALL Write_mem_tot()
         CALL RecSet_EneH0(para_Tnum,mole,para_AllBasis%BasisnD,         &
                           para_PES,para_ReadOp,ComOp)
       END IF
-CALL Write_mem_tot()
 
       write(out_unitp,*)
       write(out_unitp,*) "============================================================"
       write(out_unitp,*) "============================================================"
-!STOP
+
 !=====================================================================
 !---------------------------------------------------------------------
       IF (debug) THEN

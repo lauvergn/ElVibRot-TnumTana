@@ -28,8 +28,7 @@
 !===========================================================================
       SUBROUTINE vib(max_mem,test_mem,intensity_only)
       USE mod_system
-      USE mod_constant
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
 
@@ -314,7 +313,6 @@
           write(out_unitp,*) '================================================='
         write(out_unitp,*)
       END IF
-         write(6,*) 'coucou',WP0(1)%BasisRep,WP0(1)%GridRep
 
       !================================================================
       !================================================================
@@ -496,6 +494,10 @@
 
         CALL sub_MatOp(para_H,para_ana%print)
 
+        ! temp
+        !CALL sub_MatOp(para_AllOp%tab_Op(3),para_ana%print)
+        !stop 'coucou'
+
         write(out_unitp,*)
         write(out_unitp,*)
         CALL time_perso('sub_matOp: H and S')
@@ -530,6 +532,26 @@
       !================================================================
       !================================================================
 
+      IF (.NOT. para_H%cplx .AND. para_ana%CRP > 0) THEN
+          write(out_unitp,*)
+          write(out_unitp,*) '================================================'
+          write(out_unitp,*) ' VIB: BEGINNING sub_CRP',para_H%nb_tot
+          CALL time_perso('sub_CRP')
+          write(out_unitp,*)
+          write(out_unitp,*)
+          CALL sub_CRP(para_AllOp%tab_Op,size(para_AllOp%tab_Op),para_ana%print,  &
+            para_ana%CRP,para_ana%CRP_Ene,para_ana%CRP_DEne,para_ana%nb_CRP_Ene)
+
+          write(out_unitp,*)
+          write(out_unitp,*)
+          CALL time_perso('sub_CRP')
+          write(out_unitp,*) ' VIB: END sub_CRP'
+          write(out_unitp,*) '================================================'
+          write(out_unitp,*)
+          nullify(para_Dip)
+          STOP 'CRP'
+      END IF
+      CALL flush_perso(out_unitp)
 
       !================================================================
       !===== Diagonalisation ==========================================
@@ -777,7 +799,7 @@
             para_H%diago = .TRUE.
             CALL alloc_para_Op(para_H)
 
-            CALL Read_RVec(para_H%Rdiag,nio_res_int,5,err)
+            CALL Read_Vec(para_H%Rdiag,nio_res_int,5,err)
             IF (err /= 0) THEN
               write(out_unitp,*) 'ERROR in vib'
               write(out_unitp,*) ' reading the vector "para_H%Rdiag"'
@@ -938,14 +960,12 @@
       END SUBROUTINE vib
       SUBROUTINE sub_GridTOBasis_test(max_mem)
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
-      USE mod_constant
       USE mod_Op
       USE mod_analysis
       USE mod_propa
-      !USE mod_psi
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
       USE mod_psi_B_TO_G
@@ -1100,8 +1120,7 @@ para_mem%mem_debug = .FALSE.
 
       SUBROUTINE Sub_OpPsi_test(max_mem)
       USE mod_system
-      USE mod_constant
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_psi_set_alloc
@@ -1447,10 +1466,9 @@ para_mem%mem_debug = .FALSE.
 
       SUBROUTINE sub_Analysis_Only(max_mem)
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
-      USE mod_constant
       USE mod_Op
       USE mod_analysis
       USE mod_fullanalysis

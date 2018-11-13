@@ -29,10 +29,11 @@
       MODULE mod_Op
 
       USE mod_system
+      use mod_PrimOp, only: param_typeop, param_pes, dealloc_typeop,    &
+                            write_typeop, param_d0matop, init_d0matop,  &
+                            dealloc_d0matop
+
       USE mod_basis
-      USE mod_file
-      USE mod_SimpleOp
-      USE mod_PrimOp_def
       USE mod_ComOp
       USE mod_OpGrid
       USE mod_ReadOp
@@ -306,9 +307,9 @@
         IF (.NOT. associated(para_Op%OpGrid)) THEN
           CALL alloc_array(para_Op%OpGrid,(/nb_term/),"para_Op%OpGrid",name_sub)
           para_Op%OpGrid(:)%grid_cte = lo_Grid_cte(:)
-          IF (para_Op%para_ReadOp%para_FileGrid%Save_MemGrid) THEN
-            DO k_term=1,para_Op%nb_term
-              para_Op%OpGrid(k_term)%para_FileGrid%Save_MemGrid = .TRUE.
+          DO k_term=1,para_Op%nb_term
+            para_Op%OpGrid(k_term)%para_FileGrid = para_Op%para_ReadOp%para_FileGrid
+            IF (para_Op%OpGrid(k_term)%para_FileGrid%Save_MemGrid) THEN
 
               info = String_TO_String('  k_term( ' // int_TO_char(k_term) // &
                                       ' ) of ' // trim(para_Op%name_Op))
@@ -318,18 +319,19 @@
                               para_Op%derive_termQact(:,k_term),        &
                               para_Op%derive_termQdyn(:,k_term),        &
                               info)
-              para_Op%OpGrid(k_term)%para_FileGrid = para_Op%para_ReadOp%para_FileGrid
 
               deallocate(info)
-
-            END DO
-          END IF
+            END IF
+          END DO
         END IF
         IF (.NOT. associated(para_Op%imOpGrid) .AND. para_Op%cplx) THEN
 
           CALL alloc_array(para_Op%imOpGrid,(/1/),                      &
                           "para_Op%imOpGrid",name_sub)
-          IF (para_Op%para_ReadOp%para_FileGrid%Save_MemGrid) THEN
+
+          para_Op%imOpGrid(1)%para_FileGrid = para_Op%para_ReadOp%para_FileGrid
+
+          IF (para_Op%imOpGrid(1)%para_FileGrid%Save_MemGrid) THEN
 
             info = String_TO_String(' of ' // trim(para_Op%name_Op))
 
@@ -337,15 +339,12 @@
                             para_Op%nb_qa,para_Op%nb_bie,               &
                             (/ 0,0 /),(/ 0,0 /),info)
             para_Op%imOpGrid(1)%cplx = .TRUE.
-            para_Op%imOpGrid(1)%para_FileGrid = para_Op%para_ReadOp%para_FileGrid
 
             deallocate(info)
-
 
           END IF
         END IF
       END IF
-
 !---------------------------------------------------------------------
       IF (debug) THEN
         para_Op%print_done = .FALSE.
@@ -353,7 +352,6 @@
         write(out_unitp,*) 'END ',name_sub
       END IF
 !---------------------------------------------------------------------
-
 
       END SUBROUTINE alloc_para_Op
 
@@ -528,6 +526,8 @@
       write(out_unitp,*) 'sym_Hamil ',para_Op%sym_Hamil
 
       write(out_unitp,*) 'cplx',para_Op%cplx
+
+      CALL Write_TypeOp(para_Op%param_TypeOp)
 
       write(out_unitp,*) 'spectral,spectral_Op',                        &
                   para_Op%spectral,para_Op%spectral_Op
@@ -1089,7 +1089,6 @@
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Set_file_OF_AllOp'
 
-
       IF (.NOT. associated(tab_Op)) RETURN
       IF (size(tab_Op) < 1) RETURN
 
@@ -1126,7 +1125,6 @@
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Open_File_OF_tab_Op'
 
-
       IF (.NOT. associated(tab_Op)) RETURN
       IF (size(tab_Op) < 1) RETURN
 
@@ -1137,9 +1135,27 @@
 
       END DO
 
-
-
       END SUBROUTINE Open_File_OF_tab_Op
+
+      SUBROUTINE Close_File_OF_tab_Op(tab_Op)
+
+      TYPE (param_Op), pointer, intent(inout) :: tab_Op(:)
+
+      integer :: iOp,nio
+
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='Close_File_OF_tab_Op'
+
+      IF (.NOT. associated(tab_Op)) RETURN
+      IF (size(tab_Op) < 1) RETURN
+
+      DO iOp=1,size(tab_Op)
+        CALL Close_file_OF_OpGrid(tab_Op(iOp)%OpGrid)
+
+        CALL Close_file_OF_OpGrid(tab_Op(iOp)%ImOpGrid)
+      END DO
+
+      END SUBROUTINE Close_File_OF_tab_Op
 
 
       SUBROUTINE read_OpGrid_OF_Op(para_Op)

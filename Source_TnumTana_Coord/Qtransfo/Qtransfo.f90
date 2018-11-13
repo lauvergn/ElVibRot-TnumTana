@@ -21,11 +21,13 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_Qtransfo
-      USE mod_system
+      use mod_system, only: name_len, line_len, rkind, out_unitp, in_unitp, &
+                            flush_perso, string_uppercase_to_lowercase,     &
+                            alloc_array, print_level, error_memo_allo, zero,&
+                            make_nameq, dealloc_array, write_error_not_null,&
+                            sub_test_tab_ub, sub_test_tab_lb, write_error_null, write_mat
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
+      use mod_constant, only: table_atom
 
       USE mod_CartesianTransfo
       USE mod_QTOXanaTransfo
@@ -44,7 +46,7 @@
 
       IMPLICIT NONE
 
-        PRIVATE
+      PRIVATE
 
         TYPE, PUBLIC :: Type_Qtransfo
           logical                           :: print_done      = .FALSE.
@@ -430,7 +432,7 @@
           Qtransfo%nb_Qin  = nb_Qin
           CALL alloc_array(Qtransfo%ActiveTransfo,'Qtransfo%ActiveTransfo',name_sub)
           IF (Qtransfo%opt_transfo == 1) THEN
-            CALL Read_Active2Transfo(Qtransfo%ActiveTransfo,nb_Qin)
+            CALL Read2_ActiveTransfo(Qtransfo%ActiveTransfo,nb_Qin)
           ELSE
             CALL Read_ActiveTransfo(Qtransfo%ActiveTransfo,nb_Qin)
           END IF
@@ -460,7 +462,7 @@
           Qtransfo%ZmatTransfo%type_Qin => Qtransfo%type_Qin
           Qtransfo%ZmatTransfo%name_Qin => Qtransfo%name_Qin
 
-          CALL Read_Zmat_QTransfo(Qtransfo%ZmatTransfo,mendeleev)
+          CALL Read_ZmatTransfo(Qtransfo%ZmatTransfo,mendeleev)
 
         CASE ('bunch','bunch_poly') ! It should one of the first transfo
 
@@ -527,7 +529,7 @@
               Qtransfo%BunchTransfo%nb_vect,Qtransfo%BunchTransfo%ncart,&
                               Qtransfo%BunchTransfo%nb_G
 
-            CALL Read_Bunch2Transfo(Qtransfo%BunchTransfo,mendeleev,with_vectors)
+            CALL Read2_BunchTransfo(Qtransfo%BunchTransfo,mendeleev,with_vectors)
 
             IF (with_vectors) THEN
               CALL M_Tana_FROM_Bunch2Transfo(Qtransfo%BunchTransfo)
@@ -606,7 +608,7 @@
                                          Qtransfo%QTOXanaTransfo%nb_var,&
                                          Qtransfo%QTOXanaTransfo%ncart
 
-          CALL Read_QTOXana_QTransfo(Qtransfo%QTOXanaTransfo,mendeleev)
+          CALL Read_QTOXanaTransfo(Qtransfo%QTOXanaTransfo,mendeleev)
 
         CASE ('cartesian') ! It should be one of the first transfo read
           Qtransfo%nb_Qin             = nb_Qin ! ncart_act

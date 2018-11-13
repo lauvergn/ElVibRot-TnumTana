@@ -21,11 +21,14 @@
 !===========================================================================
 !===========================================================================
 
-      MODULE mod_dnV
-      USE mod_system
-      USE mod_dnS
-
+MODULE mod_dnV
+      USE mod_system, only: rkind, zero, half, out_unitp, write_vecmat,       &
+                            alloc_array, dealloc_array, write_error_not_null, &
+                            sub_test_tab_ub, sub_test_tab_lb,                 &
+                            error_memo_allo, write_error_null
       IMPLICIT NONE
+
+      PRIVATE
 
       !==============================================
       !!@description: TODO
@@ -54,6 +57,20 @@
       INTERFACE dealloc_array
         MODULE PROCEDURE dealloc_array_OF_dnVecdim1,dealloc_array_OF_dnVecdim2
       END INTERFACE
+
+      PUBLIC :: Type_dnVec, assignment (=), alloc_array, dealloc_array
+      PUBLIC :: alloc_dnVec, dealloc_dnVec, check_alloc_dnVec, Write_dnVec, sub_Normalize_dnVec
+
+      PUBLIC :: sub_dnVec_TO_dnS, sub_dnS_TO_dnVec, sub_dnVec2_TO_dnVec1, sub_dnVec1_TO_dnVec2
+      PUBLIC :: sub_PartdnVec1_TO_PartdnVec2, sub_dnVec1_TO_dnVec2_WithIvec, sub_dnVec1_TO_dnVec2_partial
+      PUBLIC :: sub_dnVec1_wTO_dnVec2
+
+      PUBLIC :: sub_dnVec1_wADDTO_dnVec2, sub_dnVec1_PLUS_dnVec2_TO_dnVec3, dnVec2_wPLUS_dnVec3_TO_dnVec1
+      PUBLIC :: sub_ZERO_TO_dnVec, test_ZERO_OF_dnVec
+
+      PUBLIC :: sub_dot_product_dnVec1_dnVec2_TO_dnS, Sub_crossproduct_dnVec1_dnVec2_TO_dnVec3
+      PUBLIC :: dnVec2_O_dnVec1_TO_dnVec3
+      PUBLIC :: sub_dnVec1_PROD_dnS2_TO_dnVec3
 
       CONTAINS
 !
@@ -376,6 +393,8 @@
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE sub_dnVec_TO_dnS(dnVec,dnS,iVec,nderiv)
+      use mod_dnS, only: type_dns, alloc_dns, check_alloc_dns, write_dns
+
         TYPE (Type_dnVec) :: dnVec
         TYPE (Type_dnS)   :: dnS
         integer :: iVec
@@ -430,6 +449,8 @@
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE sub_dnS_TO_dnVec(dnS,dnVec,iVec,nderiv)
+      use mod_dnS, only: type_dns, check_alloc_dns, write_dns
+
         TYPE (Type_dnVec) :: dnVec
         TYPE (Type_dnS)   :: dnS
         integer :: iVec
@@ -479,6 +500,8 @@
       END SUBROUTINE sub_dnS_TO_dnVec
 
       SUBROUTINE sub_dot_product_dnVec1_dnVec2_TO_dnS(dnVec1,dnVec2,dnS,nderiv)
+      use mod_dnS, only: type_dns, alloc_dns, check_alloc_dns, write_dns
+
         TYPE (Type_dnVec) :: dnVec1,dnVec2
         TYPE (Type_dnS)   :: dnS
         integer, optional :: nderiv
@@ -1445,7 +1468,8 @@
       END SUBROUTINE test_ZERO_OF_dnVec
 
       SUBROUTINE sub_dnVec1_PROD_dnS2_TO_dnVec3(dnVec1,dnS2,dnVec3)
-      USE mod_system
+      use mod_dnS, only: type_dns, check_alloc_dns, write_dns
+      !USE mod_system
       IMPLICIT NONE
 
       TYPE (Type_dnVec), intent(in)    :: dnVec1
@@ -1564,7 +1588,8 @@
 !       then normalization of d0v
 !================================================================
       SUBROUTINE sub_Normalize_dnVec(dnVec)
-      USE mod_system
+      use mod_dnS, only: type_dns, alloc_dns, check_alloc_dns, write_dns, sub_dns1_to_dntr2, dealloc_dns
+      !USE mod_system
       IMPLICIT NONE
 
       TYPE (Type_dnVec), intent(inout) :: dnVec
@@ -1747,5 +1772,5 @@
 
       END SUBROUTINE dnVec2_O_dnVec1_TO_dnVec3
 
-      END MODULE mod_dnV
+END MODULE mod_dnV
 

@@ -20,14 +20,14 @@
 !
 !===========================================================================
 !===========================================================================
-!MODULE mod_dnDetGG_dnDetg
-!  USE mod_system
-!  IMPLICIT NONE
-!
-!  PRIVATE
-!  PUBLIC :: sub3_dndetGG,sub3_dndetA
-!
-!  CONTAINS
+MODULE mod_dnDetGG_dnDetg
+  USE mod_system
+  IMPLICIT NONE
+
+  PRIVATE
+  PUBLIC :: sub3_dndetGG,sub3_dndetA
+
+  CONTAINS
 
 !=====================================================================
 !
@@ -705,4 +705,4 @@
 !      write(out_unitp,*) d
 
        end subroutine sub_detA
-!END MODULE mod_dnDetGG_dnDetg
+END MODULE mod_dnDetGG_dnDetg

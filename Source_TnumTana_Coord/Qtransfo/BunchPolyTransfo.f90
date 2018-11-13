@@ -21,12 +21,17 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_BunchPolyTransfo
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
-      USE mod_Lib_QTransfo
+      use mod_system, only: rkind, name_len, alloc_array, dealloc_array,     &
+                            out_unitp, zero, one, flush_perso, czero,        &
+                            write_error_not_null, sub_test_tab_ub,           &
+                            sub_test_tab_lb, error_memo_allo,                &
+                            write_error_null, in_unitp, print_level,         &
+                            string_to_string, string_uppercase_to_lowercase, &
+                            int_to_char, cone, pi, dihedral_range,           &
+                            alloc_nparray, make_nameq, write_mat, dealloc_nparray
+      use mod_dnSVM ! only all
+      use mod_constant,     only: table_atom, get_mass_tnum
+      use mod_Lib_QTransfo, only: write_dnx, sub3_dnvec_toxf, func_ic
       USE mod_Tana_OpEl
       USE mod_Tana_Op1D
       USE mod_Tana_OpnD
@@ -34,8 +39,7 @@
       USE mod_Tana_VecSumOpnD
       IMPLICIT NONE
 
-      PRIVATE :: get_Mass,get_unit_vector_Ei
-      PUBLIC
+      PRIVATE
 
       !!@description: TODO
       !!@param: TODO
@@ -140,6 +144,15 @@
       INTERFACE dealloc_array
         MODULE PROCEDURE dealloc_array_OF_BFTransfodim1
       END INTERFACE
+
+      PUBLIC :: Type_BunchTransfo, alloc_BunchTransfo, dealloc_BunchTransfo
+      PUBLIC :: Read_BunchTransfo, Read2_BunchTransfo
+      PUBLIC :: M_Tana_FROM_Bunch2Transfo, Write_BunchTransfo, calc_BunchTransfo
+      PUBLIC :: BunchTransfo1TOBunchTransfo2
+
+      PUBLIC :: Type_BFTransfo, RecRead_BFTransfo, RecWrite_BFTransfo
+      PUBLIC :: dealloc_BFTransfo, alloc_array, dealloc_array
+      PUBLIC :: calc_PolyTransfo, calc_PolyTransfo_outTOin, Rec_BFTransfo1TOBFTransfo2
 
 
       CONTAINS
@@ -2786,7 +2799,7 @@
 
       END SUBROUTINE Read_BunchTransfo
 
-      SUBROUTINE Read_Bunch2Transfo(BunchTransfo,mendeleev,with_vect)
+      SUBROUTINE Read2_BunchTransfo(BunchTransfo,mendeleev,with_vect)
 
       TYPE (Type_BunchTransfo),intent(inout) :: BunchTransfo
       TYPE (table_atom), intent(in)          :: mendeleev
@@ -2812,7 +2825,7 @@
 
       !--------------------------------------------------------
       integer :: err_io
-      character (len=*), parameter :: name_sub = "Read_Bunch2Transfo"
+      character (len=*), parameter :: name_sub = "Read2_BunchTransfo"
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
       !--------------------------------------------------------
@@ -3004,7 +3017,7 @@
       !--------------------------------------------------------
       IF (debug) write(out_unitp,*) 'END ',name_sub
       !--------------------------------------------------------
-      END SUBROUTINE Read_Bunch2Transfo
+      END SUBROUTINE Read2_BunchTransfo
 
       SUBROUTINE Add_DummyG(Mat_At_TO_centers,COM,iG,masses_OF_At,MtotG,tab_At_TO_G)
 

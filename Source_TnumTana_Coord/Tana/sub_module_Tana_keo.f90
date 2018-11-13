@@ -21,11 +21,13 @@
 !===========================================================================
 !===========================================================================
 
-   module mod_Tana_keo
-   !!@description: 
-   USE mod_system
-   USE mod_string
-   USE mod_Tnum
+MODULE mod_Tana_keo
+   use mod_system, only: rkind, name_len, out_unitp, flush_perso,       &
+                         alloc_array, zero, czero, file_open2,          &
+                         dealloc_array, name_longlen, write_int_in_char,&
+                         onetenth
+   use mod_Tnum,   only: zmatrix, tnum, write_mole
+   use mod_ActiveTransfo,  only : qact_to_qdyn_from_activetransfo
    USE mod_paramQ
    USE mod_Tana_PiEulerRot
    USE mod_Tana_sum_opnd
@@ -35,11 +37,14 @@
 
    IMPLICIT NONE
 
-   contains 
+   PRIVATE
+   PUBLIC :: compute_analytical_KEO
+
+   CONTAINS
 
    SUBROUTINE compute_analytical_KEO(TWOxKEO,mole, para_Tnum, Qact)
-
-      USE mod_File
+      USE mod_Tana_OpEl , ONLY : opel, assignment(=)
+      USE mod_Tana_op,    ONLY : add_Vextr_new, Get_F2_F1_FROM_TWOxKEO
       IMPLICIT NONE
 
       TYPE(sum_opnd),        intent(inout)        :: TWOxKEO
@@ -272,7 +277,7 @@
           CALL  Get_F2_F1_FROM_TWOxKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,&
                                      TWOxKEO,para_Tnum%ExpandTWOxKEO,       &
                                      tabQact_Qel,mole%nb_act,mole%nb_var,para_Tnum%nrho)
-          IF (debug) CALL write_sum_opnd(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
+          IF (debug) CALL write_op(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
           write(out_unitp,*) '================================================='
         ELSE
           !!!! The expansion MUST be done after removing inactive terms.
@@ -282,7 +287,7 @@
           CALL flush_perso(out_unitp)
           CALL Expand_Sum_OpnD_TO_Sum_OpnD(TWOxKEO,para_Tnum%ExpandTWOxKEO)
           write(out_unitp,*) 'number of terms after the expansion=',size(para_Tnum%ExpandTWOxKEO%sum_prod_op1d)
-          IF (debug) CALL write_sum_opnd(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
+          IF (debug) CALL write_op(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
           write(out_unitp,*) '================================================='
         END IF
       END IF
@@ -367,8 +372,8 @@
 
    END SUBROUTINE compute_analytical_KEO
    SUBROUTINE compute_analytical_KEO_old(TWOxKEO,mole, para_Tnum, Qact)
-
-      USE mod_File
+      USE mod_Tana_OpEl , ONLY : opel, assignment(=)
+      USE mod_Tana_op,    ONLY : add_Vextr_new, Get_F2_F1_FROM_TWOxKEO
       IMPLICIT NONE
 
       TYPE(sum_opnd),        intent(inout)        :: TWOxKEO
@@ -580,7 +585,7 @@
       CALL  Get_F2_F1_FROM_TWOxKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,&
                                    TWOxKEO,para_Tnum%ExpandTWOxKEO,       &
                                    tabQact_Qel,mole%nb_act,mole%nb_var,para_Tnum%nrho)
-      IF (debug) CALL write_sum_opnd(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
+      IF (debug) CALL write_op(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
       write(out_unitp,*) '================================================='
       ELSE
       !!!! The expansion MUST be done after removing inactive terms.
@@ -590,7 +595,7 @@
       CALL flush_perso(out_unitp)
       CALL Expand_Sum_OpnD_TO_Sum_OpnD(TWOxKEO,para_Tnum%ExpandTWOxKEO)
       write(out_unitp,*) 'number of terms after the expansion=',size(para_Tnum%ExpandTWOxKEO%sum_prod_op1d)
-      IF (debug) CALL write_sum_opnd(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
+      IF (debug) CALL write_op(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
       write(out_unitp,*) '================================================='
       END IF
 
@@ -786,6 +791,7 @@
    !!                          information will be saved (type: system)
    recursive subroutine extract_qval_F_system(F_system, tab_Q, tab_Qactiv, &
                                               tab_Qname, tab_Qel, i_var, with_Li)
+     USE mod_Tana_OpEl , ONLY : opel, assignment(=)
      USE mod_BunchPolyTransfo, only : Type_BFTransfo
 
      type(Type_BFTransfo),            intent(inout)      :: F_system
@@ -819,7 +825,7 @@
      ! if(F_system%nb_vect > 0) then
      !   if(F_system%tab_BFTransfo(1)%frame)  nb_var = nb_var + 1
      ! end if
-     ! if(compare_la(F_system%euler, (/.false., .false., .false./))) then
+     ! if(compare_tab(F_system%euler, (/.false., .false., .false./))) then
      if( F_system%nb_vect >1) then
        if(F_system%tab_BFTransfo(1)%frame) then
          do i=2, F_system%nb_vect
@@ -1013,8 +1019,7 @@
        CALL dealloc_array(M_mass_out,'M_mass_out',routine_name)
      end if
      CALL alloc_array(M_mass_out,shape(M_mass_in),'M_mass_out',routine_name)
-    
-    
+
      do i = 1, size(M_mass_in(:,1))
      do j = 1, size(M_mass_in(1,:))
        if(abs(M_mass_in(i,j)) > ONETENTH**13) then
@@ -1027,4 +1032,4 @@
      
    end subroutine transform_M_mass_to_M_mass_opnd
 
-end module  mod_Tana_keo
+END MODULE mod_Tana_keo

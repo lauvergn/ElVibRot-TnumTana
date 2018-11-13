@@ -6,13 +6,13 @@
 #F90 = pgf90
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
 #
 # force the default integer (without kind) during the compillation. default 4: , INT=8 (for kind=8)
-INT = 8
+INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
 ARPACK = 1
@@ -125,8 +125,9 @@ endif
 #=================================================================================
 #=================================================================================
 # gfortran (osx and linux)
+#ifeq ($(F90),gfortran)
 #=================================================================================
- ifeq ($(F90),gfortran)
+ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))  
    # for c++ preprocessing
    CPP    = -cpp
 
@@ -324,16 +325,16 @@ DIROpt     = $(DirEVR)/sub_Optimization
 
 
 #============================================================================
-#Libs
+#Libs, Minimize Only list: OK
+# USE mod_system
 Obj_Primlib  = \
   $(OBJ)/sub_module_NumParameters.o \
   $(OBJ)/sub_module_memory.o $(OBJ)/sub_module_string.o $(OBJ)/sub_module_RealWithUnit.o \
-  $(OBJ)/sub_module_RW_MatVec.o  $(OBJ)/sub_module_FracInteger.o \
   $(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_memory_NotPointer.o \
-  $(OBJ)/sub_module_system.o $(OBJ)/sub_module_file.o
+  $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/sub_module_FracInteger.o \
+  $(OBJ)/sub_module_system.o
 
 Obj_math =\
-   $(OBJ)/Integer_function.o \
    $(OBJ)/sub_diago.o $(OBJ)/sub_trans_mat.o $(OBJ)/sub_integration.o \
    $(OBJ)/sub_polyortho.o $(OBJ)/sub_function.o $(OBJ)/sub_derive.o $(OBJ)/sub_pert.o \
    $(OBJ)/sub_fft.o \
@@ -341,12 +342,18 @@ Obj_math =\
 
 Obj_io = $(OBJ)/sub_io.o
 
+# dnSVM, Minimize Only list: OK
+# USE mod_dnSVM
 Obj_dnSVM = \
   $(OBJ)/sub_module_dnS.o $(OBJ)/sub_module_VecOFdnS.o $(OBJ)/sub_module_MatOFdnS.o \
-  $(OBJ)/sub_module_dnV.o $(OBJ)/sub_module_dnM.o $(OBJ)/sub_module_dnSVM.o
+  $(OBJ)/sub_module_dnV.o $(OBJ)/sub_module_dnM.o $(OBJ)/sub_module_IntVM.o \
+  $(OBJ)/sub_module_dnSVM.o
 
+# nDindex, Minimize Only list: OK
+# USE mod_mod_nDindex and mod_module_DInd
 Obj_nDindex  = $(OBJ)/sub_module_DInd.o $(OBJ)/sub_module_nDindex.o
 
+# nDfit, Minimize Only list: OK
 Obj_nDfit    = $(OBJ)/sub_module_nDfit.o
 
 Obj_lib  = $(Obj_Primlib) $(Obj_math) $(Obj_io) $(Obj_dnSVM) $(Obj_nDindex) $(Obj_nDfit)
@@ -360,18 +367,24 @@ Obj_Smolyak_test = \
 #============================================================================
 
 #============================================================================
-#Physical constant
+#Physical constant, Minimize Only list: OK
+#USE mod_constant
 Obj_PhyCte = $(OBJ)/sub_module_Atom.o $(OBJ)/sub_module_constant.o
 #============================================================================
 
 
 #============================================================================
 #KEO objects
+#
+#TanaPrim objects, Minimize Only list: OK
 Obj_TanaPrim = $(OBJ)/sub_module_Tana_OpEl.o \
   $(OBJ)/sub_module_Tana_Op1D.o $(OBJ)/sub_module_Tana_OpnD.o \
   $(OBJ)/sub_module_Tana_SumOpnD.o $(OBJ)/sub_module_Tana_VecSumOpnD.o \
   $(OBJ)/sub_module_Tana_PiEulerRot.o
 
+#Qtransfo obj, Minimize Only list: Lib_QTransfo, Active, BunchPoly, Cartesian, Flexible, Gene
+#                                  HyperSphe, OneD, ThreeD, Rot2Coord, LinearNM, RectilinearNM
+#                                  RPH, Qtransfo
 Obj_Coord = \
   $(OBJ)/Lib_QTransfo.o \
   $(OBJ)/BunchPolyTransfo.o $(OBJ)/ZmatTransfo.o $(OBJ)/QTOXanaTransfo.o $(OBJ)/CartesianTransfo.o \
@@ -381,23 +394,27 @@ Obj_Coord = \
   $(OBJ)/RPHTransfo.o $(OBJ)/sub_freq.o \
   $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o 
 
+#Minimize Only list: OK
 Obj_Tnum = \
   $(OBJ)/sub_module_Tnum.o $(OBJ)/sub_module_paramQ.o \
   $(OBJ)/calc_f2_f1Q.o $(OBJ)/Sub_X_TO_Q_ana.o $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_dnRho.o \
   $(OBJ)/calc_dng_dnGG.o $(OBJ)/sub_export_KEO.o
 
+#Tana objects, Minimize Only list: OK
 Obj_Tana = \
   $(OBJ)/sub_module_Tana_vec_operations.o $(OBJ)/sub_module_Tana_op.o \
   $(OBJ)/sub_module_Tana_Export_KEO.o \
   $(OBJ)/sub_module_Tana_NumKEO.o $(OBJ)/sub_module_Tana_keo.o
 
-Obj_TnumTana = $(OBJ)/sub_module_Tana_Tnum.o $(OBJ)/calc_f2_f1Q_num.o
+#Minimize Only list: OK
+Obj_TnumTana = $(OBJ)/calc_f2_f1Q_num.o $(OBJ)/sub_module_Tana_Tnum.o
 
+#Minimize Only list: OK
 Obj_Coord_KEO = $(Obj_TanaPrim) $(Obj_Coord) $(Obj_Tnum) $(Obj_Tana) $(Obj_TnumTana) $(OBJ)/sub_module_Coord_KEO.o
 #============================================================================
 
 #============================================================================
-#Primitive Operators
+#Primitive Operators, Minimize Only list: OK
 Obj_PrimOperator = \
    $(OBJ)/sub_module_SimpleOp.o $(OBJ)/sub_module_OnTheFly_def.o $(OBJ)/sub_PrimOp_def.o \
    $(OBJ)/sub_onthefly.o $(OBJ)/sub_PrimOp.o \
@@ -417,6 +434,8 @@ Obj_KEO_PrimOp= \
 Obj_main   =  $(OBJ)/vib.o $(OBJ)/versionEVR-T.o $(OBJ)/cart.o \
   $(OBJ)/sub_main_Optimization.o $(OBJ)/sub_main_nDfit.o
 
+#Minimize Only list: sub_module_RotBasis, sub_module_basis_Grid_Param, sub_SymAbelian
+#... sub_module_Basis_LTO_n, 
 Obj_module =  \
  $(OBJ)/sub_module_RotBasis.o $(OBJ)/sub_module_basis_Grid_Param.o $(OBJ)/sub_module_Basis_LTO_n.o \
  $(OBJ)/sub_SymAbelian.o \
@@ -458,7 +477,7 @@ Obj_inactive = \
  $(OBJ)/sub_changement_de_var.o $(OBJ)/sub_ana_HS.o
 
 Obj_active = \
- $(OBJ)/sub_ini_act_harm.o $(OBJ)/sub_lib_act.o \
+ $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_harm.o $(OBJ)/sub_lib_act.o \
  $(OBJ)/sub_diago_H.o
 
 Obj_Operator = \
@@ -467,7 +486,7 @@ Obj_Operator = \
 
 Obj_analysis = \
  $(OBJ)/sub_module_analysis.o $(OBJ)/sub_analyse.o \
- $(OBJ)/sub_NLO.o $(OBJ)/sub_VibRot.o $(OBJ)/sub_intensity.o
+ $(OBJ)/sub_NLO.o $(OBJ)/sub_CRP.o $(OBJ)/sub_VibRot.o $(OBJ)/sub_intensity.o
 
 
 Obj_Optimization = \
@@ -548,6 +567,7 @@ obj:
 #
 clean: 
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib2
+	rm -rf vib.dSYM
 	@cd Examples/exa_hcn-dist ; ./clean
 	@cd Examples/exa_direct-dist ; ./clean
 	@cd Examples/exa_TnumTana_Coord-dist ; ./clean
@@ -611,6 +631,10 @@ $(OBJ)/sub_module_memory_Pointer.o:$(DirSys)/sub_module_memory_Pointer.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_memory_Pointer.f90
 $(OBJ)/sub_module_memory_NotPointer.o:$(DirSys)/sub_module_memory_NotPointer.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_memory_NotPointer.f90
+$(OBJ)/sub_module_file.o:$(DirSys)/sub_module_file.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_file.f90
+$(OBJ)/sub_module_string.o:$(DirSys)/sub_module_string.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_string.f90
 $(OBJ)/sub_module_RW_MatVec.o:$(DirSys)/sub_module_RW_MatVec.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_RW_MatVec.f90
 $(OBJ)/sub_module_system.o:$(DirSys)/sub_module_system.f90
@@ -621,11 +645,6 @@ $(OBJ)/sub_module_DInd.o:$(DirnDind)/sub_module_DInd.f90
 $(OBJ)/sub_module_nDindex.o:$(DirnDind)/sub_module_nDindex.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirnDind)/sub_module_nDindex.f90
 ###
-$(OBJ)/sub_module_file.o:$(DirMod)/sub_module_file.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMod)/sub_module_file.f90
-$(OBJ)/sub_module_string.o:$(DirMod)/sub_module_string.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMod)/sub_module_string.f90
-#
 $(OBJ)/sub_module_dnS.o:$(DirdnSVM)/sub_module_dnS.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnS.f90
 $(OBJ)/sub_module_VecOFdnS.o:$(DirdnSVM)/sub_module_VecOFdnS.f90
@@ -636,6 +655,8 @@ $(OBJ)/sub_module_dnV.o:$(DirdnSVM)/sub_module_dnV.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnV.f90
 $(OBJ)/sub_module_dnM.o:$(DirdnSVM)/sub_module_dnM.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnM.f90
+$(OBJ)/sub_module_IntVM.o:$(DirdnSVM)/sub_module_IntVM.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_IntVM.f90
 $(OBJ)/sub_module_dnSVM.o:$(DirdnSVM)/sub_module_dnSVM.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnSVM.f90
 #
@@ -897,6 +918,8 @@ $(OBJ)/sub_ana_HS.o:$(DIR2)/sub_ana_HS.f90
 # sub_active
 $(OBJ)/sub_ini_act_harm.o:$(DIR5)/sub_ini_act_harm.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR5)/sub_ini_act_harm.f90
+$(OBJ)/sub_Grid_SG4.o:$(DIR5)/sub_Grid_SG4.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR5)/sub_Grid_SG4.f90
 $(OBJ)/sub_lib_act.o:$(DIR5)/sub_lib_act.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR5)/sub_lib_act.f90
 $(OBJ)/sub_diago_H.o:$(DIR5)/sub_diago_H.f90
@@ -920,6 +943,8 @@ $(OBJ)/sub_analyse.o:$(DIRana)/sub_analyse.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_analyse.f90
 $(OBJ)/sub_NLO.o:$(DIRana)/sub_NLO.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_NLO.f90
+$(OBJ)/sub_CRP.o:$(DIRana)/sub_CRP.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_CRP.f90
 $(OBJ)/sub_VibRot.o:$(DIRana)/sub_VibRot.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_VibRot.f90
 $(OBJ)/sub_intensity.o:$(DIRana)/sub_intensity.f90
@@ -999,8 +1024,6 @@ $(OBJ)/read_para.o:$(DirPot)/read_para.f90
 #===================================================================================
 $(OBJ)/sub_diago.o:$(DirMath)/sub_diago.f90
 	cd $(OBJ) ; $(F90_FLAGS)  $(CPP) $(CPPSHELL_DIAGO)  -c $(DirMath)/sub_diago.f90
-$(OBJ)/Integer_function.o:$(DirMath)/Integer_function.f90
-	cd $(OBJ) ; $(F90_FLAGS)    -c $(DirMath)/Integer_function.f90
 $(OBJ)/sub_trans_mat.o:$(DirMath)/sub_trans_mat.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMath)/sub_trans_mat.f90
 $(OBJ)/sub_integration.o:$(DirMath)/sub_integration.f90

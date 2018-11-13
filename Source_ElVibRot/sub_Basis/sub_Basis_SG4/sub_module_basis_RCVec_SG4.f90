@@ -30,6 +30,8 @@ MODULE mod_basis_RCVec_SGType4
 USE mod_system
 IMPLICIT NONE
 
+PRIVATE
+
 TYPE TypeRVec
   real(kind=Rkind), allocatable :: V(:)
 END TYPE TypeRVec
@@ -41,10 +43,14 @@ INTERFACE assignment(=)
   module procedure TypeRVec2_TO_TypeRVec1,tabR2_TO_TypeRVec1
 END INTERFACE
 
+PUBLIC  TypeRVec, alloc_TypeRVec, dealloc_TypeRVec, Write_TypeRVec, &
+        TypeRVec2_TO_TypeRVec1, tabR2_TO_TypeRVec1,                 &
+        sub_ReadRVec, sub_WriteRVec
 
-!PRIVATE Write_TypeRVec,TypeRVec2_TO_TypeRVec1,tabR2_TO_TypeRVec1
+PUBLIC  TypeCVec, alloc_TypeCVec, dealloc_TypeCVec, Write_TypeCVec, &
+        TypeCVec2_TO_TypeCVec1, tabC2_TO_TypeCVec1
+
 CONTAINS
-
 
 SUBROUTINE alloc_TypeRVec(Rvec,nvec)
 USE mod_system
@@ -120,6 +126,109 @@ IMPLICIT NONE
 
 END SUBROUTINE tabR2_TO_TypeRVec1
 
+SUBROUTINE sub_ReadRVec(RVec,FileName_RVec,err_sub)
+  USE mod_system
+  IMPLICIT NONE
+
+  TYPE (TypeRVec),                 intent(inout)           :: RVec
+  character (len=Line_len),        intent(in)              :: FileName_RVec
+  integer,                         intent(inout), optional :: err_sub
+
+  character (len=*),               parameter              :: Name_sub='sub_ReadRVec'
+
+
+  integer :: nio,error,err_file,nvec
+
+  error = 0
+  nvec  = 0
+
+  CALL file_open2(FileName_RVec,nio,lformatted=.FALSE.,old=.TRUE.,err_file=err_file)
+  IF (err_file /= 0) THEN
+    write(out_unitp,*) ' ERROR in ',Name_sub
+    write(out_unitp,*) '   Problem with the file associated to RVec'
+    write(out_unitp,*) '   err_file: ',err_file
+    error = 2
+  ELSE
+    read(nio,iostat=err_file) nvec
+    IF (err_file /= 0 .OR. nvec < 1) THEN
+      write(out_unitp,*) ' ERROR in ',Name_sub
+      write(out_unitp,*) '   Error while reading nvec',nvec
+      error = 3
+      nvec = 0
+    END IF
+  END IF
+
+  IF (error == 0) THEN
+    CALL alloc_TypeRVec(Rvec,nvec)
+    read(nio,iostat=err_file) Rvec%V
+    IF (err_file /= 0) THEN
+      write(out_unitp,*) ' ERROR in ',Name_sub
+      write(out_unitp,*) '   Error while reading Rvec'
+      error = 4
+    END IF
+  END IF
+
+  close(nio,iostat=err_file)
+
+  IF (present(err_sub)) THEN
+    err_sub = error
+  ELSE
+    STOP ' in sub_ReadRVec'
+  END IF
+
+END SUBROUTINE sub_ReadRVec
+SUBROUTINE sub_WriteRVec(RVec,FileName_RVec,err_sub)
+  USE mod_system
+  IMPLICIT NONE
+
+  TYPE (TypeRVec),                 intent(in)              :: RVec
+  character (len=Line_len),        intent(in)              :: FileName_RVec
+  integer,                         intent(inout), optional :: err_sub
+
+  character (len=*),               parameter              :: Name_sub='sub_WriteRVec'
+
+
+  integer :: nio,error,err_file,nvec
+
+  error = 0
+  nvec  = size(Rvec%V)
+
+  IF (nvec < 1) THEN
+    error = 1
+  ELSE
+    CALL file_open2(FileName_RVec,nio,lformatted=.FALSE.,old=.FALSE.,err_file=err_file)
+    IF (err_file /= 0) THEN
+      write(out_unitp,*) ' ERROR in ',Name_sub
+      write(out_unitp,*) '   Problem with the file associated to RVec'
+      write(out_unitp,*) '   err_file: ',err_file
+      error = 2
+    ELSE
+      write(nio,iostat=err_file) nvec
+      IF (err_file /= 0 .OR. nvec < 1) THEN
+        write(out_unitp,*) ' ERROR in ',Name_sub
+        write(out_unitp,*) '   Error while writing nvec',nvec
+        error = 3
+        nvec = 0
+      ELSE
+        write(nio,iostat=err_file) Rvec%V
+        IF (err_file /= 0) THEN
+          write(out_unitp,*) ' ERROR in ',Name_sub
+          write(out_unitp,*) '   Error while reading Rvec'
+          error = 4
+        END IF
+      END IF
+    END IF
+  END IF
+
+  close(nio,iostat=err_file)
+
+  IF (present(err_sub)) THEN
+    err_sub = error
+  ELSE
+    STOP ' in sub_WriteRVec'
+  END IF
+
+END SUBROUTINE sub_WriteRVec
 SUBROUTINE alloc_TypeCVec(vec,nvec)
 USE mod_system
 IMPLICIT NONE

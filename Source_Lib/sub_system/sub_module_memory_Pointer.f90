@@ -20,11 +20,10 @@
 !
 !===========================================================================
 !===========================================================================
-      MODULE mod_memory_pointer
-      USE mod_NumParameters
-      USE mod_RW_MatVec
-      USE mod_memory
-      !$ USE omp_lib
+MODULE mod_memory_pointer
+      USE mod_NumParameters, only : Rkind, ILkind
+      use mod_memory, only: write_error_not_null, sub_test_tab_ub, sub_test_tab_lb, &
+                            error_memo_allo, write_error_null
       IMPLICIT NONE
 
       PRIVATE
@@ -1212,5 +1211,5 @@
 
       END SUBROUTINE dealloc_array_OF_Cdim5
 
-      END MODULE mod_memory_pointer
+END MODULE mod_memory_pointer
 

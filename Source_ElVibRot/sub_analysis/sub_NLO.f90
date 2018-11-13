@@ -33,10 +33,9 @@
       SUBROUTINE sub_NLO(para_Dip,print_Op,para_H,nb_ana,para_intensity)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_basis
       USE mod_Op
-      USE mod_constant
       USE mod_analysis
       IMPLICIT NONE
 

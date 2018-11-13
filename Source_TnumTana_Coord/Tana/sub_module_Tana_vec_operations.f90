@@ -22,19 +22,19 @@
 !===========================================================================
 
    !Description:
-   MODULE mod_Tana_vec_operations
-   USE mod_Tnum
-   USE mod_Tana_sum_opnd
-   USE mod_BunchPolyTransfo
+MODULE mod_Tana_vec_operations
+   use mod_system, only: czero, compare_tab, out_unitp, alloc_array,    &
+                         cone, dealloc_array
+   USE mod_Tana_OpEl     ! all
+   USE mod_Tana_OpnD     ! all
+   USE mod_Tana_sum_opnd ! all
+   USE mod_BunchPolyTransfo , only : Type_BFtransfo
    IMPLICIT NONE
-   public :: V1_scalar_V2_in_F_sum_nd, V1_cross_V2_in_Vres,      &
-             V1_plus_V2_in_Vres, M_opnd_times_V_in_Vres,         &
-             V_times_M_opnd_in_Vres, V_times_F_sum_nd_in_Vres,   &
-             F_sum_nd_times_V_in_Vres, Li_scalar_Li_from_Eq75,   &
-             Jdag_scalar_J_from_Eq122, Jdag_scalar_J_from_Eq171, &
-             M1_times_M2_in_Mres, Jdag_scalarJ_subsystem
-   private
 
+   PRIVATE
+
+   PUBLIC :: Jdag_scalarJ_subsystem, Li_scalar_Li_from_Eq75,     &
+             Jdag_scalar_J_from_Eq122, Jdag_scalar_J_from_Eq171
 
    CONTAINS 
 
@@ -44,6 +44,7 @@
    !!               the sub system
    !! @param:       F_system   The data structure of the subsystem
    SUBROUTINE Jdag_scalarJ_subsystem(F_system, Jdag_J)
+   USE mod_Tana_VecSumOpnD
      type(Type_BFtransfo),         intent(in)      :: F_system
      type(sum_opnd),               intent(inout)   :: Jdag_J
 
@@ -66,7 +67,7 @@
          ! Here both vectors (i,j) must defined the z-axis of a frame.
 
          IF (i==j) THEN
-           IF (compare_la(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .true./))) THEN
+           IF (compare_tab(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .true./))) THEN
 
              falpha = F_system%tab_BFTransfo(i)%QEuler(1)
              fbeta  = F_system%tab_BFTransfo(i)%QEuler(2)
@@ -74,7 +75,7 @@
 
              CALL Jdag_scalar_J_from_Eq122(falpha,fbeta,fgamma, JJ = JJ)
 
-           ELSE IF (compare_la(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .false./))) THEN
+           ELSE IF (compare_tab(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .false./))) THEN
 
              falpha = F_system%tab_BFTransfo(i)%QEuler(1)
              fbeta  = F_system%tab_BFTransfo(i)%QEuler(2)
@@ -82,7 +83,7 @@
              call Li_scalar_Li_from_Eq75(fbeta,falpha,LiLi = JJ) ! the order is different
              ! because we are using a subroutine made for theta, phi
 
-           ELSE IF (compare_la(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .true./))) THEN
+           ELSE IF (compare_tab(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .true./))) THEN
 
              fbeta  = F_system%tab_BFTransfo(i)%QEuler(2)
              fgamma = F_system%tab_BFTransfo(i)%QEuler(3)
@@ -93,7 +94,7 @@
 
              CALL delete_op(Ja_sum_subsyst)
 
-           ELSE IF (compare_la(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .false./))) THEN
+           ELSE IF (compare_tab(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .false./))) THEN
              CALL V1_scalar_V2_in_F_sum_nd(F_system%tab_BFTransfo(i)%Jdag, &
                                            F_system%tab_BFTransfo(i)%J, JJ)
            END IF
@@ -123,6 +124,7 @@
    !! @param:       fgamma       an elementary op  which contains the needed
    !!                          information on the \gamma coordinate
    SUBROUTINE Jdag_scalar_J_from_Eq171(F1_sum, fbeta, fgamma, JJ)
+   USE mod_Tana_VecSumOpnD
      type(sum_opnd),          intent(in)            :: F1_sum
      type(opel),              intent(in)            :: fbeta ! beta or ubeta
      type(opel),              intent(in)            :: fgamma ! gamma
@@ -214,6 +216,8 @@
    !! @param:       fgamma     an elementary op  which contains the needed
    !!                          information on the \gamma coordinate
    SUBROUTINE Jdag_scalar_J_from_Eq122(falpha, fbeta, fgamma, JJ)
+   USE mod_Tana_VecSumOpnD
+
      type(opel),              intent(in)            :: falpha
      type(opel),              intent(in)            :: fbeta
      type(opel),              intent(in)            :: fgamma
@@ -306,6 +310,8 @@
    !!                          information on the phi coordinate (or alpha)
    !! @param:       LiLi       operator which contains <Li I Li >.
    SUBROUTINE Li_scalar_Li_from_Eq75(theta, phi, LiLi)
+   USE mod_Tana_VecSumOpnD
+
      type(opel),              intent(in)            :: theta ! theta or beta (or utheta, ubeta)
      type(opel),              intent(in)            :: phi
      type(sum_opnd),          intent(inout)         :: LiLi
@@ -381,4 +387,4 @@
 
    END SUBROUTINE Li_scalar_Li_from_Eq75
 
-   END MODULE mod_Tana_vec_operations
+END MODULE mod_Tana_vec_operations

@@ -21,16 +21,21 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_MatOFdnS
-      USE mod_system
-      USE mod_dnS
-      USE mod_VecOFdnS
+      use mod_system, only: out_unitp, write_error_not_null, sub_test_tab_ub, &
+                            sub_test_tab_lb, error_memo_allo, write_error_null, &
+                            rkind, alloc_array, write_vecmat, dealloc_array, &
+                            flush_perso, one, zero, ten, onetenth, half, pi, two
+      use mod_dnS, only: type_dns, alloc_dns, dealloc_dns, check_alloc_dns, &
+                         write_dns, alloc_array, dealloc_array, sub_dns1_to_dns2, &
+                         sub_dns1_prod_dns2_to_dns3, sub_dns1_wplus_dns2_to_dns3, &
+                         sub_dns1_prod_w_to_dns2, sub_zero_to_dns, sub_dns1_to_dntr2, &
+                         sub_dns1_plus_dns2_to_dns3, sub_weight_dns
+      use mod_VecOFdnS, only: alloc_array, dealloc_array, normalization_of_vecofdns, &
+                              alloc_vecofdns, vec1ofdns_dotproduct_vec2ofdns_to_dns3, &
+                              dealloc_vecofdns, check_alloc_vecofdns
       IMPLICIT NONE
 
-      PRIVATE :: DIAG01_MatOFdnS
-      PRIVATE :: DIAG1_MatOFdnS
-      PRIVATE :: DIAG2_MatOFdnS
-      PRIVATE :: DIAG3_MatOFdnS
-      PRIVATE :: DIAG4_MatOFdnS
+      PRIVATE
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_dnSdim2
@@ -38,6 +43,21 @@
       INTERFACE dealloc_array
         MODULE PROCEDURE dealloc_array_OF_dnSdim2
       END INTERFACE
+
+      PUBLIC :: alloc_array, dealloc_array
+      PUBLIC :: alloc_MatOFdnS, dealloc_MatOFdnS, check_alloc_MatOFdnS, Write_MatOFdnS
+      PUBLIC :: sub_Mat1OFdnS_TO_Mat2OFdnS
+      PUBLIC :: DET_Mat3x3OFdnS_TO_dnS
+      PUBLIC :: TRANS_Mat1OFdnS_TO_Mat2OFdnS
+      PUBLIC :: DIAG_MatOFdnS
+      PUBLIC :: Mat1OFdnS_MUL_Mat2OFdnS_TO_Mat3OFdnS
+
+      PUBLIC :: Mat1OFdnS_wPLUS_Mat2OFdnS_TO_Mat3OFdnS
+      PUBLIC :: Mat1OFdnS_MUL_Vec2OFdnS_TO_Vec3OFdnS
+      PUBLIC :: MatOFdnS_TO_VecOFdnS
+      PUBLIC :: sub_ZERO_TO_MatOFdnS
+      PUBLIC :: sub_Weight_MatOFdnS
+      PUBLIC :: sub_Id_TO_MatOFdnS
 
       CONTAINS
 !

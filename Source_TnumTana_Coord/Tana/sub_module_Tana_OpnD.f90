@@ -22,28 +22,29 @@
 !===========================================================================
 
  module mod_Tana_OpnD
-   !! @description: This module defines the data structures. It contains also
-   !!               the some standard routine that initilize, 
-   !!               allocate and delete the data structure
- USE mod_system
- USE mod_Tana_OpEl
- USE mod_Tana_Op1D
+ use mod_system, only: write_error_null, out_unitp, sub_test_tab_ub,     &
+                       sub_test_tab_lb, error_memo_allo, dealloc_nparray,&
+                       alloc_nparray, rkind, cone, fracinteger,          &
+                       string_to_string, name_len, int_to_char,          &
+                       flush_perso, czero, zero
+ use mod_Tana_OpEl ! all
+ use mod_Tana_Op1D ! all
  IMPLICIT NONE
-! PRIVATE
+ PRIVATE
 
-        !-----------------------------------------------------------!
-        !                        OPND                               !
-        !-----------------------------------------------------------!
-        ! Product of 1d operators Type
-        !! @description: Definition of a type of a product 1d operators (nd_operator)
-        !!   like $ \hat{P}_{q_{k_1}} q_{k_2}^\alpha \cos^\alpha q_{k_2}, \,\,\,\, $
-        !!    $ \sin^\alpha q_{k_1}\hat{P}_{q_{k_3}}, \,\,\,\, $ $ \cdots $.
-        !!               This type is used for the analytical
-        !!               computation of the KEO
-        !! @param: prod_op1d        Array of 1d operators
-        TYPE opnd
+      !-----------------------------------------------------------!
+      !                        OPND                               !
+      !-----------------------------------------------------------!
+      ! Product of 1d operators Type
+      !! @description: Definition of a type of a product 1d operators (nd_operator)
+      !!   like $ \hat{P}_{q_{k_1}} q_{k_2}^\alpha \cos^\alpha q_{k_2}, \,\,\,\, $
+      !!    $ \sin^\alpha q_{k_1}\hat{P}_{q_{k_3}}, \,\,\,\, $ $ \cdots $.
+      !!               This type is used for the analytical
+      !!               computation of the KEO
+      !! @param: prod_op1d        Array of 1d operators
+      TYPE opnd
           type(op1d), allocatable     :: prod_op1d(:)
-        END TYPE opnd
+      END TYPE opnd
 
       INTERFACE alloc_NParray
         MODULE PROCEDURE alloc_NParray_OF_OpnDdim1
@@ -95,9 +96,6 @@
      MODULE PROCEDURE OpnD2_TO_OpnD1,Op1D2_TO_OpnD1,OpEl2_TO_OpnD1,R_TO_OpnD1,C_TO_OpnD1
   END INTERFACE
 
-   public  :: get_F1_times_F2_to_F_nd
-   private :: get_F1_1d_times_F2_1d_to_Fres_nd,get_F1_1d_times_F2_nd_to_Fres_nd, &
-                      get_F1_nd_times_F2_1d_to_Fres_nd, get_F1_nd_times_F2_nd_to_Fres_nd
    INTERFACE get_F1_times_F2_to_F_nd
      module procedure get_F1_1d_times_F2_1d_to_Fres_nd, get_F1_1d_times_F2_nd_to_Fres_nd, &
                       get_F1_nd_times_F2_1d_to_Fres_nd, get_F1_nd_times_F2_nd_to_Fres_nd
@@ -106,6 +104,21 @@
    INTERFACE operator (*)
       MODULE PROCEDURE F1_1d_times_F2_1d_TO_OpnD,F1_1d_times_F2_nd_TO_OpnD,F1_nd_times_F2_1d_TO_OpnD,F1_nd_times_F2_nd_TO_OpnD
    END INTERFACE
+
+   PUBLIC  :: opnd, allocate_op, delete_op, check_allocate_op, write_op, compare_op
+   PUBLIC  :: init_to_opzero, present_op_zero_in_F_nd, Set_coeff_OF_OpnD_TO_ONE, Simplify_OpnD
+   PUBLIC  :: alloc_NParray, dealloc_NParray, check_NParray
+   PUBLIC  :: get_F1_times_F2_to_F_nd, copy_F1_into_F2, assignment (=), operator (*)
+
+   PUBLIC  :: get_coeff_OF_OpnD, get_sin, get_cos, get_Pq, get_Pq_dag, get_Id
+   PUBLIC  :: get_Jac_OF_Q, get_rho_OF_Q, get_Q, get_Jx, get_Jy, get_Jz
+   PUBLIC  :: get_Lx, get_Ly, get_Lz, get_zero, get_cot
+
+   PUBLIC  :: Change_PQ_OF_OpnD_TO_Id_OF_OnD, Expand_OpnD_TO_SumOpnD
+   PUBLIC  :: Export_Latex_Opnd, Export_Midas_Opnd
+   PUBLIC  :: Export_MCTDH_Opnd, Export_VSCF_Opnd
+   PUBLIC  :: get_NumVal_OpnD, get_pq_OF_OpnD, get_pqJL_OF_OpnD, set_indexQ_OF_OpnD
+
 
 
   contains
@@ -246,7 +259,7 @@ subroutine check_allocate_opnd(F_nd)
    character (len=*), parameter :: routine_name="init_opzero_nd"
 
    call allocate_opnd(F_nd,1)
-   call init_opzero_op1d(F_nd%prod_op1d(1))
+   call init_to_opzero(F_nd%prod_op1d(1))
  end subroutine init_opzero_opnd
 
  FUNCTION get_Id(Q_El,coeff)
@@ -811,7 +824,7 @@ subroutine check_allocate_opnd(F_nd)
    ndim_op1d = size(F1_nd%prod_op1d)
    call allocate_op(F2_nd,ndim_op1d)
    do i = 1, ndim_op1d
-     call copy_F1_1d_into_F2_1d(F1_nd%prod_op1d(i), F2_nd%prod_op1d(i))
+     call copy_F1_into_F2(F1_nd%prod_op1d(i), F2_nd%prod_op1d(i))
    end do
  end subroutine copy_F1_nd_into_F2_nd
 
@@ -844,7 +857,7 @@ subroutine check_allocate_opnd(F_nd)
 
    call delete_op(F2_nd)
    call allocate_opnd(F2_nd,1)
-   call copy_F1_1d_into_F2_1d(F1_1d, F2_nd%prod_op1d(1))
+   call copy_F1_into_F2(F1_1d, F2_nd%prod_op1d(1))
  end subroutine copy_F1_1d_into_F2_nd
  subroutine Op1D2_TO_OpnD1(OpnD1,Op1D2)
 
@@ -872,7 +885,7 @@ subroutine check_allocate_opnd(F_nd)
 
    call delete_op(F2_nd)
    call allocate_opnd(F2_nd,1)
-   call copy_F1_el_into_F2_1d(F1_el, F2_nd%prod_op1d(1))
+   call copy_F1_into_F2(F1_el, F2_nd%prod_op1d(1))
  end subroutine copy_F1_el_into_F2_nd
 
  subroutine OpEl2_TO_OpnD1(OpnD1,OpEl2)

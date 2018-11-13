@@ -29,15 +29,12 @@
       MODULE mod_OpGrid
 
       USE mod_system
-      USE mod_file
-      USE mod_SimpleOp
       USE mod_basis_BtoG_GtoB_SGType4
       IMPLICIT NONE
 
        TYPE param_FileGrid
 
           logical                    :: Read_FileGrid      = .FALSE.   ! Read the grid from a file
-
 
           logical                    :: Save_FileGrid      = .TRUE.   ! Save the grid in a file
           logical                    :: Save_FileGrid_done = .FALSE.  ! T, if the grid is save in a file
@@ -46,6 +43,8 @@
           integer                    :: Type_FileGrid      = 0        ! 0 in normal SH_HADA file
                                                                       ! 1 unformatted sequential acces
                                                                       ! 2 unformatted direct acces
+                                                                      ! 4 unformatted sequential acces (for SG4)
+
           logical                    :: Keep_FileGrid      = .TRUE.   ! Keep the file
 
           logical                    :: Save_MemGrid       = .FALSE.  ! Save the grid in memory
@@ -180,7 +179,7 @@
       IF (present(Formatted_FileGrid)) THEN
         para_FileGrid%Formatted_FileGrid    = Formatted_FileGrid
       ELSE
-        para_FileGrid%Formatted_FileGrid    = .TRUE.   ! in SH_HADA file
+        para_FileGrid%Formatted_FileGrid    = .TRUE.
       END IF
 
       IF (present(Type_FileGrid)) THEN
@@ -189,6 +188,7 @@
         para_FileGrid%Type_FileGrid    = 0        ! 0 in normal SH_HADA file
                                                   ! 1 unformatted sequential acces
                                                   ! 2 unformatted direct acces
+                                                  ! 4 unformatted sequential acces (for SG4)
       END IF
       IF (para_FileGrid%Type_FileGrid /= 0) THEN
         para_FileGrid%Formatted_FileGrid    = .FALSE.
@@ -294,12 +294,12 @@
        OpGrid%Mat_cte(:,:) = ZERO
 
        IF (.NOT. OpGrid%grid_cte .AND. OpGrid%para_FileGrid%Save_MemGrid) THEN
-       !IF (.NOT. OpGrid%grid_cte) THEN
          CALL alloc_array(OpGrid%Grid,(/nb_qa,nb_bie,nb_bie/),       &
                          "OpGrid%Grid",info2)
          OpGrid%Grid(:,:,:) = ZERO
 
-         IF (debug) write(out_unitp,*) info2,size(OpGrid%Grid)
+         write(out_unitp,*) info2,size(OpGrid%Grid)
+         !IF (debug) write(out_unitp,*) info2,size(OpGrid%Grid)
 
        END IF
 
@@ -317,6 +317,9 @@
       SUBROUTINE dealloc_OpGrid(OpGrid,keep_FileGrid)
           TYPE (param_OpGrid), intent(inout) :: OpGrid
           logical, intent(in) :: keep_FileGrid
+
+          character (len=line_len)   :: FileName_Grid
+
 
           character (len=*), parameter :: name_sub='dealloc_OpGrid'
 
@@ -337,8 +340,6 @@
             CALL dealloc_array(OpGrid%Mat_cte,"OpGrid%Mat_cte",name_sub)
           END IF
 
-          CALL dealloc_SmolyakRep(OpGrid%SRep) ! for SG4
-
           OpGrid%nb_qa      = 0
           OpGrid%nb_bie     = 0
           OpGrid%grid_zero  = .FALSE.
@@ -346,7 +347,11 @@
           OpGrid%ana_grid   = .FALSE.
           OpGrid%cplx       = .FALSE.
 
-          IF (.NOT. keep_FileGrid) CALL file_delete(OpGrid%file_Grid)
+          IF (.NOT. keep_FileGrid) THEN
+            CALL file_delete(OpGrid%file_Grid)
+          END IF
+
+          CALL dealloc_SmolyakRep(OpGrid%SRep) ! for SG4
 
 
       END SUBROUTINE dealloc_OpGrid
@@ -454,6 +459,7 @@
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Set_file_OF_OpGrid'
 
+      !write(6,*) ' in ',name_sub,' asso OpGrid ',associated(OpGrid), 'name_Op: ',name_Op
       IF (.NOT. associated(OpGrid)) RETURN
       IF (size(OpGrid) < 1) RETURN
 
@@ -501,6 +507,19 @@
                          "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
           END IF
 
+        CASE (4) ! sequential for SG4 (here it just the base name for each Smolyak term)
+          OpGrid(iterm)%file_Grid%seq       = .TRUE.
+          OpGrid(iterm)%file_Grid%formatted = .FALSE.
+          OpGrid(iterm)%file_Grid%init      = .TRUE.
+
+          IF (OpGrid(iterm)%cplx) THEN
+            OpGrid(iterm)%file_Grid%name = trim(adjustl(Base_FileName_Grid)) // &
+                                               "_im" // trim(adjustl(name_Op))
+          ELSE
+            OpGrid(iterm)%file_Grid%name = trim(adjustl(Base_FileName_Grid)) // &
+                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+          END IF
+
         CASE default ! normal SH_HADA file
           STOP
         END SELECT
@@ -530,6 +549,8 @@
 
           CALL file_open(OpGrid(iterm)%file_Grid,nio)
 
+        CASE (4) ! for SG4: one file per Smolyak term
+          CONTINUE ! nothing the files will be open when need
         CASE default ! normal SH_HADA file
           CONTINUE ! nothing the file is opened/closed at each grid points
         END SELECT
@@ -538,6 +559,36 @@
       END DO
 
       END SUBROUTINE Open_file_OF_OpGrid
+      SUBROUTINE Close_file_OF_OpGrid(OpGrid)
+
+      TYPE (param_OpGrid), pointer, intent(inout) :: OpGrid(:)
+
+      integer :: iterm
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='Close_file_OF_OpGrid'
+
+      IF (.NOT. associated(OpGrid)) RETURN
+      IF (size(OpGrid) < 1) RETURN
+
+      DO iterm=1,size(OpGrid)
+
+        SELECT CASE (OpGrid(iterm)%para_FileGrid%Type_FileGrid)
+        CASE (0) ! normal SH_HADA file
+          CONTINUE ! nothing the file is opened/closed at each grid points
+        CASE (1,2) ! sequential
+
+          CALL file_close(OpGrid(iterm)%file_Grid)
+
+        CASE (4) ! for SG4: one file per Smolyak term
+          CONTINUE ! nothing the files will be opened/closed when need
+        CASE default ! normal SH_HADA file
+          CONTINUE ! nothing the file is opened/closed at each grid points
+        END SELECT
+
+
+      END DO
+
+      END SUBROUTINE Close_file_OF_OpGrid
 
 
       SUBROUTINE sub_ReadDir_Grid_iterm(Grid,OpGrid)
@@ -634,7 +685,6 @@
 
 
       character (len=*), parameter :: name_sub='Analysis_OpGrid'
-
 
       IF (.NOT. associated(OpGrid) ) RETURN
       IF (size(OpGrid) < 1 ) RETURN

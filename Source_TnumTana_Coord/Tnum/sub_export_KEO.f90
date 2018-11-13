@@ -21,9 +21,15 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_export_KEO
+  USE mod_system
+  use mod_dnSVM,    only: type_dnmat, alloc_dnsvm, dealloc_dnsvm,       &
+                          alloc_array, set_zero_to_dnsvm, dealloc_array
+  use mod_Tnum,     only: zmatrix, tnum
+  use mod_dnGG_dng, only: get_dng_dngg
   IMPLICIT NONE
 
   PRIVATE
+
   PUBLIC export3_MCTDH_T
 
   CONTAINS
@@ -32,10 +38,6 @@ MODULE mod_export_KEO
 !     Export T for MCTDH
 !===========================================================
       SUBROUTINE export3_MCTDH_T(Qact,para_Tnum,mole)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Tnum
-      USE mod_dnGG_dng
       IMPLICIT NONE
 
 !     - for Tnum -------------------------------------------
@@ -143,10 +145,6 @@ MODULE mod_export_KEO
 !     Export G in 1D grid for MCTDH
 !===========================================================
      SUBROUTINE export3_d0G_grid1D(Qact,para_Tnum,mole,dnGG,label,epsi_MCTDH)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Tnum
-      USE mod_dnGG_dng
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -361,8 +359,6 @@ MODULE mod_export_KEO
 !      Export second order Taylor expansion of G for MCTDH
 !================================================================
       SUBROUTINE export3_MCTDH_dnG(dnGG,grid1D,epsi_MCTDH)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
 !     - G,g ... --------------------------------------------
@@ -450,8 +446,6 @@ MODULE mod_export_KEO
 !      Export second order Taylor expansion of G for EVR
 !================================================================
       SUBROUTINE export3_dnG(dnGG,Qact,epsi_MCTDH)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
 !     - G,g ... --------------------------------------------
@@ -546,7 +540,6 @@ MODULE mod_export_KEO
 
       ! The operartor is d./dQi^i * d./dQj^j Qk^k Ql^l
       SUBROUTINE T_Operator_MCTDH(name_Op,i,j,k,l,n)
-      USE mod_system
       IMPLICIT NONE
 
       integer :: n
@@ -629,7 +622,6 @@ MODULE mod_export_KEO
       end subroutine T_Operator_MCTDH
 
       FUNCTION get_T_Operator_MCTDH(i,j,k,l,n) RESULT(name_Op)
-      USE mod_system
       IMPLICIT NONE
 
       integer :: n
@@ -715,7 +707,6 @@ MODULE mod_export_KEO
       END FUNCTION get_T_Operator_MCTDH
 
   FUNCTION real_TO_char_MCTDH(r) RESULT(string)
-    USE mod_system
     IMPLICIT NONE
 
     character (len=:), allocatable           :: string

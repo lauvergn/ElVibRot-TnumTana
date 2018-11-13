@@ -21,9 +21,11 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_string
-  USE mod_NumParameters
-  USE mod_memory
+  use mod_NumParameters, only: out_unitp, rkind, rmatio_format, name_len, line_len
+  use mod_memory, only: write_error_not_null, sub_test_tab_ub, sub_test_tab_lb, error_memo_allo, write_error_null
   IMPLICIT NONE
+
+  PRIVATE
 
   INTERFACE alloc_array
     MODULE PROCEDURE alloc_array_OF_ChLendim1
@@ -32,6 +34,11 @@ MODULE mod_string
     MODULE PROCEDURE dealloc_array_OF_ChLendim1
   END INTERFACE
 
+  PUBLIC :: alloc_array, dealloc_array
+  PUBLIC :: int_TO_char, Write_int_IN_char, real_TO_char, Write_real_IN_char
+  PUBLIC :: logical_TO_char
+  PUBLIC :: String_TO_String, make_nameQ, nom_i, nom_ii
+  PUBLIC :: read_name_advNo, string_uppercase_TO_lowercase
 
   CONTAINS
 
@@ -90,9 +97,11 @@ MODULE mod_string
   real (kind=Rkind),   intent(in)      :: R
   character(len=*), intent(inout)      :: cR
 
+!$OMP  CRITICAL (Write_real_IN_char_CRIT)
     ! modif DML 9/11/2012
     write(cR,'(' // RMatIO_format // ')') R
     cR = trim(adjustl(cR))
+!$OMP  END CRITICAL (Write_real_IN_char_CRIT)
 
   END SUBROUTINE Write_real_IN_char
 
@@ -145,6 +154,8 @@ MODULE mod_string
     character (len=:), allocatable  :: name_int
     integer :: clen
 
+!$OMP  CRITICAL (int_TO_char_CRIT)
+
     IF (allocated(int_TO_char)) deallocate(int_TO_char)
 
     ! first approximated size of name_int
@@ -169,6 +180,8 @@ MODULE mod_string
     ! deallocate name_int
     deallocate(name_int)
 
+!$OMP  END CRITICAL (int_TO_char_CRIT)
+
   END FUNCTION int_TO_char
   FUNCTION real_TO_char(r,Rformat) RESULT(string)
     character (len=:), allocatable           :: string
@@ -177,6 +190,8 @@ MODULE mod_string
 
     character(len=Line_len) :: name_real
     integer :: clen,i
+
+!$OMP  CRITICAL (real_TO_char_CRIT)
 
     IF (allocated(string)) deallocate(string)
 
@@ -201,6 +216,8 @@ MODULE mod_string
     END DO
 
     string = String_TO_String(string)
+
+!$OMP  END CRITICAL (real_TO_char_CRIT)
 
   END FUNCTION real_TO_char
 

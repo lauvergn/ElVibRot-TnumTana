@@ -22,19 +22,19 @@
 !===========================================================================
 
       MODULE mod_HyperSpheTransfo
-      USE mod_system
+      use mod_system, only: in_unitp, out_unitp, alloc_array, dihedral_range, pi, rkind
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
       IMPLICIT NONE
 
+      PRIVATE
       !!@description: TODO
       !!@param: TODO
       TYPE Type_HyperSpheTransfo
         integer          :: nb_HyperSphe      = 0
         integer, pointer :: list_HyperSphe(:) => null()
       END TYPE Type_HyperSpheTransfo
+
+      PUBLIC :: Type_HyperSpheTransfo, Read_HyperSpheTransfo, Calc_HyperSpheTransfo
 
       CONTAINS
 

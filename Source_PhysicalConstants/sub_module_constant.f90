@@ -25,9 +25,14 @@
 !> \author David Lauvergnat
 !> \date 16/12/2016
  MODULE mod_Constant
- USE mod_system
- USE mod_file
- USE mod_Atom
+ use mod_system, only: rkind, pi, name_len, write_error_not_null,        &
+                       error_memo_allo, write_error_null, evrt_path,     &
+                       out_unitp, one, in_unitp, two, print_level, four, &
+                       zero, hundred, onetenth, three, eight, five, ten, &
+                       add_rwu_to_tab_conv_for_quantity, real_wu,        &
+                       tab_conv_for_quantity, write_tabconvrwu
+ use mod_Atom, only: table_atom, construct_table_at, construct_old_table_at, &
+                     dealloc_table_at, get_mass_Tnum
  IMPLICIT NONE
 
  PRIVATE

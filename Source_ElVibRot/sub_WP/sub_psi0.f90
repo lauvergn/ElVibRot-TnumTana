@@ -46,7 +46,7 @@
 !==============================================================
       SUBROUTINE psi0(WP0,para_WP0,mole)
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_basis
       USE mod_psi_set_alloc
       USE mod_psi_Op
@@ -228,7 +228,7 @@
 !==============================================================
       SUBROUTINE psi0_gaussGridRep(WP0,para_WP0,mole)
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_psi_set_alloc
       USE mod_param_WP0
       IMPLICIT NONE

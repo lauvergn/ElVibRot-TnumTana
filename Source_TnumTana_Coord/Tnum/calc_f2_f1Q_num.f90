@@ -20,20 +20,20 @@
 !
 !===========================================================================
 !===========================================================================
-!MODULE mod_f2f2Vep
-!  USE mod_system
-!  USE mod_dnSVM
-!  USE mod_Tnum
-!  USE mod_paramQ
-!  USE mod_dnGG_dng
-!  USE mod_dnDetGG_dnDetg
-!  USE mod_dnRho
-!  IMPLICIT NONE
-!
-!  PRIVATE
-!  PUBLIC :: calc3_f2_f1Q_num,calc3_f2_f1Q_numTay0Qinact2n
-!
-!  CONTAINS
+MODULE mod_f2f2Vep
+  USE mod_system
+  USE mod_dnSVM
+  USE mod_Tnum
+  USE mod_paramQ
+  USE mod_dnGG_dng
+  USE mod_dnDetGG_dnDetg
+  USE mod_dnRho
+  IMPLICIT NONE
+
+  PRIVATE
+  PUBLIC :: calc3_f2_f1Q_num,calc3_f2_f1Q_numTay0Qinact2n
+
+  CONTAINS
 
 !======================================================================
 !
@@ -53,9 +53,11 @@
                                   para_Tnum,mole)
       USE mod_system
       USE mod_dnSVM
+      use mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
       USE mod_Tnum
       USE mod_paramQ
       USE mod_dnGG_dng
+      USE mod_dnRho ! all
       USE mod_Tana_NumKEO
       IMPLICIT NONE
 
@@ -292,6 +294,7 @@
       USE mod_Tnum
       USE mod_paramQ
       USE mod_dnGG_dng
+      USE mod_dnRho ! all
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -662,4 +665,4 @@
       end subroutine sub_H1def
 
 
-!END MODULE mod_f2f2Vep
+END MODULE mod_f2f2Vep

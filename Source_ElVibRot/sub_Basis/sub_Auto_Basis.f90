@@ -29,6 +29,9 @@
      MODULE mod_Auto_Basis
      IMPLICIT NONE
 
+     !PRIVATE
+     !PUBLIC Auto_basis, sub_MatOp_HADA
+
      CONTAINS
 
 !=========================================================================
@@ -38,11 +41,23 @@
 !=========================================================================
       SUBROUTINE Auto_basis(para_Tnum,mole,para_AllBasis,               &
                             ComOp,para_PES,para_ReadOp)
-
-      USE mod_system
-      USE mod_Tnum
-      USE mod_PrimOp
-      USE mod_basis
+      use mod_PrimOp, only: zmatrix, tnum, param_pes, out_unitp, sgtype, &
+                            mole1tomole2, dealloc_zmat, print_level,     &
+                            flush_perso, rkind, one, real_wu,            &
+                            dealloc_nparray, alloc_nparray, calc_ndindex,&
+                            zero, rwu_write, alloc_array, init_typeop,   &
+                            param_typeop, derive_termqact_to_derive_termqdyn,&
+                            write_vecmat, molerph_to_moleflex, write_mat,&
+                             type_var_analysis, write_mole, line_len,    &
+                             constant, param_d0matop, error_memo_allo,   &
+                             init_d0matop, hundred, dealloc_d0matop
+      use mod_basis, only: param_allbasis, sgtype, get_nq_from_basis,  &
+                           get_nb_bi_from_allbasis, recwrite_basis,    &
+                           basis, sub_dngb_to_dnbb, clean_basis,       &
+                           sub_dngb_to_dngg, construct_primitive_basis,&
+                           sub_contraction_basis, check_ortho_basis,   &
+                           dealloc_allbasis, alloc_allbasis,           &
+                           basis2tobasis1
       USE mod_Op
       IMPLICIT NONE
 
@@ -153,7 +168,7 @@
                                          para_PES,para_ReadOp,ComOp_loc)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -182,6 +197,7 @@
       real(kind=Rkind) :: ene0,Effi
 
       integer :: ib,ibi,val,ii,nq,i_SG,nb_SG
+      logical :: Print_basis
 
        integer, save :: rec = 0
 !-------------------------------------------------------------------------
@@ -197,7 +213,10 @@
         write(out_unitp,*) 'BEGINNING ',name_sub,rec
       END IF
 !---------------------------------------------------------------------
-      IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1) THEN
+       Print_basis = BasisnD%print_info_OF_basisDP .AND. print_level > -1 .OR. debug
+
+
+      IF (Print_basis) THEN
         write(out_unitp,*) '==============================================='
         write(out_unitp,*) '= Rec Auto Basis, layer: ',rec
         write(out_unitp,*) '==============================================='
@@ -220,8 +239,7 @@
 
           CALL clean_basis(BasisnD)
 
-          IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)     &
-                write(out_unitp,*) 'Sparse Grid type1 done. Layer: ',rec
+          IF (Print_basis) write(out_unitp,*) 'Sparse Grid type1 done. Layer: ',rec
 
         ELSE IF (BasisnD%SparseGrid_type == 2) THEN
           CALL RecSparseGrid_ForDP_type2(BasisnD,para_Tnum,mole,        &
@@ -243,23 +261,20 @@
 
           !CALL clean_basis(BasisnD)
 
-          IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)     &
-                write(out_unitp,*) 'Sparse Grid type4 done. Layer: ',rec
+          IF (Print_basis) write(out_unitp,*) 'Sparse Grid type4 done. Layer: ',rec
 
         ELSE
           ! For direct product basis (recursive)
 
-          IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)     &
-                 write(out_unitp,*) 'direct_product%...%nb:         ',  &
+          IF (Print_basis) write(out_unitp,*) 'direct_product%...%nb:         ',  &
                   (BasisnD%tab_Pbasis(i)%Pbasis%nb,i=1,BasisnD%nb_basis)
 
           IF (.NOT. BasisnD%tab_basis_done) THEN
             DO ibasis=1,BasisnD%nb_basis
 
 
-              IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1) &
-                                                   write(out_unitp,*)   &
-                           'direct_product%tab_Pbasis%(i): ',ibasis
+              IF (Print_basis) write(out_unitp,*)                       &
+                                'direct_product%tab_Pbasis%(i): ',ibasis
 
               IF (BasisnD%Type_OF_nDindB == 0)                          &
                        BasisnD%tab_Pbasis(ibasis)%Pbasis%packed = .TRUE.
@@ -288,46 +303,38 @@
                                  BasisnD%tab_Pbasis(ibasis)%Pbasis,     &
                                  para_PES,para_ReadOp,ComOp_loc)
 
-              IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1) &
-                                                   write(out_unitp,*)   &
+              IF (Print_basis) write(out_unitp,*)                       &
                     'direct_product%tab_Pbasis(i): ',ibasis,' done. Layer: ',rec
               CALL flush_perso(out_unitp)
             END DO
           ELSE
-            IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)   &
-                                                     write(out_unitp,*) &
+            IF (Print_basis) write(out_unitp,*)                         &
                 'direct_product%tab_basis_done is already done. Layer: ',rec
 
           END IF
           BasisnD%tab_basis_done = .TRUE.
 
-          IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)     &
-                          write(out_unitp,*) 'direct_product%...%nb',   &
+          IF (Print_basis) write(out_unitp,*) 'direct_product%...%nb',  &
                  (BasisnD%tab_Pbasis(i)%Pbasis%nb,i=1,BasisnD%nb_basis)
-          IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)     &
-                          write(out_unitp,*) 'direct_product%...%nq',   &
+          IF (Print_basis) write(out_unitp,*) 'direct_product%...%nq',  &
            (get_nq_FROM_basis(BasisnD%tab_Pbasis(i)%Pbasis),i=1,BasisnD%nb_basis)
           CALL flush_perso(out_unitp)
 
           ! direct product construction
           CALL sub_DirProd_basis(BasisnD)
 
-          IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)     &
-                     write(out_unitp,*) 'direct_product done. Layer:',rec
+          IF (Print_basis) write(out_unitp,*) 'direct_product done. Layer:',rec
         END IF
       ELSE ! primitive basis
-        IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1) THEN
+        IF (Print_basis) THEN
           write(out_unitp,*) 'Active basis:                  ',BasisnD%active
           write(out_unitp,*) 'check_nq_OF_basis:             ',BasisnD%check_nq_OF_basis
           CALL flush_perso(out_unitp)
         END IF
 
-      write(6,*) 'BasisnD%L_SparseBasis',BasisnD%L_SparseBasis
-
         CALL construct_primitive_basis(BasisnD)
 
-        IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)       &
-               write(out_unitp,*) 'Primitive basis done. Layer:      ',rec
+        IF (Print_basis) write(out_unitp,*) 'Primitive basis done. Layer:      ',rec
 
       END IF
       CALL flush_perso(out_unitp)
@@ -336,12 +343,9 @@
 
       ! To optimize cubature grid (experimental) .....
       IF (BasisnD%make_cubature .OR. BasisnD%Restart_make_cubature) THEN
-        IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)       &
-               write(out_unitp,*) 'Cubature basis. Layer:         ',rec
-
+        IF (Print_basis) write(out_unitp,*) 'Cubature basis. Layer:         ',rec
         CALL Make_grid_basis(BasisnD)
-        IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)       &
-               write(out_unitp,*) 'Cubature basis done. Layer:    ',rec
+        IF (Print_basis) write(out_unitp,*) 'Cubature basis done. Layer:    ',rec
         STOP
       END IF
 
@@ -352,8 +356,7 @@
           ! modification of mole => mole_loc
           CALL mole1TOmole2(mole,mole_loc)
 
-          IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)     &
-               write(out_unitp,*) 'mole1TOmole2 done. Layer:      ',rec
+          IF (Print_basis) write(out_unitp,*) 'mole1TOmole2 done. Layer:      ',rec
 
           !POGridRep
           IF (BasisnD%ndim == 1 .AND. BasisnD%POGridRep) THEN
@@ -363,16 +366,14 @@
             CALL Autocontract_basis(BasisnD,para_Tnum,mole_loc,         &
                                     ComOp_loc,para_PES,para_ReadOp)
 
-            IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)   &
-              write(out_unitp,*) 'Autocontract_basis (POGridRep_poly) done. Layer: ',rec
+            IF (Print_basis) write(out_unitp,*) 'Autocontract_basis (POGridRep_poly) done. Layer: ',rec
             CALL flush_perso(out_unitp)
 
             BasisnD%nqc =  BasisnD%nbc
              !CALL POGridRep2_basis(BasisnD,nb0,mole_loc)
              CALL POGridRep_basis(BasisnD,nb0,mole_loc)
 
-            IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)   &
-                write(out_unitp,*) 'POGridRep_basis done. Layer:   ',rec
+            IF (Print_basis) write(out_unitp,*) 'POGridRep_basis done. Layer:   ',rec
             CALL flush_perso(out_unitp)
 
             !- d1b => d1BasisRep and  d2b => d2BasisRep ------------
@@ -388,8 +389,7 @@
           CALL Autocontract_basis(BasisnD,para_Tnum,mole_loc,           &
                                   ComOp_loc,para_PES,para_ReadOp)
 
-          IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)     &
-                write(out_unitp,*) 'Autocontract_basis done. Layer:',rec
+          IF (Print_basis) write(out_unitp,*) 'Autocontract_basis done. Layer:',rec
 
           !---------------------------------------------------------------
           ! dealloc local variables
@@ -399,8 +399,7 @@
 
           CALL sub_contraction_basis(BasisnD,.FALSE.)
 
-          IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)     &
-                write(out_unitp,*) 'Contract_basis done. Layer:    ',rec
+          IF (Print_basis) write(out_unitp,*) 'Contract_basis done. Layer:    ',rec
 
         END IF
 
@@ -412,13 +411,12 @@
         CALL check_ortho_basis(BasisnD)
       END IF
 
-      IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1)         &
-         write(out_unitp,*) 'Auto_basis done. Layer:        ',rec
+      IF (Print_basis) write(out_unitp,*) 'Auto_basis done. Layer:        ',rec
 
       IF (debug) THEN
         CALL RecWrite_basis(BasisnD)
       END IF
-      IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '==============================================='
         write(out_unitp,*) '= END Rec Auto Basis for Layer:',rec
         write(out_unitp,*) '==================================================='
@@ -432,7 +430,7 @@
                                          para_PES,para_ReadOp,ComOp_loc)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -589,7 +587,7 @@ END SUBROUTINE RecSet_EneH0
                                           ComOp,para_PES,para_ReadOp)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -604,8 +602,8 @@ END SUBROUTINE RecSet_EneH0
 
 !----- variables pour la namelist minimum ----------------------------
       TYPE (param_PES) :: para_PES
-      integer :: nb_scalar_Op
-      logical :: calc_scalar_Op
+      integer :: nb_scalar_Op,type_HamilOp
+      logical :: calc_scalar_Op,direct_KEO
 
 !----- variables for the construction of H ---------------------------
       TYPE (param_ComOp)          :: ComOp
@@ -656,7 +654,10 @@ END SUBROUTINE RecSet_EneH0
       JJ                          = para_Tnum%JJ
       para_Tnum%JJ                = 0
 
-
+      type_HamilOp                = para_PES%type_HamilOp
+      para_PES%type_HamilOp       = 1
+      direct_KEO                  = para_PES%direct_KEO
+      para_PES%direct_KEO         = .FALSE.
 
       ! allocation of tab_Op
       para_AllOp_loc%nb_Op = 2 ! just H and S
@@ -675,6 +676,7 @@ END SUBROUTINE RecSet_EneH0
       para_ReadOp_loc%para_FileGrid%Restart_Grid    = .FALSE.
       para_ReadOp_loc%para_FileGrid%Test_Grid       = .FALSE.
       para_ReadOp_loc%para_FileGrid%Read_FileGrid   = .FALSE.
+      para_ReadOp_loc%para_FileGrid%Type_FileGrid   = 0
 
       !---------------------------------------------------------------
       ! modified ComOp from para_AllBasis_loc
@@ -690,7 +692,6 @@ END SUBROUTINE RecSet_EneH0
                                para_AllBasis_loc,                       &
                                ComOp,para_PES,para_ReadOp_loc,          &
                                para_AllOp_loc%tab_Op(1))
-
 
       ! old direct=2 with a matrix
       para_AllOp_loc%tab_Op(1)%make_Mat                    = .TRUE.
@@ -778,6 +779,8 @@ END SUBROUTINE RecSet_EneH0
       para_PES%calc_scalar_Op                 = calc_scalar_Op
       para_Tnum%JJ                            = JJ
 
+      para_PES%type_HamilOp                   = type_HamilOp
+      para_PES%direct_KEO                     = direct_KEO
 
       !-----------------------------------------------------------------
       IF (debug) THEN
@@ -797,7 +800,7 @@ END SUBROUTINE RecSet_EneH0
                                     ComOp,para_PES,para_ReadOp)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -1063,10 +1066,6 @@ END SUBROUTINE RecSet_EneH0
 
       END SUBROUTINE Autocontract_basis
       SUBROUTINE basis_TO_AllBasis(basis_temp,Allbasis,mole)
-
-      USE mod_system
-      USE mod_Tnum
-      USE mod_PrimOp
       USE mod_basis
       USE mod_Op
       IMPLICIT NONE
@@ -1234,10 +1233,9 @@ END SUBROUTINE RecSet_EneH0
                                      ComOp,para_PES,para_ReadOp,para_H)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
-      USE mod_constant
       USE mod_Op
       USE mod_analysis
       USE mod_propa

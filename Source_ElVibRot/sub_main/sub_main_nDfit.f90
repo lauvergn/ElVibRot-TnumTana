@@ -26,10 +26,9 @@
 !             http://shtools.ipgp.fr
 !===========================================================================
 !===========================================================================
-      MODULE mod_nDGridFit
+MODULE mod_nDGridFit
       USE mod_system
-      USE mod_nDindex
-      USE mod_file
+      USE mod_nDindex, only : Type_nDindex
       IMPLICIT NONE
 
       TYPE param_nDGrid ! it mays change in the futur (more like "basis" type)
@@ -60,6 +59,7 @@
       CONTAINS
 
       SUBROUTINE dealloc_nDGrid(para_nDGrid)
+      USE mod_nDindex, only : dealloc_nDindex
       IMPLICIT NONE
 
       TYPE (param_nDGrid), intent(inout) :: para_nDGrid
@@ -93,10 +93,8 @@
 
       SUBROUTINE sub_nDGrid_nDfit()
       USE mod_system
-      USE mod_constant
-      USE mod_Tnum
-      USE mod_paramQ
-      USE mod_PrimOp_def
+      USE mod_dnSVM
+      USE mod_Coord_KEO
       USE mod_PrimOp
       IMPLICIT NONE
 
@@ -290,11 +288,8 @@
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
-      USE mod_Tnum
-      USE mod_PrimOp_def
+      USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0
       USE mod_PrimOp
-      USE mod_SimpleOp
-      !USE mod_file
       IMPLICIT NONE
 
       TYPE (param_nDGrid), intent(inout) :: para_nDGrid
@@ -549,9 +544,8 @@
       END SUBROUTINE sub_nDGrid
       SUBROUTINE sub_nDGrid_WiTHOUT_calc(para_nDGrid,Qact,mole,para_PES)
       USE mod_system
-      USE mod_Tnum
-      USE mod_PrimOp_def
-      USE mod_file
+      USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0
+      USE mod_PrimOp
       IMPLICIT NONE
 
       TYPE (param_nDGrid), intent(inout) :: para_nDGrid
@@ -629,9 +623,8 @@
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
-      USE mod_Tnum
-      USE mod_PrimOp_def
-      USE mod_file
+      USE mod_Coord_KEO
+      USE mod_PrimOp
       IMPLICIT NONE
 
       TYPE (param_nDGrid), intent(in)   :: para_nDGrid
@@ -803,8 +796,7 @@
 
       SUBROUTINE sub_ChecknDFit2(para_nDFit,para_nDGrid)
       USE mod_system
-      USE mod_file
-      USE mod_PrimOp_def
+      USE mod_PrimOp
       IMPLICIT NONE
 
       TYPE (param_nDGrid), intent(in)   :: para_nDGrid
@@ -898,7 +890,6 @@
 
       SUBROUTINE sub_nGrid1_TO_nGrid2(Q0)
       USE mod_system
-      USE mod_file
       IMPLICIT NONE
 
       real (kind=Rkind) :: Q0(:)
@@ -1036,4 +1027,4 @@
 
       END SUBROUTINE sub_nGrid1_TO_nGrid2
 
-      END MODULE mod_nDGridFit
+END MODULE mod_nDGridFit

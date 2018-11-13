@@ -21,12 +21,17 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_RPHTransfo
-      USE mod_system
+      use mod_system, only: rkind, onetenth, name_len, in_unitp, out_unitp,     &
+                            flush_perso, alloc_nparray, dealloc_nparray,        &
+                            dealloc_array, alloc_array, one, ten, zero,         &
+                            write_error_not_null, error_memo_allo,              &
+                            write_error_null, sub_test_tab_ub, sub_test_tab_lb, &
+                            write_mat, write_vecmat, read_mat, write_vec,       &
+                            int_to_char
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
       IMPLICIT NONE
+
+      PRIVATE
 
       TYPE Type_RPHpara_AT_Qact1
         integer               :: nb_inact21    = 0        ! it should come from ActiveTransfo
@@ -118,6 +123,17 @@
         ! for RPHTransfo
         MODULE PROCEDURE dealloc_array_OF_RPHTransfodim0
       END INTERFACE
+
+      PUBLIC :: Type_RPHpara_AT_Qact1, alloc_RPHpara_AT_Qact1, dealloc_RPHpara_AT_Qact1, &
+                Write_RPHpara_AT_Qact1, RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1
+
+      !PUBLIC :: Type_RPHpara2, dealloc_RPHpara2, Read_RPHpara2, Write_RPHpara2, RPHpara2_1TORPHpara2_2
+
+      PUBLIC :: Type_RPHTransfo, Read_RPHTransfo, Write_RPHTransfo, Set_RPHTransfo, &
+                dealloc_RPHTransfo, calc_RPHTransfo, RPHTransfo1TORPHTransfo2
+
+      PUBLIC :: alloc_array, dealloc_array, Switch_RPH
+
 
       CONTAINS
 
@@ -1755,7 +1771,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
       write(out_unitp,*) ' Check your data !!'
       STOP
     END IF
-    CALL Read_RMat(RPHpara2%CinvRef(:,:,iref),in_unitp,nbcol,err_read)
+    CALL Read_Mat(RPHpara2%CinvRef(:,:,iref),in_unitp,nbcol,err_read)
     IF (err_read /= 0) THEN
       write(out_unitp,*) ' ERROR in ',name_sub
       write(out_unitp,*) '  while reading the matrix "CinvRef" for iref: ',iref
@@ -1769,7 +1785,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
 
     write(out_unitp,*) '==========================================='
     write(out_unitp,*) 'Normal modes in line, C_inv at ref',iref
-    CALL Write_RMat(RPHpara2%CinvRef(:,:,iref),out_unitp,5)
+    CALL Write_Mat(RPHpara2%CinvRef(:,:,iref),out_unitp,5)
     write(out_unitp,*) '==========================================='
 
 
@@ -1781,7 +1797,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
       DO iref=1,nb_ref
         VecNM = RPHpara2%CinvRef(iNM,:,iref)
         VecNM = VecNM / sqrt(dot_product(VecNM,VecNM))
-        CALL Write_RVec(VecNM,out_unitp,nb_var,    &
+        CALL Write_Vec(VecNM,out_unitp,nb_var,    &
                        Rformat='f6.3',name_info=' NM ' // int_TO_char(iNM))
       END DO
     END DO
@@ -1923,7 +1939,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
         IF (i == 0) CYCLE
         VecNM = RPHpara2%CinvRef(i,:,iref)
         VecNM = VecNM / sqrt(dot_product(VecNM,VecNM))
-        CALL Write_RVec(VecNM,out_unitp,nb_var,    &
+        CALL Write_Vec(VecNM,out_unitp,nb_var,    &
                         Rformat='f6.3',name_info=' NM ' // int_TO_char(i))
       END DO
     END DO
@@ -2055,8 +2071,13 @@ END SUBROUTINE Read_RPHpara2
 END MODULE mod_RPHTransfo
 
 MODULE CurviRPH_mod
-USE mod_system
+use mod_system, only: rkind, zero, in_unitp, out_unitp, flush_perso, Name_len,   &
+                      write_mat, write_vecmat, read_mat, write_vec, int_to_char, &
+                      alloc_NParray, dealloc_NParray, omp_get_thread_num
+
 implicit NONE
+
+  PRIVATE
 
   TYPE CurviRPH_type
 
@@ -2078,6 +2099,10 @@ implicit NONE
     real(kind=Rkind), allocatable :: CoefHess(:,:,:)
 
   END TYPE CurviRPH_type
+
+  PUBLIC :: CurviRPH_type, alloc_CurviRPH, dealloc_CurviRPH, Init_CurviRPH, &
+            get_CurviRPH, CurviRPH1_TO_CurviRPH2
+
   CONTAINS
 
   SUBROUTINE alloc_CurviRPH(CurviRPH,nb_Qpath,nb_Q21,nb_pts,nb_dev)
@@ -2297,9 +2322,9 @@ implicit NONE
       IF (tab_Hess(i)) THEN
         ih = ih + 1
         !read hessian
-        CALL Read_RMat(CurviRPH2%hess(:,:,ih),5,5,IOerr)
+        CALL Read_Mat(CurviRPH2%hess(:,:,ih),5,5,IOerr)
         write(out_unitp,*) 'IOerr',IOerr
-        IF (debug) CALL Write_RMat(CurviRPH2%hess(:,:,ih),out_unitp,5)
+        IF (debug) CALL Write_Mat(CurviRPH2%hess(:,:,ih),out_unitp,5)
       END IF
     END DO
     write(out_unitp,*) 'nb_pts for Qref ',CurviRPH2%nb_pts
@@ -2346,9 +2371,9 @@ implicit NONE
       fQpath(j,i) = funcQpath(CurviRPH2%Qpath_ForQref(i),j)
     END DO
     END DO
-    IF (debug) CALL Write_RMat(fQpath,out_unitp,5)
+    IF (debug) CALL Write_Mat(fQpath,out_unitp,5)
     CALL inv_m1_TO_m2(fQpath,fQpath_inv,nb_pts,0,ZERO)
-    IF (debug) CALL Write_RMat(fQpath_inv,out_unitp,5)
+    IF (debug) CALL Write_Mat(fQpath_inv,out_unitp,5)
 
     !for the fit coef.
     DO iq=1,CurviRPH2%nb_Q21
@@ -2372,9 +2397,9 @@ implicit NONE
       END DO
       END DO
 
-      IF (debug) CALL Write_RMat(fQpath,out_unitp,5)
+      IF (debug) CALL Write_Mat(fQpath,out_unitp,5)
       CALL inv_m1_TO_m2(fQpath,fQpath_inv,nb_pts,0,ZERO)
-      IF (debug) CALL Write_RMat(fQpath_inv,out_unitp,5)
+      IF (debug) CALL Write_Mat(fQpath_inv,out_unitp,5)
 
       !for the fit of g
       DO iq=1,CurviRPH2%nb_Q21
@@ -2399,9 +2424,9 @@ implicit NONE
       END DO
       END DO
 
-      IF (debug) CALL Write_RMat(fQpath,out_unitp,5)
+      IF (debug) CALL Write_Mat(fQpath,out_unitp,5)
       CALL inv_m1_TO_m2(fQpath,fQpath_inv,nb_pts,0,ZERO)
-      IF (debug) CALL Write_RMat(fQpath_inv,out_unitp,5)
+      IF (debug) CALL Write_Mat(fQpath_inv,out_unitp,5)
 
       !for the fit of hess
       DO iq=1,CurviRPH2%nb_Q21
@@ -2523,7 +2548,7 @@ implicit NONE
 
     IF (debug) THEN
       write(out_unitp,*) 'Hess '
-      CALL Write_RMat(Hess,out_unitp,5)
+      CALL Write_Mat(Hess,out_unitp,5)
     END IF
 
     CALL dealloc_NParray(fQpath,'fQpath',name_sub)

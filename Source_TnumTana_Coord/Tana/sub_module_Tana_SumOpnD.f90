@@ -20,32 +20,32 @@
 !
 !===========================================================================
 !===========================================================================
-
-   module mod_Tana_Sum_OpnD
-
-   !! @module: SUM
-   !! @description: This is a generic module which contains all the routines that evaluate
-   !!             the sum of two operators
-   USE mod_system
+module mod_Tana_Sum_OpnD
+   USE mod_system, only: rkind, sub_test_tab_ub, sub_test_tab_lb,       &
+                         error_memo_allo, write_error_not_null,         &
+                         write_error_null, alloc_nparray, cone,         &
+                         dealloc_nparray, out_unitp, zero, flush_perso, &
+                         alloc_array, dealloc_array, czero
    USE mod_Tana_OpEl
    USE mod_Tana_Op1D
    USE mod_Tana_OpnD
    IMPLICIT NONE
 
-        !-----------------------------------------------------------!
-        !                        SUM_OPND                           !
-        !-----------------------------------------------------------!
-        !! @description: Definition of a type of a sum of nd-operators
-        !!   like $ \hat{P}_{q_{k_1}} q_{k_2}^\alpha \cos^\alpha q_{k_2} +
-        !!     \sin^\alpha q_{k_1}\hat{P}_{q_{k_3}} $.
-        !!               This type is used for the analytical
-        !!               computation of the KEO
-        !! @param: sum_prod_op1d    Array of 1d operators
-        !! @param: Cn               Array of complex numbers
-        TYPE sum_opnd
-          type(opnd), allocatable            :: sum_prod_op1d(:)
-          complex(kind = Rkind), allocatable :: Cn(:)
-        END TYPE sum_opnd
+   PRIVATE
+      !-----------------------------------------------------------!
+      !                        SUM_OPND                           !
+      !-----------------------------------------------------------!
+      !! @description: Definition of a type of a sum of nd-operators
+      !!   like $ \hat{P}_{q_{k_1}} q_{k_2}^\alpha \cos^\alpha q_{k_2} +
+      !!     \sin^\alpha q_{k_1}\hat{P}_{q_{k_3}} $.
+      !!               This type is used for the analytical
+      !!               computation of the KEO
+      !! @param: sum_prod_op1d    Array of 1d operators
+      !! @param: Cn               Array of complex numbers
+      TYPE sum_opnd
+        type(opnd), allocatable            :: sum_prod_op1d(:)
+        complex(kind = Rkind), allocatable :: Cn(:)
+      END TYPE sum_opnd
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_Sum_OpnDdim1,alloc_array_OF_Sum_OpnDdim2
@@ -114,6 +114,16 @@
      MODULE PROCEDURE SumOpnD2_TO_SumOpnD1,OpnD2_TO_SumOpnD1,Op1D2_TO_SumOpnD1,OpEl2_TO_SumOpnD1
      MODULE PROCEDURE R_TO_SumOpnD1,C_TO_SumOpnD1
    END INTERFACE
+
+   PUBLIC :: sum_opnd, allocate_op, delete_op, check_allocate_op, write_op, init_to_opzero
+   PUBLIC :: Simplify_Sum_OpnD, Transpose_Mat_OF_sum_opnd
+
+   PUBLIC :: alloc_array, dealloc_array, alloc_NParray, dealloc_NParray
+   PUBLIC :: copy_F1_into_F2, get_F1_plus_F2_to_F_sum_nd, get_F1_times_F2_to_F_nd, operator (*), assignment (=)
+   PUBLIC :: Der1_OF_OpnD_TO_Sum_OpnD, Der1_OF_Sum_OpnD_TO_Sum_OpnD
+   PUBLIC :: Expand_Sum_OpnD_TO_Sum_OpnD, F1_sum_nd_PLUS_TO_Fres_sum_nd
+   PUBLIC :: F1_nd_MINUS_TO_Fres_sum_nd, F1_sum_nd_MINUS_TO_Fres_sum_nd
+   PUBLIC :: C_TO_Mat_OF_sum_opnd, remove_opzero_in_F_sum_nd
 
 
    CONTAINS 
@@ -435,7 +445,7 @@
    character (len=*), parameter :: routine_name="init_opzero_sum_nd"
 
    call allocate_sum_opnd(F_sum_nd,1)
-   call init_opzero_opnd(F_sum_nd%sum_prod_op1d(1))
+   call init_to_opzero(F_sum_nd%sum_prod_op1d(1))
 
  end subroutine init_opzero_sum_opnd
 
@@ -501,7 +511,7 @@
        write(i_open, "(A, 3x, I4, 3x, A, 1x, (E13.4,' Ix ',E13.4))") 'term', i, ', C_I=', F_sum_nd%Cn(i)
        write(i_open, *) 'term', i, ', C_I= ',type_coef, F_sum_nd%Cn(i),' nb_P+J',nb_PJ
        write(i_open, *)
-       call write_opnd(F_sum_nd%sum_prod_op1d(i), i_open)
+       call write_op(F_sum_nd%sum_prod_op1d(i), i_open)
        write(i_open, *)
      end do
      CALL flush_perso(i_open)
@@ -565,7 +575,7 @@
            n = n+1
            write(i_open, '(A, 3x, I4, 3x, A, 1x, E12.5)') 'term', n, ', C_I=', F_sum_nd%Cn(i)
            write(i_open, *)
-           call write_opnd(F_sum_nd%sum_prod_op1d(i), i_open)
+           call write_op(F_sum_nd%sum_prod_op1d(i), i_open)
            write(i_open, *)
          end if
        end do
@@ -603,7 +613,7 @@
          n = n+1
          write(i_open, '(A, 3x, I4, 3x, A, 1x, E12.5)') 'term', n, ', C_I=', F_sum_nd%Cn(i)
          write(i_open, *)
-         call write_opnd(F_sum_nd%sum_prod_op1d(i), i_open)
+         call write_op(F_sum_nd%sum_prod_op1d(i), i_open)
          write(i_open, *)
        end if
      end do
@@ -659,7 +669,7 @@
 
    call allocate_sum_opnd(F2_sum_nd,1)
 
-   call copy_F1_nd_into_F2_nd(F1_nd, F2_sum_nd%sum_prod_op1d(1))
+   call copy_F1_into_F2(F1_nd, F2_sum_nd%sum_prod_op1d(1))
    F2_sum_nd%Cn(1) = cone
 
    CALL Simplify_Sum_OpnD(F2_sum_nd)
@@ -780,7 +790,7 @@
 
    call allocate_sum_opnd(F2_sum_nd,1)
 
-   call copy_F1_1d_into_F2_nd(F1_1d, F2_sum_nd%sum_prod_op1d(1))
+   call copy_F1_into_F2(F1_1d, F2_sum_nd%sum_prod_op1d(1))
    F2_sum_nd%Cn(1) = cone
 
    CALL simplify_sum_opnd(F2_sum_nd)
@@ -801,7 +811,7 @@
 
    call allocate_sum_opnd(F2_sum_nd,1)
 
-   call copy_F1_el_into_F2_nd(F1_el, F2_sum_nd%sum_prod_op1d(1))
+   call copy_F1_into_F2(F1_el, F2_sum_nd%sum_prod_op1d(1))
    F2_sum_nd%Cn(1) = cone
 
    CALL simplify_sum_opnd(F2_sum_nd)
@@ -825,7 +835,7 @@
    call allocate_sum_opnd(F2_sum_nd,size(F1_sum_nd%sum_prod_op1d))
 
    do i = 1, size(F1_sum_nd%sum_prod_op1d)
-     call copy_F1_nd_into_F2_nd(F1_sum_nd%sum_prod_op1d(i), &
+     call copy_F1_into_F2(F1_sum_nd%sum_prod_op1d(i), &
                                 F2_sum_nd%sum_prod_op1d(i))
      F2_sum_nd%Cn(i) = F1_sum_nd%Cn(i)
    end do

@@ -21,12 +21,15 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_OneDTransfo
-      USE mod_system
+      use mod_system, only: name_len, rkind, alloc_array, dealloc_array, &
+                            write_error_not_null, sub_test_tab_ub,       &
+                            sub_test_tab_lb, error_memo_allo,            &
+                            write_error_null, zero, one, in_unitp,       &
+                            out_unitp, onetenth, ten
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
       IMPLICIT NONE
+
+      PRIVATE
 
       !!@description: TODO
       !!@param: TODO
@@ -45,6 +48,10 @@
       INTERFACE dealloc_array
         MODULE PROCEDURE dealloc_array_OF_OneDTransfodim1
       END INTERFACE
+
+      PUBLIC :: Type_oneDTransfo, alloc_oneDTransfo, dealloc_oneDTransfo, &
+                Read_oneDTransfo, Write_oneDTransfo, calc_oneDTransfo,    &
+                oneDTransfo1TOoneDTransfo2, alloc_array, dealloc_array
 
       CONTAINS
 
@@ -326,7 +333,7 @@
             oneDTransfo(i)%type_oneD = -111  ! R => x
           END IF
 
-        CASE ('xTOconstX')
+        CASE ('xTOconstX','xTOu')
          ! invers of R0.tanh(x/R0) x E ]-inf,inf[  (invers)
          ! t(x) = R0 atanh(x/R0) R0=cte(1)
           IF ( cte(1) == ZERO) THEN

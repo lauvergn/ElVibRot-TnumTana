@@ -29,10 +29,10 @@
 
    MODULE mod_PrimOp_def
    USE mod_system
-   USE mod_OTF_def
-   USE mod_nDFit
+   USE mod_OTF_def, only: param_OTF
+   use mod_nDFit,   only: param_ndfit
    IMPLICIT NONE
-
+     PRIVATE
        TYPE param_PES
           logical           :: init_done            = .FALSE. ! to check if the initalization is done
           real (kind=Rkind) :: pot0                 = ZERO    ! minimum of the PES
@@ -71,9 +71,14 @@
 
         END TYPE param_PES
 
+     PUBLIC param_PES, write_param_PES, Sub_PES_FromTnum_TO_PES
+
    CONTAINS
 
       SUBROUTINE write_param_PES(para_PES)
+      USE mod_OTF_def, only: write_OTF
+      USE mod_nDFit,   only: write_ndfit
+
       TYPE (param_PES) :: para_PES
 
       integer :: i
@@ -136,8 +141,8 @@
       END SUBROUTINE write_param_PES
 
       SUBROUTINE Sub_PES_FromTnum_TO_PES(para_PES,para_PES_FromTnum)
-      USE mod_system
-      USE mod_Tnum
+      USE mod_OTF_def,   only: init_G03_OTF
+      USE mod_Coord_KEO, only: param_PES_FromTnum
       IMPLICIT NONE
 
       TYPE (param_PES)          :: para_PES

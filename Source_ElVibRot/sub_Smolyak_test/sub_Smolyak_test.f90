@@ -28,8 +28,8 @@
 !===========================================================================
 SUBROUTINE sub_main_Smolyak_test()
 
-  !CALL sub_main_testnD_new()
-  CALL sub_main_testnD_DeltaSRep()
+  CALL sub_main_testnD_new()
+  !CALL sub_main_testnD_DeltaSRep()
 
   !CALL sub_main_test3D_old()
   !CALL sub_main_test3D()
@@ -802,17 +802,22 @@ SRep2 = SRep1
 write(6,*) 'Write Smolyak Rep 1: Basis'
 IF (debug) CALL Write_SmolyakRep(Srep1)
 
+
 CALL time_perso('sub_main_testSmat: B=>G') ; flush(6)
 CALL BSmolyakRep_TO_GSmolyakRep_01(SRep1,Smolyak_nDind%tab_ind,tab_ba)
-CALL time_perso('sub_main_testSmat: B=>G') ; flush(6)
+!CALL BSmolyakRep_TO_GSmolyakRep_01_v2(SRep1,Smolyak_nDind%tab_ind,tab_ba)
 
+!CALL BSmolyakRep_TO_GSmolyakRep(SRep1,Smolyak_nDind%tab_ind,tab_ba)
+CALL time_perso('sub_main_testSmat: B=>G') ; flush(6)
+RETURN
 nb_G = Size_SmolyakRep(SRep1)
 
 write(6,*) 'Write Smolyak Rep 1: Grid'
 IF (debug) CALL Write_SmolyakRep(Srep1)
 
 CALL time_perso('sub_main_testSmat: G=>B') ; flush(6)
-CALL GSmolyakRep_TO_BSmolyakRep_01(SRep1,Smolyak_nDind%tab_ind,tab_ba)
+!CALL GSmolyakRep_TO_BSmolyakRep_01(SRep1,Smolyak_nDind%tab_ind,tab_ba)
+CALL GSmolyakRep_TO_BSmolyakRep(SRep1,Smolyak_nDind%tab_ind,tab_ba)
 CALL time_perso('sub_main_testSmat: G=>B') ; flush(6)
 
 write(6,*) 'Write Smolyak Rep 1: Basis (after B=>G=>B)'

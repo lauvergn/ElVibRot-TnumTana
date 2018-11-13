@@ -29,9 +29,7 @@
 
       SUBROUTINE TF_autocorr(para_propa)
       USE mod_system
-      USE mod_file
       USE mod_propa
-      USE mod_constant
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------

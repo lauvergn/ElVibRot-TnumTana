@@ -1,13 +1,8 @@
       PROGRAM Tnum90_MidasCpp
       USE mod_system
-      USE mod_Tnum
-      USE mod_Tana_keo
-      USE mod_Tana_Tnum
-      USE mod_dnGG_dng
-      USE mod_PrimOp_def
-      USE mod_OTF
+      USE mod_dnSVM
+      USE mod_Coord_KEO
       USE mod_PrimOp
-      USE mod_Lib_QTransfo, only : write_dnx
       IMPLICIT NONE
 
 
@@ -109,12 +104,12 @@
 
          CALL compute_analytical_KEO(TWOxKEO,mole,para_Tnum,Qact)
 
-         IF (print_level > 2) CALL write_sum_opnd(TWOxKEO,header=.TRUE.)
+         IF (print_level > 2) CALL write_op(TWOxKEO,header=.TRUE.)
 
          write(out_unitp,*) '================================================='
          write(out_unitp,*) ' Expand 2xKEO (in reduced dimension)'
          CALL Expand_Sum_OpnD_TO_Sum_OpnD(TWOxKEO, ExpandTWOxKEO)
-         IF (print_level > 2)  CALL write_sum_opnd(ExpandTWOxKEO,header=.TRUE.)
+         IF (print_level > 2)  CALL write_op(ExpandTWOxKEO,header=.TRUE.)
          write(out_unitp,*) '================================================='
 
          CALL comparison_G_FROM_Tnum_Tana(ExpandTWOxKEO,mole,para_Tnum,Qact)

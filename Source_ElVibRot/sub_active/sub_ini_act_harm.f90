@@ -86,36 +86,17 @@
       END IF
 !-----------------------------------------------------------
 
-!
-!=====================================================================
-
-!=====================================================================
-!=====================================================================
-!=====================================================================
-!
-!       built tables V(i) T1(i) T2(i)
-!       for i in [1, nb_qa]
-!
-!=====================================================================
-
-!----- built tables --------------------------------------------------
+      !----- built tables ----------------------------------------------
       !Define the volume element (nrho of Basis => nrho of Tnum
       CALL nrho_Basis_TO_nhro_Tnum(para_AllOp%tab_Op(1)%para_AllBasis,  &
                                    para_AllOp%tab_Op(1)%mole)
 
-
-!----- zero of max... ------------------------------------------------
+      !----- zero of max... ------------------------------------------------
       para_AllOp%tab_Op(1)%para_PES%min_pot =  huge(ONE)
       para_AllOp%tab_Op(1)%para_PES%max_pot = -huge(ONE)
 
-      max_Sii = ZERO
-      max_Sij = ZERO
-      max_Hii = ZERO
-      max_Hij = ZERO
-
-
       DO iOp=1,para_AllOp%nb_Op
-        IF (para_AllOp%tab_Op(iOp)%n_op == 2 .AND.                     &
+        IF (para_AllOp%tab_Op(iOp)%n_op == -1 .AND.                     &
                 para_AllOp%tab_Op(1)%BasisnD%SparseGrid_type == 4) CYCLE ! for S
 
         IF (.NOT. para_AllOp%tab_Op(iOp)%alloc_Grid) THEN
@@ -142,8 +123,7 @@
       END DO
 
 
-!----- Transfert the constant KEO to Mate_cte -----------------
-
+      !----- Transfert the constant KEO to Mate_cte -----------------
       IF (para_AllOp%tab_Op(1)%para_Tnum%Gcte) THEN
         DO iOp=1,para_AllOp%nb_Op
 
@@ -179,11 +159,8 @@
             STOP 'Corriolis cte not yet!'
           END IF
 
-
-
         END DO
       END IF
-
 
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid) THEN
         write(out_unitp,*) ' TEST:  Operators at Qdyn0'
@@ -191,12 +168,16 @@
         IF (print_level > 0) write(out_unitp,*) 'Grid qact Veff T1 T2'
       END IF
 
-      IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid /= 0) &
-                                  CALL Set_File_OF_tab_Op(para_AllOp%tab_Op)
+      IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid /= 0) THEN
+        CALL Set_File_OF_tab_Op(para_AllOp%tab_Op)
+      END IF
 
+      IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 4) RETURN
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Read_FileGrid) RETURN
 
-!     - test ---------------------------------------------------------
+
+
+      !- test ---------------------------------------------------------
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid) THEN
         nb_Qtransfo = para_AllOp%tab_Op(1)%mole%nb_Qtransfo
         iq=0
@@ -205,28 +186,17 @@
         CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,    &
                para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)
 
-!       - writing ... -------------------------------------------------
-        IF (para_AllOp%tab_Op(1)%mole%nb_inact2n /= 0) THEN
-          write(out_unitp,*)
-          write(out_unitp,*)  ' Inactive Matrix analysis'
+        write(out_unitp,*)
+        write(out_unitp,*)
+        CALL time_perso('sub_qa_bhe')
+        write(out_unitp,*) ' VIB: END ',name_sub
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*)
+        STOP 'test ini_act'
+      END IF
 
-          write(out_unitp,11) max_Sii,max_Sij
-          write(out_unitp,*)
-          write(out_unitp,*)
-
-         END IF
-
-         write(out_unitp,*)
-         write(out_unitp,*)
-         CALL time_perso('sub_qa_bhe')
-         write(out_unitp,*) ' VIB: END ',name_sub
-         write(out_unitp,*) '================================================='
-         write(out_unitp,*)
-         STOP 'test ini_act'
-
-       END IF
-!      ----------------------------------------------------------------
-!     -- Check for a restart on HADA file ----------------------------
+      !----------------------------------------------------------------
+      !-- Check for a restart on HADA file ----------------------------
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint < 1 .OR.    &
           para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint >           &
           para_AllOp%tab_Op(1)%nb_qa) THEN
@@ -262,14 +232,12 @@
         END IF
       ELSE
 
-        CALL Set_File_OF_tab_Op(para_AllOp%tab_Op)
         CALL Open_File_OF_tab_Op(para_AllOp%tab_Op)
 
         iqf = 0
       END IF
 
       IF (print_level > 1) THEN
-        !CALL Write_FileGrid(para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid)
         write(out_unitp,*) 'num_grid',                                  &
          para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint,&
          para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint
@@ -279,9 +247,8 @@
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Save_MemGrid_done .AND.    &
         para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid /= 0) GOTO 999
 
-!     ----------------------------------------------------------------
-!     -----------------------------------------------------
-!     -- Multidimensional loop ----------------------------
+      !-----------------------------------------------------
+      !-- Multidimensional loop ----------------------------
       IF (Grid_omp == 0) THEN
         nb_thread = 1
       ELSE
@@ -342,53 +309,25 @@
         write(out_unitp,'(a)',ADVANCE='yes') '----]'
       END IF
       CALL flush_perso(out_unitp)
-!     - END multidimentional loop ---------------------------------------
-!     -------------------------------------------------------------------
+      !- END multidimentional loop ---------------------------------------
+      !-------------------------------------------------------------------
 
  999  CONTINUE
 
-!     - Analysis of the grid (zero or constant terms)
-      write(6,*) 'Pot_min',Pot_min
-      write(6,*) 'Qact_min',Qact_min
+      !-------------------------------------------------------------------
+      !- Analysis of the grid (zero or constant terms)
       DO iOp=1,para_AllOp%nb_Op
         CALL Analysis_OpGrid_OF_Op(para_AllOp%tab_Op(iOp))
         !CALL write_param_Op(para_AllOp%tab_Op(iOp))
       END DO
-!     - Analysis of the grid (zero or constant terms)
+      !-------------------------------------------------------------------
 
-!     -------------------------------------------------------------------
-!     -------------------------------------------------------------------
+      !-------------------------------------------------------------------
+      ! close files
+      CALL Close_File_OF_tab_Op(para_AllOp%tab_Op)
+      !-------------------------------------------------------------------
 
-      ! close files Grid_iterm
-      IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid /= 0) THEN
-        DO iOp=1,para_AllOp%nb_Op
-          DO iterm=1,para_AllOp%tab_Op(iOp)%nb_term
-            CALL file_close(para_AllOp%tab_Op(iOp)%OpGrid(iterm)%file_Grid)
-          END DO
-          IF (para_AllOp%tab_Op(iOp)%cplx) THEN
-            CALL file_close(para_AllOp%tab_Op(iOp)%imOpGrid(1)%file_Grid)
-          END IF
-        END DO
-      END IF
-
-!     -------------------------------------------------------------------
-!     -------------------------------------------------------------------
-
-      IF (print_level > 0) write(out_unitp,*)  'min_pot,max_pot',       &
-                                  para_AllOp%tab_Op(1)%para_PES%min_pot,&
-                                  para_AllOp%tab_Op(1)%para_PES%max_pot
-
-!     - writing ... -------------------------------------------------
-      IF (para_AllOp%tab_Op(1)%mole%nb_inact2n /= 0.AND. print_level > 0) THEN
-        write(out_unitp,*)
-        write(out_unitp,*)  ' Inactive Matrix analysis'
-
-        write(out_unitp,11) max_Sii,max_Sij
- 11     format(' Max Overlap:',2f15.12)
-        write(out_unitp,*)
-        write(out_unitp,*)
-
-      END IF
+      !-------------------------------------------------------------------
 
       ! write dnTError
       IF (associated(para_AllOp%tab_Op(1)%mole%tab_Cart_transfo)) THEN
@@ -397,7 +336,9 @@
            para_AllOp%tab_Op(1)%mole%tab_Cart_transfo(1)%CartesianTransfo%dnTErr(:)
       END IF
       END IF
+      !-------------------------------------------------------------------
 
+      !-------------------------------------------------------------------
       ! test the number of elements for the RPH transfo
       IF (associated(para_AllOp%tab_Op(1)%mole%RPHTransfo)) THEN
         write(out_unitp,*) '------------------------------'
@@ -405,12 +346,13 @@
           size(para_AllOp%tab_Op(1)%mole%RPHTransfo%tab_RPHpara_AT_Qact1)
         write(out_unitp,*) '------------------------------'
       END IF
+      !-------------------------------------------------------------------
 
-!     -------------------------------------------------------
+      !-------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
       END IF
-!     -------------------------------------------------------
+      !-------------------------------------------------------------------
 
 
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint <       &
@@ -455,8 +397,7 @@
 
       SUBROUTINE Set_paraPRH(mole,para_Tnum,BasisnD)
       USE mod_system
-      USE mod_Tnum
-      !USE mod_paramQ, only : sub_QplusDQ_TO_Cart
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       IMPLICIT NONE

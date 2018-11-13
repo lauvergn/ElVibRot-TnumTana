@@ -22,12 +22,13 @@
 !===========================================================================
 
       MODULE mod_RectilinearNM_Transfo
-      USE mod_system
+      use mod_system, only: rkind, name_len, out_unitp, dealloc_array,  &
+                            alloc_array, zero, in_unitp, write_mat
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
+      use mod_constant,     only: table_atom, get_mass_tnum
       IMPLICIT NONE
+
+      PRIVATE
 
       !!@description: TODO
       !!@param: TODO
@@ -50,6 +51,10 @@
         logical :: inv=.FALSE.
 
       END TYPE Type_RectilinearNM_Transfo
+
+      PUBLIC :: Type_RectilinearNM_Transfo, alloc_RectilinearNM_Transfo, dealloc_RectilinearNM_Transfo
+      PUBLIC :: Read_RectilinearNM_Transfo, Write_RectilinearNM_Transfo, calc_RectilinearNM_Transfo
+      PUBLIC :: RectilinearNM_Transfo1TORectilinearNM_Transfo2
 
       CONTAINS
 
@@ -222,7 +227,7 @@
 
 !=================================================================
 !
-!       Zmat_Qtransfo
+!       Rectilinear Normal modes
 !
 !=================================================================
       SUBROUTINE calc_RectilinearNM_Transfo(dnQin,dnQout,RectilinearNM_Transfo,nderiv,inTOout)

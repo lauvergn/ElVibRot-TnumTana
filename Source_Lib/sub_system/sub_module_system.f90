@@ -20,10 +20,11 @@
 !
 !===========================================================================
 !===========================================================================
-      MODULE mod_system
+MODULE mod_system
       USE mod_NumParameters
       USE mod_string
       USE mod_RealWithUnit
+      USE mod_file
       USE mod_RW_MatVec
       USE mod_FracInteger
       USE mod_memory
@@ -32,12 +33,17 @@
       !$ USE omp_lib
       IMPLICIT NONE
 
-      !!@description: TODO
-      !!@param: TODO
+
       INTERFACE compare_tab
         MODULE PROCEDURE compare_la, compare_tab_int, compare_tab_real, &
                          compare_tab_cmplx
       END INTERFACE
+      PRIVATE :: compare_la, compare_tab_int, compare_tab_real, compare_tab_cmplx
+
+      INTERFACE inferior_tab
+        MODULE PROCEDURE inferior_tab_real, inferior_tab_int
+      END INTERFACE
+      PRIVATE :: inferior_tab_real, inferior_tab_int
 
 #if defined(__TNUM_VER)
       character (len=Name_len) :: Tnum_version = __TNUM_VER
@@ -77,7 +83,6 @@
 #endif
 
 
-      character (len=Line_len) :: base_FileName = ''
       logical :: openmp = .FALSE.
       integer :: MatOp_omp,OpPsi_omp,BasisTOGrid_omp,Grid_omp
       integer :: MatOp_maxth,OpPsi_maxth,BasisTOGrid_maxth,Grid_maxth
@@ -375,28 +380,6 @@
 
       END FUNCTION inferior_tab_int
 
-      !! @description: Join two path1 with path2. Return "path1/path2"
-      !!               If path2 is absolute (starting with /), return path2
-      !! @param: path1 First path
-      !! @param: path2 Second path
-      character(len=Name_longlen) function join_path(path1, path2)
-
-        character(len=*), intent(in) :: path1
-        character(len=*), intent(in) :: path2
-
-        character (len=*), parameter :: routine_name = 'join_path'
-
-        if (path2(1:1) == '/') then
-          join_path = path2
-          return
-        end if
-        if (path1(len_trim(path1):len_trim(path1)) == '/') then
-          join_path = trim(path1)//trim(path2)
-        else
-          join_path = trim(path1)//"/"//trim(path2)
-        end if
-
-      end function join_path
       SUBROUTINE dihedral_range(angle,itype_dihedral)
 
         real (kind=Rkind), intent(inout) :: angle
@@ -418,5 +401,5 @@
         END SELECT
 
       END SUBROUTINE dihedral_range
-      END MODULE mod_system
+END MODULE mod_system
 

@@ -21,17 +21,20 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_Rot2CoordTransfo
-      USE mod_system
+      use mod_system, only: error_memo_allo, in_unitp, out_unitp, one
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
       IMPLICIT NONE
+
+      PRIVATE
 
       TYPE Type_Rot2CoordTransfo
         integer                  :: num_Rot
         integer                  :: list_2Coord(2) = (/ 0,0 /)
       END TYPE Type_Rot2CoordTransfo
+
+      PUBLIC :: Type_Rot2CoordTransfo, alloc_Rot2CoordTransfo, dealloc_Rot2CoordTransfo
+      PUBLIC :: Read_Rot2CoordTransfo, Write_Rot2CoordTransfo, calc_Rot2CoordTransfo
+      PUBLIC :: Rot2CoordTransfo1TORot2CoordTransfo2
 
       CONTAINS
 

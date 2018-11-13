@@ -28,14 +28,24 @@
 !===========================================================================
 
    MODULE mod_PrimOp
+
+    USE mod_Coord_KEO
+
+
+    USE mod_nDFit
+    USE mod_PrimOp_def
+    USE mod_OTF_def
+    USE mod_OTF
+    USE mod_SimpleOp
+
+
+
    IMPLICIT NONE
 
-   PRIVATE
-   PUBLIC    Sub_init_dnOp,Set_dnMatOp_AT_Qact
-   PUBLIC    Set_d0MatOp_AT_Qact,TnumKEO_TO_tab_d0H
-   PUBLIC    sub_freq_AT_Qact,sub_dnfreq_4p,sub_freq2_RPH,Set_RPHpara_AT_Qact1
-   PUBLIC    pot2,Finalyze_TnumTana_Coord_PrimOp
-   PUBLIC    calc3_NM_TO_sym ! for PVSCF
+   PUBLIC
+
+   PRIVATE   dnOp_num_grid_v2, calc3_NM_TO_sym, calc4_NM_TO_sym, calc5_NM_TO_sym
+   PRIVATE   get_hess_k, Set_RPHpara_AT_Qact1_opt2, Set_RPHpara_AT_Qact1_opt01
 
    CONTAINS
 
@@ -43,7 +53,7 @@
       USE mod_system
       USE mod_SimpleOp,   only : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
       USE mod_PrimOp_def, only : param_PES
-      USE mod_Tnum,  only : zmatrix,Tnum
+      USE mod_Coord_KEO,  only : zmatrix,Tnum
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -69,6 +79,7 @@
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
+         write(out_unitp,*) 'para_PES%nb_scalar_Op ',para_PES%nb_scalar_Op
          CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
@@ -79,6 +90,7 @@
       CALL Init_d0MatOp(d0MatOp(1),para_PES%Type_HamilOp,mole%nb_act,   &
                         para_PES%nb_elec,JRot=para_Tnum%JJ,             &
                         cplx=para_PES%pot_cplx,direct_KEO=para_PES%direct_KEO) ! H
+
       DO k=2,nb_Op
         CALL Init_d0MatOp(d0MatOp(k),0,mole%nb_act,para_PES%nb_elec,    &
                           JRot=para_Tnum%JJ,cplx=.FALSE.,direct_KEO=.FALSE.) ! Scalar Operator
@@ -114,11 +126,10 @@
       SUBROUTINE Set_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,para_PES)
       USE mod_system
       USE mod_dnSVM
+      use mod_nDFit, only: sub_ndfunc_from_ndfit
+      USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
-      USE mod_Tnum,  only : zmatrix,Tnum
-      USE mod_paramQ
-      USE mod_CartesianTransfo
       USE mod_OTF
       IMPLICIT NONE
 
@@ -186,6 +197,7 @@
         write(out_unitp,*) 'calc_scalar_Op',para_PES%calc_scalar_Op
         write(out_unitp,*) 'pot_cplx',para_PES%pot_cplx
         write(out_unitp,*) 'pot_itQtransfo',para_PES%pot_itQtransfo
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -304,7 +316,10 @@
               END DO
             END IF
           ELSE
-            IF (debug) write(out_unitp,*) 'With calcN_op'
+            IF (debug) THEN
+              write(out_unitp,*) 'With calcN_op'
+              CALL flush_perso(out_unitp)
+            END IF
 
             CALL calcN_op(d0MatOp(iOpE)%ReVal(:,:,itermE),              &
                           mat_imV,mat_ScalOp,                           &
@@ -458,11 +473,10 @@
      SUBROUTINE Set_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv)
       USE mod_system
       USE mod_dnSVM
+      use mod_nDFit, only: sub_ndfunc_from_ndfit
+      USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
-      USE mod_Tnum,  only : zmatrix,Tnum
-      USE mod_paramQ
-      USE mod_CartesianTransfo
       USE mod_OTF
       IMPLICIT NONE
 
@@ -878,9 +892,9 @@
                                   mole,para_Tnum,para_PES,nderiv)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
-      USE mod_Tnum,  only : zmatrix,Tnum
       USE mod_OTF
       IMPLICIT NONE
 
@@ -1128,9 +1142,9 @@
       SUBROUTINE TnumKEO_TO_tab_dnH(Qact,Tab_dnH,mole,para_Tnum)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Coord_KEO, only : zmatrix,Tnum,get_dng_dnGG, sub3_dnrho_ana, &
+                                calc3_f2_f1Q_num, sub3_dndetGG
       USE mod_SimpleOp
-      USE mod_Tnum,     only : zmatrix,Tnum
-      USE mod_dnGG_dng, only : get_dng_dnGG
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -1241,9 +1255,9 @@
       SUBROUTINE TnumKEO_TO_tab_d0H(Qact,d0MatH,mole,para_Tnum)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Coord_KEO, only : zmatrix,Tnum,get_dng_dnGG, sub3_dnrho_ana, &
+                                calc3_f2_f1Q_num, sub3_dndetGG
       USE mod_SimpleOp
-      USE mod_Tnum,     only : zmatrix,Tnum
-      USE mod_dnGG_dng, only : get_dng_dnGG
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -1408,10 +1422,9 @@
       SUBROUTINE sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES,print_freq,d0h_opt)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Coord_KEO, only : zmatrix,Tnum,get_dng_dnGG, calc_freq
       USE mod_SimpleOp
       USE mod_PrimOp_def
-      USE mod_Tnum,  only : zmatrix,Tnum
-      USE mod_dnGG_dng
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -1539,11 +1552,9 @@
       SUBROUTINE calc3_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
-      USE mod_Tnum
-      USE mod_dnGG_dng
-      USE mod_paramQ
       IMPLICIT NONE
 
       TYPE (zmatrix) :: mole,mole_1
@@ -2006,10 +2017,9 @@
       SUBROUTINE calc4_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
-      USE mod_Tnum
-      USE mod_dnGG_dng
       IMPLICIT NONE
 
       TYPE (zmatrix) :: mole,mole_1
@@ -2466,10 +2476,9 @@
       SUBROUTINE calc5_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
-      USE mod_Tnum
-      USE mod_dnGG_dng
       IMPLICIT NONE
 
       TYPE (zmatrix) :: mole,mole_1
@@ -2929,11 +2938,10 @@
                             para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Coord_KEO, only : zmatrix,Tnum,get_dng_dnGG, sub_dnFCC_TO_dnFcurvi
+
       USE mod_SimpleOp
       USE mod_PrimOp_def
-      USE mod_Tnum,  only : zmatrix,Tnum
-      USE mod_dnGG_dng
-      USE mod_paramQ
       IMPLICIT NONE
 
       integer           :: nb_NM
@@ -3202,11 +3210,7 @@
       SUBROUTINE Set_RPHpara_AT_Qact1(RPHpara_AT_Qact1,             &
                                       Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
-      USE mod_dnSVM
-      USE mod_Tnum
-      USE mod_RPHTransfo
-      USE mod_ActiveTransfo
-
+      USE mod_Coord_KEO
       IMPLICIT NONE
 
 
@@ -3320,10 +3324,7 @@
                                            Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Tnum
-      USE mod_RPHTransfo
-      USE mod_ActiveTransfo
-
+      USE mod_Coord_KEO
       IMPLICIT NONE
 
 
@@ -3470,10 +3471,7 @@
                                       Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Tnum
-      USE mod_RPHTransfo
-      USE mod_ActiveTransfo
-
+      USE mod_Coord_KEO
       IMPLICIT NONE
 
 
@@ -3644,11 +3642,9 @@
       SUBROUTINE sub_dnfreq_8p(dnQeq,dnC,dnLnN,dnEHess,dnHess,dnGrad,dnC_inv,&
                                pot0_corgrad,Qact,                      &
                                para_Tnum,mole,RPHTransfo,nderiv,test)
-
       USE mod_system
       USE mod_dnSVM
-      USE mod_Tnum,  only : zmatrix,Tnum
-      USE mod_RPHTransfo
+      USE mod_Coord_KEO
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -4005,8 +4001,7 @@
                                para_Tnum,mole,RPHTransfo,nderiv,test)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Tnum,  only : zmatrix,Tnum
-      USE mod_RPHTransfo
+      USE mod_Coord_KEO
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -4316,13 +4311,10 @@
                                Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Tnum,  only : zmatrix,Tnum
-      USE mod_RPHTransfo
-      USE mod_dnGG_dng
-      USE mod_ActiveTransfo
-
+      USE mod_Coord_KEO
       IMPLICIT NONE
-!----- for the zmatrix and Tnum --------------------------------------
+
+      !----- for the zmatrix and Tnum --------------------------------------
       TYPE (Tnum)        :: para_Tnum
       TYPE (zmatrix)     :: mole
 
@@ -4576,15 +4568,9 @@
       SUBROUTINE Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
-      USE mod_Tnum
-      USE mod_dnGG_dng
-      USE mod_RPHTransfo
-      USE mod_ActiveTransfo
-      USE mod_paramQ, only : sub_QplusDQ_TO_Cart
-      USE mod_Tana_keo
-      USE mod_Tana_Tnum
 
       IMPLICIT NONE
 
@@ -4743,7 +4729,7 @@
 
     IF (print_level > 1) THEN
       write(out_unitp,*) ' dnGG%d0'
-      CALL Write_RMat(dnGG%d0,out_unitp,5)
+      CALL Write_Mat(dnGG%d0,out_unitp,5)
     END IF
 
     CALL dealloc_dnSVM(dnGG)
@@ -4758,7 +4744,7 @@
         write(out_unitp,*)
         !IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Tana'
         CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
-        IF (debug) CALL write_sum_opnd(para_Tnum%TWOxKEO,header=.TRUE.)
+        IF (debug) CALL write_op(para_Tnum%TWOxKEO,header=.TRUE.)
 
         CALL comparison_G_FROM_Tnum_Tana(para_Tnum%ExpandTWOxKEO,mole,para_Tnum,Qact)
 

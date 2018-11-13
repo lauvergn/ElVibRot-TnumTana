@@ -1,6 +1,7 @@
 here=`pwd`
 DIR_vib=../..
 cd $DIR_vib
+  make clean
   make Tnum_MCTDH
 cd $here
 

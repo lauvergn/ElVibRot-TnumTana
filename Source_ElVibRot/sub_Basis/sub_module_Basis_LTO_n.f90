@@ -30,6 +30,8 @@
       USE mod_system
       IMPLICIT NONE
 
+        PRIVATE
+
         TYPE Basis_L_TO_n
           integer                     :: L_TO_n_type     = 0        ! for the initalization (after we use the Tab_L_TO_n)
 
@@ -50,6 +52,12 @@
         INTERFACE assignment (=)
           MODULE PROCEDURE L_TO_n_para2_TO_L_TO_n_para1
         END INTERFACE
+
+        PUBLIC Basis_L_TO_n, assignment (=), init_Basis_L_TO_n,  &
+               Write_Basis_L_TO_n, Set_Basis_L_TO_n,             &
+               alloc_Basis_L_TO_n, dealloc_Basis_L_TO_n,         &
+               Get_n_FROM_Basis_L_TO_n, Get_L_FROM_Basis_L_TO_n, &
+               check_Basis_L_TO_n
 
       CONTAINS
 
@@ -310,7 +318,7 @@
 
       IF (errBasis_L_TO_n /= 0) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
-        write(out_unitp,*) '  Problem with initailization'
+        write(out_unitp,*) '  Problem with initialization'
         CALL Write_Basis_L_TO_n(L_TO_n_para)
         write(out_unitp,*)
         STOP
@@ -318,15 +326,6 @@
 
       nmax = get_n_FROM_Basis_L_TO_n(L_TO_n_para,Lmax)
       nmin = get_L_FROM_Basis_L_TO_n(L_TO_n_para,nmax) ! to set up the table
-!      nmin = get_n_FROM_Basis_L_TO_n(L_TO_n_para,0)
-!      !write(6,*) 'nmin,nmax',nmin,nmax
-!      CALL alloc_NParray(L_TO_n_para%tab_n_TO_L,(/nmax/),'tab_n_TO_L',name_sub,(/nmin/))
-!      !write(6,*) 'shape tab_n_TO_L',lbound(L_TO_n_para%tab_n_TO_L),ubound(L_TO_n_para%tab_n_TO_L)
-!      DO L=Lmax,0,-1
-!        n = get_n_FROM_Basis_L_TO_n(L_TO_n_para,L)
-!        L_TO_n_para%tab_n_TO_L(nmin:n) = L
-!      END DO
-
 
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -342,7 +341,7 @@
 
       END SUBROUTINE init_Basis_L_TO_n
 
-      FUNCTION get_n_FROM_Basis_L_TO_n(L_TO_n_para,L,L2) RESULT(n)
+      FUNCTION Get_n_FROM_Basis_L_TO_n(L_TO_n_para,L,L2) RESULT(n)
       integer  :: n
       TYPE (Basis_L_TO_n), intent(in)    :: L_TO_n_para
       integer,             intent (in)   :: L
@@ -352,7 +351,7 @@
 
 !---------------------------------------------------------------------
       integer :: err_mem,memory
-      character (len=*), parameter :: name_sub='get_n_FROM_Basis_L_TO_n'
+      character (len=*), parameter :: name_sub='Get_n_FROM_Basis_L_TO_n'
       logical,parameter :: debug=.FALSE.
       !logical,parameter :: debug=.TRUE.
 !---------------------------------------------------------------------
@@ -451,9 +450,9 @@
         write(out_unitp,*) 'END ',name_sub
       END IF
 !---------------------------------------------------------------------
-      END FUNCTION get_n_FROM_Basis_L_TO_n
+      END FUNCTION Get_n_FROM_Basis_L_TO_n
 
-      FUNCTION get_L_FROM_Basis_L_TO_n(L_TO_n_para,n) RESULT(L)
+      FUNCTION Get_L_FROM_Basis_L_TO_n(L_TO_n_para,n) RESULT(L)
       integer  :: L
       TYPE (Basis_L_TO_n), intent(inout)    :: L_TO_n_para
       integer,             intent (in)   :: n
@@ -463,7 +462,7 @@
 
 !---------------------------------------------------------------------
       integer :: err_mem,memory
-      character (len=*), parameter :: name_sub='get_L_FROM_Basis_L_TO_n'
+      character (len=*), parameter :: name_sub='Get_L_FROM_Basis_L_TO_n'
       logical,parameter :: debug=.FALSE.
       !logical,parameter :: debug=.TRUE.
 !---------------------------------------------------------------------
@@ -509,7 +508,7 @@
         write(out_unitp,*) 'END ',name_sub
       END IF
 !---------------------------------------------------------------------
-      END FUNCTION get_L_FROM_Basis_L_TO_n
+      END FUNCTION Get_L_FROM_Basis_L_TO_n
 
       SUBROUTINE Set_Basis_L_TO_n(L_TO_n_para,A,B,C,expo,Tab_L_TO_n,max_n,L_TO_n_type)
 

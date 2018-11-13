@@ -21,16 +21,24 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_dnGG_dng
-  USE mod_system
-  USE mod_dnSVM
-  USE mod_Tnum
-  USE mod_paramQ
+  use mod_system,  only: rkind, out_unitp, zero, flush_perso, onetenth,        &
+                         write_mat, one, four, two, alloc_array, dealloc_array,&
+                         half
+  use mod_dnSVM,   only: type_dnmat, type_dns, alloc_dnsvm, dealloc_dnsvm,     &
+                         write_dnsvm, sub_zero_to_dnmat, inv_dnmat1_to_dnmat2, &
+                         type_dnvec, alloc_array, dealloc_array
+  use mod_paramQ,  only: sub_qacttodnx
+  use mod_Tnum,    only: zmatrix, tnum, write_mole, mole1tomole2, dealloc_zmat
+  USE mod_dnRho ! all
+
   IMPLICIT NONE
+
+  PRIVATE
 
   logical, parameter :: new_vep = .FALSE.
 
-  PRIVATE
-  PUBLIC :: new_vep,get_d0g_d0GG,get_d0GG,get_dnGG_vep,get_dng_dnGG,sub_vep_new,sub_vep
+  PUBLIC :: new_vep,get_d0g_d0GG,get_d0GG,get_dnGG_vep,get_dng_dnGG,    &
+            sub_vep_new,sub_vep
 
   CONTAINS
 !======================================================================
@@ -44,8 +52,7 @@ MODULE mod_dnGG_dng
 !
 !======================================================================
       SUBROUTINE get_dnGG_vep(Qact,para_Tnum,mole,dnGG,vep,rho,nderiv)
-      USE mod_system
-      USE mod_dnSVM
+      USE mod_dnDetGG_dnDetg, only : sub3_dndetGG
       IMPLICIT NONE
 
 
@@ -156,8 +163,6 @@ MODULE mod_dnGG_dng
 !
 !======================================================================
       SUBROUTINE get_dng_dnGG(Qact,para_Tnum,mole,dng,dnGG,nderiv)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
       real (kind=Rkind), intent(inout) :: Qact(:)
@@ -368,8 +373,7 @@ MODULE mod_dnGG_dng
       END SUBROUTINE get_dng_dnGG
 
       SUBROUTINE get_d0GG(Qact,para_Tnum,mole,d0GG,def,Jac,Rho)
-      USE mod_system
-      USE mod_dnSVM
+      USE mod_dnDetGG_dnDetg, only : sub3_dndetGG
       IMPLICIT NONE
 
       real (kind=Rkind),           intent(inout)  :: Qact(:)
@@ -442,7 +446,7 @@ MODULE mod_dnGG_dng
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        CALL Write_RMat(d0GG,out_unitp,5,name_info='d0GG')
+        CALL Write_Mat(d0GG,out_unitp,5,name_info='d0GG')
         write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
@@ -452,8 +456,6 @@ MODULE mod_dnGG_dng
       END SUBROUTINE get_d0GG
 
       SUBROUTINE get_d0g_d0GG(Qact,para_Tnum,mole,d0g,d0GG,def)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
       real (kind=Rkind),           intent(inout)  :: Qact(:)
@@ -539,10 +541,10 @@ MODULE mod_dnGG_dng
 !-----------------------------------------------------------
       IF (debug) THEN
         IF (present(d0GG)) THEN
-          CALL Write_RMat(d0GG,out_unitp,5,name_info='d0GG')
+          CALL Write_Mat(d0GG,out_unitp,5,name_info='d0GG')
         END IF
         IF (present(d0g)) THEN
-          CALL Write_RMat(d0g,out_unitp,5,name_info='d0g')
+          CALL Write_Mat(d0g,out_unitp,5,name_info='d0g')
         END IF
         write(out_unitp,*) 'END ',name_sub
       END IF
@@ -554,7 +556,6 @@ MODULE mod_dnGG_dng
 
       ! this subroutine does NOT deal with type100. You have to use get_dng_dnGG
       RECURSIVE SUBROUTINE get_dnGG(Qact,dnGG,nderiv,para_Tnum,mole)
-      USE mod_system
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -731,7 +732,6 @@ MODULE mod_dnGG_dng
       END SUBROUTINE get_dnGG
 
       RECURSIVE SUBROUTINE get_dng(Qact,dng,nderiv,para_Tnum,mole)
-      USE mod_system
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -804,10 +804,6 @@ MODULE mod_dnGG_dng
 !=====================================================================
 !
       SUBROUTINE sub3_dnA_ana(Qact,dnA,dnx,mole,para_Tnum,nderivA)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Tnum
-      USE mod_paramQ
       IMPLICIT NONE
 
       TYPE (zmatrix)    :: mole
@@ -888,10 +884,6 @@ MODULE mod_dnGG_dng
 !=====================================================================
 !
       SUBROUTINE sub3_dnA_num(Qact,dnA,dnx,mole,para_Tnum,nderivA)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Tnum
-      USE mod_paramQ
       IMPLICIT NONE
 
       TYPE (zmatrix)    :: mole
@@ -1094,7 +1086,6 @@ MODULE mod_dnGG_dng
       SUBROUTINE sub_d0A(A,d0x,d1x,                                     &
                          nb_act,nat_act,ncart,ncart_act,ndimA,          &
                          Without_Rot)
-      USE mod_system
       IMPLICIT NONE
 
 
@@ -1249,7 +1240,6 @@ MODULE mod_dnGG_dng
       SUBROUTINE sub_d1A(d1A,d0x,d1x,d2x,                               &
                          nb_act,nat_act,ncart,ncart_act,ndimA,          &
                          Without_Rot)
-      USE mod_system
       IMPLICIT NONE
 
        integer :: nb_act,nat_act,ncart,ncart_act,ndimA
@@ -1395,7 +1385,6 @@ MODULE mod_dnGG_dng
       SUBROUTINE sub_d2A(d2A,d0x,d1x,d2x,d3x,                           &
                          nb_act,nat_act,ncart,ncart_act,ndimA,          &
                          Without_Rot)
-      USE mod_system
       IMPLICIT NONE
 
        integer :: nb_act,nat_act,ncart,ncart_act,ndimA
@@ -1579,7 +1568,6 @@ MODULE mod_dnGG_dng
 
       SUBROUTINE sub_vep_new(vep,d0invA,d1invA,                         &
                              fi,Fij,jaci,JACij,ndimA,nb_act)
-      USE mod_system
       IMPLICIT NONE
 
        integer ndimA,nb_act
@@ -1614,7 +1602,6 @@ MODULE mod_dnGG_dng
 
       SUBROUTINE sub_vep_2(vep,d0invA,d1invA,                           &
                            fi,Fij,jaci,JACij,ndimA,nb_act)
-      USE mod_system
       IMPLICIT NONE
 
        integer ndimA,nb_act
@@ -1643,7 +1630,6 @@ MODULE mod_dnGG_dng
 
       SUBROUTINE sub_vep(vep,d0invA,d1invA,                             &
                          fi,Fij,jaci,JACij,ndimA,nb_act)
-      USE mod_system
       IMPLICIT NONE
 
        integer ndimA,nb_act
@@ -1686,8 +1672,6 @@ MODULE mod_dnGG_dng
 !
 !======================================================================
       SUBROUTINE dngG100_TO_dngG(dnG100,dnG,mole100,mole)
-      USE mod_system
-      USE mod_dnSVM
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -1730,8 +1714,6 @@ MODULE mod_dnGG_dng
 
       END SUBROUTINE dngG100_TO_dngG
       SUBROUTINE gG100TOgG(d0G100,d0G,mole100,mole)
-      USE mod_system
-      USE mod_Tnum
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------

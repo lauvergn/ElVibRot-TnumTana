@@ -23,16 +23,18 @@
       MODULE mod_TemplateTransfo
       USE mod_system
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
       IMPLICIT NONE
+
+      PRIVATE
 
       !!@description: TODO
       !!@param: TODO
       TYPE Type_TemplateTransfo
 
       END TYPE Type_TemplateTransfo
+
+      PUBLIC :: Type_TemplateTransfo
+
 
       CONTAINS
 

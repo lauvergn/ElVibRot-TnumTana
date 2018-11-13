@@ -28,7 +28,15 @@
 !===========================================================================
 
 MODULE mod_OTF
+   USE mod_system
+   USE mod_dnSVM
+   use mod_OTF_def,    only: param_otf
+   use mod_PrimOp_def, only: param_pes, write_param_pes
    IMPLICIT NONE
+
+   PRIVATE
+   PUBLIC   dnOp_grid_OnTheFly, Read_GradHess_Molpro, Read_dnDipCC_Gauss
+   PUBLIC   Read_hess_Fchk
 
    CONTAINS
 
@@ -43,11 +51,8 @@ MODULE mod_OTF
       SUBROUTINE dnOp_grid_OnTheFly(Qxyz,MatdnECC,nderivE,              &
                                     MatdnMuCC,nderivMu,                 &
                                     mole,para_PES)
+      use mod_Coord_KEO,  only: zmatrix
 
-      USE mod_system
-      USE mod_file
-      USE mod_Tnum
-      USE mod_PrimOp_def
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -144,10 +149,10 @@ END IF
       END SUBROUTINE dnOp_grid_OnTheFly
       SUBROUTINE pot_mu_onthefly_gauss(Qxyz,dnECC,nderivE,dnMuCC,nderivMu,&
                                         mole,para_PES,err_calc)
+      use mod_Coord_KEO,  only: zmatrix
 
       USE mod_system
-      USE mod_file
-      USE mod_Tnum
+      USE mod_dnSVM
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -236,7 +241,7 @@ END IF
 
       USE mod_system
       USE mod_file
-      USE mod_Tnum
+      use mod_Coord_KEO,  only: zmatrix
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -395,7 +400,6 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_file
       implicit none
 
 !----- input output variables ----------------------------------------
@@ -440,7 +444,6 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_file
       implicit none
 
 !----- input output variables ----------------------------------------
@@ -561,7 +564,6 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_file
       implicit none
 
 !----- input output variables ----------------------------------------
@@ -661,8 +663,8 @@ END IF
                                          mole,para_PES)
 
       USE mod_system
-      USE mod_file
-      USE mod_Tnum
+      USE mod_dnSVM
+      USE mod_Coord_KEO,  only: zmatrix
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -737,8 +739,7 @@ END IF
                                         mole,para_PES,para_OTF)
 
       USE mod_system
-      USE mod_file
-      USE mod_Tnum
+      USE mod_Coord_KEO,  only: zmatrix
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -864,7 +865,6 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_file
       implicit none
 
 !----- input output variables ----------------------------------------
@@ -998,7 +998,6 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_file
       implicit none
 
 !----- input output variables ----------------------------------------
@@ -1110,7 +1109,6 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_file
       implicit none
 
 !----- input output variables ----------------------------------------
@@ -1257,8 +1255,8 @@ END IF
                                   mole,para_PES)
 
       USE mod_system
-      USE mod_file
-      USE mod_Tnum
+      USE mod_dnSVM
+      USE mod_Coord_KEO,  only: zmatrix
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -1343,8 +1341,7 @@ END IF
                                           mole,para_PES,para_OTF)
 
       USE mod_system
-      USE mod_file
-      USE mod_Tnum
+      USE mod_Coord_KEO,  only: zmatrix
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -1437,7 +1434,6 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_file
       implicit none
 
 !----- input output variables ----------------------------------------
@@ -1532,7 +1528,6 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_file
       implicit none
 
 !----- input output variables ----------------------------------------

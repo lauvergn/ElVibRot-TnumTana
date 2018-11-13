@@ -30,6 +30,8 @@ MODULE mod_Smolyak_DInd
 USE mod_system
 IMPLICIT NONE
 
+PRIVATE
+
 TYPE TypeDInd
   integer :: ndim  = 0
   integer :: MaxnD = -1
@@ -42,6 +44,11 @@ END TYPE TypeDInd
 INTERFACE assignment(=)
   module procedure TypeDInd2_TO_TypeDInd1
 END INTERFACE
+
+PUBLIC :: TypeDInd, assignment(=), alloc_TypeDInd, dealloc_TypeDInd, Write_TypeDInd, &
+          Set_Smolyak_nDInd, Set_nDInd,Set_nDInd_01order,Set_nDInd_10order,dealloc_nDInd, write_nDInd, &
+          InD_TO_tabi, tabi_TO_InD, l_TO_n
+
 
 CONTAINS
 

@@ -30,7 +30,7 @@
                           para_Tnum,mole,para_PES,para_ReadOp,ComOp_loc)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -561,7 +561,7 @@
                           para_Tnum,mole,para_PES,para_ReadOp,ComOp_loc)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -597,7 +597,7 @@
       TYPE (Type_IntVec), allocatable :: tab_i_TO_l(:)
       real (kind=Rkind), allocatable :: wrho(:)
 
-      TYPE (Type_nDindex)        :: nDind_SmolyakGrids_temp
+      TYPE (Type_nDindex)        :: nDind_SmolyakRep_temp
       integer                    :: i_SGm1
       integer, allocatable       :: nDval(:)
       real (kind=Rkind), allocatable :: WeightSG1(:),WeightSG2(:)
@@ -618,7 +618,6 @@
 !-----------------------------------------------------------
 
       IF (debug) basis_SG%print_info_OF_basisDP    = .TRUE.
-
       Lmax = basis_SG%L_SparseGrid
       Lmin = max(0,Lmax-basis_SG%nb_basis+1)
       LB   = basis_SG%L_SparseBasis
@@ -662,7 +661,7 @@
       DO ib=1,basis_SG%nb_basis
       DO L=0,Lmax
 
-        IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        IF (debug) THEN
           write(out_unitp,*) '================================================='
           write(out_unitp,*) '===L,ib: ',L,ib,'==============='
         END IF
@@ -696,14 +695,13 @@
         basis_SG%tab_basisPrimSG(L,ib)%L_SparseGrid    = LG_L
         basis_SG%tab_basisPrimSG(L,ib)%L_SparseBasis   = min(LG_L,LB_L)
         basis_SG%tab_basisPrimSG(L,ib)%Norm_OF_nDindB  = min(LG_L,LB_L)
-        !basis_SG%tab_basisPrimSG(L,ib)%SparseGrid_type = 0
         basis_SG%tab_basisPrimSG(L,ib)%Type_OF_nDindB  = 0
 
         basis_SG%tab_basisPrimSG(L,ib)%packed = .TRUE.
 
         basis_SG%tab_basisPrimSG(L,ib)%print_info_OF_basisDP =        &
                                         basis_SG%print_info_OF_basisDP
-
+        basis_SG%tab_basisPrimSG(L,ib)%print_info_OF_basisDP = .FALSE.
 
         IF (.NOT. basis_SG%check_nq_OF_basis)                         &
              basis_SG%tab_basisPrimSG(L,ib)%check_nq_OF_basis = .FALSE.
@@ -720,11 +718,12 @@
         IF (debug) write(6,*) 'L,ib',L,ib,'nb:',                      &
                                      basis_SG%tab_basisPrimSG(L,ib)%nb
 
-        IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1)    &
-           write(out_unitp,*) 'primtive basis sets of FG,L,ib',L,ib,' done'
+        IF (debug) write(out_unitp,*) 'primtive basis sets of SG,L,ib',L,ib,' done'
         CALL flush_perso(out_unitp)
 
       END DO
+      write(out_unitp,*) ib,'nb(L)',(basis_SG%tab_basisPrimSG(L,ib)%nb,L=0,Lmax)
+      write(out_unitp,*) ib,'nq(L)',(get_nb_FROM_basis(basis_SG%tab_basisPrimSG(L,ib)),L=0,Lmax)
       END DO
       basis_SG%primitive_done = .TRUE.
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
@@ -748,7 +747,10 @@
       END DO
 
       ! for the Basis functions -----------------------------------------
-      write(out_unitp,*) '============ Set nDindB' ; CALL flush_perso(out_unitp)
+      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        write(out_unitp,*) '============ Set nDindB'
+        CALL flush_perso(out_unitp)
+      END IF
       CALL dealloc_nDindex(basis_SG%nDindB)
       CALL init_nDindexPrim(basis_SG%nDindB,basis_SG%nb_basis,nDsize,   &
                         type_OF_nDindex=3,Lmax=LB,tab_i_TO_l=tab_i_TO_l)
@@ -759,27 +761,34 @@
         DO i=1,basis_SG%nDindB%Max_nDI
           write(out_unitp,*) 'ib,tab_L',i,basis_SG%nDindB%Tab_nDval(:,i)
         END DO
+        CALL flush_perso(out_unitp)
       END IF
-      CALL flush_perso(out_unitp)
-      write(out_unitp,*) '============ Set nDindB: done' ; CALL flush_perso(out_unitp)
 
-      write(out_unitp,*) '============ Set nDind_SmolyakGrids' ; CALL flush_perso(out_unitp)
+      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        write(out_unitp,*) '============ Set nDindB: done' ; CALL flush_perso(out_unitp)
+        CALL flush_perso(out_unitp)
+      END IF
+
+      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        write(out_unitp,*) '============ Set nDind_SmolyakRep' ; CALL flush_perso(out_unitp)
+        CALL flush_perso(out_unitp)
+      END IF
       ! for the Smolyak grids -----------------------------------------
       CALL dealloc_SGType2(basis_SG%para_SGType2)
 
-      CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakGrids, &
+      CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep, &
                          basis_SG%nb_basis,nDsize,type_OF_nDindex=-4, &
                          Lmin=Lmin,Lmax=Lmax)
-      IF (debug) CALL Write_nDindex(basis_SG%para_SGType2%nDind_SmolyakGrids)
+      IF (debug) CALL Write_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
 
-      basis_SG%nb_SG              = basis_SG%para_SGType2%nDind_SmolyakGrids%Max_nDI
-      basis_SG%para_SGType2%nb_SG = basis_SG%para_SGType2%nDind_SmolyakGrids%Max_nDI
+      basis_SG%nb_SG              = basis_SG%para_SGType2%nDind_SmolyakRep%Max_nDI
+      basis_SG%para_SGType2%nb_SG = basis_SG%para_SGType2%nDind_SmolyakRep%Max_nDI
 
       ! for the Smolyak Weights ----------------------------------------
       CALL alloc_NParray(basis_SG%WeightSG,(/basis_SG%nb_SG/),          &
                         'basis_SG%WeightSG',name_sub)
       DO i_SG=1,basis_SG%nb_SG
-        DeltaL = Lmax - sum(basis_SG%para_SGType2%nDind_SmolyakGrids%Tab_nDval(:,i_SG))
+        DeltaL = Lmax - sum(basis_SG%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,i_SG))
         IF (DeltaL < 0) STOP 'DeltaL < 0'
         IF (DeltaL > basis_SG%nb_basis -1) STOP 'DeltaL > nb_basis-1'
         IF (mod(DeltaL,2) == 0) THEN
@@ -790,18 +799,24 @@
       END DO
 
       IF (debug) THEN
-        CALL alloc_NParray(nDval,(/basis_SG%para_SGType2%nDind_SmolyakGrids%ndim/),&
+        CALL alloc_NParray(nDval,(/basis_SG%para_SGType2%nDind_SmolyakRep%ndim/),&
                           'nDval',name_sub)
         DO i_SG=1,basis_SG%nb_SG
-          CALL calc_nDindex(basis_SG%para_SGType2%nDind_SmolyakGrids,i_SG,nDval)
+          CALL calc_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep,i_SG,nDval)
           write(6,*) 'i_SG,nDval,coef',i_SG,nDval(:),basis_SG%WeightSG(i_SG)
         END DO
         CALL dealloc_NParray(nDval,'nDval',name_sub)
       END IF
-      write(out_unitp,*) '============ Set nDind_SmolyakGrids: done' ; CALL flush_perso(out_unitp)
+      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        write(out_unitp,*) '============ Set nDind_SmolyakRep: done' ; CALL flush_perso(out_unitp)
+        CALL flush_perso(out_unitp)
+      END IF
 
+      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        write(out_unitp,*) '============ Set para_SGType2%nDind_DPG' ; CALL flush_perso(out_unitp)
+        CALL flush_perso(out_unitp)
+      END IF
 
-      write(out_unitp,*) '============ Set para_SGType2%nDind_DPG' ; CALL flush_perso(out_unitp)
       ! for the number grid points --------------------------------------
       CALL alloc_NParray(basis_SG%para_SGType2%nDind_DPG,(/ basis_SG%nb_SG /),&
                         'basis_SG%para_SGType2%nDind_DPG',name_sub)
@@ -818,7 +833,7 @@
       nqq = 0
       DO i_SG=1,basis_SG%nb_SG
         DO ib=1,basis_SG%nb_basis
-          L = basis_SG%para_SGType2%nDind_SmolyakGrids%Tab_nDval(ib,i_SG)
+          L = basis_SG%para_SGType2%nDind_SmolyakRep%Tab_nDval(ib,i_SG)
           nDsize(ib) = get_nq_FROM_basis(basis_SG%tab_basisPrimSG(L,ib))
         END DO
         CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_DPG(i_SG),     &
@@ -832,14 +847,17 @@
 
         IF (debug) THEN
           write(out_unitp,*) 'nq at i_SG',i_SG,':',                     &
-            basis_SG%para_SGType2%nDind_SmolyakGrids%Tab_nDval(:,i_SG),':',nq
+            basis_SG%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,i_SG),':',nq
         END IF
       END DO
 
       CALL Set_nq_OF_basis(basis_SG,nqq)
       IF (debug) write(out_unitp,*) 'nqq',nqq
 
-      write(out_unitp,*) '============ Set para_SGType2%nDind_DPG: done' ; CALL flush_perso(out_unitp)
+      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        write(out_unitp,*) '============ Set para_SGType2%nDind_DPG: done' ; CALL flush_perso(out_unitp)
+        CALL flush_perso(out_unitp)
+      END IF
 
 
       ! set of nrho ---------------------------------------
@@ -851,20 +869,33 @@
       END DO
 
       !-- Packed the basis if needed -------------------------------
-      write(out_unitp,*) '============ pack_basis',basis_SG%packed ; CALL flush_perso(out_unitp)
+      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        write(out_unitp,*) '============ Set pack_basis',basis_SG%packed
+        CALL flush_perso(out_unitp)
+      END IF
       CALL pack_basis(basis_SG,sortX=.TRUE.)
-      write(out_unitp,*) '============ pack_basis: done' ; CALL flush_perso(out_unitp)
+      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        write(out_unitp,*) '============ Set pack_basis: done'
+        CALL flush_perso(out_unitp)
+      END IF
 
-      write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP' ; CALL flush_perso(out_unitp)
+      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP'
+        CALL flush_perso(out_unitp)
+      END IF
       CALL Set_SymAbelian_OF_BasisDP(basis_SG)
-      write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP: done' ; CALL flush_perso(out_unitp)
+      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP: done'
+        CALL flush_perso(out_unitp)
+      END IF
 
       IF (debug) THEN
         CALL Write_SymAbelian(basis_SG%P_SymAbelian)
         write(out_unitp,*) '==== nDindB ====================================='
         CALL Write_nDindex(basis_SG%nDindB)
-        write(out_unitp,*) '==== nDind_SmolyakGrids ========================='
-        CALL Write_nDindex(basis_SG%para_SGType2%nDind_SmolyakGrids)
+        write(out_unitp,*) '==== nDind_SmolyakRep ========================='
+        CALL Write_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
+        CALL flush_perso(out_unitp)
       END IF
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
         write(out_unitp,*) '================================================='
@@ -891,7 +922,7 @@
       RECURSIVE SUBROUTINE RecSparseGrid_ForDP_type4(basis_SG,          &
                           para_Tnum,mole,para_PES,para_ReadOp,ComOp_loc)
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -930,6 +961,7 @@
       integer       :: tab_nq(basis_SG%nb_basis)
 
       integer       :: nDNum_OF_Lmax(basis_SG%nb_basis),L1max,L2max
+      logical       :: Print_basis
 
       character (len=:), allocatable :: fformat
 !----- for debuging --------------------------------------------------
@@ -947,19 +979,18 @@
       END IF
 !-----------------------------------------------------------
 
-      IF (debug) basis_SG%print_info_OF_basisDP    = .TRUE.
+       Print_basis = basis_SG%print_info_OF_basisDP .AND. print_level > -1 .OR. debug
 
       Lmax = basis_SG%L_SparseGrid
       Lmin = max(0,Lmax-basis_SG%nb_basis+1)
       LB   = basis_SG%L_SparseBasis
 
-      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '======== SPARSE GRID type4 (coucou) ============='
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '- Sparse Grid, packed   :',basis_SG%packed
         write(out_unitp,*) '- Sparse Grid, Lmin,Lmax:',Lmin,Lmax
-        CALL Write_mem_tot('BEGINNING ' // name_sub)
       END IF
 
       DO ib=1,basis_SG%nb_basis
@@ -979,7 +1010,7 @@
         STOP
       END IF
 
-      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '=====Set-up SG primtive basis sets==============='
       END IF
@@ -988,11 +1019,10 @@
                                           (/Lmax,basis_SG%nb_basis/), &
                       'basis_SG%tab_basisPrimSG',name_sub, (/0,1/) )
 
-
       DO ib=1,basis_SG%nb_basis
       DO L=0,Lmax
 
-        IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+        IF (debug) THEN
           write(out_unitp,*) '================================================='
           write(out_unitp,*) '===L,ib: ',L,ib,'==============='
         END IF
@@ -1003,7 +1033,7 @@
         IF (basis_SG%tab_basisPrimSG(L,ib)%nb_basis < 1) THEN
           LG_L = L ! old
           LB_L = LB !old
-          write(out_unitp,*) 'primitive basis'
+          IF (debug) write(out_unitp,*) 'primitive basis'
         ELSE
           basis_SG%tab_basisPrimSG(L,ib)%L_TO_nq%A = 0
           CALL init_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nq,Lmax=L)
@@ -1015,22 +1045,21 @@
           CALL init_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nb,Lmax=L)
           LB_L = get_n_FROM_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nb,L)
           !CALL Write_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nb)
-          write(out_unitp,*) 'L ,LG_L',L,LG_L
-          write(out_unitp,*) 'LB,LB_L',LB,LB_L
-          write(out_unitp,*) 'not primitive basis'
+          IF (debug) write(out_unitp,*) 'L ,LG_L',L,LG_L
+          IF (debug) write(out_unitp,*) 'LB,LB_L',LB,LB_L
+          IF (Print_basis) write(out_unitp,*) 'not primitive basis'
         END IF
 
         basis_SG%tab_basisPrimSG(L,ib)%L_SparseGrid    = LG_L
         basis_SG%tab_basisPrimSG(L,ib)%L_SparseBasis   = LG_L
         basis_SG%tab_basisPrimSG(L,ib)%Norm_OF_nDindB  = LG_L
-        !basis_SG%tab_basisPrimSG(L,ib)%SparseGrid_type = 0
         basis_SG%tab_basisPrimSG(L,ib)%Type_OF_nDindB  = 0
 
         basis_SG%tab_basisPrimSG(L,ib)%packed = .TRUE.
 
         basis_SG%tab_basisPrimSG(L,ib)%print_info_OF_basisDP =        &
                                         basis_SG%print_info_OF_basisDP
-
+        basis_SG%tab_basisPrimSG(L,ib)%print_info_OF_basisDP = .FALSE.
 
         IF (.NOT. basis_SG%check_nq_OF_basis)                         &
              basis_SG%tab_basisPrimSG(L,ib)%check_nq_OF_basis = .FALSE.
@@ -1045,31 +1074,34 @@
         CALL sort_basis(basis_SG%tab_basisPrimSG(L,ib))
 
         nDsize(ib) = basis_SG%tab_basisPrimSG(L,ib)%nb
-        IF (debug) write(out_unitp,*) 'L,ib',L,ib,'nb:',                &
-                                     basis_SG%tab_basisPrimSG(L,ib)%nb
 
-        IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1)    &
-           write(out_unitp,*) 'primtive basis sets of FG,L,ib',L,ib,' done'
-        CALL flush_perso(out_unitp)
+        IF (debug) THEN
+          write(out_unitp,*) 'primtive basis sets of SG,L,ib',L,ib,' done'
+          CALL flush_perso(out_unitp)
+        END IF
+
       END DO
       write(out_unitp,*) ib,'nb(L)',(basis_SG%tab_basisPrimSG(L,ib)%nb,L=0,Lmax)
+      write(out_unitp,*) ib,'nq(L)',(get_nb_FROM_basis(basis_SG%tab_basisPrimSG(L,ib)),L=0,Lmax)
       END DO
       basis_SG%primitive_done = .TRUE.
-      CALL Write_mem_tot('primtive basis sets done')
-      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '=END Set-up SG primtive basis sets==============='
         write(out_unitp,*) '================================================='
         CALL flush_perso(out_unitp)
       END IF
 
       ! for the Basis functions -----------------------------------------
-      write(out_unitp,*) '============ Set nDindB' ; CALL flush_perso(out_unitp)
+      IF (Print_basis) THEN
+        write(out_unitp,*) '============ Set nDindB'
+        CALL flush_perso(out_unitp)
+      END IF
       L1max = basis_SG%para_SGType2%L1_SparseGrid
       L2max = basis_SG%para_SGType2%L2_SparseGrid
       CALL dealloc_SGType2(basis_SG%para_SGType2)
 
 
-      ! for nDind_SmolyakGrids%nDNum_OF_Lmax and nDindB%nDNum_OF_Lmax
+      ! for nDind_SmolyakRep%nDNum_OF_Lmax and nDindB%nDNum_OF_Lmax
       DO ib=1,basis_SG%nb_basis
         nDNum_OF_Lmax(ib) = basis_SG%tab_Pbasis(ib)%Pbasis%para_SGType2%Num_OF_Lmax
       END DO
@@ -1117,8 +1149,9 @@
 
       IF (debug) THEN
         CALL Write_nDindex(basis_SG%nDindB)
-      ELSE IF (basis_SG%print_info_OF_basisDP .AND. print_level > 1) THEN
+        CALL flush_perso(out_unitp)
 
+      ELSE IF (Print_basis) THEN
         IF (allocated(basis_SG%nDindB%Tab_nDval)) THEN
           DO i=1,min(100,basis_SG%nDindB%Max_nDI)
             write(out_unitp,*) 'ib,tab_L',i,basis_SG%nDindB%Tab_nDval(:,i)
@@ -1134,26 +1167,32 @@
         IF (basis_SG%nDindB%Max_nDI > 100) THEN
           write(out_unitp,*) 'ib,tab_L .....'
         END IF
+        CALL flush_perso(out_unitp)
       END IF
 
-      CALL flush_perso(out_unitp)
-      write(out_unitp,*) '============ Set nDindB: done' ; CALL flush_perso(out_unitp)
+      IF (Print_basis) THEN
+        write(out_unitp,*) '============ Set nDindB: done'
+        CALL flush_perso(out_unitp)
+      END IF
 
-      write(out_unitp,*) '============ Set nDind_SmolyakRep' ; CALL flush_perso(out_unitp)
+      IF (Print_basis) THEN
+        write(out_unitp,*) '============ Set nDind_SmolyakRep'
+        CALL flush_perso(out_unitp)
+      END IF
 
       IF (count(nDNum_OF_Lmax == 0) == basis_SG%nb_basis .AND.          &
           basis_SG%MaxCoupling_OF_nDindB >= basis_SG%nb_basis) THEN
 
-        !basis_SG%para_SGType2%nDind_SmolyakGrids%packed = .FALSE.
-        basis_SG%para_SGType2%nDind_SmolyakGrids%packed = .TRUE.
-        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakGrids, &
+        !basis_SG%para_SGType2%nDind_SmolyakRep%packed = .FALSE.
+        basis_SG%para_SGType2%nDind_SmolyakRep%packed = .TRUE.
+        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep, &
                             basis_SG%nb_basis,nDsize,type_OF_nDindex=-5,&
                             Lmin=Lmin,Lmax=Lmax,                        &
                             MaxCoupling=basis_SG%MaxCoupling_OF_nDindB, &
                             nDinit=(/ (0,i=1,basis_SG%nb_basis) /) )
       ELSE
-        basis_SG%para_SGType2%nDind_SmolyakGrids%packed = .TRUE.
-        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakGrids, &
+        basis_SG%para_SGType2%nDind_SmolyakRep%packed = .TRUE.
+        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep, &
                            basis_SG%nb_basis,nDsize,type_OF_nDindex=-5, &
                            Lmin=0,Lmax=Lmax,nDNum_OF_Lmax=nDNum_OF_Lmax,&
                            L1max=L1max,L2max=L2max,                     &
@@ -1161,24 +1200,27 @@
                            nDinit=(/ (0,i=1,basis_SG%nb_basis) /) )
       END IF
 
-      IF (debug) CALL Write_nDindex(basis_SG%para_SGType2%nDind_SmolyakGrids)
+      IF (debug) CALL Write_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
 
-      basis_SG%nb_SG              = basis_SG%para_SGType2%nDind_SmolyakGrids%Max_nDI
-      basis_SG%para_SGType2%nb_SG = basis_SG%para_SGType2%nDind_SmolyakGrids%Max_nDI
+      basis_SG%nb_SG              = basis_SG%para_SGType2%nDind_SmolyakRep%Max_nDI
+      basis_SG%para_SGType2%nb_SG = basis_SG%para_SGType2%nDind_SmolyakRep%Max_nDI
 
       ! for the Smolyak Weights ----------------------------------------
       CALL alloc_NParray(basis_SG%WeightSG,(/basis_SG%nb_SG/),          &
                         'basis_SG%WeightSG',name_sub)
 
-      CALL calc_Weight_OF_SRep(basis_SG%WeightSG,basis_SG%para_SGType2%nDind_SmolyakGrids)
+      CALL calc_Weight_OF_SRep(basis_SG%WeightSG,basis_SG%para_SGType2%nDind_SmolyakRep)
+      CALL unpack_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
 
-      CALL unpack_nDindex(basis_SG%para_SGType2%nDind_SmolyakGrids)
+      IF (Print_basis) THEN
+        write(out_unitp,*) '============ Set nDind_SmolyakRep: done'
+        CALL flush_perso(out_unitp)
+      END IF
 
-      CALL Write_mem_tot('nDind_Smolyak done')
-      write(out_unitp,*) ' Number of DP ',basis_SG%nb_SG
-      write(out_unitp,*) '============ Set nDind_SmolyakRep: done' ; CALL flush_perso(out_unitp)
-
-      write(out_unitp,*) '============ Set para_SGType2%nDind_DPG and para_SGType2%nDind_DPB' ; CALL flush_perso(out_unitp)
+      IF (Print_basis) THEN
+        write(out_unitp,*) '============ Set para_SGType2%nDind_DPG and para_SGType2%nDind_DPB'
+        CALL flush_perso(out_unitp)
+      END IF
       ! for the number grid points --------------------------------------
 
       CALL alloc_NParray(basis_SG%para_SGType2%tab_Sum_nq_OF_SRep,      &
@@ -1202,9 +1244,9 @@
       nbb         = 0
       nqq         = 0
 
-      CALL init_nDval_OF_nDindex(basis_SG%para_SGType2%nDind_SmolyakGrids,tab_l)
+      CALL init_nDval_OF_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep,tab_l)
       DO i_SG=1,basis_SG%nb_SG
-        CALL ADD_ONE_TO_nDindex(basis_SG%para_SGType2%nDind_SmolyakGrids,tab_l,iG=i_SG)
+        CALL ADD_ONE_TO_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep,tab_l,iG=i_SG)
 
         tab_nq(:) = getbis_tab_nq(tab_l,basis_SG%tab_basisPrimSG)
         tab_nb(:) = getbis_tab_nb(tab_l,basis_SG%tab_basisPrimSG)
@@ -1231,11 +1273,21 @@
         END IF
       END DO
 
+      !IF (Print_basis) THEN
+        write(out_unitp,*) ' max nq nb:',maxval(basis_SG%para_SGType2%tab_nq_OF_SRep), &
+                                         maxval(basis_SG%para_SGType2%tab_nb_OF_SRep)
+        CALL flush_perso(out_unitp)
+      !END IF
+
       CALL Set_nq_OF_basis(basis_SG,nqq)
 
-      CALL Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
+      CALL Set_nDval_init_FOR_SG4(basis_SG%para_SGType2,version=1)
 
-      write(out_unitp,*) '============ Set para_SGType2%nDind_DPG and para_SGType2%nDind_DPB: done' ; CALL flush_perso(out_unitp)
+      CALL Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
+      IF (Print_basis) THEN
+        write(out_unitp,*) '============ Set para_SGType2%nDind_DPG and para_SGType2%nDind_DPB: done'
+        CALL flush_perso(out_unitp)
+      END IF
 
       write(out_unitp,*) 'nbb         (Smolyak Rep)',nbb
       write(out_unitp,*) 'nqq         (Smolyak Rep)',nqq
@@ -1250,32 +1302,44 @@
       END DO
 
       !-- Packed the basis if needed -------------------------------
-      write(out_unitp,*) '============ pack_basis',basis_SG%packed ; CALL flush_perso(out_unitp)
+      IF (Print_basis) THEN
+        write(out_unitp,*) '============ pack_basis',basis_SG%packed
+        CALL flush_perso(out_unitp)
+      END IF
       CALL pack_basis(basis_SG,sortX=.TRUE.)
-      write(out_unitp,*) '============ pack_basis: done' ; CALL flush_perso(out_unitp)
+      IF (Print_basis) THEN
+        write(out_unitp,*) '============ pack_basis: done'
+        CALL flush_perso(out_unitp)
+      END IF
 
-      write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP' ; CALL flush_perso(out_unitp)
+      IF (Print_basis) THEN
+        write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP'
+        CALL flush_perso(out_unitp)
+      END IF
       CALL Set_SymAbelian_OF_BasisDP(basis_SG)
-      write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP: done' ; CALL flush_perso(out_unitp)
+      IF (Print_basis) THEN
+        write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP: done'
+        CALL flush_perso(out_unitp)
+      END IF
 
 
       IF (debug) THEN
         CALL Write_SymAbelian(basis_SG%P_SymAbelian)
         write(out_unitp,*) '==== nDindB ====================================='
         CALL Write_nDindex(basis_SG%nDindB)
-        write(out_unitp,*) '==== nDind_SmolyakGrids ========================='
-        CALL Write_nDindex(basis_SG%para_SGType2%nDind_SmolyakGrids)
+        write(out_unitp,*) '==== nDind_SmolyakRep ========================='
+        CALL Write_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
+        CALL flush_perso(out_unitp)
       END IF
-      IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
-        CALL Write_mem_tot('END ' // name_sub)
+
+      IF (Print_basis) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '== number of DP grids (nb_SG):',basis_SG%nb_SG
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '======== END SPARSE GRID ========================'
         write(out_unitp,*) '================================================='
+        CALL flush_perso(out_unitp)
       END IF
-      CALL flush_perso(out_unitp)
-!STOP 'coucou'
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -1284,99 +1348,3 @@
       END IF
 !-----------------------------------------------------------
       END SUBROUTINE RecSparseGrid_ForDP_type4
-
-      RECURSIVE SUBROUTINE calc_Weight_OF_SRep(WeightSG,nDind_SmolyakGrids)
-      USE mod_system
-      USE mod_nDindex
-      IMPLICIT NONE
-
-      TYPE (Type_nDindex),             intent(in)    :: nDind_SmolyakGrids
-      real (kind=Rkind),               intent(inout) :: WeightSG(nDind_SmolyakGrids%Max_nDI)
-
-
-
-!---------------------------------------------------------------------
-      real (kind=Rkind) :: binomial ! function
-!---------------------------------------------------------------------
-
-      integer             :: i,i_SG,i_SGm,DeltaL
-      integer             :: tab_l(nDind_SmolyakGrids%ndim)
-      integer             :: tab_lm(nDind_SmolyakGrids%ndim)
-
-      logical             :: old = .TRUE.
-      real (kind=Rkind)   :: WeightSG_tmp(nDind_SmolyakGrids%Max_nDI)
-
-
-!----- for debuging --------------------------------------------------
-      integer :: err_mem,memory
-      character (len=*), parameter :: name_sub='calc_Weight_OF_SRep'
-      logical,parameter :: debug=.FALSE.
-      !logical,parameter :: debug=.TRUE.
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
-      END IF
-!-----------------------------------------------------------
-
-    IF (count(nDind_SmolyakGrids%nDNum_OF_Lmax == 0) == nDind_SmolyakGrids%ndim) THEN ! it work only when L1max or L2max are not used
-      CALL init_nDval_OF_nDindex(nDind_SmolyakGrids,tab_l)
-      DO i_SG=1,nDind_SmolyakGrids%Max_nDI
-        CALL ADD_ONE_TO_nDindex(nDind_SmolyakGrids,tab_l,iG=i_SG)
-        DeltaL = nDind_SmolyakGrids%Lmax - sum(tab_l)
-        !IF (DeltaL < 0) STOP 'DeltaL < 0'
-        !IF (DeltaL > nDind_SmolyakGrids%ndim -1) STOP 'DeltaL > ndim-1'
-        IF (DeltaL < 0 .OR. DeltaL > nDind_SmolyakGrids%ndim -1) THEN
-          WeightSG(i_SG) = ZERO
-        ELSE
-          IF (mod(DeltaL,2) == 0) THEN
-            WeightSG(i_SG) =  binomial(nDind_SmolyakGrids%ndim-1,deltaL)
-          ELSE
-            WeightSG(i_SG) = -binomial(nDind_SmolyakGrids%ndim-1,deltaL)
-          END IF
-        END IF
-
-        IF (debug) write(out_unitp,*) 'i_SG,nDval,coef',i_SG,tab_l(:),WeightSG(i_SG)
-      END DO
-    ELSE ! here the Smolyak rep in Delta_S is transformed in S to get the correct WeightSG
-      WeightSG(:) = ONE
-      DO i=1,nDind_SmolyakGrids%ndim
-        WeightSG_tmp(:) = ZERO
-
-        CALL init_nDval_OF_nDindex(nDind_SmolyakGrids,tab_l)
-        DO i_SG=1,nDind_SmolyakGrids%Max_nDI
-          CALL ADD_ONE_TO_nDindex(nDind_SmolyakGrids,tab_l,iG=i_SG)
-          ! DeltaS_(li) = S_(li) - S_(li-1)
-
-          ! S_(li) contribution
-          WeightSG_tmp(i_SG) = WeightSG_tmp(i_SG) + WeightSG(i_SG)
-
-          ! -S_(li-1) contribution
-          IF (tab_l(i) > 0) THEN
-            tab_lm(:) = tab_l(:)
-            tab_lm(i) = tab_l(i) -1
-            CALL calc_nDI(i_SGm,tab_lm,nDind_SmolyakGrids)
-            WeightSG_tmp(i_SGm) = WeightSG_tmp(i_SGm) - WeightSG(i_SG)
-          END IF
-
-        END DO
-        WeightSG(:) = WeightSG_tmp(:)
-      END DO
-      !STOP 'not yet'
-    END IF
-
-    write(out_unitp,*) 'count zero weight: ',count(abs(WeightSG) <= ONETENTH**6)
-!-----------------------------------------------------------
-      IF (debug .OR. print_level > 1) THEN
-
-        CALL init_nDval_OF_nDindex(nDind_SmolyakGrids,tab_l)
-        DO i_SG=1,nDind_SmolyakGrids%Max_nDI
-          CALL ADD_ONE_TO_nDindex(nDind_SmolyakGrids,tab_l,iG=i_SG)
-          write(out_unitp,*) 'i_SG,nDval,coef',i_SG,tab_l(:),WeightSG(i_SG)
-        END DO
-      END IF
-
-      IF (debug) THEN
-        write(out_unitp,*) 'END ',name_sub
-      END IF
-!-----------------------------------------------------------
-      END SUBROUTINE calc_Weight_OF_SRep

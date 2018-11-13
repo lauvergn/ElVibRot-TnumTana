@@ -27,28 +27,34 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_basis_set_alloc
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_nDindex
-      USE mod_RotBasis_Param
-      USE mod_Basis_Grid_Param
+      use mod_system, only: rkind, onetenth, param_file, name_len, one, out_unitp,   &
+                            alloc_array, alloc_nparray, zero, flush_perso,           &
+                            dealloc_nparray, dealloc_array, file_dealloc,            &
+                            write_error_not_null, error_memo_allo, write_error_null, &
+                            sub_test_tab_ub, sub_test_tab_lb, print_level, write_mat,&
+                            string_to_string, int_to_char, write_vec
+
+      use mod_dnSVM, only: type_dnmat, type_dncplxmat, type_intvec, alloc_array,&
+                           alloc_dncplxmat, alloc_dnmat, dealloc_dnmat,         &
+                           dealloc_dncplxmat, dealloc_array, dealloc_intvec,    &
+                           sub_intvec1_to_intvec2, write_dnsvm, write_dnmat,    &
+                           write_dncplxmat
+
+      use mod_nDindex,  only: type_ndindex, alloc_array, alloc_nparray, &
+                              dealloc_nparray, dealloc_array,           &
+                              dealloc_ndindex, ndindex2tondindex1,      &
+                              write_ndindex
+
+      use mod_Coord_KEO
+
+      use mod_RotBasis_Param ! all
+      use mod_Basis_Grid_Param
       USE mod_SymAbelian
-      USE mod_Tnum
-      USE mod_file
       USE mod_param_SGType2
       USE mod_Basis_L_TO_n
       IMPLICIT NONE
 
-       TYPE Type_xwBasis
-
-          integer                           :: ndim,nq,Lmax
-          real (kind=Rkind), allocatable    :: x(:,:)    !  grid points x(ndim,nq)
-          real (kind=Rkind), allocatable    :: w(:,:)    !  weight w(nq,0:Lmax)
-          real (kind=Rkind), allocatable    :: rho(:)    !  rho(nq)
-          real (kind=Rkind), allocatable    :: wrho(:,:) !  weight * rho : wrho(nq,0:Lmax)
-
-        END TYPE Type_xwBasis
-
+      PRIVATE
 
         TYPE basis
           logical           :: active                = .FALSE.    ! (F)
@@ -100,8 +106,6 @@
           real (kind=Rkind), allocatable    :: rho(:)  !  rho : wrho(nq)
           real (kind=Rkind), allocatable    :: wrho(:) ! weight * rho : wrho(nq)
           integer, allocatable              :: nrho(:) ! nrho(dim), to define the volume element for Tnum
-
-          TYPE (Type_xwBasis) :: xw
 
           logical                    :: check_basis            = .TRUE.   ! if T, the basis set is checked (ortho ...)
           logical                    :: check_nq_OF_basis      = .TRUE.   ! if T, the nq is adapted to nb (nq>= nb)
@@ -229,6 +233,24 @@
         MODULE PROCEDURE dealloc_array_OF_P_Basisdim1,dealloc_array_OF_P_Basisdim2
       END INTERFACE
 
+      PUBLIC  basis, alloc_init_basis, dealloc_basis, clean_basis, &
+              basis2TObasis1, RecWrite_basis, RecWriteMini_basis,  &
+              alloc_dnb_OF_basis, dealloc_dnb_OF_basis,            &
+              alloc_xw_OF_basis, dealloc_xw_OF_basis
+      PUBLIC  get_x_OF_basis, get_x_AT_iq_OF_basis
+      PUBLIC  get_rho_OF_basis, get_rho_AT_iq_OF_basis
+      PUBLIC  get_w_OF_basis, get_w_AT_iq_OF_basis
+      PUBLIC  get_wrho_OF_basis, get_wrho_AT_iq_OF_basis
+      PUBLIC  Get_MatdnRGG, Get_MatdnRGB, Get_MatdnRBB
+      PUBLIC  Get_MatdnCGB, Get_MatdnCBB
+      PUBLIC  Get2_MatdnRGB, Get2_MatdnRBG
+      PUBLIC  Set_nq_OF_basis, get_nq_FROM_basis, get_nb_FROM_basis
+      PUBLIC  get_tab_nq_OF_Qact, get_nb_bi_FROM_AllBasis
+
+      PUBLIC  P_basis, alloc_tab_Pbasis_OF_basis
+      PUBLIC  param_AllBasis, alloc_AllBasis, dealloc_AllBasis
+
+      PUBLIC alloc_array, dealloc_array
 
       CONTAINS
 
@@ -429,33 +451,6 @@
            STOP
          END IF
 
-         IF (allocated(basis_set%xw%x))  THEN
-           CALL dealloc_NParray(basis_set%xw%x,"basis_set%xw%x",name_sub)
-         END IF
-         CALL alloc_NParray(basis_set%xw%x,(/ basis_set%ndim,nq /),          &
-                           "basis_set%xw%x",name_sub)
-         basis_set%xw%x     = ZERO
-
-         IF (allocated(basis_set%xw%w))  THEN
-           CALL dealloc_NParray(basis_set%xw%w,"basis_set%xw%w",name_sub)
-         END IF
-         CALL alloc_NParray(basis_set%xw%w,(/ nq, Lmax /),"basis_set%w",name_sub,(/1,0/) )
-         basis_set%xw%w     = ZERO
-
-         IF (allocated(basis_set%xw%wrho))  THEN
-           CALL dealloc_NParray(basis_set%xw%wrho,"basis_set%xw%wrho",name_sub)
-         END IF
-         CALL alloc_NParray(basis_set%xw%wrho,(/ nq, Lmax /),"basis_set%xw%wrho",name_sub,(/1,0/))
-         basis_set%xw%wrho     = ZERO
-
-         IF (allocated(basis_set%xw%rho))  THEN
-           CALL dealloc_NParray(basis_set%xw%rho,"basis_set%xw%rho",name_sub)
-         END IF
-         CALL alloc_NParray(basis_set%xw%rho,(/ nq /),"basis_set%xw%rho",name_sub)
-         basis_set%xw%rho     = ZERO
-
-
-
          IF (allocated(basis_set%x))  THEN
            CALL dealloc_NParray(basis_set%x,"basis_set%x",name_sub)
          END IF
@@ -487,23 +482,6 @@
 
          integer :: err_mem,memory
          character (len=*), parameter :: name_sub='dealloc_xw_OF_basis'
-
-         IF (allocated(basis_set%xw%x))  THEN
-           CALL dealloc_NParray(basis_set%xw%x,"basis_set%xw%x",name_sub)
-         END IF
-
-         IF (allocated(basis_set%xw%w))  THEN
-           CALL dealloc_NParray(basis_set%xw%w,"basis_set%xw%w",name_sub)
-         END IF
-
-         IF (allocated(basis_set%xw%wrho))  THEN
-           CALL dealloc_NParray(basis_set%xw%wrho,"basis_set%xw%wrho",name_sub)
-         END IF
-
-         IF (allocated(basis_set%xw%rho))  THEN
-           CALL dealloc_NParray(basis_set%xw%rho,"basis_set%xw%rho",name_sub)
-         END IF
-
 
          IF (allocated(basis_set%x))  THEN
            CALL dealloc_NParray(basis_set%x,"basis_set%x",name_sub)
@@ -2200,6 +2178,11 @@
          IF ( allocated(basis_set%wrho) ) THEN
            write(out_unitp,*) Rec_line,'w*rho'
            CALL Write_Vec(basis_set%wrho,out_unitp,8,name_info=Rec_line)
+           write(out_unitp,*)
+         END IF
+         IF ( allocated(basis_set%rho) ) THEN
+           write(out_unitp,*) Rec_line,'rho'
+           CALL Write_Vec(basis_set%rho,out_unitp,8,name_info=Rec_line)
            write(out_unitp,*)
          END IF
 

@@ -1074,15 +1074,16 @@ WPG(1)%RDP(:,1) = RVecB(:)
 DO id=D,1,-1
 
 
-!CALL dealloc_TabRDP(WPG)
-!CALL Set_BgG_FOR_id(WPG,ind_Grid,ind_Basis,tab_ba,D,LG,id,.FALSE.)
+  !CALL dealloc_TabRDP(WPG)
+  !CALL Set_BgG_FOR_id(WPG,ind_Grid,ind_Basis,tab_ba,D,LG,id,.FALSE.)
 
   CALL BbG_TO_BgG(WPG,ind_Grid,ind_Basis,tab_ba,D,LG,LB,id)
   IF (debug) write(6,*) 'id',id
+
   IF (debug) CALL Size_TabRDP(WPG,nb_BG)
 
 END DO
-stop
+
 CALL Transfer_BgG_TO_WP(WPG,RVecG)
 CALL dealloc_TabRDP(WPG)
 
@@ -1095,7 +1096,7 @@ IF (debug) THEN
   write(out_unitp,*) '====================================='
   CALL flush_perso(out_unitp)
 END  IF
-
+!stop
 !CALL UnCheck_mem()
 
 END SUBROUTINE sub_B_TO_G

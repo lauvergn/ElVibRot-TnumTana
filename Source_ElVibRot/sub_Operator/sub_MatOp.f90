@@ -181,7 +181,6 @@
       USE mod_system
       USE mod_psi_set_alloc
       USE mod_psi_Op
-      !USE mod_psi
       USE mod_Op
       USE mod_OpPsi
       IMPLICIT NONE
@@ -2289,7 +2288,7 @@
             END DO
 
           ELSE
-            CALL Read_RMat(para_Op%Rmat,in_unitp,para_Op%nb_tot,err)
+            CALL Read_Mat(para_Op%Rmat,in_unitp,para_Op%nb_tot,err)
             IF (err /= 0) THEN
               write(out_unitp,*) 'ERROR in ',name_sub
               write(out_unitp,*) ' reading the matrix "para_Op%Rmat"'
@@ -2893,7 +2892,7 @@
 
         IF (Grid) THEN
           Srep_w = Set_weight_TO_SmolyakRep(                            &
-             para_Op%BasisnD%para_SGType2%nDind_SmolyakGrids%Tab_nDval, &
+             para_Op%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval, &
              para_Op%BasisnD%tab_basisPrimSG)
         END IF
 
@@ -2906,9 +2905,9 @@
                      para_Op%BasisnD%nDindB,para_Op%BasisnD%para_SGType2)
 
           IF (Grid) THEN
-            CALL BSmolyakRep_TO2_GSmolyakRep(SRep_i,                    &
-                       para_Op%BasisnD%para_SGType2%nDind_SmolyakGrids, &
-                       para_Op%BasisnD%tab_basisPrimSG)
+            CALL BSmolyakRep_TO3_GSmolyakRep(SRep_i,                    &
+                                          para_Op%BasisnD%para_SGType2, &
+                                        para_Op%BasisnD%tab_basisPrimSG)
           END IF
 
           DO j=1,para_Op%nb_tot
@@ -2920,9 +2919,9 @@
                      para_Op%BasisnD%nDindB,para_Op%BasisnD%para_SGType2)
 
             IF (Grid) THEN
-               CALL BSmolyakRep_TO2_GSmolyakRep(SRep_j,                 &
-                       para_Op%BasisnD%para_SGType2%nDind_SmolyakGrids, &
-                       para_Op%BasisnD%tab_basisPrimSG)
+               CALL BSmolyakRep_TO3_GSmolyakRep(SRep_j,                 &
+                                          para_Op%BasisnD%para_SGType2, &
+                                        para_Op%BasisnD%tab_basisPrimSG)
 
                para_Op%Rmat(j,i) = dot_product_SmolyakRep_Grid(SRep_j,  &
                                  SRep_i,Srep_w,para_Op%BasisnD%WeightSG)
@@ -3035,12 +3034,12 @@
           END IF
 
         CALL alloc2_SmolyakRep(SRep_V, &
-                       para_Op%BasisnD%para_SGType2%nDind_SmolyakGrids, &
+                       para_Op%BasisnD%para_SGType2%nDind_SmolyakRep, &
                        para_Op%BasisnD%tab_basisPrimSG,grid=.TRUE.)
         CALL tabR2bis_TO_SmolyakRep1(SRep_V,para_Op%OpGrid(1)%Grid(:,1,1))
 
         Srep_w = Set_weight_TO_SmolyakRep(                              &
-             para_Op%BasisnD%para_SGType2%nDind_SmolyakGrids%Tab_nDval, &
+             para_Op%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval, &
              para_Op%BasisnD%tab_basisPrimSG) * SRep_V
 
 
@@ -3054,9 +3053,9 @@
                                        para_Op%BasisnD%tab_basisPrimSG, &
                      para_Op%BasisnD%nDindB,para_Op%BasisnD%para_SGType2)
 
-           CALL BSmolyakRep_TO2_GSmolyakRep(SRep_i,                      &
-                          para_Op%BasisnD%para_SGType2%nDind_SmolyakGrids, &
-                          para_Op%BasisnD%tab_basisPrimSG)
+           CALL BSmolyakRep_TO3_GSmolyakRep(SRep_i,                      &
+                                           para_Op%BasisnD%para_SGType2, &
+                                          para_Op%BasisnD%tab_basisPrimSG)
 
           DO j=1,para_Op%nb_tot
             psi%RvecB(:)   = ZERO
@@ -3066,9 +3065,9 @@
                                        para_Op%BasisnD%tab_basisPrimSG, &
                      para_Op%BasisnD%nDindB,para_Op%BasisnD%para_SGType2)
 
-             CALL BSmolyakRep_TO2_GSmolyakRep(SRep_j,                    &
-                          para_Op%BasisnD%para_SGType2%nDind_SmolyakGrids, &
-                          para_Op%BasisnD%tab_basisPrimSG)
+             CALL BSmolyakRep_TO3_GSmolyakRep(SRep_j,                    &
+                                           para_Op%BasisnD%para_SGType2, &
+                                         para_Op%BasisnD%tab_basisPrimSG)
 
           para_Op%Rmat(j,i) = dot_product_SmolyakRep_Grid(SRep_j,SRep_i,&
                                         Srep_w,para_Op%BasisnD%WeightSG)

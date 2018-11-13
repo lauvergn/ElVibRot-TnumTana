@@ -55,6 +55,7 @@
 !===========================================================================
       PROGRAM ElVibRot
       USE mod_system
+      USE mod_file
       USE mod_nDGridFit
       IMPLICIT NONE
 
@@ -88,7 +89,7 @@
         cart             = .FALSE.
         GridTOBasis_test = .FALSE.
         OpPsi_test       = .FALSE.
-        EVR              = .TRUE.   ! ElVibRot (default)
+        EVR              = .FALSE.   ! ElVibRot (default)
         nDfit            = .FALSE.
         nDGrid           = .FALSE.
         main_test        = .FALSE.
@@ -135,7 +136,10 @@
 
         para_mem%mem_debug = mem_debug
 
-        IF (analysis_only .OR. GridTOBasis_test .OR. OpPsi_test .OR. cart .OR. main_test) EVR=.FALSE.
+        !IF (analysis_only .OR. GridTOBasis_test .OR. OpPsi_test .OR. cart .OR. main_test) EVR=.FALSE.
+        EVR = .NOT. (analysis_only .OR. GridTOBasis_test .OR.            &
+                     OpPsi_test .OR. cart .OR. main_test .OR. nDfit .OR. &
+                     nDGrid .OR. optimization /= 0 .OR. analysis_only)
 
         IF (printlevel > 1) write(out_unitp,system)
 

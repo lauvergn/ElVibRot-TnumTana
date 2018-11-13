@@ -188,7 +188,7 @@
                                         para_SimulatedAnnealing)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -424,7 +424,7 @@
                                              para_SimulatedAnnealing)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op

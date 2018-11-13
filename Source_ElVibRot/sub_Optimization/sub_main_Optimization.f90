@@ -28,8 +28,7 @@
 !===========================================================================
       SUBROUTINE sub_Optimization_OF_VibParam(max_mem)
       USE mod_system
-      USE mod_constant
-      USE mod_Tnum
+      USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0
       USE mod_PrimOp
       USE mod_basis
       USE mod_psi_set_alloc
@@ -273,9 +272,9 @@
 
       SUBROUTINE Sub_Energ_OF_ParamBasis(Energ,xOpt,nb_Opt,BasisnD,     &
                                     para_Tnum,mole,ComOp,para_PES,Qact)
-
       USE mod_system
-      USE mod_Tnum
+      use mod_Coord_KEO, only: constant, zmatrix, tnum
+
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -513,8 +512,7 @@
       SUBROUTINE Set_ALL_para_FOR_optimization(mole,BasisnD,Qact,Set_Val)
 
       USE mod_system
-      USE mod_Tnum
-      USE mod_paramQ
+      use mod_Coord_KEO, only: zmatrix
       USE mod_basis
       IMPLICIT NONE
 

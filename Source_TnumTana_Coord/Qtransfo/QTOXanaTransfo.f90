@@ -21,13 +21,13 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_QTOXanaTransfo
-      USE mod_system
+      use mod_system,    only: rkind, name_len, out_unitp, alloc_array, zero, &
+                               dealloc_array, print_level, in_unitp
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
-      USE mod_Lib_QTransfo
+      use mod_constant,  only: table_atom, get_mass_tnum
       IMPLICIT NONE
+
+      PRIVATE
 
       !!@description: TODO
       !!@param: TODO
@@ -48,6 +48,9 @@
         integer, pointer                  :: type_Qin(:)   => null() ! TRUE pointer
 
       END TYPE Type_QTOXanaTransfo
+
+      PUBLIC :: Type_QTOXanaTransfo, alloc_QTOXanaTransfo, dealloc_QTOXanaTransfo, &
+                Read_QTOXanaTransfo, Write_QTOXanaTransfo, QTOXanaTransfo1TOQTOXanaTransfo2
 
       CONTAINS
 
@@ -122,7 +125,7 @@
 
       END SUBROUTINE dealloc_QTOXanaTransfo
 
-      SUBROUTINE Read_QTOXana_QTransfo(QTOXanaTransfo,mendeleev)
+      SUBROUTINE Read_QTOXanaTransfo(QTOXanaTransfo,mendeleev)
 
        TYPE (Type_QTOXanaTransfo),intent(inout) :: QTOXanaTransfo
        TYPE (table_atom), intent(in)            :: mendeleev
@@ -136,7 +139,7 @@
        integer :: err_mem,memory,err_io
        logical, parameter :: debug=.FALSE.
        !logical, parameter :: debug=.TRUE.
-       character (len=*), parameter :: name_sub = 'Read_QTOXana_QTransfo'
+       character (len=*), parameter :: name_sub = 'Read_QTOXanaTransfo'
        !-----------------------------------------------------------------------
        IF (print_level > 1) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
@@ -189,7 +192,7 @@
           CALL dealloc_array(name_at,"name_at",name_sub)
 
       IF (print_level > 1) write(out_unitp,*) 'END ',name_sub
-      END SUBROUTINE Read_QTOXana_QTransfo
+      END SUBROUTINE Read_QTOXanaTransfo
 
 
       SUBROUTINE QTOXanaTransfo1TOQTOXanaTransfo2(QTOXanaTransfo1,QTOXanaTransfo2)

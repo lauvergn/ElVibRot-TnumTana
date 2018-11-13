@@ -33,10 +33,13 @@
 !!   with the "construct_table_at" subroutine.
 !!  This subroutine uses an internal file "internal_data/IsotopicMass.txt" download in 2012 from NIST.
       MODULE mod_Atom
-      USE mod_system
-      USE mod_file
-      USE mod_string
+      use mod_system, only: name_len, rkind, one, zero, param_file, int_to_char,   &
+                            ten, out_unitp, evrt_path, file_open, error_memo_allo, &
+                            alloc_array, file_close, print_level,                  &
+                            string_uppercase_to_lowercase, dealloc_array
       IMPLICIT NONE
+
+      PRIVATE
 
 !> @brief Derived type in which the isotopic mass will be set-up.
 !!
@@ -88,6 +91,9 @@
 
 
   END TYPE table_atom
+
+  PUBLIC :: table_atom, construct_table_at, construct_old_table_at, dealloc_table_at
+  PUBLIC :: get_mass_Tnum
 
   CONTAINS
 

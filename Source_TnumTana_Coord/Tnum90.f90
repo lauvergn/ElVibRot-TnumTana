@@ -1,13 +1,14 @@
       PROGRAM Tnum_f90
-      USE mod_system
-      USE mod_Tnum
-      USE mod_paramQ
-      USE mod_dnGG_dng
-      USE mod_PrimOp_def
-      USE mod_OTF
-      USE mod_SimpleOp
+      use mod_system
+      use mod_dnSVM
+      use mod_Coord_KEO, only: constant, zmatrix, tnum, read_mole,        &
+                               read_refgeom, alloc_nparray, get_qact0,    &
+                               sub_qacttodnx, write_dnx, write_cartg98,   &
+                               alloc_array, calc3_f2_f1q_num,             &
+                               dealloc_array, get_dng_dngg,               &
+                               sub_qplusdq_to_cart, sub_dnfcc_to_dnfcurvi,&
+                                dealloc_zmat, dealloc_nparray
       USE mod_PrimOp
-      USE mod_Lib_QTransfo, only : write_dnx
       IMPLICIT NONE
 
 !     - parameters for para_Tnum -----------------------

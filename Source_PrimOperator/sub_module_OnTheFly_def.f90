@@ -31,9 +31,11 @@
 !     Module for "one-the-fly" (OTF) calculation of PES (pot, gradrient, hessian)
 !================================================================
       MODULE mod_OTF_def
-      USE mod_system
-      USE mod_file
+      use mod_system, only: name_len, name_longlen, line_len, param_file, &
+                            out_unitp, file_write, flush_perso
       IMPLICIT NONE
+
+        PRIVATE
 
         TYPE param_OTF
 !         for the ab initio calculation
@@ -60,6 +62,7 @@
           MODULE PROCEDURE OTF2_TO_OTF1
       END INTERFACE
 
+      PUBLIC param_OTF,assignment (=), write_OTF, init_G03_OTF
 
       CONTAINS
 

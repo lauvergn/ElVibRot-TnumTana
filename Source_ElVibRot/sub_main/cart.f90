@@ -29,7 +29,6 @@
       SUBROUTINE sub_cart(max_mem)
       USE mod_system
       USE mod_Coord_KEO
-      USE mod_constant
       USE mod_dnSVM
       USE mod_cart
       IMPLICIT NONE

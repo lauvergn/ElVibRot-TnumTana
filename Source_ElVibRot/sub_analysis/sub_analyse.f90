@@ -39,7 +39,7 @@ CONTAINS
       SUBROUTINE sub_analyse(Tab_Psi,nb_psi_in,para_H,                  &
                           para_ana,para_intensity,para_AllOp,const_phys)
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_basis
       USE mod_psi
       USE mod_psi_set_alloc
@@ -48,7 +48,6 @@ CONTAINS
       USE mod_ana_psi
       USE mod_Op
       USE mod_analysis
-      USE mod_constant
       IMPLICIT NONE
 
 !----- variables for the construction of H ----------------------------
@@ -238,7 +237,7 @@ CONTAINS
 
       IF (allocated(AllPsi_max_RedDensity)) THEN
 
-        CALL Write_RVec(AllPsi_max_RedDensity,out_unitp,6,Rformat='e10.3',name_info='For all psi max_RedDensity ')
+        CALL Write_Vec(AllPsi_max_RedDensity,out_unitp,6,Rformat='e10.3',name_info='For all psi max_RedDensity ')
         !write(out_unitp,*) 'For all psi max_RedDensity ',AllPsi_max_RedDensity(:)
         CALL dealloc_NParray(AllPsi_max_RedDensity,"AllPsi_max_RedDensity",name_sub)
       END IF
@@ -414,7 +413,7 @@ CONTAINS
                            BasisnD,para_Op)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_basis
       USE mod_Op
       IMPLICIT NONE

@@ -20,14 +20,37 @@
 !
 !===========================================================================
 !===========================================================================
-
-      MODULE mod_paramQ
-      USE mod_system
+MODULE mod_paramQ
+      use mod_system, only: name_len, rkind, line_len, out_unitp,       &
+                            print_level, zero, in_unitp, alloc_nparray, &
+                            write_int_in_char, flush_perso, int_to_char,&
+                            dealloc_nparray, one, write_mat, param_file,&
+                            get_conv_au_to_unit, file_open, onetenth,   &
+                            half, file_close, four, two, real_wu,       &
+                            rwu_write, convrwu_to_r, read_name_advno,   &
+                            para_for_optimization
       USE mod_dnSVM
-      USE mod_file
-      USE mod_Tnum
-      USE mod_CartesianTransfo
+      use mod_Lib_QTransfo,     only: write_cart, calc_cross_product,   &
+                                      write_dnx, sub3_dnx_at1
+      use mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
+      use mod_CartesianTransfo, only: alloc_cartesiantransfo,           &
+                                      p_axis_cartesiantransfo,          &
+                                   centre_masse, write_cartesiantransfo,&
+                                 sub_dnxmassweight, sub3_dncentre_masse,&
+                         calc_cartesiantransfo_new, sub_dnxnomassweight,&
+                                                  sub3_nodncentre_masse
+      use mod_Qtransfo,         only: write_Qtransfo, calc_Qtransfo
+      use mod_Tnum,             only: tnum, zmatrix, write_mole
+
       IMPLICIT NONE
+
+      PRIVATE
+      PUBLIC :: read_RefGeom, Get_Qread
+      PUBLIC :: sub_QactTOQit, sub_QinRead_TO_Qact, sub_QxyzTOexeyez, sub_Qxyz0TORot
+      PUBLIC :: sub_QplusDQ_TO_Cart, sub_QactTOdnx, sub_QactTOd0x
+      PUBLIC :: Write_d0Q, Write_Q_WU, Write_Cartg98, Write_XYZ
+      PUBLIC :: analyze_dnx, sub_dnFCC_TO_dnFcurvi
+      PUBLIC :: Set_paramQ_FOR_optimization
 
       CONTAINS
 
@@ -2077,5 +2100,4 @@
 
       END SUBROUTINE Set_paramQ_FOR_optimization
 
-      END MODULE mod_paramQ
-
+END MODULE mod_paramQ

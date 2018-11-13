@@ -21,13 +21,15 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_ZmatTransfo
-      USE mod_system
+      use mod_system, only: rkind, zero, name_len, out_unitp, dealloc_array, &
+                            alloc_array, print_level, in_unitp, make_nameq,  &
+                            one, onetenth, dihedral_range
       USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
-      USE mod_Lib_QTransfo
+      use mod_constant,     only: table_atom, get_mass_tnum
+      use mod_Lib_QTransfo ! only all
       IMPLICIT NONE
+
+      PRIVATE
 
       !!@description: TODO
       !!@param: TODO
@@ -52,6 +54,10 @@
         character (len=Name_len), pointer :: name_Qin(:)   => null() ! TRUE pointer
 
       END TYPE Type_ZmatTransfo
+
+      PUBLIC :: Type_ZmatTransfo, alloc_ZmatTransfo, dealloc_ZmatTransfo
+      PUBLIC :: read_ZmatTransfo, Write_ZmatTransfo, calc_ZmatTransfo, calc_ZmatTransfo_outTOin
+      PUBLIC :: ZmatTransfo1TOZmatTransfo2
 
       CONTAINS
 
@@ -192,7 +198,7 @@
 
       !!@description: TODO
       !!@param: TODO
-      SUBROUTINE Read_Zmat_QTransfo(ZmatTransfo,mendeleev)
+      SUBROUTINE Read_ZmatTransfo(ZmatTransfo,mendeleev)
 
 
        TYPE (Type_ZmatTransfo),intent(inout) :: ZmatTransfo
@@ -216,7 +222,7 @@
        integer :: err_mem,memory,err_io
        logical, parameter :: debug=.FALSE.
        !logical, parameter :: debug=.TRUE.
-       character (len=*), parameter :: name_sub = 'Read_Zmat_QTransfo'
+       character (len=*), parameter :: name_sub = 'Read_ZmatTransfo'
 
 
 !-----------------------------------------------------------------------
@@ -531,12 +537,12 @@
        ZmatTransfo%masses(:)  = masses(:)
 
       IF (print_level > 1) write(out_unitp,*) 'END ',name_sub
-      END SUBROUTINE Read_Zmat_QTransfo
+      END SUBROUTINE Read_ZmatTransfo
 
 
 !=================================================================
 !
-!       Zmat_Qtransfo
+!       ZmatTransfo
 !
 !=================================================================
       SUBROUTINE calc_ZmatTransfo(dnQzmat,dnx,ZmatTransfo,nderiv)

@@ -27,10 +27,16 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_nDFit
-      USE mod_system
-      USE mod_nDindex
-      USE mod_file
+      use mod_system, only: rkind, zero, four, onetenth, param_file,    &
+                            line_len, name_len, in_unitp, out_unitp,    &
+                            alloc_array, read_name_advno, write_vecmat, &
+                            flush_perso, file_write, one, file_open,    &
+                            file_close, write_int_in_char, dealloc_array, two
+      use mod_nDindex, only: type_ndindex, alloc_array, write_ndindex,  &
+                             dealloc_array, init_ndindexprim, sort_ndindex
       IMPLICIT NONE
+
+      PRIVATE
 
       TYPE param_Analysis !
 
@@ -93,6 +99,11 @@
 
       END TYPE param_nDFit
 
+      PUBLIC param_Analysis, Read_Analysis
+      PUBLIC param_nDFit, Read_nDFit, ReadWrite_nDFitW, Write_nDFit, &
+             Analysis_nDFit, Analysis_nDFitW, nDFit1_TO_TnDFit2, &
+             sub_nDFunc_FROM_nDFit, sub_ONLYnDFunc_FROM_nDFit,   &
+             nDFunct_WITH_Q, nDFunct_WITH_tQ
 
       CONTAINS
 

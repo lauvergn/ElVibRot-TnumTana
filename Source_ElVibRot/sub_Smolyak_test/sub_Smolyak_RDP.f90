@@ -27,7 +27,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_Smolyak_RDP
-USE mod_system
+use mod_system, only: rkind, zero, nb_mult_gtob, nb_mult_btog, one, half, BasisTOGrid_maxth
 IMPLICIT NONE
 
 
@@ -67,7 +67,7 @@ END INTERFACE
 CONTAINS
 
 SUBROUTINE alloc_TypeRVec(Rvec,nvec)
-USE mod_system
+!use mod_system, only: rkind, zero, nb_mult_gtob, nb_mult_btog, one, half
 IMPLICIT NONE
 
   TYPE (TypeRVec), intent(inout) :: Rvec
@@ -86,7 +86,7 @@ IMPLICIT NONE
 
 END SUBROUTINE alloc_TypeRVec
 SUBROUTINE dealloc_TypeRVec(Rvec)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
   TYPE (TypeRVec), intent(inout) :: Rvec
@@ -98,7 +98,7 @@ IMPLICIT NONE
 END SUBROUTINE dealloc_TypeRVec
 
 SUBROUTINE Write_TypeRVec(Rvec)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
   TYPE (TypeRVec), intent(in) :: Rvec
@@ -110,7 +110,7 @@ IMPLICIT NONE
 END SUBROUTINE Write_TypeRVec
 
 SUBROUTINE TypeRVec2_TO_TypeRVec1(Rvec1,Rvec2)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
   TYPE (TypeRVec), intent(inout) :: Rvec1
@@ -122,7 +122,7 @@ IMPLICIT NONE
 
 END SUBROUTINE TypeRVec2_TO_TypeRVec1
 SUBROUTINE tabR2_TO_TypeRVec1(Rvec1,tabR2)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
   TYPE (TypeRVec),                intent(inout) :: Rvec1
@@ -136,7 +136,7 @@ END SUBROUTINE tabR2_TO_TypeRVec1
 
 
 SUBROUTINE dealloc_TabRDP(TabRDP)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeRDP), allocatable :: TabRDP(:)
@@ -164,8 +164,7 @@ END IF
 END SUBROUTINE dealloc_TabRDP
 
 SUBROUTINE alloc_SmolyakRep(SRep,tab_ind,tab_ba,delta,grid)
-USE mod_system
-USE mod_Smolyak_ba
+use mod_Smolyak_ba, only: typeba, get_tab_nq, get_tab_nb
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep),           intent(inout)         :: SRep
@@ -216,7 +215,7 @@ IF (allocated(tab_n)) deallocate(tab_n)
 
 END SUBROUTINE alloc_SmolyakRep
 SUBROUTINE dealloc_SmolyakRep(SRep)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep), intent(inout)     :: SRep
@@ -238,7 +237,7 @@ END IF
 
 END SUBROUTINE dealloc_SmolyakRep
 SUBROUTINE Write_TabRDP(TabRDP)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeRDP), allocatable :: TabRDP(:)
@@ -266,7 +265,7 @@ END IF
 
 END SUBROUTINE Write_TabRDP
 SUBROUTINE Write_TabRDP_pack(TabRDP)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeRDP), allocatable :: TabRDP(:)
@@ -295,7 +294,7 @@ END SUBROUTINE Write_TabRDP_pack
 
 
 SUBROUTINE Write_SmolyakRep(SRep)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep), intent(in)     :: SRep
@@ -317,7 +316,7 @@ END IF
 
 END SUBROUTINE Write_SmolyakRep
 SUBROUTINE Write_SmolyakRep_pack(SRep)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep), intent(in)     :: SRep
@@ -343,7 +342,7 @@ IF (allocated(R)) deallocate(R)
 
 END SUBROUTINE Write_SmolyakRep_pack
 SUBROUTINE SumSq_TabRDP(TabRDP)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeRDP), allocatable :: TabRDP(:)
@@ -375,7 +374,7 @@ END IF
 END SUBROUTINE SumSq_TabRDP
 
 SUBROUTINE Size_TabRDP(TabRDP,nb_BG)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeRDP), allocatable :: TabRDP(:)
@@ -395,7 +394,7 @@ END IF
 END SUBROUTINE Size_TabRDP
 
 FUNCTION Size_SmolyakRep(SRep) RESULT(nb_BG)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep), intent(in)     :: SRep
@@ -413,7 +412,7 @@ END IF
 
 END FUNCTION Size_SmolyakRep
 FUNCTION MaxVal_SmolyakRep(SRep) RESULT(maxSRep)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep), intent(in)     :: SRep
@@ -430,7 +429,7 @@ END IF
 
 END FUNCTION MaxVal_SmolyakRep
 SUBROUTINE SmolyakRep2_TO_tabR1(tabR1,SRep2)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 real(kind=Rkind), allocatable,   intent(inout)  :: tabR1(:)
@@ -456,7 +455,7 @@ END IF
 
 END SUBROUTINE SmolyakRep2_TO_tabR1
 SUBROUTINE tabR2_TO_SmolyakRep1(SRep1,tabR2)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 real(kind=Rkind), allocatable,   intent(in)     :: tabR2(:)
@@ -487,7 +486,7 @@ END IF
 
 END SUBROUTINE tabR2_TO_SmolyakRep1
 SUBROUTINE R2_TO_SmolyakRep1(SRep1,R2)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 real(kind=Rkind),                intent(in)     :: R2
@@ -509,9 +508,9 @@ END IF
 END SUBROUTINE R2_TO_SmolyakRep1
 
 SUBROUTINE R2_TO_SmolyakRep1_with_tab_i(SRep1,R2,tab_i,tab_ba,tab_ind)
-USE mod_system
+!USE mod_system
 USE mod_Smolyak_DInd, ONLY : l_TO_n
-USE mod_Smolyak_ba
+USE mod_Smolyak_ba, only: typeba, get_tab_nq, get_tab_nb
 IMPLICIT NONE
 
 real(kind=Rkind),                intent(in)             :: R2
@@ -603,7 +602,7 @@ END IF
 END SUBROUTINE R2_TO_SmolyakRep1_with_tab_i
 
 FUNCTION dot_product_SmolyakRep(SRep1,SRep2,WSRep) RESULT(R)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
@@ -631,7 +630,7 @@ END IF
 
 END FUNCTION dot_product_SmolyakRep
 FUNCTION SmolyakRep1_TIME_SmolyakRe2(SRep1,SRep2) RESULT(SRep)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep),           intent(in)     :: SRep1,SRep2
@@ -659,7 +658,7 @@ END IF
 
 END FUNCTION SmolyakRep1_TIME_SmolyakRe2
 FUNCTION SmolyakRep1_PLUS_SmolyakRe2(SRep1,SRep2) RESULT(SRep)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep),           intent(in)     :: SRep1,SRep2
@@ -687,7 +686,7 @@ END IF
 
 END FUNCTION SmolyakRep1_PLUS_SmolyakRe2
 FUNCTION SmolyakRep1_MINUS_SmolyakRe2(SRep1,SRep2) RESULT(SRep)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep),           intent(in)     :: SRep1,SRep2
@@ -715,8 +714,8 @@ END IF
 
 END FUNCTION SmolyakRep1_MINUS_SmolyakRe2
 SUBROUTINE GSmolyakRep_TO_BSmolyakRep(SRep,tab_ind,tab_ba)
-USE mod_system
-USE mod_Smolyak_ba
+!USE mod_system
+USE mod_Smolyak_ba, only: typeba, get_tab_nq, get_tab_nb
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
@@ -804,8 +803,8 @@ SRep%Grid = .FALSE.
 
 END SUBROUTINE GSmolyakRep_TO_BSmolyakRep
 SUBROUTINE GSmolyakRep_TO_BSmolyakRep_01(SRep,tab_ind,tab_ba)
-USE mod_system
-USE mod_Smolyak_ba
+!USE mod_system
+USE mod_Smolyak_ba, only: typeba, get_tab_nq, get_tab_nb
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
@@ -894,8 +893,8 @@ END SUBROUTINE GSmolyakRep_TO_BSmolyakRep_01
 
 
 SUBROUTINE GSmolyakRep_TO_BSmolyakRep_old(SRep,tab_ind,tab_ba)
-USE mod_system
-USE mod_Smolyak_ba
+!USE mod_system
+USE mod_Smolyak_ba, only: typeba, get_tab_nq, get_tab_nb
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
@@ -976,8 +975,8 @@ SRep%Grid = .FALSE.
 END SUBROUTINE GSmolyakRep_TO_BSmolyakRep_old
 
 SUBROUTINE BSmolyakRep_TO_GSmolyakRep(SRep,tab_ind,tab_ba)
-USE mod_system
-USE mod_Smolyak_ba
+!USE mod_system
+USE mod_Smolyak_ba, only: typeba, get_tab_nq, get_tab_nb
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
@@ -1067,8 +1066,8 @@ SRep%Grid = .TRUE.
 
 END SUBROUTINE BSmolyakRep_TO_GSmolyakRep
 SUBROUTINE BSmolyakRep_TO_GSmolyakRep_01(SRep,tab_ind,tab_ba)
-USE mod_system
-USE mod_Smolyak_ba
+!USE mod_system
+USE mod_Smolyak_ba, only: typeba, get_tab_nq, get_tab_nb
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
@@ -1158,9 +1157,103 @@ IF (allocated(tab_nq)) deallocate(tab_nq)
 SRep%Grid = .TRUE.
 
 END SUBROUTINE BSmolyakRep_TO_GSmolyakRep_01
+SUBROUTINE BSmolyakRep_TO_GSmolyakRep_01_v2(SRep,tab_ind,tab_ba)
+!USE mod_system
+USE mod_Smolyak_ba, only: typeba, get_tab_nq, get_tab_nb
+IMPLICIT NONE
+
+real(kind=Rkind)  :: R
+TYPE(Type_SmolyakRep),           intent(inout)          :: SRep
+integer,         allocatable,    intent(in)             :: tab_ind(:,:) ! tab_ind(D,MaxnD)
+TYPE(TypeBa),    allocatable,    intent(in)             :: tab_ba(:,:) ! tab_ba(L,D)
+
+integer               :: i,D,iG,nb_BG
+
+integer                            :: nnb,nnq,nb2,nq2,ib,iq
+integer, allocatable               :: tab_nb(:),tab_nq(:)
+real(kind=Rkind), allocatable      :: RTempG(:,:,:),RTempB(:,:,:)
+
+IF (SRep%Grid) STOP 'Grid is not possible in BSmolyakRep_TO_GSmolyakRep_01'
+
+nb_mult_BTOG = 0
+
+D = size(tab_ind(:,1))
+
+!$OMP   PARALLEL DEFAULT(NONE) &
+!$OMP   SHARED(D,SRep,tab_ind,tab_ba,nb_mult_BTOG) &
+!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
+!$OMP   NUM_THREADS(BasisTOGrid_maxth)
+
+!$OMP   DO SCHEDULE(STATIC)
+
+DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
+
+  tab_nb = get_tab_nb(tab_ind(:,iG),tab_ba)
+  tab_nq = get_tab_nq(tab_ind(:,iG),tab_ba)
+
+  nnb = product(tab_nb)
+  nnq = 1
+  nb2 = 1
+  nq2 = 1
+
+  RTempG = reshape(SRep%SmolyakRep(iG)%R,shape=(/ nnq,nq2,nnb /))
+! B order : b1 * b2 * b3 * ... bD ???
+! G order : gD ... * g3 * g2 * g1 ???
+
+  DO i=1,D
+    nb2 = tab_nb(i)
+    nq2 = tab_nq(i)
+    nnb = nnb / nb2
+
+
+
+    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
+
+    deallocate(RTempG)
+    allocate(RTempG(nnq,nq2,nnb))
+
+    !write(6,*) 'i',i
+    !write(6,*) 'nnq,nq2,nb2,nnb',nnq,nq2,nb2,nnb
+    !write(6,*) 'shape RTempB',shape(RTempB)
+    !write(6,*) 'shape RTempG',shape(RTempG)
+
+
+    DO ib=1,nnb
+    DO iq=1,nnq
+       !write(6,*) 'i,iG,ibb,iqq',i,iG,ib,iq,'b',RTempB(iq,:,ib)
+       !RTempG(iq,:,ib) = matmul(tab_ba(tab_ind(i,iG),i)%d0b,RTempB(iq,:,ib))
+       RTempG(iq,:,ib) = matmul(RTempB(iq,:,ib),tab_ba(tab_ind(i,iG),i)%td0b)
+
+       !write(6,*) 'i,iG,ibb,iqq',i,iG,ib,iq,'g',RTempG(iq,:,ib)
+       !$OMP ATOMIC
+       nb_mult_BTOG = nb_mult_BTOG + nb2*nq2
+    END DO
+    END DO
+
+    nnq = nnq * nq2
+    deallocate(RTempB)
+
+  END DO
+
+  SRep%SmolyakRep(iG)%R = reshape(RTempG, shape=(/ nnq*nnb /) )
+  !SRep%SmolyakRep(iG)%R = reshape(RTempG, (/ tab_nq(1),tab_nq(2) /) )
+
+  deallocate(RTempG)
+END DO
+!$OMP   END DO
+
+IF (allocated(tab_nb)) deallocate(tab_nb)
+IF (allocated(tab_nq)) deallocate(tab_nq)
+
+
+!$OMP   END PARALLEL
+
+SRep%Grid = .TRUE.
+
+END SUBROUTINE BSmolyakRep_TO_GSmolyakRep_01_v2
 SUBROUTINE BSmolyakRep_TO_GSmolyakRep_withsqrtW(SRep,tab_ind,tab_ba)
-USE mod_system
-USE mod_Smolyak_ba
+!USE mod_system
+USE mod_Smolyak_ba, only: typeba, get_tab_nq, get_tab_nb
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
@@ -1243,8 +1336,8 @@ SRep%Grid = .TRUE.
 
 END SUBROUTINE BSmolyakRep_TO_GSmolyakRep_withsqrtW
 FUNCTION Set_weight_TO_SmolyakRep(tab_ind,tab_ba) RESULT (SRep)
-USE mod_system
-USE mod_Smolyak_ba
+!USE mod_system
+USE mod_Smolyak_ba, only: typeba, get_tab_nq, get_tab_nb
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep)                              :: SRep
@@ -1307,8 +1400,9 @@ IF (allocated(tab_nq)) deallocate(tab_nq)
 
 END FUNCTION Set_weight_TO_SmolyakRep
 FUNCTION Set_V_TO_SmolyakRep(tab_ind,tab_ba) RESULT (SRep)
-USE mod_system
-USE mod_Smolyak_ba
+!USE mod_system
+USE mod_Smolyak_DInd, only : InD_TO_tabi
+USE mod_Smolyak_ba, only: typeba, get_tab_nq, get_tab_nb
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep)                              :: SRep         ! potential
@@ -1358,7 +1452,7 @@ IF (allocated(tab_x))  deallocate(tab_x)
 
 END FUNCTION Set_V_TO_SmolyakRep
 SUBROUTINE Norm_OFF_Diff_TabRDP(TabRDP1,TabRDP2)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeRDP)      :: TabRDP1(:),TabRDP2(:)
@@ -1386,7 +1480,7 @@ write(6,*) 'Norm_OFF_Diff_TabRDP',Norm
 
 END SUBROUTINE Norm_OFF_Diff_TabRDP
 SUBROUTINE TabRDP2_TO_TabRDP1(TabRDP1,TabRDP2)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeRDP), allocatable :: TabRDP1(:),TabRDP2(:)

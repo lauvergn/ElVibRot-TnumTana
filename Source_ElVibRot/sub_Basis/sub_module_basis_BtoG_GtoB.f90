@@ -42,7 +42,9 @@
       !!@param: TODO
        RECURSIVE SUBROUTINE RecRVecG_TO_RvecB(RVecG,RvecB,nq,nb,basis_set)
        USE mod_basis_BtoG_GtoB_SGType4
+       USE mod_basis_RCVec_SGType4
         IMPLICIT NONE
+
 
         TYPE (basis), intent(in)         :: basis_set
         integer, intent(in)              :: nq,nb
@@ -216,7 +218,7 @@
           CASE (2) ! Sparse basis (Smolyak 2d implementation)
 
             CALL sub_G_TO_B(RVecG,RVecB,basis_set%WeightSG,             &
-                    basis_set%para_SGType2%nDind_SmolyakGrids%Tab_DInd, &
+                      basis_set%para_SGType2%nDind_SmolyakRep%Tab_DInd, &
                                      basis_set%nDindB%Tab_DInd,         &
                                      basis_set%tab_basisPrimSG,         &
                                      D=basis_set%nb_basis,              &
@@ -229,19 +231,13 @@
           CASE (4) ! Sparse basis (Smolyak 4th implementation)
 
             !!  RVecG TO SRep
-            CALL alloc2_SmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG,grid=.TRUE.)
+            CALL alloc2_SmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep,basis_set%tab_basisPrimSG,grid=.TRUE.)
             CALL tabR2bis_TO_SmolyakRep1(SRep,RVecG) ! on the grid
-!            itabR = 0
-!            DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
-!              nR = size(SRep%SmolyakRep(iG)%V)
-!              SRep%SmolyakRep(iG)%V =  RVecG(itabR+1:itabR+nR)
-!              itabR = itabR + nR
-!            END DO
 
-            IF (allocated(basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval)) THEN
-              CALL GSmolyakRep_TO_BSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval,basis_set%tab_basisPrimSG)
+            IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
+              CALL GSmolyakRep_TO_BSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval,basis_set%tab_basisPrimSG)
             ELSE
-              CALL GSmolyakRep_TO2_BSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG)
+              CALL GSmolyakRep_TO3_BSmolyakRep(SRep,basis_set%para_SGType2,basis_set%tab_basisPrimSG)
             END IF
 
             CALL SmolyakRepBasis_TO_tabPackedBasis(SRep,RVecB,basis_set%nDindB,basis_set%para_SGType2,basis_set%WeightSG)
@@ -468,7 +464,7 @@
             RVecG(:) = real(CVecG,kind=Rkind)
 
             CALL sub_G_TO_B(RVecG,RVecB,basis_set%WeightSG,             &
-                    basis_set%para_SGType2%nDind_SmolyakGrids%Tab_DInd, &
+                    basis_set%para_SGType2%nDind_SmolyakRep%Tab_DInd, &
                                      basis_set%nDindB%Tab_DInd,         &
                                      basis_set%tab_basisPrimSG,         &
                                      D=basis_set%nb_basis,              &
@@ -478,7 +474,7 @@
 
             RVecG(:) = aimag(CVecG)
             CALL sub_G_TO_B(RVecG,RVecB,basis_set%WeightSG,             &
-                    basis_set%para_SGType2%nDind_SmolyakGrids%Tab_DInd, &
+                    basis_set%para_SGType2%nDind_SmolyakRep%Tab_DInd, &
                                      basis_set%nDindB%Tab_DInd,         &
                                      basis_set%tab_basisPrimSG,         &
                                      D=basis_set%nb_basis,              &
@@ -501,13 +497,13 @@
             !RVecG(:) = real(CVecG,kind=Rkind)
 
             !!  RVecG TO SRep
-            CALL alloc2_SmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG,grid=.TRUE.)
+            CALL alloc2_SmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep,basis_set%tab_basisPrimSG,grid=.TRUE.)
             CALL tabR2bis_TO_SmolyakRep1(SRep,real(CVecG,kind=Rkind)) ! on the grid
 
-            IF (allocated(basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval)) THEN
-              CALL GSmolyakRep_TO_BSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval,basis_set%tab_basisPrimSG)
+            IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
+              CALL GSmolyakRep_TO_BSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval,basis_set%tab_basisPrimSG)
             ELSE
-              CALL GSmolyakRep_TO2_BSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG)
+              CALL GSmolyakRep_TO3_BSmolyakRep(SRep,basis_set%para_SGType2,basis_set%tab_basisPrimSG)
             END IF
 
             CALL SmolyakRepBasis_TO_tabPackedBasis(SRep,RVecB,basis_set%nDindB,basis_set%para_SGType2,basis_set%WeightSG)
@@ -518,13 +514,13 @@
 
 
             !!  RVecG TO SRep
-            CALL alloc2_SmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG,grid=.TRUE.)
+            CALL alloc2_SmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep,basis_set%tab_basisPrimSG,grid=.TRUE.)
             CALL tabR2bis_TO_SmolyakRep1(SRep,aimag(CVecG)) ! on the grid
 
-            IF (allocated(basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval)) THEN
-              CALL GSmolyakRep_TO_BSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval,basis_set%tab_basisPrimSG)
+            IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
+              CALL GSmolyakRep_TO_BSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval,basis_set%tab_basisPrimSG)
             ELSE
-              CALL GSmolyakRep_TO2_BSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG)
+              CALL GSmolyakRep_TO3_BSmolyakRep(SRep,basis_set%para_SGType2,basis_set%tab_basisPrimSG)
             END IF
 
             CALL SmolyakRepBasis_TO_tabPackedBasis(SRep,RVecB,basis_set%nDindB,basis_set%para_SGType2,basis_set%WeightSG)
@@ -766,7 +762,7 @@
           CASE (2) ! Sparse basis (Smolyak 2d  implementation)
 
             CALL sub_B_TO_G(RVecB,RVecG,                                &
-                    basis_set%para_SGType2%nDind_SmolyakGrids%Tab_DInd, &
+                    basis_set%para_SGType2%nDind_SmolyakRep%Tab_DInd, &
                                      basis_set%nDindB%Tab_DInd,         &
                                      basis_set%tab_basisPrimSG,         &
                                      D=basis_set%nb_basis,              &
@@ -777,10 +773,10 @@
 
             CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
 
-            IF (allocated(basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval)) THEN
-              CALL BSmolyakRep_TO_GSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval,basis_set%tab_basisPrimSG)
+            IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
+              CALL BSmolyakRep_TO_GSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval,basis_set%tab_basisPrimSG)
             ELSE
-              CALL BSmolyakRep_TO2_GSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG)
+              CALL BSmolyakRep_TO3_GSmolyakRep(SRep,basis_set%para_SGType2,basis_set%tab_basisPrimSG)
             END IF
 
             CALL SmolyakRep2_TO_tabR1bis(RVecG,SRep)
@@ -1050,7 +1046,7 @@
 
             RVecB(:) = real(CVecB,kind=Rkind)
             CALL sub_B_TO_G(RVecB,RVecG,                                &
-                    basis_set%para_SGType2%nDind_SmolyakGrids%Tab_DInd, &
+                    basis_set%para_SGType2%nDind_SmolyakRep%Tab_DInd, &
                                      basis_set%nDindB%Tab_DInd,         &
                                      basis_set%tab_basisPrimSG,         &
                                      D=basis_set%nb_basis,              &
@@ -1060,7 +1056,7 @@
 
             RVecB(:) = aimag(CVecB)
             CALL sub_B_TO_G(RVecB,RVecG,                                &
-                    basis_set%para_SGType2%nDind_SmolyakGrids%Tab_DInd, &
+                    basis_set%para_SGType2%nDind_SmolyakRep%Tab_DInd, &
                                      basis_set%nDindB%Tab_DInd,         &
                                      basis_set%tab_basisPrimSG,         &
                                      D=basis_set%nb_basis,              &
@@ -1080,10 +1076,10 @@
             RVecB(:) = real(CVecB,kind=Rkind)
             CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
 
-            IF (allocated(basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval)) THEN
-              CALL BSmolyakRep_TO_GSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval,basis_set%tab_basisPrimSG)
+            IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
+              CALL BSmolyakRep_TO_GSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval,basis_set%tab_basisPrimSG)
             ELSE
-              CALL BSmolyakRep_TO2_GSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG)
+              CALL BSmolyakRep_TO3_GSmolyakRep(SRep,basis_set%para_SGType2,basis_set%tab_basisPrimSG)
             END IF
 
             itabR = 0
@@ -1098,10 +1094,10 @@
             RVecB(:) = aimag(CVecB)
             CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
 
-            IF (allocated(basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval)) THEN
-              CALL BSmolyakRep_TO_GSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval,basis_set%tab_basisPrimSG)
+            IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
+              CALL BSmolyakRep_TO_GSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval,basis_set%tab_basisPrimSG)
             ELSE
-              CALL BSmolyakRep_TO2_GSmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG)
+              CALL BSmolyakRep_TO3_GSmolyakRep(SRep,basis_set%para_SGType2,basis_set%tab_basisPrimSG)
             END IF
 
             itabR = 0
@@ -1315,7 +1311,7 @@
               CONTINUE ! nothing to do RvecG is unchanged
             ELSE
               CALL DerivOp_TO_RVecG_SGType2(RVecG,nq,                   &
-                    basis_set%para_SGType2%nDind_SmolyakGrids%Tab_DInd, &
+                    basis_set%para_SGType2%nDind_SmolyakRep%Tab_DInd, &
                                      basis_set%nDindB%Tab_DInd,         &
                                      basis_set%tab_basisPrimSG,         &
                                      D=basis_set%nb_basis,              &
@@ -1331,17 +1327,14 @@
               CONTINUE ! nothing to do RvecG is unchanged
             ELSE
               !!  RVecG TO SRep
-              CALL alloc2_SmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG,grid=.TRUE.)
+              CALL alloc2_SmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep,basis_set%tab_basisPrimSG,grid=.TRUE.)
               CALL tabR2bis_TO_SmolyakRep1(SRep,RVecG)
 
-              IF (allocated(basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval)) THEN
-                CALL DerivOp_TO2_GSmolyakRep(SRep,                      &
-                      basis_set%para_SGType2%nDind_SmolyakGrids,        &
-                      basis_set%tab_basisPrimSG,tab_der=tab_der_loc)
-
+              IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
+                CALL DerivOp_TO3_GSmolyakRep(SRep,basis_set%para_SGType2,&
+                           basis_set%tab_basisPrimSG,tab_der=tab_der_loc)
               ELSE
-                CALL DerivOp_TO2_GSmolyakRep(SRep,                      &
-                      basis_set%para_SGType2%nDind_SmolyakGrids,        &
+                CALL DerivOp_TO3_GSmolyakRep(SRep,basis_set%para_SGType2,&
                       basis_set%tab_basisPrimSG,tab_der=tab_der_loc)
               END IF
 
@@ -1545,7 +1538,7 @@
 
               RVecG(:) = real(CVecG,kind=Rkind)
               CALL DerivOp_TO_RVecG_SGType2(RVecG,nq,                   &
-                    basis_set%para_SGType2%nDind_SmolyakGrids%Tab_DInd, &
+                    basis_set%para_SGType2%nDind_SmolyakRep%Tab_DInd, &
                                      basis_set%nDindB%Tab_DInd,         &
                                      basis_set%tab_basisPrimSG,         &
                                      D=basis_set%nb_basis,              &
@@ -1559,7 +1552,7 @@
                 CVecG(i) = cmplx(a,kind=Rkind)
               END DO
               CALL DerivOp_TO_RVecG_SGType2(RVecG,nq,                   &
-                    basis_set%para_SGType2%nDind_SmolyakGrids%Tab_DInd, &
+                    basis_set%para_SGType2%nDind_SmolyakRep%Tab_DInd, &
                                      basis_set%nDindB%Tab_DInd,         &
                                      basis_set%tab_basisPrimSG,         &
                                      D=basis_set%nb_basis,              &
@@ -1580,68 +1573,20 @@
               CONTINUE ! nothing to do RvecG is unchanged
             ELSE
               !!  RVecG TO SRep
-              CALL alloc2_SmolyakRepC(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG,grid=.TRUE.)
+              CALL alloc2_SmolyakRepC(SRep,basis_set%para_SGType2%nDind_SmolyakRep,basis_set%tab_basisPrimSG,grid=.TRUE.)
               CALL tabC2bis_TO_SmolyakRepC1(SRep,CVecG)
 
-              IF (allocated(basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval)) THEN
-                CALL DerivOp_TO2_GSmolyakRepC(SRep,                     &
-                      basis_set%para_SGType2%nDind_SmolyakGrids,        &
+              IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
+                CALL DerivOp_TO3_GSmolyakRepC(SRep,basis_set%para_SGType2,&
                       basis_set%tab_basisPrimSG,tab_der=tab_der_loc)
-
               ELSE
-                CALL DerivOp_TO2_GSmolyakRepC(SRep,                     &
-                      basis_set%para_SGType2%nDind_SmolyakGrids,        &
+                CALL DerivOp_TO3_GSmolyakRepC(SRep,basis_set%para_SGType2,&
                       basis_set%tab_basisPrimSG,tab_der=tab_der_loc)
               END IF
 
               CALL SmolyakRepC2_TO_tabC1bis(CVecG,SRep)
 
               CALL dealloc_SmolyakRepC(SRep)
-
-!              CALL alloc_NParray(RVecG,shape(CVecG),'RVecG',name_sub)
-!              CALL alloc2_SmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakGrids,basis_set%tab_basisPrimSG,grid=.TRUE.)
-!
-!              !!  Real part
-!              RVecG(:) = real(CVecG,kind=Rkind)
-!
-!              CALL tabR2bis_TO_SmolyakRep1(SRep,RVecG)
-!
-!              IF (allocated(basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval)) THEN
-!                CALL DerivOp_TO2_GSmolyakRep(SRep,                      &
-!                      basis_set%para_SGType2%nDind_SmolyakGrids,        &
-!                      basis_set%tab_basisPrimSG,tab_der=tab_der_loc)
-!              ELSE
-!                CALL DerivOp_TO2_GSmolyakRep(SRep,                      &
-!                      basis_set%para_SGType2%nDind_SmolyakGrids,        &
-!                      basis_set%tab_basisPrimSG,tab_der=tab_der_loc)
-!              END IF
-!              CALL SmolyakRep2_TO_tabR1bis(RVecG,SRep)
-!
-!              !!  Im part + transfert real part
-!              DO i=1,size(CVecG)
-!                a = RVecG(i)
-!                RVecG(i) = aimag(CVecG(i))
-!                CVecG(i) = cmplx(a,kind=Rkind)
-!              END DO
-!
-!              CALL tabR2bis_TO_SmolyakRep1(SRep,RVecG)
-!
-!              IF (allocated(basis_set%para_SGType2%nDind_SmolyakGrids%Tab_nDval)) THEN
-!                CALL DerivOp_TO2_GSmolyakRep(SRep,                      &
-!                      basis_set%para_SGType2%nDind_SmolyakGrids,        &
-!                      basis_set%tab_basisPrimSG,tab_der=tab_der_loc)
-!              ELSE
-!                CALL DerivOp_TO2_GSmolyakRep(SRep,                      &
-!                      basis_set%para_SGType2%nDind_SmolyakGrids,        &
-!                      basis_set%tab_basisPrimSG,tab_der=tab_der_loc)
-!              END IF
-!              CALL SmolyakRep2_TO_tabR1bis(RVecG,SRep)
-!
-!              CVecG(:) = CVecG(:) + EYE*cmplx(RVecG(:),kind=Rkind)
-!
-!
-!              CALL dealloc_SmolyakRep(SRep)
-!              CALL dealloc_NParray(RVecG,'RVecG',name_sub)
 
             END IF
 

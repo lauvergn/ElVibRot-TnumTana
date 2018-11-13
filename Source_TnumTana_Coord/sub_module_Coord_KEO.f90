@@ -22,11 +22,29 @@
 !===========================================================================
 
 MODULE mod_Coord_KEO
+  USE mod_system
+
+  USE mod_dnSVM
+  USE mod_nDindex
+
+  USE mod_Constant
+
+  USE mod_Lib_QTransfo, only : write_dnx,Write_dnx
+  USE mod_freq
+  USE mod_ActiveTransfo
+  USE mod_RPHTransfo
+  USE mod_CartesianTransfo
+  USE mod_export_KEO  ! no only
   USE mod_Tnum
   USE mod_paramQ
+  USE mod_dnRho
   USE mod_dnGG_dng
-  USE mod_Tana_keo
-  USE mod_Tana_Tnum
+  USE mod_dnDetGG_dnDetg
+  USE mod_f2f2Vep
+
+  USE mod_Tana_keo    ! no only
+  USE mod_Tana_Tnum   ! no only
+  USE mod_Tana_Sum_OpnD
   IMPLICIT NONE
 
 END MODULE mod_Coord_KEO

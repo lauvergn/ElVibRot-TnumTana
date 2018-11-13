@@ -49,6 +49,8 @@
       logical  :: deriv
       integer  :: i,nq,nb_nosym
 
+      logical  :: Print_basis
+
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='sub_quadra_hermite'
       !logical, parameter :: debug = .TRUE.
@@ -66,6 +68,8 @@
        deriv = .TRUE.
        num   = .FALSE.
 
+       Print_basis = base%print_info_OF_basisDP .AND. print_level > -1
+
        IF (base%nb <= 0) THEN
          base%nb = Get_nb_FROM_l_OF_PrimBasis(base%L_SparseBasis,base)
        END IF
@@ -81,11 +85,10 @@
 !      test sur nb_herm et nb_quadra
 !      nb_quadra > nb_herm
 !----------------------------------------------------------------------------
-      IF (base%check_nq_OF_basis .AND. print_level > -1) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '    Basis: Hermite polynomia'
         write(out_unitp,*) '      nb_hermite',base%nb
       END IF
-      IF (print_level > -1) write(out_unitp,*) '      nb_hermite',base%nb
 
       base%packed            = .TRUE.
       base%packed_done       = .TRUE.
@@ -93,8 +96,8 @@
 
       IF (.NOT. base%xPOGridRep_done) THEN
         IF (base%check_nq_OF_basis) THEN
-          IF (print_level > -1) write(out_unitp,*) '      nb_hermite',base%nb
-          IF (print_level > -1) write(out_unitp,*) '      old nb_quadra',nq
+          IF (Print_basis) write(out_unitp,*) '      nb_hermite',base%nb
+          IF (Print_basis) write(out_unitp,*) '      old nb_quadra',nq
           IF (paire == -1) THEN
             nb_nosym = base%nb
           ELSE IF (paire == 1) THEN ! odd
@@ -112,7 +115,7 @@
           IF (base%check_nq_OF_basis .AND. mod(nq,2) == 0)    nq = nq + 1 ! here nq must be odd : 2n-1
           IF (base%check_nq_OF_basis .AND. nq < 2*nb_nosym-1) nq = 2*nb_nosym-1
           CALL Set_nq_OF_basis(base,nq)
-          IF (print_level > -1) write(out_unitp,*) '      new nb_quadra',nq
+          IF (Print_basis) write(out_unitp,*) '      new nb_quadra',nq
 
           CALL alloc_xw_OF_basis(base)
           CALL grid_HermiteNested1(base%x,base%w,nq,base%nq_max_Nested)
@@ -123,7 +126,7 @@
           IF (base%check_nq_OF_basis .AND. mod(nq,2) == 0)    nq = nq + 1 ! here nq must be odd : 2n-1
           IF (base%check_nq_OF_basis .AND. nq < 2*nb_nosym-1) nq = 2*nb_nosym-1
           CALL Set_nq_OF_basis(base,nq)
-          IF (print_level > -1) write(out_unitp,*) '      new nb_quadra',nq
+          IF (Print_basis) write(out_unitp,*) '      new nb_quadra',nq
 
           CALL alloc_xw_OF_basis(base)
 
@@ -132,7 +135,7 @@
 
           IF (base%check_nq_OF_basis .AND. nq < nb_nosym) nq = nb_nosym + 1
           CALL Set_nq_OF_basis(base,nq)
-          IF (print_level > -1) write(out_unitp,*) '      new nb_quadra',nq
+          IF (Print_basis) write(out_unitp,*) '      new nb_quadra',nq
 
           CALL alloc_xw_OF_basis(base)
           CALL hercom(nq,base%x(1,:),base%w)
@@ -150,8 +153,7 @@
       CALL alloc_dnb_OF_basis(base)
 
       IF (paire == 0) THEN
-        IF (base%print_info_OF_basisDP .AND. print_level > -1)          &
-                       write(out_unitp,*) '      even Hermite polynomia'
+        IF (Print_basis) write(out_unitp,*) '      even Hermite polynomia'
         base%tab_ndim_index(1,:) = (/ (2*i-1,i=1,base%nb) /)
         CALL d0d1d2poly_Hermite_0_exp_grille(                           &
                              base%x(1,:),                               &
@@ -160,8 +162,7 @@
                              base%dnRGB%d2(:,:,1,1),                         &
                              base%nb,nq,deriv,num,step)
       ELSE IF (paire == 1) THEN
-        IF (base%print_info_OF_basisDP .AND. print_level > -1)          &
-                         write(out_unitp,*) '      odd Hermite polynomia'
+        IF (Print_basis) write(out_unitp,*) '      odd Hermite polynomia'
         base%tab_ndim_index(1,:) = (/ (2*i,i=1,base%nb) /)
         CALL d0d1d2poly_Hermite_1_exp_grille(                           &
                              base%x(1,:),                               &
@@ -170,8 +171,7 @@
                              base%dnRGB%d2(:,:,1,1),                         &
                              base%nb,nq,deriv,num,step)
       ELSE
-        IF (base%print_info_OF_basisDP .AND. print_level > -1)          &
-                        write(out_unitp,*) '      All Hermite polynomia'
+        IF (Print_basis) write(out_unitp,*) '      All Hermite polynomia'
         base%tab_ndim_index(1,:) = (/ (i,i=1,base%nb) /)
         CALL d0d1d2poly_Hermite_exp_grille(                             &
                              base%x(1,:),                               &
@@ -183,9 +183,7 @@
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'base%dnRGB'
-        CALL write_dnSVM(base%dnRGB)
-        !CALL RecWrite_basis(base,write_all=.FALSE.)
+        CALL RecWrite_basis(base,write_all=.TRUE.)
         write(out_unitp,*) 'END sub_quadra_hermite'
       END IF
 !-----------------------------------------------------------
@@ -973,8 +971,6 @@
 
           err_Grid = err_Grid .OR. (nq < 1)
           IF (err_Grid) RETURN
-
-
 
           CALL alloc_xw_OF_basis(base)
 

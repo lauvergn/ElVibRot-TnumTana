@@ -25,7 +25,7 @@
       USE mod_string
       IMPLICIT NONE
 
-
+      PRIVATE
 
       TYPE REAL_WU ! real with unit
 
@@ -42,13 +42,21 @@
         TYPE(REAL_WU)              :: Write_unit
       END TYPE Type_TabConvRWU
 
-      TYPE(Type_TabConvRWU), allocatable :: Tab_conv_FOR_quantity(:) ! conversion factor to the working unit
+      TYPE(Type_TabConvRWU), allocatable, public :: Tab_conv_FOR_quantity(:) ! conversion factor to the working unit
 
 
      INTERFACE assignment (=)
        MODULE PROCEDURE RWU2_TO_R1,RWU2_TO_RWU1,                        &
              TabConvRWU2_TO_TabConvRWU1,TabConvRWU2_TO_TabConvRWU1_dim1
      END INTERFACE
+
+     PUBLIC :: REAL_WU, Type_TabConvRWU, assignment (=)
+     PUBLIC :: dealloc_TabConvRWU, dealloc_TabConvRWU_dim1, Write_TabConvRWU, Write_TabConvRWU_dim1
+     PUBLIC :: ADD_RWU_TO_TabConvRWU, ADD_RWU_TO_Tab_conv_FOR_quantity
+     PUBLIC :: convRWU_TO_R,convRWU_TO_RWU
+     PUBLIC :: RWU_Write,RWU_WriteUnit
+     PUBLIC :: get_Conv_au_TO_WriteUnit,get_Conv_au_TO_Unit
+     PUBLIC :: Test_RWU
 
 
       CONTAINS

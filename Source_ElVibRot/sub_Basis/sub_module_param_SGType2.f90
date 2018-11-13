@@ -28,9 +28,12 @@
 !===========================================================================
 MODULE mod_param_SGType2
 USE mod_system
-USE mod_dnSVM
-USE mod_nDindex
+use mod_nDindex, only: type_ndindex, dealloc_ndindex, dealloc_nparray,  &
+                       alloc_nparray, init_ndval_of_ndindex,            &
+                       add_one_to_ndindex, calc_ndi, calc_ndindex
 IMPLICIT NONE
+
+  PRIVATE
 
   TYPE param_SGType2
     integer                      :: L1_SparseGrid = huge(1)
@@ -38,19 +41,24 @@ IMPLICIT NONE
     integer                      :: Num_OF_Lmax   = 0 ! use normal L_SparseGrid
 
     integer                      :: nb_SG = 0
-    TYPE (Type_nDindex)          :: nDind_SmolyakGrids  ! multidimensional index smolyak grids
+    TYPE (Type_nDindex)          :: nDind_SmolyakRep  ! multidimensional index smolyak grids
 
     TYPE (Type_nDindex), allocatable :: nDind_DPG(:)    ! multidimensional DP index (nb_SG)
     TYPE (Type_nDindex), allocatable :: nDind_DPB(:)    ! multidimensional DP index (nb_SG)
 
     !for SGtype=4
-    integer, allocatable :: tab_iB_OF_SRep_TO_iB(:)   ! size (SRep)
+    integer (kind=Ikind), allocatable :: tab_iB_OF_SRep_TO_iB(:)   ! size (SRep)
 
     integer, allocatable :: tab_Sum_nq_OF_SRep(:)     ! size (SRep)
     integer, allocatable :: tab_nq_OF_SRep(:)         ! size (SRep)
 
     integer, allocatable :: tab_Sum_nb_OF_SRep(:)     ! size (SRep)
     integer, allocatable :: tab_nb_OF_SRep(:)         ! size (SRep)
+
+    ! To intialize nDval(:) for each thread and when Tab_nDval is not allocated
+    integer                       :: nb_threads = 0
+    integer, allocatable          :: nDval_init(:,:)   ! nDval_init(ndim,nb_threads) table the individual indexes
+    integer, allocatable          :: iG_th(:),fG_th(:) ! iG indexes associated to the ompen mp threads
 
   END TYPE param_SGType2
 
@@ -69,6 +77,11 @@ IMPLICIT NONE
 INTERFACE assignment (=)
   MODULE PROCEDURE SGType2_2TOSGType2_1
 END INTERFACE
+
+ PUBLIC param_SGType2, assignment (=), dealloc_SGType2, Set_nDval_init_FOR_SG4
+ PUBLIC OldParam, Write_OldParam
+ PUBLIC get_iqSG_iSG_FROM_iq, get_Tabiq_Tabil_FROM_iq, get_Tabiq_Tabil_FROM_iq_old
+ PUBLIC calc_Weight_OF_SRep
 
 CONTAINS
 SUBROUTINE Write_OldParam(OldPara)
@@ -103,7 +116,7 @@ SGType2%Num_OF_Lmax   = 0 ! use normal L_SparseGrid
 
 SGType2%nb_SG = 0
 
-CALL dealloc_nDindex(SGType2%nDind_SmolyakGrids)
+CALL dealloc_nDindex(SGType2%nDind_SmolyakRep)
 
 IF (allocated(SGType2%nDind_DPG)) THEN
   CALL dealloc_NParray(SGType2%nDind_DPG,'SGType2%nDind_DPG',name_sub)
@@ -135,6 +148,22 @@ IF (allocated(SGType2%tab_nb_OF_SRep)) THEN
   CALL dealloc_NParray(SGType2%tab_nb_OF_SRep,        &
                       'SGType2%tab_nb_OF_SRep',name_sub)
 END IF
+
+
+SGType2%nb_threads = 0
+
+IF (allocated(SGType2%nDval_init)) THEN
+  CALL dealloc_NParray(SGType2%nDval_init,'SGType2%nDval_init',name_sub)
+END IF
+
+IF (allocated(SGType2%iG_th)) THEN
+  CALL dealloc_NParray(SGType2%iG_th,'SGType2%iG_th',name_sub)
+END IF
+
+IF (allocated(SGType2%fG_th)) THEN
+  CALL dealloc_NParray(SGType2%fG_th,'SGType2%fG_th',name_sub)
+END IF
+
 END SUBROUTINE dealloc_SGType2
 
 SUBROUTINE SGType2_2TOSGType2_1(SGType2_1,SGType2_2)
@@ -151,7 +180,7 @@ SGType2_1%L1_SparseGrid = SGType2_2%L1_SparseGrid
 SGType2_1%L2_SparseGrid = SGType2_2%L2_SparseGrid
 SGType2_1%Num_OF_Lmax   = SGType2_2%Num_OF_Lmax
 
-SGType2_1%nDind_SmolyakGrids = SGType2_2%nDind_SmolyakGrids
+SGType2_1%nDind_SmolyakRep = SGType2_2%nDind_SmolyakRep
 SGType2_1%nb_SG              = SGType2_2%nb_SG
 
 
@@ -205,7 +234,255 @@ IF (allocated(SGType2_2%tab_nb_OF_SRep)) THEN
   SGType2_1%tab_nb_OF_SRep(:) = SGType2_2%tab_nb_OF_SRep
 END IF
 
+
+SGType2_1%nb_threads = SGType2_2%nb_threads
+
+IF (allocated(SGType2_2%nDval_init)) THEN
+  CALL alloc_NParray(SGType2_1%nDval_init,shape(SGType2_2%nDval_init),  &
+                    'SGType2_1%nDval_init',name_sub)
+  SGType2_1%nDval_init(:,:) = SGType2_2%nDval_init
+END IF
+
+IF (allocated(SGType2_2%iG_th)) THEN
+  CALL alloc_NParray(SGType2_1%iG_th,shape(SGType2_2%iG_th),  &
+                    'SGType2_1%iG_th',name_sub)
+  SGType2_1%iG_th(:) = SGType2_2%iG_th
+END IF
+IF (allocated(SGType2_2%fG_th)) THEN
+  CALL alloc_NParray(SGType2_1%fG_th,shape(SGType2_2%fG_th),  &
+                    'SGType2_1%fG_th',name_sub)
+  SGType2_1%fG_th(:) = SGType2_2%fG_th
+END IF
+
 END SUBROUTINE SGType2_2TOSGType2_1
+
+      SUBROUTINE Set_nDval_init_FOR_SG4(SGType2,version)
+      USE mod_system
+      IMPLICIT NONE
+
+!----- for the basis set ----------------------------------------------
+      TYPE (param_SGType2), intent(inout) :: SGType2
+      integer,              intent(in)    :: version
+
+
+      integer             :: ith,nb_threads,nqq,nqq_Th,ndim,i_SG,iiG
+      integer             :: tab_l(SGType2%nDind_SmolyakRep%ndim)
+      integer             :: tab_l0(SGType2%nDind_SmolyakRep%ndim)
+
+      character (len=:), allocatable :: fformat
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='Set_nDval_init_FOR_SG4'
+      !logical,parameter :: debug=.FALSE.
+      logical,parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'ndim (nb_basis)',SGType2%nDind_SmolyakRep%ndim
+      END IF
+!-----------------------------------------------------------
+
+      nb_threads  = 1
+   !$ nb_threads  = omp_get_max_threads()
+      ndim        = SGType2%nDind_SmolyakRep%ndim
+
+      SGType2%nb_threads = nb_threads
+
+      CALL alloc_NParray(SGType2%nDval_init,              &
+                         (/ ndim,nb_threads /),                         &
+                       'SGType2%nDval_init',name_sub)
+
+      CALL alloc_NParray(SGType2%iG_th,(/ nb_threads /),  &
+                        'SGType2%iG_th',name_sub)
+
+      CALL alloc_NParray(SGType2%fG_th,(/ nb_threads /),  &
+                        'SGType2%fG_th',name_sub)
+
+      SELECT CASE (version)
+
+      CASE (0)
+        DO ith=0,nb_threads-1
+
+          SGType2%iG_th(ith+1) =                          &
+              ith*SGType2%nDind_SmolyakRep%max_nDI/nb_threads+1
+          SGType2%fG_th(ith+1) =                          &
+            (ith+1)*SGType2%nDind_SmolyakRep%max_nDI/nb_threads
+
+
+          i_SG = SGType2%iG_th(ith+1)
+          CALL init_nDval_OF_nDindex(SGType2%nDind_SmolyakRep,tab_l)
+
+          DO iiG=1,i_SG-1
+            CALL ADD_ONE_TO_nDindex(SGType2%nDind_SmolyakRep,tab_l)
+          END DO
+          SGType2%nDval_init(:,ith+1) = tab_l(:)
+
+        END DO
+
+      CASE (1)
+        nqq_Th      = sum(SGType2%tab_nq_OF_SRep(:)) / nb_threads
+        nqq         = 0
+
+        ith = 1
+        CALL init_nDval_OF_nDindex(SGType2%nDind_SmolyakRep,tab_l)
+
+        SGType2%nDval_init(:,ith) = tab_l(:)
+        SGType2%iG_th(ith)        = 1
+
+        DO i_SG=1,SGType2%nb_SG
+          CALL ADD_ONE_TO_nDindex(SGType2%nDind_SmolyakRep,tab_l,iG=i_SG)
+
+          nqq         = nqq         + SGType2%tab_nq_OF_SRep(i_SG)
+
+          IF (nqq > nqq_Th) THEN
+            ! end for the current thread
+            SGType2%fG_th(ith) = i_SG-1
+
+            ! for the new thread
+            ith = ith+1
+            SGType2%iG_th(ith)        = i_SG
+            SGType2%nDval_init(:,ith) = tab_l0(:) ! tab_l before ADD_ONE
+
+            nqq = 0
+          END IF
+          tab_l0(:) = tab_l(:)
+
+        END DO
+        ! end of the last thread
+        SGType2%fG_th(ith) = SGType2%nb_SG
+
+
+      CASE default
+        DO ith=0,nb_threads-1
+
+          SGType2%iG_th(ith+1) =                          &
+              ith*SGType2%nDind_SmolyakRep%max_nDI/nb_threads+1
+          SGType2%fG_th(ith+1) =                          &
+            (ith+1)*SGType2%nDind_SmolyakRep%max_nDI/nb_threads
+
+
+          i_SG = SGType2%iG_th(ith+1)
+          CALL init_nDval_OF_nDindex(SGType2%nDind_SmolyakRep,tab_l)
+
+          DO iiG=1,i_SG-1
+            CALL ADD_ONE_TO_nDindex(SGType2%nDind_SmolyakRep,tab_l)
+          END DO
+          SGType2%nDval_init(:,ith+1) = tab_l(:)
+
+        END DO
+      END SELECT
+
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        fformat = '(i0,a,i0,x,i0,a,' // int_TO_char(ndim) // '(1x,i0))'
+
+        DO ith=1,nb_threads
+          write(out_unitp,fformat) ith-1,' iG_th,fG_th ',               &
+                                 SGType2%iG_th(ith),SGType2%fG_th(ith), &
+                    ' nDval_init: ',SGType2%nDval_init(:,ith)
+        END DO
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+      END SUBROUTINE Set_nDval_init_FOR_SG4
+
+      RECURSIVE SUBROUTINE calc_Weight_OF_SRep(WeightSG,nDind_SmolyakRep)
+      USE mod_system
+      IMPLICIT NONE
+
+      TYPE (Type_nDindex),             intent(in)    :: nDind_SmolyakRep
+      real (kind=Rkind),               intent(inout) :: WeightSG(nDind_SmolyakRep%Max_nDI)
+
+
+
+!---------------------------------------------------------------------
+      real (kind=Rkind) :: binomial ! function
+!---------------------------------------------------------------------
+
+      integer             :: i,i_SG,i_SGm,DeltaL
+      integer             :: tab_l(nDind_SmolyakRep%ndim)
+      integer             :: tab_lm(nDind_SmolyakRep%ndim)
+
+      logical             :: old = .TRUE.
+      real (kind=Rkind)   :: WeightSG_tmp(nDind_SmolyakRep%Max_nDI)
+
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='calc_Weight_OF_SRep'
+      logical,parameter :: debug=.FALSE.
+      !logical,parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+    IF (count(nDind_SmolyakRep%nDNum_OF_Lmax == 0) == nDind_SmolyakRep%ndim) THEN ! it work only when L1max or L2max are not used
+      CALL init_nDval_OF_nDindex(nDind_SmolyakRep,tab_l)
+      DO i_SG=1,nDind_SmolyakRep%Max_nDI
+        CALL ADD_ONE_TO_nDindex(nDind_SmolyakRep,tab_l,iG=i_SG)
+        DeltaL = nDind_SmolyakRep%Lmax - sum(tab_l)
+        !IF (DeltaL < 0) STOP 'DeltaL < 0'
+        !IF (DeltaL > nDind_SmolyakRep%ndim -1) STOP 'DeltaL > ndim-1'
+        IF (DeltaL < 0 .OR. DeltaL > nDind_SmolyakRep%ndim -1) THEN
+          WeightSG(i_SG) = ZERO
+        ELSE
+          IF (mod(DeltaL,2) == 0) THEN
+            WeightSG(i_SG) =  binomial(nDind_SmolyakRep%ndim-1,deltaL)
+          ELSE
+            WeightSG(i_SG) = -binomial(nDind_SmolyakRep%ndim-1,deltaL)
+          END IF
+        END IF
+
+        IF (debug) write(out_unitp,*) 'i_SG,nDval,coef',i_SG,tab_l(:),WeightSG(i_SG)
+      END DO
+    ELSE ! here the Smolyak rep in Delta_S is transformed in S to get the correct WeightSG
+      WeightSG(:) = ONE
+      DO i=1,nDind_SmolyakRep%ndim
+        WeightSG_tmp(:) = ZERO
+
+        CALL init_nDval_OF_nDindex(nDind_SmolyakRep,tab_l)
+        DO i_SG=1,nDind_SmolyakRep%Max_nDI
+          CALL ADD_ONE_TO_nDindex(nDind_SmolyakRep,tab_l,iG=i_SG)
+          ! DeltaS_(li) = S_(li) - S_(li-1)
+
+          ! S_(li) contribution
+          WeightSG_tmp(i_SG) = WeightSG_tmp(i_SG) + WeightSG(i_SG)
+
+          ! -S_(li-1) contribution
+          IF (tab_l(i) > 0) THEN
+            tab_lm(:) = tab_l(:)
+            tab_lm(i) = tab_l(i) -1
+            CALL calc_nDI(i_SGm,tab_lm,nDind_SmolyakRep)
+            WeightSG_tmp(i_SGm) = WeightSG_tmp(i_SGm) - WeightSG(i_SG)
+          END IF
+
+        END DO
+        WeightSG(:) = WeightSG_tmp(:)
+      END DO
+      !STOP 'not yet'
+    END IF
+
+    IF (debug) write(out_unitp,*) 'count zero weight: ',count(abs(WeightSG) <= ONETENTH**6)
+!-----------------------------------------------------------
+      IF (debug .OR. print_level > 1) THEN
+
+        CALL init_nDval_OF_nDindex(nDind_SmolyakRep,tab_l)
+        DO i_SG=1,nDind_SmolyakRep%Max_nDI
+          CALL ADD_ONE_TO_nDindex(nDind_SmolyakRep,tab_l,iG=i_SG)
+          write(out_unitp,*) 'i_SG,nDval,coef',i_SG,tab_l(:),WeightSG(i_SG)
+        END DO
+      END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+      END SUBROUTINE calc_Weight_OF_SRep
+
 
 ! from an index iq (global index of the multidimentional Smolyak grid) get:
 !  - iSG:  the numero of the direct-product grid of the Smolyak grid
@@ -346,23 +623,23 @@ IF (present(OldPara)) THEN
 
     Tabil(:) = OldPara%tab_l_AT_SG
     DO i_SG_loc=OldPara%i_SG+1,i_SG
-      CALL ADD_ONE_TO_nDindex(SGType2%nDind_SmolyakGrids,Tabil,iG=i_SG_loc,err_sub=err_sub)
+      CALL ADD_ONE_TO_nDindex(SGType2%nDind_SmolyakRep,Tabil,iG=i_SG_loc,err_sub=err_sub)
     END DO
 
   ELSE
-    CALL calc_nDindex(SGType2%nDind_SmolyakGrids,i_SG,Tabil,err_sub)
+    CALL calc_nDindex(SGType2%nDind_SmolyakRep,i_SG,Tabil,err_sub)
   END IF
 
 ELSE
-  CALL calc_nDindex(SGType2%nDind_SmolyakGrids,i_SG,Tabil,err_sub)
+  CALL calc_nDindex(SGType2%nDind_SmolyakRep,i_SG,Tabil,err_sub)
 END IF
 
 IF (err_sub /= 0) THEN
-  write(out_unitp,*) ' SGType2%nDind_SmolyakGrids'
+  write(out_unitp,*) ' SGType2%nDind_SmolyakRep'
   write(out_unitp,*) ' ERROR in ',name_sub
   write(out_unitp,*) ' i_SG,iq_SG,iq',i_SG,iq_SG,iq
   write(out_unitp,*) ' Tabil',Tabil
-  write(out_unitp,*) '  from SGType2%nDind_SmolyakGrids',i_SG
+  write(out_unitp,*) '  from SGType2%nDind_SmolyakRep',i_SG
   err_sub = 1
   RETURN
     !STOP 'calc_nDindex'
@@ -440,10 +717,10 @@ DO i_SG=1,SGType2%nb_SG
   iq_SG = iq_SG - nq
 END DO
 
-  CALL calc_nDindex(SGType2%nDind_SmolyakGrids,i_SG,Tabil,err_sub)
+  CALL calc_nDindex(SGType2%nDind_SmolyakRep,i_SG,Tabil,err_sub)
   IF (err_sub /= 0) THEN
     write(out_unitp,*) ' ERROR in ',name_sub
-    write(out_unitp,*) '  from SGType2%nDind_SmolyakGrids',i_SG
+    write(out_unitp,*) '  from SGType2%nDind_SmolyakRep',i_SG
     STOP 'calc_nDindex'
   END IF
 

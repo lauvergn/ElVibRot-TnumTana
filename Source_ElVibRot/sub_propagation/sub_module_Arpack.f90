@@ -245,10 +245,16 @@ CONTAINS
 !        | either convergence is indicated or maxitr   |
 !        | has been exceeded.                          |
 !        %---------------------------------------------%
-
+#if __ARPACK == 1
          call dnaupd ( ido, bmat, n, which, nev, tol, resid,            &
               ncv, v, ldv, iparam, ipntr, workd, workl, lworkl,         &
               info )
+#else
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' The ARPACK library is not present!'
+          write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+          STOP 'ARPACK has been removed'
+#endif
 
          IF (abs(ido) /= 1) EXIT
 
@@ -310,11 +316,17 @@ CONTAINS
 
          rvec = .true.
 
+#if __ARPACK == 1
          call dneupd ( rvec, 'A', select, d, d(1,2), v, ldv,            &
               sigmar, sigmai, workev, bmat, n, which, nev, tol,         &
               resid, ncv, v, ldv, iparam, ipntr, workd, workl,          &
               lworkl, ierr )
-
+#else
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' The ARPACK library is not present!'
+          write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+          STOP 'ARPACK has been removed'
+#endif
 !        %-----------------------------------------------%
 !        | The real part of the eigenvalue is returned   |
 !        | in the first column of the two dimensional    |
@@ -388,8 +400,16 @@ CONTAINS
                    CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,&
                                              para_H,cplxE,para_propa,int(n))
 
+#if __ARPACK == 1
                    call daxpy(n, -d(j,1), v(1,j), 1, ax, 1)
                    call daxpy(n, d(j,2), v(1,j+1), 1, ax, 1)
+#else
+             write(out_unitp,*) 'ERROR in ',name_sub
+             write(out_unitp,*) ' The ARPACK library is not present!'
+             write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+             STOP 'ARPACK has been removed'
+#endif
+
                    d(j,3) = dnrm2(n, ax, 1)
 
                    Ene(j)          = d(j,1)
@@ -407,8 +427,15 @@ CONTAINS
                    psi(j+1)%IndAvOp  = para_H%n_Op  ! it should be 0
                    psi(j+1)%convAvOp = .TRUE.
 
+#if __ARPACK == 1
                    call daxpy(n, -d(j,2), v(1,j), 1, ax, 1)
                    call daxpy(n, -d(j,1), v(1,j+1), 1, ax, 1)
+#else
+             write(out_unitp,*) 'ERROR in ',name_sub
+             write(out_unitp,*) ' The ARPACK library is not present!'
+             write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+             STOP 'ARPACK has been removed'
+#endif
                    d(j,3) = dlapy2( d(j,3), dnrm2(n, ax, 1) )
                    d(j,3) = d(j,3) / dlapy2(d(j,1),d(j,2))
                    d(j+1,3) = d(j,3)
@@ -425,9 +452,15 @@ CONTAINS
 !            %-----------------------------%
 !            | Display computed residuals. |
 !            %-----------------------------%
-
+#if __ARPACK == 1
              call dmout(6, nconv, 3, d, maxncv, -6,                     &
                        'Ritz values (Real,Imag) and relative residuals')
+#else
+             write(out_unitp,*) 'ERROR in ',name_sub
+             write(out_unitp,*) ' The ARPACK library is not present!'
+             write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+             STOP 'ARPACK has been removed'
+#endif
           end if
 
 !        %-------------------------------------------%

@@ -20,14 +20,13 @@
 !
 !===========================================================================
 !===========================================================================
-!MODULE mod_dnRho
-!  !USE mod_system
-!  IMPLICIT NONE
-!
-!  PRIVATE
-!  PUBLIC :: sub3_dnrho,Write_rho
-!
-!  CONTAINS
+MODULE mod_dnRho
+  IMPLICIT NONE
+
+  PRIVATE
+  PUBLIC :: sub3_dnrho, sub3_dnrho_ana ,Write_rho
+
+  CONTAINS
 !=====================================================================
 !
 ! ++   fi Fij f0=rho calculation
@@ -493,4 +492,4 @@
 
        END IF
       end subroutine Write_rho
-!END MODULE mod_dnRho
+END MODULE mod_dnRho

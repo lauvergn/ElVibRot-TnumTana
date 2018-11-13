@@ -40,6 +40,8 @@
 !
       SUBROUTINE read_inactive(Basis2n,ComOp,mole)
       USE mod_system
+      use mod_Coord_KEO, only: zmatrix, alloc_array, dealloc_array, &
+                               set_rphtransfo, tnum, alloc_nparray
       USE mod_basis
       USE mod_Op
       IMPLICIT NONE
@@ -292,8 +294,7 @@
 
       logical       :: lect,restart
       logical       :: read_Grid,restart_Grid
-      logical       :: Save_Grid_iterm,Read_Grid_iterm,Keep_Grid_iterm,Seq_Grid_iterm
-      logical       :: Save_FileGrid,Keep_FileGrid,Save_MemGrid
+      logical       :: Save_FileGrid,Keep_FileGrid,Save_MemGrid,Seq_FileGrid
 
       integer       :: num_grid_i,num_grid_f
       integer       :: JJ,Type_HamilOp
@@ -323,9 +324,8 @@
 
       NAMELIST /actives/comput_S,test,                                  &
                         read_Grid,lect,restart_Grid,restart,            &
-                        Save_Grid_iterm,Read_Grid_iterm,Keep_Grid_iterm,&
                         Save_FileGrid,Keep_FileGrid,Save_MemGrid,       &
-                        Seq_Grid_iterm,Type_FileGrid,                   &
+                        Seq_FileGrid,Type_FileGrid,                     &
                         num_grid_i,num_grid_f,                          &
                         pot_only,T_only,read_Op,                        &
                         name_HADA,formatted_HADA,                       &
@@ -361,10 +361,7 @@
       Save_FileGrid   = .FALSE.
       Save_MemGrid    = .FALSE.
       Keep_FileGrid   = .FALSE.
-      Save_Grid_iterm = .FALSE.
-      Read_Grid_iterm = .FALSE.
-      Keep_Grid_iterm = .FALSE.
-      Seq_Grid_iterm  = .FALSE.
+      Seq_FileGrid    = .FALSE.
       lect            = .FALSE.
       Restart_Grid    = .FALSE.
       restart         = .FALSE.
@@ -477,13 +474,12 @@
                            Base_FileName_Grid=name_Grid)
 
         IF (Type_FileGrid /= 0) THEN
+          para_ReadOp%para_FileGrid%Save_MemGrid       = Save_MemGrid
           para_ReadOp%para_FileGrid%Type_FileGrid      = Type_FileGrid
-          para_ReadOp%para_FileGrid%Save_MemGrid       = Save_Grid_iterm
-          para_ReadOp%para_FileGrid%Keep_FileGrid      = Keep_Grid_iterm
+          para_ReadOp%para_FileGrid%Keep_FileGrid      = Keep_FileGrid
           para_ReadOp%para_FileGrid%Formatted_FileGrid = .FALSE.
           para_ReadOp%para_FileGrid%Save_FileGrid      = .TRUE.
         END IF
-
 
       CASE (3)
         para_ReadOp%Make_Mat = .FALSE.
@@ -496,9 +492,22 @@
                            First_GridPoint=num_grid_i,                  &
                            Last_GridPoint=num_grid_f,                   &
                            Base_FileName_Grid=name_Grid)
-      CASE (4)
-        STOP 'direct=4'
+
+      CASE (4) ! for SG4
+        para_ReadOp%Make_Mat = .FALSE.
+        CALL init_FileGrid(para_ReadOp%para_FileGrid,                   &
+                           Type_FileGrid=4,Save_FileGrid=Save_FileGrid, &
+                           Formatted_FileGrid=.FALSE.,                  &
+                           Keep_FileGrid=Keep_FileGrid,                 &
+                           Save_MemGrid=Save_MemGrid,                   &
+                           Read_FileGrid=Read_Grid,                     &
+                           Restart_Grid=Restart_Grid,test_Grid=test,    &
+                           First_GridPoint=num_grid_i,                  &
+                           Last_GridPoint=num_grid_f,                   &
+                           Base_FileName_Grid=name_Grid)
       END SELECT
+
+      !CALL Write_FileGrid(para_ReadOp%para_FileGrid)
 
       IF (make_MatOp) para_ReadOp%Make_Mat = .TRUE.
 

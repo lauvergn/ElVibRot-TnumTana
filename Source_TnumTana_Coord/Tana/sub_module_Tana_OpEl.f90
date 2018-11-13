@@ -22,13 +22,15 @@
 !===========================================================================
 
  module mod_Tana_OpEl
-   !! @description: This module defines the data structures. It contains also
-   !!               the some standard routine that initilize, 
-   !!               allocate and delete the data structure
- USE mod_system
- USE mod_string
+ use mod_system, only: name_len, rkind, czero,          &
+                       sub_test_tab_ub, sub_test_tab_lb,             &
+                       error_memo_allo, write_error_null,            &
+                       out_unitp, string_to_string,                  &
+                       zero, eye, int_to_char, real_to_char,         &
+                       cone, one, dealloc_nparray, alloc_nparray
+ use mod_FracInteger
  IMPLICIT NONE
-! PRIVATE
+ PRIVATE
 
         !-----------------------------------------------------------!
         !                OpEl                                       !
@@ -84,6 +86,7 @@
     module procedure compare_F1el_F2el
   end interface
 
+
   !!@description: Generic routine that copy a operator F1 to another operator F2
   interface copy_F1_into_F2
     module procedure copy_F1_el_into_F2_el
@@ -100,6 +103,15 @@
    INTERFACE operator (*)
      MODULE PROCEDURE R_times_OpEl,OpEl_times_R,C_times_OpEl,OpEl_times_C
    END INTERFACE
+
+   PUBLIC :: OpEl, alloc_NParray, dealloc_NParray, check_NParray
+   PUBLIC :: compare_op, compare_indexq, copy_F1_into_F2, write_op
+   PUBLIC :: set_opel
+   PUBLIC :: assignment (=), operator (*)
+   PUBLIC :: Export_MCTDH_OpEl, Export_Latex_OpEl, Export_Midas_OpEl, Export_VSCF_OpEl
+   PUBLIC :: Change_PQ_OF_OpEl_TO_Id_OF_OpEl, Der1_OF_d0OpEl_TO_d1OpEl
+   PUBLIC :: get_NumVal_OpEl, get_pqJL_OF_OpEl
+   PUBLIC :: Merge_TabOpEl, Sort_TabOpEl, Split_OpEl_TO_SplitOpEl
 
   contains
 

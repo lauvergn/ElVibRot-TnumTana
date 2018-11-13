@@ -325,60 +325,63 @@
       IF (psi%nb_baie*psi%nb_bRot /= psi%nb_tot .AND.                   &
           .NOT. psi%ComOp%contrac_ba_ON_HAC) RETURN   ! should be spectral WP
 
-        maxC1 = ZERO
-        maxC2 = ZERO
-        i_b_maxC1 = 0
-        i_b_maxC2 = 0
-        i_h_maxC1 = 0
-        i_h_maxC2 = 0
-        i_e_maxC1 = 0
-        i_e_maxC2 = 0
-        i_R_maxC1 = 0
-        i_R_maxC2 = 0
-        i_bhe1    = 0
-        i_bhe2    = 0
+      maxC1 = ZERO
+      maxC2 = ZERO
+      i_b_maxC1 = 0
+      i_b_maxC2 = 0
+      i_h_maxC1 = 0
+      i_h_maxC2 = 0
+      i_e_maxC1 = 0
+      i_e_maxC2 = 0
+      i_R_maxC1 = 0
+      i_R_maxC2 = 0
+      i_bhe1    = 0
+      i_bhe2    = 0
 
-        i_bhe = 0
-        DO i_R=1,psi%nb_bRot
-        DO i_e=1,psi%nb_be
-        DO i_h=1,psi%nb_bi
-        DO i_b=1,psi%ComOp%nb_ba_ON_HAC(i_h)
-          i_bhe = i_bhe + 1
+      i_bhe = 0
+      DO i_R=1,psi%nb_bRot
+      DO i_e=1,psi%nb_be
+      DO i_h=1,psi%nb_bi
+      !DO i_b=1,psi%ComOp%nb_ba_ON_HAC(i_h)
+      DO i_b=1,psi%nb_ba
 
-          IF (psi%cplx) THEN
-            C = abs(psi%CvecB(i_bhe))
-          ELSE
-            C = abs(psi%RvecB(i_bhe))
+        i_bhe = i_bhe + 1
+
+        IF (psi%cplx) THEN
+          C = abs(psi%CvecB(i_bhe))
+        ELSE
+          C = abs(psi%RvecB(i_bhe))
+        END IF
+
+        IF ( C > maxC1) THEN
+          ! test if maxC1 > maxC2 (the old maxC1)
+          IF ( maxC1 > maxC2) THEN
+            maxC2     = maxC1
+            i_bhe2    = i_bhe1
+            i_b_maxC2 = i_b_maxC1
+            i_h_maxC2 = i_h_maxC1
+            i_e_maxC2 = i_e_maxC1
+            i_R_maxC2 = i_R_maxC1
           END IF
-
-          IF ( C > maxC1) THEN
-            ! test if maxC1 > maxC2 (the old maxC1)
-            IF ( maxC1 > maxC2) THEN
-              maxC2     = maxC1
-              i_bhe2    = i_bhe1
-              i_b_maxC2 = i_b_maxC1
-              i_h_maxC2 = i_h_maxC1
-              i_e_maxC2 = i_e_maxC1
-              i_R_maxC2 = i_R_maxC1
-            END IF
-            maxC1     = C
-            i_bhe1    = i_bhe
-            i_b_maxC1 = i_b
-            i_h_maxC1 = i_h
-            i_e_maxC1 = i_e
-            i_R_maxC1 = i_R
-          ELSE IF ( C > maxC2) THEN
-            maxC2     = C
-            i_bhe2    = i_bhe
-            i_b_maxC2 = i_b
-            i_h_maxC2 = i_h
-            i_e_maxC2 = i_e
-            i_R_maxC2 = i_R
-          END IF
-        END DO
-        END DO
-        END DO
-        END DO
+          maxC1     = C
+          i_bhe1    = i_bhe
+          i_b_maxC1 = i_b
+          i_h_maxC1 = i_h
+          i_e_maxC1 = i_e
+          i_R_maxC1 = i_R
+        ELSE IF ( C > maxC2) THEN
+          maxC2     = C
+          i_bhe2    = i_bhe
+          i_b_maxC2 = i_b
+          i_h_maxC2 = i_h
+          i_e_maxC2 = i_e
+          i_R_maxC2 = i_R
+        END IF
+        !write(6,*) i_bhe,C,'i_b_maxC1,i_b_maxC2',i_b_maxC1,i_b_maxC2
+      END DO
+      END DO
+      END DO
+      END DO
 
       IF (psi%ComOp%contrac_ba_ON_HAC) THEN
 
@@ -396,26 +399,31 @@
                           i_b_maxC2,i_h_maxC2,i_e_maxC2,psi%RvecB(i_bhe2)
         END IF
       ELSE
-        CALL Rec_ndim_index(psi%BasisnD,ndim_index,i_b_maxC1)
-        IF (psi%cplx) THEN
-          write(out_unitp,*) 'max1 psi%vecBasisRep ',T,trim(info),      &
-                      ndim_index(:),i_h_maxC1,i_e_maxC1,psi%CvecB(i_bhe1)
-
-          IF (i_b_maxC2 > 0) THEN
-            CALL Rec_ndim_index(psi%BasisnD,ndim_index,i_b_maxC2)
-            write(out_unitp,*) 'max2 psi%vecBasisRep ',T,trim(info),    &
-                      ndim_index(:),i_h_maxC2,i_e_maxC2,psi%CvecB(i_bhe2)
-          END IF
+        IF (i_b_maxC1 < 1 .OR. i_b_maxC1 > psi%nb_ba) THEN
+          write(out_unitp,*) '   WARNING, i_b_maxC1 is out-of-range !! ',i_b_maxC1
+          write(out_unitp,*) '    it should > 0 and <= nb_ba'
         ELSE
-          write(out_unitp,*) 'max1 psi%vecBasisRep ',T,trim(info),      &
-                      ndim_index(:),i_h_maxC1,i_e_maxC1,psi%RvecB(i_bhe1)
+          CALL Rec_ndim_index(psi%BasisnD,ndim_index,i_b_maxC1)
+          IF (psi%cplx) THEN
+            write(out_unitp,*) 'max1 psi%vecBasisRep ',T,trim(info),      &
+                        ndim_index(:),i_h_maxC1,i_e_maxC1,psi%CvecB(i_bhe1)
 
-          IF (i_b_maxC2 > 0) THEN
-            CALL Rec_ndim_index(psi%BasisnD,ndim_index,i_b_maxC2)
-            write(out_unitp,*) 'max2 psi%vecBasisRep ',T,trim(info),    &
-                      ndim_index(:),i_h_maxC2,i_e_maxC2,psi%RvecB(i_bhe2)
+            IF (i_b_maxC2 > 0) THEN
+              CALL Rec_ndim_index(psi%BasisnD,ndim_index,i_b_maxC2)
+              write(out_unitp,*) 'max2 psi%vecBasisRep ',T,trim(info),    &
+                        ndim_index(:),i_h_maxC2,i_e_maxC2,psi%CvecB(i_bhe2)
+            END IF
+          ELSE
+            write(out_unitp,*) 'max1 psi%vecBasisRep ',T,trim(info),      &
+                        ndim_index(:),i_h_maxC1,i_e_maxC1,psi%RvecB(i_bhe1)
+
+            IF (i_b_maxC2 > 0) THEN
+              CALL Rec_ndim_index(psi%BasisnD,ndim_index,i_b_maxC2)
+              write(out_unitp,*) 'max2 psi%vecBasisRep ',T,trim(info),    &
+                        ndim_index(:),i_h_maxC2,i_e_maxC2,psi%RvecB(i_bhe2)
+            END IF
+
           END IF
-
         END IF
 
 
@@ -550,7 +558,7 @@
         END DO
       END DO
       !write(out_unitp,*) 'max_RedDensity ',ana_psi%max_RedDensity(:)
-      CALL Write_RVec(ana_psi%max_RedDensity,out_unitp,6,Rformat='e9.2',name_info='max_RedDensity ')
+      CALL Write_Vec(ana_psi%max_RedDensity,out_unitp,6,Rformat='e9.2',name_info='max_RedDensity ')
       CALL flush_perso(out_unitp)
 
       CALL dealloc_NParray(weight1Dact,"weight1Dact",name_sub)

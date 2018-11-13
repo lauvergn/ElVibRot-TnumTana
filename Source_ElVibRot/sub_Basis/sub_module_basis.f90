@@ -26,22 +26,22 @@
 !             http://shtools.ipgp.fr
 !===========================================================================
 !===========================================================================
-      MODULE mod_basis
-      USE mod_system
+MODULE mod_basis
+      USE mod_Coord_KEO
+
+      USE mod_RotBasis_Param
+      USE mod_Basis_Grid_Param
+      USE mod_Basis_L_TO_n
+      USE mod_SymAbelian
+      USE mod_param_SGType2
+
       USE mod_basis_set_alloc
       USE mod_basis_BtoG_GtoB
-      USE mod_dnSVM
-      USE mod_nDindex
-      USE mod_SymAbelian
-      USE mod_Tnum
-      USE mod_file
       IMPLICIT NONE
-
 
       CONTAINS
 
       RECURSIVE SUBROUTINE Set_basis_para_FOR_optimization(basis_set,Set_Val)
-
       USE mod_system
       IMPLICIT NONE
 
@@ -249,9 +249,6 @@
         CONTINUE ! will be done in the sub_quadra... subroutine
       CASE DEFAULT
         basis_temp%nb = Get_nb_FROM_l_OF_PrimBasis(basis_temp%L_SparseBasis,basis_temp)
-      write(6,*) 'basis_temp%nb',basis_temp%nb
-      write(6,*) 'basis_temp%L_SparseBasis',basis_temp%L_SparseBasis
-
       END SELECT
 
 
@@ -757,7 +754,7 @@
 !       ------------------ Mat_read --------------------
 !
         CALL alloc_NParray(Mat_read,(/ nb_b1,nb_bc1 /),"Mat_read",name_sub)
-        CALL Read_RMat(Mat_read,nio,nb_col,err)
+        CALL Read_Mat(Mat_read,nio,nb_col,err)
         IF (err /= 0) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' reading the matrix "Mat_read"'
@@ -1861,7 +1858,6 @@
 !-----------------------------------------------------------
       END SUBROUTINE sub_dnGB_TO_dnGG
 
-
       SUBROUTINE pack_basis(basis_set,sortX)
 
       TYPE (basis), intent(inout) :: basis_set
@@ -1874,13 +1870,11 @@
       integer, allocatable :: tab_iqXmin(:)
       real (kind=Rkind)    :: Xmin(basis_set%ndim)
       real (kind=Rkind)    :: X(basis_set%ndim)
-      !TYPE (basis)         :: basis_loc
+      TYPE (basis)         :: basis_loc
       real (kind=Rkind), allocatable    :: RvecB(:),RvecG(:)
 
 
       logical :: inferior ! function
-
-      !integer, save :: nb_pack = 0
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
@@ -1889,6 +1883,8 @@
       !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (.NOT. basis_set%packed) RETURN
+      IF (basis_set%packed_done) RETURN
+
       nqo = get_nq_FROM_basis(basis_set)
       !write(out_unitp,*) 'BEGINNING ',name_sub
       !write(out_unitp,*) 'nb,nq',basis_set%nb,nqo
@@ -1908,61 +1904,166 @@
       END IF
 !-----------------------------------------------------------------------
 
-
- !-- Packed the basis if necessary --------------------------------
- IF (basis_set%packed .AND. .NOT. basis_set%packed_done) THEN
-   !IF (basis_set%ndim > 1) CALL time_perso(name_sub)
-   !IF (basis_set%ndim > 1) nb_pack = nb_pack + 1
-   !write(out_unitp,*) 'nb_pack',nb_pack
-
    sortX_loc = .FALSE.
    IF (present(sortX)) sortX_loc = sortX
+   IF (basis_set%SparseGrid_type == 2) sortX_loc = .FALSE.
 
    IF (basis_set%nb_basis > 0 .AND. basis_set%SparseGrid_type == 2) THEN
+     IF (sortX_loc) THEN
+STOP 'pack and SG2 does not work!!!'
+       ! a temp basis with all grid points
+       CALL Set_nq_OF_basis(basis_loc,nqo)
+       basis_loc%ndim = basis_set%ndim
+       basis_loc%nb   = basis_set%nb
 
-     CALL Set_nq_OF_basis(basis_set,nqo)
+       ! first the basis without sortX
+       CALL alloc_dnb_OF_basis(basis_loc)
+       CALL alloc_NParray(RvecB,(/basis_loc%nb/),'RvecB',name_sub)
 
-     ! first the basis without sortX
-     CALL alloc_xw_OF_basis(basis_set)
-     CALL alloc_dnb_OF_basis(basis_set)
-     CALL alloc_NParray(RvecB,(/basis_set%nb/),'RvecB',name_sub)
+       DO ib=1,basis_loc%nb
+         RvecB = ZERO
+         RvecB(ib) = ONE
+         CALL RecRvecB_TO_RVecG(RvecB,basis_loc%dnRGB%d0(:,ib),basis_set%nb,nqo,basis_set)
+         DO i=1,basis_loc%ndim
+           basis_loc%dnRGB%d1(:,ib,i) = basis_loc%dnRGB%d0(:,ib)
+           CALL DerivOp_TO_RVecG(basis_loc%dnRGB%d1(:,ib,i),nqo,basis_set,(/basis_set%iQdyn(i),0/))
+         END DO
 
-     DO ib=1,basis_set%nb
-       RvecB = ZERO
-       RvecB(ib) = ONE
-       CALL RecRvecB_TO_RVecG(RvecB,basis_set%dnRGB%d0(:,ib),basis_set%nb,nqo,basis_set)
-       DO i=1,basis_set%ndim
-         !write(6,*) 'ider,iQdyn',i,basis_set%iQdyn(i)
-         basis_set%dnRGB%d1(:,ib,i) = basis_set%dnRGB%d0(:,ib)
-         CALL DerivOp_TO_RVecG(basis_set%dnRGB%d1(:,ib,i),nqo,basis_set,(/basis_set%iQdyn(i),0/))
+         DO i=1,basis_loc%ndim
+         DO j=1,basis_loc%ndim
+           basis_loc%dnRGB%d2(:,ib,i,j) = basis_loc%dnRGB%d0(:,ib)
+           CALL DerivOp_TO_RVecG(basis_loc%dnRGB%d2(:,ib,i,j),nqo,basis_set, &
+             (/basis_set%iQdyn(i),basis_set%iQdyn(j)/))
+         END DO
+         END DO
+
        END DO
 
-       DO i=1,basis_set%ndim
-       DO j=1,basis_set%ndim
+       CALL dealloc_NParray(RvecB,'RvecB',name_sub)
 
-         !write(6,*) 'ider,ider,iQdyn',i,j,basis_set%iQdyn(i),basis_set%iQdyn(j)
-         basis_set%dnRGB%d2(:,ib,i,j) = basis_set%dnRGB%d0(:,ib)
-         CALL DerivOp_TO_RVecG(basis_set%dnRGB%d2(:,ib,i,j),nqo,basis_set, &
-           (/basis_set%iQdyn(i),basis_set%iQdyn(j)/))
+
+       !then with the new points
+       CALL alloc_NParray(tab_iqXmin,(/ nqo /),'tab_iqXmin',name_sub)
+       tab_iqXmin(:) = (/ (i,i=1,nqo) /)
+
+       ! first the new number of points
+       DO iq=1,nqo
+
+         CALL Rec_x(Xmin(:),basis_set,tab_iqXmin(iq))
+         !write(out_unitp,*) 'tab_iqXmin(iq),Xmin(:)',iq,tab_iqXmin(iq),Xmin(:)
+
+         ! 3d: find iqm
+         DO iq1=iq+1,nqo
+           CALL Rec_x(X,basis_set,tab_iqXmin(iq1))
+
+           IF (inferior_tab(X,Xmin)) THEN
+             iq0             = tab_iqXmin(iq)
+             tab_iqXmin(iq)  = tab_iqXmin(iq1)
+             tab_iqXmin(iq1) = iq0
+             Xmin(:) = X(:)
+           END IF
+         END DO
+         !write(out_unitp,*) 'tab_iqXmin(iq),Xmin(:)',iq,tab_iqXmin(iq),Xmin(:)
        END DO
+
+       ! first the new number of points
+       CALL Rec_x(Xmin(:),basis_set,tab_iqXmin(1))
+       nq = 1
+       DO iq=2,nqo
+
+         CALL Rec_x(X(:),basis_set,tab_iqXmin(iq))
+         IF (compare_tab(X,Xmin)) THEN
+           tab_iqXmin(iq) = -tab_iqXmin(iq)
+         ELSE
+           Xmin(:) = X(:)
+           nq = nq + 1
+         END IF
+
+       END DO
+       !IF (print_level > -1) write(out_unitp,*) 'old/new nq',nqo,nq
+       write(out_unitp,*) 'old/new nq',nqo,nq
+!nq=nqo
+!tab_iqXmin = abs(tab_iqXmin)
+       ! set up the basis set with the right number of points
+       CALL Set_nq_OF_basis(basis_set,nq)
+
+       CALL alloc_xw_OF_basis(basis_set)
+       CALL alloc_dnb_OF_basis(basis_set)
+
+       iq0 = 0
+       DO iq=1,nqo ! old nq
+
+         IF (tab_iqXmin(iq) > 0) THEN
+           iq1 = tab_iqXmin(iq)
+           iq0 = iq0 + 1
+
+           CALL Rec_x(basis_set%x(:,iq0),basis_set,iq1)
+           basis_set%rho(iq0)  = Rec_rhonD(basis_set,iq1)
+           basis_set%wrho(iq0) = Rec_WrhonD(basis_set,iq1)
+           basis_set%w(iq0)    = Rec_WnD(basis_set,iq1)
+
+           basis_set%dnRGB%d0(iq0,:)     = basis_loc%dnRGB%d0(iq1,:)
+           basis_set%dnRGB%d1(iq0,:,:)   = basis_loc%dnRGB%d1(iq1,:,:)
+           basis_set%dnRGB%d2(iq0,:,:,:) = basis_loc%dnRGB%d2(iq1,:,:,:)
+
+         ELSE  ! two (or more) identical points, just one is consider. But the weight must be changed
+           iq1 = abs(tab_iqXmin(iq))
+
+           write(6,*) 'd0RGB,wrho',iq0,basis_set%dnRGB%d0(iq0,:),basis_set%wrho(iq0)
+           write(6,*) 'd0RGB,wrho',iq1,basis_loc%dnRGB%d0(iq1,:),Rec_WrhonD(basis_set,iq1)
+
+
+           ! be carrefull, rho remains unchanged. It just function of Xmin
+           ! the sum has to be done only on w(:) and wrho(:)
+           basis_set%wrho(iq0) = basis_set%wrho(iq0) + Rec_WrhonD(basis_set,iq1)
+           basis_set%w(iq0)    = basis_set%w(iq0)    + Rec_WnD(basis_set,iq1)
+
+         END IF
+
+       END DO
+       IF (iq0 /= nq) STOP 'Wrong nq'
+
+       CALL dealloc_NParray(tab_iqXmin,'tab_iqXmin',name_sub)
+       CALL dealloc_basis(basis_loc)
+
+     ELSE
+
+       CALL Set_nq_OF_basis(basis_set,nqo)
+
+       ! first the basis without sortX
+       CALL alloc_xw_OF_basis(basis_set)
+       CALL alloc_dnb_OF_basis(basis_set)
+       CALL alloc_NParray(RvecB,(/basis_set%nb/),'RvecB',name_sub)
+
+       DO ib=1,basis_set%nb
+         RvecB = ZERO
+         RvecB(ib) = ONE
+         CALL RecRvecB_TO_RVecG(RvecB,basis_set%dnRGB%d0(:,ib),basis_set%nb,nqo,basis_set)
+         DO i=1,basis_set%ndim
+           basis_set%dnRGB%d1(:,ib,i) = basis_set%dnRGB%d0(:,ib)
+           CALL DerivOp_TO_RVecG(basis_set%dnRGB%d1(:,ib,i),nqo,basis_set,(/basis_set%iQdyn(i),0/))
+         END DO
+
+         DO i=1,basis_set%ndim
+         DO j=1,basis_set%ndim
+           basis_set%dnRGB%d2(:,ib,i,j) = basis_set%dnRGB%d0(:,ib)
+           CALL DerivOp_TO_RVecG(basis_set%dnRGB%d2(:,ib,i,j),nqo,basis_set, &
+             (/basis_set%iQdyn(i),basis_set%iQdyn(j)/))
+         END DO
+         END DO
+
        END DO
 
-     END DO
+       CALL dealloc_NParray(RvecB,'RvecB',name_sub)
 
-     CALL dealloc_NParray(RvecB,'RvecB',name_sub)
+       DO iq=1,nqo
+         CALL Rec_x(basis_set%x(:,iq),basis_set,iq)
+         basis_set%rho(iq)  = Rec_rhonD(basis_set,iq)
+         basis_set%wrho(iq) = Rec_WrhonD(basis_set,iq)
+         basis_set%w(iq)    = Rec_WnD(basis_set,iq)
+       END DO
+     END IF
 
-     DO iq=1,nqo
-       CALL Rec_x(basis_set%x(:,iq),basis_set,iq)
-
-       basis_set%rho(iq)  = Rec_rhonD(basis_set,iq)
-       basis_set%wrho(iq) = Rec_WrhonD(basis_set,iq)
-       basis_set%w(iq)    = Rec_WnD(basis_set,iq)
-     END DO
-
-     !write(6,*) 'coucou pack: dnRGB'
-     !CALL Write_dnSVM(basis_set%dnRGB)
-
-     !STOP 'in pack basis, SG_type=2'
    ELSE
 
      IF (sortX_loc) THEN
@@ -1979,9 +2080,8 @@
          ! 3d: find iqm
          DO iq1=iq+1,nqo
            CALL Rec_x(X,basis_set,tab_iqXmin(iq1))
-           !IF (inferior(X,Xmin,basis_set%ndim)) THEN
 
-           IF (inferior_tab_real(X,Xmin)) THEN
+           IF (inferior_tab(X,Xmin)) THEN
              iq0             = tab_iqXmin(iq)
              tab_iqXmin(iq)  = tab_iqXmin(iq1)
              tab_iqXmin(iq1) = iq0
@@ -2085,28 +2185,27 @@
    END IF
 
    basis_set%packed_done = .TRUE.
- END IF
 
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'pack done '
-        CALL RecWrite_basis(basis_set,write_all=.TRUE.)
+   CALL check_ortho_basis(basis_set)
 
-        nqo = get_nq_FROM_basis(basis_set)
-        write(out_unitp,*) 'packed Grid: ',nqo
-        DO iq=1,nqo
-          write(out_unitp,*) 'iq,x',iq,basis_set%x(:,iq)
-        END DO
+  !-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'pack done '
+    CALL RecWrite_basis(basis_set,write_all=.TRUE.)
 
-        write(out_unitp,*) 'END ',name_sub
+    nqo = get_nq_FROM_basis(basis_set)
+    write(out_unitp,*) 'packed Grid: ',nqo
+    DO iq=1,nqo
+      write(out_unitp,*) 'iq,x',iq,basis_set%x(:,iq)
+    END DO
+
+    write(out_unitp,*) 'END ',name_sub
 
 
-      END IF
-!-----------------------------------------------------------
-      !write(out_unitp,*) 'END ',name_sub
+  END IF
+  !-----------------------------------------------------------
 
-      END SUBROUTINE pack_basis
-
+END SUBROUTINE pack_basis
 !=============================================================
 !
 !      check the overlap matrix of a basis
@@ -2129,7 +2228,7 @@
       integer           ::  i,j,nq
 
       real (kind=Rkind) :: max_Sii,max_Sij
-      logical           :: loc_test_stop
+      logical           :: loc_test_stop,Print_basis
 
 !---------------------------------------------------------------------
       integer :: err_mem,memory
@@ -2150,6 +2249,9 @@
       !IF (.NOT. basis_temp%packed_done) RETURN
       nq = get_nq_FROM_basis(basis_temp)
       IF ( (basis_temp%nb*nq) > 1000000000) RETURN
+
+      Print_basis = basis_temp%print_info_OF_basisDP .AND. print_level > -1 .OR. debug
+
 
       IF (present(test_stop)) THEN
         loc_test_stop = test_stop
@@ -2181,7 +2283,7 @@
         END DO
         matS(:,:) = matmul(tbasiswrho,basis_temp%dnRGB%d0)
 
-        CALL sub_ana_S(matS,basis_temp%nb,max_Sii,max_Sij,(print_level > -1))
+        CALL sub_ana_S(matS,basis_temp%nb,max_Sii,max_Sij,Print_basis)
 
 
         IF (max_Sii > ONETENTH**5 .OR. max_Sij > ONETENTH**5) THEN
@@ -2493,7 +2595,8 @@
 !
        IF (BasisnD%packed_done) THEN
          !CALL RecWrite_basis(BasisnD,write_all=.TRUE.)
-         !IF (.NOT. allocated(BasisnD%wrho)) STOP 'primitive basis not defined!!'
+         !IF (.NOT. allocated(BasisnD%wrho)) STOP 'problem with primitive basis. wrho is not allocated !!'
+         !write(6,*) 'shape wrho, iq',shape(BasisnD%wrho),iq
          WrhonD = BasisnD%wrho(iq)
        ELSE ! BasisnD%nb_basis MUST BE > 0
          IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed!!!'
@@ -2519,18 +2622,19 @@
                     Rec_WrhonD(BasisnD%tab_PbasisSG(i_SG)%Pbasis,iq_SG)
 
          CASE (2) ! Sparse basis (Smolyak 2d  implementation)
-
-           IF (present(OldPara)) THEN
-             !write(6,*) 'OldPara in Rec_WrhonD:',OldPara
-             CALL get_Tabiq_Tabil_FROM_iq(nDval_SG2,nDl_SG2,          &
-                                     i_SG,iq_SG,iq,BasisnD%para_SGType2,&
-                                     OldPara,err_sub=err_sub)
-           ELSE
-             CALL get_Tabiq_Tabil_FROM_iq(nDval_SG2,nDl_SG2,          &
-                                     i_SG,iq_SG,iq,BasisnD%para_SGType2,&
-                                     err_sub=err_sub)
-           END IF
-           IF (err_sub /= 0) STOP 'Rec_WrhonD'
+           CALL get_Tabiq_Tabil_FROM_iq_old(nDval_SG2,nDl_SG2,          &
+                                     i_SG,iq_SG,iq,BasisnD%para_SGType2)
+!           IF (present(OldPara)) THEN
+!             !write(6,*) 'OldPara in Rec_WrhonD:',OldPara
+!             CALL get_Tabiq_Tabil_FROM_iq(nDval_SG2,nDl_SG2,          &
+!                                     i_SG,iq_SG,iq,BasisnD%para_SGType2,&
+!                                     OldPara,err_sub=err_sub)
+!           ELSE
+!             CALL get_Tabiq_Tabil_FROM_iq(nDval_SG2,nDl_SG2,          &
+!                                     i_SG,iq_SG,iq,BasisnD%para_SGType2,&
+!                                     err_sub=err_sub)
+!           END IF
+!           IF (err_sub /= 0) STOP 'Rec_WrhonD'
 
            WrhonD = BasisnD%WeightSG(i_SG)
            DO ib=1,BasisnD%nb_basis
@@ -2729,6 +2833,10 @@
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
          write(out_unitp,*) 'BasisnD%nb_basis',BasisnD%nb_basis
+         write(out_unitp,*) 'BasisnD%SparseGrid_type',BasisnD%SparseGrid_type
+         write(out_unitp,*) 'BasisnD%packed_done',BasisnD%packed_done
+         write(out_unitp,*) 'iq',iq
+         CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -2755,9 +2863,8 @@
            rhonD = Rec_rhonD(BasisnD%tab_PbasisSG(i_SG)%Pbasis,iq_SG)
 
          CASE (2) ! Sparse basis (Smolyak 2d)
-           CALL get_Tabiq_Tabil_FROM_iq(nDval_SG2,nDl_SG2,            &
-                      i_SG,iq_SG,iq,BasisnD%para_SGType2,err_sub=err_sub)
-           IF (err_sub /= 0) STOP 'Rec_rhonD'
+           CALL get_Tabiq_Tabil_FROM_iq_old(nDval_SG2,nDl_SG2,          &
+                                     i_SG,iq_SG,iq,BasisnD%para_SGType2)
 
            rhonD = ONE
            DO ib=1,BasisnD%nb_basis
@@ -2798,6 +2905,7 @@
         write(out_unitp,*) ' rhonD',rhonD
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
       END IF
 !     -------------------------------------------------------
 
@@ -2855,7 +2963,22 @@
            WnD = BasisnD%WeightSG(i_SG) *                               &
                  Rec_WnD(BasisnD%tab_PbasisSG(i_SG)%Pbasis,iq_SG)
 
-         CASE (2,4) ! Sparse basis (Smolyak 2d and 4th implementation)
+         CASE (2) ! Sparse basis (Smolyak 2d and 4th implementation)
+           CALL get_Tabiq_Tabil_FROM_iq_old(nDval_SG2,nDl_SG2,          &
+                                     i_SG,iq_SG,iq,BasisnD%para_SGType2)
+
+!           CALL get_Tabiq_Tabil_FROM_iq(nDval_SG2,nDl_SG2,            &
+!                      i_SG,iq_SG,iq,BasisnD%para_SGType2,err_sub=err_sub)
+!           IF (err_sub /= 0) STOP 'Rec_WnD'
+
+           WnD = BasisnD%WeightSG(i_SG)
+           DO ib=1,BasisnD%nb_basis
+             L     = nDl_SG2(ib)
+             iq_ib = nDval_SG2(ib)
+             WnD = WnD * Rec_WnD(BasisnD%tab_basisPrimSG(L,ib),iq_ib)
+           END DO
+
+         CASE (4) ! Sparse basis (Smolyak 2d and 4th implementation)
 
            CALL get_Tabiq_Tabil_FROM_iq(nDval_SG2,nDl_SG2,            &
                       i_SG,iq_SG,iq,BasisnD%para_SGType2,err_sub=err_sub)
@@ -3084,7 +3207,7 @@
 
   SUBROUTINE Rec_Qact(Qact,BasisnD,iq,mole,OldPara)
   USE mod_system
-  USE mod_Tnum
+  USE mod_Coord_KEO
 
   IMPLICIT NONE
 
@@ -3144,7 +3267,7 @@
 
   SUBROUTINE Rec_Qact_SG4(Qact,tab_ba,tab_l,nDind_DPG,iq,mole,err_sub)
   USE mod_system
-  USE mod_Tnum
+  USE mod_Coord_KEO
   IMPLICIT NONE
 
   real (kind=Rkind),               intent(inout)          :: Qact(:)
@@ -3214,7 +3337,7 @@
 
   SUBROUTINE Rec_Qact_SG4_with_Tab_iq(Qact,tab_ba,tab_l,tab_iq,mole,err_sub)
   USE mod_system
-  USE mod_Tnum
+  USE mod_Coord_KEO
   IMPLICIT NONE
 
   real (kind=Rkind),               intent(inout)          :: Qact(:)
@@ -3272,7 +3395,7 @@
 
   SUBROUTINE Rec_Qact_SG4_with_Tab_iq_old(Qact,tab_ba,tab_l,tab_iq,mole,err_sub)
   USE mod_system
-  USE mod_Tnum
+  USE mod_Coord_KEO
   IMPLICIT NONE
 
   real (kind=Rkind),               intent(inout)          :: Qact(:)
@@ -3649,32 +3772,32 @@
              ibi   = nDvalB(i)
              ndimi = BasisnD%tab_Pbasis(i)%Pbasis%ndim
 
-             CALL alloc_NParray(d1bi,(/ ndimi /),'d1bi','name_sub')
+             CALL alloc_NParray(d1bi,(/ ndimi /),      'd1bi','name_sub')
              CALL alloc_NParray(d2bi,(/ ndimi,ndimi /),'d2bi','name_sub')
 
              CALL Rec_d0d1d2bnD(d0bi,d1bi,d2bi,BasisnD%tab_Pbasis(i)%Pbasis,iqi,ibi)
              ! no derivative
              d0b = d0b * d0bi
              ! first derivatives
-             d1b(1:i0)      = d1b(1:i0) * d0bi
-             d1b(i0+1:i1)   = d1b(i0+1:i1) * d1bi(:)
+             d1b(1:i0)      = d1b(1:i0)      * d0bi
+             d1b(i0+1:i1)   = d1b(i0+1:i1)   * d1bi(:)
              d1b(i1+1:ndim) = d1b(i1+1:ndim) * d0bi
              ! second derivatives
-             d2b(1:i0,1:i0)      = d2b(1:i0,1:i0) * d0bi
+             d2b(1:i0,1:i0)      = d2b(1:i0,1:i0)      * d0bi
              d2b(1:i0,i1+1:ndim) = d2b(1:i0,i1+1:ndim) * d0bi
              DO j=1,i0
-               d2b(j,i0+1:i1)    = d2b(j,i0+1:i1) * d1bi(:)
+               d2b(j,i0+1:i1)    = d2b(j,i0+1:i1)      * d1bi(:)
              END DO
 
              DO j=1,ndimi
-               d2b(i0+j,1:i0)      = d2b(i0+j,1:i0) * d1bi(j)
-               d2b(i0+j,i1+1:ndim) = d2b(i0+j,i1+1:ndim) * d1bi(j)
+               d2b(i0+j,1:i0)      = d2b(i0+j,1:i0)       * d1bi(j)
+               d2b(i0+j,i1+1:ndim) = d2b(i0+j,i1+1:ndim)  * d1bi(j)
              END DO
              d2b(i0+1:i1,i0+1:i1)  = d2b(i0+1:i1,i0+1:i1) * d2bi(:,:)
 
-             d2b(i1+1:ndim,1:i0)      = d2b(i1+1:ndim,1:i0) * d0bi
+             d2b(i1+1:ndim,1:i0)      = d2b(i1+1:ndim,1:i0)      * d0bi
              DO j=i1+1,ndim
-               d2b(j,i0+1:i1)         = d2b(j,i0+1:i1) * d1bi(:)
+               d2b(j,i0+1:i1)         = d2b(j,i0+1:i1)           * d1bi(:)
              END DO
              d2b(i1+1:ndim,i1+1:ndim) = d2b(i1+1:ndim,i1+1:ndim) * d0bi
 
@@ -3696,10 +3819,14 @@
 
          CASE (2) ! Sparse basis (Smolyak 2d  implementation)
            CALL calc_nDindex(BasisnD%nDindB,ib,nDvalB)
+           write(6,*) 'ib,nDvalB',ib,':',nDvalB
 
-           CALL get_Tabiq_Tabil_FROM_iq(nDval_SG2,nDl_SG2,            &
-                      i_SG,iq_SG,iq,BasisnD%para_SGType2,err_sub=err_sub)
-           IF (err_sub /= 0) STOP 'Rec_d0d1d2bnD'
+           CALL get_Tabiq_Tabil_FROM_iq_old(nDval_SG2,nDl_SG2,          &
+                      i_SG,iq_SG,iq,BasisnD%para_SGType2)
+
+           write(6,*) 'iq,i_SG',iq,i_SG
+           write(6,*) 'tab_l',nDl_SG2
+           write(6,*) 'tab_iq',nDval_SG2
 
            d0b      = ONE
            d1b(:)   = ONE
@@ -3719,25 +3846,23 @@
              CALL alloc_NParray(d1bi,(/ ndimi /),      'd1bi',name_sub)
              CALL alloc_NParray(d2bi,(/ ndimi,ndimi /),'d2bi',name_sub)
 
-             !rhonD = rhonD * Rec_rhonD(BasisnD%tab_basisPrimSG(L,ib),iq_ib)
-
              CALL Rec_d0d1d2bnD(d0bi,d1bi,d2bi,BasisnD%tab_basisPrimSG(L,ib),iqi,ibi)
 
              ! no derivative
              d0b = d0b * d0bi
              ! first derivatives
-             d1b(1:i0)      = d1b(1:i0) * d0bi
-             d1b(i0+1:i1)   = d1b(i0+1:i1) * d1bi(:)
+             d1b(1:i0)      = d1b(1:i0)      * d0bi
+             d1b(i0+1:i1)   = d1b(i0+1:i1)   * d1bi(:)
              d1b(i1+1:ndim) = d1b(i1+1:ndim) * d0bi
              ! second derivatives
-             d2b(1:i0,1:i0)      = d2b(1:i0,1:i0) * d0bi
+             d2b(1:i0,1:i0)      = d2b(1:i0,1:i0)      * d0bi
              d2b(1:i0,i1+1:ndim) = d2b(1:i0,i1+1:ndim) * d0bi
              DO j=1,i0
                d2b(j,i0+1:i1)    = d2b(j,i0+1:i1) * d1bi(:)
              END DO
 
              DO j=1,ndimi
-               d2b(i0+j,1:i0)      = d2b(i0+j,1:i0) * d1bi(j)
+               d2b(i0+j,1:i0)      = d2b(i0+j,1:i0)      * d1bi(j)
                d2b(i0+j,i1+1:ndim) = d2b(i0+j,i1+1:ndim) * d1bi(j)
              END DO
              d2b(i0+1:i1,i0+1:i1)  = d2b(i0+1:i1,i0+1:i1) * d2bi(:,:)
@@ -3755,8 +3880,8 @@
            END DO
 
 
-           write(out_unitp,*) ' ERROR in',name_sub
-           STOP 'Rec_d0d1d2bnD: SparseGrid_type=2'
+           !write(out_unitp,*) ' ERROR in',name_sub
+           !STOP 'Rec_d0d1d2bnD: SparseGrid_type=2'
 
          CASE (4) ! Sparse basis (Smolyak 4th implementation)
            write(out_unitp,*) ' ERROR in',name_sub
@@ -4142,4 +4267,4 @@
       END SUBROUTINE nrho_Basis_TO_nhro_Tnum
 
 
-      END MODULE mod_basis
+END MODULE mod_basis

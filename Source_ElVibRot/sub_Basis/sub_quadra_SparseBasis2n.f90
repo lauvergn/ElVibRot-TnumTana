@@ -34,7 +34,7 @@
 !=============================================================
       SUBROUTINE sub_quadra_SparseBasis2n(SparseBasis,mole)
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_basis
       IMPLICIT NONE
 

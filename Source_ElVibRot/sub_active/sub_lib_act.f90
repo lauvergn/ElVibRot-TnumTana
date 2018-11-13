@@ -73,6 +73,8 @@
       logical, parameter :: debug = .FALSE.
 !     logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
+       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 4) RETURN
+
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
          write(out_unitp,*) 'iq',iq
@@ -409,8 +411,10 @@
           IF (para_AllOp%tab_Op(iOp)%n_Op == -1) THEN !S=tab_Op(2), NO STORAGE: useless
             para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_MemGrid      = .FALSE.
             para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_MemGrid_done = .FALSE.
-            para_AllOp%tab_Op(iOp)%OpGrid(1)%para_FileGrid%Save_MemGrid        = .FALSE.
-            para_AllOp%tab_Op(iOp)%OpGrid(1)%para_FileGrid%Save_MemGrid_done   = .FALSE.
+            IF (associated(para_AllOp%tab_Op(iOp)%OpGrid)) THEN
+              para_AllOp%tab_Op(iOp)%OpGrid(1)%para_FileGrid%Save_MemGrid        = .FALSE.
+              para_AllOp%tab_Op(iOp)%OpGrid(1)%para_FileGrid%Save_MemGrid_done   = .FALSE.
+            END IF
             CYCLE
           END IF
 
@@ -659,7 +663,7 @@
           write(out_unitp,*) ' Check the HADA file'
           STOP
         END IF
-        CALL Read_RVec(Qdyn,nio,5,err)
+        CALL Read_Vec(Qdyn,nio,5,err)
         IF (err /= 0) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' reading the vector "Qdyn"'
@@ -675,7 +679,7 @@
           write(out_unitp,*) ' Check the HADA file'
           STOP
         END IF
-        CALL Read_RVec(Qact,nio,5,err)
+        CALL Read_Vec(Qact,nio,5,err)
         IF (err /= 0) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' reading the vector "Qact"'
@@ -700,7 +704,7 @@
           !write(out_unitp,*) name_sub,name1,n_OP_lect,derive_lect(:),cplx
           !call flush_perso(out_unitp)
 
-          CALL Read_RMat(work_bhe,nio,5,err)
+          CALL Read_Mat(work_bhe,nio,5,err)
           IF (err /= 0) THEN
             write(out_unitp,*) 'ERROR in ',name_sub
             write(out_unitp,*) ' reading the matrix "work_bhe"'
@@ -862,6 +866,7 @@
 
       real (kind=Rkind), allocatable :: Grid(:,:,:) ! grid when Save_Grid_iterm=t
 
+       IF (SGtype == 4) RETURN
 
       nb_qa  = para_AllOp%tab_Op(1)%nb_qa
       nb_bie = para_AllOp%tab_Op(1)%nb_bie
@@ -932,7 +937,7 @@
       SUBROUTINE d0d1d2bnDQact(d0b,d1b,d2b,BasisnD,iq,ib,mole)
       USE mod_system
       USE mod_basis
-      USE mod_Tnum
+      USE mod_Coord_KEO
       implicit none
 
       !----- variables for the Basis and quadrature points -----------------

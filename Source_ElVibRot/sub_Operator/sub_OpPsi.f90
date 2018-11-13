@@ -34,7 +34,6 @@ PRIVATE
 PUBLIC :: sub_PsiOpPsi,sub_OpPsi,sub_scaledOpPsi,sub_OpiPsi,sub_TabOpPsi
 PUBLIC :: sub_PsiDia_TO_PsiAdia_WITH_MemGrid
 PUBLIC :: sub_TabOpPsi_OF_ONEDP_FOR_SGtype4,sub_TabOpPsi_OF_ONEGDP_FOR_SGtype4
-PUBLIC :: sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_old
 PUBLIC :: sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
 
 CONTAINS
@@ -307,12 +306,17 @@ CONTAINS
       !-----------------------------------------------------------------
 
       ! special case: to deal with TabPsi
+      SGtype4    = (para_Op%BasisnD%SparseGrid_type == 4)
+
       direct_KEO = para_Op%para_ReadOp%para_FileGrid%Save_MemGrid
-      direct_KEO = direct_KEO .AND. para_Op%BasisnD%dnGGRep
+      IF (SGtype4) THEN
+        direct_KEO = para_Op%BasisnD%dnGGRep
+      ELSE
+        direct_KEO = direct_KEO .AND. para_Op%BasisnD%dnGGRep
+      END IF
       direct_KEO = direct_KEO .AND. (para_Op%type_Op == 10)
       direct_KEO = direct_KEO .AND. para_Op%direct_KEO
 
-      SGtype4    = (para_Op%BasisnD%SparseGrid_type == 4)
 !SGtype4=.FALSE.
 
       IF (debug) write(out_unitp,*) 'SGtype4,direct_KEO',SGtype4,direct_KEO
@@ -587,7 +591,7 @@ CONTAINS
 
       SUBROUTINE sub_PrimTabOpPsi(TabPsi,TabOpPsi,para_Op,derOp,With_Grid)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op,read_OpGrid_OF_Op
+      USE mod_Op,              ONLY : param_Op,read_OpGrid_OF_Op,Write_FileGrid
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiGridRep_TO_BasisRep
       USE mod_SymAbelian,      ONLY : Calc_symab1_EOR_symab2
@@ -642,12 +646,23 @@ CONTAINS
       !-----------------------------------------------------------------
 
       ! special case: to deal with TabPsi
+      SGtype4    = (para_Op%BasisnD%SparseGrid_type == 4)
+
       direct_KEO = para_Op%para_ReadOp%para_FileGrid%Save_MemGrid
-      direct_KEO = direct_KEO .AND. para_Op%BasisnD%dnGGRep
+      IF (SGtype4) THEN
+        direct_KEO = para_Op%BasisnD%dnGGRep
+      ELSE
+        direct_KEO = direct_KEO .AND. para_Op%BasisnD%dnGGRep
+      END IF
       direct_KEO = direct_KEO .AND. (para_Op%type_Op == 10)
       direct_KEO = direct_KEO .AND. para_Op%direct_KEO
 
-      SGtype4    = (para_Op%BasisnD%SparseGrid_type == 4)
+      IF (SGtype4 .AND. direct_KEO) THEN
+        CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)
+        para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
+        RETURN
+      END IF
+
 !SGtype4=.FALSE.
 
       IF (debug) write(out_unitp,*) 'SGtype4,direct_KEO',SGtype4,direct_KEO
@@ -1129,7 +1144,6 @@ CONTAINS
           END IF
         END IF
 
-
         CALL sub_sqRhoOVERJac_Psi(Psi,para_Op,inv=.FALSE.)
 
         IF (Psi%cplx) THEN
@@ -1276,13 +1290,12 @@ CONTAINS
 
       SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid)
       USE mod_system
-      USE mod_ActiveTransfo,   ONLY : get_Qact
+      USE mod_Coord_KEO,       ONLY : get_Qact, get_d0g_d0GG
       USE mod_basis,           ONLY : rec_Qact
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
       USE mod_basis_BtoG_GtoB, ONLY : DerivOp_TO_RVecG
       USE mod_Op,              ONLY : param_Op,write_param_Op
-      USE mod_dnGG_dng,        ONLY : get_d0g_d0GG
       IMPLICIT NONE
 
 
@@ -1538,8 +1551,7 @@ STOP 'cplx'
 
  SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid)
  USE mod_system
- USE mod_ActiveTransfo,           ONLY : get_Qact
- USE mod_dnGG_dng,                ONLY : get_d0g_d0GG
+ USE mod_Coord_KEO,               ONLY : get_Qact, get_d0g_d0GG
 
  USE mod_basis,                   ONLY : rec_Qact
  USE mod_basis_BtoG_GtoB,         ONLY : DerivOp_TO_RVecG
@@ -1654,6 +1666,13 @@ STOP 'cplx'
 
  END DO
 
+ IF (.NOT. allocated(para_Op%ComOp%Jac)) THEN
+   write(out_unitp,*) ' ERROR in ',name_sub
+   write(out_unitp,*) ' para_Op%ComOp%Jac(:) is not allocated '
+   write(out_unitp,*) ' Set JacSave = .TRUE., around line 169 of sub_HSH_harm.f90.'
+   STOP
+ END IF
+
  ! first the potential (-2.Jac.V.Psi^G)
  iterm = para_Op%derive_term_TO_iterm(0,0)
  IF (.NOT. para_Op%OpGrid(iterm)%grid_zero .AND.                    &
@@ -1681,7 +1700,7 @@ STOP 'cplx'
  !Transfert sqRhoOVERJac, Jac and the potential in Smolyak rep (Grid)
  IF (debug) THEN
    CALL alloc_SmolyakRep(SRep,                               &
-    para_Op%para_AllBasis%BasisnD%para_SGType2%nDind_SmolyakGrids%Tab_nDval, &
+    para_Op%para_AllBasis%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval, &
                 para_Op%para_AllBasis%BasisnD%tab_basisPrimSG,grid=.TRUE.)
  END IF
 
@@ -2260,7 +2279,7 @@ STOP 'cplx'
 
       SUBROUTINE  sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp)
       USE mod_system
-      USE mod_SimpleOp,        ONLY : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
+      USE mod_PrimOp,          ONLY : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
       USE mod_Op,              ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,alloc_array,dealloc_array
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiBasisRep_TO_GridRep

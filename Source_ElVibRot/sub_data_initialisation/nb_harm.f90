@@ -39,9 +39,10 @@
 !
 !=====================================================================
       SUBROUTINE sub2_ind_harm(Basis2n,para_PES,para_Tnum,mole)
-      USE mod_system
-      USE mod_PrimOp_def
-      USE mod_PrimOp
+      use mod_system,    only: rkind, out_unitp, get_conv_au_to_unit,   &
+                               write_mat, half
+      USE mod_Coord_KEO, only : zmatrix, Tnum, gaussian_width, get_Qact0
+      use mod_PrimOp,    only: param_pes, sub_freq2_rph
       USE mod_basis
       IMPLICIT NONE
 

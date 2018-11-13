@@ -1,19 +1,36 @@
 ici=`pwd`
 DIR_vib=$ici/../..
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v101.2-Tnum30.37-Tana8.7
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v101.4-Tnum30.37-Tana8.7
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v110.20-Tnum32.1-Tana8.8
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v101.35-Tnum30.44-Tana8.7
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v101.26-Tnum30.43-Tana8.7
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v101.20-Tnum30.39-Tana8.7
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v101.30-Tnum30.44-Tana8.7
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v110.0-Tnum32.0-Tana8.7
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v111.20-Tnum32.1-Tana8.8
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v101.11-Tnum30.37-Tana8.7
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v101.15-Tnum30.37-Tana8.7
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v110.17-Tnum32.1-Tana8.8
+DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v110.16-Tnum32.1-Tana8.8
+DIR_vib=$ici/../..
 
 cd $DIR_vib
- make
+#make
 cd $ici
 
-#export OMP_NUM_THREADS=1
+ export OMP_NUM_THREADS=$4
 
 D=$1
 LB=$2
 LG=$3
-nice $DIR_vib/vib << ** >"res_D"$D"_LB"$LB"-LG"$LG
+nice $DIR_vib/vib << ** >"res_D"$D"_LB"$LB"-LG"$LG"_th"$OMP_NUM_THREADS
  &system main_test=t PBasisTOGrid_omp=1 /
 $D
 $LB $LG
 $D
 $LB $LG
 **
+
+grep "real (s):" "res_D"$D"_LB"$LB"-LG"$LG"_th"$OMP_NUM_THREADS | grep  "B=>G" | tail -1
+grep "real (s):" "res_D"$D"_LB"$LB"-LG"$LG"_th"$OMP_NUM_THREADS | grep  "G=>B" | tail -1

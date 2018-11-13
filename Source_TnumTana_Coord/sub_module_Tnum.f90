@@ -20,23 +20,31 @@
 !
 !===========================================================================
 !===========================================================================
-
-      MODULE mod_Tnum
+MODULE mod_Tnum
       USE mod_system
-      USE mod_dnSVM
-      USE mod_constant
-      USE mod_file
-      USE mod_string
-      USE mod_nDFit
-      USE mod_QTransfo
-
-      USE mod_LinearNMTransfo
-      USE mod_RPHTransfo
-      USE CurviRPH_mod
+      USE mod_nDFit,            only: param_nDFit
+      use mod_QTransfo,         only: type_qtransfo, write_qtransfo,    &
+                                      dealloc_qtransfo, dealloc_array,  &
+                                      alloc_array, read_qtransfo,       &
+                                      sub_type_name_of_qin,             &
+                                      sub_check_lineartransfo,          &
+                                      qtransfo1toqtransfo2
+      use mod_LinearNMTransfo,  only: type_nmtransfo, dealloc_array,    &
+                                      alloc_array, read_lineartransfo,  &
+                                      read_nmtransfo, alloc_lineartransfo
+      use mod_RPHTransfo,       only: type_rphtransfo, write_rphtransfo,&
+                                      dealloc_array, alloc_array,       &
+                                      rphtransfo1torphtransfo2,         &
+                                      set_rphtransfo, dealloc_rphtransfo
+      use CurviRPH_mod,         only: curvirph_type, dealloc_curvirph,  &
+                                      curvirph1_to_curvirph2
       USE mod_ActiveTransfo
+      USE mod_CartesianTransfo
       USE mod_Tana_Sum_OpnD
 
       IMPLICIT NONE
+
+        PRIVATE
 
         TYPE param_PES_FromTnum
 
@@ -195,6 +203,13 @@
 
         END TYPE Tnum
 
+      PUBLIC :: param_PES_FromTnum, zmatrix, Tnum
+      PUBLIC :: Set_masses_Z_TO_mole, Write_mole, Read_mole, dealloc_zmat, mole1TOmole2
+      PUBLIC :: check_charge, type_var_analysis
+      PUBLIC :: Write_f2f1vep, Write_TcorTrot
+      PUBLIC :: Sub_paraRPH_TO_mole, Sub_mole_TO_paraRPH, Sub_mole_TO_paraRPH_new
+      PUBLIC :: moleRPH_TO_moleFlex
+      PUBLIC :: Set_mole_para_FOR_optimization
 
       CONTAINS
 
@@ -553,7 +568,7 @@
       !!@param: TODO
       SUBROUTINE Read_mole(mole,para_Tnum,const_phys)
       USE mod_ActiveTransfo,    only : Read_ActiveTransfo
-      USE mod_ZmatTransfo,      only : Read_Zmat_QTransfo
+      USE mod_ZmatTransfo,      only : Read_ZmatTransfo
       USE mod_CartesianTransfo, only : Write_CartesianTransfo
       USE mod_constant
       IMPLICIT NONE
@@ -1026,7 +1041,7 @@
         mole%tab_Qtransfo(it)%ZmatTransfo%type_Qin => mole%tab_Qtransfo(it)%type_Qin
         mole%tab_Qtransfo(it)%ZmatTransfo%name_Qin => mole%tab_Qtransfo(it)%name_Qin
 
-        CALL Read_Zmat_QTransfo(mole%tab_Qtransfo(it)%ZmatTransfo,const_phys%mendeleev)
+        CALL Read_ZmatTransfo(mole%tab_Qtransfo(it)%ZmatTransfo,const_phys%mendeleev)
 
         CALL Set_masses_Z_TO_mole(mole,mole%tab_Qtransfo(it))
 
@@ -2116,6 +2131,5 @@
       END IF
 
       END SUBROUTINE set_mole_para_FOR_optimization
-
-      END MODULE mod_Tnum
+END MODULE mod_Tnum
 

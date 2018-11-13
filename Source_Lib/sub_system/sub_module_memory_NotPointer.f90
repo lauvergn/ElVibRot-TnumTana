@@ -20,11 +20,11 @@
 !
 !===========================================================================
 !===========================================================================
-      MODULE mod_memory_NotPointer
-      USE mod_NumParameters
-      USE mod_RW_MatVec
-      USE mod_memory
-      !$ USE omp_lib
+MODULE mod_memory_NotPointer
+      USE mod_NumParameters, only : Rkind, Ikind, ILkind
+      use mod_memory, only: write_error_not_null, sub_test_tab_ub, sub_test_tab_lb, &
+                            error_memo_allo, write_error_null, error_lmemo_allo,    &
+                            sub_test_bigtab_ub, sub_test_bigtab_lb
       IMPLICIT NONE
 
       PRIVATE
@@ -33,7 +33,8 @@
       INTERFACE alloc_NParray
         MODULE PROCEDURE alloc_array_OF_Ldim1,alloc_array_OF_Ldim2
 
-        MODULE PROCEDURE alloc_array_OF_Idim1,alloc_array_OF_Idim2
+        MODULE PROCEDURE alloc_array_OF_I4dim1,alloc_array_OF_I8dim1
+        MODULE PROCEDURE alloc_array_OF_Idim2
         MODULE PROCEDURE alloc_array_OF_Idim3,alloc_array_OF_Idim4
         MODULE PROCEDURE alloc_array_OF_Idim5
 
@@ -49,7 +50,8 @@
       INTERFACE dealloc_NParray
         MODULE PROCEDURE dealloc_array_OF_Ldim1,dealloc_array_OF_Ldim2
 
-        MODULE PROCEDURE dealloc_array_OF_Idim1,dealloc_array_OF_Idim2
+        MODULE PROCEDURE dealloc_array_OF_I4dim1,dealloc_array_OF_I8dim1
+        MODULE PROCEDURE dealloc_array_OF_Idim2
         MODULE PROCEDURE dealloc_array_OF_Idim3,dealloc_array_OF_Idim4
         MODULE PROCEDURE dealloc_array_OF_Idim5
 
@@ -195,10 +197,10 @@
       ! integer
       !=================================================================
 
-      SUBROUTINE alloc_array_OF_Idim1(tab,tab_ub,name_var,name_sub,tab_lb)
+      SUBROUTINE alloc_array_OF_I8dim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      integer, allocatable, intent(inout) :: tab(:)
+      integer (kind=ILkind), allocatable, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -209,7 +211,7 @@
 
 
 !----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub_alloc = 'alloc_array_OF_Idim1'
+      character (len=*), parameter :: name_sub_alloc = 'alloc_array_OF_I8dim1'
       integer :: err_mem,memory
       logical,parameter :: debug=.FALSE.
 !      logical,parameter :: debug=.TRUE.
@@ -232,16 +234,16 @@
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'integer')
 
-      END SUBROUTINE alloc_array_OF_Idim1
-      SUBROUTINE dealloc_array_OF_Idim1(tab,name_var,name_sub)
+      END SUBROUTINE alloc_array_OF_I8dim1
+      SUBROUTINE dealloc_array_OF_I8dim1(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      integer, allocatable, intent(inout) :: tab(:)
+      integer (kind=ILkind), allocatable, intent(inout) :: tab(:)
       character (len=*), intent(in) :: name_var,name_sub
 
 
 !----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub_alloc = 'dealloc_array_OF_Idim1'
+      character (len=*), parameter :: name_sub_alloc = 'dealloc_array_OF_I8dim1'
       integer :: err_mem
       integer (kind=ILkind) :: memory
       logical,parameter :: debug=.FALSE.
@@ -258,7 +260,71 @@
        CALL error_lmemo_allo(err_mem,-memory,name_var,name_sub,'integer')
 
 
-      END SUBROUTINE dealloc_array_OF_Idim1
+      END SUBROUTINE dealloc_array_OF_I8dim1
+      SUBROUTINE alloc_array_OF_I4dim1(tab,tab_ub,name_var,name_sub,tab_lb)
+      IMPLICIT NONE
+
+      integer (kind=Ikind), allocatable, intent(inout) :: tab(:)
+      integer, intent(in) :: tab_ub(:)
+      integer, intent(in), optional :: tab_lb(:)
+
+      character (len=*), intent(in) :: name_var,name_sub
+
+
+      integer, parameter :: ndim=1
+
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub_alloc = 'alloc_array_OF_I4dim1'
+      integer :: err_mem,memory
+      logical,parameter :: debug=.FALSE.
+!      logical,parameter :: debug=.TRUE.
+!----- for debuging --------------------------------------------------
+
+
+       IF (allocated(tab))                                             &
+             CALL Write_error_NOT_null(name_sub_alloc,name_var,name_sub)
+
+       CALL sub_test_tab_ub(tab_ub,ndim,name_sub_alloc,name_var,name_sub)
+
+       IF (present(tab_lb)) THEN
+         CALL sub_test_tab_lb(tab_lb,ndim,name_sub_alloc,name_var,name_sub)
+
+         memory = product(tab_ub(:)-tab_lb(:)+1)
+         allocate(tab(tab_lb(1):tab_ub(1)),stat=err_mem)
+       ELSE
+         memory = product(tab_ub(:))
+         allocate(tab(tab_ub(1)),stat=err_mem)
+       END IF
+       CALL error_memo_allo(err_mem,memory,name_var,name_sub,'integer')
+
+      END SUBROUTINE alloc_array_OF_I4dim1
+      SUBROUTINE dealloc_array_OF_I4dim1(tab,name_var,name_sub)
+      IMPLICIT NONE
+
+      integer (kind=Ikind), allocatable, intent(inout) :: tab(:)
+      character (len=*), intent(in) :: name_var,name_sub
+
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub_alloc = 'dealloc_array_OF_I4dim1'
+      integer :: err_mem
+      integer (kind=ILkind) :: memory
+      logical,parameter :: debug=.FALSE.
+!      logical,parameter :: debug=.TRUE.
+!----- for debuging --------------------------------------------------
+
+       !IF (.NOT. allocated(tab)) RETURN
+
+       IF (.NOT. allocated(tab))                                       &
+             CALL Write_error_null(name_sub_alloc,name_var,name_sub)
+
+       memory = size(tab,kind=ILkind)
+       deallocate(tab,stat=err_mem)
+       CALL error_lmemo_allo(err_mem,-memory,name_var,name_sub,'integer')
+
+
+      END SUBROUTINE dealloc_array_OF_I4dim1
       SUBROUTINE alloc_array_OF_Idim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
@@ -1275,5 +1341,5 @@
 
       END SUBROUTINE dealloc_array_OF_Cdim5
 
-      END MODULE mod_memory_NotPointer
+END MODULE mod_memory_NotPointer
 

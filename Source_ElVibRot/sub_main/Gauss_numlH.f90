@@ -28,7 +28,6 @@
 !===========================================================================
       Program Gauss_num
       USE mod_system
-      USE mod_constant
       USE mod_Coord_KEO
       USE mod_poly
       USE mod_GWP

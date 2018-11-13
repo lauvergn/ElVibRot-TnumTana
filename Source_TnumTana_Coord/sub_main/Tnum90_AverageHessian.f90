@@ -1,13 +1,7 @@
       PROGRAM Tnum_f90
       USE mod_system
-      USE mod_Tnum
-      USE mod_paramQ
-      USE mod_dnGG_dng
-      USE mod_PrimOp_def
-      USE mod_OTF
-      USE mod_SimpleOp
+      USE mod_Coord_KEO
       USE mod_PrimOp
-      USE mod_Lib_QTransfo, only : write_dnx
       IMPLICIT NONE
 
 !     - parameters for para_Tnum -----------------------
@@ -169,14 +163,14 @@
 
       write(out_unitp,*) 'Average hessian'
       write(out_unitp,*) mole%nb_act,nb_col
-      CALL Write_Rmat(hess,out_unitp,nb_col)
+      CALL Write_Mat(hess,out_unitp,nb_col)
 
       k     = k   /real(nb_average,kind=Rkind)
       !k = anint(k*TEN**4)/TEN**4
 
       write(out_unitp,*) 'Average k (kinetic)'
       write(out_unitp,*) mole%nb_act,nb_col
-      CALL Write_Rmat(k,out_unitp,nb_col)
+      CALL Write_Mat(k,out_unitp,nb_col)
 
       CALL dealloc_dnSVM(dnGG)
       CALL dealloc_NParray(k,   'k',   name_sub)

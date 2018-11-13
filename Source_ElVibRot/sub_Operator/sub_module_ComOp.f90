@@ -30,9 +30,7 @@
       MODULE mod_ComOp
 
       USE mod_system
-      USE mod_file
-      USE mod_SimpleOp
-      USE mod_basis_BtoG_GtoB_SGType4, only : Type_SmolyakRep,dealloc_SmolyakRep
+      USE mod_basis_BtoG_GtoB_SGType4, only : Type_SmolyakRep, dealloc_SmolyakRep
 
       IMPLICIT NONE
 

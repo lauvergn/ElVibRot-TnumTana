@@ -56,6 +56,52 @@
 
        END SUBROUTINE inv_m1_TO_m2
 !================================================================
+!    inversion de la matrice m1 : m2=m1^-1
+!================================================================
+      SUBROUTINE inv_m1_TO_m2_cplx(m1,m2,n,inv_type,epsi)
+      USE mod_system
+      IMPLICIT NONE
+
+       integer          :: n
+       complex(kind=Rkind) :: m1(n,n)
+       complex(kind=Rkind) :: m2(n,n)
+       integer          :: inv_type
+       real(kind=Rkind) :: epsi
+
+       integer          :: indx(n)
+       complex(kind=Rkind) :: trav(n),m1w(n,n)
+       complex(kind=Rkind) :: vv(n,n)
+       complex(kind=Rkind) :: b(n)
+
+       complex(kind=Rkind) :: wmax,wmin
+       complex(kind=Rkind) :: d
+       integer          :: j
+
+
+
+       CALL Cplx_mat_id(m2,n,n)
+       m1w = m1
+
+       SELECT CASE (inv_type)
+       CASE (0) ! ludcmp ...
+         CALL ludcmp_cplx(m1w,n,trav,indx,d)
+         DO j=1,n
+           CALL lubksb_cplx(m1w,n,indx,m2(:,j))
+         END DO
+
+       CASE (1) ! svd
+
+          STOP 'SVD not yet in complex'
+
+       CASE Default ! ludcmp ...
+         CALL ludcmp_cplx(m1w,n,trav,indx,d)
+         DO j=1,n
+           CALL lubksb_cplx(m1w,n,indx,m2(:,j))
+         END DO
+       END SELECT
+
+       END SUBROUTINE inv_m1_TO_m2_cplx
+!================================================================
 !    Dertermniant of m1
 !================================================================
       SUBROUTINE Det_OF_m1(m1,det,n)

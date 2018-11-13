@@ -38,10 +38,9 @@
                                intensity_only,nio_res_int)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_basis
       USE mod_Op
-      USE mod_constant
       USE mod_analysis
       IMPLICIT NONE
 
@@ -429,10 +428,9 @@
       SUBROUTINE sub_AnalysePsy_ScalOp(para_ScalOp,nb_ScalOp,para_H,nb_ana)
 
       USE mod_system
-      USE mod_Tnum
+      USE mod_Coord_KEO
       USE mod_basis
       USE mod_Op
-      USE mod_constant
       USE mod_analysis
       IMPLICIT NONE
 
@@ -559,8 +557,7 @@
                                width,emin,emax,                         &
                                file_spectrum,file_intensity)
       USE mod_system
-      USE mod_file
-      USE mod_constant
+      use mod_Coord_KEO, only: constant
       IMPLICIT NONE
 
 !----- physical and mathematical constants ---------------------------
@@ -686,7 +683,7 @@
                           E0,Svif,Temp,Q,Jmax,const_phys,               &
                           width,emin,pas,spectre,n,nio_int)
       USE mod_system
-      USE mod_constant
+      USE mod_Coord_KEO, only: constant
       IMPLICIT NONE
 
 !----- physical and mathematical constants ---------------------------
@@ -771,7 +768,7 @@
       SUBROUTINE calc_Imax(Imax,Evi,Ai,Bi,Ci,Evf,Af,Bf,Cf,              &
                            Svif,Temp,Q,Jmax,const_phys)
       USE mod_system
-      USE mod_constant
+      USE mod_Coord_KEO, only: constant
       IMPLICIT NONE
 
 !----- physical and mathematical constants ---------------------------
@@ -853,7 +850,7 @@
 !     P : population sums over rotational levels
       SUBROUTINE calc_Q_VR(Q,P,E0,Ev,A,B,C,Temp,Jmax,const_phys)
       USE mod_system
-      USE mod_constant
+      USE mod_Coord_KEO, only: constant
       IMPLICIT NONE
 
 

@@ -27,8 +27,8 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_Smolyak_ba
-USE mod_Smolyak_DInd
-USE mod_system
+use mod_Smolyak_DInd, only: l_to_n
+use mod_system, only: rkind, onetenth, zero, one
 IMPLICIT NONE
 
 integer :: Bmin=1
@@ -40,6 +40,9 @@ TYPE TypeBa
   real(kind=Rkind), allocatable :: w(:)
   real(kind=Rkind), allocatable :: d0b(:,:)
   real(kind=Rkind), allocatable :: twd0b(:,:)
+  real(kind=Rkind), allocatable :: td0b(:,:)
+
+
 
   real(kind=Rkind), allocatable :: d1b(:,:)
   real(kind=Rkind), allocatable :: d2b(:,:)
@@ -53,10 +56,14 @@ TYPE TypeBa
 
 END TYPE TypeBa
 
+PRIVATE
+PUBLIC :: TypeBa, alloc_TypeBa, dealloc_TypeBa, Set_ba, Set_Delatba, Set_Delatba_nested1, &
+          Set_tab_Ba,Set_tab_DelatBa, get_tab_nq, get_tab_nb
+
 CONTAINS
 
 SUBROUTINE alloc_TypeBa(Ba,nb,nq)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 integer      :: nb,nq
@@ -75,6 +82,7 @@ allocate(Ba%d1b(nq,nb))
 allocate(Ba%d2b(nq,nb))
 
 allocate(Ba%twd0b(nb,nq))
+allocate(Ba%td0b(nb,nq))
 
 
 allocate(Ba%d1bGG(nq,nq))
@@ -85,7 +93,7 @@ allocate(Ba%ib_TO_lb(nb))
 
 END SUBROUTINE alloc_TypeBa
 SUBROUTINE dealloc_TypeBa(Ba)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeBa) :: Ba
@@ -112,7 +120,7 @@ END SUBROUTINE dealloc_TypeBa
 
 
 SUBROUTINE dealloc_tab_ba(tab_ba)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 TYPE(TypeBa), allocatable :: tab_ba(:,:)
@@ -131,7 +139,7 @@ END IF
 END SUBROUTINE dealloc_tab_ba
 
 SUBROUTINE Set_ba(ba,nb,nq,l,LB,B)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 integer       :: nb,nq
@@ -158,6 +166,7 @@ deriv =.TRUE.
 step  = ONETENTH**4
 
 ! the 1D-basis
+  !write(6,*) 'B',B
 
   CALL alloc_TypeBa(ba,nb,nq)
 
@@ -182,6 +191,7 @@ step  = ONETENTH**4
     ba%d2b(iq,ib) = d2
 
     ba%twd0b(ib,iq) = d0 * ba%w(iq)
+    ba%td0b(ib,iq) = d0
 
   END DO
   END DO
@@ -250,7 +260,7 @@ step  = ONETENTH**4
 END SUBROUTINE Set_ba
 
 SUBROUTINE Set_DelatBa(DelatBa,nb1,nq1,nb2,nq2,l,D,LB,LG)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 integer       :: D,LB,LG
@@ -310,7 +320,7 @@ step  = ONETENTH**4
   END DO
 
   !IF (debug) write(6,*) '===================== d0b'
-  !IF (debug) CALL Write_RMat(DelatBa%d0b,6,5)
+  !IF (debug) CALL Write_Mat(DelatBa%d0b,6,5)
 
   !IF (debug) write(6,*) '===================== ortho ?'
   max_S = ZERO
@@ -328,7 +338,7 @@ step  = ONETENTH**4
 END SUBROUTINE Set_Delatba
 
 SUBROUTINE Set_Delatba_nested1(DelatBa,nb1,nq1,nb2,nq2,l,D,LB,LG)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 integer       :: D,LB,LG
@@ -402,7 +412,7 @@ step  = ONETENTH**4
   END DO
 
   !IF (debug) write(6,*) '===================== d0b'
-  !IF (debug) CALL Write_RMat(DelatBa%d0b,6,5)
+  !IF (debug) CALL Write_Mat(DelatBa%d0b,6,5)
 
   !IF (debug) write(6,*) '===================== ortho ?'
   max_S = ZERO
@@ -419,8 +429,8 @@ step  = ONETENTH**4
 
 END SUBROUTINE Set_Delatba_nested1
 
-SUBROUTINE Set_tab_ba(tab_ba,D,LB,LG)
-USE mod_system
+SUBROUTINE Set_tab_Ba(tab_ba,D,LB,LG)
+!USE mod_system
 IMPLICIT NONE
 
 integer       :: D,LB,LG
@@ -438,6 +448,8 @@ IF (.NOT. allocated(tab_ba)) allocate(tab_ba(0:LG,D))
 
 ! the 1D-basis
 DO id=1,D
+  write(6,*) 'id,B',id,min(id,Bmin)
+
 DO l=0,ubound(tab_ba,dim=1)
   B = min(id,Bmin)
   nq =  l_TO_n(l,1,B=B)
@@ -448,10 +460,10 @@ DO l=0,ubound(tab_ba,dim=1)
 END DO
 END DO
 
-END SUBROUTINE Set_tab_ba
+END SUBROUTINE Set_tab_Ba
 
 SUBROUTINE Set_tab_DelatBa(tab_DelatBa,D,LB,LG)
-USE mod_system
+!USE mod_system
 IMPLICIT NONE
 
 integer       :: D,LB,LG

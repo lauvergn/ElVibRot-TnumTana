@@ -23,14 +23,19 @@
 
    MODULE mod_Tana_op
    !Description:
+   USE mod_system
+   USE mod_Tana_OpEl
+   USE mod_Tana_Op1D
+   USE mod_Tana_OpnD
    USE mod_Tana_sum_opnd
+   USE mod_Tana_VecSumOpnD
    USE mod_Tana_PiEulerRot
    USE mod_Tana_vec_operations
-   USE mod_Tnum
    IMPLICIT NONE
-   public ::  get_opLi, get_opL1, get_opL2,  &
-              get_opKEO, get_opKEO_subsyst, add_Vextr,                  &
-              get_keo_for_Qactiv
+   PRIVATE
+   PUBLIC ::  get_opLi, get_opL1, get_opL2, get_keo_for_Qactiv,         &
+              get_opKEO, get_opKEO_subsyst, add_Vextr, add_Vextr_new,   &
+              Get_F2_F1_FROM_TWOxKEO
 
    CONTAINS 
 
@@ -47,7 +52,6 @@
    !!                      information on \gamma 
    !> @param:       dag   Logical, if present and = true, the adjoint of Li will be obtained
    !!                        by  vector transpose time a matrix
-
    SUBROUTINE get_opJ_projected_into_ref_frameEq170(opJ, F1_sum, fbeta, fgamma, dag)
      type(vec_sum_opnd),      intent(inout)      :: opJ
      type(sum_opnd),          intent(in)         :: F1_sum
@@ -1148,7 +1152,7 @@
 
 
      ! TTF
-     if (compare_la(F_system%euler, (/.true., .true., .false./))) then
+     if (compare_tab(F_system%euler, (/.true., .true., .false./))) then
 
        falpha = F_system%QEuler(1)
        fbeta  = F_system%QEuler(2)
@@ -1160,7 +1164,7 @@
        CALL M1_times_M2_in_Mres(D_a, D_b, Mat_R)
 
      ! FTT
-     else if (compare_la(F_system%euler, (/.false., .true., .true./))) then
+     else if (compare_tab(F_system%euler, (/.false., .true., .true./))) then
 
        fbeta  = F_system%QEuler(2)
        fgamma = F_system%QEuler(3)
@@ -1173,7 +1177,7 @@
        call M1_times_M2_in_Mres(D_b, D_g, Mat_R)
 
      !TTT
-     else if (compare_la(F_system%euler, (/.true., .true., .true./))) then
+     else if (compare_tab(F_system%euler, (/.true., .true., .true./))) then
 
        falpha = F_system%QEuler(1)
        fbeta  = F_system%QEuler(2)
@@ -1283,7 +1287,7 @@
      end do
      nvec = F_system%nb_vect-nsub_syst+1
 
-     if (compare_la(F_system%euler, (/.false., .false., .false./))) then
+     if (compare_tab(F_system%euler, (/.false., .false., .false./))) then
        true_BF = .true.
      else
        true_BF = .false. 
@@ -1338,7 +1342,7 @@
      nvec = F_system%nb_vect-nsub_syst+1
      n = size(P_Euler)
 
-     if (compare_la(F_system%euler, (/.false., .false., .false./))) then
+     if (compare_tab(F_system%euler, (/.false., .false., .false./))) then
        true_BF = .true.
      else
        true_BF = .false. 
@@ -1457,7 +1461,7 @@
 
      if(F_system%frame) then
 
-       if (compare_la(F_system%euler, (/.false., .true., .true./))) then
+       if (compare_tab(F_system%euler, (/.false., .true., .true./))) then
          call get_opKEO_subsyst_2euler(F_system, P_Euler, M_mass_out,   &
                                        scalar_PiPj, F_system_parent)
 
@@ -1573,7 +1577,7 @@
      end do
      nvec = F_system%nb_vect-nsub_syst+1
      nvec_tot = F_system%nb_vect_tot
-     if (compare_la(F_system%euler, (/.false., .false., .false./))) then
+     if (compare_tab(F_system%euler, (/.false., .false., .false./))) then
        true_BF = .true.
      else
        true_BF = .false.
@@ -1930,20 +1934,20 @@
        do j = 1, F_system%nb_vect
            if (F_system%tab_BFTransfo(i)%frame .and. F_system%tab_BFTransfo(j)%frame) then
              if(i==j) then
-               if(compare_la(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .true./))) then
+               if(compare_tab(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .true./))) then
 
                  call Jdag_scalar_J_from_Eq122(falpha = F_system%tab_BFTransfo(i)%QEuler(1), &
                  &                             fbeta  = F_system%tab_BFTransfo(i)%QEuler(2), &
                  &                             fgamma = F_system%tab_BFTransfo(i)%QEuler(3), &
                  &                             JJ = LiLi)
 
-               else if(compare_la(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .false./))) then
+               else if(compare_tab(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .false./))) then
 !
                  call Li_scalar_Li_from_Eq75(theta = F_system%tab_BFTransfo(i)%QEuler(2), &
                  &                           phi   = F_system%tab_BFTransfo(i)%QEuler(1), &
                  &                           LiLi  = LiLi)
 
-               else if(compare_la(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .true./))) then
+               else if(compare_tab(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .true./))) then
 !
                  Ja_sum_subsyst = F_system%tab_BFTransfo(i)%J%vec_sum(3)
 
@@ -1954,7 +1958,7 @@
 
                  call delete_op(Ja_sum_subsyst)
 
-               else if(compare_la(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .false./))) then
+               else if(compare_tab(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .false./))) then
 
                  call  V1_scalar_V2_in_F_sum_nd(F_system%tab_BFTransfo(i)%Jdag,&
                                                 F_system%tab_BFTransfo(i)%J,LiLi)
@@ -2096,7 +2100,7 @@
        CALL alloc_NParray(L,    (/nvec/),'L',routine_name)
        CALL alloc_NParray(L_dag,(/nvec/),'L_dag',routine_name)
 
-       if( compare_la(F_system%euler, (/.true., .true., .false./))) then
+       if( compare_tab(F_system%euler, (/.true., .true., .false./))) then
 
          CALL Li_scalar_Li_from_Eq75(theta = F_system%QEuler(2), phi = F_system%QEuler(1), LiLi = LiLi)
 
@@ -2125,11 +2129,11 @@
          call get_opPi_dagger(P_Euler(F_system%listVFr(1))%Pidag, F_system%Qvec(1),&
                               L_dag(1), E(1))
 
-       else if(compare_la(F_system%euler, (/.false., .false., .false./))) then
+       else if(compare_tab(F_system%euler, (/.false., .false., .false./))) then
 
          STOP 'FFF'
 
-       else if(compare_la(F_system%euler, (/.false., .true., .false./))) then
+       else if(compare_tab(F_system%euler, (/.false., .true., .false./))) then
 
          nvec_parent = count( .NOT. F_system_parent%tab_BFTransfo(:)%frame )
          IF (nvec_parent >=1 ) THEN
@@ -2137,17 +2141,17 @@
            CALL get_Lz_F_system_parent(F_system_parent, Liz_parent)
          END IF
 
-         if(compare_la(F_system_parent%euler, (/.false., .false., .false./))) then ! true BF
+         if(compare_tab(F_system_parent%euler, (/.false., .false., .false./))) then ! true BF
 
            Ja_sum     = get_Jz(F_system_parent%QEuler(3))
            Ja_sum_dag = get_Jz(F_system_parent%QEuler(3))
 
-         else if(compare_la(F_system_parent%euler, (/.true., .true., .true./))) then
+         else if(compare_tab(F_system_parent%euler, (/.true., .true., .true./))) then
 
            Ja_sum     = get_Pq(F_system_parent%QEuler(3))
            Ja_sum_dag = get_Pq_dag(F_system_parent%QEuler(3))
 
-         else if(compare_la(F_system_parent%euler, (/.false., .true., .true./))) then
+         else if(compare_tab(F_system_parent%euler, (/.false., .true., .true./))) then
 
            Ja_sum     = get_Pq(F_system_parent%QEuler(3))
            Ja_sum_dag = get_Pq_dag(F_system_parent%QEuler(3))
@@ -2278,7 +2282,7 @@
        end if
      end do
 
-     if(.not.compare_la(F_system%euler, (/.false., .true., .true./))) then
+     if(.not.compare_tab(F_system%euler, (/.false., .true., .true./))) then
        write(out_unitp,*) ' ERROR in',routine_name
        write(out_unitp,*) "This routine can be call only for a subsystem"
        write(out_unitp,*) "which has two Euler's angles"
@@ -2323,14 +2327,14 @@
        Ja_sum =     get_Jz(F_system_parent%QEuler(3))
        Ja_sum_dag = get_Jz(F_system_parent%QEuler(3))
 
-     else if(compare_la(F_system_parent%euler, (/.true., .true., .true./)) .OR. &
-            compare_la(F_system_parent%euler, (/.false., .true., .true./))) then
+     else if(compare_tab(F_system_parent%euler, (/.true., .true., .true./)) .OR. &
+            compare_tab(F_system_parent%euler, (/.false., .true., .true./))) then
 
         Ja_sum     = get_Pq(    F_system_parent%QEuler(3))
         Ja_sum_dag = get_Pq_dag(F_system_parent%QEuler(3))
 
 
-     else if(compare_la(F_system_parent%euler, (/.true., .true., .false./))) then
+     else if(compare_tab(F_system_parent%euler, (/.true., .true., .false./))) then
        write(out_unitp,*) 'Case not possible'
        stop
      end if
@@ -2792,7 +2796,7 @@
      write(out_unitp,*) 'list_Qactiv',list_Qactiv
      write(out_unitp,*) 'list_QpolytoQact',list_QpolytoQact
      write(out_unitp,*) 'before removing inactive terms'
-     CALL write_sum_opnd(TWOxKEO,header=.TRUE.)
+     CALL write_op(TWOxKEO,header=.TRUE.)
    END IF
 
    DO i=1,size(tabQpoly_Qel)
@@ -2817,7 +2821,7 @@
 
    IF (debug) THEN
      write(out_unitp,*) ' Change indexq (active order)'
-     CALL write_sum_opnd(TWOxKEO,header=.TRUE.)
+     CALL write_op(TWOxKEO,header=.TRUE.)
    END IF
 
    IF (nb_act == nb_var) THEN
@@ -2848,7 +2852,7 @@
 
    IF (debug) THEN
      write(out_unitp,*) 'After removing inactive terms'
-     CALL write_sum_opnd(TWOxKEO,header=.TRUE.)
+     CALL write_op(TWOxKEO,header=.TRUE.)
    END IF
 
    !write(out_unitp,*) 'Transfert inactive coef'
@@ -2887,7 +2891,7 @@
 
    IF (debug) THEN
      write(out_unitp,*) 'After new coef'
-     CALL write_sum_opnd(TWOxKEO,header=.TRUE.)
+     CALL write_op(TWOxKEO,header=.TRUE.)
      write(out_unitp,*) ' END ',routine_name
    END IF
 
@@ -2913,7 +2917,7 @@
        alfa_loc = 1
      END IF
 
-     IF ( compare_la(F_system%euler, (/.FALSE., .FALSE., .FALSE./)) ) THEN ! true BF
+     IF ( compare_tab(F_system%euler, (/.FALSE., .FALSE., .FALSE./)) ) THEN ! true BF
        rho = get_rho_OF_Q(F_system%QVec(1),alfa_loc) *                 &
              get_rho_OF_Q(F_system%QVec(2),alfa_loc) *                 &
              get_rho_OF_Q(F_system%QVec(3),alfa_loc)
@@ -2951,7 +2955,7 @@
        alfa_loc = 1
      END IF
 
-     IF ( compare_la(F_system%euler, (/.FALSE., .FALSE., .FALSE./)) ) THEN
+     IF ( compare_tab(F_system%euler, (/.FALSE., .FALSE., .FALSE./)) ) THEN
        Jac = get_Jac_OF_Q(F_system%QVec(1),alfa_loc) *                 &
              get_Jac_OF_Q(F_system%QVec(2),alfa_loc) *                 &
              get_Jac_OF_Q(F_system%QVec(3),alfa_loc)

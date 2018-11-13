@@ -21,10 +21,16 @@
 !===========================================================================
 !===========================================================================
 
-      MODULE mod_VecOFdnS
-      USE mod_system
-      USE mod_dnS
+MODULE mod_VecOFdnS
+      use mod_system, only: write_error_not_null, sub_test_tab_ub, sub_test_tab_lb, &
+                            error_memo_allo, write_error_null, out_unitp, rkind, zero, half
+      use mod_dnS, only: type_dns, alloc_dns, dealloc_dns, check_alloc_dns, write_dns, &
+                         sub_dns1_prod_dns2_to_dns3, sub_dns1_minus_dns2_to_dns3, &
+                         sub_zero_to_dns, sub_dns1_plus_dns2_to_dns3, sub_dns1_to_dntr2, &
+                         sub_dns1_to_dns2, sub_weight_dns
       IMPLICIT NONE
+
+      PRIVATE
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_dnSdim1
@@ -32,6 +38,12 @@
       INTERFACE dealloc_array
         MODULE PROCEDURE dealloc_array_OF_dnSdim1
       END INTERFACE
+
+      PUBLIC :: alloc_array, dealloc_array
+      PUBLIC :: alloc_VecOFdnS, dealloc_VecOFdnS, check_alloc_VecOFdnS, Write_VecOFdnS
+      PUBLIC :: Vec1OFdnS_CROSSPRODUCT_Vec2OFdnS_TO_Vec3OFdnS
+      PUBLIC :: Vec1OFdnS_DOTPRODUCT_Vec2OFdnS_TO_dnS3
+      PUBLIC :: NORMALIZATION_OF_VecOFdnS, sub_ZERO_TO_VecOFdnS, sub_Weight_VecOFdnS
 
       CONTAINS
 !
@@ -182,7 +194,7 @@
 
       SUBROUTINE Vec1OFdnS_CROSSPRODUCT_Vec2OFdnS_TO_Vec3OFdnS(    &
                              Vec1OFdnS,Vec2OFdnS,Vec3OFdnS,nderiv)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
       TYPE (Type_dnS) :: Vec1OFdnS(:),Vec2OFdnS(:),Vec3OFdnS(:)
@@ -246,7 +258,7 @@
 
       SUBROUTINE Vec1OFdnS_DOTPRODUCT_Vec2OFdnS_TO_dnS3(Vec1OFdnS,Vec2OFdnS,    &
                                                     dnS3,nderiv)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
       TYPE (Type_dnS) :: Vec1OFdnS(:),Vec2OFdnS(:),dnS3
@@ -310,7 +322,7 @@
         end subroutine Vec1OFdnS_DOTPRODUCT_Vec2OFdnS_TO_dnS3
 
       SUBROUTINE NORMALIZATION_OF_VecOFdnS(VecOFdnS,nderiv)
-      USE mod_system
+      !USE mod_system
       IMPLICIT NONE
 
       TYPE (Type_dnS) :: VecOFdnS(:)
@@ -406,5 +418,5 @@
 
       END SUBROUTINE sub_Weight_VecOFdnS
 
-      END MODULE mod_VecOFdnS
+END MODULE mod_VecOFdnS
 
