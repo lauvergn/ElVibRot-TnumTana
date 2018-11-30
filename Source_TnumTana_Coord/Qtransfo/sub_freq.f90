@@ -21,9 +21,10 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_freq
-      use mod_system, only: rkind, onetenth, out_unitp, write_mat,      &
-                            flush_perso, get_conv_au_to_unit, zero,     &
-                            half, one, alloc_nparray, dealloc_nparray
+      use mod_system,   ONLY: rkind, onetenth, out_unitp, write_mat,      &
+                              flush_perso, zero, half, one,               &
+                              alloc_nparray, dealloc_nparray
+      USE mod_Constant, ONLY: get_Conv_au_TO_unit
       IMPLICIT NONE
 
       PRIVATE
@@ -63,7 +64,7 @@ MODULE mod_freq
       real (kind=Rkind) :: mat1(nb_var,nb_var)
       real (kind=Rkind) :: mat2(nb_var,nb_var)
 
-      real (kind=Rkind) :: val,val1,auTOcm_inv
+      real (kind=Rkind) :: val,val1
       !real (kind=Rkind),parameter :: epsi_freq = ONETENTH**7
       real (kind=Rkind),parameter :: epsi_freq = ONETENTH**10
 
@@ -90,7 +91,6 @@ MODULE mod_freq
          CALL flush_perso(out_unitp)
       END IF
       !-----------------------------------------------------------
-      auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
 !      pour le cas 3 du calcul de det(d0c)
 !      - cas 3 --------------------------------
@@ -181,7 +181,7 @@ MODULE mod_freq
          ELSE
            d0eh(i) =  sqrt(-d0eh(i))
            write(out_unitp,*) ' ERROR : one imaginary frequency',               &
-                                    d0eh(i)*auTOcm_inv
+                                    d0eh(i)*get_Conv_au_TO_unit('E','cm-1')
 !          STOP
          END IF
 
@@ -192,11 +192,11 @@ MODULE mod_freq
 
 !-----------------------------------------------------------
        IF (debug) THEN
-         write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(d0eh(:))*auTOcm_inv
-         !write(out_unitp,*) 'ZPE   (eV): ',HALF*sum(d0eh(:))*auTOeV
+         write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(d0eh(:))*get_Conv_au_TO_unit('E','cm-1')
+         !write(out_unitp,*) 'ZPE   (eV): ',HALF*sum(d0eh(:))*get_Conv_au_TO_unit('E','eV')
          write(out_unitp,*) 'ZPE   (au): ',HALF*sum(d0eh(:))
 
-         write(out_unitp,*) 'frequencies (cm-1): ',d0eh(:)*auTOcm_inv
+         write(out_unitp,*) 'frequencies (cm-1): ',d0eh(:)*get_Conv_au_TO_unit('E','cm-1')
          write(out_unitp,*)
          write(out_unitp,*) 'modes normaux: d0ch'
          CALL Write_Mat(d0ch,out_unitp,5)
@@ -351,7 +351,6 @@ MODULE mod_freq
       integer, allocatable :: nb_PerBlock(:),Ind_Coord_AtBlock(:)
       integer :: i_Block,nb_Block
       integer ::i,j,i2,ib,jb,iNM
-      real (kind=Rkind) ::  auTOcm_inv
 
 !      -----------------------------------------------------------------
       integer :: err_mem,memory
@@ -368,10 +367,6 @@ MODULE mod_freq
          write(out_unitp,*)
          write(out_unitp,*) '=========, sym: ',sym(:)
        END IF
-
-
-      auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
-
 
       !-----------------------------------------------------------------
       !-----------------------------------------------------------------
@@ -530,7 +525,7 @@ MODULE mod_freq
         DO i=1,nb_var,3
           i2 = min(i+2,nb_var)
           write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
-                            i,i2,d0eh(i:i2)*auTOcm_inv
+                            i,i2,d0eh(i:i2)*get_Conv_au_TO_unit('E','cm-1')
         END DO
 
         write(out_unitp,*)
@@ -564,7 +559,7 @@ MODULE mod_freq
       real (kind=Rkind) :: mat1(nb_var,nb_var)
       real (kind=Rkind) :: mat2(nb_var,nb_var)
 
-      real (kind=Rkind) :: val,val1,auTOcm_inv
+      real (kind=Rkind) :: val,val1
 !     real (kind=Rkind),parameter :: epsi_freq = ONETENTH**7
       real (kind=Rkind),parameter :: epsi_freq = ONETENTH**10
 
@@ -591,7 +586,6 @@ MODULE mod_freq
          CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
-      auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
 !-----------------------------------------------------------
 !-----------------------------------------------------------
@@ -630,16 +624,16 @@ MODULE mod_freq
          d0eh(i) = mat1(i,i)
          IF (d0eh(i) < ZERO) THEN
            write(out_unitp,*) ' ERROR : one imaginary frequency',               &
-                                    d0eh(i)*auTOcm_inv
+                                    d0eh(i)*get_Conv_au_TO_unit('E','cm-1')
          END IF
        END DO
 
 !-----------------------------------------------------------
        IF (debug) THEN
-         write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(d0eh(:))*auTOcm_inv
+         write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(d0eh(:))*get_Conv_au_TO_unit('E','cm-1')
          write(out_unitp,*) 'ZPE   (au): ',HALF*sum(d0eh(:))
 
-         write(out_unitp,*) 'frequencies (cm-1): ',d0eh(:)*auTOcm_inv
+         write(out_unitp,*) 'frequencies (cm-1): ',d0eh(:)*get_Conv_au_TO_unit('E','cm-1')
          CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
@@ -778,7 +772,7 @@ MODULE mod_freq
       real (kind=Rkind) :: mat1(nb_var,nb_var)
       real (kind=Rkind) :: mat2(nb_var,nb_var)
 
-      real (kind=Rkind) :: val,val1,auTOcm_inv
+      real (kind=Rkind) :: val,val1
 
 !----- pour le determinant de d0c
       real (kind=Rkind) ::    d
@@ -801,7 +795,6 @@ MODULE mod_freq
          write(out_unitp,*) 'sqrt(masses)',d0sm
        END IF
 !-----------------------------------------------------------
-       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
 !-----------------------------------------------------------
 !----- mass-weighted hessian -------------------------------
@@ -835,7 +828,7 @@ MODULE mod_freq
 
 !-----------------------------------------------------------
        IF (debug .OR. print) THEN
-         write(out_unitp,*) 'frequencies : ',(d0eh(i)*auTOcm_inv,i=1,nb_var)
+         write(out_unitp,*) 'frequencies : ',d0eh(:)*get_Conv_au_TO_unit('E','cm-1')
          write(out_unitp,*)
          write(out_unitp,*) 'modes normaux'
          CALL Write_Mat(d0ch,out_unitp,5)
@@ -905,7 +898,7 @@ MODULE mod_freq
 
       real (kind=Rkind), allocatable :: d0c_inv(:,:),d0c_ini(:,:)
       real (kind=Rkind), allocatable :: d0k_save(:,:)
-      real (kind=Rkind) :: norme,auTOcm_inv
+      real (kind=Rkind) :: norme
       integer :: err_mem,memory
 
       CALL alloc_NParray(d0c_inv,(/nb_var,nb_var/),"d0c_inv","calc_freq_width")

@@ -34,6 +34,7 @@
  USE mod_psi_set_alloc, ONLY : param_psi
  USE mod_propa,         ONLY : param_propa,cof,Calc_AutoCorr,Write_AutoCorr
  USE mod_march_SG4
+ use mod_Constant,      only: get_conv_au_to_unit
  IMPLICIT NONE
 
  PRIVATE

@@ -1,0 +1,45 @@
+#!/bin/bash
+
+file=$1
+OldDir=output_29nov2018
+
+fNew=TempNew
+fOld=TempOld
+
+#echo $fNew $fOld
+
+grep "pi"  $file           | awk '{print $3}' >  $fNew
+grep "=>"  $file | head -9 | awk '{print $4}' >> $fNew
+grep "=>"  $file | tail -2 | awk '{print $5}' >> $fNew
+
+grep "pi"  $OldDir/$file           | awk '{print $3}' >  $fOld
+grep "=>"  $OldDir/$file | head -9 | awk '{print $4}' >> $fOld
+grep "=>"  $OldDir/$file | tail -2 | awk '{print $5}' >> $fOld
+
+
+nb_li=`wc $fNew | awk '{print $1}'`
+
+#echo $nb_li
+
+
+CompFile()
+{
+n1=`head -$1 $fNew | tail -1`
+n2=`head -$1 $fOld | tail -1`
+d=$2
+echo $n1 $n2 $d | LANG=C awk '{x=sqrt(($1-$2)^2) ; if (x > $3) {print sqrt((x/$1)^2)} else {print sqrt(($3/$1)^2)}}'
+}
+
+d=0.0
+for li in $(seq 1 1 $nb_li)
+do
+ d=`CompFile $li $d`
+ #echo $li $d
+done
+
+#echo For \"$file\", the largest relative difference between constants: $d
+echo The largest relative difference between constants: $d
+echo $d | LANG=C awk '{epsi=0.0000001 ; if ($1 > epsi) {print "    ERROR, relative diff > " epsi} else {print "    No ERROR, relative diff <= " epsi}}'
+
+
+ rm $fNew $fOld

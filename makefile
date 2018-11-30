@@ -6,7 +6,7 @@
 #F90 = pgf90
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -329,7 +329,7 @@ DIROpt     = $(DirEVR)/sub_Optimization
 # USE mod_system
 Obj_Primlib  = \
   $(OBJ)/sub_module_NumParameters.o \
-  $(OBJ)/sub_module_memory.o $(OBJ)/sub_module_string.o $(OBJ)/sub_module_RealWithUnit.o \
+  $(OBJ)/sub_module_memory.o $(OBJ)/sub_module_string.o \
   $(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_memory_NotPointer.o \
   $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/sub_module_FracInteger.o \
   $(OBJ)/sub_module_system.o
@@ -369,7 +369,7 @@ Obj_Smolyak_test = \
 #============================================================================
 #Physical constant, Minimize Only list: OK
 #USE mod_constant
-Obj_PhyCte = $(OBJ)/sub_module_Atom.o $(OBJ)/sub_module_constant.o
+Obj_PhyCte = $(OBJ)/sub_module_RealWithUnit.o $(OBJ)/sub_module_Atom.o $(OBJ)/sub_module_constant.o
 #============================================================================
 
 
@@ -568,6 +568,7 @@ obj:
 clean: 
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib2
 	rm -rf vib.dSYM
+	rm -f .DS_Store */.DS_Store */*/.DS_Store */*/*/.DS_Store
 	@cd Examples/exa_hcn-dist ; ./clean
 	@cd Examples/exa_direct-dist ; ./clean
 	@cd Examples/exa_TnumTana_Coord-dist ; ./clean
@@ -623,8 +624,6 @@ $(OBJ)/sub_module_NumParameters.o:$(DirSys)/sub_module_NumParameters.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_NumParameters.f90
 $(OBJ)/sub_module_FracInteger.o:$(DirSys)/sub_module_FracInteger.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_FracInteger.f90
-$(OBJ)/sub_module_RealWithUnit.o:$(DirSys)/sub_module_RealWithUnit.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_RealWithUnit.f90
 $(OBJ)/sub_module_memory.o:$(DirSys)/sub_module_memory.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_memory.f90
 $(OBJ)/sub_module_memory_Pointer.o:$(DirSys)/sub_module_memory_Pointer.f90
@@ -665,6 +664,8 @@ $(OBJ)/sub_module_nDfit.o:$(DirMod)/sub_module_nDfit.f90
 #
 #===================================================================================
 # Physical constants
+$(OBJ)/sub_module_RealWithUnit.o:$(DIRPhyCte)/sub_module_RealWithUnit.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPhyCte)/sub_module_RealWithUnit.f90
 $(OBJ)/sub_module_Atom.o:$(DIRPhyCte)/sub_module_Atom.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPhyCte)/sub_module_Atom.f90
 $(OBJ)/sub_module_constant.o:$(DIRPhyCte)/sub_module_constant.f90

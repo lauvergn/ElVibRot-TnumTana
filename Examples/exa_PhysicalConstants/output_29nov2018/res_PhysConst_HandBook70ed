@@ -1,0 +1,386 @@
+ BEGINNING PhysicalConstants
+ BEGINNING sub_constantes
+ EVRT_path: /Users/lauvergn/git/ElVibRot                                                                                                                                                                                                                                   
+ PHYSICAL CONSTANTS, version: HandBook70ed
+ MASSES, version: HandBook70ed
+   The unit "cm-1" is already present
+ energy unit: cm-1                
+ auTOenergy   219474.62540167637     
+ Ta (fs)=           0.024189
+ auTOcm_inv =      219474.625402
+ auTOeV     =          27.211396
+ END sub_constantes
+ ===========================================
+ = Usefull conversion factors or constants =
+
+ pi =                   3.1415926535897931     
+ cos(pi) =             -1.0000000000000000     
+
+au => m             0.5291772575E-10
+au => Angstrom      0.5291772575E+00
+
+ au => s            0.2418884392E-16
+ au => fs                    0.024189
+
+ au => J            0.4359748150E-17
+ au => cm-1             219474.625402
+ au => eV                   27.211396
+
+ g.mol-1 => au            1822.888494
+ Debye => au        0.3934300627E+00
+
+ au => V.cm-1 (E0)  0.5142208088E+10
+ au => W.cm-2 (I0)  0.3509447353E+17
+
+ ===========================================
+ ===========================================
+ ====== TEST to get masses =================
+  -------------------------------------- 
+ mass of X in au   0.0000000000000000     
+  -------------------------------------- 
+ mass of "100." in au   100.00000000000000     
+  -------------------------------------- 
+ mass of H in au   1837.1525961950590     
+  -------------------------------------- 
+ mass of "1_2" in au   3671.2974263754604     
+  -------------------------------------- 
+ mass of D in au   3671.2974263754604     
+  -------------------------------------- 
+ mass of T in au   5497.9228415192201     
+  -------------------------------------- 
+ ZZ,AA           1           4
+  ERROR in : get_mass_Tnum
+  This isotope is not defined in "1_4"
+  ERROR : get_mass_Tnum
+  I CANNOT get the right isotope
+  Your atom is NOT in my list !!
+  Your atom: "1_4"
+ ---------------------------------------------
+ Isotopes list:
+   0: X
+   1: 1H D (or 2H) T (or 3H)
+   2: 3He 4He 5He 6He 8He
+   3: 5Li 6Li 7Li 8Li 9Li
+   4: 9Be
+   5: 10B 11B
+   6: 12C
+   7: 14N
+   8: 16O
+   9: 19F
+  10: 20Ne 22Ne
+  11: 23Na
+  12: 24Mg 25Mg 26Mg
+  13: 27Al
+  14: 28Si 29Si 30Si
+  15: 31P
+  16: 32S
+  17: 35Cl 37Cl
+  18: 40Ar
+  19: 39K
+  20: 40Ca
+  21: 45Sc
+  22: 48Ti
+  23: 51V
+  24: 52Cr
+  25: 55Mn
+  26: 56Fe
+  27: 59Co
+  28: 58Ni 60Ni
+  29: 63Cu 65Cu
+  30: 64Zn 66Zn 68Zn
+  31: 69Ga 71Ga
+  32: 70Ge 72Ge 74Ge
+  33: 75As
+  34: 78Se 80Se
+  35: 79Br 81Br
+  36: 82Kr 83Kr 84Kr 86Kr
+  78: 194Pt 195Pt 196Pt
+ END Isotopes list
+ ---------------------------------------------
+ mass of "1_4" in au  -1.0000000000000000     
+  -------------------------------------- 
+ mass of He in au   7296.2934850101392     
+  -------------------------------------- 
+ mass of HE in au   7296.2934850101392     
+  -------------------------------------- 
+ mass of he in au   7296.2934850101392     
+  -------------------------------------- 
+ mass of He in au   7296.2934850101392       and then Z and A           2           4
+  -------------------------------------- 
+ mass of Z=6 in au   21874.661924779310       and then A          12
+  -------------------------------------- 
+ ZZ,AA           6          13
+  ERROR in : get_mass_Tnum
+  This isotope is not defined in ""
+  ERROR : get_mass_Tnum
+  I CANNOT get the right isotope
+  Your atom is NOT in my list !!
+  Your atom: ""
+ ---------------------------------------------
+ Isotopes list:
+   0: X
+   1: 1H D (or 2H) T (or 3H)
+   2: 3He 4He 5He 6He 8He
+   3: 5Li 6Li 7Li 8Li 9Li
+   4: 9Be
+   5: 10B 11B
+   6: 12C
+   7: 14N
+   8: 16O
+   9: 19F
+  10: 20Ne 22Ne
+  11: 23Na
+  12: 24Mg 25Mg 26Mg
+  13: 27Al
+  14: 28Si 29Si 30Si
+  15: 31P
+  16: 32S
+  17: 35Cl 37Cl
+  18: 40Ar
+  19: 39K
+  20: 40Ca
+  21: 45Sc
+  22: 48Ti
+  23: 51V
+  24: 52Cr
+  25: 55Mn
+  26: 56Fe
+  27: 59Co
+  28: 58Ni 60Ni
+  29: 63Cu 65Cu
+  30: 64Zn 66Zn 68Zn
+  31: 69Ga 71Ga
+  32: 70Ge 72Ge 74Ge
+  33: 75As
+  34: 78Se 80Se
+  35: 79Br 81Br
+  36: 82Kr 83Kr 84Kr 86Kr
+  78: 194Pt 195Pt 196Pt
+ END Isotopes list
+ ---------------------------------------------
+ mass of Z=6,A=13 in au  -1.0000000000000000     
+ ===========================================
+ mass of "2000." in au   2000.0000000000000     
+  -------------------------------------- 
+  ERROR in : get_mass_Tnum
+  I CANNOT read the mass in "20.0."
+ mass of "20.0." in au  -1.0000000000000000     
+  -------------------------------------- 
+ mass of "C" in au   21874.661924779310     
+  -------------------------------------- 
+ mass of "H" in au   1837.1525961950590     
+  -------------------------------------- 
+ mass of "Fe" in au   101963.15670067945     
+  -------------------------------------- 
+  ERROR in : get_mass_Tnum
+ ZZ,AA         111          -1
+  I CANNOT find Z in "Xe"
+  ... or Z (from the argument) is out of range
+  ERROR : get_mass_Tnum
+  I CANNOT get the right isotope
+  Your atom is NOT in my list !!
+  Your atom: "Xe"
+ ---------------------------------------------
+ Isotopes list:
+   0: X
+   1: 1H D (or 2H) T (or 3H)
+   2: 3He 4He 5He 6He 8He
+   3: 5Li 6Li 7Li 8Li 9Li
+   4: 9Be
+   5: 10B 11B
+   6: 12C
+   7: 14N
+   8: 16O
+   9: 19F
+  10: 20Ne 22Ne
+  11: 23Na
+  12: 24Mg 25Mg 26Mg
+  13: 27Al
+  14: 28Si 29Si 30Si
+  15: 31P
+  16: 32S
+  17: 35Cl 37Cl
+  18: 40Ar
+  19: 39K
+  20: 40Ca
+  21: 45Sc
+  22: 48Ti
+  23: 51V
+  24: 52Cr
+  25: 55Mn
+  26: 56Fe
+  27: 59Co
+  28: 58Ni 60Ni
+  29: 63Cu 65Cu
+  30: 64Zn 66Zn 68Zn
+  31: 69Ga 71Ga
+  32: 70Ge 72Ge 74Ge
+  33: 75As
+  34: 78Se 80Se
+  35: 79Br 81Br
+  36: 82Kr 83Kr 84Kr 86Kr
+  78: 194Pt 195Pt 196Pt
+ END Isotopes list
+ ---------------------------------------------
+ mass of "Xe" in au  -1.0000000000000000     
+  -------------------------------------- 
+ mass of "O" in au   29156.946511715123     
+  -------------------------------------- 
+ mass of "2H" in au   3671.2974263754604     
+  -------------------------------------- 
+ ZZ,AA           6          13
+  ERROR in : get_mass_Tnum
+  This isotope is not defined in "13C"
+  ERROR : get_mass_Tnum
+  I CANNOT get the right isotope
+  Your atom is NOT in my list !!
+  Your atom: "13C"
+ ---------------------------------------------
+ Isotopes list:
+   0: X
+   1: 1H D (or 2H) T (or 3H)
+   2: 3He 4He 5He 6He 8He
+   3: 5Li 6Li 7Li 8Li 9Li
+   4: 9Be
+   5: 10B 11B
+   6: 12C
+   7: 14N
+   8: 16O
+   9: 19F
+  10: 20Ne 22Ne
+  11: 23Na
+  12: 24Mg 25Mg 26Mg
+  13: 27Al
+  14: 28Si 29Si 30Si
+  15: 31P
+  16: 32S
+  17: 35Cl 37Cl
+  18: 40Ar
+  19: 39K
+  20: 40Ca
+  21: 45Sc
+  22: 48Ti
+  23: 51V
+  24: 52Cr
+  25: 55Mn
+  26: 56Fe
+  27: 59Co
+  28: 58Ni 60Ni
+  29: 63Cu 65Cu
+  30: 64Zn 66Zn 68Zn
+  31: 69Ga 71Ga
+  32: 70Ge 72Ge 74Ge
+  33: 75As
+  34: 78Se 80Se
+  35: 79Br 81Br
+  36: 82Kr 83Kr 84Kr 86Kr
+  78: 194Pt 195Pt 196Pt
+ END Isotopes list
+ ---------------------------------------------
+ mass of "13C" in au  -1.0000000000000000     
+  -------------------------------------- 
+ ZZ,AA           6          14
+  ERROR in : get_mass_Tnum
+  This isotope is not defined in "6_14"
+  ERROR : get_mass_Tnum
+  I CANNOT get the right isotope
+  Your atom is NOT in my list !!
+  Your atom: "6_14"
+ ---------------------------------------------
+ Isotopes list:
+   0: X
+   1: 1H D (or 2H) T (or 3H)
+   2: 3He 4He 5He 6He 8He
+   3: 5Li 6Li 7Li 8Li 9Li
+   4: 9Be
+   5: 10B 11B
+   6: 12C
+   7: 14N
+   8: 16O
+   9: 19F
+  10: 20Ne 22Ne
+  11: 23Na
+  12: 24Mg 25Mg 26Mg
+  13: 27Al
+  14: 28Si 29Si 30Si
+  15: 31P
+  16: 32S
+  17: 35Cl 37Cl
+  18: 40Ar
+  19: 39K
+  20: 40Ca
+  21: 45Sc
+  22: 48Ti
+  23: 51V
+  24: 52Cr
+  25: 55Mn
+  26: 56Fe
+  27: 59Co
+  28: 58Ni 60Ni
+  29: 63Cu 65Cu
+  30: 64Zn 66Zn 68Zn
+  31: 69Ga 71Ga
+  32: 70Ge 72Ge 74Ge
+  33: 75As
+  34: 78Se 80Se
+  35: 79Br 81Br
+  36: 82Kr 83Kr 84Kr 86Kr
+  78: 194Pt 195Pt 196Pt
+ END Isotopes list
+ ---------------------------------------------
+ mass of "6_14" in au  -1.0000000000000000     
+  -------------------------------------- 
+  ERROR in : get_mass_Tnum
+ ZZ,AA         111          -1
+  I CANNOT find Z in "XX"
+  ... or Z (from the argument) is out of range
+  ERROR : get_mass_Tnum
+  I CANNOT get the right isotope
+  Your atom is NOT in my list !!
+  Your atom: "XX"
+ ---------------------------------------------
+ Isotopes list:
+   0: X
+   1: 1H D (or 2H) T (or 3H)
+   2: 3He 4He 5He 6He 8He
+   3: 5Li 6Li 7Li 8Li 9Li
+   4: 9Be
+   5: 10B 11B
+   6: 12C
+   7: 14N
+   8: 16O
+   9: 19F
+  10: 20Ne 22Ne
+  11: 23Na
+  12: 24Mg 25Mg 26Mg
+  13: 27Al
+  14: 28Si 29Si 30Si
+  15: 31P
+  16: 32S
+  17: 35Cl 37Cl
+  18: 40Ar
+  19: 39K
+  20: 40Ca
+  21: 45Sc
+  22: 48Ti
+  23: 51V
+  24: 52Cr
+  25: 55Mn
+  26: 56Fe
+  27: 59Co
+  28: 58Ni 60Ni
+  29: 63Cu 65Cu
+  30: 64Zn 66Zn 68Zn
+  31: 69Ga 71Ga
+  32: 70Ge 72Ge 74Ge
+  33: 75As
+  34: 78Se 80Se
+  35: 79Br 81Br
+  36: 82Kr 83Kr 84Kr 86Kr
+  78: 194Pt 195Pt 196Pt
+ END Isotopes list
+ ---------------------------------------------
+ mass of "XX" in au  -1.0000000000000000     
+  -------------------------------------- 
+ ===========================================
+ END PhysicalConstants

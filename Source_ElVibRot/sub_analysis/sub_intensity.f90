@@ -38,6 +38,7 @@
                                intensity_only,nio_res_int)
 
       USE mod_system
+      use mod_Constant, only: constant, rwu_write, real_wu, convrwu_to_r, get_conv_au_to_unit
       USE mod_Coord_KEO
       USE mod_basis
       USE mod_Op
@@ -557,7 +558,7 @@
                                width,emin,emax,                         &
                                file_spectrum,file_intensity)
       USE mod_system
-      use mod_Coord_KEO, only: constant
+      use mod_Constant, only: constant, RWU_Write,REAL_WU
       IMPLICIT NONE
 
 !----- physical and mathematical constants ---------------------------
@@ -886,6 +887,7 @@
       end subroutine calc_Q_VR
       FUNCTION part_func(ene,nb_aie,Temp)
       USE mod_system
+      use mod_Constant, only: real_wu,convRWU_TO_R
       implicit none
 
       real (kind=Rkind) :: part_func
@@ -946,6 +948,7 @@
 !================================================================
       FUNCTION pop2_i(enei,ene0,Temp)
       USE mod_system
+      use mod_Constant, only: real_wu,convRWU_TO_R
       IMPLICIT NONE
 
       real (kind=Rkind) :: pop2_i
@@ -972,7 +975,6 @@
 !-----------------------------------------------------------
 
       RWU_Temp = REAL_WU(Temp,'°K','E')
-      !Etemp   = RWU_Temp  ! Temperature convertion in Hartree
       Etemp    = convRWU_TO_R(RWU_Temp ,WorkingUnit=.TRUE.)
 
       pop2_i = exp(-(enei-ene0)/Etemp)
@@ -993,7 +995,7 @@
       SUBROUTINE sub_spectre(Mat_Aif,ene,nb_ana,                        &
                              Ewidth,emin,emax,file_spectrum)
       USE mod_system
-      USE mod_file
+      use mod_Constant, only: REAL_WU,get_Conv_au_TO_unit,RWU_Write
       IMPLICIT NONE
 
       integer       :: nb_ana

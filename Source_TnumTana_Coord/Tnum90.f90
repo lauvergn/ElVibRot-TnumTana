@@ -1,14 +1,23 @@
       PROGRAM Tnum_f90
       use mod_system
       use mod_dnSVM
-      use mod_Coord_KEO, only: constant, zmatrix, tnum, read_mole,        &
+      use mod_Constant,  only: constant, get_conv_au_to_unit
+      use mod_Coord_KEO, only: zmatrix, tnum, read_mole,                  &
                                read_refgeom, alloc_nparray, get_qact0,    &
                                sub_qacttodnx, write_dnx, write_cartg98,   &
                                alloc_array, calc3_f2_f1q_num,             &
                                dealloc_array, get_dng_dngg,               &
                                sub_qplusdq_to_cart, sub_dnfcc_to_dnfcurvi,&
-                                dealloc_zmat, dealloc_nparray
-      USE mod_PrimOp
+                               dealloc_zmat, dealloc_nparray
+       use mod_PrimOp, only: param_pes, param_dnmatop,                    &
+                             finalyze_tnumtana_coord_primop,              &
+                             alloc_nparray, init_tab_of_dnmatop,          &
+                             set_dnmatop_at_qact, &
+                             get_scal_from_tab_of_dnmatop, get_grad_from_tab_of_dnmatop, &
+                             get_hess_from_tab_of_dnmatop, dealloc_tab_of_dnmatop, &
+                             sub_freq_at_qact, read_gradhess_molpro, read_hess_fchk, &
+                             read_dndipcc_gauss
+
       IMPLICIT NONE
 
 !     - parameters for para_Tnum -----------------------
@@ -43,7 +52,7 @@
       real (kind=Rkind), pointer :: freq(:)=>null()
       real (kind=Rkind), allocatable :: grad(:),hess(:,:)
 
-      real (kind=Rkind)  :: norme,auTOcm_inv,auTOeV
+      real (kind=Rkind)  :: norme
       character (len=50) :: wqi,mqi
 
 
@@ -122,7 +131,6 @@
       END IF
       write(out_unitp,*) "======================================"
 
-!CALL Test_RWU() ; STOP
 !===========================================================
 !===========================================================
 
@@ -308,16 +316,14 @@
 
         CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES)
 
-        auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
-        auTOeV     = get_Conv_au_TO_unit('E','eV')
-        write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(freq(:))*auTOcm_inv
-        write(out_unitp,*) 'ZPE   (eV): ',HALF*sum(freq(:))*auTOeV
+        write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(freq(:))*get_Conv_au_TO_unit('E','cm-1')
+        write(out_unitp,*) 'ZPE   (eV): ',HALF*sum(freq(:))*get_Conv_au_TO_unit('E','eV')
         write(out_unitp,*) 'ZPE   (au): ',HALF*sum(freq(:))
 
         DO i=1,mole%nb_act,3
           i2 = min(i+2,mole%nb_act)
           write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
-                         i,i2,freq(i:i2)* auTOcm_inv
+                         i,i2,freq(i:i2)* get_Conv_au_TO_unit('E','cm-1')
         END DO
 
         CALL dealloc_array(freq,"freq",name_sub)
@@ -399,16 +405,14 @@
 
           CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES,d0h_opt=dnFcurvi%d2)
 
-          auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
-          auTOeV     = get_Conv_au_TO_unit('E','eV')
-          write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(freq(:))*auTOcm_inv
-          write(out_unitp,*) 'ZPE   (eV): ',HALF*sum(freq(:))*auTOeV
+          write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(freq(:))*get_Conv_au_TO_unit('E','cm-1')
+          write(out_unitp,*) 'ZPE   (eV): ',HALF*sum(freq(:))*get_Conv_au_TO_unit('E','eV')
           write(out_unitp,*) 'ZPE   (au): ',HALF*sum(freq(:))
 
           DO i=1,mole%nb_act,3
             i2 = min(i+2,mole%nb_act)
             write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
-                         i,i2,freq(i:i2)* auTOcm_inv
+                         i,i2,freq(i:i2)* get_Conv_au_TO_unit('E','cm-1')
           END DO
 
           CALL dealloc_array(freq,"freq",name_sub)

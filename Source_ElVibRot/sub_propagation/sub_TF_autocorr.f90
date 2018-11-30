@@ -27,10 +27,11 @@
 !===========================================================================
 !===========================================================================
 
-      SUBROUTINE TF_autocorr(para_propa)
-      USE mod_system
-      USE mod_propa
-      IMPLICIT NONE
+ SUBROUTINE TF_autocorr(para_propa)
+   USE mod_system
+   USE mod_Constant, ONLY: get_Conv_au_TO_unit
+   USE mod_propa
+   IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa) :: para_propa
@@ -108,5 +109,5 @@
       CALL dealloc_array(C,"C","TF_autocorr")
       CALL dealloc_array(W,"C","TF_autocorr")
 
-      END SUBROUTINE TF_autocorr
+  END SUBROUTINE TF_autocorr
 

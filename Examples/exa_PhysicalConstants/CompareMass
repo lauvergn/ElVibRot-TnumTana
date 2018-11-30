@@ -1,0 +1,39 @@
+#!/bin/bash
+
+file=$1
+OldDir=output_29nov2018
+
+fNew=TempNew
+fOld=TempOld
+
+#echo $fNew $fOld
+
+grep "mass of"         $file | awk '{print $6}' > $fNew
+grep "mass of" $OldDir/$file | awk '{print $6}' > $fOld
+
+
+nb_li=`wc $fNew | awk '{print $1}'`
+
+#echo $nb_li
+
+
+CompFile()
+{
+n1=`head -$1 $fNew | tail -1`
+n2=`head -$1 $fOld | tail -1`
+d=$2
+echo $n1 $n2 $d | LANG=C awk '{x=sqrt(($1-$2)^2) ; if (x > $3) {print x} else {print $3}}'
+}
+
+d=0.0
+for li in $(seq 1 1 $nb_li)
+do
+ d=`CompFile $li $d`
+ #echo $li $d
+done
+
+#echo For \"$file\", the largest difference between masses: $d
+echo The largest difference between masses: $d
+echo $d | LANG=C awk '{epsi=0.00001 ; if ($1 > epsi) {print "    ERROR, diff > " epsi} else {print "    No ERROR, diff <= " epsi}}'
+
+rm $fNew $fOld

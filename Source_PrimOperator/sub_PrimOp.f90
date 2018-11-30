@@ -31,14 +31,11 @@
 
     USE mod_Coord_KEO
 
-
     USE mod_nDFit
     USE mod_PrimOp_def
     USE mod_OTF_def
     USE mod_OTF
     USE mod_SimpleOp
-
-
 
    IMPLICIT NONE
 

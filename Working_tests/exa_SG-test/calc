@@ -1,0 +1,4 @@
+D=10
+dat_main_testnD $D 9 9 1
+dat_main_testnD $D 9 9 2
+dat_main_testnD $D 9 9 4

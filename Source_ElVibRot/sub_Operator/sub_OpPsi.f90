@@ -271,6 +271,8 @@ CONTAINS
         write(out_unitp,*) 'BEGINNING ',name_sub,' ',n
         write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
         write(out_unitp,*) 'para_Op%mat_done',para_Op%mat_done
+        write(out_unitp,*) 'para_Op%... %Save_MemGrid_done',            &
+                    para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
         CALL flush_perso(out_unitp)
         !CALL write_param_Op(para_Op)
         !IF (associated(para_Op%Cmat) .AND. para_Op%mat_done) CALL Write_Mat(para_Op%Cmat,out_unitp,3)
@@ -383,7 +385,6 @@ CONTAINS
 
           !STOP 'OpPsi with Grid'
         ELSE
-
           !--- allocate OpPsi and psi%GridRep  -----------------------------
           Psi%GridRep=.TRUE.
           CALL alloc_psi(Psi)
@@ -1873,7 +1874,8 @@ STOP 'cplx'
         write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
         write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
         write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-        write(out_unitp,*) 'para_Op...%Save_MemGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
+        write(out_unitp,*) 'para_Op...%Save_MemGrid_done',              &
+                     para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
         !CALL flush_perso(out_unitp)
         !CALL write_param_Op(para_Op)
         write(out_unitp,*)

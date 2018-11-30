@@ -32,6 +32,7 @@ MODULE mod_OTF
    USE mod_dnSVM
    use mod_OTF_def,    only: param_otf
    use mod_PrimOp_def, only: param_pes, write_param_pes
+   USE mod_Constant
    IMPLICIT NONE
 
    PRIVATE

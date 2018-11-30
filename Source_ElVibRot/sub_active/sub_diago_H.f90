@@ -28,6 +28,7 @@
 !===========================================================================
       SUBROUTINE sub_diago_H(H,E,Vec,n,sym)
       USE mod_system
+      USE mod_Constant, ONLY: get_Conv_au_TO_unit
       IMPLICIT NONE
 
 !------ active Matrix H Vec E ------------------------------------
@@ -138,6 +139,7 @@ END SUBROUTINE sub_diago_H
 !=====================================================================
       SUBROUTINE sub_diago_CH(CH,CE,CVec,n)
       USE mod_system
+      USE mod_Constant, ONLY: get_Conv_au_TO_unit
       IMPLICIT NONE
       !
       !------ active Matrix H Vec E ------------------------------------

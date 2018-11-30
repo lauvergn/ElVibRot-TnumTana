@@ -25,9 +25,8 @@ MODULE mod_paramQ
                             print_level, zero, in_unitp, alloc_nparray, &
                             write_int_in_char, flush_perso, int_to_char,&
                             dealloc_nparray, one, write_mat, param_file,&
-                            get_conv_au_to_unit, file_open, onetenth,   &
-                            half, file_close, four, two, real_wu,       &
-                            rwu_write, convrwu_to_r, read_name_advno,   &
+                            file_open, onetenth, half, four, two,       &
+                            file_close, read_name_advno,                &
                             para_for_optimization
       USE mod_dnSVM
       use mod_Lib_QTransfo,     only: write_cart, calc_cross_product,   &
@@ -41,6 +40,9 @@ MODULE mod_paramQ
                                                   sub3_nodncentre_masse
       use mod_Qtransfo,         only: write_Qtransfo, calc_Qtransfo
       use mod_Tnum,             only: tnum, zmatrix, write_mole
+
+      USE mod_Constant,         ONLY: get_conv_au_to_unit, real_wu,     &
+                                      rwu_write, convrwu_to_r
 
       IMPLICIT NONE
 

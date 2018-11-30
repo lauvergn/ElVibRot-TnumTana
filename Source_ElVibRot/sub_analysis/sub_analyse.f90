@@ -227,7 +227,10 @@ CONTAINS
 
         IF (para_ana%intensity .AND. para_intensity%l_IntVR) THEN
           CALL sub_moyABC(tab_Psi(i),i,info,para_intensity%ABC(:,i),para_AllOp)
+        ELSE IF (para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op > 0) THEN
+          CALL sub_moyScalOp(tab_Psi(i),i,info,para_AllOp)
         END IF
+
 
         write(out_unitp,*)
 
@@ -401,6 +404,76 @@ CONTAINS
 
 
         end subroutine sub_moyABC
+
+!================================================================
+!
+!     calculation of <psi | Mhu | psi>
+!
+!================================================================
+       SUBROUTINE sub_moyScalOp(Psi,iPsi,info,para_AllOp)
+
+      USE mod_system
+      USE mod_Op
+      USE mod_OpPsi
+      USE mod_psi_set_alloc
+      IMPLICIT NONE
+
+      TYPE (param_psi)               :: Psi
+      integer                        :: iPsi
+      character (len=*)              :: info
+      TYPE (param_AllOp)             :: para_AllOp
+
+
+
+      !----- local variables --------------------------------------
+      TYPE (param_psi)           :: OpPsi
+      TYPE (param_Op), pointer   :: ScalOp(:) => null() ! true pointer
+
+
+      real (kind=Rkind)   :: avScalOp(para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op)
+      complex(kind=Rkind) :: avOp
+      integer             :: iOp,nb_scalar_Op
+!----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+       nb_scalar_Op = para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op
+       IF (debug) THEN
+         write(out_unitp,*) 'BEGINNING sub_moyScalOp'
+         write(out_unitp,*) 'ipsi,info',iPsi,info
+         write(out_unitp,*) 'nb_scalar_Op',nb_scalar_Op
+         DO iOp=1,size(para_AllOp%tab_Op)
+           write(out_unitp,*) iOp,'Save_MemGrid_done', &
+              para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_MemGrid_done
+         END DO
+       END IF
+!-----------------------------------------------------------
+
+      ScalOp(1:nb_scalar_Op) => para_AllOp%tab_Op(3:2+nb_scalar_Op)
+
+       OpPsi = psi  ! for the initialization
+
+       DO iOp=1,nb_scalar_Op
+
+         CALL sub_PsiOpPsi(avOp,Psi,OpPsi,ScalOp(iOp))
+         avScalOp(iOp) = real(avOp,kind=Rkind)
+
+       END DO
+
+       write(out_unitp,"(i0,2a,100(f15.9,1x))") iPsi,' avScalOp: ',info,avScalOp
+
+       CALL dealloc_psi(OpPsi)
+       nullify(ScalOp)
+
+
+!----------------------------------------------------------
+        IF (debug) THEN
+          write(out_unitp,*) 'END sub_moyScalOp'
+        END IF
+!----------------------------------------------------------
+
+
+        end subroutine sub_moyScalOp
 
 !================================================================
 !

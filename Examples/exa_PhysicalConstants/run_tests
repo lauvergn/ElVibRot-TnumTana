@@ -1,3 +1,7 @@
+#!/bin/bash
+
+OldTestsDir=output_28nov2018
+
 ./clean
 
 for dat_name in dat*
@@ -6,26 +10,14 @@ do
 done
 
 
-
 for res_name in res*
 do
    echo ---------------------------------------
    echo ----------- $res_name
 
-   # The EVRT_path line is removed with the grep
-   grep -v EVRT_path $res_name > res_tmp
-   grep -v EVRT_path output_17dec2016/$res_name > res_old_tmp
-   err=`diff res_tmp res_old_tmp`
-   rm res_tmp res_old_tmp
+   ./CompareMass  $res_name
+   ./CompareConst $res_name
 
-
-   if test -z "$err"
-   then 
-     echo "No error!"
-   else 
-     echo "Error(s) detected!!"
-     echo $err
-   fi
    echo ---------------------------------------
 done
 

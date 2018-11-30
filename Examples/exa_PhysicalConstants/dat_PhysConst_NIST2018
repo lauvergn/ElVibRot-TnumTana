@@ -6,8 +6,9 @@ cd $DIR_vib
  make PhysConst
 cd $here
 
-nice $DIR_vib/PhysConst.exe << ** >res_PhysConst
- &constantes /
+#&constantes mass_version='NIST2018' version='CODATA2014' /
+nice $DIR_vib/PhysConst.exe << ** >res_PhysConst_NIST2018
+ &constantes mass_version='NIST2018' version='CODATA2014' /
  2000.   ! mass of 2000. au
  20.0.   ! Wrong real => ERROR
  C       ! give the C mass of the main isotop (A=12)

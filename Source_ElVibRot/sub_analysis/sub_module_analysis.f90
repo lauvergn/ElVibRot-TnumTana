@@ -29,7 +29,8 @@
 
       MODULE mod_analysis
       USE mod_system
-      USE mod_file
+      use mod_Constant, only: real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit
+
       IMPLICIT NONE
         TYPE param_ana
           integer :: max_ana           = -1        ! nb of level to be analyzed. If max_ana=-1, all level are analyzed.
