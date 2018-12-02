@@ -558,30 +558,30 @@
                                width,emin,emax,                         &
                                file_spectrum,file_intensity)
       USE mod_system
-      use mod_Constant, only: constant, RWU_Write,REAL_WU
+      use mod_Constant, only: constant, RWU_Write,REAL_WU, get_Conv_au_TO_unit
       IMPLICIT NONE
 
 !----- physical and mathematical constants ---------------------------
       TYPE (constant) :: const_phys
 
 
-      integer       :: nb_ana
+      integer           :: nb_ana
       real (kind=Rkind) :: Mat_Aif(nb_ana,nb_ana)
       real (kind=Rkind) :: ene(nb_ana),ABC(3,nb_ana),pop(nb_ana)
 
       real (kind=Rkind) :: Ai,Bi,Ci,Aj,Bj,Cj,Temp,Q,Imax
       real (kind=Rkind) :: ImaxV,IntV
-      integer       :: Jmax
+      integer           :: Jmax
 
       real (kind=Rkind) :: width,emin,emax,pas
       TYPE (param_file) :: file_spectrum,file_intensity
-      integer       :: nio,nio_int
-      integer       :: n
+      integer           :: nio,nio_int
+      integer           :: n
       real (kind=Rkind),allocatable :: spectre(:)
 
 
-      real (kind=Rkind) :: e,e0
-      integer       :: i,j
+      real (kind=Rkind) :: e,e0,auTOenergy
+      integer           :: i,j
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='sub_spectreRV'
@@ -602,7 +602,7 @@
         write(out_unitp,*) 'spectrum emax: ',                      &
           RWU_Write(REAL_WU(emax,'au','E'),WithUnit=.TRUE.,WorkingUnit=.FALSE.)
         DO i=1,nb_ana
-          write(out_unitp,*) 'ABC (cm-1)',i,ABC(:,i)*const_phys%auTOcm_inv
+          write(out_unitp,*) 'ABC (cm-1)',i,ABC(:,i)*get_Conv_au_TO_unit('E','cm-1')
         END DO
       END IF
 !-----------------------------------------------------------
@@ -622,6 +622,7 @@
 
 
 !----- intialisation de spectre ----------------------------
+      auTOenergy = get_Conv_au_TO_unit('E',WorkingUnit=.TRUE.)
       pas = width / TEN
       n = (emax-emin)/pas
       CALL alloc_NParray(spectre,(/ n /),"spectre",name_sub)
@@ -658,10 +659,11 @@
 
       CALL file_open(file_spectrum,nio)
 
-      e = emin * const_phys%auTOenergy
+      e =   emin * auTOenergy
+      pas = pas  * auTOenergy
       DO i=1,n
         write(nio,*) e,spectre(i)
-        e = e + pas * const_phys%auTOenergy
+        e = e + pas
       END DO
       close(nio)
 
@@ -998,15 +1000,15 @@
       use mod_Constant, only: REAL_WU,get_Conv_au_TO_unit,RWU_Write
       IMPLICIT NONE
 
-      integer       :: nb_ana
+      integer           :: nb_ana
       real (kind=Rkind) :: Mat_Aif(nb_ana,nb_ana)
       real (kind=Rkind) :: ene(nb_ana)
 
       real (kind=Rkind) :: Ewidth,emin,emax,pas
 
       TYPE (param_file) :: file_spectrum
-      integer       :: nio
-      integer       :: n
+      integer           :: nio
+      integer           :: n
       real (kind=Rkind),allocatable :: spectre(:)
 
 
@@ -1092,12 +1094,12 @@
 
       real (kind=Rkind) :: e0,I0,a
       real (kind=Rkind) :: emin,pas
-      integer       :: n
+      integer           :: n
       real (kind=Rkind) :: spectre(n)
 
 
       real (kind=Rkind) :: e,b
-      integer       :: i,imin,imax
+      integer           :: i,imin,imax
 
       real (kind=Rkind) :: func_lorentzian
 

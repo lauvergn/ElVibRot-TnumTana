@@ -397,7 +397,6 @@
 
       SUBROUTINE Set_paraPRH(mole,para_Tnum,BasisnD)
       USE mod_system
-      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       IMPLICIT NONE

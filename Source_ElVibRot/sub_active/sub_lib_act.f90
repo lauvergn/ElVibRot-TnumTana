@@ -475,8 +475,6 @@
 !=====================================================================
 
       SUBROUTINE sub_reading_Op(iq,nb_qa,d0MatOp,n_Op,Qdyn,nb_var,Qact,w,ComOp)
-
-
       USE mod_system
       USE mod_Op
       IMPLICIT NONE
@@ -936,8 +934,8 @@
 !=====================================================================
       SUBROUTINE d0d1d2bnDQact(d0b,d1b,d2b,BasisnD,iq,ib,mole)
       USE mod_system
-      USE mod_basis
       USE mod_Coord_KEO
+      USE mod_basis
       implicit none
 
       !----- variables for the Basis and quadrature points -----------------
@@ -1010,7 +1008,6 @@
 !
 !=====================================================================
       SUBROUTINE check_HADA(iqf,ComOp)
-
       USE mod_system
       USE mod_Op
       IMPLICIT NONE

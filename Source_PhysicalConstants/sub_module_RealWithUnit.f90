@@ -365,7 +365,7 @@
       FUNCTION convRWU_TO_RWU(RWU,WorkingUnit)
       TYPE(REAL_WU)                       :: convRWU_TO_RWU
       TYPE(REAL_WU), intent(in)           :: RWU
-      logical, optional, intent(in)       :: WorkingUnit
+      logical,       intent(in), optional :: WorkingUnit
 
 
       logical                             :: skip_conv,WorkingUnit_loc
@@ -525,9 +525,9 @@
       FUNCTION get_Conv_au_TO_unit(quantity,Unit,WorkingUnit)
       real (kind=Rkind)  :: get_Conv_au_TO_unit
 
-      character (len=*), intent(in) :: quantity
-      character (len=*), intent(in) :: unit
-      logical, intent(in), optional :: WorkingUnit
+      character (len=*), intent(in)           :: quantity
+      character (len=*), intent(in), optional :: unit
+      logical,           intent(in), optional :: WorkingUnit
 
       integer :: i
 
@@ -539,8 +539,10 @@
         ELSE
           get_Conv_au_TO_unit = ONE/Tab_conv_FOR_quantity(i)%Write_unit%val
         END IF
-      ELSE
+      ELSE IF (present(unit)) THEN
         get_Conv_au_TO_unit = ONE/convRWU_TO_R( REAL_WU(ONE,unit,quantity) )
+      ELSE ! problem, unit and WorkingUnit are not present (conversion factor = ONE)
+        get_Conv_au_TO_unit = ONE
       END IF
 
       END function get_Conv_au_TO_unit

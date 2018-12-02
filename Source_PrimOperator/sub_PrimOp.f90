@@ -42,7 +42,10 @@
    PUBLIC
 
    PRIVATE   dnOp_num_grid_v2, calc3_NM_TO_sym, calc4_NM_TO_sym, calc5_NM_TO_sym
+
    PRIVATE   get_hess_k, Set_RPHpara_AT_Qact1_opt2, Set_RPHpara_AT_Qact1_opt01
+   PRIVATE   calc_freq, calc_freq_block, calc_freq_WITH_d0c, calc_freqNM, calc_freq_width
+   PRIVATE   H0_symmetrization, sort_with_Tab
 
    CONTAINS
 

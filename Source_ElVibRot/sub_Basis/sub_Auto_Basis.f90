@@ -168,7 +168,6 @@
                                          para_PES,para_ReadOp,ComOp_loc)
 
       USE mod_system
-      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -176,7 +175,7 @@
 
 !----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix), target :: mole,mole_loc
-      TYPE (Tnum), target    :: para_Tnum
+      TYPE (Tnum),    target :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
       TYPE (basis) :: basisnD
@@ -430,7 +429,6 @@
                                          para_PES,para_ReadOp,ComOp_loc)
 
       USE mod_system
-      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -587,7 +585,6 @@ END SUBROUTINE RecSet_EneH0
                                           ComOp,para_PES,para_ReadOp)
 
       USE mod_system
-      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -800,7 +797,6 @@ END SUBROUTINE RecSet_EneH0
                                     ComOp,para_PES,para_ReadOp)
 
       USE mod_system
-      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -1233,7 +1229,6 @@ END SUBROUTINE RecSet_EneH0
                                      ComOp,para_PES,para_ReadOp,para_H)
 
       USE mod_system
-      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
