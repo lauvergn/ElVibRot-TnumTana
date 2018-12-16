@@ -1,7 +1,7 @@
       PROGRAM Tnum_f90
       use mod_system
       use mod_dnSVM
-      use mod_Constant,  only: constant, get_conv_au_to_unit
+      use mod_Constant
       use mod_Coord_KEO, only: zmatrix, tnum, read_mole,                  &
                                read_refgeom, alloc_nparray, get_qact0,    &
                                sub_qacttodnx, write_dnx, write_cartg98,   &
@@ -9,14 +9,7 @@
                                dealloc_array, get_dng_dngg,               &
                                sub_qplusdq_to_cart, sub_dnfcc_to_dnfcurvi,&
                                dealloc_zmat, dealloc_nparray
-       use mod_PrimOp, only: param_pes, param_dnmatop,                    &
-                             finalyze_tnumtana_coord_primop,              &
-                             alloc_nparray, init_tab_of_dnmatop,          &
-                             set_dnmatop_at_qact, &
-                             get_scal_from_tab_of_dnmatop, get_grad_from_tab_of_dnmatop, &
-                             get_hess_from_tab_of_dnmatop, dealloc_tab_of_dnmatop, &
-                             sub_freq_at_qact, read_gradhess_molpro, read_hess_fchk, &
-                             read_dndipcc_gauss
+       use mod_PrimOp
 
       IMPLICIT NONE
 

@@ -28,6 +28,8 @@
 !===========================================================================
       SUBROUTINE Make_Grid_SG4(para_AllOp)
       USE mod_system
+!$    USE omp_lib, only : OMP_GET_THREAD_NUM
+      USE mod_nDindex
       USE mod_Op
       IMPLICIT NONE
 

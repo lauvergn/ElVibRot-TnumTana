@@ -21,11 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_Qtransfo
-      use mod_system, only: name_len, line_len, rkind, out_unitp, in_unitp, &
-                            flush_perso, string_uppercase_to_lowercase,     &
-                            alloc_array, print_level, error_memo_allo, zero,&
-                            make_nameq, dealloc_array, write_error_not_null,&
-                            sub_test_tab_ub, sub_test_tab_lb, write_error_null, write_mat
+      use mod_system
       USE mod_dnSVM
       use mod_constant, only: table_atom
 
@@ -816,7 +812,7 @@
       SUBROUTINE alloc_array_OF_Qtransfodim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_Qtransfo), pointer, intent(out) :: tab(:)
+      TYPE (Type_Qtransfo), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -1465,7 +1461,7 @@
       SUBROUTINE sub_Type_Name_OF_Qin(Qtransfo,name_coord)
         IMPLICIT NONE
         TYPE(type_qtransfo), intent(inout) :: Qtransfo
-        character (len=*), intent(in) :: name_coord
+        character (len=*),   intent(in)    :: name_coord
 
         integer :: i
         integer :: it

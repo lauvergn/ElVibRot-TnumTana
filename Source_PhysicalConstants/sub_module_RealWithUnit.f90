@@ -61,8 +61,8 @@
 
       CONTAINS
       SUBROUTINE RWU2_TO_R1(R1,RWU2)
-      TYPE(REAL_WU), intent(in)      :: RWU2
-      real (kind=Rkind), intent(out) :: R1
+      TYPE(REAL_WU),     intent(in)      :: RWU2
+      real (kind=Rkind), intent(inout)   :: R1
 
       R1 = RWU2%val
 

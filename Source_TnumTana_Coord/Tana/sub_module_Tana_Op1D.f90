@@ -22,12 +22,7 @@
 !===========================================================================
 
  MODULE mod_Tana_Op1D
- use mod_system, only: write_error_null, out_unitp, sub_test_tab_ub, &
-                       sub_test_tab_lb, error_memo_allo, czero,      &
-                       dealloc_nparray, alloc_nparray, rkind, zero,  &
-                       flush_perso, cone, eye, fracinteger, one,     &
-                       name_len, string_to_string,                   &
-                       operator (==), operator (>=), operator (+), operator (-)
+ use mod_system
  use mod_Tana_OpEl ! all
  IMPLICIT NONE
  PRIVATE
@@ -172,7 +167,7 @@
       SUBROUTINE alloc_NParray_OF_Op1Ddim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      type(op1D), allocatable, intent(out) :: tab(:)
+      type(op1D), allocatable, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -239,7 +234,7 @@
  !! @param:    string   String. It just helps to localize the problem.
  subroutine present_op_zero_in_F_1d(F_1d, i_opzero, string)
    type(op1d),          intent(in)       :: F_1d
-   integer,             intent(out)      :: i_opzero
+   integer,             intent(inout)    :: i_opzero
    character (len = *), intent(in)       :: string
 
    integer                    :: i
@@ -1713,7 +1708,6 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    TYPE(FracInteger)             :: alfa,r_sin
 
    integer           :: idf_sin,idf_cos
-   !integer           :: alfa,k_sin2,idf_sin,idf_cos
    real (kind=Rkind) :: binomial
 
 

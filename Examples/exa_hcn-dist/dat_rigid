@@ -49,7 +49,7 @@ sym  cos(a)      R     r    x    pi   dh
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
  &inactives /
 
- &actives Read_Grid=f test=f comput_S=t /
+ &actives Read_Grid=f test=f comput_S=t direct=2 /
  &analyse max_ana=40 print=f  /
 **
 

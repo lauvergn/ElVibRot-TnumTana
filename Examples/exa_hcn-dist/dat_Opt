@@ -55,7 +55,7 @@ dh 0.0
  &actives test=$test comput_S=f direct=2 /
  &analyse max_ana=40 max_ene=50000.d0 /
 
- &Optimization freq=t Optimization_method='BFGS' Optimization_param='geometry' /
+ &Optimization grad=t freq=f FinalEnergy=t Optimization_method='BFGS' Optimization_param='geometry' /
    &BFGS max_iteration=100 /
 
 **

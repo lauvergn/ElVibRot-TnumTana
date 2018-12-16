@@ -1,6 +1,7 @@
       PROGRAM Tnum_f90
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant
       USE mod_Coord_KEO
       USE mod_PrimOp
       IMPLICIT NONE

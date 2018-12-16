@@ -82,7 +82,7 @@ nom_tar=E.$a.$b.$c
 echo $nom_tar.tar
 tar cvf $nom_tar.tar $nom_sd
 gzip $nom_tar.tar
- scp $nom_tar.tar.gz styx2:/u/lauvergn/trav/ElVibRot-Tnum
+#scp $nom_tar.tar.gz styx2:/u/lauvergn/trav/ElVibRot-Tnum
  scp $nom_tar.tar.gz styx2:/userTMP/lauvergn/EVR
 
 if test $web = "y"

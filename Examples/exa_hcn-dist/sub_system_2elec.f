@@ -277,7 +277,6 @@ c---------------------------------------------------------------------
 c     initialization (only once)
 c$OMP CRITICAL (d0d1d2_h_CRIT)
       IF (begin) THEN
-c$      write(out_unitp,*) "F def thread",omp_get_thread_num()
 
         IF (nb_inactb < mole%nb_inact2n ) THEN
           write(out_unitp,*) 'ERROR : nb_inactb is TO small',nb_inactb
@@ -350,7 +349,7 @@ c---------------------------------------------------------------------
         END DO
         END DO
         write(out_unitp,*) 'd0h at c_act:',c_act
-        CALL Write_RMat(d0h,6,4)
+        CALL Write_Mat(d0h,6,4)
         write(out_unitp,*) 'END d0d1d2_h'
       END IF
 c---------------------------------------------------------------------
@@ -423,7 +422,6 @@ c      initialization (only once)
 c$OMP    CRITICAL (dnQflex_CRIT)
        IF (begin) THEN
          write(out_unitp,*) ' INITIALIZATION of ',name_sub
-c$       write(out_unitp,*) "F thread",omp_get_thread_num()
          begin=.FALSE.
          nn(:) = 0
          F(:,:) = ZERO
@@ -550,7 +548,6 @@ c---------------------------------------------------------------------
 c      initialization the first time
 c$OMP  CRITICAL (d0d1d2d3_Qeq_CRIT)
        IF (begin) THEN
-c$       write(out_unitp,*) "F def thread",omp_get_thread_num()
          begin=.FALSE.
 
 c        -------------------------------------------------------------

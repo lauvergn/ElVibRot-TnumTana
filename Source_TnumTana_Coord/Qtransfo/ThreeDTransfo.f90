@@ -21,7 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_ThreeDTransfo
-      use mod_system, only: name_len, error_memo_allo, in_unitp, out_unitp, one
+      use mod_system
       USE mod_dnSVM
       IMPLICIT NONE
 

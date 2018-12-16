@@ -640,11 +640,10 @@
       SUBROUTINE alloc_array_OF_Opdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (param_Op), pointer, intent(out) :: tab(:)
-      integer, intent(in) :: tab_ub(:)
-      integer, intent(in), optional :: tab_lb(:)
-
-      character (len=*), intent(in) :: name_var,name_sub
+      TYPE (param_Op), pointer, intent(inout) :: tab(:)
+      integer,                  intent(in)    :: tab_ub(:)
+      integer, optional,        intent(in)    :: tab_lb(:)
+      character (len=*),        intent(in)    :: name_var,name_sub
 
       integer, parameter :: ndim=1
       logical :: memory_test

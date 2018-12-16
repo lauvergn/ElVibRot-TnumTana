@@ -21,9 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_ZmatTransfo
-      use mod_system, only: rkind, zero, name_len, out_unitp, dealloc_array, &
-                            alloc_array, print_level, in_unitp, make_nameq,  &
-                            one, onetenth, dihedral_range
+      use mod_system
       USE mod_dnSVM
       use mod_constant,     only: table_atom, get_mass_tnum
       use mod_Lib_QTransfo ! only all

@@ -94,6 +94,7 @@ MODULE mod_nDGridFit
       SUBROUTINE sub_nDGrid_nDfit()
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant
       USE mod_Coord_KEO
       USE mod_PrimOp
       IMPLICIT NONE
@@ -288,6 +289,7 @@ MODULE mod_nDGridFit
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
+      USE mod_Constant,  only : get_Conv_au_TO_unit
       USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0
       USE mod_PrimOp
       IMPLICIT NONE
@@ -544,6 +546,7 @@ MODULE mod_nDGridFit
       END SUBROUTINE sub_nDGrid
       SUBROUTINE sub_nDGrid_WiTHOUT_calc(para_nDGrid,Qact,mole,para_PES)
       USE mod_system
+      USE mod_Constant,  only : get_Conv_au_TO_unit
       USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0
       USE mod_PrimOp
       IMPLICIT NONE
@@ -623,6 +626,7 @@ MODULE mod_nDGridFit
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
+      USE mod_Constant
       USE mod_Coord_KEO
       USE mod_PrimOp
       IMPLICIT NONE
@@ -796,6 +800,7 @@ MODULE mod_nDGridFit
 
       SUBROUTINE sub_ChecknDFit2(para_nDFit,para_nDGrid)
       USE mod_system
+      USE mod_Constant
       USE mod_PrimOp
       IMPLICIT NONE
 
@@ -851,7 +856,8 @@ MODULE mod_nDGridFit
             IF (para_nDFit%ind_val == 1) THEN
               write(out_unitp,*) 'iG,val,val_fit,diff (cm-1)',iGP,        &
                                       val(para_nDFit%ind_val),val_fit,    &
-                            abs(val(para_nDFit%ind_val)-val_fit)*219475.d0
+                                    abs(val(para_nDFit%ind_val)-val_fit)* &
+                                      get_Conv_au_TO_unit('E','cm-1')
             ELSE
               write(out_unitp,*) 'iG,val,val_fit,diff',iGP,               &
                                       val(para_nDFit%ind_val),val_fit,    &
@@ -870,8 +876,12 @@ MODULE mod_nDGridFit
         RMS_err = sqrt(RMS_err/para_nDGrid%nb_G)
 
         IF (para_nDFit%ind_val == 1) THEN
-          write(out_unitp,*) 'Max_error (cm-1): ',max_err*219475.d0
-          write(out_unitp,*) 'RMS_error (cm-1): ',RMS_err*219475.d0
+          write(out_unitp,*) 'Max_error (cm-1): ',max_err*              &
+                                         get_Conv_au_TO_unit('E','cm-1')
+
+          write(out_unitp,*) 'RMS_error (cm-1): ',RMS_err*              &
+                                         get_Conv_au_TO_unit('E','cm-1')
+
         ELSE
           write(out_unitp,*) 'Max_error: ',max_err
           write(out_unitp,*) 'RMS_error: ',RMS_err

@@ -21,11 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_OneDTransfo
-      use mod_system, only: name_len, rkind, alloc_array, dealloc_array, &
-                            write_error_not_null, sub_test_tab_ub,       &
-                            sub_test_tab_lb, error_memo_allo,            &
-                            write_error_null, zero, one, in_unitp,       &
-                            out_unitp, onetenth, ten
+      use mod_system
       USE mod_dnSVM
       IMPLICIT NONE
 
@@ -104,7 +100,7 @@
       SUBROUTINE alloc_array_OF_OneDTransfodim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_oneDTransfo), pointer, intent(out) :: tab(:)
+      TYPE (Type_oneDTransfo), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 

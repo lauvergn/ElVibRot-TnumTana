@@ -23,8 +23,7 @@
 
    !Description:
 MODULE mod_Tana_vec_operations
-   use mod_system, only: czero, compare_tab, out_unitp, alloc_array,    &
-                         cone, dealloc_array
+   use mod_system
    USE mod_Tana_OpEl     ! all
    USE mod_Tana_OpnD     ! all
    USE mod_Tana_sum_opnd ! all

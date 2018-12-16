@@ -22,12 +22,7 @@
 !===========================================================================
 
  module mod_Tana_OpEl
- use mod_system, only: name_len, rkind, czero,          &
-                       sub_test_tab_ub, sub_test_tab_lb,             &
-                       error_memo_allo, write_error_null,            &
-                       out_unitp, string_to_string,                  &
-                       zero, eye, int_to_char, real_to_char,         &
-                       cone, one, dealloc_nparray, alloc_nparray
+ use mod_system
  use mod_FracInteger
  IMPLICIT NONE
  PRIVATE
@@ -118,7 +113,7 @@
       SUBROUTINE alloc_NParray_OF_OpEldim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      type(opel), allocatable, intent(out) :: tab(:)
+      type(opel), allocatable, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 

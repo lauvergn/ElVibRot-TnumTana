@@ -188,7 +188,7 @@ MODULE mod_dnV
       SUBROUTINE alloc_array_OF_dnVecdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_dnVec), pointer, intent(out) :: tab(:)
+      TYPE (Type_dnVec), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -249,7 +249,7 @@ MODULE mod_dnV
       SUBROUTINE alloc_array_OF_dnVecdim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_dnVec), pointer, intent(out) :: tab(:,:)
+      TYPE (Type_dnVec), pointer, intent(inout) :: tab(:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 

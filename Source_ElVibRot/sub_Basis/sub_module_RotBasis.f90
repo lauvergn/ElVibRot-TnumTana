@@ -317,20 +317,20 @@
 
       IF (debug) THEN
         write(out_unitp,*) 'PWangDag (in line)'
-        CALL Write_CMat(PWangDag,out_unitp,5)
+        CALL Write_Mat(PWangDag,out_unitp,5)
 
         write(out_unitp,*) 'PWang (in column)'
-        CALL Write_CMat(PWang,out_unitp,5)
+        CALL Write_Mat(PWang,out_unitp,5)
       END IF
 
       !CALL alloc_NParray(test_inv,(/ RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot /),         &
       !                  'test_inv',name_sub)
       !test_inv = matmul(PWang,PWangDag)
       !write(out_unitp,*) 'PWang . PWangDag'
-      !CALL Write_CMat(test_inv,out_unitp,5)
+      !CALL Write_Mat(test_inv,out_unitp,5)
       !test_inv = matmul(PWangDag,PWang)
       !write(out_unitp,*) 'PWangDag . PWang'
-      !CALL Write_CMat(test_inv,out_unitp,5)
+      !CALL Write_Mat(test_inv,out_unitp,5)
       !CALL dealloc_NParray(test_inv,'test_inv',name_sub)
 
 
@@ -514,20 +514,20 @@
 
       IF (debug) THEN
         write(out_unitp,*) 'PWangDag (in line)'
-        CALL Write_CMat(PWangDag,out_unitp,5)
+        CALL Write_Mat(PWangDag,out_unitp,5)
 
         write(out_unitp,*) 'PWang (in column)'
-        CALL Write_CMat(PWang,out_unitp,5)
+        CALL Write_Mat(PWang,out_unitp,5)
       END IF
 
       !CALL alloc_NParray(test_inv,(/ RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot /),         &
       !                  'test_inv',name_sub)
       !test_inv = matmul(PWang,PWangDag)
       !write(out_unitp,*) 'PWang . PWangDag'
-      !CALL Write_CMat(test_inv,out_unitp,5)
+      !CALL Write_Mat(test_inv,out_unitp,5)
       !test_inv = matmul(PWangDag,PWang)
       !write(out_unitp,*) 'PWangDag . PWang'
-      !CALL Write_CMat(test_inv,out_unitp,5)
+      !CALL Write_Mat(test_inv,out_unitp,5)
       !CALL dealloc_NParray(test_inv,'test_inv',name_sub)
 
 

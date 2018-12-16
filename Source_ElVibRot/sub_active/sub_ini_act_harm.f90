@@ -290,14 +290,14 @@
           CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,  &
                para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)
 
-!        !$OMP  CRITICAL (sub_qa_bhe_CRIT)
-!        IF (minval(para_AllOp%tab_Op(1)%OpGrid(1)%Grid(iq,:,:)) < pot_min) THEN
-!          Pot_min = minval(para_AllOp%tab_Op(1)%OpGrid(1)%Grid(iq,:,:))
-!          CALL Rec_Qact(Qact_min,                                       &
-!                        para_AllOp%tab_Op(1)%para_AllBasis%BasisnD,iq,  &
-!                        para_AllOp%tab_Op(1)%mole)
-!        END IF
-!        !$OMP END CRITICAL (sub_qa_bhe_CRIT)
+        !$OMP  CRITICAL (sub_qa_bhe_CRIT)
+        IF (minval(para_AllOp%tab_Op(1)%OpGrid(1)%Grid(iq,:,:)) < pot_min) THEN
+          Pot_min = minval(para_AllOp%tab_Op(1)%OpGrid(1)%Grid(iq,:,:))
+          CALL Rec_Qact(Qact_min,                                       &
+                        para_AllOp%tab_Op(1)%para_AllBasis%BasisnD,iq,  &
+                        para_AllOp%tab_Op(1)%mole)
+        END IF
+        !$OMP END CRITICAL (sub_qa_bhe_CRIT)
 
         END DO
 !$OMP   END DO
@@ -311,6 +311,10 @@
       CALL flush_perso(out_unitp)
       !- END multidimentional loop ---------------------------------------
       !-------------------------------------------------------------------
+
+      write(out_unitp,*) 'Pot_min',Pot_min
+      write(out_unitp,*) 'Qact_min at Pot_min',Qact_min(1:nb_act1)
+      CALL dealloc_NParray(Qact_min,'Qact_min',name_sub)
 
  999  CONTINUE
 
@@ -397,6 +401,9 @@
 
       SUBROUTINE Set_paraPRH(mole,para_Tnum,BasisnD)
       USE mod_system
+      USE mod_nDindex
+      USE mod_dnSVM
+      USE mod_Constant
       USE mod_PrimOp
       USE mod_basis
       IMPLICIT NONE

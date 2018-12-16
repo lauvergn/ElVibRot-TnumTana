@@ -187,6 +187,7 @@
 
       SUBROUTINE calc_1Dweight_inact2n_elec(psi,ana_psi,max_1D,T,info,print_w)
       USE mod_system
+      USE mod_nDindex
       USE mod_psi_set_alloc
       IMPLICIT NONE
 
@@ -439,6 +440,7 @@
 
       SUBROUTINE calc_1Dweight_act1(psi,ana_psi,max_1D,T,info,print_w)
       USE mod_system
+      USE mod_nDindex
       USE mod_psi_set_alloc
       USE mod_ana_psi
       IMPLICIT NONE

@@ -22,10 +22,7 @@
 !===========================================================================
 
  module mod_Tana_VecSumOpnD
- use mod_system, only: write_error_not_null, sub_test_tab_ub,              &
-                       sub_test_tab_lb, error_memo_allo, write_error_null, &
-                       dealloc_nparray, alloc_nparray, czero, out_unitp,   &
-                       flush_perso
+ use mod_system
  USE mod_Tana_sum_opnd
  IMPLICIT NONE
 
@@ -89,7 +86,7 @@
       SUBROUTINE alloc_array_OF_Vec_Sum_OpnDdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      type(vec_sum_opnd), pointer, intent(out) :: tab(:)
+      type(vec_sum_opnd), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -155,7 +152,7 @@
       SUBROUTINE alloc_NParray_OF_Vec_Sum_OpnDdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      type(vec_sum_opnd), allocatable, intent(out) :: tab(:)
+      type(vec_sum_opnd), allocatable, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 

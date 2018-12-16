@@ -520,7 +520,7 @@ SUBROUTINE dfpmin_new(Qact,MatdnE,mole,para_PES,para_Tnum,para_BFGS,    &
 
  real(kind=Rkind), intent(in) :: xt(mole%nb_act)
 
- real(kind=Rkind),intent(out) :: df(mole%nb_act), f
+ real(kind=Rkind),intent(inout) :: df(mole%nb_act), f
 !
 ! write(6,*) 'dfunc subroutine',mole%nb_act,nderiv_dnE
 ! write(6,*) 'xt = ', xt

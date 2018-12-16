@@ -77,7 +77,7 @@
         MODULE PROCEDURE dealloc_array_OF_dnCplxMatdim1
       END INTERFACE
 
-      PUBLIC :: Type_dnMat, alloc_dnMat, dealloc_dnMat, check_alloc_dnMat, Write_dnMat
+      PUBLIC :: Type_dnMat,     alloc_dnMat,     dealloc_dnMat,     check_alloc_dnMat,     Write_dnMat
       PUBLIC :: Type_dnCplxMat, alloc_dnCplxMat, dealloc_dnCplxMat, check_alloc_dnCplxMat, Write_dnCplxMat
 
       PUBLIC :: assignment (=), alloc_array, dealloc_array
@@ -164,6 +164,7 @@
         nml = dnMat%nb_var_Matl
         nmc = dnMat%nb_var_Matc
 
+
         IF (associated(dnMat%d0)) THEN
           CALL dealloc_array(dnMat%d0,'dnMat%d0','dealloc_dnMat')
         END IF
@@ -192,7 +193,7 @@
       SUBROUTINE alloc_array_OF_dnMatdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_dnMat), pointer, intent(out) :: tab(:)
+      TYPE (Type_dnMat), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -344,7 +345,7 @@
       SUBROUTINE alloc_array_OF_dnCplxMatdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_dnCplxMat), pointer, intent(out) :: tab(:)
+      TYPE (Type_dnCplxMat), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 

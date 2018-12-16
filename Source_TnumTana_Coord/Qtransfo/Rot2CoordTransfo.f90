@@ -21,7 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_Rot2CoordTransfo
-      use mod_system, only: error_memo_allo, in_unitp, out_unitp, one
+      use mod_system
       USE mod_dnSVM
       IMPLICIT NONE
 

@@ -109,6 +109,10 @@ PUBLIC :: frac_simplification
    write(6,*) 'frac2: ',frac_TO_string(frac2)
    write(6,*) 'frac1+frac2: ',frac_TO_string(frac1+frac2)
 
+   frac1 = 6
+   write(6,*) 'frac1: ',frac_TO_string(frac1)
+
+
  END SUBROUTINE test_FracInteger
 
   SUBROUTINE Int_TO_frac(frac,i)

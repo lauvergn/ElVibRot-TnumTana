@@ -27,6 +27,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_basis
+      USE mod_nDindex
       USE mod_Coord_KEO
 
       USE mod_RotBasis_Param
@@ -178,6 +179,7 @@ MODULE mod_basis
 ! ++    Construct a primitive basis set
 !================================================================
       SUBROUTINE construct_primitive_basis(basis_primi)
+      use mod_nDindex
       IMPLICIT NONE
 
 !----- for the active basis set ---------------------------------------
@@ -476,7 +478,6 @@ MODULE mod_basis
         END IF
       END IF
 
-
       CALL Basis_Grid_ParamTOBasis_Grid_Param_init(basis_primi%Basis_Grid_Para)
       basis_primi%nb_init = basis_primi%nb
 
@@ -492,14 +493,15 @@ MODULE mod_basis
 !     - scaling of the basis ---------------------------------
       CALL sub_scale_basis(basis_primi)
 
-      IF (basis_primi%xPOGridRep_done) RETURN
 
+
+      IF (basis_primi%xPOGridRep_done) RETURN
+      CALL flush_perso(out_unitp)
 !     - d1b => d1BasisRep and  d2b => d2BasisRep ------------
       CALL sub_dnGB_TO_dnBB(basis_primi)
-
+      CALL flush_perso(out_unitp)
 !     - d1b => dnBGG%d1 and  d2b => dnBGG%d2 ------------
       CALL sub_dnGB_TO_dnGG(basis_primi)
-
       !- d0b => transpose(d0b) ... traspose(d0bwrho) ---
       CALL sub_dnGB_TO_dnBG(basis_primi)
 
@@ -654,6 +656,8 @@ MODULE mod_basis
       !!                      otherwise, the coeficients are read from a file
       SUBROUTINE sub_contraction_basis(basis_set,without_read)
       USE mod_system
+      USE mod_dnSVM
+      use mod_nDindex
       IMPLICIT NONE
 !---------------------------------------------------------------------
 !---------- variables passees en argument ----------------------------
@@ -1019,7 +1023,8 @@ MODULE mod_basis
       !!@param: without_read  if this parameter is .TRUE., the contraction coeficients are already in basis_set,
       !!                      otherwise, the coeficients are read from a file
       SUBROUTINE sort_basis(basis_set)
-
+      use mod_nDindex
+      IMPLICIT NONE
       TYPE (basis), intent(inout) :: basis_set
 
 
@@ -1380,6 +1385,8 @@ MODULE mod_basis
       END SUBROUTINE sub_scale_basis
 
       SUBROUTINE sub_dnGB_TO_dnBB(basis_set)
+      use mod_dnSVM
+      IMPLICIT NONE
 
       TYPE (basis)  :: basis_set
 !---------------------------------------------------------------------
@@ -1495,6 +1502,8 @@ MODULE mod_basis
       END SUBROUTINE sub_dnGB_TO_dnBB
 
       SUBROUTINE sub_dnGB_TO_dnBG(basis_set)
+      use mod_dnSVM
+      IMPLICIT NONE
 
       TYPE (basis), intent(inout) :: basis_set
 !---------------------------------------------------------------------
@@ -1506,13 +1515,14 @@ MODULE mod_basis
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       logical, parameter :: debug=.FALSE.
-!      logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub='sub_dnGB_TO_dnBG'
 !-----------------------------------------------------------
       nq = get_nq_FROM_basis(basis_set)
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'nb,nq',basis_set%nb,nq
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1535,13 +1545,14 @@ MODULE mod_basis
       ELSE
 
         CALL dealloc_dnMat(basis_set%dnRBG)
+
         CALL alloc_dnMat(basis_set%dnRBG,basis_set%nb,nq,nb_var_deriv=basis_set%ndim,nderiv=0)
 
         basis_set%dnRBG%d0 = transpose(basis_set%dnRGB%d0)
 
         CALL dealloc_dnMat(basis_set%dnRBGwrho)
-        CALL alloc_dnMat(basis_set%dnRBGwrho,basis_set%nb,nq,nb_var_deriv=basis_set%ndim,nderiv=0)
 
+        CALL alloc_dnMat(basis_set%dnRBGwrho,basis_set%nb,nq,nb_var_deriv=basis_set%ndim,nderiv=0)
 
         DO ib=1,get_nb_FROM_basis(basis_set)
           basis_set%dnRBGwrho%d0(ib,:) = basis_set%dnRGB%d0(:,ib) * basis_set%wrho
@@ -1595,6 +1606,8 @@ MODULE mod_basis
 !-----------------------------------------------------------
       END SUBROUTINE Set_dnGGRep
       SUBROUTINE sub_dnGB_TO_dnGG(basis_set)
+      USE mod_dnSVM
+      IMPLICIT NONE
 
       TYPE (basis)  :: basis_set
 !---------------------------------------------------------------------
@@ -2495,10 +2508,10 @@ END SUBROUTINE pack_basis
       implicit none
 
 !----- variables for the Basis and quadrature points -----------------
-      TYPE (Basis)         :: BasisnD
-      integer, intent(in)  :: ndim_index(:)
-      integer, intent(out) :: InD
-      integer, intent(in), optional :: ibGuess
+      TYPE (Basis)           :: BasisnD
+      integer,           intent(in)    :: ndim_index(:)
+      integer,           intent(inout) :: InD
+      integer, optional, intent(in)    :: ibGuess
 
 !------ working variables ---------------------------------
       integer              :: ib,ibGuess_loc
@@ -3146,6 +3159,7 @@ END SUBROUTINE pack_basis
       END SUBROUTINE Rec_x
   SUBROUTINE Rec_x_SG4(x,tab_ba,tab_l,nDind_DPG,iq,err_sub)
   USE mod_system
+  USE mod_nDindex
   IMPLICIT NONE
 
   real (kind=Rkind),               intent(inout)          :: x(:)
@@ -3267,6 +3281,7 @@ END SUBROUTINE pack_basis
 
   SUBROUTINE Rec_Qact_SG4(Qact,tab_ba,tab_l,nDind_DPG,iq,mole,err_sub)
   USE mod_system
+  USE mod_nDindex
   USE mod_Coord_KEO
   IMPLICIT NONE
 

@@ -28,6 +28,7 @@
 !===========================================================================
 MODULE mod_basis_BtoG_GtoB_SGType4
 USE mod_system
+!$ USE omp_lib, only : OMP_GET_THREAD_NUM
 USE mod_nDindex
 USE mod_basis_set_alloc
 USE mod_param_SGType2

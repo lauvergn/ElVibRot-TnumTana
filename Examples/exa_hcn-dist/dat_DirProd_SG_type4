@@ -13,7 +13,7 @@ cd $here
  x1=0.538516066
  x2=0.461483933
 
-#export OMP_NUM_THREADS=2
+#export OMP_NUM_THREADS=20
 
 nice $DIR_vib/vib << ** >res
  &system POpPsi_omp=1 /

@@ -1130,7 +1130,7 @@
       IMPLICIT NONE
 
        TYPE (para_GWP), intent(inout)     :: GWP
-       real (kind=Rkind), intent(out)     :: energyClas
+       real (kind=Rkind), intent(inout)   :: energyClas
        real (kind=Rkind), intent(in)      :: G(GWP%ndim,GWP%ndim)
        real (kind=Rkind), intent(in)      :: ene0
 

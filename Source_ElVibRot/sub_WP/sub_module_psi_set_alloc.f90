@@ -417,7 +417,7 @@
       SUBROUTINE alloc_array_OF_Psidim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (param_psi), pointer, intent(out) :: tab(:)
+      TYPE (param_psi), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -478,7 +478,7 @@
       SUBROUTINE alloc_NParray_OF_Psidim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (param_psi), allocatable, intent(out)          :: tab(:)
+      TYPE (param_psi), allocatable, intent(inout)        :: tab(:)
       integer,                       intent(in)           :: tab_ub(:)
       integer,                       intent(in), optional :: tab_lb(:)
 

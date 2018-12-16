@@ -21,12 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_CartesianTransfo
-      use mod_system, only: rkind, zero, dealloc_array, alloc_array, six, &
-                            name_len, out_unitp, in_unitp, flush_perso,   &
-                            three, string_uppercase_to_lowercase,         &
-                            read_name_advno, write_vecmat, half,          &
-                            name_longlen, rmatio_format, one, ten,        &
-                            write_mat, onetenth, two, pi, eight, five
+      use mod_system
       use mod_dnSVM
       use mod_Lib_QTransfo, only: write_dnx, calc_cross_product
       IMPLICIT NONE

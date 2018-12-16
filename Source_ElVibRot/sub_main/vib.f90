@@ -28,6 +28,7 @@
 !===========================================================================
       SUBROUTINE vib(max_mem,test_mem,intensity_only)
       USE mod_system
+      USE mod_Constant
       USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
@@ -960,6 +961,7 @@
       END SUBROUTINE vib
       SUBROUTINE sub_GridTOBasis_test(max_mem)
       USE mod_system
+      USE mod_Constant
       USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis

@@ -21,11 +21,7 @@
 !===========================================================================
 !===========================================================================
 module mod_Tana_Sum_OpnD
-   USE mod_system, only: rkind, sub_test_tab_ub, sub_test_tab_lb,       &
-                         error_memo_allo, write_error_not_null,         &
-                         write_error_null, alloc_nparray, cone,         &
-                         dealloc_nparray, out_unitp, zero, flush_perso, &
-                         alloc_array, dealloc_array, czero
+   USE mod_system
    USE mod_Tana_OpEl
    USE mod_Tana_Op1D
    USE mod_Tana_OpnD
@@ -131,7 +127,7 @@ module mod_Tana_Sum_OpnD
       SUBROUTINE alloc_NParray_OF_Sum_OpnDdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      type(sum_opnd), allocatable, intent(out) :: tab(:)
+      type(sum_opnd), allocatable, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -192,7 +188,7 @@ module mod_Tana_Sum_OpnD
       SUBROUTINE alloc_array_OF_Sum_OpnDdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      type(sum_opnd), pointer, intent(out) :: tab(:)
+      type(sum_opnd), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -257,7 +253,7 @@ module mod_Tana_Sum_OpnD
       SUBROUTINE alloc_array_OF_Sum_OpnDdim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      type(sum_opnd), pointer, intent(out) :: tab(:,:)
+      type(sum_opnd), pointer, intent(inout) :: tab(:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -326,7 +322,7 @@ module mod_Tana_Sum_OpnD
       SUBROUTINE alloc_NParray_OF_Sum_OpnDdim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      type(sum_opnd), allocatable, intent(out) :: tab(:,:)
+      type(sum_opnd), allocatable, intent(inout) :: tab(:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 

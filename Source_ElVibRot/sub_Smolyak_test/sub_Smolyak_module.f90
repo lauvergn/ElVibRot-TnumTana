@@ -609,6 +609,9 @@ DO iG=1,size(BgG)
   !$OMP   PRIVATE(ibbqq,ibb,lbb,iqq,li,iq,ib,nb,nq,gwc,b) &
   !$OMP   NUM_THREADS(BasisTOGrid_maxth)
 
+  allocate(gwc(maxval(tabnq)))
+  allocate(b(maxval(tab_ba(:,:)%nb)))
+
   !$OMP   DO SCHEDULE(dynamic)
   DO ibbqq=1,nbb*nqq
     ibb = (ibbqq-1)/nqq + 1
@@ -647,12 +650,12 @@ DO iG=1,size(BgG)
 
   END DO
   !$OMP   END DO
+  deallocate(gwc)
+  deallocate(b)
   !$OMP   END PARALLEL
 
 END DO
 
-deallocate(gwc)
-deallocate(b)
 
 CALL dealloc_TabRDP(BgG)
 

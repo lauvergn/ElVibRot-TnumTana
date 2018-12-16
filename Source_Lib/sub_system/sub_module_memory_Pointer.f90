@@ -21,7 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_memory_pointer
-      USE mod_NumParameters, only : Rkind, ILkind
+      USE mod_NumParameters, only : Rkind, ILkind, out_unitp
       use mod_memory, only: write_error_not_null, sub_test_tab_ub, sub_test_tab_lb, &
                             error_memo_allo, write_error_null
       IMPLICIT NONE
@@ -71,7 +71,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Ldim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      logical, pointer, intent(out) :: tab(:)
+      logical, pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -130,7 +130,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Ldim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      logical, pointer, intent(out) :: tab(:,:)
+      logical, pointer, intent(inout) :: tab(:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -196,7 +196,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Idim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      integer, pointer, intent(out) :: tab(:)
+      integer, pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -259,7 +259,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Idim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      integer, pointer, intent(out) :: tab(:,:)
+      integer, pointer, intent(inout) :: tab(:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -325,7 +325,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Idim3(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      integer, pointer, intent(out) :: tab(:,:,:)
+      integer, pointer, intent(inout) :: tab(:,:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -393,7 +393,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Idim4(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      integer, pointer, intent(out) :: tab(:,:,:,:)
+      integer, pointer, intent(inout) :: tab(:,:,:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -462,7 +462,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Idim5(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      integer, pointer, intent(out) :: tab(:,:,:,:,:)
+      integer, pointer, intent(inout) :: tab(:,:,:,:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -537,7 +537,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Rdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      real (kind=Rkind), pointer, intent(out) :: tab(:)
+      real (kind=Rkind), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -600,7 +600,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Rdim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      real (kind=Rkind), pointer, intent(out) :: tab(:,:)
+      real (kind=Rkind), pointer, intent(inout) :: tab(:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -649,8 +649,11 @@ MODULE mod_memory_pointer
       character (len=*), parameter :: name_sub_alloc = 'dealloc_array_OF_Rdim2'
       integer :: err_mem,memory
       logical,parameter :: debug=.FALSE.
-!      logical,parameter :: debug=.TRUE.
+      !logical,parameter :: debug=.TRUE.
 !----- for debuging --------------------------------------------------
+
+       IF (debug) write(out_unitp,*) 'BEGINNING ',name_sub_alloc
+       IF (debug) flush(out_unitp)
 
        !IF (.NOT. associated(tab)) RETURN
 
@@ -658,16 +661,22 @@ MODULE mod_memory_pointer
              CALL Write_error_null(name_sub_alloc,name_var,name_sub)
 
        memory = size(tab)
+
        deallocate(tab,stat=err_mem)
+
        CALL error_memo_allo(err_mem,-memory,name_var,name_sub,'real8')
        nullify(tab)
+
+       IF (debug) write(out_unitp,*) 'END ',name_sub_alloc
+       IF (debug) flush(out_unitp)
+
 
       END SUBROUTINE dealloc_array_OF_Rdim2
 
       SUBROUTINE alloc_array_OF_Rdim3(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      real (kind=Rkind), pointer, intent(out) :: tab(:,:,:)
+      real (kind=Rkind), pointer, intent(inout) :: tab(:,:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -736,7 +745,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Rdim4(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      real (kind=Rkind), pointer, intent(out) :: tab(:,:,:,:)
+      real (kind=Rkind), pointer, intent(inout) :: tab(:,:,:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -805,7 +814,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Rdim5(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      real (kind=Rkind), pointer, intent(out) :: tab(:,:,:,:,:)
+      real (kind=Rkind), pointer, intent(inout) :: tab(:,:,:,:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -879,7 +888,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Cdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      complex (kind=Rkind), pointer, intent(out) :: tab(:)
+      complex (kind=Rkind), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -941,7 +950,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Cdim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      complex (kind=Rkind), pointer, intent(out) :: tab(:,:)
+      complex (kind=Rkind), pointer, intent(inout) :: tab(:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -1007,7 +1016,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Cdim3(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      complex (kind=Rkind), pointer, intent(out) :: tab(:,:,:)
+      complex (kind=Rkind), pointer, intent(inout) :: tab(:,:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -1075,7 +1084,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Cdim4(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      complex (kind=Rkind), pointer, intent(out) :: tab(:,:,:,:)
+      complex (kind=Rkind), pointer, intent(inout) :: tab(:,:,:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -1144,7 +1153,7 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Cdim5(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      complex (kind=Rkind), pointer, intent(out) :: tab(:,:,:,:,:)
+      complex (kind=Rkind), pointer, intent(inout) :: tab(:,:,:,:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 

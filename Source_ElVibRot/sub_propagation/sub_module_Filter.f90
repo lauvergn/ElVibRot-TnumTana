@@ -29,6 +29,7 @@
 
 MODULE mod_Filter
 USE mod_system
+USE mod_Constant
 IMPLICIT NONE
 TYPE param_filter
 

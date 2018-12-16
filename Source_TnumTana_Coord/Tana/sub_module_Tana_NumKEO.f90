@@ -22,7 +22,7 @@
 !===========================================================================
 
  module mod_Tana_NumKEO
- use mod_system,   only: rkind, out_unitp, zero, half, chalf, write_mat, eye, write_vec
+ use mod_system
  USE mod_Tnum,     only : zmatrix
  USE mod_dnRho ! all
 

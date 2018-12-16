@@ -42,6 +42,7 @@
                               Basis2n,                                  &
                               wherm,Vinact,ScalOp)
       USE mod_system
+      USE mod_nDindex
       use mod_PrimOp, only: param_pes, param_d0matop
       USE mod_basis
       IMPLICIT NONE

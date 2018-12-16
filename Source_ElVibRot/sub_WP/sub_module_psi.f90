@@ -29,12 +29,15 @@
 
       MODULE mod_psi
       USE mod_system
+      USE mod_nDindex
+      USE mod_Constant
       IMPLICIT NONE
 
       CONTAINS
 
       SUBROUTINE write1D2D_psi(psi,ana_psi)
       USE mod_system
+      USE mod_dnSVM
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       IMPLICIT NONE
@@ -506,6 +509,7 @@
 !================================================================
       SUBROUTINE sub_Qmoy(Psi,moy_Qba,ana_psi)
       USE mod_system
+      USE mod_dnSVM
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       IMPLICIT NONE

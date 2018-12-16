@@ -108,9 +108,9 @@ MODULE mod_string
   !!@description: TODO
   !!@param: TODO
   SUBROUTINE make_nameQ(nameQ,baseQ,iQ,it)
-    character(len=Name_len), intent(inout) :: nameQ
-    character(len=*), intent(in)  :: baseQ
-    integer, intent(in), optional :: it,iq
+    character(len=Name_len), intent(inout)        :: nameQ
+    character(len=*),        intent(in)           :: baseQ
+    integer,                 intent(in), optional :: it,iq
 
     character(len=Name_len) :: baseW
     integer :: ic
@@ -262,8 +262,8 @@ MODULE mod_string
 
   SUBROUTINE read_name_advNo(nio,Read_name,err_io)
     character(len=*), intent(inout) :: Read_name
-    integer, intent(inout) :: err_io
-    integer, intent(in) :: nio
+    integer,          intent(inout) :: err_io
+    integer,          intent(in)    :: nio
 
     character(len=1) :: chara
     logical          :: first
@@ -299,7 +299,7 @@ MODULE mod_string
   SUBROUTINE string_uppercase_TO_lowercase(name_string,lower)
 
    character (len=*), intent(inout)  :: name_string
-   logical, optional  :: lower
+   logical, optional, intent(in)     :: lower
 
    logical  :: lower_loc
    integer  :: i,ascii_char
@@ -333,12 +333,11 @@ MODULE mod_string
   SUBROUTINE alloc_array_OF_ChLendim1(tab,tab_ub,ChLen,name_var,name_sub,tab_lb)
   IMPLICIT NONE
 
-  integer, intent(in) :: ChLen
-  character (len=ChLen), pointer, intent(out) :: tab(:)
-  integer, intent(in) :: tab_ub(:)
-  integer, intent(in), optional :: tab_lb(:)
-
-  character (len=*), intent(in) :: name_var,name_sub
+  integer,                        intent(in)    :: ChLen
+  character (len=ChLen), pointer, intent(inout) :: tab(:)
+  integer,                        intent(in)    :: tab_ub(:)
+  integer, optional,              intent(in)    :: tab_lb(:)
+  character (len=*),              intent(in)    :: name_var,name_sub
 
   integer, parameter :: ndim=1
 
@@ -370,8 +369,8 @@ MODULE mod_string
   SUBROUTINE dealloc_array_OF_ChLendim1(tab,name_var,name_sub)
   IMPLICIT NONE
 
-  character (len=*), pointer, intent(out) :: tab(:)
-  character (len=*), intent(in) :: name_var,name_sub
+  character (len=*), pointer, intent(inout) :: tab(:)
+  character (len=*),          intent(in)    :: name_var,name_sub
 
   !----- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub_alloc = 'dealloc_array_OF_ChLendim1'

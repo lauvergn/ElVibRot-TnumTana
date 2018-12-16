@@ -625,8 +625,8 @@
       END SUBROUTINE sub_quadra_HermiteNested2
 
      SUBROUTINE sub_quadra_hermite_cuba(base)
-
       USE mod_system
+      USE mod_nDindex
       USE mod_basis
       IMPLICIT NONE
 
@@ -868,8 +868,8 @@
 
       END SUBROUTINE sub_quadra_hermite_cuba
       SUBROUTINE sub_quadra_hermite_cuba_DML(base,err_grid)
-
       USE mod_system
+      USE mod_nDindex
       USE mod_basis
       IMPLICIT NONE
 

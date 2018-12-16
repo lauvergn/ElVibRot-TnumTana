@@ -468,7 +468,7 @@ integer               :: tabl(D)
 integer               :: tabnq(D)
 
 
-integer :: max_nq,Lmax
+integer :: max_nq,max_nb,Lmax
 real(kind=Rkind), allocatable  :: gwc(:)
 real(kind=Rkind), allocatable  :: b(:)
 integer, allocatable  :: tab_ibbnew_AT_ibb(:)
@@ -518,9 +518,7 @@ DO iq=1,ubound(tab_ba,dim=2)
   nq = get_nq_FROM_basis(tab_ba(Lmax,iq))
   IF (nq > max_nq) max_nq = nq
 END DO
-
-CALL alloc_NParray(gwc,(/max_nq/),'gwc','BgG_TO_BbG')
-CALL alloc_NParray(b,(/ maxval(tab_ba(:,:)%nb) /),'b','BgG_TO_BbG')
+max_nb = maxval(tab_ba(:,:)%nb)
 
 !write(out_unitp,*) 'nb threads (BasisTOGrid_maxth):',BasisTOGrid_maxth
 
@@ -557,11 +555,12 @@ DO iG=1,size(BgG)
   !$OMP   PARALLEL &
   !$OMP   DEFAULT(NONE) &
   !$OMP   SHARED(tab_ibbnew_AT_ibb,nbb,nqq,LB,tabl,tabnq,nq) &
-  !$OMP   SHARED(BgG,BgG_new,iG,iGm1) &
+  !$OMP   SHARED(BgG,BgG_new,iG,iGm1,max_nq,max_nb) &
   !$OMP   SHARED(id,nb_mult_GTOB,tab_ba,ind_Basis,ind_Grid,WSG) &
   !$OMP   PRIVATE(ibb,ibbNew,lbb,li,nb,iqq,iqqi,iqqf,b,gwc,iq) &
   !$OMP   NUM_THREADS(BasisTOGrid_maxth)
-
+   CALL alloc_NParray(gwc,(/max_nq/),'gwc','BgG_TO_BbG')
+   CALL alloc_NParray(b,  (/max_nb/),'b',  'BgG_TO_BbG')
   !$OMP   DO SCHEDULE(DYNAMIC)
   DO iqq=1,nqq
     iqqi = (iqq-1)*nq
@@ -609,6 +608,8 @@ DO iG=1,size(BgG)
 
   END DO
   !$OMP   END DO
+   CALL dealloc_NParray(gwc,'gwc','BgG_TO_BbG')
+   CALL dealloc_NParray(b,  'b',  'BgG_TO_BbG')
   !$OMP   END PARALLEL
 
   CALL dealloc_TabRDP_at_iG(BgG,iG)
@@ -617,9 +618,6 @@ DO iG=1,size(BgG)
 
 END DO
 
-
-CALL dealloc_NParray(gwc,'gwc','BgG_TO_BbG')
-CALL dealloc_NParray(b,'b','BgG_TO_BbG')
 
 CALL TabRDP2_TO_TabRDP1(BgG,BgG_new)
 CALL dealloc_TabRDP(BgG_new)
@@ -650,7 +648,7 @@ TYPE(basis)   :: tab_ba(0:LG,D)
 TYPE(TypeRDP), allocatable    :: BgG_new(:)
 
 integer               :: i_WP,iq,iqq,nq,nqq,ibb,nbb,iqqi,iqqf,ib,nb,li,liq,i,lbb,lqq,ibbNew
-integer               :: iG,iGm1,iG1,iG2
+integer               :: iG,iGm1,iG1,iG2,max_nb
 
 integer, allocatable  :: tab_ibbnew_AT_ibb(:)
 
@@ -687,7 +685,6 @@ IF (iGm1 /= size(BgG)) THEN
 END IF
 
 
-CALL alloc_NParray(b,(/ maxval(tab_ba(:,:)%nb) /),'b','BbG_TO_BgG')
 
 !write(out_unitp,*) 'nb threads (BasisTOGrid_maxth):',BasisTOGrid_maxth
 
@@ -718,16 +715,16 @@ DO iG=iG1+1,iG2
 
   liq = ind_Grid(id-1)%tab_ind(1,iG)
   nq  = get_nq_FROM_basis(tab_ba(liq,id))
-
+  max_nb = maxval(tab_ba(:,:)%nb)
 
   !$OMP   PARALLEL &
   !$OMP   DEFAULT(NONE) &
-  !$OMP   SHARED(tab_ibbnew_AT_ibb,nbb,nqq,nq,liq,LB) &
+  !$OMP   SHARED(tab_ibbnew_AT_ibb,nbb,nqq,nq,liq,LB,max_nb) &
   !$OMP   SHARED(BgG,BgG_new,iG,iGm1) &
   !$OMP   SHARED(id,nb_mult_BTOG,tab_ba,ind_Basis,ind_Grid) &
   !$OMP   PRIVATE(ibb,ibbNew,lbb,li,nb,iqq,iqqi,iqqf,b) &
   !$OMP   NUM_THREADS(BasisTOGrid_maxth)
-
+  CALL alloc_NParray(b,(/ max_nb /),'b','BbG_TO_BgG')
   !$OMP   DO SCHEDULE(DYNAMIC)
   DO iqq=1,nqq
     iqqi = (iqq-1)*nq
@@ -765,6 +762,7 @@ DO iG=iG1+1,iG2
 
   END DO
   !$OMP   END DO
+   CALL dealloc_NParray(b,  'b',  'BgG_TO_BbG')
   !$OMP   END PARALLEL
 
   deallocate(tab_ibbnew_AT_ibb)
@@ -774,8 +772,6 @@ END DO
 CALL dealloc_TabRDP_at_iG(BgG,iGm1)
 END DO
 
-
-CALL dealloc_NParray(b,'b','BbG_TO_BgG')
 
 CALL TabRDP2_TO_TabRDP1(BgG,BgG_new)
 CALL dealloc_TabRDP(BgG_new)
@@ -1118,8 +1114,12 @@ integer          :: tab_der_loc(2),dnba_ind(2)
 integer          :: iq1_d,dnba_ind1(2),iq2_d,dnba_ind2(2)
 
 integer            :: iG,i,nqq,li,iq1,nq1,iq,iq2,nq2,iq3,nq3,l2,iqd
-integer            :: tabiq(D),tabnq(D),tabl(D)
-TYPE(TypeRDP), allocatable    :: WPG(:)
+integer            :: tabiq(D),tabl(D)
+
+TYPE(TypeRDP),    allocatable :: WPG(:)
+
+
+integer,          allocatable :: tabnq(:)
 real(kind=Rkind), allocatable :: RGgG(:,:,:),Rg(:)
 real(kind=Rkind), allocatable :: BGG(:,:)
 
@@ -1180,9 +1180,10 @@ CALL Transfer_WP_TO_BgG(RvecG,WPG)
 !$OMP   PARALLEL &
 !$OMP   DEFAULT(NONE) &
 !$OMP   SHARED(WPG,D,ind_Grid,tab_ba,iq1_d,iq2_d,dnba_ind1,dnba_ind2,nb_mult_OpPsi) &
-!$OMP   PRIVATE(iG,i,li,tabnq,nqq,nq1,nq2,nq3,iq1,iq2,iq3,iqd,dnba_ind,RGgG,Rg,BGG,l2) &
+!$OMP   PRIVATE(iG,i,li,nqq,nq1,nq2,nq3,iq1,iq2,iq3,iqd,l2) &
+!$OMP   PRIVATE(tabnq,dnba_ind,RGgG,BGG) &
 !$OMP   NUM_THREADS(BasisTOGrid_maxth)
-
+allocate(tabnq(D))
 !$OMP   DO SCHEDULE(DYNAMIC)
 DO iG=1,size(WPG)
   DO i=1,D
@@ -1223,12 +1224,6 @@ DO iG=1,size(WPG)
 !write(6,*) 'BGG,dnba_ind',dnba_ind
 !CALL Write_Mat(BGG,6,5)
 
-!  DO iq3=1,nq3
-!  DO iq1=1,nq1
-!    RGgG(iq1,:,iq3) = matmul(BGG,RGgG(iq1,:,iq3))
-!  END DO
-!  END DO
-
   BGG = transpose(BGG)
   DO iq3=1,nq3
   DO iq1=1,nq1
@@ -1236,17 +1231,6 @@ DO iG=1,size(WPG)
   END DO
   END DO
 
-!  BGG = transpose(BGG)
-!  allocate(Rg(nq2))
-!  DO iq3=1,nq3
-!  DO iq1=1,nq1
-!    DO iq2=1,nq2
-!      Rg(iq2) = dot_product(BGG(:,iq2),RGgG(iq1,:,iq3))
-!    END DO
-!    RGgG(iq1,:,iq3) = Rg(:)
-!  END DO
-!  END DO
-!  deallocate(Rg)
 
   CALL dealloc_NParray(BGG,"BGG",name_sub)
 
@@ -1281,32 +1265,12 @@ DO iG=1,size(WPG)
   CALL alloc_NParray(BGG,(/ nq2,nq2 /),"BGG",name_sub)
   CALL Get_MatdnRGG(tab_ba(l2,iqd),BGG,dnba_ind)
 
-
-!  DO iq3=1,nq3
-!  DO iq1=1,nq1
-!    RGgG(iq1,:,iq3) = matmul(BGG,RGgG(iq1,:,iq3))
-!  END DO
-!  END DO
-
   BGG = transpose(BGG)
   DO iq3=1,nq3
   DO iq1=1,nq1
     RGgG(iq1,:,iq3) = matmul(RGgG(iq1,:,iq3),BGG)
   END DO
   END DO
-
-
-!  BGG = transpose(BGG)
-!  allocate(Rg(nq2))
-!  DO iq3=1,nq3
-!  DO iq1=1,nq1
-!    DO iq2=1,nq2
-!      Rg(iq2) = dot_product(BGG(:,iq2),RGgG(iq1,:,iq3))
-!    END DO
-!    RGgG(iq1,:,iq3) = Rg(:)
-!  END DO
-!  END DO
-!  deallocate(Rg)
 
   CALL dealloc_NParray(BGG,"BGG",name_sub)
 
@@ -1316,6 +1280,7 @@ DO iG=1,size(WPG)
 
 END DO
 !$OMP   END DO
+deallocate(tabnq)
 !$OMP   END PARALLEL
 
 CALL Transfer_BgG_TO_WP(WPG,RvecG)

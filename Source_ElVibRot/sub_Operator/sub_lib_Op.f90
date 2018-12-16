@@ -35,6 +35,7 @@
       SUBROUTINE calc_td0b_OpRVd0bW(iq,k,td0b,d0MatOpd0bWrho,WnD,kmem,  &
                                     d0MatOp,para_Op,BasisnD)
       USE mod_system
+      USE mod_PrimOp, only: Write_d0MatOp
       USE mod_basis
       USE mod_Op
       IMPLICIT NONE

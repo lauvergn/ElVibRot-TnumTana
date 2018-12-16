@@ -21,12 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_LinearNMTransfo
-      use mod_system, only: rkind, param_file, dealloc_array, alloc_array, &
-                            zero, write_error_not_null, error_memo_allo,   &
-                            write_error_null, in_unitp, out_unitp,         &
-                            print_level, read_mat, onetenth, write_mat,    &
-                            flush_perso, one, name_len, dealloc_nparray,   &
-                            alloc_nparray, write_vecmat
+      use mod_system
       USE mod_dnSVM
       IMPLICIT NONE
 
@@ -165,7 +160,7 @@
     SUBROUTINE alloc_array_OF_NMTransfodim0(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      TYPE (Type_NMTransfo), pointer, intent(out) :: tab
+      TYPE (Type_NMTransfo), pointer, intent(inout) :: tab
 
       character (len=*), intent(in) :: name_var,name_sub
 

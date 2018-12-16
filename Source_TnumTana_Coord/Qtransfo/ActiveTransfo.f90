@@ -21,10 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_ActiveTransfo
-      use mod_system, only: rkind, alloc_array, zero, dealloc_array, &
-                            write_error_not_null, error_memo_allo,   &
-                            write_error_null, in_unitp, out_unitp,   &
-                            flush_perso, name_len, read_name_advno, one
+      use mod_system
       use mod_dnSVM, only: alloc_array, dealloc_array, type_dnvec,   &
                            type_dns, write_dnsvm, alloc_dnsvm,       &
                            set_zero_to_dnsvm, sub_dns_to_dnvec,      &
@@ -170,7 +167,7 @@ MODULE mod_ActiveTransfo
     SUBROUTINE alloc_array_OF_ActiveTransfodim0(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      TYPE (Type_ActiveTransfo), pointer, intent(out) :: tab
+      TYPE (Type_ActiveTransfo), pointer, intent(inout) :: tab
 
       character (len=*), intent(in) :: name_var,name_sub
 

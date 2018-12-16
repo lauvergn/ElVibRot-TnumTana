@@ -22,8 +22,7 @@
 !===========================================================================
 
       MODULE mod_RectilinearNM_Transfo
-      use mod_system, only: rkind, name_len, out_unitp, dealloc_array,  &
-                            alloc_array, zero, in_unitp, write_mat
+      use mod_system
       USE mod_dnSVM
       use mod_constant,     only: table_atom, get_mass_tnum
       IMPLICIT NONE

@@ -21,14 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_BunchPolyTransfo
-      use mod_system, only: rkind, name_len, alloc_array, dealloc_array,     &
-                            out_unitp, zero, one, flush_perso, czero,        &
-                            write_error_not_null, sub_test_tab_ub,           &
-                            sub_test_tab_lb, error_memo_allo,                &
-                            write_error_null, in_unitp, print_level,         &
-                            string_to_string, string_uppercase_to_lowercase, &
-                            int_to_char, cone, pi, dihedral_range,           &
-                            alloc_nparray, make_nameq, write_mat, dealloc_nparray
+      use mod_system
       use mod_dnSVM ! only all
       use mod_constant,     only: table_atom, get_mass_tnum
       use mod_Lib_QTransfo, only: write_dnx, sub3_dnvec_toxf, func_ic
@@ -759,7 +752,7 @@
       SUBROUTINE alloc_array_OF_BFTransfodim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_BFTransfo), pointer, intent(out) :: tab(:)
+      TYPE (Type_BFTransfo), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 

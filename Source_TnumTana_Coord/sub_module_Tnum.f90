@@ -37,7 +37,7 @@ MODULE mod_Tnum
                                       rphtransfo1torphtransfo2,         &
                                       set_rphtransfo, dealloc_rphtransfo
       use CurviRPH_mod,         only: curvirph_type, dealloc_curvirph,  &
-                                      curvirph1_to_curvirph2
+                                      curvirph1_to_curvirph2, get_CurviRPH
       USE mod_ActiveTransfo
       USE mod_CartesianTransfo
       USE mod_Tana_Sum_OpnD
@@ -207,7 +207,7 @@ MODULE mod_Tnum
       PUBLIC :: Set_masses_Z_TO_mole, Write_mole, Read_mole, dealloc_zmat, mole1TOmole2
       PUBLIC :: check_charge, type_var_analysis
       PUBLIC :: Write_f2f1vep, Write_TcorTrot
-      PUBLIC :: Sub_paraRPH_TO_mole, Sub_mole_TO_paraRPH, Sub_mole_TO_paraRPH_new
+      PUBLIC :: Sub_paraRPH_TO_mole, Sub_mole_TO_paraRPH, Sub_mole_TO_paraRPH_new, get_CurviRPH
       PUBLIC :: moleRPH_TO_moleFlex
       PUBLIC :: Set_mole_para_FOR_optimization
 

@@ -1443,7 +1443,7 @@
       SUBROUTINE alloc_array_OF_nDindexdim0(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      TYPE (Type_nDindex), pointer, intent(out) :: tab
+      TYPE (Type_nDindex), pointer, intent(inout) :: tab
 
       character (len=*), intent(in) :: name_var,name_sub
 
@@ -1494,7 +1494,7 @@
       SUBROUTINE alloc_array_OF_nDindexdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_nDindex), pointer, intent(out) :: tab(:)
+      TYPE (Type_nDindex), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -1561,7 +1561,7 @@
       SUBROUTINE alloc_NParray_OF_nDindexdim0(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      TYPE (Type_nDindex), allocatable, intent(out) :: tab
+      TYPE (Type_nDindex), allocatable, intent(inout) :: tab
 
       character (len=*), intent(in) :: name_var,name_sub
 
@@ -1611,7 +1611,7 @@
       SUBROUTINE alloc_NParray_OF_nDindexdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_nDindex), allocatable, intent(out) :: tab(:)
+      TYPE (Type_nDindex), allocatable, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -2373,10 +2373,10 @@
 
   END DO
 
-      IF (debug) THEN
-        write(out_unitp,*) '  nDval (out), In_the_list',nDval,In_the_list
-        write(out_unitp,*) 'END ',name_sub
-      END IF
+  IF (debug) THEN
+    write(out_unitp,*) '  nDval (out), In_the_list',nDval,In_the_list
+    write(out_unitp,*) 'END ',name_sub
+  END IF
 
   END SUBROUTINE ADD_ONE_TO_nDindex_type5m
   SUBROUTINE calc_LL1L2_OF_nDindex_type5(L,L1,L2,nDval,nDindex)

@@ -23,10 +23,7 @@
 
    !Description:
    MODULE mod_Tana_write_mctdh
-   use mod_system, only: rkind, string_to_string, int_to_char, chalf, eye, &
-                         name_longlen, zero, two, write_real_in_char,      &
-                         fracinteger, half, name_len, real_to_char,        &
-                         frac_to_real, rmatio_format, operator(==)
+   use mod_system
    USE mod_Tnum,   only : zmatrix
    USE mod_Tana_OpnD
    USE mod_Tana_sum_opnd
@@ -1171,7 +1168,7 @@
    FUNCTION get_Coef_name(Cn_new,MCTDH,With_format,err) RESULT (Coef_name)
      complex(kind=Rkind), intent(in)            :: Cn_new
      logical, optional,   intent(in)            :: MCTDH,With_format
-     integer, optional,   intent(out)           :: err
+     integer, optional,   intent(inout)         :: err
 
      character (len = :), allocatable           :: Coef_name
 

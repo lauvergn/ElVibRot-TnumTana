@@ -22,10 +22,7 @@
 !===========================================================================
 
 MODULE mod_Tana_keo
-   use mod_system, only: rkind, name_len, out_unitp, flush_perso,       &
-                         alloc_array, zero, czero, file_open2,          &
-                         dealloc_array, name_longlen, write_int_in_char,&
-                         onetenth
+   use mod_system
    use mod_Tnum,   only: zmatrix, tnum, write_mole
    use mod_ActiveTransfo,  only : qact_to_qdyn_from_activetransfo
    USE mod_paramQ

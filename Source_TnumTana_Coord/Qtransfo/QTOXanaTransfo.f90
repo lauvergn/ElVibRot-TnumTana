@@ -21,8 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_QTOXanaTransfo
-      use mod_system,    only: rkind, name_len, out_unitp, alloc_array, zero, &
-                               dealloc_array, print_level, in_unitp
+      use mod_system
       USE mod_dnSVM
       use mod_constant,  only: table_atom, get_mass_tnum
       IMPLICIT NONE

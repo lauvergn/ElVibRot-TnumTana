@@ -28,8 +28,9 @@
 !===========================================================================
       RECURSIVE SUBROUTINE RecSparseGrid_ForDP_type1(basis_SG,          &
                           para_Tnum,mole,para_PES,para_ReadOp,ComOp_loc)
-
       USE mod_system
+      USE mod_dnSVM
+      USE mod_nDindex
       USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
@@ -559,8 +560,9 @@
 
       RECURSIVE SUBROUTINE RecSparseGrid_ForDP_type2(basis_SG,          &
                           para_Tnum,mole,para_PES,para_ReadOp,ComOp_loc)
-
       USE mod_system
+      USE mod_dnSVM
+      USE mod_nDindex
       USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
@@ -922,6 +924,8 @@
       RECURSIVE SUBROUTINE RecSparseGrid_ForDP_type4(basis_SG,          &
                           para_Tnum,mole,para_PES,para_ReadOp,ComOp_loc)
       USE mod_system
+      USE mod_dnSVM
+      USE mod_nDindex
       USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
@@ -1185,14 +1189,14 @@
 
         !basis_SG%para_SGType2%nDind_SmolyakRep%packed = .FALSE.
         basis_SG%para_SGType2%nDind_SmolyakRep%packed = .TRUE.
-        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep, &
+        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep,   &
                             basis_SG%nb_basis,nDsize,type_OF_nDindex=-5,&
                             Lmin=Lmin,Lmax=Lmax,                        &
                             MaxCoupling=basis_SG%MaxCoupling_OF_nDindB, &
                             nDinit=(/ (0,i=1,basis_SG%nb_basis) /) )
       ELSE
         basis_SG%para_SGType2%nDind_SmolyakRep%packed = .TRUE.
-        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep, &
+        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep,   &
                            basis_SG%nb_basis,nDsize,type_OF_nDindex=-5, &
                            Lmin=0,Lmax=Lmax,nDNum_OF_Lmax=nDNum_OF_Lmax,&
                            L1max=L1max,L2max=L2max,                     &

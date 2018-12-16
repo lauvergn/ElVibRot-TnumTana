@@ -21,9 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_freq
-      use mod_system,   ONLY: rkind, onetenth, out_unitp, write_mat,      &
-                              flush_perso, zero, half, one,               &
-                              alloc_nparray, dealloc_nparray
+      use mod_system
       USE mod_Constant, ONLY: get_Conv_au_TO_unit
       IMPLICIT NONE
 

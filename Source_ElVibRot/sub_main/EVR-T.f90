@@ -55,7 +55,7 @@
 !===========================================================================
       PROGRAM ElVibRot
       USE mod_system
-      USE mod_file
+!$    USE omp_lib, only : omp_get_max_threads
       USE mod_nDGridFit
       IMPLICIT NONE
 

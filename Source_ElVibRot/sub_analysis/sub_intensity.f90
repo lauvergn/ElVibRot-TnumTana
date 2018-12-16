@@ -686,7 +686,7 @@
                           E0,Svif,Temp,Q,Jmax,const_phys,               &
                           width,emin,pas,spectre,n,nio_int)
       USE mod_system
-      USE mod_Coord_KEO, only: constant
+      USE mod_Constant, only: constant
       IMPLICIT NONE
 
 !----- physical and mathematical constants ---------------------------
@@ -771,7 +771,7 @@
       SUBROUTINE calc_Imax(Imax,Evi,Ai,Bi,Ci,Evf,Af,Bf,Cf,              &
                            Svif,Temp,Q,Jmax,const_phys)
       USE mod_system
-      USE mod_Coord_KEO, only: constant
+      USE mod_Constant, only: constant
       IMPLICIT NONE
 
 !----- physical and mathematical constants ---------------------------
@@ -853,7 +853,7 @@
 !     P : population sums over rotational levels
       SUBROUTINE calc_Q_VR(Q,P,E0,Ev,A,B,C,Temp,Jmax,const_phys)
       USE mod_system
-      USE mod_Coord_KEO, only: constant
+      USE mod_Constant, only: constant
       IMPLICIT NONE
 
 

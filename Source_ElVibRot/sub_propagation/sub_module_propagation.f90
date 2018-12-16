@@ -29,11 +29,10 @@
 
       MODULE mod_propa
       USE mod_system
-      USE mod_file
+      USE mod_Constant,      only: get_conv_au_to_unit, real_wu, convrwu_to_r
       USE mod_field,         ONLY : param_field
       USE mod_psi_set_alloc, ONLY : param_psi
       USE mod_param_WP0,     ONLY : param_WP0
-      USE mod_Constant,      only: get_conv_au_to_unit, real_wu, convrwu_to_r
       IMPLICIT NONE
 
 PRIVATE

@@ -42,14 +42,15 @@ SUBROUTINE ini_data(const_phys,                                         &
                           para_ana,para_intensity,intensity_only,       &
                           para_propa,WP0)
 
-      use mod_system,    only: rkind, out_unitp, flush_perso, alloc_nparray,&
-                               dealloc_nparray, one, zero, alloc_array,     &
-                               int_to_char
-      USE mod_Coord_KEO, only : constant, sub_constantes, zmatrix, Tnum, &
-                                get_Qact0, read_RefGeom
-      use mod_PrimOp, only: param_otf, param_pes, write_typeop, param_typeop,&
-                            finalyze_tnumtana_coord_primop, init_typeop,     &
-                            derive_termqact_to_derive_termqdyn
+      use mod_system,    only : rkind, out_unitp, flush_perso, alloc_nparray,&
+                                dealloc_nparray, one, zero, alloc_array,     &
+                                int_to_char
+      USE mod_dnSVM,     only : Type_dnMat
+      USE mod_Constant,  only : constant, sub_constantes, REAL_WU
+      USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0, read_RefGeom
+      use mod_PrimOp,    only : param_otf, param_pes, write_typeop, param_typeop,&
+                                finalyze_tnumtana_coord_primop, init_typeop,     &
+                                derive_termqact_to_derive_termqdyn
       USE mod_basis
       USE mod_Op
       USE mod_analysis

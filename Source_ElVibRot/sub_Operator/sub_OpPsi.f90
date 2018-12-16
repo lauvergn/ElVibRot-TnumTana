@@ -837,6 +837,8 @@ CONTAINS
 
       SUBROUTINE sub_OpPsi_WITH_MemGrid(Psi,OpPsi,para_Op,derOp)
       USE mod_system
+!$    USE omp_lib, only : OMP_GET_THREAD_NUM
+
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,alloc_array,dealloc_array
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiBasisRep_TO_GridRep
       USE mod_Op,              ONLY : param_Op,write_param_Op
@@ -1364,7 +1366,6 @@ CONTAINS
         nb_block   = Psi%nb_qa/block_size
         IF (mod(Psi%nb_qa,block_size) > 0) nb_block = nb_block + 1
 
-        CALL alloc_NParray(Qact,(/para_Op%mole%nb_var/),'Qact',name_sub)
         CALL alloc_NParray(GGiq,(/block_size,para_Op%mole%nb_act,para_Op%mole%nb_act/),&
                           'GGiq',name_sub)
       ELSE
@@ -1427,16 +1428,20 @@ STOP 'cplx'
         IF (para_Op%direct_KEO) THEN
 
           !write(6,*) 'coucou direct KEO',iq1,iq2
-          !$OMP parallel do default(none)              &
+          !$OMP parallel default(none)                 &
           !$OMP shared(para_Op,GGiq,iq1,iq2)           &
           !$OMP private(iq,Qact)                       &
           !$OMP num_threads(nb_thread)
+          CALL alloc_NParray(Qact,(/para_Op%mole%nb_var/),'Qact',name_sub)
+          !$OMP  do
           DO iq=iq1,iq2
             CALL get_Qact(Qact,para_Op%mole%ActiveTransfo) ! rigid, flexible coordinates
             CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
             CALL get_d0g_d0GG(Qact,para_Op%para_Tnum,para_Op%mole,d0GG=GGiq(iq-iq1+1,:,:),def=.TRUE.)
           END DO
-          !$OMP end parallel do
+          !$OMP end do
+          CALL dealloc_NParray(Qact,'Qact',name_sub)
+          !$OMP end parallel
 
         END IF
 
@@ -1536,7 +1541,6 @@ STOP 'cplx'
       CALL sub_sqRhoOVERJac_Psi(OpPsi,para_Op,inv=.TRUE.)
 
       IF (allocated(GGiq)) CALL dealloc_NParray(GGiq,'GGiq',name_sub)
-      IF (allocated(Qact)) CALL dealloc_NParray(Qact,'Qact',name_sub)
 !CALL UnCheck_mem()
 
 !-----------------------------------------------------------
@@ -1736,7 +1740,6 @@ STOP 'cplx'
  derRGj(:,:,:) = ZERO
 
 
- CALL alloc_NParray(Qact,(/para_Op%mole%nb_var/),'Qact',name_sub)
  CALL alloc_NParray(GGiq,(/block_size,para_Op%mole%nb_act,para_Op%mole%nb_act/),&
                    'GGiq',name_sub)
 
@@ -1746,18 +1749,21 @@ STOP 'cplx'
     IF (para_Op%direct_KEO) THEN
 
       !write(6,*) 'coucou direct KEO',iq1,iq2
-      !$OMP parallel do default(none)              &
-      !$OMP shared(para_Op,GGiq,iq1,iq2)           &
+      !$OMP parallel default(none)                 &
+      !$OMP shared(para_Op,GGiq,iq1,iq2)  &
       !$OMP private(iq,Qact)                       &
       !$OMP num_threads(nb_thread)
+      CALL alloc_NParray(Qact,(/para_Op%mole%nb_var/),'Qact',name_sub)
+      !$OMP  do
       DO iq=iq1,iq2
         CALL get_Qact(Qact,para_Op%mole%ActiveTransfo) ! rigid, flexible coordinates
         CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
         CALL get_d0g_d0GG(Qact,para_Op%para_Tnum,para_Op%mole,d0GG=GGiq(iq-iq1+1,:,:),def=.TRUE.)
         !write(6,*) 'iq,Gij',iq,GGiq(iq-iq1+1,:,:)
       END DO
-      !$OMP end parallel do
-
+      !$OMP end do
+      CALL dealloc_NParray(Qact,'Qact',name_sub)
+      !$OMP end parallel
     END IF
 
     DO itab=1,size(Psi)
@@ -1775,7 +1781,6 @@ STOP 'cplx'
  END DO
  CALL dealloc_NParray(derRGi,"derRGi",name_sub)
  CALL dealloc_NParray(GGiq,'GGiq',name_sub)
- CALL dealloc_NParray(Qact,'Qact',name_sub)
 
  DO itab=1,size(Psi)
    DO j=1,para_Op%nb_Qact

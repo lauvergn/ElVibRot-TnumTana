@@ -25,16 +25,10 @@
 !> \author David Lauvergnat
 !> \date 29/11/2018
  MODULE mod_Constant
- use mod_system, only: rkind, pi, name_len, write_error_not_null,        &
-                       error_memo_allo, write_error_null, evrt_path,     &
-                       out_unitp, one, in_unitp, two, print_level, four, &
-                       zero, hundred, onetenth, three, eight, five, ten, &
-                       string_uppercase_TO_lowercase
-!                       add_rwu_to_tab_conv_for_quantity, real_wu,        &
-!                       tab_conv_for_quantity, write_tabconvrwu,          &
-
+ use mod_system
  use mod_Atom, only: table_atom, dealloc_table_at, get_mass_Tnum,        &
-                     construct_table_at_NIST2012, construct_table_at_NIST2018, construct_table_at_HandBook70ed
+                     construct_table_at_NIST2012, construct_table_at_NIST2018,&
+                     construct_table_at_HandBook70ed
 
  USE mod_RealWithUnit
  IMPLICIT NONE
@@ -118,9 +112,8 @@
   SUBROUTINE alloc_array_OF_Constantdim0(tab,name_var,name_sub)
     IMPLICIT NONE
 
-    TYPE (constant), pointer, intent(out) :: tab
-
-    character (len=*), intent(in) :: name_var,name_sub
+    TYPE (constant),   pointer, intent(inout) :: tab
+    character (len=*),          intent(in)    :: name_var,name_sub
 
     integer, parameter :: ndim=0
     logical :: memory_test

@@ -676,7 +676,7 @@
 
 !------ working parameters --------------------------------
       integer            :: i,k,isym
-      real (kind=Rkind)  :: PsiRk(ndim)
+      real (kind=Rkind), allocatable  :: PsiRk(:)
       integer            :: symab_psi_old(ndim)
 
 
@@ -691,6 +691,7 @@
         write(out_unitp,*) ' nb_save,ndim',nb_save,ndim
         CALL Write_Mat(Vec,out_unitp,5)
         write(out_unitp,*)
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -703,13 +704,18 @@
             symab_psi_old(i) = psi(i)%symab
           END DO
 
-          !$OMP parallel do default(none) &
+          !$OMP parallel default(none) &
           !$OMP shared(ndim,psi,Vec) &
           !$OMP private(i,k,PsiRk)
+
+          CALL alloc_NParray(PsiRk,(/ndim/),'PsiRk',name_sub)
+
+          !$OMP do
           DO k=1,size(psi(1)%RvecB)
             DO i=1,ndim
               PsiRk(i) = psi(i)%RvecB(k)
             END DO
+
 
             PsiRk(:) = matmul(PsiRk,Vec)
 
@@ -717,7 +723,9 @@
               psi(i)%RvecB(k) = PsiRk(i)
             END DO
           END DO
-          !$OMP end parallel do
+          !$OMP end do
+          CALL dealloc_NParray(PsiRk,'PsiRk',name_sub)
+          !$OMP end parallel
 
           DO i=1,ndim
             isym = maxloc(abs(Vec(:,i)),dim=1)
@@ -725,9 +733,13 @@
           END DO
         ELSE
 
-          !$OMP parallel do default(none) &
+          !$OMP parallel default(none) &
           !$OMP shared(ndim,psi,Vec) &
           !$OMP private(i,k,PsiRk)
+
+          CALL alloc_NParray(PsiRk,(/ndim/),'PsiRk',name_sub)
+
+          !$OMP do
           DO k=1,size(psi(1)%RvecG)
             DO i=1,ndim
               PsiRk(i) = psi(i)%RvecG(k)
@@ -739,8 +751,9 @@
               psi(i)%RvecG(k) = PsiRk(i)
             END DO
           END DO
-          !$OMP end parallel do
-
+          !$OMP end do
+          CALL dealloc_NParray(PsiRk,'PsiRk',name_sub)
+          !$OMP end parallel
         END IF
 
 
@@ -749,9 +762,10 @@
       END IF
 
 !----------------------------------------------------------
-       IF (debug) THEN
-         write(out_unitp,*) 'END ',name_sub
-       END IF
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
 !----------------------------------------------------------
 
       END SUBROUTINE sub_LCpsi_TO_psi

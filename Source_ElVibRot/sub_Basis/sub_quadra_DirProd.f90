@@ -200,6 +200,7 @@
       RECURSIVE SUBROUTINE calc_nDindB_ForDP(basis_DP)
       USE mod_system
       USE mod_nDindex
+      USE mod_dnSVM
       USE mod_basis
       IMPLICIT NONE
 

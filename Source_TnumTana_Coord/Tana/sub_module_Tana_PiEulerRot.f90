@@ -58,7 +58,7 @@
       SUBROUTINE alloc_array_OF_PiEulerRotdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      type(Type_PiEulerRot), pointer, intent(out) :: tab(:)
+      type(Type_PiEulerRot), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -128,7 +128,7 @@
       SUBROUTINE alloc_NParray_OF_PiEulerRotdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      type(Type_PiEulerRot), allocatable, intent(out) :: tab(:)
+      type(Type_PiEulerRot), allocatable, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 

@@ -65,7 +65,7 @@ MODULE mod_dnS
       SUBROUTINE alloc_array_OF_dnSdim3(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_dnS), pointer, intent(out) :: tab(:,:,:)
+      TYPE (Type_dnS), pointer, intent(inout) :: tab(:,:,:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -1029,7 +1029,7 @@ MODULE mod_dnS
       TYPE (Type_dnS), intent(inout) :: dntf
       real(kind=Rkind), intent(in)   :: x
       real(kind=Rkind), intent(in)   :: cte(20)
-      integer, intent(out), optional :: dnErr
+      integer, intent(inout), optional :: dnErr
 
       real(kind=Rkind) ::  x2,x3,x4,a,b,d,R,xx,xx2
       real(kind=Rkind) ::  c,s,t,cot,csc2,c2,s2,u,sec

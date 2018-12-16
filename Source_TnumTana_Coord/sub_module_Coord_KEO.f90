@@ -22,14 +22,14 @@
 !===========================================================================
 
 MODULE mod_Coord_KEO
-  USE mod_system
+  !USE mod_system
 
-  USE mod_dnSVM
-  USE mod_nDindex
+  !USE mod_dnSVM
+  !USE mod_nDindex
 
-  USE mod_Constant
+  !USE mod_Constant
 
-  USE mod_Lib_QTransfo, only : write_dnx,Write_dnx
+  USE mod_Lib_QTransfo, only : Write_dnx
   USE mod_freq
   USE mod_ActiveTransfo
   USE mod_RPHTransfo

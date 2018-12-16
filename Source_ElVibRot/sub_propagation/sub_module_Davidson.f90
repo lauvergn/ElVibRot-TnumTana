@@ -28,6 +28,7 @@
 !===========================================================================
 
 MODULE mod_Davidson
+USE mod_Constant
 IMPLICIT NONE
 
 PRIVATE

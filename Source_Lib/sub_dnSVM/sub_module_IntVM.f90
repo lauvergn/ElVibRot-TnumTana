@@ -170,7 +170,7 @@ MODULE mod_IntVM
       SUBROUTINE alloc_array_OF_IntVecdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_IntVec), pointer, intent(out) :: tab(:)
+      TYPE (Type_IntVec), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -235,7 +235,7 @@ MODULE mod_IntVM
       SUBROUTINE alloc_array_OF_IntMatdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_IntMat), pointer, intent(out) :: tab(:)
+      TYPE (Type_IntMat), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 

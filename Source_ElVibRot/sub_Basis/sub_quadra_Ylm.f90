@@ -35,6 +35,7 @@
 !=============================================================
       SUBROUTINE sub_quadra_Ylm(base,isyml,isymm)
       USE mod_system
+      USE mod_nDindex
       USE mod_basis
       IMPLICIT NONE
 

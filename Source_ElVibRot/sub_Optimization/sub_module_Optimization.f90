@@ -40,7 +40,9 @@
         character (len=Name_len) :: Optimization_method = 'SimulatedAnnealing'
         character (len=Name_len) :: Optimization_param  = 'coordbasis'
         logical                  :: FinalEnergy         = .TRUE.
+        logical                  :: Grad                = .FALSE.
         logical                  :: Freq                = .FALSE.
+        logical                  :: ReadRange           = .FALSE.
 
         TYPE (param_SimulatedAnnealing) :: para_SimulatedAnnealing
         TYPE (param_BFGS)               :: para_BFGS
@@ -57,27 +59,28 @@
         character (len=Name_len) :: Optimization_param  = 'coordbasis'
         logical                  :: FinalEnergy         = .TRUE.
         logical                  :: Freq                = .FALSE.
+        logical                  :: Grad                = .FALSE.
+        logical                  :: ReadRange           = .FALSE.
 
         integer :: err_io
-        NAMELIST /Optimization/ Optimization_method,Optimization_param,FinalEnergy,freq
+        NAMELIST /Optimization/ Optimization_method,Optimization_param, &
+                                FinalEnergy,Freq,Grad,ReadRange
 
         Optimization_method = 'SimulatedAnnealing'
         Optimization_param  = 'coordbasis'
         FinalEnergy         = .TRUE. ! redo the optimal energy
         Freq                = .FALSE. ! Calculation of the frequencies (geometry optimization)
+        Grad                = .FALSE. ! Calculation of the gradiant
+        ReadRange           = .FALSE.
 
-
-        read(in_unitp,Optimization)
-!        read(in_unitp,Optimization,IOSTAT=err_io)
-!        IF (err_io /= 0) THEN
-!          write(out_unitp,*) ' WARNING in Read_param_Optimization'
-!          write(out_unitp,*) '  while reading the "Optimization" namelist'
-!          write(out_unitp,*) ' end of file or end of record'
-!          write(out_unitp,*) ' The default are used!'
-!          !write(out_unitp,*) ' Check your data !!'
-!          !STOP
-!          RETURN
-!        END IF
+        read(in_unitp,Optimization,IOSTAT=err_io)
+        IF (err_io /= 0) THEN
+          write(out_unitp,*) ' WARNING in Read_param_Optimization'
+          write(out_unitp,*) '  while reading the "Optimization" namelist'
+          write(out_unitp,*) ' end of file or end of record'
+          write(out_unitp,*) ' Check your data !!'
+          STOP
+        END IF
 
         IF (print_level > 1) write(out_unitp,Optimization)
 
@@ -87,17 +90,20 @@
         para_Optimization%Optimization_param     = Optimization_param
 
         para_FOR_optimization%Optimization_param = Optimization_param
-        IF (Optimization_param == 'geometry') FinalEnergy = .FALSE.
+        !IF (Optimization_param == 'geometry') FinalEnergy = .FALSE.
         IF (Optimization_param /= 'geometry') Freq = .FALSE.
 
         para_Optimization%FinalEnergy            = FinalEnergy
         para_Optimization%Freq                   = Freq
-
+        para_Optimization%Grad                   = Grad
+        para_Optimization%ReadRange              = ReadRange
 
         SELECT CASE (para_Optimization%Optimization_method)
         CASE ('simulatedannealing','sa')
           CALL Read_param_SimulatedAnnealing(                           &
                               para_Optimization%para_SimulatedAnnealing)
+          CALL Read_param_BFGS(para_Optimization%para_BFGS)
+
         CASE ('bfgs')
           CALL Read_param_BFGS(para_Optimization%para_BFGS)
 
@@ -119,8 +125,12 @@
                                     para_Optimization%Optimization_method
       write(out_unitp,*) 'Optimization_param         ',                 &
                                     para_Optimization%Optimization_param
+      write(out_unitp,*) 'ReadRange                  ',                 &
+                                    para_Optimization%ReadRange
       write(out_unitp,*) 'FinalEnergy                ',                 &
                                     para_Optimization%FinalEnergy
+      write(out_unitp,*) 'Grad, Freq                 ',                 &
+                           para_Optimization%Grad,para_Optimization%Freq
 
       SELECT CASE (para_Optimization%Optimization_method)
       CASE ('simulatedannealing','sa')

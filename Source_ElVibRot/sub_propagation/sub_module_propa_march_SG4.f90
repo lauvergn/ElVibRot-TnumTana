@@ -41,6 +41,7 @@
 
  SUBROUTINE march_noD_SG4_BasisRep(T,no,psi,psi0,para_H,para_propa)
  USE mod_system
+!$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
  USE mod_Coord_KEO,                ONLY : zmatrix
  USE mod_basis_set_alloc,          ONLY : basis
@@ -294,6 +295,7 @@ STOP 'march_noD_SG4_BasisRep'
  END SUBROUTINE march_noD_SG4_BasisRep
  SUBROUTINE march_noD_SG4_BasisRep_v0(T,no,psi,psi0,para_H,para_propa)
  USE mod_system
+!$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
  USE mod_Coord_KEO,                ONLY : zmatrix
  USE mod_basis_set_alloc,          ONLY : basis

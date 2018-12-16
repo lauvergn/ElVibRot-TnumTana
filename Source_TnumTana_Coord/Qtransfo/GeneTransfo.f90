@@ -21,7 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_GeneTransfo
-      use mod_system, only: alloc_array, in_unitp, out_unitp, dealloc_array, flush_perso, zero
+      use mod_system
       USE mod_dnSVM
       IMPLICIT NONE
 

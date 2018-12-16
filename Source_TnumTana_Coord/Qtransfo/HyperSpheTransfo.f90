@@ -22,7 +22,7 @@
 !===========================================================================
 
       MODULE mod_HyperSpheTransfo
-      use mod_system, only: in_unitp, out_unitp, alloc_array, dihedral_range, pi, rkind
+      use mod_system
       USE mod_dnSVM
       IMPLICIT NONE
 

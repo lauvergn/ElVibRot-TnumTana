@@ -22,7 +22,6 @@
 !===========================================================================
       MODULE mod_memory
       USE mod_NumParameters, only : Rkind, ILkind, out_unitp
-    !  !$ USE omp_lib
       IMPLICIT NONE
 
       PRIVATE

@@ -327,7 +327,7 @@ c---------------------------------------------------------------------
          END DO
          END DO
          write(out_unitp,*) 'd0h at c_act:',c_act
-         CALL Write_RMat(d0h,6,4)
+         CALL Write_Mat(d0h,6,4)
          write(out_unitp,*) 'END d0d1d2_h'
        END IF
 c---------------------------------------------------------------------

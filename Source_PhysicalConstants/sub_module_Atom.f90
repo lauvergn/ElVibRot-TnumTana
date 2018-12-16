@@ -33,10 +33,7 @@
 !!   with the "construct_table_at" subroutine.
 !!  This subroutine uses an internal file "internal_data/IsotopicMass.txt" download in 2012 from NIST.
 MODULE mod_Atom
-  use mod_system, only: name_len, rkind, one, zero, param_file, int_to_char,   &
-                        ten, out_unitp, evrt_path, file_open, error_memo_allo, &
-                        alloc_array, file_close, print_level,                  &
-                        string_uppercase_to_lowercase, String_TO_String, dealloc_array
+  use mod_system
   IMPLICIT NONE
 
 PRIVATE
@@ -182,7 +179,7 @@ PRIVATE
     IF (at%Z == 1 .AND. at%A == 2) at%isotope='D'
     IF (at%Z == 1 .AND. at%A == 3) at%isotope='T'
 
-    IF (abs(real(at%A,kind=Rkind)/at%mass-ONE) > TEN**(-2)) THEN
+    IF (at%A > 0 .AND. abs(real(at%A,kind=Rkind)/at%mass-ONE) > TEN**(-2)) THEN
       write(out_unitp,*) '  WARNNING in Read_atom'
       write(out_unitp,*) '  The atomic mass in g/mol is probably too different from A (> 1%)'
       write(out_unitp,*) '  mass, A: ',at%mass,at%A
@@ -686,42 +683,6 @@ PRIVATE
 
   END SUBROUTINE construct_table_at_HandBook70ed
 
-!  FUNCTION get_mass_Tnum(mendeleev,Z,A,name,err_mass)
-!    real (kind=Rkind)                          :: get_mass_Tnum !< the isotopic mass in au (atomic unit)
-!    integer,           intent(inout), optional :: Z !< number of electrons
-!    integer,           intent(inout), optional :: A !< number of nucleons
-!    integer,           intent(out),   optional :: err_mass !< to handle error (err_mass=0 => no error)
-!
-!    character (len=*), intent(in),    optional :: name !< string which contains the mass (a real), the atomic symbol, or "Z_A" or "A"symbol
-!
-!    TYPE (table_atom),  intent(in)             :: mendeleev !< table of derived type "atom" with the known isotopes
-!
-!    integer                         :: err_mass_loc
-!    integer                         :: AA,ZZ
-!
-!    AA = -1
-!    IF (present(A)) AA = A
-!    ZZ = -1
-!    IF (present(Z)) ZZ = Z
-!
-!    IF ( present(name) ) THEN
-!      get_mass_Tnum = get_mass_Tnum_v3(mendeleev,Z=ZZ,A=AA,       &
-!                                  name=name,err_mass=err_mass_loc)
-!    ELSE
-!      get_mass_Tnum = get_mass_Tnum_v3(mendeleev,Z=ZZ,A=AA,       &
-!                                             err_mass=err_mass_loc)
-!    END IF
-!    IF (present(err_mass)) err_mass = err_mass_loc
-!    IF (present(A)) A = AA
-!    IF (present(Z)) Z = ZZ
-!
-!    IF (err_mass_loc /= 0 .AND. .NOT. present(err_mass)) THEN
-!       STOP ' ERROR in : get_mass_Tnum'
-!    END IF
-!
-!  END FUNCTION get_mass_Tnum_gen
-
-
 !> @brief Function: enables to get an isotopic mass
 !!
 !> @author David Lauvergnat
@@ -743,11 +704,9 @@ PRIVATE
     real (kind=Rkind)                          :: get_mass_Tnum !< the isotopic mass in au (atomic unit)
     integer,           intent(inout), optional :: Z !< number of electrons
     integer,           intent(inout), optional :: A !< number of nucleons
-    integer,           intent(out), optional   :: err_mass !< to handle error (err_mass=0 => no error)
-
-    character (len=*), intent(in), optional    :: name !< string which contains the mass (a real), the atomic symbol, or "Z_A" or "A"symbol
-
-    TYPE (table_atom),  intent(in)             :: mendeleev !< table of derived type "atom" with the known isotopes
+    integer,           intent(inout), optional :: err_mass !< to handle error (err_mass=0 => no error)
+    character (len=*), intent(in),    optional :: name !< string which contains the mass (a real), the atomic symbol, or "Z_A" or "A"symbol
+    TYPE (table_atom), intent(in)              :: mendeleev !< table of derived type "atom" with the known isotopes
 
     integer                         :: err_mass_loc
     integer                         :: AA,ZZ

@@ -21,13 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_RPHTransfo
-      use mod_system, only: rkind, onetenth, name_len, in_unitp, out_unitp,     &
-                            flush_perso, alloc_nparray, dealloc_nparray,        &
-                            dealloc_array, alloc_array, one, ten, zero,         &
-                            write_error_not_null, error_memo_allo,              &
-                            write_error_null, sub_test_tab_ub, sub_test_tab_lb, &
-                            write_mat, write_vecmat, read_mat, write_vec,       &
-                            int_to_char
+      use mod_system
       USE mod_dnSVM
       IMPLICIT NONE
 
@@ -568,7 +562,7 @@
     SUBROUTINE alloc_array_OF_RPHpara_AT_Qact1dim0(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      TYPE(Type_RPHpara_AT_Qact1), pointer, intent(out) :: tab
+      TYPE(Type_RPHpara_AT_Qact1), pointer, intent(inout) :: tab
 
       character (len=*), intent(in) :: name_var,name_sub
 
@@ -618,7 +612,7 @@
     SUBROUTINE alloc_array_OF_RPHpara_AT_Qact1dim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE(Type_RPHpara_AT_Qact1), pointer, intent(out) :: tab(:)
+      TYPE(Type_RPHpara_AT_Qact1), pointer, intent(inout) :: tab(:)
       integer, intent(in) :: tab_ub(:)
       integer, intent(in), optional :: tab_lb(:)
 
@@ -678,7 +672,7 @@
     SUBROUTINE alloc_array_OF_RPHTransfodim0(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      TYPE (Type_RPHTransfo), pointer, intent(out) :: tab
+      TYPE (Type_RPHTransfo), pointer, intent(inout) :: tab
 
       character (len=*), intent(in) :: name_var,name_sub
 
@@ -2073,7 +2067,8 @@ END MODULE mod_RPHTransfo
 MODULE CurviRPH_mod
 use mod_system, only: rkind, zero, in_unitp, out_unitp, flush_perso, Name_len,   &
                       write_mat, write_vecmat, read_mat, write_vec, int_to_char, &
-                      alloc_NParray, dealloc_NParray, omp_get_thread_num
+                      alloc_NParray, dealloc_NParray
+!$ USE omp_lib, only : OMP_GET_THREAD_NUM
 
 implicit NONE
 

@@ -29,6 +29,7 @@
 
       SUBROUTINE sub_MatOp(para_Op,print_Op)
       USE mod_system
+      USE mod_Constant
       USE mod_Op
       IMPLICIT NONE
 
@@ -179,6 +180,7 @@
 !================================================================
       SUBROUTINE sub_build_MatOp(WP,nb_WP,para_Op,hermitic,print_mat)
       USE mod_system
+      USE mod_Constant
       USE mod_psi_set_alloc
       USE mod_psi_Op
       USE mod_Op
@@ -1296,6 +1298,7 @@
       SUBROUTINE sub_MatOpVibRot_WITH_FileGrid_type0_old(para_Op)
       USE mod_system
       USE mod_nDindex
+      USE mod_Constant
       USE mod_Op
       IMPLICIT NONE
 
@@ -1441,7 +1444,6 @@
       IF (print_level>0) write(out_unitp,*) 'number of blocks',nb_blocks
 
       CALL alloc_NParray(td0b,(/nb_ba,kmem/),'td0b',name_sub)
-      CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
 
       CALL Init_d0MatOp(d0MatOp,type_Op,para_Op%mole%nb_act1,nb_bie,    &
                                              JRot=JRot,cplx=para_Op%cplx)
@@ -1517,11 +1519,13 @@
         DO i_Op=1,d0MatOpd0bWrho(1,1)%nb_term
 
 
-          !$OMP parallel do default(none)                               &
-          !$OMP shared(para_Op,nplus,i1_h,i2_h,i_Op,print_level)        &
-          !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp)             &
-          !$OMP private(ib1,k,VecQ)                                     &
+          !$OMP parallel default(none)                               &
+          !$OMP shared(para_Op,nplus,i1_h,i2_h,i_Op,print_level)     &
+          !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)     &
+          !$OMP private(ib1,k,VecQ)                                  &
           !$OMP num_threads(nb_thread)
+          CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
+          !$OMP do
           DO ib1=1,para_Op%nb_ba
             IF (mod(ib1,max(1,int(para_Op%nb_ba/10))) == 0 .AND.        &
                           print_level>-1 .AND. para_Op%nb_bie == 0) THEN
@@ -1535,7 +1539,9 @@
             END DO
             MatRV%ReVal(:,ib1,i_Op) = matmul(td0b(:,:),VecQ(1:nplus))
           END DO
-          !$OMP end parallel do
+          !$OMP end do
+          CALL dealloc_NParray(VecQ,'VecQ',name_sub)
+          !$OMP end parallel
 
           IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
             mat2 = matmul(MatRV%ReVal(:,:,i_Op),para_Op%ComOp%d0Cba_ON_HAC(:,:,i2_h) )
@@ -1545,11 +1551,13 @@
         END DO
 
         IF (para_Op%cplx) THEN
-          !$OMP parallel do default(none)                               &
+          !$OMP parallel default(none)                             &
           !$OMP shared(para_Op,nplus,i1_h,i2_h,i_Op,print_level)   &
-          !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp)           &
-          !$OMP private(ib1,k,VecQ)                                     &
+          !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)   &
+          !$OMP private(ib1,k,VecQ)                                &
           !$OMP num_threads(nb_thread)
+          CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
+          !$OMP do
           DO ib1=1,para_Op%nb_ba
             IF (mod(ib1,max(1,int(para_Op%nb_ba/10))) == 0 .AND.        &
                           print_level>-1 .AND. para_Op%nb_bie == 0) THEN
@@ -1562,7 +1570,9 @@
             END DO
             MatRV%ImVal(:,ib1) = matmul(td0b(:,1:nplus),VecQ(1:nplus))
           END DO
-          !$OMP end parallel do
+          !$OMP end do
+          CALL dealloc_NParray(VecQ,'VecQ',name_sub)
+          !$OMP end parallel
 
           IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
             mat2 = matmul(MatRV%ImVal(:,:),para_Op%ComOp%d0Cba_ON_HAC(:,:,i2_h) )
@@ -1746,7 +1756,6 @@
         CALL dealloc_NParray(EneVib,'EneVib',name_sub)
       END IF
 
-      CALL dealloc_NParray(VecQ,     'VecQ',     name_sub)
       CALL dealloc_NParray(td0b,     'td0b',     name_sub)
 
       DO i=1,nb_ba
@@ -1921,7 +1930,6 @@
       IF (print_level>0) write(out_unitp,*) 'number of blocks',nb_blocks
 
       CALL alloc_NParray(td0b,(/nb_ba,kmem/),'td0b',name_sub)
-      CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
 
       CALL Init_d0MatOp(d0MatOp,type_Op,para_Op%mole%nb_act1,nb_bie,    &
                                              JRot=JRot,cplx=para_Op%cplx)
@@ -2003,11 +2011,13 @@
         DO i_Op=1,d0MatOpd0bWrho(1,1)%nb_term
 
 
-          !$OMP parallel do default(none)                               &
+          !$OMP parallel default(none)                                  &
           !$OMP shared(para_Op,nplus,i1_h,i2_h,i_Op,print_level)        &
-          !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp)             &
+          !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)        &
           !$OMP private(ib1,k,VecQ)                                     &
           !$OMP num_threads(nb_thread)
+          CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
+          !$OMP do
           DO ib1=1,para_Op%nb_ba
             IF (mod(ib1,max(1,int(para_Op%nb_ba/10))) == 0 .AND.        &
                           print_level>-1 .AND. para_Op%nb_bie == 0) THEN
@@ -2021,7 +2031,9 @@
             END DO
             MatRV%ReVal(:,ib1,i_Op) = matmul(td0b(:,:),VecQ(1:nplus))
           END DO
-          !$OMP end parallel do
+          !$OMP end do
+          CALL dealloc_NParray(VecQ,'VecQ',name_sub)
+          !$OMP end parallel
 
           IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
             mat2 = matmul(MatRV%ReVal(:,:,i_Op),para_Op%ComOp%d0Cba_ON_HAC(:,:,i2_h) )
@@ -2031,11 +2043,13 @@
         END DO
 
         IF (para_Op%cplx) THEN
-          !$OMP parallel do default(none)                               &
+          !$OMP parallel default(none)                             &
           !$OMP shared(para_Op,nplus,i1_h,i2_h,i_Op,print_level)   &
-          !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp)           &
-          !$OMP private(ib1,k,VecQ)                                     &
+          !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)   &
+          !$OMP private(ib1,k,VecQ)                                &
           !$OMP num_threads(nb_thread)
+          CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
+          !$OMP do
           DO ib1=1,para_Op%nb_ba
             IF (mod(ib1,max(1,int(para_Op%nb_ba/10))) == 0 .AND.        &
                           print_level>-1 .AND. para_Op%nb_bie == 0) THEN
@@ -2048,7 +2062,9 @@
             END DO
             MatRV%ImVal(:,ib1) = matmul(td0b(:,1:nplus),VecQ(1:nplus))
           END DO
-          !$OMP end parallel do
+          !$OMP end do
+          CALL dealloc_NParray(VecQ,'VecQ',name_sub)
+          !$OMP end parallel
 
           IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
             mat2 = matmul(MatRV%ImVal(:,:),para_Op%ComOp%d0Cba_ON_HAC(:,:,i2_h) )
@@ -2172,7 +2188,6 @@
         CALL dealloc_NParray(EneVib,'EneVib',name_sub)
       END IF
 
-      CALL dealloc_NParray(VecQ,     'VecQ',     name_sub)
       CALL dealloc_NParray(td0b,     'td0b',     name_sub)
 
       DO i=1,nb_ba
@@ -2322,6 +2337,8 @@
 !=====================================================================
       SUBROUTINE sub_MatOp_direct2(para_Op)
       USE mod_system
+!$    USE omp_lib, only : OMP_GET_THREAD_NUM
+
       USE mod_Op
       USE mod_psi
       IMPLICIT NONE
@@ -2572,6 +2589,8 @@
       END SUBROUTINE sub_MatOp_direct1
       SUBROUTINE sub_MatOp_direct1_old(para_Op)
       USE mod_system
+!$    USE omp_lib, only : OMP_GET_THREAD_NUM
+
       USE mod_Op
       USE mod_OpPsi
       USE mod_psi_set_alloc

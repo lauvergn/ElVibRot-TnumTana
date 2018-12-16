@@ -75,7 +75,7 @@ ifeq ($(F90),ifort)
    ifeq ($(OPT),1)
       F90FLAGS = -O  $(OMPFLAG) -parallel -g -traceback -assume realloc_lhs
    else
-      F90FLAGS = -O0 $(OMPFLAG) -check all -g -traceback -assume realloc_lhs
+      F90FLAGS = -O0 $(OMPFLAG) -debug -g -traceback -check all -ftrapuv -assume realloc_lhs
    endif
 
    ifeq ($(LAPACK),1)
@@ -260,6 +260,9 @@ HTML = $(patsubst sub_module/%.f90, $(REFPATH)/%.html, $(wildcard sub_module/*.f
 #
 PhysConstEXE  = PhysConst.exe
 PhysConstMAIN = PhysicalConstants_Main
+#
+KEOTESTEXE  = TEST_TnumTana.exe
+KEOTEST     = TEST_TnumTana
 #
 TNUMEXE  = Tnum90.exe
 TNUMMAIN = Tnum90
@@ -533,6 +536,8 @@ libTnum: obj $(OBJ)/libTnum.a
 	echo libTnum.a
 libTnum.a: obj $(OBJ)/libTnum.a
 	echo libTnum.a
+keotest:obj $(KEOTESTEXE)
+	echo "TEST_TnumTana"
 tnum:obj $(TNUMEXE)
 	echo "Tnum"
 Tnum:obj $(TNUMEXE)
@@ -567,7 +572,7 @@ obj:
 #
 clean: 
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib2
-	rm -rf vib.dSYM
+	rm -rf *.dSYM
 	rm -f .DS_Store */.DS_Store */*/.DS_Store */*/*/.DS_Store
 	@cd Examples/exa_hcn-dist ; ./clean
 	@cd Examples/exa_direct-dist ; ./clean
@@ -594,11 +599,11 @@ $(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o
 #
 $(OBJ)/libTnum.a: obj $(Obj_KEO_PrimOp)
 	ar cr $(OBJ)/libTnum.a   $(Obj_KEO_PrimOp)
+$(KEOTESTEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(KEOTEST).o
+	$(LYNK90)   -o $(KEOTESTEXE) $(OBJ)/$(KEOTEST).o $(OBJ)/libTnum.a $(LYNKFLAGS)
 #
 $(TNUMEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMAIN).o
 	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS)
-#$(TNUMEXE): obj $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMAIN).o
-#	$(LYNK90)   -o $(TNUMEXE) $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMAIN).o  $(LYNKFLAGS)
 #
 $(TNUMMCTDHEXE): obj $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMCTDHMAIN).o
 	$(LYNK90)   -o $(TNUMMCTDHEXE) $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMCTDHMAIN).o  $(LYNKFLAGS)
@@ -980,6 +985,8 @@ $(OBJ)/$(TNUMDISTMAIN).o:$(DirTNUM)/$(TNUMDISTMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUMDISTMAIN).f90
 $(OBJ)/$(TNUMMCTDHMAIN).o:$(DirTNUM)/$(TNUMMCTDHMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUMMCTDHMAIN).f90
+$(OBJ)/$(KEOTEST).o:$(DirTNUM)/$(KEOTEST).f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(KEOTEST).f90
 #
 $(OBJ)/$(TNUM_MiddasCppMAIN).o:$(DirTNUM)/$(TNUM_MiddasCppMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUM_MiddasCppMAIN).f90

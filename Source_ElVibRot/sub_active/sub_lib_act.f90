@@ -38,6 +38,8 @@
 
 
       USE mod_system
+!$    USE omp_lib, only : OMP_GET_THREAD_NUM
+
       USE mod_PrimOp
       USE mod_Op
       IMPLICIT NONE
@@ -476,6 +478,7 @@
 
       SUBROUTINE sub_reading_Op(iq,nb_qa,d0MatOp,n_Op,Qdyn,nb_var,Qact,w,ComOp)
       USE mod_system
+      USE mod_PrimOp, only: Write_d0MatOp
       USE mod_Op
       IMPLICIT NONE
 

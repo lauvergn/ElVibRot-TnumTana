@@ -41,16 +41,8 @@
 !=========================================================================
       SUBROUTINE Auto_basis(para_Tnum,mole,para_AllBasis,               &
                             ComOp,para_PES,para_ReadOp)
-      use mod_PrimOp, only: zmatrix, tnum, param_pes, out_unitp, sgtype, &
-                            mole1tomole2, dealloc_zmat, print_level,     &
-                            flush_perso, rkind, one, real_wu,            &
-                            dealloc_nparray, alloc_nparray, calc_ndindex,&
-                            zero, rwu_write, alloc_array, init_typeop,   &
-                            param_typeop, derive_termqact_to_derive_termqdyn,&
-                            write_vecmat, molerph_to_moleflex, write_mat,&
-                             type_var_analysis, write_mole, line_len,    &
-                             constant, param_d0matop, error_memo_allo,   &
-                             init_d0matop, hundred, dealloc_d0matop
+      use mod_Coord_KEO
+      use mod_PrimOp
       use mod_basis, only: param_allbasis, sgtype, get_nq_from_basis,  &
                            get_nb_bi_from_allbasis, recwrite_basis,    &
                            basis, sub_dngb_to_dnbb, clean_basis,       &
@@ -429,6 +421,8 @@
                                          para_PES,para_ReadOp,ComOp_loc)
 
       USE mod_system
+      USE mod_nDindex
+      USE mod_Constant
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -585,6 +579,7 @@ END SUBROUTINE RecSet_EneH0
                                           ComOp,para_PES,para_ReadOp)
 
       USE mod_system
+      USE mod_Constant
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -797,6 +792,7 @@ END SUBROUTINE RecSet_EneH0
                                     ComOp,para_PES,para_ReadOp)
 
       USE mod_system
+      USE mod_Constant
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op

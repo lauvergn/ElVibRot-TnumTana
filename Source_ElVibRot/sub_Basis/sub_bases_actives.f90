@@ -30,7 +30,6 @@
 ! POGridRep_basis
 !=====================================================================
       SUBROUTINE POGridRep_basis(basis_POGridRep,nb0,mole)
-
       USE mod_system
       USE mod_Coord_KEO
       USE mod_basis
@@ -249,8 +248,8 @@
 
       END SUBROUTINE POGridRep_basis
       SUBROUTINE POGridRep2_basis(basis_POGridRep,nb0,mole)
-
       USE mod_system
+      USE mod_nDindex
       USE mod_Coord_KEO
       USE mod_basis
       IMPLICIT NONE
@@ -503,8 +502,8 @@ GOTO 99
 ! POGridRep_basis
 !=====================================================================
       SUBROUTINE sub_make_polyorthobasis(base,Rvp)
-
       USE mod_system
+      USE mod_dnSVM
       USE mod_basis
       IMPLICIT NONE
 

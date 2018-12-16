@@ -29,7 +29,7 @@
 
    MODULE mod_PrimOp
 
-    USE mod_Coord_KEO
+    !USE mod_Coord_KEO
 
     USE mod_nDFit
     USE mod_PrimOp_def
@@ -44,8 +44,8 @@
    PRIVATE   dnOp_num_grid_v2, calc3_NM_TO_sym, calc4_NM_TO_sym, calc5_NM_TO_sym
 
    PRIVATE   get_hess_k, Set_RPHpara_AT_Qact1_opt2, Set_RPHpara_AT_Qact1_opt01
-   PRIVATE   calc_freq, calc_freq_block, calc_freq_WITH_d0c, calc_freqNM, calc_freq_width
-   PRIVATE   H0_symmetrization, sort_with_Tab
+   !PRIVATE   calc_freq, calc_freq_block, calc_freq_WITH_d0c, calc_freqNM, calc_freq_width
+   !PRIVATE   H0_symmetrization, sort_with_Tab
 
    CONTAINS
 
@@ -768,7 +768,6 @@
 
         ELSE ! with finite difference (even for on-the-fly calculation)
           IF (debug) write(out_unitp,*) 'With numerical derivatives'
-          write(out_unitp,*) 'With numerical derivatives'
 
             CALL dnOp_num_grid_v2(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv_loc)
 
@@ -891,6 +890,7 @@
       SUBROUTINE dnOp_num_grid_v2(Qact,Tab_dnMatOp,                     &
                                   mole,para_Tnum,para_PES,nderiv)
       USE mod_system
+      !$ USE omp_lib, only : OMP_GET_THREAD_NUM
       USE mod_dnSVM
       USE mod_Coord_KEO
       USE mod_SimpleOp
@@ -1422,6 +1422,7 @@
       SUBROUTINE sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES,print_freq,d0h_opt)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant
       USE mod_Coord_KEO, only : zmatrix,Tnum,get_dng_dnGG, calc_freq
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -1552,6 +1553,7 @@
       SUBROUTINE calc3_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -2017,6 +2019,7 @@
       SUBROUTINE calc4_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -2476,6 +2479,7 @@
       SUBROUTINE calc5_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -3324,6 +3328,7 @@
                                            Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -3471,6 +3476,7 @@
                                       Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -3644,6 +3650,7 @@
                                para_Tnum,mole,RPHTransfo,nderiv,test)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -4001,6 +4008,7 @@
                                para_Tnum,mole,RPHTransfo,nderiv,test)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -4311,6 +4319,7 @@
                                Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -4568,6 +4577,7 @@
       SUBROUTINE Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
       USE mod_system
       USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def

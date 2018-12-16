@@ -28,6 +28,8 @@
 !===========================================================================
       SUBROUTINE sub_Optimization_OF_VibParam(max_mem)
       USE mod_system
+      USE mod_nDindex
+      USE mod_Constant
       USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0
       USE mod_PrimOp
       USE mod_basis
@@ -84,13 +86,15 @@
       TYPE (basis)          :: BasisnD_Save
 
 !----- variables divers ----------------------------------------------
-      TYPE (param_Optimization)  :: para_Optimization
-      real (kind=Rkind)          :: Energ,P1,Norm_min
-      integer                    :: i,i0,i1,iOpt,nb_Opt,n,ib
+      TYPE (param_Optimization)      :: para_Optimization
+      real (kind=Rkind)              :: Energ,P1,Norm_min
+      integer                        :: err_io,i,i0,i1,iOpt,nb_Opt,n,ib
       real (kind=Rkind), allocatable :: xOpt_min(:),SQ(:),SQini(:),QA(:),QB(:)
 
-      real (kind=Rkind), allocatable :: freq(:)
+      real (kind=Rkind), allocatable :: freq(:),grad(:)
       real (kind=Rkind), allocatable :: Qact(:)
+      TYPE (param_dnMatOp)           :: dnMatOp(1)
+      character (len=Name_len)       :: name_dum
 
 
       integer :: err_mem,memory
@@ -129,6 +133,8 @@
 
       CALL Read_param_Optimization(para_Optimization)
 
+      CALL Write_param_Optimization(para_Optimization)
+
       CALL Set_ALL_para_FOR_optimization(mole,para_AllBasis%BasisnD,Qact,0)
       nb_Opt = para_FOR_optimization%nb_OptParam
 
@@ -157,8 +163,6 @@
       CALL alloc_NParray(QA,      (/ nb_Opt /),'QA',      name_sub)
       CALL alloc_NParray(QB,      (/ nb_Opt /),'QB',      name_sub)
 
-      para_FOR_optimization%opt_RVec(1:5) = (/ 8,8,8,31,63 /)
-
 
       SQ(:) = ZERO
       IF (para_FOR_optimization%Optimization_param /= 'cubature') THEN
@@ -178,8 +182,21 @@
         CALL ReOriented_grid(reshape(xOpt_min,                          &
             (/ para_AllBasis%BasisnD%ndim,para_AllBasis%BasisnD%nqc /)),&
                     para_AllBasis%BasisnD%ndim,para_AllBasis%BasisnD%nqc)
-        QA(:) = xOpt_min(:) - SQ(:)
-        QB(:) = xOpt_min(:) + SQ(:)
+        IF (para_Optimization%ReadRange) THEN
+           DO i=1,size(QA)
+             read(in_unitp,*,IOSTAT=err_io) name_dum,QA(i),QB(i)
+             IF (err_io /= 0) THEN
+               write(out_unitp,*) ' WARNING in name_sub'
+               write(out_unitp,*) '  while reading the variable range'
+               write(out_unitp,*) ' Check your data !!'
+               STOP
+             END IF
+           END DO
+           SQ(:) = QA-QB
+        ELSE
+          QA(:) = xOpt_min(:) - SQ(:)
+          QB(:) = xOpt_min(:) + SQ(:)
+        END IF
 
         BasisnD_Save%nb  = para_AllBasis%BasisnD%nb
         BasisnD_Save%nbc = para_AllBasis%BasisnD%nbc
@@ -208,6 +225,11 @@
           write(6,*) 'Norm_min',i,Norm_min
           SQini(:) = Norm_min*TEN**1
         END DO
+
+        CALL Sub_BFGS(BasisnD_Save,xOpt_min,SQ,nb_Opt,                  &
+                                    para_Tnum,mole,ComOp,para_PES,Qact, &
+                                        para_Optimization%para_BFGS)
+
       CASE ('bfgs') ! BFGS
 
         CALL Sub_BFGS(BasisnD_Save,xOpt_min,SQ,nb_Opt,                  &
@@ -221,7 +243,10 @@
         STOP
       END SELECT
 
+      write(out_unitp,*) '============ FINAL ANLYSIS =================='
+
       IF (para_Optimization%FinalEnergy) THEN
+        write(out_unitp,*) '============ ENERGY:'
         print_level = 0
         CALL Sub_Energ_OF_ParamBasis(Energ,xOpt_min,nb_Opt,             &
                        BasisnD_Save,para_Tnum,mole,ComOp,para_PES,Qact)
@@ -229,10 +254,28 @@
 
       END IF
       IF (para_Optimization%Freq) THEN
+        write(out_unitp,*) '============ Freq:'
         CALL alloc_NParray(freq,(/ nb_Opt /),'freq',name_sub)
         CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES,print_freq=.TRUE.)
         CALL dealloc_NParray(freq,'freq',name_sub)
       END IF
+
+      IF (para_Optimization%Grad) THEN
+        write(out_unitp,*) '============ GRAD:'
+        CALL alloc_NParray(Grad,(/ nb_Opt /),'Grad',name_sub)
+
+        CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,para_PES%nb_elec,nderiv=1)
+
+        CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+
+        CALL Get_Grad_FROM_Tab_OF_dnMatOp(Grad,dnMatOp) ! for the first electronic state
+        write(out_unitp,*) 'Grad',Grad
+
+        CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
+        CALL dealloc_NParray(Grad,'Grad',name_sub)
+
+      END IF
+      write(out_unitp,*) '========= END FINAL ANLYSIS =================='
 
 
       CALL dealloc_NParray(xOpt_min,'xOpt_min',name_sub)
@@ -273,9 +316,11 @@
       SUBROUTINE Sub_Energ_OF_ParamBasis(Energ,xOpt,nb_Opt,BasisnD,     &
                                     para_Tnum,mole,ComOp,para_PES,Qact)
       USE mod_system
-      use mod_Coord_KEO, only: constant, zmatrix, tnum
-
+      USE mod_nDindex
+      USE mod_Constant
+      use mod_Coord_KEO, only: zmatrix, tnum
       USE mod_PrimOp
+
       USE mod_basis
       USE mod_Op
       USE mod_Auto_Basis
@@ -562,6 +607,8 @@
       END SUBROUTINE Set_ALL_para_FOR_optimization
       SUBROUTINE Sub_Energ_FOR_cubature(Energ,xOpt,nb_Opt,BasisnD)
       USE mod_system
+      USE mod_nDindex
+      !USE mod_Constant
       USE mod_basis
       IMPLICIT NONE
 
@@ -683,6 +730,7 @@
     END SUBROUTINE Sub_Energ_FOR_cubature
       SUBROUTINE Sub_Energ_FOR_cubatureWeight(Energ,xOpt,nb_Opt,BasisnD)
       USE mod_system
+      USE mod_nDindex
       USE mod_basis
       IMPLICIT NONE
 

@@ -22,11 +22,8 @@
 !===========================================================================
 
  module mod_Tana_OpnD
- use mod_system, only: write_error_null, out_unitp, sub_test_tab_ub,     &
-                       sub_test_tab_lb, error_memo_allo, dealloc_nparray,&
-                       alloc_nparray, rkind, cone, fracinteger,          &
-                       string_to_string, name_len, int_to_char,          &
-                       flush_perso, czero, zero
+ use mod_system
+ use mod_FracInteger
  use mod_Tana_OpEl ! all
  use mod_Tana_Op1D ! all
  IMPLICIT NONE
@@ -151,11 +148,10 @@
       SUBROUTINE alloc_NParray_OF_OpnDdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      type(opnd), allocatable, intent(out) :: tab(:)
-      integer, intent(in) :: tab_ub(:)
-      integer, intent(in), optional :: tab_lb(:)
-
-      character (len=*), intent(in) :: name_var,name_sub
+      type(opnd), allocatable, intent(inout) :: tab(:)
+      integer,                 intent(in)    :: tab_ub(:)
+      integer, optional,       intent(in)    :: tab_lb(:)
+      character (len=*),       intent(in)    :: name_var,name_sub
 
       integer, parameter :: ndim=1
       logical :: memory_test
@@ -1320,8 +1316,8 @@ subroutine check_allocate_opnd(F_nd)
  !!                        means that F_nd cointains a op_zero component.
  subroutine present_op_zero_in_F_nd(F_nd, i_opzero, j_opzero, string, l_zero)
    type(opnd),          intent(in)       :: F_nd
-   integer,             intent(out)      :: i_opzero
-   integer,             intent(out)      :: j_opzero
+   integer,             intent(inout)    :: i_opzero
+   integer,             intent(inout)    :: j_opzero
    character (len = *), intent(in)       :: string
    logical,  optional,   intent(inout)   :: l_zero
 

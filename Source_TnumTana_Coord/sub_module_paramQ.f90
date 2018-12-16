@@ -21,13 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_paramQ
-      use mod_system, only: name_len, rkind, line_len, out_unitp,       &
-                            print_level, zero, in_unitp, alloc_nparray, &
-                            write_int_in_char, flush_perso, int_to_char,&
-                            dealloc_nparray, one, write_mat, param_file,&
-                            file_open, onetenth, half, four, two,       &
-                            file_close, read_name_advno,                &
-                            para_for_optimization
+      use mod_system
       USE mod_dnSVM
       use mod_Lib_QTransfo,     only: write_cart, calc_cross_product,   &
                                       write_dnx, sub3_dnx_at1
@@ -51,7 +45,7 @@ MODULE mod_paramQ
       PUBLIC :: sub_QactTOQit, sub_QinRead_TO_Qact, sub_QxyzTOexeyez, sub_Qxyz0TORot
       PUBLIC :: sub_QplusDQ_TO_Cart, sub_QactTOdnx, sub_QactTOd0x
       PUBLIC :: Write_d0Q, Write_Q_WU, Write_Cartg98, Write_XYZ
-      PUBLIC :: analyze_dnx, sub_dnFCC_TO_dnFcurvi
+      PUBLIC :: analyze_dnx, sub_dnFCC_TO_dnFcurvi, write_dnx
       PUBLIC :: Set_paramQ_FOR_optimization
 
       CONTAINS

@@ -318,8 +318,9 @@
 !================================================================
       SUBROUTINE read5_basis_nD(basis_temp,mole)
       USE mod_system
-      USE mod_basis
+      use mod_Constant
       use mod_Coord_KEO, only: zmatrix
+      USE mod_basis
       IMPLICIT NONE
 
 !----- for the active basis set ---------------------------------------

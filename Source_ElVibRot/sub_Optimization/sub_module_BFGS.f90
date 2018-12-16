@@ -117,6 +117,8 @@
                           para_Tnum,mole,ComOp,para_PES,Qact,para_BFGS)
 
       USE mod_system
+      !USE mod_nDindex
+      USE mod_dnSVM
       use mod_Coord_KEO, only: zmatrix, tnum, alloc_array, dealloc_array
       USE mod_PrimOp
       USE mod_basis
@@ -338,10 +340,10 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
   call lnsrch(n,p,fp,g,xi,pnew,fret,stpmax,check,dnMatOp,mole,para_PES,para_Tnum)
   ! The new function evaluation occurs in lnsrch; save the value in fp for the
   ! next line search. It is usually safe to ignore the value of check.
-  fp=fret
-  xi=pnew-p    ! update the line direction
-  p=pnew       ! and the current point
-  test=ZERO
+  fp   = fret
+  xi   = pnew-p    ! update the line direction
+  p    = pnew      ! and the current point
+  test = ZERO
   do i=1,n     ! Test the convergence in Delta(x)
    temp=abs(xi(i))/max(abs(p(i)),ONE)
    if (temp > test) test=temp
@@ -378,6 +380,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
    write(out_unitp,*) ' Gradient converged !!'
    write(out_unitp,*) ' Optimized energy: ',fret
    write(out_unitp,*) ' Optimized RMS gradient: ', xxxg, test
+   write(out_unitp,*) ' gtol: ', gtol
    write(out_unitp,*) ' Optimized geometry: '
    write(out_unitp,*) ' p = ', p
    deallocate (g,hdg,pnew,dg,xi,hessin)
@@ -522,9 +525,8 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
  integer :: i
  real (kind=Rkind)   :: Qact(mole%nb_var)
 
- real(kind=Rkind), intent(in) :: xt(mole%nb_act)
-
- real(kind=Rkind),intent(out) :: df(mole%nb_act), f
+ real(kind=Rkind), intent(in)    :: xt(mole%nb_act)
+ real(kind=Rkind), intent(inout) :: df(mole%nb_act), f
 !
  !write(6,*) 'dfunc subroutine',mole%nb_act,nderiv_dnE
  !write(6,*) 'xt = ', xt

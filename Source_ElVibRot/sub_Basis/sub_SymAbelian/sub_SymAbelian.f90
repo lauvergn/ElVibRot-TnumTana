@@ -123,7 +123,7 @@
      SUBROUTINE alloc_array_OF_SymAbeliandim0(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      TYPE (Type_SymAbelian), pointer, intent(out) :: tab
+      TYPE (Type_SymAbelian), pointer, intent(inout) :: tab
 
       character (len=*), intent(in) :: name_var,name_sub
 

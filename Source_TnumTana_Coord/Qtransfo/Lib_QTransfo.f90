@@ -21,7 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_Lib_QTransfo
-      use mod_system, only: out_unitp, zero, onetenth, rkind, print_level, pi, one
+      use mod_system
       use mod_dnSVM, only: type_dnvec, type_dns, write_dnsvm,        &
                            sub_dnvec1_prod_dns2_to_dnvec3,           &
                            sub_dns1_prod_dns2_to_dns3,               &

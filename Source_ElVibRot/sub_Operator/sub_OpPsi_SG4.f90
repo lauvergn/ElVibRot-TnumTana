@@ -37,7 +37,9 @@ MODULE mod_OpPsi_SG4
 CONTAINS
 
  SUBROUTINE sub_OpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
+
  USE mod_system
+!$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
  USE mod_Coord_KEO,                ONLY : zmatrix
 
@@ -211,15 +213,16 @@ END IF
   END SUBROUTINE sub_OpPsi_FOR_SGtype4
 
   SUBROUTINE sub_OpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,tab_l,para_Op)
-  USE mod_system
-  USE mod_nDindex
+   USE mod_system
+!$ USE omp_lib, only : OMP_GET_THREAD_NUM
+   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
+   USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
 
-  USE mod_basis_set_alloc,         ONLY : basis
-  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
-  USE mod_basis_RCVec_SGType4,      ONLY : TypeRVec
-  USE mod_basis_BtoG_GtoB_SGType4, ONLY : BDP_TO_GDP_OF_SmolyakRep,     &
+   USE mod_basis_set_alloc,         ONLY : basis
+   USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
+   USE mod_basis_RCVec_SGType4,      ONLY : TypeRVec
+   USE mod_basis_BtoG_GtoB_SGType4, ONLY : BDP_TO_GDP_OF_SmolyakRep,    &
                                               GDP_TO_BDP_OF_SmolyakRep, &
                                           DerivOp_TO_RDP_OF_SmolaykRep, &
                                           tabR2grid_TO_tabR1_AT_iG,     &
@@ -394,6 +397,7 @@ END IF
 
  SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
  USE mod_system
+!$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
 
  USE mod_Coord_KEO,                     ONLY : zmatrix
@@ -1178,7 +1182,6 @@ END IF
 
    D = size(BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,dim=1)
 
-   CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
    CALL alloc_NParray(tab_l ,(/ D /),'tab_l', name_sub)
    CALL alloc_NParray(tab_nb,(/ D /),'tab_nb',name_sub)
    CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
@@ -1209,6 +1212,7 @@ END IF
  !$OMP shared(sqRhoOVERJac,Jac,GGiq)                          &
  !$OMP private(iq,Qact,err_sub,Rho)                           &
  !$OMP num_threads(nb_thread)
+   CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
  !$OMP   DO SCHEDULE(STATIC)
    DO iq=1,nq
      CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
@@ -1220,6 +1224,7 @@ END IF
 
    END DO
 !$OMP   END DO
+   CALL dealloc_NParray(Qact,'Qact',name_sub)
 !$OMP   END PARALLEL
 
    CALL dealloc_nDindex(nDind_DPG)
@@ -1300,7 +1305,6 @@ END IF
    IF (allocated(tab_nb))       CALL dealloc_NParray(tab_nb,      'tab_nb',      name_sub)
    IF (allocated(tab_nq))       CALL dealloc_NParray(tab_nq,      'tab_nq',      name_sub)
    IF (allocated(tab_l))        CALL dealloc_NParray(tab_l,       'tab_l',       name_sub)
-   IF (allocated(Qact))         CALL dealloc_NParray(Qact,        'Qact',        name_sub)
    IF (allocated(sqRhoOVERJac)) CALL dealloc_NParray(sqRhoOVERJac,'sqRhoOVERJac',name_sub)
    IF (allocated(Jac))          CALL dealloc_NParray(Jac,         'Jac',         name_sub)
    IF (allocated(V))            CALL dealloc_NParray(V,           'V',           name_sub)
@@ -1395,7 +1399,6 @@ END IF
 
    D = size(BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,dim=1)
 
-   CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
    CALL alloc_NParray(tab_l ,(/ D /),'tab_l', name_sub)
    CALL alloc_NParray(tab_nb,(/ D /),'tab_nb',name_sub)
    CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
@@ -1427,6 +1430,7 @@ END IF
  !$OMP shared(sqRhoOVERJac,Jac,GGiq)                          &
  !$OMP private(iq,Qact,err_sub,Rho)                           &
  !$OMP num_threads(nb_thread)
+   CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
  !$OMP   DO SCHEDULE(STATIC)
    DO iq=1,nq
      CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
@@ -1438,6 +1442,7 @@ END IF
 
    END DO
 !$OMP   END DO
+   CALL dealloc_NParray(Qact,'Qact',name_sub)
 !$OMP   END PARALLEL
 
    CALL dealloc_nDindex(nDind_DPG)
@@ -1511,7 +1516,6 @@ END IF
    IF (allocated(tab_nb))       CALL dealloc_NParray(tab_nb,      'tab_nb',      name_sub)
    IF (allocated(tab_nq))       CALL dealloc_NParray(tab_nq,      'tab_nq',      name_sub)
    IF (allocated(tab_l))        CALL dealloc_NParray(tab_l,       'tab_l',       name_sub)
-   IF (allocated(Qact))         CALL dealloc_NParray(Qact,        'Qact',        name_sub)
    IF (allocated(sqRhoOVERJac)) CALL dealloc_NParray(sqRhoOVERJac,'sqRhoOVERJac',name_sub)
    IF (allocated(Jac))          CALL dealloc_NParray(Jac,         'Jac',         name_sub)
    IF (allocated(V))            CALL dealloc_NParray(V,           'V',           name_sub)

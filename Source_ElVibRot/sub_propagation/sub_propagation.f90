@@ -28,6 +28,7 @@
 !===========================================================================
 
 MODULE mod_FullPropa
+USE mod_Constant
 IMPLICIT NONE
 
 PRIVATE
