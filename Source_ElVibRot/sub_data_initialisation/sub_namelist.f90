@@ -497,7 +497,7 @@
                            Last_GridPoint=num_grid_f,                   &
                            Base_FileName_Grid=name_Grid)
 
-      CASE (4) ! for SG4
+      CASE (4) ! for SG4, it enable to use directKEO and alos direct pot
         para_ReadOp%Make_Mat = .FALSE.
         CALL init_FileGrid(para_ReadOp%para_FileGrid,                   &
                            Type_FileGrid=4,Save_FileGrid=Save_FileGrid, &

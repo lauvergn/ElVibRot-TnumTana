@@ -62,6 +62,7 @@
       logical  :: intensity_only,analysis_only,Popenmp
       integer  :: PMatOp_omp,POpPsi_omp,PBasisTOGrid_omp,PGrid_omp,optimization
       integer  :: maxth,PMatOp_maxth,POpPsi_maxth,PBasisTOGrid_maxth,PGrid_maxth
+      integer  :: PSG4_omp,PSG4_maxth
       integer (kind=ILkind)  :: max_mem
       integer  :: printlevel,err
       logical  :: test,EVR,cart,nDfit,nDGrid,mem_debug
@@ -71,6 +72,7 @@
       character (len=Name_longlen) :: CMatFormat
 
       namelist /system/ max_mem,mem_debug,test,printlevel,Popenmp,      &
+                          PSG4_omp,PSG4_maxth,                          &
                           PMatOp_omp,PMatOp_maxth,                      &
                           POpPsi_omp,POpPsi_maxth,                      &
                           PBasisTOGrid_omp,PBasisTOGrid_maxth,          &
@@ -106,6 +108,9 @@
         PBasisTOGrid_maxth = maxth
         PGrid_omp          = 1
         PGrid_maxth        = maxth
+
+        PSG4_omp           = 1
+        PSG4_maxth         = maxth
 
         max_mem          = 4000000000_ILkind/Rkind ! 4GO
         mem_debug        = .FALSE.
@@ -169,16 +174,19 @@
            OpPsi_omp          = 0
            BasisTOGrid_omp    = 0
            Grid_omp           = 0
+           SG4_omp            = 0
 
            MatOp_maxth        = 1
-           POpPsi_maxth       = 1
-           PBasisTOGrid_maxth = 1
-           PGrid_maxth        = 1
+           OpPsi_maxth        = 1
+           BasisTOGrid_maxth  = 1
+           Grid_maxth         = 1
+           SG4_maxth          = 1
         ELSE
            MatOp_omp          = PMatOp_omp
            OpPsi_omp          = POpPsi_omp
            BasisTOGrid_omp    = PBasisTOGrid_omp
            Grid_omp           = PGrid_omp
+           SG4_omp            = PSG4_omp
 
            IF (MatOp_omp > 0) THEN
              MatOp_maxth        = min(PMatOp_maxth,maxth)
@@ -204,6 +212,12 @@
              Grid_maxth         = 1
            END IF
 
+           IF (SG4_omp > 0) THEN
+             SG4_maxth         = PSG4_maxth
+           ELSE
+             SG4_maxth         = 1
+           END IF
+
         END IF
 
         write(out_unitp,*) '========================================='
@@ -213,6 +227,7 @@
         write(out_unitp,*) 'OpPsi_omp,      OpPsi_maxth      ',OpPsi_omp,OpPsi_maxth
         write(out_unitp,*) 'BasisTOGrid_omp,BasisTOGrid_maxth',BasisTOGrid_omp,BasisTOGrid_maxth
         write(out_unitp,*) 'Grid_omp,       Grid_maxth       ',Grid_omp,Grid_maxth
+        write(out_unitp,*) 'SG4_omp,        SG4_maxth        ',SG4_omp,SG4_maxth
         write(out_unitp,*) '========================================='
 
         para_mem%max_mem    = max_mem/Rkind

@@ -52,6 +52,7 @@ SUBROUTINE ini_data(const_phys,                                         &
                                 finalyze_tnumtana_coord_primop, init_typeop,     &
                                 derive_termqact_to_derive_termqdyn
       USE mod_basis
+      USE mod_Set_paraRPH
       USE mod_Op
       USE mod_analysis
       USE mod_propa

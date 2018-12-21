@@ -215,7 +215,7 @@
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -346,7 +346,7 @@
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -504,7 +504,7 @@
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -650,7 +650,7 @@
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -814,7 +814,7 @@
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -972,7 +972,7 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
 
       USE mod_field,           ONLY : param_field,sub_dnE
       USE mod_Op,              ONLY : param_Op
@@ -1058,7 +1058,7 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
 
       USE mod_Op,              ONLY : param_Op
       USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi
@@ -1134,7 +1134,7 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1342,7 +1342,7 @@
       USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi,sub_PsiOpPsi
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1530,7 +1530,7 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1711,7 +1711,7 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1794,7 +1794,7 @@
       USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       USE mod_psi_Op,          ONLY : norme_psi,Overlap_psi1_psi2
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1978,7 +1978,7 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2199,7 +2199,7 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2439,7 +2439,7 @@
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------

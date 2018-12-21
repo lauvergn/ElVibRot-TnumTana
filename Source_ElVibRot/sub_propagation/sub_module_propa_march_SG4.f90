@@ -55,7 +55,7 @@
  USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : norme_psi,Overlap_psi1_psi2
- USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+ USE mod_psi_SimpleOp
  IMPLICIT NONE
 
 
@@ -308,7 +308,7 @@ STOP 'march_noD_SG4_BasisRep'
  USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : norme_psi,Overlap_psi1_psi2
- USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+ USE mod_psi_SimpleOp
  IMPLICIT NONE
 
 
@@ -625,7 +625,7 @@ nb_thread = 1
  USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : norme_psi
- USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+ USE mod_psi_SimpleOp
  IMPLICIT NONE
 
 
@@ -1014,7 +1014,7 @@ STOP 'not yet !!!!'
  USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : norme_psi
- USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+ USE mod_psi_SimpleOp
  IMPLICIT NONE
 
 

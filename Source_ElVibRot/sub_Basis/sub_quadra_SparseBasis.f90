@@ -1214,7 +1214,7 @@
                         'basis_SG%WeightSG',name_sub)
 
       CALL calc_Weight_OF_SRep(basis_SG%WeightSG,basis_SG%para_SGType2%nDind_SmolyakRep)
-      CALL unpack_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
+      !CALL unpack_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
 
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set nDind_SmolyakRep: done'
@@ -1286,6 +1286,7 @@
       CALL Set_nq_OF_basis(basis_SG,nqq)
 
       CALL Set_nDval_init_FOR_SG4(basis_SG%para_SGType2,version=1)
+
 
       CALL Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
       IF (Print_basis) THEN

@@ -62,7 +62,7 @@ sym  cos(a)      R     r    x    pi   dh
 
 
  &inactives step=1.d-5 /
- &actives test=$test direct=2 Save_Grid_iterm=t Seq_Grid_iterm=t /
+ &actives test=$test direct=2 /
  &analyse max_ana=40 max_ene=50000.d0 print=f print_psi=0 davidson=t /
  &davidson nb_WP=3 max_it=100 max_WP=300 num_resetH=10
            lower_states=t project_WP0=f one_residue=f all_lower_states=t max_Ene=4000.

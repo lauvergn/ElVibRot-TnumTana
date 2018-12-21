@@ -431,7 +431,6 @@ c      initialization (only once)
 c$OMP    CRITICAL (dnQflex_CRIT)
        IF (begin) THEN
          write(out_unitp,*) ' INITIALIZATION of ',name_sub
-c$       write(out_unitp,*) "F thread",omp_get_thread_num()
          begin=.FALSE.
          nn(:) = 0
          F(:,:) = ZERO

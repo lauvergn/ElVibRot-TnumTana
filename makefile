@@ -12,7 +12,7 @@ OPT = 0
 OMP = 1
 #
 # force the default integer (without kind) during the compillation. default 4: , INT=8 (for kind=8)
-INT = 4
+INT = 8
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
 ARPACK = 0
@@ -481,7 +481,7 @@ Obj_inactive = \
 
 Obj_active = \
  $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_harm.o $(OBJ)/sub_lib_act.o \
- $(OBJ)/sub_diago_H.o
+ $(OBJ)/sub_diago_H.o $(OBJ)/sub_paraRPH.o
 
 Obj_Operator = \
  $(OBJ)/sub_module_OpGrid.o $(OBJ)/sub_module_ReadOp.o $(OBJ)/sub_module_Op.o \
@@ -930,6 +930,8 @@ $(OBJ)/sub_lib_act.o:$(DIR5)/sub_lib_act.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR5)/sub_lib_act.f90
 $(OBJ)/sub_diago_H.o:$(DIR5)/sub_diago_H.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR5)/sub_diago_H.f90
+$(OBJ)/sub_paraRPH.o:$(DIR5)/sub_paraRPH.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR5)/sub_paraRPH.f90
 #
 # Operator
 $(OBJ)/sub_MatOp.o:$(DIROp)/sub_MatOp.f90

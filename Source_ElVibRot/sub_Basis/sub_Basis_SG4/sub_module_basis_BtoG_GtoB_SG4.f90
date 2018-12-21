@@ -497,9 +497,9 @@ TYPE (basis),                    intent(inout)        :: basis_SG
 integer               :: L,i,k,lk,iG,iBDP,iBSRep,nb_BG,nR,itabR,nDI,Max_Srep
 
 integer               :: tab_n(basis_SG%nDindB%ndim)
-integer               :: tab_l(basis_SG%nDindB%ndim)
 
-integer               :: tab_ib(basis_SG%nDindB%ndim),tab_nb(basis_SG%nDindB%ndim)
+integer, allocatable  :: tab_l(:)
+integer, allocatable  :: tab_ib(:),tab_nb(:)
 
 
 integer               :: MaxnD_with_id_and_L(basis_SG%nDindB%ndim,0:basis_SG%nDindB%Lmax)
@@ -601,17 +601,23 @@ CALL alloc_NParray(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,(/Max_Srep/), &
 basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(:) = 0
 
 IF (.NOT. allocated(basis_SG%para_SGType2%nDind_SmolyakRep%Tab_nDval) ) THEN
+  CALL alloc_NParray(tab_l, (/basis_SG%nDindB%ndim/),'tab_l',name_sub)
   CALL init_nDval_OF_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep,tab_l)
+  CALL dealloc_NParray(tab_l,'tab_l',name_sub)
 END IF
 
 !to be sure to have the correct number of threads
-nb_thread = basis_SG%para_SGType2%nb_threads
+nb_thread = basis_SG%para_SGType2%nb_tasks
 
 !$OMP parallel                                                &
 !$OMP default(none)                                           &
 !$OMP shared(basis_SG,nb_thread,Tab_inD_nDindB,out_unitp,MaxnD_with_id_and_L)     &
 !$OMP private(iG,tab_l,ith,tab_nb,tab_ib,nDI,iBDP,iBSRep,LL,k,l,ib,iib,err_sub)      &
 !$OMP num_threads(nb_thread)
+
+CALL alloc_NParray(tab_l, (/basis_SG%nDindB%ndim/),'tab_l',name_sub)
+CALL alloc_NParray(tab_ib,(/basis_SG%nDindB%ndim/),'tab_ib',name_sub)
+CALL alloc_NParray(tab_nb,(/basis_SG%nDindB%ndim/),'tab_nb',name_sub)
 
 !--------------------------------------------------------------
 !-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
@@ -692,6 +698,9 @@ DO iG=basis_SG%para_SGType2%iG_th(ith+1),basis_SG%para_SGType2%fG_th(ith+1)
 
 
 END DO
+CALL dealloc_NParray(tab_l, 'tab_l', name_sub)
+CALL dealloc_NParray(tab_ib,'tab_ib',name_sub)
+CALL dealloc_NParray(tab_nb,'tab_nb',name_sub)
 !$OMP   END PARALLEL
 
 write(out_unitp,*) 'count 0',count(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB == 0)
@@ -1540,7 +1549,7 @@ nb_mult_GTOB = 0
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_mult_GTOB,D,SRep,tab_ind,tab_ba) &
 !$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
-!$OMP   NUM_THREADS(BasisTOGrid_maxth)
+!$OMP   NUM_THREADS(SG4_maxth)
 
 !$OMP   DO SCHEDULE(STATIC)
 
@@ -1820,7 +1829,7 @@ nb_mult_BTOG = 0
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(nb_mult_BTOG,D,SRep,tab_ind,tab_ba) &
 !$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
-!$OMP   NUM_THREADS(BasisTOGrid_maxth)
+!$OMP   NUM_THREADS(SG4_maxth)
 
 !$OMP   DO SCHEDULE(STATIC)
 

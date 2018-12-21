@@ -65,7 +65,7 @@ CONTAINS
  TYPE (TypeRVec)         :: PsiR
 
  integer       :: ib,i,iG,iiG,nb_thread,ith,iterm00
- integer       :: tab_l(para_Op%BasisnD%nb_basis)
+ integer, allocatable       :: tab_l(:)
  logical       :: not_init
 
  !----- for debuging ----------------------------------------------
@@ -94,10 +94,10 @@ CONTAINS
   IF (Psi%cplx) STOP 'cplx'
   IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1'
 
-  IF (OpPsi_omp == 0) THEN
+  IF (SG4_omp == 0) THEN
     nb_thread = 1
   ELSE
-    nb_thread = OpPsi_maxth
+    nb_thread = SG4_maxth
   END IF
 
 
@@ -152,6 +152,8 @@ CONTAINS
 
    !--------------------------------------------------------------
    !-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
+   CALL alloc_NParray(tab_l,(/ BasisnD%para_SGType2%nDind_SmolyakRep%ndim /),'tabl_l',name_sub)
+
    ith = 0
    !$ ith = OMP_GET_THREAD_NUM()
    tab_l(:) = BasisnD%para_SGType2%nDval_init(:,ith+1)
@@ -185,6 +187,7 @@ CONTAINS
 
      !write(6,*) 'iG done:',iG ; flush(6)
    END DO
+   CALL dealloc_NParray(tab_l,'tabl_l',name_sub)
   !$OMP   END PARALLEL
 END IF
 
@@ -422,9 +425,9 @@ END IF
 
  TYPE (TypeRVec),   allocatable    :: PsiR(:)
 
- integer       :: ib,i,iG,iiG,nb_thread,itab,ith,iterm00
- integer       :: tab_l(para_Op%BasisnD%nb_basis)
- logical       :: not_init
+ integer                :: ib,i,iG,iiG,nb_thread,itab,ith,iterm00
+ integer, allocatable   :: tab_l(:)
+ logical                :: not_init
 
  !----- for debuging ----------------------------------------------
  character (len=*), parameter :: name_sub='sub_TabOpPsi_FOR_SGtype4'
@@ -452,10 +455,10 @@ END IF
   IF (Psi(1)%cplx) STOP 'cplx'
   IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1'
 
-  IF (OpPsi_omp == 0) THEN
+  IF (SG4_omp == 0) THEN
     nb_thread = 1
   ELSE
-    nb_thread = OpPsi_maxth
+    nb_thread = SG4_maxth
   END IF
 
  nb_mult_OpPsi = 0
@@ -507,10 +510,66 @@ END IF
 
      !write(6,*) 'iG done:',iG ; flush(6)
    END DO
- ELSE
+ ELSE IF (allocated(BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
+!$OMP   PARALLEL DEFAULT(NONE) &
+!$OMP shared(Psi,OpPsi)                                       &
+!$OMP shared(para_Op,BasisnD,print_level,out_unitp,SG4_maxth)           &
+!$OMP   PRIVATE(iG,itab,PsiR) &
+!$OMP   NUM_THREADS(SG4_maxth)
+allocate(PsiR(size(Psi)))
+!$OMP   DO SCHEDULE(DYNAMIC,BasisnD%para_SGType2%nb_SG/SG4_maxth/10)
+!!$OMP   DO SCHEDULE(GUIDED)
+!!$OMP   DO SCHEDULE(STATIC)
+DO iG=1,BasisnD%para_SGType2%nb_SG
+     !write(6,*) 'iG',iG
+     !transfert part of the psi(:)%RvecB(:) to PsiR(itab)%V
+     DO itab=1,size(Psi)
+       CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,  &
+                                         iG,BasisnD%para_SGType2)
+       !write(6,*) 'iG,itab,PsiR',iG,itab,PsiR(itab)%V
+     END DO
 
-   !to be sure to have the correct number of threads
-   nb_thread = BasisnD%para_SGType2%nb_threads
+     CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,                    &
+          BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),para_Op)
+
+     !transfert back, PsiR(itab)%V (HPsi) to the psi(:)%RvecB(:)
+     DO itab=1,size(Psi)
+       CALL tabR_AT_iG_TO_tabPackedBasis(OpPsi(itab)%RvecB,PsiR(itab)%V,&
+                          iG,BasisnD%para_SGType2,BasisnD%WeightSG(iG))
+     END DO
+
+     !deallocate PsiR(:)
+     DO itab=1,size(Psi)
+       CALL dealloc_TypeRVec(PsiR(itab))
+     END DO
+
+     IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
+         mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+       write(out_unitp,'(a)',ADVANCE='no') '---'
+       CALL flush_perso(out_unitp)
+     END IF
+
+     !write(6,*) 'iG done:',iG ; flush(6)
+END DO
+!$OMP   END DO
+deallocate(PsiR)
+!$OMP   END PARALLEL
+
+ ELSE IF (BasisnD%para_SGType2%nb_tasks /= BasisnD%para_SGType2%nb_threads) THEN ! version 2
+   !$OMP parallel do                                             &
+   !$OMP default(none)                                           &
+   !$OMP shared(Psi,OpPsi,para_Op,BasisnD)                       &
+   !$OMP private(i)                                              &
+   !$OMP num_threads(SG4_maxth)
+   DO i=1,BasisnD%para_SGType2%nb_tasks
+     CALL sub_TabOpPsi_OF_SeveralDP_FOR_SGtype4(Psi,OpPsi,para_Op,      &
+                   BasisnD%para_SGType2%nDval_init(:,i),                &
+            BasisnD%para_SGType2%iG_th(i),BasisnD%para_SGType2%fG_th(i))
+   END DO
+  !$OMP   END PARALLEL DO
+ ELSE
+   !to be sure to have the correct number of threads, we use
+   !   BasisnD%para_SGType2%nb_threads
 
    !$OMP parallel                                                &
    !$OMP default(none)                                           &
@@ -521,10 +580,13 @@ END IF
 
    !--------------------------------------------------------------
    !-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
+   CALL alloc_NParray(tab_l,(/ BasisnD%para_SGType2%nDind_SmolyakRep%ndim /),'tabl_l',name_sub)
    ith = 0
    !$ ith = OMP_GET_THREAD_NUM()
    tab_l(:) = BasisnD%para_SGType2%nDval_init(:,ith+1)
    !--------------------------------------------------------------
+
+   !!$ write(6,*) 'ith,tab_l(:)',ith,':',tab_l
 
    ! we are not using the parallel do, to be able to use the correct initialized tab_l with nDval_init
    DO iG=BasisnD%para_SGType2%iG_th(ith+1),BasisnD%para_SGType2%fG_th(ith+1)
@@ -562,6 +624,7 @@ END IF
 
      !write(6,*) 'iG done:',iG ; flush(6)
    END DO
+   CALL dealloc_NParray(tab_l,'tabl_l',name_sub)
   !$OMP   END PARALLEL
 END IF
 
@@ -590,6 +653,95 @@ END IF
 !-----------------------------------------------------------
 
   END SUBROUTINE sub_TabOpPsi_FOR_SGtype4
+
+ SUBROUTINE sub_TabOpPsi_OF_SeveralDP_FOR_SGtype4(Psi,OpPsi,para_Op,    &
+                                                  tab_l_init,initG,endG)
+ USE mod_system
+ USE mod_nDindex
+ USE mod_Coord_KEO,                ONLY : zmatrix
+ USE mod_basis_set_alloc,          ONLY : basis
+ USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
+                  tabR_AT_iG_TO_tabPackedBasis,TypeRVec,dealloc_TypeRVec
+ USE mod_psi_set_alloc,            ONLY : param_psi,ecri_psi
+ USE mod_Op,                       ONLY : param_Op,write_param_Op
+ IMPLICIT NONE
+
+ TYPE (param_psi), intent(in)      :: Psi(:)
+ TYPE (param_psi), intent(inout)   :: OpPsi(:)
+
+ TYPE (param_Op),  intent(inout)   :: para_Op
+ integer,          intent(in)      :: initG,endG,tab_l_init(:)
+
+ ! local variables
+ TYPE (basis),      pointer        :: BasisnD
+ TYPE (TypeRVec),   allocatable    :: PsiR(:)
+ integer                           :: iG,itab
+ integer,           allocatable    :: tab_l(:)
+
+ !----- for debuging ----------------------------------------------
+ character (len=*), parameter :: name_sub='sub_TabOpPsi_OF_SeveralDP_FOR_SGtype4'
+ logical, parameter :: debug = .FALSE.
+ !logical, parameter :: debug = .TRUE.
+ !-----------------------------------------------------------------
+ IF (debug) THEN
+   write(out_unitp,*) 'BEGINNING ',name_sub
+   CALL flush_perso(out_unitp)
+ END IF
+ !-----------------------------------------------------------------
+  BasisnD => para_Op%BasisnD
+
+
+
+   !--------------------------------------------------------------
+   !-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
+   CALL alloc_NParray(tab_l,(/ BasisnD%para_SGType2%nDind_SmolyakRep%ndim /),&
+                     'tab_l',name_sub)
+   tab_l(:) = tab_l_init(:)
+   !--------------------------------------------------------------
+
+   DO iG=initG,endG
+
+     CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
+
+     !write(6,*) 'iG',iG
+     !transfert part of the psi(:)%RvecB(:) to PsiR(itab)%V
+     allocate(PsiR(size(Psi)))
+     DO itab=1,size(Psi)
+       CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,    &
+                                         iG,BasisnD%para_SGType2)
+       !write(6,*) 'iG,itab,PsiR',iG,itab,PsiR(itab)%V
+     END DO
+
+     CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,tab_l,para_Op)
+
+     !transfert back, PsiR(itab)%V (HPsi) to the psi(:)%RvecB(:)
+     DO itab=1,size(Psi)
+       CALL tabR_AT_iG_TO_tabPackedBasis(OpPsi(itab)%RvecB,PsiR(itab)%V,  &
+                     iG,BasisnD%para_SGType2,BasisnD%WeightSG(iG))
+     END DO
+
+     !deallocate PsiR(:)
+     DO itab=1,size(Psi)
+       CALL dealloc_TypeRVec(PsiR(itab))
+     END DO
+     deallocate(PsiR)
+
+     IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
+         mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+       write(out_unitp,'(a)',ADVANCE='no') '---'
+       CALL flush_perso(out_unitp)
+     END IF
+
+   END DO
+
+!-----------------------------------------------------------
+ IF (debug) THEN
+   write(out_unitp,*)
+   write(out_unitp,*) 'END ',name_sub
+ END IF
+!-----------------------------------------------------------
+
+  END SUBROUTINE sub_TabOpPsi_OF_SeveralDP_FOR_SGtype4
 
   SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,tab_l,para_Op)
   USE mod_system

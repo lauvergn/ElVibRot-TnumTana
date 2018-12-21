@@ -57,6 +57,7 @@ IMPLICIT NONE
 
     ! To intialize nDval(:) for each thread and when Tab_nDval is not allocated
     integer                       :: nb_threads = 0
+    integer                       :: nb_tasks   = 0
     integer, allocatable          :: nDval_init(:,:)   ! nDval_init(ndim,nb_threads) table the individual indexes
     integer, allocatable          :: iG_th(:),fG_th(:) ! iG indexes associated to the OpenMP threads
 
@@ -236,6 +237,7 @@ END IF
 
 
 SGType2_1%nb_threads = SGType2_2%nb_threads
+SGType2_1%nb_tasks   = SGType2_2%nb_tasks
 
 IF (allocated(SGType2_2%nDval_init)) THEN
   CALL alloc_NParray(SGType2_1%nDval_init,shape(SGType2_2%nDval_init),  &
@@ -284,8 +286,11 @@ END SUBROUTINE SGType2_2TOSGType2_1
       END IF
 !-----------------------------------------------------------
 
-      nb_threads  = 1
-   !$ nb_threads  = omp_get_max_threads()
+  IF (SG4_omp == 0) THEN
+    nb_threads = 1
+  ELSE
+    nb_threads = SG4_maxth
+  END IF
 
       ndim        = SGType2%nDind_SmolyakRep%ndim
 
@@ -311,19 +316,8 @@ END SUBROUTINE SGType2_2TOSGType2_1
         END DO
 
       CASE (2)
-
-        DO
-          write(out_unitp,*) ' nb_threads',nb_threads
-          CALL Set_nDval_init_FOR_SG4_v2(SGType2,nb_threads,err_sub)
-
-          IF (err_sub /= 0) THEN
-            nb_threads = nb_threads/2
-            IF (nb_threads < 1) EXIT
-          ELSE
-            EXIT
-          END IF
-
-        END DO
+        STOP 'do not use this version: Set_nDval_init_FOR_SG4_v2'
+        CALL Set_nDval_init_FOR_SG4_v2(SGType2,nb_threads,err_sub)
 
       CASE default
         CALL Set_nDval_init_FOR_SG4_v0(SGType2,nb_threads,err_sub)
@@ -339,7 +333,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
       IF (debug) THEN
         fformat = '(i0,a,i0,x,i0,a,' // int_TO_char(ndim) // '(1x,i0))'
 
-        DO ith=1,nb_threads
+        DO ith=1,SGType2%nb_tasks
           write(out_unitp,fformat) ith-1,' iG_th,fG_th ',               &
                                  SGType2%iG_th(ith),SGType2%fG_th(ith), &
                     ' nDval_init: ',SGType2%nDval_init(:,ith)
@@ -352,7 +346,6 @@ END SUBROUTINE SGType2_2TOSGType2_1
       END SUBROUTINE Set_nDval_init_FOR_SG4
       SUBROUTINE Set_nDval_init_FOR_SG4_v0(SGType2,nb_threads,err_sub)
       USE mod_system
-      !$ USE omp_lib, only : omp_get_max_threads
       IMPLICIT NONE
 
 !----- for the basis set ----------------------------------------------
@@ -379,30 +372,37 @@ END SUBROUTINE SGType2_2TOSGType2_1
       END IF
 !-----------------------------------------------------------
 
-      IF (nb_threads < SGType2%nDind_SmolyakRep%max_nDI) THEN
-        nb_threads = SGType2%nDind_SmolyakRep%max_nDI
-      END IF
-
       ndim        = SGType2%nDind_SmolyakRep%ndim
 
       SGType2%nb_threads = nb_threads
+      SGType2%nb_tasks   = nb_threads
+
+      IF (SGType2%nb_tasks > SGType2%nDind_SmolyakRep%max_nDI) THEN
+        SGType2%nb_tasks = SGType2%nDind_SmolyakRep%max_nDI
+      END IF
 
 
-      CALL alloc_NParray(SGType2%nDval_init,(/ ndim,nb_threads /),      &
+
+
+      CALL alloc_NParray(SGType2%nDval_init,(/ ndim,SGType2%nb_tasks /),&
                         'SGType2%nDval_init',name_sub)
+      SGType2%nDval_init(:,:) = 0
 
-      CALL alloc_NParray(SGType2%iG_th,(/ nb_threads /),  &
+      CALL alloc_NParray(SGType2%iG_th,(/ SGType2%nb_tasks /),  &
                         'SGType2%iG_th',name_sub)
+      SGType2%iG_th(:) = 0
 
-      CALL alloc_NParray(SGType2%fG_th,(/ nb_threads /),  &
+      CALL alloc_NParray(SGType2%fG_th,(/ SGType2%nb_tasks /),  &
                         'SGType2%fG_th',name_sub)
+      SGType2%fG_th(:) = 0
 
-        DO ith=0,nb_threads-1
+
+        DO ith=0,SGType2%nb_tasks-1
 
           SGType2%iG_th(ith+1) =                          &
-              (ith*SGType2%nDind_SmolyakRep%max_nDI)/nb_threads+1
+              (ith*SGType2%nDind_SmolyakRep%max_nDI)/SGType2%nb_tasks+1
           SGType2%fG_th(ith+1) =                          &
-            ((ith+1)*SGType2%nDind_SmolyakRep%max_nDI)/nb_threads
+            ((ith+1)*SGType2%nDind_SmolyakRep%max_nDI)/SGType2%nb_tasks
 
 
           i_SG = SGType2%iG_th(ith+1)
@@ -416,7 +416,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
         END DO
 
         err_sub = 0
-        IF (SGType2%fG_th(nb_threads) /= SGType2%nDind_SmolyakRep%max_nDI) THEN
+        IF (SGType2%fG_th(SGType2%nb_tasks) /= SGType2%nDind_SmolyakRep%max_nDI) THEN
           err_sub = 1
         END IF
 
@@ -425,7 +425,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
       IF (debug) THEN
         fformat = '(i0,a,i0,x,i0,a,' // int_TO_char(ndim) // '(1x,i0))'
 
-        DO ith=1,nb_threads
+        DO ith=1,SGType2%nb_tasks
           write(out_unitp,fformat) ith-1,' iG_th,fG_th ',               &
                                  SGType2%iG_th(ith),SGType2%fG_th(ith), &
                     ' nDval_init: ',SGType2%nDval_init(:,ith)
@@ -437,7 +437,6 @@ END SUBROUTINE SGType2_2TOSGType2_1
       END SUBROUTINE Set_nDval_init_FOR_SG4_v0
       SUBROUTINE Set_nDval_init_FOR_SG4_v1(SGType2,nb_threads,err_sub)
       USE mod_system
-      !$ USE omp_lib, only : omp_get_max_threads
       IMPLICIT NONE
 
 !----- for the basis set ----------------------------------------------
@@ -467,22 +466,23 @@ END SUBROUTINE SGType2_2TOSGType2_1
       ndim        = SGType2%nDind_SmolyakRep%ndim
 
       SGType2%nb_threads = nb_threads
+      SGType2%nb_tasks   = nb_threads
 
 
-      CALL alloc_NParray(SGType2%nDval_init,(/ ndim,nb_threads /),      &
+      CALL alloc_NParray(SGType2%nDval_init,(/ ndim,SGType2%nb_tasks /),&
                         'SGType2%nDval_init',name_sub)
       SGType2%nDval_init(:,:) = 0
 
-      CALL alloc_NParray(SGType2%iG_th,(/ nb_threads /),  &
+      CALL alloc_NParray(SGType2%iG_th,(/ SGType2%nb_tasks /),  &
                         'SGType2%iG_th',name_sub)
       SGType2%iG_th(:) = 0
 
-      CALL alloc_NParray(SGType2%fG_th,(/ nb_threads /),  &
+      CALL alloc_NParray(SGType2%fG_th,(/ SGType2%nb_tasks /),  &
                         'SGType2%fG_th',name_sub)
       SGType2%fG_th(:) = 0
 
 
-        nqq_Th      = sum(SGType2%tab_nq_OF_SRep(:)) / nb_threads
+        nqq_Th      = sum(SGType2%tab_nq_OF_SRep(:)) / SGType2%nb_tasks
         nqq         = 0
 
         ith = 1
@@ -520,7 +520,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
       IF (debug) THEN
         fformat = '(i0,a,i0,x,i0,a,' // int_TO_char(ndim) // '(1x,i0))'
 
-        DO ith=1,nb_threads
+        DO ith=1,SGType2%nb_tasks
           write(out_unitp,fformat) ith-1,' iG_th,fG_th ',               &
                                  SGType2%iG_th(ith),SGType2%fG_th(ith), &
                     ' nDval_init: ',SGType2%nDval_init(:,ith)
@@ -543,9 +543,9 @@ END SUBROUTINE SGType2_2TOSGType2_1
 !-----------------------------------------------------------
 
       END SUBROUTINE Set_nDval_init_FOR_SG4_v1
+
       SUBROUTINE Set_nDval_init_FOR_SG4_v2(SGType2,nb_threads,err_sub)
       USE mod_system
-      !$ USE omp_lib, only : omp_get_max_threads
       IMPLICIT NONE
 
 !----- for the basis set ----------------------------------------------
@@ -553,7 +553,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
       integer,              intent(inout) :: nb_threads,err_sub
 
 
-      integer             :: ith,nqq,nqq_Th,ndim,i_SG,iiG
+      integer             :: ith,nqq,nqq_Th,ndim,i_SG,iiG,diG
       integer             :: tab_l(SGType2%nDind_SmolyakRep%ndim)
       integer             :: tab_l0(SGType2%nDind_SmolyakRep%ndim)
 
@@ -562,12 +562,14 @@ END SUBROUTINE SGType2_2TOSGType2_1
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Set_nDval_init_FOR_SG4_v2'
-      logical,parameter :: debug=.FALSE.
-      !logical,parameter :: debug=.TRUE.
+      !logical,parameter :: debug=.FALSE.
+      logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) 'ndim (nb_basis)',SGType2%nDind_SmolyakRep%ndim
+        write(out_unitp,*) 'ndim (nb_basis): ',SGType2%nDind_SmolyakRep%ndim
+        write(out_unitp,*) 'nb_threads:      ',nb_threads
+
         CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
@@ -575,91 +577,75 @@ END SUBROUTINE SGType2_2TOSGType2_1
       ndim        = SGType2%nDind_SmolyakRep%ndim
 
       SGType2%nb_threads = nb_threads
+      SGType2%nb_tasks   = nb_threads*10
+
+      IF (SGType2%nb_threads > SGType2%nDind_SmolyakRep%max_nDI) THEN
+        SGType2%nb_tasks   = SGType2%nDind_SmolyakRep%max_nDI
+        SGType2%nb_threads = SGType2%nDind_SmolyakRep%max_nDI
+      END IF
+
+      IF (SGType2%nb_tasks > SGType2%nDind_SmolyakRep%max_nDI) THEN
+        SGType2%nb_tasks   = SGType2%nDind_SmolyakRep%max_nDI
+      END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'SGType2%nb_tasks',SGType2%nb_tasks
+        CALL flush_perso(out_unitp)
+      END IF
 
 
-      CALL alloc_NParray(SGType2%nDval_init,(/ ndim,nb_threads /),      &
+      CALL alloc_NParray(SGType2%nDval_init,(/ ndim,SGType2%nb_tasks /),&
                         'SGType2%nDval_init',name_sub)
       SGType2%nDval_init(:,:) = 0
 
-      CALL alloc_NParray(SGType2%iG_th,(/ nb_threads /),  &
+      CALL alloc_NParray(SGType2%iG_th,(/ SGType2%nb_tasks /),  &
                         'SGType2%iG_th',name_sub)
       SGType2%iG_th(:) = 0
 
-      CALL alloc_NParray(SGType2%fG_th,(/ nb_threads /),  &
+      CALL alloc_NParray(SGType2%fG_th,(/ SGType2%nb_tasks /),  &
                         'SGType2%fG_th',name_sub)
       SGType2%fG_th(:) = 0
 
 
-        nqq_Th      = sum(SGType2%tab_nq_OF_SRep(:)) / nb_threads
-        nqq         = 0
+        DO ith=0,SGType2%nb_tasks-1
 
-        ith = 1
-        CALL init_nDval_OF_nDindex(SGType2%nDind_SmolyakRep,tab_l)
+          SGType2%iG_th(ith+1) =                          &
+              (ith*SGType2%nDind_SmolyakRep%max_nDI)/SGType2%nb_tasks+1
+          SGType2%fG_th(ith+1) =                          &
+            ((ith+1)*SGType2%nDind_SmolyakRep%max_nDI)/SGType2%nb_tasks
 
-        SGType2%nDval_init(:,ith) = tab_l(:)
-        SGType2%iG_th(ith)        = 1
 
-        DO i_SG=1,SGType2%nb_SG
-          CALL ADD_ONE_TO_nDindex(SGType2%nDind_SmolyakRep,tab_l,iG=i_SG)
+          i_SG = SGType2%iG_th(ith+1)
+          CALL init_nDval_OF_nDindex(SGType2%nDind_SmolyakRep,tab_l)
 
-          nqq         = nqq         + SGType2%tab_nq_OF_SRep(i_SG)
-
-          IF (nqq > nqq_Th) THEN
-            write(6,*) 'ith,nqq,nqq_Th',ith,nqq,nqq_Th
-            ! end for the current thread
-            SGType2%fG_th(ith) = i_SG-1
-
-            ! for the new thread
-            ith = ith+1
-            SGType2%iG_th(ith)        = i_SG
-            SGType2%nDval_init(:,ith) = tab_l0(:) ! tab_l before ADD_ONE
-
-            nqq = 0
-
-            ! change nqq_Th with the rest of the Smolyak terms
-            IF ((nb_threads-ith+1) /= 0) THEN
-              nqq_Th      = sum(SGType2%tab_nq_OF_SRep(i_SG:SGType2%nb_SG)) / &
-                              (nb_threads-ith+1)
-            END IF
-
-          END IF
-          tab_l0(:) = tab_l(:)
+          DO iiG=1,i_SG-1
+            CALL ADD_ONE_TO_nDindex(SGType2%nDind_SmolyakRep,tab_l)
+          END DO
+          SGType2%nDval_init(:,ith+1) = tab_l(:)
 
         END DO
-        ! end of the last thread
-        SGType2%fG_th(ith) = SGType2%nb_SG
-        write(6,*) 'ith,nqq,nqq_Th',ith,nqq,nqq_Th
 
         err_sub = 0
-        IF (count(SGType2%iG_th == 0) > 0) err_sub = 1
-        IF (count(SGType2%fG_th == 0) > 0) err_sub = 1
+        IF (SGType2%fG_th(SGType2%nb_tasks) /= SGType2%nDind_SmolyakRep%max_nDI) THEN
+          err_sub = 1
+        END IF
 
-      IF (debug) THEN
-        fformat = '(i0,a,i0,x,i0,a,' // int_TO_char(ndim) // '(1x,i0))'
-
-        DO ith=1,nb_threads
-          write(out_unitp,fformat) ith-1,' iG_th,fG_th ',               &
-                                 SGType2%iG_th(ith),SGType2%fG_th(ith), &
-                    ' nDval_init: ',SGType2%nDval_init(:,ith)
-        END DO
-        CALL flush_perso(out_unitp)
-      END IF
-
-      !err /= 0 means nb_threads is too large => table are deallocated
-      IF (err_sub /= 0) THEN
-        CALL dealloc_NParray(SGType2%nDval_init,'SGType2%nDval_init',name_sub)
-        CALL dealloc_NParray(SGType2%iG_th,'SGType2%iG_th',name_sub)
-        CALL dealloc_NParray(SGType2%fG_th,'SGType2%fG_th',name_sub)
-      END IF
 
 !-----------------------------------------------------------
       IF (debug) THEN
+        fformat = '(i0,a,i0,x,i0,a,' // int_TO_char(ndim) // '(1x,i0))'
+
+        DO ith=1,SGType2%nb_tasks
+          write(out_unitp,fformat) ith-1,' iG_th,fG_th ',               &
+                                 SGType2%iG_th(ith),SGType2%fG_th(ith), &
+                              ' nDval_init: ',SGType2%nDval_init(:,ith)
+        END DO
         write(out_unitp,*) 'END ',name_sub
         CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
-
       END SUBROUTINE Set_nDval_init_FOR_SG4_v2
+
       RECURSIVE SUBROUTINE calc_Weight_OF_SRep(WeightSG,nDind_SmolyakRep)
       USE mod_system
       IMPLICIT NONE

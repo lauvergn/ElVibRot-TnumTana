@@ -56,7 +56,7 @@ sym  cos(a)      R     r    x    pi   dh
 
 
  &inactives step=1.d-5 /
- &actives test=$test direct=2 Save_Grid_iterm=t Seq_Grid_iterm=t /
+ &actives test=$test direct=2 /
  &analyse max_ana=40 max_ene=50000.d0 print=f print_psi=0 davidson=f /
 
  &CurviRPH nb_pts=3 gradient=f /

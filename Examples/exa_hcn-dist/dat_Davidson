@@ -18,7 +18,8 @@ cd $DIR_vib
  make
 cd $here
 
-#export OMP_NUM_THREADS=1
+export OMP_NUM_THREADS=4
+export OMP_PLACES=threads
 
  x1=0.538516066
  x2=0.461483933

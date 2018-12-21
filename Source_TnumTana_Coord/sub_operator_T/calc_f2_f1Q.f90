@@ -69,10 +69,9 @@
       real (kind=Rkind), parameter :: inv_Name   = 1822.888485541_Rkind
 
       !real (kind=Rkind), parameter :: mH   = 1837.1526464003414_Rkind ! mH ! Tnum
-       real (kind=Rkind), parameter :: mD   = 3671.4829394591770_Rkind ! mD ! Tnum
       real (kind=Rkind), parameter :: mH   = 1.00800_Rkind * inv_Name ! mH ! Bacic
 
-      real (kind=Rkind), parameter :: mH2  = TWO*mD ! mH2
+      real (kind=Rkind), parameter :: mH2  = TWO*mH ! mH2
 
       integer       :: i,iQdyn
 
@@ -119,18 +118,18 @@
       th  = Qsym0(9)
       phi = Qsym0(10)
 
-      BH2 = ONE/(mD*R**2)
+      BH2 = ONE/(mH*R**2)
 
       s = sin(th)
       c = cos(th)
 
       rho = s
 
-      Tdef2_tot(1,1)   = -HALF/(mD/TWO)
+      Tdef2_tot(1,1)   = -HALF/(mH/TWO)
 
-      Tdef2_tot(6,6)   = -HALF/(mD*TWO)
-      Tdef2_tot(7,7)   = -HALF/(mD*TWO)
-      Tdef2_tot(8,8)   = -HALF/(mD*TWO)
+      Tdef2_tot(6,6)   = -HALF/(mH*TWO)
+      Tdef2_tot(7,7)   = -HALF/(mH*TWO)
+      Tdef2_tot(8,8)   = -HALF/(mH*TWO)
 
       Tdef2_tot(9,9)   = -BH2
       Tdef2_tot(10,10) = -BH2/(s*s)
