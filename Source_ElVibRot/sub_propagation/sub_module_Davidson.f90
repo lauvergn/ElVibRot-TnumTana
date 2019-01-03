@@ -130,6 +130,11 @@ CONTAINS
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
       auTOene    = get_Conv_au_TO_WriteUnit('E',WriteUnit)
 
+      write(out_unitp,*) 'all_lower_states',para_propa%para_Davidson%all_lower_states
+      write(out_unitp,*) 'lower_states    ',para_propa%para_Davidson%lower_states
+      write(out_unitp,*) 'project_WP0     ',para_propa%para_Davidson%project_WP0
+      write(out_unitp,*) 'NewVec_type     ',para_propa%para_Davidson%NewVec_type
+
       IF (para_propa%para_Davidson%Op_Transfo .AND.                     &
                                      para_H%para_ReadOp%Op_Transfo) THEN
 
@@ -1190,7 +1195,6 @@ END SUBROUTINE MakeResidual_Davidson
    j_end = ndim
  END IF
  IF (debug) write(out_unitp,*) '  j_ini,j_end',it,j_ini,j_end
-
  iresidual = 0
  DO j=j_ini,j_end
    IF (ndim == max_diago) EXIT
@@ -1264,8 +1268,8 @@ END SUBROUTINE MakeResidual_Davidson
          IF (abs(Di) > para_Davidson%conv_resi) THEN
            a = ONE / Di
          ELSE
-           a = ZERO
-           !a = ONE / (Di +ONETENTH**3)
+           !a = ZERO
+           a = ONE / (Di +ONETENTH**3)
          END IF
          psi(ndim+1)%RvecB(ib) = psi(ndim+1)%RvecB(ib) * a
        END DO
@@ -1326,23 +1330,6 @@ END SUBROUTINE MakeResidual_Davidson
      IF (psi(ndim+1)%norme < ONETENTH**10) CYCLE ! otherwise dependent vector
 
      !write(out_unitp,*) ' symab: psi(isym), new vec ortho',psi(isym)%symab,psi(ndim+1)%symab
-
-
-!old version
-!     CALL norme_psi(psi(ndim+1),Renorm=.TRUE.)
-!     DO i=1,ndim
-!       CALL Overlap_psi1_psi2(Overlap,psi(ndim+1),psi(i),      &
-!                              With_Grid=para_Davidson%With_Grid)
-!       RS = real(Overlap,kind=Rkind)
-!       psi(ndim+1) = psi(ndim+1) - psi(i) * RS
-!     END DO
-!     CALL norme_psi(psi(ndim+1),Renorm=.TRUE.)
-!     DO i=1,ndim
-!       CALL Overlap_psi1_psi2(Overlap,psi(ndim+1),psi(i),      &
-!                              With_Grid=para_Davidson%With_Grid)
-!       RS = real(Overlap,kind=Rkind)
-!       psi(ndim+1) = psi(ndim+1) - psi(i) * RS
-!     END DO
 
 
      IF (debug) THEN

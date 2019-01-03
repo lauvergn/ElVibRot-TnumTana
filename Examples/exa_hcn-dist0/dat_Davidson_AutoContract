@@ -1,0 +1,70 @@
+ SYSTEM=sub_system_murrell.f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+ x1=0.538516066
+ x2=0.461483933
+
+export OMP_NUM_THREADS=1
+
+nice $DIR_vib/vib << ** >res
+ &system /
+ &constantes /
+ &variables 
+         zmat=T
+         nat=4
+         sym=T
+         nrho=2
+ /
+C
+0.0     1
+N     2  1
+H     2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 1 1 1    0 0 0
+
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2
+          read_Qsym0=t unit='bohr' /
+cosa .999d0
+R 3.187
+r 2.179
+x 0.
+pi 3.141592653589793238462643383279d0
+dh 0.0
+
+ &basis_nD iQdyn(1)=1 name="Pl0" nb=81 nq=100 
+           POGridRep=f min_nbc=20 auto_contrac=t max_ene_contrac=20000. "cm-1" auto_contrac_type1_TO=100 /
+ &basis_nD iQdyn(1)=2 name="boxAB" nb=100 nq=128 A=2.2 B=5.2
+           POGridRep=t min_nbc=8 nqPLUSnbc_TO_nqc=0 auto_contrac=t max_ene_contrac=20000. "cm-1" /
+ &basis_nD iQdyn(1)=3 name="boxAB" nb=100 nq=128 A=1.2 B=4.2
+           POGridRep=t min_nbc=8 auto_contrac=t max_ene_contrac=20000. "cm-1" /
+ &inactives /
+ &actives test=f direct=2 /
+ &analyse max_ana=40 max_ene=50000. "cm-1" print=f print_psi=0 davidson=t /
+ &davidson nb_WP=3 max_it=100 max_WP=300 num_resetH=100
+           lower_states=t project_WP0=f one_residue=f
+           read_WP=f read_listWP=f
+/
+ 1 1 1    1 1   1.0
+end wp0
+ 2 1 1    1 1   1.0
+end wp0
+ 1 1 2    1 1   1.0
+end wp0
+**

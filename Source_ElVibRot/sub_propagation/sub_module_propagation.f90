@@ -1465,7 +1465,7 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
       precond           = .FALSE. ! precondition
       precond_tol       = ONETENTH
 
-      lower_states      = .TRUE.  ! T => converge on the lower states
+      lower_states      = .FALSE. ! T => converge on the lower states
       all_lower_states  = .FALSE. ! T => converge all the lower states (E<Max_ene)
       project_WP0       = .FALSE. ! T => project on WP0 (revelant if lower_states=f)
       one_residue       = .FALSE. ! T => increase H with ONE residue (largest)
@@ -1509,6 +1509,10 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 
       read(in_unitp,davidson)
       IF (print_level > 0) write(out_unitp,davidson)
+
+      IF (.NOT. lower_states .AND. .NOT. all_lower_states .AND. &
+          .NOT. project_WP0) lower_states = .TRUE.
+
 
       IF (residual_max_nb == huge(1) .AND. one_residue) residual_max_nb = 1
 

@@ -76,8 +76,6 @@
                                                  ! 1,2,3 => Dipole moment (x,y,z)
           character (len=Name_len) :: name_Op = 'H'
 
-
-          !logical :: cplx        = .FALSE.       ! if T mat is complexe
           integer :: nb_OpPsi    = 0             ! number of Operator action
 
           integer :: nb_bie=0                    ! number of active basis functions and grid points
@@ -93,7 +91,7 @@
                                                  ! usefull before the spectral transformation (for another operator)
 
 
-          real (kind=Rkind), pointer    :: Rmat(:,:)   => null()        ! Rmat(nb_tot ,nb_tot )
+          real (kind=Rkind),    pointer :: Rmat(:,:)   => null()        ! Rmat(nb_tot ,nb_tot )
           complex (kind=Rkind), pointer :: Cmat(:,:)   => null()        ! Cmat(nb_tot ,nb_tot )
 
           ! Parameters, when the matrix is packed
@@ -116,7 +114,7 @@
           complex (kind=Rkind), pointer :: Cvp(:,:)      => null()        ! Cvp(nb_tot ,nb_tot ) : cplx eigenvectors
 
 
-          integer                      :: nb_act1=0
+          integer                      :: nb_act1 = 0
 
           integer, allocatable         :: derive_termQdyn(:,:) ! (2,nb_Term)
           TYPE (param_OpGrid), pointer :: OpGrid(:)            => null() ! nb_Term
@@ -1255,7 +1253,8 @@
 
       TYPE (param_Op), intent(inout) :: para_Op
 
-      integer       :: k_term,iq
+      integer       :: k_term,iq,iterm00
+      real(kind=Rkind) :: Qact(para_Op%mole%nb_var)
 
 
       character (len=*), parameter :: name_sub='Analysis_OpGrid_OF_Op'
@@ -1272,6 +1271,18 @@
        END IF
 
        CALL Analysis_OpGrid(para_Op%OpGrid,para_Op%n_Op)
+
+       iterm00 = para_Op%derive_term_TO_iterm(0,0)
+       iq = para_Op%OpGrid(iterm00)%iq_min
+       IF (iq > 0) THEN
+         CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
+         write(out_unitp,*) 'iq_min,Op_min,Qact',iq,para_Op%OpGrid(iterm00)%Op_min,Qact
+       END IF
+       iq = para_Op%OpGrid(iterm00)%iq_max
+       IF (iq > 0) THEN
+         CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
+         write(out_unitp,*) 'iq_max,Op_max,Qact',iq,para_Op%OpGrid(iterm00)%Op_max,Qact
+       END IF
 
        write(out_unitp,*) 'Analysis of the imaginary Op grid',para_Op%cplx
        IF (para_Op%cplx) THEN

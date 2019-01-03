@@ -262,6 +262,8 @@
     CALL constantes_CODATA2014(c,mhu0,G,h,e,me,mp,Na,R)
   CASE ('HANDBOOK70ED','HANDBOOK')
     CALL constantes_HandBook70ed(c,mhu0,G,h,e,me,mp,Na,R)
+  CASE ('PUBLI2001')
+    CALL constantes_HandBook70ed_2001(c,mhu0,G,h,e,me,mp,Na,R)
   CASE Default
     CALL constantes_CODATA2006(c,mhu0,G,h,e,me,mp,Na,R)
   END SELECT
@@ -642,23 +644,87 @@
 
   ! vitesse de la lumiere (exacte) (en m s-1)
   c = 299792458._Rkind
+  write(out_unitp,*) 'c = ',c
   ! permeabilite du vide (exacte) (en N A-2)
   mhu0 = pi*4.e-7_Rkind
+  write(out_unitp,*) 'mhu0 = ',mhu0
   ! permitivite du vide (exacte) (en F m-1)
   G = 6.6725985e-11_Rkind
   ! constante de Planck (h et hb) (en J s)
   h = 6.626075540e-34_Rkind
+  write(out_unitp,*) 'h = ',h
   ! charge de l electron (en C)
   e = 1.6021773349e-19_Rkind
+  write(out_unitp,*) 'e = ',e
   ! masse de l electron (en kg)
   me = 9.109389754e-31_Rkind
+
+  write(out_unitp,*) 'me = ',me
   ! masse du proton (en kg)
   mp = 1.672623110e-27_Rkind
   ! constante d'Avogadro (mol-1)
   Na = 6.022136736e23_Rkind
+  write(out_unitp,*) 'Na = ',Na
   ! constante des gaz parfait R (J mol-1 K-1)
   R = 8.31451070_Rkind
+  write(out_unitp,*) 'R = ',R
 
  END SUBROUTINE constantes_HandBook70ed
+ SUBROUTINE constantes_HandBook70ed_2001(c,mhu0,G,h,e,me,mp,Na,R)
+ IMPLICIT NONE
+
+ !----- physical constants ---------------------------
+ real (kind=Rkind) :: c      !< Speed of light (exact) (in m s-1)
+ real (kind=Rkind) :: mhu0   !< Magnetic Constant (exact) (in N A-2)
+ real (kind=Rkind) :: G      !< Gravitational Constant (in m^3 kg-1 s-2)
+ real (kind=Rkind) :: h      !< Planck Constant (h et hb) (in J s)
+ real (kind=Rkind) :: e      !< Elementary Charge -electron- (in C)
+ real (kind=Rkind) :: me     !< Electron mass (in kg)
+ real (kind=Rkind) :: mp     !< Proton mass (in kg)
+ real (kind=Rkind) :: Na     !< Avogadro constant (in mol-1)
+ real (kind=Rkind) :: R      !< Molar gas constant (in J mol−1 K−1)
+
+ character (len=*), parameter :: version='constantes_HandBook70ed_2001'
+  !---------------------------------------------------------------------
+  write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
+  !---------------------------------------------------------------------
+
+  !------ affectation des constantes avec ---------------------------
+  !       Constante du Handbook of Chemisry and Physics (70th ed)
+  !       pp F-215 F-219 pour les constantes physiques
+  ! several caonstants were defined in single precision (e, me, mp)
+
+  ! vitesse de la lumiere (exacte) (en m s-1)
+  c = 299792458._Rkind
+  write(out_unitp,*) 'c = ',c
+  ! permeabilite du vide (exacte) (en N A-2)
+  mhu0 = pi*4.e-7_Rkind
+  write(out_unitp,*) 'mhu0 = ',mhu0
+  ! permitivite du vide (exacte) (en F m-1)
+  G = 6.6725985e-11_Rkind
+  ! constante de Planck (h et hb) (en J s)
+  h = 6.626075540e-34_Rkind
+  write(out_unitp,*) 'h = ',h
+  ! charge de l electron (en C)
+  !e = 1.6021773349e-19_Rkind
+  e = 1.6021773349e-19
+  write(out_unitp,*) 'e = ',e
+  ! masse de l electron (en kg)
+  !me = 9.109389754e-31_Rkind
+  me = 9.109389754e-31
+
+  write(out_unitp,*) 'me = ',me
+  ! masse du proton (en kg)
+  mp = 1.672623110e-27_Rkind
+  mp = 1.672623110e-27
+
+  ! constante d'Avogadro (mol-1)
+  Na = 6.022136736e23_Rkind
+  write(out_unitp,*) 'Na = ',Na
+  ! constante des gaz parfait R (J mol-1 K-1)
+  R = 8.31451070_Rkind
+  write(out_unitp,*) 'R = ',R
+
+ END SUBROUTINE constantes_HandBook70ed_2001
  END MODULE mod_constant
 

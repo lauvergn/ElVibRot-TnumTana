@@ -266,7 +266,7 @@
 
         CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,para_PES%nb_elec,nderiv=1)
 
-        CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+        CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
 
         CALL Get_Grad_FROM_Tab_OF_dnMatOp(Grad,dnMatOp) ! for the first electronic state
         write(out_unitp,*) 'Grad',Grad
@@ -402,8 +402,8 @@
       nb_scalar_Op                = para_PES%nb_scalar_Op
       para_PES%nb_scalar_Op       = 0
 
-      para_PES%calc_scalar_Op     = .FALSE.
       calc_scalar_Op              = para_PES%calc_scalar_Op
+      para_PES%calc_scalar_Op     = .FALSE.
 
       Cart_Transfo_save           = mole%Cart_transfo
       mole%Cart_transfo           = .FALSE.
@@ -534,7 +534,7 @@
 
       CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,para_PES%nb_elec,nderiv=0)
 
-      CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+      CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
 
       Energ = Get_Scal_FROM_Tab_OF_dnMatOp(dnMatOp) ! for the first electronic state
 

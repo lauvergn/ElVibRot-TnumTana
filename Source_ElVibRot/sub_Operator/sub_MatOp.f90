@@ -650,7 +650,7 @@
 
 !----- divers ----------------------------------------------------
       integer  :: nb_ba,nb_bie
-      integer  :: n,nb_thread
+      integer  :: n
 
       integer  :: i,k
       integer  :: i1,i2,f1,f2
@@ -696,13 +696,6 @@
       END IF
 !     ----------------------------------------------------------------
 
-      IF (MatOp_omp == 0) THEN
-        nb_thread = 1
-      ELSE
-        nb_thread = MatOp_maxth
-      END IF
-      IF (print_level>-1) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
-
       !-------------------------------------------------------------
       !-     memories allocation: td0b, Opd0bWrho mat1, mat2, mat3
       !-------------------------------------------------------------
@@ -733,8 +726,9 @@
       END IF
 
       ! selected the optimal value of kmem, as function of max_mem and mem_tot
-      kmem = min(10,para_Op%nb_qa)
-      !kmem = para_Op%nb_qa
+      !kmem = min(10,para_Op%nb_qa)
+      kmem = para_Op%nb_qa/10
+      IF (kmem == 0) kmem = para_Op%nb_qa
       allocate(d0MatOpd0bWrho(kmem,nb_ba),stat=err_mem)
       memory = kmem*nb_ba
       CALL error_memo_allo(err_mem,memory,'d0MatOpd0bWrho',name_sub,'d0MatOp')
@@ -747,7 +741,7 @@
 
       nb_blocks = para_Op%nb_qa/kmem
       IF (mod(para_Op%nb_qa,kmem) /= 0) nb_blocks = nb_blocks + 1
-      IF (print_level>0) write(out_unitp,*) 'number of blocks',nb_blocks
+      IF (print_level>0 .OR. debug) write(out_unitp,*) 'number of blocks',nb_blocks
 
       CALL alloc_NParray(td0b,(/nb_ba,kmem/),'td0b',name_sub)
       CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
@@ -986,7 +980,7 @@
 !----- divers ----------------------------------------------------
       integer  :: nb_ba,nb_bie,nb_Op,i_Op
 
-      integer  :: n,nb_thread
+      integer  :: n
 
       integer  :: i,k,KRot,JRot,ibRot,jbRot
       integer  :: i1,i2,f1,f2
@@ -1041,13 +1035,6 @@
         STOP
       END IF
 !     ----------------------------------------------------------------
-
-      IF (MatOp_omp == 0) THEN
-        nb_thread = 1
-      ELSE
-        nb_thread = MatOp_maxth
-      END IF
-      IF (print_level >-1 ) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
 
 
       nb_ba  = para_Op%nb_ba
@@ -1391,14 +1378,6 @@
       END IF
 !     ----------------------------------------------------------------
 
-      IF (MatOp_omp == 0) THEN
-        nb_thread = 1
-      ELSE
-        nb_thread = MatOp_maxth
-      END IF
-      IF (print_level >-1 ) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
-
-
       nb_ba  = para_Op%nb_ba
       nb_bie = para_Op%nb_bie
 
@@ -1555,7 +1534,7 @@
           !$OMP shared(para_Op,nplus,i1_h,i2_h,i_Op,print_level)   &
           !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)   &
           !$OMP private(ib1,k,VecQ)                                &
-          !$OMP num_threads(nb_thread)
+          !$OMP num_threads(MatOp_maxth)
           CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
           !$OMP do
           DO ib1=1,para_Op%nb_ba
@@ -1827,7 +1806,7 @@
 !----- divers ----------------------------------------------------
       integer  :: nb_ba,nb_bie,nb_Op,i_Op
 
-      integer  :: n,nb_thread
+      integer  :: n
 
       integer  :: i,k,KRot,JRot,ibRot,jbRot
       integer  :: i1,i2,f1,f2
@@ -1882,14 +1861,6 @@
         STOP
       END IF
 !     ----------------------------------------------------------------
-
-      IF (MatOp_omp == 0) THEN
-        nb_thread = 1
-      ELSE
-        nb_thread = MatOp_maxth
-      END IF
-      IF (print_level >-1 ) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
-
 
       nb_ba  = para_Op%nb_ba
       nb_bie = para_Op%nb_bie
@@ -2015,7 +1986,7 @@
           !$OMP shared(para_Op,nplus,i1_h,i2_h,i_Op,print_level)        &
           !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)        &
           !$OMP private(ib1,k,VecQ)                                     &
-          !$OMP num_threads(nb_thread)
+          !$OMP num_threads(MatOp_maxth)
           CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
           !$OMP do
           DO ib1=1,para_Op%nb_ba
@@ -2047,7 +2018,7 @@
           !$OMP shared(para_Op,nplus,i1_h,i2_h,i_Op,print_level)   &
           !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)   &
           !$OMP private(ib1,k,VecQ)                                &
-          !$OMP num_threads(nb_thread)
+          !$OMP num_threads(MatOp_maxth)
           CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
           !$OMP do
           DO ib1=1,para_Op%nb_ba

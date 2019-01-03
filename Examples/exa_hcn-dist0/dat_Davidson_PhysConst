@@ -1,0 +1,90 @@
+ SYSTEM=sub_system_murrell.f
+ test=f
+
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+echo $here
+echo $DIR_vib
+echo $DIR_pot
+echo $SYSTEM
+#exit
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+#export OMP_NUM_THREADS=1
+
+ x1=0.538516066
+ x2=0.461483933
+
+
+#&constantes EVRT_path='~/' auTOcm_inv=219475. inv_Name=1822000. version='rr' /
+#&constantes mass_version='NIST2018' version='CODATA2014' /
+#&constantes mass_version='NIST2012' version='CODATA2006' /
+#&constantes mass_version='HANDBOOK70ED' version='HANDBOOK70ED' /
+
+nice $DIR_vib/vib << ** >res
+ &system printlevel=2 PGrid_omp=1 PGrid_maxth=30 /
+ &constantes mass_version='NIST2018' version='CODATA2014' /
+ &variables 
+         zmat=T nat=4 sym=T nrho=2
+ /
+13C
+X     1
+N     2  1
+2H    2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 1 1 1    0 0 0
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2  read_Qsym0=t unit='bohr' /
+cosa .9
+R 3.187
+r 2.179
+x 0.
+pi 3.14159265358979323844d0
+dh 0.0
+
+
+ &basis_nD iQdyn(1)=1 name="Pl0" nb=51 nq=80 contrac=t nbc=20 name_contrac_file="ONE_MODE/cc1_51_80" /
+ &basis_nD iQdyn(1)=2 name="Hm"  nb=10 nq=15 Q0=3.2 scaleQ=5.1 /
+ &basis_nD iQdyn(1)=3 name="Hm"  nb=10 nq=15 Q0=2.2 scaleQ=11.0 /
+
+ &inactives /
+ &actives test=$test comput_S=f direct=2 Type_HamilOp=1 /
+ &analyse max_ana=40 max_ene=50000.d0
+          print_psi=0 psi1D_Q0=t psi2D_Q0=t
+          Rho1D=t Rho2D=t Wheight_rho=t
+          davidson=t intensity=t name_file_spectralWP='file_spec' /
+Qana_Weight 0.9 3.187 2.178 0. 3.14 0.
+Weight_Rho  -1    0    0    0   0   0
+
+ &intensity l_Int=t l_Tau=f l_IntVR=f Temp=300. Ewidth=1. Emax=6000. Emin=0.0 /
+
+ &davidson nb_WP=5 max_it=50 max_WP=300 num_resetH=10
+           lower_states=t project_WP0=f one_residue=f
+           read_WP=f read_listWP=f
+/
+ 1 1 1    1 1   1.0
+end wp0
+ 4 1 1    1 1   1.0
+end wp0
+ 6 1 1    1 1   1.0
+end wp0
+ 1 1 2    1 1   1.0
+end wp0
+ 1 2 1    1 1   1.0
+end wp0
+**

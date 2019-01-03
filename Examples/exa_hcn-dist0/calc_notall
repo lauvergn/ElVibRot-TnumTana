@@ -1,0 +1,38 @@
+rm cpu_all
+
+ for name in dat_NLO dat_NewQTransfo dat_NewQTransfo-OneD dat_NewQTransfo-RPH dat_NewQTransfo-RPH-SGtype2 dat_NewQTransfo-RPH2 dat_NewQTransfo-RPH_AutoContract dat_NewQTransfo-RPH_HarD dat_NewQTransfo-flex dat_NewQTransfo-flex3D dat_NewQTransfo-lin3D dat_NewQTransfo-poly dat_NewQTransfo-poly2 dat_PartialGrid dat_ScalarOp dat_Sparse dat_WP-control-gate dat_WP-control-gatebis dat_WP-control-nogate dat_WP-prop1 dat_WP-prop1-2elec dat_WP-prop1-bis dat_WP-prop2 dat_WP-prop22 dat_WP-prop2bis dat_WP-prop2im dat_WP-propRK4 dat_WP-relax dat_WP-relax-Hmax dat_cHAC_Davidson-dir0 dat_cHAC_Davidson-dir0-readGrid dat_cHAC_Davidson-dir1 dat_cHAC_Davidson-dir2 dat_cHAC_Davidson-dir2-Make_MatOp dat_cHAC_Davidson-dir3 dat_cart dat_flex dat_flex2 dat_flex_intensity dat_intensity dat_nDfit dat_publi dat_publi-Murrell dat_publi2 dat_publiTaylor dat_rigid dat_vib-2elec dat_vib2D
+do
+./$name
+echo "=======================================" >> cpu_all
+
+echo "=======================================" >> res_all
+echo "=======================================" >> res_all
+echo "===" $name "===========================" >> res_all
+echo "=======================================" >> res_all
+echo "=======================================" >> res_all
+echo $name >> cpu_all
+#tail -40 res >> cpu_all
+grep "lev:    0" res | tail -1 | awk '{print $1 " " $2 " " $3 " " $4 " " $5}' >> cpu_all
+grep "lev:    1" res | tail -1 | awk '{print $1 " " $2 " " $3 " " $4 " " $5}' >> cpu_all
+grep "Total real (s):" res | tail -1 >> cpu_all
+grep "Total cpu (s):" res | tail -1 >> cpu_all
+
+grep "mem_tot,max_mem_used" res | tail -1 >> cpu_all
+grep "nb_alloc,nb_dealloc" res | tail -1 >> cpu_all
+
+if [ $(grep -c "AU REVOIR" res) -ne 0 ]
+then
+    grep "AU REVOIR" res >> cpu_all
+else
+    echo "ElVibRot ERROR !!!!" >> cpu_all
+fi
+
+wc res >> cpu_all
+sleep 10
+cat res >> res_all
+rm res
+done
+echo "=======================================" >> cpu_all
+echo "=======================================" >> res_all
+echo "=======================================" >> res_all
+#clean

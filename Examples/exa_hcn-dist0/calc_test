@@ -1,0 +1,41 @@
+clean
+rm -f cpu_all res_all
+date > cpu_all
+
+for name in dat_DirProd_SG_readWP dat_Davidson dat_Davidson-dir1GF
+do
+  ./$name
+  echo "=======================================" >> cpu_all
+
+  echo "=======================================" >> res_all
+  echo "=======================================" >> res_all
+  echo "===" $name "===========================" >> res_all
+  echo "=======================================" >> res_all
+  echo "=======================================" >> res_all
+  echo $name >> cpu_all
+  #tail -40 res >> cpu_all
+  grep "lev:    1" res | tail -1 | awk '{print $1 " " $2 " " $3 " " $4 " " $5}' >> cpu_all
+  grep "lev:    2" res | tail -1 | awk '{print $1 " " $2 " " $3 " " $4 " " $5}' >> cpu_all
+  grep "Total real (s):" res | tail -1 >> cpu_all
+  grep "Total cpu (s):" res | tail -1 >> cpu_all
+
+  grep "mem_tot,max_mem_used" res | tail -1 >> cpu_all
+  grep "nb_alloc,nb_dealloc" res | tail -1 >> cpu_all
+
+  if [ $(grep -c "AU REVOIR" res) -ne 0 ]
+  then
+    grep "AU REVOIR" res >> cpu_all
+  else
+    echo "ElVibRot ERROR !!!!" >> cpu_all
+  fi
+
+  wc res >> cpu_all
+  cat res >> res_all
+  sleep 10
+  rm res
+done
+
+echo "=======================================" >> cpu_all
+echo "=======================================" >> res_all
+echo "=======================================" >> res_all
+#clean

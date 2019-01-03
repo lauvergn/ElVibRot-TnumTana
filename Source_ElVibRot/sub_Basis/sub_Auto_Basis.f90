@@ -640,8 +640,8 @@ END SUBROUTINE RecSet_EneH0
       nb_scalar_Op                = para_PES%nb_scalar_Op
       para_PES%nb_scalar_Op       = 0
 
-      para_PES%calc_scalar_Op     = .FALSE.
       calc_scalar_Op              = para_PES%calc_scalar_Op
+      para_PES%calc_scalar_Op     = .FALSE.
 
       JJ                          = para_Tnum%JJ
       para_Tnum%JJ                = 0
@@ -705,12 +705,6 @@ END SUBROUTINE RecSet_EneH0
                             para_AllOp_loc%tab_Op(i)%derive_termQact,   &
                               mole_loc%ActiveTransfo%list_QactTOQdyn)
 
-      IF (debug) THEN
-        !DO i=1,para_AllOp_loc%nb_Op
-        !  CALL write_param_Op(para_AllOp_loc%tab_Op(i))
-        !END DO
-      END IF
-
       !---------------------------------------------------------------
       ! make the Grid
       CALL sub_qa_bhe(para_AllOp_loc)
@@ -727,10 +721,6 @@ END SUBROUTINE RecSet_EneH0
                        para_AllOp_loc%tab_Op(1)%Rvp,                    &
                        para_AllOp_loc%tab_Op(1)%nb_tot,                 &
                        para_AllOp_loc%tab_Op(1)%sym_Hamil)
-      write(out_unitp,*) 'Eigenvalues'
-      CALL Write_VecMat(para_AllOp_loc%tab_Op(1)%Rdiag*219475._Rkind,out_unitp,5)
-      ! for checking !!!
-
 
       !---------------------------------------------------------------
       IF (allocated(basis_set%EneH0))    THEN
@@ -861,8 +851,8 @@ END SUBROUTINE RecSet_EneH0
       ! save some parameters of para_PES, para_ReadOp, Tnum
       nb_scalar_Op                = para_PES%nb_scalar_Op
       para_PES%nb_scalar_Op       = 0
-      para_PES%calc_scalar_Op     = .FALSE.
       calc_scalar_Op              = para_PES%calc_scalar_Op
+      para_PES%calc_scalar_Op     = .FALSE.
       JJ                          = para_Tnum%JJ
       para_Tnum%JJ                = 0
 

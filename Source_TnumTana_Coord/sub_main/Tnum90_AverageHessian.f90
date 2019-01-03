@@ -153,7 +153,7 @@
         CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=0)
         k(:,:) = k(:,:) + dnGG%d0(1:mole%nb_act,1:mole%nb_act)
 
-        CALL Set_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv=2)
+        CALL get_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv=2)
         hess(:,:) = hess(:,:) + Tab_dnMatOp(1)%tab_dnMatOp(1,1,1)%d2(:,:)
 
       END DO

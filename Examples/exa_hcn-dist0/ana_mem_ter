@@ -1,0 +1,11 @@
+
+file=resdnS
+list="real8"
+
+
+for typeVar in  $list
+do
+ mem=`awk '{print $2 " " $3 " " $4}' $file | grep var_type=$typeVar | awk '{s=s+$1} END {print s}'`
+ echo $typeVar $mem
+done
+

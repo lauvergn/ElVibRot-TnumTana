@@ -195,7 +195,7 @@
 
           !----- Hessian ------------------------------------
 
-          CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+          CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
 
           CALL Get_Hess_FROM_Tab_OF_dnMatOp(para_BFGS%hessian_inv_init,dnMatOp) ! for the ground state
 

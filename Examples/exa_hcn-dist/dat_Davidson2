@@ -52,7 +52,7 @@ dh 0.0
  &actives test=f direct=2 /
  &analyse max_ana=40 max_ene=50000.d0 print=t print_psi=50 davidson=t /
  &davidson nb_WP=3 max_it=100 max_WP=300 num_resetH=10
-           lower_states=t project_WP0=f one_residue=f
+           lower_states=t
            read_WP=f read_listWP=f
 /
  1 1 1    1 1   1.0

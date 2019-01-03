@@ -57,7 +57,7 @@ dh 0.0
           davidson=t intensity=f name_file_spectralWP='file_spec' /
 
  &davidson nb_WP=5 max_it=50 max_WP=300 num_resetH=20
-           lower_states=t project_WP0=f one_residue=f
+           lower_states=t
            read_WP=f read_listWP=f
 /
  1 1 1    1 1   1.0
@@ -111,7 +111,7 @@ dh 0.0
  &intensity l_Int=t l_Tau=f l_IntVR=f Temp=300. Ewidth=1. Emax=6000. Emin=0.0 /
 
  &davidson nb_WP=0 max_it=0 max_WP=300 num_resetH=20
-           lower_states=t project_WP0=f one_residue=f
+           lower_states=t
            read_WP=t read_listWP=f
 /
 **

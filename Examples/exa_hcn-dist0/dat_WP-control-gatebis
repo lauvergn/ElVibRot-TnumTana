@@ -1,0 +1,73 @@
+ SYSTEM=sub_system_cos_hcn.f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+ x1=0.538516066
+ x2=0.461483933
+
+
+nice $DIR_vib/vib << ** >res
+ &system /
+ &constantes /
+ &variables 
+         zmat=T
+         nat=4
+         sym=T
+         nrho=2
+ /
+C
+0.0     1
+N     2  1
+H     2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 1 21   0    0 0 0
+ &minimum pot0=-0.499465823200 HarD=t /
+.999d0
+3.187
+2.179
+0.
+3.141592653589793238462643383279d0
+0.0
+
+ &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
+ &inactives
+           max_excit=4
+           tab_nq(1:2)=8,8
+           tab_nb(1:2)=5,5
+           max_ene_h=60000. "cm-1"
+/
+ &actives test=f direct=0 /
+ &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t control=t /
+ &propa
+        WPTmax=40000.d0 WPdeltaT=10.d0 
+        n_WPecri = 1 WPpsi2 =f WPpsi=t
+        type_WPpropa=24 npoly=1000 poly_tol=1.d-20
+        spectral=t nb_vp_spec=10 
+ /
+ &control nb_WP=1 nb_WPba=3 cplx_gate=t gate=t post_control=f
+          alpha=0.7d+1 max_alpha=1.d3 max_iter=2 /
+     1        2       3
+ 1   (1.,0.)  (0.,0.) (0.,0.)
+ 1   (1.,0.)  (1.,0.) (0.,1.)
+ &field  nb_pulse=1
+         max_der=2 type='grid' type_init_grid='cos'
+         pola_xyz(1:3)=t,f,f 
+         w(1:3,1)=0.0064,0.,0.0
+         E0(1:3,1)=0.0,0.,0.0 /
+**

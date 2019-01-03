@@ -1,0 +1,77 @@
+ SYSTEM=sub_system_murrell.f
+ test=f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+ x1=0.538516066
+ x2=0.461483933
+
+
+#export OMP_NUM_THREADS=1
+
+LB=8
+LG=9
+
+
+nice $DIR_vib/vib << ** > res
+ &system /
+ &constantes /
+ &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 /
+ &Coord_transfo name_transfo='zmat' nat=4 /
+C
+X     1
+N     2  1
+H     2 -1 3
+
+ &Coord_transfo name_transfo='linear' /
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ &Coord_transfo name_transfo='RPH' /
+
+ &Coord_transfo name_transfo='active' /
+ 1 21 21    0 0 0
+
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2 Hard=f /
+.9d0
+0.
+0.
+0.
+3.14159265358d0
+0.0
+
+ &basis_nD nb_basis=2 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=2 /
+   &basis_nD iQdyn(1)=1 name="Pl0" L_TO_nq_A=1 L_TO_nq_B=10 /
+   &basis_nD nb_basis=2 name="direct_prod" /
+     &basis_nD iQdyn(1)=2 name="Hm" /
+     &basis_nD iQdyn(1)=3 name="Hm" /
+
+
+ &inactives step=1.d-5 /
+ &actives test=$test direct=2 /
+ &analyse max_ana=40 max_ene=50000.d0 print=f print_psi=0 davidson=t /
+ &davidson nb_WP=3 max_it=100 max_WP=300 num_resetH=10
+           lower_states=t project_WP0=f one_residue=f all_lower_states=t max_Ene=4000.
+           read_WP=f read_listWP=f
+/
+ 1 1 1    1 1   1.0
+end wp0
+ 2 1 1    1 1   1.0
+end wp0
+ 3 1 1    1 1   1.0
+end wp0
+**

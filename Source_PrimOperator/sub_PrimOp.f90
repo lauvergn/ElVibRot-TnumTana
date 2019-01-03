@@ -99,7 +99,7 @@
 
       Qact(:) = mole%ActiveTransfo%Qact0(:)
 
-      CALL Set_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,para_PES)
+      CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,para_PES)
 
       DO k=1,nb_Op
         CALL dealloc_d0MatOp(d0MatOp(k))
@@ -123,7 +123,7 @@
 !
 !    output : dnE%d..  dnMu(:)%d...
 !================================================================
-      SUBROUTINE Set_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,para_PES)
+      SUBROUTINE get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,para_PES)
       USE mod_system
       USE mod_dnSVM
       use mod_nDFit, only: sub_ndfunc_from_ndfit
@@ -164,8 +164,6 @@
       integer             :: i,i1,i2,ie,je,io,iOpE,itermE,iOpS,iOpScal,itermS,iOp,iterm
 
 !     - for the conversion gCC -> gzmt=d1pot -----------
-      !TYPE(Type_dnS) :: MatdnECC(para_PES%nb_elec,para_PES%nb_elec)
-      !TYPE(Type_dnS) :: MatdnScalCC(para_PES%nb_elec,para_PES%nb_elec,para_PES%nb_scalar_Op)
       TYPE(Type_dnS), allocatable :: MatdnECC(:,:)
       TYPE(Type_dnS), allocatable :: MatdnScalCC(:,:,:)
 
@@ -184,7 +182,7 @@
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
-      character (len=*), parameter :: name_sub='Set_d0MatOp_AT_Qact'
+      character (len=*), parameter :: name_sub='get_d0MatOp_AT_Qact'
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
@@ -469,8 +467,8 @@
       END IF
 !-----------------------------------------------------------
 
-     END SUBROUTINE Set_d0MatOp_AT_Qact
-     SUBROUTINE Set_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv)
+     END SUBROUTINE get_d0MatOp_AT_Qact
+     SUBROUTINE get_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv)
       USE mod_system
       USE mod_dnSVM
       use mod_nDFit, only: sub_ndfunc_from_ndfit
@@ -532,7 +530,7 @@
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
-      character (len=*), parameter :: name_sub='Set_dnMatOp_AT_Qact'
+      character (len=*), parameter :: name_sub='get_dnMatOp_AT_Qact'
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
@@ -884,7 +882,7 @@
       END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE Set_dnMatOp_AT_Qact
+      END SUBROUTINE get_dnMatOp_AT_Qact
 
 
       SUBROUTINE dnOp_num_grid_v2(Qact,Tab_dnMatOp,                     &
@@ -972,7 +970,7 @@
       END DO
 
       !-- pot0 Qact(i) ------------------
-      CALL Set_d0MatOp_AT_Qact(Qact,d0MatOp_th(:,1),mole,para_Tnum,para_PES)
+      CALL get_d0MatOp_AT_Qact(Qact,d0MatOp_th(:,1),mole,para_Tnum,para_PES)
 
       DO k=1,nb_Op
         CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,1),Tab_dnMatOp(k),(/0,0/))
@@ -1009,7 +1007,7 @@
         !-- pot0 Qact(i)+step -------------
         Qact_th(i,ith) = Qact(i) + para_PES%stepOp
 
-        CALL Set_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
 
 
         DO k=1,size(Tab_dnMatOp)
@@ -1024,7 +1022,7 @@
         !-- pot0 Qact(i)-step -------------
         Qact_th(i,ith) = Qact(i) - para_PES%stepOp
 
-        CALL Set_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
 
         DO k=1,size(Tab_dnMatOp)
           IF (nderiv_loc > 0) THEN ! gradient
@@ -1069,7 +1067,7 @@
         Qact_th(i,ith) = Qact(i) + para_PES%stepOp
         Qact_th(j,ith) = Qact(j) + para_PES%stepOp
 
-        CALL Set_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
 
         DO k=1,size(Tab_dnMatOp)
           CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/))
@@ -1079,7 +1077,7 @@
         Qact_th(i,ith) = Qact(i) - para_PES%stepOp
         Qact_th(j,ith) = Qact(j) - para_PES%stepOp
 
-        CALL Set_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
 
         DO k=1,size(Tab_dnMatOp)
           CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/),ONE)
@@ -1090,7 +1088,7 @@
         Qact_th(i,ith) = Qact(i) - para_PES%stepOp
         Qact_th(j,ith) = Qact(j) + para_PES%stepOp
 
-        CALL Set_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
 
         DO k=1,size(Tab_dnMatOp)
           CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/),-ONE)
@@ -1101,7 +1099,7 @@
         Qact_th(i,ith) = Qact(i) + para_PES%stepOp
         Qact_th(j,ith) = Qact(j) - para_PES%stepOp
 
-        CALL Set_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
 
         DO k=1,size(Tab_dnMatOp)
           CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/),-ONE)
@@ -1485,7 +1483,7 @@
       ELSE
         CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,1,nderiv=2)
 
-        CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+        CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
 
         CALL Get_Hess_FROM_Tab_OF_dnMatOp(d0h,dnMatOp)
         CALL Get_Grad_FROM_Tab_OF_dnMatOp(d0grad,dnMatOp)
@@ -1690,7 +1688,7 @@
 
             !CALL  dnOp_grid(Qact,dnE,2,mole_1,para_Tnum,para_PES)
             CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_NM,1,nderiv=2)
-            CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole_1,para_Tnum,para_PES)
+            CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole_1,para_Tnum,para_PES)
             CALL Get_Hess_FROM_Tab_OF_dnMatOp(d0h,dnMatOp)
             CALL Get_Grad_FROM_Tab_OF_dnMatOp(d0grad,dnMatOp)
             CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
@@ -1721,7 +1719,7 @@
         ELSE
 
           !CALL  dnOp_grid(Qact,dnE,2,mole_1,para_Tnum,para_PES)
-          CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole_1,para_Tnum,para_PES)
+          CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole_1,para_Tnum,para_PES)
           CALL Get_Hess_FROM_Tab_OF_dnMatOp(d0h,dnMatOp)
           CALL Get_Grad_FROM_Tab_OF_dnMatOp(d0grad,dnMatOp)
           CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
@@ -3059,7 +3057,7 @@
                                   trim(para_PES%para_OTF%file_FChk%name)
 
             CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_NM,1,nderiv=2)
-            CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+            CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
             CALL Get_Hess_FROM_Tab_OF_dnMatOp(d0h,dnMatOp)
             CALL Get_Grad_FROM_Tab_OF_dnMatOp(d0grad,dnMatOp)
             CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
@@ -3100,7 +3098,7 @@
           para_PES%calc_scalar_Op = .FALSE.
 
           CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_NM,1,nderiv=2)
-          CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+          CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
           CALL Get_Hess_FROM_Tab_OF_dnMatOp(d0h,dnMatOp)
           CALL Get_Grad_FROM_Tab_OF_dnMatOp(d0grad,dnMatOp)
           CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
@@ -4288,10 +4286,14 @@
       END DO
 
 !-----------------------------------------------------------
-       IF (print_level > 0) write(out_unitp,11)                         &
-                                     Qact(1:RPHTransfo%nb_act1), &
-                               dnEHess%d0(:)*auTOcm_inv
+       IF (print_level == 1) write(out_unitp,11)                        &
+                                            Qact(1:RPHTransfo%nb_act1), &
+                                            dnEHess%d0(:)*auTOcm_inv
  11    format(' frequencies : ',30f10.4)
+
+       IF (print_level > 1) write(out_unitp,*) ' frequencies : ',       &
+                                            Qact(1:RPHTransfo%nb_act1), &
+                                            dnEHess%d0(:)*auTOcm_inv
 
        IF (debug .OR. test) THEN
          write(out_unitp,*) 'dnQeq'
@@ -4392,7 +4394,6 @@
 
       nb_act1    = RPHTransfo%nb_act1
       nb_inact21 = RPHTransfo%nb_inact21
-
       IF (.NOT. associated(RPHTransfo%C_ini)) THEN
         CALL alloc_array(RPHTransfo%C_ini,(/nb_inact21,nb_inact21/),    &
                           "RPHTransfo%C_ini",name_sub)
@@ -4512,24 +4513,6 @@
 
       d0h(:,:) = d0hess(:,:)
 
-!      CALL alloc_NParray(NonDiag_Scaling,(/ nb_inact21 /),"NonDiag_Scaling",name_sub)
-!      NonDiag_Scaling(:) = ONE
-!      DO i=1,nb_inact21
-!        IF (NonDiag_Scaling(i) /= ONE) THEN
-!          a = d0h(i,i)
-!          d0h(i,:) = d0h(i,:) * NonDiag_Scaling(i)
-!          d0h(:,i) = d0h(:,i) * NonDiag_Scaling(i)
-!          d0h(i,i) = a
-!          a = d0k(i,i)
-!          d0k(i,:) = d0k(i,:) * NonDiag_Scaling(i)
-!          d0k(:,i) = d0k(:,i) * NonDiag_Scaling(i)
-!          d0k(i,i) = a
-!        END IF
-!      END DO
-!      CALL dealloc_NParray(NonDiag_Scaling,"NonDiag_Scaling",name_sub)
-
-
-
       IF (RPHTransfo%purify_hess .OR. RPHTransfo%eq_hess) THEN
         CALL H0_symmetrization(d0h,nb_inact21,                        &
                                RPHTransfo%Qinact2n_sym,               &
@@ -4546,7 +4529,6 @@
         CALL calc_freq_block(nb_inact21,d0h,d0k,d0ehess,                &
                              d0c,d0c_inv,norme,RPHTransfo%C_ini,        &
                              RPHTransfo%diabatic_freq,RPHTransfo%Qinact2n_sym)
-
 
         !CALL calc_freq(nb_inact21,d0h,d0k,d0ehess,d0c,d0c_inv,norme,    &
         !               RPHTransfo%C_ini,RPHTransfo%diabatic_freq)
@@ -4675,20 +4657,22 @@
         END DO
 
 
-        ! new Qact0/Qdyn0
-        ! first Delta_Qdyn0
-        mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
-                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
-                               mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1: &
-                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) - &
-                                     mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt%d0
-
-        !Qdyn0 = matmul(Delta_Qdyn0, ...dnC%d0)
-        mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
-                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
-                    matmul(mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:     &
-                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21),  &
-                             mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC%d0)
+!        ! new Qact0/Qdyn0
+!        ! first Delta_Qdyn0
+!        mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
+!                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
+!                               mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1: &
+!                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) - &
+!                                     mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt%d0
+!     write(6,*) 'delta, mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(6)
+!        !Qdyn0 = matmul(Delta_Qdyn0, ...dnC%d0)
+!        mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
+!                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
+!                    matmul(mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:     &
+!                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21),  &
+!                             mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC%d0)
+!
+!     write(6,*) 'mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(6)
 
 
         CALL Qdyn_TO_Qact_FROM_ActiveTransfo(mole%ActiveTransfo%Qdyn0,  &

@@ -82,8 +82,6 @@
       mole       => para_AllOp%tab_Op(1)%mole
       para_Tnum  => para_AllOp%tab_Op(1)%para_Tnum
 
-      !$    !write(out_unitp,*) "sub_HSOp_inact,iq",iq,omp_get_thread_num()
-
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'nb_Op',para_AllOp%nb_Op,shape(para_AllOp%tab_Op)
@@ -147,13 +145,12 @@
         END IF
 
         allocate(d0MatOp(para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op+2))
-
         DO iOp=1,size(d0MatOp)
           CALL Init_d0MatOp(d0MatOp(iOp),para_AllOp%tab_Op(iOp)%param_TypeOp,&
                             para_AllOp%tab_Op(iOp)%para_PES%nb_elec)
         END DO
 
-        CALL Set_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
+        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
                                  para_Tnum,para_AllOp%tab_Op(1)%para_PES)
 
         IF (.NOT. pot) THEN ! remove the potential part
@@ -217,6 +214,10 @@
             para_AllOp%tab_Op(1)%ComOp%Jac(iq) = d0MatOp(1)%Jac
           END IF
 
+        IF (iq > 0 .OR. .NOT. test) THEN
+          !calculation of WrhonD
+          WrhonD = Rec_WrhonD(para_AllOp%tab_Op(1)%para_AllBasis%BasisnD,iq,OldPara)
+        END IF
       !-----------------------------------------------------------
       !------ end special case if nb_inact2n=0 -------------------
       !-----------------------------------------------------------
@@ -286,23 +287,10 @@
 
       !-----------------------------------------------------------
       !-----------------------------------------------------------
-!       CALL get_iqSG_iSG_FROM_iq(i_SG,iq_SG,iq,                         &
-!               para_AllOp%tab_Op(1)%para_AllBasis%BasisnD%para_SGType2, &
-!                                       err_sub=err_sub)
-!      write(98,*) iq,i_SG,iq_SG,Qact(1:mole%nb_act1)
-
-      IF (iq == 1) Q1 = Qact(1)
       IF (print_level > 0) THEN
 
         IF (para_AllOp%tab_Op(1)%nb_qa <= max_nb_G_FOR_print) THEN
           IF (freq_only) write(out_unitp,*) 'freq_only,iq',iq
-
-          !write(out_unitp,111) iq,Qact(1:nb_act1),(d0MatOp(1)%ReVal(ie,ie,1),ie=1,d0MatOp(1)%nb_bie)
-          IF (mole%nb_act1 == 2 .AND. abs(Q1-Qact(1)) > ONETENTH**6) THEN
-          !write(6,*) 'coucou',Q1-Qact(1)
-             write(out_unitp,*)
-             Q1 = Qact(1)
-          END IF
 
           IF (JacSave) THEN
             write(out_unitp,111) iq,Qact(1:mole%nb_act1),d0MatOp(1)%ReVal(1,1,:),d0MatOp(1)%Jac,d0MatOp(1)%rho
@@ -711,7 +699,7 @@
 !       ---here only nb_inact2n variables have been modified --------
         CALL Qinact2n_TO_Qact_FROM_ActiveTransfo(Qinact,Qact,mole%ActiveTransfo)
 
-        CALL Set_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
+        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
                                  para_Tnum,para_AllOp%tab_Op(1)%para_PES)
 
         IF (.NOT. pot) THEN ! remove the potential part

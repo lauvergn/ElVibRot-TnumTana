@@ -199,7 +199,7 @@
 
           !----- Hessian ------------------------------------
 
-          CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+          CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
 
           CALL Get_Hess_FROM_Tab_OF_dnMatOp(hessian,dnMatOp) ! for the ground state
 
@@ -545,7 +545,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 
  CALL Set_ZERO_TO_Tab_OF_dnMatOp(dnMatOp)
 
- CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES,nderiv_dnE)
+ CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES,nderiv_dnE)
 
 ! the results are in the matrix of derived type MatdnE(:,:)
 !   Remark: we have a matrix because ElVibRot can deal with several diabatic electronic states

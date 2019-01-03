@@ -64,7 +64,7 @@ Weight_Rho  -1    0    0    0   0   0
  &intensity l_Int=t l_Tau=f l_IntVR=f Temp=300. Ewidth=1. Emax=6000. Emin=0.0 /
 
  &davidson nb_WP=0 max_it=100 max_WP=3000 num_resetH=20
-           all_lower_states=t project_WP0=f one_residue=f max_ene=4000. "cm-1"
+           all_lower_states=t max_ene=4000. "cm-1"
            read_WP=f read_listWP=f
 /
  1 1 1    1 1   1.0

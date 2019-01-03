@@ -1,0 +1,72 @@
+ SYSTEM=sub_system_2elec.f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+ x1=0.538516066
+ x2=0.461483933
+
+
+nice $DIR_vib/vib << ** >res
+ &system /
+ &constantes /
+ &variables 
+         zmat=T
+         nat=4
+         sym=T
+         nrho=2
+ /
+C
+0.0     1
+N     2  1
+H     2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 1 0 1    0 0 0
+ &minimum pot0=0. pot_act=f pot_cplx=t nb_elec=2
+          read_Qsym0=t read_nameQ=t unit='bohr' /
+cosa .999d0
+R 3.187
+r 2.179
+x 0.
+pi 3.141592653589793238462643383279d0
+dh 0.0
+
+&basis_nD nb_basis=2 name="direct_prod" Type_OF_nDindB=0 Norm_OF_nDindB=50. packed=f /
+ &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
+ &basis_nD iQact(1)=2 name="boxAB" nb=31 nq=32 A=1.7 B=2.7 /
+ &inactives /
+
+ &actives test=f direct=2 /
+ &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t /
+ &propa
+        WPTmax=500.d0 WPdeltaT=10.d0
+
+        n_WPecri = 1 WPpsi2 =f WPpsi=t
+
+        type_WPpropa=2 max_poly=5000 npoly=300 poly_tol=1.d-12
+        auto_Hmax=t
+
+        WP0n_h=1 WP0nb_elec=2 lect_WP0FBR=f
+
+        TFnexp2=16 TFmaxE=20000.
+ /
+ &defWP0 sigma=0.6,Qeq=0.9 imp_k=0.0 /
+ &defWP0 sigma=0.6,Qeq=2.2 imp_k=0.0 /
+**
+exit
+&basis_nD nb_basis=2 name="direct_prod" Type_OF_nDindB=0 Norm_OF_nDindB=50. packed=f /

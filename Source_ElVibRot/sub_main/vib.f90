@@ -1562,7 +1562,8 @@ para_mem%mem_debug = .FALSE.
       para_H => para_AllOp%tab_Op(1)
       CALL init_psi(WP0,para_H,para_propa%para_WP0%WP0cplx)
 
-
+      para_ana%intensity    = .FALSE.
+      para_PES%nb_scalar_Op = 0
       write(out_unitp,*)
       write(out_unitp,*)
       CALL time_perso('ini_data')

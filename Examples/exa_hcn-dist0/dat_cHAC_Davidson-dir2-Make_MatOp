@@ -1,0 +1,64 @@
+ SYSTEM=sub_system_cos_hcn.f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+ x1=0.538516066
+ x2=0.461483933
+
+
+nice $DIR_vib/vib << ** > res
+ &system PMatOp_omp=0 RMatFormat="f18.10" EneFormat="e22.15" /
+ &constantes /
+ &variables zmat=T nat=4 sym=T nrho=2 /
+C
+0.0     1
+N     2  1
+H     2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 1 21  21    0 0 0
+ &minimum pot0=-0.499465823200 HarD=t /
+.999d0
+3.187
+2.179
+0.
+3.141592653589793238462643383279d0
+0.0
+
+ &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
+ &inactives
+           max_excit=4
+           tab_nq(1:2)=8,8
+           tab_nb(1:2)=5,5
+           isort=2
+/
+ &actives test=f direct=2 Make_MatOp=t /
+ &analyse max_ana=40 print=f intensity=t davidson=t /
+ &intensity l_Int=t l_Tau=f l_IntVR=f Temp=300. Ewidth=1. Emax=6000. Emin=0.0 /
+ &davidson nb_WP=3 max_it=100 max_WP=300 num_resetH=100
+           all_lower_states=t max_Ene=4000. lower_states=f project_WP0=f one_residue=f
+           read_WP=f read_listWP=f
+/
+ 1    1 1   1.0
+end wp0
+ 2    1 1   1.0
+end wp0
+ 3    1 1   1.0
+end wp0
+**
+

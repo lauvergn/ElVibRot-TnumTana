@@ -1,8 +1,3 @@
-#
-# You should get the result of the Eh_exact (column 4 of table II).
-# Lauvergnat et al, JCP, v114 (2001) p6592
-#
-
  SYSTEM=sub_system_cos_hcn.f
 
 here=`pwd`
@@ -18,12 +13,11 @@ cd $here
  x1=0.538516066
  x2=0.461483933
 
+nqa=81
+nqi=8
 
-export OMP_NUM_THREADS=1
-
-
-nice $DIR_vib/vib << ** >res
- &system printlevel=1 /
+nice $DIR_vib/vib << ** >>res
+ &system PGrid_omp=0 /
  &constantes /
  &variables 
          zmat=T
@@ -53,12 +47,23 @@ sym  cos(a)      R     r    x    pi   dh
 3.141592653589793238462643383279d0
 0.0
 
- &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
+ &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=$nqa /
  &inactives
-           isort=2
            max_excit=4
-           tab_nq(1:2)=8,8
+           nb_quadrature=$nqi
 /
- &actives Read_Grid=f test=f comput_S=t JJ=0 /
- &analyse max_ana=40 print=f print_psi=10 /
+ &actives test=f comput_S=t direct=1 /
+ &analyse max_ana=20 ana=f print=f propa=t /
+ &propa
+        WPTmax=1000.d0 WPdeltaT=1.d-0
+        n_WPecri = 1 WPpsi2 =f WPpsi=t
+        type_WPpropa=7 npoly=64
+        DHmax=0.0d0 auto_Hmax=t
+        WP0n_h=1 lect_WP0FBR=f
+ /
+ &defWP0 sigma=0.6,Qeq=0.9,imp_k=0.0 /
 **
+exit
+        type_WPpropa=7 npoly=64
+
+

@@ -37,10 +37,11 @@
 
         TYPE param_TypeOp
 
-          integer :: type_Op = -1   ! -1: Not initialized
-                                    ! 0 : Scalar
-                                    ! 1 : H: F2.d^2 + F1.d^1 + V + (Cor+Rot)
-                                    ! 10: H: d^1 G d^1 +V
+          integer :: type_Op     = -1 ! -1: Not initialized
+                                      ! 0 : Scalar
+                                      ! 1 : H: F2.d^2 + F1.d^1 + V + (Cor+Rot)
+                                      ! 10: H: d^1 G d^1 +V
+
           logical :: direct_KEO  = .FALSE. ! to be used with type_Op=10
 
           integer :: nb_term     = 0

@@ -1,0 +1,4 @@
+rm -f res res_all res_for_guess res_dum* SH_HADA* file_OpBuilding restart.int spectrum file* fort.* Davidson.log Arpack.log
+rm -f Rho1D* Rho2D* psi1D* psi2D*
+rm -f Eq_KEO.tex mat_f2ij
+rm -f *confli*

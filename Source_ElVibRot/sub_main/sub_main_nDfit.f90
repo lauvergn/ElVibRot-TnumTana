@@ -466,7 +466,7 @@ MODULE mod_nDGridFit
             Qact(1:mole%nb_act) = para_nDGrid%Q0(:)
 
             CALL Set_ZERO_TO_Tab_OF_dnMatOp(dnMatOp)
-            CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES,nderiv=0)
+            CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES,nderiv=0)
 
             iGPtot = iGPtot +1
             isign = 0
@@ -503,7 +503,7 @@ MODULE mod_nDGridFit
                        real(nDinit(:),kind=Rkind) * para_nDGrid%stepQ(:)
 
               CALL Set_ZERO_TO_Tab_OF_dnMatOp(dnMatOp)
-              CALL Set_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES,nderiv=0)
+              CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES,nderiv=0)
 
               IF (debug) THEN
                 write(out_unitp,"(a,3i7,a,10i3)") 'iGPtot,iGp,isign,Qact',&

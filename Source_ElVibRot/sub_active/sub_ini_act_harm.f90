@@ -38,7 +38,7 @@
 !=====================================================================
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_AllOp) :: para_AllOp
+      TYPE (param_AllOp), intent(inout) :: para_AllOp
 
 !----- active parameters -------------------------------------------------
       integer   :: nb_act,nb_act1,nb_inact2n
@@ -54,9 +54,6 @@
       logical :: lformatted,freq_only
 
       TYPE (OldParam) :: OldPara
-
-      real (kind=Rkind), allocatable  :: Qact_min(:)
-      real (kind=Rkind)               :: Pot_min
 
 !----- for debuging --------------------------------------------------
       !integer :: err_mem,memory
@@ -221,12 +218,7 @@
           iqf = para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint
           lformatted = para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted
           IF (print_level > 1) write(out_unitp,*) 'file_HADA%formatted',lformatted
-          IF (Grid_omp == 0) THEN
-            nb_thread = 1
-          ELSE
-            nb_thread = Grid_maxth
-          END IF
-          para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread = nb_thread
+          para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread = Grid_maxth
           CALL file_delete(para_AllOp%tab_Op(1)%ComOp%file_HADA)
           para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted = lformatted
         END IF
@@ -245,32 +237,24 @@
       END IF
 
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Save_MemGrid_done .AND.    &
-        para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid /= 0) GOTO 999
+          para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid /= 0) GOTO 999
 
       !-----------------------------------------------------
       !-- Multidimensional loop ----------------------------
-      IF (Grid_omp == 0) THEN
-        nb_thread = 1
-      ELSE
-        nb_thread = Grid_maxth
-      END IF
-      IF (print_level > 1) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
+      IF (print_level > 1) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',Grid_maxth
 
       IF (.NOT. para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid .AND.    &
          print_level > 0 .AND. para_AllOp%tab_Op(1)%nb_qa > max_nb_G_FOR_print) THEN
-        write(out_unitp,'(a)') 'Grid_HADA (%): [--0-10-20-30-40-50-60-70-80-90-100]'
-        write(out_unitp,'(a)',ADVANCE='no') 'Grid_HADA (%): ['
+        write(out_unitp,'(a)') 'Grid (%): [--0-10-20-30-40-50-60-70-80-90-100]'
+        write(out_unitp,'(a)',ADVANCE='no') 'Grid (%): ['
         CALL flush_perso(out_unitp)
       END IF
 
-      Pot_min = huge(ONE)
-      CALL alloc_NParray(Qact_min,(/para_AllOp%tab_Op(1)%mole%nb_var/),'Qact_min',name_sub)
-
 !$OMP   PARALLEL &
 !$OMP   DEFAULT(NONE) &
-!$OMP   SHARED(para_AllOp,max_Sii,max_Sij,iqf,Pot_min,Qact_min) &
+!$OMP   SHARED(para_AllOp,max_Sii,max_Sij,iqf) &
 !$OMP   PRIVATE(iq,freq_only,OldPara) &
-!$OMP   NUM_THREADS(nb_thread)
+!$OMP   NUM_THREADS(Grid_maxth)
 
 !$OMP   DO SCHEDULE(STATIC)
         DO iq=1,iqf-1
@@ -290,14 +274,6 @@
           CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,  &
                para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)
 
-        !$OMP  CRITICAL (sub_qa_bhe_CRIT)
-        IF (minval(para_AllOp%tab_Op(1)%OpGrid(1)%Grid(iq,:,:)) < pot_min) THEN
-          Pot_min = minval(para_AllOp%tab_Op(1)%OpGrid(1)%Grid(iq,:,:))
-          CALL Rec_Qact(Qact_min,                                       &
-                        para_AllOp%tab_Op(1)%para_AllBasis%BasisnD,iq,  &
-                        para_AllOp%tab_Op(1)%mole)
-        END IF
-        !$OMP END CRITICAL (sub_qa_bhe_CRIT)
 
         END DO
 !$OMP   END DO
@@ -312,17 +288,12 @@
       !- END multidimentional loop ---------------------------------------
       !-------------------------------------------------------------------
 
-      write(out_unitp,*) 'Pot_min',Pot_min
-      write(out_unitp,*) 'Qact_min at Pot_min',Qact_min(1:nb_act1)
-      CALL dealloc_NParray(Qact_min,'Qact_min',name_sub)
-
  999  CONTINUE
 
       !-------------------------------------------------------------------
       !- Analysis of the grid (zero or constant terms)
       DO iOp=1,para_AllOp%nb_Op
         CALL Analysis_OpGrid_OF_Op(para_AllOp%tab_Op(iOp))
-        !CALL write_param_Op(para_AllOp%tab_Op(iOp))
       END DO
       !-------------------------------------------------------------------
 

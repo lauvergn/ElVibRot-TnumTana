@@ -343,8 +343,8 @@
       DO i_R=1,psi%nb_bRot
       DO i_e=1,psi%nb_be
       DO i_h=1,psi%nb_bi
-      !DO i_b=1,psi%ComOp%nb_ba_ON_HAC(i_h)
-      DO i_b=1,psi%nb_ba
+      DO i_b=1,psi%ComOp%nb_ba_ON_HAC(i_h)
+      !DO i_b=1,psi%nb_ba
 
         i_bhe = i_bhe + 1
 

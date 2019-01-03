@@ -69,7 +69,8 @@ PUBLIC  Type_SmolyakRep,  alloc2_SmolyakRep,  dealloc_SmolyakRep,  DerivOp_TO3_G
 PUBLIC  Type_SmolyakRepC, alloc2_SmolyakRepC, dealloc_SmolyakRepC, DerivOp_TO3_GSmolyakRepC
 PUBLIC  Write_SmolyakRep, alloc_SmolyakRep
 PUBLIC  tabR_AT_iG_TO_tabPackedBasis, tabPackedBasis_TO_tabR_AT_iG
-PUBLIC  tabR2grid_TO_tabR1_AT_iG, tabR2bis_TO_SmolyakRep1, tabR2_TO_SmolyakRep1
+PUBLIC  tabR2bis_TO_SmolyakRep1, tabR2_TO_SmolyakRep1
+PUBLIC  tabR2grid_TO_tabR1_AT_iG, tabR2gridbis_TO_tabR1_AT_iG
 PUBLIC  BDP_TO_GDP_OF_SmolyakRep, GDP_TO_BDP_OF_SmolyakRep
 PUBLIC  DerivOp_TO_RDP_OF_SmolaykRep
 PUBLIC  Set_weight_TO_SmolyakRep, dot_product_SmolyakRep_Grid, dot_product_SmolyakRep_Basis
@@ -1084,6 +1085,27 @@ IF (size(tabR2) > 0) THEN
 END IF
 
 END SUBROUTINE tabR2grid_TO_tabR1_AT_iG
+SUBROUTINE tabR2gridbis_TO_tabR1_AT_iG(tabR1,tabR2,iG,SGType2)
+USE mod_system
+USE mod_param_SGType2
+IMPLICIT NONE
+
+real(kind=Rkind),                intent(inout)  :: tabR1(:)
+real(kind=Rkind),                intent(in)     :: tabR2(:)
+integer,                         intent(in)     :: iG
+TYPE (param_SGType2),            intent(in)     :: SGType2
+
+integer               :: nR,itabR
+
+
+IF (size(tabR2) > 0) THEN
+
+  itabR = SGType2%tab_Sum_nq_OF_SRep(iG)
+  nR    = SGType2%tab_nq_OF_SRep(iG)
+  tabR1(:) = tabR2(itabR-nR+1:itabR)
+END IF
+
+END SUBROUTINE tabR2gridbis_TO_tabR1_AT_iG
 SUBROUTINE tabR1_AT_iG_TO_tabR2grid(tabR1,tabR2,iG,SGType2)
 USE mod_system
 USE mod_param_SGType2

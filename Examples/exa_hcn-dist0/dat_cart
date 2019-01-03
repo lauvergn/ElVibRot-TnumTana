@@ -1,0 +1,33 @@
+ SYSTEM=sub_system_cart_murrell.f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+
+nice $DIR_vib/vib << ** >res
+ &system /
+ &constantes /
+ &variables zmat=T nat=3 nrho=2 /
+C
+N     1
+H     1 -2
+
+ 0  0 1
+ &minimum pot0=-0.499465823200 pot_itQtransfo=0 read_xyz0=t read_Qsym0=f /
+1 0. 0. 0.
+2 0. 0. 2.179
+3 0. 2. 0.0
+
+ &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
+ &inactives /
+ &actives test=f /
+ &analyse max_ana=40 print=f /
+**
+

@@ -2076,19 +2076,24 @@ implicit NONE
 
   TYPE CurviRPH_type
 
-    integer :: nb_pts   = 0
-    integer :: nb_dev   = 0
     integer :: nb_Q21   = 0
     integer :: nb_Qpath = 0
 
+
+    integer :: nb_pts_ForQref   = 0
+    integer :: nb_dev_ForQref   = 0
     real(kind=Rkind), allocatable :: Qpath_ForQref(:)
     real(kind=Rkind), allocatable :: Qref(:,:)
     real(kind=Rkind), allocatable :: CoefQref(:,:)
 
+    integer :: nb_pts_ForGrad   = 0
+    integer :: nb_dev_ForGrad   = 0
     real(kind=Rkind), allocatable :: Qpath_ForGrad(:)
     real(kind=Rkind), allocatable :: Grad(:,:)
     real(kind=Rkind), allocatable :: CoefGrad(:,:)
 
+    integer :: nb_pts_ForHess   = 0
+    integer :: nb_dev_ForHess   = 0
     real(kind=Rkind), allocatable :: Qpath_ForHess(:)
     real(kind=Rkind), allocatable :: Hess(:,:,:)
     real(kind=Rkind), allocatable :: CoefHess(:,:,:)
@@ -2108,33 +2113,24 @@ implicit NONE
 
     CALL dealloc_CurviRPH(CurviRPH)
 
-    CurviRPH%nb_pts   = nb_pts
-    CurviRPH%nb_dev   = nb_dev
 
     CurviRPH%nb_Q21   = nb_Q21
     CurviRPH%nb_Qpath = nb_Qpath
 
-    CALL alloc_NParray(CurviRPH%Qpath_ForQref,(/nb_pts/),                 &
+    CurviRPH%nb_pts_ForQref   = nb_pts
+    CurviRPH%nb_dev_ForQref   = nb_dev
+
+    CALL alloc_NParray(CurviRPH%Qpath_ForQref,(/nb_pts/),               &
                       'CurviRPH%Qpath_ForQref',name_sub)
-    CALL alloc_NParray(CurviRPH%Qref,(/ nb_Q21,nb_pts /),         &
+    CurviRPH%Qpath_ForQref(:) = ZERO
+
+    CALL alloc_NParray(CurviRPH%Qref,(/ nb_Q21,nb_pts /),               &
                       'CurviRPH%Qref',name_sub)
-    CALL alloc_NParray(CurviRPH%CoefQref,(/nb_pts,nb_Q21/),       &
+    CurviRPH%Qref(:,:) = ZERO
+
+    CALL alloc_NParray(CurviRPH%CoefQref,(/nb_pts,nb_Q21/),             &
                       'CurviRPH%CoefQref',name_sub)
-
-
-    CALL alloc_NParray(CurviRPH%Grad,(/ nb_Q21,nb_pts /),         &
-                      'CurviRPH%Grad',name_sub)
-    CALL alloc_NParray(CurviRPH%CoefGrad,(/nb_pts,nb_Q21/),       &
-                      'CurviRPH%CoefGrad',name_sub)
-
-
-    CALL alloc_NParray(CurviRPH%Hess,(/ nb_Q21,nb_Q21,nb_pts /),  &
-                      'CurviRPH%Hess',name_sub)
-    CALL alloc_NParray(CurviRPH%CoefHess,(/nb_pts,nb_Q21,nb_Q21/),&
-                      'CurviRPH%CoefHess',name_sub)
-
-
-
+    CurviRPH%CoefQref(:,:) = ZERO
 
   END SUBROUTINE alloc_CurviRPH
   SUBROUTINE dealloc_CurviRPH(CurviRPH)
@@ -2142,8 +2138,14 @@ implicit NONE
 
   character (len=*),parameter :: name_sub='dealloc_CurviRPH'
 
-    CurviRPH%nb_pts   = 0
-    CurviRPH%nb_dev   = 0
+    CurviRPH%nb_pts_ForQref   = 0
+    CurviRPH%nb_dev_ForQref   = 0
+
+    CurviRPH%nb_pts_ForGrad   = 0
+    CurviRPH%nb_dev_ForGrad   = 0
+
+    CurviRPH%nb_pts_ForHess   = 0
+    CurviRPH%nb_dev_ForHess   = 0
 
     CurviRPH%nb_Q21   = 0
     CurviRPH%nb_Qpath = 0
@@ -2170,7 +2172,81 @@ implicit NONE
       CALL dealloc_NParray(CurviRPH%CoefHess,'CurviRPH%CoefHess',name_sub)
 
   END SUBROUTINE dealloc_CurviRPH
+  SUBROUTINE Write_CurviRPH(CurviRPH)
+  TYPE (CurviRPH_type), intent(in) :: CurviRPH
 
+  integer :: i,iq,jq
+  character (len=*),parameter :: name_sub='Write_CurviRPH'
+
+    write(out_unitp,*) '-----------------------------------------------'
+    write(out_unitp,*) 'Write_CurviRPH'
+    write(out_unitp,*) 'nb_Qpath   : ',CurviRPH%nb_Qpath
+    write(out_unitp,*) 'nb_Q21     : ',CurviRPH%nb_Q21
+
+    write(out_unitp,*) 'nb_pts for Qref ',CurviRPH%nb_pts_ForQref
+    write(out_unitp,*) 'nb_dev for Qref ',CurviRPH%nb_dev_ForQref
+    IF (CurviRPH%nb_pts_ForQref > 0) THEN
+      DO i=1,CurviRPH%nb_pts_ForQref
+        write(out_unitp,*) 'Qpath_ForQref',i,CurviRPH%Qpath_ForQref(i)
+        write(out_unitp,*) 'Qref',i
+        CALL Write_VecMat(CurviRPH%Qref(:,i),out_unitp,5)
+      END DO
+
+      IF (allocated(CurviRPH%CoefQref)) THEN
+        write(out_unitp,*) 'CoefQref'
+        DO iq=1,CurviRPH%nb_Q21
+          write(out_unitp,*) 'CoefQref(:)',iq,CurviRPH%CoefQref(:,iq)
+        END DO
+      ELSE
+        write(out_unitp,*) 'CoefQref: not allocated'
+      END IF
+    END IF
+    CALL flush_perso(out_unitp)
+
+    write(out_unitp,*) 'nb_pts for Grad ',CurviRPH%nb_pts_ForGrad
+    write(out_unitp,*) 'nb_dev for Grad ',CurviRPH%nb_dev_ForGrad
+    IF (CurviRPH%nb_pts_ForGrad > 0) THEN
+      DO i=1,CurviRPH%nb_pts_ForGrad
+        write(out_unitp,*) 'Qpath_ForGrad',i,CurviRPH%Qpath_ForGrad(i)
+        write(out_unitp,*) 'Grad',i
+        CALL Write_VecMat(CurviRPH%Grad(:,i),out_unitp,5)
+      END DO
+
+      IF (allocated(CurviRPH%CoefGrad)) THEN
+        write(out_unitp,*) 'CoefGraq'
+        DO iq=1,CurviRPH%nb_Q21
+          write(out_unitp,*) 'CoefGrad(:)',iq,CurviRPH%CoefGrad(:,iq)
+        END DO
+      ELSE
+        write(out_unitp,*) 'CoefGrad: not allocated'
+      END IF
+    END IF
+    CALL flush_perso(out_unitp)
+
+    write(out_unitp,*) 'nb_pts for Hess ',CurviRPH%nb_pts_ForHess
+    write(out_unitp,*) 'nb_dev for Hess ',CurviRPH%nb_dev_ForHess
+    IF (CurviRPH%nb_pts_ForHess > 0) THEN
+      DO i=1,CurviRPH%nb_pts_ForHess
+        write(out_unitp,*) 'Qpath_ForHess',i,CurviRPH%Qpath_ForHess(i)
+        write(out_unitp,*) 'Hess',i
+        CALL Write_VecMat(CurviRPH%Hess(:,:,i),out_unitp,5)
+      END DO
+
+      IF (allocated(CurviRPH%CoefHess)) THEN
+        write(out_unitp,*) 'CoefHess'
+        DO iq=1,CurviRPH%nb_Q21
+        DO jq=1,CurviRPH%nb_Q21
+          write(out_unitp,*) 'CoefHess(:)',iq,jq,CurviRPH%CoefHess(:,iq,jq)
+        END DO
+        END DO
+      ELSE
+        write(out_unitp,*) 'CoefHess: not allocated'
+      END IF
+    END IF
+    write(out_unitp,*) '-----------------------------------------------'
+    CALL flush_perso(out_unitp)
+
+  END SUBROUTINE Write_CurviRPH
   SUBROUTINE CurviRPH1_TO_CurviRPH2(CurviRPH1,CurviRPH2)
   TYPE (CurviRPH_type), intent(in)    :: CurviRPH1
   TYPE (CurviRPH_type), intent(inout) :: CurviRPH2
@@ -2180,11 +2256,11 @@ implicit NONE
 
     CALL dealloc_CurviRPH(CurviRPH2)
 
-    CurviRPH2%nb_pts   = CurviRPH1%nb_pts
-    CurviRPH2%nb_dev   = CurviRPH1%nb_dev
     CurviRPH2%nb_Q21   = CurviRPH1%nb_Q21
     CurviRPH2%nb_Qpath = CurviRPH1%nb_Qpath
 
+    CurviRPH2%nb_pts_ForQref   = CurviRPH1%nb_pts_ForQref
+    CurviRPH2%nb_dev_ForQref   = CurviRPH1%nb_dev_ForQref
 
     IF (allocated(CurviRPH1%Qpath_ForQref)) THEN
       CALL alloc_NParray(CurviRPH2%Qpath_ForQref,shape(CurviRPH1%Qpath_ForQref), &
@@ -2204,6 +2280,9 @@ implicit NONE
 
 
 
+    CurviRPH2%nb_pts_ForGrad   = CurviRPH1%nb_pts_ForGrad
+    CurviRPH2%nb_dev_ForGrad   = CurviRPH1%nb_dev_ForGrad
+
     IF (allocated(CurviRPH1%Qpath_ForGrad)) THEN
       CALL alloc_NParray(CurviRPH2%Qpath_ForGrad,shape(CurviRPH1%Qpath_ForGrad), &
                         'CurviRPH2%Qpath_ForGrad',name_sub)
@@ -2221,6 +2300,9 @@ implicit NONE
     END IF
 
 
+
+    CurviRPH2%nb_pts_ForHess   = CurviRPH1%nb_pts_ForHess
+    CurviRPH2%nb_dev_ForHess   = CurviRPH1%nb_dev_ForHess
 
     IF (allocated(CurviRPH1%Qpath_ForHess)) THEN
       CALL alloc_NParray(CurviRPH2%Qpath_ForHess,shape(CurviRPH1%Qpath_ForHess), &
@@ -2250,9 +2332,8 @@ implicit NONE
   integer :: i,j,ig,ih,iq,jq,nb_pts,nb_dev,nb_grad,nb_hess,IOerr,option
   character (len=Name_len) :: name_dum
 
-  real (kind=Rkind), allocatable :: fQpath_inv(:,:)
-  real (kind=Rkind), allocatable :: fQpath(:,:)
 
+  real (kind=Rkind), allocatable :: Grad(:,:),hess(:,:,:)
   logical,           allocatable :: tab_Grad(:),tab_Hess(:)
 
   namelist / CurviRPH / nb_pts,gradient,option
@@ -2282,13 +2363,15 @@ implicit NONE
     nb_dev = nb_pts
     CALL alloc_CurviRPH(CurviRPH2,nb_Qpath,nb_Q21,nb_pts,nb_dev)
 
-    CALL alloc_NParray(tab_Grad,(/ nb_pts /),'tab_Grad',name_sub)
-    CALL alloc_NParray(tab_Hess,(/ nb_pts /),'tab_Hess',name_sub)
+    CALL alloc_NParray(Grad,    (/ nb_Q21,nb_pts /),       'Grad',    name_sub)
+    CALL alloc_NParray(hess,    (/ nb_Q21,nb_Q21,nb_pts /),'hess',    name_sub)
+    CALL alloc_NParray(tab_Grad,(/ nb_pts /),              'tab_Grad',name_sub)
+    CALL alloc_NParray(tab_Hess,(/ nb_pts /),              'tab_Hess',name_sub)
 
-    tab_Grad(:) = gradient
+    tab_Grad(:)  = gradient
     tab_Hess(:)  = .TRUE.
 
-    write(out_unitp,*) 'nb_pts,nb_dev  ',CurviRPH2%nb_pts,CurviRPH2%nb_dev
+    write(out_unitp,*) 'nb_pts,nb_dev  ',nb_pts,nb_dev
     write(out_unitp,*) 'nb_Qpath,nb_Q21',CurviRPH2%nb_Qpath,CurviRPH2%nb_Q21
     write(out_unitp,*) 'gradient       ',gradient
     CALL flush_perso(out_unitp)
@@ -2308,8 +2391,8 @@ implicit NONE
       IF (tab_Grad(i)) THEN
         ig = ig + 1
         !read gradient
-        read(in_unitp,*) CurviRPH2%Grad(:,ig)
-        write(out_unitp,*) 'Grad',CurviRPH2%Grad(:,ig)
+        read(in_unitp,*) Grad(:,ig)
+        IF (debug) write(out_unitp,*) 'Grad',Grad(:,ig)
       END IF
 
       IF (option == 1) read(in_unitp,*) name_dum,tab_Hess(i)
@@ -2317,22 +2400,32 @@ implicit NONE
       IF (tab_Hess(i)) THEN
         ih = ih + 1
         !read hessian
-        CALL Read_Mat(CurviRPH2%hess(:,:,ih),5,5,IOerr)
+        CALL Read_Mat(hess(:,:,ih),5,5,IOerr)
         write(out_unitp,*) 'IOerr',IOerr
-        IF (debug) CALL Write_Mat(CurviRPH2%hess(:,:,ih),out_unitp,5)
+        IF (debug) THEN
+          write(out_unitp,*) 'hess'
+          CALL Write_Mat(hess(:,:,ih),out_unitp,5)
+        END IF
       END IF
     END DO
-    write(out_unitp,*) 'nb_pts for Qref ',CurviRPH2%nb_pts
+    write(out_unitp,*) 'nb_pts for Qref ',CurviRPH2%nb_pts_ForQref
     IF (debug) CALL Write_VecMat(CurviRPH2%Qpath_ForQref,out_unitp,5)
 
+    !!! Transfert of grad and hess
     nb_grad = count(tab_Grad)
+    CurviRPH2%nb_pts_ForGrad = nb_grad
     IF (nb_grad > 0) THEN
+      CALL alloc_NParray(CurviRPH2%Grad,(/nb_Q21,nb_grad/),             &
+                        'CurviRPH2%Grad',name_sub)
       CALL alloc_NParray(CurviRPH2%Qpath_ForGrad,(/nb_grad/),           &
                         'CurviRPH2%Qpath_ForGrad',name_sub)
     END IF
 
     nb_Hess = count(tab_Hess)
+    CurviRPH2%nb_pts_ForHess = nb_Hess
     IF (nb_Hess > 0) THEN
+      CALL alloc_NParray(CurviRPH2%Hess,(/nb_Q21,nb_Q21,nb_Hess/),      &
+                        'CurviRPH2%Hess',name_sub)
       CALL alloc_NParray(CurviRPH2%Qpath_ForHess,(/nb_Hess/),           &
                         'CurviRPH2%Qpath_ForHess',name_sub)
     END IF
@@ -2344,62 +2437,121 @@ implicit NONE
       IF (tab_Grad(i)) THEN
         ig = ig + 1
         CurviRPH2%Qpath_ForGrad(ig) = CurviRPH2%Qpath_ForQref(i)
+        CurviRPH2%Grad(:,ig)        = Grad(:,ig)
       END IF
 
       IF (tab_Hess(i)) THEN
         ih = ih + 1
         CurviRPH2%Qpath_ForHess(ih) = CurviRPH2%Qpath_ForQref(i)
+        CurviRPH2%Hess(:,:,ih)      = Hess(:,:,ih)
       END IF
     END DO
-    write(out_unitp,*) 'nb_pts for Grad ',nb_grad
-    IF (debug .AND. nb_grad > 0) CALL Write_VecMat(CurviRPH2%Qpath_ForGrad,out_unitp,5)
-    write(out_unitp,*) 'nb_pts for Hess ',nb_Hess
-    IF (debug .AND. nb_Hess > 0) CALL Write_VecMat(CurviRPH2%Qpath_ForHess,out_unitp,5)
+    CALL dealloc_NParray(tab_Grad,'tab_Grad',name_sub)
+    CALL dealloc_NParray(tab_Hess,'tab_Hess',name_sub)
+    CALL dealloc_NParray(Grad,'Grad',name_sub)
+    CALL dealloc_NParray(Hess,'Hess',name_sub)
 
+    write(out_unitp,*) 'nb_pts for Grad ',CurviRPH2%nb_pts_ForGrad
+    CurviRPH2%nb_dev_ForGrad = CurviRPH2%nb_pts_ForGrad
+    write(out_unitp,*) 'nb_pts for Hess ',CurviRPH2%nb_pts_ForHess
+    CurviRPH2%nb_dev_ForHess = CurviRPH2%nb_pts_ForHess
+
+    IF (debug)     CALL Write_CurviRPH(CurviRPH2)
+    !!! End of the transfert of grad and hess
+
+    CALL CalcCoef_CurviRPH(CurviRPH2)
+
+    CALL check_CurviRPH(CurviRPH2)
+
+    IF (debug)     CALL Write_CurviRPH(CurviRPH2)
+  !IF (debug) THEN
+    write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
+  !END IF
+
+  END SUBROUTINE Init_CurviRPH
+  SUBROUTINE CalcCoef_CurviRPH(CurviRPH)
+  TYPE (CurviRPH_type), intent(inout) :: CurviRPH
+
+
+  integer :: i,j,iq,jq
+  real (kind=Rkind), allocatable :: fQpath_inv(:,:)
+  real (kind=Rkind), allocatable :: fQpath(:,:)
+
+
+!----- for debuging ----------------------------------
+  character (len=*),parameter :: name_sub='CalcCoef_CurviRPH'
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
+!----- for debuging ----------------------------------
+
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    CALL flush_perso(out_unitp)
+    CALL Write_CurviRPH(CurviRPH)
+  END IF
 
     !for fQpathQref
     IF (debug) write(out_unitp,*) 'Qref coef computation:'
-    CALL alloc_NParray(fQpath_inv,(/ nb_pts,nb_dev /),'fQpath_inv',name_sub)
-    CALL alloc_NParray(fQpath,    (/ nb_dev,nb_pts /),'fQpath',    name_sub)
-    DO i=1,nb_pts
-    DO j=1,nb_dev
-      fQpath(j,i) = funcQpath(CurviRPH2%Qpath_ForQref(i),j)
+    CALL alloc_NParray(fQpath_inv,(/ CurviRPH%nb_pts_ForQref,CurviRPH%nb_dev_ForQref /),&
+                      'fQpath_inv',name_sub)
+    CALL alloc_NParray(fQpath,    (/ CurviRPH%nb_dev_ForQref,CurviRPH%nb_pts_ForQref /),&
+                      'fQpath',    name_sub)
+    DO i=1,CurviRPH%nb_pts_ForQref
+    DO j=1,CurviRPH%nb_dev_ForQref
+      fQpath(j,i) = funcQpath(CurviRPH%Qpath_ForQref(i),j)
     END DO
     END DO
-    IF (debug) CALL Write_Mat(fQpath,out_unitp,5)
-    CALL inv_m1_TO_m2(fQpath,fQpath_inv,nb_pts,0,ZERO)
-    IF (debug) CALL Write_Mat(fQpath_inv,out_unitp,5)
-
+    IF (debug) THEN
+      write(out_unitp,*) 'fQpath for Qref:'
+      CALL Write_Mat(fQpath,out_unitp,5)
+    END IF
+    CALL inv_m1_TO_m2(fQpath,fQpath_inv,CurviRPH%nb_pts_ForQref,0,ZERO)
+    IF (debug) THEN
+      write(out_unitp,*) 'fQpath_inv for Qref:'
+      CALL Write_Mat(fQpath_inv,out_unitp,5)
+    END IF
     !for the fit coef.
-    DO iq=1,CurviRPH2%nb_Q21
-      CurviRPH2%CoefQref(:,iq) = matmul(CurviRPH2%Qref(iq,:),fQpath_inv)
-      IF (debug) write(out_unitp,*) 'CoefQref(:)',iq,CurviRPH2%CoefQref(:,iq)
+    DO iq=1,CurviRPH%nb_Q21
+      CurviRPH%CoefQref(:,iq) = matmul(CurviRPH%Qref(iq,:),fQpath_inv)
+      IF (debug) write(out_unitp,*) 'CoefQref(:)',iq,CurviRPH%CoefQref(:,iq)
     END DO
     CALL dealloc_NParray(fQpath_inv,'fQpath_inv',name_sub)
     CALL dealloc_NParray(fQpath,    'fQpath',    name_sub)
 
 
     !for fQpathGrad
-    nb_pts  = count(tab_Grad)
-    nb_dev  = count(tab_Grad)
-    IF (nb_pts > 0) THEN
+    IF (CurviRPH%nb_pts_ForGrad > 0) THEN
+      CALL alloc_NParray(CurviRPH%CoefGrad,                                &
+                           (/ CurviRPH%nb_dev_ForGrad,CurviRPH%nb_Q21 /), &
+                        'CurviRPH%CoefGrad',name_sub)
       IF (debug) write(out_unitp,*) 'Grad coef computation:'
-      CALL alloc_NParray(fQpath_inv,(/ nb_pts,nb_dev /),'fQpath_inv',name_sub)
-      CALL alloc_NParray(fQpath,    (/ nb_dev,nb_pts /),'fQpath',    name_sub)
-      DO i=1,nb_pts
-      DO j=1,nb_dev
-        fQpath(j,i) = funcQpath(CurviRPH2%Qpath_ForGrad(i),j)
+      CALL alloc_NParray(fQpath_inv, &
+                           (/ CurviRPH%nb_pts_ForGrad,CurviRPH%nb_dev_ForGrad /),&
+                        'fQpath_inv',name_sub)
+      CALL alloc_NParray(fQpath,     &
+                           (/ CurviRPH%nb_dev_ForGrad,CurviRPH%nb_pts_ForGrad /),&
+                        'fQpath',    name_sub)
+      DO i=1,CurviRPH%nb_pts_ForGrad
+      DO j=1,CurviRPH%nb_dev_ForGrad
+        fQpath(j,i) = funcQpath(CurviRPH%Qpath_ForGrad(i),j)
       END DO
       END DO
 
-      IF (debug) CALL Write_Mat(fQpath,out_unitp,5)
-      CALL inv_m1_TO_m2(fQpath,fQpath_inv,nb_pts,0,ZERO)
-      IF (debug) CALL Write_Mat(fQpath_inv,out_unitp,5)
+      IF (debug) THEN
+        write(out_unitp,*) 'fQpath for Grad:'
+        CALL Write_Mat(fQpath,out_unitp,5)
+      END IF
+      CALL inv_m1_TO_m2(fQpath,fQpath_inv,CurviRPH%nb_pts_ForGrad,0,ZERO)
+      IF (debug) THEN
+        write(out_unitp,*) 'fQpath_inv for Grad:'
+        CALL Write_Mat(fQpath_inv,out_unitp,5)
+      END IF
 
       !for the fit of g
-      DO iq=1,CurviRPH2%nb_Q21
-       CurviRPH2%CoefGrad(:,iq) = matmul(CurviRPH2%Grad(iq,1:nb_pts),fQpath_inv)
-       IF (debug) write(out_unitp,*) 'CoefGrad(:)',iq,CurviRPH2%CoefGrad(:,iq)
+      DO iq=1,CurviRPH%nb_Q21
+       CurviRPH%CoefGrad(:,iq) = matmul(CurviRPH%Grad(iq,:),fQpath_inv)
+       IF (debug) write(out_unitp,*) 'CoefGrad(:)',iq,CurviRPH%CoefGrad(:,iq)
       END DO
 
       CALL dealloc_NParray(fQpath_inv,'fQpath_inv',name_sub)
@@ -2407,46 +2559,54 @@ implicit NONE
     END IF
 
     !for fQpathHess
-    nb_pts = count(tab_Hess)
-    nb_dev  = count(tab_Hess)
-    IF (nb_pts > 0) THEN
+    IF (CurviRPH%nb_pts_ForHess > 0) THEN
       IF (debug) write(out_unitp,*) 'Hess coef computation:'
-      CALL alloc_NParray(fQpath_inv,(/ nb_pts,nb_dev /),'fQpath_inv',name_sub)
-      CALL alloc_NParray(fQpath,    (/ nb_dev,nb_pts /),'fQpath',    name_sub)
-      DO i=1,nb_pts
-      DO j=1,nb_dev
-        fQpath(j,i) = funcQpath(CurviRPH2%Qpath_ForHess(i),j)
+
+      CALL alloc_NParray(CurviRPH%CoefHess, &
+                           (/ CurviRPH%nb_dev_ForHess,CurviRPH%nb_Q21,CurviRPH%nb_Q21 /), &
+                        'CurviRPH%CoefHess',name_sub)
+
+      CALL alloc_NParray(fQpath_inv,&
+                           (/ CurviRPH%nb_pts_ForHess,CurviRPH%nb_dev_ForHess /),&
+                        'fQpath_inv',name_sub)
+      CALL alloc_NParray(fQpath,    &
+                           (/ CurviRPH%nb_dev_ForHess,CurviRPH%nb_pts_ForHess /),&
+                        'fQpath',    name_sub)
+
+      DO i=1,CurviRPH%nb_pts_ForHess
+      DO j=1,CurviRPH%nb_dev_ForHess
+        fQpath(j,i) = funcQpath(CurviRPH%Qpath_ForHess(i),j)
       END DO
       END DO
 
-      IF (debug) CALL Write_Mat(fQpath,out_unitp,5)
-      CALL inv_m1_TO_m2(fQpath,fQpath_inv,nb_pts,0,ZERO)
-      IF (debug) CALL Write_Mat(fQpath_inv,out_unitp,5)
+      IF (debug) THEN
+        write(out_unitp,*) 'fQpath for hess:'
+        CALL Write_Mat(fQpath,out_unitp,5)
+      END IF
+      CALL inv_m1_TO_m2(fQpath,fQpath_inv,CurviRPH%nb_pts_ForHess,0,ZERO)
+      IF (debug) THEN
+        write(out_unitp,*) 'fQpath_inv for hess:'
+        CALL Write_Mat(fQpath_inv,out_unitp,5)
+      END IF
 
       !for the fit of hess
-      DO iq=1,CurviRPH2%nb_Q21
-      DO jq=1,CurviRPH2%nb_Q21
-        CurviRPH2%CoefHess(:,jq,iq) = matmul(CurviRPH2%Hess(jq,iq,1:nb_pts),fQpath_inv)
-        IF (debug) write(out_unitp,*) 'CoefHess(:)',iq,jq,CurviRPH2%CoefHess(:,jq,iq)
+      DO iq=1,CurviRPH%nb_Q21
+      DO jq=1,CurviRPH%nb_Q21
+        CurviRPH%CoefHess(:,jq,iq) = matmul(CurviRPH%Hess(jq,iq,:),fQpath_inv)
+        IF (debug) write(out_unitp,*) 'CoefHess(:)',iq,jq,CurviRPH%CoefHess(:,jq,iq)
       END DO
       END DO
       CALL dealloc_NParray(fQpath_inv,'fQpath_inv',name_sub)
       CALL dealloc_NParray(fQpath,    'fQpath',    name_sub)
-
     END IF
 
-    CALL dealloc_NParray(tab_Grad,'tab_Grad',name_sub)
-    CALL dealloc_NParray(tab_Hess,'tab_Hess',name_sub)
-
-    CALL check_CurviRPH(CurviRPH2)
-
-  !IF (debug) THEN
+  IF (debug) THEN
+    CALL Write_CurviRPH(CurviRPH)
     write(out_unitp,*) 'END ',name_sub
     CALL flush_perso(out_unitp)
-  !END IF
+  END IF
 
-  END SUBROUTINE Init_CurviRPH
-
+  END SUBROUTINE CalcCoef_CurviRPH
   SUBROUTINE get_CurviRPH(Qpath,CurviRPH,Q21,Grad,Hess)
   TYPE (CurviRPH_type), intent(inout)           :: CurviRPH
   real(kind=Rkind),     intent(in)              :: Qpath(:)
@@ -2562,7 +2722,7 @@ implicit NONE
 
   real(kind=Rkind), allocatable :: fQpath(:)
 
-  integer :: i,j,iq,jq,nb_Grad,nb_Hess
+  integer :: i,j,iq,jq
   real(kind=Rkind) :: val,ErrQref,ErrGrad,ErrHess
 !----- for debuging ----------------------------------
   character (len=*),parameter :: name_sub='check_CurviRPH'
@@ -2578,10 +2738,10 @@ implicit NONE
 
   !for Qref
   ErrQref = ZERO
-  CALL alloc_NParray(fQpath,(/ CurviRPH%nb_pts /),  'fQpath',name_sub)
-  DO i=1,CurviRPH%nb_pts
+  CALL alloc_NParray(fQpath,(/ CurviRPH%nb_dev_ForQref /),  'fQpath',name_sub)
+  DO i=1,CurviRPH%nb_pts_ForQref
 
-    DO j=1,CurviRPH%nb_dev
+    DO j=1,CurviRPH%nb_dev_ForQref
       fQpath(j) = funcQpath(CurviRPH%Qpath_ForQref(i),j)
     END DO
     IF (debug) write(out_unitp,*) 'points fQpath():',i,fQpath(:)
@@ -2589,6 +2749,7 @@ implicit NONE
 
     DO iq=1,CurviRPH%nb_Q21
       val = dot_product(fQpath,CurviRPH%CoefQref(:,iq))
+      !write(6,*) 'Err Qref',i,iq,val,CurviRPH%Qref(iq,i),val-CurviRPH%Qref(iq,i)
       ErrQref = max(ErrQref,abs(val-CurviRPH%Qref(iq,i)))
     END DO
 
@@ -2602,22 +2763,19 @@ implicit NONE
   !for the gradient
   IF (allocated(CurviRPH%Qpath_ForGrad)) THEN
     ErrGrad = ZERO
-    nb_Grad = size(CurviRPH%Qpath_ForGrad)
-    CALL alloc_NParray(fQpath,(/ nb_Grad /),  'fQpath',name_sub)
+    CALL alloc_NParray(fQpath,(/ CurviRPH%nb_dev_ForGrad /),  'fQpath',name_sub)
 
-    DO i=1,nb_Grad
-
-      DO j=1,nb_Grad ! nb_dev_Grad
+    DO i=1,CurviRPH%nb_pts_ForGrad
+      DO j=1,CurviRPH%nb_dev_ForGrad ! nb_dev_Grad
         fQpath(j) = funcQpath(CurviRPH%Qpath_ForGrad(i),j)
       END DO
       IF (debug) write(out_unitp,*) 'points fQpath(;)',i,fQpath(:)
       CALL flush_perso(out_unitp)
 
       DO iq=1,CurviRPH%nb_Q21
-        val     = dot_product(fQpath,CurviRPH%CoefGrad(1:nb_Grad,iq))
+        val     = dot_product(fQpath,CurviRPH%CoefGrad(:,iq))
         ErrGrad = max(ErrGrad,abs(val-CurviRPH%Grad(iq,i)))
       END DO
-
     END DO
     CALL dealloc_NParray(fQpath,  'fQpath',name_sub)
     write(out_unitp,*) 'Largest error on Grad ',ErrGrad
@@ -2627,12 +2785,11 @@ implicit NONE
   !for the hessian
   IF (allocated(CurviRPH%Qpath_ForHess)) THEN
     ErrHess = ZERO
-    nb_Hess = size(CurviRPH%Qpath_ForHess)
-    CALL alloc_NParray(fQpath,(/ nb_Hess /),  'fQpath',name_sub)
+    CALL alloc_NParray(fQpath,(/ CurviRPH%nb_dev_ForHess /),  'fQpath',name_sub)
 
-    DO i=1,nb_Hess
+    DO i=1,CurviRPH%nb_pts_ForHess
 
-      DO j=1,nb_Hess ! nb_dev_Hess
+      DO j=1,CurviRPH%nb_dev_ForHess ! nb_dev_Hess
         fQpath(j) = funcQpath(CurviRPH%Qpath_ForHess(i),j)
       END DO
       IF (debug) write(out_unitp,*) 'points fQpath(:)',i,fQpath(:)
@@ -2640,7 +2797,8 @@ implicit NONE
 
       DO iq=1,CurviRPH%nb_Q21
       DO jq=1,CurviRPH%nb_Q21
-        val = dot_product(fQpath,CurviRPH%CoefHess(1:nb_Hess,jq,iq))
+        val = dot_product(fQpath,CurviRPH%CoefHess(:,jq,iq))
+        !write(6,*) 'Err Hess',i,iq,jq,val,CurviRPH%Hess(jq,iq,i),val-CurviRPH%Hess(jq,iq,i)
         ErrHess = max(ErrHess,abs(val-CurviRPH%Hess(jq,iq,i)))
       END DO
       END DO

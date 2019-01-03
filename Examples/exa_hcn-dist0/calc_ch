@@ -1,0 +1,7 @@
+
+for name in dat_*
+do
+  sed "s/ici/here/" $name > 1
+  mv 1 $name
+  chmod a+x $name
+done

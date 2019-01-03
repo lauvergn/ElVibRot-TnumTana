@@ -45,10 +45,8 @@
       IMPLICIT NONE
 
       TYPE (param_AllOp) :: para_AllOp
-      integer       :: nb_var,nb_act1
+      integer            :: nb_var,nb_act1
       real (kind=Rkind), intent(inout)        :: Qdyn(nb_var),Qact(nb_act1)
-
-
       integer            :: iq
 
 !----- variables for calc_Op (mat_V, mat_imV and mat_ScalOp) ----------------
@@ -113,7 +111,6 @@
             para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_FileGrid_done = .FALSE.
             para_AllOp%tab_Op(iOp)%OpGrid(1)%para_FileGrid%Save_FileGrid        = .FALSE.
             para_AllOp%tab_Op(iOp)%OpGrid(1)%para_FileGrid%Save_FileGrid_done   = .FALSE.
-
             CYCLE
           END IF
 

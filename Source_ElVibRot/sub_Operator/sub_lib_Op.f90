@@ -81,6 +81,8 @@
          write(out_unitp,*)
          write(out_unitp,*) 'WnD',WnD
          ! CALL write_param_Op(para_Op)
+          write(out_unitp,*) 'd0MatOp:'
+          CALL Write_d0MatOp(d0MatOp)
          write(out_unitp,*)
        END IF
 !-----------------------------------------------------------

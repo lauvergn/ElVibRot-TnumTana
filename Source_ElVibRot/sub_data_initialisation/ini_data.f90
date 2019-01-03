@@ -403,6 +403,7 @@ SUBROUTINE ini_data(const_phys,                                         &
         write(out_unitp,*) ' WARNING in ',name_sub
         write(out_unitp,*) 'calc_scalar_Op=t and nb_scalar_Op < 3'
       END IF
+      para_PES%calc_scalar_Op = (para_PES%nb_scalar_Op > 0)
 
       para_AllOp%nb_Op = para_PES%nb_scalar_Op + 2  ! for H and S
 

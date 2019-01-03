@@ -122,12 +122,12 @@ CONTAINS
 
       ! Check if the nb_act1_RPH coordinates belong to one basis set (primitive ?)
       ! 1) RPHTransfo MUST be the 2d transformation after the active one.
-      write(6,*) 'asso RPH, itRPH,nb_Qtransfo',associated(mole%RPHTransfo),mole%itRPH,mole%nb_Qtransfo
+      !write(6,*) 'asso RPH, itRPH,nb_Qtransfo',associated(mole%RPHTransfo),mole%itRPH,mole%nb_Qtransfo
       RPHCoord_IN_OneBasis = associated(mole%RPHTransfo) .AND. (mole%itRPH == mole%nb_Qtransfo-1)
 
       RPHCoord_IN_OneBasis = RPHCoord_IN_OneBasis .AND.                 &
         (count(mole%RPHTransfo%list_act_OF_Qdyn(1:nb_act1_RPH) == 1) == nb_act1_RPH)
-      write(6,*) 'list_act_OF_Qdyn',mole%RPHTransfo%list_act_OF_Qdyn
+      !write(6,*) 'list_act_OF_Qdyn',mole%RPHTransfo%list_act_OF_Qdyn
 
 
       ! 2) basis functions of BasisnD are defined as a product (BasisnD%nb_basis > 0)
@@ -137,7 +137,7 @@ CONTAINS
       ! 3) Check nb_act1_RPH coordinates belong to one primitive basis set
       IF (RPHCoord_IN_OneBasis) THEN
         DO ib=1,BasisnD%nb_basis
-          write(6,*) 'ib,iQdyn',ib,':',BasisnD%tab_Pbasis(ib)%Pbasis%iQdyn(:)
+          !write(6,*) 'ib,iQdyn',ib,':',BasisnD%tab_Pbasis(ib)%Pbasis%iQdyn(:)
           IF (BasisnD%tab_Pbasis(ib)%Pbasis%ndim == nb_act1_RPH) THEN
             IF (all(BasisnD%tab_Pbasis(ib)%Pbasis%iQdyn ==              &
                   mole%RPHTransfo%list_QactTOQdyn(1:nb_act1_RPH)) ) EXIT
@@ -151,9 +151,6 @@ CONTAINS
       ELSE
         CALL Set_paraPRH_gene(mole,para_Tnum,BasisnD)
       END IF
-
-
-
 
       CALL flush_perso(out_unitp)
       mole%RPHTransfo%init = .TRUE.

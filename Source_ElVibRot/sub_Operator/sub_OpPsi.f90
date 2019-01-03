@@ -441,11 +441,11 @@ CONTAINS
             END IF
 
           ELSE
-            IF (psi%BasisnD%dnGGRep) THEN
-              CALL sub_OpPsi_WITH_FileGrid_type12_BGG(Psi,OpPsi,para_Op,derOp_loc,.FALSE.)
-            ELSE
-              IF (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
-                CALL sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp_loc)
+            IF (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
+              CALL sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp_loc)
+            ELSE ! Type_FileGrid 1 or 2
+              IF (psi%BasisnD%dnGGRep) THEN
+                CALL sub_OpPsi_WITH_FileGrid_type12_BGG(Psi,OpPsi,para_Op,derOp_loc,.FALSE.)
               ELSE
                 CALL sub_OpPsi_WITH_FileGrid_type12(Psi,OpPsi,para_Op,derOp_loc)
               END IF
@@ -658,7 +658,9 @@ CONTAINS
       direct_KEO = direct_KEO .AND. (para_Op%type_Op == 10)
       direct_KEO = direct_KEO .AND. para_Op%direct_KEO
 
-      IF (SGtype4 .AND. direct_KEO) THEN
+      !IF (SGtype4 .AND. direct_KEO) THEN
+
+      IF (SGtype4) THEN
         CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)
         para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
         RETURN

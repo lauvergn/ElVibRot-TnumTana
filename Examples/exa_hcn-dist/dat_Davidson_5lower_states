@@ -19,7 +19,6 @@ cd $DIR_vib
 cd $here
 
 export OMP_NUM_THREADS=4
-export OMP_PLACES=threads
 
  x1=0.538516066
  x2=0.461483933
@@ -72,7 +71,7 @@ Weight_Rho  -1    0    0    0   0   0
  &intensity l_Int=t l_Tau=f l_IntVR=f Temp=300. Ewidth=1. Emax=6000. Emin=0.0 /
 
  &davidson nb_WP=5 max_it=50 max_WP=300 num_resetH=10
-           lower_states=t project_WP0=f one_residue=f
+           lower_states=t NewVec_type=4
            read_WP=f read_listWP=f
 /
  1 1 1    1 1   1.0
