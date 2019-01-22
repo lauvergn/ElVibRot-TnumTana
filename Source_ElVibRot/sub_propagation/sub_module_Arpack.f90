@@ -38,7 +38,6 @@ CONTAINS
                                         para_H,para_propa)
       USE mod_system
       USE mod_Op
-      USE mod_OpPsi
 
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
@@ -542,7 +541,6 @@ CONTAINS
                                        para_H,cplxE,para_propa,n)
       USE mod_system
       USE mod_Op
-      USE mod_OpPsi
 
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
@@ -618,7 +616,6 @@ CONTAINS
                                           para_H,para_propa)
       USE mod_system
       USE mod_Op
-      USE mod_OpPsi
 
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp

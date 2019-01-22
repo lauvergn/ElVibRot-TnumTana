@@ -261,7 +261,6 @@ CONTAINS
       USE mod_psi_set_alloc
       USE mod_psi_Op
       !USE mod_psi
-      USE mod_OpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -461,7 +460,6 @@ CONTAINS
       USE mod_system
       USE mod_Op
       !USE mod_psi
-      USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       USE mod_psi_SimpleOp
@@ -789,7 +787,6 @@ CONTAINS
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       USE mod_psi_Op
-      USE mod_OpPsi
       USE mod_propa
       USE mod_march
       IMPLICIT NONE
@@ -984,7 +981,6 @@ CONTAINS
       !USE mod_psi
       USE mod_psi_set_alloc
       USE mod_psi_Op
-      USE mod_OpPsi
       USE mod_field
       IMPLICIT NONE
 
@@ -1272,7 +1268,6 @@ CONTAINS
       USE mod_psi_set_alloc
       USE mod_psi_io
       USE mod_psi_Op
-      USE mod_OpPsi
       USE mod_field
       IMPLICIT NONE
 

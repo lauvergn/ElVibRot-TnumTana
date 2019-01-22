@@ -716,8 +716,7 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 
       SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,para_field)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_OpPsi,           ONLY : sub_PsiOpPsi
+      USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi
       USE mod_field,           ONLY : param_field,sub_dnE
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
@@ -881,7 +880,9 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 
 
 !----- time parameters -----------------------------------------------
-      real (kind=Rkind) :: WPTmax ,WPdeltaT
+      !real (kind=Rkind) :: WPTmax ,WPdeltaT
+      TYPE (REAL_WU)    :: WPTmax ,WPdeltaT
+
       integer           :: nb_micro
 
 
@@ -976,8 +977,10 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 
 !------- read the namelist -----------------------------
 
-        WPTmax              = HUNDRED
-        WPdeltaT            = TEN
+        WPdeltaT            = REAL_WU(TEN,'au','t')  ! 10 ua (time)
+        WPTmax              = REAL_WU(HUNDRED,'au','t')  ! 100 ua (time)
+
+
         nb_micro            = 1
         restart             = .FALSE.
 
@@ -1040,8 +1043,9 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
         IF (print_level > 0) write(out_unitp,propa)
 
 
-        para_propa%WPTmax       = WPTmax
-        para_propa%WPdeltaT     = WPdeltaT
+        para_propa%WPTmax       = convRWU_TO_R(WPTmax)
+        para_propa%WPdeltaT     = convRWU_TO_R(WPdeltaT)
+
         para_propa%nb_micro     = nb_micro
 
         para_propa%para_poly%max_poly     = max_poly
@@ -1231,7 +1235,7 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
           cplx_gate    = .FALSE.
           read(in_unitp,control)
 
-          IF (Tenvelopp == ZERO) Tenvelopp = WPTmax
+          IF (Tenvelopp == ZERO) Tenvelopp = convRWU_TO_R(WPTmax)
           IF (print_level > 0) write(out_unitp,control)
 
           IF (nb_WP < 1) THEN

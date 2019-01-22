@@ -303,7 +303,7 @@
       integer       :: num_grid_i,num_grid_f
       integer       :: JJ,Type_HamilOp
 
-      logical       :: pot_only,T_only,pack_Op,read_Op,make_MatOp,direct_KEO
+      logical       :: pot_only,T_only,pack_Op,read_Op,make_MatOp,direct_KEO,direct_ScalOp
 
       character (len=Name_len) :: name0
 
@@ -334,7 +334,7 @@
                         pot_only,T_only,read_Op,                        &
                         name_HADA,formatted_HADA,                       &
                         name_Grid,formatted_Grid,                       &
-                        JJ,Type_HamilOp,direct_KEO,                     &
+                        JJ,Type_HamilOp,direct_KEO,direct_ScalOp,       &
                         direct,make_MatOp,pack_Op,tol_pack,tol_nopack,  &
                         Op_Transfo,E0_Transfo
 
@@ -358,6 +358,7 @@
       comput_S        = .FALSE.
       Type_HamilOp    = 1
       direct_KEO      = .FALSE.
+      direct_ScalOp   = .FALSE.
 
       direct          = 0
       Type_FileGrid   = 0
@@ -419,8 +420,9 @@
       CALL All2_param_TO_ComOp(ComOp,para_AllBasis,mole,nb_bi,          &
                                para_PES%nb_elec,name_Grid,formatted_Grid)
 
-      para_PES%Type_HamilOp = Type_HamilOp
-      para_PES%direct_KEO   = direct_KEO
+      para_PES%Type_HamilOp  = Type_HamilOp
+      para_PES%direct_KEO    = direct_KEO
+      para_PES%direct_ScalOp = direct_ScalOp
 
 
 
@@ -550,6 +552,5 @@
         para_ReadOp%nb_bRot         = 1
       END IF
       write(out_unitp,*) 'The number of rotational basis is:',para_ReadOp%nb_bRot
-
 
       END SUBROUTINE read_active

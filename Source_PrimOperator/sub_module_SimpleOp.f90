@@ -42,7 +42,9 @@
                                       ! 1 : H: F2.d^2 + F1.d^1 + V + (Cor+Rot)
                                       ! 10: H: d^1 G d^1 +V
 
-          logical :: direct_KEO  = .FALSE. ! to be used with type_Op=10
+          logical :: direct_KEO    = .FALSE. ! to be used with type_Op=10
+          logical :: direct_ScalOp = .FALSE. ! scalar Operotor and potential
+
 
           integer :: nb_term     = 0
           integer :: nb_Term_Vib = 0
@@ -102,10 +104,11 @@
 
    CONTAINS
 
-   SUBROUTINE Init_TypeOp(para_TypeOp,type_Op,nb_Qact,cplx,JRot,direct_KEO)
+   SUBROUTINE Init_TypeOp(para_TypeOp,type_Op,nb_Qact,cplx,JRot,        &
+                                             direct_KEO,direct_ScalOp)
     TYPE (param_TypeOp), intent(inout) :: para_TypeOp
     integer, intent(in) :: type_Op,nb_Qact
-    logical, intent(in), optional :: cplx,direct_KEO
+    logical, intent(in), optional :: cplx,direct_KEO,direct_ScalOp
     integer, intent(in), optional :: JRot
 
     integer :: iterm,i,j,nb_term,nb_term_Vib,nb_term_Rot
@@ -146,6 +149,12 @@
         IF (Type_Op /= 10) para_TypeOp%direct_KEO = .FALSE.
       ELSE
         para_TypeOp%direct_KEO = (Type_Op == 10)
+      END IF
+
+      IF (present(direct_ScalOp)) THEN
+        para_TypeOp%direct_ScalOp = direct_ScalOp
+      ELSE
+        para_TypeOp%direct_ScalOp = .FALSE.
       END IF
 
 
@@ -380,8 +389,10 @@
       END IF
 
       write(out_unitp,*) ' BEGINNING: ',name_sub
-      write(out_unitp,*) ' Type_Op:    ',para_TypeOp%Type_Op
-      write(out_unitp,*) ' direct_KEO: ',para_TypeOp%direct_KEO
+      write(out_unitp,*) ' Type_Op:       ',para_TypeOp%Type_Op
+      write(out_unitp,*) ' direct_KEO:    ',para_TypeOp%direct_KEO
+      write(out_unitp,*) ' direct_ScalOp: ',para_TypeOp%direct_ScalOp
+
       write(out_unitp,*) ' nb_term:    ',para_TypeOp%nb_term
       write(out_unitp,*) ' nb_Qact:    ',para_TypeOp%nb_Qact
 
@@ -425,8 +436,7 @@
 
       CALL Init_TypeOp(para_TypeOp1,para_TypeOp2%type_Op,               &
                para_TypeOp2%nb_Qact,para_TypeOp2%cplx,para_TypeOp2%JRot,&
-               para_TypeOp2%direct_KEO)
-
+               para_TypeOp2%direct_KEO,para_TypeOp2%direct_ScalOp)
       IF (debug) THEN
         CALL Write_TypeOp(para_TypeOp1)
         write(out_unitp,*) ' END: ',name_sub

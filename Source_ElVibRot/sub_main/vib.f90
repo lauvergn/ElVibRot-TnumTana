@@ -45,7 +45,6 @@
       USE mod_Filter
       USE mod_Arpack
       USE mod_Op
-      USE mod_OpPsi
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_Auto_Basis
@@ -1136,7 +1135,6 @@ para_mem%mem_debug = .FALSE.
       USE mod_Filter
       USE mod_Arpack
       USE mod_Op
-      USE mod_OpPsi
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_Auto_Basis
@@ -1211,7 +1209,7 @@ para_mem%mem_debug = .FALSE.
       integer :: err_mem,memory
       real (kind=Rkind) :: part_func ! function
 
-       integer           :: nb_it = 1
+      integer           :: nb_it = 10
 
 !para_mem%mem_debug=.TRUE.
 

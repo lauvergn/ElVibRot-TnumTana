@@ -312,7 +312,6 @@ CONTAINS
 
       USE mod_system
       USE mod_Op
-      USE mod_OpPsi
       USE mod_psi_set_alloc
       IMPLICIT NONE
 
@@ -414,7 +413,6 @@ CONTAINS
 
       USE mod_system
       USE mod_Op
-      USE mod_OpPsi
       USE mod_psi_set_alloc
       IMPLICIT NONE
 

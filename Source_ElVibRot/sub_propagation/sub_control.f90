@@ -942,7 +942,6 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       USE mod_system
       USE mod_Op
       USE mod_field
-      USE mod_OpPsi
       USE mod_propa
       !USE mod_psi
       USE mod_psi_set_alloc

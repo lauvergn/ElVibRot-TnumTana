@@ -37,7 +37,7 @@
       USE mod_system
       USE mod_PrimOp, only: Write_d0MatOp
       USE mod_basis
-      USE mod_Op
+      USE mod_SetOp
       IMPLICIT NONE
 
 !----- for the basis set ----------------------------------------------

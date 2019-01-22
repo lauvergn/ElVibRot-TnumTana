@@ -39,7 +39,6 @@
       USE mod_psi_set_alloc
       USE mod_psi_Op
       USE mod_Op
-      USE mod_OpPsi
       USE mod_analysis
       IMPLICIT NONE
 

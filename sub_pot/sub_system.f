@@ -7,7 +7,7 @@ c    Q are the coordinates in active order or syl order
 c    dipolar calculation if calc_dip = T
 c================================================================
       SUBROUTINE calcN_op(mat_V,mat_imV,mat_ScalOp,nb_be,nb_ScalOp,
-     *                    Qcart,nb_cart,mole,
+     *                    Qact,nb_var,mole,
      *                    calc_ScalOp,pot_cplx)
 
       USE mod_Tnum
@@ -18,40 +18,38 @@ c----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
 
 
-      integer           :: nb_be,nb_ScalOp,nb_cart
+      integer           :: nb_be,nb_ScalOp,nb_var
       logical           :: calc_ScalOp,pot_cplx
       real (kind=Rkind) :: mat_V(nb_be,nb_be),mat_imV(nb_be,nb_be)
       real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
-      real (kind=Rkind) :: Qcart(nb_cart)
+      real (kind=Rkind) :: Qact(nb_var)
 
-      real (kind=Rkind) :: pot0,im_pot0,pot_PotV08
+      integer,parameter :: ndim=4
+      real (kind=Rkind) :: im_pot0
+      real (kind=Rkind) :: Q(ndim)
+      real (kind=Rkind) :: Q2(ndim)
+      real (kind=Rkind) :: Q3(ndim)
+     
+      real (kind=Rkind), parameter :: lambda = 0.111803d0
 
 
-      !write(6,*) 'size Qcart',size(Qcart),nb_cart
-
-c     Qcart(4:9) = (/-0.684949591106229d0,0.516933590826647d0,
-c    *                0.272212678222987d0,-0.694120826186399d0,
-c    *              -1.357818704501048d-2,-0.259416567131228d0/)
-c     Qcart = Qcart/.529178d0 ! conversion factor from Valiron pot
-c     write(6,*) 'RH2',sqrt(dot_product(Qcart(4:6)-Qcart(7:9),
-c    *                                  Qcart(4:6)-Qcart(7:9)))
-c     write(6,*) 'GH2',(Qcart(4:6)+Qcart(7:9))*HALF
-c     write(6,*) 'energy : -886.09604031582364 cm-1 with model=1'
-
+      Q  = Qact(4:ndim+3)
+c     Q2 = Q*Q
+c      Q3 = Q2*Q
 
       IF (nb_be == 1 ) THEN
-        !write(6,*) 'Qcart',Qcart
-        mat_V(1,1) = ZERO
-        mat_V(1,1) = pot_PotV08(reshape(Qcart(4:9),(/3,2/)),0,'.')
-        !write(6,*) mat_V(1,1) ; STOP
+        CALL sub_model_V(mat_V,Q,ndim,nb_be)
+        mat_V(1,1) = max(mat_V(1,1),-ONE)
+        mat_V(1,1) = min(mat_V(1,1),100._Rkind)
+c       mat_V(1,1) = HALF * sum(Q2) + lambda * sum( Q2(1:ndim-1)*Q(2:ndim) ) -
+c    *             lambda/THREE * sum( Q(2:ndim)**3 )
 
-        mat_V(1,1) = mat_V(1,1) / 219474.63d0 ! the conversion factor comes from the sc_sp subroutine
-        !write(6,*) 'energy: ',mat_V(1,1)
-        !mat_V(1,1) = min(mat_V(1,1),ONE)
-        !mat_V(1,1) = ZERO
-        IF (pot_cplx) mat_imV(1,1) = im_pot0(Qcart)
+c       write(6,*) 'Q,V',Q,mat_V
+        IF (pot_cplx) mat_imV(1,1) = im_pot0(Q,ndim)
+c       write(6,*) 'Q,imV',Q,mat_imV
         IF (calc_ScalOp) THEN
-          CALL sub_dipole(mat_ScalOp(1,1,:),Qcart,mole)
+          CALL sub_scalar(mat_ScalOp(1,1,:),nb_ScalOp,Q,ndim,
+     *                    mole)
         END IF
       ELSE
         write(6,*) ' ERROR in calc_op'
@@ -60,10 +58,7 @@ c     write(6,*) 'energy : -886.09604031582364 cm-1 with model=1'
         STOP
       END IF
 
-c     write(666,*) mat_V(1,1)
-c     write(666,*) 1
-c     STOP
-
+      RETURN
       END
 C================================================================
 C    subroutine calculant le gradient
@@ -101,9 +96,10 @@ C================================================================
       IMPLICIT NONE
 
       integer, parameter :: n = 9
-      real (kind=Rkind) :: hh(n,n)
+      real (kind=Rkind) :: h(n,n),hh(n,n)
+      integer  ::  err
 
-      hh = ZERO
+      hh = zero
       END
       SUBROUTINE H0_sym(h,n)
       USE mod_system
@@ -119,6 +115,20 @@ C================================================================
 
         RETURN
 
+
+        d = h(n1,n1)
+        h(:,n1) = 0.d0
+        h(n1,:) = 0.d0
+        h(n1,n1) = d
+        
+
+        d = h(n2,n2)
+        h(:,n2) = 0.d0
+        h(n2,:) = 0.d0
+        h(n2,n2) = d
+        write(6,*) 'hessian sym'
+        CALL ecriture(h,n,n,5,.TRUE.,n)
+        
       END
 C================================================================
 C    fonction pot_rest(x)
@@ -138,15 +148,22 @@ C================================================================
 C================================================================
 C    fonction im_pot0(x)
 C================================================================
-      FUNCTION im_pot0(Qsym0)
+      FUNCTION im_pot0(Q,n)
       USE mod_system
       IMPLICIT NONE
 
        real (kind=Rkind) :: im_pot0
-       real (kind=Rkind) :: Qsym0(1)
-       real (kind=Rkind) :: z
+       integer :: i,n
+       real (kind=Rkind) :: Q(n)
+       real (kind=Rkind) :: Q0=8.d0,z
 
        z = 0.d0
+       DO i=1,n
+        IF (abs(Q(i)) > Q0) THEN
+           z = z -(abs(Q(i)) - Q0)**3
+        END IF
+       END DO
+       !write(6,*) Q,z
 
        im_pot0 = z
 
@@ -253,17 +270,21 @@ c
 C================================================================
 c    dipole read
 C================================================================
-      SUBROUTINE sub_dipole(dip,Q,mole)
+      SUBROUTINE sub_scalar(scalar,nb_scalar,Q,n,mole)
       USE mod_Tnum
+      USE mod_paramQ
       USE mod_system
       IMPLICIT NONE
 
 c----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
 
-      real (kind=Rkind) :: Q(mole%nb_var)
-      real (kind=Rkind) :: dip(3)
+      integer           :: n,nb_scalar
+      real (kind=Rkind) :: Q(n)
+      real (kind=Rkind) :: scalar(nb_scalar)
 
-      dip = ZERO
+
+
+      scalar(:)   = ZERO
 
       END

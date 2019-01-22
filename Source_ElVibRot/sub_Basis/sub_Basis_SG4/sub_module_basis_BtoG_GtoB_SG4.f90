@@ -742,7 +742,7 @@ CALL flush_perso(out_unitp)
 
 END SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis
 
-SUBROUTINE SmolyakRepBasis_TO_tabPackedBasis(SRep,tabR,nDindB,SGType2,WeightSG)
+SUBROUTINE SmolyakRepBasis_TO_tabPackedBasis(SRep,tabR,tab_ba,nDindB,SGType2,WeightSG)
 USE mod_system
 USE mod_param_SGType2
 USE mod_nDindex
@@ -751,6 +751,7 @@ IMPLICIT NONE
 TYPE(Type_SmolyakRep),           intent(in)        :: SRep
 real(kind=Rkind),                intent(inout)     :: tabR(:)
 TYPE (Type_nDindex),             intent(in)        :: nDindB
+TYPE(basis),                     intent(in)        :: tab_ba(0:,:) ! tab_ba(0:L,D)
 TYPE (param_SGType2),            intent(in)        :: SGType2
 real(kind=Rkind),                intent(in)        :: WeightSG(:)
 
@@ -803,7 +804,6 @@ integer    :: iBSRep,iG,iB,nb_BG,nR,itabR,nDI
 
 !write(6,*) 'BEGINNING tabPackedBasis_TO_SmolyakRepBasis' ; flush(6)
 
-!CALL alloc_SmolyakRep(SRep,SGType2%nDind_SmolyakRep%Tab_nDval,tab_ba,grid=.FALSE.)
 CALL alloc2_SmolyakRep(SRep,SGType2%nDind_SmolyakRep,tab_ba,grid=.FALSE.)
 SRep = ZERO
 !write(6,*) 'nb_size',Size_SmolyakRep(SRep)
@@ -823,6 +823,52 @@ END DO
 
 
 END SUBROUTINE tabPackedBasis_TO_SmolyakRepBasis
+SUBROUTINE tabPackedBasis_TO2_tabR_AT_iG(tabR_iG,tabR,iG,tab_l,tab_ba,SGType2)
+USE mod_system
+USE mod_basis_set_alloc
+USE mod_param_SGType2
+USE mod_nDindex
+IMPLICIT NONE
+
+real(kind=Rkind),     allocatable,  intent(inout)     :: tabR_iG(:)
+real(kind=Rkind),                   intent(in)        :: tabR(:)
+integer,                            intent(in)        :: iG,tab_l(:)
+TYPE (param_SGType2),               intent(in)        :: SGType2
+TYPE(basis),                        intent(in)        :: tab_ba(0:,:) ! tab_ba(0:L,D)
+
+integer               :: iBSRep,iB,nDI,i
+integer               :: tab_ldelta(size(tab_ba,dim=2))
+integer               :: tab_ib(size(tab_ba,dim=2))
+integer               :: tab_nb(size(tab_ba,dim=2))
+
+  IF (allocated(tabR_iG)) THEN
+    CALL dealloc_NParray(tabR_iG,'tabR_iG','tabPackedBasis_TO_tabR_AT_iG')
+  END IF
+
+  CALL alloc_NParray(tabR_iG,(/ SGType2%tab_nb_OF_SRep(iG) /),          &
+                    'tabR_iG','tabPackedBasis_TO_tabR_AT_iG')
+
+  tabR_iG(:) = ZERO
+
+  iBSRep = SGType2%tab_Sum_nb_OF_SRep(iG)-SGType2%tab_nb_OF_SRep(iG)
+
+  tab_nb(:) = getbis_tab_nb(tab_l,tab_ba)
+  tab_ib(:) = 1 ; tab_ib(1) = 0
+  DO iB=1,SGType2%tab_nb_OF_SRep(iG)
+    CALL ADD_ONE_TO_nDval_m1(tab_ib,tab_nb)
+    DO i=1,size(tab_ba,dim=2)
+      tab_ldelta(i) = tab_ba(tab_l(i),i)%L_TO_nb%Tab_n_TO_L(tab_ib(i))
+    END DO
+    ! in tab_ldelta(:), we have the l(:) for the DP in DeltaB
+
+
+    iBSRep = iBSRep + 1
+    nDI    = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
+    !write(6,*) 'iG,iB,nDI',iG,iB,nDI ; flush(6)
+    IF (nDI > 0 .AND. nDI <= size(tabR) ) tabR_iG(iB) = tabR(nDI)
+  END DO
+
+END SUBROUTINE tabPackedBasis_TO2_tabR_AT_iG
 SUBROUTINE tabPackedBasis_TO_tabR_AT_iG(tabR_iG,tabR,iG,SGType2)
 USE mod_system
 USE mod_basis_set_alloc
@@ -834,6 +880,7 @@ real(kind=Rkind),     allocatable,  intent(inout)     :: tabR_iG(:)
 real(kind=Rkind),                   intent(in)        :: tabR(:)
 integer,                            intent(in)        :: iG
 TYPE (param_SGType2),               intent(in)        :: SGType2
+!TYPE(basis),                        intent(in)        :: tab_ba(0:,:) ! tab_ba(0:L,D)
 
 integer               :: iBSRep,iB,nDI
 
@@ -866,6 +913,7 @@ IMPLICIT NONE
 real(kind=Rkind),                   intent(in)        :: tabR_iG(:)
 real(kind=Rkind),                   intent(inout)     :: tabR(:)
 integer,                            intent(in)        :: iG
+!TYPE(basis),                        intent(in)        :: tab_ba(0:,:) ! tab_ba(0:L,D)
 TYPE (param_SGType2),               intent(in)        :: SGType2
 real(kind=Rkind),                   intent(in)        :: WeightiG
 

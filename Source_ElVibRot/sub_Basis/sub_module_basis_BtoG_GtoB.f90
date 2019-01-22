@@ -240,7 +240,9 @@
               CALL GSmolyakRep_TO3_BSmolyakRep(SRep,basis_set%para_SGType2,basis_set%tab_basisPrimSG)
             END IF
 
-            CALL SmolyakRepBasis_TO_tabPackedBasis(SRep,RVecB,basis_set%nDindB,basis_set%para_SGType2,basis_set%WeightSG)
+            CALL SmolyakRepBasis_TO_tabPackedBasis(SRep,RVecB,          &
+                             basis_set%tab_basisPrimSG,basis_set%nDindB,&
+                             basis_set%para_SGType2,basis_set%WeightSG)
 
             CALL dealloc_SmolyakRep(SRep)
 
@@ -506,7 +508,9 @@
               CALL GSmolyakRep_TO3_BSmolyakRep(SRep,basis_set%para_SGType2,basis_set%tab_basisPrimSG)
             END IF
 
-            CALL SmolyakRepBasis_TO_tabPackedBasis(SRep,RVecB,basis_set%nDindB,basis_set%para_SGType2,basis_set%WeightSG)
+            CALL SmolyakRepBasis_TO_tabPackedBasis(SRep,RVecB,          &
+                             basis_set%tab_basisPrimSG,basis_set%nDindB,&
+                             basis_set%para_SGType2,basis_set%WeightSG)
 
             CALL dealloc_SmolyakRep(SRep)
 
@@ -523,7 +527,9 @@
               CALL GSmolyakRep_TO3_BSmolyakRep(SRep,basis_set%para_SGType2,basis_set%tab_basisPrimSG)
             END IF
 
-            CALL SmolyakRepBasis_TO_tabPackedBasis(SRep,RVecB,basis_set%nDindB,basis_set%para_SGType2,basis_set%WeightSG)
+            CALL SmolyakRepBasis_TO_tabPackedBasis(SRep,RVecB,          &
+                             basis_set%tab_basisPrimSG,basis_set%nDindB,&
+                             basis_set%para_SGType2,basis_set%WeightSG)
 
             CALL dealloc_SmolyakRep(SRep)
 

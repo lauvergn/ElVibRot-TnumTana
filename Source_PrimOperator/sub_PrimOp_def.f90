@@ -57,7 +57,8 @@
           integer           :: nb_scalar_Op         = 0       ! nb of Operator
           integer           :: Type_HamilOp         = 1       ! 1:  F2.d^2 + F1.d^1 + V
                                                               ! 10: d^1 G d^1 + V
-          logical           :: direct_KEO           = .FALSE. ! IF true the metric tensor is recomputed
+          logical           :: direct_KEO           = .FALSE. ! IF true, the metric tensor is recomputed
+          logical           :: direct_ScalOp        = .FALSE. ! IF true, the scalar op is recomputed
 
           ! For on-the-fly calculations
           TYPE (param_OTF)              :: para_OTF
@@ -111,6 +112,8 @@
 
 
       write(out_unitp,*) 'para_PES%Type_HamilOp',para_PES%Type_HamilOp
+      write(out_unitp,*) 'para_PES%direct_KEO',para_PES%direct_KEO
+      write(out_unitp,*) 'para_PES%direct_ScalOp',para_PES%direct_ScalOp
 
       write(out_unitp,*)
       IF (para_PES%OnTheFly) THEN

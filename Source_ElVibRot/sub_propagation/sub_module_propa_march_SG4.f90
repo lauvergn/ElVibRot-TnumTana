@@ -34,12 +34,22 @@
  USE mod_propa,         ONLY : param_propa,cof,Calc_AutoCorr,Write_AutoCorr
  IMPLICIT NONE
 
+ INTERFACE march_noD_SG4_BasisRep
+   MODULE PROCEDURE march_noD_SG4_BasisRep_v0
+ END INTERFACE
+
+ INTERFACE march_noD_SG4_GridRep
+   MODULE PROCEDURE march_noD_SG4_GridRep_v0
+ END INTERFACE
+
  PRIVATE
  PUBLIC :: march_noD_SG4_BasisRep,march_noD_SG4_GridRep
 
+
+
  CONTAINS
 
- SUBROUTINE march_noD_SG4_BasisRep(T,no,psi,psi0,para_H,para_propa)
+ SUBROUTINE march_noD_SG4_BasisRep_v1(T,no,psi,psi0,para_H,para_propa)
  USE mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
@@ -52,7 +62,7 @@
                   getbis_tab_nq,getbis_tab_nb
 
  USE mod_Op,              ONLY : param_Op,write_param_Op
- USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
+ USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : norme_psi,Overlap_psi1_psi2
  USE mod_psi_SimpleOp
@@ -94,7 +104,7 @@
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
-      character (len=*), parameter :: name_sub='march_noD_SG4_BasisRep'
+      character (len=*), parameter :: name_sub='march_noD_SG4_BasisRep_v1'
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -292,7 +302,7 @@ STOP 'march_noD_SG4_BasisRep'
       END IF
 !-----------------------------------------------------------
 
- END SUBROUTINE march_noD_SG4_BasisRep
+ END SUBROUTINE march_noD_SG4_BasisRep_v1
  SUBROUTINE march_noD_SG4_BasisRep_v0(T,no,psi,psi0,para_H,para_propa)
  USE mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
@@ -305,7 +315,7 @@ STOP 'march_noD_SG4_BasisRep'
                   getbis_tab_nq,getbis_tab_nb
 
  USE mod_Op,              ONLY : param_Op,write_param_Op
- USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
+ USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : norme_psi,Overlap_psi1_psi2
  USE mod_psi_SimpleOp
@@ -337,9 +347,6 @@ STOP 'march_noD_SG4_BasisRep'
  TYPE (TypeRVec)    :: PsiRVec,PsiIVec,Psi0Rvec,Psi0Ivec,Rw1,Rw2(1),Iw1,Iw2(1)
  TYPE (param_psi)   :: Rpsi,IPsi,Rpsi0,IPsi0,MarchRpsi,MarchIpsi
 
-
- !TYPE (TypeCVec)    :: PsiCVec,Psi0Cvec,Cw1,Cw2(1)
-
  integer :: ib,i,iG,nb_thread,itab,nq,nb,D,ith,err_sub
 
   integer,            allocatable       :: tab_nq(:)
@@ -347,9 +354,9 @@ STOP 'march_noD_SG4_BasisRep'
   integer,            allocatable       :: tab_l(:)
 
 !----- for debuging --------------------------------------------------
-      logical, parameter :: debug=.FALSE.
-      !logical, parameter :: debug=.TRUE.
-      character (len=*), parameter :: name_sub='march_noD_SG4_BasisRep_v0'
+  !logical, parameter :: debug=.FALSE.
+  logical, parameter :: debug=.TRUE.
+  character (len=*), parameter :: name_sub='march_noD_SG4_BasisRep_v0'
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -605,7 +612,7 @@ nb_thread = 1
 !-----------------------------------------------------------
 
       END SUBROUTINE march_noD_SG4_BasisRep_v0
- SUBROUTINE march_noD_SG4_GridRep(T,no,psi,psi0,para_H,para_propa)
+ SUBROUTINE march_noD_SG4_GridRep_v1(T,no,psi,psi0,para_H,para_propa)
  USE mod_system
  USE mod_nDindex
 
@@ -622,7 +629,7 @@ nb_thread = 1
                               getbis_tab_nq,getbis_tab_nb
 
  USE mod_Op,              ONLY : param_Op,write_param_Op
- USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
+ USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : norme_psi
  USE mod_psi_SimpleOp
@@ -676,7 +683,7 @@ nb_thread = 1
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
-      character (len=*), parameter :: name_sub='march_noD_SG4_GridRep'
+      character (len=*), parameter :: name_sub='march_noD_SG4_GridRep_v1'
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -820,8 +827,8 @@ STOP 'not yet !!!!'
 !
 !     Rw2(1)%R(:)  = Rw1%R
 !     Iw2(1)%R(:)  = Iw1%R
-!     !CALL sub_TabOpPsi_OF_ONEGDP_FOR_SGtype4(Rw2,iG,para_H) ! in Rw2, we have H.Rw1
-!     !CALL sub_TabOpPsi_OF_ONEGDP_FOR_SGtype4(Iw2,iG,para_H) ! in Iw2, we have H.Iw1
+!     !CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(Rw2,iG,para_H,PsiROnGrid=.TRUE.) ! in Rw2, we have H.Rw1
+!     !CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(Iw2,iG,para_H,PsiROnGrid=.TRUE.) ! in Iw2, we have H.Iw1
 !
 !     CALL sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4(Rw2,iG,para_H,      &
 !                                                    V,GG,sqRhoOVERJac,Jac)
@@ -994,7 +1001,7 @@ STOP 'not yet !!!!'
 !-----------------------------------------------------------
 
 
- END SUBROUTINE march_noD_SG4_GridRep
+ END SUBROUTINE march_noD_SG4_GridRep_v1
  SUBROUTINE march_noD_SG4_GridRep_v0(T,no,psi,psi0,para_H,para_propa)
  USE mod_system
  USE mod_nDindex
@@ -1011,7 +1018,7 @@ STOP 'not yet !!!!'
                               getbis_tab_nq,getbis_tab_nb
 
  USE mod_Op,              ONLY : param_Op,write_param_Op
- USE mod_OpPsi,           ONLY : sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
+ USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : norme_psi
  USE mod_psi_SimpleOp
@@ -1206,8 +1213,8 @@ STOP 'not yet !!!!'
 
      Rw2(1)%V(:)  = Rw1%V
      Iw2(1)%V(:)  = Iw1%V
-     !CALL sub_TabOpPsi_OF_ONEGDP_FOR_SGtype4(Rw2,iG,para_H) ! in Rw2, we have H.Rw1
-     !CALL sub_TabOpPsi_OF_ONEGDP_FOR_SGtype4(Iw2,iG,para_H) ! in Iw2, we have H.Iw1
+     !CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(Rw2,iG,para_H,PsiROnGrid=.TRUE.) ! in Rw2, we have H.Rw1
+     !CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(Iw2,iG,para_H,PsiROnGrid=.TRUE.) ! in Iw2, we have H.Iw1
 
      CALL sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4(Rw2,iG,para_H,      &
                                                     V,GG,sqRhoOVERJac,Jac)

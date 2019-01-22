@@ -426,6 +426,8 @@ SUBROUTINE ini_data(const_phys,                                         &
                                para_AllOp%tab_Op(iOp))
       para_AllOp%tab_Op(iOp)%symab      = 0 ! totally symmetric
       IF (para_ana%VibRot) Para_Tnum%JJ = 0
+      write(out_unitp,*) 'para_ReadOp%Make_Mat',para_ReadOp%Make_Mat
+      write(out_unitp,*) 'para_H%Make_Mat',para_AllOp%tab_Op(iOp)%Make_Mat
 
       IF (debug) CALL Write_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp)
 
@@ -436,7 +438,7 @@ SUBROUTINE ini_data(const_phys,                                         &
 
       CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,             &
                        type_Op=0,nb_Qact=mole%nb_act1,cplx=.FALSE.,     &
-                       JRot=Para_Tnum%JJ,direct_KEO=.FALSE.)
+                       JRot=Para_Tnum%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
       CALL derive_termQact_TO_derive_termQdyn(                          &
                               para_AllOp%tab_Op(iOp)%derive_termQdyn,   &
                               para_AllOp%tab_Op(iOp)%derive_termQact,   &
@@ -455,7 +457,8 @@ SUBROUTINE ini_data(const_phys,                                         &
 
         CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,           &
                          type_Op=0,nb_Qact=mole%nb_act1,cplx=.FALSE.,   &
-                         JRot=Para_Tnum%JJ,direct_KEO=.FALSE.)
+                         JRot=Para_Tnum%JJ,                             &
+                         direct_KEO=.FALSE.,direct_ScalOp=para_PES%direct_ScalOp)
         CALL derive_termQact_TO_derive_termQdyn(                        &
                               para_AllOp%tab_Op(iOp)%derive_termQdyn,   &
                               para_AllOp%tab_Op(iOp)%derive_termQact,   &

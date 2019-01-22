@@ -103,8 +103,9 @@
           Grid_cte(:) = .FALSE.
 
           IF (para_AllOp%tab_Op(iOp)%para_Tnum%Gcte .AND. para_AllOp%tab_Op(iOp)%n_op == 0) THEN
-            Grid_cte(:) = .TRUE.  ! KEO
-            Grid_cte(1) = .FALSE. ! potential
+            iterm = para_AllOp%tab_Op(iOp)%derive_term_TO_iterm(0,0)
+            Grid_cte(:)     = .TRUE.  ! KEO
+            Grid_cte(iterm) = .FALSE. ! potential
           END IF
           IF (para_AllOp%tab_Op(iOp)%para_Tnum%Gcte .AND. para_AllOp%tab_Op(iOp)%name_Op(1:3) == "Mu_") THEN
             Grid_cte(:) = .TRUE.  ! KEO, rotation, Mu_xx,Mu_xy...
@@ -169,8 +170,8 @@
         CALL Set_File_OF_tab_Op(para_AllOp%tab_Op)
       END IF
 
-      IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 4) RETURN
-      IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Read_FileGrid) RETURN
+      IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 4 .OR. &
+          para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Read_FileGrid) GOTO 999
 
 
 
@@ -329,7 +330,7 @@
       END IF
       !-------------------------------------------------------------------
 
-
+RETURN
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint <       &
           para_AllOp%tab_Op(1)%nb_qa .OR.                                       &
           para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint > 1) THEN

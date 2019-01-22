@@ -33,7 +33,7 @@ USE mod_OpPsi_SG4
 PRIVATE
 PUBLIC :: sub_PsiOpPsi,sub_OpPsi,sub_scaledOpPsi,sub_OpiPsi,sub_TabOpPsi
 PUBLIC :: sub_PsiDia_TO_PsiAdia_WITH_MemGrid
-PUBLIC :: sub_TabOpPsi_OF_ONEDP_FOR_SGtype4,sub_TabOpPsi_OF_ONEGDP_FOR_SGtype4
+PUBLIC :: sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
 PUBLIC :: sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
 
 CONTAINS
@@ -97,7 +97,7 @@ CONTAINS
 !======================================================
       SUBROUTINE sub_PsiOpPsi(E,Psi,OpPsi,para_Op)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
       IMPLICIT NONE
@@ -149,7 +149,7 @@ CONTAINS
 
       SUBROUTINE sub_OpPsi(Psi,OpPsi,para_Op,derOp,With_Grid,TransfoOp)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       IMPLICIT NONE
 
@@ -234,7 +234,7 @@ CONTAINS
 
       SUBROUTINE sub_PrimOpPsi(Psi,OpPsi,para_Op,derOp,With_Grid)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op,write_param_Op,read_OpGrid_OF_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op,read_OpGrid_OF_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,copy_psi2TOpsi1,assignment (=)
       USE mod_psi_SimpleOp,    ONLY : assignment (=)
       USE mod_psi_B_TO_G,      ONLY : sub_PsiGridRep_TO_BasisRep
@@ -256,6 +256,7 @@ CONTAINS
       integer :: derOp_loc(2)
       logical :: With_Grid_loc
       TYPE (param_psi)   :: RPsi,ROpPsi
+      TYPE (param_psi)   :: RCPsi(2),RCOpPsi(2)
 
       logical :: direct_KEO,SGtype4
 
@@ -327,8 +328,18 @@ CONTAINS
 
       para_Op%nb_OpPsi = para_Op%nb_OpPsi + 1
 
-   IF (SGtype4 .AND. direct_KEO) THEN
-     CALL sub_OpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
+   IF (SGtype4) THEN
+     IF (Psi%cplx) THEN
+       RCPsi = Psi
+       CALL sub_TabOpPsi_FOR_SGtype4(RCPsi,RCOpPsi,para_Op)
+       OpPsi = RCOpPsi
+       CALL dealloc_psi(RCPsi(1),delete_all=.TRUE.)
+       CALL dealloc_psi(RCPsi(2),delete_all=.TRUE.)
+       CALL dealloc_psi(RCOpPsi(1),delete_all=.TRUE.)
+       CALL dealloc_psi(RCOpPsi(2),delete_all=.TRUE.)
+     ELSE
+       CALL sub_OpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
+     END IF
    ELSE
 
       !--- For the allocation of OpPsi ---------------------------------
@@ -499,7 +510,7 @@ CONTAINS
 !======================================================
       SUBROUTINE sub_TabOpPsi(TabPsi,TabOpPsi,para_Op,derOp,With_Grid,TransfoOp)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       IMPLICIT NONE
 
@@ -592,7 +603,7 @@ CONTAINS
 
       SUBROUTINE sub_PrimTabOpPsi(TabPsi,TabOpPsi,para_Op,derOp,With_Grid)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op,read_OpGrid_OF_Op,Write_FileGrid
+      USE mod_SetOp,              ONLY : param_Op,read_OpGrid_OF_Op,Write_FileGrid
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiGridRep_TO_BasisRep
       USE mod_SymAbelian,      ONLY : Calc_symab1_EOR_symab2
@@ -725,7 +736,7 @@ CONTAINS
 
       SUBROUTINE sub_OpPsi_WITH_MatOp(Psi,OpPsi,para_Op)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       IMPLICIT NONE
 
@@ -843,7 +854,7 @@ CONTAINS
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,alloc_array,dealloc_array
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiBasisRep_TO_GridRep
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -1086,7 +1097,7 @@ CONTAINS
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -1300,7 +1311,7 @@ CONTAINS
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
       USE mod_basis_BtoG_GtoB, ONLY : DerivOp_TO_RVecG
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
 
@@ -1569,7 +1580,7 @@ STOP 'cplx'
  USE mod_psi_set_alloc,           ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
  USE mod_psi_B_TO_G,              ONLY : sub_PsiBasisRep_TO_GridRep
 
- USE mod_Op,                      ONLY : param_Op,write_param_Op
+ USE mod_SetOp,                      ONLY : param_Op,write_param_Op
 
  IMPLICIT NONE
 
@@ -1836,7 +1847,7 @@ STOP 'cplx'
 
       SUBROUTINE sub_OpPsi_WITH_FileGrid_type12_BGG(Psi,OpPsi,para_Op,derOp,With_Grid)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
+      USE mod_SetOp,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
       USE mod_OpGrid,          ONLY : sub_ReadSeq_Grid_iterm,sub_ReadDir_Grid_iterm
@@ -2079,7 +2090,7 @@ STOP 'cplx'
 
       SUBROUTINE sub_OpPsi_WITH_FileGrid_type12(Psi,OpPsi,para_Op,derOp)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiBasisRep_TO_GridRep
       USE mod_OpGrid,          ONLY : sub_ReadSeq_Grid_iterm,sub_ReadDir_Grid_iterm
@@ -2289,7 +2300,7 @@ STOP 'cplx'
       SUBROUTINE  sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp)
       USE mod_system
       USE mod_PrimOp,          ONLY : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,alloc_array,dealloc_array
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiBasisRep_TO_GridRep
 
@@ -2475,7 +2486,7 @@ STOP 'cplx'
 
       SUBROUTINE sub_itermOpPsi_GridRep(Psi,OpPsi,iterm,para_Op)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_SimpleOp,    ONLY : assignment (=)
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep
@@ -2625,7 +2636,7 @@ STOP 'cplx'
 !======================================================
       SUBROUTINE sub_OpiPsi(Psi,OpPsi,para_Op,iOp)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op,write_param_Op,alloc_para_Op,read_OpGrid_OF_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op,alloc_para_Op,read_OpGrid_OF_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,assignment (=)
       USE mod_psi_SimpleOp,    ONLY : assignment (=)
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
@@ -2794,7 +2805,7 @@ STOP 'cplx'
       USE mod_system
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
 
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
 
       IMPLICIT NONE
 
@@ -2917,7 +2928,7 @@ STOP 'cplx'
       USE mod_system
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
 
-      USE mod_Op,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,              ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------

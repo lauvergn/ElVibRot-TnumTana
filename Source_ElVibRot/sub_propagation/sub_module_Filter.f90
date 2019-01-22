@@ -58,7 +58,6 @@ CONTAINS
       USE mod_system
       USE mod_Op
       USE mod_psi_Op
-      USE mod_OpPsi
       USE mod_psi_SimpleOp
       USE mod_propa
       IMPLICIT NONE
@@ -566,7 +565,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_psi_Op
-      USE mod_OpPsi
       USE mod_psi_SimpleOp
       USE mod_propa
       IMPLICIT NONE
@@ -950,7 +948,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_psi_Op
-      USE mod_OpPsi
       USE mod_psi_SimpleOp
       USE mod_propa
       IMPLICIT NONE
@@ -1327,7 +1324,6 @@ STOP
       USE mod_Op
       !USE mod_psi
       USE mod_psi_Op
-      USE mod_OpPsi
       USE mod_psi_SimpleOp
       USE mod_propa
       IMPLICIT NONE
@@ -1638,7 +1634,6 @@ STOP
       USE mod_Op
       !USE mod_psi
       USE mod_psi_Op
-      USE mod_OpPsi
       USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
@@ -1934,7 +1929,6 @@ STOP
       USE mod_Op
       !USE mod_psi
       USE mod_psi_Op
-      USE mod_OpPsi
       USE mod_psi_SimpleOp
       USE mod_propa
       IMPLICIT NONE
@@ -2240,7 +2234,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_psi
-      USE mod_OpPsi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 

@@ -26,14 +26,12 @@
 !             http://shtools.ipgp.fr
 !===========================================================================
 !===========================================================================
-
-      MODULE mod_psi_set_alloc
-      USE mod_system
-      USE mod_basis
-      USE mod_ComOp
-      USE mod_ana_psi
-
-      IMPLICIT NONE
+ MODULE mod_psi_set_alloc
+ USE mod_system
+ USE mod_basis
+ USE mod_ComOp
+ USE mod_ana_psi
+ IMPLICIT NONE
 
         TYPE param_psi
         !-- for the basis set ----------------------------------------------
@@ -62,10 +60,14 @@
         integer       :: nb_qaie    =0
         integer       :: nb_paie    =0
 
-        integer       :: nb_act1=0,nb_act=0
-        integer       :: nb_basis_act1=0,nb_basis=0,max_dim=0
+        integer       :: nb_act1    =0
+        integer       :: nb_act     =0
 
-        real (kind=Rkind), allocatable    :: RvecB(:) ! RvecB(nb_tot)
+        integer       :: nb_basis_act1 =0
+        integer       :: nb_basis      =0
+        integer       :: max_dim       =0
+
+        real (kind=Rkind),    allocatable :: RvecB(:) ! RvecB(nb_tot)
         complex (kind=Rkind), allocatable :: CvecB(:) ! CvecB(nb_tot)
 
         real (kind=Rkind), allocatable    :: RvecG(:) ! RvecG(nb_qaie)
@@ -83,7 +85,7 @@
 
         !!@description: TODO
         INTERFACE assignment (=)
-          MODULE PROCEDURE psi2TOpsi1
+          MODULE PROCEDURE psi2TOpsi1, CplxPsi_TO_RCpsi, RCPsi_TO_CplxPsi
         END INTERFACE
 
       INTERFACE alloc_array
@@ -102,7 +104,7 @@
         MODULE PROCEDURE dealloc_NParray_OF_Psidim1
       END INTERFACE
 
-        CONTAINS
+ CONTAINS
 
 !================================================================
 !
@@ -791,6 +793,61 @@
 
       END SUBROUTINE copy_psi2TOpsi1
 
+      SUBROUTINE CplxPsi_TO_RCpsi(RCPsi,Psi)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi),intent(inout) :: RCPsi(2)
+      TYPE (param_psi), intent(in)   :: psi
+
+!     write(out_unitp,*) 'BEGINNING CplxPsi_TO_RCpsi'
+      IF (.NOT. Psi%cplx) STOP 'ERROR psi MUST be complex'
+
+      CALL copy_psi2TOpsi1(RCPsi(1),psi,alloc=.FALSE.)
+      RCPsi(1)%cplx = .FALSE.
+      CALL alloc_psi(RCPsi(1),psi%BasisRep,psi%GridRep)
+
+      CALL copy_psi2TOpsi1(RCPsi(2),psi,alloc=.FALSE.)
+      RCPsi(2)%cplx = .FALSE.
+      CALL alloc_psi(RCPsi(2),psi%BasisRep,psi%GridRep)
+
+      IF (psi%BasisRep .AND. allocated(psi%CvecB)) THEN
+         RCPsi(1)%RvecB(:) = real(psi%CvecB(:),kind=Rkind)
+         RCPsi(2)%RvecB(:) = aimag(psi%CvecB(:))
+      END IF
+
+      IF (psi%GridRep .AND. allocated(psi%CvecG)) THEN
+         RCPsi(1)%RvecG(:) = real(psi%CvecG(:),kind=Rkind)
+         RCPsi(2)%RvecG(:) = aimag(psi%CvecG(:))
+      END IF
+
+!     write(out_unitp,*) 'END CplxPsi_TO_RCpsi'
+
+      END SUBROUTINE CplxPsi_TO_RCpsi
+      SUBROUTINE RCPsi_TO_CplxPsi(Psi,RCPsi)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi), intent(in)    :: RCPsi(2)
+      TYPE (param_psi), intent(inout) :: psi
+
+!     write(out_unitp,*) 'BEGINNING RCPsi_TO_CplxPsi'
+
+      CALL copy_psi2TOpsi1(psi,RCPsi(1),alloc=.FALSE.)
+      psi%cplx = .TRUE.
+      CALL alloc_psi(psi,RCPsi(1)%BasisRep,RCPsi(1)%GridRep)
+
+      IF (RCPsi(1)%BasisRep .AND. allocated(RCPsi(1)%RvecB) .AND.       &
+          RCPsi(2)%BasisRep .AND. allocated(RCPsi(2)%RvecB)) THEN
+         psi%CvecB(:) = cmplx(RCPsi(1)%RvecB,RCPsi(2)%RvecB,kind=Rkind)
+      END IF
+
+      IF (RCPsi(1)%GridRep .AND. allocated(RCPsi(1)%RvecG) .AND.        &
+          RCPsi(2)%GridRep .AND. allocated(RCPsi(2)%RvecG)) THEN
+         psi%CvecG(:) = cmplx(RCPsi(1)%RvecG,RCPsi(2)%RvecG,kind=Rkind)
+      END IF
+
+!     write(out_unitp,*) 'END RCPsi_TO_CplxPsi'
+
+      END SUBROUTINE RCPsi_TO_CplxPsi
 !================================================================
 !
 !     write the initialization parameters
@@ -1254,4 +1311,4 @@
 
       END SUBROUTINE ecri_psi
 
-      END MODULE mod_psi_set_alloc
+  END MODULE mod_psi_set_alloc

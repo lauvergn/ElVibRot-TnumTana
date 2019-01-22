@@ -144,6 +144,7 @@
           !CALL  march_noD_SG4_GridRep(T,no,WP(1),WP0(1),para_H,para_propa)
           CALL  march_noD_SG4_BasisRep(T,no,WP(1),WP0(1),para_H,para_propa)
         ELSE
+          write(6,*) 'coucou'
           CALL  march_noD(T,no,WP(1),WP0(1),para_H,para_propa)
         END IF
 
@@ -975,8 +976,7 @@
       USE mod_psi_SimpleOp
 
       USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op
-      USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi
+      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1059,9 +1059,7 @@
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
       USE mod_psi_SimpleOp
-
-      USE mod_Op,              ONLY : param_Op
-      USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi
+      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1129,8 +1127,7 @@
       USE mod_system
 
       USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op
-      USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi
+      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
@@ -1338,8 +1335,8 @@
       !!@param: TODO
       SUBROUTINE march_noD(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi,sub_PsiOpPsi
+      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
+
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
       USE mod_psi_SimpleOp
@@ -1525,8 +1522,7 @@
       !!@param: TODO
       SUBROUTINE march_cheby(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi
+      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
@@ -1706,8 +1702,7 @@
       !!@param: TODO
       SUBROUTINE march_nOD_im(T,no,psi,psi0,w1,w2,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi,sub_PsiOpPsi
+      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
@@ -1790,8 +1785,7 @@
       !!@param: TODO
       SUBROUTINE march_FOD_Opti_im(psi,Ene0,T,it,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi
+      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       USE mod_psi_Op,          ONLY : norme_psi,Overlap_psi1_psi2
       USE mod_psi_SimpleOp
@@ -1973,8 +1967,7 @@
       USE mod_system
 
       USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op
-      USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi
+      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
@@ -2194,8 +2187,7 @@
       USE mod_system
 
       USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op
-      USE mod_OpPsi,           ONLY : sub_OpPsi,sub_scaledOpPsi
+      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi
@@ -2434,8 +2426,8 @@
       USE mod_system
 
       USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op
-      USE mod_OpPsi,           ONLY : sub_OpiPsi,sub_OpPsi,sub_scaledOpPsi
+      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_OpiPsi,sub_scaledOpPsi
+
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : norme_psi

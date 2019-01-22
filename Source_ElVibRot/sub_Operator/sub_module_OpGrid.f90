@@ -297,6 +297,7 @@
        CALL alloc_array(OpGrid%Mat_cte,(/nb_bie,nb_bie/),            &
                        "OpGrid%Mat_cte",info2)
        OpGrid%Mat_cte(:,:) = ZERO
+       IF (debug) write(out_unitp,*) info2,'Mat_cte(:,:)',size(OpGrid%Mat_cte)
 
        IF (.NOT. OpGrid%grid_cte .AND. OpGrid%para_FileGrid%Save_MemGrid) THEN
          CALL alloc_array(OpGrid%Grid,(/nb_qa,nb_bie,nb_bie/),       &
@@ -307,6 +308,7 @@
          !IF (debug) write(out_unitp,*) info2,size(OpGrid%Grid)
 
        END IF
+       CALL flush_perso(out_unitp)
 
        IF (debug) THEN
          write(out_unitp,*) 'END ',name_sub
@@ -369,8 +371,17 @@
       write(out_unitp,*) 'BEGINNING Write_OpGrid'
 
       write(out_unitp,*) 'nb_qa,nb_bie      ',OpGrid%nb_qa,OpGrid%nb_bie
-      write(out_unitp,*) 'derive_termQact   ',OpGrid%derive_termQact
-      write(out_unitp,*) 'derive_termQdyn   ',OpGrid%derive_termQdyn
+      IF (associated(OpGrid%derive_termQact)) THEN
+        write(out_unitp,*) 'derive_termQact   ',OpGrid%derive_termQact
+      ELSE
+        write(out_unitp,*) 'derive_termQact: not associated'
+
+      END IF
+      IF (associated(OpGrid%derive_termQdyn)) THEN
+        write(out_unitp,*) 'derive_termQdyn   ',OpGrid%derive_termQdyn
+      ELSE
+        write(out_unitp,*) 'derive_termQdyn: not associated'
+      END IF
       write(out_unitp,*) 'grid_zero         ',OpGrid%grid_zero
       write(out_unitp,*) 'grid_cte          ',OpGrid%grid_cte
       write(out_unitp,*) 'ana_grid          ',OpGrid%ana_grid
@@ -382,11 +393,14 @@
       write(out_unitp,*) 'alloc Smolyak Rep ',allocated(OpGrid%SRep%SmolyakRep)
       write(out_unitp,*) 'iq_min,Op_min     ',OpGrid%iq_min,OpGrid%Op_min
       write(out_unitp,*) 'iq_max,Op_max     ',OpGrid%iq_max,OpGrid%Op_max
+      CALL flush_perso(out_unitp)
 
       IF (associated(OpGrid%Mat_cte)) &
          write(out_unitp,*) 'Mat_cte           ',OpGrid%Mat_cte
+      CALL flush_perso(out_unitp)
 
       write(out_unitp,*) 'END Write_OpGrid'
+      CALL flush_perso(out_unitp)
 
       END SUBROUTINE Write_OpGrid
 
@@ -700,73 +714,81 @@
       IF (print_level>-1) THEN
         write(out_unitp,*)'--------------------------------------------------------------'
         write(out_unitp,*)'n_Op,k_term,derive_term,cte,zero,    minval,    maxval,dealloc'
+        CALL flush_perso(out_unitp)
       END IF
 
       DO k_term=1,size(OpGrid)
 
-        IF (.NOT. OpGrid(k_term)%grid_cte) THEN
-          OpGrid(k_term)%Mat_cte(:,:) = OpGrid(k_term)%Grid(1,:,:)
-          OpGrid(k_term)%grid_cte = .TRUE.
-          DO iq=1,OpGrid(k_term)%nb_qa
-            OpGrid(k_term)%grid_cte =                           &
-               OpGrid(k_term)%grid_cte .AND.                    &
-               (sum(abs(OpGrid(k_term)%Grid(iq,:,:) -           &
-                  OpGrid(k_term)%Grid(1,:,:))) < ONETENTH**12)
-            IF (.NOT. OpGrid(k_term)%grid_cte) EXIT
-
-          END DO
-
-          IF (all(OpGrid(k_term)%derive_termQact == 0)) THEN ! scalar part
-            OpGrid(k_term)%Op_min = huge(ONE)
-            OpGrid(k_term)%Op_max = -huge(ONE)
-            OpGrid(k_term)%iq_min = 0
-            OpGrid(k_term)%iq_max = 0
+        IF (associated(OpGrid(k_term)%Grid)) THEN
+          IF (.NOT. OpGrid(k_term)%grid_cte) THEN
+            OpGrid(k_term)%Mat_cte(:,:) = OpGrid(k_term)%Grid(1,:,:)
+            OpGrid(k_term)%grid_cte = .TRUE.
             DO iq=1,OpGrid(k_term)%nb_qa
-
-              DO k=1,OpGrid(k_term)%nb_bie
-                Op_temp = OpGrid(k_term)%Grid(iq,k,k)
-
-                IF (Op_temp < OpGrid(k_term)%Op_min) THEN
-                  OpGrid(k_term)%Op_min = Op_temp
-                  OpGrid(k_term)%iq_min = iq
-                END IF
-                IF (Op_temp > OpGrid(k_term)%Op_max) THEN
-                  OpGrid(k_term)%Op_max = Op_temp
-                  OpGrid(k_term)%iq_max = iq
-                END IF
-              END DO
+              OpGrid(k_term)%grid_cte =                                 &
+                 OpGrid(k_term)%grid_cte .AND.                          &
+                 (sum(abs(OpGrid(k_term)%Grid(iq,:,:) -                 &
+                    OpGrid(k_term)%Grid(1,:,:))) < ONETENTH**12)
+              IF (.NOT. OpGrid(k_term)%grid_cte) EXIT
             END DO
+
+            IF (all(OpGrid(k_term)%derive_termQact == 0)) THEN ! scalar part
+              OpGrid(k_term)%Op_min = huge(ONE)
+              OpGrid(k_term)%Op_max = -huge(ONE)
+              OpGrid(k_term)%iq_min = 0
+              OpGrid(k_term)%iq_max = 0
+              DO iq=1,OpGrid(k_term)%nb_qa
+
+                DO k=1,OpGrid(k_term)%nb_bie
+                  Op_temp = OpGrid(k_term)%Grid(iq,k,k)
+
+                  IF (Op_temp < OpGrid(k_term)%Op_min) THEN
+                    OpGrid(k_term)%Op_min = Op_temp
+                    OpGrid(k_term)%iq_min = iq
+                  END IF
+                  IF (Op_temp > OpGrid(k_term)%Op_max) THEN
+                    OpGrid(k_term)%Op_max = Op_temp
+                    OpGrid(k_term)%iq_max = iq
+                  END IF
+                END DO
+              END DO
+            END IF
+
           END IF
 
-        END IF
-
-        OpGrid(k_term)%grid_zero = (sum(abs(                    &
-            OpGrid(k_term)%Mat_cte(:,:))) < ONETENTH**12) .AND. &
+          OpGrid(k_term)%grid_zero = (sum(abs(                          &
+            OpGrid(k_term)%Mat_cte(:,:))) < ONETENTH**12) .AND.         &
             OpGrid(k_term)%grid_cte
 
-        IF (print_level>-1) THEN
-          IF (associated(OpGrid(k_term)%Grid)) THEN
+          IF (OpGrid(k_term)%grid_cte .AND. associated(OpGrid(k_term)%Grid)) THEN
+            CALL dealloc_array(OpGrid(k_term)%Grid,"OpGrid%Grid",name_sub)
+          END IF
+
+          IF (print_level>-1) THEN
             write(out_unitp,'(i5,x,i6,2x,2i5,l3,x,l4,x,2e11.2,x,l3)')   &
                    n_Op,k_term,OpGrid(k_term)%derive_termQact(:),       &
                    OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
-                   minval(OpGrid(k_term)%Grid),maxval(OpGrid(k_term)%Grid), &
-                   OpGrid(k_term)%grid_cte
-
-          ELSE
-            write(out_unitp,'(i5,x,i6,2x,2i5,l3,x,l4)') n_Op,k_term,    &
-                   OpGrid(k_term)%derive_termQact(:),                   &
-                   OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero
+                   OpGrid(k_term)%Op_min,OpGrid(k_term)%Op_max,         &
+                   (.NOT. associated(OpGrid(k_term)%Grid))
           END IF
 
-        END IF
+        ELSE
 
-        IF (OpGrid(k_term)%grid_cte .AND. associated(OpGrid(k_term)%Grid)) THEN
-          CALL dealloc_array(OpGrid(k_term)%Grid,"OpGrid%Grid",name_sub)
+          OpGrid(k_term)%grid_zero = OpGrid(k_term)%grid_cte .AND.      &
+                 (sum(abs(OpGrid(k_term)%Mat_cte(:,:))) < ONETENTH**12)
+
+          IF (print_level>-1) THEN
+            write(out_unitp,'(i5,x,i6,2x,2i5,l3,x,l4,24x,l3)') n_Op,k_term,    &
+                   OpGrid(k_term)%derive_termQact(:),                   &
+                   OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
+                   (.NOT. associated(OpGrid(k_term)%Grid))
+
+          END IF
         END IF
 
       END DO
       IF (print_level>-1) THEN
         write(out_unitp,*)'--------------------------------------------------------------'
+        CALL flush_perso(out_unitp)
       END IF
 
       END SUBROUTINE Analysis_OpGrid

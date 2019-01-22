@@ -26,11 +26,15 @@
 !             http://shtools.ipgp.fr
 !===========================================================================
 !===========================================================================
-
+MODULE Mod_MatOp
+ IMPLICIT NONE
+ PRIVATE
+ PUBLIC :: sub_MatOp,sub_build_MatOp
+CONTAINS
       SUBROUTINE sub_MatOp(para_Op,print_Op)
       USE mod_system
       USE mod_Constant
-      USE mod_Op
+      USE mod_SetOp
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -83,11 +87,16 @@
           END IF
         ELSE
           IF (test) THEN
-            CALL time_perso('sub_MatOp_direct1_Overlap')
-            CALL sub_MatOp_direct1_Overlap(para_Op)
+            CALL time_perso('sub_MatOp_OpExact_SG4')
+            CALL sub_MatOp_OpExact_SG4(para_Op)
+            CALL time_perso('sub_MatOp_OpExact_SG4')
+
+            !CALL time_perso('sub_MatOp_direct1_Overlap')
+            !CALL sub_MatOp_direct1_Overlap(para_Op)
+            !CALL time_perso('sub_MatOp_direct1_Overlap')
+
             !CALL sub_MatOp_Overlap_SG4(para_Op)
             !CALL sub_MatOp_V_SG4(para_Op)
-            CALL time_perso('sub_MatOp_direct1_Overlap')
             STOP
           END IF
           IF (MatOp_omp == 2) THEN
@@ -183,7 +192,7 @@
       USE mod_Constant
       USE mod_psi_set_alloc
       USE mod_psi_Op
-      USE mod_Op
+      USE mod_SetOp
       USE mod_OpPsi
       IMPLICIT NONE
 
@@ -349,7 +358,7 @@
 !=====================================================================
       SUBROUTINE pack_MatOp(para_Op)
       USE mod_system
-      USE mod_Op
+      USE mod_SetOp
       IMPLICIT NONE
 
 
@@ -444,7 +453,7 @@
 !================================================================
       SUBROUTINE sub_Spectral_Op(para_Op)
       USE mod_system
-      USE mod_Op
+      USE mod_SetOp
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -619,7 +628,7 @@
       SUBROUTINE sub_MatOp_WITH_FileGrid_type0(para_Op)
       USE mod_system
       USE mod_nDindex
-      USE mod_Op
+      USE mod_SetOp
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -948,7 +957,7 @@
       SUBROUTINE sub_MatOpVibRot_WITH_FileGrid_type0(para_Op)
       USE mod_system
       USE mod_nDindex
-      USE mod_Op
+      USE mod_SetOp
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -1286,7 +1295,7 @@
       USE mod_system
       USE mod_nDindex
       USE mod_Constant
-      USE mod_Op
+      USE mod_SetOp
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -1319,7 +1328,7 @@
 !----- divers ----------------------------------------------------
       integer  :: nb_ba,nb_bie,nb_Op,i_Op
 
-      integer  :: n,nb_thread
+      integer  :: n
 
       integer  :: i,k,KRot,JRot,ibRot,jbRot
       integer  :: i1,i2,f1,f2
@@ -1502,7 +1511,7 @@
           !$OMP shared(para_Op,nplus,i1_h,i2_h,i_Op,print_level)     &
           !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)     &
           !$OMP private(ib1,k,VecQ)                                  &
-          !$OMP num_threads(nb_thread)
+          !$OMP num_threads(MatOp_maxth)
           CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
           !$OMP do
           DO ib1=1,para_Op%nb_ba
@@ -1773,7 +1782,7 @@
       SUBROUTINE sub_MatOpVibRot_WITH_FileGrid_type0_v1(para_Op)
       USE mod_system
       USE mod_nDindex
-      USE mod_Op
+      USE mod_SetOp
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -2202,7 +2211,7 @@
 !================================================================
       SUBROUTINE sub_Read_MatOp(para_Op)
       USE mod_system
-      USE mod_Op
+      USE mod_SetOp
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -2310,7 +2319,7 @@
       USE mod_system
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
 
-      USE mod_Op
+      USE mod_SetOp
       USE mod_psi
       IMPLICIT NONE
 
@@ -2401,7 +2410,7 @@
       END SUBROUTINE sub_MatOp_direct2
       SUBROUTINE sub_MatOp_direct1(para_Op)
       USE mod_system
-      USE mod_Op
+      USE mod_SetOp
       USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
@@ -2562,7 +2571,7 @@
       USE mod_system
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
 
-      USE mod_Op
+      USE mod_SetOp
       USE mod_OpPsi
       USE mod_psi_set_alloc
       !USE mod_psi
@@ -2699,7 +2708,7 @@
 
       SUBROUTINE sub_MatOp_direct1_Overlap(para_Op)
       USE mod_system
-      USE mod_Op
+      USE mod_SetOp
       USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
@@ -2818,7 +2827,7 @@
 
       SUBROUTINE sub_MatOp_Overlap_SG4(para_Op)
       USE mod_system
-      USE mod_Op
+      USE mod_SetOp
       USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
@@ -2964,7 +2973,7 @@
       END SUBROUTINE sub_MatOp_Overlap_SG4
       SUBROUTINE sub_MatOp_V_SG4(para_Op)
       USE mod_system
-      USE mod_Op
+      USE mod_SetOp
       USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
@@ -3105,10 +3114,133 @@
 
 
       END SUBROUTINE sub_MatOp_V_SG4
+      SUBROUTINE sub_MatOp_OpExact_SG4(para_Op)
+      USE mod_system
+      USE mod_SetOp
+      USE mod_OpPsi
+      USE mod_psi_set_alloc
+      USE mod_psi_B_TO_G
+      USE mod_psi_SimpleOp
+      USE mod_psi_Op
+      USE mod_basis_BtoG_GtoB_SGType4
+      IMPLICIT NONE
 
+
+!----- variables pour la namelist minimum ----------------------------
+ TYPE (param_Op), intent(inout) :: para_Op
+
+
+ integer       :: n
+
+ ! local variables
+ TYPE (zmatrix), pointer :: mole
+ TYPE (basis),   pointer :: BasisnD
+
+
+ integer                :: ib,jb,ipb,jpb,i,iG,ith,nb,iBSRep
+ integer, allocatable   :: tab_l(:)
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      character (len=*), parameter ::name_sub='sub_MatOp_OpExact_SG4'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+  mole    => para_Op%mole
+  BasisnD => para_Op%BasisnD
+
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
+        CALL flush_perso(out_unitp)
+      END IF
+
+      IF (.NOT. para_Op%alloc_mat)                                      &
+             CALL alloc_para_Op(para_Op,Mat=.TRUE.,Grid=.FALSE.)
+      IF (para_Op%mat_done) RETURN
+
+      para_Op%Make_mat = .FALSE.
+
+
+!---- initialization -------------------------------------
+      para_Op%Rmat(:,:) = ZERO
+!     ----------------------------------------------------------
+
+   !--------------------------------------------------------------
+   !-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
+   CALL alloc_NParray(tab_l,(/ BasisnD%para_SGType2%nDind_SmolyakRep%ndim /),'tabl_l',name_sub)
+   ith = 0
+   tab_l(:) = BasisnD%para_SGType2%nDval_init(:,ith+1)
+   !--------------------------------------------------------------
+
+   !write(6,*) 'ith,tab_l(:)',ith,':',tab_l
+
+   ! we are not using the parallel do, to be able to use the correct initialized tab_l with nDval_init
+   DO iG=BasisnD%para_SGType2%iG_th(ith+1),BasisnD%para_SGType2%fG_th(ith+1)
+     !write(6,*) 'iG',iG ; flush(6)
+
+     CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
+
+     nb = BasisnD%para_SGType2%tab_nb_OF_SRep(iG)
+
+     IF (iG == 1) THEN
+       iBSRep = 0
+     ELSE
+       iBSRep = BasisnD%para_SGType2%tab_Sum_nb_OF_SRep(iG-1)
+     END IF
+
+     !write(6,*) 'iG,iBSRep,nb,WeightSG',iG,iBSRep,nb,BasisnD%WeightSG(iG)
+
+     DO ib=1,nb
+       ipb = BasisnD%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep+ib)
+       IF (ipb == 0) CYCLE
+       !write(6,*) 'ib,ipb',ib,ipb
+
+       DO jb=1,nb
+         jpb = BasisnD%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep+jb)
+         IF (jpb == 0) CYCLE
+
+         !write(6,*) 'jb,jpb',jb,jpb
+
+         para_Op%Rmat(ipb,jpb) = para_Op%Rmat(ipb,jpb) + BasisnD%WeightSG(iG)
+
+       END DO
+     END DO
+
+     !write(6,*) 'iG done:',iG ; flush(6)
+   END DO
+   CALL dealloc_NParray(tab_l,'tabl_l',name_sub)
+
+   write(out_unitp,*) '# 1',count(para_Op%Rmat == 1)
+   write(out_unitp,*) '# 0',count(para_Op%Rmat == 0)
+   write(out_unitp,*) '# (diff 0 and diff 1)',size(para_Op%Rmat)-       &
+                     (count(para_Op%Rmat == 0)+count(para_Op%Rmat == 1))
+
+   CALL Write_Mat(para_Op%Rmat,out_unitp,5)
+
+   write(6,*) 'for MatOp**2'
+   para_Op%Rmat = matmul(para_Op%Rmat,para_Op%Rmat)
+
+   write(out_unitp,*) '# 1',count(para_Op%Rmat == 1)
+   write(out_unitp,*) '# 0',count(para_Op%Rmat == 0)
+   write(out_unitp,*) '# (diff 0 and diff 1)',size(para_Op%Rmat)-       &
+                   (count(para_Op%Rmat == 0)+count(para_Op%Rmat == 1))
+
+   CALL Write_Mat(para_Op%Rmat,out_unitp,5)
+!     ----------------------------------------------------------
+      para_Op%Make_mat = .TRUE.
+
+!----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'END ',name_sub
+       END IF
+!----------------------------------------------------------
+
+      END SUBROUTINE sub_MatOp_OpExact_SG4
       SUBROUTINE sub_OpBasisFi(para_Op,i)
       USE mod_system
-      USE mod_Op
+      USE mod_SetOp
       USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
@@ -3177,4 +3309,4 @@
 
 
       END SUBROUTINE sub_OpBasisFi
-
+END MODULE Mod_MatOp

@@ -484,8 +484,9 @@ Obj_active = \
  $(OBJ)/sub_diago_H.o $(OBJ)/sub_paraRPH.o
 
 Obj_Operator = \
- $(OBJ)/sub_module_OpGrid.o $(OBJ)/sub_module_ReadOp.o $(OBJ)/sub_module_Op.o \
- $(OBJ)/sub_OpPsi_SG4.o $(OBJ)/sub_OpPsi.o $(OBJ)/sub_MatOp.o $(OBJ)/sub_lib_Op.o
+ $(OBJ)/sub_module_OpGrid.o $(OBJ)/sub_module_ReadOp.o $(OBJ)/sub_module_SetOp.o \
+ $(OBJ)/sub_OpPsi_SG4.o $(OBJ)/sub_OpPsi.o $(OBJ)/sub_MatOp.o $(OBJ)/sub_lib_Op.o \
+ $(OBJ)/sub_module_Op.o
 
 Obj_analysis = \
  $(OBJ)/sub_module_analysis.o $(OBJ)/sub_analyse.o \
@@ -909,8 +910,8 @@ $(OBJ)/sub_module_OpGrid.o:$(DIROp)/sub_module_OpGrid.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_OpGrid.f90
 $(OBJ)/sub_module_ReadOp.o:$(DIROp)/sub_module_ReadOp.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_ReadOp.f90
-$(OBJ)/sub_module_Op.o:$(DIROp)/sub_module_Op.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_Op.f90
+$(OBJ)/sub_module_SetOp.o:$(DIROp)/sub_module_SetOp.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_SetOp.f90
 #
 $(OBJ)/sub_HST_harm.o:$(DIR2)/sub_HST_harm.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR2)/sub_HST_harm.f90
@@ -942,6 +943,8 @@ $(OBJ)/sub_OpPsi.o:$(DIROp)/sub_OpPsi.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_OpPsi.f90
 $(OBJ)/sub_lib_Op.o:$(DIROp)/sub_lib_Op.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_lib_Op.f90
+$(OBJ)/sub_module_Op.o:$(DIROp)/sub_module_Op.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_Op.f90
 #
 #===================================================================================
 # sub_analysis

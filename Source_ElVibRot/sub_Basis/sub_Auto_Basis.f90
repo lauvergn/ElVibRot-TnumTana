@@ -699,7 +699,7 @@ END SUBROUTINE RecSet_EneH0
 
       CALL Init_TypeOp(para_AllOp_loc%tab_Op(i)%param_TypeOp,           &
                        type_Op=0,nb_Qact=mole_loc%nb_act1,cplx=.FALSE., &
-                       JRot=Para_Tnum%JJ,direct_KEO=.FALSE.)
+                       JRot=Para_Tnum%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
       CALL derive_termQact_TO_derive_termQdyn(                          &
                             para_AllOp_loc%tab_Op(i)%derive_termQdyn,   &
                             para_AllOp_loc%tab_Op(i)%derive_termQact,   &
@@ -905,7 +905,7 @@ END SUBROUTINE RecSet_EneH0
 
       CALL Init_TypeOp(para_AllOp_loc%tab_Op(i)%param_TypeOp,           &
                        type_Op=0,nb_Qact=mole_loc%nb_act1,cplx=.FALSE., &
-                       JRot=Para_Tnum%JJ,direct_KEO=.FALSE.)
+                       JRot=Para_Tnum%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
       CALL derive_termQact_TO_derive_termQdyn(                          &
                             para_AllOp_loc%tab_Op(i)%derive_termQdyn,   &
                             para_AllOp_loc%tab_Op(i)%derive_termQact,   &
@@ -1310,7 +1310,8 @@ END SUBROUTINE RecSet_EneH0
       CALL Init_TypeOp(para_H%param_TypeOp,                             &
                     type_Op=para_PES%type_HamilOp,nb_Qact=mole%nb_act1, &
                        cplx=para_PES%pot_cplx,JRot=para_H%Para_Tnum%JJ, &
-                       direct_KEO=para_PES%direct_KEO)
+                       direct_KEO=para_PES%direct_KEO,                  &
+                       direct_ScalOp=para_PES%direct_ScalOp)
 
       CALL derive_termQact_TO_derive_termQdyn(para_H%derive_termQdyn,   &
               para_H%derive_termQact,mole%ActiveTransfo%list_QactTOQdyn)

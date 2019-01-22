@@ -97,7 +97,8 @@ CONTAINS
       real (kind=Rkind) :: E1,RE0,auTOcm_inv,auTOene
       character (len=Name_len) :: WriteUnit
 
-      real (kind=Rkind) :: min_Ene
+      real (kind=Rkind) :: RealTime,min_Ene
+      TYPE (param_time) :: DavidsonTime
 
       logical           :: conv
       integer           :: nb_conv_states,nb_unconv_states,nb_added_states
@@ -186,6 +187,13 @@ CONTAINS
 
       CALL ReadWP0_Davidson(psi,psi0,Vec0,nb_diago,max_diago,   &
                             para_propa%para_Davidson,para_H%cplx)
+
+      ! save the nb_diago wp
+      CALL sub_save_psi(psi,nb_diago,para_propa%file_WP)
+      write(out_unitp,*) '  sub_save_psi: psi done'
+      RealTime = Delta_RealTime(DavidsonTime)
+      CALL flush_perso(out_unitp)
+
 
       !CALL time_perso('Davidson psi0')
 !para_mem%mem_debug = .TRUE.
@@ -537,7 +545,14 @@ CONTAINS
         !- save psi(:) on file
         !----------------------------------------------------------
 
+        RealTime = Delta_RealTime(DavidsonTime)
+        IF (RealTime < TEN) THEN
+          write(out_unitp,'(a,i0,a,i0)') 'At Davidson iteration: ',it,', Delta Real time (ms): ',int(10**3*RealTime)
+        ELSE
+          write(out_unitp,'(a,i0,a,i0)') 'At Davidson iteration: ',it,', Delta Real time (s): ',int(RealTime)
+        END IF
         CALL flush_perso(out_unitp)
+
         IF (conv) EXIT
 
       END DO
@@ -780,10 +795,9 @@ CONTAINS
  SUBROUTINE sub_MakeHPsi_Davidson(it,psi,Hpsi,Ene,ndim0,                &
                                   para_H,para_Davidson,iunit)
  USE mod_system
- USE mod_Op
+ USE mod_Op,             ONLY : param_Op, sub_TabOpPsi,sub_scaledOpPsi
  USE mod_psi_set_alloc
  USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
- USE mod_OpPsi,          ONLY : sub_TabOpPsi,sub_scaledOpPsi
  USE mod_propa,          ONLY : param_Davidson
  IMPLICIT NONE
 

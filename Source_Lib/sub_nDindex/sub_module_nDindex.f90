@@ -2589,10 +2589,7 @@
               nDI = ib
             END IF
 
-          CASE (3)
-STOP 'in calc_nDI, type_OF_nDindex=3'
-
-          CASE (5)
+          CASE (2,-3,3,-4,4,-5,5)
 
             CALL init_nDval_OF_nDindex(nDindex,nDval_tmp)
             DO ib=1,nDindex%Max_nDI

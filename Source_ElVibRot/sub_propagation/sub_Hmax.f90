@@ -30,7 +30,6 @@
       SUBROUTINE sub_Hmax(para_propa,para_H)
       USE mod_system
       USE mod_Op
-      USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
       USE mod_psi_Op
@@ -297,7 +296,6 @@ relax = .TRUE.
       SUBROUTINE sub_Auto_HmaxHmin_relax(para_propa,para_H)
       USE mod_system
       USE mod_Op
-      USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
       USE mod_psi_Op

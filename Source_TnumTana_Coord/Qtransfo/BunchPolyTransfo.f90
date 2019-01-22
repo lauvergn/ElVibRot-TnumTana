@@ -1915,6 +1915,365 @@
 
 
       END SUBROUTINE calc_PolyTransfo_outTOin
+
+      RECURSIVE SUBROUTINE Export_Fortran_PolyTransfo(dnQin,i_Qpoly,dnQout,&
+                                               tab_dnXVect,iv_in,BFTransfo)
+
+      TYPE (Type_BFTransfo), intent(in)     :: BFTransfo
+      TYPE (Type_dnVec),     intent(inout)  :: dnQin,dnQout
+      TYPE (Type_dnVec),     intent(inout) :: tab_dnXVect(:)
+
+      integer, intent (inout) :: i_Qpoly ! index for dnQin
+      integer, intent (in) :: iv_in
+
+
+      TYPE (Type_dnS)   :: dnd,dnQval,dnCval,dnSval,dnQdih,dnCdih,dnSdih ! one coordinate
+      TYPE (Type_dnS)   :: dnf1,dnf2,dnf3,dnfx,dnfy,dnfz
+      TYPE (Type_dnS)   :: dna,dnCa,dnSa
+
+      integer :: i_q,iv,liv,uiv,ieuler,i_Qprim,dnErr
+      logical :: check
+      integer :: nb_var_deriv,nderiv=0
+
+!      -----------------------------------------------------------------
+      integer :: nderiv_debug = 0
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub='Export_Fortran_PolyTransfo'
+!      -----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING RECURSIVE ',name_sub
+        write(out_unitp,*) 'nderiv',nderiv
+        write(out_unitp,*) 'i_Qpoly,iv_in',i_Qpoly,iv_in
+        CALL RecWrite_BFTransfo(BFTransfo,.FALSE.)
+      END IF
+!      -----------------------------------------------------------------
+      nb_var_deriv = dnQin%nb_var_deriv
+
+      ! initialization : allocation....
+      CALL alloc_dnSVM(dnd,nb_var_deriv,nderiv)
+      CALL alloc_dnSVM(dnQval,nb_var_deriv,nderiv)
+      CALL alloc_dnSVM(dnCval,nb_var_deriv,nderiv)
+      CALL alloc_dnSVM(dnSval,nb_var_deriv,nderiv)
+      CALL alloc_dnSVM(dnQdih,nb_var_deriv,nderiv)
+      CALL alloc_dnSVM(dnCdih,nb_var_deriv,nderiv)
+      CALL alloc_dnSVM(dnSdih,nb_var_deriv,nderiv)
+
+      CALL alloc_dnSVM(dnf1,nb_var_deriv,nderiv)
+      CALL alloc_dnSVM(dnf2,nb_var_deriv,nderiv)
+      CALL alloc_dnSVM(dnf3,nb_var_deriv,nderiv)
+
+
+      IF (BFTransfo%Frame) THEN
+        write(6,*) 'BFTransfo%euler : ',BFTransfo%euler(:)
+        !==========================================
+        ! 1st vector
+        write(out_unitp,*) 'd0,iv_in,name_frame',iv_in,BFTransfo%name_Frame
+        iv = 0
+        i_Qpoly = i_Qpoly + 1
+        IF (.NOT. associated(BFTransfo%list_Qpoly_TO_Qprim)) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) '  "list_Qpoly_TO_Qprim" is not associated'
+          CALL RecWrite_BFTransfo(BFTransfo,.FALSE.)
+          write(out_unitp,*) ' Check the fortran source !!'
+          STOP
+        END IF
+        i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(i_Qpoly)
+        CALL Set_ZERO_TO_dnSVM(tab_dnXVect(iv+1))
+        CALL sub_dnVec_TO_dnS(dnQin,dnd,i_Qprim)
+        CALL sub_dnS_TO_dnVec(dnd,tab_dnXVect(iv+1),3,nderiv)
+
+        !---------------------------------------------------------------
+        IF (debug) THEN
+          write(out_unitp,*)
+          write(out_unitp,*) '-------------------------------------------------'
+          write(out_unitp,*) 'Vector :',iv+1,' in ',BFTransfo%name_Frame
+          CALL write_dnx(1,3,tab_dnXVect(iv+1),nderiv_debug)
+        END IF
+        !---------------------------------------------------------------
+
+        liv = 2
+        DO iv=1,BFTransfo%nb_vect
+          uiv = ubound(tab_dnXVect(:),dim=1)
+          !write(out_unitp,*) 'iv,BFTransfo%nb_vect,liv,uiv',iv,BFTransfo%tab_BFTransfo(iv)%nb_vect_tot,liv,uiv
+          CALL calc_PolyTransfo(dnQin,i_Qpoly,dnQout,tab_dnXVect(liv:uiv),&
+                                iv,BFTransfo%tab_BFTransfo(iv),nderiv)
+          liv = liv + BFTransfo%tab_BFTransfo(iv)%nb_vect_tot
+
+        END DO
+
+        !Rotation to change the orientation of the frame
+        IF (BFTransfo%Frame_type /= 0) CALL calc_Rot_Vect(tab_dnXVect,BFTransfo,nderiv)
+
+        ! For the overall rotation in the local BF frame (not F0)
+        write(out_unitp,*) 'Overall rotation: ',BFTransfo%name_Frame
+        CALL alloc_dnSVM(dna,nb_var_deriv,nderiv)
+        CALL alloc_dnSVM(dnCa,nb_var_deriv,nderiv)
+        CALL alloc_dnSVM(dnSa,nb_var_deriv,nderiv)
+        CALL alloc_dnSVM(dnfx,nb_var_deriv,nderiv)
+        CALL alloc_dnSVM(dnfy,nb_var_deriv,nderiv)
+        CALL alloc_dnSVM(dnfz,nb_var_deriv,nderiv)
+        ! rotation of gamma with respect to Z (not for the first vector)
+        IF (BFTransfo%euler(3)) THEN
+          ieuler = count(BFTransfo%euler(:))
+          i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(i_Qpoly+ieuler)
+
+          !write(out_unitp,*) 'Rot gamma / Z , iQgamma',i_Qpoly+ieuler
+          CALL sub_dnVec_TO_dnS(dnQin,dna,i_Qprim) ! gamma
+          CALL sub_dnS1_TO_dntR2(dna,dnCa,2,nderiv)
+          CALL sub_dnS1_TO_dntR2(dna,dnSa,3,nderiv)
+
+          DO iv=2,BFTransfo%nb_vect_tot
+            !write(out_unitp,*) 'Rot gamma / Z ',iv
+            CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfx,1) ! x
+            CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfy,2) ! y
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnSa,dnf3,nderiv) ! temp=sin*y
+
+            CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf1,dnf3,dnf1,nderiv)
+
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf3,nderiv) ! temp= sin*x
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnCa,dnf2,nderiv) ! Ry=cos*y
+
+            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(dnf2,dnf3,dnf2,nderiv)! Ry = Ry+temp
+
+
+            CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(iv),1,nderiv) !x
+            CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(iv),2,nderiv) !y
+          END DO
+        END IF
+
+        ! rotation of beta with respect to Y (all vectors)
+        IF (BFTransfo%euler(2)) THEN
+          ieuler = count(BFTransfo%euler(1:2))
+          i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(i_Qpoly+ieuler)
+
+          !write(out_unitp,*) 'Rot beta / Y ,iQbeta',i_Qpoly+ieuler
+          CALL sub_dnVec_TO_dnS(dnQin,dna,i_Qprim) ! beta
+          IF (BFTransfo%type_Qin(i_Qprim) == 3) THEN
+            CALL sub_dnS1_TO_dntR2(dna,dnCa,2,nderiv)
+            CALL sub_dnS1_TO_dntR2(dna,dnSa,3,nderiv)
+          ELSE ! type_Qin(i_Qprim) == -3 (using cos(beta) as coordinate)
+            CALL sub_dnS1_TO_dnS2(dna,dnCa,nderiv)
+            CALL sub_dnS1_TO_dntR2(dna,dnSa,4,nderiv,dnErr=dnErr)
+            IF (dnErr /= 0) THEN
+              write(out_unitp,*) ' ERROR in ',name_sub
+              write(out_unitp,*) '   ERROR in the sub_dntf call for the coordinates, i_Qprim:',i_Qprim
+              STOP 'ERROR in sub_dntf called from calc_PolyTransfo'
+            END IF
+          END IF
+
+          DO iv=1,BFTransfo%nb_vect_tot
+            !write(out_unitp,*) 'Rot beta / Y ',iv
+            CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfx,1) ! x
+            CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfz,3) ! z
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfz,dnSa,dnf2,nderiv) ! temp=sin*z
+
+            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(dnf1,dnf2,dnf1,nderiv)!  Rx = Rx+temp
+
+
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf2,nderiv) ! temp = sin*x
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfz,dnCa,dnf3,nderiv) ! Rz=cos*z
+
+            CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf3,dnf2,dnf3,nderiv)! Rz = Rz-temp
+
+            CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(iv),1,nderiv) !x
+            CALL sub_dnS_TO_dnVec(dnf3,tab_dnXVect(iv),3,nderiv) !z
+
+          END DO
+        END IF
+
+        ! rotation of alpha with respect to Z (all vectors)
+        IF (BFTransfo%euler(1)) THEN
+          ieuler = 1
+          i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(i_Qpoly+ieuler)
+
+          !write(out_unitp,*) 'Rot alpha / Z , iQalpha',i_Qpoly+ieuler
+          CALL sub_dnVec_TO_dnS(dnQin,dna,i_Qprim) ! alpha
+          CALL sub_dnS1_TO_dntR2(dna,dnCa,2,nderiv)
+          CALL sub_dnS1_TO_dntR2(dna,dnSa,3,nderiv)
+          DO iv=1,BFTransfo%nb_vect_tot
+            !write(out_unitp,*) 'Rot alpha / Z ',iv
+            CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfx,1) ! x
+            CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfy,2) ! y
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnSa,dnf3,nderiv) ! temp=sin*y
+
+            CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf1,dnf3,dnf1,nderiv)! Rx = Rx-temp
+
+
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf3,nderiv) ! temp= sin*x
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnCa,dnf2,nderiv) ! Ry=cos*y
+
+            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(dnf2,dnf3,dnf2,nderiv)! Ry = Rx+temp
+
+            CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(iv),1,nderiv) !x
+            CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(iv),2,nderiv) !y
+          END DO
+        END IF
+
+        i_Qpoly = i_Qpoly + count(BFTransfo%euler(:))
+
+        CALL dealloc_dnSVM(dna)
+        CALL dealloc_dnSVM(dnCa)
+        CALL dealloc_dnSVM(dnSa)
+        CALL dealloc_dnSVM(dnfx)
+        CALL dealloc_dnSVM(dnfy)
+        CALL dealloc_dnSVM(dnfz)
+      ELSE
+        IF (iv_in == 1) THEN
+          !write(out_unitp,*) 'd1,th1,iv_in,name_frame',iv_in,BFTransfo%name_Frame
+          i_Qpoly = i_Qpoly + 1
+          i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(i_Qpoly)
+          CALL sub_dnVec_TO_dnS(dnQin,dnd,i_Qprim)
+          !CALL Write_dnSVM(dnd,nderiv)
+
+          i_Qpoly = i_Qpoly + 1
+          i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(i_Qpoly)
+          CALL sub_dnVec_TO_dnS(dnQin,dnQval,i_Qprim)
+          !CALL Write_dnSVM(dnQval,nderiv)
+          IF (BFTransfo%type_Qin(i_Qprim) == 3) THEN
+            CALL sub_dnS1_TO_dntR2(dnQval,dnCval,2,nderiv)
+            CALL sub_dnS1_TO_dntR2(dnQval,dnSval,3,nderiv)
+          ELSE ! type_Qin(i_Qprim) == -3 (using Q=cos(val) as coordinate)
+            CALL sub_dnS1_TO_dnS2(dnQval,dnCval,nderiv)
+            CALL sub_dnS1_TO_dntR2(dnQval,dnSval,4,nderiv,dnErr=dnErr)
+            IF (dnErr /= 0) THEN
+              write(out_unitp,*) ' ERROR in ',name_sub
+              write(out_unitp,*) '   ERROR in the sub_dntf call for the coordinates, i_Qprim:',i_Qprim
+              STOP 'ERROR in sub_dntf called from calc_PolyTransfo'
+            END IF
+          END IF
+          ! CALL Write_dnSVM(dnCval,nderiv)
+          ! CALL Write_dnSVM(dnSval,nderiv)
+
+          CALL Set_ZERO_TO_dnSVM(tab_dnXVect(1))
+
+          !for x coordinates
+          ! d0w = d0d * d0sin(Qval)
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnSval,dnf1,nderiv)
+          CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(1),1,nderiv)
+
+          !for z coordinates
+          ! d0w = d0d * d0cos(Qval)
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnCval,dnf2,nderiv)
+          CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(1),3,nderiv)
+
+        ELSE IF (iv_in > 1) THEN
+          i_Qpoly = i_Qpoly + 1
+          i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(i_Qpoly)
+
+          !write(out_unitp,*) 'd2,th2,iv_in,name_frame',iv_in,BFTransfo%name_Frame
+          IF (BFTransfo%type_Qin(i_Qprim) == 1) THEN ! cartesian coordinates
+            CALL sub_dnVec_TO_dnS(dnQin,dnf1,i_Qprim) !x
+            i_Qpoly = i_Qpoly + 1
+            i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(i_Qpoly)
+            CALL sub_dnVec_TO_dnS(dnQin,dnf2,i_Qprim) !y
+            i_Qpoly = i_Qpoly + 1
+            i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(i_Qpoly)
+            CALL sub_dnVec_TO_dnS(dnQin,dnf3,i_Qprim) !z
+          ELSE ! spherical coordinates
+            CALL sub_dnVec_TO_dnS(dnQin,dnd,i_Qprim)
+            i_Qpoly = i_Qpoly + 1
+            i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(i_Qpoly)
+            CALL sub_dnVec_TO_dnS(dnQin,dnQval,i_Qprim)
+            IF (BFTransfo%type_Qin(i_Qprim) == 3) THEN
+              CALL sub_dnS1_TO_dntR2(dnQval,dnCval,2,nderiv)
+              CALL sub_dnS1_TO_dntR2(dnQval,dnSval,3,nderiv)
+            ELSE ! type_Qin(i_Qprim) == -3 (using Q=cos(val) as coordinate)
+              CALL sub_dnS1_TO_dnS2(dnQval,dnCval,nderiv)
+              CALL sub_dnS1_TO_dntR2(dnQval,dnSval,4,nderiv,dnErr=dnErr)
+              IF (dnErr /= 0) THEN
+                write(out_unitp,*) ' ERROR in ',name_sub
+                write(out_unitp,*) '   ERROR in the sub_dntf call for the coordinates, i_Qprim:',i_Qprim
+                STOP 'ERROR in sub_dntf called from calc_PolyTransfo'
+              END IF
+            END IF
+
+            i_Qpoly = i_Qpoly + 1
+            i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(i_Qpoly)
+            CALL sub_dnVec_TO_dnS(dnQin,dnQdih,i_Qprim)
+            CALL sub_dnS1_TO_dntR2(dnQdih,dnCdih,2,nderiv)
+            CALL sub_dnS1_TO_dntR2(dnQdih,dnSdih,3,nderiv)
+
+
+            !-----------------------------------------------------------
+            !d0f3 = d0d * d0sval (tempory)
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnSval,dnf3,nderiv)
+
+            !d0f1 = d0f3 * d0cdih  = (d0d * d0sval) * d0cdih
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnf3,dnCdih,dnf1,nderiv)
+
+            !d0f2 = d0f3 * d0sdih  = (d0d * d0sval) * d0sdih
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnf3,dnSdih,dnf2,nderiv)
+            !-----------------------------------------------------------
+
+            !-----------------------------------------------------------
+            ! d0f3 = d0d * d0cval
+   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnCval,dnf3,nderiv)
+
+            !-----------------------------------------------------------
+          END IF
+
+          CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(1),1,nderiv) !x
+          CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(1),2,nderiv) !y
+          CALL sub_dnS_TO_dnVec(dnf3,tab_dnXVect(1),3,nderiv) !z
+
+        ELSE
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) '  Wrong iv_in for Frame = F',iv_in,BFTransfo%Frame
+          STOP
+        END IF
+
+        !-------------------------------------------------------------
+        IF (debug) THEN
+          write(out_unitp,*)
+          write(out_unitp,*) '-----------------------------------------------'
+          write(out_unitp,*) 'Vector :',iv_in,' in ',BFTransfo%name_Frame
+          CALL write_dnx(1,3,tab_dnXVect(1),nderiv_debug)
+        END IF
+        !-------------------------------------------------------------
+
+      END IF
+
+
+      CALL dealloc_dnSVM(dnd)
+      CALL dealloc_dnSVM(dnQval)
+      CALL dealloc_dnSVM(dnCval)
+      CALL dealloc_dnSVM(dnSval)
+      CALL dealloc_dnSVM(dnQdih)
+      CALL dealloc_dnSVM(dnCdih)
+      CALL dealloc_dnSVM(dnSdih)
+      CALL dealloc_dnSVM(dnf1)
+      CALL dealloc_dnSVM(dnf2)
+      CALL dealloc_dnSVM(dnf3)
+
+      ! finalization : transfert tab_dnXVect => dnQout
+      IF (BFTransfo%Frame .AND. size(BFTransfo%tab_num_Frame) == 1 ) THEN
+
+        CALL Set_ZERO_TO_dnSVM(dnQout) ! initialization: useless !!!
+
+        DO iv=1,BFTransfo%nb_vect_tot
+          IF (debug) CALL write_dnx(1,3,tab_dnXVect(iv),nderiv_debug)
+          CALL sub3_dnVec_TOxf(dnQout,3*iv-2,tab_dnXVect(iv),nderiv)
+        END DO
+      END IF
+
+      !----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'dnQout'
+        CALL Write_dnSVM(dnQout,nderiv_debug)
+        write(out_unitp,*)
+        write(out_unitp,*) 'END RECURSIVE ',name_sub
+        write(out_unitp,*)
+      END IF
+
+
+      END SUBROUTINE Export_Fortran_PolyTransfo
+
       RECURSIVE SUBROUTINE RecGet_Vec_Fi_For_poly(tab_Vect_Fi,          &
                                               nb_vect_tot,iv_tot,iv_Fi, &
                                                   UnitVect_Fi,          &
