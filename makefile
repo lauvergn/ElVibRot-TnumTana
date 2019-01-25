@@ -264,6 +264,9 @@ PhysConstMAIN = PhysicalConstants_Main
 KEOTESTEXE  = TEST_TnumTana.exe
 KEOTEST     = TEST_TnumTana
 #
+TEST_TnumTana_libEXE=Main_TnumTana_lib.exe
+TEST_TnumTana_libMain=Main_TnumTana_lib
+#
 TNUMEXE  = Tnum90.exe
 TNUMMAIN = Tnum90
 #
@@ -428,7 +431,7 @@ Obj_PrimOperator = \
 #  For Tnum/Tana + Primitive Operators only
 Obj_KEO_PrimOp= \
   $(Obj_lib) $(Obj_PhyCte) $(OBJ)/versionEVR-T.o \
-  $(Obj_Coord_KEO) $(Obj_PrimOperator)
+  $(Obj_Coord_KEO) $(Obj_PrimOperator) $(OBJ)/TnumTana_Lib.o
 #============================================================
 
 
@@ -532,7 +535,10 @@ all:obj $(VIBEXE)
 # vib
 EVR:obj $(VIBEXE)
 	echo "EVR"
-#
+#TEST_TnumTana_libEXE=Main_TnumTana_lib.exe
+#TEST_TnumTana_libMain=Main_TnumTana_lib
+libTnumtest: obj $(TEST_TnumTana_libEXE)
+	echo libTnumtest
 libTnum: obj $(OBJ)/libTnum.a
 	echo libTnum.a
 libTnum.a: obj $(OBJ)/libTnum.a
@@ -602,6 +608,9 @@ $(OBJ)/libTnum.a: obj $(Obj_KEO_PrimOp)
 	ar cr $(OBJ)/libTnum.a   $(Obj_KEO_PrimOp)
 $(KEOTESTEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(KEOTEST).o
 	$(LYNK90)   -o $(KEOTESTEXE) $(OBJ)/$(KEOTEST).o $(OBJ)/libTnum.a $(LYNKFLAGS)
+#
+$(TEST_TnumTana_libEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TEST_TnumTana_libMain).o
+	$(LYNK90)   -o $(TEST_TnumTana_libEXE) $(OBJ)/$(TEST_TnumTana_libMain).o $(OBJ)/libTnum.a $(LYNKFLAGS)
 #
 $(TNUMEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMAIN).o
 	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS)
@@ -785,8 +794,10 @@ $(OBJ)/sub_PrimOp.o:$(DIRPrimOp)/sub_PrimOp.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_PrimOp.f90
 $(OBJ)/sub_onthefly.o:$(DIRPrimOp)/sub_onthefly.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_onthefly.f90
+$(OBJ)/TnumTana_Lib.o:$(DirTNUM)/TnumTana_Lib.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/TnumTana_Lib.f90
 #
-#
+# 
 #
 #===================================================================================
 # module
@@ -992,6 +1003,8 @@ $(OBJ)/$(TNUMMCTDHMAIN).o:$(DirTNUM)/$(TNUMMCTDHMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUMMCTDHMAIN).f90
 $(OBJ)/$(KEOTEST).o:$(DirTNUM)/$(KEOTEST).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(KEOTEST).f90
+$(OBJ)/$(TEST_TnumTana_libMain).o:$(DirTNUM)/$(TEST_TnumTana_libMain).f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TEST_TnumTana_libMain).f90
 #
 $(OBJ)/$(TNUM_MiddasCppMAIN).o:$(DirTNUM)/$(TNUM_MiddasCppMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUM_MiddasCppMAIN).f90
