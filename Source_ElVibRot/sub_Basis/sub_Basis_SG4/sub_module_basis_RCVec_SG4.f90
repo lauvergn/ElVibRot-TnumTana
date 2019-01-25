@@ -56,8 +56,8 @@ SUBROUTINE alloc_TypeRVec(Rvec,nvec)
 USE mod_system
 IMPLICIT NONE
 
-  TYPE (TypeRVec), intent(inout) :: Rvec
-  integer,         intent(in)    :: nvec
+  TYPE (TypeRVec),    intent(inout) :: Rvec
+  integer,            intent(in)    :: nvec
 
 
   CALL dealloc_TypeRVec(Rvec)
@@ -67,6 +67,7 @@ IMPLICIT NONE
     write(6,*) ' nvec < 1',nvec
     STOP
   END IF
+
 
   CALL alloc_NParray(Rvec%V,(/nvec/),'Rvec%V','alloc_TypeRVec')
 

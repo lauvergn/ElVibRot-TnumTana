@@ -21,11 +21,8 @@
       real (kind=Rkind), pointer :: Tcor1(:) => null()
       real (kind=Rkind), pointer :: Trot(:,:) => null()
 
-
-      TYPE(Type_dnVec) :: dnx
-
       integer :: nderiv
-      real (kind=Rkind), allocatable :: Qact(:)
+      real (kind=Rkind), allocatable :: Qact(:),Qxyz(:)
 
 !     - working parameters ------------------------------------------
       integer :: i,n
@@ -38,7 +35,7 @@
 !===========================================================
       !para_mem%mem_debug = .TRUE.
       CALL versionEVRT(.TRUE.)
-      print_level=0
+      print_level=-1
       !-----------------------------------------------------------------
       !     - read the coordinate tansformations :
       !     -   zmatrix, polysperical, bunch...
@@ -64,7 +61,7 @@
       CALL time_perso('Tnum90_MCTDH')
 
       !-----------------------------------------------------------------
-      n=1! (several) evaluations (for cpu time)
+      n=10! (several) evaluations (for cpu time)
 !===========================================================
 !===========================================================
 
@@ -79,42 +76,35 @@
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
-       nderiv = 0
-       mole%WriteCC = .TRUE.
-       CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv)
+       mole%WriteCC = .FALSE.
+       CALL alloc_NParray(Qxyz,(/ mole%ncart_act /),'Qxyz',name_sub)
+
        write(out_unitp,*) "======================================"
-       CALL time_perso('dnx')
+       CALL time_perso('Qact->Qxyz')
 
        DO i=1,n
-         CALL sub_QactTOdnx(Qact,dnx,mole,nderiv,.FALSE.)
+         CALL sub_QactTOd0x(Qxyz,Qact,mole,Gcenter=.FALSE.)
        END DO
 
-       CALL time_perso('dnx')
+       CALL time_perso('Qact->Qxyz')
        write(out_unitp,*) "======================================"
 
-       write(out_unitp,*) 'dnx: ',mole%ncart
-       CALL write_dnx(1,mole%ncart,dnx,nderiv)
+       mole%WriteCC = .TRUE.
+       CALL sub_QactTOd0x(Qxyz,Qact,mole,Gcenter=.FALSE.)
 
-       CALL sub_QactTOdnx(Qact,dnx,mole,nderiv,.TRUE.)
-
-       write(out_unitp,*) 'dnx (mass weighted): ',mole%ncart
-       CALL write_dnx(1,mole%ncart,dnx,nderiv)
-
-       CALL sub_dnxNOMassWeight(dnx,mole%d0sm,mole%ncart,mole%ncart_act,nderiv)
-       write(out_unitp,*) ' Cartesian coordinates with Eckart (au):'
-       CALL write_dnx(1,mole%ncart,dnx,nderiv)
-       write(out_unitp,*) ' Cartesian coordinates  with Eckart (ang):'
-       CALL Write_Cartg98(dnx%d0,mole)
+       write(out_unitp,*) ' Cartesian coordinates:'
+       CALL Write_Cartg98(Qxyz,mole)
 
        mole%WriteCC = .FALSE.
-       CALL dealloc_dnSVM(dnx)
 
+       CALL dealloc_NParray(Qxyz,'Qxyz',name_sub)
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
-       write(out_unitp,*) n,' evaluation of sub_QactTOdnx'
+       write(out_unitp,*) n,' evaluation of sub_QactTOd0x'
        write(out_unitp,*) "======================================"
+STOP
 !-------------------------------------------------
 !-------------------------------------------------
 
