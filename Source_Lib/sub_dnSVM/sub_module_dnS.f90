@@ -1280,7 +1280,7 @@ MODULE mod_dnS
 
        CASE (90,-90)
          ! t(x) = 1/x
-!        90       =>    1/x; xE ]-inf,inf[
+         ! 90       =>    1/x; xE ]-inf,inf[
          dntf%d0        =  ONE/x
          dntf%d1(1)     = -ONE/x**2
          dntf%d2(1,1)   =  TWO/x**3
@@ -1345,8 +1345,8 @@ MODULE mod_dnS
 
         CASE (111)
          !  transfo R ]0,inf[ => x ]-inf,inf[
-         ! 111      =>    (-a + x^2)/x = x-a/x x E ]0,inf[
-         !-111      =>    1/2(x+sqrt(4a+x^2)) x E ]-inf,inf[
+         !-111      =>    (-a + x^2)/x = x-a/x    x E ]0,inf[
+         ! 111      =>    1/2(x+sqrt(4a+x^2))     x E ]-inf,inf[
          ! a = cte(1)^2
          a = cte(1)**2
          R  = sqrt(FOUR*a + x**2)
@@ -1357,8 +1357,8 @@ MODULE mod_dnS
 
         CASE (-111)
          !  transfo R ]0,inf[ => x ]-inf,inf[
-         ! 111      =>    (-a + x^2)/x = x-a/x x E ]0,inf[
-         !-111      =>    1/2(x+sqrt(4a+x^2)) x E ]-inf,inf[
+         !-111      =>    (-a + x^2)/x = x-a/x     x E ]0,inf[
+         ! 111      =>    1/2(x+sqrt(4a+x^2))      x E ]-inf,inf[
          ! a = cte(1)^2
 
          a = cte(1)**2

@@ -30,7 +30,7 @@
     CALL versionEVRT(.TRUE.)
     print_level=-1
     !-----------------------------------------------------------------
-    !     - read the coordinate tansformations :
+    !     - read the coordinate transformations :
     !     -   zmatrix, polysperical, bunch...
     !     ------------------------------------------------------------
     CALL Read_mole(mole,para_Tnum,const_phys)

@@ -122,6 +122,7 @@ MODULE mod_Tnum
 
           logical                       :: Without_Rot         = .FALSE.
           logical                       :: Centered_ON_CoM     = .TRUE.
+          logical                       :: With_VecCOM         = .FALSE.
 
           logical                       :: Old_Qtransfo        = .FALSE.
           logical                       :: Cart_transfo        = .FALSE.
@@ -347,16 +348,16 @@ MODULE mod_Tnum
         write(out_unitp,*) 'type100: rigid                    (nb_rigid100):',  &
                     mole%nb_rigid100
         write(out_unitp,*)
-        write(out_unitp,*) 'nb_inact2n = nb_inact21 + nb_inact22  :',           &
+        write(out_unitp,*) 'nb_inact2n = nb_inact21 + nb_inact22  :',   &
                     mole%nb_inact2n
-        write(out_unitp,*) 'nb_act= nb_act1+nb_inact31+nb_inact2n :',           &
+        write(out_unitp,*) 'nb_act= nb_act1+nb_inact31+nb_inact2n :',   &
                     mole%nb_act
-        write(out_unitp,*) 'nb_inact   = nb_inact20 + nb_inact2n  :',           &
+        write(out_unitp,*) 'nb_inact   = nb_inact20 + nb_inact2n  :',   &
                     mole%nb_inact
-        write(out_unitp,*) 'nb_rigid   = nb_rigid0 + nb_rigid100  :',           &
+        write(out_unitp,*) 'nb_rigid   = nb_rigid0 + nb_rigid100  :',   &
                     mole%nb_rigid
         write(out_unitp,*) '------------------------------------------'
-        write(out_unitp,*) 'ndimG = nb_act+3 or nb_act            :',           &
+        write(out_unitp,*) 'ndimG = nb_act+6 + nb_act+3 or nb_act :',   &
                     mole%ndimG
         write(out_unitp,*) '------------------------------------------'
         write(out_unitp,*)
@@ -638,7 +639,7 @@ MODULE mod_Tnum
 
 !     - for Tnum or Tana ----------------------------------------------
       integer           :: nrho
-      logical           :: num_GG,num_g,num_x,Gdiago,Gcte
+      logical           :: num_GG,num_g,num_x,Gdiago,Gcte,With_VecCOM
       logical           :: Tana,MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,f2f1_ana
       real (kind=Rkind) :: stepT,stepOp
       integer           :: KEO_TalyorOFQinact2n ! taylor epxansion along type 2n
@@ -650,7 +651,7 @@ MODULE mod_Tnum
 
       NAMELIST /variables/nat,zmat,bunch,cos_th,                        &
                      Without_Rot,Centered_ON_CoM,JJ,                    &
-                     New_Orient,vAt1,vAt2,vAt3,                         &
+                     New_Orient,vAt1,vAt2,vAt3,With_VecCOM,             &
                      nb_var,nb_act,                                     &
                      Old_Qtransfo,nb_Qtransfo,Cart_transfo,             &
                      Rot_Dip_with_EC,sym,check_sym,                     &
@@ -705,6 +706,7 @@ MODULE mod_Tnum
       KEO_TalyorOFQinact2n = -1
       f2f1_ana             = .FALSE.
 
+      With_VecCOM          = .FALSE.
       Without_Rot          = .FALSE.
       Centered_ON_CoM      = .TRUE.
       JJ                   = 0
@@ -809,6 +811,7 @@ MODULE mod_Tnum
       mole%Rot_Dip_with_EC = Rot_Dip_with_EC
       mole%Without_Rot     = Without_Rot
       mole%Centered_ON_CoM = Centered_ON_CoM
+      mole%With_VecCOM     = With_VecCOM
 
 
 !=======================================================================
@@ -1442,6 +1445,7 @@ MODULE mod_Tnum
       mole2%WriteCC      = mole1%WriteCC
       mole2%print_done  = .FALSE.
 
+      mole2%With_VecCOM     = mole1%With_VecCOM
       mole2%Without_Rot     = mole1%Without_Rot
       mole2%Centered_ON_CoM = mole1%Centered_ON_CoM
       mole2%cos_th          = mole1%cos_th
@@ -1743,8 +1747,10 @@ MODULE mod_Tnum
       mole%nb_act     = mole%nb_act1    + mole%nb_inact31 + mole%nb_inact2n
       mole%nb_inact   = mole%nb_inact20 + mole%nb_inact2n
       mole%nb_rigid   = mole%nb_rigid0  + mole%nb_rigid100
+
       mole%ndimG      = mole%nb_act     + 3
-      IF (mole%Without_Rot) mole%ndimG      = mole%nb_act
+      IF (mole%With_VecCOM) mole%ndimG = mole%ndimG + 3 ! with the COM
+      IF (mole%Without_Rot) mole%ndimG  = mole%nb_act
 
 
       nb_Qtransfo = mole%nb_Qtransfo
@@ -1886,7 +1892,8 @@ MODULE mod_Tnum
       mole%nb_inact   = mole%nb_inact20 + mole%nb_inact2n
       mole%nb_rigid   = mole%nb_rigid0 + mole%nb_rigid100
       mole%ndimG      = mole%nb_act+3
-      IF (mole%Without_Rot) mole%ndimG      = mole%nb_act
+      IF (mole%With_VecCOM) mole%ndimG = mole%ndimG + 3 ! with the COM
+      IF (mole%Without_Rot) mole%ndimG  = mole%nb_act
 
 
       mole%ActiveTransfo%nb_var      = mole%nb_var
@@ -1940,6 +1947,7 @@ MODULE mod_Tnum
       mole%nb_inact   = mole%nb_inact20 + mole%nb_inact2n
       mole%nb_rigid   = mole%nb_rigid0 + mole%nb_rigid100
       mole%ndimG      = mole%nb_act+3
+      IF (mole%With_VecCOM) mole%ndimG = mole%ndimG + 3 ! with the COM
       IF (mole%Without_Rot) mole%ndimG      = mole%nb_act
 
 

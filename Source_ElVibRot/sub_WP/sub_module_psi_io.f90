@@ -120,7 +120,7 @@
                                       list_nDindBasis1_TO_nDindBasis2,  &
                                       para_WP0%file_WP0,Version_File)
 
-
+        write(out_unitp,*) ' file name for WP0: ',trim(para_WP0%file_WP0%name)
         write(out_unitp,*) ' nb_readWP_file: ',nb_readWP_file
         write(out_unitp,*) ' nb_tot_file   : ',size(list_nDindBasis1_TO_nDindBasis2)
         write(out_unitp,*) ' Version_File  : ',Version_File

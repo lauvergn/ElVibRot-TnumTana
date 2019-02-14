@@ -36,8 +36,9 @@
       !para_mem%mem_debug = .TRUE.
       CALL versionEVRT(.TRUE.)
       print_level=-1
+      !print_level=2
       !-----------------------------------------------------------------
-      !     - read the coordinate tansformations :
+      !     - read the coordinate transformations :
       !     -   zmatrix, polysperical, bunch...
       !     ------------------------------------------------------------
       para_Tnum%LaTeXForm = .TRUE.

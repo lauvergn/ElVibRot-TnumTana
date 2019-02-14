@@ -38,7 +38,7 @@
       print_level=2
 
       !-----------------------------------------------------------------
-      !     - read the coordinate tansformations :
+      !     - read the coordinate transformations :
       !     -   zmatrix, polysperical, bunch...
       !     ------------------------------------------------------------
       CALL Read_mole(mole,para_Tnum,const_phys)

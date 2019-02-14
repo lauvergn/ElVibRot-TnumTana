@@ -4556,7 +4556,7 @@
 !-----------------------------------------------------------
       END SUBROUTINE sub_freq2_RPH
 
-      SUBROUTINE Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+      SUBROUTINE Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES,Tana)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
@@ -4570,6 +4570,7 @@
       TYPE (Tnum)        :: para_Tnum
       TYPE (zmatrix)     :: mole
       TYPE (param_PES)   :: para_PES
+      logical, optional  :: Tana
 
 
 !-------------------------------------------------------------------------
@@ -4579,7 +4580,7 @@
 
       integer           :: NM_TO_sym_ver=4
       real (kind=Rkind), allocatable :: hCC(:,:)
-      logical :: Gref,tab_skip_transfo(mole%nb_Qtransfo)
+      logical :: Gref,tab_skip_transfo(mole%nb_Qtransfo),Tana_loc
       integer :: iQa,nb_act1_RPH,nb_inact21_RPH,it,nderiv
       real (kind=Rkind) :: auTOcm_inv
 
@@ -4596,6 +4597,12 @@
 !-----------------------------------------------------------
 
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
+
+      IF (present(Tana)) THEN
+        Tana_loc = Tana
+      ELSE
+        Tana_loc = .TRUE.
+      END IF
 
 !-----------------------------------------------------------------------
 !--------------------- TO finalize the coordinates (NM) and the KEO ----
@@ -4730,12 +4737,14 @@
   END IF
 
       !----- Tana if needed --------------------------------------------
-      IF (para_Tnum%Tana) THEN
+      IF (para_Tnum%Tana .AND. Tana_loc) THEN
         write(out_unitp,*)
         write(out_unitp,*) '================================================='
         write(out_unitp,*) ' BEGINNING Tana'
         CALL time_perso('Tana')
-        write(out_unitp,*)
+        write(out_unitp,*) 'nrho_OF_Qdyn(:)',mole%nrho_OF_Qdyn(:)
+        write(out_unitp,*) 'nrho_OF_Qact(:)',mole%nrho_OF_Qact(:)
+
         !IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Tana'
         CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
         IF (debug) CALL write_op(para_Tnum%TWOxKEO,header=.TRUE.)

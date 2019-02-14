@@ -494,8 +494,7 @@
         STOP
       END IF
 
-
-      IF (print_level > 1) THEN
+      IF (print_level > -1) THEN
         write(out_unitp,*)  'mat of LinearTransfo: '
         CALL Write_Mat(LinearTransfo%mat,out_unitp,4)
         write(out_unitp,*)  'mat_inv of LinearTransfo: '

@@ -1,22 +1,27 @@
 #!/bin/ksh
 
  ici=`pwd`
- cd ..
+ cd ../..
  make tnum-dist
  cd $ici
 
-../Tnum90.exe << ** > res
- &variables zmat=T nat=3 sym=t /
+../../Tnum90.exe << ** > res
+ &variables Old_Qtransfo=f nb_Qtransfo=3  /
+ &Coord_transfo name_transfo='zmat' nat=3 /
 O
 H 1
 H 1 2
+
+ &Coord_transfo name_transfo='linear' /
 sym  R+   R-   a
 3
 1    1.   1.   0.
 2    1.  -1.   0.
 3    0.   0.   1.
 
+ &Coord_transfo name_transfo='active' /
 1  0 0
+
  &minimum read_nameQ=t unit='angs' /
 R+ 1.
 R- 0.

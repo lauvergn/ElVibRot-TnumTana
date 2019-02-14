@@ -38,7 +38,7 @@ sym  cos(a)      R     r    x    pi   dh
 
  1 0 1    0 0 0
  &minimum pot0=0. pot_act=f pot_cplx=t nb_elec=2
-          read_Qsym0=t read_nameQ=t unit='bohr' /
+          read_Qdyn0=t read_nameQ=t unit='bohr' /
 cosa .999d0
 R 3.187
 r 2.179
@@ -54,7 +54,7 @@ dh 0.0
  &actives test=f direct=2 /
  &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t /
  &propa
-        WPTmax=500.d0 WPdeltaT=10.d0
+        WPTmax=1000. 'fs' WPdeltaT=1. 'fs'
 
         n_WPecri = 1 WPpsi2 =f WPpsi=t
 

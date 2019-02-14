@@ -98,7 +98,7 @@ SUBROUTINE ini_data(const_phys,                                         &
 
 !----- working variables ---------------------------------------------
       integer       :: i,j,rk,rl,i_term,iOp,it
-      real (kind=Rkind), allocatable :: Qana(:)
+      real (kind=Rkind), allocatable :: Qana(:),Qact(:)
 
 
       TYPE(Type_dnMat) :: dnGG
@@ -148,7 +148,8 @@ SUBROUTINE ini_data(const_phys,                                         &
 
 !-----------------------------------------------------------------------
 !--------------------- TO finalize the coordinates (NM) and the KEO ----
-      CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+!     If needed, Tana mùust be done after auto_basis, otherwise nrho(:) could bec wrong
+      CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES,Tana=.FALSE.)
 !-----------------------------------------------------------------------
 
       write(out_unitp,*) "============================================================"
@@ -351,6 +352,15 @@ SUBROUTINE ini_data(const_phys,                                         &
       CALL flush_perso(out_unitp)
 
       CALL Auto_basis(para_Tnum,mole,para_AllBasis,ComOp,para_PES,para_ReadOp)
+
+      IF (para_Tnum%Tana) THEN
+        CALL alloc_NParray(Qact,(/ mole%nb_var /),"Qact",name_sub)
+        CALL get_Qact(Qact,mole%ActiveTransfo)
+        CALL nrho_Basis_TO_nhro_Tnum(para_AllBasis,mole)
+        CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
+        CALL comparison_G_FROM_Tnum_Tana(para_Tnum%ExpandTWOxKEO,mole,para_Tnum,Qact)
+        CALL dealloc_NParray(Qact,"Qact",name_sub)
+      END IF
 
 
       !CALL RecWrite_basis(para_AllBasis%BasisnD,write_all=.TRUE.) ; stop

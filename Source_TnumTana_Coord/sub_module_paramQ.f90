@@ -132,7 +132,8 @@ MODULE mod_paramQ
       OnTheFly     = .FALSE.
       nb_elec      = 1
       opt          = .FALSE.
-      pot_act      = .TRUE.
+
+      pot_act      = .FALSE.
       pot_cart     = .FALSE.
       pot_itQtransfo = -1
       IF (associated(mole%RPHTransfo)) THEN
@@ -144,8 +145,8 @@ MODULE mod_paramQ
 
       deriv_WITH_FiniteDiff  = .FALSE.
 
-      read_Qsym0           = .TRUE.
-      read_Qdyn0           = .TRUE.
+      read_Qsym0           = .FALSE.
+      read_Qdyn0           = .FALSE.
       read_Qact0           = .FALSE.
       read_xyz0            = .FALSE.
       read_xyz0_with_dummy = .FALSE.
@@ -186,13 +187,35 @@ MODULE mod_paramQ
         END DO
       END IF
 
-      IF (mole%nb_Qtransfo == -1) pot_itQtransfo = 0
+      IF (mole%nb_Qtransfo == -1) THEN
+        pot_itQtransfo = 0
+        pot_cart       = .FALSE.
+        pot_act        = .FALSE.
+      END IF
+
+      IF ( (pot_act  .AND. pot_cart) .OR.                               &
+           (pot_act  .AND. pot_itQtransfo /= -1) .OR.                   &
+           (pot_cart .AND. pot_itQtransfo /= -1) ) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) '(pot_act=t and pot_cart=t) .OR. ...'
+        write(out_unitp,*) 'pot_act',pot_act
+        write(out_unitp,*) 'pot_cart',pot_cart
+        write(out_unitp,*) 'pot_itQtransfo ',pot_itQtransfo
+        write(out_unitp,*) ' You have to chose between these options'
+        write(out_unitp,*) ' Check your data !'
+        STOP
+      END IF
 
       IF(pot_itQtransfo /= -1) pot_act = .FALSE.
       IF(pot_itQtransfo == -1) THEN
-        IF (pot_cart)                           pot_itQtransfo = 0                  ! Qcart
-        IF (.NOT. pot_act .AND. .NOT. pot_cart) pot_itQtransfo = mole%nb_Qtransfo-1 ! Qdyn
-        IF (pot_act)                            pot_itQtransfo = mole%nb_Qtransfo       ! Qact
+        IF (pot_cart) THEN
+          pot_itQtransfo = 0                      ! Qcart
+        ELSE IF (pot_act) THEN
+          pot_itQtransfo = mole%nb_Qtransfo       ! Qact
+        ELSE
+          pot_itQtransfo = mole%nb_Qtransfo-1     ! Qdyn
+        END IF
+
       END IF
       IF (pot_itQtransfo < 0 .OR. pot_itQtransfo > mole%nb_Qtransfo) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -265,29 +288,46 @@ MODULE mod_paramQ
       ! first defined how to read the reference geometry:
       ! - with read_itQ0transfo    or
       ! - with read_Qsym0, read_xyz0, ...
-      read_itQtransfo_OF_Qin0 = read_itQ0transfo
-      IF (read_itQtransfo_OF_Qin0 == -1) THEN ! old way with read_Qsym0 or read_xyz0
-        IF (read_Qsym0 .AND. read_xyz0) THEN
-          write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' read_Qsym0=t and read_xyz0=t !!!'
-          write(out_unitp,*) ' You have to chose between these options'
-          write(out_unitp,*) ' Check your data !'
-          STOP
-        END IF
+      IF (read_Qsym0) read_Qdyn0 = .TRUE.
 
-        IF (read_Qsym0) THEN
-          IF (debug) write(out_unitp,*) ' Read Qdyn0 coordinates:'
+
+      IF ( (read_Qdyn0 .AND. read_Qact0) .OR.                           &
+           (read_Qdyn0 .AND. read_xyz0) .OR.                            &
+           (read_Qdyn0 .AND. read_itQ0transfo /= -1) .OR.               &
+           (read_Qact0 .AND. read_xyz0) .OR.                            &
+           (read_Qact0 .AND. read_itQ0transfo /= -1) .OR.               &
+           (read_xyz0  .AND. read_itQ0transfo /= -1)) THEN
+
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) '(read_Qdyn0=t and read_xyz0=t) .OR. ...'
+        write(out_unitp,*) 'read_Qdyn0 .OR. read_Qsym0',read_Qdyn0
+        write(out_unitp,*) 'read_Qact0',read_Qact0
+        write(out_unitp,*) 'read_xyz0 ',read_xyz0
+        write(out_unitp,*) 'read_itQ0transfo ',read_itQ0transfo
+        write(out_unitp,*) ' You have to chose between these options'
+        write(out_unitp,*) ' Check your data !'
+        STOP
+      END IF
+
+
+      read_itQtransfo_OF_Qin0 = read_itQ0transfo
+      IF (read_itQtransfo_OF_Qin0 == -1) THEN ! old way with read_Qsym0 or read_xyz0 ....
+        IF (read_Qdyn0) THEN
+          IF (print_level > 1 .OR. debug) write(out_unitp,*) ' Read Qdyn0 coordinates:'
           read_itQtransfo_OF_Qin0 = mole%nb_Qtransfo-1
-        ELSE IF (read_xyz0) THEN
-          IF (debug) write(out_unitp,*) ' Read xyz0 coordinates:'
+        ELSE IF (read_xyz0 .OR. read_xyz0_with_dummy) THEN
+          IF (print_level > 1 .OR. debug) write(out_unitp,*) ' Read xyz0 coordinates:'
           read_itQtransfo_OF_Qin0 = 0
         ELSE IF (read_Qact0) THEN
-          IF (debug) write(out_unitp,*) ' Read Qact0 coordinates:'
+          IF (print_level > 1 .OR. debug) write(out_unitp,*) ' Read Qact0 coordinates:'
           read_itQtransfo_OF_Qin0 = mole%nb_Qtransfo
         ELSE
-          IF (debug) write(out_unitp,*) ' Read Qprim0 (zmat, ...) coordinates:'
-          read_itQtransfo_OF_Qin0 = mole%itPrim
+          IF (print_level > 1 .OR. debug) write(out_unitp,*) ' Read Qdyn0 coordinates:'
+          read_itQtransfo_OF_Qin0 = mole%nb_Qtransfo-1
         END IF
+
+          !IF (print_level > 1 .OR. debug) write(out_unitp,*) ' Read Qprim0 (zmat, ...) coordinates:'
+          !read_itQtransfo_OF_Qin0 = mole%itPrim
       END IF
 
       ! check if 0<= read_itQtransfo_OF_Qin0 <= mole%nb_Qtransfo
@@ -300,7 +340,7 @@ MODULE mod_paramQ
         STOP
       END IF
       read_xyz0 = (read_itQtransfo_OF_Qin0 == 0)
-      write(out_unitp,*) 'read_itQtransfo_OF_Qin0',read_itQtransfo_OF_Qin0
+      IF (print_level > 1 .OR. debug) write(out_unitp,*) 'read_itQtransfo_OF_Qin0',read_itQtransfo_OF_Qin0
       CALL flush_perso(out_unitp)
       ! defined the "info" from read_itQtransfo_OF_Qin0
       IF (read_itQtransfo_OF_Qin0 == mole%nb_Qtransfo) THEN ! Qact
@@ -1146,7 +1186,7 @@ MODULE mod_paramQ
 
 
       real (kind=Rkind), intent(in) :: Qact(:)
-      TYPE (zmatrix) :: mole
+      TYPE (zmatrix)    :: mole
       TYPE (Type_dnVec) :: dnx
       integer :: nderiv
       logical :: Gcenter

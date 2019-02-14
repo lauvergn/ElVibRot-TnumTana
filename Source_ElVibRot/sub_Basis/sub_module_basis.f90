@@ -4239,7 +4239,7 @@ END SUBROUTINE pack_basis
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='nrho_Basis_TO_nhro_Tnum'
       logical, parameter :: debug = .FALSE.
-!     logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub

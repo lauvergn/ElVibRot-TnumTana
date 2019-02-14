@@ -848,17 +848,22 @@ MODULE mod_dnGG_dng
       IF (nderivA >= 0) THEN
         CALL sub_d0A(dnA%d0,dnx%d0,dnx%d1,                              &
                      mole%nb_act,mole%nat_act,mole%ncart,               &
-                     mole%ncart_act,dnA%nb_var_Matl,mole%Without_Rot)
+                     mole%ncart_act,dnA%nb_var_Matl,                    &
+                     mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
       END IF
       IF (nderivA >= 1) THEN
         CALL sub_d1A(dnA%d1,dnx%d0,dnx%d1,dnx%d2,                       &
                      mole%nb_act,mole%nat_act,mole%ncart,               &
-                     mole%ncart_act,dnA%nb_var_Matl,mole%Without_Rot)
+                     mole%ncart_act,dnA%nb_var_Matl,                    &
+                     mole%Without_Rot)
+
       END IF
       IF (nderivA == 2) THEN
         CALL sub_d2A(dnA%d2,dnx%d0,dnx%d1,dnx%d2,dnx%d3,                &
                      mole%nb_act,mole%nat_act,mole%ncart,               &
-                     mole%ncart_act,dnA%nb_var_Matl,mole%Without_Rot)
+                     mole%ncart_act,dnA%nb_var_Matl,                    &
+                     mole%Without_Rot)
+
       END IF
 
 !-----------------------------------------------------------
@@ -949,7 +954,8 @@ MODULE mod_dnGG_dng
 
         CALL sub_d0A(dnA%d0,dnx%d0,dnx%d1,                              &
                      mole%nb_act,mole%nat_act,mole%ncart,               &
-                     mole%ncart_act,dnA%nb_var_Matl,mole%Without_Rot)
+                     mole%ncart_act,dnA%nb_var_Matl,                    &
+                     mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
       END IF
 
 !===================================================================
@@ -970,8 +976,8 @@ MODULE mod_dnGG_dng
 
           CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
-                       mole%ncart_act,dnA%nb_var_Matl,mole%Without_Rot)
-
+                       mole%ncart_act,dnA%nb_var_Matl,                  &
+                       mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
           dnA%d1(:,:,i) = At(:,:)
           IF (nderivA == 2) dnA%d2(:,:,i,i) = At(:,:)
 
@@ -980,8 +986,8 @@ MODULE mod_dnGG_dng
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
           CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
-                       mole%ncart_act,dnA%nb_var_Matl,mole%Without_Rot)
-
+                       mole%ncart_act,dnA%nb_var_Matl,                  &
+                       mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
           dnA%d1(:,:,i) = ( dnA%d1(:,:,i) - At(:,:) ) * stepp
 
           IF (nderivA == 2) dnA%d2(:,:,i,i) = ( dnA%d2(:,:,i,i) +       &
@@ -1012,8 +1018,8 @@ MODULE mod_dnGG_dng
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
           CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
-                       mole%ncart_act,dnA%nb_var_Matl,mole%Without_Rot)
-
+                       mole%ncart_act,dnA%nb_var_Matl,                  &
+                       mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
           dnA%d2(:,:,i,j) = At(:,:)
 
 
@@ -1023,8 +1029,8 @@ MODULE mod_dnGG_dng
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
           CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
-                       mole%ncart_act,dnA%nb_var_Matl,mole%Without_Rot)
-
+                       mole%ncart_act,dnA%nb_var_Matl,                  &
+                       mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
           dnA%d2(:,:,i,j) = dnA%d2(:,:,i,j) + At(:,:)
 
           Qact(i) = Qacti - para_Tnum%stepT
@@ -1033,8 +1039,8 @@ MODULE mod_dnGG_dng
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
           CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
-                       mole%ncart_act,dnA%nb_var_Matl,mole%Without_Rot)
-
+                       mole%ncart_act,dnA%nb_var_Matl,                  &
+                       mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
           dnA%d2(:,:,i,j) = dnA%d2(:,:,i,j) - At(:,:)
 
 
@@ -1044,8 +1050,8 @@ MODULE mod_dnGG_dng
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
           CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
-                       mole%ncart_act,dnA%nb_var_Matl,mole%Without_Rot)
-
+                       mole%ncart_act,dnA%nb_var_Matl,                  &
+                       mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
           dnA%d2(:,:,i,j) = dnA%d2(:,:,i,j) - At(:,:)
 
 !        -- d2A/dQidQj -----------------------------------------
@@ -1083,12 +1089,12 @@ MODULE mod_dnGG_dng
 
       SUBROUTINE sub_d0A(A,d0x,d1x,                                     &
                          nb_act,nat_act,ncart,ncart_act,ndimA,          &
-                         Without_Rot)
+                         Without_Rot,With_VecCOM,Mtot)
       IMPLICIT NONE
 
 
        integer :: nb_act,nat_act,ncart,ncart_act,ndimA
-       real (kind=Rkind) :: A(ndimA,ndimA)
+       real (kind=Rkind) :: A(ndimA,ndimA),Mtot
        real (kind=Rkind) :: d0x(ncart)
        real (kind=Rkind) :: d1x(ncart,nb_act)
        real (kind=Rkind) :: d2x,d3x
@@ -1098,7 +1104,7 @@ MODULE mod_dnGG_dng
        real (kind=Rkind) :: Cxq,Cyq,Czq
 
        integer :: i,j,k,kx,ky,kz
-       logical :: Without_Rot
+       logical :: Without_Rot,With_VecCOM
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug = .FALSE.
@@ -1217,7 +1223,11 @@ MODULE mod_dnGG_dng
 
 !================================================================
 
-
+      IF (With_VecCOM) THEN
+         DO i=ndimA-3,ndimA
+           A(i,i) = Mtot
+         END DO
+      END IF
 
 
 !-----------------------------------------------------------

@@ -1,11 +1,11 @@
 #!/bin/ksh
 
  ici=`pwd`
- cd ..
+ cd ../..
  make tnum-dist
  cd $ici
 
-../Tnum90.exe << ** > res
+../../Tnum90.exe << ** > res
  &variables zmat=T nat=3 /
 O
 H 1

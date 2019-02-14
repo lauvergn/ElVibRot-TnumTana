@@ -1,13 +1,12 @@
 c
 C================================================================
 C    calc_Op : calculation of the potential and scalar operator matrices
-c    mat_V(nb_be,nb_be) and mat_dip(nb_be,nb_be,nb_ScalOp)
+c    mat_V(nb_be,nb_be) and Mat_Scal(nb_be,nb_be,nb_ScalOp)
 c    nb_be : nb of elctronic surfaces
 c    Q are the coordinates in active order or dyn order
 C================================================================
       SUBROUTINE calcN_op(mat_V,mat_imV,mat_ScalOp,nb_be,nb_ScalOp,
-     *                   Q,nb_var,mole,
-     *                   calc_ScalOp,pot_cplx)
+     *                    Qop,nb_QOp,mole,calc_ScalOp,pot_cplx)
 
       USE mod_system
       USE mod_Tnum
@@ -16,75 +15,108 @@ C================================================================
 c----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
 
-      integer           :: nb_be,nb_ScalOp,nb_var
+      integer           :: nb_be,nb_ScalOp,nb_QOp
       logical           :: calc_ScalOp,pot_cplx
       real (kind=Rkind) :: mat_V(nb_be,nb_be),mat_imV(nb_be,nb_be)
       real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
-      real (kind=Rkind) :: Q(nb_var)
+      real (kind=Rkind) :: Qop(nb_QOp)
 
-      real (kind=Rkind) :: pot0,im_pot0
-      real (kind=Rkind) :: ScalOp(nb_ScalOp)
-
+      integer           :: nb_QOp_loc=3
 
       IF (nb_be == 1 ) THEN
-        mat_V(1,1) = pot0(Q)
-        IF (pot_cplx) mat_imV(1,1) = im_pot0(Q)
-        IF (calc_ScalOp) THEN
-          CALL sub_ScalarOp(ScalOp,nb_ScalOp,Q,mole)
-          mat_ScalOp(1,1,:) = ScalOp(:)
-        END IF
+        write(out_unitp,*) ' ERROR sub_system for 2 PES'
+        STOP
       END IF
 
-      END
+      CALL Mat_pot0(mat_V,Qop(1:nb_QOp_loc),nb_be,nb_QOp_loc) 
+
+      IF (pot_cplx) THEN
+        CALL Mat_im_pot0(mat_imV,Qop(1:nb_QOp_loc),nb_be,nb_QOp_loc)
+      END IF
+
+      IF (calc_ScalOp) THEN
+        CALL Mat_ScalarOp(mat_ScalOp,Qop(1:nb_QOp_loc),mole,
+     *                    nb_be,nb_ScalOp,nb_QOp_loc)
+      END IF
+
+      END SUBROUTINE calcN_op
 C================================================================
-C    fonction pot0(x) 1 D (avec x=cos(theta))
-c    pour une tri atomique en jacobie
+C     pot0(x) 1 D 2 surfaces
 C================================================================
-      FUNCTION pot0(Qsym0)
+      SUBROUTINE Mat_pot0(mat_V,Qop,nb_be,nb_QOp)
       USE mod_system
       IMPLICIT NONE
-       real (kind=Rkind) :: pot0
-       real (kind=Rkind) :: Qsym0(1)
 
-       real (kind=Rkind) :: z ! pot0
-       real (kind=Rkind) :: poly_legendre ! function
+      integer           :: nb_be,nb_QOp
+      real (kind=Rkind) :: Qop(nb_QOp)
+      real (kind=Rkind) :: mat_V(nb_be,nb_be)
 
-       character*14 nom
-       logical :: exist
-       integer :: kl
-       real (kind=Rkind) ::  c_act
+      real (kind=Rkind) :: kdiag(nb_QOp)
+      real (kind=Rkind) :: Qeq1(nb_QOp)
+      real (kind=Rkind) :: Qeq2(nb_QOp)
+      real (kind=Rkind) :: DQ(nb_QOp)
+      real (kind=Rkind), parameter :: e11  = 0.00d0
+      real (kind=Rkind), parameter :: e22  = 0.03d0
+      real (kind=Rkind), parameter :: e12  = 5.0d-3
+
+       kdiag(:) = (/ 0.1d0,0.5d0,0.5d0 /)
+       Qeq1(:)  = (/ 0.8d0,3.2d0,2.2d0 /)
+       Qeq2(:)  = (/ 0.8d0,3.0d0,2.0d0 /)
+
+       !Write(6,*) 'Qop',Qop
+       !Write(6,*) 'kdiag',kdiag
+
+       DQ(:) = Qop-Qeq1
+       !Write(6,*) 'DQ1',DQ
+       mat_V(1,1) = e11 + 0.5d0 * dot_product(kdiag*DQ,DQ)
+
+       DQ(:) = Qop-Qeq2
+       !Write(6,*) 'DQ2',DQ
+       mat_V(2,2) = e22 + 0.5d0 * dot_product(kdiag*DQ,DQ)
+
+       mat_V(1,2) = e12
+       mat_V(2,1) = e12
+
+       !write(6,*) 'mat_V',mat_V
+
+      END SUBROUTINE Mat_pot0
+C================================================================
+C    fonction im_pot0(x) imaginary part of pot0
+C================================================================
+      SUBROUTINE Mat_im_pot0(mat_imV,Qop,nb_be,nb_QOp)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer           :: nb_be,nb_QOp
+      real (kind=Rkind) :: mat_imV(nb_be,nb_be)
+      real (kind=Rkind) :: Qop(nb_QOp)
+
+      integer           :: i
+      real (kind=Rkind) :: im_pot0 ! imaginary function
+
+      mat_imV = ZERO
+
+      DO i=1,nb_be
+        mat_imV(i,i) = im_pot0(Qop)
+      END DO
+
+      END SUBROUTINE Mat_im_pot0
+      FUNCTION im_pot0(Qop)
+      USE mod_system
+      IMPLICIT NONE
+      real (kind=Rkind) :: im_pot0
 
 
-       integer, save           :: nn
-       integer, parameter      :: max_points = 200
-       real (kind=Rkind), save :: F(max_points)
-       logical, save           :: begin = .TRUE.
+       real (kind=Rkind) :: Qop(1)
+       real (kind=Rkind) :: z
+       real (kind=Rkind), parameter :: a=ONETENTH, Q0=0.9_Rkind
 
-c---------------------------------------------------------------
-c      initialization (only once)
-c$OMP    CRITICAL (pot0_CRIT)
-       IF (begin) THEN
-         nom='inter12-ene'
-         CALL read_para0d(F,nn,max_points,nom,exist)
-         IF ( .NOT. exist) STOP
-
-         begin=.FALSE.
-       END IF
-c$OMP    END CRITICAL (pot0_CRIT)
-c      END initialization
-c---------------------------------------------------------------
-
-       c_act = Qsym0(1)
        z = ZERO
-       DO kl=1,nn
-         z = z + F(kl) * poly_legendre(c_act,kl,0)
-       END DO
+       IF (Qop(1) > Q0) z = -a * (Qop(1) - Q0)**2
 
-       pot0 = z
+       im_pot0 = z
 
-c      write(out_unitp,*) 'pot0',Qsym0(1),c_act,z
-
-       END
+       END FUNCTION im_pot0
 C================================================================
 C    fonction pot_rest(x)
 C================================================================
@@ -100,27 +132,7 @@ C================================================================
 
        pot_rest = ZERO
 
-       END
-C================================================================
-C    fonction im_pot0(x)
-C================================================================
-      FUNCTION im_pot0(Qsym0)
-      USE mod_system
-      IMPLICIT NONE
-      real (kind=Rkind) :: im_pot0
-
-
-       real (kind=Rkind) :: Qsym0(1)
-       real (kind=Rkind) :: z
-       real (kind=Rkind), parameter :: a=ONETENTH, Q0=0.9_Rkind
-
-       z = ZERO
-       IF (Qsym0(1) > Q0) z = -a * (Qsym0(1) - Q0)**2
-
-       im_pot0 = z
-
-       RETURN
-       END
+       END FUNCTION pot_rest
 C================================================================
 C    sub hessian
 C================================================================
@@ -132,13 +144,14 @@ C================================================================
 
        h = ZERO
 
-       END
+       END SUBROUTINE sub_hessian
 c
 C================================================================
 C    fonction pot0(x) 1 D (avec x=cos(theta))
 c    pour une tri atomique en jacobie
 C================================================================
-      SUBROUTINE sub_ScalarOp(ScalOp,nb_ScalOp,Q,mole)
+      SUBROUTINE Mat_ScalarOp(mat_ScalOp,Qop,mole,
+     *                        nb_be,nb_ScalOp,nb_QOp)
       USE mod_system
       USE mod_Tnum
       IMPLICIT NONE
@@ -146,24 +159,18 @@ C================================================================
 c----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
 
-       integer nb_Q,nb_ScalOp
-       parameter (nb_Q=3)
-       real(kind=Rkind) Q(nb_Q)
-       real(kind=Rkind) ScalOp(nb_ScalOp)
-       integer :: i
+
+      integer           :: nb_be,nb_ScalOp,nb_QOp
+      real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
+      real (kind=Rkind) :: Qop(nb_QOp)
 
 
-       ScalOp(:) = ZERO
-       DO i=1,nb_ScalOp
-         ScalOp(i) = real(i,kind=Rkind) + 0.01_Rkind * Q(1) +
-     *                                   0.02_Rkind*(Q(2)+Q(3))
-       END DO
-       ScalOp(1) = Q(1)
-       ScalOp(2) = Q(2)
-       ScalOp(3) = Q(3)
+       mat_ScalOp(:,:,:) = ZERO
 
+       mat_ScalOp(1,2,1) = ONE
+       mat_ScalOp(2,1,1) = ONE
 
-       END
+       END SUBROUTINE Mat_ScalarOp
 C================================================================
 C    analytical gradient along the path
 C================================================================
@@ -371,7 +378,7 @@ C================================================================
        character (len=14) :: nom
        logical :: exist
 
-       integer :: vi,kl
+       integer :: vi,kl,k
 
        integer, parameter      ::  max_points=200
        integer, parameter      ::  nb_inactb = 5
@@ -497,7 +504,7 @@ c----- for the zmatrix and Tnum --------------------------------------
        character (len=14) :: nom
        logical :: exist
 
-       integer :: vi,kl,i_act,j_act,k_act
+       integer :: vi,kl,k,i_act,j_act,k_act
 
        integer, parameter      ::  max_points=200
        integer, parameter      ::  nb_inactb = 5

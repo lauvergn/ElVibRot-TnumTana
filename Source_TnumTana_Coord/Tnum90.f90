@@ -79,7 +79,7 @@
       !CALL sub_constantes(const_phys,Read_Namelist=.FALSE.)
 
       !-----------------------------------------------------------------
-      !     - read the coordinate tansformations :
+      !     - read the coordinate transformations :
       !     -   zmatrix, polysperical, bunch...
       !     ------------------------------------------------------------
       CALL Read_mole(mole,para_Tnum,const_phys)

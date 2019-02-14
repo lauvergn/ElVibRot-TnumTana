@@ -69,8 +69,9 @@
       real (kind=Rkind), parameter :: inv_Name   = 1822.888485541_Rkind
 
       !real (kind=Rkind), parameter :: mH   = 1837.1526464003414_Rkind ! mH ! Tnum
-       real (kind=Rkind), parameter :: mD   = 3671.4829394591770_Rkind ! mD ! Tnum
       real (kind=Rkind), parameter :: mH   = 1.00800_Rkind * inv_Name ! mH ! Bacic
+
+      real (kind=Rkind), parameter :: mH2  = TWO*mH ! mH2
 
       integer       :: i,iQdyn
 
