@@ -1,10 +1,12 @@
 
- ici=`pwd`
- cd ..
- make Tnum_MCTDH
- cd $ici
+here=`pwd`
+DIR_EVRT=$here/../..
 
-../Tnum90_MCTDH.exe << ** > res
+cd $DIR_EVRT
+ make Tnum_MCTDH
+cd $here
+
+$DIR_EVRT/Tnum90_MCTDH.exe << ** > res
  &variables Old_Qtransfo=f nb_Qtransfo=2 Cart_transfo=t /
   &Coord_transfo name_transfo='zmat' nat=4 /
     O

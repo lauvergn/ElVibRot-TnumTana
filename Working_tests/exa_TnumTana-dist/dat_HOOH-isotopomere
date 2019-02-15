@@ -1,11 +1,12 @@
-#!/bin/ksh
 
- ici=`pwd`
- cd ..
+here=`pwd`
+DIR_EVRT=$here/../..
+
+cd $DIR_EVRT
  make tnum-dist
- cd $ici
+cd $here
 
-../Tnum90.exe << ** > res
+$DIR_EVRT/Tnum90.exe << ** > res
  &variables  zmat=T nat=4 /
 8_16
 O 1

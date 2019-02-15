@@ -1,15 +1,20 @@
 
- ici=`pwd`
- cd ../..
- make Tnum_MCTDH
- cd $ici
+here=`pwd`
+DIR_EVRT=$here/../..
 
-../../Tnum90_MCTDH.exe << ** > res
- &variables  zmat=T nat=4 sym=t /
+cd $DIR_EVRT
+ make Tnum_MCTDH
+cd $here
+
+$DIR_EVRT/Tnum90_MCTDH.exe << ** > res
+ &variables Old_Qtransfo=f nb_Qtransfo=3  /
+ &Coord_transfo name_transfo='zmat' nat=4 /
 2.
 2. 1
 1. 1 2
 1. 2 1 3
+
+ &Coord_transfo name_transfo='linear' /
 sym  Rc  R+ a1    R- a2 phi
 6
 1    1. 0.  0.    0. 0. 0.
@@ -19,7 +24,9 @@ sym  Rc  R+ a1    R- a2 phi
 5    0. 0.  0.    0. 1. 0.
 6    0. 0.  0.    0. 0. 1.
 
+ &Coord_transfo name_transfo='active' /
 1 1 1 1 1 1
+
  &minimum read_nameQ=t unit='angs' /
 ROO 1.4673182
 R+ 0.9685485

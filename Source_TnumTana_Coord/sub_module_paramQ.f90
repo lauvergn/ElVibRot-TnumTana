@@ -187,6 +187,10 @@ MODULE mod_paramQ
         END DO
       END IF
 
+      write(out_unitp,*)  '------------------------------------------------------'
+      write(out_unitp,*)  '--- Coordinates used for the operators ---------------'
+      write(out_unitp,*)  '------------------------------------------------------'
+
       IF (mole%nb_Qtransfo == -1) THEN
         pot_itQtransfo = 0
         pot_cart       = .FALSE.
@@ -282,9 +286,15 @@ MODULE mod_paramQ
         write(out_unitp,*) 'Operators (pot...) with Qact coordinates'
       END IF
 
+      write(out_unitp,*)  '------------------------------------------------------'
+
       !=================================================================
       !=================================================================
       !=================================================================
+      write(out_unitp,*)  '------------------------------------------------------'
+      write(out_unitp,*)  '--- Coordinates used for the reference geometry ------'
+      write(out_unitp,*)  '------------------------------------------------------'
+
       ! first defined how to read the reference geometry:
       ! - with read_itQ0transfo    or
       ! - with read_Qsym0, read_xyz0, ...
@@ -311,11 +321,12 @@ MODULE mod_paramQ
 
 
       read_itQtransfo_OF_Qin0 = read_itQ0transfo
+
       IF (read_itQtransfo_OF_Qin0 == -1) THEN ! old way with read_Qsym0 or read_xyz0 ....
         IF (read_Qdyn0) THEN
           IF (print_level > 1 .OR. debug) write(out_unitp,*) ' Read Qdyn0 coordinates:'
           read_itQtransfo_OF_Qin0 = mole%nb_Qtransfo-1
-        ELSE IF (read_xyz0 .OR. read_xyz0_with_dummy) THEN
+        ELSE IF (read_xyz0) THEN
           IF (print_level > 1 .OR. debug) write(out_unitp,*) ' Read xyz0 coordinates:'
           read_itQtransfo_OF_Qin0 = 0
         ELSE IF (read_Qact0) THEN
@@ -329,6 +340,7 @@ MODULE mod_paramQ
           !IF (print_level > 1 .OR. debug) write(out_unitp,*) ' Read Qprim0 (zmat, ...) coordinates:'
           !read_itQtransfo_OF_Qin0 = mole%itPrim
       END IF
+
 
       ! check if 0<= read_itQtransfo_OF_Qin0 <= mole%nb_Qtransfo
       IF (read_itQtransfo_OF_Qin0 < 0 .OR.                              &
@@ -355,6 +367,7 @@ MODULE mod_paramQ
         info_Qread = ' Read Qin0 coordinates, from transfo_it' //       &
                             int_TO_char(read_itQtransfo_OF_Qin0) // ':'
       END IF
+      write(out_unitp,*) info_Qread
       ! ----------------------------------------------
 
       ! ----------------------------------------------
@@ -426,9 +439,12 @@ MODULE mod_paramQ
       mole%tab_Qtransfo(mole%nb_Qtransfo)%print_done = .FALSE.
       IF (debug) CALL Write_Qtransfo(mole%tab_Qtransfo(mole%nb_Qtransfo))
       ! END Transfert the rigid values in ActiveTransfo%Qdyn0
+
+      write(out_unitp,*)  '------------------------------------------------------'
       !=================================================================
       !=================================================================
       !=================================================================
+
 
 !======================================================================
 !     IF Cart_transfo=t

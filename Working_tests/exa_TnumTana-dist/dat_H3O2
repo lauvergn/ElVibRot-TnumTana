@@ -1,9 +1,12 @@
 
- ici=`pwd`
- cd ../..
+here=`pwd`
+DIR_EVRT=$here/../..
+
+cd $DIR_EVRT
  make Tnum_MCTDH
- cd $ici
-../../Tnum90_MCTDH.exe << ** > res
+cd $here
+
+$DIR_EVRT/Tnum90_MCTDH.exe << ** > res
  &variables
          Tana=t
          Old_Qtransfo=f

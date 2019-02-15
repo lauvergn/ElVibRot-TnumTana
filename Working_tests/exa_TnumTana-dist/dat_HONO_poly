@@ -1,11 +1,12 @@
-#!/bin/ksh
 
- ici=`pwd`
- cd ../..
+here=`pwd`
+DIR_EVRT=$here/../..
+
+cd $DIR_EVRT
  make Tnum_MCTDH
- cd $ici
+cd $here
 
-../../Tnum90_MCTDH.exe << ** > res
+$DIR_EVRT/Tnum90_MCTDH.exe << ** > res
  &variables 
          nrho=2
          Old_Qtransfo=f

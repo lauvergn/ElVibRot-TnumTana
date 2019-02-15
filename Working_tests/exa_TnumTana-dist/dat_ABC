@@ -1,11 +1,12 @@
-#!/bin/ksh
 
- ici=`pwd`
- cd ..
+here=`pwd`
+DIR_EVRT=$here/../..
+
+cd $DIR_EVRT
  make tnum-dist
- cd $ici
+cd $here
 
-../Tnum90.exe << ** > res
+$DIR_EVRT/Tnum90.exe << ** > res
  &variables Gdiago=f zmat=T nat=3 nrho=2 num_x=t num_A=t num_H=f stepT=1.e-4 /
 5.
 1.            1

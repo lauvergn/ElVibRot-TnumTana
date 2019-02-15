@@ -1,11 +1,12 @@
-#!/bin/ksh
 
- ici=`pwd`
- cd ..
- make Tnum_MCTDH
- cd $ici
+here=`pwd`
+DIR_EVRT=$here/../..
 
-../Tnum90_MCTDH.exe << ** > res
+cd $DIR_EVRT
+ make tnum-dist
+cd $here
+
+$DIR_EVRT/Tnum90.exe << ** > res
  &variables  zmat=T nat=26 /
  C
  C 1
@@ -110,6 +111,4 @@
  hcc26  119.10311399
  dih26  180.
 
-
- &MCTDH grid1D  .FALSE. perio=f /
 **

@@ -1,9 +1,12 @@
- ici=`pwd`
- cd ..
- make Tnum_MCTDH
- cd $ici
 
-../Tnum90_MCTDH.exe << ** > res
+here=`pwd`
+DIR_EVRT=$here/../..
+
+cd $DIR_EVRT
+ make tnum-dist
+cd $here
+
+$DIR_EVRT/Tnum90.exe << ** > res
 &variables  zmat=T NM_TO_sym=f nat=52 sym=F
         new_Orient=t Without_Rot=t
          vAt1(1) =  5.23616600    -9.08269405     4.00402164

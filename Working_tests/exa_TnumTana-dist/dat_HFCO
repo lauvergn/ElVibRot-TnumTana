@@ -1,11 +1,12 @@
-#!/bin/ksh
 
- ici=`pwd`
- cd ..
- make -f makefile_test tnum-dist
- cd $ici
+here=`pwd`
+DIR_EVRT=$here/../..
 
-../Tnum90.exe << ** > res
+cd $DIR_EVRT
+ make tnum-dist
+cd $here
+
+$DIR_EVRT/Tnum90.exe << ** > res
  &variables
          zmat=T
          nat=4

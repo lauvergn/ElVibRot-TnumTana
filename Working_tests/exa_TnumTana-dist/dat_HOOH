@@ -1,11 +1,12 @@
-#!/bin/ksh
 
- ici=`pwd`
- cd ..
- make Tnum_MCTDH
- cd $ici
+here=`pwd`
+DIR_EVRT=$here/../..
 
-../Tnum90_MCTDH.exe << ** > res
+cd $DIR_EVRT
+ make tnum-dist
+cd $here
+
+$DIR_EVRT/Tnum90.exe << ** > res
  &variables  nrho=2 zmat=T nat=4 /
 O
 O 1

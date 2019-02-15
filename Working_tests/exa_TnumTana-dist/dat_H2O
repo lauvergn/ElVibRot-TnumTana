@@ -1,17 +1,21 @@
-#!/bin/ksh
 
- ici=`pwd`
- cd ../..
+here=`pwd`
+DIR_EVRT=$here/../..
+
+cd $DIR_EVRT
  make tnum-dist
- cd $ici
+cd $here
 
-../../Tnum90.exe << ** > res
- &variables zmat=T nat=3 /
+$DIR_EVRT/Tnum90.exe << ** > res
+ &variables Old_Qtransfo=f nb_Qtransfo=2  /
+ &Coord_transfo name_transfo='zmat' nat=3 /
 O
 H 1
 H 1 2
 
+ &Coord_transfo name_transfo='active' /
 1  1 1
+
  &minimum read_nameQ=t unit='angs' /
  R1 0.9894120
  R2 0.9894120
