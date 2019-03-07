@@ -62,9 +62,9 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
       END IF
 !---------------------------------------------------------------------
-      CALL alloc_array(BasisnD_loc%tab_Pbasis,(/ mole%nb_act1 /),       &
+      CALL alloc_array(BasisnD_loc%tab_Pbasis,(/ mole%nb_act1+1 /),     &
                       'BasisnD_loc%tab_Pbasis',name_sub)
-      DO i=1,mole%nb_act1
+      DO i=1,size(BasisnD_loc%tab_Pbasis)
         CALL alloc_array(BasisnD_loc%tab_Pbasis(i)%Pbasis,              &
                         'BasisnD_loc%tab_Pbasis(i)%Pbasis',name_sub)
       END DO
@@ -163,6 +163,7 @@
       ! transfert of iQdyn, nrho --------------------------------
       i0 = 0
       DO i=1,BasisnD_loc%nb_basis
+        IF (BasisnD_loc%tab_Pbasis(i)%Pbasis%ndim == 0) CYCLE
         i1 = i0 + BasisnD_loc%tab_Pbasis(i)%Pbasis%ndim
         BasisnD_loc%iQdyn(i0+1:i1) = BasisnD_loc%tab_Pbasis(i)%Pbasis%iQdyn(:)
         BasisnD_loc%nrho(i0+1:i1)  = BasisnD_loc%tab_Pbasis(i)%Pbasis%nrho(:)
@@ -184,7 +185,6 @@
       IF (.NOT. BasisnD_loc%cplx) write(out_unitp,*) 'BasisnD is REAL'
       write(out_unitp,*)
       write(out_unitp,*) 'Number of active basis sets:',BasisnD_loc%nb_basis
-
 
       IF (BasisnD_loc%nb_basis == 1) THEN
         write(out_unitp,*) 'WARNING: ONE layer of basis has been removed!!'
@@ -546,10 +546,17 @@
 
       IF (.NOT. basis_temp%active) RETURN
 
-      IF (ndim <= 0 .AND. nb_basis == 0) THEN
-        write(out_unitp,*) ' ERROR : the primitive basis has no coordinates !'
+      basis_temp%name                   = name
+      CALL string_uppercase_TO_lowercase(basis_temp%name)
+      basis_temp%OK_ndim_eq_0 = .FALSE.
+      IF (trim(adjustl(basis_temp%name)) == 'el') basis_temp%OK_ndim_eq_0 = .TRUE.
+
+
+      IF (ndim <= 0 .AND. nb_basis == 0 .AND. .NOT. basis_temp%OK_ndim_eq_0) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' The primitive basis has no coordinates !'
         write(out_unitp,*) ' Specified the active coordinates with iQact(:) or iQdyn(:)'
-        write(out_unitp,*) ' or "nb_basis" for directproduct basis'
+        write(out_unitp,*) ' or "nb_basis" for direct-product basis'
         write(out_unitp,*) ' STOP in ',name_sub
         write(out_unitp,basis_nD)
         STOP
@@ -578,7 +585,6 @@
       IF (nqPLUSnbc_TO_nqc < 0) nqPLUSnbc_TO_nqc = 0
 
       basis_temp%ndim                   = ndim
-      basis_temp%name                   = name
       basis_temp%nb                     = nb
       basis_temp%nbc                    = nbc
       basis_temp%nqc                    = nqc
@@ -775,10 +781,14 @@
 
       CALL Set_ReadsymabOFSymAbelian(basis_temp%P_SymAbelian,symab(1))
 
-      IF (ndim > 0) THEN
+      IF (ndim == 0) THEN
+         IF (.NOT. associated(basis_temp%nDindB)) THEN
+           CALL alloc_array(basis_temp%nDindB,"basis_temp%nDindB",name_sub)
+         END IF
+         basis_temp%nDindB%packed          = basis_temp%packed .OR. (Type_OF_nDindB == 0)
+      ELSE
         CALL alloc_init_basis(basis_temp)
         basis_temp%nDindB%packed          = basis_temp%packed .OR. (Type_OF_nDindB == 0)
-
         ! now basis_temp%iQdyn(:)
         DO i=1,ndim
           basis_temp%iQdyn(i) = mole%ActiveTransfo%list_QactTOQdyn(iQact(i))
@@ -806,6 +816,13 @@
             write(out_unitp,*) ' You give the range ("A" and "B"):',A(i),B(i)
             write(out_unitp,*) '   and also the scaling factors ("scaleQ" and "Q0"):',scaleQ(i),Q0(i)
             write(out_unitp,*) ' You have to chose the range or the scaling factors'
+            write(out_unitp,*) ' CHECK your data'
+            write(out_unitp,basis_nD)
+            STOP
+          ELSE IF (A(i) > B(i) .AND. scaleQ(i) == ZERO) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' The range ("A" and "B") is :',A(i),B(i)
+            write(out_unitp,*) '   "A" MUST be < "B" '
             write(out_unitp,*) ' CHECK your data'
             write(out_unitp,basis_nD)
             STOP

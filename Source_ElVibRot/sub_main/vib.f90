@@ -35,7 +35,7 @@
 
       USE mod_psi_set_alloc
       USE mod_psi_Op
-      USE mod_psi
+      USE mod_ana_psi
 
 
       USE mod_propa
@@ -247,7 +247,7 @@
 !       => Time-dependent calculation
 !=====================================================================
 
-        CALL init_psi(WP0(1),para_H,para_propa%para_WP0%WP0cplx)
+        CALL init_psi(WP0(1),para_H,cplx=.TRUE.)
 
         !==============================================================
         !building of WP0 for WP propagation
@@ -292,13 +292,15 @@
                 END IF
               END DO
             END IF
-            CALL norme_psi(WP0(1),Renorm=.FALSE.)
+            CALL norm2_psi(WP0(1))
             write(out_unitp,*) ' Norm of |WP0>',WP0(1)%norme
-            CALL norme_psi(WP0(1),Renorm=.TRUE.)
+            CALL renorm_psi_With_norm2(WP0(1))
             T = ZERO
             write(out_unitp,*) ' Analysis of |WP0> or Mu|WP0>'
 
-            CALL sub_analyze_WP_forPropa(T,WP0(:),1)
+            para_propa%ana_psi%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
+            CALL sub_analyze_tab_psi(T,WP0(:),para_propa%ana_psi)
+            para_propa%ana_psi%file_Psi%name = para_propa%file_WP%name
 
           ELSE ! for optimal control
 
@@ -1473,7 +1475,7 @@ para_mem%mem_debug = .FALSE.
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_propa
-      USE mod_psi
+      USE mod_ana_psi
       USE mod_psi_set_alloc
       USE mod_param_WP0
       USE mod_psi_io

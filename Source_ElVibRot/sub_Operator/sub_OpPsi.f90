@@ -2944,7 +2944,7 @@ STOP 'cplx'
       integer :: i1_bi
       integer :: i,ki,k,iq,iqbi
 
-      integer                  :: iterm
+      integer              :: iterm
 
       real (kind=Rkind)    :: EigenVec(para_H%nb_bie,para_H%nb_bie)
       real (kind=Rkind)    :: V(para_H%nb_bie,para_H%nb_bie)
@@ -2993,7 +2993,7 @@ STOP 'cplx'
                     Cpsi_iq(i1_bi) = Psi%CvecG(iqbi)
                   END DO
 
-                  Cpsi_iq(:) = matmul(EigenVec,Cpsi_iq)
+                  Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
 
                   DO i1_bi=1,para_H%nb_bie
                     iqbi = iq + (i1_bi-1) * Psi%nb_qa
@@ -3010,7 +3010,7 @@ STOP 'cplx'
                     Rpsi_iq(i1_bi) = Psi%RvecG(iqbi)
                   END DO
 
-                  Rpsi_iq(:) = matmul(EigenVec,Rpsi_iq)
+                  Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
 
                   DO i1_bi=1,para_H%nb_bie
                     iqbi = iq + (i1_bi-1) * Psi%nb_qa
@@ -3028,20 +3028,36 @@ STOP 'cplx'
                 DO iq=1,Psi%nb_qa
 
                   V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
+!write(6,*) 'V(:,:)',V(:,:)
+
                   CALL diagonalization(V,                               &
                              EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+!write(6,*) 'EigenVec',iq,EigenVec
+!write(6,*) 'Ortho EigenVec ?',iq,matmul(transpose(EigenVec),EigenVec)
+!write(6,*) 'Ortho EigenVec ?',iq,matmul(EigenVec,transpose(EigenVec))
 
-                  DO i1_bi=1,para_H%nb_bie
-                    iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                    Cpsi_iq(i1_bi) = Psi%CvecG(iqbi)
-                  END DO
+                  Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+!write(6,*) '<Vdia>',dot_product(Cpsi_iq,matmul(V,Cpsi_iq))
 
-                  Cpsi_iq(:) = matmul(EigenVec,Cpsi_iq)
+                  !DO i1_bi=1,para_H%nb_bie
+                  !  iqbi = iq + (i1_bi-1) * Psi%nb_qa
+                  !  Cpsi_iq(i1_bi) = Psi%CvecG(iqbi)
+                  !END DO
+!write(6,*) 'Cpsi_iq',iq,Cpsi_iq
 
-                  DO i1_bi=1,para_H%nb_bie
-                    iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                    Psi%CvecG(iqbi) = Cpsi_iq(i1_bi)
-                  END DO
+                  !Cpsi_iq(:) = matmul(EigenVec,Cpsi_iq)
+                  !Cpsi_iq(:) = matmul(Cpsi_iq,EigenVec)
+                  Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
+
+!write(6,*) '<Vadia>',dot_product(Cpsi_iq,(EigenVal*Cpsi_iq))
+
+
+                  Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
+                  !DO i1_bi=1,para_H%nb_bie
+                  !  iqbi = iq + (i1_bi-1) * Psi%nb_qa
+                  !  Psi%CvecG(iqbi) = Cpsi_iq(i1_bi)
+                  !END DO
+!write(6,*) 'Cpsi_iq',iq,Cpsi_iq
 
                 END DO
               ELSE
@@ -3057,7 +3073,7 @@ STOP 'cplx'
                     Rpsi_iq(i1_bi) = Psi%RvecG(iqbi)
                   END DO
 
-                  Rpsi_iq(:) = matmul(EigenVec,Rpsi_iq)
+                  Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
 
                   DO i1_bi=1,para_H%nb_bie
                     iqbi = iq + (i1_bi-1) * Psi%nb_qa

@@ -135,10 +135,11 @@ CONTAINS
 
       SGtype4    = SGtype4 .AND. (para_H%BasisnD%SparseGrid_type == 4)
 
-
       IF (abs(para_propa%type_WPpropa) /= 33 .AND. abs(para_propa%type_WPpropa) /= 34) THEN
         WP(1) = WP0(1)
       END IF
+
+      IF (para_propa%n_WPecri < 1) para_propa%n_WPecri = 2 * int(para_propa%WPTmax/para_propa%WPdeltaT) !nothing written
 
       SELECT CASE (para_propa%type_WPpropa)
 
@@ -205,7 +206,7 @@ CONTAINS
           stepw = para_propa%para_field%stepw
           w     = wmin - stepw
           print_Op = .FALSE.
-!         print_Op = .TRUE.
+          !print_Op = .TRUE.
 
           DO WHILE (w < wmax)
             w = w + stepw
@@ -259,8 +260,7 @@ CONTAINS
       USE mod_propa
       USE mod_march
       USE mod_psi_set_alloc
-      USE mod_psi_Op
-      !USE mod_psi
+      USE mod_ana_psi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -354,21 +354,7 @@ CONTAINS
 !-----------------------------------------------------------
 
 !------- propagation loop ---------------------------------
-      CALL file_open(para_propa%file_WP,nioWP)
       DO WHILE (T <= para_propa%WPTmax .AND. DeltaE > epsi)
-
-!       - for the writting of the wp (GridRep) ---------------------
-        IF (para_propa%write_iter .OR. debug) THEN
-          IF ((para_propa%WPpsi2 .OR. para_propa%WPpsi) .AND.           &
-                      mod(it,para_propa%n_WPecri) == 0) THEN
-
-            CALL sub_PsiBasisRep_TO_GridRep(psi)
-            CALL ecri_psi(T=T,psi=psi,nioWP=nioWP,                      &
-                        ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
-            CALL alloc_psi(psi,BasisRep=BasisRep,GridRep=GridRep)
-
-          END IF
-        END IF
 
 !       --------------------------------------------------------
         IF (FOD) THEN
@@ -379,7 +365,7 @@ CONTAINS
 !         E0 = RE0
 !  normalement, RE0 doit etre l'energie....
 
-          CALL norme_psi(psi,Renorm=.TRUE.)
+          CALL renorm_psi(psi)
           E1 = E0
           CALL sub_PsiOpPsi(E0,psi,w1,para_H)
           DeltaE = abs(E1-E0)
@@ -390,7 +376,7 @@ CONTAINS
           IF (para_propa%type_WPpropa == 3) para_H%E0     = ZERO
           CALL march_nOD_im(T,no,psi,psi0,w1,w2,para_H,para_propa)
 
-          CALL norme_psi(psi,Renorm=.TRUE.)
+          CALL renorm_psi(psi)
           E1 = E0
           CALL sub_PsiOpPsi(E0,psi,w1,para_H)
           DeltaE = E0-E1
@@ -419,16 +405,18 @@ CONTAINS
       IF (T > para_propa%WPTmax)                                        &
           write(out_unitp,*) ' WARNING : the WP is not fully relaxed'
 
-!     for the writting of the wp (GridRep)
-      CALL sub_PsiBasisRep_TO_GridRep(psi)
-      CALL ecri_psi(T=T,psi=psi,nioWP=nioWP,                            &
-                    ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
+      para_propa%ana_psi%Write_psi2_Grid = .FALSE.
+      para_propa%ana_psi%Write_psi_Grid  = .TRUE.
+      para_propa%ana_psi%Write_psi_Basis = .TRUE.
+
+      !CALL Write_ana_psi(para_propa%ana_psi)
+      CALL sub_analyze_WP_OpWP(T,(/ psi /),1,para_H,para_propa,adia=.FALSE.)
+
       IF (debug .OR. psi%nb_tot < 1000) THEN
         write(out_unitp,*) 'WP (BasisRep) at T=',T
         CALL ecri_psi(T=T,psi=psi,ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
       END IF
 
-      close(nioWP)
 !----------------------------------------------------------
       write(out_unitp,*)
       write(out_unitp,*) 'Number of Hamiltonian operation',para_H%nb_OpPsi
@@ -463,6 +451,7 @@ CONTAINS
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       USE mod_psi_SimpleOp
+      USE mod_ana_psi
       USE mod_psi_Op
       USE mod_propa
       USE mod_march
@@ -596,7 +585,7 @@ CONTAINS
       END IF
 
       DO i=1,nb_diago
-        CALL norme_psi(psi(i),Renorm=.TRUE.)
+        CALL renorm_psi(psi(i))
         CALL sub_PsiOpPsi(CEne0,psi(i),Hpsi,para_H)
         Ene0(i) = CEne0
       END DO
@@ -619,7 +608,7 @@ CONTAINS
           RS = - real(CS,kind=Rkind)
           psi(i) = psi(i) + psi(j) * RS
         END DO
-        CALL norme_psi(psi(i),Renorm=.TRUE.)
+        CALL renorm_psi(psi(i))
 !         - Schmidt ortho ------------------------------------
 
 !       Hpsi = H.psi(i)
@@ -641,7 +630,7 @@ CONTAINS
             RS = - real(CS,kind=Rkind)
             psi(i) = psi(i) + psi(j) * RS
           END DO
-          CALL norme_psi(psi(i),Renorm=.TRUE.)
+          CALL renorm_psi(psi(i))
 !         - Schmidt ortho ------------------------------------
 
 !         - CG minimization ------------------------------------
@@ -695,9 +684,9 @@ CONTAINS
 
 !         - propagation ------------------------------------------
           g = Hpsi + psi(i) * (-avH1)
-          CALL norme_psi(g,Renorm=.FALSE.)
+          CALL norm2_psi(g)
           normeg = sqrt(g%norme)
-          CALL norme_psi(g,Renorm=.TRUE.)
+          CALL renorm_psi_WITH_norm2(g)
           write(out_unitp,*) 'it normeg C',it,normeg,C
 
 
@@ -705,9 +694,9 @@ CONTAINS
           psi(i) = H2psi + g * sin(th)
 
 
-          CALL norme_psi(psi(i),Renorm=.FALSE.)
+          CALL norm2_psi(psi(i))
           write(out_unitp,*) 'it norme npsi',it,psi(i)%norme
-          CALL norme_psi(psi(i),Renorm=.TRUE.)
+          CALL renorm_psi_WITH_norm2(psi(i))
           CALL sub_PsiOpPsi(CEne0,psi(i),Hpsi,para_H)
           Ene0(i) = CEne0
           write(out_unitp,*) 'it E with npsi',it,                       &
@@ -786,7 +775,7 @@ CONTAINS
       USE mod_Op
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_propa
       USE mod_march
       IMPLICIT NONE
@@ -811,7 +800,7 @@ CONTAINS
 
       integer  ::   nioWP
       TYPE (param_psi)             :: wp_Adia
-      logical :: BasisRep,GridRep
+      logical :: BasisRep,GridRep,test
       character (len=len_trim(para_propa%file_WP_restart%name)) :: Restart_file_name
 
 !----- for debuging --------------------------------------------------
@@ -856,12 +845,10 @@ CONTAINS
 
 
 !-----------------------------------------------------------
-      T = ZERO
-      CALL sub_analyze_WP_OpWP(T,psi0,1,para_H,para_propa)
 
 !------- propagation loop ---------------------------------
 
-
+      T = ZERO
       IF (para_propa%restart) THEN
         CALL file_open(para_propa%file_autocorr,no,append=.TRUE.)
         backspace(no)
@@ -872,15 +859,11 @@ CONTAINS
         CALL file_open(para_propa%file_WP_restart,no_restart)
         read(no_restart,*) psi(1)%CvecB
         close(no_restart)
-        CALL sub_analyze_WP_OpWP(T,psi0,1,para_H,para_propa)
-
 
         CALL file_open(para_propa%file_autocorr,no,append=.TRUE.)
 
-        CALL file_open(para_propa%file_WP,nioWP,append=.TRUE.)
       ELSE
         CALL file_open(para_propa%file_autocorr,no)
-        CALL file_open(para_propa%file_WP,nioWP)
         cdot = Calc_AutoCorr(psi0(1),psi(1),para_propa,T,Write_AC=.TRUE.)
       END IF
 
@@ -888,45 +871,24 @@ CONTAINS
       it            = 0
       itmax         = (para_propa%WPTmax-T)/para_propa%WPdeltaT
 
-      DO WHILE (T <= para_propa%WPTmax-para_propa%WPdeltaT .AND.        &
-                 psi(1)%norme < psi(1)%max_norme)
+      DO WHILE ( (T - (para_propa%WPTmax-para_propa%WPdeltaT) <         &
+                 para_propa%WPdeltaT/TEN**5) .AND. psi(1)%norme < psi(1)%max_norme)
 
-!        for the writting of the wp (GridRep)
-         IF ((para_propa%WPpsi2 .OR. para_propa%WPpsi) .AND.            &
-                      mod(it,para_propa%n_WPecri) == 0) THEN
+           para_propa%ana_psi%Write_psi2_Grid = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi2
+           para_propa%ana_psi%Write_psi_Grid  = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi
 
-           IF (para_propa%Write_WPAdia) THEN
-             WP_adia = psi(1)
-             CALL sub_PsiBasisRep_TO_GridRep(WP_adia)
-             CALL sub_PsiDia_TO_PsiAdia_WITH_MemGrid(WP_adia,para_H)
-             CALL ecri_psi(T=T,psi=WP_adia,nioWP=nioWP,                 &
-                         ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,     &
-                         ecri_psi2=.TRUE.)
-           ELSE
-             CALL sub_PsiBasisRep_TO_GridRep(psi(1))
-             CALL ecri_psi(T=T,psi=psi(1),nioWP=nioWP,                  &
-                         ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,     &
-                         ecri_psi2=para_propa%WPpsi2)
-             ! switch back to the initial representation (Grid are basis)
-             CALL alloc_psi(psi(1),BasisRep=BasisRep,GridRep=GridRep)
-           END IF
-           write(nioWP,*)
+           CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
 
            !para_propa%file_WP_restart%name = Restart_file_name // '_it' // int_TO_char(mod(it,max(1,itmax/100)))
            !CALL file_open(para_propa%file_WP_restart,no_restart)
            !write(no_restart,*) psi(1)%CvecB
            !close(no_restart)
 
-         END IF
-
-         it = it + 1
          CALL march_gene(T,psi(1:1),psi0(1:1),1,.FALSE.,para_H,para_propa)
 
-         T = T + para_propa%WPdeltaT
+         it = it + 1
+         T  = T + para_propa%WPdeltaT
 
-         IF ( mod(it,para_propa%n_WPecri) == 0) THEN
-           CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
-         END IF
       END DO
 
 !----------------------------------------------------------
@@ -937,10 +899,9 @@ CONTAINS
       write(out_unitp,*) 'WP (BasisRep) at T=',T
       IF (debug) CALL ecri_psi(T=T,psi=psi(1),ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
 
-!     for the writting of the wp (GridRep)
-      CALL sub_PsiBasisRep_TO_GridRep(psi(1))
-      CALL ecri_psi(T=T,psi=psi(1),nioWP=nioWP,                         &
-                    ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
+      para_propa%ana_psi%Write_psi2_Grid = para_propa%WPpsi2
+      para_propa%ana_psi%Write_psi_Grid  = para_propa%WPpsi
+      CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
 
       para_propa%file_WP_restart%name = Restart_file_name
       write(out_unitp,*) ' Last restart file: ',trim(para_propa%file_WP_restart%name)
@@ -949,7 +910,6 @@ CONTAINS
       close(no_restart)
 !----------------------------------------------------------
 
-      CALL file_close(para_propa%file_WP)
       CALL file_close(para_propa%file_autocorr)
       CALL dealloc_psi(WP_adia,delete_all=.TRUE.)
       IF (psi(1)%norme >= psi(1)%max_norme) STOP
@@ -980,7 +940,7 @@ CONTAINS
       USE mod_march
       !USE mod_psi
       USE mod_psi_set_alloc
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_field
       IMPLICIT NONE
 
@@ -1002,32 +962,12 @@ CONTAINS
 
 
 !------ working parameters --------------------------------
-      TYPE (param_psi)   :: w2
-
-      complex (kind=Rkind)   :: Overlap,cdot,rt,rti,fac_k,norm
-      real (kind=Rkind) :: limit
-
-      complex (kind=Rkind) :: ET  ! energy
-      real (kind=Rkind)    :: EE
       complex (kind=Rkind) :: E0(nb_WP),avE(nb_WP)  ! energy
 
-      integer       :: it,it_max,no,max_der,nb_der
-      integer       :: i,j,k,jt,ip,iq
+      integer       :: it,it_max,i
       real (kind=Rkind) :: T      ! time
-      real (kind=Rkind) :: T_Delta! time+deltaT
-      integer       :: max_ecri
-      logical       :: test_max_norme
-
-      real (kind=Rkind) :: Qmean(WP(1)%nb_act1)
-      real (kind=Rkind) :: dphi,phi_w2,phi_wp
-
-
-
-      integer  ::   nioWP
-      logical :: BasisRep,GridRep
 
 !----- for the field --------------------------------------------------
-      real (kind=Rkind), pointer :: tab_dnE(:,:)
       real (kind=Rkind)    :: ww(3)
       real (kind=Rkind)    :: dnE(3)
       logical :: make_field
@@ -1055,9 +995,6 @@ CONTAINS
        END IF
 !-----------------------------------------------------------
 
-      BasisRep = WP(1)%BasisRep
-      GridRep  = WP(1)%GridRep
-
 !-----------------------------------------------------------
       IF (print_Op) THEN
         write(out_unitp,*) ' Propagation ',para_propa%name_WPpropa
@@ -1071,18 +1008,6 @@ CONTAINS
                                 para_propa%WPdeltaT,                    &
                                 para_propa%type_WPpropa)
 
-      nullify(tab_dnE)
-      CALL alloc_array(tab_dnE,(/para_propa%para_poly%npoly-1,3/),      &
-                      "tab_dnE","sub_propagation24",(/0,1/))
-
-!-----------------------------------------------------------
-      w2 = WP(1)
-      w2%GridRep=.TRUE.
-      IF (.NOT. allocated(w2%CvecG)) CALL alloc_psi(w2)
-      write(out_unitp,*) 'w2 BasisRep and GridRep'
-      CALL ecri_psi(psi=w2,ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
-
-      CALL ecri_psi(psi=w2,ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
 !-----------------------------------------------------------
 
 !     - scaling of H ---------------------------------------
@@ -1098,18 +1023,12 @@ CONTAINS
       write(out_unitp,*) 'para_H%E0,para_H%Esc',para_H%E0,para_H%Esc
       write(out_unitp,*) 'phase',para_propa%para_poly%phase
 
-
-
 !-----------------------------------------------------------
-
-
-!-----------------------------------------------------------
-      max_ecri = min(25,WP(1)%nb_tot)
       T = ZERO
       IF (para_propa%WPdeltaT < 0) T = para_propa%WPTmax
-      it   = 0
+      it     = 0
       it_max = para_propa%WPTmax/abs(para_propa%WPdeltaT)-1
-
+      avE(:) = ZERO
 
       ww = para_propa%para_field%w(:,1)
       IF (print_Op) THEN
@@ -1126,47 +1045,21 @@ CONTAINS
         write(out_unitp,*)
 
       END IF
-      DO j=1,nb_WP
-!       - WP energy -----------------------------------
-        CALL norme_psi(WP(j),.FALSE.,.TRUE.,.FALSE.)
-        CALL sub_PsiOpPsi(ET,WP(j),w2,para_H)
-        ET     = ET/WP(j)%norme
-        WP(j)%CAvOp = ET
-        E0(j)  = ET
-!       para_H%E0     = ET
-!       para_propa%para_poly%phase = para_H%E0*para_propa%WPdeltaT
-        avE(j) = ZERO
-      END DO
-
-      IF (print_Op) THEN
-        CALL sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,               &
-                                 para_propa%para_field)
-      END IF
-
 !-----------------------------------------------------------
 
 
 !------- propagation loop ---------------------------------
-      CALL file_open(para_propa%file_WP,nioWP)
       DO WHILE (it <= it_max)
-        CALL flush_perso(out_unitp)
-        T_Delta = T + para_propa%WPdeltaT
 
-!        for the writting of the wp (GridRep)
-         IF ((para_propa%WPpsi2 .OR. para_propa%WPpsi) .AND.            &
-              print_Op .AND. mod(it,para_propa%n_WPecri) == 0) THEN
+        para_propa%ana_psi%Write_psi2_Grid = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi2
+        para_propa%ana_psi%Write_psi_Grid  = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi
 
-           DO j=1,nb_WP
-             CALL sub_PsiBasisRep_TO_GridRep(WP(j))
-             CALL ecri_psi(T=T,psi=WP(j),nioWP=nioWP,                   &
-                           ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,            &
-                           ecri_psi2=para_propa%WPpsi2)
-             ! switch back to the initial representation (Grid are basis)
-             CALL alloc_psi(WP(j),BasisRep=BasisRep,GridRep=GridRep)
-           END DO
-         END IF
+        CALL sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,          &
+                                       para_field=para_propa%para_field)
 
-         it = it + 1
+        IF (it ==0) E0(:)  = WP(:)%CAvOp
+        avE(:) = avE(:) + WP(:)%CAvOp-E0(:)
+
 
          print_Op_loc = print_Op .AND. mod(it,para_propa%n_WPecri) == 0
          CALL march_gene(T,WP(:),WP(:),nb_WP,print_Op_loc,              &
@@ -1174,25 +1067,8 @@ CONTAINS
                          para_Dip,para_propa%para_field)
 
 
-
-         IF ( print_Op .AND. mod(it,para_propa%n_WPecri) == 0 ) THEN
-           CALL sub_analyze_WP_OpWP(T_Delta,WP,nb_WP,para_H,para_propa, &
-                                    para_propa%para_field)
-         END IF
-         DO j=1,nb_WP
-!          - WP energy -----------------------------------
-           CALL sub_PsiOpPsi(ET,WP(j),w2,para_H)
-           ET = ET/WP(j)%norme
-!          para_H%E0     = ET
-!          para_propa%para_poly%phase  = para_H%E0*para_propa%WPdeltaT
-           avE(j) = avE(j) + ET-E0(j)
-
-         END DO ! j loop (nb_WP)
-
-
-
-
-         T  = T_Delta
+        T = T + para_propa%WPdeltaT
+        it = it + 1
 
        END DO ! loop on the Time iteration
        CALL flush_perso(out_unitp)
@@ -1200,49 +1076,26 @@ CONTAINS
 !----------------------------------------------------------
 !     - write the final WP---------------------------------
       T  = para_propa%WPTmax
-      IF (print_Op) THEN
-        write(out_unitp,*) '=================================='
-        write(out_unitp,*) 'Final normalized WP'
-        DO j=1,nb_WP
-          CALL norme_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.TRUE.)
-        END DO
-        CALL sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,               &
-                            para_propa%para_field)
+      write(out_unitp,*) '=================================='
+      write(out_unitp,*) 'Final normalized WP'
+      DO i=1,nb_WP
+        CALL renorm_psi(WP(i),GridRep=.FALSE.,BasisRep=.TRUE.)
+      END DO
 
-        DO j=1,nb_WP
-!         - WP BasisRep and GridRep ------------------------------
-          write(out_unitp,*) 'WP (BasisRep) at T=',T,j
-          CALL ecri_psi(T=T,psi=WP(j),                                  &
-                        ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,      &
-                        ecri_psi2=.FALSE.)
+      para_propa%ana_psi%Write_psi2_Grid = para_propa%WPpsi2
+      para_propa%ana_psi%Write_psi_Grid  = para_propa%WPpsi
+      CALL sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,            &
+                                 para_field=para_propa%para_field)
+      avE(:) = avE(:) + WP(:)%CAvOp-E0(:)
 
-!         for the writting of the wp (GridRep)
-          CALL sub_PsiBasisRep_TO_GridRep(WP(j))
-          CALL ecri_psi(T=T,psi=WP(j),                                  &
-                        ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,      &
-                        ecri_psi2=.FALSE.)
-          IF (para_propa%WPpsi2 .OR. para_propa%WPpsi) THEN
-            CALL ecri_psi(T=T,psi=WP(j),nioWP=nioWP,                    &
-                          ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,    &
-                          ecri_psi2=para_propa%WPpsi2)
-          END IF
-        END DO ! j loop (nb_WP)
-      END IF
-
-      DO j=1,nb_WP
-        avE(j) = avE(j)/real(it_max,kind=Rkind)
-        write(out_unitp,31) j,ww,real(avE(j),kind=Rkind)
+      DO i=1,nb_WP
+        avE(i) = avE(i)/real(it_max,kind=Rkind)
+        write(out_unitp,31) i,ww,real(avE(i),kind=Rkind)
  31     format('average absorbed energy at w ',i3,4(1x,f20.10))
       END DO ! j loop (nb_WP)
 
 !----------------------------------------------------------
 
-      CALL file_close(para_propa%file_WP)
-
-
-      CALL dealloc_psi(w2)
-
-      CALL dealloc_array(tab_dnE,"tab_dnE","sub_propagation24")
 
 !----------------------------------------------------------
        IF (debug) THEN
@@ -1267,7 +1120,7 @@ CONTAINS
       !USE mod_psi
       USE mod_psi_set_alloc
       USE mod_psi_io
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_field
       IMPLICIT NONE
 

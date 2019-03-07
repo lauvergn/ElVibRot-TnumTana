@@ -62,6 +62,7 @@
 
           integer           :: ndim        = 0                    !  dimension of the basis
                                                                   !  i.e. nb of variables
+          logical           :: OK_ndim_eq_0 = .FALSE.             ! IF T, the basis set can have ndim=0 (for Electronic basis set)
           integer, allocatable :: iQdyn(:)                        !  dim : ndim
           integer, allocatable :: Tabder_Qdyn_TO_Qbasis(:)        ! Tabder_Qdyn_TO_Qbasis(0:nb_var)
 
@@ -262,14 +263,16 @@
       !!@param: TODO
       !!@param: TODO
        SUBROUTINE alloc_init_basis(basis_set)
-         TYPE (basis) :: basis_set
+         TYPE (basis),         intent(inout) :: basis_set
+
          integer      :: i
-         integer :: err_mem,memory
+         integer      :: err_mem,memory
          character (len=*), parameter :: name_sub='alloc_init_basis'
 
-         IF (basis_set%ndim < 1) THEN
+
+         IF (basis_set%ndim < 1 .AND. .NOT. basis_set%OK_ndim_eq_0) THEN
            write(out_unitp,*) ' ERROR in ',name_sub
-           write(out_unitp,*) '  WRONG paramter values: ndim',basis_set%ndim
+           write(out_unitp,*) '  WRONG parameter values: ndim',basis_set%ndim
            write(out_unitp,*) '  CHECK the fortran !!'
            STOP
          END IF
@@ -342,7 +345,7 @@
 
        SUBROUTINE alloc_dnb_OF_basis(basis_set)
          TYPE(basis), intent(inout) :: basis_set
-         integer           :: i,nq
+         integer           :: i,nq,nderiv_loc
 
 
          !----- for debuging --------------------------------------------------
@@ -357,20 +360,36 @@
 
          nq = get_nq_FROM_basis(basis_set)
 
-         IF (basis_set%ndim < 1 .OR. basis_set%nb < 1 .OR. nq < 1) THEN
+         nderiv_loc = 2
+         IF (basis_set%ndim == 0) THEN
+           nderiv_loc = 0
+           write(out_unitp,*) ' WARNING in ',name_sub
+           write(out_unitp,*) '  ndim = 0'
+         END IF
+
+         IF (basis_set%ndim < 0 .OR. basis_set%nb < 1 .OR. nq < 1) THEN
            write(out_unitp,*) ' ERROR in ',name_sub
            write(out_unitp,*) '  WRONG paramter values: ndim or nb or nq',      &
                        basis_set%ndim,basis_set%nb,nq
            write(out_unitp,*) '  CHECK the fortran !!'
            STOP
          END IF
+!         IF (basis_set%ndim < 1 .OR. basis_set%nb < 1 .OR. nq < 1) THEN
+!           write(out_unitp,*) ' ERROR in ',name_sub
+!           write(out_unitp,*) '  WRONG paramter values: ndim or nb or nq',      &
+!                       basis_set%ndim,basis_set%nb,nq
+!           write(out_unitp,*) '  CHECK the fortran !!'
+!           STOP
+!         END IF
          ! first deallocation
          CALL dealloc_dnb_OF_basis(basis_set)
 
          ! then allocation
-         CALL alloc_NParray(basis_set%tab_ndim_index,(/basis_set%ndim,basis_set%nb /), &
+         IF (basis_set%ndim > 0) THEN
+           CALL alloc_NParray(basis_set%tab_ndim_index,(/basis_set%ndim,basis_set%nb /), &
                          "basis_set%tab_ndim_index",name_sub)
-         basis_set%tab_ndim_index(:,:) = 0
+           basis_set%tab_ndim_index(:,:) = 0
+         END IF
 
          !write(6,*) 'cplx,nb,nq,ndim',basis_set%cplx,basis_set%nb,nq,basis_set%ndim
          CALL flush_perso(6)
@@ -378,7 +397,7 @@
          IF (basis_set%cplx) THEN
 
            CALL alloc_dnCplxMat(basis_set%dnCGB,                        &
-                                nq,basis_set%nb,basis_set%ndim,nderiv=2)
+                                nq,basis_set%nb,basis_set%ndim,nderiv=nderiv_loc)
 
            CALL alloc_dnCplxMat(basis_set%dnCBG,                        &
                                 basis_set%nb,nq,basis_set%ndim,nderiv=0)
@@ -386,7 +405,7 @@
          ELSE
 
            CALL alloc_dnMat(basis_set%dnRGB,                            &
-                                nq,basis_set%nb,basis_set%ndim,nderiv=2)
+                                nq,basis_set%nb,basis_set%ndim,nderiv=nderiv_loc)
 
            CALL alloc_dnMat(basis_set%dnRBG,                            &
                                 basis_set%nb,nq,basis_set%ndim,nderiv=0)
@@ -684,7 +703,8 @@
 
 
          IF (.NOT. keep_Rvec_loc) THEN
-           basis_set%ndim = 0
+           basis_set%ndim         = 0
+           basis_set%OK_ndim_eq_0 = .FALSE.
            IF (allocated(basis_set%iQdyn))  THEN
              CALL dealloc_NParray(basis_set%iQdyn,"basis_set%iQdyn",name_sub)
            END IF
@@ -1311,6 +1331,8 @@
         basis_set1%print_info_OF_basisDP = basis_set2%print_info_OF_basisDP
 
         basis_set1%ndim              = basis_set2%ndim
+        basis_set1%OK_ndim_eq_0      = basis_set2%OK_ndim_eq_0
+
         basis_set1%nb_Transfo        = basis_set2%nb_Transfo
 
         CALL alloc_init_basis(basis_set1)
@@ -1474,10 +1496,16 @@
         CALL nDindex2TOnDindex1(basis_set1%nDindG,basis_set2%nDindG)
 
         IF (.NOT. Basis_FOR_SG_loc) THEN
+          IF (.NOT. associated(basis_set2%nDindB)) THEN
+            CALL RecWrite_basis(basis_set2)
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' nDindB of basis_set2 is not associated'
+            STOP
+          END IF
           CALL nDindex2TOnDindex1(basis_set1%nDindB,basis_set2%nDindB)
           IF (associated(basis_set2%nDindB_uncontracted)) THEN
-             CALL alloc_array(basis_set1%nDindB_uncontracted,           &
-                             'basis_set1%nDindB_uncontracted',name_sub)
+            CALL alloc_array(basis_set1%nDindB_uncontracted,            &
+                            'basis_set1%nDindB_uncontracted',name_sub)
             CALL nDindex2TOnDindex1(basis_set1%nDindB_uncontracted,     &
                                          basis_set2%nDindB_uncontracted)
           END IF

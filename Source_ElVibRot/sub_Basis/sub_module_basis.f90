@@ -271,6 +271,10 @@ MODULE mod_basis
         write(out_unitp,*) 'Basis 1 (',trim(word),') CANNOT be a primitive basis'
         STOP
 
+      CASE ("el")
+        basis_temp%type = 2
+        write(out_unitp,*) 'Basis "El": for several diabatic PES'
+        CALL sub_basis_El(basis_temp)
 
       CASE ("pl0")
         basis_temp%type = 10
@@ -389,6 +393,8 @@ MODULE mod_basis
         write(out_unitp,*) ' The possibilities :'
         write(out_unitp,*) '  0 : No basis!                           : 0'
         write(out_unitp,*)
+        write(out_unitp,*) '  2 : Diabatic Electronic states          : El'
+        write(out_unitp,*)
         write(out_unitp,*) '  1 : Direct product basis                : direct_prod'
         write(out_unitp,*) '  1 : Sparse basis and Smolyak Grids      : sparse or SB or SG'
         write(out_unitp,*)
@@ -443,9 +449,11 @@ MODULE mod_basis
       CALL init_nDindexPrim(basis_primi%nDindG,1,(/ nq /))
 
       IF (basis_primi%type == 2000) THEN
-        CONTINUE ! already done
+        CONTINUE ! nD-HO with cubature: already done
       ELSE IF (basis_primi%type == 60 .OR. basis_primi%type == 600 .OR. basis_primi%type == 601) THEN
-        CONTINUE ! already done
+        CONTINUE ! Ylm: already done
+      ELSE IF (basis_primi%type == 2) THEN
+        CONTINUE ! El basis set: already done
       ELSE
         CALL dealloc_nDindex(basis_primi%nDindB)
         IF (basis_primi%With_L) THEN
@@ -483,16 +491,17 @@ MODULE mod_basis
 
       CALL pack_nDindex(basis_primi%nDindB)
 
-!     - symmetry of the basis ---------------------------------
+    !- symmetry of the basis ---------------------------------
     IF (basis_primi%type == 60 .OR. basis_primi%type == 600 .OR. basis_primi%type == 601) THEN
-      CONTINUE ! already done
+      CONTINUE ! Ylm: already done
+      ELSE IF (basis_primi%type == 2) THEN
+        CONTINUE ! El basis set: already done
     ELSE
       CALL Set_tab_SymAbelian(basis_primi%P_SymAbelian,basis_primi%nb)
     END IF
 
-!     - scaling of the basis ---------------------------------
+      !- scaling of the basis ---------------------------------
       CALL sub_scale_basis(basis_primi)
-
 
 
       IF (basis_primi%xPOGridRep_done) RETURN
@@ -1307,7 +1316,7 @@ MODULE mod_basis
 !---------------------------------------------------------------------
 
 
-      not_scaled = (basis_sc%type == 1) ! direct_product
+      not_scaled = (basis_sc%type == 1 .OR. basis_sc%ndim == 0) ! direct_product
       DO i=1,basis_sc%ndim
         not_scaled  =  not_scaled .AND. basis_sc%Q0(i)     == ZERO
         not_scaled  =  not_scaled .AND. basis_sc%scaleQ(i) == ONE
@@ -2603,6 +2612,7 @@ END SUBROUTINE pack_basis
          write(out_unitp,*) 'iq',iq
          write(out_unitp,*) 'BasisnD%nb_basis',BasisnD%nb_basis
          write(out_unitp,*) 'BasisnD%packed_done',BasisnD%packed_done
+         write(out_unitp,*) 'BasisnD%OK_ndim_eq_0',BasisnD%OK_ndim_eq_0
        END IF
 !-----------------------------------------------------------
 !
@@ -2611,8 +2621,10 @@ END SUBROUTINE pack_basis
          !IF (.NOT. allocated(BasisnD%wrho)) STOP 'problem with primitive basis. wrho is not allocated !!'
          !write(6,*) 'shape wrho, iq',shape(BasisnD%wrho),iq
          WrhonD = BasisnD%wrho(iq)
+       ELSE IF (BasisnD%OK_ndim_eq_0) THEN
+         WrhonD = ONE
        ELSE ! BasisnD%nb_basis MUST BE > 0
-         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_WrhonD !!!'
 
          SELECT CASE (BasisnD%SparseGrid_type)
          CASE (0) ! Direct product
@@ -2736,7 +2748,7 @@ END SUBROUTINE pack_basis
            tab_iq(:) = iq
          END IF
        ELSE ! BasisnD%nb_basis MUST BE > 0
-         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_tab_iq!!!'
 
          SELECT CASE (BasisnD%SparseGrid_type)
          CASE (0) ! Direct product
@@ -2856,7 +2868,7 @@ END SUBROUTINE pack_basis
        IF (BasisnD%packed_done) THEN
          rhonD = BasisnD%rho(iq)
        ELSE ! BasisnD%nb_basis MUST BE > 0
-         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_rhonD!!!'
 
          SELECT CASE (BasisnD%SparseGrid_type)
          CASE (0) ! Direct product
@@ -2956,7 +2968,7 @@ END SUBROUTINE pack_basis
        IF (BasisnD%packed_done) THEN
          WnD = BasisnD%w(iq)
        ELSE ! BasisnD%nb_basis MUST BE > 0
-         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_WnD!!!'
 
          SELECT CASE (BasisnD%SparseGrid_type)
          CASE (0) ! Direct product
@@ -3069,8 +3081,10 @@ END SUBROUTINE pack_basis
 
        IF (BasisnD%packed_done) THEN
          x(:) = BasisnD%x(:,iq)
+       ELSE IF (BasisnD%OK_ndim_eq_0) THEN
+         CONTINUE ! no grid point
        ELSE ! BasisnD%nb_basis MUST BE > 0
-         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_x!!!'
 
          SELECT CASE (BasisnD%SparseGrid_type)
          CASE (0,3) ! Direct product and SG for type 21
@@ -3516,7 +3530,7 @@ END SUBROUTINE pack_basis
        IF (BasisnD%packed_done) THEN
          d0bnD = BasisnD%dnRGB%d0(iq,ib)
        ELSE ! BasisnD%nb_basis MUST BE > 0
-         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_d0bnD!!!'
 
          SELECT CASE (BasisnD%SparseGrid_type)
          CASE (0,3) ! Direct product
@@ -3593,7 +3607,7 @@ END SUBROUTINE pack_basis
        IF (BasisnD%primitive) THEN
          d0bnD = d0b_OF_primitive_basis_AT_Q(BasisnD,ib,Qbasis)
        ELSE ! BasisnD%nb_basis MUST BE > 0
-         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_d0bnD_AT_Q!!!'
          CALL calc_nDindex(BasisnD%nDindB,ib,nDvalB)
          d0bnD   = ONE
          i0 = 0
@@ -3645,7 +3659,7 @@ END SUBROUTINE pack_basis
        IF (BasisnD%packed_done) THEN
          d0cbnD = BasisnD%dnCGB%d0(iq,ib)
        ELSE ! BasisnD%nb_basis MUST BE > 0
-         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_d0cbnD!!!'
 
          SELECT CASE (BasisnD%SparseGrid_type)
          CASE (0) ! Direct product
@@ -3770,7 +3784,7 @@ END SUBROUTINE pack_basis
            END DO
          END IF
        ELSE ! BasisnD%nb_basis MUST BE > 0
-         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed Rec_d0d1d2bnD!!!'
 
          SELECT CASE (BasisnD%SparseGrid_type)
          CASE (0) ! Direct product
@@ -3979,7 +3993,7 @@ END SUBROUTINE pack_basis
            END DO
          END IF
        ELSE ! BasisnD%nb_basis MUST BE > 0
-         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+         IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_d0d1d2cbnD!!!'
 
          SELECT CASE (BasisnD%SparseGrid_type)
          CASE (0) ! Direct product

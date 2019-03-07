@@ -6,7 +6,7 @@
 #F90 = pgf90
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -458,6 +458,7 @@ Obj_module =  \
 Obj_Basis = \
  $(OBJ)/sub_read_data.o \
  $(OBJ)/sub_quadra_inact.o \
+ $(OBJ)/sub_basis_El.o \
  $(OBJ)/sub_quadra_herm.o $(OBJ)/sub_quadra_laguerre.o $(OBJ)/sub_quadra_legendre.o \
  $(OBJ)/sub_quadra_fourier.o $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_ft.o \
  $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_DirProd.o $(OBJ)/sub_bases_actives.o \
@@ -465,11 +466,12 @@ Obj_Basis = \
  $(OBJ)/sub_SymAbelian_OF_Basis.o
 
 Obj_WP = \
- $(OBJ)/sub_module_ana_psi.o $(OBJ)/sub_module_param_WP0.o \
- $(OBJ)/sub_module_psi_set_alloc.o $(OBJ)/sub_module_psi_SimpleOp.o \
- $(OBJ)/sub_module_psi_B_TO_G.o $(OBJ)/sub_module_psi_Op.o \
- $(OBJ)/sub_module_psi.o  $(OBJ)/sub_module_psi_io.o\
- $(OBJ)/sub_psi0.o $(OBJ)/sub_ana_psi.o
+ $(OBJ)/sub_module_type_ana_psi.o $(OBJ)/sub_module_param_WP0.o \
+ $(OBJ)/sub_module_psi_set_alloc.o \
+ $(OBJ)/sub_module_psi_B_TO_G.o $(OBJ)/sub_module_ana_psi.o \
+ $(OBJ)/sub_module_psi_SimpleOp.o $(OBJ)/sub_module_psi_Op.o \
+ $(OBJ)/sub_module_psi_io.o\
+ $(OBJ)/sub_psi0.o
 
 Obj_propagation = \
  $(OBJ)/sub_module_field.o $(OBJ)/sub_module_propagation.o \
@@ -838,6 +840,8 @@ $(OBJ)/sub_Auto_Basis.o:$(DIRba)/sub_Auto_Basis.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_Auto_Basis.f90
 $(OBJ)/sub_read_data.o:$(DIRba)/sub_read_data.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_read_data.f90
+$(OBJ)/sub_basis_El.o:$(DIRba)/sub_basis_El.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_basis_El.f90
 $(OBJ)/sub_quadra_inact.o:$(DIRba)/sub_quadra_inact.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_inact.f90
 $(OBJ)/sub_quadra_herm.o:$(DIRba)/sub_quadra_herm.f90
@@ -867,20 +871,20 @@ $(OBJ)/sub_SymAbelian_OF_Basis.o:$(DIRba)/sub_SymAbelian_OF_Basis.f90
 #
 #===================================================================================
 # sub_WP
-$(OBJ)/sub_module_ana_psi.o:$(DIRWP)/sub_module_ana_psi.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_ana_psi.f90
+$(OBJ)/sub_module_type_ana_psi.o:$(DIRWP)/sub_module_type_ana_psi.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_type_ana_psi.f90
 $(OBJ)/sub_module_param_WP0.o:$(DIRWP)/sub_module_param_WP0.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_param_WP0.f90
 $(OBJ)/sub_module_psi_set_alloc.o:$(DIRWP)/sub_module_psi_set_alloc.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_set_alloc.f90
+$(OBJ)/sub_module_ana_psi.o:$(DIRWP)/sub_module_ana_psi.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_ana_psi.f90
 $(OBJ)/sub_module_psi_SimpleOp.o:$(DIRWP)/sub_module_psi_SimpleOp.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_SimpleOp.f90
 $(OBJ)/sub_module_psi_B_TO_G.o:$(DIRWP)/sub_module_psi_B_TO_G.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_B_TO_G.f90
 $(OBJ)/sub_module_psi_Op.o:$(DIRWP)/sub_module_psi_Op.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_Op.f90
-$(OBJ)/sub_module_psi.o:$(DIRWP)/sub_module_psi.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi.f90
 $(OBJ)/sub_module_psi_io.o:$(DIRWP)/sub_module_psi_io.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_io.f90
 $(OBJ)/sub_psi0.o:$(DIRWP)/sub_psi0.f90

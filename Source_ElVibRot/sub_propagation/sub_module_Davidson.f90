@@ -42,7 +42,8 @@ CONTAINS
       USE mod_Op
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
-      USE mod_psi_Op,         ONLY : norme_psi,sub_LCpsi_TO_psi
+      USE mod_ana_psi,        ONLY : norm2_psi
+      USE mod_psi_Op,         ONLY : sub_LCpsi_TO_psi
       USE mod_psi_io,         ONLY : sub_save_psi
       USE mod_propa,          ONLY : param_propa,param_Davidson
       IMPLICIT NONE
@@ -387,7 +388,7 @@ CONTAINS
           IF (.NOT. converge(j) .AND. VecToBeIncluded(j)) THEN
             CALL MakeResidual_Davidson(j,g,psi,Hpsi,Ene,Vec)
 
-            CALL norme_psi(g,Renorm=.FALSE.)
+            CALL norm2_psi(g)
             tab_normeg(j) = sqrt(g%norme)
             IF (fresidu == 0) fresidu = j
             IF (tab_normeg(j) > normeg) THEN
@@ -584,7 +585,7 @@ CONTAINS
                                    para_H,para_propa%para_Davidson,iunit)
         DO j=1,nb_diago
           g = Hpsi(j) - psi(j) * Ene(j)
-          CALL norme_psi(g,Renorm=.FALSE.)
+          CALL norm2_psi(g)
           tab_normeg(j) = sqrt(g%norme)
           write(out_unitp,*) 'lev:',j,Ene(j)*auTOene,tab_normeg(j)
         END DO
@@ -667,7 +668,8 @@ CONTAINS
 
  USE mod_psi_set_alloc
  USE mod_psi_B_TO_G,     ONLY : sub_PsiBasisRep_TO_GridRep
- USE mod_psi_Op,         ONLY : norme_psi,Set_symab_OF_psiBasisRep
+ USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi
+ USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep
  USE mod_psi_io,         ONLY : sub_read_psi0
  USE mod_param_WP0,      ONLY : param_WP0
  USE mod_propa,          ONLY : param_Davidson
@@ -692,8 +694,8 @@ CONTAINS
  !----- for debuging --------------------------------------------------
  integer :: err_mem,memory
  character (len=*), parameter :: name_sub='ReadWP0_Davidson'
- logical, parameter :: debug=.FALSE.
- !logical, parameter :: debug=.TRUE.
+ !logical, parameter :: debug=.FALSE.
+ logical, parameter :: debug=.TRUE.
  !-----------------------------------------------------------
 
  IF (debug) THEN
@@ -735,7 +737,7 @@ CONTAINS
    END IF
 
    DO i=1,nb_diago
-     CALL norme_psi(psi(i),Renorm=.FALSE.)
+     CALL norm2_psi(psi(i))
      IF (debug) write(out_unitp,*) '   norm^2 of psi(i)',i,psi(i)%norme
      IF ( abs(psi(i)%norme-ONE) > ONETENTH**8) THEN
        write(out_unitp,*) ' ERROR while reading the vector(s)'
@@ -746,6 +748,7 @@ CONTAINS
 
  ELSE
    para_Davidson%nb_WP0 = 0
+   nb_diago = 1
    CALL alloc_psi(psi(1))
    DO i=1,psi(1)%nb_tot
      CALL random_number(a)
@@ -756,7 +759,7 @@ CONTAINS
      END IF
    END DO
    CALL Set_symab_OF_psiBasisRep(psi(1),para_Davidson%symab)
-   CALL norme_psi(psi(1),BasisRep=.TRUE.,Renorm=.TRUE.)
+   CALL renorm_psi(psi(1),BasisRep=.TRUE.)
  END IF
 
  IF (para_Davidson%With_Grid) THEN
@@ -777,7 +780,7 @@ CONTAINS
    CALL mat_id(vec0,nb_diago,nb_diago)
 
    write(out_unitp,*) ' copy psi(:) to psi0(:)',para_Davidson%nb_WP0
-   DO i=1,para_Davidson%nb_WP0
+   DO i=1,nb_diago
      psi0(i) = psi(i)
      !write(out_unitp,*) ' psi0(i)',i
      !CALL ecri_init_psi(psi0(i))
@@ -786,6 +789,11 @@ CONTAINS
 
  !----------------------------------------------------------
  IF (debug) THEN
+   write(out_unitp,*) 'psi(:), nb_diago',nb_diago
+   DO i=1,nb_diago
+     write(out_unitp,*) ' psi(i)',i
+     CALL ecri_init_psi(psi(i))
+   END DO
    write(out_unitp,*) 'END ',name_sub
  END IF
  !----------------------------------------------------------
@@ -1144,7 +1152,8 @@ END SUBROUTINE MakeResidual_Davidson
  USE mod_system
  USE mod_psi_set_alloc
  USE mod_psi_SimpleOp
- USE mod_psi_Op,         ONLY : norme_psi,Set_symab_OF_psiBasisRep,Overlap_psi1_psi2
+ USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi
+ USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep,Overlap_psi1_psi2
  USE mod_propa,          ONLY : param_Davidson
  IMPLICIT NONE
 
@@ -1304,7 +1313,7 @@ END SUBROUTINE MakeResidual_Davidson
      !- Schmidt ortho ------------------------------------
      !write(out_unitp,*) 'Schmidt ortho',it
      IF (para_Davidson%With_Grid) THEN
-       CALL norme_psi(psi(ndim+1),Renorm=.TRUE.)
+       CALL renorm_psi(psi(ndim+1))
        DO i=1,ndim
          CALL Overlap_psi1_psi2(Overlap,psi(ndim+1),psi(i),      &
                                 With_Grid=para_Davidson%With_Grid)
@@ -1312,7 +1321,7 @@ END SUBROUTINE MakeResidual_Davidson
          RS = real(Overlap,kind=Rkind)
          psi(ndim+1)%RvecG = (psi(ndim+1)%RvecG - psi(i)%RvecG * RS)/sqrt(ONE-RS**2)
        END DO
-       CALL norme_psi(psi(ndim+1),Renorm=.TRUE.)
+       CALL renorm_psi(psi(ndim+1))
        DO i=1,ndim
          CALL Overlap_psi1_psi2(Overlap,psi(ndim+1),psi(i),      &
                                 With_Grid=para_Davidson%With_Grid)
@@ -1340,7 +1349,7 @@ END SUBROUTINE MakeResidual_Davidson
 
      END IF
 
-     CALL norme_psi(psi(ndim+1),Renorm=.FALSE.)
+     CALL norm2_psi(psi(ndim+1))
      IF (psi(ndim+1)%norme < ONETENTH**10) CYCLE ! otherwise dependent vector
 
      !write(out_unitp,*) ' symab: psi(isym), new vec ortho',psi(isym)%symab,psi(ndim+1)%symab
@@ -1348,15 +1357,15 @@ END SUBROUTINE MakeResidual_Davidson
 
      IF (debug) THEN
         write(out_unitp,*) '  symab new vectors',psi(ndim+1)%symab
-        CALL norme_psi(psi(ndim+1),Renorm=.FALSE.)
+        CALL norm2_psi(psi(ndim+1))
         write(out_unitp,*) '  norm^2 of new vectors',psi(ndim+1)%norme
      END IF
 
      CALL Set_symab_OF_psiBasisRep(psi(ndim+1),psi(isym)%symab)
      !write(out_unitp,*) ' symab: psi(isym), new vec set sym ',psi(isym)%symab,psi(ndim+1)%symab
 
-     CALL norme_psi(psi(ndim+1),Renorm=.TRUE.)
-     !write(out_unitp,*) ' symab: psi(isym), new vec renorm ',psi(isym)%symab,psi(ndim+1)%symab
+     CALL renorm_psi(psi(ndim+1))
+     !write(out_unitp,*) ' symab: psi(isym), new renormalized vector ',psi(isym)%symab,psi(ndim+1)%symab
 
      !- Schmidt ortho ------------------------------------
      !write(6,*) 'n+1, vec',ndim+1,psi(ndim+1)%RvecB

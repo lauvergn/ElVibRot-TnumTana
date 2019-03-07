@@ -30,7 +30,7 @@
  USE mod_system
  USE mod_basis
  USE mod_ComOp
- USE mod_ana_psi
+ USE mod_type_ana_psi
  IMPLICIT NONE
 
         TYPE param_psi

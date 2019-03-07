@@ -54,7 +54,7 @@
       USE mod_system
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,         ONLY : norm2_psi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -100,7 +100,7 @@
         write(out_unitp,*)
 
         DO i=1,nb_WP
-          CALL norme_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
           write(out_unitp,*) 'norm WP',i,WP(i)%norme
 
           write(out_unitp,*) 'WP BasisRep',i
@@ -144,7 +144,6 @@
           !CALL  march_noD_SG4_GridRep(T,no,WP(1),WP0(1),para_H,para_propa)
           CALL  march_noD_SG4_BasisRep(T,no,WP(1),WP0(1),para_H,para_propa)
         ELSE
-          write(6,*) 'coucou'
           CALL  march_noD(T,no,WP(1),WP0(1),para_H,para_propa)
         END IF
 
@@ -215,7 +214,7 @@
       USE mod_system
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,         ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -262,7 +261,7 @@
         write(out_unitp,*)
 
         DO i=1,nb_WP
-          CALL norme_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
           write(out_unitp,*) 'norm WP',i,WP(i)%norme
 
           write(out_unitp,*) 'WP BasisRep',i
@@ -307,7 +306,7 @@
        WP(i) = WP(i) * exp(-cmplx(ZERO,phase,kind=Rkind))
 
 !     - check norm ------------------
-      CALL norme_psi(WP(i),GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+      CALL norm2_psi(WP(i),GridRep=.FALSE.,BasisRep=.TRUE.)
       IF ( WP(i)%norme > WP(i)%max_norme) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -346,7 +345,7 @@
       USE mod_system
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -401,7 +400,7 @@
         write(out_unitp,*)
 
         DO i=1,nb_WP
-          CALL norme_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
           write(out_unitp,*) 'norm WP',i,WP(i)%norme
 
           write(out_unitp,*) 'WP BasisRep',i
@@ -480,7 +479,7 @@
       WP(i) = WP(i) * exp(-cmplx(ZERO,phase,kind=Rkind))
 
 !     - check norm ------------------
-      CALL norme_psi(WP(i),GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+      CALL norm2_psi(WP(i),GridRep=.FALSE.,BasisRep=.TRUE.)
       IF ( WP(i)%norme > WP(i)%max_norme) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -504,7 +503,7 @@
       USE mod_system
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -557,7 +556,7 @@
         write(out_unitp,*) 'nb_bi',WP%nb_bi
         write(out_unitp,*)
 
-          CALL norme_psi(WP,.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
           write(out_unitp,*) 'norm WP',i,WP%norme
 
           write(out_unitp,*) 'WP BasisRep'
@@ -623,7 +622,7 @@
       WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
 
       !- check norm ------------------
-      CALL norme_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+      CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
       IF ( WP%norme > WP%max_norme) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -650,7 +649,7 @@
       USE mod_system
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -705,7 +704,7 @@
         write(out_unitp,*) 'nb_bi',WP%nb_bi
         write(out_unitp,*)
 
-          CALL norme_psi(WP,.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
           write(out_unitp,*) 'norm WP',i,WP%norme
 
           write(out_unitp,*) 'WP BasisRep'
@@ -752,7 +751,7 @@
     END DO
 
     yerr = yt1(j) - yt0(j-1)
-    CALL norme_psi(yerr)
+    CALL norm2_psi(yerr)
     err1 = sqrt(yerr%norme)
 
     DO i=lbound(yt0,dim=1),ubound(yt0,dim=1)
@@ -787,7 +786,7 @@
       WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
 
       !- check norm ------------------
-      CALL norme_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+      CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
       IF ( WP%norme > WP%max_norme) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -814,7 +813,7 @@
       USE mod_system
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -868,7 +867,7 @@
         write(out_unitp,*) 'nb_bi',WP%nb_bi
         write(out_unitp,*)
 
-          CALL norme_psi(WP,.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
           write(out_unitp,*) 'norm WP',i,WP%norme
 
           write(out_unitp,*) 'WP BasisRep'
@@ -932,7 +931,7 @@
       WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
 
       !- check norm ------------------
-      CALL norme_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+      CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
       IF ( WP%norme > WP%max_norme) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -972,7 +971,7 @@
       USE mod_system
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
 
       USE mod_field,           ONLY : param_field,sub_dnE
@@ -1020,7 +1019,7 @@
         write(out_unitp,*) 'nb_bi',WP%nb_bi
         write(out_unitp,*)
 
-        CALL norme_psi(WP,.FALSE.,.TRUE.,.FALSE.)
+        CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
         write(out_unitp,*) 'norm WP BasisRep',WP%norme
 
         write(out_unitp,*) 'WP'
@@ -1057,7 +1056,7 @@
       USE mod_system
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
@@ -1086,7 +1085,7 @@
         write(out_unitp,*) 'nb_bi',WP%nb_bi
         write(out_unitp,*)
 
-        CALL norme_psi(WP,.FALSE.,.TRUE.,.FALSE.)
+        CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
         write(out_unitp,*) 'norm WP BasisRep',WP%norme
 
         write(out_unitp,*) 'WP'
@@ -1130,7 +1129,7 @@
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -1189,7 +1188,7 @@
         write(out_unitp,*)
 
         DO i=1,nb_WP
-          CALL norme_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
           write(out_unitp,*) 'norm WP',i,WP(i)%norme
 
           write(out_unitp,*) 'WP BasisRep',i
@@ -1270,7 +1269,7 @@
           END DO
           WP(j) = WP(j) + para_propa%work_WP(i+1)
 
-          CALL norme_psi(para_propa%work_WP(i+1),.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(para_propa%work_WP(i+1),.FALSE.,.TRUE.,.FALSE.)
 !         write(out_unitp,*) 'norme psi i+1',i+1,para_propa%work_WP(i+1)%norme
           IF (para_propa%work_WP(i+1)%norme <                           &
                         para_propa%para_poly%poly_tol) EXIT
@@ -1300,7 +1299,7 @@
         WP(j) = WP(j) * exp(-cmplx(ZERO,phase,kind=Rkind))
 
 !       - check norm ------------------
-        CALL norme_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+        CALL norm2_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.)
         IF ( WP(j)%norme > WP(j)%max_norme) THEN
           T  = T + para_propa%WPdeltaT
           write(out_unitp,*) ' ERROR in ',name_sub
@@ -1338,7 +1337,7 @@
       USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -1425,7 +1424,7 @@
         !write(6,21) 'Rpsi',Real(psi%CvecB,kind=Rkind)
         !write(6,21) 'Ipsi',AImag(psi%CvecB)
 
-        CALL norme_psi(w2)
+        CALL norm2_psi(w2)
 
         IF (debug) write(out_unitp,*) 'j,norme w2',j,w2%norme
 
@@ -1461,7 +1460,7 @@
  !CALL ecri_psi(psi=psi)
 
 !    - check norm ------------------
-      CALL norme_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+      CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
       IF ( psi%norme > psi%max_norme) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -1503,7 +1502,7 @@
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        CALL norme_psi(psi)
+        CALL norm2_psi(psi)
         write(out_unitp,*) 'norm psi',psi%norme
         write(out_unitp,*) 'END ',name_sub
       END IF
@@ -1525,7 +1524,7 @@
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -1557,8 +1556,16 @@
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING march_cheby'
         write(out_unitp,*) 'deltaT',para_propa%WPdeltaT
+        write(out_unitp,*) 'deltaE',para_propa%para_poly%deltaE
+        write(out_unitp,*) 'E0',para_H%E0
+        write(out_unitp,*) 'Esc',para_H%Esc
         write(out_unitp,*) 'ncheby',para_propa%para_poly%npoly
+
         write(out_unitp,*) 'psi%BasisRep psi%GridRep',psi%BasisRep,psi%GridRep
+
+        write(out_unitp,*) 'psi'
+        CALL ecri_psi(T=T,psi=psi,ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
+
       END IF
 !-----------------------------------------------------------
 
@@ -1571,6 +1578,7 @@
       r = HALF * para_propa%para_poly%deltaE * para_propa%WPdeltaT
       CALL cof(r,para_propa%para_poly%npoly,                            &
                  para_propa%para_poly%coef_poly)
+      !write(out_unitp,*) 'r,deltaE,WPdeltaT',r,para_propa%para_poly%deltaE,para_propa%WPdeltaT
       !write(out_unitp,*) 'npoly,coef_poly',para_propa%para_poly%npoly,  &
       !  para_propa%para_poly%coef_poly(1:para_propa%para_poly%npoly)
 
@@ -1614,7 +1622,7 @@
 
          psi = psi + w2 * para_propa%para_poly%coef_poly(jt)
 
-         CALL norme_psi(w2)
+         CALL norm2_psi(w2)
 
          norm_exit = abs(w2%norme*para_propa%para_poly%coef_poly(jt))
          jt_exit = jt
@@ -1632,7 +1640,7 @@
          psi0Hkpsi0(jt) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
 
       END DO
-      write(out_unitp,*)
+      write(out_unitp,*) 'jt_exit,norms',jt_exit,abs(w2%norme),norm_exit
 
       IF (norm_exit > para_propa%para_poly%poly_tol) THEN
         write(out_unitp,*) ' ERROR in march_cheby'
@@ -1655,6 +1663,10 @@
 
       phase = ZERO
       microT = ZERO
+
+      !write(out_unitp,*) 'para_propa%nb_micro',para_propa%nb_micro
+      !write(out_unitp,*) 'microdeltaT',microdeltaT
+      !write(out_unitp,*) 'microphase',microphase
 
 
       DO it=1,para_propa%nb_micro
@@ -1685,6 +1697,8 @@
 
 !-----------------------------------------------------------
       IF (debug) THEN
+        !write(out_unitp,*) 'psi'
+        !CALL ecri_psi(T=T+para_propa%WPdeltaT,psi=psi,ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
         write(out_unitp,*) 'END march_cheby'
       END IF
 !-----------------------------------------------------------
@@ -1705,7 +1719,7 @@
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -1756,8 +1770,8 @@
         w1  = w2 * rtj
         psi = psi + w1
 
-        CALL norme_psi(w1,Renorm=.FALSE.)
-        CALL norme_psi(psi,Renorm=.FALSE.)
+        CALL norm2_psi(w1)
+        CALL norm2_psi(psi)
         !write(out_unitp,*) 'j,wi%n/psi%n',j,w1%norme/psi%norme
         IF (w1%norme/psi%norme < para_propa%para_poly%poly_tol) EXIT
 
@@ -1787,7 +1801,9 @@
       USE mod_system
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
-      USE mod_psi_Op,          ONLY : norme_psi,Overlap_psi1_psi2
+      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+      USE mod_ana_psi,          ONLY : norm2_psi
+
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -1915,7 +1931,7 @@
       g = psi         *(-Ene0)
       g = g +    Hpsi *(ONE + Ene0*DeltaT)
       g = g +   H2psi *(          -DeltaT)
-      CALL norme_psi(g,Renorm=.FALSE.)
+      CALL norm2_psi(g)
       normeg = sqrt(g%norme)
 
       H2psi = psi + Hpsi * (-DeltaT)
@@ -1970,7 +1986,7 @@
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -2034,7 +2050,7 @@
         write(out_unitp,*)
 
         DO i=1,nb_WP
-          CALL norme_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
           write(out_unitp,*) 'norm WP',i,WP(i)%norme
 
           write(out_unitp,*) 'WP BasisRep',i
@@ -2131,7 +2147,7 @@
 
 
           WP(j) = WP(j) + w1 * (-EYE)
-          CALL norme_psi(w1,Renorm=.FALSE.)
+          CALL norm2_psi(w1)
           write(out_unitp,*) 'norme dkpsi k',k,w1%norme
           IF (w1%norme < para_propa%para_poly%poly_tol) EXIT
 
@@ -2152,7 +2168,7 @@
         WP(j) = WP(j) * exp(-EYE*phase)
 
 !       - check norm ------------------
-        CALL norme_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+        CALL norm2_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.)
         IF ( WP(j)%norme > WP(j)%max_norme) THEN
            T  = T + para_propa%WPdeltaT
            write(out_unitp,*) ' ERROR in ',name_sub
@@ -2190,7 +2206,7 @@
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,          ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -2256,7 +2272,7 @@
         write(out_unitp,*)
 
         DO i=1,nb_WP
-          CALL norme_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
           write(out_unitp,*) 'norm WP',i,WP(i)%norme
 
           write(out_unitp,*) 'WP BasisRep',i
@@ -2362,7 +2378,7 @@
 
           WP(j) = WP(j) + w1
 
-          CALL norme_psi(w1,Renorm=.FALSE.)
+          CALL norm2_psi(w1)
           IF (w1%norme > max_norm) max_norm = w1%norme
           write(out_unitp,*) 'norms of w1(i),max_norm',i,w1%norme,max_norm
 
@@ -2391,7 +2407,7 @@
         WP(j) = WP(j) * exp(-EYE*phase)
 
 !       - check norm ------------------
-        CALL norme_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+        CALL norm2_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.)
         IF ( WP(j)%norme > WP(j)%max_norme) THEN
           T  = T + para_propa%WPdeltaT
           write(out_unitp,*) ' ERROR in ',name_sub
@@ -2430,7 +2446,7 @@
 
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : norme_psi
+      USE mod_ana_psi,         ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -2488,7 +2504,7 @@
         write(out_unitp,*)
 
         DO i=1,nb_WP
-          CALL norme_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
           write(out_unitp,*) 'norm WP',i,WP(i)%norme
 
           write(out_unitp,*) 'WP BasisRep',i
@@ -2548,7 +2564,7 @@
         WP(j) = WP(j) * exp(-EYE*phase)
 
 !       - check norm ------------------
-        CALL norme_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+        CALL norm2_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.)
         IF ( WP(j)%norme > WP(j)%max_norme) THEN
           T  = T + para_propa%WPdeltaT
           write(out_unitp,*) ' ERROR in ',name_sub

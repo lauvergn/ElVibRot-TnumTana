@@ -52,7 +52,7 @@
       USE mod_psi_Op
       USE mod_psi_B_TO_G
       USE mod_param_WP0
-      USE mod_psi
+      USE mod_ana_psi
       USE mod_psi_io
       IMPLICIT NONE
 
@@ -124,10 +124,9 @@
           CALL ecri_psi(ZERO,WP0(1),out_unitp,.TRUE.,.FALSE.)
         END IF
 
-        CALL norme_psi(WP0(1),GridRep=.TRUE.,Renorm=.FALSE.)
+        CALL norm2_psi(WP0(1),GridRep=.TRUE.)
         write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
-
-        CALL norme_psi(WP0(1),GridRep=.TRUE.,Renorm=.TRUE.)
+        CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
         write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
 
         IF (debug) THEN
@@ -140,7 +139,7 @@
 
           CALL sub_PsiGridRep_TO_BasisRep(WP0(1))
 
-          CALL norme_psi(WP0(1),BasisRep=.TRUE.)
+          CALL norm2_psi(WP0(1),BasisRep=.TRUE.)
 
           write(out_unitp,*) 'normeWP BasisRep',WP0(1)%norme
 
@@ -151,7 +150,7 @@
             !CALL ecri_psi(psi=WP0(1),                                      &
             !              ecri_BasisRep=.TRUE.,ecri_GridRep=.TRUE.)
           END IF
-          CALL norme_psi(WP0(1),BasisRep=.TRUE.,Renorm=.TRUE.)
+          CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
 
 
         END IF
@@ -193,7 +192,7 @@
 
  END IF
 
-      CALL norme_psi(WP0(1),BasisRep=.TRUE.,Renorm=.TRUE.)
+      CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
       write(out_unitp,*) 'normeWP BasisRep',WP0(1)%norme
 
       !- clear WP0%...GridRep, if not need ------------------

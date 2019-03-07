@@ -33,6 +33,7 @@
       USE mod_field,         ONLY : param_field
       USE mod_psi_set_alloc, ONLY : param_psi
       USE mod_param_WP0,     ONLY : param_WP0
+      USE mod_type_ana_psi,       ONLY : param_ana_psi
       IMPLICIT NONE
 
 PRIVATE
@@ -194,6 +195,9 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
         logical         ::       write_BasisRep  !  write WP of the basis
         logical         ::       write_WPAdia    !  if T, write WP on the adiabatic PES (otherwise on the diabatic ones)
 
+        TYPE (param_ana_psi)  :: ana_psi         ! to control the WP analysis
+
+
         logical         ::       control         !  use control (need type_WPpropa 24)
         logical         ::       test_max_norm   ! IF .TRUE., Error in the propagation (norm too large)
         logical         ::       march_error     ! IF .TRUE., Error in the propagation
@@ -299,10 +303,13 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
       USE mod_field,         ONLY : dealloc_param_field
       USE mod_param_WP0,     ONLY : dealloc_param_WP0
       USE mod_psi_set_alloc, ONLY : dealloc_psi,dealloc_array
+      USE mod_type_ana_psi,  ONLY : dealloc_ana_psi
       IMPLICIT NONE
       TYPE (param_propa), intent(inout) :: para_propa
 
       integer :: i
+
+      CALL dealloc_ana_psi(para_propa%ana_psi)
 
       CALL dealloc_param_WP0(para_propa%para_WP0)
       CALL dealloc_param_control(para_propa%para_control)
@@ -448,7 +455,7 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
         write(out_unitp,*) 'Hmin,Hmax',para_poly%Hmin,para_poly%Hmax
         write(out_unitp,*) 'deltaE',para_poly%deltaE
         write(out_unitp,*) 'E0,Esc',para_poly%E0,para_poly%Esc
-        write(out_unitp,*) 'alpha',para_poly%alpha
+        write(out_unitp,*) 'alpha (r)',para_poly%alpha
       END IF
 !     ------------------------------------------------------
 
@@ -516,7 +523,7 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 
 !----------------------------------------------
       ncheb = max(ONE,r)
-      write(out_unitp,*) 'r, ncheb : ',r,ncheb
+      IF (debug) write(out_unitp,*) 'r, ncheb : ',r,ncheb
 
       IF (ncheb > nchmx) THEN
          write(out_unitp,*) ' ERROR in cofcheb'
@@ -596,7 +603,6 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
       integer       :: i,ier
 
       r1 = r
-      r1 = 1.65287145d0
       CALL mmbsjn(r1,ncheb,cf,ier)
 
       !write(6,*) 'Chebychev coefficients'
@@ -647,24 +653,23 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 
 !----------------------------------------------
 
-!     - determination of the order: nOD
+      !- determination of the order: nOD
       IF (nOD < 1) THEN
         i = 1
         xi = alpha
         reste = ONE +alpha
-        DO WHILE (abs(log(reste)-alpha) > epsi .AND.                    &
-                  i <= Max_nOD)
+        DO WHILE (abs(log(reste)-alpha) > epsi .AND. i <= Max_nOD)
           i = i+1
           xi = xi * alpha / real(i,kind=Rkind)
           reste = reste +xi
-!         write(out_unitp,*) 'i,xi,reste',i,xi,log(reste)-alpha
+          !write(out_unitp,*) 'i,xi,reste',i,xi,log(reste)-alpha
         END DO
         nOD  = i
         write(out_unitp,*) 'Optimal nOD1',nOD,log(reste)-alpha
         DO WHILE (xi > epsi .AND. i <= Max_nOD)
           i = i+1
           xi = xi * alpha / real(i,kind=Rkind)
-!         write(out_unitp,*) 'i,xi',i,xi
+          !write(out_unitp,*) 'i,xi',i,xi
         END DO
         nOD  = i
         IF (debug) write(out_unitp,*) 'Optimal nOD2',nOD,xi
@@ -701,148 +706,177 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
       USE mod_system
       IMPLICIT NONE
 
-      integer                :: no
+      integer                :: no,err_io
       real (kind=Rkind)      :: T
       complex (kind=Rkind)   :: cdot
 
       character (len=Name_len) :: name
       real (kind=Rkind)      :: a,b,c
 
-      read(no,*) name,T,a,b,c
-      cdot = cmplx(a,b,kind=Rkind)
+      read(no,*,IOSTAT=err_io) name,T,a,b,c
+      IF (err_io == 0) THEN
+       cdot = cmplx(a,b,kind=Rkind)
+      ELSE
+       cdot = czero
+      END IF
 !     write(out_unitp,*) name,T,cdot
 
       END SUBROUTINE Read_AutoCorr
 
-      SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,para_field)
-      USE mod_system
-      USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi
-      USE mod_field,           ONLY : param_field,sub_dnE
+SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
+  USE mod_system
+  USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
+  USE mod_field,           ONLY : param_field,sub_dnE
 
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
-      USE mod_psi_Op,          ONLY : norme_psi
-      USE mod_psi,             ONLY : sub_analyze_WP_forPropa
-      USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
-      IMPLICIT NONE
+  USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
+  USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi
+  USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
+  USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+  IMPLICIT NONE
 
-      real (kind=Rkind) :: T      ! time
+  real (kind=Rkind) :: T      ! time
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op)   :: para_H
+  TYPE (param_Op)   :: para_H
 
-!----- variables for the WP propagation ----------------------------
-      TYPE (param_propa) :: para_propa
-      TYPE (param_field), optional :: para_field
+!- variables for the WP propagation ----------------------------
+  TYPE (param_propa) :: para_propa
+  TYPE (param_field), optional :: para_field
+  logical,            optional :: adia
 
-      integer            :: nb_WP
-      TYPE (param_psi)   :: WP(:)
+  integer            :: nb_WP
+  TYPE (param_psi)   :: WP(:)
 
-!------ working parameters --------------------------------
-      TYPE (param_psi), pointer :: w2
+!-- working parameters --------------------------------
+  TYPE (param_psi)   :: w1,w2
 
-      integer       :: j,i,i_bi,i_be,i_bie
-      complex (kind=Rkind) :: ET  ! energy
-      integer       :: max_ecri
-      character (len=30) :: info
-      logical :: BasisRep,GridRep
+  integer       :: j,i,i_bi,i_be,i_bie
+  complex (kind=Rkind) :: ET  ! energy
+  character (len=30)   :: info
+  logical :: BasisRep,GridRep,adia_loc,Write_psi2_Grid,Write_psi_Grid
 
-!----- for the field --------------------------------------------------
-      real (kind=Rkind)    :: dnE(3)
-!----- for the field --------------------------------------------------
+!- for the field --------------------------------------------------
+  real (kind=Rkind)    :: dnE(3)
+!- for the field --------------------------------------------------
 
-!----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub='sub_analyze_WP_OpWP'
-      logical, parameter :: debug=.FALSE.
-!     logical, parameter :: debug=.TRUE.
+!- for debuging --------------------------------------------------
+  character (len=*), parameter :: name_sub='sub_analyze_WP_OpWP'
+  logical, parameter :: debug=.FALSE.
+! logical, parameter :: debug=.TRUE.
+!-------------------------------------------------------
+  IF (debug) THEN
+   write(out_unitp,*) 'BEGINNING ',name_sub
+   write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
+   write(out_unitp,*)
+   write(out_unitp,*) 'nb_ba,nb_qa',WP(1)%nb_ba,WP(1)%nb_qa
+   write(out_unitp,*) 'nb_bi',WP(1)%nb_bi
+   write(out_unitp,*)
+
+   DO i=1,nb_WP
+     CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
+     write(out_unitp,*) 'normepsi0 BasisRep',i,WP(1)%norme
+
+     write(out_unitp,*) 'WP(i)%BasisRep',i
+     CALL ecri_psi(T=ZERO,psi=WP(1),                               &
+                   ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
+     write(out_unitp,*) 'WP(i)%GridRep',i
+     CALL ecri_psi(T=ZERO,psi=WP(1),                               &
+                   ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
+   END DO
+  END IF
 !-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
-        write(out_unitp,*)
-        write(out_unitp,*) 'nb_ba,nb_qa',WP(1)%nb_ba,WP(1)%nb_qa
-        write(out_unitp,*) 'nb_bi',WP(1)%nb_bi
-        write(out_unitp,*)
 
-        DO i=1,nb_WP
-          CALL norme_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
-          write(out_unitp,*) 'normepsi0 BasisRep',i,WP(1)%norme
+  Write_psi2_Grid = para_propa%ana_psi%Write_psi2_Grid
+  Write_psi_Grid  = para_propa%ana_psi%Write_psi_Grid
 
-          write(out_unitp,*) 'WP(i)%BasisRep',i
-          CALL ecri_psi(T=ZERO,psi=WP(1),                               &
-                        ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
-          write(out_unitp,*) 'WP(i)%GridRep',i
-          CALL ecri_psi(T=ZERO,psi=WP(1),                               &
-                        ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
-        END DO
-       END IF
-!-----------------------------------------------------------
+  BasisRep = WP(1)%BasisRep
+  GridRep  = WP(1)%GridRep
 
- BasisRep = WP(1)%BasisRep
- GridRep  = WP(1)%GridRep
+  para_propa%ana_psi%T = T
+
+  IF (present(adia)) THEN
+    adia_loc = adia
+  ELSE
+    adia_loc = para_propa%Write_WPAdia
+  END IF
+
+  IF (.NOT. para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done) adia_loc = .FALSE.
+
+  !-----------------------------------------------------------
+  ! => the WPs on the Grid
+  IF (.NOT. para_propa%ana_psi%GridDone) THEN
+    DO i=1,nb_WP
+      CALL sub_PsiBasisRep_TO_GridRep(WP(i))
+    END DO
+  END IF
+  para_propa%ana_psi%GridDone = .TRUE.
+  !-----------------------------------------------------------
+
+  !-----------------------------------------------------------
+   IF (present(para_field)) THEN
+     CALL sub_dnE(dnE,0,T,para_field)
+     para_propa%ana_psi%With_field = .TRUE.
+     para_propa%ana_psi%field      = dnE
+   ELSE
+     para_propa%ana_psi%With_field = .FALSE.
+     para_propa%ana_psi%field      = (/ZERO,ZERO,ZERO/)
+   END IF
+  !-----------------------------------------------------------
+
+  !-----------------------------------------------------------
+  w2 = WP(1) ! just for the initialization
+  CALL alloc_psi(w2,GridRep=.TRUE.)
+
+  DO i=1,nb_WP
+    !-----------------------------------------------------------
+    ! => Analysis for diabatic potential (always done)
+
+    ! =>first the energy
+    w1 = WP(i)
+    CALL norm2_psi(w1,.FALSE.,.TRUE.,.FALSE.)
+    CALL sub_PsiOpPsi(ET,w1,w2,para_H)
+    WP(i)%CAvOp = ET/w1%norme
+
+    para_propa%ana_psi%num_psi = i
+    para_propa%ana_psi%Ene     = real(WP(i)%CAvOp,kind=Rkind)
+
+    ! => The analysis (diabatic)
+    para_propa%ana_psi%adia = .FALSE.
+    para_propa%ana_psi%Write_psi2_Grid = Write_psi2_Grid
+    para_propa%ana_psi%Write_psi_Grid  = Write_psi_Grid
+    CALL sub_analyze_psi(WP(i),para_propa%ana_psi)
+
+    ! => The analysis (adiabatic)
+    IF (adia_loc) THEN
+      w1 = WP(i)
+      !CALL sub_PsiBasisRep_TO_GridRep(w1)
+      !para_propa%ana_psi%GridDone = .TRUE.
+      para_propa%ana_psi%adia = .TRUE.
+      para_propa%ana_psi%Write_psi2_Grid = Write_psi2_Grid
+      para_propa%ana_psi%Write_psi_Grid  = .FALSE.
+      CALL sub_PsiDia_TO_PsiAdia_WITH_MemGrid(w1,para_H)
+      CALL sub_analyze_psi(w1,para_propa%ana_psi)
+    END IF
+    CALL flush_perso(out_unitp)
+
+    para_propa%ana_psi%adia = .FALSE.
+    CALL alloc_psi(WP(i),BasisRep=BasisRep,GridRep=GridRep)
+
+  END DO
+
+  CALL dealloc_psi(w1,delete_all=.TRUE.)
+  CALL dealloc_psi(w2,delete_all=.TRUE.)
 
 
-!-----------------------------------------------------------
-        max_ecri = min(25,WP(1)%nb_tot)
+  para_propa%ana_psi%GridDone = .FALSE.
 
-        ! -- for set the GridRep grid for w2 ----------------------
-        w2 => para_propa%work_WP(0)
-        w2 = WP(1)
-        w2%GridRep=.TRUE.
-        CALL alloc_psi(w2)
 
-        IF (present(para_field)) THEN
-          CALL sub_dnE(dnE,0,T,para_field)
-        ELSE
-          dnE(:) = ZERO
-        END IF
-
-        DO j=1,nb_WP
-          CALL norme_psi(WP(j),.FALSE.,.TRUE.,.FALSE.)
-
-          CALL sub_PsiOpPsi(ET,WP(j),w2,para_H)
-          WP(j)%CAvOp = ET/WP(j)%norme
-        END DO
-
-        IF (present(para_field)) THEN
-          CALL sub_dnE(dnE,0,T,para_field)
-          CALL sub_analyze_WP_forPropa(T,WP,nb_WP,dnE)
-        ELSE
-          CALL sub_analyze_WP_forPropa(T,WP,nb_WP)
-        END IF
-
-!
-!        DO i=1,nb_WP
-!          IF (WP(i)%ComOp%nb_bi == 1) THEN
-!            !CALL sub_TPsi(WP(i),w2,para_H)
-!            CALL Overlap_psi1_psi2(ET,WP(i),w2)
-!            write(out_unitp,12) T,i,0,ET,WP(i)%norme
-!            IF (WP(i)%ComOp%nb_bie > 1) THEN
-!              DO i_be=1,WP(i)%ComOp%nb_be
-!              DO i_bi=1,WP(i)%ComOp%nb_bi
-!                i_bie = i_bi + (i_be-1)*WP(i)%ComOp%nb_bi
-!                CALL Overlap_psi1_psi2(ET,WP(i),w2,Channel_ie=i_bie)
-!                write(out_unitp,12) T,i,i_bie,ET
-!              END DO
-!              END DO
-!            END IF
-!          END IF
-!
-! 12       format(                                                       &
-!           'norme_KE',f12.2,2(1x,i3),' (',2(1x,f22.8),' )')
-!
-!          ! switch back to the initial representation (Grid are basis)
-!          CALL alloc_psi(WP(i),BasisRep=BasisRep,GridRep=GridRep)
-!        END DO
-
-        CALL flush_perso(out_unitp)
 !----------------------------------------------------------
-
-!----------------------------------------------------------
-       IF (debug) THEN
-         write(out_unitp,*) 'END ',name_sub
-       END IF
-!----------------------------------------------------------
-      END SUBROUTINE sub_analyze_WP_OpWP
+    IF (debug) THEN
+      write(out_unitp,*) 'END ',name_sub
+    END IF
+!-------------------------------------------------------
+END SUBROUTINE sub_analyze_WP_OpWP
 
 !================================================================
 ! ++    read the namelist for the wavepacket propagation
@@ -1160,9 +1194,37 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
         para_propa%write_WPAdia       = write_WPAdia
 
         para_propa%file_autocorr%name    = make_FileName(file_autocorr)
+        IF (err_file_name(para_propa%file_autocorr%name,name_sub='read_propagation') /= 0) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  the file_autocorr file name is empty'
+          write(out_unitp,*) '  => check your data!!'
+          STOP
+        END IF
+
         para_propa%file_spectrum%name    = make_FileName(file_spectrum)
+        IF (err_file_name(para_propa%file_spectrum%name,name_sub='read_propagation') /= 0) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  the file_spectrum file name is empty'
+          write(out_unitp,*) '  => check your data!!'
+          STOP
+        END IF
+
         para_propa%file_WP%name          = make_FileName(file_WP)
+        IF (err_file_name(para_propa%file_WP%name,name_sub='read_propagation') /= 0) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  the file_WP file name is empty'
+          write(out_unitp,*) '  => check your data!!'
+          STOP
+        END IF
+
         para_propa%file_WP_restart%name  = make_FileName(file_restart)
+        IF (restart .AND. .NOT. check_file_exist_WITH_file_name(para_propa%file_WP_restart%name)) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  the restart file does not exist or its file name is empty'
+          write(out_unitp,*) '  file_restart: ',file_restart
+          write(out_unitp,*) '  => check your data!!'
+          STOP
+        END IF
 
         para_propa%para_WP0%nb_WP0        = nb_WP0
         para_propa%para_WP0%New_Read_WP0  = New_Read_WP0
@@ -1179,6 +1241,14 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
         para_propa%para_WP0%WP0restart    = WP0restart
         para_propa%para_WP0%WP0cplx       = WP0cplx
         para_propa%para_WP0%file_WP0%name = make_FileName(file_WP0)
+        IF (read_file .AND. .NOT.                                       &
+            check_file_exist_WITH_file_name(para_propa%para_WP0%file_WP0%name)) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  the file_WP0 file does not exist or its file name is empty'
+          write(out_unitp,*) '  file_WP0: ',file_WP0
+          write(out_unitp,*) '  => check your data!!'
+          STOP
+        END IF
         para_propa%para_WP0%WP0_nb_CleanChannel = WP0_nb_CleanChannel
         IF (WP0_nb_CleanChannel > 0) THEN
           write(out_unitp,*)
@@ -1582,6 +1652,13 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
       para_Davidson%precond_tol           = precond_tol
       para_Davidson%name_file_readWP      = make_FileName(name_file_readWP)
       para_Davidson%formatted_file_readWP = formatted_file_readWP
+      IF (read_WP .AND. .NOT. check_file_exist_WITH_file_name(para_Davidson%name_file_readWP)) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) '  the name_file_readWP does not exist or its file name is empty'
+        write(out_unitp,*) '  name_file_readWP: ',name_file_readWP
+        write(out_unitp,*) '  => check your data!!'
+        STOP
+      END IF
 
       para_Davidson%lower_states          = lower_states
       para_Davidson%all_lower_states      = all_lower_states
@@ -1608,6 +1685,12 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
       para_Davidson%scaled_max_ene    = scaled_max_ene
       para_Davidson%save_max_nb       = save_max_nb
       para_Davidson%name_file_saveWP  = make_FileName(name_file_saveWP)
+      IF (err_file_name(para_Davidson%name_file_saveWP,name_sub='read_davidson') /= 0) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) '  the name_file_saveWP file name is empty'
+        write(out_unitp,*) '  => check your data!!'
+        STOP
+      END IF
 
       write(out_unitp,*) 'para_Davidson%Max_ene       ',para_Davidson%Max_ene
       write(out_unitp,*) 'para_Davidson%scaled_max_ene',para_Davidson%scaled_max_ene

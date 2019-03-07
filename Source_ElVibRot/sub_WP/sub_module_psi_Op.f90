@@ -31,325 +31,6 @@
 
    CONTAINS
 
-!================================================================
-!
-!     norm^2 of psi (BasisRep or GridRep)
-!
-!================================================================
-
-      SUBROUTINE norme_psi(psi,GridRep,BasisRep,ReNorm)
-      USE mod_system
-      USE mod_psi_set_alloc
-      IMPLICIT NONE
-
-!----- variables for the WP ----------------------------------------
-      TYPE (param_psi), intent(inout) :: psi
-      logical, intent(in), optional   :: ReNorm,GridRep,BasisRep
-
-!------ working variables ---------------------------------
-      integer       :: i_qa,i_qaie
-      integer       :: i_be,i_bi,i_ba,i_baie
-      integer       :: ii_baie,if_baie
-      real (kind=Rkind) :: WrhonD,temp
-      integer       :: i_max_w
-
-      logical       :: psiN,normeGridRep,normeBasisRep
-
-      real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)
-
-
-!----- for debuging --------------------------------------------------
-      logical,parameter :: debug = .FALSE.
-      !logical,parameter :: debug = .TRUE.
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING norme_psi'
-        IF (present(ReNorm)) write(out_unitp,*) 'Renormalization of psi',ReNorm
-        IF (present(GridRep)) write(out_unitp,*) 'normeGridRep',GridRep
-        IF (present(BasisRep)) write(out_unitp,*) 'normeBasisRep',BasisRep
-        write(out_unitp,*) 'psi'
-        CALL ecri_psi(psi=psi)
-      END IF
-!-----------------------------------------------------------
-
-      IF (present(ReNorm)) THEN
-        psiN = ReNorm
-      ELSE
-        psiN = .FALSE.
-      END IF
-
-      !normeGridRep = .FALSE.
-      !normeBasisRep = .TRUE.
-
-      IF (present(GridRep)) THEN
-        IF (present(BasisRep)) THEN
-          normeGridRep  = GridRep
-          normeBasisRep = BasisRep
-        ELSE
-          normeGridRep  = GridRep
-          normeBasisRep = .FALSE.
-        END IF
-      ELSE
-        IF (present(BasisRep)) THEN
-          normeBasisRep = BasisRep
-          normeGridRep  = .FALSE.
-        ELSE
-          normeBasisRep = psi%BasisRep
-          normeGridRep  = psi%GridRep
-       END IF
-     END IF
-
-      IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep,psiN',normeGridRep,normeBasisRep,psiN
-      IF (normeGridRep .AND. normeBasisRep) THEN
-        write(out_unitp,*) ' ERROR in norme_psi'
-        write(out_unitp,*) ' normeGridRep=t and normeBasisRep=t !'
-        STOP
-      END IF
-
-
-      CALL Channel_weight(tab_WeightChannels,psi,normeGridRep,normeBasisRep)
-
-      IF (debug)  write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
-
-      psi%norme = sum(tab_WeightChannels)
-
-      IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme,tab_WeightChannels
-      END IF
-
-
-
-      IF (psiN) THEN
-
-        IF (psi%norme .EQ. ZERO ) THEN
-          write(out_unitp,*) ' ERROR in norme_psi'
-          write(out_unitp,*) ' the norme is zero !',psi%norme
-          STOP
-        END IF
-        temp = ONE/psi%norme
-        tab_WeightChannels = tab_WeightChannels * temp
-        temp = sqrt(temp)
-
-        IF (normeGridRep) THEN
-!         - normalization of psiGridRep -------------------------
-          IF (psi%cplx) THEN
-            psi%CvecG(:) = psi%CvecG(:) *cmplx(temp,ZERO,kind=Rkind)
-          ELSE
-            psi%RvecG(:) = psi%RvecG(:) * temp
-          END IF
-        ELSE
-!         - normalization of psiBasisRep -------------------------
-          IF (psi%cplx) THEN
-            psi%CvecB(:) = psi%CvecB(:) *cmplx(temp,ZERO,kind=Rkind)
-          ELSE
-            psi%RvecB(:) = psi%RvecB(:) * temp
-          END IF
-        END IF
-        psi%norme = ONE
-      END IF
-
-      IF (allocated(tab_WeightChannels)) THEN
-        CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","Channel_weight")
-      END IF
-
-!----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme,tab_WeightChannels
-        write(out_unitp,*) 'END norme_psi'
-      END IF
-!----------------------------------------------------------
-
-      END SUBROUTINE norme_psi
-      SUBROUTINE Channel_weight(tab_WeightChannels,psi,GridRep,BasisRep)
-      USE mod_system
-      USE mod_psi_set_alloc
-      IMPLICIT NONE
-
-!----- variables for the WP ----------------------------------------
-      real (kind=Rkind), intent(inout), allocatable :: tab_WeightChannels(:,:)
-      TYPE (param_psi),  intent(inout)              :: psi
-      logical,           intent(in)                 :: GridRep,BasisRep
-
-!------ working variables ---------------------------------
-      integer       :: i_qa,i_qaie
-      integer       :: i_be,i_bi,i_ba,i_baie
-      integer       :: ii_baie,if_baie
-      real (kind=Rkind) :: WrhonD,temp
-      integer       :: i_max_w
-
-
-!----- for debuging --------------------------------------------------
-      logical,parameter :: debug = .FALSE.
-      !logical,parameter :: debug = .TRUE.
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING Channel_weight'
-        write(out_unitp,*) 'GridRep',GridRep
-        write(out_unitp,*) 'BasisRep',BasisRep
-        write(out_unitp,*) 'psi'
-        CALL ecri_psi(psi=psi)
-      END IF
-!-----------------------------------------------------------
-
-
-
-      IF (GridRep .AND. BasisRep) THEN
-        write(out_unitp,*) ' ERROR in Channel_weight'
-        write(out_unitp,*) ' GridRep=t and BasisRep=t !'
-        STOP
-      END IF
-
-      IF (.NOT. allocated(tab_WeightChannels) .AND.                     &
-                           psi%nb_bi > 0 .AND. psi%nb_be > 0) THEN
-        CALL alloc_NParray(tab_WeightChannels,(/psi%nb_bi,psi%nb_be/),      &
-                           "tab_WeightChannels","Channel_weight")
-        tab_WeightChannels(:,:) = ZERO
-      END IF
-
-      IF (psi%ComOp%contrac_ba_ON_HAC) THEN
-
-        CALL Channel_weight_contracADA(tab_WeightChannels(:,1),i_max_w,psi)
-
-      ELSE IF (psi%nb_baie == psi%nb_tot) THEN
-
-      IF (BasisRep .AND.                                                &
-          (allocated(psi%CvecB) .OR. allocated(psi%RvecB)) ) THEN
-
-        DO i_be=1,psi%nb_be
-        DO i_bi=1,psi%nb_bi
-          ii_baie = 1 + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_ba
-          if_baie = ii_baie -1 + psi%nb_ba
-
-          IF (psi%cplx) THEN
-            tab_WeightChannels(i_bi,i_be) =                             &
-               real(dot_product(psi%CvecB(ii_baie:if_baie),             &
-                                psi%CvecB(ii_baie:if_baie)) ,kind=Rkind)
-          ELSE
-            tab_WeightChannels(i_bi,i_be) =                               &
-               dot_product(psi%RvecB(ii_baie:if_baie),                &
-                           psi%RvecB(ii_baie:if_baie))
-          END IF
-        END DO
-        END DO
-
-      ELSE IF (GridRep .AND.                                           &
-          (allocated(psi%CvecG) .OR. allocated(psi%RvecG)) ) THEN
-
-!       - initialization ----------------------------------
-        tab_WeightChannels(:,:) = ZERO
-
-        DO i_qa=1,psi%nb_qa
-
-!         - calculation of WrhonD ------------------------------
-          WrhonD = Rec_WrhonD(psi%BasisnD,i_qa)
-
-          DO i_be=1,psi%nb_be
-          DO i_bi=1,psi%nb_bi
-            i_qaie = i_qa + ( (i_bi-1)+(i_be-1)*psi%nb_bi ) * psi%nb_qa
-
-            IF (psi%cplx) THEN
-              temp = abs( psi%CvecG(i_qaie))
-            ELSE
-              temp = psi%RvecG(i_qaie)
-            END IF
-            tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) + &
-                                            WrhonD * temp**2
-          END DO
-          END DO
-        END DO
-
-      ELSE
-
-        write(out_unitp,*) ' ERROR in Channel_weight'
-        IF (GridRep)  write(out_unitp,*) ' impossible to calculate the weights with the Grid'
-        IF (BasisRep) write(out_unitp,*) ' impossible to calculate the weights with the Basis'
-        STOP
-      END IF
-
-      ELSE
-!       - To deal with a spectral representation ------
-
-        tab_WeightChannels(:,:) = ZERO
-
-        IF (psi%cplx) THEN
-          tab_WeightChannels(1,1) = real(dot_product(psi%CvecB,psi%CvecB),kind=Rkind)
-        ELSE
-          tab_WeightChannels(1,1) = dot_product(psi%RvecB,psi%RvecB)
-        END IF
-      END IF
-
-
-
-!----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
-        write(out_unitp,*) 'END Channel_weight'
-      END IF
-!----------------------------------------------------------
-
-      END SUBROUTINE Channel_weight
-      SUBROUTINE Channel_weight_contracADA(w_harm,i_max_w,psi)
-      USE mod_system
-      USE mod_psi_set_alloc
-      IMPLICIT NONE
-
-       TYPE (param_psi)   :: psi
-
-       real (kind=Rkind) :: w_harm(psi%nb_bi)
-
-       real (kind=Rkind) :: max_w
-       integer       :: i_max_w,ih,ihk,k
-
-
-!----- for debuging --------------------------------------------------
-      logical, parameter :: debug=.FALSE.
-      !logical, parameter :: debug=.TRUE.
-!-----------------------------------------------------------
-       IF (debug) THEN
-         write(out_unitp,*) 'BEGINNING Channel_weight_contracADA'
-         write(out_unitp,*) 'nb_bi,nb_ai',psi%nb_bi
-       END IF
-!-----------------------------------------------------------
-
-
-!        weight on the harmonic states
-         max_w = ZERO
-         i_max_w = 0
-         DO ih=1,psi%nb_bi
-
-           ihk = sum(psi%ComOp%nb_ba_ON_HAC(1:ih-1))
-           w_harm(ih) = ZERO
-           DO k=1,psi%ComOp%nb_ba_ON_HAC(ih)
-             ihk = ihk + 1
-             IF (psi%cplx) THEN
-               w_harm(ih) = w_harm(ih) + abs(psi%CvecB(ihk))**2
-             ELSE
-               w_harm(ih) = w_harm(ih) + psi%RvecB(ihk)**2
-             END IF
-           END DO
-           IF ( w_harm(ih) > max_w ) THEN
-             max_w = w_harm(ih)
-             i_max_w = ih
-           END IF
-         END DO
-
-         IF (i_max_w < 1) THEN
-           CALL ecri_psi(psi=psi)
-           write(out_unitp,*) ' ERROR in Channel_weight_contracADA'
-           write(out_unitp,*) ' the index of the max weight is < 1!',i_max_w
-           write(out_unitp,*) ' Check the source!!'
-           STOP
-         END IF
-
-
-!----------------------------------------------------------
-        IF (debug) THEN
-          write(out_unitp,*) 'END Channel_weight_contracADA'
-        END IF
-!----------------------------------------------------------
-
-
-      end subroutine Channel_weight_contracADA
 
 !================================================================
 !
@@ -778,6 +459,7 @@
       USE mod_system
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
+      USE mod_ana_psi
       IMPLICIT NONE
 
       integer            :: nb_psi
@@ -816,9 +498,9 @@
         END DO
         CALL Set_symab_OF_psiBasisRep(psi(i),sym)
 
-!       CALL norme_psi(psi(i),Renorm=.FALSE.)
+!       CALL norm2_psi(psi(i))
 !       write(out_unitp,*) ' Ortho: norme',i,psi(i)%norme
-        CALL norme_psi(psi(i),Renorm=.TRUE.)
+        CALL renorm_psi(psi(i))
         !write(out_unitp,*) 'symab, bits(symab)',WriteTOstring_symab(psi(i)%symab)
 
       END DO
@@ -834,6 +516,7 @@
       USE mod_system
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
+      USE mod_ana_psi
       IMPLICIT NONE
 
       integer            :: nb_psi
@@ -866,7 +549,7 @@
 
       IF (psi(1)%cplx) THEN
         DO i=1,nb_psi
-        CALL norme_psi(psi(i),Renorm=.TRUE.)
+        CALL renorm_psi(psi(i))
         DO j=1,i-1
           CALL Overlap_psi1_psi2(Overlap,psi(i),psi(j))
           CS(i,j) =  Overlap
@@ -877,7 +560,7 @@
       ELSE
         ! first the overlap matrix
         DO i=1,nb_psi
-        CALL norme_psi(psi(i),Renorm=.TRUE.)
+        CALL renorm_psi(psi(i))
         DO j=1,i
           CALL Overlap_psi1_psi2(Overlap,psi(i),psi(j))
           RS(i,j) =  Real(Overlap,kind=Rkind)
@@ -901,7 +584,7 @@
           DO j=1,nb_psi
             psi(i) = psi(i) + Vec(j,i) * TempPsi(j)
           END DO
-          CALL norme_psi(psi(i),Renorm=.TRUE.)
+          CALL renorm_psi(psi(i))
           psi(i)%CAvOp    = cmplx(Eig(i),kind=Rkind)
         END DO
 

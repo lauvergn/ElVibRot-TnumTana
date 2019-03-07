@@ -238,7 +238,7 @@ SUBROUTINE ini_data(const_phys,                                         &
 
 !---------------------------------------------------------------------
 !------- read the parameter to analyze wave functions ----------------
-      CALL alloc_NParray(Qana,(/ mole%nb_act /),"Qana",name_sub)
+      CALL alloc_NParray(Qana,(/ mole%nb_var /),"Qana",name_sub)
       CALL get_Qact0(Qana,mole%ActiveTransfo)
 
       CALL read_analyse(para_ana,Qana)
@@ -300,6 +300,11 @@ SUBROUTINE ini_data(const_phys,                                         &
         para_propa%para_WP0%WP0n_h =                                    &
                             min(get_nb_bi_FROM_AllBasis(para_AllBasis), &
                                 para_propa%para_WP0%WP0n_h)
+
+        IF (para_propa%Write_WPAdia) para_ana%ana_psi%adia = .TRUE.
+        para_ana%ana_psi%file_Psi  = para_propa%file_WP
+
+        para_propa%ana_psi = para_ana%ana_psi
 
       END IF
 

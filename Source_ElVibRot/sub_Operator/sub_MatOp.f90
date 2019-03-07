@@ -2320,7 +2320,7 @@ CONTAINS
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
 
       USE mod_SetOp
-      USE mod_psi
+      USE mod_ana_psi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2574,7 +2574,6 @@ CONTAINS
       USE mod_SetOp
       USE mod_OpPsi
       USE mod_psi_set_alloc
-      !USE mod_psi
       USE mod_psi_SimpleOp
       USE mod_psi_Op
       IMPLICIT NONE

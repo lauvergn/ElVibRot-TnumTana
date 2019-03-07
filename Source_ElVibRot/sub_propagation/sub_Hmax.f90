@@ -32,7 +32,7 @@
       USE mod_Op
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_propa
       USE mod_FullPropa
       USE mod_Davidson
@@ -65,8 +65,6 @@
 
       real (kind=Rkind) :: Qdyn(para_H%mole%nb_var)
       real (kind=Rkind) :: Qact(para_H%mole%nb_act1)
-      !real (kind=Rkind) :: imOp_bhe(para_H%nb_bie,para_H%nb_bie)
-      !real (kind=Rkind) :: AllOp_bhe(para_H%nb_bie,para_H%nb_bie,para_H%nb_term)
       TYPE (param_d0MatOp) :: d0MatOp
       integer              :: type_Op
 
@@ -181,8 +179,7 @@
       END IF
       psi%symab = -1
 
-      CALL norme_psi(psi,BasisRep=.TRUE.,Renorm=.TRUE.)
-      IF (debug) write(out_unitp,*) 'psi%norme',psi%norme
+      CALL renorm_psi(psi,BasisRep=.TRUE.)
       IF (debug) write(out_unitp,*) 'psi%symab',psi%symab
 
       Hpsi = psi
@@ -298,7 +295,7 @@ relax = .TRUE.
       USE mod_Op
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_propa
       USE mod_FullPropa
       IMPLICIT NONE
@@ -320,8 +317,8 @@ relax = .TRUE.
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub = 'sub_Auto_HmaxHmin_relax'
       integer :: err_mem,memory
-!      logical,parameter :: debug=.FALSE.
-     logical,parameter :: debug=.TRUE.
+      logical,parameter :: debug=.FALSE.
+      !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       write(out_unitp,*) 'BEGINNING ',name_sub,' ',para_H%nb_tot
       write(out_unitp,*) 'Hmin,Hmax',para_H%Hmin,para_H%Hmax
@@ -342,6 +339,10 @@ relax = .TRUE.
         para_propa_loc%para_poly%max_poly     = 20
         para_propa_loc%para_poly%npoly        = 20
 
+        CALL alloc_array(para_propa_loc%work_WP,                        &
+                                  (/para_propa_loc%para_poly%npoly+6/), &
+                        "para_propa_loc%work_WP",name_sub,(/0/))
+
         CALL alloc_array(para_propa_loc%para_poly%coef_poly,(/2/),      &
                         "para_propa_loc%para_poly%coef_poly",name_sub)
 
@@ -352,8 +353,8 @@ relax = .TRUE.
         para_propa_loc%n_WPecri          = 1
         para_propa_loc%WPpsi2            = .FALSE.
         para_propa_loc%WPpsi             = .FALSE.
-        para_propa_loc%file_WP%name      = 'file_WP'
         para_propa_loc%file_autocorr%name= 'WP_auto'
+
 
         CALL init_psi(WP,para_H,para_H%cplx)
         WP%GridRep = .TRUE.
@@ -365,9 +366,11 @@ relax = .TRUE.
         CALL alloc_psi(WP0)
 
         !---- for Hmax -----------------------------------------
-        para_propa_loc%name_WPpropa  = 'Emax'
+        para_propa_loc%name_WPpropa      = 'Emax'
+        para_propa_loc%file_WP%name     = make_FileName('file_WP_Hmax')
+        para_propa_loc%ana_psi%file_Psi = para_propa_loc%file_WP
+
         WP0 = ZERO
-        !DO i=max(WP0%nb_tot*99/100,1),WP0%nb_tot
         DO i=1,WP0%nb_tot
 
           CALL random_number(a)
@@ -378,7 +381,7 @@ relax = .TRUE.
           END IF
         END DO
         WP0%symab = -1
-        CALL norme_psi(WP0,BasisRep=.TRUE.,Renorm=.TRUE.)
+        CALL renorm_psi(WP0,BasisRep=.TRUE.)
 
         para_propa_loc%type_WPpropa = -3
         CALL sub_propagation3(Emax,WP0,WP,para_H,para_propa_loc)
@@ -389,8 +392,10 @@ relax = .TRUE.
 
         !---- for Hmin -----------------------------------------
         para_propa_loc%name_WPpropa       = 'Emin'
+        para_propa_loc%file_WP%name       = make_FileName('file_WP_Hmin')
+        para_propa_loc%ana_psi%file_Psi   = para_propa_loc%file_WP
         para_propa_loc%para_poly%poly_tol = ONETENTH**8
-        para_propa_loc%WPdeltaT       = ONE
+        para_propa_loc%WPdeltaT           = ONE
 
         WP0 = ZERO
         DO i=1,max(WP0%nb_tot/100,1)
@@ -402,7 +407,7 @@ relax = .TRUE.
           END IF
         END DO
         WP0%symab = -1
-        CALL norme_psi(WP0,BasisRep=.TRUE.,Renorm=.TRUE.)
+        CALL renorm_psi(WP0,BasisRep=.TRUE.)
 
         para_propa_loc%type_WPpropa = 3
         CALL sub_propagation3(Emax,WP0,WP,para_H,para_propa_loc)
@@ -413,8 +418,7 @@ relax = .TRUE.
         CALL dealloc_psi(WP0)
         CALL dealloc_psi(WP)
 
-        CALL dealloc_array(para_propa_loc%para_poly%coef_poly,          &
-                          "para_propa_loc%para_poly%coef_poly",name_sub)
+        CALL dealloc_param_propa(para_propa_loc)
 
         para_propa%para_poly%DHmax        = ZERO
 

@@ -57,8 +57,9 @@ CONTAINS
                                                    para_H,para_propa)
       USE mod_system
       USE mod_Op
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_psi_SimpleOp
+      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -370,7 +371,7 @@ nb = size(P0_cheby)
     END DO
   END IF
   CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
-  CALL norme_psi(q1,BasisRep=.TRUE.,Renorm=.TRUE.)
+  CALL renorm_psi(q1,BasisRep=.TRUE.)
 !- vector initialization:  q1 -----------
 
 !----------------------------------------------------------
@@ -457,7 +458,7 @@ nb = size(P0_cheby)
             w1 = Hz(i) - z(i) * Ene(j)
             g = g + w1 * Vec(i,j)
           END DO
-          CALL norme_psi(g,Renorm=.FALSE.)
+          CALL norm2_psi(g)
           tab_normeg(j) = sqrt(g%norme)
           convergeResi(j) = tab_normeg(j) < epsi
 
@@ -564,8 +565,9 @@ STOP
                                                    para_H,para_propa)
       USE mod_system
       USE mod_Op
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_psi_SimpleOp
+      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -751,7 +753,7 @@ STOP
     END DO
   END IF
   CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
-  CALL norme_psi(q1,BasisRep=.TRUE.,Renorm=.TRUE.)
+  CALL renorm_psi(q1,BasisRep=.TRUE.)
 !- vector initialization:  q1 -----------
 
 
@@ -840,7 +842,7 @@ STOP
             w1 = Hz(i) - z(i) * Ene(j)
             g = g + w1 * Vec(i,j)
           END DO
-          CALL norme_psi(g,Renorm=.FALSE.)
+          CALL norm2_psi(g)
           tab_normeg(j) = sqrt(g%norme)
           convergeResi(j) = tab_normeg(j) < epsi
 
@@ -947,8 +949,9 @@ STOP
                                                    para_H,para_propa)
       USE mod_system
       USE mod_Op
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_psi_SimpleOp
+      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -1052,7 +1055,7 @@ STOP
         END DO
       END IF
       CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
-      CALL norme_psi(q1,BasisRep=.TRUE.,Renorm=.TRUE.)
+      CALL renorm_psi(q1,BasisRep=.TRUE.)
       !- vector initialization:  q1 + others -----------
 
      write(out_unitp,*) 'W_filter (ua)  : ',para_propa%para_Davidson%W_filter
@@ -1212,7 +1215,7 @@ STOP
             w1 = Hz(i) - z(i) * Ene(j)
             g = g + w1 * Vec(i,j)
           END DO
-          CALL norme_psi(g,Renorm=.FALSE.)
+          CALL norm2_psi(g)
           tab_normeg(j) = sqrt(g%norme)
           convergeResi(j) = tab_normeg(j) < epsi
 
@@ -1322,9 +1325,9 @@ STOP
                                            para_H,para_propa)
       USE mod_system
       USE mod_Op
-      !USE mod_psi
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_psi_SimpleOp
+      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -1424,7 +1427,7 @@ STOP
         END DO
       END IF
       CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
-      CALL norme_psi(q1,BasisRep=.TRUE.,Renorm=.TRUE.)
+      CALL renorm_psi(q1,BasisRep=.TRUE.)
       !- vector initialization:  q1 + others -----------
 
      write(out_unitp,*) 'W_filter (ua)  : ',para_propa%para_Davidson%W_filter
@@ -1529,7 +1532,7 @@ STOP
             w1 = Hz(i) - z(i) * Ene(j)
             g = g + w1 * Vec(i,j)
           END DO
-          CALL norme_psi(g,Renorm=.FALSE.)
+          CALL norm2_psi(g)
           tab_normeg(j) = sqrt(g%norme)
           convergeResi(j) = tab_normeg(j) < epsi
 
@@ -1632,8 +1635,7 @@ STOP
                                            para_H,para_propa)
       USE mod_system
       USE mod_Op
-      !USE mod_psi
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
@@ -1724,7 +1726,7 @@ STOP
         END DO
       END IF
       CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
-      CALL norme_psi(q1,BasisRep=.TRUE.,Renorm=.TRUE.)
+      CALL renorm_psi(q1,BasisRep=.TRUE.)
 
       DO j=1,nb_diago
         CALL init_psi(psi(j),para_H,para_H%cplx)
@@ -1878,7 +1880,7 @@ STOP
             w1 = Hz(i) - z(i) * Ene(j)
             g = g + w1 * Vec(i,j)
           END DO
-          CALL norme_psi(g,Renorm=.FALSE.)
+          CALL norm2_psi(g)
           tab_normeg(j) = sqrt(g%norme)
           convergeResi(j) = tab_normeg(j) < epsi
 
@@ -1927,9 +1929,9 @@ STOP
                                            para_H,para_propa)
       USE mod_system
       USE mod_Op
-      !USE mod_psi
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_psi_SimpleOp
+      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -2018,7 +2020,7 @@ STOP
         END DO
       END IF
       CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
-      CALL norme_psi(q1,BasisRep=.TRUE.,Renorm=.TRUE.)
+      CALL renorm_psi(q1,BasisRep=.TRUE.)
 
       DO j=1,nb_diago
         CALL init_psi(psi(j),para_H,para_H%cplx)
@@ -2093,11 +2095,11 @@ STOP
       !- z vectors (orthonormalized) -----------------------------------
       jorth = 0
       DO j=1,para_propa%para_Davidson%L_filter
-        CALL norme_psi(z(j),Renorm=.TRUE.)
+        CALL renorm_psi(z(j))
         write(6,*) 'j,norm',j,z(j)%norme
 
         DO i=1,jorth
-          CALL norme_psi(z(i),Renorm=.FALSE.)
+          CALL norm2_psi(z(i))
           !write(6,*) '    i,norm',i,z(i)%norme
           CALL Overlap_psi1_psi2(Overlap,z(j),z(i))
           !write(6,*) '    j,i,S(j,i)',j,i,real(Overlap,kind=Rkind)
@@ -2109,7 +2111,7 @@ STOP
           RS = real(Overlap,kind=Rkind)
           z(j) = z(j) - z(i) * RS
         END DO
-        CALL norme_psi(z(j),Renorm=.FALSE.)
+        CALL norm2_psi(z(j))
         !write(6,*) 'j,norm',j,z(j)%norme
         IF (z(j)%norme > ONETENTH**6) THEN
           jorth = jorth + 1
@@ -2198,7 +2200,7 @@ STOP
             w1 = Hz(i) - z(i) * Ene(j)
             g = g + w1 * Vec(i,j)
           END DO
-          CALL norme_psi(g,Renorm=.FALSE.)
+          CALL norm2_psi(g)
           tab_normeg(j) = sqrt(g%norme)
           convergeResi(j) = tab_normeg(j) < epsi
 
@@ -2233,7 +2235,7 @@ STOP
      SUBROUTINE sub_chebychev_recursion(Tnq1,q1,m0,mf,para_Op)
       USE mod_system
       USE mod_Op
-      USE mod_psi
+      USE mod_ana_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -2313,7 +2315,7 @@ STOP
      SUBROUTINE sub_Z_vectors(z,Tnq1,m0,mf,para_H,para_propa)
       USE mod_system
       USE mod_Op
-      USE mod_psi
+      USE mod_ana_psi
       USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
@@ -2392,7 +2394,7 @@ STOP
      SUBROUTINE sub_Z_vectors_withf(z,Tnq1,mf,para_H,para_propa,f)
       USE mod_system
       USE mod_Op
-      USE mod_psi
+      USE mod_ana_psi
       USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
@@ -2458,7 +2460,7 @@ STOP
      SUBROUTINE sub_newZ_vectors_withf(z,Tnq1,nb,para_H,para_propa,f)
       USE mod_system
       USE mod_Op
-      USE mod_psi
+      USE mod_ana_psi
       USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa

@@ -30,25 +30,21 @@
       MODULE mod_analysis
       USE mod_system
       use mod_Constant, only: real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit
+      USE mod_type_ana_psi,  only: param_ana_psi
 
       IMPLICIT NONE
         TYPE param_ana
-          integer :: max_ana           = -1        ! nb of level to be analyzed. If max_ana=-1, all level are analyzed.
-          real (kind=Rkind) :: max_ene = TEN**4    ! (cm-1)
-          integer, allocatable :: Qtransfo_type(:) ! type of the transformation
-          logical :: ana = .TRUE.                  ! analysis will be done
+          integer              :: max_ana     = -1        ! nb of level to be analyzed. If max_ana=-1, all level are analyzed.
+          real (kind=Rkind)    :: max_ene     = TEN**4    ! (cm-1)
+          logical              :: ana         = .TRUE.    ! analysis will be done
 
           integer :: print_psi                     ! nb of level write on the grid
           logical :: psi2                          ! print psi^2 instead of psi
-          logical :: Rho1D,Rho2D                   ! reduced densities (1D or 2D) along coordinates
-          integer, allocatable :: Weight_Rho(:)       ! enable to use a weight (0=>constant=1, +/-1=>step ...)
-          real (kind=Rkind), allocatable :: Qana_Weight(:) ! geometry (Qact order) for the analysis (use with Weight_Rho)
 
-          logical :: psi1D_Q0,psi2D_Q0             ! reduced densities (1D or 2D) along coordinates
-          real (kind=Rkind), allocatable :: Qana(:)  ! geometry (Qact order) for the analysis
+          TYPE (param_ana_psi) :: ana_psi
 
-          logical :: Read_zpe                      ! (default F), T is Ezpe is read
-          real (kind=Rkind) :: Ezpe                ! ground state reference energy
+          logical              :: Read_zpe                ! (default F), T is Ezpe is read
+          real (kind=Rkind)    :: Ezpe
 
           logical :: davidson                      ! flag for Davidson diagonalization
           logical :: arpack                        ! flag for arpack diagonalization
@@ -102,7 +98,7 @@
           real (kind=Rkind) :: Emin,Emax      ! in cm-1
           real (kind=Rkind) :: Ewidth         ! 1. in cm-1
           real (kind=Rkind) :: nEstep         ! 10
-          logical :: l_lorentz = .TRUE.      ! (T) if F => gaussian
+          logical           :: l_lorentz = .TRUE.      ! (T) if F => gaussian
 
           TYPE (param_file) :: file_spectrum,file_intensity
           TYPE (param_file) :: file_resart_int
@@ -110,20 +106,28 @@
         END TYPE param_intensity
       CONTAINS
       SUBROUTINE read_analyse(para_ana,Qana)
-
       USE mod_system
+      USE mod_type_ana_psi
       IMPLICIT NONE
 
 !----- variables pour la namelist analyse ----------------------------
-      TYPE (param_ana)  :: para_ana
-      real (kind=Rkind) :: Qana(:)
+      TYPE (param_ana),     intent(inout)  :: para_ana
+      real (kind=Rkind)                    :: Qana(:)
 
 
       integer       :: nb_harm_ana,max_ana,print_psi,MaxWP_TO_Write_MatOp,JJmax
       logical       :: ana,print,propa,intensity,Psi_ScalOp
       logical       :: control,davidson,arpack,filter,NLO,VibRot
       integer       :: CRP,nb_CRP_Ene
-      logical       :: Rho1D,Rho2D,psi2,psi1D_Q0,psi2D_Q0,Wheight_rho
+      logical       :: Rho1D,Rho2D,Wheight_rho
+      integer       :: Rho_type
+      logical       :: psi2,psi1D_Q0,psi2D_Q0,psi_adia
+
+      integer, allocatable :: Weight_Rho(:)            ! enable to use a weight (0=>constant=1, +/-1=>step ...)
+      real (kind=Rkind), allocatable :: Qana_Weight(:) ! geometry (Qact order) for the analysis (use with Weight_Rho)
+      real (kind=Rkind), allocatable :: Qana_cut(:)    ! geometry (Qact order) for the analysis
+      integer, allocatable :: Qtransfo_type(:)         ! type of the transformation
+
       logical       :: QTransfo,formatted_file_WP
       logical        :: Spectral_ScalOp
       TYPE (REAL_WU) :: CRP_Ene,CRP_DEne,ene0,Ezpe,max_ene
@@ -142,7 +146,7 @@
       NAMELIST /analyse/ana,print,nb_harm_ana,max_ana,max_ene,          &
                         propa,                                          &
                         print_psi,psi2,psi1D_Q0,psi2D_Q0,QTransfo,      &
-                        Rho1D,Rho2D,Wheight_rho,                        &
+                        Rho1D,Rho2D,Wheight_rho,Rho_type,psi_adia,      &
                         intensity,NLO,CRP,CRP_Ene,CRP_DEne,nb_CRP_Ene,  &
                         Psi_ScalOp,VibRot,JJmax,                        &
                         ene0,Ezpe,Temp,                                 &
@@ -155,12 +159,17 @@
 
       print                = .FALSE.
       psi2                 = .FALSE.
+      psi_adia             = .FALSE.
       QTransfo             = .FALSE.
+
       Rho1D                = .FALSE.
       Rho2D                = .FALSE.
       Wheight_rho          = .FALSE.
+      Rho_type             = 2
+
       psi1D_Q0             = .FALSE.
       psi2D_Q0             = .FALSE.
+
       propa                = .FALSE.
       intensity            = .FALSE.
       Psi_ScalOp           = .FALSE.
@@ -204,16 +213,21 @@
                           name_file_spectralWP,formatted_file_WP
 
       IF (Qtransfo) THEN
-        CALL alloc_NParray(para_ana%Qtransfo_type,shape(Qana),"para_ana%Qtransfo_type",name_sub)
-        read(in_unitp,*) name_dum,para_ana%Qtransfo_type(:)
+        CALL alloc_NParray(Qtransfo_type,shape(Qana),"Qtransfo_type",name_sub)
+        read(in_unitp,*) name_dum,Qtransfo_type(:)
       END IF
 
       IF (Wheight_rho) THEN
-        CALL alloc_NParray(para_ana%Qana_Weight,shape(Qana),"para_ana%Qana_Weight",name_sub)
-        read(in_unitp,*) name_dum,para_ana%Qana_Weight(:)
+        CALL alloc_NParray(Qana_Weight,shape(Qana),"Qana_Weight",name_sub)
+        read(in_unitp,*) name_dum,Qana_Weight(:)
 
-        CALL alloc_NParray(para_ana%Weight_Rho,shape(Qana),"para_ana%Weight_Rho",name_sub)
-        read(in_unitp,*) name_dum,para_ana%Weight_Rho(:)
+        CALL alloc_NParray(Weight_Rho,shape(Qana),"Weight_Rho",name_sub)
+        read(in_unitp,*) name_dum,Weight_Rho(:)
+      END IF
+
+      IF (psi1D_Q0 .OR. psi2D_Q0) THEN
+        CALL alloc_NParray(Qana_cut,shape(Qana),"Qana_cut",name_sub)
+        Qana_cut(:) = Qana
       END IF
 
       Spectral_ScalOp = Spectral_ScalOp .OR. intensity .OR. NLO .OR. Psi_ScalOp
@@ -240,13 +254,6 @@
 
       para_ana%ana             = ana
       para_ana%psi2            = psi2
-      para_ana%Rho1D           = Rho1D
-      para_ana%Rho2D           = Rho2D
-      para_ana%psi1D_Q0        = psi1D_Q0
-      para_ana%psi2D_Q0        = psi2D_Q0
-
-      CALL alloc_NParray(para_ana%Qana,shape(Qana),"para_ana%Qana",name_sub)
-      para_ana%Qana(:) = Qana(:)
 
       para_ana%print_psi       = print_psi
       para_ana%intensity       = intensity
@@ -259,7 +266,7 @@
       para_ana%nb_CRP_Ene      = nb_CRP_Ene
 
 
-      write(out_unitp,*) 'CRP,E,DE,nb_E   : ',para_ana%CRP,             &
+      IF (debug) write(out_unitp,*) 'CRP,E,DE,nb_E   : ',para_ana%CRP,  &
                   para_ana%CRP_Ene,para_ana%CRP_DEne,para_ana%nb_CRP_Ene
 
 
@@ -271,34 +278,57 @@
       IF (.NOT. VibRot) para_ana%JJmax = -1
 
 
-      write(out_unitp,*) 'Ezpe   : ',RWU_Write(Ezpe,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
-      write(out_unitp,*) 'max_ene: ',RWU_Write(max_ene,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
+      IF (debug)  write(out_unitp,*) 'Ezpe   : ',RWU_Write(Ezpe,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
+      IF (debug)  write(out_unitp,*) 'max_ene: ',RWU_Write(max_ene,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
 
+
+      IF (propa) THEN
+        CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
+                          Boltzmann_pop=.FALSE.,                        &
+                          adia=psi_adia,                                &
+                          Write_psi2_Grid=psi2,Write_psi2_Basis=psi2,   &
+                          Write_psi_Grid=(.NOT. psi2),                  &
+                          Write_psi_Basis=(.NOT. psi2),                 &
+                          rho1D=rho1D,rho2D=rho2D,Rho_type=Rho_type,    &
+                          Weight_Rho=Weight_Rho,Qana_Weight=Qana_Weight,&
+                          psi1D_Q0=psi1D_Q0,psi2D_Q0=psi2D_Q0,Qana=Qana_cut)
+      ELSE
+        CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
+                          Boltzmann_pop=.TRUE.,Temp=Temp,               &
+                          adia=psi_adia,                                &
+                          Write_psi2_Grid=(print_psi > 0 .AND. psi2),   &
+                          Write_psi2_Basis=(print_psi > 0 .AND. psi2),  &
+                        Write_psi_Grid=(print_psi > 0 .AND. .NOT. psi2),&
+                       Write_psi_Basis=(print_psi > 0 .AND. .NOT. psi2),&
+                          rho1D=rho1D,rho2D=rho2D,Rho_type=Rho_type,    &
+                          Weight_Rho=Weight_Rho,Qana_Weight=Qana_Weight,&
+                          psi1D_Q0=psi1D_Q0,psi2D_Q0=psi2D_Q0,Qana=Qana_cut)
+      END IF
+
+      IF (debug) CALL Write_ana_psi(para_ana%ana_psi)
+
+      IF (allocated(Qana_Weight))                                       &
+                CALL dealloc_NParray(Qana_Weight,"Qana_Weight",name_sub)
+      IF (allocated(Weight_Rho))                                        &
+                  CALL dealloc_NParray(Weight_Rho,"Weight_Rho",name_sub)
+
+      IF (allocated(Qana_cut))                                          &
+                  CALL dealloc_NParray(Qana_cut,"Qana_cut",name_sub)
+
+      IF (allocated(Qtransfo_type))                                     &
+             CALL dealloc_NParray(Qtransfo_type,"Qtransfo_type",name_sub)
 
       END SUBROUTINE read_analyse
 
       SUBROUTINE dealloc_para_ana(para_ana)
-
+      USE mod_type_ana_psi, only : dealloc_ana_psi
       USE mod_system
       IMPLICIT NONE
 
 !----- variables pour la namelist analyse ----------------------------
       TYPE (param_ana), intent(inout) :: para_ana
 
-      IF (allocated(para_ana%Qtransfo_type)) THEN
-        CALL dealloc_NParray(para_ana%Qtransfo_type,"para_ana%Qtransfo_type","dealloc_para_ana")
-      END IF
-
-      IF (allocated(para_ana%Qana_Weight)) THEN
-        CALL dealloc_NParray(para_ana%Qana_Weight,"para_ana%Qana_Weight","dealloc_para_ana")
-      END IF
-      IF (allocated(para_ana%Weight_Rho)) THEN
-        CALL dealloc_NParray(para_ana%Weight_Rho,"para_ana%Weight_Rho","dealloc_para_ana")
-      END IF
-      IF (allocated(para_ana%Qana)) THEN
-        CALL dealloc_NParray(para_ana%Qana,"para_ana%Qana","dealloc_para_ana")
-      END IF
-
+      CALL dealloc_ana_psi(para_ana%ana_psi)
 
       END SUBROUTINE dealloc_para_ana
 

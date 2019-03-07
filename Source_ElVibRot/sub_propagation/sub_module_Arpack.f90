@@ -27,6 +27,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_Arpack
+USE mod_Constant
 IMPLICIT NONE
 
 PRIVATE
@@ -41,9 +42,8 @@ CONTAINS
 
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_psi_B_TO_G
-      USE mod_psi
       USE mod_param_WP0
       USE mod_propa
       IMPLICIT NONE
@@ -544,9 +544,9 @@ CONTAINS
 
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_psi_B_TO_G
-      USE mod_psi
+      USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
       USE mod_param_WP0
       USE mod_propa
       IMPLICIT NONE
@@ -619,9 +619,8 @@ CONTAINS
 
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_psi_B_TO_G
-      USE mod_psi
       USE mod_param_WP0
       USE mod_propa
       IMPLICIT NONE

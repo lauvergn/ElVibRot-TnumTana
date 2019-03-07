@@ -75,7 +75,6 @@
       CALL versionEVRT(.TRUE.)
       print_level=2
 
-
       !CALL sub_constantes(const_phys,Read_Namelist=.FALSE.)
 
       !-----------------------------------------------------------------
@@ -340,15 +339,24 @@
 
         para_Tnum%WriteT    = .TRUE.
 
-        IF (len_trim(outm_name) > 0) THEN
-          write(out_unitp,*) 'read FCC from molpro file:',outm_name
-          CALL Read_GradHess_Molpro(dnFCC,outm_name,nderiv,mole%ncart_act)
-        ELSE IF (len_trim(fchk_name) > 0) THEN
-          write(out_unitp,*) 'read FCC from gaussian file:',fchk_name
-          CALL Read_hess_Fchk(dnFCC,fchk_name,nderiv,mole%ncart_act)
-          CALL Read_dnDipCC_Gauss(dnMuCC,fchk_name,nderiv,mole%ncart_act)
-        ELSE
+        IF (nderiv == 2) THEN
+          IF (len_trim(outm_name) > 0) THEN
+            write(out_unitp,*) 'read FCC from molpro file:',outm_name
+            CALL Read_GradHess_Molpro(dnFCC,outm_name,nderiv,mole%ncart_act)
+          ELSE IF (len_trim(fchk_name) > 0) THEN
+            write(out_unitp,*) 'read FCC from gaussian file:',fchk_name
+            CALL Read_hess_Fchk(dnFCC,fchk_name,nderiv,mole%ncart_act)
+            CALL Read_dnDipCC_Gauss(dnMuCC,fchk_name,nderiv,mole%ncart_act)
+          ELSE
+            write(out_unitp,*) ' ERROR it is not possible to read ...'
+            write(out_unitp,*) ' ... the hessian and gradient from the input file'
+            STOP
+          END IF
+        ELSE ! nderiv=1
           write(out_unitp,*) 'read FCC from the input file:'
+          CALL flush_perso(out_unitp)
+          CALL alloc_dnSVM(dnFCC,mole%ncart_act,nderiv)
+
           ! read the gradient
           read(in_unitp,*,IOSTAT=err_read)
           DO icart=1,mole%ncart_act,3
@@ -363,8 +371,6 @@
             write(out_unitp,*) ' => check your data!!'
             STOP
           END IF
-          ! read the hessian
-          IF (nderiv > 1) STOP 'hessian not yet'
         END IF
 
 
@@ -376,17 +382,17 @@
                        Qact(i),dnFcurvi%d1(i)
         END DO
 
+        IF (nderiv == 2) THEN
+          CALL sub_dnFCC_TO_dnFcurvi(Qact,dnMuCC(1),dnMucurvi(1),mole)
+          CALL sub_dnFCC_TO_dnFcurvi(Qact,dnMuCC(2),dnMucurvi(2),mole)
+          CALL sub_dnFCC_TO_dnFcurvi(Qact,dnMuCC(3),dnMucurvi(3),mole)
 
-        CALL sub_dnFCC_TO_dnFcurvi(Qact,dnMuCC(1),dnMucurvi(1),mole)
-        CALL sub_dnFCC_TO_dnFcurvi(Qact,dnMuCC(2),dnMucurvi(2),mole)
-        CALL sub_dnFCC_TO_dnFcurvi(Qact,dnMuCC(3),dnMucurvi(3),mole)
-
-        write(out_unitp,*) 'Dipole moment:',dnMuCC(:)%d0
-        write(out_unitp,*) 'Gradient of Dipole moment (curvi):'
-        DO i=1,mole%nb_act
-          write(out_unitp,*) i,Qact(i),(dnMucurvi(j)%d1(i),j=1,3)
-        END DO
-
+          write(out_unitp,*) 'Dipole moment:',dnMuCC(:)%d0
+          write(out_unitp,*) 'Gradient of Dipole moment (curvi):'
+          DO i=1,mole%nb_act
+            write(out_unitp,*) i,Qact(i),(dnMucurvi(j)%d1(i),j=1,3)
+          END DO
+        END IF
 
         IF (nderiv == 2) THEN
           write(out_unitp,*) 'Curvilinear hessian:'

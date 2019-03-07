@@ -175,6 +175,21 @@ MODULE mod_paramQ
       END IF
       IF (print_level > 1) write(out_unitp,minimum)
 
+      CALL string_uppercase_TO_lowercase(unit)
+      write(6,*) 'au',unit /= 'au'
+      write(6,*) 'bohr',unit /= 'bohr'
+      write(6,*) 'angs',unit /= 'angs'
+
+      IF (unit /= 'au' .AND. unit /= 'bohr' .AND. unit /= 'angs') THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) '  while reading the namelist "minimum"'
+        write(out_unitp,*) '  The unit is wrong, unit: "',trim(unit),'"'
+        write(out_unitp,*) '  The possible values are: "au" or "bohr" or "angs"'
+        write(out_unitp,*) ' Check your data !!'
+        STOP
+      END IF
+
+
       IF (.NOT. allocated(mole%opt_Qdyn)) THEN
         CALL alloc_NParray(mole%opt_Qdyn,(/ mole%nb_var /),'mole%opt_Qdyn',name_sub)
       END IF
@@ -1396,6 +1411,21 @@ MODULE mod_paramQ
 
         !=================================================
         IF (mole%Without_rot) THEN
+          !write(6,*) 'Gcenter',Gcenter,mole%Centered_ON_CoM
+
+          IF (Gcenter .AND. mole%Centered_ON_CoM) THEN
+
+            icG = mole%ncart-2
+
+            CALL sub3_dncentre_masse(mole%ncart_act,mole%nb_act,        &
+                                     mole%ncart,                        &
+                                     dnx,                               &
+                                     mole%masses,mole%d0sm,             &
+                                     mole%Mtot_inv,icG,                 &
+                                     nderiv)
+            GCenter_done = .TRUE.
+          END IF
+
           IF (Gcenter) THEN
             CALL sub_dnxMassWeight(dnx,mole%d0sm,mole%ncart,mole%ncart_act,nderiv)
           END IF
@@ -1458,12 +1488,12 @@ MODULE mod_paramQ
 
       END IF
 
-        !=================================================
-        ! for partial hessian (pvscf)
-        DO ic=1,mole%ncart_act,3
-          IF (mole%active_masses(ic) == 0) CALL sub3_dnx_AT1(dnx,ic,nderiv)
-        END DO
-        !=================================================
+      !=================================================
+      ! for partial hessian (pvscf)
+      DO ic=1,mole%ncart_act,3
+        IF (mole%active_masses(ic) == 0) CALL sub3_dnx_AT1(dnx,ic,nderiv)
+      END DO
+      !=================================================
 
 
 !=================================================
@@ -1673,6 +1703,11 @@ MODULE mod_paramQ
       IF (debug) THEN
         write(out_unitp,*)
         write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'type_Q',type_Q
+        write(out_unitp,*) 'unit: ',unit
+        write(out_unitp,*) 'read_xyz0',read_xyz0
+        write(out_unitp,*) 'info',info
+
       END IF
       !-----------------------------------------------------------------
 
@@ -1706,8 +1741,10 @@ MODULE mod_paramQ
             CASE default
               QWU = REAL_WU(Q(i),'',     'no_dim')
             END SELECT
-
             Q(i) = convRWU_TO_R(QWU)
+
+            !write(6,*) 'i,QWU, conv',i,QWU,Q(i)
+
 
           END DO
         END IF

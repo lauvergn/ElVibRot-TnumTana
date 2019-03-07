@@ -64,7 +64,8 @@
  USE mod_Op,              ONLY : param_Op,write_param_Op
  USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
- USE mod_psi_Op,          ONLY : norme_psi,Overlap_psi1_psi2
+ USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+ USE mod_ana_psi,         ONLY : norm2_psi
  USE mod_psi_SimpleOp
  IMPLICIT NONE
 
@@ -281,7 +282,7 @@ STOP 'march_noD_SG4_BasisRep'
 !
 !
 ! !- check norm ------------------
-! CALL norme_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+! CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
 ! IF ( psi%norme > psi%max_norme) THEN
 !   T  = T + para_propa%WPdeltaT
 !   write(out_unitp,*) ' ERROR in ',name_sub
@@ -296,7 +297,7 @@ STOP 'march_noD_SG4_BasisRep'
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        CALL norme_psi(psi)
+        CALL norm2_psi(psi)
         write(out_unitp,*) 'norm psi',psi%norme
         write(out_unitp,*) 'END ',name_sub
       END IF
@@ -317,7 +318,8 @@ STOP 'march_noD_SG4_BasisRep'
  USE mod_Op,              ONLY : param_Op,write_param_Op
  USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
- USE mod_psi_Op,          ONLY : norme_psi,Overlap_psi1_psi2
+ USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+ USE mod_ana_psi,         ONLY : norm2_psi
  USE mod_psi_SimpleOp
  IMPLICIT NONE
 
@@ -588,7 +590,7 @@ nb_thread = 1
 
 
  !- check norm ------------------
- CALL norme_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+ CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
  IF ( psi%norme > psi%max_norme) THEN
    T  = T + para_propa%WPdeltaT
    write(out_unitp,*) ' ERROR in ',name_sub
@@ -605,7 +607,7 @@ nb_thread = 1
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        CALL norme_psi(psi)
+        CALL norm2_psi(psi)
         write(out_unitp,*) 'norm psi',psi%norme
         write(out_unitp,*) 'END ',name_sub
       END IF
@@ -631,7 +633,7 @@ nb_thread = 1
  USE mod_Op,              ONLY : param_Op,write_param_Op
  USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
- USE mod_psi_Op,          ONLY : norme_psi
+ USE mod_ana_psi,         ONLY : norm2_psi
  USE mod_psi_SimpleOp
  IMPLICIT NONE
 
@@ -953,7 +955,7 @@ STOP 'not yet !!!!'
 ! psi = psi * exp(-cmplx(ZERO,phase,kind=Rkind))
 !
 ! !- check norm ------------------
-! CALL norme_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+! CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
 ! IF ( psi%norme > psi%max_norme) THEN
 !   T  = T + para_propa%WPdeltaT
 !   write(out_unitp,*) ' ERROR in ',name_sub
@@ -994,7 +996,7 @@ STOP 'not yet !!!!'
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        CALL norme_psi(psi)
+        CALL norm2_psi(psi)
         write(out_unitp,*) 'norm psi',psi%norme
         write(out_unitp,*) 'END ',name_sub
       END IF
@@ -1020,7 +1022,7 @@ STOP 'not yet !!!!'
  USE mod_Op,              ONLY : param_Op,write_param_Op
  USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
- USE mod_psi_Op,          ONLY : norme_psi
+ USE mod_ana_psi,         ONLY : norm2_psi
  USE mod_psi_SimpleOp
  IMPLICIT NONE
 
@@ -1339,7 +1341,7 @@ STOP 'not yet !!!!'
  psi = psi * exp(-cmplx(ZERO,phase,kind=Rkind))
 
  !- check norm ------------------
- CALL norme_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.FALSE.)
+ CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
  IF ( psi%norme > psi%max_norme) THEN
    T  = T + para_propa%WPdeltaT
    write(out_unitp,*) ' ERROR in ',name_sub
@@ -1380,7 +1382,7 @@ STOP 'not yet !!!!'
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        CALL norme_psi(psi)
+        CALL norm2_psi(psi)
         write(out_unitp,*) 'norm psi',psi%norme
         write(out_unitp,*) 'END ',name_sub
       END IF

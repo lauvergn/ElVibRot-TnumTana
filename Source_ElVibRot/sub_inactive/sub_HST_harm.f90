@@ -157,25 +157,25 @@
           d0MatOp(1)%ReVal(:,:,1) = ZERO
         END IF
 
-          JacSave = (para_Tnum%nrho == 0) .AND.                         &
+        JacSave = (para_Tnum%nrho == 0) .AND.                           &
                              (para_AllOp%tab_Op(1)%type_Op == 10) .AND. &
                                    .NOT. para_AllOp%tab_Op(1)%direct_KEO
-          JacSave = JacSave .OR. (para_Tnum%nrho == 0) .AND.            &
+        JacSave = JacSave .OR. (para_Tnum%nrho == 0) .AND.              &
                              (para_AllOp%tab_Op(1)%type_Op == 10) .AND. &
                                   para_AllOp%tab_Op(1)%direct_KEO .AND. &
                        para_AllOp%tab_Op(1)%BasisnD%SparseGrid_type /= 4
 !JacSave = .TRUE.
-          sqRhoOVERJacSave = JacSave .OR. (para_Tnum%nrho == 0) .AND.   &
+        sqRhoOVERJacSave = JacSave .OR. (para_Tnum%nrho == 0) .AND.     &
                                      (para_AllOp%tab_Op(1)%type_Op == 1)
 
-          KEO_bis = (JacSave .OR. sqRhoOVERJacSave) .OR.                &
+        KEO_bis = (JacSave .OR. sqRhoOVERJacSave) .OR.                  &
              (d0MatOp(1)%type_Op /= 10) .OR. .NOT. d0MatOp(1)%direct_KEO
 
-          IF (.NOT. para_AllOp%tab_Op(1)%para_Tnum%Gcte .AND. KEO .AND. KEO_bis) THEN
-            CALL TnumKEO_TO_tab_d0H(Qact,d0MatOp(1),mole,para_Tnum)
-          END IF
+        IF (.NOT. para_AllOp%tab_Op(1)%para_Tnum%Gcte .AND. KEO .AND. KEO_bis) THEN
+          CALL TnumKEO_TO_tab_d0H(Qact,d0MatOp(1),mole,para_Tnum)
+        END IF
 
-          IF (sqRhoOVERJacSave) THEN
+        IF (sqRhoOVERJacSave) THEN
             !$OMP  CRITICAL (sub_HSOp_inact1_CRIT)
             IF (allocated(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac)) THEN
               IF (size(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac) /= para_AllOp%tab_Op(1)%nb_qa) THEN
@@ -193,9 +193,9 @@
 
              para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac(iq) =              &
                                      sqrt(d0MatOp(1)%rho/d0MatOp(1)%Jac)
-          END IF
+        END IF
 
-          IF (JacSave) THEN
+        IF (JacSave) THEN
             !$OMP  CRITICAL (sub_HSOp_inact2_CRIT)
             IF (allocated(para_AllOp%tab_Op(1)%ComOp%Jac)) THEN
               IF (size(para_AllOp%tab_Op(1)%ComOp%Jac) /= para_AllOp%tab_Op(1)%nb_qa) THEN
@@ -212,12 +212,13 @@
             !$OMP  END CRITICAL (sub_HSOp_inact2_CRIT)
 
             para_AllOp%tab_Op(1)%ComOp%Jac(iq) = d0MatOp(1)%Jac
-          END IF
+        END IF
 
         IF (iq > 0 .OR. .NOT. test) THEN
           !calculation of WrhonD
           WrhonD = Rec_WrhonD(para_AllOp%tab_Op(1)%para_AllBasis%BasisnD,iq,OldPara)
         END IF
+
       !-----------------------------------------------------------
       !------ end special case if nb_inact2n=0 -------------------
       !-----------------------------------------------------------

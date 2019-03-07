@@ -8,6 +8,7 @@ cd $here
 
 $DIR_EVRT/Tnum90.exe << ** > res
  &variables 
+         Without_Rot=t CENTERED_ON_COM=t
          nrho=2
          Old_Qtransfo=f
          nb_Qtransfo=2
@@ -33,5 +34,7 @@ u2     102.3488
 R3     1.1785
 u3     110.6163
 phi3   180.
+
+&calculation calc_GG=t /
 
 **

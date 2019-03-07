@@ -51,7 +51,13 @@ dh 0.0
  &inactives /
 
  &actives test=f direct=2 /
- &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t /
+ &analyse max_ana=20 max_ene=20000. "cm-1" print=f
+          print_psi=0 psi1D_Q0=t psi2D_Q0=f
+          Rho1D=t Rho2D=f Wheight_rho=t
+          propa=t /
+Qana_Weight 0.9 3.187 2.178 0. 3.14 0.
+Weight_Rho  -1    0    0    0   0   0
+
  &propa
         WPTmax=1000.d0 WPdeltaT=10.d0
 

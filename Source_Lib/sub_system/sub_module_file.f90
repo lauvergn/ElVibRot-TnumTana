@@ -29,6 +29,7 @@
 
 MODULE mod_file
       use mod_NumParameters, only: line_len, name_len, Name_longlen, out_unitp
+      use mod_string
       !$ USE omp_lib, only : OMP_GET_THREAD_NUM
       IMPLICIT NONE
 
@@ -62,6 +63,7 @@ MODULE mod_file
 
       PUBLIC :: param_file, assignment (=),file_GetUnit, file_open, file_open2
       PUBLIC :: file_close, file_delete, file_dealloc, file_write, make_FileName
+      PUBLIC :: err_file_name,check_file_exist_WITH_file_name
       PUBLIC :: flush_perso,join_path
 
       CONTAINS
@@ -102,6 +104,49 @@ MODULE mod_file
 
       END SUBROUTINE file2TOfile1
 
+      FUNCTION err_file_name(file_name,name_sub)
+      integer                                 :: err_file_name
+      character (len=*), intent(in)           :: file_name
+      character (len=*), intent(in), optional :: name_sub
+
+        IF (string_IS_empty(file_name) ) THEN
+          IF (present(name_sub)) THEN
+            write(out_unitp,*) ' ERROR in err_file_name, called from: ',name_sub
+          ELSE
+            write(out_unitp,*) ' ERROR in err_file_name'
+          END IF
+          write(out_unitp,*) '   The file name is empty'
+          err_file_name = 1
+        ELSE
+          err_file_name = 0
+        END IF
+
+      END FUNCTION err_file_name
+
+      FUNCTION check_file_exist_WITH_file_name(file_name,err_file,name_sub)
+      logical                                    :: check_file_exist_WITH_file_name
+      character (len=*), intent(in)              :: file_name
+      character (len=*), intent(in)   , optional :: name_sub
+      integer,           intent(inout), optional :: err_file
+
+      logical                          :: file_exist
+
+
+        IF (string_IS_empty(file_name) ) THEN
+          IF (present(name_sub)) THEN
+            write(out_unitp,*) ' ERROR in check_file_exist_WITH_file_name, called from: ',name_sub
+          ELSE
+            write(out_unitp,*) ' ERROR in check_file_exist_WITH_file_name'
+          END IF
+          write(out_unitp,*) '   The file name is empty'
+          IF (present(err_file)) err_file = 1
+          file_exist = .FALSE.
+        ELSE
+          IF (present(err_file)) err_file = 0
+          INQUIRE(FILE=trim(file_name), EXIST=file_exist)
+        END IF
+
+      END FUNCTION check_file_exist_WITH_file_name
 
       FUNCTION file_GetUnit(ffile,err_file)
 
@@ -111,7 +156,7 @@ MODULE mod_file
 
 
       logical                  :: unit_opened
-      integer                  :: ithread
+      integer                  :: ithread,err_file_loc
 
       !write(out_unitp,*) 'BEGINNING file_GetUnit'
 
@@ -126,6 +171,11 @@ MODULE mod_file
          ithread      = 0
 !$       ithread      = OMP_GET_THREAD_NUM()
 
+        err_file_loc = err_file_name(ffile%tab_name_th(ithread),'file_GetUnit')
+        IF (.NOT. present(err_file) .AND. err_file_loc /= 0) STOP ' ERROR, the file name is empty!'
+        IF (present(err_file)) err_file = err_file_loc
+
+
         inquire(FILE=ffile%tab_name_th(ithread),OPENED=unit_opened)
         IF (.NOT. unit_opened) THEN ! the file is not open
           file_GetUnit = 0 ! the file is not opened
@@ -134,6 +184,11 @@ MODULE mod_file
         END IF
 
       ELSE
+
+        err_file_loc = err_file_name(ffile%name,'file_GetUnit')
+        IF (.NOT. present(err_file) .AND. err_file_loc /= 0) STOP ' ERROR, the file name is empty!'
+        IF (present(err_file)) err_file = err_file_loc
+
         inquire(FILE=ffile%name,OPENED=unit_opened)
         IF (.NOT. unit_opened) THEN ! the file is not open
           file_GetUnit = 0 ! the file is not opened
@@ -160,7 +215,7 @@ MODULE mod_file
       character (len=Name_len) :: fform,fstatus,fposition,faccess
 
       logical                  :: unit_opened
-      integer                  :: ith
+      integer                  :: ith,err_file_loc
 
       integer :: err_mem,memory
       !write(out_unitp,*) 'BEGINNING file_open'
@@ -242,7 +297,11 @@ MODULE mod_file
 
       IF (.NOT. ffile%seq) ffile%nb_thread = 0
 
-!     - check if the file is already open ------------------
+      err_file_loc = err_file_name(ffile%name,'file_open')
+      IF (.NOT. present(err_file) .AND. err_file_loc /= 0) STOP ' ERROR, the file name is empty!'
+      IF (present(err_file)) err_file = err_file_loc
+
+      !- check if the file is already open ------------------
       inquire(FILE=ffile%name,NUMBER=iunit,OPENED=unit_opened)
       IF (.NOT. unit_opened) THEN ! the file is not open
 
@@ -296,6 +355,10 @@ MODULE mod_file
 !                                                            "file_open")
 
         DO ith=0,ffile%nb_thread-1
+
+        err_file_loc = err_file_name(ffile%tab_name_th(ith),'file_open')
+        IF (.NOT. present(err_file) .AND. err_file_loc /= 0) STOP ' ERROR, the file name is empty!'
+        IF (present(err_file)) err_file = err_file_loc
 
           ffile%tab_name_th(ith) = trim(adjustl(ffile%name)) //         &
                                      "." // int_TO_char(ith)
@@ -364,7 +427,7 @@ MODULE mod_file
       character (len=Name_len) :: fform,fstatus,fposition
 
       logical           :: unit_opened
-      !logical           :: lformatted_loc,append_loc,old_loc
+      integer           :: err_file_loc
 
 !     - default for the open ---------------------------
 
@@ -398,6 +461,10 @@ MODULE mod_file
       ELSE
           fstatus = 'unknown'
       END IF
+
+      err_file_loc = err_file_name(name_file,'file_open2')
+      IF (.NOT. present(err_file) .AND. err_file_loc /= 0) STOP ' ERROR, the file name is empty!'
+      IF (present(err_file)) err_file = err_file_loc
 
 !     - check if the file is already open ------------------
 !     write(out_unitp,*) 'name,unit,unit_opened ',name_file,unit,unit_opened

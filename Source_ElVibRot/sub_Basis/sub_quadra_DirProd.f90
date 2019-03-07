@@ -125,13 +125,18 @@
      iq = 1
      DO i=1,basis_DP%nb_basis
        ndim = basis_DP%tab_Pbasis(i)%Pbasis%ndim
+       IF (ndim == 0) CYCLE
        basis_DP%nrho(iq:iq+ndim-1) = basis_DP%tab_Pbasis(i)%Pbasis%nrho(:)
        iq = iq + ndim
      END DO
 
       CALL alloc_NParray(tab_nq,(/ nb_basis /),"tab_nq",name_sub)
       DO i=1,basis_DP%nb_basis
-        tab_nq(i) = get_nq_FROM_basis(basis_DP%tab_Pbasis(i)%Pbasis)
+        IF (basis_DP%tab_Pbasis(i)%Pbasis%OK_ndim_eq_0) THEN
+          tab_nq(i) = 1
+        ELSE
+          tab_nq(i) = get_nq_FROM_basis(basis_DP%tab_Pbasis(i)%Pbasis)
+        END IF
       END DO
       IF (debug) write(out_unitp,*) 'tab_nq',tab_nq
       CALL dealloc_nDindex(basis_DP%nDindG)

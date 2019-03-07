@@ -41,11 +41,11 @@ CONTAINS
       USE mod_system
       USE mod_Coord_KEO
       USE mod_basis
-      USE mod_psi
+      USE mod_ana_psi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       USE mod_psi_io
-      USE mod_ana_psi
+      USE mod_type_ana_psi
       USE mod_Op
       USE mod_analysis
       IMPLICIT NONE
@@ -161,7 +161,7 @@ CONTAINS
         IF (ene(i)-para_H%ComOp%ZPE > para_ana%max_ene) CYCLE
 
         ana_psi%Ene = ene(i)
-        ana_psi%iwp = i
+        ana_psi%num_psi = i
 
         RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
         RWU_DE = REAL_WU(ana_psi%Ene-para_H%ComOp%ZPE,'au','E')
@@ -169,30 +169,22 @@ CONTAINS
         DE = convRWU_TO_R(RWU_DE,WorkingUnit=.FALSE.)
 
 
-        IF (ana_psi%iwp < 10000) THEN
+        IF (ana_psi%num_psi < 10000) THEN
           lformat = '("lev0: ",i4,i4,l3,3(1x,' // trim(adjustl(EneIO_format)) // '))'
         ELSE
           lformat = '("lev0: ",i0,i0,l3,3(1x,' // trim(adjustl(EneIO_format)) // '))'
         END IF
 
-        write(out_unitp,lformat) ana_psi%iwp,0,tab_Psi(i)%convAvOp,E,DE
+        write(out_unitp,lformat) ana_psi%num_psi,0,tab_Psi(i)%convAvOp,E,DE
 
         CALL Write_Psi_nDBasis(tab_Psi(i),nioWP,i,ZERO,file_WPspectral%formatted,FilePsiVersion)
 
       END DO
       close(nioWP)
 
-
-      CALL init_ana_psi(ana_psi,ana=para_ana%ana,iwp=0,                 &
-                          rho1D=para_ana%rho1D,rho2D=para_ana%rho2D,    &
-                          Weight_Rho=para_ana%Weight_Rho,               &
-                          Qana_Weight=para_ana%Qana_Weight,             &
-                          psi1D_Q0=para_ana%psi1D_Q0,                   &
-                          psi2D_Q0=para_ana%psi2D_Q0,                   &
-                          Qana=para_ana%Qana,                           &
-                          Qtransfo_type=para_ana%Qtransfo_type,         &
-                          Ene=ZERO,ZPE=para_H%ComOp%ZPE,                &
-                          Temp=para_ana%Temp,Part_Func=Q)
+      ana_psi%ZPE        = para_H%ComOp%ZPE
+      ana_psi%Part_Func  = Q
+      ana_psi%Temp       = para_ana%Temp
 
       write(out_unitp,*) 'population at T, Q',para_ana%Temp,Q
       write(out_unitp,*) 'Energy level (',const_phys%ene_unit,') pop and means :'
@@ -205,13 +197,13 @@ CONTAINS
         IF (.NOT. tab_Psi(i)%BasisRep) THEN
           CALL sub_PsiGridRep_TO_BasisRep(tab_Psi(i))
         END IF
-        ana_psi%Ene = ene(i)
-        ana_psi%iwp = i
+        ana_psi%Ene     = ene(i)
+        ana_psi%num_psi = i
 
         info = String_TO_String( " " //                                 &
            real_TO_char( ene(i)*const_phys%auTOenergy,"f12.6" ) // " : ")
 
-        CALL sub_analyze_psi(tab_Psi(i),info,ana_psi)
+        CALL sub_analyze_psi(tab_Psi(i),ana_psi)
 
         IF (allocated(ana_psi%max_RedDensity)) THEN
           IF (.NOT. allocated(AllPsi_max_RedDensity)) THEN
@@ -632,7 +624,7 @@ CONTAINS
       SUBROUTINE write_psi2_new(Tab_Psi)
 
       USE mod_system
-      USE mod_psi
+      USE mod_ana_psi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       IMPLICIT NONE
@@ -724,7 +716,7 @@ CONTAINS
       SUBROUTINE write_cube(Tab_Psi)
 
       USE mod_system
-      USE mod_psi
+      USE mod_ana_psi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       IMPLICIT NONE

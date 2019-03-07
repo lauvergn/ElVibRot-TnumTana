@@ -70,8 +70,6 @@ end wp0
 end wp0
 **
 
-cp file_WPspectral file_WP
-
 nice $DIR_vib/vib << ** > res
  &system /
  &constantes /
@@ -115,6 +113,6 @@ dh 0.0
  &davidson nb_WP=99 max_it=100 max_WP=300 num_resetH=100
            lower_states=t project_WP0=f one_residue=f
            all_lower_states=t max_Ene=4000.
-           read_WP=t read_listWP=f
+           read_WP=t read_listWP=f name_file_readWP='file_WPspectral'
 /
 **

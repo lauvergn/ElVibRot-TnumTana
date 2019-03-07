@@ -126,6 +126,10 @@
         CONTINUE
       END SELECT
 
+      DO i=1,n
+        Vec(:,i) = Vec(:,i)/sqrt(dot_product(Vec(:,i),Vec(:,i)))
+      END DO
+
       IF (phase) CALL Unique_phase(n,Vec,n)
 
       END SUBROUTINE diagonalization

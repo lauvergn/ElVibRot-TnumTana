@@ -35,12 +35,21 @@ MODULE mod_string
   END INTERFACE
 
   PUBLIC :: alloc_array, dealloc_array
+  PUBLIC :: string_IS_empty
   PUBLIC :: int_TO_char, Write_int_IN_char, real_TO_char, Write_real_IN_char
   PUBLIC :: logical_TO_char
   PUBLIC :: String_TO_String, make_nameQ, nom_i, nom_ii
   PUBLIC :: read_name_advNo, string_uppercase_TO_lowercase
 
   CONTAINS
+
+  FUNCTION string_IS_empty(String)
+    logical                          :: string_IS_empty
+    character(len=*), intent(in)     :: String
+
+    string_IS_empty = (len_trim(String) == 0)
+
+  END FUNCTION string_IS_empty
 
   FUNCTION String_TO_String(string,ltrim)
   character(len=:), allocatable     :: String_TO_String
@@ -147,9 +156,11 @@ MODULE mod_string
 
   END FUNCTION logical_TO_char
 
-  FUNCTION int_TO_char(i)
+  FUNCTION int_TO_char(i,Iformat)
     character (len=:), allocatable  :: int_TO_char
     integer, intent(in)             :: i
+    character (len=*), intent(in), optional  :: Iformat
+
 
     character (len=:), allocatable  :: name_int
     integer :: clen
@@ -158,24 +169,35 @@ MODULE mod_string
 
     IF (allocated(int_TO_char)) deallocate(int_TO_char)
 
-    ! first approximated size of name_int
-    IF (i == 0) THEN
-      clen = 1
-    ELSE IF (i < 0) THEN
-      clen = int(log10(abs(real(i,kind=Rkind))))+2
+    IF (present(Iformat)) THEN
+      read(Iformat(2:len(Iformat)),*) clen
+      ! allocate name_int
+      allocate(character(len=clen) :: name_int)
+      write(name_int,'(' // Iformat // ')') i
+
+      ! transfert name_int in int_TO_char
+      int_TO_char = name_int
+
     ELSE
-      clen = int(log10(real(i,kind=Rkind)))+1
+      ! first approximated size of name_int
+      IF (i == 0) THEN
+        clen = 1
+      ELSE IF (i < 0) THEN
+        clen = int(log10(abs(real(i,kind=Rkind))))+2
+      ELSE
+        clen = int(log10(real(i,kind=Rkind)))+1
+      END IF
+
+      ! allocate name_int
+      allocate(character(len=clen) :: name_int)
+
+      ! write i in name_int
+      write(name_int,'(i0)') i
+
+      ! transfert name_int in int_TO_char
+      int_TO_char = String_TO_String(name_int)
+
     END IF
-
-    ! allocate name_int
-    allocate(character(len=clen) :: name_int)
-
-    ! write i in name_int
-    write(name_int,'(i0)') i
-
-    ! transfert name_int in int_TO_char
-    int_TO_char = String_TO_String(name_int)
-
 
     ! deallocate name_int
     deallocate(name_int)
@@ -198,24 +220,30 @@ MODULE mod_string
 
     IF (present(Rformat)) THEN
       write(name_real,'(' // Rformat // ')') r
+
+      clen = len_trim(adjustl(name_real))
+      allocate(character(len=clen) :: string)
+
+      string = String_TO_String(trim(adjustl(name_real)))
+
     ELSE
       write(name_real,*) r
+
+      clen = len_trim(adjustl(name_real))
+      allocate(character(len=clen) :: string)
+
+      string = trim(adjustl(name_real))
+
+      DO i=len(string),2,-1
+        IF (string(i:i) == '0') THEN
+          string(i:i) = ' '
+        ELSE
+          EXIT
+        END IF
+      END DO
+
+      string = String_TO_String(string)
     END IF
-
-    clen = len_trim(adjustl(name_real))
-    allocate(character(len=clen) :: string)
-
-    string = trim(adjustl(name_real))
-
-    DO i=len(string),2,-1
-      IF (string(i:i) == '0') THEN
-        string(i:i) = ' '
-      ELSE
-        EXIT
-      END IF
-    END DO
-
-    string = String_TO_String(string)
 
 !$OMP  END CRITICAL (real_TO_char_CRIT)
 

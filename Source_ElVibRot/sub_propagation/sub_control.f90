@@ -49,7 +49,7 @@ USE mod_Constant
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       USE mod_psi_SimpleOp
-      USE mod_psi_Op
+      USE mod_ana_psi
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -195,11 +195,11 @@ USE mod_Constant
 
         T = ZERO
         write(out_unitp,*) 'WP0 (BasisRep)',i
-        CALL norme_psi(tab_WP0(i),Renorm=.TRUE.)
+        CALL renorm_psi(tab_WP0(i))
         CALL ecri_psi(T=T,psi=tab_WP0(i))
 
         write(out_unitp,*) 'WPt (BasisRep)',i
-        CALL norme_psi(tab_WPt(i),Renorm=.TRUE.)
+        CALL renorm_psi(tab_WPt(i))
         CALL ecri_psi(T=T,psi=tab_WPt(i))
 
       END DO
@@ -281,11 +281,11 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       USE mod_field
       USE mod_propa
       USE mod_FullPropa
-      USE mod_psi
+      !USE mod_psi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       USE mod_psi_SimpleOp
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_psi_io
       IMPLICIT NONE
 
@@ -426,7 +426,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
         para_propa%para_WP0%nb_WP0  = nb_WPba
         CALL sub_read_psi0(tab_WP,para_propa%para_WP0,nb_WPba)
         DO j=1,nb_WPba
-          CALL norme_psi(tab_WP(j),Renorm=.FALSE.)
+          CALL norm2_psi(tab_WP(j))
           write(out_unitp,*) 'norm tab_WP(j): ',j,tab_WP(j)%norme
         END DO
 
@@ -464,15 +464,14 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       END IF
 
       DO i=1,nb_WP
-
-        CALL norme_psi(tab_WP0(i),Renorm=.TRUE.)
-        CALL norme_psi(tab_WPt(i),Renorm=.TRUE.)
-
-        T = ZERO
-        CALL sub_analyze_WP_forPropa(T,tab_WP0(i:i),1)
-        CALL sub_analyze_WP_forPropa(T,tab_WPt(i:i),1)
-
+        CALL renorm_psi(tab_WP0(i))
+        CALL renorm_psi(tab_WPt(i))
       END DO
+
+      T = ZERO
+      CALL sub_analyze_tab_psi(T,tab_WP0,para_propa%ana_psi)
+      CALL sub_analyze_tab_psi(T,tab_WPt,para_propa%ana_psi)
+
 !     --------------------------------------------------
 
       DO i=1,nb_WP
@@ -720,7 +719,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       USE mod_march
       !USE mod_psi
       USE mod_psi_set_alloc
-      USE mod_psi_Op
+      USE mod_ana_psi
       USE mod_field
       IMPLICIT NONE
 
@@ -769,19 +768,12 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
         write(out_unitp,*)
 
         DO j=1,nb_WP
-          CALL norme_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.TRUE.)
+          CALL renorm_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.)
 
           write(out_unitp,*) 'WP0 (BasisRep)',j
           CALL ecri_psi(T=ZERO,psi=WP(j),                               &
                         ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,      &
                         ecri_psi2=.FALSE.)
-
-          !for the writting of the wp (GridRep)
-          !CALL sub_PsiBasisRep_TO_GridRep(WP(j))
-          !write(out_unitp,*) 'WP0 (GridRep)',j
-          !CALL ecri_psi(T=ZERO,psi=WP(j),                               &
-          !              ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,      &
-          !              ecri_psi2=.FALSE.)
 
         END DO ! j loop (nb_WP)
 
@@ -830,28 +822,12 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
 
         IF (print_Op .OR. debug) THEN
           CALL sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,             &
-                            para_propa%para_field)
+                                   para_field=para_propa%para_field)
           IF (nb_WP == nb_WPt) THEN
             alpha=ZERO
             CALL calc_fidelity(nb_WPt,SObj,Obj,WP,WPt,T,0,alpha,.TRUE.)
           END IF
 
-!          !Write WP (BasisRep or GridRep)
-!          IF (para_propa%WPpsi2 .OR. para_propa%WPpsi) THEN
-!            DO j=1,nb_WP/2
-!
-!              IF (para_propa%write_GridRep) CALL sub_PsiBasisRep_TO_GridRep(WP(j))
-!
-!              CALL ecri_psi(T=T,psi=WP(j),nioWP=nioWP,                  &
-!                            ecri_GridRep=para_propa%write_GridRep,      &
-!                            ecri_BasisRep=para_propa%write_BasisRep,    &
-!                            ecri_psi2=para_propa%WPpsi2)
-!
-!              ! switch back to the initial representation (Grid are basis)
-!              CALL alloc_psi(WP(j),BasisRep=BasisRep,GridRep=GridRep)
-!
-!            END DO
-!          END IF
         END IF
         IF (it == it_max .OR. para_propa%march_error) EXIT  ! exit the propagation loop
 
@@ -894,19 +870,12 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
 !     - write the final WP---------------------------------
       IF (print_Op .OR. debug) THEN
         DO j=1,nb_WP
-          CALL norme_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.,Renorm=.TRUE.)
+          CALL renorm_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.)
 
           write(out_unitp,*) 'WP (BasisRep)',j,' at T=',T
           CALL ecri_psi(T=T,psi=WP(j),                                  &
                         ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,      &
                         ecri_psi2=.FALSE.)
-
-!          !for the writting of the wp (GridRep)
-!          write(out_unitp,*) 'WP (GridRep)',j,' at T=',T
-!          CALL sub_PsiBasisRep_TO_GridRep(WP(j))
-!          CALL ecri_psi(T=T,psi=WP(j),                                  &
-!                        ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,      &
-!                        ecri_psi2=.FALSE.)
 
         END DO ! j loop (nb_WP)
       END IF
@@ -945,6 +914,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       USE mod_propa
       !USE mod_psi
       USE mod_psi_set_alloc
+      USE mod_ana_psi
       USE mod_psi_Op
       IMPLICIT NONE
 
@@ -1050,6 +1020,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       USE mod_system
       !USE mod_psi
       USE mod_psi_set_alloc
+      USE mod_ana_psi
       USE mod_psi_Op
       IMPLICIT NONE
 

@@ -90,7 +90,7 @@ c-----------------------------------------------------------
         write(6,*) 'n',WP0%nb_tot
         write(6,*)
         write(6,*) 'pot0',para_H%pot0
-        CALL norme_psi(WP0,.FALSE.,.TRUE.,.FALSE.)
+        CALL norm2_psi(WP0,.FALSE.,.TRUE.,.FALSE.)
         write(6,*) 'normeWP0 FBR',WP0%norme,WP0%tab_normeADA
 
         write(6,*) 'WP0 FBR'
@@ -318,7 +318,7 @@ c-----------------------------------------------------------
         write(6,*) 'nb_bi',psi%nb_bi
         write(6,*)
 
-        CALL norme_psi(psi0,.FALSE.,.TRUE.,.FALSE.)
+        CALL norm2_psi(psi0,.FALSE.,.TRUE.,.FALSE.)
         write(6,*) 'normepsi0 FBR',psi0%norme,psi0%tab_normeADA
         write(6,*) 'psi0%cplx ',psi0%cplx
 
@@ -363,7 +363,7 @@ c-----------------------------------------------------------
       T    = ZERO
       it   = 0
 
-      CALL norme_psi(psi,.FALSE.,.TRUE.,.FALSE.)
+      CALL norm2_psi(psi,.FALSE.,.TRUE.,.FALSE.)
 
       E1 = -para_H%pot0
       CALL sub_PsiOpPsi(E0,psi,w1,para_H)
@@ -402,7 +402,7 @@ c       --------------------------------------------------------
 c         E0 = RE0
 c  normalement, RE0 doit etre l'energie....
 
-          CALL norme_psi(psi,Renorm=.TRUE.)
+          CALL renorm_psi(psi)
           E1 = E0
           CALL sub_PsiOpPsi(E0,psi,w1,para_H)
           E0 = E0-para_H%pot0
@@ -414,7 +414,7 @@ c  normalement, RE0 doit etre l'energie....
 c         para_H%E0     = E0+para_H%pot0
           CALL march_nOD_im(T,no,psi,psi0,w1,w2,para_H,para_propa)
 
-          CALL norme_psi(psi,Renorm=.TRUE.)
+          CALL renorm_psi(psi)
           E1 = E0
           CALL sub_PsiOpPsi(E0,psi,w1,para_H)
           E0 = E0-para_H%pot0
@@ -812,7 +812,7 @@ c       - residual vector ---------------------------
             psiTemp = Hpsi(i) + psi(i) * (-Ene0(j))
             g = g + psiTemp * Vec(i,j)
           END DO
-          CALL norme_psi(g,Renorm=.FALSE.)
+          CALL norm2_psi(g)
           DEne = abs(Ene0(j) - Ene(j))
           tab_normeg(j) = sqrt(g%norme) * tab_scale_g(j)
           IF (DEne < para_propa%para_Davidson%Max_ene) 
@@ -869,13 +869,13 @@ c           write(6,*) 'Schmidt ortho',it
               RS = real(Overlap,kind=Rkind)
               psi(ndim+1) = psi(ndim+1) + psi(i) *(-RS)
             END DO
-            CALL norme_psi(psi(ndim+1),Renorm=.TRUE.)
+            CALL renorm_psi(psi(ndim+1))
             DO i=1,ndim
               CALL Overlap_psi1_psi2(Overlap,psi(ndim+1),psi(i))
               RS = real(Overlap,kind=Rkind)
               psi(ndim+1) = psi(ndim+1) + psi(i) *(-RS)
             END DO
-            CALL norme_psi(psi(ndim+1),Renorm=.TRUE.)
+            CALL renorm_psi(psi(ndim+1))
 c           - Schmidt ortho ------------------------------------
 
 c           - Hpsi(ndim+1) -------------------------------------
@@ -1159,7 +1159,7 @@ c           END DO
       END IF
 
       DO i=1,nb_diago
-        CALL norme_psi(psi(i),Renorm=.TRUE.)
+        CALL renorm_psi(psi(i))
         CALL sub_PsiOpPsi(CEne0,psi(i),Hpsi,para_H)
         Ene0(i) = CEne0
       END DO
@@ -1182,7 +1182,7 @@ c       - Schmidt ortho ------------------------------------
           RS = - real(CS,kind=Rkind)
           psi(i) = psi(i) + psi(j) * RS
         END DO
-        CALL norme_psi(psi(i),Renorm=.TRUE.)
+        CALL renorm_psi(psi(i))
 c         - Schmidt ortho ------------------------------------
 
 c       Hpsi = H.psi(i)
@@ -1204,7 +1204,7 @@ c         - Schmidt ortho ------------------------------------
             RS = - real(CS,kind=Rkind)
             psi(i) = psi(i) + psi(j) * RS
           END DO
-          CALL norme_psi(psi(i),Renorm=.TRUE.)
+          CALL renorm_psi(psi(i))
 c         - Schmidt ortho ------------------------------------
 
 c         - CG minimization ------------------------------------
@@ -1256,9 +1256,9 @@ c         - Optimal DeltaT and energy ----------------------------
 
 c         - propagation ------------------------------------------
           g = Hpsi + psi(i) * (-avH1)
-          CALL norme_psi(g,Renorm=.FALSE.)
+          CALL norm2_psi(g)
           normeg = sqrt(g%norme)
-          CALL norme_psi(g,Renorm=.TRUE.)
+          CALL renorm_psi_WITH_norm2(g)
           write(6,*) 'it normeg C',it,normeg,C
 
 
@@ -1266,9 +1266,9 @@ c         - propagation ------------------------------------------
           psi(i) = H2psi + g * sin(th)
 
 
-          CALL norme_psi(psi(i),Renorm=.FALSE.)
+          CALL norm2_psi(psi(i))
           write(6,*) 'it norme npsi',it,psi(i)%norme
-          CALL norme_psi(psi(i),Renorm=.TRUE.)
+          CALL renorm_psi_WITH_norm2(psi(i))
           CALL sub_PsiOpPsi(CEne0,psi(i),Hpsi,para_H)
           Ene0(i) = CEne0
           write(6,*) 'it E with npsi',it,
@@ -1384,7 +1384,7 @@ c-----------------------------------------------------------
         write(6,*) 'nb_bi',psi%nb_bi
         write(6,*)
 
-        CALL norme_psi(psi0,.FALSE.,.TRUE.,.FALSE.)
+        CALL norm2_psi(psi0,.FALSE.,.TRUE.,.FALSE.)
         write(6,*) 'normepsi0 FBR',psi0%norme,psi0%tab_normeADA
 
         write(6,*) 'psiFBR'
@@ -1442,7 +1442,7 @@ c-----------------------------------------------------------
 
 c-----------------------------------------------------------
       max_ecri = min(25,psi%nb_tot)
-      CALL norme_psi(psi,.FALSE.,.TRUE.,.FALSE.)
+      CALL norm2_psi(psi,.FALSE.,.TRUE.,.FALSE.)
       CALL sub_PsiOpPsi(ET,psi,w1,para_H)
       ET = ET-para_H%pot0
       T = ZERO
@@ -1494,7 +1494,7 @@ c        for the writting of the wp (DVR)
          END IF
 
 
-         CALL norme_psi(psi,.FALSE.,.TRUE.,.FALSE.)
+         CALL norm2_psi(psi,.FALSE.,.TRUE.,.FALSE.)
 
          CALL sub_PsiOpPsi(ET,psi,w1,para_H)
          ET = ET-para_H%pot0
@@ -1622,7 +1622,7 @@ c-----------------------------------------------------------
         write(6,*) 'nb_bi',WP(1)%nb_bi
         write(6,*)
 
-        CALL norme_psi(WP(1),.FALSE.,.TRUE.,.FALSE.)
+        CALL norm2_psi(WP(1),.FALSE.,.TRUE.,.FALSE.)
         write(6,*) 'normepsi0 FBR',WP(1)%norme,WP(1)%tab_normeADA
 
         write(6,*) 'WP(1)%FBR'
@@ -1710,7 +1710,7 @@ c-----------------------------------------------------------
 
       CALL sub_dnE(dnE,0,T,para_propa%para_field)
       DO j=1,nb_WP
-        CALL norme_psi(WP(j),.FALSE.,.TRUE.,.FALSE.)
+        CALL norm2_psi(WP(j),.FALSE.,.TRUE.,.FALSE.)
 
 c       - WP energy -----------------------------------
         CALL sub_PsiOpPsi(ET,WP(j),w2,para_H)
@@ -1814,7 +1814,7 @@ c----------------------------------------------------------
 c     - write the final WP---------------------------------
 
       DO j=1,nb_WP
-        CALL norme_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.,Renorm=.TRUE.)
+        CALL renorm_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.)
 
         IF (print_Op) THEN
           write(6,*) '=================================='
@@ -1939,7 +1939,7 @@ c-----------------------------------------------------------
         write(6,*)
 
         DO j=1,nb_WP
-          CALL norme_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.,Renorm=.TRUE.)
+          CALL renorm_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.)
 
           write(6,*) 'WP0 (FBR)',j
           CALL ecri_psi(T=ZERO,psi=WP(j),nioWP=6,
@@ -2054,7 +2054,7 @@ c----------------------------------------------------------
 c     - write the final WP---------------------------------
       IF (print_Op .OR. debug) THEN
         DO j=1,nb_WP
-          CALL norme_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.,Renorm=.TRUE.)
+          CALL renorm_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.)
 
           write(6,*) 'WP (FBR)',j,' at T=',T
           CALL ecri_psi(T=T,psi=WP(j),nioWP=6,
@@ -2177,7 +2177,7 @@ c-----------------------------------------------------------
         write(6,*) 'nb_bi',WP(1)%nb_bi
         write(6,*)
 
-        CALL norme_psi(WP(1),.FALSE.,.TRUE.,.FALSE.)
+        CALL norm2_psi(WP(1),.FALSE.,.TRUE.,.FALSE.)
         write(6,*) 'normepsi0 FBR',WP(1)%norme,WP(1)%tab_normeADA
 
         write(6,*) 'WP(1)%FBR'
@@ -2250,7 +2250,7 @@ c-----------------------------------------------------------
       IF (print_Op .OR. debug) THEN
         DO j=1,nb_WP
           write(info,'(a,i3)') '#WP ',j
-          CALL norme_psi(WP(j),.FALSE.,.TRUE.,.FALSE.)
+          CALL norm2_psi(WP(j),.FALSE.,.TRUE.,.FALSE.)
 c         - WP energy -----------------------------------
           CALL sub_PsiOpPsi(ET,WP(j),w2,para_H)
           ET = ET/WP(j)%norme - para_H%pot0
@@ -2377,7 +2377,7 @@ c          write(6,*) 'max_der',max_der
              END DO
              WP(j) = WP(j) + dnpsi(i+1)
 
-             CALL norme_psi(dnpsi(i+1),.FALSE.,.TRUE.,.FALSE.)
+             CALL norm2_psi(dnpsi(i+1),.FALSE.,.TRUE.,.FALSE.)
 
 c            write(6,*) 'norme psi i+1',i+1,dnpsi(i+1)%norme
              IF (dnpsi(i+1)%norme < para_propa%para_poly%poly_tol) EXIT
@@ -2401,7 +2401,7 @@ c          - Phase Shift -----------------
      *              -sin(para_propa%para_poly%phase),kind=Rkind)
 
 c          - check norm ------------------
-           CALL norme_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.,Renorm=.FALSE.)
+           CALL norm2_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.)
            IF ( WP(j)%norme .GE. WP(j)%max_norme) THEN
              T  = T + para_propa%WPdeltaT
              T_Delta = T + para_propa%WPdeltaT
@@ -2467,7 +2467,7 @@ c----------------------------------------------------------
 c     - write the final WP---------------------------------
 
       DO j=1,nb_WP
-        CALL norme_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.,Renorm=.TRUE.)
+        CALL renorm_psi(WP(j),DVR=.FALSE.,FBR=.TRUE.)
 
         IF (print_Op .OR. debug) THEN
           write(6,*) 'WP (FBR) at T=',T
@@ -2609,7 +2609,7 @@ c-----------------------------------------------------------
         write(6,*) 'nb_bi',WP(1)%nb_bi
         write(6,*)
 
-        CALL norme_psi(WP(1),.FALSE.,.TRUE.,.FALSE.)
+        CALL norm2_psi(WP(1),.FALSE.,.TRUE.,.FALSE.)
         write(6,*) 'normepsi0 FBR',WP(1)%norme,WP(1)%tab_normeADA
 
         write(6,*) 'WP(1)'
@@ -2673,7 +2673,7 @@ c     w1 = WP(1)
       CALL time_perso('D=>F')
 
       w3 = w2-w1
-      CALL norme_psi(w3,.FALSE.,.TRUE.,.FALSE.)
+      CALL norm2_psi(w3,.FALSE.,.TRUE.,.FALSE.)
       write(6,*) 'norm  diff',w3%norme
 
       write(6,*) "========================="

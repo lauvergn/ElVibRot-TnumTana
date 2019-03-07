@@ -41,6 +41,7 @@
       SUBROUTINE sub_read_psi0(psi0,para_WP0,max_WP,symab,ortho)
       USE mod_system
       USE mod_psi_set_alloc
+      USE mod_ana_psi
       USE mod_psi_Op
       USE mod_param_WP0
       IMPLICIT NONE
@@ -195,7 +196,7 @@
 !-----Check the norm and Check and set the symmetry--------------------
       DO i=1,para_WP0%nb_WP0
         CALL Set_symab_OF_psiBasisRep(psi0(i))
-        CALL norme_psi(psi0(i),Renorm=.TRUE.)
+        CALL renorm_psi(psi0(i))
         IF (debug .OR. print_level > 1) write(out_unitp,*) ' norm psi0(i),symab',i,psi0(i)%norme,psi0(i)%symab
         CALL flush_perso(out_unitp)
       END DO
@@ -244,6 +245,7 @@
       USE mod_system
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
+      USE mod_ana_psi
       USE mod_psi_Op
       USE mod_file
       IMPLICIT NONE
@@ -296,7 +298,7 @@
           END DO
           CALL Set_symab_OF_psiBasisRep(psitemp,psi(isym)%symab)
 
-          CALL norme_psi(psitemp,Renorm=.TRUE.)
+          CALL renorm_psi(psitemp)
 
           IF (psitemp%BasisRep) THEN
             CALL Write_Psi_nDBasis(psi(j),nioWP,j,ZERO,file_WP%formatted,FilePsiVersion)
@@ -504,8 +506,8 @@
       integer            :: i_bhe,i_b,i_e,i_h
       integer            :: err
 !----- for debuging --------------------------------------------------
-      logical, parameter :: debug =.FALSE.
-!     logical, parameter :: debug =.TRUE.
+      !logical, parameter :: debug =.FALSE.
+      logical, parameter :: debug =.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING lect_psiBasisRepnotall'
