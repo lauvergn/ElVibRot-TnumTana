@@ -48,7 +48,6 @@ CONTAINS
 SUBROUTINE sub_analyze_tab_Psi(T,tab_psi,ana_psi,adia,field)
   USE mod_system
   USE mod_psi_set_alloc
-  !USE mod_psi_Op
   IMPLICIT NONE
 
   real (kind=Rkind),    intent(in)           :: T      ! time
@@ -102,7 +101,6 @@ END SUBROUTINE sub_analyze_tab_Psi
 SUBROUTINE sub_analyze_psi(psi,ana_psi)
   USE mod_system
   USE mod_psi_set_alloc
-  !USE mod_psi_Op
   IMPLICIT NONE
 
   !----- variables for the WP -------------------------------
@@ -356,6 +354,11 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi)
 
   END IF
 
+!         CALL calc_DM(WP(i),max_ecri,T,info,.TRUE.)
+!         C12 = WP(i)%CvecB(1)*conjg(WP(i)%CvecB(2))
+!         write(out_unitp,31) T,i,C12,abs(C12)
+!31       format('C12',f12.1,1x,i2,3(1x,f12.6))
+          !CALL calc_nDTk(WP(i),T)
 
   IF (allocated(info))     deallocate(info)
   IF (allocated(psi_line)) deallocate(psi_line)
@@ -369,268 +372,6 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi)
   CALL flush_perso(out_unitp)
 
 END SUBROUTINE sub_analyze_psi
-
-      SUBROUTINE sub_analyze_psi_old(psi,info,ana_psi)
-      USE mod_system
-      USE mod_psi_set_alloc
-      !USE mod_psi_Op
-      IMPLICIT NONE
-
-      !----- variables for the WP -------------------------------
-      TYPE (param_psi),     intent(inout) :: psi
-      character (len=*),    intent(in)    :: info
-      TYPE (param_ana_psi), intent(inout) :: ana_psi
-
-
-      integer :: ibi,i_max_w,ih
-      real (kind=Rkind) :: max_w,pop,Etemp,T
-      character(len=:), allocatable     :: lformat
-      TYPE(REAL_WU)                     :: RWU_Temp,RWU_E,RWU_DE
-      real (kind=Rkind)                 :: E,DE
-
-      real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)
-
-
-      !----- dynamic allocation memory ------------------------------------
-      real (kind=Rkind), allocatable :: moy_Qba(:)
-
-!----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub='sub_analyze_psi_old'
-      integer :: err_mem,memory
-      logical, parameter :: debug=.FALSE.
-      !logical, parameter :: debug=.TRUE.
-!-----------------------------------------------------------
-
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
-      END IF
-
-      IF (psi%ComOp%contrac_ba_ON_HAC) THEN
-        ana_psi%AvQ = .FALSE.
-      END IF
-
-
-      CALL Channel_weight(ana_psi%tab_WeightChannels,psi,GridRep=.FALSE.,BasisRep=.TRUE.)
-
-      i_max_w   = 1
-      max_w     = ZERO
-      DO ibi=1,psi%nb_bi
-        IF (ana_psi%tab_WeightChannels(ibi,1) > max_w) THEN
-          max_w = ana_psi%tab_WeightChannels(ibi,1)
-          i_max_w = ibi
-        END IF
-      END DO
-
-      RWU_Temp = REAL_WU(ana_psi%Temp,'°K','E')
-      !Etemp   = RWU_Temp  ! Temperature convertion in Hartree
-      Etemp    = convRWU_TO_R(RWU_Temp ,WorkingUnit=.TRUE.)
-
-      pop = exp(-(ana_psi%Ene-ana_psi%ZPE)/Etemp) / ana_psi%Part_func
-
-      RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
-      RWU_DE = REAL_WU(ana_psi%Ene-ana_psi%ZPE,'au','E')
-      E  = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
-      DE = convRWU_TO_R(RWU_DE,WorkingUnit=.FALSE.)
-
-      IF (ana_psi%AvQ) THEN
-        CALL alloc_NParray(moy_Qba,(/2*Psi%BasisnD%ndim/),"moy_Qba",name_sub)
-        CALL sub_Qmoy(psi,moy_Qba,ana_psi)
-
-        IF (ana_psi%num_psi < 10000 .AND. i_max_w < 10000) THEN
-          lformat = String_TO_String('("lev: ",i4,i4,l3,' //            &
-                                       int_TO_char(3+size(moy_Qba)) //  &
-                           "(1x," // trim(adjustl(EneIO_format)) // "))")
-        ELSE
-          lformat = String_TO_String('("lev: ",i0,i0,l3,' //            &
-                                       int_TO_char(3+size(moy_Qba)) //  &
-                           "(1x," // trim(adjustl(EneIO_format)) // "))")
-        END IF
-
-        write(out_unitp,lformat) ana_psi%num_psi,i_max_w,psi%convAvOp,  &
-                                 E,DE,pop,moy_Qba(:)
-
-        CALL dealloc_NParray(moy_Qba,"moy_Qba",name_sub)
-      ELSE
-        IF (ana_psi%num_psi < 10000 .AND. i_max_w < 10000) THEN
-          lformat = String_TO_String( '("lev: ",i4,i4,l3,3(1x,' //      &
-                                   trim(adjustl(EneIO_format)) // '))' )
-        ELSE
-          lformat = String_TO_String( '("lev: ",i0,i0,l3,3(1x,' //      &
-                                   trim(adjustl(EneIO_format)) // '))' )
-        END IF
-
-        write(out_unitp,lformat) ana_psi%num_psi,i_max_w,psi%convAvOp,E,DE,pop
-
-      END IF
-      CALL flush_perso(out_unitp)
-
-      IF (psi%nb_bi > 1) THEN
-
-        lformat = String_TO_String( '("% HAC: ",' //                    &
-                                int_TO_char(psi%nb_bi) // "(1x,f4.0) )" )
-
-        write(out_unitp,lformat) (ana_psi%tab_WeightChannels(ih,1)*TEN**2,ih=1,psi%nb_bi)
-      END IF
-
-      deallocate(lformat)
-
-      CALL calc_1Dweight(psi,ana_psi,20,real(ana_psi%num_psi,kind=Rkind),info,.TRUE.)
-
-      CALL Rho1D_Rho2D_psi(psi,ana_psi)
-
-      CALL write1D2D_psi(psi,ana_psi)
-
-
-      psi%GridRep = .FALSE.
-      CALL alloc_psi(psi)
-
-      IF (debug) THEN
-        write(out_unitp,*) 'END ',name_sub
-      END IF
-      CALL flush_perso(out_unitp)
-
-      END SUBROUTINE sub_analyze_psi_old
-
-      SUBROUTINE sub_analyze_WP_forPropa(T,WP,nb_WP,ana_psi,adia,field)
-      USE mod_system
-      USE mod_psi_set_alloc
-      !USE mod_psi_Op
-      IMPLICIT NONE
-
-      real (kind=Rkind),    intent(in)           :: T      ! time
-      TYPE (param_psi),     intent(inout)        :: WP(:)
-      integer,              intent(in)           :: nb_WP
-      TYPE (param_ana_psi), intent(inout)        :: ana_psi
-      logical,              intent(in), optional :: adia
-      real (kind=Rkind),    intent(in), optional ::field(3)
-
-
-
-
-!------ working parameters --------------------------------
-      complex (kind=Rkind)          :: C12
-      real (kind=Rkind)             :: Psi_norm2
-
-      integer                       :: i
-      integer                       :: max_ecri
-      character(len=:), allocatable :: info
-
-!----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub='sub_analyze_WP_forPropa'
-      logical, parameter :: debug=.FALSE.
-!     logical, parameter :: debug=.TRUE.
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*)
-        write(out_unitp,*) 'nb_ba,nb_qa',WP(1)%nb_ba,WP(1)%nb_qa
-        write(out_unitp,*) 'nb_bi',WP(1)%nb_bi
-        write(out_unitp,*)
-
-        DO i=1,nb_WP
-
-          write(out_unitp,*) 'WP(i)%BasisRep',i
-          CALL ecri_psi(T=ZERO,psi=WP(1),                               &
-                        ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
-          write(out_unitp,*) 'WP(i)%GridRep',i
-          CALL ecri_psi(T=ZERO,psi=WP(1),                               &
-                        ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
-        END DO
-       END IF
-!-----------------------------------------------------------
-
-        IF (present(adia)) THEN
-          ana_psi%adia = adia
-        ELSE
-          ana_psi%adia = .FALSE.
-        END IF
-        ana_psi%T      = T
-        ana_psi%propa  = .TRUE.
-
-        ana_psi%With_field = present(field)
-        IF (present(field)) THEN
-          ana_psi%field      = field
-        ELSE
-          ana_psi%field      = (/ZERO,ZERO,ZERO/)
-        END IF
-
-        max_ecri = min(25,WP(1)%nb_tot)
-
-        DO i=1,nb_WP
-          ana_psi%num_psi = i
-
-          IF (ana_psi%adia) THEN
-            CALL Channel_weight(ana_psi%tab_WeightChannels,WP(i),       &
-                                GridRep=.TRUE.,BasisRep=.FALSE.)
-            info = String_TO_String( '#WPadia ' // int_TO_char(i) )
-          ELSE
-            CALL Channel_weight(ana_psi%tab_WeightChannels,WP(i),       &
-                                GridRep=.FALSE.,BasisRep=.TRUE.)
-            info = String_TO_String( '#WP ' // int_TO_char(i) )
-          END IF
-
-          Psi_norm2 = sum(ana_psi%tab_WeightChannels)
-
-          IF (ana_psi%With_field) THEN
-            write(out_unitp,21) info,T,real(WP(i)%CAvOp,kind=Rkind),    &
-                           field(:),Psi_norm2,ana_psi%tab_WeightChannels
-          ELSE
-            write(out_unitp,21) info,T,real(WP(i)%CAvOp,kind=Rkind),    &
-                                 Psi_norm2,ana_psi%tab_WeightChannels
-          END IF
- 21       format('norm^2-WP ',a,1x,f12.2,2(1x,f8.5),30(1x,f10.7))
-
-          CALL calc_1Dweight(WP(i),ana_psi,max_ecri,T,info,.TRUE.)
-
-          CALL psi_Qba_ie_psi(T,WP(i),ana_psi,info)
-
-!         CALL calc_DM(WP(i),max_ecri,T,info,.TRUE.)
-!         C12 = WP(i)%CvecB(1)*conjg(WP(i)%CvecB(2))
-!         write(out_unitp,31) T,i,C12,abs(C12)
-!31       format('C12',f12.1,1x,i2,3(1x,f12.6))
-          !CALL calc_nDTk(WP(i),T)
-
-          CALL write1D2D_psi(WP(i),ana_psi)
-
-          CALL Rho1D_Rho2D_psi(WP(i),ana_psi)
-
-!          IF (ana_psi%Write_psi2_Grid) THEN
-!             CALL ecri_psi(T=ana_psi%T,psi=WP(i),nioWP=nioWP,           &
-!                           ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,   &
-!                           ecri_psi2=.TRUE.)
-!
-!          END IF
-!          IF (.NOT. ana_psi%adia .AND. ana_psi%Write_psi_Grid) THEN
-!             CALL ecri_psi(T=ana_psi%T,psi=WP(i),nioWP=nioWP,           &
-!                           ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,   &
-!                           ecri_psi2=.FALSE.)
-!
-!          END IF
-!          IF (.NOT. ana_psi%adia .AND. ana_psi%Write_psi2_Basis) THEN
-!             CALL ecri_psi(T=ana_psi%T,psi=WP(i),nioWP=nioWP,           &
-!                           ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
-!                           ecri_psi2=.TRUE.)
-!
-!          END IF
-!          IF (.NOT. ana_psi%adia .AND. ana_psi%Write_psi_Basis) THEN
-!             CALL ecri_psi(T=ana_psi%T,psi=WP(i),nioWP=nioWP,           &
-!                           ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
-!                           ecri_psi2=.FALSE.)
-!
-!          END IF
-
-        END DO
-
-        IF (allocated(info)) deallocate(info)
-        CALL flush_perso(out_unitp)
-
-
-!----------------------------------------------------------
-       IF (debug) THEN
-         write(out_unitp,*) 'END ',name_sub
-       END IF
-!----------------------------------------------------------
-      END SUBROUTINE sub_analyze_WP_forPropa
 
 !================================================================
 !

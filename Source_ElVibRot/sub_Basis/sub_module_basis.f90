@@ -1420,6 +1420,8 @@ MODULE mod_basis
 !      logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub='sub_dnGB_TO_dnBB'
 !-----------------------------------------------------------
+      IF (basis_set%ndim == 0) RETURN
+
       nq = get_nq_FROM_basis(basis_set)
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -1527,6 +1529,8 @@ MODULE mod_basis
       !logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub='sub_dnGB_TO_dnBG'
 !-----------------------------------------------------------
+      IF (basis_set%ndim == 0) RETURN
+
       nq = get_nq_FROM_basis(basis_set)
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -1535,6 +1539,7 @@ MODULE mod_basis
       END IF
 !-----------------------------------------------------------
 
+      IF (basis_set%ndim == 0) RETURN
       IF (.NOT. basis_set%packed_done) RETURN
 
       IF (basis_set%cplx) THEN
@@ -1650,6 +1655,7 @@ MODULE mod_basis
       !logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub='sub_dnGB_TO_dnGG'
 !-----------------------------------------------------------
+      IF (basis_set%ndim == 0) RETURN
       IF (.NOT. basis_set%dnGGRep) RETURN
       nq = get_nq_FROM_basis(basis_set)
       nb = basis_set%nb
@@ -1904,6 +1910,7 @@ MODULE mod_basis
       logical,parameter :: debug=.FALSE.
       !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
+      IF (basis_set%ndim == 0) RETURN
       IF (.NOT. basis_set%packed) RETURN
       IF (basis_set%packed_done) RETURN
 
@@ -2267,6 +2274,7 @@ END SUBROUTINE pack_basis
         write(out_unitp,*)
       END IF
 !---------------------------------------------------------------------
+      IF (basis_temp%ndim == 0) RETURN
       IF (.NOT. basis_temp%check_basis .OR. .NOT. basis_temp%packed_done) RETURN
       !IF (.NOT. basis_temp%packed_done) RETURN
       nq = get_nq_FROM_basis(basis_temp)
@@ -2616,7 +2624,9 @@ END SUBROUTINE pack_basis
        END IF
 !-----------------------------------------------------------
 !
-       IF (BasisnD%packed_done) THEN
+       IF (BasisnD%ndim == 0) THEN
+         WrhonD = ONE ! no grid point
+       ELSE IF (BasisnD%packed_done) THEN
          !CALL RecWrite_basis(BasisnD,write_all=.TRUE.)
          !IF (.NOT. allocated(BasisnD%wrho)) STOP 'problem with primitive basis. wrho is not allocated !!'
          !write(6,*) 'shape wrho, iq',shape(BasisnD%wrho),iq
@@ -2741,7 +2751,9 @@ END SUBROUTINE pack_basis
        END IF
 !-----------------------------------------------------------
 !
-       IF (BasisnD%primitive) THEN
+       IF (BasisnD%ndim == 0) THEN
+         CONTINUE ! no grid point
+       ELSE IF (BasisnD%primitive) THEN
          IF (present(iqi)) THEN
            tab_iq(:) = iq + iqi
          ELSE
@@ -2865,7 +2877,9 @@ END SUBROUTINE pack_basis
        END IF
 !-----------------------------------------------------------
 
-       IF (BasisnD%packed_done) THEN
+       IF (BasisnD%ndim == 0) THEN
+         rhonD = ONE ! no grid point
+       ELSE IF (BasisnD%packed_done) THEN
          rhonD = BasisnD%rho(iq)
        ELSE ! BasisnD%nb_basis MUST BE > 0
          IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_rhonD!!!'
@@ -2873,6 +2887,7 @@ END SUBROUTINE pack_basis
          SELECT CASE (BasisnD%SparseGrid_type)
          CASE (0) ! Direct product
            CALL calc_nDindex(BasisnD%nDindG,iq,nDval)
+           IF (debug) write(out_unitp,*) 'iq',iq,'nDval:',nDval
            rhonD = ONE
            DO i=1,BasisnD%nb_basis
              rhonD = rhonD * Rec_rhonD(BasisnD%tab_Pbasis(i)%Pbasis,nDval(i))
@@ -2965,7 +2980,9 @@ END SUBROUTINE pack_basis
        END IF
 !-----------------------------------------------------------
 !
-       IF (BasisnD%packed_done) THEN
+       IF (BasisnD%ndim == 0) THEN
+         WnD = ONE ! no grid point
+       ELSE IF (BasisnD%packed_done) THEN
          WnD = BasisnD%w(iq)
        ELSE ! BasisnD%nb_basis MUST BE > 0
          IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_WnD!!!'
@@ -3079,10 +3096,10 @@ END SUBROUTINE pack_basis
        END IF
 !-----------------------------------------------------------
 
-       IF (BasisnD%packed_done) THEN
-         x(:) = BasisnD%x(:,iq)
-       ELSE IF (BasisnD%OK_ndim_eq_0) THEN
+       IF (BasisnD%ndim == 0) THEN
          CONTINUE ! no grid point
+       ELSE IF (BasisnD%packed_done) THEN
+         x(:) = BasisnD%x(:,iq)
        ELSE ! BasisnD%nb_basis MUST BE > 0
          IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_x!!!'
 

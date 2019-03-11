@@ -313,7 +313,8 @@
           CALL time_perso('psi0')
           write(out_unitp,*) ' VIB: END Generates Psi0'
           write(out_unitp,*) '================================================='
-        write(out_unitp,*)
+          write(out_unitp,*)
+          CALL flush_perso(out_unitp)
       END IF
 
       !================================================================

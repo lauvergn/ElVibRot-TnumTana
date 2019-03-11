@@ -731,7 +731,7 @@
               IF (.NOT. OpGrid(k_term)%grid_cte) EXIT
             END DO
 
-            IF (all(OpGrid(k_term)%derive_termQact == 0)) THEN ! scalar part
+            !IF (all(OpGrid(k_term)%derive_termQact == 0)) THEN ! scalar part
               OpGrid(k_term)%Op_min = huge(ONE)
               OpGrid(k_term)%Op_max = -huge(ONE)
               OpGrid(k_term)%iq_min = 0
@@ -751,7 +751,7 @@
                   END IF
                 END DO
               END DO
-            END IF
+            !END IF
 
           END IF
 

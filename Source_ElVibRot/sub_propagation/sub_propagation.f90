@@ -275,17 +275,17 @@ CONTAINS
 !------ working parameters --------------------------------
       complex (kind=Rkind) :: cdot
 
-      integer       :: it,no
-      integer       :: i,j
-      integer       :: max_ecri
-      real (kind=Rkind) :: T      ! time
-      real (kind=Rkind) :: T_Delta! time+deltaT
+      integer              :: it,no
+      integer              :: i,j
+      integer              :: max_ecri
+      real (kind=Rkind)    :: T      ! time
+      real (kind=Rkind)    :: T_Delta! time+deltaT
       complex (kind=Rkind) :: E0,E1
-      real (kind=Rkind) :: DeltaE,epsi,RE0
+      real (kind=Rkind)    :: DeltaE,epsi,RE0
 
-      logical       :: FOD
-      integer  ::   nioWP
-      logical :: BasisRep,GridRep
+      logical              :: FOD
+      integer              :: nioWP
+      logical              :: BasisRep,GridRep
 
 
 
@@ -423,11 +423,11 @@ CONTAINS
       write(out_unitp,*)
       write(out_unitp,*) 'relaxed E/pot0 (ua)',E0
       write(out_unitp,*) 'relaxed E (ua)',E0+para_H%pot0
-      write(out_unitp,*) 'relaxed En/pot0 (cm-1)',                              &
-                                              E0*get_Conv_au_TO_unit('E','cm-1')
+      write(out_unitp,*) 'relaxed En/pot0 (cm-1)',                      &
+                                      E0*get_Conv_au_TO_unit('E','cm-1')
       write(out_unitp,*)
-      write(out_unitp,*) 'DHmax (ua)',E0 -                                      &
-               para_propa%para_poly%Hmax + para_propa%para_poly%DHmax
+      write(out_unitp,*) 'DHmax (ua)',E0 -                              &
+                  para_propa%para_poly%Hmax + para_propa%para_poly%DHmax
 !----------------------------------------------------------
 
 
@@ -799,9 +799,7 @@ CONTAINS
       real (kind=Rkind) :: T      ! time
 
       integer  ::   nioWP
-      TYPE (param_psi)             :: wp_Adia
       logical :: BasisRep,GridRep,test
-      character (len=len_trim(para_propa%file_WP_restart%name)) :: Restart_file_name
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug=.FALSE.
@@ -850,15 +848,14 @@ CONTAINS
 
       T = ZERO
       IF (para_propa%restart) THEN
-        CALL file_open(para_propa%file_autocorr,no,append=.TRUE.)
-        backspace(no)
-        read(no,*) name_dum,T
-        close(no)
-        write(out_unitp,*) 'T0 for the restart:',T
+        CALL ReadWP_restart(T,psi,para_propa%file_WP_restart)
 
-        CALL file_open(para_propa%file_WP_restart,no_restart)
-        read(no_restart,*) psi(1)%CvecB
-        close(no_restart)
+!        CALL file_open(para_propa%file_WP_restart,no_restart)
+!        read(no_restart,*) T,it
+!        write(out_unitp,*) 'T0 for the restart:',T
+!        read(no_restart,*) psi(1)%CvecB
+!        close(no_restart)
+
 
         CALL file_open(para_propa%file_autocorr,no,append=.TRUE.)
 
@@ -867,22 +864,15 @@ CONTAINS
         cdot = Calc_AutoCorr(psi0(1),psi(1),para_propa,T,Write_AC=.TRUE.)
       END IF
 
-      Restart_file_name = para_propa%file_WP_restart%name
       it            = 0
       itmax         = (para_propa%WPTmax-T)/para_propa%WPdeltaT
 
       DO WHILE ( (T - (para_propa%WPTmax-para_propa%WPdeltaT) <         &
                  para_propa%WPdeltaT/TEN**5) .AND. psi(1)%norme < psi(1)%max_norme)
 
-           para_propa%ana_psi%Write_psi2_Grid = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi2
-           para_propa%ana_psi%Write_psi_Grid  = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi
-
-           CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
-
-           !para_propa%file_WP_restart%name = Restart_file_name // '_it' // int_TO_char(mod(it,max(1,itmax/100)))
-           !CALL file_open(para_propa%file_WP_restart,no_restart)
-           !write(no_restart,*) psi(1)%CvecB
-           !close(no_restart)
+         para_propa%ana_psi%Write_psi2_Grid = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi2
+         para_propa%ana_psi%Write_psi_Grid  = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi
+         CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
 
          CALL march_gene(T,psi(1:1),psi0(1:1),1,.FALSE.,para_H,para_propa)
 
@@ -892,26 +882,16 @@ CONTAINS
       END DO
 
 !----------------------------------------------------------
-
-
-!----------------------------------------------------------
-!     - write the final WP---------------------------------
-      write(out_unitp,*) 'WP (BasisRep) at T=',T
+      IF (debug) write(out_unitp,*) 'WP (BasisRep) at T=',T
       IF (debug) CALL ecri_psi(T=T,psi=psi(1),ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
 
       para_propa%ana_psi%Write_psi2_Grid = para_propa%WPpsi2
       para_propa%ana_psi%Write_psi_Grid  = para_propa%WPpsi
       CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
 
-      para_propa%file_WP_restart%name = Restart_file_name
-      write(out_unitp,*) ' Last restart file: ',trim(para_propa%file_WP_restart%name)
-      CALL file_open(para_propa%file_WP_restart,no_restart)
-      write(no_restart,*) psi(1)%CvecB
-      close(no_restart)
 !----------------------------------------------------------
 
       CALL file_close(para_propa%file_autocorr)
-      CALL dealloc_psi(WP_adia,delete_all=.TRUE.)
       IF (psi(1)%norme >= psi(1)%max_norme) STOP
 
 
@@ -1019,9 +999,7 @@ CONTAINS
       para_H%E0     = para_propa%para_poly%E0
       para_H%Esc    = para_propa%para_poly%Esc
 
-      para_propa%para_poly%phase = para_H%E0*para_propa%WPdeltaT
       write(out_unitp,*) 'para_H%E0,para_H%Esc',para_H%E0,para_H%Esc
-      write(out_unitp,*) 'phase',para_propa%para_poly%phase
 
 !-----------------------------------------------------------
       T = ZERO

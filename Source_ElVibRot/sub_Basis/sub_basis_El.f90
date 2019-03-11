@@ -65,9 +65,15 @@
          write(out_unitp,*) 'nb',base%nb
        END IF
 !-----------------------------------------------------------
-
+       IF (NewBasisEl) THEN
+         write(out_unitp,*) ' ERROR in ',name_sub
+         write(out_unitp,*) '  A electronic basis is already defined'
+         write(out_unitp,*) '   CHECK your data!!'
+         STOP
+       END IF
 
      IF (base%nb <= 0) STOP 'ERROR nb<=0'
+     NewBasisEl = .TRUE.
 
      ! here nq=nb or nq=0
      CALL Set_nq_OF_basis(base,0)
@@ -81,7 +87,7 @@
       !CALL alloc_dnb_OF_basis(base)
       !CALL mat_id(base%dnRGB%d0,base%nb,base%nb)
       base%primitive_done = .TRUE.
-
+      base%packed_done    = .TRUE.
 
       CALL dealloc_nDindex(base%nDindB)
       base%nDindB%packed = .TRUE.

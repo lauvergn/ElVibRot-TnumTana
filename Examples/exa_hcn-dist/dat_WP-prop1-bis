@@ -59,11 +59,11 @@ Qana_Weight 0.9 3.187 2.178 0. 3.14 0.
 Weight_Rho  -1    0    0    0   0   0
 
  &propa
-        WPTmax=1000.d0 WPdeltaT=10.d0
+        WPTmax=100000.d0 WPdeltaT=2000.d0
 
-        n_WPecri = 1 WPpsi2 =f WPpsi=t
+        n_WPecri=0 WPpsi2=f WPpsi=f
 
-        type_WPpropa=1 max_poly=5000 npoly=300 poly_tol=1.d-12
+        type_WPpropa=1 max_poly=5000 npoly=300 poly_tol=1.d-15
         auto_Hmax=t
 
         WP0n_h=1 lect_WP0FBR=f

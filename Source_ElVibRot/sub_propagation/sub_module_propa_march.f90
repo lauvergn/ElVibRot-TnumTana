@@ -32,7 +32,7 @@
  USE mod_file
  USE mod_field,         ONLY : param_field
  USE mod_psi_set_alloc, ONLY : param_psi
- USE mod_propa,         ONLY : param_propa,cof,Calc_AutoCorr,Write_AutoCorr
+ USE mod_propa,         ONLY : param_propa,cof,Calc_AutoCorr,Write_AutoCorr,SaveWP_restart
  USE mod_march_SG4
  use mod_Constant,      only: get_conv_au_to_unit
  IMPLICIT NONE
@@ -46,11 +46,8 @@
 !    march_gene  with or without field
 !
 !================================================================
-
-
       SUBROUTINE march_gene(T,WP,WP0,nb_WP,print_Op,                    &
-                            para_H,para_propa,                          &
-                            tab_Op,para_field)
+                            para_H,para_propa,tab_Op,para_field)
       USE mod_system
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
@@ -69,13 +66,11 @@
       TYPE (param_psi) :: WP(:),WP0(:)
 
 !----- for printing --------------------------------------------------
-      logical ::print_Op
-
+      logical           :: print_Op
       real (kind=Rkind) :: T      ! time
+      integer           :: i,no
 
 !------ working parameters --------------------------------
-      integer          :: i,no
-
       !logical :: SGtype4 = .FALSE.
       logical :: SGtype4 = .TRUE.
 
@@ -123,7 +118,6 @@
       END IF
 
 !-----------------------------------------------------------
-!      write(out_unitp,*) 'para_propa%type_WPpropa',para_propa%type_WPpropa
       para_propa%march_error = .FALSE.
       no = para_propa%file_autocorr%unit
 
@@ -134,11 +128,11 @@
 
       SGtype4    = SGtype4 .AND. (para_H%BasisnD%SparseGrid_type == 4)
 
-
       SELECT CASE (para_propa%type_WPpropa)
 
       CASE (1)
         CALL march_cheby(T,no,WP(1),WP0(1),para_H,para_propa)
+
       CASE (2)
         IF (SGtype4 .AND. direct_KEO) THEN
           !CALL  march_noD_SG4_GridRep(T,no,WP(1),WP0(1),para_H,para_propa)
@@ -185,6 +179,8 @@
 
       END SELECT
 
+      CALL SaveWP_restart(T+para_propa%WPdeltaT,WP,para_propa%file_WP_restart)
+
 !----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'Psi at T+DT'
@@ -195,7 +191,6 @@
         write(out_unitp,*) 'END ',name_sub
       END IF
 !----------------------------------------------------------
-!STOP
       END SUBROUTINE march_gene
 !================================================================
 !
@@ -1563,8 +1558,8 @@
 
         write(out_unitp,*) 'psi%BasisRep psi%GridRep',psi%BasisRep,psi%GridRep
 
-        write(out_unitp,*) 'psi'
-        CALL ecri_psi(T=T,psi=psi,ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
+        !write(out_unitp,*) 'psi'
+        !CALL ecri_psi(T=T,psi=psi,ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
 
       END IF
 !-----------------------------------------------------------
@@ -1626,7 +1621,7 @@
 
          norm_exit = abs(w2%norme*para_propa%para_poly%coef_poly(jt))
          jt_exit = jt
-         IF (debug) write(out_unitp,*) 'jt,norms',jt,abs(w2%norme),norm_exit
+         IF (debug) write(out_unitp,*) 'jt,norms',jt,norm_exit
 
           IF (norm_exit > TEN**15) THEN
             write(out_unitp,*) ' ERROR in march_cheby'
@@ -1658,8 +1653,7 @@
 
       microdeltaT = para_propa%WPdeltaT/                                &
                     real(para_propa%nb_micro,kind=Rkind)
-      microphase = para_propa%para_poly%phase/                          &
-                    real(para_propa%nb_micro,kind=Rkind)
+      microphase = phase/real(para_propa%nb_micro,kind=Rkind)
 
       phase = ZERO
       microT = ZERO
@@ -1719,7 +1713,7 @@
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
+      USE mod_ana_psi,         ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -1732,11 +1726,10 @@
 
 
 !------ working variables ---------------------------------
-      integer            :: no
-      real (kind=Rkind)  :: rtj
-      integer            :: j
-      real  (kind=Rkind) :: T,signDT
-
+      integer              :: no
+      real (kind=Rkind)    :: rtj
+      integer              :: j
+      real  (kind=Rkind)   :: T,signDT
       complex (kind=Rkind) :: E0
 
 
@@ -1777,15 +1770,13 @@
 
       END DO
       IF (para_propa%write_iter .OR. debug)                             &
-                       write(out_unitp,*) 'j,wi%n/psi%n',j,w1%norme/psi%norme
-
+                  write(out_unitp,*) 'j,wi%n/psi%n',j,w1%norme/psi%norme
 
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END march_nOD_im'
       END IF
 !-----------------------------------------------------------
-!STOP
 
       END SUBROUTINE march_nOD_im
 !================================================================
@@ -1802,7 +1793,7 @@
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-      USE mod_ana_psi,          ONLY : norm2_psi
+      USE mod_ana_psi,         ONLY : norm2_psi
 
       USE mod_psi_SimpleOp
       IMPLICIT NONE
@@ -2198,15 +2189,14 @@
 !
 !================================================================
       SUBROUTINE march_new_noD_field(T,WP,nb_WP,print_Op,               &
-                                 para_H,para_Dip,                       &
-                                 para_field,para_propa)
+                                     para_H,para_Dip,para_field,para_propa)
       USE mod_system
 
       USE mod_field,           ONLY : param_field,sub_dnE
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
+      USE mod_ana_psi,         ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 

@@ -304,30 +304,42 @@
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='RecCVecG_TO_CVecB'
       logical, parameter :: debug=.FALSE.
-!     logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
-
+      IF (debug) THEN
+        write(out_unitp,*) ' BEGINNING in ',name_sub
+        write(out_unitp,*) 'nq,nb',nq,nb
+        write(out_unitp,*) 'shape CVecG',shape(CVecG)
+        write(out_unitp,*) 'shape CVecB',shape(CVecB)
+      END IF
 
         IF (basis_set%cplx .AND. basis_set%packed_done) THEN
-
-          CVecG(:) = CVecG(:) * cmplx(get_wrho_OF_basis(basis_set),kind=Rkind)
-          DO ib=1,nb
-            CVecB(ib) = sum( CVecG(:) * basis_set%dnCGB%d0(:,ib) )
-          END DO
-          !CVecB(1:nb) = matmul(CVecG(:),basis_set%dnCGB%d0(:,1:nb))
+          IF (basis_set%ndim == 0) THEN
+            CVecB(:) = CVecG(:)
+          ELSE
+            CVecG(:) = CVecG(:) * cmplx(get_wrho_OF_basis(basis_set),kind=Rkind)
+            DO ib=1,nb
+              CVecB(ib) = sum( CVecG(:) * basis_set%dnCGB%d0(:,ib) )
+            END DO
+            !CVecB(1:nb) = matmul(CVecG(:),basis_set%dnCGB%d0(:,1:nb))
+          END IF
 
         ELSE IF (.NOT. basis_set%cplx .AND. basis_set%packed_done) THEN
-
-          CVecG(:) = CVecG(:) * get_wrho_OF_basis(basis_set)
-          DO ib=1,nb
-            CVecB(ib) = sum( CVecG(:) * cmplx(basis_set%dnRGB%d0(:,ib),kind=Rkind) )
-          END DO
-          !CVecB(1:nb) = matmul(CVecG(:),basis_set%dnRGB%d0(:,1:nb))
+          IF (basis_set%ndim == 0) THEN
+            CVecB(:) = CVecG(:)
+          ELSE
+            CVecG(:) = CVecG(:) * get_wrho_OF_basis(basis_set)
+            DO ib=1,nb
+              CVecB(ib) = sum( CVecG(:) * cmplx(basis_set%dnRGB%d0(:,ib),kind=Rkind) )
+            END DO
+            !CVecB(1:nb) = matmul(CVecG(:),basis_set%dnRGB%d0(:,1:nb))
+          END IF
         ELSE
           IF (basis_set%nb_basis == 0 ) STOP ' ERROR with packed!!!'
 
           SELECT CASE (basis_set%SparseGrid_type)
           CASE (0) ! Direct product
+            !write(6,*) 'nq,nb',nq,nb ; flush(6)
             nnq  = nq
             nnb  = 1
             nb2  = 1
@@ -335,20 +347,25 @@
             nq2  = 1
 
             CALL alloc_NParray(CTempB,(/ nnq,nbb /),"CTempB",name_sub)
+            !write(6,*) 'coucou reshape 0' ; flush(6)
             CTempB(:,:) = reshape(CVecG,shape=(/ nnq,nbb /))
 
             DO ibasis=1,basis_set%nb_basis
               nb2 = basis_set%tab_Pbasis(ibasis)%Pbasis%nb
               nq2 = get_nq_FROM_basis(basis_set%tab_Pbasis(ibasis)%Pbasis)
+
               nnq = nnq / nq2
 
               CALL alloc_NParray(CTempG,(/ nnq,nq2,nnb /),"CTempG",name_sub)
+              !write(6,*) 'shape ibasis',ibasis ; flush(6)
+              !write(6,*) 'coucou CTempG ',shape(CTempG) ; flush(6)
+
               CTempG(:,:,:) = reshape(CTempB,shape=(/ nnq,nq2,nnb /))
 
               nbb = sum(basis_set%Tab_OF_Tabnb2(ibasis)%vec)
 
-!              write(out_unitp,*) 'G=>B ibasis,nnb,Tab_OF_Tabnb2',ibasis,nnb,      &
-!                                        basis_set%Tab_OF_Tabnb2(ibasis)%vec
+              !write(out_unitp,*) 'G=>B ibasis,nnb,Tab_OF_Tabnb2',ibasis,nnb,      &
+              !                          basis_set%Tab_OF_Tabnb2(ibasis)%vec
 
               CALL dealloc_NParray(CTempB,"CTempB",name_sub)
               CALL alloc_NParray(CTempB,(/ nnq,nbb /),"CTempB",name_sub)
@@ -437,11 +454,12 @@
               CALL dealloc_NParray(CTempG,"CTempG",name_sub)
 
               nnb = nbb
-
             END DO
+            !write(6,*) 'shape CTempB',shape(CTempB) ; flush(6)
+            !write(6,*) 'coucou reshape f' ; flush(6)
+
             CVecB(:) = reshape(CTempB, shape=(/ nnq*nnb /) )
             CALL dealloc_NParray(CTempB,"CTempB",name_sub)
-
           CASE (1) ! Sparse basis (Smolyak 1st implementation)
             CVecB(:) = CZERO
             CALL alloc_NParray(CB,(/ nb /),"CB",name_sub)
@@ -545,6 +563,10 @@
             STOP
           END SELECT
         END IF
+
+      IF (debug) write(out_unitp,*) ' END in ',name_sub
+
+
       END SUBROUTINE RecCVecG_TO_CVecB
 
       !!@description: TODO

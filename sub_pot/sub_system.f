@@ -3,7 +3,7 @@ C================================================================
 C    calc_Op : calculation of the potential and scalar operator matrices
 c    mat_V(nb_be,nb_be) and Mat_Scal(nb_be,nb_be,nb_ScalOp)
 c    nb_be : nb of elctronic surfaces
-c    Q are the coordinates in active order or dyn order
+c    Qop are the coordinates in active order or dyn order
 C================================================================
       SUBROUTINE calcN_op(mat_V,mat_imV,mat_ScalOp,nb_be,nb_ScalOp,
      *                    Qop,nb_QOp,mole,calc_ScalOp,pot_cplx)
@@ -23,12 +23,17 @@ c----- for the zmatrix and Tnum --------------------------------------
 
       integer           :: nb_QOp_loc=3
 
+
       IF (nb_be == 1 ) THEN
         write(out_unitp,*) ' ERROR sub_system for 2 PES'
         STOP
       END IF
 
       CALL Mat_pot0(mat_V,Qop(1:nb_QOp_loc),nb_be,nb_QOp_loc) 
+      mat_V(1,1) = min(mat_V(1,1),ONE)
+      mat_V(2,2) = min(mat_V(2,2),ONE)
+      !mat_V(1,2) = ZERO
+      !mat_V(2,1) = ZERO
 
       IF (pot_cplx) THEN
         CALL Mat_im_pot0(mat_imV,Qop(1:nb_QOp_loc),nb_be,nb_QOp_loc)
@@ -45,41 +50,64 @@ C     pot0(x) 1 D 2 surfaces
 C================================================================
       SUBROUTINE Mat_pot0(mat_V,Qop,nb_be,nb_QOp)
       USE mod_system
+      USE mod_Constant
       IMPLICIT NONE
 
       integer           :: nb_be,nb_QOp
       real (kind=Rkind) :: Qop(nb_QOp)
       real (kind=Rkind) :: mat_V(nb_be,nb_be)
+!declaration of the functions (2 diabatic states and 1 coupling term)
+      real (kind=Rkind) :: Hdir2D
+      real (kind=Rkind) :: Hct2D
+      real (kind=Rkind) :: Hdircorr
+      real (kind=Rkind) :: Hctcorr
+      real (kind=Rkind) :: Hdir
+      real (kind=Rkind) :: Hct
+      real (kind=Rkind) :: Hcp
+      real (kind=Rkind) :: HOOP, Tors, BLA
+!declaration of the parameters: 
+      real (kind=Rkind), parameter :: d1 = 2571.28_Rkind
+      real (kind=Rkind), parameter :: d2 = 50.5629_Rkind
+      real (kind=Rkind), parameter :: d3 = 3.7302_Rkind
+      real (kind=Rkind), parameter :: d4 = 594.966_Rkind
+      real (kind=Rkind), parameter :: c1 = 437.068_Rkind
+      real (kind=Rkind), parameter :: c2 = 16.7317_Rkind
+      real (kind=Rkind), parameter :: c3 = 7.35468_Rkind
+      real (kind=Rkind), parameter :: c4 = 88.517_Rkind
+      real (kind=Rkind), parameter :: c5 = 5.95221_Rkind
+      real (kind=Rkind), parameter :: hd1 = 126.216_Rkind
+      real (kind=Rkind), parameter :: hd2 = 75.0032_Rkind
+      real (kind=Rkind), parameter :: hc1 = 86.4639_Rkind
+      real (kind=Rkind), parameter :: hc2 = 43.4614_Rkind
+      real (kind=Rkind), parameter :: cp1 = 13.6991_Rkind
+      real (kind=Rkind), parameter :: cp2 = 1.13469_Rkind
+       
+        BLA = Qop(1) * get_Conv_au_TO_unit('L','Angs')
+        Tors = Qop(2)
+        HOOP = Qop(3) + TWO * Pi
+      
+       Hdir2D = SIN(Tors)**2 * (d1 * BLA**2 + d2) +
+     *     d3 * COS(Tors / 2_Rkind)**2 + d4 * (BLA - 0.091_Rkind)**2
+       Hct2D = (1_Rkind + c5 * SIN(Tors)**2) *
+     *     (c1 * BLA**2 + c2 * BLA + c3) + c4 * COS(Tors)**2
+       Hdircorr = hd1 * SIN(HOOP / 4_Rkind)**2  -
+     *     hd2 * SIN(HOOP / 4_Rkind) * SIN(Tors * 2_Rkind)
+       Hctcorr = hc1 * SIN(HOOP / 4_Rkind)**2  +
+     *     hc2 * SIN(HOOP / 4_Rkind) * SIN(Tors * 2_Rkind)
 
-      real (kind=Rkind) :: kdiag(nb_QOp)
-      real (kind=Rkind) :: Qeq1(nb_QOp)
-      real (kind=Rkind) :: Qeq2(nb_QOp)
-      real (kind=Rkind) :: DQ(nb_QOp)
-      real (kind=Rkind), parameter :: e11  = 0.00d0
-      real (kind=Rkind), parameter :: e22  = 0.03d0
-      real (kind=Rkind), parameter :: e12  = 5.0d-3
+        mat_V(1,1) = Hdir2D + Hdircorr 
+        mat_V(2,2) = Hct2D + Hctcorr
+        mat_V(1,2) = (1_Rkind + cp2 * SIN(Tors)**2) *
+     *     cp1 * SIN((-HOOP/2_Rkind + Tors) * 2_Rkind)
+        mat_V(2,1) = mat_V(1,2)
 
-       kdiag(:) = (/ 0.1d0,0.5d0,0.5d0 /)
-       Qeq1(:)  = (/ 0.8d0,3.2d0,2.2d0 /)
-       Qeq2(:)  = (/ 0.8d0,3.0d0,2.0d0 /)
+       
+        mat_V(:,:) = mat_V(:,:) / 627.509_Rkind
 
-       !Write(6,*) 'Qop',Qop
-       !Write(6,*) 'kdiag',kdiag
-
-       DQ(:) = Qop-Qeq1
-       !Write(6,*) 'DQ1',DQ
-       mat_V(1,1) = e11 + 0.5d0 * dot_product(kdiag*DQ,DQ)
-
-       DQ(:) = Qop-Qeq2
-       !Write(6,*) 'DQ2',DQ
-       mat_V(2,2) = e22 + 0.5d0 * dot_product(kdiag*DQ,DQ)
-
-       mat_V(1,2) = e12
-       mat_V(2,1) = e12
-
-       !write(6,*) 'mat_V',mat_V
+        !write(6,*) 'mat_V',BLA,Tors,HOOP,mat_V(1,1)
 
       END SUBROUTINE Mat_pot0
+      
 C================================================================
 C    fonction im_pot0(x) imaginary part of pot0
 C================================================================

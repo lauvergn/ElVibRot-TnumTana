@@ -90,19 +90,23 @@ CONTAINS
           write(out_unitp,*) ' psi%CvecB MUST be allocated !!'
           STOP
         END IF
-        iqaie0 = 1
-        ibaie0 = 1
-        iqaie1 = psi%nb_qa
-        ibaie1 = psi%nb_ba
-        DO ibie=1,psi%nb_bi*psi%nb_be
-          CALL RecCvecB_TO_CvecG(psi%CvecB(ibaie0:ibaie1),              &
-                                 psi%CvecG(iqaie0:iqaie1),              &
-                                 psi%nb_ba,psi%nb_qa,psi%BasisnD)
-          iqaie0 = iqaie0 + psi%nb_qa
-          ibaie0 = ibaie0 + psi%nb_ba
-          iqaie1 = iqaie1 + psi%nb_qa
-          ibaie1 = ibaie1 + psi%nb_ba
-        END DO
+        IF (NewBasisEl) THEN
+          CALL RecCvecB_TO_CvecG(psi%CvecB,psi%CvecG,psi%nb_ba,psi%nb_qa,psi%BasisnD)
+        ELSE
+          iqaie0 = 1
+          ibaie0 = 1
+          iqaie1 = psi%nb_qa
+          ibaie1 = psi%nb_ba
+          DO ibie=1,psi%nb_bi*psi%nb_be
+            CALL RecCvecB_TO_CvecG(psi%CvecB(ibaie0:ibaie1),            &
+                                   psi%CvecG(iqaie0:iqaie1),            &
+                                   psi%nb_ba,psi%nb_qa,psi%BasisnD)
+            iqaie0 = iqaie0 + psi%nb_qa
+            ibaie0 = ibaie0 + psi%nb_ba
+            iqaie1 = iqaie1 + psi%nb_qa
+            ibaie1 = ibaie1 + psi%nb_ba
+          END DO
+        END IF
       ELSE
         psi%RvecG(:) = ZERO
         IF ( .NOT. allocated(psi%RvecB) ) THEN
@@ -110,19 +114,23 @@ CONTAINS
           write(out_unitp,*) ' psi%RvecB MUST be allocated !!'
           STOP
         END IF
-        iqaie0 = 1
-        ibaie0 = 1
-        iqaie1 = psi%nb_qa
-        ibaie1 = psi%nb_ba
-        DO ibie=1,psi%nb_bi*psi%nb_be
-          CALL RecRvecB_TO_RvecG(psi%RvecB(ibaie0:ibaie1),              &
-                                 psi%RvecG(iqaie0:iqaie1),              &
-                                 psi%nb_ba,psi%nb_qa,psi%BasisnD)
-          iqaie0 = iqaie0 + psi%nb_qa
-          ibaie0 = ibaie0 + psi%nb_ba
-          iqaie1 = iqaie1 + psi%nb_qa
-          ibaie1 = ibaie1 + psi%nb_ba
-        END DO
+        IF (NewBasisEl) THEN
+          CALL RecRvecB_TO_RvecG(psi%RvecB,psi%RvecG,psi%nb_ba,psi%nb_qa,psi%BasisnD)
+        ELSE
+          iqaie0 = 1
+          ibaie0 = 1
+          iqaie1 = psi%nb_qa
+          ibaie1 = psi%nb_ba
+          DO ibie=1,psi%nb_bi*psi%nb_be
+            CALL RecRvecB_TO_RvecG(psi%RvecB(ibaie0:ibaie1),            &
+                                   psi%RvecG(iqaie0:iqaie1),            &
+                                   psi%nb_ba,psi%nb_qa,psi%BasisnD)
+            iqaie0 = iqaie0 + psi%nb_qa
+            ibaie0 = ibaie0 + psi%nb_ba
+            iqaie1 = iqaie1 + psi%nb_qa
+            ibaie1 = ibaie1 + psi%nb_ba
+          END DO
+        END IF
       END IF
 
 !----------------------------------------------------------
@@ -167,15 +175,15 @@ CONTAINS
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'nb_ba,nb_qa',psi%nb_ba,psi%nb_qa
+        write(out_unitp,*) 'nb_bi,nb_be',psi%nb_bi,psi%nb_be
         write(out_unitp,*) 'nb_act1',psi%nb_act1
         write(out_unitp,*)
         write(out_unitp,*) 'nb_basis',psi%BasisnD%nb_basis
         write(out_unitp,*)
-        !write(out_unitp,*) 'psi GridRep',psi%CvecG
 
+        write(out_unitp,*) 'psi GridRep'
+        CALL ecri_psi(ZERO,psi,out_unitp,.TRUE.,.FALSE.)
         CALL flush_perso(out_unitp)
-!        write(out_unitp,*) 'psi GridRep'
-!        CALL ecri_psi(ZERO,psi,out_unitp,.TRUE.,.FALSE.)
       END IF
 !-----------------------------------------------------------
 
@@ -188,8 +196,7 @@ CONTAINS
 
 
 !---- initisalisation ----------------------------------
-      psi%BasisRep = .TRUE.
-      CALL alloc_psi(psi)
+      CALL alloc_psi(psi,BasisRep=.TRUE.)
 !---- end initisalisation -------------------------------
 
       IF (psi%cplx) THEN
@@ -199,19 +206,23 @@ CONTAINS
           STOP
         END IF
         psi%CvecB(:) = CZERO
-        iqaie0 = 1
-        ibaie0 = 1
-        iqaie1 = psi%nb_qa
-        ibaie1 = psi%nb_ba
-        DO ibie=1,psi%nb_bi*psi%nb_be
-          CALL RecCvecG_TO_CvecB(psi%CvecG(iqaie0:iqaie1),        &
-                                     psi%CvecB(ibaie0:ibaie1),        &
-                                     psi%nb_qa,psi%nb_ba,psi%BasisnD)
-          iqaie0 = iqaie0 + psi%nb_qa
-          ibaie0 = ibaie0 + psi%nb_ba
-          iqaie1 = iqaie1 + psi%nb_qa
-          ibaie1 = ibaie1 + psi%nb_ba
-        END DO
+        IF (NewBasisEl) THEN
+          CALL RecCvecG_TO_CvecB(psi%CvecG,psi%CvecB,psi%nb_qaie,psi%nb_baie,psi%BasisnD)
+        ELSE
+          iqaie0 = 1
+          ibaie0 = 1
+          iqaie1 = psi%nb_qa
+          ibaie1 = psi%nb_ba
+          DO ibie=1,psi%nb_bi*psi%nb_be
+            CALL RecCvecG_TO_CvecB(psi%CvecG(iqaie0:iqaie1),            &
+                                       psi%CvecB(ibaie0:ibaie1),        &
+                                       psi%nb_qa,psi%nb_ba,psi%BasisnD)
+            iqaie0 = iqaie0 + psi%nb_qa
+            ibaie0 = ibaie0 + psi%nb_ba
+            iqaie1 = iqaie1 + psi%nb_qa
+            ibaie1 = ibaie1 + psi%nb_ba
+          END DO
+        END IF
 
       ELSE
         IF ( .NOT. allocated(psi%RvecG) ) THEN
@@ -220,19 +231,23 @@ CONTAINS
           STOP
         END IF
         psi%RvecB(:) = ZERO
-        iqaie0 = 1
-        ibaie0 = 1
-        iqaie1 = psi%nb_qa
-        ibaie1 = psi%nb_ba
-        DO ibie=1,psi%nb_bi*psi%nb_be
-          CALL RecRvecG_TO_RvecB(psi%RvecG(iqaie0:iqaie1),        &
-                                     psi%RvecB(ibaie0:ibaie1),        &
+        IF (NewBasisEl) THEN
+          CALL RecRvecG_TO_RvecB(psi%RvecG,psi%RvecB,psi%nb_qaie,psi%nb_baie,psi%BasisnD)
+        ELSE
+          iqaie0 = 1
+          ibaie0 = 1
+          iqaie1 = psi%nb_qa
+          ibaie1 = psi%nb_ba
+          DO ibie=1,psi%nb_bi*psi%nb_be
+            CALL RecRvecG_TO_RvecB(psi%RvecG(iqaie0:iqaie1),            &
+                                     psi%RvecB(ibaie0:ibaie1),          &
                                      psi%nb_qa,psi%nb_ba,psi%BasisnD)
-          iqaie0 = iqaie0 + psi%nb_qa
-          ibaie0 = ibaie0 + psi%nb_ba
-          iqaie1 = iqaie1 + psi%nb_qa
-          ibaie1 = ibaie1 + psi%nb_ba
-        END DO
+            iqaie0 = iqaie0 + psi%nb_qa
+            ibaie0 = ibaie0 + psi%nb_ba
+            iqaie1 = iqaie1 + psi%nb_qa
+            ibaie1 = ibaie1 + psi%nb_ba
+          END DO
+        END IF
       END IF
 
 !----------------------------------------------------------

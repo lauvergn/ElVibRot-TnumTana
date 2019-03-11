@@ -62,7 +62,7 @@
 
           integer           :: ndim        = 0                    !  dimension of the basis
                                                                   !  i.e. nb of variables
-          logical           :: OK_ndim_eq_0 = .FALSE.             ! IF T, the basis set can have ndim=0 (for Electronic basis set)
+          logical              :: OK_ndim_eq_0 = .FALSE.          ! IF T, the basis set can have ndim=0 (for Electronic basis set)
           integer, allocatable :: iQdyn(:)                        !  dim : ndim
           integer, allocatable :: Tabder_Qdyn_TO_Qbasis(:)        ! Tabder_Qdyn_TO_Qbasis(0:nb_var)
 
@@ -607,6 +607,10 @@
              CALL alloc_NParray(get_wrho_OF_basis,shape(basis_set%wrho),&
                                'get_wrho_OF_basis',name_sub)
              get_wrho_OF_basis = basis_set%wrho
+           ELSE
+             CALL alloc_NParray(get_wrho_OF_basis,(/ basis_set%nb /),&
+                               'get_wrho_OF_basis',name_sub)
+             get_wrho_OF_basis = ONE
            END IF
          END IF
 
@@ -1724,6 +1728,9 @@
       END IF
 !-----------------------------------------------------------
 
+    IF (basis_set%ndim == 0) THEN
+      CALL mat_id(RMatdnb,basis_set%nb,basis_set%nb)
+    ELSE
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
         RMatdnb(:,:) = basis_set%dnRGB%d0(:,:)
       ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
@@ -1733,6 +1740,7 @@
       ELSE ! 2d derivative
         RMatdnb(:,:) = basis_set%dnRGB%d2(:,:,dnba_ind(1),dnba_ind(2))
       END IF
+    END IF
 
 
 !-----------------------------------------------------------
@@ -1832,7 +1840,9 @@
         write(out_unitp,*) 'nq',nq
       END IF
 !-----------------------------------------------------------
-
+    IF (basis_set%ndim == 0) THEN
+      CALL Cplx_mat_id(CMatdnb,basis_set%nb,basis_set%nb)
+    ELSE
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
         CMatdnb(:,:) = basis_set%dnCGB%d0(:,:)
       ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
@@ -1842,6 +1852,7 @@
       ELSE ! 2d derivative
         CMatdnb(:,:) = basis_set%dnCGB%d2(:,:,dnba_ind(1),dnba_ind(2))
       END IF
+    END IF
 
 
 !-----------------------------------------------------------
@@ -2560,10 +2571,14 @@
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 
-      IF (present(init)) THEN
-        nq  = basis_set%Basis_Grid_Para%nq_init
+      IF (basis_set%ndim == 0) THEN
+        nq = get_nb_FROM_basis(basis_set)
       ELSE
-        nq  = basis_set%Basis_Grid_Para%nq
+        IF (present(init)) THEN
+          nq  = basis_set%Basis_Grid_Para%nq_init
+        ELSE
+          nq  = basis_set%Basis_Grid_Para%nq
+        END IF
       END IF
 
 !---------------------------------------------------------------------

@@ -33,14 +33,16 @@
       USE mod_field,         ONLY : param_field
       USE mod_psi_set_alloc, ONLY : param_psi
       USE mod_param_WP0,     ONLY : param_WP0
-      USE mod_type_ana_psi,       ONLY : param_ana_psi
+      USE mod_type_ana_psi,  ONLY : param_ana_psi
       IMPLICIT NONE
 
 PRIVATE
 PUBLIC :: param_poly,param_control,param_Davidson,param_propa
 PUBLIC :: read_propagation,read_davidson
-PUBLIC :: dealloc_param_propa,cof,Calc_AutoCorr,sub_analyze_WP_OpWP
-PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
+PUBLIC :: dealloc_param_propa,sub_analyze_WP_OpWP
+PUBLIC :: Read_AutoCorr,Write_AutoCorr,Calc_AutoCorr
+PUBLIC :: SaveWP_restart,ReadWP_restart
+PUBLIC :: initialisation1_poly,cof
 
       !!@description: TODO
       !!@param: TODO
@@ -48,17 +50,15 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
       !!@param: TODO
         TYPE param_poly
 
-        logical             ::       init_done = .FALSE.
-
+        logical           :: init_done = .FALSE.
 
         real (kind=Rkind) :: DHmax,Hmax,Hmin        ! parameters
         real (kind=Rkind) :: deltaE,Esc,E0          ! parameters
-        real (kind=Rkind) :: phase                  ! parameters
         real (kind=Rkind) :: alpha                  ! parameters
         real (kind=Rkind) :: poly_tol
-        integer       :: max_poly               ! max number of polynomials
+        integer           :: max_poly               ! max number of polynomials
         real (kind=Rkind), pointer :: coef_poly(:) => null()  !
-        integer       :: npoly                  ! number polynomials
+        integer           :: npoly                  ! number polynomials
 
         END TYPE param_poly
         TYPE param_control
@@ -326,6 +326,110 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 
       END SUBROUTINE dealloc_param_propa
 
+      SUBROUTINE SaveWP_restart(T,WP,file_restart)
+      USE mod_system
+      USE mod_psi_set_alloc
+      USE mod_file
+      IMPLICIT NONE
+
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_file), intent(inout) :: file_restart
+      TYPE (param_psi),  intent(in)    :: WP(:)
+      real (kind=Rkind), intent(in)    :: T
+
+
+!------ working parameters --------------------------------
+      integer       :: i,no_restart
+
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter ::name_sub='SaveWP_restart'
+      logical, parameter :: debug=.FALSE.
+!     logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) ' nb_psi',size(WP)
+        write(out_unitp,*)
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+
+
+      CALL file_open(file_restart,no_restart)
+      write(no_restart,*) T
+      DO i=1,size(WP)
+        write(no_restart,*) WP(i)%CvecB
+      END DO
+      close(no_restart)
+
+!----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+       END IF
+!----------------------------------------------------------
+
+      END SUBROUTINE SaveWP_restart
+      SUBROUTINE ReadWP_restart(T,WP,file_restart)
+      USE mod_system
+      USE mod_psi_set_alloc
+      USE mod_file
+      IMPLICIT NONE
+
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_file), intent(inout) :: file_restart
+      TYPE (param_psi),  intent(inout) :: WP(:)
+      real (kind=Rkind), intent(inout) :: T
+
+
+!------ working parameters --------------------------------
+      integer       :: i,no_restart,err_read
+
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter ::name_sub='ReadWP_restart'
+      logical, parameter :: debug=.FALSE.
+!     logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) ' nb_psi',size(WP)
+        write(out_unitp,*)
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+
+      CALL file_open(file_restart,no_restart,old=.TRUE.)
+
+      T = ZERO
+      !err_read = 0
+      read(no_restart,*,IOSTAT=err_read) T
+      IF (err_read /= 0) THEN
+        write(out_unitp,*) ' WARNING in ',name_sub
+        write(out_unitp,*) ' T (time) is not present in the restart file'
+        write(out_unitp,*) ' file name:',trim(file_restart%name)
+        write(out_unitp,*) ' => No restart, T0=0'
+        T = ZERO
+      ELSE
+        write(out_unitp,*) 'T0 for the restart:',T
+        DO i=1,size(WP)
+          read(no_restart,*) WP(i)%CvecB
+        END DO
+      END IF
+
+      close(no_restart)
+
+!----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+       END IF
+!----------------------------------------------------------
+
+      END SUBROUTINE ReadWP_restart
 !==============================================================
 !
 !     Calculation of the autocorrelation function
@@ -381,16 +485,44 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 
       END FUNCTION Calc_AutoCorr
 
+!==============================================================
+!
+!     write/read the autocorrelation function
+!
+!==============================================================
+      SUBROUTINE Write_AutoCorr(no,T,cdot)
+      USE mod_system
+      IMPLICIT NONE
 
-!================================================================
-!
-!    Analysis of the WP
-!
-!================================================================
-      !!@description: Wave paquet analysis
-      !!@param: TODO
-      !!@param: TODO
-      !!@param: TODO
+      integer              :: no
+      real (kind=Rkind)    :: T
+      complex (kind=Rkind) :: cdot
+
+      write(no,11) T,real(cdot,kind=Rkind),aimag(cdot),abs(cdot)
+ 11   format('AutoCor ',f15.3,3(1x,f0.8))
+
+      END SUBROUTINE Write_AutoCorr
+      SUBROUTINE Read_AutoCorr(no,T,cdot)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer                :: no,err_io
+      real (kind=Rkind)      :: T
+      complex (kind=Rkind)   :: cdot
+
+      character (len=Name_len) :: name
+      real (kind=Rkind)      :: a,b,c
+
+      read(no,*,IOSTAT=err_io) name,T,a,b,c
+      IF (err_io == 0) THEN
+       cdot = cmplx(a,b,kind=Rkind)
+      ELSE
+       cdot = czero
+      END IF
+!     write(out_unitp,*) name,T,cdot
+
+      END SUBROUTINE Read_AutoCorr
+
 
 !==============================================================
 !
@@ -404,7 +536,7 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 !----- variables for the WP propagation ----------------------------
       TYPE (param_poly) :: para_poly
       real (kind=Rkind) :: deltaT
-      integer       :: type_propa
+      integer           :: type_propa
 
 
 
@@ -413,8 +545,8 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='initialisation1_poly'
-      !logical, parameter :: debug =.FALSE.
-      logical, parameter :: debug =.TRUE.
+      logical, parameter :: debug =.FALSE.
+      !logical, parameter :: debug =.TRUE.
 !-----------------------------------------------------------
        IF (para_poly%init_done) RETURN
        IF (debug) THEN
@@ -448,8 +580,6 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 !     IF (type_propa == 3) para_poly%E0     = para_poly%Hmin
 !     IF (type_propa == 3) para_poly%alpha  = para_poly%deltaE *
 !    *                                            deltaT
-
-      para_poly%phase  = para_poly%E0*deltaT
 
       IF (debug) THEN
         write(out_unitp,*) 'Hmin,Hmax',para_poly%Hmin,para_poly%Hmax
@@ -630,7 +760,6 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
       USE mod_system
       IMPLICIT NONE
 
-
       integer       :: nOD,Max_nOD
       real (kind=Rkind) :: alpha,DeltaT,epsi
       real (kind=Rkind) :: coef(:)
@@ -684,44 +813,6 @@ PUBLIC :: initialisation1_poly,Read_AutoCorr,Write_AutoCorr
 !-----------------------------------------------------------
 
       END SUBROUTINE cof_nOD
-
-!==============================================================
-!
-!     write/read the autocorrelation function
-!
-!==============================================================
-      SUBROUTINE Write_AutoCorr(no,T,cdot)
-      USE mod_system
-      IMPLICIT NONE
-
-      integer              :: no
-      real (kind=Rkind)    :: T
-      complex (kind=Rkind) :: cdot
-
-      write(no,11) T,real(cdot,kind=Rkind),aimag(cdot),abs(cdot)
- 11   format('AutoCor ',f15.3,3(1x,f0.8))
-
-      END SUBROUTINE Write_AutoCorr
-      SUBROUTINE Read_AutoCorr(no,T,cdot)
-      USE mod_system
-      IMPLICIT NONE
-
-      integer                :: no,err_io
-      real (kind=Rkind)      :: T
-      complex (kind=Rkind)   :: cdot
-
-      character (len=Name_len) :: name
-      real (kind=Rkind)      :: a,b,c
-
-      read(no,*,IOSTAT=err_io) name,T,a,b,c
-      IF (err_io == 0) THEN
-       cdot = cmplx(a,b,kind=Rkind)
-      ELSE
-       cdot = czero
-      END IF
-!     write(out_unitp,*) name,T,cdot
-
-      END SUBROUTINE Read_AutoCorr
 
 SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_system

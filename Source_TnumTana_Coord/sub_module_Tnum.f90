@@ -642,7 +642,7 @@ MODULE mod_Tnum
       logical           :: num_GG,num_g,num_x,Gdiago,Gcte,With_VecCOM
       logical           :: Tana,MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,f2f1_ana
       real (kind=Rkind) :: stepT,stepOp
-      integer           :: KEO_TalyorOFQinact2n ! taylor epxansion along type 2n
+      integer           :: KEO_TalyorOFQinact2n ! taylor epxansion along coordinate 2n (21) types
 !     - end for the zmatrix ----------------------------
 
 

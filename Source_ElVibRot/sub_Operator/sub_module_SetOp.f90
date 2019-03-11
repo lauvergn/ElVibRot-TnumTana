@@ -1290,12 +1290,12 @@ MODULE mod_SetOp
        iq = para_Op%OpGrid(iterm00)%iq_min
        IF (iq > 0) THEN
          CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
-         write(out_unitp,*) 'iq_min,Op_min,Qact',iq,para_Op%OpGrid(iterm00)%Op_min,Qact
+         write(out_unitp,*) 'iq_min,Op_min,Qact',iq,para_Op%OpGrid(iterm00)%Op_min,Qact(1:para_Op%mole%nb_act1)
        END IF
        iq = para_Op%OpGrid(iterm00)%iq_max
        IF (iq > 0) THEN
          CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
-         write(out_unitp,*) 'iq_max,Op_max,Qact',iq,para_Op%OpGrid(iterm00)%Op_max,Qact
+         write(out_unitp,*) 'iq_max,Op_max,Qact',iq,para_Op%OpGrid(iterm00)%Op_max,Qact(1:para_Op%mole%nb_act1)
        END IF
 
        write(out_unitp,*) 'Analysis of the imaginary Op grid',para_Op%cplx
@@ -1324,8 +1324,8 @@ MODULE mod_SetOp
       TYPE (param_Op) :: para_H
 
 !----- for debuging --------------------------------------------------
-!     logical, parameter :: debug = .TRUE.
-      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+       logical, parameter :: debug = .FALSE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING init_psi : cplx',cplx

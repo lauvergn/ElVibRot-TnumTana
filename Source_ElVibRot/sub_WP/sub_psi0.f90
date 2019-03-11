@@ -106,8 +106,7 @@
       IF (.NOT. para_WP0%lect_WP0BasisRep .AND.                         &
           .NOT. para_WP0%WP0restart) THEN
 
-        WP0%GridRep=.TRUE.
-        CALL alloc_psi(WP0(1))
+        CALL alloc_psi(WP0(1),GridRep=.TRUE.)
 
         IF (para_WP0%lect_WP0GridRep) THEN
           !- read WP0 on the grid ----------------------------
@@ -211,6 +210,7 @@
           CALL ecri_psi(ZERO,WP0(1),out_unitp,.TRUE.,.FALSE.)
         END IF
         write(out_unitp,*) 'END psi0'
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -248,26 +248,26 @@
 
       real (kind=Rkind)      :: z,ze,zk
       real (kind=Rkind)      :: czk,szk
-      integer            :: i_act
-      integer            :: i_qa,i_qaie
+      integer                :: i_act
+      integer                :: i_qa,i_qaie
 
 !------ dipole moment ----------------------------------------------------
       real (kind=Rkind)      :: rhonD
 
 !----- for debuging --------------------------------------------------
       logical,parameter :: debug = .FALSE.
-!     logical,parameter :: debug = .TRUE.
+      !logical,parameter :: debug = .TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING psi0_gaussGridRep'
         write(out_unitp,*) 'nb_act1',WP0%nb_act1
         write(out_unitp,*) 'nq_a,n_h,nb_elec',WP0%nb_qa,WP0%nb_bi,WP0%nb_be
-        write(out_unitp,*) 'WP0n_h,WP0nb_elec',                                 &
-           para_WP0%WP0n_h,para_WP0%WP0nb_elec
+        write(out_unitp,*) 'WP0n_h,WP0nb_elec',para_WP0%WP0n_h,para_WP0%WP0nb_elec
         write(out_unitp,*) 'sigma,Qeq,imp_k',                                   &
            para_WP0%WP0sigma,para_WP0%WP0Qeq,para_WP0%WP0imp_k
         write(out_unitp,*) 'WP0_DIP',para_WP0%WP0_DIP
         write(out_unitp,*)
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -290,7 +290,6 @@
 
 !       - calculation of Qact -------------------------------
         CALL Rec_Qact(Qact,WP0%BasisnD,i_qa,mole)
-
 !       - calculation of WrhonD ------------------------------
         rhonD = Rec_rhonD(WP0%BasisnD,i_qa)
 
@@ -328,6 +327,7 @@
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'END psi0_gaussGridRep'
+         CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
 

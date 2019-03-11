@@ -39,21 +39,19 @@
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
-      TYPE (param_Op)  :: para_H
+      TYPE (param_Op)    :: para_H
 
 !----- variables for the WP ----------------------------------------
       TYPE (param_psi)   :: psi,Hpsi
       TYPE (param_psi)   :: WP0,WP
       TYPE (param_propa) :: para_propa,para_propa_loc
 
-
 !------ active Matrix H ------------------------------------------
       real (kind=Rkind)    :: Hinter
       complex (kind=Rkind) :: Emax
 
 !----- quadrature points and weight -----------------------------
-      real (kind=Rkind) :: WnD
-
+      real (kind=Rkind)    :: WnD
 
 !----- working parameters --------------------------------------------
       integer           :: i_qa
@@ -168,8 +166,7 @@
 
       CALL init_psi(psi,para_H,para_H%cplx)
       IF (debug) write(out_unitp,*) 'nb_tot',psi%nb_tot
-      psi%BasisRep = .TRUE.
-      CALL alloc_psi(psi)
+      CALL alloc_psi(psi,BasisRep =.TRUE.)
 
       psi = ZERO
       IF (para_H%cplx) THEN
@@ -196,7 +193,6 @@
       write(out_unitp,*) 'non-auto : Hmin,Hmax',para_H%Hmin,para_H%Hmax
       write(out_unitp,*) 'nb_tot',para_H%nb_tot
       CALL flush_perso(out_unitp)
-
 
       IF (para_H%read_Op) THEN
         IF (para_H%cplx) THEN
@@ -307,8 +303,6 @@ relax = .TRUE.
       TYPE (param_psi)   :: WP0,WP
       TYPE (param_propa) :: para_propa,para_propa_loc
 
-
-
 !----- working parameters --------------------------------------------
       complex (kind=Rkind) :: Emax
       integer           :: i
@@ -360,7 +354,6 @@ relax = .TRUE.
         WP%GridRep = .TRUE.
         CALL alloc_psi(WP)
 
-
         CALL init_psi(WP0,para_H,para_H%cplx)
         WP0%BasisRep = .TRUE.
         CALL alloc_psi(WP0)
@@ -369,6 +362,7 @@ relax = .TRUE.
         para_propa_loc%name_WPpropa      = 'Emax'
         para_propa_loc%file_WP%name     = make_FileName('file_WP_Hmax')
         para_propa_loc%ana_psi%file_Psi = para_propa_loc%file_WP
+        para_propa_loc%ana_psi%propa    = .TRUE.
 
         WP0 = ZERO
         DO i=1,WP0%nb_tot

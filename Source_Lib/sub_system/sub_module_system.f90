@@ -93,6 +93,7 @@ MODULE mod_system
       integer, parameter :: max_nb_G_FOR_print = 2000
       integer :: SGtype = -1
       integer :: FilePsiVersion = 0
+      logical :: NewBasisEl = .FALSE.
 
       TYPE param_FOR_optimization
 
