@@ -70,19 +70,18 @@
       integer  :: ecri_numi,ecri_nume
 
 !----- for debuging --------------------------------------------------
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+       logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING psi0'
-         write(out_unitp,*) 'WP0n_h,WP0nb_elec',                                &
-                       para_WP0%WP0n_h,para_WP0%WP0nb_elec
+         write(out_unitp,*) 'WP0n_h,WP0nb_elec',para_WP0%WP0n_h,para_WP0%WP0nb_elec
          write(out_unitp,*)
          CALL ecri_init_psi(WP0(1))
 
          write(out_unitp,*)
          write(out_unitp,*) 'WP0BasisRep',para_WP0%WP0BasisRep
-         write(out_unitp,*) 'lect_WP0GridRep,lect_WP0BasisRep',                          &
+         write(out_unitp,*) 'lect_WP0GridRep,lect_WP0BasisRep',         &
                    para_WP0%lect_WP0GridRep,para_WP0%lect_WP0BasisRep
          write(out_unitp,*)
          write(out_unitp,*) 'nb_basis_act1',WP0(1)%BasisnD%nb_basis

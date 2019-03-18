@@ -259,7 +259,6 @@
           CALL flush_perso(out_unitp)
         END DO
 
-
         ! find the optimal grid point number : cubature, SG or DP
         ! grid point number for DP basis (with Lmax)
         ! first check if nq_DP will be too huge !!

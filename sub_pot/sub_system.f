@@ -1,12 +1,14 @@
 c
 C================================================================
-C    calc_Op : calculation of the potential and scalar operator matrices
-c    mat_V(nb_be,nb_be) and Mat_Scal(nb_be,nb_be,nb_ScalOp)
-c    nb_be : nb of elctronic surfaces
-c    Qop are the coordinates in active order or dyn order
+C    calc_Op : calculation of the potential and dipolar matrices
+c    mat_V(nb_be,nb_be) and mat_dip(nb_be,nb_be,3)
+c    nb_be : nb of elctronic surface
+c    Q are the coordinates in active order or syl order
+c    dipolar calculation if calc_dip = T
 C================================================================
       SUBROUTINE calcN_op(mat_V,mat_imV,mat_ScalOp,nb_be,nb_ScalOp,
-     *                    Qop,nb_QOp,mole,calc_ScalOp,pot_cplx)
+     *                   Q,nb_var,mole,
+     *                   calc_ScalOp,pot_cplx)
 
       USE mod_system
       USE mod_Tnum
@@ -15,152 +17,196 @@ C================================================================
 c----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
 
-      integer           :: nb_be,nb_ScalOp,nb_QOp
+      integer           :: nb_be,nb_ScalOp,nb_var
       logical           :: calc_ScalOp,pot_cplx
       real (kind=Rkind) :: mat_V(nb_be,nb_be),mat_imV(nb_be,nb_be)
       real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
-      real (kind=Rkind) :: Qop(nb_QOp)
+      real (kind=Rkind) :: Q(nb_var)
 
-      integer           :: nb_QOp_loc=3
+      real (kind=Rkind) :: murrell,im_pot0
+      real (kind=Rkind) :: ScalOp(nb_ScalOp)
+
 
 
       IF (nb_be == 1 ) THEN
-        write(out_unitp,*) ' ERROR sub_system for 2 PES'
-        STOP
+        mat_V(1,1) = murrell(Q)
+        !write(6,*) 'Q,mat_V',Q,mat_V(1,1)
+        IF (pot_cplx) mat_imV(1,1) = im_pot0(Q)
+        IF (calc_ScalOp) THEN
+          CALL sub_ScalarOp(ScalOp,nb_ScalOp,Q,mole)
+          mat_ScalOp(1,1,:) = ScalOp(:)
+        END IF
+      ELSE
+        STOP 'nb_be > 1'
       END IF
 
-      CALL Mat_pot0(mat_V,Qop(1:nb_QOp_loc),nb_be,nb_QOp_loc) 
-      mat_V(1,1) = min(mat_V(1,1),ONE)
-      mat_V(2,2) = min(mat_V(2,2),ONE)
-      !mat_V(1,2) = ZERO
-      !mat_V(2,1) = ZERO
-
-      IF (pot_cplx) THEN
-        CALL Mat_im_pot0(mat_imV,Qop(1:nb_QOp_loc),nb_be,nb_QOp_loc)
-      END IF
-
-      IF (calc_ScalOp) THEN
-        CALL Mat_ScalarOp(mat_ScalOp,Qop(1:nb_QOp_loc),mole,
-     *                    nb_be,nb_ScalOp,nb_QOp_loc)
-      END IF
-
-      END SUBROUTINE calcN_op
-C================================================================
-C     pot0(x) 1 D 2 surfaces
-C================================================================
-      SUBROUTINE Mat_pot0(mat_V,Qop,nb_be,nb_QOp)
-      USE mod_system
-      USE mod_Constant
-      IMPLICIT NONE
-
-      integer           :: nb_be,nb_QOp
-      real (kind=Rkind) :: Qop(nb_QOp)
-      real (kind=Rkind) :: mat_V(nb_be,nb_be)
-!declaration of the functions (2 diabatic states and 1 coupling term)
-      real (kind=Rkind) :: Hdir2D
-      real (kind=Rkind) :: Hct2D
-      real (kind=Rkind) :: Hdircorr
-      real (kind=Rkind) :: Hctcorr
-      real (kind=Rkind) :: Hdir
-      real (kind=Rkind) :: Hct
-      real (kind=Rkind) :: Hcp
-      real (kind=Rkind) :: HOOP, Tors, BLA
-!declaration of the parameters: 
-      real (kind=Rkind), parameter :: d1 = 2571.28_Rkind
-      real (kind=Rkind), parameter :: d2 = 50.5629_Rkind
-      real (kind=Rkind), parameter :: d3 = 3.7302_Rkind
-      real (kind=Rkind), parameter :: d4 = 594.966_Rkind
-      real (kind=Rkind), parameter :: c1 = 437.068_Rkind
-      real (kind=Rkind), parameter :: c2 = 16.7317_Rkind
-      real (kind=Rkind), parameter :: c3 = 7.35468_Rkind
-      real (kind=Rkind), parameter :: c4 = 88.517_Rkind
-      real (kind=Rkind), parameter :: c5 = 5.95221_Rkind
-      real (kind=Rkind), parameter :: hd1 = 126.216_Rkind
-      real (kind=Rkind), parameter :: hd2 = 75.0032_Rkind
-      real (kind=Rkind), parameter :: hc1 = 86.4639_Rkind
-      real (kind=Rkind), parameter :: hc2 = 43.4614_Rkind
-      real (kind=Rkind), parameter :: cp1 = 13.6991_Rkind
-      real (kind=Rkind), parameter :: cp2 = 1.13469_Rkind
-       
-        BLA = Qop(1) * get_Conv_au_TO_unit('L','Angs')
-        Tors = Qop(2)
-        HOOP = Qop(3) + TWO * Pi
-      
-       Hdir2D = SIN(Tors)**2 * (d1 * BLA**2 + d2) +
-     *     d3 * COS(Tors / 2_Rkind)**2 + d4 * (BLA - 0.091_Rkind)**2
-       Hct2D = (1_Rkind + c5 * SIN(Tors)**2) *
-     *     (c1 * BLA**2 + c2 * BLA + c3) + c4 * COS(Tors)**2
-       Hdircorr = hd1 * SIN(HOOP / 4_Rkind)**2  -
-     *     hd2 * SIN(HOOP / 4_Rkind) * SIN(Tors * 2_Rkind)
-       Hctcorr = hc1 * SIN(HOOP / 4_Rkind)**2  +
-     *     hc2 * SIN(HOOP / 4_Rkind) * SIN(Tors * 2_Rkind)
-
-        mat_V(1,1) = Hdir2D + Hdircorr 
-        mat_V(2,2) = Hct2D + Hctcorr
-        mat_V(1,2) = (1_Rkind + cp2 * SIN(Tors)**2) *
-     *     cp1 * SIN((-HOOP/2_Rkind + Tors) * 2_Rkind)
-        mat_V(2,1) = mat_V(1,2)
-
-       
-        mat_V(:,:) = mat_V(:,:) / 627.509_Rkind
-
-        !write(6,*) 'mat_V',BLA,Tors,HOOP,mat_V(1,1)
-
-      END SUBROUTINE Mat_pot0
-      
-C================================================================
-C    fonction im_pot0(x) imaginary part of pot0
-C================================================================
-      SUBROUTINE Mat_im_pot0(mat_imV,Qop,nb_be,nb_QOp)
+      END
+c=================================================================
+c
+c     potentiel de Murrell pour HCN en coordonnees de Jacobi
+c     Ref: J. N. Murrell, S. Carter and L. O. Halonene, i
+c          J. Mol. Spectrosc. vo93 p307 1982
+c          
+c                       TT  C
+c                   H_____ / gR=Q(3)
+c                  pR=Q(2)/
+c                        N
+c    Q(1) = T = cos(TT)
+c
+c    le vrai potentiel est en fonction des 3 distances
+c    R1 = R_CH
+c    R2 = R_CN
+c    R3 = R_HN
+c=================================================================
+      FUNCTION murrell(Q)
       USE mod_system
       IMPLICIT NONE
+      real(kind=Rkind) :: murrell
 
-      integer           :: nb_be,nb_QOp
-      real (kind=Rkind) :: mat_imV(nb_be,nb_be)
-      real (kind=Rkind) :: Qop(nb_QOp)
-
-      integer           :: i
-      real (kind=Rkind) :: im_pot0 ! imaginary function
-
-      mat_imV = ZERO
-
-      DO i=1,nb_be
-        mat_imV(i,i) = im_pot0(Qop)
-      END DO
-
-      END SUBROUTINE Mat_im_pot0
-      FUNCTION im_pot0(Qop)
-      USE mod_system
-      IMPLICIT NONE
-      real (kind=Rkind) :: im_pot0
+      real(kind=Rkind) autoA,autoeV
+c     parameter (autoA=.529178d0)
+c     parameter (autoeV=27.21183d0)
+      parameter (autoA=0.52917715_Rkind)
+      parameter (autoeV=27.21183_Rkind)
 
 
-       real (kind=Rkind) :: Qop(1)
-       real (kind=Rkind) :: z
-       real (kind=Rkind), parameter :: a=ONETENTH, Q0=0.9_Rkind
+      real(kind=Rkind) Q(3)
+      real(kind=Rkind) gR,pR
 
-       z = ZERO
-       IF (Qop(1) > Q0) z = -a * (Qop(1) - Q0)**2
+      real(kind=Rkind) mB,mC,mH
+      real(kind=Rkind) T,RN,RC,r1,r2,r3
 
-       im_pot0 = z
+      real(kind=Rkind) Z1,Z12,V1
+      real(kind=Rkind) Z2,Z22,V2
+      real(kind=Rkind) Z3,Z32,V3
 
-       END FUNCTION im_pot0
+      real(kind=Rkind) S1,S2,S3,S12,S22,S32,POLY
+      real(kind=Rkind) E1,E2,E3,HY1,HY2,HY3,SWITCH,V123
+
+      T  = Q(1)
+      pR = Q(2)
+      gR = Q(3)
+
+      mB=12._Rkind
+      mC=14.003074_Rkind
+      mH=1.007825_Rkind
+
+c     T=cos(TT)
+      RN=mC/(mB+mC)
+      RC=ONE-RN
+      r1=pR**2+(RN*gR)**2-TWO*pR*gR*RN*T
+      R1=sqrt(r1)
+      R2=gR
+      R3=sqrt(pR**2+(RC*gR)**2+TWO*pR*gR*RC*T)
+c     write(out_unitp,*) r1,r2,r3
+      R1=R1*autoA
+      R2=R2*autoA
+      R3=R3*autoA
+
+C.....CH
+      Z1=R1-1.0823_Rkind
+      Z12=Z1*Z1
+      V1=-2.8521_Rkind*(ONE+5.5297_Rkind*Z1+
+     *    8.7166_Rkind*Z12+5.3082_Rkind*Z1*Z12)*
+     *    exp(-5.5297_Rkind*Z1)
+C.....CN
+      Z2=R2-1.1718_Rkind
+      Z22=Z2*Z2 
+      V2=-7.9282_Rkind*(ONE+5.2448_Rkind*Z2+
+     *       7.3416_Rkind*Z22+4.9785_Rkind*Z2*Z22)*
+     *    exp(-5.2448_Rkind*Z2)
+C.....NH
+      Z3=R3-1.0370_Rkind
+      Z32=Z3*Z3
+      V3=-3.9938_Rkind*(ONE+3.0704_Rkind*Z3)*exp(-3.0704_Rkind*Z3)
+
+c     write(out_unitp,*) v1,v2,v3
+
+C.....THREE BODY TERMS
+      Z1=R1-1.9607_Rkind
+      Z2=R2-2.2794_Rkind
+      Z3=R3-1.8687_Rkind
+      S1=0.4436_Rkind*Z1+0.6091_Rkind*Z2+0.6575_Rkind*Z3
+      S2=-.8941_Rkind*Z1+0.2498_Rkind*Z2+0.3718_Rkind*Z3
+      S3=0.0622_Rkind*Z1-0.7527_Rkind*Z2+0.6554_Rkind*Z3
+
+      S12=S1*S1
+      S22=S2*S2
+      S32=S3*S3
+      POLY=-3.0578_Rkind*(ONE+1.9076_Rkind*S1-0.5008_Rkind*S2-
+     *      0.0149_Rkind*S3+0.6695_Rkind*S12-
+     +      1.3535_Rkind*S22-1.0501_Rkind*S32+
+     *      0.2698_Rkind*S1*S2-1.1120_Rkind*S1*S3+
+     +      1.9310_Rkind*S2*S3-0.0877_Rkind*S1*S12+
+     *      0.0044_Rkind*S2*S22+0.0700_Rkind*S3*S32+
+     +      0.0898_Rkind*S12*S2-1.0186_Rkind*S1*S22-
+     *      0.0911_Rkind*S12*S3+
+     +      0.0017_Rkind*S1*S32+0.4567_Rkind*S22*S3-
+     *      0.8840_Rkind*S2*S32+
+     +      0.3333_Rkind*S1*S2*S3-0.0367_Rkind*S12*S12+
+     *      0.4821_Rkind*S22*S22+
+     +      0.2564_Rkind*S32*S32-0.0017_Rkind*S12*S1*S2-
+     *      0.2278_Rkind*S12*S22-
+     +      0.1287_Rkind*S1*S2*S22+0.1759_Rkind*S1*S12*S3-
+     *      0.0399_Rkind*S12*S32-
+     +      0.1447_Rkind*S1*S3*S32-0.3147_Rkind*S2*S22*S3+
+     *      0.1233_Rkind*S22*S32+
+     +      0.3161_Rkind*S2*S3*S32+0.0919_Rkind*S12*S2*S3-
+     *      0.0954_Rkind*S1*S22*S3+
+     +      0.1778_Rkind*S1*S2*S32-0.1892_Rkind*S22*S22*S2)
+
+
+      E1=exp(3.9742_Rkind*Z1/TWO)
+      E2=exp(4.3688_Rkind*Z2/TWO)
+      E3=exp(1.5176_Rkind*Z3/TWO)
+      HY1=(E1-ONE/E1)/(E1+ONE/E1)
+      HY2=(E2-ONE/E2)/(E2+ONE/E2)
+      HY3=(E3-ONE/E3)/(E3+ONE/E3)
+      SWITCH=(ONE-HY1)*(ONE-HY2)*(ONE-HY3)
+      V123=SWITCH*POLY
+
+c     write(out_unitp,*) v123,V1+V2+V3+V123
+
+      murrell=(V1+V2+V3+V123)/autoeV
+
+
+      RETURN
+      END
 C================================================================
 C    fonction pot_rest(x)
 C================================================================
       FUNCTION pot_rest(Qact,Delta_Qact,nb_inact2n)
       USE mod_system
       IMPLICIT NONE
-      real (kind=Rkind) :: pot_rest
+      real(kind=Rkind) :: pot_rest
 
-
-       real (kind=Rkind) :: Qact(1)
-       integer :: nb_inact2n
-       real (kind=Rkind) :: Delta_Qact(nb_inact2n)
+       real(kind=Rkind) Qact(1)
+       integer nb_inact2n
+       real(kind=Rkind) Delta_Qact(nb_inact2n)
 
        pot_rest = ZERO
 
-       END FUNCTION pot_rest
+       END
+C================================================================
+C    fonction im_pot0(x)
+C================================================================
+      FUNCTION im_pot0(Q)
+      USE mod_system
+      IMPLICIT NONE
+      real(kind=Rkind) :: im_pot0
+
+      real(kind=Rkind) Q(3)
+
+       real(kind=Rkind), parameter :: a=-0.01_Rkind,Q0=2.5_Rkind
+
+       IF (Q(3) > Q0) THEN
+         im_pot0 = a*(Q(3) - Q0)
+       ELSE
+         im_pot0 = ZERO
+       END IF
+
+       RETURN
+       END
 C================================================================
 C    sub hessian
 C================================================================
@@ -168,18 +214,18 @@ C================================================================
       USE mod_system
       IMPLICIT NONE
 
-       real (kind=Rkind) :: h
+       real(kind=Rkind) h
 
        h = ZERO
 
-       END SUBROUTINE sub_hessian
+
+      END
 c
 C================================================================
 C    fonction pot0(x) 1 D (avec x=cos(theta))
 c    pour une tri atomique en jacobie
 C================================================================
-      SUBROUTINE Mat_ScalarOp(mat_ScalOp,Qop,mole,
-     *                        nb_be,nb_ScalOp,nb_QOp)
+      SUBROUTINE sub_ScalarOp(ScalOp,nb_ScalOp,Q,mole)
       USE mod_system
       USE mod_Tnum
       IMPLICIT NONE
@@ -187,18 +233,23 @@ C================================================================
 c----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
 
+       integer nb_Q,nb_ScalOp
+       parameter (nb_Q=3)
+       real(kind=Rkind) Q(nb_Q)
+       real(kind=Rkind) ScalOp(nb_ScalOp)
+       integer :: i
 
-      integer           :: nb_be,nb_ScalOp,nb_QOp
-      real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
-      real (kind=Rkind) :: Qop(nb_QOp)
+
+       ScalOp(:) = ZERO
+       DO i=1,nb_ScalOp
+         ScalOp(i) = real(i,kind=Rkind) + 0.01_Rkind * Q(1) + 
+     *                                   0.02_Rkind*(Q(2)+Q(3))
+       END DO
+       ScalOp(2) = ZERO
+       ScalOp(3) = ZERO
 
 
-       mat_ScalOp(:,:,:) = ZERO
-
-       mat_ScalOp(1,2,1) = ONE
-       mat_ScalOp(2,1,1) = ONE
-
-       END SUBROUTINE Mat_ScalarOp
+       END
 C================================================================
 C    analytical gradient along the path
 C================================================================
@@ -275,7 +326,7 @@ c----- for the zmatrix and Tnum --------------------------------------
        real (kind=Rkind)  :: poly_legendre ! function
        character (len=14) :: nom
        logical :: exist
-       integer :: iv,jv,i,j,kl,k
+       integer :: iv,jv,i,j,kl
        logical :: deriv,num
        real (kind=Rkind) :: step
 
@@ -369,13 +420,13 @@ c       write(out_unitp,*) 'd0h(i,j)',i,j,d0h(i,j)
 
 c---------------------------------------------------------------------
       IF (debug) THEN       
-        write(out_unitp,*) 'Qact1',c_act
-        DO i=1,mole%nb_inact2n
-        DO j=i,mole%nb_inact2n
-          write(out_unitp,*) 'F(.,i,j)',i,j,nn(i,j)
-          write(out_unitp,*) (F(k,i,j),k=1,nn(i,j))
-        END DO
-        END DO
+       !write(out_unitp,*) 'Qact1',c_act
+       !DO i=1,mole%nb_inact2n
+       !DO j=i,mole%nb_inact2n
+       !  write(out_unitp,*) 'F(.,i,j)',i,j,nn(i,j)
+       !  write(out_unitp,*) (F(k,i,j),k=1,nn(i,j))
+       !END DO
+       !END DO
         write(out_unitp,*) 'd0h at c_act:',c_act
         CALL Write_Mat(d0h,6,4)
         write(out_unitp,*) 'END d0d1d2_h'
@@ -384,7 +435,7 @@ c---------------------------------------------------------------------
 
       END SUBROUTINE d0d1d2_h
 C================================================================
-C    analytical derivative (dnQflex : Qflex Qflex' Qflex" Qflex'") calculation
+C    analytical derivative (dnQflex) calculation
 c    for the variable iq
 C================================================================
       SUBROUTINE calc_dnQflex(iq,dnQflex,Qact,nb_act,nderiv,it)
@@ -406,7 +457,7 @@ C================================================================
        character (len=14) :: nom
        logical :: exist
 
-       integer :: vi,kl,k
+       integer :: vi,kl
 
        integer, parameter      ::  max_points=200
        integer, parameter      ::  nb_inactb = 5
@@ -500,7 +551,7 @@ c---------------------------------------------------------------------
 
        END SUBROUTINE calc_dnQflex
 C================================================================
-C    analytical derivative (Qeq Qeq' Qeq" Qeq'") calculation
+C    analytical derivative (Qeq) calculation
 c    for the variable i_Qdyn
 C================================================================
       SUBROUTINE d0d1d2d3_Qeq(i_Qdyn,
@@ -532,7 +583,7 @@ c----- for the zmatrix and Tnum --------------------------------------
        character (len=14) :: nom
        logical :: exist
 
-       integer :: vi,kl,k,i_act,j_act,k_act
+       integer :: vi,kl,i_act,j_act,k_act
 
        integer, parameter      ::  max_points=200
        integer, parameter      ::  nb_inactb = 5
@@ -641,9 +692,9 @@ c---------------------------------------------------------------------
 c---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'd0req : ',c_act,d0req
-        write(out_unitp,*) 'd1req : ',c_act,d1req
-        write(out_unitp,*) 'd2req : ',c_act,d2req
-        write(out_unitp,*) 'd3req : ',c_act,d3req
+        IF (nderiv > 0) write(out_unitp,*) 'd1req : ',c_act,d1req
+        IF (nderiv > 1) write(out_unitp,*) 'd2req : ',c_act,d2req
+        IF (nderiv > 2) write(out_unitp,*) 'd3req : ',c_act,d3req
         write(out_unitp,*) 'END d0d1d2d3_Qeq'
       END IF
 c---------------------------------------------------------------------

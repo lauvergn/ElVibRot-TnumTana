@@ -244,7 +244,7 @@
 
         DO iOp=1,size(d0MatOp)
           CALL Init_d0MatOp(d0MatOp(iOp),para_AllOp%tab_Op(iOp)%param_TypeOp,&
-                            para_AllOp%tab_Op(1)%nb_bie)
+                        para_AllOp%tab_Op(1)%nb_bi*para_AllOp%tab_Op(1)%para_PES%nb_elec)
         END DO
 
 

@@ -277,6 +277,7 @@
           ! transfert of iQdyn, nrho, --------------------------------
           i0 = 0
           DO i=1,basis_temp%nb_basis
+            IF (basis_temp%tab_Pbasis(i)%Pbasis%ndim == 0) CYCLE
             i1 = i0 + basis_temp%tab_Pbasis(i)%Pbasis%ndim
             basis_temp%iQdyn(i0+1:i1) = basis_temp%tab_Pbasis(i)%Pbasis%iQdyn(:)
             basis_temp%nrho(i0+1:i1)  = basis_temp%tab_Pbasis(i)%Pbasis%nrho(:)
@@ -313,7 +314,7 @@
 !================================================================
 ! ++    read basis_nD
 !
-!        Now nD<3D (change max_dim = 2)
+!        Now nD<50D (change max_dim = 50)
 !
 !================================================================
       SUBROUTINE read5_basis_nD(basis_temp,mole)
@@ -333,15 +334,14 @@
       logical            :: SparseGrid_With_DP      ! Remark: when only SparseGrid_With_Cuba=T, and the grid does not exit the program stops
       integer            :: L_TO_n_type,max_nb,max_nq
       integer            :: L_SparseGrid,L_TO_nq_A,L_TO_nq_B,L_TO_nq_C,Lexpo_TO_nq
-      integer            :: L1_SparseGrid,L2_SparseGrid,Num_OF_Lmax
-      integer            :: Type_OF_nDindB,MaxCoupling_OF_nDindB,nDinit_OF_nDindB
-      integer            :: nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB
-      logical            :: contrac_WITH_nDindB
-      real (kind=Rkind)  :: Norm_OF_nDindB,weight_OF_nDindB
-      integer            :: L_SparseBasis,L_TO_nb_A,L_TO_nb_B,Lexpo_TO_nb
+      integer              :: L1_SparseGrid,L2_SparseGrid,Num_OF_Lmax
+      integer              :: Type_OF_nDindB,MaxCoupling_OF_nDindB,nDinit_OF_nDindB
+      integer              :: nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB
+      logical              :: contrac_WITH_nDindB
+      real (kind=Rkind)    :: Norm_OF_nDindB,weight_OF_nDindB
+      integer              :: L_SparseBasis,L_TO_nb_A,L_TO_nb_B,Lexpo_TO_nb
       integer, allocatable :: Tab_L_TO_n(:)
-      logical            :: read_L_TO_n
-
+      logical              :: read_L_TO_n
 
       integer            :: ndim,nb_basis
 
@@ -353,7 +353,7 @@
       integer            :: auto_contrac_type1_TO,auto_contrac_type21_TO
       character (len=Line_len) :: name_contrac_file
 
-      logical            :: cplx
+      logical            :: cplx,BasisEl
 
       integer, parameter :: max_dim = 50
       integer            :: iQact(max_dim)
@@ -547,12 +547,17 @@
       IF (.NOT. basis_temp%active) RETURN
 
       basis_temp%name                   = name
+
       CALL string_uppercase_TO_lowercase(basis_temp%name)
-      basis_temp%OK_ndim_eq_0 = .FALSE.
-      IF (trim(adjustl(basis_temp%name)) == 'el') basis_temp%OK_ndim_eq_0 = .TRUE.
+
+      IF (trim(adjustl(basis_temp%name)) == 'el') THEN
+        BasisEl = .TRUE.
+      ELSE
+        BasisEl = .FALSE.
+      END IF
 
 
-      IF (ndim <= 0 .AND. nb_basis == 0 .AND. .NOT. basis_temp%OK_ndim_eq_0) THEN
+      IF (ndim <= 0 .AND. nb_basis == 0 .AND. .NOT. BasisEl) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' The primitive basis has no coordinates !'
         write(out_unitp,*) ' Specified the active coordinates with iQact(:) or iQdyn(:)'
@@ -653,7 +658,6 @@
 
         IF (read_L_TO_n) THEN
           CALL alloc_NParray(Tab_L_TO_n,(/ 10 /),"Tab_L_TO_n",name_sub,(/ 0 /))
-
 
           read(in_unitp,*,IOSTAT=err_io) dummy_name,Tab_L_TO_n
           IF (err_io /= 0) THEN

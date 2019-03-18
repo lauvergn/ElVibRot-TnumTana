@@ -1635,9 +1635,6 @@ END SUBROUTINE sub_analyze_psi
         psiN = .FALSE.
       END IF
 
-      !normeGridRep = .FALSE.
-      !normeBasisRep = .TRUE.
-
       IF (present(GridRep)) THEN
         IF (present(BasisRep)) THEN
           normeGridRep  = GridRep
@@ -1921,146 +1918,147 @@ END SUBROUTINE sub_analyze_psi
 !----------------------------------------------------------
 
       END SUBROUTINE renorm_psi_With_norm2
-      SUBROUTINE Channel_weight(tab_WeightChannels,psi,                 &
-                                GridRep,BasisRep,Dominant_Channel)
-      USE mod_system
-      USE mod_psi_set_alloc
-      IMPLICIT NONE
+  SUBROUTINE Channel_weight(tab_WeightChannels,psi,                 &
+                            GridRep,BasisRep,Dominant_Channel)
+  USE mod_system
+  USE mod_psi_set_alloc
+  IMPLICIT NONE
 
-!----- variables for the WP ----------------------------------------
-      real (kind=Rkind), intent(inout), allocatable :: tab_WeightChannels(:,:)
-      TYPE (param_psi),  intent(inout)              :: psi
-      logical,           intent(in)                 :: GridRep,BasisRep
-      integer,           intent(inout), optional    :: Dominant_Channel(2)
+!- variables for the WP ----------------------------------------
+  real (kind=Rkind), intent(inout), allocatable :: tab_WeightChannels(:,:)
+  TYPE (param_psi),  intent(inout)              :: psi
+  logical,           intent(in)                 :: GridRep,BasisRep
+  integer,           intent(inout), optional    :: Dominant_Channel(2)
 
-!------ working variables ---------------------------------
-      integer           :: i_qa,i_qaie
-      integer           :: i_be,i_bi,i_ba,i_baie
-      integer           :: ii_baie,if_baie
-      real (kind=Rkind) :: WrhonD,temp,max_w
-
-
-!----- for debuging --------------------------------------------------
-      logical,parameter :: debug = .FALSE.
-      !logical,parameter :: debug = .TRUE.
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING Channel_weight'
-        write(out_unitp,*) 'GridRep',GridRep
-        write(out_unitp,*) 'BasisRep',BasisRep
-        !write(out_unitp,*) 'psi'
-        !CALL ecri_psi(psi=psi)
-      END IF
-!-----------------------------------------------------------
+!-- working variables ---------------------------------
+  integer           :: i_qa,i_qaie
+  integer           :: i_be,i_bi,i_ba,i_baie
+  integer           :: ii_baie,if_baie
+  real (kind=Rkind) :: WrhonD,temp,max_w
+  integer           :: nb_be,nb_bi
 
 
+!- for debuging --------------------------------------------------
+  logical,parameter :: debug = .FALSE.
+  !logical,parameter :: debug = .TRUE.
+!-------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING Channel_weight'
+    write(out_unitp,*) 'GridRep',GridRep
+    write(out_unitp,*) 'BasisRep',BasisRep
+    !write(out_unitp,*) 'psi'
+    !CALL ecri_psi(psi=psi)
+  END IF
+!-------------------------------------------------------
 
-      IF (GridRep .AND. BasisRep) THEN
-        write(out_unitp,*) ' ERROR in Channel_weight'
-        write(out_unitp,*) ' GridRep=t and BasisRep=t !'
-        STOP
-      END IF
+  nb_be = get_nb_be_FROM_psi(psi)
+  nb_bi = get_nb_bi_FROM_psi(psi)
 
-      IF (.NOT. allocated(tab_WeightChannels) .AND.                     &
-                           psi%nb_bi > 0 .AND. psi%nb_be > 0) THEN
-        CALL alloc_NParray(tab_WeightChannels,(/psi%nb_bi,psi%nb_be/),      &
-                           "tab_WeightChannels","Channel_weight")
-        tab_WeightChannels(:,:) = ZERO
-      END IF
+  !write(6,*) 'nb_bi,nb_be',nb_bi,nb_be
 
-      IF (psi%ComOp%contrac_ba_ON_HAC) THEN
+  IF (GridRep .AND. BasisRep) THEN
+    write(out_unitp,*) ' ERROR in Channel_weight'
+    write(out_unitp,*) ' GridRep=t and BasisRep=t !'
+    STOP
+  END IF
 
-        CALL Channel_weight_contracADA(tab_WeightChannels(:,1),psi)
+  IF (.NOT. allocated(tab_WeightChannels) .AND. nb_bi > 0 .AND. nb_be > 0) THEN
+    CALL alloc_NParray(tab_WeightChannels,(/nb_bi,nb_be/),              &
+                      "tab_WeightChannels","Channel_weight")
+    tab_WeightChannels(:,:) = ZERO
+  END IF
 
-      ELSE IF (psi%nb_baie == psi%nb_tot) THEN
+  IF (psi%ComOp%contrac_ba_ON_HAC) THEN
 
-      IF (BasisRep .AND.                                                &
-          (allocated(psi%CvecB) .OR. allocated(psi%RvecB)) ) THEN
+    CALL Channel_weight_contracADA(tab_WeightChannels(:,1),psi)
 
-        DO i_be=1,psi%nb_be
-        DO i_bi=1,psi%nb_bi
-          ii_baie = 1 + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_ba
-          if_baie = ii_baie -1 + psi%nb_ba
+  ELSE IF (psi%nb_baie == psi%nb_tot) THEN
 
-          IF (psi%cplx) THEN
-            tab_WeightChannels(i_bi,i_be) =                             &
-               real(dot_product(psi%CvecB(ii_baie:if_baie),             &
-                                psi%CvecB(ii_baie:if_baie)) ,kind=Rkind)
-          ELSE
-            tab_WeightChannels(i_bi,i_be) =                               &
-               dot_product(psi%RvecB(ii_baie:if_baie),                &
-                           psi%RvecB(ii_baie:if_baie))
-          END IF
-        END DO
-        END DO
+    IF (BasisRep .AND. (allocated(psi%CvecB) .OR. allocated(psi%RvecB)) ) THEN
 
-      ELSE IF (GridRep .AND.                                           &
-          (allocated(psi%CvecG) .OR. allocated(psi%RvecG)) ) THEN
-
-!       - initialization ----------------------------------
-        tab_WeightChannels(:,:) = ZERO
-
-        DO i_qa=1,psi%nb_qa
-
-!         - calculation of WrhonD ------------------------------
-          WrhonD = Rec_WrhonD(psi%BasisnD,i_qa)
-
-          DO i_be=1,psi%nb_be
-          DO i_bi=1,psi%nb_bi
-            i_qaie = i_qa + ( (i_bi-1)+(i_be-1)*psi%nb_bi ) * psi%nb_qa
-
-            IF (psi%cplx) THEN
-              temp = abs( psi%CvecG(i_qaie))
-            ELSE
-              temp = psi%RvecG(i_qaie)
-            END IF
-            tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) + &
-                                            WrhonD * temp**2
-          END DO
-          END DO
-        END DO
-
-      ELSE
-
-        write(out_unitp,*) ' ERROR in Channel_weight'
-        IF (GridRep)  write(out_unitp,*) ' impossible to calculate the weights with the Grid'
-        IF (BasisRep) write(out_unitp,*) ' impossible to calculate the weights with the Basis'
-        STOP
-      END IF
-
-      ELSE
-!       - To deal with a spectral representation ------
-
-        tab_WeightChannels(:,:) = ZERO
+      DO i_be=1,psi%nb_be
+      DO i_bi=1,psi%nb_bi
+        ii_baie = 1 + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_ba
+        if_baie = ii_baie -1 + psi%nb_ba
 
         IF (psi%cplx) THEN
-          tab_WeightChannels(1,1) = real(dot_product(psi%CvecB,psi%CvecB),kind=Rkind)
+          tab_WeightChannels(i_bi,i_be) =                             &
+             real(dot_product(psi%CvecB(ii_baie:if_baie),             &
+                              psi%CvecB(ii_baie:if_baie)) ,kind=Rkind)
         ELSE
-          tab_WeightChannels(1,1) = dot_product(psi%RvecB,psi%RvecB)
+          tab_WeightChannels(i_bi,i_be) =                               &
+             dot_product(psi%RvecB(ii_baie:if_baie),                    &
+                         psi%RvecB(ii_baie:if_baie))
         END IF
-      END IF
+      END DO
+      END DO
 
-      IF (present(Dominant_Channel)) THEN
-        Dominant_Channel(:) = 1
-        max_w               = ZERO
-        DO i_be=1,psi%nb_be
-        DO i_bi=1,psi%nb_bi
-          IF (tab_WeightChannels(i_bi,i_be) > max_w) THEN
-            max_w = tab_WeightChannels(i_bi,i_be)
-            Dominant_Channel(:) = (/ i_be,i_bi /)
+    ELSE IF (GridRep .AND. (allocated(psi%CvecG) .OR. allocated(psi%RvecG)) ) THEN
+
+      !- initialization ----------------------------------
+      tab_WeightChannels(:,:) = ZERO
+
+      DO i_qa=1,psi%nb_qa
+
+        !- calculation of WrhonD ------------------------------
+        WrhonD = Rec_WrhonD(psi%BasisnD,i_qa)
+
+        DO i_be=1,nb_be
+        DO i_bi=1,nb_bi
+          i_qaie = i_qa + ( (i_bi-1)+(i_be-1)*nb_bi ) * psi%nb_qa
+
+          IF (psi%cplx) THEN
+            temp = abs( psi%CvecG(i_qaie))
+          ELSE
+            temp = psi%RvecG(i_qaie)
           END IF
+          tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) + &
+                                          WrhonD * temp**2
         END DO
         END DO
-      END IF
+      END DO
 
-!----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
-        write(out_unitp,*) 'END Channel_weight'
-      END IF
-!----------------------------------------------------------
+    ELSE
 
-      END SUBROUTINE Channel_weight
+      write(out_unitp,*) ' ERROR in Channel_weight'
+      IF (GridRep)  write(out_unitp,*) ' impossible to calculate the weights with the Grid'
+      IF (BasisRep) write(out_unitp,*) ' impossible to calculate the weights with the Basis'
+      STOP
+    END IF
+
+  ELSE
+    !- To deal with a spectral representation ------
+
+    tab_WeightChannels(:,:) = ZERO
+
+    IF (psi%cplx) THEN
+      tab_WeightChannels(1,1) = real(dot_product(psi%CvecB,psi%CvecB),kind=Rkind)
+    ELSE
+      tab_WeightChannels(1,1) = dot_product(psi%RvecB,psi%RvecB)
+    END IF
+  END IF
+
+  IF (present(Dominant_Channel)) THEN
+    Dominant_Channel(:) = 1
+    max_w               = ZERO
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      IF (tab_WeightChannels(i_bi,i_be) > max_w) THEN
+        max_w = tab_WeightChannels(i_bi,i_be)
+        Dominant_Channel(:) = (/ i_be,i_bi /)
+      END IF
+    END DO
+    END DO
+  END IF
+
+!------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
+    write(out_unitp,*) 'END Channel_weight'
+  END IF
+!------------------------------------------------------
+
+  END SUBROUTINE Channel_weight
       SUBROUTINE Channel_weight_contracADA(w_harm,psi)
       USE mod_system
       USE mod_psi_set_alloc

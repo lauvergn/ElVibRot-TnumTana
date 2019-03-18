@@ -511,7 +511,7 @@ MODULE mod_basis
       CALL flush_perso(out_unitp)
 !     - d1b => dnBGG%d1 and  d2b => dnBGG%d2 ------------
       CALL sub_dnGB_TO_dnGG(basis_primi)
-      !- d0b => transpose(d0b) ... traspose(d0bwrho) ---
+      !- d0b => transpose(d0b) ... transpose(d0bwrho) ---
       CALL sub_dnGB_TO_dnBG(basis_primi)
 
 !     - check the overlap matrix -----------------------------
@@ -1529,7 +1529,6 @@ MODULE mod_basis
       !logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub='sub_dnGB_TO_dnBG'
 !-----------------------------------------------------------
-      IF (basis_set%ndim == 0) RETURN
 
       nq = get_nq_FROM_basis(basis_set)
       IF (debug) THEN
@@ -1539,8 +1538,34 @@ MODULE mod_basis
       END IF
 !-----------------------------------------------------------
 
-      IF (basis_set%ndim == 0) RETURN
-      IF (.NOT. basis_set%packed_done) RETURN
+  IF (.NOT. basis_set%packed_done) RETURN
+
+  IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
+    IF (basis_set%cplx) THEN
+
+      CALL dealloc_dnCplxMat(basis_set%dnCBG)
+      CALL alloc_dnCplxMat(basis_set%dnCBG,basis_set%nb,basis_set%nb,nb_var_deriv=basis_set%ndim,nderiv=0)
+      CALL Cplx_mat_id(basis_set%dnCBG%d0,basis_set%nb,basis_set%nb)
+
+      CALL dealloc_dnCplxMat(basis_set%dnCBGwrho)
+      CALL alloc_dnCplxMat(basis_set%dnCBGwrho,basis_set%nb,basis_set%nb,nb_var_deriv=basis_set%ndim,nderiv=0)
+      CALL Cplx_mat_id(basis_set%dnCBGwrho%d0,basis_set%nb,basis_set%nb)
+
+    ELSE
+
+      CALL dealloc_dnMat(basis_set%dnRBG)
+      CALL alloc_dnMat(basis_set%dnRBG,basis_set%nb,basis_set%nb,nb_var_deriv=basis_set%ndim,nderiv=0)
+
+      CALL mat_id(basis_set%dnRBG%d0,basis_set%nb,basis_set%nb)
+
+      CALL dealloc_dnMat(basis_set%dnRBGwrho)
+      CALL alloc_dnMat(basis_set%dnRBGwrho,basis_set%nb,basis_set%nb,nb_var_deriv=basis_set%ndim,nderiv=0)
+
+      CALL mat_id(basis_set%dnRBGwrho%d0,basis_set%nb,basis_set%nb)
+
+    END IF
+  ELSE
+
 
       IF (basis_set%cplx) THEN
 
@@ -1573,6 +1598,7 @@ MODULE mod_basis
         END DO
 
       END IF
+  END IF
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -2620,7 +2646,6 @@ END SUBROUTINE pack_basis
          write(out_unitp,*) 'iq',iq
          write(out_unitp,*) 'BasisnD%nb_basis',BasisnD%nb_basis
          write(out_unitp,*) 'BasisnD%packed_done',BasisnD%packed_done
-         write(out_unitp,*) 'BasisnD%OK_ndim_eq_0',BasisnD%OK_ndim_eq_0
        END IF
 !-----------------------------------------------------------
 !
@@ -2631,8 +2656,6 @@ END SUBROUTINE pack_basis
          !IF (.NOT. allocated(BasisnD%wrho)) STOP 'problem with primitive basis. wrho is not allocated !!'
          !write(6,*) 'shape wrho, iq',shape(BasisnD%wrho),iq
          WrhonD = BasisnD%wrho(iq)
-       ELSE IF (BasisnD%OK_ndim_eq_0) THEN
-         WrhonD = ONE
        ELSE ! BasisnD%nb_basis MUST BE > 0
          IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_WrhonD !!!'
 
@@ -3095,6 +3118,8 @@ END SUBROUTINE pack_basis
          CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
+      !write(6,*) ' in ',name_sub,'iq',iq
+
 
        IF (BasisnD%ndim == 0) THEN
          CONTINUE ! no grid point
@@ -3176,6 +3201,8 @@ END SUBROUTINE pack_basis
          END SELECT
 
        END IF
+
+      !write(6,*) ' out ',name_sub,'iq,x',iq,x
 
 !     -------------------------------------------------------
       IF (debug) THEN

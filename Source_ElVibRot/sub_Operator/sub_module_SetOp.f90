@@ -81,6 +81,7 @@ MODULE mod_SetOp
           integer :: nb_bie=0                    ! number of active basis functions and grid points
           integer :: nb_bi=0,nb_be=0             ! number of active basis functions and grid points
           integer :: nb_ba=0,nb_qa=0             ! number of active basis functions and grid points
+
           integer :: nb_bai=0,nb_qai=0           ! number of total active basis functions with HADA basis
           integer :: nb_baie=0,nb_qaie=0         ! number of total active basis functions
           integer :: nb_bRot=0                   ! number of total rotational basis functions
@@ -177,8 +178,7 @@ MODULE mod_SetOp
 
       logical :: lo_Mat,lo_Grid,lo_Grid_cte(para_Op%nb_term)
       integer :: nb_tot
-      integer :: nb_be
-      integer :: nb_qa,nb_bie,nb_term
+      integer :: nb_term,nb_bie
 
       integer :: err
 
@@ -239,9 +239,9 @@ MODULE mod_SetOp
 
       para_Op%alloc = .TRUE.
 
-      nb_be   = para_Op%nb_be
       nb_tot  = para_Op%nb_tot
       nb_term = para_Op%nb_term
+      nb_bie  = get_nb_be_FROM_Op(para_Op) * para_Op%nb_bi
 
 
       IF (nb_tot < 1) THEN
@@ -319,7 +319,7 @@ MODULE mod_SetOp
                                       ' ) of ' // trim(para_Op%name_Op))
 
             CALL alloc_OpGrid(para_Op%OpGrid(k_term),                 &
-                              para_Op%nb_qa,para_Op%nb_bie,           &
+                              para_Op%nb_qa,nb_bie,                   &
                               para_Op%derive_termQact(:,k_term),      &
                               para_Op%derive_termQdyn(:,k_term),      &
                               info)
@@ -342,7 +342,7 @@ MODULE mod_SetOp
           info = String_TO_String(' of ' // trim(para_Op%name_Op))
 
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
-                            para_Op%nb_qa,para_Op%nb_bie,             &
+                            para_Op%nb_qa,nb_bie,                     &
                             (/ 0,0 /),(/ 0,0 /),info)
           para_Op%imOpGrid(1)%cplx = .TRUE.
 
@@ -708,6 +708,45 @@ MODULE mod_SetOp
        nullify(tab)
 
       END SUBROUTINE dealloc_array_OF_Opdim1
+
+      FUNCTION get_nb_be_FROM_Op(para_Op)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer :: get_nb_be_FROM_Op
+!----- variables for the construction of H ---------------------------
+      TYPE (param_Op), intent(in) :: para_Op
+
+      integer :: ib
+!----- for debuging --------------------------------------------------
+      !logical, parameter :: debug = .TRUE.
+       logical, parameter :: debug = .FALSE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING get_nb_be_FROM_Op'
+      END IF
+
+     IF (NewBasisEl) THEN
+       get_nb_be_FROM_Op = get_nb_be_FROM_basis(para_Op%BasisnD)
+       IF (get_nb_be_FROM_Op == -1) THEN
+         write(out_unitp,*) ' ERROR in get_nb_be_FROM_Op'
+         write(out_unitp,*) ' NewBasisEl = t and no El basis set!!'
+         write(out_unitp,*) ' CHECK the source'
+         STOP
+       END IF
+     ELSE IF (associated(para_Op%ComOp)) THEN
+       get_nb_be_FROM_Op = para_Op%ComOp%nb_be
+     ELSE
+       write(out_unitp,*) ' ERROR in get_nb_be_FROM_Op'
+       write(out_unitp,*) ' para_Op%ComOp in not associated'
+       write(out_unitp,*) ' CHECK the source'
+       STOP
+     END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'END get_nb_be_FROM_Op'
+      END IF
+      END FUNCTION get_nb_be_FROM_Op
 !
 !================================================================
 ! ++    Copy ComOp,para_H in ComOp_HADA,para_H_HADA

@@ -44,6 +44,7 @@
       use mod_Coord_KEO
       use mod_PrimOp
       use mod_basis, only: param_allbasis, sgtype, get_nq_from_basis,  &
+                           get_nqa_from_basis,                         &
                            get_nb_bi_from_allbasis, recwrite_basis,    &
                            basis, sub_dngb_to_dnbb, clean_basis,       &
                            sub_dngb_to_dngg, construct_primitive_basis,&
@@ -71,7 +72,7 @@
 !----- local variables
       integer :: nb_elec_save,nb_bi_save,max_nb_ba_ON_HAC_save,JJ_save
       integer :: Grid_omp_save
-      integer :: nq,nb_bi
+      integer :: nqa,nb_bi
       logical :: With_BGG
 
 !-------------------------------------------------------------------------
@@ -119,27 +120,31 @@
                                ComOp%file_HADA%name,                    &
                                ComOp%file_HADA%formatted)
 
-      nq = get_nq_FROM_basis(para_AllBasis%BasisnD)
+      nqa = get_nqa_FROM_basis(para_AllBasis%BasisnD)
+
       IF (print_level > -1) THEN
         write(out_unitp,*) '==================================================='
         write(out_unitp,*) '=== NEW BASIS + ComOp ============================='
         write(out_unitp,*) 'packed',para_AllBasis%BasisnD%packed
-        write(out_unitp,*) 'nb_ba,nb_qa',para_AllBasis%BasisnD%nb,nq
+        write(out_unitp,*) 'nb_ba,nb_qa',para_AllBasis%BasisnD%nb,nqa
         write(out_unitp,*) 'nb_bi',get_nb_bi_FROM_AllBasis(para_AllBasis)
         write(out_unitp,*) 'nb_elec',para_PES%nb_elec
         write(out_unitp,*) 'nb_inact2n',mole%nb_inact2n
         CALL flush_perso(out_unitp)
       END IF
-      IF (nq < 1) THEN
+      IF (nqa < 1) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) 'The number of grid points is < 1'
-        write(out_unitp,*) ' nb_qa',nq
+        write(out_unitp,*) ' nb_qa',nqa
         STOP
       END IF
-      !write(out_unitp,*) 'nDindB%nDsize',para_AllBasis%BasisnD%nDindB%nDsize
-      !write(out_unitp,*) 'nDindG%nDsize',para_AllBasis%BasisnD%nDindG%nDsize
-      !CALL write_param_ComOp(ComOp)
+      write(out_unitp,*) 'nDindB%nDsize',para_AllBasis%BasisnD%nDindB%nDsize
       !CALL Write_nDindex(para_AllBasis%BasisnD%nDindB,"BasisnD%nDinB ")
+
+      write(out_unitp,*) 'nDindG%nDsize',para_AllBasis%BasisnD%nDindG%nDsize
+      !CALL Write_nDindex(para_AllBasis%BasisnD%nDindG,"BasisnD%nDinG ")
+
+      !CALL write_param_ComOp(ComOp)
 
       IF (debug) THEN
         write(out_unitp,*) '==== NEW BASIS ======================================='
@@ -1281,15 +1286,20 @@ END SUBROUTINE RecSet_EneH0
 
       para_H%nb_OpPsi      = 0
 
-      para_H%nb_bi         = ComOp%nb_bi
-      para_H%nb_be         = para_PES%nb_elec
-      para_H%nb_bie        = para_H%nb_bi * para_PES%nb_elec
       para_H%nb_ba         = para_AllBasis%BasisnD%nDindB%max_nDI
-      para_H%nb_qa         = get_nq_FROM_basis(para_AllBasis%BasisnD)  ! because we can use sparse grid (not defined in nDindG)
+      para_H%nb_qa         = get_nqa_FROM_basis(para_AllBasis%BasisnD)
+
+      para_H%nb_bi         = ComOp%nb_bi
+      para_H%nb_be         = ComOp%nb_be !para_PES%nb_elec
+      para_H%nb_bie        = para_H%nb_bi * para_H%nb_be
+
       para_H%nb_bai        = para_H%nb_ba * para_H%nb_bi
       para_H%nb_qai        = para_H%nb_qa * para_H%nb_bi
+
       para_H%nb_baie       = para_H%nb_bai * para_H%nb_be
       para_H%nb_qaie       = para_H%nb_qai * para_H%nb_be
+
+
       para_H%nb_bRot       = para_ReadOp%nb_bRot
 
       para_H%nb_tot        = para_H%nb_baie * para_H%nb_bRot

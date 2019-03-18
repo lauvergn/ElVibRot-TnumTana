@@ -40,12 +40,12 @@
                          dealloc_nparray, dealloc_array
 
 
-      use mod_system, only: rkind, onetenth, param_file, name_len, one, out_unitp,   &
+  use mod_system, only: rkind, onetenth, param_file, name_len, one, out_unitp,   &
                             alloc_array, alloc_nparray, zero, flush_perso,           &
                             dealloc_nparray, dealloc_array, file_dealloc,            &
                             write_error_not_null, error_memo_allo, write_error_null, &
                             sub_test_tab_ub, sub_test_tab_lb, print_level, write_mat,&
-                            string_to_string, int_to_char, write_vec
+                            string_to_string, int_to_char, write_vec,NewBasisEl
 
       use mod_RotBasis_Param ! all
       use mod_Basis_Grid_Param
@@ -62,7 +62,6 @@
 
           integer           :: ndim        = 0                    !  dimension of the basis
                                                                   !  i.e. nb of variables
-          logical              :: OK_ndim_eq_0 = .FALSE.          ! IF T, the basis set can have ndim=0 (for Electronic basis set)
           integer, allocatable :: iQdyn(:)                        !  dim : ndim
           integer, allocatable :: Tabder_Qdyn_TO_Qbasis(:)        ! Tabder_Qdyn_TO_Qbasis(0:nb_var)
 
@@ -245,8 +244,9 @@
       PUBLIC  Get_MatdnRGG, Get_MatdnRGB, Get_MatdnRBB
       PUBLIC  Get_MatdnCGB, Get_MatdnCBB
       PUBLIC  Get2_MatdnRGB, Get2_MatdnRBG
-      PUBLIC  Set_nq_OF_basis, get_nq_FROM_basis, get_nb_FROM_basis
+      PUBLIC  Set_nq_OF_basis, get_nq_FROM_basis, get_nqa_FROM_basis, get_nb_FROM_basis
       PUBLIC  get_tab_nq_OF_Qact, get_nb_bi_FROM_AllBasis
+      PUBLIC  get_nb_be_FROM_basis
 
       PUBLIC  P_basis, alloc_tab_Pbasis_OF_basis
       PUBLIC  param_AllBasis, alloc_AllBasis, dealloc_AllBasis
@@ -263,24 +263,25 @@
       !!@param: TODO
       !!@param: TODO
        SUBROUTINE alloc_init_basis(basis_set)
-         TYPE (basis),         intent(inout) :: basis_set
+       TYPE (basis),         intent(inout) :: basis_set
 
-         integer      :: i
-         integer      :: err_mem,memory
-         character (len=*), parameter :: name_sub='alloc_init_basis'
+       integer      :: i
+       integer      :: err_mem,memory
+       character (len=*), parameter :: name_sub='alloc_init_basis'
 
 
-         IF (basis_set%ndim < 1 .AND. .NOT. basis_set%OK_ndim_eq_0) THEN
-           write(out_unitp,*) ' ERROR in ',name_sub
-           write(out_unitp,*) '  WRONG parameter values: ndim',basis_set%ndim
-           write(out_unitp,*) '  CHECK the fortran !!'
-           STOP
-         END IF
+!       IF (basis_set%ndim < 1 .AND. .NOT. NewBasisEl) THEN
+!         write(out_unitp,*) ' ERROR in ',name_sub
+!         write(out_unitp,*) '  WRONG parameter values: ndim',basis_set%ndim
+!         write(out_unitp,*) '  CHECK the fortran !!'
+!         STOP
+!       END IF
 
-         IF (.NOT. associated(basis_set%nDindB)) THEN
-           CALL alloc_array(basis_set%nDindB,"basis_set%nDindB",name_sub)
-         END IF
+       IF (.NOT. associated(basis_set%nDindB)) THEN
+         CALL alloc_array(basis_set%nDindB,"basis_set%nDindB",name_sub)
+       END IF
 
+       IF (basis_set%ndim > 0) THEN
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%iQdyn) ) THEN
            CALL alloc_NParray(basis_set%iQdyn,(/ basis_set%ndim /),       &
                            "basis_set%iQdyn",name_sub)
@@ -339,6 +340,7 @@
                            "basis_set%nrho",name_sub)
            basis_set%nrho(:) = 1 ! with nrho(i)=1, the voume element is dT = dQi
          END IF
+       END IF
 
 
        END SUBROUTINE alloc_init_basis
@@ -708,7 +710,6 @@
 
          IF (.NOT. keep_Rvec_loc) THEN
            basis_set%ndim         = 0
-           basis_set%OK_ndim_eq_0 = .FALSE.
            IF (allocated(basis_set%iQdyn))  THEN
              CALL dealloc_NParray(basis_set%iQdyn,"basis_set%iQdyn",name_sub)
            END IF
@@ -1335,7 +1336,6 @@
         basis_set1%print_info_OF_basisDP = basis_set2%print_info_OF_basisDP
 
         basis_set1%ndim              = basis_set2%ndim
-        basis_set1%OK_ndim_eq_0      = basis_set2%OK_ndim_eq_0
 
         basis_set1%nb_Transfo        = basis_set2%nb_Transfo
 
@@ -1653,6 +1653,8 @@
       END SUBROUTINE basis2TObasis1
 
       SUBROUTINE Get_MatdnRGG(basis_set,MatRGG,dnba_ind)
+      USE mod_system
+      IMPLICIT NONE
 
       TYPE (basis),intent(in)        :: basis_set
       real(kind=Rkind),intent(inout) :: MatRGG(:,:)
@@ -1707,6 +1709,8 @@
       END SUBROUTINE Get_MatdnRGG
 
       SUBROUTINE Get_MatdnRGB(basis_set,RMatdnb,dnba_ind)
+      USE mod_system
+      IMPLICIT NONE
 
       TYPE (basis),intent(in)        :: basis_set
       real(kind=Rkind),intent(inout) :: RMatdnb(:,:)
@@ -1728,7 +1732,7 @@
       END IF
 !-----------------------------------------------------------
 
-    IF (basis_set%ndim == 0) THEN
+    IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
       CALL mat_id(RMatdnb,basis_set%nb,basis_set%nb)
     ELSE
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
@@ -1750,6 +1754,8 @@
 !-----------------------------------------------------------
       END SUBROUTINE Get_MatdnRGB
       FUNCTION Get2_MatdnRGB(basis_set,dnba_ind) RESULT (RMatdnb)
+      USE mod_system
+      IMPLICIT NONE
 
       TYPE (basis),intent(in)        :: basis_set
       real(kind=Rkind), allocatable  :: RMatdnb(:,:)
@@ -1771,6 +1777,10 @@
       END IF
 !-----------------------------------------------------------
 
+    IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
+      allocate(RMatdnb(basis_set%nb,basis_set%nb))
+      CALL mat_id(RMatdnb,basis_set%nb,basis_set%nb)
+    ELSE
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
         RMatdnb = basis_set%dnRGB%d0(:,:)
       ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
@@ -1780,6 +1790,7 @@
       ELSE ! 2d derivative
         RMatdnb = basis_set%dnRGB%d2(:,:,dnba_ind(1),dnba_ind(2))
       END IF
+    END IF
 
 
 !-----------------------------------------------------------
@@ -1790,6 +1801,8 @@
       END FUNCTION Get2_MatdnRGB
 
       FUNCTION Get2_MatdnRBG(basis_set) RESULT (RMatdnb)
+      USE mod_system
+      IMPLICIT NONE
 
       TYPE (basis),intent(in)        :: basis_set
       real(kind=Rkind), allocatable  :: RMatdnb(:,:)
@@ -1809,8 +1822,12 @@
         write(out_unitp,*) 'nq',nq
       END IF
 !-----------------------------------------------------------
-
-        RMatdnb = basis_set%dnRBG%d0(:,:)
+    IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
+      allocate(RMatdnb(basis_set%nb,basis_set%nb))
+      CALL mat_id(RMatdnb,basis_set%nb,basis_set%nb)
+    ELSE
+      RMatdnb = basis_set%dnRBG%d0(:,:)
+    END IF
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -1820,6 +1837,8 @@
       END FUNCTION Get2_MatdnRBG
 
       SUBROUTINE Get_MatdnCGB(basis_set,CMatdnb,dnba_ind)
+      USE mod_system
+      IMPLICIT NONE
 
       TYPE (basis),intent(in)           :: basis_set
       complex(kind=Rkind),intent(inout) :: CMatdnb(:,:)
@@ -1840,7 +1859,7 @@
         write(out_unitp,*) 'nq',nq
       END IF
 !-----------------------------------------------------------
-    IF (basis_set%ndim == 0) THEN
+    IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
       CALL Cplx_mat_id(CMatdnb,basis_set%nb,basis_set%nb)
     ELSE
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
@@ -1863,6 +1882,8 @@
       END SUBROUTINE Get_MatdnCGB
 
       SUBROUTINE Get_MatdnRBB(basis_set,MatRBB,dnba_ind)
+      USE mod_system
+      IMPLICIT NONE
 
       TYPE (basis),intent(in)        :: basis_set
       real(kind=Rkind),intent(inout) :: MatRBB(:,:)
@@ -1913,6 +1934,8 @@
 !-----------------------------------------------------------
       END SUBROUTINE Get_MatdnRBB
       SUBROUTINE Get_MatdnCBB(basis_set,MatCBB,dnba_ind)
+      USE mod_system
+      IMPLICIT NONE
 
       TYPE (basis),intent(in)           :: basis_set
       complex(kind=Rkind),intent(inout) :: MatCBB(:,:)
@@ -2590,6 +2613,81 @@
 
       END FUNCTION get_nq_FROM_basis
 
+      RECURSIVE FUNCTION get_nqa_FROM_basis(basis_set) RESULT(nqa)
+
+      TYPE (basis), intent(in) :: basis_set
+      integer           :: nqa
+
+
+      integer           :: ib,L,nqa_SG,i_SG
+
+!---------------------------------------------------------------------
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='get_nqa_FROM_basis'
+      logical,parameter :: debug=.FALSE.
+!      logical,parameter :: debug=.TRUE.
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        CALL RecWriteMini_basis(basis_set)
+        write(out_unitp,*)
+      END IF
+!---------------------------------------------------------------------
+!---------------------------------------------------------------------
+    IF (basis_set%ndim == 0 .AND. NewBasisEl) THEN
+      nqa = 1 ! Correct value ???
+    ELSE
+      IF (basis_set%packed_done) THEN
+        nqa = get_nq_FROM_basis(basis_set)
+      ELSE
+        IF (basis_set%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+
+        SELECT CASE (basis_set%SparseGrid_type)
+        CASE (0) ! Direct product
+          nqa = 1
+          DO ib=1,basis_set%nb_basis
+            nqa = nqa * get_nqa_FROM_basis(basis_set%tab_Pbasis(ib)%Pbasis)
+          END DO
+
+        CASE (1) ! Sparse basis (Smolyak 1st implementation)
+          ! Just the grid point number for the SG:
+          nqa = 0
+          DO i_SG=1,basis_set%nb_SG
+            nqa = nqa + get_nqa_FROM_basis(basis_set%tab_PbasisSG(i_SG)%Pbasis)
+          END DO
+
+        CASE (2,4) ! Sparse basis (Smolyak 2d  implementation)
+          nqa = 0
+          DO i_SG=1,basis_set%nb_SG
+
+            nqa_SG = 1
+            DO ib=1,basis_set%nb_basis
+              L = basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval(ib,i_SG)
+              nqa_SG = nqa_SG * get_nqa_FROM_basis(basis_set%tab_basisPrimSG(L,ib))
+            END DO
+
+            nqa = nqa + nqa_SG
+          END DO
+
+        CASE DEFAULT
+          write(out_unitp,*) ' ERROR in',name_sub
+          write(out_unitp,*) ' WRONG SparseGrid_type',basis_set%SparseGrid_type
+          write(out_unitp,*) ' The possibilities are: 0, 1, 2, 4'
+          STOP
+        END SELECT
+      END IF
+    END IF
+
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'nqa',nqa
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!---------------------------------------------------------------------
+
+      END FUNCTION get_nqa_FROM_basis
+
       RECURSIVE SUBROUTINE get_tab_nq_OF_Qact(tab_nq,basis_set)
 
       TYPE (basis), intent(in) :: basis_set
@@ -2741,4 +2839,42 @@
 
       END FUNCTION get_nb_bi_FROM_AllBasis
 
-      END MODULE mod_basis_set_alloc
+  FUNCTION get_nb_be_FROM_basis(basis_set)
+  USE mod_system
+  IMPLICIT NONE
+
+  integer :: get_nb_be_FROM_basis
+  !----- variables for the construction of H ---------------------------
+  TYPE (basis), intent(in) :: basis_set
+
+  integer :: ib
+  !----- for debuging --------------------------------------------------
+      !logical, parameter :: debug = .TRUE.
+       logical, parameter :: debug = .FALSE.
+  !-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING get_nb_be_FROM_basis'
+  END IF
+
+  get_nb_be_FROM_basis = -1
+  IF (NewBasisEl) THEN
+    IF (basis_set%nb_basis > 0) THEN
+      DO ib=1,size(basis_set%tab_Pbasis)
+        IF (basis_set%tab_Pbasis(ib)%Pbasis%type == 2) THEN
+          get_nb_be_FROM_basis = basis_set%tab_Pbasis(ib)%Pbasis%nb
+          EXIT
+        END IF
+      END DO
+    ELSE
+      IF (basis_set%type == 2) THEN
+        get_nb_be_FROM_basis = basis_set%nb
+      END IF
+    END IF
+  END IF
+
+  IF (debug) THEN
+    write(out_unitp,*) 'END get_nb_be_FROM_basis'
+  END IF
+  END FUNCTION get_nb_be_FROM_basis
+
+END MODULE mod_basis_set_alloc

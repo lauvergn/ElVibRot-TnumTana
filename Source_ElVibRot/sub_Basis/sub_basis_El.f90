@@ -57,8 +57,8 @@
 !----- for debuging --------------------------------------------------
       integer :: err_io,err_mem,memory
       character (len=*), parameter :: name_sub='sub_Basis_El'
-      !logical,parameter :: debug=.FALSE.
-      logical,parameter :: debug=.TRUE.
+      logical,parameter :: debug=.FALSE.
+      !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
@@ -76,16 +76,20 @@
      NewBasisEl = .TRUE.
 
      ! here nq=nb or nq=0
-     CALL Set_nq_OF_basis(base,0)
+     ! nq and ndim have the wrong value
+     base%ndim = 1
+     CALL Set_nq_OF_basis(base,base%nb)
 
 !----------------------------------------------------------------------------
 
-      !CALL alloc_xw_OF_basis(base)
-      !base%x(:,1) = (/ (i,i=1,base%nb) /)
-      !base%w(:)   = ONE/real(base%nb,kind=Rkind)
+      CALL alloc_xw_OF_basis(base)
+      base%x(:,:)   = ZERO
+      base%w(:)     = ONE
+      base%rho(:)   = ONE
+      base%wrho(:)  = ONE
 
-      !CALL alloc_dnb_OF_basis(base)
-      !CALL mat_id(base%dnRGB%d0,base%nb,base%nb)
+      CALL alloc_dnb_OF_basis(base)
+      CALL mat_id(base%dnRGB%d0,base%nb,base%nb)
       base%primitive_done = .TRUE.
       base%packed_done    = .TRUE.
 
@@ -97,9 +101,6 @@
       base%nDindB%Tab_Norm(:) = ZERO
 
 
-
-
-
       CALL alloc_SymAbelian(base%P_SymAbelian,base%nb)
       Read_symab = Get_Read_symabOFSymAbelian(base%P_SymAbelian)
       CALL Set_ReadsymabOFSymAbelian(base%P_SymAbelian,Read_symab)
@@ -108,6 +109,9 @@
       END DO
       CALL Set_nbPERsym_FROM_SymAbelian(base%P_SymAbelian)
       !CALL Write_SymAbelian(base%P_SymAbelian)
+
+     !CALL Set_nq_OF_basis(base,0)
+     base%ndim = 0
 
 
 !-----------------------------------------------------------

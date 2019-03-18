@@ -90,8 +90,13 @@
           STOP
         END IF
 
+
         IF (basis_set%packed_done) THEN
-          nb_mult_GTOB = nb_mult_GTOB + int(nb,kind=ILkind)*size(RVecG,kind=ILkind)
+          IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
+             RvecB(:) = RVecG
+          ELSE
+
+            nb_mult_GTOB = nb_mult_GTOB + int(nb,kind=ILkind)*size(RVecG,kind=ILkind)
           !write(6,*) 'nb_mult_GTOB,nb,size(RVecG)',nb_mult_BTOG,nb,size(RVecG)
 
 !          write(6,*) 'nq,nb',nq,nb
@@ -103,8 +108,8 @@
 !          flush(6)
 
 
-           RvecB(:) = matmul( basis_set%dnRBGwrho%d0,RVecG)
-
+             RvecB(:) = matmul( basis_set%dnRBGwrho%d0,RVecG)
+           END IF
 
         ELSE ! basis_set%nb_basis MUST BE > 0
           IF (basis_set%nb_basis == 0 ) STOP ' ERROR with packed!!!'
@@ -314,7 +319,7 @@
       END IF
 
         IF (basis_set%cplx .AND. basis_set%packed_done) THEN
-          IF (basis_set%ndim == 0) THEN
+          IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
             CVecB(:) = CVecG(:)
           ELSE
             CVecG(:) = CVecG(:) * cmplx(get_wrho_OF_basis(basis_set),kind=Rkind)
@@ -325,7 +330,7 @@
           END IF
 
         ELSE IF (.NOT. basis_set%cplx .AND. basis_set%packed_done) THEN
-          IF (basis_set%ndim == 0) THEN
+          IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
             CVecB(:) = CVecG(:)
           ELSE
             CVecG(:) = CVecG(:) * get_wrho_OF_basis(basis_set)

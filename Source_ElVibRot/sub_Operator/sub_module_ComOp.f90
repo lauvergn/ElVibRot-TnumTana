@@ -34,8 +34,6 @@
 
       IMPLICIT NONE
 
-      !!@description: TODO
-      !!@param: TODO
         TYPE param_ComOp
 
           integer                       :: nb_act1              = 0
@@ -58,7 +56,7 @@
           integer, pointer              :: nb_ba_ON_HAC(:)     => null() ! dimension of nb_ba_ON_HAC for a given i_h (nb_ba_ON_HAC(nb_bie))
           real (kind=Rkind), pointer    :: d0C_bhe_ini(:,:)    => null() ! d0C_bhe_ini(nb_bie,nb_bie) for ADA method
 
-!         file name HADA
+          !file name HADA
           TYPE (param_file)             :: file_HADA
           logical                       :: calc_grid_HADA   = .FALSE. ! (F). If T the grid has been calculated
           logical                       :: save_file_HADA   = .FALSE. ! save the HADA file when direct=0,1,3
@@ -69,7 +67,7 @@
           TYPE(Type_SmolyakRep)         :: SRep_Jac                   ! jac in Smolyap Rep.
 
 
-!         - the vectors are never allocated, but they point to other vectors
+          !- the vectors are never allocated, but they point to other vectors
           integer                       :: nb_vp_spec       = huge(1) ! number of eigenvectors for the spectral represention
           integer, pointer              :: liste_spec(:)    => null() ! liste of eigenvectors (nb_vp_spec)
                                                                       ! default : 1,2,3,..... nb_vp_spec
@@ -80,7 +78,7 @@
           logical                       :: Set_ZPE          = .FALSE.
 
         END TYPE param_ComOp
-!       ====================================================================
+        !====================================================================
 
       CONTAINS
 

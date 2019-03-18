@@ -13,6 +13,7 @@ cd $here
  x1=0.538516066
  x2=0.461483933
 
+export OMP_NUM_THREADS=1
 
 nice $DIR_vib/vib << ** >res
  &system printlevel=2 /
@@ -50,17 +51,18 @@ x 0.
 pi 3.141592653589793238462643383279d0
 dh 0.0
 
- &basis_nD name="El" nb=2 /
+&basis_nD nb_basis=3 name="direct_prod" /
  &basis_nD iQact(1)=1 name="Pl0" nb=5 nq=8 /
  &basis_nD iQact(1)=2 name="boxAB" nb=3 nq=4 A=1.7 B=2.7 /
+ &basis_nD name="El" nb=2 /
  &inactives /
 
  &actives test=f direct=2 /
  &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t /
  &propa
-        WPTmax=1000. 'fs' WPdeltaT=10. 'fs' nb_micro=10
+        WPTmax=1000. WPdeltaT=10. nb_micro=1
 
-        n_WPecri=1 WPpsi2 =f WPpsi=t Write_WPAdia=t
+        n_WPecri=0 WPpsi2=f WPpsi=f Write_WPAdia=f
 
         type_WPpropa=1 poly_tol=1.d-12 auto_Hmax=t
 

@@ -3054,7 +3054,7 @@
         TYPE (Type_nDindex) :: nDindex
         character (len=*), optional  :: name_info
 
-        integer :: i
+        integer :: i,err_sub,nDval(nDindex%ndim)
         character (len=Name_longlen) :: name_info_loc
 
 
@@ -3129,6 +3129,13 @@
           END DO
         END IF
 
+        IF (.NOT. allocated(nDindex%Tab_nDval)) THEN
+          DO i=1,nDindex%Max_nDI
+            CALL calc_nDindex(nDindex,i,nDval,err_sub)
+            IF (err_sub /= 0) STOP ' ERROR with calc_nDindex!!'
+            write(out_unitp,*) trim(name_info_loc),'nDI,nDval',i,':',nDval(:)
+          END DO
+        END IF
 
         IF (associated(nDindex%Tab_nDNorm)) THEN
           write(out_unitp,*) trim(name_info_loc),'Tab_nDNorm:'

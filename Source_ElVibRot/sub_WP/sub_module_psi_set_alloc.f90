@@ -537,6 +537,70 @@
 
       END SUBROUTINE dealloc_NParray_OF_Psidim1
 
+      FUNCTION get_nb_be_FROM_psi(psi)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer                      :: get_nb_be_FROM_psi
+      TYPE (param_psi), intent(in) :: psi
+
+!----- for debuging --------------------------------------------------
+      !logical, parameter :: debug = .TRUE.
+       logical, parameter :: debug = .FALSE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING get_nb_be_FROM_psi'
+      END IF
+
+     IF (NewBasisEl) THEN
+       get_nb_be_FROM_psi = get_nb_be_FROM_basis(psi%BasisnD)
+       IF (get_nb_be_FROM_psi == -1) THEN
+         write(out_unitp,*) ' ERROR in get_nb_be_FROM_psi'
+         write(out_unitp,*) ' NewBasisEl = t and no El basis set!!'
+         write(out_unitp,*) ' CHECK the source'
+         STOP
+       END IF
+     ELSE IF (associated(psi%ComOp)) THEN
+       get_nb_be_FROM_psi = psi%ComOp%nb_be
+     ELSE
+       write(out_unitp,*) ' ERROR in get_nb_be_FROM_psi'
+       write(out_unitp,*) ' psi%ComOp in not associated'
+       write(out_unitp,*) ' CHECK the source'
+       STOP
+     END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'END get_nb_be_FROM_psi'
+      END IF
+      END FUNCTION get_nb_be_FROM_psi
+      FUNCTION get_nb_bi_FROM_psi(psi)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer                      :: get_nb_bi_FROM_psi
+      TYPE (param_psi), intent(in) :: psi
+
+!----- for debuging --------------------------------------------------
+      !logical, parameter :: debug = .TRUE.
+       logical, parameter :: debug = .FALSE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING get_nb_bi_FROM_psi'
+      END IF
+
+     IF (associated(psi%ComOp)) THEN
+       get_nb_bi_FROM_psi = psi%ComOp%nb_bi
+     ELSE
+       write(out_unitp,*) ' ERROR in get_nb_bi_FROM_psi'
+       write(out_unitp,*) ' psi%ComOp in not associated'
+       write(out_unitp,*) ' CHECK the source'
+       STOP
+     END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'END get_nb_bi_FROM_psi'
+      END IF
+      END FUNCTION get_nb_bi_FROM_psi
 !================================================================
 !
 !     copy the initialization parameters
