@@ -218,7 +218,7 @@
 !     Wave packet initialisation
 !
 !     for each active dimension :
-!          psi0(qi) =  exp[-((Q-Qeq)/sigma)^2]*exp[i*imp_k*(Q-Qeq)]
+!          psi0(qi) =  exp[-((Q-Qeq)/sigma)^2]*exp[i*imp_k*(Q-Qeq)+i*phase]
 !
 !     If WP0_DIP=1,2,3     => WP0 = WP0*dip(i) [i=1,2,3 => x,y,z]
 !             =0 (default) => WP0 = WP0
@@ -299,8 +299,8 @@
            z = (Qact(i_act)-para_WP0%WP0Qeq(i_act))/                    &
                                      para_WP0%WP0sigma(i_act)
            ze = ze + z*z
-           zk = zk + (Qact(i_act)-para_WP0%WP0Qeq(i_act))*              &
-                                     para_WP0%WP0imp_k(i_act)
+           zk = zk + para_WP0%WP0phase(i_act) +                         &
+             (Qact(i_act)-para_WP0%WP0Qeq(i_act))*para_WP0%WP0imp_k(i_act)
         END DO
         zk = mod(zk,TWO*pi)
         ze = exp(-ze)/sqrt(sqrt(pi/TWO))**WP0%nb_act1

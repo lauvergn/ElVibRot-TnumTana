@@ -358,6 +358,10 @@ SUBROUTINE ini_data(const_phys,                                         &
 
       CALL Auto_basis(para_Tnum,mole,para_AllBasis,ComOp,para_PES,para_ReadOp)
 
+      IF (para_AllBasis%BasisnD%SparseGrid_type == 4) THEN
+        para_AllBasis%BasisnD%para_SGType2%nb0 = para_PES%nb_elec ! to be changed
+      END IF
+
       IF (para_Tnum%Tana) THEN
         CALL alloc_NParray(Qact,(/ mole%nb_var /),"Qact",name_sub)
         CALL get_Qact(Qact,mole%ActiveTransfo)

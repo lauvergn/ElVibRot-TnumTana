@@ -35,7 +35,10 @@
       TYPE (param_dnMatOp), allocatable :: Tab_dnMatOp(:)
 
 
-      TYPE(Type_dnS)   :: dnFCC,dnFcurvi,dnMuCC(3),dnMucurvi(3)
+      TYPE(Type_dnS)   :: dnFCC,dnFcurvi
+      TYPE(Type_dnS)   :: dnMuCC(3),dnMucurvi(3)
+      TYPE(Type_dnS)   :: dnPolarCC(6),dnPolarcurvi(6)
+
       character (len=Line_len) :: outm_name,fchk_name
       real (kind=Rkind), pointer :: d0c_inv(:,:)=>null()
       real (kind=Rkind), pointer :: d0c_ini(:,:)=>null()
@@ -347,6 +350,7 @@
             write(out_unitp,*) 'read FCC from gaussian file:',fchk_name
             CALL Read_hess_Fchk(dnFCC,fchk_name,nderiv,mole%ncart_act)
             CALL Read_dnDipCC_Gauss(dnMuCC,fchk_name,nderiv,mole%ncart_act)
+            CALL Read_dnPolarizabilityCC_Gauss(dnPolarCC,fchk_name,nderiv,mole%ncart_act)
           ELSE
             write(out_unitp,*) ' ERROR it is not possible to read ...'
             write(out_unitp,*) ' ... the hessian and gradient from the input file'
@@ -375,29 +379,42 @@
 
 
         CALL sub_dnFCC_TO_dnFcurvi(Qact,dnFCC,dnFcurvi,mole)
+        write(out_unitp,*) 'Energy=',dnFcurvi%d0
         write(out_unitp,*) 'Gradient in cuvilinear coordinates'
         DO i=1,mole%nb_act
           write(out_unitp,"(i4,1x,a,2f10.6)") i,                        &
                        mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qin(i), &
                        Qact(i),dnFcurvi%d1(i)
         END DO
-
-        IF (nderiv == 2) THEN
-          CALL sub_dnFCC_TO_dnFcurvi(Qact,dnMuCC(1),dnMucurvi(1),mole)
-          CALL sub_dnFCC_TO_dnFcurvi(Qact,dnMuCC(2),dnMucurvi(2),mole)
-          CALL sub_dnFCC_TO_dnFcurvi(Qact,dnMuCC(3),dnMucurvi(3),mole)
-
-          write(out_unitp,*) 'Dipole moment:',dnMuCC(:)%d0
-          write(out_unitp,*) 'Gradient of Dipole moment (curvi):'
-          DO i=1,mole%nb_act
-            write(out_unitp,*) i,Qact(i),(dnMucurvi(j)%d1(i),j=1,3)
-          END DO
-        END IF
-
         IF (nderiv == 2) THEN
           write(out_unitp,*) 'Curvilinear hessian:'
           CALL Write_VecMat(dnFcurvi%d2,out_unitp,5)
         END IF
+
+        IF (nderiv == 2) THEN
+          DO i=1,size(dnMuCC)
+            CALL sub_dnFCC_TO_dnFcurvi(Qact,dnMuCC(i),dnMucurvi(i),mole)
+          END DO
+
+          write(out_unitp,*) 'Dipole moment:',dnMuCC(:)%d0
+          write(out_unitp,*) 'Gradient of the Dipole moment (curvi):'
+          DO i=1,mole%nb_act
+            write(out_unitp,*) i,Qact(i),(dnMucurvi(j)%d1(i),j=1,size(dnMuCC))
+          END DO
+        END IF
+
+        IF (nderiv == 2) THEN
+          DO i=1,size(dnPolarCC)
+            CALL sub_dnFCC_TO_dnFcurvi(Qact,dnPolarCC(i),dnPolarcurvi(i),mole)
+          END DO
+
+          write(out_unitp,*) 'Polarizability:',dnPolarCC(:)%d0
+          write(out_unitp,*) 'Gradient of the Polarizability (curvi):'
+          DO i=1,mole%nb_act
+            write(out_unitp,*) i,Qact(i),(dnPolarCC(j)%d1(i),j=1,size(dnPolarCC))
+          END DO
+        END IF
+
 
         IF (calc_freq) THEN
           CALL alloc_array(freq,(/ mole%nb_act /),"freq",name_sub)

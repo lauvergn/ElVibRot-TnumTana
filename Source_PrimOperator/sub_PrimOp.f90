@@ -41,7 +41,7 @@
 
    PUBLIC
 
-   PRIVATE   dnOp_num_grid_v2, calc3_NM_TO_sym, calc4_NM_TO_sym, calc5_NM_TO_sym
+   PRIVATE   dnOp_num_grid_v2, calc4_NM_TO_sym, calc5_NM_TO_sym
 
    PRIVATE   get_hess_k, Set_RPHpara_AT_Qact1_opt2, Set_RPHpara_AT_Qact1_opt01
    !PRIVATE   calc_freq, calc_freq_block, calc_freq_WITH_d0c, calc_freqNM, calc_freq_width
@@ -1518,6 +1518,10 @@
       !----- frequencies ---------------------------------
       CALL calc_freq(mole%nb_act,d0h,d0k,freq,d0c,d0c_inv,norme,d0c_ini,.FALSE.)
 
+      IF (debug .OR. print_freq_loc) THEN
+        write(out_unitp,*) 'd0c (NM?):'
+        CALL Write_VecMat(d0c,out_unitp,5)
+      END IF
 
       CALL dealloc_NParray(d0c,    "d0c",    name_sub)
       CALL dealloc_NParray(d0k,    "d0k",    name_sub)

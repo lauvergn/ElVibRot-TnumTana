@@ -105,6 +105,7 @@ C================================================================
 
       integer  ::  i,j
 
+      STOP 'sub_hessian not with direct!!'
 
       file_FChk%name = 'h2o_freq.fchk'
       file_FChk%old = .TRUE.
@@ -112,7 +113,7 @@ c     - read the hessain matrix
       CALL file_open(file_FChk,nio)
 
 
-      CALL Find_Label(nio,'Cartesian Force Constants',located)
+      !CALL Find_Label(nio,'Cartesian Force Constants',located)
       IF (located) THEN
         read(nio,*,iostat=err)
         read(nio,*,iostat=err) ((hh(i,j),i=1,j),j=1,n)

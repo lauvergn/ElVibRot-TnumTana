@@ -1183,11 +1183,9 @@
         integer                          :: nnq1,nnq3,nq2,iq1,iq2,iq3
         integer                          :: iqi,iqe
         logical                          :: skip
-
         integer                          :: ibasis
         integer                          :: i_SG,iq0_SG,iq1_SG,nq_SG,ii_SG,nq0_SG
         integer                          :: nb_thread
-
         TYPE(Type_SmolyakRep)            :: SRep ! smolyak rep for SparseGrid_type=4
         integer                          :: itabR,iG,nR
 

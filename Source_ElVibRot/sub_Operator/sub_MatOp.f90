@@ -2471,7 +2471,7 @@ CONTAINS
 
         ib = 0
         DO
-          IF (ib > para_Op%nb_tot) EXIT
+          IF (ib >= para_Op%nb_tot) EXIT
 
           IF (para_Op%cplx) THEN
             ib0 = ib

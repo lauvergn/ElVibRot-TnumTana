@@ -59,6 +59,7 @@
         real (kind=Rkind), allocatable :: WP0sigma(:)  ! WP0sigma(nb_act1) : sigma for WP0
         real (kind=Rkind), allocatable :: WP0Qeq(:)    ! WP0Qeq(nb_act1)   : position of WP0
         real (kind=Rkind), allocatable :: WP0imp_k(:)  ! WP0imp_k(nb_act1) : impultion for WP0
+        real (kind=Rkind), allocatable :: WP0phase(:)  ! WP0imp_k(nb_act1) : impultion for WP0
 
         END TYPE param_WP0
 
@@ -79,18 +80,24 @@
         IF (para_WP0%nb_act1 > 0 .AND. WP0Grid_Gaussian) THEN
           IF (.NOT. allocated(para_WP0%WP0sigma)) THEN
             CALL alloc_NParray(para_WP0%WP0sigma,(/para_WP0%nb_act1/),    &
-                            "para_WP0%WP0sigma","alloc_param_WP0")
+                              "para_WP0%WP0sigma","alloc_param_WP0")
           END IF
 
           IF (.NOT. allocated(para_WP0%WP0Qeq)) THEN
             CALL alloc_NParray(para_WP0%WP0Qeq,(/para_WP0%nb_act1/),      &
-                            "para_WP0%WP0Qeq","alloc_param_WP0")
+                              "para_WP0%WP0Qeq","alloc_param_WP0")
           END IF
 
           IF (.NOT. allocated(para_WP0%WP0imp_k)) THEN
             CALL alloc_NParray(para_WP0%WP0imp_k,(/para_WP0%nb_act1/),    &
-                            "para_WP0%WP0imp_k","alloc_param_WP0")
+                              "para_WP0%WP0imp_k","alloc_param_WP0")
           END IF
+
+          IF (.NOT. allocated(para_WP0%WP0phase)) THEN
+            CALL alloc_NParray(para_WP0%WP0phase,(/para_WP0%nb_act1/),    &
+                              "para_WP0%WP0phase","alloc_param_WP0")
+          END IF
+
         END IF
 
         IF (WP0_CleanChannel .AND.                                      &
@@ -110,17 +117,22 @@
 
         IF (allocated(para_WP0%WP0sigma)) THEN
           CALL dealloc_NParray(para_WP0%WP0sigma,                         &
-                            "para_WP0%WP0sigma","dealloc_param_WP0")
+                              "para_WP0%WP0sigma","dealloc_param_WP0")
         END IF
 
         IF (allocated(para_WP0%WP0Qeq)) THEN
           CALL dealloc_NParray(para_WP0%WP0Qeq,                           &
-                            "para_WP0%WP0Qeq","dealloc_param_WP0")
+                              "para_WP0%WP0Qeq","dealloc_param_WP0")
         END IF
 
         IF (allocated(para_WP0%WP0imp_k)) THEN
           CALL dealloc_NParray(para_WP0%WP0imp_k,                         &
-                            "para_WP0%WP0imp_k","dealloc_param_WP0")
+                              "para_WP0%WP0imp_k","dealloc_param_WP0")
+        END IF
+
+        IF (allocated(para_WP0%WP0phase)) THEN
+          CALL dealloc_NParray(para_WP0%WP0phase,                         &
+                              "para_WP0%WP0phase","dealloc_param_WP0")
         END IF
 
         IF (allocated(para_WP0%WP0_CleanChannellist)) THEN

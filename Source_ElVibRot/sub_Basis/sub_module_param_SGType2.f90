@@ -40,6 +40,7 @@ IMPLICIT NONE
     integer                      :: L2_SparseGrid = huge(1)
     integer                      :: Num_OF_Lmax   = 0 ! use normal L_SparseGrid
 
+    integer                      :: nb0   = 0 ! to deal with several electronic PES, rotational basis, or channels (HAC)
     integer                      :: nb_SG = 0
     TYPE (Type_nDindex)          :: nDind_SmolyakRep  ! multidimensional index smolyak grids
 
@@ -116,6 +117,7 @@ SGType2%L2_SparseGrid = huge(1)
 SGType2%Num_OF_Lmax   = 0 ! use normal L_SparseGrid
 
 SGType2%nb_SG = 0
+SGType2%nb0   = 0
 
 CALL dealloc_nDindex(SGType2%nDind_SmolyakRep)
 
@@ -182,8 +184,8 @@ SGType2_1%L2_SparseGrid = SGType2_2%L2_SparseGrid
 SGType2_1%Num_OF_Lmax   = SGType2_2%Num_OF_Lmax
 
 SGType2_1%nDind_SmolyakRep = SGType2_2%nDind_SmolyakRep
-SGType2_1%nb_SG              = SGType2_2%nb_SG
-
+SGType2_1%nb_SG            = SGType2_2%nb_SG
+SGType2_1%nb0              = SGType2_2%nb0
 
 IF (allocated(SGType2_2%nDind_DPG)) THEN
   CALL alloc_NParray(SGType2_1%nDind_DPG,(/ SGType2_1%nb_SG /),            &

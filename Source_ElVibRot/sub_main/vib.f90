@@ -116,7 +116,7 @@
       real (kind=Rkind) :: T,DE,Ep,Em,Q,fac,zpe,pop
       logical           :: print_mat
       integer           :: err
-      integer :: err_mem,memory
+      integer           :: err_mem,memory
       real (kind=Rkind) :: part_func ! function
 
 
@@ -346,6 +346,7 @@
         END IF
 
         CALL sub_MatOp(para_H,para_ana%print)
+
         write(out_unitp,*)
         write(out_unitp,*)
         CALL time_perso('sub_matOp: H and S')

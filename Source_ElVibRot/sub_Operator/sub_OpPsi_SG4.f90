@@ -65,9 +65,9 @@ CONTAINS
 
  TYPE (TypeRVec)         :: PsiR
 
- integer       :: ib,i,iG,iiG,nb_thread,ith,iterm00
- integer, allocatable       :: tab_l(:)
- logical       :: not_init
+ integer                :: ib,i,iG,iiG,nb_thread,ith,iterm00
+ integer, allocatable   :: tab_l(:)
+ logical                :: not_init
 
  !----- for debuging ----------------------------------------------
  character (len=*), parameter :: name_sub='sub_OpPsi_FOR_SGtype4'
@@ -93,7 +93,7 @@ CONTAINS
   BasisnD => para_Op%BasisnD
 
   IF (Psi%cplx) STOP 'cplx'
-  IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1'
+  IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1 in sub_OpPsi_FOR_SGtype4'
 
   IF (SG4_omp == 0) THEN
     nb_thread = 1
@@ -216,110 +216,130 @@ END IF
 
   END SUBROUTINE sub_OpPsi_FOR_SGtype4
 
-  SUBROUTINE sub_OpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,tab_l,para_Op)
-   USE mod_system
+ SUBROUTINE sub_OpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,tab_l,para_Op)
+ USE mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
-   USE mod_nDindex
+ USE mod_nDindex
 
-   USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
+ USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
 
-   USE mod_basis_set_alloc,         ONLY : basis
-   USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
-   USE mod_basis_RCVec_SGType4,     ONLY : TypeRVec
-   USE mod_basis_BtoG_GtoB_SGType4, ONLY : BDP_TO_GDP_OF_SmolyakRep,    &
-                                              GDP_TO_BDP_OF_SmolyakRep, &
-                                          DerivOp_TO_RDP_OF_SmolaykRep, &
-                                          tabR2grid_TO_tabR1_AT_iG,     &
-                                          getbis_tab_nq,getbis_tab_nb
-  USE mod_SetOp,                    ONLY : param_Op,write_param_Op
-  IMPLICIT NONE
+ USE mod_basis_set_alloc,         ONLY : basis
+ USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
+ USE mod_basis_RCVec_SGType4,     ONLY : TypeRVec
+ USE mod_basis_BtoG_GtoB_SGType4, ONLY : BDP_TO_GDP_OF_SmolyakRep,    &
+                                            GDP_TO_BDP_OF_SmolyakRep, &
+                                        DerivOp_TO_RDP_OF_SmolaykRep, &
+                                        tabR2grid_TO_tabR1_AT_iG,     &
+                                        getbis_tab_nq,getbis_tab_nb
+ USE mod_SetOp,                    ONLY : param_Op,write_param_Op
+ IMPLICIT NONE
 
-  TYPE (TypeRVec),                    intent(inout)    :: PsiR
-  integer,                            intent(in)       :: iG,tab_l(:)
+ TYPE (TypeRVec),                    intent(inout)    :: PsiR
+ integer,                            intent(in)       :: iG,tab_l(:)
 
-  TYPE (param_Op),                    intent(inout)       :: para_Op
+ TYPE (param_Op),                    intent(inout)       :: para_Op
 
-  !local variables
-  TYPE (zmatrix), pointer :: mole
-  TYPE(basis),    pointer :: BasisnD
+ !local variables
+ TYPE (zmatrix), pointer :: mole
+ TYPE(basis),    pointer :: BasisnD
 
-  integer :: iq,nb,nq,i,j,D
+ integer :: iq,nb,nq,i,j,D
+ integer :: ib0,jb0,nb0,iqi,iqf,jqi,jqf
 
-  integer                               :: derive_termQdyn(2)
+ integer                               :: derive_termQdyn(2)
 
-  real (kind=Rkind),  allocatable       :: V(:)
-  real (kind=Rkind),  allocatable       :: Qact(:)
-  real (kind=Rkind),  allocatable       :: GGiq(:,:,:)
-  real (kind=Rkind),  allocatable       :: sqRhoOVERJac(:),Jac(:)
-  real (kind=Rkind)                     :: Rho
+ real (kind=Rkind),  allocatable       :: V(:,:,:)
+ real (kind=Rkind),  allocatable       :: Qact(:)
+ real (kind=Rkind),  allocatable       :: GGiq(:,:,:)
+ real (kind=Rkind),  allocatable       :: sqRhoOVERJac(:),Jac(:)
+ real (kind=Rkind)                     :: Rho
 
-  real (kind=Rkind),  allocatable       :: PsiRj(:,:),PsiRi(:),OpPsiR(:)
+ real (kind=Rkind),  allocatable       :: PsiRj(:,:),PsiRi(:),OpPsiR(:)
+ real (kind=Rkind),  allocatable       :: VPsi(:,:) ! size(nq,nb0)
 
-  integer,            allocatable       :: tab_nq(:)
-  integer,            allocatable       :: tab_nb(:)
-  integer,            allocatable       :: tab_iq(:)
-  integer :: iterm00
-  integer :: err_sub
-
-
-  !----- for debuging ----------------------------------------------
-  integer :: err_mem,memory
-  character (len=*), parameter :: name_sub='sub_OpPsi_OF_ONEDP_FOR_SGtype4'
-  logical, parameter :: debug = .FALSE.
-  !logical, parameter :: debug = .TRUE.
-  !-----------------------------------------------------------------
-  IF (debug) THEN
-    write(out_unitp,*) 'BEGINNING ',name_sub
-    write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
-    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
-    write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-    CALL flush_perso(out_unitp)
-  END IF
-  !-----------------------------------------------------------------
-
-   !write(6,*) '================================' ; flush(6)
-   !write(6,*) '============ START =============' ; flush(6)
-
-   mole    => para_Op%mole
-   BasisnD => para_Op%BasisnD
-
-   D = size(tab_l)
-
-   CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
-   CALL alloc_NParray(tab_nb,(/ D /),'tab_nb',name_sub)
-   CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
-   CALL alloc_NParray(tab_iq,(/ D /),'tab_iq',name_sub)
-
-   tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
-   tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
+ integer,            allocatable       :: tab_nq(:)
+ integer,            allocatable       :: tab_nb(:)
+ integer,            allocatable       :: tab_iq(:)
+ integer :: iterm00
+ integer :: err_sub
 
 
-   nb = size(PsiR%V) ! because PsiR is in basis Rep
-   nq = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+ !----- for debuging ----------------------------------------------
+ integer :: err_mem,memory
+ character (len=*), parameter :: name_sub='sub_OpPsi_OF_ONEDP_FOR_SGtype4'
+ logical, parameter :: debug = .FALSE.
+ !logical, parameter :: debug = .TRUE.
+ !-----------------------------------------------------------------
+ IF (debug) THEN
+   write(out_unitp,*) 'BEGINNING ',name_sub
+   write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
+   write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
+   write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
+   CALL flush_perso(out_unitp)
+ END IF
+ !-----------------------------------------------------------------
 
-   CALL alloc_NParray(PsiRj,(/ nq,mole%nb_act1 /),'PsiRj',       name_sub)
-   CALL alloc_NParray(PsiRi,       (/ nq /),      'PsiRi',       name_sub)
+  !write(6,*) '================================' ; flush(6)
+  !write(6,*) '============ START =============' ; flush(6)
+
+  mole    => para_Op%mole
+  BasisnD => para_Op%BasisnD
+
+ D = size(tab_l)
+
+ CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
+ CALL alloc_NParray(tab_nb,(/ D /),'tab_nb',name_sub)
+ CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
+ CALL alloc_NParray(tab_iq,(/ D /),'tab_iq',name_sub)
+
+ tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
+ tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
 
 
-   CALL get_OpGrid_type10_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V,GGiq,sqRhoOVERJac,Jac)
+ nb  = BasisnD%para_SGType2%tab_nb_OF_SRep(iG)
+ nq  = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+ nb0 = BasisnD%para_SGType2%nb0
 
-   !write(6,*) ' GGiq:',GGiq
-   !write(6,*) ' Jac :',Jac
-   !write(6,*) ' sqRhoOVERJac :',sqRhoOVERJac
-   !write(6,*) 'd0GG ... done' ; flush(6)
-   CALL alloc_NParray(OpPsiR,(/nq/),'OpPsiR',name_sub)
+ CALL alloc_NParray(PsiRj,(/ nq,mole%nb_act1 /),'PsiRj',       name_sub)
+ CALL alloc_NParray(PsiRi,       (/ nq /),      'PsiRi',       name_sub)
 
-   !write(6,*) ' V Basis of PsiR :',PsiR%V
 
-   ! partial B to G
-   CALL BDP_TO_GDP_OF_SmolyakRep(PsiR%V,BasisnD%tab_basisPrimSG,        &
-                                   tab_l,tab_nq,tab_nb)
-   ! now PsiR is on the grid
-   !write(6,*) ' R Grid of PsiR :',PsiR%V
-   !write(6,*) ' R Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+ CALL get_OpGrid_type10_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V,GGiq,sqRhoOVERJac,Jac)
+
+ !write(6,*) ' GGiq:',GGiq
+ !write(6,*) ' Jac :',Jac
+ !write(6,*) ' sqRhoOVERJac :',sqRhoOVERJac
+ !write(6,*) 'd0GG ... done' ; flush(6)
+ CALL alloc_NParray(OpPsiR,(/nq/),'OpPsiR',name_sub)
+
+ !write(6,*) ' V Basis of PsiR :',PsiR%V
+
+ ! partial B to G
+ CALL BDP_TO_GDP_OF_SmolyakRep(PsiR%V,BasisnD%tab_basisPrimSG,        &
+                                 tab_l,tab_nq,tab_nb,nb0)
+ ! now PsiR is on the grid
+ !write(6,*) ' R Grid of PsiR :',PsiR%V
+ !write(6,*) ' R Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+
+ ! VPsi calculation, it has to be done before because V is not diagonal
+ CALL alloc_NParray(VPsi,(/nq,nb0/),'VPsi',name_sub)
+ VPsi(:,:) = ZERO
+ DO ib0=1,nb0
+   jqi = 1
+   jqf = nq
+   DO jb0=1,nb0
+     VPsi(:,ib0) = VPsi(:,ib0) + V(:,ib0,jb0) * PsiR%V(jqi:jqf)
+     jqi = jqf+1
+     jqf = jqf+nq
+   END DO
+ END DO
+
+ iqi = 1
+ iqf = nq
+ DO ib0=1,nb0
 
    ! multiplication by sqRhoOVERJac
-   PsiR%V(:) = PsiR%V(:) * sqRhoOVERJac(:)
+   PsiR%V(iqi:iqf) = PsiR%V(iqi:iqf) * sqRhoOVERJac(:)
 
    !write(6,*) ' R*sq Grid of PsiR :',PsiR%V
    !write(6,*) ' R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
@@ -329,7 +349,7 @@ END IF
    DO j=1,mole%nb_act1
      derive_termQdyn(:) = (/ mole%liste_QactTOQsym(j),0 /)
 
-     PsiRj(:,j) = PsiR%V(:)
+     PsiRj(:,j) = PsiR%V(iqi:iqf)
      CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
                                          tab_l,tab_nq,derive_termQdyn)
 
@@ -360,44 +380,281 @@ END IF
 
    !write(6,*) ' dQi Jac Gij* ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
 
-   OpPsiR(:) = (  -HALF*OpPsiR(:)/Jac(:) + PsiR%V(:)*V(:) ) / sqRhoOVERJac(:)
+   OpPsiR(:) =   -HALF*OpPsiR(:) / ( Jac(:)*sqRhoOVERJac(:) ) + VPsi(:,ib0)
    !write(6,*) ' OpPsiR Grid of PsiR',OpPsiR
    !write(6,*) ' OpPsiR Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
 
-
    !tranfert OpPsiR (on the grid) to PsiR
-   PsiR%V(:) = OpPsiR(:)
+   PsiR%V(iqi:iqf) = OpPsiR(:)
 
-   CALL dealloc_NParray(OpPsiR,'OpPsiR', name_sub)
+   iqi = iqf+1
+   iqf = iqf+nq
+ END DO
+
+ IF (allocated(OpPsiR)) CALL dealloc_NParray(OpPsiR,'OpPsiR', name_sub)
+ IF (allocated(VPsi))   CALL dealloc_NParray(VPsi,  'VPsi',   name_sub)
+
+ CALL GDP_TO_BDP_OF_SmolyakRep(PsiR%V,BasisnD%tab_basisPrimSG,&
+                               tab_l,tab_nq,tab_nb,nb0)
+ ! now PsiR%V is on the Basis
+ !write(6,*) ' V Basis of OpPsiR :',PsiR%V
+
+ IF (allocated(PsiRi))        CALL dealloc_NParray(PsiRi,       'PsiRi',       name_sub)
+ IF (allocated(PsiRj))        CALL dealloc_NParray(PsiRj,       'PsiRj',       name_sub)
+ IF (allocated(GGiq))         CALL dealloc_NParray(GGiq,        'GGiq',        name_sub)
+ IF (allocated(tab_nb))       CALL dealloc_NParray(tab_nb,      'tab_nb',      name_sub)
+ IF (allocated(tab_nq))       CALL dealloc_NParray(tab_nq,      'tab_nq',      name_sub)
+ IF (allocated(tab_iq))       CALL dealloc_NParray(tab_iq,      'tab_iq',      name_sub)
+ IF (allocated(Qact))         CALL dealloc_NParray(Qact,        'Qact',        name_sub)
+ IF (allocated(sqRhoOVERJac)) CALL dealloc_NParray(sqRhoOVERJac,'sqRhoOVERJac',name_sub)
+ IF (allocated(Jac))          CALL dealloc_NParray(Jac,         'Jac',         name_sub)
+ IF (allocated(V))            CALL dealloc_NParray(V,           'V',           name_sub)
+
+ !write(6,*) '============ END ===============' ; flush(6)
+ !write(6,*) '================================' ; flush(6)
+
+ !-----------------------------------------------------------
+ IF (debug) THEN
+   write(out_unitp,*) 'END ',name_sub
+   CALL flush_perso(out_unitp)
+ END IF
+ !-----------------------------------------------------------
+ !CALL UnCheck_mem() ; stop
+ END SUBROUTINE sub_OpPsi_OF_ONEDP_FOR_SGtype4
+  SUBROUTINE sub_OpPsi_OF_ONEDP_FOR_SGtype4_ompGrid(PsiR,iG,para_Op)
+  USE mod_system
+  USE mod_nDindex
+
+  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
+
+  USE mod_basis_set_alloc,         ONLY : basis
+  USE mod_basis,                   ONLY : Rec_Qact_SG4
+  USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
+                     BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
+                   DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
+                     getbis_tab_nq,getbis_tab_nb
+  USE mod_SetOp,                      ONLY : param_Op,write_param_Op
+
+  IMPLICIT NONE
+
+  TYPE (TypeRVec),                    intent(inout)    :: PsiR
+  integer,                            intent(in)       :: iG
+  TYPE (param_Op),                    intent(inout)    :: para_Op
 
 
-   CALL GDP_TO_BDP_OF_SmolyakRep(PsiR%V,BasisnD%tab_basisPrimSG,&
-                                 tab_l,tab_nq,tab_nb)
-   ! now PsiR%V is on the Basis
-   !write(6,*) ' V Basis of OpPsiR :',PsiR%V
+  !local variables
+  TYPE (zmatrix), pointer :: mole
+  TYPE(basis),    pointer :: BasisnD
 
-   IF (allocated(PsiRi))        CALL dealloc_NParray(PsiRi,       'PsiRi',       name_sub)
-   IF (allocated(PsiRj))        CALL dealloc_NParray(PsiRj,       'PsiRj',       name_sub)
-   IF (allocated(GGiq))         CALL dealloc_NParray(GGiq,        'GGiq',        name_sub)
-   IF (allocated(tab_nb))       CALL dealloc_NParray(tab_nb,      'tab_nb',      name_sub)
-   IF (allocated(tab_nq))       CALL dealloc_NParray(tab_nq,      'tab_nq',      name_sub)
-   IF (allocated(tab_iq))       CALL dealloc_NParray(tab_iq,      'tab_iq',      name_sub)
-   IF (allocated(Qact))         CALL dealloc_NParray(Qact,        'Qact',        name_sub)
-   IF (allocated(sqRhoOVERJac)) CALL dealloc_NParray(sqRhoOVERJac,'sqRhoOVERJac',name_sub)
-   IF (allocated(Jac))          CALL dealloc_NParray(Jac,         'Jac',         name_sub)
-   IF (allocated(V))            CALL dealloc_NParray(V,           'V',           name_sub)
+  integer :: iq,nb,nq,i,j,D
 
-   !write(6,*) '============ END ===============' ; flush(6)
-   !write(6,*) '================================' ; flush(6)
+  integer                               :: derive_termQdyn(2)
 
-  !-----------------------------------------------------------
+  real (kind=Rkind),  allocatable       :: V(:,:,:)
+  real (kind=Rkind),  allocatable       :: Qact(:)
+  real (kind=Rkind),  allocatable       :: GGiq(:,:,:)
+  TYPE (Type_nDindex)                   :: nDind_DPG    ! multidimensional DP index
+  real (kind=Rkind),  allocatable       :: sqRhoOVERJac(:),Jac(:)
+  real (kind=Rkind)                     :: Rho
+
+  real (kind=Rkind),  allocatable       :: PsiRj(:,:),PsiRi(:),OpPsiR(:)
+  real (kind=Rkind),  allocatable       :: VPsi(:,:) ! size(nq,nb0)
+
+  integer,            allocatable       :: tab_nq(:)
+  integer,            allocatable       :: tab_nb(:)
+  integer,            allocatable       :: tab_l(:)
+  integer :: iterm00
+  integer :: ib0,jb0,nb0,iqi,iqf,jqi,jqf
+  integer :: err_sub,nb_thread
+
+
+  !----- for debuging ----------------------------------------------
+  integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='sub_OpPsi_OF_ONEDP_FOR_SGtype4_ompGrid'
+  logical, parameter :: debug = .FALSE.
+  !logical, parameter :: debug = .TRUE.
+  !-----------------------------------------------------------------
   IF (debug) THEN
-    write(out_unitp,*) 'END ',name_sub
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
+    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
+    write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
     CALL flush_perso(out_unitp)
   END IF
-  !-----------------------------------------------------------
-  !CALL UnCheck_mem() ; stop
-  END SUBROUTINE sub_OpPsi_OF_ONEDP_FOR_SGtype4
+  !-----------------------------------------------------------------
+  !CALL Check_mem()
+
+   !write(6,*) '================================' ; flush(6)
+   !write(6,*) '============ START =============' ; flush(6)
+
+
+  IF (Grid_omp == 0 .AND. OpPsi_omp > 0) THEN
+    nb_thread = 1
+  ELSE
+    nb_thread = Grid_maxth
+  END IF
+
+
+   mole    => para_Op%mole
+   BasisnD => para_Op%BasisnD
+
+   D   = size(BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,dim=1)
+
+   CALL alloc_NParray(tab_l ,(/ D /),'tab_l', name_sub)
+   CALL alloc_NParray(tab_nb,(/ D /),'tab_nb',name_sub)
+   CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
+
+   tab_l(:)  = BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,iG)
+   tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
+   tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
+
+
+   nb  = BasisnD%para_SGType2%tab_nb_OF_SRep(iG) ! because PsiR is in basis Rep
+   nq  = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nb0 = BasisnD%para_SGType2%nb0
+
+   CALL alloc_NParray(PsiRj,(/ nq,mole%nb_act1 /),'PsiRj',       name_sub)
+   CALL alloc_NParray(PsiRi,       (/ nq /),      'PsiRi',       name_sub)
+   CALL alloc_NParray(sqRhoOVERJac,(/ nq /),      'sqRhoOVERJac',name_sub)
+   CALL alloc_NParray(Jac,         (/ nq /),      'Jac',         name_sub)
+
+   !transfert part of the potential
+   CALL get_OpGrid_type0_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V)
+
+
+   ! G calculation
+   CALL alloc_NParray(GGiq,(/nq,mole%nb_act1,mole%nb_act1/),'GGiq',name_sub)
+   CALL init_nDindexPrim(nDind_DPG,BasisnD%nb_basis,tab_nq,type_OF_nDindex=-1)
+
+   !$OMP parallel                                               &
+   !$OMP default(none)                                          &
+   !$OMP shared(mole,BasisnD,para_Op,nq,tab_l,nDind_DPG,iG)     &
+   !$OMP shared(sqRhoOVERJac,Jac,GGiq)                          &
+   !$OMP private(iq,Qact,err_sub,Rho)                           &
+   !$OMP num_threads(nb_thread)
+   CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
+   !$OMP   DO SCHEDULE(STATIC)
+   DO iq=1,nq
+     CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
+     CALL Rec_Qact_SG4(Qact,BasisnD%tab_basisPrimSG,tab_l,nDind_DPG,iq,mole,err_sub)
+
+     CALL get_d0GG(Qact,para_Op%para_Tnum,mole,d0GG=GGiq(iq,:,:),        &
+                                         def=.TRUE.,Jac=Jac(iq),Rho=Rho)
+     sqRhoOVERJac(iq) = sqrt(Rho/Jac(iq))
+
+   END DO
+   !$OMP   END DO
+   CALL dealloc_NParray(Qact,'Qact',name_sub)
+   !$OMP   END PARALLEL
+
+   CALL dealloc_nDindex(nDind_DPG)
+
+   CALL alloc_NParray(OpPsiR,(/nq/),'OpPsiR',name_sub)
+
+   ! partial B to G
+   CALL BDP_TO_GDP_OF_SmolyakRep(PsiR%V,BasisnD%tab_basisPrimSG,  &
+                                 tab_l,tab_nq,tab_nb,nb0)
+   ! now PsiR is on the grid
+   !write(6,*) ' R Grid of PsiR :',PsiR%V
+   !write(6,*) ' R Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+
+ ! VPsi calculation, it has to be done before because V is not diagonal
+ CALL alloc_NParray(VPsi,(/nq,nb0/),'VPsi',name_sub)
+ VPsi(:,:) = ZERO
+ DO ib0=1,nb0
+   jqi = 1
+   jqf = nq
+   DO jb0=1,nb0
+     VPsi(:,ib0) = VPsi(:,ib0) + V(:,ib0,jb0) * PsiR%V(jqi:jqf)
+     jqi = jqf+1
+     jqf = jqf+nq
+   END DO
+ END DO
+
+ iqi = 1
+ iqf = nq
+ DO ib0=1,nb0
+
+   ! multiplication by sqRhoOVERJac
+   PsiR%V(iqi:iqf) = PsiR%V(iqi:iqf) * sqRhoOVERJac(:)
+
+   !write(6,*) ' R*sq Grid of PsiR :',PsiR
+   !write(6,*) ' R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+
+
+   ! derivative with respect to Qj
+   DO j=1,mole%nb_act1
+     derive_termQdyn(:) = (/ mole%liste_QactTOQsym(j),0 /)
+
+     PsiRj(:,j) = PsiR%V(iqi:iqf)
+     CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
+                                         tab_l,tab_nq,derive_termQdyn)
+
+     !write(6,*) 'dQj Grid of PsiR',j,PsiRj(:,j) ; flush(6)
+   END DO
+   !write(6,*) ' dQj R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+
+   OpPsiR(:) = ZERO
+   DO i=1,mole%nb_act1
+
+     PsiRi(:) = ZERO
+     DO j=1,mole%nb_act1
+       PsiRi(:) = PsiRi(:) + GGiq(:,j,i) * PsiRj(:,j)
+     END DO
+     PsiRi(:) = PsiRi(:) * Jac(:)
+     !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(6)
+
+     derive_termQdyn(:) = (/ mole%liste_QactTOQsym(i),0 /)
+
+     CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,&
+                                       tab_l,tab_nq,derive_termQdyn)
+
+     OpPsiR(:) = OpPsiR(:) + PsiRi(:)
+
+   END DO
+   !write(6,*) ' dQi Jac Gij* ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+
+   OpPsiR(:) =   -HALF*OpPsiR(:) / ( Jac(:)*sqRhoOVERJac(:) ) + VPsi(:,ib0)
+   !write(6,*) ' OpPsiR Grid of PsiR',OpPsiR
+   !write(6,*) ' OpPsiR Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+
+   !tranfert OpPsiR (on the grid) to PsiR
+   PsiR%V(iqi:iqf) = OpPsiR(:)
+
+   iqi = iqf+1
+   iqf = iqf+nq
+ END DO
+
+
+ IF (allocated(OpPsiR)) CALL dealloc_NParray(OpPsiR,'OpPsiR', name_sub)
+ IF (allocated(VPsi))   CALL dealloc_NParray(VPsi,  'VPsi',   name_sub)
+
+
+ CALL GDP_TO_BDP_OF_SmolyakRep(PsiR%V,BasisnD%tab_basisPrimSG,          &
+                                   tab_l,tab_nq,tab_nb,nb0)
+ ! now PsiR%V is on the Basis
+
+ IF (allocated(PsiRi))        CALL dealloc_NParray(PsiRi,       'PsiRi',       name_sub)
+ IF (allocated(PsiRj))        CALL dealloc_NParray(PsiRj,       'PsiRj',       name_sub)
+ IF (allocated(GGiq))         CALL dealloc_NParray(GGiq,        'GGiq',        name_sub)
+ IF (allocated(tab_nb))       CALL dealloc_NParray(tab_nb,      'tab_nb',      name_sub)
+ IF (allocated(tab_nq))       CALL dealloc_NParray(tab_nq,      'tab_nq',      name_sub)
+ IF (allocated(tab_l))        CALL dealloc_NParray(tab_l,       'tab_l',       name_sub)
+ IF (allocated(sqRhoOVERJac)) CALL dealloc_NParray(sqRhoOVERJac,'sqRhoOVERJac',name_sub)
+ IF (allocated(Jac))          CALL dealloc_NParray(Jac,         'Jac',         name_sub)
+ IF (allocated(V))            CALL dealloc_NParray(V,           'V',           name_sub)
+
+ !write(6,*) '============ END ===============' ; flush(6)
+ !write(6,*) '================================' ; flush(6)
+
+ !-----------------------------------------------------------
+ IF (debug) THEN
+   write(out_unitp,*) 'END ',name_sub
+   CALL flush_perso(out_unitp)
+ END IF
+ !-----------------------------------------------------------
+ !CALL UnCheck_mem() ; stop
+ END SUBROUTINE sub_OpPsi_OF_ONEDP_FOR_SGtype4_ompGrid
 
  SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
  USE mod_system
@@ -454,7 +711,7 @@ END IF
   BasisnD => para_Op%BasisnD
 
   IF (Psi(1)%cplx) STOP 'cplx'
-  IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1'
+  !IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1 in sub_TabOpPsi_FOR_SGtype4'
 
   IF (SG4_omp == 0) THEN
     nb_thread = 1
@@ -474,8 +731,8 @@ END IF
    CALL flush_perso(out_unitp)
  END IF
 
- IF (OpPsi_omp == 0 .AND. para_Op%direct_KEO) THEN
-   !write(6,*) 'coucou : OpPsi_omp == 0 .AND. para_Op%direct_KEO'
+ IF (SG4_omp == 0 .AND. para_Op%direct_KEO) THEN
+   write(6,*) 'coucou : SG4_omp == 0 .AND. para_Op%direct_KEO'  ; flush(6)
 
    DO iG=1,BasisnD%para_SGType2%nb_SG
 
@@ -514,7 +771,7 @@ END IF
      !write(6,*) 'iG done:',iG ; flush(6)
    END DO
  ELSE IF (allocated(BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
-   !write(6,*) 'coucou : allo Tab_nDval=t'
+   !write(6,*) 'coucou : allo Tab_nDval=t' ; flush(6)
    packet_size=max(1,BasisnD%para_SGType2%nb_SG/SG4_maxth/10)
    !$OMP   PARALLEL DEFAULT(NONE)                              &
    !$OMP   SHARED(Psi,OpPsi)                                   &
@@ -561,7 +818,7 @@ END IF
    deallocate(PsiR)
    !$OMP   END PARALLEL
  ELSE IF (BasisnD%para_SGType2%nb_tasks /= BasisnD%para_SGType2%nb_threads) THEN ! version 2
-   !write(6,*) 'coucou : nb_tasks /= nb_threads'
+   !write(6,*) 'coucou : nb_tasks /= nb_threads'  ; flush(6)
 
    !$OMP parallel do                                             &
    !$OMP default(none)                                           &
@@ -575,7 +832,7 @@ END IF
    END DO
   !$OMP   END PARALLEL DO
  ELSE
-   !write(6,*) 'coucou : with para_SGType2%nb_threads'
+   !write(6,*) 'coucou : with para_SGType2%nb_threads' ; flush(6)
    !to be sure to have the correct number of threads, we use
    !   BasisnD%para_SGType2%nb_threads
 
@@ -751,7 +1008,8 @@ END IF
 
   END SUBROUTINE sub_TabOpPsi_OF_SeveralDP_FOR_SGtype4
 
-  SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,tab_l,para_Op,PsiROnGrid)
+
+  SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_old(PsiR,iG,tab_l,para_Op,PsiROnGrid)
   USE mod_system
   USE mod_nDindex
 
@@ -781,8 +1039,8 @@ END IF
 
   integer                               :: derive_termQdyn(2)
 
-  real (kind=Rkind),  allocatable       :: V(:)
-  real(kind=Rkind),   allocatable       :: GridOp(:,:)
+  real (kind=Rkind),  allocatable       :: V(:,:,:)
+  real(kind=Rkind),   allocatable       :: GridOp(:,:,:,:)
   real (kind=Rkind),  allocatable       :: GGiq(:,:,:)
   real (kind=Rkind),  allocatable       :: sqRhoOVERJac(:),Jac(:)
   real (kind=Rkind)                     :: Rho
@@ -798,7 +1056,7 @@ END IF
 
   !----- for debuging ----------------------------------------------
   integer :: err_mem,memory
-  character (len=*), parameter :: name_sub='sub_TabOpPsi_OF_ONEDP_FOR_SGtype4'
+  character (len=*), parameter :: name_sub='sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_old'
   logical, parameter :: debug = .FALSE.
   !logical, parameter :: debug = .TRUE.
   !-----------------------------------------------------------------
@@ -849,14 +1107,14 @@ END IF
          ! partial B to G
          CALL BDP_TO_GDP_OF_SmolyakRep(PsiR(itab)%V,BasisnD%tab_basisPrimSG,&
                                        tab_l,tab_nq,tab_nb)
-         PsiR(itab)%V(:) = PsiR(itab)%V(:) * V(:)
+         PsiR(itab)%V(:) = PsiR(itab)%V(:) * V(:,1,1)
 
          ! partial B to G
          CALL GDP_TO_BDP_OF_SmolyakRep(PsiR(itab)%V,BasisnD%tab_basisPrimSG,&
                                        tab_l,tab_nq,tab_nb)
          ! now PsiR(itab)%V is on the Basis
        ELSE
-         PsiR(itab)%V(:) = PsiR(itab)%V(:) * V(:)
+         PsiR(itab)%V(:) = PsiR(itab)%V(:) * V(:,1,1)
        END IF
 
      END DO
@@ -888,7 +1146,7 @@ END IF
            CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiTemp2,BasisnD%tab_basisPrimSG, &
                                tab_l,tab_nq,para_Op%derive_termQdyn(:,iterm))
 
-           PsiTemp1(:) = PsiTemp1(:) + PsiTemp2 * GridOp(:,iterm)
+           PsiTemp1(:) = PsiTemp1(:) + PsiTemp2 * GridOp(:,1,1,iterm)
 
          END DO
 
@@ -910,7 +1168,7 @@ END IF
            CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiTemp2,BasisnD%tab_basisPrimSG, &
                                tab_l,tab_nq,para_Op%derive_termQdyn(:,iterm))
 
-           PsiTemp1(:) = PsiTemp1(:) + PsiTemp2 * GridOp(:,iterm)
+           PsiTemp1(:) = PsiTemp1(:) + PsiTemp2 * GridOp(:,1,1,iterm)
 
          END DO
 
@@ -986,7 +1244,7 @@ END IF
        END DO
        !write(6,*) ' dQi Jac Gij* ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
 
-       OpPsiR(:) = (  -HALF*OpPsiR(:)/Jac(:) + PsiR(itab)%V(:)*V(:) ) / sqRhoOVERJac(:)
+       OpPsiR(:) = (  -HALF*OpPsiR(:)/Jac(:) + PsiR(itab)%V(:)*V(:,1,1) ) / sqRhoOVERJac(:)
        !write(6,*) ' OpPsiR Grid of PsiR(itab)',OpPsiR
        !write(6,*) ' OpPsiR Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
 
@@ -1028,7 +1286,324 @@ END IF
   END IF
   !-----------------------------------------------------------
   !CALL UnCheck_mem() ; stop
+  END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_old
+
+  SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,tab_l,para_Op,PsiROnGrid)
+  USE mod_system
+  USE mod_nDindex
+
+  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
+
+  USE mod_basis_set_alloc,         ONLY : basis
+  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
+  USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
+                     BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
+                  DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
+                     getbis_tab_nq,getbis_tab_nb
+  USE mod_SetOp,                      ONLY : param_Op,write_param_Op
+  IMPLICIT NONE
+
+  TYPE (TypeRVec),                    intent(inout)    :: PsiR(:)
+  logical,          optional,         intent(in)       :: PsiROnGrid
+  integer,                            intent(in)       :: iG,tab_l(:)
+
+  TYPE (param_Op),                    intent(inout)    :: para_Op
+
+  !local variables
+  TYPE (zmatrix), pointer :: mole
+  TYPE(basis),    pointer :: BasisnD
+
+  integer :: iq,nb,nq,i,j,itab,D
+  integer :: ib0,jb0,nb0,iqi,iqf,jqi,jqf,ibi,ibf
+
+  logical :: PsiROnBasis_loc
+
+  integer                               :: derive_termQdyn(2)
+
+  real (kind=Rkind),  allocatable       :: V(:,:,:)
+  real(kind=Rkind),   allocatable       :: GridOp(:,:,:,:)
+  real (kind=Rkind),  allocatable       :: GGiq(:,:,:)
+  real (kind=Rkind),  allocatable       :: sqRhoOVERJac(:),Jac(:)
+  real (kind=Rkind)                     :: Rho
+
+  real (kind=Rkind),  allocatable       :: PsiRj(:,:),PsiRi(:),OpPsiR(:),VPsi(:,:)
+  real (kind=Rkind),  allocatable       :: OpPsi(:,:) ! size(nq,nb0)
+  real (kind=Rkind),  allocatable       :: Psi_ch(:,:) ! size(nq,nb0)
+
+  integer,            allocatable       :: tab_nq(:)
+  integer,            allocatable       :: tab_nb(:)
+  integer :: iterm,iterm00
+  integer :: err_sub
+
+
+  !----- for debuging ----------------------------------------------
+  integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='sub_TabOpPsi_OF_ONEDP_FOR_SGtype4'
+  logical, parameter :: debug = .FALSE.
+  !logical, parameter :: debug = .TRUE.
+  !-----------------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
+    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
+    write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
+    write(out_unitp,*) 'nb psi',size(PsiR)
+    write(out_unitp,*) 'iG, tab_l(:)',iG,':',tab_l(:)
+    write(out_unitp,*) 'nb0',para_Op%BasisnD%para_SGType2%nb0
+    write(out_unitp,*) 'nq',para_Op%BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+    write(out_unitp,*) 'nb',para_Op%BasisnD%para_SGType2%tab_nb_OF_SRep(iG)
+    IF (present(PsiROnGrid)) write(out_unitp,*) 'PsiROnGrid',PsiROnGrid
+    CALL flush_perso(out_unitp)
+  END IF
+  !-----------------------------------------------------------------
+  !CALL Check_mem()
+
+   !write(6,*) '================================' ; flush(6)
+   !write(6,*) '============ START =============' ; flush(6)
+
+   mole    => para_Op%mole
+   BasisnD => para_Op%BasisnD
+
+   IF (present(PsiROnGrid)) THEN
+     PsiROnBasis_loc = .NOT. PsiROnGrid
+   ELSE
+     PsiROnBasis_loc = .TRUE.
+   END IF
+   D = size(tab_l)
+
+   CALL alloc_NParray(tab_nb,(/ D /),'tab_nb',name_sub)
+   CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
+
+   tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
+   tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
+
+   nb  = BasisnD%para_SGType2%tab_nb_OF_SRep(iG)
+   nq  = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nb0 = BasisnD%para_SGType2%nb0
+
+   SELECT CASE (para_Op%type_Op)
+   CASE (0) ! 0 : Scalar
+
+     CALL get_OpGrid_type0_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V)
+
+     CALL alloc_NParray(OpPsi,(/nq,nb0/),'OpPsi',name_sub)
+
+     DO itab=1,size(PsiR)
+
+       OpPsi(:,:) = ZERO
+
+       IF (PsiROnBasis_loc) THEN
+         ! partial B to G
+         CALL BDP_TO_GDP_OF_SmolyakRep(PsiR(itab)%V,BasisnD%tab_basisPrimSG,&
+                                       tab_l,tab_nq,tab_nb,nb0)
+       END IF
+
+       ! VPsi calculation, it has to be done before because V is not diagonal
+       DO ib0=1,nb0
+         jqi = 1
+         jqf = nq
+         DO jb0=1,nb0
+           OpPsi(:,ib0) = OpPsi(:,ib0) + V(:,ib0,jb0) * PsiR(itab)%V(jqi:jqf)
+           jqi = jqf+1
+           jqf = jqf+nq
+         END DO
+       END DO
+
+
+       PsiR(itab)%V(:) = reshape(OpPsi,shape=(/nq*nb0/))
+
+       IF (PsiROnBasis_loc) THEN
+         ! partial B to G
+         CALL GDP_TO_BDP_OF_SmolyakRep(PsiR(itab)%V,BasisnD%tab_basisPrimSG,&
+                                       tab_l,tab_nq,tab_nb,nb0)
+         ! now PsiR(itab)%V is on the Basis
+       END IF
+
+     END DO
+
+     IF (allocated(V))     CALL dealloc_NParray(V,'V',name_sub)
+     IF (allocated(OpPsi)) CALL dealloc_NParray(OpPsi,'OpPsi',name_sub)
+
+   CASE (1) ! 1 : H: F2.d^2 + F1.d^1 + V
+     IF (debug) write(out_unitp,*) 'nb_Term',para_Op%nb_Term
+
+     CALL get_OpGrid_type1_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,GridOp)
+
+     CALL alloc_NParray(OpPsi,(/nq,nb0/),'OpPsi',name_sub)
+     CALL alloc_NParray(Psi_ch,(/nq,nb0/),'Psi_ch',name_sub)
+
+
+     DO itab=1,size(PsiR)
+
+       IF (PsiROnBasis_loc) THEN
+         ! partial B to G
+           CALL BDP_TO_GDP_OF_SmolyakRep(PsiR(itab)%V,                  &
+                                         BasisnD%tab_basisPrimSG,       &
+                                         tab_l,tab_nq,tab_nb,nb0)
+       END IF
+
+       OpPsi(:,:) = ZERO
+
+       DO iterm=1,para_Op%nb_Term
+         IF (para_Op%OpGrid(iterm)%grid_zero) CYCLE
+
+         Psi_ch(:,:) = reshape(PsiR(itab)%V,shape=(/nq,nb0/))
+         DO ib0=1,nb0
+           CALL DerivOp_TO_RDP_OF_SmolaykRep(Psi_ch(:,ib0),BasisnD%tab_basisPrimSG, &
+                               tab_l,tab_nq,para_Op%derive_termQdyn(:,iterm))
+         END DO
+
+
+         ! GridOp(:,1,1,iterm)Psi_ch calculation
+         DO ib0=1,nb0
+         DO jb0=1,nb0
+           OpPsi(:,ib0) = OpPsi(:,ib0) + GridOp(:,ib0,jb0,iterm) * Psi_ch(:,jb0)
+         END DO
+         END DO
+
+       END DO
+
+
+       PsiR(itab)%V(:) = reshape(OpPsi,shape=(/nq*nb0/))
+
+
+
+       IF (PsiROnBasis_loc) THEN
+         ! partial B to G
+           CALL GDP_TO_BDP_OF_SmolyakRep(PsiR(itab)%V,                  &
+                                         BasisnD%tab_basisPrimSG,       &
+                                         tab_l,tab_nq,tab_nb,nb0)
+         ! now PsiR(itab)%V is on the basis
+       END IF
+
+     END DO
+
+     IF (allocated(GridOp))   CALL dealloc_NParray(GridOp,  'GridOp',  name_sub)
+     IF (allocated(OpPsi))    CALL dealloc_NParray(OpPsi,   'OpPsi',name_sub)
+     IF (allocated(Psi_ch))   CALL dealloc_NParray(Psi_ch,  'Psi_ch',name_sub)
+
+   CASE (10) !10: H: d^1 G d^1 +V
+     CALL alloc_NParray(PsiRj, (/ nq,mole%nb_act1 /),'PsiRj',       name_sub)
+     CALL alloc_NParray(PsiRi,       (/ nq /),       'PsiRi',       name_sub)
+     CALL alloc_NParray(VPsi,  (/nq,nb0/),           'VPsi',        name_sub)
+     CALL alloc_NParray(OpPsiR,(/nq/),               'OpPsiR',      name_sub)
+
+
+     CALL get_OpGrid_type10_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V,GGiq,sqRhoOVERJac,Jac)
+
+
+     DO itab=1,size(PsiR)
+
+       IF (PsiROnBasis_loc) THEN
+         ! partial B to G
+         CALL BDP_TO_GDP_OF_SmolyakRep(PsiR(itab)%V,BasisnD%tab_basisPrimSG,&
+                                       tab_l,tab_nq,tab_nb,nb0)
+       END IF
+
+       ! VPsi calculation, it has to be done before because V is not diagonal
+       VPsi(:,:) = ZERO
+       DO ib0=1,nb0
+         jqi = 1
+         jqf = nq
+         DO jb0=1,nb0
+           VPsi(:,ib0) = VPsi(:,ib0) + V(:,ib0,jb0) * PsiR(itab)%V(jqi:jqf)
+           jqi = jqf+1
+           jqf = jqf+nq
+         END DO
+       END DO
+
+       iqi = 1
+       iqf = nq
+       DO ib0=1,nb0
+
+         ! multiplication by sqRhoOVERJac
+         PsiR(itab)%V(iqi:iqf) = PsiR(itab)%V(iqi:iqf) * sqRhoOVERJac(:)
+
+         !write(6,*) ' R*sq Grid of PsiR :',PsiR%V
+         !write(6,*) ' R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+
+
+         ! derivative with respect to Qj
+         DO j=1,mole%nb_act1
+           derive_termQdyn(:) = (/ mole%liste_QactTOQsym(j),0 /)
+
+           PsiRj(:,j) = PsiR(itab)%V(iqi:iqf)
+           CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
+                                             tab_l,tab_nq,derive_termQdyn)
+           !write(6,*) 'dQj Grid of PsiR',j,PsiRj(:,j) ; flush(6)
+         END DO
+         !write(6,*) ' dQj R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+
+         OpPsiR(:) = ZERO
+         DO i=1,mole%nb_act1
+
+           PsiRi(:) = ZERO
+           DO j=1,mole%nb_act1
+             PsiRi(:) = PsiRi(:) + GGiq(:,j,i) * PsiRj(:,j)
+           END DO
+           PsiRi(:) = PsiRi(:) * Jac(:)
+           !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(6)
+
+           derive_termQdyn(:) = (/ mole%liste_QactTOQsym(i),0 /)
+
+           CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,&
+                                               tab_l,tab_nq,derive_termQdyn)
+
+           !write(6,*) 'shape OpPsiR,PsiRi ',shape(OpPsiR),shape(PsiRi)
+           !write(6,*) 'DerivOp_TO_RDP_OF_SmolaykRep : done',OMP_GET_THREAD_NUM() ; flush(6)
+
+           OpPsiR(:) = OpPsiR(:) + PsiRi(:)
+         END DO
+
+         !write(6,*) ' dQi Jac Gij* ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+
+         OpPsiR(:) =   -HALF*OpPsiR(:) / ( Jac(:)*sqRhoOVERJac(:) ) + VPsi(:,ib0)
+         !write(6,*) ' OpPsiR Grid of PsiR',OpPsiR
+         !write(6,*) ' OpPsiR Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+
+         !tranfert OpPsiR (on the grid) to PsiR
+         PsiR(itab)%V(iqi:iqf) = OpPsiR(:)
+
+         iqi = iqf+1
+         iqf = iqf+nq
+       END DO
+
+       IF (PsiROnBasis_loc) THEN
+         ! partial B to G
+         CALL GDP_TO_BDP_OF_SmolyakRep(PsiR(itab)%V,BasisnD%tab_basisPrimSG,&
+                                     tab_l,tab_nq,tab_nb,nb0)
+         ! now PsiR(itab)%V is on the Basis
+       END IF
+
+
+     END DO
+
+     IF (allocated(PsiRi))        CALL dealloc_NParray(PsiRi,       'PsiRi',       name_sub)
+     IF (allocated(PsiRj))        CALL dealloc_NParray(PsiRj,       'PsiRj',       name_sub)
+     IF (allocated(GGiq))         CALL dealloc_NParray(GGiq,        'GGiq',        name_sub)
+     IF (allocated(sqRhoOVERJac)) CALL dealloc_NParray(sqRhoOVERJac,'sqRhoOVERJac',name_sub)
+     IF (allocated(Jac))          CALL dealloc_NParray(Jac,         'Jac',         name_sub)
+     IF (allocated(V))            CALL dealloc_NParray(V,           'V',           name_sub)
+     IF (allocated(VPsi))         CALL dealloc_NParray(VPsi        ,'VPsi',        name_sub)
+
+
+   CASE Default
+     STOP 'no default'
+   END SELECT
+
+   IF (allocated(tab_nb)) CALL dealloc_NParray(tab_nb,'tab_nb',name_sub)
+   IF (allocated(tab_nq)) CALL dealloc_NParray(tab_nq,'tab_nq',name_sub)
+   !write(6,*) '============ END ===============' ; flush(6)
+   !write(6,*) '================================' ; flush(6)
+  !-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
+  END IF
+  !-----------------------------------------------------------
+  !CALL UnCheck_mem() ; stop
   END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
+
 
   SUBROUTINE sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4(PsiR,iG,para_Op, &
                                                    V,GG,sqRhoOVERJac,Jac)
@@ -1057,6 +1632,7 @@ END IF
   TYPE(basis),    pointer :: BasisnD
 
   integer :: iq,nb,nq,i,j,itab,D
+  integer :: ib0,jb0,nb0,iqi,iqf,jqi,jqf
 
   integer                               :: derive_termQdyn(2)
 
@@ -1064,6 +1640,7 @@ END IF
   real (kind=Rkind)                     :: Rho
 
   real (kind=Rkind),  allocatable       :: PsiRj(:,:),PsiRi(:),OpPsiR(:)
+  real (kind=Rkind),  allocatable       :: VPsi(:,:) ! size(nq,nb0)
 
   integer,            allocatable       :: tab_nq(:)
   integer,            allocatable       :: tab_nb(:)
@@ -1104,8 +1681,9 @@ END IF
    tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
 
 
-   nb = size(PsiR(1)%V) ! because PsiR is in basis Rep
+   nb = BasisnD%para_SGType2%tab_nb_OF_SRep(iG)
    nq = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nb0 = BasisnD%para_SGType2%nb0
 
    CALL alloc_NParray(PsiRj,(/ nq,mole%nb_act1 /),'PsiRj',       name_sub)
    CALL alloc_NParray(PsiRi,       (/ nq /),      'PsiRi',       name_sub)
@@ -1217,10 +1795,11 @@ END IF
   TYPE(basis),    pointer :: BasisnD
 
   integer :: iq,nb,nq,i,j,itab,D
+  integer :: ib0,jb0,nb0,iqi,iqf,jqi,jqf
 
   integer                               :: derive_termQdyn(2)
 
-  real (kind=Rkind),  allocatable       :: V(:)
+  real (kind=Rkind),  allocatable       :: V(:,:,:)
   real (kind=Rkind),  allocatable       :: Qact(:)
   real (kind=Rkind),  allocatable       :: GGiq(:,:,:)
   TYPE (Type_nDindex)                   :: nDind_DPG    ! multidimensional DP index
@@ -1228,6 +1807,7 @@ END IF
   real (kind=Rkind)                     :: Rho
 
   real (kind=Rkind),  allocatable       :: PsiRj(:,:),PsiRi(:),OpPsiR(:)
+  real (kind=Rkind),  allocatable       :: VPsi(:,:) ! size(nq,nb0)
 
   integer,            allocatable       :: tab_nq(:)
   integer,            allocatable       :: tab_nb(:)
@@ -1277,8 +1857,9 @@ END IF
    tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
 
 
-   nb = size(PsiR(1)%V) ! because PsiR is in basis Rep
-   nq = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nb  = BasisnD%para_SGType2%tab_nb_OF_SRep(iG)
+   nq  = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nb0 = BasisnD%para_SGType2%nb0
 
    CALL alloc_NParray(PsiRj,(/ nq,mole%nb_act1 /),'PsiRj',       name_sub)
    CALL alloc_NParray(PsiRi,       (/ nq /),      'PsiRi',       name_sub)
@@ -1366,7 +1947,7 @@ END IF
      END DO
      !write(6,*) ' dQi Jac Gij* ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
 
-     OpPsiR(:) = (  -HALF*OpPsiR(:)/Jac(:) + PsiR(itab)%V(:)*V(:) ) / sqRhoOVERJac(:)
+     OpPsiR(:) = (  -HALF*OpPsiR(:)/Jac(:) + PsiR(itab)%V(:)*V(:,1,1) ) / sqRhoOVERJac(:)
      !write(6,*) ' OpPsiR Grid of PsiR(itab)',OpPsiR
      !write(6,*) ' OpPsiR Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
 
@@ -1407,385 +1988,6 @@ END IF
   !CALL UnCheck_mem() ; stop
   END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_ompGrid
 
-  SUBROUTINE get_OpGrid_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,GridOp,typeOp)
-  USE mod_system
-  USE mod_nDindex
-
-  USE mod_Coord_KEO
-  use mod_PrimOp
-
-  USE mod_basis_set_alloc
-  USE mod_basis
-  USE mod_basis_BtoG_GtoB_SGType4
-  USE mod_SetOp
-
-
-  IMPLICIT NONE
-
-  real(kind=Rkind), allocatable,      intent(inout)    :: GridOp(:,:)
-  integer,                            intent(in)       :: typeOp,iG,tab_l(:)
-  TYPE (param_Op),                    intent(inout)    :: para_Op
-
-  !local variables
-  TYPE (zmatrix), pointer :: mole
-  TYPE(basis),    pointer :: BasisnD
-
-  integer :: iq,nq,D,iOp
-
-  integer                               :: derive_termQdyn(2)
-  real (kind=Rkind),  allocatable       :: Qact(:)
-
-  integer,            allocatable       :: tab_nq(:)
-  integer,            allocatable       :: tab_iq(:)
-  integer :: iterm,iterm00,itabR,nR
-  integer :: err_sub
-  logical :: KEO
-  logical :: Op_term_done(para_Op%nb_Term)
-
-  TYPE (param_d0MatOp), allocatable :: d0MatOp(:)
-
-
-  !----- for debuging ----------------------------------------------
-  integer :: err_mem,memory
-  character (len=*), parameter :: name_sub='get_OpGrid_OF_ONEDP_FOR_SG4'
-  logical, parameter :: debug = .FALSE.
-  !logical, parameter :: debug = .TRUE.
-  !-----------------------------------------------------------------
-  IF (debug) THEN
-    write(out_unitp,*) 'BEGINNING ',name_sub
-    write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
-    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
-    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
-
-    write(out_unitp,*) 'nb_Term',para_Op%nb_Term
-    write(out_unitp,*) 'asso OpGrid',associated(para_Op%OpGrid)
-
-    CALL flush_perso(out_unitp)
-  END IF
-  !-----------------------------------------------------------------
-
-   SELECT CASE (typeOp)
-   CASE (0)
-
-   CASE (1)
-   CASE (10)
-   END SELECT
-
-   !write(6,*) '================================' ; flush(6)
-   !write(6,*) '============ START =============' ; flush(6)
-
-   mole    => para_Op%mole
-   BasisnD => para_Op%BasisnD
-
-   D = size(tab_l)
-
-   nq = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
-   iterm00 = para_Op%derive_term_TO_iterm(0,0)
-   !write(6,*) 'coucou',iG,nq
-
-
-   IF (debug) THEN
-     write(out_unitp,*) iG,'Save_MemGrid,Save_MemGrid_done',            &
-                       para_Op%OpGrid(1)%para_FileGrid%Save_MemGrid,    &
-                       para_Op%OpGrid(1)%para_FileGrid%Save_MemGrid_done
-   END IF
-
-   CALL alloc_NParray(GridOp,(/ nq,para_Op%nb_Term /),'GridOp',name_sub)
-   Op_term_done(:) = .FALSE.
-
-   IF (associated(para_Op%OpGrid)) THEN
-     DO iterm=1,para_Op%nb_Term
-       IF (para_Op%OpGrid(iterm)%grid_zero) THEN
-         GridOp(:,iterm) = ZERO
-         Op_term_done(iterm) = .TRUE.
-       ELSE
-         IF (para_Op%OpGrid(iterm)%grid_cte) THEN
-           GridOp(:,iterm) = para_Op%OpGrid(iterm)%Mat_cte(1,1)
-           Op_term_done(iterm) = .TRUE.
-         ELSE
-           IF (associated(para_Op%OpGrid(iterm)%Grid)) THEN
-             Op_term_done(iterm) = .TRUE.
-             CALL tabR2gridbis_TO_tabR1_AT_iG(GridOp(:,iterm),          &
-                                     para_Op%OpGrid(iterm)%Grid(:,1,1), &
-                                               iG,BasisnD%para_SGType2)
-           END IF
-         END IF
-       END IF
-     END DO
-   END IF
-
-   !Op_term_done(iterm00) = .TRUE.
-   IF (.NOT. Op_term_done(iterm00)) THEN
-     !write(6,*) 'coucou calc pot',iG,nq
-     CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
-     CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
-     CALL alloc_NParray(tab_iq,(/ D /),'tab_iq',name_sub)
-
-     tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
-
-     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
-     DO iOp=1,size(d0MatOp)
-       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
-     END DO
-
-     tab_iq(:) = 1 ; tab_iq(1) = 0
-
-     DO iq=1,nq
-
-       CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
-
-       CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
-       CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
-
-!       IF (KEO) THEN
-!         CALL get_d0GG(Qact,para_Op%para_Tnum,mole,d0GG=GGiq(iq,:,:),  &
-!                                        def=.TRUE.,Jac=Jac(iq),Rho=Rho)
-!       END IF
-
-          CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                   &
-                                   para_Op%para_Tnum,para_Op%para_PES)
-          GridOp(iq,iterm00) = d0MatOp(iterm00)%ReVal(1,1,1)
-
-     END DO
-
-     IF (allocated(tab_nq))  CALL dealloc_NParray(tab_nq,'tab_nq',name_sub)
-     IF (allocated(tab_iq))  CALL dealloc_NParray(tab_iq,'tab_iq',name_sub)
-     IF (allocated(Qact))    CALL dealloc_NParray(Qact,  'Qact',  name_sub)
-
-     IF (allocated(d0MatOp)) THEN
-       CALL dealloc_Tab_OF_d0MatOp(d0MatOp)
-       deallocate(d0MatOp)
-     END IF
-
-   END IF
-
-
-  !write(6,*) '============ END ===============' ; flush(6)
-  !write(6,*) '================================' ; flush(6)
-
-  !-----------------------------------------------------------
-  IF (debug) THEN
-    DO iterm=1,para_Op%nb_Term
-      write(out_unitp,*) 'GridOp(:,iterm)',GridOp(:,iterm)
-    END DO
-    write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
-  END IF
-  !-----------------------------------------------------------
-  END SUBROUTINE get_OpGrid_OF_ONEDP_FOR_SG4
-
-  SUBROUTINE sub_OpPsi_OF_ONEDP_FOR_SGtype4_ompGrid(PsiR,iG,para_Op)
-  USE mod_system
-  USE mod_nDindex
-
-  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
-
-  USE mod_basis_set_alloc,         ONLY : basis
-  USE mod_basis,                   ONLY : Rec_Qact_SG4
-  USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
-                     BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
-                   DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
-                     getbis_tab_nq,getbis_tab_nb
-  USE mod_SetOp,                      ONLY : param_Op,write_param_Op
-
-  IMPLICIT NONE
-
-  TYPE (TypeRVec),                    intent(inout)    :: PsiR
-  integer,                            intent(in)       :: iG
-
-  TYPE (param_Op),                    intent(inout)    :: para_Op
-
-
-  !local variables
-  TYPE (zmatrix), pointer :: mole
-  TYPE(basis),    pointer :: BasisnD
-
-  integer :: iq,nb,nq,i,j,D
-
-  integer                               :: derive_termQdyn(2)
-
-  real (kind=Rkind),  allocatable       :: V(:)
-  real (kind=Rkind),  allocatable       :: Qact(:)
-  real (kind=Rkind),  allocatable       :: GGiq(:,:,:)
-  TYPE (Type_nDindex)                   :: nDind_DPG    ! multidimensional DP index
-  real (kind=Rkind),  allocatable       :: sqRhoOVERJac(:),Jac(:)
-  real (kind=Rkind)                     :: Rho
-
-  real (kind=Rkind),  allocatable       :: PsiRj(:,:),PsiRi(:),OpPsiR(:)
-
-  integer,            allocatable       :: tab_nq(:)
-  integer,            allocatable       :: tab_nb(:)
-  integer,            allocatable       :: tab_l(:)
-  integer :: iterm00
-  integer :: err_sub,nb_thread
-
-
-  !----- for debuging ----------------------------------------------
-  integer :: err_mem,memory
-  character (len=*), parameter :: name_sub='sub_OpPsi_OF_ONEDP_FOR_SGtype4_ompGrid'
-  logical, parameter :: debug = .FALSE.
-  !logical, parameter :: debug = .TRUE.
-  !-----------------------------------------------------------------
-  IF (debug) THEN
-    write(out_unitp,*) 'BEGINNING ',name_sub
-    write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
-    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
-    write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-    CALL flush_perso(out_unitp)
-  END IF
-  !-----------------------------------------------------------------
-  !CALL Check_mem()
-
-   !write(6,*) '================================' ; flush(6)
-   !write(6,*) '============ START =============' ; flush(6)
-
-
-  IF (Grid_omp == 0 .AND. OpPsi_omp > 0) THEN
-    nb_thread = 1
-  ELSE
-    nb_thread = Grid_maxth
-  END IF
-
-
-   mole    => para_Op%mole
-   BasisnD => para_Op%BasisnD
-
-   D = size(BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,dim=1)
-
-   CALL alloc_NParray(tab_l ,(/ D /),'tab_l', name_sub)
-   CALL alloc_NParray(tab_nb,(/ D /),'tab_nb',name_sub)
-   CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
-
-   tab_l(:)  = BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,iG)
-   tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
-   tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
-
-
-   nb = size(PsiR%V) ! because PsiR is in basis Rep
-   nq = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
-
-   CALL alloc_NParray(PsiRj,(/ nq,mole%nb_act1 /),'PsiRj',       name_sub)
-   CALL alloc_NParray(PsiRi,       (/ nq /),      'PsiRi',       name_sub)
-   CALL alloc_NParray(sqRhoOVERJac,(/ nq /),      'sqRhoOVERJac',name_sub)
-   CALL alloc_NParray(Jac,         (/ nq /),      'Jac',         name_sub)
-
-   !transfert part of the potential
-   CALL get_OpGrid_type0_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V)
-
-
-   ! G calculation
-   CALL alloc_NParray(GGiq,(/nq,mole%nb_act1,mole%nb_act1/),'GGiq',name_sub)
-   CALL init_nDindexPrim(nDind_DPG,BasisnD%nb_basis,tab_nq,type_OF_nDindex=-1)
-
- !$OMP parallel                                               &
- !$OMP default(none)                                          &
- !$OMP shared(mole,BasisnD,para_Op,nq,tab_l,nDind_DPG,iG)     &
- !$OMP shared(sqRhoOVERJac,Jac,GGiq)                          &
- !$OMP private(iq,Qact,err_sub,Rho)                           &
- !$OMP num_threads(nb_thread)
-   CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
- !$OMP   DO SCHEDULE(STATIC)
-   DO iq=1,nq
-     CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
-     CALL Rec_Qact_SG4(Qact,BasisnD%tab_basisPrimSG,tab_l,nDind_DPG,iq,mole,err_sub)
-
-     CALL get_d0GG(Qact,para_Op%para_Tnum,mole,d0GG=GGiq(iq,:,:),        &
-                                         def=.TRUE.,Jac=Jac(iq),Rho=Rho)
-     sqRhoOVERJac(iq) = sqrt(Rho/Jac(iq))
-
-   END DO
-!$OMP   END DO
-   CALL dealloc_NParray(Qact,'Qact',name_sub)
-!$OMP   END PARALLEL
-
-   CALL dealloc_nDindex(nDind_DPG)
-
-   CALL alloc_NParray(OpPsiR,(/nq/),'OpPsiR',name_sub)
-
-   ! partial B to G
-   CALL BDP_TO_GDP_OF_SmolyakRep(PsiR%V,BasisnD%tab_basisPrimSG,tab_l,tab_nq,tab_nb)
-   ! now PsiR is on the grid
-   !write(6,*) ' R Grid of PsiR :',PsiR%V
-   !write(6,*) ' R Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
-
-   ! multiplication by sqRhoOVERJac
-   PsiR%V(:) = PsiR%V(:) * sqRhoOVERJac(:)
-
-   !write(6,*) ' R*sq Grid of PsiR :',PsiR
-   !write(6,*) ' R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
-
-
-   ! derivative with respect to Qj
-   DO j=1,mole%nb_act1
-     derive_termQdyn(:) = (/ mole%liste_QactTOQsym(j),0 /)
-
-     PsiRj(:,j) = PsiR%V(:)
-     CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
-                                         tab_l,tab_nq,derive_termQdyn)
-
-     !write(6,*) 'dQj Grid of PsiR',j,PsiRj(:,j) ; flush(6)
-   END DO
-   !write(6,*) ' dQj R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
-
-   OpPsiR(:) = ZERO
-   DO i=1,mole%nb_act1
-
-     PsiRi(:) = ZERO
-     DO j=1,mole%nb_act1
-       PsiRi(:) = PsiRi(:) + GGiq(:,j,i) * PsiRj(:,j)
-     END DO
-     PsiRi(:) = PsiRi(:) * Jac(:)
-     !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(6)
-
-     derive_termQdyn(:) = (/ mole%liste_QactTOQsym(i),0 /)
-
-     CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,&
-                                       tab_l,tab_nq,derive_termQdyn)
-
-     OpPsiR(:) = OpPsiR(:) + PsiRi(:)
-
-   END DO
-   !write(6,*) ' dQi Jac Gij* ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
-
-   OpPsiR(:) = (  -HALF*OpPsiR(:)/Jac(:) + PsiR%V(:)*V(:) ) / sqRhoOVERJac(:)
-   !write(6,*) ' OpPsiR Grid of PsiR',OpPsiR
-   !write(6,*) ' OpPsiR Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
-
-   !tranfert OpPsiR (on the grid) to PsiR
-   PsiR%V(:) = OpPsiR(:)
-
-
-
-   CALL dealloc_NParray(OpPsiR,'OpPsiR', name_sub)
-
-
-   CALL GDP_TO_BDP_OF_SmolyakRep(PsiR%V,BasisnD%tab_basisPrimSG,&
-                                   tab_l,tab_nq,tab_nb)
-   ! now PsiR%V is on the Basis
-
-   IF (allocated(PsiRi))        CALL dealloc_NParray(PsiRi,       'PsiRi',       name_sub)
-   IF (allocated(PsiRj))        CALL dealloc_NParray(PsiRj,       'PsiRj',       name_sub)
-   IF (allocated(GGiq))         CALL dealloc_NParray(GGiq,        'GGiq',        name_sub)
-   IF (allocated(tab_nb))       CALL dealloc_NParray(tab_nb,      'tab_nb',      name_sub)
-   IF (allocated(tab_nq))       CALL dealloc_NParray(tab_nq,      'tab_nq',      name_sub)
-   IF (allocated(tab_l))        CALL dealloc_NParray(tab_l,       'tab_l',       name_sub)
-   IF (allocated(sqRhoOVERJac)) CALL dealloc_NParray(sqRhoOVERJac,'sqRhoOVERJac',name_sub)
-   IF (allocated(Jac))          CALL dealloc_NParray(Jac,         'Jac',         name_sub)
-   IF (allocated(V))            CALL dealloc_NParray(V,           'V',           name_sub)
-
-   !write(6,*) '============ END ===============' ; flush(6)
-   !write(6,*) '================================' ; flush(6)
-
-  !-----------------------------------------------------------
-  IF (debug) THEN
-    write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
-  END IF
-  !-----------------------------------------------------------
-  !CALL UnCheck_mem() ; stop
-  END SUBROUTINE sub_OpPsi_OF_ONEDP_FOR_SGtype4_ompGrid
-
-
   SUBROUTINE get_OpGrid_type10_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V,GGiq,sqRhoOVERJac,Jac)
   USE mod_system
   USE mod_nDindex
@@ -1800,13 +2002,13 @@ END IF
   USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
                      BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
                   DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
-                     getbis_tab_nq,getbis_tab_nb
+                     getbis_tab_nq,getbis_tab_nb,tabR2gridbis_TO_tabR1_AT_iG
   USE mod_SetOp,                      ONLY : param_Op,write_param_Op
 
 
   IMPLICIT NONE
 
-  real (kind=Rkind),  allocatable,    intent(inout)              :: V(:)
+  real (kind=Rkind),  allocatable,    intent(inout)              :: V(:,:,:)
   real (kind=Rkind),  allocatable,    intent(inout), optional    :: GGiq(:,:,:)
   real (kind=Rkind),  allocatable,    intent(inout), optional    :: sqRhoOVERJac(:),Jac(:)
   integer,                            intent(in)                 :: iG,tab_l(:)
@@ -1825,7 +2027,7 @@ END IF
 
   integer,            allocatable       :: tab_nq(:)
   integer,            allocatable       :: tab_iq(:)
-  integer :: iterm00,itabR,nR
+  integer :: iterm00,itabR,nR,nb0,i,j
   integer :: err_sub
   logical :: KEO
   logical :: lformatted=.TRUE.
@@ -1865,7 +2067,8 @@ END IF
 
    tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
 
-   nq = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nq  = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nb0 = BasisnD%para_SGType2%nb0
 
    IF (KEO) THEN
      CALL alloc_NParray(sqRhoOVERJac,(/ nq /),      'sqRhoOVERJac',name_sub)
@@ -1888,24 +2091,37 @@ END IF
 
    IF (para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
      IF (para_Op%OpGrid(iterm00)%grid_zero) THEN
-       CALL alloc_NParray(V,(/ nq /),'V',name_sub)
-       V(:) = ZERO
+       CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
+       V(:,:,:) = ZERO
      ELSE
        IF (para_Op%OpGrid(iterm00)%grid_cte) THEN
-         CALL alloc_NParray(V,(/ nq /),'V',name_sub)
-         V(:) = para_Op%OpGrid(iterm00)%Mat_cte(1,1)
+         CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
+         DO i=1,nb0
+         DO j=1,nb0
+           V(:,j,i) = para_Op%OpGrid(iterm00)%Mat_cte(j,i)
+         END DO
+         END DO
        ELSE
+         CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
          IF (associated(para_Op%OpGrid)) THEN
          IF (associated(para_Op%OpGrid(iterm00)%Grid)) THEN
-
-           CALL tabR2grid_TO_tabR1_AT_iG(V,para_Op%OpGrid(iterm00)%Grid(:,1,1),&
-                                         iG,BasisnD%para_SGType2)
+         DO i=1,nb0
+         DO j=1,nb0
+           CALL tabR2gridbis_TO_tabR1_AT_iG(V(:,j,i),                   &
+                                   para_Op%OpGrid(iterm00)%Grid(:,j,i), &
+                                            iG,BasisnD%para_SGType2)
+         END DO
+         END DO
          END IF
          END IF
        END IF
      END IF
+
    ELSE IF (para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid_done .OR. &
             para_Op%OpGrid(iterm00)%para_FileGrid%Read_FileGrid) THEN
+    STOP 'nb0>1 not yet'
+    IF (nb0 /= 1) STOP 'nb0>1 not yet'
+
     !$OMP  CRITICAL (get_OpGrid_type10_OF_ONEDP_FOR_SG4_CRIT2)
      FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // int_TO_char(iG)
 
@@ -1914,7 +2130,8 @@ END IF
        CALL flush_perso(out_unitp)
      END IF
 
-     CALL sub_ReadRV(V,FileName_RV,lformatted,err_sub)
+     ! this subroutine does not work because V as 3 dim (before 1)
+     !CALL sub_ReadRV(V,FileName_RV,lformatted,err_sub)
      IF (err_sub /= 0) STOP 'error while reading the grid'
      IF (nq /= size(V)) THEN
        write(out_unitp,*) ' ERROR in ',name_sub
@@ -1931,7 +2148,7 @@ END IF
     !$OMP  END CRITICAL (get_OpGrid_type10_OF_ONEDP_FOR_SG4_CRIT2)
 
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
-     CALL alloc_NParray(V,(/ nq /),'V',name_sub)
+     CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
      allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
      DO iOp=1,size(d0MatOp)
        CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
@@ -1963,7 +2180,11 @@ END IF
 
         CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
                                  para_Op%para_Tnum,para_Op%para_PES)
-        V(iq) = d0MatOp(iterm00)%ReVal(1,1,1)
+        DO i=1,nb0
+        DO j=1,nb0
+          V(iq,j,i) = d0MatOp(iterm00)%ReVal(j,i,1)
+        END DO
+        END DO
 
         IF (iG == 1 .AND. debug) THEN
           write(out_unitp,*) 'iG,nq,V',iG,nq,V
@@ -1973,6 +2194,7 @@ END IF
      END IF
 
    END DO
+   !IF (debug) write(out_unitp,*) 'V(:,:,:)',V(:,:,:)
 
 
    IF (para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid .AND.       &
@@ -1980,7 +2202,7 @@ END IF
    IF (associated(para_Op%OpGrid(iterm00)%Grid)) THEN
      itabR = BasisnD%para_SGType2%tab_Sum_nq_OF_SRep(iG)
      nR    = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
-     para_Op%OpGrid(iterm00)%Grid(itabR-nR+1:itabR,1,1) = V
+     para_Op%OpGrid(iterm00)%Grid(itabR-nR+1:itabR,:,:) = V
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, save mem V',iG,nq
@@ -1993,10 +2215,14 @@ END IF
    IF (para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid .AND.           &
       .NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid_done .AND. &
       .NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Read_FileGrid) THEN
+    STOP 'nb0>1 not yet'
+    IF (nb0 /= 1) STOP 'nb0>1 not yet'
 
 !    !$OMP  CRITICAL (get_OpGrid_type10_OF_ONEDP_FOR_SG4_CRIT1)
      FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // int_TO_char(iG)
-     CALL sub_WriteRV(V,FileName_RV,lformatted,err_sub)
+
+     ! this subroutine does not work because V as 3 dim (before 1)
+     !CALL sub_WriteRV(V,FileName_RV,lformatted,err_sub)
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, save file V',iG,nq
@@ -2020,6 +2246,15 @@ END IF
 
   !-----------------------------------------------------------
   IF (debug) THEN
+    DO i=1,nb0
+    DO j=1,nb0
+      write(out_unitp,*) 'V(:,j,i) ',j,i,V(:,j,i)
+    END DO
+    END DO
+    write(out_unitp,*) 'GGiq(iq,:,:)'
+    DO iq=1,nq
+      CALL Write_Mat(GGiq(iq,:,:),out_unitp,6)
+    END DO
     write(out_unitp,*) 'END ',name_sub
     CALL flush_perso(out_unitp)
   END IF
@@ -2042,7 +2277,7 @@ END IF
 
   IMPLICIT NONE
 
-  real(kind=Rkind), allocatable,      intent(inout)    :: GridOp(:,:)
+  real(kind=Rkind), allocatable,      intent(inout)    :: GridOp(:,:,:,:)
   integer,                            intent(in)       :: iG,tab_l(:)
   TYPE (param_Op),                    intent(inout)    :: para_Op
 
@@ -2057,7 +2292,7 @@ END IF
 
   integer,            allocatable       :: tab_nq(:)
   integer,            allocatable       :: tab_iq(:)
-  integer :: iterm,iterm00,itabR,nR
+  integer :: iterm,iterm00,itabR,nR,nb0,i,j
   integer :: err_sub
   logical :: KEO
   logical :: Op_term_done(para_Op%nb_Term)
@@ -2075,8 +2310,6 @@ END IF
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
     write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
-    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
-
     write(out_unitp,*) 'nb_Term',para_Op%nb_Term
     write(out_unitp,*) 'asso OpGrid',associated(para_Op%OpGrid)
 
@@ -2092,7 +2325,8 @@ END IF
 
    D = size(tab_l)
 
-   nq = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nq  = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nb0 = BasisnD%para_SGType2%nb0
    iterm00 = para_Op%derive_term_TO_iterm(0,0)
    !write(6,*) 'coucou',iG,nq
 
@@ -2103,24 +2337,32 @@ END IF
                        para_Op%OpGrid(1)%para_FileGrid%Save_MemGrid_done
    END IF
 
-   CALL alloc_NParray(GridOp,(/ nq,para_Op%nb_Term /),'GridOp',name_sub)
+   CALL alloc_NParray(GridOp,(/ nq,nb0,nb0,para_Op%nb_Term /),'GridOp',name_sub)
    Op_term_done(:) = .FALSE.
 
    IF (associated(para_Op%OpGrid)) THEN
      DO iterm=1,para_Op%nb_Term
        IF (para_Op%OpGrid(iterm)%grid_zero) THEN
-         GridOp(:,iterm) = ZERO
+         GridOp(:,:,:,iterm) = ZERO
          Op_term_done(iterm) = .TRUE.
        ELSE
          IF (para_Op%OpGrid(iterm)%grid_cte) THEN
-           GridOp(:,iterm) = para_Op%OpGrid(iterm)%Mat_cte(1,1)
+           DO i=1,nb0
+           DO j=1,nb0
+             GridOp(:,j,i,iterm) = para_Op%OpGrid(iterm)%Mat_cte(j,i)
+           END DO
+           END DO
            Op_term_done(iterm) = .TRUE.
          ELSE
            IF (associated(para_Op%OpGrid(iterm)%Grid)) THEN
              Op_term_done(iterm) = .TRUE.
-             CALL tabR2gridbis_TO_tabR1_AT_iG(GridOp(:,iterm),          &
-                                     para_Op%OpGrid(iterm)%Grid(:,1,1), &
+             DO i=1,nb0
+             DO j=1,nb0
+               CALL tabR2gridbis_TO_tabR1_AT_iG(GridOp(:,j,i,iterm),    &
+                                     para_Op%OpGrid(iterm)%Grid(:,j,i), &
                                                iG,BasisnD%para_SGType2)
+             END DO
+             END DO
            END IF
          END IF
        END IF
@@ -2157,7 +2399,7 @@ END IF
 
           CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                   &
                                    para_Op%para_Tnum,para_Op%para_PES)
-          GridOp(iq,iterm00) = d0MatOp(iterm00)%ReVal(1,1,1)
+          GridOp(iq,:,:,iterm00) = d0MatOp(iterm00)%ReVal(:,:,1)
 
      END DO
 
@@ -2179,7 +2421,7 @@ END IF
   !-----------------------------------------------------------
   IF (debug) THEN
     DO iterm=1,para_Op%nb_Term
-      write(out_unitp,*) 'GridOp(:,iterm)',GridOp(:,iterm)
+      write(out_unitp,*) 'GridOp(:,:,:,iterm)',iterm,GridOp(:,:,:,iterm)
     END DO
     write(out_unitp,*) 'END ',name_sub
     CALL flush_perso(out_unitp)
@@ -2201,13 +2443,13 @@ END IF
   USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
                      BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
                   DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
-                     getbis_tab_nq,getbis_tab_nb
+                     getbis_tab_nq,getbis_tab_nb,tabR2gridbis_TO_tabR1_AT_iG
   USE mod_SetOp,                   ONLY : param_Op,write_param_Op
 
 
   IMPLICIT NONE
 
-  real (kind=Rkind),  allocatable,    intent(inout)    :: V(:)
+  real (kind=Rkind),  allocatable,    intent(inout)    :: V(:,:,:)
   integer,                            intent(in)       :: iG,tab_l(:)
 
   TYPE (param_Op),                    intent(inout)    :: para_Op
@@ -2224,7 +2466,7 @@ END IF
 
   integer,            allocatable       :: tab_nq(:)
   integer,            allocatable       :: tab_iq(:)
-  integer :: iterm00,itabR,nR
+  integer :: iterm00,itabR,nR,nb0,i,j
   integer :: err_sub
   logical :: lformatted=.TRUE.
 
@@ -2261,7 +2503,8 @@ END IF
 
    tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
 
-   nq = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nq  = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nb0 = BasisnD%para_SGType2%nb0
 
 
    !transfert part of the scalar part of the potential
@@ -2280,24 +2523,35 @@ END IF
 
    IF (para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
      IF (para_Op%OpGrid(iterm00)%grid_zero) THEN
-       CALL alloc_NParray(V,(/ nq /),'V',name_sub)
-       V(:) = ZERO
+       CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
+       V(:,:,:) = ZERO
      ELSE
        IF (para_Op%OpGrid(iterm00)%grid_cte) THEN
-         CALL alloc_NParray(V,(/ nq /),'V',name_sub)
-         V(:) = para_Op%OpGrid(iterm00)%Mat_cte(1,1)
+         CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
+         DO i=1,nb0
+         DO j=1,nb0
+            V(:,j,i) = para_Op%OpGrid(iterm00)%Mat_cte(j,i)
+         END DO
+         END DO
        ELSE
          IF (associated(para_Op%OpGrid)) THEN
          IF (associated(para_Op%OpGrid(iterm00)%Grid)) THEN
-
-           CALL tabR2grid_TO_tabR1_AT_iG(V,para_Op%OpGrid(iterm00)%Grid(:,1,1),&
-                                         iG,BasisnD%para_SGType2)
+         CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
+           DO i=1,nb0
+           DO j=1,nb0
+             CALL tabR2gridbis_TO_tabR1_AT_iG(V(:,j,i),                 &
+                                   para_Op%OpGrid(iterm00)%Grid(:,j,i), &
+                                               iG,BasisnD%para_SGType2)
+           END DO
+           END DO
          END IF
          END IF
        END IF
      END IF
    ELSE IF (para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid_done .OR. &
             para_Op%OpGrid(iterm00)%para_FileGrid%Read_FileGrid) THEN
+    STOP 'nb0>1 not yet'
+
      !$OMP  CRITICAL (get_OpGrid_type0_OF_ONEDP_FOR_SG4_CRIT2)
      FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // int_TO_char(iG)
 
@@ -2306,7 +2560,8 @@ END IF
        CALL flush_perso(out_unitp)
      END IF
 
-     CALL sub_ReadRV(V,FileName_RV,lformatted,err_sub)
+     ! the rank of V is 3 now, this subroutine work with rank 1
+     !CALL sub_ReadRV(V,FileName_RV,lformatted,err_sub)
      IF (err_sub /= 0) STOP 'error while reading the grid'
      IF (nq /= size(V)) THEN
        write(out_unitp,*) ' ERROR in ',name_sub
@@ -2322,7 +2577,7 @@ END IF
      !$OMP  END CRITICAL (get_OpGrid_type0_OF_ONEDP_FOR_SG4_CRIT2)
 
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
-     CALL alloc_NParray(V,(/ nq /),'V',name_sub)
+     CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
      allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
      DO iOp=1,size(d0MatOp)
        CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
@@ -2344,7 +2599,7 @@ END IF
 
         CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
                                  para_Op%para_Tnum,para_Op%para_PES)
-        V(iq) = d0MatOp(iterm00)%ReVal(1,1,1)
+        V(iq,:,:) = d0MatOp(iterm00)%ReVal(:,:,1)
 
         IF (iG == 1 .AND. debug) THEN
           write(out_unitp,*) 'iG,nq,V',iG,nq,V
@@ -2361,7 +2616,7 @@ END IF
    IF (associated(para_Op%OpGrid(iterm00)%Grid)) THEN
      itabR = BasisnD%para_SGType2%tab_Sum_nq_OF_SRep(iG)
      nR    = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
-     para_Op%OpGrid(iterm00)%Grid(itabR-nR+1:itabR,1,1) = V
+     para_Op%OpGrid(iterm00)%Grid(itabR-nR+1:itabR,:,:) = V(:,:,:)
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, save mem V',iG,nq
@@ -2374,10 +2629,13 @@ END IF
    IF (para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid .AND.           &
       .NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid_done .AND. &
       .NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Read_FileGrid) THEN
+    STOP 'nb0>1 not yet'
 
 !    !$OMP  CRITICAL (get_OpGrid_type0_OF_ONEDP_FOR_SG4_CRIT1)
      FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // int_TO_char(iG)
-     CALL sub_WriteRV(V,FileName_RV,lformatted,err_sub)
+
+     ! the rank of V is 3 now, this subroutine work with rank 1
+     !CALL sub_WriteRV(V,FileName_RV,lformatted,err_sub)
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, save file V',iG,nq

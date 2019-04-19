@@ -1,0 +1,39 @@
+
+here=`pwd`
+DIR_EVRT=$here/../..
+
+cd $DIR_EVRT
+ make tnum-dist
+cd $here
+
+$DIR_EVRT/Tnum90.exe << ** > res
+ &variables Old_Qtransfo=f nb_Qtransfo=3 /
+ &Coord_transfo name_transfo='zmat' nat=4 /
+O
+X 1
+H 1 2
+H 1 2 3
+
+ &Coord_transfo name_transfo='linear' /
+sym  R+   R-   a    RX  ax  dx
+6
+1    0.   0.   0.   1.  0.  0.
+2    1.   1.   0.   0.  0.  0.
+3    0.   0.   .5   0.  1.  0.
+4    1.  -1.   0.   0.  0.  0.
+5    0.   0.   .5   0. -1.  0.
+6    0.   0.   0.   0.  0.  1.
+
+ &Coord_transfo name_transfo='active' /
+1 1 1   0 0 0
+
+ &minimum read_nameQ=t read_Qdyn0=t unit='angs' /
+ R+ 0.9894120
+ R- 0.
+ A 100.0269146
+ RX 1.
+ Ax 0.
+ DX 180.
+
+ &calculation calc_freq=t calc_hessian=t fchk_name='H2O_freq3.fchk' /
+**

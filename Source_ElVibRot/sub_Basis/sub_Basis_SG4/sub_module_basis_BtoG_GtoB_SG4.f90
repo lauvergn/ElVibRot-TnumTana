@@ -40,11 +40,13 @@ IMPLICIT NONE
 PRIVATE
 
 TYPE Type_SmolyakRep
+  integer                      :: nb0      = 0         ! to deal with several electronic PES, rot basis, or channels (HAC)
   logical                      :: Grid     = .FALSE.
   logical                      :: Delta    = .FALSE.
   TYPE (TypeRVec), allocatable :: SmolyakRep(:)
 END TYPE Type_SmolyakRep
 TYPE Type_SmolyakRepC
+  integer                      :: nb0      = 0         ! to deal with several electronic PES, rot basis, or channels (HAC)
   logical                      :: Grid     = .FALSE.
   logical                      :: Delta    = .FALSE.
   TYPE (TypeCVec), allocatable :: SmolyakRep(:)
@@ -87,7 +89,7 @@ PUBLIC  assignment(=), operator(*), operator(+), operator(-)
 
 CONTAINS
 
-SUBROUTINE alloc_SmolyakRep(SRep,tab_ind,tab_ba,delta,grid)
+SUBROUTINE alloc_SmolyakRep(SRep,tab_ind,tab_ba,delta,grid,nb0)
 USE mod_system
 USE mod_basis_set_alloc
 IMPLICIT NONE
@@ -96,6 +98,7 @@ TYPE(Type_SmolyakRep),           intent(inout)         :: SRep
 integer,                         intent(in)            :: tab_ind(:,:) ! tab_ind(D,MaxnD)
 TYPE(basis),                     intent(in)            :: tab_ba(0:,:) ! tab_ba(0:L,D)
 logical,                         intent(in),  optional :: delta,grid
+integer,                         intent(in),  optional :: nb0
 
 integer               :: iG,nb_B
 integer, allocatable  :: tab_n(:)
@@ -103,6 +106,13 @@ integer, allocatable  :: tab_n(:)
 
 !write(6,*) 'in alloc_SmolyakRep, shape tab_ind',shape(tab_ind) ; flush(6)
 CALL dealloc_SmolyakRep(SRep)
+
+IF (present(nb0)) THEN
+  SRep%nb0 = nb0
+ELSE
+  SRep%nb0 = 1
+END IF
+IF (SRep%nb0 < 1) SRep%nb0 = 1
 
 IF (present(delta)) THEN
   SRep%delta = delta
@@ -129,7 +139,7 @@ DO iG=1,size(tab_ind(1,:))
     tab_n = getbis_tab_nb(tab_ind(:,iG),tab_ba)
   END IF
   !write(6,*) iG,'tab_n',tab_n ; flush(6)
-  CALL alloc_TypeRVec(SRep%SmolyakRep(iG),nvec=product(tab_n))
+  CALL alloc_TypeRVec(SRep%SmolyakRep(iG),nvec=product(tab_n)*SRep%nb0)
 END DO
 
 IF (allocated(tab_n)) CALL dealloc_NParray(tab_n,'tab_n','alloc_SmolyakRep')
@@ -138,7 +148,7 @@ nb_B = Size_SmolyakRep(SRep)
 !write(6,*) 'Size Smolyak Rep:',nb_B ; flush(6)
 
 END SUBROUTINE alloc_SmolyakRep
-SUBROUTINE alloc2_SmolyakRep(SRep,nDind_SmolyakRep,tab_ba,delta,grid)
+SUBROUTINE alloc2_SmolyakRep(SRep,nDind_SmolyakRep,tab_ba,delta,grid,nb0)
 USE mod_system
 USE mod_basis_set_alloc
 IMPLICIT NONE
@@ -147,12 +157,20 @@ TYPE(Type_SmolyakRep),           intent(inout)         :: SRep
 TYPE(basis),                     intent(in)            :: tab_ba(0:,:) ! tab_ba(0:L,D)
 logical,                         intent(in),  optional :: delta,grid
 TYPE (Type_nDindex),             intent(in)            :: nDind_SmolyakRep
+integer,                         intent(in),  optional :: nb0
 
 integer  :: iG,nb_B,err_sub
 integer, allocatable  :: tab_n(:),tab_l(:)
 
 
 CALL dealloc_SmolyakRep(SRep)
+
+IF (present(nb0)) THEN
+  SRep%nb0 = nb0
+ELSE
+  SRep%nb0 = 1
+END IF
+IF (SRep%nb0 < 1) SRep%nb0 = 1
 
 IF (present(delta)) THEN
   SRep%delta = delta
@@ -180,7 +198,7 @@ IF (allocated(nDind_SmolyakRep%Tab_nDval)) THEN
     ELSE
       tab_n = getbis_tab_nb(nDind_SmolyakRep%Tab_nDval(:,iG),tab_ba)
     END IF
-    CALL alloc_TypeRVec(SRep%SmolyakRep(iG),nvec=product(tab_n))
+    CALL alloc_TypeRVec(SRep%SmolyakRep(iG),nvec=product(tab_n)*SRep%nb0)
   END DO
 ELSE
   CALL alloc_NParray(tab_l,(/ nDind_SmolyakRep%ndim /),'tab_l','alloc2_SmolyakRep')
@@ -197,7 +215,7 @@ ELSE
     ELSE
       tab_n = getbis_tab_nb(tab_l,tab_ba)
     END IF
-    CALL alloc_TypeRVec(SRep%SmolyakRep(iG),nvec=product(tab_n))
+    CALL alloc_TypeRVec(SRep%SmolyakRep(iG),nvec=product(tab_n)*SRep%nb0)
   END DO
   CALL dealloc_NParray(tab_l,'tab_l','alloc2_SmolyakRep')
 
@@ -209,7 +227,7 @@ CALL dealloc_NParray(tab_n,'tab_n','alloc2_SmolyakRep')
 
 END SUBROUTINE alloc2_SmolyakRep
 
-SUBROUTINE alloc_SmolyakRepC(SRep,tab_ind,tab_ba,delta,grid)
+SUBROUTINE alloc_SmolyakRepC(SRep,tab_ind,tab_ba,delta,grid,nb0)
 USE mod_system
 USE mod_basis_set_alloc
 IMPLICIT NONE
@@ -218,6 +236,7 @@ TYPE(Type_SmolyakRepC),          intent(inout)         :: SRep
 integer,                         intent(in)            :: tab_ind(:,:) ! tab_ind(D,MaxnD)
 TYPE(basis),                     intent(in)            :: tab_ba(0:,:) ! tab_ba(0:L,D)
 logical,                         intent(in),  optional :: delta,grid
+integer,                         intent(in),  optional :: nb0
 
 integer               :: iG,nb_B
 integer, allocatable  :: tab_n(:)
@@ -225,6 +244,13 @@ integer, allocatable  :: tab_n(:)
 
 !write(6,*) 'in alloc_SmolyakRep, shape tab_ind',shape(tab_ind)
 CALL dealloc_SmolyakRepC(SRep)
+
+IF (present(nb0)) THEN
+  SRep%nb0 = nb0
+ELSE
+  SRep%nb0 = 1
+END IF
+IF (SRep%nb0 < 1) SRep%nb0 = 1
 
 IF (present(delta)) THEN
   SRep%delta = delta
@@ -251,7 +277,7 @@ DO iG=1,size(tab_ind(1,:))
     tab_n = getbis_tab_nb(tab_ind(:,iG),tab_ba)
   END IF
   !write(6,*) iG,'tab_n',tab_n
-  CALL alloc_TypeCVec(SRep%SmolyakRep(iG),nvec=product(tab_n))
+  CALL alloc_TypeCVec(SRep%SmolyakRep(iG),nvec=product(tab_n)*SRep%nb0)
 END DO
 
 IF (allocated(tab_n)) CALL dealloc_NParray(tab_n,'tab_n','alloc_SmolyakRepC')
@@ -260,7 +286,7 @@ IF (allocated(tab_n)) CALL dealloc_NParray(tab_n,'tab_n','alloc_SmolyakRepC')
 !write(6,*) 'Size Smolyak Rep:',nb_B
 
 END SUBROUTINE alloc_SmolyakRepC
-SUBROUTINE alloc2_SmolyakRepC(SRep,nDind_SmolyakRep,tab_ba,delta,grid)
+SUBROUTINE alloc2_SmolyakRepC(SRep,nDind_SmolyakRep,tab_ba,delta,grid,nb0)
 USE mod_system
 USE mod_basis_set_alloc
 IMPLICIT NONE
@@ -269,12 +295,20 @@ TYPE(Type_SmolyakRepC),          intent(inout)         :: SRep
 TYPE(basis),                     intent(in)            :: tab_ba(0:,:) ! tab_ba(0:L,D)
 logical,                         intent(in),  optional :: delta,grid
 TYPE (Type_nDindex),             intent(in)            :: nDind_SmolyakRep
+integer,                         intent(in),  optional :: nb0
 
 integer  :: iG,nb_B,err_sub
 integer, allocatable  :: tab_n(:),tab_l(:)
 
 
 CALL dealloc_SmolyakRepC(SRep)
+
+IF (present(nb0)) THEN
+  SRep%nb0 = nb0
+ELSE
+  SRep%nb0 = 1
+END IF
+IF (SRep%nb0 < 1) SRep%nb0 = 1
 
 IF (present(delta)) THEN
   SRep%delta = delta
@@ -302,7 +336,7 @@ IF (allocated(nDind_SmolyakRep%Tab_nDval)) THEN
     ELSE
       tab_n = getbis_tab_nb(nDind_SmolyakRep%Tab_nDval(:,iG),tab_ba)
     END IF
-    CALL alloc_TypeCVec(SRep%SmolyakRep(iG),nvec=product(tab_n))
+    CALL alloc_TypeCVec(SRep%SmolyakRep(iG),nvec=product(tab_n)*SRep%nb0)
   END DO
 ELSE
   CALL alloc_NParray(tab_l,(/ nDind_SmolyakRep%ndim /),'tab_l','alloc2_SmolyakRepC')
@@ -319,7 +353,7 @@ ELSE
     ELSE
       tab_n = getbis_tab_nb(tab_l,tab_ba)
     END IF
-    CALL alloc_TypeCVec(SRep%SmolyakRep(iG),nvec=product(tab_n))
+    CALL alloc_TypeCVec(SRep%SmolyakRep(iG),nvec=product(tab_n)*SRep%nb0)
   END DO
   CALL dealloc_NParray(tab_l,'tab_l','alloc2_SmolyakRepC')
 
@@ -348,6 +382,7 @@ SUBROUTINE dealloc_SmolyakRep(SRep)
 
   SRep%Grid     = .FALSE.
   SRep%Delta    = .FALSE.
+  SRep%nb0      = 0
 
 END SUBROUTINE dealloc_SmolyakRep
 
@@ -368,6 +403,7 @@ SUBROUTINE dealloc_SmolyakRepC(SRep)
 
   SRep%Grid     = .FALSE.
   SRep%Delta    = .FALSE.
+  SRep%nb0      = 0
 
 END SUBROUTINE dealloc_SmolyakRepC
 
@@ -381,6 +417,7 @@ integer               :: iG
 
   write(6,*) 'Grid',SRep%Grid
   write(6,*) 'Delta',SRep%Delta
+  write(6,*) 'nb0',SRep%nb0
   write(6,*) 'alloc?',allocated(SRep%SmolyakRep)
 
 IF (allocated(SRep%SmolyakRep)) THEN
@@ -402,6 +439,7 @@ integer               :: iG
 
   write(6,*) 'Grid',SRep%Grid
   write(6,*) 'Delta',SRep%Delta
+  write(6,*) 'nb0',SRep%nb0
   write(6,*) 'alloc?',allocated(SRep%SmolyakRep)
 
 IF (allocated(SRep%SmolyakRep)) THEN
@@ -755,7 +793,8 @@ TYPE(basis),                     intent(in)        :: tab_ba(0:,:) ! tab_ba(0:L,
 TYPE (param_SGType2),            intent(in)        :: SGType2
 real(kind=Rkind),                intent(in)        :: WeightSG(:)
 
-integer               :: iBSRep,iG,iB,nb_BG,nR,itabR,nDI
+integer :: iBSRep,iG,iB,nb_BG,nR,itabR,nDI
+integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0
 
 !write(6,*) 'SmolyakRepBasis_TO_tabPackedBasis'
 !CALL write_SmolyakRep(SRep)
@@ -764,20 +803,28 @@ integer               :: iBSRep,iG,iB,nb_BG,nR,itabR,nDI
 IF (size(tabR) == 0) STOP ' ERROR in SmolyakRepBasis_TO_tabPackedBasis. size(tabR)=0'
 !write(6,*) 'nb_size',Size_SmolyakRep(SRep)
 
-tabR = ZERO
-iBSRep = 0
-DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
-  IF (abs(WeightSG(iG)) < ONETENTH**6) CYCLE
+tabR(:) = ZERO
 
-  DO iB=1,size(SRep%SmolyakRep(iG)%V)
-    iBSRep = iBSRep + 1
+DO ib0=1,SRep%nb0
+  iBSRep = 0
+  DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
+    IF (abs(WeightSG(iG)) < ONETENTH**6) CYCLE
 
-    nDI = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
+    nb_AT_iG = SGType2%tab_nb_OF_SRep(iG)
 
-    IF (nDI > 0 .AND. nDI <= nDindB%Max_nDI)                             &
-          tabR(nDI) = tabR(nDI) + WeightSG(iG)*SRep%SmolyakRep(iG)%V(iB)
+    DO iB_ib0=1,nb_AT_iG
+      iBSRep = iBSRep + 1
+
+      nDI_ib0 = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
+
+      IF (nDI_ib0 > 0 .AND. nDI_ib0 <= nDindB%Max_nDI) THEN
+        nDI = (ib0-1)*nDindB%Max_nDI + nDI_ib0
+        iB  = (ib0-1)*nb_AT_iG       + iB_ib0
+        tabR(nDI) = tabR(nDI) + WeightSG(iG)*SRep%SmolyakRep(iG)%V(iB)
+      END IF
+    END DO
+
   END DO
-
 END DO
 !write(6,*) 'tabR',tabR
 
@@ -800,25 +847,38 @@ TYPE(basis),                     intent(in)        :: tab_ba(0:,:) ! tab_ba(0:L,
 TYPE (Type_nDindex),             intent(in)        :: nDindB
 TYPE (param_SGType2),            intent(in)        :: SGType2
 
-integer    :: iBSRep,iG,iB,nb_BG,nR,itabR,nDI
+integer :: iBSRep,iG,iB,nb_BG,nR,itabR,nDI
+integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0
 
 !write(6,*) 'BEGINNING tabPackedBasis_TO_SmolyakRepBasis' ; flush(6)
 
-CALL alloc2_SmolyakRep(SRep,SGType2%nDind_SmolyakRep,tab_ba,grid=.FALSE.)
+CALL alloc2_SmolyakRep(SRep,SGType2%nDind_SmolyakRep,tab_ba,grid=.FALSE.,nb0=SGType2%nb0)
 SRep = ZERO
 !write(6,*) 'nb_size',Size_SmolyakRep(SRep)
-iBSRep = 0
-DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
-  DO iB=1,size(SRep%SmolyakRep(iG)%V)
-    iBSRep = iBSRep + 1
-    nDI = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
-    !write(6,*) 'iG,iB,nDI',iG,iB,nDI ; flush(6)
-    IF (nDI > 0 .AND. nDI <= nDindB%Max_nDI) SRep%SmolyakRep(iG)%V(iB) = tabR(nDI)
+DO ib0=1,SRep%nb0
+  iBSRep = 0
+  DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
+
+    nb_AT_iG = SGType2%tab_nb_OF_SRep(iG)
+
+    DO iB_ib0=1,nb_AT_iG
+      iBSRep = iBSRep + 1
+
+      nDI_ib0 = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
+
+      !write(6,*) 'iG,iB,nDI',iG,iB,nDI ; flush(6)
+      IF (nDI_ib0 > 0 .AND. nDI_ib0 <= nDindB%Max_nDI) THEN
+
+        nDI = (ib0-1)*nDindB%Max_nDI + nDI_ib0
+        iB  = (ib0-1)*nb_AT_iG       + iB_ib0
+
+        SRep%SmolyakRep(iG)%V(iB) = tabR(nDI)
+      END IF
+    END DO
+
   END DO
-
 END DO
-
 !write(6,*) 'END tabPackedBasis_TO_SmolyakRepBasis' ; flush(6)
 
 
@@ -840,33 +900,47 @@ integer               :: iBSRep,iB,nDI,i
 integer               :: tab_ldelta(size(tab_ba,dim=2))
 integer               :: tab_ib(size(tab_ba,dim=2))
 integer               :: tab_nb(size(tab_ba,dim=2))
+integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0,Max_nDI_ib0
 
   IF (allocated(tabR_iG)) THEN
     CALL dealloc_NParray(tabR_iG,'tabR_iG','tabPackedBasis_TO_tabR_AT_iG')
   END IF
 
-  CALL alloc_NParray(tabR_iG,(/ SGType2%tab_nb_OF_SRep(iG) /),          &
+CALL alloc_NParray(tabR_iG,(/ SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0 /), &
                     'tabR_iG','tabPackedBasis_TO_tabR_AT_iG')
 
-  tabR_iG(:) = ZERO
+nb_AT_iG = SGType2%tab_nb_OF_SRep(iG)
+Max_nDI_ib0 = size(tabR)/SGType2%nb0
 
+tabR_iG(:) = ZERO
+tab_nb(:)  = getbis_tab_nb(tab_l,tab_ba)
+
+
+DO ib0=1,SGType2%nb0
   iBSRep = SGType2%tab_Sum_nb_OF_SRep(iG)-SGType2%tab_nb_OF_SRep(iG)
 
-  tab_nb(:) = getbis_tab_nb(tab_l,tab_ba)
   tab_ib(:) = 1 ; tab_ib(1) = 0
-  DO iB=1,SGType2%tab_nb_OF_SRep(iG)
+  DO iB_ib0=1,SGType2%tab_nb_OF_SRep(iG)
     CALL ADD_ONE_TO_nDval_m1(tab_ib,tab_nb)
+
+    !????????????????????????????????????????????, to be removed !!!
     DO i=1,size(tab_ba,dim=2)
       tab_ldelta(i) = tab_ba(tab_l(i),i)%L_TO_nb%Tab_n_TO_L(tab_ib(i))
     END DO
     ! in tab_ldelta(:), we have the l(:) for the DP in DeltaB
+    !????????????????????????????????????????????,
 
 
-    iBSRep = iBSRep + 1
-    nDI    = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
+    iBSRep     = iBSRep + 1
+    nDI_ib0    = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
     !write(6,*) 'iG,iB,nDI',iG,iB,nDI ; flush(6)
-    IF (nDI > 0 .AND. nDI <= size(tabR) ) tabR_iG(iB) = tabR(nDI)
+    IF (nDI_ib0 > 0 .AND. nDI_ib0 <= Max_nDI_ib0) THEN
+      nDI = (ib0-1)*Max_nDI_ib0                + nDI_ib0
+      iB  = (ib0-1)*SGType2%tab_nb_OF_SRep(iG) + iB_ib0
+      tabR_iG(iB) = tabR(nDI)
+    END IF
   END DO
+END DO
 
 END SUBROUTINE tabPackedBasis_TO2_tabR_AT_iG
 SUBROUTINE tabPackedBasis_TO_tabR_AT_iG(tabR_iG,tabR,iG,SGType2)
@@ -882,26 +956,63 @@ integer,                            intent(in)        :: iG
 TYPE (param_SGType2),               intent(in)        :: SGType2
 !TYPE(basis),                        intent(in)        :: tab_ba(0:,:) ! tab_ba(0:L,D)
 
-integer               :: iBSRep,iB,nDI
+integer :: iBSRep,iB,nDI
+integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0,Max_nDI_ib0
 
-  IF (allocated(tabR_iG)) THEN
-    CALL dealloc_NParray(tabR_iG,'tabR_iG','tabPackedBasis_TO_tabR_AT_iG')
-  END IF
+ !----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='tabPackedBasis_TO_tabR_AT_iG'
+      logical,parameter :: debug=.FALSE.
+      !logical,parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'tabR',tabR(:)
+        write(out_unitp,*) 'nb0',SGType2%nb0
+        write(out_unitp,*) 'iG',iG
+        write(out_unitp,*) 'nb at iG',SGType2%tab_nb_OF_SRep(iG)
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
 
-  CALL alloc_NParray(tabR_iG,(/ SGType2%tab_nb_OF_SRep(iG) /),          &
-                    'tabR_iG','tabPackedBasis_TO_tabR_AT_iG')
 
-  tabR_iG(:) = ZERO
+IF (allocated(tabR_iG)) THEN
+  CALL dealloc_NParray(tabR_iG,'tabR_iG',name_sub)
+END IF
 
+CALL alloc_NParray(tabR_iG,(/ SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0 /),&
+                  'tabR_iG',name_sub)
+
+tabR_iG(:)  = ZERO
+Max_nDI_ib0 = size(tabR)/SGType2%nb0
+!write(6,*) 'iG,nb0,nb,Max_nDI_ib0',iG,SGType2%nb0,SGType2%tab_nb_OF_SRep(iG),Max_nDI_ib0 ; flush(6)
+
+DO ib0=1,SGType2%nb0
   iBSRep = SGType2%tab_Sum_nb_OF_SRep(iG)-SGType2%tab_nb_OF_SRep(iG)
 
-  DO iB=1,SGType2%tab_nb_OF_SRep(iG)
-    iBSRep = iBSRep + 1
-    nDI    = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
-    !write(6,*) 'iG,iB,nDI',iG,iB,nDI ; flush(6)
-    IF (nDI > 0 .AND. nDI <= size(tabR) ) tabR_iG(iB) = tabR(nDI)
-  END DO
+  DO iB_ib0=1,SGType2%tab_nb_OF_SRep(iG)
+    iBSRep  = iBSRep + 1
+    nDI_ib0 = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
+    !write(6,*) 'ib0,iB_ib0',ib0,iB_ib0 ; flush(6)
+    !write(6,*) 'iBSRep,nDI_ib0',iBSRep,nDI_ib0 ; flush(6)
 
+    IF (nDI_ib0 > 0 .AND. nDI_ib0 <= Max_nDI_ib0 ) THEN
+      nDI = (ib0-1)*Max_nDI_ib0                + nDI_ib0
+      iB  = (ib0-1)*SGType2%tab_nb_OF_SRep(iG) + iB_ib0
+      !write(6,*) 'iB,nDI',iB,nDI ; flush(6)
+
+      tabR_iG(iB) = tabR(nDI)
+    END IF
+
+  END DO
+END DO
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'tabR_iG: ',tabR_iG(:)
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
 END SUBROUTINE tabPackedBasis_TO_tabR_AT_iG
 SUBROUTINE tabR_AT_iG_TO_tabPackedBasis(tabR,tabR_iG,iG,SGType2,WeightiG)
 USE mod_system
@@ -918,23 +1029,29 @@ TYPE (param_SGType2),               intent(in)        :: SGType2
 real(kind=Rkind),                   intent(in)        :: WeightiG
 
 
-integer               :: iBSRep,iB,nDI
+integer :: iBSRep,iB,nDI
+integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0,Max_nDI_ib0
 
 
 IF (size(tabR) == 0) STOP ' ERROR in SmolyakRepBasis_TO_tabPackedBasis. size(tabR)=0'
 
+Max_nDI_ib0 = size(tabR)/SGType2%nb0
 
+DO ib0=1,SGType2%nb0
   iBSRep = SGType2%tab_Sum_nb_OF_SRep(iG)-SGType2%tab_nb_OF_SRep(iG)
 
-  DO iB=1,SGType2%tab_nb_OF_SRep(iG)
+  DO iB_ib0=1,SGType2%tab_nb_OF_SRep(iG)
     iBSRep = iBSRep + 1
-    nDI    = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
+    nDI_ib0    = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
     !write(6,*) 'iG,iB,nDI',iG,iB,nDI ; flush(6)
-    IF (nDI > 0 .AND. nDI <= size(tabR) ) THEN
+    IF (nDI_ib0 > 0 .AND. nDI_ib0 <= Max_nDI_ib0 ) THEN
+      nDI = (ib0-1)*Max_nDI_ib0                + nDI_ib0
+      iB  = (ib0-1)*SGType2%tab_nb_OF_SRep(iG) + iB_ib0
       !$OMP ATOMIC
       tabR(nDI) = tabR(nDI) + WeightiG*tabR_iG(iB)
     END IF
   END DO
+END DO
 
 END SUBROUTINE tabR_AT_iG_TO_tabPackedBasis
 SUBROUTINE SmolyakRep2_TO_tabR1(tabR1,SRep2)
@@ -1184,34 +1301,7 @@ IF (size(tabR1) > 0) THEN
 END IF
 
 END SUBROUTINE tabR1_AT_iG_TO_tabR2grid
-SUBROUTINE tabR2basis_TO_tabR1_AT_iG(tabR1,tabR2,iG,SGType2)
-USE mod_system
-USE mod_param_SGType2
-IMPLICIT NONE
 
-real(kind=Rkind), allocatable,   intent(inout)  :: tabR1(:)
-real(kind=Rkind),                intent(in)     :: tabR2(:)
-integer,                         intent(in)     :: iG
-TYPE (param_SGType2),            intent(in)     :: SGType2
-
-integer               :: nR,itabR
-
-
-IF (size(tabR2) > 0) THEN
-
-  itabR = SGType2%tab_Sum_nb_OF_SRep(iG)
-  nR    = SGType2%tab_nb_OF_SRep(iG)
-
-  IF (allocated(tabR1)) CALL dealloc_NParray(tabR1,'tabR1','tabR2basis_TO_tabR1_AT_iG')
-  CALL alloc_NParray(tabR1,(/ nR /),'tabR1','tabR2basis_TO_tabR1_AT_iG')
-
-
-  tabR1(:) = tabR2(itabR-nR+1:itabR)
-
-
-END IF
-
-END SUBROUTINE tabR2basis_TO_tabR1_AT_iG
 SUBROUTINE R2_TO_SmolyakRep1(SRep1,R2)
 USE mod_system
 IMPLICIT NONE
@@ -1393,6 +1483,7 @@ CALL dealloc_SmolyakRep(SRep1)
 IF (size(SRep2%SmolyakRep) > 0) THEN
   SRep1%Grid  = SRep2%Grid
   SRep1%Delta = SRep2%Delta
+  SRep1%nb0   = SRep2%nb0
 
   allocate(SRep1%SmolyakRep(size(SRep2%SmolyakRep)) )
 
@@ -1417,6 +1508,7 @@ CALL dealloc_SmolyakRepC(SRep1)
 IF (size(SRep2%SmolyakRep) > 0) THEN
   SRep1%Grid  = SRep2%Grid
   SRep1%Delta = SRep2%Delta
+  SRep1%nb0   = SRep2%nb0
 
   allocate(SRep1%SmolyakRep(size(SRep2%SmolyakRep)) )
 
@@ -2152,7 +2244,7 @@ IF (allocated(tab_nq)) deallocate(tab_nq)
 SRep%Grid = .TRUE.
 
 END SUBROUTINE BSmolyakRepC_TO3_GSmolyakRepC
-SUBROUTINE BDP_TO_GDP_OF_SmolyakRep(R,tab_ba,tab_l,tab_nq,tab_nb)
+SUBROUTINE BDP_TO_GDP_OF_SmolyakRep(R,tab_ba,tab_l,tab_nq,tab_nb,nb0)
 USE mod_system
 USE mod_basis_set_alloc
 IMPLICIT NONE
@@ -2161,13 +2253,42 @@ real(kind=Rkind), allocatable,   intent(inout)          :: R(:) ! from SRep%Smol
 
 TYPE(basis),                     intent(in)             :: tab_ba(0:,:) ! tab_ba(0:L,D)
 integer,                         intent(in)             :: tab_nb(:),tab_nq(:),tab_l(:)
+integer,                         intent(in), optional   :: nb0
 
-integer                            :: i
+integer                            :: i,ib0,nb0_loc
 integer                            :: nnb,nnq,nb2,nq2,ib,iq
 real(kind=Rkind), allocatable      :: RTempG(:,:,:),RTempB(:,:,:)
+real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
 
- character (len=*), parameter :: name_sub='BDP_TO_GDP_OF_SmolyakRep'
 
+  !----- for debuging ----------------------------------------------
+  integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='BDP_TO_GDP_OF_SmolyakRep'
+  logical, parameter :: debug = .FALSE.
+  !logical, parameter :: debug = .TRUE.
+  !-----------------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'tab_l(:)',tab_l(:)
+    IF (present(nb0)) write(out_unitp,*) 'nb0',nb0
+    write(out_unitp,*) 'size(R)',size(R)
+    CALL flush_perso(out_unitp)
+  END IF
+  !-----------------------------------------------------------------
+ nb0_loc = 1
+ IF (present(nb0)) nb0_loc = nb0
+
+ nnb = product(tab_nb)
+ CALL alloc_NParray(RB,(/ nnb,nb0_loc /),'RB',name_sub)
+ RB(:,:)  = reshape(R,shape=(/ nnb,nb0_loc /))
+
+ nnq = product(tab_nq)
+ CALL alloc_NParray(RG,(/ nnq,nb0_loc /),'RG',name_sub)
+ RG(:,:)  = ZERO
+
+ CALL dealloc_NParray(R,'R',name_sub)
+
+ DO ib0=1,nb0_loc
 
   nnb = product(tab_nb)
   nnq = 1
@@ -2175,9 +2296,7 @@ real(kind=Rkind), allocatable      :: RTempG(:,:,:),RTempB(:,:,:)
   nq2 = 1
 
   CALL alloc_NParray(RTempG,(/ nnq,nq2,nnb /),'RTempG',name_sub)
-  RTempG(:,:,:) = reshape(R,shape=(/ nnq,nq2,nnb /))
-
-  CALL dealloc_NParray(R,'R',name_sub)
+  RTempG(:,:,:) = reshape(RB(:,ib0),shape=(/ nnq,nq2,nnb /))
 
 
   ! B order : b1 * b2 * b3 * ... bD
@@ -2209,13 +2328,26 @@ real(kind=Rkind), allocatable      :: RTempG(:,:,:),RTempB(:,:,:)
 
   END DO
 
-  CALL alloc_NParray(R,(/ nnq /),'R',name_sub)
-
-  R(:) = reshape(RTempG, shape=(/ nnq /) )
+  RG(:,ib0) = reshape(RTempG, shape=(/ nnq /) )
   CALL dealloc_NParray(RTempG,'RTempG',name_sub)
 
+ END DO
+
+  nnq = product(tab_nq)
+  CALL alloc_NParray(R,(/ nnq*nb0_loc /),'R',name_sub)
+  R(:) = reshape(RG, shape=(/ nnq*nb0_loc /) )
+
+  CALL dealloc_NParray(RB,'RB',name_sub)
+  CALL dealloc_NParray(RG,'RG',name_sub)
+
+  IF (debug) THEN
+    write(out_unitp,*) 'size(R)',size(R)
+    write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
+  END IF
+
 END SUBROUTINE BDP_TO_GDP_OF_SmolyakRep
-SUBROUTINE GDP_TO_BDP_OF_SmolyakRep(R,tab_ba,tab_l,tab_nq,tab_nb)
+SUBROUTINE GDP_TO_BDP_OF_SmolyakRep(R,tab_ba,tab_l,tab_nq,tab_nb,nb0)
 USE mod_system
 USE mod_basis_set_alloc
 IMPLICIT NONE
@@ -2224,24 +2356,36 @@ real(kind=Rkind), allocatable,   intent(inout)          :: R(:) ! from SRep%Smol
 
 TYPE(basis),                     intent(in)             :: tab_ba(0:,:) ! tab_ba(0:L,D)
 integer,                         intent(in)             :: tab_nb(:),tab_nq(:),tab_l(:)
+integer,                         intent(in), optional   :: nb0
 
-integer                            :: i
+integer                            :: i,ib0,nb0_loc
 integer                            :: nnb,nnq,nb2,nq2,ib,iq
 real(kind=Rkind), allocatable      :: RTempG(:,:,:),RTempB(:,:,:)
+real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
 
  character (len=*), parameter :: name_sub='GDP_TO_BDP_OF_SmolyakRep'
 
+ nb0_loc = 1
+ IF (present(nb0)) nb0_loc = nb0
 
+ nnq = product(tab_nq)
+ CALL alloc_NParray(RG,(/ nnq,nb0_loc /),'RG',name_sub)
+ RG(:,:)  = reshape(R,shape=(/ nnq,nb0_loc /))
+ CALL dealloc_NParray(R,'R',name_sub)
+
+
+ nnb = product(tab_nb)
+ CALL alloc_NParray(RB,(/ nnb,nb0 /),'RB',name_sub)
+ RB(:,:) = ZERO
+
+ DO ib0=1,nb0_loc
   nnq = product(tab_nq)
   nnb = 1
   nb2 = 1
   nq2 = 1
 
   CALL alloc_NParray(RTempB,(/ 1,1,nnq /),'RTempB',name_sub)
-  RTempB(:,:,:) = reshape(R,shape=(/ 1,1,nnq /))
-
-  CALL dealloc_NParray(R,'R',name_sub)
-
+  RTempB(:,:,:) = reshape(RG(:,ib0),shape=(/ 1,1,nnq /))
 
 ! B order : b1 * b2 * b3 * ... bD
 ! G order : g1 * g2 * g3 * ... gD
@@ -2273,11 +2417,17 @@ real(kind=Rkind), allocatable      :: RTempG(:,:,:),RTempB(:,:,:)
 
   END DO
 
-  CALL alloc_NParray(R,(/ nnb /),'R',name_sub)
-  R(:) = reshape(RTempB, shape=(/ nnb /) )
+  RB(:,ib0) = reshape(RTempB, shape=(/ nnb /) )
 
   CALL dealloc_NParray(RTempB,'RTempB',name_sub)
+ END DO
 
+
+  CALL alloc_NParray(R,(/ nnb*nb0_loc /),'R',name_sub)
+  R(:) = reshape(RB, shape=(/ nnb*nb0_loc /) )
+
+  CALL dealloc_NParray(RB,'RB',name_sub)
+  CALL dealloc_NParray(RG,'RG',name_sub)
 
  END SUBROUTINE GDP_TO_BDP_OF_SmolyakRep
 

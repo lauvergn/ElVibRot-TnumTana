@@ -25,8 +25,7 @@ H 1
 H 1 2
 
  &Coord_transfo name_transfo='NM' skip_transfo=f
-    hessian_old=t hessian_onthefly=t purify_hess=t file_hessian='H2O_freq.fchk' /
-aa 1 1 -1
+    hessian_old=t hessian_onthefly=t file_hessian='H2O_freq.fchk' /
 
  &Coord_transfo name_transfo='active' /
 1  1 1

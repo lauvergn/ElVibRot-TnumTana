@@ -921,13 +921,11 @@
          ELSE
            d1 = sqrt(real(2*l,kind=Rkind)) * poly_Hermite(x,l-1)
            d2 = TWO*(x*d1-d0*real(l,kind=Rkind))
-           d3 = TWO*(x*d2+d1*real(l-1,kind=Rkind))
+           d3 = TWO*(x*d2-d1*real(l-1,kind=Rkind))
          END IF
 
-
-
 !        on rajoute la partie exponentielle
-!        pour d0 d1 d2
+!        pour d0 d1 d2, d3
          pexp = exp(-HALF*x*x)
          d3 = ( d3-THREE*x*d2-THREE*(ONE-x*x)*d1+                       &
                THREE*x*(ONE-x*x)*d0 ) * pexp

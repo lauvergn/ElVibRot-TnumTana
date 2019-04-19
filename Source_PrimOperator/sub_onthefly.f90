@@ -37,6 +37,7 @@ MODULE mod_OTF
 
    PRIVATE
    PUBLIC   dnOp_grid_OnTheFly, Read_GradHess_Molpro, Read_dnDipCC_Gauss
+   PUBLIC   Read_dnPolarizabilityCC_Gauss
    PUBLIC   Read_hess_Fchk
 
    CONTAINS
@@ -659,6 +660,105 @@ END IF
 
 
       END SUBROUTINE Read_dnDipCC_Gauss
+
+     SUBROUTINE Read_dnPolarizabilityCC_Gauss(dnPolarCC,fchk_name,nderiv,ncart_act)
+
+      USE mod_system
+      USE mod_dnSVM
+      implicit none
+
+!----- input output variables ----------------------------------------
+      integer, intent(in)      :: nderiv,ncart_act
+      character (len=Line_len) :: fchk_name
+      TYPE (param_file)        :: file_FChk
+      TYPE(Type_dnS)           :: dnPolarCC(6) ! αxx, αxy, αyy, αxz, αyz, αzz
+
+!----- for the files -------------------------------------------------
+      integer :: nio
+
+      integer                   :: i,j,nderiv_loc
+      character (len=Name_len)  :: name1_i
+      logical                   :: located
+      integer                   :: err
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='Read_dnPolarizabilityCC_Gauss'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (nderiv > 1) THEN
+         nderiv_loc = 1
+      ELSE
+         nderiv_loc = nderiv
+      END IF
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING',name_sub
+        write(out_unitp,*) 'nderiv',nderiv_loc
+        write(out_unitp,*) 'fchk_name: ',fchk_name
+        write(out_unitp,*)
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+      IF (nderiv_loc < 0) RETURN
+
+      CALL alloc_VecOFdnS(dnPolarCC,ncart_act,nderiv_loc)
+      CALL sub_ZERO_TO_VecOFdnS(dnPolarCC,nderiv_loc)
+
+!----------------------------------------------------------------------
+!     ----------------------------------------------------------------
+!     - read the Dipole Moment from the file Test.FChk
+      file_FChk%name = fchk_name
+
+      CALL file_open(file_FChk,nio)
+      CALL Find_Label(nio,'Polarizability',located)
+      IF (debug) write(out_unitp,*) 'Located: Polarizability ',located
+      IF (located) THEN
+        read(nio,*,iostat=err)
+        read(nio,*,iostat=err) dnPolarCC(:)%d0
+      ELSE
+        err = -1
+      END IF
+
+      IF (.NOT. located .OR. err /=0) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) 'I cannot find the Polarizability in :',fchk_name
+        write(out_unitp,*) 'located,err',located,err
+        !STOP
+      END IF
+      close(nio)
+
+!     - read the gradient of the Dipole Moment
+      IF (nderiv_loc >= 1) THEN
+        CALL file_open(file_FChk,nio)
+
+        CALL Find_Label(nio,'Polarizability Derivatives',located)
+        IF (debug) write(out_unitp,*) 'Located: Polarizability Derivatives ',located
+        IF (located) THEN
+
+          read(nio,*,iostat=err)
+          read(nio,*,iostat=err) ((dnPolarCC(i)%d1(j),i=1,6),j=1,ncart_act)
+
+        END IF
+        IF (.NOT. located .OR. err /=0) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) 'I cannot find the Polarizability Derivatives in :',fchk_name
+          write(out_unitp,*) 'located,err',located,err
+          !STOP
+        END IF
+        close(nio)
+      END IF
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'dnPolarCC(:)'
+        CALL Write_VecOFdnS(dnPolarCC)
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+
+
+      END SUBROUTINE Read_dnPolarizabilityCC_Gauss
 
       SUBROUTINE pot_mu_onthefly_gamess(Qxyz,dnECC,nderivE,dnMuCC,nderivMu, &
                                          mole,para_PES)

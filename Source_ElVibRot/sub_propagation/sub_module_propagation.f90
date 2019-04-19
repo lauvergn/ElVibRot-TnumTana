@@ -1048,8 +1048,8 @@ END SUBROUTINE sub_analyze_WP_OpWP
       real (kind=Rkind) :: TFmaxE,TFminE
 
 !------ initial WP definition -----------------------------
-!     for each variable Qi : exp[-((Q-Qeq)/sigma)2+i*imp_k*(Q-Qeq)]
-      real (kind=Rkind) :: sigma,imp_k,Qeq
+!     for each variable Qi : exp[-((Q-Qeq)/sigma)2+i*imp_k*(Q-Qeq)+i*phase]
+      real (kind=Rkind) :: sigma,imp_k,Qeq,phase
 
 !------ initial WP for the control -----------------------
       integer       :: nb_WP,nb_WPba,max_iter
@@ -1078,7 +1078,7 @@ END SUBROUTINE sub_analyze_WP_OpWP
                       file_autocorr,file_spectrum,file_restart,         &
                       TFnexp2,TFmaxE,TFminE
 
-      NAMELIST /defWP0/sigma,Qeq,imp_k
+      NAMELIST /defWP0/sigma,Qeq,imp_k,phase
       NAMELIST /control/nb_WP,nb_WPba,max_iter,conv,alpha,Max_alpha,    &
                         gamma,                                          &
                         Krotov,Turinici,envelopp,Tenvelopp,Obj_TO_alpha,&
@@ -1521,17 +1521,20 @@ END SUBROUTINE sub_analyze_WP_OpWP
 
             write(out_unitp,*)
             IF (print_level > 0)                                        &
-             write(out_unitp,*) 'WP0(Q)=exp[-((Q-Qeq)/sigma)^2+i*imp_k*(Q-Qeq)]'
-            IF (print_level > 0) write(out_unitp,*) 'WP0sigma WP0Qeq WP0imp_k'
+             write(out_unitp,*) 'WP0(Q)=exp[-((Q-Qeq)/sigma)^2+i*imp_k*(Q-Qeq)+i*phase]'
+            IF (print_level > 0) write(out_unitp,*) 'WP0sigma WP0Qeq WP0imp_k WP0phase'
             DO i=1,nb_act1
-              sigma = ONETENTH
-              Qeq   = ZERO
-              imp_k = ZERO
+              sigma    = ONETENTH
+              Qeq      = ZERO
+              imp_k    = ZERO
+              phase    = ZERO
               read(in_unitp,defWP0)
               para_propa%para_WP0%WP0sigma(i) = sigma
               para_propa%para_WP0%WP0Qeq(i)   = Qeq
               para_propa%para_WP0%WP0imp_k(i) = imp_k
-              IF (print_level > 0) write(out_unitp,*) i,sigma,Qeq,imp_k
+              para_propa%para_WP0%WP0phase(i) = phase
+
+              IF (print_level > 0) write(out_unitp,*) i,sigma,Qeq,imp_k,phase
             END DO
 
           END IF

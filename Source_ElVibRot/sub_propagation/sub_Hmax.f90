@@ -82,6 +82,7 @@
 !-----------------------------------------------------------
       write(out_unitp,*) 'BEGINNING ',name_sub,' ',para_H%nb_tot
       write(out_unitp,*) 'Hmin,Hmax',para_H%Hmin,para_H%Hmax
+      CALL flush_perso(out_unitp)
       IF (debug) THEN
 
       END IF
