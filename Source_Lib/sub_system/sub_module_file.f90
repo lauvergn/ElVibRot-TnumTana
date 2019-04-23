@@ -145,6 +145,7 @@ MODULE mod_file
           IF (present(err_file)) err_file = 0
           INQUIRE(FILE=trim(file_name), EXIST=file_exist)
         END IF
+        check_file_exist_WITH_file_name = file_exist
 
       END FUNCTION check_file_exist_WITH_file_name
 

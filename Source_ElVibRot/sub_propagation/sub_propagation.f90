@@ -390,7 +390,6 @@ CONTAINS
 
         IF (para_propa%write_iter .OR. debug) THEN
            write(out_unitp,21) T,E0*get_Conv_au_TO_unit('E','cm-1')
-           !write(out_unitp,21) T,E0
         END IF
         it = it + 1
 

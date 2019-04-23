@@ -99,7 +99,7 @@
       max_iE = min(NPT2,int(para_propa%TFmaxE * auTOcm_inv/DE))
       IF (max_iE == 0) max_iE = NPT2
       DO i=1,max_iE
-        write(no,33) E,real(C(i),kind=Rkind),aimag(C(i)),abs(C(i))
+        write(no,*) E,real(C(i),kind=Rkind),aimag(C(i)),abs(C(i))
         E = E + DE
       END DO
       close(no)

@@ -1411,7 +1411,7 @@ MODULE mod_paramQ
 
         !=================================================
         IF (mole%Without_rot) THEN
-          !write(6,*) 'Gcenter',Gcenter,mole%Centered_ON_CoM
+          write(6,*) 'Gcenter',Gcenter,mole%Centered_ON_CoM
 
           IF (Gcenter .AND. mole%Centered_ON_CoM) THEN
 
@@ -1791,7 +1791,7 @@ MODULE mod_paramQ
                QWU = REAL_WU(Q(i),trim(adjustl(Read_name)),'no_dim')
              END SELECT
 
-           ELSE IF (unit == 'angs' ) THEN
+           ELSE IF (unit == 'angs' ) THEN ! angs + degree
              SELECT CASE (type_Q(i))
              CASE (3,4)
                QWU = REAL_WU(Q(i),'°',    'angle')
@@ -1801,7 +1801,7 @@ MODULE mod_paramQ
                QWU = REAL_WU(Q(i),'',     'no_dim')
              END SELECT
 
-          ELSE
+          ELSE ! bohr + radian
              SELECT CASE (type_Q(i))
              CASE (3,4)
                QWU = REAL_WU(Q(i),'rad',  'angle')
@@ -1813,7 +1813,9 @@ MODULE mod_paramQ
 
           END IF
 
-          Q(i) = convRWU_TO_R(QWU)
+          Q(i) = convRWU_TO_R(QWU,WorkingUnit=.TRUE.)
+          write(6,*) i,QWU,'working value Q(i)',Q(i)
+
         END DO
       END IF
 

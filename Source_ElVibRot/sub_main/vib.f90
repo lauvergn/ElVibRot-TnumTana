@@ -297,10 +297,12 @@
             CALL renorm_psi_With_norm2(WP0(1))
             T = ZERO
             write(out_unitp,*) ' Analysis of |WP0> or Mu|WP0>'
+            write(out_unitp,*)
 
             para_propa%ana_psi%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
             CALL sub_analyze_tab_psi(T,WP0(:),para_propa%ana_psi)
             para_propa%ana_psi%file_Psi%name = para_propa%file_WP%name
+            write(out_unitp,*)
 
           ELSE ! for optimal control
 
@@ -1206,14 +1208,15 @@ para_mem%mem_debug = .FALSE.
 
       integer :: Get_nbPERsym_FROM_SymAbelianOFAllBasis ! function
 !----- variables divers ----------------------------------------------
-      integer           :: i,ip,i_baie,f_baie,id,nb_ScalOp
-      real (kind=Rkind) :: T,DE,Ep,Em,Q,fac,zpe,pop
+      integer           :: i,ib,ip,i_baie,f_baie,id,nb_ScalOp
+      real (kind=Rkind) :: T,DE,Ep,Em,Q,fac,zpe,pop,a,b
       logical           :: print_mat
       integer           :: err
       integer :: err_mem,memory
       real (kind=Rkind) :: part_func ! function
 
       integer           :: nb_it = 10
+      logical           :: cplx  = .FALSE.
 
 !para_mem%mem_debug=.TRUE.
 
@@ -1369,26 +1372,26 @@ para_mem%mem_debug = .FALSE.
         write(out_unitp,*)
       END IF
 
+      cplx = (para_ana%propa .OR. para_H%cplx)
 
+      IF (cplx) nb_it = 1
       allocate(Tab_Psi(nb_it))
       allocate(Tab_OpPsi(nb_it))
       DO i=1,nb_it
-        CALL init_psi(Tab_Psi(i),para_H,para_H%cplx)
+        CALL init_psi(Tab_Psi(i),para_H,cplx)
         CALL alloc_psi(Tab_Psi(i),BasisRep=.TRUE.,GridRep=.FALSE.)
-        Tab_Psi(i) = ZERO
+        Tab_Psi(i)   = ZERO
         Tab_OpPsi(i) = Tab_Psi(i)
-        CALL random_number(Tab_Psi(i)%RvecB)
+        IF (cplx) THEN
+          DO ib=1,size(Tab_Psi(i)%CvecB)
+            CALL random_number(a)
+            CALL random_number(b)
+            Tab_Psi(i)%CvecB(ib) = cmplx(a,b,kind=Rkind)
+          END DO
+        ELSE
+          CALL random_number(Tab_Psi(i)%RvecB)
+        END IF
       END DO
-
-
-      !CALL init_psi(WP0,para_H,para_H%cplx)
-      !CALL alloc_psi(WP0,BasisRep=.TRUE.,GridRep=.FALSE.)
-      !OpWP0 = WP0  ! for the allocation
-
-      !WP0%RvecB(:) = ZERO
-      !WP0%RvecB(2) = ONE
-      !CALL random_number(WP0%RvecB)
-
 
 para_mem%mem_debug = .FALSE.
 
@@ -1396,18 +1399,17 @@ para_mem%mem_debug = .FALSE.
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' VIB: BEGINNING sub_OpPsi_test'
       write(out_unitp,*)
-      !CALL sub_OpPsi(WP0,OpWP0,para_H)
-
+      write(out_unitp,*) ' Number of psi:',nb_it
+      write(out_unitp,*)
       CALL time_perso('HPsi')
 
-      CALL sub_TabOpPsi(Tab_Psi,Tab_OpPsi,para_H)
-
-      !DO i=1,nb_it
-      !CALL sub_OpPsi(WP0,OpWP0,para_H)
-      !END DO
+      IF (cplx) THEN
+        CALL sub_OpPsi(Tab_Psi(1),Tab_OpPsi(1),para_H)
+      ELSE
+        CALL sub_TabOpPsi(Tab_Psi,Tab_OpPsi,para_H)
+      END IF
 
       CALL time_perso('HPsi')
-
       write(out_unitp,*)
       write(out_unitp,*) 'nb_mult_BTOG,nb_mult_GTOB',nb_mult_BTOG,nb_mult_GTOB
       write(out_unitp,*)

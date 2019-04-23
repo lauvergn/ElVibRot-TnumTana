@@ -70,8 +70,8 @@
       integer  :: ecri_numi,ecri_nume
 
 !----- for debuging --------------------------------------------------
-      !logical, parameter :: debug = .FALSE.
-       logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING psi0'

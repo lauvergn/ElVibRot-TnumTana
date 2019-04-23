@@ -92,6 +92,8 @@ CONTAINS
         END IF
         IF (NewBasisEl) THEN
           CALL RecCvecB_TO_CvecG(psi%CvecB,psi%CvecG,psi%nb_ba,psi%nb_qa,psi%BasisnD)
+        ELSE IF (psi%BasisnD%SparseGrid_type == 4) THEN ! specail case with SG4
+          CALL RecCvecB_TO_CvecG(psi%CvecB,psi%CvecG,psi%nb_ba,psi%nb_qa,psi%BasisnD)
         ELSE
           iqaie0 = 1
           ibaie0 = 1
@@ -115,6 +117,8 @@ CONTAINS
           STOP
         END IF
         IF (NewBasisEl) THEN
+          CALL RecRvecB_TO_RvecG(psi%RvecB,psi%RvecG,psi%nb_ba,psi%nb_qa,psi%BasisnD)
+        ELSE IF (psi%BasisnD%SparseGrid_type == 4) THEN ! specail case with SG4
           CALL RecRvecB_TO_RvecG(psi%RvecB,psi%RvecG,psi%nb_ba,psi%nb_qa,psi%BasisnD)
         ELSE
           iqaie0 = 1
@@ -198,7 +202,6 @@ CONTAINS
 !---- initisalisation ----------------------------------
       CALL alloc_psi(psi,BasisRep=.TRUE.)
 !---- end initisalisation -------------------------------
-
       IF (psi%cplx) THEN
         IF ( .NOT. allocated(psi%CvecG) ) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
@@ -207,6 +210,9 @@ CONTAINS
         END IF
         psi%CvecB(:) = CZERO
         IF (NewBasisEl) THEN
+          CALL RecCvecG_TO_CvecB(psi%CvecG,psi%CvecB,psi%nb_qaie,psi%nb_baie,psi%BasisnD)
+        ELSE IF (psi%BasisnD%SparseGrid_type == 4) THEN ! special case with SG4
+write(6,*) 'coucou SG4', name_sub
           CALL RecCvecG_TO_CvecB(psi%CvecG,psi%CvecB,psi%nb_qaie,psi%nb_baie,psi%BasisnD)
         ELSE
           iqaie0 = 1
@@ -232,6 +238,8 @@ CONTAINS
         END IF
         psi%RvecB(:) = ZERO
         IF (NewBasisEl) THEN
+          CALL RecRvecG_TO_RvecB(psi%RvecG,psi%RvecB,psi%nb_qaie,psi%nb_baie,psi%BasisnD)
+        ELSE IF (psi%BasisnD%SparseGrid_type == 4) THEN ! specail case with SG4
           CALL RecRvecG_TO_RvecB(psi%RvecG,psi%RvecB,psi%nb_qaie,psi%nb_baie,psi%BasisnD)
         ELSE
           iqaie0 = 1

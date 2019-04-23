@@ -58,12 +58,12 @@ dh 0.0
  &inactives /
 
  &actives test=f direct=2 Type_HamilOp=10 direct_KEO=t /
- &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=f 
+ &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t 
           print_psi=0 psi1D_Q0=f psi2D_Q0=f
           Rho1D=f Rho2D=f Rho_type=1 /
 
  &propa
-        WPTmax=100. 'fs' WPdeltaT=10. 'fs' nb_micro=10
+        WPTmax=10. WPdeltaT=1. nb_micro=1
 
         n_WPecri=0 WPpsi2=f WPpsi=f Write_WPAdia=f
 

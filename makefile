@@ -6,10 +6,10 @@
 #F90 = pgf90
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
 #
 # force the default integer (without kind) during the compillation. default 4: , INT=8 (for kind=8)
 INT = 4

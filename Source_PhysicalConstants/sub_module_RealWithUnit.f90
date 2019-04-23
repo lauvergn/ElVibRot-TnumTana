@@ -53,7 +53,7 @@
      PUBLIC :: REAL_WU, Type_TabConvRWU, assignment (=)
      PUBLIC :: dealloc_TabConvRWU, dealloc_TabConvRWU_dim1, Write_TabConvRWU, Write_TabConvRWU_dim1
      PUBLIC :: ADD_RWU_TO_TabConvRWU, ADD_RWU_TO_Tab_conv_FOR_quantity
-     PUBLIC :: convRWU_TO_R,convRWU_TO_RWU
+     PUBLIC :: convRWU_TO_R,convRWU_WorkingUnit_TO_R,convRWU_WritingUnit_TO_R,convRWU_TO_RWU
      PUBLIC :: RWU_Write,RWU_WriteUnit
      PUBLIC :: get_Conv_au_TO_WriteUnit,get_Conv_au_TO_Unit
      PUBLIC :: Test_RWU
@@ -362,6 +362,28 @@
 
       END FUNCTION convRWU_TO_R
 
+      FUNCTION convRWU_WorkingUnit_TO_R(RWU)
+      real (kind=Rkind)             :: convRWU_WorkingUnit_TO_R
+      TYPE(REAL_WU), intent(in)     :: RWU
+
+      TYPE(REAL_WU)                 :: RWU_loc
+
+      RWU_loc = convRWU_TO_RWU(RWU,WorkingUnit=.TRUE.)
+
+      convRWU_WorkingUnit_TO_R = RWU_loc%val
+
+      END FUNCTION convRWU_WorkingUnit_TO_R
+      FUNCTION convRWU_WritingUnit_TO_R(RWU)
+      real (kind=Rkind)             :: convRWU_WritingUnit_TO_R
+      TYPE(REAL_WU), intent(in)     :: RWU
+
+      TYPE(REAL_WU)                 :: RWU_loc
+
+      RWU_loc = convRWU_TO_RWU(RWU,WorkingUnit=.FALSE.)
+
+      convRWU_WritingUnit_TO_R = RWU_loc%val
+
+      END FUNCTION convRWU_WritingUnit_TO_R
       FUNCTION convRWU_TO_RWU(RWU,WorkingUnit)
       TYPE(REAL_WU)                       :: convRWU_TO_RWU
       TYPE(REAL_WU), intent(in)           :: RWU
@@ -416,7 +438,7 @@
           name_unit = Tab_conv_FOR_quantity(iq)%conv(i)%unit
           CALL string_uppercase_TO_lowercase(name_unit)
 
-          !write(6,*) 'i,name_unit',i,name_unit,(name_RWUunit == name_unit)
+          !write(6,*) 'i,name_unit',i,name_unit,name_RWUunit,(name_RWUunit == name_unit)
 
           IF (name_RWUunit == name_unit) THEN
             IF (WorkingUnit_loc) THEN ! working unit

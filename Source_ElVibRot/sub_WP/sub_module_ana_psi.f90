@@ -525,7 +525,7 @@ END SUBROUTINE sub_analyze_psi
         STOP
       END IF
 
-      Qmean(:) = ZERO
+      Qmean(:)        = ZERO
       Qmean_ie(:,:,:) = ZERO
 
       IF (.NOT. ana_psi%GridDone) CALL sub_PsiBasisRep_TO_GridRep(psi)

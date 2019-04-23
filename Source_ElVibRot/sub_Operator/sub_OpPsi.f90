@@ -257,6 +257,7 @@ CONTAINS
       logical :: With_Grid_loc
       TYPE (param_psi)   :: RPsi,ROpPsi
       TYPE (param_psi)   :: RCPsi(2),RCOpPsi(2)
+      TYPE (param_psi)   :: RROpPsi(1)
 
       logical :: direct_KEO,SGtype4
 
@@ -333,12 +334,14 @@ CONTAINS
        RCPsi = Psi
        CALL sub_TabOpPsi_FOR_SGtype4(RCPsi,RCOpPsi,para_Op)
        OpPsi = RCOpPsi
-       CALL dealloc_psi(RCPsi(1),delete_all=.TRUE.)
-       CALL dealloc_psi(RCPsi(2),delete_all=.TRUE.)
+       CALL dealloc_psi(RCPsi(1),  delete_all=.TRUE.)
+       CALL dealloc_psi(RCPsi(2),  delete_all=.TRUE.)
        CALL dealloc_psi(RCOpPsi(1),delete_all=.TRUE.)
        CALL dealloc_psi(RCOpPsi(2),delete_all=.TRUE.)
      ELSE
-       CALL sub_OpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
+       CALL sub_TabOpPsi_FOR_SGtype4( (/Psi/) ,RROpPsi,para_Op)
+       OpPsi = RROpPsi(1)
+       CALL dealloc_psi(RROpPsi(1),delete_all=.TRUE.)
      END IF
    ELSE
 

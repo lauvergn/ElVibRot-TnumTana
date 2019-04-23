@@ -798,10 +798,10 @@ integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0
 
 !write(6,*) 'SmolyakRepBasis_TO_tabPackedBasis'
 !CALL write_SmolyakRep(SRep)
-
+flush(6)
 
 IF (size(tabR) == 0) STOP ' ERROR in SmolyakRepBasis_TO_tabPackedBasis. size(tabR)=0'
-!write(6,*) 'nb_size',Size_SmolyakRep(SRep)
+write(6,*) 'nb_size',Size_SmolyakRep(SRep) ; flush(6)
 
 tabR(:) = ZERO
 
@@ -826,9 +826,8 @@ DO ib0=1,SRep%nb0
 
   END DO
 END DO
+
 !write(6,*) 'tabR',tabR
-
-
 !write(6,*) 'END SmolyakRepBasis_TO_tabPackedBasis'
 
 
@@ -1061,21 +1060,39 @@ IMPLICIT NONE
 real(kind=Rkind), allocatable,   intent(inout)  :: tabR1(:)
 TYPE(Type_SmolyakRep),           intent(in)     :: SRep2
 
-integer               :: iG,nb_BG,nR,itabR
+real(kind=Rkind), allocatable  :: tab(:,:)
+real(kind=Rkind), allocatable  :: V(:,:)
+
+integer               :: iG,nb_BG,itabR
+integer               :: ib0,nb,nb_AT_iG
+
 
 IF (allocated(tabR1)) CALL dealloc_NParray(tabR1,'tabR1','SmolyakRep2_TO_tabR1')
 
 nb_BG = Size_SmolyakRep(SRep2)
 
+nb = nb_BG/SRep2%nb0
+CALL alloc_NParray(tab,(/ nb,SRep2%nb0 /),                              &
+                  'tab','SmolyakRep2_TO_tabR1')
+
 IF (nb_BG > 0) THEN
-  CALL alloc_NParray(tabR1,(/nb_BG/),'tabR1','SmolyakRep2_TO_tabR1')
 
   itabR = 0
   DO iG=lbound(SRep2%SmolyakRep,dim=1),ubound(SRep2%SmolyakRep,dim=1)
-    nR = size(SRep2%SmolyakRep(iG)%V)
-    tabR1(itabR+1:itabR+nR) = SRep2%SmolyakRep(iG)%V
-    itabR = itabR + nR
+    nb_AT_iG = size(SRep2%SmolyakRep(iG)%V) / SRep2%nb0
+
+    V = reshape(SRep2%SmolyakRep(iG)%V,shape=(/ nb_AT_iG,SRep2%nb0 /) )
+
+    tab(itabR+1:itabR+nb_AT_iG,:) = V(:,:)
+
+    itabR = itabR + nb_AT_iG
+
   END DO
+  CALL alloc_NParray(tabR1,(/nb_BG/),'tabR1','SmolyakRep2_TO_tabR1')
+  tabR1(:) = reshape(tab,shape=(/ nb_BG /) )
+
+  CALL dealloc_NParray(tab,'tab','SmolyakRep2_TO_tabR1bis')
+  deallocate(V)
 
 END IF
 
@@ -1087,7 +1104,12 @@ IMPLICIT NONE
 real(kind=Rkind),                intent(inout)  :: tabR1(:)
 TYPE(Type_SmolyakRep),           intent(in)     :: SRep2
 
-integer               :: iG,nb_BG,nR,itabR
+
+real(kind=Rkind), allocatable  :: tab(:,:)
+real(kind=Rkind), allocatable  :: V(:,:)
+
+integer               :: iG,nb_BG,itabR
+integer               :: ib0,nb,nb_AT_iG
 
 nb_BG = Size_SmolyakRep(SRep2)
 IF (nb_BG /= size(tabR1)) THEN
@@ -1096,13 +1118,27 @@ IF (nb_BG /= size(tabR1)) THEN
   STOP
 END IF
 
+nb = nb_BG/SRep2%nb0
+CALL alloc_NParray(tab,(/ nb,SRep2%nb0 /),                              &
+                  'tab','SmolyakRep2_TO_tabR1bis')
+
 IF (nb_BG > 0) THEN
+
   itabR = 0
   DO iG=lbound(SRep2%SmolyakRep,dim=1),ubound(SRep2%SmolyakRep,dim=1)
-    nR = size(SRep2%SmolyakRep(iG)%V)
-    tabR1(itabR+1:itabR+nR) = SRep2%SmolyakRep(iG)%V
-    itabR = itabR + nR
+    nb_AT_iG = size(SRep2%SmolyakRep(iG)%V) / SRep2%nb0
+
+    V = reshape(SRep2%SmolyakRep(iG)%V,shape=(/ nb_AT_iG,SRep2%nb0 /) )
+
+    tab(itabR+1:itabR+nb_AT_iG,:) = V(:,:)
+
+    itabR = itabR + nb_AT_iG
+
   END DO
+  tabR1 = reshape(tab,shape=(/ nb_BG /) )
+
+  CALL dealloc_NParray(tab,'tab','SmolyakRep2_TO_tabR1bis')
+  deallocate(V)
 END IF
 
 END SUBROUTINE SmolyakRep2_TO_tabR1bis
@@ -1139,8 +1175,11 @@ IMPLICIT NONE
 real(kind=Rkind), allocatable,   intent(in)     :: tabR2(:)
 TYPE(Type_SmolyakRep),           intent(inout)  :: SRep1
 
-integer               :: iG,nb_BG,nR,itabR
+real(kind=Rkind), allocatable  :: tab(:,:)
+real(kind=Rkind), allocatable  :: V(:,:)
 
+integer               :: iG,nb_BG,itabR
+integer               :: ib0,nb,nb_AT_iG
 
 nb_BG = Size_SmolyakRep(SRep1)
 IF (size(tabR2) /= nb_BG) THEN
@@ -1152,12 +1191,24 @@ END IF
 
 IF (nb_BG > 0) THEN
 
+  nb = nb_BG/SRep1%nb0
+
+  tab = reshape(tabR2,shape=(/ nb,SRep1%nb0 /) )
+
   itabR = 0
   DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
-    nR = size(SRep1%SmolyakRep(iG)%V)
-    SRep1%SmolyakRep(iG)%V(:) = tabR2(itabR+1:itabR+nR)
-    itabR = itabR + nR
+    nb_AT_iG = size(SRep1%SmolyakRep(iG)%V) / SRep1%nb0
+
+    V = tab(itabR+1:itabR+nb_AT_iG,:)
+
+    SRep1%SmolyakRep(iG)%V(:) = reshape(V,shape(SRep1%SmolyakRep(iG)%V))
+
+    itabR = itabR + nb_AT_iG
+
   END DO
+
+  deallocate(tab)
+  deallocate(V)
 
 END IF
 
@@ -1169,8 +1220,11 @@ IMPLICIT NONE
 real(kind=Rkind),                intent(in)     :: tabR2(:)
 TYPE(Type_SmolyakRep),           intent(inout)  :: SRep1
 
-integer               :: iG,nb_BG,nR,itabR
+real(kind=Rkind), allocatable  :: tab(:,:)
+real(kind=Rkind), allocatable  :: V(:,:)
 
+integer               :: iG,nb_BG,itabR
+integer               :: ib0,nb,nb_AT_iG
 
 nb_BG = Size_SmolyakRep(SRep1)
 IF (size(tabR2) /= nb_BG) THEN
@@ -1182,12 +1236,24 @@ END IF
 
 IF (nb_BG > 0) THEN
 
+  nb = nb_BG/SRep1%nb0
+
+  tab = reshape(tabR2,shape=(/ nb,SRep1%nb0 /) )
+
   itabR = 0
   DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
-    nR = size(SRep1%SmolyakRep(iG)%V)
-    SRep1%SmolyakRep(iG)%V(:) = tabR2(itabR+1:itabR+nR)
-    itabR = itabR + nR
+    nb_AT_iG = size(SRep1%SmolyakRep(iG)%V) / SRep1%nb0
+
+    V = tab(itabR+1:itabR+nb_AT_iG,:)
+
+    SRep1%SmolyakRep(iG)%V(:) = reshape(V,shape(SRep1%SmolyakRep(iG)%V))
+
+    itabR = itabR + nb_AT_iG
+
   END DO
+
+  deallocate(tab)
+  deallocate(V)
 
 END IF
 
@@ -1199,8 +1265,11 @@ IMPLICIT NONE
 complex(kind=Rkind),              intent(in)     :: tabC2(:)
 TYPE(Type_SmolyakRepC),           intent(inout)  :: SRep1
 
-integer               :: iG,nb_BG,nR,itabR
+complex(kind=Rkind), allocatable  :: tab(:,:)
+complex(kind=Rkind), allocatable  :: V(:,:)
 
+integer               :: iG,nb_BG,itabR,nR
+integer               :: ib0,nb,nb_AT_iG
 
 nb_BG = Size_SmolyakRepC(SRep1)
 IF (size(tabC2) /= nb_BG) THEN
@@ -1687,7 +1756,7 @@ IF (nb_BG > 0) THEN
 END IF
 
 END FUNCTION SmolyakRepC1_MINUS_SmolyakRepC2
-SUBROUTINE GSmolyakRep_TO_BSmolyakRep(SRep,tab_ind,tab_ba)
+SUBROUTINE GSmolyakRep_TO_BSmolyakRep(SRep,tab_ind,tab_ba,nb0)
 USE mod_system
 USE mod_basis_set_alloc
 IMPLICIT NONE
@@ -1696,6 +1765,7 @@ real(kind=Rkind)  :: R
 TYPE(Type_SmolyakRep),           intent(inout)          :: SRep
 integer,                         intent(in)             :: tab_ind(:,:) ! tab_ind(D,MaxnD)
 TYPE(basis),                     intent(in)             :: tab_ba(0:,:) ! tab_ba(L,D)
+integer,                         intent(in)             :: nb0
 
 integer               :: i,D,iG,nb_BG
 
@@ -1706,11 +1776,14 @@ real(kind=Rkind), allocatable      :: RTempG(:,:,:),RTempB(:,:,:)
 
 IF (.NOT. SRep%Grid) STOP 'Basis is not possible in GSmolyakRep_TO_BSmolyakRep'
 
+!!$OMP   SHARED(nb_mult_GTOB,D,SRep,tab_ind,tab_ba) &
+!!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
+
 D = size(tab_ba(0,:))
 nb_mult_GTOB = 0
 !$OMP   PARALLEL DEFAULT(NONE) &
-!$OMP   SHARED(nb_mult_GTOB,D,SRep,tab_ind,tab_ba) &
-!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
+!$OMP   SHARED(SRep,tab_ind,tab_ba,nb0) &
+!$OMP   PRIVATE(iG,tab_nb,tab_nq) &
 !$OMP   NUM_THREADS(SG4_maxth)
 
 !$OMP   DO SCHEDULE(STATIC)
@@ -1720,44 +1793,47 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
   tab_nq = get_tab_nq(tab_ind(:,iG),tab_ba)
   tab_nb = get_tab_nb(tab_ind(:,iG),tab_ba)
 
-  nnq = product(tab_nq)
-  nnb = 1
-  nb2 = 1
-  nq2 = 1
+  CALL GDP_TO_BDP_OF_SmolyakRep(SRep%SmolyakRep(iG)%V,tab_ba,           &
+                                tab_ind(:,iG),tab_nq,tab_nb,nb0)
 
-  RTempB = reshape(SRep%SmolyakRep(iG)%V,shape=(/ 1,1,nnq /))
-
-! B order : b1 * b2 * b3 * ... bD
-! G order : g1 * g2 * g3 * ... gD
-
-  DO i=1,D
-    nb2 = tab_nb(i)
-    nq2 = tab_nq(i)
-    nnq = nnq / nq2
-
-    RTempG = reshape(RTempB,shape=(/ nnb,nq2,nnq /))
-
-    deallocate(RTempB)
-    allocate(RTempB(nnb,nb2,nnq))
-
-    DO iq=1,nnq
-    DO ib=1,nnb
-
-       RTempB(ib,:,iq) = matmul(tab_ba(tab_ind(i,iG),i)%dnRBGwrho%d0 , RTempG(ib,:,iq))
-
-      !$OMP ATOMIC
-      nb_mult_GTOB = nb_mult_GTOB + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
-
-    END DO
-    END DO
-
-    nnb = nnb * nb2
-    deallocate(RTempG)
-
-  END DO
-
-  SRep%SmolyakRep(iG)%V = reshape(RTempB, shape=(/ nnb /) )
-  deallocate(RTempB)
+!  nnq = product(tab_nq)
+!  nnb = 1
+!  nb2 = 1
+!  nq2 = 1
+!
+!  RTempB = reshape(SRep%SmolyakRep(iG)%V,shape=(/ 1,1,nnq /))
+!
+!! B order : b1 * b2 * b3 * ... bD
+!! G order : g1 * g2 * g3 * ... gD
+!
+!  DO i=1,D
+!    nb2 = tab_nb(i)
+!    nq2 = tab_nq(i)
+!    nnq = nnq / nq2
+!
+!    RTempG = reshape(RTempB,shape=(/ nnb,nq2,nnq /))
+!
+!    deallocate(RTempB)
+!    allocate(RTempB(nnb,nb2,nnq))
+!
+!    DO iq=1,nnq
+!    DO ib=1,nnb
+!
+!       RTempB(ib,:,iq) = matmul(tab_ba(tab_ind(i,iG),i)%dnRBGwrho%d0 , RTempG(ib,:,iq))
+!
+!      !$OMP ATOMIC
+!      nb_mult_GTOB = nb_mult_GTOB + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
+!
+!    END DO
+!    END DO
+!
+!    nnb = nnb * nb2
+!    deallocate(RTempG)
+!
+!  END DO
+!
+!  SRep%SmolyakRep(iG)%V = reshape(RTempB, shape=(/ nnb /) )
+!  deallocate(RTempB)
 END DO
 !$OMP   END DO
 
@@ -1796,10 +1872,13 @@ nb_mult_GTOB = 0
 !to be sure to have the correct number of threads
 nb_thread = SGType2%nb_threads
 
+!!$OMP   SHARED(nb_mult_GTOB,D,SRep,SGType2,tab_ba,nb_thread) &
+!!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
+!!$OMP   PRIVATE(ith,tab_l,err_sub) &
+
 !$OMP   PARALLEL DEFAULT(NONE) &
-!$OMP   SHARED(nb_mult_GTOB,D,SRep,SGType2,tab_ba,nb_thread) &
-!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
-!$OMP   PRIVATE(ith,tab_l,err_sub) &
+!$OMP   SHARED(D,SRep,SGType2,tab_ba,nb_thread) &
+!$OMP   PRIVATE(iG,tab_nb,tab_nq,ith,tab_l,err_sub) &
 !$OMP   NUM_THREADS(nb_thread)
 
 allocate(tab_l(D))
@@ -1820,44 +1899,47 @@ DO iG=SGType2%iG_th(ith+1),SGType2%fG_th(ith+1)
   tab_nq = getbis_tab_nq(tab_l,tab_ba)
   tab_nb = getbis_tab_nb(tab_l,tab_ba)
 
-  nnq = product(tab_nq)
-  nnb = 1
-  nb2 = 1
-  nq2 = 1
+  CALL GDP_TO_BDP_OF_SmolyakRep(SRep%SmolyakRep(iG)%V,tab_ba,           &
+                                tab_l,tab_nq,tab_nb,nb0=SGType2%nb0)
 
-  RTempB = reshape(SRep%SmolyakRep(iG)%V,shape=(/ 1,1,nnq /))
-
-! B order : b1 * b2 * b3 * ... bD
-! G order : g1 * g2 * g3 * ... gD
-
-  DO i=1,D
-    nb2 = tab_nb(i)
-    nq2 = tab_nq(i)
-    nnq = nnq / nq2
-
-    RTempG = reshape(RTempB,shape=(/ nnb,nq2,nnq /))
-
-    deallocate(RTempB)
-    allocate(RTempB(nnb,nb2,nnq))
-
-    DO iq=1,nnq
-    DO ib=1,nnb
-
-       RTempB(ib,:,iq) = matmul(tab_ba(tab_l(i),i)%dnRBGwrho%d0 , RTempG(ib,:,iq))
-
-      !$OMP ATOMIC
-      nb_mult_GTOB = nb_mult_GTOB + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
-
-    END DO
-    END DO
-
-    nnb = nnb * nb2
-    deallocate(RTempG)
-
-  END DO
-
-  SRep%SmolyakRep(iG)%V = reshape(RTempB, shape=(/ nnb /) )
-  deallocate(RTempB)
+!  nnq = product(tab_nq)
+!  nnb = 1
+!  nb2 = 1
+!  nq2 = 1
+!
+!  RTempB = reshape(SRep%SmolyakRep(iG)%V,shape=(/ 1,1,nnq /))
+!
+!! B order : b1 * b2 * b3 * ... bD
+!! G order : g1 * g2 * g3 * ... gD
+!
+!  DO i=1,D
+!    nb2 = tab_nb(i)
+!    nq2 = tab_nq(i)
+!    nnq = nnq / nq2
+!
+!    RTempG = reshape(RTempB,shape=(/ nnb,nq2,nnq /))
+!
+!    deallocate(RTempB)
+!    allocate(RTempB(nnb,nb2,nnq))
+!
+!    DO iq=1,nnq
+!    DO ib=1,nnb
+!
+!       RTempB(ib,:,iq) = matmul(tab_ba(tab_l(i),i)%dnRBGwrho%d0 , RTempG(ib,:,iq))
+!
+!      !$OMP ATOMIC
+!      nb_mult_GTOB = nb_mult_GTOB + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
+!
+!    END DO
+!    END DO
+!
+!    nnb = nnb * nb2
+!    deallocate(RTempG)
+!
+!  END DO
+!
+!  SRep%SmolyakRep(iG)%V = reshape(RTempB, shape=(/ nnb /) )
+!  deallocate(RTempB)
 END DO
 
 IF (allocated(tab_l)) deallocate(tab_l)
@@ -1870,104 +1952,7 @@ SRep%Grid = .FALSE.
 
 END SUBROUTINE GSmolyakRep_TO3_BSmolyakRep
 
-SUBROUTINE GSmolyakRepC_TO3_BSmolyakRepC(SRep,SGType2,tab_ba)
-USE mod_system
-USE mod_basis_set_alloc
-IMPLICIT NONE
-
-TYPE(Type_SmolyakRepC),          intent(inout)          :: SRep
-TYPE(basis),                     intent(in)             :: tab_ba(0:,:) ! tab_ba(L,D)
-TYPE (param_SGType2),            intent(in)             :: SGType2
-
-integer               :: i,D,iG,nb_BG,ith,nb_thread,err_sub
-
-integer                            :: nnb,nnq,nb2,nq2,ib,iq
-integer, allocatable               :: tab_nb(:),tab_nq(:),tab_l(:)
-complex(kind=Rkind), allocatable   :: RTempG(:,:,:),RTempB(:,:,:)
-
-
-IF (.NOT. SRep%Grid) STOP 'Basis is not possible in GSmolyakRepC_TO3_BSmolyakRepC'
-
-D = SGType2%nDind_SmolyakRep%ndim
-nb_mult_GTOB = 0
-
-!to be sure to have the correct number of threads
-nb_thread = SGType2%nb_threads
-
-!$OMP   PARALLEL DEFAULT(NONE) &
-!$OMP   SHARED(nb_mult_GTOB,D,SRep,SGType2,tab_ba,nb_thread) &
-!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
-!$OMP   PRIVATE(ith,tab_l,err_sub) &
-!$OMP   NUM_THREADS(nb_thread)
-
-allocate(tab_l(D))
-allocate(tab_nb(D))
-allocate(tab_nq(D))
-
-!--------------------------------------------------------------
-!-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
-ith = 0
-!$ ith = OMP_GET_THREAD_NUM()
-tab_l(:) = SGType2%nDval_init(:,ith+1)
-!--------------------------------------------------------------
-
-! we are not using the parallel do, to be able to use the correct initialized tab_l with nDval_init
-DO iG=SGType2%iG_th(ith+1),SGType2%fG_th(ith+1)
-  CALL ADD_ONE_TO_nDindex(SGType2%nDind_SmolyakRep,tab_l,iG=iG,err_sub=err_sub)
-
-  tab_nq = getbis_tab_nq(tab_l,tab_ba)
-  tab_nb = getbis_tab_nb(tab_l,tab_ba)
-
-  nnq = product(tab_nq)
-  nnb = 1
-  nb2 = 1
-  nq2 = 1
-
-  RTempB = reshape(SRep%SmolyakRep(iG)%V,shape=(/ 1,1,nnq /))
-
-! B order : b1 * b2 * b3 * ... bD
-! G order : g1 * g2 * g3 * ... gD
-
-  DO i=1,D
-    nb2 = tab_nb(i)
-    nq2 = tab_nq(i)
-    nnq = nnq / nq2
-
-    RTempG = reshape(RTempB,shape=(/ nnb,nq2,nnq /))
-
-    deallocate(RTempB)
-    allocate(RTempB(nnb,nb2,nnq))
-
-    DO iq=1,nnq
-    DO ib=1,nnb
-
-       RTempB(ib,:,iq) = matmul(tab_ba(tab_l(i),i)%dnRBGwrho%d0 , RTempG(ib,:,iq))
-
-      !$OMP ATOMIC
-      nb_mult_GTOB = nb_mult_GTOB + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
-
-    END DO
-    END DO
-
-    nnb = nnb * nb2
-    deallocate(RTempG)
-
-  END DO
-
-  SRep%SmolyakRep(iG)%V = reshape(RTempB, shape=(/ nnb /) )
-  deallocate(RTempB)
-END DO
-
-IF (allocated(tab_l)) deallocate(tab_l)
-IF (allocated(tab_nb)) deallocate(tab_nb)
-IF (allocated(tab_nq)) deallocate(tab_nq)
-
-!$OMP   END PARALLEL
-
-SRep%Grid = .FALSE.
-
-END SUBROUTINE GSmolyakRepC_TO3_BSmolyakRepC
-SUBROUTINE BSmolyakRep_TO_GSmolyakRep(SRep,tab_ind,tab_ba)
+SUBROUTINE BSmolyakRep_TO_GSmolyakRep(SRep,tab_ind,tab_ba,nb0)
 USE mod_system
 USE mod_basis_set_alloc
 IMPLICIT NONE
@@ -1976,21 +1961,28 @@ real(kind=Rkind)  :: R
 TYPE(Type_SmolyakRep),           intent(inout)          :: SRep
 integer,                         intent(in)             :: tab_ind(:,:) ! tab_ind(D,MaxnD)
 TYPE(basis),                     intent(in)             :: tab_ba(0:,:) ! tab_ba(0:L,D)
+integer,                         intent(in)             :: nb0
 
 
-integer               :: i,D,iG,nb_BG
-
-integer                            :: nnb,nnq,nb2,nq2,ib,iq
+integer                            :: iG
 integer, allocatable               :: tab_nb(:),tab_nq(:)
+
+
+integer                            :: i,D,nb_BG
+integer                            :: nnb,nnq,nb2,nq2,ib,iq
 real(kind=Rkind), allocatable      :: RTempG(:,:,:),RTempB(:,:,:)
+
 IF (SRep%Grid) STOP 'Grid is not possible in BSmolyakRep_TO_GSmolyakRep'
 
-D = size(tab_ba(0,:))
-nb_mult_BTOG = 0
+!D = size(tab_ba(0,:))
+!nb_mult_BTOG = 0
+
+!!!$OMP   SHARED(nb_mult_BTOG,D,SRep,tab_ind,tab_ba) &
+!!!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
 
 !$OMP   PARALLEL DEFAULT(NONE) &
-!$OMP   SHARED(nb_mult_BTOG,D,SRep,tab_ind,tab_ba) &
-!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
+!$OMP   SHARED(SRep,tab_ind,tab_ba,nb0) &
+!$OMP   PRIVATE(iG,tab_nb,tab_nq) &
 !$OMP   NUM_THREADS(SG4_maxth)
 
 !$OMP   DO SCHEDULE(STATIC)
@@ -2000,43 +1992,47 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
   tab_nq = get_tab_nq(tab_ind(:,iG),tab_ba)
   tab_nb = get_tab_nb(tab_ind(:,iG),tab_ba)
 
-  nnb = product(tab_nb)
-  nnq = 1
-  nb2 = 1
-  nq2 = 1
+  CALL BDP_TO_GDP_OF_SmolyakRep(SRep%SmolyakRep(iG)%V,tab_ba,           &
+                                tab_ind(:,iG),tab_nq,tab_nb,nb0=nb0)
 
-  RTempG = reshape(SRep%SmolyakRep(iG)%V,shape=(/ nnq,nq2,nnb /))
-! B order : b1 * b2 * b3 * ... bD
-! G order : g1 * g2 * g3 * ... gD
-
-  DO i=1,D
-    nb2 = tab_nb(i)
-    nq2 = tab_nq(i)
-    nnb = nnb / nb2
-
-    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
-
-    deallocate(RTempG)
-    allocate(RTempG(nnq,nq2,nnb))
-
-    DO ib=1,nnb
-    DO iq=1,nnq
-       !RTempG(iq,:,ib) = matmul(Get2_MatdnRGB(tab_ba(tab_ind(i,iG),i),(/0,0/)),RTempB(iq,:,ib))
-       RTempG(iq,:,ib) = matmul(tab_ba(tab_ind(i,iG),i)%dnRGB%d0,RTempB(iq,:,ib))
-
-      !$OMP ATOMIC
-      nb_mult_BTOG = nb_mult_BTOG + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
-
-    END DO
-    END DO
-
-    nnq = nnq * nq2
-    deallocate(RTempB)
-
-  END DO
-
-  SRep%SmolyakRep(iG)%V = reshape(RTempG, shape=(/ nnq /) )
-  deallocate(RTempG)
+!
+!  nnb = product(tab_nb)
+!  nnq = 1
+!  nb2 = 1
+!  nq2 = 1
+!
+!  RTempG = reshape(SRep%SmolyakRep(iG)%V,shape=(/ nnq,nq2,nnb /))
+!! B order : b1 * b2 * b3 * ... bD
+!! G order : g1 * g2 * g3 * ... gD
+!
+!  DO i=1,D
+!    nb2 = tab_nb(i)
+!    nq2 = tab_nq(i)
+!    nnb = nnb / nb2
+!
+!    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
+!
+!    deallocate(RTempG)
+!    allocate(RTempG(nnq,nq2,nnb))
+!
+!    DO ib=1,nnb
+!    DO iq=1,nnq
+!       !RTempG(iq,:,ib) = matmul(Get2_MatdnRGB(tab_ba(tab_ind(i,iG),i),(/0,0/)),RTempB(iq,:,ib))
+!       RTempG(iq,:,ib) = matmul(tab_ba(tab_ind(i,iG),i)%dnRGB%d0,RTempB(iq,:,ib))
+!
+!      !$OMP ATOMIC
+!      nb_mult_BTOG = nb_mult_BTOG + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
+!
+!    END DO
+!    END DO
+!
+!    nnq = nnq * nq2
+!    deallocate(RTempB)
+!
+!  END DO
+!
+!  SRep%SmolyakRep(iG)%V = reshape(RTempG, shape=(/ nnq /) )
+!  deallocate(RTempG)
 END DO
 !$OMP   END DO
 
@@ -2060,24 +2056,31 @@ TYPE(basis),                     intent(in)             :: tab_ba(0:,:) ! tab_ba
 TYPE (param_SGType2),            intent(in)             :: SGType2
 
 
-integer               :: i,D,iG,nb_BG,ith,nb_thread,err_sub
+integer                            :: iG,D
+integer, allocatable               :: tab_nb(:),tab_nq(:),tab_l(:)
+
+
+integer               :: i,nb_BG,ith,nb_thread,err_sub
 
 integer                            :: nnb,nnq,nb2,nq2,ib,iq
-integer, allocatable               :: tab_nb(:),tab_nq(:),tab_l(:)
 real(kind=Rkind), allocatable      :: RTempG(:,:,:),RTempB(:,:,:)
 
 IF (SRep%Grid) STOP 'Grid is not possible in BSmolyakRep_TO3_GSmolyakRep'
+
 
 D = SGType2%nDind_SmolyakRep%ndim
 nb_mult_BTOG = 0
 
 !to be sure to have the correct number of threads
 nb_thread = SGType2%nb_threads
+!!$OMP   SHARED(nb_mult_BTOG,D,SRep,tab_ba,SGType2,nb_thread) &
+!!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
+!!$OMP   PRIVATE(tab_l,ith,err_sub) &
+
 
 !$OMP   PARALLEL DEFAULT(NONE) &
-!$OMP   SHARED(nb_mult_BTOG,D,SRep,tab_ba,SGType2,nb_thread) &
-!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
-!$OMP   PRIVATE(tab_l,ith,err_sub) &
+!$OMP   SHARED(D,SRep,tab_ba,SGType2,nb_thread) &
+!$OMP   PRIVATE(iG,tab_nb,tab_nq,tab_l,ith,err_sub) &
 !$OMP   NUM_THREADS(nb_thread)
 
 allocate(tab_l(D))
@@ -2099,42 +2102,45 @@ DO iG=SGType2%iG_th(ith+1),SGType2%fG_th(ith+1)
   tab_nq = getbis_tab_nq(tab_l,tab_ba)
   tab_nb = getbis_tab_nb(tab_l,tab_ba)
 
-  nnb = product(tab_nb)
-  nnq = 1
-  nb2 = 1
-  nq2 = 1
-
-  RTempG = reshape(SRep%SmolyakRep(iG)%V,shape=(/ nnq,nq2,nnb /))
-! B order : b1 * b2 * b3 * ... bD
-! G order : g1 * g2 * g3 * ... gD
-
-  DO i=1,D
-    nb2 = tab_nb(i)
-    nq2 = tab_nq(i)
-    nnb = nnb / nb2
-
-    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
-
-    deallocate(RTempG)
-    allocate(RTempG(nnq,nq2,nnb))
-
-    DO ib=1,nnb
-    DO iq=1,nnq
-       RTempG(iq,:,ib) = matmul(tab_ba(tab_l(i),i)%dnRGB%d0,RTempB(iq,:,ib))
-
-      !$OMP ATOMIC
-      nb_mult_BTOG = nb_mult_BTOG + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
-
-    END DO
-    END DO
-
-    nnq = nnq * nq2
-    deallocate(RTempB)
-
-  END DO
-
-  SRep%SmolyakRep(iG)%V = reshape(RTempG, shape=(/ nnq /) )
-  deallocate(RTempG)
+  CALL BDP_TO_GDP_OF_SmolyakRep(SRep%SmolyakRep(iG)%V,tab_ba,           &
+                                tab_l,tab_nq,tab_nb,nb0=SGType2%nb0)
+!
+!  nnb = product(tab_nb)
+!  nnq = 1
+!  nb2 = 1
+!  nq2 = 1
+!
+!  RTempG = reshape(SRep%SmolyakRep(iG)%V,shape=(/ nnq,nq2,nnb /))
+!! B order : b1 * b2 * b3 * ... bD
+!! G order : g1 * g2 * g3 * ... gD
+!
+!  DO i=1,D
+!    nb2 = tab_nb(i)
+!    nq2 = tab_nq(i)
+!    nnb = nnb / nb2
+!
+!    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
+!
+!    deallocate(RTempG)
+!    allocate(RTempG(nnq,nq2,nnb))
+!
+!    DO ib=1,nnb
+!    DO iq=1,nnq
+!       RTempG(iq,:,ib) = matmul(tab_ba(tab_l(i),i)%dnRGB%d0,RTempB(iq,:,ib))
+!
+!      !$OMP ATOMIC
+!      nb_mult_BTOG = nb_mult_BTOG + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
+!
+!    END DO
+!    END DO
+!
+!    nnq = nnq * nq2
+!    deallocate(RTempB)
+!
+!  END DO
+!
+!  SRep%SmolyakRep(iG)%V = reshape(RTempG, shape=(/ nnq /) )
+!  deallocate(RTempG)
 END DO
 
 IF (allocated(tab_l)) deallocate(tab_l)
@@ -2147,103 +2153,7 @@ IF (allocated(tab_nq)) deallocate(tab_nq)
 SRep%Grid = .TRUE.
 
 END SUBROUTINE BSmolyakRep_TO3_GSmolyakRep
-SUBROUTINE BSmolyakRepC_TO3_GSmolyakRepC(SRep,SGType2,tab_ba)
-USE mod_system
-USE mod_basis_set_alloc
-IMPLICIT NONE
 
-TYPE(Type_SmolyakRepC),          intent(inout)          :: SRep
-TYPE(basis),                     intent(in)             :: tab_ba(0:,:) ! tab_ba(0:L,D)
-TYPE (param_SGType2),            intent(in)             :: SGType2
-
-
-integer               :: i,D,iG,nb_BG,ith,nb_thread,err_sub
-
-integer                            :: nnb,nnq,nb2,nq2,ib,iq
-integer, allocatable               :: tab_nb(:),tab_nq(:),tab_l(:)
-complex(kind=Rkind), allocatable   :: RTempG(:,:,:),RTempB(:,:,:)
-
-IF (SRep%Grid) STOP 'Grid is not possible in BSmolyakRepC_TO3_GSmolyakRepC'
-
-D = SGType2%nDind_SmolyakRep%ndim
-nb_mult_BTOG = 0
-
-!to be sure to have the correct number of threads
-nb_thread = SGType2%nb_threads
-
-!$OMP   PARALLEL DEFAULT(NONE) &
-!$OMP   SHARED(nb_mult_BTOG,D,SRep,tab_ba,SGType2,nb_thread) &
-!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
-!$OMP   PRIVATE(tab_l,ith,err_sub) &
-!$OMP   NUM_THREADS(nb_thread)
-
-allocate(tab_l(D))
-allocate(tab_nb(D))
-allocate(tab_nq(D))
-
-!--------------------------------------------------------------
-!-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
-ith = 0
-!$ ith = OMP_GET_THREAD_NUM()
-tab_l(:) = SGType2%nDval_init(:,ith+1)
-!--------------------------------------------------------------
-
-! we are not using the parallel do, to be able to use the correct initialized tab_l with nDval_init
-DO iG=SGType2%iG_th(ith+1),SGType2%fG_th(ith+1)
-
-  CALL ADD_ONE_TO_nDindex(SGType2%nDind_SmolyakRep,tab_l,iG=iG,err_sub=err_sub)
-
-  tab_nq = getbis_tab_nq(tab_l,tab_ba)
-  tab_nb = getbis_tab_nb(tab_l,tab_ba)
-
-  nnb = product(tab_nb)
-  nnq = 1
-  nb2 = 1
-  nq2 = 1
-
-  RTempG = reshape(SRep%SmolyakRep(iG)%V,shape=(/ nnq,nq2,nnb /))
-! B order : b1 * b2 * b3 * ... bD
-! G order : g1 * g2 * g3 * ... gD
-
-  DO i=1,D
-    nb2 = tab_nb(i)
-    nq2 = tab_nq(i)
-    nnb = nnb / nb2
-
-    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
-
-    deallocate(RTempG)
-    allocate(RTempG(nnq,nq2,nnb))
-
-    DO ib=1,nnb
-    DO iq=1,nnq
-       RTempG(iq,:,ib) = matmul(tab_ba(tab_l(i),i)%dnRGB%d0,RTempB(iq,:,ib))
-
-      !$OMP ATOMIC
-      nb_mult_BTOG = nb_mult_BTOG + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
-
-    END DO
-    END DO
-
-    nnq = nnq * nq2
-    deallocate(RTempB)
-
-  END DO
-
-  SRep%SmolyakRep(iG)%V = reshape(RTempG, shape=(/ nnq /) )
-  deallocate(RTempG)
-END DO
-
-IF (allocated(tab_l)) deallocate(tab_l)
-IF (allocated(tab_nb)) deallocate(tab_nb)
-IF (allocated(tab_nq)) deallocate(tab_nq)
-
-
-!$OMP   END PARALLEL
-
-SRep%Grid = .TRUE.
-
-END SUBROUTINE BSmolyakRepC_TO3_GSmolyakRepC
 SUBROUTINE BDP_TO_GDP_OF_SmolyakRep(R,tab_ba,tab_l,tab_nq,tab_nb,nb0)
 USE mod_system
 USE mod_basis_set_alloc

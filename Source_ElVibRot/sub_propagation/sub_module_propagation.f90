@@ -498,8 +498,7 @@ PUBLIC :: initialisation1_poly,cof
       real (kind=Rkind)    :: T
       complex (kind=Rkind) :: cdot
 
-      write(no,11) T,real(cdot,kind=Rkind),aimag(cdot),abs(cdot)
- 11   format('AutoCor ',f15.3,3(1x,f0.8))
+      write(no,*) 'AutoCor ',T,real(cdot,kind=Rkind),aimag(cdot),abs(cdot)
 
       END SUBROUTINE Write_AutoCorr
       SUBROUTINE Read_AutoCorr(no,T,cdot)
@@ -994,6 +993,7 @@ END SUBROUTINE sub_analyze_WP_OpWP
       USE mod_system
       USE mod_psi_set_alloc, ONLY : alloc_array
       USE mod_param_WP0,     ONLY : alloc_param_WP0
+      USE mod_Constant
       IMPLICIT NONE
 
 !------ parameter for the propagation ---------------------
@@ -1045,7 +1045,8 @@ END SUBROUTINE sub_analyze_WP_OpWP
       character (len=Line_len) :: file_WP0
 
       integer           :: TFnexp2
-      real (kind=Rkind) :: TFmaxE,TFminE
+      !real (kind=Rkind) :: TFmaxE,TFminE
+      TYPE (REAL_WU)    :: TFmaxE,TFminE
 
 !------ initial WP definition -----------------------------
 !     for each variable Qi : exp[-((Q-Qeq)/sigma)2+i*imp_k*(Q-Qeq)+i*phase]
@@ -1150,8 +1151,8 @@ END SUBROUTINE sub_analyze_WP_OpWP
         WP0nrho             = -1
 
         TFnexp2             = 15
-        TFmaxE              = TEN**4 / auTOcm_inv
-        TFminE              = ZERO
+        TFminE              = REAL_WU(0,'cm-1','E')  ! 0 cm-1
+        TFmaxE              = REAL_WU(TEN**4,'cm-1','E')  ! 10000 cm-1
         type_corr           = 0
         i_qa_corr           = 0
         Op_corr             = 0
@@ -1168,8 +1169,8 @@ END SUBROUTINE sub_analyze_WP_OpWP
         IF (print_level > 0) write(out_unitp,propa)
 
 
-        para_propa%WPTmax       = convRWU_TO_R(WPTmax)
-        para_propa%WPdeltaT     = convRWU_TO_R(WPdeltaT)
+        para_propa%WPTmax       = convRWU_WorkingUnit_TO_R(WPTmax)
+        para_propa%WPdeltaT     = convRWU_WorkingUnit_TO_R(WPdeltaT)
 
         para_propa%nb_micro     = nb_micro
 
@@ -1374,8 +1375,10 @@ END SUBROUTINE sub_analyze_WP_OpWP
 
 
         para_propa%TFnexp2        = TFnexp2
-        para_propa%TFmaxE         = TFmaxE / auTOcm_inv
-        para_propa%TFminE         = TFminE / auTOcm_inv
+
+
+        para_propa%TFmaxE       = convRWU_WorkingUnit_TO_R(TFmaxE)
+        para_propa%TFminE       = convRWU_WorkingUnit_TO_R(TFminE)
 
         IF (para_propa%control) THEN
           para_propa%with_field    = .TRUE.
@@ -1552,7 +1555,7 @@ END SUBROUTINE sub_analyze_WP_OpWP
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_Davidson) :: para_Davidson
-      TYPE (param_propa) :: para_propa
+      TYPE (param_propa)    :: para_propa
 
 !----- for the namelist -------------------------------------
       integer :: num_resetH,num_checkS

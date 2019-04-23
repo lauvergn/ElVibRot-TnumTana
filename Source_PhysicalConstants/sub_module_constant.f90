@@ -100,7 +100,7 @@
  PUBLIC  REAL_WU, Type_TabConvRWU, assignment (=)
  PUBLIC  dealloc_TabConvRWU, dealloc_TabConvRWU_dim1, Write_TabConvRWU, Write_TabConvRWU_dim1
  PUBLIC  ADD_RWU_TO_TabConvRWU, ADD_RWU_TO_Tab_conv_FOR_quantity
- PUBLIC  convRWU_TO_R,convRWU_TO_RWU
+ PUBLIC  convRWU_TO_R,convRWU_WorkingUnit_TO_R,convRWU_WritingUnit_TO_R,convRWU_TO_RWU
  PUBLIC  RWU_Write,RWU_WriteUnit
  PUBLIC  get_Conv_au_TO_WriteUnit,get_Conv_au_TO_Unit
  PUBLIC  Test_RWU

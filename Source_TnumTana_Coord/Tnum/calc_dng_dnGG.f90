@@ -161,6 +161,7 @@ MODULE mod_dnGG_dng
 !
 !======================================================================
       SUBROUTINE get_dng_dnGG(Qact,para_Tnum,mole,dng,dnGG,nderiv)
+      USE mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
       IMPLICIT NONE
 
       real (kind=Rkind), intent(inout) :: Qact(:)
@@ -183,6 +184,21 @@ MODULE mod_dnGG_dng
 !     ----------------------------------------------------------
 
       integer :: i,j
+
+      real (kind=Rkind) :: Gref(mole%ndimG,mole%ndimG)
+      real (kind=Rkind) :: Tdef2(mole%nb_act,mole%nb_act)
+      real (kind=Rkind) :: Tdef1(mole%nb_act)
+      real (kind=Rkind) :: Tcor2(mole%nb_act,3),Tcor1(3)
+      real (kind=Rkind) :: Trot(3,3)
+      real (kind=Rkind) :: Qdyn(mole%nb_var)
+
+
+!-------------------------------------------------------------------------
+
+
+
+
+!     - for memory ---------------------------------------------
 
 
       logical, save :: begin = .TRUE.
@@ -230,11 +246,32 @@ MODULE mod_dnGG_dng
 !-----------------------------------------------------------
 !-----------------------------------------------------------
 !-----------------------------------------------------------
-    IF (mole%nb_Qtransfo == -1) THEN
-      write(out_unitp,*) 'ERROR in ',name_sub
-      write(out_unitp,*) ' with analytical expression of f2, f1'
-      write(out_unitp,*) ' could not be used to get dnGG'
-      STOP
+   IF (mole%nb_Qtransfo == -1 .OR. para_Tnum%f2f1_ana) THEN
+        CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
+
+        CALL calc_f2_f1Q_ana(Qdyn,                                      &
+                             Tdef2,Tdef1,vep,rho,                       &
+                             Tcor2,Tcor1,Trot,                          &
+                             para_Tnum,mole)
+        CALL mat_id(Gref,mole%ndimG,mole%ndimG)
+        Gref(1:mole%nb_act,1:mole%nb_act) = -Tdef2
+        DO i=1,mole%nb_act
+            Gref(i,i) = TWO*Gref(i,i)
+        END DO
+
+        IF (present(dnGG)) THEN
+          CALL sub_ZERO_TO_dnMat(dnGG,nderiv)
+          dnGG%d0(:,:) = Gref
+        END IF
+
+        IF (present(dng)) THEN
+          CALL sub_ZERO_TO_dnMat(dng,nderiv)
+          CALL inv_m1_TO_m2(Gref,dng%d0,mole%ndimG,0,ZERO)
+        END IF
+!      write(out_unitp,*) 'ERROR in ',name_sub
+!      write(out_unitp,*) ' with analytical expression of f2, f1'
+!      write(out_unitp,*) ' could not be used to get dnGG'
+!      STOP
     ELSE
 
 
@@ -334,23 +371,23 @@ MODULE mod_dnGG_dng
 
     END IF
 
-      IF (para_Tnum%Gdiago) THEN
-        DO i=1,mole%nb_act
-        DO j=1,mole%nb_act
-          IF (i == j) CYCLE
-          IF (present(dnGG)) THEN
-            dnGG%d0(i,j) = ZERO
-            IF (dnGG%nderiv > 0) dnGG%d1(i,j,:)   = ZERO
-            IF (dnGG%nderiv > 1) dnGG%d2(i,j,:,:) = ZERO
-          END IF
-          IF (present(dng)) THEN
-            dng%d0(i,j) = ZERO
-            IF (dnGG%nderiv > 0) dng%d1(i,j,:)   = ZERO
-            IF (dnGG%nderiv > 1) dng%d2(i,j,:,:) = ZERO
-          END IF
-        END DO
-        END DO
-      END IF
+    IF (para_Tnum%Gdiago) THEN
+      DO i=1,mole%nb_act
+      DO j=1,mole%nb_act
+        IF (i == j) CYCLE
+        IF (present(dnGG)) THEN
+          dnGG%d0(i,j) = ZERO
+          IF (dnGG%nderiv > 0) dnGG%d1(i,j,:)   = ZERO
+          IF (dnGG%nderiv > 1) dnGG%d2(i,j,:,:) = ZERO
+        END IF
+        IF (present(dng)) THEN
+          dng%d0(i,j) = ZERO
+          IF (dnGG%nderiv > 0) dng%d1(i,j,:)   = ZERO
+          IF (dnGG%nderiv > 1) dng%d2(i,j,:,:) = ZERO
+        END IF
+      END DO
+      END DO
+    END IF
 
 !-----------------------------------------------------------
       IF (debug) THEN

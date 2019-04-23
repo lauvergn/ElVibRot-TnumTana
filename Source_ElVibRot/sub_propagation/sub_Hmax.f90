@@ -77,8 +77,8 @@
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub = 'sub_Hmax'
       integer :: err_mem,memory
-!      logical,parameter :: debug=.FALSE.
-     logical,parameter :: debug=.TRUE.
+      logical,parameter :: debug=.FALSE.
+      !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       write(out_unitp,*) 'BEGINNING ',name_sub,' ',para_H%nb_tot
       write(out_unitp,*) 'Hmin,Hmax',para_H%Hmin,para_H%Hmax
@@ -366,15 +366,19 @@ relax = .TRUE.
         para_propa_loc%ana_psi%propa    = .TRUE.
 
         WP0 = ZERO
-        DO i=1,WP0%nb_tot
-
-          CALL random_number(a)
-          IF (WP0%cplx) THEN
-           WP0%CvecB(WP0%nb_tot+1-i) = cmplx(a-HALF,ZERO,kind=Rkind)
-          ELSE
-            WP0%RvecB(WP0%nb_tot+1-i) = a-HALF
-          END IF
-        END DO
+        IF (WP0%cplx) THEN
+          WP0%CvecB(WP0%nb_tot) = CONE
+        ELSE
+          WP0%RvecB(WP0%nb_tot) = ONE
+        END IF
+!        DO i=1,WP0%nb_tot
+!          CALL random_number(a)
+!          IF (WP0%cplx) THEN
+!           WP0%CvecB(WP0%nb_tot+1-i) = cmplx(a-HALF,ZERO,kind=Rkind)
+!          ELSE
+!            WP0%RvecB(WP0%nb_tot+1-i) = a-HALF
+!          END IF
+!        END DO
         WP0%symab = -1
         CALL renorm_psi(WP0,BasisRep=.TRUE.)
 
@@ -393,14 +397,19 @@ relax = .TRUE.
         para_propa_loc%WPdeltaT           = ONE
 
         WP0 = ZERO
-        DO i=1,max(WP0%nb_tot/100,1)
-          CALL random_number(a)
-          IF (WP0%cplx) THEN
-           WP0%CvecB(i) = cmplx(a-HALF,ZERO,kind=Rkind)
-          ELSE
-            WP0%RvecB(i) = a-HALF
-          END IF
-        END DO
+        IF (WP0%cplx) THEN
+          WP0%CvecB(1) = CONE
+        ELSE
+          WP0%RvecB(1) = ONE
+        END IF
+!        DO i=1,max(WP0%nb_tot/100,1)
+!          CALL random_number(a)
+!          IF (WP0%cplx) THEN
+!           WP0%CvecB(i) = cmplx(a-HALF,ZERO,kind=Rkind)
+!          ELSE
+!            WP0%RvecB(i) = a-HALF
+!          END IF
+!        END DO
         WP0%symab = -1
         CALL renorm_psi(WP0,BasisRep=.TRUE.)
 
