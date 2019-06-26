@@ -13,6 +13,7 @@ then
   aold=`grep EVR  version-EVR-T | awk '{print $3}' | awk -F. '{print $1 " " $2}'`
   bold=`grep Tnum version-EVR-T | awk '{print $3}' | awk -F. '{print $1 " " $2}'`
   cold=`grep Tana version-EVR-T | awk '{print $3}' | awk -F. '{print $1 " " $2}'`
+  echo $aold $bold $cold
 
   if test $a = "+"
   then
@@ -40,6 +41,7 @@ then
 fi
 nom_sd="ElVibRot_f90-v"$a"-Tnum"$b"-Tana"$c
 
+echo $nom_sd
 
 nom=$nom_rep/$nom_sd
 

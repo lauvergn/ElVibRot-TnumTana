@@ -450,6 +450,10 @@ MODULE mod_CartesianTransfo
 
           CartesianTransfo%Qxyz(:,:,j) = reshape(d0x,(/3,nat/) )
 
+!          DO i=1,CartesianTransfo%nat_act
+!            write(out_unitp,*) i,CartesianTransfo%Qxyz(:,i,j)
+!          END DO
+
         END DO
 
         CALL string_uppercase_TO_lowercase(unit)

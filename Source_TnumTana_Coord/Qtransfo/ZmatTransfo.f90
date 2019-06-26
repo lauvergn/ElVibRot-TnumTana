@@ -1027,7 +1027,9 @@
 
           IF (nc2==0 .AND. nc3==0 .AND. nc4==0) THEN
             nc0 = ZmatTransfo%ind_zmat(1,1) ! first atom (can be dummy)
-            CALL calc_vector2(v1,norm1,nc1,nc0,dnx%d0,ncart0)
+            CALL calc_vector2(v1,norm1,nc0,nc1,dnx%d0,ncart0)
+            IF (debug) write(out_unitp,*) ' nc1,nc0,v1,norm1',nc1,nc0,v1,norm1
+
             iqz = iqz + 1
             dnQzmat%d0(iqz) = dot_product(v1,ex) ! x
             iqz = iqz + 1

@@ -531,7 +531,7 @@ USE mod_param_SGType2
 USE mod_nDindex
 IMPLICIT NONE
 
-TYPE (basis),                    intent(inout)        :: basis_SG
+TYPE (basis),     intent(inout)        :: basis_SG
 
 integer               :: L,i,k,lk,iG,iBDP,iBSRep,nb_BG,nR,itabR,nDI,Max_Srep
 
@@ -544,6 +544,7 @@ integer, allocatable  :: tab_ib(:),tab_nb(:)
 integer               :: MaxnD_with_id_and_L(basis_SG%nDindB%ndim,0:basis_SG%nDindB%Lmax)
 integer               :: max_NBB,max_nb,id,ib,iib,iBB,iVal,LL
 integer               :: Tab_inD_nDindB(basis_SG%nDindB%Max_nDI)
+integer               :: nDval(basis_SG%nDindB%ndim)
 
 TYPE (Type_nDindex)   :: nDind_DPB
 
@@ -568,7 +569,7 @@ character (len=*), parameter :: name_sub='Set_tables_FOR_SmolyakRepBasis_TO_tabP
 write(out_unitp,*) 'BEGINNING ',name_sub
 IF (debug) THEN
   write(out_unitp,*) 'Write nDindB'
-  CALL write_nDindex(basis_SG%nDindB)
+  !CALL write_nDindex(basis_SG%nDindB)
 !  IF (associated(basis_SG%nDindB%Tab_i_TO_l)) THEN
 !    write(out_unitp,*) 'tab_i_TO_l'
 !    DO id=1,basis_SG%nDindB%ndim
@@ -593,15 +594,23 @@ DO id=1,basis_SG%nDindB%ndim
   IF (debug) THEN
     write(out_unitp,*) '------------------------------------ id',id
     write(out_unitp,*) 'id,tab_i_TO_l',id,':',basis_SG%nDindB%tab_i_TO_l(id)%vec
+    CALL flush_perso(out_unitp)
   END IF
   ib    = 1
   iVal  = 1
+
+  ith = 0
+  CALL init_nDval_OF_nDindex(basis_SG%nDindB,nDval,err_sub)
+  IF (err_sub /= 0) STOP 'init_nDval_OF_nDindex in Mapping'
   DO iBB=1,max_NBB
-    IF (basis_SG%nDindB%Tab_nDval(id,iBB) /= ib) THEN
-      ib   = basis_SG%nDindB%Tab_nDval(id,iBB)
+    CALL ADD_ONE_TO_nDindex(basis_SG%nDindB,nDval,iG=iBB)
+    !nDval(:) = basis_SG%nDindB%Tab_nDval(:,iBB)
+
+    IF (nDval(id) /= ib) THEN
+      ib   = nDval(id)
       iVal = 1
     END IF
-    IF (basis_SG%nDindB%Tab_nDval(id,iBB) == ib) THEN
+    IF (nDval(id) == ib) THEN
       l = basis_SG%nDindB%tab_i_TO_l(id)%vec(ib)
       MaxnD_with_id_and_L(id,l) = iVal
     END IF
@@ -616,6 +625,7 @@ IF (debug) THEN
     write(out_unitp,*) ' MaxnD_with_id_and_l',l,':',MaxnD_with_id_and_L(:,l)
   END DO
   write(out_unitp,*) '---------------------------------------------------------------'
+  CALL flush_perso(out_unitp)
 END IF
 
 IF (allocated(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB)) THEN
@@ -647,6 +657,13 @@ END IF
 
 !to be sure to have the correct number of threads
 nb_thread = basis_SG%para_SGType2%nb_tasks
+!nb_thread = 1
+
+IF (.NOT. debug) THEN
+  write(out_unitp,'(a)')              'Tab(:) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
+  write(out_unitp,'(a)',ADVANCE='no') 'Tab(:) (%): ['
+  CALL flush_perso(out_unitp)
+END IF
 
 !$OMP parallel                                                &
 !$OMP default(none)                                           &
@@ -668,13 +685,18 @@ tab_l(:) = basis_SG%para_SGType2%nDval_init(:,ith+1)
 ! we are not using the parallel do, to be able to use the correct initialized tab_l with nDval_init
 DO iG=basis_SG%para_SGType2%iG_th(ith+1),basis_SG%para_SGType2%fG_th(ith+1)
 
-  IF (debug) write(out_unitp,*) '============================== iG',iG
-  IF (debug) write(out_unitp,*) '======================= size(DPB)',basis_SG%para_SGType2%tab_nb_OF_SRep(iG)
-  CALL flush_perso(out_unitp)
 
-  IF (max(1,size(basis_SG%para_SGType2%tab_nb_OF_SRep)/100) == 0)       &
+  IF (debug) THEN
+    write(out_unitp,*) '============================== iG,nb_G',iG,size(basis_SG%para_SGType2%tab_nb_OF_SRep)
+    write(out_unitp,*) '======================= size(DPB)',basis_SG%para_SGType2%tab_nb_OF_SRep(iG)
+    CALL flush_perso(out_unitp)
+  END IF
+
+  IF (max(1,size(basis_SG%para_SGType2%tab_nb_OF_SRep)/100) == 0 .OR. &
+      size(basis_SG%para_SGType2%tab_nb_OF_SRep) < 100) THEN
     write(out_unitp,*) 'iG,nb_G',iG,size(basis_SG%para_SGType2%tab_nb_OF_SRep)
-  CALL flush_perso(out_unitp)
+    CALL flush_perso(out_unitp)
+  END IF
 
   CALL ADD_ONE_TO_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
 
@@ -695,7 +717,11 @@ DO iG=basis_SG%para_SGType2%iG_th(ith+1),basis_SG%para_SGType2%fG_th(ith+1)
     CALL ADD_ONE_TO_nDval_m1(tab_ib,tab_nb)
 
     LL = calc_L_OF_nDval(tab_ib,basis_SG%nDindB)
-    IF (debug) write(out_unitp,*) 'iG,iBDP,',iG,iBDP,'tab',tab_ib,'LL',LL
+
+    IF (debug) THEN
+      write(out_unitp,*) 'iG,iBDP,',iG,iBDP,'tab',tab_ib,'LL',LL
+      CALL flush_perso(out_unitp)
+    END IF
     IF (LL > basis_SG%nDindB%Lmax) CYCLE
 
     ! first estimation of nDI. It works most of the time !!!
@@ -715,14 +741,18 @@ DO iG=basis_SG%para_SGType2%iG_th(ith+1),basis_SG%para_SGType2%fG_th(ith+1)
     CALL calc_nDI(nDI,tab_ib,basis_SG%nDindB,err_sub)
 
     IF (err_sub == 0) THEN
-      IF (debug)  write(out_unitp,*) '     nDI',nDI,nDI,'tab',basis_SG%nDindB%Tab_nDval(:,nDI)
-
+      IF (debug) THEN
+        write(out_unitp,*) '     nDI',nDI,nDI,'tab',tab_ib(:)
+        CALL flush_perso(out_unitp)
+      END IF
+      IF (allocated(basis_SG%nDindB%Tab_nDval)) THEN
       IF ( .NOT. all(tab_ib == basis_SG%nDindB%Tab_nDval(:,nDI)) ) THEN
          write(out_unitp,*) 'ERROR in ',name_sub
          write(out_unitp,*) 'The Tab_ib(:) from both representation are different!'
          write(out_unitp,*) 'Tab_ib from Smolyak Rep',tab_ib
          write(out_unitp,*) 'Tab_ib from nDindB     ',basis_SG%nDindB%Tab_nDval(:,nDI)
          STOP
+      END IF
       END IF
     END IF
 
@@ -735,12 +765,22 @@ DO iG=basis_SG%para_SGType2%iG_th(ith+1),basis_SG%para_SGType2%fG_th(ith+1)
     END IF
   END DO
 
+  IF (mod(iG,max(1,int(basis_SG%nb_SG/10))) == 0 .AND. .NOT. debug) THEN
+    write(out_unitp,'(a)',ADVANCE='no') '---'
+    CALL flush_perso(out_unitp)
+  END IF
 
 END DO
 CALL dealloc_NParray(tab_l, 'tab_l', name_sub)
 CALL dealloc_NParray(tab_ib,'tab_ib',name_sub)
 CALL dealloc_NParray(tab_nb,'tab_nb',name_sub)
 !$OMP   END PARALLEL
+
+IF (.NOT. debug) THEN
+  write(out_unitp,'(a)',ADVANCE='yes') '----]'
+  CALL flush_perso(out_unitp)
+END IF
+
 
 write(out_unitp,*) 'count 0',count(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB == 0)
 IF (count(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB == 0) > 0) THEN
@@ -776,7 +816,7 @@ write(out_unitp,*) 'real time:',REAL(nb_ticks) / real(nb_ticks_sec,kind=Rkind)
 write(out_unitp,*) 'END ',name_sub
 CALL flush_perso(out_unitp)
 
-!STOP
+
 
 END SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis
 
@@ -2226,6 +2266,12 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
     DO ib=1,nnb
     DO iq=1,nnq
        RTempG(iq,:,ib) = matmul(tab_ba(tab_l(i),i)%dnRGB%d0,RTempB(iq,:,ib))
+       !dgemv (TRANS, M, N, ALPHA, A, LDA, X, INCX, BETA, Y, INCY)
+       ! Y = ALPHA * A.X + BETA * Y (if TRANS='n')
+       ! Y = ALPHA * A^t.X + BETA * Y (if TRANS='t')
+
+       !CALL dgemv('n',nq2,nb2,ONE,tab_ba(tab_l(i),i)%dnRGB%d0, &
+       !           nq2,RTempB(iq,:,ib),1,ZERO,RTempG(iq,:,ib),1)
 
       !$OMP ATOMIC
       nb_mult_BTOG = nb_mult_BTOG + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
@@ -2313,9 +2359,12 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
 
     DO iq=1,nnq
     DO ib=1,nnb
-
+!#if __LAPACK == 1
+!       CALL dgemv('n',nb2,nq2,ONE,tab_ba(tab_l(i),i)%dnRBGwrho%d0, &
+!                  nb2,RTempG(ib,:,iq),1,ZERO,RTempB(ib,:,iq),1)
+!#else
        RTempB(ib,:,iq) = matmul(tab_ba(tab_l(i),i)%dnRBGwrho%d0 , RTempG(ib,:,iq))
-
+!#endif
       !$OMP ATOMIC
       nb_mult_GTOB = nb_mult_GTOB + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
 

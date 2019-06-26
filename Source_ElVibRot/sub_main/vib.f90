@@ -255,13 +255,17 @@
         IF (.NOT. para_ana%control .AND. para_propa%type_WPpropa /=100) THEN
           write(out_unitp,*)
           write(out_unitp,*) '================================================='
-          write(out_unitp,*) ' VIB: Generates Psi0',WP0%nb_tot
+          write(out_unitp,*) ' VIB: Generate Psi0',WP0%nb_tot
           CALL time_perso('psi0')
           write(out_unitp,*)
           write(out_unitp,*)
 
           IF ( .NOT. abs(para_propa%type_WPpropa) == 33 .AND.           &
                .NOT. abs(para_propa%type_WPpropa) == 34) THEN
+
+            !CALL alloc_psi(WP0(1),BasisRep=.TRUE.,GridRep=.FALSE.)
+            !WP0(1)%CvecB(:) = CZERO
+            !WP0(1)%CvecB(WP0(1)%nb_ba+1) = CONE
 
             CALL psi0(WP0,para_propa%para_WP0,mole)
 
@@ -300,7 +304,7 @@
             write(out_unitp,*)
 
             para_propa%ana_psi%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
-            CALL sub_analyze_tab_psi(T,WP0(:),para_propa%ana_psi)
+            CALL sub_analyze_tab_psi(T,WP0(:),para_propa%ana_psi,Write_Psi=.FALSE.)
             para_propa%ana_psi%file_Psi%name = para_propa%file_WP%name
             write(out_unitp,*)
 
@@ -313,11 +317,19 @@
           write(out_unitp,*)
           write(out_unitp,*)
           CALL time_perso('psi0')
-          write(out_unitp,*) ' VIB: END Generates Psi0'
+          write(out_unitp,*) ' VIB: END Generate Psi0'
           write(out_unitp,*) '================================================='
           write(out_unitp,*)
           CALL flush_perso(out_unitp)
       END IF
+
+      !================================================================
+      !================================================================
+      !================================================================
+      !===== Tune the number of threads (for SG4) =====================
+      !================================================================
+      ! for only one WP (complex)
+      CALL Tune_SG4threads_HPsi(.TRUE.,1,para_H)
 
       !================================================================
       !================================================================
@@ -472,6 +484,18 @@
 !=====================================================================
 !       => Time-independent calculation
 !=====================================================================
+
+
+      !================================================================
+      !================================================================
+      !================================================================
+      !===== Tune the number of threads (for SG4) =====================
+      !================================================================
+      max_diago = max(10,para_propa%para_Davidson%nb_WP,para_H%nb_tot/10)
+      max_diago = min(max_diago,10,para_H%nb_tot)
+      CALL Tune_SG4threads_HPsi(para_H%cplx,max_diago,para_H)
+
+
       !================================================================
       !===== build S and/or H if necessary ============================
       !================================================================
@@ -927,7 +951,6 @@
 !=====================================================================
 !
 
-
       CALL dealloc_table_at(const_phys%mendeleev)
       !CALL dealloc_param_OTF(para_OTF)
 
@@ -941,7 +964,6 @@
       CALL dealloc_para_AllOp(para_AllOp)
 
       CALL dealloc_para_ana(para_ana)
-
 
       CALL dealloc_param_propa(para_propa)
 
@@ -1133,6 +1155,7 @@ para_mem%mem_debug = .FALSE.
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
       USE mod_psi_Op
+      USE mod_psi_io
 
       USE mod_propa
       USE mod_FullPropa
@@ -1216,6 +1239,7 @@ para_mem%mem_debug = .FALSE.
       real (kind=Rkind) :: part_func ! function
 
       integer           :: nb_it = 10
+      integer           :: PSG4_maxth_save
       logical           :: cplx  = .FALSE.
 
 !para_mem%mem_debug=.TRUE.
@@ -1382,24 +1406,27 @@ para_mem%mem_debug = .FALSE.
         CALL alloc_psi(Tab_Psi(i),BasisRep=.TRUE.,GridRep=.FALSE.)
         Tab_Psi(i)   = ZERO
         Tab_OpPsi(i) = Tab_Psi(i)
+
         IF (cplx) THEN
-          DO ib=1,size(Tab_Psi(i)%CvecB)
-            CALL random_number(a)
-            CALL random_number(b)
-            Tab_Psi(i)%CvecB(ib) = cmplx(a,b,kind=Rkind)
-          END DO
+          CALL Set_psi_With_index_R(Tab_Psi(i),ONE,ind_aie=i)
         ELSE
-          CALL random_number(Tab_Psi(i)%RvecB)
+          CALL Set_psi_With_index_C(Tab_Psi(i),CONE,ind_aie=i)
         END IF
+
+        !CALL Set_Random_psi(Tab_Psi(i))
+
       END DO
 
 para_mem%mem_debug = .FALSE.
 
-      write(out_unitp,*)
-      write(out_unitp,*) '================================================='
-      write(out_unitp,*) ' VIB: BEGINNING sub_OpPsi_test'
+write(out_unitp,*)
+write(out_unitp,*) '================================================='
+write(out_unitp,*) ' VIB: BEGINNING sub_OpPsi_test'
+
       write(out_unitp,*)
       write(out_unitp,*) ' Number of psi:',nb_it
+      write(out_unitp,*) ' Number of threads (SG4):',SG4_maxth
+
       write(out_unitp,*)
       CALL time_perso('HPsi')
 
@@ -1413,9 +1440,20 @@ para_mem%mem_debug = .FALSE.
       write(out_unitp,*)
       write(out_unitp,*) 'nb_mult_BTOG,nb_mult_GTOB',nb_mult_BTOG,nb_mult_GTOB
       write(out_unitp,*)
-      write(out_unitp,*) ' VIB: END sub_OpPsi_test'
-      write(out_unitp,*) '================================================='
-      write(out_unitp,*)
+
+      write(out_unitp,*) 'OpPsi states:'
+      para_propa%file_WP%name = 'file_WP'
+      CALL sub_save_psi(Tab_OpPsi,size(Tab_Psi),para_propa%file_WP)
+
+write(out_unitp,*) ' VIB: END sub_OpPsi_test'
+write(out_unitp,*) '================================================='
+write(out_unitp,*)
+
+
+
+
+CALL Tune_SG4threads_HPsi(cplx,nb_it,para_H)
+
 
       !CALL ecri_psi(psi=OpWP0)
 
@@ -1467,8 +1505,115 @@ para_mem%mem_debug = .FALSE.
       write(out_unitp,*) '================================================'
 
 
-      END SUBROUTINE Sub_OpPsi_test
+END SUBROUTINE Sub_OpPsi_test
 
+
+SUBROUTINE Tune_SG4threads_HPsi(cplx,nb_psi,para_H)
+USE mod_system
+USE mod_psi_set_alloc
+USE mod_psi_SimpleOp
+USE mod_psi_Op
+
+USE mod_Op
+IMPLICIT NONE
+
+!
+!=====================================================================
+!
+!     variables
+!
+!=====================================================================
+!
+
+!----- variables for the construction of H ----------------------------
+ TYPE (param_Op)    :: para_H
+
+
+!----- for Davidson diagonalization ----------------------------
+ integer            :: nb_psi
+ logical            :: cplx
+
+ TYPE (param_psi), allocatable   :: Tab_Psi(:)
+ TYPE (param_psi), allocatable   :: Tab_OpPsi(:)
+
+ TYPE (param_time) :: HPsiTime
+
+ integer           :: nb_psi_loc,i,ib,PSG4_maxth_save,opt_PSG4_maxth
+ real(kind=Rkind)  :: a,b,Opt_RealTime,RealTime(SG4_maxth)
+
+!----- for debuging --------------------------------------------------
+ character (len=*), parameter :: name_sub='Tune_SG4threads_HPsi'
+ logical, parameter :: debug=.FALSE.
+ !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+
+para_mem%mem_debug = .FALSE.
+
+
+nb_psi_loc = nb_psi
+IF (cplx) nb_psi_loc = 1
+
+allocate(Tab_Psi(nb_psi_loc))
+allocate(Tab_OpPsi(nb_psi_loc))
+DO i=1,nb_psi_loc
+  CALL init_psi(Tab_Psi(i),para_H,cplx)
+  CALL alloc_psi(Tab_Psi(i),BasisRep=.TRUE.,GridRep=.FALSE.)
+  Tab_Psi(i)   = ZERO
+  Tab_OpPsi(i) = Tab_Psi(i)
+  IF (cplx) THEN
+    DO ib=1,size(Tab_Psi(i)%CvecB)
+      CALL random_number(a)
+      CALL random_number(b)
+      Tab_Psi(i)%CvecB(ib) = cmplx(a,b,kind=Rkind)
+    END DO
+  ELSE
+    CALL random_number(Tab_Psi(i)%RvecB)
+  END IF
+END DO
+
+
+write(out_unitp,*)
+write(out_unitp,*) ' Number of psi:',size(Tab_Psi)
+write(out_unitp,*) ' cplx?:',cplx
+
+write(out_unitp,*) ' Number of threads (SG4):',SG4_maxth
+
+RealTime(1) = Delta_RealTime(HPsiTime)
+
+PSG4_maxth_save = SG4_maxth
+Opt_RealTime    = huge(ONE)
+DO SG4_maxth=1,PSG4_maxth_save
+
+  IF (Tab_Psi(1)%cplx) THEN
+    CALL sub_OpPsi(Tab_Psi(1),Tab_OpPsi(1),para_H)
+  ELSE
+    CALL sub_TabOpPsi(Tab_Psi,Tab_OpPsi,para_H)
+  END IF
+
+  RealTime(SG4_maxth) = Delta_RealTime(HPsiTime)
+  write(out_unitp,*) 'With ',SG4_maxth,'threads, Delta Real Time',RealTime(SG4_maxth)
+  IF (RealTime(SG4_maxth) < Opt_RealTime) THEN
+    Opt_RealTime   = RealTime(SG4_maxth)
+    opt_PSG4_maxth = SG4_maxth
+  ELSE
+    IF (SG4_maxth > 1) EXIT
+  END IF
+
+
+END DO
+
+SG4_maxth = opt_PSG4_maxth
+write(out_unitp,*) 'Optimal threads: ',SG4_maxth,' Delta Real Time',RealTime(SG4_maxth)
+
+
+DO i=1,size(Tab_Psi)
+  CALL dealloc_psi(Tab_Psi(i),  delete_all=.TRUE.)
+  CALL dealloc_psi(Tab_OpPsi(i),delete_all=.TRUE.)
+END DO
+CALL dealloc_NParray(Tab_OpPsi,'Tab_OpPsi',name_sub)
+CALL dealloc_NParray(Tab_Psi,  'Tab_Psi',  name_sub)
+
+END SUBROUTINE Tune_SG4threads_HPsi
 
       SUBROUTINE sub_Analysis_Only(max_mem)
       USE mod_system

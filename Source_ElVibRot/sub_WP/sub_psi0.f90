@@ -87,6 +87,7 @@
          write(out_unitp,*) 'nb_basis_act1',WP0(1)%BasisnD%nb_basis
          CALL RecWrite_basis(WP0(1)%BasisnD)
          write(out_unitp,*)
+         CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
  IF (para_WP0%New_Read_WP0) THEN
@@ -124,8 +125,10 @@
 
         CALL norm2_psi(WP0(1),GridRep=.TRUE.)
         write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
+        CALL flush_perso(out_unitp)
         CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
         write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
+        CALL flush_perso(out_unitp)
 
         IF (debug) THEN
           write(out_unitp,*) 'psiGridRep normalized'
@@ -254,8 +257,8 @@
       real (kind=Rkind)      :: rhonD
 
 !----- for debuging --------------------------------------------------
-      logical,parameter :: debug = .FALSE.
-      !logical,parameter :: debug = .TRUE.
+      !logical,parameter :: debug = .FALSE.
+      logical,parameter :: debug = .TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING psi0_gaussGridRep'

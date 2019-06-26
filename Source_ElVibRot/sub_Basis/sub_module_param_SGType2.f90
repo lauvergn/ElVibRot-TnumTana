@@ -680,7 +680,10 @@ END SUBROUTINE SGType2_2TOSGType2_1
       END IF
 !-----------------------------------------------------------
 
-    IF (count(nDind_SmolyakRep%nDNum_OF_Lmax == 0) == nDind_SmolyakRep%ndim) THEN ! it work only when L1max or L2max are not used
+    IF (count(nDind_SmolyakRep%nDNum_OF_Lmax == 0) == nDind_SmolyakRep%ndim .AND. &
+        nDind_SmolyakRep%MaxCoupling >= nDind_SmolyakRep%ndim) THEN
+      ! it works only when L1max or L2max are not used and
+      !     when the max number of coupling terms is >= than ndim
       CALL init_nDval_OF_nDindex(nDind_SmolyakRep,tab_l)
       DO i_SG=1,nDind_SmolyakRep%Max_nDI
         CALL ADD_ONE_TO_nDindex(nDind_SmolyakRep,tab_l,iG=i_SG)

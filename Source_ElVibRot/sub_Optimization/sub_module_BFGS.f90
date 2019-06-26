@@ -117,7 +117,6 @@
                           para_Tnum,mole,ComOp,para_PES,Qact,para_BFGS)
 
       USE mod_system
-      !USE mod_nDindex
       USE mod_dnSVM
       use mod_Coord_KEO, only: zmatrix, tnum, alloc_array, dealloc_array
       USE mod_PrimOp
@@ -159,11 +158,11 @@
       TYPE (param_BFGS) :: para_BFGS
       integer, intent(in) :: nb_Opt
       real (kind=Rkind), intent(inout) :: xOpt_min(nb_Opt),SQ(nb_Opt)
-      real (kind=Rkind), pointer :: hessian(:,:)
+      real (kind=Rkind), allocatable :: hessian(:,:)
 
 !---------- working variables ----------------------------------------
   TYPE (param_dnMatOp) :: dnMatOp(1)
-  integer        :: nderiv_alloc
+  integer              :: nderiv_alloc
 
 !---------------------------------------------------------------------
 !      logical,parameter :: debug= .FALSE.
@@ -183,10 +182,10 @@
 
         write(out_unitp,*) 'Qact',Qact
         !---------JML-------------------------------------
-        write(out_unitp,*) 'mole%nb_act', mole%nb_act
-        write(out_unitp,*) 'RMS_grad', para_BFGS%RMS_grad
-        write(out_unitp,*) 'RMS_step', para_BFGS%RMS_step
-        write(out_unitp,*) 'max_iteration',  para_BFGS%max_iteration
+        write(out_unitp,*) 'mole%nb_act',mole%nb_act
+        write(out_unitp,*) 'RMS_grad',para_BFGS%RMS_grad
+        write(out_unitp,*) 'RMS_step',para_BFGS%RMS_step
+        write(out_unitp,*) 'max_iteration',para_BFGS%max_iteration
 
         IF (para_BFGS%calc_hessian) THEN
           write(out_unitp,*) ' The initial hessian is calculated'
@@ -194,7 +193,10 @@
           CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_Opt,para_PES%nb_elec,nderiv=2)
           CALL alloc_array(para_BFGS%hessian_inv_init,(/ nb_Opt,nb_Opt /),  &
                           'para_BFGS%hessian_inv_init',name_sub)
-          CALL alloc_array(hessian,(/ nb_Opt,nb_Opt /),'hessian',name_sub)
+          IF (allocated(hessian)) THEN
+            CALL dealloc_NParray(hessian,'hessian',name_sub)
+          END IF
+          CALL alloc_NParray(hessian,(/ nb_Opt,nb_Opt /),'hessian',name_sub)
           !-------- end allocation --------------------------------------------
 
           !----- Hessian ------------------------------------
@@ -208,7 +210,9 @@
           CALL Write_Mat(para_BFGS%hessian_inv_init,out_unitp,5)
 
           !-------- deallocation ---------------------------------------------
-          CALL dealloc_array(hessian,'hessian',name_sub)
+          IF (allocated(hessian)) THEN
+            CALL dealloc_NParray(hessian,'hessian',name_sub)
+          END IF
           CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
           !-------- end deallocation -----------------------------------------
         END IF
@@ -278,9 +282,9 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 !
  implicit none
 
- real (kind=Rkind), pointer :: p(:) => null()
+ real (kind=Rkind), pointer    :: p(:) => null()
  real (kind=Rkind), intent(in) ::  gtol, tolx
- integer, intent(in) :: itmax
+ integer,           intent(in) :: itmax
  integer :: n
  logical :: check
  real (kind=Rkind), parameter :: EPS=epsilon(p), STPMX=100
@@ -289,11 +293,11 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
  real (kind=Rkind), allocatable :: g(:),dg(:),pnew(:),hdg(:),hessin(:,:),xi(:)
 
  real (kind=Rkind), target :: Qact(:)
- TYPE (param_dnMatOp) :: dnMatOp(1)
- TYPE (zmatrix)    :: mole
- TYPE (param_PES)  :: para_PES
- TYPE (Tnum)       :: para_Tnum
- TYPE (param_BFGS) :: para_BFGS
+ TYPE (param_dnMatOp)      :: dnMatOp(1)
+ TYPE (zmatrix)            :: mole
+ TYPE (param_PES)          :: para_PES
+ TYPE (Tnum)               :: para_Tnum
+ TYPE (param_BFGS)         :: para_BFGS
 
 
  p => Qact(1:mole%nb_act)
@@ -320,7 +324,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
   end do
 !!!!!!!!!!!!!!
  write(out_unitp,*) ' RMS Gradient = ',xxxg
- write(out_unitp,*) ' Test on gradient convergence = ', test
+ write(out_unitp,*) ' Test on gradient convergence = ',test
  call flush(out_unitp)
 
  IF (associated(para_BFGS%hessian_inv_init)) THEN
@@ -342,6 +346,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
   ! next line search. It is usually safe to ignore the value of check.
   fp   = fret
   xi   = pnew-p    ! update the line direction
+  write(6,*) 'DeltaQ',xi(:)
   p    = pnew      ! and the current point
   test = ZERO
   do i=1,n     ! Test the convergence in Delta(x)
@@ -438,9 +443,9 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
  real (kind=Rkind) :: rhs1, rhs2, a, b, alam2, disc, f2
 !
  TYPE (param_dnMatOp) :: dnMatOp(1)
- TYPE (zmatrix) :: mole
- TYPE (param_PES) :: para_PES
- TYPE (Tnum)    :: para_Tnum
+ TYPE (zmatrix)       :: mole
+ TYPE (param_PES)     :: para_PES
+ TYPE (Tnum)          :: para_Tnum
 !
  check=.false.
  call proescvec(p,p,sum,n)

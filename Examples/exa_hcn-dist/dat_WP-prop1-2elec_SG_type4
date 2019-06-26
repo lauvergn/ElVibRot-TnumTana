@@ -55,9 +55,10 @@ dh 0.0
  &basis_nD nb_basis=2 name="direct_prod" L_SparseBasis=3 L_SparseGrid=5 SparseGrid_type=4 /
    &basis_nD iQact(1)=1 name="Pl0"               L_TO_nq_A=20 L_TO_nq_B=10 /
    &basis_nD iQact(1)=2 name="boxAB" A=1.7 B=2.7 L_TO_nq_A=10 L_TO_nq_B=3 /
+
  &inactives /
 
- &actives test=f direct=2 Type_HamilOp=10 direct_KEO=t /
+ &actives test=f direct=2 /
  &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t 
           print_psi=0 psi1D_Q0=f psi2D_Q0=f
           Rho1D=f Rho2D=f Rho_type=1 /

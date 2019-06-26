@@ -102,7 +102,7 @@
 !      test sur nb_fourier et nb_quadra
 !----------------------------------------------------------------------------
       nb = base%nb
-      write(out_unitp,*) '    Basis: ylm'
+      write(out_unitp,*) '    Basis: Ylm'
       write(out_unitp,*) '      old nb_Ylm',nb
 
       IF (base%xPOGridRep_done) THEN
@@ -136,20 +136,9 @@
 
       lebedev = 2*max_ql+1
       !lebedev = -1
-      write(out_unitp,*) 'lebedev',lebedev
 
-      IF (lebedev < 0) THEN
-        write(out_unitp,*) '      old nb_quadra',nq
+      IF (lebedev >= 0) THEN
 
-        max_ql = int(sqrt(real(nq,kind=Rkind)))
-        IF (max_ql <= max_l) max_ql = max_l+1
-        max_qm = 2*max_ql+1
-        IF (mod(max_qm,2) .EQ. 1) max_qm = max_qm + 1
-        nq = max_ql*max_qm
-
-        write(out_unitp,*) '      new nb_quadra',nq
-        write(out_unitp,*) '      max_ql, max_qm',max_ql,max_qm
-      ELSE
         write(out_unitp,*) '      old nb_quadra',nq
         write(out_unitp,*) '      max_ql',max_ql
         write(out_unitp,*) '      lebedev',lebedev
@@ -177,16 +166,32 @@
           ELSE
             lebedev = lebedev + 2
             IF (lebedev > 131) THEN
-              write(out_unitp,*) 'ERROR in ',name_sub
+              write(out_unitp,*) 'WARNING in ',name_sub
               write(out_unitp,*) 'the lebedev parameter is too large',lebedev
               write(out_unitp,*) ' => Do not use sparse grid (L_SparseGrid=-1)'
-              STOP
+              lebedev = -1
+              EXIT
             END IF
           END IF
         END DO
         close(nio)
         write(out_unitp,*) '      new nb_quadra',nq
       END IF
+
+      IF (lebedev < 0) THEN
+        write(out_unitp,*) '      old nb_quadra',nq
+        write(out_unitp,*) '  not lebedev',lebedev
+
+        max_ql = int(sqrt(real(nq,kind=Rkind)))
+        IF (max_ql <= max_l) max_ql = max_l+1
+        max_qm = 2*max_ql+1
+        IF (mod(max_qm,2) .EQ. 1) max_qm = max_qm + 1
+        nq = max_ql*max_qm
+
+        write(out_unitp,*) '      new nb_quadra',nq
+        write(out_unitp,*) '      max_ql, max_qm',max_ql,max_qm
+      END IF
+
       CALL Set_nq_OF_basis(base,nq)
 
       ! calculation of base%nb with symmetry

@@ -43,7 +43,6 @@
 
 !----- variables for the WP ----------------------------------------
       TYPE (param_psi)   :: psi,Hpsi
-      TYPE (param_psi)   :: WP0,WP
       TYPE (param_propa) :: para_propa,para_propa_loc
 
 !------ active Matrix H ------------------------------------------
@@ -169,12 +168,10 @@
       IF (debug) write(out_unitp,*) 'nb_tot',psi%nb_tot
       CALL alloc_psi(psi,BasisRep =.TRUE.)
 
+
+
       psi = ZERO
-      IF (para_H%cplx) THEN
-        psi%CvecB(psi%nb_tot) = ONE
-      ELSE
-        psi%RvecB(psi%nb_tot) = ONE
-      END IF
+      CALL Set_psi_With_index(psi,R=ONE,ind_aie=psi%nb_tot)
       psi%symab = -1
 
       CALL renorm_psi(psi,BasisRep=.TRUE.)
@@ -222,6 +219,8 @@
         write(out_unitp,*) 'spectral : Hmin,Hmax',para_H%Hmin,para_H%Hmax
         RETURN
       END IF
+
+      !CALL sub_Auto_Hmax_cheby(para_propa,para_H)
 
       IF (para_propa%auto_Hmax) THEN
 
@@ -361,16 +360,20 @@ relax = .TRUE.
 
         !---- for Hmax -----------------------------------------
         para_propa_loc%name_WPpropa      = 'Emax'
-        para_propa_loc%file_WP%name     = make_FileName('file_WP_Hmax')
-        para_propa_loc%ana_psi%file_Psi = para_propa_loc%file_WP
-        para_propa_loc%ana_psi%propa    = .TRUE.
+        para_propa_loc%file_WP%name      = make_FileName('file_WP_Hmax')
+        para_propa_loc%ana_psi%file_Psi  = para_propa_loc%file_WP
+        para_propa_loc%ana_psi%propa     = .TRUE.
+        para_propa_loc%ana_psi%Write_psi = .FALSE.
 
         WP0 = ZERO
-        IF (WP0%cplx) THEN
-          WP0%CvecB(WP0%nb_tot) = CONE
-        ELSE
-          WP0%RvecB(WP0%nb_tot) = ONE
-        END IF
+        CALL Set_psi_With_index(WP0,R=ONE,ind_aie=WP0%nb_tot)
+!        IF (WP0%cplx) THEN
+!          WP0%CvecB(WP0%nb_tot) = CONE
+!        ELSE
+!          WP0%RvecB(WP0%nb_tot) = ONE
+!        END IF
+
+        !CALL Set_Random_psi(WP0)
 !        DO i=1,WP0%nb_tot
 !          CALL random_number(a)
 !          IF (WP0%cplx) THEN
@@ -397,11 +400,14 @@ relax = .TRUE.
         para_propa_loc%WPdeltaT           = ONE
 
         WP0 = ZERO
-        IF (WP0%cplx) THEN
-          WP0%CvecB(1) = CONE
-        ELSE
-          WP0%RvecB(1) = ONE
-        END IF
+        CALL Set_psi_With_index(WP0,R=ONE,ind_aie=1)
+!        IF (WP0%cplx) THEN
+!          WP0%CvecB(1) = CONE
+!        ELSE
+!          WP0%RvecB(1) = ONE
+!        END IF
+
+        !CALL Set_Random_psi(WP0)
 !        DO i=1,max(WP0%nb_tot/100,1)
 !          CALL random_number(a)
 !          IF (WP0%cplx) THEN
@@ -436,4 +442,165 @@ relax = .TRUE.
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_Auto_HmaxHmin_relax
+      ! we are using the fact that chebychev propagation is very sensitive to the spectral range
+      SUBROUTINE sub_Auto_Hmax_cheby(para_propa,para_H)
+      USE mod_system
+      USE mod_Op
+      USE mod_psi_set_alloc
+      USE mod_psi_SimpleOp
+      USE mod_ana_psi
+      USE mod_march
+      USE mod_propa
+      USE mod_FullPropa
+      IMPLICIT NONE
+
+!----- Operator variables --------------------------------------------
+      TYPE (param_Op)  :: para_H
+
+!----- variables for the WP ----------------------------------------
+      TYPE (param_psi)   :: WP0(1),WP(1)
+      TYPE (param_propa) :: para_propa
+
+!----- working parameters --------------------------------------------
+      integer           :: i,nb_HPsi,nb_HPsi_opt
+      real (kind=Rkind) :: a,WPdeltaT,T,DeltaT_opt
+      integer           :: type_WPpropa
+      logical           :: With_field
+      character (len=Name_len) :: name_WPpropa
+
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub = 'sub_Auto_Hmax_cheby'
+      integer :: err_mem,memory
+      logical,parameter :: debug=.FALSE.
+      !logical,parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      write(out_unitp,*) 'BEGINNING ',name_sub,' ',para_H%nb_tot
+      write(out_unitp,*) 'Hmin,Hmax',para_H%Hmin,para_H%Hmax
+      IF (debug) THEN
+
+      END IF
+!-----------------------------------------------------------
+
+     T = ZERO
+
+     type_WPpropa            = para_propa%type_WPpropa
+     para_propa%type_WPpropa = 1
+     name_WPpropa            = para_propa%name_WPpropa
+     para_propa%name_WPpropa = 'cheby'
+     With_field              = para_propa%With_field
+     para_propa%With_field   = .FALSE.
+
+     para_propa%para_poly%Hmax = para_H%Hmax
+     para_propa%para_poly%Hmin = para_H%Hmin
+
+     WPdeltaT                = para_propa%WPdeltaT
+     para_propa%WPdeltaT     = min(ONE,WPdeltaT)
+
+     CALL init_psi(WP(1),para_H,cplx=.TRUE.)
+     WP(1)%GridRep = .TRUE.
+     CALL alloc_psi(WP(1))
+     WP0(1) = WP(1)
+
+     nb_HPsi_opt = huge(1)
+
+     DO
+
+        CALL Set_Random_psi(WP0(1))
+        WP0(1)%symab = -1
+        CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
+        WP(1) = WP0(1)
+
+        CALL march_gene(T,WP,WP0,1,.FALSE.,para_H,para_propa)
+
+        write(out_unitp,*) 'March_cheby with WPdeltaT',para_propa%WPdeltaT
+        write(out_unitp,*) 'Opt npoly',para_propa%para_poly%npoly_Opt
+
+        nb_HPsi = para_propa%para_poly%npoly_Opt*(ONE+para_propa%WPTmax/para_propa%WPdeltaT)
+        IF (nb_HPsi < nb_HPsi_opt) THEN
+          nb_HPsi_opt = nb_HPsi
+          DeltaT_opt  = para_propa%WPdeltaT
+        END IF
+        write(out_unitp,*) '# HPsi',nb_HPsi
+        write(out_unitp,*) 'opt nb_HPsi,DeltaT_opt',nb_HPsi_opt,DeltaT_opt
+
+
+        IF (para_propa%WPdeltaT == WPdeltaT) EXIT
+
+        para_propa%WPdeltaT = para_propa%WPdeltaT*TEN
+        IF (para_propa%WPdeltaT > WPdeltaT) para_propa%WPdeltaT = WPdeltaT
+
+     END DO
+     para_propa%WPdeltaT     = WPdeltaT
+
+
+!     IF (DeltaT_opt >= para_propa%WPdeltaT) THEN
+!     !optimization of DeltaT
+!     DO
+!
+!       para_propa%WPdeltaT = min(para_propa%WPTmax,para_propa%WPdeltaT*TWO)
+!
+!        WP0(1) = ZERO
+!        DO i=1,WP0(1)%nb_tot
+!          CALL random_number(a)
+!          WP0(1)%CvecB(WP0(1)%nb_tot+1-i) = cmplx(a-HALF,ZERO,kind=Rkind)
+!        END DO
+!        WP0(1)%symab = -1
+!        CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
+!        WP(1) = WP0(1)
+!
+!        CALL march_gene(T,WP,WP0,1,.FALSE.,para_H,para_propa)
+!
+!        IF (para_propa%march_error) EXIT
+!
+!        write(out_unitp,*) 'March_cheby with WPdeltaT',para_propa%WPdeltaT
+!        write(out_unitp,*) 'Opt npoly',para_propa%para_poly%npoly_Opt
+!
+!        nb_HPsi = para_propa%para_poly%npoly_Opt*(ONE+para_propa%WPTmax/para_propa%WPdeltaT)
+!        write(out_unitp,*) '# HPsi',nb_HPsi
+!        IF (nb_HPsi < nb_HPsi_opt) THEN
+!          nb_HPsi_opt = nb_HPsi
+!          DeltaT_opt  = para_propa%WPdeltaT
+!        ELSE
+!          EXIT
+!        END IF
+!
+!        IF (para_propa%WPdeltaT == para_propa%WPTmax) EXIT
+!
+!
+!      END DO
+!      END IF
+
+      write(out_unitp,*) 'Optimal WPdeltaT',DeltaT_opt
+      write(out_unitp,*) '# HPsi (for the whole propagation)',nb_HPsi_opt
+      para_propa%WPdeltaT     = DeltaT_opt
+
+
+
+      ! back to the old values
+      !para_propa%WPdeltaT     = WPdeltaT
+      para_propa%type_WPpropa = type_WPpropa
+      para_propa%name_WPpropa = name_WPpropa
+      para_propa%With_field   = With_field
+
+
+      CALL dealloc_psi(WP0(1))
+      CALL dealloc_psi(WP(1))
+
+
+      para_propa%para_poly%DHmax        = ZERO
+
+
+     para_H%Hmax = para_propa%para_poly%Hmax
+     para_H%Hmin = para_propa%para_poly%Hmin
+      write(out_unitp,*) 'auto : Hmin,Hmax',para_H%Hmin,para_H%Hmax
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+      END IF
+      write(out_unitp,*) 'END ',name_sub
+!-----------------------------------------------------------
+
+      END SUBROUTINE sub_Auto_Hmax_cheby
 

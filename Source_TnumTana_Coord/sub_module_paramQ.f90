@@ -519,7 +519,6 @@ MODULE mod_paramQ
 
         ELSE IF (mole%tab_Cart_transfo(1)%CartesianTransfo%New_Orient) THEN
           ! obtained from the new orient
-
           CALL alloc_CartesianTransfo(mole%tab_Cart_transfo(1)%         &
                                         CartesianTransfo,mole%ncart_act)
           mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm =              &
@@ -760,7 +759,7 @@ MODULE mod_paramQ
 
 
       !- working variables -------------------------
-      integer :: it,nb_act,i,ic1
+      integer :: it,nb_act,i,ic1,ic
       integer :: it_QoutRead
 
       TYPE (Type_dnVec) :: dnQin,dnQout
@@ -858,8 +857,8 @@ MODULE mod_paramQ
       real (kind=Rkind) :: ex(3),nx,ey(3),ny,ez(3),nz
 
 !     -----------------------------------------------------------------
-!      logical, parameter :: debug = .FALSE.
-      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='sub_QxyzTOexeyez'
 !     -----------------------------------------------------------------
       IF (debug) THEN
@@ -876,6 +875,13 @@ MODULE mod_paramQ
 
       ncart = min(size(Qxyz),size(mole%d0sm))
       Qxyz(1:ncart) = Qxyz(1:ncart) / mole%d0sm(1:ncart)
+
+      IF (debug) THEN
+        write(out_unitp,*) 'Qxyz:'
+        DO i=1,ncart,3
+          write(out_unitp,*) i,'-',i+2,Qxyz(i:i+2)
+        END DO
+      END IF
 
       SELECT CASE (mole%tab_Qtransfo(1)%name_transfo)
       CASE ('zmat')
@@ -989,8 +995,6 @@ MODULE mod_paramQ
       real (kind=Rkind) :: Qxyz(:)
       real (kind=Rkind) :: Rot_initial(3,3)
 
-
-
 !     - working variables -------------------------
       logical           :: case1
       integer :: i,it,nb_act,ncart,nc1,nc2,nc3
@@ -999,7 +1003,7 @@ MODULE mod_paramQ
 
 !     -----------------------------------------------------------------
       logical, parameter :: debug = .FALSE.
-!      logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='sub_Qxyz0TORot'
 !     -----------------------------------------------------------------
       IF (debug) THEN
@@ -1411,7 +1415,7 @@ MODULE mod_paramQ
 
         !=================================================
         IF (mole%Without_rot) THEN
-          write(6,*) 'Gcenter',Gcenter,mole%Centered_ON_CoM
+          !write(6,*) 'Gcenter',Gcenter,mole%Centered_ON_CoM
 
           IF (Gcenter .AND. mole%Centered_ON_CoM) THEN
 
@@ -1716,6 +1720,8 @@ MODULE mod_paramQ
         DO i=1,size(Q)/3
 
           read(in_unitp,*,IOSTAT=err_io) name_Q(3*i-2),Q(3*i-2:3*i)
+          !write(6,*) name_Q(3*i-2),Q(3*i-2:3*i)*.52d0
+
           IF (err_io /= 0) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) '  while reading the Cartessian reference geometry ...'

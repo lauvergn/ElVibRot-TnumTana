@@ -283,7 +283,7 @@
           L_TO_n_para%tab_L_TO_n(L) = L_TO_n_para%A + L_TO_n_para%B * L**L_TO_n_para%expo
         END DO
 
-      CASE (1) ! Delta_n(L) = B * L**(expo-1)  => n(L) = A + B * L*(L-1)/2 (with expo=2)
+      CASE (1) ! Delta_n(L) = B * L**(expo-1)  => n(L) = A + B * L*(L+1)/2 (with expo=2)
         L_TO_n_para%tab_L_TO_n(0) = L_TO_n_para%A
         DO L=1,Lmax
           L_TO_n_para%tab_L_TO_n(L) = L_TO_n_para%tab_L_TO_n(L-1) + L_TO_n_para%B * L**(L_TO_n_para%expo-1)

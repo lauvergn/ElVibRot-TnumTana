@@ -362,19 +362,18 @@
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter ::name_sub='sub_save_psi'
-      logical, parameter :: debug=.FALSE.
-!     logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) ' nb_save',nb_save
         write(out_unitp,*) ' nioWP',file_WP%unit
+        write(out_unitp,*) ' name',file_WP%name
         write(out_unitp,*)
         CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
-      !write(out_unitp,*) 'Save psi',nb_save
-      !CALL flush_perso(out_unitp)
 
       Version_File  = FilePsiVersion
 
@@ -397,8 +396,6 @@
       END DO
 
       close(nioWP)
-      !write(out_unitp,*) 'END Save psi'
-      !CALL flush_perso(out_unitp)
 
 !----------------------------------------------------------
        IF (debug) THEN

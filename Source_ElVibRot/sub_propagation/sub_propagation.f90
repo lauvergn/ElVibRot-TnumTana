@@ -107,7 +107,7 @@ CONTAINS
         CALL write_param_Op(para_H)
       END IF
 !-----------------------------------------------------------
-
+      para_propa%ana_psi%propa     = .TRUE.
 
       para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
 
@@ -779,6 +779,7 @@ CONTAINS
       USE mod_march
       IMPLICIT NONE
 
+
 !----- variables pour la namelist minimum ----------------------------
       TYPE (param_Op)   :: para_H
 
@@ -849,13 +850,6 @@ CONTAINS
       IF (para_propa%restart) THEN
         CALL ReadWP_restart(T,psi,para_propa%file_WP_restart)
 
-!        CALL file_open(para_propa%file_WP_restart,no_restart)
-!        read(no_restart,*) T,it
-!        write(out_unitp,*) 'T0 for the restart:',T
-!        read(no_restart,*) psi(1)%CvecB
-!        close(no_restart)
-
-
         CALL file_open(para_propa%file_autocorr,no,append=.TRUE.)
 
       ELSE
@@ -869,9 +863,13 @@ CONTAINS
       DO WHILE ( (T - (para_propa%WPTmax-para_propa%WPdeltaT) <         &
                  para_propa%WPdeltaT/TEN**5) .AND. psi(1)%norme < psi(1)%max_norme)
 
-         para_propa%ana_psi%Write_psi2_Grid = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi2
-         para_propa%ana_psi%Write_psi_Grid  = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi
-         CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
+         IF (mod(it,para_propa%n_WPecri) == 0) THEN
+           para_propa%ana_psi%Write_psi2_Grid = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi2
+           para_propa%ana_psi%Write_psi_Grid  = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi
+           CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
+         ELSE
+           CALL sub_analyze_mini_WP_OpWP(T,psi,1,para_H,para_propa)
+         END IF
 
          CALL march_gene(T,psi(1:1),psi0(1:1),1,.FALSE.,para_H,para_propa)
 

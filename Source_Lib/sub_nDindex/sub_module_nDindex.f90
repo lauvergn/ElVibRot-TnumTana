@@ -989,6 +989,7 @@
         write(out_unitp,*) 'Lmax,L1max,L2max',nDindex%Lmax,nDindex%L1max,nDindex%L2max
         write(out_unitp,*) 'nDNum_OF_Lmax',nDindex%nDNum_OF_Lmax
         !CALL Write_nDindex(nDindex)
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
       err_sub = 0
@@ -1011,8 +1012,10 @@
         ! first the number of points
         CALL calc_Max_nDI_type5p(nDindex)
 
-        IF (nDindex%Write_Tab .OR. debug)                               &
-                      write(out_unitp,*) 'nDindex%Max_nDI',nDindex%Max_nDI
+        IF (nDindex%Write_Tab .OR. debug) THEN
+          write(out_unitp,*) 'nDindex%Max_nDI',nDindex%Max_nDI
+          CALL flush_perso(out_unitp)
+        END IF
 
         IF (nDindex%Max_nDI <= 0) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
@@ -1049,8 +1052,14 @@
             nDindex%Tab_Norm(nDI)    = real(L,kind=Rkind)
             nDindex%Tab_L(nDI)       = L
           END IF
-          IF (nDindex%Write_Tab .OR. debug)                             &
-             write(out_unitp,*) 'nDI,nDval',nDI,':',nDval,' L:',L
+          IF (nDindex%Write_Tab .OR. debug)  THEN
+             IF (nDI < 100) THEN
+               write(out_unitp,*) 'nDI,nDval',nDI,':',nDval,' L:',L
+             ELSE IF (nDI == 100) THEN
+               write(out_unitp,*) 'nDI,nDval ....'
+             END IF
+             CALL flush_perso(out_unitp)
+          END IF
         END DO
         IF (nDI /= nDindex%Max_nDI) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
@@ -1066,6 +1075,7 @@
       IF (debug) THEN
         !CALL Write_nDindex(nDindex)
         write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2475,150 +2485,451 @@
 
   END SUBROUTINE ADD_ONE_TO_nDval_p1
 
-      !!@description: TODO
-      !!@param: TODO
-      SUBROUTINE calc_nDI(nDI,nDval,nDindex,err_sub)
-        TYPE (Type_nDindex)    :: nDindex
-        integer, intent(in)    :: nDval(:)
-        integer, intent(inout) :: nDI
-        integer,             intent(inout), optional     :: err_sub
+  SUBROUTINE calc_nDI(nDI,nDval,nDindex,err_sub)
+    TYPE (Type_nDindex)    :: nDindex
+    integer, intent(in)    :: nDval(:)
+    integer, intent(inout) :: nDI
+    integer,             intent(inout), optional     :: err_sub
 
-        integer :: i,ib,nDval_tmp(nDindex%ndim)
-        logical :: not_out_of_range,found
+    integer :: i,ib,ibm,ibp,nDval_tmp(nDindex%ndim)
+    logical :: not_out_of_range,found
 
-!----------------------------------------------------------
-      character (len=*), parameter :: name_sub='calc_nDI'
-      logical,parameter :: debug=.FALSE.
-      !logical,parameter :: debug=.TRUE.
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) '  nDval (in) ',nDval
-        !CALL write_nDindex(nDindex)
-        CALL flush_perso(out_unitp)
-      END IF
-!-----------------------------------------------------------
+!------------------------------------------------------
+  character (len=*), parameter :: name_sub='calc_nDI'
+  logical,parameter :: debug=.FALSE.
+  !logical,parameter :: debug=.TRUE.
+!-------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) '  nDval (in) ',nDval
+    !CALL write_nDindex(nDindex)
+    CALL flush_perso(out_unitp)
+  END IF
+!-------------------------------------------------------
 
-        IF (present(err_sub)) err_sub = 0
+  IF (present(err_sub)) err_sub = 0
 
 
-        IF (.NOT. nDindex%init) THEN
-          write(out_unitp,*) ' ERROR in calc_nDI'
-          write(out_unitp,*) ' nDindex is not initialized!'
-          STOP
-        END IF
+  IF (.NOT. nDindex%init) THEN
+    write(out_unitp,*) ' ERROR in calc_nDI'
+    write(out_unitp,*) ' nDindex is not initialized!'
+    STOP
+  END IF
 
-        IF (nDindex%packed) THEN
+  IF (nDindex%packed) THEN
 
-          IF (nDI < 1 .OR. nDI > nDindex%Max_nDI) nDI = 1
+    IF (nDI < 1 .OR. nDI > nDindex%Max_nDI) nDI = 1
 
-          ib = nDI
+    ib = nDI
 
-          ! first at nDI
-          found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
-          IF (debug .AND. found) write(out_unitp,*) 'found at nDI',ib
-          !CALL flush_perso(out_unitp)
+    ! first at nDI
+    found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
+    IF (debug .AND. found) write(out_unitp,*) 'found at nDI',ib
+    IF (debug .AND. .NOT. found) write(out_unitp,*) 'not found at nDI',ib
 
-          ! then from nDI+1 to Max_nDI
-          IF (.NOT. found) THEN
-            DO ib=nDI+1,nDindex%Max_nDI
-             found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
-             IF (found) EXIT
-            END DO
-            IF (debug .AND. found) write(out_unitp,*) 'found in [nDI+1 ... Max_nDI], it',ib-nDI
-            !CALL flush_perso(out_unitp)
+    CALL flush_perso(out_unitp)
 
-          END IF
+    IF (.NOT. found) THEN
 
-          ! then from 1 to nDI
-          IF (.NOT. found) THEN
-            DO ib=1,nDI-1
-             found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
-             IF (found) EXIT
-            END DO
-            IF (debug .AND. found) write(6,*) 'found in [1 ... nDI-1], it',ib
-            !CALL flush_perso(out_unitp)
+      ! then from nDI+1 to Max_nDI
+      ibp = NDI  ! this index increases
+      ibm = NDI  ! this index decreases
 
-          END IF
+      DO
+        IF (ibp < nDindex%Max_nDI) THEN
+          ibp = ibp + 1
+          found = ( all(nDval == nDindex%Tab_nDval(:,ibp)) )
 
           IF (found) THEN
-            nDI = ib
-          ELSE
-            IF (present(err_sub)) THEN
-              nDI = nDindex%Max_nDI + 1
-              err_sub = err_nDI
-            ELSE
-              write(out_unitp,*) ' ERROR in calc_nDI'
-              write(out_unitp,*) ' nDI cannot be found !!'
-              write(out_unitp,*) ' CHECK the fortran source!'
-              STOP
-            END IF
+            ib = ibp
+            IF (debug) write(out_unitp,*) 'found in [nDI+1 ... Max_nDI], it',ib-nDI
+            EXIT
           END IF
-
-        ELSE
-          SELECT CASE (nDindex%type_OF_nDindex)
-          CASE (1)
-            ib = nDval(1)
-            not_out_of_range = (nDval(1) <= nDindex%nDend(1))
-            !write(out_unitp,*) 'ib',ib,not_out_of_range
-            DO i=2,nDindex%ndim
-              ib = (ib-1) * nDindex%nDend(i) + nDval(i)
-              not_out_of_range = not_out_of_range .AND. (nDval(i) <= nDindex%nDend(i))
-              !write(out_unitp,*) 'ib',ib,not_out_of_range
-            END DO
-
-            IF (.NOT. not_out_of_range) THEN
-              nDI = nDindex%Max_nDI + 1
-            ELSE
-              nDI = ib
-            END IF
-
-          CASE (-1)
-            ib = nDval(nDindex%ndim)
-            not_out_of_range = (nDval(nDindex%ndim) <= nDindex%nDend(nDindex%ndim))
-            !write(out_unitp,*) 'ib',ib,not_out_of_range
-            DO i=nDindex%ndim-1,1,-1
-              ib = (ib-1) * nDindex%nDend(i) + nDval(i)
-              not_out_of_range = not_out_of_range .AND. (nDval(i) <= nDindex%nDend(i))
-              !write(out_unitp,*) 'ib',ib,not_out_of_range
-            END DO
-
-            IF (.NOT. not_out_of_range) THEN
-              nDI = nDindex%Max_nDI + 1
-            ELSE
-              nDI = ib
-            END IF
-
-          CASE (2,-3,3,-4,4,-5,5)
-
-            CALL init_nDval_OF_nDindex(nDindex,nDval_tmp)
-            DO ib=1,nDindex%Max_nDI
-              CALL ADD_ONE_TO_nDindex(nDindex,nDval_tmp)
-              IF (all(nDval_tmp == nDval)) EXIT
-            END DO
-            nDI = ib
-
-
-          CASE DEFAULT
-            write(out_unitp,*) ' ERROR in calc_nDI'
-            write(out_unitp,*) ' You cannot use type_OF_nDindex/=1 with packed=F'
-            write(out_unitp,*) '           OR'
-            write(out_unitp,*) ' Not yet this type_OF_nDindex :',nDindex%type_OF_nDindex
-            write(out_unitp,*) ' CHECK the fortran source!'
-            STOP
-          END SELECT
-
         END IF
 
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) '  nDI ',nDI
-        write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
-      END IF
-!-----------------------------------------------------------
+        IF (ibm > 1) THEN
+          ibm = ibm - 1
+          found = ( all(nDval == nDindex%Tab_nDval(:,ibm)) )
+          IF (found) THEN
+            ib = ibm
+            IF (debug) write(6,*) 'found in [1 ... nDI-1], it',nDI-ib
+            EXIT
+          END IF
+        END IF
 
-      END SUBROUTINE calc_nDI
+        IF (ibm == 1 .AND. ibp == nDindex%Max_nDI) EXIT
+
+      END DO
+    END IF
+
+    IF (found) THEN
+      nDI = ib
+    ELSE
+      IF (present(err_sub)) THEN
+        nDI = nDindex%Max_nDI + 1
+        err_sub = err_nDI
+      ELSE
+        write(out_unitp,*) ' ERROR in calc_nDI'
+        write(out_unitp,*) ' nDI cannot be found !!'
+        write(out_unitp,*) ' CHECK the fortran source!'
+        STOP
+      END IF
+    END IF
+
+  ELSE
+    SELECT CASE (nDindex%type_OF_nDindex)
+    CASE (1)
+      ib = nDval(1)
+      not_out_of_range = (nDval(1) <= nDindex%nDend(1))
+      !write(out_unitp,*) 'ib',ib,not_out_of_range
+      DO i=2,nDindex%ndim
+        ib = (ib-1) * nDindex%nDend(i) + nDval(i)
+        not_out_of_range = not_out_of_range .AND. (nDval(i) <= nDindex%nDend(i))
+        !write(out_unitp,*) 'ib',ib,not_out_of_range
+      END DO
+
+      IF (.NOT. not_out_of_range) THEN
+        nDI = nDindex%Max_nDI + 1
+      ELSE
+        nDI = ib
+      END IF
+
+    CASE (-1)
+      ib = nDval(nDindex%ndim)
+      not_out_of_range = (nDval(nDindex%ndim) <= nDindex%nDend(nDindex%ndim))
+      !write(out_unitp,*) 'ib',ib,not_out_of_range
+      DO i=nDindex%ndim-1,1,-1
+        ib = (ib-1) * nDindex%nDend(i) + nDval(i)
+        not_out_of_range = not_out_of_range .AND. (nDval(i) <= nDindex%nDend(i))
+        !write(out_unitp,*) 'ib',ib,not_out_of_range
+      END DO
+
+      IF (.NOT. not_out_of_range) THEN
+        nDI = nDindex%Max_nDI + 1
+      ELSE
+        nDI = ib
+      END IF
+
+    CASE (2,-3,3,-4,4,-5,5)
+
+      CALL init_nDval_OF_nDindex(nDindex,nDval_tmp)
+      DO ib=1,nDindex%Max_nDI
+        CALL ADD_ONE_TO_nDindex(nDindex,nDval_tmp)
+        IF (all(nDval_tmp == nDval)) EXIT
+      END DO
+      nDI = ib
+
+
+    CASE DEFAULT
+      write(out_unitp,*) ' ERROR in calc_nDI'
+      write(out_unitp,*) ' You cannot use type_OF_nDindex/=1 with packed=F'
+      write(out_unitp,*) '           OR'
+      write(out_unitp,*) ' Not yet this type_OF_nDindex :',nDindex%type_OF_nDindex
+      write(out_unitp,*) ' CHECK the fortran source!'
+      STOP
+    END SELECT
+
+  END IF
+
+!-------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) '  nDI ',nDI
+    write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
+  END IF
+!-------------------------------------------------------
+
+  END SUBROUTINE calc_nDI
+
+  SUBROUTINE calc_nDI_v1(nDI,nDval,nDindex,err_sub)
+    TYPE (Type_nDindex)    :: nDindex
+    integer, intent(in)    :: nDval(:)
+    integer, intent(inout) :: nDI
+    integer,             intent(inout), optional     :: err_sub
+
+    integer :: i,ib,nDval_tmp(nDindex%ndim)
+    logical :: not_out_of_range,found
+
+!------------------------------------------------------
+  character (len=*), parameter :: name_sub='calc_nDI_v1'
+  logical,parameter :: debug=.FALSE.
+  !logical,parameter :: debug=.TRUE.
+!-------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) '  nDval (in) ',nDval
+    !CALL write_nDindex(nDindex)
+    CALL flush_perso(out_unitp)
+  END IF
+!-------------------------------------------------------
+
+  IF (present(err_sub)) err_sub = 0
+
+
+  IF (.NOT. nDindex%init) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' nDindex is not initialized!'
+    STOP
+  END IF
+
+  IF (nDindex%packed) THEN
+
+    IF (nDI < 1 .OR. nDI > nDindex%Max_nDI) nDI = 1
+
+    ib = nDI
+
+    ! first at nDI
+    found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
+    IF (debug .AND. found) write(out_unitp,*) 'found at nDI',ib
+    IF (debug .AND. .NOT. found) write(out_unitp,*) 'not found at nDI',ib
+
+    CALL flush_perso(out_unitp)
+
+    ! then from nDI+1 to Max_nDI
+    IF (.NOT. found) THEN
+      DO ib=nDI+1,nDindex%Max_nDI
+       found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
+       IF (found) EXIT
+      END DO
+      IF (debug .AND. found) write(out_unitp,*) 'found in [nDI+1 ... Max_nDI], it',ib-nDI
+      IF (debug .AND. .NOT. found) write(out_unitp,*) 'not found in [nDI+1 ... Max_nDI], it',ib-nDI
+
+      !CALL flush_perso(out_unitp)
+
+    END IF
+
+    ! then from 1 to nDI
+    IF (.NOT. found) THEN
+      DO ib=1,nDI-1
+       found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
+       IF (found) EXIT
+      END DO
+      IF (debug .AND. found) write(6,*) 'found in [1 ... nDI-1], it',ib
+      !CALL flush_perso(out_unitp)
+
+    END IF
+
+    IF (found) THEN
+      nDI = ib
+    ELSE
+      IF (present(err_sub)) THEN
+        nDI = nDindex%Max_nDI + 1
+        err_sub = err_nDI
+      ELSE
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' nDI cannot be found !!'
+        write(out_unitp,*) ' CHECK the fortran source!'
+        STOP
+      END IF
+    END IF
+
+  ELSE
+    SELECT CASE (nDindex%type_OF_nDindex)
+    CASE (1)
+      ib = nDval(1)
+      not_out_of_range = (nDval(1) <= nDindex%nDend(1))
+      !write(out_unitp,*) 'ib',ib,not_out_of_range
+      DO i=2,nDindex%ndim
+        ib = (ib-1) * nDindex%nDend(i) + nDval(i)
+        not_out_of_range = not_out_of_range .AND. (nDval(i) <= nDindex%nDend(i))
+        !write(out_unitp,*) 'ib',ib,not_out_of_range
+      END DO
+
+      IF (.NOT. not_out_of_range) THEN
+        nDI = nDindex%Max_nDI + 1
+      ELSE
+        nDI = ib
+      END IF
+
+    CASE (-1)
+      ib = nDval(nDindex%ndim)
+      not_out_of_range = (nDval(nDindex%ndim) <= nDindex%nDend(nDindex%ndim))
+      !write(out_unitp,*) 'ib',ib,not_out_of_range
+      DO i=nDindex%ndim-1,1,-1
+        ib = (ib-1) * nDindex%nDend(i) + nDval(i)
+        not_out_of_range = not_out_of_range .AND. (nDval(i) <= nDindex%nDend(i))
+        !write(out_unitp,*) 'ib',ib,not_out_of_range
+      END DO
+
+      IF (.NOT. not_out_of_range) THEN
+        nDI = nDindex%Max_nDI + 1
+      ELSE
+        nDI = ib
+      END IF
+
+    CASE (2,-3,3,-4,4,-5,5)
+
+      CALL init_nDval_OF_nDindex(nDindex,nDval_tmp)
+      DO ib=1,nDindex%Max_nDI
+        CALL ADD_ONE_TO_nDindex(nDindex,nDval_tmp)
+        IF (all(nDval_tmp == nDval)) EXIT
+      END DO
+      nDI = ib
+
+
+    CASE DEFAULT
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' You cannot use type_OF_nDindex/=1 with packed=F'
+      write(out_unitp,*) '           OR'
+      write(out_unitp,*) ' Not yet this type_OF_nDindex :',nDindex%type_OF_nDindex
+      write(out_unitp,*) ' CHECK the fortran source!'
+      STOP
+    END SELECT
+
+  END IF
+
+!-------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) '  nDI ',nDI
+    write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
+  END IF
+!-------------------------------------------------------
+
+  END SUBROUTINE calc_nDI_v1
+
+  SUBROUTINE calc_nDI_old(nDI,nDval,nDindex,err_sub)
+    TYPE (Type_nDindex)    :: nDindex
+    integer, intent(in)    :: nDval(:)
+    integer, intent(inout) :: nDI
+    integer,             intent(inout), optional     :: err_sub
+
+    integer :: i,ib,nDval_tmp(nDindex%ndim)
+    logical :: not_out_of_range,found
+
+!------------------------------------------------------
+  character (len=*), parameter :: name_sub='calc_nDI_old'
+  logical,parameter :: debug=.FALSE.
+  !logical,parameter :: debug=.TRUE.
+!-------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) '  nDval (in) ',nDval
+    !CALL write_nDindex(nDindex)
+    CALL flush_perso(out_unitp)
+  END IF
+!-------------------------------------------------------
+
+  IF (present(err_sub)) err_sub = 0
+
+
+  IF (.NOT. nDindex%init) THEN
+    write(out_unitp,*) ' ERROR in calc_nDI'
+    write(out_unitp,*) ' nDindex is not initialized!'
+    STOP
+  END IF
+
+  IF (nDindex%packed) THEN
+
+    IF (nDI < 1 .OR. nDI > nDindex%Max_nDI) nDI = 1
+
+    ib = nDI
+
+    ! first at nDI
+    found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
+    IF (debug .AND. found) write(out_unitp,*) 'found at nDI',ib
+    !CALL flush_perso(out_unitp)
+
+    ! then from nDI+1 to Max_nDI
+    IF (.NOT. found) THEN
+      DO ib=nDI+1,nDindex%Max_nDI
+       found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
+       IF (found) EXIT
+      END DO
+      IF (debug .AND. found) write(out_unitp,*) 'found in [nDI+1 ... Max_nDI], it',ib-nDI
+      !CALL flush_perso(out_unitp)
+
+    END IF
+
+    ! then from 1 to nDI
+    IF (.NOT. found) THEN
+      DO ib=1,nDI-1
+       found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
+       IF (found) EXIT
+      END DO
+      IF (debug .AND. found) write(6,*) 'found in [1 ... nDI-1], it',ib
+      !CALL flush_perso(out_unitp)
+
+    END IF
+
+    IF (found) THEN
+      nDI = ib
+    ELSE
+      IF (present(err_sub)) THEN
+        nDI = nDindex%Max_nDI + 1
+        err_sub = err_nDI
+      ELSE
+        write(out_unitp,*) ' ERROR in calc_nDI'
+        write(out_unitp,*) ' nDI cannot be found !!'
+        write(out_unitp,*) ' CHECK the fortran source!'
+        STOP
+      END IF
+    END IF
+
+  ELSE
+    SELECT CASE (nDindex%type_OF_nDindex)
+    CASE (1)
+      ib = nDval(1)
+      not_out_of_range = (nDval(1) <= nDindex%nDend(1))
+      !write(out_unitp,*) 'ib',ib,not_out_of_range
+      DO i=2,nDindex%ndim
+        ib = (ib-1) * nDindex%nDend(i) + nDval(i)
+        not_out_of_range = not_out_of_range .AND. (nDval(i) <= nDindex%nDend(i))
+        !write(out_unitp,*) 'ib',ib,not_out_of_range
+      END DO
+
+      IF (.NOT. not_out_of_range) THEN
+        nDI = nDindex%Max_nDI + 1
+      ELSE
+        nDI = ib
+      END IF
+
+    CASE (-1)
+      ib = nDval(nDindex%ndim)
+      not_out_of_range = (nDval(nDindex%ndim) <= nDindex%nDend(nDindex%ndim))
+      !write(out_unitp,*) 'ib',ib,not_out_of_range
+      DO i=nDindex%ndim-1,1,-1
+        ib = (ib-1) * nDindex%nDend(i) + nDval(i)
+        not_out_of_range = not_out_of_range .AND. (nDval(i) <= nDindex%nDend(i))
+        !write(out_unitp,*) 'ib',ib,not_out_of_range
+      END DO
+
+      IF (.NOT. not_out_of_range) THEN
+        nDI = nDindex%Max_nDI + 1
+      ELSE
+        nDI = ib
+      END IF
+
+    CASE (2,-3,3,-4,4,-5,5)
+
+      CALL init_nDval_OF_nDindex(nDindex,nDval_tmp)
+      DO ib=1,nDindex%Max_nDI
+        CALL ADD_ONE_TO_nDindex(nDindex,nDval_tmp)
+        IF (all(nDval_tmp == nDval)) EXIT
+      END DO
+      nDI = ib
+
+
+    CASE DEFAULT
+      write(out_unitp,*) ' ERROR in calc_nDI'
+      write(out_unitp,*) ' You cannot use type_OF_nDindex/=1 with packed=F'
+      write(out_unitp,*) '           OR'
+      write(out_unitp,*) ' Not yet this type_OF_nDindex :',nDindex%type_OF_nDindex
+      write(out_unitp,*) ' CHECK the fortran source!'
+      STOP
+    END SELECT
+
+  END IF
+
+!-------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) '  nDI ',nDI
+    write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
+  END IF
+!-------------------------------------------------------
+
+  END SUBROUTINE calc_nDI_old
 !     =================================================================
 !      Calculation of the multidimensional index Norm
 !         Sum_i nDval(i)*nDweight(i)
@@ -2824,7 +3135,6 @@
           END DO
           calc_L_OF_nDval = int(Norm)
         ELSE IF (with_Tab_i_TO_l) THEN
-
           iNorm = 0
           DO i=1,nDindex%ndim
             IF (nDval(i) > nDindex%Tab_i_TO_l(i)%nb_var_vec) THEN

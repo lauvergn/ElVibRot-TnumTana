@@ -33,6 +33,12 @@
       IMPLICIT NONE
 
         !!@description: TODO
+        INTERFACE Set_psi_With_index
+          MODULE PROCEDURE Set_psi_With_index_R
+          MODULE PROCEDURE Set_psi_With_index_C
+        END INTERFACE
+
+        !!@description: TODO
         INTERFACE operator (+)
           MODULE PROCEDURE psi1_plus_psi2
           MODULE PROCEDURE R_plus_psi
@@ -65,6 +71,214 @@
         END INTERFACE
 
         CONTAINS
+
+      SUBROUTINE Set_Random_psi(psi,option)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi),intent(inout)          :: psi
+      integer,         intent(in),   optional :: option
+
+      integer          :: i
+      real(kind=Rkind) :: a,b
+
+
+!     write(out_unitp,*) 'BEGINNING Set_Random_psi'
+
+       CALL alloc_psi(psi)
+
+      IF (psi%BasisRep) THEN
+        IF (allocated(psi%RvecB)) THEN
+          CALL random_number(psi%RvecB(:))
+        END IF
+        IF (allocated(psi%CvecB)) THEN
+          DO i=1,size(psi%CvecB)
+            CALL random_number(a)
+            CALL random_number(b)
+            psi%CvecB(i) = cmplx(a,b,kind=Rkind)
+          END DO
+        END IF
+      END IF
+
+      IF (psi%GridRep) THEN
+        IF (allocated(psi%RvecG)) THEN
+          CALL random_number(psi%RvecG(:))
+        END IF
+        IF (allocated(psi%CvecG)) THEN
+          DO i=1,size(psi%CvecG)
+            CALL random_number(a)
+            CALL random_number(b)
+            psi%CvecG(i) = cmplx(a,b,kind=Rkind)
+          END DO
+        END IF
+      END IF
+
+      psi%norme = ZERO
+      psi%symab = -1
+
+!     write(out_unitp,*) 'END Set_Random_psi'
+
+      END SUBROUTINE Set_Random_psi
+
+      SUBROUTINE Set_psi_With_index_R(psi,R,ind_a,ind_i,ind_e,ind_aie)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi),intent(inout)          :: psi
+      real(kind=Rkind),intent(in)             :: R
+      integer,         intent(in),   optional :: ind_a,ind_i,ind_e,ind_aie
+
+      integer          :: ind_a_loc,ind_i_loc,ind_e_loc,ind_aie_loc
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='Set_psi_With_index_R'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) write(out_unitp,*) 'BEGINNING ',name_sub
+
+      IF (present(ind_aie) .AND. present(ind_a)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both ind_aie and ind_a are present !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+      IF (.NOT. present(ind_aie) .AND. .NOT. present(ind_a)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both ind_aie and ind_a are absent !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (.NOT. allocated(psi%RvecB) .AND. .NOT. allocated(psi%CvecB)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both psi%RvecB and psi%CvecB are not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(ind_a)) THEN
+        ind_a_loc = ind_a
+
+        IF (present(ind_i)) THEN
+          ind_i_loc = ind_i-1
+        ELSE
+          ind_i_loc = 0
+        END IF
+
+        IF (present(ind_e)) THEN
+          ind_e_loc = ind_e-1
+        ELSE
+          ind_e_loc = 0
+        END IF
+
+        ind_aie_loc = ind_a_loc + (ind_i_loc+ind_e_loc*psi%nb_bi) * psi%nb_ba
+
+      ELSE ! it means ind_aie is present
+        ind_aie_loc = ind_aie
+      END IF
+
+      IF (ind_aie_loc < 1 .OR. ind_aie_loc > psi%nb_tot) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' ind_aie_loc is out of range. ind_aie_loc:',ind_aie_loc
+        write(out_unitp,*) '    ind_aie_loc:',ind_aie_loc
+        write(out_unitp,*) '    range: [1   ...',psi%nb_tot,']'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+
+      IF (allocated(psi%RvecB)) psi%RvecB(ind_aie_loc) = R
+      IF (allocated(psi%CvecB)) psi%CvecB(ind_aie_loc) = R
+
+
+      psi%norme = ZERO
+      psi%symab = -1
+
+      IF (debug) THEN
+        write(out_unitp,*) 'ind_aie_loc ',ind_aie_loc
+        write(out_unitp,*) 'END ',name_sub
+        flush(out_unitp)
+      END IF
+
+      END SUBROUTINE Set_psi_With_index_R
+
+      SUBROUTINE Set_psi_With_index_C(psi,C,ind_a,ind_i,ind_e,ind_aie)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi),intent(inout)          :: psi
+      complex(kind=Rkind),intent(in)          :: C
+      integer,         intent(in),   optional :: ind_a,ind_i,ind_e,ind_aie
+
+      integer          :: ind_a_loc,ind_i_loc,ind_e_loc,ind_aie_loc
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='Set_psi_With_index_C'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) write(out_unitp,*) 'BEGINNING ',name_sub
+
+      IF (present(ind_aie) .AND. present(ind_a)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both ind_aie and ind_a are present !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+      IF (.NOT. present(ind_aie) .AND. .NOT. present(ind_a)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both ind_aie and ind_a are absent !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (.NOT. allocated(psi%RvecB) .AND. .NOT. allocated(psi%CvecB)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both psi%RvecB and psi%CvecB are not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(ind_a)) THEN
+        ind_a_loc = ind_a
+
+        IF (present(ind_i)) THEN
+          ind_i_loc = ind_i-1
+        ELSE
+          ind_i_loc = 0
+        END IF
+
+        IF (present(ind_e)) THEN
+          ind_e_loc = ind_e-1
+        ELSE
+          ind_e_loc = 0
+        END IF
+
+        ind_aie_loc = ind_a_loc + (ind_i_loc+ind_e_loc*psi%nb_bi) * psi%nb_ba
+
+      ELSE ! it means ind_aie is present
+        ind_aie_loc = ind_aie
+      END IF
+
+
+      IF (ind_aie_loc < 1 .OR. ind_aie_loc > psi%nb_tot) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' ind_aie_loc is out of range. ind_aie_loc:',ind_aie_loc
+        write(out_unitp,*) '    ind_aie_loc:',ind_aie_loc
+        write(out_unitp,*) '    range: [1   ...',psi%nb_tot,']'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+
+      IF (allocated(psi%RvecB)) psi%RvecB(ind_aie_loc) = C
+      IF (allocated(psi%CvecB)) psi%CvecB(ind_aie_loc) = C
+
+
+      psi%norme = ZERO
+      psi%symab = -1
+
+      IF (debug) write(out_unitp,*) 'END ',name_sub
+
+      END SUBROUTINE Set_psi_With_index_C
 
 !================================================================
 !

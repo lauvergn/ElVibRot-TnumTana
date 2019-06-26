@@ -180,6 +180,7 @@ MODULE mod_Tnum
 
           logical                    :: Gdiago  = .FALSE.
           logical                    :: Gcte    = .FALSE.
+          integer                    :: NonGcteRange(2) = 0
           logical                    :: Inertia = .TRUE.
           real (kind=Rkind), pointer :: Gref(:,:) => null() ! reference value if Gcte=.true.
 
@@ -638,7 +639,7 @@ MODULE mod_Tnum
 
 
 !     - for Tnum or Tana ----------------------------------------------
-      integer           :: nrho
+      integer           :: nrho,NonGcteRange(2)
       logical           :: num_GG,num_g,num_x,Gdiago,Gcte,With_VecCOM
       logical           :: Tana,MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,f2f1_ana
       real (kind=Rkind) :: stepT,stepOp
@@ -657,7 +658,8 @@ MODULE mod_Tnum
                      Rot_Dip_with_EC,sym,check_sym,                     &
                      NM,NM_TO_sym,hessian_old,purify_hess,k_Half,       &
                      hessian_cart,hessian_onthefly,file_hessian,stepOp, &
-                     stepT,num_GG,num_g,num_x,nrho,Gdiago,Gcte,Tana,    &
+                     stepT,num_GG,num_g,num_x,nrho,Tana,                &
+                     Gdiago,Gcte,NonGcteRange,                          &
                      MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,         &
                      KEO_TalyorOFQinact2n,f2f1_ana,                     &
                      charge,multiplicity,                               &
@@ -696,6 +698,7 @@ MODULE mod_Tnum
       num_x                = .FALSE.
       Gdiago               = .FALSE.
       Gcte                 = .FALSE.
+      NonGcteRange(:)      = 0
       Tana                 = .FALSE.
       MidasCppForm         = .FALSE.
       MCTDHForm            = .FALSE.
@@ -791,6 +794,7 @@ MODULE mod_Tnum
       para_Tnum%WriteT               = WriteT
       para_Tnum%Gdiago               = Gdiago
       para_Tnum%Gcte                 = Gcte
+
       para_Tnum%Tana                 = Tana
 
       para_Tnum%LaTeXForm            = (Tana .AND. LaTeXForm)
@@ -1290,6 +1294,23 @@ MODULE mod_Tnum
 
       mole%WriteCC         = WriteCC
 
+      IF (NonGcteRange(1) > 0 .AND. NonGcteRange(1) > mole%nb_act1) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' Wrong value for NonGcteRange(:)',NonGcteRange(:)
+        STOP
+      END IF
+      IF (NonGcteRange(1) > 0 .AND. NonGcteRange(2) > 0 .AND. NonGcteRange(2) > mole%nb_act1) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' Wrong value for NonGcteRange(:)',NonGcteRange(:)
+        STOP
+      END IF
+      IF (NonGcteRange(1) > 0 .AND. NonGcteRange(2) < NonGcteRange(1)) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' Wrong value for NonGcteRange(:)',NonGcteRange(:)
+        STOP
+      END IF
+      para_Tnum%NonGcteRange(:)   = NonGcteRange(:)
+
 !=======================================================================
 !=======================================================================
 !=======================================================================
@@ -1363,14 +1384,14 @@ MODULE mod_Tnum
              END DO
            END IF
 
-           write(out_unitp,*) 'asso name_Qin and type_Qin',           &
-               associated(mole%tab_Qtransfo(it)%name_Qin),             &
+           write(out_unitp,*) 'asso name_Qin and type_Qin',             &
+               associated(mole%tab_Qtransfo(it)%name_Qin),              &
                             associated(mole%tab_Qtransfo(it)%type_Qin)
-           IF (associated(mole%tab_Qtransfo(it)%name_Qin) .AND.        &
+           IF (associated(mole%tab_Qtransfo(it)%name_Qin) .AND.         &
                        associated(mole%tab_Qtransfo(it)%type_Qin)) THEN
              DO i_Q=1,mole%tab_Qtransfo(it)%nb_Qin
-               write(out_unitp,*) 'i_Q,name_Qin,type_Qin',i_Q," ",    &
-                           trim(mole%tab_Qtransfo(it)%name_Qin(i_Q)),  &
+               write(out_unitp,*) 'i_Q,name_Qin,type_Qin',i_Q," ",      &
+                           trim(mole%tab_Qtransfo(it)%name_Qin(i_Q)),   &
                                     mole%tab_Qtransfo(it)%type_Qin(i_Q)
                CALL flush_perso(out_unitp)
              END DO

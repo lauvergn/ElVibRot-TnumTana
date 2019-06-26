@@ -91,6 +91,8 @@ MODULE mod_system
 
       integer, parameter :: max_HADA = 5000
       integer, parameter :: max_nb_G_FOR_print = 2000
+      !integer, parameter :: max_nb_G_FOR_print = 20000
+
       integer :: SGtype = -1
       integer :: FilePsiVersion = 0
       logical :: NewBasisEl = .FALSE.

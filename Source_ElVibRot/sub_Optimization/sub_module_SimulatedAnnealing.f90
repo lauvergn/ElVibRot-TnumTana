@@ -334,7 +334,7 @@
             CALL random_number(xi)
             xi = TWO*xi-ONE
             xOpt(i) = x0(i) + xi*SQ(i)
-            IF (xOpt(i) <= QB(i) .AND. xOpt(i) >= QA(i)) EXIT
+            !IF (xOpt(i) <= QB(i) .AND. xOpt(i) >= QA(i)) EXIT
           END DO
         END DO
 
@@ -396,6 +396,10 @@
           Temp        = Temp_max
           x0(:)       = xOpt_min(:)
           nb_Norm_min = 0
+        END IF
+        IF (mod(imc,100) == 0) THEN
+          write(out_unitp,*) imc,'Temp_max,nb_Energy_min,Energy_min',           &
+                                           Temp_max,nb_Norm_min,Norm_min
         END IF
 
         IF (Temp < para_SimulatedAnnealing%Tmin .OR. imc > para_SimulatedAnnealing%nb_mc_tot) EXIT

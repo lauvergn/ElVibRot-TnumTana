@@ -97,8 +97,11 @@
 
         LG = basis_DP%L_SparseGrid
 
+        CALL init_nDval_OF_nDindex(basis_DP%nDindB,nDval)
         DO ib=1,basis_DP%nb
-          CALL calc_nDindex(basis_DP%nDindB,ib,nDval)
+          CALL ADD_ONE_TO_nDindex(basis_DP%nDindB,nDval)
+          !CALL calc_nDindex(basis_DP%nDindB,ib,nDval)
+
           symab = 0
           DO ibasis=1,basis_DP%nb_basis
             ibi = nDval(ibasis)

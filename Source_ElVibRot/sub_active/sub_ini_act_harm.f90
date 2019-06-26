@@ -49,7 +49,7 @@
 
 
 !------ working variables ---------------------------------
-      integer :: iq,iqf,nb_thread,nb_Qtransfo
+      integer :: i,j,iq,iqf,nb_thread,nb_Qtransfo
       integer :: iOp,iterm,id1,id2,i_e
       logical :: lformatted,freq_only
 
@@ -106,6 +106,35 @@
             iterm = para_AllOp%tab_Op(iOp)%derive_term_TO_iterm(0,0)
             Grid_cte(:)     = .TRUE.  ! KEO
             Grid_cte(iterm) = .FALSE. ! potential
+          ELSE IF (para_AllOp%tab_Op(iOp)%para_Tnum%NonGcteRange(1) > 0 .AND. &
+                   para_AllOp%tab_Op(iOp)%para_Tnum%NonGcteRange(2) > 0 .AND. &
+                   para_AllOp%tab_Op(iOp)%n_op == 0) THEN
+            Grid_cte(:)     = .TRUE.  ! KEO
+
+            iterm = para_AllOp%tab_Op(iOp)%derive_term_TO_iterm(0,0)
+            Grid_cte(iterm)     = .FALSE. ! pot
+
+            DO i=para_AllOp%tab_Op(iOp)%para_Tnum%NonGcteRange(1),      &
+                 para_AllOp%tab_Op(iOp)%para_Tnum%NonGcteRange(2)
+              iterm = para_AllOp%tab_Op(iOp)%derive_term_TO_iterm(i,0)
+              Grid_cte(iterm)     = .FALSE. ! KEO
+            DO j=para_AllOp%tab_Op(iOp)%para_Tnum%NonGcteRange(1),      &
+                 para_AllOp%tab_Op(iOp)%para_Tnum%NonGcteRange(2)
+                iterm = para_AllOp%tab_Op(iOp)%derive_term_TO_iterm(i,j)
+                Grid_cte(iterm)     = .FALSE. ! KEO
+              END DO
+            END DO
+
+          END IF
+          IF (para_AllOp%tab_Op(iOp)%para_Tnum%Gdiago .AND. para_AllOp%tab_Op(iOp)%n_op == 0) THEN
+            DO i=1,para_AllOp%tab_Op(1)%mole%nb_act
+            DO j=1,para_AllOp%tab_Op(1)%mole%nb_act
+              IF (i /= j) THEN
+                iterm = para_AllOp%tab_Op(iOp)%derive_term_TO_iterm(i,j)
+                Grid_cte(iterm)     = .TRUE. ! off diag terms
+              END IF
+            END DO
+            END DO
           END IF
           IF (para_AllOp%tab_Op(iOp)%para_Tnum%Gcte .AND. para_AllOp%tab_Op(iOp)%name_Op(1:3) == "Mu_") THEN
             Grid_cte(:) = .TRUE.  ! KEO, rotation, Mu_xx,Mu_xy...

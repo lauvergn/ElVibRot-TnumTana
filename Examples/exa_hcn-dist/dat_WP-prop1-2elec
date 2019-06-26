@@ -16,7 +16,7 @@ cd $here
 
 nice $DIR_vib/vib << ** >res
  &system base_FileName='/utmp/lauvergn' /
- &constantes /
+ &constantes ene_unit='au' /
  &variables
          nrho=2
          Old_Qtransfo=f
@@ -51,16 +51,16 @@ pi 3.141592653589793238462643383279d0
 dh 0.0
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
- &basis_nD iQact(1)=2 name="boxAB" nb=15 nq=17 A=1.7 B=2.7 /
+ &basis_nD iQact(1)=2 name="boxAB" nb=31 nq=32 A=1.7 B=2.7 /
  &inactives /
 
  &actives test=f direct=2 /
  &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t 
           print_psi=0 psi1D_Q0=t psi2D_Q0=t
-          Rho1D=t Rho2D=t Rho_type=1 /
+          Rho1D=t Rho2D=t Rho_type=1 coherence=1 /
 
  &propa
-        WPTmax=100. 'fs' WPdeltaT=10. 'fs' nb_micro=10
+        WPTmax=100. 'fs' WPdeltaT=0.1 'fs' nb_micro=1
 
         n_WPecri=1 WPpsi2=t WPpsi=t Write_WPAdia=t
 
@@ -73,6 +73,8 @@ dh 0.0
  &defWP0 sigma=0.3,Qeq=0.9 imp_k=0.0 /
  &defWP0 sigma=0.2,Qeq=2.2 imp_k=0.0 /
 **
+
+ls /utmp/lauvergn
 exit
 &basis_nD nb_basis=2 name="direct_prod" Type_OF_nDindB=0 Norm_OF_nDindB=50. packed=f /
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /

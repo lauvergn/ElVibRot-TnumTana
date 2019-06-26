@@ -71,11 +71,8 @@
       integer           :: i,no
 
 !------ working parameters --------------------------------
-      !logical :: SGtype4 = .FALSE.
-      logical :: SGtype4 = .TRUE.
-
-      logical :: direct_KEO
-
+      logical :: SGtype4 = .FALSE.
+      !logical :: SGtype4 = .TRUE.
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug=.FALSE.
@@ -121,11 +118,6 @@
       para_propa%march_error = .FALSE.
       no = para_propa%file_autocorr%unit
 
-      direct_KEO = para_H%para_ReadOp%para_FileGrid%Save_MemGrid
-      direct_KEO = direct_KEO .AND. para_H%BasisnD%dnGGRep
-      direct_KEO = direct_KEO .AND. (para_H%type_Op == 10)
-      direct_KEO = direct_KEO .AND. para_H%direct_KEO
-
       SGtype4    = SGtype4 .AND. (para_H%BasisnD%SparseGrid_type == 4)
 
       SELECT CASE (para_propa%type_WPpropa)
@@ -135,9 +127,9 @@
         CALL march_cheby(T,no,WP(1),WP0(1),para_H,para_propa)
 
       CASE (2)
-        IF (SGtype4 .AND. direct_KEO) THEN
-          !CALL  march_noD_SG4_GridRep(T,no,WP(1),WP0(1),para_H,para_propa)
-          CALL  march_noD_SG4_BasisRep(T,no,WP(1),WP0(1),para_H,para_propa)
+        !IF (SGtype4 .AND. direct_KEO) THEN
+        IF (SGtype4) THEN
+          CALL  march_noD_SG4(T,no,WP(1),WP0(1),para_H,para_propa)
         ELSE
           CALL  march_noD(T,no,WP(1),WP0(1),para_H,para_propa)
         END IF
@@ -1587,14 +1579,25 @@
       para_H%E0                   = para_propa%para_poly%E0
       para_H%Esc                  = para_propa%para_poly%Esc
 
+      IF (debug) THEN
+        write(out_unitp,*) 'deltaT',para_propa%WPdeltaT
+        write(out_unitp,*) 'deltaE',para_propa%para_poly%deltaE
+        write(out_unitp,*) 'alpha ',para_propa%para_poly%alpha
+        write(out_unitp,*) 'E0    ',para_H%E0
+        write(out_unitp,*) 'Esc   ',para_H%Esc
+        write(out_unitp,*) 'ncheby',para_propa%para_poly%npoly
+      END IF
+
       psi0Hkpsi0(:) = CZERO
 
-      r = HALF * para_propa%para_poly%deltaE * para_propa%WPdeltaT
+      r = max(ONE,HALF * para_propa%para_poly%deltaE * para_propa%WPdeltaT)
       CALL cof(r,para_propa%para_poly%npoly,para_propa%para_poly%coef_poly)
 
-      !write(out_unitp,*) 'r,deltaE,WPdeltaT',r,para_propa%para_poly%deltaE,para_propa%WPdeltaT
-      !write(out_unitp,*) 'npoly,coef_poly',para_propa%para_poly%npoly,  &
-      !  para_propa%para_poly%coef_poly(1:para_propa%para_poly%npoly)
+      IF (debug) THEN
+        write(out_unitp,*) 'r,deltaE,WPdeltaT',r,para_propa%para_poly%deltaE,para_propa%WPdeltaT
+        write(out_unitp,*) 'npoly',para_propa%para_poly%npoly
+        !write(out_unitp,*) 'coef_poly',para_propa%para_poly%coef_poly(1:para_propa%para_poly%npoly)
+      END IF
 
       psi0Hkpsi0(0) = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
 
@@ -1642,11 +1645,8 @@
          jt_exit = jt
          IF (debug) write(out_unitp,*) 'jt,norms',jt,norm_exit
 
-          IF (norm_exit > TEN**15) THEN
-            write(out_unitp,*) ' ERROR in march_cheby'
-            write(out_unitp,*) ' Norm of the vector is TOO large (> 10^15)',    &
-                                                jt,norm_exit
-           write(out_unitp,*) ' => Reduce the time step !!'
+         IF (norm_exit > TEN**15) THEN
+           write(out_unitp,*) ' WARNING: Norm^2 of the vector is TOO large (> 10^15)',jt,norm_exit
            para_propa%march_error = .TRUE.
            EXIT
          END IF
@@ -1657,12 +1657,11 @@
 
       END DO
       write(out_unitp,*) 'jt_exit,norms',jt_exit,abs(w2%norme),norm_exit
+      para_propa%para_poly%npoly_Opt = jt_exit
 
-      IF (norm_exit > para_propa%para_poly%poly_tol) THEN
+      IF (.NOT. para_propa%march_error .AND. norm_exit > para_propa%para_poly%poly_tol) THEN
         write(out_unitp,*) ' ERROR in march_cheby'
-        write(out_unitp,*) ' Norm of the last vector TOO large',norm_exit
-        write(out_unitp,*) ' poly_tol: ',para_propa%para_poly%poly_tol
-        write(out_unitp,*) ' => npoly TOO small',para_propa%para_poly%npoly
+        write(out_unitp,*) ' WARNING: Norm^2 of the last vector TOO large',jt_exit,norm_exit
         para_propa%march_error = .TRUE.
       END IF
 

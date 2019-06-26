@@ -2064,8 +2064,8 @@
 
 !      -----------------------------------------------------------------
       integer :: err_mem,memory
-      logical, parameter :: debug=.FALSE.
-      !logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub = 'calc4_NM_TO_sym'
 !      -----------------------------------------------------------------
        IF (debug) THEN
@@ -2213,7 +2213,6 @@
         CALL alloc_NParray(d0k_save,(/nb_NM,nb_NM/),"d0k_save",name_sub)
         CALL alloc_NParray(d0c_ini, (/nb_NM,nb_NM/),"d0c_ini", name_sub)
         CALL alloc_NParray(d0eh,    (/ nb_NM /),    "d0eh",    name_sub)
-
 
         CALL get_hess_k(d0k,d0h,nb_NM,Qact,mole_1,para_Tnum,          &
                         Ind_Coord_AtBlock(i_Block),Ind_Coord_PerBlock,  &
@@ -2970,6 +2969,7 @@
       TYPE(Type_dnS)       :: dnECC(1,1),dnE(1,1)
       TYPE (param_dnMatOp) :: dnMatOp(1)
 
+      real (kind=Rkind) :: d0eh(nb_NM),d0ch(nb_NM,nb_NM),d0hh(nb_NM,nb_NM)
 
 
       integer :: i,j,ib,jb,k,i_act,i_sym,k_act,k_sym,ierr
@@ -3103,6 +3103,7 @@
 
           CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_NM,1,nderiv=2)
           CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+
           CALL Get_Hess_FROM_Tab_OF_dnMatOp(d0h,dnMatOp)
           CALL Get_Grad_FROM_Tab_OF_dnMatOp(d0grad,dnMatOp)
           CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
@@ -3141,6 +3142,15 @@
         CALL Write_Mat(d0k,out_unitp,5,Rformat='f12.6')
         CALL flush_perso(out_unitp)
       END IF
+
+      IF (debug) THEN
+        d0hh = d0h
+        CALL diagonalization(d0hh,d0eh,d0ch,nb_NM,2,1,.TRUE.)
+        DO i=1,nb_NM,3
+          write(out_unitp,*) i,'d0eh:',d0eh(i:min(i+2,nb_NM))
+        END DO
+      END IF
+
 
       IF (print_level > 1) THEN
         write(out_unitp,*) '========================================='
@@ -4768,6 +4778,7 @@
         CALL flush_perso(out_unitp)
       !END IF
 !-----------------------------------------------------------
+
       END SUBROUTINE Finalyze_TnumTana_Coord_PrimOp
 
 

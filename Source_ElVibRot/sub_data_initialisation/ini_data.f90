@@ -97,12 +97,11 @@ SUBROUTINE ini_data(const_phys,                                         &
 
 
 !----- working variables ---------------------------------------------
-      integer       :: i,j,rk,rl,i_term,iOp,it
+      integer       :: i,j,rk,rl,i_term,iOp,it,nq
       real (kind=Rkind), allocatable :: Qana(:),Qact(:)
 
 
       TYPE(Type_dnMat) :: dnGG
-      integer       :: nq
 
 
 !----- for debuging --------------------------------------------------
@@ -389,6 +388,14 @@ SUBROUTINE ini_data(const_phys,                                         &
        !END IF
        !STOP
 
+!=====================================================================
+!=====================================================================
+      nq = get_nq_FROM_basis(para_AllBasis%BasisnD)
+      CALL MemoryEstimation(para_AllBasis%BasisnD%nb,nq,mole%nb_act,    &
+                            ComOp%nb_bie,para_propa%para_Davidson%nb_WP)
+!=====================================================================
+!=====================================================================
+
 
 !=====================================================================
 !     initialization of AllOp,
@@ -538,4 +545,82 @@ SUBROUTINE ini_data(const_phys,                                         &
         write(out_unitp,*) 'END ',name_sub
       END IF
 !---------------------------------------------------------------------
-      END SUBROUTINE ini_data
+END SUBROUTINE ini_data
+SUBROUTINE MemoryEstimation(nb,nq,nb_Q,nb_channels,nb_psi)
+USE mod_system
+IMPLICIT NONE
+
+integer, intent(in) :: nb,nq,nb_Q,nb_channels,nb_psi
+
+integer :: GridMem,BasisMem
+integer :: MappingSG4Meme,PotMem,KEO_type1_Mem,KEO_type10_Mem,psi_Mem
+integer :: Mem,nb_psi_loc
+character (len=2) :: MemUnit
+
+GridMem  = nq*Rkind
+BasisMem = nb*Rkind
+
+MappingSG4Meme = nq*Ikind
+
+psi_Mem        = BasisMem * nb_channels
+PotMem         = GridMem  * nb_channels**2
+KEO_type1_Mem  = PotMem   * (nb_Q+1)*(nb_Q+2)/2 ! F2+F1+vep
+KEO_type10_Mem = GridMem  * (nb_Q**2 + 2) ! size of G + jac+rho
+              ! We suppose, the KEO are the same on each channel !! Pb...
+
+write(out_unitp,*) "============================================================"
+write(out_unitp,*) "============================================================"
+write(out_unitp,*) "====== Memory psi and H ===================================="
+
+write(out_unitp,*) "------------------------------------------------------------"
+Mem = psi_Mem
+CALL convertMem(Mem,MemUnit)
+write(out_unitp,'(a,i0,x,a)') "One psi: ",Mem,MemUnit
+  Mem = psi_Mem * 4
+  CALL convertMem(Mem,MemUnit)
+  write(out_unitp,'(a,i0,x,a)') "One psi's with Davidson (num_resetH=1): ",Mem,MemUnit
+write(out_unitp,*) "------------------------------------------------------------"
+
+IF (nb_psi > 0) THEN
+  Mem = psi_Mem * nb_psi
+  CALL convertMem(Mem,MemUnit)
+  write(out_unitp,'(i0,a,i0,x,a)') nb_psi," psi's: ",Mem,MemUnit
+  Mem = psi_Mem * nb_psi * 4
+  CALL convertMem(Mem,MemUnit)
+  write(out_unitp,'(i0,a,i0,x,a)') nb_psi," psi's with Davidson (num_resetH=1): ",Mem,MemUnit
+  write(out_unitp,*) "------------------------------------------------------------"
+END IF
+
+write(out_unitp,*) "====== Memory for Type 1 (F2+F1+Vep+V) ====================="
+write(out_unitp,*) "-SG4 Full direct --"
+Mem = MappingSG4Meme
+CALL convertMem(Mem,MemUnit)
+write(out_unitp,'(a,i0,x,a)') "H memory (mapping):       ",Mem,MemUnit
+write(out_unitp,*) "-SG4 KEO direct --"
+Mem = MappingSG4Meme+PotMem
+CALL convertMem(Mem,MemUnit)
+write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V):     ",Mem,MemUnit
+write(out_unitp,*) "-SG4 --"
+Mem = MappingSG4Meme+KEO_type1_Mem ! PotMem is not here because is already counted in KEO_type1_Mem
+CALL convertMem(Mem,MemUnit)
+write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
+
+write(out_unitp,*) "====== Memory for Type 10 (G+V) ============================"
+write(out_unitp,*) "-SG4 Full direct --"
+Mem = MappingSG4Meme
+CALL convertMem(Mem,MemUnit)
+write(out_unitp,'(a,i0,x,a)') "H memory (mapping):       ",Mem,MemUnit
+write(out_unitp,*) "-SG4 KEO direct --"
+Mem = MappingSG4Meme+PotMem
+CALL convertMem(Mem,MemUnit)
+write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V):     ",Mem,MemUnit
+write(out_unitp,*) "-SG4 --"
+Mem = MappingSG4Meme+PotMem+KEO_type10_Mem
+CALL convertMem(Mem,MemUnit)
+write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
+
+
+write(out_unitp,*) "============================================================"
+write(out_unitp,*) "============================================================"
+
+END SUBROUTINE MemoryEstimation

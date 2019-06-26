@@ -16,7 +16,6 @@
                                  para_Tnum,mole)
       USE mod_system
       USE mod_Tnum
-      USE mod_Constant
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -63,19 +62,26 @@
       real (kind=Rkind) :: Tdef2_tot(mole%nb_var,mole%nb_var)
       real (kind=Rkind) :: Tdef1_tot(mole%nb_var)
 
-      integer           :: i
 
-      integer, parameter :: ndim=24
-      real (kind=Rkind), parameter :: w(ndim) = (/                   &
-        0.09357_Rkind, 0.0740_Rkind, 0.1273_Rkind, 0.1568_Rkind,     &
-        0.0400_Rkind, 0.0589_Rkind, 0.0778_Rkind, 0.0968_Rkind,      &
-        0.1157_Rkind, 0.1347_Rkind, 0.1536_Rkind, 0.1726_Rkind,      &
-        0.1915_Rkind, 0.2105_Rkind, 0.2294_Rkind, 0.2484_Rkind,      &
-        0.2673_Rkind, 0.2863_Rkind, 0.3052_Rkind, 0.3242_Rkind,      &
-        0.3431_Rkind, 0.3621_Rkind, 0.3810_Rkind, 0.4000_Rkind /)
-
-      real (kind=Rkind) :: eVTOau
 !-------------------------------------------------------------------------
+
+      real (kind=Rkind), parameter :: auTOcm_inv = 219474.63144319772_Rkind
+      real (kind=Rkind), parameter :: inv_Name   = 1822.888485541_Rkind
+
+      real (kind=Rkind), parameter :: Iner = 1849.60842365259637412949_Rkind ! M.R^2 en ua
+
+      real (kind=Rkind), parameter :: mH   = 1837.1526464003414_Rkind ! mH ! Tnum
+      !real (kind=Rkind), parameter :: mH   = 1.00800_Rkind * inv_Name ! mH ! Bacic
+
+      real (kind=Rkind), parameter :: mH2  = TWO*mH ! mH2
+
+      integer       :: i,iQdyn
+
+      !real (kind=Rkind), parameter :: BH2 = 59.322_Rkind / auTOcm_inv ! from Valdez, PCCP, 2011, 13, 2935
+      !real (kind=Rkind), parameter :: BH2 = 59.32266_Rkind / auTOcm_inv ! from Bacic(ref)
+      real (kind=Rkind) :: BH2
+
+      real (kind=Rkind) :: R,th,phi,c,s
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug = .FALSE.
@@ -91,12 +97,10 @@
            CALL Write_mole(mole)
            write(out_unitp,*)
          END IF
-         write(out_unitp,*) 'JJ',para_Tnum%JJ
+         write(out_unitp,*)
          write(out_unitp,*)
        END IF
 !-----------------------------------------------------------
-
-      eVTOau = ONE/get_Conv_au_TO_unit(quantity='E',Unit='eV')
 
       Tdef2(:,:) = ZERO
       Tdef1(:)   = ZERO
@@ -106,14 +110,57 @@
       Tcor1(:)   = ZERO
       Trot(:,:)  = ZERO
 
-      DO i=1,ndim
-        Tdef2(i,i) = -HALF*w(i)*eVTOau
+      Tdef2_tot(:,:) = ZERO
+      Tdef1_tot(:)   = ZERO
+
+
+      DO i=1,mole%nb_var
+        Tdef2_tot(i,i) = -HALF
       END DO
 
-      !write(6,*) 'Tdef',Tdef2
+
+      R   = Qsym0(1)
+
+      th  = Qsym0(9)
+      phi = Qsym0(10)
+
+      BH2 = ONE/(mH*R**2)
+
+      s = sin(th)
+      c = cos(th)
+
+      rho = s
+
+      Tdef2_tot(1,1)   = -HALF/(mH/TWO)
+
+      Tdef2_tot(6,6)   = -HALF/(mH*TWO)
+      Tdef2_tot(7,7)   = -HALF/(mH*TWO)
+      Tdef2_tot(8,8)   = -HALF/(mH*TWO)
+
+      Tdef2_tot(9,9)   = -BH2
+      Tdef2_tot(10,10) = -BH2/(s*s)
+
+      Tdef1_tot(9)     = -BH2 * c/s
+
+      DO i=1,mole%nb_act
+        iQdyn = mole%liste_QactTOQsym(i)
+        Tdef2(i,i) = Tdef2_tot(iQdyn,iQdyn)
+        Tdef1(i)   = Tdef1_tot(iQdyn)
+      END DO
+
+
+      DO i=1,3
+        Trot(i,i) = -HALF
+      END DO
+
 
 !-----------------------------------------------------------
       IF (debug .OR. para_Tnum%WriteT) THEN
+
+        CALL Write_f2f1vep(Tdef2,Tdef1,vep,rho,mole%nb_act)
+        IF (para_Tnum%JJ .GT. 0) CALL Write_TcorTrot(Tcor2,Tcor1,Trot,   &
+                                           mole%nb_act)
+
         write(out_unitp,*) 'END calc_f2_f1Q_ana'
       END IF
 !-----------------------------------------------------------

@@ -916,6 +916,8 @@ MODULE mod_Lib_QTransfo
       real (kind=Rkind) :: v2(3),norm2
       real (kind=Rkind) :: angle
 
+      real (kind=Rkind) :: c
+
 !     write(out_unitp,*) 'v1,norm1',v1,norm1
 !     write(out_unitp,*) 'v2,norm2',v2,norm2
 
@@ -926,7 +928,15 @@ MODULE mod_Lib_QTransfo
         STOP
       END IF
 
-      angle = acos(dot_product(v1,v2)/(norm1*norm2))
+      c = dot_product(v1,v2)/(norm1*norm2)
+
+      IF (c < -ONE) THEN
+        angle = pi
+      ELSE IF (c > ONE) THEN
+        angle = ZERO
+      ELSE
+        angle = acos(c)
+      END IF
       !write(out_unitp,*) 'angle',angle
 
       end subroutine calc_angle

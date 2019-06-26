@@ -1108,6 +1108,7 @@
       DO ib=1,basis_SG%nb_basis
         nDNum_OF_Lmax(ib) = basis_SG%tab_Pbasis(ib)%Pbasis%para_SGType2%Num_OF_Lmax
       END DO
+      write(6,*) 'nDNum_OF_Lmax',nDNum_OF_Lmax
 
       allocate(tab_i_TO_l(basis_SG%nb_basis))
       DO ib=1,basis_SG%nb_basis
@@ -1124,15 +1125,16 @@
       END DO
 
       CALL dealloc_nDindex(basis_SG%nDindB)
-      basis_SG%nDindB%packed = .TRUE.
-
       IF (count(nDNum_OF_Lmax == 0) == basis_SG%nb_basis .AND.          &
           basis_SG%MaxCoupling_OF_nDindB >= basis_SG%nb_basis) THEN
+        basis_SG%nDindB%packed = .FALSE.
+        basis_SG%nDindB%packed = .TRUE. ! with false the mapping is too long !!
         CALL init_nDindexPrim(basis_SG%nDindB,basis_SG%nb_basis,nDsize, &
                               type_OF_nDindex=5,Lmax=LB,                &
                              MaxCoupling=basis_SG%MaxCoupling_OF_nDindB,&
                               tab_i_TO_l=tab_i_TO_l)
       ELSE
+        basis_SG%nDindB%packed = .TRUE.
         CALL init_nDindexPrim(basis_SG%nDindB,                          &
                              basis_SG%nb_basis,nDsize,type_OF_nDindex=5,&
                              Lmax=LB,nDNum_OF_Lmax=nDNum_OF_Lmax,       &
@@ -1288,6 +1290,8 @@
 
 
       CALL Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
+      !CALL unpack_nDindex(basis_SG%nDindB)
+
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set para_SGType2%nDind_DPG and para_SGType2%nDind_DPB: done'
         CALL flush_perso(out_unitp)
@@ -1295,7 +1299,7 @@
 
       write(out_unitp,*) 'nbb         (Smolyak Rep)',nbb
       write(out_unitp,*) 'nqq         (Smolyak Rep)',nqq
-
+      CALL flush_perso(out_unitp)
 
       ! set of nrho ---------------------------------------
       iq = 1

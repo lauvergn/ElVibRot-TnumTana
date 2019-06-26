@@ -1033,7 +1033,7 @@ END IF
 
       IF (nderiv >= 1) THEN
 
-        CALL NFind_Label(nio,'$GRAD',located,7)
+        CALL NFind_Label(nio,'$GRAD',located,6)
         IF (debug) write(out_unitp,*) 'located gradient',located
         IF (located) THEN
           read(nio,*,iostat=err)

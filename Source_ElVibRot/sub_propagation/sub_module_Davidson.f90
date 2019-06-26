@@ -420,7 +420,7 @@ CONTAINS
 
         !----------------------------------------------------------
         !- convergence ? ------------------------------------------
-        nb_conv_states = count( converge(1:nb_diago) )
+        nb_conv_states   = count( converge(1:nb_diago) )
         nb_unconv_states = nb_diago-nb_conv_states
         write(out_unitp,*) 'it, conv',it,conv
         write(out_unitp,*) 'it, nb   converged state(s)',it,nb_conv_states
@@ -694,8 +694,8 @@ CONTAINS
  !----- for debuging --------------------------------------------------
  integer :: err_mem,memory
  character (len=*), parameter :: name_sub='ReadWP0_Davidson'
- !logical, parameter :: debug=.FALSE.
- logical, parameter :: debug=.TRUE.
+ logical, parameter :: debug=.FALSE.
+ !logical, parameter :: debug=.TRUE.
  !-----------------------------------------------------------
 
  IF (debug) THEN

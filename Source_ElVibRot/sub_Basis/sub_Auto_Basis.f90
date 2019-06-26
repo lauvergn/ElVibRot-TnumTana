@@ -533,8 +533,10 @@
                                          para_PES,para_ReadOp,ComOp_loc)
         END DO
 
+        CALL init_nDval_OF_nDindex(BasisnD%nDindB,nDval)
         DO ib=1,BasisnD%nb
-          CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
+          CALL ADD_ONE_TO_nDindex(BasisnD%nDindB,nDval)
+          !CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
 
           BasisnD%EneH0(ib) = ZERO
           DO i=1,BasisnD%nb_basis
@@ -617,6 +619,8 @@ END SUBROUTINE RecSet_EneH0
       TYPE (param_AllBasis) :: para_AllBasis_loc
 
       integer       :: i,iact,isym,JJ
+      integer       :: NonGcteRange(2)
+
       TYPE(REAL_WU) :: RWU_E
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -655,6 +659,9 @@ END SUBROUTINE RecSet_EneH0
       para_PES%type_HamilOp       = 1
       direct_KEO                  = para_PES%direct_KEO
       para_PES%direct_KEO         = .FALSE.
+
+      NonGcteRange(:)             = para_Tnum%NonGcteRange(:)
+      para_Tnum%NonGcteRange(:)   = 0
 
       ! allocation of tab_Op
       para_AllOp_loc%nb_Op = 2 ! just H and S
@@ -765,6 +772,7 @@ END SUBROUTINE RecSet_EneH0
       para_PES%nb_scalar_Op                   = nb_scalar_Op
       para_PES%calc_scalar_Op                 = calc_scalar_Op
       para_Tnum%JJ                            = JJ
+      para_Tnum%NonGcteRange(:)               = NonGcteRange(:)
 
       para_PES%type_HamilOp                   = type_HamilOp
       para_PES%direct_KEO                     = direct_KEO

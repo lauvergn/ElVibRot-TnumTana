@@ -325,15 +325,15 @@
       IMPLICIT NONE
 
 !----- for the active basis set ---------------------------------------
-      integer            :: nb,nq,nbc,nqc
-      integer            :: Nested,nq_max_Nested
-      integer            :: SparseGrid_type
-      logical            :: SparseGrid,With_L
-      logical            :: SparseGrid_With_Cuba    ! When 2 or more are true, the program choses the optimal one
-      logical            :: SparseGrid_With_Smolyak ! When only one is true, the program tries to use only one
-      logical            :: SparseGrid_With_DP      ! Remark: when only SparseGrid_With_Cuba=T, and the grid does not exit the program stops
-      integer            :: L_TO_n_type,max_nb,max_nq
-      integer            :: L_SparseGrid,L_TO_nq_A,L_TO_nq_B,L_TO_nq_C,Lexpo_TO_nq
+      integer              :: nb,nq,nbc,nqc
+      integer              :: Nested,nq_max_Nested
+      integer              :: SparseGrid_type
+      logical              :: SparseGrid,With_L
+      logical              :: SparseGrid_With_Cuba    ! When 2 or more are true, the program choses the optimal one
+      logical              :: SparseGrid_With_Smolyak ! When only one is true, the program tries to use only one
+      logical              :: SparseGrid_With_DP      ! Remark: when only SparseGrid_With_Cuba=T, and the grid does not exit the program stops
+      integer              :: L_TO_n_type,max_nb,max_nq
+      integer              :: L_SparseGrid,L_TO_nq_A,L_TO_nq_B,L_TO_nq_C,Lexpo_TO_nq
       integer              :: L1_SparseGrid,L2_SparseGrid,Num_OF_Lmax
       integer              :: Type_OF_nDindB,MaxCoupling_OF_nDindB,nDinit_OF_nDindB
       integer              :: nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB

@@ -63,6 +63,12 @@
           logical                        :: AvQ           = .FALSE.   ! Average Values (Qact ...)
           integer,           allocatable :: Qtransfo_type(:)          ! ???type of the transformation
 
+          ! For qunatum coherence Mij = Int [rho_i(Q)*rho_j(Q)/rho(Q) dQ]
+          integer                        :: coherence = 0       ! default, 0: no coherence calculation
+                                                                !          1: coherence calculation
+          real (kind=Rkind)              :: coherence_epsi = ONETENTH**6  ! To avoid numerical trouble when rho(Q) is almost zero
+
+
           ! 1D and 2D cut of psi at Qana
           TYPE (param_file)              :: file_PsiCut
           logical                        :: psi1D_Q0 = .FALSE.  ! reduced densities (1D or 2D) along coordinates
@@ -71,6 +77,7 @@
 
           ! write the psi
           TYPE (param_file)              :: file_Psi
+          logical                        :: Write_psi        = .FALSE. ! write psi (or psi^2 ...)
           logical                        :: Write_psi2_Grid  = .FALSE. ! write the density on the grid
           logical                        :: Write_psi2_Basis = .FALSE. ! write the density on the basis functions
           logical                        :: Write_psi_Grid  = .FALSE.  ! write psi on the grid
@@ -95,6 +102,7 @@
                               Write_psi2_Grid,Write_psi2_Basis,   &
                               Write_psi_Grid,Write_psi_Basis,     &
                               AvQ,Qtransfo_type,                  &
+                              coherence,coherence_epsi,           &
                               Rho1D,Rho2D,Weight_Rho,Qana_Weight, &
                               Rho_type,                           &
                               psi1D_Q0,psi2D_Q0,Qana,             &
@@ -113,6 +121,9 @@
 
       logical,                        optional :: AvQ
       integer,           allocatable, optional :: Qtransfo_type(:)     ! type of the transformation
+
+      integer,                         optional :: coherence         ! coherence_tyep (0 non calculation)
+      real (kind=Rkind),               optional :: coherence_epsi    ! To avoid numerical trouble when rho(Q) is almost zero
 
       logical,                        optional :: Rho1D,Rho2D
       integer,           allocatable, optional :: Weight_Rho(:)        ! enable to use a weight (0=>constant=1, +/-1=>step ...)
@@ -154,6 +165,8 @@
       IF (present(Write_psi2_Basis))      ana_psi%Write_psi2_Basis      = Write_psi2_Basis
       IF (present(Write_psi_Grid))        ana_psi%Write_psi_Grid        = Write_psi_Grid
       IF (present(Write_psi_Basis))       ana_psi%Write_psi_Basis       = Write_psi_Basis
+      ana_psi%Write_psi = ana_psi%Write_psi2_Grid .OR. ana_psi%Write_psi2_Basis .OR.    &
+                          ana_psi%Write_psi_Grid  .OR. ana_psi%Write_psi_Basis
 
       !------------------------------------------------------------
       ! for the reduced denstity analysis
@@ -221,6 +234,14 @@
       END IF
       !------------------------------------------------------------
 
+      !------------------------------------------------------------
+      ! coherence calculation
+      ana_psi%coherence = 0       ! default, 0: no coherence calculation
+      IF (present(coherence)) ana_psi%coherence = coherence
+
+      ana_psi%coherence_epsi = ONETENTH**6
+      IF (present(coherence_epsi)) ana_psi%coherence_epsi = coherence_epsi
+      !------------------------------------------------------------
 
       !------------------------------------------------------------
       ! Boltzman population analysis
@@ -298,10 +319,14 @@
      ana_psi1%num_psi       = ana_psi2%num_psi
      ana_psi1%GridDone      = ana_psi2%GridDone
 
+     ana_psi1%Write_psi           = ana_psi2%Write_psi
      ana_psi1%Write_psi2_Grid     = ana_psi2%Write_psi2_Grid
      ana_psi1%Write_psi2_Basis    = ana_psi2%Write_psi2_Basis
      ana_psi1%Write_psi_Grid      = ana_psi2%Write_psi_Grid
      ana_psi1%Write_psi_Basis     = ana_psi2%Write_psi_Basis
+
+     ana_psi1%Coherence_epsi      = ana_psi2%Coherence_epsi
+     ana_psi1%Coherence           = ana_psi2%Coherence
 
      ana_psi1%AvQ = ana_psi2%AvQ
      IF (allocated(ana_psi2%Qtransfo_type)) THEN
@@ -416,6 +441,11 @@
                 write(out_unitp,*) 'Qtransfo_type',ana_psi%Qtransfo_type
 
       write(out_unitp,*)
+      write(out_unitp,*) 'Coherence:?'
+      write(out_unitp,*) 'Coherence (Coherence_type)',ana_psi%Coherence
+      write(out_unitp,*) 'Coherence_epsi',ana_psi%Coherence_epsi
+
+      write(out_unitp,*)
       write(out_unitp,*) '1D and 2D cut of psi at Qana:'
       write(out_unitp,*) 'file_PsiCut:'
       CALL file_Write(ana_psi%file_PsiCut)
@@ -425,7 +455,7 @@
 
 
       write(out_unitp,*)
-      write(out_unitp,*) 'write  psi:'
+      write(out_unitp,*) 'Write_psi:',ana_psi%Write_psi
       write(out_unitp,*) 'file_Psi:'
       CALL file_Write(ana_psi%file_Psi)
       write(out_unitp,*) 'Write_psi2_Grid',ana_psi%Write_psi2_Grid

@@ -48,6 +48,7 @@
       PUBLIC :: sub_test_tab_ub, sub_test_tab_lb, sub_test_Bigtab_ub, sub_test_Bigtab_lb
       PUBLIC :: Check_mem, UnCheck_mem
       PUBLIC :: error_memo_allo, error_lmemo_allo
+      PUBLIC :: convertMem
 
       CONTAINS
 
@@ -441,6 +442,22 @@
 !$OMP END CRITICAL (Write_mem_tot_CRIT)
  END SUBROUTINE Write_mem_tot
 
+ SUBROUTINE convertMem(mem,MemUnit)
+ integer,           intent(inout) :: mem
+ character (len=2), intent(inout) :: MemUnit
 
-      END MODULE mod_memory
+   IF (mem < 1024) THEN
+     MemUnit='O'
+   ELSE IF (mem < 1024**2) THEN
+     mem = mem / 1024
+     MemUnit='kO'
+   ELSE IF (mem < 1024**3) THEN
+     mem = mem / 1024**2
+     MemUnit='MO'
+   ELSE
+     mem = mem / 1024**3
+     MemUnit='GO'
+   END IF
+ END SUBROUTINE convertMem
+END MODULE mod_memory
 
