@@ -287,7 +287,7 @@ write(6,*) 'coucou SG4', name_sub
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_psi), intent(inout)   :: psi
-      integer,          intent(inout)   :: tab_derQdyn(2)
+      integer,          intent(in)      :: tab_derQdyn(2)
 
 !------ working variables ---------------------------------
       integer       :: ibaie0,iqaie0,ibaie1,iqaie1,ibie

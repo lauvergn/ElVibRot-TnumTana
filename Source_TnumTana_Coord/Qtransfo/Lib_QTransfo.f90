@@ -28,12 +28,13 @@ MODULE mod_Lib_QTransfo
                            sub_dnvec1_plus_dnvec2_to_dnvec3,         &
                            sub_crossproduct_dnvec1_dnvec2_to_dnvec3, &
                            sub_normalize_dnvec, sub_dns_to_dnvec,    &
-                           check_alloc_dnvec
+                           check_alloc_dnvec, dealloc_dnS,           &
+                           sub_dnS1_wPLUS_dnS2_TO_dnS3
       IMPLICIT NONE
 
       PRIVATE
       PUBLIC :: sub3_dnx_AT1, sub3_dnx_AT2_new, sub3_dnx_AT3_new
-      PUBLIC :: sub3_dnx_AT4, sub3_dnx_AT4_cart, sub3_dnx_AT4_poly
+      PUBLIC :: sub3_dnx_AT4, sub3_dnx_AT4_cart, sub3_dnx_AT4_poly, sub3_dnx_AT4_cart_new
       PUBLIC :: sub3_dnx_TO_dnVec, sub3_dnVec_PLUS_x1TOxf, sub3_dnVec_TOxf
       PUBLIC :: Write_Cart, Write_dnx
       PUBLIC :: calc_vector, calc_vector2, calc_cross_product
@@ -423,6 +424,83 @@ MODULE mod_Lib_QTransfo
 
       end subroutine sub3_dnx_AT4_cart
 !================================================================
+!       atom 4 :  en Cartesienne
+!================================================================
+!
+      SUBROUTINE sub3_dnx_AT4_cart_new(dnx,icf,dna,dnb,dnc,dnx3,dny3,dnz3,nderiv)
+      IMPLICIT NONE
+
+      TYPE (Type_dnVec) :: dnx
+      integer           :: icf
+
+      TYPE (Type_dnS)   :: dna,dnb,dnc
+      TYPE (Type_dnVec) :: dnx3,dny3,dnz3
+      integer           :: nderiv
+
+
+      TYPE (Type_dnS)   :: dnS1,dnS2
+!     -----------------------------------------------------------------
+!      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      integer, parameter :: nderiv_debug = 1
+      character (len=*), parameter :: name_sub = 'sub3_dnx_AT4_cart_new'
+!     -----------------------------------------------------------------
+
+!     -----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nderiv',nderiv
+        write(out_unitp,*) 'icf',icf
+        write(out_unitp,*) 'dna'
+        CALL Write_dnSVM(dna,nderiv=nderiv_debug)
+        write(out_unitp,*) 'dnb'
+        CALL Write_dnSVM(dnb,nderiv=nderiv_debug)
+        write(out_unitp,*) 'dnb'
+        CALL Write_dnSVM(dnb,nderiv=nderiv_debug)
+      END IF
+!     -----------------------------------------------------------------
+
+      ! x component
+      !dnS = dna * dnx3%d0(1) + dnb * dny3%d0(1) + dnc * dnz3%d0(1)
+      CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dna,dnx3%d0(1),dnb,dny3%d0(1),dnS1,nderiv)
+      CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnS1,ONE,dnc,dnz3%d0(1),dnS2,nderiv)
+
+      CALL sub_dnS_TO_dnVec(dnS2,dnx,icf,nderiv)
+
+      ! y component
+      !dnS = dna * dnx3%d0(2) + dnb * dny3%d0(2) + dnc * dnz3%d0(2)
+      CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dna,dnx3%d0(2),dnb,dny3%d0(2),dnS1,nderiv)
+      CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnS1,ONE,dnc,dnz3%d0(2),dnS2,nderiv)
+
+      icf=icf+1
+      CALL sub_dnS_TO_dnVec(dnS2,dnx,icf,nderiv)
+
+      ! z component
+      !dnS = dna * dnx3%d0(3) + dnb * dny3%d0(3) + dnc * dnz3%d0(3)
+      CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dna,dnx3%d0(3),dnb,dny3%d0(3),dnS1,nderiv)
+      CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnS1,ONE,dnc,dnz3%d0(3),dnS2,nderiv)
+
+      icf=icf+1
+      CALL sub_dnS_TO_dnVec(dnS2,dnx,icf,nderiv)
+
+
+      ! deallocate
+      CALL dealloc_dnS(dnS1)
+      CALL dealloc_dnS(dnS2)
+
+
+!     -----------------------------------------------------------------
+      IF (debug) THEN
+        icf=icf-2
+        write(out_unitp,*) 'icf',icf
+        CALL write_dnx(1,dnx%nb_var_vec,dnx,nderiv_debug)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!     -----------------------------------------------------------------
+
+      end subroutine sub3_dnx_AT4_cart_new
+
+!================================================================
 !       atom 4 : with d0d, (d0cval,d0sval) and (d0cdih,d0sdih)
 !       with polyspherical coordinates
 !
@@ -510,8 +588,8 @@ MODULE mod_Lib_QTransfo
 !     -----------------------------------------------------------------
 
 
-!      -----------------------------------------------------------------
-!      -----------------------------------------------------------------
+!      ----------------------------------------------------------------
+!      ----------------------------------------------------------------
 !      NOW :
 !      d0f1 = (d0d * d0sval) * d0cdih
 !      d0f2 = (d0d * d0sval) * d0sdih

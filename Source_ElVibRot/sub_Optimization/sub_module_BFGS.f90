@@ -42,6 +42,7 @@
       real (kind=Rkind) :: RMS_step            = 0.000040_Rkind
 
       logical           :: calc_hessian        = .FALSE.
+      logical           :: read_hessian        = .FALSE.
 
       real (kind=Rkind), pointer :: hessian_inv_init(:,:) => null()
 
@@ -60,11 +61,11 @@
 
       real (kind=Rkind) :: max_step
       real (kind=Rkind) :: RMS_step
-      logical           :: calc_hessian
+      logical           :: calc_hessian,read_hessian
 
 
       integer :: err_io
-      NAMELIST /BFGS/ max_iteration,max_grad,RMS_grad,max_step,RMS_step,calc_hessian
+      NAMELIST /BFGS/ max_iteration,max_grad,RMS_grad,max_step,RMS_step,calc_hessian,read_hessian
 
         max_iteration       = 10
 
@@ -74,10 +75,11 @@
         max_step            = 0.000060_Rkind
         RMS_step            = 0.000040_Rkind
         calc_hessian        = .FALSE.
+        read_hessian        = .FALSE.
 
         read(in_unitp,BFGS,IOSTAT=err_io)
         IF (err_io /= 0) THEN
-           write(out_unitp,*) ' WARNING in Read_param_BFGS'
+           write(out_unitp,*) ' ERROR in Read_param_BFGS'
            write(out_unitp,*) '  while reading the "BFGS" namelist'
            write(out_unitp,*) ' end of file or end of record'
            write(out_unitp,*) ' Check your data !!'
@@ -93,7 +95,14 @@
         para_BFGS%max_step            = max_step
         para_BFGS%RMS_step            = RMS_step
 
+        IF (calc_hessian .AND. read_hessian) THEN
+           write(out_unitp,*) ' ERROR in Read_param_BFGS'
+           write(out_unitp,*) '  Both calc_hessian and read_hessian are .TRUE., it not possible'
+           write(out_unitp,*) ' Check your data !!'
+           STOP
+        END IF
         para_BFGS%calc_hessian        = calc_hessian
+        para_BFGS%read_hessian        = read_hessian
 
       END SUBROUTINE Read_param_BFGS
 
@@ -162,7 +171,7 @@
 
 !---------- working variables ----------------------------------------
   TYPE (param_dnMatOp) :: dnMatOp(1)
-  integer              :: nderiv_alloc
+  integer              :: nderiv_alloc,nbcol,err
 
 !---------------------------------------------------------------------
 !      logical,parameter :: debug= .FALSE.
@@ -204,9 +213,12 @@
           CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
 
           CALL Get_Hess_FROM_Tab_OF_dnMatOp(hessian,dnMatOp) ! for the ground state
+          write(out_unitp,*) 'hessian'
+          CALL Write_Mat(hessian,out_unitp,5)
 
           CALL inv_m1_TO_m2(hessian,para_BFGS%hessian_inv_init,nb_Opt,0,ZERO)
 
+          write(out_unitp,*) 'hessian inverse'
           CALL Write_Mat(para_BFGS%hessian_inv_init,out_unitp,5)
 
           !-------- deallocation ---------------------------------------------
@@ -214,6 +226,49 @@
             CALL dealloc_NParray(hessian,'hessian',name_sub)
           END IF
           CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
+          !-------- end deallocation -----------------------------------------
+        END IF
+        IF (para_BFGS%read_hessian) THEN
+          write(out_unitp,*) ' The initial hessian is read in internal coordinates'
+          !-------- allocation -----------------------------------------------
+          CALL alloc_array(para_BFGS%hessian_inv_init,(/ nb_Opt,nb_Opt /),  &
+                          'para_BFGS%hessian_inv_init',name_sub)
+          IF (allocated(hessian)) THEN
+            CALL dealloc_NParray(hessian,'hessian',name_sub)
+          END IF
+          CALL alloc_NParray(hessian,(/ nb_Opt,nb_Opt /),'hessian',name_sub)
+          !-------- end allocation --------------------------------------------
+
+          !----- Hessian ------------------------------------
+          read(in_unitp,*,IOSTAT=err) nbcol
+          IF (err /= 0) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' "End of file", while reading nbcol'
+            write(out_unitp,*) ' Check your data !!'
+            STOP
+          END IF
+
+          IF (print_level > 1) write(out_unitp,*)'nbcol=',nbcol
+
+          CALL Read_Mat(hessian,in_unitp,nbcol,err)
+          IF (err /= 0) THEN
+            write(out_unitp,*) 'ERROR ',name_sub
+            write(out_unitp,*) ' while reading the matrix "hessian"'
+            write(out_unitp,*) ' Check your data !!'
+            STOP
+          END IF
+          write(out_unitp,*) 'hessian'
+          CALL Write_Mat(hessian,out_unitp,5)
+
+          CALL inv_m1_TO_m2(hessian,para_BFGS%hessian_inv_init,nb_Opt,0,ZERO)
+
+          write(out_unitp,*) 'hessian inverse'
+          CALL Write_Mat(para_BFGS%hessian_inv_init,out_unitp,5)
+
+          !-------- deallocation ---------------------------------------------
+          IF (allocated(hessian)) THEN
+            CALL dealloc_NParray(hessian,'hessian',name_sub)
+          END IF
           !-------- end deallocation -----------------------------------------
         END IF
 

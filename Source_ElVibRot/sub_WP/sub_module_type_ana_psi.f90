@@ -63,10 +63,14 @@
           logical                        :: AvQ           = .FALSE.   ! Average Values (Qact ...)
           integer,           allocatable :: Qtransfo_type(:)          ! ???type of the transformation
 
-          ! For qunatum coherence Mij = Int [rho_i(Q)*rho_j(Q)/rho(Q) dQ]
+          ! For quantum coherence Mij = Int [rho_i(Q)*rho_j(Q)/rho(Q) dQ]
           integer                        :: coherence = 0       ! default, 0: no coherence calculation
                                                                 !          1: coherence calculation
           real (kind=Rkind)              :: coherence_epsi = ONETENTH**6  ! To avoid numerical trouble when rho(Q) is almost zero
+
+          ! For the exact factorization
+          integer                        :: ExactFact = 0       ! default, 0: no exact factorization analysis
+          TYPE (param_file)              :: file_ExactFactPotCut
 
 
           ! 1D and 2D cut of psi at Qana
@@ -103,6 +107,7 @@
                               Write_psi_Grid,Write_psi_Basis,     &
                               AvQ,Qtransfo_type,                  &
                               coherence,coherence_epsi,           &
+                              ExactFact,                          &
                               Rho1D,Rho2D,Weight_Rho,Qana_Weight, &
                               Rho_type,                           &
                               psi1D_Q0,psi2D_Q0,Qana,             &
@@ -122,8 +127,10 @@
       logical,                        optional :: AvQ
       integer,           allocatable, optional :: Qtransfo_type(:)     ! type of the transformation
 
-      integer,                         optional :: coherence         ! coherence_tyep (0 non calculation)
-      real (kind=Rkind),               optional :: coherence_epsi    ! To avoid numerical trouble when rho(Q) is almost zero
+      integer,                        optional :: coherence         ! coherence_tyep (0 non calculation)
+      real (kind=Rkind),              optional :: coherence_epsi    ! To avoid numerical trouble when rho(Q) is almost zero
+
+      integer,                        optional ::ExactFact          ! for the exact factorization analysis
 
       logical,                        optional :: Rho1D,Rho2D
       integer,           allocatable, optional :: Weight_Rho(:)        ! enable to use a weight (0=>constant=1, +/-1=>step ...)
@@ -244,6 +251,12 @@
       !------------------------------------------------------------
 
       !------------------------------------------------------------
+      ! exact factorization analysis
+      ana_psi%ExactFact = 0       ! default, 0: no exact factorization analysis
+      IF (present(ExactFact)) ana_psi%ExactFact = ExactFact
+      !------------------------------------------------------------
+
+      !------------------------------------------------------------
       ! Boltzman population analysis
       ana_psi%Ene       = -Huge(ONE) ! Ene
       IF (present(Ene))         ana_psi%Ene         = Ene
@@ -305,6 +318,8 @@
       CALL file_dealloc(ana_psi%file_PsiRho)
       CALL file_dealloc(ana_psi%file_PsiCut)
       CALL file_dealloc(ana_psi%file_Psi)
+      CALL file_dealloc(ana_psi%file_ExactFactPotCut)
+
 
       END SUBROUTINE dealloc_ana_psi
 
@@ -327,6 +342,9 @@
 
      ana_psi1%Coherence_epsi      = ana_psi2%Coherence_epsi
      ana_psi1%Coherence           = ana_psi2%Coherence
+
+     ana_psi1%ExactFact            = ana_psi2%ExactFact
+     ana_psi1%file_ExactFactPotCut = ana_psi2%file_ExactFactPotCut
 
      ana_psi1%AvQ = ana_psi2%AvQ
      IF (allocated(ana_psi2%Qtransfo_type)) THEN
@@ -444,6 +462,11 @@
       write(out_unitp,*) 'Coherence:?'
       write(out_unitp,*) 'Coherence (Coherence_type)',ana_psi%Coherence
       write(out_unitp,*) 'Coherence_epsi',ana_psi%Coherence_epsi
+
+      write(out_unitp,*)
+      write(out_unitp,*) 'Exact Factorisation analysis:?'
+      write(out_unitp,*) 'ExactFact',ana_psi%ExactFact
+
 
       write(out_unitp,*)
       write(out_unitp,*) '1D and 2D cut of psi at Qana:'

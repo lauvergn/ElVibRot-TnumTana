@@ -126,6 +126,7 @@
       integer           :: Coherence
       real (kind=Rkind) :: Coherence_epsi
 
+      integer           :: ExactFact
 
       integer, allocatable :: Weight_Rho(:)            ! enable to use a weight (0=>constant=1, +/-1=>step ...)
       real (kind=Rkind), allocatable :: Qana_Weight(:) ! geometry (Qact order) for the analysis (use with Weight_Rho)
@@ -152,6 +153,7 @@
                         print_psi,psi2,psi1D_Q0,psi2D_Q0,QTransfo,      &
                         Rho1D,Rho2D,Wheight_rho,Rho_type,psi_adia,      &
                         Coherence,Coherence_epsi,                       &
+                        ExactFact,                                      &
                         intensity,NLO,CRP,CRP_Ene,CRP_DEne,nb_CRP_Ene,  &
                         Psi_ScalOp,VibRot,JJmax,                        &
                         ene0,Ezpe,Temp,                                 &
@@ -169,6 +171,8 @@
 
       Coherence            = 0
       Coherence_epsi       = ONETENTH**6
+
+      ExactFact            = 0 ! 0 no exact factorisation analysis
 
       Rho1D                = .FALSE.
       Rho2D                = .FALSE.
@@ -298,6 +302,7 @@
                           Write_psi_Grid=(.NOT. psi2),                  &
                           Write_psi_Basis=(.NOT. psi2),                 &
                      Coherence=Coherence,Coherence_epsi=Coherence_epsi, &
+                          ExactFact=ExactFact,                          &
                           rho1D=rho1D,rho2D=rho2D,Rho_type=Rho_type,    &
                           Weight_Rho=Weight_Rho,Qana_Weight=Qana_Weight,&
                           psi1D_Q0=psi1D_Q0,psi2D_Q0=psi2D_Q0,Qana=Qana_cut)

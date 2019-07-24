@@ -818,6 +818,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_system
   USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
   USE mod_field,           ONLY : param_field,sub_dnE
+  USE mod_ExactFact
 
   USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
   USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi
@@ -856,7 +857,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 !- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub='sub_analyze_WP_OpWP'
   logical, parameter :: debug=.FALSE.
-! logical, parameter :: debug=.TRUE.
+  !logical, parameter :: debug=.TRUE.
 !-------------------------------------------------------
   IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
@@ -957,21 +958,32 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
     para_propa%ana_psi%Write_psi_Grid  = Write_psi_Grid
     CALL sub_analyze_psi(WP(i),para_propa%ana_psi)
 
-    ! => The analysis (adiabatic)
-    IF (adia_loc) THEN
-      w1 = WP(i)
-      !CALL sub_PsiBasisRep_TO_GridRep(w1)
-      !para_propa%ana_psi%GridDone = .TRUE.
-      para_propa%ana_psi%adia = .TRUE.
-      para_propa%ana_psi%Write_psi2_Grid = Write_psi2_Grid
-      para_propa%ana_psi%Write_psi_Grid  = .FALSE.
-      CALL sub_PsiDia_TO_PsiAdia_WITH_MemGrid(w1,para_H)
-      CALL sub_analyze_psi(w1,para_propa%ana_psi)
+    IF (para_propa%ana_psi%ExactFact > 0) THEN
+      write(out_unitp,*) i,'Exact Factorization analysis at ',T, ' ua'
+      IF (present(para_field)) THEN
+        CALL sub_ExactFact_analysis(T,WP(i),para_propa%ana_psi,para_H,  &
+                       para_propa%WPTmax,para_propa%WPdeltaT,para_field)
+      ELSE
+        CALL sub_ExactFact_analysis(T,WP(i),para_propa%ana_psi,para_H,  &
+                                  para_propa%WPTmax,para_propa%WPdeltaT)
+      END IF
     END IF
+
+
+!    ! => The analysis (adiabatic)
+!    IF (adia_loc) THEN
+!      w1 = WP(i)
+!      para_propa%ana_psi%adia = .TRUE.
+!      para_propa%ana_psi%Write_psi2_Grid = Write_psi2_Grid
+!      para_propa%ana_psi%Write_psi_Grid  = .FALSE.
+!      CALL sub_PsiDia_TO_PsiAdia_WITH_MemGrid(w1,para_H)
+!      CALL sub_analyze_psi(w1,para_propa%ana_psi)
+!    END IF
     CALL flush_perso(out_unitp)
 
     para_propa%ana_psi%adia = .FALSE.
     CALL alloc_psi(WP(i),BasisRep=BasisRep,GridRep=GridRep)
+
 
   END DO
 
@@ -980,7 +992,6 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
 
   para_propa%ana_psi%GridDone = .FALSE.
-
 
 !----------------------------------------------------------
     IF (debug) THEN

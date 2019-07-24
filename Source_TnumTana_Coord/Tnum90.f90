@@ -153,7 +153,7 @@
 
         CALL get_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES)
 
-        write(out_unitp,*) "Energie: ",Get_Scal_FROM_Tab_OF_dnMatOp(Tab_dnMatOp,1)
+        write(out_unitp,*) "Energy: ",Get_Scal_FROM_Tab_OF_dnMatOp(Tab_dnMatOp,1)
         write(out_unitp,*) "Dipole Moments: ",Get_Scal_FROM_Tab_OF_dnMatOp(Tab_dnMatOp,3),&
          Get_Scal_FROM_Tab_OF_dnMatOp(Tab_dnMatOp,4),Get_Scal_FROM_Tab_OF_dnMatOp(Tab_dnMatOp,5)
 

@@ -2930,8 +2930,7 @@ STOP 'cplx'
       SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
       USE mod_system
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -2959,7 +2958,7 @@ STOP 'cplx'
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='sub_PsiDia_TO_PsiAdia_WITH_MemGrid'
       logical, parameter :: debug = .FALSE.
-!      logical, parameter :: debug = .TRUE.
+     !logical, parameter :: debug = .TRUE.
       !-----------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub

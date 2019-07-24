@@ -474,7 +474,7 @@ Obj_WP = \
  $(OBJ)/sub_psi0.o
 
 Obj_propagation = \
- $(OBJ)/sub_module_field.o $(OBJ)/sub_module_propagation.o \
+ $(OBJ)/sub_module_field.o $(OBJ)/sub_module_ExactFact.o $(OBJ)/sub_module_propagation.o \
  $(OBJ)/sub_module_propa_march_SG4.o $(OBJ)/sub_module_propa_march.o \
  $(OBJ)/sub_module_Filter.o $(OBJ)/sub_module_Davidson.o $(OBJ)/sub_module_Arpack.o \
  $(OBJ)/sub_propagation.o $(OBJ)/sub_Hmax.o $(OBJ)/sub_control.o \
@@ -893,9 +893,11 @@ $(OBJ)/sub_ana_psi.o:$(DIRWP)/sub_ana_psi.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_ana_psi.f90
 #
 #===================================================================================
-# sub_propagation
+# sub_propagation sub_module_ExactFact
 $(OBJ)/sub_module_field.o:$(DIRpropa)/sub_module_field.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_module_field.f90
+$(OBJ)/sub_module_ExactFact.o:$(DIRpropa)/sub_module_ExactFact.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_module_ExactFact.f90
 $(OBJ)/sub_module_propagation.o:$(DIRpropa)/sub_module_propagation.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_module_propagation.f90
 $(OBJ)/sub_module_propa_march.o:$(DIRpropa)/sub_module_propa_march.f90

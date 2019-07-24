@@ -2064,8 +2064,8 @@
 
 !      -----------------------------------------------------------------
       integer :: err_mem,memory
-      !logical, parameter :: debug=.FALSE.
-      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub = 'calc4_NM_TO_sym'
 !      -----------------------------------------------------------------
        IF (debug) THEN
@@ -2982,8 +2982,8 @@
 
       !-----------------------------------------------------------------
       integer :: err_mem,memory
-      logical, parameter :: debug=.FALSE.
-      !logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub = 'get_hess_k'
       !-----------------------------------------------------------------
       IF (debug) THEN
@@ -3120,7 +3120,7 @@
           CALL flush_perso(out_unitp)
         END IF
 
-        IF (para_Tnum%WriteT .OR. debug .OR. print_level > 1) THEN
+        IF (para_Tnum%WriteT .OR. debug .OR. print_level > 0) THEN
           write(out_unitp,*) 'gradient:'
           DO i=1,nb_NM
             write(out_unitp,'(a,x,i0,x,f12.6)') 'Q',i,d0grad(i)

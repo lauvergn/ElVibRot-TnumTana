@@ -89,6 +89,8 @@ MODULE mod_paramQ
       character (len=Line_len) :: BaseName_nDfit_file
       character (len=Name_len) :: name_int
 
+      real (kind=Rkind) :: ex(3),nx,ey(3),ny,ez(3),nz
+
 
       integer           :: i,nb_t,type_Qin,type_Qread,nc1,nc2,nc3
       character (len=Line_len) :: info_Qread
@@ -475,8 +477,11 @@ MODULE mod_paramQ
         nc2 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,2)
         nc3 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,3)
 
+        write(6,*) 'nc1,nc2,nc3',nc1,nc2,nc3
+        write(6,*) 'shape Qread',shape(Qread)
+
         mole%tab_Qtransfo(1)%ZmatTransfo%vAt1(:) = Qread(nc1:nc1+2)
-        mole%tab_Qtransfo(1)%ZmatTransfo%vAt2(:) = Qread(nc2:nc3+2)
+        mole%tab_Qtransfo(1)%ZmatTransfo%vAt2(:) = Qread(nc2:nc2+2)
         mole%tab_Qtransfo(1)%ZmatTransfo%vAt3(:) = Qread(nc3:nc3+2)
         write(out_unitp,*) 'vAt1', mole%tab_Qtransfo(1)%ZmatTransfo%vAt1
         write(out_unitp,*) 'vAt2', mole%tab_Qtransfo(1)%ZmatTransfo%vAt2
@@ -497,7 +502,7 @@ MODULE mod_paramQ
           CALL sub_QxyzTOexeyez(                                        &
                                                                reshape( &
                   mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1),&
-                                              (/ mole%ncart_act /) ),   &
+         (/ mole%tab_Cart_transfo(1)%CartesianTransfo%ncart_act /) ),   &
                                                                   mole)
         ELSE IF (mole%tab_Cart_transfo(1)%CartesianTransfo%P_Axis_Ref) THEN
           ! obtained from the principal axis
@@ -519,6 +524,8 @@ MODULE mod_paramQ
 
         ELSE IF (mole%tab_Cart_transfo(1)%CartesianTransfo%New_Orient) THEN
           ! obtained from the new orient
+          !write(6,*) 'coucou New_Orient'
+
           CALL alloc_CartesianTransfo(mole%tab_Cart_transfo(1)%         &
                                         CartesianTransfo,mole%ncart_act)
           mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm =              &
@@ -765,8 +772,8 @@ MODULE mod_paramQ
       TYPE (Type_dnVec) :: dnQin,dnQout
 
       !-----------------------------------------------------------------
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='sub_QinRead_TO_Qact'
       !-----------------------------------------------------------------
       IF (debug) THEN
@@ -857,8 +864,8 @@ MODULE mod_paramQ
       real (kind=Rkind) :: ex(3),nx,ey(3),ny,ez(3),nz
 
 !     -----------------------------------------------------------------
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='sub_QxyzTOexeyez'
 !     -----------------------------------------------------------------
       IF (debug) THEN
@@ -885,9 +892,12 @@ MODULE mod_paramQ
 
       SELECT CASE (mole%tab_Qtransfo(1)%name_transfo)
       CASE ('zmat')
+        IF (debug) write(out_unitp,*) 'zmat'
         nc1 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,1)
         nc2 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,2)
         nc3 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,3)
+        IF (debug) write(out_unitp,*) 'zmat, nc1,nc2,nc3',nc1,nc2,nc3
+
         IF (nc1 <= ncart .AND. nc2 <= ncart .AND. nc3 <= ncart) THEN
 
           ez(:) = Qxyz(nc2:nc2+2)-Qxyz(nc1:nc1+2)
@@ -1460,6 +1470,7 @@ MODULE mod_paramQ
             CALL sub_dnxMassWeight(dnx,mole%d0sm,mole%ncart,mole%ncart_act,nderiv)
 
             IF (Cart_Transfo_loc) THEN
+             ! write(6,*) 'coucou Cart_Transfo_loc',Cart_Transfo_loc
               CALL calc_CartesianTransfo_new(dnx,dnx,                   &
                              mole%tab_Cart_transfo(1)%CartesianTransfo, &
                              Qact,nderiv,.TRUE.)

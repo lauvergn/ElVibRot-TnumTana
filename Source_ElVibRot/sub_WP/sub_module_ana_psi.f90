@@ -2099,10 +2099,10 @@ END SUBROUTINE sub_analyze_psi
     tab_WeightChannels(:,:) = ZERO
   END IF
 
-  IF (SGtype == 4) THEN
-    CALL Channel_weight_SG4(tab_WeightChannels,psi,                 &
-                            GridRep,BasisRep)
-  END IF
+  !IF (SGtype == 4) THEN
+  !  CALL Channel_weight_SG4(tab_WeightChannels,psi,                 &
+  !                          GridRep,BasisRep)
+  !END IF
 
   IF (psi%ComOp%contrac_ba_ON_HAC) THEN
 

@@ -112,6 +112,7 @@
         IF (nosym) THEN
           dx = base%x(1,2)-base%x(1,1)
           base%x = base%x + dx*HALF
+          !base%x = base%x - dx*HALF
         END IF
         base%wrho(:) = base%w(:)
       END IF

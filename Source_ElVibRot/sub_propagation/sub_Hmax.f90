@@ -92,7 +92,13 @@
 !     --------------------------------------------------------
       IF (para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
         ! Minimal value of Veff
-        para_H%Hmin = minval(para_H%OpGrid(1)%Grid(:,:,:))
+        para_H%Hmin = para_H%OpGrid(1)%Op_min
+!
+!        IF (associated(para_H%OpGrid(1)%Grid)) THEN
+!          para_H%Hmin = minval(para_H%OpGrid(1)%Grid(:,:,:))
+!        ELSE ! it means the Grid is cte => deallocated
+!          para_H%Hmin = para_H%OpGrid(1)%Op_min
+!        END IF
       ELSE ! the grids are on a file
 
 !       -  Hmin ------------------------------------------------

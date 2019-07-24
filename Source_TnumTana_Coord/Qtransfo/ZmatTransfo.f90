@@ -555,8 +555,8 @@
       TYPE (Type_dnS)    :: dnf1,dnf2,dnf3
       TYPE (Type_dnVec)  :: dnv1,dnv2,dnv3
 
-       TYPE (Type_dnVec) :: dnEz2,dnEz3,dnEx3,dnAt1
-       real (kind=Rkind) :: d1,s12
+       TYPE (Type_dnVec) :: dnEz2,dnEz3,dnEy3,dnEx3,dnAt1
+       real (kind=Rkind) :: d1,s12,nEx3,nEy3,nEz3
 !      ---------------------------------------------
 
 
@@ -591,6 +591,7 @@
         CALL alloc_dnSVM(dnEz2,3,nb_act,nderiv)
         CALL alloc_dnSVM(dnEz3,3,nb_act,nderiv)
         CALL alloc_dnSVM(dnEx3,3,nb_act,nderiv)
+        CALL alloc_dnSVM(dnEy3,3,nb_act,nderiv)
 
         CALL alloc_dnSVM(dnd,nb_act,nderiv)
         CALL alloc_dnSVM(dnQval,nb_act,nderiv)
@@ -665,6 +666,8 @@
             !--- Z2 axis along z_BF ------
             dnEz2%d0(3) = ONE
           END IF
+
+          !write(6,*) 'dnEz2',dnEz2%d0
 
           CALL sub3_dnx_AT2_new(dnx,icf,ic1,dnd,dnEz2,nderiv,check)
 
@@ -750,6 +753,9 @@
                 END IF
               END IF
             END IF
+            !write(6,*) 'New_Orient',ZmatTransfo%New_Orient
+            !write(6,*) 'dnEx3',dnEx3%d0
+            !write(6,*) 'dnEz3',dnEz3%d0
 
             CALL sub3_dnx_AT3_new(dnx,icf,ic1,check,                    &
                                   dnd,dnCval,dnSval,                    &
@@ -777,6 +783,40 @@
 
               IF (ic1 == 0) THEN !  atome en cartesiennes
 
+                IF (ZmatTransfo%New_Orient) THEN
+                  IF (case1) THEN
+                    dnEz3%d0(:) = ZmatTransfo%vAt2(:)-           &
+                                  ZmatTransfo%vAt1(:)
+                    dnEx3%d0(:) = ZmatTransfo%vAt3(:)-           &
+                                  ZmatTransfo%vAt1(:)
+                  ELSE
+                    dnEz3%d0(:) = ZmatTransfo%vAt1(:)-           &
+                                  ZmatTransfo%vAt2(:)
+                    dnEx3%d0(:) = ZmatTransfo%vAt3(:)-           &
+                                  ZmatTransfo%vAt2(:)
+                  END IF
+                  d1 = sqrt(dot_product(dnEz3%d0,dnEz3%d0))
+                  dnEz3%d0(:) = dnEz3%d0(:)/d1
+                  s12 = dot_product(dnEz3%d0,dnEx3%d0)
+
+                  dnEx3%d0(:) = dnEx3%d0(:) - dnEz3%d0(:) * s12
+                  dnEx3%d0(:) = dnEx3%d0(:) /                           &
+                      sqrt(dot_product(dnEx3%d0,dnEx3%d0))
+                ELSE
+                  !--- Z3 axis along z_BF and x3 along x_BF ------
+                  IF (case1) THEN
+                    dnEx3%d0(1) = ONE
+                    dnEz3%d0(3) = ONE
+                  ELSE
+                    dnEx3%d0(1) = ONE
+                    dnEz3%d0(3) = -ONE
+                  END IF
+                END IF
+                CALL calc_cross_product(dnEz3%d0,nEz3,dnEx3%d0,nEx3,dnEy3%d0,nEy3)
+                !write(6,*) 'dnEx3',dnEx3%d0
+                !write(6,*) 'dnEy3',dnEy3%d0
+                !write(6,*) 'dnEz3',dnEz3%d0
+
                 i_q = i_q + 1
                 CALL sub_dnVec_TO_dnS(dnQzmat,dnd,i_q)
 
@@ -786,7 +826,10 @@
                 i_q = i_q + 1
                 CALL sub_dnVec_TO_dnS(dnQzmat,dnQdih,i_q)
 
-                CALL sub3_dnx_AT4_cart(dnx,icf,dnd,dnQval,dnQdih,nderiv)
+
+                CALL sub3_dnx_AT4_cart_new(dnx,icf,dnd,dnQval,dnQdih,dnEx3,dnEy3,dnEz3,nderiv)
+
+                !CALL sub3_dnx_AT4_cart(dnx,icf,dnd,dnQval,dnQdih,nderiv)
                 IF (ZmatTransfo%New_Orient) THEN
                   icf = ZmatTransfo%ind_zmat(1,i)
                   dnx%d0(icf:icf+2) = dnx%d0(icf:icf+2) + ZmatTransfo%vAt1(:)
@@ -1037,7 +1080,7 @@
             iqz = iqz + 1
             dnQzmat%d0(iqz) = dot_product(v1,ez) ! z
             IF (debug) write(out_unitp,*) ' nc1,nc2,nc3,x,y,z',         &
-                                        nc1,nc2,nc3,dnQzmat%d0(iqz-2:iqz)
+                                        nc1,nc2,nc3,dnQzmat%d0(iqz-2:iqz),sqrt(dnQzmat%d0(iqz-2:iqz)**2)
           ELSE IF (nc2/=0 .AND. nc3==0 .AND. nc4==0) THEN
             CALL calc_vector2(v1,norm1,nc1,nc2,dnx%d0,ncart0)
             iqz = iqz + 1

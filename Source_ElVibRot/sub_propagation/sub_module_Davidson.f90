@@ -366,7 +366,7 @@ CONTAINS
                             Ene(1:nb_diago)*auTOene
         END IF
         DO j=1,nb_diago
-          convergeEne(j) = abs(DEne(j))<para_propa%para_Davidson%conv_Ene
+          convergeEne(j) = abs(DEne(j)) < para_propa%para_Davidson%conv_Ene
         END DO
         write(out_unitp,41) 'it Diff Ene (' // trim(WriteUnit) // '):    ',it, &
                          DEne(1:nb_diago) * auTOene
