@@ -218,20 +218,23 @@ CONTAINS
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter ::name_sub='sub_build_MatOp'
-      logical, parameter :: debug=.FALSE.
-      !logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) ' nb_diago',nb_WP
         write(out_unitp,*)
         CALL write_param_Op(para_Op)
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
       spectral_save = para_Op%spectral
       para_Op%spectral = .FALSE.
 !     - init and allocation of OpWP --
       CALL alloc_NParray(OpWP,(/nb_WP/),"OpWP",name_sub)
+
+write(6,*) 'coucou0 size(WP)',size(WP) ; flush(6)
 
       IF (para_Op%cplx) THEN
         CALL alloc_NParray(CMatOp,(/nb_WP,nb_WP/),'CmatOp',name_sub)
@@ -255,6 +258,7 @@ CONTAINS
           END IF
         END DO
       END DO
+write(6,*) 'coucou1 size(WP)',size(WP) ; flush(6)
 
       IF (hermitic .AND. para_Op%n_Op == 0) THEN
         IF (para_Op%cplx) THEN
@@ -293,6 +297,7 @@ CONTAINS
           write(out_unitp,21) non_hermitic*auTOcm_inv
  21       format(' non-hermitic Hamiltonien: ',f16.12,' cm-1')
         END IF
+        CALL flush_perso(out_unitp)
       END IF
 
 !     - Write the matrix ----
@@ -314,6 +319,8 @@ CONTAINS
       para_Op%nb_tot      = nb_WP
       para_Op%mat_done    = .TRUE.
       write(out_unitp,*) 'nb_tot_ini',para_Op%nb_tot_ini
+      CALL flush_perso(out_unitp)
+
       IF (para_Op%cplx) THEN
         IF (associated(para_Op%Cmat))  THEN
           CALL dealloc_array(para_Op%Cmat,"para_Op%Cmat",name_sub)
@@ -346,6 +353,7 @@ CONTAINS
 !----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
        END IF
 !----------------------------------------------------------
 

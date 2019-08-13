@@ -666,6 +666,8 @@ END IF
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                   tabR_AT_iG_TO_tabPackedBasis,TypeRVec,dealloc_TypeRVec
+ USE mod_SymAbelian,               ONLY : Calc_symab1_EOR_symab2
+ USE mod_psi_Op,                   ONLY : Set_symab_OF_psiBasisRep
 
  USE mod_psi_set_alloc,            ONLY : param_psi,ecri_psi
 
@@ -683,7 +685,7 @@ END IF
 
  TYPE (TypeRVec),   allocatable    :: PsiR(:)
 
- integer                :: ib,i,iG,iiG,nb_thread,itab,ith,iterm00,packet_size
+ integer                :: ib,i,iG,iiG,nb_thread,itab,ith,iterm00,packet_size,OpPsi_symab
  integer, allocatable   :: tab_l(:)
  logical                :: not_init
 
@@ -905,6 +907,14 @@ END IF
    para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid_done =           &
                      para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid
  END IF
+
+ DO i=1,size(OpPsi)
+    !write(6,*) 'coucou symab Op psi',i,para_Op%symab,Psi(i)%symab
+    OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,Psi(i)%symab)
+    CALL Set_symab_OF_psiBasisRep(OpPsi(i),OpPsi_symab)
+    !write(6,*) 'coucou symab Op.psi',i,OpPsi(i)%symab
+
+ END DO
 
 !-----------------------------------------------------------
  IF (debug) THEN

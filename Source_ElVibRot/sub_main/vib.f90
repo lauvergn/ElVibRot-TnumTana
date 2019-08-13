@@ -154,9 +154,6 @@
       para_H => para_AllOp%tab_Op(1)
       CALL dealloc_Basis(BasisnD_Save)
 
-      CALL Sub_init_dnOp(mole,para_Tnum,para_PES)
-
-
       write(out_unitp,*)
       write(out_unitp,*)
       CALL time_perso('ini_data')
@@ -705,6 +702,7 @@
             Tab_psi(i)%CAvOp       = para_H%Rdiag(i)
             Tab_psi(i)%IndAvOp     = para_H%n_Op  ! it should be 0
             Tab_psi(i)%convAvOp    = .TRUE.
+            CALL Set_symab_OF_psiBasisRep(Tab_psi(i))
           END DO
           para_H%ComOp%Rvp_spec    => para_H%Rvp
         END IF
@@ -1275,9 +1273,6 @@ para_mem%mem_debug = .FALSE.
 
       para_H => para_AllOp%tab_Op(1)
       CALL dealloc_Basis(BasisnD_Save)
-
-      CALL Sub_init_dnOp(mole,para_Tnum,para_PES)
-
 
       write(out_unitp,*)
       write(out_unitp,*)

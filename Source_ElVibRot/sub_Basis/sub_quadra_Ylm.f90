@@ -382,7 +382,7 @@
 
       CALL Set_nbPERsym_FROM_SymAbelian(base%P_SymAbelian)
 
-      CALL Write_SymAbelian(base%P_SymAbelian)
+      IF (debug) CALL Write_SymAbelian(base%P_SymAbelian)
 
       IF (ib /= base%nb) STOP 'ib /= nb : ERROR in sub_quadra_Ylm'
 

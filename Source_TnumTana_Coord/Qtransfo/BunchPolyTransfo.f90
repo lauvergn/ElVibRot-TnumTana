@@ -2303,6 +2303,13 @@
 
       real (kind=Rkind), parameter :: radTOdeg = 180._Rkind / pi
 
+!      -----------------------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug = .FALSE.
+!      logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub='RecGet_Vec_Fi_For_poly'
+!      -----------------------------------------------------------------
+
       iv_tot = iv_tot + 1
       !write(out_unitp,*) 'RecGet_Vec_Fi: nb_vect_tot,iv_Fi,iv_tot',nb_vect_tot,iv_Fi,iv_tot
       !write(out_unitp,*) 'vect:',tab_Vect_Fi(iv_tot)%d0
@@ -2311,8 +2318,8 @@
       Frame   = BFTransfo%Frame
 
       IF (Frame) THEN
-        write(out_unitp,*) '============================================='
-        write(out_unitp,*) ' Frame = T, iv_tot',iv_tot
+        IF (debug) write(out_unitp,*) '============================================='
+        IF (debug) write(out_unitp,*) ' Frame = T, iv_tot',iv_tot
         ! norm of the vector (distance)
         Riv = sqrt(dot_product(tab_Vect_Fi(iv_tot)%d0,tab_Vect_Fi(iv_tot)%d0))
 
@@ -2354,7 +2361,7 @@
         alphaiv = atan2(py,px)
         CALL dihedral_range(alphaiv,2) ! [0:2pi]
 
-        write(out_unitp,*) 'R       : ',iv_Fi,':',Riv,Riv
+        IF (debug) write(out_unitp,*) 'R       : ',iv_Fi,':',Riv,Riv
         iQpoly  = iQpoly + 1
         i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(iQpoly)
         dnQpoly%d0(i_Qprim) = Riv
@@ -2381,14 +2388,14 @@
             ELSE
               dnQpoly%d0(i_Qprim) = betaiv
             END IF
-            write(out_unitp,*) 'beta (u): ',iv_Fi,':',betaiv*radTOdeg,ubetaiv
+            IF (debug) write(out_unitp,*) 'beta (u): ',iv_Fi,':',betaiv*radTOdeg,ubetaiv
           END IF
         ELSE ! iv_Fi /= 2
           iQpoly  = iQpoly + 1
           IF (iQpoly <= dnQpoly%nb_var_vec) THEN
             i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(iQpoly)
             dnQpoly%d0(i_Qprim) = alphaiv
-            write(out_unitp,*) 'alpha   : ',iv_Fi,':',alphaiv*radTOdeg,alphaiv
+            IF (debug) write(out_unitp,*) 'alpha   : ',iv_Fi,':',alphaiv*radTOdeg,alphaiv
           END IF
 
           iQpoly = iQpoly + 1
@@ -2399,7 +2406,7 @@
             ELSE
               dnQpoly%d0(i_Qprim) = betaiv
             END IF
-            write(out_unitp,*) 'beta (u): ',iv_Fi,':',betaiv*radTOdeg,ubetaiv
+            IF (debug) write(out_unitp,*) 'beta (u): ',iv_Fi,':',betaiv*radTOdeg,ubetaiv
           END IF
         END IF
 
@@ -2415,7 +2422,7 @@
           IF (iQpoly <= dnQpoly%nb_var_vec) THEN
             i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(iQpoly)
             dnQpoly%d0(i_Qprim) = gammaiv
-            write(out_unitp,*) 'gamma   : ',iv_Fi,':',gammaiv*radTOdeg,gammaiv
+            IF (debug) write(out_unitp,*) 'gamma   : ',iv_Fi,':',gammaiv*radTOdeg,gammaiv
           END IF
 
         END IF
@@ -2424,7 +2431,7 @@
         CALL dealloc_dnSVM(UnitVect_Fij(2))
         CALL dealloc_dnSVM(UnitVect_Fij(3))
 
-        write(out_unitp,*) '============================================='
+        IF (debug) write(out_unitp,*) '============================================='
       ELSE
 
 !        write(out_unitp,*) 'ex_Fi',UnitVect_Fi(1)%d0
@@ -2447,7 +2454,7 @@
           iQpoly = iQpoly + 1
           i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(iQpoly)
           dnQpoly%d0(i_Qprim) = Riv
-          write(out_unitp,*) 'R       : ',iv_Fi,':',Riv,Riv
+          IF (debug) write(out_unitp,*) 'R       : ',iv_Fi,':',Riv,Riv
 
           iQpoly = iQpoly + 1
           i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(iQpoly)
@@ -2457,7 +2464,7 @@
           ELSE
               dnQpoly%d0(i_Qprim) = thiv
           END IF
-          write(out_unitp,*) 'th (u)  : ',iv_Fi,':',thiv*radTOdeg,uiv
+          IF (debug) write(out_unitp,*) 'th (u)  : ',iv_Fi,':',thiv*radTOdeg,uiv
 
         ELSE
           IF (BFTransfo%cart) THEN
@@ -2476,9 +2483,9 @@
             !dnQpoly%d0(i_Qprim) = tab_Vect_Fi(iv_tot)%d0(3)
             dnQpoly%d0(i_Qprim) = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(3)%d0)
 
-            write(out_unitp,*) 'x       : ',iv_Fi,':',tab_Vect_Fi(iv_tot)%d0(1)
-            write(out_unitp,*) 'y       : ',iv_Fi,':',tab_Vect_Fi(iv_tot)%d0(2)
-            write(out_unitp,*) 'z       : ',iv_Fi,':',tab_Vect_Fi(iv_tot)%d0(3)
+            IF (debug) write(out_unitp,*) 'x       : ',iv_Fi,':',tab_Vect_Fi(iv_tot)%d0(1)
+            IF (debug) write(out_unitp,*) 'y       : ',iv_Fi,':',tab_Vect_Fi(iv_tot)%d0(2)
+            IF (debug) write(out_unitp,*) 'z       : ',iv_Fi,':',tab_Vect_Fi(iv_tot)%d0(3)
           ELSE
             ! norm of the vector (distance)
             Riv = sqrt(dot_product(tab_Vect_Fi(iv_tot)%d0,tab_Vect_Fi(iv_tot)%d0))
@@ -2495,7 +2502,7 @@
             iQpoly = iQpoly + 1
             i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(iQpoly)
             dnQpoly%d0(i_Qprim) = Riv
-            write(out_unitp,*) 'R       : ',iv_Fi,':',Riv,Riv
+            IF (debug) write(out_unitp,*) 'R       : ',iv_Fi,':',Riv,Riv
 
             iQpoly = iQpoly + 1
             i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(iQpoly)
@@ -2504,12 +2511,12 @@
             ELSE
               dnQpoly%d0(i_Qprim) = thiv
             END IF
-            write(out_unitp,*) 'th (u)  : ',iv_Fi,':',thiv*radTOdeg,uiv
+            IF (debug) write(out_unitp,*) 'th (u)  : ',iv_Fi,':',thiv*radTOdeg,uiv
 
             iQpoly = iQpoly + 1
             i_Qprim = BFTransfo%list_Qpoly_TO_Qprim(iQpoly)
             dnQpoly%d0(i_Qprim) = phiv
-            write(out_unitp,*) 'phi     : ',iv_Fi,':',phiv*radTOdeg,phiv
+            IF (debug) write(out_unitp,*) 'phi     : ',iv_Fi,':',phiv*radTOdeg,phiv
           END IF
 
         END IF

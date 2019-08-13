@@ -674,7 +674,7 @@ CONTAINS
 
       !IF (SGtype4 .AND. direct_KEO) THEN
 
-      IF (SGtype4) THEN
+    IF (SGtype4) THEN
         CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)
         para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
         RETURN

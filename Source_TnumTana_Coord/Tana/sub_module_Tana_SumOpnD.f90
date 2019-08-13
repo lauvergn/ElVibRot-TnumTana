@@ -1431,7 +1431,6 @@ subroutine Expand_Sin2_IN_Sum_OpnD_TO_Sum_OpnD(F_Sum_nD,ExpandF_Sum_nD)
 
    integer                    :: i,j,ij,ndim
 
-
    !logical, parameter           :: debug=.TRUE.
    logical, parameter           :: debug=.FALSE.
    character (len =*), parameter :: routine_name='Expand_Sin2_IN_Sum_OpnD_TO_Sum_OpnD'
@@ -1476,15 +1475,18 @@ subroutine Expand_Sin2_IN_Sum_OpnD_TO_Sum_OpnD(F_Sum_nD,ExpandF_Sum_nD)
   END IF
 
  end subroutine Expand_Sin2_IN_Sum_OpnD_TO_Sum_OpnD
-subroutine Expand_Sum_OpnD_TO_Sum_OpnD(F_Sum_nD,ExpandF_Sum_nD)
+subroutine Expand_Sum_OpnD_TO_Sum_OpnD(F_Sum_nD,ExpandF_Sum_nD,With_Vep)
 
    type(sum_opnd),           intent(in)       :: F_Sum_nD
    type(sum_opnd),           intent(inout)    :: ExpandF_Sum_nD
+   logical,        optional, intent(in)       :: With_Vep
 
    type(sum_opnd), allocatable                :: Temp_ExpandF_Sum_nD(:)
 
    integer                    :: i,j,ij,ndim,ndimi
-
+   integer                    :: nb_var
+   integer                    :: pq1,pq2,nb_pq,nb_J,nb_L
+   logical                    :: With_Vep_loc
 
    !logical, parameter           :: debug=.TRUE.
    logical, parameter           :: debug=.FALSE.
@@ -1494,6 +1496,12 @@ subroutine Expand_Sum_OpnD_TO_Sum_OpnD(F_Sum_nD,ExpandF_Sum_nD)
      write(out_unitp,*) ' BEGINNING ',routine_name
      CALL write_op(F_sum_nd,header=.TRUE.)
      CALL flush_perso(out_unitp)
+   END IF
+
+   IF (present(With_Vep)) THEN
+     With_Vep_loc = With_Vep
+   ELSE
+     With_Vep_loc = .TRUE.
    END IF
 
    CALL alloc_NParray(Temp_ExpandF_Sum_nD,(/ size(F_sum_nd%sum_prod_op1d) /), &
@@ -1521,9 +1529,14 @@ subroutine Expand_Sum_OpnD_TO_Sum_OpnD(F_Sum_nD,ExpandF_Sum_nD)
    DO i=1,size(Temp_ExpandF_Sum_nD)
    DO j=1,size(Temp_ExpandF_Sum_nD(i)%sum_prod_op1d)
      ij = ij + 1
-     ExpandF_Sum_nD%sum_prod_op1d(ij) = Temp_ExpandF_Sum_nD(i)%sum_prod_op1d(j)
-     ExpandF_Sum_nD%Cn(ij) = F_sum_nd%Cn(i) * get_coeff_OF_OpnD(ExpandF_Sum_nD%sum_prod_op1d(ij))
-     CALL Set_coeff_OF_OpnD_TO_ONE( ExpandF_Sum_nD%sum_prod_op1d(ij) )
+     CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,nb_var,Temp_ExpandF_Sum_nD(i)%sum_prod_op1d(j))
+     IF (With_Vep_loc .OR. nb_pq > 0 .OR. nb_L > 0 .OR. nb_J > 0) THEN
+       ExpandF_Sum_nD%sum_prod_op1d(ij) = Temp_ExpandF_Sum_nD(i)%sum_prod_op1d(j)
+       ExpandF_Sum_nD%Cn(ij) = F_sum_nd%Cn(i) * get_coeff_OF_OpnD(ExpandF_Sum_nD%sum_prod_op1d(ij))
+       CALL Set_coeff_OF_OpnD_TO_ONE( ExpandF_Sum_nD%sum_prod_op1d(ij) )
+     ELSE
+       CALL init_to_opzero(ExpandF_Sum_nD%sum_prod_op1d(ij))
+     END IF
    END DO
    END DO
 

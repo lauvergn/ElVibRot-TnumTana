@@ -664,7 +664,7 @@
             dnEz2%d0(:) = dnEz2%d0(:)/d1
           ELSE
             !--- Z2 axis along z_BF ------
-            dnEz2%d0(3) = ONE
+            dnEz2%d0(:) = (/ ZERO,ZERO,ONE /)
           END IF
 
           !write(6,*) 'dnEz2',dnEz2%d0
@@ -805,11 +805,11 @@
                 ELSE
                   !--- Z3 axis along z_BF and x3 along x_BF ------
                   IF (case1) THEN
-                    dnEx3%d0(1) = ONE
-                    dnEz3%d0(3) = ONE
+                    dnEx3%d0(:) = (/  ONE,ZERO,ZERO /)
+                    dnEz3%d0(:) = (/ ZERO,ZERO,ONE /)
                   ELSE
-                    dnEx3%d0(1) = ONE
-                    dnEz3%d0(3) = -ONE
+                    dnEx3%d0(:) = (/  ONE,ZERO, ZERO /)
+                    dnEz3%d0(:) = (/ ZERO,ZERO,-ONE /)
                   END IF
                 END IF
                 CALL calc_cross_product(dnEz3%d0,nEz3,dnEx3%d0,nEx3,dnEy3%d0,nEy3)

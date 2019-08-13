@@ -68,9 +68,10 @@
 
 !----- working variables ----------------------------------------
       TYPE (param_d0MatOp), allocatable :: d0MatOp(:)
-      integer              :: k,nb_Op
-      real (kind=Rkind)    :: Qact(mole%nb_var)
-
+      integer                           :: k,nb_Op
+      real (kind=Rkind)                 :: Qact(mole%nb_var)
+      integer                           :: err_io
+      character (len=Name_longlen)      :: name_dum
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='Sub_init_dnOp'
@@ -99,7 +100,39 @@
 
       Qact(:) = mole%ActiveTransfo%Qact0(:)
 
-      CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,para_PES)
+      IF (para_PES%QMLib) THEN
+        IF (debug) write(out_unitp,*) 'Initialization with Quantum Model Lib'
+
+#if __QML == 1
+        CALL sub_Init_Qmodel(mole%nb_act,para_PES%nb_elec,'read_model',.FALSE.,0)
+#else
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
+        write(out_unitp,*) '  Qmodel cannot be intialized!'
+        write(out_unitp,*) 'Use another potential/model'
+        STOP 'QML is not present'
+#endif
+
+        IF (allocated(para_PES%Qit_TO_QQMLib)) THEN
+          CALL dealloc_NParray(para_PES%Qit_TO_QQMLib,'Qit_TO_QQMLib',name_sub)
+        END IF
+        CALL alloc_NParray(para_PES%Qit_TO_QQMLib,(/ mole%nb_act /),'Qit_TO_QQMLib',name_sub)
+        para_PES%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%nb_act) /)
+
+        IF (para_PES%pot_itQtransfo == mole%nb_Qtransfo-1) THEN ! Qdyn Coord
+          read(in_unitp,*,IOSTAT=err_io) name_dum,para_PES%Qit_TO_QQMLib
+          IF (err_io /= 0) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) '  while reading "Qit_TO_QQMLib"'
+            write(out_unitp,*) ' end of file or end of record'
+            write(out_unitp,*) ' Probably, you have forgotten the list of integers ...'
+            write(out_unitp,*) ' Check your data !!'
+            STOP
+          END IF
+        END IF
+      ELSE
+        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,para_PES)
+      END IF
 
       DO k=1,nb_Op
         CALL dealloc_d0MatOp(d0MatOp(k))
@@ -109,6 +142,7 @@
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
       END IF
+
 
       END SUBROUTINE Sub_init_dnOp
 
@@ -296,7 +330,21 @@
 
       ELSE
 
-          IF (para_PES%nDfit_Op) THEN
+          IF (para_PES%QMLib) THEN
+            IF (debug) THEN
+               write(out_unitp,*) 'With Quantum Model Lib'
+               write(out_unitp,*) 'QQMLib',Qit(para_PES%Qit_TO_QQMLib)
+            END IF
+#if __QML == 1
+            CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(1,1,itermE),Qit(para_PES%Qit_TO_QQMLib))
+#else
+            write(out_unitp,*) 'ERROR in ',name_sub
+            write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
+            write(out_unitp,*) 'Use another potential/model'
+            STOP 'QML is not present'
+#endif
+
+          ELSE IF (para_PES%nDfit_Op) THEN
             IF (debug) write(out_unitp,*) 'With nDFit'
             IF (para_PES%nb_elec > 1) STOP 'ERROR nb_elec > 1 with nDFit'
 
@@ -4593,7 +4641,7 @@
       TYPE(Type_dnMat)  :: dnGG
 
       integer           :: NM_TO_sym_ver=4
-      real (kind=Rkind), allocatable :: hCC(:,:)
+      real (kind=Rkind), allocatable :: hCC(:,:),GGdef(:,:)
       logical :: Gref,tab_skip_transfo(mole%nb_Qtransfo),Tana_loc
       integer :: iQa,nb_act1_RPH,nb_inact21_RPH,it,nderiv
       real (kind=Rkind) :: auTOcm_inv
@@ -4623,6 +4671,12 @@
 
   CALL Sub_PES_FromTnum_TO_PES(para_PES,para_Tnum%para_PES_FromTnum)
   IF (para_PES%nb_scalar_Op > 0) para_PES%calc_scalar_Op = .TRUE.
+
+  !-----------------------------------------------------------------
+  ! initialization of the scalar operators
+  CALL Sub_init_dnOp(mole,para_Tnum,para_PES)
+  !-----------------------------------------------------------------
+
 
 
   !----- calc and transfert NM to LinearTransfo%mat if needed ---------------
@@ -4728,12 +4782,31 @@
 
   IF (Gref) THEN
     CALL get_Qact0(Qact,mole%ActiveTransfo)
-
     IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
+
     CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,0)
 
-    CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=0)
+    IF (para_PES%QMLib) THEN
+      CALL alloc_NPArray(GGdef,(/ mole%nb_act,mole%nb_act /),'GGdef',name_sub)
 
+#if __QML == 1
+      CALL get_Qmodel_GGdef(GGdef)
+#else
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
+      write(out_unitp,*) 'Use another potential/model'
+      STOP 'QML is not present'
+#endif
+
+      dnGG%d0(:,:) = ZERO
+      dnGG%d0(1:mole%nb_act,1:mole%nb_act) = GGdef
+
+      CALL dealloc_NPArray(GGdef,'GGdef',name_sub)
+    ELSE
+
+      CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=0)
+
+    END IF
     IF (para_Tnum%Gcte) THEN
 
       CALL alloc_array(para_Tnum%Gref,(/ mole%ndimG,mole%ndimG /),    &

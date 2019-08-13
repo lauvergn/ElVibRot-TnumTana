@@ -43,7 +43,7 @@ MODULE mod_paramQ
       PRIVATE
       PUBLIC :: read_RefGeom, Get_Qread
       PUBLIC :: sub_QactTOQit, sub_QinRead_TO_Qact, sub_QxyzTOexeyez, sub_Qxyz0TORot
-      PUBLIC :: sub_QplusDQ_TO_Cart, sub_QactTOdnx, sub_QactTOd0x
+      PUBLIC :: sub_QplusDQ_TO_Cart, sub_QactTOdnx, sub_QactTOd0x, sub_d0xTOQact
       PUBLIC :: Write_d0Q, Write_Q_WU, Write_Cartg98, Write_XYZ
       PUBLIC :: analyze_dnx, sub_dnFCC_TO_dnFcurvi, write_dnx
       PUBLIC :: Set_paramQ_FOR_optimization
@@ -86,6 +86,7 @@ MODULE mod_paramQ
 
       logical                  :: deriv_WITH_FiniteDiff  = .FALSE.
       logical                  :: nDfit_Op               = .FALSE.
+      logical                  :: QMLib                  = .FALSE.
       character (len=Line_len) :: BaseName_nDfit_file
       character (len=Name_len) :: name_int
 
@@ -102,7 +103,7 @@ MODULE mod_paramQ
                         nb_elec,pot_cplx,OnTheFly,nb_scalar_Op,         &
                        read_itQ0transfo,read_Qsym0,read_Qdyn0,read_xyz0,&
                         read_nameQ,unit,read_xyz0_with_dummy,read_Qact0,&
-                        nDfit_Op,BaseName_nDfit_file
+                        nDfit_Op,QMLib,BaseName_nDfit_file
 
       !-----------------------------------------------------------------
       integer :: err_mem,memory,err_io
@@ -158,6 +159,9 @@ MODULE mod_paramQ
       unit                 = 'au'
       nDfit_Op             = .FALSE.
       BaseName_nDfit_file  = ""
+
+      QMLib                = .FALSE.
+
 
       read(in_unitp,minimum,IOSTAT=err_io)
       IF (err_io < 0) THEN
@@ -288,8 +292,10 @@ MODULE mod_paramQ
                       trim(adjustl(BaseName_nDfit_file)) // "-col" // &
                                               trim(adjustl(name_int))
        END DO
-
       END IF
+
+      para_Tnum%para_PES_FromTnum%QMLib = QMLib
+
       write(out_unitp,*) 'nb_scalar_Op',nb_scalar_Op
       write(out_unitp,*) 'pot_itQtransfo',pot_itQtransfo
 
@@ -302,6 +308,11 @@ MODULE mod_paramQ
       ELSE IF (para_Tnum%para_PES_FromTnum%pot_itQtransfo == mole%nb_Qtransfo) THEN
         write(out_unitp,*) 'Operators (pot...) with Qact coordinates'
       END IF
+
+      IF (QMLib .AND. para_Tnum%para_PES_FromTnum%pot_itQtransfo /= mole%nb_Qtransfo-1) THEN
+        write(out_unitp,*)  ' WARNING QMLib=.TRUE. and its coordiantes are not Qdyn!!'
+      END IF
+
 
       write(out_unitp,*)  '------------------------------------------------------'
 
@@ -1223,7 +1234,7 @@ MODULE mod_paramQ
 !       conversion d0Q (zmat,poly, bunch ...) => d0x
 !================================================================
       RECURSIVE SUBROUTINE sub_QactTOdnx(Qact,dnx,mole,                  &
-                                         nderiv,Gcenter,Cart_Transfo)
+                                         nderiv,Gcenter,Cart_Transfo,WriteCC)
       USE mod_system
       USE mod_dnSVM
       USE mod_Tnum
@@ -1235,7 +1246,7 @@ MODULE mod_paramQ
       TYPE (Type_dnVec) :: dnx
       integer :: nderiv
       logical :: Gcenter
-      logical, optional :: Cart_Transfo
+      logical, optional :: Cart_Transfo,WriteCC
 
 
 !     - working variables -------------------------
@@ -1244,7 +1255,7 @@ MODULE mod_paramQ
       real (kind=Rkind) :: step2,step24,stepp
       integer           :: i,j
       integer           :: it,ic,icG,nb_act,iii
-      logical           :: Gcenter_loc,Cart_Transfo_loc,GCenter_done
+      logical           :: Gcenter_loc,Cart_Transfo_loc,GCenter_done,WriteCC_loc
       real (kind=Rkind) :: Qact_loc(size(Qact))
 
 
@@ -1279,11 +1290,18 @@ MODULE mod_paramQ
       END IF
 
 
+      IF (present(WriteCC)) THEN
+        WriteCC_loc = WriteCC
+      ELSE
+        WriteCC_loc = mole%WriteCC
+      END IF
+
       IF (present(Cart_Transfo)) THEN
         Cart_Transfo_loc = Cart_Transfo
       ELSE
         Cart_Transfo_loc = mole%Cart_transfo
       END IF
+
 
       IF (debug) write(out_unitp,*) 'Cart_Transfo_loc',Cart_Transfo_loc
 
@@ -1306,12 +1324,12 @@ MODULE mod_paramQ
             Qacti = Qact_loc(i)
 
             Qact_loc(i) = Qacti + mole%stepQ
-            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc)
+            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc,WriteCC=.FALSE.)
             dnx%d1(:,i) = dnx%d0(:)
             IF (nderiv == 2) dnx%d2(:,i,i) = dnx%d0(:)
 
             Qact_loc(i) = Qacti - mole%stepQ
-            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc)
+            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc,WriteCC=.FALSE.)
             dnx%d1(:,i) = (dnx%d1(:,i) - dnx%d0(:)) * stepp
             IF (nderiv == 2) dnx%d2(:,i,i) = dnx%d2(:,i,i) + dnx%d0
 
@@ -1329,22 +1347,22 @@ MODULE mod_paramQ
 
             Qact_loc(i) = Qacti + mole%stepQ
             Qact_loc(j) = Qactj + mole%stepQ
-            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc)
+            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc,WriteCC=.FALSE.)
             dnx%d2(:,i,j) = dnx%d0(:)
 
             Qact_loc(i) = Qacti - mole%stepQ
             Qact_loc(j) = Qactj - mole%stepQ
-            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc)
+            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc,WriteCC=.FALSE.)
             dnx%d2(:,i,j) = dnx%d2(:,i,j) + dnx%d0(:)
 
             Qact_loc(i) = Qacti - mole%stepQ
             Qact_loc(j) = Qactj + mole%stepQ
-            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc)
+            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc,WriteCC=.FALSE.)
             dnx%d2(:,i,j) = dnx%d2(:,i,j) - dnx%d0(:)
 
             Qact_loc(i) = Qacti - mole%stepQ
             Qact_loc(j) = Qactj - mole%stepQ
-            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc)
+            CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc,WriteCC=.FALSE.)
             dnx%d2(:,i,j) = dnx%d2(:,i,j) - dnx%d0(:)
 
             dnx%d2(:,i,j) = dnx%d2(:,i,j) * step24
@@ -1358,7 +1376,7 @@ MODULE mod_paramQ
         END IF ! end second derivatives (crossing term)
 
         ! no derivative values
-        CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc)
+        CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc,WriteCC=WriteCC_loc)
 
         IF (nderiv == 2) THEN
          DO i=1,mole%nb_act
@@ -1373,27 +1391,27 @@ MODULE mod_paramQ
         it = mole%nb_Qtransfo
         nb_act = mole%tab_Qtransfo(mole%nb_Qtransfo)%nb_act
 
-        IF (mole%WriteCC .OR. debug) THEN
+        IF (WriteCC_loc .OR. debug) THEN
           CALL Write_d0Q(it,'Qact',Qact(1:mole%nb_act),6)
         END IF
 
         CALL alloc_dnSVM(dnQin,mole%tab_Qtransfo(it)%nb_Qout,nb_act,nderiv)
         dnQin%d0(:) = Qact(:)
-        IF (mole%WriteCC .OR. debug) CALL Write_d0Q(it,'Qin (Qact)',dnQin%d0,6)
+        IF (WriteCC_loc .OR. debug) CALL Write_d0Q(it,'Qin (Qact)',dnQin%d0,6)
 
 
         DO it=mole%nb_Qtransfo,1,-1
           IF (mole%tab_Qtransfo(it)%skip_transfo) CYCLE
-          IF (mole%WriteCC .OR. debug) write(out_unitp,*) 'name_transfo',it,&
+          IF (WriteCC_loc .OR. debug) write(out_unitp,*) 'name_transfo',it,&
                                   mole%tab_Qtransfo(it)%name_transfo
           CALL flush_perso(out_unitp)
           CALL alloc_dnSVM(dnQout,mole%tab_Qtransfo(it)%nb_Qout,nb_act,nderiv)
 
-          IF (mole%WriteCC .OR. debug) CALL Write_d0Q(it,'Qin ',dnQin%d0,6)
+          IF (WriteCC_loc .OR. debug) CALL Write_d0Q(it,'Qin ',dnQin%d0,6)
 
           CALL calc_Qtransfo(dnQin,dnQout,mole%tab_Qtransfo(it),nderiv,.TRUE.)
 
-          IF (mole%WriteCC .OR. debug) THEN
+          IF (WriteCC_loc .OR. debug) THEN
             IF (it == 1) THEN
               CALL Write_d0Q(it,'Qxyz',dnQout%d0,3)
             ELSE
@@ -1413,7 +1431,7 @@ MODULE mod_paramQ
         CALL dealloc_dnSVM(dnQin)
 
         !=================================================
-        IF (mole%WriteCC .OR. debug) THEN
+        IF (WriteCC_loc .OR. debug) THEN
           write(out_unitp,*) ' Cartesian coordinates (au):'
           CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
           write(out_unitp,*) ' Cartesian coordinates (ang):'
@@ -1458,7 +1476,7 @@ MODULE mod_paramQ
             GCenter_done = .TRUE.
 
             !=================================================
-            IF (mole%WriteCC .OR. debug) THEN
+            IF (WriteCC_loc .OR. debug) THEN
               write(out_unitp,*) ' Cartesian coordinates with respect to the COM (au):'
               CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
               write(out_unitp,*) ' Cartesian coordinates with respect to the COM (ang):'
@@ -1487,7 +1505,7 @@ MODULE mod_paramQ
               END IF
 
               !=================================================
-              IF (mole%WriteCC .OR. debug) THEN
+              IF (WriteCC_loc .OR. debug) THEN
                 write(out_unitp,*) ' Cartesian coordinates with Eckart (au):'
                 CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
                 write(out_unitp,*) ' Cartesian coordinates  with Eckart (ang):'
@@ -1585,6 +1603,95 @@ MODULE mod_paramQ
       CALL dealloc_dnSVM(dnx)
 
       END SUBROUTINE sub_QactTOd0x
+
+      SUBROUTINE sub_d0xTOQact(Qxyz,Qact,mole)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Tnum
+      IMPLICIT NONE
+
+
+      TYPE (zmatrix)    :: mole
+      real (kind=Rkind) :: Qxyz(:)
+      real (kind=Rkind) :: Qact(:)
+
+      real (kind=Rkind) :: Rot_initial(3,3),Qat1(3)
+
+
+      !- working variables -------------------------
+      integer :: it,nb_act,i,ic1,ic
+      integer :: it_QoutRead,it_QinRead
+
+      TYPE (Type_dnVec) :: dnQin,dnQout
+
+      !-----------------------------------------------------------------
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub='sub_d0xTOQact'
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'mole%nb_Qtransfo',mole%nb_Qtransfo
+        write(out_unitp,*) 'Qxyz =',Qxyz(:)
+        write(out_unitp,*)
+        !CALL Write_mole(mole)
+        write(out_unitp,*)
+      END IF
+      !-----------------------------------------------------------------
+
+      ! since it is going from out to in, it is better to use it_QoutRead (= it_QinRead+1)
+      it_QinRead  = 0 ! Qread=Qxyz => it_QinRead=0
+      it_QoutRead = it_QinRead + 1
+
+        it = it_QoutRead
+        nb_act = mole%tab_Qtransfo(it_QoutRead)%nb_act
+
+
+        CALL alloc_dnSVM(dnQout,mole%tab_Qtransfo(it)%nb_Qout,nb_act,0)
+
+        dnQout%d0(1:size(Qxyz)) = Qxyz(:)
+
+        DO it=it_QoutRead,mole%nb_Qtransfo
+
+          CALL alloc_dnSVM(dnQin,mole%tab_Qtransfo(it)%nb_Qin,nb_act,0)
+
+          IF (debug) THEN
+            CALL Write_d0Q(it,'Qout ' // trim(adjustl(mole%tab_Qtransfo(it)%name_transfo)),dnQout%d0,6)
+            write(out_unitp,*) 'Qout ',it,mole%tab_Qtransfo(it)%name_transfo,dnQout%d0
+            CALL flush_perso(out_unitp)
+          END IF
+
+          CALL calc_Qtransfo(dnQin,dnQout,mole%tab_Qtransfo(it),0,inTOout=.FALSE.)
+
+          IF (debug) THEN
+            CALL Write_d0Q(it,'Qin  ' // trim(adjustl(mole%tab_Qtransfo(it)%name_transfo)),dnQin%d0,6)
+            CALL flush_perso(out_unitp)
+          END IF
+
+          CALL dealloc_dnSVM(dnQout)
+          CALL alloc_dnSVM(dnQout,mole%tab_Qtransfo(it)%nb_Qin,nb_act,0)
+
+          CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv=0)
+          CALL dealloc_dnSVM(dnQin)
+
+        END DO
+
+        Qact(:) = dnQout%d0(1:size(Qact))
+        CALL dealloc_dnSVM(dnQout)
+
+
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'Qact',Qact(:)
+        write(out_unitp,*) 'END ',name_sub
+        write(out_unitp,*)
+      END IF
+      CALL flush_perso(out_unitp)
+      !-----------------------------------------------------------------
+
+      END SUBROUTINE sub_d0xTOQact
 
       SUBROUTINE Write_d0Q(it,name_info,d0Q,iblock)
       USE mod_system

@@ -2550,7 +2550,6 @@ MODULE mod_CartesianTransfo
 !         G : Center of mass calculation
 !         => molecule centers on G
 !======================================================================
-
           CALL centre_masse(ncart_act,ncart,dnx%d0,            &
                             masses,Mtot_inv,icG)
 

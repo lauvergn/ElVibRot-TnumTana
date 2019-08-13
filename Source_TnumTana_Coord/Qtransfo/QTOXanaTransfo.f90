@@ -178,13 +178,13 @@
             at = get_mass_Tnum(mendeleev,Z=QTOXanaTransfo%Z(i),name=name_at(i))
             IF (print_level > 0) write(out_unitp,*) i,QTOXanaTransfo%Z(i),at
 
-            IF (at == ZERO) THEN
-              write(out_unitp,*) ' ERROR in ',name_sub
-              write(out_unitp,*) '  One mass is ZERO.'
-              write(out_unitp,*) '  It is not possible for this transformation'
-              write(out_unitp,*) ' Check your data'
-              STOP
-            END IF
+!            IF (at == ZERO) THEN
+!              write(out_unitp,*) ' ERROR in ',name_sub
+!              write(out_unitp,*) '  One mass is ZERO.'
+!              write(out_unitp,*) '  It is not possible for this transformation'
+!              write(out_unitp,*) ' Check your data'
+!              STOP
+!            END IF
 
             QTOXanaTransfo%masses( 3*i -2: 3*i -0) = at
           END DO

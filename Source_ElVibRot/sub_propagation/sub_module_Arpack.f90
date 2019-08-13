@@ -66,7 +66,7 @@ CONTAINS
       !------ working parameters --------------------------------
       TYPE (param_psi)               :: psi_loc,Hpsi_loc
       real (kind=Rkind)              :: ZPE
-      real (kind=Rkind), allocatable :: Vec(:,:),Evec(:)
+      real (kind=Rkind), allocatable :: Evec(:)
 
 !     %-----------------------------%
 !     | Define leading dimensions   |
@@ -512,27 +512,20 @@ CONTAINS
 !     %---------------------------%
 
 
-
-      IF (debug) THEN
-        CALL sub_build_MatOp(psi,nb_diago,para_H,.TRUE.,.FALSE.)
-        CALL alloc_NParray(vec,(/ nb_diago,nb_diago /),'vec',name_sub)
-        CALL alloc_NParray(Evec,(/ nb_diago /),'Evec',name_sub)
-        CALL diagonalization(para_H%Rmat,Evec,Vec,nb_diago,2,1,.TRUE.)
-        ZPE = minval(Evec)
-        DO j=1,nb_diago
-           write(out_unitp,*) j,Evec(j)*get_Conv_au_TO_unit('E','cm-1'),   &
-                             (Evec(j)-ZPE)*get_Conv_au_TO_unit('E','cm-1')
-        END DO
-        CALL dealloc_NParray(vec,'vec',name_sub)
-        CALL dealloc_NParray(Evec,'Evec',name_sub)
-      END IF
-
       CALL dealloc_psi(Hpsi_loc,delete_all=.TRUE.)
       CALL dealloc_psi(psi_loc,delete_all=.TRUE.)
 
 
 !----------------------------------------------------------
        IF (debug) THEN
+        CALL alloc_NParray(Evec,(/ nb_diago /),'Evec',name_sub)
+        Evec(:) = real( psi(1:nb_diago)%CAvOp,kind=Rkind)
+        ZPE = minval(Evec)
+        DO j=1,nb_diago
+           write(out_unitp,*) j,Evec(j)*get_Conv_au_TO_unit('E','cm-1'),   &
+                             (Evec(j)-ZPE)*get_Conv_au_TO_unit('E','cm-1')
+        END DO
+        CALL dealloc_NParray(Evec,'Evec',name_sub)
          write(out_unitp,*) 'END ',name_sub
        END IF
 !----------------------------------------------------------

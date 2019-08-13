@@ -1085,7 +1085,7 @@
 
       END DO
       write(out_unitp,*) ib,'nb(L)',(basis_SG%tab_basisPrimSG(L,ib)%nb,L=0,Lmax)
-      write(out_unitp,*) ib,'nq(L)',(get_nb_FROM_basis(basis_SG%tab_basisPrimSG(L,ib)),L=0,Lmax)
+      write(out_unitp,*) ib,'nq(L)',(get_nq_FROM_basis(basis_SG%tab_basisPrimSG(L,ib)),L=0,Lmax)
       END DO
       basis_SG%primitive_done = .TRUE.
       IF (Print_basis) THEN

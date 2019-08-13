@@ -191,7 +191,7 @@
   real (kind=Rkind) :: convDebyeTOau,conv_auTOCm
   real (kind=Rkind) :: inv_Name
 
-  real (kind=Rkind) :: auTOcm_inv,auTOenergy,auTOeV,auTOGHz
+  real (kind=Rkind) :: auTOcm_inv,auTOenergy,auTOeV,auTOGHz,auTOkJmol_inv,auTOkcalmol_inv
   character(len=Name_len)  :: ene_unit
   character(len=Name_len)  :: version,mass_version
 
@@ -306,6 +306,11 @@
 !   Energy conversion factor: GHz => eV
     auTOGHz    = auTOcm_inv * ONETENTH**7 * c
 
+!   Energy conversion factor: au => kJ.mol-1
+    auTOkJmol_inv    = Eh * ONETENTH**3 * Na
+!   Energy conversion factor: au => kcal.mol-1
+    auTOkcalmol_inv    = Eh * ONETENTH**3 * Na /4.184_Rkind
+
 !   Electric field conversion factor: au => V.cm-1
     E0 = Eh / (e * a0) / HUNDRED
     E0 = hb**2 / (e * a0**3 * me) / HUNDRED
@@ -394,6 +399,8 @@
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(k/Eh,'°K','E')) ! Kelvin
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOcm_inv,'cm-1','E'))
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOGHz,'GHz','E'))
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOkcalmol_inv,'kcal.mol-1','E'))
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOkJmol_inv,'kJ.mol-1','E'))
 
   ! for the automatic time (t) conversion
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'ua','t'),Work_unit=.TRUE.)

@@ -89,7 +89,10 @@ MODULE mod_Tnum
           character (len=Name_len)      :: file_name_OTF      = ' '
           character (len=Name_len)      :: file_name_fchk     = ' '
 
-          ! parameters for PES obtained from internal fit program
+          ! parameters for the Quantum Model Lib (ECAM), KEO+PES
+          logical                       :: QMLib = .FALSE.
+
+          ! parameters for the PES obtained from internal fit program
           logical                       :: nDfit_Op = .FALSE.
           character (len=Line_len)      :: BaseName_nDfit_file
           TYPE (param_nDFit)            :: para_nDFit_V

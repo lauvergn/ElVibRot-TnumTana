@@ -6,7 +6,7 @@
 #F90 = pgf90
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -18,6 +18,8 @@ INT = 4
 ARPACK = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
+## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
+QML = 0
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 # if $(EXTFextern) is empty, the default is f
@@ -26,24 +28,42 @@ extf = $(EXTFextern)
 ## Operating system, OS? automatic using uname:
 OS=$(shell uname)
 #
+#=================================================================================
 # External pot for the library: libpot.a, with epxort variable (POTDIRextern) or with explicit name
 ExternalDIR := $(POTDIRextern)
 # Example pot Bowman (new lib)
 #ExternalDIR := /u/lauvergn/trav/ElVibRot-Tnum/exa_work/exa_clathrate-Bowman/H2-clathrate-PES-ompNewLib/ver1
 # Valiron pot
 #ExternalDIR := /Users/lauvergn/Documents/Papiers/Clathrate/Papier1-2016/Papier1-2016/Pot_Valiron/code_PES_V08
-#ExternalDIR := /Users/lauvergn/git/E-CAM-ModelLib
-PESLIB := -L$(ExternalDIR) -lpot
-#EXTMOD := -fintrinsic-modules-path /Users/lauvergn/git/E-CAM-ModelLib/OBJ
-#
-#=================================================================================
-#=================================================================================
-
-#=================================================================================
+#ExternalDIR := /Users/lauvergn/git/PotV08_6D/EXEC_6D-v3
+DIRLIB := -L$(ExternalDIR)
+PESLIB := -lpot
 # If ExternalDIR is empty, PESLIB must be empty
 ifeq  ($(strip $(ExternalDIR)),)
   PESLIB =
+  DIRLIB =
 endif
+#=================================================================================
+#=================================================================================
+#
+#=================================================================================
+# Quantum Model Lib (ECAM)
+QMLibDIR := /Users/lauvergn/git/QuantumModelLib
+DIRLIB += -L$(QMLibDIR)
+QMLIB := -lQMLib
+QMLibDIR_full := $(QMLibDIR)/libQMLib.a
+ifeq  ($(strip $(QML)),)
+  QMLIB := 
+  QMLibDIR_full :=
+endif
+ifeq ($(QML),0)
+  QMLIB := 
+  QMLibDIR_full :=
+endif
+#=================================================================================
+#
+#
+#=================================================================================
 # If EXTFextern is empty, extf must be empty
 ifeq  ($(strip $(EXTFextern)),)
   extf = f
@@ -57,6 +77,8 @@ ifeq ($(LAPACK),0)
 endif
 #=================================================================================
 #
+CompC=gcc
+
 #=================================================================================
 #=================================================================================
 # ifort compillation v12 with mkl
@@ -142,6 +164,7 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
      ifeq ($(OS),Darwin)    # OSX
         # OSX libs (included lapack+blas)
         F90LIB = -framework Accelerate
+        CompC  = gcc-9
      else                   # Linux
         # linux libs
         F90LIB = -llapack -lblas
@@ -158,10 +181,12 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
    # opt management
    ifeq ($(OPT),1)
       F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
+      CFLAGS   = -O5 -g $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
    else
       #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wconversion -Wconversion-extra
       #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wunused
        F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
+       CFLAGS   = -O0 -g $(OMPFLAG) -fwhole-file -Wuninitialized
       #F90FLAGS = -O0 -fbounds-check -Wuninitialized
    endif
    # integer kind management
@@ -169,7 +194,6 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
       F90FLAGS := $(F90FLAGS) -fdefault-integer-8
    endif
 endif
-F90FLAGS := $(F90FLAGS)   $(EXTMOD)
 #=================================================================================
 #=================================================================================
 $(info ***********************************************************************)
@@ -179,10 +203,12 @@ $(info ***********OPTIMIZATION:    $(OPT))
 $(info ***********OpenMP:          $(OMPFLAG))
 $(info ***********Arpack:          $(ARPACK))
 $(info ***********Lapack:          $(LAPACK))
+$(info ***********QMLib:           $(QMLIB))
 $(info ***********F90FLAGS:        $(F90FLAGS))
 $(info ***********F90LIB:          $(F90LIB))
 $(info ***********subsystem file:  sub_system.$(extf))
 $(info ***********DIR of potlib.a: $(ExternalDIR))
+$(info ***********potLib:          $(PESLIB))
 $(info ***********************************************************************)
 
 
@@ -206,7 +232,7 @@ endif
 #=================================================================================
 
 
- LIBS := $(PESLIB) $(F90LIB) $(ARPACKLIB)
+ LIBS := $(DIRLIB) $(QMLIB) $(PESLIB) $(F90LIB) $(ARPACKLIB)
  LYNKFLAGS = $(LIBS)
 
 
@@ -238,6 +264,7 @@ CPPSHELL = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
            -D__TANA_VER="'$(TANA_ver)'"
 CPPSHELL_ARPACK = -D__ARPACK="$(ARPACK)"
 CPPSHELL_DIAGO  = -D__LAPACK="$(LAPACK)"
+CPPSHELL_QML    = -D__QML="$(QML)"
 
 #==========================================
 # the different programs
@@ -264,8 +291,8 @@ PhysConstMAIN = PhysicalConstants_Main
 KEOTESTEXE  = TEST_TnumTana.exe
 KEOTEST     = TEST_TnumTana
 #
-TEST_TnumTana_libEXE=Main_TnumTana_lib.exe
-TEST_TnumTana_libMain=Main_TnumTana_lib
+Main_TnumTana_FDriverEXE=Main_TnumTana_FDriver.exe
+Main_TnumTana_cDriverEXE=Main_TnumTana_cDriver.exe
 #
 TNUMEXE  = Tnum90.exe
 TNUMMAIN = Tnum90
@@ -431,7 +458,7 @@ Obj_PrimOperator = \
 #  For Tnum/Tana + Primitive Operators only
 Obj_KEO_PrimOp= \
   $(Obj_lib) $(Obj_PhyCte) $(OBJ)/versionEVR-T.o \
-  $(Obj_Coord_KEO) $(Obj_PrimOperator) $(OBJ)/TnumTana_Lib.o
+  $(Obj_Coord_KEO) $(Obj_PrimOperator) $(OBJ)/Module_ForTnumTana_Driver.o $(OBJ)/TnumTana_Lib.o
 #============================================================
 
 
@@ -537,10 +564,10 @@ all:obj $(VIBEXE)
 # vib
 EVR:obj $(VIBEXE)
 	echo "EVR"
-#TEST_TnumTana_libEXE=Main_TnumTana_lib.exe
-#TEST_TnumTana_libMain=Main_TnumTana_lib
-libTnumtest: obj $(TEST_TnumTana_libEXE)
-	echo libTnumtest
+Tnum_FDriver: obj $(Main_TnumTana_FDriverEXE)
+	echo Main_TnumTana_FDriver
+Tnum_cDriver: obj $(Main_TnumTana_cDriverEXE)
+	echo Main_TnumTana_cDriver
 libTnum: obj $(OBJ)/libTnum.a
 	echo libTnum.a
 libTnum.a: obj $(OBJ)/libTnum.a
@@ -576,6 +603,11 @@ PhysConst:obj $(PhysConstEXE)
 #===============================================
 #===============================================
 #
+# QML
+$(QMLibDIR_full):
+	cd $(QMLibDIR) ; make
+   
+#
 obj:
 	mkdir -p obj
 #
@@ -600,7 +632,7 @@ clean:
 #===============================================
 #===============================================
 #
-$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o
+$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(QMLibDIR_full)
 	echo EVR-T
 	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o  $(LYNKFLAGS)
 	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
@@ -610,9 +642,11 @@ $(OBJ)/libTnum.a: obj $(Obj_KEO_PrimOp)
 	ar cr $(OBJ)/libTnum.a   $(Obj_KEO_PrimOp)
 $(KEOTESTEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(KEOTEST).o
 	$(LYNK90)   -o $(KEOTESTEXE) $(OBJ)/$(KEOTEST).o $(OBJ)/libTnum.a $(LYNKFLAGS)
-#
-$(TEST_TnumTana_libEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TEST_TnumTana_libMain).o
-	$(LYNK90)   -o $(TEST_TnumTana_libEXE) $(OBJ)/$(TEST_TnumTana_libMain).o $(OBJ)/libTnum.a $(LYNKFLAGS)
+#Main_TnumTana_FDriver
+$(Main_TnumTana_FDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_FDriver.o
+	$(LYNK90)   -o $(Main_TnumTana_FDriverEXE) $(OBJ)/Main_TnumTana_FDriver.o $(OBJ)/libTnum.a $(LYNKFLAGS)
+$(Main_TnumTana_cDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_cDriver.o
+	$(CompC) -o $(Main_TnumTana_cDriverEXE) $(CFLAGS) $(OBJ)/Main_TnumTana_cDriver.o $(OBJ)/libTnum.a $(LYNKFLAGS) -lgfortran -lm
 #
 $(TNUMEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMAIN).o
 	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS)
@@ -793,13 +827,28 @@ $(OBJ)/sub_PrimOp_def.o:$(DIRPrimOp)/sub_PrimOp_def.f90
 $(OBJ)/sub_module_OnTheFly_def.o:$(DIRPrimOp)/sub_module_OnTheFly_def.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_module_OnTheFly_def.f90
 $(OBJ)/sub_PrimOp.o:$(DIRPrimOp)/sub_PrimOp.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_PrimOp.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_QML)  -c $(DIRPrimOp)/sub_PrimOp.f90
 $(OBJ)/sub_onthefly.o:$(DIRPrimOp)/sub_onthefly.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_onthefly.f90
+$(OBJ)/Module_ForTnumTana_Driver.o:$(DirTNUM)/Module_ForTnumTana_Driver.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Module_ForTnumTana_Driver.f90
 $(OBJ)/TnumTana_Lib.o:$(DirTNUM)/TnumTana_Lib.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/TnumTana_Lib.f90
-#
 # 
+#===================================================================================
+# mains TnumTana_PrimOp
+$(OBJ)/$(TNUMMAIN).o:$(DirTNUM)/$(TNUMMAIN).f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUMMAIN).f90
+$(OBJ)/$(TNUMDISTMAIN).o:$(DirTNUM)/$(TNUMDISTMAIN).f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUMDISTMAIN).f90
+$(OBJ)/$(TNUMMCTDHMAIN).o:$(DirTNUM)/$(TNUMMCTDHMAIN).f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUMMCTDHMAIN).f90
+$(OBJ)/$(KEOTEST).o:$(DirTNUM)/$(KEOTEST).f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(KEOTEST).f90
+$(OBJ)/Main_TnumTana_FDriver.o:$(DirTNUM)/Main_TnumTana_FDriver.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Main_TnumTana_FDriver.f90
+$(OBJ)/Main_TnumTana_cDriver.o:$(DirTNUM)/Main_TnumTana_cDriver.c
+	cd $(OBJ) ; $(CompC) $(CFLAGS)  -c $(DirTNUM)/Main_TnumTana_cDriver.c
 #
 #===================================================================================
 # module
@@ -1001,19 +1050,6 @@ $(OBJ)/nb_harm.o:$(DIR1)/nb_harm.f90
 # mains
 $(OBJ)/$(VIBMAIN).o:$(DIRvib)/$(VIBMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS) -c $(DIRvib)/$(VIBMAIN).f90
-$(OBJ)/$(TNUMMAIN).o:$(DirTNUM)/$(TNUMMAIN).f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUMMAIN).f90
-$(OBJ)/$(TNUMDISTMAIN).o:$(DirTNUM)/$(TNUMDISTMAIN).f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUMDISTMAIN).f90
-$(OBJ)/$(TNUMMCTDHMAIN).o:$(DirTNUM)/$(TNUMMCTDHMAIN).f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUMMCTDHMAIN).f90
-$(OBJ)/$(KEOTEST).o:$(DirTNUM)/$(KEOTEST).f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(KEOTEST).f90
-$(OBJ)/$(TEST_TnumTana_libMain).o:$(DirTNUM)/$(TEST_TnumTana_libMain).f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TEST_TnumTana_libMain).f90
-#
-$(OBJ)/$(TNUM_MiddasCppMAIN).o:$(DirTNUM)/$(TNUM_MiddasCppMAIN).f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUM_MiddasCppMAIN).f90
 #
 $(OBJ)/$(GWPMAIN).o:$(DIRvib)/$(GWPMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRvib)/$(GWPMAIN).f90

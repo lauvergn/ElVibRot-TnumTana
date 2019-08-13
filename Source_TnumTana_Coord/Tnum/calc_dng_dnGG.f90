@@ -749,8 +749,6 @@ MODULE mod_dnGG_dng
 
         CALL INV_dnMat1_TO_dnMat2(dng,dnGG,nderiv)
 
-        !IF (para_Tnum%WriteT .OR. debug) CALL analyze_dnx(dnx,Qact,mole)
-
         CALL dealloc_dnSVM(dng)
 
       END IF
@@ -1144,13 +1142,14 @@ MODULE mod_dnGG_dng
        logical :: Without_Rot,With_VecCOM
 
 !----- for debuging --------------------------------------------------
-      logical, parameter :: debug = .FALSE.
-!     logical, parameter :: debug = .TRUE.
+       logical, parameter :: debug = .FALSE.
+       !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING sub_d0A'
          write(out_unitp,*) 'nb_act,nat_act,ncart,ncart_act,ndimA',             &
                      nb_act,nat_act,ncart,ncart_act,ndimA
+         write(out_unitp,*) 'Without_Rot',Without_Rot
          write(out_unitp,*)
        END IF
 !-----------------------------------------------------------
@@ -1302,8 +1301,8 @@ MODULE mod_dnGG_dng
        logical :: Without_Rot
 
 !----- for debuging --------------------------------------------------
-      logical, parameter :: debug = .FALSE.
-!     logical, parameter :: debug = .TRUE.
+       logical, parameter :: debug = .FALSE.
+       !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING sub_d1A'

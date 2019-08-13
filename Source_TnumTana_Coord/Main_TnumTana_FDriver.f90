@@ -1,4 +1,4 @@
- PROGRAM Main_TnumTana
+ PROGRAM Main_TnumTana_FDriver
  IMPLICIT NONE
 
 
@@ -32,4 +32,4 @@
     write(6,*) (i-1)/3+1,Qcart(i:i+2)
   END DO
 
- END PROGRAM Main_TnumTana
+ END PROGRAM Main_TnumTana_FDriver

@@ -104,9 +104,9 @@ MODULE mod_Lib_QTransfo
       logical :: check
 
 !     -----------------------------------------------------------------
-!     logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
       logical, parameter :: debug = .FALSE.
-      integer, parameter :: nderiv_debug = 3
+      integer, parameter :: nderiv_debug = 1
       character (len=*), parameter :: name_sub = 'sub3_dnx_AT2_new'
 !     -----------------------------------------------------------------
 
@@ -145,8 +145,8 @@ MODULE mod_Lib_QTransfo
 !
 !      ------------
 !
-!          atf
-!          /                          ex3
+!          atf                        ex3
+!          /                           ^
 !      d  /                            |
 !        /                             |
 !       /  val                         |
@@ -169,9 +169,9 @@ MODULE mod_Lib_QTransfo
         integer :: nderiv
 
 !     -----------------------------------------------------------------
-!     logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
       logical, parameter :: debug = .FALSE.
-      integer, parameter :: nderiv_debug = 3
+      integer, parameter :: nderiv_debug = 1
       character (len=*), parameter :: name_sub = 'sub3_dnx_AT3_new'
 !     -----------------------------------------------------------------
       IF (debug) THEN
@@ -440,7 +440,7 @@ MODULE mod_Lib_QTransfo
 
       TYPE (Type_dnS)   :: dnS1,dnS2
 !     -----------------------------------------------------------------
-!      logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
       logical, parameter :: debug = .FALSE.
       integer, parameter :: nderiv_debug = 1
       character (len=*), parameter :: name_sub = 'sub3_dnx_AT4_cart_new'
@@ -455,8 +455,15 @@ MODULE mod_Lib_QTransfo
         CALL Write_dnSVM(dna,nderiv=nderiv_debug)
         write(out_unitp,*) 'dnb'
         CALL Write_dnSVM(dnb,nderiv=nderiv_debug)
-        write(out_unitp,*) 'dnb'
-        CALL Write_dnSVM(dnb,nderiv=nderiv_debug)
+        write(out_unitp,*) 'dnc'
+        CALL Write_dnSVM(dnc,nderiv=nderiv_debug)
+
+        write(out_unitp,*) 'dnx3'
+        CALL Write_dnSVM(dnx3,nderiv=nderiv_debug)
+        write(out_unitp,*) 'dny3'
+        CALL Write_dnSVM(dny3,nderiv=nderiv_debug)
+        write(out_unitp,*) 'dnz3'
+        CALL Write_dnSVM(dnz3,nderiv=nderiv_debug)
       END IF
 !     -----------------------------------------------------------------
 

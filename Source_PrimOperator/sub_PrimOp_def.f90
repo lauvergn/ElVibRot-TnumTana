@@ -65,6 +65,11 @@
           TYPE (param_OTF)              :: para_OTF_Dip
           logical                       :: levelEne_EQ_levelDip = .TRUE.
 
+          ! parameters for the Quantum Model Lib (ECAM), KEO+PES
+          logical                       :: QMLib = .FALSE.
+          integer, allocatable          :: Qit_TO_QQMLib(:)
+
+
           ! For the nDfit
           logical                       :: nDfit_Op = .FALSE.
           TYPE (param_nDFit)            :: para_nDFit_V
@@ -110,6 +115,11 @@
       write(out_unitp,*) 'para_PES%deriv_WITH_FiniteDiff',para_PES%deriv_WITH_FiniteDiff
       write(out_unitp,*) 'para_PES%nDfit_Op',para_PES%nDfit_Op
 
+      ! parameters for the Quantum Model Lib (ECAM), KEO+PES
+      write(out_unitp,*) 'para_PES%QMLib',para_PES%QMLib
+      IF (allocated(para_PES%Qit_TO_QQMLib)) THEN
+        write(out_unitp,*) 'para_PES%Qit_TO_QQMLib',para_PES%Qit_TO_QQMLib
+      END IF
 
       write(out_unitp,*) 'para_PES%Type_HamilOp',para_PES%Type_HamilOp
       write(out_unitp,*) 'para_PES%direct_KEO',para_PES%direct_KEO
@@ -176,6 +186,9 @@
         para_PES%nb_scalar_Op          = para_PES_FromTnum%nb_scalar_Op
         para_PES%deriv_WITH_FiniteDiff = para_PES_FromTnum%deriv_WITH_FiniteDiff
         para_PES%nDfit_Op              = para_PES_FromTnum%nDfit_Op
+
+        para_PES%QMLib                  = para_PES_FromTnum%QMLib
+
 
       !IF (para_PES%OnTheFly) THEN
         para_PES%para_OTF%charge       = para_PES_FromTnum%charge
