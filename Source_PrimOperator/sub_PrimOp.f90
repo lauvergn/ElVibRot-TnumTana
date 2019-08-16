@@ -2112,8 +2112,8 @@
 
 !      -----------------------------------------------------------------
       integer :: err_mem,memory
-      logical, parameter :: debug=.FALSE.
-      !logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub = 'calc4_NM_TO_sym'
 !      -----------------------------------------------------------------
        IF (debug) THEN
@@ -2209,7 +2209,7 @@
       write(out_unitp,*) '  nb_PerBlock(:)      ',nb_PerBlock(:)
       write(out_unitp,*) '  Ind_Coord_AtBlock(:)',Ind_Coord_AtBlock(:)
       write(out_unitp,*) '  nb_NM',nb_NM
-
+      CALL flush_perso(out_unitp)
       !-----------------------------------------------------------------
       !-----------------------------------------------------------------
 
@@ -2225,6 +2225,7 @@
         write(out_unitp,*) '========= nb_PerBlock: ',nb_PerBlock(i_Block)
         write(out_unitp,*) '========================================='
         write(out_unitp,*)
+        CALL flush_perso(out_unitp)
 
         !- create mole_1 (type=-1 => type=1)
         CALL mole1TOmole2(mole,mole_1)
@@ -2246,11 +2247,13 @@
 
         Qact = mole_1%ActiveTransfo%Qact0(:)
         IF (print_level > 1) write(out_unitp,*) 'Qact',Qact
+        CALL flush_perso(out_unitp)
 
 
         IF (debug) THEN
           write(out_unitp,*) 'mole_1:'
           CALL Write_mole(mole_1)
+          CALL flush_perso(out_unitp)
         END IF
 
         CALL alloc_NParray(d0c,     (/nb_NM,nb_NM/),"d0c",     name_sub)
@@ -2285,6 +2288,7 @@
           write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
                           i,i2,d0eh(i:i2)*auTOcm_inv
         END DO
+        CALL flush_perso(out_unitp)
 
         ! frequencies
         iQ = 0
@@ -2301,6 +2305,7 @@
           write(out_unitp,*) 'new d0k'
           CALL Write_Mat(d0k_save,out_unitp,5)
           write(out_unitp,*) '==========================='
+          CALL flush_perso(out_unitp)
         END IF
 
         ! change d0c, d0c_inv
@@ -3044,6 +3049,7 @@
         write(out_unitp,*)
         !CALL Write_mole(mole)
         !write(out_unitp,*)
+        CALL flush_perso(out_unitp)
       END IF
       !-----------------------------------------------------------------
 
@@ -3056,6 +3062,7 @@
         write(out_unitp,*) '========================================='
         write(out_unitp,*) '==== hessian and kinetic matrices ======='
         write(out_unitp,*) '========================================='
+        CALL flush_perso(out_unitp)
       END IF
 
       IF (mole%NMTransfo%hessian_read .AND. mole%NMTransfo%k_read) THEN
@@ -3197,6 +3204,7 @@
         DO i=1,nb_NM,3
           write(out_unitp,*) i,'d0eh:',d0eh(i:min(i+2,nb_NM))
         END DO
+        CALL flush_perso(out_unitp)
       END IF
 
 
@@ -3206,6 +3214,7 @@
         write(out_unitp,*) '========================================='
         write(out_unitp,*) '========================================='
         write(out_unitp,*)
+        CALL flush_perso(out_unitp)
       END IF
 
 !     -----------------------------------------------------------------
@@ -4678,7 +4687,6 @@
   !-----------------------------------------------------------------
 
 
-
   !----- calc and transfert NM to LinearTransfo%mat if needed ---------------
   IF (associated(mole%NMTransfo)) THEN
       IF (.NOT. mole%tab_Qtransfo(mole%itNM)%skip_transfo) THEN
@@ -4754,7 +4762,7 @@
                                              mole%ActiveTransfo%Qact0,  &
                                              mole%ActiveTransfo)
 
-        write(6,*) 'New Qact0',mole%ActiveTransfo%Qact0
+        write(out_unitp,*) 'New Qact0',mole%ActiveTransfo%Qact0
 
         write(out_unitp,*) ' Frequencies, normal modes at the reference geometry'
 
@@ -4803,9 +4811,7 @@
 
       CALL dealloc_NPArray(GGdef,'GGdef',name_sub)
     ELSE
-
       CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=0)
-
     END IF
     IF (para_Tnum%Gcte) THEN
 

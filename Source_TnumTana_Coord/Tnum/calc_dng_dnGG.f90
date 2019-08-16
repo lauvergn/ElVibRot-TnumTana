@@ -25,7 +25,7 @@ MODULE mod_dnGG_dng
   use mod_dnSVM,   only: type_dnmat, type_dns, alloc_dnsvm, dealloc_dnsvm,     &
                          write_dnsvm, sub_zero_to_dnmat, inv_dnmat1_to_dnmat2, &
                          type_dnvec, alloc_array, dealloc_array
-  use mod_paramQ,  only: sub_qacttodnx, Write_dnx
+  use mod_paramQ,  only: sub_QactTOdnMWx, Write_dnx
   use mod_Tnum,    only: zmatrix, tnum, write_mole, mole1tomole2, dealloc_zmat
   USE mod_dnRho ! all
 
@@ -179,7 +179,7 @@ MODULE mod_dnGG_dng
 !     - for memory ---------------------------------------------
       real (kind=Rkind) :: rho,vep
 
-      TYPE (Type_dnMat) :: dng100,dnGG100,dnGG_temp
+      TYPE (Type_dnMat) :: dnGG100,dnGG_temp
       TYPE (zmatrix)    :: mole100
 !     ----------------------------------------------------------
 
@@ -204,7 +204,7 @@ MODULE mod_dnGG_dng
       logical, save :: begin = .TRUE.
 
 !----- for debuging --------------------------------------------------
-      integer :: err_mem,memory
+      
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub = 'get_dng_dnGG'
@@ -427,7 +427,7 @@ MODULE mod_dnGG_dng
 
 
 !----- for debuging --------------------------------------------------
-      integer :: err_mem,memory
+      
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub = 'get_d0g_d0GG'
@@ -506,7 +506,7 @@ MODULE mod_dnGG_dng
 
 
 !----- for debuging --------------------------------------------------
-      integer :: err_mem,memory
+      
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub = 'get_d0g_d0GG'
@@ -607,22 +607,13 @@ MODULE mod_dnGG_dng
 
 !     - for memory ---------------------------------------------
       TYPE(Type_dnMat)  :: dng,dnGG_loc
-
-      real (kind=Rkind) :: rho,vep
-
-      TYPE (Type_dnVec) :: dnQin,dnQout,dnx
-
-      integer :: it
-
-      integer :: i,j,k,l
-      integer           :: nderivX
-
+      integer           :: i,j
       real (kind=Rkind) :: Qacti,Qactj,step2,stepp,step24
 
 
 
 !----- for debuging --------------------------------------------------
-      integer :: err_mem,memory
+      
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub = 'get_dnGG'
@@ -782,7 +773,7 @@ MODULE mod_dnGG_dng
 
 !     - for memory ---------------------------------------------
 
-      TYPE (Type_dnVec) :: dnx
+      TYPE (Type_dnVec) :: dnMWx
 
 
 
@@ -802,21 +793,20 @@ MODULE mod_dnGG_dng
         write(out_unitp,*)
         CALL flush_perso(out_unitp)
       END IF
-
 !---------------------------------------------------------------
 
 
-      CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv+1)
+      CALL alloc_dnSVM(dnMWx,mole%ncart,mole%nb_act,nderiv+1)
 
       IF (para_Tnum%num_g) THEN
-        CALL sub3_dnA_num(Qact,dng,dnx,mole,para_Tnum,nderiv)
+        CALL sub3_dnA_num(Qact,dng,dnMWx,mole,para_Tnum,nderiv)
       ELSE
-        CALL sub3_dnA_ana(Qact,dng,dnx,mole,para_Tnum,nderiv)
+        CALL sub3_dnA_ana(Qact,dng,dnMWx,mole,para_Tnum,nderiv)
       END IF
 
-     !IF (para_Tnum%WriteT .OR. debug) CALL analyze_dnx(dnx,Qact,mole)
+      IF (debug) CALL analyze_dnx(dnMWx,Qact,mole)
 
-      CALL dealloc_dnSVM(dnx)
+      CALL dealloc_dnSVM(dnMWx)
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -826,9 +816,7 @@ MODULE mod_dnGG_dng
       END IF
 !-----------------------------------------------------------
 
-
       END SUBROUTINE get_dng
-
 !
 !=====================================================================
 !
@@ -836,14 +824,14 @@ MODULE mod_dnGG_dng
 !
 !=====================================================================
 !
-      SUBROUTINE sub3_dnA_ana(Qact,dnA,dnx,mole,para_Tnum,nderivA)
+      SUBROUTINE sub3_dnA_ana(Qact,dnA,dnMWx,mole,para_Tnum,nderivA)
       IMPLICIT NONE
 
       TYPE (zmatrix)    :: mole
       real (kind=Rkind), intent(inout) :: Qact(mole%nb_var)
 
       TYPE(Type_dnMat)  :: dnA
-      TYPE(Type_dnVec)  :: dnx
+      TYPE(Type_dnVec)  :: dnMWx
 
       TYPE (Tnum)       :: para_Tnum
       integer           :: nderivA
@@ -877,24 +865,24 @@ MODULE mod_dnGG_dng
       Gcenter = .TRUE.
       nderivX = nderivA + 1
 
-      CALL sub_QactTOdnx(Qact,dnx,mole,nderivX,Gcenter,               &
+      CALL sub_QactTOdnMWx(Qact,dnMWx,mole,nderivX,Gcenter,             &
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
 
       IF (nderivA >= 0) THEN
-        CALL sub_d0A(dnA%d0,dnx%d0,dnx%d1,                              &
+        CALL sub_d0A(dnA%d0,dnMWx%d0,dnMWx%d1,                          &
                      mole%nb_act,mole%nat_act,mole%ncart,               &
                      mole%ncart_act,dnA%nb_var_Matl,                    &
                      mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
       END IF
       IF (nderivA >= 1) THEN
-        CALL sub_d1A(dnA%d1,dnx%d0,dnx%d1,dnx%d2,                       &
+        CALL sub_d1A(dnA%d1,dnMWx%d0,dnMWx%d1,dnMWx%d2,                 &
                      mole%nb_act,mole%nat_act,mole%ncart,               &
                      mole%ncart_act,dnA%nb_var_Matl,                    &
                      mole%Without_Rot)
 
       END IF
       IF (nderivA == 2) THEN
-        CALL sub_d2A(dnA%d2,dnx%d0,dnx%d1,dnx%d2,dnx%d3,                &
+        CALL sub_d2A(dnA%d2,dnMWx%d0,dnMWx%d1,dnMWx%d2,dnMWx%d3,         &
                      mole%nb_act,mole%nat_act,mole%ncart,               &
                      mole%ncart_act,dnA%nb_var_Matl,                    &
                      mole%Without_Rot)
@@ -904,8 +892,8 @@ MODULE mod_dnGG_dng
 !-----------------------------------------------------------
       IF (debug) THEN
 
-        write(out_unitp,*) 'dnx'
-        CALL write_dnx(1,mole%ncart,dnx,nderivX)
+        write(out_unitp,*) 'dnMWx'
+        CALL write_dnx(1,mole%ncart,dnMWx,nderivX)
 
         write(out_unitp,*) 'dnA'
         CALL Write_dnSVM(dnA)
@@ -921,14 +909,14 @@ MODULE mod_dnGG_dng
 !
 !=====================================================================
 !
-      SUBROUTINE sub3_dnA_num(Qact,dnA,dnx,mole,para_Tnum,nderivA)
+      SUBROUTINE sub3_dnA_num(Qact,dnA,dnMWx,mole,para_Tnum,nderivA)
       IMPLICIT NONE
 
       TYPE (zmatrix)    :: mole
       real (kind=Rkind), intent(inout) :: Qact(mole%nb_var)
 
       TYPE(Type_dnMat)  :: dnA
-      TYPE(Type_dnVec)  :: dnx
+      TYPE(Type_dnVec)  :: dnMWx
 
       TYPE (Tnum)       :: para_Tnum
 
@@ -942,10 +930,10 @@ MODULE mod_dnGG_dng
       real (kind=Rkind) :: step2,step24,stepp
 
       integer           :: i,j
-      real (kind=Rkind), pointer :: At(:,:)
+      real (kind=Rkind), allocatable :: At(:,:)
 
 !----- for debuging --------------------------------------------------
-      integer :: err_mem,memory
+      
       logical, parameter :: debug = .FALSE.
 !     logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub = 'sub3_dnA_num'
@@ -962,7 +950,6 @@ MODULE mod_dnGG_dng
        END IF
 !-----------------------------------------------------------
 
-       nullify(At)
         write(out_unitp,*) 'num_x,nrho',para_Tnum%num_x,para_Tnum%nrho
         write(out_unitp,*) 'step',para_Tnum%stepT
 !----- some step ----------------------------------------------------
@@ -975,7 +962,7 @@ MODULE mod_dnGG_dng
       step24 = step2/FOUR
       stepp = ONE/(para_Tnum%stepT+para_Tnum%stepT)
 
-      CALL alloc_array(At,(/ dnA%nb_var_Matl,dnA%nb_var_Matc /),"At",name_sub)
+      CALL alloc_NParray(At,(/ dnA%nb_var_Matl,dnA%nb_var_Matc /),"At",name_sub)
 
 !===================================================================
 !
@@ -984,10 +971,10 @@ MODULE mod_dnGG_dng
 !===================================================================
       IF (nderivA >=0) THEN
 
-        CALL sub_QactTOdnx(Qact,dnx,mole,1,Gcenter,                   &
+        CALL sub_QactTOdnMWx(Qact,dnMWx,mole,1,Gcenter,                 &
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
 
-        CALL sub_d0A(dnA%d0,dnx%d0,dnx%d1,                              &
+        CALL sub_d0A(dnA%d0,dnMWx%d0,dnMWx%d1,                          &
                      mole%nb_act,mole%nat_act,mole%ncart,               &
                      mole%ncart_act,dnA%nb_var_Matl,                    &
                      mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
@@ -1006,10 +993,10 @@ MODULE mod_dnGG_dng
           Qacti = Qact(i)
 
           Qact(i) = Qacti + para_Tnum%stepT
-          CALL sub_QactTOdnx(Qact,dnx,mole,1,Gcenter,                 &
+          CALL sub_QactTOdnMWx(Qact,dnMWx,mole,1,Gcenter,               &
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
 
-          CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
+          CALL sub_d0A(At,dnMWx%d0,dnMWx%d1,                            &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
                        mole%ncart_act,dnA%nb_var_Matl,                  &
                        mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
@@ -1017,9 +1004,9 @@ MODULE mod_dnGG_dng
           IF (nderivA == 2) dnA%d2(:,:,i,i) = At(:,:)
 
           Qact(i) = Qacti - para_Tnum%stepT
-          CALL sub_QactTOdnx(Qact,dnx,mole,1,Gcenter,                 &
+          CALL sub_QactTOdnMWx(Qact,dnMWx,mole,1,Gcenter,               &
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
-          CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
+          CALL sub_d0A(At,dnMWx%d0,dnMWx%d1,                            &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
                        mole%ncart_act,dnA%nb_var_Matl,                  &
                        mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
@@ -1049,9 +1036,9 @@ MODULE mod_dnGG_dng
 
           Qact(i) = Qacti + para_Tnum%stepT
           Qact(j) = Qactj + para_Tnum%stepT
-          CALL sub_QactTOdnx(Qact,dnx,mole,1,Gcenter,                 &
+          CALL sub_QactTOdnMWx(Qact,dnMWx,mole,1,Gcenter,               &
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
-          CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
+          CALL sub_d0A(At,dnMWx%d0,dnMWx%d1,                            &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
                        mole%ncart_act,dnA%nb_var_Matl,                  &
                        mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
@@ -1060,9 +1047,9 @@ MODULE mod_dnGG_dng
 
           Qact(i) = Qacti - para_Tnum%stepT
           Qact(j) = Qactj - para_Tnum%stepT
-          CALL sub_QactTOdnx(Qact,dnx,mole,1,Gcenter,                 &
+          CALL sub_QactTOdnMWx(Qact,dnMWx,mole,1,Gcenter,               &
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
-          CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
+          CALL sub_d0A(At,dnMWx%d0,dnMWx%d1,                            &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
                        mole%ncart_act,dnA%nb_var_Matl,                  &
                        mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
@@ -1070,9 +1057,9 @@ MODULE mod_dnGG_dng
 
           Qact(i) = Qacti - para_Tnum%stepT
           Qact(j) = Qactj + para_Tnum%stepT
-          CALL sub_QactTOdnx(Qact,dnx,mole,1,Gcenter,                 &
+          CALL sub_QactTOdnMWx(Qact,dnMWx,mole,1,Gcenter,               &
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
-          CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
+          CALL sub_d0A(At,dnMWx%d0,dnMWx%d1,                            &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
                        mole%ncart_act,dnA%nb_var_Matl,                  &
                        mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
@@ -1081,9 +1068,9 @@ MODULE mod_dnGG_dng
 
           Qact(i) = Qacti + para_Tnum%stepT
           Qact(j) = Qactj - para_Tnum%stepT
-          CALL sub_QactTOdnx(Qact,dnx,mole,1,Gcenter,                 &
+          CALL sub_QactTOdnMWx(Qact,dnMWx,mole,1,Gcenter,               &
                                Cart_Transfo=para_Tnum%With_Cart_Transfo)
-          CALL sub_d0A(At,dnx%d0,dnx%d1,                                &
+          CALL sub_d0A(At,dnMWx%d0,dnMWx%d1,                            &
                        mole%nb_act,mole%nat_act,mole%ncart,             &
                        mole%ncart_act,dnA%nb_var_Matl,                  &
                        mole%Without_Rot,mole%With_VecCOM,mole%Mtot)
@@ -1102,7 +1089,7 @@ MODULE mod_dnGG_dng
       END IF
 
 
-      CALL dealloc_array(At,"At",name_sub)
+      CALL dealloc_NParray(At,"At",name_sub)
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -1132,7 +1119,7 @@ MODULE mod_dnGG_dng
        real (kind=Rkind) :: A(ndimA,ndimA),Mtot
        real (kind=Rkind) :: d0x(ncart)
        real (kind=Rkind) :: d1x(ncart,nb_act)
-       real (kind=Rkind) :: d2x,d3x
+       
 
        real (kind=Rkind) :: Ixx,Iyy,Izz,Ixy,Ixz,Iyz
 
@@ -1291,7 +1278,7 @@ MODULE mod_dnGG_dng
        real (kind=Rkind) :: d0x(ncart)
        real (kind=Rkind) :: d1x(ncart,nb_act)
        real (kind=Rkind) :: d2x(ncart,nb_act,nb_act)
-       real (kind=Rkind) :: d3x
+       
 
        real (kind=Rkind) :: Ixx,Iyy,Izz,Ixy,Ixz,Iyz
 

@@ -143,16 +143,6 @@
             Grid_cte(:) = .TRUE.  ! KEO, Coriolis
           END IF
 
-          write(6,*) 'Grid_cte?'
-          DO i=1,para_AllOp%tab_Op(1)%mole%nb_act
-            write(6,'(i0,x)',advance='no') i
-            DO j=1,para_AllOp%tab_Op(1)%mole%nb_act
-              iterm = para_AllOp%tab_Op(iOp)%derive_term_TO_iterm(i,j)
-              write(6,'(l,x)',advance='no') Grid_cte(iterm)
-            END DO
-            write(6,*)
-          END DO
-
           CALL alloc_para_Op(para_AllOp%tab_Op(iOp),Grid=.TRUE.,Mat=.FALSE.,Grid_cte=Grid_cte)
 
           CALL dealloc_NParray(Grid_cte,"Grid_cte",name_sub)

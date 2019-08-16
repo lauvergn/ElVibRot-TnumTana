@@ -43,7 +43,7 @@ MODULE mod_paramQ
       PRIVATE
       PUBLIC :: read_RefGeom, Get_Qread
       PUBLIC :: sub_QactTOQit, sub_QinRead_TO_Qact, sub_QxyzTOexeyez, sub_Qxyz0TORot
-      PUBLIC :: sub_QplusDQ_TO_Cart, sub_QactTOdnx, sub_QactTOd0x, sub_d0xTOQact
+      PUBLIC :: sub_QplusDQ_TO_Cart, sub_QactTOdnMWx, sub_QactTOdnx, sub_QactTOd0x, sub_d0xTOQact
       PUBLIC :: Write_d0Q, Write_Q_WU, Write_Cartg98, Write_XYZ
       PUBLIC :: analyze_dnx, sub_dnFCC_TO_dnFcurvi, write_dnx
       PUBLIC :: Set_paramQ_FOR_optimization
@@ -1229,9 +1229,76 @@ MODULE mod_paramQ
 
       END SUBROUTINE sub_QplusDQ_TO_Cart
 
-
 !================================================================
-!       conversion d0Q (zmat,poly, bunch ...) => d0x
+!       conversion d0Q (zmat,poly, bunch ...) => d0x (mass weighted)
+!================================================================
+      SUBROUTINE sub_QactTOdnMWx(Qact,dnMWx,mole,nderiv,Gcenter,Cart_Transfo,WriteCC)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Tnum
+      IMPLICIT NONE
+
+
+      real (kind=Rkind), intent(in)             :: Qact(:)
+      TYPE (zmatrix),    intent(in)             :: mole
+      TYPE (Type_dnVec), intent(inout)          :: dnMWx
+      integer,           intent(in)             :: nderiv
+      logical,           intent(in)             :: Gcenter
+      logical,           intent(in),   optional :: Cart_Transfo,WriteCC
+
+
+!     - working variables -------------------------
+      logical           :: Cart_Transfo_loc,WriteCC_loc
+
+
+!     -----------------------------------------------------------------
+      integer :: nderiv_debug = 1
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub='sub_QactTOdnMWx'
+!     -----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nderiv',nderiv
+        write(out_unitp,*) 'ncart',mole%ncart
+        write(out_unitp,*) 'Qact =',Qact
+        write(out_unitp,*)
+        !CALL Write_mole(mole)
+        write(out_unitp,*)
+        CALL write_dnx(1,mole%ncart,dnMWx,nderiv_debug)
+      END IF
+!     -----------------------------------------------------------------
+
+      IF (present(WriteCC)) THEN
+        WriteCC_loc = WriteCC
+      ELSE
+        WriteCC_loc = mole%WriteCC
+      END IF
+
+      IF (present(Cart_Transfo)) THEN
+        Cart_Transfo_loc = Cart_Transfo
+      ELSE
+        Cart_Transfo_loc = mole%Cart_transfo
+      END IF
+
+      CALL sub_QactTOdnx(Qact,dnMWx,mole,nderiv,Gcenter,Cart_Transfo_loc,WriteCC_loc)
+
+      CALL sub_dnxMassWeight(dnMWx,mole%d0sm,mole%ncart,mole%ncart_act,nderiv)
+
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'Mass Weighted Cartessian coordinates'
+        CALL write_dnx(1,mole%ncart,dnMWx,nderiv_debug)
+        write(out_unitp,*) 'END ',name_sub
+        write(out_unitp,*)
+      END IF
+      !-----------------------------------------------------------------
+
+      END SUBROUTINE sub_QactTOdnMWx
+!================================================================
+!       conversion d0Q (zmat,poly, bunch ...) => d0x (not mass weighted)
 !================================================================
       RECURSIVE SUBROUTINE sub_QactTOdnx(Qact,dnx,mole,                  &
                                          nderiv,Gcenter,Cart_Transfo,WriteCC)
@@ -1458,9 +1525,6 @@ MODULE mod_paramQ
             GCenter_done = .TRUE.
           END IF
 
-          IF (Gcenter) THEN
-            CALL sub_dnxMassWeight(dnx,mole%d0sm,mole%ncart,mole%ncart_act,nderiv)
-          END IF
         ELSE
 
           IF ((Gcenter .AND. mole%Centered_ON_CoM) .OR. Cart_Transfo_loc) THEN
@@ -1485,18 +1549,20 @@ MODULE mod_paramQ
             END IF
             !=================================================
 
-            CALL sub_dnxMassWeight(dnx,mole%d0sm,mole%ncart,mole%ncart_act,nderiv)
 
             IF (Cart_Transfo_loc) THEN
              ! write(6,*) 'coucou Cart_Transfo_loc',Cart_Transfo_loc
+
+              CALL sub_dnxMassWeight(dnx,mole%d0sm,mole%ncart,mole%ncart_act,nderiv)
+
               CALL calc_CartesianTransfo_new(dnx,dnx,                   &
                              mole%tab_Cart_transfo(1)%CartesianTransfo, &
                              Qact,nderiv,.TRUE.)
+              CALL sub_dnxNOMassWeight(dnx,mole%d0sm,mole%ncart,mole%ncart_act,nderiv)
+
             END IF
 
             IF (.NOT. (Gcenter .AND. mole%Centered_ON_CoM)) THEN
-
-              CALL sub_dnxNOMassWeight(dnx,mole%d0sm,mole%ncart,mole%ncart_act,nderiv)
 
               IF (GCenter_done) THEN
                icG = mole%ncart-2
