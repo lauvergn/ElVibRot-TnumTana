@@ -289,7 +289,6 @@
       para_ana%JJmax           = JJmax
       IF (.NOT. VibRot) para_ana%JJmax = -1
 
-
       IF (debug)  write(out_unitp,*) 'Ezpe   : ',RWU_Write(Ezpe,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
       IF (debug)  write(out_unitp,*) 'max_ene: ',RWU_Write(max_ene,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
 

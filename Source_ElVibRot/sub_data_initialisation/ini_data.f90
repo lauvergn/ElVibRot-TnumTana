@@ -247,7 +247,7 @@ SUBROUTINE ini_data(const_phys,                                         &
       IF (para_ana%VibRot .AND. para_ana%JJmax <= 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) '  VibRot=t and JJmax<1'
-        write(out_unitp,*) ' It impossible, you have to:'
+        write(out_unitp,*) ' It is impossible, you have to:'
         write(out_unitp,*) '(i)     Set VibRot=f'
         write(out_unitp,*) '(ii) or Set VibRot=t and JJmax > 0'
         STOP

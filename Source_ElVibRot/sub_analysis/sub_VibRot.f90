@@ -82,8 +82,8 @@
 
 !----- for debuging --------------------------------------------------
       integer   :: err
-      !logical, parameter :: debug=.FALSE.
-      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub = 'sub_VibRot'
 !-----------------------------------------------------------
       mole       => para_H%mole
@@ -123,7 +123,7 @@
           END IF
 
           CALL sub_OpPsi(Tab_Psi(iv),OpPsi,para_H,MatRV%derive_termQact(:,iterm_Op))
-write(6,*) 'coucou oppsi' ; flush(6)
+!write(6,*) 'coucou oppsi' ; flush(6)
           DO jv=1,nb_psi
             CALL Overlap_psi1_psi2(C_over,Tab_Psi(jv),OpPsi)
             !write(6,*) 'jv,iv,C_over',jv,iv,C_over

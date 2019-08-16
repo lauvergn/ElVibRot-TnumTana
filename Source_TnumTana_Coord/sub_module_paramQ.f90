@@ -512,7 +512,7 @@ MODULE mod_paramQ
           !here it doesn't work with multireference geometry
           CALL sub_QxyzTOexeyez(                                        &
                                                                reshape( &
-                  mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1),&
+                  mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,:,1),&
          (/ mole%tab_Cart_transfo(1)%CartesianTransfo%ncart_act /) ),   &
                                                                   mole)
         ELSE IF (mole%tab_Cart_transfo(1)%CartesianTransfo%P_Axis_Ref) THEN
@@ -523,11 +523,11 @@ MODULE mod_paramQ
                                              mole%d0sm(1:mole%ncart_act)
 
           CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
-          mole%Cart_transfo = .FALSE.
-          CALL sub_QactTOdnx(Qact,dnx,mole,0,.TRUE.)
+          CALL sub_QactTOdnx(Qact,dnx,mole,0,.TRUE.,Cart_Transfo=.FALSE.)
           mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1) =       &
                reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
-          mole%Cart_transfo = .TRUE.
+          mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,:,1) =       &
+               reshape(dnx%d0(1:mole%ncart_act)*mole%d0sm(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
           CALL dealloc_dnSVM(dnx)
 
           CALL P_Axis_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
@@ -543,16 +543,16 @@ MODULE mod_paramQ
                                              mole%d0sm(1:mole%ncart_act)
 
           CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
-          mole%Cart_transfo = .FALSE.
-          CALL sub_QactTOdnx(Qact,dnx,mole,0,.TRUE.)
+          CALL sub_QactTOdnx(Qact,dnx,mole,0,.TRUE.,Cart_Transfo=.FALSE.)
           mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1) =       &
                reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
-          mole%Cart_transfo = .TRUE.
+          mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,:,1) =       &
+               reshape(dnx%d0(1:mole%ncart_act)*mole%d0sm(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
           CALL dealloc_dnSVM(dnx)
 
           CALL sub_QxyzTOexeyez(                                        &
                                                                reshape( &
-                  mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1),&
+                mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,:,1),&
                                               (/ mole%ncart_act /) ),   &
                                                                   mole)
         ELSE
@@ -572,21 +572,21 @@ MODULE mod_paramQ
             CALL flush_perso(out_unitp)
 
             mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1) =     &
+              reshape(Qread(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
+
+            mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1) =     &
              reshape(                                                   &
                     Qread(1:mole%ncart_act)*mole%d0sm(1:mole%ncart_act),&
                                               (/ 3,mole%ncart_act/3 /) )
           ELSE
             CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
-            mole%Cart_transfo = .FALSE.
-
-            CALL sub_QactTOdnx(Qact,dnx,mole,0,.TRUE.)
-            mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1) =     &
+            CALL sub_QactTOdnx(Qact,dnx,mole,0,.TRUE.,Cart_Transfo=.FALSE.)
+            mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1) =       &
                reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
-            mole%Cart_transfo = .TRUE.
+            mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,:,1) =       &
+               reshape(dnx%d0(1:mole%ncart_act)*mole%d0sm(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
             CALL dealloc_dnSVM(dnx)
           END IF
-
-          CALL Write_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
         END IF
         CALL Write_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
 
