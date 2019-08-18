@@ -27,7 +27,7 @@ MODULE mod_paramQ
                                       write_dnx, sub3_dnx_at1
       use mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
       use mod_CartesianTransfo, only: alloc_cartesiantransfo,           &
-                                      p_axis_cartesiantransfo,          &
+               Set_P_Axis_CartesianTransfo, Set_Ecart_CartesianTransfo, &
                                    centre_masse, write_cartesiantransfo,&
                                  sub_dnxmassweight, sub3_dncentre_masse,&
                          calc_cartesiantransfo_new, sub_dnxnomassweight,&
@@ -42,7 +42,7 @@ MODULE mod_paramQ
 
       PRIVATE
       PUBLIC :: read_RefGeom, Get_Qread
-      PUBLIC :: sub_QactTOQit, sub_QinRead_TO_Qact, sub_QxyzTOexeyez, sub_Qxyz0TORot
+      PUBLIC :: sub_QactTOQit, sub_QinRead_TO_Qact
       PUBLIC :: sub_QplusDQ_TO_Cart, sub_QactTOdnMWx, sub_QactTOdnx, sub_QactTOd0x, sub_d0xTOQact
       PUBLIC :: Write_d0Q, Write_Q_WU, Write_Cartg98, Write_XYZ
       PUBLIC :: analyze_dnx, sub_dnFCC_TO_dnFcurvi, write_dnx
@@ -91,9 +91,10 @@ MODULE mod_paramQ
       character (len=Name_len) :: name_int
 
       real (kind=Rkind) :: ex(3),nx,ey(3),ny,ez(3),nz
+      real (kind=Rkind) :: VG(3)
 
 
-      integer           :: i,nb_t,type_Qin,type_Qread,nc1,nc2,nc3
+      integer           :: iref,i,nb_t,type_Qin,type_Qread,nc1,nc2,nc3
       character (len=Line_len) :: info_Qread
 
       !-----------------------------------------------------------------
@@ -107,8 +108,8 @@ MODULE mod_paramQ
 
       !-----------------------------------------------------------------
       integer :: err_mem,memory,err_io
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='read_RefGeom'
       !-----------------------------------------------------------------
 
@@ -488,9 +489,6 @@ MODULE mod_paramQ
         nc2 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,2)
         nc3 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,3)
 
-        write(6,*) 'nc1,nc2,nc3',nc1,nc2,nc3
-        write(6,*) 'shape Qread',shape(Qread)
-
         mole%tab_Qtransfo(1)%ZmatTransfo%vAt1(:) = Qread(nc1:nc1+2)
         mole%tab_Qtransfo(1)%ZmatTransfo%vAt2(:) = Qread(nc2:nc2+2)
         mole%tab_Qtransfo(1)%ZmatTransfo%vAt3(:) = Qread(nc3:nc3+2)
@@ -500,96 +498,68 @@ MODULE mod_paramQ
       END IF
 
 
-      ! Transfert the reference geometry to the CartesianTransfo
+      ! Transfert/calculate the reference geometries to the CartesianTransfo
+      ! => initial rotation matrix
       IF (mole%Cart_transfo) THEN
         write(out_unitp,*) '===================================='
         write(out_unitp,*) '==== CartesianTransfo =============='
         CALL flush_perso(out_unitp)
 
-        ! The reference gemometry and the initial constant rotational matrix
-        IF (mole%tab_Cart_transfo(1)%CartesianTransfo%ReadRefGeometry) THEN
+        CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
 
-          !here it doesn't work with multireference geometry
-          CALL sub_QxyzTOexeyez(                                        &
-                                                               reshape( &
-                  mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,:,1),&
-         (/ mole%tab_Cart_transfo(1)%CartesianTransfo%ncart_act /) ),   &
-                                                                  mole)
-        ELSE IF (mole%tab_Cart_transfo(1)%CartesianTransfo%P_Axis_Ref) THEN
-          ! obtained from the principal axis
-          CALL alloc_CartesianTransfo(mole%tab_Cart_transfo(1)%         &
-                                        CartesianTransfo,mole%ncart_act)
-          mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm =              &
-                                             mole%d0sm(1:mole%ncart_act)
 
-          CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
-          CALL sub_QactTOdnx(Qact,dnx,mole,0,.TRUE.,Cart_Transfo=.FALSE.)
-          mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1) =       &
-               reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
-          mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,:,1) =       &
-               reshape(dnx%d0(1:mole%ncart_act)*mole%d0sm(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
-          CALL dealloc_dnSVM(dnx)
+        ! The reference geometries are not read in "Read_CartesianTransfo"
+        IF (.NOT. mole%tab_Cart_transfo(1)%CartesianTransfo%ReadRefGeometry) THEN
 
-          CALL P_Axis_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
-          !CALL P_Axis_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
+          IF (mole%tab_Cart_transfo(1)%CartesianTransfo%nb_RefGeometry > 1) THEN
+            ! Here several reference geometries => They MUST be calculated with sub_QactTOdnx
 
-        ELSE IF (mole%tab_Cart_transfo(1)%CartesianTransfo%New_Orient) THEN
-          ! obtained from the new orient
-          !write(6,*) 'coucou New_Orient'
+            DO iref=1,mole%tab_Cart_transfo(1)%CartesianTransfo%nb_RefGeometry
 
-          CALL alloc_CartesianTransfo(mole%tab_Cart_transfo(1)%         &
-                                        CartesianTransfo,mole%ncart_act)
-          mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm =              &
-                                             mole%d0sm(1:mole%ncart_act)
+              CALL sub_QactTOdnx(Qact,dnx,mole,0,Gcenter=.FALSE.,Cart_Transfo=.FALSE.)
 
-          CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
-          CALL sub_QactTOdnx(Qact,dnx,mole,0,.TRUE.,Cart_Transfo=.FALSE.)
-          mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1) =       &
-               reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
-          mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,:,1) =       &
-               reshape(dnx%d0(1:mole%ncart_act)*mole%d0sm(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
-          CALL dealloc_dnSVM(dnx)
+              mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref) =     &
+                 reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
 
-          CALL sub_QxyzTOexeyez(                                        &
-                                                               reshape( &
-                mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,:,1),&
-                                              (/ mole%ncart_act /) ),   &
-                                                                  mole)
-        ELSE
-          ! the Eckart reference geometry is not read, therefore we get it from the intial coordinates (cart or curvilinear)
-          ! => the initial constant rotation matrix should be the identity
-          CALL alloc_CartesianTransfo(mole%tab_Cart_transfo(1)%         &
-                                        CartesianTransfo,mole%ncart_act)
-          mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm =              &
-                                             mole%d0sm(1:mole%ncart_act)
-          IF (read_xyz0) THEN
+            END DO
 
-            CALL centre_masse(mole%ncart_act,mole%ncart,Qread,          &
-                              mole%masses,mole%Mtot_inv,mole%ncart-2)
-
-            write(out_unitp,*) 'Read Cartessian coordinates recentered with respect to the COM'
-            CALL Write_Cart(mole%ncart,Qread)
-            CALL flush_perso(out_unitp)
-
-            mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1) =     &
-              reshape(Qread(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
-
-            mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1) =     &
-             reshape(                                                   &
-                    Qread(1:mole%ncart_act)*mole%d0sm(1:mole%ncart_act),&
-                                              (/ 3,mole%ncart_act/3 /) )
           ELSE
-            CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
-            CALL sub_QactTOdnx(Qact,dnx,mole,0,.TRUE.,Cart_Transfo=.FALSE.)
-            mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,1) =       &
-               reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
-            mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,:,1) =       &
-               reshape(dnx%d0(1:mole%ncart_act)*mole%d0sm(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
-            CALL dealloc_dnSVM(dnx)
+            ! Here ONE reference geometry
+            iref = 1
+            IF (read_xyz0) THEN
+
+              mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref) =       &
+                  reshape(Qread(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
+
+            ELSE
+
+              CALL sub_QactTOdnx(Qact,dnx,mole,0,Gcenter=.FALSE.,Cart_Transfo=.FALSE.)
+
+              mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref) =     &
+                 reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
+
+            END IF
+
+          END IF
+
+        END IF
+        CALL dealloc_dnSVM(dnx)
+
+        IF (mole%tab_Cart_transfo(1)%CartesianTransfo%P_Axis_Ref) THEN
+          ! this is valid also for Eckart
+          CALL Set_P_Axis_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
+        ELSE
+          IF (mole%tab_Cart_transfo(1)%CartesianTransfo%Eckart .OR.        &
+             mole%tab_Cart_transfo(1)%CartesianTransfo%MultiRefEckart) THEN
+            CALL Set_Ecart_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
           END IF
         END IF
-        CALL Write_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
 
+        IF (mole%tab_Cart_transfo(1)%CartesianTransfo%New_Orient) THEN
+          CALL Set_NewOrient_CartesianTransfo(mole)
+        END IF
+
+        IF (debug) CALL Write_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
 
       END IF
 !======================================================================
@@ -856,7 +826,81 @@ MODULE mod_paramQ
 
       END SUBROUTINE sub_QinRead_TO_Qact
 
-      SUBROUTINE sub_QxyzTOexeyez(Qxyz,mole)
+      SUBROUTINE Set_NewOrient_CartesianTransfo(mole)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Tnum
+      IMPLICIT NONE
+
+      TYPE (zmatrix),   intent(inout)      :: mole
+
+
+
+!     - working variables -------------------------
+      integer           :: iref,iat
+      real (kind=Rkind) :: Qxyz(mole%ncart)
+      logical           :: vAti_EQ_ZERO
+
+
+!     -----------------------------------------------------------------
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub='Set_NewOrient_CartesianTransfo'
+!     -----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+      END IF
+!     -----------------------------------------------------------------
+
+      vAti_EQ_ZERO = all(mole%tab_Cart_transfo(1)%CartesianTransfo%vAt1 == ZERO) .AND. &
+                     all(mole%tab_Cart_transfo(1)%CartesianTransfo%vAt2 == ZERO) .AND. &
+                     all(mole%tab_Cart_transfo(1)%CartesianTransfo%vAt3 == ZERO)
+
+      IF (.NOT. vAti_EQ_ZERO) THEN
+
+        CALL sub_vAtiTOexeyez(mole%tab_Cart_transfo(1)%CartesianTransfo%TransVect(:,1),mole)
+
+        mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,:)   = ZERO
+        mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,:,:) = ZERO
+
+      ELSE
+
+        IF (mole%ncart /= mole%ncart_act+3) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  ncart /= ncart_act+3',mole%ncart,mole%ncart_act
+          write(out_unitp,*) ' => dummy atoms are present. It is not possible with this option.'
+          write(out_unitp,*) ' => Choose New_Orient with vAt1,vAt3,vAt3. '
+          write(out_unitp,*) '  CHECK your data!!'
+          STOP
+        END IF
+
+        DO iref=1,mole%tab_Cart_transfo(1)%CartesianTransfo%nb_RefGeometry
+
+          Qxyz(1:mole%ncart_act) = reshape(mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref), shape=(/ mole%ncart_act /))
+
+          CALL sub_QxyzTOexeyez(Qxyz,mole%tab_Cart_transfo(1)%CartesianTransfo%TransVect(:,iref),mole)
+
+          mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref) = reshape(Qxyz(1:mole%ncart_act), shape=(/ 3,mole%nat_act /))
+
+          DO iat=1,mole%tab_Cart_transfo(1)%CartesianTransfo%nat_act
+            mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,iat,iref) = &
+             mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,iat,iref) *  &
+               sqrt(mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at(iat))
+          END DO
+
+        END DO
+      END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+        write(out_unitp,*)
+      END IF
+      CALL flush_perso(out_unitp)
+
+      END SUBROUTINE Set_NewOrient_CartesianTransfo
+
+      SUBROUTINE sub_QxyzTOexeyez(Qxyz,VT,mole)
       USE mod_system
       USE mod_dnSVM
       USE mod_Tnum
@@ -864,7 +908,7 @@ MODULE mod_paramQ
 
 
       TYPE (zmatrix)    :: mole
-      real (kind=Rkind) :: Qxyz(:)
+      real (kind=Rkind) :: Qxyz(:),VT(:)
 
 
 
@@ -882,7 +926,14 @@ MODULE mod_paramQ
       IF (debug) THEN
         write(out_unitp,*)
         write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) 'Qxyz =',Qxyz
+        write(out_unitp,*) 'Qxyz (not mass-weigthed, Angs)'
+        DO i=1,mole%nat_act
+          write(out_unitp,*) Qxyz(3*i-2:3*i) * get_Conv_au_TO_unit("L","Angs")
+        END DO
+        write(out_unitp,*) 'Qxyz (not mass-weigthed, Bohr)'
+        DO i=1,mole%nat_act
+          write(out_unitp,*) Qxyz(3*i-2:3*i)
+        END DO
         write(out_unitp,*) 'num_transfo',mole%tab_Qtransfo(1)%num_transfo
         write(out_unitp,*) 'name_transfo ',mole%tab_Qtransfo(1)%name_transfo
       END IF
@@ -891,15 +942,8 @@ MODULE mod_paramQ
       IF (.NOT. mole%Cart_transfo) RETURN
       IF (.NOT. associated(mole%tab_Cart_transfo)) RETURN
 
-      ncart = min(size(Qxyz),size(mole%d0sm))
-      Qxyz(1:ncart) = Qxyz(1:ncart) / mole%d0sm(1:ncart)
 
-      IF (debug) THEN
-        write(out_unitp,*) 'Qxyz:'
-        DO i=1,ncart,3
-          write(out_unitp,*) i,'-',i+2,Qxyz(i:i+2)
-        END DO
-      END IF
+      VT(:) = ZERO
 
       SELECT CASE (mole%tab_Qtransfo(1)%name_transfo)
       CASE ('zmat')
@@ -907,18 +951,24 @@ MODULE mod_paramQ
         nc1 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,1)
         nc2 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,2)
         nc3 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,3)
+
+        VT(:) = Qxyz(nc1:nc1+2)
+        DO i=1,mole%nat_act
+          Qxyz(3*i-2:3*i) = Qxyz(3*i-2:3*i)-VT(:)
+        END DO
+
         IF (debug) write(out_unitp,*) 'zmat, nc1,nc2,nc3',nc1,nc2,nc3
 
-        IF (nc1 <= ncart .AND. nc2 <= ncart .AND. nc3 <= ncart) THEN
+        IF (nc1 <= mole%ncart .AND. nc2 <= mole%ncart .AND. nc3 <= mole%ncart) THEN
 
-          ez(:) = Qxyz(nc2:nc2+2)-Qxyz(nc1:nc1+2)
+          ez(:) = Qxyz(nc2:nc2+2)
           ez(:) = ez(:)/sqrt(dot_product(ez,ez))
 
           case1 = (mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(2,3) ==    &
                  mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,1) )
 
           IF (case1) THEN
-            ex(:) = Qxyz(nc3:nc3+2)-Qxyz(nc1:nc1+2)
+            ex(:) = Qxyz(nc3:nc3+2)
           ELSE
             ex(:) = Qxyz(nc3:nc3+2)-Qxyz(nc2:nc2+2)
           END IF
@@ -987,7 +1037,124 @@ MODULE mod_paramQ
 !=================================================
 
 
-      Qxyz(1:ncart) = Qxyz(1:ncart) * mole%d0sm(1:ncart)
+!=================================================
+!     -----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'ex',ex(:)
+        write(out_unitp,*) 'ey',ey(:)
+        write(out_unitp,*) 'ez',ez(:)
+        write(out_unitp,*) 'END ',name_sub
+        write(out_unitp,*)
+      END IF
+      CALL flush_perso(out_unitp)
+
+!     -----------------------------------------------------------------
+!=================================================
+
+      END SUBROUTINE sub_QxyzTOexeyez
+      !Initial rotation with vAt1, vAt2, vAt3
+      SUBROUTINE sub_vAtiTOexeyez(VT,mole)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Tnum
+      IMPLICIT NONE
+
+
+      TYPE (zmatrix)    :: mole
+      real (kind=Rkind) :: VT(:)
+
+
+
+!     - working variables -------------------------
+      logical           :: case1
+      integer :: i,it,nb_act,ncart,nc1,nc2,nc3
+      TYPE (Type_dnVec) :: dnQin,dnQout
+      real (kind=Rkind) :: ex(3),nx,ey(3),ny,ez(3),nz
+      logical :: vAti_EQ_ZERO
+
+!     -----------------------------------------------------------------
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub='sub_vAtiTOexeyez'
+!     -----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'vAt1',mole%tab_Cart_transfo(1)%CartesianTransfo%vAt1
+        write(out_unitp,*) 'vAt2',mole%tab_Cart_transfo(1)%CartesianTransfo%vAt2
+        write(out_unitp,*) 'vAt3',mole%tab_Cart_transfo(1)%CartesianTransfo%vAt3
+      END IF
+!     -----------------------------------------------------------------
+
+
+      vAti_EQ_ZERO = all(mole%tab_Cart_transfo(1)%CartesianTransfo%vAt1 == ZERO) .AND. &
+                     all(mole%tab_Cart_transfo(1)%CartesianTransfo%vAt2 == ZERO) .AND. &
+                     all(mole%tab_Cart_transfo(1)%CartesianTransfo%vAt3 == ZERO)
+
+     IF (vAti_EQ_ZERO) THEN
+       write(out_unitp,*) 'ERROR in ',name_sub
+       write(out_unitp,*) '  vAt1=0 and vAt2=0 and vAt3=0 '
+       write(out_unitp,*) '  CHECK you data!!'
+       STOP
+     END IF
+
+      VT(:) = mole%tab_Cart_transfo(1)%CartesianTransfo%vAt1(:)
+
+      SELECT CASE (mole%tab_Qtransfo(1)%name_transfo)
+      CASE ('zmat')
+        IF (debug) write(out_unitp,*) 'zmat'
+        nc1 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,1)
+        nc2 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,2)
+        nc3 = mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,3)
+
+
+        IF (debug) write(out_unitp,*) 'zmat, nc1,nc2,nc3',nc1,nc2,nc3
+
+        IF (nc1 <= mole%ncart .AND. nc2 <= mole%ncart .AND. nc3 <= mole%ncart) THEN
+
+          ez(:) = mole%tab_Cart_transfo(1)%CartesianTransfo%vAt2(:)-VT(:)
+          ez(:) = ez(:)/sqrt(dot_product(ez,ez))
+
+          case1 = (mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(2,3) ==    &
+                 mole%tab_Qtransfo(1)%ZmatTransfo%ind_zmat(1,1) )
+
+          IF (case1) THEN
+            ex(:) = mole%tab_Cart_transfo(1)%CartesianTransfo%vAt3(:)-VT(:)
+          ELSE
+            ex(:) = mole%tab_Cart_transfo(1)%CartesianTransfo%vAt3(:)-mole%tab_Cart_transfo(1)%CartesianTransfo%vAt2(:)
+          END IF
+          ex(:) = ex(:) - ez(:)*dot_product(ez,ex)
+          ex(:) = ex(:)/sqrt(dot_product(ex,ex))
+
+          CALL calc_cross_product(ez,nz,ex,nx,ey,ny)
+        ELSE
+          ex(:) = (/ONE,ZERO,ZERO/)
+          ey(:) = (/ZERO,ONE,ZERO/)
+          ez(:) = (/ZERO,ZERO,ONE/)
+        END IF
+
+      CASE ('bunch','bunch_poly')
+
+        STOP ' not yet with bunch or bunch_poly'
+
+      CASE ('QTOX_ana')
+
+        STOP ' not yet with QTOX_ana'
+
+
+      CASE default ! ERROR: wrong transformation !
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) '  Wrong transformation !!'
+        write(out_unitp,*) 'name_transfo',mole%tab_Qtransfo(1)%name_transfo
+        write(out_unitp,*) '  CHECK the fortran!!'
+        STOP
+      END SELECT
+
+      mole%tab_Cart_transfo(1)%CartesianTransfo%Rot_initial(:,1) = ex(:)
+      mole%tab_Cart_transfo(1)%CartesianTransfo%Rot_initial(:,2) = ey(:)
+      mole%tab_Cart_transfo(1)%CartesianTransfo%Rot_initial(:,3) = ez(:)
+
+!=================================================
 
 
 !=================================================
@@ -1004,7 +1171,7 @@ MODULE mod_paramQ
 !     -----------------------------------------------------------------
 !=================================================
 
-      END SUBROUTINE sub_QxyzTOexeyez
+      END SUBROUTINE sub_vAtiTOexeyez
       SUBROUTINE sub_Qxyz0TORot(Qxyz,Rot_initial,mole)
       USE mod_system
       USE mod_dnSVM
@@ -1183,7 +1350,7 @@ MODULE mod_paramQ
       CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,0)
 
       Qact = mole%ActiveTransfo%Qact0
-      CALL sub_QactTOdnx(Qact,dnx0,mole,0,.FALSE.)
+      CALL sub_QactTOdnx(Qact,dnx0,mole,0,Gcenter=.TRUE.)
 
       write(out_unitp,*) '=============================================='
       write(out_unitp,*) '= XYZ format (reference geometry) ============'
@@ -1208,7 +1375,7 @@ MODULE mod_paramQ
 
         Qact = mole%ActiveTransfo%Qact0
         Qact(iQ) = Qact(iQ) + ONETENTH
-        CALL sub_QactTOdnx(Qact,dnx,mole,0,.FALSE.)
+        CALL sub_QactTOdnx(Qact,dnx,mole,0,Gcenter=.TRUE.)
         dnx%d0 = dnx%d0 - dnx0%d0 ! dxyz
         Norm = dot_product(dnx%d0,dnx%d0)
         dnx%d0 = HALF*dnx%d0/sqrt(Norm)
@@ -1370,7 +1537,7 @@ MODULE mod_paramQ
       END IF
 
 
-      IF (debug) write(out_unitp,*) 'Cart_Transfo_loc',Cart_Transfo_loc
+      IF (debug) write(out_unitp,*) 'Cart_Transfo_loc, mole%Cart_transfo',Cart_Transfo_loc,mole%Cart_transfo
 
       IF (mole%num_x .AND. nderiv > 0) THEN
         step2 = ONE/(mole%stepQ*mole%stepQ)
@@ -1446,14 +1613,12 @@ MODULE mod_paramQ
         CALL sub_QactTOdnx(Qact_loc,dnx,mole,0,Gcenter,Cart_Transfo_loc,WriteCC=WriteCC_loc)
 
         IF (nderiv == 2) THEN
-         DO i=1,mole%nb_act
+          DO i=1,mole%nb_act
             dnx%d2(:,i,i) = ( dnx%d2(:,i,i) - TWO*dnx%d0(:) ) * step2
-         END DO
+          END DO
         END IF
 
-
       ELSE
-
 
         it = mole%nb_Qtransfo
         nb_act = mole%tab_Qtransfo(mole%nb_Qtransfo)%nb_act
@@ -1465,7 +1630,6 @@ MODULE mod_paramQ
         CALL alloc_dnSVM(dnQin,mole%tab_Qtransfo(it)%nb_Qout,nb_act,nderiv)
         dnQin%d0(:) = Qact(:)
         IF (WriteCC_loc .OR. debug) CALL Write_d0Q(it,'Qin (Qact)',dnQin%d0,6)
-
 
         DO it=mole%nb_Qtransfo,1,-1
           IF (mole%tab_Qtransfo(it)%skip_transfo) CYCLE
@@ -1499,9 +1663,9 @@ MODULE mod_paramQ
 
         !=================================================
         IF (WriteCC_loc .OR. debug) THEN
-          write(out_unitp,*) ' Cartesian coordinates (au):'
+          write(out_unitp,*) ' Cartesian coordinates without the Cartesian Transformation (au):'
           CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
-          write(out_unitp,*) ' Cartesian coordinates (ang):'
+          write(out_unitp,*) ' Cartesian coordinates without the Cartesian Transformation (ang):'
           CALL Write_Cartg98(dnx%d0,mole)
           CALL flush_perso(out_unitp)
         END IF
@@ -1509,81 +1673,35 @@ MODULE mod_paramQ
 
 
         !=================================================
-        IF (mole%Without_rot) THEN
-          !write(6,*) 'Gcenter',Gcenter,mole%Centered_ON_CoM
-
-          IF (Gcenter .AND. mole%Centered_ON_CoM) THEN
-
-            icG = mole%ncart-2
-
-            CALL sub3_dncentre_masse(mole%ncart_act,mole%nb_act,        &
-                                     mole%ncart,                        &
-                                     dnx,                               &
-                                     mole%masses,mole%d0sm,             &
-                                     mole%Mtot_inv,icG,                 &
-                                     nderiv)
-            GCenter_done = .TRUE.
-          END IF
-
-        ELSE
-
-          IF ((Gcenter .AND. mole%Centered_ON_CoM) .OR. Cart_Transfo_loc) THEN
-
-            icG = mole%ncart-2
-
-            CALL sub3_dncentre_masse(mole%ncart_act,mole%nb_act,        &
-                                     mole%ncart,                        &
-                                     dnx,                               &
-                                     mole%masses,mole%d0sm,             &
-                                     mole%Mtot_inv,icG,                 &
-                                     nderiv)
-            GCenter_done = .TRUE.
-
-            !=================================================
-            IF (WriteCC_loc .OR. debug) THEN
-              write(out_unitp,*) ' Cartesian coordinates with respect to the COM (au):'
-              CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
-              write(out_unitp,*) ' Cartesian coordinates with respect to the COM (ang):'
-              CALL Write_Cartg98(dnx%d0,mole)
-              CALL flush_perso(out_unitp)
-            END IF
-            !=================================================
+        IF (Cart_Transfo_loc) THEN
+           ! write(6,*) 'coucou Cart_Transfo_loc',Cart_Transfo_loc
+           IF (debug) write(out_unitp,*) ' calc_CartesianTransfo_new?',Cart_Transfo_loc
 
 
-            IF (Cart_Transfo_loc) THEN
-             ! write(6,*) 'coucou Cart_Transfo_loc',Cart_Transfo_loc
-
-              CALL sub_dnxMassWeight(dnx,mole%d0sm,mole%ncart,mole%ncart_act,nderiv)
-
-              CALL calc_CartesianTransfo_new(dnx,dnx,                   &
+           CALL calc_CartesianTransfo_new(dnx,dnx,                      &
                              mole%tab_Cart_transfo(1)%CartesianTransfo, &
                              Qact,nderiv,.TRUE.)
-              CALL sub_dnxNOMassWeight(dnx,mole%d0sm,mole%ncart,mole%ncart_act,nderiv)
 
-            END IF
+           !=================================================
+           IF (WriteCC_loc .OR. debug) THEN
+             write(out_unitp,*) ' Cartesian coordinates after the Cartesian Transformation (au):'
+             CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
+             write(out_unitp,*) ' Cartesian coordinates after the Cartesian Transformation (ang):'
+             CALL Write_Cartg98(dnx%d0,mole)
+             CALL flush_perso(out_unitp)
+           END IF
+           !=================================================
 
-            IF (.NOT. (Gcenter .AND. mole%Centered_ON_CoM)) THEN
-
-              IF (GCenter_done) THEN
-               icG = mole%ncart-2
-               CALL sub3_NOdncentre_masse(mole%ncart_act,mole%nb_act,   &
-                                          mole%ncart,dnx,icG,nderiv)
-              END IF
-
-              !=================================================
-              IF (WriteCC_loc .OR. debug) THEN
-                write(out_unitp,*) ' Cartesian coordinates with Eckart (au):'
-                CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
-                write(out_unitp,*) ' Cartesian coordinates  with Eckart (ang):'
-                CALL Write_Cartg98(dnx%d0,mole)
-                CALL flush_perso(out_unitp)
-              END IF
-              !=================================================
-
-            END IF
-          END IF
         END IF
+
         !=================================================
+        IF (Gcenter .AND. mole%Centered_ON_CoM) THEN
+          icG = mole%ncart-2
+
+          CALL sub3_dncentre_masse(mole%ncart_act,mole%nb_act,mole%ncart, &
+                                     dnx,mole%masses,mole%Mtot_inv,icG,nderiv)
+        END IF
+
 
       END IF
 
@@ -1598,7 +1716,7 @@ MODULE mod_paramQ
 !=================================================
 !     -----------------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'Cartessian coordinates center / G'
+        write(out_unitp,*) 'Cartessian coordinates (au)'
         CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*)
@@ -2275,7 +2393,7 @@ MODULE mod_paramQ
         DO i=1,dnFcurvi%nb_var_deriv
         DO j=1,i
           dnFcurvi%d2(i,j) = dot_product(dnx%d2(1:ncc,i,j),dnFCC%d1(:)) + &
-                           dot_product(dnx%d1(1:ncc,j),work(i,:))
+                             dot_product(dnx%d1(1:ncc,j),work(i,:))
 
           dnFcurvi%d2(j,i) = dnFcurvi%d2(i,j)
         END DO

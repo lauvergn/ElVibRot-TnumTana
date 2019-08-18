@@ -1,0 +1,34 @@
+here=`pwd`
+DIR_vib=../..
+cd $DIR_vib
+# make Tnum
+cd $here
+
+$DIR_vib/Tnum90.exe << ** > res
+ &variables
+         Old_Qtransfo=f
+         nb_Qtransfo=2
+         nrho=2
+
+         charge=0 multiplicity=1
+         commande_unix='gauss09.run xx >err'
+         ab_initio_prog='g09 '
+         ab_initio_meth='hf'
+         ab_initio_basis='sto-3g'
+ /
+ &Coord_transfo name_transfo='zmat' nat=3 /
+O
+H 1
+H 1 2
+
+ &Coord_transfo name_transfo='active' /
+1  1 1
+
+ &minimum pot0=-74.9659012171 pot_act=f read_itQ0transfo=1 /
+ RH 0.9894093 angs
+ RH 0.9894093 angs
+ A 100.026877 °
+
+ &calculation calc_QTOx=t calc_Tnum=t calc_gG=t calc_freq=t calc_hessian=t fchk_name='H2O_freq.fchk' /
+**
+

@@ -1,0 +1,38 @@
+./compi
+
+list0="dat_H2O_zmat_Qcart0_hessCalcFreq dat_H2O_zmat_Qact0_hessCalcFreq dat_H2O_zmat_Qcart0_hessReadFreq dat_H2O_zmat_Qact0_hessReadFreq"
+
+list1="dat_H2O_zmat_Qact0_hessReadFreq_NewOrient dat_H2O_zmat_Qcart0_hessCalcFreq_NewOrient dat_H2O_zmat_Qact0_hessCalcFreq_NewOrient	dat_H2O_zmat_Qcart0_hessReadFreq_NewOrient"
+
+list2="dat_H2O_zmat_Qcart0_hessCalcFreq_NewOrientWithQcart0 dat_H2O_zmat_Qcart0_hessReadFreq_NewOrientWithQcart0"
+
+list3="dat_H2O_zmat_Qcart0_hessCalcFreq_NewOrientWithvAti dat_H2O_zmat_Qcart0_hessReadFreq_NewOrientWithvAti"
+
+#list4="dat_H2O_zmatX_Qact0_hessReadFreq dat_H2O_zmatX_Qcart0_hessReadFreq dat_H2O_zmatX_Qact0_hessReadFreq_NewOrient dat_H2O_zmatX_Qcart0_hessReadFreq_NewOrientWithvAti dat_H2O_zmatX_Qact0_hessReadFreq_NewOrientWithvAti"
+list4="dat_H2O_zmatX_Qact0_hessReadFreq dat_H2O_zmatX_Qcart0_hessReadFreq dat_H2O_zmatX_Qcart0_hessReadFreq_NewOrientWithvAti dat_H2O_zmatX_Qact0_hessReadFreq_NewOrientWithvAti"
+
+
+list5="dat_H2O_zmatcartX_Qact0_hessReadFreq			dat_H2O_zmatcartX_Qcart0_hessReadFreq_NewOrientWithvAti dat_H2O_zmatcartX_Qcart0_hessReadFreq			dat_H2O_zmatcartX_Qcart0v2_hessReadFreq"
+
+list="$list0 $list1 $list2 $list3 $list4 $list5"
+#list="$list4"
+echo $list
+
+echo ===============================
+echo gaussian frequencies
+ grep "Frequencies --" H2O_freq_sym.log
+ fr1=`grep "Frequencies --" H2O_freq_sym.log | awk '{print $3" "$4" "$5}'`
+ #echo $fr1
+echo ===============================
+
+for dat in $list
+do
+  echo ===============================
+  echo = $dat
+  ./DatFiles/$dat
+  grep frequencies res
+  fr2=`grep frequencies res | awk '{print $4" "$5" "$6}'`
+  rm res
+  echo $fr1 $fr2 | awk '{e=sqrt(($1-$4)**2+($2-$5)**2+($3-$6)**2) ; print e " cm-1"; if (e>=0.01) print "ERROR" }'
+  echo ===============================
+done

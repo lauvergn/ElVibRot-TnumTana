@@ -875,7 +875,7 @@
         !  2d: calculation of the dnXref
         CALL alloc_MatOFdnS(dnXref,dnXin%nb_var_deriv,nderivScal)
 
-        CALL dnX_MultiRef(dnXref,                                       &
+        CALL dnMWX_MultiRef(dnXref,                                     &
                              mole%tab_Cart_transfo(1)%CartesianTransfo, &
               Qact(1:mole%tab_Cart_transfo(1)%CartesianTransfo%nb_Qact),&
                                                                   dnXin)

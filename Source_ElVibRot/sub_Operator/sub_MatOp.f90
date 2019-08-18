@@ -218,8 +218,8 @@ CONTAINS
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter ::name_sub='sub_build_MatOp'
-      !logical, parameter :: debug=.FALSE.
-      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -233,8 +233,6 @@ CONTAINS
       para_Op%spectral = .FALSE.
 !     - init and allocation of OpWP --
       CALL alloc_NParray(OpWP,(/nb_WP/),"OpWP",name_sub)
-
-write(6,*) 'coucou0 size(WP)',size(WP) ; flush(6)
 
       IF (para_Op%cplx) THEN
         CALL alloc_NParray(CMatOp,(/nb_WP,nb_WP/),'CmatOp',name_sub)
@@ -258,7 +256,6 @@ write(6,*) 'coucou0 size(WP)',size(WP) ; flush(6)
           END IF
         END DO
       END DO
-write(6,*) 'coucou1 size(WP)',size(WP) ; flush(6)
 
       IF (hermitic .AND. para_Op%n_Op == 0) THEN
         IF (para_Op%cplx) THEN

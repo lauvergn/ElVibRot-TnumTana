@@ -79,7 +79,8 @@ MODULE mod_OTF
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) 'Qxyz',Qxyz
+        write(out_unitp,*) 'Qxyz'
+        write(out_unitp,'(3(x,f16.6))') Qxyz
         write(out_unitp,*) 'nderivE,nderivMu',nderivE,nderivMu
         write(out_unitp,*)
       END IF

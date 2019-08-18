@@ -168,7 +168,8 @@ MODULE mod_Tnum
           integer, pointer           :: active_masses(:) => null() ! for partial hessian (PVSCF)
 
           real (kind=Rkind), pointer :: d0sm(:) => null()
-          real (kind=Rkind)          :: Mtot = ZERO,Mtot_inv = ZERO
+          real (kind=Rkind)          :: Mtot = ZERO
+          real (kind=Rkind)          :: Mtot_inv = ZERO
 
         END TYPE zmatrix
 
@@ -1285,6 +1286,12 @@ MODULE mod_Tnum
                                                     (/mole%ncart_act/), &
                         "mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm",name_sub)
         mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm = mole%d0sm(1:mole%ncart_act)
+
+        CALL alloc_array(mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at,&
+                                                    (/ mole%nat_act /), &
+                        "mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at",name_sub)
+        mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at(:) = mole%masses(1:mole%ncart_act:3)
+
 
         mole%tab_Cart_transfo(1)%num_transfo = 1
         CALL read_Qtransfo(mole%tab_Cart_transfo(1),mole%ncart_act,const_phys%mendeleev)

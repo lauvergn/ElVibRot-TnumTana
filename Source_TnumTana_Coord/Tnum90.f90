@@ -377,7 +377,6 @@
           END IF
         END IF
 
-
         CALL sub_dnFCC_TO_dnFcurvi(Qact,dnFCC,dnFcurvi,mole)
         write(out_unitp,*) 'Energy=',dnFcurvi%d0
         write(out_unitp,*) 'Gradient in cuvilinear coordinates'

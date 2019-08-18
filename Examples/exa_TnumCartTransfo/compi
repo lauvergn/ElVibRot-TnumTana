@@ -1,0 +1,5 @@
+here=`pwd`
+DIR_vib=../..
+cd $DIR_vib
+  make Tnum
+cd $here
