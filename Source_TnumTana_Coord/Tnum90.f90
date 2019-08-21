@@ -208,10 +208,14 @@
         nderiv = 0
         CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv)
         write(out_unitp,*) "======================================"
-        DO i=1,n_eval
+        DO i=1,n_eval-1
           CALL sub_QactTOdnx(Qact,dnx,mole,nderiv,.FALSE.)
         END DO
         write(out_unitp,*) 'dnx: ',mole%ncart
+        mole%WriteCC = .TRUE.
+        CALL sub_QactTOdnx(Qact,dnx,mole,nderiv,.FALSE.)
+        mole%WriteCC = .FALSE.
+
         CALL write_dnx(1,mole%ncart,dnx,nderiv)
 
         CALL Write_Cartg98(dnx%d0,mole)

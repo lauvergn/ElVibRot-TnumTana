@@ -81,7 +81,6 @@
           write(out_unitp,*) ' Check your data !!'
           STOP
         END IF
-
         IF (print_level > 1) write(out_unitp,Optimization)
 
         CALL string_uppercase_TO_lowercase(Optimization_method)
@@ -102,7 +101,7 @@
         CASE ('simulatedannealing','sa')
           CALL Read_param_SimulatedAnnealing(                           &
                               para_Optimization%para_SimulatedAnnealing)
-          CALL Read_param_BFGS(para_Optimization%para_BFGS)
+          !CALL Read_param_BFGS(para_Optimization%para_BFGS)
 
         CASE ('bfgs')
           CALL Read_param_BFGS(para_Optimization%para_BFGS)

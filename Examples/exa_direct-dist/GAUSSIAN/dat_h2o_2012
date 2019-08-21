@@ -1,5 +1,5 @@
 T=300.
-test=t
+test=f
 
  SYSTEM=sub_system_h2o.f
 

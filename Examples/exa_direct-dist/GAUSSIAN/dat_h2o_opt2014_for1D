@@ -38,7 +38,7 @@ H   1
 H   1 2
 
  &Coord_transfo name_transfo='linear_inv' /
-sym    R1   R2   A
+sym    R+   R-   A
 3 
 1      0.5  0.5  0.
 2      0.5  -.5  0.
@@ -51,9 +51,9 @@ sym    R1   R2   A
  &Coord_transfo name_transfo='Cartesian' /
     &Cartesian Eckart=t /
 
- &minimum pot0=0. nb_scalar_Op=3 OnTheFly=t opt=t pot_act=f read_Qsym0=f read_nameQ=t unit='angs' /
-R1 0.9894
-R2 0.9894
+ &minimum pot0=0. nb_scalar_Op=3 OnTheFly=t opt=t pot_act=f read_Qdyn0=t read_nameQ=t unit='angs' /
+R+ 0.9894
+R- 0.
 A  100.0269
 
  &basis_nD iQdyn(1)=           1  name="Hm" nq=5 nb=5 Q0=   9.3802712105857307       scaleQ=1. /

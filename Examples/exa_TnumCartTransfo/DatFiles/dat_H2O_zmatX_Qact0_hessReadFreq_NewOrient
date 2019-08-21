@@ -37,7 +37,7 @@ sym  R1   R2   a    RX  ax  dx
 1 1 1   0 0 0
 
  &Coord_transfo name_transfo='Cartesian' /
-    &Cartesian ReadRefGeometry=t nat=4 unit='angs' New_Orient=t /
+    &Cartesian ReadRefGeometry=t unit='angs' New_Orient=t /
       8                   0.000000    0.000000    0.127160
       0                   0.000000    0.000000   -0.872840
       1                   0.000000    0.758081   -0.508642

@@ -26,7 +26,7 @@ H 1 2
 1  1 1
 
  &Coord_transfo name_transfo='Cartesian' /
-    &Cartesian ReadRefGeometry=f nat=3 unit='angs' New_Orient=t /
+    &Cartesian ReadRefGeometry=f unit='angs' New_Orient=t /
 
  &minimum pot0=-74.9659012171 OnTheFly=t pot_act=f read_itQ0transfo=0 unit='angs' /
       8           0.000000000           0.000000000           0.000000000

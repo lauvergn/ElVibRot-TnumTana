@@ -357,7 +357,7 @@ MODULE mod_CartesianTransfo
 
       ReadRefGeometry  = .FALSE.
       nb_RefGeometry   = 1
-      nat              = 0
+      nat              = CartesianTransfo%nat_act
       unit             = 'au'
       sc               = SIX
       type_diago       = 4
@@ -421,7 +421,6 @@ MODULE mod_CartesianTransfo
         STOP
       END IF
 
-
       vAti_EQ_ZERO = all(vAt1 == ZERO) .AND. all(vAt2 == ZERO) .AND. all(vAt3 == ZERO)
 
       IF (CartesianTransfo%New_Orient) THEN
@@ -458,9 +457,7 @@ MODULE mod_CartesianTransfo
           CartesianTransfo%tab_sc(:)       = sc
         END SELECT
       ELSE
-        CALL alloc_CartesianTransfo(CartesianTransfo,                   &
-                                            CartesianTransfo%ncart_act, &
-                                        CartesianTransfo%nb_RefGeometry)
+          CALL alloc_CartesianTransfo(CartesianTransfo,3*nat,nb_RefGeometry)
       END IF
 
       CALL mat_id(CartesianTransfo%Rot_initial,3,3)
@@ -506,8 +503,13 @@ MODULE mod_CartesianTransfo
 
       END IF
 
+      IF (.NOT. associated(CartesianTransfo%Qxyz)) THEN
+        STOP 'CartesianTransfo%Qxyz NOT allocated'
+      END IF
+
       !CALL Write_CartesianTransfo(CartesianTransfo)
       write(out_unitp,*) 'END ',name_sub
+      !STOP
       END SUBROUTINE Read_CartesianTransfo
 
       SUBROUTINE Read_MultiRef_type0_OF_CartesianTransfo(CartesianTransfo)

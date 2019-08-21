@@ -16,7 +16,7 @@ cd $ici
 #        ab_initio_meth='hf field=z4'
 
 nice $DIR_vib/$VIBEXE << ** > $ici/res
- &system PGrid_omp=0 optimization=1 Set_EneH0=f /
+ &system PGrid_omp=0 optimization=1 /
  &constantes /
  &variables 
          charge=0 multiplicity=1 

@@ -533,10 +533,14 @@ MODULE mod_paramQ
 
             ELSE
 
+              IF (.NOT. associated(mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz)) THEN
+                STOP 'CartesianTransfo%Qxyz NOT allocated'
+              END IF
               CALL sub_QactTOdnx(Qact,dnx,mole,0,Gcenter=.FALSE.,Cart_Transfo=.FALSE.)
+              !CALL Write_XYZ(dnx%d0,mole)
 
               mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref) =     &
-                 reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
+                 reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%nat_act /) )
 
             END IF
 
@@ -2205,11 +2209,13 @@ MODULE mod_paramQ
       USE mod_system
       IMPLICIT NONE
 
-      TYPE (zmatrix) :: mole
-      character (len=*),optional, intent(in) :: unit
-      integer,optional, intent(in) :: io_unit
+      TYPE (zmatrix),              intent(in) :: mole
+      real (kind=Rkind),           intent(in) :: d0x(mole%ncart)
+      character (len=*), optional, intent(in) :: unit
+      integer,           optional, intent(in) :: io_unit
 
-      real (kind=Rkind) :: d0x(mole%ncart)
+
+
       real (kind=Rkind) :: a0
       integer           :: Z_act(mole%nat)
 

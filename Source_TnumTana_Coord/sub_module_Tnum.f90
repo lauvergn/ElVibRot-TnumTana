@@ -1291,6 +1291,7 @@ MODULE mod_Tnum
                                                     (/ mole%nat_act /), &
                         "mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at",name_sub)
         mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at(:) = mole%masses(1:mole%ncart_act:3)
+        mole%tab_Cart_transfo(1)%CartesianTransfo%nat_act      = mole%nat_act
 
 
         mole%tab_Cart_transfo(1)%num_transfo = 1

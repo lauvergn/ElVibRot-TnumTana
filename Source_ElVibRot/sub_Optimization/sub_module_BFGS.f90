@@ -401,7 +401,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
   ! next line search. It is usually safe to ignore the value of check.
   fp   = fret
   xi   = pnew-p    ! update the line direction
-  write(6,*) 'DeltaQ',xi(:)
+  IF (print_level > 1) write(out_unitp,*) 'DeltaQ',xi(:)
   p    = pnew      ! and the current point
   test = ZERO
   do i=1,n     ! Test the convergence in Delta(x)
@@ -419,16 +419,16 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
   end do
   call proescvec(g,g,xxxg,n)
   xxxg=sqrt(xxxg/n)
-  IF (print_level > 0 .OR. test < tolx) THEN
-    write(out_unitp,*)
-    write(out_unitp,'(a,i4)') ' Iteration= ',its
-    write(out_unitp,*) ' Geometry: '
-    write(out_unitp,*) ' p = ', p
-    write(out_unitp,*) ' Energy',fret
-    write(out_unitp,*) ' RMS Gradient',xxxg
-    write(out_unitp,*) ' Test on gradient convergence = ', test
-    call flush(out_unitp)
-  END IF
+
+  write(out_unitp,*)
+  write(out_unitp,'(a,i4)') ' Iteration= ',its
+  IF (print_level > 0) write(out_unitp,*) ' Geometry: '
+  IF (print_level > 0) write(out_unitp,*) ' p = ', p
+  write(out_unitp,*) ' Energy',fret
+  write(out_unitp,*) ' RMS Gradient',xxxg
+  write(out_unitp,*) ' Test on gradient convergence = ', test
+  call flush(out_unitp)
+
    if (test < tolx) then  !!! Testing what happen if this part is removed
    write(out_unitp,*) ' Geometry coordinates converged !! RMS step criteria'
    call flush(out_unitp)

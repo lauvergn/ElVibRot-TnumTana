@@ -45,7 +45,7 @@ sym    R+  R-  a
  &Coord_transfo name_transfo='Cartesian' /
     &Cartesian Eckart=t /
 
- &minimum pot0=-74.9659012077 nb_scalar_Op=3 OnTheFly=t opt=t pot_act=f read_Qsym0=f read_nameQ=t unit='angs' /
+ &minimum pot0=-74.9659012077 nb_scalar_Op=3 OnTheFly=t opt=t pot_act=f read_itQ0transfo=1 read_nameQ=t unit='angs' /
 R1 0.9995
 R2 0.9995
 A  105.015

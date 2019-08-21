@@ -26,7 +26,7 @@ H 1 2
 1  1 1
 
  &Coord_transfo name_transfo='Cartesian' /
-    &Cartesian ReadRefGeometry=f nat=3 unit='angs' New_Orient=t  
+    &Cartesian ReadRefGeometry=f unit='angs' New_Orient=t  
         vAt1=0.000000    0.000000    0.127160
         vAt2=0.000000    0.758081   -0.508642
         vAt3=0.000000   -0.758081   -0.508642 /
