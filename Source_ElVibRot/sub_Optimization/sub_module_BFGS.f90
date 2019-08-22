@@ -209,26 +209,16 @@
           !-------- end allocation --------------------------------------------
 
           !----- Hessian ------------------------------------
-
           CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
 
           CALL Get_Hess_FROM_Tab_OF_dnMatOp(hessian,dnMatOp) ! for the ground state
-          write(out_unitp,*) 'hessian'
-          CALL Write_Mat(hessian,out_unitp,5)
-
-          CALL inv_m1_TO_m2(hessian,para_BFGS%hessian_inv_init,nb_Opt,0,ZERO)
-
-          write(out_unitp,*) 'hessian inverse'
-          CALL Write_Mat(para_BFGS%hessian_inv_init,out_unitp,5)
+          !----- End Hessian ------------------------------------
 
           !-------- deallocation ---------------------------------------------
-          IF (allocated(hessian)) THEN
-            CALL dealloc_NParray(hessian,'hessian',name_sub)
-          END IF
           CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
           !-------- end deallocation -----------------------------------------
-        END IF
-        IF (para_BFGS%read_hessian) THEN
+
+        ELSE IF (para_BFGS%read_hessian) THEN
           write(out_unitp,*) ' The initial hessian is read in internal coordinates'
           !-------- allocation -----------------------------------------------
           CALL alloc_array(para_BFGS%hessian_inv_init,(/ nb_Opt,nb_Opt /),  &
@@ -257,19 +247,31 @@
             write(out_unitp,*) ' Check your data !!'
             STOP
           END IF
-          write(out_unitp,*) 'hessian'
-          CALL Write_Mat(hessian,out_unitp,5)
+          !----- End Hessian ------------------------------------
+
+        END IF
+
+        IF (allocated(hessian)) THEN
+          IF (print_level > 1 .OR. nb_Opt <= 10) THEN
+            write(out_unitp,*) 'hessian'
+            CALL Write_Mat(hessian,out_unitp,5)
+          ELSE
+            write(out_unitp,*) 'The hessian is too large. => No printing'
+          END IF
 
           CALL inv_m1_TO_m2(hessian,para_BFGS%hessian_inv_init,nb_Opt,0,ZERO)
 
-          write(out_unitp,*) 'hessian inverse'
-          CALL Write_Mat(para_BFGS%hessian_inv_init,out_unitp,5)
+          IF (print_level > 1 .OR. nb_Opt <= 10) THEN
+            write(out_unitp,*) 'hessian inverse'
+            CALL Write_Mat(para_BFGS%hessian_inv_init,out_unitp,5)
+          ELSE
+            write(out_unitp,*) 'The hessian inverse is too large. => No printing'
+          END IF
 
           !-------- deallocation ---------------------------------------------
-          IF (allocated(hessian)) THEN
-            CALL dealloc_NParray(hessian,'hessian',name_sub)
-          END IF
+          CALL dealloc_NParray(hessian,'hessian',name_sub)
           !-------- end deallocation -----------------------------------------
+
         END IF
 
         !-------- allocation -----------------------------------------------
@@ -447,7 +449,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
    return
   end if
 !
-  dg=g-dg          ! Compute diference of gradient
+  dg=g-dg          ! Compute difference of gradient
   do i=1,n         ! and difference times current matrix.
    call proescvec(hessin(:,i),dg,hdg(i),n)
   end do
@@ -567,7 +569,8 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
   SUBROUTINE dfunc(xt,df,f,dnMatOp,mole,para_PES,para_Tnum,nderiv_dnE)
 !---------------------------------------------------------------------------
  USE mod_system
- USE mod_Coord_KEO, only: zmatrix, tnum, alloc_array, dealloc_array
+ USE mod_dnSVM
+ USE mod_Coord_KEO, only: zmatrix, tnum, alloc_array, dealloc_array,get_Qact0,sub_QactTOdnx
  USE mod_PrimOp
  USE mod_basis
  USE mod_Op
@@ -576,23 +579,35 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 ! calculation of the gradient at xt
 !
  IMPLICIT none
- integer, intent(in) :: nderiv_dnE
+ integer, intent(in)  :: nderiv_dnE
  TYPE (param_dnMatOp) :: dnMatOp(1)
- TYPE (zmatrix)      :: mole
- TYPE (param_PES)    :: para_PES
- TYPE (Tnum)         :: para_Tnum
-
- integer :: i
- real (kind=Rkind)   :: Qact(mole%nb_var)
+ TYPE (zmatrix)       :: mole
+ TYPE (param_PES)     :: para_PES
+ TYPE (Tnum)          :: para_Tnum
 
  real(kind=Rkind), intent(in)    :: xt(mole%nb_act)
  real(kind=Rkind), intent(inout) :: df(mole%nb_act), f
-!
+
+ integer :: i
+ real (kind=Rkind)    :: Qact(mole%nb_var)
+ TYPE (Type_dnVec)    :: dnx
+
+
  !write(6,*) 'dfunc subroutine',mole%nb_act,nderiv_dnE
  !write(6,*) 'xt = ', xt
 
  Qact(:) = ZERO
  Qact(1:mole%nb_act)=xt
+
+ IF (print_level > 1) THEN
+   write(out_unitp,*) '=== Current geometry (not recenter) ==========='
+   CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
+
+   CALL get_Qact0(Qact,mole%ActiveTransfo)
+   CALL sub_QactTOdnx(Qact,dnx,mole,nderiv=0,Gcenter=.FALSE.,WriteCC=.TRUE.)
+
+   CALL dealloc_dnSVM(dnx)
+ END IF
 
 ! write(6,*) 'Qact = ',Qact
 ! flush(6)

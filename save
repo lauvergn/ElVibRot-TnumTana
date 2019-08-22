@@ -11,10 +11,10 @@ name_rep=/Users/lauvergn/trav/EVR-old
 
 #current version
   acur=`grep EVR   version-EVR-T | awk '{print $3}'`
-  bcur=`grep TnumNCT  version-EVR-T | awk '{print $3}'`
+  bcur=`grep Tnum  version-EVR-T | awk '{print $3}'`
   ccur=`grep Tana  version-EVR-T | awk '{print $3}'`
 
-  name_sd="ElVibRot_f90-v"$acur"-TnumNCT"$bcur"-Tana"$ccur
+  name_sd="ElVibRot_f90-v"$acur"-Tnum"$bcur"-Tana"$ccur
   name=$name_rep/$name_sd
   echo curent version $acur $bcur $ccur
 
@@ -34,7 +34,7 @@ name_rep=/Users/lauvergn/trav/EVR-old
   if test $b = "+"
   then
     echo with b+
-    b=`grep TnumNCT  version-EVR-T | awk '{print $3}' | awk -F. '{print $1 "." $2+1}'`
+    b=`grep Tnum  version-EVR-T | awk '{print $3}' | awk -F. '{print $1 "." $2+1}'`
   fi
   if test $b = "0"
   then
@@ -80,7 +80,7 @@ else
     #modify the version in version-EVR-T. It has to be done after the copy
     echo Change the new version-EVR-T $a $b $c
     echo "EVR =  "$a >  version-EVR-T
-    echo "TnumNCT = "$b >> version-EVR-T
+    echo "Tnum = "$b >> version-EVR-T
     echo "Tana = "$c >> version-EVR-T
 
     cd $name
@@ -88,7 +88,7 @@ else
     cd $name_rep
 
 
-   name_tar=ENCT.$acur.$bcur.$ccur
+   name_tar=E.$acur.$bcur.$ccur
    echo $name_tar.tar
    tar cvf $name_tar.tar $name_sd
    gzip $name_tar.tar

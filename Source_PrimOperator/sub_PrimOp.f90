@@ -4648,6 +4648,7 @@
 !-------------------------------------------------------------------------
       real (kind=Rkind) :: Qact(mole%nb_var)
       TYPE(Type_dnMat)  :: dnGG
+      TYPE (Type_dnVec) :: dnx
 
       integer           :: NM_TO_sym_ver=4
       real (kind=Rkind), allocatable :: hCC(:,:),GGdef(:,:)
@@ -4850,6 +4851,16 @@
         write(out_unitp,*) '================================================='
 
       END IF
+
+      write(out_unitp,*) '================================================='
+      write(out_unitp,*) '=== Reference geometry (not recenter) ==========='
+      CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
+
+      CALL get_Qact0(Qact,mole%ActiveTransfo)
+      CALL sub_QactTOdnx(Qact,dnx,mole,nderiv=0,Gcenter=.FALSE.,WriteCC=.TRUE.)
+
+      CALL dealloc_dnSVM(dnx)
+      write(out_unitp,*) '================================================='
 
 !-----------------------------------------------------------
       !IF (debug) THEN
