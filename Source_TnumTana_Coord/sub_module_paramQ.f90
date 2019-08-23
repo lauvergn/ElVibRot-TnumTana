@@ -99,12 +99,13 @@ MODULE mod_paramQ
 
       !-----------------------------------------------------------------
 
-      NAMELIST /minimum/opt,pot0,pot_act,pot_cart,pot_itQtransfo,       &
-                        HarD,deriv_WITH_FiniteDiff,                     &
-                        nb_elec,pot_cplx,OnTheFly,nb_scalar_Op,         &
-                       read_itQ0transfo,read_Qsym0,read_Qdyn0,read_xyz0,&
-                        read_nameQ,unit,read_xyz0_with_dummy,read_Qact0,&
-                        nDfit_Op,QMLib,BaseName_nDfit_file
+      NAMELIST /minimum/ read_itQ0transfo,read_Qsym0,read_Qdyn0,read_xyz0, &
+                         read_nameQ,unit,read_xyz0_with_dummy,read_Qact0,  &
+                         pot0,pot_act,pot_cart,pot_itQtransfo,pot_cplx,    &
+                         HarD,nb_elec,nb_scalar_Op,                        &
+                         OnTheFly,nDfit_Op,QMLib,BaseName_nDfit_file,      &
+                         deriv_WITH_FiniteDiff,                            &
+                         opt
 
       !-----------------------------------------------------------------
       integer :: err_mem,memory,err_io
@@ -131,38 +132,38 @@ MODULE mod_paramQ
       END IF
 
 !------- read the namelist minimum -----------------------------
-      nb_scalar_Op = 0
-      pot_cplx     = .FALSE.
-      OnTheFly     = .FALSE.
-      nb_elec      = 1
-      opt          = .FALSE.
-
-      pot_act      = .FALSE.
-      pot_cart     = .FALSE.
-      pot_itQtransfo = -1
-      IF (associated(mole%RPHTransfo)) THEN
-        HarD         = .FALSE.
-      ELSE
-        HarD         = .TRUE.
-      END IF
-      pot0           = ZERO
-
-      deriv_WITH_FiniteDiff  = .FALSE.
-
       read_Qsym0           = .FALSE.
       read_Qdyn0           = .FALSE.
       read_Qact0           = .FALSE.
       read_xyz0            = .FALSE.
-      read_xyz0_with_dummy = .FALSE.
-      IF (mole%Old_Qtransfo) read_xyz0_with_dummy = .TRUE.
+      read_xyz0_with_dummy = .TRUE.
       read_nameQ           = .FALSE.
       read_itQ0transfo     = -1
       unit                 = 'au'
+
+
+      nb_scalar_Op = 0
+      pot_cplx     = .FALSE.
+      nb_elec      = 1
+
+
+      pot_act             = .FALSE.
+      pot_cart            = .FALSE.
+      pot_itQtransfo      = -1
+      IF (associated(mole%RPHTransfo)) THEN
+        HarD               = .FALSE.
+      ELSE
+        HarD               = .TRUE.
+      END IF
+      pot0                 = ZERO
+
       nDfit_Op             = .FALSE.
       BaseName_nDfit_file  = ""
-
+      OnTheFly             = .FALSE.
       QMLib                = .FALSE.
 
+      deriv_WITH_FiniteDiff  = .FALSE.
+      opt          = .FALSE.
 
       read(in_unitp,minimum,IOSTAT=err_io)
       IF (err_io < 0) THEN
@@ -183,9 +184,6 @@ MODULE mod_paramQ
       IF (print_level > 1) write(out_unitp,minimum)
 
       CALL string_uppercase_TO_lowercase(unit)
-      write(6,*) 'au',unit /= 'au'
-      write(6,*) 'bohr',unit /= 'bohr'
-      write(6,*) 'angs',unit /= 'angs'
 
       IF (unit /= 'au' .AND. unit /= 'bohr' .AND. unit /= 'angs') THEN
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -232,7 +230,6 @@ MODULE mod_paramQ
         STOP
       END IF
 
-      IF(pot_itQtransfo /= -1) pot_act = .FALSE.
       IF(pot_itQtransfo == -1) THEN
         IF (pot_cart) THEN
           pot_itQtransfo = 0                      ! Qcart

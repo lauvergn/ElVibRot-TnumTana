@@ -277,7 +277,7 @@ SUBROUTINE ini_data(const_phys,                                         &
       para_Tnum%Inertia = para_intensity%Inertia
 
       IF (para_ana%Temp < ZERO) para_ana%Temp = para_intensity%Temp
-      IF (para_ana%Temp < ZERO) para_ana%Temp = real(298,kind=Rkind)
+      IF (para_ana%Temp < ZERO) para_ana%Temp = 298_Rkind
 
 !     -- reading the WP propagation ---------------------------------
       IF (para_ana%propa) THEN

@@ -35,7 +35,7 @@ MODULE mod_file
 
       PRIVATE
 
-      character (len=Line_len), public :: base_FileName = ''
+      character (len=Line_len), public :: File_path = ''
 
       !!@description: TODO
       !!@param: TODO
@@ -594,19 +594,19 @@ MODULE mod_file
         character (len=:), allocatable  :: make_FileName
         integer :: ilast_char
 
-        ilast_char = len_trim(base_FileName)
+        ilast_char = len_trim(File_path)
 
         IF (FileName(1:1) == "/" .OR. FileName(1:1) == "" .OR. ilast_char == 0) THEN
           make_FileName = trim(adjustl(FileName))
         ELSE
-          IF (base_FileName(ilast_char:ilast_char) == "/") THEN
-            make_FileName = trim(adjustl(base_FileName)) // trim(adjustl(FileName))
+          IF (File_path(ilast_char:ilast_char) == "/") THEN
+            make_FileName = trim(adjustl(File_path)) // trim(adjustl(FileName))
           ELSE
-            make_FileName = trim(adjustl(base_FileName)) // '/' // trim(adjustl(FileName))
+            make_FileName = trim(adjustl(File_path)) // '/' // trim(adjustl(FileName))
           END IF
         END IF
-
-
+!write(666,*) 'make_FileName: ',make_FileName
+!stop
       END FUNCTION make_FileName
 
   !!@description: TODO

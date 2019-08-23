@@ -13,10 +13,12 @@ cd $here
  x1=0.538516066
  x2=0.461483933
 
+ export OMP_NUM_THREADS=1
+
 
 nice $DIR_vib/vib << ** >res
- &system base_FileName='/utmp/lauvergn' /
- &constantes /
+ &system File_path='/utmp/lauvergn' /
+ &constantes ene_unit='eV' /
  &variables 
          zmat=T
          nat=4
@@ -68,8 +70,8 @@ sym  cos(a)      R     r    x    pi   dh
 **
 
 nice $DIR_vib/vib << ** >>res
- &system base_FileName='/utmp/lauvergn' /
- &constantes /
+ &system File_path='/utmp/lauvergn' /
+ &constantes ene_unit='eV' /
  &variables 
          zmat=T
          nat=4

@@ -647,7 +647,7 @@
 
       DO i_point=1,nq
         IF (print_level > 0 .AND. nq > nq_write_HADA .AND.              &
-                                        mod(i_point,(nq/10)) == 0) THEN
+                                  mod(i_point,max(1,(nq/10))) == 0) THEN
 
           write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                  &
               int(real(i_point,kind=Rkind)*HUNDRED/real(nq,kind=Rkind))

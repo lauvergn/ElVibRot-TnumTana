@@ -15,7 +15,7 @@ cd $here
 
 
 nice $DIR_vib/vib << ** >res
- &system printlevel=1 base_FileName='/utmp/lauvergn' /
+ &system printlevel=1 File_path='/utmp/lauvergn' /
  &constantes ene_unit='au' /
  &variables
          nrho=2

@@ -70,19 +70,26 @@
       character (len=Name_longlen) :: EneFormat
       character (len=Name_longlen) :: RMatFormat
       character (len=Name_longlen) :: CMatFormat
+      character (len=Line_len)     :: base_FileName = ''
 
-      namelist /system/ max_mem,mem_debug,test,printlevel,Popenmp,      &
+
+      namelist /system/ max_mem,mem_debug,test,printlevel,              &
+
+                          Popenmp,                                      &
                           PSG4_omp,PSG4_maxth,                          &
                           PMatOp_omp,PMatOp_maxth,                      &
                           POpPsi_omp,POpPsi_maxth,                      &
                           PBasisTOGrid_omp,PBasisTOGrid_maxth,          &
                           PGrid_omp,PGrid_maxth,                        &
+
                           RMatFormat,CMatFormat,EneFormat,              &
+
                           intensity_only,analysis_only,EVR,cart,        &
                           GridTOBasis_test,OpPsi_test,                  &
                           optimization,nDfit,nDGrid,                    &
                           main_test,                                    &
-                          EVRT_path,base_FileName
+
+                          EVRT_path,File_path,base_FileName
 
 
         intensity_only   = .FALSE.
@@ -114,7 +121,7 @@
 
         max_mem          = 4000000000_ILkind/Rkind ! 4GO
         mem_debug        = .FALSE.
-        printlevel       = 0
+        printlevel       = -1
 
         EneFormat        = "f18.10"
         RMatFormat       = "f18.10"
@@ -139,9 +146,20 @@
           STOP
         END IF
 
+        IF (base_FileName /= "" .AND. File_path /= "") THEN
+          write(out_unitp,*) ' ERROR in ElVibRot (main program)'
+          write(out_unitp,*) ' base_FileName and File_path are both set!!'
+          write(out_unitp,*) ' You MUST define only File_path.'
+          write(out_unitp,*) ' check your data!'
+          write(out_unitp,system)
+          write(out_unitp,*) ' ERROR in ElVibRot (main program)'
+          STOP
+        ELSE IF (base_FileName /= "") THEN
+          File_path = base_FileName
+        END IF
+
         para_mem%mem_debug = mem_debug
 
-        !IF (analysis_only .OR. GridTOBasis_test .OR. OpPsi_test .OR. cart .OR. main_test) EVR=.FALSE.
         EVR = .NOT. (analysis_only .OR. GridTOBasis_test .OR.            &
                      OpPsi_test .OR. cart .OR. main_test .OR. nDfit .OR. &
                      nDGrid .OR. optimization /= 0 .OR. analysis_only)
@@ -229,6 +247,11 @@
         write(out_unitp,*) 'Grid_omp,       Grid_maxth       ',Grid_omp,Grid_maxth
         write(out_unitp,*) 'SG4_omp,        SG4_maxth        ',SG4_omp,SG4_maxth
         write(out_unitp,*) '========================================='
+
+        write(out_unitp,*) '========================================='
+        write(out_unitp,*) 'File_path: ',trim(adjustl(File_path))
+        write(out_unitp,*) '========================================='
+
 
         para_mem%max_mem    = max_mem/Rkind
         write(out_unitp,*) '========================================='

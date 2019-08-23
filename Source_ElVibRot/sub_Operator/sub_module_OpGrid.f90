@@ -214,9 +214,9 @@
 
 
       IF (present(Base_FileName_Grid)) THEN
-        para_FileGrid%Base_FileName_Grid    = Base_FileName_Grid
+        para_FileGrid%Base_FileName_Grid    = make_FileName(Base_FileName_Grid)
       ELSE
-        para_FileGrid%Base_FileName_Grid    = "SH_HADA"
+        para_FileGrid%Base_FileName_Grid    = make_FileName("SH_HADA")
       END IF
 
       END SUBROUTINE init_FileGrid

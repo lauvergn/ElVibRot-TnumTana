@@ -172,7 +172,7 @@
 
 
   logical :: Read_Namelist_loc
-  integer :: err_read
+  integer :: err_read,err_unit
 
   real (kind=Rkind) :: c
   real (kind=Rkind) :: mhu0
@@ -347,9 +347,9 @@
   IF (mass_unit .EQ. "au") THEN
     IF (auTOmass < ZERO) const_phys%auTOmass  = ONE
     const_phys%mass_unit = "au"
-  ELSE IF (mass_unit .EQ. "g/mol" .OR. mass_unit .EQ. "gPmol") THEN
+  ELSE IF (mass_unit .EQ. "g/mol" .OR. mass_unit .EQ. "gPmol" .OR. mass_unit .EQ. "g.mol-1") THEN
     IF (auTOmass < ZERO) const_phys%auTOmass  = TEN**3 / inv_Name
-    const_phys%mass_unit = "g/mol"
+    const_phys%mass_unit = "g.mol-1"
   ELSE
     const_phys%auTOmass  = auTOmass
     const_phys%mass_unit = mass_unit
@@ -369,31 +369,15 @@
     write(out_unitp,*) 'MASSES, version: ','HandBook70ed'
     CALL construct_table_at_HandBook70ed(const_phys%mendeleev,gPmolTOmass,mass_unit)
   CASE Default
-    write(out_unitp,*) 'MASSES, version: ','HandBook70ed'
-    CALL construct_table_at_HandBook70ed(const_phys%mendeleev,gPmolTOmass,mass_unit)
+    write(out_unitp,*) 'MASSES, version: ',mass_version
+    CALL construct_table_at_NIST2012(const_phys%mendeleev,gPmolTOmass,mass_unit)
   END SELECT
 
   !------------------------------------------------------------------
 
 
-  IF (ene_unit .EQ. "cm-1") THEN
-    const_phys%auTOenergy = auTOcm_inv
-    const_phys%ene_unit   = "cm-1"
-  ELSE IF (ene_unit .EQ. "au" .OR. ene_unit .EQ. "hartree") THEN
-    const_phys%auTOenergy = ONE
-    const_phys%ene_unit   = "hartree"
-  ELSE IF (ene_unit .EQ. "ev" .OR. ene_unit .EQ. "eV") THEN
-    const_phys%auTOenergy = auTOeV
-    const_phys%ene_unit   = "eV"
-  ELSE
-    const_phys%auTOenergy = auTOenergy
-    const_phys%ene_unit   = ene_unit
-  END IF
-
-
   ! for the automatic energy (E) conversion
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','E'),Work_unit=.TRUE.)
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/const_phys%auTOenergy,ene_unit,'E'),Write_unit=.TRUE.)
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'hartree','E'))
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOeV,'eV','E'))
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(k/Eh,'°K','E')) ! Kelvin
@@ -401,6 +385,42 @@
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOGHz,'GHz','E'))
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOkcalmol_inv,'kcal.mol-1','E'))
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOkJmol_inv,'kJ.mol-1','E'))
+
+  IF (ene_unit == "") THEN
+    const_phys%auTOenergy = get_Conv_au_TO_unit('E','cm-1',err_unit=err_unit)
+    const_phys%ene_unit   = 'cm-1'
+    IF (err_unit /= 0) THEN
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) ' Problem to get the conversion factor for "cm-1"'
+      write(out_unitp,*) '  It should never append.'
+      write(out_unitp,*) '  Check the fortran!!'
+      write(out_unitp,*) 'List of available units:'
+      CALL Write_TabConvRWU_dim1(Tab_conv_FOR_quantity)
+      STOP
+    END IF
+  ELSE
+    IF (auTOenergy > ZERO) THEN
+      const_phys%auTOenergy = auTOenergy
+      const_phys%ene_unit   = ene_unit
+      err_unit              = 0
+    ELSE
+      const_phys%auTOenergy = get_Conv_au_TO_unit('E',ene_unit,err_unit=err_unit)
+      const_phys%ene_unit   = trim(adjustl(ene_unit))
+      IF (err_unit /= 0) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) ' Problem with "ene_unit" and/or "auTOenergy"'
+        write(out_unitp,*) '   energy unit: ',ene_unit
+        write(out_unitp,*) '   auTOenergy:  ',auTOenergy
+        IF (auTOenergy < ZERO) write(out_unitp,*) ' The value of "auTOenergy" is wrong'
+        write(out_unitp,*) 'List of available units:'
+        CALL Write_TabConvRWU_dim1(Tab_conv_FOR_quantity)
+        STOP
+      END IF
+    END IF
+  END IF
+  ! Now we can add the writing unit for the energy (E).
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/const_phys%auTOenergy,const_phys%ene_unit,'E'),Write_unit=.TRUE.)
+
 
   ! for the automatic time (t) conversion
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'ua','t'),Work_unit=.TRUE.)
@@ -411,6 +431,8 @@
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','L'),Work_unit=.TRUE.)
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'bohr','L'))
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-10)/a0,'Angs','L'),Write_unit=.TRUE.)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-9)/a0,'nm','L'))
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-12)/a0,'pm','L'))
 
 
   ! for the automatic angle (angle) conversion
@@ -434,9 +456,8 @@
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'','No_Dim'),Work_unit=.TRUE.,Write_unit=.TRUE.)
 
   IF (print_level > 1) THEN
-    DO i=1,size(Tab_conv_FOR_quantity)
-      CALL Write_TabConvRWU(Tab_conv_FOR_quantity(i))
-    END DO
+    write(out_unitp,*) 'List of available units:'
+    CALL Write_TabConvRWU_dim1(Tab_conv_FOR_quantity)
   END IF
 
   const_phys%pi         = pi
@@ -478,32 +499,28 @@
 !-----------------------------------------------------------------
 
 !-- Write some constantes ------------------------------------
-  write(out_unitp,*) 'energy unit: ',const_phys%ene_unit
-  write(out_unitp,*) 'auTOenergy',const_phys%auTOenergy
+                       write(out_unitp,*) 'energy unit: ',const_phys%ene_unit
+                       write(out_unitp,21) ' auTOenergy    = ',const_phys%auTOenergy
+  IF (print_level > 0) write(out_unitp,*)  ' pi            = ',const_phys%pi
+  IF (print_level > 0) write(out_unitp,*)  ' cos(pi)       = ',cos(const_phys%pi)
+  IF (print_level > 0) write(out_unitp,11) ' a0 (m-1)      = ',const_phys%a0
+  IF (print_level > 0) write(out_unitp,11) ' a0 (Angs)     = ',const_phys%a0*TEN**10
+  IF (print_level > 0) write(out_unitp,11) ' Eh (J)        = ',const_phys%Eh
+  IF (print_level > 0) write(out_unitp,11) ' Ta (s)        = ',const_phys%Ta
+                       write(out_unitp,21) ' Ta (fs)       = ',const_phys%Ta*TEN**15
+                       write(out_unitp,21) ' auTOcm_inv    = ',const_phys%auTOcm_inv
+                       write(out_unitp,21) ' auTOeV        = ',const_phys%auTOeV
+  IF (print_level > 0) write(out_unitp,21) ' inv_Name      = ',const_phys%inv_Name
+  IF (print_level > 0) write(out_unitp,11) ' E0 (V cm-1)   = ',const_phys%E0
+  IF (print_level > 0) write(out_unitp,11) ' I0 (W cm-2)   = ',const_phys%I0
+  IF (print_level > 0) write(out_unitp,11) ' convAif       = ',const_phys%convAif
+  IF (print_level > 0) write(out_unitp,11) ' convIDif      = ',const_phys%convIDif
+  IF (print_level > 0) write(out_unitp,11) ' convIQif      = ',const_phys%convIQif
+  IF (print_level > 0) write(out_unitp,11) ' convDebyeTOau = ',convDebyeTOau
 
 
-  IF (print_level > 0) write(out_unitp,*) 'pi = ',const_phys%pi
-  IF (print_level > 0) write(out_unitp,*) 'cos(pi) = ',cos(const_phys%pi)
-  IF (print_level > 0) write(out_unitp,11) ' a0 (m-1) = ',const_phys%a0
 11 format (a,e17.10)
 21 format (a,f18.6)
-  IF (print_level > 0) write(out_unitp,11) ' Eh (J) = ',const_phys%Eh
-  IF (print_level > 0) write(out_unitp,11) ' Ta (s)= ',const_phys%Ta
-  write(out_unitp,21) ' Ta (fs)= ',const_phys%Ta*TEN**15
-  write(out_unitp,21) ' auTOcm_inv = ',const_phys%auTOcm_inv
-  write(out_unitp,21) ' auTOeV     = ',const_phys%auTOeV
-  IF (print_level > 0)                                              &
-     write(out_unitp,21) ' inv_Name = ',const_phys%inv_Name
-  IF (print_level > 0) write(out_unitp,11) ' E0 (V cm-1) = ',const_phys%E0
-  IF (print_level > 0) write(out_unitp,11) ' I0 (W cm-2) = ',const_phys%I0
-
-  IF (print_level > 0) write(out_unitp,11) ' convAif =',const_phys%convAif
-  IF (print_level > 0) write(out_unitp,11) ' convIDif =',const_phys%convIDif
-  IF (print_level > 0) write(out_unitp,11) ' convIQif =',const_phys%convIQif
-  IF (print_level > 0) write(out_unitp,11) ' convIDif/convIQif =',          &
-                 const_phys%convIDif/const_phys%convIQif
-  IF (print_level > 0) write(out_unitp,11)
-  IF (print_level > 0) write(out_unitp,11) ' convDebyeTOau =',convDebyeTOau
 
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub

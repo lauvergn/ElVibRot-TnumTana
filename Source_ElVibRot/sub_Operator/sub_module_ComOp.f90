@@ -123,7 +123,7 @@
       ComOp%ADA                 = .FALSE.
 
 
-      ComOp%file_HADA%name      = 'SH_HADA'
+      ComOp%file_HADA%name      = make_FileName('SH_HADA')
       ComOp%file_HADA%unit      = 0
       ComOp%file_HADA%formatted = .TRUE.
       ComOp%file_HADA%append    = .FALSE.

@@ -95,7 +95,7 @@
 
       CALL mole1TOmole2(mole,mole_loc)
 
-      ComOp_loc%file_HADA%name      = 'SH_HADA_not_used'
+      ComOp_loc%file_HADA%name      = make_FileName('SH_HADA_not_used')
       ComOp_loc%file_HADA%formatted = .TRUE.
       max_nb_ba_ON_HAC_save         = ComOp%max_nb_ba_ON_HAC
 
@@ -1219,7 +1219,7 @@ END SUBROUTINE RecSet_EneH0
       IF (allocated(ComOp%Jac)) THEN
         CALL dealloc_NParray(ComOp%Jac,"ComOp%Jac",name_sub)
       END IF
-      ComOp%file_HADA%name      = name_HADA
+      ComOp%file_HADA%name      = make_FileName(name_HADA)
       ComOp%file_HADA%formatted = formatted_HADA
       !write(out_unitp,*) ' END ',name_sub
 

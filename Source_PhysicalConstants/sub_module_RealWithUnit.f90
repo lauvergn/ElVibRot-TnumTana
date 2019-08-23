@@ -411,19 +411,8 @@
       !write(6,*) 'RWU',RWU,skip_conv
 
       ! first find the quantity
-      name_RWUquantity = RWU%quantity
-      CALL string_uppercase_TO_lowercase(name_RWUquantity)
+      iq = get_Index_OF_Quantity(RWU%quantity)
 
-      DO i=1,size(Tab_conv_FOR_quantity)
-
-        name_quantity = Tab_conv_FOR_quantity(i)%quantity
-        CALL string_uppercase_TO_lowercase(name_quantity)
-
-        IF (name_quantity == name_RWUquantity) THEN
-          EXIT
-        END IF
-      END DO
-      iq = i
 
       name_RWUunit = RWU%unit
       CALL string_uppercase_TO_lowercase(name_RWUunit)
@@ -544,27 +533,38 @@
 
       END function get_Conv_au_TO_WriteUnit
 
-      FUNCTION get_Conv_au_TO_unit(quantity,Unit,WorkingUnit)
+      FUNCTION get_Conv_au_TO_unit(quantity,Unit,WorkingUnit,err_unit)
       real (kind=Rkind)  :: get_Conv_au_TO_unit
 
-      character (len=*), intent(in)           :: quantity
-      character (len=*), intent(in), optional :: unit
-      logical,           intent(in), optional :: WorkingUnit
+      character (len=*), intent(in)              :: quantity
+      character (len=*), intent(in),    optional :: unit
+      logical,           intent(in),    optional :: WorkingUnit
+      integer,           intent(inout), optional :: err_unit
 
-      integer :: i
+      integer :: iq,iu,err_unit_loc
 
+      IF (present(err_unit)) err_unit = 0
+
+      iq = get_Index_OF_Quantity(quantity)
       IF (present(WorkingUnit)) THEN
         ! first find the quantity
-        i = get_Index_OF_Quantity(quantity)
         IF (WorkingUnit) THEN
-          get_Conv_au_TO_unit = ONE/Tab_conv_FOR_quantity(i)%Work_unit%val
+          get_Conv_au_TO_unit = ONE/Tab_conv_FOR_quantity(iq)%Work_unit%val
         ELSE
-          get_Conv_au_TO_unit = ONE/Tab_conv_FOR_quantity(i)%Write_unit%val
+          get_Conv_au_TO_unit = ONE/Tab_conv_FOR_quantity(iq)%Write_unit%val
         END IF
       ELSE IF (present(unit)) THEN
-        get_Conv_au_TO_unit = ONE/convRWU_TO_R( REAL_WU(ONE,unit,quantity) )
+        iu = get_Index_OF_Unit(unit,iq,err_unit=err_unit_loc)
+        IF (err_unit_loc /= 0) THEN
+          get_Conv_au_TO_unit = ONE
+          IF (present(err_unit)) err_unit = err_unit_loc
+        ELSE
+          get_Conv_au_TO_unit = ONE/Tab_conv_FOR_quantity(iq)%conv(iu)%val
+        END IF
+
       ELSE ! problem, unit and WorkingUnit are not present (conversion factor = ONE)
         get_Conv_au_TO_unit = ONE
+        IF (present(err_unit)) err_unit = -2
       END IF
 
       END function get_Conv_au_TO_unit
@@ -595,6 +595,52 @@
       get_Index_OF_Quantity = i
       END FUNCTION get_Index_OF_Quantity
 
+      FUNCTION get_Index_OF_Unit(unit,iq,err_unit)
+      integer  :: get_Index_OF_Unit
+      character (len=*), intent(in)              :: unit
+      integer,           intent(in)              :: iq
+      integer,           intent(inout), optional :: err_unit
+
+
+      character (len=Name_len)            :: unit_loc,name_unit
+      integer :: iu
+
+
+      IF (present(err_unit)) err_unit = 0
+      iu = 0
+      ! first find the unit
+      unit_loc = unit
+      CALL string_uppercase_TO_lowercase(unit_loc)
+
+      IF (iq <= size(Tab_conv_FOR_quantity)) THEN
+        DO iu=1,size(Tab_conv_FOR_quantity(iq)%conv)
+
+          name_unit = Tab_conv_FOR_quantity(iq)%conv(iu)%unit
+          CALL string_uppercase_TO_lowercase(name_unit)
+
+          !write(6,*) 'i,name_unit',i,name_unit,name_RWUunit,(name_RWUunit == name_unit)
+
+          IF (unit_loc == name_unit) EXIT
+        END DO
+
+        IF (iu > size(Tab_conv_FOR_quantity(iq)%conv)) THEN
+          IF (present(err_unit)) THEN
+            err_unit = -2
+          ELSE
+            STOP 'iu is out-of-range (unity cannot be found!!)'
+          END IF
+        END IF
+      ELSE
+        IF (present(err_unit)) THEN
+          err_unit = -1
+        ELSE
+          STOP 'iq is out-of-range (quantity cannot be found!!)'
+        END IF
+      END IF
+
+      get_Index_OF_Unit = iu
+
+      END FUNCTION get_Index_OF_Unit
       SUBROUTINE Test_RWU()
 
       TYPE(REAL_WU)     :: RWU1,RWU2 ! test the real with unit convertion
