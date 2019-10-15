@@ -68,12 +68,17 @@
       real (kind=Rkind), parameter :: auTOcm_inv = 219474.63144319772_Rkind
       real (kind=Rkind), parameter :: inv_Name   = 1822.888485541_Rkind
 
-      !real (kind=Rkind), parameter :: mH   = 1837.1526464003414_Rkind ! mH ! Tnum
-       real (kind=Rkind), parameter :: mD   = 3671.4829394591770_Rkind ! mD ! Tnum
-      real (kind=Rkind), parameter :: mH   = 1.00800_Rkind * inv_Name ! mH ! Bacic
+      real (kind=Rkind), parameter :: Iner = 1849.60842365259637412949_Rkind ! M.R^2 en ua
+
+      real (kind=Rkind), parameter :: mH   = 1837.1526464003414_Rkind ! mH ! Tnum
+      !real (kind=Rkind), parameter :: mH   = 1.00800_Rkind * inv_Name ! mH ! Bacic
+
+      real (kind=Rkind), parameter :: mH2  = TWO*mH ! mH2
 
       integer       :: i,iQdyn
 
+      !real (kind=Rkind), parameter :: BH2 = 59.322_Rkind / auTOcm_inv ! from Valdez, PCCP, 2011, 13, 2935
+      !real (kind=Rkind), parameter :: BH2 = 59.32266_Rkind / auTOcm_inv ! from Bacic(ref)
       real (kind=Rkind) :: BH2
 
       real (kind=Rkind) :: R,th,phi,c,s
@@ -92,8 +97,13 @@
            CALL Write_mole(mole)
            write(out_unitp,*)
          END IF
+         write(out_unitp,*)
+         write(out_unitp,*)
        END IF
 !-----------------------------------------------------------
+
+      !write(6,*) 'nb_act',mole%nb_act
+      !write(6,*) 'iQdyn(:)',mole%liste_QactTOQsym(1:mole%nb_act)
 
       Tdef2(:,:) = ZERO
       Tdef1(:)   = ZERO
@@ -146,15 +156,18 @@
         Trot(i,i) = -HALF
       END DO
 
+
 !-----------------------------------------------------------
       IF (debug .OR. para_Tnum%WriteT) THEN
 
         CALL Write_f2f1vep(Tdef2,Tdef1,vep,rho,mole%nb_act)
-        IF (para_Tnum%JJ .GT. 0) CALL Write_TcorTrot(Tcor2,Tcor1,Trot, &
+        IF (para_Tnum%JJ .GT. 0) CALL Write_TcorTrot(Tcor2,Tcor1,Trot,   &
                                            mole%nb_act)
+
         write(out_unitp,*) 'END calc_f2_f1Q_ana'
       END IF
 !-----------------------------------------------------------
 
 
+      RETURN
       end subroutine calc_f2_f1Q_ana

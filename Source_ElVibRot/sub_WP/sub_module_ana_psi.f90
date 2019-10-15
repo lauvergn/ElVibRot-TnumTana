@@ -233,7 +233,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
       CALL dealloc_NParray(Mij,'Mij',name_sub)
     END IF
 
-  ELSE
+  ELSE ! not propa
     CALL Channel_weight(ana_psi%tab_WeightChannels,psi,                 &
        GridRep=.FALSE.,BasisRep=.TRUE.,Dominant_Channel=Dominant_Channel)
 

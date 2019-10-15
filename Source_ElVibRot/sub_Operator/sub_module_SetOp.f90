@@ -70,12 +70,6 @@ MODULE mod_SetOp
 !         !-- for ComOp ------------------------------------------------------
           TYPE (param_ComOp), pointer    :: ComOp           => null() ! true POINTER
 
-          integer :: n_Op        = 0             ! type of Operator :
-                                                 ! 0 => H
-                                                 ! -1 => S
-                                                 ! 1,2,3 => Dipole moment (x,y,z)
-          character (len=Name_len) :: name_Op = 'H'
-
           integer :: nb_OpPsi    = 0             ! number of Operator action
 
           integer :: nb_bie=0                    ! number of active basis functions and grid points
@@ -136,9 +130,11 @@ MODULE mod_SetOp
           real (kind=Rkind) :: Hmin     =  huge(ONE)  !
           real (kind=Rkind) :: Hmax     = -huge(ONE)  !
 
-          real (kind=Rkind) :: pot0     = ZERO        !
-          logical           :: pot_only = .FALSE.     ! comput only the PES without T (and the vep)
-          logical           :: T_only   = .FALSE.     ! comput only the T (with the vep)
+          real (kind=Rkind)              :: pot0              = ZERO    !
+          logical                        :: pot_only          = .FALSE. ! comput only the PES without T (and the vep)
+          logical                        :: T_only            = .FALSE. ! comput only the T (with the vep)
+          logical                        :: SplitH            = .FALSE. ! When true, the H is split in a diagonal part wich contains the KEO and also part of the potential (for HO basis set)
+          real (kind=Rkind), allocatable :: SplitDiagB(:)               ! if SplitH=t, the Hamiltonian diagonal values on the basis set
 
         END TYPE param_Op
 
@@ -176,8 +172,8 @@ MODULE mod_SetOp
       logical, optional, intent(in) :: Mat,Grid
       logical, optional, intent(in) :: Grid_cte(para_Op%nb_term)
 
-      logical :: lo_Mat,lo_Grid,lo_Grid_cte(para_Op%nb_term)
-      integer :: nb_tot
+      logical :: SmolyakRep,lo_Mat,lo_Grid,lo_Grid_cte(para_Op%nb_term)
+      integer :: nb_tot,nb_SG
       integer :: nb_term,nb_bie
 
       integer :: err
@@ -213,6 +209,9 @@ MODULE mod_SetOp
         CALL write_param_Op(para_Op)
         STOP
       END IF
+
+      SmolyakRep = ( para_Op%BasisnD%SparseGrid_type == 4)
+      nb_SG      = para_Op%BasisnD%nb_SG
 
       IF (present(Mat)) THEN
         lo_Mat = Mat
@@ -322,7 +321,7 @@ MODULE mod_SetOp
                               para_Op%nb_qa,nb_bie,                   &
                               para_Op%derive_termQact(:,k_term),      &
                               para_Op%derive_termQdyn(:,k_term),      &
-                              info)
+                              SmolyakRep,nb_SG,info)
 
             deallocate(info)
           END DO
@@ -343,7 +342,7 @@ MODULE mod_SetOp
 
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
                             para_Op%nb_qa,nb_bie,                     &
-                            (/ 0,0 /),(/ 0,0 /),info)
+                            (/ 0,0 /),(/ 0,0 /),SmolyakRep,nb_SG,info)
           para_Op%imOpGrid(1)%cplx = .TRUE.
 
           deallocate(info)
@@ -1325,19 +1324,21 @@ MODULE mod_SetOp
 
        CALL Analysis_OpGrid(para_Op%OpGrid,para_Op%n_Op)
 
-       iterm00 = para_Op%derive_term_TO_iterm(0,0)
-       iq = para_Op%OpGrid(iterm00)%iq_min
-       IF (iq > 0) THEN
-         CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
-         write(out_unitp,*) 'iq_min,Op_min,Qact',iq,para_Op%OpGrid(iterm00)%Op_min,Qact(1:para_Op%mole%nb_act1)
-       END IF
-       iq = para_Op%OpGrid(iterm00)%iq_max
-       IF (iq > 0) THEN
-         CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
-         write(out_unitp,*) 'iq_max,Op_max,Qact',iq,para_Op%OpGrid(iterm00)%Op_max,Qact(1:para_Op%mole%nb_act1)
+       IF (print_level>-1) THEN
+         iterm00 = para_Op%derive_term_TO_iterm(0,0)
+         iq = para_Op%OpGrid(iterm00)%iq_min
+         IF (iq > 0) THEN
+           CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
+           write(out_unitp,*) 'iq_min,Op_min,Qact',iq,para_Op%OpGrid(iterm00)%Op_min,Qact(1:para_Op%mole%nb_act1)
+         END IF
+         iq = para_Op%OpGrid(iterm00)%iq_max
+         IF (iq > 0) THEN
+           CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
+           write(out_unitp,*) 'iq_max,Op_max,Qact',iq,para_Op%OpGrid(iterm00)%Op_max,Qact(1:para_Op%mole%nb_act1)
+         END IF
        END IF
 
-       write(out_unitp,*) 'Analysis of the imaginary Op grid',para_Op%cplx
+       IF (print_level>-1) write(out_unitp,*) 'Analysis of the imaginary Op grid',para_Op%cplx
        IF (para_Op%cplx) THEN
          CALL Analysis_OpGrid(para_Op%imOpGrid,para_Op%n_Op)
        END IF

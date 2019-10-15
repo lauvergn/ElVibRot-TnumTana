@@ -640,8 +640,9 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
   f = Get_Scal_FROM_Tab_OF_dnMatOp(dnMatOp,1)
   if (nderiv_dnE >= 1) CALL Get_Grad_FROM_Tab_OF_dnMatOp(df,dnMatOp,1)
 
-  !write(6,*) ' Energy = ',f
-  !write(6,*) ' Active modes gradient = ', df
+  write(out_unitp,*) ' Energy = ',f
+  IF (nderiv_dnE >= 1) write(out_unitp,*) ' Active modes gradient norm = ',sqrt(dot_product(df,df))
+  IF (print_level > 1) write(out_unitp,*) ' Active modes gradient = ', df
   !write(6,*) 'end dfunc subroutine'
   !flush(6)
 

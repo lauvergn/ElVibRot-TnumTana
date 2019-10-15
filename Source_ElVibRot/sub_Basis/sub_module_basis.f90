@@ -210,6 +210,7 @@ MODULE mod_basis
       END IF
 !---------------------------------------------------------------------
 
+      !write(6,*) 'scaleQ,QO',basis_primi%scaleQ,basis_primi%Q0
 
       IF (.NOT. basis_primi%active) RETURN
 
@@ -503,14 +504,15 @@ MODULE mod_basis
       !- scaling of the basis ---------------------------------
       CALL sub_scale_basis(basis_primi)
 
-
       IF (basis_primi%xPOGridRep_done) RETURN
       CALL flush_perso(out_unitp)
 !     - d1b => d1BasisRep and  d2b => d2BasisRep ------------
       CALL sub_dnGB_TO_dnBB(basis_primi)
+
       CALL flush_perso(out_unitp)
 !     - d1b => dnBGG%d1 and  d2b => dnBGG%d2 ------------
       CALL sub_dnGB_TO_dnGG(basis_primi)
+
       !- d0b => transpose(d0b) ... transpose(d0bwrho) ---
       CALL sub_dnGB_TO_dnBG(basis_primi)
 
@@ -2304,6 +2306,7 @@ END SUBROUTINE pack_basis
       IF (.NOT. basis_temp%check_basis .OR. .NOT. basis_temp%packed_done) RETURN
       !IF (.NOT. basis_temp%packed_done) RETURN
       nq = get_nq_FROM_basis(basis_temp)
+      !write(6,*) 'nq,nb',nq,basis_temp%nb
       IF ( (basis_temp%nb*nq) > 1000000000) RETURN
 
       Print_basis = basis_temp%print_info_OF_basisDP .AND. print_level > -1 .OR. debug
@@ -2334,10 +2337,13 @@ END SUBROUTINE pack_basis
         CALL alloc_NParray(matS,(/ basis_temp%nb,basis_temp%nb /),        &
                           'matS',name_sub)
 
+
+
         DO i=1,basis_temp%nb
           tbasiswrho(i,:) = basis_temp%dnRGB%d0(:,i) * basis_temp%wrho(:)
         END DO
         matS(:,:) = matmul(tbasiswrho,basis_temp%dnRGB%d0)
+
 
         CALL sub_ana_S(matS,basis_temp%nb,max_Sii,max_Sij,Print_basis)
 
@@ -2359,7 +2365,7 @@ END SUBROUTINE pack_basis
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' the basis is not orthonormal !!'
         IF (loc_test_stop) THEN
-          CALL RecWrite_basis(basis_temp)
+          CALL RecWrite_basis(basis_temp,write_all=.FALSE.)
           write(out_unitp,*) ' The basis is not orthonormal !!'
           STOP 'ERROR: None orthonormal Basis'
         END IF

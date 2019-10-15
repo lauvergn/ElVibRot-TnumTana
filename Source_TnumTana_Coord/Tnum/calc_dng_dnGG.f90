@@ -25,7 +25,7 @@ MODULE mod_dnGG_dng
   use mod_dnSVM,   only: type_dnmat, type_dns, alloc_dnsvm, dealloc_dnsvm,     &
                          write_dnsvm, sub_zero_to_dnmat, inv_dnmat1_to_dnmat2, &
                          type_dnvec, alloc_array, dealloc_array
-  use mod_paramQ,  only: sub_QactTOdnMWx, Write_dnx
+  use mod_paramQ,  only: sub_QactTOdnMWx, Write_dnx, analyze_dnx
   use mod_Tnum,    only: zmatrix, tnum, write_mole, mole1tomole2, dealloc_zmat
   USE mod_dnRho ! all
 

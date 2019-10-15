@@ -6,14 +6,14 @@ General quantum dynamics code using curvilinear coordinates:
 3. Quantum gate and optimal control.
 4. Optimization with the given set of curvilinear coordiantes
 
-## Introduction
+## 1) Introduction
 
 Originalities of this code:
  * No built-in limitation in terms of number of degrees of freedom.
  * the use of a numerical but exact kinetic energy operator with Tnum (Automatic differentiation), which enables a large flexibility in the choice of the curvilinear coordinates.
  * the use of Smolyak scheme, which enables to avoid a direct-product basis set and grids.
 
-## Input file
+## 2) Input file
  The input file has four mains sections:
 * *SYSTEM* and *CONSTANTS*, which define general parameters for parallelization, printing levels, energy unit, physical constants...
 * *COORDINATES*, which defines the curvilinear coordinates, the coordinates transformations and some aspects of the physical models (constraints....). This section is part of Tnum.
@@ -21,7 +21,7 @@ Originalities of this code:
 * *ANALYSIS*, which defines parameters for time dependent (including optimal control) or independent calculations, intensities.
 
 
-### &system namelist
+### 2.1) &system namelist
 
 This namelist can be used without parameter. The default values should work for most of the situations. However, the following parameters can be used in this namelist:
 
@@ -70,7 +70,7 @@ This namelist can be used without parameter. The default values should work for 
 * **File_path**: it enables to define the path were most of the files will be save.
 
 
-### &constantes namelist (physical constants and units)
+### 2.2) &constantes namelist (physical constants and units)
 
 This namelist can be used without parameter, it enables to change energy unit and selects different version of physical constants or to redefine some of them. 
 
@@ -105,12 +105,12 @@ The following parameters can be use to modify some physical constants (to reprod
 * **auTOcm_inv** : This parameter enables to modify energy conversion factor to **"cm-1"**. It has an effect only if **ene_unit="cm-1"**.
 * **inv_Name** : This parameter enables to modify mass conversion factor (au <=> g.mol-1).
 
-### &variables namelist (Tnum)
+### 2.3) &variables namelist (Tnum)
 
 This namelist is part of **Tnum** (or **Tana**) and it enables to define the curvilinear coordinates used in the dynamics. It enables to set reduced dimensionality models (rigid or flexible constraints, some part of adiabatic approximation...). 
 See the **Tnum** manual.
 
-### &minimun namelist (Tnum)
+### 2.4) &minimun namelist (Tnum)
 
 The parameters of this namelist define two mains features: 
 
@@ -163,5 +163,32 @@ Other parameters:
 * **opt** (default **F**): when the value is **T** and when the **optimization > 0** in the *&system* namelist, the active coordinates could be optimized (see Optimization procedure).
 
 
+## 3) Installation
 
+The installation is simple. However, we do not have an fully automatic procedure (like configure ...).
+However, the program uses some fortran 2003 features. Therefore, the compilers gfortran or ifort or pgf90 can be used (probably orthers as well).
+
+You have to select or define your compiler in the "makefile" (the default is gfortran).
+Then, you have to compile the program with the unix command "make".
+
+Currently, the program can be compiled on: 
+* linux platform with 
+   - gfortran (version= 6.3, 8.3, 9.1)
+   - ifort    (version= 18.0.3) Pb with 17.0.1
+   - pgf90    (version= 17.10-0) Pb with 16.4-0
+* osx platform with gfortran
+
+
+There are severals options with can be modified in the makefile:
+* F90: the compiler (see above)
+* OPT: the compiler optimization. 0 => no optimization, 1 => optimization
+* OMP: compilation with (OMP=1) or without (OMP=0) OpenMP.
+* INT: This enables to change the integer king default (INT=4) during the compilation to a "long integer" INT=8. This is usefull for large calculations (Smolyak).
+* ARPACK: this enables the use of ARPACK diagonalisation (ARPACK=1). It needs Lapack as well. 0 => without ARPACK (default), 1 => with ARPACK.
+* LAPACK: this enables the use of BLAS and LAPACK libraries. 0 => without LAPACK, 1 => with LAPACK (default)
+* QML: Quantum Model Lib.  0 => without QML (default), 1 => with QML.
+* extf: it enables to change the "sub_system" file extention. Possible values: f or f90. Alternativaly, one can use an external unix variable: EXTFextern.
+
+To check that the program has be compile correctly, you can run some tests from the directory: "exa_hcn-dist". Each input data starts with dat.... 
+To run the "dat_Davidson" example, just the type the "dat_Davidson" command. The output will be in the "res" file.
 

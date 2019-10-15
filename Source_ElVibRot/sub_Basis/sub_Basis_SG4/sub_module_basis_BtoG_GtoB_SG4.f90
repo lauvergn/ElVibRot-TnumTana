@@ -67,7 +67,7 @@ INTERFACE operator(-)
 END INTERFACE
 
 PUBLIC  getbis_tab_nq, getbis_tab_nb
-PUBLIC  Type_SmolyakRep,  alloc2_SmolyakRep,  dealloc_SmolyakRep,  DerivOp_TO3_GSmolyakRep
+PUBLIC  Type_SmolyakRep,  alloc2_SmolyakRep, alloc_SmolyakRep_only, dealloc_SmolyakRep,  DerivOp_TO3_GSmolyakRep
 PUBLIC  Type_SmolyakRepC, alloc2_SmolyakRepC, dealloc_SmolyakRepC, DerivOp_TO3_GSmolyakRepC
 PUBLIC  Write_SmolyakRep, alloc_SmolyakRep
 PUBLIC  tabR_AT_iG_TO_tabPackedBasis, tabPackedBasis_TO_tabR_AT_iG
@@ -88,6 +88,50 @@ PUBLIC  typeCvec, alloc_typeCvec, dealloc_typeCvec
 PUBLIC  assignment(=), operator(*), operator(+), operator(-)
 
 CONTAINS
+
+SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
+USE mod_system
+USE mod_basis_set_alloc
+IMPLICIT NONE
+
+TYPE(Type_SmolyakRep),           intent(inout)         :: SRep
+integer,                         intent(in)            :: nb_SG
+logical,                         intent(in),  optional :: delta,grid
+integer,                         intent(in),  optional :: nb0
+
+integer               :: iG,nb_B
+integer, allocatable  :: tab_n(:)
+
+
+!write(6,*) 'in alloc_SmolyakRep, shape tab_ind',shape(tab_ind) ; flush(6)
+CALL dealloc_SmolyakRep(SRep)
+
+IF (present(nb0)) THEN
+  SRep%nb0 = nb0
+ELSE
+  SRep%nb0 = 1
+END IF
+IF (SRep%nb0 < 1) SRep%nb0 = 1
+
+IF (present(delta)) THEN
+  SRep%delta = delta
+ELSE
+  SRep%delta = .FALSE.
+END IF
+
+IF (present(grid)) THEN
+  SRep%grid = grid
+ELSE
+  SRep%grid = .FALSE.
+END IF
+
+!write(6,*) 'Alloc Smolyak Rep' ; flush(6)
+
+allocate(SRep%SmolyakRep( nb_SG ))
+
+!write(6,*) 'Size Smolyak Rep:',nb_B ; flush(6)
+
+END SUBROUTINE alloc_SmolyakRep_only
 
 SUBROUTINE alloc_SmolyakRep(SRep,tab_ind,tab_ba,delta,grid,nb0)
 USE mod_system
@@ -692,11 +736,11 @@ DO iG=basis_SG%para_SGType2%iG_th(ith+1),basis_SG%para_SGType2%fG_th(ith+1)
     CALL flush_perso(out_unitp)
   END IF
 
-  IF (max(1,size(basis_SG%para_SGType2%tab_nb_OF_SRep)/100) == 0 .OR. &
-      size(basis_SG%para_SGType2%tab_nb_OF_SRep) < 100) THEN
-    write(out_unitp,*) 'iG,nb_G',iG,size(basis_SG%para_SGType2%tab_nb_OF_SRep)
-    CALL flush_perso(out_unitp)
-  END IF
+!  IF (max(1,size(basis_SG%para_SGType2%tab_nb_OF_SRep)/100) == 0 .OR. &
+!      size(basis_SG%para_SGType2%tab_nb_OF_SRep) < 100) THEN
+!    write(out_unitp,*) 'iG,nb_G',iG,size(basis_SG%para_SGType2%tab_nb_OF_SRep)
+!    CALL flush_perso(out_unitp)
+!  END IF
 
   CALL ADD_ONE_TO_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
 

@@ -477,6 +477,7 @@ Obj_module =  \
  $(OBJ)/sub_module_basis_RCVec_SG4.o $(OBJ)/sub_module_basis_BtoG_GtoB_SG4.o \
  $(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o $(OBJ)/sub_module_basis_BtoG_GtoB.o \
  $(OBJ)/sub_module_basis.o \
+$(OBJ)/sub_module_BasisMakeGrid.o \
  $(OBJ)/sub_module_ComOp.o \
  $(OBJ)/sub_module_poly.o $(OBJ)/sub_module_GWP.o \
  $(OBJ)/sub_module_cart.o
@@ -488,7 +489,7 @@ Obj_Basis = \
  $(OBJ)/sub_basis_El.o \
  $(OBJ)/sub_quadra_herm.o $(OBJ)/sub_quadra_laguerre.o $(OBJ)/sub_quadra_legendre.o \
  $(OBJ)/sub_quadra_fourier.o $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_ft.o \
- $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_DirProd.o $(OBJ)/sub_bases_actives.o \
+ $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_DirProd.o \
  $(OBJ)/sub_quadra_SparseBasis2n.o \
  $(OBJ)/sub_SymAbelian_OF_Basis.o
 
@@ -668,6 +669,7 @@ $(WORKEXE): obj $(Obj_KEO_PrimOp) $(OBJ)/$(WORKMAIN).o
 #$(PhysConstEXE): obj $(Obj_lib) $(Obj_PhyCte) $(OBJ)/$(PhysConstMAIN).o
 #	$(LYNK90)   -o $(PhysConstEXE) $(Obj_lib) $(Obj_PhyCte) $(OBJ)/$(PhysConstMAIN).o  $(LYNKFLAGS)
 $(PhysConstEXE): obj $(Obj_Primlib) $(Obj_math) $(Obj_io) $(Obj_PhyCte) $(OBJ)/$(PhysConstMAIN).o
+	ar cr $(OBJ)/libPhysConst.a $(Obj_Primlib) $(Obj_math) $(Obj_io) $(Obj_PhyCte)
 	$(LYNK90)   -o $(PhysConstEXE) $(Obj_Primlib) $(Obj_math) $(Obj_io) $(Obj_PhyCte) $(OBJ)/$(PhysConstMAIN).o  $(LYNKFLAGS)
 #===================================================================================
 # lib
@@ -911,8 +913,8 @@ $(OBJ)/sub_quadra_DirProd.o:$(DIRba)/sub_quadra_DirProd.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_DirProd.f90
 $(OBJ)/sub_quadra_SparseBasis.o:$(DIRba)/sub_quadra_SparseBasis.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_SparseBasis.f90
-$(OBJ)/sub_bases_actives.o:$(DIRba)/sub_bases_actives.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_bases_actives.f90
+$(OBJ)/sub_module_BasisMakeGrid.o:$(DIRba)/sub_module_BasisMakeGrid.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_module_BasisMakeGrid.f90
 $(OBJ)/sub_quadra_SparseBasis2n.o:$(DIRba)/sub_quadra_SparseBasis2n.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_SparseBasis2n.f90
 $(OBJ)/sub_SymAbelian_OF_Basis.o:$(DIRba)/sub_SymAbelian_OF_Basis.f90

@@ -1,15 +1,10 @@
-#
-# For WP propagation (relaxation, GS)
-#
 
  SYSTEM=sub_system_cos_hcn.f
  SYSTEM=sub_system_murrell.f
 
 ici=`pwd`
-DIR_vib=$ici/..
+DIR_vib=$ici/../..
 DIR_pot=$DIR_vib/sub_pot
-
-#cp $SYSTEM $DIR_pot/sub_system.f
 
 cd $DIR_vib
  make
@@ -35,7 +30,7 @@ nq=`echo $excit | awk '{print $1+0}'`
 
 
 nice $DIR_vib/vib << ** >res
- &system POpPsi_omp=1 optimization=1 /
+ &system optimization=1 /
  &constantes /
  &variables 
          zmat=T

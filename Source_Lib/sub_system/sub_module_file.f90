@@ -200,6 +200,43 @@ MODULE mod_file
 
       END FUNCTION file_GetUnit
 
+  FUNCTION GetUnit_NewFile(file_name,err_file)
+
+      integer                                    :: GetUnit_NewFile
+      character (len=*), intent(in)              :: file_name
+      integer,           intent(inout), optional :: err_file
+
+
+      logical                  :: unit_opened
+      integer                  :: iunit,err_file_loc
+
+      !write(out_unitp,*) 'BEGINNING GetUnit_NewFile'
+
+
+      err_file_loc = err_file_name(file_name,'GetUnit_NewFile')
+      IF (.NOT. present(err_file) .AND. err_file_loc /= 0) STOP ' ERROR, the file name is empty!'
+      IF (present(err_file)) err_file = err_file_loc
+
+
+      !- check if the file is already open ------------------
+      inquire(FILE=file_name,NUMBER=iunit,OPENED=unit_opened)
+      IF (.NOT. unit_opened) THEN ! the file is not open
+
+        !- the file is not open, find an unused UNIT ---------
+        iunit = 66
+        DO
+          iunit = iunit + 1
+          inquire(UNIT=iunit,OPENED=unit_opened)
+          IF (.NOT. unit_opened) EXIT
+        END DO
+        GetUnit_NewFile = iunit
+
+      ELSE
+        GetUnit_NewFile = 0
+      END IF
+
+  END FUNCTION GetUnit_NewFile
+
 
       !!@description: TODO
       !!@param: TODO

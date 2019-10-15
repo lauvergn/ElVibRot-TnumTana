@@ -219,7 +219,7 @@ CONTAINS
 
         IF (para_ana%intensity .AND. para_intensity%l_IntVR) THEN
           CALL sub_moyABC(tab_Psi(i),i,info,para_intensity%ABC(:,i),para_AllOp)
-        ELSE IF (para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op > 0) THEN
+        ELSE IF (para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op > 0 .AND. ana_psi%AvScalOp) THEN
           CALL sub_moyScalOp(tab_Psi(i),i,info,para_AllOp)
         END IF
 

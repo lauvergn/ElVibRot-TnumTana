@@ -106,6 +106,7 @@
             nb_nosym = 2*base%nb
           END IF
         END IF
+        CALL flush_perso(out_unitp)
 
         SELECT CASE (base%Nested)
         CASE(1)
@@ -136,16 +137,15 @@
           IF (base%check_nq_OF_basis .AND. nq < nb_nosym) nq = nb_nosym + 1
           CALL Set_nq_OF_basis(base,nq)
           IF (Print_basis) write(out_unitp,*) '      new nb_quadra',nq
+          CALL flush_perso(out_unitp)
 
           CALL alloc_xw_OF_basis(base)
           CALL hercom(nq,base%x(1,:),base%w)
-
         END SELECT
         !base%xPOGridRep_done = .TRUE.
         base%wrho(:) = base%w(:)
         base%rho(:)  = ONE
       END IF
-
 
 !     calcul des valeurs des polynomes de hermites et des derivees en chaque
 !     point de la quadrature.
@@ -352,6 +352,7 @@
 
       USE mod_system
       USE mod_basis
+      USE BasisMakeGrid
       IMPLICIT NONE
 
       integer, intent(in) :: nq,nqmax
@@ -441,6 +442,7 @@
 
       USE mod_system
       USE mod_basis
+      USE BasisMakeGrid
       IMPLICIT NONE
 
 !---------------------------------------------------------------------

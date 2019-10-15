@@ -774,6 +774,7 @@ END IF
    END DO
  ELSE IF (allocated(BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
    !write(6,*) 'coucou : allo Tab_nDval=t' ; flush(6)
+
    packet_size=max(1,BasisnD%para_SGType2%nb_SG/SG4_maxth/10)
    !$OMP   PARALLEL DEFAULT(NONE)                              &
    !$OMP   SHARED(Psi,OpPsi)                                   &
@@ -819,6 +820,8 @@ END IF
    !$OMP   END DO
    deallocate(PsiR)
    !$OMP   END PARALLEL
+
+
  ELSE IF (BasisnD%para_SGType2%nb_tasks /= BasisnD%para_SGType2%nb_threads) THEN ! version 2
    !write(6,*) 'coucou : nb_tasks /= nb_threads'  ; flush(6)
 
@@ -913,6 +916,9 @@ END IF
     OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,Psi(i)%symab)
     CALL Set_symab_OF_psiBasisRep(OpPsi(i),OpPsi_symab)
     !write(6,*) 'coucou symab Op.psi',i,OpPsi(i)%symab
+
+    !write(out_unitp,*) 'para_Op,psi symab ',i,para_Op%symab,Psi(i)%symab
+    !write(out_unitp,*) 'OpPsi_symab',i,OpPsi(i)%symab
 
  END DO
 
@@ -1134,7 +1140,7 @@ END IF
    CASE (1) ! 1 : H: F2.d^2 + F1.d^1 + V
      IF (debug) write(out_unitp,*) 'nb_Term',para_Op%nb_Term
 
-     CALL get_OpGrid_type1_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,GridOp)
+     CALL get_OpGrid_type1_OF_ONEDP_FOR_SG4_new2(iG,tab_l,para_Op,GridOp)
 
      CALL alloc_NParray(PsiTemp1,       (/ nq /),      'PsiTemp1',       name_sub)
      CALL alloc_NParray(PsiTemp2,       (/ nq /),      'PsiTemp2',       name_sub)
@@ -1437,7 +1443,7 @@ END IF
    CASE (1) ! 1 : H: F2.d^2 + F1.d^1 + V
      IF (debug) write(out_unitp,*) 'nb_Term',para_Op%nb_Term
 
-     CALL get_OpGrid_type1_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,GridOp)
+     CALL get_OpGrid_type1_OF_ONEDP_FOR_SG4_new2(iG,tab_l,para_Op,GridOp)
 
      CALL alloc_NParray(OpPsi,(/nq,nb0/),'OpPsi',name_sub)
      CALL alloc_NParray(Psi_ch,(/nq,nb0/),'Psi_ch',name_sub)
@@ -2003,7 +2009,7 @@ END IF
   USE mod_nDindex
 
   USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
-  use mod_PrimOp,                  only: param_d0matop, init_d0matop,   &
+  use mod_PrimOp,                  only: param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,   &
                                          param_typeop, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
 
@@ -2029,7 +2035,7 @@ END IF
   TYPE (zmatrix), pointer :: mole
   TYPE(basis),    pointer :: BasisnD
 
-  integer :: iq,nq,D,iOp
+  integer :: iq,nq,D
 
   integer                               :: derive_termQdyn(2)
   real (kind=Rkind),  allocatable       :: Qact(:)
@@ -2037,7 +2043,7 @@ END IF
 
   integer,            allocatable       :: tab_nq(:)
   integer,            allocatable       :: tab_iq(:)
-  integer :: iterm00,itabR,nR,nb0,i,j
+  integer :: iterm00,iOp,itabR,nR,nb0,i,j
   integer :: err_sub
   logical :: KEO
   logical :: lformatted=.TRUE.
@@ -2087,6 +2093,7 @@ END IF
 
    !transfert part of the scalar part of the potential
    iterm00 = para_Op%derive_term_TO_iterm(0,0)
+   iOp     = Get_iOp_FROM_n_Op(para_Op%n_Op)
 
    lformatted = para_Op%OpGrid(iterm00)%para_FileGrid%Formatted_FileGrid
 
@@ -2192,7 +2199,7 @@ END IF
                                  para_Op%para_Tnum,para_Op%para_PES)
         DO i=1,nb0
         DO j=1,nb0
-          V(iq,j,i) = d0MatOp(iterm00)%ReVal(j,i,1)
+          V(iq,j,i) = d0MatOp(iOp)%ReVal(j,i,iterm00)
         END DO
         END DO
 
@@ -2271,7 +2278,485 @@ END IF
   !-----------------------------------------------------------
   END SUBROUTINE get_OpGrid_type10_OF_ONEDP_FOR_SG4
 
+  SUBROUTINE get_OpGrid_type1_OF_ONEDP_FOR_SG4_new(iG,tab_l,para_Op,GridOp)
+  USE mod_system
+  USE mod_nDindex
 
+  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact
+  use mod_PrimOp,                  only: param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
+                                         param_typeop, TnumKEO_TO_tab_d0H, get_d0MatOp_AT_Qact, &
+                                         dealloc_tab_of_d0matop
+
+  USE mod_basis_set_alloc,         ONLY : basis
+  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
+  USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
+                     BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
+                  DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
+                     getbis_tab_nq,getbis_tab_nb,tabR2gridbis_TO_tabR1_AT_iG
+  USE mod_SetOp,                      ONLY : param_Op,write_param_Op
+
+
+  IMPLICIT NONE
+
+  real (kind=Rkind),  allocatable,    intent(inout)              :: GridOp(:,:,:,:)
+  integer,                            intent(in)                 :: iG,tab_l(:)
+
+  TYPE (param_Op),                    intent(inout)    :: para_Op
+
+  !local variables
+  TYPE (zmatrix), pointer :: mole
+  TYPE(basis),    pointer :: BasisnD
+
+
+  integer                               :: derive_termQdyn(2)
+  real (kind=Rkind),  allocatable       :: Qact(:)
+
+  integer,            allocatable       :: tab_nq(:)
+  integer,            allocatable       :: tab_iq(:)
+
+  integer :: iq,nq,D,iOp,iterm,iterm00,itabR,nR,nb0,i,j
+  integer :: err_sub
+
+  logical :: Op_term_done(para_Op%nb_Term)
+  TYPE (param_d0MatOp), allocatable :: d0MatOp(:)
+  character (len=Line_len) :: FileName_RV
+
+
+  !----- for debuging ----------------------------------------------
+  integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='get_OpGrid_type1_OF_ONEDP_FOR_SG4_new'
+  logical, parameter :: debug = .FALSE.
+  !logical, parameter :: debug = .TRUE.
+  !-----------------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
+    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
+    write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
+    CALL flush_perso(out_unitp)
+  END IF
+  !-----------------------------------------------------------------
+
+ IF (iG == 1 .AND. debug) write(6,*) '================================' ; flush(6)
+ IF (iG == 1 .AND. debug) write(6,*) '============ START =============' ; flush(6)
+
+   mole    => para_Op%mole
+   BasisnD => para_Op%BasisnD
+
+
+   D = size(tab_l)
+
+   CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
+   CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
+   CALL alloc_NParray(tab_iq,(/ D /),'tab_iq',name_sub)
+
+   tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
+
+   nq  = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nb0 = BasisnD%para_SGType2%nb0
+
+   CALL alloc_NParray(GridOp,(/ nq,nb0,nb0,para_Op%nb_Term /),'GridOp',name_sub)
+   GridOp(:,:,:,:) = ZERO
+   Op_term_done(:) = .FALSE.
+
+
+   !transfert part of the scalar part of the potential
+   iterm00 = para_Op%derive_term_TO_iterm(0,0)
+   iOp     = Get_iOp_FROM_n_Op(para_Op%n_Op)
+   !write(6,*) name_sub,' iOp',iOp
+
+   IF (debug) THEN
+     write(out_unitp,*) iG,'Save_MemGrid,Save_MemGrid_done',            &
+                 para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid,    &
+                 para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done
+   END IF
+
+   IF (para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
+      IF (associated(para_Op%OpGrid)) THEN
+        DO iterm=1,para_Op%nb_Term
+          IF (para_Op%OpGrid(iterm)%grid_zero) THEN
+            IF (debug) write(out_unitp,*) ' Op term: zero',iG,nq
+
+            GridOp(:,:,:,iterm) = ZERO
+            Op_term_done(iterm) = .TRUE.
+          ELSE
+            IF (para_Op%OpGrid(iterm)%grid_cte) THEN
+              IF (debug) write(out_unitp,*) ' Op term: cte',iG,iterm,nq
+              DO i=1,nb0
+              DO j=1,nb0
+                GridOp(:,j,i,iterm) = para_Op%OpGrid(iterm)%Mat_cte(j,i)
+              END DO
+              END DO
+              Op_term_done(iterm) = .TRUE.
+            ELSE
+              IF (associated(para_Op%OpGrid(iterm)%Grid)) THEN
+                IF (debug) write(out_unitp,*) ' Op term: from memory',iG,iterm,nq
+                Op_term_done(iterm) = .TRUE.
+                DO i=1,nb0
+                DO j=1,nb0
+                  CALL tabR2gridbis_TO_tabR1_AT_iG(GridOp(:,j,i,iterm),    &
+                                        para_Op%OpGrid(iterm)%Grid(:,j,i), &
+                                                  iG,BasisnD%para_SGType2)
+                END DO
+                END DO
+              ELSE
+                IF (debug) write(out_unitp,*) ' Op term: from memory SRep',iG,iterm,nq
+                Op_term_done(iterm) = .TRUE.
+                GridOp(:,:,:,iterm) = reshape(para_Op%OpGrid(iterm)%SRep%SmolyakRep(iG)%V,shape=[nq,nb0,nb0])
+              END IF
+            END IF
+          END IF
+        END DO
+      END IF
+
+   ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
+     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     DO i=1,size(d0MatOp)
+       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+     END DO
+
+     tab_iq(:) = 1 ; tab_iq(1) = 0
+
+     DO iq=1,nq
+
+       CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
+
+       CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
+       CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
+
+       CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
+                                   para_Op%para_Tnum,para_Op%para_PES)
+
+       IF (para_Op%n_Op == 0) THEN ! H
+         CALL TnumKEO_TO_tab_d0H(Qact,d0MatOp(iOp),mole,para_Op%para_Tnum) ! here the vep is added to the potential
+
+         DO iterm=1,para_Op%nb_Term ! just the diagonal elements
+           IF (iterm == iterm00) CYCLE ! without the vep+potential
+           DO i=1,nb0
+             GridOp(iq,i,i,iterm) = d0MatOp(iOp)%ReVal(i,i,iterm)
+           END DO
+         END DO
+       END IF
+
+       ! now the saclar part (diagonal+off diagonal elements)
+       ! when Op=H, potential+vep
+       GridOp(iq,:,:,iterm00) = d0MatOp(iOp)%ReVal(:,:,iterm00)
+
+     END DO
+
+     IF (iG == 1 .AND. debug) THEN
+       write(out_unitp,*) 'iG,nq,GridOp: calc',iG,nq,GridOp(:,:,:,iterm00)
+       CALL flush_perso(out_unitp)
+     END IF
+   END IF
+
+   DO iterm=1,para_Op%nb_Term
+     IF (para_Op%OpGrid(iterm)%para_FileGrid%Save_MemGrid .AND.           &
+        .NOT. para_Op%OpGrid(iterm)%para_FileGrid%Save_MemGrid_done .AND. &
+        Op_term_done(iterm) ) THEN
+
+       IF (associated(para_Op%OpGrid(iterm)%Grid)) THEN
+         itabR = BasisnD%para_SGType2%tab_Sum_nq_OF_SRep(iG)
+         nR    = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+
+         IF (iG == 1 .AND. debug) write(out_unitp,*) 'iG,nq,GridOp: save mem Grid',iterm
+
+
+         para_Op%OpGrid(iterm00)%Grid(itabR-nR+1:itabR,:,:) = GridOp(:,:,:,iterm)
+         para_Op%OpGrid(iterm)%grid_zero = .FALSE.
+         para_Op%OpGrid(iterm)%grid_cte  = .FALSE.
+
+       ELSE IF (allocated(para_Op%OpGrid(iterm)%SRep%SmolyakRep)) THEN
+         IF (iG == 1 .AND. debug) write(out_unitp,*) 'iG,nq,GridOp SRep: save mem Grid',iterm
+
+         para_Op%OpGrid(iterm)%SRep%SmolyakRep(iG)%V = reshape(GridOp(:,:,:,iterm),shape=[nq*nb0**2])
+         para_Op%OpGrid(iterm)%grid_zero = .FALSE.
+         para_Op%OpGrid(iterm)%grid_cte  = .FALSE.
+       END IF
+
+       IF (iG == 1 .AND. debug) THEN
+         write(out_unitp,*) 'iG,nq, save mem GridOp',iG,nq
+         CALL flush_perso(out_unitp)
+       END IF
+
+     END IF
+
+   END DO
+
+
+  IF (allocated(tab_nq))       CALL dealloc_NParray(tab_nq,      'tab_nq',      name_sub)
+  IF (allocated(tab_iq))       CALL dealloc_NParray(tab_iq,      'tab_iq',      name_sub)
+  IF (allocated(Qact))         CALL dealloc_NParray(Qact,        'Qact',        name_sub)
+
+  IF (allocated(d0MatOp)) THEN
+    CALL dealloc_Tab_OF_d0MatOp(d0MatOp)
+    deallocate(d0MatOp)
+  END IF
+
+ IF (iG == 1 .AND. debug)  write(6,*) '============ END ===============' ; flush(6)
+ IF (iG == 1 .AND. debug)  write(6,*) '================================' ; flush(6)
+
+  !-----------------------------------------------------------
+  IF (debug) THEN
+    DO iterm=1,para_Op%nb_Term
+      write(out_unitp,*) 'GridOp(:,:,:,iterm)',iterm,GridOp(:,:,:,iterm)
+    END DO
+    write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
+  END IF
+  !-----------------------------------------------------------
+  END SUBROUTINE get_OpGrid_type1_OF_ONEDP_FOR_SG4_new
+  SUBROUTINE get_OpGrid_type1_OF_ONEDP_FOR_SG4_new2(iG,tab_l,para_Op,GridOp)
+  USE mod_system
+  USE mod_nDindex
+
+  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact
+  use mod_PrimOp,                  only: param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
+                                         param_typeop, TnumKEO_TO_tab_d0H, get_d0MatOp_AT_Qact, &
+                                         dealloc_tab_of_d0matop
+
+  USE mod_basis_set_alloc,         ONLY : basis
+  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
+  USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
+                     BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
+                  DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
+                     getbis_tab_nq,getbis_tab_nb,tabR2gridbis_TO_tabR1_AT_iG
+  USE mod_SetOp,                      ONLY : param_Op,write_param_Op
+
+
+  IMPLICIT NONE
+
+  real (kind=Rkind),  allocatable,    intent(inout)              :: GridOp(:,:,:,:)
+  integer,                            intent(in)                 :: iG,tab_l(:)
+
+  TYPE (param_Op),                    intent(inout)    :: para_Op
+
+  !local variables
+  TYPE (zmatrix), pointer :: mole
+  TYPE(basis),    pointer :: BasisnD
+
+
+  integer                               :: derive_termQdyn(2)
+  real (kind=Rkind),  allocatable       :: Qact(:)
+
+  integer,            allocatable       :: tab_nq(:)
+  integer,            allocatable       :: tab_iq(:)
+
+  integer :: iq,nq,D,iOp,iterm,iterm00,itabR,nR,nb0,i,j
+  integer :: err_sub
+
+  logical :: KEO_done,Op_term_done(para_Op%nb_Term)
+  TYPE (param_d0MatOp), allocatable :: d0MatOp(:)
+  character (len=Line_len) :: FileName_RV
+
+
+  !----- for debuging ----------------------------------------------
+  integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='get_OpGrid_type1_OF_ONEDP_FOR_SG4_new2'
+  logical, parameter :: debug = .FALSE.
+  !logical, parameter :: debug = .TRUE.
+  !-----------------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
+    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
+    write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
+    CALL flush_perso(out_unitp)
+  END IF
+  !-----------------------------------------------------------------
+
+ IF (iG == 1 .AND. debug) write(6,*) '================================' ; flush(6)
+ IF (iG == 1 .AND. debug) write(6,*) '============ START =============' ; flush(6)
+
+   mole    => para_Op%mole
+   BasisnD => para_Op%BasisnD
+
+
+   D = size(tab_l)
+
+   CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
+   CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
+   CALL alloc_NParray(tab_iq,(/ D /),'tab_iq',name_sub)
+
+   tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
+
+   nq  = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+   nb0 = BasisnD%para_SGType2%nb0
+
+   CALL alloc_NParray(GridOp,(/ nq,nb0,nb0,para_Op%nb_Term /),'GridOp',name_sub)
+   GridOp(:,:,:,:) = ZERO
+   Op_term_done(:) = .FALSE.
+
+
+   !transfert part of the scalar part of the potential
+   iterm00 = para_Op%derive_term_TO_iterm(0,0)
+   iOp     = Get_iOp_FROM_n_Op(para_Op%n_Op)
+   !write(6,*) name_sub,' iOp',iOp
+
+   IF (iG == 1 .AND. debug) THEN
+     write(out_unitp,*) iG,'Save_MemGrid,Save_MemGrid_done',            &
+                 para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid,    &
+                 para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done
+   END IF
+
+   !first deal with constant or zero term.
+   KEO_done = .TRUE.
+   DO iterm=1,para_Op%nb_Term
+
+     IF (para_Op%OpGrid(iterm)%grid_zero) THEN
+       IF (iG == 1 .AND. debug) write(out_unitp,*) ' Op term: zero',iG,nq
+
+       GridOp(:,:,:,iterm) = ZERO
+       Op_term_done(iterm) = .TRUE.
+     ELSE IF (para_Op%OpGrid(iterm)%grid_cte) THEN
+       IF (iG == 1 .AND. debug) write(out_unitp,*) ' Op term: cte',iG,iterm,nq
+       DO i=1,nb0
+       DO j=1,nb0
+           GridOp(:,j,i,iterm) = para_Op%OpGrid(iterm)%Mat_cte(j,i)
+       END DO
+         END DO
+         Op_term_done(iterm) = .TRUE.
+     END IF
+     IF (iterm00 /= iterm) KEO_done = KEO_done .AND. Op_term_done(iterm)
+   END DO
+   ! Now KEO_done=.TRUE., when all KEO terms have been treated
+
+   IF (para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
+      IF (associated(para_Op%OpGrid)) THEN
+        DO iterm=1,para_Op%nb_Term
+          IF (Op_term_done(iterm)) CYCLE
+
+          IF (associated(para_Op%OpGrid(iterm)%Grid)) THEN
+            IF (iG == 1 .AND. debug) write(out_unitp,*) ' Op term: from memory',iG,iterm,nq
+            Op_term_done(iterm) = .TRUE.
+            DO i=1,nb0
+            DO j=1,nb0
+              CALL tabR2gridbis_TO_tabR1_AT_iG(GridOp(:,j,i,iterm),     &
+                                     para_Op%OpGrid(iterm)%Grid(:,j,i), &
+                                                iG,BasisnD%para_SGType2)
+            END DO
+            END DO
+          ELSE
+            IF (iG == 1 .AND. debug) write(out_unitp,*) ' Op term: from memory SRep',iG,iterm,nq
+            Op_term_done(iterm) = .TRUE.
+            GridOp(:,:,:,iterm) = reshape(para_Op%OpGrid(iterm)%SRep%SmolyakRep(iG)%V,shape=[nq,nb0,nb0])
+          END IF
+
+          IF (iG == 1 .AND. debug) THEN
+            write(out_unitp,*) 'iG,nq,GridOp: from mem',iG,nq,GridOp(:,:,:,iterm)
+            CALL flush_perso(out_unitp)
+          END IF
+
+        END DO
+      END IF
+
+   ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
+     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     DO i=1,size(d0MatOp)
+       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+     END DO
+
+     tab_iq(:) = 1 ; tab_iq(1) = 0
+
+     DO iq=1,nq
+
+       CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
+
+       CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
+       CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
+
+       CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
+                                   para_Op%para_Tnum,para_Op%para_PES)
+
+       IF (para_Op%n_Op == 0 .AND. .NOT. KEO_done) THEN ! H
+         CALL TnumKEO_TO_tab_d0H(Qact,d0MatOp(iOp),mole,para_Op%para_Tnum) ! here the vep is added to the potential
+
+         DO iterm=1,para_Op%nb_Term ! just the diagonal elements
+           IF (iterm == iterm00) CYCLE ! without the vep+potential
+           DO i=1,nb0
+             GridOp(iq,i,i,iterm) = d0MatOp(iOp)%ReVal(i,i,iterm)
+           END DO
+         END DO
+       END IF
+
+       ! now the saclar part (diagonal+off diagonal elements)
+       ! when Op=H, potential+vep
+       GridOp(iq,:,:,iterm00) = d0MatOp(iOp)%ReVal(:,:,iterm00)
+
+     END DO
+
+     Op_term_done(:) = .TRUE.
+
+
+     IF (iG == 1 .AND. debug) THEN
+       write(out_unitp,*) 'iG,nq,GridOp: calc',iG,nq,GridOp(:,:,:,iterm00)
+       CALL flush_perso(out_unitp)
+     END IF
+   END IF
+
+   DO iterm=1,para_Op%nb_Term
+     IF (para_Op%OpGrid(iterm)%para_FileGrid%Save_MemGrid .AND.           &
+        .NOT. para_Op%OpGrid(iterm)%para_FileGrid%Save_MemGrid_done .AND. &
+        Op_term_done(iterm) ) THEN
+
+       IF (associated(para_Op%OpGrid(iterm)%Grid)) THEN
+         itabR = BasisnD%para_SGType2%tab_Sum_nq_OF_SRep(iG)
+         nR    = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+
+         IF (iG == 1 .AND. debug) write(out_unitp,*) 'iG,nq,GridOp: save mem Grid',iterm
+
+
+         para_Op%OpGrid(iterm)%Grid(itabR-nR+1:itabR,:,:) = GridOp(:,:,:,iterm)
+         para_Op%OpGrid(iterm)%grid_zero = .FALSE.
+         para_Op%OpGrid(iterm)%grid_cte  = .FALSE.
+
+         IF (iG == 1 .AND. debug) THEN
+           write(out_unitp,*) 'iG,nq,GridOp: save mem Grid',iG,nq,para_Op%OpGrid(iterm)%Grid(itabR-nR+1:itabR,:,:)
+           CALL flush_perso(out_unitp)
+         END IF
+
+       ELSE IF (allocated(para_Op%OpGrid(iterm)%SRep%SmolyakRep)) THEN
+         IF (iG == 1 .AND. debug) write(out_unitp,*) 'iG,nq,GridOp SRep: save mem Grid',iterm
+
+         para_Op%OpGrid(iterm)%SRep%SmolyakRep(iG)%V = reshape(GridOp(:,:,:,iterm),shape=[nq*nb0**2])
+         para_Op%OpGrid(iterm)%grid_zero = .FALSE.
+         para_Op%OpGrid(iterm)%grid_cte  = .FALSE.
+
+         IF (iG == 1 .AND. debug) THEN
+           write(out_unitp,*) 'iG,nq,GridOp: save mem Grid',iG,nq,para_Op%OpGrid(iterm)%SRep%SmolyakRep(iG)%V
+           CALL flush_perso(out_unitp)
+         END IF
+
+       END IF
+
+
+     END IF
+
+   END DO
+
+
+  IF (allocated(tab_nq))       CALL dealloc_NParray(tab_nq,      'tab_nq',      name_sub)
+  IF (allocated(tab_iq))       CALL dealloc_NParray(tab_iq,      'tab_iq',      name_sub)
+  IF (allocated(Qact))         CALL dealloc_NParray(Qact,        'Qact',        name_sub)
+
+  IF (allocated(d0MatOp)) THEN
+    CALL dealloc_Tab_OF_d0MatOp(d0MatOp)
+    deallocate(d0MatOp)
+  END IF
+
+ IF (iG == 1 .AND. debug)  write(6,*) '============ END ===============' ; flush(6)
+ IF (iG == 1 .AND. debug)  write(6,*) '================================' ; flush(6)
+
+  !-----------------------------------------------------------
+  IF (debug) THEN
+    !DO iterm=1,para_Op%nb_Term
+    !  write(out_unitp,*) 'GridOp(:,:,:,iterm)',iterm,GridOp(:,:,:,iterm)
+    !END DO
+    write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
+  END IF
+  !-----------------------------------------------------------
+  END SUBROUTINE get_OpGrid_type1_OF_ONEDP_FOR_SG4_new2
   SUBROUTINE get_OpGrid_type1_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,GridOp)
   USE mod_system
   USE mod_nDindex
@@ -2353,10 +2838,13 @@ END IF
    IF (associated(para_Op%OpGrid)) THEN
      DO iterm=1,para_Op%nb_Term
        IF (para_Op%OpGrid(iterm)%grid_zero) THEN
+         IF (debug) write(out_unitp,*) ' Op term: zero',iG,nq
+
          GridOp(:,:,:,iterm) = ZERO
          Op_term_done(iterm) = .TRUE.
        ELSE
          IF (para_Op%OpGrid(iterm)%grid_cte) THEN
+           IF (debug) write(out_unitp,*) ' Op term: cte',iG,nq
            DO i=1,nb0
            DO j=1,nb0
              GridOp(:,j,i,iterm) = para_Op%OpGrid(iterm)%Mat_cte(j,i)
@@ -2365,6 +2853,8 @@ END IF
            Op_term_done(iterm) = .TRUE.
          ELSE
            IF (associated(para_Op%OpGrid(iterm)%Grid)) THEN
+           IF (debug) write(out_unitp,*) ' Op term: from memory',iG,nq
+
              Op_term_done(iterm) = .TRUE.
              DO i=1,nb0
              DO j=1,nb0
@@ -2381,7 +2871,9 @@ END IF
 
    !Op_term_done(iterm00) = .TRUE.
    IF (.NOT. Op_term_done(iterm00)) THEN
-     !write(6,*) 'coucou calc pot',iG,nq
+     IF (debug) write(out_unitp,*) ' Op term (potential): calculated',iG,nq
+     write(out_unitp,*) ' Op term (potential): calculated',iG,nq
+
      CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
      CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
      CALL alloc_NParray(tab_iq,(/ D /),'tab_iq',name_sub)
@@ -2438,7 +2930,6 @@ END IF
   END IF
   !-----------------------------------------------------------
   END SUBROUTINE get_OpGrid_type1_OF_ONEDP_FOR_SG4
-
   SUBROUTINE get_OpGrid_type0_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V)
   USE mod_system
   USE mod_nDindex

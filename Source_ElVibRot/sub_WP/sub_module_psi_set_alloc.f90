@@ -613,8 +613,8 @@
       SUBROUTINE psi2TOpsi1(psi1,psi2)
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi),intent(inout) :: psi1
-      TYPE (param_psi),intent(in) :: psi2
+      TYPE (param_psi), intent(inout) :: psi1
+      TYPE (param_psi), intent(in)    :: psi2
 
 
       integer  :: i,n1

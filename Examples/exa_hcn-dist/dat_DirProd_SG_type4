@@ -16,7 +16,7 @@ cd $here
 #export OMP_NUM_THREADS=20
 
 nice $DIR_vib/vib << ** >res
- &system POpPsi_omp=1 /
+ &system printlevel=2 /
  &constantes /
  &variables 
          zmat=T
@@ -49,8 +49,8 @@ dh 0.0
 
  &basis_nD iQdyn(1)=1 name="Pl0" nb=51 nq=80 contrac=t nbc=20 name_contrac_file="ONE_MODE/cc1_51_80" /
  &basis_nD nb_basis=2 name="direct_prod" L_SparseBasis=5 L_SparseGrid=5 SparseGrid_type=4 /
-    &basis_nD iQact(1)=2 name="Hm" Q0=3.2 scaleQ=5.1  L_TO_nq_A=1 L_TO_nq_B=3 L_TO_nq_C=2 /
-    &basis_nD iQact(1)=3 name="Hm" Q0=2.2 scaleQ=11.0 L_TO_nq_A=1 L_TO_nq_B=3 L_TO_nq_C=2 /
+    &basis_nD iQact(1)=2 name="Hm" Q0=3.2 scaleQ=5.1  L_TO_nq_A=1 L_TO_nq_B=3 L_TO_nq_C=2 auto_basis=f /
+    &basis_nD iQact(1)=3 name="Hm" Q0=2.2 scaleQ=11.0 L_TO_nq_A=1 L_TO_nq_B=3 L_TO_nq_C=2 auto_basis=f /
  &inactives /
  &actives test=f direct=2 Make_MatOp=t /
  &analyse max_ana=40 max_ene=20000.d0 print=f print_psi=0 propa=f /

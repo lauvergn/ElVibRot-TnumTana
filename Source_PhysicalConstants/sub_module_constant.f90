@@ -45,6 +45,9 @@
    real (kind=Rkind) :: auTOcm_inv              !< Conversion factor: au to cm-1
    real (kind=Rkind) :: auTOeV                  !< Conversion factor: au to eV
    real (kind=Rkind) :: auTOGHz                 !< Conversion factor: au to GHz
+   real (kind=Rkind) :: auTOkJmol_inv           !< Conversion factor: au to kJ.mol-1
+   real (kind=Rkind) :: auTOkcalmol_inv         !< Conversion factor: au to kcal.mol-1
+
    real (kind=Rkind) :: auTOenergy              !< Conversion factor: au to selected energy unit (default cm-1)
    character(len=Name_len) :: ene_unit          !< The name of selected energy unit (default cm-1)
 
@@ -164,11 +167,12 @@
 !! \param const_phys  derived type with the physical constants, conversion factors and masses
 !! \param Read_Namelist an optional logical flag to be able to read the namelist "constantes"
 !
-  SUBROUTINE sub_constantes(const_phys,Read_Namelist)
+  SUBROUTINE sub_constantes(const_phys,Read_Namelist,version,mass_version)
   IMPLICIT NONE
 
-  TYPE (constant), intent(inout)          :: const_phys
-  logical,         intent(in),   optional :: Read_Namelist
+  TYPE (constant),         intent(inout)            :: const_phys
+  logical,                 intent(in),    optional  :: Read_Namelist
+  character(len=*),        intent(in),    optional  :: version,mass_version
 
 
   logical :: Read_Namelist_loc
@@ -193,17 +197,15 @@
 
   real (kind=Rkind) :: auTOcm_inv,auTOenergy,auTOeV,auTOGHz,auTOkJmol_inv,auTOkcalmol_inv
   character(len=Name_len)  :: ene_unit
-  character(len=Name_len)  :: version,mass_version
 
   character(len=Name_len)  :: mass_unit  !  the energy unit (default : au)
   real (kind=Rkind)        :: auTOmass          !  au => g/mol (1/1822...)
   real (kind=Rkind)        :: gPmolTOmass       !  au => g/mol (1/1822...)
+  character(len=Name_len)  :: version_loc,mass_version_loc
+
+
   integer :: i
 
-
-  NAMELIST /constantes/ auTOcm_inv,inv_Name,mass_unit,auTOmass,     &
-                        mass_version,version,EVRT_path,             &
-                        ene_unit,auTOenergy
 
 !- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub='sub_constantes'
@@ -214,17 +216,26 @@
     write(out_unitp,*) 'BEGINNING ',name_sub
   END IF
 !-----------------------------------------------------------------
+  const_phys%constant_done = .TRUE.
+
+
   IF (present(Read_Namelist)) THEN
     Read_Namelist_loc = Read_Namelist
   ELSE
     Read_Namelist_loc = .FALSE.
   END IF
 
-  const_phys%constant_done = .TRUE.
-
-!-- read the namelist ------------------------------------
-  version      = 'CODATA2006'
-  mass_version = 'NIST2012'
+  ! initialization with or without the namelist
+  IF (present(version)) THEN
+    version_loc = trim(adjustl(version))
+  ELSE
+    version_loc = 'CODATA2006'
+  END IF
+  IF (present(mass_version)) THEN
+    mass_version_loc = trim(adjustl(mass_version))
+  ELSE
+    mass_version_loc = 'NIST2012'
+  END IF
 
   ene_unit   = 'cm-1'
   auTOenergy = -ONE
@@ -235,27 +246,16 @@
   inv_Name   = -ONE
 
   IF (Read_Namelist_loc) THEN
-    read(in_unitp,constantes,IOSTAT=err_read)
-    IF (err_read < 0) THEN
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' End-of-file or End-of-record'
-      write(out_unitp,*) ' The namelist "constantes" is probably absent'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,*) ' ERROR in ',name_sub
-      STOP
-    ELSE IF (err_read > 0) THEN
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) ' Some parameter name of the namelist "constantes" are probaly wrong'
-      write(out_unitp,*) ' check your data!'
-      write(out_unitp,constantes)
-      write(out_unitp,*) ' ERROR in ',name_sub
-      STOP
-    END IF
+    CALL sub_ReadNMLconstantes(auTOcm_inv,ene_unit,auTOenergy,          &
+                               inv_Name,mass_unit,auTOmass,             &
+                               mass_version_loc,version_loc)
   END IF
+
   write(out_unitp,*) 'EVRT_path: ',EVRT_path
 
-  CALL string_uppercase_TO_lowercase(version,lower=.FALSE.) ! conversion in capital letters
-  SELECT CASE (version)
+
+  CALL string_uppercase_TO_lowercase(version_loc,lower=.FALSE.) ! conversion in capital letters
+  SELECT CASE (version_loc)
   CASE ('CODATA2006')
     CALL constantes_CODATA2006(c,mhu0,G,h,e,me,mp,Na,R)
   CASE ('CODATA2014')
@@ -278,7 +278,7 @@
   k = R/Na
 
 
-    IF (print_level > 1)                                            &
+  IF (print_level > 1)                                              &
       write(out_unitp,*) 'c,mhu0,epsi0,G,h,hb,e,me,mp,alpha,Na,R,k',&
                           c,mhu0,epsi0,G,h,hb,e,me,mp,alpha,Na,R,k
 
@@ -357,19 +357,19 @@
 
   ! in this subroutine the mass are read in g/mol
   gPmolTOmass          = (TEN**3/inv_Name) / const_phys%auTOmass
-  CALL string_uppercase_TO_lowercase(mass_version,lower=.FALSE.) ! conversion in capital letters
-  SELECT CASE (mass_version)
+  CALL string_uppercase_TO_lowercase(mass_version_loc,lower=.FALSE.) ! conversion in capital letters
+  SELECT CASE (mass_version_loc)
   CASE ('NIST2012')
-    write(out_unitp,*) 'MASSES, version: ',mass_version
+    write(out_unitp,*) 'MASSES, version: ',mass_version_loc
     CALL construct_table_at_NIST2012(const_phys%mendeleev,gPmolTOmass,mass_unit)
   CASE ('NIST2018')
-    write(out_unitp,*) 'MASSES, version: ',mass_version
+    write(out_unitp,*) 'MASSES, version: ',mass_version_loc
     CALL construct_table_at_NIST2018(const_phys%mendeleev,gPmolTOmass,mass_unit)
   CASE ('HANDBOOK70ED','HANDBOOK')
     write(out_unitp,*) 'MASSES, version: ','HandBook70ed'
     CALL construct_table_at_HandBook70ed(const_phys%mendeleev,gPmolTOmass,mass_unit)
   CASE Default
-    write(out_unitp,*) 'MASSES, version: ',mass_version
+    write(out_unitp,*) 'MASSES, version: ',mass_version_loc
     CALL construct_table_at_NIST2012(const_phys%mendeleev,gPmolTOmass,mass_unit)
   END SELECT
 
@@ -462,9 +462,12 @@
 
   const_phys%pi         = pi
 
-  const_phys%auTOcm_inv = auTOcm_inv
-  const_phys%auTOeV     = auTOeV
-  const_phys%auTOGHz    = auTOGHz
+  const_phys%auTOcm_inv      = auTOcm_inv
+  const_phys%auTOeV          = auTOeV
+  const_phys%auTOGHz         = auTOGHz
+  const_phys%auTOkJmol_inv   = auTOkJmol_inv
+  const_phys%auTOkcalmol_inv = auTOkcalmol_inv
+
   const_phys%inv_Name   = inv_Name
 
   const_phys%c          = c
@@ -499,24 +502,29 @@
 !-----------------------------------------------------------------
 
 !-- Write some constantes ------------------------------------
-                       write(out_unitp,*) 'energy unit: ',const_phys%ene_unit
-                       write(out_unitp,21) ' auTOenergy    = ',const_phys%auTOenergy
-  IF (print_level > 0) write(out_unitp,*)  ' pi            = ',const_phys%pi
-  IF (print_level > 0) write(out_unitp,*)  ' cos(pi)       = ',cos(const_phys%pi)
-  IF (print_level > 0) write(out_unitp,11) ' a0 (m-1)      = ',const_phys%a0
-  IF (print_level > 0) write(out_unitp,11) ' a0 (Angs)     = ',const_phys%a0*TEN**10
-  IF (print_level > 0) write(out_unitp,11) ' Eh (J)        = ',const_phys%Eh
-  IF (print_level > 0) write(out_unitp,11) ' Ta (s)        = ',const_phys%Ta
-                       write(out_unitp,21) ' Ta (fs)       = ',const_phys%Ta*TEN**15
-                       write(out_unitp,21) ' auTOcm_inv    = ',const_phys%auTOcm_inv
-                       write(out_unitp,21) ' auTOeV        = ',const_phys%auTOeV
-  IF (print_level > 0) write(out_unitp,21) ' inv_Name      = ',const_phys%inv_Name
-  IF (print_level > 0) write(out_unitp,11) ' E0 (V cm-1)   = ',const_phys%E0
-  IF (print_level > 0) write(out_unitp,11) ' I0 (W cm-2)   = ',const_phys%I0
-  IF (print_level > 0) write(out_unitp,11) ' convAif       = ',const_phys%convAif
-  IF (print_level > 0) write(out_unitp,11) ' convIDif      = ',const_phys%convIDif
-  IF (print_level > 0) write(out_unitp,11) ' convIQif      = ',const_phys%convIQif
-  IF (print_level > 0) write(out_unitp,11) ' convDebyeTOau = ',convDebyeTOau
+                       write(out_unitp,*)  ' energy unit     : ',const_phys%ene_unit
+                       write(out_unitp,21) ' auTOenergy      = ',const_phys%auTOenergy
+                       write(out_unitp,21) ' auTOcm_inv      = ',const_phys%auTOcm_inv
+                       write(out_unitp,21) ' auTOeV          = ',const_phys%auTOeV
+                       write(out_unitp,21) ' auTOGHz         = ',const_phys%auTOGHz
+                       write(out_unitp,21) ' auTOkcalmol_inv = ',const_phys%auTOkcalmol_inv
+                       write(out_unitp,21) ' auTOkJmol_inv   = ',const_phys%auTOkJmol_inv
+
+  IF (print_level > 0) write(out_unitp,*)  ' pi              = ',const_phys%pi
+  IF (print_level > 0) write(out_unitp,*)  ' cos(pi)         = ',cos(const_phys%pi)
+  IF (print_level > 0) write(out_unitp,11) ' a0 (m-1)        = ',const_phys%a0
+  IF (print_level > 0) write(out_unitp,11) ' a0 (Angs)       = ',const_phys%a0*TEN**10
+  IF (print_level > 0) write(out_unitp,11) ' Eh (J)          = ',const_phys%Eh
+  IF (print_level > 0) write(out_unitp,11) ' Ta (s)          = ',const_phys%Ta
+                       write(out_unitp,21) ' Ta (fs)         = ',const_phys%Ta*TEN**15
+
+  IF (print_level > 0) write(out_unitp,21) ' inv_Name        = ',const_phys%inv_Name
+  IF (print_level > 0) write(out_unitp,11) ' E0 (V cm-1)     = ',const_phys%E0
+  IF (print_level > 0) write(out_unitp,11) ' I0 (W cm-2)     = ',const_phys%I0
+  IF (print_level > 0) write(out_unitp,11) ' convAif         = ',const_phys%convAif
+  IF (print_level > 0) write(out_unitp,11) ' convIDif        = ',const_phys%convIDif
+  IF (print_level > 0) write(out_unitp,11) ' convIQif        = ',const_phys%convIQif
+  IF (print_level > 0) write(out_unitp,11) ' convDebyeTOau   = ',convDebyeTOau
 
 
 11 format (a,e17.10)
@@ -528,6 +536,85 @@
 !-----------------------------------------------------------------
 
   END SUBROUTINE sub_constantes
+  SUBROUTINE sub_ReadNMLconstantes(auTOcm_inv1,ene_unit1,auTOenergy1,   &
+                                   inv_Name1,mass_unit1,auTOmass1,      &
+                                   mass_version1,version1)
+  IMPLICIT NONE
+
+  real (kind=Rkind),       intent(inout)   :: auTOcm_inv1,auTOenergy1,auTOmass1,inv_Name1
+  character(len=Name_len), intent(inout)   :: ene_unit1,mass_unit1
+  character(len=Name_len), intent(inout)   :: version1,mass_version1
+
+
+  integer :: err_read,err_unit
+
+
+  real (kind=Rkind)        :: inv_Name,auTOmass
+  real (kind=Rkind)        :: auTOcm_inv,auTOenergy
+  character(len=Name_len)  :: ene_unit
+  character(len=Name_len)  :: mass_unit  !  the energy unit (default : au)
+  character(len=Name_len)  :: version,mass_version
+
+
+  NAMELIST /constantes/ auTOcm_inv,inv_Name,mass_unit,auTOmass,     &
+                        mass_version,version,EVRT_path,             &
+                        ene_unit,auTOenergy
+
+!- for debuging --------------------------------------------------
+  character (len=*), parameter :: name_sub='sub_ReadNMLconstantes'
+  logical, parameter :: debug = .FALSE.
+  !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+  END IF
+!-----------------------------------------------------------------
+
+!-- read the namelist ------------------------------------
+  version      = version1
+  mass_version = mass_version1
+
+  ene_unit     = ene_unit1
+  auTOenergy   = auTOenergy1
+  auTOcm_inv   = auTOcm_inv1
+
+  mass_unit    = mass_unit1
+  auTOmass     = auTOmass1
+  inv_Name     = inv_Name1
+
+  read(in_unitp,constantes,IOSTAT=err_read)
+  IF (err_read < 0) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' End-of-file or End-of-record'
+    write(out_unitp,*) ' The namelist "constantes" is probably absent'
+    write(out_unitp,*) ' check your data!'
+    write(out_unitp,*) ' ERROR in ',name_sub
+    STOP
+  ELSE IF (err_read > 0) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Some parameter name of the namelist "constantes" are probaly wrong'
+    write(out_unitp,*) ' check your data!'
+    write(out_unitp,constantes)
+    write(out_unitp,*) ' ERROR in ',name_sub
+    STOP
+  END IF
+
+  version1      = version
+  mass_version1 = mass_version
+
+  ene_unit1     = ene_unit
+  auTOenergy1   = auTOenergy
+  auTOcm_inv1   = auTOcm_inv
+
+  mass_unit1    = mass_unit
+  auTOmass1     = auTOmass
+  inv_Name1     = inv_Name
+
+  IF (debug) THEN
+    write(out_unitp,*) 'END ',name_sub
+  END IF
+
+END SUBROUTINE sub_ReadNMLconstantes
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------

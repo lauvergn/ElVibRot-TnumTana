@@ -42,6 +42,12 @@
                                       ! 1 : H: F2.d^2 + F1.d^1 + V + (Cor+Rot)
                                       ! 10: H: d^1 G d^1 +V
 
+          integer :: n_Op        = 0             ! type of Operator :
+                                                 ! 0 => H
+                                                 ! -1 => S
+                                                 ! 1,2,3 => Dipole moment (x,y,z)
+          character (len=Name_len) :: name_Op = 'H'
+
           logical :: direct_KEO    = .FALSE. ! to be used with type_Op=10
           logical :: direct_ScalOp = .FALSE. ! scalar Operotor and potential
 
@@ -93,7 +99,7 @@
 
    PUBLIC param_TypeOp, param_d0MatOp, param_dnMatOp, assignment (=)
    PUBLIC dealloc_TypeOp, dealloc_d0MatOp, dealloc_Tab_OF_d0MatOp, dealloc_Tab_OF_dnMatOp
-   PUBLIC Init_TypeOp, Init_d0MatOp, Init_Tab_OF_d0MatOp, Init_Tab_OF_dnMatOp
+   PUBLIC Init_TypeOp, Init_d0MatOp, Init_Tab_OF_d0MatOp, Init_Tab_OF_dnMatOp, Get_iOp_FROM_n_Op
    PUBLIC Write_TypeOp,Write_d0MatOp,Write_dnMatOp
    PUBLIC Set_ZERO_TO_Tab_OF_dnMatOp, Write_Tab_OF_dnMatOp, Write_Tab_OF_d0MatOp
    PUBLIC derive_termQact_TO_derive_termQdyn
@@ -728,6 +734,24 @@
 
 
    END SUBROUTINE Init_Tab_OF_d0MatOp
+   FUNCTION Get_iOp_FROM_n_Op(n_Op)
+      integer               :: Get_iOp_FROM_n_Op
+      integer, intent(in)   :: n_Op
+
+
+      character (len=*), parameter :: name_sub='Get_iOp_FROM_n_Op'
+
+
+      SELECT CASE (n_Op)
+      CASE (-1) ! S
+        Get_iOp_FROM_n_Op = 2
+      CASE (0) ! H
+        Get_iOp_FROM_n_Op = 1
+      CASE DEFAULT ! scalar Op
+        Get_iOp_FROM_n_Op = 2 + n_Op
+      END SELECT
+
+   END FUNCTION Get_iOp_FROM_n_Op
    SUBROUTINE dealloc_Tab_OF_d0MatOp(d0MatOp)
       TYPE (param_d0MatOp), intent(inout) :: d0MatOp(:)
 

@@ -1,2 +1,3 @@
 cd GAMESS ; ./clean ; cd ..
 cd GAUSSIAN ; ./clean ; cd ..
+cd h2o-opt ; ./clean ; cd ..

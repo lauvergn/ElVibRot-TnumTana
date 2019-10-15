@@ -985,7 +985,8 @@
             TYPE (param_psi)  :: psi_time_C
             integer           :: err,i
 
-!           write(out_unitp,*) 'BEGINNING psi_time_C'
+            !write(out_unitp,*) 'BEGINNING psi_time_C'
+            !CALL flush_perso(out_unitp)
 
 !           - define and allocate psi_time_C ----
             CALL copy_psi2TOpsi1(psi_time_C,psi)
@@ -1017,7 +1018,9 @@
             psi_time_C%symab = psi%symab
 
             IF (psi%builtINsub) CALL dealloc_psi(psi)
-!           write(out_unitp,*) 'END psi_time_C'
+
+            !write(out_unitp,*) 'END psi_time_C'
+            !CALL flush_perso(out_unitp)
 
           END FUNCTION psi_time_C
 

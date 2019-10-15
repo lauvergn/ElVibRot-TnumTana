@@ -29,10 +29,12 @@
       SUBROUTINE sub_Optimization_OF_VibParam(max_mem)
       USE mod_system
       USE mod_nDindex
+      USE mod_dnSVM
       USE mod_Constant
       USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0
       USE mod_PrimOp
       USE mod_basis
+      USE BasisMakeGrid
       USE mod_psi_set_alloc
       USE mod_propa
       USE mod_Op
@@ -92,10 +94,11 @@
       real (kind=Rkind), allocatable :: xOpt_min(:),SQ(:),SQini(:),QA(:),QB(:)
 
       real (kind=Rkind), allocatable :: freq(:),grad(:)
-      real (kind=Rkind), allocatable :: Qact(:)
+      real (kind=Rkind), allocatable :: Qact(:),Qdyn(:)
       TYPE (param_dnMatOp)           :: dnMatOp(1)
       character (len=Name_len)       :: name_dum
 
+      TYPE (Type_dnVec) :: dnx
 
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub = 'sub_Optimization_OF_VibParam'
@@ -167,7 +170,11 @@
       SQ(:) = ZERO
       IF (para_FOR_optimization%Optimization_param /= 'cubature') THEN
         xOpt_min(:) = para_FOR_optimization%Val_RVec(:)
-        SQ(:)       = ONETENTH * real(para_FOR_optimization%opt_RVec(:),kind=Rkind)
+        IF (para_Optimization%para_SimulatedAnnealing%With_RangeInit) THEN
+          SQ(:) = para_Optimization%para_SimulatedAnnealing%RangeInit
+        ELSE
+          SQ(:)       = ONETENTH * real(para_FOR_optimization%opt_RVec(:),kind=Rkind)
+        END IF
       ELSE
         IF (para_Optimization%para_SimulatedAnnealing%With_RangeInit) THEN
           SQ(:) = para_Optimization%para_SimulatedAnnealing%RangeInit
@@ -204,31 +211,36 @@
         BasisnD_Save%nqc = para_AllBasis%BasisnD%nqc
 
       END IF
-      write(out_unitp,*) 'SQ',SQ
       SQini(:) = SQ(:)
+      !write(out_unitp,*) 'SQini(1:10)',SQini(1:min(10,size(SQini)))
 
       SELECT CASE (para_Optimization%Optimization_method)
       CASE ('simulatedannealing','sa') ! simulated annealing
         DO i=0,para_Optimization%para_SimulatedAnnealing%Restart_Opt
           SQ(:) = SQini(:) * para_Optimization%para_SimulatedAnnealing%RangeScalInit
+          !write(out_unitp,*) 'SQini(1:10)',SQini(1:min(10,size(SQ)))
+          !write(out_unitp,*) 'SQ(1:10)',SQ(1:min(10,size(SQ)))
+
           IF (para_FOR_optimization%Optimization_param == 'cubature') THEN
             CALL Sub_SimulatedAnnealing_cuba(BasisnD_Save,xOpt_min,Norm_min,&
                                                       SQ,QA,QB,nb_Opt,  &
                                     para_Tnum,mole,ComOp,para_PES,Qact, &
                               para_Optimization%para_SimulatedAnnealing)
+            SQini(:) = Norm_min*TEN**1
           ELSE
             CALL Sub_SimulatedAnnealing(BasisnD_Save,xOpt_min,Norm_min, &
                                                        SQ,nb_Opt,       &
                                     para_Tnum,mole,ComOp,para_PES,Qact, &
                               para_Optimization%para_SimulatedAnnealing)
+            SQini(:) = SQini(:) * para_Optimization%para_SimulatedAnnealing%RangeScal
           END IF
-          write(6,*) 'Norm_min',i,Norm_min
-          SQini(:) = Norm_min*TEN**1
-        END DO
 
-        CALL Sub_BFGS(BasisnD_Save,xOpt_min,SQ,nb_Opt,                  &
-                                    para_Tnum,mole,ComOp,para_PES,Qact, &
-                                        para_Optimization%para_BFGS)
+        END DO
+        write(6,*) 'Norm_min',i,Norm_min
+
+!        CALL Sub_BFGS(BasisnD_Save,xOpt_min,SQ,nb_Opt,                  &
+!                                    para_Tnum,mole,ComOp,para_PES,Qact, &
+!                                        para_Optimization%para_BFGS)
 
       CASE ('bfgs') ! BFGS
 
@@ -269,10 +281,38 @@
         CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
 
         CALL Get_Grad_FROM_Tab_OF_dnMatOp(Grad,dnMatOp) ! for the first electronic state
+        write(out_unitp,*) 'Grad: size, RMS',size(grad),sqrt(sum(grad**2)/size(grad))
         write(out_unitp,*) 'Grad',Grad
 
         CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
         CALL dealloc_NParray(Grad,'Grad',name_sub)
+
+      END IF
+
+      IF (para_Optimization%Optimization_param == 'geometry') THEN
+        write(out_unitp,*) '============ GEOM:'
+        CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
+
+        CALL sub_QactTOdnx(Qact,dnx,mole,nderiv=0,Gcenter=.FALSE.,WriteCC=.TRUE.)
+
+        CALL dealloc_dnSVM(dnx)
+        write(out_unitp,*) 'Qact geometry:'
+        DO i=1,size(Qact)
+          write(out_unitp,*) Qact(i)
+        END DO
+        write(out_unitp,*) 'END Qact geometry:'
+
+
+        CALL alloc_NParray(Qdyn,(/mole%nb_var/),'Qdyn',name_sub)
+        CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
+        write(out_unitp,*) 'Qdyn geometry:'
+        DO i=1,size(Qdyn)
+          write(out_unitp,*) Qdyn(i)
+        END DO
+        write(out_unitp,*) 'END Qdyn geometry:'
+
+        CALL dealloc_NParray(Qdyn,'Qdyn',name_sub)
+        CALL dealloc_NParray(Qact,'Qact',name_sub)
 
       END IF
       write(out_unitp,*) '========= END FINAL ANLYSIS =================='
@@ -298,7 +338,6 @@
         CALL dealloc_array(para_Tnum%Gref,"para_Tnum%Gref",name_sub)
       END IF
       !CALL dealloc_Tnum(para_Tnum)
-      CALL dealloc_NParray(Qact,'Qact',name_sub)
 
       CALL dealloc_ComOp(ComOp)
       CALL dealloc_para_AllOp(para_AllOp)
@@ -610,6 +649,7 @@
       USE mod_nDindex
       !USE mod_Constant
       USE mod_basis
+      USE BasisMakeGrid
       IMPLICIT NONE
 
 !----- for the basis set ----------------------------------------------
@@ -732,6 +772,7 @@
       USE mod_system
       USE mod_nDindex
       USE mod_basis
+      USE BasisMakeGrid
       IMPLICIT NONE
 
 !----- for the basis set ----------------------------------------------

@@ -232,9 +232,9 @@ CONTAINS
 
       END SUBROUTINE sub_OpPsi
 
-      SUBROUTINE sub_PrimOpPsi(Psi,OpPsi,para_Op,derOp,With_Grid)
+      SUBROUTINE sub_PrimOpPsi(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op,read_OpGrid_OF_Op
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op,read_OpGrid_OF_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,copy_psi2TOpsi1,assignment (=)
       USE mod_psi_SimpleOp,    ONLY : assignment (=)
       USE mod_psi_B_TO_G,      ONLY : sub_PsiGridRep_TO_BasisRep
@@ -245,7 +245,7 @@ CONTAINS
       !----- variables pour la namelist minimum ------------------------
       TYPE (param_Op)  :: para_Op
       integer, intent(in), optional :: derOp(2)
-      logical, intent(in), optional :: With_Grid
+      logical, intent(in), optional :: With_Grid,pot_only
       integer          :: n
 
 
@@ -254,7 +254,7 @@ CONTAINS
       integer :: OpPsi_symab
 
       integer :: derOp_loc(2)
-      logical :: With_Grid_loc
+      logical :: With_Grid_loc,pot_only_loc
       TYPE (param_psi)   :: RPsi,ROpPsi
       TYPE (param_psi)   :: RCPsi(2),RCOpPsi(2)
       TYPE (param_psi)   :: RROpPsi(1)
@@ -297,6 +297,12 @@ CONTAINS
         With_Grid_loc = .FALSE.
       END IF
       IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
+
+      IF (present(pot_only)) THEN
+        pot_only_loc = pot_only .AND. (para_Op%n_Op ==0) ! para_Op has to be H
+      ELSE
+        pot_only_loc = .FALSE.
+      END IF
 
       !-----------------------------------------------------------------
       !-----------------------------------------------------------------
@@ -368,7 +374,7 @@ CONTAINS
           END IF
           OpPsi = ZERO
 
-          IF (para_Op%type_Op == 10) THEN
+          IF (para_Op%type_Op == 10 .AND. .NOT. pot_only_loc) THEN
             IF (psi%cplx) THEN
 
               CALL copy_psi2TOpsi1(RPsi,Psi,alloc=.FALSE.)
@@ -378,12 +384,12 @@ CONTAINS
 
               ! Real part
               RPsi%RvecG(:) = Real(Psi%CvecG(:),kind=Rkind)
-              CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.TRUE.)
+              CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc)
               OpPsi%CvecG(:) = cmplx(ROpPsi%RvecG,kind=Rkind)
 
               ! Imaginary part
               RPsi%RvecG(:) = aimag(Psi%CvecG(:))
-              CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.TRUE.)
+              CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc)
               OpPsi%CvecG(:) = OpPsi%CvecG + EYE * ROpPsi%RvecG
 
               CALL dealloc_psi(RPsi)
@@ -391,10 +397,10 @@ CONTAINS
 
 
             ELSE
-              CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp_loc,.TRUE.)
+              CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc )
             END IF
           ELSE
-            CALL sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp_loc,.TRUE.)
+            CALL sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc)
           END IF
 
           !STOP 'OpPsi with Grid'
@@ -426,7 +432,7 @@ CONTAINS
                   RPsi%RvecB(:) = Real(Psi%CvecB(:),kind=Rkind)
                   !write(6,*) 'Real part of Psi'
                   !CALL ecri_psi(Psi=RPsi)
-                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.FALSE.)
+                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
                   !write(6,*) 'Real part of OpPsi'
                   !CALL ecri_psi(Psi=ROpPsi)
                   OpPsi%CvecG(:) = cmplx(ROpPsi%RvecG,kind=Rkind)
@@ -435,7 +441,7 @@ CONTAINS
                   RPsi%RvecB(:) = aimag(Psi%CvecB(:))
                   !write(6,*) 'Imag part of Psi'
                   !CALL ecri_psi(Psi=RPsi)
-                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.FALSE.)
+                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
                   !write(6,*) 'Imag part of OpPsi'
                   !CALL ecri_psi(Psi=ROpPsi)
                   OpPsi%CvecG(:) = OpPsi%CvecG + EYE * ROpPsi%RvecG
@@ -445,23 +451,23 @@ CONTAINS
 
 
                 ELSE
-                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp_loc,.FALSE.)
+                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
                 END IF
               ELSE
-                CALL sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp_loc,.FALSE.)
+                CALL sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
               END IF
             ELSE
-              CALL sub_OpPsi_WITH_MemGrid(Psi,OpPsi,para_Op,derOp_loc)
+              CALL sub_OpPsi_WITH_MemGrid(Psi,OpPsi,para_Op,derOp_loc,pot_only=pot_only_loc)
             END IF
 
           ELSE
             IF (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
-              CALL sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp_loc)
+              CALL sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp_loc,pot_only=pot_only_loc)
             ELSE ! Type_FileGrid 1 or 2
               IF (psi%BasisnD%dnGGRep) THEN
-                CALL sub_OpPsi_WITH_FileGrid_type12_BGG(Psi,OpPsi,para_Op,derOp_loc,.FALSE.)
+                CALL sub_OpPsi_WITH_FileGrid_type12_BGG(Psi,OpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
               ELSE
-                CALL sub_OpPsi_WITH_FileGrid_type12(Psi,OpPsi,para_Op,derOp_loc)
+                CALL sub_OpPsi_WITH_FileGrid_type12(Psi,OpPsi,para_Op,derOp_loc,pot_only=pot_only_loc)
               END IF
             END IF
 
@@ -496,6 +502,8 @@ CONTAINS
       CALL Set_symab_OF_psiBasisRep(OpPsi,OpPsi_symab)
       IF (debug) write(out_unitp,*) 'OpPsi_symab',OpPsi%symab
 
+!write(out_unitp,*) 'para_Op,psi symab ',para_Op%symab,psi%symab
+!write(out_unitp,*) 'OpPsi_symab',OpPsi%symab
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'OpPsiBasisRep'
@@ -675,6 +683,7 @@ CONTAINS
       !IF (SGtype4 .AND. direct_KEO) THEN
 
     IF (SGtype4) THEN
+        !write(6,*) 'coucou sub_TabOpPsi_FOR_SGtype4: ',para_Op%name_Op,' ',size(TabPsi)
         CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)
         para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
         RETURN
@@ -851,18 +860,19 @@ CONTAINS
 
       END SUBROUTINE sub_OpPsi_WITH_MatOp
 
-      SUBROUTINE sub_OpPsi_WITH_MemGrid(Psi,OpPsi,para_Op,derOp)
+      SUBROUTINE sub_OpPsi_WITH_MemGrid(Psi,OpPsi,para_Op,derOp,pot_only)
       USE mod_system
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,alloc_array,dealloc_array
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiBasisRep_TO_GridRep
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
       TYPE (param_Op)     :: para_Op
       integer, intent(in) :: derOp(2)
+      logical, intent(in) :: pot_only
 
       integer          :: n
 
@@ -924,11 +934,12 @@ CONTAINS
         !-----------------------------------------------------------------
         IF (nb_thread == 1) THEN
 
+
           DO iterm=1,para_Op%nb_term
 
             IF (para_Op%OpGrid(iterm)%grid_zero) CYCLE
-
             IF ( skip_term(derOp,para_Op%derive_termQdyn(:,iterm)) ) CYCLE
+            IF (pot_only .AND. iterm /= para_Op%derive_term_TO_iterm(0,0)) CYCLE
 
 
             IF (para_Op%OpGrid(iterm)%grid_cte) THEN
@@ -1003,11 +1014,13 @@ CONTAINS
           !-------------------------------------------------------------
 
           !$OMP parallel do default(none) &
-          !$OMP shared(para_Op,thread_Psi,thread_OpPsi,OpPsi,derOp) &
+          !$OMP shared(para_Op,thread_Psi,thread_OpPsi,OpPsi,derOp,pot_only) &
           !$OMP private(iterm,ith) &
           !$OMP num_threads(nb_thread)
           DO iterm=1,para_Op%nb_term
             IF ( skip_term(derOp,para_Op%derive_termQdyn(:,iterm)) ) CYCLE
+            IF (pot_only .AND. iterm /= para_Op%derive_term_TO_iterm(0,0)) CYCLE
+
 
             ith = 1
             !$ ith = omp_get_thread_num()+1
@@ -1094,19 +1107,20 @@ CONTAINS
 
       END SUBROUTINE sub_OpPsi_WITH_MemGrid
 
-      SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp,With_Grid)
+      SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
       USE mod_basis_BtoG_GtoB, ONLY : DerivOp_TO_CVecG,DerivOp_TO_RVecG
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
       TYPE (param_Op)     :: para_Op
       integer, intent(in) :: derOp(2)
       logical, intent(in) :: With_Grid
+      logical, intent(in) :: pot_only
 
       integer          :: n
 
@@ -1174,8 +1188,7 @@ CONTAINS
         DO iterm=1,para_Op%nb_term
 
           IF (para_Op%OpGrid(iterm)%grid_zero) CYCLE
-
-
+          IF (pot_only .AND. iterm /= para_Op%derive_term_TO_iterm(0,0)) CYCLE
           IF ( skip_term(derOp,para_Op%derive_termQdyn(:,iterm)) ) CYCLE
 
 
@@ -1307,7 +1320,7 @@ CONTAINS
 
 
 
-      SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid)
+      SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
       USE mod_Coord_KEO,       ONLY : get_Qact, get_d0g_d0GG
       USE mod_basis,           ONLY : rec_Qact
@@ -1322,6 +1335,7 @@ CONTAINS
       TYPE (param_Op)     :: para_Op
       integer, intent(in) :: derOp(2)
       logical, intent(in) :: With_Grid
+      logical, intent(in) :: pot_only
 
       integer          :: n
 
@@ -1375,7 +1389,7 @@ CONTAINS
        nb_thread = Grid_maxth
      END IF
 
-
+     IF (pot_only) STOP 'pot_only is not possible in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
 
       IF (para_Op%direct_KEO) THEN
         block_size = 1500
@@ -1570,7 +1584,9 @@ STOP 'cplx'
 
       END SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG_Hamil10
 
+ !SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
  SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid)
+
  USE mod_system
  USE mod_Coord_KEO,               ONLY : get_Qact, get_d0g_d0GG
 
@@ -1591,6 +1607,7 @@ STOP 'cplx'
  TYPE (param_Op)     :: para_Op
  integer, intent(in) :: derOp(2)
  logical, intent(in) :: With_Grid
+ !logical, intent(in) :: pot_only
 
  integer          :: n
 
@@ -1848,7 +1865,7 @@ STOP 'cplx'
  END IF
  END SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10
 
-      SUBROUTINE sub_OpPsi_WITH_FileGrid_type12_BGG(Psi,OpPsi,para_Op,derOp,With_Grid)
+      SUBROUTINE sub_OpPsi_WITH_FileGrid_type12_BGG(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
       USE mod_SetOp,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
@@ -1861,6 +1878,7 @@ STOP 'cplx'
       TYPE (param_Op)     :: para_Op
       integer, intent(in) :: derOp(2)
       logical, intent(in) :: With_Grid
+      logical, intent(in) :: pot_only
 
       integer          :: n
 
@@ -1938,8 +1956,7 @@ STOP 'cplx'
         DO iterm=1,para_Op%nb_term
 
           IF (para_Op%OpGrid(iterm)%grid_zero) CYCLE
-
-
+          IF (pot_only .AND. iterm /= para_Op%derive_term_TO_iterm(0,0)) CYCLE
           IF ( skip_term(derOp,para_Op%derive_termQdyn(:,iterm)) ) CYCLE
 
 
@@ -2091,17 +2108,18 @@ STOP 'cplx'
 
 
 
-      SUBROUTINE sub_OpPsi_WITH_FileGrid_type12(Psi,OpPsi,para_Op,derOp)
+      SUBROUTINE sub_OpPsi_WITH_FileGrid_type12(Psi,OpPsi,para_Op,derOp,pot_only)
       USE mod_system
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiBasisRep_TO_GridRep
       USE mod_OpGrid,          ONLY : sub_ReadSeq_Grid_iterm,sub_ReadDir_Grid_iterm
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
-      TYPE (param_Op)  :: para_Op
+      TYPE (param_Op)     :: para_Op
       integer, intent(in) :: derOp(2)
+      logical, intent(in) :: pot_only
 
       integer          :: n
 
@@ -2171,6 +2189,7 @@ STOP 'cplx'
 
           IF (para_Op%OpGrid(iterm)%grid_zero) CYCLE
           IF ( skip_term(derOp,para_Op%derive_termQdyn(:,iterm)) ) CYCLE
+          IF (pot_only .AND. iterm /= para_Op%derive_term_TO_iterm(0,0)) CYCLE
 
           IF (para_Op%OpGrid(iterm)%grid_cte) THEN
 
@@ -2300,18 +2319,20 @@ STOP 'cplx'
       END SUBROUTINE sub_OpPsi_WITH_FileGrid_type12
 
 
-      SUBROUTINE  sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp)
+      SUBROUTINE  sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp,pot_only)
       USE mod_system
       USE mod_PrimOp,          ONLY : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,alloc_array,dealloc_array
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiBasisRep_TO_GridRep
 
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
-      TYPE (param_Op)  :: para_Op
+      TYPE (param_Op)     :: para_Op
       integer, intent(in) :: derOp(2)
+      logical, intent(in) :: pot_only
+
       integer          :: n
 
       integer          :: iOp
@@ -2428,6 +2449,7 @@ STOP 'cplx'
             IF (Psi%cplx) THEN
               DO iterm=1,para_Op%nb_term
                 IF ( skip_term(derOp,para_Op%derive_termQdyn(:,iterm)) ) CYCLE
+                IF (pot_only .AND. iterm /= para_Op%derive_term_TO_iterm(0,0)) CYCLE
 
                 id1 = para_Op%derive_termQact(1,iterm)
                 id2 = para_Op%derive_termQact(2,iterm)
@@ -2440,6 +2462,7 @@ STOP 'cplx'
             ELSE
               DO iterm=1,para_Op%nb_term
                 IF ( skip_term(derOp,para_Op%derive_termQdyn(:,iterm)) ) CYCLE
+                IF (pot_only .AND. iterm /= para_Op%derive_term_TO_iterm(0,0)) CYCLE
 
                 id1 = para_Op%derive_termQact(1,iterm)
                 id2 = para_Op%derive_termQact(2,iterm)

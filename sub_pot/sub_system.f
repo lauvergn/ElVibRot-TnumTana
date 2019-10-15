@@ -98,7 +98,7 @@ c     T=cos(TT)
       R1=sqrt(r1)
       R2=gR
       R3=sqrt(pR**2+(RC*gR)**2+TWO*pR*gR*RC*T)
-c     write(out_unitp,*) r1,r2,r3
+      !write(out_unitp,*) r1,r2,r3
       R1=R1*autoA
       R2=R2*autoA
       R3=R3*autoA
@@ -197,12 +197,12 @@ C================================================================
 
       real(kind=Rkind) Q(3)
 
-       real(kind=Rkind), parameter :: a=-0.01_Rkind,Q0=2.5_Rkind
+       real(kind=Rkind), parameter :: a=-0.01,Q0=2.5
 
        IF (Q(3) > Q0) THEN
          im_pot0 = a*(Q(3) - Q0)
        ELSE
-         im_pot0 = ZERO
+         im_pot0 = 0.d0
        END IF
 
        RETURN
@@ -315,6 +315,7 @@ C================================================================
 c----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
 
+
        real (kind=Rkind) :: Qdyn(mole%nb_var)
        real (kind=Rkind) :: c_act
 
@@ -323,18 +324,9 @@ c----- for the zmatrix and Tnum --------------------------------------
        real (kind=Rkind) :: d1h(mole%nb_inact2n,mole%nb_inact2n)
        real (kind=Rkind) :: d2h(mole%nb_inact2n,mole%nb_inact2n)
 
-       real (kind=Rkind)  :: poly_legendre ! function
-       character (len=14) :: nom
-       logical :: exist
-       integer :: iv,jv,i,j,kl
-       logical :: deriv,num
+       logical           :: deriv,num
        real (kind=Rkind) :: step
 
-       integer, parameter      ::  max_points=200
-       integer, parameter      ::  nb_inactb = 5
-       real (kind=Rkind), save :: F(max_points,nb_inactb,nb_inactb)
-       integer, save           :: nn(nb_inactb,nb_inactb)
-       logical, save           :: begin = .TRUE.
 
 c----- for debuging ----------------------------------
       logical, parameter :: debug = .FALSE.
@@ -351,53 +343,6 @@ c---------------------------------------------------------------------
       END IF
 c---------------------------------------------------------------------
 
-c---------------------------------------------------------------------
-c---------------------------------------------------------------------
-c     initialization (only once)
-c$OMP CRITICAL (d0d1d2_h_CRIT)
-      IF (begin) THEN
-
-        IF (nb_inactb < mole%nb_inact2n ) THEN
-          write(out_unitp,*) 'ERROR : nb_inactb is TO small',nb_inactb
-          write(out_unitp,*) 'it should at least equal to',
-     *                       mole%nb_inact2n
-          STOP
-        END IF
-
-        DO i=1,mole%nb_inact2n
-        DO j=i,mole%nb_inact2n
-
-          iv = mole%liste_QactTOQsym(mole%nb_act1+i)
-          jv = mole%liste_QactTOQsym(mole%nb_act1+j)
-          IF (iv > jv) THEN
-            nom=nom_ii('inter12h__',jv,iv)
-          ELSE
-            nom=nom_ii('inter12h__',iv,jv)
-          END IF
-
-          CALL read_para0d(F(1,i,j),nn(i,j),max_points,nom,exist)
-          IF ( .NOT. exist ) THEN
-            write(out_unitp,*) 'F(1,i,i) tq d0h = 1 ...'
-            write(out_unitp,*) '... and F(1,i,j) tq d0h = 0'
-            nn(i,j) = 1
-            IF ( i .EQ. j ) THEN
-              F(1,i,j) = ONE/poly_legendre(ONE,1,0)
-            ELSE
-              F(1,j,i) = ZERO
-              F(1,i,j) = ZERO
-            END IF
-          END IF
-
-        END DO
-        END DO
-
-        begin=.FALSE.
-      END IF
-c$OMP END CRITICAL (d0d1d2_h_CRIT)
-c     END initialization
-c---------------------------------------------------------------------
-c---------------------------------------------------------------------
-
       c_act = Qdyn(mole%liste_QactTOQsym(1))
  
       IF (deriv) THEN
@@ -407,27 +352,11 @@ c---------------------------------------------------------------------
         STOP
       END IF
 
-      DO i=1,mole%nb_inact2n
-      DO j=i,mole%nb_inact2n
-        d0h(i,j)=ZERO
-        DO kl=1,nn(i,j)
-           d0h(i,j) = d0h(i,j) + F(kl,i,j)*poly_legendre(c_act,kl,0)
-        END DO
-        d0h(j,i) = d0h(i,j)
-c       write(out_unitp,*) 'd0h(i,j)',i,j,d0h(i,j)
-      END DO
-      END DO
+      CALL get_CurviRPH( (/ c_act /),mole%CurviRPH,Hess=d0h)
 
 c---------------------------------------------------------------------
       IF (debug) THEN       
-       !write(out_unitp,*) 'Qact1',c_act
-       !DO i=1,mole%nb_inact2n
-       !DO j=i,mole%nb_inact2n
-       !  write(out_unitp,*) 'F(.,i,j)',i,j,nn(i,j)
-       !  write(out_unitp,*) (F(k,i,j),k=1,nn(i,j))
-       !END DO
-       !END DO
-        write(out_unitp,*) 'd0h at c_act:',c_act
+        write(out_unitp,*) 'Qact1',c_act
         CALL Write_Mat(d0h,6,4)
         write(out_unitp,*) 'END d0d1d2_h'
       END IF
@@ -441,6 +370,7 @@ C================================================================
       SUBROUTINE calc_dnQflex(iq,dnQflex,Qact,nb_act,nderiv,it)
       USE mod_system
       USE mod_dnSVM      
+      USE CurviRPH_mod
       IMPLICIT NONE
 
        integer           :: iq,nb_act
@@ -457,7 +387,7 @@ C================================================================
        character (len=14) :: nom
        logical :: exist
 
-       integer :: vi,kl
+       integer :: vi,kl,k
 
        integer, parameter      ::  max_points=200
        integer, parameter      ::  nb_inactb = 5
@@ -468,8 +398,8 @@ C================================================================
 
 c----- for debuging ----------------------------------
       character (len=*), parameter :: name_sub='dnQflex'
-      logical, parameter :: debug=.FALSE.
-c     logical, parameter :: debug=.TRUE.
+c     logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
 c----- for debuging ----------------------------------
 
 
@@ -564,32 +494,20 @@ C================================================================
 c----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
 
-       integer :: i_Qdyn
-       real (kind=Rkind) ::  Qdyn(mole%nb_var)
+      integer :: i_Qdyn
+      real (kind=Rkind) ::  Qdyn(mole%nb_var)
 
-       integer :: nderiv
+      integer :: nderiv
 
-       real (kind=Rkind) ::  d0req
-       real (kind=Rkind) ::  d1req(mole%nb_act1)
-       real (kind=Rkind) ::  d2req(mole%nb_act1,mole%nb_act1)
-       real (kind=Rkind) :: 
+      real (kind=Rkind) ::  d0req
+      real (kind=Rkind) ::  d1req(mole%nb_act1)
+      real (kind=Rkind) ::  d2req(mole%nb_act1,mole%nb_act1)
+      real (kind=Rkind) :: 
      *             d3req(mole%nb_act1,mole%nb_act1,mole%nb_act1)
 
 
-
-       real (kind=Rkind) :: dc0,dc1,dc2,dc3
-       real (kind=Rkind) :: c_act
-
-       character (len=14) :: nom
-       logical :: exist
-
-       integer :: vi,kl,i_act,j_act,k_act
-
-       integer, parameter      ::  max_points=200
-       integer, parameter      ::  nb_inactb = 5
-       real (kind=Rkind), save :: F(max_points,nb_inactb)
-       integer, save           :: nn(nb_inactb)
-       logical, save           :: begin = .TRUE.
+      real (kind=Rkind) :: c_act,Q21(mole%nb_inact21)
+      integer :: i_Qact
 
 
 c----- for debuging ----------------------------------
@@ -621,73 +539,14 @@ c---------------------------------------------------------------------
 c---------------------------------------------------------------------
 c---------------------------------------------------------------------
 
-
 c---------------------------------------------------------------------
+      c_act = Qdyn(mole%liste_QactTOQsym(1))
+
+      CALL get_CurviRPH( (/ c_act /),mole%CurviRPH,Q21=Q21)
+
+      i_Qact = mole%liste_QsymTOQact(i_Qdyn) - mole%nb_act1
+      d0req  = Q21(i_Qact)
 c---------------------------------------------------------------------
-c      initialization the first time
-c$OMP  CRITICAL (d0d1d2d3_Qeq_CRIT)
-       IF (begin) THEN
-         begin=.FALSE.
-
-c        -------------------------------------------------------------
-c         nb_inact (=nb_inact20+nb_inact21+nb_inact22) > nb_inactb ??
-c        -------------------------------------------------------------
-         IF (mole%nb_inact > nb_inactb) THEN
-           write(out_unitp,*) ' ERROR : in ',name_sub
-           write(out_unitp,*) 'nb_inact(',mole%nb_inact,
-     *                    ')>nb_inactb(',nb_inactb,')'
-           STOP
-         END IF
-
-         nn(:) = 0
-         F(:,:) = ZERO
-         DO vi=2,3
-           nom=nom_i('inter12___',vi)
-           write(out_unitp,*) 'read file :',nom,vi
-
-           CALL read_para0d(F(1,vi),nn(vi),max_points,nom,exist)
-           IF ( .NOT. exist ) STOP
-
-c          write(out_unitp,*) vi,(F(k,vi),k=1,nn(vi))
-         END DO
-       END IF
-c$OMP  END CRITICAL (d0d1d2d3_Qeq_CRIT)
-c      end  initialisation
-c---------------------------------------------------------------------
-c---------------------------------------------------------------------
-
-c---------------------------------------------------------------------
-       c_act = Qdyn(mole%liste_QactTOQsym(1))
-c---------------------------------------------------------------------
-
-
-c---------------------------------------------------------------------
-       d0req = ZERO
-       d1req(:) = ZERO
-       d2req(:,:) = ZERO
-       d3req(:,:,:) = ZERO
-c---------------------------------------------------------------------
-
-       i_act = mole%nb_act1
-       j_act = mole%nb_act1
-       k_act = mole%nb_act1
-
-
-         DO kl=1,nn(i_Qdyn)
-           CALL d0d1d2d3poly_legendre(c_act,kl,dc0,dc1,dc2,dc3,nderiv)
-
-           d0req = d0req + F(kl,i_Qdyn) * dc0
-
-           IF (nderiv .GE. 1)  d1req(i_act) =
-     *                         d1req(i_act) + F(kl,i_Qdyn) * dc1
-
-           IF (nderiv .GE. 2)  d2req(i_act,j_act) =
-     *                         d2req(i_act,j_act) + F(kl,i_Qdyn)*dc2
-
-           IF (nderiv .GE. 3)  d3req(i_act,j_act,k_act) =
-     *                      d3req(i_act,j_act,k_act) + F(kl,i_Qdyn)*dc3
-
-         END DO
 
 c---------------------------------------------------------------------
       IF (debug) THEN

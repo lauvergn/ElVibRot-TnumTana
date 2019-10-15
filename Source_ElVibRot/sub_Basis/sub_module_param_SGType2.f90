@@ -38,6 +38,10 @@ IMPLICIT NONE
   TYPE param_SGType2
     integer                      :: L1_SparseGrid = huge(1)
     integer                      :: L2_SparseGrid = huge(1)
+
+    integer                      :: L1_SparseBasis = huge(1)
+    integer                      :: L2_SparseBasis = huge(1)
+
     integer                      :: Num_OF_Lmax   = 0 ! use normal L_SparseGrid
 
     integer                      :: nb0   = 0 ! to deal with several electronic PES, rotational basis, or channels (HAC)
@@ -181,6 +185,10 @@ character (len=*), parameter :: name_sub='SGType2_2TOSGType2_1'
 
 SGType2_1%L1_SparseGrid = SGType2_2%L1_SparseGrid
 SGType2_1%L2_SparseGrid = SGType2_2%L2_SparseGrid
+
+SGType2_1%L1_SparseBasis = SGType2_2%L1_SparseBasis
+SGType2_1%L2_SparseBasis = SGType2_2%L2_SparseBasis
+
 SGType2_1%Num_OF_Lmax   = SGType2_2%Num_OF_Lmax
 
 SGType2_1%nDind_SmolyakRep = SGType2_2%nDind_SmolyakRep

@@ -313,7 +313,7 @@
         CALL alloc_array(freq,(/ mole%nb_act /),"freq",name_sub)
 
 
-        CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES)
+        CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES,print_freq=.TRUE.)
 
         write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(freq(:))*get_Conv_au_TO_unit('E','cm-1')
         write(out_unitp,*) 'ZPE   (eV): ',HALF*sum(freq(:))*get_Conv_au_TO_unit('E','eV')

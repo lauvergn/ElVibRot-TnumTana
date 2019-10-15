@@ -101,6 +101,9 @@ CONTAINS
 
       real(kind=Rkind)    ::  tol, sigmar, sigmai
 
+      integer (kind=4)    :: it
+
+
 !     %-----------------------------%
 !     | BLAS & LAPACK routines used |
 !     %-----------------------------%
@@ -144,13 +147,6 @@ CONTAINS
       CALL alloc_psi(psi_loc,BasisRep=With_Basis,GridRep=With_Grid)
       CALL init_psi(Hpsi_loc,para_H,cplx)
       CALL alloc_psi(Hpsi_loc,BasisRep=With_Basis,GridRep=With_Grid)
-      DO j=1,max_diago
-        CALL init_psi(psi(j),para_H,cplx)
-      END DO
-      DO j=1,nb_diago
-        CALL alloc_psi(psi(j),BasisRep=With_Basis,GridRep=With_Grid)
-      END DO
-
 
 
 
@@ -174,6 +170,7 @@ CONTAINS
 
       nev =  int(nb_diago,kind=4)
       ncv =  2*nev+10
+      ncv =  3*nev+10
 
       maxn   = n
       ldv    = maxn
@@ -214,7 +211,25 @@ CONTAINS
       !tol    = ONETENTH**6
 
       ido    = 0
-      info   = 0
+
+      info   = 1
+      IF (info /= 0) THEN
+        CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                 &
+                          para_propa%para_Davidson,para_H%cplx)
+        IF (para_propa%para_Davidson%With_Grid) THEN
+          resid(:) = psi_loc%RvecG(:)
+        ELSE
+          resid(:) = psi_loc%RvecB(:)
+        END IF
+      END IF
+
+
+      DO j=1,max_diago
+        CALL init_psi(psi(j),para_H,cplx)
+      END DO
+      DO j=1,nb_diago
+        CALL alloc_psi(psi(j),BasisRep=With_Basis,GridRep=With_Grid)
+      END DO
 
 !     %---------------------------------------------------%
 !     | This program uses exact shifts with respect to    |
@@ -237,8 +252,9 @@ CONTAINS
 !     %-------------------------------------------%
 !     | M A I N   L O O P (Reverse communication) |
 !     %-------------------------------------------%
-
+      it = 0
       DO
+         it = it +1
 !        %---------------------------------------------%
 !        | Repeatedly call the routine DNAUPD and take |
 !        | actions indicated by parameter IDO until    |
@@ -247,14 +263,15 @@ CONTAINS
 !        %---------------------------------------------%
 #if __ARPACK == 1
          call dnaupd ( ido, bmat, n, which, nev, tol, resid,            &
-              ncv, v, ldv, iparam, ipntr, workd, workl, lworkl,         &
-              info )
+                       ncv, v, ldv, iparam, ipntr, workd, workl, lworkl,&
+                       info )
 #else
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' The ARPACK library is not present!'
           write(out_unitp,*) 'Use Arpack=f and Davidson=t'
           STOP 'ARPACK has been removed'
 #endif
+         !write(6,*) 'it,ido',it,ido
 
          IF (abs(ido) /= 1) EXIT
 
@@ -540,7 +557,7 @@ CONTAINS
       USE mod_psi_SimpleOp
       USE mod_ana_psi
       USE mod_psi_B_TO_G
-      USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
+      USE mod_psi_Op,         ONLY : Overlap_psi1_psi2,Set_symab_OF_psiBasisRep
       USE mod_param_WP0
       USE mod_propa
       IMPLICIT NONE
@@ -588,6 +605,9 @@ CONTAINS
 
       CALL sub_OpPsi(psi1,psi2,para_H,With_Grid=With_Grid)
 
+      CALL Set_symab_OF_psiBasisRep(psi2,para_propa%para_Davidson%symab)
+
+
       IF (debug) THEN
         CALL Overlap_psi1_psi2(cplxE,psi1,psi2,With_Grid=With_Grid)
         write(out_unitp,*) 'Arpack <psi H psi>:',cplxE
@@ -613,6 +633,7 @@ CONTAINS
 
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
+      USE mod_psi_Op
       USE mod_ana_psi
       USE mod_psi_B_TO_G
       USE mod_param_WP0
@@ -633,9 +654,10 @@ CONTAINS
 
 
       !------ working parameters --------------------------------
-      TYPE (param_psi)          :: psi_loc,Hpsi_loc
-      real (kind=Rkind) :: ZPE
+      TYPE (param_psi)               :: psi_loc,Hpsi_loc
+      real (kind=Rkind)              :: ZPE
       real (kind=Rkind), allocatable :: Vec(:,:),Evec(:)
+      complex (kind=Rkind)           :: cplxE
 
 !     %-----------------------------%
 !     | Define leading dimensions   |
@@ -656,7 +678,6 @@ CONTAINS
       logical, allocatable          :: select(:)
       integer (kind=4)              :: iparam(11), ipntr(11)
 
-
 !     %---------------%
 !     | Local Scalars |
 !     %---------------%
@@ -673,8 +694,8 @@ CONTAINS
 !     | BLAS & LAPACK routines used |
 !     %-----------------------------%
 
-      real(kind=Rkind) ::  dnrm2
-      external         dnrm2, daxpy
+      real(kind=Rkind), external ::  dnrm2
+      external                       daxpy
 
 
       TYPE(param_file)  :: Log_file
@@ -709,12 +730,6 @@ CONTAINS
       CALL alloc_psi(psi_loc)
       CALL init_psi(Hpsi_loc,para_H,cplx)
       CALL alloc_psi(Hpsi_loc)
-      DO j=1,max_diago
-        CALL init_psi(psi(j),para_H,cplx)
-      END DO
-      DO j=1,nb_diago
-        CALL alloc_psi(psi(j))
-      END DO
 
 
 
@@ -733,14 +748,14 @@ CONTAINS
         STOP
       END IF
       nev =  nb_diago
-      ncv =  nev+10
+      ncv =  2*nev+10
 
       maxn   = n
       ldv    = maxn
       maxnev = nev
       maxncv = ncv
 
-
+      ! allocate: OK
       allocate(v(ldv,maxncv))
       allocate( workl(maxncv*(maxncv+8)) )
       allocate(workd(3*maxn))
@@ -749,9 +764,9 @@ CONTAINS
       allocate(ax(maxn))
       allocate(select(maxncv))
 
-
       bmat  = 'I'
-      which = 'SM'
+      which = 'SM' ! smalest magnitude
+      !which = 'SA' ! algebraically smalest
 
 !     %--------------------------------------------------%
 !     | The work array WORKL is used in DSAUPD as        |
@@ -765,10 +780,30 @@ CONTAINS
 !     | iteration.                                       |
 !     %--------------------------------------------------%
 
-      lworkl = ncv*(ncv+8)
+      lworkl = ncv*(ncv+8) ! ok
       tol    = ZERO
       ido    = 0
+
       info   = 0
+      info   = 1
+      IF (info /= 0) THEN
+        CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                 &
+                          para_propa%para_Davidson,para_H%cplx)
+        IF (para_propa%para_Davidson%With_Grid) THEN
+          resid(:) = psi_loc%RvecG(:)
+        ELSE
+          resid(:) = psi_loc%RvecB(:)
+        END IF
+      END IF
+
+
+      DO j=1,max_diago
+        CALL init_psi(psi(j),para_H,cplx)
+      END DO
+      DO j=1,nb_diago
+        CALL alloc_psi(psi(j))
+      END DO
+
 
 !     %---------------------------------------------------%
 !     | This program uses exact shifts with respect to    |
@@ -822,9 +857,14 @@ CONTAINS
 !        | workd(ipntr(2)).                     |
 !        %--------------------------------------%
 
-         psi_loc%RvecB(:) = workd(ipntr(1):ipntr(1)-1+n)
-         CALL sub_OpPsi(psi_loc,Hpsi_loc,para_H)
-         workd(ipntr(2):ipntr(2)-1+n) = Hpsi_loc%RvecB(:)
+         CALL sub_OpV1_TO_V2_Arpack(workd(ipntr(1):ipntr(1)-1+n),       &
+                                    workd(ipntr(2):ipntr(2)-1+n),       &
+                                    psi_loc,Hpsi_loc,para_H,cplxE,para_propa,int(n,kind=4))
+
+
+         !psi_loc%RvecB(:) = workd(ipntr(1):ipntr(1)-1+n)
+         !CALL sub_OpPsi(psi_loc,Hpsi_loc,para_H)
+         !workd(ipntr(2):ipntr(2)-1+n) = Hpsi_loc%RvecB(:)
 
          write(iunit,*) 'Arpack <psi H psi>:',                          &
           dot_product(workd(ipntr(1):ipntr(1)-1+n),workd(ipntr(2):ipntr(2)-1+n))
@@ -887,7 +927,7 @@ CONTAINS
 !        | returned in V.                               |
 !        %----------------------------------------------%
 
-         if ( ierr .ne. 0) then
+         if ( ierr /= 0) then
 
 !            %------------------------------------%
 !            | Error condition:                   |
@@ -918,9 +958,13 @@ CONTAINS
 !               | tolerance)                |
 !               %---------------------------%
 
-                psi(j)%RvecB(:) = v(:,j)
-                CALL sub_OpPsi(psi(j),Hpsi_loc,para_H)
-                ax(:) = Hpsi_loc%RvecB(:)
+                 !call av(nx, v(1,j), ax)
+                 CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,&
+                                             para_H,cplxE,para_propa,int(n,kind=4))
+
+                !psi(j)%RvecB(:) = v(:,j)
+                !CALL sub_OpPsi(psi(j),Hpsi_loc,para_H)
+                !ax(:) = Hpsi_loc%RvecB(:)
 
 #if __ARPACK == 1
                 call daxpy(n, -d(j,1), v(:,j), 1, ax, 1)
@@ -985,21 +1029,6 @@ CONTAINS
       nb_diago = nconv
 
 
-      IF (debug) THEN
-        CALL sub_build_MatOp(psi,nb_diago,para_H,.TRUE.,.FALSE.)
-        CALL alloc_NParray(vec,(/ nb_diago,nb_diago /),'vec',name_sub)
-        CALL alloc_NParray(Evec,(/ nb_diago /),'Evec',name_sub)
-        CALL diagonalization(para_H%Rmat,Evec,Vec,nb_diago,2,1,.TRUE.)
-        ZPE = minval(Evec)
-        DO j=1,nb_diago
-           write(out_unitp,*) j,Evec(j)*get_Conv_au_TO_unit('E','cm-1'),&
-                          (Evec(j)-ZPE)*get_Conv_au_TO_unit('E','cm-1')
-        END DO
-        CALL dealloc_NParray(vec,'vec',name_sub)
-        CALL dealloc_NParray(Evec,'Evec',name_sub)
-      END IF
-
-
       CALL dealloc_psi(Hpsi_loc,delete_all=.TRUE.)
       CALL dealloc_psi(psi_loc,delete_all=.TRUE.)
       deallocate(v)
@@ -1012,9 +1041,133 @@ CONTAINS
 
 !----------------------------------------------------------
        IF (debug) THEN
+        CALL alloc_NParray(Evec,(/ nb_diago /),'Evec',name_sub)
+        Evec(:) = real( psi(1:nb_diago)%CAvOp,kind=Rkind)
+        ZPE = minval(Evec)
+        DO j=1,nb_diago
+           write(out_unitp,*) j,Evec(j)*get_Conv_au_TO_unit('E','cm-1'),   &
+                             (Evec(j)-ZPE)*get_Conv_au_TO_unit('E','cm-1')
+        END DO
+        CALL dealloc_NParray(Evec,'Evec',name_sub)
          write(out_unitp,*) 'END ',name_sub
        END IF
 !----------------------------------------------------------
+
       END SUBROUTINE sub_propagation_Arpack_Sym
+
+ SUBROUTINE ReadWP0_Arpack(psi,nb_diago,max_diago,para_Davidson,cplx)
+ USE mod_system
+
+ USE mod_psi_set_alloc
+ USE mod_psi_SimpleOp
+ USE mod_psi_B_TO_G,     ONLY : sub_PsiBasisRep_TO_GridRep
+ USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi
+ USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep
+ USE mod_psi_io,         ONLY : sub_read_psi0
+ USE mod_param_WP0,      ONLY : param_WP0
+ USE mod_propa,          ONLY : param_Davidson
+ IMPLICIT NONE
+
+
+ TYPE (param_Davidson) :: para_Davidson
+ logical               :: cplx
+
+ !----- WP, energy ... -----------------------------------
+ TYPE (param_WP0)          :: para_WP0
+
+ integer                   :: nb_diago,max_diago
+ TYPE (param_psi)          :: psi
+ TYPE (param_psi)          :: psi0(max_diago)
+
+ integer :: i
+
+
+ !----- for debuging --------------------------------------------------
+ integer :: err_mem,memory
+ character (len=*), parameter :: name_sub='ReadWP0_Arpack'
+ logical, parameter :: debug=.FALSE.
+ !logical, parameter :: debug=.TRUE.
+ !-----------------------------------------------------------
+
+ IF (debug) THEN
+   write(out_unitp,*) 'BEGINNING ',name_sub
+   write(out_unitp,*) ' nb_diago',nb_diago
+   write(out_unitp,*) ' max_diago',max_diago
+
+   write(out_unitp,*) ' para_Davidson',para_Davidson
+   write(out_unitp,*)
+   CALL flush_perso(out_unitp)
+ END IF
+ !-----------------------------------------------------------
+
+ !------ read guess vectors ---------------------------------
+ IF (nb_diago > 0 .OR. para_Davidson%read_WP) THEN
+
+   DO i=1,max_diago
+     CALL copy_psi2TOpsi1(psi0(i),psi,alloc=.FALSE.)
+   END DO
+
+   para_WP0%nb_WP0              = nb_diago
+   para_WP0%read_file           = para_Davidson%read_WP
+   IF (para_Davidson%nb_readWP_OF_List > 0) THEN
+     para_WP0%read_listWP0        = .FALSE.
+   ELSE
+     para_WP0%read_listWP0        = para_Davidson%read_listWP
+   END IF
+   para_WP0%WP0cplx             = cplx
+   para_WP0%file_WP0%name       = para_Davidson%name_file_readWP
+   para_WP0%file_WP0%formatted  = para_Davidson%formatted_file_readWP
+
+   CALL sub_read_psi0(psi0,para_WP0,max_diago,                      &
+                      symab=para_Davidson%symab,ortho=.TRUE.)
+
+   nb_diago = para_WP0%nb_WP0
+   para_Davidson%nb_WP0 = para_WP0%nb_WP0
+
+   IF (nb_diago < 1) THEN
+     write(out_unitp,*) ' ERROR while reading the vector(s)'
+     write(out_unitp,*) ' ... the number is 0'
+     write(out_unitp,*) ' Probably, in the namelist (davidson)...'
+     write(out_unitp,*) '   ... you select a wrong symmetry',para_Davidson%symab
+     STOP
+   END IF
+
+   psi = ZERO
+   DO i=1,nb_diago
+     psi = psi + psi0(i)
+     CALL norm2_psi(psi0(i))
+     IF (debug) write(out_unitp,*) '   norm^2 of psi0(i)',i,psi0(i)%norme
+     IF ( abs(psi0(i)%norme-ONE) > ONETENTH**8) THEN
+       write(out_unitp,*) ' ERROR while reading the vector(s)'
+       write(out_unitp,*) ' ... the norm^2 of psi0(i) is /= 1',i,psi0(i)%norme
+       STOP
+     END IF
+   END DO
+   CALL Set_symab_OF_psiBasisRep(psi,para_Davidson%symab)
+   CALL renorm_psi(psi,BasisRep=.TRUE.)
+
+
+ ELSE
+   para_Davidson%nb_WP0 = 0
+   nb_diago = 1
+   CALL alloc_psi(psi)
+   CALL Set_Random_psi(psi)
+   CALL Set_symab_OF_psiBasisRep(psi,para_Davidson%symab)
+   CALL renorm_psi(psi,BasisRep=.TRUE.)
+ END IF
+
+ DO i=1,max_diago
+   CALL dealloc_psi(psi0(i),delete_all=.TRUE.)
+ END DO
+
+ !----------------------------------------------------------
+ IF (debug) THEN
+   write(out_unitp,*) 'psi, nb_diago',nb_diago
+   CALL ecri_init_psi(psi)
+   write(out_unitp,*) 'END ',name_sub
+ END IF
+ !----------------------------------------------------------
+
+ END SUBROUTINE ReadWP0_Arpack
 
 END MODULE mod_Arpack

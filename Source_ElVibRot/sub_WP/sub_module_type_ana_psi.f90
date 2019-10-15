@@ -63,6 +63,10 @@
           logical                        :: AvQ           = .FALSE.   ! Average Values (Qact ...)
           integer,           allocatable :: Qtransfo_type(:)          ! ???type of the transformation
 
+
+          logical                        :: AvScalOp      = .FALSE.   ! Average value of the scalar operators
+
+
           ! For quantum coherence Mij = Int [rho_i(Q)*rho_j(Q)/rho(Q) dQ]
           integer                        :: coherence = 0       ! default, 0: no coherence calculation
                                                                 !          1: coherence calculation
@@ -106,6 +110,7 @@
                               Write_psi2_Grid,Write_psi2_Basis,   &
                               Write_psi_Grid,Write_psi_Basis,     &
                               AvQ,Qtransfo_type,                  &
+                              AvScalOp,                           &
                               coherence,coherence_epsi,           &
                               ExactFact,                          &
                               Rho1D,Rho2D,Weight_Rho,Qana_Weight, &
@@ -124,7 +129,7 @@
       logical,                        optional :: Write_psi2_Grid,Write_psi2_Basis
       logical,                        optional :: Write_psi_Grid,Write_psi_Basis
 
-      logical,                        optional :: AvQ
+      logical,                        optional :: AvQ,AvScalOp
       integer,           allocatable, optional :: Qtransfo_type(:)     ! type of the transformation
 
       integer,                        optional :: coherence         ! coherence_tyep (0 non calculation)
@@ -241,6 +246,14 @@
       END IF
       !------------------------------------------------------------
 
+
+      !------------------------------------------------------------
+      ! Average of the Scalar Operators
+      ana_psi%AvScalOp = .FALSE.
+      IF (present(AvScalOp))         ana_psi%AvScalOp         = AvScalOp
+      !------------------------------------------------------------
+
+
       !------------------------------------------------------------
       ! coherence calculation
       ana_psi%coherence = 0       ! default, 0: no coherence calculation
@@ -354,6 +367,8 @@
        ana_psi1%Qtransfo_type(:) = ana_psi2%Qtransfo_type(:)
      END IF
 
+     ana_psi1%AvScalOp      = ana_psi2%AvScalOp
+
      ana_psi1%adia          = ana_psi2%adia
      ana_psi1%Rho1D         = ana_psi2%Rho1D
      ana_psi1%Rho2D         = ana_psi2%Rho2D
@@ -457,6 +472,10 @@
       write(out_unitp,*) 'AvQ',ana_psi%AvQ
       IF (allocated(ana_psi%Qtransfo_type))                             &
                 write(out_unitp,*) 'Qtransfo_type',ana_psi%Qtransfo_type
+
+      write(out_unitp,*)
+      write(out_unitp,*) 'Average over scalar operators:'
+      write(out_unitp,*) 'AvScalOp',ana_psi%AvScalOp
 
       write(out_unitp,*)
       write(out_unitp,*) 'Coherence:?'

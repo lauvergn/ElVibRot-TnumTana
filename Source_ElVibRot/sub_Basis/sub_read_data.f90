@@ -339,7 +339,7 @@
       integer              :: nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB
       logical              :: contrac_WITH_nDindB
       real (kind=Rkind)    :: Norm_OF_nDindB,weight_OF_nDindB
-      integer              :: L_SparseBasis,L_TO_nb_A,L_TO_nb_B,Lexpo_TO_nb
+      integer              :: L_SparseBasis,L_TO_nb_A,L_TO_nb_B,Lexpo_TO_nb,L1_SparseBasis,L2_SparseBasis
       integer, allocatable :: Tab_L_TO_n(:)
       logical              :: read_L_TO_n
 
@@ -384,6 +384,7 @@
                          L1_SparseGrid,L2_SparseGrid,Num_OF_Lmax,       &
                          Lexpo_TO_nq,Lexpo_TO_nb,max_nb,max_nq,         &
                          L_SparseBasis,L_TO_nb_A,L_TO_nb_B,read_L_TO_n, &
+                         L1_SparseBasis,L2_SparseBasis,                 &
                          SparseGrid,SparseGrid_type,With_L,             &
                          SparseGrid_With_Cuba,SparseGrid_With_Smolyak,  &
                          SparseGrid_With_DP, &
@@ -471,6 +472,8 @@
       Lexpo_TO_nb              = -1
       read_L_TO_n              = .FALSE.
       L_SparseBasis            = -1
+      L1_SparseBasis           = huge(1)
+      L2_SparseBasis           = huge(1)
 
       SparseGrid               = .FALSE.
       SparseGrid_type          = -1
@@ -638,15 +641,35 @@
 
       END IF
 
-      basis_temp%SparseGrid_type            = SparseGrid_type
-      basis_temp%L_SparseGrid               = L_SparseGrid
-      basis_temp%L_SparseBasis              = L_SparseBasis
+      basis_temp%SparseGrid_type             = SparseGrid_type
+      basis_temp%L_SparseGrid                = L_SparseGrid
+      basis_temp%L_SparseBasis               = L_SparseBasis
 
-      basis_temp%para_SGType2%L1_SparseGrid = L1_SparseGrid
-      basis_temp%para_SGType2%L2_SparseGrid = L2_SparseGrid
+
       IF (Num_OF_Lmax < 0 .OR. Num_OF_Lmax > 2) Num_OF_Lmax = 0
-      basis_temp%para_SGType2%Num_OF_Lmax   = Num_OF_Lmax
+      basis_temp%para_SGType2%Num_OF_Lmax    = Num_OF_Lmax
 
+      IF (L1_SparseGrid  == huge(1) .AND. L1_SparseBasis < huge(1)) L1_SparseGrid  = L1_SparseBasis
+      IF (L1_SparseBasis == huge(1) .AND. L1_SparseGrid  < huge(1)) L1_SparseBasis = L1_SparseGrid
+      IF (L1_SparseBasis > L1_SparseGrid) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) '  L1_SparseBasis > L1_SparseGrid : it is impossible'
+          write(out_unitp,*) '  L1_SparseBasis,L1_SparseGrid',L1_SparseBasis,L1_SparseGrid
+          STOP
+      END IF
+      basis_temp%para_SGType2%L1_SparseGrid  = L1_SparseGrid
+      basis_temp%para_SGType2%L1_SparseBasis = L1_SparseBasis
+
+      IF (L2_SparseGrid  == huge(1) .AND. L2_SparseBasis < huge(1)) L2_SparseGrid  = L2_SparseBasis
+      IF (L2_SparseBasis == huge(1) .AND. L2_SparseGrid  < huge(1)) L2_SparseBasis = L2_SparseGrid
+      IF (L2_SparseBasis > L2_SparseGrid) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) '  L2_SparseBasis > L2_SparseGrid : it is impossible'
+          write(out_unitp,*) '  L2_SparseBasis,L2_SparseGrid',L2_SparseBasis,L2_SparseGrid
+          STOP
+      END IF
+      basis_temp%para_SGType2%L2_SparseGrid  = L2_SparseGrid
+      basis_temp%para_SGType2%L2_SparseBasis = L2_SparseBasis
 
       IF (max_nb > max_nq ) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
@@ -859,6 +882,7 @@
           END IF
         END DO
 
+        basis_temp%auto_basis = (auto_basis .AND. ndim == 1)
         IF (auto_basis .AND. ndim == 1 .AND. associated(mole%NMTransfo)) THEN
           IF (.NOT. mole%tab_Qtransfo(mole%itNM)%skip_transfo) THEN
           IF (associated(mole%NMTransfo%Q0_HObasis) .AND. associated(mole%NMTransfo%scaleQ_HObasis)) THEN
@@ -866,23 +890,23 @@
             basis_temp%Q0(1)     = mole%NMTransfo%Q0_HObasis(basis_temp%iQdyn(1))
             basis_temp%scaleQ(1) = mole%NMTransfo%scaleQ_HObasis(basis_temp%iQdyn(1))
             write(out_unitp,*) 'Q0,scaleQ (from auto_basis): ',basis_temp%Q0,basis_temp%scaleQ
-
+            basis_temp%auto_basis = .FALSE.
           ELSE
-            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' WARNING in ',name_sub
             write(out_unitp,*) '  auto_basis=t and ...'
             write(out_unitp,*) '   NMTransfo%Q0_HObasis or NMTransfo%scaleQ_HObasis are not associated'
             write(out_unitp,*) '      The Q0 and scaleQ are not modified !!'
             write(out_unitp,*) ' CHECK your data'
-            write(out_unitp,basis_nD)
-            STOP
+            !write(out_unitp,basis_nD)
+            !STOP
           END IF
           END IF
         ELSE IF (auto_basis .AND. ndim == 1 .AND. .NOT. associated(mole%NMTransfo)) THEN
-          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' WARNING in ',name_sub
           write(out_unitp,*) '  auto_basis=t and mole%NMTransfo is not associated'
           write(out_unitp,*) ' CHECK your data'
-          write(out_unitp,basis_nD)
-          STOP
+          !write(out_unitp,basis_nD)
+          !STOP
         END IF
 
         basis_temp%opt_param = count(basis_temp%opt_A /= 0) +           &

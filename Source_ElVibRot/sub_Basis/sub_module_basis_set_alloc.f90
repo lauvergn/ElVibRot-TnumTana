@@ -117,6 +117,7 @@
           logical                    :: primitive_done         = .FALSE.  ! This parameter is used to check if primitive basis-sets or set-up
                                                                           ! for direct-product basis-set
 
+          logical                    :: auto_basis             = .FALSE.  ! it is done automatically
 
           logical                    :: contrac                = .FALSE.  !  .T. if the basis set is contracted
           logical                    :: auto_contrac           = .FALSE.  ! it is done automatically
@@ -439,10 +440,14 @@
          CALL dealloc_dnMat(basis_set%dnRGB)
          CALL dealloc_dnMat(basis_set%dnRBG)
          CALL dealloc_dnMat(basis_set%dnRBGwrho)
+         CALL dealloc_dnMat(basis_set%dnRBB)
+         CALL dealloc_dnMat(basis_set%dnRGG)
 
          CALL dealloc_dnCplxMat(basis_set%dnCGB)
          CALL dealloc_dnCplxMat(basis_set%dnCBG)
          CALL dealloc_dnCplxMat(basis_set%dnCBGwrho)
+         CALL dealloc_dnCplxMat(basis_set%dnCBB)
+         !CALL dealloc_dnCplxMat(basis_set%dnCGG) !not yet in the type
 
          IF (debug) write(out_unitp,*) 'END ',name_sub
          CALL flush_perso(out_unitp)
@@ -738,12 +743,13 @@
          basis_set%primitive_done         = .FALSE.
 
          IF (.NOT. keep_Rvec_loc) THEN
+           basis_set%auto_basis             = .FALSE.
            basis_set%contrac                = .FALSE.
            basis_set%auto_contrac           = .FALSE.
            basis_set%max_ene_contrac        = ONETENTH
-           basis_set%POGridRep                  = .FALSE.
-           basis_set%POGridRep_polyortho        = .FALSE.
-           basis_set%xPOGridRep_done            = .FALSE.
+           basis_set%POGridRep              = .FALSE.
+           basis_set%POGridRep_polyortho    = .FALSE.
+           basis_set%xPOGridRep_done        = .FALSE.
            basis_set%nbc                    = 0
            basis_set%nqc                    = 0
            basis_set%max_nbc                = 0
@@ -1367,6 +1373,9 @@
           basis_set1%primitive_done       = basis_set2%primitive_done
           basis_set1%packed_done          = basis_set2%packed_done
         END IF
+
+        basis_set1%auto_basis             = basis_set2%auto_basis
+
         basis_set1%contrac                = basis_set2%contrac
         basis_set1%auto_contrac           = basis_set2%auto_contrac
         basis_set1%max_ene_contrac        = basis_set2%max_ene_contrac
@@ -2594,7 +2603,7 @@
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 
-      IF (basis_set%ndim == 0) THEN
+      IF (basis_set%ndim == 0) THEN ! for the electronic basis
         nq = get_nb_FROM_basis(basis_set)
       ELSE
         IF (present(init)) THEN

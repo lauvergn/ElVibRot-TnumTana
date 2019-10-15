@@ -314,6 +314,19 @@
          print_level > 0 .AND. para_AllOp%tab_Op(1)%nb_qa > max_nb_G_FOR_print) THEN
         write(out_unitp,'(a)',ADVANCE='yes') '----]'
       END IF
+      DO iOp=1,para_AllOp%nb_Op
+        IF (associated(para_AllOp%tab_Op(iOp)%OpGrid)) THEN
+          DO iterm=1,size(para_AllOp%tab_Op(iOp)%OpGrid)
+            para_AllOp%tab_Op(iOp)%OpGrid(iterm)%Grid_done = .TRUE.
+          END DO
+        END IF
+        IF (associated(para_AllOp%tab_Op(iOp)%imOpGrid)) THEN
+          DO iterm=1,size(para_AllOp%tab_Op(iOp)%imOpGrid)
+            para_AllOp%tab_Op(iOp)%imOpGrid(iterm)%Grid_done = .TRUE.
+          END DO
+        END IF
+      END DO
+
       CALL flush_perso(out_unitp)
       !- END multidimentional loop ---------------------------------------
       !-------------------------------------------------------------------

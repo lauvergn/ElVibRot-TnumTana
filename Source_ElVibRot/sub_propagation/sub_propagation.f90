@@ -260,6 +260,7 @@ CONTAINS
       USE mod_propa
       USE mod_march
       USE mod_psi_set_alloc
+      USE mod_psi_io
       USE mod_ana_psi
       IMPLICIT NONE
 
@@ -369,7 +370,7 @@ CONTAINS
           E1 = E0
           CALL sub_PsiOpPsi(E0,psi,w1,para_H)
           DeltaE = abs(E1-E0)
-          FOD = (DeltaE > ONETENTH**6)  ! about 3 cm-1
+          !FOD = (DeltaE > ONETENTH**6)  ! about 3 cm-1
         ELSE
           IF (para_propa%write_iter .OR. debug) write(out_unitp,*) 'march nOD'
           para_H%E0     = para_propa%para_poly%E0
@@ -410,6 +411,13 @@ CONTAINS
 
       !CALL Write_ana_psi(para_propa%ana_psi)
       CALL sub_analyze_WP_OpWP(T,(/ psi /),1,para_H,para_propa,adia=.FALSE.)
+
+      CALL file_open(para_propa%file_WP,nioWP)
+      CALL Write_Psi_nDBasis(psi,nioWP,iPsi=1,epsi=ZERO,lformated=para_propa%file_WP%formatted,version=0)
+      close(nioWP)
+
+      write(out_unitp,*) 'WP (BasisRep) at T=',T
+      CALL Write_Psi_nDBasis(psi,6,iPsi=1,epsi=ONETENTH,lformated=.TRUE.,version=0)
 
       IF (debug .OR. psi%nb_tot < 1000) THEN
         write(out_unitp,*) 'WP (BasisRep) at T=',T
@@ -829,6 +837,7 @@ CONTAINS
       GridRep  = psi0(1)%GridRep
 
       write(out_unitp,*) ' vib : propagation',para_propa%name_WPpropa
+      CALL flush_perso(out_unitp)
 
 !     - parameters for poly (cheby and nOD) ... ------------
       CALL initialisation1_poly(para_propa%para_poly,                   &
@@ -840,7 +849,6 @@ CONTAINS
       para_H%E0     = para_propa%para_poly%E0
       para_H%Esc    = para_propa%para_poly%Esc
 !-----------------------------------------------------------
-
 
 !-----------------------------------------------------------
 
@@ -1094,6 +1102,7 @@ CONTAINS
       USE mod_march
       !USE mod_psi
       USE mod_psi_set_alloc
+      USE mod_psi_Op
       USE mod_psi_io
       USE mod_ana_psi
       USE mod_field

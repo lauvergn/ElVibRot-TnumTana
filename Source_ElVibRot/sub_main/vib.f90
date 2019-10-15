@@ -36,6 +36,7 @@
       USE mod_psi_set_alloc
       USE mod_psi_Op
       USE mod_ana_psi
+      USE mod_psi_SimpleOp
 
 
       USE mod_propa
@@ -91,10 +92,10 @@
       TYPE (param_ana)           :: para_ana
       TYPE (param_intensity)     :: para_intensity
       TYPE (param_ana_psi)       :: ana_psi
-
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_propa) :: para_propa
-      TYPE (param_psi)   :: WP0(1),MuWP0
+      TYPE (param_propa)          :: para_propa
+      TYPE (param_psi)            :: WP0(1),WP0tmp,MuWP0
+      complex (kind=Rkind)        :: s,c
 
 !----- for Davidson diagonalization ----------------------------
       integer                    :: nb_diago,max_diago
@@ -272,12 +273,18 @@
               para_Dip => para_AllOp%tab_Op(iOp+1:iOp+3)
 
               write(out_unitp,*) ' calculation Mu|WP0> with: ',para_Dip(ip)%name_Op
+              write(out_unitp,*) ' th_WP0: ',para_propa%para_WP0%th_WP0
+              CALL flush_perso(out_unitp)
 
-              CALL sub_MatOp(para_Dip(ip),para_ana%print)
-              MuWP0 = WP0(1)
-              CALL sub_OpPsi(WP0(1),MuWP0,para_Dip(ip))
-              WP0(1) = MuWP0
+              WP0tmp = WP0(1)
+              CALL sub_OpPsi(WP0tmp,MuWP0,para_Dip(ip))
+              MuWP0  = cos(para_propa%para_WP0%th_WP0)*MuWP0
+              WP0tmp = sin(para_propa%para_WP0%th_WP0)*WP0tmp
+              WP0(1) = MuWP0 + WP0tmp
+
               CALL dealloc_psi(MuWP0)
+              CALL dealloc_psi(WP0tmp)
+
             END IF
 
             IF (para_propa%para_WP0%WP0_nb_CleanChannel > 0) THEN
@@ -619,10 +626,10 @@
                                         para_H,para_propa)
 
         ELSE IF (para_ana%arpack) THEN! arpack=t
-          CALL sub_propagation_Arpack(Tab_Psi,Ene0,nb_diago,max_diago,  &
-                                      para_H,para_propa)
-          !CALL sub_propagation_Arpack_Sym(Tab_Psi,Ene0,nb_diago,max_diago,&
+          !CALL sub_propagation_Arpack(Tab_Psi,Ene0,nb_diago,max_diago,  &
           !                            para_H,para_propa)
+          CALL sub_propagation_Arpack_Sym(Tab_Psi,Ene0,nb_diago,max_diago,&
+                                           para_H,para_propa)
 
         ELSE ! filter diagonalization
           CALL sub_GaussianFilterDiagonalization(Tab_Psi,Ene0,nb_diago,max_diago,&
@@ -1541,6 +1548,8 @@ IMPLICIT NONE
  logical, parameter :: debug=.FALSE.
  !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
+
+IF (para_H%BasisnD%SparseGrid_type /= 4) RETURN
 
 para_mem%mem_debug = .FALSE.
 

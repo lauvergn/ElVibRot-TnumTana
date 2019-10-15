@@ -29,6 +29,194 @@
 !=====================================================================
 ! POGridRep_basis
 !=====================================================================
+MODULE BasisMakeGrid
+USE mod_system
+IMPLICIT NONE
+
+  TYPE param_SimulatedAnnealing
+
+  integer           :: nb_mc_tot           =  100000
+  integer           :: nb_mc_partial       =  100
+
+  integer           :: TempInit_type       =  1
+  real (kind=Rkind) :: Tmax                = -ONE
+  real (kind=Rkind) :: Tmin                =  ONETENTH**7
+  real (kind=Rkind) :: DeltaT              =  ZERO
+
+  real (kind=Rkind) :: RangeScal           =  0.8_Rkind
+  real (kind=Rkind) :: RangeScalInit       =  1._Rkind
+
+  logical           :: With_RangeInit      = .FALSE.
+  real (kind=Rkind) :: RangeInit           = 1._Rkind
+
+  integer           :: TempScheduling_type =  2 ! 1: linear, 2: geometrical ...
+  real (kind=Rkind) :: ExpCoolParam        =  0.95_Rkind
+
+  logical           :: ResetTemp           = .TRUE.
+  real (kind=Rkind) :: ResetTempScal       =  ONE/THREE
+
+  integer           :: Restart_Opt         =  0
+
+
+  END TYPE param_SimulatedAnnealing
+  TYPE param_Grid_FOR_SA
+
+  integer           :: type_weight           =  0
+
+  integer           :: type_grid           =  0
+  logical           :: ReOriented_grid           = .TRUE.
+  logical           :: ReCentered_grid           = .TRUE.
+
+
+  integer           :: nb_mc_partial       =  100
+
+
+  integer           :: TempInit_type       =  1
+  real (kind=Rkind) :: Tmax                = -ONE
+  real (kind=Rkind) :: Tmin                =  ONETENTH**7
+  real (kind=Rkind) :: DeltaT              =  ZERO
+
+  real (kind=Rkind) :: RangeScal           =  0.8_Rkind
+  real (kind=Rkind) :: RangeScalInit       =  1._Rkind
+
+  logical           :: With_RangeInit      = .FALSE.
+  real (kind=Rkind) :: RangeInit           = 1._Rkind
+
+  integer           :: TempScheduling_type =  2 ! 1: linear, 2: geometrical ...
+  real (kind=Rkind) :: ExpCoolParam        =  0.95_Rkind
+
+
+  real (kind=Rkind) :: ResetTempScal       =  ONE/THREE
+
+  integer           :: Restart_Opt         =  0
+
+
+  END TYPE param_Grid_FOR_SA
+
+CONTAINS
+
+      SUBROUTINE Read_param_SimulatedAnnealing(para_SimulatedAnnealing)
+      TYPE (param_SimulatedAnnealing), intent(inout) :: para_SimulatedAnnealing
+
+        integer :: nb_mc_tot     = 1000
+        integer :: nb_mc_partial = 100
+
+        real (kind=Rkind) :: Tmax          = -ONE
+        real (kind=Rkind) :: Tmin          =  ONETENTH**7
+        real (kind=Rkind) :: DeltaT        =  ZERO
+        real (kind=Rkind) :: ResetTempScal = ONE/THREE
+
+
+        real (kind=Rkind) :: ExpCoolParam = 0.95_Rkind
+
+        real (kind=Rkind) :: RangeScal     = 0.8_Rkind
+        real (kind=Rkind) :: RangeScalInit = 1._Rkind
+        logical           :: With_RangeInit = .FALSE.
+        real (kind=Rkind) :: RangeInit     = 1._Rkind
+
+        logical :: ResetTemp               = .TRUE.
+        integer :: TempScheduling_type     = 2 ! 1: linear, 2: geometrical ...
+        integer :: TempInit_type           = 1
+
+        integer :: Restart_Opt     = 0
+
+        integer :: err_io
+        NAMELIST /SimulatedAnnealing/nb_mc_tot,nb_mc_partial,           &
+                                        Tmax,Tmin,DeltaT,TempInit_type, &
+                                               RangeScal,RangeScalInit, &
+                                              With_RangeInit,RangeInit, &
+                                      TempScheduling_type,ExpCoolParam, &
+                                    ResetTemp,ResetTempScal,Restart_Opt
+
+        nb_mc_tot           =  1000
+        nb_mc_partial       =  100
+
+        TempInit_type       =  1
+        Tmax                = -ONE
+        Tmin                =  ONETENTH**7
+        DeltaT              =  ZERO
+
+        RangeScal           =  0.8_Rkind
+        RangeScalInit       =  1._Rkind
+
+        TempScheduling_type =  2 ! 1: linear, 2: geometrical ...
+        ExpCoolParam        =  0.95_Rkind
+
+        ResetTemp           = .TRUE.
+        ResetTempScal       =  ONE/THREE
+
+        Restart_Opt         =  0
+
+        read(in_unitp,SimulatedAnnealing,IOSTAT=err_io)
+        IF (err_io /= 0) THEN
+           write(out_unitp,*) ' WARNING in Read_param_SimulatedAnnealing'
+           write(out_unitp,*) '  while reading the "SimulatedAnnealing" namelist'
+           write(out_unitp,*) ' end of file or end of record'
+           write(out_unitp,*) ' Check your data !!'
+           STOP
+        END IF
+        IF (print_level > 1) write(out_unitp,SimulatedAnnealing)
+
+        para_SimulatedAnnealing%nb_mc_tot           =  nb_mc_tot
+        para_SimulatedAnnealing%nb_mc_partial       =  nb_mc_partial
+
+        para_SimulatedAnnealing%TempInit_type       =  TempInit_type
+        para_SimulatedAnnealing%Tmax                =  Tmax
+        para_SimulatedAnnealing%Tmin                =  Tmin
+        para_SimulatedAnnealing%DeltaT              =  DeltaT
+
+        para_SimulatedAnnealing%With_RangeInit      =  With_RangeInit
+        para_SimulatedAnnealing%RangeInit           =  RangeInit
+        IF (With_RangeInit) RangeScalInit           =  ONE
+
+        para_SimulatedAnnealing%RangeScal           =  RangeScal
+        para_SimulatedAnnealing%RangeScalInit       =  RangeScalInit
+
+
+
+        para_SimulatedAnnealing%TempScheduling_type =  TempScheduling_type
+        para_SimulatedAnnealing%ExpCoolParam        =  ExpCoolParam
+
+        para_SimulatedAnnealing%ResetTemp           =  ResetTemp
+        para_SimulatedAnnealing%ResetTempScal       =  ResetTempScal
+
+        para_SimulatedAnnealing%Restart_Opt         =  Restart_Opt
+
+      END SUBROUTINE Read_param_SimulatedAnnealing
+
+      SUBROUTINE Write_param_SimulatedAnnealing(para_SimulatedAnnealing)
+      TYPE (param_SimulatedAnnealing), intent(in)   :: para_SimulatedAnnealing
+
+      write(out_unitp,*) '  WRITE param_SimulatedAnnealing'
+      write(out_unitp,*)
+      write(out_unitp,*) '  nb_mc_tot          ',para_SimulatedAnnealing%nb_mc_tot
+      write(out_unitp,*) '  nb_mc_partial      ',para_SimulatedAnnealing%nb_mc_partial
+      write(out_unitp,*)
+      write(out_unitp,*) '  TempInit_type      ',para_SimulatedAnnealing%TempInit_type
+      write(out_unitp,*) '  Tmax               ',para_SimulatedAnnealing%Tmax
+      write(out_unitp,*) '  Tmin               ',para_SimulatedAnnealing%Tmin
+      write(out_unitp,*) '  DeltaT             ',para_SimulatedAnnealing%DeltaT
+      write(out_unitp,*)
+      write(out_unitp,*) '  RangeScal          ',para_SimulatedAnnealing%RangeScal
+      write(out_unitp,*) '  RangeScalInit      ',para_SimulatedAnnealing%RangeScalInit
+
+      write(out_unitp,*) '  With_RangeInit     ',para_SimulatedAnnealing%With_RangeInit
+      write(out_unitp,*) '  RangeInit          ',para_SimulatedAnnealing%RangeInit
+
+      write(out_unitp,*)
+      write(out_unitp,*) '  TempScheduling_type',para_SimulatedAnnealing%TempScheduling_type
+      write(out_unitp,*) '  ExpCoolParam       ',para_SimulatedAnnealing%ExpCoolParam
+      write(out_unitp,*)
+      write(out_unitp,*) '  ResetTemp          ',para_SimulatedAnnealing%ResetTemp
+      write(out_unitp,*) '  ResetTempScal      ',para_SimulatedAnnealing%ResetTempScal
+      write(out_unitp,*)
+      write(out_unitp,*) '  Restart_Opt        ',para_SimulatedAnnealing%Restart_Opt
+      write(out_unitp,*)
+      write(out_unitp,*) '  END WRITE param_SimulatedAnnealing'
+
+      END SUBROUTINE write_param_SimulatedAnnealing
+
+
       SUBROUTINE POGridRep_basis(basis_POGridRep,nb0,mole)
       USE mod_system
       USE mod_Coord_KEO
@@ -1323,7 +1511,7 @@ STOP
         STOP
       END IF
 
-      write(out_unitp,*) 'nq',nq ; flush(out_unitp)
+      !write(out_unitp,*) 'nq',nq ; flush(out_unitp)
       CALL alloc_NParray(A, (/ basis_temp%nb*(basis_temp%nb+1)/2,nq /), &
                         "A",  name_sub)
       CALL alloc_NParray(AtA,(/nq,nq/),"AtA",name_sub)
@@ -1429,6 +1617,7 @@ STOP
       END SUBROUTINE ConstantWeight_OF_grid_basis
       SUBROUTINE Make_grid_basis(basis_cuba)
       USE mod_system
+      USE mt19937_64
       USE mod_basis
       IMPLICIT NONE
 !---------------------------------------------------------------------
@@ -1440,18 +1629,22 @@ STOP
       TYPE (basis)      :: basis_temp
 
 
-      real (kind=Rkind) :: Norm_OF_grid_basis ! function
       real (kind=Rkind) :: NormA
 
 
-      integer           :: i,j,k,ij,imc,iq,mc_max,Lq,idum
-      integer           :: nq
+      !integer           :: i,j,k,ij,imc,iq,mc_max,Lq,idum
+      integer           :: i,iq,nq,Lq,idum
 
       logical           :: check_basis_save,err_cuba
 
       integer                  :: nio,err_io
       TYPE (param_file)        :: cubature_file
       character (len=Name_len) :: name_i,name_j
+
+
+      TYPE (param_SimulatedAnnealing) :: SA_para
+
+
 
 !---------------------------------------------------------------------
       logical,parameter :: debug= .FALSE.
@@ -1465,8 +1658,10 @@ STOP
         write(out_unitp,*)
       END IF
 !---------------------------------------------------------------------
-      nq = get_nq_FROM_basis(basis_cuba)
+      CALL init_genrand64(0_ILkind)
 
+
+      nq = basis_cuba%nqc
       ! Save the old grid in basis_temp
       !CALL basis2TObasis1(basis_temp,basis_cuba)
       write(out_unitp,*) 'basis_cuba%nb',basis_cuba%nb
@@ -1479,20 +1674,49 @@ STOP
 !      END DO
 !
 !      write(out_unitp,*) 'NormA',NormA
+
       Lq = int(basis_cuba%nDindB%MaxNorm)
       CALL Write_int_IN_char(basis_cuba%ndim,name_i)
       CALL Write_int_IN_char(Lq,             name_j)
       cubature_file%name = trim(name_i) // 'D_deg' // trim(name_j)
       write(out_unitp,*) 'cubature_file%name: ',cubature_file%name
 
+!      IF (basis_cuba%Read_make_cubature) THEN
+!        STOP 'Read_make_cubature: not yet'
+!      ELSE
+        SA_para%nb_mc_tot           = 1000000
+        SA_para%nb_mc_partial       = 0             ! ?????
+
+        SA_para%TempInit_type       =  1
+        SA_para%Tmax                = -ONE
+        SA_para%Tmin                =  ONETENTH**40
+        SA_para%DeltaT              =  ZERO
+
+        SA_para%RangeScal           =  0.8_Rkind
+        SA_para%RangeScalInit       =  1._Rkind
+
+        SA_para%With_RangeInit      = .FALSE.
+        SA_para%RangeInit           = 1._Rkind
+
+        SA_para%TempScheduling_type =  2 ! 1: linear, 2: geometrical (exp cooling) ...
+        SA_para%ExpCoolParam        =  0.995_Rkind
+        SA_para%ExpCoolParam        =  0.999_Rkind
+
+        SA_para%ResetTemp           = .TRUE.
+        SA_para%ResetTempScal       =  ONE/THREE
+
+        SA_para%Restart_Opt         =  3
+
+!      END IF
+
       IF (basis_cuba%Restart_make_cubature) THEN
 
         CALL Set_nq_OF_basis(basis_cuba,basis_cuba%nqc)
         CALL alloc_dnb_OF_basis(basis_cuba)
         CALL alloc_xw_OF_basis(basis_cuba)
+        basis_cuba%rho(:) = ONE
 
         nq = get_nq_FROM_basis(basis_cuba)
-
 
         CALL file_open(cubature_file,nio,err_file=err_io)
         read(nio,*,iostat=err_io) idum
@@ -1508,16 +1732,18 @@ STOP
         END DO
         CALL file_close(cubature_file)
 
-        NormA = Norm_OF_grid_basis(basis_cuba,1,err_cuba)
-        write(out_unitp,*) ' Initial norm',NormA
-
-        CALL Make_grid_basis_SimulatedAnnealing_new_restart(basis_cuba,1)
-
       ELSE
-        CALL Make_grid_basis_SimulatedAnnealing_new(basis_cuba,1)
-        CALL Make_grid_basis_SimulatedAnnealing_new_restart(basis_cuba,1)
-        CALL Make_grid_basis_SimulatedAnnealing_new_restart(basis_cuba,1)
+        CALL Make_grid_basis_SimulatedAnnealing(basis_cuba,1,SA_para,restart=.FALSE.)
       END IF
+      SA_para%RangeScalInit = TEN**6
+      DO i=1,SA_para%Restart_Opt
+        CALL Make_grid_basis_SimulatedAnnealing(basis_cuba,1,SA_para,restart=.TRUE.)
+      END DO
+
+
+      basis_cuba%rho(:) = ONE
+      basis_cuba%wrho(:) = basis_cuba%w(:)
+
 
       NormA = Norm_OF_grid_basis(basis_cuba,1,err_cuba)
       write(out_unitp,*) ' Optimal norm',NormA
@@ -1533,7 +1759,9 @@ STOP
       write(nio,*) ' Rkind',Rkind
       write(nio,*) ' Optimal norm',NormA
       CALL file_close(cubature_file)
-stop
+
+
+      STOP
       ! check the calulation
       check_basis_save       = basis_cuba%check_basis
       basis_cuba%check_basis = .TRUE.
@@ -1551,22 +1779,23 @@ stop
 
 
       END SUBROUTINE Make_grid_basis
-      SUBROUTINE Make_grid_basis_SimulatedAnnealing_new(basis_cuba,type_weight)
+      SUBROUTINE Make_grid_basis_SimulatedAnnealing(basis_cuba,type_weight,SA_para,restart)
       USE mod_system
+      USE mt19937_64
       USE mod_basis
       IMPLICIT NONE
 !---------------------------------------------------------------------
 !---------- variables passees en argument ----------------------------
-      TYPE (basis), intent(inout) :: basis_cuba
-      integer, intent(in)         :: type_weight
+      TYPE (basis),                    intent(inout) :: basis_cuba
+      integer,                         intent(in)    :: type_weight
+      TYPE (param_SimulatedAnnealing), intent(in)    :: SA_para
+      logical,                         intent(in)    :: restart
 
 
 !---------- working variables ----------------------------------------
-      TYPE (basis)      :: basis_temp
       real (kind=Rkind) :: x0(basis_cuba%ndim,basis_cuba%nqc)
       real (kind=Rkind) :: xmin(basis_cuba%ndim,basis_cuba%nqc),Norm_min,Norm_max
 
-      real (kind=Rkind) :: Norm_OF_grid_basis ! function
       real (kind=Rkind) :: DNorm,NormA,NormB,Temp,Temp_max,PTemp,DTemp
       real (kind=Rkind) :: x(basis_cuba%ndim),xi,xav,S
 
@@ -1575,414 +1804,9 @@ stop
       real (kind=Rkind) :: SQ(basis_cuba%ndim)
       real (kind=Rkind) :: QAv(basis_cuba%ndim)
 
-      integer           :: i,j,k,ij,imc,iq,mc_max,nb_Norm_min,nb_block_WithoutMin
-      logical           :: check_basis_save,err_cuba
-      real (kind=Rkind) :: ExpCoolParam,ResetTempScal,RangeScal,RangeScalInit
+      integer           :: i,j,k,ij,imc,iq,nb_Norm_min,nb_block_WithoutMin,option_rand_grid
 
-
-!---------------------------------------------------------------------
-      logical,parameter :: debug= .FALSE.
-!     logical,parameter :: debug= .TRUE.
-      character (len=*), parameter :: name_sub='Make_grid_basis_SimulatedAnnealing_new'
-!---------------------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*)
-        write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL RecWrite_basis(basis_cuba)
-        write(out_unitp,*)
-      END IF
-!---------------------------------------------------------------------
-
-      ! work for 1D, 2D (NormB<= 3)
-      ExpCoolParam  = 0.995_Rkind
-      ExpCoolParam  = 0.95_Rkind
-      RangeScal     = 0.8_Rkind
-
-      ! work for 1D, 2D (NormB<= 3)
-      !ExpCoolParam  = 0.997_Rkind
-      !RangeScal     = 0.9_Rkind
-
-      ResetTempScal = ONE/THREE
-      ResetTempScal = ONE/FIVE
-
-      RangeScalInit = 1._Rkind
-
-      mc_max        = 1000000
-
-      ! Save the old grid in basis_temp
-      CALL basis2TObasis1(basis_temp,basis_cuba)
-
-
-      DO i=1,basis_temp%ndim
-        QA(i) = minval(basis_temp%x(i,:))
-        QB(i) = maxval(basis_temp%x(i,:))
-        QAv(i)= (QA(i)+QB(i))*HALF
-        SQ(i) = (QB(i)-QA(i))/TWO
-      END DO
-
-      SQ(:) = SQ(:)*RangeScalInit
-      write(out_unitp,*) 'QA',QA
-      write(out_unitp,*) 'QB',QB
-      write(out_unitp,*) 'SQ',SQ
-
-      CALL Set_nq_OF_basis(basis_cuba,basis_cuba%nqc)
-      CALL alloc_dnb_OF_basis(basis_cuba)
-      CALL alloc_xw_OF_basis(basis_cuba)
-      DO i=1,basis_cuba%ndim
-        x0(i,:) = QAv(i)
-      END DO
-      CALL ReOriented_grid(x0,basis_cuba%ndim,basis_cuba%nqc)
-      CALL ReCentered_grid(x0,basis_cuba%ndim,basis_cuba%nqc)
-
-
-      Norm_min  = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-      xmin(:,:) = x0(:,:)
-      Norm_max  = ZERO
-
-
-      NormA  = ZERO
-      ! first find the average Energy (Norm), then Temp
-      DO imc=1,mc_max/10
-        err_cuba = .TRUE.
-        DO WHILE (err_cuba)
-          CALL Random_grid(basis_cuba%x,x0,SQ,QA,QB,basis_cuba%ndim,basis_cuba%nqc,0)
-          NormB = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-        END DO
-        !write(6,*) 'NormB',imc,NormB
-        NormA = NormA + NormB
-        IF (NormB > Norm_max) Norm_max = NormB
-
-        IF (NormB < Norm_min) THEN
-          xmin(:,:) = basis_cuba%x(:,:)
-          Norm_min = NormB
-        END IF
-        IF (NormB < ONETENTH**20) EXIT
-      END DO
-      NormA = NormA / real(mc_max/10,kind=Rkind)
-      write(out_unitp,*) 'Min, Average, Max Norm',Norm_min,NormA,Norm_max
-      IF (NormB < ONETENTH**20) RETURN
-
-      basis_cuba%x(:,:) = xmin(:,:)
-      Norm_min = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-      x0(:,:)  = basis_cuba%x(:,:)
-      NormB    = Norm_min
-      write(out_unitp,*) ' Norm (cubature)',xmin,Norm_min
-
-      Temp_max = Norm_max-Norm_min
-      Temp_max = NormA
-
-      Temp     = Temp_max
-      write(out_unitp,*) 'Average Norm, Temp',NormA,Temp
-      CALL flush_perso(out_unitp)
-
-      DTemp = Temp_max/real(mc_max,kind=Rkind)
-      imc = 1
-      nb_Norm_min = 0
-      nb_block_WithoutMin = 0
-      write(6,*) 'NormB',NormB
-
-      DO
-
-        err_cuba = .TRUE.
-        DO WHILE (err_cuba)
-          CALL Random_grid(basis_cuba%x,x0,SQ,QA,QB,basis_cuba%ndim,basis_cuba%nqc,0)
-          NormA = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-        END DO
-        DNorm = NormA - NormB
-        write(out_unitp,*) 'Norm',imc,NormA
-        CALL flush_perso(out_unitp)
-
-        IF ( NormA < Norm_min) THEN
-          nb_Norm_min = nb_Norm_min + 1
-          xmin(:,:)   = basis_cuba%x(:,:)
-          Norm_min    = NormA
-          !write(out_unitp,*) ' imc, Temp, Norm_min',imc,Temp,Norm_min
-        END IF
-
-
-        IF ( DNorm < ZERO) THEN
-          x0(:,:)     = basis_cuba%x(:,:)
-          xmin(:,:)   = x0(:,:)
-          NormB       = NormA
-          !write(out_unitp,*) ' imc, Temp, Norm (cubature)',imc,Temp,NormA
-          !write(out_unitp,*) ' accepted, DNorm',DNorm
-        ELSE
-          CALL random_number(PTemp)
-          IF ( PTemp < exp(-DNorm/Temp) ) THEN
-            x0(:,:)   = basis_cuba%x(:,:)
-            NormB     = NormA
-            !write(out_unitp,*) ' imc, Temp, Norm (propa)',imc,Temp,NormA
-            !write(out_unitp,*) ' accepted, Proba',PTemp,exp(-DNorm/Temp)
-          END IF
-        END IF
-        imc = imc + 1
-        !Temp = Temp - DTemp
-        Temp = ExpCoolParam * Temp ! Exponential cooling
-        !write(6,*) 'imc,Temp,Temp_max,ResetTempScal',imc,Temp,Temp_max,ResetTempScal
-
-        IF (Temp < ResetTempScal*Temp_max) THEN
-
-          write(out_unitp,*) 'imc,Temp_max,nb_Norm_min,Norm_min',imc,   &
-                                           Temp_max,nb_Norm_min,Norm_min
-          CALL flush_perso(out_unitp)
-          SQ(:)               = SQ(:)*RangeScal
-          Temp_max            = (ONE-ResetTempScal)*Temp_max
-          Temp                = Temp_max
-          !DTemp              = Temp_max/real(mc_max,kind=Rkind)
-          !imc                = 0
-          x0(:,:)             = xmin(:,:)
-          IF (nb_Norm_min == 0) THEN
-            nb_block_WithoutMin = nb_block_WithoutMin + 1
-          ELSE
-            nb_block_WithoutMin = 0
-            nb_Norm_min         = 0
-          END IF
-        END IF
-
-        IF (nb_block_WithoutMin > 50) EXIT
-        IF (Temp < ONETENTH**40 .OR. imc > mc_max) EXIT
-        !IF (Temp < ONETENTH**40 .OR. imc > mc_max .OR. Temp*TEN**6<Norm_min) EXIT
-
-      END DO
-
-      ! optimal values
-      basis_cuba%x(:,:) = xmin(:,:)
-
-
-!---------------------------------------------------------------------
-      IF (debug) THEN
-        CALL RecWrite_basis(basis_cuba)
-        write(out_unitp,*) 'END ',name_sub
-      END IF
-!---------------------------------------------------------------------
-
-
-      END SUBROUTINE Make_grid_basis_SimulatedAnnealing_new
-
-      SUBROUTINE Make_grid_basis_SimulatedAnnealing_new_restart(basis_cuba,type_weight)
-      USE mod_system
-      USE mod_basis
-      IMPLICIT NONE
-!---------------------------------------------------------------------
-!---------- variables passees en argument ----------------------------
-      TYPE (basis), intent(inout) :: basis_cuba
-      integer, intent(in)         :: type_weight
-
-
-!---------- working variables ----------------------------------------
-      TYPE (basis)      :: basis_temp
-      real (kind=Rkind) :: x0(basis_cuba%ndim,basis_cuba%nqc)
-      real (kind=Rkind) :: xmin(basis_cuba%ndim,basis_cuba%nqc),Norm_min,Norm_max
-
-      real (kind=Rkind) :: Norm_OF_grid_basis ! function
-      real (kind=Rkind) :: DNorm,NormA,NormB,Temp,Temp_max,PTemp,DTemp
-      real (kind=Rkind) :: x(basis_cuba%ndim),xi,xav,S
-
-      real (kind=Rkind) :: QA(basis_cuba%ndim)
-      real (kind=Rkind) :: QB(basis_cuba%ndim)
-      real (kind=Rkind) :: SQ(basis_cuba%ndim)
-      real (kind=Rkind) :: QAv(basis_cuba%ndim)
-
-      integer           :: i,j,k,ij,imc,iq,mc_max,nb_Norm_min,nb_block_WithoutMin
-      logical           :: check_basis_save,err_cuba
-      real (kind=Rkind) :: ExpCoolParam,ResetTempScal,RangeScal,RangeScalInit
-
-
-!---------------------------------------------------------------------
-      logical,parameter :: debug= .FALSE.
-!     logical,parameter :: debug= .TRUE.
-      character (len=*), parameter :: name_sub='Make_grid_basis_SimulatedAnnealing_new_restart'
-!---------------------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*)
-        write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL RecWrite_basis(basis_cuba)
-        write(out_unitp,*)
-      END IF
-!---------------------------------------------------------------------
-
-      ! work for 1D, 2D (NormB<= 3)
-      ExpCoolParam  = 0.995_Rkind
-      RangeScal     = 0.8_Rkind
-
-      ! work for 1D, 2D (NormB<= 3)
-      ExpCoolParam  = 0.997_Rkind
-      RangeScal     = 0.9_Rkind
-
-      ResetTempScal = ONE/THREE
-
-      RangeScalInit = 1._Rkind
-
-      mc_max        = 500000
-
-      ! Save the old grid in basis_temp
-      CALL basis2TObasis1(basis_temp,basis_cuba)
-
-      Norm_min  = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba) ! initial norm
-
-
-      DO i=1,basis_temp%ndim
-        QA(i) = minval(basis_temp%x(i,:))
-        QB(i) = maxval(basis_temp%x(i,:))
-        QAv(i)= (QA(i)+QB(i))*HALF
-        SQ(i) = Norm_min*TEN
-      END DO
-
-      SQ(:) = SQ(:)*RangeScalInit
-      write(out_unitp,*) 'QA',QA
-      write(out_unitp,*) 'QB',QB
-      write(out_unitp,*) 'SQ',SQ
-
-      x0(:,:) = basis_cuba%x(:,:)
-
-      Norm_min  = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba) ! initial norm
-      xmin(:,:) = basis_cuba%x(:,:)
-      Norm_max  = ZERO
-
-
-      NormA  = ZERO
-      ! first find the average Energy (Norm), then Temp
-      DO imc=1,mc_max/10
-        err_cuba = .TRUE.
-        DO WHILE (err_cuba)
-          CALL Random_grid(basis_cuba%x,x0,SQ,QA,QB,basis_cuba%ndim,basis_cuba%nqc,0)
-          NormB = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-        END DO
-        !write(6,*) 'NormB',imc,NormB
-        NormA = NormA + NormB
-        IF (NormB > Norm_max) Norm_max = NormB
-
-        IF (NormB < Norm_min) THEN
-          xmin(:,:) = basis_cuba%x(:,:)
-          Norm_min = NormB
-        END IF
-        IF (NormB < ONETENTH**30) EXIT
-      END DO
-      NormA = NormA / real(mc_max/10,kind=Rkind)
-      write(out_unitp,*) 'Min, Average, Max Norm',Norm_min,NormA,Norm_max
-      basis_cuba%x(:,:) = xmin(:,:)
-      Norm_min = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-      x0(:,:)  = basis_cuba%x(:,:)
-      write(out_unitp,*) ' Norm (cubature)',Norm_min
-      IF (Norm_min < ONETENTH**30) RETURN
-
-      Temp_max = Norm_max-Norm_min
-      Temp_max = NormA
-
-      Temp     = Temp_max
-      write(out_unitp,*) 'Average Norm, Temp',NormA,Temp
-      CALL flush_perso(out_unitp)
-
-      DTemp = Temp_max/real(mc_max,kind=Rkind)
-      imc = 1
-      nb_Norm_min = 0
-      nb_block_WithoutMin = 0
-      DO
-
-        err_cuba = .TRUE.
-        DO WHILE (err_cuba)
-          CALL Random_grid(basis_cuba%x,x0,SQ,QA,QB,basis_cuba%ndim,basis_cuba%nqc,0)
-          NormA = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-        END DO
-        DNorm = NormA - NormB
-        !write(out_unitp,*) 'Norm',imc,NormA
-        CALL flush_perso(out_unitp)
-
-        IF ( NormA < Norm_min) THEN
-          nb_Norm_min = nb_Norm_min + 1
-          xmin(:,:)   = basis_cuba%x(:,:)
-          Norm_min    = NormA
-          !write(out_unitp,*) ' imc, Temp, Norm_min',imc,Temp,Norm_min
-        END IF
-
-
-        IF ( DNorm < ZERO) THEN
-          x0(:,:)     = basis_cuba%x(:,:)
-          !xmin(:,:)   = x0(:,:)
-          NormB       = NormA
-          !write(out_unitp,*) ' imc, Temp, Norm (cubature)',imc,Temp,NormA
-          !write(out_unitp,*) ' accepted, DNorm',DNorm
-        ELSE
-          CALL random_number(PTemp)
-          IF ( PTemp < exp(-DNorm/Temp) ) THEN
-            x0(:,:)   = basis_cuba%x(:,:)
-            NormB     = NormA
-            !write(out_unitp,*) ' imc, Temp, Norm (propa)',imc,Temp,NormA
-            !write(out_unitp,*) ' accepted, Proba',PTemp,exp(-DNorm/Temp)
-          END IF
-        END IF
-        imc = imc + 1
-        !Temp = Temp - DTemp
-        Temp = ExpCoolParam * Temp ! Exponential cooling
-
-        IF (Temp < ResetTempScal*Temp_max) THEN
-
-          write(out_unitp,*) 'imc,Temp_max,nb_Norm_min,Norm_min',imc,   &
-                                           Temp_max,nb_Norm_min,Norm_min
-          CALL flush_perso(out_unitp)
-          SQ(:)               = SQ(:)*RangeScal
-          Temp_max            = (ONE-ResetTempScal)*Temp_max
-          Temp                = Temp_max
-          !DTemp              = Temp_max/real(mc_max,kind=Rkind)
-          !imc                = 0
-          x0(:,:)             = xmin(:,:)
-          IF (nb_Norm_min == 0) THEN
-            nb_block_WithoutMin = nb_block_WithoutMin + 1
-          ELSE
-            nb_block_WithoutMin = 0
-            nb_Norm_min         = 0
-          END IF
-        END IF
-
-        IF (nb_block_WithoutMin > 50) EXIT
-        IF (Temp < ONETENTH**40 .OR. imc > mc_max) EXIT
-        !IF (Temp < ONETENTH**40 .OR. imc > mc_max .OR. Temp*TEN**6<Norm_min) EXIT
-
-      END DO
-
-      ! optimal values
-      basis_cuba%x(:,:) = xmin(:,:)
-
-
-!---------------------------------------------------------------------
-      IF (debug) THEN
-        CALL RecWrite_basis(basis_cuba)
-        write(out_unitp,*) 'END ',name_sub
-      END IF
-!---------------------------------------------------------------------
-
-
-      END SUBROUTINE Make_grid_basis_SimulatedAnnealing_new_restart
-
-
-      SUBROUTINE Make_grid_basis_SimulatedAnnealing(basis_cuba,type_weight)
-      USE mod_system
-      USE mod_basis
-      IMPLICIT NONE
-!---------------------------------------------------------------------
-!---------- variables passees en argument ----------------------------
-      TYPE (basis), intent(inout) :: basis_cuba
-      integer, intent(in)         :: type_weight
-
-
-!---------- working variables ----------------------------------------
-      TYPE (basis)      :: basis_temp
-      real (kind=Rkind) :: x0(basis_cuba%ndim,basis_cuba%nqc)
-      real (kind=Rkind) :: xmin(basis_cuba%ndim,basis_cuba%nqc),Norm_min,Norm_max
-
-      real (kind=Rkind) :: Norm_OF_grid_basis ! function
-      real (kind=Rkind) :: DNorm,NormA,NormB,Temp,Temp_max,PTemp,DTemp
-      real (kind=Rkind) :: x(basis_cuba%ndim),xi,xav
-
-      real (kind=Rkind) :: QA(basis_cuba%ndim)
-      real (kind=Rkind) :: QB(basis_cuba%ndim)
-      real (kind=Rkind) :: SQ(basis_cuba%ndim)
-      real (kind=Rkind) :: QAv(basis_cuba%ndim)
-
-      integer           :: i,j,k,ij,imc,iq,mc_max,nb_Norm_min
-      integer           :: nq
-      logical           :: check_basis_save,err_cuba
-      real (kind=Rkind) :: ExpCoolParam,ResetTempScal,RangeScal,RangeScalInit
+      logical           :: check_basis_save,err_cuba,Norm_down
 
 
 !---------------------------------------------------------------------
@@ -1997,103 +1821,123 @@ stop
         write(out_unitp,*)
       END IF
 !---------------------------------------------------------------------
-
-      ExpCoolParam  = 0.995_Rkind
-
-      ResetTempScal = ONE/THREE
-
-      RangeScal     = 0.8_Rkind
-      RangeScalInit = 1._Rkind
-
-      mc_max        = 100000
-
-      ! Save the old grid in basis_temp
-      CALL basis2TObasis1(basis_temp,basis_cuba)
+      option_rand_grid = 0
+      Norm_down        = .FALSE.
 
 
-      DO i=1,basis_temp%ndim
-        QA(i) = minval(basis_temp%x(i,:))
-        QB(i) = maxval(basis_temp%x(i,:))
+      DO i=1,basis_cuba%ndim
+        QA(i) = minval(basis_cuba%x(i,:))
+        QB(i) = maxval(basis_cuba%x(i,:))
         QAv(i)= (QA(i)+QB(i))*HALF
-        SQ(i) = QB(i)-QA(i)
+        SQ(i) = (QB(i)-QA(i))/TWO
       END DO
-      write(out_unitp,*) 'QA,QB,SQ',QA,QB,SQ
 
-      SQ(:) = SQ(:)*RangeScalInit
-      QA(:) = QAv(:)-SQ(:)*HALF
-      QB(:) = QAv(:)+SQ(:)*HALF
-      write(out_unitp,*) 'QA,QB,SQ',QA,QB,SQ
+      IF (restart) THEN
 
-      CALL Set_nq_OF_basis(basis_cuba,basis_cuba%nqc)
-      CALL alloc_dnb_OF_basis(basis_cuba)
-      CALL alloc_xw_OF_basis(basis_cuba)
+        Norm_min  = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba) ! initial norm
+        write(out_unitp,*) 'Initial Norm',Norm_min
 
-      nq = get_nq_FROM_basis(basis_cuba)
-      Norm_min = huge(ONE)
-      Norm_max = ZERO
+        SQ(:)     = SQ(:)*min(ONE,Norm_min*SA_para%RangeScalInit)
+
+        x0(:,:)   = basis_cuba%x(:,:)
 
 
+      ELSE
+        SQ(:) = SQ(:)*SA_para%RangeScalInit
+
+        ! because, nq has changed (nq->nqc)
+        CALL Set_nq_OF_basis(basis_cuba,basis_cuba%nqc)
+        CALL alloc_dnb_OF_basis(basis_cuba)
+        CALL alloc_xw_OF_basis(basis_cuba)
+
+        DO i=1,basis_cuba%ndim
+          x0(i,:) = QAv(i)
+        END DO
+        CALL ReOriented_grid(x0,basis_cuba%ndim,basis_cuba%nqc)
+        CALL ReCentered_grid(x0,basis_cuba%ndim,basis_cuba%nqc)
+
+      END IF
+      write(out_unitp,*) 'QA',QA
+      write(out_unitp,*) 'QB',QB
+      write(out_unitp,*) 'SQ',SQ
+
+      Norm_min  = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
+      xmin(:,:) = x0(:,:)
+      Norm_max  = ZERO
+
+
+      write(out_unitp,'(a,i0,a)') 'Initial Temperature, with ',SA_para%nb_mc_tot/10,' evaluations'
+      flush(out_unitp)
+
+      write(out_unitp,'(a)') 'Eval (%): [--0-10-20-30-40-50-60-70-80-90-100]'
+      write(out_unitp,'(a)',ADVANCE='no') 'Eval (%): ['
+      CALL flush_perso(out_unitp)
       NormA  = ZERO
       ! first find the average Energy (Norm), then Temp
-      DO imc=1,mc_max/10
-        DO iq=1,nq
-          CALL random_number(x)
-          basis_cuba%x(:,iq) = QA(:) + x(:)*SQ(:)
+      DO imc=1,SA_para%nb_mc_tot/10
+        err_cuba = .TRUE.
+        DO WHILE (err_cuba)
+          CALL Random_grid(basis_cuba%x,x0,SQ,QA,QB,basis_cuba%ndim,basis_cuba%nqc,option_rand_grid)
+          NormB = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
         END DO
-
-        NormB = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
         !write(6,*) 'NormB',imc,NormB
         NormA = NormA + NormB
         IF (NormB > Norm_max) Norm_max = NormB
 
         IF (NormB < Norm_min) THEN
           xmin(:,:) = basis_cuba%x(:,:)
-          Norm_min = NormB
+          Norm_down = .TRUE.
+          Norm_min  = NormB
         END IF
+
+        IF (mod(imc,max(1,int(SA_para%nb_mc_tot/100))) == 0) THEN
+          write(out_unitp,'(a)',ADVANCE='no') '---'
+          flush(out_unitp)
+        END IF
+
+        IF (NormB < SA_para%Tmin) EXIT
       END DO
-      NormA = NormA / real(mc_max/10,kind=Rkind)
+      write(out_unitp,'(a)',ADVANCE='yes') '----]'
+
+      NormA = NormA / real(SA_para%nb_mc_tot/10,kind=Rkind)
       write(out_unitp,*) 'Min, Average, Max Norm',Norm_min,NormA,Norm_max
+      flush(out_unitp)
+
+      IF (NormB < SA_para%Tmin) RETURN
 
       basis_cuba%x(:,:) = xmin(:,:)
-      Norm_min = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-      x0(:,:)  = basis_cuba%x(:,:)
-      write(out_unitp,*) ' Norm (cubature)',Norm_min
+      Norm_min          = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
+      x0(:,:)           = basis_cuba%x(:,:)
+      NormB             = Norm_min
+      write(out_unitp,*) ' Norm (cubature)',xmin,Norm_min
 
       Temp_max = Norm_max-Norm_min
+      Temp_max = NormA
+
       Temp     = Temp_max
       write(out_unitp,*) 'Average Norm, Temp',NormA,Temp
       CALL flush_perso(out_unitp)
 
-      DTemp = Temp_max/real(mc_max,kind=Rkind)
-      imc = 1
-      nb_Norm_min = 0
+      DTemp               = Temp_max/real(SA_para%nb_mc_tot,kind=Rkind)
+      imc                 = 1
+      nb_Norm_min         = 0
+      nb_block_WithoutMin = 0
+
       DO
 
         err_cuba = .TRUE.
         DO WHILE (err_cuba)
-          DO iq=1,nq
-          DO i=1,basis_cuba%ndim
-            DO
-              CALL random_number(xi)
-              xi = TWO*xi-ONE
-              basis_cuba%x(i,iq) = x0(i,iq) + xi*SQ(i)
-              IF (basis_cuba%x(i,iq) <= QB(i) .AND. basis_cuba%x(i,iq) >= QA(i)) EXIT
-            END DO
-          END DO
-          END DO
-          ! To avoid rotation
-          DO i=1,basis_cuba%ndim-1
-            basis_cuba%x(1:basis_cuba%ndim-i,i) = ZERO ! to avoid rotation
-          END DO
+          CALL Random_grid(basis_cuba%x,x0,SQ,QA,QB,basis_cuba%ndim,basis_cuba%nqc,option_rand_grid)
           NormA = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
         END DO
         DNorm = NormA - NormB
-        write(out_unitp,*) 'Norm',imc,NormA
+        !write(out_unitp,*) 'Norm',imc,NormA
         CALL flush_perso(out_unitp)
 
         IF ( NormA < Norm_min) THEN
           nb_Norm_min = nb_Norm_min + 1
           xmin(:,:)   = basis_cuba%x(:,:)
+          Norm_down   = .TRUE.
           Norm_min    = NormA
           !write(out_unitp,*) ' imc, Temp, Norm_min',imc,Temp,Norm_min
         END IF
@@ -2101,12 +1945,12 @@ stop
 
         IF ( DNorm < ZERO) THEN
           x0(:,:)     = basis_cuba%x(:,:)
-          xmin(:,:)   = x0(:,:)
           NormB       = NormA
           !write(out_unitp,*) ' imc, Temp, Norm (cubature)',imc,Temp,NormA
           !write(out_unitp,*) ' accepted, DNorm',DNorm
         ELSE
           CALL random_number(PTemp)
+          !Ptemp = genrand64_real1()
           IF ( PTemp < exp(-DNorm/Temp) ) THEN
             x0(:,:)   = basis_cuba%x(:,:)
             NormB     = NormA
@@ -2115,27 +1959,47 @@ stop
           END IF
         END IF
         imc = imc + 1
-        !Temp = Temp - DTemp
-        Temp = ExpCoolParam * Temp ! Exponential cooling
 
-        IF (Temp < ResetTempScal*Temp_max) THEN
+        SELECT CASE(SA_para%TempScheduling_type)
+        CASE (1)
+          Temp = Temp - DTemp        ! linear cooling
+        CASE (2)
+          Temp = SA_para%ExpCoolParam * Temp ! Exponential cooling
+        CASE DEFAULT
+          Temp = SA_para%ExpCoolParam * Temp ! Exponential cooling
+        END SELECT
+        !write(6,*) 'imc,Temp,Temp_max,ResetTempScal,Norm_min',imc,Temp,Temp_max,ResetTempScal
 
-          write(out_unitp,*) 'Temp_max,nb_Norm_min,Norm_min',           &
+        IF (Temp < SA_para%ResetTempScal*Temp_max) THEN
+
+          write(out_unitp,*) 'imc,Temp_max,nb_Norm_min,Norm_min',imc,   &
                                            Temp_max,nb_Norm_min,Norm_min
           CALL flush_perso(out_unitp)
-          SQ(:)       = SQ(:)*RangeScal
-          Temp_max    = (ONE-ResetTempScal)*Temp_max
-          Temp        = Temp_max
-          !DTemp      = Temp_max/real(mc_max,kind=Rkind)
-          !imc        = 0
-          x0(:,:)     = xmin(:,:)
-          nb_Norm_min = 0
+
+          SQ(:)               = SQ(:)*SA_para%RangeScal
+          Temp_max            = (ONE-SA_para%ResetTempScal)*Temp_max
+          Temp                = Temp_max
+          DTemp               = Temp_max/real(max(10,SA_para%nb_mc_tot-imc),kind=Rkind)
+
+          x0(:,:)             = xmin(:,:)
+          IF (nb_Norm_min == 0) THEN
+            nb_block_WithoutMin = nb_block_WithoutMin + 1
+          ELSE
+            nb_block_WithoutMin = 0
+            nb_Norm_min         = 0
+          END IF
         END IF
 
-        IF (Temp < ONETENTH**30 .OR. imc > mc_max) EXIT
+        IF (nb_block_WithoutMin > 20) THEN
+          write(out_unitp,*) 'restart because, nb_block_WithoutMin > 20'
+          flush(out_unitp)
+          EXIT
+        END IF
+        IF (Temp < SA_para%Tmin .OR. imc > SA_para%nb_mc_tot) EXIT
+
       END DO
 
-      ! optimal values
+      ! optimal values.
       basis_cuba%x(:,:) = xmin(:,:)
 
 
@@ -2149,185 +2013,6 @@ stop
 
       END SUBROUTINE Make_grid_basis_SimulatedAnnealing
 
-      SUBROUTINE Make_grid_basis_SimulatedAnnealing_restart(basis_cuba,type_weight)
-      USE mod_system
-      USE mod_basis
-      IMPLICIT NONE
-!---------------------------------------------------------------------
-!---------- variables passees en argument ----------------------------
-      TYPE (basis), intent(inout) :: basis_cuba
-      integer, intent(in)         :: type_weight
-
-
-!---------- working variables ----------------------------------------
-      real (kind=Rkind) :: x0(basis_cuba%ndim,basis_cuba%nqc)
-      real (kind=Rkind) :: xmin(basis_cuba%ndim,basis_cuba%nqc),Norm_min,Norm_max
-
-      real (kind=Rkind) :: Norm_OF_grid_basis ! function
-      real (kind=Rkind) :: DNorm,NormA,NormB,Temp,Temp_max,PTemp,DTemp
-      real (kind=Rkind) :: x(basis_cuba%ndim),xi
-
-      real (kind=Rkind) :: QA(basis_cuba%ndim)
-      real (kind=Rkind) :: QB(basis_cuba%ndim)
-      real (kind=Rkind) :: SQ(basis_cuba%ndim)
-      real (kind=Rkind) :: QAv(basis_cuba%ndim)
-
-      integer           :: i,j,k,ij,imc,iq,mc_max
-      integer           :: nq
-      logical           :: check_basis_save,err_cuba
-      real (kind=Rkind) :: ExpCoolParam,ResetTempScal,RangeScal,RangeScalInit
-
-
-!---------------------------------------------------------------------
-      logical,parameter :: debug= .FALSE.
-!     logical,parameter :: debug= .TRUE.
-      character (len=*), parameter :: name_sub='Make_grid_basis_SimulatedAnnealing_restart'
-!---------------------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*)
-        write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL RecWrite_basis(basis_cuba)
-        write(out_unitp,*)
-      END IF
-!---------------------------------------------------------------------
-      nq = get_nq_FROM_basis(basis_cuba)
-
-      ExpCoolParam  = 0.995_Rkind
-
-      ResetTempScal = ONE/THREE
-
-      RangeScal     = 0.8_Rkind
-      RangeScalInit = 0.01_Rkind
-
-      mc_max        = 100000
-      DO i=1,basis_cuba%ndim
-        QA(i) = minval(basis_cuba%x(i,:))
-        QB(i) = maxval(basis_cuba%x(i,:))
-        QAv(i)= (QA(i)+QB(i))*HALF
-        SQ(i) = QB(i)-QA(i)
-      END DO
-      write(out_unitp,*) 'QA,QB,SQ',QA,QB,SQ
-
-      SQ(:) = SQ(:)*RangeScalInit
-      QA(:) = QAv(:)-SQ(:)*HALF
-      QB(:) = QAv(:)+SQ(:)*HALF
-      write(out_unitp,*) 'QA,QB,SQ',QA,QB,SQ
-      x0(:,:)   = basis_cuba%x(:,:)
-      xmin(:,:) = basis_cuba%x(:,:)
-      CALL flush_perso(out_unitp)
-      Norm_min = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-      Norm_max = ZERO
-
-      NormA  = ZERO
-      ! first find the average Energy (Norm), then Temp
-      DO imc=1,mc_max/10
-        DO iq=1,nq
-        DO i=1,basis_cuba%ndim
-          CALL random_number(xi)
-          xi = TWO*xi-ONE
-          basis_cuba%x(i,iq) = x0(i,iq) + xi*SQ(i)
-        END DO
-        END DO
-        NormB = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-        NormA = NormA + NormB
-        IF (NormB > Norm_max) Norm_max = NormB
-
-        IF (NormB < Norm_min) THEN
-          xmin(:,:) = basis_cuba%x(:,:)
-          Norm_min  = NormB
-        END IF
-      END DO
-      NormA = NormA / real(mc_max/10,kind=Rkind)
-      write(out_unitp,*) 'Min, Average, Max Norm',Norm_min,NormA,Norm_max
-
-      basis_cuba%x(:,:) = xmin(:,:)
-      Norm_min = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-      x0(:,:)  = basis_cuba%x(:,:)
-      write(out_unitp,*) ' Norm_min',Norm_min
-      Temp_max = Norm_max-Norm_min
-      Temp     = Temp_max
-      write(out_unitp,*) 'Average Norm, Temp',NormA,Temp
-      CALL flush_perso(out_unitp)
-
-      DTemp = Temp_max/real(mc_max,kind=Rkind)
-      imc = 1
-      DO
-
-        err_cuba = .TRUE.
-        DO WHILE (err_cuba)
-          DO iq=1,nq
-          DO i=1,basis_cuba%ndim
-            DO
-              CALL random_number(xi)
-              xi = TWO*xi-ONE
-              basis_cuba%x(i,iq) = x0(i,iq) + xi*SQ(i)
-              EXIT
-            END DO
-          END DO
-          END DO
-          ! To avoid rotation
-          DO i=1,basis_cuba%ndim-1
-            basis_cuba%x(1:basis_cuba%ndim-i,i) = ZERO ! to avoid rotation
-          END DO
-          NormA = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
-        END DO
-        DNorm = NormA - NormB
-
-        IF ( NormA < Norm_min) THEN
-          xmin(:,:) = basis_cuba%x(:,:)
-          Norm_min = NormA
-          write(out_unitp,*) ' imc, Temp, Norm_min',imc,Temp,Norm_min
-        END IF
-        !write(out_unitp,*) ' imc, Temp, Norm_min',imc,Temp,Norm_min
-
-
-        IF ( DNorm < ZERO) THEN
-          x0(:,:)   = basis_cuba%x(:,:)
-          !xmin(:,:) = x0(:,:)
-          NormB     = NormA
-          !write(out_unitp,*) ' imc, Temp, Norm (cubature)',imc,Temp,NormA
-          !write(out_unitp,*) ' accepted, DNorm',DNorm
-
-        ELSE
-          CALL random_number(PTemp)
-          IF ( PTemp < exp(-DNorm/Temp) ) THEN
-            x0(:,:) = basis_cuba%x(:,:)
-            NormB = NormA
-            !write(out_unitp,*) ' imc, Temp, Norm (propa)',imc,Temp,NormA
-            !write(out_unitp,*) ' accepted, Proba',PTemp,exp(-DNorm/Temp)
-          END IF
-        END IF
-        imc = imc + 1
-        !Temp = Temp - DTemp
-        Temp = ExpCoolParam * Temp ! Exponential cooling
-
-        IF (Temp < ResetTempScal*Temp_max) THEN
-
-          SQ(:)    = SQ(:)*RangeScal
-          Temp_max = (ONE-ResetTempScal)*Temp_max
-          Temp     = Temp_max
-          !DTemp    = Temp_max/real(mc_max,kind=Rkind)
-          !imc      = 0
-          x0(:,:)   =  xmin(:,:)
-          write(6,*) 'Temp_max',Temp_max
-        END IF
-
-        IF (Temp < ONETENTH**30 .OR. imc > mc_max) EXIT
-      END DO
-
-      ! optimal values
-      basis_cuba%x(:,:) = xmin(:,:)
-
-
-!---------------------------------------------------------------------
-      IF (debug) THEN
-        CALL RecWrite_basis(basis_cuba)
-        write(out_unitp,*) 'END ',name_sub
-      END IF
-!---------------------------------------------------------------------
-
-
-      END SUBROUTINE Make_grid_basis_SimulatedAnnealing_restart
       FUNCTION Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
       USE mod_system
       USE mod_basis
@@ -2428,7 +2113,6 @@ stop
         write(out_unitp,*) 'END ',name_sub
       END IF
 !---------------------------------------------------------------------
-
 
       END FUNCTION Norm_OF_grid_basis
 
@@ -2545,6 +2229,7 @@ stop
       END SUBROUTINE ReOriented_grid
       SUBROUTINE Random_grid(x,x0,SQ,QA,QB,ndim,nqc,option)
       USE mod_system
+      USE mt19937_64
       USE mod_basis
       IMPLICIT NONE
 
@@ -2575,22 +2260,38 @@ stop
         write(out_unitp,*)
       END IF
 !---------------------------------------------------------------------
+  IF (option == 0) THEN
 
-      DO iq=1,nqc
-      DO i=1,ndim
-        DO k=1,1000
-          CALL random_number(xi)
-          xi = TWO*xi-ONE
-          !S=minval( (/ QB(i)-x0(i,iq),x0(i,iq)-QA(i),SQ(i) /) )
-          S=SQ(i)
-          x(i,iq) = x0(i,iq) + xi*S
-          IF (x(i,iq) <= QB(i) .AND. x(i,iq) >= QA(i)) EXIT
-        END DO
+    DO iq=1,nqc
+    DO i=1,ndim
+      DO k=1,1000
+        CALL random_number(xi)
+        !xi = genrand64_real1()
+        xi = TWO*xi-ONE
+        !S=minval( (/ QB(i)-x0(i,iq),x0(i,iq)-QA(i),SQ(i) /) )
+        S=SQ(i)
+        x(i,iq) = x0(i,iq) + xi*S
+        IF (x(i,iq) <= QB(i) .AND. x(i,iq) >= QA(i)) EXIT
       END DO
-      END DO
+    END DO
+    END DO
 
-      CALL ReOriented_grid(x,ndim,nqc)
-      CALL ReCentered_grid(x,ndim,nqc)
+  ELSE
+
+    DO iq=1,nqc
+    DO i=1,ndim
+      CALL random_number(xi)
+      !xi = genrand64_real1()
+      xi = TWO*xi-ONE
+      S=SQ(i)
+      x(i,iq) = x0(i,iq) + xi*S
+    END DO
+    END DO
+
+  END IF
+
+  CALL ReOriented_grid(x,ndim,nqc)
+  CALL ReCentered_grid(x,ndim,nqc)
 
 
 !---------------------------------------------------------------------
@@ -2605,3 +2306,4 @@ stop
 
 
       END SUBROUTINE Random_grid
+END MODULE BasisMakeGrid

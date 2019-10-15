@@ -6,7 +6,7 @@
  SYSTEM=sub_system_murrell.f
 
 ici=`pwd`
-DIR_vib=$ici/..
+DIR_vib=$ici/../..
 DIR_pot=$DIR_vib/sub_pot
 
 #cp $SYSTEM $DIR_pot/sub_system.f

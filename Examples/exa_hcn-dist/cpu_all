@@ -1,873 +1,883 @@
-Sam 16 mar 2019 18:37:23 CET
+Lun 14 oct 2019 13:41:41 CEST
 =======================================
 dat_Arpack
-  Total real (s):              7.178
-  Total cpu (s):             17.210
+  Total real (s):              3.273
+  Total cpu (s):             11.714
 ElVibRot ERROR !!!!
-     490    1750   26590 res
+     485    1624   23884 res
 =======================================
 dat_Davidson-dir1GF
 lev: 1 1 T 3483.1879348457
 lev: 2 1 T 4901.5153949565
-  Total real (s):            345.218
-  Total cpu (s):             28.116
+  Total real (s):            205.799
+  Total cpu (s):             17.009
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1152    5321   60921 res
+    1048    4851   51242 res
 =======================================
 dat_Davidson-dir2GF
 lev: 1 1 T 3483.1879348457
 lev: 2 1 T 4901.5153949565
-  Total real (s):             16.296
-  Total cpu (s):             24.170
+  Total real (s):              6.008
+  Total cpu (s):             14.942
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1128    5123   58466 res
+    1048    4851   51251 res
 =======================================
 dat_Davidson2
-lev: 1 1 T 3483.1879199052
-lev: 2 1 T 4901.5170692556
-  Total real (s):              8.692
-  Total cpu (s):             18.228
+lev: 1 1 T 3483.1879199053
+lev: 2 1 T 4901.5170692553
+  Total real (s):              3.722
+  Total cpu (s):             12.211
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    3091   12921  185191 res
+    3023   12602  178045 res
 =======================================
 dat_Davidson6
 lev: 1 1 T 3483.1879348457
-lev: 2 1 T 4901.5153949564
-  Total real (s):             56.682
-  Total cpu (s):             54.539
+lev: 2 1 T 4901.5153949565
+  Total real (s):             21.798
+  Total cpu (s):             30.352
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    3183   13465  190130 res
+    3075   12981  180207 res
 =======================================
 dat_Davidson7
 lev: 1 1 T 3483.1879348457
 lev: 2 1 T 4901.5153949565
-  Total real (s):             54.204
-  Total cpu (s):             54.473
+  Total real (s):             21.608
+  Total cpu (s):             30.408
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1253    5782   67720 res
+    1086    4987   52750 res
 =======================================
 dat_Davidson8
-lev: 1 1 T 3483.1945008921
-  Total real (s):              8.907
-  Total cpu (s):             18.201
+lev: 1 1 T 3483.1944599633
+  Total real (s):              3.608
+  Total cpu (s):             12.259
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1504    6488   72607 res
+    1341    5573   58457 res
 =======================================
 dat_Davidson_5lower_states
 lev: 1 1 T 3483.1855144945
 lev: 2 1 T 4901.5120075689
-  Total real (s):             11.669
-  Total cpu (s):             20.177
+  Total real (s):              4.643
+  Total cpu (s):             13.318
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    3132   13268  170427 res
+    3181   13479  161149 res
 =======================================
 dat_Davidson_AutoContract
-lev: 1 1 T 3483.2038379790
-lev: 2 1 T 4901.9075271105
-  Total real (s):              9.903
-  Total cpu (s):              7.864
+lev: 1 1 T 3483.2038379793
+lev: 2 1 T 4901.9075271107
+  Total real (s):              3.056
+  Total cpu (s):              3.023
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1465    6259   79606 res
+    1106    4698   54070 res
 =======================================
 dat_Davidson_Eckart
 lev: 1 1 T 3483.1879348457
 lev: 2 1 T 4901.5153949565
-  Total real (s):              9.694
-  Total cpu (s):             18.466
+  Total real (s):              3.734
+  Total cpu (s):             12.424
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1260    5597   65501 res
+    1165    5177   56596 res
 =======================================
 dat_Davidson_PhysConst
-lev: 1 1 T 2855.4344438792
-lev: 2 1 T 3977.0749266555
-  Total real (s):             12.185
-  Total cpu (s):             20.730
+lev: 1 1 T 2855.4344442514
+lev: 2 1 T 3977.0755981806
+  Total real (s):              6.298
+  Total cpu (s):             14.579
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    2870   12539  149236 res
+    2951   12999  142741 res
 =======================================
 dat_Davidson_all_lower_states
-lev: 1 1 T 3483.1855147194
-lev: 2 1 T 4901.5112201900
-  Total real (s):             10.490
-  Total cpu (s):             19.237
+lev: 1 1 T 3483.1855147195
+lev: 2 1 T 4901.5112201786
+  Total real (s):              4.329
+  Total cpu (s):             12.790
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1449    7568   77525 res
+    1381    7247   68606 res
 =======================================
 dat_Davidson_analysis_Only
 lev: 1 1 F 0.0000000000
 lev: 2 1 F 0.0000000000
-  Total real (s):              0.265
-  Total cpu (s):              0.096
+  Total real (s):              0.110
+  Total cpu (s):              0.054
   ElVibRot-Tnum AU REVOIR!!!
-     484    1742   25474 res
+     525    1913   26366 res
+=======================================
+dat_Davidson_auto_basis
+lev: 1 1 T 3483.1876491113
+lev: 2 1 F 4901.5484182603
+  Total real (s):              6.918
+  Total cpu (s):             17.065
+ mem_tot,max_mem_used                    0                    0
+ nb_alloc,nb_dealloc           0           0
+  ElVibRot-Tnum AU REVOIR!!!
+    1908   10715  106498 res
 =======================================
 dat_Davidson_cart
 lev: 1 1 T 3483.1879268092
 lev: 2 1 T 4901.5153793547
-  Total real (s):              9.731
-  Total cpu (s):             19.025
+  Total real (s):              4.221
+  Total cpu (s):             12.975
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1152    5324   60930 res
+    1048    4851   51247 res
 =======================================
 dat_Davidson_cart0
 lev: 1 1 T 3483.1882318370
 lev: 2 1 T 4901.5156405935
-  Total real (s):              8.963
-  Total cpu (s):             18.488
+  Total real (s):              3.958
+  Total cpu (s):             12.459
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1143    5273   60544 res
+    1055    4884   52115 res
 =======================================
 dat_Davidson_intensity
 lev: 1 1 F 3483.1855148090
 lev: 2 1 F 4901.5107805102
-  Total real (s):              7.416
-  Total cpu (s):             17.663
+  Total real (s):              3.530
+  Total cpu (s):             12.066
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     897    3478   47594 res
+     734    2850   37551 res
 =======================================
 dat_Davidson_project_WP0
-lev: 1 1 T 3483.1855144676
-lev: 2 1 T 6801.7001111541
-  Total real (s):             37.364
-  Total cpu (s):             41.148
+lev: 1 1 T 3483.1855144983
+lev: 2 1 T 6801.7001110530
+  Total real (s):             18.648
+  Total cpu (s):             27.006
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    9572   74617  637539 res
+    9483   74344  578793 res
 =======================================
 dat_Davidson_symab
 lev: 1 1 T 3561.4398565002
 lev: 2 1 T 5028.3397297785
-  Total real (s):              7.545
-  Total cpu (s):             17.754
+  Total real (s):              3.438
+  Total cpu (s):             12.039
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     934    3725   48524 res
+     831    3259   40008 res
 =======================================
 dat_Davidson_theta
 lev: 1 1 T 3483.1879348457
 lev: 2 1 T 4901.5153949565
-  Total real (s):              9.519
-  Total cpu (s):             18.555
+  Total real (s):              3.787
+  Total cpu (s):             12.490
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1152    5321   60935 res
+    1048    4855   51281 res
 =======================================
 dat_DirProd
-lev: 1 1 T 3483.1906185526
+lev: 1 1 T 3483.1906185527
 lev: 2 1 T 4901.7385596524
-  Total real (s):            521.998
-  Total cpu (s):            195.059
+  Total real (s):            269.861
+  Total cpu (s):            107.857
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     958    6367   76524 res
+     927    5966   68374 res
 =======================================
 dat_DirProd2
-lev: 1 1 T 3483.1897721094
+lev: 1 1 T 3483.1897721095
 lev: 2 1 T 4901.6069025151
-  Total real (s):              4.106
-  Total cpu (s):              4.706
+  Total real (s):              2.178
+  Total cpu (s):              3.044
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     953    6150   74954 res
+     927    5966   68372 res
 =======================================
 dat_DirProd3
 lev: 1 1 T 3483.1855496652
 lev: 2 1 T 4901.5106247252
-  Total real (s):             14.336
-  Total cpu (s):             22.195
+  Total real (s):              6.860
+  Total cpu (s):             14.781
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     976    6068   72627 res
+     968    5940   66898 res
 =======================================
 dat_DirProd_AutoContract
-lev: 1 1 T 3483.1859397995
-lev: 2 1 T 4901.5363572588
-  Total real (s):           1165.584
-  Total cpu (s):            687.103
+lev: 1 1 T 3483.1859397996
+lev: 2 1 T 4901.5363572589
+  Total real (s):            654.487
+  Total cpu (s):            473.691
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1136    7213   88216 res
+     927    5975   68363 res
 =======================================
 dat_DirProd_AutoContract2
 lev: 1 1 T 3483.1859401465
 lev: 2 1 T 4901.5363765110
-  Total real (s):           1201.009
-  Total cpu (s):            711.124
+  Total real (s):            630.468
+  Total cpu (s):            452.740
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1136    7203   88216 res
+     927    5975   68363 res
 =======================================
 dat_DirProd_AutoContract3
 lev: 1 1 T 3484.0129370698
 lev: 2 1 T 4915.1795389052
-  Total real (s):            315.960
-  Total cpu (s):             40.082
+  Total real (s):            198.083
+  Total cpu (s):             24.971
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1138    6495   80398 res
+     929    5258   60536 res
 =======================================
 dat_DirProd_AutoContract_dir2
 lev: 1 1 T 3483.1859397996
 lev: 2 1 T 4901.5363572589
-  Total real (s):            297.495
-  Total cpu (s):            236.571
+  Total real (s):            161.305
+  Total cpu (s):            174.767
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1143    7095   88865 res
+     927    5971   68363 res
 =======================================
 dat_DirProd_SG
 lev: 1 1 T 3483.1888870599
 lev: 2 1 T 4901.5134441070
-  Total real (s):             15.388
-  Total cpu (s):             27.892
+  Total real (s):              6.332
+  Total cpu (s):             20.151
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    2183    9332  129353 res
+    2356    9952  126038 res
 =======================================
 dat_DirProd_SG2
 lev: 1 1 T 3483.2119650510
 lev: 2 1 T 4902.7162785017
-  Total real (s):             31.634
-  Total cpu (s):             38.372
+  Total real (s):             12.556
+  Total cpu (s):             23.362
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     967    6113   72642 res
+     969    6063   68268 res
 =======================================
 dat_DirProd_SG3
 lev: 1 1 T 3483.5333836969
-lev: 2 1 T 4901.9567730223
-  Total real (s):              5.005
-  Total cpu (s):              6.122
+lev: 2 1 T 4901.9567730222
+  Total real (s):              1.834
+  Total cpu (s):              3.706
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     955    5946   72826 res
+     927    5766   66166 res
 =======================================
 dat_DirProd_SGNested
 lev: 1 1 T 3483.1888610322
 lev: 2 1 T 4901.5133262310
-  Total real (s):             18.438
-  Total cpu (s):             17.730
+  Total real (s):              8.134
+  Total cpu (s):             11.329
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     963    6209   76359 res
+     945    6059   69927 res
 =======================================
 dat_DirProd_SGNested_type2
   Total real (s):              0.000
   Total cpu (s):              0.000
 ElVibRot ERROR !!!!
-     400    1511   27071 res
+     421    1604   26770 res
 =======================================
 dat_DirProd_SGSG
   Total real (s):              0.000
   Total cpu (s):              0.000
 ElVibRot ERROR !!!!
-     183     590    8903 res
+     308    1029   15463 res
 =======================================
 dat_DirProd_SG_readWP
 lev: 1 1 T 3483.1920111274
 lev: 2 1 T 4901.5212367869
-  Total real (s):              3.411
-  Total cpu (s):              7.887
+  Total real (s):              1.509
+  Total cpu (s):              5.351
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     849    3468   44032 res
+     751    3070   36849 res
 =======================================
 dat_DirProd_SG_type2
   Total real (s):              0.000
   Total cpu (s):              0.000
 ElVibRot ERROR !!!!
-     310    1003   16389 res
+     349    1132   17618 res
 =======================================
 dat_DirProd_SG_type2bis
   Total real (s):              0.000
   Total cpu (s):              0.000
 ElVibRot ERROR !!!!
-     312    1021   16389 res
+     351    1150   17690 res
 =======================================
 dat_DirProd_SG_type4
-  Total real (s):              0.000
-  Total cpu (s):              0.000
+  Total real (s):              5.738
+  Total cpu (s):             22.197
 ElVibRot ERROR !!!!
-     430    1479   24493 res
+    1783    5380   74743 res
 =======================================
 dat_DirProd_WitoutCuba
 lev: 1 1 T 2838.6393624655
 lev: 2 1 T 5027.7483630832
-  Total real (s):              0.054
-  Total cpu (s):              0.034
+  Total real (s):              0.043
+  Total cpu (s):              0.026
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     543    2004   25294 res
+     558    1974   26338 res
 =======================================
 dat_DirProd_basisRecu
-lev: 1 1 T 3746.6178844920
+lev: 1 1 T 3746.6178844919
 lev: 2 1 T 6006.3640133357
-  Total real (s):              0.126
-  Total cpu (s):              0.120
+  Total real (s):              0.064
+  Total cpu (s):              0.059
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     764    3404   44803 res
+     709    3196   39285 res
 =======================================
 dat_DirProd_cuba
 lev: 1 1 T 2826.8900674483
 lev: 2 1 T 5048.1576407396
-  Total real (s):              0.045
-  Total cpu (s):              0.024
+  Total real (s):              0.027
+  Total cpu (s):              0.018
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     496    1887   24650 res
+     591    2204   28848 res
 =======================================
 dat_Filter
-  Total real (s):             25.511
-  Total cpu (s):             25.416
+  Total real (s):              9.845
+  Total cpu (s):             13.669
 ElVibRot ERROR !!!!
-     628    2399   31950 res
+     656    2483   32986 res
 =======================================
 dat_Filter_big
-  Total real (s):            273.981
-  Total cpu (s):            214.645
+  Total real (s):            103.767
+  Total cpu (s):            109.206
 ElVibRot ERROR !!!!
-     619    2358   30986 res
+     629    2348   31059 res
 =======================================
 dat_FunOfOp
-lev: 1 1 F 12280.5408023394
-  Total real (s):             18.132
-  Total cpu (s):             18.291
+lev: 1 1 F 12782.3665479387
+  Total real (s):              6.927
+  Total cpu (s):             10.718
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-   12036   59489  568388 res
+   12047   59017  510429 res
 =======================================
 dat_NLO
-lev: 1 1 T 0.350756102969394E+04
-lev: 2 1 T 0.493806525835453E+04
-  Total real (s):            220.224
-  Total cpu (s):            161.583
+lev: 1 1 T 0.350756102969395E+04
+lev: 2 1 T 0.493806525835463E+04
+  Total real (s):             47.582
+  Total cpu (s):             49.658
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    5406   49106  574997 res
+    5427   48889  571564 res
 =======================================
 dat_NewQTransfo
 lev: 1 1 T 724.2981189645
 lev: 2 1 T 2179.4083077061
-  Total real (s):              0.264
-  Total cpu (s):              0.150
+  Total real (s):              0.272
+  Total cpu (s):              0.130
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     807    4484   51658 res
+     892    4454   53283 res
 =======================================
 dat_NewQTransfo-OneD
 lev: 1 1 T 3508.3216434321
 lev: 2 1 T 4925.7322264170
-  Total real (s):             25.430
-  Total cpu (s):             20.660
+  Total real (s):              7.885
+  Total cpu (s):              7.736
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1671    9701  135265 res
+    1670    9601  129842 res
 =======================================
 dat_NewQTransfo-RPH
-lev: 1 1 T 3483.1855284886
-lev: 2 1 T 4901.5088076256
-  Total real (s):            497.562
-  Total cpu (s):            515.934
- mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
-  ElVibRot-Tnum AU REVOIR!!!
-    1250    7395   86602 res
+  Total real (s):              0.000
+  Total cpu (s):              0.000
+ElVibRot ERROR !!!!
+     274     856   12978 res
 =======================================
 dat_NewQTransfo-RPH-SGtype2
   Total real (s):              0.000
   Total cpu (s):              0.000
 ElVibRot ERROR !!!!
-     332     976   16267 res
+     274     856   12978 res
 =======================================
 dat_NewQTransfo-RPH2
-lev: 1 1 T 3484.8730675650
-lev: 2 1 T 4903.0998636496
-  Total real (s):             33.730
-  Total cpu (s):            120.938
- mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
-  ElVibRot-Tnum AU REVOIR!!!
-    1720    8646   84066 res
+  Total real (s):              0.000
+  Total cpu (s):              0.000
+ElVibRot ERROR !!!!
+     303     932   13932 res
 =======================================
 dat_NewQTransfo-RPH_AutoContract
-lev: 1 1 T 3483.1855284889
-lev: 2 1 T 4901.5088076257
-  Total real (s):            205.318
-  Total cpu (s):            342.497
- mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
-  ElVibRot-Tnum AU REVOIR!!!
-    1327    7804   92617 res
+  Total real (s):              0.000
+  Total cpu (s):              0.000
+ElVibRot ERROR !!!!
+     284     869   13138 res
 =======================================
 dat_NewQTransfo-RPH_HarD
-lev: 1 1 T 3507.3511087164
-lev: 2 1 T 4937.2283879751
-  Total real (s):             75.373
-  Total cpu (s):             75.171
- mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
-  ElVibRot-Tnum AU REVOIR!!!
-    2621   19988  142850 res
+  Total real (s):              0.000
+  Total cpu (s):              0.000
+ElVibRot ERROR !!!!
+     303     930   13932 res
 =======================================
 dat_NewQTransfo-RPH_withCurviRPH
-lev: 1 1 T 3483.1855246883
-lev: 2 1 T 4901.5088004532
-  Total real (s):            285.900
-  Total cpu (s):            461.173
- mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
-  ElVibRot-Tnum AU REVOIR!!!
-    1263    7441   87187 res
+  Total real (s):              0.000
+  Total cpu (s):              0.000
+ElVibRot ERROR !!!!
+     274     856   12978 res
 =======================================
 dat_NewQTransfo-RPH_withCurviRPH1
-lev: 1 1 T 3483.1855277609
-lev: 2 1 T 4901.5088130662
-  Total real (s):            285.129
-  Total cpu (s):            463.427
- mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
-  ElVibRot-Tnum AU REVOIR!!!
-    1262    7439   87159 res
+  Total real (s):              0.000
+  Total cpu (s):              0.000
+ElVibRot ERROR !!!!
+     274     856   12978 res
 =======================================
 dat_NewQTransfo-flex
-lev: 1 1 T 721.7849546396
+lev: 1 1 T 721.7849546397
 lev: 2 1 T 2166.9068610558
-  Total real (s):              0.151
-  Total cpu (s):              0.101
+  Total real (s):              0.132
+  Total cpu (s):              0.084
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     813    4596   52776 res
+     891    4545   54041 res
 =======================================
 dat_NewQTransfo-flex3D
 lev: 1 1 T 3483.1857173200
 lev: 2 1 T 4901.5131320345
-  Total real (s):              6.409
-  Total cpu (s):             20.146
+  Total real (s):              4.871
+  Total cpu (s):             14.475
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1388    7259   71034 res
+    1331    7051   63817 res
 =======================================
 dat_NewQTransfo-lin3D
 lev: 1 1 T 3483.1855462541
-lev: 2 1 T 4901.5088234016
-  Total real (s):             35.774
-  Total cpu (s):             51.945
+lev: 2 1 T 4901.5088234014
+  Total real (s):             31.705
+  Total cpu (s):             44.167
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1020    6483   78023 res
+    1019    6383   72636 res
 =======================================
 dat_NewQTransfo-poly
 lev: 1 1 T 721.7849468111
 lev: 2 1 T 2166.9068378120
-  Total real (s):              0.151
-  Total cpu (s):              0.091
+  Total real (s):              0.143
+  Total cpu (s):              0.081
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     840    4632   53933 res
+     932    4570   54790 res
 =======================================
 dat_NewQTransfo-poly2
 lev: 1 1 T 725.9830538783
 lev: 2 1 T 2169.5712825739
-  Total real (s):              0.192
-  Total cpu (s):              0.112
+  Total real (s):              0.165
+  Total cpu (s):              0.089
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     847    4802   55692 res
+     932    4715   56164 res
 =======================================
 dat_NewQTransfo-poly_Tana
-lev: 1 1 T 3483.1855065288
-lev: 2 1 T 4901.5087842008
-  Total real (s):            244.656
-  Total cpu (s):            325.353
+lev: 1 1 T 3483.1855065289
+lev: 2 1 T 4901.5087842009
+  Total real (s):            243.692
+  Total cpu (s):            324.901
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1865    8481  108786 res
+    2027    8998  108618 res
 =======================================
 dat_Opt
-  Total real (s):              0.010
-  Total cpu (s):              0.010
+  Total real (s):              0.008
+  Total cpu (s):              0.008
 ElVibRot ERROR !!!!
-     500    1387   21876 res
+     750    2253   33047 res
 =======================================
 dat_PartialGrid
 lev: 1 1 T 2379.8966443952
 lev: 2 1 T 3817.8546513491
-  Total real (s):              0.399
-  Total cpu (s):              0.294
+  Total real (s):              0.364
+  Total cpu (s):              0.273
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1423    7946   90672 res
+    1597    8378   97411 res
 =======================================
 dat_ScalarOp
-lev: 1 1 T 0.350756102969394E+04
-lev: 2 1 T 0.493806525835453E+04
-  Total real (s):            581.063
-  Total cpu (s):            547.027
+lev: 1 1 T 0.350756102969395E+04
+lev: 2 1 T 0.493806525835463E+04
+  Total real (s):            289.732
+  Total cpu (s):            276.354
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    7375   60935  816906 res
+    7361   60303  807240 res
 =======================================
 dat_Sparse
 lev: 1 1 T 3507.5610299416
 lev: 2 1 T 4938.0652642736
-  Total real (s):              2.677
-  Total cpu (s):              5.843
+  Total real (s):              2.181
+  Total cpu (s):              4.608
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    2759   26626  272860 res
+    2838   26559  273446 res
 =======================================
 dat_WP-control-gate
-  Total real (s):            251.804
-  Total cpu (s):             94.515
+  Total real (s):            235.580
+  Total cpu (s):             82.532
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     633    2913   29843 res
+     666    2344   30134 res
 =======================================
 dat_WP-control-gatebis
-  Total real (s):             22.573
-  Total cpu (s):              7.684
+  Total real (s):             24.896
+  Total cpu (s):              8.038
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     607    2707   28229 res
+     640    2140   28511 res
 =======================================
 dat_WP-control-nogate
-  Total real (s):            220.797
-  Total cpu (s):             81.841
+  Total real (s):            309.515
+  Total cpu (s):             84.931
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     630    2874   29588 res
+     663    2304   29861 res
 =======================================
 dat_WP-prop1
-  Total real (s):             13.124
-  Total cpu (s):              3.922
+  Total real (s):             11.486
+  Total cpu (s):              2.832
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
   ElVibRot-Tnum AU REVOIR!!!
-    8385   68565  736101 res
+    6959   59035  577143 res
+=======================================
+dat_WP-prop1-1D2elec
+  Total real (s):              0.207
+  Total cpu (s):              0.209
+ mem_tot,max_mem_used                    0                    0
+ nb_alloc,nb_dealloc           0           0
+  ElVibRot-Tnum AU REVOIR!!!
+     996    3668   49844 res
 =======================================
 dat_WP-prop1-2elec
-  Total real (s):             19.003
-  Total cpu (s):             18.517
+  Total real (s):             10.410
+  Total cpu (s):              9.768
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    8386   46638  807569 res
+    3359   14548  204020 res
+=======================================
+dat_WP-prop1-2elec_SG_type4
+  Total real (s):              2.380
+  Total cpu (s):              6.118
+ mem_tot,max_mem_used                    0                    0
+ nb_alloc,nb_dealloc           0           0
+  ElVibRot-Tnum AU REVOIR!!!
+    8118   32282  482661 res
+=======================================
+dat_WP-prop1-2elec_test
+  Total real (s):              5.046
+  Total cpu (s):              5.345
+ mem_tot,max_mem_used                    0                    0
+ nb_alloc,nb_dealloc           0           0
+  ElVibRot-Tnum AU REVOIR!!!
+    2112    9394  127275 res
 =======================================
 dat_WP-prop1-BasisEl
-  Total real (s):              0.024
-  Total cpu (s):              0.022
+  Total real (s):              0.018
+  Total cpu (s):              0.018
 ElVibRot ERROR !!!!
-    1805    5537   92938 res
+    1619    4694   69376 res
 =======================================
 dat_WP-prop1-bis
-  Total real (s):            139.200
-  Total cpu (s):            138.679
+  Total real (s):            145.657
+  Total cpu (s):            142.355
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-   13955   69180 1197464 res
+    3337   13575  198305 res
 =======================================
 dat_WP-prop2
-  Total real (s):            957.156
-  Total cpu (s):             79.558
+  Total real (s):            872.805
+  Total cpu (s):             51.686
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-  202091 2300774 20523318 res
+  116378 1236007 11254736 res
 =======================================
 dat_WP-prop22
-  Total real (s):              7.716
-  Total cpu (s):              5.696
+  Total real (s):              5.705
+  Total cpu (s):              3.743
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    3623   31129  335132 res
+    2872   26505  252477 res
 =======================================
 dat_WP-prop2bis
-  Total real (s):             84.144
-  Total cpu (s):             12.056
+  Total real (s):             75.927
+  Total cpu (s):              8.555
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-   22553  244864 2296838 res
+   21797  239915 2198741 res
 =======================================
 dat_WP-prop2im
-  Total real (s):             14.824
-  Total cpu (s):             12.782
+  Total real (s):              6.957
+  Total cpu (s):              4.964
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    4052   33186  356187 res
+    3453   29071  283827 res
 =======================================
 dat_WP-propRK4
-lev: 1 1 T -95.9135027713
+lev: 1 1 T -95.9135027712
 lev: 2 2 T -75.4014739829
-  Total real (s):           1115.062
-  Total cpu (s):           1096.566
+  Total real (s):            576.241
+  Total cpu (s):            560.854
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
   ElVibRot-Tnum AU REVOIR!!!
-    4506   42750  441619 res
+    4648   43030  445020 res
 =======================================
 dat_WP-propRK4_field
-  Total real (s):           1828.106
-  Total cpu (s):            216.217
+  Total real (s):           1240.208
+  Total cpu (s):            142.533
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
   ElVibRot-Tnum AU REVOIR!!!
-  223049 2566851 22901176 res
+  221547 2557603 22749238 res
 =======================================
 dat_WP-propRK4bis
-  Total real (s):           1167.485
-  Total cpu (s):            931.773
+  Total real (s):           1978.516
+  Total cpu (s):           1743.183
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-   84843 1008482 9737608 res
+   83109  991499 9456250 res
 =======================================
 dat_WP-relax
-  Total real (s):             26.031
-  Total cpu (s):             29.826
+  Total real (s):             14.263
+  Total cpu (s):             16.425
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    3153   23434  367955 res
+    1646    7612   85380 res
 =======================================
 dat_WP-relax-Hmax
-  Total real (s):             37.577
-  Total cpu (s):             41.398
+  Total real (s):             20.842
+  Total cpu (s):             23.933
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    2985   22639  359750 res
+    1234    5539   66643 res
 =======================================
 dat_cHAC_Davidson-dir0
-lev: 1 1 T 0.350756253215739E+04
-lev: 2 1 T 0.493809623806391E+04
-  Total real (s):              4.111
-  Total cpu (s):              7.794
+lev: 1 1 T 0.350756253215740E+04
+lev: 2 1 T 0.493809623806384E+04
+  Total real (s):              2.920
+  Total cpu (s):              5.557
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    2220   12048  115402 res
+    2218   11881  107849 res
 =======================================
 dat_cHAC_Davidson-dir0-readGrid
-lev: 1 1 T 0.350756253215739E+04
-lev: 2 1 T 0.493809623806390E+04
-  Total real (s):              2.482
-  Total cpu (s):              2.276
+lev: 1 1 T 0.350756253215740E+04
+lev: 2 1 T 0.493809623806384E+04
+  Total real (s):              1.806
+  Total cpu (s):              1.444
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    2223   12065  115462 res
+    2221   11895  107909 res
 =======================================
 dat_cHAC_Davidson-dir1
-lev: 1 1 T 0.350756210994465E+04
-lev: 2 1 T 0.493810875924127E+04
-  Total real (s):              3.201
-  Total cpu (s):              7.173
+lev: 1 1 T 0.350756210994511E+04
+lev: 2 1 T 0.493810875923687E+04
+  Total real (s):              1.891
+  Total cpu (s):              4.842
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1451    7084   76342 res
+    1438    7029   71615 res
 =======================================
 dat_cHAC_Davidson-dir2
-lev: 1 1 T 0.350756210994468E+04
-lev: 2 1 T 0.493810875924111E+04
-  Total real (s):              2.951
-  Total cpu (s):              6.775
+lev: 1 1 T 0.350756210994513E+04
+lev: 2 1 T 0.493810875923677E+04
+  Total real (s):              1.740
+  Total cpu (s):              4.502
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1451    7083   76342 res
+    1438    7019   71615 res
 =======================================
 dat_cHAC_Davidson-dir2-Make_MatOp
 lev: 1 1 T 0.350756253215739E+04
-lev: 2 1 T 0.493809623806396E+04
-  Total real (s):             18.443
-  Total cpu (s):             22.327
+lev: 2 1 T 0.493809623806399E+04
+  Total real (s):              9.021
+  Total cpu (s):             11.799
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    2229   11954  116209 res
+    2218   11881  107849 res
 =======================================
 dat_cHAC_Davidson-dir3
-lev: 1 1 T 0.350756210994398E+04
-lev: 2 1 T 0.493810875924764E+04
-  Total real (s):             11.458
-  Total cpu (s):             14.902
+lev: 1 1 T 0.350756210994395E+04
+lev: 2 1 T 0.493810875924794E+04
+  Total real (s):             10.392
+  Total cpu (s):             12.785
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1434    6973   74933 res
+    1438    7024   71647 res
 =======================================
 dat_cart
 lev: 1 1 T 734.7345832757
 lev: 2 1 T 2194.1337134425
-  Total real (s):              0.142
-  Total cpu (s):              0.067
+  Total real (s):              0.116
+  Total cpu (s):              0.060
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     475    2050   24676 res
+     555    2126   27715 res
 =======================================
 dat_intensity
-lev: 1 1 T 0.350756102969394E+04
-lev: 2 1 T 0.493806525835453E+04
-  Total real (s):             94.400
-  Total cpu (s):             95.349
+lev: 1 1 T 0.350756102969395E+04
+lev: 2 1 T 0.493806525835463E+04
+  Total real (s):             49.920
+  Total cpu (s):             51.950
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    5057   47172  522907 res
+    5081   46948  519918 res
 =======================================
 dat_nDfit
 ElVibRot ERROR !!!!
-     172     594    8512 res
+     297    1032   15087 res
 =======================================
 dat_publi-Murrell
 lev: 1 1 T 3483.2268865669
-lev: 2 1 T 4901.5666272567
-  Total real (s):            109.515
-  Total cpu (s):            115.522
+lev: 2 1 T 4901.5666272563
+  Total real (s):            103.813
+  Total cpu (s):            111.233
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    8085   53268  788260 res
+    8160   53337  784399 res
 =======================================
 dat_publiTaylor
 lev: 1 1 T 3513.5616497586
-lev: 2 1 T 4944.0542906795
-  Total real (s):              7.059
-  Total cpu (s):              6.576
+lev: 2 1 T 4944.0542906796
+  Total real (s):              6.912
+  Total cpu (s):              6.528
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    7077   78334 1106599 res
+    7236   78901 1110855 res
 =======================================
 dat_publi_HADA
 lev: 1 1 T 3508.9448932059
 lev: 2 1 T 4952.4760170442
-  Total real (s):             10.931
-  Total cpu (s):             10.794
+  Total real (s):              9.820
+  Total cpu (s):              9.509
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    2832   13105  198692 res
+    2999   13703  201755 res
 =======================================
 dat_publi_cHAC
 lev: 1 1 T 3507.6030244557
-lev: 2 1 T 4938.1240309249
-  Total real (s):             84.497
-  Total cpu (s):             90.966
+lev: 2 1 T 4938.1240309246
+  Total real (s):             79.315
+  Total cpu (s):             85.940
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    9669  101217 1053861 res
+    9836  101818 1055536 res
 =======================================
 dat_publi_flex
 lev: 1 1 T 721.2546363544
 lev: 2 1 T 2165.3226316152
-  Total real (s):              0.181
-  Total cpu (s):              0.096
+  Total real (s):              0.227
+  Total cpu (s):              0.112
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1431    5610   74986 res
+    1598    6196   78575 res
 =======================================
 dat_publi_rigid
 lev: 1 1 T 725.9917170682
-lev: 2 1 T 2169.5970414917
-  Total real (s):              0.167
-  Total cpu (s):              0.086
+lev: 2 1 T 2169.5970414918
+  Total real (s):              0.193
+  Total cpu (s):              0.091
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1374    5564   75551 res
+    1541    6163   79059 res
 =======================================
 dat_vib-2elec
 lev: 1 1 T 1044.4229122175
 lev: 2 1 T 2467.4034401942
-  Total real (s):              0.061
-  Total cpu (s):              0.033
+  Total real (s):              0.023
+  Total cpu (s):              0.027
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    1151    6189   88004 res
+    1200    6247   87759 res
 =======================================
 dat_vib2D
-lev: 1 1 T 2376.0944670501
-lev: 2 1 T 3814.1632431559
-  Total real (s):             24.485
-  Total cpu (s):             20.946
+lev: 1 1 T 2376.0944670493
+lev: 2 1 T 3814.1632431560
+  Total real (s):             23.755
+  Total cpu (s):             19.570
  mem_tot,max_mem_used                    0                    0
- nb_alloc,nb_dealloc                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     684    3864   45609 res
+     730    3834   45986 res
 =======================================

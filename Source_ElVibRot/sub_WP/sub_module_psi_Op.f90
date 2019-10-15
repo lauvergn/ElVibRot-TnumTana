@@ -231,7 +231,7 @@
           i_baie = 1 + (locChannel_ie-1)*psi1%nb_ba
           f_baie = i_baie-1 + psi1%nb_ba
         END IF
-        IF (psi1%symab > -1 .AND. psi1%symab > -1 .AND. psi1%symab /= psi2%symab) THEN
+        IF (psi1%symab > -1 .AND. psi2%symab > -1 .AND. psi1%symab /= psi2%symab) THEN
           Overlap = cmplx(ZERO,ZERO,kind=Rkind)
         ELSE
           IF (psi1%cplx) THEN

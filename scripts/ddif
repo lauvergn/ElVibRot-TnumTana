@@ -1,5 +1,5 @@
 
-nom=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v120.6-Tnum32.6-Tana8.10
+nom=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v150.6-Tnum35.13-Tana10.2
 #nom=$1
 moi=`pwd`
 

@@ -609,6 +609,7 @@ MODULE mod_paramQ
         write(out_unitp,*)
         !CALL Write_mole(mole)
         write(out_unitp,*)
+        CALL flush_perso(out_unitp)
       END IF
 !     -----------------------------------------------------------------
 !      IF (size(Qact) == 0) THEN
@@ -650,6 +651,7 @@ MODULE mod_paramQ
         IF (print_Qtransfo_loc .OR. debug) THEN
           CALL Write_d0Q(it,'Qin (Qact)',Qact,6)
           CALL Write_d0Q(0, 'Qit (Cart)',Qit,3)
+          CALL flush_perso(out_unitp)
         END IF
 
         CALL dealloc_dnSVM(dnx)
@@ -674,6 +676,7 @@ MODULE mod_paramQ
 
           CALL Write_d0Q(it,'Qin  (Qact)',dnQin%d0 ,6)
           CALL Write_d0Q(it,'Qout (Qdyn)',dnQout%d0,6)
+          CALL flush_perso(out_unitp)
 
         END IF
 
@@ -703,6 +706,7 @@ MODULE mod_paramQ
             write(out_unitp,*) 'name_transfo',it,mole%tab_Qtransfo(it)%name_transfo
             CALL Write_d0Q(it,'Qin ',dnQin%d0 ,6)
             CALL Write_d0Q(it,'Qout',dnQout%d0,6)
+            CALL flush_perso(out_unitp)
 
           END IF
 
@@ -727,6 +731,7 @@ MODULE mod_paramQ
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*)
+        CALL flush_perso(out_unitp)
       END IF
 !     -----------------------------------------------------------------
 

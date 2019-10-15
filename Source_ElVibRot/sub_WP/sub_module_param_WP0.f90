@@ -47,8 +47,11 @@
         logical         :: lect_WP0BasisRepall     ! read WP0 on the basis
                                               ! (for some given basis functions index)
                                               ! Usefull for spectral paropagation or test
-        integer         :: WP0n_h ,WP0nb_elec ! indices of the harmonic and electronic channel for WP0
-        integer         :: WP0_DIP            ! =0 no dipole moment =1,2,3 => mhux,mhuy,mhuy
+        integer           :: WP0n_h ,WP0nb_elec ! indices of the harmonic and electronic channel for WP0
+        integer           :: WP0_DIP            ! =0 no dipole moment =1,2,3 => mhux,mhuy,mhuy
+        real (kind=Rkind) :: th_WP0 = ZERO      ! mixing angle between the initial WP0 and Dip.WP0
+                                                ! so that NewWP0=cos(th_WP0)*Dip.WP0 + sin(th_WP0).WP0
+
         integer         :: WP0nrho            ! WP0nrho : define how to normalize WP0
         logical         :: WP0BasisRep             ! calculation of WP0BasisRep with the following parameters
         integer         :: WP0_nb_CleanChannel   ! remove some adiabatic or electronic channels

@@ -17,8 +17,8 @@ cd $here
 
 
 nice $DIR_vib/vib << ** >res
- &system File_path='/utmp/lauvergn' /
- &constantes /
+ &system printlevel=1 File_path='/utmp/lauvergn' /
+ &constantes ene_unit='au' /
  &variables
          nrho=2
          Old_Qtransfo=f
@@ -68,7 +68,7 @@ dh 0.0
 
         n_WPecri=0 WPpsi2=f WPpsi=f Write_WPAdia=f
 
-        type_WPpropa=1 poly_tol=1.d-12 auto_Hmax=t
+        type_WPpropa=1 npoly=30 poly_tol=1.d-12 auto_Hmax=f
 
         WP0n_h=1 WP0nb_elec=2 lect_WP0FBR=f
 

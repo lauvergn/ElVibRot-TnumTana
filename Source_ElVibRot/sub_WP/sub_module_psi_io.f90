@@ -186,10 +186,12 @@
         DO i=1,para_WP0%nb_WP0
           write(out_unitp,*) ' Read in',in_unitp,i
           CALL flush_perso(out_unitp)
+          CALL alloc_psi(psi0(i),BasisRep=.TRUE.)
           CALL lect_psiBasisRepnotall_nD(psi0(i),in_unitp,cplx,.TRUE.)
           write(out_unitp,*) ' write in',out_unitp,i
           CALL flush_perso(out_unitp)
           CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ONETENTH**4,.TRUE.,i)
+          !CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ZERO,.TRUE.,i)
         END DO
       END IF
 
@@ -1142,7 +1144,7 @@ END SELECT
       integer            :: Rerr
       integer            :: i,ndim
       integer            :: ind_ndim(Psi%BasisnD%ndim+2)
-      logical            :: done_basis_is_smaller=.FALSE.
+      logical            :: done_basis_is_smaller
       logical            :: basis_is_OK
       real (kind=Rkind)  :: a,b
 !----- for debuging --------------------------------------------------
@@ -1160,6 +1162,7 @@ END SELECT
       END IF
 !-----------------------------------------------------------
 
+done_basis_is_smaller = .FALSE.
 
 lformated_loc = lformated
 IF (nioPsi == 5 .OR. nioPsi == in_unitp) lformated_loc = .TRUE.
@@ -1186,26 +1189,17 @@ CASE(0)
       ! test the electronic and adiabatic channels
       i_h = ind_ndim(ndim+1)
       i_e = ind_ndim(ndim+2)
-      basis_is_OK = i_h <= Psi%nb_bi .AND. i_e <= Psi%nb_be
 
-      IF (.NOT. basis_is_OK) THEN
-        IF (.NOT. done_basis_is_smaller)                          &
-               write(out_unitp,*) ' WARNNING the basis is smaller'
-        done_basis_is_smaller = .TRUE.
-      END IF
-
+      basis_is_OK = (i_h <= Psi%nb_bi .AND. i_e <= Psi%nb_be)
+      IF (.NOT. basis_is_OK) done_basis_is_smaller = .TRUE.
       IF (.NOT. basis_is_OK) CYCLE
 
       CALL calc_InD_FROM_ndim_index(Psi%BasisnD,ind_ndim(1:ndim),i_b,i_bguess)
 
-      basis_is_OK = i_b <= Psi%nb_ba
-
-      IF (.NOT. basis_is_OK) THEN
-        IF (.NOT. done_basis_is_smaller)                          &
-                   write(out_unitp,*) ' WARNNING the basis is smaller'
-        done_basis_is_smaller = .TRUE.
-      END IF
+      basis_is_OK = (i_b <= Psi%nb_ba)
+      IF (.NOT. basis_is_OK) done_basis_is_smaller = .TRUE.
       IF (.NOT. basis_is_OK) CYCLE
+
       i_bguess = i_b + 1
 
 
@@ -1235,25 +1229,15 @@ CASE(1)
       ! test the electronic and adiabatic channels
       i_h = ind_ndim(ndim+1)
       i_e = ind_ndim(ndim+2)
-      basis_is_OK = i_h <= Psi%nb_bi .AND. i_e <= Psi%nb_be
 
-      IF (.NOT. basis_is_OK) THEN
-        IF (.NOT. done_basis_is_smaller)                          &
-               write(out_unitp,*) ' WARNNING the basis is smaller'
-        done_basis_is_smaller = .TRUE.
-      END IF
-
+      basis_is_OK = (i_h <= Psi%nb_bi .AND. i_e <= Psi%nb_be)
+      IF (.NOT. basis_is_OK) done_basis_is_smaller = .TRUE.
       IF (.NOT. basis_is_OK) CYCLE
 
       CALL calc_InD_FROM_ndim_index(Psi%BasisnD,ind_ndim(1:ndim),i_b,i_bguess)
 
-      basis_is_OK = i_b <= Psi%nb_ba
-
-      IF (.NOT. basis_is_OK) THEN
-        IF (.NOT. done_basis_is_smaller)                          &
-                   write(out_unitp,*) ' WARNNING the basis is smaller'
-        done_basis_is_smaller = .TRUE.
-      END IF
+      basis_is_OK = (i_b <= Psi%nb_ba)
+      IF (.NOT. basis_is_OK) done_basis_is_smaller = .TRUE.
       IF (.NOT. basis_is_OK) CYCLE
       i_bguess = i_b + 1
 
@@ -1267,6 +1251,8 @@ CASE(1)
 CASE Default
   STOP 'no default in Read_list_nDindBasis1_TO_nDindBasis2'
 END SELECT
+
+IF (done_basis_is_smaller) write(out_unitp,*) ' WARNNING the basis is smaller'
 
 !-----------------------------------------------------------
 IF (debug) THEN

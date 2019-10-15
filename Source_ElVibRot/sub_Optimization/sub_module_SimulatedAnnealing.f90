@@ -105,6 +105,9 @@
         RangeScal           =  0.8_Rkind
         RangeScalInit       =  1._Rkind
 
+        With_RangeInit      = .FALSE.
+        RangeInit           = 1._Rkind
+
         TempScheduling_type =  2 ! 1: linear, 2: geometrical ...
         ExpCoolParam        =  0.95_Rkind
 
@@ -244,7 +247,7 @@
 
       real (kind=Rkind), pointer :: xOpt(:)
 
-      integer           :: i,imc,nb_Norm_min
+      integer           :: i,imc,nb_Norm_min,nb_block_WithoutMin
       integer           :: nb_Accepted_DNorm,nb_Accepted_proba,nb_NotAccepted_proba
 
 
@@ -281,18 +284,29 @@
       print_level = 0
       CALL Sub_Energ_OF_ParamBasis(Norm_min,xOpt_min,nb_Opt,BasisnD,    &
                                    para_Tnum,mole,ComOp,para_PES,Qact)
-      write(out_unitp,*) 'Initial param',xOpt_min,' Energy',Norm_min
-          !STOP 'coucou'
+      IF (size(xOpt_min) > 20) THEN
+        write(out_unitp,*) ' Initial param',xOpt_min(1:10),' ... Energy',Norm_min
+      ELSE
+        write(out_unitp,*) ' Initial param',xOpt_min,' Energy',Norm_min
+      END IF
 
 
       QA(:) = xOpt_min(:) - SQ(:)*HALF
       QB(:) = xOpt_min(:) + SQ(:)*HALF
       QAv(:)= xOpt_min(:)
-      write(out_unitp,*) 'QA,QB',QA,QB
+      IF (size(QA) > 20) THEN
+        write(out_unitp,*) 'SQ(1:10)',SQ(1:10),' ...'
+        write(out_unitp,*) 'QA(1:10)',QA(1:10),' ...'
+        write(out_unitp,*) 'QB(1:10)',QB(1:10),' ...'
+      ELSE
+        write(out_unitp,*) 'SQ',SQ
+        write(out_unitp,*) 'QA',QA
+        write(out_unitp,*) 'QB',QB
+      END IF
 
 
-      Norm_max = Norm_min
-      NormA    = ZERO
+      Norm_max    = Norm_min
+      NormA       = ZERO
       print_level = -1
       ! first find the average Energy (Norm), then Temp
       DO imc=1,para_SimulatedAnnealing%nb_mc_tot/10
@@ -308,7 +322,7 @@
 
           IF (NormB < Norm_min) THEN
             xOpt_min(:) = xOpt(:)
-            Norm_min = NormB
+            Norm_min    = NormB
             write(out_unitp,*) 'NormB',imc,NormB
           END IF
       END DO
@@ -316,7 +330,11 @@
       write(out_unitp,*) 'Min, Average, Max Energy',Norm_min,NormA,Norm_max
 
       x0(:)  = xOpt_min(:)
-      write(out_unitp,*) ' Energy_min',xOpt_min,Norm_min
+      IF (size(xOpt_min) > 20) THEN
+        write(out_unitp,*) ' Energy_min',xOpt_min(1:10),' ...',Norm_min
+      ELSE
+        write(out_unitp,*) ' Energy_min',xOpt_min,Norm_min
+      END IF
 
       Temp_max = Norm_max-Norm_min
       Temp     = Temp_max
@@ -325,8 +343,9 @@
 
       DTemp       = Temp_max/real(max(10,para_SimulatedAnnealing%nb_mc_tot),kind=Rkind)
 
-      imc = 1
-      nb_Norm_min = 0
+      imc                 = 1
+      nb_Norm_min         = 0
+      nb_block_WithoutMin = 0
       DO
 
         DO i=1,nb_Opt
@@ -334,7 +353,7 @@
             CALL random_number(xi)
             xi = TWO*xi-ONE
             xOpt(i) = x0(i) + xi*SQ(i)
-            !IF (xOpt(i) <= QB(i) .AND. xOpt(i) >= QA(i)) EXIT
+            IF (xOpt(i) <= QB(i) .AND. xOpt(i) >= QA(i)) EXIT
           END DO
         END DO
 
@@ -343,13 +362,15 @@
 
         DNorm = NormA - NormB
         !write(out_unitp,*) 'Norm',imc,xOpt,NormA
+        !write(out_unitp,*) 'Norm',imc,sqrt(sum((xOpt-xOpt_min)**2)),NormA
+
         CALL flush_perso(out_unitp)
 
         IF ( NormA < Norm_min) THEN
           nb_Norm_min   = nb_Norm_min + 1
           xOpt_min(:)   = xOpt(:)
           Norm_min      = NormA
-          write(out_unitp,*) ' imc, Temp, nb_Energy_min, Energy_min',imc,Temp,nb_Norm_min,Norm_min
+          !write(out_unitp,*) ' imc, Temp, nb_Energy_min, Energy_min',imc,Temp,nb_Norm_min,Norm_min
         END IF
 
 
@@ -385,26 +406,32 @@
                                            Temp_max,nb_Norm_min,Norm_min
           CALL flush_perso(out_unitp)
           SQ(:)       = SQ(:)*para_SimulatedAnnealing%RangeScal
-          IF (nb_Norm_min == 0) THEN ! another scaling+no reset Tmax and DTemp
-            SQ(:) = SQ(:)*para_SimulatedAnnealing%RangeScal ! another scaling
-          ELSE
-            Temp_max    = (ONE-para_SimulatedAnnealing%ResetTempScal)*Temp_max
-            DTemp       = Temp_max/real(max(10,para_SimulatedAnnealing%nb_mc_tot-imc),kind=Rkind)
-          END IF
-
-
+          Temp_max    = (ONE-para_SimulatedAnnealing%ResetTempScal)*Temp_max
           Temp        = Temp_max
+          DTemp       = Temp_max/real(max(10,para_SimulatedAnnealing%nb_mc_tot-imc),kind=Rkind)
           x0(:)       = xOpt_min(:)
-          nb_Norm_min = 0
+
+          IF (nb_Norm_min == 0) THEN
+            nb_block_WithoutMin = nb_block_WithoutMin + 1
+          ELSE
+            nb_block_WithoutMin = 0
+            nb_Norm_min         = 0
+          END IF
         END IF
-        IF (mod(imc,100) == 0) THEN
-          write(out_unitp,*) imc,'Temp_max,nb_Energy_min,Energy_min',           &
-                                           Temp_max,nb_Norm_min,Norm_min
+
+        IF (nb_block_WithoutMin > 20) THEN
+          write(out_unitp,*) 'restart because, nb_block_WithoutMin > 20'
+          flush(out_unitp)
+          EXIT
         END IF
 
         IF (Temp < para_SimulatedAnnealing%Tmin .OR. imc > para_SimulatedAnnealing%nb_mc_tot) EXIT
       END DO
-      write(out_unitp,*) 'Optimal param',xOpt_min,' Energy',Norm_min
+      IF (size(xOpt_min) > 20) THEN
+        write(out_unitp,*) ' Optimal param',xOpt_min(1:10),' ... Energy',Norm_min
+      ELSE
+        write(out_unitp,*) ' Optimal param',xOpt_min,' Energy',Norm_min
+      END IF
 
       !deallocation
       CALL dealloc_array(x,   'x',   name_sub)

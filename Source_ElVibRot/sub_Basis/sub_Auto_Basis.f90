@@ -32,6 +32,8 @@
      !PRIVATE
      !PUBLIC Auto_basis, sub_MatOp_HADA
 
+     PRIVATE AutoParam_basis_Q0,AutoParam_basis_scaleQ,check_OutOfRange,Set_InitRange
+
      CONTAINS
 
 !=========================================================================
@@ -163,10 +165,10 @@
 !=======================================================================
       RECURSIVE SUBROUTINE RecAuto_basis(para_Tnum,mole,BasisnD,        &
                                          para_PES,para_ReadOp,ComOp_loc)
-
       USE mod_system
       USE mod_PrimOp
       USE mod_basis
+      USE BasisMakeGrid
       USE mod_Op
       IMPLICIT NONE
 
@@ -249,6 +251,7 @@
                 write(out_unitp,*) 'Sparse Grid type2 done. Layer: ',rec
 
         ELSE IF (BasisnD%SparseGrid_type == 4) THEN
+
           CALL RecSparseGrid_ForDP_type4(BasisnD,para_Tnum,mole,        &
                                          para_PES,para_ReadOp,ComOp_loc)
 
@@ -329,6 +332,11 @@
         END IF
 
         CALL construct_primitive_basis(BasisnD)
+
+        IF (BasisnD%auto_basis) THEN
+          CALL AutoParam_basis(BasisnD,para_Tnum,mole,ComOp_loc,para_PES,para_ReadOp)
+          CALL construct_primitive_basis(BasisnD)
+        END IF
 
         IF (Print_basis) write(out_unitp,*) 'Primitive basis done. Layer:      ',rec
 
@@ -692,7 +700,7 @@ END SUBROUTINE RecSet_EneH0
       !---------------------------------------------------------------
       ! make Operators: H and S
       !i=1 => for H
-      CALL All_param_TO_para_H(para_Tnum,mole_loc,                          &
+      CALL All_param_TO_para_H(para_Tnum,mole_loc,                      &
                                para_AllBasis_loc,                       &
                                ComOp,para_PES,para_ReadOp_loc,          &
                                para_AllOp_loc%tab_Op(1))
@@ -723,6 +731,7 @@ END SUBROUTINE RecSet_EneH0
 
       !---------------------------------------------------------------
       ! make the matrix of H
+
       CALL sub_MatOp(para_AllOp_loc%tab_Op(1),debug)
 
       ! for checking !!!
@@ -788,6 +797,673 @@ END SUBROUTINE RecSet_EneH0
 
       END SUBROUTINE Set_EneH0_OF_PackedBasis
 
+      ! basis parameters: for HO basis set (scaleQ)
+      SUBROUTINE AutoParam_basis(basis_Set,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+
+      USE mod_system
+      USE mod_Constant
+      USE mod_PrimOp
+      USE mod_basis
+      USE mod_Op
+      IMPLICIT NONE
+
+!----- for the zmatrix and Tnum --------------------------------------
+      TYPE (zmatrix), intent(in) :: mole
+      TYPE (Tnum)    :: para_Tnum
+
+!----- for the basis set ----------------------------------------------
+      TYPE (basis)          :: basis_Set
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_PES) :: para_PES
+
+!----- variables for the construction of H ---------------------------
+      TYPE (param_ComOp)          :: ComOp
+      TYPE (param_ReadOp)         :: para_ReadOp
+
+
+
+      logical       :: HObasis
+
+
+      TYPE (basis)      :: basis_temp
+      integer           :: print_level_loc
+
+!-------------------------------------------------------------------------
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub = 'AutoParam_basis'
+!---------------------------------------------------------------------
+
+      ! test for HO basis
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        CALL RecWrite_basis(basis_Set,write_all=.FALSE.)
+      END IF
+!---------------------------------------------------------------------
+      print_level_loc = print_level
+      print_level = -1
+      IF (debug) print_level = 2
+
+      CALL basis2TObasis1(basis_temp,basis_Set)
+
+      basis_temp%nb            = 2
+      CALL Set_nq_OF_basis(basis_temp,nq=10)
+      basis_temp%With_L        = .FALSE.
+      basis_temp%L_SparseGrid  = -1
+      basis_temp%L_SparseBasis = -1
+      basis_temp%Type_OF_nDindB = 1
+
+      CALL construct_primitive_basis(basis_temp)
+
+
+      !write(6,*) 'In ',name_sub,' basis_temp%type',basis_temp%type,HObasis
+      HObasis = (basis_temp%type == 20 .OR. basis_temp%type == 21 .OR.     &
+                 basis_temp%type == 200 .OR. basis_temp%type == 201)
+
+      IF (HObasis .AND. basis_temp%auto_basis) THEN
+        write(out_unitp,*) 'Initial Q0 and scaleQ',basis_Set%Q0(1),basis_Set%scaleQ(1)
+        CALL AutoParam_basis_scaleQ(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        CALL AutoParam_basis_Q0(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        CALL AutoParam_basis_scaleQ(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+
+        basis_Set%Q0(1)      = basis_temp%Q0(1)
+        basis_Set%scaleQ(1)  = basis_temp%scaleQ(1)
+      END IF
+
+      basis_Set%auto_basis = .FALSE.
+      print_level = print_level_loc
+
+      CALL dealloc_basis(basis_temp)
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        !CALL RecWrite_basis(basis_Set,write_all=.TRUE.)
+        write(out_unitp,*)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+      CALL flush_perso(out_unitp)
+
+      END SUBROUTINE AutoParam_basis
+      ! basis parameters: for HO basis set (scaleQ)
+      SUBROUTINE AutoParam_basis_scaleQ(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+
+      USE mod_system
+      USE mod_Constant
+      USE mod_PrimOp
+      USE mod_basis
+      USE mod_Op
+      IMPLICIT NONE
+
+!----- for the zmatrix and Tnum --------------------------------------
+      TYPE (zmatrix), intent(in) :: mole
+      TYPE (Tnum)    :: para_Tnum
+
+!----- for the basis set ----------------------------------------------
+      TYPE (basis)          :: basis_temp
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_PES) :: para_PES
+      integer :: nb_scalar_Op,type_HamilOp
+      logical :: calc_scalar_Op,direct_KEO
+
+!----- variables for the construction of H ---------------------------
+      TYPE (param_ComOp)          :: ComOp
+      TYPE (param_ReadOp)         :: para_ReadOp
+
+
+       integer       :: i
+
+      real (kind=Rkind) :: Ene1_10SQrange(29)      !  range [1.0, 1.5 ....14.5 15.0]
+      real (kind=Rkind) :: Enep1_p9SQrange(9)      !  range [0.1 0.2            0.9] around the optimal value of the previous range
+      real (kind=Rkind) :: Enep01_p09SQrange(9)    !  range [0.01 0.02         0.09]
+      real (kind=Rkind) :: Enep001_p009SQrange(19) !  range [0.001 0.002      0.009] around the optimal value of the previous range
+
+      real (kind=Rkind) :: E,Emin,SQmin
+      real (kind=Rkind) :: auTOcm_inv
+
+!-------------------------------------------------------------------------
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub = 'AutoParam_basis_scaleQ'
+!---------------------------------------------------------------------
+
+      ! test for HO basis
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        !CALL RecWrite_basis(basis_temp,write_all=.FALSE.)
+      END IF
+!---------------------------------------------------------------------
+      auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
+
+      basis_temp%scaleQ(1) = ONE
+
+
+      Emin = HUGE(ONE)
+      SQMin = basis_temp%scaleQ(1)
+
+      DO i=1,size(Ene1_10SQrange)
+
+        CALL dealloc_dnb_OF_basis(basis_temp)
+        CALL dealloc_xw_OF_basis(basis_temp)
+        CALL dealloc_nDindex(basis_temp%nDindG)
+
+        CALL construct_primitive_basis(basis_temp)
+
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        IF (debug) write(out_unitp,*) 'SQ,E',basis_temp%scaleQ(1),E*auTOcm_inv
+        flush(out_unitp)
+
+        IF (E < Emin) THEN
+          Emin  = E
+          SQMin = basis_temp%scaleQ(1)
+        END IF
+        Ene1_10SQrange(i) = E
+
+        basis_temp%scaleQ(1) = basis_temp%scaleQ(1) + HALF
+
+      END DO
+
+      !short range (evry 0.1)
+      IF (SQMin == ONE) THEN
+        basis_temp%scaleQ(1) = ONETENTH
+      ELSE IF (SQMin == 15._Rkind) THEN
+        basis_temp%scaleQ(1) = 15._Rkind
+      ELSE
+        basis_temp%scaleQ(1) = SQMin-0.4_Rkind
+      END IF
+      DO i=1,size(Enep1_p9SQrange)
+
+        CALL dealloc_dnb_OF_basis(basis_temp)
+        CALL dealloc_xw_OF_basis(basis_temp)
+        CALL construct_primitive_basis(basis_temp)
+
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        IF (debug) write(out_unitp,*) 'SQ,E',basis_temp%scaleQ(1),E*auTOcm_inv
+
+        IF (E < Emin) THEN
+          Emin  = E
+          SQMin = basis_temp%scaleQ(1)
+        END IF
+        Enep1_p9SQrange(i) = E
+
+        basis_temp%scaleQ(1) = basis_temp%scaleQ(1) + ONETENTH
+
+      END DO
+
+
+      IF (SQMin == ONETENTH) THEN
+        basis_temp%scaleQ(1) = ONETENTH**2
+        DO i=1,size(Enep01_p09SQrange)
+
+        CALL dealloc_dnb_OF_basis(basis_temp)
+        CALL dealloc_xw_OF_basis(basis_temp)
+        CALL construct_primitive_basis(basis_temp)
+
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        IF (debug) write(out_unitp,*) 'SQ,E',basis_temp%scaleQ(1),E*auTOcm_inv
+
+        IF (E < Emin) THEN
+          Emin  = E
+          SQMin = basis_temp%scaleQ(1)
+        END IF
+        Enep01_p09SQrange(i) = E
+
+        basis_temp%scaleQ(1) = basis_temp%scaleQ(1) + ONETENTH**2
+
+        END DO
+
+        !short range (evry 0.001)
+        IF (SQMin == ONETENTH**2) THEN
+          basis_temp%scaleQ(1) = ONETENTH**3
+        ELSE
+          basis_temp%scaleQ(1) = SQMin-0.009_Rkind
+        END IF
+        DO i=1,size(Enep001_p009SQrange)
+
+          CALL dealloc_dnb_OF_basis(basis_temp)
+          CALL dealloc_xw_OF_basis(basis_temp)
+          CALL construct_primitive_basis(basis_temp)
+
+          E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+          IF (debug) write(out_unitp,*) 'SQ,E',basis_temp%scaleQ(1),E*auTOcm_inv
+
+          IF (E < Emin) THEN
+            Emin  = E
+            SQMin = basis_temp%scaleQ(1)
+          END IF
+          Enep001_p009SQrange(i) = E
+
+          basis_temp%scaleQ(1) = basis_temp%scaleQ(1) + ONETENTH**3
+
+        END DO
+
+
+      END IF
+      write(out_unitp,*) 'Optimal scaleQ, E(cm-1)',SQMin,Emin*auTOcm_inv
+
+
+      basis_temp%scaleQ(1)  = SQMin
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        !CALL RecWrite_basis(basis_temp,write_all=.TRUE.)
+        write(out_unitp,*)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+      CALL flush_perso(out_unitp)
+
+      END SUBROUTINE AutoParam_basis_scaleQ
+      SUBROUTINE AutoParam_basis_Q0(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+
+      USE mod_system
+      USE mod_Constant
+      USE mod_PrimOp
+      USE mod_basis
+      USE mod_Op
+      IMPLICIT NONE
+
+!----- for the zmatrix and Tnum --------------------------------------
+      TYPE (zmatrix), intent(in) :: mole
+      TYPE (Tnum)    :: para_Tnum
+
+!----- for the basis set ----------------------------------------------
+      TYPE (basis)          :: basis_temp
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_PES) :: para_PES
+      integer :: nb_scalar_Op,type_HamilOp
+      logical :: calc_scalar_Op,direct_KEO
+
+!----- variables for the construction of H ---------------------------
+      TYPE (param_ComOp)          :: ComOp
+      TYPE (param_ReadOp)         :: para_ReadOp
+
+
+      integer           :: i,type_Q
+      real (kind=Rkind) :: Ene1_Q0range(21)      !  range Q0 +/- scaleQ/10*i
+      real (kind=Rkind) :: Ene1_Q0range2(21)      !  range Q0 +/- scaleQ/100*i
+      real (kind=Rkind) :: E,Emin,Q0min,Q0ini
+      real (kind=Rkind) :: auTOcm_inv
+
+!-------------------------------------------------------------------------
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub = 'AutoParam_basis_Q0'
+!---------------------------------------------------------------------
+
+      ! test for HO basis
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        !CALL RecWrite_basis(basis_temp,write_all=.FALSE.)
+      END IF
+!---------------------------------------------------------------------
+      auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
+
+
+      !write(6,*) 'type_Qin',mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(:)
+      !write(6,*) 'iQdyn',basis_temp%iQdyn(1)
+      !write(6,*) 'type_Qin',mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(basis_temp%iQdyn(1))
+      type_Q = mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(basis_temp%iQdyn(1))
+
+
+      Q0ini = basis_temp%Q0(1)
+      CALL dealloc_dnb_OF_basis(basis_temp)
+      CALL dealloc_xw_OF_basis(basis_temp)
+      CALL dealloc_nDindex(basis_temp%nDindG)
+
+      CALL construct_primitive_basis(basis_temp)
+
+      Q0Min = Q0ini
+      Emin  = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+
+      !write(out_unitp,*) 'Initial Q0,E',Q0ini,Emin*auTOcm_inv
+
+      basis_temp%Q0(1) = Q0ini - basis_temp%scaleQ(1)
+      IF (check_OutOfRange(basis_temp%Q0(1),type_Q) .OR. (type_Q==2 .AND. basis_temp%Q0(1) < Q0ini/TWO)) THEN
+        IF (type_Q==2) basis_temp%Q0(1) = Q0ini/TWO
+        CALL Set_InitRange(basis_temp%Q0(1),type_Q)
+      END IF
+
+      DO i=1,size(Ene1_Q0range)
+
+        CALL dealloc_dnb_OF_basis(basis_temp)
+        CALL dealloc_xw_OF_basis(basis_temp)
+        CALL dealloc_nDindex(basis_temp%nDindG)
+
+        CALL construct_primitive_basis(basis_temp)
+
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        IF (debug) write(out_unitp,*) 'Q0,E',basis_temp%Q0(1),E*auTOcm_inv
+        flush(out_unitp)
+
+        IF (E < Emin) THEN
+          Emin  = E
+          Q0Min = basis_temp%Q0(1)
+        END IF
+        Ene1_Q0range(i) = E
+
+        basis_temp%Q0(1) = basis_temp%Q0(1) + basis_temp%scaleQ(1)/TEN
+
+        IF (check_OutOfRange(basis_temp%Q0(1),type_Q)) EXIT
+
+      END DO
+
+
+      basis_temp%Q0(1) = Q0Min - basis_temp%scaleQ(1)/TEN
+      IF (check_OutOfRange(basis_temp%Q0(1),type_Q) .OR. (type_Q==2 .AND. basis_temp%Q0(1) < Q0ini/TWO)) THEN
+        IF (type_Q==2) basis_temp%Q0(1) = Q0ini/TWO
+        CALL Set_InitRange(basis_temp%Q0(1),type_Q)
+      END IF
+
+      DO i=1,size(Ene1_Q0range2)
+
+        CALL dealloc_dnb_OF_basis(basis_temp)
+        CALL dealloc_xw_OF_basis(basis_temp)
+        CALL dealloc_nDindex(basis_temp%nDindG)
+
+        CALL construct_primitive_basis(basis_temp)
+
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        IF (debug) write(out_unitp,*) 'Q0,E',basis_temp%Q0(1),E*auTOcm_inv
+        flush(out_unitp)
+
+        IF (E < Emin) THEN
+          Emin  = E
+          Q0Min = basis_temp%Q0(1)
+        END IF
+        Ene1_Q0range2(i) = E
+
+        basis_temp%Q0(1) = basis_temp%Q0(1) + basis_temp%scaleQ(1)/TEN**2
+
+        IF (check_OutOfRange(basis_temp%Q0(1),type_Q)) EXIT
+
+
+      END DO
+
+      basis_temp%Q0(1) = Q0Min - basis_temp%scaleQ(1)/TEN**2
+      IF (check_OutOfRange(basis_temp%Q0(1),type_Q) .OR. (type_Q==2 .AND. basis_temp%Q0(1) < Q0ini/TWO)) THEN
+        IF (type_Q==2) basis_temp%Q0(1) = Q0ini/TWO
+        CALL Set_InitRange(basis_temp%Q0(1),type_Q)
+      END IF
+
+      DO i=1,size(Ene1_Q0range2)
+
+        CALL dealloc_dnb_OF_basis(basis_temp)
+        CALL dealloc_xw_OF_basis(basis_temp)
+        CALL dealloc_nDindex(basis_temp%nDindG)
+
+        CALL construct_primitive_basis(basis_temp)
+
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        IF (debug) write(out_unitp,*) 'Q0,E',basis_temp%Q0(1),E*auTOcm_inv
+        flush(out_unitp)
+
+        IF (E < Emin) THEN
+          Emin  = E
+          Q0Min = basis_temp%Q0(1)
+        END IF
+        Ene1_Q0range2(i) = E
+
+        basis_temp%Q0(1) = basis_temp%Q0(1) + basis_temp%scaleQ(1)/TEN**3
+
+        IF (check_OutOfRange(basis_temp%Q0(1),type_Q)) EXIT
+
+
+      END DO
+
+      write(out_unitp,*) 'Optimal Q0, E (cm-1)',Q0Min,Emin*auTOcm_inv
+
+
+      basis_temp%Q0(1)  = Q0Min
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        !CALL RecWrite_basis(basis_temp,write_all=.TRUE.)
+        write(out_unitp,*)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+      CALL flush_perso(out_unitp)
+
+      END SUBROUTINE AutoParam_basis_Q0
+      FUNCTION check_OutOfRange(Q,type_Q)
+      USE mod_system
+      IMPLICIT NONE
+
+      logical                          :: check_OutOfRange
+      integer,           intent(in)    :: type_Q
+      real (kind=Rkind), intent(inout) :: Q
+
+
+      check_OutOfRange = (type_Q ==  3 .AND. Q <= ZERO)  .OR.   &
+                         (type_Q ==  3 .AND. Q >= Pi)    .OR.   &
+                         (type_Q == -3 .AND. Q <= -ONE)  .OR.   &
+                         (type_Q == -3 .AND. Q >=  ONE)  .OR.   &
+                         (type_Q ==  2 .AND. Q <= ZERO)
+
+      END FUNCTION check_OutOfRange
+      SUBROUTINE Set_InitRange(Q,type_Q)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer,           intent(in)    :: type_Q
+      real (kind=Rkind), intent(inout) :: Q
+
+
+      IF ( type_Q == 3 .AND. Q <= ZERO) Q = ONETENTH
+      IF ( type_Q == 3 .AND. Q >= Pi)   Q = PI/TWO
+
+      IF ( type_Q == -3 .AND. Q < -ONE) Q = -ONE + ONETENTH
+      IF ( type_Q == -3 .AND. Q >  ONE) Q = ZERO
+
+      IF ( type_Q == 2 .AND. Q <= ZERO) Q = HALF
+
+      END SUBROUTINE Set_InitRange
+      FUNCTION Ene_FROM_basis(basis_Set,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+
+      USE mod_system
+      USE mod_Constant
+      USE mod_PrimOp
+      USE mod_basis
+      USE mod_Op
+      IMPLICIT NONE
+
+      real(kind=Rkind) :: Ene_FROM_basis
+
+!----- for the zmatrix and Tnum --------------------------------------
+      TYPE (zmatrix), intent(in) :: mole
+      TYPE (Tnum)    :: para_Tnum
+
+!----- for the basis set ----------------------------------------------
+      TYPE (basis), intent(in)          :: basis_Set
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_PES) :: para_PES
+      integer :: nb_scalar_Op,type_HamilOp
+      logical :: calc_scalar_Op,direct_KEO
+
+!----- variables for the construction of H ---------------------------
+      TYPE (param_ComOp)          :: ComOp
+      TYPE (param_ReadOp)         :: para_ReadOp
+
+
+!----- local variables -----------------------------------------------
+!----- variables for the para_ReadOp parameters ----------------
+      TYPE (param_ReadOp)        :: para_ReadOp_loc
+
+!----- variables for the construction of H ---------------------------
+      TYPE (param_AllOp)          :: para_AllOp_loc
+!----- for the basis set ----------------------------------------------
+      TYPE (param_AllBasis) :: para_AllBasis_loc
+
+      integer       :: i,iact,isym,JJ
+      integer       :: NonGcteRange(2)
+
+      TYPE(REAL_WU) :: RWU_E
+
+!----- for the zmatrix and Tnum --------------------------------------
+      TYPE (zmatrix) :: mole_loc
+
+!-------------------------------------------------------------------------
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub = 'Ene_FROM_basis'
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        !CALL RecWrite_basis(basis_Set,write_all=.FALSE.)
+      END IF
+!---------------------------------------------------------------------
+
+      ! modification of mole => mole_loc (we need that for RPH transfo)
+      CALL mole1TOmole2(mole,mole_loc)
+      mole_loc%Cart_transfo                       = .FALSE.
+
+      ! save some parameters of para_PES, para_ReadOp, Tnum
+      nb_scalar_Op                = para_PES%nb_scalar_Op
+      para_PES%nb_scalar_Op       = 0
+
+      calc_scalar_Op              = para_PES%calc_scalar_Op
+      para_PES%calc_scalar_Op     = .FALSE.
+
+      JJ                          = para_Tnum%JJ
+      para_Tnum%JJ                = 0
+
+      type_HamilOp                = para_PES%type_HamilOp
+      para_PES%type_HamilOp       = 1
+      direct_KEO                  = para_PES%direct_KEO
+      para_PES%direct_KEO         = .FALSE.
+
+      NonGcteRange(:)             = para_Tnum%NonGcteRange(:)
+      para_Tnum%NonGcteRange(:)   = 0
+
+      ! allocation of tab_Op
+      para_AllOp_loc%nb_Op = 2 ! just H and S
+      CALL alloc_array(para_AllOp_loc%tab_Op,(/ para_AllOp_loc%nb_Op /),&
+                      'para_AllOp_loc%tab_Op',name_sub)
+
+      CALL basis_TO_Allbasis(basis_Set,para_AllBasis_loc,mole_loc)
+
+      !CALL RecWrite_basis(para_AllBasis_loc%BasisnD,write_all=.FALSE.)
+
+      para_ReadOp_loc             = para_ReadOp
+      para_ReadOp_loc%nb_bRot     = 1
+      para_ReadOp_loc%comput_S    = .FALSE.
+      para_ReadOp_loc%para_FileGrid%Save_FileGrid   = .FALSE.
+      para_ReadOp_loc%para_FileGrid%First_GridPoint = 1
+      para_ReadOp_loc%para_FileGrid%Last_GridPoint  = get_nq_FROM_basis(para_AllBasis_loc%BasisnD)
+      para_ReadOp_loc%para_FileGrid%Restart_Grid    = .FALSE.
+      para_ReadOp_loc%para_FileGrid%Test_Grid       = .FALSE.
+      para_ReadOp_loc%para_FileGrid%Read_FileGrid   = .FALSE.
+      para_ReadOp_loc%para_FileGrid%Type_FileGrid   = 0
+
+      !---------------------------------------------------------------
+      ! modified ComOp from para_AllBasis_loc
+      CALL All2_param_TO_ComOp(ComOp,para_AllBasis_loc,mole_loc,1,      &
+                               para_PES%nb_elec,                        &
+                               ComOp%file_HADA%name,                    &
+                               ComOp%file_HADA%formatted)
+
+      !---------------------------------------------------------------
+      ! make Operators: H and S
+      !i=1 => for H
+      CALL All_param_TO_para_H(para_Tnum,mole_loc,                      &
+                               para_AllBasis_loc,                       &
+                               ComOp,para_PES,para_ReadOp_loc,          &
+                               para_AllOp_loc%tab_Op(1))
+
+
+      ! old direct=2 with a matrix
+      para_AllOp_loc%tab_Op(1)%make_Mat                    = .TRUE.
+      para_AllOp_loc%tab_Op(1)%para_ReadOp%para_FileGrid%Save_MemGrid  = .TRUE.
+      para_AllOp_loc%tab_Op(1)%para_ReadOp%para_FileGrid%Save_FileGrid = .FALSE.
+
+      !i=2 => for S
+      i=2
+      CALL param_Op1TOparam_Op2(para_AllOp_loc%tab_Op(1),               &
+                                para_AllOp_loc%tab_Op(i))
+      para_AllOp_loc%tab_Op(i)%name_Op = 'S'
+      para_AllOp_loc%tab_Op(i)%n_Op    = -1
+
+      CALL Init_TypeOp(para_AllOp_loc%tab_Op(i)%param_TypeOp,           &
+                       type_Op=0,nb_Qact=mole_loc%nb_act1,cplx=.FALSE., &
+                       JRot=Para_Tnum%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
+      CALL derive_termQact_TO_derive_termQdyn(                          &
+                            para_AllOp_loc%tab_Op(i)%derive_termQdyn,   &
+                            para_AllOp_loc%tab_Op(i)%derive_termQact,   &
+                              mole_loc%ActiveTransfo%list_QactTOQdyn)
+
+      !---------------------------------------------------------------
+      ! make the Grid
+      CALL sub_qa_bhe(para_AllOp_loc)
+
+      !---------------------------------------------------------------
+      ! make the matrix of H
+      CALL sub_MatOp(para_AllOp_loc%tab_Op(1),debug)
+
+      para_AllOp_loc%tab_Op(1)%diago = .TRUE.
+      CALL alloc_para_Op(para_AllOp_loc%tab_Op(1),Grid=.FALSE.,Mat=.TRUE.)
+      CALL sub_diago_H(para_AllOp_loc%tab_Op(1)%Rmat,                   &
+                       para_AllOp_loc%tab_Op(1)%Rdiag,                  &
+                       para_AllOp_loc%tab_Op(1)%Rvp,                    &
+                       para_AllOp_loc%tab_Op(1)%nb_tot,                 &
+                       para_AllOp_loc%tab_Op(1)%sym_Hamil)
+
+      Ene_FROM_basis = para_AllOp_loc%tab_Op(1)%Rdiag(1)
+
+      !-----------------------------------------------------------------
+      ! deallocation ....
+      CALL dealloc_AllBasis(para_AllBasis_loc)
+      CALL dealloc_para_AllOp(para_AllOp_loc)
+      CALL dealloc_zmat(mole_loc)
+      IF (allocated(ComOp%sqRhoOVERJac)) THEN
+        CALL dealloc_NParray(ComOp%sqRhoOVERJac,"ComOp%sqRhoOVERJac",name_sub)
+      END IF
+      IF (allocated(ComOp%Jac)) THEN
+        CALL dealloc_NParray(ComOp%Jac,"ComOp%Jac",name_sub)
+      END IF
+
+      ! restore some parameters of para_PES, para_ReadOp, Tnum
+      para_PES%nb_scalar_Op                   = nb_scalar_Op
+      para_PES%calc_scalar_Op                 = calc_scalar_Op
+      para_Tnum%JJ                            = JJ
+      para_Tnum%NonGcteRange(:)               = NonGcteRange(:)
+
+      para_PES%type_HamilOp                   = type_HamilOp
+      para_PES%direct_KEO                     = direct_KEO
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        !CALL RecWrite_basis(basis_Set,write_all=.TRUE.)
+        write(out_unitp,*)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+      CALL flush_perso(out_unitp)
+
+      END FUNCTION Ene_FROM_basis
 
       ! In this subroutine the variable (derived type) can be modified :
       ! mole, ComOp
@@ -798,6 +1474,7 @@ END SUBROUTINE RecSet_EneH0
       USE mod_Constant
       USE mod_PrimOp
       USE mod_basis
+      USE BasisMakeGrid
       USE mod_Op
       IMPLICIT NONE
 
@@ -1178,10 +1855,9 @@ END SUBROUTINE RecSet_EneH0
       END IF
 
       ComOp%nb_act1 = mole%nb_act1
-      ComOp%nb_ba   = para_AllBasis%BasisnD%nDindB%max_nDI
+      ComOp%nb_ba   = get_nb_FROM_basis(para_AllBasis%BasisnD)
       ComOp%nb_be   = nb_elec
       ComOp%nb_bie  = ComOp%nb_bi * nb_elec
-
 
       IF (.NOT. associated(ComOp%nb_ba_ON_HAC)) THEN
         CALL alloc_array(ComOp%nb_ba_ON_HAC,(/ ComOp%nb_bie /),         &
@@ -1296,6 +1972,7 @@ END SUBROUTINE RecSet_EneH0
 
       para_H%nb_ba         = para_AllBasis%BasisnD%nDindB%max_nDI
       para_H%nb_qa         = get_nqa_FROM_basis(para_AllBasis%BasisnD)
+
 
       para_H%nb_bi         = ComOp%nb_bi
       para_H%nb_be         = ComOp%nb_be !para_PES%nb_elec

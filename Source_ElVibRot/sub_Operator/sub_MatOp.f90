@@ -87,13 +87,15 @@ CONTAINS
           END IF
         ELSE
           IF (test) THEN
-            CALL time_perso('sub_MatOp_OpExact_SG4')
-            CALL sub_MatOp_OpExact_SG4(para_Op)
-            CALL time_perso('sub_MatOp_OpExact_SG4')
+            !CALL time_perso('sub_MatOp_OpExact_SG4')
+            !CALL sub_MatOp_OpExact_SG4(para_Op)
+            !CALL time_perso('sub_MatOp_OpExact_SG4')
 
-            !CALL time_perso('sub_MatOp_direct1_Overlap')
-            !CALL sub_MatOp_direct1_Overlap(para_Op)
-            !CALL time_perso('sub_MatOp_direct1_Overlap')
+            CALL time_perso('sub_MatOp_direct1_Overlap')
+            CALL sub_MatOp_direct1_Overlap(para_Op)
+            CALL sub_ana_S(para_Op%Rmat,para_Op%nb_tot,max_Sii,max_Sij,.TRUE.)
+
+            CALL time_perso('sub_MatOp_direct1_Overlap')
 
             !CALL sub_MatOp_Overlap_SG4(para_Op)
             !CALL sub_MatOp_V_SG4(para_Op)
@@ -240,7 +242,7 @@ CONTAINS
         CALL alloc_NParray(RMatOp,(/nb_WP,nb_WP/),'RmatOp',name_sub)
       END IF
       DO i=1,nb_WP
-        CALL init_psi(OpWP(i),para_Op,para_Op%cplx)
+        CALL copy_psi2TOpsi1(OpWP(i),WP(i),alloc=.FALSE.)
       END DO
 
 !     - calculation of the matrix ----

@@ -555,8 +555,18 @@ PUBLIC :: initialisation1_poly,cof
          write(out_unitp,*) 'Hmax',para_poly%Hmax
          write(out_unitp,*) 'DHmax',para_poly%DHmax
          write(out_unitp,*) 'Hmin',para_poly%Hmin
+         CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
+
+      IF (para_poly%Hmin > para_poly%Hmax) THEN
+         write(out_unitp,*) ' ERROR in ',name_sub
+         write(out_unitp,*) 'Hmax',para_poly%Hmax
+         write(out_unitp,*) 'DHmax',para_poly%DHmax
+         write(out_unitp,*) 'Hmin',para_poly%Hmin
+         write(out_unitp,*) ' Hmin > Hmax '
+         STOP " ERROR in " // name_sub // " : Hmin > Hmax"
+      END IF
 
 !-----------------------------------------------------------
 !     E0 is the zero of energy for energy scaling (i.e. the centre of the range).
@@ -568,24 +578,17 @@ PUBLIC :: initialisation1_poly,cof
       para_poly%Esc    = ONE
 
       IF (type_propa == 1) para_poly%Esc = HALF * para_poly%deltaE
-!     IF (type_propa == 22) para_poly%Esc = HALF * para_poly%deltaE
       IF (type_propa == 33) para_poly%E0     = para_poly%Hmin
       IF (type_propa == 33) para_poly%alpha  = para_poly%deltaE *       &
                                                   deltaT
 
-!     IF (type_propa == 50) para_poly%E0     = para_poly%Hmin
-!     IF (type_propa == 50) para_poly%alpha  = para_poly%deltaE *
-!    *                                            deltaT
-
-!     IF (type_propa == 3) para_poly%E0     = para_poly%Hmin
-!     IF (type_propa == 3) para_poly%alpha  = para_poly%deltaE *
-!    *                                            deltaT
 
       IF (debug) THEN
         write(out_unitp,*) 'Hmin,Hmax',para_poly%Hmin,para_poly%Hmax
         write(out_unitp,*) 'deltaE',para_poly%deltaE
         write(out_unitp,*) 'E0,Esc',para_poly%E0,para_poly%Esc
         write(out_unitp,*) 'alpha (r)',para_poly%alpha
+        CALL flush_perso(out_unitp)
       END IF
 !     ------------------------------------------------------
 
@@ -642,18 +645,20 @@ PUBLIC :: initialisation1_poly,cof
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug =.FALSE.
-!     logical, parameter :: debug =.TRUE.
+      !logical, parameter :: debug =.TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING cofcheb'
          write(out_unitp,*) 'r,tol',r,tol
          write(out_unitp,*) 'nchmx',nchmx
+         CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
 
 !----------------------------------------------
       ncheb = max(ONE,r)
       IF (debug) write(out_unitp,*) 'r, ncheb : ',r,ncheb
+       CALL flush_perso(out_unitp)
 
       IF (ncheb > nchmx) THEN
          write(out_unitp,*) ' ERROR in cofcheb'
@@ -668,6 +673,7 @@ PUBLIC :: initialisation1_poly,cof
       IF (debug) THEN
         write(out_unitp,*) 'Chebychev coeficients',ncheb
         write(out_unitp,2009) (i,cf(i),i=1,ncheb)
+        CALL flush_perso(out_unitp)
       END IF
 !     -----------------------------------------
 !----------------------------------------------
@@ -711,6 +717,7 @@ PUBLIC :: initialisation1_poly,cof
         write(out_unitp,*) 'END cofcheb'
       END IF
 !-----------------------------------------------------------
+      CALL flush_perso(out_unitp)
 
       END SUBROUTINE cofcheb
 !==============================================================
@@ -1201,9 +1208,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       integer      :: WP0n_h,WP0nb_elec,WP0_DIP,WP0nrho,nb_WP0
       integer      :: WP0_nb_CleanChannel
       character (len=Line_len) :: file_WP0
-
+      real (kind=Rkind) :: th_WP0
       integer           :: TFnexp2
-      !real (kind=Rkind) :: TFmaxE,TFminE
       TYPE (REAL_WU)    :: TFmaxE,TFminE
 
 !------ initial WP definition -----------------------------
@@ -1227,7 +1233,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
                   WPpsi2,WPpsi,file_WP,write_DVR,write_FBR,write_WPAdia,&
                       lect_WP0DVR,lect_WP0FBR,lect_WP0FBRall,           &
                       WP0FBR,                                           &
-                      WP0n_h,WP0nb_elec,WP0_DIP,WP0nrho,                &
+                      WP0n_h,WP0nb_elec,WP0_DIP,th_WP0,WP0nrho,         &
                       WP0_nb_CleanChannel,                              &
                       WP0restart,file_WP0,WP0cplx,                      &
                       nb_WP0,New_Read_WP0,read_listWP0,read_file,       &
@@ -1305,6 +1311,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         WP0n_h              = 1
         WP0nb_elec          = 1
         WP0_DIP             = 0
+        th_WP0              = ZERO
         WP0_nb_CleanChannel = 0
         WP0nrho             = -1
 
@@ -1487,6 +1494,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         para_propa%para_WP0%WP0n_h        = WP0n_h
         para_propa%para_WP0%WP0nb_elec    = WP0nb_elec
         para_propa%para_WP0%WP0_DIP       = WP0_DIP
+        para_propa%para_WP0%th_WP0        = th_WP0
         para_propa%para_WP0%WP0nrho       = WP0nrho
         para_propa%para_WP0%WP0restart    = WP0restart
         para_propa%para_WP0%WP0cplx       = WP0cplx

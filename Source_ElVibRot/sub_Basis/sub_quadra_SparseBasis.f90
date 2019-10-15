@@ -965,6 +965,7 @@
 
       integer       :: nDNum_OF_Lmax(basis_SG%nb_basis),L1max,L2max
       logical       :: Print_basis
+      TYPE (basis)  :: basis_temp
 
       character (len=:), allocatable :: fformat
 !----- for debuging --------------------------------------------------
@@ -1002,6 +1003,11 @@
         basis_SG%tab_Pbasis(ib)%Pbasis%print_info_OF_basisDP    = .FALSE.
         basis_SG%tab_Pbasis(ib)%Pbasis%With_L                   = .TRUE.
         !CALL RecWrite_basis(basis_SG%tab_Pbasis(ib)%Pbasis,write_all=.TRUE.)
+
+        IF (basis_SG%tab_Pbasis(ib)%Pbasis%auto_basis) THEN
+          CALL AutoParam_basis(basis_SG%tab_Pbasis(ib)%Pbasis,para_Tnum,mole,ComOp_loc,para_PES,para_ReadOp)
+        END IF
+
       END DO
 
 
@@ -1041,7 +1047,6 @@
           basis_SG%tab_basisPrimSG(L,ib)%L_TO_nq%A = 0
           CALL init_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nq,Lmax=L)
           LG_L = get_n_FROM_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nq,L)
-
           !CALL Write_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nq)
 
           basis_SG%tab_basisPrimSG(L,ib)%L_TO_nb%A = 0
@@ -1099,8 +1104,8 @@
         write(out_unitp,*) '============ Set nDindB'
         CALL flush_perso(out_unitp)
       END IF
-      L1max = basis_SG%para_SGType2%L1_SparseGrid
-      L2max = basis_SG%para_SGType2%L2_SparseGrid
+      L1max = basis_SG%para_SGType2%L1_SparseBasis
+      L2max = basis_SG%para_SGType2%L2_SparseBasis
       CALL dealloc_SGType2(basis_SG%para_SGType2)
 
 
@@ -1196,6 +1201,8 @@
                             MaxCoupling=basis_SG%MaxCoupling_OF_nDindB, &
                             nDinit=(/ (0,i=1,basis_SG%nb_basis) /) )
       ELSE
+        L1max = basis_SG%para_SGType2%L1_SparseGrid
+        L2max = basis_SG%para_SGType2%L2_SparseGrid
         basis_SG%para_SGType2%nDind_SmolyakRep%packed = .TRUE.
         CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep,   &
                            basis_SG%nb_basis,nDsize,type_OF_nDindex=-5, &

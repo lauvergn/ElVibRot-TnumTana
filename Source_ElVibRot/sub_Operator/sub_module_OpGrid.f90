@@ -250,13 +250,15 @@
 
 
       SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
-                              derive_termQact,derive_termQdyn,info)
+                              derive_termQact,derive_termQdyn,SmolyakRep,nb_SG,info)
 
           TYPE (param_OpGrid), intent(inout) :: OpGrid
-          integer, intent(in) :: nb_qa,nb_bie
-          integer, intent(in) :: derive_termQact(2)
-          integer, intent(in) :: derive_termQdyn(2)
-          character (len=*), intent(in) :: info
+          integer,             intent(in)    :: nb_qa,nb_bie
+          integer,             intent(in)    :: derive_termQact(2)
+          integer,             intent(in)    :: derive_termQdyn(2)
+          logical,             intent(in)    :: SmolyakRep
+          integer,             intent(in)    :: nb_SG
+          character (len=*),   intent(in)    :: info
 
           character (len=Name_longlen) :: info2
           integer :: err
@@ -268,7 +270,7 @@
 !---------------------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
-         write(out_unitp,*) 'nb_qa,nb_bie',nb_qa,nb_bie
+         write(out_unitp,*) 'nb_qa,nb_bie',nb_qa,nb_bie,nb_SG
          write(out_unitp,*) 'derive_termQact(:)',derive_termQact(:)
          write(out_unitp,*) 'derive_termQdyn(:)',derive_termQdyn(:)
          write(out_unitp,*) 'grid_cte',OpGrid%grid_cte
@@ -304,9 +306,12 @@
                          "OpGrid%Grid",info2)
          OpGrid%Grid(:,:,:) = ZERO
 
-         write(out_unitp,*) info2,size(OpGrid%Grid)
-         !IF (debug) write(out_unitp,*) info2,size(OpGrid%Grid)
+         IF (print_level > -1) write(out_unitp,*) info2,size(OpGrid%Grid)
 
+         IF (SmolyakRep) THEN
+           IF (print_level > -1) write(out_unitp,*) info2 // ': OpGrid%SRep allocated'
+           CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG,delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
+         END IF
        END IF
        CALL flush_perso(out_unitp)
 
@@ -719,7 +724,7 @@
 
       DO k_term=1,size(OpGrid)
 
-        IF (associated(OpGrid(k_term)%Grid)) THEN
+        IF (associated(OpGrid(k_term)%Grid) .AND. OpGrid(k_term)%Grid_done) THEN
           IF (.NOT. OpGrid(k_term)%grid_cte) THEN
             OpGrid(k_term)%Mat_cte(:,:) = OpGrid(k_term)%Grid(1,:,:)
             OpGrid(k_term)%grid_cte = .TRUE.
@@ -731,27 +736,25 @@
               IF (.NOT. OpGrid(k_term)%grid_cte) EXIT
             END DO
 
-            !IF (all(OpGrid(k_term)%derive_termQact == 0)) THEN ! scalar part
-              OpGrid(k_term)%Op_min = huge(ONE)
-              OpGrid(k_term)%Op_max = -huge(ONE)
-              OpGrid(k_term)%iq_min = 0
-              OpGrid(k_term)%iq_max = 0
-              DO iq=1,OpGrid(k_term)%nb_qa
+            OpGrid(k_term)%Op_min = huge(ONE)
+            OpGrid(k_term)%Op_max = -huge(ONE)
+            OpGrid(k_term)%iq_min = 0
+            OpGrid(k_term)%iq_max = 0
+            DO iq=1,OpGrid(k_term)%nb_qa
 
-                DO k=1,OpGrid(k_term)%nb_bie
-                  Op_temp = OpGrid(k_term)%Grid(iq,k,k)
+              DO k=1,OpGrid(k_term)%nb_bie
+                Op_temp = OpGrid(k_term)%Grid(iq,k,k)
 
-                  IF (Op_temp < OpGrid(k_term)%Op_min) THEN
-                    OpGrid(k_term)%Op_min = Op_temp
-                    OpGrid(k_term)%iq_min = iq
-                  END IF
-                  IF (Op_temp > OpGrid(k_term)%Op_max) THEN
-                    OpGrid(k_term)%Op_max = Op_temp
-                    OpGrid(k_term)%iq_max = iq
-                  END IF
-                END DO
+                IF (Op_temp < OpGrid(k_term)%Op_min) THEN
+                  OpGrid(k_term)%Op_min = Op_temp
+                  OpGrid(k_term)%iq_min = iq
+                END IF
+                IF (Op_temp > OpGrid(k_term)%Op_max) THEN
+                  OpGrid(k_term)%Op_max = Op_temp
+                  OpGrid(k_term)%iq_max = iq
+                END IF
               END DO
-            !END IF
+            END DO
 
           END IF
 

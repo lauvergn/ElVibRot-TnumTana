@@ -357,6 +357,24 @@ MODULE mod_string
 
 
   END SUBROUTINE string_uppercase_TO_lowercase
+  SUBROUTINE string_lowercase_TO_uppercase(name_string)
+
+   character (len=*), intent(inout)  :: name_string
+
+   integer  :: i,ascii_char
+
+
+   !write(out_unitp,*) 'name_string: ',name_string
+   ! lowercase => uppercase
+   DO i=1,len_trim(name_string)
+     ascii_char = iachar(name_string(i:i))
+     IF (ascii_char >= 97 .AND. ascii_char <= 122)                 &
+                           name_string(i:i) = achar(ascii_char-32)
+
+   END DO
+   !write(out_unitp,*) 'name_string: ',name_string
+
+  END SUBROUTINE string_lowercase_TO_uppercase
 
   SUBROUTINE alloc_array_OF_ChLendim1(tab,tab_ub,ChLen,name_var,name_sub,tab_lb)
   IMPLICIT NONE
