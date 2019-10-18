@@ -74,6 +74,11 @@
       character (len=Name_longlen) :: RMatFormat
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
+
+#IF(run_MPI)
+#ELSE
+      Integer  :: MPI_id
+#ENDIF 
       
       ! parameters for system setup
       ! make sure to be prepared in file      
@@ -101,6 +106,8 @@
 #IF(run_MPI)
         CALL MPI_initialization()
         Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
+#ELSE 
+        MPI_id=0
 #ENDIF
  
         intensity_only     = .FALSE.
@@ -138,9 +145,7 @@
         RMatFormat       = "f18.10"
         CMatFormat       = "f15.7"
 
-#IF(run_MPI) 
         IF(MPI_id==0) THEN 
-#ENDIF
           ! version and copyright statement
           CALL versionEVRT(.TRUE.)
           write(out_unitp,*)
@@ -148,8 +153,9 @@
           CALL time_perso('MPI start, initial time')
           write(out_unitp,*) ' Initiaize MPI with ', MPI_np, 'cores.'
           write(out_unitp,*)
-        ENDIF
 #ENDIF
+        ENDIF
+
 
         !> read from file when running with MPI
 #IF(run_MPI) 
@@ -268,9 +274,7 @@
 
         END IF
 
-#IF(run_MPI)
         IF(MPI_id==0) THEN
-#ENDIF
           write(out_unitp,*) '========================================='
           write(out_unitp,*) 'OpenMP parameters:'
           write(out_unitp,*) 'Max number of threads:           ',maxth
@@ -284,19 +288,14 @@
           write(out_unitp,*) '========================================='
           write(out_unitp,*) 'File_path: ',trim(adjustl(File_path))
           write(out_unitp,*) '========================================='
-#IF(run_MPI)
         ENDIF ! for MPI_id=0
-#ENDIF
         
         para_mem%max_mem    = max_mem/Rkind
-#IF(run_MPI)
         IF(MPI_id==0) THEN
-#ENDIF
           write(out_unitp,*) '========================================='
           write(out_unitp,*) '========================================='
-#IF(run_MPI)
         ENDIF ! for MPI_id=0
-#ENDIF
+
         IF (para_EVRT_calc%optimization /= 0) THEN
           write(out_unitp,*) ' Optimization calculation'
           write(out_unitp,*) '========================================='
@@ -343,14 +342,10 @@
           CALL vib(max_mem,test,intensity_only)
         END IF
 
-#IF(run_MPI)
         IF(MPI_id==0) THEN
-#ENDIF
           write(out_unitp,*) '========================================='
           write(out_unitp,*) '========================================='
-#IF(run_MPI)
         ENDIF ! for MPI_id=0
-#ENDIF
 
 #IF(run_MPI)
         !write(*,*) 'time check for action: ',time_MPI_action,' from ',MPI_id
