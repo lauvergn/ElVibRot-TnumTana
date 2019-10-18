@@ -25,16 +25,14 @@
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
 !===========================================================================
-!===========================================================================
+!=======================================================================================
       SUBROUTINE sub_qa_bhe(para_AllOp)
       USE mod_system
       USE mod_Op
       IMPLICIT NONE
 
 !=====================================================================
-!
 !     variables
-!
 !=====================================================================
 
 !----- variables for the construction of H ---------------------------
@@ -143,12 +141,12 @@
             Grid_cte(:) = .TRUE.  ! KEO, Coriolis
           END IF
 
+          !grid will be allocated in the action part
           CALL alloc_para_Op(para_AllOp%tab_Op(iOp),Grid=.TRUE.,Mat=.FALSE.,Grid_cte=Grid_cte)
 
           CALL dealloc_NParray(Grid_cte,"Grid_cte",name_sub)
         END IF
       END DO
-
 
       !----- Transfert the constant KEO to Mate_cte -----------------
       IF (para_AllOp%tab_Op(1)%para_Tnum%Gcte) THEN
@@ -202,8 +200,6 @@
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 4 .OR. &
           para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Read_FileGrid) GOTO 999
 
-
-
       !- test ---------------------------------------------------------
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid) THEN
         nb_Qtransfo = para_AllOp%tab_Op(1)%mole%nb_Qtransfo
@@ -253,9 +249,7 @@
           para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted = lformatted
         END IF
       ELSE
-
         CALL Open_File_OF_tab_Op(para_AllOp%tab_Op)
-
         iqf = 0
       END IF
 
