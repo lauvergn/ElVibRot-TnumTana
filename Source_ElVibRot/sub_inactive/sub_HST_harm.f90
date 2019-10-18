@@ -49,8 +49,6 @@
 !---- variable pour le test -----------------------------------------
       logical :: test
 
-
-
 !----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix), pointer     :: mole      ! true pointer
       TYPE (Tnum),    pointer     :: para_Tnum ! true pointer
@@ -150,8 +148,14 @@
                             para_AllOp%tab_Op(iOp)%para_PES%nb_elec)
         END DO
 
-        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
+#IF(run_MPI)
+        IF(Grid_allco)  THEN
+#ENDIF
+          CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                   &
                                  para_Tnum,para_AllOp%tab_Op(1)%para_PES)
+#IF(run_MPI)
+        ENDIF
+#ENDIF
 
         IF (.NOT. pot) THEN ! remove the potential part
           d0MatOp(1)%ReVal(:,:,1) = ZERO
@@ -648,6 +652,7 @@
       DO i_point=1,nq
         IF (print_level > 0 .AND. nq > nq_write_HADA .AND.              &
                                   mod(i_point,max(1,(nq/10))) == 0) THEN
+                                  ! was mod(i_point,(nq/10)) == 0)
 
           write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                  &
               int(real(i_point,kind=Rkind)*HUNDRED/real(nq,kind=Rkind))
@@ -700,8 +705,14 @@
 !       ---here only nb_inact2n variables have been modified --------
         CALL Qinact2n_TO_Qact_FROM_ActiveTransfo(Qinact,Qact,mole%ActiveTransfo)
 
+#IF(run_MPI)
+        IF(Grid_allco) THEN
+#ENDIF
         CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
                                  para_Tnum,para_AllOp%tab_Op(1)%para_PES)
+#IF(run_MPI)
+        ENDIF
+#ENDIF
 
         IF (.NOT. pot) THEN ! remove the potential part
           d0MatOp(1)%ReVal(:,:,1) = ZERO
