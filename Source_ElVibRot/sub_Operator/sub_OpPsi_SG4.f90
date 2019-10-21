@@ -768,6 +768,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   END IF
 
   ! MPI version 3.3
+#IF(run_MPI)  
   IF(openmpi) THEN 
 
     CALL system_clock(time_point1,time_rate)
@@ -1103,6 +1104,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     IF(MPI_id==0) write(*,*) 'time MPI comm check: ',time_comm,' from ', MPI_id
     CALL time_perso('MPI loop in action end')  
   ELSE
+#ENDIF
     ! non openmpi cases
     !---------------------------------------------------------------------------
     ! for direct_KEO case
@@ -1270,7 +1272,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       CALL dealloc_NParray(tab_l,'tabl_l',name_sub)
       !$OMP   END PARALLEL
     END IF
+#IF(run_MPI)
   ENDIF ! for openmpi
+#ENDIF
 
   IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**4) THEN
     write(out_unitp,'(a)',ADVANCE='yes') '-]'
