@@ -1,6 +1,5 @@
-!===========================================================================
-!===========================================================================
-!This file is part of ElVibRot.
+!=======================================================================================
+! This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
 !    it under the terms of the GNU Lesser General Public License as published by
@@ -24,17 +23,27 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
-!===========================================================================
-!===========================================================================
+!=======================================================================================
 
 
-!=====================================================================
-!
+!=======================================================================================
 !     INITIALIZATION of most of parameters :
 !        mole, WP0, Operators....
 !
-!=====================================================================
-SUBROUTINE ini_data(const_phys,                                         &
+! >const_phys: type constant contains all the physical constants
+!              *Note: may not safe with this name
+!              setup with calling 'sub_constantes', 
+!              *Note: a namelist 'constants' is required in input file for this 
+!                     subroutine if call with sub_constantes(const_phys,.Ture.)
+! >para_OTF: type param_OTF
+! >para_Tnum: type Tnum, which contains type param_PES_FromTnum and sum_opnd
+! >mole: type zmatrix
+! >para_AllBasis: type param_AllBasis, contians four Basis pointers 
+!                 BasisnD,Basis2n,BasisElec,BasisRot
+!                 setup with calling alloc_AllBasis(para_AllBasis)
+! >para_AllOp: type param_AllOp, for the construction of H
+!=======================================================================================
+      SUBROUTINE ini_data(const_phys,                                   &
                           para_OTF,                                     &
                           para_Tnum,mole,                               &
                           para_AllBasis,BasisnD_Save,                   &
@@ -42,8 +51,8 @@ SUBROUTINE ini_data(const_phys,                                         &
                           para_ana,para_intensity,intensity_only,       &
                           para_propa,WP0)
 
-      use mod_system,    only : rkind, out_unitp, flush_perso, alloc_nparray,&
-                                dealloc_nparray, one, zero, alloc_array,     &
+      use mod_system,    only : rkind, out_unitp, flush_perso, alloc_nparray,  &
+                                dealloc_nparray, one, zero, alloc_array,       &
                                 int_to_char
       USE mod_dnSVM,     only : Type_dnMat
       USE mod_Constant,  only : constant, sub_constantes, REAL_WU
@@ -58,8 +67,10 @@ SUBROUTINE ini_data(const_phys,                                         &
       USE mod_propa
       USE mod_psi_set_alloc
       USE mod_Auto_Basis
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
-
 
 !----- On the fly parameters (at this time for gaussian) -------------
       TYPE (param_OTF) :: para_OTF
@@ -80,29 +91,27 @@ SUBROUTINE ini_data(const_phys,                                         &
       logical                :: intensity_only
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_propa) :: para_propa
-      TYPE (param_psi)   :: WP0
-      integer            :: nb_vp_specWP
+      TYPE (param_propa)     :: para_propa
+      TYPE (param_psi)       :: WP0
+      integer                :: nb_vp_specWP
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES)   :: para_PES
+      TYPE (param_PES)       :: para_PES
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_AllOp)  :: para_AllOp
-      TYPE (param_ComOp)  :: ComOp
-      TYPE (param_ReadOp) :: para_ReadOp
+      TYPE (param_AllOp)     :: para_AllOp
+      TYPE (param_ComOp)     :: ComOp
+      TYPE (param_ReadOp)    :: para_ReadOp
 
 !----- physical and mathematical constants ----------------------------
-      TYPE (constant)             :: const_phys
+      TYPE (constant)        :: const_phys
 
 
 !----- working variables ---------------------------------------------
-      integer       :: i,j,rk,rl,i_term,iOp,it,nq
+      integer                        :: i,j,rk,rl,i_term,iOp,it,nq
       real (kind=Rkind), allocatable :: Qana(:),Qact(:)
 
-
-      TYPE(Type_dnMat) :: dnGG
-
+      TYPE(Type_dnMat)               :: dnGG
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug = .FALSE.
@@ -115,7 +124,6 @@ SUBROUTINE ini_data(const_phys,                                         &
       END IF
 !---------------------------------------------------------------------
 
-
 !=====================================================================
 !=====================================================================
 !=====================================================================
@@ -125,20 +133,18 @@ SUBROUTINE ini_data(const_phys,                                         &
       CALL sub_constantes(const_phys,.TRUE.)
 
       CALL flush_perso(out_unitp)
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "=== COORDINATES (TNUM) ====================================="
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "=== COORDINATES (TNUM) ====================================="
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+      ENDIF 
       CALL flush_perso(out_unitp)
-
-!---------------------------------------------------------------------
 
 !---------------------------------------------------------------------
 !------- read the coordinates ....     -------------------------------
       CALL Read_mole(mole,para_Tnum,const_phys)
-
-!---------------------------------------------------------------------
 
 !---------------------------------------------------------------------
 !----- Read the namelist:  minimum -----------------------------------
@@ -151,14 +157,14 @@ SUBROUTINE ini_data(const_phys,                                         &
       CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES,Tana=.FALSE.)
 !-----------------------------------------------------------------------
 
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "=== END COORDINATES (TNUM) ================================="
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      CALL flush_perso(out_unitp)
-
-
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "=== END COORDINATES (TNUM) ================================="
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        CALL flush_perso(out_unitp)
+      ENDIF
 
 !---------------------------------------------------------------------
 !------- read basis -- -----------------------------------------------
@@ -167,35 +173,41 @@ SUBROUTINE ini_data(const_phys,                                         &
 !     and calculations of the basis (d0b) and their dervivatives (d1b d2b)
 !     on the grid points.
 !     ----------------------------------------------------------------
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "=== BASIS =================================================="
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      CALL flush_perso(out_unitp)
+      IF(MPI_id==0) THEN 
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "=== BASIS =================================================="
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        CALL flush_perso(out_unitp)
+      ENDIF
 
+      ! allocate para_AllBasis, but no big mem at this point
       CALL alloc_AllBasis(para_AllBasis)
 
-
       CALL flush_perso(out_unitp)
-      write(out_unitp,*) '================================================='
-      write(out_unitp,*) '== READ ACTIVE BASIS ============================'
-      write(out_unitp,*) '================================================='
-      CALL flush_perso(out_unitp)
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*) '== READ ACTIVE BASIS ============================'
+        write(out_unitp,*) '================================================='
+        CALL flush_perso(out_unitp)
+      ENDIF
 
+      ! basis information in BasisnD
       CALL read_basis5(para_AllBasis%BasisnD,mole)
-      CALL basis2TObasis1(BasisnD_Save,para_AllBasis%BasisnD)
-
-
+      CALL basis2TObasis1(BasisnD_Save,para_AllBasis%BasisnD) ! basis saved here
       CALL flush_perso(out_unitp)
-      write(out_unitp,*) '================================================='
-      write(out_unitp,*) '== END READ ACTIVE BASIS ========================'
-      write(out_unitp,*) '================================================='
+      
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*) '== END READ ACTIVE BASIS ========================'
+        write(out_unitp,*) '================================================='
 
-      write(out_unitp,*) '================================================='
-      write(out_unitp,*) '== INACTIVE BASIS ==============================='
-      write(out_unitp,*) '================================================='
-      CALL flush_perso(out_unitp)
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*) '== INACTIVE BASIS ==============================='
+        write(out_unitp,*) '================================================='
+        CALL flush_perso(out_unitp)
+      ENDIF
 
       CALL read_inactive(para_AllBasis%Basis2n,ComOp,mole)
 
@@ -218,20 +230,24 @@ SUBROUTINE ini_data(const_phys,                                         &
           CALL sub_quadra_inact(para_AllBasis%Basis2n,mole)
         END IF
       END IF
-      write(out_unitp,*) '================================================='
-      write(out_unitp,*) '== END INACTIVE BASIS ==========================='
-      write(out_unitp,*) '================================================='
-      CALL flush_perso(out_unitp)
 
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*) '== END INACTIVE BASIS ==========================='
+        write(out_unitp,*) '================================================='
+        CALL flush_perso(out_unitp)
+      ENDIF
 !---------------------------------------------------------------------
 
 !---------------------------------------------------------------------
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "=== END BASIS =============================================="
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      CALL flush_perso(out_unitp)
+      IF(MPI_id==0) THEN 
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "=== END BASIS =============================================="
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        CALL flush_perso(out_unitp)
+      ENDIF
 
       CALL read_active(para_Tnum,mole, para_AllBasis,ComOp,para_ReadOp,para_PES)
 
@@ -281,7 +297,7 @@ SUBROUTINE ini_data(const_phys,                                         &
 
 !     -- reading the WP propagation ---------------------------------
       IF (para_ana%propa) THEN
-        para_propa%control = para_ana%control
+        para_propa%control = para_ana%control !< for controling the calcutation of Hmin
         para_propa%max_ana = para_ana%max_ana
         CALL read_propagation(para_propa,mole%nb_act1,nb_vp_specWP)
 
@@ -348,12 +364,14 @@ SUBROUTINE ini_data(const_phys,                                         &
 !
 !=====================================================================
       CALL flush_perso(out_unitp)
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "=== AUTO BASIS ============================================="
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      CALL flush_perso(out_unitp)
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "=== AUTO BASIS ============================================="
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        CALL flush_perso(out_unitp)
+      ENDIF
 
       CALL Auto_basis(para_Tnum,mole,para_AllBasis,ComOp,para_PES,para_ReadOp)
 
@@ -370,17 +388,18 @@ SUBROUTINE ini_data(const_phys,                                         &
         CALL dealloc_NParray(Qact,"Qact",name_sub)
       END IF
 
-
-      !CALL RecWrite_basis(para_AllBasis%BasisnD,write_all=.TRUE.) ; stop
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      IF (debug) CALL RecWrite_basis(para_AllBasis%BasisnD)
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "=== END AUTO BASIS ========================================="
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      CALL flush_perso(out_unitp)
+      IF(MPI_id==0) THEN
+        !CALL RecWrite_basis(para_AllBasis%BasisnD,write_all=.TRUE.) ; stop
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        IF (debug) CALL RecWrite_basis(para_AllBasis%BasisnD)
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "=== END AUTO BASIS ========================================="
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        CALL flush_perso(out_unitp)
+      ENDIF
 
        !write(out_unitp,*) 'pack ?',para_AllBasis%BasisnD%packed_done
        !IF (para_AllBasis%BasisnD%packed_done) THEN
@@ -406,11 +425,13 @@ SUBROUTINE ini_data(const_phys,                                         &
 !     i=5 => for Dipz    : n_op = 3 (or ScalOp3)
 !     i=5 => for ScalOp4 : n_op = 4
 !     ....
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "====== List of Operators ==================================="
-      write(out_unitp,*)
-      write(out_unitp,*) 'para_PES%nb_scalar_Op : ',para_PES%nb_scalar_Op
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "====== List of Operators ==================================="
+        write(out_unitp,*)
+        write(out_unitp,*) 'para_PES%nb_scalar_Op : ',para_PES%nb_scalar_Op
+      ENDIF
 
       IF (debug) write(out_unitp,*) 'para_PES%nb_scalar_Op : ',para_PES%nb_scalar_Op
       IF (para_PES%nb_scalar_Op > 27) THEN
@@ -438,7 +459,6 @@ SUBROUTINE ini_data(const_phys,                                         &
       CALL alloc_array(para_AllOp%tab_Op,(/ para_AllOp%nb_Op /),        &
                       'para_AllOp%tab_Op',name_sub)
 
-
       iOp = 1 ! => for H
       IF (para_ana%Read_zpe) THEN
         ComOp%Set_ZPE = .TRUE.
@@ -452,8 +472,10 @@ SUBROUTINE ini_data(const_phys,                                         &
                                para_AllOp%tab_Op(iOp))
       para_AllOp%tab_Op(iOp)%symab      = 0 ! totally symmetric
       IF (para_ana%VibRot) Para_Tnum%JJ = 0
-      write(out_unitp,*) 'para_ReadOp%Make_Mat',para_ReadOp%Make_Mat
-      write(out_unitp,*) 'para_H%Make_Mat',para_AllOp%tab_Op(iOp)%Make_Mat
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) 'para_ReadOp%Make_Mat',para_ReadOp%Make_Mat
+        write(out_unitp,*) 'para_H%Make_Mat',para_AllOp%tab_Op(iOp)%Make_Mat
+      ENDIF
 
       IF (debug) CALL Write_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp)
 
@@ -500,23 +522,22 @@ SUBROUTINE ini_data(const_phys,                                         &
         para_AllOp%tab_Op(5)%name_Op = 'Dipz'
       END IF
 
+      IF(MPI_id==0) THEN
+        DO i=1,para_AllOp%nb_Op
+          write(out_unitp,*) i,'Operator name: ',trim(para_AllOp%tab_Op(i)%name_Op)
+        END DO
 
+        write(out_unitp,*)
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
 
-      DO i=1,para_AllOp%nb_Op
-        write(out_unitp,*) i,'Operator name: ',trim(para_AllOp%tab_Op(i)%name_Op)
-      END DO
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "====== Finalyze RPH transfo (Tnum) and ... ================="
+        write(out_unitp,*) "====== ... EneH0 of the basis sets ========================="
+        write(out_unitp,*)
+      ENDIF
 
-      write(out_unitp,*)
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-
-
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "====== Finalyze RPH transfo (Tnum) and ... ================="
-      write(out_unitp,*) "====== ... EneH0 of the basis sets ========================="
-
-      write(out_unitp,*)
       IF (associated(mole%RPHTransfo)) THEN
         CALL Set_paraPRH(mole,para_Tnum,para_AllBasis%BasisnD)
       END IF
@@ -526,10 +547,11 @@ SUBROUTINE ini_data(const_phys,                                         &
                           para_PES,para_ReadOp,ComOp)
       END IF
 
-      write(out_unitp,*)
-      write(out_unitp,*) "============================================================"
-      write(out_unitp,*) "============================================================"
-
+      IF(MPI_id==0) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) "============================================================"
+        write(out_unitp,*) "============================================================"
+      ENDIF
 !=====================================================================
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -544,10 +566,16 @@ SUBROUTINE ini_data(const_phys,                                         &
         END DO
         write(out_unitp,*) 'END ',name_sub
       END IF
-!---------------------------------------------------------------------
-END SUBROUTINE ini_data
+      !---------------------------------------------------------------------
+      END SUBROUTINE ini_data
+!=======================================================================================
+
+!===============================================================================
 SUBROUTINE MemoryEstimation(nb,nq,nb_Q,nb_channels,nb_psi)
 USE mod_system
+#IF(run_MPI)
+USE mod_MPI_Aid
+#ENDIF
 IMPLICIT NONE
 
 integer, intent(in) :: nb,nq,nb_Q,nb_channels,nb_psi
@@ -568,59 +596,62 @@ KEO_type1_Mem  = PotMem   * (nb_Q+1)*(nb_Q+2)/2 ! F2+F1+vep
 KEO_type10_Mem = GridMem  * (nb_Q**2 + 2) ! size of G + jac+rho
               ! We suppose, the KEO are the same on each channel !! Pb...
 
-write(out_unitp,*) "============================================================"
-write(out_unitp,*) "============================================================"
-write(out_unitp,*) "====== Memory psi and H ===================================="
+IF(MPI_id==0) THEN
+  write(out_unitp,*) "============================================================"
+  write(out_unitp,*) "============================================================"
+  write(out_unitp,*) "====== Memory psi and H ===================================="
+ENDIF
 
-write(out_unitp,*) "------------------------------------------------------------"
+IF(MPI_id==0) write(out_unitp,*) "------------------------------------------------------------"
 Mem = psi_Mem
 CALL convertMem(Mem,MemUnit)
-write(out_unitp,'(a,i0,x,a)') "One psi: ",Mem,MemUnit
-  Mem = psi_Mem * 4
-  CALL convertMem(Mem,MemUnit)
-  write(out_unitp,'(a,i0,x,a)') "One psi's with Davidson (num_resetH=1): ",Mem,MemUnit
-write(out_unitp,*) "------------------------------------------------------------"
+IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "One psi: ",Mem,MemUnit
+Mem = psi_Mem * 4
+CALL convertMem(Mem,MemUnit)
+IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "One psi's with Davidson (num_resetH=1): ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,*) "------------------------------------------------------------"
 
 IF (nb_psi > 0) THEN
   Mem = psi_Mem * nb_psi
   CALL convertMem(Mem,MemUnit)
-  write(out_unitp,'(i0,a,i0,x,a)') nb_psi," psi's: ",Mem,MemUnit
+  IF(MPI_id==0) write(out_unitp,'(i0,a,i0,x,a)') nb_psi," psi's: ",Mem,MemUnit
   Mem = psi_Mem * nb_psi * 4
   CALL convertMem(Mem,MemUnit)
-  write(out_unitp,'(i0,a,i0,x,a)') nb_psi," psi's with Davidson (num_resetH=1): ",Mem,MemUnit
-  write(out_unitp,*) "------------------------------------------------------------"
+  IF(MPI_id==0) write(out_unitp,'(i0,a,i0,x,a)') nb_psi," psi's with Davidson (num_resetH=1): ",Mem,MemUnit
+  IF(MPI_id==0) write(out_unitp,*) "------------------------------------------------------------"
 END IF
 
-write(out_unitp,*) "====== Memory for Type 1 (F2+F1+Vep+V) ====================="
-write(out_unitp,*) "-SG4 Full direct --"
+IF(MPI_id==0) write(out_unitp,*) "====== Memory for Type 1 (F2+F1+Vep+V) ====================="
+IF(MPI_id==0) write(out_unitp,*) "-SG4 Full direct --"
 Mem = MappingSG4Meme
 CALL convertMem(Mem,MemUnit)
-write(out_unitp,'(a,i0,x,a)') "H memory (mapping):       ",Mem,MemUnit
-write(out_unitp,*) "-SG4 KEO direct --"
+IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping):       ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,*) "-SG4 KEO direct --"
 Mem = MappingSG4Meme+PotMem
 CALL convertMem(Mem,MemUnit)
-write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V):     ",Mem,MemUnit
-write(out_unitp,*) "-SG4 --"
+IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V):     ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,*) "-SG4 --"
 Mem = MappingSG4Meme+KEO_type1_Mem ! PotMem is not here because is already counted in KEO_type1_Mem
 CALL convertMem(Mem,MemUnit)
-write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
 
-write(out_unitp,*) "====== Memory for Type 10 (G+V) ============================"
-write(out_unitp,*) "-SG4 Full direct --"
+IF(MPI_id==0) write(out_unitp,*) "====== Memory for Type 10 (G+V) ============================"
+IF(MPI_id==0) write(out_unitp,*) "-SG4 Full direct --"
 Mem = MappingSG4Meme
 CALL convertMem(Mem,MemUnit)
-write(out_unitp,'(a,i0,x,a)') "H memory (mapping):       ",Mem,MemUnit
-write(out_unitp,*) "-SG4 KEO direct --"
+IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping):       ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,*) "-SG4 KEO direct --"
 Mem = MappingSG4Meme+PotMem
 CALL convertMem(Mem,MemUnit)
-write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V):     ",Mem,MemUnit
-write(out_unitp,*) "-SG4 --"
+IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V):     ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,*) "-SG4 --"
 Mem = MappingSG4Meme+PotMem+KEO_type10_Mem
 CALL convertMem(Mem,MemUnit)
-write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
 
-
-write(out_unitp,*) "============================================================"
-write(out_unitp,*) "============================================================"
+IF(MPI_id==0) THEN
+  write(out_unitp,*) "============================================================"
+  write(out_unitp,*) "============================================================"
+ENDIF
 
 END SUBROUTINE MemoryEstimation
