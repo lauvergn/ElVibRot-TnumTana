@@ -39,6 +39,8 @@ MODULE mod_SetOp
       USE mod_ReadOp
       IMPLICIT NONE
 
+!------------------------------------------------------------------------------
+        ! type param_Op
         TYPE, EXTENDS(param_TypeOp) :: param_Op
 
           logical                        :: init_var   = .FALSE.
@@ -84,7 +86,6 @@ MODULE mod_SetOp
           integer :: nb_tot_ini=0                ! size of the hamiltonian
                                                  ! can be smaller than nb_baie (HADA or spectral contracion)
                                                  ! usefull before the spectral transformation (for another operator)
-
 
           real (kind=Rkind),    pointer :: Rmat(:,:)   => null()        ! Rmat(nb_tot ,nb_tot )
           complex (kind=Rkind), pointer :: Cmat(:,:)   => null()        ! Cmat(nb_tot ,nb_tot )
@@ -138,6 +139,7 @@ MODULE mod_SetOp
 
         END TYPE param_Op
 
+!-------------------------------------------------------------------------------
       !!@description: TODO
       !!@param: TODO
         TYPE param_AllOp
@@ -146,6 +148,7 @@ MODULE mod_SetOp
           TYPE (param_Op), pointer :: tab_Op(:) => null()
 
         END TYPE param_AllOp
+!-------------------------------------------------------------------------------
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_Opdim1
@@ -158,22 +161,25 @@ MODULE mod_SetOp
       CONTAINS
 
 
-!=======================================================
+!=======================================================================================
 !
 !  allocate/deallocate para_Op
 !
-!=======================================================
+!=======================================================================================
       !!@description: TODO
       !!@param: TODO
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE alloc_para_Op(para_Op,Grid,Mat,Grid_cte)
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       TYPE (param_Op), intent(inout) :: para_Op
       logical, optional, intent(in) :: Mat,Grid
       logical, optional, intent(in) :: Grid_cte(para_Op%nb_term)
 
       logical :: SmolyakRep,lo_Mat,lo_Grid,lo_Grid_cte(para_Op%nb_term)
-      integer :: nb_tot,nb_SG
+      integer :: nb_tot,nb_SG,nb_SG1,nb_SG2
       integer :: nb_term,nb_bie
 
       integer :: err
@@ -212,6 +218,17 @@ MODULE mod_SetOp
 
       SmolyakRep = ( para_Op%BasisnD%SparseGrid_type == 4)
       nb_SG      = para_Op%BasisnD%nb_SG
+#IF(run_MPI)      
+      ! nb_SG1,nb_SG2 for MPI 
+      IF(nb_SG>0) THEN
+        nb_per_MPI=para_Op%BasisnD%nb_SG/MPI_np
+        If(mod(para_Op%BasisnD%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
+        nb_SG=MIN((MPI_id+1)*nb_per_MPI,para_Op%BasisnD%nb_SG)-(MPI_id*nb_per_MPI+1)+1
+        nb_SG1=MPI_id*nb_per_MPI+1
+        nb_SG2=MIN((MPI_id+1)*nb_per_MPI,para_Op%BasisnD%nb_SG)
+        write(*,*) 'nb_SG,nb_SG1,nb_SG2 check',nb_SG,nb_SG1,nb_SG2, ' from ',MPI_id
+      ENDIF
+#ENDIF
 
       IF (present(Mat)) THEN
         lo_Mat = Mat
@@ -317,11 +334,19 @@ MODULE mod_SetOp
             info = String_TO_String('  k_term( ' // int_TO_char(k_term) // &
                                       ' ) of ' // trim(para_Op%name_Op))
 
+#IF(run_MPI)
+            CALL alloc_OpGrid(para_Op%OpGrid(k_term),                 &
+                              para_Op%nb_qa,nb_bie,                   &
+                              para_Op%derive_termQact(:,k_term),      &
+                              para_Op%derive_termQdyn(:,k_term),      &
+                              SmolyakRep,nb_SG1,nb_SG2,info)
+#ELSE
             CALL alloc_OpGrid(para_Op%OpGrid(k_term),                 &
                               para_Op%nb_qa,nb_bie,                   &
                               para_Op%derive_termQact(:,k_term),      &
                               para_Op%derive_termQdyn(:,k_term),      &
                               SmolyakRep,nb_SG,info)
+#ENDIF
 
             deallocate(info)
           END DO
@@ -340,9 +365,15 @@ MODULE mod_SetOp
 
           info = String_TO_String(' of ' // trim(para_Op%name_Op))
 
+#IF(run_MPI)
+          CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
+                            para_Op%nb_qa,nb_bie,                     &
+                            (/ 0,0 /),(/ 0,0 /),SmolyakRep,nb_SG1,nb_SG2,info)
+#ELSE
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
                             para_Op%nb_qa,nb_bie,                     &
                             (/ 0,0 /),(/ 0,0 /),SmolyakRep,nb_SG,info)
+#ENDIF
           para_Op%imOpGrid(1)%cplx = .TRUE.
 
           deallocate(info)
@@ -358,12 +389,16 @@ MODULE mod_SetOp
 !---------------------------------------------------------------------
 
       END SUBROUTINE alloc_para_Op
+!=======================================================================================
 
       !!@description: TODO
       !!@param: TODO
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE dealloc_para_Op(para_Op)
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       TYPE (param_Op),intent(inout) :: para_Op
 
       integer :: k_term
@@ -494,11 +529,9 @@ MODULE mod_SetOp
 
       END SUBROUTINE dealloc_para_Op
 
-
-!================================================================
+!===============================================================================
 ! ++    write the type param_Op
-!================================================================
-!
+!===============================================================================
       SUBROUTINE write_param_Op(para_Op)
       USE mod_system
       IMPLICIT NONE
@@ -627,6 +660,7 @@ MODULE mod_SetOp
       CALL flush_perso(out_unitp)
 
       END SUBROUTINE write_param_Op
+!===============================================================================
 
       !!@description: TODO
       !!@param: TODO
@@ -648,7 +682,12 @@ MODULE mod_SetOp
       para_AllOp%nb_Op = 0
 
       END SUBROUTINE dealloc_para_AllOp
+
+!=======================================================================================
       SUBROUTINE alloc_array_OF_Opdim1(tab,tab_ub,name_var,name_sub,tab_lb)
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
       TYPE (param_Op), pointer, intent(inout) :: tab(:)
@@ -684,6 +723,8 @@ MODULE mod_SetOp
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'param_Op')
 
       END SUBROUTINE alloc_array_OF_Opdim1
+!=======================================================================================
+
       SUBROUTINE dealloc_array_OF_Opdim1(tab,name_var,name_sub)
       IMPLICIT NONE
 
@@ -1302,7 +1343,9 @@ MODULE mod_SetOp
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE Analysis_OpGrid_OF_Op(para_Op)
-
+#IF(run_MPI)
+      USE mod_MPI
+#ELSE
       TYPE (param_Op), intent(inout) :: para_Op
 
       integer       :: k_term,iq,iterm00
@@ -1311,9 +1354,8 @@ MODULE mod_SetOp
 
       character (len=*), parameter :: name_sub='Analysis_OpGrid_OF_Op'
 
-
        IF (.NOT. associated(para_Op%OpGrid)) THEN
-         IF (print_level>-1) THEN
+         IF (print_level>-1 .AND. MPI_id==0) THEN
            write(out_unitp,*)'--------------------------------------------------------------'
            write(out_unitp,*)'n_Op,k_term,derive_term,cte,zero,    minval,    maxval,dealloc'
            write(out_unitp,'(i5,x,a)') para_Op%n_Op,'This Operator is not allocated'
@@ -1329,27 +1371,25 @@ MODULE mod_SetOp
          iq = para_Op%OpGrid(iterm00)%iq_min
          IF (iq > 0) THEN
            CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
-           write(out_unitp,*) 'iq_min,Op_min,Qact',iq,para_Op%OpGrid(iterm00)%Op_min,Qact(1:para_Op%mole%nb_act1)
+           IF(MPI_id==0) write(out_unitp,*) 'iq_min,Op_min,Qact',iq,para_Op%OpGrid(iterm00)%Op_min,Qact(1:para_Op%mole%nb_act1)
          END IF
          iq = para_Op%OpGrid(iterm00)%iq_max
          IF (iq > 0) THEN
            CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
-           write(out_unitp,*) 'iq_max,Op_max,Qact',iq,para_Op%OpGrid(iterm00)%Op_max,Qact(1:para_Op%mole%nb_act1)
+           IF(MPI_id==0) write(out_unitp,*) 'iq_max,Op_max,Qact',iq,para_Op%OpGrid(iterm00)%Op_max,Qact(1:para_Op%mole%nb_act1)
          END IF
        END IF
 
-       IF (print_level>-1) write(out_unitp,*) 'Analysis of the imaginary Op grid',para_Op%cplx
+       IF (print_level>-1 .AND. MPI_id==0) write(out_unitp,*) 'Analysis of the imaginary Op grid',para_Op%cplx
        IF (para_Op%cplx) THEN
          CALL Analysis_OpGrid(para_Op%imOpGrid,para_Op%n_Op)
        END IF
 
       END SUBROUTINE Analysis_OpGrid_OF_Op
 
-!================================================================
-!
+!=======================================================================================
 !     initialization of psi
-!
-!================================================================
+!=======================================================================================
       SUBROUTINE init_psi(psi,para_H,cplx)
       USE mod_system
       USE mod_psi_set_alloc
@@ -1431,6 +1471,7 @@ MODULE mod_SetOp
         write(out_unitp,*) 'END init_psi'
       END IF
       END SUBROUTINE init_psi
+!=======================================================================================
 
 END MODULE mod_SetOp
 
