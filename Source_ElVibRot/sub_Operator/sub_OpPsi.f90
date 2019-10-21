@@ -97,7 +97,7 @@ CONTAINS
 !======================================================
       SUBROUTINE sub_PsiOpPsi(E,Psi,OpPsi,para_Op)
       USE mod_system
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
       IMPLICIT NONE
@@ -147,9 +147,10 @@ CONTAINS
 
       END SUBROUTINE sub_PsiOpPsi
 
+!===============================================================================
       SUBROUTINE sub_OpPsi(Psi,OpPsi,para_Op,derOp,With_Grid,TransfoOp)
       USE mod_system
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       IMPLICIT NONE
 
@@ -202,13 +203,19 @@ CONTAINS
       ELSE
         With_Grid_loc = .FALSE.
       END IF
-      IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
+      IF(MPI_id==0) THEN
+        IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
+      ENDIF
+#IF(run_MPI)
+      CALL MPI_BCAST(With_Grid_loc,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
+#ENDIF
 
       IF (present(TransfoOp)) THEN
         TransfoOp_loc = TransfoOp
       ELSE
         TransfoOp_loc = .FALSE.
       END IF
+      !-------------------------------------------------------------------------
 
       IF (para_Op%para_ReadOp%Op_Transfo .AND. TransfoOp_loc) THEN
         CALL sub_PrimOpPsi(Psi,Psi_loc,para_Op,derOp_loc,With_Grid_loc)
@@ -217,6 +224,7 @@ CONTAINS
         CALL sub_scaledOpPsi(Psi_loc,OpPsi,para_Op%para_ReadOp%E0_Transfo,ONE)
         CALL dealloc_psi(Psi_loc,delete_all=.TRUE.)
       ELSE
+        ! MPI action here
         CALL sub_PrimOpPsi(Psi,OpPsi,para_Op,derOp_loc,With_Grid_loc)
       END IF
 
@@ -231,7 +239,9 @@ CONTAINS
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_OpPsi
+!===============================================================================
 
+!===============================================================================
       SUBROUTINE sub_PrimOpPsi(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
       USE mod_SetOp,           ONLY : param_Op,write_param_Op,read_OpGrid_OF_Op
@@ -246,7 +256,7 @@ CONTAINS
       TYPE (param_Op)  :: para_Op
       integer, intent(in), optional :: derOp(2)
       logical, intent(in), optional :: With_Grid,pot_only
-      integer          :: n
+      integer                       :: n
 
 
       !----- variables for the WP --------------------------------------
@@ -262,12 +272,12 @@ CONTAINS
       logical :: direct_KEO,SGtype4
 
 
-      !----- for debuging ----------------------------------------------
+      !----- for debuging ------------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='sub_PrimOpPsi'
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
-      !-----------------------------------------------------------------
+      !-------------------------------------------------------------------------
       n = para_Op%nb_tot
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub,' ',n
@@ -284,7 +294,8 @@ CONTAINS
         CALL ecri_psi(Psi=Psi)
         CALL flush_perso(out_unitp)
       END IF
-      !-----------------------------------------------------------------
+      !-------------------------------------------------------------------------
+
       IF (present(derOp)) THEN
         derOp_loc(:) = derOp(:)
       ELSE
@@ -296,8 +307,13 @@ CONTAINS
       ELSE
         With_Grid_loc = .FALSE.
       END IF
-      IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
-
+      IF(MPI_id==0) THEN
+        IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
+      ENDIF
+#IF(run_MPI)
+      CALL MPI_BCAST(With_Grid_loc,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
+#ENDIF
+     
       IF (present(pot_only)) THEN
         pot_only_loc = pot_only .AND. (para_Op%n_Op ==0) ! para_Op has to be H
       ELSE
@@ -313,8 +329,9 @@ CONTAINS
         write(out_unitp,*) 'STOP in ',name_sub
         STOP
       END IF
-      !-----------------------------------------------------------------
+      !-------------------------------------------------------------------------
 
+      !-------------------------------------------------------------------------
       ! special case: to deal with TabPsi
       SGtype4    = (para_Op%BasisnD%SparseGrid_type == 4)
 
@@ -332,163 +349,163 @@ CONTAINS
       IF (debug) write(out_unitp,*) 'SGtype4,direct_KEO',SGtype4,direct_KEO
       CALL flush_perso(out_unitp)
 
-
+      ! Number of Hamiltonian operation counter
       para_Op%nb_OpPsi = para_Op%nb_OpPsi + 1
 
-   IF (SGtype4) THEN
-     IF (Psi%cplx) THEN
-       RCPsi = Psi
-       CALL sub_TabOpPsi_FOR_SGtype4(RCPsi,RCOpPsi,para_Op)
-       OpPsi = RCOpPsi
-       CALL dealloc_psi(RCPsi(1),  delete_all=.TRUE.)
-       CALL dealloc_psi(RCPsi(2),  delete_all=.TRUE.)
-       CALL dealloc_psi(RCOpPsi(1),delete_all=.TRUE.)
-       CALL dealloc_psi(RCOpPsi(2),delete_all=.TRUE.)
-     ELSE
-       CALL sub_TabOpPsi_FOR_SGtype4( (/Psi/) ,RROpPsi,para_Op)
-       OpPsi = RROpPsi(1)
-       CALL dealloc_psi(RROpPsi(1),delete_all=.TRUE.)
-     END IF
-   ELSE
-
-      !--- For the allocation of OpPsi ---------------------------------
-      OpPsi = Psi
-
-      IF (para_Op%mat_done) THEN
-
-        CALL sub_OpPsi_WITH_MatOp(Psi,OpPsi,para_Op)
-
+      IF (SGtype4) THEN
+        IF (Psi%cplx) THEN
+          IF(MPI_id==0) RCPsi = Psi
+          CALL sub_TabOpPsi_FOR_SGtype4(RCPsi,RCOpPsi,para_Op)
+          IF(MPI_id==0) OpPsi = RCOpPsi
+          CALL dealloc_psi(RCPsi(1),  delete_all=.TRUE.)
+          CALL dealloc_psi(RCPsi(2),  delete_all=.TRUE.)
+          CALL dealloc_psi(RCOpPsi(1),delete_all=.TRUE.)
+          CALL dealloc_psi(RCOpPsi(2),delete_all=.TRUE.)
+        ELSE
+          CALL sub_TabOpPsi_FOR_SGtype4( (/Psi/) ,RROpPsi,para_Op)
+          IF(MPI_id==0) OpPsi = RROpPsi(1)
+          CALL dealloc_psi(RROpPsi(1),delete_all=.TRUE.)
+        END IF
       ELSE
 
-        IF (With_Grid_loc) THEN
-          IF (.NOT. Psi%GridRep) THEN
-            write(out_unitp,*) ' ERROR in ',name_sub
-            write(out_unitp,*) '      Psi%GridRep=F and With_Grid=T'
-            write(out_unitp,*) 'The wavepacket MUST be on the grid'
-            write(out_unitp,*) 'CHECK the fortran!'
-            STOP
-          END IF
+        !--- For the allocation of OpPsi ---------------------------------
+        IF(MPI_id==0) THEN
+          OpPsi = Psi
 
-          IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
-            CALL read_OpGrid_OF_Op(para_Op)
-          END IF
-          OpPsi = ZERO
-
-          IF (para_Op%type_Op == 10 .AND. .NOT. pot_only_loc) THEN
-            IF (psi%cplx) THEN
-
-              CALL copy_psi2TOpsi1(RPsi,Psi,alloc=.FALSE.)
-              RPsi%cplx = .FALSE.
-              CALL alloc_psi(RPsi,GridRep=.TRUE.)
-              ROpPsi = RPsi
-
-              ! Real part
-              RPsi%RvecG(:) = Real(Psi%CvecG(:),kind=Rkind)
-              CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc)
-              OpPsi%CvecG(:) = cmplx(ROpPsi%RvecG,kind=Rkind)
-
-              ! Imaginary part
-              RPsi%RvecG(:) = aimag(Psi%CvecG(:))
-              CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc)
-              OpPsi%CvecG(:) = OpPsi%CvecG + EYE * ROpPsi%RvecG
-
-              CALL dealloc_psi(RPsi)
-              CALL dealloc_psi(ROpPsi)
-
-
-            ELSE
-              CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc )
-            END IF
+          IF (para_Op%mat_done) THEN
+            CALL sub_OpPsi_WITH_MatOp(Psi,OpPsi,para_Op)
           ELSE
-            CALL sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc)
-          END IF
+            ! With_Grid_loc F
+            IF (With_Grid_loc) THEN
+              IF (.NOT. Psi%GridRep) THEN
+                write(out_unitp,*) ' ERROR in ',name_sub
+                write(out_unitp,*) '      Psi%GridRep=F and With_Grid=T'
+                write(out_unitp,*) 'The wavepacket MUST be on the grid'
+                write(out_unitp,*) 'CHECK the fortran!'
+                STOP
+              END IF
 
-          !STOP 'OpPsi with Grid'
-        ELSE
-          !--- allocate OpPsi and psi%GridRep  -----------------------------
-          Psi%GridRep=.TRUE.
-          CALL alloc_psi(Psi)
-          OpPsi%GridRep=.TRUE.
-          CALL alloc_psi(OpPsi)
-          OpPsi = ZERO
+              IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
+                CALL read_OpGrid_OF_Op(para_Op)
+              END IF
+              OpPsi = ZERO
 
-          !-----------------------------------------------------------------
-          IF (para_Op%para_ReadOp%para_FileGrid%Save_MemGrid) THEN
-
-            IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
-               CALL read_OpGrid_OF_Op(para_Op)
-            END IF
-
-            IF (psi%BasisnD%dnGGRep) THEN
-              IF (para_Op%type_Op == 10) THEN
+              IF (para_Op%type_Op == 10 .AND. .NOT. pot_only_loc) THEN
                 IF (psi%cplx) THEN
 
                   CALL copy_psi2TOpsi1(RPsi,Psi,alloc=.FALSE.)
                   RPsi%cplx = .FALSE.
-                  CALL alloc_psi(RPsi,BasisRep=.TRUE.)
+                  CALL alloc_psi(RPsi,GridRep=.TRUE.)
                   ROpPsi = RPsi
 
                   ! Real part
-                  RPsi%RvecB(:) = Real(Psi%CvecB(:),kind=Rkind)
-                  !write(6,*) 'Real part of Psi'
-                  !CALL ecri_psi(Psi=RPsi)
-                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
-                  !write(6,*) 'Real part of OpPsi'
-                  !CALL ecri_psi(Psi=ROpPsi)
+                  RPsi%RvecG(:) = Real(Psi%CvecG(:),kind=Rkind)
+                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc)
                   OpPsi%CvecG(:) = cmplx(ROpPsi%RvecG,kind=Rkind)
 
                   ! Imaginary part
-                  RPsi%RvecB(:) = aimag(Psi%CvecB(:))
-                  !write(6,*) 'Imag part of Psi'
-                  !CALL ecri_psi(Psi=RPsi)
-                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
-                  !write(6,*) 'Imag part of OpPsi'
-                  !CALL ecri_psi(Psi=ROpPsi)
+                  RPsi%RvecG(:) = aimag(Psi%CvecG(:))
+                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc)
                   OpPsi%CvecG(:) = OpPsi%CvecG + EYE * ROpPsi%RvecG
 
                   CALL dealloc_psi(RPsi)
                   CALL dealloc_psi(ROpPsi)
 
-
                 ELSE
-                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
+                  CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc )
+                END IF ! for psi%cplx
+              ELSE ! for para_Op%type_Op /= 10
+                CALL sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp_loc,.TRUE.,pot_only=pot_only_loc)
+              END IF
+
+              !STOP 'OpPsi with Grid'
+            ELSE ! for .NOT. With_Grid_loc
+              !--- allocate OpPsi and psi%GridRep  -----------------------------
+              Psi%GridRep=.TRUE.
+              CALL alloc_psi(Psi)
+              OpPsi%GridRep=.TRUE.
+              CALL alloc_psi(OpPsi)
+              OpPsi = ZERO
+
+              !-----------------------------------------------------------------
+              IF (para_Op%para_ReadOp%para_FileGrid%Save_MemGrid) THEN
+
+                IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
+                   CALL read_OpGrid_OF_Op(para_Op)
                 END IF
+
+                ! psi%BasisnD%dnGGRep T
+                ! para_Op%type_Op 1
+                IF (psi%BasisnD%dnGGRep) THEN
+                  IF (para_Op%type_Op == 10) THEN
+                    IF (psi%cplx) THEN
+
+                      CALL copy_psi2TOpsi1(RPsi,Psi,alloc=.FALSE.)
+                      RPsi%cplx = .FALSE.
+                      CALL alloc_psi(RPsi,BasisRep=.TRUE.)
+                      ROpPsi = RPsi
+
+                      ! Real part
+                      RPsi%RvecB(:) = Real(Psi%CvecB(:),kind=Rkind)
+                      !write(6,*) 'Real part of Psi'
+                      !CALL ecri_psi(Psi=RPsi)
+                      CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
+                      !write(6,*) 'Real part of OpPsi'
+                      !CALL ecri_psi(Psi=ROpPsi)
+                      OpPsi%CvecG(:) = cmplx(ROpPsi%RvecG,kind=Rkind)
+
+                      ! Imaginary part
+                      RPsi%RvecB(:) = aimag(Psi%CvecB(:))
+                      !write(6,*) 'Imag part of Psi'
+                      !CALL ecri_psi(Psi=RPsi)
+                      CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
+                      !write(6,*) 'Imag part of OpPsi'
+                      !CALL ecri_psi(Psi=ROpPsi)
+                      OpPsi%CvecG(:) = OpPsi%CvecG + EYE * ROpPsi%RvecG
+
+                      CALL dealloc_psi(RPsi)
+                      CALL dealloc_psi(ROpPsi)
+
+
+                    ELSE
+                      CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
+                    END IF
+                  ELSE
+                    CALL sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
+                  END IF
+                ELSE ! for .NOT. psi%BasisnD%dnGGRep
+                  CALL sub_OpPsi_WITH_MemGrid(Psi,OpPsi,para_Op,derOp_loc,pot_only=pot_only_loc)
+                END IF ! for psi%BasisnD%dnGGRep
+
               ELSE
-                CALL sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
+                IF (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
+                  CALL sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp_loc,pot_only=pot_only_loc)
+                ELSE ! Type_FileGrid 1 or 2
+                  IF (psi%BasisnD%dnGGRep) THEN
+                    CALL sub_OpPsi_WITH_FileGrid_type12_BGG(Psi,OpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
+                  ELSE
+                    CALL sub_OpPsi_WITH_FileGrid_type12(Psi,OpPsi,para_Op,derOp_loc,pot_only=pot_only_loc)
+                  END IF
+                END IF
+
               END IF
-            ELSE
-              CALL sub_OpPsi_WITH_MemGrid(Psi,OpPsi,para_Op,derOp_loc,pot_only=pot_only_loc)
-            END IF
 
-          ELSE
-            IF (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
-              CALL sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp_loc,pot_only=pot_only_loc)
-            ELSE ! Type_FileGrid 1 or 2
-              IF (psi%BasisnD%dnGGRep) THEN
-                CALL sub_OpPsi_WITH_FileGrid_type12_BGG(Psi,OpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
-              ELSE
-                CALL sub_OpPsi_WITH_FileGrid_type12(Psi,OpPsi,para_Op,derOp_loc,pot_only=pot_only_loc)
-              END IF
-            END IF
+              !- the projection of PsiGridRep on PsiBasisRep -------------------
+              CALL sub_PsiGridRep_TO_BasisRep(OpPsi)
+              nb_mult_OpPsi = nb_mult_OpPsi + nb_mult_GTOB
 
-          END IF
+              !--------------------------------------------------------
+              !--------------------------------------------------------
+              Psi%GridRep=.FALSE.
+              CALL alloc_psi(Psi)
+              OpPsi%GridRep=.FALSE.
+              CALL alloc_psi(OpPsi)
+              !--------------------------------------------------------
 
-          !- the projection of PsiGridRep on PsiBasisRep -------------------
-          CALL sub_PsiGridRep_TO_BasisRep(OpPsi)
-          nb_mult_OpPsi = nb_mult_OpPsi + nb_mult_GTOB
-
-          !--------------------------------------------------------
-          !--------------------------------------------------------
-          Psi%GridRep=.FALSE.
-          CALL alloc_psi(Psi)
-          OpPsi%GridRep=.FALSE.
-          CALL alloc_psi(OpPsi)
-          !--------------------------------------------------------
-
-        END IF
-
+            END IF ! for With_Grid_loc
+          END IF ! for para_Op%mat_done
+        ENDIF ! for MPI_id=0
       END IF
-   END IF
 
 !=====================================================================
 !
@@ -497,9 +514,10 @@ CONTAINS
 !=====================================================================
       IF (debug) write(out_unitp,*) 'para_Op,psi symab ',para_Op%symab,psi%symab
 
-      OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,psi%symab)
-
-      CALL Set_symab_OF_psiBasisRep(OpPsi,OpPsi_symab)
+      IF(MPI_id==0) THEN
+        OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,psi%symab)
+        CALL Set_symab_OF_psiBasisRep(OpPsi,OpPsi_symab)
+      ENDIF
       IF (debug) write(out_unitp,*) 'OpPsi_symab',OpPsi%symab
 
 !write(out_unitp,*) 'para_Op,psi symab ',para_Op%symab,psi%symab
@@ -514,11 +532,11 @@ CONTAINS
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_PrimOpPsi
+!=======================================================================================
 
-
-!======================================================
+!=======================================================================================
 !     | OpPsi> = Op | Psi>
-!======================================================
+!=======================================================================================
       SUBROUTINE sub_TabOpPsi(TabPsi,TabOpPsi,para_Op,derOp,With_Grid,TransfoOp)
       USE mod_system
       USE mod_SetOp,              ONLY : param_Op,write_param_Op
@@ -568,6 +586,7 @@ CONTAINS
 !CALL Check_mem()
 !write(6,*) 'coucou ',name_sub
 
+      !-----------------------------------------------------------------
       IF (present(derOp)) THEN
         derOp_loc(:) = derOp(:)
       ELSE
@@ -595,6 +614,7 @@ CONTAINS
           CALL dealloc_psi(Psi_loc,delete_all=.TRUE.)
         END DO
       ELSE
+        ! MPI action here
         CALL sub_PrimTabOpPsi(TabPsi,TabOpPsi,para_Op,derOp_loc,With_Grid_loc)
       END IF
 
@@ -611,14 +631,19 @@ CONTAINS
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_TabOpPsi
+!=======================================================================================
 
+!=======================================================================================
       SUBROUTINE sub_PrimTabOpPsi(TabPsi,TabOpPsi,para_Op,derOp,With_Grid)
       USE mod_system
-      USE mod_SetOp,              ONLY : param_Op,read_OpGrid_OF_Op,Write_FileGrid
+      USE mod_SetOp,           ONLY : param_Op,read_OpGrid_OF_Op,Write_FileGrid
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiGridRep_TO_BasisRep
       USE mod_SymAbelian,      ONLY : Calc_symab1_EOR_symab2
       USE mod_psi_Op,          ONLY : Set_symab_OF_psiBasisRep
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -626,7 +651,7 @@ CONTAINS
       integer, intent(in) :: derOp(2)
       logical, intent(in) :: With_Grid
       integer             :: n
-
+      integer             :: size_TabPsi
 
       !----- variables for the WP --------------------------------------
       TYPE (param_psi)   :: TabPsi(:),TabOpPsi(:)
@@ -642,6 +667,11 @@ CONTAINS
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
       !-----------------------------------------------------------------
+      size_TabPsi=size(TabPsi) 
+#IF(run_MPI)
+      CALL MPI_BCAST(size_TabPsi,size1_MPI,MPI_int,root_MPI,MPI_COMM_WORLD,MPI_err)
+#ENDIF
+
       n = para_Op%nb_tot
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub,' ',n
@@ -650,7 +680,8 @@ CONTAINS
         CALL flush_perso(out_unitp)
         write(out_unitp,*)
         write(out_unitp,*) 'TabPsi'
-        DO i=1,size(TabPsi)
+        !DO i=1,size(TabPsi)
+        DO i=1,size_TabPsi
           CALL ecri_psi(Psi=TabPsi(i))
         END DO
         CALL flush_perso(out_unitp)
@@ -684,8 +715,10 @@ CONTAINS
 
     IF (SGtype4) THEN
         !write(6,*) 'coucou sub_TabOpPsi_FOR_SGtype4: ',para_Op%name_Op,' ',size(TabPsi)
+        ! para_Op%BasisnD%SparseGrid_type=4
         CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)
-        para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
+        !para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
+        para_Op%nb_OpPsi=para_Op%nb_OpPsi+size_TabPsi
         RETURN
       END IF
 
@@ -694,6 +727,8 @@ CONTAINS
       IF (debug) write(out_unitp,*) 'SGtype4,direct_KEO',SGtype4,direct_KEO
       CALL flush_perso(out_unitp)
 
+      ! direct_KEO false by defult
+      ! note this part is not modified for MPI yet
       IF (direct_KEO) THEN
         IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
           CALL read_OpGrid_OF_Op(para_Op)
@@ -701,33 +736,36 @@ CONTAINS
 
         IF (SGtype4) THEN
           CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)
-          para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
+          ! para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
+          para_Op%nb_OpPsi = para_Op%nb_OpPsi+size_TabPsi
         ELSE
           CALL sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(TabPsi,TabOpPsi,para_Op,derOp,.FALSE.)
-          para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
+          ! para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
+          para_Op%nb_OpPsi = para_Op%nb_OpPsi+size_TabPsi
 
-          DO i=1,size(TabPsi)
-
+          !DO i=1,size(TabPsi)
+          DO i=1,size_TabPsi
+          
             !- the projection of PsiGridRep on PsiBasisRep -------------------
             CALL sub_PsiGridRep_TO_BasisRep(TabOpPsi(i))
             nb_mult_OpPsi = nb_mult_OpPsi + nb_mult_GTOB
 
-          !--------------------------------------------------------
+            !--------------------------------------------------------
             TabPsi(i)%GridRep=.FALSE.
             CALL alloc_psi(TabPsi(i))
             TabOpPsi(i)%GridRep=.FALSE.
             CALL alloc_psi(TabOpPsi(i))
             !--------------------------------------------------------
 
-           OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,TabPsi(i)%symab)
+            OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,TabPsi(i)%symab)
             CALL Set_symab_OF_psiBasisRep(TabOpPsi(i),OpPsi_symab)
 
           END DO
         END IF
 
-
       ELSE
-        DO i=1,size(TabPsi)
+        !DO i=1,size(TabPsi)
+        DO i=1,size_TabPsi
           CALL sub_PrimOpPsi(TabPsi(i),TabOpPsi(i),para_Op,derOp,With_Grid)
         END DO
       END IF
@@ -745,10 +783,12 @@ CONTAINS
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_PrimTabOpPsi
+!=======================================================================================
 
+!=======================================================================================
       SUBROUTINE sub_OpPsi_WITH_MatOp(Psi,OpPsi,para_Op)
       USE mod_system
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       IMPLICIT NONE
 
@@ -758,11 +798,7 @@ CONTAINS
       !----- variables for the WP --------------------------------------
       TYPE (param_psi)   :: Psi,OpPsi
 
-
-
       integer :: i,ki,k,n
-
-
 
       !----- for debuging ----------------------------------------------
       integer :: err_mem,memory
@@ -859,6 +895,7 @@ CONTAINS
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_OpPsi_WITH_MatOp
+!=======================================================================================
 
       SUBROUTINE sub_OpPsi_WITH_MemGrid(Psi,OpPsi,para_Op,derOp,pot_only)
       USE mod_system
@@ -933,7 +970,6 @@ CONTAINS
 
         !-----------------------------------------------------------------
         IF (nb_thread == 1) THEN
-
 
           DO iterm=1,para_Op%nb_term
 
@@ -1586,7 +1622,6 @@ STOP 'cplx'
 
  !SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
  SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid)
-
  USE mod_system
  USE mod_Coord_KEO,               ONLY : get_Qact, get_d0g_d0GG
 
@@ -2605,14 +2640,15 @@ STOP 'cplx'
       END IF
 
       END SUBROUTINE sub_itermOpPsi_GridRep
-!======================================================
-!
+!=======================================================================================
 !     OpPsi = (OpPsi - E0.Psi) / Esc
-!
-!======================================================
+!=======================================================================================
       SUBROUTINE sub_scaledOpPsi(Psi,OpPsi,E0,Esc)
       USE mod_system
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 !----- for the scaling -------------------------------------------
@@ -2636,13 +2672,13 @@ STOP 'cplx'
         CALL ecri_psi(Psi=OpPsi)
       END IF
 
-
-      IF (Psi%cplx) THEN
+      IF(MPI_id==0) THEN
+        IF (Psi%cplx) THEN
           OpPsi%CvecB(:) = (OpPsi%CvecB(:) - E0*Psi%CvecB(:))/Esc
-      ELSE
+        ELSE
           OpPsi%RvecB(:) = (OpPsi%RvecB(:) - E0*Psi%RvecB(:))/Esc
-      END IF
-
+        END IF
+      ENDIF
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -2654,12 +2690,13 @@ STOP 'cplx'
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_scaledOpPsi
-!======================================================
-!
+!=======================================================================================
+
+!=======================================================================================
 !     | Op(i).Psi> = Op | Psi>
 !     just for ONE term (iop) of the op
 !
-!======================================================
+!=======================================================================================
       SUBROUTINE sub_OpiPsi(Psi,OpPsi,para_Op,iOp)
       USE mod_system
       USE mod_SetOp,              ONLY : param_Op,write_param_Op,alloc_para_Op,read_OpGrid_OF_Op
