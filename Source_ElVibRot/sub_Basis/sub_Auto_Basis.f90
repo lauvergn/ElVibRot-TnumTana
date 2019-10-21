@@ -36,11 +36,11 @@
 
      CONTAINS
 
-!=========================================================================
+!=======================================================================================
 !
 !        Automatic calculation of a contracted basis set (in nD)
 !
-!=========================================================================
+!=======================================================================================
       SUBROUTINE Auto_basis(para_Tnum,mole,para_AllBasis,               &
                             ComOp,para_PES,para_ReadOp)
       use mod_Coord_KEO
@@ -54,6 +54,9 @@
                            dealloc_allbasis, alloc_allbasis,           &
                            basis2tobasis1
       USE mod_Op
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -107,6 +110,7 @@
       JJ_save                          = para_Tnum%JJ
       para_Tnum%JJ                     = 0
 
+      !> primary memory here
       CALL RecAuto_basis(para_Tnum,mole_loc,para_AllBasis%BasisnD,      &
                          para_PES,para_ReadOp,ComOp_loc)
       CALL dealloc_zmat(mole_loc)
@@ -140,10 +144,10 @@
         write(out_unitp,*) ' nb_qa',nqa
         STOP
       END IF
-      write(out_unitp,*) 'nDindB%nDsize',para_AllBasis%BasisnD%nDindB%nDsize
+      IF(MPI_id==0) write(out_unitp,*) 'nDindB%nDsize',para_AllBasis%BasisnD%nDindB%nDsize
       !CALL Write_nDindex(para_AllBasis%BasisnD%nDindB,"BasisnD%nDinB ")
 
-      write(out_unitp,*) 'nDindG%nDsize',para_AllBasis%BasisnD%nDindG%nDsize
+      IF(MPI_id==0) write(out_unitp,*) 'nDindG%nDsize',para_AllBasis%BasisnD%nDindG%nDsize
       !CALL Write_nDindex(para_AllBasis%BasisnD%nDindG,"BasisnD%nDinG ")
 
       !CALL write_param_ComOp(ComOp)
@@ -160,9 +164,12 @@
       CALL dealloc_ComOp(ComOp_loc)
 
       END SUBROUTINE Auto_basis
-!=======================================================================
+!=======================================================================================
+
+
+!=======================================================================================
 ! Auto contraction
-!=======================================================================
+!=======================================================================================
       RECURSIVE SUBROUTINE RecAuto_basis(para_Tnum,mole,BasisnD,        &
                                          para_PES,para_ReadOp,ComOp_loc)
       USE mod_system
@@ -170,6 +177,9 @@
       USE mod_basis
       USE BasisMakeGrid
       USE mod_Op
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -214,7 +224,7 @@
        Print_basis = BasisnD%print_info_OF_basisDP .AND. print_level > -1 .OR. debug
 
 
-      IF (Print_basis) THEN
+      IF (Print_basis .AND. MPI_id==0) THEN
         write(out_unitp,*) '==============================================='
         write(out_unitp,*) '= Rec Auto Basis, layer: ',rec
         write(out_unitp,*) '==============================================='
@@ -260,7 +270,7 @@
 
           !CALL clean_basis(BasisnD)
 
-          IF (Print_basis) write(out_unitp,*) 'Sparse Grid type4 done. Layer: ',rec
+          IF (Print_basis .AND. MPI_id==0) write(out_unitp,*) 'Sparse Grid type4 done. Layer: ',rec
 
         ELSE
           ! For direct product basis (recursive)
@@ -374,8 +384,8 @@
             CALL flush_perso(out_unitp)
 
             BasisnD%nqc =  BasisnD%nbc
-             !CALL POGridRep2_basis(BasisnD,nb0,mole_loc)
-             CALL POGridRep_basis(BasisnD,nb0,mole_loc)
+            !CALL POGridRep2_basis(BasisnD,nb0,mole_loc)
+            CALL POGridRep_basis(BasisnD,nb0,mole_loc)
 
             IF (Print_basis) write(out_unitp,*) 'POGridRep_basis done. Layer:   ',rec
             CALL flush_perso(out_unitp)
@@ -415,12 +425,12 @@
         CALL check_ortho_basis(BasisnD)
       END IF
 
-      IF (Print_basis) write(out_unitp,*) 'Auto_basis done. Layer:        ',rec
+      IF (Print_basis .AND. MPI_id==0) write(out_unitp,*) 'Auto_basis done. Layer:        ',rec
 
       IF (debug) THEN
         CALL RecWrite_basis(BasisnD)
       END IF
-      IF (Print_basis) THEN
+      IF (Print_basis .AND. MPI_id==0) THEN
         write(out_unitp,*) '==============================================='
         write(out_unitp,*) '= END Rec Auto Basis for Layer:',rec
         write(out_unitp,*) '==================================================='
@@ -429,7 +439,9 @@
       rec = rec - 1
 
       END SUBROUTINE RecAuto_basis
+!=======================================================================================
 
+!=======================================================================================
       RECURSIVE SUBROUTINE RecSet_EneH0(para_Tnum,mole,BasisnD,        &
                                          para_PES,para_ReadOp,ComOp_loc)
 
@@ -439,6 +451,9 @@
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -461,7 +476,7 @@
       integer :: nDval(basisnD%nb_basis)
       TYPE(REAL_WU) :: RWU_E
 
-       integer, save :: rec = 0
+      integer, save :: rec = 0
 !-------------------------------------------------------------------------
 
 !----- for debuging --------------------------------------------------
@@ -475,121 +490,120 @@
         write(out_unitp,*) 'BEGINNING ',name_sub,rec
       END IF
 !---------------------------------------------------------------------
-  IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1) THEN
-    write(out_unitp,*) '==============================================='
-    write(out_unitp,*) '= RecSet_EneH0, layer: ',rec
-    write(out_unitp,*) '==============================================='
 
-    write(out_unitp,*) 'packed_done:                   ',BasisnD%packed_done
-    write(out_unitp,*) 'SparseGrid_type:               ',BasisnD%SparseGrid_type
-    write(out_unitp,*) 'nb_basis:                      ',BasisnD%nb_basis
-    CALL flush_perso(out_unitp)
-  END IF
+      IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1) THEN
+        write(out_unitp,*) '==============================================='
+        write(out_unitp,*) '= RecSet_EneH0, layer: ',rec
+        write(out_unitp,*) '==============================================='
 
-  IF (allocated(BasisnD%EneH0))    THEN
-    CALL dealloc_NParray(BasisnD%EneH0,"BasisnD%EneH0",name_sub)
-  END IF
-  CALL alloc_NParray(BasisnD%EneH0,(/ BasisnD%nb /),"BasisnD%EneH0",name_sub)
-
-  IF (BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done) THEN
-
-      SELECT CASE (BasisnD%SparseGrid_type)
-      CASE (0) ! Direct product
-
-        DO i=1,BasisnD%nb_basis
-          CALL RecSet_EneH0(para_Tnum,mole,                             &
-                            BasisnD%tab_Pbasis(i)%Pbasis,               &
-                                         para_PES,para_ReadOp,ComOp_loc)
-        END DO
-
-        DO ib=1,BasisnD%nb
-          CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
-          BasisnD%EneH0(ib) = ZERO
-          DO i=1,BasisnD%nb_basis
-            BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
-                          BasisnD%tab_Pbasis(i)%Pbasis%EneH0(nDval(i))
-          END DO
-        END DO
-
-      CASE (1) ! Sparse basis (Smolyak 1st implementation)
-
-        L = BasisnD%L_SparseBasis
-
-        DO i=1,BasisnD%nb_basis
-          CALL RecSet_EneH0(para_Tnum,mole,                             &
-                            BasisnD%tab_basisPrimSG(i,L),             &
-                                         para_PES,para_ReadOp,ComOp_loc)
-        END DO
-
-        DO ib=1,BasisnD%nb
-          CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
-
-          BasisnD%EneH0(ib) = ZERO
-          DO i=1,BasisnD%nb_basis
-            BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
-                          BasisnD%tab_basisPrimSG(i,L)%EneH0(nDval(i))
-          END DO
-        END DO
-
-      CASE (2,4) ! Sparse basis (Smolyak 2d or 4th implementation)
-
-        L = BasisnD%L_SparseBasis
-
-        DO i=1,BasisnD%nb_basis
-          CALL RecSet_EneH0(para_Tnum,mole,                             &
-                            BasisnD%tab_basisPrimSG(L,i),             &
-                                         para_PES,para_ReadOp,ComOp_loc)
-        END DO
-
-        CALL init_nDval_OF_nDindex(BasisnD%nDindB,nDval)
-        DO ib=1,BasisnD%nb
-          CALL ADD_ONE_TO_nDindex(BasisnD%nDindB,nDval)
-          !CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
-
-          BasisnD%EneH0(ib) = ZERO
-          DO i=1,BasisnD%nb_basis
-            BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
-                          BasisnD%tab_basisPrimSG(L,i)%EneH0(nDval(i))
-          END DO
-        END DO
-
-      CASE DEFAULT
-        write(out_unitp,*) ' ERROR in',name_sub
-        write(out_unitp,*) ' WRONG SparseGrid_type',BasisnD%SparseGrid_type
-        write(out_unitp,*) ' The possibilities are: 0, 1, 2, 4'
-        STOP
-      END SELECT
-
-
-      IF (debug) THEN
-        write(out_unitp,*) '<d0b(:,ib) I H0 I d0b(:,ib)>'
-        DO i=1,BasisnD%nb
-          RWU_E  = REAL_WU(BasisnD%EneH0(i),'au','E')
-          write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
-        END DO
+        write(out_unitp,*) 'packed_done:                   ',BasisnD%packed_done
+        write(out_unitp,*) 'SparseGrid_type:               ',BasisnD%SparseGrid_type
+        write(out_unitp,*) 'nb_basis:                      ',BasisnD%nb_basis
         CALL flush_perso(out_unitp)
       END IF
 
+      IF (allocated(BasisnD%EneH0))    THEN
+        CALL dealloc_NParray(BasisnD%EneH0,"BasisnD%EneH0",name_sub)
+      END IF
+      CALL alloc_NParray(BasisnD%EneH0,(/ BasisnD%nb /),"BasisnD%EneH0",name_sub)
 
-  ELSE ! packed basis
+      IF (BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done) THEN
 
-    IF (.NOT. BasisnD%auto_contrac) THEN ! Because, it is done with an auto_contracted basis
-      CALL Set_EneH0_OF_PackedBasis(BasisnD,para_Tnum,mole,     &
-                                    ComOp_loc,para_PES,para_ReadOp)
-    END IF
-  END IF
+        SELECT CASE (BasisnD%SparseGrid_type)
+        CASE (0) ! Direct product
 
-  IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1) THEN
-    write(out_unitp,*) '==============================================='
-    write(out_unitp,*) '= END RecSet_EneH0 for Layer:',rec
-    write(out_unitp,*) '==================================================='
-    CALL flush_perso(out_unitp)
-  END IF
-  rec = rec - 1
+          DO i=1,BasisnD%nb_basis
+            CALL RecSet_EneH0(para_Tnum,mole,                             &
+                              BasisnD%tab_Pbasis(i)%Pbasis,               &
+                                           para_PES,para_ReadOp,ComOp_loc)
+          END DO
 
-END SUBROUTINE RecSet_EneH0
+          DO ib=1,BasisnD%nb
+            CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
+            BasisnD%EneH0(ib) = ZERO
+            DO i=1,BasisnD%nb_basis
+              BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
+                            BasisnD%tab_Pbasis(i)%Pbasis%EneH0(nDval(i))
+            END DO
+          END DO
 
+        CASE (1) ! Sparse basis (Smolyak 1st implementation)
 
+          L = BasisnD%L_SparseBasis
+
+          DO i=1,BasisnD%nb_basis
+            CALL RecSet_EneH0(para_Tnum,mole,                             &
+                              BasisnD%tab_basisPrimSG(i,L),             &
+                                           para_PES,para_ReadOp,ComOp_loc)
+          END DO
+
+          DO ib=1,BasisnD%nb
+            CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
+
+            BasisnD%EneH0(ib) = ZERO
+            DO i=1,BasisnD%nb_basis
+              BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
+                            BasisnD%tab_basisPrimSG(i,L)%EneH0(nDval(i))
+            END DO
+          END DO
+
+        CASE (2,4) ! Sparse basis (Smolyak 2d or 4th implementation)
+
+          L = BasisnD%L_SparseBasis
+          DO i=1,BasisnD%nb_basis
+            CALL RecSet_EneH0(para_Tnum,mole,                             &
+                              BasisnD%tab_basisPrimSG(L,i),             &
+                                           para_PES,para_ReadOp,ComOp_loc)
+          END DO
+
+          CALL init_nDval_OF_nDindex(BasisnD%nDindB,nDval)
+          DO ib=1,BasisnD%nb
+            CALL ADD_ONE_TO_nDindex(BasisnD%nDindB,nDval)
+            !CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
+
+            BasisnD%EneH0(ib) = ZERO
+            DO i=1,BasisnD%nb_basis
+              BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
+                            BasisnD%tab_basisPrimSG(L,i)%EneH0(nDval(i))
+            END DO
+          END DO
+
+        CASE DEFAULT
+          write(out_unitp,*) ' ERROR in',name_sub
+          write(out_unitp,*) ' WRONG SparseGrid_type',BasisnD%SparseGrid_type
+          write(out_unitp,*) ' The possibilities are: 0, 1, 2, 4'
+          STOP
+        END SELECT
+
+        IF (debug) THEN
+          write(out_unitp,*) '<d0b(:,ib) I H0 I d0b(:,ib)>'
+          DO i=1,BasisnD%nb
+            RWU_E  = REAL_WU(BasisnD%EneH0(i),'au','E')
+            write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
+          END DO
+          CALL flush_perso(out_unitp)
+        END IF
+
+      ELSE ! packed basis
+
+        IF (.NOT. BasisnD%auto_contrac) THEN ! Because, it is done with an auto_contracted basis
+          CALL Set_EneH0_OF_PackedBasis(BasisnD,para_Tnum,mole,     &
+                                        ComOp_loc,para_PES,para_ReadOp)
+        END IF
+      END IF ! for BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done
+
+      IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1 .AND. MPI_id==0) THEN
+        write(out_unitp,*) '==============================================='
+        write(out_unitp,*) '= END RecSet_EneH0 for Layer:',rec
+        write(out_unitp,*) '==================================================='
+        CALL flush_perso(out_unitp)
+      END IF
+      rec = rec - 1
+
+      END SUBROUTINE RecSet_EneH0
+!=======================================================================================
+
+!=======================================================================================
       SUBROUTINE Set_EneH0_OF_PackedBasis(basis_Set,para_Tnum,mole,     &
                                           ComOp,para_PES,para_ReadOp)
 
@@ -598,6 +612,9 @@ END SUBROUTINE RecSet_EneH0
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -638,8 +655,8 @@ END SUBROUTINE RecSet_EneH0
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
-      !logical, parameter :: debug = .FALSE.
-      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub = 'Set_EneH0_OF_PackedBasis'
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -677,7 +694,6 @@ END SUBROUTINE RecSet_EneH0
                       'para_AllOp_loc%tab_Op',name_sub)
 
       CALL basis_TO_Allbasis(basis_Set,para_AllBasis_loc,mole_loc)
-
 
       para_ReadOp_loc             = para_ReadOp
       para_ReadOp_loc%nb_bRot     = 1
@@ -720,6 +736,7 @@ END SUBROUTINE RecSet_EneH0
       CALL Init_TypeOp(para_AllOp_loc%tab_Op(i)%param_TypeOp,           &
                        type_Op=0,nb_Qact=mole_loc%nb_act1,cplx=.FALSE., &
                        JRot=Para_Tnum%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
+
       CALL derive_termQact_TO_derive_termQdyn(                          &
                             para_AllOp_loc%tab_Op(i)%derive_termQdyn,   &
                             para_AllOp_loc%tab_Op(i)%derive_termQact,   &
@@ -731,7 +748,6 @@ END SUBROUTINE RecSet_EneH0
 
       !---------------------------------------------------------------
       ! make the matrix of H
-
       CALL sub_MatOp(para_AllOp_loc%tab_Op(1),debug)
 
       ! for checking !!!
@@ -755,12 +771,11 @@ END SUBROUTINE RecSet_EneH0
         basis_set%EneH0(i) = para_AllOp_loc%tab_Op(1)%Rmat(i,i)
       END DO
 
-
       IF (print_level > -1 .OR. debug) THEN
-        write(out_unitp,*) '<d0b(:,ib) I H0 I d0b(:,ib)>'
+        IF(MPI_id==0) write(out_unitp,*) '<d0b(:,ib) I H0 I d0b(:,ib)>'
         DO i=1,basis_set%nb
           RWU_E  = REAL_WU(basis_set%EneH0(i),'au','E')
-          write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
+          IF(MPI_id==0) write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
         END DO
         CALL flush_perso(out_unitp)
       END IF
@@ -795,7 +810,9 @@ END SUBROUTINE RecSet_EneH0
       END IF
       CALL flush_perso(out_unitp)
 
+      write(*,*) 'Set_EneH0_OF_PackedBasis end from', MPI_id
       END SUBROUTINE Set_EneH0_OF_PackedBasis
+!=======================================================================================
 
       ! basis parameters: for HO basis set (scaleQ)
       SUBROUTINE AutoParam_basis(basis_Set,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
@@ -1670,7 +1687,6 @@ END SUBROUTINE RecSet_EneH0
       END IF
       basis_AutoContract%nbc = nbc
 
-
       ! Energy levels
       IF (allocated(basis_AutoContract%EneH0))    THEN
         CALL dealloc_NParray(basis_AutoContract%EneH0,"basis_set%EneH0",name_sub)
@@ -1815,7 +1831,7 @@ END SUBROUTINE RecSet_EneH0
 
       END SUBROUTINE basis_TO_AllBasis
 
-
+!=======================================================================================
       SUBROUTINE All2_param_TO_ComOp(ComOp,para_AllBasis,mole,nb_bi,    &
                                      nb_elec,name_HADA,formatted_HADA)
 
@@ -1832,7 +1848,6 @@ END SUBROUTINE RecSet_EneH0
 
 !----- for coordinates ----------------------------------------------
       TYPE (zmatrix)                :: mole
-
 
       integer, intent(in)       :: nb_bi,nb_elec
 !-------variables for the file names -------------------------------------
@@ -1900,6 +1915,8 @@ END SUBROUTINE RecSet_EneH0
       !write(out_unitp,*) ' END ',name_sub
 
       END SUBROUTINE All2_param_TO_ComOp
+!=======================================================================================
+
       SUBROUTINE All_param_TO_para_H(para_Tnum,mole,para_AllBasis,      &
                                      ComOp,para_PES,para_ReadOp,para_H)
 
@@ -1973,7 +1990,6 @@ END SUBROUTINE RecSet_EneH0
       para_H%nb_ba         = para_AllBasis%BasisnD%nDindB%max_nDI
       para_H%nb_qa         = get_nqa_FROM_basis(para_AllBasis%BasisnD)
 
-
       para_H%nb_bi         = ComOp%nb_bi
       para_H%nb_be         = ComOp%nb_be !para_PES%nb_elec
       para_H%nb_bie        = para_H%nb_bi * para_H%nb_be
@@ -2029,11 +2045,9 @@ END SUBROUTINE RecSet_EneH0
 
       END SUBROUTINE All_param_TO_para_H
 
-!====================================================================
-!
+!=======================================================================================
 !     adiabatic contraction
-!
-!=====================================================================
+!=======================================================================================
       SUBROUTINE sub_MatOp_HADA(para_H,para_ana,para_intensity,para_AllOp,const_phys)
       USE mod_system
       USE mod_nDindex
@@ -2060,7 +2074,6 @@ END SUBROUTINE RecSet_EneH0
       integer :: max_ana_save
 
       TYPE (param_psi), allocatable   :: Tab_Psi(:)
-
 
 !------ quadrature points and weight -----------------------------
 
@@ -2332,6 +2345,7 @@ END SUBROUTINE RecSet_EneH0
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_MatOp_HADA
+!=======================================================================================
 
       END MODULE mod_Auto_Basis
 
