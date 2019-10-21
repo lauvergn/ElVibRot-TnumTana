@@ -248,11 +248,15 @@
 
       END SUBROUTINE Write_FileGrid
 
-
-!      SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
-!                              derive_termQact,derive_termQdyn,SmolyakRep,nb_SG,info)
+!=======================================================================================
+#IF(run_MPI)
       SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
                           derive_termQact,derive_termQdyn,SmolyakRep,nb_SG1,nb_SG2,info)
+#ELSE
+      SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
+                          derive_termQact,derive_termQdyn,SmolyakRep,nb_SG,info)
+#ENDIF
+
 #IF(run_MPI)
       USE mod_MPI
 #ENDIF
@@ -262,6 +266,7 @@
       integer,             intent(in)    :: derive_termQdyn(2)
       logical,             intent(in)    :: SmolyakRep
       integer,             intent(in)    :: nb_SG1,nb_SG2
+      integer,             intent(in)    :: nb_SG
       character (len=*),   intent(in)    :: info
 
       character (len=Name_longlen) :: info2
@@ -318,9 +323,13 @@
 
          IF (SmolyakRep) THEN
            IF (print_level > -1) write(out_unitp,*) info2 // ': OpGrid%SRep allocated'
-           !CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG,delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
-           CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG1,nb_SG2,                        &
+#IF(run_MPI)
+           CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG1,nb_SG2,                       &
                                       delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
+#ELSE
+           CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG,                               &
+                                      delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
+#ENDIF
          END IF
        END IF
        CALL flush_perso(out_unitp)

@@ -98,14 +98,17 @@ CONTAINS
 !=======================================================================================
 ! added for SmolyakRep
 !---------------------------------------------------------------------------------------
-!SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
+#IF(run_MPI)
 SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG1,nb_SG2,delta,grid,nb0)
+#ELSE
+SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
+#ENDIF
   USE mod_system
   USE mod_basis_set_alloc
   IMPLICIT NONE
 
   TYPE(Type_SmolyakRep),           intent(inout)         :: SRep
-  !Integer,                         intent(in)            :: nb_SG
+  Integer,                         intent(in)            :: nb_SG
   Integer,                         intent(in)            :: nb_SG1,nb_SG2
   logical,                         intent(in),  optional :: delta,grid
   integer,                         intent(in),  optional :: nb0
@@ -138,8 +141,11 @@ SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG1,nb_SG2,delta,grid,nb0)
 
   !write(6,*) 'Alloc Smolyak Rep' ; flush(6)
 
-  !allocate(SRep%SmolyakRep( nb_SG ))
+#IF(run_MPI)
   allocate(SRep%SmolyakRep(nb_SG1:nb_SG2))
+#ELSE
+  allocate(SRep%SmolyakRep( nb_SG ))
+#ENDIF  
 
   !write(6,*) 'Size Smolyak Rep:',nb_B ; flush(6)
 
