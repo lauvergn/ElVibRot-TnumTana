@@ -90,11 +90,11 @@
 
 
 !------- read the inactive namelist ----------------------------
-!       logical, parameter :: debug=.TRUE.
-       logical, parameter :: debug=.FALSE.
-       character (len=*), parameter :: name_sub='read_inactive'
+!      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      character (len=*), parameter :: name_sub='read_inactive'
 !      -----------------------------------------------------------------
-      write(out_unitp,*) ' INACTIVES PARAMETERS'
+      IF(MPI_id==0) write(out_unitp,*) 'INACTIVES PARAMETERS'
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
       END IF
@@ -532,7 +532,7 @@
       para_ReadOp%T_only          = T_only
 
       para_ReadOp%Op_Transfo      = Op_Transfo
-      write(out_unitp,*) 'para_ReadOp%Op_Transfo',para_ReadOp%Op_Transfo
+      IF(MPI_id==0) write(out_unitp,*) 'para_ReadOp%Op_Transfo',para_ReadOp%Op_Transfo
       IF (Op_Transfo) THEN
         !write(out_unitp,*) 'E0_Transfo',E0_Transfo
 
