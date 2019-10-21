@@ -31,10 +31,15 @@ MODULE Mod_MatOp
  PRIVATE
  PUBLIC :: sub_MatOp,sub_build_MatOp
 CONTAINS
+
+!=======================================================================================
       SUBROUTINE sub_MatOp(para_Op,print_Op)
       USE mod_system
       USE mod_Constant
       USE mod_SetOp
+#IF(run_MPI)
+      USE mod_MPI   
+#ENDIF
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -101,13 +106,22 @@ CONTAINS
             !CALL sub_MatOp_V_SG4(para_Op)
             STOP
           END IF
-          IF (MatOp_omp == 2) THEN
-            CALL sub_MatOp_direct2(para_Op) ! for openmp
-          ELSE IF (MatOp_omp == 1) THEN
-            CALL sub_MatOp_direct1_old(para_Op)  ! for openmp but more memory
-          ELSE ! no openmp (nb_thread=1)
+#IF(run_MPI)          
+          IF(openmpi) THEN
+            ! add MPI for sub_MatOp_direct1 later
             CALL sub_MatOp_direct1(para_Op)
-          END IF
+          ELSE
+#ENDIF
+            IF (MatOp_omp == 2) THEN
+              CALL sub_MatOp_direct2(para_Op) ! for openmp
+            ELSE IF (MatOp_omp == 1) THEN
+              CALL sub_MatOp_direct1_old(para_Op)  ! for openmp but more memory
+            ELSE ! no openmp (nb_thread=1)
+              CALL sub_MatOp_direct1(para_Op)
+            END IF
+#IF(run_MPI)             
+          ENDIF
+#ENDIF
         END IF
       END IF
       para_Op%Make_mat = .TRUE.
@@ -144,7 +158,7 @@ CONTAINS
 
       END IF
 
-      IF (print_Op .OR. debug) THEN
+      IF ((print_Op .OR. debug) .AND. MPI_id==0) THEN
         write(out_unitp,*) para_Op%name_Op,' symmetrized'
         IF (para_Op%cplx) THEN
           CALL Write_Mat(para_Op%Cmat,out_unitp,3)
@@ -162,8 +176,6 @@ CONTAINS
 !     --------------------------------------------------------
 
 
-
-
       IF (para_Op%spectral .AND. (print_Op .OR. debug)) THEN
         write(out_unitp,*) para_Op%name_Op,' spectral'
         IF (para_Op%cplx) THEN
@@ -173,7 +185,6 @@ CONTAINS
         END IF
       END IF
 
-
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*)
@@ -182,13 +193,12 @@ CONTAINS
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_MatOp
+!=======================================================================================
 
 
-!================================================================
-!
+!=======================================================================================
 !     Construct an Operator on a set of WP
-!
-!================================================================
+!=======================================================================================
       SUBROUTINE sub_build_MatOp(WP,nb_WP,para_Op,hermitic,print_mat)
       USE mod_system
       USE mod_Constant
@@ -243,6 +253,7 @@ CONTAINS
       END IF
       DO i=1,nb_WP
         CALL copy_psi2TOpsi1(OpWP(i),WP(i),alloc=.FALSE.)
+        !@chen was CALL init_psi(OpWP(i),para_Op,para_Op%cplx)
       END DO
 
 !     - calculation of the matrix ----
@@ -352,11 +363,13 @@ CONTAINS
 !----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+         CALL flush_perso(out_unitp)
        END IF
 !----------------------------------------------------------
 
       END SUBROUTINE sub_build_MatOp
+!=======================================================================================
+
 
 !=====================================================================
 !
@@ -2314,14 +2327,14 @@ CONTAINS
         END IF
         CALL flush_perso(out_unitp)
       END SUBROUTINE sub_Read_MatOp
-!====================================================================
+!===============================================================================
 !
 !     not(para_Op%para_FileGrid%Type_FileGrid = 0
 !      and
 !     para_Op%para_FileGrid%Save_MemGrid  = .F.)
 !
 !     second version for MatOp_omp=2,1
-!=====================================================================
+!===============================================================================
       SUBROUTINE sub_MatOp_direct2(para_Op)
       USE mod_system
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
@@ -2415,6 +2428,7 @@ CONTAINS
 !----------------------------------------------------------
 
       END SUBROUTINE sub_MatOp_direct2
+      
       SUBROUTINE sub_MatOp_direct1(para_Op)
       USE mod_system
       USE mod_SetOp
@@ -2458,15 +2472,16 @@ CONTAINS
 
 !---- initialization -------------------------------------
       n = min(100,para_Op%nb_tot)
+      IF(MPI_id==0) THEN
+      
+        CALL alloc_NParray(psi, (/n/),"psi", name_sub)
+        CALL alloc_NParray(Hpsi,(/n/),"Hpsi",name_sub)
 
-      CALL alloc_NParray(psi, (/n/),"psi", name_sub)
-      CALL alloc_NParray(Hpsi,(/n/),"Hpsi",name_sub)
-
-      DO i=1,n
-        CALL init_psi(psi(i),para_Op,para_Op%cplx)
-        CALL init_psi(Hpsi(i),para_Op,para_Op%cplx)
-        psi(i) = ZERO
-      END DO
+        DO i=1,n
+          CALL init_psi(psi(i),para_Op,para_Op%cplx)
+          CALL init_psi(Hpsi(i),para_Op,para_Op%cplx)
+          psi(i) = ZERO
+        END DO
 
 !     ----------------------------------------------------------
 !       - build H and H0
@@ -2475,76 +2490,74 @@ CONTAINS
           write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
           CALL flush_perso(out_unitp)
         END IF
+      ENDIF ! for MPI=0
+       
+      ib = 0
+      DO
+        IF (ib >= para_Op%nb_tot) EXIT
 
-        ib = 0
-        DO
-          IF (ib >= para_Op%nb_tot) EXIT
-
-          IF (para_Op%cplx) THEN
-            ib0 = ib
-            DO i=1,n
-              ib = ib + 1
-              IF (ib > para_Op%nb_tot) EXIT
-
+        IF (para_Op%cplx) THEN
+          ib0 = ib
+          DO i=1,n
+            ib = ib + 1
+            IF (ib > para_Op%nb_tot) EXIT
+            IF(MPI_id==0) THEN
               psi(i)%CvecB(:) = CZERO
               psi(i)%CvecB(ib) = CONE
               CALL Set_symab_OF_psiBasisRep(psi(i))
+            ENDIF
+          END DO
 
-            END DO
+          CALL sub_TabOpPsi(Psi,HPsi,para_Op)
 
-            CALL sub_TabOpPsi(Psi,HPsi,para_Op)
+          ib = ib0
+          DO i=1,n
+            ib = ib + 1
+            IF (ib > para_Op%nb_tot) EXIT
 
-            ib = ib0
-            DO i=1,n
-              ib = ib + 1
-              IF (ib > para_Op%nb_tot) EXIT
+            !> Cmat assigned here
+            IF(MPI_id==0) para_Op%Cmat(:,ib)  = Hpsi(i)%CvecB(:)
 
-              para_Op%Cmat(:,ib)  = Hpsi(i)%CvecB(:)
+            IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1) THEN
+              write(out_unitp,'(a)',ADVANCE='no') '---'
+              CALL flush_perso(out_unitp)
+            END IF
+          END DO
+        ELSE
+          ib0 = ib
+          DO i=1,n
+            ib = ib + 1
+            IF (ib > para_Op%nb_tot) EXIT
 
-
-              IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1) THEN
-                write(out_unitp,'(a)',ADVANCE='no') '---'
-                CALL flush_perso(out_unitp)
-              END IF
-
-            END DO
-
-          ELSE
-            ib0 = ib
-            DO i=1,n
-              ib = ib + 1
-              IF (ib > para_Op%nb_tot) EXIT
-
+            IF(MPI_id==0) THEN
               psi(i)%RvecB(:) = ZERO
               psi(i)%RvecB(ib) = ONE
               CALL Set_symab_OF_psiBasisRep(psi(i))
+            ENDIF
+          END DO
 
-            END DO
+          CALL sub_TabOpPsi(Psi,HPsi,para_Op)
 
-            CALL sub_TabOpPsi(Psi,HPsi,para_Op)
+          ib = ib0
+          DO i=1,n
+            ib = ib + 1
+            IF (ib > para_Op%nb_tot) EXIT
 
-            ib = ib0
-            DO i=1,n
-              ib = ib + 1
-              IF (ib > para_Op%nb_tot) EXIT
+            !> Rmat assigned here
+            IF(MPI_id==0) para_Op%Rmat(:,ib)  = Hpsi(i)%RvecB(:)
 
-              para_Op%Rmat(:,ib)  = Hpsi(i)%RvecB(:)
-
-              IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1) THEN
-                write(out_unitp,'(a)',ADVANCE='no') '---'
-                CALL flush_perso(out_unitp)
-              END IF
-
-            END DO
-
-          END IF
-
-        END DO
-
-        IF (print_level > -1) THEN
-          write(out_unitp,'(a)',ADVANCE='yes') '----]'
-          CALL flush_perso(out_unitp)
+            IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1) THEN
+              write(out_unitp,'(a)',ADVANCE='no') '---'
+              CALL flush_perso(out_unitp)
+            END IF
+          END DO
         END IF
+      END DO
+
+      IF (print_level > -1) THEN
+        write(out_unitp,'(a)',ADVANCE='yes') '----]'
+        CALL flush_perso(out_unitp)
+      END IF
 
       IF (debug) THEN
         write(out_unitp,*) para_Op%name_Op,' non-symmetrized'
@@ -2570,10 +2583,9 @@ CONTAINS
          write(out_unitp,*) 'END ',name_sub
        END IF
 !----------------------------------------------------------
-
-
-
       END SUBROUTINE sub_MatOp_direct1
+!=======================================================================================
+
       SUBROUTINE sub_MatOp_direct1_old(para_Op)
       USE mod_system
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
@@ -3252,6 +3264,8 @@ CONTAINS
 !----------------------------------------------------------
 
       END SUBROUTINE sub_MatOp_OpExact_SG4
+      
+!===============================================================================     
       SUBROUTINE sub_OpBasisFi(para_Op,i)
       USE mod_system
       USE mod_SetOp
@@ -3259,6 +3273,9 @@ CONTAINS
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
       USE mod_psi_Op
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3301,12 +3318,12 @@ CONTAINS
         CALL Set_symab_OF_psiBasisRep(psi)
 
         CALL sub_OpPsi(psi,Hpsi,para_Op)
-        para_Op%Cmat(:,i)  = Hpsi%CvecB(:)
+        para_Op%Cmat(:,i)  = Hpsi%CvecB(:) !< Cmat calculated
       ELSE
         psi%RvecB(i) = ONE
         CALL Set_symab_OF_psiBasisRep(psi)
         CALL sub_OpPsi(psi,Hpsi,para_Op)
-        para_Op%Rmat(:,i)  = Hpsi%RvecB(:)
+        para_Op%Rmat(:,i)  = Hpsi%RvecB(:) !< Rmat calculated
       END IF
       CALL dealloc_psi(Hpsi)
       CALL dealloc_psi(psi)
@@ -3318,9 +3335,7 @@ CONTAINS
        END IF
 !----------------------------------------------------------
 
-
-
-
-
       END SUBROUTINE sub_OpBasisFi
+!===============================================================================     
+
 END MODULE Mod_MatOp
