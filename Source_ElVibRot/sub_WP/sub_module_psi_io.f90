@@ -38,12 +38,16 @@
 
       CONTAINS
 
+!=======================================================================================
       SUBROUTINE sub_read_psi0(psi0,para_WP0,max_WP,symab,ortho)
       USE mod_system
       USE mod_psi_set_alloc
       USE mod_ana_psi
       USE mod_psi_Op
       USE mod_param_WP0
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -52,7 +56,6 @@
       TYPE (param_psi), intent(inout) :: psi0(max_WP)
       integer, intent(in), optional   :: symab
       logical, intent(in), optional   :: ortho
-
 
 !------ working parameters --------------------------------
       logical                  :: cplx,ortho_loc
@@ -144,6 +147,7 @@
         ELSE
           list_readWP(:) = (/ (i,i=1,para_WP0%nb_WP0) /)
         END IF
+        
         IF (debug) write(out_unitp,*) 'list_readWP:',list_readWP(1:para_WP0%nb_WP0)
         CALL flush_perso(out_unitp)
 
@@ -190,7 +194,7 @@
           CALL lect_psiBasisRepnotall_nD(psi0(i),in_unitp,cplx,.TRUE.)
           write(out_unitp,*) ' write in',out_unitp,i
           CALL flush_perso(out_unitp)
-          CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ONETENTH**4,.TRUE.,i)
+          IF(MPI_id==0) CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ONETENTH**4,.TRUE.,i)
           !CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ZERO,.TRUE.,i)
         END DO
       END IF
@@ -202,7 +206,6 @@
         IF (debug .OR. print_level > 1) write(out_unitp,*) ' norm psi0(i),symab',i,psi0(i)%norme,psi0(i)%symab
         CALL flush_perso(out_unitp)
       END DO
-
 
 !-----Check the norm and Check and set the symmetry--------------------
       ! keep only the right symmetry if symab > -1
@@ -241,7 +244,7 @@
         write(out_unitp,*) 'END ',name_sub
       END IF
       END SUBROUTINE sub_read_psi0
-
+!=======================================================================================
 
       SUBROUTINE sub_save_LCpsi(psi,Vec,ndim,nb_save,file_WP)
       USE mod_system
@@ -250,6 +253,9 @@
       USE mod_ana_psi
       USE mod_psi_Op
       USE mod_file
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 
@@ -318,7 +324,7 @@
       ELSE
         DO j=1,nb_save
           IF (psi(j)%BasisRep) THEN
-            CALL ecri_psiBasisRepnotall_nD(psi(j),nioWP,ZERO,file_WP%formatted,j)
+            IF(MPI_id==0) CALL ecri_psiBasisRepnotall_nD(psi(j),nioWP,ZERO,file_WP%formatted,j)
           ELSE IF (psi(j)%GridRep) THEN
             IF (psi(j)%cplx) THEN
               write(nioWP,*) psi(j)%CvecG
@@ -338,17 +344,18 @@
 !----------------------------------------------------------
 
       END SUBROUTINE sub_save_LCpsi
-!================================================================
-!
+
+!=======================================================================================
 !     Save vectors
-!
-!================================================================
+!=======================================================================================
       SUBROUTINE sub_save_psi(psi,nb_save,file_WP)
       USE mod_system
       USE mod_psi_set_alloc
       USE mod_file
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
-
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_file) :: file_WP
@@ -356,16 +363,14 @@
       integer            :: nb_save
       TYPE (param_psi)   :: psi(nb_save)
 
-
 !------ working parameters --------------------------------
       integer       :: j,nioWP,ioerr,Version_File
-
       !integer  :: Version_File,nb_psi,nb_tot
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter ::name_sub='sub_save_psi'
-      !logical, parameter :: debug=.FALSE.
-      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -379,13 +384,13 @@
 
       Version_File  = FilePsiVersion
 
-
       CALL file_open(file_WP,iunit=nioWP,lformatted=file_WP%formatted)
 
       CALL Write_header_saveFile_psi(psi,nb_save,file_WP)
 
       DO j=1,nb_save
           IF (psi(j)%BasisRep) THEN
+            ! output
             CALL Write_Psi_nDBasis(psi(j),nioWP,j,ZERO,file_WP%formatted,Version_File)
           ELSE IF (psi(j)%GridRep) THEN
             IF (psi(j)%cplx) THEN
@@ -407,10 +412,11 @@
 !----------------------------------------------------------
 
       END SUBROUTINE sub_save_psi
+!=======================================================================================
 
-!==============================================================
+!=======================================================================================
 !     reading BasisRep Wave packet
-!==============================================================
+!---------------------------------------------------------------------------------------
       SUBROUTINE lect_psiBasisRep(psiBasisRep,WP0cplx,                  &
                                   nb_a,n_h,nb_elec,WP0n_h,WP0nb_elec)
       USE mod_system
@@ -484,9 +490,9 @@
        END IF
 !-----------------------------------------------------------
 
-
-
       END SUBROUTINE lect_psiBasisRep
+!=======================================================================================
+
 !==============================================================
 !     reading BasisRep Wave packet
 !==============================================================
@@ -694,11 +700,13 @@
 
             i_bhe = i_b + ( (i_h-1)+ (i_e-1)*WP0%nb_bi ) * WP0%nb_ba
             IF (debug) write(out_unitp,*) 'i_bhe,indnD,a,b',i_bhe,ind_ndim(:),a,b
-            IF (WP0%cplx) THEN
-              WP0%CvecB(i_bhe) = cmplx(a,b,kind=Rkind)
-            ELSE
-              WP0%RvecB(i_bhe) = a
-            END IF
+            IF(MPI_id==0) THEN
+              IF (WP0%cplx) THEN
+                WP0%CvecB(i_bhe) = cmplx(a,b,kind=Rkind)
+              ELSE
+                WP0%RvecB(i_bhe) = a
+              END IF
+            ENDIF
           END DO
         ELSE
           RETURN
@@ -761,12 +769,13 @@
        END IF
 !-----------------------------------------------------------
       END SUBROUTINE lect_psiBasisRepnotall_nD
+
+!=======================================================================================      
       SUBROUTINE ecri_psiBasisRepnotall_nD(WP0,nio,epsi,lformated,iwp)
       USE mod_system
       USE mod_psi_set_alloc
       USE mod_psi_Op
       IMPLICIT NONE
-
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_psi)   :: WP0
@@ -798,58 +807,55 @@
       lformated_loc = lformated
       IF (nio == 6) lformated_loc = .TRUE.
 
+      IF (WP0%nb_tot == WP0%nb_baie) THEN
+!-----------------------------------------------------------
+        IF (lformated_loc) THEN
+          i_bhe = 0
+          DO i_e=1,WP0%nb_be
+          DO i_h=1,WP0%nb_bi
+          DO i_b=1,WP0%nb_ba
+          i_bhe = i_bhe + 1
 
- IF (WP0%nb_tot == WP0%nb_baie) THEN
- !-----------------------------------------------------------
- !-----------------------------------------------------------
-   IF (lformated_loc) THEN
-      i_bhe = 0
-      DO i_e=1,WP0%nb_be
-      DO i_h=1,WP0%nb_bi
-      DO i_b=1,WP0%nb_ba
-      i_bhe = i_bhe + 1
+          CALL Rec_ndim_index(WP0%BasisnD,ind_ndim(:),i_b)
 
-        CALL Rec_ndim_index(WP0%BasisnD,ind_ndim(:),i_b)
-
-        IF (WP0%cplx) THEN
-          a = real(WP0%CvecB(i_bhe),kind=Rkind)
-          b = aimag(WP0%CvecB(i_bhe))
-          IF (sqrt(a*a+b*b) >= epsi) write(nio,*) ind_ndim(:),i_h,i_e,a,b
+          IF (WP0%cplx) THEN
+            a = real(WP0%CvecB(i_bhe),kind=Rkind)
+            b = aimag(WP0%CvecB(i_bhe))
+            IF (sqrt(a*a+b*b) >= epsi) write(nio,*) ind_ndim(:),i_h,i_e,a,b
+          ELSE
+            a = WP0%RvecB(i_bhe)
+!           write(out_unitp,*) indnD(:),a
+            IF (abs(a) >= epsi) write(nio,*) ind_ndim(:),i_h,i_e,a
+          END IF
+          END DO
+          END DO
+          END DO
+          write(nio,*) 'end wp ',iwp
+        !-----------------------------------------------------------
+        !-----------------------------------------------------------
         ELSE
-          a = WP0%RvecB(i_bhe)
-!         write(out_unitp,*) indnD(:),a
-          IF (abs(a) >= epsi) write(nio,*) ind_ndim(:),i_h,i_e,a
+          i_bhe = 0
+          DO i_e=1,WP0%nb_be
+          DO i_h=1,WP0%nb_bi
+          DO i_b=1,WP0%nb_ba
+          i_bhe = i_bhe + 1
+
+          CALL Rec_ndim_index(WP0%BasisnD,ind_ndim(:),i_b)
+
+          IF (WP0%cplx) THEN
+            a = real(WP0%CvecB(i_b),kind=Rkind)
+            b = aimag(WP0%CvecB(i_b))
+            IF (sqrt(a*a+b*b) >= epsi) write(nio) ind_ndim(:),i_h,i_e,a,b
+          ELSE
+            a = WP0%RvecB(i_b)
+!           write(out_unitp,*) indnD(:),a
+            IF (abs(a) >= epsi) write(nio) ind_ndim(:),i_h,i_e,a
+          END IF
+          END DO
+          END DO
+          END DO
+          write(nio) 'end wp ',iwp
         END IF
-      END DO
-      END DO
-      END DO
-      write(nio,*) 'end wp ',iwp
-   !-----------------------------------------------------------
-   !-----------------------------------------------------------
-   ELSE
-      i_bhe = 0
-      DO i_e=1,WP0%nb_be
-      DO i_h=1,WP0%nb_bi
-      DO i_b=1,WP0%nb_ba
-      i_bhe = i_bhe + 1
-
-        CALL Rec_ndim_index(WP0%BasisnD,ind_ndim(:),i_b)
-
-
-        IF (WP0%cplx) THEN
-          a = real(WP0%CvecB(i_b),kind=Rkind)
-          b = aimag(WP0%CvecB(i_b))
-          IF (sqrt(a*a+b*b) >= epsi) write(nio) ind_ndim(:),i_h,i_e,a,b
-        ELSE
-          a = WP0%RvecB(i_b)
-!         write(out_unitp,*) indnD(:),a
-          IF (abs(a) >= epsi) write(nio) ind_ndim(:),i_h,i_e,a
-        END IF
-      END DO
-      END DO
-      END DO
-      write(nio) 'end wp ',iwp
-   END IF
  !-----------------------------------------------------------
  !-----------------------------------------------------------
  ELSE IF (WP0%ComOp%contrac_ba_ON_HAC) THEN
@@ -900,6 +906,8 @@
 !-----------------------------------------------------------
 
       END SUBROUTINE ecri_psiBasisRepnotall_nD
+!=======================================================================================      
+
 SUBROUTINE Read_psi_nDBasis(Psi,nioPsi,lformated,version,  &
                             list_nDindBasis1_TO_nDindBasis2,nb_tot)
 USE mod_system
@@ -1577,6 +1585,7 @@ END SELECT
 !-----------------------------------------------------------
       END SUBROUTINE Write_list_nDindBasis
 
+!=======================================================================================
       SUBROUTINE Write_Psi_nDBasis(Psi,nioPsi,iPsi,epsi,lformated,version)
       USE mod_system
       USE mod_psi_set_alloc
@@ -1750,7 +1759,7 @@ END SELECT
        END IF
 !-----------------------------------------------------------
       END SUBROUTINE Write_psi_nDBasis
-
+!=======================================================================================
 
       END MODULE mod_psi_io
 
