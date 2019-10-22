@@ -58,7 +58,7 @@
 !$    USE omp_lib, only : omp_get_max_threads
       USE mod_nDGridFit
 #IF(run_MPI)
-      USE MPI
+      USE mod_MPI
 #ENDIF
       IMPLICIT NONE
 
