@@ -126,10 +126,10 @@
           END IF
 
           CALL norm2_psi(WP0(1),GridRep=.TRUE.)
-          write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
+          IF(MPI_id==0) write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
           CALL flush_perso(out_unitp)
           CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
-          write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
+          IF(MPI_id==0) write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
           CALL flush_perso(out_unitp)
 
           IF (debug) THEN
