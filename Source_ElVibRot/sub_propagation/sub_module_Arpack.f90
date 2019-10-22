@@ -35,6 +35,7 @@ PUBLIC :: sub_propagation_Arpack,sub_propagation_Arpack_Sym
 
 CONTAINS
 
+!=======================================================================================
       SUBROUTINE sub_propagation_Arpack(psi,Ene,nb_diago,max_diago,     &
                                         para_H,para_propa)
       USE mod_system
@@ -47,6 +48,9 @@ CONTAINS
       USE mod_psi_Op
       USE mod_param_WP0
       USE mod_propa
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -61,7 +65,6 @@ CONTAINS
 
       real (kind=Rkind)         :: Ene(max_diago)
       logical                   :: With_Grid,With_Basis
-
 
       !------ working parameters --------------------------------
       TYPE (param_psi)               :: psi_loc,Hpsi_loc
@@ -87,7 +90,6 @@ CONTAINS
       logical, allocatable          :: select(:)
       integer  (kind=4)             :: iparam(11), ipntr(14)
 
-
 !     %---------------%
 !     | Local Scalars |
 !     %---------------%
@@ -98,11 +100,11 @@ CONTAINS
       integer (kind=4)    :: ido, n, nev, ncv, lworkl, info, ierr, j
       integer (kind=4)    :: nconv, maxitr, mode, ishfts
       logical             :: rvec,first
+      logical             :: if_deq0=.FALSE. ! for MPI
 
-      real(kind=Rkind)    ::  tol, sigmar, sigmai
+      real(kind=Rkind)    :: tol, sigmar, sigmai
 
       integer (kind=4)    :: it
-
 
 !     %-----------------------------%
 !     | BLAS & LAPACK routines used |
@@ -111,18 +113,16 @@ CONTAINS
       real(kind=Rkind) ::  dnrm2,dlapy2
       external         dnrm2, dlapy2, daxpy
 
-
       TYPE(param_file)     :: Log_file
       integer              :: iunit
       logical              :: cplx
       complex (kind=Rkind) :: cplxE
 
-
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='sub_propagation_Arpack'
-      !logical, parameter :: debug=.FALSE.
-      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -148,20 +148,19 @@ CONTAINS
       CALL init_psi(Hpsi_loc,para_H,cplx)
       CALL alloc_psi(Hpsi_loc,BasisRep=With_Basis,GridRep=With_Grid)
 
-
-
-
 !------ initialization -------------------------------------
       Log_file%name='Arpack.log'
-      CALL file_open(Log_file,iunit)
-
-
+      IF(MPI_id==0) CALL file_open(Log_file,iunit)
 
       IF (With_Grid) THEN
         n = int(para_H%nb_qaie,kind=4)
       ELSE
         n = int(para_H%nb_tot,kind=4)
       END IF
+#IF(run_MPI)
+      CALL MPI_Bcast(n,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+#ENDIF
+      
       IF (nb_diago == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' nb_diago=0 is not possible with ARPACK'
@@ -170,7 +169,8 @@ CONTAINS
 
       nev =  int(nb_diago,kind=4)
       ncv =  2*nev+10
-      ncv =  3*nev+10
+      ncv =  3*nev+10 
+      !was ncv =  2*nev+10
 
       maxn   = n
       ldv    = maxn
@@ -178,21 +178,18 @@ CONTAINS
       maxncv = ncv
 
       allocate(select(maxncv))
-
-
       allocate(ax(maxn))
       allocate(d(maxncv,3))
-      allocate(resid(maxn))
+      allocate(resid(maxn)) !< initial guess vector when infor=1
 
       allocate(v(ldv,maxncv))
       allocate(workd(3*maxn))
       allocate(workev(3*maxncv))
-      allocate( workl(3*maxncv*maxncv+6*maxncv) )
+      allocate(workl(3*maxncv*maxncv+6*maxncv))
 
       bmat  = 'I'
       which = 'SR'
       !which = 'SM'
-
 
 !     %--------------------------------------------------%
 !     | The work array WORKL is used in DSAUPD as        |
@@ -254,53 +251,54 @@ CONTAINS
 !     %-------------------------------------------%
       it = 0
       DO
-         it = it +1
-!        %---------------------------------------------%
-!        | Repeatedly call the routine DNAUPD and take |
-!        | actions indicated by parameter IDO until    |
-!        | either convergence is indicated or maxitr   |
-!        | has been exceeded.                          |
-!        %---------------------------------------------%
+        it = it +1
+!       %---------------------------------------------%
+!       | Repeatedly call the routine DNAUPD and take |
+!       | actions indicated by parameter IDO until    |
+!       | either convergence is indicated or maxitr   |
+!       | has been exceeded.                          |
+!       %---------------------------------------------%
 #if __ARPACK == 1
-         call dnaupd ( ido, bmat, n, which, nev, tol, resid,            &
-                       ncv, v, ldv, iparam, ipntr, workd, workl, lworkl,&
-                       info )
+        IF(MPI_id==0) call dnaupd(ido, bmat, n, which, nev, tol, resid,             &
+                                  ncv, v, ldv, iparam, ipntr, workd, workl, lworkl, &
+                                  info )
+#IF(run_MPI)
+        CALL MPI_Bcast(info,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+        CALL MPI_Bcast(ido,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+#ENDIF
 #else
-          write(out_unitp,*) 'ERROR in ',name_sub
-          write(out_unitp,*) ' The ARPACK library is not present!'
-          write(out_unitp,*) 'Use Arpack=f and Davidson=t'
-          STOP 'ARPACK has been removed'
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) ' The ARPACK library is not present!'
+        write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+        STOP 'ARPACK has been removed'
 #endif
-         !write(6,*) 'it,ido',it,ido
+        !write(6,*) 'it,ido',it,ido
 
-         IF (abs(ido) /= 1) EXIT
+        IF (abs(ido) /= 1) EXIT
 
-!        %--------------------------------------%
-!        | Perform matrix vector multiplication |
-!        |              y <--- OP*x             |
-!        | The user should supply his/her own   |
-!        | matrix vector multiplication routine |
-!        | here that takes workd(ipntr(1)) as   |
-!        | the input, and return the result to  |
-!        | workd(ipntr(2)).                     |
-!        %--------------------------------------%
+!       %--------------------------------------%
+!       | Perform matrix vector multiplication |
+!       |              y <--- OP*x             |
+!       | The user should supply his/her own   |
+!       | matrix vector multiplication routine |
+!       | here that takes workd(ipntr(1)) as   |
+!       | the input, and return the result to  |
+!       | workd(ipntr(2)).                     |
+!       %--------------------------------------%
 
-         CALL sub_OpV1_TO_V2_Arpack(workd(ipntr(1):ipntr(1)-1+n),       &
-                                    workd(ipntr(2):ipntr(2)-1+n),       &
+        CALL sub_OpV1_TO_V2_Arpack(workd(ipntr(1):ipntr(1)-1+n),                       &
+                                    workd(ipntr(2):ipntr(2)-1+n),                      &
                               psi_loc,Hpsi_loc,para_H,cplxE,para_propa,int(n))
 
-         write(iunit,*) 'Arpack <psi H psi>:',                          &
+        IF(MPI_id==0) write(iunit,*) 'Arpack <psi H psi>:',                            &
           dot_product(workd(ipntr(1):ipntr(1)-1+n),workd(ipntr(2):ipntr(2)-1+n))
-         CALL flush_perso(iunit)
+        CALL flush_perso(iunit)
 
       END DO
 
-      write(iunit,*) 'End Arpack ' ; CALL flush_perso(iunit)
-      CALL file_close(Log_file)
-
-
-!----------------------------------------------------------
-
+      IF(MPI_id==0) write(iunit,*) 'End Arpack ' ; CALL flush_perso(iunit)
+      IF(MPI_id==0) CALL file_close(Log_file)
+!---------------------------------------------------------------------------------------
 
 !     %----------------------------------------%
 !     | Either we have convergence or there is |
@@ -309,214 +307,234 @@ CONTAINS
 
       if ( info .lt. 0 ) then
 !
-!        %--------------------------%
-!        | Error message. Check the |
-!        | documentation in DSAUPD. |
-!        %--------------------------%
+!       %--------------------------%
+!       | Error message. Check the |
+!       | documentation in DSAUPD. |
+!       %--------------------------%
 
-         write(out_unitp,*)
-         write(out_unitp,*) ' Error with _saupd, info = ', info
-         write(out_unitp,*) ' Check documentation in _naupd '
-         write(out_unitp,*) ' '
+        write(out_unitp,*)
+        write(out_unitp,*) ' Error with _saupd, info = ', info,' from ', MPI_id
+        write(out_unitp,*) ' Check documentation in _naupd '
+        write(out_unitp,*) ' '
 
       else
 
-!        %-------------------------------------------%
-!        | No fatal errors occurred.                 |
-!        | Post-Process using DSEUPD.                |
-!        |                                           |
-!        | Computed eigenvalues may be extracted.    |
-!        |                                           |
-!        | Eigenvectors may also be computed now if  |
-!        | desired.  (indicated by rvec = .true.)    |
-!        %-------------------------------------------%
+!       %-------------------------------------------%
+!       | No fatal errors occurred.                 |
+!       | Post-Process using DSEUPD.                |
+!       |                                           |
+!       | Computed eigenvalues may be extracted.    |
+!       |                                           |
+!       | Eigenvectors may also be computed now if  |
+!       | desired.  (indicated by rvec = .true.)    |
+!       %-------------------------------------------%
 
-         rvec = .true.
+        rvec = .true.
 
 #if __ARPACK == 1
-         call dneupd ( rvec, 'A', select, d, d(1,2), v, ldv,            &
-              sigmar, sigmai, workev, bmat, n, which, nev, tol,         &
-              resid, ncv, v, ldv, iparam, ipntr, workd, workl,          &
-              lworkl, ierr )
+        ! consider p-arpark 
+        IF(MPI_id==0) call dneupd(rvec, 'A', select, d, d(1,2), v, ldv,               &
+                                  sigmar, sigmai, workev, bmat, n, which, nev, tol,   &
+                                  resid, ncv, v, ldv, iparam, ipntr, workd, workl,    &
+                                  lworkl, ierr )
+#IF(run_MPI)
+        CALL MPI_Bcast(ierr,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+#ENDIF
+#else
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) ' The ARPACK library is not present!'
+        write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+        STOP 'ARPACK has been removed'
+#endif
+!       %-----------------------------------------------%
+!       | The real part of the eigenvalue is returned   |
+!       | in the first column of the two dimensional    |
+!       | array D, and the imaginary part is returned   |
+!       | in the second column of D.  The corresponding |
+!       | eigenvectors are returned in the first NEV    |
+!       | columns of the two dimensional array V if     |
+!       | requested.  Otherwise, an orthogonal basis    |
+!       | for the invariant subspace corresponding to   |
+!       | the eigenvalues in D is returned in V.        |
+!       %-----------------------------------------------%
+
+        if ( ierr .ne. 0) then
+
+!         %------------------------------------%
+!         | Error condition:                   |
+!         | Check the documentation of _neupd  |
+!         %------------------------------------%
+
+          write(out_unitp,*)
+          write(out_unitp,*) ' Error with _seupd, info = ', ierr
+          write(out_unitp,*) ' Check the documentation of _neupd. '
+          write(out_unitp,*)
+
+        else
+
+          first  = .true.
+          nconv  = iparam(5)
+#IF(run_MPI)
+          CALL MPI_Bcast(nconv,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+#ELSE
+          do j=1, nconv
+
+!           %---------------------------%
+!           | Compute the residual norm |
+!           |                           |
+!           |   ||  A*x - lambda*x ||   |
+!           |                           |
+!           | for the NCONV accurately  |
+!           | computed eigenvalues and  |
+!           | eigenvectors.  (iparam(5) |
+!           | indicates how many are    |
+!           | accurate to the requested |
+!           | tolerance)                |
+!           %---------------------------%
+
+#IF(run_MPI)
+            IF(MPI_id==0) THEN
+              IF(d(j,2)==zero) THEN
+                if_deq0=.TRUE.
+              ELSE
+                if_deq0=.FALSE.
+              ENDIF
+            ENDIF
+            CALL MPI_Bcast(if_deq0,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
+            !if (d(j,2) == zero)  then
+            if (if_deq0)  then
+#ELSE            
+            if (d(j,2) == zero)  then
+#ENDIF
+
+!             %--------------------%
+!             | Ritz value is real |
+!             %--------------------%
+
+              CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,                    &
+                                         para_H,cplxE,para_propa,int(n))
+
+              call daxpy(n, -d(j,1), v(1,j), 1, ax, 1)
+              d(j,3) = dnrm2(n, ax, 1)
+              d(j,3) = d(j,3) / abs(d(j,1))
+
+              Ene(j)          = d(j,1)
+              psi(j)%CAvOp    = cmplx(d(j,1),ZERO,kind=Rkind)
+              psi(j)%IndAvOp  = para_H%n_Op  ! it should be 0
+              psi(j)%convAvOp = .TRUE.
+            else if (first) then
+
+!             %------------------------%
+!             | Ritz value is complex. |
+!             | Residual of one Ritz   |
+!             | value of the conjugate |
+!             | pair is computed.      |
+!             %------------------------%
+
+              !call av(nx, v(1,j), ax)
+              CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,                    &
+                                         para_H,cplxE,para_propa,int(n))
+
+#if __ARPACK == 1
+              call daxpy(n, -d(j,1), v(1,j), 1, ax, 1)
+              call daxpy(n, d(j,2), v(1,j+1), 1, ax, 1)
+#else
+              write(out_unitp,*) 'ERROR in ',name_sub
+              write(out_unitp,*) ' The ARPACK library is not present!'
+              write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+              STOP 'ARPACK has been removed'
+#endif
+
+              d(j,3) = dnrm2(n, ax, 1)
+
+              Ene(j)          = d(j,1)
+              psi(j)%CAvOp    = cmplx(d(j,1),d(j,2),kind=Rkind)
+              psi(j)%IndAvOp  = para_H%n_Op  ! it should be 0
+              psi(j)%convAvOp = .TRUE.
+
+
+              !call av(nx, v(1,j+1), ax)
+              CALL sub_OpV1_TO_V2_Arpack(v(:,j+1),ax,psi(j+1),Hpsi_loc,&
+                                        para_H,cplxE,para_propa,int(n))
+
+              Ene(j+1)          = d(j,1)
+              psi(j+1)%CAvOp    = cmplx(d(j,1),-d(j,2),kind=Rkind)
+              psi(j+1)%IndAvOp  = para_H%n_Op  ! it should be 0
+              psi(j+1)%convAvOp = .TRUE.
+
+#if __ARPACK == 1
+              call daxpy(n, -d(j,2), v(1,j), 1, ax, 1)
+              call daxpy(n, -d(j,1), v(1,j+1), 1, ax, 1)
+#else
+              write(out_unitp,*) 'ERROR in ',name_sub
+              write(out_unitp,*) ' The ARPACK library is not present!'
+              write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+              STOP 'ARPACK has been removed'
+#endif
+              d(j,3) = dlapy2( d(j,3), dnrm2(n, ax, 1) )
+              d(j,3) = d(j,3) / dlapy2(d(j,1),d(j,2))
+              d(j+1,3) = d(j,3)
+              first = .false.
+            else
+              first = .true.
+            end if
+
+            IF (debug) write(out_unitp,*) 'j,cplx ene ?',j,         &
+                             psi(j)%CAvOp * get_Conv_au_TO_unit('E','cm-1')
+
+          END DO ! for j=1, nconv
+
+!         %-----------------------------%
+!         | Display computed residuals. |
+!         %-----------------------------%
+#if __ARPACK == 1
+          call dmout(6, nconv, 3, d, maxncv, -6,                     &
+                     'Ritz values (Real,Imag) and relative residuals')
 #else
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' The ARPACK library is not present!'
           write(out_unitp,*) 'Use Arpack=f and Davidson=t'
           STOP 'ARPACK has been removed'
 #endif
-!        %-----------------------------------------------%
-!        | The real part of the eigenvalue is returned   |
-!        | in the first column of the two dimensional    |
-!        | array D, and the imaginary part is returned   |
-!        | in the second column of D.  The corresponding |
-!        | eigenvectors are returned in the first NEV    |
-!        | columns of the two dimensional array V if     |
-!        | requested.  Otherwise, an orthogonal basis    |
-!        | for the invariant subspace corresponding to   |
-!        | the eigenvalues in D is returned in V.        |
-!        %-----------------------------------------------%
+        end if ! for ierr .ne. 0
 
-         if ( ierr .ne. 0) then
+!       %-------------------------------------------%
+!       | Print additional convergence information. |
+!       %-------------------------------------------%
 
-!            %------------------------------------%
-!            | Error condition:                   |
-!            | Check the documentation of _neupd  |
-!            %------------------------------------%
+        if ( info .eq. 1) then
+          print *, ' '
+          print *, ' Maximum number of iterations reached.'
+          print *, ' '
+        else if ( info .eq. 3) then
+          print *, ' '
+          print *, ' No shifts could be applied during implicit',    &
+                   ' Arnoldi update, try increasing NCV.'
+          print *, ' '
+        end if
 
-             write(out_unitp,*)
-             write(out_unitp,*) ' Error with _seupd, info = ', ierr
-             write(out_unitp,*) ' Check the documentation of _neupd. '
-             write(out_unitp,*)
+        print *, ' '
+        print *, ' _NDRV1 '
+        print *, ' ====== '
+        print *, ' '
+        print *, ' Size of the matrix is ', n
+        print *, ' The number of Ritz values requested is ', nev
+        print *, ' The number of Arnoldi vectors generated (NCV) is ', ncv
+        print *, ' What portion of the spectrum: ', which
+        print *, ' The number of converged Ritz values is ',nconv
+        print *, ' The number of Implicit Arnoldi update',             &
+                 ' iterations taken is ', iparam(3)
+        print *, ' The number of OP*x is ', iparam(9)
+        print *, ' The convergence criterion is ', tol
+        print *, ' '
 
-         else
-
-             first  = .true.
-             nconv  = iparam(5)
-             do j=1, nconv
-
-!               %---------------------------%
-!               | Compute the residual norm |
-!               |                           |
-!               |   ||  A*x - lambda*x ||   |
-!               |                           |
-!               | for the NCONV accurately  |
-!               | computed eigenvalues and  |
-!               | eigenvectors.  (iparam(5) |
-!               | indicates how many are    |
-!               | accurate to the requested |
-!               | tolerance)                |
-!               %---------------------------%
-
-                if (d(j,2) == zero)  then
-
-!                  %--------------------%
-!                  | Ritz value is real |
-!                  %--------------------%
-
-                   CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,&
-                                              para_H,cplxE,para_propa,int(n))
-
-                   call daxpy(n, -d(j,1), v(1,j), 1, ax, 1)
-                   d(j,3) = dnrm2(n, ax, 1)
-                   d(j,3) = d(j,3) / abs(d(j,1))
-
-                   Ene(j)          = d(j,1)
-                   psi(j)%CAvOp    = cmplx(d(j,1),ZERO,kind=Rkind)
-                   psi(j)%IndAvOp  = para_H%n_Op  ! it should be 0
-                   psi(j)%convAvOp = .TRUE.
-                else if (first) then
-
-!                  %------------------------%
-!                  | Ritz value is complex. |
-!                  | Residual of one Ritz   |
-!                  | value of the conjugate |
-!                  | pair is computed.      |
-!                  %------------------------%
-
-                   !call av(nx, v(1,j), ax)
-                   CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,&
-                                             para_H,cplxE,para_propa,int(n))
-
-#if __ARPACK == 1
-                   call daxpy(n, -d(j,1), v(1,j), 1, ax, 1)
-                   call daxpy(n, d(j,2), v(1,j+1), 1, ax, 1)
-#else
-             write(out_unitp,*) 'ERROR in ',name_sub
-             write(out_unitp,*) ' The ARPACK library is not present!'
-             write(out_unitp,*) 'Use Arpack=f and Davidson=t'
-             STOP 'ARPACK has been removed'
-#endif
-
-                   d(j,3) = dnrm2(n, ax, 1)
-
-                   Ene(j)          = d(j,1)
-                   psi(j)%CAvOp    = cmplx(d(j,1),d(j,2),kind=Rkind)
-                   psi(j)%IndAvOp  = para_H%n_Op  ! it should be 0
-                   psi(j)%convAvOp = .TRUE.
-
-
-                   !call av(nx, v(1,j+1), ax)
-                   CALL sub_OpV1_TO_V2_Arpack(v(:,j+1),ax,psi(j+1),Hpsi_loc,&
-                                             para_H,cplxE,para_propa,int(n))
-
-                   Ene(j+1)          = d(j,1)
-                   psi(j+1)%CAvOp    = cmplx(d(j,1),-d(j,2),kind=Rkind)
-                   psi(j+1)%IndAvOp  = para_H%n_Op  ! it should be 0
-                   psi(j+1)%convAvOp = .TRUE.
-
-#if __ARPACK == 1
-                   call daxpy(n, -d(j,2), v(1,j), 1, ax, 1)
-                   call daxpy(n, -d(j,1), v(1,j+1), 1, ax, 1)
-#else
-             write(out_unitp,*) 'ERROR in ',name_sub
-             write(out_unitp,*) ' The ARPACK library is not present!'
-             write(out_unitp,*) 'Use Arpack=f and Davidson=t'
-             STOP 'ARPACK has been removed'
-#endif
-                   d(j,3) = dlapy2( d(j,3), dnrm2(n, ax, 1) )
-                   d(j,3) = d(j,3) / dlapy2(d(j,1),d(j,2))
-                   d(j+1,3) = d(j,3)
-                   first = .false.
-                else
-                   first = .true.
-                end if
-
-                IF (debug) write(out_unitp,*) 'j,cplx ene ?',j,         &
-                             psi(j)%CAvOp * get_Conv_au_TO_unit('E','cm-1')
-
-            END DO
-
-!            %-----------------------------%
-!            | Display computed residuals. |
-!            %-----------------------------%
-#if __ARPACK == 1
-             call dmout(6, nconv, 3, d, maxncv, -6,                     &
-                       'Ritz values (Real,Imag) and relative residuals')
-#else
-             write(out_unitp,*) 'ERROR in ',name_sub
-             write(out_unitp,*) ' The ARPACK library is not present!'
-             write(out_unitp,*) 'Use Arpack=f and Davidson=t'
-             STOP 'ARPACK has been removed'
-#endif
-          end if
-
-!        %-------------------------------------------%
-!        | Print additional convergence information. |
-!        %-------------------------------------------%
-
-         if ( info .eq. 1) then
-             print *, ' '
-             print *, ' Maximum number of iterations reached.'
-             print *, ' '
-         else if ( info .eq. 3) then
-             print *, ' '
-             print *, ' No shifts could be applied during implicit',    &
-                      ' Arnoldi update, try increasing NCV.'
-             print *, ' '
-         end if
-
-         print *, ' '
-         print *, ' _NDRV1 '
-         print *, ' ====== '
-         print *, ' '
-         print *, ' Size of the matrix is ', n
-         print *, ' The number of Ritz values requested is ', nev
-         print *, ' The number of Arnoldi vectors generated (NCV) is ', ncv
-         print *, ' What portion of the spectrum: ', which
-         print *, ' The number of converged Ritz values is ',nconv
-         print *, ' The number of Implicit Arnoldi update',             &
-                  ' iterations taken is ', iparam(3)
-         print *, ' The number of OP*x is ', iparam(9)
-         print *, ' The convergence criterion is ', tol
-         print *, ' '
-
-      end if
+      end if ! for info .lt. 0
 
       nb_diago = nconv
 
-      CALL trie_psi(psi,Ene,nb_diago)
+      IF(MPI_id==0) CALL trie_psi(psi,Ene,nb_diago)
 
-      deallocate(v)
+      if(allocated(v)) deallocate(v)
       deallocate(workl)
       deallocate(workd)
       deallocate(d)
@@ -547,7 +565,9 @@ CONTAINS
        END IF
 !----------------------------------------------------------
       END SUBROUTINE sub_propagation_Arpack
+!=======================================================================================
 
+!=======================================================================================
       SUBROUTINE sub_OpV1_TO_V2_Arpack(V1,V2,psi1,psi2,                 &
                                        para_H,cplxE,para_propa,n)
       USE mod_system
@@ -560,6 +580,9 @@ CONTAINS
       USE mod_psi_Op,         ONLY : Overlap_psi1_psi2,Set_symab_OF_psiBasisRep
       USE mod_param_WP0
       USE mod_propa
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -598,9 +621,9 @@ CONTAINS
 
 
       IF (With_Grid) THEN
-        psi1%RvecG(:) = V1(:)/sqrt(para_H%BasisnD%wrho(:))
+        IF(MPI_id==0) psi1%RvecG(:) = V1(:)/sqrt(para_H%BasisnD%wrho(:))
       ELSE
-        psi1%RvecB(:) = V1(:)
+        IF(MPI_id==0) psi1%RvecB(:) = V1(:)
       END IF
 
       CALL sub_OpPsi(psi1,psi2,para_H,With_Grid=With_Grid)
@@ -614,9 +637,9 @@ CONTAINS
       END IF
 
       IF (With_Grid) THEN
-        V2(:) = psi2%RvecG(:)*sqrt(para_H%BasisnD%wrho(:))
+        IF(MPI_id==0) V2(:) = psi2%RvecG(:)*sqrt(para_H%BasisnD%wrho(:))
       ELSE
-        V2(:) = psi2%RvecB(:)
+        IF(MPI_id==0) V2(:) = psi2%RvecB(:)
       END IF
 
 !----------------------------------------------------------
@@ -625,7 +648,9 @@ CONTAINS
        END IF
 !----------------------------------------------------------
       END SUBROUTINE sub_OpV1_TO_V2_Arpack
+!=======================================================================================
 
+!=======================================================================================
       SUBROUTINE sub_propagation_Arpack_Sym(psi,Ene,nb_diago,max_diago, &
                                           para_H,para_propa)
       USE mod_system
@@ -638,6 +663,9 @@ CONTAINS
       USE mod_psi_B_TO_G
       USE mod_param_WP0
       USE mod_propa
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -689,6 +717,7 @@ CONTAINS
       integer (kind=4)    :: nconv, maxitr, mode, ishfts
       logical             :: rvec
       real(kind=Rkind)    :: tol, sigma
+      logical             :: if_deq0=.FALSE. !< for MPI 
 
 !     %-----------------------------%
 !     | BLAS & LAPACK routines used |
@@ -706,8 +735,8 @@ CONTAINS
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='sub_propagation_Arpack_Sym'
-      !logical, parameter :: debug=.FALSE.
-      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -731,17 +760,14 @@ CONTAINS
       CALL init_psi(Hpsi_loc,para_H,cplx)
       CALL alloc_psi(Hpsi_loc)
 
-
-
-
-
 !------ initialization -------------------------------------
       Log_file%name='Arpack.log'
-      CALL file_open(Log_file,iunit)
-
-
+      IF(MPI_id==0) CALL file_open(Log_file,iunit)
 
       n = para_H%nb_tot
+#IF(run_MPI)
+      CALL MPI_Bcast(n,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+#ENDIF
       IF (nb_diago == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' nb_diago=0 is not possible with ARPACK'
@@ -828,16 +854,20 @@ CONTAINS
 !     %-------------------------------------------%
 
       DO
-!        %---------------------------------------------%
-!        | Repeatedly call the routine DSAUPD and take |
-!        | actions indicated by parameter IDO until    |
-!        | either convergence is indicated or maxitr   |
-!        | has been exceeded.                          |
-!        %---------------------------------------------%
+!       %---------------------------------------------%
+!       | Repeatedly call the routine DSAUPD and take |
+!       | actions indicated by parameter IDO until    |
+!       | either convergence is indicated or maxitr   |
+!       | has been exceeded.                          |
+!       %---------------------------------------------%
 #if __ARPACK == 1
-         call dsaupd ( ido, bmat, n, which, nev, tol, resid,            &
-                       ncv, v, ldv, iparam, ipntr, workd, workl,        &
-                       lworkl, info )
+        IF(MPI_id==0) call dsaupd(ido, bmat, n, which, nev, tol, resid,            &
+                                  ncv, v, ldv, iparam, ipntr, workd, workl,        &
+                                  lworkl, info )
+#IF(run_MPI)
+        CALL MPI_Bcast(info,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+        CALL MPI_Bcast(ido,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+#ENDIF
 #else
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' The ARPACK library is not present!'
@@ -861,21 +891,26 @@ CONTAINS
                                     workd(ipntr(2):ipntr(2)-1+n),       &
                                     psi_loc,Hpsi_loc,para_H,cplxE,para_propa,int(n,kind=4))
 
-
          !psi_loc%RvecB(:) = workd(ipntr(1):ipntr(1)-1+n)
          !CALL sub_OpPsi(psi_loc,Hpsi_loc,para_H)
          !workd(ipntr(2):ipntr(2)-1+n) = Hpsi_loc%RvecB(:)
-
-         write(iunit,*) 'Arpack <psi H psi>:',                          &
-          dot_product(workd(ipntr(1):ipntr(1)-1+n),workd(ipntr(2):ipntr(2)-1+n))
-         CALL flush_perso(iunit)
-
+         
+        !IF(MPI_id==0) psi_loc%RvecB(:) = workd(ipntr(1):ipntr(1)-1+n)
+        !CALL sub_OpPsi(psi_loc,Hpsi_loc,para_H)
+        !IF(MPI_id==0) THEN
+        !  workd(ipntr(2):ipntr(2)-1+n) = Hpsi_loc%RvecB(:)
+        
+        IF(MPI_id==0) THEN  
+          write(iunit,*) 'Arpack <psi H psi>:',                          &
+           dot_product(workd(ipntr(1):ipntr(1)-1+n),workd(ipntr(2):ipntr(2)-1+n))
+          CALL flush_perso(iunit)
+        ENDIF
       END DO
 
-
-      write(iunit,*) 'End Arpack ' ; CALL flush_perso(iunit)
-      CALL file_close(Log_file)
-
+      IF(MPI_id==0) THEN
+        write(iunit,*) 'End Arpack ' ; CALL flush_perso(iunit)
+        CALL file_close(Log_file)
+      ENDIF
 
 !----------------------------------------------------------
 
@@ -887,10 +922,10 @@ CONTAINS
 
       if ( info .lt. 0 ) then
 !
-!        %--------------------------%
-!        | Error message. Check the |
-!        | documentation in DSAUPD. |
-!        %--------------------------%
+!       %--------------------------%
+!       | Error message. Check the |
+!       | documentation in DSAUPD. |
+!       %--------------------------%
 
          write(out_unitp,*)
          write(out_unitp,*) ' Error with _saupd, info = ', info
@@ -899,130 +934,142 @@ CONTAINS
 
       else
 
-!        %-------------------------------------------%
-!        | No fatal errors occurred.                 |
-!        | Post-Process using DSEUPD.                |
-!        |                                           |
-!        | Computed eigenvalues may be extracted.    |
-!        |                                           |
-!        | Eigenvectors may also be computed now if  |
-!        | desired.  (indicated by rvec = .true.)    |
-!        %-------------------------------------------%
+!       %-------------------------------------------%
+!       | No fatal errors occurred.                 |
+!       | Post-Process using DSEUPD.                |
+!       |                                           |
+!       | Computed eigenvalues may be extracted.    |
+!       |                                           |
+!       | Eigenvectors may also be computed now if  |
+!       | desired.  (indicated by rvec = .true.)    |
+!       %-------------------------------------------%
 
-         rvec = .true.
-
-#if __ARPACK == 1
-         call dseupd ( rvec, 'All', select, d, v, ldv, sigma,           &
-              bmat, n, which, nev, tol, resid, ncv, v, ldv,             &
-              iparam, ipntr, workd, workl, lworkl, ierr )
-#endif
-!        %----------------------------------------------%
-!        | Eigenvalues are returned in the first column |
-!        | of the two dimensional array D and the       |
-!        | corresponding eigenvectors are returned in   |
-!        | the first NEV columns of the two dimensional |
-!        | array V if requested.  Otherwise, an         |
-!        | orthogonal basis for the invariant subspace  |
-!        | corresponding to the eigenvalues in D is     |
-!        | returned in V.                               |
-!        %----------------------------------------------%
-
-         if ( ierr /= 0) then
-
-!            %------------------------------------%
-!            | Error condition:                   |
-!            | Check the documentation of DSEUPD. |
-!            %------------------------------------%
-
-             write(out_unitp,*)
-             write(out_unitp,*) ' Error with _seupd, info = ', ierr
-             write(out_unitp,*) ' Check the documentation of _seupd. '
-             write(out_unitp,*)
-             STOP
-
-         else
-
-             nconv =  iparam(5)
-             DO j=1, nconv
-
-!               %---------------------------%
-!               | Compute the residual norm |
-!               |                           |
-!               |   ||  A*x - lambda*x ||   |
-!               |                           |
-!               | for the NCONV accurately  |
-!               | computed eigenvalues and  |
-!               | eigenvectors.  (iparam(5) |
-!               | indicates how many are    |
-!               | accurate to the requested |
-!               | tolerance)                |
-!               %---------------------------%
-
-                 !call av(nx, v(1,j), ax)
-                 CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,&
-                                             para_H,cplxE,para_propa,int(n,kind=4))
-
-                !psi(j)%RvecB(:) = v(:,j)
-                !CALL sub_OpPsi(psi(j),Hpsi_loc,para_H)
-                !ax(:) = Hpsi_loc%RvecB(:)
+        rvec = .true.
 
 #if __ARPACK == 1
-                call daxpy(n, -d(j,1), v(:,j), 1, ax, 1)
-#endif
-                d(j,2) = dnrm2(n, ax, 1)
-                d(j,2) = d(j,2) / abs(d(j,1))
+        IF(MPI_id==0) call dseupd(rvec, 'All', select, d, v, ldv, sigma,                &
+                                  bmat, n, which, nev, tol, resid, ncv, v, ldv,         &
+                                  iparam, ipntr, workd, workl, lworkl, ierr )
+#IF(run_MPI)
+        CALL MPI_Bcast(ierr,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+#ENDIF
 
-                IF (debug) write(out_unitp,*) 'j,ene ?',j,              &
+#endif
+!       %----------------------------------------------%
+!       | Eigenvalues are returned in the first column |
+!       | of the two dimensional array D and the       |
+!       | corresponding eigenvectors are returned in   |
+!       | the first NEV columns of the two dimensional |
+!       | array V if requested.  Otherwise, an         |
+!       | orthogonal basis for the invariant subspace  |
+!       | corresponding to the eigenvalues in D is     |
+!       | returned in V.                               |
+!       %----------------------------------------------%
+
+        if ( ierr /= 0) then
+
+!         %------------------------------------%
+!         | Error condition:                   |
+!         | Check the documentation of DSEUPD. |
+!         %------------------------------------%
+
+          write(out_unitp,*)
+          write(out_unitp,*) ' Error with _seupd, info = ', ierr
+          write(out_unitp,*) ' Check the documentation of _seupd. '
+          write(out_unitp,*)
+          STOP
+
+        else
+
+          nconv =  iparam(5)
+#IF(run_MPI)
+          CALL MPI_Bcast(nconv,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+#ENDIF
+          DO j=1, nconv
+
+!           %---------------------------%
+!           | Compute the residual norm |
+!           |                           |
+!           |   ||  A*x - lambda*x ||   |
+!           |                           |
+!           | for the NCONV accurately  |
+!           | computed eigenvalues and  |
+!           | eigenvectors.  (iparam(5) |
+!           | indicates how many are    |
+!           | accurate to the requested |
+!           | tolerance)                |
+!           %---------------------------%
+
+            !call av(nx, v(1,j), ax)
+            CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,&
+                                       para_H,cplxE,para_propa,int(n,kind=4))
+
+            !psi(j)%RvecB(:) = v(:,j)
+            !CALL sub_OpPsi(psi(j),Hpsi_loc,para_H)
+            !ax(:) = Hpsi_loc%RvecB(:)
+            
+            !IF(MPI_id==0) psi(j)%RvecB(:) = v(:,j)
+            !CALL sub_OpPsi(psi(j),Hpsi_loc,para_H)
+            !IF(MPI_id==0) ax(:) = Hpsi_loc%RvecB(:)
+
+#if __ARPACK == 1
+            IF(MPI_id==0) call daxpy(n, -d(j,1), v(:,j), 1, ax, 1)
+#endif
+            IF(MPI_id==0) THEN
+              d(j,2) = dnrm2(n, ax, 1)
+              d(j,2) = d(j,2) / abs(d(j,1))
+
+              IF (debug) write(out_unitp,*) 'j,ene ?',j,              &
                              d(j,1) * get_Conv_au_TO_unit('E','cm-1')
 
-                Ene(j)          = d(j,1)
-                psi(j)%CAvOp    = Ene(j)
-                psi(j)%IndAvOp  = para_H%n_Op  ! it should be 0
-                psi(j)%convAvOp = .TRUE.
+              Ene(j)          = d(j,1)
+              psi(j)%CAvOp    = Ene(j)
+              psi(j)%IndAvOp  = para_H%n_Op  ! it should be 0
+              psi(j)%convAvOp = .TRUE.
+            ENDIF ! for MPI_id==0
+          END DO
 
-             END DO
-
-!            %-------------------------------%
-!            | Display computed residuals    |
-!            %-------------------------------%
+!         %-------------------------------%
+!         | Display computed residuals    |
+!         %-------------------------------%
 #if __ARPACK == 1
-             call dmout(6, nconv, 2, d, maxncv, -6,                     &
+          IF(MPI_id==0) call dmout(6, nconv, 2, d, maxncv, -6,                     &
                         'Ritz values and relative residuals')
 #endif
-         end if
+        end if
 
 
-!        %------------------------------------------%
-!        | Print additional convergence information |
-!        %------------------------------------------%
+!       %------------------------------------------%
+!       | Print additional convergence information |
+!       %------------------------------------------%
 
-         if ( info .eq. 1) then
-            print *, ' '
-            print *, ' Maximum number of iterations reached.'
-            print *, ' '
-         else if ( info .eq. 3) then
-            print *, ' '
-            print *, ' No shifts could be applied during implicit',     &
-                     ' Arnoldi update, try increasing NCV.'
-            print *, ' '
-         end if
+        if ( info .eq. 1) then
+          print *, ' '
+          print *, ' Maximum number of iterations reached.'
+          print *, ' '
+        else if ( info .eq. 3) then
+          print *, ' '
+          print *, ' No shifts could be applied during implicit',     &
+                   ' Arnoldi update, try increasing NCV.'
+          print *, ' '
+        end if
 
-         print *, ' '
-         print *, ' _SDRV1 '
-         print *, ' ====== '
-         print *, ' '
-         print *, ' Size of the matrix is ', n
-         print *, ' The number of Ritz values requested is ', nev
-         print *, ' The number of Arnoldi vectors generated',           &
-                 ' (NCV) is ', ncv
-         print *, ' What portion of the spectrum: ', which
-         print *, ' The number of converged Ritz values is ',           &
-                    nconv
-         print *, ' The number of Implicit Arnoldi update',             &
-                  ' iterations taken is ', iparam(3)
-         print *, ' The number of OP*x is ', iparam(9)
-         print *, ' The convergence criterion is ', tol
-         print *, ' '
+        print *, ' '
+        print *, ' _SDRV1 '
+        print *, ' ====== '
+        print *, ' '
+        print *, ' Size of the matrix is ', n
+        print *, ' The number of Ritz values requested is ', nev
+        print *, ' The number of Arnoldi vectors generated',           &
+                ' (NCV) is ', ncv
+        print *, ' What portion of the spectrum: ', which
+        print *, ' The number of converged Ritz values is ',           &
+                   nconv
+        print *, ' The number of Implicit Arnoldi update',             &
+                 ' iterations taken is ', iparam(3)
+        print *, ' The number of OP*x is ', iparam(9)
+        print *, ' The convergence criterion is ', tol
+        print *, ' '
 
       end if
 
@@ -1054,6 +1101,7 @@ CONTAINS
 !----------------------------------------------------------
 
       END SUBROUTINE sub_propagation_Arpack_Sym
+!=======================================================================================
 
  SUBROUTINE ReadWP0_Arpack(psi,nb_diago,max_diago,para_Davidson,cplx)
  USE mod_system
