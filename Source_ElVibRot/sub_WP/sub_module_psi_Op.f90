@@ -32,11 +32,11 @@
    CONTAINS
 
 
-!================================================================
+!=======================================================================================
 !
 !     Symmetrization (with abelian group) of psi in BasisRep
 !
-!================================================================
+!=======================================================================================
       SUBROUTINE Set_symab_OF_psiBasisRep(psi,symab)
       USE mod_system
       USE mod_psi_set_alloc
@@ -118,6 +118,7 @@
 !----------------------------------------------------------
 
       END SUBROUTINE Set_symab_OF_psiBasisRep
+!=======================================================================================
 
 !================================================================
 !
@@ -131,6 +132,9 @@
       SUBROUTINE Overlap_psi1_psi2(Overlap,psi1,psi2,With_Grid,Channel_ie)
       USE mod_system
       USE mod_psi_set_alloc
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 !----- variables for the WP ----------------------------------------
@@ -181,107 +185,107 @@
         With_Grid_loc = .FALSE.
       END IF
 
-
-      IF (With_Grid_loc) THEN
-        IF (psi1%cplx .AND.                                             &
-         allocated(psi1%CvecG) .AND. allocated(psi2%CvecG)) THEN
-        ELSE IF (.NOT. psi1%cplx .AND.                                  &
-         allocated(psi1%RvecG) .AND. allocated(psi2%RvecG)) THEN
-        ELSE
-          write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' impossible to calculate the GridRep overlap'
-          write(out_unitp,*) ' With_Grid_loc=t but problem with the allocation GridRep'
-          write(out_unitp,*) 'allocated(psi1%CvecG)',allocated(psi1%CvecG)
-          write(out_unitp,*) 'allocated(psi2%CvecG)',allocated(psi2%CvecG)
-          write(out_unitp,*) 'allocated(psi1%RvecG)',allocated(psi1%RvecG)
-          write(out_unitp,*) 'allocated(psi2%RvecG)',allocated(psi2%RvecG)
-          write(out_unitp,*) ' psi1'
-          CALL ecri_psi(psi=psi1,ecri_GridRep=.TRUE.)
-          write(out_unitp,*) ' psi2'
-          CALL ecri_psi(psi=psi2,ecri_GridRep=.TRUE.)
-          STOP
-        END IF
-      ELSE
-        IF (psi1%cplx .AND.                                             &
-         allocated(psi1%CvecB) .AND. allocated(psi2%CvecB)) THEN
-        ELSE IF (.NOT. psi1%cplx .AND.                                  &
-         allocated(psi1%RvecB) .AND. allocated(psi2%RvecB)) THEN
-        ELSE
-          write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' impossible to calculate the BasisRep overlap'
-          write(out_unitp,*) ' With_Grid_loc=f (on basis) but problem with the allocation of BasisRep'
-          write(out_unitp,*) 'allocated(psi1%CvecB)',allocated(psi1%CvecB)
-          write(out_unitp,*) 'allocated(psi2%CvecB)',allocated(psi2%CvecB)
-          write(out_unitp,*) 'allocated(psi1%RvecB)',allocated(psi1%RvecB)
-          write(out_unitp,*) 'allocated(psi2%RvecB)',allocated(psi2%RvecB)
-          write(out_unitp,*) ' psi1'
-          CALL ecri_psi(psi=psi1,ecri_BasisRep=.TRUE.)
-          write(out_unitp,*) ' psi2'
-          CALL ecri_psi(psi=psi2,ecri_BasisRep=.TRUE.)
-          STOP
-        END IF
-      END IF
-
-
-      IF (.NOT. With_Grid_loc) THEN
-        i_baie=1
-        f_baie=psi1%nb_tot
-        IF (psi1%nb_tot == psi1%nb_baie .AND.  locChannel_ie > 0 .AND.  &
-                                locChannel_ie <= psi1%ComOp%nb_bie) THEN
-          i_baie = 1 + (locChannel_ie-1)*psi1%nb_ba
-          f_baie = i_baie-1 + psi1%nb_ba
-        END IF
-        IF (psi1%symab > -1 .AND. psi2%symab > -1 .AND. psi1%symab /= psi2%symab) THEN
-          Overlap = cmplx(ZERO,ZERO,kind=Rkind)
-        ELSE
-          IF (psi1%cplx) THEN
-            Overlap = dot_product( psi1%CvecB(i_baie:f_baie) ,          &
-                                   psi2%CvecB(i_baie:f_baie) )
+      ! With_Grid_loc: F
+      IF(MPI_id==0) THEN
+        IF (With_Grid_loc) THEN
+          IF (psi1%cplx .AND.                                             &
+           allocated(psi1%CvecG) .AND. allocated(psi2%CvecG)) THEN
+          ELSE IF (.NOT. psi1%cplx .AND.                                  &
+           allocated(psi1%RvecG) .AND. allocated(psi2%RvecG)) THEN
           ELSE
-            ROverlap = dot_product( psi1%RvecB(i_baie:f_baie) ,         &
-                                    psi2%RvecB(i_baie:f_baie) )
-            Overlap = cmplx(ROverlap,ZERO,kind=Rkind)
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' impossible to calculate the GridRep overlap'
+            write(out_unitp,*) ' With_Grid_loc=t but problem with the allocation GridRep'
+            write(out_unitp,*) 'allocated(psi1%CvecG)',allocated(psi1%CvecG)
+            write(out_unitp,*) 'allocated(psi2%CvecG)',allocated(psi2%CvecG)
+            write(out_unitp,*) 'allocated(psi1%RvecG)',allocated(psi1%RvecG)
+            write(out_unitp,*) 'allocated(psi2%RvecG)',allocated(psi2%RvecG)
+            write(out_unitp,*) ' psi1'
+            CALL ecri_psi(psi=psi1,ecri_GridRep=.TRUE.)
+            write(out_unitp,*) ' psi2'
+            CALL ecri_psi(psi=psi2,ecri_GridRep=.TRUE.)
+            STOP
+          END IF
+        ELSE
+          IF (psi1%cplx .AND.                                             &
+           allocated(psi1%CvecB) .AND. allocated(psi2%CvecB)) THEN
+          ELSE IF (.NOT. psi1%cplx .AND.                                  &
+           allocated(psi1%RvecB) .AND. allocated(psi2%RvecB)) THEN
+          ELSE
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' impossible to calculate the BasisRep overlap'
+            write(out_unitp,*) ' With_Grid_loc=f (on basis) but problem with the allocation of BasisRep'
+            write(out_unitp,*) 'allocated(psi1%CvecB)',allocated(psi1%CvecB)
+            write(out_unitp,*) 'allocated(psi2%CvecB)',allocated(psi2%CvecB)
+            write(out_unitp,*) 'allocated(psi1%RvecB)',allocated(psi1%RvecB)
+            write(out_unitp,*) 'allocated(psi2%RvecB)',allocated(psi2%RvecB)
+            write(out_unitp,*) ' psi1'
+            CALL ecri_psi(psi=psi1,ecri_BasisRep=.TRUE.)
+            write(out_unitp,*) ' psi2'
+            CALL ecri_psi(psi=psi2,ecri_BasisRep=.TRUE.)
+            STOP
           END IF
         END IF
 
-      ELSE
+        IF (.NOT. With_Grid_loc) THEN
+          i_baie=1
+          f_baie=psi1%nb_tot
+          IF (psi1%nb_tot == psi1%nb_baie .AND.  locChannel_ie > 0 .AND.  &
+                                  locChannel_ie <= psi1%ComOp%nb_bie) THEN
+            i_baie = 1 + (locChannel_ie-1)*psi1%nb_ba
+            f_baie = i_baie-1 + psi1%nb_ba
+          END IF
+          IF (psi1%symab > -1 .AND. psi2%symab > -1 .AND. psi1%symab /= psi2%symab) THEN
+            Overlap = cmplx(ZERO,ZERO,kind=Rkind)
+          ELSE
+            IF (psi1%cplx) THEN
+              Overlap = dot_product( psi1%CvecB(i_baie:f_baie) ,          &
+                                     psi2%CvecB(i_baie:f_baie) )
+            ELSE
+              ROverlap = dot_product( psi1%RvecB(i_baie:f_baie) ,         &
+                                      psi2%RvecB(i_baie:f_baie) )
+              Overlap = cmplx(ROverlap,ZERO,kind=Rkind)
+            END IF
+          END IF
 
-!       - initialization ----------------------------------
-        Overlap = cmplx(ZERO,ZERO,kind=Rkind)
-
-        CALL alloc_NParray(wrho,(/ psi1%nb_qa/),"wrho",name_sub)
-        DO i_qa=1,psi1%nb_qa
-          wrho(i_qa) = Rec_WrhonD(psi1%BasisnD,i_qa)
-        END DO
-
-        IF (psi1%cplx) THEN
-          iie = 1
-          fie = psi1%nb_qa
-          DO i_be=1,psi1%nb_be
-          DO i_bi=1,psi1%nb_bi
-            Overlap = Overlap + dot_product(                            &
-              psi1%CvecG(iie:fie),wrho*psi2%CvecG(iie:fie))
-            iie = iie + psi1%nb_qa
-            fie = fie + psi1%nb_qa
-          END DO
-          END DO
         ELSE
-          iie = 1
-          fie = psi1%nb_qa
-          DO i_be=1,psi1%nb_be
-          DO i_bi=1,psi1%nb_bi
-            Overlap = Overlap + cmplx(dot_product(                      &
-              psi1%RvecG(iie:fie),wrho*psi2%RvecG(iie:fie)) ,kind=Rkind)
-            iie = iie + psi1%nb_qa
-            fie = fie + psi1%nb_qa
+
+  !       - initialization ----------------------------------
+          Overlap = cmplx(ZERO,ZERO,kind=Rkind)
+
+          CALL alloc_NParray(wrho,(/ psi1%nb_qa/),"wrho",name_sub)
+          DO i_qa=1,psi1%nb_qa
+            wrho(i_qa) = Rec_WrhonD(psi1%BasisnD,i_qa)
           END DO
-          END DO
+
+          IF (psi1%cplx) THEN
+            iie = 1
+            fie = psi1%nb_qa
+            DO i_be=1,psi1%nb_be
+            DO i_bi=1,psi1%nb_bi
+              Overlap = Overlap + dot_product(                            &
+                psi1%CvecG(iie:fie),wrho*psi2%CvecG(iie:fie))
+              iie = iie + psi1%nb_qa
+              fie = fie + psi1%nb_qa
+            END DO
+            END DO
+          ELSE
+            iie = 1
+            fie = psi1%nb_qa
+            DO i_be=1,psi1%nb_be
+            DO i_bi=1,psi1%nb_bi
+              Overlap = Overlap + cmplx(dot_product(                      &
+                psi1%RvecG(iie:fie),wrho*psi2%RvecG(iie:fie)) ,kind=Rkind)
+              iie = iie + psi1%nb_qa
+              fie = fie + psi1%nb_qa
+            END DO
+            END DO
+          END IF
+
+          CALL dealloc_NParray(wrho,"wrho",name_sub)
+
         END IF
-
-        CALL dealloc_NParray(wrho,"wrho",name_sub)
-
-      END IF
-
+      ENDIF ! for MPI_id==0
 
 !----------------------------------------------------------
       IF (debug) THEN
@@ -289,7 +293,6 @@
         write(out_unitp,*) 'END ',name_sub
       END IF
 !----------------------------------------------------------
-
 
       END SUBROUTINE Overlap_psi1_psi2
 
