@@ -318,7 +318,7 @@ PRIVATE
         IF (debug) write(out_unitp,*) 'at: ',mendeleev%at(Z,A)
 
       END DO
-      write(out_unitp,*) 'The number of read isotopes:',isot
+      IF(MPI_id==0) write(out_unitp,*) 'The number of read isotopes:',isot
       CALL file_close(mendeleev%List_Isotope)
 
       DO Z=0,mendeleev%max_Z
@@ -356,7 +356,9 @@ PRIVATE
 !! @param auTOgPmol     conversion factor: au to g.mol-1
 !! @param mass_unit     name of the mass unit (eg gPmol)
   SUBROUTINE construct_table_at_NIST2018(mendeleev,auTOgPmol,mass_unit)
-
+#IF(run_MPI)
+    USE mod_MPI
+#ENDIF
     TYPE (table_atom), intent(inout) :: mendeleev
     character (len=*), intent(in)    :: mass_unit
     real (kind=Rkind), intent(in)    :: auTOgPmol
@@ -439,7 +441,7 @@ PRIVATE
         IF (debug) write(out_unitp,*) '-----------------------------------------------------'
 
       END DO
-      write(out_unitp,*) 'The number of read isotopes:',isot
+      IF(MPI_id==0) write(out_unitp,*) 'The number of read isotopes:',isot
       CALL file_close(mendeleev%List_Isotope)
 
 
