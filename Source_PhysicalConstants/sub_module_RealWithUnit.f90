@@ -177,6 +177,9 @@
       END SUBROUTINE Write_TabConvRWU_dim1
 
       SUBROUTINE ADD_RWU_TO_TabConvRWU(TabConvRWU,RWU,Work_unit,Write_unit)
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       TYPE(REAL_WU), intent(in)           :: RWU
       TYPE(Type_TabConvRWU), intent(inout)   :: TabConvRWU
       logical, optional :: Work_unit,Write_unit
@@ -228,7 +231,8 @@
           deallocate(name_unit)
 
           IF (unit_present) THEN
-            write(out_unitp,*) '  The unit "',trim(adjustl(RWU%unit)),'" is already present'
+            IF(MPI_id==0) write(out_unitp,*) 'The unit "',trim(adjustl(RWU%unit)),      &
+                                             '" is already present'
             EXIT
           END IF
 
@@ -412,7 +416,6 @@
 
       ! first find the quantity
       iq = get_Index_OF_Quantity(RWU%quantity)
-
 
       name_RWUunit = RWU%unit
       CALL string_uppercase_TO_lowercase(name_RWUunit)
