@@ -29,6 +29,9 @@ MODULE mod_system
       USE mod_memory
       USE mod_memory_Pointer
       USE mod_memory_NotPointer
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 
@@ -82,6 +85,7 @@ MODULE mod_system
 
 
       logical :: openmp = .FALSE.
+      logical :: openmpi= .True. 
       integer :: MatOp_omp,OpPsi_omp,BasisTOGrid_omp,Grid_omp,SG4_omp
       integer :: MatOp_maxth,OpPsi_maxth,BasisTOGrid_maxth,Grid_maxth,SG4_maxth
 
@@ -134,13 +138,16 @@ MODULE mod_system
 
       CONTAINS
 
+!===============================================================================
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE time_perso(name)
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
         character (len=*), intent(in) :: name
-
 
         !local variables
         integer           :: tab_time(8) = 0
@@ -167,8 +174,8 @@ MODULE mod_system
         hours   = mod(hours,24)
 
 
-        write(out_unitp,31) dt_real,name
- 31     format('        real (s): ',f18.3,' in ',a)
+        write(out_unitp,31) dt_real,name,MPI_id
+ 31     format('        real (s): ',f18.3,' in ',a, ' from MPI id ',i4)
         write(out_unitp,32) days,hours,minutes,seconds,name
  32     format('        real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s in ',a)
 
@@ -186,8 +193,8 @@ MODULE mod_system
         days    = hours/24
         hours   = mod(hours,24)
 
-        write(out_unitp,41) t_real
- 41     format('  Total real (s): ',f18.3)
+        write(out_unitp,41) t_real,MPI_id
+ 41     format('  Total real (s): ',f18.3,' from MPI id ',i4)
         write(out_unitp,42) days,hours,minutes,seconds
  42     format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
         write(out_unitp,43) t_cpu
@@ -198,6 +205,8 @@ MODULE mod_system
 
 
       END SUBROUTINE time_perso
+!===============================================================================
+
       SUBROUTINE time_perso_v0(name)
       IMPLICIT NONE
 
@@ -270,8 +279,8 @@ MODULE mod_system
         hours   = mod(hours,24)
 
         t_real = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
-        write(out_unitp,41) t_real
- 41     format('  Total real (s): ',f18.3)
+        write(out_unitp,41) t_real,MPI_id
+ 41     format('  Total real (s): ',f18.3,' from MPI id ',i4)
         write(out_unitp,42) days,hours,minutes,seconds
  42     format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
         write(out_unitp,43) t_cpu-t_cpu_ini
@@ -308,6 +317,7 @@ MODULE mod_system
         END IF
 
       END SUBROUTINE DeltaTime
+      
       SUBROUTINE DeltaTime_withParam_time(dt_real,t_real,dt_cpu,t_cpu,LocalTime)
       IMPLICIT NONE
 
