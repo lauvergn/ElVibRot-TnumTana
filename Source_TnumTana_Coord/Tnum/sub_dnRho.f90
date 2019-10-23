@@ -419,9 +419,13 @@ MODULE mod_dnRho
 !-----------------------------------------------------------
 
        end subroutine sub3_dnrho_ana
+       
       SUBROUTINE Write_rho(mole)
       USE mod_system
       USE mod_Tnum
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
       TYPE (zmatrix), intent(in)    :: mole
@@ -449,7 +453,7 @@ MODULE mod_dnRho
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 !      analysis of rho as a function of the zmatrix definition
-       IF (print_level > -1) THEN
+       IF (print_level > -1 .AND. MPI_id==0) THEN
 
          write(out_unitp,*)
          write(out_unitp,*) '----------------------------------------------'
