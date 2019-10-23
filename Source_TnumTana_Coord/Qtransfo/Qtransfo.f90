@@ -106,7 +106,9 @@
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,mendeleev)
-
+#IF(run_MPI)
+        USE mod_MPI
+#ENDIF
         TYPE (Type_Qtransfo), intent(inout) :: Qtransfo
         integer, intent(inout)              :: nb_Qin
         TYPE (table_atom), intent(in)       :: mendeleev
@@ -197,8 +199,7 @@
           write(out_unitp,*) ' Check your data !!'
           STOP
         END IF
-        write(out_unitp,*) '=========================================='
-        write(out_unitp,*) '=========================================='
+        IF(MPI_id==0) write(out_unitp,*) '=========================================='
 
         IF (debug) write(out_unitp,Coord_transfo)
 
@@ -206,12 +207,14 @@
         Qtransfo%inTOout      = inTOout
         Qtransfo%opt_transfo  = opt_transfo
         Qtransfo%skip_transfo = skip_transfo
-        write(out_unitp,'(a,a)' ) ' transfo:               ',Qtransfo%name_transfo
-        write(out_unitp,'(a,i0)') ' Option of the transfo: ',Qtransfo%opt_transfo
-        write(out_unitp,'(a,l)' ) ' Skip the transfo:      ',Qtransfo%skip_transfo
-        write(out_unitp,'(a,i0)') ' num_transfo:           ',Qtransfo%num_transfo
-        write(out_unitp,'(a,l)' ) ' inTOout:               ',Qtransfo%inTOout
-        write(out_unitp,'(a)'   ) '------------------------------------------'
+        IF(MPI_id==0) THEN
+          write(out_unitp,'(a,a)' ) ' transfo:               ',Qtransfo%name_transfo
+          write(out_unitp,'(a,i0)') ' Option of the transfo: ',Qtransfo%opt_transfo
+          write(out_unitp,'(a,l)' ) ' Skip the transfo:      ',Qtransfo%skip_transfo
+          write(out_unitp,'(a,i0)') ' num_transfo:           ',Qtransfo%num_transfo
+          write(out_unitp,'(a,l)' ) ' inTOout:               ',Qtransfo%inTOout
+          write(out_unitp,'(a)'   ) '------------------------------------------'
+        ENDIF
         CALL flush_perso(out_unitp)
 
 
@@ -646,8 +649,7 @@
 
 
         IF (debug) CALL Write_QTransfo(Qtransfo)
-        write(out_unitp,*) '=========================================='
-        write(out_unitp,*) '=========================================='
+        IF(MPI_id==0) write(out_unitp,*) '=========================================='
 
       END SUBROUTINE read_Qtransfo
 
@@ -1290,6 +1292,7 @@
 
       !!@description: TODO
       !!@param: TODO
+!===============================================================================
       SUBROUTINE Write_Qtransfo(Qtransfo,force_print)
         TYPE (Type_Qtransfo) :: Qtransfo
         logical, optional    :: force_print
@@ -1301,7 +1304,6 @@
         logical :: force_print_loc
 
         character (len=*), parameter :: name_sub = "Write_Qtransfo"
-
 
         IF (present(force_print)) THEN
           force_print_loc = force_print
@@ -1457,6 +1459,7 @@
 
         CALL flush_perso(out_unitp)
       END SUBROUTINE Write_Qtransfo
+!===============================================================================
 
       SUBROUTINE sub_Type_Name_OF_Qin(Qtransfo,name_coord)
         IMPLICIT NONE
