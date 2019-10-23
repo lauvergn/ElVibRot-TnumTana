@@ -49,6 +49,10 @@
 
    CONTAINS
 
+!===============================================================================
+! Sub_init_dnOp: 
+! Init_d0MatOp, get_d0MatOp_AT_Qact
+!===============================================================================
       SUBROUTINE Sub_init_dnOp(mole,para_Tnum,para_PES)
       USE mod_system
       USE mod_SimpleOp,   only : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
@@ -59,7 +63,6 @@
 !----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix)   :: mole
       TYPE (Tnum)      :: para_Tnum
-
 
       TYPE (param_PES) :: para_PES
 
@@ -144,8 +147,8 @@
         write(out_unitp,*) 'END ',name_sub
       END IF
 
-
       END SUBROUTINE Sub_init_dnOp
+!===============================================================================
 
       SUBROUTINE Sub_init_dnOp_old(mole,para_Tnum,para_PES)
       USE mod_system
@@ -4762,8 +4765,10 @@
        !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
        !IF (debug) THEN
+       IF(MPI_id==0) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
          CALL flush_perso(out_unitp)
+       ENDIF
        !END IF
 !-----------------------------------------------------------
 
@@ -4969,8 +4974,10 @@
 
 !-----------------------------------------------------------
       !IF (debug) THEN
+      IF(MPI_id==0) THEN
         write(out_unitp,*) 'END ',name_sub
         CALL flush_perso(out_unitp)
+      ENDIF
       !END IF
 !-----------------------------------------------------------
 
