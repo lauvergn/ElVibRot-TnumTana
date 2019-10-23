@@ -50,11 +50,13 @@ MODULE mod_paramQ
 
       CONTAINS
 
-!================================================================
+!=======================================================================================
 !      Read reference geometry
-!================================================================
-!
+!=======================================================================================
       SUBROUTINE read_RefGeom(mole,para_Tnum)
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 
@@ -114,7 +116,7 @@ MODULE mod_paramQ
       character (len=*), parameter :: name_sub='read_RefGeom'
       !-----------------------------------------------------------------
 
-      write(out_unitp,*) 'BEGINNING ',name_sub
+      IF(MPI_id==0) write(out_unitp,*) 'BEGINNING ',name_sub
 
 !------- allocation of Q... -----------------------------------------
 
@@ -146,10 +148,9 @@ MODULE mod_paramQ
       pot_cplx     = .FALSE.
       nb_elec      = 1
 
-
-      pot_act             = .FALSE.
-      pot_cart            = .FALSE.
-      pot_itQtransfo      = -1
+      pot_act              = .FALSE.
+      pot_cart             = .FALSE.
+      pot_itQtransfo       = -1
       IF (associated(mole%RPHTransfo)) THEN
         HarD               = .FALSE.
       ELSE
@@ -207,9 +208,11 @@ MODULE mod_paramQ
         END DO
       END IF
 
-      write(out_unitp,*)  '------------------------------------------------------'
-      write(out_unitp,*)  '--- Coordinates used for the operators ---------------'
-      write(out_unitp,*)  '------------------------------------------------------'
+      IF(MPI_id==0) THEN
+        write(out_unitp,*)  '------------------------------------------------------'
+        write(out_unitp,*)  '--- Coordinates used for the operators ---------------'
+        write(out_unitp,*)  '------------------------------------------------------'
+      ENDIF
 
       IF (mole%nb_Qtransfo == -1) THEN
         pot_itQtransfo = 0
@@ -317,15 +320,16 @@ MODULE mod_paramQ
       !=================================================================
       !=================================================================
       !=================================================================
-      write(out_unitp,*)  '------------------------------------------------------'
-      write(out_unitp,*)  '--- Coordinates used for the reference geometry ------'
-      write(out_unitp,*)  '------------------------------------------------------'
+      IF(MPI_id==0) THEN
+        write(out_unitp,*)  '------------------------------------------------------'
+        write(out_unitp,*)  '--- Coordinates used for the reference geometry ------'
+        write(out_unitp,*)  '------------------------------------------------------'
+      ENDIF
 
       ! first defined how to read the reference geometry:
       ! - with read_itQ0transfo    or
       ! - with read_Qsym0, read_xyz0, ...
       IF (read_Qsym0) read_Qdyn0 = .TRUE.
-
 
       IF ( (read_Qdyn0 .AND. read_Qact0) .OR.                           &
            (read_Qdyn0 .AND. read_xyz0) .OR.                            &
@@ -393,7 +397,7 @@ MODULE mod_paramQ
         info_Qread = ' Read Qin0 coordinates, from transfo_it' //       &
                             int_TO_char(read_itQtransfo_OF_Qin0) // ':'
       END IF
-      write(out_unitp,*) info_Qread
+      IF(MPI_id==0) write(out_unitp,*) info_Qread
       ! ----------------------------------------------
 
       ! ----------------------------------------------
@@ -437,27 +441,27 @@ MODULE mod_paramQ
       CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
 
  111  format(a,1x,f15.6)
-      write(out_unitp,*) 'Qdyn0 coordinates (not transformed): [bohr]/[rad or cos(angle)]'
+      IF(MPI_id==0) write(out_unitp,*) 'Qdyn0 coordinates (not transformed): [bohr]/[rad or cos(angle)]'
       DO i=1,mole%nb_var
         name = mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qout(i)
-        write(out_unitp,111) name,Qdyn(i)
+        IF(MPI_id==0) write(out_unitp,111) name,Qdyn(i)
       END DO
 
-      write(out_unitp,*) 'Qact0 coordinates (not transformed): [bohr]/[rad or cos(angle)]'
+      IF(MPI_id==0) write(out_unitp,*) 'Qact0 coordinates (not transformed): [bohr]/[rad or cos(angle)]'
       DO i=1,mole%nb_var
         name = mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qin(i)
         write(out_unitp,111) name,Qact(i)
       END DO
 
-      CALL Write_Q_WU(Qdyn,                                             &
-                      mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qout,    &
-                      mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qout,    &
-                      info='Qdyn0 coordinates (transformed):')
+      IF(MPI_id==0) CALL Write_Q_WU(Qdyn,                                             &
+                         mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qout,    &
+                         mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qout,    &
+                         info='Qdyn0 coordinates (transformed):')
 
-      CALL Write_Q_WU(Qact,                                             &
-                      mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qin,     &
-                      mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin,     &
-                      info='Qact0 coordinates (transformed):')
+      IF(MPI_id==0) CALL Write_Q_WU(Qact,                                             &
+                         mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qin,     &
+                         mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin,     &
+                         info='Qact0 coordinates (transformed):')
 
       ! Transfert the rigid values in ActiveTransfo%Qdyn0 and ActiveTransfo%Qact0
       mole%tab_Qtransfo(mole%nb_Qtransfo)%ActiveTransfo%Qdyn0(:) =  Qdyn(:)
@@ -567,13 +571,16 @@ MODULE mod_paramQ
 !     END Cart_transfo=t
 !======================================================================
 
-      IF (print_level > 1)                                              &
-          write(out_unitp,*) '===================================='
-      write(out_unitp,*) 'END ',name_sub
-
+      IF(MPI_id==0) THEN
+        IF (print_level > 1)                                              &
+            write(out_unitp,*) '===================================='
+        write(out_unitp,*) 'END ',name_sub
+      ENDIF
+      
       CALL dealloc_NParray(QRead,"QRead",name_sub)
 
       END SUBROUTINE read_RefGeom
+!=======================================================================================
 
       SUBROUTINE sub_QactTOQit(Qact,Qit,it_QTransfo,mole,print_Qtransfo)
       USE mod_system
@@ -1708,7 +1715,6 @@ MODULE mod_paramQ
                                      dnx,mole%masses,mole%Mtot_inv,icG,nderiv)
         END IF
 
-
       END IF
 
       !=================================================
@@ -1924,8 +1930,13 @@ MODULE mod_paramQ
       !-----------------------------------------------------------------
 
       END SUBROUTINE Write_d0Q
+
+!=======================================================================================      
       SUBROUTINE Write_Q_WU(Q,name_Q,type_Q,info)
       USE mod_system
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF 
       IMPLICIT NONE
 
 
@@ -1954,29 +1965,28 @@ MODULE mod_paramQ
       END IF
       !-----------------------------------------------------------------
 
-          write(out_unitp,*) '-----------------------------------------'
-          IF (present(info)) write(out_unitp,*) info
+      write(out_unitp,*) '-----------------------------------------'
+      IF (present(info) .AND. MPI_id==0) write(out_unitp,*) info
 
-          DO i=1,size(Q)
+      DO i=1,size(Q)
 
-            SELECT CASE (type_Q(i))
-            CASE (-3)
-              QWU = REAL_WU(acos(Q(i)),'rad','angle')
-            CASE (3,4)
-              QWU = REAL_WU(Q(i),'rad','angle')
-            CASE (1,2)
-              QWU = REAL_WU(Q(i),'bohr','L')
-            CASE default
-              QWU = REAL_WU(Q(i),'','no_dim')
-            END SELECT
+        SELECT CASE (type_Q(i))
+        CASE (-3)
+          QWU = REAL_WU(acos(Q(i)),'rad','angle')
+        CASE (3,4)
+          QWU = REAL_WU(Q(i),'rad','angle')
+        CASE (1,2)
+          QWU = REAL_WU(Q(i),'bohr','L')
+        CASE default
+          QWU = REAL_WU(Q(i),'','no_dim')
+        END SELECT
 
-            write(out_unitp,'(a,i0,5x,a,5x,a)') name_Q(i),i,             &
-                      RWU_Write(QWU,WithUnit=.TRUE.,WorkingUnit=.TRUE.),&
-                      RWU_Write(QWU,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
-          END DO
-          write(out_unitp,*) '-----------------------------------------'
-          CALL flush_perso(out_unitp)
-
+        write(out_unitp,'(a,i0,5x,a,5x,a)') name_Q(i),i,             &
+                  RWU_Write(QWU,WithUnit=.TRUE.,WorkingUnit=.TRUE.),&
+                  RWU_Write(QWU,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
+      END DO
+      write(out_unitp,*) '-----------------------------------------'
+      CALL flush_perso(out_unitp)
 
       !-----------------------------------------------------------------
       IF (debug) THEN
@@ -1986,9 +1996,13 @@ MODULE mod_paramQ
       !-----------------------------------------------------------------
 
       END SUBROUTINE Write_Q_WU
+!=======================================================================================      
 
       SUBROUTINE Get_Qread(Q,name_Q,type_Q,read_nameQ,unit,read_xyz0,info)
       USE mod_system
+#IF(run_MPI)
+      USE mod_MPI
+#ENDIF
       IMPLICIT NONE
 
 
@@ -2092,8 +2106,10 @@ MODULE mod_paramQ
              CALL read_name_advNo(in_unitp,Read_name,err_io)
            END IF
 
-           write(6,*) i,name_Q(i),':',Q(i),':',trim(adjustl(Read_name))
-           write(6,*) i,'type_Q(i) :',type_Q(i)
+           IF(MPI_id==0) THEN
+             write(6,*) i,name_Q(i),':',Q(i),':',trim(adjustl(Read_name))
+             write(6,*) i,'type_Q(i) :',type_Q(i)
+           ENDIF
 
            IF (len_trim(Read_name) > 0) THEN
              SELECT CASE (type_Q(i))
@@ -2128,7 +2144,7 @@ MODULE mod_paramQ
           END IF
 
           Q(i) = convRWU_TO_R(QWU,WorkingUnit=.TRUE.)
-          write(6,*) i,QWU,'working value Q(i)',Q(i)
+          IF(MPI_id==0) write(6,*) i,QWU,'working value Q(i)',Q(i)
 
         END DO
       END IF
@@ -2215,8 +2231,6 @@ MODULE mod_paramQ
       real (kind=Rkind),           intent(in) :: d0x(mole%ncart)
       character (len=*), optional, intent(in) :: unit
       integer,           optional, intent(in) :: io_unit
-
-
 
       real (kind=Rkind) :: a0
       integer           :: Z_act(mole%nat)
