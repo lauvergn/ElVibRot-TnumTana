@@ -1,35 +1,38 @@
 #=================================================================================
 #=================================================================================
-# Compiler? Possible values: ifort; gfortran; pgf90 (v17)
- F90 = gfortran
+## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
+F90 = mpifort
+#F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
 #
-# Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
+## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 1
+OMP = 0
 #
-# force the default integer (without kind) during the compillation. default 4: , INT=8 (for kind=8)
+## force the default integer (without kind) during the compillation. 
+## default 4: , INT=8 (for kind=8)
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 0
+ARPACK = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
 QML = 0
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
-# if $(EXTFextern) is empty, the default is f
+## if $(EXTFextern) is empty, the default is f
 extf = $(EXTFextern)
 #
 ## Operating system, OS? automatic using uname:
 OS=$(shell uname)
 #
 #=================================================================================
-# External pot for the library: libpot.a, with epxort variable (POTDIRextern) or with explicit name
+# External pot for the library: libpot.a, 
+# with epxort variable (POTDIRextern) or with explicit name
 ExternalDIR := $(POTDIRextern)
 # Example pot Bowman (new lib)
 #ExternalDIR := /u/lauvergn/trav/ElVibRot-Tnum/exa_work/exa_clathrate-Bowman/H2-clathrate-PES-ompNewLib/ver1
@@ -43,7 +46,6 @@ ifeq  ($(strip $(ExternalDIR)),)
   PESLIB =
   DIRLIB =
 endif
-#=================================================================================
 #=================================================================================
 #
 #=================================================================================
@@ -62,7 +64,6 @@ ifeq ($(QML),0)
 endif
 #=================================================================================
 #
-#
 #=================================================================================
 # If EXTFextern is empty, extf must be empty
 ifeq  ($(strip $(EXTFextern)),)
@@ -80,12 +81,11 @@ endif
 CompC=gcc
 
 #=================================================================================
-#=================================================================================
 # ifort compillation v12 with mkl
 #=================================================================================
 ifeq ($(F90),ifort)
    # for c++ preprocessing
-   CPP    = -cpp
+   CPPpre  = -cpp
 
    # omp management
    ifeq ($(OMP),0)
@@ -107,16 +107,14 @@ ifeq ($(F90),ifort)
    endif
 endif
 #=================================================================================
-#=================================================================================
 
-#=================================================================================
 #=================================================================================
 # pgf90 compillation v12 with mkl
 #=================================================================================
 ifeq ($(F90),pgf90)
 
    # for c++ preprocessing
-   CPP    = -Mpreprocess
+   CPPpre    = -Mpreprocess
 
    # omp management
    ifeq ($(OMP),0)
@@ -140,18 +138,14 @@ ifeq ($(F90),pgf90)
 
 endif
 #=================================================================================
-#=================================================================================
 
-
-
-#=================================================================================
 #=================================================================================
 # gfortran (osx and linux)
 #ifeq ($(F90),gfortran)
 #=================================================================================
 ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))  
    # for c++ preprocessing
-   CPP    = -cpp
+   CPPpre    = -cpp
 
    # omp management
    ifeq ($(OMP),0)
@@ -195,6 +189,53 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
    endif
 endif
 #=================================================================================
+
+#=================================================================================
+# mpifort (osx and linux)
+# ifeq ($(F90),mpifort)
+# for gfortran core
+#=================================================================================
+ifeq ($(F90),mpifort)  
+   # for c++ preprocessing
+   CPPpre = -cpp -Drun_MPI=1
+
+   # omp management
+   ifeq ($(OMP),0)
+      OMPFLAG =
+   else
+      $(error disable openMP when using MPI!)
+   endif
+   # OS management
+   ifeq ($(LAPACK),1)
+     ifeq ($(OS),Darwin)    # OSX
+        # OSX libs (included lapack+blas)
+        F90LIB = -framework Accelerate
+     else                   # Linux
+        # linux libs
+        F90LIB = -llapack -lblas
+        # linux libs with mkl and without openmp
+        #F90LIB = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_sequential
+     endif
+   else
+    F90LIB =
+   endif
+   #
+   # opt management
+   ifeq ($(OPT),1)
+      F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
+   else
+      #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wconversion -Wconversion-extra
+      #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wunused
+       F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
+      #F90FLAGS = -O0 -fbounds-check -Wuninitialized
+   endif
+   # integer kind management
+   ifeq ($(INT),8)
+      F90FLAGS := $(F90FLAGS) -fdefault-integer-8
+   endif
+endif
+F90FLAGS := $(F90FLAGS)   $(EXTMOD)
+#=================================================================================
 #=================================================================================
 $(info ***********************************************************************)
 $(info ***********OS:              $(OS))
@@ -210,7 +251,6 @@ $(info ***********subsystem file:  sub_system.$(extf))
 $(info ***********DIR of potlib.a: $(ExternalDIR))
 $(info ***********potLib:          $(PESLIB))
 $(info ***********************************************************************)
-
 
 F90_FLAGS = $(F90) $(F90FLAGS)
 LYNK90 = $(F90_FLAGS)
@@ -234,7 +274,6 @@ endif
 
  LIBS := $(DIRLIB) $(QMLIB) $(PESLIB) $(F90LIB) $(ARPACKLIB)
  LYNKFLAGS = $(LIBS)
-
 
 
 #=================================================================================
@@ -690,7 +729,7 @@ $(OBJ)/sub_module_string.o:$(DirSys)/sub_module_string.f90
 $(OBJ)/sub_module_RW_MatVec.o:$(DirSys)/sub_module_RW_MatVec.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_RW_MatVec.f90
 $(OBJ)/sub_module_system.o:$(DirSys)/sub_module_system.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL)  -c $(DirSys)/sub_module_system.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL)  -c $(DirSys)/sub_module_system.f90
 ###
 $(OBJ)/sub_module_DInd.o:$(DirnDind)/sub_module_DInd.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirnDind)/sub_module_DInd.f90
@@ -718,9 +757,9 @@ $(OBJ)/sub_module_nDfit.o:$(DirMod)/sub_module_nDfit.f90
 #===================================================================================
 # Physical constants
 $(OBJ)/sub_module_RealWithUnit.o:$(DIRPhyCte)/sub_module_RealWithUnit.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPhyCte)/sub_module_RealWithUnit.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRPhyCte)/sub_module_RealWithUnit.f90
 $(OBJ)/sub_module_Atom.o:$(DIRPhyCte)/sub_module_Atom.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPhyCte)/sub_module_Atom.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRPhyCte)/sub_module_Atom.f90
 $(OBJ)/sub_module_constant.o:$(DIRPhyCte)/sub_module_constant.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPhyCte)/sub_module_constant.f90
 $(OBJ)/$(PhysConstMAIN).o:$(DIRPhyCte)/$(PhysConstMAIN).f90
@@ -746,7 +785,7 @@ $(OBJ)/sub_module_Tana_PiEulerRot.o:$(DirTNUM)/Tana/sub_module_Tana_PiEulerRot.f
 # Coordinates , Qtransfo, zmat...
 #
 $(OBJ)/Lib_QTransfo.o:$(DirTNUM)/Qtransfo/Lib_QTransfo.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/Lib_QTransfo.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirTNUM)/Qtransfo/Lib_QTransfo.f90
 $(OBJ)/CartesianTransfo.o:$(DirTNUM)/Qtransfo/CartesianTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/CartesianTransfo.f90
 $(OBJ)/BunchPolyTransfo.o:$(DirTNUM)/Qtransfo/BunchPolyTransfo.f90
@@ -782,9 +821,9 @@ $(OBJ)/sub_freq.o:$(DirTNUM)/Qtransfo/sub_freq.f90
 
 #
 $(OBJ)/sub_module_Tnum.o:$(DirTNUM)/sub_module_Tnum.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_module_Tnum.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirTNUM)/sub_module_Tnum.f90
 $(OBJ)/sub_module_paramQ.o:$(DirTNUM)/sub_module_paramQ.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_module_paramQ.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirTNUM)/sub_module_paramQ.f90
 $(OBJ)/sub_module_Coord_KEO.o:$(DirTNUM)/sub_module_Coord_KEO.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_module_Coord_KEO.f90
 #
@@ -804,7 +843,7 @@ $(OBJ)/sub_export_KEO.o:$(DirTNUM)/Tnum/sub_export_KEO.f90
 $(OBJ)/sub_dnDetGG_dnDetg.o:$(DirTNUM)/Tnum/sub_dnDetGG_dnDetg.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Tnum/sub_dnDetGG_dnDetg.f90
 $(OBJ)/sub_dnRho.o:$(DirTNUM)/Tnum/sub_dnRho.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Tnum/sub_dnRho.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirTNUM)/Tnum/sub_dnRho.f90
 #
 # Tana files
 $(OBJ)/sub_module_Tana_Export_KEO.o:$(DirTNUM)/Tana/sub_module_Tana_Export_KEO.f90
@@ -829,7 +868,7 @@ $(OBJ)/sub_PrimOp_def.o:$(DIRPrimOp)/sub_PrimOp_def.f90
 $(OBJ)/sub_module_OnTheFly_def.o:$(DIRPrimOp)/sub_module_OnTheFly_def.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_module_OnTheFly_def.f90
 $(OBJ)/sub_PrimOp.o:$(DIRPrimOp)/sub_PrimOp.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_QML)  -c $(DIRPrimOp)/sub_PrimOp.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_QML)  -c $(DIRPrimOp)/sub_PrimOp.f90
 $(OBJ)/sub_onthefly.o:$(DIRPrimOp)/sub_onthefly.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_onthefly.f90
 $(OBJ)/Module_ForTnumTana_Driver.o:$(DirTNUM)/Module_ForTnumTana_Driver.f90
@@ -879,7 +918,7 @@ $(OBJ)/sub_module_basis_set_alloc.o:$(DIRba)/sub_module_basis_set_alloc.f90
 $(OBJ)/sub_module_basis_RCVec_SG4.o:$(DIRbaSG4)/sub_module_basis_RCVec_SG4.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRbaSG4)/sub_module_basis_RCVec_SG4.f90
 $(OBJ)/sub_module_basis_BtoG_GtoB_SG4.o:$(DIRbaSG4)/sub_module_basis_BtoG_GtoB_SG4.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRbaSG4)/sub_module_basis_BtoG_GtoB_SG4.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRbaSG4)/sub_module_basis_BtoG_GtoB_SG4.f90
 
 $(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o:$(DIRba)/sub_module_basis_BtoG_GtoB_SGType2.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_module_basis_BtoG_GtoB_SGType2.f90
@@ -888,7 +927,7 @@ $(OBJ)/sub_module_basis_BtoG_GtoB.o:$(DIRba)/sub_module_basis_BtoG_GtoB.f90
 $(OBJ)/sub_module_basis.o:$(DIRba)/sub_module_basis.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_module_basis.f90
 $(OBJ)/sub_Auto_Basis.o:$(DIRba)/sub_Auto_Basis.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_Auto_Basis.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRba)/sub_Auto_Basis.f90
 $(OBJ)/sub_read_data.o:$(DIRba)/sub_read_data.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_read_data.f90
 $(OBJ)/sub_basis_El.o:$(DIRba)/sub_basis_El.f90
@@ -912,7 +951,7 @@ $(OBJ)/sub_quadra_Ylm.o:$(DIRba)/sub_quadra_Ylm.f90
 $(OBJ)/sub_quadra_DirProd.o:$(DIRba)/sub_quadra_DirProd.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_DirProd.f90
 $(OBJ)/sub_quadra_SparseBasis.o:$(DIRba)/sub_quadra_SparseBasis.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_SparseBasis.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRba)/sub_quadra_SparseBasis.f90
 $(OBJ)/sub_module_BasisMakeGrid.o:$(DIRba)/sub_module_BasisMakeGrid.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_module_BasisMakeGrid.f90
 $(OBJ)/sub_quadra_SparseBasis2n.o:$(DIRba)/sub_quadra_SparseBasis2n.f90
@@ -927,19 +966,19 @@ $(OBJ)/sub_module_type_ana_psi.o:$(DIRWP)/sub_module_type_ana_psi.f90
 $(OBJ)/sub_module_param_WP0.o:$(DIRWP)/sub_module_param_WP0.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_param_WP0.f90
 $(OBJ)/sub_module_psi_set_alloc.o:$(DIRWP)/sub_module_psi_set_alloc.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_set_alloc.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_set_alloc.f90
 $(OBJ)/sub_module_ana_psi.o:$(DIRWP)/sub_module_ana_psi.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_ana_psi.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_ana_psi.f90
 $(OBJ)/sub_module_psi_SimpleOp.o:$(DIRWP)/sub_module_psi_SimpleOp.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_SimpleOp.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_SimpleOp.f90
 $(OBJ)/sub_module_psi_B_TO_G.o:$(DIRWP)/sub_module_psi_B_TO_G.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_B_TO_G.f90
 $(OBJ)/sub_module_psi_Op.o:$(DIRWP)/sub_module_psi_Op.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_Op.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_Op.f90
 $(OBJ)/sub_module_psi_io.o:$(DIRWP)/sub_module_psi_io.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_io.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_io.f90
 $(OBJ)/sub_psi0.o:$(DIRWP)/sub_psi0.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_psi0.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_psi0.f90
 $(OBJ)/sub_ana_psi.o:$(DIRWP)/sub_ana_psi.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_ana_psi.f90
 #
@@ -950,21 +989,21 @@ $(OBJ)/sub_module_field.o:$(DIRpropa)/sub_module_field.f90
 $(OBJ)/sub_module_ExactFact.o:$(DIRpropa)/sub_module_ExactFact.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_module_ExactFact.f90
 $(OBJ)/sub_module_propagation.o:$(DIRpropa)/sub_module_propagation.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_module_propagation.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRpropa)/sub_module_propagation.f90
 $(OBJ)/sub_module_propa_march.o:$(DIRpropa)/sub_module_propa_march.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_module_propa_march.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRpropa)/sub_module_propa_march.f90
 $(OBJ)/sub_module_propa_march_SG4.o:$(DIRpropa)/sub_module_propa_march_SG4.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_module_propa_march_SG4.f90
 $(OBJ)/sub_module_Filter.o:$(DIRpropa)/sub_module_Filter.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_module_Filter.f90
 $(OBJ)/sub_module_Davidson.o:$(DIRpropa)/sub_module_Davidson.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_module_Davidson.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRpropa)/sub_module_Davidson.f90
 $(OBJ)/sub_module_Arpack.o:$(DIRpropa)/sub_module_Arpack.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_ARPACK)  -c $(DIRpropa)/sub_module_Arpack.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_ARPACK)  -c $(DIRpropa)/sub_module_Arpack.f90
 $(OBJ)/sub_propagation.o:$(DIRpropa)/sub_propagation.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_propagation.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRpropa)/sub_propagation.f90
 $(OBJ)/sub_Hmax.o:$(DIRpropa)/sub_Hmax.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_Hmax.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRpropa)/sub_Hmax.f90
 $(OBJ)/sub_control.o:$(DIRpropa)/sub_control.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_control.f90
 $(OBJ)/sub_TF_autocorr.o:$(DIRpropa)/sub_TF_autocorr.f90
@@ -975,14 +1014,14 @@ $(OBJ)/sub_TF_autocorr.o:$(DIRpropa)/sub_TF_autocorr.f90
 $(OBJ)/sub_module_ComOp.o:$(DIROp)/sub_module_ComOp.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_ComOp.f90
 $(OBJ)/sub_module_OpGrid.o:$(DIROp)/sub_module_OpGrid.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_OpGrid.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIROp)/sub_module_OpGrid.f90
 $(OBJ)/sub_module_ReadOp.o:$(DIROp)/sub_module_ReadOp.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_ReadOp.f90
 $(OBJ)/sub_module_SetOp.o:$(DIROp)/sub_module_SetOp.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_SetOp.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIROp)/sub_module_SetOp.f90
 #
 $(OBJ)/sub_HST_harm.o:$(DIR2)/sub_HST_harm.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR2)/sub_HST_harm.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIR2)/sub_HST_harm.f90
 $(OBJ)/sub_inactive_harmo.o:$(DIR2)/sub_inactive_harmo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR2)/sub_inactive_harmo.f90
 $(OBJ)/sub_changement_de_var.o:$(DIR2)/sub_changement_de_var.f90
@@ -996,19 +1035,19 @@ $(OBJ)/sub_ini_act_harm.o:$(DIR5)/sub_ini_act_harm.f90
 $(OBJ)/sub_Grid_SG4.o:$(DIR5)/sub_Grid_SG4.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR5)/sub_Grid_SG4.f90
 $(OBJ)/sub_lib_act.o:$(DIR5)/sub_lib_act.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR5)/sub_lib_act.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIR5)/sub_lib_act.f90
 $(OBJ)/sub_diago_H.o:$(DIR5)/sub_diago_H.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR5)/sub_diago_H.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIR5)/sub_diago_H.f90
 $(OBJ)/sub_paraRPH.o:$(DIR5)/sub_paraRPH.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR5)/sub_paraRPH.f90
 #
 # Operator
 $(OBJ)/sub_MatOp.o:$(DIROp)/sub_MatOp.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_MatOp.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIROp)/sub_MatOp.f90
 $(OBJ)/sub_OpPsi_SG4.o:$(DIROp)/sub_OpPsi_SG4.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_OpPsi_SG4.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIROp)/sub_OpPsi_SG4.f90
 $(OBJ)/sub_OpPsi.o:$(DIROp)/sub_OpPsi.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_OpPsi.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIROp)/sub_OpPsi.f90
 $(OBJ)/sub_lib_Op.o:$(DIROp)/sub_lib_Op.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_lib_Op.f90
 $(OBJ)/sub_module_Op.o:$(DIROp)/sub_module_Op.f90
@@ -1017,7 +1056,7 @@ $(OBJ)/sub_module_Op.o:$(DIROp)/sub_module_Op.f90
 #===================================================================================
 # sub_analysis
 $(OBJ)/sub_module_analysis.o:$(DIRana)/sub_module_analysis.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_module_analysis.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRana)/sub_module_analysis.f90
 $(OBJ)/sub_analyse.o:$(DIRana)/sub_analyse.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_analyse.f90
 $(OBJ)/sub_NLO.o:$(DIRana)/sub_NLO.f90
@@ -1042,7 +1081,7 @@ $(OBJ)/sub_module_Optimization.o:$(DIROpt)/sub_module_Optimization.f90
 #===================================================================================
 # sub_data_initialisation
 $(OBJ)/ini_data.o:$(DIR1)/ini_data.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR1)/ini_data.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIR1)/ini_data.f90
 $(OBJ)/sub_namelist.o:$(DIR1)/sub_namelist.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR1)/sub_namelist.f90
 $(OBJ)/nb_harm.o:$(DIR1)/nb_harm.f90
@@ -1059,9 +1098,9 @@ $(OBJ)/$(WORKMAIN).o:$(DirTNUM)/sub_main/$(WORKMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_main/$(WORKMAIN).f90
 #
 $(OBJ)/vib.o:$(DIRvib)/vib.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPP) $(CPPSHELL_ARPACK)  -c $(DIRvib)/vib.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_ARPACK)  -c $(DIRvib)/vib.f90
 $(OBJ)/versionEVR-T.o:$(DIRvib)/versionEVR-T.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRvib)/versionEVR-T.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRvib)/versionEVR-T.f90
 $(OBJ)/cart.o:$(DIRvib)/cart.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRvib)/cart.f90
 $(OBJ)/sub_main_nDfit.o:$(DIRvib)/sub_main_nDfit.f90
@@ -1093,7 +1132,7 @@ $(OBJ)/read_para.o:$(DirPot)/read_para.f90
 #
 #===================================================================================
 $(OBJ)/sub_diago.o:$(DirMath)/sub_diago.f90
-	cd $(OBJ) ; $(F90_FLAGS)  $(CPP) $(CPPSHELL_DIAGO)  -c $(DirMath)/sub_diago.f90
+	cd $(OBJ) ; $(F90_FLAGS)  $(CPPpre) $(CPPSHELL_DIAGO)  -c $(DirMath)/sub_diago.f90
 $(OBJ)/sub_trans_mat.o:$(DirMath)/sub_trans_mat.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMath)/sub_trans_mat.f90
 $(OBJ)/sub_integration.o:$(DirMath)/sub_integration.f90
