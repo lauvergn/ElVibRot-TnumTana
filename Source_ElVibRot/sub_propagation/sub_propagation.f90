@@ -116,7 +116,7 @@ CONTAINS
       !para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
       !para_propa%para_poly%Hmin = para_propa%Hmin
       !para_propa%para_poly%Hmax = para_propa%Hmax
-#ELSE
+#else
       para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
       para_propa%para_poly%Hmin = para_propa%Hmin
       para_propa%para_poly%Hmax = para_propa%Hmax
@@ -831,7 +831,7 @@ CONTAINS
 #if(run_MPI)
         !write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
         !                        para_propa%para_poly%Hmax
-#ELSE
+#else
         write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
                                 para_propa%para_poly%Hmax
 #endif
@@ -865,7 +865,7 @@ CONTAINS
       !para_H%E0     = para_propa%para_poly%E0
       !para_H%Esc    = para_propa%para_poly%Esc
 !-----------------------------------------------------------
-#ELSE
+#else
       CALL initialisation1_poly(para_propa%para_poly,                   &
                                 para_propa%WPdeltaT,                    &
                                 para_propa%type_WPpropa)

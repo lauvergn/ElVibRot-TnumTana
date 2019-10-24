@@ -252,7 +252,7 @@
 #if(run_MPI)
       SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
                           derive_termQact,derive_termQdyn,SmolyakRep,nb_SG1,nb_SG2,info)
-#ELSE
+#else
       SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
                           derive_termQact,derive_termQdyn,SmolyakRep,nb_SG,info)
 #endif
@@ -326,7 +326,7 @@
 #if(run_MPI)
            CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG1,nb_SG2,                       &
                                       delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
-#ELSE
+#else
            CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG,                               &
                                       delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
 #endif

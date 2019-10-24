@@ -340,7 +340,7 @@ MODULE mod_SetOp
                               para_Op%derive_termQact(:,k_term),      &
                               para_Op%derive_termQdyn(:,k_term),      &
                               SmolyakRep,nb_SG1,nb_SG2,info)
-#ELSE
+#else
             CALL alloc_OpGrid(para_Op%OpGrid(k_term),                 &
                               para_Op%nb_qa,nb_bie,                   &
                               para_Op%derive_termQact(:,k_term),      &
@@ -369,7 +369,7 @@ MODULE mod_SetOp
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
                             para_Op%nb_qa,nb_bie,                     &
                             (/ 0,0 /),(/ 0,0 /),SmolyakRep,nb_SG1,nb_SG2,info)
-#ELSE
+#else
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
                             para_Op%nb_qa,nb_bie,                     &
                             (/ 0,0 /),(/ 0,0 /),SmolyakRep,nb_SG,info)
@@ -1345,7 +1345,7 @@ MODULE mod_SetOp
       SUBROUTINE Analysis_OpGrid_OF_Op(para_Op)
 #if(run_MPI)
       USE mod_MPI
-#ELSE
+#else
       TYPE (param_Op), intent(inout) :: para_Op
 
       integer       :: k_term,iq,iterm00

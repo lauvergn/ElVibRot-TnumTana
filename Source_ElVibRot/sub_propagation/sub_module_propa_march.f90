@@ -81,7 +81,7 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
 #if(run_MPI)
-#ELSE
+#else
         write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,       &
                                        para_propa%para_poly%Hmax
 #endif
@@ -1639,7 +1639,7 @@
 !     - The first term of the expansion ------------------
 #if(run_MPI)
         !w1  = psi
-#ELSE
+#else
         w1  = psi
 #endif
         psi = psi * para_propa%para_poly%coef_poly(1)
@@ -1693,7 +1693,7 @@
             psi0Hkpsi0(jt) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
 #if(run_MPI)
             IF (norm_exit < para_propa%para_poly%poly_tol) exitall=.TRUE.
-#ELSE
+#else
             IF (norm_exit < para_propa%para_poly%poly_tol) EXIT
 #endif
           ENDIF

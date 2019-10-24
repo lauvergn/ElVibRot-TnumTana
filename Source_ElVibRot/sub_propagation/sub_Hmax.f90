@@ -111,7 +111,7 @@
           IF(MPI_id==0) para_H%Hmin=temp_real
           CALL MPI_Bcast(para_H%Hmin,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
         ENDIF
-#ELSE
+#else
         ! Minimal value of Veff
         para_H%Hmin = para_H%OpGrid(1)%Op_min
 !

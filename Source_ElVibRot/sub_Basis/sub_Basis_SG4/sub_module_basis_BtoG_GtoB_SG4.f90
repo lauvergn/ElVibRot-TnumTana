@@ -100,7 +100,7 @@ CONTAINS
 !---------------------------------------------------------------------------------------
 #if(run_MPI)
 SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG1,nb_SG2,delta,grid,nb0)
-#ELSE
+#else
 SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
 #endif
   USE mod_system
@@ -108,8 +108,11 @@ SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
   IMPLICIT NONE
 
   TYPE(Type_SmolyakRep),           intent(inout)         :: SRep
-  Integer,                         intent(in)            :: nb_SG
+#if(run_MPI)
   Integer,                         intent(in)            :: nb_SG1,nb_SG2
+#else
+  Integer,                         intent(in)            :: nb_SG
+#endif
   logical,                         intent(in),  optional :: delta,grid
   integer,                         intent(in),  optional :: nb0
 
@@ -143,7 +146,7 @@ SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
 
 #if(run_MPI)
   allocate(SRep%SmolyakRep(nb_SG1:nb_SG2))
-#ELSE
+#else
   allocate(SRep%SmolyakRep( nb_SG ))
 #endif  
 

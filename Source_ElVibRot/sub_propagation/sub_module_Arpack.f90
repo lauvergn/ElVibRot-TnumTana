@@ -376,7 +376,7 @@ CONTAINS
           nconv  = iparam(5)
 #if(run_MPI)
           CALL MPI_Bcast(nconv,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ELSE
+#else
           do j=1, nconv
 
 !           %---------------------------%
@@ -403,7 +403,7 @@ CONTAINS
             CALL MPI_Bcast(if_deq0,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
             !if (d(j,2) == zero)  then
             if (if_deq0)  then
-#ELSE            
+#else            
             if (d(j,2) == zero)  then
 #endif
 

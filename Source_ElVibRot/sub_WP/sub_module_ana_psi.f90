@@ -1576,7 +1576,7 @@ END SUBROUTINE sub_analyze_psi
       USE mod_type_ana_psi
 #if(run_MPI)
       USE mod_MPI
-#ELSE
+#else
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------

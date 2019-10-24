@@ -445,7 +445,7 @@
 !         - Hmax and Hmin calculation ---------------------------------
 #if(run_MPI)
           !CALL sub_Hmax(para_propa,para_H) !< to be done in action
-#ELSE
+#else
           CALL sub_Hmax(para_propa,para_H)
 #endif
         ELSE
@@ -589,7 +589,7 @@
 
 #if(run_MPI) 
           !CALL sub_Hmax(para_propa,para_H)
-#ELSE         
+#else         
           CALL sub_Hmax(para_propa,para_H)
 #endif
           IF(MPI_id==0) THEN
@@ -1051,7 +1051,7 @@
       write(out_unitp,*) '================================================'
 #if(run_MPI)      
       write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!', ' from ', MPI_id
-#ELSE 
+#else 
       write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!'
 #endif
       write(out_unitp,*) '================================================'

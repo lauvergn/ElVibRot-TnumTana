@@ -76,7 +76,7 @@
       character (len=Line_len)     :: base_FileName = ''
 
 #if(run_MPI)
-#ELSE
+#else
       Integer  :: MPI_id
 #endif 
       
@@ -106,7 +106,7 @@
 #if(run_MPI)
         CALL MPI_initialization()
         Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
-#ELSE 
+#else 
         MPI_id=0
 #endif
  
