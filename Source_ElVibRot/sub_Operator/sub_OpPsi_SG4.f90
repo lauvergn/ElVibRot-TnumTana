@@ -742,7 +742,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   mole    => para_Op%mole
   BasisnD => para_Op%BasisnD
 
-  IF(MPI_id==0) IF (Psi(1)%cplx) STOP 'cplx'
+  IF(MPI_id==0) THEN
+    IF (Psi(1)%cplx) STOP 'cplx'
+  ENDIF
   !IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1 in sub_TabOpPsi_FOR_SGtype4'
 
   !-----------------------------------------------------------------------------
