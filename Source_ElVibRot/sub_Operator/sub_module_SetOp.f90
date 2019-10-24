@@ -1345,7 +1345,7 @@ MODULE mod_SetOp
       SUBROUTINE Analysis_OpGrid_OF_Op(para_Op)
 #if(run_MPI)
       USE mod_MPI
-#else
+#endif
       TYPE (param_Op), intent(inout) :: para_Op
 
       integer       :: k_term,iq,iterm00
