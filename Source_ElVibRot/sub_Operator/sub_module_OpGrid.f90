@@ -265,8 +265,11 @@
       integer,             intent(in)    :: derive_termQact(2)
       integer,             intent(in)    :: derive_termQdyn(2)
       logical,             intent(in)    :: SmolyakRep
-      integer,             intent(in)    :: nb_SG1,nb_SG2
+#if(run_MPI)
       integer,             intent(in)    :: nb_SG
+#else
+      integer,             intent(in)    :: nb_SG1,nb_SG2
+#endif
       character (len=*),   intent(in)    :: info
 
       character (len=Name_longlen) :: info2
