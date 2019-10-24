@@ -356,9 +356,9 @@ PRIVATE
 !! @param auTOgPmol     conversion factor: au to g.mol-1
 !! @param mass_unit     name of the mass unit (eg gPmol)
   SUBROUTINE construct_table_at_NIST2018(mendeleev,auTOgPmol,mass_unit)
-#IF(run_MPI)
+#if(run_MPI)
     USE mod_MPI
-#ENDIF
+#endif
     TYPE (table_atom), intent(inout) :: mendeleev
     character (len=*), intent(in)    :: mass_unit
     real (kind=Rkind), intent(in)    :: auTOgPmol

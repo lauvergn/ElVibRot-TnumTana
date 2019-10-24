@@ -148,14 +148,14 @@
                             para_AllOp%tab_Op(iOp)%para_PES%nb_elec)
         END DO
 
-#IF(run_MPI)
+#if(run_MPI)
         IF(Grid_allco)  THEN
-#ENDIF
+#endif
           CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                   &
                                  para_Tnum,para_AllOp%tab_Op(1)%para_PES)
-#IF(run_MPI)
+#if(run_MPI)
         ENDIF
-#ENDIF
+#endif
 
         IF (.NOT. pot) THEN ! remove the potential part
           d0MatOp(1)%ReVal(:,:,1) = ZERO
@@ -705,14 +705,14 @@
 !       ---here only nb_inact2n variables have been modified --------
         CALL Qinact2n_TO_Qact_FROM_ActiveTransfo(Qinact,Qact,mole%ActiveTransfo)
 
-#IF(run_MPI)
+#if(run_MPI)
         IF(Grid_allco) THEN
-#ENDIF
+#endif
         CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
                                  para_Tnum,para_AllOp%tab_Op(1)%para_PES)
-#IF(run_MPI)
+#if(run_MPI)
         ENDIF
-#ENDIF
+#endif
 
         IF (.NOT. pot) THEN ! remove the potential part
           d0MatOp(1)%ReVal(:,:,1) = ZERO

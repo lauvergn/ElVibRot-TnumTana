@@ -54,10 +54,10 @@
       USE mod_param_WP0
       USE mod_ana_psi
       USE mod_psi_io
-#IF(run_MPI)      
+#if(run_MPI)      
       USE mod_MPI
       USE mod_MPI_Aid
-#ENDIF      
+#endif      
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------

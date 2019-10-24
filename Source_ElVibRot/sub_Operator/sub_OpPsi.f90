@@ -206,9 +206,9 @@ CONTAINS
       IF(MPI_id==0) THEN
         IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
       ENDIF
-#IF(run_MPI)
+#if(run_MPI)
       CALL MPI_BCAST(With_Grid_loc,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
 
       IF (present(TransfoOp)) THEN
         TransfoOp_loc = TransfoOp
@@ -310,9 +310,9 @@ CONTAINS
       IF(MPI_id==0) THEN
         IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
       ENDIF
-#IF(run_MPI)
+#if(run_MPI)
       CALL MPI_BCAST(With_Grid_loc,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
      
       IF (present(pot_only)) THEN
         pot_only_loc = pot_only .AND. (para_Op%n_Op ==0) ! para_Op has to be H
@@ -641,9 +641,9 @@ CONTAINS
       USE mod_psi_B_TO_G,      ONLY : sub_PsiGridRep_TO_BasisRep
       USE mod_SymAbelian,      ONLY : Calc_symab1_EOR_symab2
       USE mod_psi_Op,          ONLY : Set_symab_OF_psiBasisRep
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -668,9 +668,9 @@ CONTAINS
       !logical, parameter :: debug = .TRUE.
       !-----------------------------------------------------------------
       size_TabPsi=size(TabPsi) 
-#IF(run_MPI)
+#if(run_MPI)
       CALL MPI_BCAST(size_TabPsi,size1_MPI,MPI_int,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
 
       n = para_Op%nb_tot
       IF (debug) THEN
@@ -2646,9 +2646,9 @@ STOP 'cplx'
       SUBROUTINE sub_scaledOpPsi(Psi,OpPsi,E0,Esc)
       USE mod_system
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
 !----- for the scaling -------------------------------------------

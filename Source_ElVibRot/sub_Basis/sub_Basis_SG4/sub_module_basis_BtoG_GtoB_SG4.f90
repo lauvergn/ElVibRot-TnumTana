@@ -35,9 +35,9 @@ USE mod_param_SGType2
 USE mod_basis_RCVec_SGType4, only: typervec, typecvec, &
                                    alloc_typervec, alloc_typecvec, &
                                    dealloc_typervec, dealloc_typecvec
-#IF(run_MPI)
+#if(run_MPI)
 USE mod_MPI
-#ENDIF
+#endif
 IMPLICIT NONE
 
 PRIVATE
@@ -98,11 +98,11 @@ CONTAINS
 !=======================================================================================
 ! added for SmolyakRep
 !---------------------------------------------------------------------------------------
-#IF(run_MPI)
+#if(run_MPI)
 SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG1,nb_SG2,delta,grid,nb0)
 #ELSE
 SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
-#ENDIF
+#endif
   USE mod_system
   USE mod_basis_set_alloc
   IMPLICIT NONE
@@ -141,11 +141,11 @@ SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
 
   !write(6,*) 'Alloc Smolyak Rep' ; flush(6)
 
-#IF(run_MPI)
+#if(run_MPI)
   allocate(SRep%SmolyakRep(nb_SG1:nb_SG2))
 #ELSE
   allocate(SRep%SmolyakRep( nb_SG ))
-#ENDIF  
+#endif  
 
   !write(6,*) 'Size Smolyak Rep:',nb_B ; flush(6)
 
@@ -595,9 +595,9 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   USE mod_basis_set_alloc
   USE mod_param_SGType2
   USE mod_nDindex
-#IF(run_MPI)
+#if(run_MPI)
   USE mod_MPI
-#ENDIF
+#endif
   IMPLICIT NONE
 
   TYPE (basis),     intent(inout)        :: basis_SG
@@ -2209,9 +2209,9 @@ END SUBROUTINE GSmolyakRep_TO_BSmolyakRep
 SUBROUTINE GSmolyakRep_TO3_BSmolyakRep(SRep,SGType2,tab_ba)
 USE mod_system
 USE mod_basis_set_alloc
-#IF(run_MPI)
+#if(run_MPI)
 USE mod_MPI
-#ENDIF
+#endif
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
@@ -2411,9 +2411,9 @@ END SUBROUTINE BSmolyakRep_TO_GSmolyakRep
 SUBROUTINE BSmolyakRep_TO3_GSmolyakRep(SRep,SGType2,tab_ba)
 USE mod_system
 USE mod_basis_set_alloc
-#IF(run_MPI)
+#if(run_MPI)
 USE mod_MPI
-#ENDIF
+#endif
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep),           intent(inout)          :: SRep
@@ -2718,9 +2718,9 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
 SUBROUTINE DerivOp_TO3_GSmolyakRep(SRep,SGType2,tab_ba,tab_der)
 USE mod_system
 USE mod_basis_set_alloc
-#IF(run_MPI)
+#if(run_MPI)
 USE mod_MPI
-#ENDIF
+#endif
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep),           intent(inout)          :: SRep
@@ -2774,9 +2774,9 @@ END SUBROUTINE DerivOp_TO3_GSmolyakRep
 SUBROUTINE DerivOp_TO3_GSmolyakRepC(SRep,SGType2,tab_ba,tab_der)
 USE mod_system
 USE mod_basis_set_alloc
-#IF(run_MPI)
+#if(run_MPI)
 USE mod_MPI
-#ENDIF
+#endif
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRepC),          intent(inout)          :: SRep

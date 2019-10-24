@@ -48,9 +48,9 @@ CONTAINS
       USE mod_psi_Op
       USE mod_param_WP0
       USE mod_propa
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -157,9 +157,9 @@ CONTAINS
       ELSE
         n = int(para_H%nb_tot,kind=4)
       END IF
-#IF(run_MPI)
+#if(run_MPI)
       CALL MPI_Bcast(n,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
       
       IF (nb_diago == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -262,10 +262,10 @@ CONTAINS
         IF(MPI_id==0) call dnaupd(ido, bmat, n, which, nev, tol, resid,             &
                                   ncv, v, ldv, iparam, ipntr, workd, workl, lworkl, &
                                   info )
-#IF(run_MPI)
+#if(run_MPI)
         CALL MPI_Bcast(info,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
         CALL MPI_Bcast(ido,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
 #else
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) ' The ARPACK library is not present!'
@@ -337,9 +337,9 @@ CONTAINS
                                   sigmar, sigmai, workev, bmat, n, which, nev, tol,   &
                                   resid, ncv, v, ldv, iparam, ipntr, workd, workl,    &
                                   lworkl, ierr )
-#IF(run_MPI)
+#if(run_MPI)
         CALL MPI_Bcast(ierr,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
 #else
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) ' The ARPACK library is not present!'
@@ -374,7 +374,7 @@ CONTAINS
 
           first  = .true.
           nconv  = iparam(5)
-#IF(run_MPI)
+#if(run_MPI)
           CALL MPI_Bcast(nconv,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
 #ELSE
           do j=1, nconv
@@ -392,7 +392,7 @@ CONTAINS
 !           | tolerance)                |
 !           %---------------------------%
 
-#IF(run_MPI)
+#if(run_MPI)
             IF(MPI_id==0) THEN
               IF(d(j,2)==zero) THEN
                 if_deq0=.TRUE.
@@ -405,7 +405,7 @@ CONTAINS
             if (if_deq0)  then
 #ELSE            
             if (d(j,2) == zero)  then
-#ENDIF
+#endif
 
 !             %--------------------%
 !             | Ritz value is real |
@@ -580,9 +580,9 @@ CONTAINS
       USE mod_psi_Op,         ONLY : Overlap_psi1_psi2,Set_symab_OF_psiBasisRep
       USE mod_param_WP0
       USE mod_propa
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -663,9 +663,9 @@ CONTAINS
       USE mod_psi_B_TO_G
       USE mod_param_WP0
       USE mod_propa
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -765,9 +765,9 @@ CONTAINS
       IF(MPI_id==0) CALL file_open(Log_file,iunit)
 
       n = para_H%nb_tot
-#IF(run_MPI)
+#if(run_MPI)
       CALL MPI_Bcast(n,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
       IF (nb_diago == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' nb_diago=0 is not possible with ARPACK'
@@ -864,10 +864,10 @@ CONTAINS
         IF(MPI_id==0) call dsaupd(ido, bmat, n, which, nev, tol, resid,            &
                                   ncv, v, ldv, iparam, ipntr, workd, workl,        &
                                   lworkl, info )
-#IF(run_MPI)
+#if(run_MPI)
         CALL MPI_Bcast(info,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
         CALL MPI_Bcast(ido,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
 #else
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' The ARPACK library is not present!'
@@ -950,9 +950,9 @@ CONTAINS
         IF(MPI_id==0) call dseupd(rvec, 'All', select, d, v, ldv, sigma,                &
                                   bmat, n, which, nev, tol, resid, ncv, v, ldv,         &
                                   iparam, ipntr, workd, workl, lworkl, ierr )
-#IF(run_MPI)
+#if(run_MPI)
         CALL MPI_Bcast(ierr,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
 
 #endif
 !       %----------------------------------------------%
@@ -982,9 +982,9 @@ CONTAINS
         else
 
           nconv =  iparam(5)
-#IF(run_MPI)
+#if(run_MPI)
           CALL MPI_Bcast(nconv,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
           DO j=1, nconv
 
 !           %---------------------------%

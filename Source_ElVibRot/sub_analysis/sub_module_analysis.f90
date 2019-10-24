@@ -110,9 +110,9 @@
       SUBROUTINE read_analyse(para_ana,Qana)
       USE mod_system
       USE mod_type_ana_psi
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
 !----- variables pour la namelist analyse ----------------------------

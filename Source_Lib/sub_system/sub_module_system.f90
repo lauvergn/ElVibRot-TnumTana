@@ -29,9 +29,9 @@ MODULE mod_system
       USE mod_memory
       USE mod_memory_Pointer
       USE mod_memory_NotPointer
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
 
@@ -142,9 +142,9 @@ MODULE mod_system
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE time_perso(name)
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
         character (len=*), intent(in) :: name
@@ -157,7 +157,7 @@ MODULE mod_system
 
 
         CALL date_and_time(values=tab_time)
-        write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
+        IF(MPI_id==0) write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
  21     format('     Time and date in ',a,' : ',i2,'h:',                &
                i2,'m:',i2,'.',i3,'s, the ',i2,'/',i2,'/',i4)
 

@@ -36,9 +36,9 @@
       USE mod_propa
       USE mod_FullPropa
       USE mod_Davidson
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -93,7 +93,7 @@
 !     -  Hmin ------------------------------------------------
 !     --------------------------------------------------------
       IF (para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
-#IF(run_MPI)
+#if(run_MPI)
         ! get iG boundary of each threads
         nb_per_MPI=para_H%BasisnD%nb_SG/MPI_np
         If(mod(para_H%BasisnD%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
@@ -120,7 +120,7 @@
 !        ELSE ! it means the Grid is cte => deallocated
 !          para_H%Hmin = para_H%OpGrid(1)%Op_min
 !        END IF
-#ENDIF
+#endif
       ELSE ! the grids are on a file
 
 !       -  Hmin ------------------------------------------------
@@ -207,9 +207,9 @@
 
       CALL sub_PsiOpPsi(Emax,psi,Hpsi,para_H)
       para_H%Hmax = Real(Emax,kind=Rkind)
-#IF(run_MPI)     
+#if(run_MPI)     
       CALL MPI_Bcast(para_H%Hmax,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
       IF (debug) write(out_unitp,*) 'Hmax: ',para_H%Hmax
       CALL flush_perso(out_unitp)
 

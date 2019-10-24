@@ -67,9 +67,9 @@
       USE mod_propa
       USE mod_psi_set_alloc
       USE mod_Auto_Basis
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
 !----- On the fly parameters (at this time for gaussian) -------------
@@ -573,9 +573,9 @@
 !===============================================================================
 SUBROUTINE MemoryEstimation(nb,nq,nb_Q,nb_channels,nb_psi)
 USE mod_system
-#IF(run_MPI)
+#if(run_MPI)
 USE mod_MPI_Aid
-#ENDIF
+#endif
 IMPLICIT NONE
 
 integer, intent(in) :: nb,nq,nb_Q,nb_channels,nb_psi

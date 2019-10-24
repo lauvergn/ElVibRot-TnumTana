@@ -7,7 +7,7 @@ F90 = mpifort
 #F90 = pgf90
 #
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 0
@@ -259,13 +259,13 @@ LYNK90 = $(F90_FLAGS)
 # Arpack library
 #=================================================================================
  ifeq ($(ARPACK),1)
-   # Arpack management with the OS
-   ifeq ($(OS),Darwin)    # OSX
-     ARPACKLIB = /Users/lauvergn/trav/ARPACK/libarpack_OSX.a
-   else                   # Linux
-     ARPACKLIB = /usr/lib64/libarpack.a
-   endif
-else
+	 # Arpack management with the OS
+	 ifeq ($(OS),Darwin)    # OSX
+		 ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
+	 else                   # Linux
+		 ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
+	 endif
+ else
    ARPACKLIB = 
 endif
 #=================================================================================
@@ -400,11 +400,13 @@ DIROpt     = $(DirEVR)/sub_Optimization
 #Libs, Minimize Only list: OK
 # USE mod_system
 Obj_Primlib  = \
+  $(OBJ)/sub_module_MPI.o \
   $(OBJ)/sub_module_NumParameters.o \
   $(OBJ)/sub_module_memory.o $(OBJ)/sub_module_string.o \
   $(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_memory_NotPointer.o \
   $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/sub_module_FracInteger.o \
-  $(OBJ)/sub_module_system.o
+  $(OBJ)/sub_module_system.o \
+  $(OBJ)/sub_module_MPI_Aid.o 
 
 Obj_math =\
    $(OBJ)/sub_diago.o $(OBJ)/sub_trans_mat.o $(OBJ)/sub_integration.o \
@@ -712,6 +714,8 @@ $(PhysConstEXE): obj $(Obj_Primlib) $(Obj_math) $(Obj_io) $(Obj_PhyCte) $(OBJ)/$
 	$(LYNK90)   -o $(PhysConstEXE) $(Obj_Primlib) $(Obj_math) $(Obj_io) $(Obj_PhyCte) $(OBJ)/$(PhysConstMAIN).o  $(LYNKFLAGS)
 #===================================================================================
 # lib
+$(OBJ)/sub_module_MPI.o:$(DirSys)/sub_module_MPI.f90
+	cd $(OBJ) ; $(F90_FLAGS)  -c $(DirSys)/sub_module_MPI.f90
 $(OBJ)/sub_module_NumParameters.o:$(DirSys)/sub_module_NumParameters.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_NumParameters.f90
 $(OBJ)/sub_module_FracInteger.o:$(DirSys)/sub_module_FracInteger.f90
@@ -725,11 +729,13 @@ $(OBJ)/sub_module_memory_NotPointer.o:$(DirSys)/sub_module_memory_NotPointer.f90
 $(OBJ)/sub_module_file.o:$(DirSys)/sub_module_file.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_file.f90
 $(OBJ)/sub_module_string.o:$(DirSys)/sub_module_string.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_string.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirSys)/sub_module_string.f90
 $(OBJ)/sub_module_RW_MatVec.o:$(DirSys)/sub_module_RW_MatVec.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_RW_MatVec.f90
 $(OBJ)/sub_module_system.o:$(DirSys)/sub_module_system.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL)  -c $(DirSys)/sub_module_system.f90
+$(OBJ)/sub_module_MPI_Aid.o:$(DirSys)/sub_module_MPI_Aid.f90
+	cd $(OBJ) ; $(F90_FLAGS)  -c $(DirSys)/sub_module_MPI_Aid.f90	
 ###
 $(OBJ)/sub_module_DInd.o:$(DirnDind)/sub_module_DInd.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirnDind)/sub_module_DInd.f90

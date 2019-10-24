@@ -249,17 +249,17 @@
       END SUBROUTINE Write_FileGrid
 
 !=======================================================================================
-#IF(run_MPI)
+#if(run_MPI)
       SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
                           derive_termQact,derive_termQdyn,SmolyakRep,nb_SG1,nb_SG2,info)
 #ELSE
       SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
                           derive_termQact,derive_termQdyn,SmolyakRep,nb_SG,info)
-#ENDIF
+#endif
 
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       TYPE (param_OpGrid), intent(inout) :: OpGrid
       integer,             intent(in)    :: nb_qa,nb_bie
       integer,             intent(in)    :: derive_termQact(2)
@@ -311,25 +311,25 @@
        IF (debug) write(out_unitp,*) info2,'Mat_cte(:,:)',size(OpGrid%Mat_cte)
 
        IF (.NOT. OpGrid%grid_cte .AND. OpGrid%para_FileGrid%Save_MemGrid) THEN
-#IF(run_MPI)
+#if(run_MPI)
          IF(Grid_allco) THEN
-#ENDIF
+#endif
            CALL alloc_array(OpGrid%Grid,(/nb_qa,nb_bie,nb_bie/),"OpGrid%Grid",info2)
            OpGrid%Grid(:,:,:) = ZERO
-#IF(run_MPI)   
+#if(run_MPI)   
          ENDIF
-#ENDIF
+#endif
          IF (print_level > -1) write(out_unitp,*) info2,size(OpGrid%Grid)
 
          IF (SmolyakRep) THEN
            IF (print_level > -1) write(out_unitp,*) info2 // ': OpGrid%SRep allocated'
-#IF(run_MPI)
+#if(run_MPI)
            CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG1,nb_SG2,                       &
                                       delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
 #ELSE
            CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG,                               &
                                       delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
-#ENDIF
+#endif
          END IF
        END IF
        CALL flush_perso(out_unitp)
@@ -723,9 +723,9 @@
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE Analysis_OpGrid(OpGrid,n_Op)
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       TYPE (param_OpGrid), pointer, intent(inout) :: OpGrid(:)
       integer,                      intent(in)    :: n_Op
 

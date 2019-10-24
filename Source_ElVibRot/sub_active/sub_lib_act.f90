@@ -423,26 +423,26 @@
             !para_AllOp%tab_Op(iOp)%nb_term_cut=k_term  ! record actual nb_term
 
             IF (para_AllOp%tab_Op(iOp)%OpGrid(k_term)%para_FileGrid%Save_MemGrid) THEN
-#IF(run_MPI)
+#if(run_MPI)
               IF(Grid_allco) THEN
-#ENDIF
+#endif
                 para_AllOp%tab_Op(iOp)%OpGrid(k_term)%para_FileGrid%Save_MemGrid_done = .TRUE.
-#IF(run_MPI)
+#if(run_MPI)
               ENDIF
-#ENDIF
+#endif
               i1 = para_AllOp%tab_Op(iOp)%derive_termQact(1,k_term)
               i2 = para_AllOp%tab_Op(iOp)%derive_termQact(2,k_term)
               IF ((i1 < 0 .OR. i2 < 0) .AND. para_AllOp%tab_Op(1)%para_Tnum%JJ == 0) CYCLE
               iterm = d0MatOp(iOp)%derive_term_TO_iterm(i1,i2)
 
-#IF(run_MPI)
+#if(run_MPI)
               IF(Grid_allco) Then
-#ENDIF
+#endif
                 para_AllOp%tab_Op(iOp)%OpGrid(k_term)%Grid(iq,:,:) =      &
                                            d0MatOp(iOp)%ReVal(:,:,iterm)
-#IF(run_MPI)
+#if(run_MPI)
               ENDIF
-#ENDIF
+#endif
             END IF
 
           END DO

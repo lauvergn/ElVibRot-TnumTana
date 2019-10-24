@@ -423,9 +423,9 @@ MODULE mod_dnRho
       SUBROUTINE Write_rho(mole)
       USE mod_system
       USE mod_Tnum
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
       TYPE (zmatrix), intent(in)    :: mole

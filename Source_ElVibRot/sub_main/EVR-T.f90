@@ -57,9 +57,9 @@
       USE mod_system
 !$    USE omp_lib, only : omp_get_max_threads
       USE mod_nDGridFit
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
       logical  :: intensity_only,analysis_only,Popenmp,Popenmpi
@@ -75,10 +75,10 @@
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
 
-#IF(run_MPI)
+#if(run_MPI)
 #ELSE
       Integer  :: MPI_id
-#ENDIF 
+#endif 
       
       ! parameters for system setup
       ! make sure to be prepared in file      
@@ -103,12 +103,12 @@
         !> initialize MPI
         !> id=0 to be the master
         !---------------------------------------------------------------------------------
-#IF(run_MPI)
+#if(run_MPI)
         CALL MPI_initialization()
         Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
 #ELSE 
         MPI_id=0
-#ENDIF
+#endif
  
         intensity_only     = .FALSE.
         analysis_only      = .FALSE.
@@ -149,19 +149,19 @@
           ! version and copyright statement
           CALL versionEVRT(.TRUE.)
           write(out_unitp,*)
-#IF(run_MPI)
+#if(run_MPI)
           CALL time_perso('MPI start, initial time')
           write(out_unitp,*) ' Initiaize MPI with ', MPI_np, 'cores.'
           write(out_unitp,*)
-#ENDIF
+#endif
         ENDIF
 
 
         !> read from file when running with MPI
-#IF(run_MPI) 
+#if(run_MPI) 
         open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
         IF(err/=0) STOP 'error in opening file for namelist when running MPI'
-#ENDIF
+#endif
         read(in_unitp,system,IOSTAT=err)
         
         IF (err < 0) THEN
@@ -347,7 +347,7 @@
           write(out_unitp,*) '========================================='
         ENDIF ! for MPI_id=0
 
-#IF(run_MPI)
+#if(run_MPI)
         !write(*,*) 'time check for action: ',time_MPI_action,' from ',MPI_id
         write(*,*) 'time check for action: ',                                          &
                     real(time_MPI_action,Rkind)/real(time_rate,Rkind),' from ',MPI_id
@@ -360,6 +360,6 @@
         ENDIF
         CALL MPI_Finalize(MPI_err);
         close(in_unitp)
-#ENDIF        
+#endif        
       END PROGRAM ElVibRot
 

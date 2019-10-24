@@ -54,9 +54,9 @@ MODULE mod_paramQ
 !      Read reference geometry
 !=======================================================================================
       SUBROUTINE read_RefGeom(mole,para_Tnum)
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
 
@@ -1934,9 +1934,9 @@ MODULE mod_paramQ
 !=======================================================================================      
       SUBROUTINE Write_Q_WU(Q,name_Q,type_Q,info)
       USE mod_system
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF 
+#endif 
       IMPLICIT NONE
 
 
@@ -2000,9 +2000,9 @@ MODULE mod_paramQ
 
       SUBROUTINE Get_Qread(Q,name_Q,type_Q,read_nameQ,unit,read_xyz0,info)
       USE mod_system
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
 

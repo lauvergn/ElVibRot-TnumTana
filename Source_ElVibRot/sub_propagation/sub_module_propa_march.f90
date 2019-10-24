@@ -80,11 +80,11 @@
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
-#IF(run_MPI)
+#if(run_MPI)
 #ELSE
         write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,       &
                                        para_propa%para_poly%Hmax
-#ENDIF
+#endif
         write(out_unitp,*)
         write(out_unitp,*) 'nb_ba,nb_qa',WP%nb_ba,WP%nb_qa
         write(out_unitp,*) 'nb_bi',WP%nb_bi
@@ -1519,9 +1519,9 @@
       USE mod_ana_psi,         ONLY : norm2_psi
       USE mod_psi_SimpleOp
       !USE mod_propa
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1576,7 +1576,7 @@
 
       DO icheb=1,max_cheby
 
-#IF(run_MPI)
+#if(run_MPI)
         w1  = psi
         CALL sub_OpPsi(w1,w2,para_H)
         write(*,*) 'para_propa%once_control_Hmin check',para_propa%once_control_Hmin
@@ -1597,7 +1597,7 @@
           para_H%Esc    = para_propa%para_poly%Esc
           write(*,*) 'Hmin,Hmax check:', para_propa%Hmin,para_propa%Hmax
         ENDIF
-#ENDIF
+#endif
 
         para_propa%march_error = .FALSE.
         para_propa%para_poly%deltaE = para_propa%para_poly%Hmax -          &
@@ -1637,11 +1637,11 @@
         rt2 = cmplx(ZERO,-TWO,kind=Rkind)
 
 !     - The first term of the expansion ------------------
-#IF(run_MPI)
+#if(run_MPI)
         !w1  = psi
 #ELSE
         w1  = psi
-#ENDIF
+#endif
         psi = psi * para_propa%para_poly%coef_poly(1)
 
         psi0Hkpsi0(1) =  psi0Hkpsi0(0)
@@ -1677,9 +1677,9 @@
 
             norm_exit = abs(w2%norme*para_propa%para_poly%coef_poly(jt))
           ENDIF
-#IF(run_MPI)
+#if(run_MPI)
           CALL MPI_Bcast(norm_exit,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
           jt_exit = jt
           IF (debug) write(out_unitp,*) 'jt,norms',jt,norm_exit
 
@@ -1691,17 +1691,17 @@
 
           IF(MPI_id==0) THEN
             psi0Hkpsi0(jt) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
-#IF(run_MPI)
+#if(run_MPI)
             IF (norm_exit < para_propa%para_poly%poly_tol) exitall=.TRUE.
 #ELSE
             IF (norm_exit < para_propa%para_poly%poly_tol) EXIT
-#ENDIF
+#endif
           ENDIF
-#IF(run_MPI)
+#if(run_MPI)
           !> MPI the other threads are waiting for master here
           CALL MPI_Bcast(exitall,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
           IF(exitall) EXIT
-#ENDIF
+#endif
         END DO ! for jt=3,para_propa%para_poly%npoly
 
         write(out_unitp,*) 'jt_exit,norms',jt_exit,abs(w2%norme),norm_exit

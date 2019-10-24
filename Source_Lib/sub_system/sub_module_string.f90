@@ -157,9 +157,9 @@ MODULE mod_string
   END FUNCTION logical_TO_char
 
   FUNCTION int_TO_char(i,Iformat)
-#IF(run_MPI)
+#if(run_MPI)
     USE mod_MPI
-#ENDIF
+#endif
     character (len=:), allocatable  :: int_TO_char
     integer, intent(in)             :: i
     character (len=*), intent(in), optional  :: Iformat

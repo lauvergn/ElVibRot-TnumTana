@@ -29,9 +29,9 @@
       SUBROUTINE sub_diago_H(H,E,Vec,n,sym)
       USE mod_system
       USE mod_Constant, ONLY: get_Conv_au_TO_unit
-#IF(run_MPI)      
+#if(run_MPI)      
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
 !------ active Matrix H Vec E ------------------------------------

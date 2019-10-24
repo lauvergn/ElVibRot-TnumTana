@@ -898,9 +898,9 @@
 
           !!@description: TODO
           FUNCTION psi_time_R(psi,R)
-#IF(run_MPI)
+#if(run_MPI)
             USE mod_MPI
-#ENDIF
+#endif
             TYPE (param_psi), intent (in) :: psi
             real (kind=Rkind),    intent (in) :: R
             TYPE (param_psi)  :: psi_time_R

@@ -29,9 +29,9 @@
 
 MODULE mod_Davidson
 USE mod_Constant
-#IF(run_MPI)
+#if(run_MPI)
 USE mod_MPI 
-#ENDIF
+#endif
 IMPLICIT NONE
 
 PRIVATE
@@ -429,9 +429,9 @@ CONTAINS
           conv = all(converge(1:nb_diago))
         ENDIF ! for MPI_id==0
 
-#IF(run_MPI)
+#if(run_MPI)
         CALL MPI_BCAST(conv,size1_MPI,MPI_LOGICAL,root_MPI,MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
     
         IF(MPI_id==0) THEN 
           Ene0(1:nb_diago) = Ene(1:nb_diago)
@@ -710,9 +710,9 @@ CONTAINS
  USE mod_psi_io,         ONLY : sub_read_psi0
  USE mod_param_WP0,      ONLY : param_WP0
  USE mod_propa,          ONLY : param_Davidson
-#IF(run_MPI)
+#if(run_MPI)
   USE mod_MPI
-#ENDIF
+#endif
  IMPLICIT NONE
 
  TYPE (param_Davidson) :: para_Davidson
@@ -956,9 +956,9 @@ CONTAINS
  USE mod_psi_set_alloc
  USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
  USE mod_propa,          ONLY : param_Davidson
-#IF(run_MPI)
+#if(run_MPI)
  USE mod_MPI
-#ENDIF
+#endif
  IMPLICIT NONE
 
  integer,                  intent(in)     :: it

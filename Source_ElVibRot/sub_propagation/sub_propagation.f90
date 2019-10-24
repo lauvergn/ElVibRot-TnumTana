@@ -29,9 +29,9 @@
 
 MODULE mod_FullPropa
 USE mod_Constant
-#IF(run_MPI)
+#if(run_MPI)
 USE mod_MPI
-#ENDIF
+#endif
 IMPLICIT NONE
 
 PRIVATE
@@ -112,7 +112,7 @@ CONTAINS
 !-----------------------------------------------------------
       para_propa%ana_psi%propa     = .TRUE.
 
-#IF(run_MPI)
+#if(run_MPI)
       !para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
       !para_propa%para_poly%Hmin = para_propa%Hmin
       !para_propa%para_poly%Hmax = para_propa%Hmax
@@ -120,7 +120,7 @@ CONTAINS
       para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
       para_propa%para_poly%Hmin = para_propa%Hmin
       para_propa%para_poly%Hmax = para_propa%Hmax
-#ENDIF
+#endif
 
 
       write(out_unitp,*) 'Tmax,DeltaT (ua)=> ',                         &
@@ -794,9 +794,9 @@ CONTAINS
       USE mod_ana_psi
       USE mod_propa
       USE mod_march
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -828,13 +828,13 @@ CONTAINS
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING sub_propagation11'
         write(out_unitp,*) 'Tmax,DeltaT',para_propa%WPTmax,para_propa%WPdeltaT
-#IF(run_MPI)
+#if(run_MPI)
         !write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
         !                        para_propa%para_poly%Hmax
 #ELSE
         write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
                                 para_propa%para_poly%Hmax
-#ENDIF
+#endif
         write(out_unitp,*)
         write(out_unitp,*) 'nb_ba,nb_qa',psi(1)%nb_ba,psi(1)%nb_qa
         write(out_unitp,*) 'nb_bi',psi(1)%nb_bi
@@ -855,7 +855,7 @@ CONTAINS
       CALL flush_perso(out_unitp)
 
 !     - parameters for poly (cheby and nOD) ... ------------
-#IF(run_MPI)
+#if(run_MPI)
       !CALL initialisation1_poly(para_propa%para_poly,                   &
       !                          para_propa%WPdeltaT,                    &
       !                          para_propa%type_WPpropa)
@@ -874,7 +874,7 @@ CONTAINS
       para_H%E0     = para_propa%para_poly%E0
       para_H%Esc    = para_propa%para_poly%Esc
 !-----------------------------------------------------------
-#ENDIF
+#endif
 
 !------- propagation loop ---------------------------------
 

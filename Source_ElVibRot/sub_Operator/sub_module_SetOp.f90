@@ -171,9 +171,9 @@ MODULE mod_SetOp
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE alloc_para_Op(para_Op,Grid,Mat,Grid_cte)
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       TYPE (param_Op), intent(inout) :: para_Op
       logical, optional, intent(in) :: Mat,Grid
       logical, optional, intent(in) :: Grid_cte(para_Op%nb_term)
@@ -218,7 +218,7 @@ MODULE mod_SetOp
 
       SmolyakRep = ( para_Op%BasisnD%SparseGrid_type == 4)
       nb_SG      = para_Op%BasisnD%nb_SG
-#IF(run_MPI)      
+#if(run_MPI)      
       ! nb_SG1,nb_SG2 for MPI 
       IF(nb_SG>0) THEN
         nb_per_MPI=para_Op%BasisnD%nb_SG/MPI_np
@@ -228,7 +228,7 @@ MODULE mod_SetOp
         nb_SG2=MIN((MPI_id+1)*nb_per_MPI,para_Op%BasisnD%nb_SG)
         write(*,*) 'nb_SG,nb_SG1,nb_SG2 check',nb_SG,nb_SG1,nb_SG2, ' from ',MPI_id
       ENDIF
-#ENDIF
+#endif
 
       IF (present(Mat)) THEN
         lo_Mat = Mat
@@ -334,7 +334,7 @@ MODULE mod_SetOp
             info = String_TO_String('  k_term( ' // int_TO_char(k_term) // &
                                       ' ) of ' // trim(para_Op%name_Op))
 
-#IF(run_MPI)
+#if(run_MPI)
             CALL alloc_OpGrid(para_Op%OpGrid(k_term),                 &
                               para_Op%nb_qa,nb_bie,                   &
                               para_Op%derive_termQact(:,k_term),      &
@@ -346,7 +346,7 @@ MODULE mod_SetOp
                               para_Op%derive_termQact(:,k_term),      &
                               para_Op%derive_termQdyn(:,k_term),      &
                               SmolyakRep,nb_SG,info)
-#ENDIF
+#endif
 
             deallocate(info)
           END DO
@@ -365,7 +365,7 @@ MODULE mod_SetOp
 
           info = String_TO_String(' of ' // trim(para_Op%name_Op))
 
-#IF(run_MPI)
+#if(run_MPI)
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
                             para_Op%nb_qa,nb_bie,                     &
                             (/ 0,0 /),(/ 0,0 /),SmolyakRep,nb_SG1,nb_SG2,info)
@@ -373,7 +373,7 @@ MODULE mod_SetOp
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
                             para_Op%nb_qa,nb_bie,                     &
                             (/ 0,0 /),(/ 0,0 /),SmolyakRep,nb_SG,info)
-#ENDIF
+#endif
           para_Op%imOpGrid(1)%cplx = .TRUE.
 
           deallocate(info)
@@ -396,9 +396,9 @@ MODULE mod_SetOp
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE dealloc_para_Op(para_Op)
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       TYPE (param_Op),intent(inout) :: para_Op
 
       integer :: k_term
@@ -685,9 +685,9 @@ MODULE mod_SetOp
 
 !=======================================================================================
       SUBROUTINE alloc_array_OF_Opdim1(tab,tab_ub,name_var,name_sub,tab_lb)
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
       TYPE (param_Op), pointer, intent(inout) :: tab(:)
@@ -1343,7 +1343,7 @@ MODULE mod_SetOp
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE Analysis_OpGrid_OF_Op(para_Op)
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
 #ELSE
       TYPE (param_Op), intent(inout) :: para_Op

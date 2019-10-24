@@ -48,10 +48,10 @@
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_Auto_Basis
-#IF(run_MPI)      
+#if(run_MPI)      
       USE mod_MPI
       USE mod_MPI_Aid     
-#ENDIF    
+#endif    
       IMPLICIT NONE
 
 !---------------------------------------------------------------------------------------
@@ -258,13 +258,13 @@
 !---------------------------------------------------------------------------------------
 !       => Time-dependent calculation
 !---------------------------------------------------------------------------------------
-#IF(run_MPI)
+#if(run_MPI)
         CALL MPI0_write(out_unitp,'Propogation start')
-#ENDIF
+#endif
         CALL init_psi(WP0(1),para_H,cplx=.TRUE.)
-#IF(run_MPI)
+#if(run_MPI)
         CALL MPI0_write(out_unitp,'Propogation initialized')
-#ENDIF
+#endif
   
         ! building of WP0 for WP propagation ------------------------------------------
         IF (.NOT. para_ana%control .AND. para_propa%type_WPpropa /=100) THEN
@@ -443,11 +443,11 @@
              .NOT. abs(para_propa%type_WPpropa) == 100 ) THEN
 
 !         - Hmax and Hmin calculation ---------------------------------
-#IF(run_MPI)
+#if(run_MPI)
           !CALL sub_Hmax(para_propa,para_H) !< to be done in action
 #ELSE
           CALL sub_Hmax(para_propa,para_H)
-#ENDIF
+#endif
         ELSE
           IF(MPI_id==0) write(out_unitp,*) ' Calculation of Hmax is skiped'
         ENDIF
@@ -587,11 +587,11 @@
             write(out_unitp,*)
           ENDIF
 
-#IF(run_MPI) 
+#if(run_MPI) 
           !CALL sub_Hmax(para_propa,para_H)
 #ELSE         
           CALL sub_Hmax(para_propa,para_H)
-#ENDIF
+#endif
           IF(MPI_id==0) THEN
             write(out_unitp,*)
             write(out_unitp,*)
@@ -659,10 +659,10 @@
           para_propa%para_Davidson%max_WP = max_diago
 
           nb_diago = min(para_propa%para_Davidson%nb_WP,para_H%nb_tot,max_diago)
-#IF(run_MPI) 
+#if(run_MPI) 
           CALL MPI_Bcast(nb_diago,size1_MPI,MPI_Int_fortran,root_MPI,                  &
                          MPI_COMM_WORLD,MPI_err)
-#ENDIF
+#endif
           nullify(Tab_Psi)
           CALL alloc_array(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
           CALL alloc_NParray(Ene0,(/max_diago/),"Ene0","vib")
@@ -1049,11 +1049,11 @@
       write(out_unitp,*) 'mem_tot,max_mem_used',para_mem%mem_tot,para_mem%max_mem_used
       write(out_unitp,*) 'nb_alloc,nb_dealloc',para_mem%nb_alloc,para_mem%nb_dealloc
       write(out_unitp,*) '================================================'
-#IF(run_MPI)      
+#if(run_MPI)      
       write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!', ' from ', MPI_id
 #ELSE 
       write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!'
-#ENDIF
+#endif
       write(out_unitp,*) '================================================'
 
       END SUBROUTINE vib
@@ -1242,9 +1242,9 @@ para_mem%mem_debug = .FALSE.
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_Auto_Basis
-#IF(run_MPI) 
+#if(run_MPI) 
       USE mod_MPI 
-#ENDIF     
+#endif     
       IMPLICIT NONE
 
 !

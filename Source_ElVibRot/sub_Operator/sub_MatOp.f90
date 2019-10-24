@@ -37,9 +37,9 @@ CONTAINS
       USE mod_system
       USE mod_Constant
       USE mod_SetOp
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI   
-#ENDIF
+#endif
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -106,12 +106,12 @@ CONTAINS
             !CALL sub_MatOp_V_SG4(para_Op)
             STOP
           END IF
-#IF(run_MPI)          
+#if(run_MPI)          
           IF(openmpi) THEN
             ! add MPI for sub_MatOp_direct1 later
             CALL sub_MatOp_direct1(para_Op)
           ELSE
-#ENDIF
+#endif
             IF (MatOp_omp == 2) THEN
               CALL sub_MatOp_direct2(para_Op) ! for openmp
             ELSE IF (MatOp_omp == 1) THEN
@@ -119,9 +119,9 @@ CONTAINS
             ELSE ! no openmp (nb_thread=1)
               CALL sub_MatOp_direct1(para_Op)
             END IF
-#IF(run_MPI)             
+#if(run_MPI)             
           ENDIF
-#ENDIF
+#endif
         END IF
       END IF
       para_Op%Make_mat = .TRUE.
@@ -3273,9 +3273,9 @@ CONTAINS
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
       USE mod_psi_Op
-#IF(run_MPI)
+#if(run_MPI)
       USE mod_MPI
-#ENDIF
+#endif
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
