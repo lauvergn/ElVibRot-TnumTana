@@ -266,9 +266,9 @@
       integer,             intent(in)    :: derive_termQdyn(2)
       logical,             intent(in)    :: SmolyakRep
 #if(run_MPI)
-      integer,             intent(in)    :: nb_SG
-#else
       integer,             intent(in)    :: nb_SG1,nb_SG2
+#else
+      integer,             intent(in)    :: nb_SG
 #endif
       character (len=*),   intent(in)    :: info
 
@@ -282,7 +282,11 @@
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) 'nb_qa,nb_bie',nb_qa,nb_bie,nb_SG,nb_SG1,nb_SG2
+#if(run_MPI)
+        write(out_unitp,*) 'nb_qa,nb_bie',nb_qa,nb_bie,nb_SG1,nb_SG2
+#else
+        write(out_unitp,*) 'nb_qa,nb_bie',nb_qa,nb_bie,nb_SG
+#endif
         write(out_unitp,*) 'derive_termQact(:)',derive_termQact(:)
         write(out_unitp,*) 'derive_termQdyn(:)',derive_termQdyn(:)
         write(out_unitp,*) 'grid_cte',OpGrid%grid_cte
