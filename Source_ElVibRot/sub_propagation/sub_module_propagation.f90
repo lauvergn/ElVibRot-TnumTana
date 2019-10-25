@@ -755,8 +755,6 @@ PUBLIC :: initialisation1_poly,cof
 !stop
       END SUBROUTINE cof
 
-
-
 !==============================================================
 !
 !     Taylor coeficients calculation (nOD)
