@@ -1295,7 +1295,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   DO i=1,size(OpPsi)
     !write(6,*) 'coucou symab Op psi',i,para_Op%symab,Psi(i)%symab
     OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,Psi(i)%symab)
-    CALL Set_symab_OF_psiBasisRep(OpPsi(i),OpPsi_symab)
+    IF(MPI_id==0) CALL Set_symab_OF_psiBasisRep(OpPsi(i),OpPsi_symab)
     !write(6,*) 'coucou symab Op.psi',i,OpPsi(i)%symab
 
     !write(out_unitp,*) 'para_Op,psi symab ',i,para_Op%symab,Psi(i)%symab
