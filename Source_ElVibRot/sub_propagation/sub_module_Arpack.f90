@@ -1129,7 +1129,6 @@ CONTAINS
 
  integer :: i
 
-
  !----- for debuging --------------------------------------------------
  integer :: err_mem,memory
  character (len=*), parameter :: name_sub='ReadWP0_Arpack'
