@@ -813,8 +813,8 @@ CONTAINS
       info   = 0
       info   = 1
       IF (info /= 0) THEN
-        CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                 &
-                          para_propa%para_Davidson,para_H%cplx)
+        IF(MPI_id==0) CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                  &
+                                          para_propa%para_Davidson,para_H%cplx)
         IF (para_propa%para_Davidson%With_Grid) THEN
           resid(:) = psi_loc%RvecG(:)
         ELSE
@@ -1166,8 +1166,8 @@ CONTAINS
    para_WP0%file_WP0%name       = para_Davidson%name_file_readWP
    para_WP0%file_WP0%formatted  = para_Davidson%formatted_file_readWP
 
-   CALL sub_read_psi0(psi0,para_WP0,max_diago,                      &
-                      symab=para_Davidson%symab,ortho=.TRUE.)
+   IF(MPI_id==0) CALL sub_read_psi0(psi0,para_WP0,max_diago,                           &
+                                    symab=para_Davidson%symab,ortho=.TRUE.)
 
    nb_diago = para_WP0%nb_WP0
    para_Davidson%nb_WP0 = para_WP0%nb_WP0
