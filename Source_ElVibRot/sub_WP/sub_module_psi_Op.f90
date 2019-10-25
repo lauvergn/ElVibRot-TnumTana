@@ -93,7 +93,6 @@
 
 !-----------------------------------------------------------
       IF (psi%symab >= 0 .AND. psi%symab <= 7) THEN
-
         IF (psi%cplx .AND. allocated(psi%CvecB)) THEN
           DO ib=1,psi%nb_tot
             IF (psi%symab /= Get_symabOFSymAbelianOFBasis_AT_ib(psi%BasisnD,ib) ) &
