@@ -84,7 +84,7 @@
       ! make sure to be prepared in file      
       namelist /system/ max_mem,mem_debug,test,printlevel,              &
 
-                          Popenmp,Popenmpi                              &
+                          Popenmp,Popenmpi,                             &
                           PSG4_omp,PSG4_maxth,                          &
                           PMatOp_omp,PMatOp_maxth,                      &
                           POpPsi_omp,POpPsi_maxth,                      &
