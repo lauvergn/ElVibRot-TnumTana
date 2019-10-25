@@ -933,9 +933,11 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   !-----------------------------------------------------------
   ! => the WPs on the Grid
   IF (.NOT. para_propa%ana_psi%GridDone) THEN
+    CALL time_perso('sub_PsiBasisRep_TO_GridRep ini')
     DO i=1,nb_WP
-      CALL sub_PsiBasisRep_TO_GridRep(WP(i))
+      IF(MPI_id==0) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
     END DO
+    CALL time_perso('sub_PsiBasisRep_TO_GridRep end')
   END IF
   para_propa%ana_psi%GridDone = .TRUE.
   !-----------------------------------------------------------
@@ -1782,6 +1784,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       integer           :: max_poly
       real (kind=Rkind) :: poly_tol
       logical           :: Op_Transfo
+      integer           :: err_io
 
       namelist /davidson/num_resetH,num_checkS,                         &
                         read_WP,nb_readWP,read_listWP,nb_readWP_OF_List,&
@@ -1866,7 +1869,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       poly_tol          = ZERO
       Op_Transfo        = .FALSE.
 
-      read(in_unitp,davidson)
+      read(in_unitp,davidson,IOSTAT=err_io)
       IF (print_level > 0) write(out_unitp,davidson)
 
       IF (.NOT. lower_states .AND. .NOT. all_lower_states .AND. &
