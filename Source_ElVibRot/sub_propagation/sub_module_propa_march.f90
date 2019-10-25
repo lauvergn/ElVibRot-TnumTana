@@ -1518,7 +1518,7 @@
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi
       USE mod_psi_SimpleOp
-      !USE mod_propa
+      USE mod_propa
 #if(run_MPI)
       USE mod_MPI
 #endif
