@@ -791,7 +791,7 @@ $(OBJ)/sub_module_Tana_PiEulerRot.o:$(DirTNUM)/Tana/sub_module_Tana_PiEulerRot.f
 # Coordinates , Qtransfo, zmat...
 #
 $(OBJ)/Lib_QTransfo.o:$(DirTNUM)/Qtransfo/Lib_QTransfo.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirTNUM)/Qtransfo/Lib_QTransfo.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/Lib_QTransfo.f90
 $(OBJ)/CartesianTransfo.o:$(DirTNUM)/Qtransfo/CartesianTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/CartesianTransfo.f90
 $(OBJ)/BunchPolyTransfo.o:$(DirTNUM)/Qtransfo/BunchPolyTransfo.f90
@@ -821,7 +821,7 @@ $(OBJ)/RPHTransfo.o:$(DirTNUM)/Qtransfo/RPHTransfo.f90
 $(OBJ)/ActiveTransfo.o:$(DirTNUM)/Qtransfo/ActiveTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/ActiveTransfo.f90
 $(OBJ)/Qtransfo.o:$(DirTNUM)/Qtransfo/Qtransfo.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/Qtransfo.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirTNUM)/Qtransfo/Qtransfo.f90
 $(OBJ)/sub_freq.o:$(DirTNUM)/Qtransfo/sub_freq.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/sub_freq.f90
 
@@ -1096,7 +1096,7 @@ $(OBJ)/nb_harm.o:$(DIR1)/nb_harm.f90
 #===================================================================================
 # mains
 $(OBJ)/$(VIBMAIN).o:$(DIRvib)/$(VIBMAIN).f90
-	cd $(OBJ) ; $(F90_FLAGS) -c $(DIRvib)/$(VIBMAIN).f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRvib)/$(VIBMAIN).f90
 #
 $(OBJ)/$(GWPMAIN).o:$(DIRvib)/$(GWPMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRvib)/$(GWPMAIN).f90
