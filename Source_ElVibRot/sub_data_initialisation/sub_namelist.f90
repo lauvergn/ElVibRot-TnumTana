@@ -167,29 +167,29 @@
         write(6,*) 'max_excit',max_excit
         write(6,*) 'tab_nb(:)',tab_nb(1:nb_inact21)
 
-       nDinit(:) = 0
-       CALL alloc_array(Basis2n%nDindB,'Basis2n%nDindB',name_sub)
-       IF (isort == 1) THEN ! sort with energy
-         CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
-             tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
-                     MaxNorm=convRWU_TO_R(max_ene_h),type_OF_nDindex=0, &
+        nDinit(:) = 0
+        CALL alloc_array(Basis2n%nDindB,'Basis2n%nDindB',name_sub)
+        IF (isort == 1) THEN ! sort with energy
+          CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
+              tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
+                      MaxNorm=convRWU_TO_R(max_ene_h),type_OF_nDindex=0, &
                                    With_nDindex=.FALSE.)
-       ELSE IF (isort == 2) THEN ! sort with excitation
-         CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
-             tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
-                                      Lmax=max_excit,type_OF_nDindex=0, &
-                                      With_nDindex=.FALSE.)
-       ELSE
-         write(out_unitp,*) ' ERROR in ',name_sub
-         write(out_unitp,*) '   the isort value ',isort,' cannot be used.'
-         write(out_unitp,*) '   check your data!!'
-         STOP
-       END IF
-       !CALL Write_nDindex(Basis2n%nDindB)
+        ELSE IF (isort == 2) THEN ! sort with excitation
+          CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
+              tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
+                                       Lmax=max_excit,type_OF_nDindex=0, &
+                                       With_nDindex=.FALSE.)
+        ELSE
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) '   the isort value ',isort,' cannot be used.'
+          write(out_unitp,*) '   check your data!!'
+          STOP
+        END IF
+        !CALL Write_nDindex(Basis2n%nDindB)
 
-       CALL init_nDindexPrim(Basis2n%nDindG,nb_inact21,                 &
-             tab_nq(1:nb_inact21),type_OF_nDindex=0,With_nDindex=.FALSE.)
-       CALL Write_nDindex(Basis2n%nDindG)
+        CALL init_nDindexPrim(Basis2n%nDindG,nb_inact21,                 &
+              tab_nq(1:nb_inact21),type_OF_nDindex=0,With_nDindex=.FALSE.)
+        CALL Write_nDindex(Basis2n%nDindG)
 
         ComOp%ADA               = ADA
         ComOp%contrac_ba_ON_HAC = contrac_ba_ON_HAC
@@ -317,7 +317,7 @@
 !     - working variables -----
       integer       :: ib,ind_b(mole%nb_act1+1)
       integer       :: i,j,k,i_term,nb_bi
-
+      integer       :: err_io
 
 !-------variables for the file names -------------------------------------
        character (len=Line_len) :: name_HADA
@@ -387,7 +387,7 @@
       Op_Transfo    = .FALSE.
       E0_Transfo    = REAL_WU(ZERO,   'cm-1','E') !ZERO with cm-1 as default unit
 
-      read(in_unitp,actives)
+      read(in_unitp,actives,IOSTAT=err_io)
       IF (direct == 0 .OR. read_Op) make_MatOp = .TRUE.
       IF (print_level > 1) write(out_unitp,actives)
 
