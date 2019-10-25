@@ -2569,12 +2569,14 @@ CONTAINS
       END IF
 
 !---- deallocation -------------------------------------
-      DO i=1,n
-        CALL dealloc_psi(Hpsi(i))
-        CALL dealloc_psi(psi(i))
-      END DO
-      CALL dealloc_NParray(psi ,"psi", name_sub)
-      CALL dealloc_NParray(Hpsi,"Hpsi",name_sub)
+      IF(MPI_id==0) THEN
+        DO i=1,n
+          CALL dealloc_psi(Hpsi(i))
+          CALL dealloc_psi(psi(i))
+        END DO
+        CALL dealloc_NParray(psi ,"psi", name_sub)
+        CALL dealloc_NParray(Hpsi,"Hpsi",name_sub)
+      ENDIF
 !     ----------------------------------------------------------
       para_Op%Make_mat = .TRUE.
 
