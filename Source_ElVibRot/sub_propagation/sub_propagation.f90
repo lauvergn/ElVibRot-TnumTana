@@ -29,9 +29,7 @@
 
 MODULE mod_FullPropa
 USE mod_Constant
-#if(run_MPI)
 USE mod_MPI
-#endif
 IMPLICIT NONE
 
 PRIVATE
@@ -794,9 +792,7 @@ CONTAINS
       USE mod_ana_psi
       USE mod_propa
       USE mod_march
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------

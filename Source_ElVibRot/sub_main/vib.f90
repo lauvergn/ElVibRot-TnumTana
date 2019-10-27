@@ -48,8 +48,8 @@
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_Auto_Basis
-#if(run_MPI)      
       USE mod_MPI
+#if(run_MPI)      
       USE mod_MPI_Aid     
 #endif    
       IMPLICIT NONE
@@ -152,7 +152,9 @@
                         para_ana,para_intensity,intensity_only,         &
                         para_propa,WP0(1))
 
+#if(run_MPI)
       if_propa=para_ana%propa !< add to some type  later
+#endif
       !CALL system_mem_usage(memory_RSS,'after ini_data')
       para_H => para_AllOp%tab_Op(1)
       CALL dealloc_Basis(BasisnD_Save)
@@ -174,8 +176,9 @@
 !---------------------------------------------------------------------------------------
       !> turn off the allocation of grid, to be done in action
       !> sub_qa_bhe should be refined later
+#if(run_MPI)
       Grid_allco=.FALSE.  
-      
+#endif
       IF(MPI_id==0) THEN
         write(out_unitp,*)
         write(out_unitp,*) '================================================='
@@ -217,8 +220,9 @@
         write(out_unitp,*)
       ENDIF
       
+#if(run_MPI)
       Grid_allco=.True.
-
+#endif
 !---------------------------------------------------------------------------------------
 !      contraction of the active basis set with HADA basis 
 !---------------------------------------------------------------------------------------
@@ -1242,9 +1246,7 @@ para_mem%mem_debug = .FALSE.
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_Auto_Basis
-#if(run_MPI) 
       USE mod_MPI 
-#endif     
       IMPLICIT NONE
 
 !

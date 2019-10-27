@@ -35,9 +35,7 @@ USE mod_param_SGType2
 USE mod_basis_RCVec_SGType4, only: typervec, typecvec, &
                                    alloc_typervec, alloc_typecvec, &
                                    dealloc_typervec, dealloc_typecvec
-#if(run_MPI)
 USE mod_MPI
-#endif
 IMPLICIT NONE
 
 PRIVATE
@@ -86,8 +84,10 @@ PUBLIC  Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis
 PUBLIC  SmolyakRep2_TO_tabR1bis, SmolyakRepC2_TO_tabC1bis, tabC2bis_TO_SmolyakRepC1
 PUBLIC  SmolyakRepBasis_TO_tabPackedBasis, tabPackedBasis_TO_SmolyakRepBasis
 
+#if(run_MPI)
 PUBLIC  PackedBasis_TO_tabR_index,tabPackedBasis_TO_tabR_MPIpacked
 PUBLIC  tabPackedBasis_TO_tabR_MPI,tabR_TO_tabPackedBasis_MPI
+#endif
 
 PUBLIC  typeRvec, alloc_typeRvec, dealloc_typeRvec
 PUBLIC  typeCvec, alloc_typeCvec, dealloc_typeCvec
@@ -598,9 +598,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   USE mod_basis_set_alloc
   USE mod_param_SGType2
   USE mod_nDindex
-#if(run_MPI)
   USE mod_MPI
-#endif
   IMPLICIT NONE
 
   TYPE (basis),     intent(inout)        :: basis_SG
@@ -1138,6 +1136,7 @@ END SUBROUTINE tabPackedBasis_TO_tabR_AT_iG
 !=======================================================================================
 ! transfer from compact rep to SRep
 !---------------------------------------------------------------------------------------
+#if(run_MPI)
 SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index,        &
                                  total_Vlength,Psi_size_MPI0,Max_nDI_ib0,nDI_index_list)
   USE mod_system
@@ -1201,6 +1200,7 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
   deallocate(temp_list)
     
 END SUBROUTINE tabPackedBasis_TO_tabR_MPI
+#endif
 !=======================================================================================
 
 !=======================================================================================
@@ -1209,6 +1209,7 @@ END SUBROUTINE tabPackedBasis_TO_tabR_MPI
 ! length_index_mpi: count the overall length for each threads
 ! nDI_index: temp index for all possible nDI for each threads
 !---------------------------------------------------------------------------------------
+#if(run_MPI)
 SUBROUTINE PackedBasis_TO_tabR_index(iG,SGType2,length_index_mpi,nDI_index,            &
                                      Max_nDI_ib0,nDI_index_list)
   USE mod_system
@@ -1276,11 +1277,13 @@ SUBROUTINE PackedBasis_TO_tabR_index(iG,SGType2,length_index_mpi,nDI_index,     
   ENDDO
   
 END SUBROUTINE PackedBasis_TO_tabR_index
+#endif 
 !=======================================================================================
 
 !=======================================================================================
 ! pack the vectors to send to each threads
 !---------------------------------------------------------------------------------------
+#if(run_MPI)
 SUBROUTINE tabPackedBasis_TO_tabR_MPIpacked(all_RvecB_temp,Psi_RvecB,nDI_index,length)
   IMPLICIT NONE
   
@@ -1295,6 +1298,7 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPIpacked(all_RvecB_temp,Psi_RvecB,nDI_index,l
   ENDDO
     
 END SUBROUTINE tabPackedBasis_TO_tabR_MPIpacked
+#endif 
 !=======================================================================================
 
 !=======================================================================================
@@ -1343,6 +1347,7 @@ END SUBROUTINE tabR_AT_iG_TO_tabPackedBasis
 !=======================================================================================
 ! transfer from SRep to compact basis
 !---------------------------------------------------------------------------------------
+#if(run_MPI)
 SUBROUTINE tabR_TO_tabPackedBasis_MPI(all_RvecB_temp2,PsiR,iG,SGType2,WeightiG,        &
                        nDI_index,total_Vlength,Psi_size_MPI0,Max_nDI_ib0,nDI_index_list)
   USE mod_system
@@ -1350,7 +1355,6 @@ SUBROUTINE tabR_TO_tabPackedBasis_MPI(all_RvecB_temp2,PsiR,iG,SGType2,WeightiG, 
   USE mod_param_SGType2
   USE mod_nDindex
   USE mod_MPI_Aid
-  USE mod_MPI
   IMPLICIT NONE
 
   TYPE(TypeRVec),allocatable,    intent(inout)      :: PsiR(:)
@@ -1405,6 +1409,7 @@ SUBROUTINE tabR_TO_tabPackedBasis_MPI(all_RvecB_temp2,PsiR,iG,SGType2,WeightiG, 
   deallocate(temp_list)
 
 END SUBROUTINE tabR_TO_tabPackedBasis_MPI
+#endif
 !=======================================================================================
 
 SUBROUTINE SmolyakRep2_TO_tabR1(tabR1,SRep2)
@@ -2212,9 +2217,7 @@ END SUBROUTINE GSmolyakRep_TO_BSmolyakRep
 SUBROUTINE GSmolyakRep_TO3_BSmolyakRep(SRep,SGType2,tab_ba)
 USE mod_system
 USE mod_basis_set_alloc
-#if(run_MPI)
 USE mod_MPI
-#endif
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
@@ -2414,9 +2417,7 @@ END SUBROUTINE BSmolyakRep_TO_GSmolyakRep
 SUBROUTINE BSmolyakRep_TO3_GSmolyakRep(SRep,SGType2,tab_ba)
 USE mod_system
 USE mod_basis_set_alloc
-#if(run_MPI)
 USE mod_MPI
-#endif
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep),           intent(inout)          :: SRep
@@ -2721,9 +2722,7 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
 SUBROUTINE DerivOp_TO3_GSmolyakRep(SRep,SGType2,tab_ba,tab_der)
 USE mod_system
 USE mod_basis_set_alloc
-#if(run_MPI)
 USE mod_MPI
-#endif
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep),           intent(inout)          :: SRep
@@ -2777,9 +2776,7 @@ END SUBROUTINE DerivOp_TO3_GSmolyakRep
 SUBROUTINE DerivOp_TO3_GSmolyakRepC(SRep,SGType2,tab_ba,tab_der)
 USE mod_system
 USE mod_basis_set_alloc
-#if(run_MPI)
 USE mod_MPI
-#endif
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRepC),          intent(inout)          :: SRep

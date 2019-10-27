@@ -48,9 +48,7 @@ CONTAINS
       USE mod_psi_Op
       USE mod_param_WP0
       USE mod_propa
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -580,9 +578,7 @@ CONTAINS
       USE mod_psi_Op,         ONLY : Overlap_psi1_psi2,Set_symab_OF_psiBasisRep
       USE mod_param_WP0
       USE mod_propa
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -663,9 +659,7 @@ CONTAINS
       USE mod_psi_B_TO_G
       USE mod_param_WP0
       USE mod_propa
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------

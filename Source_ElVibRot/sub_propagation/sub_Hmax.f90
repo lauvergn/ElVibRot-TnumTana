@@ -36,9 +36,7 @@
       USE mod_propa
       USE mod_FullPropa
       USE mod_Davidson
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------

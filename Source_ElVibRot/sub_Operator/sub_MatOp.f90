@@ -37,9 +37,7 @@ CONTAINS
       USE mod_system
       USE mod_Constant
       USE mod_SetOp
-#if(run_MPI)
       USE mod_MPI   
-#endif
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -3275,9 +3273,7 @@ CONTAINS
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
       USE mod_psi_Op
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------

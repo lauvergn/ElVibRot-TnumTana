@@ -54,9 +54,7 @@
                            dealloc_allbasis, alloc_allbasis,           &
                            basis2tobasis1
       USE mod_Op
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -177,9 +175,7 @@
       USE mod_basis
       USE BasisMakeGrid
       USE mod_Op
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -451,9 +447,7 @@
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -612,9 +606,7 @@
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------

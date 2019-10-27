@@ -131,9 +131,7 @@
       SUBROUTINE Overlap_psi1_psi2(Overlap,psi1,psi2,With_Grid,Channel_ie)
       USE mod_system
       USE mod_psi_set_alloc
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- variables for the WP ----------------------------------------

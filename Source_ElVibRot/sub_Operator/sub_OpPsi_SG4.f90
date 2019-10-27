@@ -669,18 +669,22 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_basis_set_alloc,          ONLY : basis
   USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                                            tabR_AT_iG_TO_tabPackedBasis, &
+#if(run_MPI)
                                            TypeRVec,dealloc_TypeRVec,    &
                                            PackedBasis_TO_tabR_index,    &
                                            tabR_TO_tabPackedBasis_MPI,   &
                                            tabPackedBasis_TO_tabR_MPI
+#else
+                                           TypeRVec,dealloc_TypeRVec
+#endif
                                            
   USE mod_SymAbelian,               ONLY : Calc_symab1_EOR_symab2
   USE mod_psi_Op,                   ONLY : Set_symab_OF_psiBasisRep
 
   USE mod_psi_set_alloc,            ONLY : param_psi,ecri_psi
   USE mod_SetOp,                    ONLY : param_Op,write_param_Op
-#if(run_MPI)
   USE mod_MPI
+#if(run_MPI)
   USE mod_MPI_Aid
 #endif
   IMPLICIT NONE
@@ -698,13 +702,15 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   Real (kind=Rkind), allocatable       :: PsiR_temp(:) 
   Real (kind=Rkind), allocatable       :: all_RvecB_temp(:)
   Real (kind=Rkind), allocatable       :: all_RvecB_temp2(:)
+#if(run_MPI)
   TYPE (multi_array4),save,allocatable :: nDI_index_master(:)
-  
+#endif
   integer                              :: ib,i,iG,iiG,nb_thread
   integer                              :: itab,ith,iterm00,packet_size,OpPsi_symab
   integer, allocatable                 :: tab_l(:)
   logical                              :: not_init
 
+#if(run_MPI)
   integer                              :: iG_MPI,ii  
   integer                              :: PsiR_V_iG_size
   integer(kind=MPI_INTEGER_KIND),save  :: Psi_size_MPI0
@@ -718,6 +724,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   integer,save                         :: Max_nDI_ib0
   integer(kind=MPI_INTEGER_KIND),save  :: total_Vlength
   integer(kind=MPI_INTEGER_KIND),save,allocatable :: size_PsiR_V(:) 
+#endif
 
   !----- for debuging ----------------------------------------------
   character (len=*), parameter :: name_sub='sub_TabOpPsi_FOR_SGtype4'

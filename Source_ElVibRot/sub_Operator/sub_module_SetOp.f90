@@ -171,9 +171,7 @@ MODULE mod_SetOp
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE alloc_para_Op(para_Op,Grid,Mat,Grid_cte)
-#if(run_MPI)
       USE mod_MPI
-#endif
       TYPE (param_Op), intent(inout) :: para_Op
       logical, optional, intent(in) :: Mat,Grid
       logical, optional, intent(in) :: Grid_cte(para_Op%nb_term)
@@ -396,9 +394,7 @@ MODULE mod_SetOp
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE dealloc_para_Op(para_Op)
-#if(run_MPI)
       USE mod_MPI
-#endif
       TYPE (param_Op),intent(inout) :: para_Op
 
       integer :: k_term
@@ -685,9 +681,7 @@ MODULE mod_SetOp
 
 !=======================================================================================
       SUBROUTINE alloc_array_OF_Opdim1(tab,tab_ub,name_var,name_sub,tab_lb)
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
       TYPE (param_Op), pointer, intent(inout) :: tab(:)
@@ -1343,9 +1337,7 @@ MODULE mod_SetOp
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE Analysis_OpGrid_OF_Op(para_Op)
-#if(run_MPI)
       USE mod_MPI
-#endif
       TYPE (param_Op), intent(inout) :: para_Op
 
       integer       :: k_term,iq,iterm00

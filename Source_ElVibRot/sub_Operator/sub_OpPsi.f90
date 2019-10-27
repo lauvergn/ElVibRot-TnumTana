@@ -641,9 +641,7 @@ CONTAINS
       USE mod_psi_B_TO_G,      ONLY : sub_PsiGridRep_TO_BasisRep
       USE mod_SymAbelian,      ONLY : Calc_symab1_EOR_symab2
       USE mod_psi_Op,          ONLY : Set_symab_OF_psiBasisRep
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -2646,9 +2644,7 @@ STOP 'cplx'
       SUBROUTINE sub_scaledOpPsi(Psi,OpPsi,E0,Esc)
       USE mod_system
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- for the scaling -------------------------------------------

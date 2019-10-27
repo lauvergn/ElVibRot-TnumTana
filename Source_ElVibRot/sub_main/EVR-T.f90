@@ -57,9 +57,7 @@
       USE mod_system
 !$    USE omp_lib, only : omp_get_max_threads
       USE mod_nDGridFit
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
       logical  :: intensity_only,analysis_only,Popenmp,Popenmpi
@@ -74,11 +72,6 @@
       character (len=Name_longlen) :: RMatFormat
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
-
-#if(run_MPI)
-#else
-      Integer  :: MPI_id
-#endif 
       
       ! parameters for system setup
       ! make sure to be prepared in file      
@@ -158,10 +151,10 @@
 
 
         !> read from file when running with MPI
-#if(run_MPI) 
+!#if(run_MPI) 
         open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
         IF(err/=0) STOP 'error in opening file for namelist when running MPI'
-#endif
+!#endif
         read(in_unitp,system,IOSTAT=err)
         
         IF (err < 0) THEN

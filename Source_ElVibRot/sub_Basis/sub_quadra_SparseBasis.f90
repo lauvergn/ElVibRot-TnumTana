@@ -568,9 +568,7 @@
       USE mod_basis
       USE mod_Op
       USE mod_Auto_Basis
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------

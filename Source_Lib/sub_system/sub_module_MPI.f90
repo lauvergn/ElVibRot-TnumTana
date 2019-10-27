@@ -9,6 +9,7 @@
 !>  - 
 !=======================================================================================
 MODULE mod_MPI
+#if(run_MPI)
   USE MPI_F08
   IMPLICIT NONE
   
@@ -139,6 +140,11 @@ MODULE mod_MPI
       STOP 'integer neither 4 or 8 in default MPI'
     ENDIF
   END SUBROUTINE MPI_initialization
+  
+#else
+  Integer,save   :: MPI_id     !< fake MPI_id, for convenience
+#endif
+
 END MODULE mod_MPI
 
 

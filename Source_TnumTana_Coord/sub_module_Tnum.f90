@@ -582,9 +582,7 @@ MODULE mod_Tnum
       USE mod_ZmatTransfo,      only : Read_ZmatTransfo
       USE mod_CartesianTransfo, only : Write_CartesianTransfo
       USE mod_constant
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 

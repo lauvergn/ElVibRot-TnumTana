@@ -1519,9 +1519,7 @@
       USE mod_ana_psi,         ONLY : norm2_psi
       USE mod_psi_SimpleOp
       USE mod_propa
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------

@@ -29,9 +29,7 @@
 
 MODULE mod_Davidson
 USE mod_Constant
-#if(run_MPI)
 USE mod_MPI 
-#endif
 IMPLICIT NONE
 
 PRIVATE
@@ -710,9 +708,7 @@ CONTAINS
  USE mod_psi_io,         ONLY : sub_read_psi0
  USE mod_param_WP0,      ONLY : param_WP0
  USE mod_propa,          ONLY : param_Davidson
-#if(run_MPI)
-  USE mod_MPI
-#endif
+ USE mod_MPI
  IMPLICIT NONE
 
  TYPE (param_Davidson) :: para_Davidson
@@ -956,9 +952,7 @@ CONTAINS
  USE mod_psi_set_alloc
  USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
  USE mod_propa,          ONLY : param_Davidson
-#if(run_MPI)
  USE mod_MPI
-#endif
  IMPLICIT NONE
 
  integer,                  intent(in)     :: it

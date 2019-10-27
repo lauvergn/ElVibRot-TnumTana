@@ -67,9 +67,7 @@
       USE mod_propa
       USE mod_psi_set_alloc
       USE mod_Auto_Basis
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- On the fly parameters (at this time for gaussian) -------------

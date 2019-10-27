@@ -45,9 +45,7 @@
       USE mod_ana_psi
       USE mod_psi_Op
       USE mod_param_WP0
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -253,9 +251,7 @@
       USE mod_ana_psi
       USE mod_psi_Op
       USE mod_file
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 
@@ -352,9 +348,7 @@
       USE mod_system
       USE mod_psi_set_alloc
       USE mod_file
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------

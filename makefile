@@ -2,7 +2,7 @@
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 F90 = mpifort
-#F90 = gfortran
+# F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
 #
@@ -10,7 +10,10 @@ F90 = mpifort
 OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
+ifeq ($(F90),mpifort)  
+  OMP = 0
+endif
 #
 ## force the default integer (without kind) during the compillation. 
 ## default 4: , INT=8 (for kind=8)
@@ -392,13 +395,10 @@ DIRpropa   = $(DirEVR)/sub_propagation
 DIRSmolyak = $(DirEVR)/sub_Smolyak_test
 DIROpt     = $(DirEVR)/sub_Optimization
 
-
-
-
-
 #============================================================================
 #Libs, Minimize Only list: OK
 # USE mod_system
+ifeq ($(F90),mpifort)
 Obj_Primlib  = \
   $(OBJ)/sub_module_MPI.o \
   $(OBJ)/sub_module_NumParameters.o \
@@ -407,6 +407,16 @@ Obj_Primlib  = \
   $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/sub_module_FracInteger.o \
   $(OBJ)/sub_module_system.o \
   $(OBJ)/sub_module_MPI_Aid.o 
+else
+  Obj_Primlib  = \
+  $(OBJ)/sub_module_MPI.o \
+  $(OBJ)/sub_module_NumParameters.o \
+  $(OBJ)/sub_module_memory.o $(OBJ)/sub_module_string.o \
+  $(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_memory_NotPointer.o \
+  $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/sub_module_FracInteger.o \
+  $(OBJ)/sub_module_system.o 
+endif
+
 
 Obj_math =\
    $(OBJ)/sub_diago.o $(OBJ)/sub_trans_mat.o $(OBJ)/sub_integration.o \
@@ -715,7 +725,7 @@ $(PhysConstEXE): obj $(Obj_Primlib) $(Obj_math) $(Obj_io) $(Obj_PhyCte) $(OBJ)/$
 #===================================================================================
 # lib
 $(OBJ)/sub_module_MPI.o:$(DirSys)/sub_module_MPI.f90
-	cd $(OBJ) ; $(F90_FLAGS)  -c $(DirSys)/sub_module_MPI.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirSys)/sub_module_MPI.f90
 $(OBJ)/sub_module_NumParameters.o:$(DirSys)/sub_module_NumParameters.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_NumParameters.f90
 $(OBJ)/sub_module_FracInteger.o:$(DirSys)/sub_module_FracInteger.f90
@@ -734,8 +744,10 @@ $(OBJ)/sub_module_RW_MatVec.o:$(DirSys)/sub_module_RW_MatVec.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_RW_MatVec.f90
 $(OBJ)/sub_module_system.o:$(DirSys)/sub_module_system.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL)  -c $(DirSys)/sub_module_system.f90
+ifeq ($(F90),mpifort)
 $(OBJ)/sub_module_MPI_Aid.o:$(DirSys)/sub_module_MPI_Aid.f90
-	cd $(OBJ) ; $(F90_FLAGS)  -c $(DirSys)/sub_module_MPI_Aid.f90	
+	cd $(OBJ) ; $(F90_FLAGS)  -c $(DirSys)/sub_module_MPI_Aid.f90
+endif
 ###
 $(OBJ)/sub_module_DInd.o:$(DirnDind)/sub_module_DInd.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirnDind)/sub_module_DInd.f90

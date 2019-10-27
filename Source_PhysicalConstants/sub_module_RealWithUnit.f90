@@ -177,9 +177,8 @@
       END SUBROUTINE Write_TabConvRWU_dim1
 
       SUBROUTINE ADD_RWU_TO_TabConvRWU(TabConvRWU,RWU,Work_unit,Write_unit)
-#if(run_MPI)
       USE mod_MPI
-#endif
+
       TYPE(REAL_WU), intent(in)           :: RWU
       TYPE(Type_TabConvRWU), intent(inout)   :: TabConvRWU
       logical, optional :: Work_unit,Write_unit

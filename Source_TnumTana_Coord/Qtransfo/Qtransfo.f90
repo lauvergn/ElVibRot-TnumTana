@@ -106,9 +106,8 @@
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,mendeleev)
-#if(run_MPI)
         USE mod_MPI
-#endif
+
         TYPE (Type_Qtransfo), intent(inout) :: Qtransfo
         integer, intent(inout)              :: nb_Qin
         TYPE (table_atom), intent(in)       :: mendeleev

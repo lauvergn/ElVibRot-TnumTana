@@ -6,9 +6,7 @@
 !=======================================================================================
       SUBROUTINE diagonalization(Mat,Eig,Vec,n,type_diag,sort,phase)
       USE mod_system
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
       integer          :: n

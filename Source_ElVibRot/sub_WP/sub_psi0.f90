@@ -54,8 +54,8 @@
       USE mod_param_WP0
       USE mod_ana_psi
       USE mod_psi_io
-#if(run_MPI)      
       USE mod_MPI
+#if(run_MPI)      
       USE mod_MPI_Aid
 #endif      
       IMPLICIT NONE

@@ -115,9 +115,7 @@
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE alloc_psi(psi,BasisRep,GridRep)
-#if(run_MPI)
       USE mod_MPI
-#endif
 
       TYPE (param_psi), intent(inout) :: psi
       logical, optional, intent(in)   :: BasisRep,GridRep
@@ -861,9 +859,7 @@
 !=======================================================================================
 
       SUBROUTINE CplxPsi_TO_RCpsi(RCPsi,Psi)
-#if(run_MPI)
       USE mod_MPI
-#endif
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_psi),intent(inout) :: RCPsi(2)

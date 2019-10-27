@@ -1574,9 +1574,7 @@ END SUBROUTINE sub_analyze_psi
       USE mod_nDindex
       USE mod_psi_set_alloc
       USE mod_type_ana_psi
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -2054,9 +2052,7 @@ END SUBROUTINE sub_analyze_psi
                             GridRep,BasisRep,Dominant_Channel)
   USE mod_system
   USE mod_psi_set_alloc
-#if(run_MPI)
   USE mod_MPI
-#endif
   IMPLICIT NONE
 
 !- variables for the WP ----------------------------------------

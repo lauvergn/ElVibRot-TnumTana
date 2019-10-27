@@ -443,9 +443,7 @@ PUBLIC :: initialisation1_poly,cof
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 
@@ -833,9 +831,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi
   USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
   USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
-#if(run_MPI)
   USE mod_MPI
-#endif
   IMPLICIT NONE
 
   real (kind=Rkind) :: T      ! time
@@ -1029,9 +1025,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi,Channel_weight
   USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
   USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
-#if(run_MPI)
   USE mod_MPI
-#endif
   IMPLICIT NONE
 
   real (kind=Rkind) :: T      ! time
@@ -1178,9 +1172,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       USE mod_psi_set_alloc, ONLY : alloc_array
       USE mod_param_WP0,     ONLY : alloc_param_WP0
       USE mod_Constant
-#if(run_MPI)
       USE mod_MPI
-#endif
       IMPLICIT NONE
 
 !------ parameter for the propagation ---------------------

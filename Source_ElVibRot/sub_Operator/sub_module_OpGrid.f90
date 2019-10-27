@@ -257,9 +257,7 @@
                           derive_termQact,derive_termQdyn,SmolyakRep,nb_SG,info)
 #endif
 
-#if(run_MPI)
       USE mod_MPI
-#endif
       TYPE (param_OpGrid), intent(inout) :: OpGrid
       integer,             intent(in)    :: nb_qa,nb_bie
       integer,             intent(in)    :: derive_termQact(2)
@@ -730,9 +728,7 @@
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE Analysis_OpGrid(OpGrid,n_Op)
-#if(run_MPI)
       USE mod_MPI
-#endif
       TYPE (param_OpGrid), pointer, intent(inout) :: OpGrid(:)
       integer,                      intent(in)    :: n_Op
 
