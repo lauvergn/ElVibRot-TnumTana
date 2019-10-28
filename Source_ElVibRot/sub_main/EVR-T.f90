@@ -153,7 +153,7 @@
         !> read from file when running with MPI
 !#if(run_MPI) 
         open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
-        IF(err/=0) STOP 'error in opening file for namelist when running MPI'
+        IF(err/=0) STOP 'error in opening file for namelist'
 !#endif
         read(in_unitp,system,IOSTAT=err)
         

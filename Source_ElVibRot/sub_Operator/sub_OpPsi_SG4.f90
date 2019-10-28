@@ -803,8 +803,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     !IF((if_propa .AND. MPI_np>10) .OR. MPI_np>50) THEN 
     IF(size_PsiR_V(0)<2600000) THEN  !< according to the effeiciency test
       ! calculate total length of vectors for each threads------------------------------
-      write(*,*) 'MPI TYPE 1 in action'
       IF(once_control) THEN
+      write(*,*) 'MPI TYPE 1 in action'
         allocate(nDI_index_master(0:MPI_np-1))
         allocate(total_Vlength_master(0:MPI_np-1))
       ENDIF
@@ -1299,16 +1299,17 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done=.True. 
   END IF
 
-  DO i=1,size(OpPsi)
-    !write(6,*) 'coucou symab Op psi',i,para_Op%symab,Psi(i)%symab
-    OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,Psi(i)%symab)
-    IF(MPI_id==0) CALL Set_symab_OF_psiBasisRep(OpPsi(i),OpPsi_symab)
-    !write(6,*) 'coucou symab Op.psi',i,OpPsi(i)%symab
-
-    !write(out_unitp,*) 'para_Op,psi symab ',i,para_Op%symab,Psi(i)%symab
-    !write(out_unitp,*) 'OpPsi_symab',i,OpPsi(i)%symab
-
-  END DO
+  IF(MPI_id==0) THEN
+    DO i=1,size(OpPsi)
+      !write(6,*) 'coucou symab Op psi',i,para_Op%symab,Psi(i)%symab
+      OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,Psi(i)%symab)
+      CALL Set_symab_OF_psiBasisRep(OpPsi(i),OpPsi_symab)
+      !write(6,*) 'coucou symab Op.psi',i,OpPsi(i)%symab
+ 
+      !write(out_unitp,*) 'para_Op,psi symab ',i,para_Op%symab,Psi(i)%symab
+      !write(out_unitp,*) 'OpPsi_symab',i,OpPsi(i)%symab
+    END DO
+  ENDIF
 
   !-----------------------------------------------------------
   IF (debug) THEN
