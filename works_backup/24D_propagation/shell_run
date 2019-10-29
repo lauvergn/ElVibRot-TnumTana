@@ -1,0 +1,216 @@
+#!/bin/bash
+
+
+###> parameters
+##==============================================================
+
+parall=MPI   ## MPI or openMP or BLANK
+num_cores=$2
+
+L=$1
+LB=$L
+LG=$L
+B1=4
+B2=4
+B3=3
+B4=3
+B=2
+
+dav=f
+test=f
+
+
+if [ -z $LB -o -z $LG -o -z $LG ]; then
+  echo 'short of variables, check shell input'
+  exit 1
+fi
+
+##==============================================================
+###< parameters
+
+
+###> setup environment
+##==============================================================
+
+##--------------------------------------------------------------
+## set code dir
+
+here=`pwd`
+DIR_vib=$here/..
+DIR_pot=$DIR_vib/sub_pot
+VIBEXE=vib
+
+cp sub_system_pyrazine.f $DIR_pot/sub_system.f
+cp calc_f2_f1Q.f90       $DIR_vib/Source_TnumTana_Coord/sub_operator_T
+
+cd $DIR_vib
+make
+cd $here
+
+##--------------------------------------------------------------
+## set working dir 
+
+##TMPDIR=EVR-HenonHeiles_6D_LB$LB"-B"$B
+##echo TMPDIR: $TMPDIR
+ 
+name_WP=$here/temp
+name_WPR=$here/temp
+
+##--------------------------------------------------------------
+## set openMP environment
+
+if   [ $parall == 'openMP' ] ; then
+  echo 'run with openMP'
+  #export OMP_NUM_THREADS=$num_cores    ## number of openMP cores
+
+## set MPI environment
+
+elif [ $parall == 'MPI'    ] ; then
+  echo 'run with MPI'
+  MPI_cores=$num_cores                  ## number of MPI cores 
+
+##  else
+else
+  echo 'run without openMP or MPI'
+fi
+##--------------------------------------------------------------
+
+##==============================================================
+###< environment
+
+
+###> create file 'namelist' for parameters 
+##==============================================================
+##==============================================================
+##==============================================================
+cat > namelist << EOF
+ &system EVR=t OpPsi_test=f printlevel=0 /
+ &constantes ene_unit='eV' /
+ &variables
+         nrho=2 Without_Rot=t Centered_ON_CoM=f Gcte=t
+         f2f1_ana=t
+         Old_Qtransfo=f
+         nb_Qtransfo=2
+ /
+
+ &Coord_transfo name_transfo='zmat' nat=11 /
+X
+X 1
+X 1 2
+1. 0 0 0   ! cart1
+1. 0 0 0   ! cart2
+1. 0 0 0   ! cart3
+1. 0 0 0   ! cart4
+1. 0 0 0   ! cart5
+1. 0 0 0   ! cart6
+1. 0 0 0   ! cart7
+1. 0 0 0   ! cart8
+
+ &Coord_transfo name_transfo='active' /
+0 0 0    1 1 1   1 1 1   1 1 1   1 1 1   1 1 1   1 1 1   1 1 1   1 1 1
+
+ &minimum pot0=0.d0  nb_elec=2 nb_scalar_Op=0 pot_act=f read_Qsym0=t pot_cart=f unit='bohr' /
+ 1.
+ 1.
+ 90. °
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+
+ &basis_nD nb_basis=24 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=4 /
+   &basis_nD iQdyn=4         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B1 /
+   &basis_nD iQdyn=5         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B2 /
+   &basis_nD iQdyn=6         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B3 /
+   &basis_nD iQdyn=7         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B4 /
+   &basis_nD iQdyn=8         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=9         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=10        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=11        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=12        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=13        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=14        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=15        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=16        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=17        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=18        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=19        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=20        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=21        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=22        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=23        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=24        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=25        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=26        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=27        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+ 
+ &inactives /
+ &actives test=$test direct=2 Make_MatOp=f /
+
+ &analyse max_ene=50. 'au' print=f print_psi=0 propa=t /
+ &propa
+        WPTmax=150. 'fs' WPdeltaT=10. 'fs' nb_micro=100
+        n_WPecri=0 WPpsi2 =f WPpsi=f
+        type_WPpropa=1 max_poly=10000 npoly=300 poly_tol=1.d-10
+        DHmax=0.0d0 auto_Hmax=f
+        New_Read_WP0=t
+
+        TFnexp2=20
+        TFmaxE=5.0 'eV' TFminE=-3245.98 'cm-1'
+ /
+ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1   1 2   1.0 0.
+end wp0
+
+
+EOF
+##==============================================================
+##==============================================================
+##==============================================================
+###< parameter file
+
+
+
+
+
+
+###> run
+##==============================================================
+
+if   [ $parall == 'openMP' ] ; then
+  $DIR_vib/$VIBEXE > $here/"res_24Dprop_SGtype4_L"$LB"_B"$B1"-"$B2"-"$B3"-"$B4"-Bi"$B"_"$num_cores"openMpcores"
+
+elif [ $parall == 'MPI'    ] ; then
+  if [ -z $MPI_cores ]; then
+    echo 'short of MPI core number, check shell input'
+    exit 1
+  fi
+  mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $here/"res_24Dprop_SGtype4_L"$LB"_B"$B1"-"$B2"-"$B3"-"$B4"-Bi"$B"_"$num_cores"MPIcores"
+
+else 
+  $DIR_vib/$VIBEXE > $here/"res_24Dprop_SGtype4_L"$LB"_B"$B1"-"$B2"-"$B3"-"$B4"-Bi"$B
+fi
+##==============================================================
+###< run
+
+
+echo 'script finished'

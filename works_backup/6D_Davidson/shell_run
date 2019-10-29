@@ -5,16 +5,16 @@
 ##==============================================================
 
 parall=MPI   ## MPI or openMP or BLANK
-num_cores=$4
+num_cores=$1
 
-LB=$1
-LG=$2
-B=$3
+LB=$2
+LG=$3
+B=$4
 
 nb_ana=28
-dav=f
+dav=$5
 test=f
-arpack=$5
+arpack=f
 
 
 if [ -z $LB -o -z $LG -o -z $LG ]; then
