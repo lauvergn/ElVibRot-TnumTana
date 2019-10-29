@@ -1,0 +1,171 @@
+#!/bin/bash
+
+
+###> parameters
+##==============================================================
+
+parall=MPI   ## MPI or openMP or BLANK
+num_cores=$4
+
+LB=$1
+LG=$2
+B=$3
+
+nb_ana=28
+dav=f
+test=f
+arpack=$5
+
+
+if [ -z $LB -o -z $LG -o -z $LG ]; then
+  echo 'short of variables, check shell input'
+  exit 1
+fi
+
+##==============================================================
+###< parameters
+
+
+###> setup environment
+##==============================================================
+
+##--------------------------------------------------------------
+## set code dir
+
+here=`pwd`
+DIR_vib=$here/..
+DIR_pot=$DIR_vib/sub_pot
+VIBEXE=vib
+
+cp sub_system_HenonHeiles.f $DIR_pot/sub_system.f
+cd $DIR_vib
+make
+cd $here
+
+##--------------------------------------------------------------
+## set working dir 
+
+##TMPDIR=EVR-HenonHeiles_6D_LB$LB"-B"$B
+##echo TMPDIR: $TMPDIR
+ 
+name_WP=$here/temp
+name_WPR=$here/temp
+
+##--------------------------------------------------------------
+## set openMP environment
+
+if   [ $parall == 'openMP' ] ; then
+  echo 'run with openMP'
+  #export OMP_NUM_THREADS=$num_cores    ## number of openMP cores
+
+## set MPI environment
+
+elif [ $parall == 'MPI'    ] ; then
+  echo 'run with MPI'
+  MPI_cores=$num_cores                  ## number of MPI cores 
+
+##  else
+else
+  echo 'run without openMP or MPI'
+fi
+##--------------------------------------------------------------
+
+##==============================================================
+###< environment
+
+
+###> create file 'namelist' for parameters 
+##==============================================================
+##==============================================================
+##==============================================================
+cat > namelist << EOF
+&system 
+EVR=t 
+OpPsi_test=f 
+printlevel=0 
+/
+
+&constantes ene_unit='au' /
+
+&variables
+nrho=2 
+Without_Rot=t 
+Centered_ON_CoM=f 
+Gcte=t
+Old_Qtransfo=f
+nb_Qtransfo=2
+/
+
+&Coord_transfo name_transfo='zmat' nat=5 /
+X
+X 1
+X 1 2
+1. 0 0 0   ! cart4
+1. 0 0 0   ! cart5
+
+&Coord_transfo name_transfo='active' /
+0 0 0    1 1 1   1 1 1
+
+&minimum pot0=0.d0  nb_scalar_Op=0 pot_act=f read_Qsym0=t unit='bohr' /
+ 1.
+ 1.
+ 1.57
+ 0.1
+ 0.2
+ 0.3
+ 0.4
+ 0.1
+ 0.2
+
+ &basis_nD nb_basis=6 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=4 /
+   &basis_nD iQdyn=4         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=5         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=6         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=7         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=8         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=9         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+
+ &inactives /
+ &actives test=$test direct=2 Make_MatOp=t direct_KEO=f Save_MemGrid=t direct_ScalOp=t /
+
+ &analyse max_ana=$nb_ana max_ene=7. 'au' 
+          name_file_spectralWP='$name_WP'
+          print=f print_psi=0 Psi_ScalOp=f intensity=f davidson=$dav arpack=$arpack/
+ &davidson nb_WP=$nb_ana max_it=200 max_WP=10000 num_resetH=10
+           lower_states=t conv_resi=0.0005 'au' conv_ene=0.00010 'au'
+           read_WP=t read_listWP=f name_file_readWP='$name_WPR' NewVec_type=4
+/
+
+
+EOF
+##==============================================================
+##==============================================================
+##==============================================================
+###< parameter file
+
+
+
+
+
+
+###> run
+##==============================================================
+
+if   [ $parall == 'openMP' ] ; then
+  $DIR_vib/$VIBEXE > $here/"res_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG"_"$num_cores"openMpcores"
+
+elif [ $parall == 'MPI'    ] ; then
+  if [ -z $MPI_cores ]; then
+    echo 'short of MPI core number, check shell input'
+    exit 1
+  fi
+  mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $here/"res_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG"_"$num_cores"MPIcores"
+
+else 
+  $DIR_vib/$VIBEXE > $here/"res_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG
+fi
+##==============================================================
+###< run
+
+
+echo 'script finished'

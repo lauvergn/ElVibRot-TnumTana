@@ -209,12 +209,12 @@ CONTAINS
 
       info   = 1
       IF (info /= 0) THEN
-        CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                 &
+        IF(MPI_id==0) CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                  &
                           para_propa%para_Davidson,para_H%cplx)
         IF (para_propa%para_Davidson%With_Grid) THEN
-          resid(:) = psi_loc%RvecG(:)
+          IF(MPI_id==0) resid(:) = psi_loc%RvecG(:)
         ELSE
-          resid(:) = psi_loc%RvecB(:)
+          IF(MPI_id==0) resid(:) = psi_loc%RvecB(:)
         END IF
       END IF
 
@@ -288,14 +288,18 @@ CONTAINS
                                     workd(ipntr(2):ipntr(2)-1+n),                      &
                               psi_loc,Hpsi_loc,para_H,cplxE,para_propa,int(n))
 
-        IF(MPI_id==0) write(iunit,*) 'Arpack <psi H psi>:',                            &
-          dot_product(workd(ipntr(1):ipntr(1)-1+n),workd(ipntr(2):ipntr(2)-1+n))
-        CALL flush_perso(iunit)
-
+        IF(MPI_id==0) THEN
+          write(iunit,*) 'Arpack <psi H psi>:',                                        &
+                  dot_product(workd(ipntr(1):ipntr(1)-1+n),workd(ipntr(2):ipntr(2)-1+n))
+          CALL flush_perso(iunit)
+        ENDIF
       END DO
 
-      IF(MPI_id==0) write(iunit,*) 'End Arpack ' ; CALL flush_perso(iunit)
-      IF(MPI_id==0) CALL file_close(Log_file)
+      IF(MPI_id==0) THEN
+        write(iunit,*) 'End Arpack ' 
+        CALL flush_perso(iunit)
+        CALL file_close(Log_file)
+      ENDIF
 !---------------------------------------------------------------------------------------
 
 !     %----------------------------------------%
@@ -810,9 +814,9 @@ CONTAINS
         IF(MPI_id==0) CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                  &
                                           para_propa%para_Davidson,para_H%cplx)
         IF (para_propa%para_Davidson%With_Grid) THEN
-          resid(:) = psi_loc%RvecG(:)
+          IF(MPI_id==0) resid(:) = psi_loc%RvecG(:)
         ELSE
-          resid(:) = psi_loc%RvecB(:)
+          IF(MPI_id==0) resid(:) = psi_loc%RvecB(:)
         END IF
       END IF
 
