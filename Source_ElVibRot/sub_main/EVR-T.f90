@@ -150,8 +150,8 @@
         ENDIF
 
 
-        !> read from file when running with MPI
-!#if(run_MPI) 
+        !> read from parameter file created by shell script
+!#if(run_MPI)
         open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
         IF(err/=0) STOP 'error in opening file for namelist'
 !#endif
