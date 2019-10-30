@@ -764,8 +764,8 @@ MODULE mod_paramQ
       TYPE (Type_dnVec) :: dnQin,dnQout
 
       !-----------------------------------------------------------------
-      !logical, parameter :: debug = .FALSE.
-      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='sub_QinRead_TO_Qact'
       !-----------------------------------------------------------------
       IF (debug) THEN

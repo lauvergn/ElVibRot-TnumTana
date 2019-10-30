@@ -218,6 +218,7 @@ MODULE mod_ActiveTransfo
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE Read_ActiveTransfo(ActiveTransfo,nb_Qin)
+      USE mod_MPI
 
       TYPE (Type_ActiveTransfo), intent(inout) :: ActiveTransfo
       integer, intent(in) :: nb_Qin
@@ -228,8 +229,8 @@ MODULE mod_ActiveTransfo
       CALL alloc_ActiveTransfo(ActiveTransfo,nb_Qin)
 
       read(in_unitp,*,IOSTAT=err) ActiveTransfo%list_act_OF_Qdyn(:)
-      write(out_unitp,*) 'list_act_OF_Qdyn or type_var',                &
-                                  ActiveTransfo%list_act_OF_Qdyn(:)
+      IF(MPI_id==0) write(out_unitp,*) 'list_act_OF_Qdyn or type_var',                 &
+                                        ActiveTransfo%list_act_OF_Qdyn(:)
       IF (err /= 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) '  while reading "list_act_OF_Qdyn"'
@@ -258,8 +259,8 @@ MODULE mod_ActiveTransfo
       CALL alloc_ActiveTransfo(ActiveTransfo,nb_Qin)
 
       read(in_unitp,*,IOSTAT=err_io) ActiveTransfo%list_act_OF_Qdyn(:)
-      write(out_unitp,*) 'list_act_OF_Qdyn or type_var',                &
-                                  ActiveTransfo%list_act_OF_Qdyn(:)
+      IF(MPI_id==0) write(out_unitp,*) 'list_act_OF_Qdyn or type_var',                 &
+                                        ActiveTransfo%list_act_OF_Qdyn(:)
       IF (err_io /= 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) '  while reading "list_act_OF_Qdyn"'
@@ -323,7 +324,7 @@ MODULE mod_ActiveTransfo
 
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) 'asso ActiveTransfo:',associated(ActiveTransfo)
-      IF (associated(ActiveTransfo)) THEN
+      IF (associated(ActiveTransfo) .AND. MPI_id==0) THEN
         write(out_unitp,*) 'nb_var:        ',ActiveTransfo%nb_var
         write(out_unitp,*) 'nb_act:        ',ActiveTransfo%nb_act
         write(out_unitp,*) 'nb_act1:       ',ActiveTransfo%nb_act1

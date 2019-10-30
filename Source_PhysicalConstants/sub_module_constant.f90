@@ -505,30 +505,31 @@
 !-----------------------------------------------------------------
 
 !-- Write some constantes ------------------------------------
-                       write(out_unitp,*)  ' energy unit     : ',const_phys%ene_unit
-                       write(out_unitp,21) ' auTOenergy      = ',const_phys%auTOenergy
-                       write(out_unitp,21) ' auTOcm_inv      = ',const_phys%auTOcm_inv
-                       write(out_unitp,21) ' auTOeV          = ',const_phys%auTOeV
-                       write(out_unitp,21) ' auTOGHz         = ',const_phys%auTOGHz
-                       write(out_unitp,21) ' auTOkcalmol_inv = ',const_phys%auTOkcalmol_inv
-                       write(out_unitp,21) ' auTOkJmol_inv   = ',const_phys%auTOkJmol_inv
+  IF(MPI_id==0) THEN
+                         write(out_unitp,*)  ' energy unit     : ',const_phys%ene_unit
+                         write(out_unitp,21) ' auTOenergy      = ',const_phys%auTOenergy
+                         write(out_unitp,21) ' auTOcm_inv      = ',const_phys%auTOcm_inv
+                         write(out_unitp,21) ' auTOeV          = ',const_phys%auTOeV
+                         write(out_unitp,21) ' auTOGHz         = ',const_phys%auTOGHz
+                         write(out_unitp,21) ' auTOkcalmol_inv = ',const_phys%auTOkcalmol_inv
+                         write(out_unitp,21) ' auTOkJmol_inv   = ',const_phys%auTOkJmol_inv
 
-  IF (print_level > 0) write(out_unitp,*)  ' pi              = ',const_phys%pi
-  IF (print_level > 0) write(out_unitp,*)  ' cos(pi)         = ',cos(const_phys%pi)
-  IF (print_level > 0) write(out_unitp,11) ' a0 (m-1)        = ',const_phys%a0
-  IF (print_level > 0) write(out_unitp,11) ' a0 (Angs)       = ',const_phys%a0*TEN**10
-  IF (print_level > 0) write(out_unitp,11) ' Eh (J)          = ',const_phys%Eh
-  IF (print_level > 0) write(out_unitp,11) ' Ta (s)          = ',const_phys%Ta
-                       write(out_unitp,21) ' Ta (fs)         = ',const_phys%Ta*TEN**15
+    IF (print_level > 0) write(out_unitp,*)  ' pi              = ',const_phys%pi
+    IF (print_level > 0) write(out_unitp,*)  ' cos(pi)         = ',cos(const_phys%pi)
+    IF (print_level > 0) write(out_unitp,11) ' a0 (m-1)        = ',const_phys%a0
+    IF (print_level > 0) write(out_unitp,11) ' a0 (Angs)       = ',const_phys%a0*TEN**10
+    IF (print_level > 0) write(out_unitp,11) ' Eh (J)          = ',const_phys%Eh
+    IF (print_level > 0) write(out_unitp,11) ' Ta (s)          = ',const_phys%Ta
+                         write(out_unitp,21) ' Ta (fs)         = ',const_phys%Ta*TEN**15
 
-  IF (print_level > 0) write(out_unitp,21) ' inv_Name        = ',const_phys%inv_Name
-  IF (print_level > 0) write(out_unitp,11) ' E0 (V cm-1)     = ',const_phys%E0
-  IF (print_level > 0) write(out_unitp,11) ' I0 (W cm-2)     = ',const_phys%I0
-  IF (print_level > 0) write(out_unitp,11) ' convAif         = ',const_phys%convAif
-  IF (print_level > 0) write(out_unitp,11) ' convIDif        = ',const_phys%convIDif
-  IF (print_level > 0) write(out_unitp,11) ' convIQif        = ',const_phys%convIQif
-  IF (print_level > 0) write(out_unitp,11) ' convDebyeTOau   = ',convDebyeTOau
-
+    IF (print_level > 0) write(out_unitp,21) ' inv_Name        = ',const_phys%inv_Name
+    IF (print_level > 0) write(out_unitp,11) ' E0 (V cm-1)     = ',const_phys%E0
+    IF (print_level > 0) write(out_unitp,11) ' I0 (W cm-2)     = ',const_phys%I0
+    IF (print_level > 0) write(out_unitp,11) ' convAif         = ',const_phys%convAif
+    IF (print_level > 0) write(out_unitp,11) ' convIDif        = ',const_phys%convIDif
+    IF (print_level > 0) write(out_unitp,11) ' convIQif        = ',const_phys%convIQif
+    IF (print_level > 0) write(out_unitp,11) ' convDebyeTOau   = ',convDebyeTOau
+  ENDIF
 
 11 format (a,e17.10)
 21 format (a,f18.6)
