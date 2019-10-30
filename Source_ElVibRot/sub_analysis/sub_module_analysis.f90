@@ -165,7 +165,7 @@
                         MaxWP_TO_Write_MatOp
 
 
-      write(out_unitp,*) ' ANALYSIS PARAMETERS'
+      IF(MPI_id==0) write(out_unitp,*) ' ANALYSIS PARAMETERS'
 
       print                = .FALSE.
       psi2                 = .FALSE.

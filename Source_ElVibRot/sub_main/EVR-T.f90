@@ -290,48 +290,48 @@
         ENDIF ! for MPI_id=0
 
         IF (para_EVRT_calc%optimization /= 0) THEN
-          write(out_unitp,*) ' Optimization calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' Optimization calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_Optimization_OF_VibParam(max_mem)
 
         ELSE IF (para_EVRT_calc%nDfit .OR. para_EVRT_calc%nDGrid) THEN
-          write(out_unitp,*) ' nDfit or nDGrid calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' nDfit or nDGrid calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_nDGrid_nDfit()
 
         ELSE IF (para_EVRT_calc%EVR) THEN
-          write(out_unitp,*) ' ElVibRot calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' ElVibRot calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL vib(max_mem,test,intensity_only)
 
         ELSE IF (para_EVRT_calc%cart) THEN
-          write(out_unitp,*) ' cart calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' cart calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_cart(max_mem)
 
         ELSE IF (para_EVRT_calc%GridTOBasis_test) THEN
-          write(out_unitp,*) ' sub_GridTOBasis calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' sub_GridTOBasis calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_GridTOBasis_test(max_mem)
 
         ELSE IF (para_EVRT_calc%OpPsi_test) THEN
-          write(out_unitp,*) ' OpPsi calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' OpPsi calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL Sub_OpPsi_test(max_mem)
 
         ELSE IF (para_EVRT_calc%analysis_only) THEN
-          write(out_unitp,*) ' WP analysis calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' WP analysis calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_analysis_only(max_mem)
 
         ELSE IF (para_EVRT_calc%main_test) THEN
-          write(out_unitp,*) ' Smolyat test calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' Smolyat test calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_main_Smolyak_test()
 
         ELSE
-          write(out_unitp,*) ' ElVibRot calculation (default)'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' ElVibRot calculation (default)'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL vib(max_mem,test,intensity_only)
         END IF
 
@@ -341,16 +341,14 @@
         ENDIF ! for MPI_id=0
 
 #if(run_MPI)
-        !write(*,*) 'time check for action: ',time_MPI_action,' from ',MPI_id
-        write(*,*) 'time check for action: ',                                          &
-                    real(time_MPI_action,Rkind)/real(time_rate,Rkind),' from ',MPI_id
-        !write(*,*) 'time MPI comm check: ',time_comm,' from ', MPI_id
-        write(*,*) 'time MPI comm check: ',                                            &
-                    real(time_comm,Rkind)/real(time_rate,Rkind),' from ', MPI_id
-        !> end MPI
         IF(MPI_id==0) THEN
-          CALL time_perso('MPI closed, final time')
+          write(*,*) 'time check for action: ',                                        &
+                    real(time_MPI_action,Rkind)/real(time_rate,Rkind),' from ',MPI_id
+          write(*,*) 'time MPI comm check: ',                                          &
+                    real(time_comm,Rkind)/real(time_rate,Rkind),' from ', MPI_id
         ENDIF
+        !> end MPI
+        CALL time_perso('MPI closed, final time')
         CALL MPI_Finalize(MPI_err);
         close(in_unitp)
 #endif        

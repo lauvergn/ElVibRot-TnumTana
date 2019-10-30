@@ -136,6 +136,7 @@ END SUBROUTINE sub_diago_H
       SUBROUTINE sub_diago_CH(CH,CE,CVec,n)
       USE mod_system
       USE mod_Constant, ONLY: get_Conv_au_TO_unit
+      USE mod_MPI
       IMPLICIT NONE
       !
       !------ active Matrix H Vec E ------------------------------------
@@ -157,22 +158,21 @@ END SUBROUTINE sub_diago_H
 !     logical, parameter :: debug=.FALSE.
       logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
-       IF (debug) THEN
-         write(out_unitp,*) 'BEGINNING sub_diago_CH'
-       END IF
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING sub_diago_CH'
+      END IF
 !-----------------------------------------------------------
-       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
+      auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
 !=====================================================================
 !
-!       H matrix diagonalisation
+!     H matrix diagonalisation
 !
 !=====================================================================
 
       CALL cTred2(n,n,CH,CE,trav,CVec)
       CALL cTql2(n,n,CE,trav,CVec,ierr)
-      write(out_unitp,*)'ierr=',ierr
-
+      IF(MPI_id==0) write(out_unitp,*)'ierr=',ierr
 
 !=====================================================================
 !
@@ -180,22 +180,19 @@ END SUBROUTINE sub_diago_H
 !=====================================================================
 
 !-----------------------------------------------------------
-       IF (debug) THEN
+      IF (debug) THEN
 
-         write(out_unitp,*) ' level energy :'
-         DO i=1,n
-
-           write(out_unitp,*) i,CE(i)*cmplx(auTOcm_inv,kind=Rkind),     &
-                        (CE(i)-CE(1))*cmplx(auTOcm_inv,kind=Rkind)
-
-         END DO
+        write(out_unitp,*) ' level energy :'
+        DO i=1,n
+          write(out_unitp,*) i,CE(i)*cmplx(auTOcm_inv,kind=Rkind),     &
+                             (CE(i)-CE(1))*cmplx(auTOcm_inv,kind=Rkind)
+        END DO
 
         write(out_unitp,*) ' Vec:'
         CALL Write_Mat(CVec,out_unitp,5)
 
-
-         write(out_unitp,*) 'END sub_diago_CH'
-       END IF
+        write(out_unitp,*) 'END sub_diago_CH'
+      END IF
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_diago_CH

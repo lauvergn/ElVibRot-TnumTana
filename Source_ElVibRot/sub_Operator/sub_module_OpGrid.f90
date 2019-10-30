@@ -791,7 +791,7 @@
             CALL dealloc_array(OpGrid(k_term)%Grid,"OpGrid%Grid",name_sub)
           END IF
 
-          IF (print_level>-1) THEN
+          IF (print_level>-1 .AND. MPI_id==0) THEN
             write(out_unitp,'(i5,x,i6,2x,2i5,l3,x,l4,x,2e11.2,x,l3)')   &
                    n_Op,k_term,OpGrid(k_term)%derive_termQact(:),       &
                    OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
@@ -804,7 +804,7 @@
           OpGrid(k_term)%grid_zero = OpGrid(k_term)%grid_cte .AND.      &
                  (sum(abs(OpGrid(k_term)%Mat_cte(:,:))) < ONETENTH**12)
 
-          IF (print_level>-1) THEN
+          IF (print_level>-1 .AND. MPI_id==0) THEN
             write(out_unitp,'(i5,x,i6,2x,2i5,l3,x,l4,24x,l3)') n_Op,k_term,    &
                    OpGrid(k_term)%derive_termQact(:),                   &
                    OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
@@ -814,7 +814,7 @@
         END IF
 
       END DO
-      IF (print_level>-1) THEN
+      IF (print_level>-1 .AND. MPI_id==0) THEN
         write(out_unitp,*)'--------------------------------------------------------------'
         CALL flush_perso(out_unitp)
       END IF

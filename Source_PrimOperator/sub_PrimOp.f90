@@ -4736,7 +4736,7 @@
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
-
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -4759,17 +4759,17 @@
       real (kind=Rkind) :: auTOcm_inv
 
 !----- for debuging --------------------------------------------------
-       integer :: err_mem,memory
-       character (len=*), parameter :: name_sub = 'Finalyze_TnumTana_Coord_PrimOp'
-       logical, parameter :: debug = .FALSE.
-       !logical, parameter :: debug = .TRUE.
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub = 'Finalyze_TnumTana_Coord_PrimOp'
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
-       !IF (debug) THEN
-       IF(MPI_id==0) THEN
-         write(out_unitp,*) 'BEGINNING ',name_sub
-         CALL flush_perso(out_unitp)
-       ENDIF
-       !END IF
+      !IF (debug) THEN
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        CALL flush_perso(out_unitp)
+      ENDIF
+      !END IF
 !-----------------------------------------------------------
 
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
@@ -4783,194 +4783,192 @@
 !-----------------------------------------------------------------------
 !--------------------- TO finalize the coordinates (NM) and the KEO ----
 
-  CALL Sub_PES_FromTnum_TO_PES(para_PES,para_Tnum%para_PES_FromTnum)
-  IF (para_PES%nb_scalar_Op > 0) para_PES%calc_scalar_Op = .TRUE.
+      CALL Sub_PES_FromTnum_TO_PES(para_PES,para_Tnum%para_PES_FromTnum)
+      IF (para_PES%nb_scalar_Op > 0) para_PES%calc_scalar_Op = .TRUE.
 
-  !-----------------------------------------------------------------
-  ! initialization of the scalar operators
-  CALL Sub_init_dnOp(mole,para_Tnum,para_PES)
-  !-----------------------------------------------------------------
+      !-----------------------------------------------------------------
+      ! initialization of the scalar operators
+      CALL Sub_init_dnOp(mole,para_Tnum,para_PES)
+      !-----------------------------------------------------------------
 
+      !----- calc and transfert NM to LinearTransfo%mat if needed ---------------
+      IF (associated(mole%NMTransfo)) THEN
+        IF (.NOT. mole%tab_Qtransfo(mole%itNM)%skip_transfo) THEN
 
-  !----- calc and transfert NM to LinearTransfo%mat if needed ---------------
-  IF (associated(mole%NMTransfo)) THEN
-      IF (.NOT. mole%tab_Qtransfo(mole%itNM)%skip_transfo) THEN
+          CALL get_Qact0(Qact,mole%ActiveTransfo)
 
-        CALL get_Qact0(Qact,mole%ActiveTransfo)
+          IF (NM_TO_sym_ver == 3) THEN
 
-        IF (NM_TO_sym_ver == 3) THEN
+            CALL alloc_NParray(hCC,(/ mole%ncart_act,mole%ncart_act /),"hCC",name_sub)
+            CALL calc3_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,.FALSE.)
+            CALL dealloc_NParray(hCC,"hCC",name_sub)
 
-          CALL alloc_NParray(hCC,(/ mole%ncart_act,mole%ncart_act /),"hCC",name_sub)
-          CALL calc3_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,.FALSE.)
-          CALL dealloc_NParray(hCC,"hCC",name_sub)
+          ELSE
+            CALL calc4_NM_TO_sym(Qact,mole,para_Tnum,para_PES)
+          END IF
+          IF (print_level > 1) CALL sub_QplusDQ_TO_Cart(Qact,mole)
 
-        ELSE
-          CALL calc4_NM_TO_sym(Qact,mole,para_Tnum,para_PES)
         END IF
-        IF (print_level > 1) CALL sub_QplusDQ_TO_Cart(Qact,mole)
-
       END IF
-  END IF
 
-  !----- set RPH transfo of Qref -----------------------------------
-  IF (associated(mole%RPHTransfo)) THEN
-    IF (.NOT. mole%tab_Qtransfo(mole%itRPH)%skip_transfo .AND.          &
-                                       mole%RPHTransfo%option /= 0) THEN
+      !----- set RPH transfo of Qref -----------------------------------
+      IF (associated(mole%RPHTransfo)) THEN
+        IF (.NOT. mole%tab_Qtransfo(mole%itRPH)%skip_transfo .AND.          &
+                                           mole%RPHTransfo%option /= 0) THEN
 
-      CALL get_Qact0(Qact,mole%ActiveTransfo)
+          CALL get_Qact0(Qact,mole%ActiveTransfo)
 
-      !we cannot set RPHpara_AT_Qref for option=0,
-      ! because the RPHTransfo parameters will be readed in "inactive" namelist
+          ! we cannot set RPHpara_AT_Qref for option=0,
+          ! because the RPHTransfo parameters will be readed in "inactive" namelist
 
-      DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
-          tab_skip_transfo(it) = mole%tab_Qtransfo(it)%skip_transfo
-          mole%tab_Qtransfo(it)%skip_transfo = .TRUE.
-      END DO
+          DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
+              tab_skip_transfo(it) = mole%tab_Qtransfo(it)%skip_transfo
+              mole%tab_Qtransfo(it)%skip_transfo = .TRUE.
+          END DO
 
-        ! for RPHpara_AT_Qref
-        IF (.NOT. associated(mole%RPHTransfo%RPHpara_AT_Qref)) THEN
-          nb_act1_RPH    = mole%RPHTransfo%nb_act1
-          nb_inact21_RPH = mole%RPHTransfo%nb_inact21
-          CALL alloc_array(mole%RPHTransfo%RPHpara_AT_Qref,(/ 1 /),       &
-                          'mole%RPHTransfo%RPHpara_AT_Qref',name_sub)
-        END IF
+          ! for RPHpara_AT_Qref
+          IF (.NOT. associated(mole%RPHTransfo%RPHpara_AT_Qref)) THEN
+            nb_act1_RPH    = mole%RPHTransfo%nb_act1
+            nb_inact21_RPH = mole%RPHTransfo%nb_inact21
+            CALL alloc_array(mole%RPHTransfo%RPHpara_AT_Qref,(/ 1 /),       &
+                            'mole%RPHTransfo%RPHpara_AT_Qref',name_sub)
+          END IF
 
-        CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%RPHpara_AT_Qref(1),     &
-                                  Qact,para_Tnum,mole,mole%RPHTransfo)
+          CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%RPHpara_AT_Qref(1),     &
+                                    Qact,para_Tnum,mole,mole%RPHTransfo)
 
-        mole%RPHTransfo%init_Qref = .TRUE.
+          mole%RPHTransfo%init_Qref = .TRUE.
 
-        DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
-          mole%tab_Qtransfo(it)%skip_transfo = tab_skip_transfo(it)
-        END DO
+          DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
+            mole%tab_Qtransfo(it)%skip_transfo = tab_skip_transfo(it)
+          END DO
 
 
-!        ! new Qact0/Qdyn0
-!        ! first Delta_Qdyn0
-!        mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
-!                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
-!                               mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1: &
-!                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) - &
-!                                     mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt%d0
-!     write(6,*) 'delta, mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(6)
-!        !Qdyn0 = matmul(Delta_Qdyn0, ...dnC%d0)
-!        mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
-!                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
-!                    matmul(mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:     &
-!                             mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21),  &
-!                             mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC%d0)
+!          ! new Qact0/Qdyn0
+!          ! first Delta_Qdyn0
+!          mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
+!                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
+!                                 mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1: &
+!                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) - &
+!                                       mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt%d0
+!          write(6,*) 'delta, mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(6)
+!          !Qdyn0 = matmul(Delta_Qdyn0, ...dnC%d0)
+!          mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
+!                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
+!                      matmul(mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:     &
+!                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21),  &
+!                               mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC%d0)
 !
-!     write(6,*) 'mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(6)
+!          write(6,*) 'mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(6)
 
-        CALL Qdyn_TO_Qact_FROM_ActiveTransfo(mole%ActiveTransfo%Qdyn0,  &
-                                             mole%ActiveTransfo%Qact0,  &
-                                             mole%ActiveTransfo)
+          CALL Qdyn_TO_Qact_FROM_ActiveTransfo(mole%ActiveTransfo%Qdyn0,  &
+                                               mole%ActiveTransfo%Qact0,  &
+                                               mole%ActiveTransfo)
 
-        write(out_unitp,*) 'New Qact0',mole%ActiveTransfo%Qact0
+          write(out_unitp,*) 'New Qact0',mole%ActiveTransfo%Qact0
 
-        write(out_unitp,*) ' Frequencies, normal modes at the reference geometry'
+          write(out_unitp,*) ' Frequencies, normal modes at the reference geometry'
 
-        write(out_unitp,11) Qact(1:mole%RPHTransfo%RPHpara_AT_Qref(1)%nb_act1), &
-               mole%RPHTransfo%RPHpara_AT_Qref(1)%dnEHess%d0(:)*auTOcm_inv
- 11     format(' frequencies : ',30f10.4)
+          write(out_unitp,11) Qact(1:mole%RPHTransfo%RPHpara_AT_Qref(1)%nb_act1), &
+                 mole%RPHTransfo%RPHpara_AT_Qref(1)%dnEHess%d0(:)*auTOcm_inv
+11        format(' frequencies : ',30f10.4)
 
-        write(out_unitp,*) 'dnQopt'
-        CALL Write_dnVec(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt,nderiv=0)
-        write(out_unitp,*) 'dnC_inv'
-        CALL Write_dnMat(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC_inv,nderiv=0)
-        CALL flush_perso(out_unitp)
+          write(out_unitp,*) 'dnQopt'
+          CALL Write_dnVec(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt,nderiv=0)
+          write(out_unitp,*) 'dnC_inv'
+          CALL Write_dnMat(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC_inv,nderiv=0)
+          CALL flush_perso(out_unitp)
 
+          IF (debug) CALL Write_RPHTransfo(mole%RPHTransfo)
 
-       IF (debug) CALL Write_RPHTransfo(mole%RPHTransfo)
+        END IF
+      END IF
 
-    END IF
-  END IF
+      !----- Gcte if needed --------------------------------------------
+      Gref = .TRUE.
+      IF (associated(mole%RPHTransfo)) THEN
+        Gref = Gref .AND. associated(mole%RPHTransfo%RPHpara_AT_Qref)
+      END IF
 
-  !----- Gcte if needed --------------------------------------------
-  Gref = .TRUE.
-  IF (associated(mole%RPHTransfo)) THEN
-    Gref = Gref .AND. associated(mole%RPHTransfo%RPHpara_AT_Qref)
-  END IF
+      IF (Gref) THEN
+        CALL get_Qact0(Qact,mole%ActiveTransfo)
+        IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
 
-  IF (Gref) THEN
-    CALL get_Qact0(Qact,mole%ActiveTransfo)
-    IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
+        CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,0)
 
-    CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,0)
-
-    IF (para_PES%QMLib) THEN
-      CALL alloc_NPArray(GGdef,(/ mole%nb_act,mole%nb_act /),'GGdef',name_sub)
+        IF (para_PES%QMLib) THEN
+          CALL alloc_NPArray(GGdef,(/ mole%nb_act,mole%nb_act /),'GGdef',name_sub)
 
 #if __QML == 1
-      CALL get_Qmodel_GGdef(GGdef)
+          CALL get_Qmodel_GGdef(GGdef)
 #else
-      write(out_unitp,*) 'ERROR in ',name_sub
-      write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
-      write(out_unitp,*) 'Use another potential/model'
-      STOP 'QML is not present'
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
+          write(out_unitp,*) 'Use another potential/model'
+          STOP 'QML is not present'
 #endif
+          dnGG%d0(:,:) = ZERO
+          dnGG%d0(1:mole%nb_act,1:mole%nb_act) = GGdef
 
-      dnGG%d0(:,:) = ZERO
-      dnGG%d0(1:mole%nb_act,1:mole%nb_act) = GGdef
+          CALL dealloc_NPArray(GGdef,'GGdef',name_sub)
+        ELSE
+          CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=0)
+        END IF
+        
+        IF (para_Tnum%Gcte) THEN
+          CALL alloc_array(para_Tnum%Gref,(/ mole%ndimG,mole%ndimG /),    &
+                          'para_Tnum%Gref',name_sub)
 
-      CALL dealloc_NPArray(GGdef,'GGdef',name_sub)
-    ELSE
-      CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=0)
-    END IF
-    IF (para_Tnum%Gcte) THEN
+          para_Tnum%Gref(:,:) = dnGG%d0(:,:)
+        END IF
 
-      CALL alloc_array(para_Tnum%Gref,(/ mole%ndimG,mole%ndimG /),    &
-                      'para_Tnum%Gref',name_sub)
+        IF (print_level > 1) THEN
+          write(out_unitp,*) ' dnGG%d0'
+          CALL Write_Mat(dnGG%d0,out_unitp,5)
+        END IF
 
-      para_Tnum%Gref(:,:) = dnGG%d0(:,:)
-    END IF
+        CALL dealloc_dnSVM(dnGG)
+      END IF
 
-    IF (print_level > 1) THEN
-      write(out_unitp,*) ' dnGG%d0'
-      CALL Write_Mat(dnGG%d0,out_unitp,5)
-    END IF
+      !----- Tana if needed --------------------------------------------
+      IF (para_Tnum%Tana .AND. Tana_loc) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*) ' BEGINNING Tana'
+        CALL time_perso('Tana')
+        write(out_unitp,*) 'nrho_OF_Qdyn(:)',mole%nrho_OF_Qdyn(:)
+        write(out_unitp,*) 'nrho_OF_Qact(:)',mole%nrho_OF_Qact(:)
 
-    CALL dealloc_dnSVM(dnGG)
-  END IF
+        !IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Tana'
+        CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
+        IF (debug) CALL write_op(para_Tnum%TWOxKEO,header=.TRUE.)
 
-  !----- Tana if needed --------------------------------------------
-  IF (para_Tnum%Tana .AND. Tana_loc) THEN
-    write(out_unitp,*)
-    write(out_unitp,*) '================================================='
-    write(out_unitp,*) ' BEGINNING Tana'
-    CALL time_perso('Tana')
-    write(out_unitp,*) 'nrho_OF_Qdyn(:)',mole%nrho_OF_Qdyn(:)
-    write(out_unitp,*) 'nrho_OF_Qact(:)',mole%nrho_OF_Qact(:)
+        CALL comparison_G_FROM_Tnum_Tana(para_Tnum%ExpandTWOxKEO,mole,para_Tnum,Qact)
 
-    !IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Tana'
-    CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
-    IF (debug) CALL write_op(para_Tnum%TWOxKEO,header=.TRUE.)
+        write(out_unitp,*)
+        CALL time_perso('Tana')
+        write(out_unitp,*) ' END Tana'
+        write(out_unitp,*) '================================================='
 
-    CALL comparison_G_FROM_Tnum_Tana(para_Tnum%ExpandTWOxKEO,mole,para_Tnum,Qact)
+      END IF
 
-    write(out_unitp,*)
-    CALL time_perso('Tana')
-    write(out_unitp,*) ' END Tana'
-    write(out_unitp,*) '================================================='
+      Qref = .TRUE.
+      IF (associated(mole%RPHTransfo)) THEN
+        Qref = Qref .AND. associated(mole%RPHTransfo%RPHpara_AT_Qref)
+      END IF
+      IF (Qref) THEN
+        IF(MPI_id==0) THEN
+          write(out_unitp,*) '================================================='
+          write(out_unitp,*) '=== Reference geometry (not recenter) ==========='
+        ENDIF
+        CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
 
-  END IF
+        CALL get_Qact0(Qact,mole%ActiveTransfo)
+        CALL sub_QactTOdnx(Qact,dnx,mole,nderiv=0,Gcenter=.FALSE.,WriteCC=.TRUE.)
 
-  Qref = .TRUE.
-  IF (associated(mole%RPHTransfo)) THEN
-    Qref = Qref .AND. associated(mole%RPHTransfo%RPHpara_AT_Qref)
-  END IF
-  IF (Qref) THEN
-
-    write(out_unitp,*) '================================================='
-    write(out_unitp,*) '=== Reference geometry (not recenter) ==========='
-    CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
-
-    CALL get_Qact0(Qact,mole%ActiveTransfo)
-    CALL sub_QactTOdnx(Qact,dnx,mole,nderiv=0,Gcenter=.FALSE.,WriteCC=.TRUE.)
-
-    CALL dealloc_dnSVM(dnx)
-    write(out_unitp,*) '================================================='
-  END IF
+        CALL dealloc_dnSVM(dnx)
+        IF(MPI_id==0) write(out_unitp,*) '================================================='
+      END IF
 
 !-----------------------------------------------------------
       !IF (debug) THEN
@@ -4982,7 +4980,6 @@
 !-----------------------------------------------------------
 
       END SUBROUTINE Finalyze_TnumTana_Coord_PrimOp
-
 
    END MODULE mod_PrimOp
 

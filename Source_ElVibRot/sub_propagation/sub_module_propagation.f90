@@ -1731,6 +1731,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 !=======================================================
       SUBROUTINE read_davidson(para_Davidson,para_propa)
       USE mod_system
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -1796,7 +1797,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       logical, parameter :: debug =.FALSE.
 !      logical, parameter :: debug =.TRUE.
 !-----------------------------------------------------------
-      write(out_unitp,*) ' DAVIDSON PARAMETERS'
+      IF(MPI_id==0) write(out_unitp,*) ' DAVIDSON PARAMETERS'
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
       END IF

@@ -1293,6 +1293,8 @@
       !!@param: TODO
 !===============================================================================
       SUBROUTINE Write_Qtransfo(Qtransfo,force_print)
+        USE mod_MPI
+        
         TYPE (Type_Qtransfo) :: Qtransfo
         logical, optional    :: force_print
 
@@ -1315,48 +1317,50 @@
 
         Qtransfo%print_done = .TRUE.
 
-        write(out_unitp,*) 'name_transfo,num_transfo: ',     &
-                       trim(Qtransfo%name_transfo),Qtransfo%num_transfo
+        IF(MPI_id==0) THEN
+          write(out_unitp,*) 'name_transfo,num_transfo: ',     &
+                         trim(Qtransfo%name_transfo),Qtransfo%num_transfo
 
-        write(out_unitp,*) 'Primitive_Coord: ',Qtransfo%Primitive_Coord
+          write(out_unitp,*) 'Primitive_Coord: ',Qtransfo%Primitive_Coord
 
-        write(out_unitp,*) ' Option of the transfo: ',Qtransfo%opt_transfo
-        write(out_unitp,*) ' Skip the transfo: ',Qtransfo%skip_transfo
+          write(out_unitp,*) ' Option of the transfo: ',Qtransfo%opt_transfo
+          write(out_unitp,*) ' Skip the transfo: ',Qtransfo%skip_transfo
 
-        write(out_unitp,*) ' Parameter(s) to be optimized?: ',Qtransfo%opt_param
+          write(out_unitp,*) ' Parameter(s) to be optimized?: ',Qtransfo%opt_param
 
-        write(out_unitp,*) 'nb_var,nb_act',                             &
-                         Qtransfo%nb_var,Qtransfo%nb_act
-        write(out_unitp,*) 'nb_Qin,nb_Qout',                            &
-                         Qtransfo%nb_Qin,Qtransfo%nb_Qout
+          write(out_unitp,*) 'nb_var,nb_act',                             &
+                           Qtransfo%nb_var,Qtransfo%nb_act
+          write(out_unitp,*) 'nb_Qin,nb_Qout',                            &
+                           Qtransfo%nb_Qin,Qtransfo%nb_Qout
 
-        CALL flush_perso(out_unitp)
-        write(out_unitp,*) '---------------------------------------'
-        IF (associated(Qtransfo%name_Qout) .AND. associated(Qtransfo%type_Qout)) THEN
-          DO i_Q=1,Qtransfo%nb_Qout
-            write(out_unitp,*) 'i_Q,name_Qout,type_Qout',i_Q," ",       &
-                   trim(Qtransfo%name_Qout(i_Q)),                       &
-                   Qtransfo%type_Qout(i_Q)
-            CALL flush_perso(out_unitp)
-
-          END DO
-        ELSE
-          write(out_unitp,*) 'asso name_Qout and type_Qout',            &
-           associated(Qtransfo%name_Qout),associated(Qtransfo%type_Qout)
-        END IF
-
-        IF (associated(Qtransfo%name_Qin) .AND. associated(Qtransfo%type_Qin)) THEN
+          CALL flush_perso(out_unitp)
           write(out_unitp,*) '---------------------------------------'
-          DO i_Q=1,Qtransfo%nb_Qin
-            write(out_unitp,*) 'i_Q,name_Qin,type_Qin',i_Q," ",         &
-                   trim(Qtransfo%name_Qin(i_Q)),                        &
-                   Qtransfo%type_Qin(i_Q)
-          END DO
-        ELSE
-          write(out_unitp,*) 'asso name_Qin and type_Qin',              &
-           associated(Qtransfo%name_Qin),associated(Qtransfo%type_Qin)
-        END IF
-        write(out_unitp,*) '---------------------------------------'
+          IF (associated(Qtransfo%name_Qout) .AND. associated(Qtransfo%type_Qout)) THEN
+            DO i_Q=1,Qtransfo%nb_Qout
+              write(out_unitp,*) 'i_Q,name_Qout,type_Qout',i_Q," ",       &
+                     trim(Qtransfo%name_Qout(i_Q)),                       &
+                     Qtransfo%type_Qout(i_Q)
+              CALL flush_perso(out_unitp)
+
+            END DO
+          ELSE
+            write(out_unitp,*) 'asso name_Qout and type_Qout',            &
+             associated(Qtransfo%name_Qout),associated(Qtransfo%type_Qout)
+          END IF
+
+          IF (associated(Qtransfo%name_Qin) .AND. associated(Qtransfo%type_Qin)) THEN
+            write(out_unitp,*) '---------------------------------------'
+            DO i_Q=1,Qtransfo%nb_Qin
+              write(out_unitp,*) 'i_Q,name_Qin,type_Qin',i_Q," ",         &
+                     trim(Qtransfo%name_Qin(i_Q)),                        &
+                     Qtransfo%type_Qin(i_Q)
+            END DO
+          ELSE
+            write(out_unitp,*) 'asso name_Qin and type_Qin',              &
+             associated(Qtransfo%name_Qin),associated(Qtransfo%type_Qin)
+          END IF
+          write(out_unitp,*) '---------------------------------------'
+        ENDIF ! for MPI_id==0
 
         name_transfo = Qtransfo%name_transfo
         CALL string_uppercase_TO_lowercase(name_transfo)
@@ -1454,7 +1458,7 @@
           write(out_unitp,*) ' Check the source!'
           STOP
         END SELECT
-        write(out_unitp,*) 'END ',name_sub
+        IF(MPI_id==0) write(out_unitp,*) 'END ',name_sub
 
         CALL flush_perso(out_unitp)
       END SUBROUTINE Write_Qtransfo

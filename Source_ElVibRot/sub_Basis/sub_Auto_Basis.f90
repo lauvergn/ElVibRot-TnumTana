@@ -464,7 +464,6 @@
       TYPE (param_ComOp)  :: ComOp_loc
       TYPE (param_ReadOp) :: para_ReadOp
 
-
 !----- local variables
       integer :: i,ib,L
       integer :: nDval(basisnD%nb_basis)
@@ -485,7 +484,7 @@
       END IF
 !---------------------------------------------------------------------
 
-      IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1) THEN
+      IF (BasisnD%print_info_OF_basisDP .AND. print_level > -1 .AND. MPI_id==0) THEN
         write(out_unitp,*) '==============================================='
         write(out_unitp,*) '= RecSet_EneH0, layer: ',rec
         write(out_unitp,*) '==============================================='

@@ -678,10 +678,10 @@
 
           ELSE IF (para_ana%arpack) THEN ! arpack=t
             !@chen ? sym or not
-            CALL sub_propagation_Arpack(Tab_Psi,Ene0,nb_diago,max_diago,  &
-                                        para_H,para_propa)
-            !CALL sub_propagation_Arpack_Sym(Tab_Psi,Ene0,nb_diago,max_diago,&
-            !                               para_H,para_propa)
+            !CALL sub_propagation_Arpack(Tab_Psi,Ene0,nb_diago,max_diago,  &
+            !                            para_H,para_propa)
+            CALL sub_propagation_Arpack_Sym(Tab_Psi,Ene0,nb_diago,max_diago,&
+                                           para_H,para_propa)
 
           ELSE ! filter diagonalization
             CALL sub_GaussianFilterDiagonalization(Tab_Psi,Ene0,nb_diago,max_diago,&

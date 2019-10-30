@@ -1016,6 +1016,7 @@
       SUBROUTINE check_HADA(iqf,ComOp)
       USE mod_system
       USE mod_Op
+      USE mod_MPI
       IMPLICIT NONE
 
       TYPE (param_ComOp)   :: ComOp
@@ -1070,12 +1071,9 @@
 
       END IF
 
-
-
       close(ComOp%file_HADA%unit)
 
-
-      write(out_unitp,*) 'check_HADA: last grid point, iqf=',iqf
+      IF(MPI_id==0) write(out_unitp,*) 'check_HADA: last grid point, iqf=',iqf
 
       end subroutine check_HADA
 

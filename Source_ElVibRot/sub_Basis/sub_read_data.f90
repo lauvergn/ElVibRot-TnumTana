@@ -36,6 +36,7 @@
       USE mod_system
       USE mod_basis
       use mod_Coord_KEO, only: zmatrix, alloc_array, alloc_nparray, dealloc_nparray
+      USE mod_MPI
       IMPLICIT NONE
 
       !----- for the active basis set ------------------------------------
@@ -206,9 +207,10 @@
       CALL dealloc_basis(BasisnD_loc)
       !CALL RecWriteMini_basis(BasisnD)
 
-      write(out_unitp,*) '---------------------------------------'
-      write(out_unitp,*) '---------------------------------------'
-
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) '---------------------------------------'
+        write(out_unitp,*) '---------------------------------------'
+      ENDIF
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BasisnD'

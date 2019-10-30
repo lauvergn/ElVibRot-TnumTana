@@ -935,6 +935,7 @@
       USE mod_Auto_Basis
       USE mod_basis_BtoG_GtoB_SGType4
       USE mod_module_DInd
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -1292,9 +1293,11 @@
       END DO
 
       !IF (Print_basis) THEN
+      IF(MPI_id==0) THEN
         write(out_unitp,*) ' max nq nb:',maxval(basis_SG%para_SGType2%tab_nq_OF_SRep), &
                                          maxval(basis_SG%para_SGType2%tab_nb_OF_SRep)
         CALL flush_perso(out_unitp)
+      ENDIF
       !END IF
 
       CALL Set_nq_OF_basis(basis_SG,nqq)

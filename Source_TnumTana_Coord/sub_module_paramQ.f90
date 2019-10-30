@@ -1483,8 +1483,8 @@ MODULE mod_paramQ
       USE mod_system
       USE mod_dnSVM
       USE mod_Tnum
+      USE mod_MPI
       IMPLICIT NONE
-
 
       real (kind=Rkind), intent(in) :: Qact(:)
       TYPE (zmatrix)    :: mole
@@ -1492,7 +1492,6 @@ MODULE mod_paramQ
       integer :: nderiv
       logical :: Gcenter
       logical, optional :: Cart_Transfo,WriteCC
-
 
 !     - working variables -------------------------
       TYPE (Type_dnVec) :: dnQin,dnQout
@@ -1523,8 +1522,6 @@ MODULE mod_paramQ
       END IF
 !     -----------------------------------------------------------------
 
-
-
       IF (size(Qact) /= mole%nb_var) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) ' the size of Qact(:) is not mole%nb_var!'
@@ -1533,7 +1530,6 @@ MODULE mod_paramQ
         write(out_unitp,*) ' Check the Frantran source!!'
         STOP
       END IF
-
 
       IF (present(WriteCC)) THEN
         WriteCC_loc = WriteCC
@@ -1546,7 +1542,6 @@ MODULE mod_paramQ
       ELSE
         Cart_Transfo_loc = mole%Cart_transfo
       END IF
-
 
       IF (debug) write(out_unitp,*) 'Cart_Transfo_loc, mole%Cart_transfo',Cart_Transfo_loc,mole%Cart_transfo
 
@@ -1673,7 +1668,7 @@ MODULE mod_paramQ
         CALL dealloc_dnSVM(dnQin)
 
         !=================================================
-        IF (WriteCC_loc .OR. debug) THEN
+        IF((WriteCC_loc .OR. debug) .AND. MPI_id==0) THEN
           write(out_unitp,*) ' Cartesian coordinates without the Cartesian Transformation (au):'
           CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
           write(out_unitp,*) ' Cartesian coordinates without the Cartesian Transformation (ang):'
@@ -1685,23 +1680,23 @@ MODULE mod_paramQ
 
         !=================================================
         IF (Cart_Transfo_loc) THEN
-           ! write(6,*) 'coucou Cart_Transfo_loc',Cart_Transfo_loc
-           IF (debug) write(out_unitp,*) ' calc_CartesianTransfo_new?',Cart_Transfo_loc
+          ! write(6,*) 'coucou Cart_Transfo_loc',Cart_Transfo_loc
+          IF (debug) write(out_unitp,*) ' calc_CartesianTransfo_new?',Cart_Transfo_loc
 
 
-           CALL calc_CartesianTransfo_new(dnx,dnx,                      &
-                             mole%tab_Cart_transfo(1)%CartesianTransfo, &
-                             Qact,nderiv,.TRUE.)
+          CALL calc_CartesianTransfo_new(dnx,dnx,                      &
+                            mole%tab_Cart_transfo(1)%CartesianTransfo, &
+                            Qact,nderiv,.TRUE.)
 
-           !=================================================
-           IF (WriteCC_loc .OR. debug) THEN
-             write(out_unitp,*) ' Cartesian coordinates after the Cartesian Transformation (au):'
-             CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
-             write(out_unitp,*) ' Cartesian coordinates after the Cartesian Transformation (ang):'
-             CALL Write_Cartg98(dnx%d0,mole)
-             CALL flush_perso(out_unitp)
-           END IF
-           !=================================================
+          !=================================================
+          IF((WriteCC_loc .OR. debug) .AND. MPI_id==0)THEN
+            write(out_unitp,*) ' Cartesian coordinates after the Cartesian Transformation (au):'
+            CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
+            write(out_unitp,*) ' Cartesian coordinates after the Cartesian Transformation (ang):'
+            CALL Write_Cartg98(dnx%d0,mole)
+            CALL flush_perso(out_unitp)
+          END IF
+          !=================================================
 
         END IF
 
@@ -1889,6 +1884,7 @@ MODULE mod_paramQ
 
       SUBROUTINE Write_d0Q(it,name_info,d0Q,iblock)
       USE mod_system
+      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -1911,14 +1907,15 @@ MODULE mod_paramQ
       END IF
       !-----------------------------------------------------------------
 
-          write(out_unitp,*) '-----------------------------------------'
-          DO i=1,size(d0Q),iblock
-            iend = min(size(d0Q),i+iblock-1)
-            write(out_unitp,'(a,a,i0,x,6(x,f0.4))') name_info,',it_Qtransfo: ',it,d0Q(i:iend)
-          END DO
-          write(out_unitp,*) '-----------------------------------------'
-          CALL flush_perso(out_unitp)
-
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) '-----------------------------------------'
+        DO i=1,size(d0Q),iblock
+          iend = min(size(d0Q),i+iblock-1)
+          write(out_unitp,'(a,a,i0,x,6(x,f0.4))') name_info,',it_Qtransfo: ',it,d0Q(i:iend)
+        END DO
+        write(out_unitp,*) '-----------------------------------------'
+        CALL flush_perso(out_unitp)
+      ENDIF
 
       !-----------------------------------------------------------------
       IF (debug) THEN
@@ -1934,7 +1931,6 @@ MODULE mod_paramQ
       USE mod_system
       USE mod_MPI
       IMPLICIT NONE
-
 
       real (kind=Rkind), intent(in)           :: Q(:)
       integer, intent(in)                     :: type_Q(:)

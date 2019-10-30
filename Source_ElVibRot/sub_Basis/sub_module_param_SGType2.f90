@@ -574,8 +574,8 @@ END SUBROUTINE SGType2_2TOSGType2_1
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Set_nDval_init_FOR_SG4_v2'
-      !logical,parameter :: debug=.FALSE.
-      logical,parameter :: debug=.TRUE.
+      logical,parameter :: debug=.FALSE.
+      !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -664,8 +664,6 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
       TYPE (Type_nDindex),             intent(in)    :: nDind_SmolyakRep
       real (kind=Rkind),               intent(inout) :: WeightSG(nDind_SmolyakRep%Max_nDI)
-
-
 
 !---------------------------------------------------------------------
       real (kind=Rkind) :: binomial ! function

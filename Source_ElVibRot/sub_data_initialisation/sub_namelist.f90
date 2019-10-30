@@ -99,7 +99,6 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
       END IF
 
-
       ! get nb_inact21 from mole%nb_inact2n or mole%RPHTransfo%nb_inact21
       IF (associated(mole%RPHTransfo)) THEN
         nb_inact21 = mole%RPHTransfo%nb_inact21
@@ -278,6 +277,7 @@
       USE mod_Op
       USE mod_basis
       USE mod_Auto_Basis
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -340,8 +340,7 @@
 
 
 !------- test on max_HADA and n_h ---------------------------------
-      write(out_unitp,*) ' ACTIVES PARAMETERS'
-
+      IF(MPI_id==0) write(out_unitp,*) ' ACTIVES PARAMETERS'
 
       IF (print_level > 0) write(out_unitp,*) 'BEGINNING read_active'
       IF (print_level > 0) write(out_unitp,*) 'nb_act1',mole%nb_act1

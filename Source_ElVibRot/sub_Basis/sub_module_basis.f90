@@ -519,7 +519,7 @@ MODULE mod_basis
 !     - check the overlap matrix -----------------------------
       CALL check_ortho_basis(basis_primi)
 
-      IF (print_level > 2 .AND. allocated(basis_primi%x) ) THEN
+      IF (print_level > 2 .AND. allocated(basis_primi%x)) THEN
         write(out_unitp,*) '---------------------------------------'
         write(out_unitp,*) 'x Grid:',basis_primi%x
         write(out_unitp,*) '---------------------------------------'

@@ -224,7 +224,8 @@ MODULE mod_SetOp
         nb_SG=MIN((MPI_id+1)*nb_per_MPI,para_Op%BasisnD%nb_SG)-(MPI_id*nb_per_MPI+1)+1
         nb_SG1=MPI_id*nb_per_MPI+1
         nb_SG2=MIN((MPI_id+1)*nb_per_MPI,para_Op%BasisnD%nb_SG)
-        write(*,*) 'nb_SG,nb_SG1,nb_SG2 check',nb_SG,nb_SG1,nb_SG2, ' from ',MPI_id
+        IF(MPI_id==0) write(*,*) 'nb_SG,nb_SG1,nb_SG2:',nb_SG,nb_SG1,nb_SG2,           &
+                                 ' from ',MPI_id
       ENDIF
 #endif
 
@@ -1342,7 +1343,6 @@ MODULE mod_SetOp
 
       integer       :: k_term,iq,iterm00
       real(kind=Rkind) :: Qact(para_Op%mole%nb_var)
-
 
       character (len=*), parameter :: name_sub='Analysis_OpGrid_OF_Op'
 
