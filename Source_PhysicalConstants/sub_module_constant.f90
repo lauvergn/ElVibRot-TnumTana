@@ -168,6 +168,7 @@
 !! \param Read_Namelist an optional logical flag to be able to read the namelist "constantes"
 !
   SUBROUTINE sub_constantes(const_phys,Read_Namelist,version,mass_version)
+  USE mod_MPI
   IMPLICIT NONE
 
   TYPE (constant),         intent(inout)            :: const_phys
@@ -407,12 +408,14 @@
       const_phys%auTOenergy = get_Conv_au_TO_unit('E',ene_unit,err_unit=err_unit)
       const_phys%ene_unit   = trim(adjustl(ene_unit))
       IF (err_unit /= 0) THEN
-        write(out_unitp,*) 'ERROR in ',name_sub
-        write(out_unitp,*) ' Problem with "ene_unit" and/or "auTOenergy"'
-        write(out_unitp,*) '   energy unit: ',ene_unit
-        write(out_unitp,*) '   auTOenergy:  ',auTOenergy
-        IF (auTOenergy < ZERO) write(out_unitp,*) ' The value of "auTOenergy" is wrong'
-        write(out_unitp,*) 'List of available units:'
+        IF(MPI_id==0) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' Problem with "ene_unit" and/or "auTOenergy"'
+          write(out_unitp,*) '   energy unit: ',ene_unit
+          write(out_unitp,*) '   auTOenergy:  ',auTOenergy
+          IF (auTOenergy < ZERO) write(out_unitp,*) ' The value of "auTOenergy" is wrong'
+          write(out_unitp,*) 'List of available units:'
+        ENDIF
         CALL Write_TabConvRWU_dim1(Tab_conv_FOR_quantity)
         STOP
       END IF
