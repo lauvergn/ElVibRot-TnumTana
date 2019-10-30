@@ -28,6 +28,7 @@
 !===========================================================================
       SUBROUTINE versionEVRT(write_version)
       USE mod_system
+      USE mod_MPI
       IMPLICIT NONE
 
       logical :: write_version
@@ -38,7 +39,7 @@
 
 
 
-      IF (write_version) THEN
+      IF (write_version .AND. MPI_id==0) THEN
         write(out_unitp,*) '==============================================='
         write(out_unitp,*) '==============================================='
         write(out_unitp,*) 'Working with ',                             &
