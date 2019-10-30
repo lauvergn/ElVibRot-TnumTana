@@ -967,7 +967,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       !---------------------------------------------------------------------------------  
       ! case for less cores in Davidson or arpark calculation      
       !--------------------------------------------------------------------------------- 
-      write(*,*) 'MPI TYPE 2 in action'
+      IF(once_control .AND. MPI_id==0) write(*,*) 'MPI TYPE 2 in action'
       If(MPI_id==0) Psi_size_MPI0=size(Psi) ! for itab
       CALL MPI_BCAST(Psi_size_MPI0,size1_MPI,MPI_int,root_MPI,MPI_COMM_WORLD,MPI_err)
       IF(allocated(PsiR)) deallocate(PsiR)
