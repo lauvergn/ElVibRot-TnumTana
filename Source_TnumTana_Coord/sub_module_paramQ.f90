@@ -448,18 +448,18 @@ MODULE mod_paramQ
       IF(MPI_id==0) write(out_unitp,*) 'Qact0 coordinates (not transformed): [bohr]/[rad or cos(angle)]'
       DO i=1,mole%nb_var
         name = mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qin(i)
-        write(out_unitp,111) name,Qact(i)
+        IF(MPI_id==0) write(out_unitp,111) name,Qact(i)
       END DO
 
-      IF(MPI_id==0) CALL Write_Q_WU(Qdyn,                                             &
-                         mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qout,    &
-                         mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qout,    &
-                         info='Qdyn0 coordinates (transformed):')
+      IF(MPI_id==0) CALL Write_Q_WU(Qdyn,                                              &
+                                    mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qout,     &
+                                    mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qout,     &
+                                    info='Qdyn0 coordinates (transformed):')
 
-      IF(MPI_id==0) CALL Write_Q_WU(Qact,                                             &
-                         mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qin,     &
-                         mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin,     &
-                         info='Qact0 coordinates (transformed):')
+      IF(MPI_id==0) CALL Write_Q_WU(Qact,                                              &
+                                    mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qin,      &
+                                    mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin,      &
+                                    info='Qact0 coordinates (transformed):')
 
       ! Transfert the rigid values in ActiveTransfo%Qdyn0 and ActiveTransfo%Qact0
       mole%tab_Qtransfo(mole%nb_Qtransfo)%ActiveTransfo%Qdyn0(:) =  Qdyn(:)

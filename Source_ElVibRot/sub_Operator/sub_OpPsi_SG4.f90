@@ -781,7 +781,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   IF(openmpi) THEN 
 
     CALL system_clock(time_point1,time_rate)
-    CALL time_perso('MPI loop in action begin')
+    IF(once_control) CALL time_perso('MPI loop in action begin')
     ! simple parallel case, equally devided for different threads
     nb_per_MPI=BasisnD%para_SGType2%nb_SG/MPI_np
     If(mod(BasisnD%para_SGType2%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
@@ -803,8 +803,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     !IF((if_propa .AND. MPI_np>10) .OR. MPI_np>50) THEN 
     IF(size_PsiR_V(0)<2600000) THEN  !< according to the effeiciency test
       ! calculate total length of vectors for each threads------------------------------
+      IF(once_control .AND. MPI_id==0) write(*,*) 'MPI TYPE 1 in action'
       IF(once_control) THEN
-      write(*,*) 'MPI TYPE 1 in action'
         allocate(nDI_index_master(0:MPI_np-1))
         allocate(total_Vlength_master(0:MPI_np-1))
       ENDIF
@@ -961,7 +961,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         CALL dealloc_TypeRVec(PsiR(itab))
       END DO
       
-      once_control=.FALSE.
+      !once_control=.FALSE.
       !---------------------------------------------------------------------------------  
     ELSE
       !---------------------------------------------------------------------------------  
@@ -1104,14 +1104,17 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       DO itab=1,Psi_size_MPI0
         CALL dealloc_TypeRVec(PsiR(itab))
       END DO
-      once_control=.FALSE.    
-    ENDIF ! for if_propa .OR. MPI_np>=10
+         
+      !once_control=.FALSE.    
+    ENDIF ! for size_PsiR_V(0)<2600000
     !-----------------------------------------------------------------------------------
 
     CALL system_clock(time_point2,time_rate)
     time_MPI_action=time_MPI_action+(time_point2-time_point1)
-    IF(MPI_id==0) write(*,*) 'time MPI comm check: ',time_comm,' from ', MPI_id
-    CALL time_perso('MPI loop in action end')  
+    IF(once_control .AND. MPI_id==0) write(*,*) 'time MPI comm check: ',time_comm,     &
+                                                ' from ', MPI_id
+    IF(once_control) CALL time_perso('MPI loop in action end') 
+    once_control=.FALSE.
   ELSE
 #endif
     ! non openmpi cases

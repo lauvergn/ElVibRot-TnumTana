@@ -324,10 +324,11 @@
 #if(run_MPI)   
          ENDIF
 #endif
-         IF (print_level > -1) write(out_unitp,*) info2,size(OpGrid%Grid)
+         IF(print_level>-1 .AND. MPI_id==0) write(out_unitp,*) info2,size(OpGrid%Grid)
 
          IF (SmolyakRep) THEN
-           IF (print_level > -1) write(out_unitp,*) info2 // ': OpGrid%SRep allocated'
+           IF (print_level>-1 .AND. MPI_id==0)                                         &
+                                   write(out_unitp,*) info2 // ': OpGrid%SRep allocated'
 #if(run_MPI)
            CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG1,nb_SG2,                       &
                                       delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)

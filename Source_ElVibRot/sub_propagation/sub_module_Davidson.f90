@@ -48,6 +48,7 @@ CONTAINS
       USE mod_psi_Op,         ONLY : sub_LCpsi_TO_psi
       USE mod_psi_io,         ONLY : sub_save_psi
       USE mod_propa,          ONLY : param_propa,param_Davidson
+      USE mod_MPI
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -134,20 +135,24 @@ CONTAINS
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
       auTOene    = get_Conv_au_TO_WriteUnit('E',WriteUnit)
 
-      write(out_unitp,*) 'all_lower_states',para_propa%para_Davidson%all_lower_states
-      write(out_unitp,*) 'lower_states    ',para_propa%para_Davidson%lower_states
-      write(out_unitp,*) 'project_WP0     ',para_propa%para_Davidson%project_WP0
-      write(out_unitp,*) 'NewVec_type     ',para_propa%para_Davidson%NewVec_type
-
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) 'all_lower_states',para_propa%para_Davidson%all_lower_states
+        write(out_unitp,*) 'lower_states    ',para_propa%para_Davidson%lower_states
+        write(out_unitp,*) 'project_WP0     ',para_propa%para_Davidson%project_WP0
+        write(out_unitp,*) 'NewVec_type     ',para_propa%para_Davidson%NewVec_type
+      ENDIF
+     
       IF (para_propa%para_Davidson%Op_Transfo .AND.                     &
                                      para_H%para_ReadOp%Op_Transfo) THEN
 
         DE = para_propa%para_Davidson%max_ene
-        write(out_unitp,*) 'DE:             ',DE
-        write(out_unitp,*) 'degree_Transfo: ',para_H%para_ReadOp%degree_Transfo
-        write(out_unitp,*) 'alloc Poly_Transfo:   ',allocated(para_H%para_ReadOp%Poly_Transfo)
-        write(out_unitp,*) 'Poly_Transfo:   ',para_H%para_ReadOp%Poly_Transfo
-
+        IF(MPI_id==0) THEN
+          write(out_unitp,*) 'DE:             ',DE
+          write(out_unitp,*) 'degree_Transfo: ',para_H%para_ReadOp%degree_Transfo
+          write(out_unitp,*) 'alloc Poly_Transfo:   ',allocated(para_H%para_ReadOp%Poly_Transfo)
+          write(out_unitp,*) 'Poly_Transfo:   ',para_H%para_ReadOp%Poly_Transfo
+        ENDIF
+        
         para_propa%para_Davidson%max_ene = para_H%para_ReadOp%Poly_Transfo(0)
         DO i=1,para_H%para_ReadOp%degree_Transfo
           para_propa%para_Davidson%max_ene = para_propa%para_Davidson%max_ene + &
@@ -1629,7 +1634,6 @@ END SUBROUTINE sub_NewVec_Davidson
 
  IF(MPI_id==0) Then
    IF (debug .OR. print_project) write(out_unitp,*) 'VecToBeIncluded',it,VecToBeIncluded(1:ndim)
-
    IF (debug .OR. print_project) write(out_unitp,*) 'End Vector projections'
  ENDIF
 
