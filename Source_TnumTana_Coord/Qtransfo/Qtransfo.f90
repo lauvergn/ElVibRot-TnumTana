@@ -1077,10 +1077,10 @@
       END SUBROUTINE Qtransfo1TOQtransfo2
       SUBROUTINE calc_Qtransfo(dnQin,dnQout,Qtransfo,nderiv,inTOout)
 
-        TYPE (Type_dnVec), intent(inout)  :: dnQin,dnQout
-        TYPE (Type_Qtransfo), intent(in)  :: Qtransfo
-        integer, intent(in)               :: nderiv
-        logical, optional                 :: inTOout
+        TYPE (Type_dnVec),    intent(inout)        :: dnQin,dnQout
+        TYPE (Type_Qtransfo), intent(in)           :: Qtransfo
+        integer,              intent(in)           :: nderiv
+        logical,              intent(in), optional :: inTOout
 
         logical           :: inTOout_loc
         TYPE (Type_dnS)   :: dnR

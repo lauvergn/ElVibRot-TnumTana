@@ -376,14 +376,14 @@ MODULE mod_ActiveTransfo
       SUBROUTINE calc_ActiveTransfo(dnQact,dnQdyn,ActiveTransfo,nderiv,inTOout)
       IMPLICIT NONE
 
-        TYPE (Type_dnVec), intent(inout)        :: dnQact,dnQdyn
-        TYPE (Type_ActiveTransfo), intent(in)   :: ActiveTransfo
-        integer, intent(in)                     :: nderiv
-        logical                                 :: inTOout
+        TYPE (Type_dnVec),         intent(inout) :: dnQact,dnQdyn
+        TYPE (Type_ActiveTransfo), intent(in)    :: ActiveTransfo
+        integer,                   intent(in)    :: nderiv
+        logical,                   intent(in)    :: inTOout
 
 
         TYPE (Type_dnS)    :: dnQ
-        integer :: typ_var_act,i_Qdyn,i_Qact,nb_act1
+        integer            :: typ_var_act,i_Qdyn,i_Qact,nb_act1
 
 
 !      -----------------------------------------------------------------

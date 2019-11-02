@@ -1481,12 +1481,12 @@ MODULE mod_paramQ
       IMPLICIT NONE
 
 
-      real (kind=Rkind), intent(in) :: Qact(:)
-      TYPE (zmatrix)    :: mole
-      TYPE (Type_dnVec) :: dnx
-      integer :: nderiv
-      logical :: Gcenter
-      logical, optional :: Cart_Transfo,WriteCC
+      real (kind=Rkind), intent(in)           :: Qact(:)
+      TYPE (zmatrix),    intent(in)           :: mole
+      TYPE (Type_dnVec), intent(inout)        :: dnx
+      integer,           intent(in)           :: nderiv
+      logical,           intent(in)           :: Gcenter
+      logical,           intent(in), optional :: Cart_Transfo,WriteCC
 
 
 !     - working variables -------------------------
@@ -1642,7 +1642,6 @@ MODULE mod_paramQ
           IF (WriteCC_loc .OR. debug) write(out_unitp,*) 'name_transfo',it,&
                                   mole%tab_Qtransfo(it)%name_transfo
           CALL flush_perso(out_unitp)
-          CALL alloc_dnSVM(dnQout,mole%tab_Qtransfo(it)%nb_Qout,nb_act,nderiv)
 
           IF (WriteCC_loc .OR. debug) CALL Write_d0Q(it,'Qin ',dnQin%d0,6)
 
@@ -1680,7 +1679,7 @@ MODULE mod_paramQ
 
         !=================================================
         IF (Cart_Transfo_loc) THEN
-           ! write(6,*) 'coucou Cart_Transfo_loc',Cart_Transfo_loc
+           !write(6,*) 'coucou Cart_Transfo_loc',Cart_Transfo_loc
            IF (debug) write(out_unitp,*) ' calc_CartesianTransfo_new?',Cart_Transfo_loc
 
 

@@ -102,9 +102,6 @@
        END IF
 !-----------------------------------------------------------
 
-      !write(6,*) 'nb_act',mole%nb_act
-      !write(6,*) 'iQdyn(:)',mole%liste_QactTOQsym(1:mole%nb_act)
-
       Tdef2(:,:) = ZERO
       Tdef1(:)   = ZERO
       vep        = ZERO
