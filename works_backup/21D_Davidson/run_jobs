@@ -1,2 +1,2 @@
-./shell_run 2 2 f
-./shell_run 2 3 t
+./shell_run 2 1 2 f
+./shell_run 2 1 3 t

@@ -7,13 +7,13 @@
 parall=MPI   ## MPI or openMP or BLANK
 num_cores=$1
 
-L=1
+L=$2
 LB=$L
 LG=$L
-B=$2
+B=$3
 
 nb_ana=22
-dav=$3
+dav=$4
 test=f
 arpack=f
 
@@ -157,8 +157,8 @@ X 1 2
  &inactives /
  &actives test=$test direct=2 Make_MatOp=f /
 
- &analyse max_ana=$nb_ana max_ene=5. 'au'
-          print=f print_psi=0 Psi_ScalOp=f intensity=f davidson=$dav
+ &analyse max_ana=$nb_ana max_ene=5.0 'au'
+          print=f print_psi=0 Psi_ScalOp=f intensity=f arpack=$arpack davidson=$dav
           name_file_spectralWP='$name_WP' formatted_file_WP=t FilePsiVersion=1 /
 
  &davidson nb_WP=$nb_ana max_it=200 max_WP=50 num_resetH=2 NewVec_type=4
