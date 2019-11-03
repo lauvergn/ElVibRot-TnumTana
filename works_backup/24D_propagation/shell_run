@@ -197,17 +197,17 @@ EOF
 ##==============================================================
 
 if   [ $parall == 'openMP' ] ; then
-  $DIR_vib/$VIBEXE > $here/"res_24Dprop_SGtype4_L"$LB"_B"$B1"-"$B2"-"$B3"-"$B4"-Bi"$B"_"$num_cores"openMpcores"
+  $DIR_vib/$VIBEXE > $here/"res_pyrazine_24Dprop_SGtype4_L"$LB"_B"$B1"-"$B2"-"$B3"-"$B4"-Bi"$B"_"$num_cores"openMpcores"
 
 elif [ $parall == 'MPI'    ] ; then
   if [ -z $MPI_cores ]; then
     echo 'short of MPI core number, check shell input'
     exit 1
   fi
-  mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $here/"res_24Dprop_SGtype4_L"$LB"_B"$B1"-"$B2"-"$B3"-"$B4"-Bi"$B"_"$num_cores"MPIcores"
+  mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $here/"res_pyrazine_24Dprop_SGtype4_L"$LB"_B"$B1"-"$B2"-"$B3"-"$B4"-Bi"$B"_"$num_cores"MPIcores"
 
 else 
-  $DIR_vib/$VIBEXE > $here/"res_24Dprop_SGtype4_L"$LB"_B"$B1"-"$B2"-"$B3"-"$B4"-Bi"$B
+  $DIR_vib/$VIBEXE > $here/"res_pyrazine_24Dprop_SGtype4_L"$LB"_B"$B1"-"$B2"-"$B3"-"$B4"-Bi"$B
 fi
 ##==============================================================
 ###< run

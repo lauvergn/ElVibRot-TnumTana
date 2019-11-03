@@ -189,17 +189,17 @@ EOF
 ##==============================================================
 
 if   [ $parall == 'openMP' ] ; then
-  $DIR_vib/$VIBEXE > $here/"res_12Dprop_SGtype4_LB"$LB"_B"$B"_LG"$LG"_"$num_cores"openMpcores"
+  $DIR_vib/$VIBEXE > $here/"res_pyrazine_12Dprop_SGtype4_LB"$LB"_B"$B"_LG"$LG"_"$num_cores"openMpcores"
 
 elif [ $parall == 'MPI'    ] ; then
   if [ -z $MPI_cores ]; then
     echo 'short of MPI core number, check shell input'
     exit 1
   fi
-  mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $here/"res_12Dprop_SGtype4_LB"$LB"_B"$B"_LG"$LG"_"$num_cores"MPIcores"
+  mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $here/"res_pyrazine_12Dprop_SGtype4_LB"$LB"_B"$B"_LG"$LG"_"$num_cores"MPIcores"
 
 else 
-  $DIR_vib/$VIBEXE > $here/"res_12Dprop_SGtype4_LB"$LB"_B"$B"_LG"$LG
+  $DIR_vib/$VIBEXE > $here/"res_pyrazine_12Dprop_SGtype4_LB"$LB"_B"$B"_LG"$LG
 fi
 ##==============================================================
 ###< run
