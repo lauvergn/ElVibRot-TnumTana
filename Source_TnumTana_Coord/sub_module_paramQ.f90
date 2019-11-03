@@ -37,7 +37,6 @@ MODULE mod_paramQ
 
       USE mod_Constant,         ONLY: get_conv_au_to_unit, real_wu,     &
                                       rwu_write, convrwu_to_r
-
       IMPLICIT NONE
 
       PRIVATE
@@ -109,8 +108,8 @@ MODULE mod_paramQ
 
       !-----------------------------------------------------------------
       integer :: err_mem,memory,err_io
-      !logical, parameter :: debug = .FALSE.
-      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='read_RefGeom'
       !-----------------------------------------------------------------
 
@@ -295,25 +294,26 @@ MODULE mod_paramQ
 
       para_Tnum%para_PES_FromTnum%QMLib = QMLib
 
-      write(out_unitp,*) 'nb_scalar_Op',nb_scalar_Op
-      write(out_unitp,*) 'pot_itQtransfo',pot_itQtransfo
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) 'nb_scalar_Op',nb_scalar_Op
+        write(out_unitp,*) 'pot_itQtransfo',pot_itQtransfo
 
-      IF (para_Tnum%para_PES_FromTnum%pot_itQtransfo == 0) THEN
-        write(out_unitp,*) 'Operators (pot...) with Cartesian coordinates'
-      ELSE IF (para_Tnum%para_PES_FromTnum%pot_itQtransfo == 1) THEN
-        write(out_unitp,*) 'Operators (pot...) with primitive (zmat...) coordinates'
-      ELSE IF (para_Tnum%para_PES_FromTnum%pot_itQtransfo == mole%nb_Qtransfo-1) THEN
-        write(out_unitp,*) 'Operators (pot...) with Qdyn coordinates'
-      ELSE IF (para_Tnum%para_PES_FromTnum%pot_itQtransfo == mole%nb_Qtransfo) THEN
-        write(out_unitp,*) 'Operators (pot...) with Qact coordinates'
-      END IF
+        IF (para_Tnum%para_PES_FromTnum%pot_itQtransfo == 0) THEN
+          write(out_unitp,*) 'Operators (pot...) with Cartesian coordinates'
+        ELSE IF (para_Tnum%para_PES_FromTnum%pot_itQtransfo == 1) THEN
+          write(out_unitp,*) 'Operators (pot...) with primitive (zmat...) coordinates'
+        ELSE IF (para_Tnum%para_PES_FromTnum%pot_itQtransfo == mole%nb_Qtransfo-1) THEN
+          write(out_unitp,*) 'Operators (pot...) with Qdyn coordinates'
+        ELSE IF (para_Tnum%para_PES_FromTnum%pot_itQtransfo == mole%nb_Qtransfo) THEN
+          write(out_unitp,*) 'Operators (pot...) with Qact coordinates'
+        END IF
 
-      IF (QMLib .AND. para_Tnum%para_PES_FromTnum%pot_itQtransfo /= mole%nb_Qtransfo-1) THEN
-        write(out_unitp,*)  ' WARNING QMLib=.TRUE. and its coordiantes are not Qdyn!!'
-      END IF
+        IF (QMLib .AND. para_Tnum%para_PES_FromTnum%pot_itQtransfo /= mole%nb_Qtransfo-1) THEN
+          write(out_unitp,*)  ' WARNING QMLib=.TRUE. and its coordiantes are not Qdyn!!'
+        END IF
 
-
-      write(out_unitp,*)  '------------------------------------------------------'
+        write(out_unitp,*)  '------------------------------------------------------'
+      ENDIF
 
       !=================================================================
       !=================================================================
@@ -930,8 +930,8 @@ MODULE mod_paramQ
       real (kind=Rkind) :: ex(3),nx,ey(3),ny,ez(3),nz
 
 !     -----------------------------------------------------------------
-      !logical, parameter :: debug = .FALSE.
-      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='sub_QxyzTOexeyez'
 !     -----------------------------------------------------------------
       IF (debug) THEN

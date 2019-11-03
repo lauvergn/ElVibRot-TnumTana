@@ -1313,7 +1313,7 @@
         END IF
 
         IF (Qtransfo%print_done .AND. .NOT. force_print_loc) RETURN
-        write(out_unitp,*) 'BEGINNING ',name_sub
+        IF(MPI_id==0) write(out_unitp,*) 'BEGINNING ',name_sub
 
         Qtransfo%print_done = .TRUE.
 

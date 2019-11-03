@@ -189,7 +189,7 @@
       ENDIF
 
       IF (BasisnD_loc%nb_basis == 1) THEN
-        write(out_unitp,*) 'WARNING: ONE layer of basis has been removed!!'
+        IF(MPI_id==0) write(out_unitp,*) 'WARNING: ONE layer of basis has been removed!!'
         CALL basis2TObasis1(BasisnD,BasisnD_loc%tab_Pbasis(1)%Pbasis)
       ELSE
         CALL basis2TObasis1(BasisnD,BasisnD_loc)

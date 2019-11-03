@@ -550,6 +550,6 @@
       ELSE
         para_ReadOp%nb_bRot         = 1
       END IF
-      write(out_unitp,*) 'The number of rotational basis is:',para_ReadOp%nb_bRot
+      IF(MPI_id==0) write(out_unitp,*) 'The number of rotational basis is:',para_ReadOp%nb_bRot
 
       END SUBROUTINE read_active

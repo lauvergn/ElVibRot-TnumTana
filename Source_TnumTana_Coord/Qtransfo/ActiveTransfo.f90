@@ -316,14 +316,15 @@ MODULE mod_ActiveTransfo
       END SUBROUTINE Read2_ActiveTransfo
 
       SUBROUTINE Write_ActiveTransfo(ActiveTransfo)
+      USE mod_MPI
 
       TYPE (Type_ActiveTransfo), pointer, intent(in) :: ActiveTransfo
 
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Write_ActiveTransfo'
 
-      write(out_unitp,*) 'BEGINNING ',name_sub
-      write(out_unitp,*) 'asso ActiveTransfo:',associated(ActiveTransfo)
+      IF(MPI_id==0) write(out_unitp,*) 'BEGINNING ',name_sub
+      IF(MPI_id==0) write(out_unitp,*) 'asso ActiveTransfo:',associated(ActiveTransfo)
       IF (associated(ActiveTransfo) .AND. MPI_id==0) THEN
         write(out_unitp,*) 'nb_var:        ',ActiveTransfo%nb_var
         write(out_unitp,*) 'nb_act:        ',ActiveTransfo%nb_act

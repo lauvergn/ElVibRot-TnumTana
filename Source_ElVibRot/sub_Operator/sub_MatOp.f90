@@ -147,8 +147,8 @@ CONTAINS
 
         auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
         IF (non_hermitic >= FOUR/TEN**4) THEN
-          write(out_unitp,*) 'WARNING: non_hermitic is BIG'
-          write(out_unitp,31) non_hermitic
+          If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
+          If(MPI_id==0) write(out_unitp,31) non_hermitic
  31       format(' Hamiltonien: ',f16.12,' au')
         ELSE
           IF (print_level>-1) write(out_unitp,21) non_hermitic*auTOcm_inv
@@ -298,12 +298,12 @@ CONTAINS
           END DO
         END IF
         IF (non_hermitic >= FOUR/TEN**4) THEN
-          write(out_unitp,*) 'WARNING: non_hermitic is BIG'
-          write(out_unitp,31) non_hermitic
+          If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
+          If(MPI_id==0) write(out_unitp,31) non_hermitic
  31       format(' non-hermitic Hamiltonien: ',f16.12,' au')
         ELSE
           auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
-          write(out_unitp,21) non_hermitic*auTOcm_inv
+          If(MPI_id==0) write(out_unitp,21) non_hermitic*auTOcm_inv
  21       format(' non-hermitic Hamiltonien: ',f16.12,' cm-1')
         END IF
         CALL flush_perso(out_unitp)
@@ -2340,6 +2340,7 @@ CONTAINS
 
       USE mod_SetOp
       USE mod_ana_psi
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2395,7 +2396,8 @@ CONTAINS
           !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
           CALL sub_OpBasisFi(para_Op,i)
 
-          IF (mod(i,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1) THEN
+          IF (mod(i,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1         &
+              .AND. MPI_id==0) THEN
             write(out_unitp,'(a)',ADVANCE='no') '---'
             CALL flush_perso(out_unitp)
           END IF
@@ -2403,7 +2405,7 @@ CONTAINS
         END DO
         !$OMP end parallel do
 
-        IF (print_level > -1) THEN
+        IF (print_level > -1 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='yes') '----]'
           CALL flush_perso(out_unitp)
         END IF
@@ -2435,6 +2437,7 @@ CONTAINS
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
       USE mod_psi_Op
+      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -2517,7 +2520,8 @@ CONTAINS
             !> Cmat assigned here
             IF(MPI_id==0) para_Op%Cmat(:,ib)  = Hpsi(i)%CvecB(:)
 
-            IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1) THEN
+            IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1      &
+                .AND. MPI_id==0) THEN
               write(out_unitp,'(a)',ADVANCE='no') '---'
               CALL flush_perso(out_unitp)
             END IF
@@ -2545,7 +2549,8 @@ CONTAINS
             !> Rmat assigned here
             IF(MPI_id==0) para_Op%Rmat(:,ib)  = Hpsi(i)%RvecB(:)
 
-            IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1) THEN
+            IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1      &
+                .AND. MPI_id==0) THEN
               write(out_unitp,'(a)',ADVANCE='no') '---'
               CALL flush_perso(out_unitp)
             END IF
@@ -2553,7 +2558,7 @@ CONTAINS
         END IF
       END DO
 
-      IF (print_level > -1) THEN
+      IF (print_level > -1 .AND. MPI_id==0) THEN
         write(out_unitp,'(a)',ADVANCE='yes') '----]'
         CALL flush_perso(out_unitp)
       END IF
@@ -2596,6 +2601,7 @@ CONTAINS
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
       USE mod_psi_Op
+      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -2683,7 +2689,8 @@ CONTAINS
 
             para_Op%Rmat(:,i)  = Hpsi(ith)%RvecB(:)
           END IF
-          IF (mod(i,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1) THEN
+          IF (mod(i,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1         &
+              .AND. MPI_id==0) THEN
             write(out_unitp,'(a)',ADVANCE='no') '---'
             CALL flush_perso(out_unitp)
           END IF
@@ -2691,7 +2698,7 @@ CONTAINS
         END DO
         !$OMP end parallel do
 
-        IF (print_level > -1) THEN
+        IF (print_level > -1 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='yes') '----]'
           CALL flush_perso(out_unitp)
         END IF

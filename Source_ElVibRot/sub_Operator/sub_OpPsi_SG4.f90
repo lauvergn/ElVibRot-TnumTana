@@ -52,6 +52,7 @@ CONTAINS
  USE mod_psi_set_alloc,            ONLY : param_psi,ecri_psi,assignment (=)
 
  USE mod_SetOp,                    ONLY : param_Op,write_param_Op
+ USE mod_MPI
  IMPLICIT NONE
 
  TYPE (param_psi), intent(in)      :: Psi
@@ -132,7 +133,7 @@ CONTAINS
 
 
      IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND. &
-         mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+         mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
        write(out_unitp,'(a)',ADVANCE='no') '---'
        CALL flush_perso(out_unitp)
      END IF
@@ -181,7 +182,7 @@ CONTAINS
 
 
      IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND. &
-         mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+         mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
        write(out_unitp,'(a)',ADVANCE='no') '---'
        CALL flush_perso(out_unitp)
      END IF
@@ -1153,7 +1154,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         deallocate(PsiR)
 
         IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND.    &
-            mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+            mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='no') '---'
           CALL flush_perso(out_unitp)
         END IF
@@ -1198,7 +1199,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         END DO
 
         IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND. &
-            mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+            mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='no') '---'
           CALL flush_perso(out_unitp)
         END IF
@@ -1274,7 +1275,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         deallocate(PsiR)
 
         IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND. &
-            mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+            mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='no') '---'
           CALL flush_perso(out_unitp)
         END IF
@@ -1401,7 +1402,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
      deallocate(PsiR)
 
      IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND. &
-         mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+         mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
        write(out_unitp,'(a)',ADVANCE='no') '---'
        CALL flush_perso(out_unitp)
      END IF

@@ -229,6 +229,7 @@ MODULE mod_RW_MatVec
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE Write_RVec(l,nio,nbcol1,Rformat,name_info)
+      	 USE mod_MPI
 
          character (len=*), optional  :: Rformat
          character (len=*), optional  :: name_info
@@ -239,81 +240,83 @@ MODULE mod_RW_MatVec
          integer           :: n,i,nb,nbblocs,nfin,nbcol
          character (len=:), allocatable  :: wformat
 
-         n = size(l)
-         !write(out_unitp,*) 'n,nbcol',n,nbcol
-         nbcol = nbcol1
-         IF (nbcol > 10) nbcol=10
-         nbblocs=int(n/nbcol)
-         IF (nbblocs*nbcol == n) nbblocs=nbblocs-1
+         IF(MPI_id==0) THEN
+           n = size(l)
+           !write(out_unitp,*) 'n,nbcol',n,nbcol
+           nbcol = nbcol1
+           IF (nbcol > 10) nbcol=10
+           nbblocs=int(n/nbcol)
+           IF (nbblocs*nbcol == n) nbblocs=nbblocs-1
 
 
-         IF (present(Rformat)) THEN
-           IF (present(name_info)) THEN
-             CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.,Rformat,name_info)
+           IF (present(Rformat)) THEN
+             IF (present(name_info)) THEN
+               CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.,Rformat,name_info)
+             ELSE
+               CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.,Rformat=Rformat)
+             END IF
            ELSE
-             CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.,Rformat=Rformat)
+             IF (present(name_info)) THEN
+               CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.,name_info=name_info)
+             ELSE
+               CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.)
+             END IF
            END IF
-         ELSE
-           IF (present(name_info)) THEN
-             CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.,name_info=name_info)
-           ELSE
-             CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.)
-           END IF
-         END IF
 
-         DO nb=0,nbblocs-1
-           write(nio,wformat) (l(i+nb*nbcol),i=1,nbcol)
-         END DO
-         nfin=n-nbcol*nbblocs
-         write(nio,wformat) (l(i+nbcol*nbblocs),i=1,nfin)
+           DO nb=0,nbblocs-1
+             write(nio,wformat) (l(i+nb*nbcol),i=1,nbcol)
+           END DO
+           nfin=n-nbcol*nbblocs
+           write(nio,wformat) (l(i+nbcol*nbblocs),i=1,nfin)
 
-         deallocate(wformat)
-
+           deallocate(wformat)
+        ENDIF ! for MPI_id==0
       END SUBROUTINE Write_RVec
 
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE Write_CVec(l,nio,nbcol1,Rformat,name_info)
+        USE mod_MPI
 
-         character (len=*), optional     :: Rformat
-         character (len=*), optional     :: name_info
+        character (len=*), optional     :: Rformat
+        character (len=*), optional     :: name_info
 
-         integer, intent(in)             :: nio,nbcol1
-         complex(kind=Rkind), intent(in) :: l(:)
+        integer, intent(in)             :: nio,nbcol1
+        complex(kind=Rkind), intent(in) :: l(:)
 
-         integer           :: n,i,nb,nbblocs,nfin,nbcol
-         character (len=:), allocatable  :: wformat
+        integer           :: n,i,nb,nbblocs,nfin,nbcol
+        character (len=:), allocatable  :: wformat
 
-         n = size(l)
-         !write(out_unitp,*) 'n,nbcol',n,nbcol
-         nbcol = nbcol1
-         IF (nbcol > 10) nbcol=10
-         nbblocs=int(n/nbcol)
-         IF (nbblocs*nbcol == n) nbblocs=nbblocs-1
+        IF(MPI_id==0) THEN
+          n = size(l)
+          !write(out_unitp,*) 'n,nbcol',n,nbcol
+          nbcol = nbcol1
+          IF (nbcol > 10) nbcol=10
+          nbblocs=int(n/nbcol)
+          IF (nbblocs*nbcol == n) nbblocs=nbblocs-1
 
-         IF (present(Rformat)) THEN
-           IF (present(name_info)) THEN
-             CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.,Rformat,name_info)
-           ELSE
-             CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.,Rformat=Rformat)
-           END IF
-         ELSE
-           IF (present(name_info)) THEN
-             CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.,name_info=name_info)
-           ELSE
-             CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.)
-           END IF
-         END IF
+          IF (present(Rformat)) THEN
+            IF (present(name_info)) THEN
+              CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.,Rformat,name_info)
+            ELSE
+              CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.,Rformat=Rformat)
+            END IF
+          ELSE
+            IF (present(name_info)) THEN
+              CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.,name_info=name_info)
+            ELSE
+              CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.)
+            END IF
+          END IF
 
-         DO nb=0,nbblocs-1
-           write(nio,wformat) (l(i+nb*nbcol),i=1,nbcol)
-         END DO
-         nfin=n-nbcol*nbblocs
-         write(nio,wformat) (l(i+nbcol*nbblocs),i=1,nfin)
+          DO nb=0,nbblocs-1
+            write(nio,wformat) (l(i+nb*nbcol),i=1,nbcol)
+          END DO
+          nfin=n-nbcol*nbblocs
+          write(nio,wformat) (l(i+nbcol*nbblocs),i=1,nfin)
 
-         deallocate(wformat)
-
-
+          deallocate(wformat)
+        ENDIF ! for MPI_id==0
       END SUBROUTINE Write_CVec
 
 

@@ -305,7 +305,7 @@
  111      format('Grid: ',i6,50(1x,f18.10))
 
         ELSE
-          IF (mod(iq,max(1,int(para_AllOp%tab_Op(1)%nb_qa/10))) == 0)   &
+          IF (mod(iq,max(1,int(para_AllOp%tab_Op(1)%nb_qa/10))) == 0 .AND. MPI_id==0)  &
             write(out_unitp,'(a)',ADVANCE='no') '---'
         END IF
         CALL flush_perso(out_unitp)

@@ -635,7 +635,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   logical, parameter :: debug=.FALSE.
   character (len=*), parameter :: name_sub='Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis'
 
-  write(out_unitp,*) 'BEGINNING ',name_sub
+  IF(MPI_id==0) write(out_unitp,*) 'BEGINNING ',name_sub
   IF (debug) THEN
     write(out_unitp,*) 'Write nDindB'
     !CALL write_nDindex(basis_SG%nDindB)
@@ -730,7 +730,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   nb_thread = basis_SG%para_SGType2%nb_tasks
   !nb_thread = 1
 
-  IF (.NOT. debug) THEN
+  IF((.NOT. debug) .AND. MPI_id==0) THEN
     write(out_unitp,'(a)')              'Tab(:) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
     write(out_unitp,'(a)',ADVANCE='no') 'Tab(:) (%): ['
     CALL flush_perso(out_unitp)
@@ -836,7 +836,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
       END IF
     END DO
 
-    IF (mod(iG,max(1,int(basis_SG%nb_SG/10))) == 0 .AND. .NOT. debug) THEN
+    IF (mod(iG,max(1,int(basis_SG%nb_SG/10))) == 0 .AND. .NOT. debug .AND. MPI_id==0) THEN
       write(out_unitp,'(a)',ADVANCE='no') '---'
       CALL flush_perso(out_unitp)
     END IF
@@ -847,13 +847,13 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   CALL dealloc_NParray(tab_nb,'tab_nb',name_sub)
   !$OMP   END PARALLEL
 
-  IF (.NOT. debug) THEN
+  IF (.NOT. debug .AND. MPI_id==0) THEN
     write(out_unitp,'(a)',ADVANCE='yes') '----]'
     CALL flush_perso(out_unitp)
   END IF
 
-  write(out_unitp,*) 'count 0',count(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB == 0)
-  IF (count(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB == 0) > 0) THEN
+  IF(MPI_id==0) write(out_unitp,*) 'count 0',count(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB == 0)
+  IF (count(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB == 0) > 0 .AND. MPI_id==0) THEN
     write(out_unitp,*) 'WARNING in ',name_sub
     write(out_unitp,*) 'The Smolyak Basis has more basis function than the nD-Basis'
     write(out_unitp,*) ' Probably LB < LG'

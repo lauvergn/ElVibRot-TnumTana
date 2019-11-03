@@ -210,8 +210,8 @@
 
 !- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub='sub_constantes'
-  !logical, parameter :: debug = .FALSE.
-  logical, parameter :: debug = .TRUE.
+  logical, parameter :: debug = .FALSE.
+  !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub

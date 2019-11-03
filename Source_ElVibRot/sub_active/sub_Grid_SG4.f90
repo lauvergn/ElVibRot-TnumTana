@@ -31,6 +31,7 @@
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
       USE mod_nDindex
       USE mod_Op
+      USE mod_MPI
       IMPLICIT NONE
 
 !=====================================================================
@@ -146,7 +147,7 @@
   IF (print_level > 1) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
 
   IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
-      mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+      mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
     write(out_unitp,'(a)',ADVANCE='no') '---'
     CALL flush_perso(out_unitp)
   END IF
@@ -173,7 +174,7 @@
     !CALL Make_Grid_OF_ONEGDP_SG4(TabAllOp_Rvec,tab_l,iG,para_AllOp)
 
     IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
-        mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+        mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
       write(out_unitp,'(a)',ADVANCE='no') '---'
       CALL flush_perso(out_unitp)
     END IF

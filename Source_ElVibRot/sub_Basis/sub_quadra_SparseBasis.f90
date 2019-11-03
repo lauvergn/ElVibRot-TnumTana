@@ -1120,7 +1120,7 @@
       DO ib=1,basis_SG%nb_basis
         nDNum_OF_Lmax(ib) = basis_SG%tab_Pbasis(ib)%Pbasis%para_SGType2%Num_OF_Lmax
       END DO
-      write(6,*) 'nDNum_OF_Lmax',nDNum_OF_Lmax
+      IF(MPI_id==0) write(6,*) 'nDNum_OF_Lmax',nDNum_OF_Lmax
 
       allocate(tab_i_TO_l(basis_SG%nb_basis))
       DO ib=1,basis_SG%nb_basis

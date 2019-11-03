@@ -307,7 +307,7 @@
 
       IF (.NOT. para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid .AND.  &
          print_level > 0 .AND. para_AllOp%tab_Op(1)%nb_qa > max_nb_G_FOR_print) THEN
-        write(out_unitp,'(a)',ADVANCE='yes') '----]'
+         IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
       END IF
       DO iOp=1,para_AllOp%nb_Op
         IF (associated(para_AllOp%tab_Op(iOp)%OpGrid)) THEN

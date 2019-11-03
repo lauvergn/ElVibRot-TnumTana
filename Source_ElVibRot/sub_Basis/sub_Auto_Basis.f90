@@ -126,7 +126,7 @@
 
       nqa = get_nqa_FROM_basis(para_AllBasis%BasisnD)
 
-      IF (print_level > -1) THEN
+      IF (print_level > -1 .AND. MPI_id==0) THEN
         write(out_unitp,*) '==================================================='
         write(out_unitp,*) '=== NEW BASIS + ComOp ============================='
         write(out_unitp,*) 'packed',para_AllBasis%BasisnD%packed

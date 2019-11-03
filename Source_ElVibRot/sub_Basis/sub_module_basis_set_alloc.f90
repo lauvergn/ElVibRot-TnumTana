@@ -2003,6 +2003,7 @@
       !!@param: TODO
       RECURSIVE SUBROUTINE RecWrite_basis(basis_set,write_all)
       USE mod_system
+      USE mod_MPI
       IMPLICIT NONE
 
        TYPE (basis) :: basis_set
@@ -2230,7 +2231,7 @@
            write(out_unitp,*) Rec_line,'opt_scaleQ',basis_set%opt_scaleQ
          END IF
        END IF
-       write(out_unitp,*) 'Parameter(s) to be optimized?: ',basis_set%opt_param
+       IF(MPI_id==0) write(out_unitp,*) 'Parameter(s) to be optimized?: ',basis_set%opt_param
 
 
        nq = get_nq_FROM_basis(basis_set)
@@ -2286,8 +2287,8 @@
 
 
          IF (allocated(basis_set%EneH0)) THEN
-             write(out_unitp,*) Rec_line,'EneH0 = <d0b(:,ib) I H0 I d0b(:,ib)>'
-             CALL Write_Vec(basis_set%EneH0,out_unitp,8,name_info=Rec_line)
+           IF(MPI_id==0) write(out_unitp,*) Rec_line,'EneH0 = <d0b(:,ib) I H0 I d0b(:,ib)>'
+           CALL Write_Vec(basis_set%EneH0,out_unitp,8,name_info=Rec_line)
          END IF
 
        write(out_unitp,*) Rec_line,'END RecWrite_basis'
