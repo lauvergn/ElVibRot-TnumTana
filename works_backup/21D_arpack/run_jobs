@@ -1,0 +1,2 @@
+./shell_run 2 1 2 f
+./shell_run 2 1 3 t
