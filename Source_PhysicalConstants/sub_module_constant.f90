@@ -627,25 +627,26 @@ END SUBROUTINE sub_ReadNMLconstantes
 !!
 !! The CODATA 2014 one in 2018. They can be download from
 !! the <a href="http://physics.nist.gov/constants">NIST</a>
- SUBROUTINE constantes_CODATA2014(c,mhu0,G,h,e,me,mp,Na,R)
- IMPLICIT NONE
+  SUBROUTINE constantes_CODATA2014(c,mhu0,G,h,e,me,mp,Na,R)
+  USE mod_MPI
+  IMPLICIT NONE
 
- !----- physical constants ---------------------------
- real (kind=Rkind) :: c      !< speed of light in vacuum (exact) (in m s-1)
- real (kind=Rkind) :: mhu0   !< Magnetic Constant (exact) (in N A-2)
- real (kind=Rkind) :: G      !< Newtonian constant of gravitation (in m^3 kg-1 s-2)
- real (kind=Rkind) :: h      !< Planck Constant (h et hb) (in J s)
- real (kind=Rkind) :: e      !< Atomic unit of charge (in C)
- real (kind=Rkind) :: me     !< Atomic unit of mass (in kg) (Electron mass)
- real (kind=Rkind) :: mp     !< Proton mass (in kg)
- real (kind=Rkind) :: Na     !< Avogadro constant (in mol-1)
- real (kind=Rkind) :: R      !< Molar gas constant (in J mol−1 K−1)
- real (kind=Rkind) :: k      !< Boltzmann constant (in J K^-1)
+  !----- physical constants ---------------------------
+  real (kind=Rkind) :: c      !< speed of light in vacuum (exact) (in m s-1)
+  real (kind=Rkind) :: mhu0   !< Magnetic Constant (exact) (in N A-2)
+  real (kind=Rkind) :: G      !< Newtonian constant of gravitation (in m^3 kg-1 s-2)
+  real (kind=Rkind) :: h      !< Planck Constant (h et hb) (in J s)
+  real (kind=Rkind) :: e      !< Atomic unit of charge (in C)
+  real (kind=Rkind) :: me     !< Atomic unit of mass (in kg) (Electron mass)
+  real (kind=Rkind) :: mp     !< Proton mass (in kg)
+  real (kind=Rkind) :: Na     !< Avogadro constant (in mol-1)
+  real (kind=Rkind) :: R      !< Molar gas constant (in J mol−1 K−1)
+  real (kind=Rkind) :: k      !< Boltzmann constant (in J K^-1)
 
- character (len=*), parameter :: version='CODATA 2014'
- !---------------------------------------------------------------------
- write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
- !---------------------------------------------------------------------
+  character (len=*), parameter :: version='CODATA 2014'
+  !---------------------------------------------------------------------
+  IF(MPI_id==0) write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
+  !---------------------------------------------------------------------
 
   !------ Physical constant of CODATA2014 ---------------------------
   ! http://physics.nist.gov/constants
@@ -680,33 +681,35 @@ END SUBROUTINE sub_ReadNMLconstantes
   ! Molar gas constant R (J mol-1 K-1): R=k*Na
   R = k * Na
 
- END SUBROUTINE constantes_CODATA2014
+  END SUBROUTINE constantes_CODATA2014
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
+
 !> @brief fundamental physical constants:
 !!
 !! The CODATA 2006 one in 2006. There are not available anymore, but they can be download from
 !! the <a href="http://physics.nist.gov/cuu/Constants/archive2006.html">NIST</a>
- SUBROUTINE constantes_CODATA2006(c,mhu0,G,h,e,me,mp,Na,R)
- IMPLICIT NONE
+  SUBROUTINE constantes_CODATA2006(c,mhu0,G,h,e,me,mp,Na,R)
+  USE mod_MPI
+  IMPLICIT NONE
 
- !----- physical constants ---------------------------
- real (kind=Rkind) :: c      !< Speed of light (exact) (in m s-1)
- real (kind=Rkind) :: mhu0   !< Magnetic Constant (exact) (in N A-2)
- real (kind=Rkind) :: G      !< Gravitational Constant (in m^3 kg-1 s-2)
- real (kind=Rkind) :: h      !< Planck Constant (h et hb) (in J s)
- real (kind=Rkind) :: e      !< Elementary Charge -electron- (in C)
- real (kind=Rkind) :: me     !< Electron mass (in kg)
- real (kind=Rkind) :: mp     !< Proton mass (in kg)
- real (kind=Rkind) :: Na     !< Avogadro constant (in mol-1)
- real (kind=Rkind) :: R      !< Molar gas constant (in J mol−1 K−1)
+  !----- physical constants ---------------------------
+  real (kind=Rkind) :: c      !< Speed of light (exact) (in m s-1)
+  real (kind=Rkind) :: mhu0   !< Magnetic Constant (exact) (in N A-2)
+  real (kind=Rkind) :: G      !< Gravitational Constant (in m^3 kg-1 s-2)
+  real (kind=Rkind) :: h      !< Planck Constant (h et hb) (in J s)
+  real (kind=Rkind) :: e      !< Elementary Charge -electron- (in C)
+  real (kind=Rkind) :: me     !< Electron mass (in kg)
+  real (kind=Rkind) :: mp     !< Proton mass (in kg)
+  real (kind=Rkind) :: Na     !< Avogadro constant (in mol-1)
+  real (kind=Rkind) :: R      !< Molar gas constant (in J mol−1 K−1)
 
- character (len=*), parameter :: version='CODATA 2006'
- !---------------------------------------------------------------------
- write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
- !---------------------------------------------------------------------
+  character (len=*), parameter :: version='CODATA 2006'
+  !---------------------------------------------------------------------
+  IF(MPI_id==0) write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
+  !---------------------------------------------------------------------
 
   !------ Physical constant of CODATA2006 ---------------------------
   ! http://www.codata.org/resources/databases/index.html (from NIST now)
@@ -733,24 +736,27 @@ END SUBROUTINE sub_ReadNMLconstantes
   ! constante des gaz parfait R (J mol-1 K-1)
   R = 8.314472_Rkind
 
- END SUBROUTINE constantes_CODATA2006
- SUBROUTINE constantes_HandBook70ed(c,mhu0,G,h,e,me,mp,Na,R)
- IMPLICIT NONE
+  END SUBROUTINE constantes_CODATA2006
+  
+  
+  SUBROUTINE constantes_HandBook70ed(c,mhu0,G,h,e,me,mp,Na,R)
+  USE mod_MPI
+  IMPLICIT NONE
 
- !----- physical constants ---------------------------
- real (kind=Rkind) :: c      !< Speed of light (exact) (in m s-1)
- real (kind=Rkind) :: mhu0   !< Magnetic Constant (exact) (in N A-2)
- real (kind=Rkind) :: G      !< Gravitational Constant (in m^3 kg-1 s-2)
- real (kind=Rkind) :: h      !< Planck Constant (h et hb) (in J s)
- real (kind=Rkind) :: e      !< Elementary Charge -electron- (in C)
- real (kind=Rkind) :: me     !< Electron mass (in kg)
- real (kind=Rkind) :: mp     !< Proton mass (in kg)
- real (kind=Rkind) :: Na     !< Avogadro constant (in mol-1)
- real (kind=Rkind) :: R      !< Molar gas constant (in J mol−1 K−1)
+  !----- physical constants ---------------------------
+  real (kind=Rkind) :: c      !< Speed of light (exact) (in m s-1)
+  real (kind=Rkind) :: mhu0   !< Magnetic Constant (exact) (in N A-2)
+  real (kind=Rkind) :: G      !< Gravitational Constant (in m^3 kg-1 s-2)
+  real (kind=Rkind) :: h      !< Planck Constant (h et hb) (in J s)
+  real (kind=Rkind) :: e      !< Elementary Charge -electron- (in C)
+  real (kind=Rkind) :: me     !< Electron mass (in kg)
+  real (kind=Rkind) :: mp     !< Proton mass (in kg)
+  real (kind=Rkind) :: Na     !< Avogadro constant (in mol-1)
+  real (kind=Rkind) :: R      !< Molar gas constant (in J mol−1 K−1)
 
- character (len=*), parameter :: version='HandBook70ed'
+  character (len=*), parameter :: version='HandBook70ed'
   !---------------------------------------------------------------------
-  write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
+  IF(MPI_id==0) write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
   !---------------------------------------------------------------------
 
   !------ affectation des constantes avec ---------------------------
@@ -784,24 +790,27 @@ END SUBROUTINE sub_ReadNMLconstantes
   R = 8.31451070_Rkind
   write(out_unitp,*) 'R = ',R
 
- END SUBROUTINE constantes_HandBook70ed
- SUBROUTINE constantes_HandBook70ed_2001(c,mhu0,G,h,e,me,mp,Na,R)
- IMPLICIT NONE
+  END SUBROUTINE constantes_HandBook70ed
+  
+  
+  SUBROUTINE constantes_HandBook70ed_2001(c,mhu0,G,h,e,me,mp,Na,R)
+  USE mod_MPI
+  IMPLICIT NONE
 
- !----- physical constants ---------------------------
- real (kind=Rkind) :: c      !< Speed of light (exact) (in m s-1)
- real (kind=Rkind) :: mhu0   !< Magnetic Constant (exact) (in N A-2)
- real (kind=Rkind) :: G      !< Gravitational Constant (in m^3 kg-1 s-2)
- real (kind=Rkind) :: h      !< Planck Constant (h et hb) (in J s)
- real (kind=Rkind) :: e      !< Elementary Charge -electron- (in C)
- real (kind=Rkind) :: me     !< Electron mass (in kg)
- real (kind=Rkind) :: mp     !< Proton mass (in kg)
- real (kind=Rkind) :: Na     !< Avogadro constant (in mol-1)
- real (kind=Rkind) :: R      !< Molar gas constant (in J mol−1 K−1)
+  !----- physical constants ---------------------------
+  real (kind=Rkind) :: c      !< Speed of light (exact) (in m s-1)
+  real (kind=Rkind) :: mhu0   !< Magnetic Constant (exact) (in N A-2)
+  real (kind=Rkind) :: G      !< Gravitational Constant (in m^3 kg-1 s-2)
+  real (kind=Rkind) :: h      !< Planck Constant (h et hb) (in J s)
+  real (kind=Rkind) :: e      !< Elementary Charge -electron- (in C)
+  real (kind=Rkind) :: me     !< Electron mass (in kg)
+  real (kind=Rkind) :: mp     !< Proton mass (in kg)
+  real (kind=Rkind) :: Na     !< Avogadro constant (in mol-1)
+  real (kind=Rkind) :: R      !< Molar gas constant (in J mol−1 K−1)
 
- character (len=*), parameter :: version='constantes_HandBook70ed_2001'
+  character (len=*), parameter :: version='constantes_HandBook70ed_2001'
   !---------------------------------------------------------------------
-  write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
+  IF(MPI_id==0)  write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
   !---------------------------------------------------------------------
 
   !------ affectation des constantes avec ---------------------------
