@@ -220,12 +220,15 @@ MODULE mod_SetOp
       ! nb_SG1,nb_SG2 for MPI 
       IF(nb_SG>0) THEN
         nb_per_MPI=para_Op%BasisnD%nb_SG/MPI_np
-        If(mod(para_Op%BasisnD%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
-        nb_SG=MIN((MPI_id+1)*nb_per_MPI,para_Op%BasisnD%nb_SG)-(MPI_id*nb_per_MPI+1)+1
-        nb_SG1=MPI_id*nb_per_MPI+1
-        nb_SG2=MIN((MPI_id+1)*nb_per_MPI,para_Op%BasisnD%nb_SG)
-        IF(MPI_id==0) write(*,*) 'nb_SG,nb_SG1,nb_SG2:',nb_SG,nb_SG1,nb_SG2,           &
-                                 ' from ',MPI_id
+        !If(mod(para_Op%BasisnD%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
+        !nb_SG1=MPI_id*nb_per_MPI+1
+        !nb_SG2=MIN((MPI_id+1)*nb_per_MPI,para_Op%BasisnD%nb_SG)
+        nb_rem_MPI=mod(para_Op%BasisnD%nb_SG,MPI_np)
+        nb_SG1=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
+        nb_SG2=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
+        nb_SG=nb_SG2-nb_SG1+1
+        write(*,*) 'nb_SG,nb_SG1,nb_SG2,total:',nb_SG,nb_SG1,nb_SG2,                   &
+                    para_Op%BasisnD%nb_SG,' from ',MPI_id
       ENDIF
 #endif
 
@@ -670,7 +673,7 @@ MODULE mod_SetOp
 
       IF (associated(para_AllOp%tab_Op)) THEN
         DO i=1,size(para_AllOp%tab_Op)
-           CALL dealloc_para_Op(para_AllOp%tab_Op(i))
+          CALL dealloc_para_Op(para_AllOp%tab_Op(i))
         END DO
 
         CALL dealloc_array(para_AllOp%tab_Op,'para_AllOp%tab_Op','dealloc_para_AllOp')

@@ -49,6 +49,7 @@ MODULE mod_MPI
   Integer                        :: bound1_MPI   !< up boundary of works for each thread
   Integer                        :: bound2_MPI   !< dn boundary of works for each thread
   Integer                        :: nb_per_MPI   !< number of distribed works per thread
+  Integer                        :: nb_rem_MPI   !< remainder of distribed works
 
   !Common /group_MPI_world/     MPI_err, MPI_id, MPI_np, MPI_status
   !Common /group_MPI_tag/       MPI_tag0,MPI_tag1,MPI_tag2,MPI_tag3

@@ -299,12 +299,13 @@ MODULE mod_memory_NotPointer
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'integer')
 
       END SUBROUTINE alloc_array_OF_I4dim1
+      
       SUBROUTINE dealloc_array_OF_I4dim1(tab,name_var,name_sub)
+      USE mod_MPI
       IMPLICIT NONE
 
       integer (kind=Ikind), allocatable, intent(inout) :: tab(:)
       character (len=*), intent(in) :: name_var,name_sub
-
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub_alloc = 'dealloc_array_OF_I4dim1'
@@ -316,15 +317,15 @@ MODULE mod_memory_NotPointer
 
        !IF (.NOT. allocated(tab)) RETURN
 
-       IF (.NOT. allocated(tab))                                       &
-             CALL Write_error_null(name_sub_alloc,name_var,name_sub)
+      IF (.NOT. allocated(tab) .AND. MPI_id==0)                                       &
+          CALL Write_error_null(name_sub_alloc,name_var,name_sub)
 
-       memory = size(tab,kind=ILkind)
-       deallocate(tab,stat=err_mem)
-       CALL error_lmemo_allo(err_mem,-memory,name_var,name_sub,'integer')
-
+      memory = size(tab,kind=ILkind)
+      IF(allocated(tab)) deallocate(tab,stat=err_mem)
+      CALL error_lmemo_allo(err_mem,-memory,name_var,name_sub,'integer')
 
       END SUBROUTINE dealloc_array_OF_I4dim1
+
       SUBROUTINE alloc_array_OF_Idim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
@@ -365,13 +366,13 @@ MODULE mod_memory_NotPointer
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'integer')
 
       END SUBROUTINE alloc_array_OF_Idim2
+      
+!=======================================================================================      
       SUBROUTINE dealloc_array_OF_Idim2(tab,name_var,name_sub)
       IMPLICIT NONE
 
       integer, allocatable, intent(inout) :: tab(:,:)
       character (len=*), intent(in) :: name_var,name_sub
-
-
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub_alloc = 'dealloc_array_OF_Idim2'
@@ -392,6 +393,7 @@ MODULE mod_memory_NotPointer
 
 
       END SUBROUTINE dealloc_array_OF_Idim2
+!=======================================================================================      
 
       SUBROUTINE alloc_array_OF_Idim3(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
@@ -401,7 +403,6 @@ MODULE mod_memory_NotPointer
       integer, intent(in), optional :: tab_lb(:)
 
       character (len=*), intent(in) :: name_var,name_sub
-
 
       integer, parameter :: ndim=3
 

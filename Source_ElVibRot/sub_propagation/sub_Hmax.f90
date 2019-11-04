@@ -94,9 +94,12 @@
 #if(run_MPI)
         ! get iG boundary of each threads
         nb_per_MPI=para_H%BasisnD%nb_SG/MPI_np
-        If(mod(para_H%BasisnD%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
-        temp_int1=MPI_id*nb_per_MPI+1
-        temp_int2=MIN((MPI_id+1)*nb_per_MPI,para_H%BasisnD%nb_SG)
+        !If(mod(para_H%BasisnD%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
+        !temp_int1=MPI_id*nb_per_MPI+1
+        !temp_int2=MIN((MPI_id+1)*nb_per_MPI,para_H%BasisnD%nb_SG)
+        nb_rem_MPI=mod(para_H%BasisnD%nb_SG,MPI_np)
+        temp_int1=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
+        temp_int2=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
         para_H%Hmin=1.0e10;
         DO i1_loop=temp_int1,temp_int2
           ! Minimal value of Veff
