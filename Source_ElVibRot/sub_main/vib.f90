@@ -152,9 +152,9 @@
                         para_ana,para_intensity,intensity_only,         &
                         para_propa,WP0(1))
 
-#if(run_MPI)
-      if_propa=para_ana%propa !< add to some type  later
-#endif
+!#if(run_MPI)
+      !if_propa=para_ana%propa !< add to some type  later
+!#endif
       !CALL system_mem_usage(memory_RSS,'after ini_data')
       para_H => para_AllOp%tab_Op(1)
       CALL dealloc_Basis(BasisnD_Save)

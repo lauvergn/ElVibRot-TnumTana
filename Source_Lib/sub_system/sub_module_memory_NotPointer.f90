@@ -321,7 +321,7 @@ MODULE mod_memory_NotPointer
           CALL Write_error_null(name_sub_alloc,name_var,name_sub)
 
       memory = size(tab,kind=ILkind)
-      IF(allocated(tab)) deallocate(tab,stat=err_mem)
+      IF(MPI_id<9) deallocate(tab,stat=err_mem)
       CALL error_lmemo_allo(err_mem,-memory,name_var,name_sub,'integer')
 
       END SUBROUTINE dealloc_array_OF_I4dim1
