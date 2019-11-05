@@ -4,7 +4,8 @@
 ###> parameters
 ##==============================================================
 
-parall=MPI   ## MPI or openMP or BLANK
+parall=openMP      ## MPI or openMP or BLANK
+MPI_output0=1   ## just print output form process 0 in MPI, 0 for debug
 num_cores=$1
 
 L=$2
@@ -172,23 +173,34 @@ EOF
 
 
 
-
-
 ###> run
 ##==============================================================
 
-if   [ $parall == 'openMP' ] ; then
-  $DIR_vib/$VIBEXE > $here/"res_HenonHeiles_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG"_"$num_cores"openMpcores"
+output_file_name="res_HenonHeiles_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG
 
+##-openMP-------------------------------------------------------
+if   [ $parall == 'openMP' ] ; then
+  $DIR_vib/$VIBEXE > $here/$output_file_name"_"$num_cores"openMpcores"
+
+##-MPI----------------------------------------------------------
 elif [ $parall == 'MPI'    ] ; then
+
   if [ -z $MPI_cores ]; then
     echo 'short of MPI core number, check shell input'
     exit 1
   fi
-  mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $here/"res_HenonHeiles_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG"_"$num_cores"MPIcores"
 
+##-if just output process 0-------------------------------------
+
+  if [ $MPI_output0 == 1 ] ; then
+    mpirun -np $MPI_cores MPI_output_control $DIR_vib/$VIBEXE > $here/$output_file_name"_"$num_cores"MPIcores"
+  else
+    mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $here/$output_file_name"_"$num_cores"MPIcores"
+  fi
+
+##-no parallel--------------------------------------------------
 else 
-  $DIR_vib/$VIBEXE > $here/"res_HenonHeiles_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG
+  $DIR_vib/$VIBEXE > $here/$output_file_name
 fi
 ##==============================================================
 ###< run
