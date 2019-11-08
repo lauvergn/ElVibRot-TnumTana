@@ -34,15 +34,15 @@ fi
 ##--------------------------------------------------------------
 ## set code dir
 
-here=`pwd`
-DIR_vib=$here/..
+work=`pwd`
+DIR_vib=$work/..
 DIR_pot=$DIR_vib/sub_pot
 VIBEXE=vib
 
 cp sub_system_HenonHeiles.f $DIR_pot/sub_system.f
 cd $DIR_vib
 make
-cd $here
+cd $work
 
 ##--------------------------------------------------------------
 ## set working dir 
@@ -50,8 +50,8 @@ cd $here
 ##TMPDIR=EVR-HenonHeiles_6D_LB$LB"-B"$B
 ##echo TMPDIR: $TMPDIR
  
-name_WP=$here/temp
-name_WPR=$here/temp
+name_WP=$work/temp
+name_WPR=$work/temp
 
 ##--------------------------------------------------------------
 ## set openMP environment
@@ -180,7 +180,7 @@ output_file_name="res_HenonHeiles_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG
 
 ##-openMP-------------------------------------------------------
 if   [ $parall == 'openMP' ] ; then
-  $DIR_vib/$VIBEXE > $here/$output_file_name"_"$num_cores"openMpcores"
+  $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"openMpcores"
 
 ##-MPI----------------------------------------------------------
 elif [ $parall == 'MPI'    ] ; then
@@ -193,14 +193,14 @@ elif [ $parall == 'MPI'    ] ; then
 ##-if just output process 0-------------------------------------
 
   if [ $MPI_output0 == 1 ] ; then
-    mpirun -np $MPI_cores MPI_output_control $DIR_vib/$VIBEXE > $here/$output_file_name"_"$num_cores"MPIcores"
+    mpirun -np $MPI_cores MPI_output_control $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
   else
-    mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $here/$output_file_name"_"$num_cores"MPIcores"
+    mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
   fi
 
 ##-no parallel--------------------------------------------------
 else 
-  $DIR_vib/$VIBEXE > $here/$output_file_name
+  $DIR_vib/$VIBEXE > $work/$output_file_name
 fi
 ##==============================================================
 ###< run

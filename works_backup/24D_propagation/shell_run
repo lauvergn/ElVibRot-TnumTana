@@ -36,8 +36,8 @@ fi
 ##--------------------------------------------------------------
 ## set code dir
 
-here=`pwd`
-DIR_vib=$here/..
+work=`pwd`
+DIR_vib=$work/..
 DIR_pot=$DIR_vib/sub_pot
 VIBEXE=vib
 
@@ -46,7 +46,7 @@ cp calc_f2_f1Q.f90       $DIR_vib/Source_TnumTana_Coord/sub_operator_T
 
 cd $DIR_vib
 make
-cd $here
+cd $work
 
 ##--------------------------------------------------------------
 ## set working dir 
@@ -54,8 +54,8 @@ cd $here
 ##TMPDIR=EVR-HenonHeiles_6D_LB$LB"-B"$B
 ##echo TMPDIR: $TMPDIR
  
-name_WP=$here/temp
-name_WPR=$here/temp
+name_WP=$work/temp
+name_WPR=$work/temp
 
 ##--------------------------------------------------------------
 ## set openMP environment
@@ -199,7 +199,7 @@ output_file_name="res_pyrazine_24Dprop_SGtype4_L"$LB"_B"$B1"-"$B2"-"$B3"-"$B4"-B
 
 ##-openMP-------------------------------------------------------
 if   [ $parall == 'openMP' ] ; then
-  $DIR_vib/$VIBEXE > $here/$output_file_name"_"$num_cores"openMpcores"
+  $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"openMpcores"
 
 ##-MPI----------------------------------------------------------
 elif [ $parall == 'MPI'    ] ; then
@@ -212,14 +212,14 @@ elif [ $parall == 'MPI'    ] ; then
 ##-if just output process 0-------------------------------------
 
   if [ $MPI_output0 == 1 ] ; then
-    mpirun -np $MPI_cores MPI_output_control $DIR_vib/$VIBEXE > $here/$output_file_name"_"$num_cores"MPIcores"
+    mpirun -np $MPI_cores MPI_output_control $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
   else
-    mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $here/$output_file_name"_"$num_cores"MPIcores"
+    mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
   fi
 
 ##-no parallel--------------------------------------------------
 else 
-  $DIR_vib/$VIBEXE > $here/$output_file_name
+  $DIR_vib/$VIBEXE > $work/$output_file_name
 fi
 ##==============================================================
 ###< run
