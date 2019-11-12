@@ -722,10 +722,12 @@
 
           nullify(Tab_Psi)
           IF(MPI_id==0) CALL alloc_array(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
-
-          DO i=1,max_diago
-            IF(MPI_id==0) CALL init_psi(Tab_psi(i),para_H,para_H%cplx)
-          END DO
+         
+          IF(MPI_id==0) THEN
+            DO i=1,max_diago
+              CALL init_psi(Tab_psi(i),para_H,para_H%cplx)
+            END DO
+          ENDIF
 
           para_H%diago = .TRUE.
           IF(MPI_id==0) CALL alloc_para_Op(para_H,Grid=.FALSE.,Mat=.TRUE.)
@@ -815,8 +817,8 @@
           write(out_unitp,*)
         ENDIF
         
-        IF(MPI_id==0) CALL sub_analyse(Tab_Psi,nb_diago,para_H,                         &
-                         para_ana,para_intensity,para_AllOp,const_phys)
+        IF(MPI_id==0) CALL sub_analyse(Tab_Psi,nb_diago,para_H,                        &
+                                       para_ana,para_intensity,para_AllOp,const_phys)
         CALL flush_perso(out_unitp)
 
         IF (.NOT. para_H%cplx .AND. para_ana%VibRot) THEN

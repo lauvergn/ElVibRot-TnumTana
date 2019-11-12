@@ -692,6 +692,7 @@
       !!@param: TODO
       !!@param: TODO
        RECURSIVE SUBROUTINE dealloc_basis(basis_set,Basis_FOR_SG,keep_Rvec)
+         USE mod_MPI
          IMPLICIT NONE
 
          TYPE (basis)      :: basis_set
@@ -702,7 +703,14 @@
 
          integer :: err_mem,memory
          character (len=*), parameter :: name_sub='dealloc_basis'
-
+         
+!         character(14) :: name_subp='dealloc_basis'
+!         character(2)  :: name_int
+!         character(16) :: name_all
+!         i=MPI_id
+!         write(name_int, '(I2)') i
+!         name_all=name_subp//name_int
+         
          Basis_FOR_SG_loc = .FALSE.
          IF (present(Basis_FOR_SG)) Basis_FOR_SG_loc = Basis_FOR_SG
 
@@ -711,7 +719,6 @@
 
          basis_set%active                = .FALSE.
          basis_set%print_info_OF_basisDP = .TRUE.
-
 
          IF (.NOT. keep_Rvec_loc) THEN
            basis_set%ndim         = 0
@@ -1458,7 +1465,7 @@
         END IF
 
 
-        IF (allocated(basis_set2%Tabder_Qdyn_TO_Qbasis) ) THEN
+        IF (allocated(basis_set2%Tabder_Qdyn_TO_Qbasis)) THEN
           n1 = ubound(basis_set2%Tabder_Qdyn_TO_Qbasis,dim=1)
           CALL alloc_NParray(basis_set1%Tabder_Qdyn_TO_Qbasis,(/ n1 /),   &
                           "basis_set1%Tabder_Qdyn_TO_Qbasis",name_sub, (/ 0 /))

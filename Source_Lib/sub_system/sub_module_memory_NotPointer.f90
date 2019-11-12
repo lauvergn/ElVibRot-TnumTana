@@ -106,6 +106,7 @@ MODULE mod_memory_NotPointer
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'logical')
 
       END SUBROUTINE alloc_array_OF_Ldim1
+      
       SUBROUTINE dealloc_array_OF_Ldim1(tab,name_var,name_sub)
       IMPLICIT NONE
 
@@ -126,10 +127,11 @@ MODULE mod_memory_NotPointer
 
        memory = size(tab,kind=ILkind)
        deallocate(tab,stat=err_mem)
+       
        CALL error_lmemo_allo(err_mem,-memory,name_var,name_sub,'logical')
 
-
       END SUBROUTINE dealloc_array_OF_Ldim1
+      
       SUBROUTINE alloc_array_OF_Ldim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
@@ -188,6 +190,7 @@ MODULE mod_memory_NotPointer
 
        memory = size(tab,kind=ILkind)
        deallocate(tab,stat=err_mem)
+
        CALL error_lmemo_allo(err_mem,-memory,name_var,name_sub,'logical')
 
 
@@ -257,8 +260,8 @@ MODULE mod_memory_NotPointer
 
        memory = size(tab,kind=ILkind)
        deallocate(tab,stat=err_mem)
-       CALL error_lmemo_allo(err_mem,-memory,name_var,name_sub,'integer')
 
+       CALL error_lmemo_allo(err_mem,-memory,name_var,name_sub,'integer')
 
       END SUBROUTINE dealloc_array_OF_I8dim1
       SUBROUTINE alloc_array_OF_I4dim1(tab,tab_ub,name_var,name_sub,tab_lb)
@@ -317,11 +320,11 @@ MODULE mod_memory_NotPointer
 
        !IF (.NOT. allocated(tab)) RETURN
 
-      IF (.NOT. allocated(tab) .AND. MPI_id==0)                                       &
+      IF (.NOT. allocated(tab))                                       &
           CALL Write_error_null(name_sub_alloc,name_var,name_sub)
 
       memory = size(tab,kind=ILkind)
-      IF(MPI_id<9) deallocate(tab,stat=err_mem)
+      deallocate(tab,stat=err_mem)
       CALL error_lmemo_allo(err_mem,-memory,name_var,name_sub,'integer')
 
       END SUBROUTINE dealloc_array_OF_I4dim1

@@ -980,7 +980,6 @@ MODULE mod_Tnum
 
         CALL type_var_analysis(mole)
 
-
         mole%name_Qact => mole%tab_Qtransfo(nb_Qtransfo)%name_Qin
 
         IF (mole%nb_act < 1) THEN
@@ -1425,6 +1424,7 @@ MODULE mod_Tnum
            write(out_unitp,*) '========================='
          END DO
       END IF
+      
       IF(MPI_id==0) THEN
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*) '================================================='

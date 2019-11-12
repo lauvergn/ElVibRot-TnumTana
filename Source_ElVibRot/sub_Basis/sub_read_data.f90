@@ -76,7 +76,7 @@
         write(out_unitp,*) '---------------------------------------'
         write(out_unitp,*)
       ENDIF
-
+     
       ! parameter for BasisnD
       BasisnD_loc%type           = 1
       BasisnD_loc%name           = 'direct_prod'
@@ -203,7 +203,7 @@
         write(out_unitp,*) 'BasisnD%opt_param',BasisnD%opt_param
         write(out_unitp,*)
       ENDIF
-
+    
       CALL dealloc_basis(BasisnD_loc)
       !CALL RecWriteMini_basis(BasisnD)
 
@@ -219,11 +219,13 @@
       END IF
 !---------------------------------------------------------------------
       end subroutine read_basis5
+
       RECURSIVE SUBROUTINE RecRead5_Basis(basis_temp,mole)
 
       USE mod_system
       USE mod_basis
-      use mod_Coord_KEO, only: zmatrix
+      USE mod_Coord_KEO, only: zmatrix
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the active basis set ---------------------------------------

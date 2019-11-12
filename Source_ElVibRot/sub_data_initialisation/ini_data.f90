@@ -273,7 +273,6 @@
         STOP
       END IF
 
-
 !     -- reading parameters for intensity ----------------------------
       para_intensity%Temp     = -ONE
       IF (para_ana%intensity) THEN

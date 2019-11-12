@@ -169,6 +169,9 @@ CONTAINS
       ncv =  2*nev+10
       ncv =  3*nev+10 
       !was ncv =  2*nev+10
+      
+      ncv=MIN(N,ncv)  ! prevent infor=-3 error:
+                      ! NCV must be greater than NEV and less than or equal to N.
 
       maxn   = n
       ldv    = maxn
@@ -210,7 +213,7 @@ CONTAINS
       info   = 1
       IF (info /= 0) THEN
         IF(MPI_id==0) CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                  &
-                          para_propa%para_Davidson,para_H%cplx)
+                                          para_propa%para_Davidson,para_H%cplx)
         IF (para_propa%para_Davidson%With_Grid) THEN
           IF(MPI_id==0) resid(:) = psi_loc%RvecG(:)
         ELSE
@@ -257,13 +260,14 @@ CONTAINS
 !       | has been exceeded.                          |
 !       %---------------------------------------------%
 #if __ARPACK == 1
-        IF(MPI_id==0) call dnaupd(ido, bmat, n, which, nev, tol, resid,             &
-                                  ncv, v, ldv, iparam, ipntr, workd, workl, lworkl, &
-                                  info )
+        IF(MPI_id==0) call dnaupd(ido, bmat, n, which, nev, tol, resid,                &
+                                  ncv, v, ldv, iparam, ipntr, workd, workl, lworkl,    &
+                                  info)
 #if(run_MPI)
         CALL MPI_Bcast(info,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-        CALL MPI_Bcast(ido,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+        CALL MPI_Bcast(ido, size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
 #endif
+
 #else
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) ' The ARPACK library is not present!'
@@ -285,8 +289,8 @@ CONTAINS
 !       %--------------------------------------%
 
         CALL sub_OpV1_TO_V2_Arpack(workd(ipntr(1):ipntr(1)-1+n),                       &
-                                    workd(ipntr(2):ipntr(2)-1+n),                      &
-                              psi_loc,Hpsi_loc,para_H,cplxE,para_propa,int(n))
+                                   workd(ipntr(2):ipntr(2)-1+n),                       &
+                                   psi_loc,Hpsi_loc,para_H,cplxE,para_propa,int(n))
 
         IF(MPI_id==0) THEN
           write(iunit,*) 'Arpack <psi H psi>:',                                        &
@@ -773,6 +777,9 @@ CONTAINS
       END IF
       nev =  nb_diago
       ncv =  2*nev+10
+      
+      ncv=MIN(N,ncv)  ! prevent infor=-3 error:
+                      ! NCV must be greater than NEV and less than or equal to N.
 
       maxn   = n
       ldv    = maxn
@@ -866,6 +873,7 @@ CONTAINS
         CALL MPI_Bcast(info,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
         CALL MPI_Bcast(ido,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
 #endif
+
 #else
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' The ARPACK library is not present!'
@@ -926,7 +934,7 @@ CONTAINS
 !       %--------------------------%
 
          write(out_unitp,*)
-         write(out_unitp,*) ' Error with _saupd, info = ', info
+         write(out_unitp,*) ' Error with _saupd, info = ', info,' from ', MPI_id
          write(out_unitp,*) ' Check documentation in _saupd '
          write(out_unitp,*) ' '
 
