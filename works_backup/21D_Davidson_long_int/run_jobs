@@ -1,6 +1,6 @@
 B=1
-./shell_run 1   2 3 $B  1 2 $B f
-./shell_run 2   2 3 $B  1 2 $B t
+./shell_run 1   2 2 $B  1 2 $B f
+./shell_run 2   2 2 $B  1 2 $B t
 
 ##./shell_run 1   8 9 $B  7 8 $B f
 ##./shell_run 2   8 9 $B  7 8 $B t

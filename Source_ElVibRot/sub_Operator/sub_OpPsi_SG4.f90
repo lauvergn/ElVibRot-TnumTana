@@ -2514,7 +2514,6 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
    !transfert part of the scalar part of the potential
    iterm00 = para_Op%derive_term_TO_iterm(0,0)
    iOp     = Get_iOp_FROM_n_Op(para_Op%n_Op) ! 2,1,2 + n_Op
-   write(*,*) 'iOp check1',iOp
 
    lformatted = para_Op%OpGrid(iterm00)%para_FileGrid%Formatted_FileGrid
 
@@ -2588,12 +2587,13 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
      CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
      allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
-     DO iOp=1,size(d0MatOp)
+     DO iOp=1,size(d0MatOp) ! iOp value is change here !!
        CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
      END DO
    END IF
 
-   write(*,*) 'iOp check2',iOp
+   !write(*,*) 'iOp check2',iOp
+   !iOp     = Get_iOp_FROM_n_Op(para_Op%n_Op) ! temp
 
    ! G calculation
    CALL alloc_NParray(GGiq,(/nq,mole%nb_act1,mole%nb_act1/),'GGiq',name_sub)
@@ -2621,13 +2621,12 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
                                  para_Op%para_Tnum,para_Op%para_PES)
 
-        write(*,*) 'iOp check3',iOp
         DO i=1,nb0
         DO j=1,nb0
           V(iq,j,i) = d0MatOp(iOp)%ReVal(j,i,iterm00)
           !was V(iq,j,i) = d0MatOp(iterm00)%ReVal(j,i,1)
-          !!! iOpE= 1 (iOp) in get_d0MatOp_AT_Qact
-          !!! iOpS=2 (if nb_Op=sizie(d0MatOp)>2)  (iOp) in get_d0MatOp_AT_Qact
+          !! iOpE=1 (iOp) in get_d0MatOp_AT_Qact
+          !! iOpS=2 (if nb_Op=sizie(d0MatOp)>2)  (iOp) in get_d0MatOp_AT_Qact
         END DO
         END DO
 

@@ -26,6 +26,7 @@ B2=2
 x=4.5
 zref=-1.4
 pi=3.14159265358979323844
+
 export EXTFextern=f90
 
 
@@ -99,9 +100,7 @@ fi
 ##==============================================================
 cat > namelist << EOF
 &system 
-printlevel=1 
-PGrid_omp=1 
-POpPsi_omp=1 /
+printlevel=1 /
 
 &constantes /
 
@@ -168,28 +167,29 @@ sym  z   R1  R2  u2  R3  u3  f3  x   y   R1+  R2+  u2+  a+   ub+  g+   R1-  R2- 
 &Coord_transfo name_transfo='active' /
  1 1 1    1 1 1   1 1 1  1 1 1  1 1 1    1 1 1   1 1 1 
 
-&minimum pot0=0. read_itQ0transfo=2 pot_itQtransfo=0 unit='bohr' /
-R1_F(BF)                    4.873215
-R2_F(BF)                    3.744908
-u2_F(BF)                    0.005470
-R3_F(BF)                    2.038028
-u3_F(BF)                    0.014242
-phi3_F(BF)                  0.000000
-x4_F(BF)                   -0.663011
-y4_F(BF)                    0.000000
+&minimum pot0=0. read_itQ0transfo=5 pot_itQtransfo=0 unit='bohr' /
 z4_F(BF)                    $zref
-R1_F(1,BF)                  2.332503
-R2_F(1,BF)                  2.077414
-u2_F(1,BF)                 -0.486305
-alpha_F(1,BF)               $pi
-ubeta_F(1,BF)               0.036951
-gamma_F(1,BF)               $pi
-R1_F(2,BF)                  2.496509
-R2_F(2,BF)                  2.047324
-u2_F(2,BF)                 -0.398611
-alpha_F(2,BF)               $pi
-ubeta_F(2,BF)              -0.086986
-gamma_F(2,BF)               0.000000
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+
 
 
 &CurviRPH nb_pts=2 gradient=f /
