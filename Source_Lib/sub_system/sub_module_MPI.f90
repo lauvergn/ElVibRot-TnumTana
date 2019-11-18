@@ -144,6 +144,7 @@ MODULE mod_MPI
   
 #else
   Integer,save   :: MPI_id     !< fake MPI_id, for convenience
+  !Logical        :: logical_ture ! defined because of the transfer between 32 and 64 bit compiler
 #endif
 
 END MODULE mod_MPI

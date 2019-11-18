@@ -34,7 +34,7 @@
       IF (nb_be == 1 ) THEN
         CALL pes(reshape(Qxyz(1:3*natoms),shape=[3,natoms]),0,mat_V(1,1),g,h)
 
-        !write(6,*) 'Q,mat_V',Q,mat_V(1,1)
+         write(6,*) 'Q,mat_V',Qxyz,mat_V(1,1)
         IF (pot_cplx) mat_imV(1,1) = im_pot0(Qxyz)
         IF (calc_ScalOp) THEN
           CALL sub_ScalarOp(ScalOp,nb_ScalOp,Qxyz,mole)

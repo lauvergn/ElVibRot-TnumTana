@@ -1077,6 +1077,7 @@
 !     -----------------------------------------------------------------
       END SUBROUTINE Qtransfo1TOQtransfo2
       SUBROUTINE calc_Qtransfo(dnQin,dnQout,Qtransfo,nderiv,inTOout)
+        USE mod_MPI
 
         TYPE (Type_dnVec), intent(inout)  :: dnQin,dnQout
         TYPE (Type_Qtransfo), intent(in)  :: Qtransfo

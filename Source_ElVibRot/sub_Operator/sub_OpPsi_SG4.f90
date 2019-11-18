@@ -806,7 +806,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     !-----------------------------------------------------------------------------------
 
     !IF((if_propa .AND. MPI_np>10) .OR. MPI_np>50) THEN 
-    IF(size_PsiR_V(0)<2600000) THEN  !< according to the effeiciency test
+    IF(size_PsiR_V(0)<1000000) THEN  !< according to the a few effeiciency test
       ! calculate total length of vectors for each threads------------------------------
       IF(once_control .AND. MPI_id==0) write(*,*) 'MPI TYPE 1 in action'
       IF(once_control .AND. MPI_id==0) THEN
@@ -2439,6 +2439,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                   DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
                      getbis_tab_nq,getbis_tab_nb,tabR2gridbis_TO_tabR1_AT_iG
   USE mod_SetOp,                      ONLY : param_Op,write_param_Op
+  USE mod_MPI
 
 
   IMPLICIT NONE
@@ -2512,7 +2513,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
    !transfert part of the scalar part of the potential
    iterm00 = para_Op%derive_term_TO_iterm(0,0)
-   iOp     = Get_iOp_FROM_n_Op(para_Op%n_Op)
+   iOp     = Get_iOp_FROM_n_Op(para_Op%n_Op) ! 2,1,2 + n_Op
+   write(*,*) 'iOp check1',iOp
 
    lformatted = para_Op%OpGrid(iterm00)%para_FileGrid%Formatted_FileGrid
 
@@ -2591,6 +2593,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
      END DO
    END IF
 
+   write(*,*) 'iOp check2',iOp
+
    ! G calculation
    CALL alloc_NParray(GGiq,(/nq,mole%nb_act1,mole%nb_act1/),'GGiq',name_sub)
 
@@ -2616,10 +2620,14 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
         CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
                                  para_Op%para_Tnum,para_Op%para_PES)
+
+        write(*,*) 'iOp check3',iOp
         DO i=1,nb0
         DO j=1,nb0
           V(iq,j,i) = d0MatOp(iOp)%ReVal(j,i,iterm00)
           !was V(iq,j,i) = d0MatOp(iterm00)%ReVal(j,i,1)
+          !!! iOpE= 1 (iOp) in get_d0MatOp_AT_Qact
+          !!! iOpS=2 (if nb_Op=sizie(d0MatOp)>2)  (iOp) in get_d0MatOp_AT_Qact
         END DO
         END DO
 

@@ -12,6 +12,7 @@ c================================================================
 
       USE mod_Tnum
       USE mod_system
+      USE mod_Constant
       IMPLICIT NONE
 
 c----- for the zmatrix and Tnum --------------------------------------
@@ -24,41 +25,60 @@ c----- for the zmatrix and Tnum --------------------------------------
       real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
       real (kind=Rkind) :: Qact(nb_var)
 
-      integer,parameter :: ndim=6
+      integer,parameter :: ndim=12
       real (kind=Rkind) :: im_pot0
       real (kind=Rkind) :: Q(ndim)
       real (kind=Rkind) :: Q2(ndim)
-      real (kind=Rkind) :: Q3(ndim)
-     
-      real (kind=Rkind), parameter :: lambda = 0.111803d0
-      integer :: i,n
 
+      real (kind=Rkind), parameter :: w(ndim) = (/
+     *  0.09357_Rkind, 0.0740_Rkind, 0.1273_Rkind, 0.1568_Rkind,
+     *  0.1347_Rkind, 0.3431_Rkind, 0.1157_Rkind, 0.3242_Rkind,
+     *  0.3621_Rkind, 0.2673_Rkind, 0.3052_Rkind, 0.0968_Rkind/)
+
+      real (kind=Rkind), parameter :: k1(ndim) = (/
+     *  ZERO, -0.0964_Rkind, 0.0470_Rkind, 0.1594_Rkind,
+     *  0.0308_Rkind, 0.0782_Rkind, 0.0261_Rkind, 0.0717_Rkind,
+     *  0.0560_Rkind, 0.0625_Rkind, 0.0780_Rkind, 0.0188_Rkind/)
+
+      real (kind=Rkind) :: k2(ndim) = (/
+     *  ZERO,0.1194_Rkind, 0.2012_Rkind, 0.0484_Rkind,
+     *  -0.0308_Rkind, -0.0782_Rkind, -0.0261_Rkind, -0.0717_Rkind,
+     *  -0.0560_Rkind, -0.0625_Rkind, -0.0780_Rkind, -0.0188_Rkind/)
+
+      real (kind=Rkind), parameter :: delta=0.46165_Rkind
+      real (kind=Rkind), parameter :: lambda=0.1825_Rkind
+
+      real (kind=Rkind) :: eVTOau
+
+      
+      eVTOau = ONE/get_Conv_au_TO_unit(quantity='E',Unit='eV')
+     
+      !write(6,*) 'w (au)',w10a,w6a,w1,w9a
 
       Q  = Qact(4:ndim+3)
       Q2 = Q*Q
-      Q3 = Q2*Q
 
-      IF (nb_be == 1 ) THEN
-c       CALL sub_model_V(mat_V,Q,ndim,nb_be)
-        mat_V(1,1) = ZERO
-        DO i=1,ndim
-         mat_V(1,1) = mat_V(1,1) + HALF * Q(i)**2
-        END DO
-        DO i=1,ndim-1
-         mat_V(1,1) = mat_V(1,1) + lambda * 
-     *     ( Q(i)**2 * Q(i+1) - Q(i+1)**3/THREE )
-        END DO
-c       mat_V(1,1) = HALF * sum(Q2) + lambda * sum( Q2(1:n-1)*Q(2:n) ) -
-c    *             lambda/THREE * sum( Q(2:n)**3 )
+      IF (nb_be == 2 ) THEN
+        mat_V(:,:) = ZERO
+        mat_V(1,1) = HALF* dot_product(w(:),Q2(:))
 
-        IF (pot_cplx) mat_imV(1,1) = im_pot0(Q,n)
+        mat_V(2,2) = mat_V(1,1) + delta + dot_product(k2(:),Q(:))
+        mat_V(1,1) = mat_V(1,1) - delta + dot_product(k1(:),Q(:))
+        mat_V(1,2) = lambda*Q(1)
+        mat_V(2,1) = lambda*Q(1)
+
+        mat_V = mat_V * eVTOau
+
+c       write(6,*) 'Q,V',Q,mat_V
+        IF (pot_cplx) mat_imV(1,1) = im_pot0(Q,ndim)
+c       write(6,*) 'Q,imV',Q,mat_imV
         IF (calc_ScalOp) THEN
-          CALL sub_scalar(mat_ScalOp(1,1,:),nb_ScalOp,Q,n,
+          CALL sub_scalar(mat_ScalOp(1,1,:),nb_ScalOp,Q,ndim,
      *                    mole)
         END IF
       ELSE
         write(6,*) ' ERROR in calc_op'
-        write(6,*) ' more than ONE electronic surface is impossible'
+        write(6,*) ' It needs two PES'
         write(6,*) ' Rq: nb_be',nb_be
         STOP
       END IF
@@ -168,6 +188,7 @@ C================================================================
            z = z -(abs(Q(i)) - Q0)**3
         END IF
        END DO
+       !write(6,*) Q,z
 
        im_pot0 = z
 

@@ -34,14 +34,18 @@ fi
 ##--------------------------------------------------------------
 ## set code dir
 
-work=`pwd`
-DIR_vib=$work/..
+here=`pwd`
+
+work=$here/result/
+DIR_vib=$here/../..
 DIR_pot=$DIR_vib/sub_pot
 VIBEXE=vib
 
 cp sub_system_HenonHeiles.f $DIR_pot/sub_system.f
 cd $DIR_vib
 make
+
+mkdir -p $work
 cd $work
 
 ##--------------------------------------------------------------
@@ -194,7 +198,7 @@ elif [ $parall == 'MPI'    ] ; then
 ##-if just output process 0-------------------------------------
 
   if [ $MPI_output0 == 1 ] ; then
-    mpirun -np $MPI_cores MPI_output_control $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
+    mpirun -np $MPI_cores $here/MPI_output_control $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
   else
     mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
   fi

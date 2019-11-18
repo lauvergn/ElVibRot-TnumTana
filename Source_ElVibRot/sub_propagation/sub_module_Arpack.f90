@@ -591,7 +591,8 @@ CONTAINS
 
       !----- Operator: Hamiltonian ----------------------------
       TYPE (param_Op)   :: para_H
-      integer           :: n
+      integer (kind=4)  :: n
+      ! was integer     :: n
       real(kind=Rkind)  :: V1(n),V2(n)
 
       !----- WP, energy ... -----------------------------------

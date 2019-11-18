@@ -33,6 +33,13 @@ extf = $(EXTFextern)
 ## Operating system, OS? automatic using uname:
 OS=$(shell uname)
 #
+
+## set path for 64-bit MPI when requiring long integer.
+## disable ARPACK for 64-bit case 
+ifeq ($(INT),8)
+  PATH := $(PATH):/u/achen/Software/openmpi64/bin/
+  ARPACK = 0
+endif
 #=================================================================================
 # External pot for the library: libpot.a, 
 # with epxort variable (POTDIRextern) or with explicit name

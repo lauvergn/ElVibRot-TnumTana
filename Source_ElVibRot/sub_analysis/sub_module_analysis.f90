@@ -214,7 +214,9 @@
       ene0            = REAL_WU(huge(ONE),'cm-1','E')
       Ezpe            = REAL_WU(huge(ONE),'cm-1','E')
       max_ene         = REAL_WU(TEN**4,   'cm-1','E') ! 10 000 cm-1
+
       read(in_unitp,analyse)
+
       IF (print_level > 0) write(out_unitp,analyse)
       write(out_unitp,*)
       IF (davidson .AND. arpack) THEN
