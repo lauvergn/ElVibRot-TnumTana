@@ -1775,7 +1775,6 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       integer           :: max_poly
       real (kind=Rkind) :: poly_tol
       logical           :: Op_Transfo
-      integer           :: err_io
 
       namelist /davidson/num_resetH,num_checkS,                         &
                         read_WP,nb_readWP,read_listWP,nb_readWP_OF_List,&
@@ -1860,7 +1859,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       poly_tol          = ZERO
       Op_Transfo        = .FALSE.
 
-      read(in_unitp,davidson,IOSTAT=err_io)
+      read(in_unitp,davidson)
       IF (print_level > 0) write(out_unitp,davidson)
 
       IF (.NOT. lower_states .AND. .NOT. all_lower_states .AND. &
