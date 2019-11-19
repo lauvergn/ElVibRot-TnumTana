@@ -113,6 +113,10 @@ MODULE mod_paramQ
       logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='read_RefGeom'
       !-----------------------------------------------------------------
+  write(6,*) 'coucou ',name_sub
+  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
+  flush(6)
+
 
       write(out_unitp,*) 'BEGINNING ',name_sub
 
@@ -432,6 +436,9 @@ MODULE mod_paramQ
 
       END IF
       ! ----------------------------------------------
+  write(6,*) 'coucou2 ',name_sub
+  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
+  flush(6)
 
       CALL sub_QinRead_TO_Qact(Qread,Qact,mole,read_itQtransfo_OF_Qin0)
       CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
@@ -777,6 +784,9 @@ MODULE mod_paramQ
       ! since it is going from out to in, it is better to use it_QoutRead (= it_QinRead+1)
       it_QoutRead = it_QinRead + 1
 
+  write(6,*) 'coucou ',name_sub
+  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
+  flush(6)
 
 
       IF (it_QoutRead == mole%nb_Qtransfo+1) THEN ! read_Qact0
@@ -785,13 +795,14 @@ MODULE mod_paramQ
         it = it_QoutRead
         nb_act = mole%tab_Qtransfo(it_QoutRead)%nb_act
 
-
         CALL alloc_dnSVM(dnQout,mole%tab_Qtransfo(it)%nb_Qout,nb_act,0)
 
         dnQout%d0(1:size(Qread)) = Qread(:)
 
         DO it=it_QoutRead,mole%nb_Qtransfo
-
+  write(6,*) 'coucou0 ',it,name_sub
+  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
+  flush(6)
           CALL alloc_dnSVM(dnQin,mole%tab_Qtransfo(it)%nb_Qin,nb_act,0)
 
           IF (debug) THEN
@@ -812,7 +823,9 @@ MODULE mod_paramQ
 
           CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv=0)
           CALL dealloc_dnSVM(dnQin)
-
+  write(6,*) 'coucou2 ',it,name_sub
+  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
+  flush(6)
         END DO
 
         Qact(:) = dnQout%d0(1:size(Qact))
@@ -1383,8 +1396,8 @@ MODULE mod_paramQ
         Qact(iQ) = Qact(iQ) + ONETENTH
         CALL sub_QactTOdnx(Qact,dnx,mole,0,Gcenter=.TRUE.)
         dnx%d0 = dnx%d0 - dnx0%d0 ! dxyz
-        Norm = dot_product(dnx%d0,dnx%d0)
-        dnx%d0 = HALF*dnx%d0/sqrt(Norm)
+        Norm = sqrt(dot_product(dnx%d0,dnx%d0))
+        dnx%d0 = dnx%d0/Norm
         write(niofreq,*) mole%nat_act
         write(niofreq,*) '  Coord: ',iQ
 

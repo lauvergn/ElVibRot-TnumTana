@@ -886,20 +886,20 @@ MODULE mod_Tnum
             END IF
 
           CASE ("rph")
-            mole%itRPH = it
             IF (it /= nb_Qtransfo-1) THEN
                write(out_unitp,*) ' WARNNING in ',name_sub
                write(out_unitp,*) ' The RPH (Reaction Path Hamiltonian) transfortmation MUST be just before "active".'
                write(out_unitp,*) 'it,name_transfo: ',it,mole%tab_Qtransfo(it)%name_transfo
                !STOP
             END IF
-            IF (associated(mole%RPHTransfo)) THEN
+            IF (mole%itRPH /= -1) THEN
               write(out_unitp,*) ' ERROR in ',name_sub
               write(out_unitp,*) '  TWO RPH transformations have been read'
               write(out_unitp,*) '  Only one is possible'
               write(out_unitp,*) ' Check your data !!'
               STOP
             ELSE
+              mole%itRPH      = it
               mole%RPHTransfo => mole%tab_Qtransfo(it)%RPHTransfo
             END IF
 

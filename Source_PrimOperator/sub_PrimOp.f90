@@ -4808,6 +4808,7 @@
   END IF
 
   !----- set RPH transfo of Qref -----------------------------------
+
   IF (associated(mole%RPHTransfo)) THEN
     IF (.NOT. mole%tab_Qtransfo(mole%itRPH)%skip_transfo .AND.          &
                                        mole%RPHTransfo%option /= 0) THEN
