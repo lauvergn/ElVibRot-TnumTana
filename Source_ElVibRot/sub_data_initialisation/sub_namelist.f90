@@ -317,7 +317,6 @@
 !     - working variables -----
       integer       :: ib,ind_b(mole%nb_act1+1)
       integer       :: i,j,k,i_term,nb_bi
-      integer       :: err_io
 
 !-------variables for the file names -------------------------------------
        character (len=Line_len) :: name_HADA
@@ -386,7 +385,7 @@
       Op_Transfo    = .FALSE.
       E0_Transfo    = REAL_WU(ZERO,   'cm-1','E') !ZERO with cm-1 as default unit
 
-      read(in_unitp,actives,IOSTAT=err_io)
+      read(in_unitp,actives)
       IF (direct == 0 .OR. read_Op) make_MatOp = .TRUE.
       IF (print_level > 1) write(out_unitp,actives)
 
