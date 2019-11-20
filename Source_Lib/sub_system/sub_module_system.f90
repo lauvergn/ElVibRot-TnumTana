@@ -82,7 +82,7 @@ MODULE mod_system
 
 
       logical :: openmp = .FALSE.
-      logical :: openmpi= .True. 
+      logical :: openmpi= .FALSE. 
       integer :: MatOp_omp,OpPsi_omp,BasisTOGrid_omp,Grid_omp,SG4_omp
       integer :: MatOp_maxth,OpPsi_maxth,BasisTOGrid_maxth,Grid_maxth,SG4_maxth
 
