@@ -967,7 +967,10 @@
       integer       :: tab_ib(basis_SG%nb_basis)
       integer       :: tab_nq(basis_SG%nb_basis)
 
-      integer       :: nDNum_OF_Lmax(basis_SG%nb_basis),L1max,L2max
+      integer       :: nDNum_OF_Lmax(basis_SG%nb_basis)
+      integer       :: L1maxB,L2maxB,L1maxG,L2maxG
+
+
       logical       :: Print_basis
       TYPE (basis)  :: basis_temp
 
@@ -999,6 +1002,10 @@
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '- Sparse Grid, packed   :',basis_SG%packed
         write(out_unitp,*) '- Sparse Grid, Lmin,Lmax:',Lmin,Lmax
+        write(out_unitp,*) '- L1_SparseBasis        :',basis_SG%para_SGType2%L1_SparseBasis
+        write(out_unitp,*) '- L1_SparseGrid         :',basis_SG%para_SGType2%L1_SparseGrid
+        write(out_unitp,*) '- L2_SparseBasis        :',basis_SG%para_SGType2%L2_SparseBasis
+        write(out_unitp,*) '- L2_SparseGrid         :',basis_SG%para_SGType2%L2_SparseGrid
       END IF
 
       DO ib=1,basis_SG%nb_basis
@@ -1111,8 +1118,10 @@
         write(out_unitp,*) '============ Set nDindB'
         CALL flush_perso(out_unitp)
       END IF
-      L1max = basis_SG%para_SGType2%L1_SparseBasis
-      L2max = basis_SG%para_SGType2%L2_SparseBasis
+      L1maxB = basis_SG%para_SGType2%L1_SparseBasis
+      L2maxB = basis_SG%para_SGType2%L2_SparseBasis
+      L1maxG = basis_SG%para_SGType2%L1_SparseGrid
+      L2maxG = basis_SG%para_SGType2%L2_SparseGrid
       CALL dealloc_SGType2(basis_SG%para_SGType2)
 
 
@@ -1120,7 +1129,10 @@
       DO ib=1,basis_SG%nb_basis
         nDNum_OF_Lmax(ib) = basis_SG%tab_Pbasis(ib)%Pbasis%para_SGType2%Num_OF_Lmax
       END DO
-      IF(MPI_id==0) write(6,*) 'nDNum_OF_Lmax',nDNum_OF_Lmax
+      IF(MPI_id==0) THEN
+        write(6,*) 'L1maxB, L2maxB (basis)',L1maxB,L2maxB
+        write(6,*) 'nDNum_OF_Lmax',nDNum_OF_Lmax
+      END IF
 
       allocate(tab_i_TO_l(basis_SG%nb_basis))
       DO ib=1,basis_SG%nb_basis
@@ -1150,7 +1162,7 @@
         CALL init_nDindexPrim(basis_SG%nDindB,                          &
                              basis_SG%nb_basis,nDsize,type_OF_nDindex=5,&
                              Lmax=LB,nDNum_OF_Lmax=nDNum_OF_Lmax,       &
-                             L1max=L1max,L2max=L2max,                   &
+                             L1max=L1maxB,L2max=L2maxB,                 &
                              MaxCoupling=basis_SG%MaxCoupling_OF_nDindB,&
                              tab_i_TO_l=tab_i_TO_l )
       END IF
@@ -1208,13 +1220,12 @@
                             MaxCoupling=basis_SG%MaxCoupling_OF_nDindB, &
                             nDinit=(/ (0,i=1,basis_SG%nb_basis) /) )
       ELSE
-        L1max = basis_SG%para_SGType2%L1_SparseGrid
-        L2max = basis_SG%para_SGType2%L2_SparseGrid
+        IF (MPI_id==0) write(6,*) 'L1maxG, L2maxG (grid)',L1maxG,L2maxG
         basis_SG%para_SGType2%nDind_SmolyakRep%packed = .TRUE.
         CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep,   &
                            basis_SG%nb_basis,nDsize,type_OF_nDindex=-5, &
                            Lmin=0,Lmax=Lmax,nDNum_OF_Lmax=nDNum_OF_Lmax,&
-                           L1max=L1max,L2max=L2max,                     &
+                           L1max=L1maxG,L2max=L2maxG,                   &
                            MaxCoupling=basis_SG%MaxCoupling_OF_nDindB,  &
                            nDinit=(/ (0,i=1,basis_SG%nb_basis) /) )
       END IF
