@@ -46,6 +46,7 @@ MODULE mod_Tnum
 
         PRIVATE
 
+!-------------------------------------------------------------------------------
         TYPE param_PES_FromTnum
 
           integer           :: nb_elec              = 1       ! nb of electronic PES
@@ -99,8 +100,9 @@ MODULE mod_Tnum
           TYPE (param_nDFit), pointer   :: para_nDFit_Scalar_Op(:) => null()
 
         END TYPE param_PES_FromTnum
+!-------------------------------------------------------------------------------
 
-
+!-------------------------------------------------------------------------------
         TYPE zmatrix
           logical            :: print_done = .FALSE.! if T, the zmat has been already print
           logical            :: WriteCC    = .FALSE.
@@ -172,10 +174,12 @@ MODULE mod_Tnum
           real (kind=Rkind)          :: Mtot_inv = ZERO
 
         END TYPE zmatrix
+!-------------------------------------------------------------------------------
 
 
         !!@description: TODO
         !!@param: TODO
+!-------------------------------------------------------------------------------
         TYPE Tnum
           real (kind=Rkind)          :: stepT   = ONETENTH**4
           logical                    :: num_GG  = .FALSE.
@@ -208,6 +212,7 @@ MODULE mod_Tnum
           TYPE (sum_opnd)            :: TWOxKEO,ExpandTWOxKEO
 
         END TYPE Tnum
+!-------------------------------------------------------------------------------
 
       PUBLIC :: param_PES_FromTnum, zmatrix, Tnum
       PUBLIC :: Set_masses_Z_TO_mole, Write_mole, Read_mole, dealloc_zmat, mole1TOmole2
@@ -567,9 +572,9 @@ MODULE mod_Tnum
       !write(out_unitp,*) 'END dealloc_zmat'
 
        END SUBROUTINE dealloc_zmat
-!======================================================
+!===============================================================================
 !     read parameter for the zmat of Tnum
-!======================================================
+!===============================================================================
       !!@description: read parameter for the zmat of Tnum
       !!@param: TODO
       SUBROUTINE Read_mole(mole,para_Tnum,const_phys)
@@ -577,6 +582,7 @@ MODULE mod_Tnum
       USE mod_ZmatTransfo,      only : Read_ZmatTransfo
       USE mod_CartesianTransfo, only : Write_CartesianTransfo
       USE mod_constant
+      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -681,11 +687,13 @@ MODULE mod_Tnum
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
-       !IF (debug) THEN
-         write(out_unitp,*) '================================================='
-         write(out_unitp,*) '================================================='
-         write(out_unitp,*) 'BEGINNING ',name_sub
-       !END IF
+      !IF (debug) THEN
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*) 'BEGINNING ',name_sub
+      ENDIF
+      !END IF
 
 !-------------------------------------------------------
 !     initializations
@@ -826,10 +834,12 @@ MODULE mod_Tnum
 !===== New Coordinates transformation ==================================
 !=======================================================================
       IF (mole%nb_Qtransfo > 1) THEN
-        write(out_unitp,*) '================================================='
-        write(out_unitp,*) '================================================='
-        write(out_unitp,*) 'New Coordinates transformation',mole%nb_Qtransfo
-        write(out_unitp,*) '================================================='
+        IF(MPI_id==0) THEN
+          write(out_unitp,*) '================================================='
+          write(out_unitp,*) '================================================='
+          write(out_unitp,*) 'New Coordinates transformation',mole%nb_Qtransfo
+          write(out_unitp,*) '================================================='
+        ENDIF
         CALL alloc_array(mole%tab_Qtransfo,(/mole%nb_Qtransfo/),        &
                         "mole%tab_Qtransfo",name_sub)
         nb_Qin = 0
@@ -970,7 +980,6 @@ MODULE mod_Tnum
 
         CALL type_var_analysis(mole)
 
-
         mole%name_Qact => mole%tab_Qtransfo(nb_Qtransfo)%name_Qin
 
         IF (mole%nb_act < 1) THEN
@@ -986,12 +995,14 @@ MODULE mod_Tnum
           END DO
         END IF
 
-        write(out_unitp,*) '================================================='
-        write(out_unitp,*) '================================================='
-        write(out_unitp,*) 'END New Coordinates transformation'
-        write(out_unitp,*) '================================================='
-        write(out_unitp,*) '================================================='
-        CALL flush_perso(out_unitp)
+        IF(MPI_id==0) THEN
+          write(out_unitp,*) '================================================='
+          write(out_unitp,*) '================================================='
+          write(out_unitp,*) 'END New Coordinates transformation'
+          write(out_unitp,*) '================================================='
+          write(out_unitp,*) '================================================='
+          CALL flush_perso(out_unitp)
+        ENDIF
 !=======================================================================
 !===== Old Coordinates transformation ==================================
 !=======================================================================
@@ -1000,11 +1011,13 @@ MODULE mod_Tnum
         IF (sym) mole%nb_Qtransfo = mole%nb_Qtransfo + 1
         IF (NM .OR. NM_TO_sym) mole%nb_Qtransfo = mole%nb_Qtransfo + 1
 
-        write(out_unitp,*) '================================================='
-        write(out_unitp,*) '================================================='
-        write(out_unitp,*) 'Old Coordinates transformation',            &
-                             mole%nb_Qtransfo
-        write(out_unitp,*) '================================================='
+        IF(MPI_id==0) THEN
+          write(out_unitp,*) '================================================='
+          write(out_unitp,*) '================================================='
+          write(out_unitp,*) 'Old Coordinates transformation',            &
+                               mole%nb_Qtransfo
+          write(out_unitp,*) '================================================='
+        ENDIF
 
         CALL alloc_array(mole%tab_Qtransfo,(/mole%nb_Qtransfo/),        &
                         "mole%tab_Qtransfo",name_sub)
@@ -1411,11 +1424,15 @@ MODULE mod_Tnum
            write(out_unitp,*) '========================='
          END DO
       END IF
-      write(out_unitp,*) 'END ',name_sub
-      write(out_unitp,*) '================================================='
-      write(out_unitp,*) '================================================='
+      
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) 'END ',name_sub
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*) '================================================='
+      ENDIF
       CALL flush_perso(out_unitp)
       END SUBROUTINE Read_mole
+!===============================================================================
 
 !================================================================
 !       conversion d0Q (zmat,poly, bunch ...) => d0x

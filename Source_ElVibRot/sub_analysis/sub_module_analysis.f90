@@ -105,9 +105,12 @@
 
         END TYPE param_intensity
       CONTAINS
+
+!===============================================================================
       SUBROUTINE read_analyse(para_ana,Qana)
       USE mod_system
       USE mod_type_ana_psi
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables pour la namelist analyse ----------------------------
@@ -162,7 +165,7 @@
                         MaxWP_TO_Write_MatOp
 
 
-      write(out_unitp,*) ' ANALYSIS PARAMETERS'
+      IF(MPI_id==0) write(out_unitp,*) ' ANALYSIS PARAMETERS'
 
       print                = .FALSE.
       psi2                 = .FALSE.
@@ -211,7 +214,9 @@
       ene0            = REAL_WU(huge(ONE),'cm-1','E')
       Ezpe            = REAL_WU(huge(ONE),'cm-1','E')
       max_ene         = REAL_WU(TEN**4,   'cm-1','E') ! 10 000 cm-1
+
       read(in_unitp,analyse)
+
       IF (print_level > 0) write(out_unitp,analyse)
       write(out_unitp,*)
       IF (davidson .AND. arpack) THEN
@@ -221,8 +226,8 @@
         STOP
       END IF
       IF (.NOT. formatted_file_WP) FilePsiVersion = 1
-      write(out_unitp,*) 'name_file_spectralWP,formatted_file_WP: ', &
-                          name_file_spectralWP,formatted_file_WP
+      IF(MPI_id==0) write(out_unitp,*) 'name_file_spectralWP,formatted_file_WP: ', &
+                                        name_file_spectralWP,formatted_file_WP
 
       IF (Qtransfo) THEN
         CALL alloc_NParray(Qtransfo_type,shape(Qana),"Qtransfo_type",name_sub)
@@ -243,8 +248,6 @@
       END IF
 
       Spectral_ScalOp = Spectral_ScalOp .OR. intensity .OR. NLO .OR. Psi_ScalOp
-
-
 
       IF (ene0%val /= huge(ONE) .AND. Ezpe%val == huge(ONE) ) Ezpe = ene0
       para_ana%Read_zpe = (Ezpe%val /= huge(ONE))
@@ -277,10 +280,8 @@
       para_ana%CRP_DEne        = convRWU_TO_R(CRP_DEne)
       para_ana%nb_CRP_Ene      = nb_CRP_Ene
 
-
       IF (debug) write(out_unitp,*) 'CRP,E,DE,nb_E   : ',para_ana%CRP,  &
                   para_ana%CRP_Ene,para_ana%CRP_DEne,para_ana%nb_CRP_Ene
-
 
       para_ana%Ezpe            = convRWU_TO_R(Ezpe)
       para_ana%Temp            = Temp
@@ -291,7 +292,6 @@
 
       IF (debug)  write(out_unitp,*) 'Ezpe   : ',RWU_Write(Ezpe,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
       IF (debug)  write(out_unitp,*) 'max_ene: ',RWU_Write(max_ene,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
-
 
       IF (propa) THEN
         CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
@@ -332,6 +332,7 @@
              CALL dealloc_NParray(Qtransfo_type,"Qtransfo_type",name_sub)
 
       END SUBROUTINE read_analyse
+!===============================================================================
 
       SUBROUTINE dealloc_para_ana(para_ana)
       USE mod_type_ana_psi, only : dealloc_ana_psi

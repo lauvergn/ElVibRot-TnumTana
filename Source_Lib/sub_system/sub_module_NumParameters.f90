@@ -191,7 +191,6 @@ module mt19937_64
 
 contains
 
-
   !-----------------------------------------------------------------------------
   ! Initializes mt(nn) with a seed
   subroutine init_genrand64(seed)

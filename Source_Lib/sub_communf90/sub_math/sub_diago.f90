@@ -1,12 +1,12 @@
-!============================================================
+!=======================================================================================
 !
 !   diagonalisation par jacobi
 !   le vecteur i est V(.,i)
 !
-!============================================================
-!
+!=======================================================================================
       SUBROUTINE diagonalization(Mat,Eig,Vec,n,type_diag,sort,phase)
       USE mod_system
+      USE mod_MPI
       IMPLICIT NONE
 
       integer          :: n
@@ -56,7 +56,7 @@
         CALL DSYEV('V','U',n4,Vec,n4,Eig,work,lwork,ierr4)
         IF (debug) write(out_unitp,*)'ierr=',ierr4
         IF (ierr4 /= 0) THEN
-           write(out_unitp,*) ' ERROR in ',name_sub
+           write(out_unitp,*) ' ERROR in ',name_sub,' from ', MPI_id
            write(out_unitp,*) ' DSYEV lapack subroutine has FAILED!'
            STOP
         END IF
@@ -89,7 +89,7 @@
         CALL DGEEV('N','V',n4,saveMat,lda4,Eig,IEig,dummy,int(1,kind=4),Vec,ldvr4,work,lwork4,ierr4)
         IF (debug) write(out_unitp,*)'ierr=',ierr4
         IF (ierr4 /= 0) THEN
-           write(out_unitp,*) ' ERROR in ',name_sub
+           write(out_unitp,*) ' ERROR in ',name_sub,' from ', MPI_id
            write(out_unitp,*) ' DGEEV lapack subroutine has FAILED!'
            STOP
         END IF
@@ -133,6 +133,7 @@
       IF (phase) CALL Unique_phase(n,Vec,n)
 
       END SUBROUTINE diagonalization
+!=======================================================================================
 
       SUBROUTINE JACOBI(A,N,D,V,B,Z,max_N)
       USE mod_system

@@ -195,11 +195,11 @@
       CALL sub_hermitic_H(H_VR,nb_bVR,non_hermitic,para_H%sym_Hamil)
 
       IF (non_hermitic >= FOUR/TEN**4) THEN
-        write(out_unitp,*) 'WARNING: non_hermitic is BIG'
-        write(out_unitp,31) non_hermitic
+        If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
+        If(MPI_id==0) write(out_unitp,31) non_hermitic
  31     format(' Hamiltonien: ',f16.12,' au')
       ELSE
-        IF (print_level>-1) write(out_unitp,21) non_hermitic*auTOcm_inv
+        IF (print_level>-1 .AND. MPI_id==0) write(out_unitp,21) non_hermitic*auTOcm_inv
  21     format(' Hamiltonien: ',f16.12,' cm-1')
       END IF
       CALL flush_perso(out_unitp)
@@ -212,8 +212,8 @@
       END IF
       nb_shift = count(Ene_VR(:) <= para_H%ComOp%ZPE)
       IF (nb_shift > 0) THEN
-        write(out_unitp,*) 'WARNING the vectors 1 to ',nb_shift,'have negative energies',Ene_VR(1:nb_shift)
-        write(out_unitp,*) '=> They will be shifted'
+        If(MPI_id==0) write(out_unitp,*) 'WARNING the vectors 1 to ',nb_shift,'have negative energies',Ene_VR(1:nb_shift)
+        If(MPI_id==0)  write(out_unitp,*) '=> They will be shifted'
         Vec_VR = cshift(Vec_VR,shift=nb_shift,dim=2)
         Ene_VR = cshift(Ene_VR,shift=nb_shift)
       END IF

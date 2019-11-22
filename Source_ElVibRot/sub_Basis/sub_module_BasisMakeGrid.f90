@@ -1783,6 +1783,7 @@ STOP
       USE mod_system
       USE mt19937_64
       USE mod_basis
+      USE mod_MPI
       IMPLICIT NONE
 !---------------------------------------------------------------------
 !---------- variables passees en argument ----------------------------
@@ -1890,14 +1891,14 @@ STOP
           Norm_min  = NormB
         END IF
 
-        IF (mod(imc,max(1,int(SA_para%nb_mc_tot/100))) == 0) THEN
+        IF (mod(imc,max(1,int(SA_para%nb_mc_tot/100))) == 0 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='no') '---'
           flush(out_unitp)
         END IF
 
         IF (NormB < SA_para%Tmin) EXIT
       END DO
-      write(out_unitp,'(a)',ADVANCE='yes') '----]'
+      IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
 
       NormA = NormA / real(SA_para%nb_mc_tot/10,kind=Rkind)
       write(out_unitp,*) 'Min, Average, Max Norm',Norm_min,NormA,Norm_max

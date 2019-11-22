@@ -357,11 +357,9 @@
 
       integer            :: iq
 
-
       integer       :: iOp,i1,i2
       integer       :: k_term,iterm
       logical       :: SaveGrid_Op
-
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='sub_Save_GridMem_AllOp'
@@ -389,7 +387,6 @@
       DO iOp=1,para_AllOp%nb_Op
         IF (para_AllOp%tab_Op(iOp)%n_Op == -1) CYCLE  ! for S
 
-
         !--- alloc OpGrid ------------------------------------
         IF (.NOT. associated(para_AllOp%tab_Op(iOp)%OpGrid)) THEN
            CALL alloc_para_Op(para_AllOp%tab_Op(iOp),Mat=.FALSE.,Grid=.TRUE.)
@@ -402,8 +399,6 @@
 !           END DO
          END IF
       END DO
-
-
 
         DO iOp=1,para_AllOp%nb_Op
 
@@ -424,18 +419,30 @@
                para_AllOp%tab_Op(iOp)%OpGrid(k_term)%para_FileGrid%Save_MemGrid
 
             IF (para_AllOp%tab_Op(iOp)%OpGrid(k_term)%Grid_cte) CYCLE
+            !@chen removed?
+            !para_AllOp%tab_Op(iOp)%nb_term_cut=k_term  ! record actual nb_term
 
             IF (para_AllOp%tab_Op(iOp)%OpGrid(k_term)%para_FileGrid%Save_MemGrid) THEN
-
-              para_AllOp%tab_Op(iOp)%OpGrid(k_term)%para_FileGrid%Save_MemGrid_done = .TRUE.
+#if(run_MPI)
+              IF(Grid_allco) THEN
+#endif
+                para_AllOp%tab_Op(iOp)%OpGrid(k_term)%para_FileGrid%Save_MemGrid_done = .TRUE.
+#if(run_MPI)
+              ENDIF
+#endif
               i1 = para_AllOp%tab_Op(iOp)%derive_termQact(1,k_term)
               i2 = para_AllOp%tab_Op(iOp)%derive_termQact(2,k_term)
               IF ((i1 < 0 .OR. i2 < 0) .AND. para_AllOp%tab_Op(1)%para_Tnum%JJ == 0) CYCLE
               iterm = d0MatOp(iOp)%derive_term_TO_iterm(i1,i2)
 
-              para_AllOp%tab_Op(iOp)%OpGrid(k_term)%Grid(iq,:,:) =      &
+#if(run_MPI)
+              IF(Grid_allco) Then
+#endif
+                para_AllOp%tab_Op(iOp)%OpGrid(k_term)%Grid(iq,:,:) =      &
                                            d0MatOp(iOp)%ReVal(:,:,iterm)
-
+#if(run_MPI)
+              ENDIF
+#endif
             END IF
 
           END DO
@@ -463,7 +470,6 @@
        IF (debug) THEN
          write(out_unitp,*) 'END ',name_sub
        END IF
-
 
       END SUBROUTINE sub_Save_GridMem_AllOp
 
@@ -1010,6 +1016,7 @@
       SUBROUTINE check_HADA(iqf,ComOp)
       USE mod_system
       USE mod_Op
+      USE mod_MPI
       IMPLICIT NONE
 
       TYPE (param_ComOp)   :: ComOp
@@ -1064,12 +1071,9 @@
 
       END IF
 
-
-
       close(ComOp%file_HADA%unit)
 
-
-      write(out_unitp,*) 'check_HADA: last grid point, iqf=',iqf
+      IF(MPI_id==0) write(out_unitp,*) 'check_HADA: last grid point, iqf=',iqf
 
       end subroutine check_HADA
 

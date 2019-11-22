@@ -898,6 +898,8 @@
 
           !!@description: TODO
           FUNCTION psi_time_R(psi,R)
+            USE mod_MPI
+
             TYPE (param_psi), intent (in) :: psi
             real (kind=Rkind),    intent (in) :: R
             TYPE (param_psi)  :: psi_time_R
@@ -913,17 +915,17 @@
 
             IF (psi%GridRep) THEN
               IF (psi%cplx) THEN
-                psi_time_R%CvecG = psi%CvecG * cmplx(R,kind=Rkind)
+                IF(MPI_id==0) psi_time_R%CvecG = psi%CvecG * cmplx(R,kind=Rkind)
               ELSE
-                psi_time_R%RvecG = psi%RvecG * R
+                IF(MPI_id==0) psi_time_R%RvecG = psi%RvecG * R
               END IF
             END IF
 
             IF (psi%BasisRep) THEN
               IF (psi%cplx) THEN
-                psi_time_R%CvecB = psi%CvecB * cmplx(R,kind=Rkind)
+                IF(MPI_id==0) psi_time_R%CvecB = psi%CvecB * cmplx(R,kind=Rkind)
               ELSE
-                psi_time_R%RvecB = psi%RvecB * R
+                IF(MPI_id==0) psi_time_R%RvecB = psi%RvecB * R
               END IF
             END IF
 
@@ -979,6 +981,7 @@
           END FUNCTION C_time_psi
 
           !!@description: TODO
+!=======================================================================================
           FUNCTION psi_time_C(psi,C)
             TYPE (param_psi), intent (in) :: psi
             complex (kind=Rkind), intent (in) :: C
@@ -995,7 +998,7 @@
 
             IF (psi%BasisRep) THEN
               IF (psi%cplx) THEN
-                psi_time_C%CvecB = psi%CvecB * C
+                IF(MPI_id==0) psi_time_C%CvecB = psi%CvecB * C
               ELSE
                 write(out_unitp,*) ' ERROR : in psi_time_C'
                 write(out_unitp,*) ' I cannot multiply a real psi and a complex'
@@ -1006,7 +1009,7 @@
 
             IF (psi%GridRep) THEN
               IF (psi%cplx) THEN
-                psi_time_C%CvecG = psi%CvecG * C
+                IF(MPI_id==0) psi_time_C%CvecG = psi%CvecG * C
               ELSE
                 write(out_unitp,*) ' ERROR : in psi_time_C'
                 write(out_unitp,*) ' I cannot multiply a real psi and a complex'
@@ -1023,6 +1026,7 @@
             !CALL flush_perso(out_unitp)
 
           END FUNCTION psi_time_C
+!=======================================================================================
 
       END MODULE mod_psi_SimpleOp
 

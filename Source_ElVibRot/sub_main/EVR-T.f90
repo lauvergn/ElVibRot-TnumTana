@@ -53,13 +53,14 @@
 !\end{itemize}
 !%END-LATEX-USER-DOC-Driver
 !===========================================================================
-      PROGRAM ElVibRot
+    PROGRAM ElVibRot
       USE mod_system
 !$    USE omp_lib, only : omp_get_max_threads
       USE mod_nDGridFit
+      USE mod_MPI
       IMPLICIT NONE
 
-      logical  :: intensity_only,analysis_only,Popenmp
+      logical  :: intensity_only,analysis_only,Popenmp,Popenmpi
       integer  :: PMatOp_omp,POpPsi_omp,PBasisTOGrid_omp,PGrid_omp,optimization
       integer  :: maxth,PMatOp_maxth,POpPsi_maxth,PBasisTOGrid_maxth,PGrid_maxth
       integer  :: PSG4_omp,PSG4_maxth
@@ -71,11 +72,12 @@
       character (len=Name_longlen) :: RMatFormat
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
-
-
+      
+      ! parameters for system setup
+      ! make sure to be prepared in file      
       namelist /system/ max_mem,mem_debug,test,printlevel,              &
 
-                          Popenmp,                                      &
+                          Popenmp,Popenmpi,                             &
                           PSG4_omp,PSG4_maxth,                          &
                           PMatOp_omp,PMatOp_maxth,                      &
                           POpPsi_omp,POpPsi_maxth,                      &
@@ -91,22 +93,31 @@
 
                           EVRT_path,File_path,base_FileName
 
-
-        intensity_only   = .FALSE.
-        analysis_only    = .FALSE.
-        test             = .FALSE.
-        cart             = .FALSE.
-        GridTOBasis_test = .FALSE.
-        OpPsi_test       = .FALSE.
-        EVR              = .FALSE.   ! ElVibRot (default)
-        nDfit            = .FALSE.
-        nDGrid           = .FALSE.
-        main_test        = .FALSE.
-        optimization     = 0
+        !> initialize MPI
+        !> id=0 to be the master
+        !---------------------------------------------------------------------------------
+#if(run_MPI)
+        CALL MPI_initialization()
+        Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
+#else 
+        MPI_id=0
+#endif
+ 
+        intensity_only     = .FALSE.
+        analysis_only      = .FALSE.
+        test               = .FALSE.
+        cart               = .FALSE.
+        GridTOBasis_test   = .FALSE.
+        OpPsi_test         = .FALSE.   !< True for test of action
+        EVR                = .FALSE.   ! ElVibRot (default)
+        nDfit              = .FALSE.
+        nDGrid             = .FALSE.
+        main_test          = .FALSE.
+        optimization       = 0
 
         maxth              = 1
         !$ maxth           = omp_get_max_threads()
-        Popenmp            = .TRUE.
+        Popenmp            = .FALSE.  !< True to run openMP
         PMatOp_omp         = 0
         PMatOp_maxth       = maxth
         POpPsi_omp         = 0
@@ -127,9 +138,25 @@
         RMatFormat       = "f18.10"
         CMatFormat       = "f15.7"
 
-        CALL versionEVRT(.TRUE.)
+        IF(MPI_id==0) THEN 
+          ! version and copyright statement
+          CALL versionEVRT(.TRUE.)
+          write(out_unitp,*)
+#if(run_MPI)
+          CALL time_perso('MPI start, initial time')
+          write(out_unitp,*) ' Initiaize MPI with ', MPI_np, 'cores.'
+          write(out_unitp,*)
+#endif
+        ENDIF
 
+
+        !> read from parameter file created by shell script
+!#if(run_MPI)
+        open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
+        IF(err/=0) STOP 'error in opening file for namelist'
+!#endif
         read(in_unitp,system,IOSTAT=err)
+        
         IF (err < 0) THEN
           write(out_unitp,*) ' ERROR in ElVibRot (main program)'
           write(out_unitp,*) ' End-of-file or End-of-record'
@@ -187,6 +214,8 @@
 
 
         openmp              = Popenmp ! openmp is in mod_system.mod
+        openmpi             = Popenmpi
+        
         IF (.NOT. openmp) THEN
            MatOp_omp          = 0
            OpPsi_omp          = 0
@@ -238,73 +267,90 @@
 
         END IF
 
-        write(out_unitp,*) '========================================='
-        write(out_unitp,*) 'OpenMP parameters:'
-        write(out_unitp,*) 'Max number of threads:           ',maxth
-        write(out_unitp,*) 'MatOp_omp,      MatOp_maxth      ',MatOp_omp,MatOp_maxth
-        write(out_unitp,*) 'OpPsi_omp,      OpPsi_maxth      ',OpPsi_omp,OpPsi_maxth
-        write(out_unitp,*) 'BasisTOGrid_omp,BasisTOGrid_maxth',BasisTOGrid_omp,BasisTOGrid_maxth
-        write(out_unitp,*) 'Grid_omp,       Grid_maxth       ',Grid_omp,Grid_maxth
-        write(out_unitp,*) 'SG4_omp,        SG4_maxth        ',SG4_omp,SG4_maxth
-        write(out_unitp,*) '========================================='
-
-        write(out_unitp,*) '========================================='
-        write(out_unitp,*) 'File_path: ',trim(adjustl(File_path))
-        write(out_unitp,*) '========================================='
-
-
-        para_mem%max_mem    = max_mem/Rkind
-        write(out_unitp,*) '========================================='
-        write(out_unitp,*) '========================================='
-        IF (para_EVRT_calc%optimization /= 0) THEN
-          write(out_unitp,*) ' Optimization calculation'
+        IF(MPI_id==0) THEN
           write(out_unitp,*) '========================================='
+          write(out_unitp,*) 'OpenMP parameters:'
+          write(out_unitp,*) 'Max number of threads:           ',maxth
+          write(out_unitp,*) 'MatOp_omp,      MatOp_maxth      ',MatOp_omp,MatOp_maxth
+          write(out_unitp,*) 'OpPsi_omp,      OpPsi_maxth      ',OpPsi_omp,OpPsi_maxth
+          write(out_unitp,*) 'BasisTOGrid_omp,BasisTOGrid_maxth',BasisTOGrid_omp,BasisTOGrid_maxth
+          write(out_unitp,*) 'Grid_omp,       Grid_maxth       ',Grid_omp,Grid_maxth
+          write(out_unitp,*) 'SG4_omp,        SG4_maxth        ',SG4_omp,SG4_maxth
+          write(out_unitp,*) '========================================='
+          
+          write(out_unitp,*) '========================================='
+          write(out_unitp,*) 'File_path: ',trim(adjustl(File_path))
+          write(out_unitp,*) '========================================='
+        ENDIF ! for MPI_id=0
+        
+        para_mem%max_mem    = max_mem/Rkind
+        IF(MPI_id==0) THEN
+          write(out_unitp,*) '========================================='
+          write(out_unitp,*) '========================================='
+        ENDIF ! for MPI_id=0
+
+        IF (para_EVRT_calc%optimization /= 0) THEN
+          IF(MPI_id==0) write(out_unitp,*) ' Optimization calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_Optimization_OF_VibParam(max_mem)
 
         ELSE IF (para_EVRT_calc%nDfit .OR. para_EVRT_calc%nDGrid) THEN
-          write(out_unitp,*) ' nDfit or nDGrid calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' nDfit or nDGrid calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_nDGrid_nDfit()
 
         ELSE IF (para_EVRT_calc%EVR) THEN
-          write(out_unitp,*) ' ElVibRot calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' ElVibRot calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL vib(max_mem,test,intensity_only)
 
         ELSE IF (para_EVRT_calc%cart) THEN
-          write(out_unitp,*) ' cart calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' cart calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_cart(max_mem)
 
         ELSE IF (para_EVRT_calc%GridTOBasis_test) THEN
-          write(out_unitp,*) ' sub_GridTOBasis calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' sub_GridTOBasis calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_GridTOBasis_test(max_mem)
 
         ELSE IF (para_EVRT_calc%OpPsi_test) THEN
-          write(out_unitp,*) ' OpPsi calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' OpPsi calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL Sub_OpPsi_test(max_mem)
 
         ELSE IF (para_EVRT_calc%analysis_only) THEN
-          write(out_unitp,*) ' WP analysis calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' WP analysis calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_analysis_only(max_mem)
 
         ELSE IF (para_EVRT_calc%main_test) THEN
-          write(out_unitp,*) ' Smolyat test calculation'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' Smolyat test calculation'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL sub_main_Smolyak_test()
 
         ELSE
-          write(out_unitp,*) ' ElVibRot calculation (default)'
-          write(out_unitp,*) '========================================='
+          IF(MPI_id==0) write(out_unitp,*) ' ElVibRot calculation (default)'
+          IF(MPI_id==0) write(out_unitp,*) '========================================='
           CALL vib(max_mem,test,intensity_only)
         END IF
 
+        IF(MPI_id==0) THEN
+          write(out_unitp,*) '========================================='
+          write(out_unitp,*) '========================================='
+        ENDIF ! for MPI_id=0
 
-
-        write(out_unitp,*) '========================================='
-        write(out_unitp,*) '========================================='
-        END PROGRAM ElVibRot
+#if(run_MPI)
+        IF(MPI_id==0) THEN
+          write(*,*) 'time check for action: ',                                        &
+                    real(time_MPI_action,Rkind)/real(time_rate,Rkind),' from ',MPI_id
+          write(*,*) 'time MPI comm check: ',                                          &
+                    real(time_comm,Rkind)/real(time_rate,Rkind),' from ', MPI_id
+        ENDIF
+        !> end MPI
+        CALL time_perso('MPI closed, final time')
+        CALL MPI_Finalize(MPI_err);
+        close(in_unitp)
+#endif        
+      END PROGRAM ElVibRot
 

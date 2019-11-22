@@ -248,35 +248,49 @@
 
       END SUBROUTINE Write_FileGrid
 
-
+!=======================================================================================
+#if(run_MPI)
       SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
-                              derive_termQact,derive_termQdyn,SmolyakRep,nb_SG,info)
+                          derive_termQact,derive_termQdyn,SmolyakRep,nb_SG1,nb_SG2,info)
+#else
+      SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
+                          derive_termQact,derive_termQdyn,SmolyakRep,nb_SG,info)
+#endif
 
-          TYPE (param_OpGrid), intent(inout) :: OpGrid
-          integer,             intent(in)    :: nb_qa,nb_bie
-          integer,             intent(in)    :: derive_termQact(2)
-          integer,             intent(in)    :: derive_termQdyn(2)
-          logical,             intent(in)    :: SmolyakRep
-          integer,             intent(in)    :: nb_SG
-          character (len=*),   intent(in)    :: info
+      USE mod_MPI
+      TYPE (param_OpGrid), intent(inout) :: OpGrid
+      integer,             intent(in)    :: nb_qa,nb_bie
+      integer,             intent(in)    :: derive_termQact(2)
+      integer,             intent(in)    :: derive_termQdyn(2)
+      logical,             intent(in)    :: SmolyakRep
+#if(run_MPI)
+      integer,             intent(in)    :: nb_SG1,nb_SG2
+#else
+      integer,             intent(in)    :: nb_SG
+#endif
+      character (len=*),   intent(in)    :: info
 
-          character (len=Name_longlen) :: info2
-          integer :: err
-          integer :: err_mem,memory
+      character (len=Name_longlen) :: info2
+      integer :: err
+      integer :: err_mem,memory
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='alloc_OpGrid'
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
-       IF (debug) THEN
-         write(out_unitp,*) 'BEGINNING ',name_sub
-         write(out_unitp,*) 'nb_qa,nb_bie',nb_qa,nb_bie,nb_SG
-         write(out_unitp,*) 'derive_termQact(:)',derive_termQact(:)
-         write(out_unitp,*) 'derive_termQdyn(:)',derive_termQdyn(:)
-         write(out_unitp,*) 'grid_cte',OpGrid%grid_cte
-         write(out_unitp,*) 'Save_MemGrid',OpGrid%para_FileGrid%Save_MemGrid
-         CALL flush_perso(out_unitp)
-       END IF
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+#if(run_MPI)
+        write(out_unitp,*) 'nb_qa,nb_bie',nb_qa,nb_bie,nb_SG1,nb_SG2
+#else
+        write(out_unitp,*) 'nb_qa,nb_bie',nb_qa,nb_bie,nb_SG
+#endif
+        write(out_unitp,*) 'derive_termQact(:)',derive_termQact(:)
+        write(out_unitp,*) 'derive_termQdyn(:)',derive_termQdyn(:)
+        write(out_unitp,*) 'grid_cte',OpGrid%grid_cte
+        write(out_unitp,*) 'Save_MemGrid',OpGrid%para_FileGrid%Save_MemGrid
+        CALL flush_perso(out_unitp)
+      END IF
 
        OpGrid%nb_qa      = nb_qa
        OpGrid%nb_bie     = nb_bie
@@ -302,15 +316,26 @@
        IF (debug) write(out_unitp,*) info2,'Mat_cte(:,:)',size(OpGrid%Mat_cte)
 
        IF (.NOT. OpGrid%grid_cte .AND. OpGrid%para_FileGrid%Save_MemGrid) THEN
-         CALL alloc_array(OpGrid%Grid,(/nb_qa,nb_bie,nb_bie/),       &
-                         "OpGrid%Grid",info2)
-         OpGrid%Grid(:,:,:) = ZERO
-
-         IF (print_level > -1) write(out_unitp,*) info2,size(OpGrid%Grid)
+#if(run_MPI)
+         IF(Grid_allco) THEN
+#endif
+           CALL alloc_array(OpGrid%Grid,(/nb_qa,nb_bie,nb_bie/),"OpGrid%Grid",info2)
+           OpGrid%Grid(:,:,:) = ZERO
+#if(run_MPI)   
+         ENDIF
+#endif
+         IF(print_level>-1 .AND. MPI_id==0) write(out_unitp,*) info2,size(OpGrid%Grid)
 
          IF (SmolyakRep) THEN
-           IF (print_level > -1) write(out_unitp,*) info2 // ': OpGrid%SRep allocated'
-           CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG,delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
+           IF (print_level>-1 .AND. MPI_id==0)                                         &
+                                   write(out_unitp,*) info2 // ': OpGrid%SRep allocated'
+#if(run_MPI)
+           CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG1,nb_SG2,                       &
+                                      delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
+#else
+           CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG,                               &
+                                      delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
+#endif
          END IF
        END IF
        CALL flush_perso(out_unitp)
@@ -321,6 +346,7 @@
        END IF
 
       END SUBROUTINE alloc_OpGrid
+!=======================================================================================
 
       !!@description: TODO
       !!@param: TODO
@@ -703,7 +729,7 @@
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE Analysis_OpGrid(OpGrid,n_Op)
-
+      USE mod_MPI
       TYPE (param_OpGrid), pointer, intent(inout) :: OpGrid(:)
       integer,                      intent(in)    :: n_Op
 
@@ -716,7 +742,7 @@
       IF (.NOT. associated(OpGrid) ) RETURN
       IF (size(OpGrid) < 1 ) RETURN
 
-      IF (print_level>-1) THEN
+      IF (print_level>-1 .AND. MPI_id==0) THEN
         write(out_unitp,*)'--------------------------------------------------------------'
         write(out_unitp,*)'n_Op,k_term,derive_term,cte,zero,    minval,    maxval,dealloc'
         CALL flush_perso(out_unitp)
@@ -766,7 +792,7 @@
             CALL dealloc_array(OpGrid(k_term)%Grid,"OpGrid%Grid",name_sub)
           END IF
 
-          IF (print_level>-1) THEN
+          IF (print_level>-1 .AND. MPI_id==0) THEN
             write(out_unitp,'(i5,x,i6,2x,2i5,l3,x,l4,x,2e11.2,x,l3)')   &
                    n_Op,k_term,OpGrid(k_term)%derive_termQact(:),       &
                    OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
@@ -779,7 +805,7 @@
           OpGrid(k_term)%grid_zero = OpGrid(k_term)%grid_cte .AND.      &
                  (sum(abs(OpGrid(k_term)%Mat_cte(:,:))) < ONETENTH**12)
 
-          IF (print_level>-1) THEN
+          IF (print_level>-1 .AND. MPI_id==0) THEN
             write(out_unitp,'(i5,x,i6,2x,2i5,l3,x,l4,24x,l3)') n_Op,k_term,    &
                    OpGrid(k_term)%derive_termQact(:),                   &
                    OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
@@ -789,7 +815,7 @@
         END IF
 
       END DO
-      IF (print_level>-1) THEN
+      IF (print_level>-1 .AND. MPI_id==0) THEN
         write(out_unitp,*)'--------------------------------------------------------------'
         CALL flush_perso(out_unitp)
       END IF

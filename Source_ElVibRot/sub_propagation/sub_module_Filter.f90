@@ -426,11 +426,11 @@ nb = size(P0_cheby)
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
 
         IF (non_hermitic > FOUR*ONETENTH**4) THEN
-          write(out_unitp,*) 'WARNING: non_hermitic is BIG'
-          write(out_unitp,31) non_hermitic
+          If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
+          If(MPI_id==0) write(out_unitp,31) non_hermitic
  31       format(' Hamiltonien: ',f16.12,' au')
         ELSE
-          write(out_unitp,51) non_hermitic*auTOcm_inv
+          If(MPI_id==0) write(out_unitp,51) non_hermitic*auTOcm_inv
  51       format(' Hamiltonien: ',f16.12,' cm-1')
         END IF
         epsi = max(para_propa%para_Davidson%conv_resi,                    &
@@ -810,11 +810,11 @@ STOP
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
 
         IF (non_hermitic > FOUR*ONETENTH**4) THEN
-          write(out_unitp,*) 'WARNING: non_hermitic is BIG'
-          write(out_unitp,31) non_hermitic
+          If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
+          If(MPI_id==0) write(out_unitp,31) non_hermitic
  31       format(' Hamiltonien: ',f16.12,' au')
         ELSE
-          write(out_unitp,51) non_hermitic*auTOcm_inv
+          If(MPI_id==0) write(out_unitp,51) non_hermitic*auTOcm_inv
  51       format(' Hamiltonien: ',f16.12,' cm-1')
         END IF
         epsi = max(para_propa%para_Davidson%conv_resi,                    &
@@ -1183,11 +1183,11 @@ STOP
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
 
         IF (non_hermitic > FOUR*ONETENTH**4) THEN
-          write(out_unitp,*) 'WARNING: non_hermitic is BIG'
-          write(out_unitp,31) non_hermitic
+          If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
+          If(MPI_id==0) write(out_unitp,31) non_hermitic
  31       format(' Hamiltonien: ',f16.12,' au')
         ELSE
-          write(out_unitp,51) non_hermitic*auTOcm_inv
+          If(MPI_id==0) write(out_unitp,51) non_hermitic*auTOcm_inv
  51       format(' Hamiltonien: ',f16.12,' cm-1')
         END IF
         epsi = max(para_propa%para_Davidson%conv_resi,                    &
@@ -1500,11 +1500,11 @@ STOP
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
 
         IF (non_hermitic > FOUR*ONETENTH**4) THEN
-          write(out_unitp,*) 'WARNING: non_hermitic is BIG'
-          write(out_unitp,31) non_hermitic
+          If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
+          If(MPI_id==0) write(out_unitp,31) non_hermitic
  31       format(' Hamiltonien: ',f16.12,' au')
         ELSE
-          write(out_unitp,51) non_hermitic*auTOcm_inv
+          If(MPI_id==0) write(out_unitp,51) non_hermitic*auTOcm_inv
  51       format(' Hamiltonien: ',f16.12,' cm-1')
         END IF
         epsi = max(para_propa%para_Davidson%conv_resi,                    &
@@ -1843,11 +1843,11 @@ STOP
       !IF (debug) CALL Write_Mat(H,out_unitp,5)
 
       IF (non_hermitic > FOUR*ONETENTH**4) THEN
-        write(out_unitp,*) 'WARNING: non_hermitic is BIG'
-        write(out_unitp,31) non_hermitic
+        If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
+        If(MPI_id==0) write(out_unitp,31) non_hermitic
  31     format(' Hamiltonien: ',f16.12,' au')
       ELSE
-        write(out_unitp,51) non_hermitic*auTOcm_inv
+        If(MPI_id==0) write(out_unitp,51) non_hermitic*auTOcm_inv
  51     format(' Hamiltonien: ',f16.12,' cm-1')
       END IF
       epsi = max(para_propa%para_Davidson%conv_resi,                    &
@@ -2164,11 +2164,11 @@ STOP
       !IF (debug) CALL Write_Mat(H,out_unitp,5)
 
       IF (non_hermitic > FOUR*ONETENTH**4) THEN
-        write(out_unitp,*) 'WARNING: non_hermitic is BIG'
-        write(out_unitp,31) non_hermitic
+        If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
+        If(MPI_id==0) write(out_unitp,31) non_hermitic
  31     format(' Hamiltonien: ',f16.12,' au')
       ELSE
-        write(out_unitp,51) non_hermitic*auTOcm_inv
+        If(MPI_id==0) write(out_unitp,51) non_hermitic*auTOcm_inv
  51     format(' Hamiltonien: ',f16.12,' cm-1')
       END IF
       epsi = max(para_propa%para_Davidson%conv_resi,                    &
