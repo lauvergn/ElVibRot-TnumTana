@@ -112,6 +112,10 @@ MODULE mod_paramQ
       !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='read_RefGeom'
       !-----------------------------------------------------------------
+  write(6,*) 'coucou ',name_sub
+  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
+  flush(6)
+
 
       IF(MPI_id==0) write(out_unitp,*) 'BEGINNING ',name_sub
 
@@ -434,6 +438,9 @@ MODULE mod_paramQ
 
       END IF
       ! ----------------------------------------------
+  write(6,*) 'coucou2 ',name_sub
+  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
+  flush(6)
 
       CALL sub_QinRead_TO_Qact(Qread,Qact,mole,read_itQtransfo_OF_Qin0)
       CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
@@ -782,6 +789,9 @@ MODULE mod_paramQ
       ! since it is going from out to in, it is better to use it_QoutRead (= it_QinRead+1)
       it_QoutRead = it_QinRead + 1
 
+  write(6,*) 'coucou ',name_sub
+  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
+  flush(6)
 
 
       IF (it_QoutRead == mole%nb_Qtransfo+1) THEN ! read_Qact0
@@ -790,13 +800,14 @@ MODULE mod_paramQ
         it = it_QoutRead
         nb_act = mole%tab_Qtransfo(it_QoutRead)%nb_act
 
-
         CALL alloc_dnSVM(dnQout,mole%tab_Qtransfo(it)%nb_Qout,nb_act,0)
 
         dnQout%d0(1:size(Qread)) = Qread(:)
 
         DO it=it_QoutRead,mole%nb_Qtransfo
-
+  write(6,*) 'coucou0 ',it,name_sub
+  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
+  flush(6)
           CALL alloc_dnSVM(dnQin,mole%tab_Qtransfo(it)%nb_Qin,nb_act,0)
 
           IF (debug) THEN
@@ -817,7 +828,9 @@ MODULE mod_paramQ
 
           CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv=0)
           CALL dealloc_dnSVM(dnQin)
-
+  write(6,*) 'coucou2 ',it,name_sub
+  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
+  flush(6)
         END DO
 
         Qact(:) = dnQout%d0(1:size(Qact))
@@ -1388,8 +1401,8 @@ MODULE mod_paramQ
         Qact(iQ) = Qact(iQ) + ONETENTH
         CALL sub_QactTOdnx(Qact,dnx,mole,0,Gcenter=.TRUE.)
         dnx%d0 = dnx%d0 - dnx0%d0 ! dxyz
-        Norm = dot_product(dnx%d0,dnx%d0)
-        dnx%d0 = HALF*dnx%d0/sqrt(Norm)
+        Norm = sqrt(dot_product(dnx%d0,dnx%d0))
+        dnx%d0 = dnx%d0/Norm
         write(niofreq,*) mole%nat_act
         write(niofreq,*) '  Coord: ',iQ
 
@@ -1486,12 +1499,12 @@ MODULE mod_paramQ
       USE mod_MPI
       IMPLICIT NONE
 
-      real (kind=Rkind), intent(in) :: Qact(:)
-      TYPE (zmatrix)    :: mole
-      TYPE (Type_dnVec) :: dnx
-      integer :: nderiv
-      logical :: Gcenter
-      logical, optional :: Cart_Transfo,WriteCC
+      real (kind=Rkind), intent(in)           :: Qact(:)
+      TYPE (zmatrix),    intent(in)           :: mole
+      TYPE (Type_dnVec), intent(inout)        :: dnx
+      integer,           intent(in)           :: nderiv
+      logical,           intent(in)           :: Gcenter
+      logical,           intent(in), optional :: Cart_Transfo,WriteCC
 
 !     - working variables -------------------------
       TYPE (Type_dnVec) :: dnQin,dnQout
@@ -1642,7 +1655,6 @@ MODULE mod_paramQ
           IF (WriteCC_loc .OR. debug) write(out_unitp,*) 'name_transfo',it,&
                                   mole%tab_Qtransfo(it)%name_transfo
           CALL flush_perso(out_unitp)
-          CALL alloc_dnSVM(dnQout,mole%tab_Qtransfo(it)%nb_Qout,nb_act,nderiv)
 
           IF (WriteCC_loc .OR. debug) CALL Write_d0Q(it,'Qin ',dnQin%d0,6)
 
@@ -1680,8 +1692,10 @@ MODULE mod_paramQ
 
         !=================================================
         IF (Cart_Transfo_loc) THEN
+
           ! write(6,*) 'coucou Cart_Transfo_loc',Cart_Transfo_loc
           IF (debug) write(out_unitp,*) ' calc_CartesianTransfo_new?',Cart_Transfo_loc
+
 
 
           CALL calc_CartesianTransfo_new(dnx,dnx,                      &

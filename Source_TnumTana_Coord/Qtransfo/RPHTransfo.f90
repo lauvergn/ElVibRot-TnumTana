@@ -1000,12 +1000,14 @@
           ELSE
             CALL sub_dnVec1_TO_dnVec2(dnQout,dnQin,nderiv)
           END IF
-
-          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) 'WARNING in ',name_sub
           write(out_unitp,*) ' the "RPHTransfo" derived type is not initialized'
-          write(out_unitp,*) ' It should not append!'
-          write(out_unitp,*) ' CHECK the fortran source!!'
-          STOP
+
+          !write(out_unitp,*) 'ERROR in ',name_sub
+          !write(out_unitp,*) ' the "RPHTransfo" derived type is not initialized'
+          !write(out_unitp,*) ' It should not append!'
+          !write(out_unitp,*) ' CHECK the fortran source!!'
+          !STOP
        END IF
 
        IF (inTOout) THEN

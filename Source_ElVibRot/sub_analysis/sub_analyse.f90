@@ -136,6 +136,8 @@ CONTAINS
       write(out_unitp,*)
       write(out_unitp,*) 'ZPE        : ',RWU_Write(RWU_ZPE,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
       write(out_unitp,*) 'Average_ene: ',RWU_Write(RWU_E,  WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
+      RWU_E   = REAL_WU(sum(ene),'au','E') ! trace
+      write(out_unitp,*) 'trace_ene  : ',RWU_Write(RWU_E,  WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
       CALL flush_perso(out_unitp)
       IF (para_ana%max_ana > nb_psi_in) para_ana%max_ana = nb_psi_in
 

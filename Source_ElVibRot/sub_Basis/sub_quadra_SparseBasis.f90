@@ -1221,6 +1221,7 @@
                             nDinit=(/ (0,i=1,basis_SG%nb_basis) /) )
       ELSE
         IF (MPI_id==0) write(6,*) 'L1maxG, L2maxG (grid)',L1maxG,L2maxG
+
         basis_SG%para_SGType2%nDind_SmolyakRep%packed = .TRUE.
         CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep,   &
                            basis_SG%nb_basis,nDsize,type_OF_nDindex=-5, &

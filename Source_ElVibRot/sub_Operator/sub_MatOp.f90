@@ -2850,7 +2850,117 @@ CONTAINS
 
 
       END SUBROUTINE sub_MatOp_direct1_Overlap
+      SUBROUTINE sub_MatOp_Grid(para_Op)
+      USE mod_system
+      USE mod_SetOp
+      USE mod_OpPsi
+      USE mod_psi_set_alloc
+      USE mod_psi_SimpleOp
+      USE mod_psi_Op
+      IMPLICIT NONE
 
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op), intent(inout) :: para_Op
+
+!------ for OpenMP --------------------------------
+      TYPE (param_psi) :: psi,Hpsi
+      integer          :: iq,nq
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      character (len=*), parameter ::name_sub='sub_MatOp_Grid'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
+        CALL flush_perso(out_unitp)
+      END IF
+
+!     - scaling of Op ---------------------------------------
+        para_Op%E0     = ZERO
+        para_Op%Esc    = ONE
+        para_Op%scaled = .FALSE.
+!-----------------------------------------------------------
+
+!---- initialization -------------------------------------
+        CALL init_psi(psi,para_Op,para_Op%cplx)
+        CALL init_psi(Hpsi,para_Op,para_Op%cplx)
+        psi = ZERO
+
+      nq = psi%nb_qaie
+
+
+!     ----------------------------------------------------------
+!       - build H and H0
+        IF (print_level > -1) THEN
+          write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
+          write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
+          CALL flush_perso(out_unitp)
+        END IF
+
+        DO iq=1,nq
+
+          IF (para_Op%cplx) THEN
+
+            psi%CvecG(:)  = CZERO
+            psi%CvecG(iq) = CONE
+
+            CALL sub_OpPsi(Psi,HPsi,para_Op)
+
+            para_Op%Cmat(:,iq)  = Hpsi%CvecG(:)
+
+          ELSE
+
+            psi%RvecG(:)  = ZERO
+            psi%RvecG(iq) = ONE
+
+            CALL sub_OpPsi(Psi,HPsi,para_Op)
+
+            para_Op%Rmat(:,iq)  = Hpsi%RvecG(:)
+
+          END IF
+
+          IF (mod(iq,max(1,int(nq/10))) == 0 .AND. print_level > -1) THEN
+            write(out_unitp,'(a)',ADVANCE='no') '---'
+            CALL flush_perso(out_unitp)
+          END IF
+
+
+        END DO
+
+        IF (print_level > -1) THEN
+          write(out_unitp,'(a)',ADVANCE='yes') '----]'
+          CALL flush_perso(out_unitp)
+        END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) para_Op%name_Op,' non-symmetrized'
+        IF (para_Op%cplx) THEN
+          CALL Write_Mat(para_Op%Cmat,out_unitp,3)
+        ELSE
+          CALL Write_Mat(para_Op%Rmat,out_unitp,5)
+        END IF
+      END IF
+
+!---- deallocation -------------------------------------
+      CALL dealloc_psi(Hpsi)
+      CALL dealloc_psi(psi)
+!     ----------------------------------------------------------
+      para_Op%Make_mat = .TRUE.
+
+!----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'END ',name_sub
+       END IF
+!----------------------------------------------------------
+
+
+
+      END SUBROUTINE sub_MatOp_Grid
       SUBROUTINE sub_MatOp_Overlap_SG4(para_Op)
       USE mod_system
       USE mod_SetOp

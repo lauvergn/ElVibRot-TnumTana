@@ -41,7 +41,7 @@
 
 !----- active parameters -------------------------------------------------
       integer   :: nb_act,nb_act1,nb_inact2n
-      logical, allocatable           :: Grid_cte(:)
+      logical, allocatable             :: Grid_cte(:)
 
       real (kind=Rkind) :: max_Sii,max_Sij
       real (kind=Rkind) :: max_Hii,max_Hij
@@ -135,6 +135,7 @@
             END DO
             END DO
           END IF
+
           IF (para_AllOp%tab_Op(iOp)%para_Tnum%Gcte .AND. para_AllOp%tab_Op(iOp)%name_Op(1:3) == "Mu_") THEN
             Grid_cte(:) = .TRUE.  ! KEO, rotation, Mu_xx,Mu_xy...
           END IF

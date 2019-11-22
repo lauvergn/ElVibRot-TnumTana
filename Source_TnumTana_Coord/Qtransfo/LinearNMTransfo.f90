@@ -544,11 +544,11 @@
       !!@param: TODO
       SUBROUTINE calc_LinearTransfo(dnQin,dnQout,LinearTransfo,nderiv,inTOout)
 
-        TYPE (Type_dnVec), intent(inout)      :: dnQin,dnQout
-        TYPE (Type_LinearTransfo), intent(in) :: LinearTransfo
+        TYPE (Type_dnVec),         intent(inout) :: dnQin,dnQout
+        TYPE (Type_LinearTransfo), intent(in)    :: LinearTransfo
 
-        integer, intent(in)                   :: nderiv
-        logical, intent(in)                   :: inTOout
+        integer,                   intent(in)    :: nderiv
+        logical,                   intent(in)    :: inTOout
 
 
         integer :: i,j,k

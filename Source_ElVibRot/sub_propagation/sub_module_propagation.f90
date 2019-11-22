@@ -567,7 +567,8 @@ PUBLIC :: initialisation1_poly,cof
          write(out_unitp,*) 'DHmax',para_poly%DHmax
          write(out_unitp,*) 'Hmin',para_poly%Hmin
          write(out_unitp,*) ' Hmin > Hmax '
-         STOP " ERROR in " // name_sub // " : Hmin > Hmax"
+         !STOP " ERROR in " // name_sub // " : Hmin > Hmax"
+         STOP
       END IF
 
 !-----------------------------------------------------------

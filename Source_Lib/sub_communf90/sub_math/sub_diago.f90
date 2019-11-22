@@ -634,7 +634,7 @@
       DO i=1,nb_niv
       DO j=i+1,nb_niv
        IF (ene(i) .GT. ene(j)) THEN
-!	      permutation
+          ! permutation
           a=ene(i)
           ene(i)=ene(j)
           ene(j)=a

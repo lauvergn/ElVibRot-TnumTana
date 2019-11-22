@@ -695,7 +695,7 @@
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) '  while reading  "Tab_L_TO_n" for L_TO_nb'
             write(out_unitp,*) ' Probably, you some intergers are missing ...'
-            write(out_unitp,*) ' => The line has to like that (with 11 integers):'
+            write(out_unitp,*) ' => The line has to be like that (with 11 integers):'
             write(out_unitp,*) ' l_to_nb 1 2 3 4 5 6   6 6 6 6 6'
             write(out_unitp,*) ' Check your data !!'
             STOP

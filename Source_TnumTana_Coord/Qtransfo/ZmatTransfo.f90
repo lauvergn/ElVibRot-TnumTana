@@ -546,9 +546,9 @@
       SUBROUTINE calc_ZmatTransfo(dnQzmat,dnx,ZmatTransfo,nderiv)
       IMPLICIT NONE
 
-      TYPE (Type_dnVec), intent(inout)   :: dnQzmat,dnx
-      TYPE (Type_ZmatTransfo),intent(in) :: ZmatTransfo
-      integer, intent(in)                :: nderiv
+      TYPE (Type_dnVec),       intent(inout) :: dnQzmat,dnx
+      TYPE (Type_ZmatTransfo), intent(in)    :: ZmatTransfo
+      integer,                 intent(in)    :: nderiv
 
       TYPE (Type_dnS)    :: dnd,dnQval,dnCval,dnSval,dnQdih,dnCdih,dnSdih
 
@@ -937,6 +937,7 @@
 
         CALL dealloc_dnSVM(dnEz2)
         CALL dealloc_dnSVM(dnEz3)
+        CALL dealloc_dnSVM(dnEy3)
         CALL dealloc_dnSVM(dnEx3)
         CALL dealloc_dnSVM(dnAt1)
 

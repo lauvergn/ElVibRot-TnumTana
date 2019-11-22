@@ -4816,6 +4816,7 @@
         IF (.NOT. mole%tab_Qtransfo(mole%itRPH)%skip_transfo .AND.          &
                                            mole%RPHTransfo%option /= 0) THEN
 
+
           CALL get_Qact0(Qact,mole%ActiveTransfo)
 
           ! we cannot set RPHpara_AT_Qref for option=0,
