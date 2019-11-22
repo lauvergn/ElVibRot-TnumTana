@@ -1683,8 +1683,10 @@ DO SG4_maxth=1,PSG4_maxth_save
   RealTime(SG4_maxth) = Delta_RealTime(HPsiTime)
   write(out_unitp,*) 'With ',SG4_maxth,'threads, Delta Real Time',RealTime(SG4_maxth)
   IF (RealTime(SG4_maxth) < Opt_RealTime) THEN
-    Opt_RealTime   = RealTime(SG4_maxth)
-    opt_PSG4_maxth = SG4_maxth
+    IF (RealTime(SG4_maxth) > 0) THEN
+      Opt_RealTime   = RealTime(SG4_maxth)
+      opt_PSG4_maxth = SG4_maxth
+    END IF
   ELSE
     IF (SG4_maxth > 1) EXIT
   END IF
