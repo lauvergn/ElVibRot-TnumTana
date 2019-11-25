@@ -149,6 +149,7 @@ CONTAINS
    !$OMP default(none)                                           &
    !$OMP shared(Psi,OpPsi)                                       &
    !$OMP shared(para_Op,BasisnD,print_level,out_unitp)           &
+   !$OMP shared(MPI_id)                                          &
    !$OMP private(iG,iiG,tab_l,PsiR,ith)                          &
    !$OMP num_threads(BasisnD%para_SGType2%nb_threads)
 
@@ -1193,6 +1194,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       !$OMP   SHARED(Psi,OpPsi)                                   &
       !$OMP   SHARED(para_Op,BasisnD)                             &
       !$OMP   SHARED(print_level,out_unitp,SG4_maxth,packet_size) &
+      !$OMP   SHARED(MPI_id)                                      &
       !$OMP   PRIVATE(iG,itab,PsiR)                               &
       !$OMP   NUM_THREADS(SG4_maxth)
       allocate(PsiR(size(Psi)))
@@ -1257,6 +1259,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       !$OMP default(none)                                           &
       !$OMP shared(Psi,OpPsi)                                       &
       !$OMP shared(para_Op,BasisnD,print_level,out_unitp)           &
+      !$OMP shared(MPI_id)                                          &
       !$OMP private(itab,iG,iiG,tab_l,PsiR,ith)                     &
       !$OMP num_threads(BasisnD%para_SGType2%nb_threads)
 

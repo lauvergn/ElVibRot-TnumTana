@@ -738,7 +738,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
 
   !$OMP parallel                                                &
   !$OMP default(none)                                           &
-  !$OMP shared(basis_SG,nb_thread,Tab_inD_nDindB,out_unitp,MaxnD_with_id_and_L)     &
+  !$OMP shared(basis_SG,nb_thread,Tab_inD_nDindB,out_unitp,MaxnD_with_id_and_L,MPI_id) &
   !$OMP private(iG,tab_l,ith,tab_nb,tab_ib,nDI,iBDP,iBSRep,LL,k,l,ib,iib,err_sub)      &
   !$OMP num_threads(nb_thread)
 

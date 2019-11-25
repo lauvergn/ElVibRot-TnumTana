@@ -184,7 +184,7 @@ output_file_name="res_HenonHeiles_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG
 
 ##-openMP-------------------------------------------------------
 if   [ $parall == 'openMP' ] ; then
-  $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"openMpcores"
+  $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"openMPcores"
 
 ##-MPI----------------------------------------------------------
 elif [ $parall == 'MPI'    ] ; then

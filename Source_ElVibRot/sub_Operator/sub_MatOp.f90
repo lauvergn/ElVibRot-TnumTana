@@ -2390,6 +2390,7 @@ CONTAINS
         END IF
         !$OMP parallel do default(none) &
         !$OMP shared(para_Op,print_level,out_unitp) &
+        !$OMP shared(MPI_id) &
         !$OMP private(i) &
         !$OMP num_threads(nb_thread)
         DO i=1,para_Op%nb_tot
@@ -2667,6 +2668,7 @@ CONTAINS
         !$OMP parallel do &
         !$OMP default(none) &
         !$OMP shared(para_Op,psi,Hpsi,print_level,out_unitp) &
+        !$OMP shared(MPI_id) &
         !$OMP private(i,ith) &
         !$OMP num_threads(nb_thread)
         DO i=1,para_Op%nb_tot

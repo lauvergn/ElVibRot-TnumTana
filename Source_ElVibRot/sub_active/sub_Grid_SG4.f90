@@ -155,7 +155,8 @@
   !$OMP parallel                                                &
   !$OMP default(none)                                           &
   !$OMP shared(para_AllOp,BasisnD,print_level,out_unitp)        &
-  !$OMP private(iG,tab_l,ith)                          &
+  !$OMP shared(MPI_id)                                          &
+  !$OMP private(iG,tab_l,ith)                                   &
   !$OMP num_threads(nb_thread)
 
   !--------------------------------------------------------------
