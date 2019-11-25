@@ -1,8 +1,8 @@
 #=================================================================================
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-F90 = mpifort
-# F90 = gfortran
+# F90 = mpifort
+ F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
 #
@@ -37,8 +37,10 @@ OS=$(shell uname)
 ## set path for 64-bit MPI when requiring long integer.
 ## disable ARPACK for 64-bit case 
 ifeq ($(INT),8)
-  PATH := $(PATH):/u/achen/Software/openmpi64/bin/
-  ARPACK = 0
+  ifeq ($(F90),mpifort)
+    PATH := $(PATH):/u/achen/Software/openmpi64/bin/
+    ARPACK = 0
+  endif
 endif
 #=================================================================================
 # External pot for the library: libpot.a, 
