@@ -1575,6 +1575,7 @@ END SUBROUTINE sub_analyze_psi
       USE mod_nDindex
       USE mod_psi_set_alloc
       USE mod_type_ana_psi
+      USE mod_param_RD
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -1588,15 +1589,16 @@ END SUBROUTINE sub_analyze_psi
       character (len=*)    :: info
       logical          :: print_w
 
-      integer          :: i,ie,ii,ib,ibie,iq,ibiq
+      integer          :: i,ie,ii,ib,ibie,iq,ibiq,n
       integer          :: max_dim,max_1D
       integer          :: max_indGr(psi%BasisnD%nDindB%ndim)
       integer          :: ndim_AT_ib(psi%BasisnD%nDindB%ndim)
       integer          :: nDval(psi%BasisnD%nDindB%ndim)
 
-      character (len=:), allocatable  :: state_name
+      character (len=:), allocatable :: state_name
 
-      real (kind=Rkind):: r2
+      real (kind=Rkind)              :: r2
+      real (kind=Rkind), allocatable :: DiagRDcontrac(:) ! diagonal reduced density matrix with the contracted basis set (nbc,nbc)
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='calc_1Dweight_act1'
@@ -1673,6 +1675,22 @@ END SUBROUTINE sub_analyze_psi
           write(out_unitp,21) state_name // ' ',trim(info),iq,T,           &
                            weight1Dact(iq,1:min(max_1D,ndim_AT_ib(iq)))
  21       format(a,a,i3,1x,f17.4,300(1x,e10.3))
+          CALL flush_perso(out_unitp)
+
+
+          IF (psi%BasisnD%para_RD(iq)%RD_analysis) THEN
+            CALL calc_RD(psi%BasisnD%para_RD(iq),psi%RvecB,DiagRDcontrac=DiagRDcontrac)
+            n = min(ndim_AT_ib(iq),size(DiagRDcontrac))
+            weight1Dact(iq,1:n) = DiagRDcontrac(1:n)
+            write(out_unitp,21) state_name // 'c',trim(info),iq,T,           &
+                           weight1Dact(iq,1:min(max_1D,n))
+            CALL flush_perso(out_unitp)
+
+            !write(out_unitp,*) 'Diag RD contracted',iq,DiagRDcontrac
+            IF (allocated(DiagRDcontrac)) CALL dealloc_NParray(DiagRDcontrac,'DiagRDcontrac',name_sub)
+          END IF
+
+
           max_indGr(iq) = sum(maxloc(weight1Dact(iq,1:ndim_AT_ib(iq))))
         END DO
 

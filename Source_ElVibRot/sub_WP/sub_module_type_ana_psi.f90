@@ -59,6 +59,12 @@
                                                                       ! Rho_type=1, with    rho(Q).w(Q) => dT=rho(Q).w(Q)dQ (=>sum Rho(Q)=1)
                                                                       ! Rho_type=2, without w(Q);       => dT=w(Q)dQ
 
+          logical                        :: Rho1Dcontract = .FALSE.   ! reduced densities (1D) on contracted basis set (just for the analysis)
+          integer,           allocatable :: contractBasis_list(:)     ! list of contracted basis set (for the analysis)
+
+
+
+
 
           logical                        :: AvQ           = .FALSE.   ! Average Values (Qact ...)
           integer,           allocatable :: Qtransfo_type(:)          ! ???type of the transformation
@@ -88,8 +94,8 @@
           logical                        :: Write_psi        = .FALSE. ! write psi (or psi^2 ...)
           logical                        :: Write_psi2_Grid  = .FALSE. ! write the density on the grid
           logical                        :: Write_psi2_Basis = .FALSE. ! write the density on the basis functions
-          logical                        :: Write_psi_Grid  = .FALSE.  ! write psi on the grid
-          logical                        :: Write_psi_Basis = .FALSE.  ! write psi on the basis
+          logical                        :: Write_psi_Grid   = .FALSE.  ! write psi on the grid
+          logical                        :: Write_psi_Basis  = .FALSE.  ! write psi on the basis
 
           ! Propagation parameters
           logical                        :: propa         = .FALSE.      ! To perform special analysis of WP

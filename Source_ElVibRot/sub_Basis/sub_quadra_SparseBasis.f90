@@ -1045,10 +1045,17 @@
 
         CALL basis2TObasis1(basis_SG%tab_basisPrimSG(L,ib),           &
                                        basis_SG%tab_Pbasis(ib)%Pbasis)
+
+        IF (L < Lmax) THEN
+          basis_SG%tab_basisPrimSG(L,ib)%contrac          = .FALSE.
+          basis_SG%tab_basisPrimSG(L,ib)%contrac_analysis = .FALSE.
+          basis_SG%tab_basisPrimSG(L,ib)%auto_contrac     = .FALSE.
+        END IF
+
         ! change nb, nq (function of L)
         IF (basis_SG%tab_basisPrimSG(L,ib)%nb_basis < 1) THEN
           LG_L = L ! old
-          LB_L = LB !old
+          LB_L = min(L,LB) !old
           IF (debug) write(out_unitp,*) 'primitive basis'
         ELSE
           basis_SG%tab_basisPrimSG(L,ib)%L_TO_nq%A = 0
@@ -1066,8 +1073,8 @@
         END IF
 
         basis_SG%tab_basisPrimSG(L,ib)%L_SparseGrid    = LG_L
-        basis_SG%tab_basisPrimSG(L,ib)%L_SparseBasis   = LG_L
-        basis_SG%tab_basisPrimSG(L,ib)%Norm_OF_nDindB  = LG_L
+        basis_SG%tab_basisPrimSG(L,ib)%L_SparseBasis   = LB_L
+        basis_SG%tab_basisPrimSG(L,ib)%Norm_OF_nDindB  = basis_SG%tab_basisPrimSG(L,ib)%L_SparseBasis
         basis_SG%tab_basisPrimSG(L,ib)%Type_OF_nDindB  = 0
 
         basis_SG%tab_basisPrimSG(L,ib)%packed = .TRUE.
@@ -1087,6 +1094,10 @@
                            para_PES,para_ReadOp,ComOp_loc)
 
         CALL sort_basis(basis_SG%tab_basisPrimSG(L,ib))
+
+        IF (L == Lmax .AND. allocated(basis_SG%tab_basisPrimSG(L,ib)%Rvec)) THEN
+          basis_SG%tab_Pbasis(ib)%Pbasis%Rvec = basis_SG%tab_basisPrimSG(L,ib)%Rvec
+        END IF
 
         nDsize(ib) = basis_SG%tab_basisPrimSG(L,ib)%nb
 

@@ -941,6 +941,10 @@
 
       END SUBROUTINE RPHTransfo1TORPHTransfo2
 
+      ! this version works only when:
+      !    - Qact1(:) are the first coordinates
+      !    - Qina21(:) are just after Qact1
+      !  If not the case, you have to use "order" transformation
       SUBROUTINE calc_RPHTransfo(dnQin,dnQout,RPHTransfo,nderiv,inTOout)
       IMPLICIT NONE
 
@@ -960,7 +964,7 @@
 
         real(kind=rkind) :: Qact1(RPHTransfo%nb_act1)
 
-        integer :: iQ,iQa,iQout,iQin
+        integer :: i,iQ,iQa,iQout,iQin
 
         TYPE (Type_RPHpara_AT_Qact1), pointer :: RPHpara_AT_Qact1(:)
 
@@ -979,6 +983,7 @@
         write(out_unitp,*) 'nderiv',nderiv
         write(out_unitp,*) 'list_act_OF_Qdyn',RPHTransfo%list_act_OF_Qdyn(:)
         write(out_unitp,*) 'list_QactTOQdyn ',RPHTransfo%list_QactTOQdyn(:)
+        CALL flush_perso(out_unitp)
 
         write(out_unitp,*) 'Qact1',dnQin%d0(1:RPHTransfo%nb_act1)
 
@@ -1047,7 +1052,9 @@
 
          ! find the iQa from tab_RPHpara_AT_Qact1
          Qact1(:)        = dnQin%d0(1:RPHTransfo%nb_act1)
+         !write(6,*) 'Qact1',Qact1(:)
          DO iQa=1,RPHTransfo%nb_Qa
+           !write(6,*) 'iQa,Qact1 from RPH',iQa,RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1
            IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1)) < ONETENTH**5) EXIT
          END DO
 
@@ -1056,6 +1063,7 @@
              IF (debug) write(out_unitp,*) 'RPHpara_AT_Qref point'
              RPHpara_AT_Qact1 => RPHTransfo%RPHpara_AT_Qref(1:1)
            ELSE
+             STOP
              write(out_unitp,*) 'ERROR in ',name_sub
              write(out_unitp,*) ' I cannot find Qact1(:) in tab_RPHpara_AT_Qact1'
              write(out_unitp,*) '  or  in tab_RPHpara_AT_Qref(1)'

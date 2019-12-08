@@ -33,7 +33,7 @@
    PUBLIC :: write_keo_LatexForm
    PUBLIC :: write_keo_VSCFForm
    PUBLIC :: write_keo_MCTDH_Form
-   PUBLIC :: write_keo_MidasCppForm
+   PUBLIC :: write_keo_MidasCppForm,write_mol_MidasCppForm
 
    CONTAINS 
    !! @description: Write the deformation part of the total KEO in a MidasCpp format,
@@ -47,21 +47,24 @@
      character (len = *),       intent(in)                :: tab_Qname(:)
      integer,                   intent(in)                :: param_JJ
 
-     complex(kind=Rkind)                        :: Cn_new
+     complex(kind=Rkind)                                  :: Cn_new
      character (len = :),       allocatable               :: FnDname
      !character (len = Name_longlen)                       :: Coef_name
      integer                                              :: NactQ
-     character (len = :),       allocatable               :: ModeName
+     character (len = :),       allocatable               :: ModeName, ModeRefName, ModeRefVal
      integer                                              :: i
      integer                                              :: pq1, pq2, nb_pq, nb_J, nb_L
      real (kind=Rkind)                                    :: Cn
+     real (kind=Rkind), allocatable                       :: Qact(:) !Emil new
      character (len = *),       parameter                 :: routine_name = 'write_keo_MidasCppForm'
 
      ! We need to know the number of active modes
      NactQ = mole%nb_act
 
-     ! First we set the MidasCpp format style keywords
+     ! Write a MidasCpp formatted operator file
      write(i_out, '(A)') "#0MIDASMOPINPUT"
+
+     ! First: Write MidasCpp style mode labels
      write(i_out, '(A)') "#1MODENAMES"
      DO i = 0, (NactQ - 1)
        ModeName = String_TO_String(' Q' // int_TO_char(i) )
@@ -71,11 +74,20 @@
          write(i_out, '(A)', advance='no') ModeName
        END IF
      END DO
+
+     ! Second: Write out the reference/equilibrium structure internal coordinates
+     Qact = mole%ActiveTransfo%Qact0
+
      write(i_out, '(A)') "#1CONSTANTS"
-     write(i_out, '(A)') "#1FUNCTIONS"
+     DO i = 0, (NactQ - 1)
+       ModeRefName = String_TO_String(' Q' // int_TO_char(i) // '_ref')
+       ModeRefVal = String_TO_String(' ' // real_TO_char(Qact(i+1)))
+       write(i_out, '(A)') (ModeRefName // ModeRefVal) !Emil change
+     END DO
+
+     ! Third: Write out the MidasCpp format style operator terms
      write(i_out, '(A)') "#1OPERATORTERMS"
 
-     ! Second we write out the MidasCpp format style operator terms
      ! Deformation part:
      DO i = 1, size(TWOxKEO%sum_prod_op1d)
 
@@ -87,7 +99,7 @@
 
       ! divide by 2 because we have 2xKEO and  ...
       ! multiply by (-EYE)**nb_pq because Pq = -EYE d./dq
-       Cn_new = TWOxKEO%Cn(i) * get_coeff_OF_OpnD(TWOxKEO%sum_prod_op1d(i)) * CHALF * (-EYE)**nb_pq
+       Cn_new = TWOxKEO%Cn(i) * get_coeff_OF_OpnD(TWOxKEO%sum_prod_op1d(i)) * HALF * (-EYE)**nb_pq
 
        write(i_out, '(A)')  (get_Coef_name(Cn_new) // FnDname)
 
@@ -104,7 +116,7 @@
 
         ! divide by 2 because we have 2xKEO and  ...
         ! multiply by (-EYE)**nb_pq because Pq = -EYE d./dq
-         Cn_new = TWOxKEO%Cn(i) * get_coeff_OF_OpnD(TWOxKEO%sum_prod_op1d(i)) * CHALF * (-EYE)**nb_pq
+         Cn_new = TWOxKEO%Cn(i) * get_coeff_OF_OpnD(TWOxKEO%sum_prod_op1d(i)) * HALF * (-EYE)**nb_pq
 
          write(i_out, '(A)')  (get_Coef_name(Cn_new) // FnDname)
 
@@ -120,7 +132,7 @@
 
         ! divide by 2 because we have 2xKEO and  ...
         ! multiply by (-EYE)**nb_pq because Pq = -EYE d./dq
-         Cn_new = TWOxKEO%Cn(i) * get_coeff_OF_OpnD(TWOxKEO%sum_prod_op1d(i)) * CHALF * (-EYE)**nb_pq
+         Cn_new = TWOxKEO%Cn(i) * get_coeff_OF_OpnD(TWOxKEO%sum_prod_op1d(i)) * HALF * (-EYE)**nb_pq
 
          write(i_out, '(A)')  (get_Coef_name(Cn_new) // FnDname)
 
@@ -136,7 +148,7 @@
 
         ! divide by 2 because we have 2xKEO and  ...
         ! multiply by (-EYE)**nb_pq because Pq = -EYE d./dq
-         Cn_new = TWOxKEO%Cn(i) * get_coeff_OF_OpnD(TWOxKEO%sum_prod_op1d(i)) * CHALF * (-EYE)**nb_pq
+         Cn_new = TWOxKEO%Cn(i) * get_coeff_OF_OpnD(TWOxKEO%sum_prod_op1d(i)) * HALF * (-EYE)**nb_pq
 
          write(i_out, '(A)')  (get_Coef_name(Cn_new) // FnDname)
 
@@ -147,8 +159,118 @@
 
      IF (allocated(FnDname)) deallocate(FnDname)
      IF (allocated(ModeName)) deallocate(ModeName)
+     IF (allocated(ModeRefVal)) deallocate(ModeRefVal)
 
    END SUBROUTINE write_keo_MidasCppForm
+
+   !! @description: Write the molecule information in a MidasCpp format,
+   !! @param:       mole          The generalized variable.
+   !! @param:       i_out         The id of the output file.
+   !! @param:       tab_Qname     The active coordinates.
+   !Emil new: Might not work for all units
+   SUBROUTINE write_mol_MidasCppForm(mole, i_out, tab_Qname, unit)
+   USE mod_paramQ !Emil new
+   USE mod_Constant
+   IMPLICIT NONE
+
+     type (zmatrix),            intent(in)                :: mole
+     integer,                   intent(in)                :: i_out
+     character (len = *),       intent(in)                :: tab_Qname(:)
+
+     character (len=*), optional, intent(in)              :: unit
+     real (kind=Rkind)                                    :: unit_conv
+     !type (Type_dnVec)                                    :: dnx, dnx0
+     real (kind=Rkind)                                    :: Qxyz0(mole%ncart)
+     integer                                              :: iZ, Z_act(mole%nat)
+     integer                                              :: NactQ, NactC, Natom, NactAtom
+     integer                                              :: i, Rnr, Vnr, Dnr
+     real (kind=Rkind), allocatable                       :: Qact(:)
+     character (len = *), parameter                       :: routine_name = 'write_mol_MidasCppForm'
+
+     ! We need to know the number of active modes
+     NactQ = mole%nb_act
+     NactC = mole%ncart_act
+     Natom = mole%nat
+     NactAtom = mole%nat_act
+
+     ! Write a MidasCpp formatted molecule file
+     write(i_out, '(A)') "#0MOLECULEINPUT"
+     write(i_out, '(A)', advance='yes') ''
+
+     ! First: Write Cartesian coordinates information
+     write(i_out, '(A)') "#1XYZ"
+
+     ! Determine the unit
+     IF (present(unit)) THEN
+       unit_conv = get_Conv_au_TO_unit("L",unit)
+
+       write(i_out, *) int_TO_char(NactAtom)," AU"
+       write(i_out, '(A)', advance='yes') ''
+     ELSE
+       unit_conv = get_Conv_au_TO_unit("L","Angs")
+
+       write(i_out, *) int_TO_char(NactAtom)," AA"
+       write(i_out, '(A)', advance='yes') ''
+     END IF
+
+     Z_act(:) = -1
+     iZ = 0
+     DO i=1,Natom
+       IF (mole%Z(i) > 0) THEN
+         iZ = iZ + 1
+         Z_act(iZ) = mole%Z(i)
+       END IF
+     END DO
+
+     !CALL alloc_dnSVM(dnx0,mole%ncart,mole%nb_act,0)
+     !CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,0)
+
+     Qact = mole%ActiveTransfo%Qact0
+     CALL sub_QactTOd0x(Qxyz0,Qact,mole,Gcenter=.FALSE.)
+
+     iZ = 0
+     DO i=1,NactC,3
+        iZ = iZ + 1
+        write(i_out,112) Z_act(iZ),Qxyz0(i:i+2)*unit_conv
+ 112    format(' ',i0,3(2x,f20.16))
+     END DO
+     write(i_out, '(A)', advance='yes') ''
+
+     ! Second: Write internal coordinate information
+     write(i_out, '(A)') "#1INTERNALCOORD"
+     write(i_out, *) int_TO_char(NactQ), " AU", " RAD"
+
+     DO i=1,NactQ
+       write(i_out, '(A)', advance='no') " "
+       write(i_out, '(A)', advance='no') real_TO_char(Qact(i))
+
+       Rnr = 0
+       Vnr = 1
+       Dnr = 2
+       IF (index(tab_Qname(i), 'R') == 1) THEN                       ! A bond length
+         Rnr = Rnr + 1
+         write(i_out, '(A)', advance='no') String_TO_String(' R' // int_TO_char(Rnr))
+       ELSE IF (index(tab_Qname(i), 'theta') == 2) THEN              ! A valence angle
+         Vnr = Vnr + 1
+         write(i_out, '(A)', advance='no') String_TO_String(' V' // int_TO_char(Vnr))
+       ELSE IF (index(tab_Qname(i), 'u') == 1) THEN                  ! A valence angle
+         Vnr = Vnr + 1
+         write(i_out, '(A)', advance='no') String_TO_String(' u' // int_TO_char(Vnr))
+       ELSE                                                          ! A dihedral angle
+         Dnr = Dnr + 1
+         write(i_out, '(A)', advance='no') String_TO_String(' D' // int_TO_char(Dnr))
+       END IF
+
+       write(i_out, '(A)', advance='yes') String_TO_String(' Q' // int_TO_char(i-1))
+     END DO
+     write(i_out, '(A)', advance='yes') ''
+
+     write(i_out, '(A)') "#0MOLECULEINPUTEND"
+
+     ! Deallocations
+     CALL dealloc_NParray(Qact, 'Qact', routine_name)
+   END SUBROUTINE write_mol_MidasCppForm
+
    SUBROUTINE write_keo_MidasCppForm_old(mole, keo, i_out, tab_Qname, param_JJ)
      type (zmatrix),            intent(in)                :: mole
      type (sum_opnd),           intent(in)                :: keo

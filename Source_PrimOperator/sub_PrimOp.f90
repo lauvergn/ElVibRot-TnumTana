@@ -4887,7 +4887,7 @@
   IF (associated(mole%RPHTransfo)) THEN
     Gref = Gref .AND. associated(mole%RPHTransfo%RPHpara_AT_Qref)
   END IF
-
+  !Gref = .FALSE.
   IF (Gref) THEN
     CALL get_Qact0(Qact,mole%ActiveTransfo)
     IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
@@ -4955,6 +4955,7 @@
   IF (associated(mole%RPHTransfo)) THEN
     Qref = Qref .AND. associated(mole%RPHTransfo%RPHpara_AT_Qref)
   END IF
+  !Qref = .FALSE.
   IF (Qref) THEN
 
     write(out_unitp,*) '================================================='

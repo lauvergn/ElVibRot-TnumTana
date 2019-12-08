@@ -1077,6 +1077,9 @@ END FUNCTION Qnamealfa_Latex
    !CALL write_op(Fel)
 
    calfa = '^(' // frac_TO_string(Fel%alfa) // ')'
+!Emil change
+   calfa = '^' // frac_TO_string(Fel%alfa)  !!! wrong with half-integers !!!!!!!!!!
+
 
    PName        = String_TO_String('(DDQ)')
    FuncQName    = String_TO_String(Qname)
@@ -1097,11 +1100,12 @@ END FUNCTION Qnamealfa_Latex
      case(1) ! Id
        FelName = String_TO_String('1')
 
+!Emil change:
      case(2) ! q^alfa
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String(FuncQName // trim(calfa))
+         FelName = String_TO_String('(' // FuncQName // ')' // trim(calfa))
        ELSE
-         FelName = String_TO_String(QName)
+         FelName = String_TO_String('(' // QName // ')')
        END IF
 
      case(3) ! sqrt(1-Q^2)^alfa
@@ -1120,15 +1124,23 @@ END FUNCTION Qnamealfa_Latex
        FelName = String_TO_String(PName)
        FelName = String_TO_String(FelName // trim(calfa))
 
+     !Emil change:
      case(5) ! cos(Q)^alfa
-       FelName = String_TO_String('cos')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // '(' // FuncQName // ')')
+       FelName = String_TO_String('COS')
+       IF (Fel%alfa /= 1) THEN
+         FelName = String_TO_String(FelName // '(' // FuncQName // ')' // trim(calfa))
+       ELSE
+         FelName = String_TO_String(FelName // '(' // FuncQName // ')')
+       END IF
 
+     !Emil change:
      case(6) ! sin(Q)^alfa
-       FelName = String_TO_String('sin')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // '(' // FuncQName // ')')
+       FelName = String_TO_String('SIN')
+       IF (Fel%alfa /= 1) THEN
+         FelName = String_TO_String(FelName // '(' // FuncQName // ')' // trim(calfa))
+       ELSE
+         FelName = String_TO_String(FelName // '(' // FuncQName // ')')
+       END IF
 
      case(7) ! tan(Q)^alfa
        FelName = String_TO_String('tan')

@@ -737,11 +737,7 @@ MODULE mod_basis
       IF (debug .OR. print_level > -1) write(out_unitp,*) 'nbc',basis_set%nbc
 
       IF (.NOT. without_read) THEN
-        IF (allocated(basis_set%Rvec))  THEN
-          CALL dealloc_NParray(basis_set%Rvec,"basis_set%Rvec",name_sub)
-        END IF
-        CALL alloc_NParray(basis_set%Rvec,(/ nb_b,nb_b /),"basis_set%Rvec",name_sub)
-        basis_set%Rvec(:,:) = ZERO
+
 !       - test and read a matrix ------------------------
         nio = 5
         IF (basis_set%read_contrac_file) CALL file_open(basis_set%file_contrac,nio)
@@ -783,7 +779,14 @@ MODULE mod_basis
         END IF
 !       -------------------------------------------------
         IF (basis_set%read_contrac_file) close(nio)
-        basis_set%Rvec(:,1:nb_bc1) = Mat_read(:,:)
+
+        IF (allocated(basis_set%Rvec))  THEN
+          CALL dealloc_NParray(basis_set%Rvec,"basis_set%Rvec",name_sub)
+        END IF
+        CALL alloc_NParray(basis_set%Rvec,(/ nb_b,nb_bc /),"basis_set%Rvec",name_sub)
+        basis_set%Rvec(:,:) = ZERO
+
+        basis_set%Rvec(:,1:nb_bc) = Mat_read(:,1:nb_bc)
         CALL dealloc_NParray(Mat_read,"Mat_read",name_sub)
       ELSE
         IF (.NOT. allocated(basis_set%Rvec)) THEN
@@ -1017,7 +1020,7 @@ MODULE mod_basis
 
 !---------------------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*)
+        !write(out_unitp,*) 'shape basis_set%Rvec',shape(basis_set%Rvec)
         CALL RecWrite_basis(basis_set)
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
@@ -2381,10 +2384,10 @@ END SUBROUTINE pack_basis
 
       END SUBROUTINE check_ortho_basis
 
-      integer FUNCTION Get_nb_FROM_l_OF_PrimBasis(l,PrimBasis)
+      integer FUNCTION Get_nb_FROM_l_OF_PrimBasis(L,PrimBasis)
       IMPLICIT NONE
       TYPE (Basis), intent(inout)  :: PrimBasis
-      integer, intent(in)          :: l
+      integer, intent(in)          :: L
       integer :: u
 
 !----- for debuging --------------------------------------------------
@@ -2394,17 +2397,23 @@ END SUBROUTINE pack_basis
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
-         write(out_unitp,*) '  With_L',PrimBasis%With_L
-         write(out_unitp,*) '  Norm_OF_nDindB',PrimBasis%Norm_OF_nDindB
+         write(out_unitp,*) '  With_L          ',PrimBasis%With_L
+         write(out_unitp,*) '  Norm_OF_nDindB  ',PrimBasis%Norm_OF_nDindB
+         write(out_unitp,*) '  L               ',L
          write(out_unitp,*) '  weight_OF_nDindB',PrimBasis%weight_OF_nDindB
+         write(out_unitp,*) '  contrac         ',PrimBasis%contrac
+         write(out_unitp,*) '  contrac_analysis',PrimBasis%contrac_analysis
+
        END IF
 !-----------------------------------------------------------
        IF (PrimBasis%With_L) THEN
-         IF (PrimBasis%contrac) THEN
+         IF (PrimBasis%contrac .AND. .NOT. PrimBasis%contrac_analysis) THEN
            PrimBasis%nbc = get_n_FROM_Basis_L_TO_n(PrimBasis%L_TO_nb,L)
            Get_nb_FROM_l_OF_PrimBasis = PrimBasis%nb
+           IF (debug) write(out_unitp,*) ' nb',Get_nb_FROM_l_OF_PrimBasis
          ELSE
            Get_nb_FROM_l_OF_PrimBasis = get_n_FROM_Basis_L_TO_n(PrimBasis%L_TO_nb,L)
+           IF (debug) write(out_unitp,*) ' nb',Get_nb_FROM_l_OF_PrimBasis
          END IF
        ELSE
           IF (PrimBasis%nb < 1) THEN
@@ -2419,7 +2428,8 @@ END SUBROUTINE pack_basis
          write(out_unitp,*) 'ERROR in ',name_sub
          write(out_unitp,*) '  L',L
          write(out_unitp,*) '  contrac',PrimBasis%contrac
-         write(out_unitp,*) '  nb',PrimBasis%nb
+         write(out_unitp,*) '  nb',Get_nb_FROM_l_OF_PrimBasis
+         write(out_unitp,*) '  nb (from PrimBasis)',PrimBasis%nb
          write(out_unitp,*) '  With_L',PrimBasis%With_L
          write(out_unitp,*) '  Norm_OF_nDindB',PrimBasis%Norm_OF_nDindB
          write(out_unitp,*) '  weight_OF_nDindB',PrimBasis%weight_OF_nDindB

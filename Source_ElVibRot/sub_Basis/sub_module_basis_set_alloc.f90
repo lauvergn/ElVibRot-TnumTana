@@ -51,6 +51,7 @@
       use mod_Basis_Grid_Param
       USE mod_SymAbelian
       USE mod_param_SGType2
+      USE mod_param_RD, ONLY : param_RD
       USE mod_Basis_L_TO_n
       IMPLICIT NONE
 
@@ -121,6 +122,7 @@
 
           logical                    :: contrac                = .FALSE.  !  .T. if the basis set is contracted
           logical                    :: auto_contrac           = .FALSE.  ! it is done automatically
+          logical                    :: contrac_analysis       = .FALSE.  ! perform contraction, but only for the analysis (RD)
           real (kind=Rkind)          :: max_ene_contrac        = ONETENTH ! maximal energy to select nbc (in ua)
           integer                    :: max_nbc                = 0
           integer                    :: min_nbc                = 0
@@ -197,6 +199,9 @@
           TYPE (basis), pointer       :: tab_basisPrimSG(:,:)     => null() ! tab_basis(nb_basis,0:Lmax)
 
           TYPE (param_SGType2)        :: para_SGType2
+
+          TYPE (param_RD), allocatable :: para_RD(:) ! it is allocated only for BasisnD. The size is nb_basis
+
 
           TYPE (RotBasis_Param)       :: RotBasis
 
@@ -692,6 +697,7 @@
       !!@param: TODO
       !!@param: TODO
        RECURSIVE SUBROUTINE dealloc_basis(basis_set,Basis_FOR_SG,keep_Rvec)
+         USE mod_param_RD, ONLY : dealloc_tab_RD
          IMPLICIT NONE
 
          TYPE (basis)      :: basis_set
@@ -746,6 +752,7 @@
            basis_set%auto_basis             = .FALSE.
            basis_set%contrac                = .FALSE.
            basis_set%auto_contrac           = .FALSE.
+           basis_set%contrac_analysis       = .FALSE.
            basis_set%max_ene_contrac        = ONETENTH
            basis_set%POGridRep              = .FALSE.
            basis_set%POGridRep_polyortho    = .FALSE.
@@ -926,6 +933,7 @@
 
          CALL dealloc_SGType2(basis_set%para_SGType2)
          CALL dealloc_RotBasis_Param(basis_set%RotBasis)
+         CALL dealloc_tab_RD(basis_set%para_RD)
 
        END SUBROUTINE dealloc_basis
 
@@ -1312,6 +1320,7 @@
       !!@param: TODO
       !!@param: TODO
       RECURSIVE SUBROUTINE basis2TObasis1(basis_set1,basis_set2,init_only,with_SG,Basis_FOR_SG)
+        USE mod_param_RD, ONLY : assignment (=)
         IMPLICIT NONE
         TYPE (basis), intent(in)    :: basis_set2
         TYPE (basis), intent(inout) :: basis_set1
@@ -1378,6 +1387,7 @@
 
         basis_set1%contrac                = basis_set2%contrac
         basis_set1%auto_contrac           = basis_set2%auto_contrac
+        basis_set1%contrac_analysis       = basis_set2%contrac_analysis
         basis_set1%max_ene_contrac        = basis_set2%max_ene_contrac
         basis_set1%make_cubature          = basis_set2%make_cubature
         basis_set1%Restart_make_cubature  = basis_set2%Restart_make_cubature
@@ -1657,6 +1667,8 @@
         basis_set1%para_SGType2 = basis_set2%para_SGType2
 
         basis_set1%RotBasis     = basis_set2%RotBasis
+
+        !basis_set1%para_RD      = basis_set2%para_RD
 
 
       END SUBROUTINE basis2TObasis1
@@ -2058,6 +2070,7 @@
 
        write(out_unitp,*) Rec_line,'contrac',basis_set%contrac
        write(out_unitp,*) Rec_line,'auto_contrac',basis_set%auto_contrac
+       write(out_unitp,*) Rec_line,'contrac_analysis',basis_set%contrac_analysis
        write(out_unitp,*) Rec_line,'POGridRep,POGridRep_polyortho',basis_set%POGridRep,basis_set%POGridRep_polyortho
        write(out_unitp,*) Rec_line,'nqPLUSnbc_TO_nqc',basis_set%nqPLUSnbc_TO_nqc
        write(out_unitp,*) Rec_line,'max_ene_contrac',basis_set%max_ene_contrac
@@ -2349,6 +2362,7 @@
 
        write(out_unitp,*) Rec_line,'contrac',basis_set%contrac
        write(out_unitp,*) Rec_line,'auto_contrac',basis_set%auto_contrac
+       write(out_unitp,*) Rec_line,'contrac_analysis',basis_set%contrac_analysis
        write(out_unitp,*) Rec_line,'POGridRep,POGridRep_polyortho',basis_set%POGridRep,basis_set%POGridRep_polyortho
        write(out_unitp,*) Rec_line,'nqPLUSnbc_TO_nqc',basis_set%nqPLUSnbc_TO_nqc
        write(out_unitp,*) Rec_line,'max_ene_contrac',basis_set%max_ene_contrac

@@ -1634,6 +1634,8 @@ END SUBROUTINE Tune_SG4threads_HPsi
       USE mod_psi_set_alloc
       USE mod_param_WP0
       USE mod_psi_io
+      USE mod_Auto_Basis
+
       IMPLICIT NONE
 
 !
@@ -1675,11 +1677,11 @@ END SUBROUTINE Tune_SG4threads_HPsi
       TYPE (param_intensity)     :: para_intensity
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_propa)        :: para_propa
-      TYPE (param_WP0)          :: para_WP0
-      TYPE (param_psi), pointer :: Tab_WP(:) => null()
-      TYPE (param_psi)          :: WP0
-      integer                   :: nioWP
+      TYPE (param_propa)            :: para_propa
+      TYPE (param_WP0)              :: para_WP0
+      TYPE (param_psi), allocatable :: Tab_WP(:)
+      TYPE (param_psi)              :: WP0
+      integer                       :: nioWP
 
 !----- variables pour la namelist minimum ----------------------------
       TYPE (param_PES) :: para_PES
@@ -1689,9 +1691,10 @@ END SUBROUTINE Tune_SG4threads_HPsi
 !----- for the basis set ----------------------------------------------
       TYPE (param_AllBasis) :: para_AllBasis
       TYPE (basis) :: BasisnD_Save
+      integer :: Get_nbPERsym_FROM_SymAbelianOFAllBasis ! function
 
 !----- variables divers ----------------------------------------------
-       integer           :: i
+       integer           :: i,max_diago
 !      real (kind=Rkind) :: T,DE,Ep,Em
 !      logical           :: print_mat
 !      integer           :: err
@@ -1735,12 +1738,30 @@ END SUBROUTINE Tune_SG4threads_HPsi
       write(out_unitp,*)
       write(out_unitp,*)
 
+
       ! first the number of WP
       IF (para_ana%davidson) THEN
 
+
+        IF (para_propa%para_Davidson%max_WP == 0) THEN
+          max_diago = max(1000,para_propa%para_Davidson%nb_WP,          &
+                          para_H%nb_tot/10)
+        ELSE
+          max_diago = para_propa%para_Davidson%max_WP
+        END IF
+        IF (Get_nbPERsym_FROM_SymAbelianOFAllBasis(para_AllBasis,       &
+                             para_propa%para_Davidson%symab) == 0) THEN
+          max_diago = min(max_diago,para_H%nb_tot)
+        ELSE
+          max_diago = min(max_diago,para_H%nb_tot,                      &
+                  Get_nbPERsym_FROM_SymAbelianOFAllBasis(para_AllBasis, &
+                                        para_propa%para_Davidson%symab))
+        END IF
+        write(6,*) 'max_diago',max_diago
+
         para_WP0%nb_WP0              = 0
         para_WP0%read_file           = .TRUE.
-        para_propa%file_WP%formatted = .TRUE.
+        para_propa%file_WP%formatted = para_propa%para_Davidson%formatted_file_readWP
         para_WP0%file_WP0            = para_propa%file_WP
         write(6,*) 'name WP0',para_WP0%file_WP0%name
 !        para_WP0%file_WP0            = 'file_WP'
@@ -1755,35 +1776,15 @@ END SUBROUTINE Tune_SG4threads_HPsi
         STOP
       END IF
 
-      CALL file_open(para_WP0%file_WP0,nioWP,                           &
-                     lformatted=para_WP0%file_WP0%formatted,            &
-                     old=.TRUE.)
-      IF (para_WP0%file_WP0%formatted) THEN
-          read(nioWP,*) para_WP0%nb_WP0
-      ELSE
-          read(nioWP) para_WP0%nb_WP0
-      END IF
-      close(nioWP)
-      write(out_unitp,*) ' nb_WP read WP from the file: ',para_WP0%nb_WP0
-      IF (para_WP0%nb_WP0 < 1) THEN
-        write(out_unitp,*) ' ERROR in sub_Analysis_Only'
-        write(out_unitp,*) ' No read WP from the file',                 &
-                                trim(para_propa%para_WP0%file_WP0%name)
-        STOP
-      END IF
 
-      CALL ecri_init_psi(WP0)
       ! allocation
-      nullify(Tab_WP)
-      CALL alloc_array(Tab_WP,(/para_WP0%nb_WP0/),"Tab_WP","sub_Analysis_Only")
-
-      DO i=1,para_WP0%nb_WP0
-        Tab_WP(i) = WP0
-        CALL alloc_psi(Tab_WP(i))
+      CALL alloc_NParray(Tab_WP,(/max_diago/),"Tab_WP","sub_Analysis_Only")
+      DO i=1,size(Tab_WP)
+        CALL init_psi(Tab_WP(i),para_H,para_propa%para_WP0%WP0cplx)
       END DO
 
       ! read the WPs
-      CALL sub_read_psi0(tab_WP,para_WP0,para_WP0%nb_WP0)
+      CALL sub_read_psi0(tab_WP,para_WP0,max_diago)
 
       ! Analysis
       CALL sub_analyse(Tab_WP,para_WP0%nb_WP0,para_H,                   &
@@ -1796,11 +1797,11 @@ END SUBROUTINE Tune_SG4threads_HPsi
       write(out_unitp,*) '================================================='
       write(out_unitp,*)
 
-      IF ( associated(tab_WP) ) THEN
+      IF ( allocated(tab_WP) ) THEN
         DO i=1,size(tab_WP)
           CALL dealloc_psi(tab_WP(i))
         END DO
-        CALL dealloc_array(tab_WP,"tab_WP","sub_Analysis_Only")
+        CALL dealloc_NParray(tab_WP,"tab_WP","sub_Analysis_Only")
       END IF
 
       write(out_unitp,*) '================================================'

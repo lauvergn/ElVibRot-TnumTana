@@ -2268,7 +2268,8 @@ MODULE mod_paramQ
       DO i=1,mole%ncart_act,3
         iZ = iZ + 1
         write(io_unit_loc,112) Z_act(iZ),d0x(i+0)*a0,d0x(i+1)*a0,d0x(i+2)*a0
- 112    format(2x,i5,3(2x,f20.9))
+ 112    format(2x,i5,3(2x,f20.16))
+!112    format(2x,i5,3(2x,f20.9)) ! Emil change: Needed more digits for coordinate conversion between Tana and MidasCpp
 
       END DO
       write(io_unit_loc,*) '= END XYZ format ============================='

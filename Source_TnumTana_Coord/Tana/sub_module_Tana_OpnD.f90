@@ -647,7 +647,7 @@ subroutine check_allocate_opnd(F_nd)
    character (len = :), allocatable     :: FndName
    character(len=*),    intent(in)      :: tab_Qname(:)
 
-   character (len = :), allocatable     :: qname
+   character (len = :), allocatable     :: qname, Qdispname !Emil new
    character (len = :), allocatable     :: F1dName
    integer :: j,m
    character (len = *), parameter       :: mult = ' '
@@ -663,11 +663,14 @@ subroutine check_allocate_opnd(F_nd)
        m = get_indexQ_OF_Op1D( Fnd%prod_op1d(j) ) -1
 
        Qname = String_TO_String('(Q' // int_TO_char(m) // ')')
+       Qdispname = String_TO_String('Q+Q' // int_TO_char(m) // '_ref') !Emil new
 
-       CALL Export_Midas_Op1D(Fnd%prod_op1d(j), 'Q', F1dName)
+       CALL Export_Midas_Op1D(Fnd%prod_op1d(j), Qdispname, F1dName) !Emil change
+       !CALL Export_Midas_Op1D(Fnd%prod_op1d(j), 'Q', F1dName) ! old one DML
        FndName = String_TO_String( FndName // mult // F1dName // Qname)
      END DO
      IF (allocated(F1dName)) deallocate(F1dName)
+     IF (allocated(Qdispname)) deallocate(Qdispname) !Emil new
 
    ELSE
      FndName = String_TO_String('')

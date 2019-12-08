@@ -345,7 +345,7 @@
 
       integer            :: ndim,nb_basis
 
-      logical            :: packed,dnBBRep,contrac,read_contrac_file
+      logical            :: packed,dnBBRep,contrac,contrac_analysis,read_contrac_file
       logical            :: auto_basis,auto_contrac,POGridRep,POGridRep_polyortho,make_cubature
       logical            :: restart_make_cubature
       TYPE (REAL_WU)     :: max_ene_contrac
@@ -376,7 +376,7 @@
       integer       :: i
 
       NAMELIST /basis_nD/iQact,iQsym,iQdyn,name,                        &
-                         nb,nq,nbc,nqc,contrac,cte,cplx,                &
+                         nb,nq,nbc,nqc,contrac,contrac_analysis,cte,cplx,   &
                  auto_basis,A,B,Q0,scaleQ,opt_A,opt_B,opt_Q0,opt_scaleQ,&
                          symab,index_symab,                             &
                          L_TO_n_type,                                   &
@@ -417,6 +417,7 @@
       packed                   = .FALSE.
       dnBBRep                  = .FALSE.
       contrac                  = .FALSE.
+      contrac_analysis         = .FALSE.
       make_cubature            = .FALSE.
       restart_make_cubature    = .FALSE.
       auto_contrac             = .FALSE.
@@ -789,7 +790,8 @@
 
       basis_temp%dnBBRep                  = dnBBRep
       basis_temp%packed                   = packed
-      basis_temp%contrac                  = contrac .OR. auto_contrac
+      basis_temp%contrac                  = contrac .OR. auto_contrac .OR. contrac_analysis
+      basis_temp%contrac_analysis         = contrac_analysis
       basis_temp%auto_contrac             = auto_contrac
       basis_temp%make_cubature            = make_cubature
       basis_temp%restart_make_cubature    = restart_make_cubature

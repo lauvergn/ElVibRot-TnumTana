@@ -117,7 +117,9 @@
           MODULE PROCEDURE dealloc_NParray_OF_nDindexdim0,dealloc_NParray_OF_nDindexdim1
         END INTERFACE
 
-        PUBLIC :: Type_nDindex,alloc_nDindex,dealloc_nDindex,nDindex2TOnDindex1,Write_nDindex
+        PUBLIC :: Type_nDindex,alloc_nDindex,dealloc_nDindex,Write_nDindex
+        PUBLIC :: nDindex2TOnDindex1,nDindex2TOnDindex1_InitOnly
+
         PUBLIC :: alloc_array,dealloc_array,alloc_NParray,dealloc_NParray
         PUBLIC :: init_nDindexPrim,init_nDindex_typeTAB
         PUBLIC :: pack_nDindex,sort_nDindex,unpack_nDindex
@@ -141,8 +143,8 @@
         TYPE (Type_nDindex)        :: nDindex
         integer, intent(in)        :: ndim
         integer                    :: nDsize(:)
-        integer,              intent(inout), optional     :: err_sub
 
+        integer,              intent(inout), optional     :: err_sub
         integer, optional          :: type_OF_nDindex,MaxCoupling,MinCoupling
         integer, optional          :: nDinit(:),nDNum_OF_Lmax(:)
         real(kind=Rkind), optional :: nDweight(:)
@@ -1901,6 +1903,12 @@
         nDindex1%Lmin            = nDindex2%Lmin
         nDindex1%With_L          = nDindex2%With_L
 
+        nDindex1%L1max           = nDindex2%L1max
+        nDindex1%L2max           = nDindex2%L2max
+
+        IF (allocated(nDindex2%nDNum_OF_Lmax)) THEN
+          nDindex1%nDNum_OF_Lmax = nDindex2%nDNum_OF_Lmax
+        END IF
 
         IF (allocated(nDindex2%nDinit)) THEN
           nDindex1%nDinit = nDindex2%nDinit
@@ -1967,6 +1975,89 @@
         !CALL Write_nDindex(nDindex1)
 
       END SUBROUTINE nDindex2TOnDindex1
+      SUBROUTINE nDindex2TOnDindex1_InitOnly(nDindex1,nDindex2)
+        TYPE (Type_nDindex), intent(inout) :: nDindex1
+        TYPE (Type_nDindex), intent(in)    :: nDindex2
+
+        integer :: i
+        integer :: err_mem,memory
+
+        CALL dealloc_nDindex(nDindex1)
+        IF (nDindex2%alloc) THEN
+          CALL alloc_nDindex(nDindex1,nDindex2%ndim)
+        END IF
+
+        !CALL Write_nDindex(nDindex2)
+
+        nDindex1%alloc = .FALSE.
+        nDindex1%init  = .TRUE.
+
+        nDindex1%ndim            = nDindex2%ndim
+        nDindex1%Max_nDI         = 0
+        nDindex1%type_OF_nDindex = nDindex2%type_OF_nDindex
+        nDindex1%MaxNorm         = nDindex2%MaxNorm
+        nDindex1%MinNorm         = nDindex2%MinNorm
+        nDindex1%MaxCoupling     = nDindex2%MaxCoupling
+        nDindex1%MinCoupling     = nDindex2%MinCoupling
+
+        nDindex1%nb_OF_MinNorm   = nDindex2%nb_OF_MinNorm
+        nDindex1%Div_nb_TO_Norm  = nDindex2%Div_nb_TO_Norm
+
+        nDindex1%Lmax            = nDindex2%Lmax
+        nDindex1%Lmin            = nDindex2%Lmin
+        nDindex1%With_L          = nDindex2%With_L
+
+        nDindex1%L1max           = nDindex2%L1max
+        nDindex1%L2max           = nDindex2%L2max
+
+        IF (allocated(nDindex2%nDNum_OF_Lmax)) THEN
+          nDindex1%nDNum_OF_Lmax = nDindex2%nDNum_OF_Lmax
+        END IF
+
+
+        IF (allocated(nDindex2%nDinit)) THEN
+          nDindex1%nDinit = nDindex2%nDinit
+        END IF
+
+        IF (allocated(nDindex2%nDend)) THEN
+          nDindex1%nDend = nDindex2%nDend
+        END IF
+
+        IF (allocated(nDindex2%nDsize)) THEN
+          nDindex1%nDsize = nDindex2%nDsize
+        END IF
+
+        IF (allocated(nDindex2%nDweight)) THEN
+          nDindex1%nDweight = nDindex2%nDweight
+        END IF
+
+        IF (associated(nDindex2%Tab_nDNorm)) THEN
+          CALL alloc_array(nDindex1%Tab_nDNorm,(/nDindex1%ndim/),       &
+                          "nDindex1%Tab_nDNorm","nDindex2TOnDindex1")
+          DO i=1,nDindex1%ndim
+            CALL alloc_dnSVM(nDindex1%Tab_nDNorm(i),nDindex2%Tab_nDNorm(i)%nb_var_vec)
+            CALL sub_dnVec1_TO_dnVec2(nDindex2%Tab_nDNorm(i),nDindex1%Tab_nDNorm(i))
+          END DO
+        END IF
+
+        IF (associated(nDindex2%Tab_i_TO_L)) THEN
+          CALL alloc_array(nDindex1%Tab_i_TO_L,(/nDindex1%ndim/),       &
+                          "nDindex1%Tab_i_TO_L","nDindex2TOnDindex1")
+          DO i=1,nDindex1%ndim
+            CALL alloc_dnSVM(nDindex1%Tab_i_TO_L(i),nDindex2%Tab_i_TO_L(i)%nb_var_vec)
+            CALL sub_IntVec1_TO_IntVec2(nDindex2%Tab_i_TO_L(i),nDindex1%Tab_i_TO_L(i))
+          END DO
+        END IF
+
+
+
+        nDindex1%packed         = nDindex2%packed
+        nDindex1%packed_done    = .FALSE.
+
+
+        !CALL Write_nDindex(nDindex1)
+
+      END SUBROUTINE nDindex2TOnDindex1_InitOnly
 !     =================================================================
 !      Calculation of the multidimensional index as a function of a table
 !      Example in 3D:
@@ -2335,12 +2426,12 @@
 
   END DO
 
-      IF (debug) THEN
-        write(out_unitp,*) '  nDval (out), In_the_list',nDval,In_the_list
-        write(out_unitp,*) 'END ',name_sub
-      END IF
+  IF (debug) THEN
+    write(out_unitp,*) '  nDval (out), In_the_list',nDval,In_the_list
+    write(out_unitp,*) 'END ',name_sub
+  END IF
 
-  END SUBROUTINE ADD_ONE_TO_nDindex_type5p
+END SUBROUTINE ADD_ONE_TO_nDindex_type5p
   SUBROUTINE ADD_ONE_TO_nDindex_type5m(nDval,nDindex,In_the_list)
   integer,             intent(inout) :: nDval(:)
   TYPE (Type_nDindex), intent(in)    :: nDindex
@@ -2423,10 +2514,10 @@
       END DO
       L = L + L1 + L2
     ELSE
-      L1 = sum(nDval,mask=(nDindex%nDNum_OF_Lmax(:) == 1) )
-      L2 = sum(nDval,mask=(nDindex%nDNum_OF_Lmax(:) == 2) )
-      L  = L1 + L2 + sum(nDval,mask=(nDindex%nDNum_OF_Lmax(:) == 0) )
-      IF (L /= sum(nDval)) STOP 'pb with L, L1, L2'
+      L1 = sum(nDval-nDindex%nDinit,mask=(nDindex%nDNum_OF_Lmax(:) == 1) )
+      L2 = sum(nDval-nDindex%nDinit,mask=(nDindex%nDNum_OF_Lmax(:) == 2) )
+      L  = L1 + L2 + sum(nDval-nDindex%nDinit,mask=(nDindex%nDNum_OF_Lmax(:) == 0) )
+      IF (L /= sum(nDval-nDindex%nDinit)) STOP 'pb with L, L1, L2'
     END IF
 
   END SUBROUTINE calc_LL1L2_OF_nDindex_type5
@@ -2447,6 +2538,10 @@
            L  <= nDindex%Lmax  .AND. L  >= nDindex%Lmin  .AND.          &
            all(nDval <= nDindex%nDend)                  .AND.           &
            nb_Coupling <= nDindex%MaxCoupling .AND. nb_Coupling >= nDindex%MinCoupling
+
+  !write(6,*) 'nDval      ',nDval
+  !write(6,*) 'L1,L2,L    ',L1,L2,L
+  !write(6,*) 'nb_Coupling',nb_Coupling
 
   END FUNCTION InList_nDindex_type5
 
@@ -3284,6 +3379,7 @@
         nDindex%Max_nDI     = 0
 
         CALL init_nDval_OF_nDindex(nDindex,nDval)
+
         DO
           CALL ADD_ONE_TO_nDindex_type5p(nDval,nDindex,In_the_list)
           IF (.NOT. In_the_list) EXIT

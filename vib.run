@@ -1,0 +1,9 @@
+#!/bin/bash
+
+cat > namelist
+
+
+
+nice /Users/lauvergn/git/ElVibRot/vib < namelist
+
+
