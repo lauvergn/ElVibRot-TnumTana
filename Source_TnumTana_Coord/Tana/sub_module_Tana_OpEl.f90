@@ -1076,23 +1076,12 @@ END FUNCTION Qnamealfa_Latex
    FelName = String_TO_String('')
    !CALL write_op(Fel)
 
-   calfa = '^(' // frac_TO_string(Fel%alfa) // ')'
-!Emil change
-   calfa = '^' // frac_TO_string(Fel%alfa)  !!! wrong with half-integers !!!!!!!!!!
-
+   !Emil change
+   calfa = '^' // frac_TO_string(Fel%alfa)
 
    PName        = String_TO_String('(DDQ)')
    FuncQName    = String_TO_String(Qname)
    SQName       = String_TO_String('v' // Qname(2:len_trim(Qname)) )
-
-
-!    allocate(character(len=len_trim('(DDQ)')) :: PName)
-!    PName     = '(DDQ)'
-!    allocate(character(len=len_trim(Qname)) :: FuncQName)
-!    FuncQName = trim(Qname)
-!    allocate(character(len=('v' // Qname(2:len_trim(Qname)))) :: SQName)
-!    SQName    = 'v' // Qname(2:len_trim(Qname))
-
 
    select case (Fel%idf)
      case(0) ! 0
@@ -1100,7 +1089,7 @@ END FUNCTION Qnamealfa_Latex
      case(1) ! Id
        FelName = String_TO_String('1')
 
-!Emil change:
+     !Emil change:
      case(2) ! q^alfa
        IF (Fel%alfa /= 1) THEN
          FelName = String_TO_String('(' // FuncQName // ')' // trim(calfa))
@@ -1160,7 +1149,7 @@ END FUNCTION Qnamealfa_Latex
        IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
      case(11) ! Jz
        FelName = String_TO_String('Jz')
-        IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
+       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
 
      case(12) ! PQ Q^alfa
        IF (Fel%alfa /= 1) THEN
@@ -1257,6 +1246,157 @@ END FUNCTION Qnamealfa_Latex
 
 
  end subroutine Export_Midas_OpEl
+
+ subroutine Export_Midas_OpEl_new(Fel, Qname, FelName)
+   type(opel),          intent(in)                    :: Fel
+   character (len =*),  intent(in)                    :: Qname
+
+   character (len = :), allocatable, intent(inout)    :: FelName
+
+   character (len = :), allocatable                   :: PName, SQName, FuncQName
+   character (len = Name_len)                         :: calfa
+
+   character (len = *), parameter                     :: routine_name = 'Export_Midas_OpEl'
+
+   IF (allocated(FelName)) deallocate(FelName)
+
+   FelName = String_TO_String('')
+   !CALL write_op(Fel)
+
+!Emil and DML change
+   IF ( frac_IS_integer(Fel%alfa)) THEN
+     IF (Fel%alfa == 1) THEN
+       calfa = ''
+     ELSE
+       calfa = '^' // frac_TO_string(Fel%alfa)
+     END IF
+   ELSE
+     calfa = '^(' // frac_TO_string(Fel%alfa) // ')'
+     write(out_unitp,*) 'ERROR in ',routine_name
+     write(out_unitp,*) 'Fel%alfa=',calfa
+     write(out_unitp,*) " MidasCpp is not working with half-integers"
+     STOP " MidasCpp is not working with half-integers"
+   END IF
+
+
+   PName        = String_TO_String('(DDQ)')
+   FuncQName    = String_TO_String(Qname)
+   SQName       = String_TO_String('v' // Qname(2:len_trim(Qname)) )
+
+   select case (Fel%idf)
+     case(0) ! 0
+       FelName = String_TO_String('0')
+     case(1) ! Id
+       FelName = String_TO_String('1')
+
+!Emil change:
+     case(2) ! q^alfa
+       FelName = String_TO_String('(' // FuncQName // ')' // trim(calfa))
+
+     case(3) ! sqrt(1-Q^2)^alfa
+       !FelName = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
+
+       !???????????? DML
+       IF (Fel%alfa /= 1) THEN
+         FelName = String_TO_String('(' // SQName // ')')
+         FelName = String_TO_String(FelName // trim(calfa))
+       ELSE
+         FelName = String_TO_String(SQName)
+       END IF
+
+
+     case(4) ! PQ^alfa
+       FelName = String_TO_String(PName // trim(calfa))
+
+     !Emil change:
+     case(5) ! cos(Q)^alfa
+       FelName = String_TO_String('COS(' // FuncQName // ')' // trim(calfa))
+
+     !Emil change:
+     case(6) ! sin(Q)^alfa
+       FelName = String_TO_String('SIN(' // FuncQName // ')' // trim(calfa))
+
+     case(7) ! tan(Q)^alfa
+       FelName = String_TO_String('TAN(' // FuncQName // ')' // trim(calfa))
+
+     case(8) ! cot(Q)^alfa
+       FelName = String_TO_String('COT(' // FuncQName // ')' // trim(calfa))
+
+     case(9) ! Jx
+       FelName = String_TO_String('Jx' // trim(calfa))
+     case(10) ! Jy
+       FelName = String_TO_String('Jy' // trim(calfa))
+     case(11) ! Jz
+       FelName = String_TO_String('Jz' // trim(calfa))
+
+     case(12) ! PQ Q^alfa
+       FelName = String_TO_String(PName // '(' // FuncQName // ')' // trim(calfa))
+     case(13) ! Q^alfa PQ
+       FelName = String_TO_String('(' // FuncQName // ')' // trim(calfa) // PName)
+
+     case(14) ! PQ cos(Q)^alfa
+       FelName = String_TO_String(PName // 'COS(' // FuncQName // ')' // trim(calfa))
+     case(15) ! cos(Q)^alfa PQ
+       FelName = String_TO_String('COS(' // FuncQName // ')' // trim(calfa) // PName)
+
+     case(16)  ! PQ sin(Q)^alfa
+       FelName = String_TO_String(PName // 'SIN(' // FuncQName // ')' // trim(calfa))
+     case(17) ! sin(Q)^alfa PQ
+       FelName = String_TO_String('SIN(' // FuncQName // ')' // trim(calfa) // PName)
+
+     case(18)   ! PQ tan(Q)^alfa
+       FelName = String_TO_String(PName // 'TAN(' // FuncQName // ')' // trim(calfa))
+     case(19) ! tan(Q)^alfa PQ
+       FelName = String_TO_String('TAN(' // FuncQName // ')' // trim(calfa) // PName)
+
+     case(20)   ! PQ cot(Q)^alfa
+       FelName = String_TO_String(PName // 'COT(' // FuncQName // ')' // trim(calfa))
+     case(21)  ! cot(Q)^alfa PQ
+       FelName = String_TO_String('COT(' // FuncQName // ')' // trim(calfa) // PName)
+
+     case(22)   ! PQ sqrt(1-Q^2)^alfa
+       !FelName = String_TO_String(PName // 'sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
+
+       FelName = String_TO_String(PName)
+       IF (Fel%alfa /= 1) THEN
+         FelName = String_TO_String(FelName // '(' // SQName // ')')
+         FelName = String_TO_String(FelName // trim(calfa))
+       ELSE
+         FelName = String_TO_String(FelName // SQName)
+       END IF
+
+     case(23) ! sqrt(1-Q^2)^alfa PQ
+       !FelName = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
+       !FelName = String_TO_String(FelName // PName)
+
+       IF (Fel%alfa /= 1) THEN
+         FelName = String_TO_String('(' // SQName // ')' // trim(calfa))
+         FelName = String_TO_String(FelName // trim(calfa))
+       ELSE
+         FelName = String_TO_String(SQName)
+       END IF
+       FelName = String_TO_String(FelName // PName)
+
+
+     case default
+       write(out_unitp,*) 'ERROR in ',routine_name
+       write(out_unitp,*) 'idf=', Fel%idf
+       write(out_unitp,*) "This idf is not registered for an elementary operator"
+       write(out_unitp,*) "   illegal value of idf . (Internal Bug)"
+       STOP
+     end select
+
+
+     IF (allocated(PName))     deallocate(PName)
+     IF (allocated(SQName))    deallocate(SQName)
+     IF (allocated(FuncQName)) deallocate(FuncQName)
+
+
+ end subroutine Export_Midas_OpEl_new
+
  subroutine Export_VSCF_OpEl(Fel,qname,FelName)
    type(opel),          intent(in)                   :: Fel
    character (len =*), intent(in)                    :: qname
