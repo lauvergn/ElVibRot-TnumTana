@@ -63,6 +63,7 @@
  USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
  USE mod_ana_psi,         ONLY : norm2_psi,ReNorm_psi
  USE mod_psi_SimpleOp
+ USE mod_MPI
  IMPLICIT NONE
 
 
@@ -138,7 +139,7 @@
  !$OMP parallel                                                &
  !$OMP default(none)                                           &
  !$OMP shared(RPsi,IPsi,MarchRpsi,MarchIpsi)                   &
- !$OMP shared(T,para_H,BasisnD,para_propa,print_level,out_unitp) &
+ !$OMP shared(T,para_H,BasisnD,para_propa,print_level,out_unitp,MPI_id) &
  !$OMP private(itab,iG,tab_l,ith,err_sub,PsiRvec,PsiIvec)      &
  !$OMP num_threads(BasisnD%para_SGType2%nb_threads)
 
@@ -179,7 +180,7 @@
    !CALL dealloc_TypeRVec(Psi0Ivec)
 
    IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
-       mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+       mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
      write(out_unitp,'(a)',ADVANCE='no') '---'
      CALL flush_perso(out_unitp)
    END IF
@@ -200,7 +201,7 @@
 
 
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**5) THEN
-   write(out_unitp,'(a)',ADVANCE='yes') '----]'
+   IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
  END IF
  CALL flush_perso(out_unitp)
 
@@ -378,6 +379,7 @@ END SUBROUTINE march_noD_ONE_DP_SG4
  USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
  USE mod_ana_psi,         ONLY : norm2_psi,ReNorm_psi
  USE mod_psi_SimpleOp
+ USE mod_MPI
  IMPLICIT NONE
 
 
@@ -588,7 +590,7 @@ nb_thread = 1
    CALL dealloc_TypeRVec(RIw2(2))
 
    IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
-       mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+       mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
      write(out_unitp,'(a)',ADVANCE='no') '---'
      CALL flush_perso(out_unitp)
    END IF
@@ -610,7 +612,7 @@ nb_thread = 1
  CALL dealloc_NParray(tab_nq,'tab_nq',name_sub)
 
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**5) THEN
-   write(out_unitp,'(a)',ADVANCE='yes') '----]'
+   IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
  END IF
  CALL flush_perso(out_unitp)
 
@@ -670,6 +672,7 @@ nb_thread = 1
  USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
  USE mod_ana_psi,         ONLY : norm2_psi,ReNorm_psi
  USE mod_psi_SimpleOp
+ USE mod_MPI
  IMPLICIT NONE
 
 
@@ -902,7 +905,7 @@ nb_thread = 1
    CALL dealloc_TypeRVec(Iw2(1))
 
    IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
-       mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
+       mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
      write(out_unitp,'(a)',ADVANCE='no') '---'
      CALL flush_perso(out_unitp)
    END IF
@@ -924,7 +927,7 @@ nb_thread = 1
  CALL dealloc_NParray(tab_nq,'tab_nq',name_sub)
 
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**5) THEN
-   write(out_unitp,'(a)',ADVANCE='yes') '----]'
+   IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
  END IF
  CALL flush_perso(out_unitp)
 

@@ -25,16 +25,15 @@
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
 !===========================================================================
-!===========================================================================
+!=======================================================================================
       SUBROUTINE sub_qa_bhe(para_AllOp)
       USE mod_system
       USE mod_Op
+      USE mod_MPI
       IMPLICIT NONE
 
 !=====================================================================
-!
 !     variables
-!
 !=====================================================================
 
 !----- variables for the construction of H ---------------------------
@@ -144,12 +143,12 @@
             Grid_cte(:) = .TRUE.  ! KEO, Coriolis
           END IF
 
+          !grid will be allocated in the action part
           CALL alloc_para_Op(para_AllOp%tab_Op(iOp),Grid=.TRUE.,Mat=.FALSE.,Grid_cte=Grid_cte)
 
           CALL dealloc_NParray(Grid_cte,"Grid_cte",name_sub)
         END IF
       END DO
-
 
       !----- Transfert the constant KEO to Mate_cte -----------------
       IF (para_AllOp%tab_Op(1)%para_Tnum%Gcte) THEN
@@ -191,7 +190,7 @@
       END IF
 
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid) THEN
-        write(out_unitp,*) ' TEST:  Operators at Qdyn0'
+        IF(MPI_id==0) write(out_unitp,*) ' TEST:  Operators at Qdyn0'
       ELSE
         IF (print_level > 0) write(out_unitp,*) 'Grid qact Veff T1 T2'
       END IF
@@ -203,8 +202,6 @@
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 4 .OR. &
           para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Read_FileGrid) GOTO 999
 
-
-
       !- test ---------------------------------------------------------
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid) THEN
         nb_Qtransfo = para_AllOp%tab_Op(1)%mole%nb_Qtransfo
@@ -213,7 +210,7 @@
 
         CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,    &
                para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)
-
+        
         write(out_unitp,*)
         write(out_unitp,*)
         CALL time_perso('sub_qa_bhe')
@@ -254,14 +251,12 @@
           para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted = lformatted
         END IF
       ELSE
-
         CALL Open_File_OF_tab_Op(para_AllOp%tab_Op)
-
         iqf = 0
       END IF
 
       IF (print_level > 1) THEN
-        write(out_unitp,*) 'num_grid',                                  &
+         write(out_unitp,*) 'num_grid',                                  &
          para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint,&
          para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint
          write(out_unitp,*) 'num_grid iqf',iqf
@@ -313,7 +308,7 @@
 
       IF (.NOT. para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid .AND.  &
          print_level > 0 .AND. para_AllOp%tab_Op(1)%nb_qa > max_nb_G_FOR_print) THEN
-        write(out_unitp,'(a)',ADVANCE='yes') '----]'
+         IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
       END IF
       DO iOp=1,para_AllOp%nb_Op
         IF (associated(para_AllOp%tab_Op(iOp)%OpGrid)) THEN
@@ -351,15 +346,15 @@
       ! write dnTError
       IF (associated(para_AllOp%tab_Op(1)%mole%tab_Cart_transfo)) THEN
       IF (para_AllOp%tab_Op(1)%mole%tab_Cart_transfo(1)%CartesianTransfo%check_dnT) THEN
-        write(out_unitp,*) ' Error det(dnT-1) ?',                       &
-           para_AllOp%tab_Op(1)%mole%tab_Cart_transfo(1)%CartesianTransfo%dnTErr(:)
+        IF(MPI_id==0) write(out_unitp,*) ' Error det(dnT-1) ?',                        &
+                para_AllOp%tab_Op(1)%mole%tab_Cart_transfo(1)%CartesianTransfo%dnTErr(:)
       END IF
       END IF
       !-------------------------------------------------------------------
 
       !-------------------------------------------------------------------
       ! test the number of elements for the RPH transfo
-      IF (associated(para_AllOp%tab_Op(1)%mole%RPHTransfo)) THEN
+      IF (associated(para_AllOp%tab_Op(1)%mole%RPHTransfo) .AND. MPI_id==0) THEN
         write(out_unitp,*) '------------------------------'
         write(out_unitp,*) 'Number of RPH points (active coordiantes)', &
           size(para_AllOp%tab_Op(1)%mole%RPHTransfo%tab_RPHpara_AT_Qact1)

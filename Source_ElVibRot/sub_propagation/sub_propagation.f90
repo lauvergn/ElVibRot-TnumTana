@@ -29,6 +29,7 @@
 
 MODULE mod_FullPropa
 USE mod_Constant
+USE mod_MPI
 IMPLICIT NONE
 
 PRIVATE
@@ -54,7 +55,7 @@ CONTAINS
 !     33: relaxation (n states)
 !
 !
-!================================================================
+!=======================================================================================
       SUBROUTINE sub_propagation(WP0,para_AllOp,para_propa)
       USE mod_system
       USE mod_Op
@@ -109,11 +110,15 @@ CONTAINS
 !-----------------------------------------------------------
       para_propa%ana_psi%propa     = .TRUE.
 
+#if(run_MPI)
+      !para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
+      !para_propa%para_poly%Hmin = para_propa%Hmin
+      !para_propa%para_poly%Hmax = para_propa%Hmax
+#else
       para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
-
       para_propa%para_poly%Hmin = para_propa%Hmin
       para_propa%para_poly%Hmax = para_propa%Hmax
-
+#endif
 
 
       write(out_unitp,*) 'Tmax,DeltaT (ua)=> ',                         &
@@ -152,7 +157,7 @@ CONTAINS
           CALL sub_propagation11(WP0,WP,1,para_H,para_propa)
         END IF
 
-        CALL TF_autocorr(para_propa)
+        IF(MPI_id==0) CALL TF_autocorr(para_propa)
 
       CASE (-3,3)
 
@@ -248,11 +253,11 @@ CONTAINS
       END IF
 !-----------------------------------------------------------
       end subroutine sub_propagation
-!================================================================
-!
+!=======================================================================================
+
+!=======================================================================================
 !     3 : propagation in imaginary time => ground state
-!
-!================================================================
+!=======================================================================================
       SUBROUTINE sub_propagation3(E0,psi0,psi,para_H,para_propa)
       USE mod_system
       USE mod_psi_B_TO_G
@@ -412,12 +417,14 @@ CONTAINS
       !CALL Write_ana_psi(para_propa%ana_psi)
       CALL sub_analyze_WP_OpWP(T,(/ psi /),1,para_H,para_propa,adia=.FALSE.)
 
-      CALL file_open(para_propa%file_WP,nioWP)
-      CALL Write_Psi_nDBasis(psi,nioWP,iPsi=1,epsi=ZERO,lformated=para_propa%file_WP%formatted,version=0)
-      close(nioWP)
-
-      write(out_unitp,*) 'WP (BasisRep) at T=',T
-      CALL Write_Psi_nDBasis(psi,6,iPsi=1,epsi=ONETENTH,lformated=.TRUE.,version=0)
+      IF(MPI_id==0) THEN
+        CALL file_open(para_propa%file_WP,nioWP)
+        CALL Write_Psi_nDBasis(psi,nioWP,iPsi=1,epsi=ZERO,lformated=para_propa%file_WP%formatted,version=0)
+        close(nioWP)
+      
+        write(out_unitp,*) 'WP (BasisRep) at T=',T
+        CALL Write_Psi_nDBasis(psi,6,iPsi=1,epsi=ONETENTH,lformated=.TRUE.,version=0)
+      ENDIF
 
       IF (debug .OR. psi%nb_tot < 1000) THEN
         write(out_unitp,*) 'WP (BasisRep) at T=',T
@@ -785,8 +792,8 @@ CONTAINS
       USE mod_ana_psi
       USE mod_propa
       USE mod_march
+      USE mod_MPI
       IMPLICIT NONE
-
 
 !----- variables pour la namelist minimum ----------------------------
       TYPE (param_Op)   :: para_H
@@ -817,8 +824,13 @@ CONTAINS
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING sub_propagation11'
         write(out_unitp,*) 'Tmax,DeltaT',para_propa%WPTmax,para_propa%WPdeltaT
+#if(run_MPI)
+        !write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
+        !                        para_propa%para_poly%Hmax
+#else
         write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
                                 para_propa%para_poly%Hmax
+#endif
         write(out_unitp,*)
         write(out_unitp,*) 'nb_ba,nb_qa',psi(1)%nb_ba,psi(1)%nb_qa
         write(out_unitp,*) 'nb_bi',psi(1)%nb_bi
@@ -831,7 +843,6 @@ CONTAINS
       END IF
 !-----------------------------------------------------------
 
-
 !-----------------------------------------------------------
       BasisRep = psi0(1)%BasisRep
       GridRep  = psi0(1)%GridRep
@@ -840,17 +851,26 @@ CONTAINS
       CALL flush_perso(out_unitp)
 
 !     - parameters for poly (cheby and nOD) ... ------------
+#if(run_MPI)
+      !CALL initialisation1_poly(para_propa%para_poly,                   &
+      !                          para_propa%WPdeltaT,                    &
+      !                          para_propa%type_WPpropa)
+
+!     - scaling of H ---------------------------------------
+      !para_H%scaled = .TRUE.
+      !para_H%E0     = para_propa%para_poly%E0
+      !para_H%Esc    = para_propa%para_poly%Esc
+!-----------------------------------------------------------
+#else
       CALL initialisation1_poly(para_propa%para_poly,                   &
                                 para_propa%WPdeltaT,                    &
                                 para_propa%type_WPpropa)
-
 !     - scaling of H ---------------------------------------
       para_H%scaled = .TRUE.
       para_H%E0     = para_propa%para_poly%E0
       para_H%Esc    = para_propa%para_poly%Esc
 !-----------------------------------------------------------
-
-!-----------------------------------------------------------
+#endif
 
 !------- propagation loop ---------------------------------
 
@@ -872,13 +892,16 @@ CONTAINS
                  para_propa%WPdeltaT/TEN**5) .AND. psi(1)%norme < psi(1)%max_norme)
 
          IF (mod(it,para_propa%n_WPecri) == 0) THEN
-           para_propa%ana_psi%Write_psi2_Grid = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi2
-           para_propa%ana_psi%Write_psi_Grid  = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi
+           IF(MPI_id==0) THEN
+             para_propa%ana_psi%Write_psi2_Grid = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi2
+             para_propa%ana_psi%Write_psi_Grid  = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi
+           ENDIF 
            CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
          ELSE
            CALL sub_analyze_mini_WP_OpWP(T,psi,1,para_H,para_propa)
          END IF
 
+         ! propgation for given fixed t
          CALL march_gene(T,psi(1:1),psi0(1:1),1,.FALSE.,para_H,para_propa)
 
          it = it + 1
@@ -893,12 +916,10 @@ CONTAINS
       para_propa%ana_psi%Write_psi2_Grid = para_propa%WPpsi2
       para_propa%ana_psi%Write_psi_Grid  = para_propa%WPpsi
       CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
-
 !----------------------------------------------------------
 
       CALL file_close(para_propa%file_autocorr)
       IF (psi(1)%norme >= psi(1)%max_norme) STOP
-
 
 !----------------------------------------------------------
       IF (debug) THEN
@@ -907,14 +928,16 @@ CONTAINS
 !----------------------------------------------------------
 
       end subroutine sub_propagation11
-!================================================================
+!=======================================================================================
+
+!=======================================================================================
 !
 !    24 : nOD propagation with
 !         a time dependant pulse in Hamiltonian (W(t))
 !         H is the square matrix (dimension n)
 !         Hmin and Hmax are the parameter to scale H
 !
-!================================================================
+!=======================================================================================
       SUBROUTINE sub_propagation24(WP,nb_WP,print_Op,                   &
                                    para_field_new,make_field,           &
                                    para_H,para_Dip,para_propa)
@@ -1210,10 +1233,11 @@ CONTAINS
          CALL dealloc_psi(OpWP(i))
       END DO
 
-      write(out_unitp,*) 'file_WP0: ',para_propa%para_WP0%file_WP0%name
-
-      CALL sub_save_psi(WP,nb_WP,para_propa%para_WP0%file_WP0)
-
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) 'file_WP0: ',para_propa%para_WP0%file_WP0%name
+        CALL sub_save_psi(WP,nb_WP,para_propa%para_WP0%file_WP0)
+      ENDIF
+      
       RETURN
       !=================================================
 

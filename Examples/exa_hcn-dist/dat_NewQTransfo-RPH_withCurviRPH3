@@ -1,0 +1,95 @@
+ SYSTEM=sub_system_murrell.f
+ SYSTEM=sub_system_murrell_CurviRPH.f
+ test=f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+ x1=0.538516066
+ x2=0.461483933
+
+#export OMP_NUM_THREADS=1
+
+nice $DIR_vib/vib << ** > res
+ &system /
+ &constantes /
+ &variables nrho=0 Old_Qtransfo=f nb_Qtransfo=4 /
+ &Coord_transfo name_transfo='zmat' nat=4 /
+C
+X     1
+N     2  1
+H     2 -1 3
+
+ &Coord_transfo name_transfo='linear' /
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ &Coord_transfo name_transfo='RPH' opt_transfo=1 /
+   &RPH step=1.e-4 /
+ 1 21 21  0 0 0
+
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1    0 0 0
+
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2 Hard=f /
+.9d0
+.0
+0.
+0.
+3.14159265358d0
+0.0
+
+ &CurviRPH nb_pts=3 gradient=f /
+-1.
+     2.8932105286 2.2006075632
+ 1        0.5026260794      -0.2466219610
+ 2       -0.2466219610       1.2140728386
+0.
+1.9444915093       2.1192431295
+ 1        0.3316182985      -0.1904943062
+ 2       -0.1904943062       1.5911896900
+ 1.
+      3.1872186649 2.1792616328
+ 1        0.4038016062      -0.2300140913
+ 2       -0.2300140913       1.3294827768
+
+
+ &basis_nD nb_basis=3 name="direct_prod" L_SparseBasis=8 L_SparseGrid=9 SparseGrid_type=4 /
+   &basis_nD iQdyn(1)=1 name="Pl0" L_TO_nq_A=1 L_TO_nq_B=10 /
+   &basis_nD iQdyn(1)=2 name="Hm" /
+   &basis_nD iQdyn(1)=3 name="Hm" /
+
+ &basis_nD iQdyn(1)=1 name="Pl0" nb=51 nq=80 /
+ &basis_nD iQdyn(1)=2 name="Hm" nb=10 nq=15 Q0=0. scaleQ=1.0 /
+ &basis_nD iQdyn(1)=3 name="Hm" nb=10 nq=15 Q0=0. scaleQ=1.0 /
+ &inactives /
+
+ &actives test=$test direct=2 Type_HamilOp=10 direct_KEO=t /
+ &analyse max_ana=40 max_ene=50000.d0 'cm-1' print=f print_psi=0 davidson=t /
+
+ &davidson nb_WP=3 max_it=100 max_WP=300 num_resetH=100
+           lower_states=t project_WP0=f one_residue=f all_lower_states=t max_Ene=4000. 'cm-1'
+           read_WP=f read_listWP=f NewVec_type=4
+/
+ 1 1 1    1 1   1.0
+end wp0
+ 2 1 1    1 1   1.0
+end wp0
+ 3 1 1    1 1   1.0
+end wp0
+
+**

@@ -107,6 +107,7 @@ SUBROUTINE sub_analyze_tab_Psi(T,tab_psi,ana_psi,adia,field,Write_Psi)
   END IF
 !----------------------------------------------------------
 END SUBROUTINE sub_analyze_tab_Psi
+
 SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
   USE mod_system
   USE mod_psi_set_alloc
@@ -273,7 +274,6 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
     END IF
 
     info = String_TO_String( " " // real_TO_char(E,"f12.6" ) // " : ")
-
   END IF
   !----------------------------------------------------------------------
 
@@ -300,7 +300,6 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
   CALL Rho1D_Rho2D_psi(psi,ana_psi)
 
   CALL write1D2D_psi(psi,ana_psi)
-
 
   !---------------------------------------------------------------------------
   IF (Write_Psi_loc .AND. ana_psi%Write_psi) THEN
@@ -1576,6 +1575,7 @@ END SUBROUTINE sub_analyze_psi
       USE mod_psi_set_alloc
       USE mod_type_ana_psi
       USE mod_param_RD
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -1672,12 +1672,12 @@ END SUBROUTINE sub_analyze_psi
           IF (sum(weight1Dact(iq,1:ndim_AT_ib(iq)))-ONE > ONETENTH**7)  &
                 write(out_unitp,21) state_name // ' Sum(RD)/=1',trim(info),&
                              iq,T,sum(weight1Dact(iq,1:ndim_AT_ib(iq)))
-          write(out_unitp,21) state_name // ' ',trim(info),iq,T,           &
+          IF(MPI_id==0) write(out_unitp,21) state_name // ' ',trim(info),iq,T,           &
                            weight1Dact(iq,1:min(max_1D,ndim_AT_ib(iq)))
  21       format(a,a,i3,1x,f17.4,300(1x,e10.3))
           CALL flush_perso(out_unitp)
 
-
+          IF (allocated(psi%BasisnD%para_RD)) THEN
           IF (psi%BasisnD%para_RD(iq)%RD_analysis) THEN
             CALL calc_RD(psi%BasisnD%para_RD(iq),psi%RvecB,DiagRDcontrac=DiagRDcontrac)
             n = min(ndim_AT_ib(iq),size(DiagRDcontrac))
@@ -1688,6 +1688,7 @@ END SUBROUTINE sub_analyze_psi
 
             !write(out_unitp,*) 'Diag RD contracted',iq,DiagRDcontrac
             IF (allocated(DiagRDcontrac)) CALL dealloc_NParray(DiagRDcontrac,'DiagRDcontrac',name_sub)
+          END IF
           END IF
 
 
@@ -1732,12 +1733,9 @@ END SUBROUTINE sub_analyze_psi
       END SUBROUTINE calc_1Dweight_act1
 
 
-!================================================================
-!
+!=======================================================================================      
 !     norm^2 of psi (BasisRep or GridRep)
-!
-!================================================================
-
+!=======================================================================================      
       SUBROUTINE norm2_psi(psi,GridRep,BasisRep,ReNorm)
       USE mod_system
       USE mod_psi_set_alloc
@@ -1864,6 +1862,9 @@ END SUBROUTINE sub_analyze_psi
 !----------------------------------------------------------
 
       END SUBROUTINE norm2_psi
+!=======================================================================================
+      
+!=======================================================================================
       SUBROUTINE renorm_psi(psi,GridRep,BasisRep)
       USE mod_system
       USE mod_psi_set_alloc
@@ -1969,6 +1970,9 @@ END SUBROUTINE sub_analyze_psi
 !----------------------------------------------------------
 
       END SUBROUTINE renorm_psi
+!=======================================================================================      
+
+!=======================================================================================      
       SUBROUTINE renorm_psi_With_norm2(psi,GridRep,BasisRep)
       USE mod_system
       USE mod_psi_set_alloc
@@ -2062,10 +2066,12 @@ END SUBROUTINE sub_analyze_psi
 !----------------------------------------------------------
 
       END SUBROUTINE renorm_psi_With_norm2
+      
   SUBROUTINE Channel_weight(tab_WeightChannels,psi,                 &
                             GridRep,BasisRep,Dominant_Channel)
   USE mod_system
   USE mod_psi_set_alloc
+  USE mod_MPI
   IMPLICIT NONE
 
 !- variables for the WP ----------------------------------------
@@ -2180,7 +2186,7 @@ END SUBROUTINE sub_analyze_psi
 
     ELSE
 
-      write(out_unitp,*) ' ERROR in Channel_weight'
+      write(out_unitp,*) ' ERROR in Channel_weight',' from ',MPI_id
       IF (GridRep)  write(out_unitp,*) ' impossible to calculate the weights with the Grid'
       IF (BasisRep) write(out_unitp,*) ' impossible to calculate the weights with the Basis'
       STOP

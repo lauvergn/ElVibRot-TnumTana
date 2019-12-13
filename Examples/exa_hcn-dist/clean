@@ -3,3 +3,5 @@ rm -f EF*
 rm -f Rho* psi* 
 rm -f Eq_KEO.tex mat_f2ij
 rm -f *confli*
+rm -f namelist
+rm -f Arpack.log_sym

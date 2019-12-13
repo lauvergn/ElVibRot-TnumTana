@@ -36,6 +36,7 @@
       USE mod_system
       USE mod_basis
       use mod_Coord_KEO, only: zmatrix, alloc_array, alloc_nparray, dealloc_nparray
+      USE mod_MPI
       IMPLICIT NONE
 
       !----- for the active basis set ------------------------------------
@@ -69,14 +70,13 @@
                         'BasisnD_loc%tab_Pbasis(i)%Pbasis',name_sub)
       END DO
 
-
-      write(out_unitp,*) '---------------------------------------'
-      write(out_unitp,*) '----------- BasisnD -------------------'
-      write(out_unitp,*) '---------------------------------------'
-      write(out_unitp,*)
-      write(out_unitp,*)
-
-
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) '---------------------------------------'
+        write(out_unitp,*) '----------- BasisnD -------------------'
+        write(out_unitp,*) '---------------------------------------'
+        write(out_unitp,*)
+      ENDIF
+     
       ! parameter for BasisnD
       BasisnD_loc%type           = 1
       BasisnD_loc%name           = 'direct_prod'
@@ -180,14 +180,16 @@
       END DO
 
       BasisnD_loc%active            = .TRUE.
-      write(out_unitp,*)
-      IF (BasisnD_loc%cplx)       write(out_unitp,*) 'BasisnD is COMPLEX'
-      IF (.NOT. BasisnD_loc%cplx) write(out_unitp,*) 'BasisnD is REAL'
-      write(out_unitp,*)
-      write(out_unitp,*) 'Number of active basis sets:',BasisnD_loc%nb_basis
+      IF(MPI_id==0) THEN
+        write(out_unitp,*)
+        IF (BasisnD_loc%cplx)       write(out_unitp,*) 'BasisnD is COMPLEX'
+        IF (.NOT. BasisnD_loc%cplx) write(out_unitp,*) 'BasisnD is REAL'
+        write(out_unitp,*)
+        write(out_unitp,*) 'Number of active basis sets:',BasisnD_loc%nb_basis
+      ENDIF
 
       IF (BasisnD_loc%nb_basis == 1) THEN
-        write(out_unitp,*) 'WARNING: ONE layer of basis has been removed!!'
+        IF(MPI_id==0) write(out_unitp,*) 'WARNING: ONE layer of basis has been removed!!'
         CALL basis2TObasis1(BasisnD,BasisnD_loc%tab_Pbasis(1)%Pbasis)
       ELSE
         CALL basis2TObasis1(BasisnD,BasisnD_loc)
@@ -195,18 +197,20 @@
 
       IF (BasisnD%MaxCoupling_OF_nDindB < 1) BasisnD%MaxCoupling_OF_nDindB = BasisnD%nb_basis
 
-      write(out_unitp,*) 'Tabder_Qdyn_TO_Qbasis',BasisnD%Tabder_Qdyn_TO_Qbasis(1:mole%nb_var)
-      write(out_unitp,*)
-      write(out_unitp,*) 'BasisnD%opt_param',BasisnD%opt_param
-      write(out_unitp,*)
-
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) 'Tabder_Qdyn_TO_Qbasis',BasisnD%Tabder_Qdyn_TO_Qbasis(1:mole%nb_var)
+        write(out_unitp,*)
+        write(out_unitp,*) 'BasisnD%opt_param',BasisnD%opt_param
+        write(out_unitp,*)
+      ENDIF
+    
       CALL dealloc_basis(BasisnD_loc)
       !CALL RecWriteMini_basis(BasisnD)
 
-      write(out_unitp,*) '---------------------------------------'
-      write(out_unitp,*) '---------------------------------------'
-      write(out_unitp,*) '---------------------------------------'
-
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) '---------------------------------------'
+        write(out_unitp,*) '---------------------------------------'
+      ENDIF
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BasisnD'
@@ -215,11 +219,13 @@
       END IF
 !---------------------------------------------------------------------
       end subroutine read_basis5
+
       RECURSIVE SUBROUTINE RecRead5_Basis(basis_temp,mole)
 
       USE mod_system
       USE mod_basis
-      use mod_Coord_KEO, only: zmatrix
+      USE mod_Coord_KEO, only: zmatrix
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the active basis set ---------------------------------------
@@ -339,7 +345,8 @@
       integer              :: nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB
       logical              :: contrac_WITH_nDindB
       real (kind=Rkind)    :: Norm_OF_nDindB,weight_OF_nDindB
-      integer              :: L_SparseBasis,L_TO_nb_A,L_TO_nb_B,Lexpo_TO_nb,L1_SparseBasis,L2_SparseBasis
+      integer              :: L_SparseBasis,L_TO_nb_A,L_TO_nb_B,Lexpo_TO_nb
+      integer              :: L1_SparseBasis,L2_SparseBasis
       integer, allocatable :: Tab_L_TO_n(:)
       logical              :: read_L_TO_n
 
@@ -512,9 +519,9 @@
       END IF
 
       IF (print_level > 1 .OR. debug) THEN
-         write(out_unitp,basis_nD)
+         IF(MPI_id==0) write(out_unitp,basis_nD)
       ELSE
-         write(out_unitp,*) 'Basis name : ',name
+         IF(MPI_id==0) write(out_unitp,*) 'Basis name : ',name
       END IF
 
       IF (count(cte /= ZERO) > 0) THEN

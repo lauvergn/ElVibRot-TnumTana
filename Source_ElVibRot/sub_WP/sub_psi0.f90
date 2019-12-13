@@ -54,13 +54,15 @@
       USE mod_param_WP0
       USE mod_ana_psi
       USE mod_psi_io
+      USE mod_MPI
+#if(run_MPI)      
+      USE mod_MPI_Aid
+#endif      
       IMPLICIT NONE
-
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_WP0) :: para_WP0
       TYPE (param_psi), intent(inout) :: WP0(1)
-
 
 !----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
@@ -73,117 +75,116 @@
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
-       IF (debug) THEN
-         write(out_unitp,*) 'BEGINNING psi0'
-         write(out_unitp,*) 'WP0n_h,WP0nb_elec',para_WP0%WP0n_h,para_WP0%WP0nb_elec
-         write(out_unitp,*)
-         CALL ecri_init_psi(WP0(1))
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING psi0'
+        write(out_unitp,*) 'WP0n_h,WP0nb_elec',para_WP0%WP0n_h,para_WP0%WP0nb_elec
+        write(out_unitp,*)
+        CALL ecri_init_psi(WP0(1))
 
-         write(out_unitp,*)
-         write(out_unitp,*) 'WP0BasisRep',para_WP0%WP0BasisRep
-         write(out_unitp,*) 'lect_WP0GridRep,lect_WP0BasisRep',         &
-                   para_WP0%lect_WP0GridRep,para_WP0%lect_WP0BasisRep
-         write(out_unitp,*)
-         write(out_unitp,*) 'nb_basis_act1',WP0(1)%BasisnD%nb_basis
-         CALL RecWrite_basis(WP0(1)%BasisnD)
-         write(out_unitp,*)
-         CALL flush_perso(out_unitp)
-       END IF
-!-----------------------------------------------------------
- IF (para_WP0%New_Read_WP0) THEN
-   CALL sub_read_psi0(WP0,para_WP0,max_WP=1)
- ELSE
-
-
-      ecri_numi = para_WP0%WP0n_h
-      ecri_nume = para_WP0%WP0nb_elec
-
-
-!---- alloc the WP0 ---------------------------------------
-      CALL alloc_psi(WP0(1))
-!-----------------------------------------------------------
-
-      IF (.NOT. para_WP0%lect_WP0BasisRep .AND.                         &
-          .NOT. para_WP0%WP0restart) THEN
-
-        CALL alloc_psi(WP0(1),GridRep=.TRUE.)
-
-        IF (para_WP0%lect_WP0GridRep) THEN
-          !- read WP0 on the grid ----------------------------
-          CALL lect_psiBasisRep(WP0(1)%CvecG,para_WP0%WP0cplx,          &
-                           WP0(1)%nb_qa,WP0(1)%nb_bi,WP0(1)%nb_be,      &
-                           para_WP0%WP0n_h,para_WP0%WP0nb_elec)
-        ELSE
-          !- initialisation with a gaussian WP ---------------
-          CALL psi0_gaussGridRep(WP0(1),para_WP0,mole)
-        END IF
-
-        IF (debug) THEN
-          write(out_unitp,*) 'psiGridRep ini'
-          CALL ecri_psi(ZERO,WP0(1),out_unitp,.TRUE.,.FALSE.)
-        END IF
-
-        CALL norm2_psi(WP0(1),GridRep=.TRUE.)
-        write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
+        write(out_unitp,*)
+        write(out_unitp,*) 'WP0BasisRep',para_WP0%WP0BasisRep
+        write(out_unitp,*) 'lect_WP0GridRep,lect_WP0BasisRep',         &
+                  para_WP0%lect_WP0GridRep,para_WP0%lect_WP0BasisRep
+        write(out_unitp,*)
+        write(out_unitp,*) 'nb_basis_act1',WP0(1)%BasisnD%nb_basis
+        CALL RecWrite_basis(WP0(1)%BasisnD)
+        write(out_unitp,*)
         CALL flush_perso(out_unitp)
-        CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
-        write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
-        CALL flush_perso(out_unitp)
-
-        IF (debug) THEN
-          write(out_unitp,*) 'psiGridRep normalized'
-          CALL ecri_psi(ZERO,WP0(1),out_unitp,.TRUE.,.FALSE.)
-        END IF
-
-        !- GridRep=>BasisRep -------------------------------------------------
-        IF (para_WP0%WP0BasisRep) THEN
-
-          CALL sub_PsiGridRep_TO_BasisRep(WP0(1))
-
-          CALL norm2_psi(WP0(1),BasisRep=.TRUE.)
-
-          write(out_unitp,*) 'normeWP BasisRep',WP0(1)%norme
-
-          IF (abs(ONE-WP0(1)%norme) >= ONETENTH**5) THEN
-            write(out_unitp,*) ' WARNNIG in psi0'
-            write(out_unitp,*) ' the transformation GridRep to BasisRep is NOT exact'
-            write(out_unitp,*) ' => used more basis functions'
-            !CALL ecri_psi(psi=WP0(1),                                      &
-            !              ecri_BasisRep=.TRUE.,ecri_GridRep=.TRUE.)
-          END IF
-          CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
-
-
-        END IF
-
-      ELSE IF (para_WP0%WP0restart ) THEN
-        !write(out_unitp,*) 'WP0%cplx',WP0%cplx
-        CALL file_open(para_WP0%file_WP0,nio)
-        read(nio,*) nb_WPdum
-        CALL lect_psiBasisRepnotall_nD(WP0(1),nio,WP0(1)%cplx,para_WP0%file_WP0%formatted)
-        close(nio)
-
-      ELSE IF (para_WP0%lect_WP0BasisRep .AND. para_WP0%lect_WP0BasisRepall) THEN
-
-        IF (WP0(1)%nb_baie > WP0(1)%nb_tot) THEN
-        CALL lect_psiBasisRep(WP0(1)%CvecB,para_WP0%WP0cplx,                  &
-                         WP0(1)%nb_tot,1,1,                                   &
-                         para_WP0%WP0n_h,para_WP0%WP0nb_elec)
-        ELSE
-        CALL lect_psiBasisRep(WP0(1)%CvecB,para_WP0%WP0cplx,                  &
-                         WP0(1)%nb_ba,WP0(1)%nb_bi,WP0(1)%nb_be,                 &
-                         para_WP0%WP0n_h,para_WP0%WP0nb_elec)
-        END IF
-
-      ELSE IF (para_WP0%lect_WP0BasisRep                                     &
-                              .AND. .NOT. para_WP0%lect_WP0BasisRepall) THEN
-
-        CALL lect_psiBasisRepnotall(WP0(1),para_WP0%WP0cplx)
-      ELSE
-        write(out_unitp,*) ' ERROR in psi0'
-        write(out_unitp,*) ' I do not what to do!!!'
-        STOP
       END IF
+
+!-----------------------------------------------------------
+      IF (para_WP0%New_Read_WP0) THEN
+        IF(MPI_id==0) CALL sub_read_psi0(WP0,para_WP0,max_WP=1)
+      ELSE
+        ecri_numi = para_WP0%WP0n_h
+        ecri_nume = para_WP0%WP0nb_elec
+
+
+        ! alloc the WP0 ----------------------------------------------------------------
+        ! only allocated for MPI_id=0 inside the subroutine
+        ! for psi%CvecB,psi%RvecB,psi%CvecG,psi%RvecG      
+        CALL alloc_psi(WP0(1))
+
+        IF (.NOT. para_WP0%lect_WP0BasisRep .AND.                         &
+            .NOT. para_WP0%WP0restart) THEN
+
+          CALL alloc_psi(WP0(1),GridRep=.TRUE.)
+
+          IF (para_WP0%lect_WP0GridRep) THEN
+            !- read WP0 on the grid ----------------------------
+            CALL lect_psiBasisRep(WP0(1)%CvecG,para_WP0%WP0cplx,          &
+                             WP0(1)%nb_qa,WP0(1)%nb_bi,WP0(1)%nb_be,      &
+                             para_WP0%WP0n_h,para_WP0%WP0nb_elec)
+          ELSE
+            !- initialisation with a gaussian WP ---------------
+            CALL psi0_gaussGridRep(WP0(1),para_WP0,mole)
+          END IF
+
+          IF (debug) THEN
+            write(out_unitp,*) 'psiGridRep ini'
+            CALL ecri_psi(ZERO,WP0(1),out_unitp,.TRUE.,.FALSE.)
+          END IF
+
+          CALL norm2_psi(WP0(1),GridRep=.TRUE.)
+          IF(MPI_id==0) write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
+          CALL flush_perso(out_unitp)
+          CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
+          IF(MPI_id==0) write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
+          CALL flush_perso(out_unitp)
+
+          IF (debug) THEN
+            write(out_unitp,*) 'psiGridRep normalized'
+            CALL ecri_psi(ZERO,WP0(1),out_unitp,.TRUE.,.FALSE.)
+          END IF
+
+          !- GridRep=>BasisRep -------------------------------------------------
+          IF (para_WP0%WP0BasisRep) THEN
+
+            CALL sub_PsiGridRep_TO_BasisRep(WP0(1))
+
+            CALL norm2_psi(WP0(1),BasisRep=.TRUE.)
+
+            write(out_unitp,*) 'normeWP BasisRep',WP0(1)%norme
+
+            IF (abs(ONE-WP0(1)%norme) >= ONETENTH**5) THEN
+              write(out_unitp,*) ' WARNNIG in psi0'
+              write(out_unitp,*) ' the transformation GridRep to BasisRep is NOT exact'
+              write(out_unitp,*) ' => used more basis functions'
+              !CALL ecri_psi(psi=WP0(1),                                      &
+              !              ecri_BasisRep=.TRUE.,ecri_GridRep=.TRUE.)
+            END IF
+            CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
+
+          END IF
+
+        ELSE IF (para_WP0%WP0restart ) THEN
+          !write(out_unitp,*) 'WP0%cplx',WP0%cplx
+          CALL file_open(para_WP0%file_WP0,nio)
+          read(nio,*) nb_WPdum
+          CALL lect_psiBasisRepnotall_nD(WP0(1),nio,WP0(1)%cplx,para_WP0%file_WP0%formatted)
+          close(nio)
+
+        ELSE IF (para_WP0%lect_WP0BasisRep .AND. para_WP0%lect_WP0BasisRepall) THEN
+
+          IF (WP0(1)%nb_baie > WP0(1)%nb_tot) THEN
+          CALL lect_psiBasisRep(WP0(1)%CvecB,para_WP0%WP0cplx,                  &
+                           WP0(1)%nb_tot,1,1,                                   &
+                           para_WP0%WP0n_h,para_WP0%WP0nb_elec)
+          ELSE
+          CALL lect_psiBasisRep(WP0(1)%CvecB,para_WP0%WP0cplx,                  &
+                           WP0(1)%nb_ba,WP0(1)%nb_bi,WP0(1)%nb_be,                 &
+                           para_WP0%WP0n_h,para_WP0%WP0nb_elec)
+          END IF
+
+        ELSE IF (para_WP0%lect_WP0BasisRep                                     &
+                                .AND. .NOT. para_WP0%lect_WP0BasisRepall) THEN
+
+          CALL lect_psiBasisRepnotall(WP0(1),para_WP0%WP0cplx)
+        ELSE
+          write(out_unitp,*) ' ERROR in psi0'
+          write(out_unitp,*) ' I do not what to do!!!'
+          STOP
+        END IF ! for .NOT. para_WP0%lect_WP0BasisRep
 
 !     IF (para_WP0%WP0_DIP .GT. 0) THEN
 !       IF (para_WP0%WP0BasisRep) THEN
@@ -191,10 +192,10 @@
 !       ENDIF
 !     END IF
 
- END IF
+      END IF ! for para_WP0%New_Read_WP0
 
-      CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
-      write(out_unitp,*) 'normeWP BasisRep',WP0(1)%norme
+      IF(MPI_id==0) CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
+      IF(MPI_id==0) write(out_unitp,*) 'normeWP BasisRep',WP0(1)%norme
 
       !- clear WP0%...GridRep, if not need ------------------
       IF (para_WP0%WP0BasisRep) THEN
@@ -257,8 +258,8 @@
       real (kind=Rkind)      :: rhonD
 
 !----- for debuging --------------------------------------------------
-      !logical,parameter :: debug = .FALSE.
-      logical,parameter :: debug = .TRUE.
+      logical,parameter :: debug = .FALSE.
+      !logical,parameter :: debug = .TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING psi0_gaussGridRep'

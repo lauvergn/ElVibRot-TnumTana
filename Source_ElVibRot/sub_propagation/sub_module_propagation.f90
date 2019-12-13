@@ -146,20 +146,22 @@ PUBLIC :: initialisation1_poly,cof
         TYPE param_propa
 
 
-        real (kind=Rkind)   ::       Hmax,Hmin    !
-        logical             ::       auto_Hmax    !  .TRUE. => Hmax is obtained with a propagation
+        real (kind=Rkind)   ::  Hmax,Hmin     !
+        logical             ::  once_control_Hmin=.TRUE.!< control the calculation of 
+                                                        !! Hmin once at the first action
+        logical             ::  auto_Hmax     !  .TRUE. => Hmax is obtained with a propagation
                                               !            with imaginary time (type_WPpropa=-3)
                                               !            (default .FALSE.)
-        real (kind=Rkind)   ::       WPTmax       ! propagation time in au
-        real (kind=Rkind)   ::       WPT0         ! initial time in au
-        logical             ::       restart      ! restart the propagation
+        real (kind=Rkind)   ::  WPTmax        ! propagation time in au
+        real (kind=Rkind)   ::  WPT0          ! initial time in au
+        logical             ::  restart       ! restart the propagation
 
-        real (kind=Rkind)   ::       WPdeltaT     ! time step in au
-        integer             ::       nb_micro     ! nb of microiterations
+        real (kind=Rkind)   ::  WPdeltaT      ! time step in au
+        integer             ::  nb_micro      ! nb of microiterations
 
-        integer             ::       max_ana      ! nb of wavefunctions calculated with imaginary propagation
+        integer             ::  max_ana       ! nb of wavefunctions calculated with imaginary propagation
 
-        integer             ::       type_WPpropa ! propagation type :
+        integer             ::  type_WPpropa  ! propagation type :
                                               !  0 from the spectrum (not working)
                                               !  1 Chebychef (default)
                                               !  2 nOD
@@ -360,9 +362,11 @@ PUBLIC :: initialisation1_poly,cof
 
       CALL file_open(file_restart,no_restart)
       write(no_restart,*) T
-      DO i=1,size(WP)
-        write(no_restart,*) WP(i)%CvecB
-      END DO
+      IF(MPI_id==0) THEN
+        DO i=1,size(WP)
+          write(no_restart,*) WP(i)%CvecB
+        END DO
+      ENDIF
       close(no_restart)
 
 !----------------------------------------------------------
@@ -379,16 +383,13 @@ PUBLIC :: initialisation1_poly,cof
       USE mod_file
       IMPLICIT NONE
 
-
 !----- variables for the WP propagation ----------------------------
       TYPE (param_file), intent(inout) :: file_restart
       TYPE (param_psi),  intent(inout) :: WP(:)
       real (kind=Rkind), intent(inout) :: T
 
-
 !------ working parameters --------------------------------
       integer       :: i,no_restart,err_read
-
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter ::name_sub='ReadWP_restart'
@@ -442,6 +443,7 @@ PUBLIC :: initialisation1_poly,cof
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -608,7 +610,6 @@ PUBLIC :: initialisation1_poly,cof
       END IF
 !     ------------------------------------------------------
 
-
       para_poly%init_done = .TRUE.
 
 !-----------------------------------------------------------
@@ -659,7 +660,7 @@ PUBLIC :: initialisation1_poly,cof
 !----------------------------------------------
       ncheb = max(ONE,r)
       IF (debug) write(out_unitp,*) 'r, ncheb : ',r,ncheb
-       CALL flush_perso(out_unitp)
+      IF(MPI_id==0) CALL flush_perso(out_unitp)
 
       IF (ncheb > nchmx) THEN
          write(out_unitp,*) ' ERROR in cofcheb'
@@ -718,7 +719,7 @@ PUBLIC :: initialisation1_poly,cof
         write(out_unitp,*) 'END cofcheb'
       END IF
 !-----------------------------------------------------------
-      CALL flush_perso(out_unitp)
+      IF(MPI_id==0) CALL flush_perso(out_unitp)
 
       END SUBROUTINE cofcheb
 !==============================================================
@@ -752,8 +753,6 @@ PUBLIC :: initialisation1_poly,cof
       END DO
 !stop
       END SUBROUTINE cof
-
-
 
 !==============================================================
 !
@@ -822,6 +821,7 @@ PUBLIC :: initialisation1_poly,cof
 
       END SUBROUTINE cof_nOD
 
+!=======================================================================================
 SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_system
   USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
@@ -832,6 +832,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi
   USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
   USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+  USE mod_MPI
   IMPLICIT NONE
 
   real (kind=Rkind) :: T      ! time
@@ -909,8 +910,10 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   Write_psi2_Grid = para_propa%ana_psi%Write_psi2_Grid
   Write_psi_Grid  = para_propa%ana_psi%Write_psi_Grid
 
-  BasisRep = WP(1)%BasisRep
-  GridRep  = WP(1)%GridRep
+  IF(MPI_id==0) THEN
+    BasisRep = WP(1)%BasisRep
+    GridRep  = WP(1)%GridRep
+  ENDIF
 
   para_propa%ana_psi%T = T
 
@@ -925,9 +928,11 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   !-----------------------------------------------------------
   ! => the WPs on the Grid
   IF (.NOT. para_propa%ana_psi%GridDone) THEN
+    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep ini')
     DO i=1,nb_WP
-      CALL sub_PsiBasisRep_TO_GridRep(WP(i))
+      IF(MPI_id==0) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
     END DO
+    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep end')
   END IF
   para_propa%ana_psi%GridDone = .TRUE.
   !-----------------------------------------------------------
@@ -945,37 +950,41 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
   !-----------------------------------------------------------
   w2 = WP(1) ! just for the initialization
-  CALL alloc_psi(w2,GridRep=.TRUE.)
+  IF(MPI_id==0) CALL alloc_psi(w2,GridRep=.TRUE.)
 
   DO i=1,nb_WP
     !-----------------------------------------------------------
     ! => Analysis for diabatic potential (always done)
 
     ! =>first the energy
-    w1 = WP(i)
-    CALL norm2_psi(w1,.FALSE.,.TRUE.,.FALSE.)
+    IF(MPI_id==0) THEN
+      w1 = WP(i)
+      CALL norm2_psi(w1,.FALSE.,.TRUE.,.FALSE.)
+    ENDIF
     CALL sub_PsiOpPsi(ET,w1,w2,para_H)
-    WP(i)%CAvOp = ET/w1%norme
+    
+    IF(MPI_id==0) THEN
+      WP(i)%CAvOp = ET/w1%norme
 
-    para_propa%ana_psi%num_psi = i
-    para_propa%ana_psi%Ene     = real(WP(i)%CAvOp,kind=Rkind)
+      para_propa%ana_psi%num_psi = i
+      para_propa%ana_psi%Ene     = real(WP(i)%CAvOp,kind=Rkind)
 
-    ! => The analysis (diabatic)
-    para_propa%ana_psi%adia = .FALSE.
-    para_propa%ana_psi%Write_psi2_Grid = Write_psi2_Grid
-    para_propa%ana_psi%Write_psi_Grid  = Write_psi_Grid
-    CALL sub_analyze_psi(WP(i),para_propa%ana_psi)
+      ! => The analysis (diabatic)
+      para_propa%ana_psi%adia = .FALSE.
+      para_propa%ana_psi%Write_psi2_Grid = Write_psi2_Grid
+      para_propa%ana_psi%Write_psi_Grid  = Write_psi_Grid
+      CALL sub_analyze_psi(WP(i),para_propa%ana_psi)
 
-    IF (para_propa%ana_psi%ExactFact > 0) THEN
-      write(out_unitp,*) i,'Exact Factorization analysis at ',T, ' ua'
-      IF (present(para_field)) THEN
-        CALL sub_ExactFact_analysis(T,WP(i),para_propa%ana_psi,para_H,  &
-                       para_propa%WPTmax,para_propa%WPdeltaT,para_field)
-      ELSE
-        CALL sub_ExactFact_analysis(T,WP(i),para_propa%ana_psi,para_H,  &
-                                  para_propa%WPTmax,para_propa%WPdeltaT)
+      IF (para_propa%ana_psi%ExactFact > 0) THEN
+        write(out_unitp,*) i,'Exact Factorization analysis at ',T, ' ua'
+        IF (present(para_field)) THEN
+          CALL sub_ExactFact_analysis(T,WP(i),para_propa%ana_psi,para_H,  &
+                         para_propa%WPTmax,para_propa%WPdeltaT,para_field)
+        ELSE
+          CALL sub_ExactFact_analysis(T,WP(i),para_propa%ana_psi,para_H,  &
+                                    para_propa%WPTmax,para_propa%WPdeltaT)
+        END IF
       END IF
-    END IF
 
 
 !    ! => The analysis (adiabatic)
@@ -987,12 +996,11 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 !      CALL sub_PsiDia_TO_PsiAdia_WITH_MemGrid(w1,para_H)
 !      CALL sub_analyze_psi(w1,para_propa%ana_psi)
 !    END IF
-    CALL flush_perso(out_unitp)
+      CALL flush_perso(out_unitp)
 
-    para_propa%ana_psi%adia = .FALSE.
-    CALL alloc_psi(WP(i),BasisRep=BasisRep,GridRep=GridRep)
-
-
+      para_propa%ana_psi%adia = .FALSE.
+      CALL alloc_psi(WP(i),BasisRep=BasisRep,GridRep=GridRep)
+    ENDIF ! for MPI_id==0
   END DO
 
   CALL dealloc_psi(w1,delete_all=.TRUE.)
@@ -1002,11 +1010,13 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   para_propa%ana_psi%GridDone = .FALSE.
 
 !----------------------------------------------------------
-    IF (debug) THEN
-      write(out_unitp,*) 'END ',name_sub
-    END IF
+  IF (debug) THEN
+    write(out_unitp,*) 'END ',name_sub
+  END IF
 !-------------------------------------------------------
 END SUBROUTINE sub_analyze_WP_OpWP
+!=======================================================================================
+
 SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_system
   USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
@@ -1016,6 +1026,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi,Channel_weight
   USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
   USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+  USE mod_MPI
   IMPLICIT NONE
 
   real (kind=Rkind) :: T      ! time
@@ -1079,46 +1090,49 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
 
 
   !-----------------------------------------------------------
-  w2 = WP(1) ! just for the initialization
-  CALL alloc_psi(w2)
+  IF(MPI_id==0) w2 = WP(1) ! just for the initialization
+  IF(MPI_id==0) CALL alloc_psi(w2)
 
   DO i=1,nb_WP
     !-----------------------------------------------------------
     ! => Analysis for diabatic potential (always done)
 
     ! =>first the energy
-    CALL norm2_psi(WP(i))
+    IF(MPI_id==0) CALL norm2_psi(WP(i))
     CALL sub_PsiOpPsi(ET,WP(i),w2,para_H)
-    WP(i)%CAvOp = ET/WP(i)%norme
+    
+    IF(MPI_id==0) THEN
+      WP(i)%CAvOp = ET/WP(i)%norme
 
-    RWU_E  = REAL_WU(real(WP(i)%CAvOp,kind=Rkind),'au','E')
-    E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
+      RWU_E  = REAL_WU(real(WP(i)%CAvOp,kind=Rkind),'au','E')
+      E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
 
-    CALL Channel_weight(tab_WeightChannels,WP(i),GridRep=.FALSE.,BasisRep=.TRUE.)
-    Psi_norm2 = sum(tab_WeightChannels)
+      CALL Channel_weight(tab_WeightChannels,WP(i),GridRep=.FALSE.,BasisRep=.TRUE.)
+      Psi_norm2 = sum(tab_WeightChannels)
 
-    ! add the psi number + the time
-    psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat='f12.2')
+      ! add the psi number + the time
+      psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat='f12.2')
 
-    ! add the energy
-    psi_line = psi_line // ' ' // real_TO_char(E,Rformat='f8.5')
+      ! add the energy
+      psi_line = psi_line // ' ' // real_TO_char(E,Rformat='f8.5')
 
-    ! add the field (if necessary)
-    IF (present(para_field)) THEN
-      CALL sub_dnE(dnE,0,T,para_field)
-      psi_line = psi_line // ' ' // real_TO_char(dnE(1),Rformat='f8.5')
-      psi_line = psi_line // ' ' // real_TO_char(dnE(2),Rformat='f8.5')
-      psi_line = psi_line // ' ' // real_TO_char(dnE(3),Rformat='f8.5')
-    END IF
+      ! add the field (if necessary)
+      IF (present(para_field)) THEN
+        CALL sub_dnE(dnE,0,T,para_field)
+        psi_line = psi_line // ' ' // real_TO_char(dnE(1),Rformat='f8.5')
+        psi_line = psi_line // ' ' // real_TO_char(dnE(2),Rformat='f8.5')
+        psi_line = psi_line // ' ' // real_TO_char(dnE(3),Rformat='f8.5')
+      END IF
 
-    psi_line = psi_line // ' ' // real_TO_char(Psi_norm2,Rformat='f10.7')
-    DO i_be=1,WP(i)%nb_be
-    DO i_bi=1,WP(i)%nb_bi
-      psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
-    END DO
-    END DO
+      psi_line = psi_line // ' ' // real_TO_char(Psi_norm2,Rformat='f10.7')
+      DO i_be=1,WP(i)%nb_be
+      DO i_bi=1,WP(i)%nb_bi
+        psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
+      END DO
+      END DO
 
-    write(out_unitp,*) psi_line
+      write(out_unitp,*) psi_line
+    ENDIF ! for MPI_id==0
 
   END DO
 
@@ -1127,11 +1141,10 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   IF (allocated(tab_WeightChannels)) deallocate(tab_WeightChannels)
   IF (allocated(psi_line))           deallocate(psi_line)
 
-
 !----------------------------------------------------------
-    IF (debug) THEN
-      write(out_unitp,*) 'END ',name_sub
-    END IF
+  IF (debug) THEN
+    write(out_unitp,*) 'END ',name_sub
+  END IF
 !-------------------------------------------------------
 END SUBROUTINE sub_analyze_mini_WP_OpWP
 !================================================================
@@ -1160,6 +1173,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       USE mod_psi_set_alloc, ONLY : alloc_array
       USE mod_param_WP0,     ONLY : alloc_param_WP0
       USE mod_Constant
+      USE mod_MPI
       IMPLICIT NONE
 
 !------ parameter for the propagation ---------------------
@@ -1256,7 +1270,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 !     logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
-      write(out_unitp,*) ' PROPAGATION PARAMETERS: propa, defWP0, control'
+      IF(MPI_id==0) write(out_unitp,*) ' PROPAGATION PARAMETERS: propa, defWP0, control'
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
 !--------- memory allocation -----------------------------
@@ -1718,6 +1732,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 !=======================================================
       SUBROUTINE read_davidson(para_Davidson,para_propa)
       USE mod_system
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -1782,7 +1797,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       logical, parameter :: debug =.FALSE.
 !      logical, parameter :: debug =.TRUE.
 !-----------------------------------------------------------
-      write(out_unitp,*) ' DAVIDSON PARAMETERS'
+      IF(MPI_id==0) write(out_unitp,*) ' DAVIDSON PARAMETERS'
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
       END IF
@@ -1956,11 +1971,12 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         STOP
       END IF
 
-      write(out_unitp,*) 'para_Davidson%Max_ene       ',para_Davidson%Max_ene
-      write(out_unitp,*) 'para_Davidson%scaled_max_ene',para_Davidson%scaled_max_ene
-      write(out_unitp,*) 'para_Davidson%conv_ene      ',para_Davidson%conv_ene
-      write(out_unitp,*) 'para_Davidson%conv_resi     ',para_Davidson%conv_resi
-
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) 'para_Davidson%Max_ene       ',para_Davidson%Max_ene
+        write(out_unitp,*) 'para_Davidson%scaled_max_ene',para_Davidson%scaled_max_ene
+        write(out_unitp,*) 'para_Davidson%conv_ene      ',para_Davidson%conv_ene
+        write(out_unitp,*) 'para_Davidson%conv_resi     ',para_Davidson%conv_resi
+      ENDIF
 
 !-----------------------------------------------------------
       IF (debug) THEN

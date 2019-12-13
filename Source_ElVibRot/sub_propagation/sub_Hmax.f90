@@ -36,6 +36,7 @@
       USE mod_propa
       USE mod_FullPropa
       USE mod_Davidson
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -79,11 +80,10 @@
       logical,parameter :: debug=.FALSE.
       !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
-      write(out_unitp,*) 'BEGINNING ',name_sub,' ',para_H%nb_tot
-      write(out_unitp,*) 'Hmin,Hmax',para_H%Hmin,para_H%Hmax
-      CALL flush_perso(out_unitp)
       IF (debug) THEN
-
+        write(out_unitp,*) 'BEGINNING ',name_sub,' ',para_H%nb_tot
+        write(out_unitp,*) 'Hmin,Hmax',para_H%Hmin,para_H%Hmax
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -91,6 +91,28 @@
 !     -  Hmin ------------------------------------------------
 !     --------------------------------------------------------
       IF (para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
+#if(run_MPI)
+        ! get iG boundary of each threads
+        nb_per_MPI=para_H%BasisnD%nb_SG/MPI_np
+        !If(mod(para_H%BasisnD%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
+        !temp_int1=MPI_id*nb_per_MPI+1
+        !temp_int2=MIN((MPI_id+1)*nb_per_MPI,para_H%BasisnD%nb_SG)
+        nb_rem_MPI=mod(para_H%BasisnD%nb_SG,MPI_np)
+        temp_int1=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
+        temp_int2=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
+        para_H%Hmin=1.0e10;
+        DO i1_loop=temp_int1,temp_int2
+          ! Minimal value of Veff
+          temp_real=minval(para_H%OpGrid(1)%SRep%SmolyakRep(i1_loop)%V)
+          IF(temp_real<para_H%Hmin) para_H%Hmin=temp_real
+        ENDDO
+        IF(MPI_np>1) THEN
+          CALL MPI_Reduce(para_H%Hmin,temp_real,size1_MPI,MPI_Real8,MPI_MIN,           &
+                          root_MPI,MPI_COMM_WORLD,MPI_err)
+          IF(MPI_id==0) para_H%Hmin=temp_real
+          CALL MPI_Bcast(para_H%Hmin,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
+        ENDIF
+#else
         ! Minimal value of Veff
         para_H%Hmin = para_H%OpGrid(1)%Op_min
 !
@@ -99,6 +121,7 @@
 !        ELSE ! it means the Grid is cte => deallocated
 !          para_H%Hmin = para_H%OpGrid(1)%Op_min
 !        END IF
+#endif
       ELSE ! the grids are on a file
 
 !       -  Hmin ------------------------------------------------
@@ -161,7 +184,7 @@
         END IF
 
 !       --------------------------------------------------------
-      END IF
+      END IF ! for para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done
       IF (debug) write(out_unitp,*) 'Hmin: ',para_H%Hmin
       CALL flush_perso(out_unitp)
 
@@ -174,19 +197,20 @@
       IF (debug) write(out_unitp,*) 'nb_tot',psi%nb_tot
       CALL alloc_psi(psi,BasisRep =.TRUE.)
 
-
-
       psi = ZERO
-      CALL Set_psi_With_index(psi,R=ONE,ind_aie=psi%nb_tot)
+      IF(MPI_id==0) CALL Set_psi_With_index(psi,R=ONE,ind_aie=psi%nb_tot)
       psi%symab = -1
 
-      CALL renorm_psi(psi,BasisRep=.TRUE.)
+      IF(MPI_id==0) CALL renorm_psi(psi,BasisRep=.TRUE.)
       IF (debug) write(out_unitp,*) 'psi%symab',psi%symab
 
-      Hpsi = psi
+      IF(MPI_id==0) Hpsi = psi
 
       CALL sub_PsiOpPsi(Emax,psi,Hpsi,para_H)
       para_H%Hmax = Real(Emax,kind=Rkind)
+#if(run_MPI)     
+      CALL MPI_Bcast(para_H%Hmax,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
+#endif
       IF (debug) write(out_unitp,*) 'Hmax: ',para_H%Hmax
       CALL flush_perso(out_unitp)
 
@@ -292,6 +316,9 @@ relax = .TRUE.
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_Hmax
+!=======================================================================================      
+
+!=======================================================================================            
       SUBROUTINE sub_Auto_HmaxHmin_relax(para_propa,para_H)
       USE mod_system
       USE mod_Op
@@ -448,6 +475,8 @@ relax = .TRUE.
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_Auto_HmaxHmin_relax
+
+!=======================================================================================      
       ! we are using the fact that chebychev propagation is very sensitive to the spectral range
       SUBROUTINE sub_Auto_Hmax_cheby(para_propa,para_H)
       USE mod_system

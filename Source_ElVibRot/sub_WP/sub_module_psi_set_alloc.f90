@@ -106,17 +106,16 @@
 
  CONTAINS
 
-!================================================================
-!
+!=======================================================================================
 !     allocation of psi
 !     deallocation of psi
-!
-!================================================================
+!=======================================================================================
       !!@description: TODO
       !!@param: TODO
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE alloc_psi(psi,BasisRep,GridRep)
+      USE mod_MPI
 
       TYPE (param_psi), intent(inout) :: psi
       logical, optional, intent(in)   :: BasisRep,GridRep
@@ -150,9 +149,9 @@
       IF (psi%BasisRep) THEN ! allocate psi%BasisRep
         IF (psi%cplx) THEN
           IF ( .NOT. allocated(psi%CvecB) ) THEN
-            CALL alloc_NParray(psi%CvecB,(/psi%nb_tot/),'psi%CvecB','alloc_psi')
+            IF(MPI_id==0) CALL alloc_NParray(psi%CvecB,(/psi%nb_tot/),'psi%CvecB','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: CvecB'
-            psi%CvecB(:) = CZERO
+            IF(MPI_id==0) psi%CvecB(:) = CZERO
           END IF
           IF ( allocated(psi%RvecB) ) THEN
             CALL dealloc_NParray(psi%RvecB,'psi%RvecB','alloc_psi')
@@ -160,9 +159,9 @@
           END IF
         ELSE
           IF ( .NOT. allocated(psi%RvecB) ) THEN
-            CALL alloc_NParray(psi%RvecB,(/psi%nb_tot/),'psi%RvecB','alloc_psi')
+            IF(MPI_id==0) CALL alloc_NParray(psi%RvecB,(/psi%nb_tot/),'psi%RvecB','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: RvecB'
-            psi%RvecB(:) = ZERO
+            IF(MPI_id==0) psi%RvecB(:) = ZERO
           END IF
           IF ( allocated(psi%CvecB) ) THEN
             CALL dealloc_NParray(psi%CvecB,'psi%CvecB','alloc_psi')
@@ -184,9 +183,9 @@
       IF (psi%GridRep) THEN ! allocate psi%GridRep
         IF (psi%cplx) THEN
           IF ( .NOT. allocated(psi%CvecG) ) THEN
-            CALL alloc_NParray(psi%CvecG,(/psi%nb_qaie/),'psi%CvecG','alloc_psi')
+            IF(MPI_id==0) CALL alloc_NParray(psi%CvecG,(/psi%nb_qaie/),'psi%CvecG','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: CvecG'
-            psi%CvecG(:) = CZERO
+            IF(MPI_id==0) psi%CvecG(:) = CZERO
           END IF
           IF ( allocated(psi%RvecG) ) THEN
             CALL dealloc_NParray(psi%RvecG,'psi%RvecG','alloc_psi')
@@ -194,9 +193,9 @@
           END IF
         ELSE
           IF ( .NOT. allocated(psi%RvecG) ) THEN
-            CALL alloc_NParray(psi%RvecG,(/psi%nb_qaie/),'psi%RvecG','alloc_psi')
+            IF(MPI_id==0) CALL alloc_NParray(psi%RvecG,(/psi%nb_qaie/),'psi%RvecG','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: RvecG'
-            psi%RvecG(:) = ZERO
+            IF(MPI_id==0) psi%RvecG(:) = ZERO
           END IF
           IF ( allocated(psi%CvecG) ) THEN
             CALL dealloc_NParray(psi%CvecG,'psi%CvecG','alloc_psi')
@@ -221,8 +220,8 @@
       END IF
 !-----------------------------------------------------------
 
-
       END SUBROUTINE alloc_psi
+!=======================================================================================
 
   FUNCTION print_alloc_psi(psi)
   USE mod_string
@@ -717,6 +716,7 @@
       !!@param: TODO
       !!@param: TODO
       !!@param: TODO
+!=======================================================================================
       SUBROUTINE copy_psi2TOpsi1(psi1,psi2,BasisRep,GridRep,alloc)
 
 !----- variables for the WP propagation ----------------------------
@@ -856,8 +856,10 @@
 !     write(out_unitp,*) 'END copy_psi2TOpsi1'
 
       END SUBROUTINE copy_psi2TOpsi1
+!=======================================================================================
 
       SUBROUTINE CplxPsi_TO_RCpsi(RCPsi,Psi)
+      USE mod_MPI
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_psi),intent(inout) :: RCPsi(2)
@@ -980,9 +982,9 @@
       write(out_unitp,*) ' END ecri_init_psi'
 
       END SUBROUTINE ecri_init_psi
-!==============================================================
+!===============================================================================
 !     writing psi
-!==============================================================
+!===============================================================================
       !!@description: TODO
       !!@param: TODO
       !!@param: TODO
@@ -1374,5 +1376,6 @@
 
 
       END SUBROUTINE ecri_psi
+!===============================================================================
 
   END MODULE mod_psi_set_alloc

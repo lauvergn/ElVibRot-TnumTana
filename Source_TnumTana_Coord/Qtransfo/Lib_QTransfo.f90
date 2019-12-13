@@ -900,8 +900,6 @@ MODULE mod_Lib_QTransfo
       SUBROUTINE Write_dnx(ic,ncart_e,dnx,nderiv)
       IMPLICIT NONE
 
-
-
         integer :: ic,ncart_e,ncart,nb_act,nderiv,nderiv_loc
         TYPE (Type_dnVec) :: dnx
 

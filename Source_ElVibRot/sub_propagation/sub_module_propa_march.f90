@@ -41,11 +41,9 @@
  PUBLIC :: march_gene,march_nOD_im,march_FOD_Opti_im
 
       CONTAINS
-!================================================================
-!
+!=======================================================================================
 !    march_gene  with or without field
-!
-!================================================================
+!=======================================================================================
       SUBROUTINE march_gene(T,WP,WP0,nb_WP,print_Op,                    &
                             para_H,para_propa,tab_Op,para_field)
       USE mod_system
@@ -82,8 +80,11 @@
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
+#if(run_MPI)
+#else
         write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,       &
                                        para_propa%para_poly%Hmax
+#endif
         write(out_unitp,*)
         write(out_unitp,*) 'nb_ba,nb_qa',WP%nb_ba,WP%nb_qa
         write(out_unitp,*) 'nb_bi',WP%nb_bi
@@ -102,7 +103,6 @@
           CALL ecri_psi(T=ZERO,psi=WP(i),                               &
                         ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
         END DO
-
       END IF
 !-----------------------------------------------------------
 
@@ -120,9 +120,12 @@
 
       SGtype4    = SGtype4 .AND. (para_H%BasisnD%SparseGrid_type == 4)
 
+      ! para_propa%type_WPpropa 1 
+      ! SGtype4 F
       SELECT CASE (para_propa%type_WPpropa)
 
       CASE (1)
+        ! propagation with Chebyshev
         !CALL march_cheby_old(T,no,WP(1),WP0(1),para_H,para_propa)
         CALL march_cheby(T,no,WP(1),WP0(1),para_H,para_propa)
 
@@ -185,6 +188,8 @@
       END IF
 !----------------------------------------------------------
       END SUBROUTINE march_gene
+!=======================================================================================
+
 !================================================================
 !
 !    march RK2
@@ -1499,11 +1504,9 @@
 !STOP
 
  END SUBROUTINE march_noD
-!================================================================
-!
+!=======================================================================================      
 !     march cheby
-!
-!================================================================
+!=======================================================================================      
       !!@description: march cheby
       !!@param: TODO
       !!@param: TODO
@@ -1515,6 +1518,8 @@
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi
       USE mod_psi_SimpleOp
+      USE mod_propa
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1539,7 +1544,7 @@
       integer              :: i,i_qaie_corr,icheb
       real (kind=Rkind)    :: norm_exit
       integer              :: max_cheby=10
-
+      Logical              :: exitall ! for MPI
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug=.FALSE.
@@ -1557,146 +1562,184 @@
 
         !write(out_unitp,*) 'psi'
         !CALL ecri_psi(T=T,psi=psi,ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
-
       END IF
 !-----------------------------------------------------------
-    w1 => para_propa%work_WP(1)
-    w2 => para_propa%work_WP(2)
-    w3 => para_propa%work_WP(3)
+      exitall=.FALSE. !< MPI: for controling the exit of all threads
 
-    psi_save = psi
+      w1 => para_propa%work_WP(1)
+      w2 => para_propa%work_WP(2)
+      w3 => para_propa%work_WP(3)
 
-    DO icheb=1,max_cheby
-      para_propa%march_error = .FALSE.
+      psi_save = psi
 
-      para_propa%para_poly%deltaE = para_propa%para_poly%Hmax -          &
-                                                para_propa%para_poly%Hmin
-      para_propa%para_poly%E0     = para_propa%para_poly%Hmin +          &
-                                       HALF * para_propa%para_poly%deltaE
-      para_propa%para_poly%alpha  = HALF * para_propa%para_poly%deltaE * &
-                                                     para_propa%WPdeltaT
-      para_propa%para_poly%Esc    = HALF * para_propa%para_poly%deltaE
-      para_H%E0                   = para_propa%para_poly%E0
-      para_H%Esc                  = para_propa%para_poly%Esc
+      DO icheb=1,max_cheby
 
-      IF (debug) THEN
-        write(out_unitp,*) 'deltaT',para_propa%WPdeltaT
-        write(out_unitp,*) 'deltaE',para_propa%para_poly%deltaE
-        write(out_unitp,*) 'alpha ',para_propa%para_poly%alpha
-        write(out_unitp,*) 'E0    ',para_H%E0
-        write(out_unitp,*) 'Esc   ',para_H%Esc
-        write(out_unitp,*) 'ncheby',para_propa%para_poly%npoly
-      END IF
+#if(run_MPI)
+        w1  = psi
+        CALL sub_OpPsi(w1,w2,para_H)
+        write(*,*) 'para_propa%once_control_Hmin check',para_propa%once_control_Hmin
+        IF(para_propa%once_control_Hmin) THEN
+          CALL sub_Hmax(para_propa,para_H)
+          para_propa%once_control_Hmin=.FALSE.
+                
+          para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
+          para_propa%para_poly%Hmin = para_propa%Hmin
+          para_propa%para_poly%Hmax = para_propa%Hmax
 
-      psi0Hkpsi0(:) = CZERO
+          CALL initialisation1_poly(para_propa%para_poly,                                &
+                                    para_propa%WPdeltaT,                                 &
+                                    para_propa%type_WPpropa)
+          
+          para_H%scaled = .TRUE.
+          para_H%E0     = para_propa%para_poly%E0
+          para_H%Esc    = para_propa%para_poly%Esc
+          write(*,*) 'Hmin,Hmax check:', para_propa%Hmin,para_propa%Hmax
+        ENDIF
+#endif
 
-      r = max(ONE,HALF * para_propa%para_poly%deltaE * para_propa%WPdeltaT)
-      CALL cof(r,para_propa%para_poly%npoly,para_propa%para_poly%coef_poly)
+        para_propa%march_error = .FALSE.
+        para_propa%para_poly%deltaE = para_propa%para_poly%Hmax -          &
+                                                  para_propa%para_poly%Hmin
+        para_propa%para_poly%E0     = para_propa%para_poly%Hmin +          &
+                                         HALF * para_propa%para_poly%deltaE
+        para_propa%para_poly%alpha  = HALF * para_propa%para_poly%deltaE * &
+                                                       para_propa%WPdeltaT
+        para_propa%para_poly%Esc    = HALF * para_propa%para_poly%deltaE
+        para_H%E0                   = para_propa%para_poly%E0
+        para_H%Esc                  = para_propa%para_poly%Esc
 
-      IF (debug) THEN
-        write(out_unitp,*) 'r,deltaE,WPdeltaT',r,para_propa%para_poly%deltaE,para_propa%WPdeltaT
-        write(out_unitp,*) 'npoly',para_propa%para_poly%npoly
-        !write(out_unitp,*) 'coef_poly',para_propa%para_poly%coef_poly(1:para_propa%para_poly%npoly)
-      END IF
+        IF (debug) THEN
+          write(out_unitp,*) 'deltaT',para_propa%WPdeltaT
+          write(out_unitp,*) 'deltaE',para_propa%para_poly%deltaE
+          write(out_unitp,*) 'alpha ',para_propa%para_poly%alpha
+          write(out_unitp,*) 'E0    ',para_H%E0
+          write(out_unitp,*) 'Esc   ',para_H%Esc
+          write(out_unitp,*) 'ncheby',para_propa%para_poly%npoly
+        END IF
 
-      psi0Hkpsi0(0) = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+        psi0Hkpsi0(:) = CZERO
 
-      rt  = cmplx(ZERO,-ONE,kind=Rkind)
-      rt2 = cmplx(ZERO,-TWO,kind=Rkind)
+        ! calculate cofficients for Chebychev in para_propa%para_poly%coef_poly
+        r = max(ONE,HALF * para_propa%para_poly%deltaE * para_propa%WPdeltaT)
+        CALL cof(r,para_propa%para_poly%npoly,para_propa%para_poly%coef_poly)
+
+        IF (debug) THEN
+          write(out_unitp,*) 'r,deltaE,WPdeltaT',r,para_propa%para_poly%deltaE,para_propa%WPdeltaT
+          write(out_unitp,*) 'npoly',para_propa%para_poly%npoly
+          !write(out_unitp,*) 'coef_poly',para_propa%para_poly%coef_poly(1:para_propa%para_poly%npoly)
+        END IF
+
+        psi0Hkpsi0(0) = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+
+        rt  = cmplx(ZERO,-ONE,kind=Rkind)
+        rt2 = cmplx(ZERO,-TWO,kind=Rkind)
 
 !     - The first term of the expansion ------------------
-      w1  = psi
-      psi = psi * para_propa%para_poly%coef_poly(1)
+#if(run_MPI)
+        !w1  = psi
+#else
+        w1  = psi
+#endif
+        psi = psi * para_propa%para_poly%coef_poly(1)
 
-
-      psi0Hkpsi0(1) =  psi0Hkpsi0(0)
+        psi0Hkpsi0(1) =  psi0Hkpsi0(0)
 
 !     - The second term of the expansion -----------------
-      write(out_unitp,'(a)',advance='no') 'cheby rec:'
-      CALL sub_OpPsi(w1,w2,para_H)
-      CALL sub_scaledOpPsi(w1,w2,para_H%E0,para_H%Esc)
+        write(out_unitp,'(a)',advance='no') 'cheby rec:'
+        CALL sub_OpPsi(w1,w2,para_H)
+        CALL sub_scaledOpPsi(w1,w2,para_H%E0,para_H%Esc)
 
-      w2  = w2 * rt
-      psi = psi + w2 * para_propa%para_poly%coef_poly(2)
-
-      psi0Hkpsi0(2) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
-
+        IF(MPI_id==0) THEN
+          w2  = w2 * rt
+          psi = psi + w2 * para_propa%para_poly%coef_poly(2)
+        ENDIF
+        
+        psi0Hkpsi0(2) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
 
 !     - The higher terms of the expansion ----------------
 
-      DO jt=3,para_propa%para_poly%npoly
+        DO jt=3,para_propa%para_poly%npoly
 
-        CALL sub_OpPsi(w2,w3,para_H)
-        CALL sub_scaledOpPsi(w2,w3,para_H%E0,para_H%Esc)
-        IF (mod(jt,100) == 0) write(out_unitp,'(a)',advance='no') '.'
+          CALL sub_OpPsi(w2,w3,para_H)
+          CALL sub_scaledOpPsi(w2,w3,para_H%E0,para_H%Esc)
+          IF (mod(jt,100) == 0) write(out_unitp,'(a)',advance='no') '.'
+          
+          IF(MPI_id==0) THEN
+!           Recurrence relations of the Chebychev expansion:
+            w3 = w1 + w3 * rt2
+            w1 = w2
+            w2 = w3
+            psi = psi + w2 * para_propa%para_poly%coef_poly(jt)
 
-!        Recurrence relations of the Chebychev expansion:
-         w3 = w1 + w3 * rt2
+            CALL norm2_psi(w2)
 
+            norm_exit = abs(w2%norme*para_propa%para_poly%coef_poly(jt))
+          ENDIF
+#if(run_MPI)
+          CALL MPI_Bcast(norm_exit,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
+#endif
+          jt_exit = jt
+          IF (debug) write(out_unitp,*) 'jt,norms',jt,norm_exit
 
-         w1 = w2
-         w2 = w3
+          IF (norm_exit > TEN**15) THEN
+            write(out_unitp,*) ' WARNING: Norm^2 of the vector is TOO large (> 10^15)',jt,norm_exit
+            IF(MPI_id==0) para_propa%march_error = .TRUE.
+            EXIT
+          END IF
 
-         psi = psi + w2 * para_propa%para_poly%coef_poly(jt)
+          IF(MPI_id==0) THEN
+            psi0Hkpsi0(jt) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
+#if(run_MPI)
+            IF (norm_exit < para_propa%para_poly%poly_tol) exitall=.TRUE.
+#else
+            IF (norm_exit < para_propa%para_poly%poly_tol) EXIT
+#endif
+          ENDIF
+#if(run_MPI)
+          !> MPI the other threads are waiting for master here
+          CALL MPI_Bcast(exitall,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
+          IF(exitall) EXIT
+#endif
+        END DO ! for jt=3,para_propa%para_poly%npoly
 
-         CALL norm2_psi(w2)
+        write(out_unitp,*) 'jt_exit,norms',jt_exit,abs(w2%norme),norm_exit
+        para_propa%para_poly%npoly_Opt = jt_exit
 
-         norm_exit = abs(w2%norme*para_propa%para_poly%coef_poly(jt))
-         jt_exit = jt
-         IF (debug) write(out_unitp,*) 'jt,norms',jt,norm_exit
+        IF (.NOT. para_propa%march_error .AND. norm_exit > para_propa%para_poly%poly_tol) THEN
+          write(out_unitp,*) ' ERROR in march_cheby'
+          write(out_unitp,*) ' WARNING: Norm^2 of the last vector TOO large',jt_exit,norm_exit
+          para_propa%march_error = .TRUE.
+        END IF
 
-         IF (norm_exit > TEN**15) THEN
-           write(out_unitp,*) ' WARNING: Norm^2 of the vector is TOO large (> 10^15)',jt,norm_exit
-           para_propa%march_error = .TRUE.
-           EXIT
-         END IF
+        IF (para_propa%march_error) THEN
+          write(out_unitp,*) ' Old Hmin,Hmax',para_propa%para_poly%Hmin,para_propa%para_poly%Hmax
 
-         psi0Hkpsi0(jt) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
+          para_propa%para_poly%Hmax = para_propa%para_poly%Hmax +         &
+                                    para_propa%para_poly%deltaE * ONETENTH
+          !para_propa%para_poly%Hmin = para_propa%para_poly%Hmin -         &
+          !                          para_propa%para_poly%deltaE * ONETENTH
 
-         IF (norm_exit < para_propa%para_poly%poly_tol) EXIT
+          write(out_unitp,*) ' New Hmin,Hmax',para_propa%para_poly%Hmin,para_propa%para_poly%Hmax
 
-      END DO
-      write(out_unitp,*) 'jt_exit,norms',jt_exit,abs(w2%norme),norm_exit
-      para_propa%para_poly%npoly_Opt = jt_exit
+          psi = psi_save
+        ELSE
+          EXIT
+        END IF
 
-      IF (.NOT. para_propa%march_error .AND. norm_exit > para_propa%para_poly%poly_tol) THEN
-        write(out_unitp,*) ' ERROR in march_cheby'
-        write(out_unitp,*) ' WARNING: Norm^2 of the last vector TOO large',jt_exit,norm_exit
-        para_propa%march_error = .TRUE.
-      END IF
+      END DO ! for max_cheby
 
       IF (para_propa%march_error) THEN
-        write(out_unitp,*) ' Old Hmin,Hmax',para_propa%para_poly%Hmin,para_propa%para_poly%Hmax
-
-        para_propa%para_poly%Hmax = para_propa%para_poly%Hmax +         &
-                                  para_propa%para_poly%deltaE * ONETENTH
-        !para_propa%para_poly%Hmin = para_propa%para_poly%Hmin -         &
-        !                          para_propa%para_poly%deltaE * ONETENTH
-
-        write(out_unitp,*) ' New Hmin,Hmax',para_propa%para_poly%Hmin,para_propa%para_poly%Hmax
-
-        psi = psi_save
-      ELSE
-        EXIT
+        write(out_unitp,*) ' ERROR in march_cheby'
+        write(out_unitp,*) ' It cannot converge ...'
+        write(out_unitp,*) ' => Reduce the time step !!'
+        STOP
       END IF
 
-    END DO
-
-    IF (para_propa%march_error) THEN
-      write(out_unitp,*) ' ERROR in march_cheby'
-      write(out_unitp,*) ' It cannot converge ...'
-      write(out_unitp,*) ' => Reduce the time step !!'
-      STOP
-    END IF
-
-    CALL dealloc_psi(psi_save,delete_all=.TRUE.)
-
+      CALL dealloc_psi(psi_save,delete_all=.TRUE.)
 
 !     - Phase Shift -----------------------------------
       phase = para_H%E0*para_propa%WPdeltaT
       psi = psi * exp(-cmplx(ZERO,phase,kind=Rkind))
-
-
 
       microdeltaT = para_propa%WPdeltaT/                                &
                     real(para_propa%nb_micro,kind=Rkind)
@@ -1708,7 +1751,6 @@
       !write(out_unitp,*) 'para_propa%nb_micro',para_propa%nb_micro
       !write(out_unitp,*) 'microdeltaT',microdeltaT
       !write(out_unitp,*) 'microphase',microphase
-
 
       DO it=1,para_propa%nb_micro
 
@@ -1733,9 +1775,6 @@
       END DO
       CALL flush_perso(no)
 
-
-
-
 !-----------------------------------------------------------
       IF (debug) THEN
         !write(out_unitp,*) 'psi'
@@ -1744,8 +1783,9 @@
       END IF
 !-----------------------------------------------------------
 
-
       END SUBROUTINE march_cheby
+!=======================================================================================      
+
       SUBROUTINE march_cheby_old(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi

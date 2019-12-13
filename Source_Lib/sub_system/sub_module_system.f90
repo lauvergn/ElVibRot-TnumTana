@@ -29,8 +29,8 @@ MODULE mod_system
       USE mod_memory
       USE mod_memory_Pointer
       USE mod_memory_NotPointer
+      USE mod_MPI
       IMPLICIT NONE
-
 
       INTERFACE compare_tab
         MODULE PROCEDURE compare_la, compare_tab_int, compare_tab_real, &
@@ -82,6 +82,7 @@ MODULE mod_system
 
 
       logical :: openmp = .FALSE.
+      logical :: openmpi= .FALSE. 
       integer :: MatOp_omp,OpPsi_omp,BasisTOGrid_omp,Grid_omp,SG4_omp
       integer :: MatOp_maxth,OpPsi_maxth,BasisTOGrid_maxth,Grid_maxth,SG4_maxth
 
@@ -134,13 +135,14 @@ MODULE mod_system
 
       CONTAINS
 
+!===============================================================================
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE time_perso(name)
+      USE mod_MPI
       IMPLICIT NONE
 
         character (len=*), intent(in) :: name
-
 
         !local variables
         integer           :: tab_time(8) = 0
@@ -150,7 +152,7 @@ MODULE mod_system
 
 
         CALL date_and_time(values=tab_time)
-        write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
+        IF(MPI_id==0) write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
  21     format('     Time and date in ',a,' : ',i2,'h:',                &
                i2,'m:',i2,'.',i3,'s, the ',i2,'/',i2,'/',i4)
 
@@ -166,14 +168,18 @@ MODULE mod_system
         days    = hours/24
         hours   = mod(hours,24)
 
-
+#if(run_MPI)
+        write(out_unitp,31) dt_real,name,MPI_id
+31      format('        real (s): ',f18.3,' in ',a, ' from MPI id ',i4)
+#else
         write(out_unitp,31) dt_real,name
- 31     format('        real (s): ',f18.3,' in ',a)
+31      format('        real (s): ',f18.3,' in ',a)
+#endif
         write(out_unitp,32) days,hours,minutes,seconds,name
- 32     format('        real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s in ',a)
+32      format('        real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s in ',a)
 
          write(out_unitp,33) dt_cpu,name
- 33     format('        cpu (s): ',f18.3,' in ',a)
+33      format('        cpu (s): ',f18.3,' in ',a)
 
 
         !============================================
@@ -186,18 +192,25 @@ MODULE mod_system
         days    = hours/24
         hours   = mod(hours,24)
 
+#if(run_MPI)
+        write(out_unitp,41) t_real,MPI_id
+41      format('  Total real (s): ',f18.3,' from MPI id ',i4)
+#else
         write(out_unitp,41) t_real
- 41     format('  Total real (s): ',f18.3)
+41      format('  Total real (s): ',f18.3)
+#endif
         write(out_unitp,42) days,hours,minutes,seconds
- 42     format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
+42      format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
         write(out_unitp,43) t_cpu
- 43     format('  Total cpu (s): ',f18.3)
+43      format('  Total cpu (s): ',f18.3)
 
         CALL flush_perso(out_unitp)
         !============================================
 
 
       END SUBROUTINE time_perso
+!===============================================================================
+
       SUBROUTINE time_perso_v0(name)
       IMPLICIT NONE
 
@@ -270,15 +283,20 @@ MODULE mod_system
         hours   = mod(hours,24)
 
         t_real = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
+#if(run_MPI)
+        write(out_unitp,41) t_real,MPI_id
+41      format('  Total real (s): ',f18.3,' from MPI id ',i4)
+#else
         write(out_unitp,41) t_real
- 41     format('  Total real (s): ',f18.3)
+41      format('  Total real (s): ',f18.3)
+#endif
         write(out_unitp,42) days,hours,minutes,seconds
- 42     format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
+42      format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
         write(out_unitp,43) t_cpu-t_cpu_ini
- 43     format('  Total cpu (s): ',f18.3)
+43      format('  Total cpu (s): ',f18.3)
 
         write(out_unitp,51) '  Total memory: ',para_mem%mem_tot,' in ',name
- 51     format(a,i10,a,a)
+51      format(a,i10,a,a)
 
 
         CALL flush_perso(out_unitp)
@@ -308,6 +326,7 @@ MODULE mod_system
         END IF
 
       END SUBROUTINE DeltaTime
+      
       SUBROUTINE DeltaTime_withParam_time(dt_real,t_real,dt_cpu,t_cpu,LocalTime)
       IMPLICIT NONE
 

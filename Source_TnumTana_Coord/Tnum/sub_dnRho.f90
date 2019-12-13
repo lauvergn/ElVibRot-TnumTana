@@ -419,13 +419,14 @@ MODULE mod_dnRho
 !-----------------------------------------------------------
 
        end subroutine sub3_dnrho_ana
+       
       SUBROUTINE Write_rho(mole)
       USE mod_system
       USE mod_Tnum
+      USE mod_MPI
       IMPLICIT NONE
 
       TYPE (zmatrix), intent(in)    :: mole
-
 
       integer                       :: iQact,type_act,iQact_transfo
       character (len=Name_longlen)  :: name_rho
@@ -444,19 +445,17 @@ MODULE mod_dnRho
       END IF
 !-----------------------------------------------------------
 
-
-
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 !      analysis of rho as a function of the zmatrix definition
-       IF (print_level > -1) THEN
+       IF (print_level > -1 .AND. MPI_id==0) THEN
 
          write(out_unitp,*)
          write(out_unitp,*) '----------------------------------------------'
          write(out_unitp,*) ' Definition of the volume element dV=rho.dQact1.dQact2...'
          write(out_unitp,*) '    rho=rho(Qact1)*rho(Qact2)...'
          write(out_unitp,*) ' Remark: only for variables of type 1'
-           write(out_unitp,'(a)') ' iQact iQact_transfo : rho(iQact)'
+         write(out_unitp,'(a)') ' iQact iQact_transfo : rho(iQact)'
 !
 !
 !        ------------------------------------------------------------------
@@ -483,12 +482,11 @@ MODULE mod_dnRho
            ELSE
              name_rho = '1.'
            END IF
-           write(out_unitp,'(i6,8x,i6,a,a)') iQact,iQact_transfo,' : ',name_rho
-
+           IF(MPI_id==0) write(out_unitp,'(i6,8x,i6,a,a)') iQact,iQact_transfo,' : ',name_rho
 
          END DO
-         write(out_unitp,*) '----------------------------------------------'
-         write(out_unitp,*)
+         IF(MPI_id==0) write(out_unitp,*) '----------------------------------------------'
+         IF(MPI_id==0) write(out_unitp,*)
 
        END IF
       end subroutine Write_rho

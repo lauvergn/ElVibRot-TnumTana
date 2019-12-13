@@ -49,6 +49,7 @@ CONTAINS
       USE mod_type_ana_psi
       USE mod_Op
       USE mod_analysis
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables for the construction of H ----------------------------
@@ -123,9 +124,11 @@ CONTAINS
 !-----------------------------------------------------------
       CALL alloc_NParray(ene,shape(Tab_psi),'ene',name_sub)
 
+      write(*,*) 'ene check1:',ene(1),Tab_psi(1)%CAvOp,size(ene),size(Tab_psi),' from ',MPI_id
       ene(:) = real(Tab_psi(:)%CAvOp,kind=Rkind)
+      write(*,*) 'ene check2:',ene(1),Tab_psi(1)%CAvOp,size(ene),size(Tab_psi),' from ',MPI_id
       CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene=ene)
-
+      write(*,*) 'ene check3:',ene(1),Tab_psi(1)%CAvOp,size(ene),size(Tab_psi),' from ',MPI_id
       IF (count(ene(:)-para_H%ComOp%ZPE <= para_ana%max_ene) == 0) RETURN
 
       RWU_ZPE = REAL_WU(para_H%ComOp%ZPE,'au','E')

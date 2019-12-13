@@ -106,6 +106,7 @@
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,mendeleev)
+        USE mod_MPI
 
         TYPE (Type_Qtransfo), intent(inout) :: Qtransfo
         integer, intent(inout)              :: nb_Qin
@@ -197,8 +198,7 @@
           write(out_unitp,*) ' Check your data !!'
           STOP
         END IF
-        write(out_unitp,*) '=========================================='
-        write(out_unitp,*) '=========================================='
+        IF(MPI_id==0) write(out_unitp,*) '=========================================='
 
         IF (debug) write(out_unitp,Coord_transfo)
 
@@ -206,12 +206,14 @@
         Qtransfo%inTOout      = inTOout
         Qtransfo%opt_transfo  = opt_transfo
         Qtransfo%skip_transfo = skip_transfo
-        write(out_unitp,'(a,a)' ) ' transfo:               ',Qtransfo%name_transfo
-        write(out_unitp,'(a,i0)') ' Option of the transfo: ',Qtransfo%opt_transfo
-        write(out_unitp,'(a,l)' ) ' Skip the transfo:      ',Qtransfo%skip_transfo
-        write(out_unitp,'(a,i0)') ' num_transfo:           ',Qtransfo%num_transfo
-        write(out_unitp,'(a,l)' ) ' inTOout:               ',Qtransfo%inTOout
-        write(out_unitp,'(a)'   ) '------------------------------------------'
+        IF(MPI_id==0) THEN
+          write(out_unitp,'(a,a)' ) ' transfo:               ',Qtransfo%name_transfo
+          write(out_unitp,'(a,i0)') ' Option of the transfo: ',Qtransfo%opt_transfo
+          write(out_unitp,'(a,l)' ) ' Skip the transfo:      ',Qtransfo%skip_transfo
+          write(out_unitp,'(a,i0)') ' num_transfo:           ',Qtransfo%num_transfo
+          write(out_unitp,'(a,l)' ) ' inTOout:               ',Qtransfo%inTOout
+          write(out_unitp,'(a)'   ) '------------------------------------------'
+        ENDIF
         CALL flush_perso(out_unitp)
 
 
@@ -646,8 +648,7 @@
 
 
         IF (debug) CALL Write_QTransfo(Qtransfo)
-        write(out_unitp,*) '=========================================='
-        write(out_unitp,*) '=========================================='
+        IF(MPI_id==0) write(out_unitp,*) '=========================================='
 
       END SUBROUTINE read_Qtransfo
 
@@ -1076,6 +1077,7 @@
 !     -----------------------------------------------------------------
       END SUBROUTINE Qtransfo1TOQtransfo2
       SUBROUTINE calc_Qtransfo(dnQin,dnQout,Qtransfo,nderiv,inTOout)
+        USE mod_MPI
 
         TYPE (Type_dnVec),    intent(inout)        :: dnQin,dnQout
         TYPE (Type_Qtransfo), intent(in)           :: Qtransfo
@@ -1290,7 +1292,10 @@
 
       !!@description: TODO
       !!@param: TODO
+!===============================================================================
       SUBROUTINE Write_Qtransfo(Qtransfo,force_print)
+        USE mod_MPI
+        
         TYPE (Type_Qtransfo) :: Qtransfo
         logical, optional    :: force_print
 
@@ -1302,7 +1307,6 @@
 
         character (len=*), parameter :: name_sub = "Write_Qtransfo"
 
-
         IF (present(force_print)) THEN
           force_print_loc = force_print
         ELSE
@@ -1310,52 +1314,54 @@
         END IF
 
         IF (Qtransfo%print_done .AND. .NOT. force_print_loc) RETURN
-        write(out_unitp,*) 'BEGINNING ',name_sub
+        IF(MPI_id==0) write(out_unitp,*) 'BEGINNING ',name_sub
 
         Qtransfo%print_done = .TRUE.
 
-        write(out_unitp,*) 'name_transfo,num_transfo: ',     &
-                       trim(Qtransfo%name_transfo),Qtransfo%num_transfo
+        IF(MPI_id==0) THEN
+          write(out_unitp,*) 'name_transfo,num_transfo: ',     &
+                         trim(Qtransfo%name_transfo),Qtransfo%num_transfo
 
-        write(out_unitp,*) 'Primitive_Coord: ',Qtransfo%Primitive_Coord
+          write(out_unitp,*) 'Primitive_Coord: ',Qtransfo%Primitive_Coord
 
-        write(out_unitp,*) ' Option of the transfo: ',Qtransfo%opt_transfo
-        write(out_unitp,*) ' Skip the transfo: ',Qtransfo%skip_transfo
+          write(out_unitp,*) ' Option of the transfo: ',Qtransfo%opt_transfo
+          write(out_unitp,*) ' Skip the transfo: ',Qtransfo%skip_transfo
 
-        write(out_unitp,*) ' Parameter(s) to be optimized?: ',Qtransfo%opt_param
+          write(out_unitp,*) ' Parameter(s) to be optimized?: ',Qtransfo%opt_param
 
-        write(out_unitp,*) 'nb_var,nb_act',                             &
-                         Qtransfo%nb_var,Qtransfo%nb_act
-        write(out_unitp,*) 'nb_Qin,nb_Qout',                            &
-                         Qtransfo%nb_Qin,Qtransfo%nb_Qout
+          write(out_unitp,*) 'nb_var,nb_act',                             &
+                           Qtransfo%nb_var,Qtransfo%nb_act
+          write(out_unitp,*) 'nb_Qin,nb_Qout',                            &
+                           Qtransfo%nb_Qin,Qtransfo%nb_Qout
 
-        CALL flush_perso(out_unitp)
-        write(out_unitp,*) '---------------------------------------'
-        IF (associated(Qtransfo%name_Qout) .AND. associated(Qtransfo%type_Qout)) THEN
-          DO i_Q=1,Qtransfo%nb_Qout
-            write(out_unitp,*) 'i_Q,name_Qout,type_Qout',i_Q," ",       &
-                   trim(Qtransfo%name_Qout(i_Q)),                       &
-                   Qtransfo%type_Qout(i_Q)
-            CALL flush_perso(out_unitp)
-
-          END DO
-        ELSE
-          write(out_unitp,*) 'asso name_Qout and type_Qout',            &
-           associated(Qtransfo%name_Qout),associated(Qtransfo%type_Qout)
-        END IF
-
-        IF (associated(Qtransfo%name_Qin) .AND. associated(Qtransfo%type_Qin)) THEN
+          CALL flush_perso(out_unitp)
           write(out_unitp,*) '---------------------------------------'
-          DO i_Q=1,Qtransfo%nb_Qin
-            write(out_unitp,*) 'i_Q,name_Qin,type_Qin',i_Q," ",         &
-                   trim(Qtransfo%name_Qin(i_Q)),                        &
-                   Qtransfo%type_Qin(i_Q)
-          END DO
-        ELSE
-          write(out_unitp,*) 'asso name_Qin and type_Qin',              &
-           associated(Qtransfo%name_Qin),associated(Qtransfo%type_Qin)
-        END IF
-        write(out_unitp,*) '---------------------------------------'
+          IF (associated(Qtransfo%name_Qout) .AND. associated(Qtransfo%type_Qout)) THEN
+            DO i_Q=1,Qtransfo%nb_Qout
+              write(out_unitp,*) 'i_Q,name_Qout,type_Qout',i_Q," ",       &
+                     trim(Qtransfo%name_Qout(i_Q)),                       &
+                     Qtransfo%type_Qout(i_Q)
+              CALL flush_perso(out_unitp)
+
+            END DO
+          ELSE
+            write(out_unitp,*) 'asso name_Qout and type_Qout',            &
+             associated(Qtransfo%name_Qout),associated(Qtransfo%type_Qout)
+          END IF
+
+          IF (associated(Qtransfo%name_Qin) .AND. associated(Qtransfo%type_Qin)) THEN
+            write(out_unitp,*) '---------------------------------------'
+            DO i_Q=1,Qtransfo%nb_Qin
+              write(out_unitp,*) 'i_Q,name_Qin,type_Qin',i_Q," ",         &
+                     trim(Qtransfo%name_Qin(i_Q)),                        &
+                     Qtransfo%type_Qin(i_Q)
+            END DO
+          ELSE
+            write(out_unitp,*) 'asso name_Qin and type_Qin',              &
+             associated(Qtransfo%name_Qin),associated(Qtransfo%type_Qin)
+          END IF
+          write(out_unitp,*) '---------------------------------------'
+        ENDIF ! for MPI_id==0
 
         name_transfo = Qtransfo%name_transfo
         CALL string_uppercase_TO_lowercase(name_transfo)
@@ -1453,10 +1459,11 @@
           write(out_unitp,*) ' Check the source!'
           STOP
         END SELECT
-        write(out_unitp,*) 'END ',name_sub
+        IF(MPI_id==0) write(out_unitp,*) 'END ',name_sub
 
         CALL flush_perso(out_unitp)
       END SUBROUTINE Write_Qtransfo
+!===============================================================================
 
       SUBROUTINE sub_Type_Name_OF_Qin(Qtransfo,name_coord)
         IMPLICIT NONE

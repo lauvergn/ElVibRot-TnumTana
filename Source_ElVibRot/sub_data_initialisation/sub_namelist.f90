@@ -90,15 +90,14 @@
 
 
 !------- read the inactive namelist ----------------------------
-!       logical, parameter :: debug=.TRUE.
-       logical, parameter :: debug=.FALSE.
-       character (len=*), parameter :: name_sub='read_inactive'
+!      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      character (len=*), parameter :: name_sub='read_inactive'
 !      -----------------------------------------------------------------
-      write(out_unitp,*) ' INACTIVES PARAMETERS'
+      IF(MPI_id==0) write(out_unitp,*) 'INACTIVES PARAMETERS'
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
       END IF
-
 
       ! get nb_inact21 from mole%nb_inact2n or mole%RPHTransfo%nb_inact21
       IF (associated(mole%RPHTransfo)) THEN
@@ -167,29 +166,29 @@
         write(6,*) 'max_excit',max_excit
         write(6,*) 'tab_nb(:)',tab_nb(1:nb_inact21)
 
-       nDinit(:) = 0
-       CALL alloc_array(Basis2n%nDindB,'Basis2n%nDindB',name_sub)
-       IF (isort == 1) THEN ! sort with energy
-         CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
-             tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
-                     MaxNorm=convRWU_TO_R(max_ene_h),type_OF_nDindex=0, &
+        nDinit(:) = 0
+        CALL alloc_array(Basis2n%nDindB,'Basis2n%nDindB',name_sub)
+        IF (isort == 1) THEN ! sort with energy
+          CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
+              tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
+                      MaxNorm=convRWU_TO_R(max_ene_h),type_OF_nDindex=0, &
                                    With_nDindex=.FALSE.)
-       ELSE IF (isort == 2) THEN ! sort with excitation
-         CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
-             tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
-                                      Lmax=max_excit,type_OF_nDindex=0, &
-                                      With_nDindex=.FALSE.)
-       ELSE
-         write(out_unitp,*) ' ERROR in ',name_sub
-         write(out_unitp,*) '   the isort value ',isort,' cannot be used.'
-         write(out_unitp,*) '   check your data!!'
-         STOP
-       END IF
-       !CALL Write_nDindex(Basis2n%nDindB)
+        ELSE IF (isort == 2) THEN ! sort with excitation
+          CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
+              tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
+                                       Lmax=max_excit,type_OF_nDindex=0, &
+                                       With_nDindex=.FALSE.)
+        ELSE
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) '   the isort value ',isort,' cannot be used.'
+          write(out_unitp,*) '   check your data!!'
+          STOP
+        END IF
+        !CALL Write_nDindex(Basis2n%nDindB)
 
-       CALL init_nDindexPrim(Basis2n%nDindG,nb_inact21,                 &
-             tab_nq(1:nb_inact21),type_OF_nDindex=0,With_nDindex=.FALSE.)
-       CALL Write_nDindex(Basis2n%nDindG)
+        CALL init_nDindexPrim(Basis2n%nDindG,nb_inact21,                 &
+              tab_nq(1:nb_inact21),type_OF_nDindex=0,With_nDindex=.FALSE.)
+        CALL Write_nDindex(Basis2n%nDindG)
 
         ComOp%ADA               = ADA
         ComOp%contrac_ba_ON_HAC = contrac_ba_ON_HAC
@@ -278,6 +277,7 @@
       USE mod_Op
       USE mod_basis
       USE mod_Auto_Basis
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -318,7 +318,6 @@
       integer       :: ib,ind_b(mole%nb_act1+1)
       integer       :: i,j,k,i_term,nb_bi
 
-
 !-------variables for the file names -------------------------------------
        character (len=Line_len) :: name_HADA
        logical                  :: formatted_HADA
@@ -340,8 +339,7 @@
 
 
 !------- test on max_HADA and n_h ---------------------------------
-      write(out_unitp,*) ' ACTIVES PARAMETERS'
-
+      IF(MPI_id==0) write(out_unitp,*) ' ACTIVES PARAMETERS'
 
       IF (print_level > 0) write(out_unitp,*) 'BEGINNING read_active'
       IF (print_level > 0) write(out_unitp,*) 'nb_act1',mole%nb_act1
@@ -532,7 +530,7 @@
       para_ReadOp%T_only          = T_only
 
       para_ReadOp%Op_Transfo      = Op_Transfo
-      write(out_unitp,*) 'para_ReadOp%Op_Transfo',para_ReadOp%Op_Transfo
+      IF(MPI_id==0) write(out_unitp,*) 'para_ReadOp%Op_Transfo',para_ReadOp%Op_Transfo
       IF (Op_Transfo) THEN
         !write(out_unitp,*) 'E0_Transfo',E0_Transfo
 
@@ -551,6 +549,6 @@
       ELSE
         para_ReadOp%nb_bRot         = 1
       END IF
-      write(out_unitp,*) 'The number of rotational basis is:',para_ReadOp%nb_bRot
+      IF(MPI_id==0) write(out_unitp,*) 'The number of rotational basis is:',para_ReadOp%nb_bRot
 
       END SUBROUTINE read_active

@@ -45,7 +45,7 @@ IMPLICIT NONE
     integer                      :: Num_OF_Lmax   = 0 ! use normal L_SparseGrid
 
     integer                      :: nb0   = 0 ! to deal with several electronic PES, rotational basis, or channels (HAC)
-    integer                      :: nb_SG = 0
+    integer                      :: nb_SG = 0 ! numer of terms
     TYPE (Type_nDindex)          :: nDind_SmolyakRep  ! multidimensional index smolyak grids
 
     TYPE (Type_nDindex), allocatable :: nDind_DPG(:)    ! multidimensional DP index (nb_SG)
@@ -286,8 +286,8 @@ END SUBROUTINE SGType2_2TOSGType2_1
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Set_nDval_init_FOR_SG4'
-      !logical,parameter :: debug=.FALSE.
-      logical,parameter :: debug=.TRUE.
+      logical,parameter :: debug=.FALSE.
+      !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -296,6 +296,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
       END IF
 !-----------------------------------------------------------
 
+  !this line is fine for both openMP and MPI
   IF (SG4_omp == 0) THEN
     nb_threads = 1
   ELSE
@@ -304,7 +305,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
       ndim        = SGType2%nDind_SmolyakRep%ndim
 
-
+      ! version 1 currently
       SELECT CASE (version)
 
       CASE (0)
@@ -314,6 +315,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
         DO
           write(out_unitp,*) ' nb_threads',nb_threads
+          ! nDval_init setup
           CALL Set_nDval_init_FOR_SG4_v1(SGType2,nb_threads,err_sub)
 
           IF (err_sub /= 0) THEN
@@ -572,8 +574,8 @@ END SUBROUTINE SGType2_2TOSGType2_1
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Set_nDval_init_FOR_SG4_v2'
-      !logical,parameter :: debug=.FALSE.
-      logical,parameter :: debug=.TRUE.
+      logical,parameter :: debug=.FALSE.
+      !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -662,8 +664,6 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
       TYPE (Type_nDindex),             intent(in)    :: nDind_SmolyakRep
       real (kind=Rkind),               intent(inout) :: WeightSG(nDind_SmolyakRep%Max_nDI)
-
-
 
 !---------------------------------------------------------------------
       real (kind=Rkind) :: binomial ! function
