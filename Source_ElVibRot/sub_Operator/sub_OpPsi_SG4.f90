@@ -673,7 +673,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                                            tabR_AT_iG_TO_tabPackedBasis, &
 #if(run_MPI)
                                            TypeRVec,dealloc_TypeRVec,    &
-                                           PackedBasis_TO_tabR_index,    &
+                                           PackedBasis_TO_tabR_index_MPI,&
                                            tabR_TO_tabPackedBasis_MPI,   &
                                            tabPackedBasis_TO_tabR_MPI
 #else
@@ -686,9 +686,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_psi_set_alloc,            ONLY : param_psi,ecri_psi
   USE mod_SetOp,                    ONLY : param_Op,write_param_Op
   USE mod_MPI
-#if(run_MPI)
   USE mod_MPI_Aid
-#endif
   IMPLICIT NONE
 
   TYPE (param_psi), intent(in)      :: Psi(:)
@@ -699,33 +697,36 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   TYPE (zmatrix), pointer :: mole
   TYPE (basis),   pointer :: BasisnD
 
-  TYPE (TypeRVec),   allocatable    :: PsiR(:)
+  TYPE (TypeRVec),   allocatable       :: PsiR(:)
   
   Real (kind=Rkind), allocatable       :: PsiR_temp(:) 
   Real (kind=Rkind), allocatable       :: all_RvecB_temp(:)
   Real (kind=Rkind), allocatable       :: all_RvecB_temp2(:)
-#if(run_MPI)
-  TYPE (multi_array4),save,allocatable :: nDI_index_master(:)
-#endif
+!#if(run_MPI)
+!  TYPE (multi_array4),save,allocatable :: nDI_index_master(:)
+!#endif
   integer                              :: ib,i,iG,iiG,nb_thread
   integer                              :: itab,ith,iterm00,packet_size,OpPsi_symab
   integer, allocatable                 :: tab_l(:)
   logical                              :: not_init
 
 #if(run_MPI)
-  integer                              :: iG_MPI,ii  
-  integer                              :: PsiR_V_iG_size
-  integer(kind=MPI_INTEGER_KIND),save  :: Psi_size_MPI0
-  integer                              :: PsiR_temp_count
-  integer                              :: PsiR_temp_count2
-  integer                              :: PsiR_temp_count_iG
-  integer(kind=MPI_INTEGER_KIND)       :: PsiR_temp_length(0:MPI_np-1)
-  integer(kind=MPI_INTEGER_KIND),save,allocatable :: total_Vlength_master(:)
-  integer*4,save,allocatable           :: nDI_index(:)
-  integer*4,save,allocatable           :: nDI_index_list(:)
-  integer,save                         :: Max_nDI_ib0
-  integer(kind=MPI_INTEGER_KIND),save  :: total_Vlength
-  integer(kind=MPI_INTEGER_KIND),save,allocatable :: size_PsiR_V(:) 
+  integer                                :: iG_MPI,ii  
+  integer                                :: PsiR_V_iG_size
+  integer                                :: PsiR_temp_count
+  integer                                :: PsiR_temp_count2
+  integer                                :: PsiR_temp_count_iG
+  integer(kind=MPI_INTEGER_KIND)         :: PsiR_temp_length(0:MPI_np-1)
+
+  integer(kind=MPI_INTEGER_KIND),pointer :: size_PsiR_V(:) 
+  integer(kind=MPI_INTEGER_KIND),pointer :: reduce_Vlength_master(:)
+  integer(kind=MPI_INTEGER_KIND),pointer :: Psi_size_MPI0
+  integer(kind=MPI_INTEGER_KIND),pointer :: reduce_Vlength
+  integer,pointer                        :: Max_nDI_ib0
+  integer,pointer                        :: V_allcount
+  integer,pointer                        :: V_allcount2
+!  integer*4,save,allocatable           :: nDI_index(:)
+!  integer*4,save,allocatable           :: nDI_index_list(:)
 #endif
 
   !----- for debuging ----------------------------------------------
@@ -781,45 +782,54 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   ! MPI version 3.3
 #if(run_MPI)  
   IF(openmpi) THEN 
+    Psi_size_MPI0  => BasisnD%para_SGType2%Psi_size_MPI0  
+    Max_nDI_ib0    => BasisnD%para_SGType2%Max_nDI_ib0
+    reduce_Vlength => BasisnD%para_SGType2%reduce_Vlength
+    V_allcount     => BasisnD%para_SGType2%V_allcount
+    V_allcount2    => BasisnD%para_SGType2%V_allcount2
 
     CALL system_clock(time_point1,time_rate)
     IF(once_control) CALL time_perso('MPI loop in action begin')
-    ! simple parallel case, equally devided for different threads
+    ! jobs equally assigned to different threads
+    ! the remainder jobs are assigned to each thread from 0
     nb_per_MPI=BasisnD%para_SGType2%nb_SG/MPI_np
     !If(mod(BasisnD%para_SGType2%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
-    nb_rem_MPI=mod(BasisnD%para_SGType2%nb_SG,MPI_np)
+    nb_rem_MPI=mod(BasisnD%para_SGType2%nb_SG,MPI_np) !remainder jobs 
     
     IF(once_control) THEN
-      allocate(size_PsiR_V(0:MPI_np-1))
+      allocate(BasisnD%para_SGType2%size_PsiR_V(0:MPI_np-1))
       !size of %V for each thread
       Do i_mpi=0,MPI_np-1
-        size_PsiR_V(i_mpi)=0;
+        BasisnD%para_SGType2%size_PsiR_V(i_mpi)=0;
         !DO iG=i_mpi*nb_per_MPI+1,MIN((i_mpi+1)*nb_per_MPI,BasisnD%para_SGType2%nb_SG)
         DO iG=i_mpi*nb_per_MPI+1+MIN(i_mpi,nb_rem_MPI),                                &
            (i_mpi+1)*nb_per_MPI+ MIN(i_mpi,nb_rem_MPI)+merge(1,0,nb_rem_MPI>i_mpi)
           temp_int=BasisnD%para_SGType2%tab_nb_OF_SRep(iG)*BasisnD%para_SGType2%nb0
-          size_PsiR_V(i_mpi)=size_PsiR_V(i_mpi)+temp_int
+          BasisnD%para_SGType2%size_PsiR_V(i_mpi)=BasisnD%para_SGType2                 &
+                                                         %size_PsiR_V(i_mpi)+temp_int
         ENDDO
       ENDDO
-      write(*,*) 'size_PsiR_V:',size_PsiR_V(MPI_id),'from',MPI_id
+      write(*,*) 'size_PsiR_V:',BasisnD%para_SGType2%size_PsiR_V(MPI_id),'from',MPI_id
     ENDIF
-    ! case works better for propagation or cores > 10
-    !-----------------------------------------------------------------------------------
+    size_PsiR_V=>BasisnD%para_SGType2%size_PsiR_V
 
+    If(MPI_id==0) Psi_size_MPI0=INT(size(Psi),MPI_INTEGER_KIND) ! for itab
+    CALL MPI_BCAST(Psi_size_MPI0,size1_MPI,MPI_int,root_MPI,MPI_COMM_WORLD,MPI_err)
+
+    !-----------------------------------------------------------------------------------  
+    ! MPI TYPE 1 in action: case for long propagation or a lot of cores, need improvement
+    !-----------------------------------------------------------------------------------    
     !IF((if_propa .AND. MPI_np>10) .OR. MPI_np>50) THEN 
     IF(size_PsiR_V(0)<1000000) THEN  !< according to the a few effeiciency test
       ! calculate total length of vectors for each threads------------------------------
-      IF(once_control .AND. MPI_id==0) write(*,*) 'MPI TYPE 1 in action'
       IF(once_control .AND. MPI_id==0) THEN
-        allocate(nDI_index_master(0:MPI_np-1))
-        allocate(total_Vlength_master(0:MPI_np-1))
+        write(*,*) 'MPI TYPE 1 in action'
+        allocate(BasisnD%para_SGType2%nDI_index_master(0:MPI_np-1))
+        allocate(BasisnD%para_SGType2%reduce_Vlength_master(0:MPI_np-1))
       ENDIF
+      reduce_Vlength_master=>BasisnD%para_SGType2%reduce_Vlength_master
 
-      If(MPI_id==0) THEN
-        Psi_size_MPI0=INT(size(Psi),MPI_INTEGER_KIND) ! for itab
-        Max_nDI_ib0=size(psi(1)%RvecB)/BasisnD%para_SGType2%nb0
-      ENDIF
-      CALL MPI_BCAST(Psi_size_MPI0,size1_MPI,MPI_int,root_MPI,MPI_COMM_WORLD,MPI_err)
+      If(MPI_id==0) Max_nDI_ib0=size(psi(1)%RvecB)/BasisnD%para_SGType2%nb0
       CALL MPI_BCAST(Max_nDI_ib0,size1_MPI,MPI_int_fortran,root_MPI,                   &
                      MPI_COMM_WORLD,MPI_err)
            
@@ -828,42 +838,42 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       allocate(PsiR(Psi_size_MPI0))
       ! works on the other threads
       !---------------------------------------------------------------------------------
-      ! all information for total_Vlength_MPI is keeped on master
+      ! all information for reduce_Vlength_MPI is keeped on master
       ! each thread keep its own    
       IF(MPI_id/=0) THEN
         !-generate index,  once only----------------------------------------------------
         IF(once_control) THEN
-          num_nDI_index=size_PsiR_V(MPI_id)/10 ! initial size
-          total_Vlength=0
-          allcount=0
-          CALL allocate_array(nDI_index,num_nDI_index)
-          CALL allocate_array(nDI_index_list,size_PsiR_V(MPI_id))
-          !DO iG=MPI_id*nb_per_MPI+1,                                                   &
+          BasisnD%para_SGType2%num_nDI_index=size_PsiR_V(MPI_id)/10 ! initial size
+          reduce_Vlength=0
+          V_allcount=0
+          CALL allocate_array(BasisnD%para_SGType2%nDI_index,BasisnD%para_SGType2%num_nDI_index)
+          CALL allocate_array(BasisnD%para_SGType2%nDI_index_list,size_PsiR_V(MPI_id))
+          !DO iG=MPI_id*nb_per_MPI+1,                                                  &
           !      MIN((MPI_id+1)*nb_per_MPI,BasisnD%para_SGType2%nb_SG) 
           DO iG=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI),                            &
                (MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
           
             ! note size(psi(i)%RvecB) same for all i 
-            CALL PackedBasis_TO_tabR_index(iG,BasisnD%para_SGType2,                    &
-                                     total_Vlength,nDI_index,Max_nDI_ib0,nDI_index_list)
+            CALL PackedBasis_TO_tabR_index_MPI(iG,BasisnD%para_SGType2,                &
+    reduce_Vlength,BasisnD%para_SGType2%nDI_index,Max_nDI_ib0,BasisnD%para_SGType2%nDI_index_list)
           ENDDO
-          CALL MPI_Send(total_Vlength,size1_MPI,MPI_int,root_MPI,MPI_id,               &
+          CALL MPI_Send(reduce_Vlength,size1_MPI,MPI_int,root_MPI,MPI_id,               &
                         MPI_COMM_WORLD,MPI_err)
-          CALL MPI_Send(nDI_index(1:total_Vlength),total_Vlength,MPI_integer4,root_MPI,&    
-                                  MPI_id,MPI_COMM_WORLD,MPI_err)
-          write(*,*) 'allcount check',allcount,size_PsiR_V(MPI_id),total_Vlength,      &
+          CALL MPI_Send(BasisnD%para_SGType2%nDI_index(1:reduce_Vlength),reduce_Vlength, &
+                        MPI_integer4,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_err)
+          write(*,*) 'V_allcount check',V_allcount,size_PsiR_V(MPI_id),reduce_Vlength,      &
                      ' from ',MPI_id
         ENDIF
         
         !-wait for master---------------------------------------------------------------
-        CALL allocate_array(all_RvecB_temp,total_Vlength*Psi_size_MPI0)
-        CALL allocate_array(all_RvecB_temp2,total_Vlength*Psi_size_MPI0)
-        Call MPI_Recv(all_RvecB_temp,total_Vlength*Psi_size_MPI0,MPI_REAL8,root_MPI,   &
+        CALL allocate_array(all_RvecB_temp,reduce_Vlength*Psi_size_MPI0)
+        CALL allocate_array(all_RvecB_temp2,reduce_Vlength*Psi_size_MPI0)
+        Call MPI_Recv(all_RvecB_temp,reduce_Vlength*Psi_size_MPI0,MPI_REAL8,root_MPI,   &
                       MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
          
         !-calculation on threads--------------------------------------------------------
-        allcount=0
-        allcount2=0   
+        V_allcount=0
+        V_allcount2=0   
         !DO iG=MPI_id*nb_per_MPI+1,                                                     &
         !      MIN((MPI_id+1)*nb_per_MPI,BasisnD%para_SGType2%nb_SG)    
         DO iG=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI),                              &
@@ -871,7 +881,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
           ! all_RvecB_temp --> PsiR
           CALL tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,BasisnD%para_SGType2, &
-                       nDI_index,total_Vlength,Psi_size_MPI0,Max_nDI_ib0,nDI_index_list)
+                 BasisnD%para_SGType2%nDI_index,reduce_Vlength,Psi_size_MPI0,Max_nDI_ib0,BasisnD%para_SGType2%nDI_index_list)
                          
           !-main calculation------------------------------------------------------------
           CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,                              &
@@ -879,16 +889,17 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
           !-pack PsiR in the slave threads----------------------------------------------
           CALL tabR_TO_tabPackedBasis_MPI(all_RvecB_temp2,PsiR,iG,                     &
                                           BasisnD%para_SGType2,BasisnD%WeightSG(iG),   &
-                                          nDI_index,total_Vlength,Psi_size_MPI0,       &
-                                          Max_nDI_ib0,nDI_index_list)
+                                          BasisnD%para_SGType2%nDI_index,reduce_Vlength,Psi_size_MPI0,       &
+                                          Max_nDI_ib0,BasisnD%para_SGType2%nDI_index_list)
         ENDDO 
         
         !-send packed PsiR to master----------------------------------------------------
         !> check length of integer
-        IF(total_Vlength*Psi_size_MPI0>2147483647 .AND. MPI_INTEGER_KIND==4) THEN
+        IF(Int(reduce_Vlength,8)*Int(Psi_size_MPI0,8)>2147483647                        &
+           .AND. MPI_INTEGER_KIND==4) THEN
           STOP 'integer exceed 32-bit MPI, use 64-bit MPI instead'
         ENDIF
-        CALL MPI_Send(all_RvecB_temp2,total_Vlength*Psi_size_MPI0,MPI_REAL8,root_MPI,  &
+        CALL MPI_Send(all_RvecB_temp2,reduce_Vlength*Psi_size_MPI0,MPI_REAL8,root_MPI,  &
                       MPI_id,MPI_COMM_WORLD,MPI_err)
                      
       ENDIF ! for MPI_id/=0  
@@ -902,28 +913,33 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
           !-wait for other threads------------------------------------------------------
           CALL system_clock(time_temp1,time_rate)
           IF(once_control) THEN
-            CALL MPI_Recv(total_Vlength,size1_MPI,MPI_int,i_mpi,i_mpi,                 &
+            CALL MPI_Recv(reduce_Vlength,size1_MPI,MPI_int,i_mpi,i_mpi,                 &
                           MPI_COMM_WORLD,MPI_stat,MPI_err)
-            total_Vlength_master(i_mpi)=total_Vlength
-            allocate(nDI_index_master(i_mpi)%array(total_Vlength))
-            CALL MPI_Recv(nDI_index_master(i_mpi)%array,total_Vlength,MPI_integer4,    &
-                          i_mpi,i_mpi,MPI_COMM_WORLD,MPI_stat,MPI_err)
-            write(*,*) 'length of comm list:',total_Vlength_master(i_mpi),'from',i_mpi
+            reduce_Vlength_master(i_mpi)=reduce_Vlength
+            allocate(BasisnD%para_SGType2%nDI_index_master(i_mpi)%array(reduce_Vlength))
+            CALL MPI_Recv(BasisnD%para_SGType2%nDI_index_master(i_mpi)%array,          &
+                          reduce_Vlength,MPI_integer4,i_mpi,i_mpi,                      &
+                          MPI_COMM_WORLD,MPI_stat,MPI_err)
+            write(*,*) 'length of comm list:',                                         &
+                        reduce_Vlength_master(i_mpi),'from',i_mpi
           ENDIF ! for once_control
           CALL system_clock(time_temp2,time_rate)
           time_comm=time_comm+time_temp2-time_temp1
 
           ! pack vectores to send
-          CALL allocate_array(all_RvecB_temp,total_Vlength_master(i_mpi)*Psi_size_MPI0)
+          CALL allocate_array(all_RvecB_temp,                                          &
+                         reduce_Vlength_master(i_mpi)*Psi_size_MPI0)
           DO itab=1,Psi_size_MPI0
-            DO ii=1,total_Vlength_master(i_mpi)
-              temp_int=(itab-1)*total_Vlength_master(i_mpi)+ii
-              all_RvecB_temp(temp_int)=psi(itab)%RvecB(nDI_index_master(i_mpi)%array(ii))
+            DO ii=1,reduce_Vlength_master(i_mpi)
+              temp_int=(itab-1)*reduce_Vlength_master(i_mpi)+ii
+              all_RvecB_temp(temp_int)=psi(itab)%RvecB(                                &
+                                 BasisnD%para_SGType2%nDI_index_master(i_mpi)%array(ii))
             ENDDO
           ENDDO
 
           CALL system_clock(time_temp1,time_rate)
-          CALL MPI_Send(all_RvecB_temp,total_Vlength_master(i_mpi)*Psi_size_MPI0,      &
+          CALL MPI_Send(all_RvecB_temp,Psi_size_MPI0                                   &
+                        *reduce_Vlength_master(i_mpi),             &
                         MPI_REAL8,i_mpi,i_mpi,MPI_COMM_WORLD,MPI_err)
           CALL system_clock(time_temp2,time_rate)
           time_comm=time_comm+time_temp2-time_temp1
@@ -954,19 +970,22 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
         !-receive results from slave threads--------------------------------------------
         Do i_mpi=1,MPI_np-1
-          CALL allocate_array(all_RvecB_temp,total_Vlength_master(i_mpi)*Psi_size_MPI0)
+          CALL allocate_array(all_RvecB_temp,Psi_size_MPI0                             &
+                              *reduce_Vlength_master(i_mpi))
           CALL system_clock(time_temp1,time_rate)
-          CALL MPI_Recv(all_RvecB_temp,total_Vlength_master(i_mpi)*Psi_size_MPI0,      &
+          CALL MPI_Recv(all_RvecB_temp,Psi_size_MPI0                                   &
+                        *reduce_Vlength_master(i_mpi),             &
                         MPI_REAL8,i_mpi,i_mpi,MPI_COMM_WORLD,MPI_stat,MPI_err)
           CALL system_clock(time_temp2,time_rate)
           time_comm=time_comm+time_temp2-time_temp1
           
           !-extract results from other threads------------------------------------------
           DO itab=1,Psi_size_MPI0
-            Do ii=1,total_Vlength_master(i_mpi)             
-              temp_int=nDI_index_master(i_mpi)%array(ii)
+            Do ii=1,reduce_Vlength_master(i_mpi)             
+              temp_int=BasisnD%para_SGType2%nDI_index_master(i_mpi)%array(ii)
               OpPsi(itab)%RvecB(temp_int)=OpPsi(itab)%RvecB(temp_int)                  &
-                                +all_RvecB_temp((itab-1)*total_Vlength_master(i_mpi)+ii)
+                                   +all_RvecB_temp((itab-1)                            &
+                                   *reduce_Vlength_master(i_mpi)+ii)
             ENDDO 
           ENDDO
         ENDDO ! for i_mpi=1,MPI_np-1
@@ -981,11 +1000,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       !---------------------------------------------------------------------------------  
     ELSE
       !---------------------------------------------------------------------------------  
-      ! case for less cores in Davidson or arpark calculation      
+      ! MPI TYPE 2 in action: case for less cores in Davidson or arpark calculation      
       !--------------------------------------------------------------------------------- 
       IF(once_control .AND. MPI_id==0) write(*,*) 'MPI TYPE 2 in action'
-      If(MPI_id==0) Psi_size_MPI0=size(Psi) ! for itab
-      CALL MPI_BCAST(Psi_size_MPI0,size1_MPI,MPI_int,root_MPI,MPI_COMM_WORLD,MPI_err)
       IF(allocated(PsiR)) deallocate(PsiR)
       allocate(PsiR(Psi_size_MPI0))
       !---------------------------------------------------------------------------------
@@ -996,9 +1013,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
           allocate(PsiR_temp(Psi_size_MPI0*size_PsiR_V(i_mpi)))
           !CALL allocate_array(PsiR_temp,Psi_size_MPI0*size_PsiR_V(i_mpi))
           PsiR_temp_count=0
-          !DO iG_MPI=i_mpi*nb_per_MPI+1,                                                &
+          !DO iG_MPI=i_mpi*nb_per_MPI+1,                                               &
           !          MIN((i_mpi+1)*nb_per_MPI,BasisnD%para_SGType2%nb_SG)
-          DO iG_MPI=i_mpi*nb_per_MPI+1+MIN(i_mpi,nb_rem_MPI),                              &
+          DO iG_MPI=i_mpi*nb_per_MPI+1+MIN(i_mpi,nb_rem_MPI),                          &
              (i_mpi+1)*nb_per_MPI+MIN(i_mpi,nb_rem_MPI)+merge(1,0,nb_rem_MPI>i_mpi)
 
             DO itab=1,Psi_size_MPI0
@@ -1012,13 +1029,15 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
           PsiR_temp_length(i_mpi)=PsiR_temp_count
           
           ! double check
-          IF(Abs(Psi_size_MPI0*size_PsiR_V(i_mpi)-PsiR_temp_length(i_mpi))>0) THEN
+          IF(Abs(Psi_size_MPI0*size_PsiR_V(i_mpi)                 &
+             -PsiR_temp_length(i_mpi))>0) THEN
             write(*,*) 'error in MPI action part,check length'
             STOP
           ENDIF
                   
           CALL system_clock(time_temp1,time_rate)
-          CALL MPI_Send(PsiR_temp,Psi_size_MPI0*size_PsiR_V(i_mpi),MPI_REAL8,i_mpi,    &
+          CALL MPI_Send(PsiR_temp,Psi_size_MPI0                                        &
+                        *size_PsiR_V(i_mpi),MPI_REAL8,i_mpi,      &
                         i_mpi,MPI_COMM_WORLD,MPI_err)
           CALL system_clock(time_temp2,time_rate)
           time_comm=time_comm+time_temp2-time_temp1
@@ -1047,6 +1066,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
             CALL tabR_AT_iG_TO_tabPackedBasis(OpPsi(itab)%RvecB,PsiR(itab)%V,          &
                                            iG,BasisnD%para_SGType2,BasisnD%WeightSG(iG))
           ENDDO
+!write(*,*) 'MPI check024',iG,PsiR(1)%V
+!write(*,*) 'MPI check0240',BasisnD%WeightSG(iG)
+!write(*,*) 'MPI check025',iG,OpPsi(1)%RvecB
         ENDDO ! main loop of iG for calcuation on master
 
         !-receive results from other threads--------------------------------------------
@@ -1055,7 +1077,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
           If(allocated(PsiR_temp)) deallocate(PsiR_temp)
           allocate(PsiR_temp(Psi_size_MPI0*size_PsiR_V(i_mpi)))
           !CALL allocate_array(PsiR_temp,Psi_size_MPI0*size_PsiR_V(i_mpi))
-          CALL MPI_Recv(PsiR_temp,Psi_size_MPI0*size_PsiR_V(i_mpi),MPI_REAL8,i_mpi,    &
+          CALL MPI_Recv(PsiR_temp,Psi_size_MPI0                                        &
+                        *size_PsiR_V(i_mpi),MPI_REAL8,i_mpi,      &
                         i_mpi,MPI_COMM_WORLD,MPI_stat,MPI_err)
           CALL system_clock(time_temp2,time_rate)
           time_comm=time_comm+time_temp2-time_temp1
@@ -1084,7 +1107,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       IF(MPI_id/=0) THEN
         allocate(PsiR_temp(Psi_size_MPI0*size_PsiR_V(MPI_id)))
         ! waiting for master, get PsiR(itab)%V
-        CALL MPI_Recv(PsiR_temp,Psi_size_MPI0*size_PsiR_V(MPI_id),MPI_REAL8,root_MPI,  &
+        CALL MPI_Recv(PsiR_temp,Psi_size_MPI0                                          &
+                      *size_PsiR_V(MPI_id),MPI_REAL8,root_MPI,    &
                       MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
                                 
         !-loop for main calculation-----------------------------------------------------
@@ -1121,7 +1145,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         ENDDO ! for iG
         
         !-send back PsiR(itab)%V--------------------------------------------------------
-        CALL MPI_Send(PsiR_temp,Psi_size_MPI0*size_PsiR_V(MPI_id),MPI_REAL8,           &
+        CALL MPI_Send(PsiR_temp,Psi_size_MPI0                                          &
+                      *size_PsiR_V(MPI_id),MPI_REAL8,             &
                       root_MPI,MPI_id,MPI_COMM_WORLD,MPI_err)
       ENDIF ! for MPI_id/=0
       !---------------------------------------------------------------------------------

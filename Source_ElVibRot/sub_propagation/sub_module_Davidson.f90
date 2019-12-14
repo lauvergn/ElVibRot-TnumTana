@@ -288,11 +288,11 @@ CONTAINS
           IF (debug) CALL Write_Mat(H,out_unitp,5)
 
           IF (non_hermitic > FOUR*ONETENTH**4) THEN
-            If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
-            If(MPI_id==0) write(out_unitp,31) non_hermitic
+            write(out_unitp,*) 'WARNING: non_hermitic is BIG'
+            write(out_unitp,31) non_hermitic
 31          format(' Hamiltonien: ',f16.12,' au')
           ELSE
-            If(MPI_id==0) write(out_unitp,51) non_hermitic*auTOcm_inv
+            write(out_unitp,51) non_hermitic*auTOcm_inv
 51          format(' Hamiltonien: ',f16.12,' cm-1')
           END IF
         ENDIF ! for MPI_id==0
@@ -1032,6 +1032,7 @@ CONTAINS
  DO j=ndim0+1,ndim
    CALL Overlap_psi1_psi2(Overlap,psi(j),Hpsi(i),With_Grid=para_Davidson%With_Grid)
    H(j,i) = real(Overlap,kind=Rkind)
+   !write(*,*) 'H check1',H(j,i)
  END DO
  END DO
 
@@ -1041,6 +1042,7 @@ CONTAINS
    CALL Overlap_psi1_psi2(Overlap,psi(j),Hpsi(i),With_Grid=para_Davidson%With_Grid)
    !write(out_unitp,*) 'H,i,j',i,j,Overlap
    H(j,i) = real(Overlap,kind=Rkind)
+   !write(*,*) 'H check2',H(j,i)
  END DO
  END DO
 
@@ -1497,12 +1499,13 @@ END SUBROUTINE sub_NewVec_Davidson
 !     Sort Davidson
 !=======================================================================================
  SUBROUTINE sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,min_Ene,min_pot,   &
-                                psi,psi0,Vec,Vec0,para_Davidson,it,     &
+                                psi,psi0,Vec,Vec0,para_Davidson,it,             &
                                 print_project)
  USE mod_system
  USE mod_psi_set_alloc
  USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
  USE mod_propa,          ONLY : param_Davidson
+ USE mod_MPI
  IMPLICIT NONE
 
  TYPE (param_Davidson) :: para_Davidson
@@ -1599,7 +1602,7 @@ END SUBROUTINE sub_NewVec_Davidson
        VecToBeIncluded(i) =(Ene(i) >= min_Ene .AND. count(VecToBeIncluded) < nb_diago )
      END DO
      IF (count(VecToBeIncluded) /= nb_diago) THEN
-       write(out_unitp,*) ' ERROR in ',name_sub
+       write(out_unitp,*) ' ERROR in ',name_sub,' from ', MPI_id
        write(out_unitp,*) 'nb_diago ',nb_diago
        write(out_unitp,*) 'VecToBeIncluded ',VecToBeIncluded
        write(out_unitp,*) 'Ene(:) ',Ene

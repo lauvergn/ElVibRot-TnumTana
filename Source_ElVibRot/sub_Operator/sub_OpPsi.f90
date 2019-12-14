@@ -250,6 +250,7 @@ CONTAINS
       USE mod_psi_B_TO_G,      ONLY : sub_PsiGridRep_TO_BasisRep
       USE mod_SymAbelian,      ONLY : Calc_symab1_EOR_symab2
       USE mod_psi_Op,          ONLY : Set_symab_OF_psiBasisRep
+      USE mod_MPI
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -541,6 +542,7 @@ CONTAINS
       USE mod_system
       USE mod_SetOp,              ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
+      USE mod_MPI
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -665,7 +667,7 @@ CONTAINS
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
       !-----------------------------------------------------------------
-      size_TabPsi=size(TabPsi) 
+      If(MPI_id==0) size_TabPsi=size(TabPsi) 
 #if(run_MPI)
       CALL MPI_BCAST(size_TabPsi,size1_MPI,MPI_int,root_MPI,MPI_COMM_WORLD,MPI_err)
 #endif
@@ -711,7 +713,7 @@ CONTAINS
 
       !IF (SGtype4 .AND. direct_KEO) THEN
 
-    IF (SGtype4) THEN
+      IF (SGtype4) THEN
         !write(6,*) 'coucou sub_TabOpPsi_FOR_SGtype4: ',para_Op%name_Op,' ',size(TabPsi)
         ! para_Op%BasisnD%SparseGrid_type=4
         CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)

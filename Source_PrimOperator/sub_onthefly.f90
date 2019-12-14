@@ -1066,7 +1066,8 @@ END IF
           DO  i=1,ncart_act
             DO  j=0,nbligne-1
               read(nio,41,iostat=err) idum,jdum,(dnECC%d2(i,j*5+k),k=1,5)
- 41           format (i2,i3,5E15.9)
+ 41           format (i2,i3,5E16.9)
+              !Recommended by ifort, W>=D+7, was 5E15.9
             END DO
             IF (nbreste > 0 ) THEN
               j = nbligne

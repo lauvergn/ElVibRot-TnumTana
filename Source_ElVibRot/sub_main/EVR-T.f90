@@ -72,6 +72,7 @@
       character (len=Name_longlen) :: RMatFormat
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
+      logical  :: namelist_from_file=.TRUE.
       
       ! parameters for system setup
       ! make sure to be prepared in file      
@@ -101,6 +102,7 @@
         Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
 #else 
         MPI_id=0
+        Popenmpi=.FALSE.
 #endif
  
         intensity_only     = .FALSE.
@@ -117,7 +119,11 @@
 
         maxth              = 1
         !$ maxth           = omp_get_max_threads()
-        Popenmp            = .FALSE.  !< True to run openMP
+#if(run_openMP)
+        Popenmp            = .True.   !< True to run openMP
+#else
+        Popenmp            = .FALSE. 
+#endif
         PMatOp_omp         = 0
         PMatOp_maxth       = maxth
         POpPsi_omp         = 0
@@ -146,15 +152,19 @@
           CALL time_perso('MPI start, initial time')
           write(out_unitp,*) ' Initiaize MPI with ', MPI_np, 'cores.'
           write(out_unitp,*)
+          write(*,*) 'Integer type of default Fortran Compiler:',sizeof(integer_MPI),  &
+                                                        ', MPI: ',MPI_INTEGER_KIND
+          write(out_unitp,*) 'NOTE: MPI version halfway. If get memory error, check if &
+                                    the variables are just allocated on master process.'
 #endif
         ENDIF
 
 
         !> read from parameter file created by shell script
-!#if(run_MPI)
-        open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
-        IF(err/=0) STOP 'error in opening file for namelist'
-!#endif
+        IF(namelist_from_file) THEN
+          open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
+          IF(err/=0) STOP 'error in opening file for namelist'
+        Endif
         read(in_unitp,system,IOSTAT=err)
         
         IF (err < 0) THEN
@@ -267,7 +277,7 @@
 
         END IF
 
-        IF(MPI_id==0) THEN
+        IF(MPI_id==0 .AND. .NOT. openmpi) THEN
           write(out_unitp,*) '========================================='
           write(out_unitp,*) 'OpenMP parameters:'
           write(out_unitp,*) 'Max number of threads:           ',maxth

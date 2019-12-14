@@ -1576,9 +1576,9 @@
 
 #if(run_MPI)
         w1  = psi
-        CALL sub_OpPsi(w1,w2,para_H)
-        write(*,*) 'para_propa%once_control_Hmin check',para_propa%once_control_Hmin
+        !write(*,*) 'para_propa%once_control_Hmin check',para_propa%once_control_Hmin
         IF(para_propa%once_control_Hmin) THEN
+          CALL sub_OpPsi(w1,w2,para_H) ! calculate once for Hmax
           CALL sub_Hmax(para_propa,para_H)
           para_propa%once_control_Hmin=.FALSE.
                 
@@ -1647,7 +1647,7 @@
 !     - The second term of the expansion -----------------
         write(out_unitp,'(a)',advance='no') 'cheby rec:'
         CALL sub_OpPsi(w1,w2,para_H)
-        CALL sub_scaledOpPsi(w1,w2,para_H%E0,para_H%Esc)
+        CALL sub_scaledOpPsi(w1,w2,para_H%E0,para_H%Esc) ! limited to MPI_id==0 in subroutine
 
         IF(MPI_id==0) THEN
           w2  = w2 * rt

@@ -290,7 +290,7 @@ CONTAINS
 
         CALL sub_OpV1_TO_V2_Arpack(workd(ipntr(1):ipntr(1)-1+n),                       &
                                    workd(ipntr(2):ipntr(2)-1+n),                       &
-                                   psi_loc,Hpsi_loc,para_H,cplxE,para_propa,int(n))
+                                   psi_loc,Hpsi_loc,para_H,cplxE,para_propa,int(n,4))
 
         IF(MPI_id==0) THEN
           write(iunit,*) 'Arpack <psi H psi>:',                                        &
@@ -418,7 +418,7 @@ CONTAINS
 !             %--------------------%
 
               CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,                    &
-                                         para_H,cplxE,para_propa,int(n))
+                                         para_H,cplxE,para_propa,int(n,4))
 
               call daxpy(n, -d(j,1), v(1,j), 1, ax, 1)
               d(j,3) = dnrm2(n, ax, 1)
@@ -439,7 +439,7 @@ CONTAINS
 
               !call av(nx, v(1,j), ax)
               CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,                    &
-                                         para_H,cplxE,para_propa,int(n))
+                                         para_H,cplxE,para_propa,int(n,4))
 
 #if __ARPACK == 1
               call daxpy(n, -d(j,1), v(1,j), 1, ax, 1)
@@ -461,7 +461,7 @@ CONTAINS
 
               !call av(nx, v(1,j+1), ax)
               CALL sub_OpV1_TO_V2_Arpack(v(:,j+1),ax,psi(j+1),Hpsi_loc,&
-                                        para_H,cplxE,para_propa,int(n))
+                                        para_H,cplxE,para_propa,int(n,4))
 
               Ene(j+1)          = d(j,1)
               psi(j+1)%CAvOp    = cmplx(d(j,1),-d(j,2),kind=Rkind)

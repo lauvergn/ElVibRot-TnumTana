@@ -136,8 +136,8 @@ CONTAINS
 
 !     - For the Hamiltonian (n_Op=0) -------------------------
       IF (para_Op%n_Op == 0 ) THEN
-        IF (print_level>-1 .AND. MPI_id==0)                                            &
-                            write(out_unitp,*) 'Hmin and Hmax',para_Op%Hmin,para_Op%Hmax
+        !IF (print_level>-1 .AND. MPI_id==0)                                            &
+        !                    write(out_unitp,*) 'Hmin and Hmax',para_Op%Hmin,para_Op%Hmax
         IF (para_Op%cplx) THEN
           CALL sub_hermitic_cplxH(para_Op%Cmat,para_Op%nb_tot,          &
                                   non_hermitic,para_Op%sym_Hamil)

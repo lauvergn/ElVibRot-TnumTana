@@ -55,9 +55,7 @@
       USE mod_ana_psi
       USE mod_psi_io
       USE mod_MPI
-#if(run_MPI)      
       USE mod_MPI_Aid
-#endif      
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
