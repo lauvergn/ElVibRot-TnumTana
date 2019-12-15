@@ -14,7 +14,7 @@ OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
-ifeq ($(F90),mpifort)  
+ifeq ($(F90),mpifort)
   OMP = 0
 endif
 #
@@ -296,15 +296,17 @@ LYNK90 = $(F90_FLAGS)
 #=================================================================================
 # Arpack library
 #=================================================================================
- ifeq ($(ARPACK),1)
-   # Arpack management with the OS
-   ifeq ($(OS),Darwin)    # OSX
-     ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
-   else                   # Linux
-     ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
-   endif
- else
-   ARPACKLIB = 
+ifeq ($(ARPACK),1)
+  # Arpack management with the OS
+  ifeq ($(OS),Darwin)    # OSX
+    #ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
+    ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
+  else                   # Linux
+    #ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
+    ARPACKLIB=/usr/lib64/libarpack.a
+  endif
+else
+  ARPACKLIB = 
 endif
 #=================================================================================
 #=================================================================================
@@ -547,7 +549,7 @@ Obj_main   =  $(OBJ)/vib.o $(OBJ)/versionEVR-T.o $(OBJ)/cart.o \
 Obj_module =  \
  $(OBJ)/sub_module_RotBasis.o $(OBJ)/sub_module_basis_Grid_Param.o $(OBJ)/sub_module_Basis_LTO_n.o \
  $(OBJ)/sub_SymAbelian.o \
- $(OBJ)/sub_module_param_SGType2.o \
+ $(OBJ)/sub_module_param_SGType2.o $(OBJ)/sub_module_param_RD.o \
  $(OBJ)/sub_module_basis_set_alloc.o \
  $(OBJ)/sub_module_basis_RCVec_SG4.o $(OBJ)/sub_module_basis_BtoG_GtoB_SG4.o \
  $(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o $(OBJ)/sub_module_basis_BtoG_GtoB.o \
@@ -767,7 +769,7 @@ $(OBJ)/sub_module_file.o:$(DirSys)/sub_module_file.f90
 $(OBJ)/sub_module_string.o:$(DirSys)/sub_module_string.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirSys)/sub_module_string.f90
 $(OBJ)/sub_module_RW_MatVec.o:$(DirSys)/sub_module_RW_MatVec.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_RW_MatVec.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL)  -c $(DirSys)/sub_module_RW_MatVec.f90
 $(OBJ)/sub_module_system.o:$(DirSys)/sub_module_system.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL)  -c $(DirSys)/sub_module_system.f90
 $(OBJ)/sub_module_MPI_Aid.o:$(DirSys)/sub_module_MPI_Aid.f90
@@ -926,6 +928,9 @@ $(OBJ)/$(TNUMDISTMAIN).o:$(DirTNUM)/$(TNUMDISTMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUMDISTMAIN).f90
 $(OBJ)/$(TNUMMCTDHMAIN).o:$(DirTNUM)/$(TNUMMCTDHMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUMMCTDHMAIN).f90
+#Emil change: Could not compile without inserting the following two lines of code
+$(OBJ)/$(TNUM_MiddasCppMAIN).o:$(DirTNUM)/$(TNUM_MiddasCppMAIN).f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(TNUM_MiddasCppMAIN).f90
 $(OBJ)/$(KEOTEST).o:$(DirTNUM)/$(KEOTEST).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/$(KEOTEST).f90
 $(OBJ)/Main_TnumTana_FDriver.o:$(DirTNUM)/Main_TnumTana_FDriver.f90
@@ -954,6 +959,8 @@ $(OBJ)/sub_SymAbelian.o:$(DIRba)/sub_SymAbelian/sub_SymAbelian.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_SymAbelian/sub_SymAbelian.f90
 $(OBJ)/sub_module_param_SGType2.o:$(DIRba)/sub_module_param_SGType2.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRba)/sub_module_param_SGType2.f90
+$(OBJ)/sub_module_param_RD.o:$(DIRba)/sub_ReducedDensity/sub_module_param_RD.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_ReducedDensity/sub_module_param_RD.f90
 $(OBJ)/sub_module_basis_set_alloc.o:$(DIRba)/sub_module_basis_set_alloc.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_module_basis_set_alloc.f90
 

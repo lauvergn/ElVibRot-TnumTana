@@ -100,8 +100,9 @@ MODULE mod_RW_MatVec
            !ilen = int(log10(real(nb_line,kind=Rkind)))+1
            ! ensure compatible with very small system in test
            ilen = MAX(int(log10(real(nb_line,kind=Rkind)))+1,2)
-           !write(*,*) 'max_col check:',max_col,ilen, ' from ',MPI_id
-           
+#if(run_MPI)
+           write(*,*) 'max_col check:',max_col,ilen, ' from ',MPI_id
+#endif
            wformat = String_TO_String(wformat // '1x,i' //              &
                        int_TO_char(ilen) // ',2x,' //                   &
                        int_TO_char(max_col) // '(' //                   &

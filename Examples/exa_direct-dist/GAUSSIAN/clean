@@ -1,1 +1,1 @@
-rm -f res* SH_HADA* xx.* err file_WPspectral restart.int spectrum Test.FChk
+rm -f res* SH_HADA* xx.* err file_WPspectral restart.int spectrum Test.FChk xxx.chk xxx.fchk

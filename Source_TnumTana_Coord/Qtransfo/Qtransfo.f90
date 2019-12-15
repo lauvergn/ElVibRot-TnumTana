@@ -71,7 +71,7 @@
 
           TYPE (Type_oneDTransfo),pointer      :: oneDTransfo(:)      => null()
           TYPE (Type_ThreeDTransfo),pointer    :: ThreeDTransfo       => null()
-          TYPE (Type_Rot2CoordTransfo),pointer :: Rot2CoordTransfo    => null()
+          TYPE (Type_Rot2CoordTransfo),pointer :: Rot2CoordTransfo(:) => null()
           TYPE (Type_HyperSpheTransfo)         :: HyperSpheTransfo
           integer, pointer                     :: list_Qin_TO_Qout(:) => null() ! "order" transfo
 
@@ -405,7 +405,7 @@
         CASE ('rot2coord')
           Qtransfo%nb_Qin  = nb_Qin
 
-          CALL Read_Rot2CoordTransfo(Qtransfo%Rot2CoordTransfo,nb_Qin)
+          CALL Read_Rot2CoordTransfo(Qtransfo%Rot2CoordTransfo,nb_transfo,nb_Qin)
 
           CALL sub_Type_Name_OF_Qin(Qtransfo,"Qrot2Coord")
           Qtransfo%type_Qin(:) = 0

@@ -1,0 +1,1804 @@
+ ===============================================
+ ===============================================
+ Working with ElVibRot150.3-Tnum35.13-Tana10.2
+ Compiled on "kruck" the Sam  7 sep 2019 - 21:07:09
+ EVRT_path: /Users/lauvergn/git/ElVibRot
+ -----------------------------------------------
+ ElVibRot is written by David Lauvergnat [1] 
+      with contributions of Josep Maria Luis [2]
+ ElVibRot is under GNU LGPL3 license.
+
+ Tnum is written David Lauvergnat [1]
+ Tana is written by Mamadou Ndong 
+      with contributions of David Lauvergnat
+ Tnum and Tana are under GNU LGPL3 license.
+
+ [1]: Laboratoire de Chimie Physique, UMR 8000, CNRS-Université Paris-Sud, France
+ [2]: Institut de Química Computacional and Departament de Química Universitat de Girona, Catalonia, Spain
+ ===============================================
+ ===============================================
+&SYSTEM
+ MAX_MEM=500000000           ,
+ MEM_DEBUG=F,
+ TEST=F,
+ PRINTLEVEL=2          ,
+ POPENMP=T,
+ PSG4_OMP=1          ,
+ PSG4_MAXTH=2          ,
+ PMATOP_OMP=0          ,
+ PMATOP_MAXTH=2          ,
+ POPPSI_OMP=0          ,
+ POPPSI_MAXTH=2          ,
+ PBASISTOGRID_OMP=0          ,
+ PBASISTOGRID_MAXTH=2          ,
+ PGRID_OMP=1          ,
+ PGRID_MAXTH=2          ,
+ RMATFORMAT="f18.10                                            ",
+ CMATFORMAT="f15.7                                             ",
+ ENEFORMAT="f18.10                                            ",
+ INTENSITY_ONLY=F,
+ ANALYSIS_ONLY=F,
+ EVR=T,
+ CART=F,
+ GRIDTOBASIS_TEST=F,
+ OPPSI_TEST=F,
+ OPTIMIZATION=0          ,
+ NDFIT=F,
+ NDGRID=F,
+ MAIN_TEST=F,
+ EVRT_PATH="/Users/lauvergn/git/ElVibRot                                                                                                                                                                                                                                   ",
+ FILE_PATH="                                                                                                                                                                                                                                                               ",
+ BASE_FILENAME="                                                                                                                                                                                                                                                               ",
+ /
+ =========================================
+ OpenMP parameters:
+ Max number of threads:                      2
+ MatOp_omp,      MatOp_maxth                 0           1
+ OpPsi_omp,      OpPsi_maxth                 0           1
+ BasisTOGrid_omp,BasisTOGrid_maxth           0           1
+ Grid_omp,       Grid_maxth                  1           2
+ SG4_omp,        SG4_maxth                   1           2
+ =========================================
+ =========================================
+ File_path: 
+ =========================================
+ =========================================
+ =========================================
+  ElVibRot calculation
+ =========================================
+ =================================================
+  VIB: initialization of variables
+  END VIB: initialization of variables
+ =================================================
+
+ =================================================
+  VIB: BEGINNING ini_data
+     Time and date in ini_data : 22h:21m: 7.366s, the  7/ 9/2019
+        real (s):              0.000 in ini_data
+        real    :   0d  0h  0m  0s in ini_data
+        cpu (s):              0.000 in ini_data
+  Total real (s):              0.000
+  Total real    :   0d  0h  0m  0s
+  Total cpu (s):              0.000
+
+
+ BEGINNING sub_constantes
+ EVRT_path: /Users/lauvergn/git/ElVibRot                                                                                                                                                                                                                                   
+ PHYSICAL CONSTANTS, version: CODATA 2006
+ c,mhu0,epsi0,G,h,hb,e,me,mp,alpha,Na,R,k   299792458.00000000        1.2566370614359173E-006   8.8541878176203892E-012   6.6742799999999995E-011   6.6260689599999996E-034   1.0545716282517741E-034   1.6021764870000000E-019   9.1093821499999992E-031   1.6726216370000001E-027   7.2973525367964467E-003   6.0221417899999999E+023   8.3144720000000003        1.3806503217520558E-023
+ mhu (g)   9.1044237258627160E-031
+ a0 (m)   5.2917720835354106E-011
+ Eh (J)   4.3597439408138934E-018
+ Ta (s)   2.4188843257040059E-017
+ Debye TO C.m   3.3356409519815207E-030
+ Debye TO au  0.39343030751266250     
+ MASSES, version: NIST2012            
+ The number of read isotopes:         178
+ ---------------------------------------------
+ Isotopes list:
+   0: X
+   1: 1H D (or 2H) T (or 3H)
+   2: 3He 4He
+   3: 6Li 7Li
+   4: 9Be
+   5: 10B 11B
+   6: 12C 13C 14C
+   7: 14N 15N
+   8: 16O 17O 18O
+   9: 19F
+  10: 20Ne 21Ne 22Ne
+  11: 23Na
+  12: 24Mg 25Mg 26Mg
+  13: 27Al
+  14: 28Si 29Si 30Si
+  15: 31P
+  16: 32S 33S 34S 36S
+  17: 35Cl 37Cl
+  18: 36Ar 38Ar 40Ar
+  19: 39K 40K 41K
+  20: 40Ca 42Ca 43Ca 44Ca 46Ca 48Ca
+  21: 45Sc
+  22: 46Ti 47Ti 48Ti 49Ti 50Ti
+  23: 50V 51V
+  24: 50Cr 52Cr 53Cr 54Cr
+  25: 55Mn
+  26: 54Fe 56Fe 57Fe 58Fe
+  27: 59Co
+  28: 58Ni 60Ni 61Ni 62Ni 64Ni
+  29: 63Cu 65Cu
+  30: 64Zn 66Zn 67Zn 68Zn 70Zn
+  31: 69Ga 71Ga
+  32: 70Ge 72Ge 73Ge 74Ge 76Ge
+  33: 75As
+  34: 74Se 76Se 77Se 78Se 80Se 82Se
+  35: 79Br 81Br
+  36: 78Kr 80Kr 82Kr 83Kr 84Kr 86Kr
+  37: 85Rb
+  38: 88Sr
+  39: 89Y
+  40: 90Zr
+  41: 93Nb
+  42: 98Mo
+  43: 98Tc
+  44: 102Ru
+  45: 103Rh
+  46: 106Pd
+  47: 107Ag 109Ag
+  48: 114Cd
+  49: 115In
+  50: 120Sn
+  51: 121Sb 123Sb
+  52: 130Te
+  53: 127I
+  54: 132Xe
+  55: 133Cs
+  56: 138Ba
+  57: 139La
+  58: 140Ce
+  59: 141Pr
+  60: 142Nd
+  61: 145Pm
+  62: 152Sm
+  63: 153Eu
+  64: 158Gd
+  65: 159Tb
+  66: 164Dy
+  67: 165Ho
+  68: 166Er
+  69: 169Tm
+  70: 174Yb
+  71: 175Lu
+  72: 180Hf
+  73: 181Ta
+  74: 184W
+  75: 187Re
+  76: 192Os
+  77: 193Ir
+  78: 195Pt
+  79: 197Au
+  80: 202Hg
+  81: 205Tl
+  82: 208Pb
+  83: 209Bi
+  84: 209Po
+  85: 210At
+  86: 222Rn
+  87: 223Fr
+  88: 226Ra
+  89: 227Ac
+  90: 232Th
+  91: 231Pa
+  92: 238U
+  93: 237Np
+  94: 244Pu
+  95: 243Am
+  96: 247Cm
+  97: 247Bk
+  98: 251Cf
+  99: 252Es
+ 100: 257Fm
+ 101: 258Md
+ 102: 259No
+ 103: 262Lr
+ 104: 265Rf
+ 105: 268Db
+ 106: 271Sg
+ 107: 272Bh
+ 108: 270Hs
+ 109: 276Mt
+ 110: 281Ds
+ END Isotopes list
+ ---------------------------------------------
+   The unit "cm-1" is already present
+ List of available units:
+ ======================================
+ quantity:   E                   
+ Work_unit:     1.0000000000000000      au                  E                   
+ Write_unit:    4.5563352512511690E-006 cm-1                E                   
+ conv(i):             1   1.0000000000000000      au                  E                   
+ conv(i):             2   1.0000000000000000      hartree             E                   
+ conv(i):             3   3.6749325390447118E-002 eV                  E                   
+ conv(i):             4   3.1668151627600194E-006 °K                 E                   
+ conv(i):             5   4.5563352512511690E-006 cm-1                E                   
+ conv(i):             6   1.5198298455030406E-007 GHz                 E                   
+ conv(i):             7   1.5936014506980020E-003 kcal.mol-1          E                   
+ conv(i):             8   3.8087988783413042E-004 kJ.mol-1            E                   
+ ======================================
+ ======================================
+ quantity:   t                   
+ Work_unit:     1.0000000000000000      ua                  t                   
+ Write_unit:    41.341373350251231      fs                  t                   
+ conv(i):             1   1.0000000000000000      ua                  t                   
+ conv(i):             2   41.341373350251231      fs                  t                   
+ conv(i):             3   41341.373350251226      ps                  t                   
+ ======================================
+ ======================================
+ quantity:   L                   
+ Work_unit:     1.0000000000000000      au                  L                   
+ Write_unit:    1.8897261337300533      Angs                L                   
+ conv(i):             1   1.0000000000000000      au                  L                   
+ conv(i):             2   1.0000000000000000      bohr                L                   
+ conv(i):             3   1.8897261337300533      Angs                L                   
+ conv(i):             4   18.897261337300534      nm                  L                   
+ conv(i):             5   1.8897261337300533E-002 pm                  L                   
+ ======================================
+ ======================================
+ quantity:   angle               
+ Work_unit:     1.0000000000000000      Rad                 angle               
+ Write_unit:    1.7453292519943295E-002 °                  angle               
+ conv(i):             1   1.0000000000000000      Rad                 angle               
+ conv(i):             2   1.7453292519943295E-002 °                  angle               
+ ======================================
+ ======================================
+ quantity:   QL                  
+ Work_unit:     1.0000000000000000      au                  QL                  
+ Write_unit:   0.39343030751266250      D                   QL                  
+ conv(i):             1   1.0000000000000000      au                  QL                  
+ conv(i):             2  0.39343030751266250      D                   QL                  
+ conv(i):             3   1.1794743894091695E+029 C.m                 QL                  
+ ======================================
+ ======================================
+ quantity:   Electric field      
+ Work_unit:     1.0000000000000000      au                  Electric field      
+ Write_unit:    0.0000000000000000                                              
+ conv(i):             1   1.0000000000000000      au                  Electric field      
+ conv(i):             2   1.9446905418992709E-010 V.cm-1              Electric field      
+ ======================================
+ ======================================
+ quantity:   EF intensity        
+ Work_unit:     1.0000000000000000      au                  EF intensity        
+ Write_unit:    0.0000000000000000                                              
+ conv(i):             1   1.0000000000000000      au                  EF intensity        
+ conv(i):             2   2.8494534504381483E-017 W.cm-2              EF intensity        
+ ======================================
+ ======================================
+ quantity:   No_Dim              
+ Work_unit:     1.0000000000000000                          No_Dim              
+ Write_unit:    1.0000000000000000                          No_Dim              
+ conv(i):             1   1.0000000000000000                          No_Dim              
+ ======================================
+  energy unit     : cm-1                
+ auTOenergy      =      219474.631443
+ auTOcm_inv      =      219474.631443
+ auTOeV          =          27.211384
+ auTOGHz         =     6579683.922900
+ auTOkcalmol_inv =         627.509469
+ auTOkJmol_inv   =        2625.499618
+  pi              =    3.1415926535897931     
+  cos(pi)         =   -1.0000000000000000     
+ a0 (m-1)        =  0.5291772084E-10
+ a0 (Angs)       =  0.5291772084E+00
+ Eh (J)          =  0.4359743941E-17
+ Ta (s)          =  0.2418884326E-16
+ Ta (fs)         =           0.024189
+ inv_Name        =     1822888.485541
+ E0 (V cm-1)     =  0.5142206323E+10
+ I0 (W cm-2)     =  0.3509444942E+17
+ convAif         =  0.2142000753E+11
+ convIDif        =  0.3554196022E+10
+ convIQif        =  0.1419493130E+05
+ convDebyeTOau   =  0.3934303075E+00
+ END sub_constantes
+ ============================================================
+ ============================================================
+ === COORDINATES (TNUM) =====================================
+ ============================================================
+ ============================================================
+ =================================================
+ =================================================
+ BEGINNING Read_mole
+&VARIABLES
+ NAT=4          ,
+ ZMAT=T,
+ BUNCH=F,
+ COS_TH=T,
+ WITHOUT_ROT=F,
+ CENTERED_ON_COM=T,
+ JJ=0          ,
+ NEW_ORIENT=F,
+ VAT1= 3*0.0000000000000000       ,
+ VAT2= 3*0.0000000000000000       ,
+ VAT3= 3*0.0000000000000000       ,
+ WITH_VECCOM=F,
+ NB_VAR=0          ,
+ NB_ACT=0          ,
+ OLD_QTRANSFO=T,
+ NB_QTRANSFO=-1         ,
+ CART_TRANSFO=F,
+ ROT_DIP_WITH_EC=F,
+ SYM=T,
+ CHECK_SYM=T,
+ NM=F,
+ NM_TO_SYM=F,
+ HESSIAN_OLD=T,
+ PURIFY_HESS=F,
+ K_HALF=F,
+ HESSIAN_CART=T,
+ HESSIAN_ONTHEFLY=F,
+ FILE_HESSIAN="xx_freq.fchk        ",
+ STEPOP=  0.0000000000000000     ,
+ STEPT=  1.0000000000000002E-004,
+ NUM_GG=F,
+ NUM_G=F,
+ NUM_X=F,
+ NRHO=2          ,
+ TANA=F,
+ GDIAGO=F,
+ GCTE=F,
+ NONGCTERANGE= 2*0          ,
+ MIDASCPPFORM=F,
+ MCTDHFORM=F,
+ LATEXFORM=F,
+ VSCFFORM=F,
+ KEO_TALYOROFQINACT2N=-1         ,
+ F2F1_ANA=F,
+ CHARGE=0          ,
+ MULTIPLICITY=-1         ,
+ HEADER=F,
+ FOOTER=F,
+ FILE_NAME_OTF="xx                  ",
+ FILE_NAME_FCHK="                    ",
+ COMMANDE_UNIX="g03.run xx >err                                                                                                                                                                                                                                                ",
+ AB_INITIO_PROG="g03                 ",
+ AB_INITIO_METH=" hf                                               ",
+ AB_INITIO_BASIS=" sto-3g                                           ",
+ AB_INITIO_METHENE="                                                  ",
+ AB_INITIO_BASISENE="                                                  ",
+ AB_INITIO_METHDIP="                                                  ",
+ AB_INITIO_BASISDIP="                                                  ",
+ WRITECC=F,
+ WRITET=F,
+ /
+ =================================================
+ =================================================
+ Old Coordinates transformation           3
+ =================================================
+  transfo: zmat                
+  num_transfo           1
+ BEGINNING Read_ZmatTransfo
+ nat0,nat           4           5
+ nb_var           6
+ ncart          15
+ cos_th T
+ ==================           1
+ get_mass_Tnum:            6          12   21874.661826491400     
+           1           6   21874.661826491400     
+ ==================           2
+ get_mass_Tnum (read):            0           0   0.0000000000000000     
+           2           0   0.0000000000000000                1
+ ==================           3
+ get_mass_Tnum:            7          14   25526.042365527715     
+           3           7   25526.042365527715                2           1
+ ==================           4
+ get_mass_Tnum:            1           1   1837.1526464003414     
+           4           1   1837.1526464003414                2          -1           3
+   1837.1526464003414                2          -1           3
+ END Read_ZmatTransfo
+ BEGINNING Write_Qtransfo
+ name_transfo,num_transfo: zmat           1
+ Primitive_Coord:  T
+  Option of the transfo:            0
+  Skip the transfo:  F
+  Parameter(s) to be optimized?:            0
+ nb_var,nb_act           0           0
+ nb_Qin,nb_Qout           6          15
+ ---------------------------------------
+ i_Q,name_Qout,type_Qout           1  X0_1           1
+ i_Q,name_Qout,type_Qout           2  Y0_1           1
+ i_Q,name_Qout,type_Qout           3  Z0_1           1
+ i_Q,name_Qout,type_Qout           4  X0_2           1
+ i_Q,name_Qout,type_Qout           5  Y0_2           1
+ i_Q,name_Qout,type_Qout           6  Z0_2           1
+ i_Q,name_Qout,type_Qout           7  X0_3           1
+ i_Q,name_Qout,type_Qout           8  Y0_3           1
+ i_Q,name_Qout,type_Qout           9  Z0_3           1
+ i_Q,name_Qout,type_Qout          10  X0_4           1
+ i_Q,name_Qout,type_Qout          11  Y0_4           1
+ i_Q,name_Qout,type_Qout          12  Z0_4           1
+ i_Q,name_Qout,type_Qout          13  X0_5           1
+ i_Q,name_Qout,type_Qout          14  Y0_5           1
+ i_Q,name_Qout,type_Qout          15  Z0_5           1
+ ---------------------------------------
+ i_Q,name_Qin,type_Qin           1  Qzmat_d0_1           2
+ i_Q,name_Qin,type_Qin           2  Qzmat_d0_2           2
+ i_Q,name_Qin,type_Qin           3  Qzmat_th0_3           3
+ i_Q,name_Qin,type_Qin           4  Qzmat_d0_4           2
+ i_Q,name_Qin,type_Qin           5  Qzmat_Costh0_5          -3
+ i_Q,name_Qin,type_Qin           6  Qzmat_phi0_6           4
+ ---------------------------------------
+ BEGINNING Write_ZmatTransfo
+ ncart_act,ncart           9          15
+ nat_act,nat0,nat,           3           4           5
+ nb_var           6
+ ind2_zmat
+           1           1           0           0           0           0
+           2           2           1           0           0           0
+           3           3           2           1           0           0
+           4           4           2          -1           3           0
+           5           0           0           0           0           0
+ ind_zmat,cos_th T
+           1           1           0           0           0           0
+           2          10           1           0           0           0
+           3           4          10           1           0           0
+           4           7          10           1           4           0
+           5           0           0           0           0           0
+ New_Orient F
+ vAt1   0.0000000000000000        0.0000000000000000        0.0000000000000000     
+ vAt2   0.0000000000000000        0.0000000000000000        0.0000000000000000     
+ vAt3   0.0000000000000000        0.0000000000000000        0.0000000000000000     
+ END Write_ZmatTransfo
+ END Write_Qtransfo
+ ------------------------------------------
+  transfo: linear              
+  num_transfo           2
+ nbcol=           6
+ mat of LinearTransfo has been read
+ mat of LinearTransfo: 
+ 1        0.0000000000       0.0000000000       0.5385160660       1.0000000000
+ 2        0.0000000000       0.0000000000       0.4614839330      -1.0000000000
+ 3        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 4        0.0000000000       1.0000000000       0.0000000000       0.0000000000
+ 5        1.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 6        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+ 1        0.0000000000       0.0000000000
+ 2        0.0000000000       0.0000000000
+ 3        1.0000000000       0.0000000000
+ 4        0.0000000000       0.0000000000
+ 5        0.0000000000       0.0000000000
+ 6        0.0000000000       1.0000000000
+ mat_inv of LinearTransfo: 
+ 1        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 2        0.0000000000       0.0000000000       0.0000000000       1.0000000000
+ 3        1.0000000010       1.0000000010       0.0000000000       0.0000000000
+ 4        0.4614839335      -0.5385160665      -0.0000000000       0.0000000000
+ 5        0.0000000000       0.0000000000       1.0000000000       0.0000000000
+ 6        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+ 1        1.0000000000       0.0000000000
+ 2        0.0000000000       0.0000000000
+ 3        0.0000000000       0.0000000000
+ 4        0.0000000000       0.0000000000
+ 5        0.0000000000       0.0000000000
+ 6        0.0000000000       1.0000000000
+ BEGINNING Write_Qtransfo
+ name_transfo,num_transfo: linear           2
+ Primitive_Coord:  F
+  Option of the transfo:            0
+  Skip the transfo:  F
+  Parameter(s) to be optimized?:            0
+ nb_var,nb_act           0           0
+ nb_Qin,nb_Qout           6           6
+ ---------------------------------------
+ i_Q,name_Qout,type_Qout           1  Qzmat_d0_1           2
+ i_Q,name_Qout,type_Qout           2  Qzmat_d0_2           2
+ i_Q,name_Qout,type_Qout           3  Qzmat_th0_3           3
+ i_Q,name_Qout,type_Qout           4  Qzmat_d0_4           2
+ i_Q,name_Qout,type_Qout           5  Qzmat_Costh0_5          -3
+ i_Q,name_Qout,type_Qout           6  Qzmat_phi0_6           4
+ ---------------------------------------
+ i_Q,name_Qin,type_Qin           1  Qlinear2_1          -3
+ i_Q,name_Qin,type_Qin           2  Qlinear2_2           2
+ i_Q,name_Qin,type_Qin           3  Qlinear2_3           2
+ i_Q,name_Qin,type_Qin           4  Qlinear2_4           2
+ i_Q,name_Qin,type_Qin           5  Qlinear2_5           3
+ i_Q,name_Qin,type_Qin           6  Qlinear2_6           4
+ ---------------------------------------
+ Mat of LinearTransfo: 
+ 1        0.0000000000       0.0000000000       0.5385160660       1.0000000000
+ 2        0.0000000000       0.0000000000       0.4614839330      -1.0000000000
+ 3        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 4        0.0000000000       1.0000000000       0.0000000000       0.0000000000
+ 5        1.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 6        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+ 1        0.0000000000       0.0000000000
+ 2        0.0000000000       0.0000000000
+ 3        1.0000000000       0.0000000000
+ 4        0.0000000000       0.0000000000
+ 5        0.0000000000       0.0000000000
+ 6        0.0000000000       1.0000000000
+ Mat_inv of LinearTransfo: 
+ 1        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+ 2        0.0000000000       0.0000000000       0.0000000000       1.0000000000
+ 3        1.0000000010       1.0000000010       0.0000000000       0.0000000000
+ 4        0.4614839335      -0.5385160665      -0.0000000000       0.0000000000
+ 5        0.0000000000       0.0000000000       1.0000000000       0.0000000000
+ 6        0.0000000000       0.0000000000       0.0000000000       0.0000000000
+
+ 1        1.0000000000       0.0000000000
+ 2        0.0000000000       0.0000000000
+ 3        0.0000000000       0.0000000000
+ 4        0.0000000000       0.0000000000
+ 5        0.0000000000       0.0000000000
+ 6        0.0000000000       1.0000000000
+ END Write_Qtransfo
+ ------------------------------------------
+  transfo: active              
+  num_transfo           3
+ list_act_OF_Qdyn or type_var           1           1           0           0           0           0
+ -analysis of the variable type ---
+   mole%list_act_OF_Qdyn           1           1           0           0           0           0
+ mole%nrho_OF_Qact(:)               0           0           0           0           0           0
+ mole%...%list_QactTOQdyn           1           2           3           4           5           6
+ mole%...%list_QdynTOQact           1           2           3           4           5           6
+
+ mole%...%type_Qout(:)          -3           2           2           2           3           4
+ mole%...%type_Qin(:)          -3           2           2           2           3           4
+
+ - End analysis of the variable type ---
+ BEGINNING Write_Qtransfo
+ name_transfo,num_transfo: active           3
+ Primitive_Coord:  F
+  Option of the transfo:            0
+  Skip the transfo:  F
+  Parameter(s) to be optimized?:            0
+ nb_var,nb_act           0           2
+ nb_Qin,nb_Qout           6           6
+ ---------------------------------------
+ i_Q,name_Qout,type_Qout           1  Qlinear2_1          -3
+ i_Q,name_Qout,type_Qout           2  Qlinear2_2           2
+ i_Q,name_Qout,type_Qout           3  Qlinear2_3           2
+ i_Q,name_Qout,type_Qout           4  Qlinear2_4           2
+ i_Q,name_Qout,type_Qout           5  Qlinear2_5           3
+ i_Q,name_Qout,type_Qout           6  Qlinear2_6           4
+ ---------------------------------------
+ i_Q,name_Qin,type_Qin           1  Qlinear2_1          -3
+ i_Q,name_Qin,type_Qin           2  Qlinear2_2           2
+ i_Q,name_Qin,type_Qin           3  Qlinear2_3           2
+ i_Q,name_Qin,type_Qin           4  Qlinear2_4           2
+ i_Q,name_Qin,type_Qin           5  Qlinear2_5           3
+ i_Q,name_Qin,type_Qin           6  Qlinear2_6           4
+ ---------------------------------------
+ BEGINNING Write_ActiveTransfo
+ asso ActiveTransfo: T
+ nb_var:                   6
+ nb_act:                   2
+ nb_act1:                  2
+ nb_inact2n:               0
+ nb_inact21:               0
+ nb_inact22:               0
+ nb_inact20:               0
+ nb_inact:                 0
+ nb_inact31:               0
+ nb_rigid0:                4
+ nb_rigid100:              0
+ nb_rigid:                 4
+ list_act_OF_Qdyn or type_var:            1           1           0           0           0           0
+ list_QactTOQdyn:            1           2           3           4           5           6
+ list_QdynTOQact:            1           2           3           4           5           6
+  Rigid coordinate values (Qdyn order):   0.0000000000000000        0.0000000000000000        0.0000000000000000        0.0000000000000000        0.0000000000000000        0.0000000000000000     
+ Qact0:    0.0000000000000000        0.0000000000000000        0.0000000000000000        0.0000000000000000        0.0000000000000000        0.0000000000000000     
+ END Write_ActiveTransfo
+ END Write_Qtransfo
+ ------------------------------------------
+ =================================================
+ END Old Coordinates transformation
+ =================================================
+ =================================================
+ END Read_mole
+ =================================================
+ =================================================
+ BEGINNING read_RefGeom
+ ====================================
+ nb_var           6
+&MINIMUM
+ READ_ITQ0TRANSFO=-1         ,
+ READ_QSYM0=T,
+ READ_QDYN0=F,
+ READ_XYZ0=F,
+ READ_NAMEQ=T,
+ UNIT="bohr                ",
+ READ_XYZ0_WITH_DUMMY=T,
+ READ_QACT0=F,
+ POT0=-0.49946582319999999     ,
+ POT_ACT=F,
+ POT_CART=F,
+ POT_ITQTRANSFO=-1         ,
+ POT_CPLX=F,
+ HARD=T,
+ NB_ELEC=1          ,
+ NB_SCALAR_OP=0          ,
+ ONTHEFLY=F,
+ NDFIT_OP=F,
+ QMLIB=F,
+ BASENAME_NDFIT_FILE="                                                                                                                                                                                                                                                               ",
+ DERIV_WITH_FINITEDIFF=F,
+ OPT=F,
+ /
+ ------------------------------------------------------
+ --- Coordinates used for the operators ---------------
+ ------------------------------------------------------
+ nb_scalar_Op           0
+ pot_itQtransfo           2
+ Operators (pot...) with Qdyn coordinates
+ ------------------------------------------------------
+ ------------------------------------------------------
+ --- Coordinates used for the reference geometry ------
+ ------------------------------------------------------
+  Read Qdyn0 coordinates:
+ read_itQtransfo_OF_Qin0           2
+  Read Qdyn0 coordinates:                                                                                                                                                                                                                                       
+           1 cosa                :  0.99900000000000000      :
+           1 type_Q(i) :          -3
+           1  0.99900000000000000                          no_dim              working value Q(i)  0.99900000000000000     
+           2 R                   :   3.1869999999999998      :
+           2 type_Q(i) :           2
+           2   3.1869999999999998      bohr                L                   working value Q(i)   3.1869999999999998     
+           3 r                   :   2.1789999999999998      :
+           3 type_Q(i) :           2
+           3   2.1789999999999998      bohr                L                   working value Q(i)   2.1789999999999998     
+           4 x                   :   0.0000000000000000      :
+           4 type_Q(i) :           2
+           4   0.0000000000000000      bohr                L                   working value Q(i)   0.0000000000000000     
+           5 pi                  :   3.1415926535897931      :
+           5 type_Q(i) :           3
+           5   3.1415926535897931      rad                 angle               working value Q(i)   3.1415926535897931     
+           6 dh                  :   0.0000000000000000      :
+           6 type_Q(i) :           4
+           6   0.0000000000000000      rad                 angle               working value Q(i)   0.0000000000000000     
+
+ BEGINNING sub_QinRead_TO_Qact
+ it_QinRead,mole%nb_Qtransfo           2           3
+ Qread =  0.99900000000000000        3.1869999999999998        2.1789999999999998        0.0000000000000000        3.1415926535897931        0.0000000000000000     
+
+
+ -----------------------------------------
+Qout active,it_Qtransfo: 3  .9990 3.1870 2.1790 .0000 3.1416 .0000
+ -----------------------------------------
+ Qout            3 active                0.99900000000000000        3.1869999999999998        2.1789999999999998        0.0000000000000000        3.1415926535897931        0.0000000000000000     
+ -----------------------------------------
+Qin  active,it_Qtransfo: 3  .9990 3.1870 2.1790 .0000 3.1416 .0000
+ -----------------------------------------
+ Qact  0.99900000000000000        3.1869999999999998        2.1789999999999998        0.0000000000000000        3.1415926535897931        0.0000000000000000     
+ END sub_QinRead_TO_Qact
+
+ Qdyn0 coordinates (not transformed): [bohr]/[rad or cos(angle)]
+cosa                        0.999000
+R                           3.187000
+r                           2.179000
+x                           0.000000
+pi                          3.141593
+dh                          0.000000
+ Qact0 coordinates (not transformed): [bohr]/[rad or cos(angle)]
+Qlinear2_1                  0.999000
+Qlinear2_2                  3.187000
+Qlinear2_3                  2.179000
+Qlinear2_4                  0.000000
+Qlinear2_5                  3.141593
+Qlinear2_6                  0.000000
+ -----------------------------------------
+ Qdyn0 coordinates (transformed):
+cosa                1     0.044725 Rad     2.562559 °
+R                   2     3.187000 au     1.686488 Angs
+r                   3     2.179000 au     1.153077 Angs
+x                   4     0.000000 au     0.000000 Angs
+pi                  5     3.141593 Rad     180.000000 °
+dh                  6     0.000000 Rad     0.000000 °
+ -----------------------------------------
+ -----------------------------------------
+ Qact0 coordinates (transformed):
+Qlinear2_1          1     0.044725 Rad     2.562559 °
+Qlinear2_2          2     3.187000 au     1.686488 Angs
+Qlinear2_3          3     2.179000 au     1.153077 Angs
+Qlinear2_4          4     0.000000 au     0.000000 Angs
+Qlinear2_5          5     3.141593 Rad     180.000000 °
+Qlinear2_6          6     0.000000 Rad     0.000000 °
+ -----------------------------------------
+ BEGINNING Write_Qtransfo
+ name_transfo,num_transfo: active           3
+ Primitive_Coord:  F
+  Option of the transfo:            0
+  Skip the transfo:  F
+  Parameter(s) to be optimized?:            0
+ nb_var,nb_act           0           2
+ nb_Qin,nb_Qout           6           6
+ ---------------------------------------
+ i_Q,name_Qout,type_Qout           1  cosa          -3
+ i_Q,name_Qout,type_Qout           2  R           2
+ i_Q,name_Qout,type_Qout           3  r           2
+ i_Q,name_Qout,type_Qout           4  x           2
+ i_Q,name_Qout,type_Qout           5  pi           3
+ i_Q,name_Qout,type_Qout           6  dh           4
+ ---------------------------------------
+ i_Q,name_Qin,type_Qin           1  Qlinear2_1          -3
+ i_Q,name_Qin,type_Qin           2  Qlinear2_2           2
+ i_Q,name_Qin,type_Qin           3  Qlinear2_3           2
+ i_Q,name_Qin,type_Qin           4  Qlinear2_4           2
+ i_Q,name_Qin,type_Qin           5  Qlinear2_5           3
+ i_Q,name_Qin,type_Qin           6  Qlinear2_6           4
+ ---------------------------------------
+ BEGINNING Write_ActiveTransfo
+ asso ActiveTransfo: T
+ nb_var:                   6
+ nb_act:                   2
+ nb_act1:                  2
+ nb_inact2n:               0
+ nb_inact21:               0
+ nb_inact22:               0
+ nb_inact20:               0
+ nb_inact:                 0
+ nb_inact31:               0
+ nb_rigid0:                4
+ nb_rigid100:              0
+ nb_rigid:                 4
+ list_act_OF_Qdyn or type_var:            1           1           0           0           0           0
+ list_QactTOQdyn:            1           2           3           4           5           6
+ list_QdynTOQact:            1           2           3           4           5           6
+  Rigid coordinate values (Qdyn order):  0.99900000000000000        3.1869999999999998        2.1789999999999998        0.0000000000000000        3.1415926535897931        0.0000000000000000     
+ Qact0:   0.99900000000000000        3.1869999999999998        2.1789999999999998        0.0000000000000000        3.1415926535897931        0.0000000000000000     
+ END Write_ActiveTransfo
+ END Write_Qtransfo
+ ------------------------------------------------------
+ ====================================
+ END read_RefGeom
+ BEGINNING Finalyze_TnumTana_Coord_PrimOp
+  Files for the OTF
+ xx.com
+ xx.log
+ Test.FChk
+ xx.dat
+  Program for the OTF g03                 
+  Unix script for the OTF g03.run xx >err                                                                                                                                                                                                                                                
+  para_Tnum%Gcte
+  WARNNING in check_Valence
+  The value of the valence angle (           3 ) :    3.1415926535897931     
+  is out of range ]0,Pi(   3.1415926535897931      )[
+  type_Q           3
+  ONLY one warning for this coordinate
+  END WARNNING in check_Valence
+  dnGG%d0
+ 1        0.0000001470      -0.0000000000       0.0000000000      -0.0000007994       0.0000000000
+ 2       -0.0000000000       0.0005654173       0.0000000000       0.0000000000       0.0000000000
+ 3        0.0000000000       0.0000000000       0.0000178791       0.0000000000      -0.0003994888
+ 4       -0.0000007994       0.0000000000       0.0000000000       0.0000178791       0.0000000000
+ 5       -0.0000000000      -0.0000000000      -0.0003994888      -0.0000000000       0.0367740231
+ =================================================
+ === Reference geometry (not recenter) ===========
+ -----------------------------------------
+Qact,it_Qtransfo: 3  .9990 3.1870
+ -----------------------------------------
+ -----------------------------------------
+Qin (Qact),it_Qtransfo: 3  .9990 3.1870 2.1790 .0000 3.1416 .0000
+ -----------------------------------------
+ name_transfo           3 active              
+ -----------------------------------------
+Qin ,it_Qtransfo: 3  .9990 3.1870 2.1790 .0000 3.1416 .0000
+ -----------------------------------------
+ -----------------------------------------
+Qout,it_Qtransfo: 3  .9990 3.1870 2.1790 .0000 3.1416 .0000
+ -----------------------------------------
+ name_transfo           2 linear              
+ -----------------------------------------
+Qin ,it_Qtransfo: 2  .9990 3.1870 2.1790 .0000 3.1416 .0000
+ -----------------------------------------
+ -----------------------------------------
+Qout,it_Qtransfo: 2  1.1734 1.0056 3.1416 3.1870 .9990 .0000
+ -----------------------------------------
+ name_transfo           1 zmat                
+ -----------------------------------------
+Qin ,it_Qtransfo: 1  1.1734 1.0056 3.1416 3.1870 .9990 .0000
+ -----------------------------------------
+ -----------------------------------------
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+Qxyz,it_Qtransfo: 1  .0000 .0000 2.1790
+Qxyz,it_Qtransfo: 1  .1425 .0000 -2.0104
+Qxyz,it_Qtransfo: 1  .0000 .0000 1.1734
+Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
+ -----------------------------------------
+  Cartesian coordinates without the Cartesian Transformation (au):
+ d0x =
+            0.000000000           0.000000000           0.000000000
+            0.000000000           0.000000000           2.178999998
+            0.142491337           0.000000000          -2.010386492
+            0.000000000           0.000000000           1.173426508
+            0.000000000           0.000000000           0.000000000
+  Cartesian coordinates without the Cartesian Transformation (ang):
+ ==============================================
+ = Gaussian CC ================================
+      6     0           0.000000000           0.000000000           0.000000000
+      7     0           0.000000000           0.000000000           1.153077136
+      1     0           0.075403168           0.000000000          -1.063850712
+      5     0           0.000000000           0.000000000           0.620950564
+     -1     0           0.000000000           0.000000000           0.000000000
+ = END Gaussian CC ============================
+ ==============================================
+ ==============================================
+ = XYZ format =================================
+           3
+
+      6           0.000000000           0.000000000           0.000000000
+      7           0.000000000           0.000000000           1.153077136
+      1           0.075403168           0.000000000          -1.063850712
+ = END XYZ format =============================
+ ==============================================
+ =================================================
+ END Finalyze_TnumTana_Coord_PrimOp
+ ============================================================
+ ============================================================
+ === END COORDINATES (TNUM) =================================
+ ============================================================
+ ============================================================
+ ============================================================
+ ============================================================
+ === BASIS ==================================================
+ ============================================================
+ ============================================================
+ =================================================
+ == READ ACTIVE BASIS ============================
+ =================================================
+ ---------------------------------------
+ ----------- BasisnD -------------------
+ ---------------------------------------
+
+
+&BASIS_ND
+ IQACT= 50*0          ,
+ IQSYM= 50*0          ,
+ IQDYN= 50*0          ,
+ NAME="direct_prod         ",
+ NB=0          ,
+ NQ=0          ,
+ NBC=-1         ,
+ NQC=16         ,
+ CONTRAC=F,
+ CTE= 1000*0.0000000000000000       ,
+ CPLX=F,
+ AUTO_BASIS=F,
+ A= 50*0.0000000000000000       ,
+ B= 50*0.0000000000000000       ,
+ Q0= 50*0.0000000000000000       ,
+ SCALEQ= 50*0.0000000000000000       ,
+ OPT_A= 50*0          ,
+ OPT_B= 50*0          ,
+ OPT_Q0= 50*0          ,
+ OPT_SCALEQ= 50*0          ,
+ SYMAB= 3*-1         ,
+ INDEX_SYMAB= 3*-1         ,
+ L_TO_N_TYPE=0          ,
+ L_SPARSEGRID=-1         ,
+ L_TO_NQ_A=1          ,
+ L_TO_NQ_B=1          ,
+ L_TO_NQ_C=0          ,
+ L1_SPARSEGRID=2147483647 ,
+ L2_SPARSEGRID=2147483647 ,
+ NUM_OF_LMAX=0          ,
+ LEXPO_TO_NQ=1          ,
+ LEXPO_TO_NB=-1         ,
+ MAX_NB=2147483647 ,
+ MAX_NQ=2147483647 ,
+ L_SPARSEBASIS=-1         ,
+ L_TO_NB_A=-1         ,
+ L_TO_NB_B=-1         ,
+ READ_L_TO_N=F,
+ SPARSEGRID=F,
+ SPARSEGRID_TYPE=-1         ,
+ WITH_L=F,
+ SPARSEGRID_WITH_CUBA=T,
+ SPARSEGRID_WITH_SMOLYAK=T,
+ SPARSEGRID_WITH_DP=T,
+ NESTED=0          ,
+ NQ_MAX_NESTED=-1         ,
+ TYPE_OF_NDINDB=0          ,
+ NORM_OF_NDINDB=  4.0000000000000000     ,
+ WEIGHT_OF_NDINDB=  1.0000000000000000     ,
+ NB_OF_MINNORM_OF_NDINDB=1          ,
+ DIV_NB_TO_NORM_OF_NDINDB=1          ,
+ MAXCOUPLING_OF_NDINDB=-1         ,
+ NDINIT_OF_NDINDB=1          ,
+ CONTRAC_WITH_NDINDB=F,
+ PACKED=T,
+ DNBBREP=F,
+ NAME_CONTRAC_FILE="                                                                                                                                                                                                                                                               ",
+ AUTO_CONTRAC=F,
+ MAKE_CUBATURE=T,
+ RESTART_MAKE_CUBATURE=F,
+ POGRIDREP_POLYORTHO=F,
+ POGRIDREP=F,
+ NB_BASIS=2          ,
+ MAX_ENE_CONTRAC%VAL=  10000.000000000000     ,
+ MAX_ENE_CONTRAC%UNIT="cm-1                ",
+ MAX_ENE_CONTRAC%QUANTITY="E                   ",
+ MAX_NBC=0          ,
+ MIN_NBC=0          ,
+ NQPLUSNBC_TO_NQC=2          ,
+ AUTO_CONTRAC_TYPE1_TO=100        ,
+ AUTO_CONTRAC_TYPE21_TO=200        ,
+ /
+  Parameters: nq(L) = A + B * L**expo
+ L_TO_n_type                0
+ Lmax                      -1
+ A                          1
+ B                          1
+ C                          1
+ expo                       1
+ max_n             2147483647
+ alloc tab_L_TO_n F
+ alloc tab_n_TO_L F
+  Parameters: nb(L) = A + B * L**expo
+ L_TO_n_type                0
+ Lmax                      -1
+ A                          1
+ B                          1
+ C                          0
+ expo                       1
+ max_n             2147483647
+ alloc tab_L_TO_n F
+ alloc tab_n_TO_L F
+&BASIS_ND
+ IQACT= 50*0          ,
+ IQSYM= 50*0          ,
+ IQDYN=1          , 49*0          ,
+ NAME="Hm                  ",
+ NB=5          ,
+ NQ=8          ,
+ NBC=-1         ,
+ NQC=-1         ,
+ CONTRAC=F,
+ CTE= 1000*0.0000000000000000       ,
+ CPLX=F,
+ AUTO_BASIS=F,
+ A= 50*0.0000000000000000       ,
+ B= 50*0.0000000000000000       ,
+ Q0= 50*0.0000000000000000       ,
+ SCALEQ=  1.0000000000000000     , 49*0.0000000000000000       ,
+ OPT_A= 50*0          ,
+ OPT_B= 50*0          ,
+ OPT_Q0= 50*0          ,
+ OPT_SCALEQ= 50*0          ,
+ SYMAB= 3*-1         ,
+ INDEX_SYMAB= 3*-1         ,
+ L_TO_N_TYPE=0          ,
+ L_SPARSEGRID=-1         ,
+ L_TO_NQ_A=1          ,
+ L_TO_NQ_B=1          ,
+ L_TO_NQ_C=0          ,
+ L1_SPARSEGRID=2147483647 ,
+ L2_SPARSEGRID=2147483647 ,
+ NUM_OF_LMAX=0          ,
+ LEXPO_TO_NQ=1          ,
+ LEXPO_TO_NB=-1         ,
+ MAX_NB=2147483647 ,
+ MAX_NQ=2147483647 ,
+ L_SPARSEBASIS=-1         ,
+ L_TO_NB_A=-1         ,
+ L_TO_NB_B=-1         ,
+ READ_L_TO_N=F,
+ SPARSEGRID=F,
+ SPARSEGRID_TYPE=-1         ,
+ WITH_L=F,
+ SPARSEGRID_WITH_CUBA=T,
+ SPARSEGRID_WITH_SMOLYAK=T,
+ SPARSEGRID_WITH_DP=T,
+ NESTED=0          ,
+ NQ_MAX_NESTED=-1         ,
+ TYPE_OF_NDINDB=1          ,
+ NORM_OF_NDINDB=  1.7976931348623157E+308,
+ WEIGHT_OF_NDINDB=  1.0000000000000000     ,
+ NB_OF_MINNORM_OF_NDINDB=1          ,
+ DIV_NB_TO_NORM_OF_NDINDB=1          ,
+ MAXCOUPLING_OF_NDINDB=-1         ,
+ NDINIT_OF_NDINDB=1          ,
+ CONTRAC_WITH_NDINDB=F,
+ PACKED=F,
+ DNBBREP=F,
+ NAME_CONTRAC_FILE="                                                                                                                                                                                                                                                               ",
+ AUTO_CONTRAC=F,
+ MAKE_CUBATURE=F,
+ RESTART_MAKE_CUBATURE=F,
+ POGRIDREP_POLYORTHO=F,
+ POGRIDREP=F,
+ NB_BASIS=0          ,
+ MAX_ENE_CONTRAC%VAL=  10000.000000000000     ,
+ MAX_ENE_CONTRAC%UNIT="cm-1                ",
+ MAX_ENE_CONTRAC%QUANTITY="E                   ",
+ MAX_NBC=0          ,
+ MIN_NBC=0          ,
+ NQPLUSNBC_TO_NQC=2          ,
+ AUTO_CONTRAC_TYPE1_TO=100        ,
+ AUTO_CONTRAC_TYPE21_TO=200        ,
+ /
+  Parameters: nq(L) = A + B * L**expo
+ L_TO_n_type                0
+ Lmax                      -1
+ A                          1
+ B                          1
+ C                          1
+ expo                       1
+ max_n             2147483647
+ alloc tab_L_TO_n F
+ alloc tab_n_TO_L F
+  Parameters: nb(L) = A + B * L**expo
+ L_TO_n_type                0
+ Lmax                      -1
+ A                          1
+ B                          1
+ C                          0
+ expo                       1
+ max_n             2147483647
+ alloc tab_L_TO_n F
+ alloc tab_n_TO_L F
+ auto_basis:     F
+ A,B,Q0,scaleQ:    0.0000000000000000        0.0000000000000000        0.0000000000000000        1.0000000000000000     
+ opt of A,B,Q0,scaleQ:            0           0           0           0
+ Parameter(s) to be optimized?:            0
+ Tabder_Qdyn_TO_Qbasis           1           0           0           0           0           0
+&BASIS_ND
+ IQACT= 50*0          ,
+ IQSYM= 50*0          ,
+ IQDYN=2          , 49*0          ,
+ NAME="Hm                  ",
+ NB=5          ,
+ NQ=8          ,
+ NBC=-1         ,
+ NQC=-1         ,
+ CONTRAC=F,
+ CTE= 1000*0.0000000000000000       ,
+ CPLX=F,
+ AUTO_BASIS=F,
+ A= 50*0.0000000000000000       ,
+ B= 50*0.0000000000000000       ,
+ Q0= 50*0.0000000000000000       ,
+ SCALEQ=  1.0000000000000000     , 49*0.0000000000000000       ,
+ OPT_A= 50*0          ,
+ OPT_B= 50*0          ,
+ OPT_Q0= 50*0          ,
+ OPT_SCALEQ= 50*0          ,
+ SYMAB= 3*-1         ,
+ INDEX_SYMAB= 3*-1         ,
+ L_TO_N_TYPE=0          ,
+ L_SPARSEGRID=-1         ,
+ L_TO_NQ_A=1          ,
+ L_TO_NQ_B=1          ,
+ L_TO_NQ_C=0          ,
+ L1_SPARSEGRID=2147483647 ,
+ L2_SPARSEGRID=2147483647 ,
+ NUM_OF_LMAX=0          ,
+ LEXPO_TO_NQ=1          ,
+ LEXPO_TO_NB=-1         ,
+ MAX_NB=2147483647 ,
+ MAX_NQ=2147483647 ,
+ L_SPARSEBASIS=-1         ,
+ L_TO_NB_A=-1         ,
+ L_TO_NB_B=-1         ,
+ READ_L_TO_N=F,
+ SPARSEGRID=F,
+ SPARSEGRID_TYPE=-1         ,
+ WITH_L=F,
+ SPARSEGRID_WITH_CUBA=T,
+ SPARSEGRID_WITH_SMOLYAK=T,
+ SPARSEGRID_WITH_DP=T,
+ NESTED=0          ,
+ NQ_MAX_NESTED=-1         ,
+ TYPE_OF_NDINDB=1          ,
+ NORM_OF_NDINDB=  1.7976931348623157E+308,
+ WEIGHT_OF_NDINDB=  1.0000000000000000     ,
+ NB_OF_MINNORM_OF_NDINDB=1          ,
+ DIV_NB_TO_NORM_OF_NDINDB=1          ,
+ MAXCOUPLING_OF_NDINDB=-1         ,
+ NDINIT_OF_NDINDB=1          ,
+ CONTRAC_WITH_NDINDB=F,
+ PACKED=F,
+ DNBBREP=F,
+ NAME_CONTRAC_FILE="                                                                                                                                                                                                                                                               ",
+ AUTO_CONTRAC=F,
+ MAKE_CUBATURE=F,
+ RESTART_MAKE_CUBATURE=F,
+ POGRIDREP_POLYORTHO=F,
+ POGRIDREP=F,
+ NB_BASIS=0          ,
+ MAX_ENE_CONTRAC%VAL=  10000.000000000000     ,
+ MAX_ENE_CONTRAC%UNIT="cm-1                ",
+ MAX_ENE_CONTRAC%QUANTITY="E                   ",
+ MAX_NBC=0          ,
+ MIN_NBC=0          ,
+ NQPLUSNBC_TO_NQC=2          ,
+ AUTO_CONTRAC_TYPE1_TO=100        ,
+ AUTO_CONTRAC_TYPE21_TO=200        ,
+ /
+  Parameters: nq(L) = A + B * L**expo
+ L_TO_n_type                0
+ Lmax                      -1
+ A                          1
+ B                          1
+ C                          1
+ expo                       1
+ max_n             2147483647
+ alloc tab_L_TO_n F
+ alloc tab_n_TO_L F
+  Parameters: nb(L) = A + B * L**expo
+ L_TO_n_type                0
+ Lmax                      -1
+ A                          1
+ B                          1
+ C                          0
+ expo                       1
+ max_n             2147483647
+ alloc tab_L_TO_n F
+ alloc tab_n_TO_L F
+ auto_basis:     F
+ A,B,Q0,scaleQ:    0.0000000000000000        0.0000000000000000        0.0000000000000000        1.0000000000000000     
+ opt of A,B,Q0,scaleQ:            0           0           0           0
+ Parameter(s) to be optimized?:            0
+ Tabder_Qdyn_TO_Qbasis           0           1           0           0           0           0
+ Tabder_Qdyn_TO_Qbasis           1           2           0           0           0           0
+
+ BasisnD is REAL
+
+ Number of active basis sets:           1
+ WARNING: ONE layer of basis has been removed!!
+ Tabder_Qdyn_TO_Qbasis           1           2           0           0           0           0
+
+ BasisnD%opt_param           0
+
+ ---------------------------------------
+ ---------------------------------------
+ ---------------------------------------
+ =================================================
+ == END READ ACTIVE BASIS ========================
+ =================================================
+ =================================================
+ == INACTIVE BASIS ===============================
+ =================================================
+  INACTIVES PARAMETERS
+ =================================================
+ == END INACTIVE BASIS ===========================
+ =================================================
+ ============================================================
+ ============================================================
+ === END BASIS ==============================================
+ ============================================================
+ ============================================================
+  ACTIVES PARAMETERS
+ BEGINNING read_active
+ nb_act1           2
+&ACTIVES
+ COMPUT_S=F,
+ TEST=F,
+ READ_GRID=F,
+ LECT=F,
+ RESTART_GRID=F,
+ RESTART=F,
+ SAVE_FILEGRID=F,
+ KEEP_FILEGRID=F,
+ SAVE_MEMGRID=F,
+ SEQ_FILEGRID=F,
+ TYPE_FILEGRID=0          ,
+ NUM_GRID_I=0          ,
+ NUM_GRID_F=0          ,
+ POT_ONLY=F,
+ T_ONLY=F,
+ READ_OP=F,
+ NAME_HADA="SH_HADA                                                                                                                                                                                                                                                        ",
+ FORMATTED_HADA=T,
+ NAME_GRID="SH_HADA                                                                                                                                                                                                                                                        ",
+ FORMATTED_GRID=T,
+ JJ=-1         ,
+ TYPE_HAMILOP=1          ,
+ DIRECT_KEO=F,
+ DIRECT_SCALOP=F,
+ DIRECT=2          ,
+ MAKE_MATOP=T,
+ PACK_OP=F,
+ TOL_PACK=  1.0000000000000004E-007,
+ TOL_NOPACK= 0.90000000000000002     ,
+ OP_TRANSFO=F,
+ E0_TRANSFO%VAL=  0.0000000000000000     ,
+ E0_TRANSFO%UNIT="cm-1                ",
+ E0_TRANSFO%QUANTITY="E                   ",
+ /
+  END read_active
+ para_ReadOp%Op_Transfo F
+ The number of rotational basis is:           1
+  ANALYSIS PARAMETERS
+&ANALYSE
+ ANA=T,
+ PRINT=F,
+ NB_HARM_ANA=1          ,
+ MAX_ANA=40         ,
+ MAX_ENE%VAL=  20000.000000000000     ,
+ MAX_ENE%UNIT="cm-1                ",
+ MAX_ENE%QUANTITY="E                   ",
+ PROPA=F,
+ PRINT_PSI=0          ,
+ PSI2=F,
+ PSI1D_Q0=F,
+ PSI2D_Q0=F,
+ QTRANSFO=F,
+ RHO1D=F,
+ RHO2D=F,
+ WHEIGHT_RHO=F,
+ RHO_TYPE=2          ,
+ PSI_ADIA=F,
+ COHERENCE=0          ,
+ COHERENCE_EPSI=  1.0000000000000004E-006,
+ EXACTFACT=0          ,
+ INTENSITY=F,
+ NLO=F,
+ CRP=0          ,
+ CRP_ENE%VAL=  0.0000000000000000     ,
+ CRP_ENE%UNIT="cm-1                ",
+ CRP_ENE%QUANTITY="E                   ",
+ CRP_DENE%VAL=  0.0000000000000000     ,
+ CRP_DENE%UNIT="cm-1                ",
+ CRP_DENE%QUANTITY="E                   ",
+ NB_CRP_ENE=1          ,
+ PSI_SCALOP=F,
+ VIBROT=F,
+ JJMAX=-1         ,
+ ENE0%VAL=  1.7976931348623157E+308,
+ ENE0%UNIT="cm-1                ",
+ ENE0%QUANTITY="E                   ",
+ EZPE%VAL=  1.7976931348623157E+308,
+ EZPE%UNIT="cm-1                ",
+ EZPE%QUANTITY="E                   ",
+ TEMP= -1.0000000000000000     ,
+ NAME_FILE_SPECTRALWP="file_WPspectral                                                                                                                                                                                                                                                ",
+ FORMATTED_FILE_WP=T,
+ FILEPSIVERSION=0          ,
+ CONTROL=F,
+ DAVIDSON=F,
+ ARPACK=F,
+ FILTER=F,
+ SPECTRAL_SCALOP=F,
+ MAXWP_TO_WRITE_MATOP=100        ,
+ /
+
+ name_file_spectralWP,formatted_file_WP: file_WPspectral                                                                                                                                                                                                                                                 T
+ ============================================================
+ ============================================================
+ === AUTO BASIS =============================================
+ ============================================================
+ ============================================================
+ ===============================================
+ = Rec Auto Basis, layer:            1
+ ===============================================
+ packed_done:                    F
+ SparseGrid_type:                          0
+ nb_basis:                                 2
+ direct_product%...%nb:                    5           5
+ direct_product%tab_Pbasis%(i):            1
+ ===============================================
+ = Rec Auto Basis, layer:            2
+ ===============================================
+ packed_done:                    F
+ SparseGrid_type:                          0
+ nb_basis:                                 0
+ Active basis:                   T
+ check_nq_OF_basis:              T
+     Basis: Hermite polynomia
+       nb_hermite           5
+       nb_hermite           5
+       old nb_quadra           8
+       new nb_quadra           8
+       All Hermite polynomia
+     The basis is scaled
+           Q0(:)    0.0000000000000000     
+       scaleQ(:)    1.0000000000000000     
+ Max Overlap:  0.311E-11  0.359E-15
+ Primitive basis done. Layer:                 2
+ Auto_basis done. Layer:                   2
+ ===============================================
+ = END Rec Auto Basis for Layer:           2
+ ===================================================
+ direct_product%tab_Pbasis(i):            1  done. Layer:            1
+ direct_product%tab_Pbasis%(i):            2
+ ===============================================
+ = Rec Auto Basis, layer:            2
+ ===============================================
+ packed_done:                    F
+ SparseGrid_type:                          0
+ nb_basis:                                 0
+ Active basis:                   T
+ check_nq_OF_basis:              T
+     Basis: Hermite polynomia
+       nb_hermite           5
+       nb_hermite           5
+       old nb_quadra           8
+       new nb_quadra           8
+       All Hermite polynomia
+     The basis is scaled
+           Q0(:)    0.0000000000000000     
+       scaleQ(:)    1.0000000000000000     
+ Max Overlap:  0.311E-11  0.359E-15
+ Primitive basis done. Layer:                 2
+ Auto_basis done. Layer:                   2
+ ===============================================
+ = END Rec Auto Basis for Layer:           2
+ ===================================================
+ direct_product%tab_Pbasis(i):            2  done. Layer:            1
+ direct_product%...%nb           5           5
+ direct_product%...%nq           8           8
+ibasis,size(vec),sum(vec)   1:     1     5
+ibasis,size(vec),sum(vec)   2:     5    15
+ symab done
+ Max Overlap:  0.623E-11  0.394E-15
+ Max Overlap:  0.623E-11  0.394E-15
+ direct_product done. Layer:           1
+ Cubature basis. Layer:                    1
+ basis_cuba%nb          15
+ basis_cuba%nq          16
+ cubature_file%name: 2D_deg4                                                                                                                                                                                                                                                        
+ QA  -2.9306374202572441       -2.9306374202572441     
+ QB   2.9306374202572441        2.9306374202572441     
+ SQ   2.9306374202572441        2.9306374202572441     
+ Min, Average, Max Norm  0.12162102465565428       0.17513329916905590        6.2294866000618585     
+  Norm (cubature)   1.6183582164747929      -0.14052882953505988       -2.6138641619359735      -0.65099162900251073        2.5581039339422200       0.94172742096361983       -1.9745220750772252      -0.18948422202638313       -1.5889838362606659       -1.8235713754195297       0.61532053651178820        2.4580796591171128E-002 -0.41558401885481799       -1.3058022091999180       0.14297550678102755      -0.44705611618400642        2.4256850807520909       -1.4838046734278660      -0.10100749481430038       -2.3280436517072496       -8.8193706908392788E-002   1.7022999408239663        1.0082986562493423        1.7779759528047847      -0.42148009841310630       0.43155072192365329       -1.2953663291879867        2.6691374992760140       -1.1821036164263719      -0.41489487512324219        1.3123634071675787        1.2369052492425567       0.12162102465565428     
+ Average Norm, Temp  0.17513329916905590       0.17513329916905590     
+ NormB  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min          33  0.17513329916905590                0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min          65  0.14010663933524473                0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min          97  0.11208531146819578                0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         129   8.9668249174556625E-002           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         161   7.1734599339645308E-002           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         193   5.7387679471716246E-002           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         225   4.5910143577372997E-002           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         257   3.6728114861898399E-002           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         289   2.9382491889518719E-002           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         321   2.3505993511614975E-002           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         353   1.8804794809291980E-002           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         385   1.5043835847433585E-002           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         417   1.2035068677946868E-002           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         449   9.6280549423574946E-003           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         481   7.7024439538859960E-003           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         513   6.1619551631087975E-003           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         545   4.9295641304870387E-003           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         577   3.9436513043896310E-003           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         609   3.1549210435117049E-003           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         641   2.5239368348093641E-003           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         673   2.0191494678474912E-003           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         705   1.6153195742779930E-003           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         737   1.2922556594223945E-003           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         769   1.0338045275379156E-003           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         801   8.2704362203033259E-004           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         833   6.6163489762426607E-004           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         865   5.2930791809941292E-004           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         897   4.2344633447953035E-004           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         929   3.3875706758362432E-004           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         961   2.7100565406689949E-004           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min         993   2.1680452325351961E-004           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1025   1.7344361860281569E-004           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1057   1.3875489488225255E-004           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1089   1.1100391590580204E-004           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1121   8.8803132724641644E-005           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1153   7.1042506179713313E-005           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1185   5.6834004943770652E-005           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1217   4.5467203955016521E-005           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1249   3.6373763164013218E-005           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1281   2.9099010531210575E-005           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1313   2.3279208424968462E-005           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1345   1.8623366739974771E-005           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1377   1.4898693391979819E-005           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1409   1.1918954713583855E-005           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1441   9.5351637708670842E-006           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1473   7.6281310166936680E-006           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1505   6.1025048133549348E-006           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1537   4.8820038506839480E-006           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1569   3.9056030805471584E-006           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1601   3.1244824644377270E-006           0  0.12162102465565428     
+ imc,Temp_max,nb_Norm_min,Norm_min        1633   2.4995859715501816E-006           0  0.12162102465565428     
+ QA  -2.4734614204030354       -2.9155391897640510     
+ QB   2.1786278376427051        2.5885581990516973     
+ SQ   1.2469491968346023        1.2469491968346023     
+ Min, Average, Max Norm  0.11625994856387563       0.16383427098489123        1.1380079401618610     
+  Norm (cubature)  0.11625994856387563     
+ Average Norm, Temp  0.16383427098489123       0.16383427098489123     
+ imc,Temp_max,nb_Norm_min,Norm_min         367  0.16383427098489123                0  0.11625994856387563     
+ imc,Temp_max,nb_Norm_min,Norm_min         733  0.10922284732326083                0  0.11625994856387563     
+ imc,Temp_max,nb_Norm_min,Norm_min        1099   7.2815231548840564E-002           0  0.11625994856387563     
+ imc,Temp_max,nb_Norm_min,Norm_min        1465   4.8543487699227048E-002           0  0.11625994856387563     
+ imc,Temp_max,nb_Norm_min,Norm_min        1831   3.2362325132818039E-002           0  0.11625994856387563     
+ imc,Temp_max,nb_Norm_min,Norm_min        2197   2.1574883421878695E-002           0  0.11625994856387563     
+ imc,Temp_max,nb_Norm_min,Norm_min        2563   1.4383255614585798E-002           0  0.11625994856387563     
+ imc,Temp_max,nb_Norm_min,Norm_min        2929   9.5888370763905339E-003           2  0.11278806845276493     
+ imc,Temp_max,nb_Norm_min,Norm_min        3295   6.3925580509270235E-003           0  0.11278806845276493     
+ imc,Temp_max,nb_Norm_min,Norm_min        3661   4.2617053672846829E-003           0  0.11278806845276493     
+ imc,Temp_max,nb_Norm_min,Norm_min        4027   2.8411369115231224E-003           0  0.11278806845276493     
+ imc,Temp_max,nb_Norm_min,Norm_min        4393   1.8940912743487485E-003           2  0.11034215142196022     
+ imc,Temp_max,nb_Norm_min,Norm_min        4759   1.2627275162324992E-003           1  0.11017388969497784     
+ imc,Temp_max,nb_Norm_min,Norm_min        5125   8.4181834415499957E-004           4   9.5909791575511258E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        5491   5.6121222943666645E-004           1   9.4105168738642483E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        5857   3.7414148629111098E-004           1   9.4007564094024956E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        6223   2.4942765752740734E-004           7   7.8904013488423047E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        6589   1.6628510501827157E-004           0   7.8904013488423047E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        6955   1.1085673667884772E-004           3   7.4501307548448581E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        7321   7.3904491119231819E-005           1   7.2115451959363294E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        7687   4.9269660746154553E-005           5   6.4742407547724215E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        8053   3.2846440497436375E-005           5   6.2325401361921884E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        8419   2.1897626998290920E-005           6   4.8780800451456600E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        8785   1.4598417998860615E-005           2   4.6274812760107718E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        9151   9.7322786659070774E-006           4   4.3539663855456649E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        9517   6.4881857772713855E-006           5   3.2637515365615856E-002
+ imc,Temp_max,nb_Norm_min,Norm_min        9883   4.3254571848475912E-006           1   2.8420467443115365E-002
+ imc,Temp_max,nb_Norm_min,Norm_min       10249   2.8836381232317276E-006           0   2.8420467443115365E-002
+ imc,Temp_max,nb_Norm_min,Norm_min       10615   1.9224254154878185E-006           2   2.7583791383619456E-002
+ imc,Temp_max,nb_Norm_min,Norm_min       10981   1.2816169436585458E-006           3   2.3605656714816594E-002
+ imc,Temp_max,nb_Norm_min,Norm_min       11347   8.5441129577236395E-007           0   2.3605656714816594E-002
+ imc,Temp_max,nb_Norm_min,Norm_min       11713   5.6960753051490933E-007           1   2.3535500536846676E-002
+ imc,Temp_max,nb_Norm_min,Norm_min       12079   3.7973835367660626E-007           5   2.0609358821378480E-002
+ imc,Temp_max,nb_Norm_min,Norm_min       12445   2.5315890245107089E-007           3   1.7872622525828677E-002
+ imc,Temp_max,nb_Norm_min,Norm_min       12811   1.6877260163404729E-007           5   1.4725999085683079E-002
+ imc,Temp_max,nb_Norm_min,Norm_min       13177   1.1251506775603154E-007           1   1.4079118699474048E-002
+ imc,Temp_max,nb_Norm_min,Norm_min       13543   7.5010045170687699E-008           4   1.1253080820373698E-002
+ imc,Temp_max,nb_Norm_min,Norm_min       13909   5.0006696780458475E-008           7   8.6991084450556873E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       14275   3.3337797853638986E-008           3   7.8095165345717340E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       14641   2.2225198569092660E-008           2   7.1927258334979205E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       15007   1.4816799046061776E-008           0   7.1927258334979205E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       15373   9.8778660307078522E-009           4   6.1561755238452162E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       15739   6.5852440204719020E-009           1   5.8875888496770111E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       16105   4.3901626803146016E-009           5   5.6511132453327968E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       16471   2.9267751202097348E-009           2   3.5358991642578542E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       16837   1.9511834134731568E-009           0   3.5358991642578542E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       17203   1.3007889423154380E-009           0   3.5358991642578542E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       17569   8.6719262821029208E-010           0   3.5358991642578542E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       17935   5.7812841880686149E-010           2   3.1676761141784674E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       18301   3.8541894587124101E-010           3   2.9748649789308628E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       18667   2.5694596391416073E-010           7   2.1343502651853755E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       19033   1.7129730927610716E-010           1   2.0724394796618178E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       19399   1.1419820618407146E-010           1   1.9015232695511839E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       19765   7.6132137456047651E-011           2   1.8234682013949914E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       20131   5.0754758304031772E-011           1   1.7870412334890183E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       20497   3.3836505536021187E-011           1   1.7525915976392640E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       20863   2.2557670357347459E-011           1   1.7001693160279623E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       21229   1.5038446904898307E-011           5   1.3072694566380434E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       21595   1.0025631269932206E-011           4   1.0950326237181426E-003
+ imc,Temp_max,nb_Norm_min,Norm_min       21961   6.6837541799548051E-012           3   9.5653758440506745E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       22327   4.4558361199698706E-012           3   9.1415013367440246E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       22693   2.9705574133132473E-012           2   7.5060381399085396E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       23059   1.9803716088754986E-012           1   7.4705273507693509E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       23425   1.3202477392503326E-012           6   6.2621202658504386E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       23791   8.8016515950022184E-013           3   4.9808620308017921E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       24157   5.8677677300014800E-013           3   4.5090107628909312E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       24523   3.9118451533343205E-013           1   4.2419794793971367E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       24889   2.6078967688895473E-013           3   3.8626724044358597E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       25255   1.7385978459263651E-013           1   3.7975074456855253E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       25621   1.1590652306175770E-013           0   3.7975074456855253E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       25987   7.7271015374505134E-014           4   3.0504517431067233E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       26353   5.1514010249670094E-014           4   2.8713653968252595E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       26719   3.4342673499780069E-014           6   2.3040873275760278E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       27085   2.2895115666520047E-014           2   2.1604526577955122E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       27451   1.5263410444346700E-014           1   2.0616755326868420E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       27817   1.0175606962897801E-014           4   1.5195409313106489E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       28183   6.7837379752652013E-015           4   1.4738947349845558E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       28549   4.5224919835101347E-015           1   1.4696557614452403E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       28915   3.0149946556734234E-015           2   1.1668262621890985E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       29281   2.0099964371156159E-015           1   1.0852620698456834E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       29647   1.3399976247437440E-015           2   1.0487355977497725E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       30013   8.9333174982916285E-016           0   1.0487355977497725E-004
+ imc,Temp_max,nb_Norm_min,Norm_min       30379   5.9555449988610866E-016           2   8.7123740868222795E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       30745   3.9703633325740582E-016           3   7.6812115312284755E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       31111   2.6469088883827058E-016           1   7.5106018280493217E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       31477   1.7646059255884708E-016           1   7.4162308553115945E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       31843   1.1764039503923141E-016           4   6.0629601358512105E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       32209   7.8426930026154286E-017           2   5.2017316108193874E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       32575   5.2284620017436195E-017           3   4.2242561817136202E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       32941   3.4856413344957470E-017           1   4.0921602067538718E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       33307   2.3237608896638317E-017           2   3.4579924806540134E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       33673   1.5491739264425547E-017           2   2.9890759413604274E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       34039   1.0327826176283698E-017           5   2.4799439013585516E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       34405   6.8852174508557999E-018           2   2.0700462079978612E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       34771   4.5901449672372002E-018           2   1.9156678369452064E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       35137   3.0600966448248005E-018           3   1.6333388225568722E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       35503   2.0400644298832005E-018           1   1.5420899545451780E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       35869   1.3600429532554671E-018           1   1.4962809965250857E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       36235   9.0669530217031156E-019           2   1.2304663763581072E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       36601   6.0446353478020780E-019           1   1.2190318245054638E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       36967   4.0297568985347192E-019           1   1.2072533654546894E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       37333   2.6865045990231464E-019           1   1.0937183098342427E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       37699   1.7910030660154311E-019           0   1.0937183098342427E-005
+ imc,Temp_max,nb_Norm_min,Norm_min       38065   1.1940020440102875E-019           3   9.8628238056014769E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       38431   7.9600136267352508E-020           2   8.8936801435789739E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       38797   5.3066757511568344E-020           5   7.3414820409887263E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       39163   3.5377838341045567E-020           3   6.1181221099668301E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       39529   2.3585225560697047E-020           2   5.1180336499722383E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       39895   1.5723483707131365E-020           1   5.0147666289790476E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       40261   1.0482322471420911E-020           5   3.5642563685889120E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       40627   6.9882149809472747E-021           0   3.5642563685889120E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       40993   4.6588099872981836E-021           3   2.8378087478674425E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       41359   3.1058733248654560E-021           0   2.8378087478674425E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       41725   2.0705822165769708E-021           1   2.4981389083258328E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       42091   1.3803881443846473E-021           1   2.4808849745523927E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       42457   9.2025876292309830E-022           1   2.2777472694140882E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       42823   6.1350584194873226E-022           1   2.2608046513546608E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       43189   4.0900389463248824E-022           3   2.0525917745518975E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       43555   2.7266926308832552E-022           2   2.0138399883950527E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       43921   1.8177950872555036E-022           3   1.5469021899813395E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       44287   1.2118633915036693E-022           1   1.5401299521057037E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       44653   8.0790892766911287E-023           3   1.4809368567511390E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       45019   5.3860595177940870E-023           3   1.2807086554504898E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       45385   3.5907063451960582E-023           6   1.0761904075152110E-006
+ imc,Temp_max,nb_Norm_min,Norm_min       45751   2.3938042301307057E-023           3   9.4907123865188397E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       46117   1.5958694867538041E-023           1   8.4284642514650881E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       46483   1.0639129911692029E-023           1   8.4271091067360165E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       46849   7.0927532744613534E-024           3   8.1272763235395393E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       47215   4.7285021829742361E-024           3   7.6733911034069067E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       47581   3.1523347886494911E-024           3   6.3767378000201183E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       47947   2.1015565257663275E-024           2   5.4308366790907322E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       48313   1.4010376838442185E-024           3   4.7991311739980325E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       48679   9.3402512256281237E-025           2   4.3132557937331923E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       49045   6.2268341504187497E-025           4   3.7605921921474982E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       49411   4.1512227669458338E-025           5   3.4044648742015298E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       49777   2.7674818446305560E-025           3   3.1020669647552843E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       50143   1.8449878964203708E-025           1   3.0331737608042515E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       50509   1.2299919309469140E-025           5   2.0933405473444879E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       50875   8.1999462063127606E-026           2   2.0268369754079449E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       51241   5.4666308042085078E-026           3   1.8921483510462379E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       51607   3.6444205361390058E-026           3   1.6194705067645728E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       51973   2.4296136907593375E-026           2   1.4511286214450897E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       52339   1.6197424605062253E-026           2   1.3051131920112211E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       52705   1.0798283070041503E-026           1   1.1242944056991877E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       53071   7.1988553800276690E-027           2   1.0089688049347776E-007
+ imc,Temp_max,nb_Norm_min,Norm_min       53437   4.7992369200184467E-027           2   9.3004323894285816E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       53803   3.1994912800122982E-027           3   7.6169359292698314E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       54169   2.1329941866748656E-027           1   7.4798942831161543E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       54535   1.4219961244499105E-027           3   6.1512486762346121E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       54901   9.4799741629994039E-028           0   6.1512486762346121E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       55267   6.3199827753329362E-028           1   6.0964987243949654E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       55633   4.2133218502219584E-028           2   5.6332966721013623E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       55999   2.8088812334813060E-028           1   5.3194967582806307E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       56365   1.8725874889875376E-028           5   4.5089880205055947E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       56731   1.2483916593250253E-028           6   3.8943091481467033E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       57097   8.3226110621668363E-029           3   3.5007435878081066E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       57463   5.5484073747778920E-029           2   3.1507906800026261E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       57829   3.6989382498519286E-029           2   2.7980877603004295E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       58195   2.4659588332346192E-029           2   2.6063065434423069E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       58561   1.6439725554897464E-029           3   2.3812178766630742E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       58927   1.0959817036598311E-029           1   2.3664768598505221E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       59293   7.3065446910655411E-030           4   1.9881302158032093E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       59659   4.8710297940436945E-030           3   1.8767956487348429E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       60025   3.2473531960291304E-030           4   1.3455724112057075E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       60391   2.1649021306860873E-030           3   1.2003586772930200E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       60757   1.4432680871240583E-030           0   1.2003586772930200E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       61123   9.6217872474937232E-031           1   1.1758087816017891E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       61489   6.4145248316624824E-031           3   1.0340429910889684E-008
+ imc,Temp_max,nb_Norm_min,Norm_min       61855   4.2763498877749892E-031           4   8.9486190327863315E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       62221   2.8508999251833264E-031           2   7.9775853710683677E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       62587   1.9005999501222178E-031           2   7.3320293843317411E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       62953   1.2670666334148120E-031           1   7.0305540611808907E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       63319   8.4471108894320813E-032           1   6.6086540344566670E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       63685   5.6314072596213882E-032           8   5.0416202164949156E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       64051   3.7542715064142592E-032           2   4.4003521238265184E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       64417   2.5028476709428400E-032           1   4.3105874933864335E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       64783   1.6685651139618935E-032           1   4.3009360614757879E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       65149   1.1123767426412625E-032           0   4.3009360614757879E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       65515   7.4158449509417506E-033           4   3.5309079366860796E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       65881   4.9438966339611676E-033           0   3.5309079366860796E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       66247   3.2959310893074455E-033           6   2.9334859650690519E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       66613   2.1972873928716306E-033           6   2.1197101350370070E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       66979   1.4648582619144205E-033           2   1.8486332188355705E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       67345   9.7657217460961381E-034           0   1.8486332188355705E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       67711   6.5104811640640932E-034           3   1.7458593864113944E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       68077   4.3403207760427291E-034           3   1.5839778980103582E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       68443   2.8935471840284863E-034           2   1.3284978719375036E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       68809   1.9290314560189912E-034           1   1.1675413271004718E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       69175   1.2860209706793276E-034           0   1.1675413271004718E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       69541   8.5734731378621847E-035           1   1.0878698152559638E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       69907   5.7156487585747901E-035           2   1.0610448907507329E-009
+ imc,Temp_max,nb_Norm_min,Norm_min       70273   3.8104325057165269E-035           4   7.6781559509965517E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       70639   2.5402883371443515E-035           1   7.6635732251137750E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       71005   1.6935255580962344E-035           1   7.6546938846821558E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       71371   1.1290170387308231E-035           3   7.1356207861227292E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       71737   7.5267802582054876E-036           4   5.3490392433973450E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       72103   5.0178535054703259E-036           1   5.1775103818088495E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       72469   3.3452356703135509E-036           2   4.9009209396186769E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       72835   2.2301571135423676E-036           2   4.2063558875205056E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       73201   1.4867714090282452E-036           2   3.9985273653582056E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       73567   9.9118093935216353E-037           6   3.4476554569277110E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       73933   6.6078729290144247E-037           3   3.1269458813812326E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       74299   4.4052486193429503E-037           4   2.6277247697473125E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       74665   2.9368324128953005E-037           2   2.4837344172352832E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       75031   1.9578882752635338E-037           2   2.3146675840646394E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       75397   1.3052588501756893E-037           0   2.3146675840646394E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       75763   8.7017256678379292E-038           4   2.0858220141322830E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       76129   5.8011504452252872E-038           5   1.6736025344348512E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       76495   3.8674336301501920E-038           2   1.5631298714654228E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       76861   2.5782890867667952E-038           3   1.4446780827341185E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       77227   1.7188593911778635E-038           7   1.1478005855821548E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       77593   1.1459062607852424E-038           1   1.0680446129581727E-010
+ imc,Temp_max,nb_Norm_min,Norm_min       77959   7.6393750719016176E-039           3   9.8332203055821311E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       78325   5.0929167146010788E-039           2   8.8983983185948332E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       78691   3.3952778097340530E-039           1   8.5249616093548041E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       79057   2.2635185398227022E-039           3   7.8181053067392035E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       79423   1.5090123598818017E-039           3   7.1757465566409491E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       79789   1.0060082399212013E-039           8   5.3819658200216790E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       80155   6.7067215994746758E-040           3   4.7696933589963884E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       80521   4.4711477329831180E-040           2   4.1857598002174736E-011
+ QA  -1.9816788328705526       -2.3296031829972472     
+ QB   2.4494897426966897        2.3296031794566852     
+ SQ   3.9252664936699513E-010   3.9252664936699513E-010
+ Min, Average, Max Norm   3.9252664936699513E-011   1.4839059195586603E-010   2.1825177674654279E-010
+  Norm (cubature)   3.9252664936699513E-011
+ Average Norm, Temp   1.4839059195586603E-010   1.4839059195586603E-010
+ imc,Temp_max,nb_Norm_min,Norm_min         367   1.4839059195586603E-010           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min         733   9.8927061303910698E-011           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        1099   6.5951374202607145E-011           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        1465   4.3967582801738099E-011           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        1831   2.9311721867825403E-011           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        2197   1.9541147911883604E-011           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        2563   1.3027431941255738E-011           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        2929   8.6849546275038263E-012           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        3295   5.7899697516692178E-012           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        3661   3.8599798344461455E-012           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        4027   2.5733198896307641E-012           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        4393   1.7155465930871762E-012           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        4759   1.1436977287247844E-012           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        5125   7.6246515248318964E-013           0   3.9252664936699513E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        5491   5.0831010165545986E-013           1   3.7024831088550540E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        5857   3.3887340110363993E-013           0   3.7024831088550540E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        6223   2.2591560073575998E-013           2   3.6018152252739855E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        6589   1.5061040049050667E-013           3   3.3817308308158476E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        6955   1.0040693366033779E-013           4   3.1869490275588616E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        7321   6.6937955773558542E-014           4   2.9288123891155626E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        7687   4.4625303849039035E-014           1   2.8931800302541793E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        8053   2.9750202566026027E-014           1   2.8033756891329321E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        8419   1.9833468377350686E-014           2   2.7354984071577479E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        8785   1.3222312251567126E-014           5   2.6618801068981529E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        9151   8.8148748343780852E-015           7   2.4161354114997748E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        9517   5.8765832229187238E-015           2   2.3107868172093452E-011
+ imc,Temp_max,nb_Norm_min,Norm_min        9883   3.9177221486124833E-015           1   2.2818777753058638E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       10249   2.6118147657416559E-015           3   2.2104139092759195E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       10615   1.7412098438277708E-015           3   2.1664734715218694E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       10981   1.1608065625518473E-015           3   2.1523906658287906E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       11347   7.7387104170123169E-016           2   2.1502354359858669E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       11713   5.1591402780082116E-016           5   2.0937454235637320E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       12079   3.4394268520054746E-016           3   2.0685678705627101E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       12445   2.2929512346703169E-016           3   2.0446091708489051E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       12811   1.5286341564468781E-016           2   2.0359013839476737E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       13177   1.0190894376312522E-016           2   2.0191688680469551E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       13543   6.7939295842083494E-017           2   2.0139481743373444E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       13909   4.5292863894722333E-017           3   2.0037607693224245E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       14275   3.0195242596481562E-017           2   1.9906592906629756E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       14641   2.0130161730987709E-017           0   1.9906592906629756E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       15007   1.3420107820658474E-017           2   1.9871232656707188E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       15373   8.9467385471056495E-018           0   1.9871232656707188E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       15739   5.9644923647371005E-018           0   1.9871232656707188E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       16105   3.9763282431580675E-018           1   1.9832487132193678E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       16471   2.6508854954387119E-018           2   1.9788042911894875E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       16837   1.7672569969591415E-018           2   1.9756637818762892E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       17203   1.1781713313060945E-018           1   1.9728092405585004E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       17569   7.8544755420406309E-019           2   1.9675611248660654E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       17935   5.2363170280270882E-019           2   1.9659556611784612E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       18301   3.4908780186847258E-019           4   1.9600156864204317E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       18667   2.3272520124564840E-019           5   1.9558956649903031E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       19033   1.5515013416376562E-019           1   1.9534367905592527E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       19399   1.0343342277584376E-019           0   1.9534367905592527E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       19765   6.8955615183895849E-020           1   1.9526911978028901E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       20131   4.5970410122597238E-020           0   1.9526911978028901E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       20497   3.0646940081731494E-020           0   1.9526911978028901E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       20863   2.0431293387820997E-020           0   1.9526911978028901E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       21229   1.3620862258547334E-020           0   1.9526911978028901E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       21595   9.0805748390315573E-021           1   1.9524737964602740E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       21961   6.0537165593543723E-021           0   1.9524737964602740E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       22327   4.0358110395695818E-021           1   1.9519747997972843E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       22693   2.6905406930463881E-021           0   1.9519747997972843E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       23059   1.7936937953642590E-021           0   1.9519747997972843E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       23425   1.1957958635761727E-021           0   1.9519747997972843E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       23791   7.9719724238411521E-022           0   1.9519747997972843E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       24157   5.3146482825607690E-022           7   1.9504325330309904E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       24523   3.5430988550405130E-022           3   1.9497372044270040E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       24889   2.3620659033603421E-022           0   1.9497372044270040E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       25255   1.5747106022402283E-022           1   1.9497039866555874E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       25621   1.0498070681601523E-022           5   1.9494450505189740E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       25987   6.9987137877343491E-023           5   1.9487729370832300E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       26353   4.6658091918229000E-023           4   1.9484623536689719E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       26719   3.1105394612152672E-023           5   1.9478383232146362E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       27085   2.0736929741435117E-023           3   1.9476344898029595E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       27451   1.3824619827623412E-023           3   1.9474989710313010E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       27817   9.2164132184156086E-024           1   1.9474661220432690E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       28183   6.1442754789437396E-024           4   1.9471870212525714E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       28549   4.0961836526291600E-024           5   1.9469099799964333E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       28915   2.7307891017527735E-024           0   1.9469099799964333E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       29281   1.8205260678351825E-024           3   1.9468555161731004E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       29647   1.2136840452234551E-024           0   1.9468555161731004E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       30013   8.0912269681563684E-025           1   1.9468458279532931E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       30379   5.3941513121042462E-025           2   1.9467944802156603E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       30745   3.5961008747361647E-025           6   1.9466547310263052E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       31111   2.3974005831574433E-025           3   1.9465825356241573E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       31477   1.5982670554382957E-025           6   1.9464536082753990E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       31843   1.0655113702921973E-025           2   1.9464304150964245E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       32209   7.1034091352813160E-026           5   1.9463231819199561E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       32575   4.7356060901875447E-026           2   1.9463195865356383E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       32941   3.1570707267916971E-026           2   1.9462941024589489E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       33307   2.1047138178611316E-026           2   1.9462724980375220E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       33673   1.4031425452407546E-026           0   1.9462724980375220E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       34039   9.3542836349383643E-027           1   1.9462568489343794E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       34405   6.2361890899589102E-027           1   1.9462557403961956E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       34771   4.1574593933059404E-027          10   1.9461963466146906E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       35137   2.7716395955372938E-027           4   1.9461590565539023E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       35503   1.8477597303581963E-027           0   1.9461590565539023E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       35869   1.2318398202387976E-027           0   1.9461590565539023E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       36235   8.2122654682586514E-028           0   1.9461590565539023E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       36601   5.4748436455057685E-028           0   1.9461590565539023E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       36967   3.6498957636705128E-028           0   1.9461590565539023E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       37333   2.4332638424470090E-028           0   1.9461590565539023E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       37699   1.6221758949646729E-028           0   1.9461590565539023E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       38065   1.0814505966431155E-028           1   1.9461538266210996E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       38431   7.2096706442874372E-029           0   1.9461538266210996E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       38797   4.8064470961916256E-029           0   1.9461538266210996E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       39163   3.2042980641277509E-029           1   1.9461497991745844E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       39529   2.1361987094185010E-029           0   1.9461497991745844E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       39895   1.4241324729456675E-029           1   1.9461463123011762E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       40261   9.4942164863044515E-030           0   1.9461463123011762E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       40627   6.3294776575363015E-030           0   1.9461463123011762E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       40993   4.2196517716908679E-030           0   1.9461463123011762E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       41359   2.8131011811272457E-030           0   1.9461463123011762E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       41725   1.8754007874181641E-030           1   1.9461453055303979E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       42091   1.2502671916121095E-030           0   1.9461453055303979E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       42457   8.3351146107473972E-031           0   1.9461453055303979E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       42823   5.5567430738315987E-031           0   1.9461453055303979E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       43189   3.7044953825543994E-031           1   1.9461448420891027E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       43555   2.4696635883696000E-031           0   1.9461448420891027E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       43921   1.6464423922464002E-031           1   1.9461434727494483E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       44287   1.0976282614976003E-031           0   1.9461434727494483E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       44653   7.3175217433173359E-032           0   1.9461434727494483E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       45019   4.8783478288782247E-032           0   1.9461434727494483E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       45385   3.2522318859188166E-032           0   1.9461434727494483E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       45751   2.1681545906125447E-032           2   1.9461430848188549E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       46117   1.4454363937416966E-032           1   1.9461425362523641E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       46483   9.6362426249446447E-033           0   1.9461425362523641E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       46849   6.4241617499630978E-033           0   1.9461425362523641E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       47215   4.2827744999753992E-033           0   1.9461425362523641E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       47581   2.8551829999835998E-033           0   1.9461425362523641E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       47947   1.9034553333224002E-033           1   1.9461410015137127E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       48313   1.2689702222149337E-033           0   1.9461410015137127E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       48679   8.4598014814328922E-034           0   1.9461410015137127E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       49045   5.6398676542885956E-034           0   1.9461410015137127E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       49411   3.7599117695257308E-034           0   1.9461410015137127E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       49777   2.5066078463504874E-034           0   1.9461410015137127E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       50143   1.6710718975669919E-034           0   1.9461410015137127E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       50509   1.1140479317113281E-034           0   1.9461410015137127E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       50875   7.4269862114088541E-035           0   1.9461410015137127E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       51241   4.9513241409392364E-035           1   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       51607   3.3008827606261578E-035           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       51973   2.2005885070841055E-035           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       52339   1.4670590047227373E-035           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       52705   9.7803933648182491E-036           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       53071   6.5202622432121665E-036           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       53437   4.3468414954747781E-036           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       53803   2.8978943303165192E-036           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       54169   1.9319295535443463E-036           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       54535   1.2879530356962311E-036           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       54901   8.5863535713082080E-037           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       55267   5.7242357142054726E-037           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       55633   3.8161571428036489E-037           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       55999   2.5441047618690996E-037           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       56365   1.6960698412460665E-037           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       56731   1.1307132274973779E-037           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       57097   7.5380881833158529E-038           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       57463   5.0253921222105697E-038           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       57829   3.3502614148070468E-038           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       58195   2.2335076098713649E-038           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       58561   1.4890050732475768E-038           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       58927   9.9267004883171801E-039           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       59293   6.6178003255447872E-039           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       59659   4.4118668836965252E-039           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       60025   2.9412445891310170E-039           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       60391   1.9608297260873450E-039           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       60757   1.3072198173915635E-039           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       61123   8.7147987826104246E-040           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       61489   5.8098658550736170E-040           0   1.9461391617831017E-011
+ imc,Temp_max,nb_Norm_min,Norm_min       61855   3.8732439033824121E-040           0   1.9461391617831017E-011
+  Optimal norm   1.9461391617831017E-011
+ av   2.7755575615628914E-017   3.1556668769313753E-017
+ Max Overlap:  0.212E-09  0.595E-10
+ Cubature basis done. Layer:               1

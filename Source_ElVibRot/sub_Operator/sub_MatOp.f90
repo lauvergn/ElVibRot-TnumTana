@@ -2388,10 +2388,10 @@ CONTAINS
           write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
           CALL flush_perso(out_unitp)
         END IF
-        !$OMP parallel do default(none) &
-        !$OMP shared(para_Op,print_level,out_unitp) &
-        !$OMP shared(MPI_id) &
-        !$OMP private(i) &
+        
+        !$OMP parallel do default(none)                    &
+        !$OMP shared(para_Op,print_level,out_unitp,MPI_id) &
+        !$OMP private(i)                                   &
         !$OMP num_threads(nb_thread)
         DO i=1,para_Op%nb_tot
           !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
@@ -2667,8 +2667,7 @@ CONTAINS
         n=para_Op%nb_tot/nb_thread
         !$OMP parallel do &
         !$OMP default(none) &
-        !$OMP shared(para_Op,psi,Hpsi,print_level,out_unitp) &
-        !$OMP shared(MPI_id) &
+        !$OMP shared(para_Op,psi,Hpsi,print_level,out_unitp,MPI_id) &
         !$OMP private(i,ith) &
         !$OMP num_threads(nb_thread)
         DO i=1,para_Op%nb_tot

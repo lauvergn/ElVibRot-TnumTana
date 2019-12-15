@@ -1735,7 +1735,7 @@ CASE(1)
 
   IF (Rerr /= 0) THEN
     write(out_unitp,*) 'ERROR in ',name_sub
-    write(out_unitp,*) 'Probleme while writing the WP with version=',version
+    write(out_unitp,*) 'Problem while writing the WP with version=',version
     STOP
   END IF
 

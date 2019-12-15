@@ -30,16 +30,16 @@
  END TYPE FracInteger
 
  INTERFACE operator (+)
-  MODULE PROCEDURE frac1_PLUS_frac2,frac1_PLUS_Int2
+  MODULE PROCEDURE frac1_PLUS_frac2,frac1_PLUS_Int2,Int1_PLUS_frac2
  END INTERFACE
  INTERFACE operator (-)
-  MODULE PROCEDURE frac1_MINUS_frac2,frac1_MINUS_Int2
+  MODULE PROCEDURE frac1_MINUS_frac2,frac1_MINUS_Int2,Int1_MINUS_frac2
  END INTERFACE
  INTERFACE operator (*)
-  MODULE PROCEDURE frac1_TIME_frac2
+  MODULE PROCEDURE frac1_TIME_frac2,Int1_TIME_frac2,frac1_TIME_Int2
  END INTERFACE
  INTERFACE operator (/)
-  MODULE PROCEDURE frac1_DIVIDEBY_frac2
+  MODULE PROCEDURE frac1_DIVIDEBY_frac2,Int1_DIVIDEBY_frac2,frac1_DIVIDEBY_Int2
  END INTERFACE
 
  INTERFACE operator (==)
@@ -67,7 +67,7 @@
  END INTERFACE
 
 PRIVATE
-PUBLIC :: FracInteger, test_FracInteger
+PUBLIC :: FracInteger, test_FracInteger,frac_IS_integer
 PUBLIC :: operator (+),operator (-),operator (*),operator (/)
 PUBLIC :: operator (==),operator (/=),operator (>),operator (<),operator (>=),operator (<=)
 PUBLIC :: assignment (=),frac_TO_string,frac_TO_real
@@ -77,6 +77,9 @@ PUBLIC :: frac_simplification
 
   SUBROUTINE test_FracInteger()
    TYPE(FracInteger) :: frac1,frac2
+
+   TYPE(FracInteger), allocatable :: tab_frac1(:)
+   TYPE(FracInteger), allocatable :: tab_frac2(:)
 
 
    frac1 = FracInteger(1,2)
@@ -113,9 +116,63 @@ PUBLIC :: frac_simplification
    write(6,*) 'frac1: ',frac_TO_string(frac1)
 
 
+   write(6,*) 'table of FracInteger:'
+   tab_frac1 = [ FracInteger(1,2), FracInteger(1,3), FracInteger(1,4) ]
+   write(6,*) 'tab_frac1            ',tab_frac1
+
+   tab_frac2 = tab_frac1
+   write(6,*) 'tab_frac2=tab_frac1  ',tab_frac2
+   write(6,*)
+
+   tab_frac2 = 5*tab_frac1
+   write(6,*) '5*tab_frac1          ',tab_frac2
+   tab_frac2 = tab_frac1*5
+   write(6,*) 'tab_frac1*5          ',tab_frac2
+   tab_frac2 = frac1*tab_frac1
+   write(6,*) 'frac1*tab_frac1      ',tab_frac2
+   tab_frac2 = tab_frac1*frac1
+   write(6,*) 'tab_frac1*frac1      ',tab_frac2
+   tab_frac2 = tab_frac1*tab_frac1
+   write(6,*) 'tab_frac1*tab_frac1  ',tab_frac2
+   write(6,*)
+
+   tab_frac2 = 5/tab_frac1
+   write(6,*) '5/tab_frac1          ',tab_frac2
+   tab_frac2 = tab_frac1/5
+   write(6,*) 'tab_frac1/5          ',tab_frac2
+   tab_frac2 = tab_frac1/tab_frac1
+   write(6,*) 'tab_frac1/tab_frac1  ',tab_frac2
+   tab_frac2 = tab_frac1/0
+   write(6,*) 'tab_frac1/0          ',tab_frac2
+   write(6,*)
+
+   tab_frac2 = tab_frac1 + tab_frac1
+   write(6,*) 'tab_frac1+tab_frac1  ',tab_frac2
+   tab_frac2 = tab_frac1 + 5
+   write(6,*) 'tab_frac1+5          ',tab_frac2
+   tab_frac2 = 5+tab_frac1
+   write(6,*) '5+tab_frac1          ',tab_frac2
+   write(6,*)
+
+   tab_frac2 = tab_frac1 - tab_frac1
+   write(6,*) 'tab_frac1-tab_frac1  ',tab_frac2
+   tab_frac2 = tab_frac1 - 5
+   write(6,*) 'tab_frac1-5          ',tab_frac2
+   tab_frac2 = 5-tab_frac1
+   write(6,*) '5-tab_frac1          ',tab_frac2
+   write(6,*)
+
  END SUBROUTINE test_FracInteger
 
-  SUBROUTINE Int_TO_frac(frac,i)
+  ELEMENTAL FUNCTION frac_IS_integer(frac) RESULT(test)
+   TYPE(FracInteger), intent(in) :: frac
+   logical                       :: test
+
+   test = (frac%den == 1) .OR. (frac%num == 0)
+
+ END FUNCTION frac_IS_integer
+
+  ELEMENTAL SUBROUTINE Int_TO_frac(frac,i)
    TYPE(FracInteger), intent(inout) :: frac
    integer,           intent(in)    :: i
 
@@ -123,7 +180,8 @@ PUBLIC :: frac_simplification
 
  END SUBROUTINE Int_TO_frac
 
-  FUNCTION frac_TO_string(frac) RESULT(String)
+
+ FUNCTION frac_TO_string(frac) RESULT(String)
    USE mod_string, only : String_TO_String,int_TO_char
    character (len=:), allocatable  :: String
    TYPE(FracInteger), intent(in) :: frac
@@ -135,7 +193,7 @@ PUBLIC :: frac_simplification
    END IF
 
  END FUNCTION frac_TO_string
- FUNCTION frac_TO_real(frac) RESULT(R)
+ ELEMENTAL FUNCTION frac_TO_real(frac) RESULT(R)
  USE mod_NumParameters, only : Rkind
    real(kind=Rkind)              :: R
    TYPE(FracInteger), intent(in) :: frac
@@ -144,7 +202,7 @@ PUBLIC :: frac_simplification
 
  END FUNCTION frac_TO_real
 
- FUNCTION frac1_EQ_frac2(frac1,frac2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_EQ_frac2(frac1,frac2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1,frac2
 
@@ -154,7 +212,7 @@ PUBLIC :: frac_simplification
    leq  = (frac%num == 0)
 
  END FUNCTION frac1_EQ_frac2
- FUNCTION frac1_EQ_Int2(frac1,Int2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_EQ_Int2(frac1,Int2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1
    Integer,           intent(in) :: Int2
@@ -165,7 +223,7 @@ PUBLIC :: frac_simplification
    leq  = (frac%num == 0)
 
  END FUNCTION frac1_EQ_Int2
- FUNCTION frac1_NEQ_frac2(frac1,frac2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_NEQ_frac2(frac1,frac2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1,frac2
 
@@ -175,7 +233,7 @@ PUBLIC :: frac_simplification
    leq  = (frac%num /= 0)
 
  END FUNCTION frac1_NEQ_frac2
- FUNCTION frac1_NEQ_Int2(frac1,Int2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_NEQ_Int2(frac1,Int2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1
    Integer,           intent(in) :: Int2
@@ -186,7 +244,7 @@ PUBLIC :: frac_simplification
    leq  = (frac%num /= 0)
 
  END FUNCTION frac1_NEQ_Int2
- FUNCTION frac1_GT_frac2(frac1,frac2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_GT_frac2(frac1,frac2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1,frac2
 
@@ -196,7 +254,7 @@ PUBLIC :: frac_simplification
    leq  = (frac%num > 0)
 
  END FUNCTION frac1_GT_frac2
- FUNCTION frac1_GT_Int2(frac1,Int2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_GT_Int2(frac1,Int2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1
    Integer,           intent(in) :: Int2
@@ -207,7 +265,7 @@ PUBLIC :: frac_simplification
    leq  = (frac%num > 0)
 
  END FUNCTION frac1_GT_Int2
- FUNCTION frac1_LT_frac2(frac1,frac2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_LT_frac2(frac1,frac2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1,frac2
 
@@ -217,7 +275,7 @@ PUBLIC :: frac_simplification
    leq  = (frac%num < 0)
 
  END FUNCTION frac1_LT_frac2
- FUNCTION frac1_LT_Int2(frac1,Int2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_LT_Int2(frac1,Int2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1
    Integer,           intent(in) :: Int2
@@ -228,7 +286,7 @@ PUBLIC :: frac_simplification
    leq  = (frac%num < 0)
 
  END FUNCTION frac1_LT_Int2
- FUNCTION frac1_GE_frac2(frac1,frac2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_GE_frac2(frac1,frac2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1,frac2
 
@@ -238,7 +296,7 @@ PUBLIC :: frac_simplification
    leq  = (frac%num >= 0)
 
  END FUNCTION frac1_GE_frac2
- FUNCTION frac1_GE_Int2(frac1,Int2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_GE_Int2(frac1,Int2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1
    Integer,           intent(in) :: Int2
@@ -249,7 +307,7 @@ PUBLIC :: frac_simplification
    leq  = (frac%num >= 0)
 
  END FUNCTION frac1_GE_Int2
- FUNCTION frac1_LE_frac2(frac1,frac2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_LE_frac2(frac1,frac2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1,frac2
 
@@ -259,7 +317,7 @@ PUBLIC :: frac_simplification
    leq  = (frac%num <= 0)
 
  END FUNCTION frac1_LE_frac2
- FUNCTION frac1_LE_Int2(frac1,Int2) RESULT(leq)
+ ELEMENTAL FUNCTION frac1_LE_Int2(frac1,Int2) RESULT(leq)
    logical                       :: leq
    TYPE(FracInteger), intent(in) :: frac1
    Integer,           intent(in) :: Int2
@@ -271,7 +329,7 @@ PUBLIC :: frac_simplification
 
  END FUNCTION frac1_LE_Int2
 
- FUNCTION frac1_PLUS_frac2(frac1,frac2) RESULT(frac)
+ ELEMENTAL FUNCTION frac1_PLUS_frac2(frac1,frac2) RESULT(frac)
    TYPE(FracInteger)             :: frac
    TYPE(FracInteger), intent(in) :: frac1,frac2
 
@@ -281,7 +339,7 @@ PUBLIC :: frac_simplification
    CALL frac_simplification(Frac%num, Frac%den)
 
  END FUNCTION frac1_PLUS_frac2
- FUNCTION frac1_PLUS_Int2(frac1,Int2) RESULT(frac)
+ ELEMENTAL FUNCTION frac1_PLUS_Int2(frac1,Int2) RESULT(frac)
    TYPE(FracInteger)             :: frac
    TYPE(FracInteger), intent(in) :: frac1
    Integer,           intent(in) :: Int2
@@ -292,7 +350,18 @@ PUBLIC :: frac_simplification
    CALL frac_simplification(Frac%num, Frac%den)
 
  END FUNCTION frac1_PLUS_Int2
- FUNCTION frac1_MINUS_frac2(frac1,frac2) RESULT(frac)
+ ELEMENTAL FUNCTION Int1_PLUS_frac2(Int1,frac2) RESULT(frac)
+   TYPE(FracInteger)             :: frac
+   TYPE(FracInteger), intent(in) :: frac2
+   Integer,           intent(in) :: Int1
+
+   Frac%num = frac2%num + frac2%den * Int1
+   Frac%den = frac2%den
+
+   CALL frac_simplification(Frac%num, Frac%den)
+
+ END FUNCTION Int1_PLUS_frac2
+ ELEMENTAL FUNCTION frac1_MINUS_frac2(frac1,frac2) RESULT(frac)
    TYPE(FracInteger)             :: frac
    TYPE(FracInteger), intent(in) :: frac1,frac2
 
@@ -302,7 +371,7 @@ PUBLIC :: frac_simplification
    CALL frac_simplification(Frac%num, Frac%den)
 
  END FUNCTION frac1_MINUS_frac2
- FUNCTION frac1_MINUS_Int2(frac1,Int2) RESULT(frac)
+ ELEMENTAL FUNCTION frac1_MINUS_Int2(frac1,Int2) RESULT(frac)
    TYPE(FracInteger)             :: frac
    TYPE(FracInteger), intent(in) :: frac1
    Integer,           intent(in) :: Int2
@@ -313,7 +382,19 @@ PUBLIC :: frac_simplification
    CALL frac_simplification(Frac%num, Frac%den)
 
  END FUNCTION frac1_MINUS_Int2
- FUNCTION frac1_TIME_frac2(frac1,frac2) RESULT(frac)
+ ELEMENTAL FUNCTION Int1_MINUS_frac2(Int1,frac2) RESULT(frac)
+   TYPE(FracInteger)             :: frac
+   TYPE(FracInteger), intent(in) :: frac2
+   Integer,           intent(in) :: Int1
+
+   Frac%num = frac2%den * Int1 - frac2%num
+   Frac%den = frac2%den
+
+   CALL frac_simplification(Frac%num, Frac%den)
+
+ END FUNCTION Int1_MINUS_frac2
+
+ ELEMENTAL FUNCTION frac1_TIME_frac2(frac1,frac2) RESULT(frac)
    TYPE(FracInteger)             :: frac
    TYPE(FracInteger), intent(in) :: frac1,frac2
 
@@ -323,7 +404,29 @@ PUBLIC :: frac_simplification
    CALL frac_simplification(Frac%num, Frac%den)
 
  END FUNCTION frac1_TIME_frac2
- FUNCTION frac1_DIVIDEBY_frac2(frac1,frac2) RESULT(frac)
+ ELEMENTAL FUNCTION Int1_TIME_frac2(Int1,frac2) RESULT(frac)
+   TYPE(FracInteger)             :: frac
+   TYPE(FracInteger), intent(in) :: frac2
+   Integer,           intent(in) :: Int1
+
+   Frac%num = Int1 * frac2%num
+   Frac%den = frac2%den
+
+   CALL frac_simplification(Frac%num, Frac%den)
+
+ END FUNCTION Int1_TIME_frac2
+ ELEMENTAL FUNCTION frac1_TIME_Int2(frac1,Int2) RESULT(frac)
+   TYPE(FracInteger)             :: frac
+   TYPE(FracInteger), intent(in) :: frac1
+   Integer,           intent(in) :: Int2
+
+   Frac%num = frac1%num * Int2
+   Frac%den = frac1%den
+
+   CALL frac_simplification(Frac%num, Frac%den)
+
+ END FUNCTION frac1_TIME_Int2
+ ELEMENTAL FUNCTION frac1_DIVIDEBY_frac2(frac1,frac2) RESULT(frac)
    TYPE(FracInteger)             :: frac
    TYPE(FracInteger), intent(in) :: frac1,frac2
 
@@ -333,13 +436,34 @@ PUBLIC :: frac_simplification
    CALL frac_simplification(Frac%num, Frac%den)
 
  END FUNCTION frac1_DIVIDEBY_frac2
+ ELEMENTAL FUNCTION Int1_DIVIDEBY_frac2(Int1,frac2) RESULT(frac)
+   TYPE(FracInteger)             :: frac
+   TYPE(FracInteger), intent(in) :: frac2
+   Integer,           intent(in) :: Int1
 
+   Frac%num = Int1 * frac2%den
+   Frac%den = frac2%num
+
+   CALL frac_simplification(Frac%num, Frac%den)
+
+ END FUNCTION Int1_DIVIDEBY_frac2
+ ELEMENTAL FUNCTION frac1_DIVIDEBY_Int2(frac1,Int2) RESULT(frac)
+   TYPE(FracInteger)             :: frac
+   TYPE(FracInteger), intent(in) :: frac1
+   Integer,           intent(in) :: Int2
+
+   Frac%num = frac1%num
+   Frac%den = frac1%den * Int2
+
+   CALL frac_simplification(Frac%num, Frac%den)
+
+ END FUNCTION frac1_DIVIDEBY_Int2
 !================================================================
 !    greatest common divisor
 !================================================================
-    FUNCTION gcd(a, b)
-    integer :: gcd
-    integer :: a,b
+    ELEMENTAL FUNCTION gcd(a, b)
+    integer              :: gcd
+    integer, intent (in) :: a,b
 
     integer :: aa,bb,t
 
@@ -357,9 +481,8 @@ PUBLIC :: frac_simplification
 !================================================================
 !    fraction simplification a/b
 !================================================================
-    SUBROUTINE frac_simplification(a, b)
-    !integer :: gcd
-    integer :: a,b
+    ELEMENTAL SUBROUTINE frac_simplification(a, b)
+    integer, intent (inout) :: a,b
 
     integer :: aa,bb,t
 

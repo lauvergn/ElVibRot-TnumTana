@@ -232,7 +232,6 @@ MODULE mod_Tana_keo
       END IF
 
       IF ( para_Tnum%nrho == 1 .OR. para_Tnum%nrho == 2 ) THEN
-
         ! this version with Qact, when get_KEO_for_Qactiv is BEFORE add_Vextr_new
         !CALL add_Vextr_new(mole%tab_Qtransfo(i_transfo)%BFTransfo,TWOxKEO,&
         !                   tabQact_Qel,para_Tnum%nrho,mole%nb_act)
@@ -327,6 +326,11 @@ MODULE mod_Tana_keo
         !CALL write_keo_MidasCppForm(mole, TWOxKEO, nio, tab_Qname, 0)
         CALL write_keo_MidasCppForm(mole, para_Tnum%ExpandTWOxKEO, nio, tab_Qname, 0)
         close(nio)
+
+        CALL file_open2(name_file = 'Molecule.mmol', iunit = nio) !Emil change
+        CALL write_mol_MidasCppForm(mole, nio, tab_Qname, unit='bohr')
+        close(nio)
+
         write(out_unitp,*) '================================================='
         write(out_unitp,*) 'MidasCpp formatted KEO: T = '
         write(out_unitp,*) '-------------------------------------------------'

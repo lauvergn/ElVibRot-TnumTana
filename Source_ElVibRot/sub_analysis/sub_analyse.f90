@@ -41,6 +41,7 @@ CONTAINS
       USE mod_system
       USE mod_Coord_KEO
       USE mod_basis
+      USE mod_param_RD
       USE mod_ana_psi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
@@ -147,9 +148,22 @@ CONTAINS
        write(out_unitp,*)
        Q =  part_func(ene,nb_psi_in,para_ana%Temp,const_phys)
 
-       write(out_unitp,*) 'population at T, Q',para_ana%Temp,Q
-       write(out_unitp,*) 'Energy level (',const_phys%ene_unit,') pop and means :'
-       CALL flush_perso(out_unitp)
+      ! initialization for RD analysis
+      IF (para_H%BasisnD%nb_basis > 1) THEN
+        allocate(para_H%BasisnD%para_RD(para_H%BasisnD%nb_basis))
+        para_H%BasisnD%para_RD(:)%RD_analysis = .FALSE.
+        DO ib=1,para_H%BasisnD%nb_basis
+          para_H%BasisnD%para_RD(ib)%RD_analysis = para_H%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_analysis
+
+          para_H%BasisnD%para_RD(ib)%basis_index = ib
+          IF (allocated(para_H%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)) THEN
+            CALL init_RD(para_H%BasisnD%para_RD(ib),para_H%BasisnD%nDindB,para_H%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)
+          ELSE
+            CALL init_RD(para_H%BasisnD%para_RD(ib),para_H%BasisnD%nDindB)
+          END IF
+
+        END DO
+      END IF
 
       file_WPspectral%name = make_FileName(para_ana%name_file_spectralWP)
       CALL file_open(file_WPspectral,nioWP,lformatted=para_ana%formatted_file_WP)
@@ -159,6 +173,9 @@ CONTAINS
       CALL Write_header_saveFile_psi(tab_Psi,nb_psi,file_WPspectral)
 
       ! write the energy level + save the psi
+      write(out_unitp,*) 'population at T, Q',para_ana%Temp,Q
+      write(out_unitp,*) 'Energy level (',const_phys%ene_unit,') pop and means :'
+      CALL flush_perso(out_unitp)
       DO i=1,nb_psi_in
 
         IF (ene(i)-para_H%ComOp%ZPE > para_ana%max_ene) CYCLE
@@ -225,7 +242,6 @@ CONTAINS
         ELSE IF (para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op > 0 .AND. ana_psi%AvScalOp) THEN
           CALL sub_moyScalOp(tab_Psi(i),i,info,para_AllOp)
         END IF
-
 
         write(out_unitp,*)
 

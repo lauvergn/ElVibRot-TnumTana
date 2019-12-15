@@ -72,7 +72,7 @@
       character (len=Name_longlen) :: RMatFormat
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
-      logical  :: namelist_from_file=.TRUE.
+      logical  :: namelist_from_file=.TRUE.  ! .False. to read namelist from shell
       
       ! parameters for system setup
       ! make sure to be prepared in file      
@@ -100,9 +100,16 @@
 #if(run_MPI)
         CALL MPI_initialization()
         Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
+        Popenmp            = .FALSE.  !< True to run openMP
 #else 
         MPI_id=0
-        Popenmpi=.FALSE.
+        Popenmpi           = .FALSE.  !< True to run MPI, set here or in namelist system
+        ! set openMP accodring to make file
+#if(run_openMP)
+        Popenmp            = .True.   !< True to run openMP
+#else
+        Popenmp            = .FALSE. 
+#endif
 #endif
  
         intensity_only     = .FALSE.
@@ -119,11 +126,7 @@
 
         maxth              = 1
         !$ maxth           = omp_get_max_threads()
-#if(run_openMP)
-        Popenmp            = .True.   !< True to run openMP
-#else
-        Popenmp            = .FALSE. 
-#endif
+        
         PMatOp_omp         = 0
         PMatOp_maxth       = maxth
         POpPsi_omp         = 0

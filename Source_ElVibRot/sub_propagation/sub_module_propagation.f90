@@ -928,9 +928,11 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   !-----------------------------------------------------------
   ! => the WPs on the Grid
   IF (.NOT. para_propa%ana_psi%GridDone) THEN
+    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep ini')
     DO i=1,nb_WP
       IF(MPI_id==0) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
     END DO
+    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep end')
   END IF
   para_propa%ana_psi%GridDone = .TRUE.
   !-----------------------------------------------------------

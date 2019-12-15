@@ -194,7 +194,7 @@
 
 
 !----- local variables
-      TYPE (basis) :: basisnD_loc
+      TYPE (basis) :: basisnD_contrac
       logical :: Rec_call
       integer :: i,j,iact,isym,ibasis,jbasis,nb_ba,nb0,nbc0
       integer :: nb_elec_save,n_h_save,max_nb_ba_ON_HAC_save
@@ -370,7 +370,7 @@
 
           !POGridRep
           IF (BasisnD%ndim == 1 .AND. BasisnD%POGridRep) THEN
-            nb0 = BasisnD%nb   ! save the value before the contraction
+            nb0  = BasisnD%nb   ! save the value before the contraction
             nbc0 = BasisnD%nbc ! save the value before the contraction
 
             CALL Autocontract_basis(BasisnD,para_Tnum,mole_loc,         &
@@ -396,8 +396,19 @@
           END IF
 
           BasisnD%POGridRep_polyortho = .FALSE.
-          CALL Autocontract_basis(BasisnD,para_Tnum,mole_loc,           &
-                                  ComOp_loc,para_PES,para_ReadOp)
+
+          IF (BasisnD%contrac_analysis) THEN
+            CALL basis2TObasis1(BasisnD_contrac,BasisnD)
+            CALL Autocontract_basis(BasisnD_contrac,para_Tnum,mole_loc, &
+                                    ComOp_loc,para_PES,para_ReadOp)
+            CALL alloc_NParray(BasisnD%Rvec,shape(BasisnD_contrac%Rvec),&
+                              'BasisnD%Rvec',name_sub)
+            BasisnD%Rvec(:,:) = BasisnD_contrac%Rvec
+            CALL dealloc_basis(BasisnD_contrac)
+          ELSE
+            CALL Autocontract_basis(BasisnD,para_Tnum,mole_loc,         &
+                                    ComOp_loc,para_PES,para_ReadOp)
+          END IF
 
           IF (Print_basis) write(out_unitp,*) 'Autocontract_basis done. Layer:',rec
 
@@ -407,7 +418,16 @@
           CALL flush_perso(out_unitp)
         ELSE ! just contraction (not the automatic procedure)
 
-          CALL sub_contraction_basis(BasisnD,.FALSE.)
+          IF (BasisnD%contrac_analysis) THEN
+            CALL basis2TObasis1(BasisnD_contrac,BasisnD)
+            CALL sub_contraction_basis(BasisnD_contrac,.FALSE.)
+            CALL alloc_NParray(BasisnD%Rvec,shape(BasisnD_contrac%Rvec),&
+                              'BasisnD%Rvec',name_sub)
+            BasisnD%Rvec(:,:) = BasisnD_contrac%Rvec
+            CALL dealloc_basis(BasisnD_contrac)
+          ELSE
+            CALL sub_contraction_basis(BasisnD,.FALSE.)
+          END IF
 
           IF (Print_basis) write(out_unitp,*) 'Contract_basis done. Layer:    ',rec
 
@@ -1510,8 +1530,10 @@
 !----- for the basis set ----------------------------------------------
       TYPE (param_AllBasis) :: para_AllBasis_loc
 
-      integer          :: i,iact,isym,JJ
-      logical          :: nosym
+      integer          :: i,iact,isym,JJ,type_HamilOp
+      integer          :: NonGcteRange(2)
+
+      logical          :: nosym,direct_KEO
       integer          :: nbc
       real(kind=Rkind) :: ene0,auTOcm_inv
       TYPE(REAL_WU)    :: RWU_E,RWU_DE
@@ -1550,12 +1572,22 @@
       para_PES%nb_scalar_Op       = 0
       calc_scalar_Op              = para_PES%calc_scalar_Op
       para_PES%calc_scalar_Op     = .FALSE.
+
+      type_HamilOp                = para_PES%type_HamilOp
+      para_PES%type_HamilOp       = 1
+      direct_KEO                  = para_PES%direct_KEO
+      para_PES%direct_KEO         = .FALSE.
+
+      NonGcteRange(:)             = para_Tnum%NonGcteRange(:)
+      para_Tnum%NonGcteRange(:)   = 0
+
       JJ                          = para_Tnum%JJ
       para_Tnum%JJ                = 0
 
       ! If needed, change RPH transfo in flexible transfo
       CALL moleRPH_TO_moleFlex(mole_loc)
       mole_loc%Cart_transfo                       = .FALSE.
+
 
       ! allocation of tab_Op
       para_AllOp_loc%nb_Op = 2 ! just H and S
@@ -1730,6 +1762,10 @@
       para_PES%calc_scalar_Op                 = calc_scalar_Op
       para_Tnum%JJ                            = JJ
 
+      para_Tnum%NonGcteRange(:)               = NonGcteRange(:)
+
+      para_PES%type_HamilOp                   = type_HamilOp
+      para_PES%direct_KEO                     = direct_KEO
 
       !-----------------------------------------------------------------
       IF (debug) THEN

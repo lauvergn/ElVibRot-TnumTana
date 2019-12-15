@@ -148,8 +148,7 @@ CONTAINS
    !$OMP parallel                                                &
    !$OMP default(none)                                           &
    !$OMP shared(Psi,OpPsi)                                       &
-   !$OMP shared(para_Op,BasisnD,print_level,out_unitp)           &
-   !$OMP shared(MPI_id)                                          &
+   !$OMP shared(para_Op,BasisnD,print_level,out_unitp,MPI_id)    &
    !$OMP private(iG,iiG,tab_l,PsiR,ith)                          &
    !$OMP num_threads(BasisnD%para_SGType2%nb_threads)
 
@@ -669,17 +668,19 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
   USE mod_Coord_KEO,                ONLY : zmatrix
   USE mod_basis_set_alloc,          ONLY : basis
+#if(run_MPI)
   USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                                            tabR_AT_iG_TO_tabPackedBasis, &
-#if(run_MPI)
                                            TypeRVec,dealloc_TypeRVec,    &
                                            PackedBasis_TO_tabR_index_MPI,&
                                            tabR_TO_tabPackedBasis_MPI,   &
                                            tabPackedBasis_TO_tabR_MPI
 #else
+  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
+                                           tabR_AT_iG_TO_tabPackedBasis, &
                                            TypeRVec,dealloc_TypeRVec
 #endif
-                                           
+
   USE mod_SymAbelian,               ONLY : Calc_symab1_EOR_symab2
   USE mod_psi_Op,                   ONLY : Set_symab_OF_psiBasisRep
 
@@ -1283,8 +1284,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       !$OMP parallel                                                &
       !$OMP default(none)                                           &
       !$OMP shared(Psi,OpPsi)                                       &
-      !$OMP shared(para_Op,BasisnD,print_level,out_unitp)           &
-      !$OMP shared(MPI_id)                                          &
+      !$OMP shared(para_Op,BasisnD,print_level,out_unitp,MPI_id)    &
       !$OMP private(itab,iG,iiG,tab_l,PsiR,ith)                     &
       !$OMP num_threads(BasisnD%para_SGType2%nb_threads)
 

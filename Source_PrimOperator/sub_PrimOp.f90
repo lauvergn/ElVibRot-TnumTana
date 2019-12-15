@@ -4891,12 +4891,15 @@
         Gref = Gref .AND. associated(mole%RPHTransfo%RPHpara_AT_Qref)
       END IF
 
-      IF (Gref) THEN
-        CALL get_Qact0(Qact,mole%ActiveTransfo)
-        IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
-
-        CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,0)
-
+  !----- Gcte if needed --------------------------------------------
+  Gref = .TRUE.
+  IF (associated(mole%RPHTransfo)) THEN
+    Gref = Gref .AND. associated(mole%RPHTransfo%RPHpara_AT_Qref)
+  END IF
+  !Gref = .FALSE.
+  IF (Gref) THEN
+    CALL get_Qact0(Qact,mole%ActiveTransfo)
+    IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
         IF (para_PES%QMLib) THEN
           CALL alloc_NPArray(GGdef,(/ mole%nb_act,mole%nb_act /),'GGdef',name_sub)
 
@@ -4970,6 +4973,7 @@
         CALL dealloc_dnSVM(dnx)
         IF(MPI_id==0) write(out_unitp,*) '================================================='
       END IF
+
 
 !-----------------------------------------------------------
       !IF (debug) THEN
