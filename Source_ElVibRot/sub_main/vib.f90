@@ -260,13 +260,10 @@
 !---------------------------------------------------------------------------------------
 !       => Time-dependent calculation
 !---------------------------------------------------------------------------------------
-#if(run_MPI)
-        CALL MPI0_write(out_unitp,'Propogation start')
-#endif
+        write(out_unitp,*) 'Propogation start'
+        
         CALL init_psi(WP0(1),para_H,cplx=.TRUE.)
-#if(run_MPI)
-        CALL MPI0_write(out_unitp,'Propogation initialized')
-#endif
+        write(out_unitp,*) 'Propogation initialized'
   
         ! building of WP0 for WP propagation ------------------------------------------
         IF (.NOT. para_ana%control .AND. para_propa%type_WPpropa /=100) THEN
