@@ -299,11 +299,11 @@ LYNK90 = $(F90_FLAGS)
 ifeq ($(ARPACK),1)
   # Arpack management with the OS
   ifeq ($(OS),Darwin)    # OSX
-    #ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
-    ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
+    ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
+    #ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
   else                   # Linux
-    #ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
-    ARPACKLIB=/usr/lib64/libarpack.a
+    ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
+    #ARPACKLIB=/usr/lib64/libarpack.a
   endif
 else
   ARPACKLIB = 
@@ -1244,7 +1244,7 @@ ifeq ($(F90),mpifort)
 	@echo "test for Davidson, result in ./Working_tests/MPI_tests/6D_Davidson/result/"
 	@echo "> test for Davidson" > MPI_test.log
 	@cd ./Working_tests/MPI_tests/6D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
-	# Arpack test
+  # Arpack test
   ifeq ($(ARPACK),1) 
 	  @echo "test for Arpack, result in ./Working_tests/MPI_tests/6D_arpack/result/"
 	  @echo "> test for Arpack" >> MPI_test.log
