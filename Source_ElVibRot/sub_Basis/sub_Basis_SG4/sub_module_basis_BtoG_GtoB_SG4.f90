@@ -85,7 +85,7 @@ PUBLIC  SmolyakRep2_TO_tabR1bis, SmolyakRepC2_TO_tabC1bis, tabC2bis_TO_SmolyakRe
 PUBLIC  SmolyakRepBasis_TO_tabPackedBasis, tabPackedBasis_TO_SmolyakRepBasis
 
 #if(run_MPI)
-PUBLIC  PackedBasis_TO_tabR_index,tabPackedBasis_TO_tabR_MPIpacked
+PUBLIC  PackedBasis_TO_tabR_index_MPI,tabPackedBasis_TO_tabRpacked_MPI
 PUBLIC  tabPackedBasis_TO_tabR_MPI,tabR_TO_tabPackedBasis_MPI
 #endif
 
@@ -1139,7 +1139,7 @@ END SUBROUTINE tabPackedBasis_TO_tabR_AT_iG
 !---------------------------------------------------------------------------------------
 #if(run_MPI)
 SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index,        &
-                                 total_Vlength,Psi_size_MPI0,Max_nDI_ib0,nDI_index_list)
+                                 reduce_Vlength,Psi_size_MPI0,Max_nDI_ib0,nDI_index_list)
   USE mod_system
   USE mod_basis_set_alloc
   USE mod_param_SGType2
@@ -1149,14 +1149,14 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
   IMPLICIT NONE
 
   TYPE (TypeRVec),allocatable,   intent(inout)     :: PsiR(:)
-  TYPE (param_SGType2),          intent(in)        :: SGType2
+  TYPE (param_SGType2),          intent(inout)     :: SGType2
   Real(kind=Rkind),              intent(in)        :: all_RvecB_temp(:)
   Integer*4,allocatable,         intent(in)        :: nDI_index(:)
   Integer*4,allocatable,         intent(inout)     :: nDI_index_list(:)
   integer,                       intent(in)        :: iG
   integer(kind=MPI_INTEGER_KIND),intent(in)        :: Psi_size_MPI0
   integer,                       intent(in)        :: Max_nDI_ib0
-  integer(kind=MPI_INTEGER_KIND),intent(in)        :: total_Vlength  
+  integer(kind=MPI_INTEGER_KIND),intent(in)        :: reduce_Vlength  
 
   integer,allocatable                             :: temp_list(:)  
   integer                                         :: temp_length 
@@ -1173,7 +1173,6 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
   CALL allocate_array(temp_list,temp_int)
   once1=.TRUE.
   
-  !DO itab=1,Psi_size_MPI0
   DO itab=1,Psi_size_MPI0
     temp_length=0
     DO ib0=1,SGType2%nb0
@@ -1184,13 +1183,13 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
         IF (nDI_ib0>0 .AND. nDI_ib0<=Max_nDI_ib0) THEN
           nDI=(ib0-1)*Max_nDI_ib0               +nDI_ib0
           iB =(ib0-1)*SGType2%tab_nb_OF_SRep(iG)+iB_ib0
-          ! note allcount contains the information of nDI
+          ! note V_allcount contains the information of nDI
           temp_length=temp_length+1
           IF(once1) THEN
-            allcount=allcount+1
-            temp_list(temp_length)=nDI_index_list(allcount)
+            SGType2%V_allcount=SGType2%V_allcount+1
+            temp_list(temp_length)=nDI_index_list(SGType2%V_allcount)
           ENDIF
-          temp_int=(itab-1)*total_Vlength+temp_list(temp_length)
+          temp_int=(itab-1)*reduce_Vlength+temp_list(temp_length)
           PsiR(itab)%V(iB)=all_RvecB_temp(temp_int)
           !tabR_iG(iB) = tabR(nDI)
         END IF
@@ -1207,11 +1206,11 @@ END SUBROUTINE tabPackedBasis_TO_tabR_MPI
 !=======================================================================================
 ! subroutine for ccounting the length of compact basis to be send to each threads
 !
-! length_index_mpi: count the overall length for each threads
+! reduce_index_mpi: count the overall length for each threads
 ! nDI_index: temp index for all possible nDI for each threads
 !---------------------------------------------------------------------------------------
 #if(run_MPI)
-SUBROUTINE PackedBasis_TO_tabR_index(iG,SGType2,length_index_mpi,nDI_index,            &
+SUBROUTINE PackedBasis_TO_tabR_index_MPI(iG,SGType2,reduce_index_mpi,nDI_index,            &
                                      Max_nDI_ib0,nDI_index_list)
   USE mod_system
   USE mod_basis_set_alloc
@@ -1221,11 +1220,11 @@ SUBROUTINE PackedBasis_TO_tabR_index(iG,SGType2,length_index_mpi,nDI_index,     
   USE mod_MPI_Aid
   IMPLICIT NONE
 
-  TYPE(param_SGType2),          intent(in)     :: SGType2
+  TYPE(param_SGType2),          intent(inout)  :: SGType2
   Integer,                      intent(in)     :: iG
   Integer,                      intent(in)     :: Max_nDI_ib0
 
-  Integer(kind=MPI_INTEGER_KIND),intent(inout) :: length_index_mpi
+  Integer(kind=MPI_INTEGER_KIND),intent(inout) :: reduce_index_mpi
   Integer*4,allocatable,        intent(inout)  :: nDI_index(:)
   Integer*4,allocatable,        intent(inout)  :: nDI_index_list(:)
   
@@ -1246,46 +1245,46 @@ SUBROUTINE PackedBasis_TO_tabR_index(iG,SGType2,length_index_mpi,nDI_index,     
         nDI=(ib0-1)*Max_nDI_ib0               +nDI_ib0
         iB =(ib0-1)*SGType2%tab_nb_OF_SRep(iG)+iB_ib0  
         !write(*,*) 'checkinging iB,nDI',iB,nDI,iG,ib0,iB_ib0
-        allcount=allcount+1
-        DO ii=1,MAX(length_index_mpi,1)
+        SGType2%V_allcount=SGType2%V_allcount+1
+        DO ii=1,MAX(reduce_index_mpi,1)
           IF(nDI_index(ii)==nDI) THEN
-            IF(MPI_id/=0) nDI_index_list(allcount)=ii
+            IF(MPI_id/=0) nDI_index_list(SGType2%V_allcount)=ii
             EXIT
           ENDIF
         ENDDO
-        IF(ii>MAX(length_index_mpi,1)) THEN
-          length_index_mpi=length_index_mpi+1
-          nDI_index(length_index_mpi)=nDI
-          IF(MPI_id/=0) nDI_index_list(allcount)=length_index_mpi
+        IF(ii>MAX(reduce_index_mpi,1)) THEN
+          reduce_index_mpi=reduce_index_mpi+1
+          nDI_index(reduce_index_mpi)=nDI
+          IF(MPI_id/=0) nDI_index_list(SGType2%V_allcount)=reduce_index_mpi
           ! if exceed the size of the current table
-          IF(length_index_mpi==num_nDI_index) THEN
+          IF(reduce_index_mpi==SGType2%num_nDI_index) THEN
             ! may be a waste of space sometimes
-            num_nDI_index=num_nDI_index+Max(num_nDI_index/3,500) 
-!            CALL allocate_array(nDI_index_temp,length_index_mpi)
+            SGType2%num_nDI_index=SGType2%num_nDI_index+Max(SGType2%num_nDI_index/3,500) 
+!            CALL allocate_array(nDI_index_temp,reduce_index_mpi)
 !            nDI_index_temp=nDI_index
-!            CALL allocate_array(nDI_index,num_nDI_index)
-!            nDI_index(1:length_index_mpi)=nDI_index_temp
+!            CALL allocate_array(nDI_index,SGType2%num_nDI_index)
+!            nDI_index(1:reduce_index_mpi)=nDI_index_temp
 !            deallocate(nDI_index_temp)
             ! use "move_alloc" instead
-            CALL allocate_array(nDI_index_temp,num_nDI_index)
-            nDI_index_temp(1:length_index_mpi)=nDI_index
+            CALL allocate_array(nDI_index_temp,SGType2%num_nDI_index)
+            nDI_index_temp(1:reduce_index_mpi)=nDI_index
             CALL move_alloc(nDI_index_temp,nDI_index) ! nDI_index_temp -> nDI_index
             ! nDI_index_temp is deallocated automatically
-          ENDIF ! for length_index_mpi==num_nDI_index
-        ENDIF ! for ii>MAX(length_index_mpi,1)
+          ENDIF ! for reduce_index_mpi==SGType2%num_nDI_index
+        ENDIF ! for ii>MAX(reduce_index_mpi,1)
       ENDIF ! for nDI_ib0 > 0 .AND. nDI_ib0 <= Max_nDI_ib0
     ENDDO
   ENDDO
   
-END SUBROUTINE PackedBasis_TO_tabR_index
+END SUBROUTINE PackedBasis_TO_tabR_index_MPI
 #endif 
 !=======================================================================================
 
 !=======================================================================================
-! pack the vectors to send to each threads
+! pack the vectors to send to each threads (not currently used)
 !---------------------------------------------------------------------------------------
 #if(run_MPI)
-SUBROUTINE tabPackedBasis_TO_tabR_MPIpacked(all_RvecB_temp,Psi_RvecB,nDI_index,length)
+SUBROUTINE tabPackedBasis_TO_tabRpacked_MPI(all_RvecB_temp,Psi_RvecB,nDI_index,length)
   IMPLICIT NONE
   
   Real(kind=Rkind), allocatable,intent(inout) :: all_RvecB_temp(:)
@@ -1298,7 +1297,7 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPIpacked(all_RvecB_temp,Psi_RvecB,nDI_index,l
     all_RvecB_temp(ii)=Psi_RvecB(nDI_index(ii))
   ENDDO
     
-END SUBROUTINE tabPackedBasis_TO_tabR_MPIpacked
+END SUBROUTINE tabPackedBasis_TO_tabRpacked_MPI
 #endif 
 !=======================================================================================
 
@@ -1350,7 +1349,7 @@ END SUBROUTINE tabR_AT_iG_TO_tabPackedBasis
 !---------------------------------------------------------------------------------------
 #if(run_MPI)
 SUBROUTINE tabR_TO_tabPackedBasis_MPI(all_RvecB_temp2,PsiR,iG,SGType2,WeightiG,        &
-                       nDI_index,total_Vlength,Psi_size_MPI0,Max_nDI_ib0,nDI_index_list)
+                       nDI_index,reduce_Vlength,Psi_size_MPI0,Max_nDI_ib0,nDI_index_list)
   USE mod_system
   USE mod_basis_set_alloc
   USE mod_param_SGType2
@@ -1359,14 +1358,14 @@ SUBROUTINE tabR_TO_tabPackedBasis_MPI(all_RvecB_temp2,PsiR,iG,SGType2,WeightiG, 
   IMPLICIT NONE
 
   TYPE(TypeRVec),allocatable,    intent(inout)      :: PsiR(:)
-  TYPE(param_SGType2),           intent(in)         :: SGType2
+  TYPE(param_SGType2),           intent(inout)      :: SGType2
   Real(kind=Rkind),              intent(inout)      :: all_RvecB_temp2(:)
   Integer*4,allocatable,         intent(in)         :: nDI_index(:)
   Integer*4,allocatable,         intent(inout)      :: nDI_index_list(:)
   integer,                       intent(in)         :: iG
   integer(kind=MPI_INTEGER_KIND),intent(in)         :: Psi_size_MPI0
   integer,                       intent(in)         :: Max_nDI_ib0
-  integer(kind=MPI_INTEGER_KIND),intent(in)         :: total_Vlength  
+  integer(kind=MPI_INTEGER_KIND),intent(in)         :: reduce_Vlength  
   real(kind=Rkind),              intent(in)         :: WeightiG
 
   integer,allocatable                               :: temp_list(:)  
@@ -1396,10 +1395,10 @@ SUBROUTINE tabR_TO_tabPackedBasis_MPI(all_RvecB_temp2,PsiR,iG,SGType2,WeightiG, 
           iB =(ib0-1)*SGType2%tab_nb_OF_SRep(iG)+iB_ib0
           temp_length=temp_length+1
           IF(once1) THEN
-            allcount2=allcount2+1
-            temp_list(temp_length)=nDI_index_list(allcount2)
+            SGType2%V_allcount2=SGType2%V_allcount2+1
+            temp_list(temp_length)=nDI_index_list(SGType2%V_allcount2)
           ENDIF
-          temp_int=(itab-1)*total_Vlength+temp_list(temp_length)
+          temp_int=(itab-1)*reduce_Vlength+temp_list(temp_length)
           all_RvecB_temp2(temp_int)=all_RvecB_temp2(temp_int)+WeightiG*PsiR(itab)%V(iB)
           !tabR(nDI)=tabR(nDI)+WeightiG*tabR_iG(iB)
         END IF

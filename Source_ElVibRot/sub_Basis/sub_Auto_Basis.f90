@@ -821,7 +821,6 @@
       END IF
       CALL flush_perso(out_unitp)
 
-      !write(*,*) 'Set_EneH0_OF_PackedBasis end from', MPI_id
       END SUBROUTINE Set_EneH0_OF_PackedBasis
 !=======================================================================================
 

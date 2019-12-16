@@ -570,9 +570,7 @@
 !===============================================================================
 SUBROUTINE MemoryEstimation(nb,nq,nb_Q,nb_channels,nb_psi)
 USE mod_system
-#if(run_MPI)
 USE mod_MPI_Aid
-#endif
 IMPLICIT NONE
 
 integer, intent(in) :: nb,nq,nb_Q,nb_channels,nb_psi

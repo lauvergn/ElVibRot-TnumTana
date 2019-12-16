@@ -258,7 +258,7 @@ MODULE mod_dnGG_dng
         DO i=1,mole%nb_act
             Gref(i,i) = TWO*Gref(i,i)
         END DO
-
+        !!dnGG%alloc not present
         IF (present(dnGG)) THEN
           CALL sub_ZERO_TO_dnMat(dnGG,nderiv)
           dnGG%d0(:,:) = Gref

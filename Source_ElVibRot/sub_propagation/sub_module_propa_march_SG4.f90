@@ -136,11 +136,12 @@
  !write(6,*) 'coucou : with para_SGType2%nb_threads' ; flush(6)
  !to be sure to have the correct number of threads, we use
  !   BasisnD%para_SGType2%nb_threads
- !$OMP parallel                                                &
- !$OMP default(none)                                           &
- !$OMP shared(RPsi,IPsi,MarchRpsi,MarchIpsi)                   &
- !$OMP shared(T,para_H,BasisnD,para_propa,print_level,out_unitp,MPI_id) &
- !$OMP private(itab,iG,tab_l,ith,err_sub,PsiRvec,PsiIvec)      &
+ !$OMP parallel                                                  &
+ !$OMP default(none)                                             &
+ !$OMP shared(RPsi,IPsi,MarchRpsi,MarchIpsi)                     &
+ !$OMP shared(T,para_H,BasisnD,para_propa,print_level,out_unitp) &
+ !$OMP shared(MPI_id)                                            &
+ !$OMP private(itab,iG,tab_l,ith,err_sub,PsiRvec,PsiIvec)        &
  !$OMP num_threads(BasisnD%para_SGType2%nb_threads)
 
  CALL alloc_NParray(tab_l ,(/ BasisnD%para_SGType2%nDind_SmolyakRep%ndim /),'tab_l', name_sub)

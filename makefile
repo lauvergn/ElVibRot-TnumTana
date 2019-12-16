@@ -5,8 +5,11 @@
  F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
-#
-# Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
+
+## MPI compiled with
+MPICORE = gfortran   # gfortran or ifort
+
+## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
@@ -20,7 +23,7 @@ endif
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 1
+ARPACK = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
@@ -33,13 +36,20 @@ extf = $(EXTFextern)
 ## Operating system, OS? automatic using uname:
 OS=$(shell uname)
 #
-
-## set path for 64-bit MPI when requiring long integer.
-## disable ARPACK for 64-bit case 
+#=================================================================================
+## set path for 64-bit MPI when requiring long integer. 
 ifeq ($(INT),8)
-  PATH := $(PATH):/u/achen/Software/openmpi64/bin/
+  ifeq ($(F90),mpifort)
+    ARPACK = 0 ## temp here, disable ARPACK for 64-bit case
+  endif
+endif
+
+# turn off ARPACK when using pgf90
+ifeq ($(F90),pgf90)
   ARPACK = 0
 endif
+
+## turn off ARPACK 
 #=================================================================================
 # External pot for the library: libpot.a, 
 # with epxort variable (POTDIRextern) or with explicit name
@@ -95,8 +105,12 @@ CompC=gcc
 #=================================================================================
 ifeq ($(F90),ifort)
    # for c++ preprocessing
-   CPPpre  = -cpp
-
+   ifeq ($(OMP),1)
+     CPPpre  = -cpp -Drun_openMP=1
+   else
+     CPPpre  = -cpp
+   endif
+   
    # omp management
    ifeq ($(OMP),0)
       OMPFLAG =
@@ -115,6 +129,10 @@ ifeq ($(F90),ifort)
    else
      F90LIB = -lpthread
    endif
+  
+   ifeq ($(INT),8)
+     F90FLAGS := $(F90FLAGS) -i8 
+   endif
 endif
 #=================================================================================
 
@@ -122,16 +140,19 @@ endif
 # pgf90 compillation v12 with mkl
 #=================================================================================
 ifeq ($(F90),pgf90)
-
    # for c++ preprocessing
-   CPPpre    = -Mpreprocess
+   ifeq ($(OMP),1)
+     CPPpre  = -Mpreprocess -Drun_openMP=1
+   else
+     CPPpre  = -Mpreprocess
+   endif
 
    # omp management
    ifeq ($(OMP),0)
       OMPFLAG =
    else
-       OMPFLAG = -mp=allcores
-       F90LIB = -lpthread
+      OMPFLAG = -mp=allcores
+      F90LIB = -lpthread
    endif
    # opt management
    ifeq ($(OPT),1)
@@ -145,7 +166,6 @@ ifeq ($(F90),pgf90)
    else
      F90LIB += 
    endif
-
 endif
 #=================================================================================
 
@@ -155,7 +175,11 @@ endif
 #=================================================================================
 ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))  
    # for c++ preprocessing
-   CPPpre    = -cpp
+   ifeq ($(OMP),1)
+     CPPpre  = -cpp -Drun_openMP=1
+   else
+     CPPpre  = -cpp
+   endif
 
    # omp management
    ifeq ($(OMP),0)
@@ -195,7 +219,7 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
    endif
    # integer kind management
    ifeq ($(INT),8)
-      F90FLAGS := $(F90FLAGS) -fdefault-integer-8
+      F90FLAGS := $(F90FLAGS) -fdefault-integer-8 
    endif
 endif
 #=================================================================================
@@ -241,7 +265,11 @@ ifeq ($(F90),mpifort)
    endif
    # integer kind management
    ifeq ($(INT),8)
-      F90FLAGS := $(F90FLAGS) -fdefault-integer-8
+      ifeq ($(MPICORE),ifort)
+         F90FLAGS := $(F90FLAGS) -i8
+      else
+         F90FLAGS := $(F90FLAGS) -fdefault-integer-8 
+      endif
    endif
 endif
 F90FLAGS := $(F90FLAGS)   $(EXTMOD)
@@ -268,17 +296,17 @@ LYNK90 = $(F90_FLAGS)
 #=================================================================================
 # Arpack library
 #=================================================================================
- ifeq ($(ARPACK),1)
-	 # Arpack management with the OS
-	 ifeq ($(OS),Darwin)    # OSX
-		#ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
-		ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
-	 else                   # Linux
-		#ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
-		ARPACKLIB=/usr/lib64/libarpack.a
-	 endif
- else
-   ARPACKLIB = 
+ifeq ($(ARPACK),1)
+  # Arpack management with the OS
+  ifeq ($(OS),Darwin)    # OSX
+    ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
+    #ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
+  else                   # Linux
+    ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
+    #ARPACKLIB=/usr/lib64/libarpack.a
+  endif
+else
+  ARPACKLIB = 
 endif
 #=================================================================================
 #=================================================================================
@@ -360,7 +388,7 @@ GWPMAIN = Gauss_numlH
 WORKEXE  = work.exe
 #WORKMAIN = Tana_test
 #WORKMAIN = CurviRPH
- WORKMAIN = Tnum90_AverageHessian
+WORKMAIN = Tnum90_AverageHessian
 
 #==========================================
 EXE = $(VIBEXE) $(TNUMEXE) $(TNUMDISTEXE) $(GWPEXE) $(WORKEXE)
@@ -408,7 +436,6 @@ DIRCRP     = $(DirEVR)/sub_CRP
 #============================================================================
 #Libs, Minimize Only list: OK
 # USE mod_system
-ifeq ($(F90),mpifort)
 Obj_Primlib  = \
   $(OBJ)/sub_module_MPI.o \
   $(OBJ)/sub_module_NumParameters.o \
@@ -417,16 +444,6 @@ Obj_Primlib  = \
   $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/sub_module_FracInteger.o \
   $(OBJ)/sub_module_system.o \
   $(OBJ)/sub_module_MPI_Aid.o 
-else
-  Obj_Primlib  = \
-  $(OBJ)/sub_module_MPI.o \
-  $(OBJ)/sub_module_NumParameters.o \
-  $(OBJ)/sub_module_memory.o $(OBJ)/sub_module_string.o \
-  $(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_memory_NotPointer.o \
-  $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/sub_module_FracInteger.o \
-  $(OBJ)/sub_module_system.o 
-endif
-
 
 Obj_math =\
    $(OBJ)/sub_diago.o $(OBJ)/sub_trans_mat.o $(OBJ)/sub_integration.o \
@@ -622,8 +639,9 @@ Obj_EVRT =\
 #===============================================
 #==============================================
 # vib (without argument)
-EVR1: obj $(VIBEXE)
-	echo "EVR"
+EVR1:obj $(VIBEXE)
+	@echo "EVR"
+
 #
 #make all programs (except work)
 all:obj $(VIBEXE)
@@ -678,7 +696,8 @@ $(QMLibDIR_full):
 #
 obj:
 	mkdir -p obj
-#
+
+# clean
 clean: 
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib2
 	rm -rf *.dSYM
@@ -760,10 +779,8 @@ $(OBJ)/sub_module_RW_MatVec.o:$(DirSys)/sub_module_RW_MatVec.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL)  -c $(DirSys)/sub_module_RW_MatVec.f90
 $(OBJ)/sub_module_system.o:$(DirSys)/sub_module_system.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL)  -c $(DirSys)/sub_module_system.f90
-ifeq ($(F90),mpifort)
 $(OBJ)/sub_module_MPI_Aid.o:$(DirSys)/sub_module_MPI_Aid.f90
-	cd $(OBJ) ; $(F90_FLAGS)  -c $(DirSys)/sub_module_MPI_Aid.f90
-endif
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirSys)/sub_module_MPI_Aid.f90
 ###
 $(OBJ)/sub_module_DInd.o:$(DirnDind)/sub_module_DInd.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirnDind)/sub_module_DInd.f90
@@ -948,7 +965,7 @@ $(OBJ)/sub_module_Basis_LTO_n.o:$(DIRba)/sub_module_Basis_LTO_n.f90
 $(OBJ)/sub_SymAbelian.o:$(DIRba)/sub_SymAbelian/sub_SymAbelian.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_SymAbelian/sub_SymAbelian.f90
 $(OBJ)/sub_module_param_SGType2.o:$(DIRba)/sub_module_param_SGType2.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_module_param_SGType2.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRba)/sub_module_param_SGType2.f90
 $(OBJ)/sub_module_param_RD.o:$(DIRba)/sub_ReducedDensity/sub_module_param_RD.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_ReducedDensity/sub_module_param_RD.f90
 $(OBJ)/sub_module_basis_set_alloc.o:$(DIRba)/sub_module_basis_set_alloc.f90
@@ -1229,3 +1246,85 @@ doxy:
 
 $(HTML) : $(REFPATH)/%.html : sub_module/%.f90
 	@perl $(DOCGEN) $(DOCINDEX) $< $@
+
+#=======================================================================================
+#=======================================================================================
+#=======================================================================================
+$(info ***********************************************************************)
+$(info *********** to test code: make test)
+$(info *********** to clean test: make cleantest)
+$(info ***********************************************************************)
+# test
+
+ifeq ($(OMP),1)
+  parall=openMP
+  parall_name=_openMP
+else 
+  parall=NaN
+  parall_name=_noparall
+endif
+
+test: 
+
+ifeq ($(F90),mpifort) 
+	@echo "test for MPI > MPI_test.log"
+  # Davidson test
+	@echo "test for Davidson, result in ./Working_tests/MPI_tests/6D_Davidson/result/"
+	@echo "> test for Davidson" > MPI_test.log
+	@cd ./Working_tests/MPI_tests/6D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
+  # Arpack test
+  ifeq ($(ARPACK),1) 
+	  @echo "test for Arpack, result in ./Working_tests/MPI_tests/6D_arpack/result/"
+	  @echo "> test for Arpack" >> MPI_test.log
+	  @cd ./Working_tests/MPI_tests/6D_arpack   ; ./run_jobs >> ../../../MPI_test.log
+  endif
+	@echo "test for propagation, result in ./Working_tests/MPI_tests/12D_propagation/result/"
+	@echo "> test for propagation" >> MPI_test.log
+	@cd ./Working_tests/MPI_tests/12D_propagation  ; ./run_jobs >> ../../../MPI_test.log
+	@echo "test done"
+	@echo " "
+	@echo "to clean test result: make cleantest"
+endif
+	
+ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))  
+	@echo "test for" $(F90)$(parall_name) ">" $(F90)$(parall_name)"_test.log"
+  # Davidson test
+	@echo "test for Davidson, result in ./Working_tests/MPI_tests/6D_Davidson"$(parall_name)"/result/"
+	@echo "> test for Davidson" > $(F90)$(parall_name)_test.log
+	@cp -rf ./Working_tests/MPI_tests/6D_Davidson ./Working_tests/MPI_tests/6D_Davidson$(parall_name)
+	@cd ./Working_tests/MPI_tests/6D_Davidson$(parall_name); \
+	    sed -e "s/parall=MPI/parall=${parall}/g" shell_run  > shell_runp ; \
+	    mv shell_runp shell_run; chmod 777 *; \
+	    ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
+  # Arpack test
+  ifeq ($(ARPACK),1) 
+	  @echo "test for Arpack, result in ./Working_tests/MPI_tests/6D_arpack"$(parall_name)"/result/"
+	  @echo "> test for Arpack" >> $(F90)$(parall_name)_test.log
+	  @cp -rf ./Working_tests/MPI_tests/6D_arpack ./Working_tests/MPI_tests/6D_arpack$(parall_name)
+	  @cd ./Working_tests/MPI_tests/6D_arpack$(parall_name); \
+	      sed -e "s/parall=MPI/parall=${parall}/g"  shell_run  > shell_runp ; \
+	      mv shell_runp shell_run; chmod 777 *; \
+	      ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
+  endif
+  # propagation test 
+	@echo "test for propagation, result in ./Working_tests/MPI_tests/12D_propagation"$(parall_name)"/result/"
+	@echo "> test for propagation" >> $(F90)$(parall_name)_test.log
+	@cp -rf ./Working_tests/MPI_tests/12D_propagation ./Working_tests/MPI_tests/12D_propagation$(parall_name)
+	@cd ./Working_tests/MPI_tests/12D_propagation$(parall_name); \
+	    sed -e "s/parall=MPI/parall=${parall}/g"  shell_run  > shell_runp ; \
+	    mv shell_runp shell_run; chmod 777 *; \
+	    ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
+	@echo "test done"
+	@echo " "
+	@echo "to clean test result: make cleantest"
+endif 
+
+# clean test results
+cleantest:
+	@echo "clean test file"
+	@rm -rf ./Working_tests/MPI_tests/*/result
+	@echo "removed ./Working_tests/MPI_tests/*/result"
+# @rm -rf ./Working_tests/MPI_tests/6D_Davidson/result
+# @rm -rf ./Working_tests/MPI_tests/6D_arpack/result
+# @rm -rf ./Working_tests/MPI_tests/12D_propagation/result
+	@echo "clean test file done"

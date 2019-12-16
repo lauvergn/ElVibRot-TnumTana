@@ -31,6 +31,8 @@ USE mod_system
 use mod_nDindex, only: type_ndindex, dealloc_ndindex, dealloc_nparray,  &
                        alloc_nparray, init_ndval_of_ndindex,            &
                        add_one_to_ndindex, calc_ndi, calc_ndindex
+USE mod_MPI
+USE mod_MPI_Aid
 IMPLICIT NONE
 
   PRIVATE
@@ -65,6 +67,20 @@ IMPLICIT NONE
     integer                       :: nb_tasks   = 0
     integer, allocatable          :: nDval_init(:,:)   ! nDval_init(ndim,nb_threads) table the individual indexes
     integer, allocatable          :: iG_th(:),fG_th(:) ! iG indexes associated to the OpenMP threads
+
+#if(run_MPI)    
+    TYPE (multi_array4),allocatable :: nDI_index_master(:) !< for MPI in action, type 1 
+    integer(kind=MPI_INTEGER_KIND),allocatable :: reduce_Vlength_master(:) 
+    integer(kind=MPI_INTEGER_KIND),allocatable :: size_PsiR_V(:) 
+    integer(kind=MPI_INTEGER_KIND)             :: Psi_size_MPI0 !< length of Psi on master
+    integer(kind=MPI_INTEGER_KIND)             :: reduce_Vlength !< reduced size of V 
+    integer                                    :: Max_nDI_ib0
+    integer*4,allocatable                      :: nDI_index(:)
+    integer*4,allocatable                      :: nDI_index_list(:) 
+    integer                                    :: num_nDI_index
+    integer                                    :: V_allcount
+    integer                                    :: V_allcount2
+#endif    
 
   END TYPE param_SGType2
 

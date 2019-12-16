@@ -4,7 +4,7 @@
 ###> parameters
 ##==============================================================
 
-parall=openMP      ## MPI or openMP or BLANK
+parall=MPI      ## MPI or openMP or NaN
 MPI_output0=1   ## just print output form process 0 in MPI, 0 for debug
 num_cores=$1
 
@@ -14,9 +14,9 @@ LG=$L
 B=2
 
 nb_ana=28
-dav=f
+dav=$3
 test=f
-arpack=$3
+arpack=f
 
 
 if [ -z $LB -o -z $LG -o -z $LG ]; then
@@ -37,7 +37,7 @@ fi
 here=`pwd`
 
 work=$here/result/
-DIR_vib=$here/../..
+DIR_vib=$here/../../..
 DIR_pot=$DIR_vib/sub_pot
 VIBEXE=vib
 
@@ -134,7 +134,7 @@ X 1 2
 &inactives /
 &actives 
 test=$test 
-direct=4 
+direct=2 
 Make_MatOp=t 
 direct_KEO=f 
 Save_MemGrid=t 
@@ -173,6 +173,7 @@ EOF
 ##==============================================================
 ##==============================================================
 ###< parameter file
+
 
 
 

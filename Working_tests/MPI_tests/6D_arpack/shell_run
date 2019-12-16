@@ -4,17 +4,19 @@
 ###> parameters
 ##==============================================================
 
-parall=MPI   ## MPI or openMP or BLANK
-num_cores=$4
+parall=MPI      ## MPI or openMP or NaN
+MPI_output0=1   ## just print output form process 0 in MPI, 0 for debug
+num_cores=$1
 
-LB=$1
-LG=$2
-B=$3
+L=$2
+LB=$L
+LG=$L
+B=2
 
 nb_ana=28
 dav=f
 test=f
-arpack=$5
+arpack=$3
 
 
 if [ -z $LB -o -z $LG -o -z $LG ]; then
@@ -33,14 +35,18 @@ fi
 ## set code dir
 
 here=`pwd`
-DIR_vib=$here/..
+
+work=$here/result/
+DIR_vib=$here/../../..
 DIR_pot=$DIR_vib/sub_pot
 VIBEXE=vib
 
 cp sub_system_HenonHeiles.f $DIR_pot/sub_system.f
 cd $DIR_vib
 make
-cd $here
+
+mkdir -p $work
+cd $work
 
 ##--------------------------------------------------------------
 ## set working dir 
@@ -48,8 +54,8 @@ cd $here
 ##TMPDIR=EVR-HenonHeiles_6D_LB$LB"-B"$B
 ##echo TMPDIR: $TMPDIR
  
-name_WP=$here/temp
-name_WPR=$here/temp
+name_WP=$work/temp
+name_WPR=$work/temp
 
 ##--------------------------------------------------------------
 ## set openMP environment
@@ -171,23 +177,34 @@ EOF
 
 
 
-
-
 ###> run
 ##==============================================================
 
-if   [ $parall == 'openMP' ] ; then
-  $DIR_vib/$VIBEXE > $here/"res_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG"_"$num_cores"openMpcores"
+output_file_name="res_HenonHeiles_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG
 
+##-openMP-------------------------------------------------------
+if   [ $parall == 'openMP' ] ; then
+  $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"openMpcores"
+
+##-MPI----------------------------------------------------------
 elif [ $parall == 'MPI'    ] ; then
+
   if [ -z $MPI_cores ]; then
     echo 'short of MPI core number, check shell input'
     exit 1
   fi
-  mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $here/"res_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG"_"$num_cores"MPIcores"
 
+##-if just output process 0-------------------------------------
+
+  if [ $MPI_output0 == 1 ] ; then
+    mpirun -np $MPI_cores $here/MPI_output_control $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
+  else
+    mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
+  fi
+
+##-no parallel--------------------------------------------------
 else 
-  $DIR_vib/$VIBEXE > $here/"res_6D_SGtype4_LB"$LB"_B"$B"_LG"$LG
+  $DIR_vib/$VIBEXE > $work/$output_file_name
 fi
 ##==============================================================
 ###< run

@@ -144,7 +144,8 @@ MODULE mod_Tana_Tnum
       max_error = max( max_error, maxval(abs(f2_ana-Tdef2))/maxval(abs(Tdef2)) )
       max_error = max( max_error, maxval(abs(f1_ana-Tdef1))/maxval_f1 )
 
-      write(out_unitp,'(a,e8.2)') '         max error: ',max_error
+      write(out_unitp,'(a,e9.2)') '         max error: ',max_error
+      !Recommended by ifort, W>=D+7, was e8.2
 
       CALL dealloc_array(Tdef2, 'Tdef2', routine_name)
       CALL dealloc_array(Tdef1, 'Tdef1', routine_name)
