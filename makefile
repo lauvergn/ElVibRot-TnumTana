@@ -403,6 +403,7 @@ DIRana     = $(DirEVR)/sub_analysis
 DIRpropa   = $(DirEVR)/sub_propagation
 DIRSmolyak = $(DirEVR)/sub_Smolyak_test
 DIROpt     = $(DirEVR)/sub_Optimization
+DIRCRP     = $(DirEVR)/sub_CRP
 
 #============================================================================
 #Libs, Minimize Only list: OK
@@ -568,6 +569,12 @@ Obj_propagation = \
  $(OBJ)/sub_propagation.o $(OBJ)/sub_Hmax.o $(OBJ)/sub_control.o \
  $(OBJ)/sub_TF_autocorr.o
 
+Obj_CRP = \
+ $(OBJ)/sub_calc_crp_P_lanczos.o \
+ $(OBJ)/sub_cpgmres_cerfacs.o $(OBJ)/sub_pmult_QMR.o \
+ $(OBJ)/sub_GMRES_driver_cerfacs.o $(OBJ)/sub_npqm.o $(OBJ)/sub_qall.o \
+$(OBJ)/sub_NAG.o $(OBJ)/sub_pmult_GMRES.o $(OBJ)/sub_qm.o
+
 Obj_inactive = \
  $(OBJ)/sub_HST_harm.o $(OBJ)/sub_inactive_harmo.o \
  $(OBJ)/sub_changement_de_var.o $(OBJ)/sub_ana_HS.o
@@ -602,7 +609,7 @@ Obj_EVRT =\
   $(Obj_WP) \
   $(Obj_Operator) \
   $(Obj_inactive) $(Obj_active) \
-  $(Obj_propagation) \
+  $(Obj_propagation) $(Obj_CRP) \
   $(Obj_analysis) \
   $(Obj_Basis_WP_Op_propa) \
   $(Obj_Optimization) \
@@ -1040,6 +1047,27 @@ $(OBJ)/sub_control.o:$(DIRpropa)/sub_control.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_control.f90
 $(OBJ)/sub_TF_autocorr.o:$(DIRpropa)/sub_TF_autocorr.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_TF_autocorr.f90
+#
+#===================================================================================
+# sub_CRP: 
+$(OBJ)/sub_calc_crp_P_lanczos.o:$(DIRCRP)/sub_calc_crp_P_lanczos.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_calc_crp_P_lanczos.f90
+$(OBJ)/sub_cpgmres_cerfacs.o:$(DIRCRP)/sub_cpgmres_cerfacs.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_cpgmres_cerfacs.f
+$(OBJ)/sub_pmult_QMR.o:$(DIRCRP)/sub_pmult_QMR.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_pmult_QMR.f
+$(OBJ)/sub_GMRES_driver_cerfacs.o:$(DIRCRP)/sub_GMRES_driver_cerfacs.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_GMRES_driver_cerfacs.f
+$(OBJ)/sub_npqm.o:$(DIRCRP)/sub_npqm.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_npqm.f
+$(OBJ)/sub_qm.o:$(DIRCRP)/sub_qm.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_qm.f
+$(OBJ)/sub_qall.o:$(DIRCRP)/sub_qall.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_qall.f
+$(OBJ)/sub_NAG.o:$(DIRCRP)/sub_NAG.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_NAG.f
+$(OBJ)/sub_pmult_GMRES.o:$(DIRCRP)/sub_pmult_GMRES.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_pmult_GMRES.f
 #
 #===================================================================================
 #Operator ....

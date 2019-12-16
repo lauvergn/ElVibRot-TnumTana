@@ -133,6 +133,99 @@
       IF (phase) CALL Unique_phase(n,Vec,n)
 
       END SUBROUTINE diagonalization
+      SUBROUTINE diagonalization_HerCplx(Mat,Eig,Vec,n,type_diag,sort,phase)
+      USE mod_system
+      USE mod_MPI
+      IMPLICIT NONE
+
+      integer             :: n
+      complex(kind=Rkind) :: Mat(n,n),Vec(n,n)
+      real(kind=Rkind)    :: Eig(n)
+
+      integer          :: type_diag,sort
+      logical          :: phase
+
+      integer          :: type_diag_loc
+
+
+      integer          :: ierr
+      integer          :: i,lwork
+      complex(kind=Rkind), allocatable :: work(:),saveMat(:,:)
+      real(kind=Rkind),    allocatable :: rwork(:)
+
+      integer(kind=4)  :: n4,lwork4,ierr4
+
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='diagonalization_HerCplx'
+      logical, parameter :: debug = .FALSE.
+!      logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+      type_diag_loc = type_diag
+
+      SELECT CASE (type_diag_loc)
+      CASE(1)
+        stop ' type_diag=1 not yet in diagonalization_HerCplx'
+      CASE(2)
+        stop ' type_diag=2 not yet in diagonalization_HerCplx'
+      CASE(3) ! lapack77
+
+#if __LAPACK == 1
+        lwork = (5+1)*n ! max(1,2*n-1)
+
+        CALL alloc_NParray(work,(/ lwork /),'work',name_sub)
+        CALL alloc_NParray(rwork,(/ max(1, 3*n-2) /),'rwork',name_sub)
+
+
+        Vec(:,:) = Mat(:,:)
+
+        ! lapack subroutines need integer (kind=4), therefore, we add a conversion, otherwise
+        ! it fails when integers (kind=8) are used (at the compilation).
+        n4     = int(n,kind=4)
+        lwork4 = int(lwork,kind=4)
+        CALL ZHEEV('V','U',n4,Vec,n4,Eig, work,lwork4, rwork, ierr4)
+
+        IF (debug) write(out_unitp,*)'ierr=',ierr4
+        IF (ierr4 /= 0) THEN
+           write(out_unitp,*) ' ERROR in ',name_sub,' from ', MPI_id
+           write(out_unitp,*) ' ZHEEV lapack subroutine has FAILED!'
+           STOP
+        END IF
+
+        CALL dealloc_NParray(work, 'work', name_sub)
+        CALL dealloc_NParray(rwork,'rwork',name_sub)
+
+#else
+        stop ' no lapack in diagonalization_HerCplx'
+
+#endif
+
+      CASE DEFAULT
+        stop ' no default in diagonalization_HerCplx'
+      END SELECT
+
+
+!      SELECT CASE (sort)
+!      CASE(1)
+!        CALL trie(n,Eig,Vec,n)
+!      CASE(-1)
+!        Eig = -Eig
+!        CALL trie(n,Eig,Vec,n)
+!        Eig = -Eig
+!      CASE(2)
+!        CALL trie_abs(n,Eig,Vec,n)
+!      CASE DEFAULT ! no sort
+!        CONTINUE
+!      END SELECT
+!
+!      DO i=1,n
+!        Vec(:,i) = Vec(:,i)/sqrt(dot_product(Vec(:,i),Vec(:,i)))
+!      END DO
+!
+!      IF (phase) CALL Unique_phase(n,Vec,n)
+
+      END SUBROUTINE diagonalization_HerCplx
 !=======================================================================================
 
       SUBROUTINE JACOBI(A,N,D,V,B,Z,max_N)

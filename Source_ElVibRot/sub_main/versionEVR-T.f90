@@ -16,7 +16,12 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!      with contributions of:
+!          Mamadou Ndong (Tana)
+!          Josep Maria Luis:    geometry optimization (ElVibRot)
+!          Ahai Chen:           MPI (ElVibRot)
+!          Emil Lund klinting:  coupling with MidasCpp (Tana)
+!          Lucien Dupuy:        CRP (ElVibRot)
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -54,18 +59,26 @@
 
         write(out_unitp,*) EVR_name,' is written by David Lauvergnat [1] '
         write(out_unitp,*) '     with contributions of Josep Maria Luis [2]'
+        write(out_unitp,*) '     Ahai Chen (MPI) [1,4]'
+        write(out_unitp,*) '     Lucien Dupuy (CRP) [5]'
+
         write(out_unitp,*) EVR_name,' is under GNU LGPL3 license.'
         write(out_unitp,*)
 
         write(out_unitp,*) Tnum_name,' is written David Lauvergnat [1]'
         write(out_unitp,*) Tana_name,' is written by Mamadou Ndong '
         write(out_unitp,*) '     with contributions of David Lauvergnat'
+        write(out_unitp,*) '        and Emil Lund klinting (coupling with MidasCpp) [3]'
+
         write(out_unitp,*) Tnum_name,' and ',Tana_name,' are under GNU LGPL3 license.'
         write(out_unitp,*)
-        write(out_unitp,*) '[1]: Laboratoire de Chimie Physique, UMR 8000,',&
-                                        ' CNRS-Université Paris-Sud, France'
+        write(out_unitp,*) '[1]: Laboratoire de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
         write(out_unitp,*) '[2]: Institut de Química Computacional and Departament de Química',&
                                    ' Universitat de Girona, Catalonia, Spain'
+        write(out_unitp,*) '[3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark'
+        write(out_unitp,*) '[4]: Maison de la Simulation USR 3441, CEA Saclay, France'
+        write(out_unitp,*) '[5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,', &
+                                   ' Université de Montpellier, France'
         write(out_unitp,*) '==============================================='
         write(out_unitp,*) '==============================================='
       END IF

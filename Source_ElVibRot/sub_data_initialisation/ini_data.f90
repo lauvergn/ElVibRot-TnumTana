@@ -539,7 +539,7 @@
         CALL Set_paraPRH(mole,para_Tnum,para_AllBasis%BasisnD)
       END IF
 
-      IF (para_propa%para_Davidson%NewVec_type == 4) THEN
+      IF (para_propa%para_Davidson%NewVec_type == 4 .OR. para_ana%CRP > 0) THEN
         CALL RecSet_EneH0(para_Tnum,mole,para_AllBasis%BasisnD,         &
                           para_PES,para_ReadOp,ComOp)
       END IF

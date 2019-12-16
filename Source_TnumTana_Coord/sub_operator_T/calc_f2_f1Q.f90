@@ -65,13 +65,10 @@
 
       integer           :: i
 
-      integer, parameter :: ndim=12
-      real (kind=Rkind), parameter :: w(ndim) = (/               &
-        0.09357_Rkind, 0.0740_Rkind, 0.1273_Rkind, 0.1568_Rkind, &
-        0.1347_Rkind, 0.3431_Rkind, 0.1157_Rkind, 0.3242_Rkind,  &
-        0.3621_Rkind, 0.2673_Rkind, 0.3052_Rkind, 0.0968_Rkind/)
-
-      real (kind=Rkind) :: eVTOau
+      real (kind=Rkind) :: w10a
+      real (kind=Rkind) :: w6a
+      real (kind=Rkind) :: w1
+      real (kind=Rkind) :: w9a
 !-------------------------------------------------------------------------
 
 !----- for debuging --------------------------------------------------
@@ -93,7 +90,11 @@
        END IF
 !-----------------------------------------------------------
 
-      eVTOau = ONE/get_Conv_au_TO_unit(quantity='E',Unit='eV')
+      w10a   = convRWU_WorkingUnit_TO_R(REAL_WU(0.09357,'ev','E'))
+      w6a    = convRWU_WorkingUnit_TO_R(REAL_WU(0.0740,'ev','E'))
+      w1     = convRWU_WorkingUnit_TO_R(REAL_WU(0.1273,'ev','E'))
+      w9a    = convRWU_WorkingUnit_TO_R(REAL_WU(0.1568,'ev','E'))
+      !write(6,*) 'w (au)',w10a,w6a,w1,w9a
 
       Tdef2(:,:) = ZERO
       Tdef1(:)   = ZERO
@@ -103,9 +104,10 @@
       Tcor1(:)   = ZERO
       Trot(:,:)  = ZERO
 
-      DO i=1,ndim
-        Tdef2(i,i) = -HALF*w(i)*eVTOau
-      END DO
+      Tdef2(1,1) = -HALF*w10a
+      Tdef2(2,2) = -HALF*w6a
+      Tdef2(3,3) = -HALF*w1
+      Tdef2(4,4) = -HALF*w9a
 
       !write(6,*) 'Tdef',Tdef2
 
