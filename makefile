@@ -6,8 +6,7 @@
 #F90 = ifort
 #F90 = pgf90
 
-## MPI compiled with
-# gfortran or ifort
+## MPI compiled with: gfortran or ifort
 MPICORE = gfortran   
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
