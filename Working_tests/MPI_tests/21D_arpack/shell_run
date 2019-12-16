@@ -4,7 +4,7 @@
 ###> parameters
 ##==============================================================
 
-parall=MPI      ## MPI or openMP or BLANK
+parall=MPI      ## MPI or openMP or NaN
 MPI_output0=1   ## just print output form process 0 in MPI, 0 for debug
 num_cores=$1
 
@@ -37,7 +37,7 @@ fi
 here=`pwd`
 
 work=$here/result/
-DIR_vib=$here/../..
+DIR_vib=$here/../../..
 DIR_pot=$DIR_vib/sub_pot
 VIBEXE=vib
 

@@ -4917,7 +4917,7 @@
           CALL dealloc_NPArray(GGdef,'GGdef',name_sub)
         ELSE
           CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=0)
-        END IF
+        END IF ! for para_PES%QMLib
         
         IF (para_Tnum%Gcte) THEN
           CALL alloc_array(para_Tnum%Gref,(/ mole%ndimG,mole%ndimG /),    &

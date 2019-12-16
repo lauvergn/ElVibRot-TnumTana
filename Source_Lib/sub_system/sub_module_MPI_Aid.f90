@@ -9,6 +9,7 @@
 !>  -
 !=======================================================================================
 MODULE mod_MPI_Aid
+#if(run_MPI)
   USE mod_MPI
   IMPLICIT NONE
   
@@ -33,45 +34,45 @@ MODULE mod_MPI_Aid
 !---------------------------------------------------------------------------------------
   Contains
     !> check total memory used at certain point
-    SUBROUTINE system_mem_usage(memory_RSS,name)
-      USE mod_NumParameters
-      ! USE ifport ! if on intel compiler
-      IMPLICIT NONE
-      Integer, intent(out) :: memory_RSS
-      Character(len=200):: filename=' '
-      Character(len=80) :: line
-      Character(len=8)  :: pid_char=' '
-      Integer :: pid
-      Logical :: ifxst
-      Character (len=*), intent(in) :: name
-
-      memory_RSS=-1 ! return negative number if not found
-
-      !> get process ID
-      pid=getpid()
-      !write(*,*) 'pid=',pid
-      write(pid_char,'(I8)') pid
-      filename='/proc/'//trim(adjustl(pid_char))//'/status'
-
-      ! read system file
-      inquire (file=filename,exist=ifxst)
-      IF(.not.ifxst) THEN
-        !write (*,*) 'system file does not exist'
-      ELSE
-        OPEN(unit=100, file=filename, action='read')
-        DO
-          read(100,'(a)',end=120) line
-          IF(line(1:6).eq.'VmRSS:') THEN
-            read (line(7:),*) memory_RSS
-            EXIT
-          ENDIF
-        ENDDO
-120     CONTINUE
-        CLOSE(100)
-        write(out_unitp,121) name,memory_RSS,MPI_id
-121     format('memory check at ',a,': ',i4,' from ',i4)
-      ENDIF
-    ENDSUBROUTINE system_mem_usage
+!    SUBROUTINE system_mem_usage(memory_RSS,name)
+!      USE mod_NumParameters
+!      ! USE ifport ! if on intel compiler
+!      IMPLICIT NONE
+!      Integer, intent(out) :: memory_RSS
+!      Character(len=200):: filename=' '
+!      Character(len=80) :: line
+!      Character(len=8)  :: pid_char=' '
+!      Integer :: pid
+!      Logical :: ifxst
+!      Character (len=*), intent(in) :: name
+!
+!      memory_RSS=-1 ! return negative number if not found
+!
+!      !> get process ID
+!      pid=getpid()
+!      !write(*,*) 'pid=',pid
+!      write(pid_char,'(I8)') pid
+!      filename='/proc/'//trim(adjustl(pid_char))//'/status'
+!
+!      ! read system file
+!      inquire (file=filename,exist=ifxst)
+!      IF(.not.ifxst) THEN
+!        !write (*,*) 'system file does not exist'
+!      ELSE
+!        OPEN(unit=100, file=filename, action='read')
+!        DO
+!          read(100,'(a)',end=120) line
+!          IF(line(1:6).eq.'VmRSS:') THEN
+!            read (line(7:),*) memory_RSS
+!            EXIT
+!          ENDIF
+!        ENDDO
+!120     CONTINUE
+!        CLOSE(100)
+!        write(out_unitp,121) name,memory_RSS,MPI_id
+!121     format('memory check at ',a,': ',i4,' from ',i4)
+!      ENDIF
+!    ENDSUBROUTINE system_mem_usage
 
 !---------------------------------------------------------------------------------------
 !> write for MPI outpout
@@ -180,6 +181,7 @@ MODULE mod_MPI_Aid
       array_in=0.
     END SUBROUTINE
 !---------------------------------------------------------------------------------------
+#endif
 
 END MODULE mod_MPI_Aid
 

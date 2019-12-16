@@ -103,7 +103,6 @@ MODULE mod_RW_MatVec
 #if(run_MPI)
            write(*,*) 'max_col check:',max_col,ilen, ' from ',MPI_id
 #endif
-
            wformat = String_TO_String(wformat // '1x,i' //              &
                        int_TO_char(ilen) // ',2x,' //                   &
                        int_TO_char(max_col) // '(' //                   &

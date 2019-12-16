@@ -49,9 +49,7 @@
       USE mod_fullanalysis
       USE mod_Auto_Basis
       USE mod_MPI
-#if(run_MPI)      
       USE mod_MPI_Aid     
-#endif    
       IMPLICIT NONE
 
 !---------------------------------------------------------------------------------------
@@ -262,13 +260,10 @@
 !---------------------------------------------------------------------------------------
 !       => Time-dependent calculation
 !---------------------------------------------------------------------------------------
-#if(run_MPI)
-        CALL MPI0_write(out_unitp,'Propogation start')
-#endif
+        write(out_unitp,*) 'Propogation start'
+        
         CALL init_psi(WP0(1),para_H,cplx=.TRUE.)
-#if(run_MPI)
-        CALL MPI0_write(out_unitp,'Propogation initialized')
-#endif
+        write(out_unitp,*) 'Propogation initialized'
   
         ! building of WP0 for WP propagation ------------------------------------------
         IF (.NOT. para_ana%control .AND. para_propa%type_WPpropa /=100) THEN
@@ -663,7 +658,7 @@
           para_propa%para_Davidson%max_WP = max_diago
 
           nb_diago = min(para_propa%para_Davidson%nb_WP,para_H%nb_tot,max_diago)
-#if(run_MPI) 
+#if(run_MPI)
           CALL MPI_Bcast(nb_diago,size1_MPI,MPI_Int_fortran,root_MPI,                  &
                          MPI_COMM_WORLD,MPI_err)
 #endif
@@ -673,11 +668,10 @@
 
           IF (para_ana%davidson) THEN
 
-            CALL sub_propagation_Davidson(Tab_Psi,Ene0,nb_diago,max_diago,&
-                                        para_H,para_propa)
+            CALL sub_propagation_Davidson(Tab_Psi,Ene0,nb_diago,max_diago,             &
+                                          para_H,para_propa)
 
           ELSE IF (para_ana%arpack) THEN ! arpack=t
-            !@chen ? sym or not
             !CALL sub_propagation_Arpack(Tab_Psi,Ene0,nb_diago,max_diago,  &
             !                            para_H,para_propa)
             CALL sub_propagation_Arpack_Sym(Tab_Psi,Ene0,nb_diago,max_diago,&

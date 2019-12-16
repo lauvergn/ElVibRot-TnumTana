@@ -4,8 +4,8 @@
 ###> parameters
 ##==============================================================
 
-parall=MPI      ## MPI or openMP or BLANK
-MPI_output0=1   ## just print output form process 0 in MPI, 0 for debug
+parall=MPI      ## MPI or openMP or NaN
+MPI_output0=0   ## just print output form process 0 in MPI, 0 for debug
 num_cores=$1
 
 LB=$2
@@ -21,7 +21,6 @@ arpack=f
 
 
 test=f
-B=1
 B2=2
 x=4.5
 zref=-1.4
@@ -49,13 +48,16 @@ fi
 here=`pwd`
 
 work=$here/result/
-DIR_vib=$here/../..
+DIR_vib=$here/../../..
 DIR_pot=$DIR_vib/sub_pot
 VIBEXE=vib
 
 cp sub_system_malo.f90 $DIR_pot/sub_system.f90
 
 cd $DIR_vib
+which mpifort
+which gfortran
+which ifort
 make
 
 mkdir -p $work
@@ -67,8 +69,8 @@ cd $work
 ##TMPDIR=EVR-HenonHeiles_6D_LB$LB"-B"$B
 ##echo TMPDIR: $TMPDIR
  
-name_WP=$work/"file_WPspectral_LB"$LB"_LG"$LG
-name_WPR=$work/"file_WPspectral_LB"$LBR"_LG"$LGR
+name_WP=$work/temp
+name_WPR=$work/temp
 name_SaveWP=$work/file_WP
 
 ##--------------------------------------------------------------
@@ -444,15 +446,16 @@ z4_F(BF)                    $zref
 
 ##  Eq.2b for Type_HamilOp=10, 1 for Eq.2d
 ##  direct_KEO=t: calculate everytime K operator
-&actives test=$test direct=4 Type_HamilOp=10 direct_KEO=t Save_MemGrid=f /
+## &actives test=$test direct=2 Type_HamilOp=10 direct_KEO=t Save_MemGrid=f /
+&actives test=$test direct=2 Type_HamilOp=10/
 
 &analyse max_ene=200000. 'cm-1' print=f print_psi=0 davidson=$dav arpack=$arpack
-         formatted_file_WP=f FilePsiVersion=1 name_file_spectralWP="$name_WP" /
+         formatted_file_WP=t FilePsiVersion=1 name_file_spectralWP="$name_WP" /
 
 ## nb_WP: number of states keeped
 &davidson nb_WP=2 max_it=100 max_WP=300 num_resetH=5
           all_lower_states=t max_Ene=1500. 'cm-1' NewVec_type=4
-          read_WP=t read_listWP=f name_file_readWP="$name_WPR" formatted_file_readWP=t 
+          read_WP=t read_listWP=f name_file_readWP="$name_WPR" formatted_file_readWP=t
           name_file_saveWP="$name_SaveWP"
 /
 
