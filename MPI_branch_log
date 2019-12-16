@@ -5,6 +5,8 @@
 ----------------------------------------------------------------------------------------
 @ log
 
+> correcton for makefile on MPICORE
+
 > new master merged locally (MPI_vm1.1)
   issue in propagation
 
