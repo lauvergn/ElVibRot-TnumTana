@@ -163,14 +163,23 @@
 #endif
         ENDIF
 
+         
+        !> automatically decide the reading of namelist, from file or shell
+        !> remember to add "rm namelist" in shell script to prevent 
+        !> the reading of old namelist
+!        in_unitp=10
+!        open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
+!        IF(err/=0) THEN
+!          write(*,*) 'namelist file does not exist or error, reading namelist from shell'
+!          in_unitp=INPUT_UNIT
+!        ENDIF
+!        read(in_unitp,system,IOSTAT=err)
 
         !> read from parameter file created by shell script
-        in_unitp=10
-        open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
-        IF(err/=0) THEN
-          write(*,*) 'namelist file does not exist or error, reading namelist from shell'
-          in_unitp=INPUT_UNIT
-        ENDIF
+        IF(namelist_from_file) THEN
+          open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
+          IF(err/=0) STOP 'error in opening file for namelist'
+        Endif
         read(in_unitp,system,IOSTAT=err)
              
         IF (err < 0) THEN
