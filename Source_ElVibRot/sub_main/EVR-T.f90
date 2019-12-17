@@ -72,7 +72,6 @@
       character (len=Name_longlen) :: RMatFormat
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
-      logical  :: namelist_from_file=.TRUE.  ! .False. to read namelist from shell
       
       ! parameters for system setup
       ! make sure to be prepared in file      
@@ -164,12 +163,14 @@
 
 
         !> read from parameter file created by shell script
-        IF(namelist_from_file) THEN
-          open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
-          IF(err/=0) STOP 'error in opening file for namelist'
-        Endif
+        in_unitp=10
+        open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
+        IF(err/=0) THEN
+          write(*,*) 'namelist file does not exist or error, reading namelist from shell'
+          in_unitp=INPUT_UNIT
+        ENDIF
         read(in_unitp,system,IOSTAT=err)
-        
+             
         IF (err < 0) THEN
           write(out_unitp,*) ' ERROR in ElVibRot (main program)'
           write(out_unitp,*) ' End-of-file or End-of-record'
