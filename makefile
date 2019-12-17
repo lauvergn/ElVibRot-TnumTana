@@ -1,16 +1,16 @@
 #=================================================================================
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-#F90 = mpifort
+# F90 = mpifort
  F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
 
-## MPI compiled with
-MPICORE = gfortran   # gfortran or ifort
+## MPI compiled with: gfortran or ifort
+MPICORE = gfortran   
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -266,9 +266,9 @@ ifeq ($(F90),mpifort)
    # integer kind management
    ifeq ($(INT),8)
       ifeq ($(MPICORE),ifort)
-         F90FLAGS := $(F90FLAGS) -i8
+         F90FLAGS += -i8
       else
-         F90FLAGS := $(F90FLAGS) -fdefault-integer-8 
+         F90FLAGS += -fdefault-integer-8 
       endif
    endif
 endif

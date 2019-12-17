@@ -12,7 +12,6 @@ c================================================================
 
       USE mod_Tnum
       USE mod_system
-      USE mod_Constant
       IMPLICIT NONE
 
 c----- for the zmatrix and Tnum --------------------------------------
@@ -25,62 +24,41 @@ c----- for the zmatrix and Tnum --------------------------------------
       real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
       real (kind=Rkind) :: Qact(nb_var)
 
-      integer,parameter :: ndim=4
+      integer,parameter :: ndim=6
       real (kind=Rkind) :: im_pot0
       real (kind=Rkind) :: Q(ndim)
       real (kind=Rkind) :: Q2(ndim)
-
+      real (kind=Rkind) :: Q3(ndim)
      
-      real (kind=Rkind) :: w10a
-      real (kind=Rkind) :: w6a
-      real (kind=Rkind) :: w1
-      real (kind=Rkind) :: w9a
-      real (kind=Rkind) :: delta
-      real (kind=Rkind) :: lambda
-      real (kind=Rkind) :: k6a1
-      real (kind=Rkind) :: k6a2
-      real (kind=Rkind) :: k11
-      real (kind=Rkind) :: k12
-      real (kind=Rkind) :: k9a1
-      real (kind=Rkind) :: k9a2
+      real (kind=Rkind), parameter :: lambda = 0.111803d0
+      integer :: i,n
 
-    
-       w10a   = convRWU_WorkingUnit_TO_R(REAL_WU(0.09357,'ev','E'))
-       w6a    = convRWU_WorkingUnit_TO_R(REAL_WU(0.0740,'ev','E'))
-       w1     = convRWU_WorkingUnit_TO_R(REAL_WU(0.1273,'ev','E'))
-       w9a    = convRWU_WorkingUnit_TO_R(REAL_WU(0.1568,'ev','E'))
-       delta  = convRWU_WorkingUnit_TO_R(REAL_WU(0.46165,'ev','E'))
-       lambda = convRWU_WorkingUnit_TO_R(REAL_WU(0.1825,'ev','E'))
-       k6a1   = convRWU_WorkingUnit_TO_R(REAL_WU(-0.0964,'ev','E'))
-       k6a2   = convRWU_WorkingUnit_TO_R(REAL_WU(0.1194,'ev','E'))
-       k11    = convRWU_WorkingUnit_TO_R(REAL_WU(0.0470,'ev','E'))
-       k12    = convRWU_WorkingUnit_TO_R(REAL_WU(0.2012,'ev','E'))
-       k9a1   = convRWU_WorkingUnit_TO_R(REAL_WU(0.1594,'ev','E'))
-       k9a2   = convRWU_WorkingUnit_TO_R(REAL_WU(0.0484,'ev','E'))
-
-      !write(6,*) 'w (au)',w10a,w6a,w1,w9a
 
       Q  = Qact(4:ndim+3)
       Q2 = Q*Q
+      Q3 = Q2*Q
 
-      IF (nb_be == 2 ) THEN
-        mat_V(:,:) = ZERO
-        mat_V(1,1) = HALF*(w10a*Q2(1)+w6a*Q2(2)+w1*Q2(3)+w9a*Q2(4))
-        mat_V(2,2) = mat_V(1,1) + delta + k6a2*Q(2)+k12*Q(3)+k9a2*Q(4)
-        mat_V(1,1) = mat_V(1,1) - delta + k6a1*Q(2)+k11*Q(3)+k9a1*Q(4)
-        mat_V(1,2) = lambda*Q(1)
-        mat_V(2,1) = lambda*Q(1)
+      IF (nb_be == 1 ) THEN
+c       CALL sub_model_V(mat_V,Q,ndim,nb_be)
+        mat_V(1,1) = ZERO
+        DO i=1,ndim
+         mat_V(1,1) = mat_V(1,1) + HALF * Q(i)**2
+        END DO
+        DO i=1,ndim-1
+         mat_V(1,1) = mat_V(1,1) + lambda * 
+     *     ( Q(i)**2 * Q(i+1) - Q(i+1)**3/THREE )
+        END DO
+c       mat_V(1,1) = HALF * sum(Q2) + lambda * sum( Q2(1:n-1)*Q(2:n) ) -
+c    *             lambda/THREE * sum( Q(2:n)**3 )
 
-c       write(6,*) 'Q,V',Q,mat_V
-        IF (pot_cplx) mat_imV(1,1) = im_pot0(Q,ndim)
-c       write(6,*) 'Q,imV',Q,mat_imV
+        IF (pot_cplx) mat_imV(1,1) = im_pot0(Q,n)
         IF (calc_ScalOp) THEN
-          CALL sub_scalar(mat_ScalOp(1,1,:),nb_ScalOp,Q,ndim,
+          CALL sub_scalar(mat_ScalOp(1,1,:),nb_ScalOp,Q,n,
      *                    mole)
         END IF
       ELSE
         write(6,*) ' ERROR in calc_op'
-        write(6,*) ' It needs two PES'
+        write(6,*) ' more than ONE electronic surface is impossible'
         write(6,*) ' Rq: nb_be',nb_be
         STOP
       END IF
@@ -190,7 +168,6 @@ C================================================================
            z = z -(abs(Q(i)) - Q0)**3
         END IF
        END DO
-       !write(6,*) Q,z
 
        im_pot0 = z
 
