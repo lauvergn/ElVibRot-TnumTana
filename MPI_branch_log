@@ -5,10 +5,9 @@
 ----------------------------------------------------------------------------------------
 @ log
 
-> correcton for makefile on MPICORE
-  a few backup lines for namelist: automaticly compatible with shell input way
+> correction for makefile on MPICORE
+  a few backup lines for namelist: automatically compatible with shell input way
   add example for reading namelist from shell directly. 
-    *add "rm namelist" in the exapmle to ensure not reading from old namelist file.  
   
 
 > new master merged locally (MPI_vm1.1)

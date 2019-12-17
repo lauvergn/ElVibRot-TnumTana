@@ -72,6 +72,7 @@
       character (len=Name_longlen) :: RMatFormat
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
+      logical  :: namelist_from_file=.TRUE.  ! .False. to read namelist from shell
       
       ! parameters for system setup
       ! make sure to be prepared in file      
