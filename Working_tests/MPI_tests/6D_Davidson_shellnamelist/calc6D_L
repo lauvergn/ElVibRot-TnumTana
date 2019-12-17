@@ -1,0 +1,13 @@
+L=2
+LR=2
+
+B=1
+BR=1
+./dat_HenonHeiles_6D  3 3 1   $LR $LR $BR   f
+
+for L in 3 
+do
+  ./dat_HenonHeiles_6D  $L $L $B   $LR $LR $BR   t
+  LR=$L
+  BR=$B
+done

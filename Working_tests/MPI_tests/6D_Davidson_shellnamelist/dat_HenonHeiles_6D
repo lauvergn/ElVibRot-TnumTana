@@ -1,0 +1,72 @@
+test=f
+dav=$7
+nb_ana=28
+
+ici=`pwd`
+DIR_vib=../../..
+DIR_pot=$DIR_vib/sub_pot
+VIBEXE=vib
+
+cp sub_system_HenonHeiles.f $DIR_pot/sub_system.f
+
+
+# for the extranl potlib
+cd $DIR_vib
+ make
+cd $ici
+
+
+LB=2
+LG=3
+B=1
+
+
+export OMP_NUM_THREADS=1
+
+$DIR_vib/$VIBEXE << ** > $ici/"res_HenonHeiles_6D_SGtype4_LB"$LB"-B"$B"_LG"$LG
+ &system EVR=t OpPsi_test=f printlevel=0 /
+ &constantes ene_unit='au' /
+ &variables
+         nrho=2 Without_Rot=t Centered_ON_CoM=f Gcte=t
+         Old_Qtransfo=f
+         nb_Qtransfo=2
+ /
+
+ &Coord_transfo name_transfo='zmat' nat=5 /
+X
+X 1
+X 1 2
+1. 0 0 0   ! cart4
+1. 0 0 0   ! cart5
+
+ &Coord_transfo name_transfo='active' /
+0 0 0    1 1 1   1 1 1
+
+ &minimum pot0=0.d0  nb_scalar_Op=0 pot_act=f read_Qsym0=t unit='bohr' /
+ 1.
+ 1.
+ 1.57
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+
+ &basis_nD nb_basis=6 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=4 /
+   &basis_nD iQdyn=4         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=5         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=6         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=7         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=8         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=9         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+
+ &inactives /
+ &actives test=$test direct=2 Make_MatOp=t /
+
+ &analyse max_ana=$nb_ana max_ene=7. 'au' 
+          print=t print_psi=0 Psi_ScalOp=f intensity=f davidson=f /
+**
+exit
+ &actives test=$test direct=2 Make_MatOp=t /
+ &actives test=$test direct=4 Make_MatOp=t direct_KEO=t Save_MemGrid=t direct_ScalOp=t /
