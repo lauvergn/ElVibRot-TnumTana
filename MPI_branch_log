@@ -6,8 +6,11 @@
 @ log
 
 > correction for makefile on MPICORE
-  a few backup lines for namelist: automatically compatible with shell input way
+  namelist: automatically compatible with shell input way; 
+            get rid of varilables "namelist_from_file";
+            remember to use vib.run to ensure "rm namelist" to prevent the reading of old namelist;
   add example for reading namelist from shell directly. 
+  change 2147483647 to huge(0) 
   
 
 > new master merged locally (MPI_vm1.1)

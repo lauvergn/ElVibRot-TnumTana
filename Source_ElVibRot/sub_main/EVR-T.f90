@@ -72,7 +72,7 @@
       character (len=Name_longlen) :: RMatFormat
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
-      logical  :: namelist_from_file=.TRUE.  ! .False. to read namelist from shell
+!      logical  :: namelist_from_file=.TRUE.  ! .False. to read namelist from shell
       
       ! parameters for system setup
       ! make sure to be prepared in file      
@@ -101,11 +101,11 @@
         CALL MPI_initialization()
         Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
         Popenmp            = .FALSE.  !< True to run openMP
-        namelist_from_file = .TRUE.
+!        namelist_from_file = .TRUE.
 #else 
         MPI_id=0
         Popenmpi           = .FALSE.  !< True to run MPI, set here or in namelist system
-        namelist_from_file = .FALSE.
+!        namelist_from_file = .FALSE.
         ! set openMP accodring to make file
 #if(run_openMP)
         Popenmp            = .TRUE.   !< True to run openMP
@@ -166,22 +166,22 @@
 
          
         !> automatically decide the reading of namelist, from file or shell
-        !> remember to add "rm namelist" in shell script to prevent 
-        !> the reading of old namelist
-!        in_unitp=10
-!        open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
-!        IF(err/=0) THEN
-!          write(*,*) 'namelist file does not exist or error, reading namelist from shell'
-!          in_unitp=INPUT_UNIT
-!        ENDIF
-!        read(in_unitp,system,IOSTAT=err)
+        !> NOTE: remember to use vib.run to ensure "rm namelist" to prevent the
+        !> reading of old namelist
+        in_unitp=10
+        open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
+        IF(err/=0) THEN
+          write(*,*) 'namelist file does not exist or error, reading namelist from shell'
+          in_unitp=INPUT_UNIT
+        ENDIF
+        read(in_unitp,system,IOSTAT=err)
 
         !> read from parameter file created by shell script
-        IF(namelist_from_file) THEN
-          open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
-          IF(err/=0) STOP 'error in opening file for namelist'
-        Endif
-        read(in_unitp,system,IOSTAT=err)
+!        IF(namelist_from_file) THEN
+!          open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
+!          IF(err/=0) STOP 'error in opening file for namelist'
+!        Endif
+!        read(in_unitp,system,IOSTAT=err)
              
         IF (err < 0) THEN
           write(out_unitp,*) ' ERROR in ElVibRot (main program)'
