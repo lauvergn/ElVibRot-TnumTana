@@ -1,9 +1,10 @@
 test=f
-dav=$7
+dav=$5
 nb_ana=28
 
 ici=`pwd`
-DIR_vib=../../..
+work=$ici/result
+DIR_vib=$ici/../../..
 DIR_pot=$DIR_vib/sub_pot
 VIBEXE=vib
 
@@ -14,16 +15,20 @@ cp sub_system_HenonHeiles.f $DIR_pot/sub_system.f
 cd $DIR_vib
  make
 cd $ici
+rm -f namelist
+mkdir -p $work 
+cd $work
 
+L=$1
+LB=$2
+LG=$3
+B=$4
 
-LB=2
-LG=3
-B=1
 
 
 export OMP_NUM_THREADS=1
 
-$DIR_vib/$VIBEXE << ** > $ici/"res_HenonHeiles_6D_SGtype4_LB"$LB"-B"$B"_LG"$LG
+$DIR_vib/$VIBEXE << ** > $work/"res_HenonHeiles_6D_SGtype4_LB"$LB"-B"$B"_LG"$LG
  &system EVR=t OpPsi_test=f printlevel=0 /
  &constantes ene_unit='au' /
  &variables
