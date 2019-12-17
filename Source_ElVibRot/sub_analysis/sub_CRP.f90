@@ -41,11 +41,16 @@
 
 
 !----- Operator variables ----------------------------------------------
-      integer           :: nb_Op
-      TYPE (param_Op)   :: tab_Op(nb_Op)
-      logical           :: print_Op
-      real (kind=Rkind) :: CRP_Ene,CRP_DEne
-      integer           :: nb_CRP_Ene,CRPtype
+      integer,           intent(in) :: nb_Op
+      TYPE (param_Op),   intent(in) :: tab_Op(nb_Op)
+      logical,           intent(in) :: print_Op
+      real (kind=Rkind), intent(in) :: CRP_Ene,CRP_DEne
+      integer,           intent(in) :: nb_CRP_Ene,CRPtype
+
+
+      ! local variables (it should be read in a namelist)
+      integer           :: i,KS_iterations,actualit
+      real (kind=Rkind) :: accuracy
 
 !----- for debuging --------------------------------------------------
       integer   :: err
@@ -60,10 +65,20 @@
         write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
+      SELECT CASE (CRPtype)
+      CASE (1) ! old one
+        CALL sub_CRP_BasisRep_WithMat(tab_Op,nb_Op,print_Op,CRP_Ene,CRP_DEne,nb_CRP_Ene)
+        !CALL sub_CRP_V0(tab_Op,nb_Op,print_Op,CRP_Ene) ! very old!!!
 
-      CALL sub_CRP_BasisRep_WithMat(tab_Op,nb_Op,print_Op,CRP_Ene,CRP_DEne,nb_CRP_Ene)
+      CASE (2) ! lanczos (Lucien Dupuy)
+        STOP 'CRP=2 not yet'
+        accuracy      = ONETENTH**5
+        KS_iterations = 100
+        DO i = 0, nb_CRP_Ene-1
+            !CALL calc_crp_P_lanczos(tab_Op, nb_Op, KS_iterations, actualit, accuracy, CRP_Ene+i*CRP_DEne)
+        END DO
+      END SELECT
 
-      !CALL sub_CRP_V0(tab_Op,nb_Op,print_Op,CRP_Ene)
 !----------------------------------------------------------
       IF (debug) THEN
       END IF

@@ -1,14 +1,13 @@
 !c
 !C================================================================
-!C    calcN_Op : calculation of the potential and dipolar matrices
+!C    calc_Op : calculation of the potential and dipolar matrices
 !c    mat_V(nb_be,nb_be) and mat_dip(nb_be,nb_be,3)
 !c    nb_be : nb of elctronic surface
-!c    Q are the coordinates. size : nb_var
-!c    scalar operators (dipolar) calculation if calc_ScalOp = T
-!c    Potential imaginary part calculation   if pot_cplx = T
+!c    Q are the coordinates in active order or syl order
+!c    dipolar calculation if calc_dip = T
 !C================================================================
       SUBROUTINE calcN_op(mat_V,mat_imV,mat_ScalOp,nb_be,nb_ScalOp, &
-                          Q,nb_var,mole,calc_ScalOp,pot_cplx)
+                        Qact,nb_var,mole,calc_ScalOp,pot_cplx)
 
       USE mod_system
       USE mod_Tnum
@@ -21,17 +20,28 @@
       logical           :: calc_ScalOp,pot_cplx
       real (kind=Rkind) :: mat_V(nb_be,nb_be),mat_imV(nb_be,nb_be)
       real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
-      real (kind=Rkind) :: Q(nb_var)
+      real (kind=Rkind) :: Qact(nb_var)
 
       real (kind=Rkind) :: im_pot0
       real (kind=Rkind) :: ScalOp(nb_ScalOp)
 
       
+      ! Eckart barrier. Parameters: E. Baloitcha et al. J. Chem. Phys., Vol. 117, No. 2, 8 July 2002
+      ! V(x)  = V0 / COSH(x/L)**2
+      real (kind=Rkind), parameter :: v0    = 0.0156_Rkind
+      real (kind=Rkind), parameter :: L     = 1._Rkind
+
+
+
       IF (nb_be == 1 ) THEN
-         mat_V(1,1) = ZERO
-        IF (pot_cplx) mat_imV(1,1) = ZERO
+        ! Eckart barrier
+        mat_V(1,1)  = V0 / COSH(Qact(1)/L)**2
+
+        !write(6,*) 'Q,mat_V',Q,mat_V(1,1)
+        IF (pot_cplx) mat_imV(1,1) = im_pot0(Qact(mole%nb_act1))
         IF (calc_ScalOp) THEN
-          mat_ScalOp(1,1,:) = ZERO
+          CALL sub_ScalarOp(ScalOp,nb_ScalOp,Qact(mole%nb_act1),mole)
+          mat_ScalOp(1,1,:) = ScalOp(:)
         END IF
       ELSE
         STOP 'nb_be > 1'
@@ -105,28 +115,31 @@
        integer :: i
 
        
-       !real(kind=Rkind), parameter :: x0 = 20._Rkind
-       !real(kind=Rkind), parameter :: x  = 25._Rkind
-       !real(kind=Rkind), parameter :: A   = 0.006_Rkind
+       real(kind=Rkind), parameter :: xL0  = -10._Rkind
+       real(kind=Rkind), parameter :: xR0  =  10._Rkind
+       real(kind=Rkind), parameter :: xopt =  6._Rkind
+       real(kind=Rkind), parameter :: C0   =  0.09_Rkind
 
-       real(kind=Rkind), parameter :: x0 = 9._Rkind
-       real(kind=Rkind), parameter :: x  = 17._Rkind
-       real(kind=Rkind), parameter :: A   = 0.003_Rkind
+      ! CAP. Parameters: E. Baloitcha et al. J. Chem. Phys., Vol. 117, No. 2, 8 July 2002
+      ! CAP(x)  = C0 ((x-x0)/xopt)**2
+       !real(kind=Rkind), parameter :: xL0  = -5._Rkind
+       !real(kind=Rkind), parameter :: xR0  =  5._Rkind
+       !real(kind=Rkind), parameter :: xopt =  3._Rkind
+       !real(kind=Rkind), parameter :: C0   =  0.05_Rkind
 
        IF (nb_ScalOp /= 2) STOP 'WRONG nb_ScalOp value. It MUST be 2'
 
-       IF (Q(1) < -x0) THEN
-         ScalOp(1) = A * ((-x0-Q(1))/(x-x0))**4
+       IF (Q(1) < xL0) THEN
+         ScalOp(1) = C0 * ((xL0-Q(1))/xopt)**4
        ELSE
          ScalOp(1) = ZERO
        END IF
-       IF (Q(1) > x0) THEN
-         ScalOp(2) = A * ((x0-Q(1))/(x-x0))**4
+       IF (Q(1) > xR0) THEN
+         ScalOp(2) = C0 * ((xR0-Q(1))/xopt)**4
        ELSE
          ScalOp(2) = ZERO
        END IF
 
-       !write(6,*) 'Q,ScalOp',Q,ScalOp
 
        END
 !C================================================================
@@ -206,14 +219,6 @@
        real (kind=Rkind) :: step
        integer :: i,j,iQdyn,jQdyn
 
-       real (kind=Rkind) :: k0
-
-       !real (kind=Rkind), parameter :: b     = ZERO
-       real (kind=Rkind), parameter :: b     = ONE
-       real (kind=Rkind), parameter :: alpha = 3._Rkind
-       !real (kind=Rkind), parameter :: v0    = 0.001822534_Rkind
-       real (kind=Rkind), parameter :: v0    = 0.0018_Rkind
-       real (kind=Rkind), parameter :: zmu   = 2000._Rkind
 
 !c----- for debuging ----------------------------------
       logical, parameter :: debug = .FALSE.
@@ -229,9 +234,6 @@
       END IF
 !c---------------------------------------------------------------------
 
-      k0 = zmu * V0**2
-
-
       Qact = Qdyn(mole%liste_QactTOQsym(1))
 
       IF (deriv) THEN
@@ -241,9 +243,14 @@
         STOP
       END IF
 
-      d0h(:,:) = ZERO
+      CALL get_CurviRPH( (/ Qact /),mole%CurviRPH,Hess=hess)
+
       DO i=1,mole%nb_inact2n
-       d0h(i,i) = k0 * ( ONE + b / COSH(alpha * Qact)**2 )
+      DO j=1,mole%nb_inact2n
+       iQdyn = mole%liste_QactTOQsym(i+1)
+       jQdyn = mole%liste_QactTOQsym(j+1)
+       d0h(j,i) = hess(jQdyn,iQdyn)
+      END DO
       END DO
 
 !c---------------------------------------------------------------------
@@ -354,9 +361,6 @@
 !c---------------------------------------------------------------------
 
       d0req  = zero
-      d1req  = zero
-      d2req  = zero
-      d3req  = zero
 !c---------------------------------------------------------------------
 
 !c---------------------------------------------------------------------
@@ -369,71 +373,3 @@
       END IF
 !c---------------------------------------------------------------------
       END SUBROUTINE d0d1d2d3_Qeq
-
-SUBROUTINE pot_bottleneck_nd (r, n, Vpot, alpha, V0, b, zmu)
-
-  ! - Time-stamp: <pot_bottleneck_nd.f90 - Apr 05, 2012 16:08:31 - G. Parlant>
-  !
-  ! - Language: F90/95
-  !
-  ! ////// description //////
-  !
-  !     (n+1)D bottleneck potential (Eckart + n harmonic oscillators):
-  !
-  !             V(x,y_i) = V0 * Sech(alpha * x)^2 + k(x)/2 * Sum_i |y_i|^2
-  !   
-  !             with    k(x) = k0 * [1 + b * Sech(alpha * x)^2]
-  !   
-  !                     k0 = m * Omega^2
-  !                     hbar*Omega = V0
-  !   
-  !     Refs:
-  !             Maddox & Poirier, Multidim. Quantum Mechanics with Trajs, CCP (2009))
-  !
-  !             Trahan, Wyatt and Poirier, J Chem Phys 122, 164104 (2005)
-  !             Multidimensional quantum trajectories: Applications of the
-  !             derivative propagation method.
-  !
-  ! ////////////////////////////////////////////////////////////////////////////
-
-  USE mod_system
-
-  IMPLICIT NONE 
-
-  ! Subroutine scalars - intent(in)
-
-  REAL(Rkind), INTENT(in) :: alpha, V0               !! Eckart constants
-  REAL(Rkind), INTENT(in) :: b                       !! coupling parameter
-  REAL(Rkind), INTENT(in) :: zmu                     !! mass
-  INTEGER    , INTENT(in) :: n                       !! size of r (number of coordinates)
-
-  ! Subroutine arrays - intent(in)
-
-  REAL(Rkind), INTENT(in) :: r(n)                  !! internuclear distance
-
-  ! Subroutine arrays - intent(out)
-
-  REAL(Rkind), INTENT(out) :: Vpot                !! potential
-
-  ! Local scalars
-
-  INTEGER :: icoord                               !! do-loop index
-  REAL(Rkind) :: k0
-
-  ! Local arrays
-
-  REAL(Rkind) :: k
-
-  ! ============================   end of header ===============================
-
-  k0 = zmu * V0**2
-
-  k = k0 * ( one + b / COSH(alpha * r(1))**2 )
-
-  ! Eckart barrier
-  Vpot = V0 / COSH(alpha * r(1))**2
-
-  ! add classical part
-  Vpot = Vpot + half * k * sum(r(2:n)**2)
-  
-END SUBROUTINE pot_bottleneck_nd

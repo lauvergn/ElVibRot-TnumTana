@@ -4749,7 +4749,6 @@
 !-------------------------------------------------------------------------
 !-------------------------------------------------------------------------
       real (kind=Rkind) :: Qact(mole%nb_var)
-      TYPE(Type_dnMat)  :: dnGG
       TYPE (Type_dnVec) :: dnx
 
       integer           :: NM_TO_sym_ver=4
@@ -4899,40 +4898,38 @@
   !Gref = .FALSE.
   IF (Gref) THEN
     CALL get_Qact0(Qact,mole%ActiveTransfo)
+    CALL alloc_NPArray(GGdef,(/ mole%nb_act,mole%nb_act /),'GGdef',name_sub)
     IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
-        IF (para_PES%QMLib) THEN
-          CALL alloc_NPArray(GGdef,(/ mole%nb_act,mole%nb_act /),'GGdef',name_sub)
+
+    IF (para_PES%QMLib) THEN
 
 #if __QML == 1
-          CALL get_Qmodel_GGdef(GGdef)
+      CALL get_Qmodel_GGdef(GGdef)
 #else
-          write(out_unitp,*) 'ERROR in ',name_sub
-          write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
-          write(out_unitp,*) 'Use another potential/model'
-          STOP 'QML is not present'
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
+      write(out_unitp,*) 'Use another potential/model'
+      STOP 'QML is not present'
 #endif
-          dnGG%d0(:,:) = ZERO
-          dnGG%d0(1:mole%nb_act,1:mole%nb_act) = GGdef
 
-          CALL dealloc_NPArray(GGdef,'GGdef',name_sub)
-        ELSE
-          CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=0)
-        END IF ! for para_PES%QMLib
-        
-        IF (para_Tnum%Gcte) THEN
-          CALL alloc_array(para_Tnum%Gref,(/ mole%ndimG,mole%ndimG /),    &
-                          'para_Tnum%Gref',name_sub)
+    ELSE
+      CALL get_d0GG(Qact,para_Tnum,mole,GGdef,def=.TRUE.)
+    END IF
 
-          para_Tnum%Gref(:,:) = dnGG%d0(:,:)
-        END IF
+    IF (para_Tnum%Gcte) THEN
+      CALL alloc_array(para_Tnum%Gref,(/ mole%ndimG,mole%ndimG /),    &
+                      'para_Tnum%Gref',name_sub)
 
-        IF (print_level > 1) THEN
-          write(out_unitp,*) ' dnGG%d0'
-          CALL Write_Mat(dnGG%d0,out_unitp,5)
-        END IF
+      para_Tnum%Gref(:,:) = ZERO
+      para_Tnum%Gref(1:mole%nb_act,1:mole%nb_act) = GGdef
+    END IF
 
-        CALL dealloc_dnSVM(dnGG)
-      END IF
+    IF (print_level > 1) THEN
+      write(out_unitp,*) ' GGdef'
+      CALL Write_Mat(GGdef,out_unitp,5)
+    END IF
+    CALL dealloc_NPArray(GGdef,'GGdef',name_sub)
+  END IF
 
       !----- Tana if needed --------------------------------------------
       IF (para_Tnum%Tana .AND. Tana_loc) THEN

@@ -189,6 +189,7 @@
       intensity            = .FALSE.
       Psi_ScalOp           = .FALSE.
       NLO                  = .FALSE.
+
       CRP                  = 0
       CRP_Ene              = REAL_WU(ZERO,'cm-1','E')
       CRP_DEne             = REAL_WU(ZERO,'cm-1','E')

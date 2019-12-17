@@ -100,12 +100,14 @@
         CALL MPI_initialization()
         Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
         Popenmp            = .FALSE.  !< True to run openMP
+        namelist_from_file = .TRUE.
 #else 
         MPI_id=0
         Popenmpi           = .FALSE.  !< True to run MPI, set here or in namelist system
+        namelist_from_file = .FALSE.
         ! set openMP accodring to make file
 #if(run_openMP)
-        Popenmp            = .True.   !< True to run openMP
+        Popenmp            = .TRUE.   !< True to run openMP
 #else
         Popenmp            = .FALSE. 
 #endif
