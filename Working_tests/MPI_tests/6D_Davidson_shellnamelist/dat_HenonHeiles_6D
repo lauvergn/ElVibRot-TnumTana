@@ -6,7 +6,7 @@ ici=`pwd`
 work=$ici/result
 DIR_vib=$ici/../../..
 DIR_pot=$DIR_vib/sub_pot
-VIBEXE=vib
+VIBEXE=vib.exe
 
 cp sub_system_HenonHeiles.f $DIR_pot/sub_system.f
 

@@ -10,7 +10,7 @@
 MPICORE = gfortran   
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -1247,10 +1247,10 @@ $(HTML) : $(REFPATH)/%.html : sub_module/%.f90
 
 #========================================================================================
 #========================================================================================
-#add dependence
+#add dependence for parallelization
 
 #mod_MPI
-lib_dep_mod_MPI=$(OBJ)/sub_module_string.o
+lib_dep_mod_MPI=$(OBJ)/sub_module_string.o $(OBJ)/sub_module_memory_NotPointer.o
 $(lib_dep_mod_MPI):$(OBJ)/sub_module_MPI.o
 
 #mod_memory
