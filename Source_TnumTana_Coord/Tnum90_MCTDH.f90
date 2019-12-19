@@ -29,8 +29,8 @@
 
       character (len=*), parameter :: name_sub='Tnum90_MCTDH'
 
-     !CALL test_FracInteger()
-     !STOP
+     !CALL test2_FracInteger()
+     !STOP 'test2_FracInteger'
 !===========================================================
 !===========================================================
       !para_mem%mem_debug = .TRUE.

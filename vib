@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cat > namelist
+
+/Users/lauvergn/git/ElVibRot/vib.exe < namelist
+
+rm -f namelist

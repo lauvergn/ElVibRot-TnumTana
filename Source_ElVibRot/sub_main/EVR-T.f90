@@ -72,7 +72,6 @@
       character (len=Name_longlen) :: RMatFormat
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
-!      logical  :: namelist_from_file=.TRUE.  ! .False. to read namelist from shell
       
       ! parameters for system setup
       ! make sure to be prepared in file      
@@ -101,17 +100,17 @@
         CALL MPI_initialization()
         Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
         Popenmp            = .FALSE.  !< True to run openMP
-!        namelist_from_file = .TRUE.
 #else 
         MPI_id=0
         Popenmpi           = .FALSE.  !< True to run MPI, set here or in namelist system
-!        namelist_from_file = .FALSE.
+
         ! set openMP accodring to make file
 #if(run_openMP)
         Popenmp            = .TRUE.   !< True to run openMP
 #else
         Popenmp            = .FALSE. 
 #endif
+
 #endif
  
         intensity_only     = .FALSE.
@@ -128,7 +127,7 @@
 
         maxth              = 1
         !$ maxth           = omp_get_max_threads()
-        
+
         PMatOp_omp         = 0
         PMatOp_maxth       = maxth
         POpPsi_omp         = 0
@@ -166,13 +165,16 @@
 
          
         !> automatically decide the reading of namelist, from file or shell
-        !> NOTE: remember to use vib.run to ensure "rm namelist" to prevent the
+        !> NOTE: remember to use vib to ensure "rm namelist" to prevent the
         !> reading of old namelist
-        in_unitp=10
-        open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
+        CALL file_open2('namelist',in_unitp,old=.TRUE.,err_file=err)
+        !in_unitp=10
+        !open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
         IF(err/=0) THEN
-          write(*,*) 'namelist file does not exist or error, reading namelist from shell'
+          write(out_unitp,*) 'namelist file does not exist or error, reading namelist from shell'
           in_unitp=INPUT_UNIT
+        ELSE
+          write(out_unitp,*) 'namelist file does exist, reading namelist from the file'
         ENDIF
         read(in_unitp,system,IOSTAT=err)
 

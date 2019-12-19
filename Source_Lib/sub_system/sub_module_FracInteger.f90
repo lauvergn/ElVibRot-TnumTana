@@ -67,13 +67,53 @@
  END INTERFACE
 
 PRIVATE
-PUBLIC :: FracInteger, test_FracInteger,frac_IS_integer
+PUBLIC :: FracInteger,frac_IS_integer
+PUBLIC :: test_FracInteger,test2_FracInteger
 PUBLIC :: operator (+),operator (-),operator (*),operator (/)
 PUBLIC :: operator (==),operator (/=),operator (>),operator (<),operator (>=),operator (<=)
 PUBLIC :: assignment (=),frac_TO_string,frac_TO_real
 PUBLIC :: frac_simplification
 
  CONTAINS
+
+  SUBROUTINE test2_FracInteger()
+   TYPE(FracInteger)    :: frac1,frac2,frac3,frac4
+   character (len=255)  :: FracString
+
+
+   frac1 = FracInteger(1,2)
+   frac2 = 2
+   read(5,'(a)') FracString
+   frac2 = string_TO_frac(FracString)
+   read(5,'(a)') FracString
+   frac3 = string_TO_frac(FracString)
+
+   write(6,*) 'frac1: ',frac_TO_string(frac1)
+   write(6,*) 'frac2: ',frac_TO_string(frac2)
+   write(6,*) 'frac3: ',frac_TO_string(frac3)
+
+frac4=frac3/frac2
+
+   write(6,*) 'frac4: ',frac_TO_string(frac4)
+
+   STOP
+   write(6,*)
+   write(6,*) 'frac1+frac2: ',frac_TO_string(frac1+frac2)
+   write(6,*) 'frac1-frac2: ',frac_TO_string(frac1-frac2)
+   write(6,*) 'frac1*frac2: ',frac_TO_string(frac1*frac2)
+   write(6,*) 'frac1/frac2: ',frac_TO_string(frac1/frac2)
+   write(6,*)
+   write(6,*) 'frac1 == frac2 ?: ',(frac1 == frac2)
+   write(6,*) 'frac1 /= frac2 ?: ',(frac1 /= frac2)
+   write(6,*) 'frac1 == frac1 ?: ',(frac1 == frac1)
+   write(6,*) 'frac1 /= frac1 ?: ',(frac1 /= frac1)
+   write(6,*)
+   write(6,*) 'frac1 <  frac2 ?: ',(frac1 < frac2)
+   write(6,*) 'frac1 >  frac2 ?: ',(frac1 > frac2)
+   write(6,*) 'frac1 >= frac1 ?: ',(frac1 >= frac1)
+   write(6,*) 'frac1 <= frac1 ?: ',(frac1 <= frac1)
+
+ END SUBROUTINE test2_FracInteger
 
   SUBROUTINE test_FracInteger()
    TYPE(FracInteger) :: frac1,frac2
@@ -180,7 +220,28 @@ PUBLIC :: frac_simplification
 
  END SUBROUTINE Int_TO_frac
 
+ FUNCTION string_TO_frac(String) RESULT(frac)
+   USE mod_string, only : String_TO_String,int_TO_char
+   character (len=*), intent(in)  :: String
+   TYPE(FracInteger)              :: frac
 
+   integer :: islash
+
+   IF (len_trim(String) == 0) THEN
+     frac = 0
+   ELSE
+     islash = index(String,'/')
+     IF (islash == 0 .OR. islash == 1 .OR. islash == len(String)) THEN
+       write(6,*) ' ERROR in string_TO_frac'
+       write(6,*) ' The string does not contain a "/" or its postion is wrong'
+       write(6,*) ' String: ',String
+       STOP ' ERROR in string_TO_frac'
+     END IF
+     read(String(1:islash-1),*) frac%num
+     read(String(islash+1:len(String)),*) frac%den
+   END IF
+
+ END FUNCTION string_TO_frac
  FUNCTION frac_TO_string(frac) RESULT(String)
    USE mod_string, only : String_TO_String,int_TO_char
    character (len=:), allocatable  :: String

@@ -28,7 +28,7 @@ ene_unit=$1
 
 #&constantes EVRT_path='~/' auTOcm_inv=219475. inv_Name=1822000. version='rr' /
 
-nice $DIR_vib/vib.run << ** >res
+nice $DIR_vib/vib << ** >res
  &system printlevel=2 PGrid_omp=1 PGrid_maxth=30 /
  &constantes ene_unit="$ene_unit" auTOenergy=2. /
  &variables 

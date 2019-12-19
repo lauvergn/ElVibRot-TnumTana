@@ -1880,7 +1880,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       para_Davidson%Mmax_filter   = Mmax_filter
 
       IF (poly_tol == ZERO) poly_tol = ONETENTH**8
-      IF (DHmax == -TEN)    DHmax = HALF
+      IF (DHmax    == -TEN)    DHmax = HALF
       para_propa%para_poly%poly_tol     = poly_tol
       para_propa%para_poly%max_poly     = max_poly
       para_propa%para_poly%npoly        = M_filter
