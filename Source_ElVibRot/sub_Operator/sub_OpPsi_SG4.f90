@@ -900,7 +900,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         
         !-send packed PsiR to master----------------------------------------------------
         !> check length of integer
-        IF(Int(reduce_Vlength,8)*Int(Psi_size_MPI0,8)>huge(0)                          &
+        IF(Int(reduce_Vlength,8)*Int(Psi_size_MPI0,8)>huge(0_4)                        &
            .AND. MPI_INTEGER_KIND==4) THEN
           STOP 'integer exceed 32-bit MPI, use 64-bit MPI instead'
         ENDIF
