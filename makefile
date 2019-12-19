@@ -1251,6 +1251,10 @@ $(HTML) : $(REFPATH)/%.html : sub_module/%.f90
 #========================================================================================
 #add dependence
 
+#mod_MPI
+lib_dep_mod_MPI=$(OBJ)/sub_module_string.o
+$(lib_dep_mod_MPI):$(OBJ)/sub_module_MPI.o
+
 #mod_memory
 lib_dep_mod_memory=$(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_string.o       \
                    $(OBJ)/sub_module_memory_NotPointer.o                               \
