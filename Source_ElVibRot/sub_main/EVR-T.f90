@@ -128,7 +128,7 @@
 
         maxth              = 1
         !$ maxth           = omp_get_max_threads()
-        
+
         PMatOp_omp         = 0
         PMatOp_maxth       = maxth
         POpPsi_omp         = 0
@@ -166,13 +166,16 @@
 
          
         !> automatically decide the reading of namelist, from file or shell
-        !> NOTE: remember to use vib.run to ensure "rm namelist" to prevent the
+        !> NOTE: remember to use vib to ensure "rm namelist" to prevent the
         !> reading of old namelist
-        in_unitp=10
-        open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
+        CALL file_open2('namelist',in_unitp,old=.TRUE.,err_file=err)
+        !in_unitp=10
+        !open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
         IF(err/=0) THEN
-          write(*,*) 'namelist file does not exist or error, reading namelist from shell'
+          write(out_unitp,*) 'namelist file does not exist or error, reading namelist from shell'
           in_unitp=INPUT_UNIT
+        ELSE
+          write(out_unitp,*) 'namelist file does exist, reading namelist from the file'
         ENDIF
         read(in_unitp,system,IOSTAT=err)
 

@@ -1,8 +1,8 @@
 #=================================================================================
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-# F90 = mpifort
- F90 = gfortran
+ F90 = mpifort
+#F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
 
@@ -10,7 +10,7 @@
 MPICORE = gfortran   
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -351,7 +351,7 @@ CPPSHELL_QML    = -D__QML="$(QML)"
 #  Tnum:  make tnum or make Tnum or make tnum-dist
 #  work (program):  make work
 #
-VIBEXE = vib
+VIBEXE  = vib.exe
 VIBMAIN = EVR-T
 VIBDIRm = sub_main
 #Variables for documentation generation
@@ -386,8 +386,6 @@ GWPEXE = gauss.exe
 GWPMAIN = Gauss_numlH
 #
 WORKEXE  = work.exe
-#WORKMAIN = Tana_test
-#WORKMAIN = CurviRPH
 WORKMAIN = Tnum90_AverageHessian
 
 #==========================================
