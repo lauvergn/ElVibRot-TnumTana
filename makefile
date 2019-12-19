@@ -1640,6 +1640,14 @@ $(lib_dep_mod_Optimization):$(OBJ)/sub_module_Optimization.o
 #mod_BFGS
 lib_dep_mod_BFGS=$(OBJ)/sub_module_Optimization.o
 $(lib_dep_mod_BFGS):$(OBJ)/sub_module_BFGS.o
+
+#mod_ExactFact
+lib_dep_mod_ExactFact=$(OBJ)/sub_module_propagation.o
+$(lib_dep_mod_ExactFact):$(OBJ)/sub_module_ExactFact.o
+
+#mod_psi_B_TO_G
+lib_dep_mod_psi_B_TO_G=$(OBJ)/sub_module_ana_psi.o
+$(lib_dep_mod_psi_B_TO_G):$(OBJ)/sub_module_psi_B_TO_G.o
 #========================================================================================
 
 #=======================================================================================

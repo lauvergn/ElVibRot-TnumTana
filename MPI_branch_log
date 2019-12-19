@@ -7,9 +7,10 @@
 
 > makefile parallelization, dependence added, first draft
   current improvements: 
-  num_cores=2: 1.75; 
-  num_cores=3: 2.22; 
-  num_cores=4: 2.52; 
+  num_cores=2: 1.8; 
+  num_cores=3: 2.3; 
+  num_cores=4: 2.7;
+  num_cores=5: 2.8;
   suggest to run with: make -j 3
 
 > correction for makefile on MPICORE
