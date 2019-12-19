@@ -5,6 +5,13 @@
 ----------------------------------------------------------------------------------------
 @ log
 
+> makefile parallelization, dependence added, first draft
+  current improvements: 
+  num_cores=2: 1.75; 
+  num_cores=3: 2.22; 
+  num_cores=4: 2.52; 
+  suggest to run with: make -j 3
+
 > correction for makefile on MPICORE
   namelist: automatically compatible with shell input way; 
             get rid of varilables "namelist_from_file";
