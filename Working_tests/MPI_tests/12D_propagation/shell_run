@@ -41,7 +41,7 @@ here=`pwd`
 work=$here/result/
 DIR_vib=$here/../../..
 DIR_pot=$DIR_vib/sub_pot
-VIBEXE=vib
+VIBEXE=vib.exe
 
 cp sub_system_pyrazine.f $DIR_pot/sub_system.f
 cp calc_f2_f1Q.f90       $DIR_vib/Source_TnumTana_Coord/sub_operator_T
