@@ -293,6 +293,350 @@
 
       END SUBROUTINE Overlap_psi1_psi2
 
+!=======================================================================================
+! subroutine for the calculation of Overlap_psi1_psi2 with MPI 
+! in loop: 
+! DO i=i_l,i_u
+! DO j=j_l,j_u
+!=======================================================================================
+SUBROUTINE Overlap_psi1_psi2_MPI(H,psi,Hpsi,i_l,i_u,j_l,j_u,With_Grid)
+  USE mod_system
+  USE mod_psi_set_alloc
+  !USE mod_propa,          ONLY : param_Davidson
+  USE mod_MPI
+  IMPLICIT NONE
+
+  TYPE (param_psi),intent(inout)   :: psi(:) !< psi on non-root threads are allocated
+  TYPE (param_psi),intent(inout)   :: Hpsi(:)!< Hpsi on non-root threads are allocated
+  Real (kind=Rkind),intent(inout)  :: H(:,:)
+  Logical, optional, intent(in)    :: With_Grid
+  
+  Integer,intent(in)               :: i_l
+  Integer,intent(in)               :: i_u
+  Integer,intent(in)               :: j_l
+  Integer,intent(in)               :: j_u
+
+  complex(kind=Rkind)              :: Overlap
+  logical                          :: With_Grid_loc
+  Integer                          :: i
+  Integer                          :: j
+  Logical                          :: send_once(MPI_np-1)
+
+  With_Grid_loc=.FALSE.
+  
+  IF (present(With_Grid)) With_Grid_loc = With_Grid
+
+  ! only on master: psi%CvecG,psi%RvecG,psi%CvecB,psi%RvecB
+  !nb_per_MPI=(i_u-i_l+1)*(j_u-j_l+1)/MPI_np
+  !nb_rem_MPI=mod((i_u-i_l+1)*(j_u-j_l+1),MPI_np) !remainder jobs
+  nb_per_MPI=(i_u-i_l+1)/MPI_np
+  nb_rem_MPI=mod(i_u-i_l+1,MPI_np) !remainder jobs
+  IF(MPI_id==0) THEN
+    DO i_MPI=1,MPI_np-1
+      send_once(i_MPI)=.TRUE.
+      DO i=i_l,i_u
+        bound1_MPI=i_MPI*nb_per_MPI+1+MIN(i_MPI,nb_rem_MPI)
+        bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)                          &
+                                       +merge(1,0,nb_rem_MPI>i_MPI)
+        IF(i>=bound1_MPI .AND. i<=bound2_MPI) THEN
+          DO j=j_l,j_u
+            IF (.NOT. With_Grid_loc) THEN
+              IF (psi(j)%symab > -1 .AND. Hpsi(i)%symab > -1                           &
+                                    .AND. Hpsi(i)%symab /= Hpsi(i)%symab) THEN
+              ELSE
+                IF (psi(j)%cplx) THEN
+                  IF(send_once(i_MPI)) CALL MPI_Send(psi(j)%CvecB,psi(j)%nb_tot,       &
+                                        MPI_Complex8,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
+                  CALL MPI_Send(Hpsi(i)%CvecB,Hpsi(i)%nb_tot,MPI_complex8,i_MPI,i_MPI, &
+                                MPI_COMM_WORLD,MPI_err)
+                ELSE
+                  IF(send_once(i_MPI)) CALL MPI_Send(psi(j)%RvecB,psi(j)%nb_tot,       &
+                                           MPI_Real8,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
+                  CALL MPI_Send(Hpsi(i)%RvecB,Hpsi(i)%nb_tot,MPI_Real8,i_MPI,i_MPI,    &
+                                MPI_COMM_WORLD,MPI_err)
+                ENDIF
+              ENDIF
+            ELSE
+              IF (psi(j)%cplx) THEN
+                IF(send_once(i_MPI)) CALL MPI_Send(psi(j)%CvecG,psi(j)%nb_qaie,        &
+                                        MPI_Complex8,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
+                CALL MPI_Send(Hpsi(i)%CvecG,Hpsi(i)%nb_qaie,MPI_complex8,i_MPI,i_MPI,  &
+                              MPI_COMM_WORLD,MPI_err)
+              ELSE
+                IF(send_once(i_MPI)) CALL MPI_Send(psi(j)%RvecG,psi(j)%nb_qaie,        &
+                                           MPI_Real8,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
+                CALL MPI_Send(Hpsi(i)%RvecG,Hpsi(i)%nb_qaie,MPI_Real8,i_MPI,i_MPI,     &
+                              MPI_COMM_WORLD,MPI_err)
+              ENDIF
+            ENDIF ! for .NOT. With_Grid_loc
+          END DO ! for j=j_l,j_u
+          send_once(i_MPI)=.FALSE.
+        ENDIF ! for i>=bound1_MPI .AND. i<=bound2_MPI
+      END DO ! i=i_l,i_u
+    ENDDO ! for i_MPI=1,MPI_np-1
+
+    ! receive H(j,i)
+    DO i_MPI=0,MPI_np-1
+      DO i=i_l,i_u
+        bound1_MPI=i_MPI*nb_per_MPI+1+MIN(i_MPI,nb_rem_MPI)
+        bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)                          &
+                                       +merge(1,0,nb_rem_MPI>i_MPI)
+        IF(i>=bound1_MPI .AND. i<=bound2_MPI) THEN
+          DO j=j_l,j_u
+            IF(i_MPI>0) THEN
+              CALL MPI_Recv(H(j,i),size1_MPI,MPI_Real8,i_MPI,                          &
+                            i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
+            ELSE
+              ! main claculation on master
+              CALL Overlap_psipsi_MPI(Overlap,psi(j),Hpsi(i),With_Grid=With_Grid)
+              H(j,i)=real(Overlap,kind=Rkind)   
+            ENDIF
+          ENDDO ! for j=j_l,j_u
+        ENDIF ! for i>=bound1_MPI .AND. i<=bound2_MPI
+      END DO ! for i=i_l,i_u
+    ENDDO
+  ENDIF !for MPI_id==0
+
+  !-------------------------------------------------------------------------------------
+  IF(MPI_id/=0) THEN
+    send_once(MPI_id)=.TRUE.
+    bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
+    bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)                            &
+                                    +merge(1,0,nb_rem_MPI>MPI_id)
+    DO i=i_l,i_u
+      IF(i>=bound1_MPI .AND. i<=bound2_MPI) THEN
+        DO j=j_l,j_u
+          IF (.NOT. With_Grid_loc) THEN
+            IF (psi(j)%symab > -1 .AND. Hpsi(i)%symab > -1                             &
+                                  .AND. Hpsi(i)%symab /= Hpsi(i)%symab) THEN
+            ELSE
+              !CALL alloc_psi(psi(j),psi(j)%BasisRep,psi(j)%GridRep)
+              !CALL alloc_psi(Hpsi(i),Hpsi(i)%BasisRep,Hpsi(i)%GridRep)
+              IF (psi(j)%cplx) THEN
+                IF(.NOT. allocated(psi(j)%CvecB)) CALL alloc_NParray(psi(j)%CvecB,     &
+                                              (/psi(j)%nb_tot/),'psi%CvecB','alloc_psi')
+                IF(.NOT. allocated(Hpsi(i)%CvecB)) CALL alloc_NParray(Hpsi(i)%CvecB,   &
+                                            (/Hpsi(i)%nb_tot/),'Hpsi%CvecB','alloc_psi')
+                IF(send_once(MPI_id)) CALL MPI_Recv(psi(j)%CvecB,psi(j)%nb_tot,        &
+                           MPI_Complex8,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+                CALL MPI_Recv(Hpsi(i)%CvecB,Hpsi(i)%nb_tot,MPI_complex8,root_MPI,      &
+                                                 MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+              ELSE
+                IF(.NOT. allocated(psi(j)%RvecB))  CALL alloc_NParray(psi(j)%RvecB,    &
+                                              (/psi(j)%nb_tot/),'psi%RvecB','alloc_psi')
+                IF(.NOT. allocated(Hpsi(i)%RvecB)) CALL alloc_NParray(Hpsi(i)%RvecB,   &
+                                            (/Hpsi(i)%nb_tot/),'Hpsi%RvecB','alloc_psi')
+                IF(send_once(MPI_id)) CALL MPI_Recv(psi(j)%RvecB,psi(j)%nb_tot,        &
+                              MPI_Real8,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+                CALL MPI_Recv(Hpsi(i)%RvecB,Hpsi(i)%nb_tot,MPI_Real8,root_MPI,         &
+                                                   MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+              ENDIF
+            ENDIF ! for psi(j)%symab > -1 
+          ELSE
+            !CALL alloc_psi(psi(j),psi(j)%BasisRep,psi(j)%GridRep)
+            !CALL alloc_psi(Hpsi(i),Hpsi(i)%BasisRep,Hpsi(i)%GridRep)
+            IF (psi(j)%cplx) THEN
+              IF(.NOT. allocated(psi(j)%CvecG))  CALL alloc_NParray(psi(j)%CvecG,      &
+                                             (/psi(j)%nb_qaie/),'psi%CvecG','alloc_psi')
+              IF(.NOT. allocated(Hpsi(i)%CvecG)) CALL alloc_NParray(Hpsi(i)%CvecG,     &
+                                           (/Hpsi(i)%nb_qaie/),'Hpsi%CvecG','alloc_psi')
+              IF(send_once(MPI_id)) CALL MPI_Recv(psi(j)%CvecG,psi(j)%nb_qaie,         &
+                           MPI_Complex8,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+              CALL MPI_Recv(Hpsi(i)%CvecG,Hpsi(i)%nb_qaie,MPI_complex8,root_MPI,       &
+                                                 MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+            ELSE
+              IF(.NOT. allocated(psi(j)%RvecG))  CALL alloc_NParray(psi(j)%RvecG,      &
+                                             (/psi(j)%nb_qaie/),'psi%RvecG','alloc_psi')
+              IF(.NOT. allocated(Hpsi(i)%RvecG)) CALL alloc_NParray(Hpsi(i)%RvecG,     &
+                                           (/Hpsi(i)%nb_qaie/),'Hpsi%RvecG','alloc_psi')
+              IF(send_once(MPI_id)) CALL MPI_Recv(psi(j)%RvecG,psi(j)%nb_qaie,         &
+                              MPI_Real8,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+              CALL MPI_Recv(Hpsi(i)%RvecG,Hpsi(i)%nb_qaie,MPI_Real8,root_MPI,          &
+                                                 MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+            ENDIF
+          ENDIF ! for .NOT. With_Grid_loc  
+          ! main calculation on master
+          CALL Overlap_psipsi_MPI(Overlap,psi(j),Hpsi(i),With_Grid=With_Grid)
+          H(j,i)=real(Overlap,kind=Rkind)
+          CALL MPI_Send(H(j,i),size1_MPI,MPI_Real8,root_MPI,                           &
+                        MPI_id,MPI_COMM_WORLD,MPI_err)
+        END DO ! for j=j_l,j_u
+        send_once(MPI_id)=.FALSE.
+      ENDIF ! for i>=bound1_MPI .AND. i<=bound2_MPI
+    END DO ! for i=i_l,i_u
+  ENDIF !for MPI_id/=0
+
+END SUBROUTINE Overlap_psi1_psi2_MPI
+!=======================================================================================
+
+!=======================================================================================
+! this is a temp subroutine for running Overlap_psi1_psi2 on all threads with MPI
+! it will merge with Overlap_psi1_psi2 later
+!=======================================================================================
+      SUBROUTINE Overlap_psipsi_MPI(Overlap,psi1,psi2,With_Grid,Channel_ie)
+      USE mod_system
+      USE mod_psi_set_alloc
+      USE mod_MPI
+      IMPLICIT NONE
+
+!----- variables for the WP ----------------------------------------
+      TYPE (param_psi), intent(in)    :: psi1,psi2
+      complex (kind=Rkind)            :: Overlap
+      logical, optional, intent(in)   :: With_Grid
+      integer, optional, intent(in)   :: Channel_ie
+
+!------ working variables ---------------------------------
+      logical              :: With_Grid_loc
+      integer              :: locChannel_ie
+      integer              :: i_qa,i_qaie
+      integer              :: i_be,i_bi,i_ba
+      integer              :: i_baie,f_baie
+      integer              :: i_modif_q
+      real (kind=Rkind)    :: WrhonD
+      complex (kind=Rkind) :: temp
+      real (kind=Rkind)    :: Roverlap,Rtemp
+      integer              :: iie,fie
+      real (kind=Rkind), allocatable :: wrho(:)
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='Overlap_psipsi_MPI'
+      logical,parameter :: debug = .FALSE.
+!     logical,parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'psi1'
+        CALL ecri_psi(psi=psi1)
+
+        write(out_unitp,*) 'psi2'
+        CALL ecri_psi(psi=psi2)
+        write(out_unitp,*) 'GridRep,BasisRep ?'
+        IF (present(With_Grid)) write(out_unitp,*) 'With_Grid',With_Grid
+        IF (present(Channel_ie)) write(out_unitp,*) 'Channel_ie',Channel_ie
+      END IF
+!-----------------------------------------------------------
+
+      With_Grid_loc = .FALSE.
+
+      IF (present(With_Grid)) With_Grid_loc = With_Grid
+
+      locChannel_ie = 0
+      IF (present(Channel_ie)) locChannel_ie = Channel_ie
+
+      IF (psi1%nb_baie > psi1%nb_tot) THEN
+        With_Grid_loc = .FALSE.
+      END IF
+
+      ! With_Grid_loc: F
+      IF (With_Grid_loc) THEN
+        IF (psi1%cplx .AND.                                             &
+         allocated(psi1%CvecG) .AND. allocated(psi2%CvecG)) THEN
+        ELSE IF (.NOT. psi1%cplx .AND.                                  &
+         allocated(psi1%RvecG) .AND. allocated(psi2%RvecG)) THEN
+        ELSE
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' impossible to calculate the GridRep overlap'
+          write(out_unitp,*) ' With_Grid_loc=t but problem with the allocation GridRep'
+          write(out_unitp,*) 'allocated(psi1%CvecG)',allocated(psi1%CvecG)
+          write(out_unitp,*) 'allocated(psi2%CvecG)',allocated(psi2%CvecG)
+          write(out_unitp,*) 'allocated(psi1%RvecG)',allocated(psi1%RvecG)
+          write(out_unitp,*) 'allocated(psi2%RvecG)',allocated(psi2%RvecG)
+          write(out_unitp,*) ' psi1'
+          CALL ecri_psi(psi=psi1,ecri_GridRep=.TRUE.)
+          write(out_unitp,*) ' psi2'
+          CALL ecri_psi(psi=psi2,ecri_GridRep=.TRUE.)
+          STOP
+        END IF
+      ELSE
+        IF (psi1%cplx .AND.                                             &
+         allocated(psi1%CvecB) .AND. allocated(psi2%CvecB)) THEN
+        ELSE IF (.NOT. psi1%cplx .AND.                                  &
+         allocated(psi1%RvecB) .AND. allocated(psi2%RvecB)) THEN
+        ELSE
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' impossible to calculate the BasisRep overlap'
+          write(out_unitp,*) ' With_Grid_loc=f (on basis) but problem with the allocation of BasisRep'
+          write(out_unitp,*) 'allocated(psi1%CvecB)',allocated(psi1%CvecB)
+          write(out_unitp,*) 'allocated(psi2%CvecB)',allocated(psi2%CvecB)
+          write(out_unitp,*) 'allocated(psi1%RvecB)',allocated(psi1%RvecB)
+          write(out_unitp,*) 'allocated(psi2%RvecB)',allocated(psi2%RvecB)
+          write(out_unitp,*) ' psi1'
+          CALL ecri_psi(psi=psi1,ecri_BasisRep=.TRUE.)
+          write(out_unitp,*) ' psi2'
+          CALL ecri_psi(psi=psi2,ecri_BasisRep=.TRUE.)
+          STOP
+        END IF
+      END IF
+
+      IF (.NOT. With_Grid_loc) THEN
+        i_baie=1
+        f_baie=psi1%nb_tot
+        IF (psi1%nb_tot == psi1%nb_baie .AND.  locChannel_ie > 0 .AND.  &
+                                locChannel_ie <= psi1%ComOp%nb_bie) THEN
+          i_baie = 1 + (locChannel_ie-1)*psi1%nb_ba
+          f_baie = i_baie-1 + psi1%nb_ba
+        END IF
+        IF (psi1%symab > -1 .AND. psi2%symab > -1 .AND. psi1%symab /= psi2%symab) THEN
+          Overlap = cmplx(ZERO,ZERO,kind=Rkind)
+        ELSE
+          IF (psi1%cplx) THEN
+            Overlap = dot_product( psi1%CvecB(i_baie:f_baie) ,          &
+                                   psi2%CvecB(i_baie:f_baie) )
+          ELSE
+            ROverlap = dot_product( psi1%RvecB(i_baie:f_baie) ,         &
+                                    psi2%RvecB(i_baie:f_baie) )
+            Overlap = cmplx(ROverlap,ZERO,kind=Rkind)
+          END IF
+        END IF
+
+      ELSE
+
+!       - initialization ----------------------------------
+        Overlap = cmplx(ZERO,ZERO,kind=Rkind)
+
+        CALL alloc_NParray(wrho,(/ psi1%nb_qa/),"wrho",name_sub)
+        DO i_qa=1,psi1%nb_qa
+          wrho(i_qa) = Rec_WrhonD(psi1%BasisnD,i_qa)
+        END DO
+
+        IF (psi1%cplx) THEN
+          iie = 1
+          fie = psi1%nb_qa
+          DO i_be=1,psi1%nb_be
+          DO i_bi=1,psi1%nb_bi
+            Overlap = Overlap + dot_product(                            &
+              psi1%CvecG(iie:fie),wrho*psi2%CvecG(iie:fie))
+            iie = iie + psi1%nb_qa
+            fie = fie + psi1%nb_qa
+          END DO
+          END DO
+        ELSE
+          iie = 1
+          fie = psi1%nb_qa
+          DO i_be=1,psi1%nb_be
+          DO i_bi=1,psi1%nb_bi
+            Overlap = Overlap + cmplx(dot_product(                      &
+              psi1%RvecG(iie:fie),wrho*psi2%RvecG(iie:fie)) ,kind=Rkind)
+            iie = iie + psi1%nb_qa
+            fie = fie + psi1%nb_qa
+          END DO
+          END DO
+        END IF
+
+        CALL dealloc_NParray(wrho,"wrho",name_sub)
+
+      END IF
+
+!----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'Overlap : ',Overlap
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!----------------------------------------------------------
+
+      END SUBROUTINE Overlap_psipsi_MPI
+!=======================================================================================
+
 !============================================================
 !
 !   trie des vecteur dans l'ordre croissant

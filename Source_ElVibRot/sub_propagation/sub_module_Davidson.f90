@@ -174,14 +174,16 @@ CONTAINS
       para_propa%para_Davidson%formatted_file_WP = para_propa%file_WP%formatted
 
       !CALL time_perso('Davidson psi0')
-      IF(MPI_id==0) THEN
+      !IF(MPI_id==0) THEN
         CALL alloc_NParray(psi0,shape(psi),'psi0',name_sub)
         CALL alloc_NParray(Hpsi,shape(psi),'Hpsi',name_sub)
-      ENDIF
+      !ENDIF
 
       DO i=1,max_diago
-        IF(MPI_id==0) CALL init_psi( psi(i),para_H,para_H%cplx)
-        IF(MPI_id==0) CALL init_psi(Hpsi(i),para_H,para_H%cplx)
+        !IF(MPI_id==0) CALL init_psi( psi(i),para_H,para_H%cplx)
+        CALL init_psi( psi(i),para_H,para_H%cplx)
+        !IF(MPI_id==0) CALL init_psi(Hpsi(i),para_H,para_H%cplx)
+        CALL init_psi(Hpsi(i),para_H,para_H%cplx)
       END DO
       IF (With_Grid) THEN
         DO i=1,max_diago
@@ -274,13 +276,15 @@ CONTAINS
         IF (debug) write(out_unitp,*) 'H mat',it,ndim,ndim0
         IF (debug) CALL flush_perso(out_unitp)
 
-        IF(MPI_id==0) THEN
+        !IF(MPI_id==0) THEN
           ! H built from psi and Hpsi
           ! add MPI for this subroutine later
+call time_perso('sub_MakeH_Davidson checkk 1')       
           CALL sub_MakeH_Davidson(it,psi(1:ndim),Hpsi(1:ndim),H,para_propa%para_Davidson)
-        ENDIF
+call time_perso('sub_MakeH_Davidson checkk 2')       
+        !ENDIF
         ndim0 = ndim
-        !CALL time_perso('MakeH done')
+        CALL time_perso('MakeH done')
 
         IF(MPI_id==0) THEN
           ! if symmetric
@@ -461,11 +465,12 @@ CONTAINS
           !- convergence ? ------------------------------------------
           !----------------------------------------------------------
 
+call time_perso('sub_NewVec_Davidson checkk 1')
           CALL sub_NewVec_Davidson(it,psi,Hpsi,Ene,Ene0,EneRef,Vec,       &
                              converge,VecToBeIncluded,nb_diago,max_diago, &
                                    para_propa%para_Davidson,fresidu,ndim, &
                                    para_H%para_ReadOp%Op_Transfo,para_H%para_ReadOp%E0_Transfo)
-          !CALL time_perso('NewVec done')
+call time_perso('sub_NewVec_Davidson checkk 2')
 
           nb_added_states = ndim-ndim0
           save_WP = (ndim == max_diago) .OR. conv .OR.                    &
@@ -504,14 +509,17 @@ CONTAINS
             write(out_unitp,*) 'save psi(:)',it,ndim,ndim0
             CALL flush_perso(out_unitp)
 
+call time_perso('sub_MakeS_Davidson checkk1')
             !- check the orthogonality ------------------------
             CALL sub_MakeS_Davidson(it,psi(1:ndim),With_Grid,debug)
             !CALL time_perso('MakeS done')
+call time_perso('sub_MakeS_Davidson checkk2')
 
-
+call time_perso('sub_LCpsi_TO_psi checkk1')
             CALL sub_LCpsi_TO_psi(psi,Vec,ndim0,nb_diago)
             write(out_unitp,*) '  sub_LCpsi_TO_psi: psi done',ndim0,nb_diago
             CALL flush_perso(out_unitp)
+call time_perso('sub_LCpsi_TO_psi checkk2')
 
             ! move the new vectors (nb_added_states), after the nb_diago ones
             DO i=1,nb_added_states
@@ -955,7 +963,7 @@ CONTAINS
  SUBROUTINE sub_MakeH_Davidson(it,psi,Hpsi,H,para_Davidson)
  USE mod_system
  USE mod_psi_set_alloc
- USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
+ USE mod_psi_Op,         ONLY : Overlap_psi1_psi2,Overlap_psi1_psi2_MPI
  USE mod_propa,          ONLY : param_Davidson
  USE mod_MPI
  IMPLICIT NONE
@@ -964,8 +972,8 @@ CONTAINS
 
  !----- WP ... -----------------------------------
  TYPE (param_Davidson),    intent(in)     :: para_Davidson
- TYPE (param_psi),         intent(in)     :: psi(:)
- TYPE (param_psi),         intent(in)     :: Hpsi(:)
+ TYPE (param_psi),         intent(inout)  :: psi(:)  !< inout for non-root threads
+ TYPE (param_psi),         intent(inout)  :: Hpsi(:) !< inout for non-root threads
 
  !----- Operator: Hamiltonian ----------------------------
  real (kind=Rkind), allocatable, intent(inout) :: H(:,:)
@@ -1027,6 +1035,17 @@ CONTAINS
    H(:,:) = ZERO
  END IF
 
+#if(run_MPI)
+  ! MPI for Overlap of psi1 & psi2
+  CALL MPI_BCAST(ndim,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
+  CALL MPI_BCAST(ndim0,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
+
+  CALL Overlap_psi1_psi2_MPI(H,psi,Hpsi,1,ndim0,ndim0+1,ndim,                          &
+                             With_Grid=para_Davidson%With_Grid)
+  CALL Overlap_psi1_psi2_MPI(H,psi,Hpsi,ndim0+1,ndim,1,ndim,                           &
+                             With_Grid=para_Davidson%With_Grid)
+#else
+
  !block: 2,1 (ndim0-ndim)*ndim0
  DO i=1,ndim0
  DO j=ndim0+1,ndim
@@ -1045,6 +1064,8 @@ CONTAINS
    !write(*,*) 'H check2',H(j,i)
  END DO
  END DO
+
+#endif
 
  !----------------------------------------------------------
  IF (debug) THEN
@@ -1092,19 +1113,21 @@ ndim = size(psi)
  !- check the orthogonality ------------------------
  CALL alloc_NParray(S,(/ndim,ndim/),"S",name_sub)
 
-
+call time_perso('sub_MakeS_Davidson inside1')
  DO j=1,ndim
  DO i=1,ndim
    CALL Overlap_psi1_psi2(Overlap,psi(i),psi(j),With_Grid)
    S(i,j) = real(Overlap,kind=Rkind)
  END DO
  END DO
+call time_perso('sub_MakeS_Davidson inside2')
 
  CALL sub_ana_S(S,ndim,max_Sii,max_Sij,.TRUE.)
  IF (Print_Mat) CALL Write_Mat(S,out_unitp,5)
  CALL flush_perso(out_unitp)
  CALL dealloc_NParray(S,"S",name_sub)
  !- check the orthogonality ------------------------
+call time_perso('sub_MakeS_Davidson inside3')
 
  !----------------------------------------------------------
  IF (debug) THEN
@@ -1277,6 +1300,7 @@ END SUBROUTINE MakeResidual_Davidson
      psi(ndim+1) = psi(isym) ! to be allocated correctly
      psi(ndim+1) = ZERO
 
+call time_perso('sub_NewVec_Davidson insides1')
      SELECT CASE (para_Davidson%NewVec_type)
      CASE (1) ! just the residual
        !write(6,*) 'coucou residual'
@@ -1351,11 +1375,14 @@ END SUBROUTINE MakeResidual_Davidson
      END SELECT
      !write(out_unitp,*) ' symab: psi(isym), new vec',psi(isym)%symab,psi(ndim+1)%symab
 
+call time_perso('sub_NewVec_Davidson insides2')
      CALL Set_symab_OF_psiBasisRep(psi(ndim+1),psi(isym)%symab)
      !write(out_unitp,*) ' symab: psi(isym), new vec set sym',psi(isym)%symab,psi(ndim+1)%symab
+call time_perso('sub_NewVec_Davidson insides3')
 
 
      !- new vectors -------------------------------
+call time_perso('sub_NewVec_Davidson insides4')
 
      !- Schmidt ortho ------------------------------------
      !write(out_unitp,*) 'Schmidt ortho',it
@@ -1395,6 +1422,8 @@ END SUBROUTINE MakeResidual_Davidson
        END DO
 
      END IF
+call time_perso('sub_NewVec_Davidson insides5')
+
 
      CALL norm2_psi(psi(ndim+1))
      IF (psi(ndim+1)%norme < ONETENTH**10) CYCLE ! otherwise dependent vector
@@ -1419,6 +1448,7 @@ END SUBROUTINE MakeResidual_Davidson
      !write(out_unitp,*) ' new vec symab, bits(symab)',WriteTOstring_symab(psi(ndim+1)%symab)
 
      ndim = ndim + 1
+call time_perso('sub_NewVec_Davidson insides6')
 
    END IF
 

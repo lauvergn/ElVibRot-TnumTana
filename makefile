@@ -1245,9 +1245,14 @@ doxy:
 $(HTML) : $(REFPATH)/%.html : sub_module/%.f90
 	@perl $(DOCGEN) $(DOCINDEX) $< $@
 
-#========================================================================================
-#========================================================================================
+#=======================================================================================
+#=======================================================================================
 #add dependence for parallelization
+
+# debug_mod=1 fro fast debug make, but possible wired error when 
+debug_mod=1 
+
+ifeq ($(debug_mod),0)
 
 #mod_MPI
 lib_dep_mod_MPI=$(OBJ)/sub_module_string.o $(OBJ)/sub_module_memory_NotPointer.o
@@ -1648,7 +1653,8 @@ $(lib_dep_mod_ExactFact):$(OBJ)/sub_module_ExactFact.o
 #mod_psi_B_TO_G
 lib_dep_mod_psi_B_TO_G=$(OBJ)/sub_module_ana_psi.o
 $(lib_dep_mod_psi_B_TO_G):$(OBJ)/sub_module_psi_B_TO_G.o
-#========================================================================================
+endif
+#=======================================================================================
 
 #=======================================================================================
 #=======================================================================================
@@ -1726,7 +1732,4 @@ cleantest:
 	@echo "clean test file"
 	@rm -rf ./Working_tests/MPI_tests/*/result
 	@echo "removed ./Working_tests/MPI_tests/*/result"
-# @rm -rf ./Working_tests/MPI_tests/6D_Davidson/result
-# @rm -rf ./Working_tests/MPI_tests/6D_arpack/result
-# @rm -rf ./Working_tests/MPI_tests/12D_propagation/result
 	@echo "clean test file done"
