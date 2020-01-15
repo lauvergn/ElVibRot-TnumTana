@@ -106,6 +106,7 @@ CONTAINS
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
+      IF (.NOT. para_ana%ana) RETURN
 
       mole       => para_H%mole
       para_Tnum  => para_H%para_Tnum
@@ -150,6 +151,9 @@ CONTAINS
 
       ! initialization for RD analysis
       IF (para_H%BasisnD%nb_basis > 1) THEN
+        IF (allocated(para_H%BasisnD%para_RD)) THEN
+          deallocate(para_H%BasisnD%para_RD)
+        END IF
         allocate(para_H%BasisnD%para_RD(para_H%BasisnD%nb_basis))
         para_H%BasisnD%para_RD(:)%RD_analysis = .FALSE.
         DO ib=1,para_H%BasisnD%nb_basis

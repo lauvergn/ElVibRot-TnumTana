@@ -133,6 +133,9 @@ ifeq ($(F90),ifort)
    ifeq ($(INT),8)
      F90FLAGS := $(F90FLAGS) -i8 
    endif
+
+   F90_VER = $(shell $(F90) --version | head -1 )
+
 endif
 #=================================================================================
 
@@ -166,6 +169,10 @@ ifeq ($(F90),pgf90)
    else
      F90LIB += 
    endif
+
+   F90_VER = $(shell $(F90) --version | head -2 | tail -1 )
+
+
 endif
 #=================================================================================
 
@@ -221,6 +228,9 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
    ifeq ($(INT),8)
       F90FLAGS := $(F90FLAGS) -fdefault-integer-8 
    endif
+
+   F90_VER = $(shell $(F90) --version | head -1 )
+
 endif
 #=================================================================================
 
@@ -276,18 +286,19 @@ F90FLAGS := $(F90FLAGS)   $(EXTMOD)
 #=================================================================================
 #=================================================================================
 $(info ***********************************************************************)
-$(info ***********OS:              $(OS))
-$(info ***********COMPILER:        $(F90))
-$(info ***********OPTIMIZATION:    $(OPT))
-$(info ***********OpenMP:          $(OMPFLAG))
-$(info ***********Arpack:          $(ARPACK))
-$(info ***********Lapack:          $(LAPACK))
-$(info ***********QMLib:           $(QMLIB))
-$(info ***********F90FLAGS:        $(F90FLAGS))
-$(info ***********F90LIB:          $(F90LIB))
-$(info ***********subsystem file:  sub_system.$(extf))
-$(info ***********DIR of potlib.a: $(ExternalDIR))
-$(info ***********potLib:          $(PESLIB))
+$(info ***********OS:               $(OS))
+$(info ***********COMPILER:         $(F90))
+$(info ***********OPTIMIZATION:     $(OPT))
+$(info ***********COMPILER VERSION: $(F90_VER))
+$(info ***********OpenMP:           $(OMPFLAG))
+$(info ***********Arpack:           $(ARPACK))
+$(info ***********Lapack:           $(LAPACK))
+$(info ***********QMLib:            $(QMLIB))
+$(info ***********F90FLAGS:         $(F90FLAGS))
+$(info ***********F90LIB:           $(F90LIB))
+$(info ***********subsystem file:   sub_system.$(extf))
+$(info ***********DIR of potlib.a:  $(ExternalDIR))
+$(info ***********potLib:           $(PESLIB))
 $(info ***********************************************************************)
 
 F90_FLAGS = $(F90) $(F90FLAGS)
@@ -311,10 +322,8 @@ endif
 #=================================================================================
 #=================================================================================
 
-
  LIBS := $(DIRLIB) $(QMLIB) $(PESLIB) $(F90LIB) $(ARPACKLIB)
  LYNKFLAGS = $(LIBS)
-
 
 #=================================================================================
 #=================================================================================
@@ -337,6 +346,9 @@ $(info ***********************************************************************)
 #
 CPPSHELL = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
            -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
+           -D__COMPILER_VER="'$(F90_VER)'" \
+           -D__COMPILER_OPT="'$(F90FLAGS)'" \
+           -D__COMPILER_LIBS="'$(F90LIB)'" \
            -D__EVRTPATH="'$(DIR_EVRT)'" \
            -D__EVR_VER="'$(EVR_ver)'" \
            -D__TNUM_VER="'$(TNUM_ver)'" \
@@ -543,6 +555,8 @@ Obj_KEO_PrimOp= \
 Obj_main   =  $(OBJ)/vib.o $(OBJ)/versionEVR-T.o $(OBJ)/cart.o \
   $(OBJ)/sub_main_Optimization.o $(OBJ)/sub_main_nDfit.o
 
+Obj_EVR-Mod =  $(OBJ)/EVR-Module.o $(OBJ)/versionEVR-T.o 
+
 #Minimize Only list: sub_module_RotBasis, sub_module_basis_Grid_Param, sub_SymAbelian
 #... sub_module_Basis_LTO_n, 
 Obj_module =  \
@@ -648,6 +662,8 @@ all:obj $(VIBEXE)
 # vib
 EVR:obj $(VIBEXE)
 	echo "EVR"
+libEVR:obj $(OBJ)/libEVR.a
+	echo libEVR.a
 Tnum_FDriver: obj $(Main_TnumTana_FDriverEXE)
 	echo Main_TnumTana_FDriver
 Tnum_cDriver: obj $(Main_TnumTana_cDriverEXE)
@@ -717,14 +733,16 @@ clean:
 #===============================================
 #===============================================
 #
-$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(QMLibDIR_full)
+$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(QMLibDIR_full)
 	echo EVR-T
-	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o  $(LYNKFLAGS)
+	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(LYNKFLAGS)
 	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
 #===============================================
 #
 $(OBJ)/libTnum.a: obj $(Obj_KEO_PrimOp)
 	ar cr $(OBJ)/libTnum.a   $(Obj_KEO_PrimOp)
+$(OBJ)/libEVR.a:obj $(Obj_EVRT) $(OBJ)/EVR_Module.o $(OBJ)/EVR_driver.o $(QMLibDIR_full)
+	ar cr $(OBJ)/libEVR.a $(Obj_EVRT)  $(OBJ)/EVR_Module.o $(OBJ)/EVR_driver.o
 $(KEOTESTEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(KEOTEST).o
 	$(LYNK90)   -o $(KEOTESTEXE) $(OBJ)/$(KEOTEST).o $(OBJ)/libTnum.a $(LYNKFLAGS)
 #Main_TnumTana_FDriver
@@ -1172,6 +1190,11 @@ $(OBJ)/$(GWPMAIN).o:$(DIRvib)/$(GWPMAIN).f90
 $(OBJ)/$(WORKMAIN).o:$(DirTNUM)/sub_main/$(WORKMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_main/$(WORKMAIN).f90
 #
+$(OBJ)/EVR_Module.o:$(DIRvib)/EVR_Module.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRvib)/EVR_Module.f90
+$(OBJ)/EVR_driver.o:$(DIRvib)/EVR_driver.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRvib)/EVR_driver.f90
+
 $(OBJ)/vib.o:$(DIRvib)/vib.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_ARPACK)  -c $(DIRvib)/vib.f90
 $(OBJ)/versionEVR-T.o:$(DIRvib)/versionEVR-T.f90

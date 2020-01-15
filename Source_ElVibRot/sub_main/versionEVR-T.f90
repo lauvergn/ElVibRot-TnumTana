@@ -53,12 +53,17 @@
                    Tana_name,trim(adjustl(Tana_version))
 
         write(out_unitp,*) 'Compiled on "',trim(compile_host), '" the ',trim(compile_date)
+        write(out_unitp,*) 'Compiler version: ',trim(compiler_ver)
+        write(out_unitp,*) 'Compiler options: ',trim(compiler_opt)
+        write(out_unitp,*) 'Compiler libs: ',trim(compiler_libs)
+
         write(out_unitp,*) 'EVRT_path: ',trim(EVRT_path)
 
         write(out_unitp,*) '-----------------------------------------------'
 
         write(out_unitp,*) EVR_name,' is written by David Lauvergnat [1] '
-        write(out_unitp,*) '     with contributions of Josep Maria Luis [2]'
+        write(out_unitp,*) '  with contributions of'
+        write(out_unitp,*) '     Josep Maria Luis (optimization) [2]'
         write(out_unitp,*) '     Ahai Chen (MPI) [1,4]'
         write(out_unitp,*) '     Lucien Dupuy (CRP) [5]'
 
@@ -66,9 +71,9 @@
         write(out_unitp,*)
 
         write(out_unitp,*) Tnum_name,' is written David Lauvergnat [1]'
-        write(out_unitp,*) Tana_name,' is written by Mamadou Ndong '
-        write(out_unitp,*) '     with contributions of David Lauvergnat'
-        write(out_unitp,*) '        and Emil Lund klinting (coupling with MidasCpp) [3]'
+        write(out_unitp,*) Tana_name,' is written by Mamadou Ndong [1] and David Lauvergnat [1]'
+        write(out_unitp,*) '  with contributions'
+        write(out_unitp,*) '      Emil Lund klinting (coupling with MidasCpp) [3]'
 
         write(out_unitp,*) Tnum_name,' and ',Tana_name,' are under GNU LGPL3 license.'
         write(out_unitp,*)

@@ -29,7 +29,7 @@
 
       MODULE mod_analysis
       USE mod_system
-      use mod_Constant, only: real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit
+      use mod_Constant, only: real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit, get_val_FROM_RWU
       USE mod_type_ana_psi,  only: param_ana_psi
 
       IMPLICIT NONE
@@ -265,7 +265,11 @@
       para_ana%name_file_spectralWP = name_file_spectralWP
       para_ana%formatted_file_WP    = formatted_file_WP
 
-      para_ana%max_ene         = convRWU_TO_R(max_ene)
+      IF (get_val_FROM_RWU(max_ene) <= ZERO) THEN
+        para_ana%max_ene         = huge(ONE)
+      ELSE
+        para_ana%max_ene         = convRWU_TO_R(max_ene)
+      END IF
       para_ana%max_ana         = max_ana
 
       para_ana%ana             = ana

@@ -82,17 +82,25 @@
 
       CONTAINS
 
-      SUBROUTINE dealloc_ComOp(ComOp)
+      SUBROUTINE dealloc_ComOp(ComOp,keep_init)
 
-      TYPE (param_ComOp) :: ComOp
+      TYPE (param_ComOp),          intent(inout) :: ComOp
+      logical,           optional, intent(in)    :: keep_init
+
+      logical :: keep_init_loc
 
       character (len=*), parameter :: name_sub='dealloc_ComOp'
 
-      ComOp%nb_act1     = 0
-      ComOp%nb_ba       = 0
-      ComOp%nb_bi       = 0
-      ComOp%nb_be       = 0
-      ComOp%nb_bie      = 0
+      keep_init_loc = .FALSE.
+      IF (present(keep_init)) keep_init_loc = keep_init
+
+      IF (.NOT. keep_init_loc) THEN
+        ComOp%nb_act1     = 0
+        ComOp%nb_ba       = 0
+        ComOp%nb_bi       = 0
+        ComOp%nb_be       = 0
+        ComOp%nb_bie      = 0
+      END IF
 
       IF (associated(ComOp%NormIndexBasisRep))  THEN
         CALL dealloc_array(ComOp%NormIndexBasisRep,                     &
@@ -100,8 +108,10 @@
       END IF
       ComOp%MaxNormIndexBasisRep     = huge(1)
 
-      ComOp%contrac_ba_ON_HAC = .FALSE.
-      ComOp%max_ene_ON_HAC    = huge(ONE)  ! maximal energy
+      IF (.NOT. keep_init_loc) THEN
+        ComOp%contrac_ba_ON_HAC = .FALSE.
+        ComOp%max_ene_ON_HAC    = huge(ONE)  ! maximal energy
+      END IF
 
       IF (associated(ComOp%d0Cba_ON_HAC))  THEN
         CALL dealloc_array(ComOp%d0Cba_ON_HAC,                          &
@@ -111,26 +121,30 @@
         CALL dealloc_array(ComOp%Eneba_ON_HAC,                          &
                           "ComOp%Eneba_ON_HAC",name_sub)
       END IF
-      IF (associated(ComOp%nb_ba_ON_HAC))  THEN
-        CALL dealloc_array(ComOp%nb_ba_ON_HAC,                          &
-                          "ComOp%nb_ba_ON_HAC",name_sub)
+      IF (.NOT. keep_init_loc .AND. .NOT. ComOp%contrac_ba_ON_HAC) THEN
+        IF (associated(ComOp%nb_ba_ON_HAC))  THEN
+          CALL dealloc_array(ComOp%nb_ba_ON_HAC,                        &
+                            "ComOp%nb_ba_ON_HAC",name_sub)
+        END IF
+        ComOp%max_nb_ba_ON_HAC = huge(1)
       END IF
-      ComOp%max_nb_ba_ON_HAC = huge(1)
+
       IF (associated(ComOp%d0C_bhe_ini))  THEN
         CALL dealloc_array(ComOp%d0C_bhe_ini,                           &
                           "ComOp%d0C_bhe_ini",name_sub)
       END IF
-      ComOp%ADA                 = .FALSE.
 
+      IF (.NOT. keep_init_loc) THEN
+        ComOp%ADA                 = .FALSE.
 
-      ComOp%file_HADA%name      = make_FileName('SH_HADA')
-      ComOp%file_HADA%unit      = 0
-      ComOp%file_HADA%formatted = .TRUE.
-      ComOp%file_HADA%append    = .FALSE.
-      ComOp%file_HADA%old       = .TRUE.
-      ComOp%calc_grid_HADA      = .FALSE.
-      ComOp%save_file_HADA      = .FALSE.
-
+        ComOp%file_HADA%name      = make_FileName('SH_HADA')
+        ComOp%file_HADA%unit      = 0
+        ComOp%file_HADA%formatted = .TRUE.
+        ComOp%file_HADA%append    = .FALSE.
+        ComOp%file_HADA%old       = .TRUE.
+        ComOp%calc_grid_HADA      = .FALSE.
+        ComOp%save_file_HADA      = .FALSE.
+      END IF
 
       nullify(ComOp%Rvp_spec)
       nullify(ComOp%Cvp_spec)

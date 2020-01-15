@@ -109,6 +109,7 @@
 
 #if __QML == 1
         CALL sub_Init_Qmodel(mole%nb_act,para_PES%nb_elec,'read_model',.FALSE.,0)
+        IF (print_level > 0 .OR. debug) CALL sub_Write_Qmodel(out_unitp)
 #else
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
@@ -443,6 +444,13 @@
             write(out_unitp,*) 'Use another potential/model'
             STOP 'QML is not present'
 #endif
+
+            !----------------------------------------------------------------
+            DO ie=1,para_PES%nb_elec
+             d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                        &
+                       d0MatOp(iOpE)%ReVal(ie,ie,itermE) - para_PES%pot0
+            END DO
+            !----------------------------------------------------------------
 
           ELSE IF (para_PES%nDfit_Op) THEN
             IF (debug) write(out_unitp,*) 'With nDFit'

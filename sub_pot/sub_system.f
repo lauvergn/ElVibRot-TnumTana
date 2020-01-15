@@ -7,54 +7,94 @@ c    Q are the coordinates in active order or syl order
 c    dipolar calculation if calc_dip = T
 c================================================================
       SUBROUTINE calcN_op(mat_V,mat_imV,mat_ScalOp,nb_be,nb_ScalOp,
-     *                    Qact,nb_var,mole,
+     *                    Qcart,nb_Qcart,mole,
      *                    calc_ScalOp,pot_cplx)
-
       USE mod_Tnum
       USE mod_system
+      USE mod_constant, only : get_Conv_au_TO_unit
       IMPLICIT NONE
 
 c----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
 
 
-      integer           :: nb_be,nb_ScalOp,nb_var
+      integer           :: nb_be,nb_ScalOp,nb_Qcart
       logical           :: calc_ScalOp,pot_cplx
       real (kind=Rkind) :: mat_V(nb_be,nb_be),mat_imV(nb_be,nb_be)
       real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
-      real (kind=Rkind) :: Qact(nb_var)
+      real (kind=Rkind) :: Qcart(nb_Qcart)
 
-      integer,parameter :: ndim=6
-      real (kind=Rkind) :: im_pot0
-      real (kind=Rkind) :: Q(ndim)
-      real (kind=Rkind) :: Q2(ndim)
-      real (kind=Rkind) :: Q3(ndim)
-     
-      real (kind=Rkind), parameter :: lambda = 0.111803d0
-      integer :: i,n
+      real (kind=Rkind) :: pot0,im_pot0,x(3),x1(3),x2(3)
+      real (kind=Rkind) :: pot2_H2atWn_WITH_cage_FlexSPCFW_SPCE
+      integer           :: i,option
+      integer           :: nat = 122
+      real (kind=Rkind) :: XH2cage(3,122)
+      integer, parameter :: n2dshell=60
+      character (len=10) :: name_dum
 
+      real (kind=Rkind), save :: X2dShell(3,60)
+      real (kind=Rkind), save :: auTOcm=219474.631443_Rkind ! from Tnum
+      real (kind=Rkind), save :: a0
+      logical,           save :: begin=.TRUE.
 
-      Q  = Qact(4:ndim+3)
-      Q2 = Q*Q
-      Q3 = Q2*Q
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+
+      !mat_V(1,1) = ZERO
+      !RETURN
 
       IF (nb_be == 1 ) THEN
-c       CALL sub_model_V(mat_V,Q,ndim,nb_be)
-        mat_V(1,1) = ZERO
-        DO i=1,ndim
-         mat_V(1,1) = mat_V(1,1) + HALF * Q(i)**2
-        END DO
-        DO i=1,ndim-1
-         mat_V(1,1) = mat_V(1,1) + lambda * 
-     *     ( Q(i)**2 * Q(i+1) - Q(i+1)**3/THREE )
-        END DO
-c       mat_V(1,1) = HALF * sum(Q2) + lambda * sum( Q2(1:n-1)*Q(2:n) ) -
-c    *             lambda/THREE * sum( Q(2:n)**3 )
+c---------------------------------------------------------------
+c$OMP    CRITICAL (calcN_op_CRIT)
+        IF (begin) THEN
+          a0 = get_Conv_au_TO_unit(quantity='L',Unit='Angs')
+          auTOcm = get_Conv_au_TO_unit(quantity='E',Unit='cm-1')
+          open(unit=99,file='2dShell.xyz')
+          read(99,*)
+          read(99,*)
+          DO i=1,n2dshell
+            read(99,*) name_dum,X2dShell(:,i)
+            write(6,'(a,i0,3(x,F12.6))') 'xyz,i',i,X2dShell(:,i)
+          END DO
+          X2dShell = X2dShell / a0
+          close(unit=99)
+          begin=.FALSE.
+        END IF
+c$OMP    END CRITICAL (calcN_op_CRIT)
+c---------------------------------------------------------------
+        IF (debug) write(6,*) 'Qcart',Qcart
+        !write(6,*) 'Qcart',Qcart(1:21)
 
-        IF (pot_cplx) mat_imV(1,1) = im_pot0(Q,n)
+        XH2cage(:,1:62)   = reshape(Qcart(1:186),shape=(/3,62/) )
+        XH2cage(:,63:122) = X2dShell(:,:)
+        
+        IF (debug) THEN
+          a0 = get_Conv_au_TO_unit(quantity='L',Unit='Angs')
+          write(6,*) '==========================================='
+          write(6,'(a,3(x,F12.6))') 'H ',XH2cage(:,1)*a0
+          write(6,'(a,3(x,F12.6))') 'H ',XH2cage(:,2)*a0
+          DO i=3,size(XH2cage(1,:)),3
+            write(6,'(a,3(x,F12.6))') 'O ',XH2cage(:,i)*a0
+            write(6,'(a,3(x,F12.6))') 'H ',XH2cage(:,i+1)*a0
+            write(6,'(a,3(x,F12.6))') 'H ',XH2cage(:,i+2)*a0
+          END DO
+        END IF
+
+c       CALL pot_H2_Cage(reshape(XH2cage,shape=[366]),mat_V(1,1))
+
+        mat_V(1,1) = pot2_H2atWn_WITH_cage_FlexSPCFW_SPCE(XH2cage,
+     *                                                    122,0,'./')
+
+        IF (debug) write(6,*) 'nat,mat_V(1,1)',nat,mat_V(1,1)
+        !write(6,*) 'nat,mat_V(1,1)',nat,mat_V(1,1)
+        mat_V(1,1) = mat_V(1,1) / auTOcm
+        !STOP
+        
+        IF (debug)  write(6,*) 'nat,mat_V(1,1)',nat,mat_V(1,1)
+
+        IF (pot_cplx) mat_imV(1,1) = im_pot0(Qcart)
         IF (calc_ScalOp) THEN
-          CALL sub_scalar(mat_ScalOp(1,1,:),nb_ScalOp,Q,n,
-     *                    mole)
+          CALL sub_dipole(mat_ScalOp(1,1,:),Qcart,mole)
         END IF
       ELSE
         write(6,*) ' ERROR in calc_op'
@@ -63,7 +103,63 @@ c    *             lambda/THREE * sum( Q(2:n)**3 )
         STOP
       END IF
 
-      RETURN
+      END
+c
+C================================================================
+C    fonction pot0(x) 3+9 D pour h2o en cartesiennes (calcul direct)
+C================================================================
+      FUNCTION pot0(Q)
+      USE mod_system
+      USE mod_file
+      IMPLICIT NONE
+
+      integer, parameter :: ndim=6
+      real (kind=Rkind) :: pot0
+      real (kind=Rkind) :: Q(ndim)
+
+
+      real (kind=Rkind) :: DQ(ndim)
+      real (kind=Rkind) :: G(ndim)
+
+      integer :: nio,i,err,idum
+      real (kind=Rkind) :: V
+   
+      real (kind=Rkind), save :: Qref(ndim)
+      real (kind=Rkind), save :: hess(ndim,ndim)
+
+      logical, save     :: begin = .TRUE.
+
+c---------------------------------------------------------------
+c      initialisation la premiere fois
+c$OMP  CRITICAL (pot0_CRIT)
+       IF (begin) THEN
+         CALL file_open2(name_file='hessien6D.inp',iunit=nio)
+
+         read(nio,*) 
+
+         DO i=1,ndim
+           read(nio,*) idum,Qref(i)
+         END DO
+         write(6,*) 'Qref',Qref(:)
+
+         read(nio,*) 
+         CALL Read_Mat(hess,nio,5,err)
+         IF (err /= 0) STOP 'error read hessien'
+
+         close(nio)
+         begin = .FALSE.
+       END IF
+c$OMP  END CRITICAL (pot0_CRIT)
+c fin     initialisation la premiere fois
+c---------------------------------------------------------------
+
+      DQ(:) = Q(:)-Qref(:)
+      V = HALF * dot_product(DQ,matmul(hess,DQ))
+      pot0 = V
+c     write(6,*) 'DQ,pot0',DQ,V
+
+c     STOP 
+
       END
 C================================================================
 C    subroutine calculant le gradient
@@ -101,10 +197,9 @@ C================================================================
       IMPLICIT NONE
 
       integer, parameter :: n = 9
-      real (kind=Rkind) :: h(n,n),hh(n,n)
-      integer  ::  err
+      real (kind=Rkind) :: hh(n,n)
 
-      hh = zero
+      hh = ZERO
       END
       SUBROUTINE H0_sym(h,n)
       USE mod_system
@@ -153,21 +248,15 @@ C================================================================
 C================================================================
 C    fonction im_pot0(x)
 C================================================================
-      FUNCTION im_pot0(Q,n)
+      FUNCTION im_pot0(Qsym0)
       USE mod_system
       IMPLICIT NONE
 
        real (kind=Rkind) :: im_pot0
-       integer :: i,n
-       real (kind=Rkind) :: Q(n)
-       real (kind=Rkind) :: Q0=8.d0,z
+       real (kind=Rkind) :: Qsym0(1)
+       real (kind=Rkind) :: z
 
        z = 0.d0
-       DO i=1,n
-        IF (abs(Q(i)) > Q0) THEN
-           z = z -(abs(Q(i)) - Q0)**3
-        END IF
-       END DO
 
        im_pot0 = z
 
@@ -214,7 +303,7 @@ c---------------------------------------------------------------------
 
       END
 C================================================================
-C    analytical derivative (Qeq Qeq' Qeq" Qeq'") calculation
+C    analytical derivative (Qeq + derivatives) calculation
 c    for the variable i_qsym
 C================================================================
       SUBROUTINE d0d1d2d3_Qeq(i_qsym,
@@ -256,7 +345,7 @@ c---------------------------------------------------------------------
       END
 
 C================================================================
-C    analytical derivative (dnQflex : Qflex Qflex' Qflex" Qflex'") calculation
+C    analytical derivative (dnQflex : Qflex + derivatives) calculation
 c    for the variable iq
 C================================================================
       SUBROUTINE calc_dnQflex(iq,dnQflex,Qact,nb_act,nderiv,it)
@@ -274,21 +363,27 @@ c
 C================================================================
 c    dipole read
 C================================================================
-      SUBROUTINE sub_scalar(scalar,nb_scalar,Q,n,mole)
+      SUBROUTINE sub_dipole(dip,XH2,mole)
       USE mod_Tnum
-      USE mod_paramQ
       USE mod_system
       IMPLICIT NONE
 
 c----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
 
-      integer           :: n,nb_scalar
-      real (kind=Rkind) :: Q(n)
-      real (kind=Rkind) :: scalar(nb_scalar)
+      real (kind=Rkind) :: XH2(3,2)
+      real (kind=Rkind) :: dip(3)
 
 
+      real (kind=Rkind) :: G(3),R(3)
 
-      scalar(:)   = ZERO
+      G=HALF*(XH2(:,1)+XH2(:,2))
+      R=(XH2(:,1)-XH2(:,2))
+
+      dip(1) = G(1) + R(1)
+      dip(2) = G(2) + R(2)
+      dip(3) = G(3) + R(3)
+
+      !dip(2) = R(3)/sqrt(dot_product(R,R))
 
       END
