@@ -44,6 +44,7 @@
       USE mod_Davidson
       USE mod_Filter
       USE mod_Arpack
+      USE mod_CRP
       USE mod_Op
       USE mod_analysis
       USE mod_fullanalysis
@@ -613,8 +614,8 @@
             write(out_unitp,*)
             write(out_unitp,*)
           ENDIF
-            CALL sub_CRP(para_AllOp%tab_Op,size(para_AllOp%tab_Op),para_ana%print,  &
-              para_ana%CRP,para_ana%CRP_Ene,para_ana%CRP_DEne,para_ana%nb_CRP_Ene)
+
+          CALL sub_CRP(para_AllOp%tab_Op,size(para_AllOp%tab_Op),para_ana%print,para_ana%para_CRP)
 
           IF(MPI_id==0) THEN
             write(out_unitp,*)

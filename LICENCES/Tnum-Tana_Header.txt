@@ -16,7 +16,7 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      with contributions of Mamadou Ndong (Tana)
 !
 !===========================================================================
 !===========================================================================

@@ -10,7 +10,7 @@
 MPICORE = gfortran
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -24,6 +24,8 @@ INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
 ARPACK = 0
+## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
+CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
@@ -292,6 +294,7 @@ $(info ***********OPTIMIZATION:     $(OPT))
 $(info ***********COMPILER VERSION: $(F90_VER))
 $(info ***********OpenMP:           $(OMPFLAG))
 $(info ***********Arpack:           $(ARPACK))
+$(info ***********CERFACS:          $(CERFACS))
 $(info ***********Lapack:           $(LAPACK))
 $(info ***********QMLib:            $(QMLIB))
 $(info ***********F90FLAGS:         $(F90FLAGS))
@@ -327,10 +330,6 @@ endif
 
 #=================================================================================
 #=================================================================================
-
-#
-#DIR0 = .
-#DIRm = $(DIR0)
 DIR_EVRT=$(shell pwd)
 OBJ = $(DIR_EVRT)/obj
 
@@ -353,10 +352,10 @@ CPPSHELL = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
            -D__EVR_VER="'$(EVR_ver)'" \
            -D__TNUM_VER="'$(TNUM_ver)'" \
            -D__TANA_VER="'$(TANA_ver)'"
-CPPSHELL_ARPACK = -D__ARPACK="$(ARPACK)"
-CPPSHELL_DIAGO  = -D__LAPACK="$(LAPACK)"
-CPPSHELL_QML    = -D__QML="$(QML)"
-
+CPPSHELL_ARPACK  = -D__ARPACK="$(ARPACK)"
+CPPSHELL_CERFACS = -D__CERFACS="$(CERFACS)"
+CPPSHELL_DIAGO   = -D__LAPACK="$(LAPACK)"
+CPPSHELL_QML     = -D__QML="$(QML)"
 #==========================================
 # the different programs
 #  vib:  make or make EVR
@@ -598,11 +597,13 @@ Obj_propagation = \
  $(OBJ)/sub_propagation.o $(OBJ)/sub_Hmax.o $(OBJ)/sub_control.o \
  $(OBJ)/sub_TF_autocorr.o
 
-Obj_CRP = \
- $(OBJ)/sub_calc_crp_P_lanczos.o \
- $(OBJ)/sub_cpgmres_cerfacs.o $(OBJ)/sub_pmult_QMR.o \
- $(OBJ)/sub_GMRES_driver_cerfacs.o $(OBJ)/sub_npqm.o $(OBJ)/sub_qall.o \
-$(OBJ)/sub_NAG.o $(OBJ)/sub_pmult_GMRES.o $(OBJ)/sub_qm.o
+ifeq ($(CERFACS),1)
+  # CERFACS management
+  Obj_CRP = $(OBJ)/sub_CRP.o $(OBJ)/CERFACS_lib.o $(OBJ)/QMRPACK_lib.o
+else
+  Obj_CRP = $(OBJ)/sub_CRP.o $(OBJ)/QMRPACK_lib.o
+endif
+
 
 Obj_inactive = \
  $(OBJ)/sub_HST_harm.o $(OBJ)/sub_inactive_harmo.o \
@@ -619,7 +620,7 @@ Obj_Operator = \
 
 Obj_analysis = \
  $(OBJ)/sub_module_analysis.o $(OBJ)/sub_analyse.o \
- $(OBJ)/sub_NLO.o $(OBJ)/sub_CRP.o $(OBJ)/sub_VibRot.o $(OBJ)/sub_intensity.o
+ $(OBJ)/sub_NLO.o $(OBJ)/sub_VibRot.o $(OBJ)/sub_intensity.o
 
 
 Obj_Optimization = \
@@ -638,7 +639,7 @@ Obj_EVRT =\
   $(Obj_WP) \
   $(Obj_Operator) \
   $(Obj_inactive) $(Obj_active) \
-  $(Obj_propagation) \
+  $(Obj_propagation) $(Obj_CRP) \
   $(Obj_analysis) \
   $(Obj_Basis_WP_Op_propa) \
   $(Obj_Optimization) \
@@ -651,16 +652,16 @@ Obj_EVRT =\
 #===============================================
 #==============================================
 # vib (without argument)
-EVR1:obj $(VIBEXE)
+EVR1:obj vib $(VIBEXE)
 	@echo "EVR"
 
 #
 #make all programs (except work)
-all:obj $(VIBEXE)
+all:obj vib $(VIBEXE)
 	echo "EVR (for eclipse)"
 #
 # vib
-EVR:obj $(VIBEXE)
+EVR:obj vib $(VIBEXE)
 	echo "EVR"
 libEVR:obj $(OBJ)/libEVR.a
 	echo libEVR.a
@@ -707,13 +708,22 @@ PhysConst:obj $(PhysConstEXE)
 $(QMLibDIR_full):
 	cd $(QMLibDIR) ; make
    
-#
+# obj directory
 obj:
 	mkdir -p obj
 
+# vib script
+vib: 
+	echo "make vib script"
+	echo "#!/bin/bash" > vib
+	echo "cat > namelist" >> vib
+	echo "nice $(DIR_EVRT)/vib.exe < namelist" >> vib
+	echo "rm namelist" >> vib
+	chmod a+x vib
+
 # clean
 clean: 
-	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib2
+	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib2 vib
 	rm -rf *.dSYM
 	rm -f .DS_Store */.DS_Store */*/.DS_Store */*/*/.DS_Store
 	@cd Examples/exa_hcn-dist ; ./clean
@@ -1083,25 +1093,12 @@ $(OBJ)/sub_TF_autocorr.o:$(DIRpropa)/sub_TF_autocorr.f90
 #
 #===================================================================================
 # sub_CRP: 
-$(OBJ)/sub_calc_crp_P_lanczos.o:$(DIRCRP)/sub_calc_crp_P_lanczos.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_calc_crp_P_lanczos.f90
-$(OBJ)/sub_cpgmres_cerfacs.o:$(DIRCRP)/sub_cpgmres_cerfacs.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_cpgmres_cerfacs.f
-$(OBJ)/sub_pmult_QMR.o:$(DIRCRP)/sub_pmult_QMR.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_pmult_QMR.f
-$(OBJ)/sub_GMRES_driver_cerfacs.o:$(DIRCRP)/sub_GMRES_driver_cerfacs.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_GMRES_driver_cerfacs.f
-$(OBJ)/sub_npqm.o:$(DIRCRP)/sub_npqm.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_npqm.f
-$(OBJ)/sub_qm.o:$(DIRCRP)/sub_qm.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_qm.f
-$(OBJ)/sub_qall.o:$(DIRCRP)/sub_qall.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_qall.f
-$(OBJ)/sub_NAG.o:$(DIRCRP)/sub_NAG.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_NAG.f
-$(OBJ)/sub_pmult_GMRES.o:$(DIRCRP)/sub_pmult_GMRES.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_pmult_GMRES.f
-#
+$(OBJ)/sub_CRP.o:$(DIRCRP)/sub_CRP.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_CERFACS) -c $(DIRCRP)/sub_CRP.f90
+$(OBJ)/CERFACS_lib.o:$(DIRCRP)/CERFACS_lib.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/CERFACS_lib.f
+$(OBJ)/QMRPACK_lib.o:$(DIRCRP)/QMRPACK_lib.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/QMRPACK_lib.f
 #===================================================================================
 #Operator ....
 $(OBJ)/sub_module_ComOp.o:$(DIROp)/sub_module_ComOp.f90
@@ -1154,8 +1151,6 @@ $(OBJ)/sub_analyse.o:$(DIRana)/sub_analyse.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_analyse.f90
 $(OBJ)/sub_NLO.o:$(DIRana)/sub_NLO.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_NLO.f90
-$(OBJ)/sub_CRP.o:$(DIRana)/sub_CRP.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_CRP.f90
 $(OBJ)/sub_VibRot.o:$(DIRana)/sub_VibRot.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_VibRot.f90
 $(OBJ)/sub_intensity.o:$(DIRana)/sub_intensity.f90

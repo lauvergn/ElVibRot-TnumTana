@@ -235,6 +235,7 @@
               para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint = 1
       END IF
 
+      IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Save_FileGrid) THEN
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
 
         iqf = 0
@@ -252,6 +253,8 @@
         END IF
       ELSE
         CALL Open_File_OF_tab_Op(para_AllOp%tab_Op)
+        iqf = 0
+      END IF
         iqf = 0
       END IF
 

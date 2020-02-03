@@ -27,24 +27,25 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_EVR
-   USE mod_system
+ USE mod_system
 !$ USE omp_lib, only : omp_get_max_threads
-   USE mod_Constant
-   USE mod_Coord_KEO
-   USE mod_PrimOp
-   USE mod_basis
+ USE mod_Constant
+ USE mod_Coord_KEO
+ USE mod_PrimOp
+ USE mod_basis
 
-   USE mod_psi_set_alloc
-   USE mod_psi_Op
-   USE mod_ana_psi
-   USE mod_psi_SimpleOp
+ USE mod_psi_set_alloc
+ USE mod_psi_Op
+ USE mod_ana_psi
+ USE mod_psi_SimpleOp
 
-   USE mod_propa
-   USE mod_Op
-   USE mod_analysis
-   USE mod_MPI
-   IMPLICIT NONE
+ USE mod_propa
+ USE mod_Op
+ USE mod_analysis
+ USE mod_MPI
+ IMPLICIT NONE
 
+ TYPE param_EVRT
 
    !----- physical and mathematical constants ---------------------------
    TYPE (constant) :: const_phys
@@ -64,7 +65,7 @@ MODULE mod_EVR
 
    !----- variables for the construction of H ----------------------------
    TYPE (param_ComOp)  :: ComOp
-   TYPE (param_AllOp), target :: para_AllOp
+   TYPE (param_AllOp)  :: para_AllOp
 
 
    !----- variables pour la namelist analyse ----------------------------
@@ -76,6 +77,11 @@ MODULE mod_EVR
    !----- variables for the WP propagation ----------------------------
    TYPE (param_propa) :: para_propa
    TYPE (param_psi)   :: WP0
+ END TYPE param_EVRT
+
+ TYPE (param_EVRT)              :: para_EVRT
+ TYPE (param_EVRT), allocatable :: tab_EVRT(:) ! for the openmp
+
 
 END MODULE mod_EVR
 

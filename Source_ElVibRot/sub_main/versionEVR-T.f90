@@ -17,7 +17,7 @@
 !
 !    Copyright 2015  David Lauvergnat
 !      with contributions of:
-!          Mamadou Ndong (Tana)
+!          Mamadou Ndong:       (Tana)
 !          Josep Maria Luis:    geometry optimization (ElVibRot)
 !          Ahai Chen:           MPI (ElVibRot)
 !          Emil Lund klinting:  coupling with MidasCpp (Tana)
@@ -29,6 +29,8 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
 !===========================================================================
 !===========================================================================
       SUBROUTINE versionEVRT(write_version)
