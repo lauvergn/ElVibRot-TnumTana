@@ -348,15 +348,16 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op, nb_Op, para_CRP,Ene)
          write(out_unitp,*) 'CRP at E (ua)', Ene, crp,'CRP with explicit inversion =', crp2
     ELSE
 
-      IF (allocated(tab_Op(1)%BasisnD%EneH0)) THEN
-        M1(:) = ONE/(Ene-tab_Op(1)%BasisnD%EneH0(:)) ! approximation of 1/(Ene-H(i,i))
-        !M1(:) = (Ene-tab_Op(1)%BasisnD%EneH0(:))
-        write(6,*) 'precon /= 1. DML'
-      ELSE
-        M1(:)        = CONE
-        write(6,*) 'precon = 1. DML'
-      END IF
+!      IF (allocated(tab_Op(1)%BasisnD%EneH0)) THEN
+!        M1(:) = ONE/(Ene-tab_Op(1)%BasisnD%EneH0(:)) ! approximation of 1/(Ene-H(i,i))
+!        !M1(:) = (Ene-tab_Op(1)%BasisnD%EneH0(:))
+!        write(out_unitp,*) 'precon /= 1. DML'
+!      ELSE
+!        M1(:)        = CONE
+!        write(out_unitp,*) 'precon = 1. DML'
+!      END IF
       M1(:)        = CONE
+      write(out_unitp,*) 'precon = 1. DML'
 
       CALL alloc_NParray(Krylov_vectors,[tab_Op(1)%nb_tot,para_CRP%KS_max_it], &
                         'Krylov_vectors',name_sub,tab_lb=[1,0])
@@ -421,7 +422,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op, nb_Op, para_CRP,Ene)
          CASE ( 'gmres' )
 #if __CERFACS == 1
             call p_multiplyGMRES(Krylov_vectors(:,nks-1),Krylov_vectors(:,nks),&
-                                 tab_Op,nb_Op,Ene,ncooked,M1)
+                                 tab_Op,nb_Op,Ene,ncooked,M1,para_CRP%LinSolv_accuracy)
 #else
            write(6,*) ' ERROR in',name_sub
            write(6,*) '  CERFACS GMRES is not implemented.'
