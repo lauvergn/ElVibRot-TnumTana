@@ -13,6 +13,8 @@
       Overlap_psi1_psi2_MPI
       Overlap_psi1_psi2_MPI2
       Overlap_psi1_psi2_MPI3
+      Overlap_psipsi_MPI
+      Overlap_psipsi_MPI3
       MakeResidual_Davidson_MPI
       MakeResidual_Davidson_MPI3
       MakeResidual_Davidson_j_MPI
