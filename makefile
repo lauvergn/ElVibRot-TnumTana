@@ -9,6 +9,10 @@
 ## MPI compiled with: gfortran or ifort
 MPICORE = gfortran   
 
+## debug_make=0 to enable parallel make
+## debug_make=1 for fast debug make, no parallel
+debug_make=1
+
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 1
 #
@@ -1249,9 +1253,6 @@ $(HTML) : $(REFPATH)/%.html : sub_module/%.f90
 #=======================================================================================
 #add dependence for parallelization
 
-# debug_make=1 for fast debug make
-debug_make=1
-
 ifeq ($(debug_make),0)
 
 #mod_MPI
@@ -1665,6 +1666,10 @@ $(lib_dep_mod_Tana_Sum_OpnD):$(OBJ)/sub_module_Tana_SumOpnD.o
 #mod_Davidson
 lib_dep_mod_Davidson=$(OBJ)/sub_Hmax.o
 $(lib_dep_mod_Davidson)=$(OBJ)/sub_module_Davidson.o
+
+#mod_param_RD
+lib_dep_mod_param_RD=$(OBJ)/sub_module_basis_set_alloc.o
+$(lib_dep_mod_param_RD)=$(OBJ)/sub_module_param_RD.o
 
 endif
 #=======================================================================================

@@ -4,6 +4,11 @@
 
 ----------------------------------------------------------------------------------------
 @ log
+> MPI_Vm1.3 (branch: MPI_working)
+  - Davidson improved, v1-3
+  - makefile update
+  - Schmidt process issue
+  - a better version of Davidson MPI, waiting for issue in Schmidt process 
 
 > MPI_Vm1.2 (branch: MPI_working)
   - Improve Davidson
