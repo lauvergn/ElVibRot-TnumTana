@@ -6,7 +6,34 @@
 @ log
 > MPI_Vm1.3 (branch: MPI_working)
   - Davidson improved, v1-3
+    added functions: 
+      Overlap_psi_Hpsi_matrix_MPI
+      Overlap_psi_Hpsi_matrix_MPI2
+      Overlap_psi_Hpsi_matrix_MPI3
+      Overlap_psi1_psi2_MPI
+      Overlap_psi1_psi2_MPI2
+      Overlap_psi1_psi2_MPI3
+      MakeResidual_Davidson_MPI
+      MakeResidual_Davidson_MPI3
+      MakeResidual_Davidson_j_MPI
+      MakeResidual_Davidson_j_MPI3
+    modified functions: 
+      sub_MakeHPsi_Davidson
+      sub_MakeH_Davidson
+      sub_NewVec_Davidson
+      sub_MakeS_Davidson
+      sub_propagation_Davidson
+      
   - makefile update
+  
+  - MPI functions added for easier access of matrix with MPI
+    NOTE: do not use for extremey big matrix
+      MPI_Send_matrix
+      MPI_Recv_matrix
+      MPI_Reduce_sum_matrix
+      MPI_Bcast_matrix
+       * for real, integer, and complex data currently
+    
   - Schmidt process issue
   - a better version of Davidson MPI, waiting for issue in Schmidt process 
 
