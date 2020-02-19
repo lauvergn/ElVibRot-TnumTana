@@ -157,3 +157,71 @@
     # MPI with gfortran
     export PATH=/usr/local/prod/openmpi/openmpi-3.1.2/ifort_64/bin:$PATH
     export LD_LIBRARY_PATH=/usr/local/prod/openmpi/openmpi-3.1.2/ifort_64/lib:$LD_LIBRARY_PATH
+    
+> env note
+  - mpifort 32 bit
+    @styx: use 32 bit MPI installed at default env
+    Davidson     : pass
+    Arpack       : pass
+    propagation  : pass
+    
+    @styx: use 32 bit MPI installed with gfortran910
+    intel18_init
+    gcc_910_init    
+    MPI install
+    ./configure F77=gfortran FC=gfortran --prefix=/u/achen/Software/openmpi_gfortran910
+    Davidson     : pass
+    Arpack       : error in dmout.f,confication 
+    propagation  : pass    
+
+  - mpifort 64 bit
+    @styx: use 64 bit MPI installed at default env (gfortran630)
+    Davidson     : pass
+    Arpack       : working
+
+    @styx: use 64 bit MPI installed with gfortran910    
+    intel18_init
+    gcc_910_init
+    MPI install
+    ./configure F77=gfortran FC=gfortran --prefix=/u/achen/Software/openmpi64_gfortran910 FFLAGS=-fdefault-integer-8 FCFLAGS=-fdefault-integer-8
+    **issue for new version compiler in styx
+
+  - gfortran 630 (styx default): 
+    Davidson    + openmp : pass
+    Arpack      + openmp : pass
+    propagation + openmp : pass
+          
+  - gfortran 910: 
+    styx: gcc_910_init
+    Davidson    + openmp : pass
+    Arpack      + openmp : error in dmout.f
+    propagation + openmp : pass
+
+  - ifort2011.5.220 (styx default)
+    out of data
+    
+  - ifort2018.3.222
+    styx: intel18_init
+    Davidson    + openmp : pass
+    Arpack      + openmp : error in dmout.f
+    propagation + openmp : pass
+    
+  - pgf90 17.10 
+    pgi170_init
+    Davidson             : pass
+    Arpack               : error in dmout.f
+    propagation          : pass
+    
+  = examples with old namelist
+  - gfortran             : pass
+  - ifort                :  
+  - pgf90                :
+  
+> makefile parallelization 
+  num_cores=2: 1.8; 
+  num_cores=3: 2.3; 
+  num_cores=4: 2.7;
+  num_cores=5: 2.8;
+  suggest to run with: make -j 3 
+  
+> 
