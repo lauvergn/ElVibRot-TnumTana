@@ -107,6 +107,7 @@ PUBLIC :: initialisation1_poly,cof
          real (kind=Rkind) :: precond_tol
 
          logical :: save_all
+         integer :: save_interal
          real (kind=Rkind) :: save_max_ene,scaled_max_ene
          integer :: save_max_nb
          character (len=Line_len) :: name_file_saveWP
@@ -1751,6 +1752,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       logical :: save_all
        real (kind=Rkind) :: scaled_max_ene
       integer :: save_max_nb
+      integer :: save_interal !< save WP every 'save_interal' step
       character (len=Line_len) :: name_file_saveWP
 
       logical :: lower_states,all_lower_states,project_wp0
@@ -1790,7 +1792,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
                          Op_Transfo,E0_filter,W_filter,                 &
                          L_filter,M_filter,DeltaM_filter,Mmax_filter,   &
                        DHmax,auto_Hmax,Hmin,Hmax,Hmin_propa,Hmax_propa, &
-                         max_poly,poly_tol
+                         max_poly,poly_tol,save_interal
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='read_Davidson'
@@ -1839,6 +1841,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       save_all          = .FALSE.
       save_max_nb       = -1 ! If -1, we did not use this number (default)
       name_file_saveWP  = 'file_WP'
+      save_interal      = 1
 
       ! for the filter diagonalization
       E0_filter         = REAL_WU(ZERO,      'cm-1','E')  ! the center of the window in ua (but read in cm-1)
@@ -1961,6 +1964,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       para_Davidson%conv_hermitian    = conv_hermitian
 
       para_Davidson%save_all          = save_all
+      para_Davidson%save_interal      = save_interal
       para_Davidson%scaled_max_ene    = scaled_max_ene
       para_Davidson%save_max_nb       = save_max_nb
       para_Davidson%name_file_saveWP  = make_FileName(name_file_saveWP)

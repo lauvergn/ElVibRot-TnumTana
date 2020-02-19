@@ -1249,10 +1249,10 @@ $(HTML) : $(REFPATH)/%.html : sub_module/%.f90
 #=======================================================================================
 #add dependence for parallelization
 
-# debug_mod=1 fro fast debug make, but possible wired error when 
-debug_mod=1 
+# debug_make=1 for fast debug make
+debug_make=1
 
-ifeq ($(debug_mod),0)
+ifeq ($(debug_make),0)
 
 #mod_MPI
 lib_dep_mod_MPI=$(OBJ)/sub_module_string.o $(OBJ)/sub_module_memory_NotPointer.o
@@ -1261,7 +1261,7 @@ $(lib_dep_mod_MPI):$(OBJ)/sub_module_MPI.o
 #mod_memory
 lib_dep_mod_memory=$(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_string.o       \
                    $(OBJ)/sub_module_memory_NotPointer.o                               \
-                   $(OBJ)/sub_module_memory_Pointer.o
+                   $(OBJ)/sub_module_memory_Pointer.o 
 $(lib_dep_mod_memory):$(OBJ)/sub_module_memory.o
 
 # mod_system
@@ -1653,6 +1653,19 @@ $(lib_dep_mod_ExactFact):$(OBJ)/sub_module_ExactFact.o
 #mod_psi_B_TO_G
 lib_dep_mod_psi_B_TO_G=$(OBJ)/sub_module_ana_psi.o
 $(lib_dep_mod_psi_B_TO_G):$(OBJ)/sub_module_psi_B_TO_G.o
+
+#mod_CartesianTransfo
+lib_dep_mod_CartesianTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_CartesianTransfo):$(OBJ)/CartesianTransfo.o
+
+#mod_Tana_Sum_OpnD
+lib_dep_mod_Tana_Sum_OpnD=$(OBJ)/sub_module_Tana_VecSumOpnD.o
+$(lib_dep_mod_Tana_Sum_OpnD):$(OBJ)/sub_module_Tana_SumOpnD.o
+
+#mod_Davidson
+lib_dep_mod_Davidson=$(OBJ)/sub_Hmax.o
+$(lib_dep_mod_Davidson)=$(OBJ)/sub_module_Davidson.o
+
 endif
 #=======================================================================================
 

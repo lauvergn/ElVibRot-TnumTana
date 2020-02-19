@@ -8,6 +8,7 @@
 > MPI_Vm1.2 (branch: MPI_working)
   - Improve Davidson
     MPI for Overlap_psi1_psi2 in sub_MakeH_Davidson
+    psi overlap improvement
 
 > MPI_Vm1.1 (branch: MPI_working)
 

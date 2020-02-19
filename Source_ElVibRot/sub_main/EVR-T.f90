@@ -97,7 +97,7 @@
         !> id=0 to be the master
         !---------------------------------------------------------------------------------
 #if(run_MPI)
-        CALL MPI_initialization()
+        CALL MPI_initialization(Rkind)
         Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
         Popenmp            = .FALSE.  !< True to run openMP
 #else 

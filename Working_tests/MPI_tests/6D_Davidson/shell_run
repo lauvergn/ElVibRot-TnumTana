@@ -165,6 +165,7 @@ read_WP=t
 read_listWP=f 
 name_file_readWP='$name_WPR' 
 NewVec_type=4
+save_interal=2
 /
 
 

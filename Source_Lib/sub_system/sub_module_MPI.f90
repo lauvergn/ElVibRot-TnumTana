@@ -37,7 +37,7 @@ MODULE mod_MPI
   TYPE(MPI_Status)               :: MPI_stat          !< status of MPI process
   TYPE(MPI_Datatype)             :: MPI_int           !< integer type of default MPI
   TYPE(MPI_Datatype)             :: MPI_int_fortran   !< integer type of default fortran
-  TYPE(MPI_Datatype)             :: MPI_rea           !< real type used for send etc.
+  TYPE(MPI_Datatype)             :: MPI_real_fortran  !< real type for fortran (Rkind)
   Integer(kind=MPI_INTEGER_KIND) :: MPI_rec_source    !< for MPI_RECV, not used
   Integer(kind=MPI_INTEGER_KIND) :: MPI_tag1     !< tag for MPI send and receive
   Integer(kind=MPI_INTEGER_KIND) :: MPI_tag2     !< tag for MPI send and receive
@@ -105,10 +105,14 @@ MODULE mod_MPI
   Integer                        :: temp_int1
   Integer                        :: temp_int2
 
-!---------------------------------------------------------------------------------------
-  Contains
+!=======================================================================================
+  Contains  
+  !-------------------------------------------------------------------------------------
   !> MPI initialization 
-  SUBROUTINE MPI_initialization()
+  SUBROUTINE MPI_initialization(Rkind)
+    IMPLICIT NONE
+    Integer,intent(in)    :: Rkind
+
     CALL MPI_Init(MPI_err)
     CALL MPI_Comm_rank(MPI_COMM_WORLD, MPI_id, MPI_err)
     CALL MPI_Comm_size(MPI_COMM_WORLD, MPI_np, MPI_err)
@@ -125,6 +129,15 @@ MODULE mod_MPI
       MPI_int_fortran=MPI_integer8
     ELSE
       STOP 'integer neither 4 or 8 in default fortran'
+    ENDIF
+    
+    !> define Fortran Real type according to Rkind
+    IF(Rkind==8) THEN
+      MPI_real_fortran=MPI_Real8
+    ELSEIF(Rkind==16) THEN
+      MPI_real_fortran=MPI_Real16
+    ELSE
+      STOP 'Rkind neither 64 or 128 bit, define MPI_real_fortran in sub_module_MPI.f90'
     ENDIF
     
     !> get MPI default bit
