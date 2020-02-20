@@ -131,10 +131,11 @@
 
       integer           :: ExactFact
 
-      integer, allocatable :: Weight_Rho(:)            ! enable to use a weight (0=>constant=1, +/-1=>step ...)
-      real (kind=Rkind), allocatable :: Qana_Weight(:) ! geometry (Qact order) for the analysis (use with Weight_Rho)
-      real (kind=Rkind), allocatable :: Qana_cut(:)    ! geometry (Qact order) for the analysis
-      integer, allocatable :: Qtransfo_type(:)         ! type of the transformation
+      integer,           allocatable :: Weight_Rho(:)    ! enable to use a weight (0=>constant=1, +/-1=>step ...)
+      real (kind=Rkind), allocatable :: Qana_Weight(:)   ! geometry (Qact order) for the analysis (use with Weight_Rho)
+      real (kind=Rkind), allocatable :: Qana_cut(:)      ! geometry (Qact order) for the analysis
+      integer,           allocatable :: Qtransfo_type(:) ! type of the transformation
+      logical                        :: AvScalOp,AvHiterm
 
       logical       :: QTransfo,formatted_file_WP
       logical        :: Spectral_ScalOp
@@ -155,6 +156,7 @@
                         propa,                                          &
                         print_psi,psi2,psi1D_Q0,psi2D_Q0,QTransfo,      &
                         Rho1D,Rho2D,Wheight_rho,Rho_type,psi_adia,      &
+                        AvScalOp,AvHiterm,                              &
                         Coherence,Coherence_epsi,                       &
                         ExactFact,intensity,NLO,CRP,                    &
                         Psi_ScalOp,VibRot,JJmax,                        &
@@ -170,6 +172,9 @@
       psi2                 = .FALSE.
       psi_adia             = .FALSE.
       QTransfo             = .FALSE.
+
+      AvScalOp             = .FALSE.
+      AvHiterm             = .FALSE.
 
       Coherence            = 0
       Coherence_epsi       = ONETENTH**6
@@ -292,6 +297,7 @@
         CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
                           Boltzmann_pop=.FALSE.,                        &
                           adia=psi_adia,                                &
+                          AvScalOp=AvScalOp,AvHiterm=AvHiterm,          &
                           Write_psi2_Grid=psi2,Write_psi2_Basis=psi2,   &
                           Write_psi_Grid=(.NOT. psi2),                  &
                           Write_psi_Basis=(.NOT. psi2),                 &
@@ -304,6 +310,7 @@
         CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
                           Boltzmann_pop=.TRUE.,Temp=Temp,               &
                           adia=psi_adia,                                &
+                          AvScalOp=AvScalOp,AvHiterm=AvHiterm,          &
                           Write_psi2_Grid=(print_psi > 0 .AND. psi2),   &
                           Write_psi2_Basis=(print_psi > 0 .AND. psi2),  &
                         Write_psi_Grid=(print_psi > 0 .AND. .NOT. psi2),&

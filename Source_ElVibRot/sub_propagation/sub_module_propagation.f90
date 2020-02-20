@@ -824,7 +824,8 @@ PUBLIC :: initialisation1_poly,cof
 !=======================================================================================
 SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_system
-  USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
+  USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi,sub_psiHitermPsi, &
+                                  sub_PsiDia_TO_PsiAdia_WITH_MemGrid
   USE mod_field,           ONLY : param_field,sub_dnE
   USE mod_ExactFact
 
@@ -986,6 +987,9 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
         END IF
       END IF
 
+      IF (para_propa%ana_psi%AvHiterm) THEN
+        CALL sub_psiHitermPsi(WP(i),i,'',para_H)
+      END IF
 
 !    ! => The analysis (adiabatic)
 !    IF (adia_loc) THEN

@@ -66,6 +66,7 @@ dh 0.0
  &analyse max_ana=40 max_ene=50000.d0
           print_psi=0 psi1D_Q0=t psi2D_Q0=t
           Rho1D=t Rho2D=t Wheight_rho=t
+          AvHiterm=t
           davidson=t intensity=t name_file_spectralWP='file_spec' /
 Qana_Weight 0.9 3.187 2.178 0. 3.14 0.
 Weight_Rho  -1    0    0    0   0   0

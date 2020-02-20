@@ -71,7 +71,7 @@
 
 
           logical                        :: AvScalOp      = .FALSE.   ! Average value of the scalar operators
-
+          logical                        :: AvHiterm      = .FALSE.   ! Average value of H term by term
 
           ! For quantum coherence Mij = Int [rho_i(Q)*rho_j(Q)/rho(Q) dQ]
           integer                        :: coherence = 0       ! default, 0: no coherence calculation
@@ -116,7 +116,7 @@
                               Write_psi2_Grid,Write_psi2_Basis,   &
                               Write_psi_Grid,Write_psi_Basis,     &
                               AvQ,Qtransfo_type,                  &
-                              AvScalOp,                           &
+                              AvScalOp,AvHiterm,                  &
                               coherence,coherence_epsi,           &
                               ExactFact,                          &
                               Rho1D,Rho2D,Weight_Rho,Qana_Weight, &
@@ -135,7 +135,7 @@
       logical,                        optional :: Write_psi2_Grid,Write_psi2_Basis
       logical,                        optional :: Write_psi_Grid,Write_psi_Basis
 
-      logical,                        optional :: AvQ,AvScalOp
+      logical,                        optional :: AvQ,AvScalOp,AvHiterm
       integer,           allocatable, optional :: Qtransfo_type(:)     ! type of the transformation
 
       integer,                        optional :: coherence         ! coherence_tyep (0 non calculation)
@@ -254,9 +254,11 @@
 
 
       !------------------------------------------------------------
-      ! Average of the Scalar Operators
+      ! Average of the Scalar Operators and/or H term by term
       ana_psi%AvScalOp = .FALSE.
       IF (present(AvScalOp))         ana_psi%AvScalOp         = AvScalOp
+      ana_psi%AvHiterm = .FALSE.
+      IF (present(AvHiterm))         ana_psi%AvHiterm         = AvHiterm
       !------------------------------------------------------------
 
 
@@ -374,6 +376,7 @@
      END IF
 
      ana_psi1%AvScalOp      = ana_psi2%AvScalOp
+     ana_psi1%AvHiterm      = ana_psi2%AvHiterm
 
      ana_psi1%adia          = ana_psi2%adia
      ana_psi1%Rho1D         = ana_psi2%Rho1D
@@ -482,6 +485,8 @@
       write(out_unitp,*)
       write(out_unitp,*) 'Average over scalar operators:'
       write(out_unitp,*) 'AvScalOp',ana_psi%AvScalOp
+      write(out_unitp,*) 'Average over H term by term:'
+      write(out_unitp,*) 'AvHiterm',ana_psi%AvHiterm
 
       write(out_unitp,*)
       write(out_unitp,*) 'Coherence:?'
