@@ -219,6 +219,7 @@
       IF (allocated(name_RWUquantity)) deallocate(name_RWUquantity)
 
       ! check if the unit is already present
+      unit_present = .FALSE.
       IF (allocated(TabConvRWU%conv)) THEN
 
         allocate(character(len=len(RWU%unit)) :: name_RWUunit)
@@ -430,6 +431,7 @@
         ! modify quantity to have the correct case
         convRWU_TO_RWU%quantity = Tab_conv_FOR_quantity(iq)%quantity
 
+        conv = ONE
         DO i=1,size(Tab_conv_FOR_quantity(iq)%conv)
 
           name_unit = Tab_conv_FOR_quantity(iq)%conv(i)%unit

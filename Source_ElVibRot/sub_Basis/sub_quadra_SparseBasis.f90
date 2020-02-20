@@ -957,6 +957,7 @@
       integer             :: A,B,LG_L,LB_L,n
       integer             :: nDsize(basis_SG%nb_basis)
       logical             :: with_L2max
+      real(kind=Rkind)    :: SG4_Mat_size,Mat_size
 
 
       TYPE (Type_IntVec), allocatable :: tab_i_TO_l(:)
@@ -990,13 +991,14 @@
       END IF
 !-----------------------------------------------------------
 
-       Print_basis = basis_SG%print_info_OF_basisDP .AND. print_level > -1 .OR. debug
+      Print_basis = basis_SG%print_info_OF_basisDP .AND. print_level > -1 .OR. debug
+      Print_basis = Print_basis .AND. MPI_id==0
 
       Lmax = basis_SG%L_SparseGrid
       Lmin = max(0,Lmax-basis_SG%nb_basis+1)
       LB   = basis_SG%L_SparseBasis
 
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '======== SPARSE GRID type4 (coucou) ============='
         write(out_unitp,*) '================================================='
@@ -1030,7 +1032,7 @@
         STOP
       END IF
 
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '=====Set-up SG primtive basis sets==============='
       END IF
@@ -1120,14 +1122,14 @@
         ENDIF
       END DO
       basis_SG%primitive_done = .TRUE.
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '=END Set-up SG primtive basis sets==============='
         write(out_unitp,*) '================================================='
         CALL flush_perso(out_unitp)
       END IF
 
       ! for the Basis functions -----------------------------------------
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '============ Set nDindB'
         CALL flush_perso(out_unitp)
       END IF
@@ -1143,8 +1145,8 @@
         nDNum_OF_Lmax(ib) = basis_SG%tab_Pbasis(ib)%Pbasis%para_SGType2%Num_OF_Lmax
       END DO
       IF(MPI_id==0) THEN
-        write(6,*) 'L1maxB, L2maxB (basis)',L1maxB,L2maxB
-        write(6,*) 'nDNum_OF_Lmax',nDNum_OF_Lmax
+        write(out_unitp,*) 'L1maxB, L2maxB (basis)',L1maxB,L2maxB
+        write(out_unitp,*) 'nDNum_OF_Lmax',nDNum_OF_Lmax
       END IF
 
       allocate(tab_i_TO_l(basis_SG%nb_basis))
@@ -1164,7 +1166,7 @@
       CALL dealloc_nDindex(basis_SG%nDindB)
       IF (count(nDNum_OF_Lmax == 0) == basis_SG%nb_basis .AND.          &
           basis_SG%MaxCoupling_OF_nDindB >= basis_SG%nb_basis) THEN
-        basis_SG%nDindB%packed = .FALSE.
+        !basis_SG%nDindB%packed = .FALSE.
         basis_SG%nDindB%packed = .TRUE. ! with false the mapping is too long !!
         CALL init_nDindexPrim(basis_SG%nDindB,basis_SG%nb_basis,nDsize, &
                               type_OF_nDindex=5,Lmax=LB,                &
@@ -1212,12 +1214,12 @@
         CALL flush_perso(out_unitp)
       END IF
 
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '============ Set nDindB: done'
         CALL flush_perso(out_unitp)
       END IF
 
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '============ Set nDind_SmolyakRep'
         CALL flush_perso(out_unitp)
       END IF
@@ -1233,7 +1235,7 @@
                             MaxCoupling=basis_SG%MaxCoupling_OF_nDindB, &
                             nDinit=(/ (0,i=1,basis_SG%nb_basis) /) )
       ELSE
-        IF (MPI_id==0) write(6,*) 'L1maxG, L2maxG (grid)',L1maxG,L2maxG
+        IF (MPI_id==0) write(out_unitp,*) 'L1maxG, L2maxG (grid)',L1maxG,L2maxG
 
         basis_SG%para_SGType2%nDind_SmolyakRep%packed = .TRUE.
         CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep,   &
@@ -1256,12 +1258,12 @@
       CALL calc_Weight_OF_SRep(basis_SG%WeightSG,basis_SG%para_SGType2%nDind_SmolyakRep)
       !CALL unpack_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
 
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '============ Set nDind_SmolyakRep: done'
         CALL flush_perso(out_unitp)
       END IF
 
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '============ Set para_SGType2%nDind_DPG and para_SGType2%nDind_DPB'
         CALL flush_perso(out_unitp)
       END IF
@@ -1287,6 +1289,8 @@
 
       nbb         = 0
       nqq         = 0
+      SG4_Mat_size = ZERO
+      Mat_size     = real(basis_SG%nb,kind=Rkind)**2
 
       CALL init_nDval_OF_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep,tab_l)
       DO i_SG=1,basis_SG%nb_SG
@@ -1306,6 +1310,8 @@
         basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(i_SG) = nbb
         basis_SG%para_SGType2%tab_nb_OF_SRep(i_SG)     = nb
 
+        SG4_Mat_size = SG4_Mat_size + basis_SG%WeightSG(i_SG)*real(nb,kind=Rkind)**2
+
 
         IF (debug) THEN
           fformat = '(a,i0,a,' // int_TO_char(basis_SG%nb_basis) // '(1x,i0),a,i0)'
@@ -1317,13 +1323,11 @@
         END IF
       END DO
 
-      !IF (Print_basis) THEN
       IF(MPI_id==0) THEN
         write(out_unitp,*) ' max nq nb:',maxval(basis_SG%para_SGType2%tab_nq_OF_SRep), &
                                          maxval(basis_SG%para_SGType2%tab_nb_OF_SRep)
         CALL flush_perso(out_unitp)
       ENDIF
-      !END IF
 
       CALL Set_nq_OF_basis(basis_SG,nqq)
 
@@ -1333,13 +1337,18 @@
       CALL Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
       !CALL unpack_nDindex(basis_SG%nDindB)
 
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '============ Set para_SGType2%nDind_DPG and para_SGType2%nDind_DPB: done'
         CALL flush_perso(out_unitp)
       END IF
 
-      IF(MPI_id==0) write(out_unitp,*) 'nbb         (Smolyak Rep)',nbb
-      IF(MPI_id==0) write(out_unitp,*) 'nqq         (Smolyak Rep)',nqq
+      IF(MPI_id==0) THEN
+        write(out_unitp,*) 'nbb          (Smolyak Rep)',nbb
+        write(out_unitp,*) 'nqq          (Smolyak Rep)',nqq
+        write(out_unitp,*) 'SG4_Mat_size (Smolyak Rep)',SG4_Mat_size
+        write(out_unitp,*) '    Mat_size (Smolyak Rep)',Mat_size
+        write(out_unitp,*) 'Mat_size/SG4_Mat_size     ',Mat_size/SG4_Mat_size
+      END IF
       CALL flush_perso(out_unitp)
 
       ! set of nrho ---------------------------------------
@@ -1351,22 +1360,22 @@
       END DO
 
       !-- Packed the basis if needed -------------------------------
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '============ pack_basis',basis_SG%packed
         CALL flush_perso(out_unitp)
       END IF
       CALL pack_basis(basis_SG,sortX=.TRUE.)
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '============ pack_basis: done'
         CALL flush_perso(out_unitp)
       END IF
 
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP'
         CALL flush_perso(out_unitp)
       END IF
       CALL Set_SymAbelian_OF_BasisDP(basis_SG)
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP: done'
         CALL flush_perso(out_unitp)
       END IF
@@ -1381,7 +1390,7 @@
         CALL flush_perso(out_unitp)
       END IF
 
-      IF (Print_basis .AND. MPI_id==0) THEN
+      IF (Print_basis) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '== number of DP grids (nb_SG):',basis_SG%nb_SG
         write(out_unitp,*) '================================================='

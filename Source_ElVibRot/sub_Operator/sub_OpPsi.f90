@@ -163,7 +163,7 @@ CONTAINS
 
       !----- variables for the WP --------------------------------------
       TYPE (param_psi)   :: Psi,OpPsi
-      integer :: OpPsi_symab
+      integer            :: OpPsi_symab
 
       integer :: derOp_loc(2)
       logical :: With_Grid_loc,TransfoOp_loc

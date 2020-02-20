@@ -40,7 +40,7 @@
       TYPE (param_AllOp), intent(inout) :: para_AllOp
 
 !----- active parameters -------------------------------------------------
-      integer   :: nb_act,nb_act1,nb_inact2n
+      integer                          :: nb_act,nb_act1,nb_inact2n
       logical, allocatable             :: Grid_cte(:)
 
       real (kind=Rkind) :: max_Sii,max_Sij
@@ -235,26 +235,26 @@
               para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint = 1
       END IF
 
+      iqf = 0
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Save_FileGrid) THEN
-      IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
-
-        iqf = 0
-        IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Restart_Grid) THEN
-          CALL check_HADA(iqf,para_AllOp%tab_Op(1)%ComOp)
-          IF (iqf > para_AllOp%tab_Op(1)%nb_qa) iqf = 0
-          iqf = max(para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint,iqf+1)
+        IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
+          iqf = 0
+          IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Restart_Grid) THEN
+            CALL check_HADA(iqf,para_AllOp%tab_Op(1)%ComOp)
+            IF (iqf > para_AllOp%tab_Op(1)%nb_qa) iqf = 0
+            iqf = max(para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint,iqf+1)
+          ELSE
+            iqf = para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint
+            lformatted = para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted
+            IF (print_level > 1) write(out_unitp,*) 'file_HADA%formatted',lformatted
+            para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread = Grid_maxth
+            CALL file_delete(para_AllOp%tab_Op(1)%ComOp%file_HADA)
+            para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted = lformatted
+          END IF
         ELSE
-          iqf = para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint
-          lformatted = para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted
-          IF (print_level > 1) write(out_unitp,*) 'file_HADA%formatted',lformatted
-          para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread = Grid_maxth
-          CALL file_delete(para_AllOp%tab_Op(1)%ComOp%file_HADA)
-          para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted = lformatted
+          CALL Open_File_OF_tab_Op(para_AllOp%tab_Op)
+          iqf = 0
         END IF
-      ELSE
-        CALL Open_File_OF_tab_Op(para_AllOp%tab_Op)
-        iqf = 0
-      END IF
         iqf = 0
       END IF
 
@@ -313,6 +313,7 @@
          print_level > 0 .AND. para_AllOp%tab_Op(1)%nb_qa > max_nb_G_FOR_print) THEN
          IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
       END IF
+
       DO iOp=1,para_AllOp%nb_Op
         IF (associated(para_AllOp%tab_Op(iOp)%OpGrid)) THEN
           DO iterm=1,size(para_AllOp%tab_Op(iOp)%OpGrid)

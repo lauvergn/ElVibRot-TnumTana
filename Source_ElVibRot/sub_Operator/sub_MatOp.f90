@@ -2467,16 +2467,16 @@ CONTAINS
       IF (para_Op%mat_done) RETURN
 
       para_Op%Make_mat = .FALSE.
-!     - scaling of Op ---------------------------------------
-        para_Op%E0     = ZERO
-        para_Op%Esc    = ONE
-        para_Op%scaled = .FALSE.
+      !- scaling of Op ---------------------------------------
+      para_Op%E0     = ZERO
+      para_Op%Esc    = ONE
+      para_Op%scaled = .FALSE.
 !-----------------------------------------------------------
 
 !---- initialization -------------------------------------
       n = min(100,para_Op%nb_tot)
       IF(MPI_id==0) THEN
-      
+
         CALL alloc_NParray(psi, (/n/),"psi", name_sub)
         CALL alloc_NParray(Hpsi,(/n/),"Hpsi",name_sub)
 
@@ -2494,7 +2494,7 @@ CONTAINS
           CALL flush_perso(out_unitp)
         END IF
       ENDIF ! for MPI=0
-       
+
       ib = 0
       DO
         IF (ib >= para_Op%nb_tot) EXIT

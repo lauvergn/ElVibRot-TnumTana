@@ -750,6 +750,7 @@
  14     CONTINUE
 
         aamax=CZERO
+        imax = 0
         DO 16 i=j,n
          sum=a(i,j)
          DO 15 k=1,j-1

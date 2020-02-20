@@ -1667,6 +1667,7 @@ RealTime(1) = Delta_RealTime(HPsiTime)
 
 PSG4_maxth_save = SG4_maxth
 Opt_RealTime    = huge(ONE)
+opt_PSG4_maxth  = SG4_maxth
 DO SG4_maxth=1,PSG4_maxth_save
 
   IF (Tab_Psi(1)%cplx) THEN

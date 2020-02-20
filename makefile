@@ -10,7 +10,7 @@
 MPICORE = gfortran
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -216,14 +216,15 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
    endif
    #
    # opt management
+   # -finit-local-zero
    ifeq ($(OPT),1)
       F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
-      CFLAGS   = -O5 -g $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
+      CFLAGS   = -O5 -g             $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
    else
       #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wconversion -Wconversion-extra
       #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wunused
        F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
-       CFLAGS   = -O0 -g $(OMPFLAG) -fwhole-file -Wuninitialized
+       CFLAGS   = -O0 -g             $(OMPFLAG) -fwhole-file -Wuninitialized
       #F90FLAGS = -O0 -fbounds-check -Wuninitialized
    endif
    # integer kind management

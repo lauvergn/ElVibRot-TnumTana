@@ -2245,6 +2245,8 @@
       IF (present(l_hCC) .AND. present(hCC)) THEN
         l_hCC_loc    = l_hCC
         IF (l_hCC_loc) hCC_loc(:,:) = hCC(:,:)
+      ELSE
+        l_hCC_loc    = .FALSE.
       END IF
 
       !-----------------------------------------------------------------
@@ -3122,7 +3124,7 @@
       real (kind=Rkind), intent(inout) :: Qact(:)
       TYPE (param_PES)   :: para_PES
       real (kind=Rkind)  :: hCC(mole%ncart_act,mole%ncart_act)
-      logical            :: l_hCC  ! if .TRUE. hCC is already calculated (for PVSCF)
+      logical,           intent(in)    :: l_hCC  ! if .TRUE. hCC is already calculated (for PVSCF)
       integer :: Ind_Coord_AtBlock,Ind_Coord_PerBlock(mole%nb_var)
       real (kind=Rkind) :: d0grad(nb_NM)
 

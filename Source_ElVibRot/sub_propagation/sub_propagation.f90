@@ -457,8 +457,7 @@ CONTAINS
 
       END SUBROUTINE sub_propagation3
 
-      SUBROUTINE sub_propagation34(psi,Ene0,nb_diago,                   &
-                                   para_H,para_propa)
+      SUBROUTINE sub_propagation34(psi,Ene0,nb_diago,para_H,para_propa)
       USE mod_system
       USE mod_Op
       !USE mod_psi
@@ -728,7 +727,7 @@ CONTAINS
             write(out_unitp,*) 'WP it, DeltaT,S',it,DeltaT,S
           END IF
 
-          T = T + DeltaT
+          T = T + para_propa%WPdeltaT
           it = it + 1
 
         END DO

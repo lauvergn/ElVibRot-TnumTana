@@ -3073,9 +3073,9 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
       !!@param: TODO
       FUNCTION calc_Norm_OF_nDval(nDval,nDindex,err_sub)
 
-        TYPE (Type_nDindex)        :: nDindex
-        integer                    :: nDval(:)
-        integer,             intent(inout), optional     :: err_sub
+        TYPE (Type_nDindex)                              :: nDindex
+        integer                                          :: nDval(:)
+        integer,               intent(inout), optional   :: err_sub
 
         real(kind=Rkind)           :: Norm,calc_Norm_OF_nDval
         integer                    :: i,iNorm
@@ -3112,8 +3112,9 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
                                      nDindex%Tab_nDNorm(i)%nb_var_vec
              write(out_unitp,*) ' CHECK the fortran source !!'
              IF (present(err_sub)) THEN
-               Norm    = nDindex%MaxNorm + ONE
-               err_sub = err_nDval
+               Norm               = nDindex%MaxNorm + ONE
+               calc_Norm_OF_nDval = Norm
+               err_sub            = err_nDval
                RETURN
              ELSE
                STOP
@@ -3134,8 +3135,9 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
                                      nDindex%Tab_i_TO_l(i)%nb_var_vec
              write(out_unitp,*) ' CHECK the fortran source !!'
              IF (present(err_sub)) THEN
-              Norm    = nDindex%MaxNorm + ONE
-              err_sub = err_nDval
+               Norm               = nDindex%MaxNorm + ONE
+               calc_Norm_OF_nDval = Norm
+               err_sub            = err_nDval
                RETURN
              ELSE
                STOP

@@ -79,7 +79,7 @@
 
         write(out_unitp,*) Tnum_name,' and ',Tana_name,' are under GNU LGPL3 license.'
         write(out_unitp,*)
-        write(out_unitp,*) '[1]: Laboratoire de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
+        write(out_unitp,*) '[1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
         write(out_unitp,*) '[2]: Institut de Química Computacional and Departament de Química',&
                                    ' Universitat de Girona, Catalonia, Spain'
         write(out_unitp,*) '[3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark'

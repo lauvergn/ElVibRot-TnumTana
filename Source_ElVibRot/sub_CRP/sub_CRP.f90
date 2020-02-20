@@ -485,7 +485,7 @@ SUBROUTINE Gpsi(Vect,tab_Op,nb_Op,Ene,l_conjg)
       integer           :: nb_Op
       TYPE (param_Op)   :: tab_Op(nb_Op)
       logical           :: print_Op
-      logical, parameter:: cplx=.TRUE.
+      !logical, parameter:: cplx=.TRUE.
       TYPE (param_psi)   :: Tab_Psi
       TYPE (param_psi)   :: Tab_OpPsi
       character(len=3) :: l_conjg
@@ -496,7 +496,7 @@ SUBROUTINE Gpsi(Vect,tab_Op,nb_Op,Ene,l_conjg)
          Vect(:)=conjg(Vect(:))
       end if
 
-      CALL init_psi(Tab_Psi,tab_Op(1),cplx)
+      CALL init_psi(Tab_Psi,tab_Op(1),cplx=.TRUE.)
       CALL alloc_psi(Tab_Psi,BasisRep=.TRUE.,GridRep=.FALSE.)
 
       Tab_Psi%cvecB(:)=Vect(:)
@@ -558,9 +558,9 @@ SUBROUTINE OpOnVec(Vect,tab_Op,l_conjg)
 
       call dealloc_psi(Tab_Psi, .TRUE.)
       call dealloc_psi(Tab_OpPsi, .TRUE.)
-      end
+END SUBROUTINE OpOnVec
 
-      subroutine ReNorm_CplxVec(Vect)
+SUBROUTINE ReNorm_CplxVec(Vect)
       use mod_system
       implicit none
 

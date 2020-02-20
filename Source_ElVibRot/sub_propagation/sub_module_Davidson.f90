@@ -1364,8 +1364,8 @@ END SUBROUTINE MakeResidual_Davidson
        DO i=1,ndim
          CALL Overlap_psi1_psi2(Overlap,psi(ndim+1),psi(i),      &
                                 With_Grid=para_Davidson%With_Grid)
-         IF (RS == ZERO) CYCLE
          RS = real(Overlap,kind=Rkind)
+         IF (RS == ZERO) CYCLE
          psi(ndim+1)%RvecG = (psi(ndim+1)%RvecG - psi(i)%RvecG * RS)/sqrt(ONE-RS**2)
        END DO
        CALL renorm_psi(psi(ndim+1))
