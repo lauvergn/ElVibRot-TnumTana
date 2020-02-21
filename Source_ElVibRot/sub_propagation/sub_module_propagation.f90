@@ -857,7 +857,8 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
   integer       :: j,i,i_bi,i_be,i_bie
   complex (kind=Rkind) :: ET  ! energy
-  character (len=30)   :: info
+  character (len=:), allocatable           :: info
+
   logical :: BasisRep,GridRep,adia_loc,Write_psi2_Grid,Write_psi_Grid
 
 !- for the field --------------------------------------------------
@@ -988,7 +989,8 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       END IF
 
       IF (para_propa%ana_psi%AvHiterm) THEN
-        CALL sub_psiHitermPsi(WP(i),i,'',para_H)
+        info = real_TO_char(T,Rformat='f12.2')
+        CALL sub_psiHitermPsi(WP(i),i,info,para_H)
       END IF
 
 !    ! => The analysis (adiabatic)

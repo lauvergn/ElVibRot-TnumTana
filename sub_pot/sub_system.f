@@ -3,7 +3,7 @@ C================================================================
 C    calc_Op : calculation of the potential and scalar operator matrices
 c    mat_V(nb_be,nb_be) and Mat_Scal(nb_be,nb_be,nb_ScalOp)
 c    nb_be : nb of elctronic surfaces
-c    Q are the coordinates in active order or dyn order
+c    Qop are the coordinates in active order or dyn order
 C================================================================
       SUBROUTINE calcN_op(mat_V,mat_imV,mat_ScalOp,nb_be,nb_ScalOp,
      *                    Qop,nb_QOp,mole,calc_ScalOp,pot_cplx)
@@ -45,41 +45,77 @@ C     pot0(x) 1 D 2 surfaces
 C================================================================
       SUBROUTINE Mat_pot0(mat_V,Qop,nb_be,nb_QOp)
       USE mod_system
+      USE mod_Constant
       IMPLICIT NONE
 
       integer           :: nb_be,nb_QOp
       real (kind=Rkind) :: Qop(nb_QOp)
       real (kind=Rkind) :: mat_V(nb_be,nb_be)
 
-      real (kind=Rkind) :: kdiag(nb_QOp)
-      real (kind=Rkind) :: Qeq1(nb_QOp)
-      real (kind=Rkind) :: Qeq2(nb_QOp)
-      real (kind=Rkind) :: DQ(nb_QOp)
-      real (kind=Rkind), parameter :: e11  = 0.00d0
-      real (kind=Rkind), parameter :: e22  = 0.03d0
-      real (kind=Rkind), parameter :: e12  = 5.0d-3
+      real (kind=Rkind) :: HOOP, Tors, BLA, Overlap
+      real (kind=Rkind) :: d1, d4
 
-       kdiag(:) = (/ 0.1d0,0.5d0,0.5d0 /)
-       Qeq1(:)  = (/ 0.8d0,3.2d0,2.2d0 /)
-       Qeq2(:)  = (/ 0.8d0,3.0d0,2.0d0 /)
+!declaration of the functions
+      real (kind=Rkind) :: Hdir2D
+      real (kind=Rkind) :: Hct2D
 
-       !Write(6,*) 'Qop',Qop
-       !Write(6,*) 'kdiag',kdiag
+      real (kind=Rkind) :: MorseBLAP 
+      real (kind=Rkind) :: Morsemin
 
-       DQ(:) = Qop-Qeq1
-       !Write(6,*) 'DQ1',DQ
-       mat_V(1,1) = e11 + 0.5d0 * dot_product(kdiag*DQ,DQ)
+!declaration of the parameters:
 
-       DQ(:) = Qop-Qeq2
-       !Write(6,*) 'DQ2',DQ
-       mat_V(2,2) = e22 + 0.5d0 * dot_product(kdiag*DQ,DQ)
+      real (kind=Rkind), parameter :: blamin   = 0.0912615_Rkind
+      real (kind=Rkind), parameter :: blaTSdir = 0.025079167_Rkind
+      real (kind=Rkind), parameter :: deepth   = 2000_Rkind
+ 
+      real (kind=Rkind), parameter :: kf1 = 3733.5_Rkind
+      real (kind=Rkind), parameter :: d2  = 54.633_Rkind
+      real (kind=Rkind), parameter :: d3  = 3.8008_Rkind
+      real (kind=Rkind), parameter :: kf4 = 1097.19_Rkind
 
-       mat_V(1,2) = e12
-       mat_V(2,1) = e12
+      real (kind=Rkind), parameter :: c1 = 437.068_Rkind
+      real (kind=Rkind), parameter :: c2 = 16.7317_Rkind
+      real (kind=Rkind), parameter :: c3 = 7.35468_Rkind
+      real (kind=Rkind), parameter :: c4 = 88.517_Rkind
+      real (kind=Rkind), parameter :: c5 = 5.95221_Rkind
 
-       !write(6,*) 'mat_V',mat_V
+      real (kind=Rkind), parameter :: h1 = 155.749_Rkind
+
+      real (kind=Rkind), parameter :: k1 = 24.0358_Rkind
+      
+
+!-----------------support functions--------------------------------!
+
+        d1 = SQRT(kf1/(2_Rkind * deepth))
+        d4 = SQRT(kf4/(2_Rkind * deepth))
+
+        BLA  = Qop(1) * get_Conv_au_TO_unit('L','Angs')
+        Tors = Qop(2)
+        HOOP = Qop(3) + 2_Rkind * Pi
+
+       MorseBLAP = deepth * (1_Rkind - EXP(-d1 * (BLA-blaTSdir)))**2
+       Morsemin  = deepth * (1_Rkind - EXP(-d4 * (BLA-blamin  )))**2
+
+       Overlap = Tors - HOOP/2_Rkind
+!---------------------diabatic states-----------------------------!
+
+       Hdir2D = SIN(Overlap)**2 * (MorseBLAP + d2) +
+     *     d3 * COS(Overlap / 2_Rkind)**2 + Morsemin * Cos(Overlap)**2
+       Hct2D = (1_Rkind + c5 * SIN(Overlap)**2) *
+     *     (c1 * BLA**2 + c2 * BLA + c3) + c4 * COS(Overlap)**2
+
+       mat_V(1,1) = Hdir2D + h1 * Sin(HOOP/4_Rkind)**2
+       mat_V(2,2) = Hct2D  + h1 * Sin(HOOP/4_Rkind)**2
+!------------------------coupling elements------------------------!
+
+       mat_V(1,2) = k1 * SIN((Overlap) * 2_Rkind)
+       mat_V(2,1) = mat_V(1,2)
+!---------------rescale in atomic units---------------------------!
+
+       mat_V(:,:) = mat_V(:,:) / 627.509_Rkind
 
       END SUBROUTINE Mat_pot0
+      
 C================================================================
 C    fonction im_pot0(x) imaginary part of pot0
 C================================================================
