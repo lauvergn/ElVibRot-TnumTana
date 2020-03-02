@@ -1,8 +1,8 @@
 #=================================================================================
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-#F90 = mpifort
- F90 = gfortran
+F90 = mpifort
+# F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
 
@@ -11,10 +11,10 @@ MPICORE = gfortran
 
 ## debug_make=0 to enable parallel make
 ## debug_make=1 for fast debug make, no parallel
-debug_make=1
+debug_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -27,7 +27,7 @@ endif
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 0
+ARPACK = 1
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -1331,7 +1331,7 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_main_Optimization.o  $(OBJ)/sub_Smolyak_DInd.o           \
                    $(OBJ)/sub_Smolyak_ba.o $(OBJ)/sub_module_cart.o                    \
                    $(OBJ)/sub_Smolyak_RDP.o $(OBJ)/sub_Smolyak_test.o                  \
-                   $(OBJ)/$(VIBMAIN).o
+                   $(OBJ)/$(VIBMAIN).o $(OBJ)/QMRPACK_lib.o $(OBJ)/EVR_Module.o
 $(lib_dep_mod_system):$(OBJ)/sub_module_system.o
 
 #mod_Coord_KEO    
@@ -1530,7 +1530,8 @@ lib_dep_mod_Op=$(OBJ)/sub_HST_harm.o $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_ha
                $(OBJ)/sub_CRP.o $(OBJ)/sub_VibRot.o $(OBJ)/sub_analyse.o               \
                $(OBJ)/sub_Auto_Basis.o $(OBJ)/sub_intensity.o                          \
                $(OBJ)/sub_quadra_SparseBasis.o $(OBJ)/sub_module_SimulatedAnnealing.o  \
-               $(OBJ)/sub_module_BFGS.o $(OBJ)/ini_data.o $(OBJ)/sub_namelist.o 
+               $(OBJ)/sub_module_BFGS.o $(OBJ)/ini_data.o $(OBJ)/sub_namelist.o        \
+               $(OBJ)/QMRPACK_lib.o
 $(lib_dep_mod_Op):$(OBJ)/sub_module_Op.o
 
 #mod_psi_io 
@@ -1689,6 +1690,14 @@ $(lib_dep_mod_Davidson)=$(OBJ)/sub_module_Davidson.o
 #mod_param_RD
 lib_dep_mod_param_RD=$(OBJ)/sub_module_basis_set_alloc.o
 $(lib_dep_mod_param_RD)=$(OBJ)/sub_module_param_RD.o
+
+#mod_EVR
+lib_dep_mod_EVR=$(OBJ)/EVR_driver.o
+$(lib_dep_mod_EVR)=$(OBJ)/EVR_Module.o
+
+#mod_CRP
+lib_dep_mod_CRP=$(OBJ)/sub_module_analysis.o $(OBJ)/versionEVR-T.o 
+$(lib_dep_mod_CRP)=$(OBJ)/sub_CRP.o
 
 endif
 #=======================================================================================
