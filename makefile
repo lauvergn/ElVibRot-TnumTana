@@ -1,8 +1,8 @@
 #=================================================================================
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-F90 = mpifort
-# F90 = gfortran
+# F90 = mpifort
+ F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
 
@@ -14,7 +14,7 @@ MPICORE = gfortran
 debug_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -27,7 +27,7 @@ endif
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 1
+ARPACK = 0
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -1341,9 +1341,9 @@ lib_dep_mod_Coord_KEO=$(OBJ)/sub_Auto_Basis.o $(OBJ)/sub_PrimOp_def.o           
                       $(OBJ)/sub_main_nDfit.o
 $(lib_dep_mod_Coord_KEO):$(OBJ)/sub_module_Coord_KEO.o
 
-#mod_Constant  
+#mod_Constant
 lib_dep_mod_Constant=$(OBJ)/sub_analyse.o $(OBJ)/sub_freq.o $(OBJ)/sub_diago_H.o       \
-                     $(OBJ)/sub_module_analysis.o
+                     $(OBJ)/sub_module_analysis.o $(OBJ)/EVR_Module.o
 $(lib_dep_mod_Constant):$(OBJ)/sub_module_constant.o
 
 #mod_NumParameters
@@ -1691,12 +1691,12 @@ $(lib_dep_mod_Davidson)=$(OBJ)/sub_module_Davidson.o
 lib_dep_mod_param_RD=$(OBJ)/sub_module_basis_set_alloc.o
 $(lib_dep_mod_param_RD)=$(OBJ)/sub_module_param_RD.o
 
-#mod_EVR
+#mod_EVR 
 lib_dep_mod_EVR=$(OBJ)/EVR_driver.o
 $(lib_dep_mod_EVR)=$(OBJ)/EVR_Module.o
 
 #mod_CRP
-lib_dep_mod_CRP=$(OBJ)/sub_module_analysis.o $(OBJ)/versionEVR-T.o 
+lib_dep_mod_CRP=$(OBJ)/versionEVR-T.o $(OBJ)/sub_module_analysis.o
 $(lib_dep_mod_CRP)=$(OBJ)/sub_CRP.o
 
 endif
