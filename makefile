@@ -11,7 +11,7 @@ MPICORE = gfortran
 
 ## debug_make=0 to enable parallel make
 ## debug_make=1 for fast debug make, no parallel
-debug_make=0
+debug_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 0
@@ -1334,6 +1334,14 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/$(VIBMAIN).o $(OBJ)/QMRPACK_lib.o $(OBJ)/EVR_Module.o
 $(lib_dep_mod_system):$(OBJ)/sub_module_system.o
 
+#mod_EVR 
+lib_dep_mod_EVR=$(OBJ)/EVR_driver.o
+$(lib_dep_mod_EVR)=$(OBJ)/EVR_Module.o
+
+#mod_CRP
+lib_dep_mod_CRP=$(OBJ)/versionEVR-T.o $(OBJ)/sub_module_analysis.o $(OBJ)/EVR_driver.o
+$(lib_dep_mod_CRP)=$(OBJ)/sub_CRP.o
+
 #mod_Coord_KEO    
 lib_dep_mod_Coord_KEO=$(OBJ)/sub_Auto_Basis.o $(OBJ)/sub_PrimOp_def.o                  \
                       $(OBJ)/sub_module_basis.o $(OBJ)/sub_quadra_SparseBasis2n.o      \
@@ -1343,7 +1351,8 @@ $(lib_dep_mod_Coord_KEO):$(OBJ)/sub_module_Coord_KEO.o
 
 #mod_Constant
 lib_dep_mod_Constant=$(OBJ)/sub_analyse.o $(OBJ)/sub_freq.o $(OBJ)/sub_diago_H.o       \
-                     $(OBJ)/sub_module_analysis.o $(OBJ)/EVR_Module.o
+                     $(OBJ)/sub_module_analysis.o $(OBJ)/EVR_Module.o                  \
+                     $(OBJ)/sub_CRP.o
 $(lib_dep_mod_Constant):$(OBJ)/sub_module_constant.o
 
 #mod_NumParameters
@@ -1690,14 +1699,6 @@ $(lib_dep_mod_Davidson)=$(OBJ)/sub_module_Davidson.o
 #mod_param_RD
 lib_dep_mod_param_RD=$(OBJ)/sub_module_basis_set_alloc.o
 $(lib_dep_mod_param_RD)=$(OBJ)/sub_module_param_RD.o
-
-#mod_EVR 
-lib_dep_mod_EVR=$(OBJ)/EVR_driver.o
-$(lib_dep_mod_EVR)=$(OBJ)/EVR_Module.o
-
-#mod_CRP
-lib_dep_mod_CRP=$(OBJ)/versionEVR-T.o $(OBJ)/sub_module_analysis.o
-$(lib_dep_mod_CRP)=$(OBJ)/sub_CRP.o
 
 endif
 #=======================================================================================

@@ -123,6 +123,7 @@
 !=======================================================================================
 ! MPI version, Symmetrization (with abelian group) of psi in BasisRep
 !=======================================================================================
+#if(run_MPI)
 SUBROUTINE Set_symab_OF_psiBasisRep_MPI(psi,symab,changes)
   USE mod_system
   USE mod_psi_set_alloc
@@ -195,6 +196,7 @@ SUBROUTINE Set_symab_OF_psiBasisRep_MPI(psi,symab,changes)
   ENDIF
 
 END SUBROUTINE Set_symab_OF_psiBasisRep_MPI
+#endif
 !=======================================================================================
 
 !================================================================
@@ -875,6 +877,7 @@ END SUBROUTINE Overlap_psi_psi_MPI
 !> subroutine for distribute psi(ndim1:ndim2) to different threads 
 !> the distribution is depends on the length of vec (RvecB, CvecB, RvecG, or CvecG)
 !=======================================================================================
+#if(run_MPI)
 SUBROUTINE distribute_psi_MPI(psi,ndim1,ndim2,With_Grid)
   USE mod_system
   USE mod_psi_set_alloc
@@ -973,6 +976,7 @@ SUBROUTINE distribute_psi_MPI(psi,ndim1,ndim2,With_Grid)
   ENDIF ! for MPI_id/=0  
 
 END SUBROUTINE distribute_psi_MPI
+#endif
 !=======================================================================================
 
 !=======================================================================================
@@ -980,6 +984,7 @@ END SUBROUTINE distribute_psi_MPI
 !> the distribution is depends on the length of vec (RvecB, CvecB, RvecG, or CvecG)
 !> vector is packed on master and unpacked on theards to reduce comm. time.
 !=======================================================================================
+#if(run_MPI)
 SUBROUTINE distribute_psi_pack_MPI(psi,ndim1,ndim2,With_Grid)
   USE mod_system
   USE mod_psi_set_alloc
@@ -1128,6 +1133,7 @@ SUBROUTINE distribute_psi_pack_MPI(psi,ndim1,ndim2,With_Grid)
   ENDIF ! for MPI_id/=0  
 
 END SUBROUTINE distribute_psi_pack_MPI
+#endif
 !=======================================================================================
 
 !=======================================================================================
@@ -1139,6 +1145,7 @@ END SUBROUTINE distribute_psi_pack_MPI
 !>   NOTE: works according to the vectors stored on different threads 
 !>         limited by bound1_MPI and bound2_MPI, see "Overlap_psipsi_MPI3"
 !=======================================================================================
+#if(run_MPI)
 SUBROUTINE calculate_overlap_MPI(psi,ndim1,ndim2,With_Grid,Hpsi,S_overlap,H_overlap)
   USE mod_system
   USE mod_psi_set_alloc
@@ -1220,8 +1227,10 @@ SUBROUTINE calculate_overlap_MPI(psi,ndim1,ndim2,With_Grid,Hpsi,S_overlap,H_over
   ENDIF
 
 END SUBROUTINE calculate_overlap_MPI
+#endif
 !=======================================================================================
 
+#if(run_MPI)
 !=======================================================================================
 ! calculate overlap for <psi(n+1)|psi(i)> or/and <Hpsi(n+1)|psi(i)> i=1...n
 !=======================================================================================
@@ -1283,6 +1292,7 @@ SUBROUTINE calculate_overlap1D_MPI(psi,ndim,With_Grid,Hpsi,S_overlap1D,H_overlap
 
 END SUBROUTINE calculate_overlap1D_MPI
 !=======================================================================================
+#endif
 
 !=======================================================================================
 !> subroutine for the calculation of Overlap_psi1_psi2 with MPI 

@@ -9,12 +9,15 @@
   - improve MPI for davidson, add function
     distribute_psi_pack_MPI
   
-  - a bug correctted in distribute_psi_MPI
+  - a bug corrected in distribute_psi_MPI
   
-  - a bug in mod_CRP in the merge new version.
+  - a bug in mod_CRP in the merge new version
+  
+  - the out-of-date subroutines will be cleaned in the next version 
+    once the code confirmed stable
     
 > MPI_Vm1.5 (branch: MPI_working)
-  - improve code structure and easy reading 
+  - improve the code structure, shorten code ...
     distribute_psi_MPI
     calculate_overlap_MPI
     interface increase_martix 

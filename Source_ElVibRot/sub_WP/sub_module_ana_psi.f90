@@ -34,7 +34,10 @@ MODULE mod_ana_psi
 
   PRIVATE
   PUBLIC :: sub_analyze_tab_psi,sub_analyze_psi,Channel_weight
-  PUBLIC :: norm2_psi,renorm_psi_With_norm2,renorm_psi,norm_psi_mpi
+  PUBLIC :: norm2_psi,renorm_psi_With_norm2,renorm_psi
+#if(run_MPI)
+  PUBLIC :: norm_psi_MPI
+#endif
 
 CONTAINS
 

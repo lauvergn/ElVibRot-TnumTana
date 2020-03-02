@@ -2245,6 +2245,7 @@ END SUBROUTINE sub_NewVec_Davidson
 !> Schmidt process done with MPI
 !> 
 !=======================================================================================
+#if(run_MPI)
 SUBROUTINE Schmidt_process_MPI(S_Overlap1D,psi,ndim,isym,With_Grid) 
   USE mod_system
   USE mod_psi_set_alloc
@@ -2324,6 +2325,7 @@ SUBROUTINE Schmidt_process_MPI(S_Overlap1D,psi,ndim,isym,With_Grid)
   ENDDO ! do Schmidt process twice
   
 END SUBROUTINE Schmidt_process_MPI
+#endif
 !=======================================================================================
 
  SUBROUTINE Sort_VecToBeIncluded_Davidson(Ene,Vec,VecToBeIncluded)
