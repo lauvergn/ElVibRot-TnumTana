@@ -9,8 +9,9 @@
   - improve MPI for davidson, add function
     distribute_psi_pack_MPI
   
-  - a bug correction in distribute_psi_MPI
+  - a bug correctted in distribute_psi_MPI
   
+  - a bug in mod_CRP in the merge new version.
     
 > MPI_Vm1.5 (branch: MPI_working)
   - improve code structure and easy reading 
