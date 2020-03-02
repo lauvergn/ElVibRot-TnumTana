@@ -11,10 +11,38 @@
 MODULE mod_MPI_Aid
 #if(run_MPI)
   USE mod_MPI
+  USE mod_system
   IMPLICIT NONE
   
+  !-------------------------------------------------------------------------------------
+  !> varilables for convenience, temprary here
+  Integer                        :: i1_loop          !< indexs for loop
+  Integer                        :: i2_loop
+  Integer                        :: i3_loop
+  Integer                        :: i4_loop
+  Integer                        :: i5_loop
+  Integer                        :: i6_loop
+  Integer                        :: i1_length        !< boundary for looop
+  Integer                        :: i2_length
+  Integer                        :: i3_length
+  Integer                        :: i4_length
+  Integer                        :: i5_length
+  Integer                        :: i6_length
+
+  Complex(kind=Rkind)            :: temp_cplx        !< temparay Complex
+  Complex(kind=Rkind)            :: temp_cplx1
+  Complex(kind=Rkind)            :: temp_cplx2
+  Real(kind=Rkind)               :: temp_real        !< temparay real
+  Real(kind=Rkind)               :: temp_real1
+  Real(kind=Rkind)               :: temp_real2
+  Integer                        :: temp_int         !< temparay integer 
+  Integer                        :: temp_int1
+  Integer                        :: temp_int2
+  
+  !-------------------------------------------------------------------------------------
   INTEGER                       :: memory_RSS   !< memory usage
   
+  !-------------------------------------------------------------------------------------
   TYPE multi_array
     Integer,allocatable :: array(:)
   END TYPE multi_array
@@ -22,6 +50,13 @@ MODULE mod_MPI_Aid
   TYPE multi_array4
     Integer*4,allocatable :: array(:)
   END TYPE multi_array4  
+  
+  !> subroutine for increase matrix size. the origin value is kept. 
+  !> the increase way is decided by the variables presented
+  INTERFACE increase_martix
+    module procedure increase_martix_int
+    module procedure increase_martix_real
+  END INTERFACE
   
   INTERFACE allocate_array  
     module procedure allocate_array_int4_length4
@@ -135,6 +170,79 @@ MODULE mod_MPI_Aid
       
       IF(MPI_id==0) write(out_channel,*) '============================================================'
     ENDSUBROUTINE
+!---------------------------------------------------------------------------------------
+
+!---------------------------------------------------------------------------------------
+!> interface: increase_martix    
+!---------------------------------------------------------------------------------------
+    SUBROUTINE increase_martix_int(matrix,name_sub,ndim0,ndim,double_size)
+      USE mod_system
+      IMPLICIT NONE
+      
+      Integer,allocatable,intent(inout)            :: matrix(:,:)
+      Integer,optional,intent(in)                  :: ndim0
+      Integer,optional,intent(in)                  :: ndim
+      Logical,optional,intent(in)                  :: double_size
+      Character(len=*),intent(in)                  :: name_sub
+      
+      Integer,allocatable                          :: matrix_temp(:,:)
+      Integer                                      :: new_dim
+
+      IF(.NOT. allocated(matrix)) THEN
+        CALL alloc_NParray(matrix,(/ ndim,ndim /),"increase matrix",name_sub)
+      ELSE
+        IF(present(ndim0)) THEN
+          IF(present(ndim)) THEN
+            new_dim=ndim
+          ELSE IF(present(double_size)) THEN
+            new_dim=ndim0*2
+          ELSE
+            STOP 'error in the variables for increase matrix size.'
+          ENDIF
+          
+          CALL alloc_NParray(matrix_temp,(/ ndim,ndim /),"increase matrix",name_sub)
+          matrix_temp(1:ndim0,1:ndim0)=matrix(1:ndim0,1:ndim0)
+          CALL move_alloc(matrix_temp,matrix) ! matrix_temp is dellocated
+        ELSE
+          STOP 'error in the variables for increase matrix size.'
+        ENDIF
+      ENDIF
+    END SUBROUTINE increase_martix_int
+    
+    SUBROUTINE increase_martix_real(matrix,name_sub,ndim0,ndim,double_size)
+      USE mod_system
+      IMPLICIT NONE
+      
+      Real(kind=Rkind),allocatable,intent(inout)   :: matrix(:,:)
+      Integer,optional,            intent(in)      :: ndim0
+      Integer,optional,            intent(in)      :: ndim
+      Logical,optional,            intent(in)      :: double_size
+      Character(len=*),            intent(in)      :: name_sub
+      
+      Real(kind=Rkind),allocatable                 :: matrix_temp(:,:)
+      Integer                                      :: new_dim
+
+      IF(.NOT. allocated(matrix)) THEN
+        CALL alloc_NParray(matrix,(/ ndim,ndim /),"increase matrix",name_sub)
+      ELSE
+        IF(present(ndim0)) THEN
+          IF(present(ndim)) THEN
+            IF(ndim0>=ndim) write(*,*) 'error increase matrix, ndim<=ndim0'
+            new_dim=ndim
+          ELSE IF(present(double_size)) THEN
+            new_dim=ndim0*2
+          ELSE
+            STOP 'error in the variables for increase matrix size.'
+          ENDIF
+          
+          CALL alloc_NParray(matrix_temp,(/ ndim,ndim /),"increase matrix",name_sub)
+          matrix_temp(1:ndim0,1:ndim0)=matrix(1:ndim0,1:ndim0)
+          CALL move_alloc(matrix_temp,matrix) ! matrix_temp is dellocated
+        ELSE
+          STOP 'error in the variables for increase matrix size.'
+        ENDIF
+      ENDIF
+    END SUBROUTINE increase_martix_real
 !---------------------------------------------------------------------------------------
 
 !---------------------------------------------------------------------------------------

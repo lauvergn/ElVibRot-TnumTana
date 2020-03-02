@@ -119,6 +119,84 @@
       END SUBROUTINE Set_symab_OF_psiBasisRep
 !=======================================================================================
 
+
+!=======================================================================================
+! MPI version, Symmetrization (with abelian group) of psi in BasisRep
+!=======================================================================================
+SUBROUTINE Set_symab_OF_psiBasisRep_MPI(psi,symab,changes)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_MPI
+  IMPLICIT NONE
+
+  TYPE(param_psi), intent(inout)      :: psi
+  Integer,optional,intent(in)         :: symab
+  Logical,optional,intent(inout)      :: changes
+
+  Integer                             :: loc_symab
+  Integer                             :: ib
+  Integer                             :: Get_symabOFSymAbelianOFBasis_AT_ib ! function
+  Logical                             :: broadcast
+
+  broadcast=.FALSE.
+  changes=.FALSE.
+  
+  IF(psi%BasisRep) THEN
+    IF(psi%nb_bi==1 .AND. psi%nb_be==1) THEN
+      IF(present(symab)) THEN
+        loc_symab=symab
+      ELSE
+        broadcast=.TRUE.
+        ! find the symmtry (symab of the largest coef)
+        IF(MPI_id==0) THEN
+          IF(psi%cplx) THEN
+            ib=maxloc(abs(psi%CvecB),dim=1)
+          ELSE
+            ib=maxloc(abs(psi%RvecB),dim=1)
+          ENDIF
+          loc_symab=Get_symabOFSymAbelianOFBasis_AT_ib(psi%BasisnD,ib)
+        ENDIF ! for MPI_id==0
+      ENDIF
+    ELSE
+      loc_symab=-1
+    ENDIF
+    psi%symab=loc_symab
+  ELSE
+    psi%symab=-1
+  ENDIF
+
+  IF(broadcast) CALL MPI_Bcast(psi%symab,size1_MPI,MPI_Int_fortran,root_MPI,           &
+                               MPI_COMM_WORLD,MPI_err)
+
+  IF(psi%symab >= 0 .AND. psi%symab <= 7) THEN
+    nb_per_MPI=psi%nb_tot/MPI_np
+    nb_rem_MPI=mod(psi%nb_tot,MPI_np) 
+    bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
+    bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
+    IF(MPI_id==0) THEN
+      bound1_MPI=1
+      bound2_MPI=psi%nb_tot
+    ENDIF
+    IF(psi%cplx .AND. allocated(psi%CvecB)) THEN      
+      DO ib=bound1_MPI,bound2_MPI
+        IF(psi%symab/=Get_symabOFSymAbelianOFBasis_AT_ib(psi%BasisnD,ib)) THEN
+          psi%CvecB(ib)=CZERO
+          changes=.TRUE.
+        ENDIF
+      ENDDO
+    ELSE IF(.NOT. psi%cplx .AND. allocated(psi%RvecB)) THEN
+      DO ib=bound1_MPI,bound2_MPI
+        IF(psi%symab/=Get_symabOFSymAbelianOFBasis_AT_ib(psi%BasisnD,ib)) THEN
+          psi%RvecB(ib)=ZERO
+          changes=.TRUE.
+        ENDIF
+      ENDDO
+    ENDIF
+  ENDIF
+
+END SUBROUTINE Set_symab_OF_psiBasisRep_MPI
+!=======================================================================================
+
 !================================================================
 !
 !     Overlap : <psi1 I psi2>
@@ -431,6 +509,7 @@ END SUBROUTINE Overlap_psi_Hpsi_matrix_MPI2
 
 !=======================================================================================
 !> Subroutine for the calculation of matrix H_overlap(i,j) for <psi(i)|Hpsi(j)> 
+!>                                      and S_overlap(i,j) for <psi(i)| psi(j)> 
 !> MPI V3
 
 !> overlap is cut into submatrix for MPI parallel   
@@ -440,7 +519,7 @@ END SUBROUTINE Overlap_psi_Hpsi_matrix_MPI2
 !> of Residual g in MakeResidual_Davidson_MPI2
 !=======================================================================================
 #if(run_MPI)
-SUBROUTINE Overlap_psi_Hpsi_matrix_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
+SUBROUTINE Overlap_HS_matrix_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
   USE mod_system
   USE mod_psi_set_alloc
   USE mod_MPI
@@ -459,70 +538,793 @@ SUBROUTINE Overlap_psi_Hpsi_matrix_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,
   Real(kind=Rkind),allocatable                :: H0_overlap(:,:)
   Real(kind=Rkind),allocatable                :: S0_overlap(:,:)
   
-!  Real(kind=Rkind),allocatable                :: H_overlapp(:,:)
-!  Real(kind=Rkind),allocatable                :: S_overlapp(:,:)
+  Real(kind=Rkind),allocatable                :: H_overlapp(:,:)
+  Real(kind=Rkind),allocatable                :: S_overlapp(:,:)
 
   Character(len=*),parameter                  :: name_sub='Overlap_psi_Hpsi_matrix_MPI'
   Complex(kind=Rkind)                         :: Overlap
   Integer                                     :: ii
   Integer                                     :: jj
 
-  IF(allocated(H_overlap)) THEN
+  
+  CALL increase_martix(H_overlap,name_sub,ndim0,ndim)
+  CALL increase_martix(S_overlap,name_sub,ndim0,ndim)
+  
+!  IF(allocated(H_overlap)) THEN
+!!    CALL alloc_NParray(H0_overlap,(/ ndim,ndim /),"H0",name_sub)
+!!    H0_overlap(1:ndim0,1:ndim0)=H_overlap(1:ndim0,1:ndim0)
+!!    deallocate(H_overlap)
+!!    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H0",name_sub)
+!!    H_overlap(1:ndim0,1:ndim0)=H0_overlap(1:ndim0,1:ndim0)
 !    CALL alloc_NParray(H0_overlap,(/ ndim,ndim /),"H0",name_sub)
 !    H0_overlap(1:ndim0,1:ndim0)=H_overlap(1:ndim0,1:ndim0)
-!    deallocate(H_overlap)
-!    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H0",name_sub)
-!    H_overlap(1:ndim0,1:ndim0)=H0_overlap(1:ndim0,1:ndim0)
-    CALL alloc_NParray(H0_overlap,(/ ndim,ndim /),"H0",name_sub)
-    H0_overlap(1:ndim0,1:ndim0)=H_overlap(1:ndim0,1:ndim0)
-    CALL move_alloc(H0_overlap,H_overlap) ! moves the allocation from H0_overlap to ...
-  ELSE
-    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H",name_sub)
-  ENDIF
-  
-  IF(allocated(S_overlap)) THEN
+!    CALL move_alloc(H0_overlap,H_overlap) ! moves the allocation from H0_overlap to ...
+!  ELSE
+!    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H",name_sub)
+!  ENDIF
+!  
+!  IF(allocated(S_overlap)) THEN
+!!    CALL alloc_NParray(S0_overlap,(/ ndim,ndim /),"S0",name_sub)
+!!    S0_overlap(1:ndim0,1:ndim0)=S_overlap(1:ndim0,1:ndim0)
+!!    deallocate(S_overlap)
+!!    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"S",name_sub)
+!!    S_overlap(1:ndim0,1:ndim0)=S0_overlap(1:ndim0,1:ndim0)
 !    CALL alloc_NParray(S0_overlap,(/ ndim,ndim /),"S0",name_sub)
 !    S0_overlap(1:ndim0,1:ndim0)=S_overlap(1:ndim0,1:ndim0)
-!    deallocate(S_overlap)
-!    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"S",name_sub)
-!    S_overlap(1:ndim0,1:ndim0)=S0_overlap(1:ndim0,1:ndim0)
-    CALL alloc_NParray(S0_overlap,(/ ndim,ndim /),"S0",name_sub)
-    S0_overlap(1:ndim0,1:ndim0)=S_overlap(1:ndim0,1:ndim0)
-    CALL move_alloc(S0_overlap,S_overlap) ! moves the allocation from S0_overlap to ...
-  ELSE
-    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"H",name_sub)
-  ENDIF
+!    CALL move_alloc(S0_overlap,S_overlap) ! moves the allocation from S0_overlap to ...
+!  ELSE
+!    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"H",name_sub)
+!  ENDIF
+
+  !-------------------------------------------------------------------------------------
+  ! calculate on master without MPI
+  CALL alloc_NParray(H_overlapp,(/ ndim,ndim /),"H",name_sub)
+  CALL alloc_NParray(S_overlapp,(/ ndim,ndim /),"S",name_sub)
+  IF(MPI_id==0) THEN
+    DO ii=1,ndim
+      DO jj=1,ndim
+        CALL Overlap_psi1_psi2(Overlap,psi(jj),Hpsi(ii),With_Grid=With_Grid)
+        H_overlapp(jj,ii)=real(Overlap,kind=Rkind)
+
+        CALL Overlap_psi1_psi2(Overlap,psi(jj), psi(ii),With_Grid=With_Grid)
+        S_overlapp(jj,ii)=real(Overlap,kind=Rkind)
+
+      ENDDO
+    ENDDO
+  ENDIF ! for MPI_id==0
   
+  CALL MPI_Bcast_matrix(H_overlapp,1,ndim,1,ndim,root_MPI)
+  CALL MPI_Bcast_matrix(S_overlapp,1,ndim,1,ndim,root_MPI)
+
+  !-------------------------------------------------------------------------------------
+  ! calculate with MPI
+  CALL Overlap_psi1_psi2_MPI5(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
+  
+!  write(*,*) 'overlapp check',MAXVAL(ABS(H_overlapp-H_overlap)),                       &
+!                              MAXVAL(ABS(S_overlapp-S_overlap)),                       &
+!                              MAXVAL(ABS(H_overlap)),MAXVAL(ABS(S_overlap)),           &
+!                              MAXVAL(ABS(H_overlapp)),MAXVAL(ABS(S_overlapp))
+!  Stop
+
+END SUBROUTINE Overlap_HS_matrix_MPI3
+#endif
+!=======================================================================================
+
+!=======================================================================================
+!> MPI Subroutine for the calculation of matrix H_overlap(i,j) for <psi(i)|Hpsi(j)> 
+
+!> overlap is cut into submatrix for MPI parallel   
+!> note, this requre new Overlap_psipsi_MPI3 routine
+!
+!> the submatrix of psi have been distribed in sub_NewVec_Davidson
+!> Hpsi are distribed and keeped also for the calculation
+!> of Residual g in MakeResidual_Davidson_MPI3
+!=======================================================================================
+#if(run_MPI)
+SUBROUTINE Overlap_H_matrix_MPI4(H_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_MPI
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+  
+  TYPE(param_psi), intent(inout)              :: psi(:)  !< inout only non-root threats
+  TYPE(param_psi), intent(inout)              :: Hpsi(:) !< inout only non-root threats
+  Logical,optional,intent(in)                 :: With_Grid
+  Integer,         intent(in)                 :: ndim0
+  Integer,         intent(in)                 :: ndim
+  
+  Real(kind=Rkind),allocatable,intent(inout)  :: H_overlap(:,:)
+  Real(kind=Rkind),allocatable                :: H0_overlap(:,:)
+!  Real(kind=Rkind),allocatable                :: H_overlapp(:,:)
+
+  Character(len=*),parameter                  :: name_sub='Overlap_H_matrix_MPI4'
+  Complex(kind=Rkind)                         :: Overlap
+  Integer                                     :: ii
+  Integer                                     :: jj
+
+
+  CALL increase_martix(H_overlap,name_sub,ndim0,ndim)
+  
+!  IF(allocated(H_overlap)) THEN
+!!    CALL alloc_NParray(H0_overlap,(/ ndim,ndim /),"H0",name_sub)
+!!    H0_overlap(1:ndim0,1:ndim0)=H_overlap(1:ndim0,1:ndim0)
+!!    deallocate(H_overlap)
+!!    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H0",name_sub)
+!!    H_overlap(1:ndim0,1:ndim0)=H0_overlap(1:ndim0,1:ndim0)
+!    CALL alloc_NParray(H0_overlap,(/ ndim,ndim /),"H0",name_sub)
+!    H0_overlap(1:ndim0,1:ndim0)=H_overlap(1:ndim0,1:ndim0)
+!    CALL move_alloc(H0_overlap,H_overlap) ! moves the allocation from H0_overlap to ...
+!  ELSE
+!    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H",name_sub)
+!  ENDIF
+
   !-------------------------------------------------------------------------------------
   ! calculate on master without MPI
 !  CALL alloc_NParray(H_overlapp,(/ ndim,ndim /),"H",name_sub)
-!  CALL alloc_NParray(S_overlapp,(/ ndim,ndim /),"S",name_sub)
 !  IF(MPI_id==0) THEN
 !    DO ii=1,ndim
 !      DO jj=1,ndim
 !        CALL Overlap_psi1_psi2(Overlap,psi(jj),Hpsi(ii),With_Grid=With_Grid)
 !        H_overlapp(jj,ii)=real(Overlap,kind=Rkind)
-!
-!        CALL Overlap_psi1_psi2(Overlap,psi(jj), psi(ii),With_Grid=With_Grid)
-!        S_overlapp(jj,ii)=real(Overlap,kind=Rkind)
-!
 !      ENDDO
 !    ENDDO
 !  ENDIF ! for MPI_id==0
 !  
 !  CALL MPI_Bcast_matrix(H_overlapp,1,ndim,1,ndim,root_MPI)
+
+  !-------------------------------------------------------------------------------------
+  ! calculate with MPI
+  CALL Overlap_psi_Hpsi_MPI(H_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
+  
+!  write(*,*) 'H_overlapp check',MAXVAL(ABS(H_overlapp-H_overlap)),    &
+!                                MAXVAL(ABS(H_overlap)),MAXVAL(ABS(H_overlapp))
+
+END SUBROUTINE Overlap_H_matrix_MPI4
+#endif
+!=======================================================================================
+
+!=======================================================================================
+!> MPI Subroutine for the calculation of matrix S_overlap(i,j) for <psi(i)|psi(j)> 
+
+!> overlap is cut into submatrix for MPI parallel   
+!> note, this requre new Overlap_psipsi_MPI3 routine
+!
+!> psi are distribed and keeped also for the calculation
+!> of H_overlap in sub_MakeHPsi_Davidson 
+!> and Residual g in MakeResidual_Davidson_MPI3
+!=======================================================================================
+#if(run_MPI)
+SUBROUTINE Overlap_S_matrix_MPI4(S_overlap,psi,ndim0,ndim,With_Grid)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_MPI
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+  
+  TYPE(param_psi), intent(inout)              :: psi(:)  !< inout only non-root threats
+  Logical,optional,intent(in)                 :: With_Grid
+  Integer,         intent(in)                 :: ndim0
+  Integer,         intent(in)                 :: ndim
+  
+  Real(kind=Rkind),allocatable,intent(inout)  :: S_overlap(:,:)
+  Real(kind=Rkind),allocatable                :: S0_overlap(:,:)
+  !Real(kind=Rkind),allocatable                :: S_overlapp(:,:)
+
+  Character(len=*),parameter                  :: name_sub='Overlap_S_matrix_MPI4'
+  Complex(kind=Rkind)                         :: Overlap
+  Integer                                     :: ii
+  Integer                                     :: jj
+
+
+  CALL increase_martix(S_overlap,name_sub,ndim0,ndim)
+  
+!  IF(allocated(S_overlap)) THEN
+!!    CALL alloc_NParray(S0_overlap,(/ ndim,ndim /),"S0",name_sub)
+!!    S0_overlap(1:ndim0,1:ndim0)=S_overlap(1:ndim0,1:ndim0)
+!!    deallocate(S_overlap)
+!!    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"S",name_sub)
+!!    S_overlap(1:ndim0,1:ndim0)=S0_overlap(1:ndim0,1:ndim0)
+!    CALL alloc_NParray(S0_overlap,(/ ndim,ndim /),"S0",name_sub)
+!    S0_overlap(1:ndim0,1:ndim0)=S_overlap(1:ndim0,1:ndim0)
+!    CALL move_alloc(S0_overlap,S_overlap) ! moves the allocation from S0_overlap to ...
+!  ELSE
+!    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"H",name_sub)
+!  ENDIF
+  
+  !-------------------------------------------------------------------------------------
+  ! calculate on master without MPI
+!  CALL alloc_NParray(S_overlapp,(/ ndim,ndim /),"S",name_sub)
+!  IF(MPI_id==0) THEN
+!    DO ii=1,ndim
+!      DO jj=1,ndim
+!        CALL Overlap_psi1_psi2(Overlap,psi(jj), psi(ii),With_Grid=With_Grid)
+!        S_overlapp(jj,ii)=real(Overlap,kind=Rkind)
+!      ENDDO
+!    ENDDO
+!  ENDIF ! for MPI_id==0
+!  
 !  CALL MPI_Bcast_matrix(S_overlapp,1,ndim,1,ndim,root_MPI)
 
   !-------------------------------------------------------------------------------------
   ! calculate with MPI
-  CALL Overlap_psi1_psi2_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
-  
-!  write(*,*) 'H_overlapp check',MAXVAL(ABS(H_overlapp-H_overlap)),    &
-!                                MAXVAL(ABS(S_overlapp-S_overlap)),    &
-!                                MAXVAL(ABS(H_overlap)),MAXVAL(ABS(S_overlap)),  &
-!                                MAXVAL(ABS(H_overlapp)),MAXVAL(ABS(S_overlapp))
+  !CALL Overlap_psi_psi_MPI(S_overlap,psi,ndim0,ndim,With_Grid)
+  ! no distribution  of psi
+  CALL calculate_overlap_MPI(psi,ndim0+1,ndim,With_Grid=With_Grid,S_overlap=S_overlap)
 
-END SUBROUTINE Overlap_psi_Hpsi_matrix_MPI3
+
+!  write(*,*) 'S_overlapp check',MAXVAL(ABS(S_overlapp-S_overlap)),    &
+!                                MAXVAL(ABS(S_overlap)),MAXVAL(ABS(S_overlapp))
+
+END SUBROUTINE Overlap_S_matrix_MPI4
+#endif
+!=======================================================================================
+
+!=======================================================================================
+!> Overlap_S_matrix_MPI without the distribution of psi
+!=======================================================================================
+#if(run_MPI)
+SUBROUTINE Overlap_S0_matrix_MPI4(S_overlap,psi,ndim0,ndim,With_Grid)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_MPI
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+  
+  TYPE(param_psi), intent(inout)              :: psi(:)  !< inout only non-root threats
+  Real(kind=Rkind),allocatable,intent(inout)  :: S_overlap(:,:)
+  Logical,optional,intent(in)                 :: With_Grid
+  Integer,         intent(in)                 :: ndim0
+  Integer,         intent(in)                 :: ndim
+  
+  Character(len=*),parameter                  :: name_sub='Overlap_S_matrix_MPI4'
+  Complex(kind=Rkind)                         :: Overlap
+  Integer                                     :: ii
+  Integer                                     :: jj
+
+
+  CALL increase_martix(S_overlap,name_sub,ndim0,ndim)
+  
+  ! calculate without the distribution of psi
+  CALL calculate_overlap_MPI(psi,ndim0+1,ndim,With_Grid=With_Grid,S_overlap=S_overlap)
+
+END SUBROUTINE Overlap_S0_matrix_MPI4
+#endif
+!=======================================================================================
+
+!=======================================================================================
+!> subroutine for the calculation of Overlap_psi_Hpsi with MPI 
+!> overlap is cut into submatrix for MPI parallel   
+!> note, this requre new Overlap_psi1_psi2 routine
+!
+!> the submatrix of Hpsi are keeped also for the calculation 
+!> of Residual g in MakeResidual_Davidson_MPI2
+!=======================================================================================
+#if(run_MPI)
+SUBROUTINE Overlap_psi_Hpsi_MPI(H_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_MPI
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+  
+  TYPE(param_psi), intent(inout)          :: psi(:)  !< on non-root threads allocated
+  TYPE(param_psi), intent(inout)          :: Hpsi(:) !< on non-root threads allocated
+  Real(kind=Rkind),intent(inout)          :: H_overlap(:,:)
+  Logical,optional,intent(in)             :: With_Grid
+  Integer,         intent(in)             :: ndim0
+  Integer,         intent(in)             :: ndim
+
+  complex(kind=Rkind)                     :: Overlap
+  logical                                 :: With_Grid_loc
+  Integer                                 :: i
+  Integer                                 :: j
+  Logical                                 :: root_jobs
+  
+  With_Grid_loc=.FALSE.
+  IF (present(With_Grid)) With_Grid_loc = With_Grid
+
+  ! only on master: psi%CvecG,psi%RvecG,psi%CvecB,psi%RvecB
+  CALL distribute_psi_pack_MPI(Hpsi,ndim0+1,ndim,With_Grid=With_Grid_loc)
+  CALL calculate_overlap_MPI(psi,ndim0+1,ndim,With_Grid=With_Grid_loc,Hpsi=Hpsi,       &
+                             H_overlap=H_overlap)
+                             
+END SUBROUTINE Overlap_psi_Hpsi_MPI
+#endif
+!=======================================================================================
+
+!=======================================================================================
+!> subroutine for the calculation of S_overlap(Overlap_psi_psi) with MPI 
+!> overlap is cut into submatrix for MPI parallel   
+!> note, this requre new Overlap_psi1_psi2 routine
+!
+!> the submatrix of psi are keeped also for the calculation 
+!> of H_overlap and Residual g in MakeResidual_Davidson_MPI3
+!=======================================================================================
+#if(run_MPI)
+SUBROUTINE Overlap_psi_psi_MPI(S_overlap,psi,ndim0,ndim,With_Grid)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_MPI
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+  
+  TYPE(param_psi), intent(inout)          :: psi(:)  !< on non-root threads allocated
+  Real(kind=Rkind),intent(inout)          :: S_overlap(:,:)
+  Logical,optional,intent(in)             :: With_Grid
+  Integer,         intent(in)             :: ndim0
+  Integer,         intent(in)             :: ndim
+
+  logical                                 :: With_Grid_loc
+  Integer                                 :: i,j
+  Logical                                 :: root_jobs
+  
+  With_Grid_loc=.FALSE.
+  IF(present(With_Grid)) With_Grid_loc=With_Grid
+
+  ! only on master: psi%CvecG,psi%RvecG,psi%CvecB,psi%RvecB
+  CALL distribute_psi_pack_MPI(psi,ndim0+1,ndim,With_Grid=With_Grid_loc)
+  CALL calculate_overlap_MPI(psi,ndim0+1,ndim,With_Grid=With_Grid_loc,                 &
+                             S_overlap=S_overlap)
+                             
+END SUBROUTINE Overlap_psi_psi_MPI
+#endif
+!=======================================================================================
+
+!=======================================================================================
+!> subroutine for distribute psi(ndim1:ndim2) to different threads 
+!> the distribution is depends on the length of vec (RvecB, CvecB, RvecG, or CvecG)
+!=======================================================================================
+SUBROUTINE distribute_psi_MPI(psi,ndim1,ndim2,With_Grid)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_MPI
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+  
+  TYPE(param_psi), intent(inout)          :: psi(:) 
+  Integer,         intent(in)             :: ndim1
+  Integer,         intent(in)             :: ndim2
+  Logical,optional,intent(in)             :: With_Grid
+ 
+  Integer                                 :: i,j
+  Logical                                 :: With_Grid_loc
+
+  With_Grid_loc=.FALSE.
+  IF (present(With_Grid)) With_Grid_loc=With_Grid
+
+  IF(MPI_id==0) THEN
+    DO i=ndim1,ndim2
+      IF(.NOT. With_Grid_loc) THEN
+        nb_per_MPI=psi(i)%nb_tot/MPI_np
+        nb_rem_MPI=mod(psi(i)%nb_tot,MPI_np) !remainder jobs
+      ELSE
+        nb_per_MPI=psi(i)%nb_qaie/MPI_np
+        nb_rem_MPI=mod(psi(i)%nb_qaie,MPI_np) !remainder jobs
+      ENDIF
+      
+      ! Send array
+      DO i_MPI=1,MPI_np-1
+        bound1_MPI=i_MPI*nb_per_MPI+1+MIN(i_MPI,nb_rem_MPI)
+        bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)                          &
+                                       +merge(1,0,nb_rem_MPI>i_MPI)
+        IF (.NOT. With_Grid_loc) THEN
+          IF (psi(i)%cplx) THEN
+            CALL MPI_Send(psi(i)%CvecB(bound1_MPI:bound2_MPI),bound2_MPI-bound1_MPI+1, &
+                          MPI_Complex8,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
+          ELSE
+            CALL MPI_Send(psi(i)%RvecB(bound1_MPI:bound2_MPI),bound2_MPI-bound1_MPI+1, &
+                          MPI_Real8,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
+          ENDIF
+        ELSE
+          IF (psi(i)%cplx) THEN
+            CALL MPI_Send(psi(i)%CvecG(bound1_MPI:bound2_MPI),bound2_MPI-bound1_MPI+1, &
+                          MPI_Complex8,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)        
+          ELSE
+            CALL MPI_Send(psi(i)%RvecG(bound1_MPI:bound2_MPI),bound2_MPI-bound1_MPI+1, &
+                          MPI_Real8,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
+          ENDIF
+        ENDIF ! for .NOT. With_Grid_loc 
+      ENDDO ! for i_MPI=1,MPI_np-1
+    ENDDO ! for i=ndim1,ndim2
+  ENDIF ! for MPI_id==0
+  
+  ! MPI/=0------------------------------------------------------------------------------
+  IF(MPI_id/=0) THEN
+    DO i=ndim1,ndim2
+      IF(.NOT. With_Grid_loc) THEN
+        nb_per_MPI=psi(i)%nb_tot/MPI_np
+        nb_rem_MPI=mod(psi(i)%nb_tot,MPI_np) !remainder jobs
+      ELSE
+        nb_per_MPI=psi(i)%nb_qaie/MPI_np
+        nb_rem_MPI=mod(psi(i)%nb_qaie,MPI_np) !remainder jobs
+      ENDIF
+      bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
+      bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)                          &
+                                      +merge(1,0,nb_rem_MPI>MPI_id)
+      
+      ! receive array
+      IF (.NOT. With_Grid_loc) THEN
+        IF (psi(i)%cplx) THEN
+          IF(.NOT. allocated(psi(i)%CvecB))                                            &
+               allocate(psi(i)%CvecB(bound1_MPI:bound2_MPI))
+          CALL MPI_Recv(psi(i)%CvecB(bound1_MPI:bound2_MPI),bound2_MPI-bound1_MPI+1,   &
+                        MPI_Complex8,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        ELSE
+          IF(.NOT. allocated(psi(i)%RvecB))                                            &
+               allocate(psi(i)%RvecB(bound1_MPI:bound2_MPI))
+          CALL MPI_Recv( psi(i)%RvecB(bound1_MPI:bound2_MPI),bound2_MPI-bound1_MPI+1,  &
+                        MPI_Real8,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        ENDIF
+      ELSE
+        IF (psi(i)%cplx) THEN
+          IF(.NOT. allocated(psi(i)%CvecG))                                            &
+               allocate(psi(i)%CvecG(bound1_MPI:bound2_MPI))
+          CALL MPI_Recv(psi(i)%CvecG(bound1_MPI:bound2_MPI),bound2_MPI-bound1_MPI+1,   &
+                        MPI_Complex8,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        ELSE
+          IF(.NOT. allocated(psi(i)%RvecG))                                            &
+               allocate(psi(i)%RvecG(bound1_MPI:bound2_MPI))
+          CALL MPI_Recv(psi(i)%RvecG(bound1_MPI:bound2_MPI),bound2_MPI-bound1_MPI+1,   &
+                        MPI_Real8,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        ENDIF
+      ENDIF
+    ENDDO ! for i=ndim1,ndim2
+  ENDIF ! for MPI_id/=0  
+
+END SUBROUTINE distribute_psi_MPI
+!=======================================================================================
+
+!=======================================================================================
+!> subroutine for distribute psi(ndim1:ndim2) to different threads 
+!> the distribution is depends on the length of vec (RvecB, CvecB, RvecG, or CvecG)
+!> vector is packed on master and unpacked on theards to reduce comm. time.
+!=======================================================================================
+SUBROUTINE distribute_psi_pack_MPI(psi,ndim1,ndim2,With_Grid)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_MPI
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+  
+  TYPE(param_psi), intent(inout)          :: psi(:) 
+  Integer,         intent(in)             :: ndim1
+  Integer,         intent(in)             :: ndim2
+  Logical,optional,intent(in)             :: With_Grid
+ 
+  Complex(kind=Rkind),allocatable         :: Cvec(:)
+  Real(kind=Rkind),allocatable            :: Rvec(:)
+  Integer                                 :: length(MPI_np)
+  Integer                                 :: count
+  Integer                                 :: i,j
+  Logical                                 :: With_Grid_loc
+
+  With_Grid_loc=.FALSE.
+  IF (present(With_Grid)) With_Grid_loc=With_Grid
+
+  DO i_MPI=1,MPI_np-1
+    length(i_MPI)=0
+    DO i=ndim1,ndim2
+      IF(.NOT. With_Grid_loc) THEN
+        nb_per_MPI=psi(i)%nb_tot/MPI_np
+        nb_rem_MPI=mod(psi(i)%nb_tot,MPI_np) 
+      ELSE
+        nb_per_MPI=psi(i)%nb_qaie/MPI_np
+        nb_rem_MPI=mod(psi(i)%nb_qaie,MPI_np) 
+      ENDIF
+      bound1_MPI=i_MPI*nb_per_MPI+1+MIN(i_MPI,nb_rem_MPI)
+      bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)+merge(1,0,nb_rem_MPI>i_MPI)
+      
+      length(i_MPI)=length(i_MPI)+(bound2_MPI-bound1_MPI+1)
+    ENDDO
+  ENDDO
+
+  IF(MPI_id==0) THEN
+    DO i_MPI=1,MPI_np-1
+      IF(psi(1)%cplx) THEN
+        allocate(Cvec(length(i_MPI)))
+      ELSE
+        allocate(Rvec(length(i_MPI)))
+      ENDIF
+      count=1
+
+      DO i=ndim1,ndim2
+        IF(.NOT. With_Grid_loc) THEN
+          nb_per_MPI=psi(i)%nb_tot/MPI_np
+          nb_rem_MPI=mod(psi(i)%nb_tot,MPI_np) !remainder jobs
+        ELSE
+          nb_per_MPI=psi(i)%nb_qaie/MPI_np
+          nb_rem_MPI=mod(psi(i)%nb_qaie,MPI_np) !remainder jobs
+        ENDIF
+        bound1_MPI=i_MPI*nb_per_MPI+1+MIN(i_MPI,nb_rem_MPI)
+        bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)                          &
+                                       +merge(1,0,nb_rem_MPI>i_MPI)
+
+        ! pack array
+        IF (.NOT. With_Grid_loc) THEN
+          IF (psi(i)%cplx) THEN
+            Cvec(count:bound2_MPI-bound1_MPI+count)=psi(i)%CvecB(bound1_MPI:bound2_MPI)
+          ELSE
+            Rvec(count:bound2_MPI-bound1_MPI+count)=psi(i)%RvecB(bound1_MPI:bound2_MPI)
+          ENDIF
+        ELSE
+          IF (psi(i)%cplx) THEN
+            Cvec(count:bound2_MPI-bound1_MPI+count)=psi(i)%CvecG(bound1_MPI:bound2_MPI)
+          ELSE
+            Rvec(count:bound2_MPI-bound1_MPI+count)=psi(i)%RvecG(bound1_MPI:bound2_MPI)
+          ENDIF
+        ENDIF ! for .NOT. With_Grid_loc 
+        count=bound2_MPI-bound1_MPI+count+1
+        
+      ENDDO ! for i=ndim1,ndim2 
+
+      ! send array
+      IF(psi(1)%cplx) THEN
+        CALL MPI_Send(Cvec,count-1,MPI_Complex8,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
+        deallocate(Cvec)
+      ELSE
+        CALL MPI_Send(Rvec,count-1,MPI_Real8,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
+        deallocate(Rvec)
+      ENDIF
+    ENDDO ! for i_MPI=1,MPI_np-1
+  ENDIF ! for MPI_id==0
+  
+  ! MPI/=0------------------------------------------------------------------------------
+  IF(MPI_id/=0) THEN
+    ! receive array
+    IF(psi(1)%cplx) THEN
+      allocate(Cvec(length(MPI_id)))
+      CALL MPI_Recv(Cvec,length(MPI_id),MPI_Complex8,root_MPI,MPI_id,                  &
+                    MPI_COMM_WORLD,MPI_stat,MPI_err)
+    ELSE
+      allocate(Rvec(length(MPI_id)))
+      CALL MPI_Recv(Rvec,length(MPI_id),MPI_Real8,root_MPI,MPI_id,                     &
+                    MPI_COMM_WORLD,MPI_stat,MPI_err)
+    ENDIF
+
+    count=1
+    DO i=ndim1,ndim2
+      IF(.NOT. With_Grid_loc) THEN
+        nb_per_MPI=psi(i)%nb_tot/MPI_np
+        nb_rem_MPI=mod(psi(i)%nb_tot,MPI_np) !remainder jobs
+      ELSE
+        nb_per_MPI=psi(i)%nb_qaie/MPI_np
+        nb_rem_MPI=mod(psi(i)%nb_qaie,MPI_np) !remainder jobs
+      ENDIF
+      bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
+      bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)                          &
+                                      +merge(1,0,nb_rem_MPI>MPI_id)
+
+      ! unpack
+      IF (.NOT. With_Grid_loc) THEN
+        IF (psi(i)%cplx) THEN
+          IF(.NOT. allocated(psi(i)%CvecB))                                            &
+                    allocate(psi(i)%CvecB(bound1_MPI:bound2_MPI))
+          psi(i)%CvecB(bound1_MPI:bound2_MPI)=Cvec(count:count+bound2_MPI-bound1_MPI)
+        ELSE
+          IF(.NOT. allocated(psi(i)%RvecB))                                            &
+                    allocate(psi(i)%RvecB(bound1_MPI:bound2_MPI))
+          psi(i)%RvecB(bound1_MPI:bound2_MPI)=Rvec(count:count+bound2_MPI-bound1_MPI)
+        ENDIF
+      ELSE
+        IF (psi(i)%cplx) THEN
+          IF(.NOT. allocated(psi(i)%CvecG))                                            &
+                    allocate(psi(i)%CvecG(bound1_MPI:bound2_MPI))
+          psi(i)%CvecG(bound1_MPI:bound2_MPI)=Cvec(count:count+bound2_MPI-bound1_MPI)
+        ELSE
+          IF(.NOT. allocated(psi(i)%RvecG))                                            &
+                    allocate(psi(i)%RvecG(bound1_MPI:bound2_MPI))
+          psi(i)%RvecG(bound1_MPI:bound2_MPI)=Rvec(count:count+bound2_MPI-bound1_MPI)
+        ENDIF
+      ENDIF
+      count=bound2_MPI-bound1_MPI+count+1
+    ENDDO ! for i=ndim1,ndim2
+    
+    IF(psi(1)%cplx) THEN
+      deallocate(Cvec)
+    ELSE
+      deallocate(Rvec)
+    ENDIF
+  ENDIF ! for MPI_id/=0  
+
+END SUBROUTINE distribute_psi_pack_MPI
+!=======================================================================================
+
+!=======================================================================================
+!> for calculating the overlap of <psi|psi> or <psi|Hpsi> with MPI
+!> working for ndim1=<i<=ndim2 
+!
+!>   NOTE: the pre-distribution of vectors (RvecB, CvecB, RvecG, or CvecG) are required
+!>         i.e. subroutine distribute_psi_MPI
+!>   NOTE: works according to the vectors stored on different threads 
+!>         limited by bound1_MPI and bound2_MPI, see "Overlap_psipsi_MPI3"
+!=======================================================================================
+SUBROUTINE calculate_overlap_MPI(psi,ndim1,ndim2,With_Grid,Hpsi,S_overlap,H_overlap)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_MPI
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+  
+  TYPE(param_psi),          intent(in)    :: psi(:) 
+  TYPE(param_psi),optional, intent(in)    :: Hpsi(:) 
+  Integer,                  intent(in)    :: ndim1
+  Integer,                  intent(in)    :: ndim2
+  Logical,optional,         intent(in)    :: With_Grid
+  Real(kind=Rkind),optional,intent(inout) :: H_overlap(:,:)
+  Real(kind=Rkind),optional,intent(inout) :: S_overlap(:,:)
+
+  Complex(kind=Rkind)                     :: Overlap
+  Integer                                 :: i,j
+  Logical                                 :: With_Grid_loc
+
+  With_Grid_loc=.FALSE.
+  IF(present(With_Grid)) With_Grid_loc=With_Grid
+
+  IF((present(Hpsi) .AND. (.NOT. present(H_overlap))) .OR.                             &
+     ((.NOT. present(H_overlap)) .AND. (.NOT. present(S_overlap)))) THEN
+    write(out_unitp,*) 'variable presented error in calculate_overlap_MPI'  
+    STOP
+  ENDIF
+  
+  !-overlap <psi|Hpsi>------------------------------------------------------------------
+  IF(present(Hpsi) .AND. present(H_overlap)) THEN 
+    DO i=1,ndim1-1
+      DO j=ndim1,ndim2
+        CALL Overlap_psipsi_MPI3(Overlap,psi(j),Hpsi(i),With_Grid=With_Grid)
+        H_overlap(j,i)=real(Overlap,kind=Rkind) 
+      ENDDO 
+    END DO
+    
+    DO i=ndim1,ndim2
+      DO j=1,ndim2
+        CALL Overlap_psipsi_MPI3(Overlap,psi(j),Hpsi(i),With_Grid=With_Grid)
+        H_overlap(j,i)=real(Overlap,kind=Rkind) 
+      ENDDO 
+    ENDDO
+    
+    ! collect and broadcast result
+    CALL MPI_Reduce_sum_matrix(H_overlap,ndim1,ndim2,1,ndim1-1,root_MPI)
+    CALL MPI_Bcast_matrix     (H_overlap,ndim1,ndim2,1,ndim1-1,root_MPI)
+    CALL MPI_Reduce_sum_matrix(H_overlap,1,ndim2,ndim1,ndim2,root_MPI)
+    CALL MPI_Bcast_matrix     (H_overlap,1,ndim2,ndim1,ndim2,root_MPI)
+  ENDIF 
+    
+  !-overlap <psi|psi>-------------------------------------------------------------------  
+  IF(present(S_overlap)) THEN 
+    DO i=1,ndim1-1
+      DO j=ndim1,ndim2
+        IF(j<=i) THEN
+          CALL Overlap_psipsi_MPI3(Overlap,psi(j),psi(i),With_Grid=With_Grid)
+          S_overlap(j,i)=real(Overlap,kind=Rkind)
+          S_overlap(i,j)=S_overlap(j,i)
+        ENDIF
+      ENDDO 
+    ENDDO 
+    
+    DO i=ndim1,ndim2
+      DO j=1,ndim2
+        IF(j<=i) THEN
+          CALL Overlap_psipsi_MPI3(Overlap,psi(j),psi(i),With_Grid=With_Grid)
+          S_overlap(j,i)=real(Overlap,kind=Rkind)
+          S_overlap(i,j)=S_overlap(j,i)
+        ENDIF
+      ENDDO 
+    ENDDO
+    
+    ! collect and broadcast result 
+    CALL MPI_Reduce_sum_matrix(S_overlap,ndim1,ndim2,1,ndim1-1,root_MPI)
+    CALL MPI_Bcast_matrix     (S_overlap,ndim1,ndim2,1,ndim1-1,root_MPI)
+    CALL MPI_Reduce_sum_matrix(S_overlap,1,ndim2,ndim1,ndim2,root_MPI)
+    CALL MPI_Bcast_matrix     (S_overlap,1,ndim2,ndim1,ndim2,root_MPI)
+  ENDIF
+
+END SUBROUTINE calculate_overlap_MPI
+!=======================================================================================
+
+!=======================================================================================
+! calculate overlap for <psi(n+1)|psi(i)> or/and <Hpsi(n+1)|psi(i)> i=1...n
+!=======================================================================================
+SUBROUTINE calculate_overlap1D_MPI(psi,ndim,With_Grid,Hpsi,S_overlap1D,H_overlap1D)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_MPI
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+  
+  TYPE(param_psi),          intent(in)    :: psi(:) 
+  TYPE(param_psi),optional, intent(in)    :: Hpsi(:) 
+  Integer,                  intent(in)    :: ndim
+  Logical,optional,         intent(in)    :: With_Grid
+  Real(kind=Rkind),optional,intent(inout) :: H_overlap1D(:)
+  Real(kind=Rkind),optional,intent(inout) :: S_overlap1D(:)
+  
+  Complex(kind=Rkind)                     :: Overlap
+  Real(kind=Rkind)                        :: Overlap1D_temp(ndim)
+  Integer                                 :: i,j
+  Logical                                 :: With_Grid_loc
+
+  With_Grid_loc=.FALSE.
+  IF(present(With_Grid)) With_Grid_loc=With_Grid
+
+  IF((present(Hpsi) .AND. (.NOT. present(H_overlap1D))) .OR.                             &
+     ((.NOT. present(S_overlap1D)) .AND. (.NOT. present(H_overlap1D)))) THEN
+    write(out_unitp,*) 'variable presented error in calculate_overlap_MPI'  
+    STOP
+  ENDIF
+  
+  !-overlap <psi|Hpsi>------------------------------------------------------------------
+  IF(present(Hpsi) .AND. present(H_overlap1D)) THEN 
+    DO i=1,ndim
+      CALL Overlap_psipsi_MPI3(Overlap,psi(i),Hpsi(ndim),With_Grid=With_Grid)
+      H_overlap1D(i)=real(Overlap,kind=Rkind) 
+    END DO
+    
+    ! collect and broadcast result
+    CALL MPI_Reduce(H_overlap1D,Overlap1D_temp,ndim,MPI_Real8,MPI_SUM,root_MPI,        &
+                    MPI_COMM_WORLD,MPI_err)
+    IF(MPI_id==0) H_overlap1D=Overlap1D_temp
+    CALL MPI_BCAST(H_overlap1D,ndim,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
+  ENDIF 
+    
+  !-overlap <psi|psi>-------------------------------------------------------------------  
+  IF(present(S_overlap1D)) THEN 
+    DO i=1,ndim
+      CALL Overlap_psipsi_MPI3(Overlap,psi(i),psi(ndim),With_Grid=With_Grid)
+      S_overlap1D(i)=real(Overlap,kind=Rkind)
+    ENDDO 
+    
+    ! collect and broadcast result
+    CALL MPI_Reduce(S_overlap1D,Overlap1D_temp,ndim,MPI_Real8,MPI_SUM,root_MPI,        &
+                    MPI_COMM_WORLD,MPI_err)
+    IF(MPI_id==0) S_overlap1D=Overlap1D_temp
+    CALL MPI_BCAST(S_overlap1D,ndim,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
+  ENDIF
+
+END SUBROUTINE calculate_overlap1D_MPI
+!=======================================================================================
+
+!=======================================================================================
+!> subroutine for the calculation of Overlap_psi1_psi2 with MPI 
+!> overlap is cut into submatrix for MPI parallel   
+!> note, this requre new  Overlap_psi1_psi2 routine
+!
+!> the submatrix of psi and Hpsi are keeped also for the calculation 
+!> of Residual g in MakeResidual_Davidson_MPI2
+!=======================================================================================
+#if(run_MPI)
+SUBROUTINE Overlap_psi1_psi2_MPI5(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_MPI
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+  
+  TYPE(param_psi), intent(inout)          :: psi(:)  !< on non-root threads allocated
+  TYPE(param_psi), intent(inout)          :: Hpsi(:) !< on non-root threads allocated
+  Real(kind=Rkind),intent(inout)          :: H_overlap(:,:)
+  Real(kind=Rkind),intent(inout)          :: S_overlap(:,:)
+  Logical,optional,intent(in)             :: With_Grid
+  Integer,         intent(in)             :: ndim0
+  Integer,         intent(in)             :: ndim
+
+  complex(kind=Rkind)                     :: Overlap
+  logical                                 :: With_Grid_loc
+  Integer                                 :: i
+  Integer                                 :: j
+  Logical                                 :: root_jobs
+  
+  With_Grid_loc=.FALSE.
+  IF (present(With_Grid)) With_Grid_loc = With_Grid
+
+  ! only on master: psi%CvecG,psi%RvecG,psi%CvecB,psi%RvecB
+  CALL distribute_psi_pack_MPI( psi,ndim0+1,ndim,With_Grid)
+  CALL distribute_psi_pack_MPI(Hpsi,ndim0+1,ndim,With_Grid)
+
+  CALL calculate_overlap_MPI(psi,ndim0+1,ndim,With_Grid,Hpsi=Hpsi,                     &
+                             S_overlap=S_overlap,H_overlap=H_overlap)
+  
+END SUBROUTINE Overlap_psi1_psi2_MPI5
 #endif
 !=======================================================================================
 
@@ -554,7 +1356,6 @@ SUBROUTINE Overlap_psi1_psi2_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_G
   logical                                 :: With_Grid_loc
   Integer                                 :: i
   Integer                                 :: j
-  Logical                                 :: send_once(MPI_np-1)
   Logical                                 :: root_jobs
   
   With_Grid_loc=.FALSE.
@@ -1105,7 +1906,8 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
   IMPLICIT NONE
 
   !-variables for the WP----------------------------------------------------------------
-  TYPE(param_psi),intent(in)                :: psi1,psi2
+  TYPE(param_psi),intent(in)                :: psi1
+  TYPE(param_psi),intent(in)                :: psi2
   Complex(kind=Rkind)                       :: Overlap
   Logical,optional,intent(in)               :: With_Grid
   Integer,optional,intent(in)               :: Channel_ie
@@ -1118,17 +1920,22 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
   Real(kind=Rkind)                          :: Rtemp
   Real(kind=Rkind),allocatable              :: wrho(:)
   Integer                                   :: locChannel_ie
-  Integer                                   :: i_qa,i_qaie
-  Integer                                   :: i_be,i_bi,i_ba
-  Integer                                   :: i_baie,f_baie
-  Integer                                   :: i_modif_q
-  Integer                                   :: iie,fie
-  Integer                                   :: iie_MPI,fie_MPI
+  Integer                                   :: i_qa
+  Integer                                   :: i_qaie
+  Integer                                   :: i_be
+  Integer                                   :: i_bi
+  Integer                                   :: i_ba
+  Integer                                   :: i_baie
+  Integer                                   :: f_baie
+  Integer                                   :: iie
+  Integer                                   :: fie
+  Integer                                   :: iie_MPI
+  Integer                                   :: fie_MPI
   
   !-for debuging------------------------------------------------------------------------
   character (len=*), parameter :: name_sub='Overlap_psipsi_MPI3'
   logical,parameter :: debug = .FALSE.
-! logical,parameter :: debug = .TRUE.
+  ! logical,parameter :: debug = .TRUE.
 
   !-------------------------------------------------------------------------------------
   IF (debug) THEN
@@ -1141,7 +1948,7 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
     write(out_unitp,*) 'GridRep,BasisRep ?'
     IF (present(With_Grid)) write(out_unitp,*) 'With_Grid',With_Grid
     IF (present(Channel_ie)) write(out_unitp,*) 'Channel_ie',Channel_ie
-  END IF
+  ENDIF
   !-------------------------------------------------------------------------------------
 
   With_Grid_loc = .FALSE.
@@ -1153,7 +1960,7 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
 
   IF (psi1%nb_baie>psi1%nb_tot) THEN
     With_Grid_loc = .FALSE.
-  END IF
+  ENDIF
 
   ! get bound1_MPI and bound2_MPI
   IF(.NOT. With_Grid_loc) THEN
@@ -1184,7 +1991,7 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
       write(out_unitp,*) ' psi2'
       CALL ecri_psi(psi=psi2,ecri_GridRep=.TRUE.)
       STOP
-    END IF
+    ENDIF
   ELSE
     IF(psi1%cplx .AND.allocated(psi1%CvecB) .AND. allocated(psi2%CvecB)) THEN
     ELSE IF(.NOT. psi1%cplx .AND. allocated(psi1%RvecB) .AND.                          &
@@ -1202,8 +2009,8 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
       write(out_unitp,*) ' psi2'
       CALL ecri_psi(psi=psi2,ecri_BasisRep=.TRUE.)
       STOP
-    END IF
-  END IF
+    ENDIF
+  ENDIF
 
   Overlap = cmplx(ZERO,ZERO,kind=Rkind)
   IF (.NOT. With_Grid_loc) THEN
@@ -1236,9 +2043,9 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
     CALL alloc_NParray(wrho,(/psi1%nb_qa/),"wrho",name_sub)
     DO i_qa=1,psi1%nb_qa
       wrho(i_qa) = Rec_WrhonD(psi1%BasisnD,i_qa)
-    END DO
+    ENDDO
 
-    IF (psi1%cplx) THEN
+    IF(psi1%cplx) THEN
       iie=1
       fie=psi1%nb_qa
       DO i_be=1,psi1%nb_be
@@ -1252,8 +2059,8 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
         ENDIF
         iie=iie+psi1%nb_qa
         fie=fie+psi1%nb_qa
-      END DO
-      END DO
+      ENDDO
+      ENDDO
     ELSE
       iie=1
       fie=psi1%nb_qa
@@ -1268,21 +2075,22 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
         ENDIF
         iie=iie + psi1%nb_qa
         fie=fie + psi1%nb_qa
-      END DO
-      END DO
+      ENDDO
+      ENDDO
       Overlap=cmplx(ROverlap,ZERO,kind=Rkind)
-    END IF
+    ENDIF
 
     CALL dealloc_NParray(wrho,"wrho",name_sub)
 
-  END IF
+  ENDIF
 
   !-------------------------------------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'Overlap : ',Overlap
     write(out_unitp,*) 'END ',name_sub
-  END IF
+  ENDIF
   !-------------------------------------------------------------------------------------
+  
 END SUBROUTINE Overlap_psipsi_MPI3
 #endif
 !=======================================================================================

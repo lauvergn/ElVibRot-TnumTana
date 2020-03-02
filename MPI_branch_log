@@ -4,21 +4,52 @@
 
 ----------------------------------------------------------------------------------------
 @ log
+
+> MPI_Vm1.6
+  - improve MPI for davidson, add function
+    distribute_psi_pack_MPI
+  
+  - a bug correction in distribute_psi_MPI
+  
+    
+> MPI_Vm1.5 (branch: MPI_working)
+  - improve code structure and easy reading 
+    distribute_psi_MPI
+    calculate_overlap_MPI
+    interface increase_martix 
+    calculate_overlap1D_MPI
+  
+> MPI_Vm1.4 (branch: MPI_working)
+  - Davidson improved, v1-4
+    added functions:
+      Overlap_S_matrix_MPI4*
+      Overlap_H_matrix_MPI4*
+      Set_symab_OF_psiBasisRep_MPI
+      norm_psi_MPI
+      Schmidt_process_MPI
+
+  - update:
+    mod_MPI
+    mod_MPI_Aid
+
 > MPI_Vm1.3 (branch: MPI_working)
   - Davidson improved, v1-3
     added functions: 
       Overlap_psi_Hpsi_matrix_MPI
       Overlap_psi_Hpsi_matrix_MPI2
-      Overlap_psi_Hpsi_matrix_MPI3
+      Overlap_HS_matrix_MPI3
+      Overlap_psi_psi_MPI*
+      Overlap_psi_Hpsi_MPI*
       Overlap_psi1_psi2_MPI
       Overlap_psi1_psi2_MPI2
-      Overlap_psi1_psi2_MPI3
+      Overlap_psi1_psi2_MPI3*
       Overlap_psipsi_MPI
-      Overlap_psipsi_MPI3
+      Overlap_psipsi_MPI3*
       MakeResidual_Davidson_MPI
-      MakeResidual_Davidson_MPI3
+      MakeResidual_Davidson_MPI3*
       MakeResidual_Davidson_j_MPI
-      MakeResidual_Davidson_j_MPI3
+      MakeResidual_Davidson_j_MPI3*
+      
     modified functions: 
       sub_MakeHPsi_Davidson
       sub_MakeH_Davidson
@@ -34,10 +65,12 @@
       MPI_Recv_matrix
       MPI_Reduce_sum_matrix
       MPI_Bcast_matrix
-       * for real, integer, and complex data currently
-    
-  - Schmidt process issue
+       * for real, integer, and complex type currently
+
   - a better version of Davidson MPI, waiting for issue in Schmidt process 
+
+  - issue  
+    Schmidt process
 
 > MPI_Vm1.2 (branch: MPI_working)
   - Improve Davidson

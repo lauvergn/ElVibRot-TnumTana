@@ -867,7 +867,7 @@ CONTAINS
 #if(run_MPI)
  SUBROUTINE sub_MakeHPsi_Davidson(it,psi,Hpsi,Ene,ndim0,                               &
                                   para_H,para_Davidson,iunit,H_overlap,S_overlap)
- USE mod_psi_Op,         ONLY : Overlap_psi1_psi2,Overlap_psi_Hpsi_matrix_MPI3
+ USE mod_psi_Op,         ONLY:Overlap_HS_matrix_MPI3,Overlap_H_matrix_MPI4
 #else
  SUBROUTINE sub_MakeHPsi_Davidson(it,psi,Hpsi,Ene,ndim0,                &
                                   para_H,para_Davidson,iunit)
@@ -949,12 +949,16 @@ CONTAINS
   ENDIF
    
 #if(run_MPI)
-  ! calculate matrix H_overlap(i,j) for <psi(i)|Hpsi(j)>  (ndim0<=i,j<=ndim)
-  !                & S_overlap(i,j) for <psi(i)| psi(j)>  (ndim0<=i,j<=ndim)
-  ! shared by all threads
-  IF((.NOT. allocated(H_overlap)) .OR. size(H_overlap,1)/=ndim)                        &
-    !CALL Overlap_psi_Hpsi_matrix_MPI2(H_overlap,S_overlap,psi,Hpsi,ndim,With_Grid)
-    CALL Overlap_psi_Hpsi_matrix_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
+  !> calculate matrix H_overlap(i,j) for <psi(i)|Hpsi(j)>  (ndim0<=i,j<=ndim)
+  !> shared by all threads
+  IF((.NOT. allocated(H_overlap)) .OR. size(H_overlap,1)/=ndim) THEN
+    IF(it==0) THEN
+      CALL Overlap_HS_matrix_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
+    ELSE
+      ! S_overlap is calculated in sub_NewVec_Davidson
+      CALL Overlap_H_matrix_MPI4(H_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
+    ENDIF
+  ENDIF
 #endif
 
  DO i=ndim0+1,ndim
@@ -1942,9 +1946,17 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
  USE mod_system
  USE mod_psi_set_alloc
  USE mod_psi_SimpleOp
+#if(run_MPI)
+ USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi,norm_psi_MPI
+ USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep,Set_symab_OF_psiBasisRep_MPI, &
+                                calculate_overlap_MPI,calculate_overlap1D_MPI
+#else
  USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi
  USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep,Overlap_psi1_psi2
+#endif
  USE mod_propa,          ONLY : param_Davidson
+ USE mod_MPI
+ USE mod_MPI_Aid
  IMPLICIT NONE
 
  integer           :: it,fresidu,ndim,isym
@@ -1966,8 +1978,10 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
  logical                   :: converge(max_diago)
  logical                   :: VecToBeIncluded(max_diago)
 
-  Real(kind=Rkind),intent(in) :: S_overlap(:,:)
-
+  Real(kind=Rkind),intent(inout),allocatable  :: S_overlap(:,:)
+  Real(kind=Rkind)                            :: S_overlap_add(2*ndim,2*ndim)
+  Real(kind=Rkind)                            :: Norm_Const
+  Logical                                     :: sym_change
 
  !------ working parameters --------------------------------
  integer              :: i,j,j_ini,j_end,nb_added_states,ib,ndim0,iresidual
@@ -2102,34 +2116,51 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
      END SELECT
      !write(out_unitp,*) ' symab: psi(isym), new vec',psi(isym)%symab,psi(ndim+1)%symab
 
-     CALL Set_symab_OF_psiBasisRep(psi(ndim+1),psi(isym)%symab)
+     IF(MPI_id==0) CALL Set_symab_OF_psiBasisRep(psi(ndim+1),psi(isym)%symab)
      !write(out_unitp,*) ' symab: psi(isym), new vec set sym',psi(isym)%symab,psi(ndim+1)%symab
 
      !- new vectors -------------------------------
      !- Schmidt ortho ------------------------------------
      !write(out_unitp,*) 'Schmidt ortho',it
-     ! time consuming, MPI later
-     IF(MPI_id==0) THEN
+     
+#if(run_MPI)
+     CALL Schmidt_process_MPI(S_overlap_add(:,ndim+1-ndim0),psi,ndim,isym,             &
+                              With_Grid=para_Davidson%With_Grid) 
+     ! check and normalization
+     CALL norm_psi_MPI(psi(ndim+1),1) ! get normalization constant
+     IF(psi(ndim+1)%norme<ONETENTH**10) CYCLE ! error case
+     Norm_Const=psi(ndim+1)%norme
+     CALL Set_symab_OF_psiBasisRep_MPI(psi(ndim+1),psi(isym)%symab,sym_change)  
+     CALL norm_psi_MPI(psi(ndim+1),2) ! normalization
+     
+     ! synchronism S_overlap_add
+     IF(sym_change) THEN ! Rvec changed in Set_symab_OF_psiBasisRep_MPI
+       CALL calculate_overlap1D_MPI(psi,ndim+1,With_Grid=para_Davidson%With_Grid,      &
+                                    S_overlap1D=S_overlap_add(:,ndim+1-ndim0))
+     ELSE
+       S_overlap_add(:,ndim+1-ndim0)=S_overlap_add(:,ndim+1-ndim0)/Norm_Const
+     ENDIF
+#else
      IF (para_Davidson%With_Grid) THEN
        CALL renorm_psi(psi(ndim+1))
        DO i=1,ndim
          CALL Overlap_psi1_psi2(Overlap,psi(ndim+1),psi(i),      &
                                 With_Grid=para_Davidson%With_Grid)
-         IF (RS == ZERO) CYCLE ! RS = real(Overlap,kind=Rkind) first ?
          RS = real(Overlap,kind=Rkind)
+         IF (RS == ZERO) CYCLE
          psi(ndim+1)%RvecG = (psi(ndim+1)%RvecG - psi(i)%RvecG * RS)/sqrt(ONE-RS**2)
        END DO
        CALL renorm_psi(psi(ndim+1))
        DO i=1,ndim
          CALL Overlap_psi1_psi2(Overlap,psi(ndim+1),psi(i),      &
                                 With_Grid=para_Davidson%With_Grid)
-         IF (RS == ZERO) CYCLE
          RS = real(Overlap,kind=Rkind)
+         IF (RS == ZERO) CYCLE
          psi(ndim+1)%RvecG = (psi(ndim+1)%RvecG - psi(i)%RvecG * RS)/sqrt(ONE-RS**2)
        END DO
 
      ELSE
-       ! the first norm can be removed? why twice?
+
        RS = dot_product(psi(ndim+1)%RvecB,psi(ndim+1)%RvecB)
        psi(ndim+1)%RvecB = psi(ndim+1)%RvecB / sqrt(RS)       
        DO i=1,ndim
@@ -2169,7 +2200,7 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
      !- Schmidt ortho ------------------------------------
      !write(6,*) 'n+1, vec',ndim+1,psi(ndim+1)%RvecB
      !write(out_unitp,*) ' new vec symab, bits(symab)',WriteTOstring_symab(psi(ndim+1)%symab)
-     ENDIF ! for MPI_id==0
+#endif     
      ndim = ndim + 1
 
    END IF
@@ -2182,6 +2213,17 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
  write(out_unitp,*) 'it, nb         new state(s)',it,nb_added_states
  !- new vectors -------------------------------
  !----------------------------------------------------------
+
+#if(run_MPI)
+  ! get new S_overlap
+  CALL increase_martix(S_overlap,name_sub,ndim0,ndim)
+  DO i=ndim0+1,ndim
+    DO j=1,i
+      S_overlap(i,j)=S_overlap_add(j,i-ndim0)
+      S_overlap(j,i)=S_overlap(i,j)
+    ENDDO
+  ENDDO
+#endif
 
  CALL dealloc_psi(psiTemp,delete_all=.TRUE.)
 
@@ -2198,6 +2240,91 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
  !----------------------------------------------------------
 
 END SUBROUTINE sub_NewVec_Davidson
+
+!=======================================================================================
+!> Schmidt process done with MPI
+!> 
+!=======================================================================================
+SUBROUTINE Schmidt_process_MPI(S_Overlap1D,psi,ndim,isym,With_Grid) 
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_psi_SimpleOp
+  USE mod_ana_psi,        ONLY:norm_psi_mpi
+  USE mod_psi_Op,         ONLY:Set_symab_OF_psiBasisRep_MPI,distribute_psi_MPI,        &
+                               calculate_overlap1D_MPI
+  USE mod_propa,          ONLY:param_Davidson
+  USE mod_MPI
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+
+  Real(kind=Rkind),intent(inout)             :: S_Overlap1D(:)
+  TYPE(param_psi), intent(inout)             :: psi(:)
+  Integer,         intent(in)                :: ndim
+  Integer,         intent(in)                :: isym
+  Logical,optional,intent(in)                :: With_Grid
+  
+  Real(kind=Rkind)                           :: RS,RS2
+  Integer                                    :: twice
+  Integer                                    :: ii
+  Logical                                    :: With_Grid_loc
+  Character(len=*),parameter                 :: name_sub='Schmidt_process_MPI'
+
+  
+  With_Grid_loc=.FALSE.
+  IF(present(With_Grid)) With_Grid_loc=With_Grid
+  
+  CALL distribute_psi_MPI(psi,ndim+1,ndim+1,With_Grid_loc)
+
+  DO twice=0,1
+    IF(With_Grid) THEN
+      ! normalization
+      nb_per_MPI=psi(ndim+1)%nb_qaie/MPI_np
+      nb_rem_MPI=mod(psi(ndim+1)%nb_qaie,MPI_np)
+      bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
+      bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)                          &
+                                      +merge(1,0,nb_rem_MPI>MPI_id)
+      RS=real(dot_product(psi(ndim+1)%RvecG(bound1_MPI:bound2_MPI),                    &
+                     psi(ndim+1)%RvecG(bound1_MPI:bound2_MPI)))
+      CALL MPI_Reduce(RS,RS2,size1_MPI,MPI_Real8,MPI_SUM,root_MPI,                     &
+                      MPI_COMM_WORLD,MPI_err)
+      IF(MPI_id==0) RS=RS2
+      CALL MPI_Bcast(RS,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
+      psi(ndim+1)%RvecB=psi(ndim+1)%RvecB/sqrt(RS)
+      
+      DO ii=1,ndim        
+        RS=S_overlap1D(ii)
+        IF(RS==ZERO) CYCLE
+        psi(ndim+1)%RvecG=(psi(ndim+1)%RvecG-psi(ii)%RvecG*RS)/sqrt(ONE-RS**2)
+      ENDDO ! ii=1,ndim
+    ELSE
+      ! normalization
+      nb_per_MPI=psi(ndim+1)%nb_tot/MPI_np
+      nb_rem_MPI=mod(psi(ndim+1)%nb_tot,MPI_np)
+      bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
+      bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)                          &
+                                      +merge(1,0,nb_rem_MPI>MPI_id)
+      RS=dot_product(psi(ndim+1)%RvecB(bound1_MPI:bound2_MPI),                         &
+                     psi(ndim+1)%RvecB(bound1_MPI:bound2_MPI))
+      CALL MPI_Reduce(RS,RS2,size1_MPI,MPI_Real8,MPI_SUM,root_MPI,                     &
+                      MPI_COMM_WORLD,MPI_err)
+      IF(MPI_id==0) RS=RS2
+      CALL MPI_Bcast(RS,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
+      psi(ndim+1)%RvecB=psi(ndim+1)%RvecB/sqrt(RS)
+
+      ! calculate S_overlap_add
+      CALL calculate_overlap1D_MPI(psi,ndim+1,With_Grid=With_Grid_loc,                 &
+                                   S_overlap1D=S_overlap1D)
+      DO ii=1,ndim
+        RS=S_overlap1D(ii)
+        IF(RS==ZERO) CYCLE
+        ! be careful on the difference of vec on different threads
+        psi(ndim+1)%RvecB=psi(ndim+1)%RvecB-psi(ii)%RvecB*RS
+      ENDDO ! ii=1,ndim
+    ENDIF
+  ENDDO ! do Schmidt process twice
+  
+END SUBROUTINE Schmidt_process_MPI
+!=======================================================================================
 
  SUBROUTINE Sort_VecToBeIncluded_Davidson(Ene,Vec,VecToBeIncluded)
  USE mod_system

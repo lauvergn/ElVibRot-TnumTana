@@ -82,28 +82,6 @@ MODULE mod_MPI
   
   !Common /group_MPI_time/     time_MPI_action,time_point1,time_point2,time_action
   !Common /group_MPI_control/  if_propa,Grid_allco
-  
-  !-------------------------------------------------------------------------------------
-  !> varilables for convenience, temprary here
-  Integer                        :: i1_loop          !< indexs for loop
-  Integer                        :: i2_loop
-  Integer                        :: i3_loop
-  Integer                        :: i4_loop
-  Integer                        :: i5_loop
-  Integer                        :: i6_loop
-  Integer                        :: i1_length        !< boundary for looop
-  Integer                        :: i2_length
-  Integer                        :: i3_length
-  Integer                        :: i4_length
-  Integer                        :: i5_length
-  Integer                        :: i6_length
-
-  Real*8                         :: temp_real        !< temparay real
-  Real*8                         :: temp_real1
-  Real*8                         :: temp_real2
-  Integer                        :: temp_int         !< temparay integer 
-  Integer                        :: temp_int1
-  Integer                        :: temp_int2
 
 !=======================================================================================
   Contains  
