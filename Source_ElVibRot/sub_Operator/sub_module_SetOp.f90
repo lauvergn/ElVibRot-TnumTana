@@ -397,16 +397,21 @@ MODULE mod_SetOp
       !!@param: TODO
       !!@param: TODO
       !!@param: TODO
-      SUBROUTINE dealloc_para_Op(para_Op)
+      SUBROUTINE dealloc_para_Op(para_Op,keep_init)
       USE mod_MPI
-      TYPE (param_Op),intent(inout) :: para_Op
+      TYPE (param_Op),          intent(inout) :: para_Op
+      logical,        optional, intent(in)    :: keep_init
 
       integer :: k_term
+      logical :: keep_init_loc
 
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='dealloc_para_Op'
 
       !IF (.NOT. para_Op%alloc) RETURN
+
+      keep_init_loc = .FALSE.
+      IF (present(keep_init)) keep_init_loc = keep_init
 
       IF (associated(para_Op%Rmat))    THEN
         CALL dealloc_array(para_Op%Rmat,'para_Op%Rmat',name_sub)
@@ -436,10 +441,12 @@ MODULE mod_SetOp
         CALL dealloc_array(para_Op%Cvp,'para_Op%Cvp',name_sub)
       END IF
 
-      CALL dealloc_TypeOp(para_Op%param_TypeOp)
+      IF (.NOT. keep_init_loc) THEN
+        CALL dealloc_TypeOp(para_Op%param_TypeOp)
 
-      IF (allocated(para_Op%derive_termQdyn))  THEN
-        CALL dealloc_NParray(para_Op%derive_termQdyn,'para_Op%derive_termQdyn',name_sub)
+        IF (allocated(para_Op%derive_termQdyn))  THEN
+          CALL dealloc_NParray(para_Op%derive_termQdyn,'para_Op%derive_termQdyn',name_sub)
+        END IF
       END IF
 
 
@@ -454,78 +461,83 @@ MODULE mod_SetOp
         CALL dealloc_array(para_Op%imOpGrid,"para_Op%imOpGrid",name_sub)
       END IF
 
-      para_Op%read_Op    = .FALSE.
-      para_Op%print_done = .FALSE.
-
-      para_Op%init_var = .FALSE.
-
       para_Op%alloc      = .FALSE.
       para_Op%alloc_mat  = .FALSE.
       para_Op%mat_done   = .FALSE.
       para_Op%alloc_Grid = .FALSE.
       para_Op%Grid_done  = .FALSE.
 
-      nullify(para_Op%para_AllBasis)
-      nullify(para_Op%BasisnD)
-      nullify(para_Op%Basis2n)
+      IF (.NOT. keep_init_loc) THEN
+        para_Op%read_Op    = .FALSE.
+        para_Op%print_done = .FALSE.
 
-      para_Op%symab = -1
+        para_Op%init_var = .FALSE.
 
-      nullify(para_Op%mole)
-      nullify(para_Op%para_Tnum)
+        nullify(para_Op%para_AllBasis)
+        nullify(para_Op%BasisnD)
+        nullify(para_Op%Basis2n)
 
-      nullify(para_Op%para_PES)
+        para_Op%symab = -1
 
-      nullify(para_Op%ComOp)
+        nullify(para_Op%mole)
+        nullify(para_Op%para_Tnum)
 
+        nullify(para_Op%para_PES)
 
-      para_Op%n_Op        = 0
-      para_Op%name_Op     = 'H'
+        nullify(para_Op%ComOp)
 
-      para_Op%Make_Mat    = .FALSE.
-      CALL init_ReadOp(para_Op%para_ReadOp)
-      para_Op%cplx        = .FALSE.
-      para_Op%sym_Hamil   = .TRUE.
+        para_Op%n_Op        = 0
+        para_Op%name_Op     = 'H'
 
-      para_Op%spectral    = .FALSE.
-      para_Op%spectral_Op = 0
-      para_Op%nb_OpPsi    = 0
+        para_Op%Make_Mat    = .FALSE.
+        CALL init_ReadOp(para_Op%para_ReadOp)
+        para_Op%cplx        = .FALSE.
+        para_Op%sym_Hamil   = .TRUE.
 
-
-      para_Op%nb_bi       = 0
-      para_Op%nb_be       = 0
-      para_Op%nb_bie      = 0
-      para_Op%nb_ba       = 0
-      para_Op%nb_qa       = 0
-      para_Op%nb_bai      = 0
-      para_Op%nb_qai      = 0
-      para_Op%nb_baie     = 0
-      para_Op%nb_qaie     = 0
-      para_Op%nb_bRot     = 0
-      para_Op%nb_tot      = 0
-      para_Op%nb_tot_ini  = 0
+        para_Op%spectral    = .FALSE.
+        para_Op%spectral_Op = 0
+        para_Op%nb_OpPsi    = 0
 
 
-      para_Op%pack_Op = .FALSE.
-      para_Op%tol_pack= ONETENTH**7
-      para_Op%ratio_pack= ZERO
-      para_Op%tol_nopack= NINE*ONETENTH
+        para_Op%nb_bi       = 0
+        para_Op%nb_be       = 0
+        para_Op%nb_bie      = 0
+        para_Op%nb_ba       = 0
+        para_Op%nb_qa       = 0
+        para_Op%nb_bai      = 0
+        para_Op%nb_qai      = 0
+        para_Op%nb_baie     = 0
+        para_Op%nb_qaie     = 0
+        para_Op%nb_bRot     = 0
+        para_Op%nb_tot      = 0
+        para_Op%nb_tot_ini  = 0
 
-      para_Op%diago   = .FALSE.
+
+        para_Op%pack_Op = .FALSE.
+        para_Op%tol_pack= ONETENTH**7
+        para_Op%ratio_pack= ZERO
+        para_Op%tol_nopack= NINE*ONETENTH
+
+        para_Op%diago   = .FALSE.
 
 
-      para_Op%nb_act1 = 0
+        para_Op%nb_act1 = 0
 
-! for H Operator n_Op = 0
-      para_Op%scaled      = .FALSE.
-      para_Op%E0          = ZERO
-      para_Op%Esc         = ONE
+        ! for H Operator n_Op = 0
+        para_Op%scaled      = .FALSE.
+        para_Op%E0          = ZERO
+        para_Op%Esc         = ONE
 
+
+        para_Op%pot0        = ZERO
+        para_Op%pot_only    = .FALSE.
+        para_Op%T_only      = .FALSE.
+
+      END IF
+
+      ! for H Operator n_Op = 0
       para_Op%Hmin        =  huge(ONE)
       para_Op%Hmax        = -huge(ONE)
-      para_Op%pot0        = ZERO
-      para_Op%pot_only    = .FALSE.
-      para_Op%T_only      = .FALSE.
 
       END SUBROUTINE dealloc_para_Op
 

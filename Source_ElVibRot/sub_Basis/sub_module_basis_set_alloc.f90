@@ -570,7 +570,11 @@
          integer :: err_mem,memory
          character (len=*), parameter :: name_sub='get_rho_AT_iq_OF_basis'
 
-         IF (allocated(basis_set%rho)) get_rho_AT_iq_OF_basis = basis_set%rho(iq)
+         IF (allocated(basis_set%rho)) THEN
+            get_rho_AT_iq_OF_basis = basis_set%rho(iq)
+         ELSE
+           STOP 'basis_set%rho(:) is not allocated. STOP in get_rho_AT_iq_OF_basis'
+         END IF
 
        END FUNCTION get_rho_AT_iq_OF_basis
        FUNCTION get_w_OF_basis(basis_set,L)
@@ -600,7 +604,11 @@
          IF (present(L)) THEN
            STOP 'not yet in get_w_AT_iq_OF_basis'
          ELSE
-           IF (allocated(basis_set%w)) get_w_AT_iq_OF_basis = basis_set%w(iq)
+           IF (allocated(basis_set%w)) THEN
+              get_w_AT_iq_OF_basis = basis_set%w(iq)
+           ELSE
+             STOP 'basis_set%w(:) is not allocated. STOP in get_w_AT_iq_OF_basis'
+           END IF
          END IF
 
        END FUNCTION get_w_AT_iq_OF_basis
@@ -637,9 +645,13 @@
          character (len=*), parameter :: name_sub='get_wrho_AT_iq_OF_basis'
 
          IF (present(L)) THEN
-           STOP 'not yet in get_wrho_AT_iq_OF_basis'
+           STOP 'L present: not yet. STOP in get_wrho_AT_iq_OF_basis'
          ELSE
-           IF (allocated(basis_set%wrho)) get_wrho_AT_iq_OF_basis = basis_set%wrho(iq)
+           IF (allocated(basis_set%wrho)) THEN
+              get_wrho_AT_iq_OF_basis = basis_set%wrho(iq)
+           ELSE
+             STOP 'basis_set%wrho(:) is not allocated. STOP in get_wrho_AT_iq_OF_basis'
+           END IF
          END IF
 
        END FUNCTION get_wrho_AT_iq_OF_basis

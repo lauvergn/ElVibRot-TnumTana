@@ -104,10 +104,10 @@ sym  cos(a)      R     r    x    pi   dh
  &inactives
            max_excit=4
            tab_nq(1:2)=8,8
-           tab_nb(1:2)=5,5
+           tab_nb(1:2)=4,4
            max_ene_h=60000. "cm-1"
 /
- &actives test=f comput_S=t /
+ &actives test=f direct=2 /
  &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t /
  &propa
         WPTmax=20000.d0 WPdeltaT=100.d0 nb_micro=100 restart=t

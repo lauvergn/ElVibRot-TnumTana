@@ -1,0 +1,9 @@
+here=`pwd`
+
+cd /Users/lauvergn/git/ElVibRot
+ make libEVR
+cd $here
+
+gfortran -O0 -g -fbacktrace -fopenmp -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized  test_lib.f90 /Users/lauvergn/git/ElVibRot/obj/libEVR.a -L/Users/lauvergn/git/QuantumModelLib -lQMLib -framework Accelerate
+
+a.out

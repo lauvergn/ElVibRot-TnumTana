@@ -25,33 +25,6 @@
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
 !===========================================================================
-!%LATEX-USER-DOC-Driver
-!
-!\begin{itemize}
-!  \item
-!    Time independent calculations: energy levels, spectrum with intensities...
-!  \item
-!    Time dependent calculations (wavepacket propagations):
-!    propagations with time dependent field, relaxation, optimal control ...
-!\end{itemize}
-!
-!The main originality concerns the use of numerical kinetic energy operator (Tnum),
-! which enables a large flexibility in the choice of the curvilinear coordinates.
-!
-!\section(Input file)
-!
-!The input file has four mains sections:
-!\begin{itemize}
-!  \item
-!   SYSTEM and CONSTANTS, which define general parameters for parallelization, printing levels, energy unit, physical constants...
-!  \item
-!   COORDINATES, which defines the curvilinear coordinates, the coordinates transformations and some aspects of the physical models (constraints....). This section is part of Tnum.
-!  \item
-!   OPERATORS and BASIS SETS, which define parameters of scalar operators (potential, dipole moments...) and the active and inactive basis set (contracted).
-!  \item
-!   ANALYSIS, which defines parameters for time dependent (including optimal control) or independent calculations, intensities.
-!\end{itemize}
-!%END-LATEX-USER-DOC-Driver
 !===========================================================================
     PROGRAM ElVibRot
       USE mod_system
@@ -61,6 +34,7 @@
       IMPLICIT NONE
 
       logical  :: intensity_only,analysis_only,Popenmp,Popenmpi
+
       integer  :: PMatOp_omp,POpPsi_omp,PBasisTOGrid_omp,PGrid_omp,optimization
       integer  :: maxth,PMatOp_maxth,POpPsi_maxth,PBasisTOGrid_maxth,PGrid_maxth
       integer  :: PSG4_omp,PSG4_maxth
@@ -92,6 +66,7 @@
                           main_test,                                    &
 
                           EVRT_path,File_path,base_FileName
+
 
         !> initialize MPI
         !> id=0 to be the master

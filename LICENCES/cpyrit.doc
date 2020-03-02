@@ -1,0 +1,34 @@
+C**********************************************************************
+C
+C     Copyright (C) 1991-1993  Roland W. Freund and Noel M. Nachtigal
+C     All rights reserved.
+C
+C     This code is provided "as is",  without any warranty of any kind,
+C     either  expressed or implied,  including but not limited to,  any
+C     implied warranty of  merchantibility or fitness  for any purpose.
+C     In no event will any party who distributed the code be liable for
+C     damages or for any claim(s) by any other party, including but not
+C     limited to,  any lost  profits,  lost monies,  lost data  or data
+C     rendered inaccurate,  losses sustained  by third parties,  or any
+C     other special, incidental or consequential damages arising out of
+C     the use or inability to use the program,  even if the possibility
+C     of such damages has  been advised against.  The entire risk as to
+C     the quality,  the performance, and the fitness of the program for
+C     any particular purpose lies with the party using the code.
+C
+C     This code, and any derivative of this code, may not be  used in a
+C     commercial package without the prior explicit  written permission
+C     of all authors or  their legal proxies.  Verbatim copies  of this
+C     code may  be made  and distributed  in any medium,  provided that
+C     this copyright notice  is not removed or altered  in any way.  No
+C     fees may be charged for  distribution of the codes,  other than a
+C     fee to cover the cost of the media and a reasonable handling fee.
+C
+C**********************************************************************
+C
+C     *****************************************************************
+C     ANY USE OF  THIS CODE CONSTITUTES ACCEPTANCE OF  THE TERMS OF THE
+C                             COPYRIGHT NOTICE
+C     *****************************************************************
+C
+C**********************************************************************

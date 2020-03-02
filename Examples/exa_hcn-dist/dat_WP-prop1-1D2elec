@@ -57,10 +57,12 @@ dh 0.0
  &actives test=f direct=2 /
  &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t 
           print_psi=0 psi1D_Q0=t psi2D_Q0=t
-          Rho1D=t Rho2D=t Rho_type=1 coherence=1 ExactFact=1 /
+          Rho1D=t Rho2D=t Rho_type=1 
+          AvHiterm=t
+          coherence=1 ExactFact=1 /
 
  &propa
-        WPTmax=2. 'fs' WPdeltaT=1. 'fs' nb_micro=1
+        WPTmax=20. 'fs' WPdeltaT=1. 'fs' nb_micro=1
 
         n_WPecri=1 WPpsi2=t WPpsi=t Write_WPAdia=t
 

@@ -825,7 +825,8 @@ PUBLIC :: initialisation1_poly,cof
 !=======================================================================================
 SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_system
-  USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
+  USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi,sub_psiHitermPsi, &
+                                  sub_PsiDia_TO_PsiAdia_WITH_MemGrid
   USE mod_field,           ONLY : param_field,sub_dnE
   USE mod_ExactFact
 
@@ -857,7 +858,8 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
   integer       :: j,i,i_bi,i_be,i_bie
   complex (kind=Rkind) :: ET  ! energy
-  character (len=30)   :: info
+  character (len=:), allocatable           :: info
+
   logical :: BasisRep,GridRep,adia_loc,Write_psi2_Grid,Write_psi_Grid
 
 !- for the field --------------------------------------------------
@@ -987,6 +989,10 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
         END IF
       END IF
 
+      IF (para_propa%ana_psi%AvHiterm) THEN
+        info = real_TO_char(T,Rformat='f12.2')
+        CALL sub_psiHitermPsi(WP(i),i,info,para_H)
+      END IF
 
 !    ! => The analysis (adiabatic)
 !    IF (adia_loc) THEN

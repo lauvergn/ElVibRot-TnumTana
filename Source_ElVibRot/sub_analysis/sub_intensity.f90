@@ -213,6 +213,7 @@
       ELSE IF (para_intensity%l_CrossSec) THEN
 !       Cross Section (m^2)
         DE_pow = 1
+        conv = ONE
         STOP
       ELSE IF (para_intensity%l_intVR) THEN
 !       intensity (dipole)

@@ -35,6 +35,7 @@ PUBLIC :: sub_PsiOpPsi,sub_OpPsi,sub_scaledOpPsi,sub_OpiPsi,sub_TabOpPsi
 PUBLIC :: sub_PsiDia_TO_PsiAdia_WITH_MemGrid
 PUBLIC :: sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
 PUBLIC :: sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
+PUBLIC :: sub_psiHitermPsi
 
 CONTAINS
 !======================================================
@@ -95,7 +96,7 @@ CONTAINS
 !     E = <Psi | Op | Psi>
 !
 !======================================================
-      SUBROUTINE sub_PsiOpPsi(E,Psi,OpPsi,para_Op)
+      SUBROUTINE sub_PsiOpPsi(E,Psi,OpPsi,para_Op,iOp)
       USE mod_system
       USE mod_SetOp,           ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
@@ -103,26 +104,24 @@ CONTAINS
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op)       :: para_Op
-
-      complex (kind=Rkind)  :: E
+      TYPE (param_Op),      intent(in)           :: para_Op
+      integer,              intent(in), optional :: iOp
+      complex (kind=Rkind), intent(inout)        :: E
 
 !----- variables for the WP ----------------------------------------
-      TYPE (param_psi)   :: Psi,OpPsi
-
-!----- working variables ----------------------------------------
-      integer  :: n
+      TYPE (param_psi),     intent(in)           :: Psi
+      TYPE (param_psi),     intent(inout)        :: OpPsi
 
   !----- for debuging --------------------------------------------------
   logical, parameter :: debug = .FALSE.
   !logical, parameter :: debug = .TRUE.
   !---------------------------------------------------------------------
-      n = para_Op%nb_tot
       IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING sub_PsiOpPsi',n,                          &
-                    para_Op%nb_ba,para_Op%nb_bi,para_Op%nb_be
+        write(out_unitp,*) 'BEGINNING sub_PsiOpPsi',para_Op%nb_tot,     &
+                               para_Op%nb_ba,para_Op%nb_bi,para_Op%nb_be
         write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
         write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
+        IF (present(iOp)) write(out_unitp,*) 'iOp',iOp
         write(out_unitp,*)
         CALL write_param_Op(para_Op)
         IF (associated(para_Op%Cmat)) CALL Write_Mat(para_Op%Cmat,out_unitp,3)
@@ -134,7 +133,11 @@ CONTAINS
       END IF
 !-----------------------------------------------------------
 
-      CALL sub_OpPsi(Psi,OpPsi,para_Op)
+      IF (present(iOp)) THEN
+        CALL sub_OpiPsi(Psi,OpPsi,para_Op,iOp)
+      ELSE
+        CALL sub_OpPsi(Psi,OpPsi,para_Op)
+      END IF
 
       CALL Overlap_psi1_psi2(E,Psi,OpPsi)
 
@@ -163,7 +166,7 @@ CONTAINS
 
       !----- variables for the WP --------------------------------------
       TYPE (param_psi)   :: Psi,OpPsi
-      integer :: OpPsi_symab
+      integer            :: OpPsi_symab
 
       integer :: derOp_loc(2)
       logical :: With_Grid_loc,TransfoOp_loc
@@ -2697,7 +2700,7 @@ STOP 'cplx'
 !=======================================================================================
       SUBROUTINE sub_OpiPsi(Psi,OpPsi,para_Op,iOp)
       USE mod_system
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op,alloc_para_Op,read_OpGrid_OF_Op
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op,alloc_para_Op,read_OpGrid_OF_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,assignment (=)
       USE mod_psi_SimpleOp,    ONLY : assignment (=)
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
@@ -2806,25 +2809,51 @@ STOP 'cplx'
         IF (.NOT. para_Op%OpGrid(iOp)%grid_zero) THEN
           CALL sub_d0d1d2PsiBasisRep_TO_GridRep(Psi,para_Op%derive_termQdyn(:,iOp))
 
-          DO i1_bi=1,para_Op%nb_bie
-          DO i2_bi=1,para_Op%nb_bie
-            iqi1 = 1         + (i1_bi-1) * Psi%nb_qa
-            fqi1 = Psi%nb_qa + (i1_bi-1) * Psi%nb_qa
-            iqi2 = 1         + (i2_bi-1) * Psi%nb_qa
-            fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
+          IF (para_Op%OpGrid(iOp)%grid_cte) THEN
 
-            IF (Psi%cplx) THEN
-              OpPsi%CvecG(iqi1:fqi1) = OpPsi%CvecG(iqi1:fqi1) +         &
-                 Psi%CvecG(iqi2:fqi2) *                                 &
-                   para_Op%OpGrid(iOp)%Grid(:,i1_bi,i2_bi)
-            ELSE
-              OpPsi%RvecG(iqi1:fqi1) = OpPsi%RvecG(iqi1:fqi1) +         &
-                 Psi%RvecG(iqi2:fqi2) *                                 &
-                   para_Op%OpGrid(iOp)%Grid(:,i1_bi,i2_bi)
+            DO i1_bi=1,para_Op%nb_bie
+            DO i2_bi=1,para_Op%nb_bie
+              iqi1 = 1         + (i1_bi-1) * Psi%nb_qa
+              fqi1 = Psi%nb_qa + (i1_bi-1) * Psi%nb_qa
+              iqi2 = 1         + (i2_bi-1) * Psi%nb_qa
+              fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
+
+              IF (Psi%cplx) THEN
+                OpPsi%CvecG(iqi1:fqi1) = OpPsi%CvecG(iqi1:fqi1) +       &
+                      Psi%CvecG(iqi2:fqi2) * para_Op%OpGrid(iOp)%Mat_cte(i1_bi,i2_bi)
+              ELSE
+                OpPsi%RvecG(iqi1:fqi1) = OpPsi%RvecG(iqi1:fqi1) +       &
+                      Psi%RvecG(iqi2:fqi2) * para_Op%OpGrid(iOp)%Mat_cte(i1_bi,i2_bi)
+              END IF
+            END DO
+            END DO
+          ELSE
+            DO i1_bi=1,para_Op%nb_bie
+            DO i2_bi=1,para_Op%nb_bie
+              iqi1 = 1         + (i1_bi-1) * Psi%nb_qa
+              fqi1 = Psi%nb_qa + (i1_bi-1) * Psi%nb_qa
+              iqi2 = 1         + (i2_bi-1) * Psi%nb_qa
+              fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
+
+              IF (Psi%cplx) THEN
+                OpPsi%CvecG(iqi1:fqi1) = OpPsi%CvecG(iqi1:fqi1) +         &
+                   Psi%CvecG(iqi2:fqi2) *                                 &
+                     para_Op%OpGrid(iOp)%Grid(:,i1_bi,i2_bi)
+              ELSE
+                OpPsi%RvecG(iqi1:fqi1) = OpPsi%RvecG(iqi1:fqi1) +         &
+                   Psi%RvecG(iqi2:fqi2) *                                 &
+                     para_Op%OpGrid(iOp)%Grid(:,i1_bi,i2_bi)
+              END IF
+            END DO
+            END DO
             END IF
-          END DO
-          END DO
-       END IF
+        ELSE
+          IF (Psi%cplx) THEN
+            OpPsi%CvecG(:) = CZERO
+          ELSE
+            OpPsi%RvecG(:) = ZERO
+          END IF
+        END IF
 
 !     - the projection of PsiGridRep on PsiBasisRep -------------------
 !     write(out_unitp,*) 'OpPsiGridRep'
@@ -3167,5 +3196,59 @@ STOP 'cplx'
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid
+      SUBROUTINE sub_psiHitermPsi(Psi,iPsi,info,para_H)
+      USE mod_system
+      USE mod_SetOp,           ONLY : param_Op
+      USE mod_psi_set_alloc
+      IMPLICIT NONE
 
+      TYPE (param_psi)               :: Psi
+      integer                        :: iPsi
+      character (len=*)              :: info
+      TYPE (param_Op)                :: para_H
+
+
+
+      !----- local variables --------------------------------------
+      TYPE (param_psi)           :: OpPsi
+
+
+      complex(kind=Rkind) :: avOp
+      integer             :: iOp
+!----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'BEGINNING sub_psiHitermPsi'
+         write(out_unitp,*) 'ipsi,info',iPsi,info
+       END IF
+!-----------------------------------------------------------
+
+       OpPsi = psi  ! for the initialization
+
+       !for H
+       IF (para_H%name_Op /= 'H') STOP 'wrong Operator !!'
+       write(6,*) 'nb_Term',para_H%nb_Term ; flush(6)
+       DO iOp=1,para_H%nb_Term
+
+         CALL sub_PsiOpPsi(avOp,Psi,OpPsi,para_H,iOp)
+         write(out_unitp,"(i0,a,i0,a,2(i0,x),2a,f15.9,1x,f15.9)") iPsi,  &
+          ' H(',iOp,') der[',para_H%derive_termQact(:,iOp),']: ',info,avOp
+
+         CALL flush_perso(out_unitp)
+
+       END DO
+
+       CALL dealloc_psi(OpPsi)
+
+!----------------------------------------------------------
+        IF (debug) THEN
+          write(out_unitp,*) 'END sub_psiHitermPsi'
+          CALL flush_perso(out_unitp)
+        END IF
+!----------------------------------------------------------
+
+
+        end subroutine sub_psiHitermPsi
 END MODULE mod_OpPsi

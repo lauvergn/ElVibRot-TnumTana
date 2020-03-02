@@ -87,10 +87,10 @@ IMPLICIT NONE
   TYPE OldParam
     integer                      :: i_SG = 0
 
-    integer                      :: iq   = 0
+    integer                      :: iq    = 0
     integer                      :: iq_SG = 0
 
-    integer                      :: ib   = 0
+    integer                      :: ib    = 0
     integer                      :: ib_SG = 0
 
     integer, allocatable         :: tab_l_AT_SG(:) ! associated to i_SG
@@ -845,6 +845,8 @@ END SUBROUTINE get_iqSG_iSG_FROM_iq
 !  - Tabil(:): the "l" indexes corresponding to "i_SG"
 !  - Tabiq(:): the "iq" indexes corresponding to "iq_SG"
 SUBROUTINE get_Tabiq_Tabil_FROM_iq(Tabiq,Tabil,i_SG,iq_SG,iq,SGType2,OldPara,err_sub)
+!$    USE omp_lib, only : omp_get_thread_num
+IMPLICIT NONE
 
 integer, intent(inout) :: Tabiq(:)
 integer, intent(inout) :: Tabil(:)
@@ -863,9 +865,16 @@ logical, parameter :: debug=.FALSE.
 !logical, parameter :: debug=.TRUE.
 character (len=*), parameter :: name_sub = 'get_Tabiq_Tabil_FROM_iq'
 !-----------------------------------------------------------
+
 err_sub = 0
 IF (debug) THEN
   write(out_unitp,*) 'BEGINNING ',name_sub
+  !$ write(out_unitp,*) 'thread_num:',omp_get_thread_num()
+  write(out_unitp,*) ' iq',iq
+  write(out_unitp,*) ' i_SG,iq_SG',i_SG,iq_SG
+  write(out_unitp,*) ' Tabiq',Tabiq
+  write(out_unitp,*) ' Tabil',Tabil
+  IF (present(OldPara)) CALL Write_OldParam(OldPara)
   CALL flush_perso(out_unitp)
 END IF
 
@@ -895,7 +904,24 @@ DO i_SG_loc=i_SG,SGType2%nb_SG
 END DO
 
 i_SG       = i_SG_loc
-IF (iq_SG < 1) STOP 'iq_SG < 1'
+
+IF (i_SG > SGType2%nDind_SmolyakRep%Max_nDI) THEN
+  write(out_unitp,*) 'ERROR in ',name_sub
+  write(out_unitp,*) ' iq_SG',iq_SG
+  write(out_unitp,*) ' i_SG',i_SG
+  write(out_unitp,*) ' nDind_SmolyakRep%Max_nDI',SGType2%nDind_SmolyakRep%Max_nDI
+  IF (present(OldPara)) CALL Write_OldParam(OldPara)
+  CALL flush_perso(out_unitp)
+  STOP 'i_SG too large'
+END IF
+IF (iq_SG < 1) THEN
+  write(out_unitp,*) 'ERROR in ',name_sub
+  write(out_unitp,*) ' iq_SG',iq_SG
+  write(out_unitp,*) ' iq_SG < 1'
+  IF (present(OldPara)) CALL Write_OldParam(OldPara)
+  CALL flush_perso(out_unitp)
+  STOP 'iq_SG < 1'
+END IF
 
   IF (debug) write(out_unitp,*) ' i_SG,iq_SG,iq',i_SG,iq_SG,iq
   CALL flush_perso(out_unitp)
@@ -927,9 +953,10 @@ IF (err_sub /= 0) THEN
   write(out_unitp,*) ' i_SG,iq_SG,iq',i_SG,iq_SG,iq
   write(out_unitp,*) ' Tabil',Tabil
   write(out_unitp,*) '  from SGType2%nDind_SmolyakRep',i_SG
+  IF (present(OldPara)) CALL Write_OldParam(OldPara)
   err_sub = 1
   RETURN
-    !STOP 'calc_nDindex'
+  !STOP 'calc_nDindex'
 END IF
   IF (debug) write(out_unitp,*) ' Tabil',i_SG,' : ',Tabil
   CALL flush_perso(out_unitp)

@@ -3140,6 +3140,7 @@ END SUBROUTINE pack_basis
        IF (BasisnD%ndim == 0) THEN
          CONTINUE ! no grid point
        ELSE IF (BasisnD%packed_done) THEN
+         !write(6,*) 'iq',iq ; flush(6)
          x(:) = BasisnD%x(:,iq)
        ELSE ! BasisnD%nb_basis MUST BE > 0
          IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_x!!!'

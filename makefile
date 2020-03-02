@@ -1,20 +1,20 @@
 #=================================================================================
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
- F90 = mpifort
-#F90 = gfortran
+#F90 = mpifort
+ F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
 
 ## MPI compiled with: gfortran or ifort
-MPICORE = gfortran   
+MPICORE = gfortran
 
 ## debug_make=0 to enable parallel make
 ## debug_make=1 for fast debug make, no parallel
 debug_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -27,7 +27,9 @@ endif
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 1
+ARPACK = 0
+## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
+CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
@@ -137,6 +139,9 @@ ifeq ($(F90),ifort)
    ifeq ($(INT),8)
      F90FLAGS := $(F90FLAGS) -i8 
    endif
+
+   F90_VER = $(shell $(F90) --version | head -1 )
+
 endif
 #=================================================================================
 
@@ -170,6 +175,10 @@ ifeq ($(F90),pgf90)
    else
      F90LIB += 
    endif
+
+   F90_VER = $(shell $(F90) --version | head -2 | tail -1 )
+
+
 endif
 #=================================================================================
 
@@ -211,20 +220,24 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
    endif
    #
    # opt management
+   # -finit-local-zero
    ifeq ($(OPT),1)
       F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
-      CFLAGS   = -O5 -g $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
+      CFLAGS   = -O5 -g             $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
    else
       #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wconversion -Wconversion-extra
       #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wunused
        F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
-       CFLAGS   = -O0 -g $(OMPFLAG) -fwhole-file -Wuninitialized
+       CFLAGS   = -O0 -g             $(OMPFLAG) -fwhole-file -Wuninitialized
       #F90FLAGS = -O0 -fbounds-check -Wuninitialized
    endif
    # integer kind management
    ifeq ($(INT),8)
       F90FLAGS := $(F90FLAGS) -fdefault-integer-8 
    endif
+
+   F90_VER = $(shell $(F90) --version | head -1 )
+
 endif
 #=================================================================================
 
@@ -280,18 +293,20 @@ F90FLAGS := $(F90FLAGS)   $(EXTMOD)
 #=================================================================================
 #=================================================================================
 $(info ***********************************************************************)
-$(info ***********OS:              $(OS))
-$(info ***********COMPILER:        $(F90))
-$(info ***********OPTIMIZATION:    $(OPT))
-$(info ***********OpenMP:          $(OMPFLAG))
-$(info ***********Arpack:          $(ARPACK))
-$(info ***********Lapack:          $(LAPACK))
-$(info ***********QMLib:           $(QMLIB))
-$(info ***********F90FLAGS:        $(F90FLAGS))
-$(info ***********F90LIB:          $(F90LIB))
-$(info ***********subsystem file:  sub_system.$(extf))
-$(info ***********DIR of potlib.a: $(ExternalDIR))
-$(info ***********potLib:          $(PESLIB))
+$(info ***********OS:               $(OS))
+$(info ***********COMPILER:         $(F90))
+$(info ***********OPTIMIZATION:     $(OPT))
+$(info ***********COMPILER VERSION: $(F90_VER))
+$(info ***********OpenMP:           $(OMPFLAG))
+$(info ***********Arpack:           $(ARPACK))
+$(info ***********CERFACS:          $(CERFACS))
+$(info ***********Lapack:           $(LAPACK))
+$(info ***********QMLib:            $(QMLIB))
+$(info ***********F90FLAGS:         $(F90FLAGS))
+$(info ***********F90LIB:           $(F90LIB))
+$(info ***********subsystem file:   sub_system.$(extf))
+$(info ***********DIR of potlib.a:  $(ExternalDIR))
+$(info ***********potLib:           $(PESLIB))
 $(info ***********************************************************************)
 
 F90_FLAGS = $(F90) $(F90FLAGS)
@@ -315,17 +330,11 @@ endif
 #=================================================================================
 #=================================================================================
 
-
  LIBS := $(DIRLIB) $(QMLIB) $(PESLIB) $(F90LIB) $(ARPACKLIB)
  LYNKFLAGS = $(LIBS)
 
-
 #=================================================================================
 #=================================================================================
-
-#
-#DIR0 = .
-#DIRm = $(DIR0)
 DIR_EVRT=$(shell pwd)
 OBJ = $(DIR_EVRT)/obj
 
@@ -341,14 +350,17 @@ $(info ***********************************************************************)
 #
 CPPSHELL = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
            -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
+           -D__COMPILER_VER="'$(F90_VER)'" \
+           -D__COMPILER_OPT="'$(F90FLAGS)'" \
+           -D__COMPILER_LIBS="'$(F90LIB)'" \
            -D__EVRTPATH="'$(DIR_EVRT)'" \
            -D__EVR_VER="'$(EVR_ver)'" \
            -D__TNUM_VER="'$(TNUM_ver)'" \
            -D__TANA_VER="'$(TANA_ver)'"
-CPPSHELL_ARPACK = -D__ARPACK="$(ARPACK)"
-CPPSHELL_DIAGO  = -D__LAPACK="$(LAPACK)"
-CPPSHELL_QML    = -D__QML="$(QML)"
-
+CPPSHELL_ARPACK  = -D__ARPACK="$(ARPACK)"
+CPPSHELL_CERFACS = -D__CERFACS="$(CERFACS)"
+CPPSHELL_DIAGO   = -D__LAPACK="$(LAPACK)"
+CPPSHELL_QML     = -D__QML="$(QML)"
 #==========================================
 # the different programs
 #  vib:  make or make EVR
@@ -547,6 +559,8 @@ Obj_KEO_PrimOp= \
 Obj_main   =  $(OBJ)/vib.o $(OBJ)/versionEVR-T.o $(OBJ)/cart.o \
   $(OBJ)/sub_main_Optimization.o $(OBJ)/sub_main_nDfit.o
 
+Obj_EVR-Mod =  $(OBJ)/EVR-Module.o $(OBJ)/versionEVR-T.o 
+
 #Minimize Only list: sub_module_RotBasis, sub_module_basis_Grid_Param, sub_SymAbelian
 #... sub_module_Basis_LTO_n, 
 Obj_module =  \
@@ -588,11 +602,13 @@ Obj_propagation = \
  $(OBJ)/sub_propagation.o $(OBJ)/sub_Hmax.o $(OBJ)/sub_control.o \
  $(OBJ)/sub_TF_autocorr.o
 
-Obj_CRP = \
- $(OBJ)/sub_calc_crp_P_lanczos.o \
- $(OBJ)/sub_cpgmres_cerfacs.o $(OBJ)/sub_pmult_QMR.o \
- $(OBJ)/sub_GMRES_driver_cerfacs.o $(OBJ)/sub_npqm.o $(OBJ)/sub_qall.o \
-$(OBJ)/sub_NAG.o $(OBJ)/sub_pmult_GMRES.o $(OBJ)/sub_qm.o
+ifeq ($(CERFACS),1)
+  # CERFACS management
+  Obj_CRP = $(OBJ)/sub_CRP.o $(OBJ)/CERFACS_lib.o $(OBJ)/QMRPACK_lib.o
+else
+  Obj_CRP = $(OBJ)/sub_CRP.o $(OBJ)/QMRPACK_lib.o
+endif
+
 
 Obj_inactive = \
  $(OBJ)/sub_HST_harm.o $(OBJ)/sub_inactive_harmo.o \
@@ -609,7 +625,7 @@ Obj_Operator = \
 
 Obj_analysis = \
  $(OBJ)/sub_module_analysis.o $(OBJ)/sub_analyse.o \
- $(OBJ)/sub_NLO.o $(OBJ)/sub_CRP.o $(OBJ)/sub_VibRot.o $(OBJ)/sub_intensity.o
+ $(OBJ)/sub_NLO.o $(OBJ)/sub_VibRot.o $(OBJ)/sub_intensity.o
 
 
 Obj_Optimization = \
@@ -628,7 +644,7 @@ Obj_EVRT =\
   $(Obj_WP) \
   $(Obj_Operator) \
   $(Obj_inactive) $(Obj_active) \
-  $(Obj_propagation) \
+  $(Obj_propagation) $(Obj_CRP) \
   $(Obj_analysis) \
   $(Obj_Basis_WP_Op_propa) \
   $(Obj_Optimization) \
@@ -641,17 +657,19 @@ Obj_EVRT =\
 #===============================================
 #==============================================
 # vib (without argument)
-EVR1:obj $(VIBEXE)
+EVR1:obj vib $(VIBEXE)
 	@echo "EVR"
 
 #
 #make all programs (except work)
-all:obj $(VIBEXE)
+all:obj vib $(VIBEXE)
 	echo "EVR (for eclipse)"
 #
 # vib
-EVR:obj $(VIBEXE)
+EVR:obj vib $(VIBEXE)
 	echo "EVR"
+libEVR:obj $(OBJ)/libEVR.a
+	echo libEVR.a
 Tnum_FDriver: obj $(Main_TnumTana_FDriverEXE)
 	echo Main_TnumTana_FDriver
 Tnum_cDriver: obj $(Main_TnumTana_cDriverEXE)
@@ -695,13 +713,22 @@ PhysConst:obj $(PhysConstEXE)
 $(QMLibDIR_full):
 	cd $(QMLibDIR) ; make
    
-#
+# obj directory
 obj:
 	mkdir -p obj
 
+# vib script
+vib: 
+	echo "make vib script"
+	echo "#!/bin/bash" > vib
+	echo "cat > namelist" >> vib
+	echo "nice $(DIR_EVRT)/vib.exe < namelist" >> vib
+	echo "rm namelist" >> vib
+	chmod a+x vib
+
 # clean
 clean: 
-	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib2
+	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib2 vib
 	rm -rf *.dSYM
 	rm -f .DS_Store */.DS_Store */*/.DS_Store */*/*/.DS_Store
 	@cd Examples/exa_hcn-dist ; ./clean
@@ -721,14 +748,16 @@ clean:
 #===============================================
 #===============================================
 #
-$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(QMLibDIR_full)
+$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(QMLibDIR_full)
 	echo EVR-T
-	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o  $(LYNKFLAGS)
+	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(LYNKFLAGS)
 	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
 #===============================================
 #
 $(OBJ)/libTnum.a: obj $(Obj_KEO_PrimOp)
 	ar cr $(OBJ)/libTnum.a   $(Obj_KEO_PrimOp)
+$(OBJ)/libEVR.a:obj $(Obj_EVRT) $(OBJ)/EVR_Module.o $(OBJ)/EVR_driver.o $(QMLibDIR_full)
+	ar cr $(OBJ)/libEVR.a $(Obj_EVRT)  $(OBJ)/EVR_Module.o $(OBJ)/EVR_driver.o
 $(KEOTESTEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(KEOTEST).o
 	$(LYNK90)   -o $(KEOTESTEXE) $(OBJ)/$(KEOTEST).o $(OBJ)/libTnum.a $(LYNKFLAGS)
 #Main_TnumTana_FDriver
@@ -1069,25 +1098,12 @@ $(OBJ)/sub_TF_autocorr.o:$(DIRpropa)/sub_TF_autocorr.f90
 #
 #===================================================================================
 # sub_CRP: 
-$(OBJ)/sub_calc_crp_P_lanczos.o:$(DIRCRP)/sub_calc_crp_P_lanczos.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_calc_crp_P_lanczos.f90
-$(OBJ)/sub_cpgmres_cerfacs.o:$(DIRCRP)/sub_cpgmres_cerfacs.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_cpgmres_cerfacs.f
-$(OBJ)/sub_pmult_QMR.o:$(DIRCRP)/sub_pmult_QMR.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_pmult_QMR.f
-$(OBJ)/sub_GMRES_driver_cerfacs.o:$(DIRCRP)/sub_GMRES_driver_cerfacs.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_GMRES_driver_cerfacs.f
-$(OBJ)/sub_npqm.o:$(DIRCRP)/sub_npqm.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_npqm.f
-$(OBJ)/sub_qm.o:$(DIRCRP)/sub_qm.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_qm.f
-$(OBJ)/sub_qall.o:$(DIRCRP)/sub_qall.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_qall.f
-$(OBJ)/sub_NAG.o:$(DIRCRP)/sub_NAG.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_NAG.f
-$(OBJ)/sub_pmult_GMRES.o:$(DIRCRP)/sub_pmult_GMRES.f
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/sub_pmult_GMRES.f
-#
+$(OBJ)/sub_CRP.o:$(DIRCRP)/sub_CRP.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_CERFACS) -c $(DIRCRP)/sub_CRP.f90
+$(OBJ)/CERFACS_lib.o:$(DIRCRP)/CERFACS_lib.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/CERFACS_lib.f
+$(OBJ)/QMRPACK_lib.o:$(DIRCRP)/QMRPACK_lib.f
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/QMRPACK_lib.f
 #===================================================================================
 #Operator ....
 $(OBJ)/sub_module_ComOp.o:$(DIROp)/sub_module_ComOp.f90
@@ -1140,8 +1156,6 @@ $(OBJ)/sub_analyse.o:$(DIRana)/sub_analyse.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_analyse.f90
 $(OBJ)/sub_NLO.o:$(DIRana)/sub_NLO.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_NLO.f90
-$(OBJ)/sub_CRP.o:$(DIRana)/sub_CRP.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_CRP.f90
 $(OBJ)/sub_VibRot.o:$(DIRana)/sub_VibRot.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_VibRot.f90
 $(OBJ)/sub_intensity.o:$(DIRana)/sub_intensity.f90
@@ -1176,6 +1190,11 @@ $(OBJ)/$(GWPMAIN).o:$(DIRvib)/$(GWPMAIN).f90
 $(OBJ)/$(WORKMAIN).o:$(DirTNUM)/sub_main/$(WORKMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_main/$(WORKMAIN).f90
 #
+$(OBJ)/EVR_Module.o:$(DIRvib)/EVR_Module.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRvib)/EVR_Module.f90
+$(OBJ)/EVR_driver.o:$(DIRvib)/EVR_driver.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRvib)/EVR_driver.f90
+
 $(OBJ)/vib.o:$(DIRvib)/vib.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_ARPACK)  -c $(DIRvib)/vib.f90
 $(OBJ)/versionEVR-T.o:$(DIRvib)/versionEVR-T.f90

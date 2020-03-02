@@ -29,9 +29,9 @@
 
       MODULE mod_analysis
       USE mod_system
-      use mod_Constant, only: real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit
+      use mod_Constant, only: real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit, get_val_FROM_RWU
       USE mod_type_ana_psi,  only: param_ana_psi
-
+      USE mod_CRP
       IMPLICIT NONE
         TYPE param_ana
           integer              :: max_ana     = -1        ! nb of level to be analyzed. If max_ana=-1, all level are analyzed.
@@ -57,9 +57,6 @@
           logical :: NLO                           ! flag for NLO calculations
           logical :: Psi_ScalOp                    ! flag for NLO calculations
           integer :: CRP  = 0                      ! CRP=1, to CRP calculation
-          real (kind=Rkind) :: CRP_Ene = ZERO      ! Total energy for CRP
-          real (kind=Rkind) :: CRP_DEne = ZERO     ! Energy increment for the CRP
-          integer :: nb_CRP_Ene  = 1               ! Number of CRP calculation
 
           real (kind=Rkind) :: Temp                ! temperature (K) (for intensity)
 
@@ -72,6 +69,9 @@
 
           character (len=Line_len) :: name_file_spectralWP = 'file_WPspectral'
           logical                  :: formatted_file_WP    = .TRUE.
+
+          TYPE (param_CRP)         :: para_CRP
+
 
         END TYPE param_ana
 
@@ -131,10 +131,11 @@
 
       integer           :: ExactFact
 
-      integer, allocatable :: Weight_Rho(:)            ! enable to use a weight (0=>constant=1, +/-1=>step ...)
-      real (kind=Rkind), allocatable :: Qana_Weight(:) ! geometry (Qact order) for the analysis (use with Weight_Rho)
-      real (kind=Rkind), allocatable :: Qana_cut(:)    ! geometry (Qact order) for the analysis
-      integer, allocatable :: Qtransfo_type(:)         ! type of the transformation
+      integer,           allocatable :: Weight_Rho(:)    ! enable to use a weight (0=>constant=1, +/-1=>step ...)
+      real (kind=Rkind), allocatable :: Qana_Weight(:)   ! geometry (Qact order) for the analysis (use with Weight_Rho)
+      real (kind=Rkind), allocatable :: Qana_cut(:)      ! geometry (Qact order) for the analysis
+      integer,           allocatable :: Qtransfo_type(:) ! type of the transformation
+      logical                        :: AvScalOp,AvHiterm
 
       logical       :: QTransfo,formatted_file_WP
       logical        :: Spectral_ScalOp
@@ -155,9 +156,9 @@
                         propa,                                          &
                         print_psi,psi2,psi1D_Q0,psi2D_Q0,QTransfo,      &
                         Rho1D,Rho2D,Wheight_rho,Rho_type,psi_adia,      &
+                        AvScalOp,AvHiterm,                              &
                         Coherence,Coherence_epsi,                       &
-                        ExactFact,                                      &
-                        intensity,NLO,CRP,CRP_Ene,CRP_DEne,nb_CRP_Ene,  &
+                        ExactFact,intensity,NLO,CRP,                    &
                         Psi_ScalOp,VibRot,JJmax,                        &
                         ene0,Ezpe,Temp,                                 &
                 name_file_spectralWP,formatted_file_WP,FilePsiVersion,  &
@@ -171,6 +172,9 @@
       psi2                 = .FALSE.
       psi_adia             = .FALSE.
       QTransfo             = .FALSE.
+
+      AvScalOp             = .FALSE.
+      AvHiterm             = .FALSE.
 
       Coherence            = 0
       Coherence_epsi       = ONETENTH**6
@@ -191,9 +195,6 @@
       NLO                  = .FALSE.
 
       CRP                  = 0
-      CRP_Ene              = REAL_WU(ZERO,'cm-1','E')
-      CRP_DEne             = REAL_WU(ZERO,'cm-1','E')
-      nb_CRP_Ene           = 1
 
       VibRot               = .FALSE.
       JJmax                = -1
@@ -265,7 +266,11 @@
       para_ana%name_file_spectralWP = name_file_spectralWP
       para_ana%formatted_file_WP    = formatted_file_WP
 
-      para_ana%max_ene         = convRWU_TO_R(max_ene)
+      IF (get_val_FROM_RWU(max_ene) <= ZERO) THEN
+        para_ana%max_ene         = huge(ONE)
+      ELSE
+        para_ana%max_ene         = convRWU_TO_R(max_ene)
+      END IF
       para_ana%max_ana         = max_ana
 
       para_ana%ana             = ana
@@ -277,12 +282,6 @@
       para_ana%NLO             = NLO
 
       para_ana%CRP             = CRP
-      para_ana%CRP_Ene         = convRWU_TO_R(CRP_Ene)
-      para_ana%CRP_DEne        = convRWU_TO_R(CRP_DEne)
-      para_ana%nb_CRP_Ene      = nb_CRP_Ene
-
-      IF (debug) write(out_unitp,*) 'CRP,E,DE,nb_E   : ',para_ana%CRP,  &
-                  para_ana%CRP_Ene,para_ana%CRP_DEne,para_ana%nb_CRP_Ene
 
       para_ana%Ezpe            = convRWU_TO_R(Ezpe)
       para_ana%Temp            = Temp
@@ -298,6 +297,7 @@
         CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
                           Boltzmann_pop=.FALSE.,                        &
                           adia=psi_adia,                                &
+                          AvScalOp=AvScalOp,AvHiterm=AvHiterm,          &
                           Write_psi2_Grid=psi2,Write_psi2_Basis=psi2,   &
                           Write_psi_Grid=(.NOT. psi2),                  &
                           Write_psi_Basis=(.NOT. psi2),                 &
@@ -310,6 +310,7 @@
         CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
                           Boltzmann_pop=.TRUE.,Temp=Temp,               &
                           adia=psi_adia,                                &
+                          AvScalOp=AvScalOp,AvHiterm=AvHiterm,          &
                           Write_psi2_Grid=(print_psi > 0 .AND. psi2),   &
                           Write_psi2_Basis=(print_psi > 0 .AND. psi2),  &
                         Write_psi_Grid=(print_psi > 0 .AND. .NOT. psi2),&
@@ -331,6 +332,11 @@
 
       IF (allocated(Qtransfo_type))                                     &
              CALL dealloc_NParray(Qtransfo_type,"Qtransfo_type",name_sub)
+
+      !-- reading parameters for CRP ----------------------------
+      IF (para_ana%CRP > 0) THEN
+        CALL read_CRP(para_ana%para_CRP)
+      END IF
 
       END SUBROUTINE read_analyse
 !===============================================================================

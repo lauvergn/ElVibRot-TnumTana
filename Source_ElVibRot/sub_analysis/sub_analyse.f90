@@ -36,8 +36,8 @@ CONTAINS
 !
 !
 !================================================================
-      SUBROUTINE sub_analyse(Tab_Psi,nb_psi_in,para_H,                  &
-                          para_ana,para_intensity,para_AllOp,const_phys)
+      SUBROUTINE sub_analyse(Tab_Psi,nb_psi_in,para_H,para_ana,         &
+                             para_intensity,para_AllOp,const_phys)
       USE mod_system
       USE mod_Coord_KEO
       USE mod_basis
@@ -82,7 +82,7 @@ CONTAINS
 
       logical                        :: cube = .FALSE.
 
-      TYPE (param_ana_psi)           :: ana_psi
+      !TYPE (param_ana_psi)           :: ana_psi
 
       integer                        :: i,nb_col,ib
       real (kind=Rkind)              :: Q,E,DE
@@ -106,6 +106,7 @@ CONTAINS
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
+      IF (.NOT. para_ana%ana) RETURN
 
       mole       => para_H%mole
       para_Tnum  => para_H%para_Tnum
@@ -150,6 +151,9 @@ CONTAINS
 
       ! initialization for RD analysis
       IF (para_H%BasisnD%nb_basis > 1) THEN
+        IF (allocated(para_H%BasisnD%para_RD)) THEN
+          deallocate(para_H%BasisnD%para_RD)
+        END IF
         allocate(para_H%BasisnD%para_RD(para_H%BasisnD%nb_basis))
         para_H%BasisnD%para_RD(:)%RD_analysis = .FALSE.
         DO ib=1,para_H%BasisnD%nb_basis
@@ -180,31 +184,28 @@ CONTAINS
 
         IF (ene(i)-para_H%ComOp%ZPE > para_ana%max_ene) CYCLE
 
-        ana_psi%Ene = ene(i)
-        ana_psi%num_psi = i
-
-        RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
-        RWU_DE = REAL_WU(ana_psi%Ene-para_H%ComOp%ZPE,'au','E')
+        RWU_E  = REAL_WU(ene(i),'au','E')
+        RWU_DE = REAL_WU(ene(i)-para_H%ComOp%ZPE,'au','E')
         E  = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
         DE = convRWU_TO_R(RWU_DE,WorkingUnit=.FALSE.)
 
 
-        IF (ana_psi%num_psi < 10000) THEN
+        IF (i < 10000) THEN
           lformat = '("lev0: ",i4,i4,l3,3(1x,' // trim(adjustl(EneIO_format)) // '))'
         ELSE
           lformat = '("lev0: ",i0,i0,l3,3(1x,' // trim(adjustl(EneIO_format)) // '))'
         END IF
 
-        write(out_unitp,lformat) ana_psi%num_psi,0,tab_Psi(i)%convAvOp,E,DE
+        write(out_unitp,lformat) i,0,tab_Psi(i)%convAvOp,E,DE
 
         CALL Write_Psi_nDBasis(tab_Psi(i),nioWP,i,ZERO,file_WPspectral%formatted,FilePsiVersion)
 
       END DO
       close(nioWP)
 
-      ana_psi%ZPE        = para_H%ComOp%ZPE
-      ana_psi%Part_Func  = Q
-      ana_psi%Temp       = para_ana%Temp
+      para_ana%ana_psi%ZPE        = para_H%ComOp%ZPE
+      para_ana%ana_psi%Part_Func  = Q
+      para_ana%ana_psi%Temp       = para_ana%Temp
 
       write(out_unitp,*) 'population at T, Q',para_ana%Temp,Q
       write(out_unitp,*) 'Energy level (',const_phys%ene_unit,') pop and means :'
@@ -217,30 +218,34 @@ CONTAINS
         IF (.NOT. tab_Psi(i)%BasisRep) THEN
           CALL sub_PsiGridRep_TO_BasisRep(tab_Psi(i))
         END IF
-        ana_psi%Ene     = ene(i)
-        ana_psi%num_psi = i
+        para_ana%ana_psi%Ene     = ene(i)
+        para_ana%ana_psi%num_psi = i
 
         info = String_TO_String( " " //                                 &
            real_TO_char( ene(i)*const_phys%auTOenergy,"f12.6" ) // " : ")
 
-        CALL sub_analyze_psi(tab_Psi(i),ana_psi)
+        CALL sub_analyze_psi(tab_Psi(i),para_ana%ana_psi)
 
-        IF (allocated(ana_psi%max_RedDensity)) THEN
+        IF (allocated(para_ana%ana_psi%max_RedDensity)) THEN
           IF (.NOT. allocated(AllPsi_max_RedDensity)) THEN
-            CALL alloc_NParray(AllPsi_max_RedDensity,shape(ana_psi%max_RedDensity), &
+            CALL alloc_NParray(AllPsi_max_RedDensity,shape(para_ana%ana_psi%max_RedDensity), &
                               "AllPsi_max_RedDensity",name_sub)
             AllPsi_max_RedDensity(:) = ZERO
           END IF
 
           DO ib=1,size(AllPsi_max_RedDensity)
-            AllPsi_max_RedDensity(ib) = max(AllPsi_max_RedDensity(ib),ana_psi%max_RedDensity(ib))
+            AllPsi_max_RedDensity(ib) = max(AllPsi_max_RedDensity(ib),para_ana%ana_psi%max_RedDensity(ib))
           END DO
         END IF
 
         IF (para_ana%intensity .AND. para_intensity%l_IntVR) THEN
           CALL sub_moyABC(tab_Psi(i),i,info,para_intensity%ABC(:,i),para_AllOp)
-        ELSE IF (para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op > 0 .AND. ana_psi%AvScalOp) THEN
+        ELSE IF (para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op > 0 .AND. para_ana%ana_psi%AvScalOp) THEN
           CALL sub_moyScalOp(tab_Psi(i),i,info,para_AllOp)
+        END IF
+
+        IF (para_ana%ana_psi%AvHiterm) THEN
+          CALL sub_psiHitermPsi(tab_Psi(i),i,info,para_H)
         END IF
 
         write(out_unitp,*)
@@ -297,7 +302,7 @@ CONTAINS
       END IF
 !----------------------------------------------------------
 
-      CALL dealloc_ana_psi(ana_psi)
+      !CALL dealloc_ana_psi(ana_psi)
       CALL dealloc_NParray(ene,'ene',name_sub)
 
 !----------------------------------------------------------
@@ -470,6 +475,21 @@ CONTAINS
        END DO
 
        write(out_unitp,"(i0,2a,100(f15.9,1x))") iPsi,' avScalOp: ',info,avScalOp
+       CALL flush_perso(out_unitp)
+
+       !for H
+       IF (para_AllOp%tab_Op(1)%name_Op /= 'H') STOP 'wrong Operator !!'
+       write(6,*) 'nb_Term',para_AllOp%tab_Op(1)%nb_Term ; flush(6)
+       DO iOp=1,para_AllOp%tab_Op(1)%nb_Term
+
+         CALL sub_PsiOpPsi(avOp,Psi,OpPsi,para_AllOp%tab_Op(1),iOp)
+         write(out_unitp,"(i0,a,i0,a,2(i0,x),2a,f15.9,1x,f15.9)") iPsi,  &
+          ' H(',iOp,') der[',para_AllOp%tab_Op(1)%derive_termQact(:,iOp),&
+          ']: ',info,avOp
+
+         CALL flush_perso(out_unitp)
+
+       END DO
 
        CALL dealloc_psi(OpPsi)
        nullify(ScalOp)
@@ -478,12 +498,12 @@ CONTAINS
 !----------------------------------------------------------
         IF (debug) THEN
           write(out_unitp,*) 'END sub_moyScalOp'
+          CALL flush_perso(out_unitp)
         END IF
 !----------------------------------------------------------
 
 
         end subroutine sub_moyScalOp
-
 !================================================================
 !
 !     write psi or psi^2 on the grid point

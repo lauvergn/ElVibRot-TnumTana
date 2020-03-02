@@ -17,7 +17,7 @@
 !
 !    Copyright 2015  David Lauvergnat
 !      with contributions of:
-!          Mamadou Ndong (Tana)
+!          Mamadou Ndong:       (Tana)
 !          Josep Maria Luis:    geometry optimization (ElVibRot)
 !          Ahai Chen:           MPI (ElVibRot)
 !          Emil Lund klinting:  coupling with MidasCpp (Tana)
@@ -29,6 +29,8 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
 !===========================================================================
 !===========================================================================
       SUBROUTINE versionEVRT(write_version)
@@ -53,12 +55,17 @@
                    Tana_name,trim(adjustl(Tana_version))
 
         write(out_unitp,*) 'Compiled on "',trim(compile_host), '" the ',trim(compile_date)
+        write(out_unitp,*) 'Compiler version: ',trim(compiler_ver)
+        write(out_unitp,*) 'Compiler options: ',trim(compiler_opt)
+        write(out_unitp,*) 'Compiler libs: ',trim(compiler_libs)
+
         write(out_unitp,*) 'EVRT_path: ',trim(EVRT_path)
 
         write(out_unitp,*) '-----------------------------------------------'
 
         write(out_unitp,*) EVR_name,' is written by David Lauvergnat [1] '
-        write(out_unitp,*) '     with contributions of Josep Maria Luis [2]'
+        write(out_unitp,*) '  with contributions of'
+        write(out_unitp,*) '     Josep Maria Luis (optimization) [2]'
         write(out_unitp,*) '     Ahai Chen (MPI) [1,4]'
         write(out_unitp,*) '     Lucien Dupuy (CRP) [5]'
 
@@ -66,13 +73,13 @@
         write(out_unitp,*)
 
         write(out_unitp,*) Tnum_name,' is written David Lauvergnat [1]'
-        write(out_unitp,*) Tana_name,' is written by Mamadou Ndong '
-        write(out_unitp,*) '     with contributions of David Lauvergnat'
-        write(out_unitp,*) '        and Emil Lund klinting (coupling with MidasCpp) [3]'
+        write(out_unitp,*) Tana_name,' is written by Mamadou Ndong [1] and David Lauvergnat [1]'
+        write(out_unitp,*) '  with contributions'
+        write(out_unitp,*) '      Emil Lund klinting (coupling with MidasCpp) [3]'
 
         write(out_unitp,*) Tnum_name,' and ',Tana_name,' are under GNU LGPL3 license.'
         write(out_unitp,*)
-        write(out_unitp,*) '[1]: Laboratoire de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
+        write(out_unitp,*) '[1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
         write(out_unitp,*) '[2]: Institut de Química Computacional and Departament de Química',&
                                    ' Universitat de Girona, Catalonia, Spain'
         write(out_unitp,*) '[3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark'

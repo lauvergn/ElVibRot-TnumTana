@@ -290,7 +290,6 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
     write(out_unitp,lformat) (ana_psi%tab_WeightChannels(i_bi,1)*TEN**2,i_bi=1,psi%nb_bi)
   END IF
 
-
   CALL calc_1Dweight(psi,ana_psi,20,real(ana_psi%num_psi,kind=Rkind),info,.TRUE.)
 
   IF (.NOT. ana_psi%adia .AND. .NOT. ana_psi%propa) CALL calc_MaxCoef_psi(psi,ana_psi%T,info)
@@ -1447,11 +1446,12 @@ END SUBROUTINE sub_analyze_psi
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='calc_MaxCoef_psi'
       logical, parameter :: debug =.FALSE.
-!      logical, parameter :: debug =.TRUE.
+      !logical, parameter :: debug =.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'asso psi%BasisnD',associated(psi%BasisnD)
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
       IF (psi%nb_baie*psi%nb_bRot /= psi%nb_tot .AND.                   &

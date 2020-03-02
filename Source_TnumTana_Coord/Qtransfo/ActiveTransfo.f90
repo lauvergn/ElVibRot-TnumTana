@@ -567,8 +567,8 @@ MODULE mod_ActiveTransfo
       SUBROUTINE get_Qact0(Qact0,ActiveTransfo)
       IMPLICIT NONE
 
-        real (kind=Rkind), intent(inout)      :: Qact0(:)
-        TYPE (Type_ActiveTransfo), intent(in) :: ActiveTransfo
+        real (kind=Rkind),         intent(inout) :: Qact0(:)
+        TYPE (Type_ActiveTransfo), intent(in)    :: ActiveTransfo
 
 
         TYPE (Type_dnS)    :: dnQ

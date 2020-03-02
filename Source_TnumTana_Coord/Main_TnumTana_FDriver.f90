@@ -14,6 +14,7 @@
   Qact(:) = 0.5d0
   CALL Qact_TO_cart(Qact,size(Qact),Qcart,size(Qcart))
 
+  write(6,*) 'Beginning loop'
  !$OMP   PARALLEL &
  !$OMP   DEFAULT(NONE) &
  !$OMP   PRIVATE(i,Qact,Qcart)
@@ -26,7 +27,8 @@
   END DO
  !$OMP   END DO
  !$OMP   END PARALLEL
- write(6,*)
+  write(6,*)
+  write(6,*) 'END loop'
 
   DO i=1,3*nat,3
     write(6,*) (i-1)/3+1,Qcart(i:i+2)

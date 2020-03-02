@@ -35,10 +35,11 @@
       USE mod_basis
       USE mod_Op
       USE mod_PrimOp
+!$    USE omp_lib, only : omp_get_thread_num
       IMPLICIT NONE
 
-      integer       :: iq ! grid point number
-      logical, intent(in) :: freq_only
+      integer,         intent(in)    :: iq ! grid point number
+      logical,         intent(in)    :: freq_only
       TYPE (OldParam), intent(inout) :: OldPara
 
 
@@ -116,11 +117,13 @@
       !-----------------------------------------------------------
       CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
 
+
       CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
 
       IF (iq > 0 .OR. .NOT. test) THEN
         !-----------------------------------------------------
         !calculation of Qact
+
         CALL Rec_Qact(Qact,                                             &
                       para_AllOp%tab_Op(1)%para_AllBasis%BasisnD,iq,    &
                       mole,OldPara)
@@ -231,7 +234,7 @@
       !-----------------------------------------------------------
       !------ case nb_inact2n>0 ----------------------------------
       !-----------------------------------------------------------
-
+        JacSave = .FALSE.
         IF (iq > 0 .OR. .NOT. test) THEN
           !calculation of WrhonD
           WrhonD = Rec_WrhonD(para_AllOp%tab_Op(1)%para_AllBasis%BasisnD,iq,OldPara)

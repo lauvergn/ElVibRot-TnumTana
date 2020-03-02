@@ -1,6 +1,6 @@
 fich='exa*/*.f exa*/*/*.f'
 
-fich='Source*/*f90 Source*/*/*f90 Source*/*/*/*f90 sub*/*f90 sub*/*f '
+fich='Source*/*f90 Source*/*/*f90 Source*/*/*/*f90 Source*/*f Source*/*/*f Source*/*/*/*f sub*/*f90 sub*/*f '
 
 list1=' ifix idint float sngl dble aint dint anint dnint nint idnint iabs dabs cabs amod dmod isign dsign idim ddim max0 amax1 dmax1 amax0 max1  min0 amin1 dmin1 min1 amin0 '
 #list3=' imag conjg'

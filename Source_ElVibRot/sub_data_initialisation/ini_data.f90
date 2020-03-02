@@ -247,7 +247,7 @@
         CALL flush_perso(out_unitp)
       ENDIF
 
-      CALL read_active(para_Tnum,mole, para_AllBasis,ComOp,para_ReadOp,para_PES)
+      CALL read_active(para_Tnum,mole,para_AllBasis,ComOp,para_ReadOp,para_PES)
 
 !---------------------------------------------------------------------
 !------- read the parameter to analyze wave functions ----------------
@@ -351,7 +351,8 @@
                    para_PES%nb_scalar_Op == 0) para_PES%nb_scalar_Op = 3
 
       IF (.NOT. para_ana%davidson .AND. .NOT. para_ana%arpack .AND.     &
-          .NOT. para_ana%filter .AND. .NOT. para_ana%propa) para_ReadOp%make_Mat = .TRUE.
+          .NOT. para_ana%filter   .AND. para_ana%CRP <= 0 .AND.         &
+          .NOT. para_ana%propa)             para_ReadOp%make_Mat = .TRUE.
 
 !---------------------------------------------------------------------
 
@@ -543,6 +544,7 @@
         CALL RecSet_EneH0(para_Tnum,mole,para_AllBasis%BasisnD,         &
                           para_PES,para_ReadOp,ComOp)
       END IF
+
 
       IF(MPI_id==0) THEN
         write(out_unitp,*)

@@ -105,7 +105,7 @@
  PUBLIC  ADD_RWU_TO_TabConvRWU, ADD_RWU_TO_Tab_conv_FOR_quantity
  PUBLIC  convRWU_TO_R,convRWU_WorkingUnit_TO_R,convRWU_WritingUnit_TO_R,convRWU_TO_RWU
  PUBLIC  RWU_Write,RWU_WriteUnit
- PUBLIC  get_Conv_au_TO_WriteUnit,get_Conv_au_TO_Unit
+ PUBLIC  get_Conv_au_TO_WriteUnit,get_Conv_au_TO_Unit,get_val_FROM_RWU
  PUBLIC  Test_RWU
 
 

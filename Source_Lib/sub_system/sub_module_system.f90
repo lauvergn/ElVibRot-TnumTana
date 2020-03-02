@@ -79,6 +79,22 @@ MODULE mod_system
 #else
       character (len=Line_len) :: compile_host = "unknown: -D__COMPILE_HOST=?"
 #endif
+#if defined(__COMPILER_VER)
+      character (len=Line_len) :: compiler_ver = __COMPILER_VER
+#else
+      character (len=Line_len) :: compiler_ver = "unknown: -D__COMPILER_VER=?"
+#endif
+#if defined(__COMPILER_OPT)
+      character (len=Line_len) :: compiler_opt = &
+      __COMPILER_OPT
+#else
+      character (len=Line_len) :: compiler_opt = "unknown: -D__COMPILER_OPT=?"
+#endif
+#if defined(__COMPILER_LIBS)
+      character (len=Line_len) :: compiler_libs = __COMPILER_LIBS
+#else
+      character (len=Line_len) :: compiler_libs = "unknown: -D__COMPILER_LIBS=?"
+#endif
 
 
       logical :: openmp = .FALSE.

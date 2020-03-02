@@ -339,6 +339,9 @@ MODULE mod_file
       IF (.NOT. present(err_file) .AND. err_file_loc /= 0) STOP ' ERROR, the file name is empty!'
       IF (present(err_file)) err_file = err_file_loc
 
+      !write(6,*) 'ffile%name,iunit ',ffile%name,iunit ; flush(6)
+
+
       !- check if the file is already open ------------------
       inquire(FILE=ffile%name,NUMBER=iunit,OPENED=unit_opened)
       IF (.NOT. unit_opened) THEN ! the file is not open
@@ -505,7 +508,7 @@ MODULE mod_file
       IF (present(err_file)) err_file = err_file_loc
 
 !     - check if the file is already open ------------------
-!     write(out_unitp,*) 'name,unit,unit_opened ',name_file,unit,unit_opened
+      !write(6,*) 'name_file,iunit ',name_file,iunit ; flush(6)
 
       inquire(FILE=name_file,NUMBER=iunit,OPENED=unit_opened)
 !     write(out_unitp,*) 'name,unit,unit_opened ',name_file,unit,unit_opened
