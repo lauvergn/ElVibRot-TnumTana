@@ -64,7 +64,7 @@
   - makefile update
   
   - MPI functions added for easier access of matrix with MPI
-    NOTE: do not use for extremey big matrix
+    NOTE: do not use for extremely big matrix
       MPI_Send_matrix
       MPI_Recv_matrix
       MPI_Reduce_sum_matrix

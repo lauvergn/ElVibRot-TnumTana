@@ -254,6 +254,12 @@ CONTAINS
           write(out_unitp,*) '--------------------------------------------------'
           write(iunit,*) 'Davidson iteration',it ; CALL flush_perso(iunit)
         ENDIF
+
+#if(run_MPI)
+        CALL sub_MakeHPsi_Davidson(it,psi(1:ndim),Hpsi(1:ndim),Ene,ndim0,para_H,       &
+                             para_propa%para_Davidson,iunit,H_overlap,S_overlap,save_WP)
+        save_WP = .FALSE.
+#else
         save_WP = .FALSE.
         !CALL time_perso('Beginining it')
 
@@ -261,11 +267,7 @@ CONTAINS
         !- Hpsi(:) -----------------------------------------------------
         IF (debug) write(out_unitp,*) 'Hpsi(:)',it,ndim,ndim0
         IF (debug) CALL flush_perso(out_unitp)
-
-#if(run_MPI)
-        CALL sub_MakeHPsi_Davidson(it,psi(1:ndim),Hpsi(1:ndim),Ene,ndim0,para_H,       &
-                                   para_propa%para_Davidson,iunit,H_overlap,S_overlap)
-#else
+        
         CALL sub_MakeHPsi_Davidson(it,psi(1:ndim),Hpsi(1:ndim),Ene,ndim0, &
                                    para_H,para_propa%para_Davidson,iunit)
 #endif
@@ -395,7 +397,7 @@ CONTAINS
             write(out_unitp,21) it,ndim,normeg/epsi,iresidu,              &
                               Ene(1:nb_diago)*auTOene
           END IF
-          
+
           DO j=1,nb_diago
             convergeEne(j) = abs(DEne(j)) < para_propa%para_Davidson%conv_Ene
           END DO
@@ -492,12 +494,12 @@ CONTAINS
                                 mod(it,para_propa%para_Davidson%num_resetH)
           END IF
           CALL flush_perso(out_unitp)
-        
-        IF(MPI_id==0) THEN
+
           !----------------------------------------------------------
           !- save psi(:) on file
+          save_WP=.FALSE.
           IF (save_WP) THEN
-
+            IF(MPI_id==0) THEN
             CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,        &
                                      min_Ene,para_H%para_PES%min_pot,     &
                                      psi,psi0,Vec,Vec0,para_propa%para_Davidson,it,.TRUE.)
@@ -524,6 +526,7 @@ CONTAINS
             CALL sub_LCpsi_TO_psi(psi,Vec,ndim0,nb_diago)
             write(out_unitp,*) '  sub_LCpsi_TO_psi: psi done',ndim0,nb_diago
             CALL flush_perso(out_unitp)
+            ENDIF ! for MPI_id==0
 
             ! move the new vectors (nb_added_states), after the nb_diago ones
             DO i=1,nb_added_states
@@ -557,8 +560,6 @@ CONTAINS
             END DO
             write(out_unitp,*) '  deallocation Hpsi done'
             CALL flush_perso(out_unitp)
-
-
 
             CALL mat_id(Vec,ndim0,ndim0)
 
@@ -596,15 +597,14 @@ CONTAINS
             write(out_unitp,'(a,i0,a,i0)') 'At Davidson iteration: ',it,', Delta Real time (s): ',int(RealTime)
           END IF
           CALL flush_perso(out_unitp)
-        ENDIF ! for MPI_id==0
         
         IF (conv) EXIT
 
-!#if(run_MPI)
-!        ! boardcast new ndim value
-!        CALL MPI_BCAST(ndim,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
-!        CALL MPI_BCAST(ndim0,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
-!#endif
+#if(run_MPI)
+        ! boardcast new ndim value
+        CALL MPI_BCAST(ndim,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
+        CALL MPI_BCAST(ndim0,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
+#endif
 
       END DO ! for it=0,para_propa%para_Davidson%max_it
       write(out_unitp,*) '--------------------------------------------------'
@@ -633,7 +633,7 @@ CONTAINS
         para_H%para_ReadOp%Op_Transfo = .FALSE.
 #if(run_MPI)
         CALL sub_MakeHPsi_Davidson(it,psi(1:nb_diago),Hpsi(1:nb_diago),Ene,0,para_H,   &
-                                   para_propa%para_Davidson,iunit,H_overlap,S_overlap)
+                             para_propa%para_Davidson,iunit,H_overlap,S_overlap,.FALSE.)
 #else
         CALL sub_MakeHPsi_Davidson(it,psi(1:nb_diago),Hpsi(1:nb_diago),Ene,0, &
                                    para_H,para_propa%para_Davidson,iunit)
@@ -866,7 +866,7 @@ CONTAINS
 !=======================================================================================
 #if(run_MPI)
  SUBROUTINE sub_MakeHPsi_Davidson(it,psi,Hpsi,Ene,ndim0,                               &
-                                  para_H,para_Davidson,iunit,H_overlap,S_overlap)
+                                 para_H,para_Davidson,iunit,H_overlap,S_overlap,save_WP)
  USE mod_psi_Op,         ONLY:Overlap_HS_matrix_MPI3,Overlap_H_matrix_MPI4
 #else
  SUBROUTINE sub_MakeHPsi_Davidson(it,psi,Hpsi,Ene,ndim0,                &
@@ -903,6 +903,7 @@ CONTAINS
 #if(run_MPI) 
   Real (kind=Rkind),allocatable,intent(inout) :: H_overlap(:,:)
   Real (kind=Rkind),allocatable,intent(inout) :: S_overlap(:,:)
+  Logical,                      intent(in)    :: save_WP
 #endif
 
 !----- for debuging --------------------------------------------------
@@ -951,8 +952,8 @@ CONTAINS
 #if(run_MPI)
   !> calculate matrix H_overlap(i,j) for <psi(i)|Hpsi(j)>  (ndim0<=i,j<=ndim)
   !> shared by all threads
-  IF((.NOT. allocated(H_overlap)) .OR. size(H_overlap,1)/=ndim) THEN
-    IF(it==0) THEN
+  IF((.NOT. allocated(H_overlap)) .OR. ndim0<ndim .OR. (save_WP .eqv. .TRUE.)) THEN
+    IF(it==0 .OR. (save_WP .eqv. .TRUE.)) THEN
       CALL Overlap_HS_matrix_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
     ELSE
       ! S_overlap is calculated in sub_NewVec_Davidson
@@ -1076,7 +1077,11 @@ CONTAINS
 #if(run_MPI)
   CALL MPI_BCAST(ndim, size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
   CALL MPI_BCAST(ndim0,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+  
+  IF(allocated(H)) CALL dealloc_NParray(H,"H",name_sub)
+  CALL alloc_NParray(H,(/ ndim,ndim /),"H",name_sub)
+  H(1:ndim,1:ndim)=H_overlap(1:ndim,1:ndim)
+#else
 
  !----------------------------------------------------------
  !- First save H in H0
@@ -1103,9 +1108,6 @@ CONTAINS
    H(:,:) = ZERO
  END IF
 
-#if(run_MPI)
-  H(ndim0+1:ndim,1:ndim0)=H_overlap(ndim0+1:ndim,1:ndim0)
-#else
  !block: 2,1 (ndim0-ndim)*ndim0
  DO i=1,ndim0
  DO j=ndim0+1,ndim
@@ -1113,12 +1115,7 @@ CONTAINS
    H(j,i) = real(Overlap,kind=Rkind)
  END DO
  END DO
-#endif
  
-
-#if(run_MPI)
-  H(1:ndim,ndim0+1:ndim)=H_overlap(1:ndim,ndim0+1:ndim)
-#else
  !blocks: 1,2 ndim0*(ndim0-ndim) + 2,2: (ndim0-ndim)*(ndim0-ndim)
  DO i=ndim0+1,ndim
  DO j=1,ndim
@@ -1182,23 +1179,27 @@ CONTAINS
 ndim = size(psi)
 
  !- check the orthogonality ------------------------
- CALL alloc_NParray(S,(/ndim,ndim/),"S",name_sub)
 
 #if(run_MPI)
-  S(1:ndim,1:ndim)=S_overlap(1:ndim,1:ndim)
+  CALL sub_ana_S(S_overlap(1:ndim,1:ndim),ndim,max_Sii,max_Sij,.TRUE.)
+  IF (Print_Mat) CALL Write_Mat(S_overlap(1:ndim,1:ndim),out_unitp,5)
+  CALL flush_perso(out_unitp)
 #else
+ CALL alloc_NParray(S,(/ndim,ndim/),"S",name_sub)
+ 
  DO j=1,ndim
  DO i=1,ndim
    CALL Overlap_psi1_psi2(Overlap,psi(i),psi(j),With_Grid)
    S(i,j) = real(Overlap,kind=Rkind)
  END DO
  END DO
-#endif
-
+ 
  CALL sub_ana_S(S,ndim,max_Sii,max_Sij,.TRUE.)
  IF (Print_Mat) CALL Write_Mat(S,out_unitp,5)
  CALL flush_perso(out_unitp)
  CALL dealloc_NParray(S,"S",name_sub)
+#endif
+
  !- check the orthogonality ------------------------
 
  !----------------------------------------------------------

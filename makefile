@@ -1,8 +1,8 @@
 #=================================================================================
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-# F90 = mpifort
- F90 = gfortran
+ F90 = mpifort
+# F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
 
@@ -14,7 +14,7 @@ MPICORE = gfortran
 debug_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -27,7 +27,7 @@ endif
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 0
+ARPACK = 1
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -1724,9 +1724,14 @@ test:
 ifeq ($(F90),mpifort) 
 	@echo "test for MPI > MPI_test.log"
   # Davidson test
-	@echo "test for Davidson, result in ./Working_tests/MPI_tests/6D_Davidson/result/"
-	@echo "> test for Davidson" > MPI_test.log
+  # 6D
+	@echo "test for Davidson 6D, result in ./Working_tests/MPI_tests/6D_Davidson/result/"
+	@echo "> test for Davidson 6D" > MPI_test.log
 	@cd ./Working_tests/MPI_tests/6D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
+  # 21D
+	@echo "test for Davidson 21D, result in ./Working_tests/MPI_tests/21D_Davidson/result/"
+	@echo "> test for Davidson 21D" > MPI_test.log
+	@cd ./Working_tests/MPI_tests/21D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
   # Arpack test
   ifeq ($(ARPACK),1) 
 	  @echo "test for Arpack, result in ./Working_tests/MPI_tests/6D_arpack/result/"
@@ -1744,10 +1749,19 @@ endif
 ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))  
 	@echo "test for" $(F90)$(parall_name) ">" $(F90)$(parall_name)"_test.log"
   # Davidson test
-	@echo "test for Davidson, result in ./Working_tests/MPI_tests/6D_Davidson"$(parall_name)"/result/"
-	@echo "> test for Davidson" > $(F90)$(parall_name)_test.log
+  # 6D
+	@echo "test for Davidson 6D, result in ./Working_tests/MPI_tests/6D_Davidson"$(parall_name)"/result/"
+	@echo "> test for Davidson 6D" > $(F90)$(parall_name)_test.log
 	@cp -rf ./Working_tests/MPI_tests/6D_Davidson ./Working_tests/MPI_tests/6D_Davidson$(parall_name)
 	@cd ./Working_tests/MPI_tests/6D_Davidson$(parall_name); \
+	    sed -e "s/parall=MPI/parall=${parall}/g" shell_run  > shell_runp ; \
+	    mv shell_runp shell_run; chmod 777 *; \
+	    ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
+	# 21D
+	@echo "test for Davidson 21D, result in ./Working_tests/MPI_tests/21D_Davidson"$(parall_name)"/result/"
+	@echo "> test for Davidson 21D" > $(F90)$(parall_name)_test.log
+	@cp -rf ./Working_tests/MPI_tests/21D_Davidson ./Working_tests/MPI_tests/21D_Davidson$(parall_name)
+	@cd ./Working_tests/MPI_tests/21D_Davidson$(parall_name); \
 	    sed -e "s/parall=MPI/parall=${parall}/g" shell_run  > shell_runp ; \
 	    mv shell_runp shell_run; chmod 777 *; \
 	    ./run_jobs >> ../../../$(F90)$(parall_name)_test.log

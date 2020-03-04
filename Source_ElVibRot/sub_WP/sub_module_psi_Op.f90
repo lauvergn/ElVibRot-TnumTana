@@ -647,7 +647,7 @@ SUBROUTINE Overlap_H_matrix_MPI4(H_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
 
 
   CALL increase_martix(H_overlap,name_sub,ndim0,ndim)
-  
+
 !  IF(allocated(H_overlap)) THEN
 !!    CALL alloc_NParray(H0_overlap,(/ ndim,ndim /),"H0",name_sub)
 !!    H0_overlap(1:ndim0,1:ndim0)=H_overlap(1:ndim0,1:ndim0)
@@ -830,7 +830,7 @@ SUBROUTINE Overlap_psi_Hpsi_MPI(H_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
   CALL distribute_psi_pack_MPI(Hpsi,ndim0+1,ndim,With_Grid=With_Grid_loc)
   CALL calculate_overlap_MPI(psi,ndim0+1,ndim,With_Grid=With_Grid_loc,Hpsi=Hpsi,       &
                              H_overlap=H_overlap)
-                             
+
 END SUBROUTINE Overlap_psi_Hpsi_MPI
 #endif
 !=======================================================================================
@@ -1189,7 +1189,7 @@ SUBROUTINE calculate_overlap_MPI(psi,ndim1,ndim2,With_Grid,Hpsi,S_overlap,H_over
         H_overlap(j,i)=real(Overlap,kind=Rkind) 
       ENDDO 
     ENDDO
-    
+
     ! collect and broadcast result
     CALL MPI_Reduce_sum_matrix(H_overlap,ndim1,ndim2,1,ndim1-1,root_MPI)
     CALL MPI_Bcast_matrix     (H_overlap,ndim1,ndim2,1,ndim1-1,root_MPI)
@@ -1711,8 +1711,6 @@ SUBROUTINE Overlap_psi1_psi2_MPI2(H_overlap,S_overlap,psi,Hpsi,ndim,With_Grid)
                          root_MPI,MPI_id)
     CALL MPI_Send_matrix(S_overlap,bound1_MPI,bound2_MPI,bound1_MPI,bound2_MPI,        &  
                          root_MPI,MPI_id)
-                         write(*,*) 'send done',MPI_id
-
   ENDIF ! for MPI_id/=0  
 
 !  DO i_MPI=1,MPI_np-1

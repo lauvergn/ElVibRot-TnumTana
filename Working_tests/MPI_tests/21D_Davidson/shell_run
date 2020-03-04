@@ -166,7 +166,7 @@ X 1 2
           print=f print_psi=0 Psi_ScalOp=f intensity=f arpack=$arpack davidson=$dav
           name_file_spectralWP='$name_WP' formatted_file_WP=t FilePsiVersion=1 /
 
- &davidson nb_WP=$nb_ana max_it=200 max_WP=50 num_resetH=2 NewVec_type=4
+ &davidson nb_WP=$nb_ana max_it=200 max_WP=500 num_resetH=2 NewVec_type=4
            lower_states=t conv_resi=0.0005 'au' conv_ene=0.00010 'au'
            read_WP=t read_listWP=f name_file_readWP='$name_WPR' formatted_file_readWP=t
 /
