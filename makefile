@@ -1757,7 +1757,7 @@ ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
 	    sed -e "s/parall=MPI/parall=${parall}/g" shell_run  > shell_runp ; \
 	    mv shell_runp shell_run; chmod 777 *; \
 	    ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
-	# 21D
+  # 21D
 	@echo "test for Davidson 21D, result in ./Working_tests/MPI_tests/21D_Davidson"$(parall_name)"/result/"
 	@echo "> test for Davidson 21D" > $(F90)$(parall_name)_test.log
 	@cp -rf ./Working_tests/MPI_tests/21D_Davidson ./Working_tests/MPI_tests/21D_Davidson$(parall_name)
