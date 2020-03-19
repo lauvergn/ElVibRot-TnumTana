@@ -35,7 +35,7 @@
 !   or  lect_WP0BasisRep = .TRUE.
 !
 !     calculating WP0 on the grid (GridRep)
-!          WP0(qi) =  exp[-((Q-Qeq)/sigma)2]*exp[i*imp_k*(Q-Qeq)]
+!          WP0(qi) =  exp[-((Q-Qeq)/sigma)^2]*exp[i*imp_k*(Q-Qeq)]
 !
 !
 !     If WP0BasisRep=.TRUE. => WP0 is BasisRep and nWP0=dim(WP0BasisRep)

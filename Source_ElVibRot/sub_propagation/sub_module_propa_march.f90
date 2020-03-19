@@ -146,6 +146,12 @@
       CASE (7)
         CALL march_BS(T,no,WP(1),WP0(1),para_H,para_propa)
 
+      CASE (9)
+        CALL march_SIP(T,no,WP(1),WP0(1),para_H,para_propa)
+
+      CASE (10)
+        CALL march_Spectral(T,no,WP(1),WP0(1),para_H,para_propa)
+
       CASE (22,24) ! nOD
 !       CALL march_split_field(T,WP(:),nb_WP,print_Op,
 !    *                       para_H,tab_Op(3:5),
@@ -1122,7 +1128,7 @@
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
+      USE mod_ana_psi,         ONLY : norm2_psi
       USE mod_psi_SimpleOp
       IMPLICIT NONE
 
@@ -1146,7 +1152,7 @@
 !------ working parameters --------------------------------
 
       complex (kind=Rkind)   :: Overlap,cdot,rt,rti,fac_k,norm
-      real (kind=Rkind) :: phase,limit
+      real (kind=Rkind)      :: phase,limit
 
       integer       :: it,it_max,no,max_der,nb_der
       integer       :: i,j,k,jt,ip,iq
@@ -1504,6 +1510,853 @@
 !STOP
 
  END SUBROUTINE march_noD
+!================================================================
+!
+!     march Short Iteration Progration (Lanczos ...)
+!
+!================================================================
+      !!@description: march SIP
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+  SUBROUTINE march_SIP(T,no,psi,psi0,para_H,para_propa)
+      USE mod_system
+      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
+
+      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
+      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
+      USE mod_psi_SimpleOp
+      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op),       intent(in)     :: para_H
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_propa),    intent(inout)  :: para_propa
+      TYPE (param_psi),      intent(in)     :: psi0
+      TYPE (param_psi),      intent(inout)  :: psi
+      integer,               intent(in)     :: no
+      real (kind=Rkind),     intent(in)     :: T
+
+!------ working variables ---------------------------------
+      complex (kind=Rkind)      :: cdot
+      real (kind=Rkind)         :: E0,microT,microdeltaT,phase,microphase
+      complex (kind=Rkind)      :: psi0_psiKrylovSpace(para_propa%para_poly%npoly)
+
+      integer                            :: n
+      complex (kind=Rkind)               :: H(para_propa%para_poly%npoly,para_propa%para_poly%npoly)
+      complex (kind=Rkind), allocatable  :: UPsiOnKrylov(:)
+      complex (kind=Rkind), allocatable  :: Vec(:,:)
+      real (kind=Rkind),    allocatable  :: Eig(:)
+
+      TYPE (param_psi),     allocatable  :: tab_KrylovSpace(:)
+      complex (kind=Rkind)               :: Overlap
+
+
+      integer              :: it,i,j
+
+!----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='march_SIP'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'deltaT',para_propa%WPdeltaT
+        write(out_unitp,*) 'E0,Esc',para_H%E0,para_H%Esc
+        write(out_unitp,*) 'order',para_propa%para_poly%npoly
+      END IF
+!-----------------------------------------------------------
+
+      allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1))
+
+      tab_KrylovSpace(1) = psi
+
+      IF (para_propa%nb_micro > 1) THEN
+        psi0_psiKrylovSpace(:) = CZERO
+        psi0_psiKrylovSpace(1) = Calc_AutoCorr(psi0,tab_KrylovSpace(1), &
+                                         para_propa,T,Write_AC=.FALSE.)
+      END IF
+
+      E0 = para_H%E0
+      H(:,:) = CZERO
+      DO j=2,para_propa%para_poly%npoly+1
+        CALL sub_OpPsi(Psi  =tab_KrylovSpace(j-1),                      &
+                       OpPsi=tab_KrylovSpace(j),para_Op=para_H)
+        IF (j == 2) THEN
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(1),tab_KrylovSpace(2))
+          E0 = real(Overlap,kind=Rkind)
+        END IF
+        CALL sub_scaledOpPsi(Psi  =tab_KrylovSpace(j-1),                &
+                             OpPsi=tab_KrylovSpace(j),E0=E0,Esc=ONE)
+
+        !make part of the H matrix (related to the vector j-1)
+        ! OpPsi of the vector j-1 is in tab_KrylovSpace(j).
+        ! That why we need a loop util npoly+1.
+        DO i=1,j-1
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(i),tab_KrylovSpace(j))
+          H(i,j-1) = Overlap
+          H(j-1,i) = conjg(Overlap)
+        END DO
+
+        CALL UPsi_spec(UPsiOnKrylov,H(1:j-1,1:j-1),Vec,Eig,             &
+                              para_propa%WPdeltaT,j-1,With_diago=.TRUE.)
+        !write(6,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
+        IF (abs(UPsiOnKrylov(j-1)) < para_propa%para_poly%poly_tol .OR. &
+            j == para_propa%para_poly%npoly+1) THEN
+          n = j-1
+          write(6,*) n,'abs(UPsiOnKrylov(n)',abs(UPsiOnKrylov(n))
+          EXIT
+        END IF
+
+        ! ortho, the Krylov space: new vector
+        !2d version (more stable than the 1st and the 3d ones)
+        CALL renorm_psi(tab_KrylovSpace(j))
+        DO i=1,j-1
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(i),tab_KrylovSpace(j))
+          IF (abs(Overlap) == ZERO) CYCLE
+          tab_KrylovSpace(j) = tab_KrylovSpace(j) - tab_KrylovSpace(i) * Overlap
+          CALL renorm_psi(tab_KrylovSpace(j))
+        END DO
+
+        IF (para_propa%nb_micro > 1) THEN
+          psi0_psiKrylovSpace(j) = Calc_AutoCorr(psi0,tab_KrylovSpace(j),&
+                                          para_propa,T,Write_AC=.FALSE.)
+        END IF
+
+      END DO
+
+      IF (debug) write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n))
+
+      Psi = ZERO
+      DO i=1,n
+        Psi = Psi + UPsiOnKrylov(i)*tab_KrylovSpace(i)
+      END DO
+
+      !- check norm ------------------
+      CALL norm2_psi(psi)
+      IF ( psi%norme > psi%max_norme) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' STOP propagation: norm > max_norm',                &
+                         psi%norme
+        para_propa%march_error   = .TRUE.
+        para_propa%test_max_norm = .TRUE.
+        STOP
+      END IF
+
+      !- Phase Shift -----------------
+      phase = E0*para_propa%WPdeltaT
+      psi   = psi * exp(-EYE*phase)
+
+      !- autocorelation -----------------
+      IF (para_propa%nb_micro > 1) THEN
+        microdeltaT = para_propa%WPdeltaT/real(para_propa%nb_micro,kind=Rkind)
+        microphase  = phase/real(para_propa%nb_micro,kind=Rkind)
+
+        phase  = ZERO
+        microT = ZERO
+        DO it=1,para_propa%nb_micro
+
+          microT = microT + microdeltaT
+          phase  = phase   + microphase
+
+          CALL UPsi_spec(UPsiOnKrylov,H,Vec,Eig,microT,n,With_diago=.FALSE.)
+
+          cdot = sum(UPsiOnKrylov(1:n)*psi0_psiKrylovSpace(1:n)) ! we cannot use dot_product
+          cdot = cdot * exp(-EYE*phase)
+          CALL Write_AutoCorr(no,T+microT,cdot)
+        END DO
+        CALL flush_perso(no)
+      ELSE
+        cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+        CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+        CALL flush_perso(no)
+      END IF
+
+
+      ! deallocation
+      DO i=1,size(tab_KrylovSpace)
+         CALL dealloc_psi(tab_KrylovSpace(i))
+      END DO
+      deallocate(tab_KrylovSpace)
+      IF (allocated(Vec))          CALL dealloc_NParray(Vec,'Vec',name_sub)
+      IF (allocated(Eig))          CALL dealloc_NParray(Eig,'Eig',name_sub)
+      IF (allocated(UPsiOnKrylov)) CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        CALL norm2_psi(psi)
+        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+      IF (debug) STOP
+
+
+  END SUBROUTINE march_SIP
+  SUBROUTINE UPsi_spec(UPsiOnKrylov,H,Vec,Eig,deltaT,n,With_diago)
+      USE mod_system
+      IMPLICIT NONE
+
+
+
+!----- variables for the WP propagation ----------------------------
+      complex (kind=Rkind),              intent(in)     :: H(n,n)
+      complex (kind=Rkind), allocatable, intent(inout)  :: Vec(:,:)
+      real (kind=Rkind),    allocatable, intent(inout)  :: Eig(:)
+      complex (kind=Rkind), allocatable, intent(inout)  :: UPsiOnKrylov(:)
+      real (kind=Rkind),                 intent(in)     :: deltaT
+      integer,                           intent(in)     :: n
+      logical,                           intent(in)     :: With_diago
+
+!------ working variables ---------------------------------
+      complex (kind=Rkind) :: coef_i
+      integer              :: i
+
+!----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='UPsi_spec'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'deltaT',deltaT
+        write(out_unitp,*) 'n',n
+        write(out_unitp,*) 'With_diago',With_diago
+      END IF
+!-----------------------------------------------------------
+      IF (With_diago) THEN
+        IF (allocated(Vec)) CALL dealloc_NParray(Vec,'Vec',name_sub)
+        CALL alloc_NParray(Vec,[n,n],'Vec',name_sub)
+
+        IF (allocated(Eig)) CALL dealloc_NParray(Eig,'Eig',name_sub)
+        CALL alloc_NParray(Eig,[n],  'Eig',name_sub)
+
+        IF (allocated(UPsiOnKrylov))                                    &
+              CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
+        CALL alloc_NParray(UPsiOnKrylov,[n],'UPsiOnKrylov',name_sub)
+
+        CALL diagonalization_HerCplx(H,Eig,Vec,n,3,1,.TRUE.)
+      END IF
+
+      ! loop on the eigenvectors
+      UPsiOnKrylov = CZERO
+      DO i=1,n
+        coef_i = Vec(1,i) ! just (1,i) because psi on the Krylov space is [1,0,0,...0]
+        coef_i = coef_i * exp(-EYE*Eig(i)*deltaT) ! spectral propa
+
+        UPsiOnKrylov(:) = UPsiOnKrylov(:) + conjg(Vec(:,i))*coef_i ! update U.psi on the Krylov space
+
+      END DO
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov)
+        write(out_unitp,*) 'norm2 UPsiOnKrylov',dot_product(UPsiOnKrylov,UPsiOnKrylov)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+
+  END SUBROUTINE UPsi_spec
+  SUBROUTINE UPsi_spec_v1(UPsiOnKrylov,H,deltaT,n)
+      USE mod_system
+      IMPLICIT NONE
+
+
+
+!----- variables for the WP propagation ----------------------------
+      complex (kind=Rkind),  intent(in)     :: H(n,n)
+      complex (kind=Rkind),  intent(inout)  :: UPsiOnKrylov(n)
+      real (kind=Rkind),     intent(in)     :: deltaT
+      integer,               intent(in)     :: n
+
+!------ working variables ---------------------------------
+      complex (kind=Rkind) :: Vec(n,n)
+      real (kind=Rkind)    :: Eig(n)
+      complex (kind=Rkind) :: coef_i
+      integer              :: i
+
+!----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='UPsi_spec_v1'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'deltaT',deltaT
+      END IF
+!-----------------------------------------------------------
+
+      CALL diagonalization_HerCplx(H,Eig,Vec,n,3,1,.TRUE.)
+
+      ! loop on the eigenvectors
+      UPsiOnKrylov = CZERO
+      DO i=1,n
+        coef_i = Vec(1,i) ! just (1,i) because psi on the Krylov space is [1,0,0,...0]
+        coef_i = coef_i * exp(-EYE*Eig(i)*deltaT) ! spectral propa
+
+        UPsiOnKrylov(:) = UPsiOnKrylov(:) + conjg(Vec(:,i))*coef_i ! update U.psi on the Krylov space
+
+      END DO
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov)
+        write(out_unitp,*) 'norm2 UPsiOnKrylov',dot_product(UPsiOnKrylov,UPsiOnKrylov)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+
+  END SUBROUTINE UPsi_spec_v1
+  SUBROUTINE march_SIP_v1(T,no,psi,psi0,para_H,para_propa)
+      USE mod_system
+      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
+
+      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
+      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
+      USE mod_psi_SimpleOp
+      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op),       intent(in)     :: para_H
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_propa),    intent(inout)  :: para_propa
+      TYPE (param_psi),      intent(in)     :: psi0
+      TYPE (param_psi),      intent(inout)  :: psi
+      integer,               intent(in)     :: no
+      real (kind=Rkind),     intent(in)     :: T
+
+!------ working variables ---------------------------------
+      TYPE (param_psi), pointer :: w1,w2
+      complex (kind=Rkind)      :: cdot
+      real (kind=Rkind)         :: E0,microT,microdeltaT,phase,microphase
+      integer                   :: n
+
+
+      complex (kind=Rkind) :: H(para_propa%para_poly%npoly,para_propa%para_poly%npoly)
+      complex (kind=Rkind) :: UPsiOnKrylov(para_propa%para_poly%npoly)
+
+      TYPE (param_psi), allocatable :: tab_KrylovSpace(:)
+      complex (kind=Rkind) :: Overlap,ReNor,coef_i
+
+      logical, parameter :: test = .FALSE.
+      !logical, parameter :: test = .TRUE.
+
+      integer              :: it,i,j
+
+!----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='march_SIP_v1'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'deltaT',para_propa%WPdeltaT
+        write(out_unitp,*) 'E0,Esc',para_H%E0,para_H%Esc
+        write(out_unitp,*) 'order',para_propa%para_poly%npoly
+      END IF
+!-----------------------------------------------------------
+
+      w1 => para_propa%work_WP(1)
+      w2 => para_propa%work_WP(2)
+
+      allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1))
+
+      tab_KrylovSpace(1) = psi
+
+      E0 = para_H%E0
+      H(:,:) = CZERO
+      DO j=2,para_propa%para_poly%npoly+1
+        CALL sub_OpPsi(Psi  =tab_KrylovSpace(j-1),                      &
+                       OpPsi=tab_KrylovSpace(j),para_Op=para_H)
+        IF (j == 2) THEN
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(1),tab_KrylovSpace(2))
+          E0 = real(Overlap,kind=Rkind)
+        END IF
+        CALL sub_scaledOpPsi(Psi  =tab_KrylovSpace(j-1),                &
+                             OpPsi=tab_KrylovSpace(j),E0=E0,Esc=ONE)
+
+        !make part of the H matrix (related to the vector j-1)
+        ! OpPsi of the vector j-1 is in tab_KrylovSpace(j).
+        ! That why we need a loop util npoly+1.
+        DO i=1,j-1
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(i),tab_KrylovSpace(j))
+          H(i,j-1) = Overlap
+          H(j-1,i) = conjg(Overlap)
+        END DO
+
+        CALL UPsi_spec_v1(UPsiOnKrylov(1:j-1),H(1:j-1,1:j-1),para_propa%WPdeltaT,j-1)
+        !write(6,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
+        IF (abs(UPsiOnKrylov(j-1)) < para_propa%para_poly%poly_tol .OR. &
+            j == para_propa%para_poly%npoly+1) THEN
+          n = j-1
+          write(6,*) n,'abs(UPsiOnKrylov(n)',abs(UPsiOnKrylov(n))
+          EXIT
+        END IF
+
+        ! ortho, the Krylov space: new vector
+!        !1st version (not very stable)
+!        CALL renorm_psi(tab_KrylovSpace(j))
+!        DO i=1,j-1
+!          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(j),tab_KrylovSpace(i))
+!          IF (abs(Overlap) == ZERO) CYCLE
+!          ReNor = ONE/sqrt(ONE-abs(Overlap)**2)
+!          w1                 = tab_KrylovSpace(j)*ReNor
+!          w2                 = tab_KrylovSpace(i) * (Overlap*ReNor)
+!          tab_KrylovSpace(j) = w1-w2
+!        END DO
+
+        !2e version (more stable than the 1st)
+        CALL renorm_psi(tab_KrylovSpace(j))
+        DO i=1,j-1
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(i),tab_KrylovSpace(j))
+          IF (abs(Overlap) == ZERO) CYCLE
+          tab_KrylovSpace(j) = tab_KrylovSpace(j) - tab_KrylovSpace(i) * Overlap
+          CALL renorm_psi(tab_KrylovSpace(j))
+        END DO
+
+!        !3e version (less stable than the 2e)
+!        DO i=1,j-1
+!          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(j),tab_KrylovSpace(i))
+!          IF (abs(Overlap) == ZERO) CYCLE
+!          CALL norm2_psi(tab_KrylovSpace(j))
+!          w1                 = tab_KrylovSpace(j)
+!          w2                 = tab_KrylovSpace(i) * (conjg(Overlap)/tab_KrylovSpace(j)%norme)
+!          tab_KrylovSpace(j) = w1-w2
+!        END DO
+!        CALL renorm_psi(tab_KrylovSpace(j))
+
+      END DO
+
+      IF (debug) write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n))
+
+      Psi = ZERO
+      DO i=1,n
+        Psi = Psi + UPsiOnKrylov(i)*tab_KrylovSpace(i)
+      END DO
+
+      !- check norm ------------------
+      CALL norm2_psi(psi)
+      IF ( psi%norme > psi%max_norme) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' STOP propagation: norm > max_norm',                &
+                         psi%norme
+        para_propa%march_error   = .TRUE.
+        para_propa%test_max_norm = .TRUE.
+        STOP
+      END IF
+
+      !- Phase Shift -----------------
+      phase = E0*para_propa%WPdeltaT
+      psi = psi * exp(-EYE*phase)
+
+!      microdeltaT = para_propa%WPdeltaT/real(para_propa%nb_micro,kind=Rkind)
+!      microphase  = phase/real(para_propa%nb_micro,kind=Rkind)
+!
+!
+!      !write(out_unitp,*) 'para_propa%nb_micro',para_propa%nb_micro
+!      !write(out_unitp,*) 'microdeltaT',microdeltaT
+!      !write(out_unitp,*) 'microphase',microphase
+!
+!      phase  = ZERO
+!      microT = ZERO
+!      DO it=1,para_propa%nb_micro
+!
+!        microT = microT + microdeltaT
+!        phase = phase + microphase
+!
+!        rtj = cmplx(ONE,ZERO,kind=Rkind)
+!        cdot = psi0Hkpsi0(0)
+!        DO j=1,j_exit
+!
+!          rt_tmp =  cmplx(ZERO,-microT/real(j,kind=Rkind),kind=Rkind)
+!          rtj = rt_tmp * rtj
+!          cdot = cdot + psi0Hkpsi0(j) * rtj
+!        END DO
+!        cdot = cdot * cmplx( cos(phase),-sin(phase),kind=Rkind)
+!        CALL Write_AutoCorr(no,T+microT,cdot)
+!      END DO
+!      CALL flush_perso(no)
+
+      cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+      CALL flush_perso(no)
+
+
+      ! deallocation
+      DO i=1,size(tab_KrylovSpace)
+         CALL dealloc_psi(tab_KrylovSpace(i))
+      END DO
+      deallocate(tab_KrylovSpace)
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+
+
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        CALL norm2_psi(psi)
+        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+      IF (debug) STOP
+
+
+  END SUBROUTINE march_SIP_v1
+  SUBROUTINE march_SIP_v0(T,no,psi,psi0,para_H,para_propa)
+      USE mod_system
+      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
+
+      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
+      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
+      USE mod_psi_SimpleOp
+      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op),       intent(in)     :: para_H
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_propa),    intent(in)     :: para_propa
+      TYPE (param_psi),      intent(in)     :: psi0
+      TYPE (param_psi),      intent(inout)  :: psi
+      integer,               intent(in)     :: no
+      real (kind=Rkind),     intent(in)     :: T
+
+!------ working variables ---------------------------------
+      TYPE (param_psi), pointer :: w1,w2
+      complex (kind=Rkind)      :: cdot
+      real (kind=Rkind)         :: E0,microT,microdeltaT,phase,microphase
+
+
+      complex (kind=Rkind) :: H(para_propa%para_poly%npoly,para_propa%para_poly%npoly)
+      complex (kind=Rkind) :: S(para_propa%para_poly%npoly,para_propa%para_poly%npoly)
+      complex (kind=Rkind) :: Vec(para_propa%para_poly%npoly,para_propa%para_poly%npoly)
+      real (kind=Rkind)    :: Eig(para_propa%para_poly%npoly)
+      complex (kind=Rkind) :: PsiOnVec(para_propa%para_poly%npoly)
+      complex (kind=Rkind) :: HPsiOnVec(para_propa%para_poly%npoly)
+      complex (kind=Rkind) :: HPsiOnKrylov(para_propa%para_poly%npoly)
+
+      TYPE (param_psi), allocatable :: tab_KrylovSpace(:)
+      complex (kind=Rkind) :: Overlap,ReNor
+
+      logical, parameter :: test = .FALSE.
+      !logical, parameter :: test = .TRUE.
+
+      integer              :: it,i,j
+
+!----- for debuging --------------------------------------------------
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='march_SIP_v0'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'deltaT',para_propa%WPdeltaT
+        write(out_unitp,*) 'E0,Esc',para_H%E0,para_H%Esc
+        write(out_unitp,*) 'order',para_propa%para_poly%npoly
+      END IF
+!-----------------------------------------------------------
+
+      w1 => para_propa%work_WP(1)
+      w2 => para_propa%work_WP(2)
+
+      allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1))
+
+      tab_KrylovSpace(1) = psi
+
+      E0 = para_H%E0
+      H(:,:) = CZERO
+      DO j=2,para_propa%para_poly%npoly+1
+        CALL sub_OpPsi(Psi  =tab_KrylovSpace(j-1),                      &
+                       OpPsi=tab_KrylovSpace(j),para_Op=para_H)
+        IF (j == 2) THEN
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(1),tab_KrylovSpace(2))
+          E0 = real(Overlap)
+        END IF
+        CALL sub_scaledOpPsi(Psi  =tab_KrylovSpace(j-1),                &
+                             OpPsi=tab_KrylovSpace(j),E0=E0,Esc=ONE)
+
+        !make part of the H matrix (related to the vector j-1)
+        ! OpPsi of the vector j-1 is in tab_KrylovSpace(j).
+        ! That why we need a loop util npoly+1.
+        DO i=1,j-1
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(i),tab_KrylovSpace(j))
+          H(i,j-1) = Overlap
+          H(j-1,i) = conjg(Overlap)
+        END DO
+
+        IF (j == para_propa%para_poly%npoly+1) EXIT
+        ! ortho, the Krylov space: new vector
+        CALL renorm_psi(tab_KrylovSpace(j))
+!        DO i=1,j-1
+!          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(j),tab_KrylovSpace(i))
+!          IF (abs(Overlap) == ZERO) CYCLE
+!          ReNor = ONE/sqrt(ONE-abs(Overlap)**2)
+!          w1                 = tab_KrylovSpace(j)*ReNor
+!          w2                 = tab_KrylovSpace(i) * (Overlap*ReNor)
+!          tab_KrylovSpace(j) = w1-w2
+!        END DO
+        DO i=1,j-1
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(j),tab_KrylovSpace(i))
+          IF (abs(Overlap) == ZERO) CYCLE
+          !ReNor = ONE/sqrt(ONE-abs(Overlap)**2)
+          w1                 = tab_KrylovSpace(j)
+          w2                 = tab_KrylovSpace(i) * conjg(Overlap)
+          tab_KrylovSpace(j) = w1-w2
+          CALL renorm_psi(tab_KrylovSpace(j))
+
+        END DO
+
+      END DO
+
+      IF (debug) THEN
+        write(out_unitp,*) 'H'
+        CALL Write_Mat(H,out_unitp,6)
+      END IF
+
+      CALL diagonalization_HerCplx(H,Eig,Vec,para_propa%para_poly%npoly,&
+                                   3,1,.TRUE.)
+
+      IF (debug) THEN
+        write(out_unitp,*) 'Vec'
+        CALL Write_Mat(Vec,out_unitp,6)
+        write(out_unitp,*) 'Eig',Eig
+      END IF
+
+      IF (test) THEN
+        !overlapp matrix S(i,j)
+        DO j=1,para_propa%para_poly%npoly
+        DO i=1,para_propa%para_poly%npoly
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(i),tab_KrylovSpace(j))
+          S(i,j) = Overlap
+        END DO
+        END DO
+        write(out_unitp,*) 'S'
+        CALL Write_Mat(S,out_unitp,6)
+
+        write(out_unitp,*) 'H'
+        CALL Write_Mat(H,out_unitp,6)
+
+        write(6,*) 'Eig1',dot_product(Vec(:,1),matmul(H,Vec(:,1)))
+
+        H = CZERO
+        DO i=1,para_propa%para_poly%npoly
+          H(i,i) = Eig(i)
+        END DO
+        H = matmul(conjg(Vec),matmul(H,transpose(Vec)))
+        !H = matmul(transpose(conjg(Vec)),matmul(H,Vec)) ! wrong expression
+
+        write(out_unitp,*) 'H'
+        CALL Write_Mat(H,out_unitp,6)
+        STOP
+      END IF
+
+      ! since the first vector of the orthonormalized Krylov space is psi
+      HPsiOnKrylov(:) = CZERO  ; HPsiOnKrylov(1) = CONE
+      PsiOnVec    = matmul(transpose(Vec),HPsiOnKrylov)
+      !DO i=1,para_propa%para_poly%npoly
+      !  PsiOnVec(i) = Vec(1,i)
+      !END DO
+      IF (debug) write(out_unitp,*) 'PsiOnVec',PsiOnVec
+
+      HPsiOnVec   = exp(-EYE*Eig*para_propa%WPdeltaT)*PsiOnVec
+      IF (debug) write(out_unitp,*) 'HPsiOnVec',HPsiOnVec
+
+
+      HPsiOnKrylov  = matmul(conjg(Vec),HPsiOnVec)
+      !HPsiOnKrylov = CZERO
+      !DO i=1,para_propa%para_poly%npoly
+      !  HPsiOnKrylov(:) = HPsiOnKrylov(:) + conjg(Vec(:,i))*HPsiOnVec(i)
+      !END DO
+      IF (debug) write(out_unitp,*) 'HPsiOnKrylov',HPsiOnKrylov
+      IF (debug) write(out_unitp,*) 'abs(HPsiOnKrylov)',abs(HPsiOnKrylov)
+
+      Psi = ZERO
+      DO i=1,para_propa%para_poly%npoly
+        Psi = Psi + HPsiOnKrylov(i)*tab_KrylovSpace(i)
+      END DO
+
+      ! deallocation
+      DO i=1,size(tab_KrylovSpace)
+         CALL dealloc_psi(tab_KrylovSpace(i))
+      END DO
+      deallocate(tab_KrylovSpace)
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+
+      !- Phase Shift -----------------
+      phase = E0*para_propa%WPdeltaT
+      psi = psi * exp(-EYE*phase)
+
+      cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+      CALL flush_perso(no)
+
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        CALL norm2_psi(psi)
+        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+      IF (debug) STOP
+
+
+  END SUBROUTINE march_SIP_v0
+!================================================================
+!
+!     march with spectral representation
+!
+!================================================================
+      !!@description: march Spectral
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+  SUBROUTINE march_Spectral(T,no,psi,psi0,para_H,para_propa)
+      USE mod_system
+      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
+
+      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
+      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
+      USE mod_psi_SimpleOp
+      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op),       intent(in)     :: para_H
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_propa),    intent(in)     :: para_propa
+      TYPE (param_psi),      intent(in)     :: psi0
+      TYPE (param_psi),      intent(inout)  :: psi
+      integer,               intent(in)     :: no
+      real (kind=Rkind),     intent(in)     :: T
+
+!------ working variables ---------------------------------
+      TYPE (param_psi), pointer :: w1,w2
+      complex (kind=Rkind) :: cdot
+      !real (kind=Rkind)    :: microT,microdeltaT,phase,microphase
+
+
+
+      complex (kind=Rkind), allocatable :: PsiOnSpectral(:)
+      complex (kind=Rkind), allocatable :: HPsiOnSpectral(:)
+
+      TYPE (param_psi), allocatable :: tab_KrylovSpace(:)
+      complex (kind=Rkind) :: Overlap,ReNor
+
+      logical, parameter :: test = .FALSE.
+      !logical, parameter :: test = .TRUE.
+
+      integer              :: it,i,j
+
+!----- for debuging --------------------------------------------------
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='march_Spectral'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'deltaT',para_propa%WPdeltaT
+        write(out_unitp,*) 'E0,Esc',para_H%E0,para_H%Esc
+        write(out_unitp,*) 'order',para_propa%para_poly%npoly
+      END IF
+!-----------------------------------------------------------
+
+      IF (.NOT. para_H%spectral_done .AND. para_H%spectral_Op /= para_H%n_Op) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' H is not in a spectral representation or'
+        write(out_unitp,*) ' The spectral representation not done on H.'
+        write(out_unitp,*) ' spectral_done',para_H%spectral_done
+        write(out_unitp,*) ' spectral_Op',para_H%spectral_Op
+        STOP
+      END IF
+
+      CALL alloc_NParray(PsiOnSpectral, [para_H%nb_tot],'PsiOnSpectral', name_sub)
+      CALL alloc_NParray(HPsiOnSpectral,[para_H%nb_tot],'HPsiOnSpectral',name_sub)
+
+!      ! 1st: project psi on the spectral basis
+!      IF (para_H%cplx) THEN
+!        PsiOnSpectral(:) = matmul(transpose(para_H%Cvp),Psi%CvecB)
+!      ELSE
+!        PsiOnSpectral(:) = matmul(transpose(para_H%Rvp),Psi%CvecB)
+!      END IF
+!
+!      ! 2d: propagation with spectral representation
+!      IF (para_H%cplx) THEN
+!        HPsiOnSpectral   = exp(-EYE*para_H%Cdiag*para_propa%WPdeltaT)*PsiOnSpectral
+!      ELSE
+!        HPsiOnSpectral   = exp(-EYE*para_H%Rdiag*para_propa%WPdeltaT)*PsiOnSpectral
+!      END IF
+!
+!      ! 3d: back to the initial basis
+!      IF (para_H%cplx) THEN
+!        Psi%CvecB = matmul(conjg(para_H%Cvp),HPsiOnSpectral)
+!      ELSE
+!        Psi%CvecB = matmul(para_H%Rvp,HPsiOnSpectral)
+!      END IF
+
+
+      ! 1st: project psi on the spectral basis
+      IF (para_H%cplx) THEN
+        PsiOnSpectral(:) = matmul(transpose(para_H%Cvp),Psi%CvecB)
+      ELSE
+        DO i=1,para_H%nb_tot
+          PsiOnSpectral(i) = dot_product(para_H%Rvp(:,i),Psi%CvecB)
+        END DO
+      END IF
+
+      ! 2d: propagation with spectral representation
+      IF (para_H%cplx) THEN
+        HPsiOnSpectral   = exp(-EYE*para_H%Cdiag*para_propa%WPdeltaT)*PsiOnSpectral
+      ELSE
+        HPsiOnSpectral   = exp(-EYE*para_H%Rdiag*para_propa%WPdeltaT)*PsiOnSpectral
+      END IF
+
+      ! 3d: back to the initial basis
+      IF (para_H%cplx) THEN
+        Psi%CvecB = matmul(conjg(para_H%Cvp),HPsiOnSpectral)
+      ELSE
+        Psi%CvecB = CZERO
+        DO i=1,para_H%nb_tot
+          Psi%CvecB(:) = Psi%CvecB(:) + HPsiOnSpectral(i) * para_H%Rvp(:,i)
+        END DO
+      END IF
+
+
+      CALL dealloc_NParray(PsiOnSpectral, 'PsiOnSpectral', name_sub)
+      CALL dealloc_NParray(HPsiOnSpectral,'HPsiOnSpectral',name_sub)
+
+
+      cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+      CALL flush_perso(no)
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        CALL norm2_psi(psi)
+        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+!STOP
+
+ END SUBROUTINE march_Spectral
 !=======================================================================================      
 !     march cheby
 !=======================================================================================      

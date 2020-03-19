@@ -851,6 +851,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
   !logical            :: ana_mini = .TRUE.
   logical            :: ana_mini = .FALSE.
+  logical            :: adia_save
 
 !-- working parameters --------------------------------
   TYPE (param_psi)   :: w1,w2
@@ -919,14 +920,15 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
   para_propa%ana_psi%T = T
 
+  adia_save = para_propa%ana_psi%adia
+
   IF (present(adia)) THEN
     adia_loc = adia
   ELSE
-    adia_loc = para_propa%Write_WPAdia
+    adia_loc = para_propa%Write_WPAdia .OR. para_propa%ana_psi%adia
   END IF
 
   IF (.NOT. para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done) adia_loc = .FALSE.
-
   !-----------------------------------------------------------
   ! => the WPs on the Grid
   IF (.NOT. para_propa%ana_psi%GridDone) THEN
@@ -961,10 +963,10 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
     ! =>first the energy
     IF(MPI_id==0) THEN
       w1 = WP(i)
-      CALL norm2_psi(w1,.FALSE.,.TRUE.,.FALSE.)
+      CALL norm2_psi(w1,GridRep=.FALSE.,BasisRep=.TRUE.)
     ENDIF
     CALL sub_PsiOpPsi(ET,w1,w2,para_H)
-    
+
     IF(MPI_id==0) THEN
       WP(i)%CAvOp = ET/w1%norme
 
@@ -972,39 +974,38 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       para_propa%ana_psi%Ene     = real(WP(i)%CAvOp,kind=Rkind)
 
       ! => The analysis (diabatic)
-      para_propa%ana_psi%adia = .FALSE.
       para_propa%ana_psi%Write_psi2_Grid = Write_psi2_Grid
       para_propa%ana_psi%Write_psi_Grid  = Write_psi_Grid
-      CALL sub_analyze_psi(WP(i),para_propa%ana_psi)
+      CALL sub_analyze_psi(WP(i),para_propa%ana_psi,adia=.FALSE.)
 
       IF (para_propa%ana_psi%ExactFact > 0) THEN
+        w1 = WP(i)
         write(out_unitp,*) i,'Exact Factorization analysis at ',T, ' ua'
         IF (present(para_field)) THEN
-          CALL sub_ExactFact_analysis(T,WP(i),para_propa%ana_psi,para_H,  &
+          CALL sub_ExactFact_analysis(T,w1,para_propa%ana_psi,para_H,   &
                          para_propa%WPTmax,para_propa%WPdeltaT,para_field)
         ELSE
-          CALL sub_ExactFact_analysis(T,WP(i),para_propa%ana_psi,para_H,  &
+          CALL sub_ExactFact_analysis(T,w1,para_propa%ana_psi,para_H,  &
                                     para_propa%WPTmax,para_propa%WPdeltaT)
         END IF
       END IF
 
       IF (para_propa%ana_psi%AvHiterm) THEN
+        w1 = WP(i)
         info = real_TO_char(T,Rformat='f12.2')
-        CALL sub_psiHitermPsi(WP(i),i,info,para_H)
+        CALL sub_psiHitermPsi(w1,i,info,para_H)
       END IF
 
-!    ! => The analysis (adiabatic)
-!    IF (adia_loc) THEN
-!      w1 = WP(i)
-!      para_propa%ana_psi%adia = .TRUE.
-!      para_propa%ana_psi%Write_psi2_Grid = Write_psi2_Grid
-!      para_propa%ana_psi%Write_psi_Grid  = .FALSE.
-!      CALL sub_PsiDia_TO_PsiAdia_WITH_MemGrid(w1,para_H)
-!      CALL sub_analyze_psi(w1,para_propa%ana_psi)
-!    END IF
+      ! => The analysis (adiabatic)
+      IF (adia_loc) THEN
+        w1 = WP(i)
+        para_propa%ana_psi%Write_psi2_Grid = Write_psi2_Grid
+        para_propa%ana_psi%Write_psi_Grid  = .FALSE.
+        CALL sub_PsiDia_TO_PsiAdia_WITH_MemGrid(w1,para_H)
+        CALL sub_analyze_psi(w1,para_propa%ana_psi,adia=.TRUE.)
+      END IF
       CALL flush_perso(out_unitp)
 
-      para_propa%ana_psi%adia = .FALSE.
       CALL alloc_psi(WP(i),BasisRep=BasisRep,GridRep=GridRep)
     ENDIF ! for MPI_id==0
   END DO
@@ -1012,7 +1013,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   CALL dealloc_psi(w1,delete_all=.TRUE.)
   CALL dealloc_psi(w2,delete_all=.TRUE.)
 
-
+  para_propa%ana_psi%adia     = adia_save
   para_propa%ana_psi%GridDone = .FALSE.
 
 !----------------------------------------------------------
@@ -1371,88 +1372,89 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         para_propa%spectral      = spectral
         nb_vp_spec_out           = nb_vp_spec
         para_propa%with_field    = .FALSE.
-        IF (type_WPpropa .EQ.1) THEN
-!         Chebychev
+
+  SELECT CASE (type_WPpropa)
+  CASE (1) !         Chebychev
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**8
           IF (DHmax .EQ. -TEN) DHmax = HALF
           name_WPpropa  = 'cheby'
-        ELSE IF (type_WPpropa .EQ.2) THEN
-!         Taylor
+  CASE (2)!         Taylor
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
           name_WPpropa  = 'nOD'
-        ELSE IF (type_WPpropa .EQ. 3 .OR. type_WPpropa .EQ. -3) THEN
-!         im SOD
+  CASE (3,-3) !         im Relax
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**8
           IF (DHmax .EQ. -TEN) DHmax = ZERO
           IF (type_WPpropa .EQ.  3) name_WPpropa  = 'Emin'
           IF (type_WPpropa .EQ. -3) name_WPpropa  = 'Emax'
-        ELSE IF (type_WPpropa .EQ. 33 .OR. type_WPpropa .EQ. -33) THEN
-!         Davidson
+  CASE (33,-33) !         Davidson
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**5
           IF (DHmax .EQ. -TEN) DHmax = ZERO
           name_WPpropa  = 'Davidson'
-        ELSE IF (type_WPpropa .EQ. 34) THEN
-!         im SOD
+  CASE (34) ! Conjugated Gradient
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**5
           IF (DHmax .EQ. -TEN) DHmax = ZERO
           name_WPpropa  = 'Conjugated Gradient'
-        ELSE IF (type_WPpropa==22 .OR. type_WPpropa==221 .OR.           &
-                 type_WPpropa==222 .OR. type_WPpropa==223) THEN
-!         nOD with a time dependant pulse in Hamiltonian (W(t))
+  CASE (22,221,222,223) !         nOD with a time dependant pulse in Hamiltonian (W(t))
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
-          name_WPpropa  = 'TDH nOD'
+          name_WPpropa  = 'TDH-nOD'
           para_propa%with_field    = .TRUE.
-        ELSE IF (type_WPpropa==50 .OR. type_WPpropa==54 .OR.            &
-                 type_WPpropa==52 ) THEN
-!         RK4 with a time dependant pulse in Hamiltonian (W(t))
+  CASE (50,54,52) !         RK4 with a time dependant pulse in Hamiltonian (W(t))
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
           name_WPpropa  = 'TDH_RK4'
           IF (type_WPpropa==52) name_WPpropa  = 'TDH_RK2'
           para_propa%with_field    = .TRUE.
-        ELSE IF (type_WPpropa==5) THEN
-!         RK4 without a time dependant pulse in Hamiltonian (W(t))
+
+  CASE (5) !         RK4 without a time dependant pulse in Hamiltonian (W(t))
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
           name_WPpropa  = 'RK4'
           para_propa%with_field    = .FALSE.
 
-        ELSE IF (type_WPpropa==6) THEN
-!         ModMidPoint without a time dependant pulse in Hamiltonian (W(t))
+  CASE (6) !         ModMidPoint without a time dependant pulse in Hamiltonian (W(t))
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
           name_WPpropa  = 'ModMidPoint'
           para_propa%with_field    = .FALSE.
 
-        ELSE IF (type_WPpropa==7) THEN
-!         Bulirsch-Stoer without a time dependant pulse in Hamiltonian (W(t))
+  CASE (7) !         Bulirsch-Stoer without a time dependant pulse in Hamiltonian (W(t))
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
           name_WPpropa  = 'Bulirsch-Stoer'
           para_propa%with_field    = .FALSE.
 
-        ELSE IF (type_WPpropa==24 .OR. type_WPpropa==241 .OR.           &
-                 type_WPpropa==242 .OR. type_WPpropa==243) THEN
-!         nOD with a time dependant pulse in Hamiltonian (W(t))
+  CASE (9)!         Short Interative Propagation (Lanczos/Davidson)
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'SIP'
+          para_propa%with_field    = .FALSE.
+
+  CASE (10)!         Spectral representation Propagation
+          poly_tol                 = ZERO
+          DHmax                    = ZERO
+          name_WPpropa             = 'Spectral'
+          para_propa%with_field    = .FALSE.
+
+  CASE (24,241,242,243) !         nOD with a time dependant pulse in Hamiltonian (W(t))
 !         for the control only
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
-          name_WPpropa  = 'TDnOD'
+          name_WPpropa  = 'TD-nOD'
           para_propa%with_field    = .TRUE.
-        ELSE IF (type_WPpropa == 100) THEN
-!         test
+
+  CASE (100) !         test
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
           name_WPpropa  = 'TDH test'
           para_propa%with_field    = .TRUE.
-        ELSE
+  CASE Default
            write(out_unitp,*) 'ERROR in ',name_sub
            write(out_unitp,*) ' type of propagation(',type_WPpropa,')'
            write(out_unitp,*) ' is not possible'
            STOP
-        ENDIF
+  END SELECT
 
 
         para_propa%para_poly%poly_tol     = poly_tol

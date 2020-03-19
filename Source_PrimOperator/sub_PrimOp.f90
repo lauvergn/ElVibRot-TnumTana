@@ -1926,8 +1926,8 @@
 !     - frequencies
       CALL alloc_NParray(d0c_inv,(/ nb_NM,nb_NM /),"d0c_inv",name_sub)
       CALL alloc_NParray(d0c_ini,(/ nb_NM,nb_NM /),"d0c_ini",name_sub)
-      CALL alloc_NParray(d0c,(/ nb_NM,nb_NM /),"d0c",name_sub)
-      CALL alloc_NParray(d0eh,(/ nb_NM /),"d0eh",name_sub)
+      CALL alloc_NParray(d0c,    (/ nb_NM,nb_NM /),"d0c",    name_sub)
+      CALL alloc_NParray(d0eh,   (/ nb_NM /),      "d0eh",   name_sub)
 
       IF (mole%NMTransfo%purify_hess) THEN
 

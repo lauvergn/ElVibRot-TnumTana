@@ -56,7 +56,7 @@ CONTAINS
 !
 !
 !=======================================================================================
-      SUBROUTINE sub_propagation(WP0,para_AllOp,para_propa)
+  SUBROUTINE sub_propagation(WP0,para_AllOp,para_propa)
       USE mod_system
       USE mod_Op
       USE mod_propa
@@ -94,12 +94,13 @@ CONTAINS
       logical :: direct_KEO
 
 !----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='sub_propagation'
       logical, parameter :: debug = .FALSE.
 !     logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
       para_H => para_AllOp%tab_Op(1)
       IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING propagation'
+        write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'n',WP0(1)%nb_tot
         write(out_unitp,*)
         write(out_unitp,*) 'WP0 BasisRep'
@@ -148,7 +149,7 @@ CONTAINS
 
       SELECT CASE (para_propa%type_WPpropa)
 
-      CASE (1,2,5,6,7)
+      CASE (1,2,5,6,7,9,10)
 
         IF (SGtype4 .AND. direct_KEO) THEN
           !CALL sub_propagation11_SG4(WP0,WP,1,para_H,para_propa)
@@ -167,15 +168,15 @@ CONTAINS
 
         nb_diago = min(para_propa%max_ana,para_H%nb_tot)
         nullify(psi)
-        CALL alloc_array(psi,(/nb_diago/),"psi","sub_propagation")
+        CALL alloc_array(psi,(/nb_diago/),"psi",name_sub)
         nullify(Ene0)
-        CALL alloc_array(Ene0,(/nb_diago/),"Ene0","sub_propagation")
+        CALL alloc_array(Ene0,(/nb_diago/),"Ene0",name_sub)
 
         CALL sub_propagation34(psi,Ene0,nb_diago,                       &
                                para_H,para_propa)
 
-        CALL dealloc_array(psi,"psi","sub_propagation")
-        CALL dealloc_array(Ene0,"Ene0","sub_propagation")
+        CALL dealloc_array(psi,"psi",name_sub)
+        CALL dealloc_array(Ene0,"Ene0",name_sub)
 
       CASE (22,24,50,52,54,221,222,223)
 
@@ -235,10 +236,9 @@ CONTAINS
                                 para_AllOp,para_propa)
 
       CASE DEFAULT
-
-        write(out_unitp,*) ' sub_propagation : NO spectral propagation'
-        STOP
-
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) ' Unknown type of propagation(',para_propa%type_WPpropa,')'
+        STOP ' ERROR: Unknown type of propagation'
       END SELECT
       write(out_unitp,*) 'Number of Hamiltonian operations (H I psi >)',para_H%nb_OpPsi
 
@@ -249,10 +249,10 @@ CONTAINS
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'END propagation'
+        write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
-      end subroutine sub_propagation
+  end subroutine sub_propagation
 !=======================================================================================
 
 !=======================================================================================

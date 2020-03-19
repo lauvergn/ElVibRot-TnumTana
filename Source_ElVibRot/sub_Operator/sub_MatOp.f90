@@ -524,8 +524,7 @@ CONTAINS
 
 !     - spectral representation ------------------------------
       write(out_unitp,*) 'spectral',para_Op%spectral,para_Op%spectral_Op
-      IF ( para_Op%spectral .AND.                                       &
-           para_Op%n_Op == para_Op%spectral_Op ) THEN
+      IF ( para_Op%spectral .AND. para_Op%n_Op == para_Op%spectral_Op ) THEN
         para_Op%diago = .TRUE.
         CALL alloc_para_Op(para_Op)
 
@@ -543,10 +542,16 @@ CONTAINS
                           "para_Op%Cmat",name_sub)
           para_Op%Cmat(:,:) = CZERO
 
-          DO i=1,para_Op%nb_tot
-            para_Op%Cmat(i,i) =                                         &
+          IF (associated(para_Op%ComOp%liste_spec)) THEN
+            DO i=1,para_Op%nb_tot
+              para_Op%Cmat(i,i) =                                       &
                               para_Op%Cdiag(para_Op%ComOp%liste_spec(i))
-          END DO
+            END DO
+          ELSE
+            DO i=1,para_Op%nb_tot
+              para_Op%Cmat(i,i) = para_Op%Cdiag(i)
+            END DO
+          END IF
           para_Op%ComOp%Cvp_spec => para_Op%Cvp
         ELSE
 
@@ -564,10 +569,17 @@ CONTAINS
                           "para_Op%Rmat",name_sub)
           para_Op%Rmat(:,:) = ZERO
 
-          DO i=1,para_Op%nb_tot
-            para_Op%Rmat(i,i) =                                         &
+
+          IF (associated(para_Op%ComOp%liste_spec)) THEN
+            DO i=1,para_Op%nb_tot
+              para_Op%Rmat(i,i) =                                       &
                       para_Op%Rdiag(para_Op%ComOp%liste_spec(i))
-          END DO
+            END DO
+          ELSE
+            DO i=1,para_Op%nb_tot
+              para_Op%Rmat(i,i) = para_Op%Rdiag(i)
+            END DO
+          END IF
           para_Op%ComOp%Rvp_spec => para_Op%Rvp
         END IF
         IF (para_Op%pack_Op)  THEN
@@ -575,8 +587,7 @@ CONTAINS
           CALL dealloc_array(para_Op%dim_Op,"para_Op%dim_Op",name_sub)
         END IF
 
-      ELSE IF ( para_Op%spectral .AND.                                  &
-                para_Op%n_Op /= para_Op%spectral_Op ) THEN
+      ELSE IF ( para_Op%spectral .AND. para_Op%n_Op /= para_Op%spectral_Op ) THEN
         write(out_unitp,*) 'para_Op%ComOp%nb_vp_spec',para_Op%ComOp%nb_vp_spec
         IF (para_Op%cplx) THEN
 

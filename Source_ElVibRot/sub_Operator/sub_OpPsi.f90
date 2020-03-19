@@ -3014,118 +3014,124 @@ STOP 'cplx'
 !-----------------------------------------------------------
       END SUBROUTINE sub_sqRhoOVERJac_Psi
 
-      SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
-      USE mod_system
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_SetOp,           ONLY : param_Op,write_param_Op
-      IMPLICIT NONE
+SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
+  USE mod_system
+  USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
+  USE mod_SetOp,           ONLY : param_Op,write_param_Op
+  IMPLICIT NONE
 
-      !----- variables pour la namelist minimum ------------------------
-      TYPE (param_Op)  :: para_H ! the operator is the Hamiltonian
+  !----- variables pour la namelist minimum ------------------------
+  TYPE (param_Op)  :: para_H ! the operator is the Hamiltonian
 
-      integer          :: iOp
+  integer          :: iOp
 
-      !----- variables for the WP --------------------------------------
-      TYPE (param_psi)   :: Psi
-
-
-      !----- working variables -----------------------------------------
-      integer :: i1_bi
-      integer :: i,ki,k,iq,iqbi
-
-      integer              :: iterm
-
-      real (kind=Rkind)    :: EigenVec(para_H%nb_bie,para_H%nb_bie)
-      real (kind=Rkind)    :: V(para_H%nb_bie,para_H%nb_bie)
-      real (kind=Rkind)    :: EigenVal(para_H%nb_bie)
-      real (kind=Rkind)    :: Rpsi_iq(para_H%nb_bie)
-      complex (kind=Rkind) :: Cpsi_iq(para_H%nb_bie)
-
-      !----- for debuging ----------------------------------------------
-      integer :: err_mem,memory
-      character (len=*), parameter :: name_sub='sub_PsiDia_TO_PsiAdia_WITH_MemGrid'
-      logical, parameter :: debug = .FALSE.
-     !logical, parameter :: debug = .TRUE.
-      !-----------------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) 'nb_bie,nb_baie',para_H%nb_bie,para_H%nb_baie
-        write(out_unitp,*) 'para_H%mat_done',para_H%mat_done
-        CALL flush_perso(out_unitp)
-        CALL write_param_Op(para_H)
-        write(out_unitp,*)
-        write(out_unitp,*) 'PsiDia'
-        CALL ecri_psi(Psi=Psi)
-        CALL flush_perso(out_unitp)
-      END IF
-      !-----------------------------------------------------------------
+  !----- variables for the WP --------------------------------------
+  TYPE (param_psi)   :: Psi
 
 
-      IF (para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
+  !----- working variables -----------------------------------------
+  integer :: i1_bi
+  integer :: i,ki,k,iq,iqbi
 
-        DO iterm=1,para_H%nb_term
+  integer              :: iterm
 
-          IF (para_H%derive_termQdyn(1,iterm) == 0 ) THEN ! the PES
-            IF (para_H%OpGrid(iterm)%grid_zero) CYCLE ! wp_adia = wp_dia
+  real (kind=Rkind)    :: EigenVec(para_H%nb_bie,para_H%nb_bie)
+  real (kind=Rkind)    :: V(para_H%nb_bie,para_H%nb_bie)
+  real (kind=Rkind)    :: EigenVal(para_H%nb_bie)
+  real (kind=Rkind)    :: Rpsi_iq(para_H%nb_bie)
+  complex (kind=Rkind) :: Cpsi_iq(para_H%nb_bie)
+  logical              :: GridDone
 
-            IF (para_H%OpGrid(iterm)%grid_cte) THEN
+  !----- for debuging ----------------------------------------------
+  integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='sub_PsiDia_TO_PsiAdia_WITH_MemGrid'
+  logical, parameter :: debug = .FALSE.
+  !logical, parameter :: debug = .TRUE.
+  !-----------------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'nb_bie,nb_baie',para_H%nb_bie,para_H%nb_baie
+    write(out_unitp,*) 'para_H%mat_done',para_H%mat_done
+    CALL flush_perso(out_unitp)
+    CALL write_param_Op(para_H)
+    write(out_unitp,*)
+    write(out_unitp,*) 'PsiDia'
+    CALL ecri_psi(Psi=Psi)
+    CALL flush_perso(out_unitp)
+  END IF
+  !-----------------------------------------------------------------
 
-              CALL diagonalization(para_H%OpGrid(iterm)%Mat_cte,        &
-                             EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+  IF (Psi%cplx) THEN
+    GridDone = allocated(Psi%CvecG)
+  ELSE
+    GridDone = allocated(Psi%RvecG)
+  END IF
 
-              IF (Psi%cplx) THEN
+  IF (para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done .AND. GridDone) THEN
 
-                DO iq=1,Psi%nb_qa
+    DO iterm=1,para_H%nb_term
 
-                  DO i1_bi=1,para_H%nb_bie
-                    iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                    Cpsi_iq(i1_bi) = Psi%CvecG(iqbi)
-                  END DO
+      IF (para_H%derive_termQdyn(1,iterm) == 0 ) THEN ! the PES
+        IF (para_H%OpGrid(iterm)%grid_zero) CYCLE ! wp_adia = wp_dia
 
-                  Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
+        IF (para_H%OpGrid(iterm)%grid_cte) THEN
 
-                  DO i1_bi=1,para_H%nb_bie
-                    iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                    Psi%CvecG(iqbi) = Cpsi_iq(i1_bi)
-                  END DO
+          CALL diagonalization(para_H%OpGrid(iterm)%Mat_cte,        &
+                         EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
 
-                END DO
-              ELSE
+          IF (Psi%cplx) THEN
 
-                DO iq=1,Psi%nb_qa
+            DO iq=1,Psi%nb_qa
 
-                  DO i1_bi=1,para_H%nb_bie
-                    iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                    Rpsi_iq(i1_bi) = Psi%RvecG(iqbi)
-                  END DO
+              DO i1_bi=1,para_H%nb_bie
+                iqbi = iq + (i1_bi-1) * Psi%nb_qa
+                Cpsi_iq(i1_bi) = Psi%CvecG(iqbi)
+              END DO
 
-                  Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
+              Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
 
-                  DO i1_bi=1,para_H%nb_bie
-                    iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                    Psi%RvecG(iqbi) = Rpsi_iq(i1_bi)
-                  END DO
+              DO i1_bi=1,para_H%nb_bie
+                iqbi = iq + (i1_bi-1) * Psi%nb_qa
+                Psi%CvecG(iqbi) = Cpsi_iq(i1_bi)
+              END DO
 
-                END DO
+            END DO
+          ELSE
 
-              END IF
+            DO iq=1,Psi%nb_qa
 
-            ELSE
+              DO i1_bi=1,para_H%nb_bie
+                iqbi = iq + (i1_bi-1) * Psi%nb_qa
+                Rpsi_iq(i1_bi) = Psi%RvecG(iqbi)
+              END DO
 
-              IF (Psi%cplx) THEN
+              Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
 
-                DO iq=1,Psi%nb_qa
+              DO i1_bi=1,para_H%nb_bie
+                iqbi = iq + (i1_bi-1) * Psi%nb_qa
+                Psi%RvecG(iqbi) = Rpsi_iq(i1_bi)
+              END DO
 
-                  V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
+            END DO
+
+          END IF
+
+        ELSE
+
+          IF (Psi%cplx) THEN
+
+            DO iq=1,Psi%nb_qa
+
+              V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
 !write(6,*) 'V(:,:)',V(:,:)
 
-                  CALL diagonalization(V,                               &
-                             EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+              CALL diagonalization(V,                               &
+                         EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
 !write(6,*) 'EigenVec',iq,EigenVec
 !write(6,*) 'Ortho EigenVec ?',iq,matmul(transpose(EigenVec),EigenVec)
 !write(6,*) 'Ortho EigenVec ?',iq,matmul(EigenVec,transpose(EigenVec))
 
-                  Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+              Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
 !write(6,*) '<Vdia>',dot_product(Cpsi_iq,matmul(V,Cpsi_iq))
 
                   !DO i1_bi=1,para_H%nb_bie
@@ -3136,66 +3142,69 @@ STOP 'cplx'
 
                   !Cpsi_iq(:) = matmul(EigenVec,Cpsi_iq)
                   !Cpsi_iq(:) = matmul(Cpsi_iq,EigenVec)
-                  Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
+              Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
 
 !write(6,*) '<Vadia>',dot_product(Cpsi_iq,(EigenVal*Cpsi_iq))
 
 
-                  Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
+              Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
                   !DO i1_bi=1,para_H%nb_bie
                   !  iqbi = iq + (i1_bi-1) * Psi%nb_qa
                   !  Psi%CvecG(iqbi) = Cpsi_iq(i1_bi)
                   !END DO
 !write(6,*) 'Cpsi_iq',iq,Cpsi_iq
 
-                END DO
-              ELSE
+            END DO
+          ELSE
 
-                DO iq=1,Psi%nb_qa
+            DO iq=1,Psi%nb_qa
 
-                  V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
-                  CALL diagonalization(V,                               &
-                             EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+              V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
+              CALL diagonalization(V,                               &
+                         EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
 
-                  DO i1_bi=1,para_H%nb_bie
-                    iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                    Rpsi_iq(i1_bi) = Psi%RvecG(iqbi)
-                  END DO
+              DO i1_bi=1,para_H%nb_bie
+                iqbi = iq + (i1_bi-1) * Psi%nb_qa
+                Rpsi_iq(i1_bi) = Psi%RvecG(iqbi)
+              END DO
 
-                  Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
+              Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
 
-                  DO i1_bi=1,para_H%nb_bie
-                    iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                    Psi%RvecG(iqbi) = Rpsi_iq(i1_bi)
-                  END DO
+              DO i1_bi=1,para_H%nb_bie
+                iqbi = iq + (i1_bi-1) * Psi%nb_qa
+                Psi%RvecG(iqbi) = Rpsi_iq(i1_bi)
+              END DO
 
-                END DO
+            END DO
 
-              END IF
-
-            END IF
           END IF
 
-        END DO
-
-      ELSE
-        write(out_unitp,*) 'ERROR in ',name_sub
-        write(out_unitp,*) 'Save_MemGrid_done=.FALSE. is not possible in this subroutine'
-        write(out_unitp,*) 'Check the fortran!'
-        STOP
+        END IF
       END IF
 
+    END DO
 
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'PsiAdia'
-        CALL ecri_psi(Psi=Psi)
-        write(out_unitp,*)
-        write(out_unitp,*) 'END ',name_sub
-      END IF
-!-----------------------------------------------------------
+  ELSE
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) 'Save_MemGrid_done=.FALSE. is not possible in this subroutine'
+    write(out_unitp,*) '  Save_MemGrid_done',para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done
+    write(out_unitp,*) 'OR'
+    write(out_unitp,*) 'The wave function is not on the grid:'
+    write(out_unitp,*) '  alloc Psi%CvecG',allocated(Psi%CvecG)
+    write(out_unitp,*) '  alloc Psi%RvecG',allocated(Psi%RvecG)
+    write(out_unitp,*) 'Check the fortran!'
+    STOP
+  END IF
+  !-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'PsiAdia'
+    CALL ecri_psi(Psi=Psi)
+    write(out_unitp,*)
+    write(out_unitp,*) 'END ',name_sub
+  END IF
+  !-----------------------------------------------------------
 
-      END SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid
+END SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid
       SUBROUTINE sub_psiHitermPsi(Psi,iPsi,info,para_H)
       USE mod_system
       USE mod_SetOp,           ONLY : param_Op

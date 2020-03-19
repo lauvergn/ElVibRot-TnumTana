@@ -206,24 +206,24 @@
       END SELECT
 
 
-!      SELECT CASE (sort)
-!      CASE(1)
-!        CALL trie(n,Eig,Vec,n)
-!      CASE(-1)
-!        Eig = -Eig
-!        CALL trie(n,Eig,Vec,n)
-!        Eig = -Eig
-!      CASE(2)
-!        CALL trie_abs(n,Eig,Vec,n)
-!      CASE DEFAULT ! no sort
-!        CONTINUE
-!      END SELECT
-!
-!      DO i=1,n
-!        Vec(:,i) = Vec(:,i)/sqrt(dot_product(Vec(:,i),Vec(:,i)))
-!      END DO
-!
-!      IF (phase) CALL Unique_phase(n,Vec,n)
+      SELECT CASE (sort)
+      CASE(1)
+        CALL trie_VecCplx_EneR(n,Eig,Vec,n)
+      CASE(-1)
+        Eig = -Eig
+        CALL trie_VecCplx_EneR(n,Eig,Vec,n)
+        Eig = -Eig
+      CASE(2)
+        CALL trie_abs_VecCplx_EneR(n,Eig,Vec,n)
+      CASE DEFAULT ! no sort
+        CONTINUE
+      END SELECT
+
+       DO i=1,n
+         Vec(:,i) = Vec(:,i)/sqrt(dot_product(Vec(:,i),Vec(:,i)))
+       END DO
+
+       IF (phase) CALL Unique_phase_cplx(n,Vec,n)
 
       END SUBROUTINE diagonalization_HerCplx
 !=======================================================================================
@@ -741,6 +741,93 @@
       END DO
 
       END SUBROUTINE trie
+  SUBROUTINE trie_VecCplx_EneR(nb_niv,ene,psi,max_niv)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer             :: nb_niv,max_niv
+      real(kind=Rkind)    :: ene(max_niv)
+      complex(kind=Rkind) :: psi(max_niv,max_niv)
+
+      real(kind=Rkind)    :: a
+      complex(kind=Rkind) :: ca
+      integer             :: i,j,k
+
+
+      DO i=1,nb_niv
+      DO j=i+1,nb_niv
+       IF (ene(i) .GT. ene(j)) THEN
+          ! permutation
+          a=ene(i)
+          ene(i)=ene(j)
+          ene(j)=a
+          DO k=1,nb_niv
+            ca=psi(k,i)
+            psi(k,i)=psi(k,j)
+            psi(k,j)=ca
+          END DO
+        END IF
+      END DO
+      END DO
+
+  END SUBROUTINE trie_VecCplx_EneR
+  SUBROUTINE trie_abs(nb_niv,ene,psi,max_niv)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer             :: nb_niv,max_niv
+      real(kind=Rkind)    :: ene(max_niv)
+      real(kind=Rkind)    :: psi(max_niv,max_niv)
+
+      real(kind=Rkind)    :: a
+      integer             :: i,j,k
+
+        DO i=1,nb_niv
+          DO j=i+1,nb_niv
+            IF (abs(ene(i)) .GT. abs(ene(j))) THEN
+!             permutation
+              a=ene(i)
+              ene(i)=ene(j)
+              ene(j)=a
+              DO k=1,nb_niv
+                a=psi(k,i)
+                psi(k,i)=psi(k,j)
+                psi(k,j)=a
+              END DO
+            END IF
+          END DO
+        END DO
+
+  end subroutine trie_abs
+  SUBROUTINE trie_abs_VecCplx_EneR(nb_niv,ene,psi,max_niv)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer             :: nb_niv,max_niv
+      real(kind=Rkind)    :: ene(max_niv)
+      complex(kind=Rkind) :: psi(max_niv,max_niv)
+
+      real(kind=Rkind)    :: a
+      complex(kind=Rkind) :: ca
+      integer             :: i,j,k
+
+        DO i=1,nb_niv
+          DO j=i+1,nb_niv
+            IF (abs(ene(i)) .GT. abs(ene(j))) THEN
+!             permutation
+              a=ene(i)
+              ene(i)=ene(j)
+              ene(j)=a
+              DO k=1,nb_niv
+                ca=psi(k,i)
+                psi(k,i)=psi(k,j)
+                psi(k,j)=ca
+              END DO
+            END IF
+          END DO
+        END DO
+
+  end subroutine trie_abs_VecCplx_EneR
 !
 !============================================================
 !
@@ -771,6 +858,32 @@
       END DO
 
       END SUBROUTINE Unique_phase
+      SUBROUTINE Unique_phase_cplx(n,Vec,max_n)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer             :: n,max_n
+      complex(kind=Rkind) :: Vec(max_n,max_n)
+
+      real(kind=Rkind)    :: max_val
+      complex(kind=Rkind) :: val
+      integer             :: i,j
+
+      DO i=1,n
+        max_val        = ZERO
+        DO j=1,n
+          IF (abs(Vec(j,i)) > max_val) THEN
+            max_val = abs(Vec(j,i))
+            val     = Vec(j,i)
+          END IF
+        END DO
+        val = conjg(val/max_val)
+        IF (max_val > ZERO) THEN
+          Vec(:,i) = Vec(:,i)*val
+        END IF
+      END DO
+
+      END SUBROUTINE Unique_phase_cplx
       SUBROUTINE Unique_phase_old(n,Vec,max_n)
       USE mod_system
       IMPLICIT NONE
@@ -794,34 +907,6 @@
       END DO
 
       END SUBROUTINE Unique_phase_old
-      SUBROUTINE trie_abs(nb_niv,ene,psi,max_niv)
-      USE mod_system
-      IMPLICIT NONE
-
-        integer nb_niv,max_niv
-        real(kind=Rkind) ene(max_niv),psi(max_niv,max_niv)
-        real(kind=Rkind) a
-
-        integer i,j,k
-
-        DO i=1,nb_niv
-          DO j=i+1,nb_niv
-            IF (abs(ene(i)) .GT. abs(ene(j))) THEN
-!             permutation
-              a=ene(i)
-              ene(i)=ene(j)
-              ene(j)=a
-              DO k=1,nb_niv
-                a=psi(k,i)
-                psi(k,i)=psi(k,j)
-                psi(k,j)=a
-              END DO
-            END IF
-          END DO
-        END DO
-
-        RETURN
-        end subroutine trie_abs
 !
 !============================================================
 !

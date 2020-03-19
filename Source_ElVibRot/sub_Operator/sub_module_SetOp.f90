@@ -104,9 +104,9 @@ MODULE mod_SetOp
           logical                       :: spectral_done = .FALSE.        ! if T, The spect Rep is done
           integer                       :: spectral_Op   =  0             ! type of operator usually H (=>0)
           logical                       :: diago         = .FALSE.        ! if T, allocate the memory for diagonalization
-          real (kind=Rkind), pointer    :: Rdiag(:)      => null()        ! Rdiag(nb_tot) : real eigenvalues
+          real (kind=Rkind),    pointer :: Rdiag(:)      => null()        ! Rdiag(nb_tot) : real eigenvalues
           complex (kind=Rkind), pointer :: Cdiag(:)      => null()        ! Cdiag(nb_tot ) : cplx eigenvalues
-          real (kind=Rkind), pointer    :: Rvp(:,:)      => null()        ! Rvp(nb_tot ,nb_tot ) : real eigenvectors
+          real (kind=Rkind),    pointer :: Rvp(:,:)      => null()        ! Rvp(nb_tot ,nb_tot ) : real eigenvectors
           complex (kind=Rkind), pointer :: Cvp(:,:)      => null()        ! Cvp(nb_tot ,nb_tot ) : cplx eigenvectors
 
 

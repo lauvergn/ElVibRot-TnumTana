@@ -107,6 +107,7 @@
 
 !----- working variables ---------------------------------------------
       integer                        :: i,j,rk,rl,i_term,iOp,it,nq
+      logical                        :: spectral_H
       real (kind=Rkind), allocatable :: Qana(:),Qact(:)
 
       TYPE(Type_dnMat)               :: dnGG
@@ -297,6 +298,7 @@
         para_propa%control = para_ana%control !< for controling the calcutation of Hmin
         para_propa%max_ana = para_ana%max_ana
         CALL read_propagation(para_propa,mole%nb_act1,nb_vp_specWP)
+        spectral_H = (para_propa%type_WPpropa == 10)
 
         IF (para_propa%spectral) THEN
            para_ReadOp%spectral     = .TRUE.
@@ -318,6 +320,8 @@
 
         para_propa%ana_psi = para_ana%ana_psi
 
+      ELSE
+        spectral_H = .FALSE.
       END IF
 
       IF (para_ana%davidson .OR. para_ana%arpack .OR. para_ana%filter) THEN
@@ -468,6 +472,11 @@
                                para_AllBasis,                           &
                                ComOp,para_PES,para_ReadOp,              &
                                para_AllOp%tab_Op(iOp))
+      IF (spectral_H) THEN
+        para_AllOp%tab_Op(iOp)%spectral    = .TRUE.
+        para_AllOp%tab_Op(iOp)%spectral_Op = para_AllOp%tab_Op(iOp)%n_Op
+         para_AllOp%tab_Op(iOp)%para_ReadOp%make_Mat = .TRUE.
+      END IF
       para_AllOp%tab_Op(iOp)%symab      = 0 ! totally symmetric
       IF (para_ana%VibRot) Para_Tnum%JJ = 0
       IF(MPI_id==0) THEN

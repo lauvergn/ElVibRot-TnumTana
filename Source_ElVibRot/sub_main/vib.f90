@@ -158,6 +158,8 @@
       para_H => para_AllOp%tab_Op(1)
       CALL dealloc_Basis(BasisnD_Save)
 
+write(6,*) 'para_propa%ana_psi%adia',para_propa%ana_psi%adia
+
       IF(MPI_id==0) THEN
         write(out_unitp,*)
         CALL time_perso('ini_data end')
@@ -317,7 +319,7 @@
                   WP0(1)%RvecB(i_baie:f_baie) = ZERO
                 END IF
               END DO
-            END IF ! for ara_propa%para_WP0%WP0_nb_CleanChannel > 0
+            END IF ! for para_propa%para_WP0%WP0_nb_CleanChannel > 0
 
             IF(MPI_id==0) CALL norm2_psi(WP0(1))
             write(out_unitp,*) ' Norm of |WP0>',WP0(1)%norme
@@ -327,7 +329,10 @@
             write(out_unitp,*)
 
             para_propa%ana_psi%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
-            IF(MPI_id==0) CALL sub_analyze_tab_psi(T,WP0(:),para_propa%ana_psi,Write_Psi=.FALSE.)
+            WP0(1)%CAvOp           = CZERO
+            para_propa%ana_psi%ZPE = ZERO
+
+            IF(MPI_id==0) CALL sub_analyze_tab_psi(T,WP0(:),para_propa%ana_psi,adia=.FALSE.,Write_Psi=.FALSE.)
             para_propa%ana_psi%file_Psi%name = para_propa%file_WP%name
             write(out_unitp,*)
 
