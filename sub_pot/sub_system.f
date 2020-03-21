@@ -25,43 +25,34 @@ c----- for the zmatrix and Tnum --------------------------------------
       real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
       real (kind=Rkind) :: Qact(nb_var)
 
-      integer,parameter :: ndim=6
+      integer,parameter :: ndim=12
       real (kind=Rkind) :: im_pot0
       real (kind=Rkind) :: Q(ndim)
       real (kind=Rkind) :: Q2(ndim)
 
+      real (kind=Rkind), parameter :: w(ndim) = (/
+     *  0.09357_Rkind, 0.0740_Rkind, 0.1273_Rkind, 0.1568_Rkind,
+     *  0.1347_Rkind, 0.3431_Rkind, 0.1157_Rkind, 0.3242_Rkind,
+     *  0.3621_Rkind, 0.2673_Rkind, 0.3052_Rkind, 0.0968_Rkind/)
+
+      real (kind=Rkind), parameter :: k1(ndim) = (/
+     *  ZERO, -0.0964_Rkind, 0.0470_Rkind, 0.1594_Rkind,
+     *  0.0308_Rkind, 0.0782_Rkind, 0.0261_Rkind, 0.0717_Rkind,
+     *  0.0560_Rkind, 0.0625_Rkind, 0.0780_Rkind, 0.0188_Rkind/)
+
+      real (kind=Rkind) :: k2(ndim) = (/
+     *  ZERO,0.1194_Rkind, 0.2012_Rkind, 0.0484_Rkind,
+     *  -0.0308_Rkind, -0.0782_Rkind, -0.0261_Rkind, -0.0717_Rkind,
+     *  -0.0560_Rkind, -0.0625_Rkind, -0.0780_Rkind, -0.0188_Rkind/)
+
+      real (kind=Rkind), parameter :: delta=0.46165_Rkind
+      real (kind=Rkind), parameter :: lambda=0.1825_Rkind
+
+      real (kind=Rkind) :: eVTOau
+
+      
+      eVTOau = ONE/get_Conv_au_TO_unit(quantity='E',Unit='eV')
      
-      real (kind=Rkind) :: w10a,w6a,w1,w9a,w16b,w18b
-      real (kind=Rkind) :: delta
-      real (kind=Rkind) :: lambda
-      real (kind=Rkind) :: k6a1,k6a2
-      real (kind=Rkind) :: k11,k12
-      real (kind=Rkind) :: k9a1,k9a2
-      real (kind=Rkind) :: k16b1,k16b2
-      real (kind=Rkind) :: k18b1,k18b2
-
-    
-       w10a   = convRWU_WorkingUnit_TO_R(REAL_WU(0.09357,'ev','E'))
-       w6a    = convRWU_WorkingUnit_TO_R(REAL_WU(0.0740,'ev','E'))
-       w1     = convRWU_WorkingUnit_TO_R(REAL_WU(0.1273,'ev','E'))
-       w9a    = convRWU_WorkingUnit_TO_R(REAL_WU(0.1568,'ev','E'))
-       w16b   = convRWU_WorkingUnit_TO_R(REAL_WU(0.3242,'ev','E'))
-       w18b   = convRWU_WorkingUnit_TO_R(REAL_WU(0.3621,'ev','E'))
-
-       delta  = convRWU_WorkingUnit_TO_R(REAL_WU(0.46165,'ev','E'))
-       lambda = convRWU_WorkingUnit_TO_R(REAL_WU(0.1825,'ev','E'))
-
-       k6a1   = convRWU_WorkingUnit_TO_R(REAL_WU(-0.0964,'ev','E'))
-       k6a2   = convRWU_WorkingUnit_TO_R(REAL_WU(0.1194,'ev','E'))
-       k11    = convRWU_WorkingUnit_TO_R(REAL_WU(0.0470,'ev','E'))
-       k12    = convRWU_WorkingUnit_TO_R(REAL_WU(0.2012,'ev','E'))
-       k9a1   = convRWU_WorkingUnit_TO_R(REAL_WU(0.1594,'ev','E'))
-       k9a2   = convRWU_WorkingUnit_TO_R(REAL_WU(0.0484,'ev','E'))
-       k16b1  = convRWU_WorkingUnit_TO_R(REAL_WU(0.0717,'ev','E'))
-       k16b2  = convRWU_WorkingUnit_TO_R(REAL_WU(-0.0717,'ev','E'))
-       k18b1  = convRWU_WorkingUnit_TO_R(REAL_WU(0.0780,'ev','E'))
-       k18b2  = convRWU_WorkingUnit_TO_R(REAL_WU(-0.0780,'ev','E'))
-
       !write(6,*) 'w (au)',w10a,w6a,w1,w9a
 
       Q  = Qact(4:ndim+3)
@@ -69,14 +60,14 @@ c----- for the zmatrix and Tnum --------------------------------------
 
       IF (nb_be == 2 ) THEN
         mat_V(:,:) = ZERO
-        mat_V(1,1) = HALF*( w10a*Q2(1)+w6a*Q2(2)+w1*Q2(3)+w9a*Q2(4)+
-     *                      w16b*Q2(5)+w18b*Q2(6) )
-        mat_V(2,2) = mat_V(1,1) + delta + 
-     *             k6a2*Q(2)+k12*Q(3)+k9a2*Q(4)+k16b2*Q(5)+k18b2*Q(6)
-        mat_V(1,1) = mat_V(1,1) - delta + 
-     *             k6a1*Q(2)+k11*Q(3)+k9a1*Q(4)+k16b1*Q(5)+k18b1*Q(6)
+        mat_V(1,1) = HALF* dot_product(w(:),Q2(:))
+
+        mat_V(2,2) = mat_V(1,1) + delta + dot_product(k2(:),Q(:))
+        mat_V(1,1) = mat_V(1,1) - delta + dot_product(k1(:),Q(:))
         mat_V(1,2) = lambda*Q(1)
         mat_V(2,1) = lambda*Q(1)
+
+        mat_V = mat_V * eVTOau
 
 c       write(6,*) 'Q,V',Q,mat_V
         IF (pot_cplx) mat_imV(1,1) = im_pot0(Q,ndim)

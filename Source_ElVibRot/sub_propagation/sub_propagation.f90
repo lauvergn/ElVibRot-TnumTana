@@ -149,7 +149,7 @@ CONTAINS
 
       SELECT CASE (para_propa%type_WPpropa)
 
-      CASE (1,2,5,6,7,9,10)
+      CASE (1,2,5,6,7,8,9,10)
 
         IF (SGtype4 .AND. direct_KEO) THEN
           !CALL sub_propagation11_SG4(WP0,WP,1,para_H,para_propa)

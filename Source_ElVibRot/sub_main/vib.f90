@@ -158,8 +158,6 @@
       para_H => para_AllOp%tab_Op(1)
       CALL dealloc_Basis(BasisnD_Save)
 
-write(6,*) 'para_propa%ana_psi%adia',para_propa%ana_psi%adia
-
       IF(MPI_id==0) THEN
         write(out_unitp,*)
         CALL time_perso('ini_data end')
@@ -358,7 +356,7 @@ write(6,*) 'para_propa%ana_psi%adia',para_propa%ana_psi%adia
         !===== Tune the number of threads (for SG4) =====================
         !================================================================
         ! for only one WP (complex)
-        !CALL Tune_SG4threads_HPsi(.TRUE.,1,para_H)
+        CALL Tune_SG4threads_HPsi(.TRUE.,1,para_H)
 
         !================================================================
         !================================================================
@@ -1634,7 +1632,9 @@ IMPLICIT NONE
  logical, parameter :: debug=.FALSE.
  !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
-
+#if(run_MPI)
+   RETURN
+#endif
 IF (para_H%BasisnD%SparseGrid_type /= 4) RETURN
 
 para_mem%mem_debug = .FALSE.

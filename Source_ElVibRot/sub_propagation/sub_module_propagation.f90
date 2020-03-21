@@ -205,6 +205,7 @@ PUBLIC :: initialisation1_poly,cof
         logical         ::       test_max_norm   ! IF .TRUE., Error in the propagation (norm too large)
         logical         ::       march_error     ! IF .TRUE., Error in the propagation
         integer         ::       num_Op = 0      !  Operator used for the propagation (H)
+        logical         ::       One_Iteration = .FALSE. ! Propagation stops after one time step.
 
 !----- variables for the WP propagation ----------------------------
         TYPE (param_psi), pointer :: work_WP(:) => null()
@@ -1241,7 +1242,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 !------ initial WP for the control -----------------------
       integer       :: nb_WP,nb_WPba,max_iter
       real (kind=Rkind) :: conv,alpha,Max_alpha,gamma,Tenvelopp
-      logical       :: post_control,gate,cplx_gate
+      logical       :: post_control,gate,cplx_gate,One_Iteration
       logical       :: Krotov,Turinici,envelopp,Obj_TO_alpha
       real (kind=Rkind),pointer    :: MRgate(:,:)
       complex (kind=Rkind),pointer :: MCgate(:,:)
@@ -1251,6 +1252,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
       NAMELIST /propa/WPTmax,WPdeltaT,nb_micro,restart,                 &
                       type_WPpropa,spectral,nb_vp_spec,                 &
+                      One_Iteration,                                    &
                       write_iter,n_WPecri,                              &
                   WPpsi2,WPpsi,file_WP,write_DVR,write_FBR,write_WPAdia,&
                       lect_WP0DVR,lect_WP0FBR,lect_WP0FBRall,           &
@@ -1295,6 +1297,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
         nb_micro            = 1
         restart             = .FALSE.
+        One_Iteration       = .FALSE.
 
         DHmax               = -TEN
         auto_Hmax           = .FALSE.
@@ -1356,11 +1359,10 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         IF (print_level > 0) write(out_unitp,propa)
 
 
-        para_propa%WPTmax       = convRWU_WorkingUnit_TO_R(WPTmax)
-        para_propa%WPdeltaT     = convRWU_WorkingUnit_TO_R(WPdeltaT)
-
-        para_propa%nb_micro     = nb_micro
-
+        para_propa%WPTmax                 = convRWU_WorkingUnit_TO_R(WPTmax)
+        para_propa%WPdeltaT               = convRWU_WorkingUnit_TO_R(WPdeltaT)
+        para_propa%nb_micro               = nb_micro
+        para_propa%One_Iteration          = One_Iteration
         para_propa%para_poly%max_poly     = max_poly
         para_propa%para_poly%npoly        = npoly
 
@@ -1423,6 +1425,12 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
           name_WPpropa  = 'Bulirsch-Stoer'
+          para_propa%with_field    = .FALSE.
+
+  CASE (8)!         Short Interative Propagation (Lanczos/Davidson)
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'SIL'
           para_propa%with_field    = .FALSE.
 
   CASE (9)!         Short Interative Propagation (Lanczos/Davidson)
