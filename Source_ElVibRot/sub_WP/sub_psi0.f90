@@ -124,10 +124,10 @@
           END IF
 
           CALL norm2_psi(WP0(1),GridRep=.TRUE.)
-          IF(MPI_id==0) write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
+          IF(MPI_id==0) write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
           CALL flush_perso(out_unitp)
           CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
-          IF(MPI_id==0) write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
+          IF(MPI_id==0) write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
           CALL flush_perso(out_unitp)
 
           IF (debug) THEN
@@ -142,9 +142,9 @@
 
             CALL norm2_psi(WP0(1),BasisRep=.TRUE.)
 
-            write(out_unitp,*) 'normeWP BasisRep',WP0(1)%norme
+            write(out_unitp,*) 'norm2WP BasisRep',WP0(1)%norm2
 
-            IF (abs(ONE-WP0(1)%norme) >= ONETENTH**5) THEN
+            IF (abs(ONE-WP0(1)%norm2) >= ONETENTH**5) THEN
               write(out_unitp,*) ' WARNNIG in psi0'
               write(out_unitp,*) ' the transformation GridRep to BasisRep is NOT exact'
               write(out_unitp,*) ' => used more basis functions'
@@ -193,7 +193,7 @@
       END IF ! for para_WP0%New_Read_WP0
 
       IF(MPI_id==0) CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
-      IF(MPI_id==0) write(out_unitp,*) 'normeWP BasisRep',WP0(1)%norme
+      IF(MPI_id==0) write(out_unitp,*) 'norm2WP BasisRep',WP0(1)%norm2
 
       !- clear WP0%...GridRep, if not need ------------------
       IF (para_WP0%WP0BasisRep) THEN
@@ -204,7 +204,7 @@
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*)
-        write(out_unitp,*) 'WP0BasisRep',WP0(1)%norme
+        write(out_unitp,*) 'WP0BasisRep',WP0(1)%norm2
         IF (para_WP0%WP0BasisRep) THEN
           CALL ecri_psi(ZERO,WP0(1),out_unitp,.FALSE.,.TRUE.)
         ELSE

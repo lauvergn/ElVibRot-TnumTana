@@ -29,7 +29,7 @@
 
       MODULE mod_propa
       USE mod_system
-      USE mod_Constant,      only: get_conv_au_to_unit, real_wu, convrwu_to_r
+      USE mod_Constant,      ONLY : get_conv_au_to_unit, real_wu, convrwu_to_r
       USE mod_field,         ONLY : param_field
       USE mod_psi_set_alloc, ONLY : param_psi
       USE mod_param_WP0,     ONLY : param_WP0
@@ -42,7 +42,6 @@ PUBLIC :: read_propagation,read_davidson
 PUBLIC :: dealloc_param_propa,sub_analyze_WP_OpWP,sub_analyze_mini_WP_OpWP
 PUBLIC :: Read_AutoCorr,Write_AutoCorr,Calc_AutoCorr
 PUBLIC :: SaveWP_restart,ReadWP_restart
-PUBLIC :: initialisation1_poly,cof
 
       !!@description: TODO
       !!@param: TODO
@@ -69,17 +68,17 @@ PUBLIC :: initialisation1_poly,cof
         integer          :: nb_WP              ! number of initial WP and WP target's
         integer          :: nb_WPba            ! number of basis function of each WP
         integer          :: max_iter           ! number of iterations for the control
-        real (kind=Rkind)    :: conv               ! convergence for the objective
-        real (kind=Rkind)    :: alpha,gamma        ! parameters for the convergence
-        real (kind=Rkind)    :: Max_alpha          ! parameters for the convergence
+        real (kind=Rkind):: conv               ! convergence for the objective
+        real (kind=Rkind):: alpha,gamma        ! parameters for the convergence
+        real (kind=Rkind):: Max_alpha          ! parameters for the convergence
         logical          :: Krotov             ! Krotov Algorithm
         logical          :: Turinici           ! Turinici Algorithm
         logical          :: envelopp           ! use an envelopp (s(t)) for the field
-        real (kind=Rkind)    :: Tenvelopp          ! parameter of the envelopp sin(t/T*pi)
+        real (kind=Rkind):: Tenvelopp          ! parameter of the envelopp sin(t/T*pi)
         logical          :: Obj_TO_alpha       ! the objectifs modify alpha
 
-        integer, pointer :: tab_WP0(:) => null()         ! numero of the intial WP (nb_WP)
-        integer, pointer :: tab_WPt(:) => null()        ! numero of the target WP (nb_WP)
+        integer, pointer :: tab_WP0(:) => null()        ! the intial WPs (nb_WP)
+        integer, pointer :: tab_WPt(:) => null()        ! the target WPs (nb_WP)
 
         logical          :: lo_WP_save_T
         integer          :: nb_DT
@@ -162,14 +161,23 @@ PUBLIC :: initialisation1_poly,cof
         integer             ::  max_ana       ! nb of wavefunctions calculated with imaginary propagation
 
         integer             ::  type_WPpropa  ! propagation type :
-                                              !  0 from the spectrum (not working)
-                                              !  1 Chebychef (default)
-                                              !  2 nOD
-                                              !  3 imaginary propagation
-                                              ! 22 Time dependant
-                                              ! 221,222,223 Time dependant (with Mux or Muy or Muz)
-                                              ! 24 Time dependant (for the control)
-                                              ! 241,242,243 Time dependant (with Mux or Muy or Muz)
+                                              !  1 Chebychev (default)
+                                              !  2 nOD (Taylor)
+                                              !  5 RK4
+                                              !  6 ModmidPoint
+                                              !  7 Bulirsch-Stoer
+                                              !  8 SIL
+                                              !  9 SIP
+                                              ! 10 Spectral
+
+                                              !  3 (Emin) or  -3 (Emax) imaginary propagation
+                                              ! 33 (Emin) or -33 (Emax) Davidson
+                                              ! 34 (Emin) Conjugated Gradient
+
+                                              ! 22 or 24 Time dependant Hamiltonian nOD
+                                              ! 52 Time dependant Hamiltonian RK2
+                                              ! 54 Time dependant Hamiltonian RK4
+
 
         logical                  :: With_field = .FALSE.   ! propagation with a field
         character (len=Name_len) :: name_WPpropa  !  spectral (not working)
@@ -201,14 +209,14 @@ PUBLIC :: initialisation1_poly,cof
         TYPE (param_ana_psi)  :: ana_psi         ! to control the WP analysis
 
 
-        logical         ::       control         !  use control (need type_WPpropa 24)
-        logical         ::       test_max_norm   ! IF .TRUE., Error in the propagation (norm too large)
-        logical         ::       march_error     ! IF .TRUE., Error in the propagation
-        integer         ::       num_Op = 0      !  Operator used for the propagation (H)
-        logical         ::       One_Iteration = .FALSE. ! Propagation stops after one time step.
+        logical           ::       control         !  use control (need type_WPpropa 24)
+        logical           ::       test_max_norm   ! IF .TRUE., Error in the propagation (norm too large)
+        real (kind=Rkind) ::       max_norm2 = 1.3_Rkind ! ! if wp%norm^2 > max_norm^2 => stop
+        logical           ::       march_error     ! IF .TRUE., Error in the propagation
+        integer           ::       num_Op = 0      !  Operator used for the propagation (H)
+        logical           ::       One_Iteration = .FALSE. ! Propagation stops after one time step.
 
 !----- variables for the WP propagation ----------------------------
-        TYPE (param_psi), pointer :: work_WP(:) => null()
 
         TYPE (param_file)    :: file_WP,file_autocorr,file_spectrum
         TYPE (param_file)    :: file_WP_restart ! files to be able to write the propagation
@@ -319,14 +327,6 @@ PUBLIC :: initialisation1_poly,cof
       CALL dealloc_param_control(para_propa%para_control)
       CALL dealloc_param_poly(para_propa%para_poly)
       CALL dealloc_param_field(para_propa%para_field)
-
-      IF (associated(para_propa%work_WP)) THEN
-        DO i=0,size(para_propa%work_WP)-1
-          CALL dealloc_psi(para_propa%work_WP(i))
-        END DO
-        CALL dealloc_array(para_propa%work_WP,                          &
-                          "para_propa%work_WP","dealloc_param_propa")
-      END IF
 
       END SUBROUTINE dealloc_param_propa
 
@@ -527,301 +527,6 @@ PUBLIC :: initialisation1_poly,cof
       END SUBROUTINE Read_AutoCorr
 
 
-!==============================================================
-!
-!     initialisation for the Chebychev and nOD propagation
-!
-!==============================================================
-      SUBROUTINE initialisation1_poly(para_poly,deltaT,type_propa)
-      USE mod_system
-      IMPLICIT NONE
-
-!----- variables for the WP propagation ----------------------------
-      TYPE (param_poly) :: para_poly
-      real (kind=Rkind) :: deltaT
-      integer           :: type_propa
-
-
-
-      integer       :: npoly_cheby
-
-!----- for debuging --------------------------------------------------
-      integer :: err_mem,memory
-      character (len=*), parameter :: name_sub='initialisation1_poly'
-      logical, parameter :: debug =.FALSE.
-      !logical, parameter :: debug =.TRUE.
-!-----------------------------------------------------------
-       IF (para_poly%init_done) RETURN
-       IF (debug) THEN
-         write(out_unitp,*) 'BEGINNING ',name_sub
-         write(out_unitp,*) 'deltaT',deltaT
-         write(out_unitp,*) 'Hmax',para_poly%Hmax
-         write(out_unitp,*) 'DHmax',para_poly%DHmax
-         write(out_unitp,*) 'Hmin',para_poly%Hmin
-         CALL flush_perso(out_unitp)
-       END IF
-!-----------------------------------------------------------
-
-      IF (para_poly%Hmin > para_poly%Hmax) THEN
-         write(out_unitp,*) ' ERROR in ',name_sub
-         write(out_unitp,*) 'Hmax',para_poly%Hmax
-         write(out_unitp,*) 'DHmax',para_poly%DHmax
-         write(out_unitp,*) 'Hmin',para_poly%Hmin
-         write(out_unitp,*) ' Hmin > Hmax '
-         !STOP " ERROR in " // name_sub // " : Hmin > Hmax"
-         STOP
-      END IF
-
-!-----------------------------------------------------------
-!     E0 is the zero of energy for energy scaling (i.e. the centre of the range).
-!     ESC is the energy scaling parameter ( so that scaled energy lies between -1 and 1)
-
-      para_poly%deltaE = para_poly%Hmax - para_poly%Hmin
-      para_poly%E0     = para_poly%Hmin + HALF * para_poly%deltaE
-      para_poly%alpha  = HALF * para_poly%deltaE * deltaT
-      para_poly%Esc    = ONE
-
-      IF (type_propa == 1) para_poly%Esc = HALF * para_poly%deltaE
-      IF (type_propa == 33) para_poly%E0     = para_poly%Hmin
-      IF (type_propa == 33) para_poly%alpha  = para_poly%deltaE *       &
-                                                  deltaT
-
-
-      IF (debug) THEN
-        write(out_unitp,*) 'Hmin,Hmax',para_poly%Hmin,para_poly%Hmax
-        write(out_unitp,*) 'deltaE',para_poly%deltaE
-        write(out_unitp,*) 'E0,Esc',para_poly%E0,para_poly%Esc
-        write(out_unitp,*) 'alpha (r)',para_poly%alpha
-        CALL flush_perso(out_unitp)
-      END IF
-!     ------------------------------------------------------
-
-!     ------------------------------------------------------
-      IF (type_propa == 1) THEN
-!       - Chebychev coeficients calculation ------------------
-        CALL cofcheb(para_poly%alpha,npoly_cheby,                       &
-                     para_poly%coef_poly,                               &
-                     para_poly%max_poly,para_poly%poly_tol)
-        IF (npoly_cheby > para_poly%npoly) para_poly%npoly = npoly_cheby
-
-      ELSE
-        CALL cof_nOD(para_poly%alpha,DeltaT,para_poly%npoly,            &
-                     para_poly%coef_poly,                               &
-                     para_poly%max_poly,para_poly%poly_tol)
-      END IF
-!     ------------------------------------------------------
-
-      para_poly%init_done = .TRUE.
-
-!-----------------------------------------------------------
-       IF (debug) THEN
-         write(out_unitp,*) 'npoly',para_poly%npoly
-         write(out_unitp,*) 'deltaT',deltaT
-         write(out_unitp,*) 'END ',name_sub
-       END IF
-!-----------------------------------------------------------
-       CALL flush_perso(out_unitp)
-
-       END SUBROUTINE initialisation1_poly
-
-
-!==============================================================
-!
-!     Chebychev coeficients calculation
-!     the number of polynomia ncheb is optimized
-!
-!==============================================================
-      !!@description: Calculation of the Chebychev coefficients
-      !!              the number of polynomia ncheb is optimized
-      !!@param: TODO
-      !!@param: TODO
-      !!@param: TODO
-      SUBROUTINE cofcheb(r,ncheb,cf,nchmx,tol)
-      USE mod_system
-      IMPLICIT NONE
-
-      integer       :: ncheb,nchmx
-      real (kind=Rkind) :: cf(:)
-      real (kind=Rkind) :: r,tol,ctst,chk
-      integer       :: i,nset,k6,ier
-
-
-!----- for debuging --------------------------------------------------
-      logical, parameter :: debug =.FALSE.
-      !logical, parameter :: debug =.TRUE.
-!-----------------------------------------------------------
-       IF (debug) THEN
-         write(out_unitp,*) 'BEGINNING cofcheb'
-         write(out_unitp,*) 'r,tol',r,tol
-         write(out_unitp,*) 'nchmx',nchmx
-         CALL flush_perso(out_unitp)
-       END IF
-!-----------------------------------------------------------
-
-!----------------------------------------------
-      ncheb = max(ONE,r)
-      IF (debug) write(out_unitp,*) 'r, ncheb : ',r,ncheb
-      IF(MPI_id==0) CALL flush_perso(out_unitp)
-
-      IF (ncheb > nchmx) THEN
-         write(out_unitp,*) ' ERROR in cofcheb'
-         write(out_unitp,*) '*** nchmx too small '
-         write(out_unitp,*) 'nchmx < ncheb',nchmx,ncheb
-         STOP
-      END IF
-
-      CALL cof(r,ncheb,cf)
-
-!     -----------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'Chebychev coeficients',ncheb
-        write(out_unitp,2009) (i,cf(i),i=1,ncheb)
-        CALL flush_perso(out_unitp)
-      END IF
-!     -----------------------------------------
-!----------------------------------------------
-
-!----------------------------------------------
-! Set nch by using tolerance parameter, tol
-
-  30  ctst = abs(cf(ncheb)/cf(1))
-      if(ctst > tol)then
-        ncheb=ncheb+10
-        IF (ncheb > nchmx) THEN
-          write(out_unitp,*) ' ERROR in cofcheb'
-          write(out_unitp,*) '*** nchmx too small '
-          write(out_unitp,*) 'nchmx < ncheb',nchmx,ncheb
-          STOP
-        END IF
-        call cof(r,ncheb,cf)
-      go to 30
-      else
-        nset=ncheb
-        DO  k6=1,nset
-            chk=abs(cf(k6)/cf(1))
-            if(chk <= tol)then
-               ncheb=k6
-               go to 45
-            endif
-        END DO
-      endif
-   45 continue
-!----------------------------------------------
-
-      write(out_unitp,2007) ncheb
- 2007 format(1x,'Ncheb after optimization = ',i6)
-
-
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'Chebychev coeficients',ncheb
-        write(out_unitp,2009) (i,cf(i),i=1,ncheb)
- 2009   format(3(i6,e16.5))
-        write(out_unitp,*) 'END cofcheb'
-      END IF
-!-----------------------------------------------------------
-      IF(MPI_id==0) CALL flush_perso(out_unitp)
-
-      END SUBROUTINE cofcheb
-!==============================================================
-!
-!     Chebychev coeficients calculation
-!
-!==============================================================
-      !!@description: Chebychev coefficients calculation
-      !!@param: TODO
-      !!@param: TODO
-      !!@param: TODO
-      SUBROUTINE cof(r,ncheb,cf)
-      USE mod_system
-      IMPLICIT NONE
-
-      integer ncheb
-      real (kind=Rkind) :: cf(:)
-      real (kind=Rkind) :: r,r1
-
-      integer       :: i,ier
-
-      r1 = r
-      CALL mmbsjn(r1,ncheb,cf,ier)
-
-      !write(6,*) 'Chebychev coefficients'
-      !write(6,*) '  with r=',r1
-
-      DO i=2,ncheb
-        cf(i) = cf(i) + cf(i)
-        !write(6,*) 'i,cf',i,cf(i)
-      END DO
-!stop
-      END SUBROUTINE cof
-
-!==============================================================
-!
-!     Taylor coeficients calculation (nOD)
-!
-!==============================================================
-      !!@description: Taylor coeficients calculation (nOD)
-      !!@param: TODO
-      !!@param: TODO
-      !!@param: TODO
-      SUBROUTINE cof_nOD(alpha,DeltaT,nOD,coef,Max_nOD,epsi)
-      USE mod_system
-      IMPLICIT NONE
-
-      integer       :: nOD,Max_nOD
-      real (kind=Rkind) :: alpha,DeltaT,epsi
-      real (kind=Rkind) :: coef(:)
-
-
-
-      real (kind=Rkind) :: reste,xi
-      integer       :: i
-
-!----- for debuging --------------------------------------------------
-      logical, parameter :: debug =.FALSE.
-!     logical, parameter :: debug =.TRUE.
-!-----------------------------------------------------------
-       IF (debug) THEN
-         write(out_unitp,*) 'BEGINNING cof_nOD'
-         write(out_unitp,*) 'alpha,DeltaT,epsi',alpha,DeltaT,epsi
-         write(out_unitp,*) 'nOD,Max_nOD',nOD,Max_nOD
-       END IF
-!-----------------------------------------------------------
-
-!----------------------------------------------
-
-      !- determination of the order: nOD
-      IF (nOD < 1) THEN
-        i = 1
-        xi = alpha
-        reste = ONE +alpha
-        DO WHILE (abs(log(reste)-alpha) > epsi .AND. i <= Max_nOD)
-          i = i+1
-          xi = xi * alpha / real(i,kind=Rkind)
-          reste = reste +xi
-          !write(out_unitp,*) 'i,xi,reste',i,xi,log(reste)-alpha
-        END DO
-        nOD  = i
-        write(out_unitp,*) 'Optimal nOD1',nOD,log(reste)-alpha
-        DO WHILE (xi > epsi .AND. i <= Max_nOD)
-          i = i+1
-          xi = xi * alpha / real(i,kind=Rkind)
-          !write(out_unitp,*) 'i,xi',i,xi
-        END DO
-        nOD  = i
-        IF (debug) write(out_unitp,*) 'Optimal nOD2',nOD,xi
-      ELSE
-        IF (debug) write(out_unitp,*) 'Fixed   nOD ',nOD
-      END IF
-
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'END cof_nOD'
-      END IF
-!-----------------------------------------------------------
-
-      END SUBROUTINE cof_nOD
-
 !=======================================================================================
 SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_system
@@ -882,7 +587,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
    DO i=1,nb_WP
      CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
-     write(out_unitp,*) 'normepsi0 BasisRep',i,WP(1)%norme
+     write(out_unitp,*) 'norm2psi0 BasisRep',i,WP(1)%norm2
 
      write(out_unitp,*) 'WP(i)%BasisRep',i
      CALL ecri_psi(T=ZERO,psi=WP(1),                               &
@@ -969,7 +674,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
     CALL sub_PsiOpPsi(ET,w1,w2,para_H)
 
     IF(MPI_id==0) THEN
-      WP(i)%CAvOp = ET/w1%norme
+      WP(i)%CAvOp = ET/w1%norm2
 
       para_propa%ana_psi%num_psi = i
       para_propa%ana_psi%Ene     = real(WP(i)%CAvOp,kind=Rkind)
@@ -1084,7 +789,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
 
    DO i=1,nb_WP
      CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
-     write(out_unitp,*) 'normepsi0 BasisRep',i,WP(1)%norme
+     write(out_unitp,*) 'norm2psi0 BasisRep',i,WP(1)%norm2
 
      write(out_unitp,*) 'WP(i)%BasisRep',i
      CALL ecri_psi(T=ZERO,psi=WP(1),                               &
@@ -1110,7 +815,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
     CALL sub_PsiOpPsi(ET,WP(i),w2,para_H)
     
     IF(MPI_id==0) THEN
-      WP(i)%CAvOp = ET/WP(i)%norme
+      WP(i)%CAvOp = ET/WP(i)%norm2
 
       RWU_E  = REAL_WU(real(WP(i)%CAvOp,kind=Rkind),'au','E')
       E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
@@ -1193,7 +898,6 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
 
 !----- time parameters -----------------------------------------------
-      !real (kind=Rkind) :: WPTmax ,WPdeltaT
       TYPE (REAL_WU)    :: WPTmax ,WPdeltaT
 
       integer           :: nb_micro
@@ -1251,7 +955,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       integer   :: i
 
       NAMELIST /propa/WPTmax,WPdeltaT,nb_micro,restart,                 &
-                      type_WPpropa,spectral,nb_vp_spec,                 &
+                      name_WPpropa,type_WPpropa,spectral,nb_vp_spec,    &
                       One_Iteration,                                    &
                       write_iter,n_WPecri,                              &
                   WPpsi2,WPpsi,file_WP,write_DVR,write_FBR,write_WPAdia,&
@@ -1305,8 +1009,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         npoly               = 0
         poly_tol            = ZERO
 
-        type_WPpropa        = 1
-        name_WPpropa        = 'cheby'
+        type_WPpropa        = 0
+        name_WPpropa        = ''
         spectral            = .FALSE.
         nb_vp_spec          = 0
 
@@ -1368,46 +1072,71 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
         CALL alloc_param_poly(para_propa%para_poly)
 
-        CALL alloc_array(para_propa%work_WP,(/npoly+6/),                &
-                        "para_propa%work_WP",name_sub,(/0/))
-
         para_propa%spectral      = spectral
         nb_vp_spec_out           = nb_vp_spec
         para_propa%with_field    = .FALSE.
 
+  IF (type_WPpropa > 0 .AND. name_WPpropa /= '') THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) '  type_WPpropa and name_WPpropa are defined.'
+    write(out_unitp,*) '  type_WPpropa: ',type_WPpropa
+    write(out_unitp,*) '  name_WPpropa: ',trim(name_WPpropa)
+    write(out_unitp,*) '  You have to chose only one.'
+    write(out_unitp,*) '  => check your data!!'
+    STOP
+  END IF
+  IF (type_WPpropa == 0) THEN
+     CALL string_uppercase_TO_lowercase(name_WPpropa)
+     SELECT CASE (name_WPpropa)
+       CASE ('cheby','chebychev')
+         type_WPpropa = 1
+       CASE ('nod','taylor')
+         type_WPpropa = 2
+       CASE ('emin','emin-relax','relax')
+         type_WPpropa = 3
+       CASE ('emax')
+         type_WPpropa = -3
+       CASE ('davidson','emin-davidson')
+         type_WPpropa = 33
+       CASE ('emax-davidson')
+         type_WPpropa = -33
+       CASE ('cg','conjugated gradient')
+         type_WPpropa = 34
+       CASE ('tdh-nod','tdh-taylor')
+         type_WPpropa = 22
+       CASE ('tdh-rk2')
+         type_WPpropa = 52
+       CASE ('tdh-rk4')
+         type_WPpropa = 54
+       CASE ('rk4')
+         type_WPpropa = 5
+
+       CASE ('modmidpoint')
+         type_WPpropa = 6
+       CASE ('bulirsch-stoer')
+         type_WPpropa = 7
+       CASE ('sil')
+         type_WPpropa = 8
+       CASE ('sip')
+         type_WPpropa = 9
+       CASE ('spectral')
+         type_WPpropa = 10
+
+       CASE ('control','opt-control')
+         type_WPpropa = 24
+       CASE ('test')
+         type_WPpropa = 100
+       END SELECT
+  END IF
   SELECT CASE (type_WPpropa)
   CASE (1) !         Chebychev
-          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**8
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**12
           IF (DHmax .EQ. -TEN) DHmax = HALF
           name_WPpropa  = 'cheby'
   CASE (2)!         Taylor
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
           name_WPpropa  = 'nOD'
-  CASE (3,-3) !         im Relax
-          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**8
-          IF (DHmax .EQ. -TEN) DHmax = ZERO
-          IF (type_WPpropa .EQ.  3) name_WPpropa  = 'Emin'
-          IF (type_WPpropa .EQ. -3) name_WPpropa  = 'Emax'
-  CASE (33,-33) !         Davidson
-          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**5
-          IF (DHmax .EQ. -TEN) DHmax = ZERO
-          name_WPpropa  = 'Davidson'
-  CASE (34) ! Conjugated Gradient
-          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**5
-          IF (DHmax .EQ. -TEN) DHmax = ZERO
-          name_WPpropa  = 'Conjugated Gradient'
-  CASE (22,221,222,223) !         nOD with a time dependant pulse in Hamiltonian (W(t))
-          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
-          IF (DHmax .EQ. -TEN) DHmax = ZERO
-          name_WPpropa  = 'TDH-nOD'
-          para_propa%with_field    = .TRUE.
-  CASE (50,54,52) !         RK4 with a time dependant pulse in Hamiltonian (W(t))
-          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
-          IF (DHmax .EQ. -TEN) DHmax = ZERO
-          name_WPpropa  = 'TDH_RK4'
-          IF (type_WPpropa==52) name_WPpropa  = 'TDH_RK2'
-          para_propa%with_field    = .TRUE.
 
   CASE (5) !         RK4 without a time dependant pulse in Hamiltonian (W(t))
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
@@ -1445,17 +1174,39 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
           name_WPpropa             = 'Spectral'
           para_propa%with_field    = .FALSE.
 
-  CASE (24,241,242,243) !         nOD with a time dependant pulse in Hamiltonian (W(t))
-!         for the control only
+
+  CASE (3,-3) !         im Relax
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**5
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          IF (type_WPpropa ==  3) name_WPpropa  = 'Emin'
+          IF (type_WPpropa == -3) name_WPpropa  = 'Emax'
+  CASE (33,-33) !         Davidson
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**5
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'Davidson'
+  CASE (34) ! Conjugated Gradient
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**5
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'Conjugated Gradient'
+
+
+  CASE (22,221,222,223,24,241,242,243) !         nOD with a time dependant pulse in Hamiltonian (W(t))
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
-          name_WPpropa  = 'TD-nOD'
+          name_WPpropa  = 'TDH-nOD'
           para_propa%with_field    = .TRUE.
+  CASE (50,54,52) !         RK4 with a time dependant pulse in Hamiltonian (W(t))
+          poly_tol                 = ZERO
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'TDH_RK4'
+          IF (type_WPpropa==52) name_WPpropa  = 'TDH_RK2'
+          para_propa%with_field    = .TRUE.
+
 
   CASE (100) !         test
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
-          name_WPpropa  = 'TDH test'
+          name_WPpropa  = 'test'
           para_propa%with_field    = .TRUE.
   CASE Default
            write(out_unitp,*) 'ERROR in ',name_sub
@@ -1895,8 +1646,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       para_Davidson%DeltaM_filter = DeltaM_filter
       para_Davidson%Mmax_filter   = Mmax_filter
 
-      IF (poly_tol == ZERO) poly_tol = ONETENTH**8
-      IF (DHmax    == -TEN)    DHmax = HALF
+      IF (poly_tol == ZERO)    poly_tol = ONETENTH**8
+      IF (DHmax    == -TEN)       DHmax = HALF
       para_propa%para_poly%poly_tol     = poly_tol
       para_propa%para_poly%max_poly     = max_poly
       para_propa%para_poly%npoly        = M_filter

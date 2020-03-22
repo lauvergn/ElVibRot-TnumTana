@@ -499,7 +499,7 @@
         CALL Set_symab_OF_psiBasisRep(psi(i),sym)
 
 !       CALL norm2_psi(psi(i))
-!       write(out_unitp,*) ' Ortho: norme',i,psi(i)%norme
+!       write(out_unitp,*) ' Ortho: norm2',i,psi(i)%norm2
         CALL renorm_psi(psi(i))
         !write(out_unitp,*) 'symab, bits(symab)',WriteTOstring_symab(psi(i)%symab)
 

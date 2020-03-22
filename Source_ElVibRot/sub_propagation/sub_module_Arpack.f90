@@ -1190,10 +1190,10 @@ CONTAINS
    DO i=1,nb_diago
      psi = psi + psi0(i)
      CALL norm2_psi(psi0(i))
-     IF (debug) write(out_unitp,*) '   norm^2 of psi0(i)',i,psi0(i)%norme
-     IF ( abs(psi0(i)%norme-ONE) > ONETENTH**8) THEN
+     IF (debug) write(out_unitp,*) '   norm^2 of psi0(i)',i,psi0(i)%norm2
+     IF ( abs(psi0(i)%norm2-ONE) > ONETENTH**8) THEN
        write(out_unitp,*) ' ERROR while reading the vector(s)'
-       write(out_unitp,*) ' ... the norm^2 of psi0(i) is /= 1',i,psi0(i)%norme
+       write(out_unitp,*) ' ... the norm^2 of psi0(i) is /= 1',i,psi0(i)%norm2
        STOP
      END IF
    END DO

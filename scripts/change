@@ -1,11 +1,7 @@
 
 
-# sub_analysis        sub_non_adia sub_cha_var     sub_onthefly sub_communf90       sub_operator_T sub_data_initialisation sub_pot sub_inactive        sub_propagation sub_GWP         sub_main        sub_pvscf sub_active      sub_module      sub_rotation
-
-#  sub_module
-
-     # for f in *.f90 sub*/*.f90 Tnum/*.f90 Tnum/zmat/*.f90
-       for f in Tnum/zmat/*.f90
+     # for f in Tnum/zmat/*.f90
+      for f in Source_ElVibRot/*.f90 Source_ElVibRot/sub*/*.f90 Source_ElVibRot/sub*/*/*.f90
       do
         echo =========================================================
         echo $f
@@ -21,8 +17,12 @@
 #       sed "s/ecriture_cg98/Write_CartGaussian/g" $f > $f.new
 #       mv $f.new $f
 
-        /Users/lauvergn/trav/change_alloc_dealloc/change_alloc_dealloc.exe < $f
-        mv $f $f.old
-        mv fort.7 $f
+#       /Users/lauvergn/trav/change_alloc_dealloc/change_alloc_dealloc.exe < $f
+#       mv $f $f.old
+#       mv fort.7 $f
+
+        sed "s/norme/norm2/g" $f > $f.new
+        mv $f.new $f
+        
         echo =========================================================
       done

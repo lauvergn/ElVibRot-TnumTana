@@ -717,7 +717,8 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           IF (tab_EVRT(ith)%para_ana%davidson) THEN
 
             CALL sub_propagation_Davidson(Tab_Psi,Ene0,nb_diago,max_diago,             &
-                                          para_H,tab_EVRT(ith)%para_propa)
+                                         para_H,tab_EVRT(ith)%para_propa%para_Davidson,&
+                                         tab_EVRT(ith)%para_propa)
 
           ELSE IF (tab_EVRT(ith)%para_ana%arpack) THEN ! arpack=t
             !CALL sub_propagation_Arpack(Tab_Psi,Ene0,nb_diago,max_diago,  &
@@ -1773,7 +1774,8 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           IF (para_EVRT%para_ana%davidson) THEN
 
             CALL sub_propagation_Davidson(Tab_Psi,Ene0,nb_diago,max_diago,             &
-                                          para_H,para_EVRT%para_propa)
+                                          para_H,para_EVRT%para_propa%para_Davidson,   &
+                                          para_EVRT%para_propa)
 
           ELSE IF (para_EVRT%para_ana%arpack) THEN ! arpack=t
             !CALL sub_propagation_Arpack(Tab_Psi,Ene0,nb_diago,max_diago,  &

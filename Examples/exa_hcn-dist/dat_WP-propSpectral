@@ -59,7 +59,7 @@ sym  cos(a)      R     r    x    pi   dh
  &actives test=f comput_S=t /
  &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t /
  &propa
-        WPTmax=5.d0 WPdeltaT=5.d0
+        WPTmax=500.d0 WPdeltaT=5.d0
         n_WPecri=1 WPpsi2=t WPpsi=t Write_WPAdia=t
         type_WPpropa=10
         WP0n_h=1 lect_WP0FBR=f

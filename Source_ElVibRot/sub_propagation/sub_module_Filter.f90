@@ -103,7 +103,7 @@ CONTAINS
       logical                   :: Conv,convergeEne(max_diago),convergeResi(max_diago)
       real (kind=Rkind)         :: non_hermitic,epsi,auTOcm_inv
       real (kind=Rkind)         :: RS,a,max_Sii,max_Sij
-      real (kind=Rkind)         :: tab_normeg(max_diago)
+      real (kind=Rkind)         :: tab_norm2g(max_diago)
       complex (kind=Rkind)      :: Overlap
       integer :: m0,mf,nb_Vec_IN_Window,nb_ConvVec_IN_Window,DeltaL
       real (kind=Rkind)         :: filter_err_thresh = ONETENTH**8
@@ -459,11 +459,11 @@ nb = size(P0_cheby)
             g = g + w1 * Vec(i,j)
           END DO
           CALL norm2_psi(g)
-          tab_normeg(j) = sqrt(g%norme)
-          convergeResi(j) = tab_normeg(j) < epsi
+          tab_norm2g(j) = sqrt(g%norm2)
+          convergeResi(j) = tab_norm2g(j) < epsi
 
         END DO
-        write(out_unitp,41) 'tab_normeg(:):      ',tab_normeg(1:nb_diago)
+        write(out_unitp,41) 'tab_norm2g(:):      ',tab_norm2g(1:nb_diago)
         write(out_unitp,42) 'convergenceResi(:): ',convergeResi(1:nb_diago)
  41     format(a,100(1x,e9.2))
  42     format(a,100(1x,l9))
@@ -608,7 +608,7 @@ STOP
       logical                   :: Conv,convergeEne(max_diago),convergeResi(max_diago)
       real (kind=Rkind)         :: non_hermitic,epsi,auTOcm_inv
       real (kind=Rkind)         :: RS,a,max_Sii,max_Sij
-      real (kind=Rkind)         :: tab_normeg(max_diago)
+      real (kind=Rkind)         :: tab_norm2g(max_diago)
       complex (kind=Rkind)      :: Overlap
       integer :: m0,mf,nb_Vec_IN_Window,nb_ConvVec_IN_Window,DeltaL
 
@@ -843,11 +843,11 @@ STOP
             g = g + w1 * Vec(i,j)
           END DO
           CALL norm2_psi(g)
-          tab_normeg(j) = sqrt(g%norme)
-          convergeResi(j) = tab_normeg(j) < epsi
+          tab_norm2g(j) = sqrt(g%norm2)
+          convergeResi(j) = tab_norm2g(j) < epsi
 
         END DO
-        write(out_unitp,41) 'tab_normeg(:):      ',tab_normeg(1:nb_diago)
+        write(out_unitp,41) 'tab_norm2g(:):      ',tab_norm2g(1:nb_diago)
         write(out_unitp,42) 'convergenceResi(:): ',convergeResi(1:nb_diago)
  41     format(a,100(1x,e9.2))
  42     format(a,100(1x,l9))
@@ -987,7 +987,7 @@ STOP
       logical                   :: Conv,convergeEne(max_diago),convergeResi(max_diago)
       real (kind=Rkind)         :: non_hermitic,epsi,auTOcm_inv
       real (kind=Rkind)         :: RS,a,max_Sii,max_Sij
-      real (kind=Rkind)         :: tab_normeg(max_diago)
+      real (kind=Rkind)         :: tab_norm2g(max_diago)
       complex (kind=Rkind)      :: Overlap
       integer :: m0,mf,nb_Vec_IN_Window,nb_ConvVec_IN_Window,DeltaL
 
@@ -1216,11 +1216,11 @@ STOP
             g = g + w1 * Vec(i,j)
           END DO
           CALL norm2_psi(g)
-          tab_normeg(j) = sqrt(g%norme)
-          convergeResi(j) = tab_normeg(j) < epsi
+          tab_norm2g(j) = sqrt(g%norm2)
+          convergeResi(j) = tab_norm2g(j) < epsi
 
         END DO
-        write(out_unitp,41) 'tab_normeg(:):      ',tab_normeg(1:nb_diago)
+        write(out_unitp,41) 'tab_norm2g(:):      ',tab_norm2g(1:nb_diago)
         write(out_unitp,42) 'convergenceResi(:): ',convergeResi(1:nb_diago)
  41     format(a,100(1x,e9.2))
  42     format(a,100(1x,l9))
@@ -1359,7 +1359,7 @@ STOP
       logical                   :: Conv,convergeEne(max_diago),convergeResi(max_diago)
       real (kind=Rkind)         :: non_hermitic,epsi,auTOcm_inv
       real (kind=Rkind)         :: RS,a,max_Sii,max_Sij
-      real (kind=Rkind)         :: tab_normeg(max_diago)
+      real (kind=Rkind)         :: tab_norm2g(max_diago)
       complex (kind=Rkind)      :: Overlap
       integer :: m0,mf,nb_Vec_IN_Window,nb_ConvVec_IN_Window,DeltaL
 
@@ -1533,11 +1533,11 @@ STOP
             g = g + w1 * Vec(i,j)
           END DO
           CALL norm2_psi(g)
-          tab_normeg(j) = sqrt(g%norme)
-          convergeResi(j) = tab_normeg(j) < epsi
+          tab_norm2g(j) = sqrt(g%norm2)
+          convergeResi(j) = tab_norm2g(j) < epsi
 
         END DO
-        write(out_unitp,41) 'tab_normeg(:):      ',tab_normeg(1:nb_diago)
+        write(out_unitp,41) 'tab_norm2g(:):      ',tab_norm2g(1:nb_diago)
         write(out_unitp,42) 'convergenceResi(:): ',convergeResi(1:nb_diago)
  41     format(a,100(1x,e9.2))
  42     format(a,100(1x,l9))
@@ -1668,7 +1668,7 @@ STOP
       logical                   :: convergeEne(max_diago),convergeResi(max_diago)
       real (kind=Rkind)         :: non_hermitic,epsi,auTOcm_inv
       real (kind=Rkind)         :: RS,a,max_Sii,max_Sij
-      real (kind=Rkind)         :: tab_normeg(max_diago)
+      real (kind=Rkind)         :: tab_norm2g(max_diago)
       complex (kind=Rkind)      :: Overlap
 
 !----- for debuging --------------------------------------------------
@@ -1881,11 +1881,11 @@ STOP
             g = g + w1 * Vec(i,j)
           END DO
           CALL norm2_psi(g)
-          tab_normeg(j) = sqrt(g%norme)
-          convergeResi(j) = tab_normeg(j) < epsi
+          tab_norm2g(j) = sqrt(g%norm2)
+          convergeResi(j) = tab_norm2g(j) < epsi
 
       END DO
-      write(out_unitp,41) 'tab_normeg          ',tab_normeg(1:nb_diago)
+      write(out_unitp,41) 'tab_norm2g          ',tab_norm2g(1:nb_diago)
       write(out_unitp,42)  'convergenceResi(:): ',convergeResi(1:nb_diago)
  41   format(a,100(1x,e9.2))
  42   format(a,100(1x,l9))
@@ -1962,7 +1962,7 @@ STOP
       logical                   :: convergeEne(max_diago),convergeResi(max_diago)
       real (kind=Rkind)         :: non_hermitic,epsi,auTOcm_inv
       real (kind=Rkind)         :: RS,a,max_Sii,max_Sij
-      real (kind=Rkind)         :: tab_normeg(max_diago)
+      real (kind=Rkind)         :: tab_norm2g(max_diago)
       complex (kind=Rkind)      :: Overlap
 
 !----- for debuging --------------------------------------------------
@@ -2096,11 +2096,11 @@ STOP
       jorth = 0
       DO j=1,para_propa%para_Davidson%L_filter
         CALL renorm_psi(z(j))
-        write(6,*) 'j,norm',j,z(j)%norme
+        write(6,*) 'j,norm',j,z(j)%norm2
 
         DO i=1,jorth
           CALL norm2_psi(z(i))
-          !write(6,*) '    i,norm',i,z(i)%norme
+          !write(6,*) '    i,norm',i,z(i)%norm2
           CALL Overlap_psi1_psi2(Overlap,z(j),z(i))
           !write(6,*) '    j,i,S(j,i)',j,i,real(Overlap,kind=Rkind)
 
@@ -2112,10 +2112,10 @@ STOP
           z(j) = z(j) - z(i) * RS
         END DO
         CALL norm2_psi(z(j))
-        !write(6,*) 'j,norm',j,z(j)%norme
-        IF (z(j)%norme > ONETENTH**6) THEN
+        !write(6,*) 'j,norm',j,z(j)%norm2
+        IF (z(j)%norm2 > ONETENTH**6) THEN
           jorth = jorth + 1
-          z(j) = z(j) * (ONE/sqrt(z(j)%norme))
+          z(j) = z(j) * (ONE/sqrt(z(j)%norm2))
           IF (jorth < j) z(jorth) = z(j)
         ELSE
           z(j) = ZERO
@@ -2201,11 +2201,11 @@ STOP
             g = g + w1 * Vec(i,j)
           END DO
           CALL norm2_psi(g)
-          tab_normeg(j) = sqrt(g%norme)
-          convergeResi(j) = tab_normeg(j) < epsi
+          tab_norm2g(j) = sqrt(g%norm2)
+          convergeResi(j) = tab_norm2g(j) < epsi
 
       END DO
-      write(out_unitp,41) 'tab_normeg          ',tab_normeg(1:nb_diago)
+      write(out_unitp,41) 'tab_norm2g          ',tab_norm2g(1:nb_diago)
       write(out_unitp,42)  'convergenceResi(:): ',convergeResi(1:nb_diago)
  41   format(a,100(1x,e9.2))
  42   format(a,100(1x,l9))

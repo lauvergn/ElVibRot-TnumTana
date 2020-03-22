@@ -178,7 +178,7 @@ SUBROUTINE sub_ExactFact_analysis(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
   ! Q derivatives
   DO iact1=1,psi%nb_act1
     dpsi = psi
-    idyn = para_H%mole%liste_QactTOQsym(iact1)
+    idyn = para_H%mole%liste_QactTOQdyn(iact1)
     CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=(/ idyn,0 /) ) ! put d./dQ psi on the grid
     d1psi(:,:,iact1) = reshape(dpsi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
   END DO
@@ -188,7 +188,7 @@ SUBROUTINE sub_ExactFact_analysis(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
     dpsi%CvecG = reshape(dtpsi,shape=(/ psi%nb_qa*psi%nb_be /))
     CALL sub_PsiGridRep_TO_BasisRep(dpsi) ! put dtpsi on the basis
 
-    idyn = para_H%mole%liste_QactTOQsym(iact1)
+    idyn = para_H%mole%liste_QactTOQdyn(iact1)
     CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=(/ idyn,0 /) ) ! put d./dQ psi on the grid
     d1dtpsi(:,:,iact1) = reshape(dpsi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
   END DO

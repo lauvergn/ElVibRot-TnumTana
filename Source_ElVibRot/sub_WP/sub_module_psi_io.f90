@@ -201,7 +201,7 @@
       DO i=1,para_WP0%nb_WP0
         CALL Set_symab_OF_psiBasisRep(psi0(i))
         CALL renorm_psi(psi0(i))
-        IF (debug .OR. print_level > 1) write(out_unitp,*) ' norm psi0(i),symab',i,psi0(i)%norme,psi0(i)%symab
+        IF (debug .OR. print_level > 1) write(out_unitp,*) ' norm psi0(i),symab',i,psi0(i)%norm2,psi0(i)%symab
         CALL flush_perso(out_unitp)
       END DO
 

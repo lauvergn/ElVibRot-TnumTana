@@ -427,7 +427,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
         CALL sub_read_psi0(tab_WP,para_propa%para_WP0,nb_WPba)
         DO j=1,nb_WPba
           CALL norm2_psi(tab_WP(j))
-          write(out_unitp,*) 'norm tab_WP(j): ',j,tab_WP(j)%norme
+          write(out_unitp,*) 'norm tab_WP(j): ',j,tab_WP(j)%norm2
         END DO
 
         DO i=1,nb_WP
@@ -887,7 +887,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
         write(out_unitp,*) ' ERROR in sub_propagation25'
         write(out_unitp,*) ' March: norm too large, no convergence...'
         IF (para_propa%test_max_norm)                                   &
-         write(out_unitp,*) ' the norme is too large! ',WP(:)%norme
+         write(out_unitp,*) ' the norm2 is too large! ',WP(:)%norm2
         STOP
       END IF
 
@@ -933,9 +933,8 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
 
 
 !------ working parameters --------------------------------
-      TYPE (param_psi), pointer :: w2
-
-      integer          :: i,j,k,jt,ip
+      TYPE (param_psi)     :: w2
+      integer              :: i,j,k,jt,ip
       real (kind=Rkind)    :: T      ! time
       complex (kind=Rkind) :: S,avMu
       real (kind=Rkind)    :: alpha_j,Obj_min
@@ -955,8 +954,6 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
         CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
-
-       w2 => para_propa%work_WP(0)
 
 !      - Build of the field ------------------------------
        IF (nb_WP > 1 .AND. mod(nb_WP,2) == 0) THEN
@@ -1002,6 +999,8 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
              para_propa%para_control%Obj_TO_alpha) THEN
          write(out_unitp,*) 'T Log(Obj/min_Obj)',T,int(log10(Obj0_w(:)/Obj_min))
        END IF
+
+       CALL dealloc_psi(w2)
 
 !----------------------------------------------------------
        IF (debug) THEN

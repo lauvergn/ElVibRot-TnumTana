@@ -631,7 +631,7 @@ END SUBROUTINE sub_analyze_psi
       integer       :: i
       real (kind=Rkind) :: WrhonD,temp
 
-      logical       :: psiN,normeGridRep,normeBasisRep
+      logical       :: psiN,norm2GridRep,norm2BasisRep
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub = 'psi_Qba_ie_psi'
@@ -1758,7 +1758,7 @@ END SUBROUTINE sub_analyze_psi
       real (kind=Rkind) :: WrhonD,temp
       integer       :: i_max_w
 
-      logical       :: psiN,normeGridRep,normeBasisRep
+      logical       :: psiN,norm2GridRep,norm2BasisRep
 
       real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)
 
@@ -1770,8 +1770,8 @@ END SUBROUTINE sub_analyze_psi
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING norm2_psi'
         IF (present(ReNorm)) write(out_unitp,*) 'Renormalization of psi',ReNorm
-        IF (present(GridRep)) write(out_unitp,*) 'normeGridRep',GridRep
-        IF (present(BasisRep)) write(out_unitp,*) 'normeBasisRep',BasisRep
+        IF (present(GridRep)) write(out_unitp,*) 'norm2GridRep',GridRep
+        IF (present(BasisRep)) write(out_unitp,*) 'norm2BasisRep',BasisRep
         write(out_unitp,*) 'psi'
         CALL ecri_psi(psi=psi)
       END IF
@@ -1785,60 +1785,60 @@ END SUBROUTINE sub_analyze_psi
 
       IF (present(GridRep)) THEN
         IF (present(BasisRep)) THEN
-          normeGridRep  = GridRep
-          normeBasisRep = BasisRep
+          norm2GridRep  = GridRep
+          norm2BasisRep = BasisRep
         ELSE
-          normeGridRep  = GridRep
-          normeBasisRep = .FALSE.
+          norm2GridRep  = GridRep
+          norm2BasisRep = .FALSE.
         END IF
       ELSE
         IF (present(BasisRep)) THEN
-          normeBasisRep = BasisRep
-          normeGridRep  = .FALSE.
+          norm2BasisRep = BasisRep
+          norm2GridRep  = .FALSE.
         ELSE
           IF (psi%BasisRep .AND. psi%GridRep) THEN
-            normeBasisRep = .TRUE.
-            normeGridRep  = .FALSE.
+            norm2BasisRep = .TRUE.
+            norm2GridRep  = .FALSE.
           ELSE
-            normeBasisRep = psi%BasisRep
-            normeGridRep  = psi%GridRep
+            norm2BasisRep = psi%BasisRep
+            norm2GridRep  = psi%GridRep
           END IF
        END IF
      END IF
 
-      IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep,psiN',normeGridRep,normeBasisRep,psiN
-      IF (normeGridRep .AND. normeBasisRep) THEN
+      IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep,psiN',norm2GridRep,norm2BasisRep,psiN
+      IF (norm2GridRep .AND. norm2BasisRep) THEN
         write(out_unitp,*) ' ERROR in norm2_psi'
-        write(out_unitp,*) ' normeGridRep=t and normeBasisRep=t !'
+        write(out_unitp,*) ' norm2GridRep=t and norm2BasisRep=t !'
         write(out_unitp,*) ' BasisRep,GridRep',psi%BasisRep,psi%GridRep
         STOP
       END IF
 
 
-      CALL Channel_weight(tab_WeightChannels,psi,normeGridRep,normeBasisRep)
+      CALL Channel_weight(tab_WeightChannels,psi,norm2GridRep,norm2BasisRep)
 
       IF (debug)  write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
 
-      psi%norme = sum(tab_WeightChannels)
+      psi%norm2 = sum(tab_WeightChannels)
 
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme,tab_WeightChannels
+        write(out_unitp,*) 'norm2 : ',psi%norm2,tab_WeightChannels
       END IF
 
 
 
       IF (psiN) THEN
 
-        IF (psi%norme .EQ. ZERO ) THEN
+        IF (psi%norm2 .EQ. ZERO ) THEN
           write(out_unitp,*) ' ERROR in norm2_psi'
-          write(out_unitp,*) ' the norm2 is zero !',psi%norme
+          write(out_unitp,*) ' the norm2 is zero !',psi%norm2
           STOP
         END IF
-        temp = ONE/psi%norme
+        temp = ONE/psi%norm2
         tab_WeightChannels = tab_WeightChannels * temp
         temp = sqrt(temp)
 
-        IF (normeGridRep) THEN
+        IF (norm2GridRep) THEN
 !         - normalization of psiGridRep -------------------------
           IF (psi%cplx) THEN
             psi%CvecG(:) = psi%CvecG(:) *cmplx(temp,ZERO,kind=Rkind)
@@ -1853,7 +1853,7 @@ END SUBROUTINE sub_analyze_psi
             psi%RvecB(:) = psi%RvecB(:) * temp
           END IF
         END IF
-        psi%norme = ONE
+        psi%norm2 = ONE
       END IF
 
       IF (allocated(tab_WeightChannels)) THEN
@@ -1862,7 +1862,7 @@ END SUBROUTINE sub_analyze_psi
 
 !----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme,tab_WeightChannels
+        write(out_unitp,*) 'norm2 : ',psi%norm2,tab_WeightChannels
         write(out_unitp,*) 'END norm2_psi'
       END IF
 !----------------------------------------------------------
@@ -1881,7 +1881,7 @@ END SUBROUTINE sub_analyze_psi
       logical,          intent(in),   optional :: GridRep,BasisRep
 
 !------ working variables ---------------------------------
-      logical                        :: normeGridRep,normeBasisRep
+      logical                        :: norm2GridRep,norm2BasisRep
       real (kind=Rkind)              :: temp
       real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)
 
@@ -1892,8 +1892,8 @@ END SUBROUTINE sub_analyze_psi
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING renorm_psi'
-        IF (present(GridRep)) write(out_unitp,*) 'normeGridRep',GridRep
-        IF (present(BasisRep)) write(out_unitp,*) 'normeBasisRep',BasisRep
+        IF (present(GridRep)) write(out_unitp,*) 'norm2GridRep',GridRep
+        IF (present(BasisRep)) write(out_unitp,*) 'norm2BasisRep',BasisRep
         write(out_unitp,*) 'psi'
         CALL ecri_psi(psi=psi)
       END IF
@@ -1901,53 +1901,53 @@ END SUBROUTINE sub_analyze_psi
 
       IF (present(GridRep)) THEN
         IF (present(BasisRep)) THEN
-          normeGridRep  = GridRep
-          normeBasisRep = BasisRep
+          norm2GridRep  = GridRep
+          norm2BasisRep = BasisRep
         ELSE
-          normeGridRep  = GridRep
-          normeBasisRep = .FALSE.
+          norm2GridRep  = GridRep
+          norm2BasisRep = .FALSE.
         END IF
       ELSE
         IF (present(BasisRep)) THEN
-          normeBasisRep = BasisRep
-          normeGridRep  = .FALSE.
+          norm2BasisRep = BasisRep
+          norm2GridRep  = .FALSE.
         ELSE
           IF (psi%BasisRep .AND. psi%GridRep) THEN
-            normeBasisRep = .TRUE.
-            normeGridRep  = .FALSE.
+            norm2BasisRep = .TRUE.
+            norm2GridRep  = .FALSE.
           ELSE
-            normeBasisRep = psi%BasisRep
-            normeGridRep  = psi%GridRep
+            norm2BasisRep = psi%BasisRep
+            norm2GridRep  = psi%GridRep
           END IF
        END IF
      END IF
 
-     IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep',normeGridRep,normeBasisRep
-      IF (normeGridRep .AND. normeBasisRep) THEN
+     IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep',norm2GridRep,norm2BasisRep
+      IF (norm2GridRep .AND. norm2BasisRep) THEN
         write(out_unitp,*) ' ERROR in renorm_psi'
-        write(out_unitp,*) ' normeGridRep=t and normeBasisRep=t !'
+        write(out_unitp,*) ' norm2GridRep=t and norm2BasisRep=t !'
         write(out_unitp,*) ' BasisRep,GridRep',psi%BasisRep,psi%GridRep
         STOP
       END IF
 
-      CALL Channel_weight(tab_WeightChannels,psi,normeGridRep,normeBasisRep)
+      CALL Channel_weight(tab_WeightChannels,psi,norm2GridRep,norm2BasisRep)
 
       IF (debug)  write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
 
-      psi%norme = sum(tab_WeightChannels)
+      psi%norm2 = sum(tab_WeightChannels)
 
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme,tab_WeightChannels
+        write(out_unitp,*) 'norm2 : ',psi%norm2,tab_WeightChannels
       END IF
 
-      IF (psi%norme .EQ. ZERO ) THEN
+      IF (psi%norm2 .EQ. ZERO ) THEN
         write(out_unitp,*) ' ERROR in renorm_psi'
-        write(out_unitp,*) ' the norme is zero !',psi%norme
+        write(out_unitp,*) ' the norm2 is zero !',psi%norm2
         STOP
       END IF
-      temp = sqrt(ONE/psi%norme)
+      temp = sqrt(ONE/psi%norm2)
 
-      IF (normeGridRep) THEN
+      IF (norm2GridRep) THEN
         !- normalization of psiGridRep -------------------------
         IF (psi%cplx) THEN
           psi%CvecG(:) = psi%CvecG(:) *cmplx(temp,ZERO,kind=Rkind)
@@ -1962,7 +1962,7 @@ END SUBROUTINE sub_analyze_psi
           psi%RvecB(:) = psi%RvecB(:) * temp
         END IF
       END IF
-      psi%norme = ONE
+      psi%norm2 = ONE
 
       IF (allocated(tab_WeightChannels)) THEN
         CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","Channel_weight (from renorm_psi)")
@@ -1970,7 +1970,7 @@ END SUBROUTINE sub_analyze_psi
 
 !----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme
+        write(out_unitp,*) 'norm2 : ',psi%norm2
         write(out_unitp,*) 'END renorm_psi'
       END IF
 !----------------------------------------------------------
@@ -1989,7 +1989,7 @@ END SUBROUTINE sub_analyze_psi
       logical,          intent(in),   optional :: GridRep,BasisRep
 
 !------ working variables ---------------------------------
-      logical                        :: normeGridRep,normeBasisRep
+      logical                        :: norm2GridRep,norm2BasisRep
       real (kind=Rkind)              :: temp
 
 !----- for debuging --------------------------------------------------
@@ -1998,8 +1998,8 @@ END SUBROUTINE sub_analyze_psi
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING renorm_psi_With_norm2'
-        IF (present(GridRep))  write(out_unitp,*) 'normeGridRep',GridRep
-        IF (present(BasisRep)) write(out_unitp,*) 'normeBasisRep',BasisRep
+        IF (present(GridRep))  write(out_unitp,*) 'norm2GridRep',GridRep
+        IF (present(BasisRep)) write(out_unitp,*) 'norm2BasisRep',BasisRep
         write(out_unitp,*) 'psi'
         CALL ecri_psi(psi=psi)
       END IF
@@ -2007,47 +2007,47 @@ END SUBROUTINE sub_analyze_psi
 
       IF (present(GridRep)) THEN
         IF (present(BasisRep)) THEN
-          normeGridRep  = GridRep
-          normeBasisRep = BasisRep
+          norm2GridRep  = GridRep
+          norm2BasisRep = BasisRep
         ELSE
-          normeGridRep  = GridRep
-          normeBasisRep = .FALSE.
+          norm2GridRep  = GridRep
+          norm2BasisRep = .FALSE.
         END IF
       ELSE
         IF (present(BasisRep)) THEN
-          normeBasisRep = BasisRep
-          normeGridRep  = .FALSE.
+          norm2BasisRep = BasisRep
+          norm2GridRep  = .FALSE.
         ELSE
           IF (psi%BasisRep .AND. psi%GridRep) THEN
-            normeBasisRep = .TRUE.
-            normeGridRep  = .FALSE.
+            norm2BasisRep = .TRUE.
+            norm2GridRep  = .FALSE.
           ELSE
-            normeBasisRep = psi%BasisRep
-            normeGridRep  = psi%GridRep
+            norm2BasisRep = psi%BasisRep
+            norm2GridRep  = psi%GridRep
           END IF
        END IF
      END IF
 
-     IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep',normeGridRep,normeBasisRep
-      IF (normeGridRep .AND. normeBasisRep) THEN
+     IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep',norm2GridRep,norm2BasisRep
+      IF (norm2GridRep .AND. norm2BasisRep) THEN
         write(out_unitp,*) ' ERROR in renorm_psi_With_norm2'
-        write(out_unitp,*) ' normeGridRep=t and normeBasisRep=t !'
+        write(out_unitp,*) ' norm2GridRep=t and norm2BasisRep=t !'
         write(out_unitp,*) ' BasisRep,GridRep',psi%BasisRep,psi%GridRep
         STOP
       END IF
 
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme
+        write(out_unitp,*) 'norm2 : ',psi%norm2
       END IF
 
-      IF (psi%norme .EQ. ZERO ) THEN
+      IF (psi%norm2 .EQ. ZERO ) THEN
         write(out_unitp,*) ' ERROR in renorm_psi_With_norm2'
-        write(out_unitp,*) ' the norme is zero !',psi%norme
+        write(out_unitp,*) ' the norm2 is zero !',psi%norm2
         STOP
       END IF
-      temp = sqrt(ONE/psi%norme)
+      temp = sqrt(ONE/psi%norm2)
 
-      IF (normeGridRep) THEN
+      IF (norm2GridRep) THEN
         !- normalization of psiGridRep -------------------------
         IF (psi%cplx) THEN
           psi%CvecG(:) = psi%CvecG(:) *cmplx(temp,ZERO,kind=Rkind)
@@ -2062,11 +2062,11 @@ END SUBROUTINE sub_analyze_psi
           psi%RvecB(:) = psi%RvecB(:) * temp
         END IF
       END IF
-      psi%norme = ONE
+      psi%norm2 = ONE
 
 !----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme
+        write(out_unitp,*) 'norm2 : ',psi%norm2
         write(out_unitp,*) 'END renorm_psi_With_norm2'
       END IF
 !----------------------------------------------------------

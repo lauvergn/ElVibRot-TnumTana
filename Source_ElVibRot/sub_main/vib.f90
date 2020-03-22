@@ -320,7 +320,7 @@
             END IF ! for para_propa%para_WP0%WP0_nb_CleanChannel > 0
 
             IF(MPI_id==0) CALL norm2_psi(WP0(1))
-            write(out_unitp,*) ' Norm of |WP0>',WP0(1)%norme
+            write(out_unitp,*) ' Norm of |WP0>',WP0(1)%norm2
             IF(MPI_id==0) CALL renorm_psi_With_norm2(WP0(1))
             T = ZERO
             write(out_unitp,*) ' Analysis of |WP0> or Mu|WP0>'
@@ -673,7 +673,7 @@
           IF (para_ana%davidson) THEN
 
             CALL sub_propagation_Davidson(Tab_Psi,Ene0,nb_diago,max_diago,             &
-                                          para_H,para_propa)
+                                          para_H,para_propa%para_Davidson,para_propa)
 
           ELSE IF (para_ana%arpack) THEN ! arpack=t
             !CALL sub_propagation_Arpack(Tab_Psi,Ene0,nb_diago,max_diago,  &

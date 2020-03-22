@@ -33,6 +33,12 @@
       USE mod_MPI
       IMPLICIT NONE
 
+      INTERFACE
+        SUBROUTINE read_arg(input_filename)
+          character(len=:), allocatable, intent(inout) :: input_filename
+        END SUBROUTINE read_arg
+      END INTERFACE
+
       logical  :: intensity_only,analysis_only,Popenmp,Popenmpi
 
       integer  :: PMatOp_omp,POpPsi_omp,PBasisTOGrid_omp,PGrid_omp,optimization
@@ -42,11 +48,13 @@
       integer  :: printlevel,err
       logical  :: test,EVR,cart,nDfit,nDGrid,mem_debug
       logical  :: GridTOBasis_test,OpPsi_test,main_test
-      character (len=Name_longlen) :: EneFormat
-      character (len=Name_longlen) :: RMatFormat
-      character (len=Name_longlen) :: CMatFormat
-      character (len=Line_len)     :: base_FileName = ''
-      
+      character (len=Name_longlen)   :: EneFormat
+      character (len=Name_longlen)   :: RMatFormat
+      character (len=Name_longlen)   :: CMatFormat
+      character (len=Line_len)       :: base_FileName = ''
+
+      character(len=:), allocatable  :: input_filename
+
       ! parameters for system setup
       ! make sure to be prepared in file      
       namelist /system/ max_mem,mem_debug,test,printlevel,              &
@@ -138,28 +146,22 @@
 #endif
         ENDIF
 
-         
+        !read the file name for the command arguments
+        CALL read_arg(input_filename)
         !> automatically decide the reading of namelist, from file or shell
         !> NOTE: remember to use vib to ensure "rm namelist" to prevent the
         !> reading of old namelist
-        CALL file_open2('namelist',in_unitp,old=.TRUE.,err_file=err)
-        !in_unitp=10
-        !open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
+        CALL file_open2(input_filename,in_unitp,old=.TRUE.,err_file=err)
         IF(err/=0) THEN
-          write(out_unitp,*) 'namelist file does not exist or error, reading namelist from shell'
+          write(out_unitp,*) input_filename,' file does not exist or error.'
+          write(out_unitp,*) '   => reading input data from shell.'
           in_unitp=INPUT_UNIT
         ELSE
-          write(out_unitp,*) 'namelist file does exist, reading namelist from the file'
+          write(out_unitp,*) input_filename,' file does exist.'
+          write(out_unitp,*) '   => reading input data from the file.'
         ENDIF
         read(in_unitp,system,IOSTAT=err)
 
-        !> read from parameter file created by shell script
-!        IF(namelist_from_file) THEN
-!          open(in_unitp,file='namelist',STATUS='OLD',IOSTAT=err)
-!          IF(err/=0) STOP 'error in opening file for namelist'
-!        Endif
-!        read(in_unitp,system,IOSTAT=err)
-             
         IF (err < 0) THEN
           write(out_unitp,*) ' ERROR in ElVibRot (main program)'
           write(out_unitp,*) ' End-of-file or End-of-record'
@@ -354,6 +356,64 @@
         CALL time_perso('MPI closed, final time')
         CALL MPI_Finalize(MPI_err);
         close(in_unitp)
+#else
+        close(in_unitp)
 #endif        
       END PROGRAM ElVibRot
+SUBROUTINE read_arg(input_filename)
+  USE mod_system
+  IMPLICIT NONE
 
+  character(len=:), allocatable, intent(inout) :: input_filename
+
+
+  character(len=:), allocatable :: arg,arg2
+  integer :: i,arg_len
+
+  IF (COMMAND_ARGUMENT_COUNT() /= 0 .AND. COMMAND_ARGUMENT_COUNT() /= 2) THEN
+    write(out_unitp,*) ' ERROR in read_arg'
+    write(out_unitp,*) ' Wrong ElVibRot argument number!'
+    write(out_unitp,*) 'argument number',COMMAND_ARGUMENT_COUNT()
+    write(out_unitp,*) ' You can have 0 or 2 arguments.'
+    STOP 'Wrong ElVibRot argument number'
+  END IF
+
+
+  DO i=1, COMMAND_ARGUMENT_COUNT(),2
+
+    CALL GET_COMMAND_ARGUMENT( NUMBER=i, LENGTH=arg_len )
+    allocate( character(len=arg_len) :: arg )
+    CALL GET_COMMAND_ARGUMENT( NUMBER=i, VALUE=arg )
+
+    CALL GET_COMMAND_ARGUMENT( NUMBER=i+1, LENGTH=arg_len )
+    allocate( character(len=arg_len) :: arg2 )
+    CALL GET_COMMAND_ARGUMENT( NUMBER=i+1, VALUE=arg2 )
+
+    SELECT CASE(arg)
+    CASE("-i","--input")
+      input_filename = arg2
+    CASE Default
+      write(out_unitp,*) ' ERROR in read_arg'
+      write(out_unitp,*) ' Wrong ElVibRot argument!'
+      write(out_unitp,*) '   arg: "',arg,'"'
+      write(out_unitp,*) ' The possibilities are:'
+      write(out_unitp,*) '    -i or --input'
+      STOP 'Wrong ElVibRot argument'
+    END SELECT
+
+    write(out_unitp,*) 'Argument number: ',i,' ==> arg: "',arg,'", arg2: "',arg2,'"'
+
+    deallocate(arg)
+    deallocate(arg2)
+  END DO
+  IF (.NOT. allocated(input_filename)) THEN
+    write(out_unitp,*) ' WARNING in read_arg'
+    write(out_unitp,*) ' No input file name argument'
+    write(out_unitp,*) '    => the file name is "namelist".'
+    input_filename = 'namelist'
+  END IF
+
+  write(6,*) '=================================='
+  write(6,*) '=================================='
+
+END SUBROUTINE read_arg

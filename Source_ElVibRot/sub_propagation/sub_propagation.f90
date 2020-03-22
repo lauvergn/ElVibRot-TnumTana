@@ -492,7 +492,7 @@ CONTAINS
       integer       :: i,ii,j,iqa
       integer       :: max_ecri
       real (kind=Rkind) :: DeltaT,T      ! time
-      real (kind=Rkind) :: DeltaE,Deltapsi,epsi,normeg,th
+      real (kind=Rkind) :: DeltaE,Deltapsi,epsi,norm2g,th
       real (kind=Rkind) :: avH1,avH2,avH3,A,B,C,D,DT1,DT2,S,E1,E2
       real (kind=Rkind) :: Qact(para_H%mole%nb_act1)
       real (kind=Rkind) :: psi_q(nb_diago)
@@ -628,14 +628,14 @@ CONTAINS
         CALL sub_PsiOpPsi(CEne0,psi(i),Hpsi,para_H)
         Ene0(i) = CEne0
         DeltaE = para_H%Hmax-para_H%Hmin
-        normeg = para_H%Hmax-para_H%Hmin
+        norm2g = para_H%Hmax-para_H%Hmin
 
         write(out_unitp,*) '-------------------------------------------'
         write(out_unitp,*) 'WP i, E',i,                                 &
                         Ene0(i)*get_Conv_au_TO_unit('E','cm-1'),DeltaE
 
 !       DO WHILE (T .LE. para_propa%WPTmax .AND. abs(DeltaE) .GT. epsi)
-        DO WHILE (T <= para_propa%WPTmax .AND. normeg > ONETENTH**5)
+        DO WHILE (T <= para_propa%WPTmax .AND. norm2g > ONETENTH**5)
 
 !         - Schmidt ortho ------------------------------------
           DO j=1,i-1
@@ -698,9 +698,9 @@ CONTAINS
 !         - propagation ------------------------------------------
           g = Hpsi + psi(i) * (-avH1)
           CALL norm2_psi(g)
-          normeg = sqrt(g%norme)
+          norm2g = sqrt(g%norm2)
           CALL renorm_psi_WITH_norm2(g)
-          write(out_unitp,*) 'it normeg C',it,normeg,C
+          write(out_unitp,*) 'it norm2g C',it,norm2g,C
 
 
           H2psi  = psi(i) * cos(th)
@@ -708,7 +708,7 @@ CONTAINS
 
 
           CALL norm2_psi(psi(i))
-          write(out_unitp,*) 'it norme npsi',it,psi(i)%norme
+          write(out_unitp,*) 'it norm2 npsi',it,psi(i)%norm2
           CALL renorm_psi_WITH_norm2(psi(i))
           CALL sub_PsiOpPsi(CEne0,psi(i),Hpsi,para_H)
           Ene0(i) = CEne0
@@ -722,8 +722,8 @@ CONTAINS
             write(out_unitp,*) 'WP it, E',it,                           &
                        Ene0(i)*get_Conv_au_TO_unit('E','cm-1'),         &
                         DeltaE*get_Conv_au_TO_unit('E','cm-1')
-            write(out_unitp,*) 'WP it sqrt(norme g)',it,                &
-                         sqrt(g%norme)*get_Conv_au_TO_unit('E','cm-1')
+            write(out_unitp,*) 'WP it sqrt(norm2 g)',it,                &
+                         sqrt(g%norm2)*get_Conv_au_TO_unit('E','cm-1')
             write(out_unitp,*) 'WP it, DeltaT,S',it,DeltaT,S
           END IF
 
@@ -888,7 +888,7 @@ CONTAINS
       itmax         = (para_propa%WPTmax-T)/para_propa%WPdeltaT
 
       DO WHILE ( (T - (para_propa%WPTmax-para_propa%WPdeltaT) <         &
-                 para_propa%WPdeltaT/TEN**5) .AND. psi(1)%norme < psi(1)%max_norme)
+                 para_propa%WPdeltaT/TEN**5) .AND. psi(1)%norm2 < para_propa%max_norm2)
 
          IF (mod(it,para_propa%n_WPecri) == 0) THEN
            IF(MPI_id==0) THEN
@@ -918,7 +918,7 @@ CONTAINS
 !----------------------------------------------------------
 
       CALL file_close(para_propa%file_autocorr)
-      IF (psi(1)%norme >= psi(1)%max_norme) STOP
+      IF (psi(1)%norm2 >= para_propa%max_norm2) STOP
 
 !----------------------------------------------------------
       IF (debug) THEN

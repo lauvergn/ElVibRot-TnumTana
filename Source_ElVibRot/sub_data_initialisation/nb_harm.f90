@@ -60,7 +60,7 @@
 
 !------ working variables -------------------------------------------
 
-      real (kind=Rkind) :: norme
+      real (kind=Rkind) :: norm2
 
       real (kind=Rkind) :: d0ehess(mole%nb_inact2n)
       real (kind=Rkind) :: d0Qeq(mole%nb_inact2n)
@@ -110,7 +110,7 @@
 
       CALL get_Qact0(Qact,mole%ActiveTransfo)
 
-      CALL sub_freq2_RPH(d0ehess,d0c,d0c_inv,norme,d0hess,d0Qeq,d0g,    &
+      CALL sub_freq2_RPH(d0ehess,d0c,d0c_inv,norm2,d0hess,d0Qeq,d0g,    &
                          pot0_corgrad,                                  &
                          Qact,para_Tnum,mole,mole%RPHTransfo_inact2n)
 

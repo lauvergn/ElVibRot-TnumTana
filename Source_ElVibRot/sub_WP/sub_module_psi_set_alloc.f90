@@ -70,16 +70,14 @@
         real (kind=Rkind),    allocatable :: RvecB(:) ! RvecB(nb_tot)
         complex (kind=Rkind), allocatable :: CvecB(:) ! CvecB(nb_tot)
 
-        real (kind=Rkind), allocatable    :: RvecG(:) ! RvecG(nb_qaie)
+        real (kind=Rkind),    allocatable :: RvecG(:) ! RvecG(nb_qaie)
         complex (kind=Rkind), allocatable :: CvecG(:) ! CvecG(nb_qaie)
 
         complex (kind=Rkind) :: CAvOp    = (ZERO,ZERO) ! average value for an operator (usualy H)
         integer              :: IndAvOp  = -1          ! operator type  (usualy H, IndAvOp=0)
         logical              :: convAvOp = .FALSE.     ! TRUE, if the average value is calculated with a converged wavefunction
 
-
-        real (kind=Rkind)              :: norme             = -ONE       ! norme of psi
-        real (kind=Rkind)              :: max_norme         =  1.3_Rkind ! if norme >max_norme => stop
+        real (kind=Rkind)              :: norm2             = -ONE       ! norm^2 of psi
 
         END TYPE param_psi
 
@@ -397,7 +395,6 @@
         psi%CAvOp           = (ZERO,ZERO)
         psi%convAvOp        = .FALSE.
 
-        psi%max_norme       = 1.3_Rkind
         IF (debug) write(out_unitp,*) 'end dealloc: init param'
         CALL flush_perso(out_unitp)
 
@@ -458,6 +455,7 @@
       TYPE (param_psi), pointer, intent(inout) :: tab(:)
       character (len=*), intent(in) :: name_var,name_sub
 
+      integer :: i
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub_alloc = 'dealloc_array_OF_Psidim1'
       integer :: err_mem,memory
@@ -468,6 +466,10 @@
        !IF (.NOT. associated(tab)) RETURN
        IF (.NOT. associated(tab))                                       &
              CALL Write_error_null(name_sub_alloc,name_var,name_sub)
+
+       DO i=lbound(tab,dim=1),ubound(tab,dim=1)
+         CALL dealloc_psi(tab(i))
+       END DO
 
        memory = size(tab)
        deallocate(tab,stat=err_mem)
@@ -519,6 +521,7 @@
       TYPE (param_psi), allocatable, intent(inout) :: tab(:)
       character (len=*), intent(in) :: name_var,name_sub
 
+      integer :: i
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub_alloc = 'dealloc_NParray_OF_Psidim1'
       integer :: err_mem,memory
@@ -529,6 +532,10 @@
        !IF (.NOT. allocated(tab)) RETURN
        IF (.NOT. allocated(tab))                                       &
              CALL Write_error_null(name_sub_alloc,name_var,name_sub)
+
+       DO i=lbound(tab,dim=1),ubound(tab,dim=1)
+         CALL dealloc_psi(tab(i))
+       END DO
 
        memory = size(tab)
        deallocate(tab,stat=err_mem)
@@ -704,9 +711,7 @@
      psi1%CAvOp           = psi2%CAvOp
      psi1%convAvOp        = psi2%convAvOp
 
-      psi1%norme          = psi2%norme
-
-      psi1%max_norme      = psi2%max_norme
+      psi1%norm2          = psi2%norm2
 
       IF (psi2%builtINsub) CALL dealloc_psi(psi2)
 
@@ -841,13 +846,7 @@
         psi1%CAvOp           = psi2%CAvOp
         psi1%convAvOp        = psi2%convAvOp
 
-        psi1%norme = psi2%norme
-
-        psi1%max_norme = psi2%max_norme
-
-      ELSE
-
-        psi1%max_norme       = 1.3_Rkind
+        psi1%norm2           = psi2%norm2
 
       END IF
 
@@ -975,8 +974,7 @@
       write(out_unitp,*) 'IndAvOp,CAvOp,convAvOp',psi%IndAvOp,psi%CAvOp,psi%convAvOp
 
       write(out_unitp,*)
-      write(out_unitp,*) 'max_norm^2',psi%max_norme
-      write(out_unitp,*) 'norm^2',psi%norme
+      write(out_unitp,*) 'norm^2',psi%norm2
 
 
       write(out_unitp,*) ' END ecri_init_psi'

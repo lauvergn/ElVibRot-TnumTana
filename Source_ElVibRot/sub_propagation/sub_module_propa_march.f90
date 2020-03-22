@@ -32,7 +32,7 @@
  USE mod_file
  USE mod_field,         ONLY : param_field
  USE mod_psi_set_alloc, ONLY : param_psi
- USE mod_propa,         ONLY : param_propa,cof,Calc_AutoCorr,           &
+ USE mod_propa,         ONLY : param_propa,param_poly,Calc_AutoCorr,    &
                                Write_AutoCorr,SaveWP_restart,           &
                                sub_analyze_mini_WP_OpWP
  USE mod_march_SG4
@@ -40,7 +40,7 @@
  IMPLICIT NONE
 
  PRIVATE
- PUBLIC :: march_gene,march_nOD_im,march_FOD_Opti_im
+ PUBLIC :: march_gene,march_nOD_im,march_FOD_Opti_im,initialisation1_poly
 
       CONTAINS
 !=======================================================================================
@@ -96,7 +96,7 @@
 
         DO i=1,nb_WP
           CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
-          write(out_unitp,*) 'norm WP',i,WP(i)%norme
+          write(out_unitp,*) 'norm WP',i,WP(i)%norm2
 
           write(out_unitp,*) 'WP BasisRep',i
           CALL ecri_psi(T=ZERO,psi=WP(i),                               &
@@ -253,7 +253,6 @@
 
       integer          :: nb_WP
       TYPE (param_psi) :: WP(:)
-      TYPE (param_psi), pointer :: w1,w2,w3,w4,w5,w6
 
 !----- for printing --------------------------------------------------
       logical :: print_Op
@@ -262,9 +261,8 @@
 
 
 !------ working parameters --------------------------------
-
-
-      integer :: i
+      TYPE (param_psi)  :: w1,w2,w3,w4,w5,w6
+      integer           :: i
       integer           :: ip
       real (kind=Rkind) :: T      ! time
       real (kind=Rkind) :: T_DT
@@ -287,7 +285,7 @@
 
         DO i=1,nb_WP
           CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
-          write(out_unitp,*) 'norm WP',i,WP(i)%norme
+          write(out_unitp,*) 'norm WP',i,WP(i)%norm2
 
           write(out_unitp,*) 'WP BasisRep',i
           CALL ecri_psi(T=ZERO,psi=WP(i),                              &
@@ -298,12 +296,6 @@
         END DO
        END IF
 !-----------------------------------------------------------
-      w1 => para_propa%work_WP(1)
-      w2 => para_propa%work_WP(2)
-      w3 => para_propa%work_WP(3)
-      w4 => para_propa%work_WP(4)
-      w5 => para_propa%work_WP(5)
-      w6 => para_propa%work_WP(6)
 
       DO i=1,nb_WP
 !-----------------------------------------------------------
@@ -332,17 +324,24 @@
 
 !     - check norm ------------------
       CALL norm2_psi(WP(i),GridRep=.FALSE.,BasisRep=.TRUE.)
-      IF ( WP(i)%norme > WP(i)%max_norme) THEN
+      IF ( WP(i)%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' STOP propagation: norme > max_norme',              &
-                         WP%norme
+        write(out_unitp,*) ' STOP propagation: norm2 > max_norm2',WP%norm2
         para_propa%march_error   = .TRUE.
         para_propa%test_max_norm = .TRUE.
         STOP
       END IF
 
       END DO
+
+
+       CALL dealloc_psi(w1)
+       CALL dealloc_psi(w2)
+       CALL dealloc_psi(w3)
+       CALL dealloc_psi(w4)
+       CALL dealloc_psi(w5)
+       CALL dealloc_psi(w6)
 
 !----------------------------------------------------------
       IF (debug) THEN
@@ -383,7 +382,6 @@
 
       integer          :: nb_WP
       TYPE (param_psi) :: WP(:)
-      TYPE (param_psi), pointer :: w1,w2,w3,w4,w5,w6
 
 !----- for printing --------------------------------------------------
       logical ::print_Op
@@ -391,8 +389,7 @@
 
 
 !------ working parameters --------------------------------
-
-
+      TYPE (param_psi)  :: w1,w2,w3,w4,w5,w6
       integer           :: i,ip
       real (kind=Rkind) :: T      ! time
       real (kind=Rkind) :: T_DT,T_DT_HALF
@@ -425,7 +422,7 @@
 
         DO i=1,nb_WP
           CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
-          write(out_unitp,*) 'norm WP',i,WP(i)%norme
+          write(out_unitp,*) 'norm WP',i,WP(i)%norm2
 
           write(out_unitp,*) 'WP BasisRep',i
           CALL ecri_psi(T=ZERO,psi=WP(i),                               &
@@ -443,15 +440,6 @@
       DTo2      = para_propa%WPdeltaT/TWO
       DTo6      = para_propa%WPdeltaT/SIX
 
-      DO i=1,6
-        para_propa%work_WP(i) = WP(1)
-      END DO
-      w1 => para_propa%work_WP(1)
-      w2 => para_propa%work_WP(2)
-      w3 => para_propa%work_WP(3)
-      w4 => para_propa%work_WP(4)
-      w5 => para_propa%work_WP(5)
-      w6 => para_propa%work_WP(6)
 !-----------------------------------------------------------
 
       DO i=1,nb_WP
@@ -504,17 +492,23 @@
 
 !     - check norm ------------------
       CALL norm2_psi(WP(i),GridRep=.FALSE.,BasisRep=.TRUE.)
-      IF ( WP(i)%norme > WP(i)%max_norme) THEN
+      IF ( WP(i)%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' STOP propagation: norme > max_norme',              &
-                         WP%norme
+        write(out_unitp,*) ' STOP propagation: norm2 > max_norm2',WP%norm2
         para_propa%march_error   = .TRUE.
         para_propa%test_max_norm = .TRUE.
         STOP
       END IF
 
       END DO
+
+       CALL dealloc_psi(w1)
+       CALL dealloc_psi(w2)
+       CALL dealloc_psi(w3)
+       CALL dealloc_psi(w4)
+       CALL dealloc_psi(w5)
+       CALL dealloc_psi(w6)
 
 !----------------------------------------------------------
       IF (debug) THEN
@@ -538,7 +532,6 @@
       TYPE (param_propa) :: para_propa
 
       TYPE (param_psi) :: WP,WP0
-      TYPE (param_psi), pointer :: w1,w2,w3,w4,w5,w6
 
       integer :: no
 !----- for printing --------------------------------------------------
@@ -547,14 +540,13 @@
 
 
 !------ working parameters --------------------------------
-
+      TYPE (param_psi)     :: w1,w2,w3,w4,w5,w6
       complex (kind=Rkind) :: cdot
-
-      integer           :: i,ip
-      real (kind=Rkind) :: T      ! time
-      real (kind=Rkind) :: T_DT,T_DT_HALF
-      real (kind=Rkind) :: DT,DTo2,DTo6
-      real (kind=Rkind) :: phase
+      integer              :: i,ip
+      real (kind=Rkind)    :: T      ! time
+      real (kind=Rkind)    :: T_DT,T_DT_HALF
+      real (kind=Rkind)    :: DT,DTo2,DTo6
+      real (kind=Rkind)    :: phase
 
       integer  ::   nioWP
 
@@ -581,7 +573,7 @@
         write(out_unitp,*)
 
           CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
-          write(out_unitp,*) 'norm WP',i,WP%norme
+          write(out_unitp,*) 'norm WP',i,WP%norm2
 
           write(out_unitp,*) 'WP BasisRep'
           CALL ecri_psi(T=ZERO,psi=WP,                               &
@@ -598,15 +590,7 @@
       DTo2      = para_propa%WPdeltaT/TWO
       DTo6      = para_propa%WPdeltaT/SIX
 
-      DO i=1,6
-        para_propa%work_WP = WP
-      END DO
-      w1 => para_propa%work_WP(1)
-      w2 => para_propa%work_WP(2)
-      w3 => para_propa%work_WP(3)
-      w4 => para_propa%work_WP(4)
-      w5 => para_propa%work_WP(5)
-      w6 => para_propa%work_WP(6)
+
 !-----------------------------------------------------------
 
       !w1 = -i.H.WP
@@ -647,11 +631,10 @@
 
       !- check norm ------------------
       CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
-      IF ( WP%norme > WP%max_norme) THEN
+      IF ( WP%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' STOP propagation: norme > max_norme',              &
-                         WP%norme
+        write(out_unitp,*) ' STOP propagation: norm2 > max_norm2',WP%norm2
         para_propa%march_error   = .TRUE.
         para_propa%test_max_norm = .TRUE.
         STOP
@@ -661,7 +644,12 @@
       CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
       CALL flush_perso(no)
 
-
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+      CALL dealloc_psi(w3)
+      CALL dealloc_psi(w4)
+      CALL dealloc_psi(w5)
+      CALL dealloc_psi(w6)
 !----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
@@ -729,7 +717,7 @@
         write(out_unitp,*)
 
           CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
-          write(out_unitp,*) 'norm WP',i,WP%norme
+          write(out_unitp,*) 'norm WP',i,WP%norm2
 
           write(out_unitp,*) 'WP BasisRep'
           CALL ecri_psi(T=ZERO,psi=WP,                               &
@@ -776,7 +764,7 @@
 
     yerr = yt1(j) - yt0(j-1)
     CALL norm2_psi(yerr)
-    err1 = sqrt(yerr%norme)
+    err1 = sqrt(yerr%norm2)
 
     DO i=lbound(yt0,dim=1),ubound(yt0,dim=1)
       CALL dealloc_psi(yt0(i),delete_all=.TRUE.)
@@ -811,11 +799,10 @@
 
       !- check norm ------------------
       CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
-      IF ( WP%norme > WP%max_norme) THEN
+      IF ( WP%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' STOP propagation: norme > max_norme',              &
-                         WP%norme
+        write(out_unitp,*) ' STOP propagation: norm2 > max_norm2',WP%norm2
         para_propa%march_error   = .TRUE.
         para_propa%test_max_norm = .TRUE.
         STOP
@@ -892,7 +879,7 @@
         write(out_unitp,*)
 
           CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
-          write(out_unitp,*) 'norm WP',i,WP%norme
+          write(out_unitp,*) 'norm WP',i,WP%norm2
 
           write(out_unitp,*) 'WP BasisRep'
           CALL ecri_psi(T=ZERO,psi=WP,                               &
@@ -956,11 +943,10 @@
 
       !- check norm ------------------
       CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
-      IF ( WP%norme > WP%max_norme) THEN
+      IF ( WP%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' STOP propagation: norme > max_norme',              &
-                         WP%norme
+        write(out_unitp,*) ' STOP propagation: norm2 > max_norm2',WP%norm2
         para_propa%march_error   = .TRUE.
         para_propa%test_max_norm = .TRUE.
         STOP
@@ -1044,7 +1030,7 @@
         write(out_unitp,*)
 
         CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
-        write(out_unitp,*) 'norm WP BasisRep',WP%norme
+        write(out_unitp,*) 'norm WP BasisRep',WP%norm2
 
         write(out_unitp,*) 'WP'
         CALL ecri_psi(T=T,psi=WP)
@@ -1060,7 +1046,7 @@
        DO ip=1,3
          IF (.NOT. para_field%pola_xyz(ip)) CYCLE
 
-         w1 = ZERO
+         !w1 = ZERO
          CALL sub_OpPsi(WP,w1,para_Dip(ip))
          dWP = dWP - w1 * dnE(ip)
 
@@ -1110,7 +1096,7 @@
         write(out_unitp,*)
 
         CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
-        write(out_unitp,*) 'norm WP BasisRep',WP%norme
+        write(out_unitp,*) 'norm WP BasisRep',WP%norm2
 
         write(out_unitp,*) 'WP'
         CALL ecri_psi(T=ZERO,psi=WP)
@@ -1167,7 +1153,6 @@
 
       integer          :: nb_WP
       TYPE (param_psi) :: WP(:)
-      TYPE (param_psi), pointer :: w1,w2
 
 !----- for printing --------------------------------------------------
       logical ::print_Op
@@ -1175,15 +1160,16 @@
 
 
 !------ working parameters --------------------------------
+      TYPE (param_psi)              :: w1,w2
+      TYPE (param_psi) ,allocatable :: work_WP(:)
 
       complex (kind=Rkind)   :: Overlap,cdot,rt,rti,fac_k,norm
       real (kind=Rkind)      :: phase,limit
-
-      integer       :: it,it_max,no,max_der,nb_der
-      integer       :: i,j,k,jt,ip,iq
-      real (kind=Rkind) :: T      ! time
-      real (kind=Rkind) :: T_Delta! time+deltaT
-      integer       :: max_ecri
+      integer                :: it,it_max,no,max_der,nb_der
+      integer                :: i,j,k,jt,ip,iq
+      real (kind=Rkind)      :: T      ! time
+      real (kind=Rkind)      :: T_Delta! time+deltaT
+      integer                :: max_ecri
 
       integer  ::   nioWP
 
@@ -1213,7 +1199,7 @@
 
         DO i=1,nb_WP
           CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
-          write(out_unitp,*) 'norm WP',i,WP(i)%norme
+          write(out_unitp,*) 'norm WP',i,WP(i)%norm2
 
           write(out_unitp,*) 'WP BasisRep',i
           CALL ecri_psi(T=ZERO,psi=WP(i),                               &
@@ -1227,18 +1213,16 @@
 
 
 !-----------------------------------------------------------
-      w1 => para_propa%work_WP(para_propa%para_poly%npoly+1)
-      w2 => para_propa%work_WP(para_propa%para_poly%npoly+2)
-
       max_der = 0
       nb_der = para_propa%para_poly%npoly-1
       IF (para_field%max_der >= 0)                                      &
            nb_der = min(para_field%max_der,para_propa%para_poly%npoly-1)
 
       nullify(tab_dnE)
-      CALL alloc_array(tab_dnE,(/nb_der,3/),"tab_dnE","march_noD_field",(/0,1/))
+      CALL alloc_array(tab_dnE,(/nb_der,3/),"tab_dnE",name_sub,(/0,1/))
       tab_dnE(:,:) = ZERO
 !-----------------------------------------------------------
+
 
 !-----------------------------------------------------------
 
@@ -1257,20 +1241,22 @@
 !     max_der=para_propa%para_poly%npoly-1
 !     write(out_unitp,*) 'max_der',max_der
 
+      CALL alloc_NParray(work_WP,[para_propa%para_poly%npoly-1],        &
+                        'work_WP',name_sub,[0])
       DO j=1,nb_WP
-        para_propa%work_WP(0) = WP(j)
+        work_WP(0) = WP(j)
         DO i=0,para_propa%para_poly%npoly-1
 
-          CALL sub_OpPsi(para_propa%work_WP(i),w2,para_H)
-          CALL sub_scaledOpPsi(para_propa%work_WP(i),w2,para_H%E0,ONE)
+          CALL sub_OpPsi(work_WP(i),w2,para_H)
+          CALL sub_scaledOpPsi(work_WP(i),w2,para_H%E0,ONE)
 
-          para_propa%work_WP(i+1) = w2  ! H.psi(i)
+          work_WP(i+1) = w2  ! H.psi(i)
 
 
           fac_k = cmplx(ZERO,-para_propa%WPdeltaT /                     &
                            real(i+1,kind=Rkind),kind=Rkind)
 
-          para_propa%work_WP(i+1) = para_propa%work_WP(i+1) * fac_k
+          work_WP(i+1) = work_WP(i+1) * fac_k
 
           DO ip=1,3
             IF (.NOT. para_field%pola_xyz(ip)) CYCLE
@@ -1279,28 +1265,27 @@
             fac_k = cmplx(ZERO,-para_propa%WPdeltaT /                   &
                                  real(i+1,kind=Rkind),kind=Rkind)
 
-            w1 = para_propa%work_WP(i) * (cmplx(tab_dnE(0,ip),kind=Rkind) * fac_k)
+            w1 = work_WP(i) * (cmplx(tab_dnE(0,ip),kind=Rkind) * fac_k)
 
             DO k=1,min(i,max_der)
                fac_k = fac_k * cmplx(para_propa%WPdeltaT/real(k,kind=Rkind),kind=Rkind)
                rt = cmplx(tab_dnE(k,ip),kind=Rkind)*fac_k
-               w1 = w1 + para_propa%work_WP(i-k) * rt
+               w1 = w1 + work_WP(i-k) * rt
             END DO
 
             CALL sub_OpPsi(w1,w2,para_Dip(ip))
 
-            para_propa%work_WP(i+1) = para_propa%work_WP(i+1) + w2
+            work_WP(i+1) = work_WP(i+1) + w2
           END DO
-          WP(j) = WP(j) + para_propa%work_WP(i+1)
+          WP(j) = WP(j) + work_WP(i+1)
 
-          CALL norm2_psi(para_propa%work_WP(i+1),.FALSE.,.TRUE.,.FALSE.)
-!         write(out_unitp,*) 'norme psi i+1',i+1,para_propa%work_WP(i+1)%norme
-          IF (para_propa%work_WP(i+1)%norme <                           &
-                        para_propa%para_poly%poly_tol) EXIT
-          IF (para_propa%work_WP(i+1)%norme > TEN**15) THEN
+          CALL norm2_psi(work_WP(i+1))
+!         write(out_unitp,*) 'norm2 psi i+1',i+1,work_WP(i+1)%norm2
+          IF (work_WP(i+1)%norm2 < para_propa%para_poly%poly_tol) EXIT
+          IF (work_WP(i+1)%norm2 > TEN**15) THEN
              write(out_unitp,*) ' ERROR in ',name_sub
-             write(out_unitp,*) ' The norme of dnpsi(i+1) is huge !',           &
-                                          para_propa%work_WP(i+1)%norme
+             write(out_unitp,*) ' The norm2 of dnpsi(i+1) is huge !',           &
+                                          work_WP(i+1)%norm2
              write(out_unitp,*) ' iteration i:',i
              write(out_unitp,*) ' Reduce the time step, WPDeltaT:',             &
                              para_propa%WPdeltaT
@@ -1311,12 +1296,10 @@
 
 
 
-        IF (print_Op) write(out_unitp,*) 'T,max_der,ipoly,norme',               &
-                                  T,max_der,i,                          &
-        para_propa%work_WP(min(i+1,para_propa%para_poly%npoly))%norme
+        IF (print_Op) write(out_unitp,*) 'T,max_der,ipoly,norm2',T,max_der,i,&
+                          work_WP(min(i+1,para_propa%para_poly%npoly))%norm2
 
-        para_propa%work_WP(0) =                                         &
-        para_propa%work_WP(min(i+1,para_propa%para_poly%npoly))
+        work_WP(0) = work_WP(min(i+1,para_propa%para_poly%npoly))
 
 !       - Phase Shift -----------------
         phase = para_H%E0*para_propa%WPdeltaT
@@ -1324,11 +1307,12 @@
 
 !       - check norm ------------------
         CALL norm2_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.)
-        IF ( WP(j)%norme > WP(j)%max_norme) THEN
+        IF (WP(j)%norm2 > para_propa%max_norm2) THEN
           T  = T + para_propa%WPdeltaT
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' STOP propagation: norm > max_norm',              &
-                         WP(j)%norme
+          write(out_unitp,*) ' STOP propagation: norm^2 > max_norm^2',WP(j)%norm2
+          write(out_unitp,*) ' norm^2:     ',WP(j)%norm2
+          write(out_unitp,*) ' max_norm^2: ',para_propa%max_norm2
           para_propa%march_error   = .TRUE.
           para_propa%test_max_norm = .TRUE.
           STOP
@@ -1337,7 +1321,9 @@
       END DO
 
       CALL dealloc_array(tab_dnE,"tab_dnE","march_noD_field")
-
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+      CALL dealloc_NParray(work_WP,'work_WP',name_sub)
 
 !----------------------------------------------------------
       IF (debug) THEN
@@ -1373,7 +1359,7 @@
       TYPE (param_psi)   :: psi0,psi
 
 !------ working variables ---------------------------------
-      TYPE (param_psi), pointer :: w1,w2
+      TYPE (param_psi)     :: w1,w2
       complex (kind=Rkind) :: E,cdot
       complex (kind=Rkind) :: psi0Hkpsi0(0:para_propa%para_poly%npoly)
       real (kind=Rkind)    :: microT,T,microdeltaT,phase,microphase
@@ -1395,9 +1381,6 @@
         write(out_unitp,*) 'nOD',para_propa%para_poly%npoly
       END IF
 !-----------------------------------------------------------
-
-      w1 => para_propa%work_WP(1)
-      w2 => para_propa%work_WP(2)
 
       w2 = psi
       CALL sub_PsiOpPsi(E,psi,w2,para_H)
@@ -1450,25 +1433,25 @@
 
         CALL norm2_psi(w2)
 
-        IF (debug) write(out_unitp,*) 'j,norme w2',j,w2%norme
+        IF (debug) write(out_unitp,*) 'j,norm2 w2',j,w2%norm2
 
-        IF (w2%norme > TEN**15) THEN
+        IF (w2%norm2 > TEN**15) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' Norm of the vector is TOO large (> 10^15)',j,    &
-                                                w2%norme
+                                                w2%norm2
           write(out_unitp,*) ' => Reduce the time step !!'
           STOP
         END IF
         j_exit = j
-        IF (w2%norme < para_propa%para_poly%poly_tol) EXIT
+        IF (w2%norm2 < para_propa%para_poly%poly_tol) EXIT
 
       END DO
-      write(out_unitp,*) 'j_exit,norms',j_exit,abs(w2%norme)
+      write(out_unitp,*) 'j_exit,norms',j_exit,abs(w2%norm2)
 
-!     write(out_unitp,*) 'j,norme',j,abs(w1%norme*rtj)
-      IF (abs(w2%norme) > para_propa%para_poly%poly_tol) THEN
+!     write(out_unitp,*) 'j,norm2',j,abs(w1%norm2*rtj)
+      IF (abs(w2%norm2) > para_propa%para_poly%poly_tol) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' Norm of the last vector is TOO large',w2%norme
+        write(out_unitp,*) ' Norm of the last vector is TOO large',w2%norm2
         write(out_unitp,*) ' poly_tol: ',para_propa%para_poly%poly_tol
         write(out_unitp,*) ' => npoly or max_poly are TOO small',               &
                       para_propa%para_poly%npoly
@@ -1486,11 +1469,11 @@
 
 !    - check norm ------------------
       CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
-      IF ( psi%norme > psi%max_norme) THEN
+      IF ( psi%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' STOP propagation: norm > max_norm',                &
-                         psi%norme
+                         psi%norm2
         para_propa%march_error   = .TRUE.
         para_propa%test_max_norm = .TRUE.
         STOP
@@ -1523,12 +1506,13 @@
         CALL Write_AutoCorr(no,T+microT,cdot)
       END DO
 
-
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
 
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL norm2_psi(psi)
-        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'norm psi',psi%norm2
         write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
@@ -1678,9 +1662,9 @@
 
       !- check norm ------------------
       CALL norm2_psi(psi)
-      IF ( psi%norme > psi%max_norme) THEN
+      IF ( psi%norm2 > para_propa%max_norm2) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norme
+        write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norm2
         para_propa%march_error   = .TRUE.
         para_propa%test_max_norm = .TRUE.
         STOP
@@ -1728,7 +1712,7 @@
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL norm2_psi(psi)
-        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'norm psi',psi%norm2
         write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
@@ -1768,7 +1752,7 @@
 
       TYPE (param_psi),     allocatable  :: tab_KrylovSpace(:)
       complex (kind=Rkind)               :: Overlap
-      TYPE (param_psi),     pointer      :: w1,w2
+      TYPE (param_psi)                   :: w1
 
 
       integer              :: k,it
@@ -1785,9 +1769,6 @@
         write(out_unitp,*) 'order',para_propa%para_poly%npoly
       END IF
 !-----------------------------------------------------------
-
-      w1 => para_propa%work_WP(1)
-      !w2 => para_propa%work_WP(2)
 
 
       allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1))
@@ -1853,7 +1834,7 @@
         !beta_k = <v_k | v_k> = <w1 | w1>
         !       => beta_k = sqrt(norm2)
         CALL norm2_psi(w1)
-        H(k+1,k) = sqrt(w1%norme)
+        H(k+1,k) = sqrt(w1%norm2)
         H(k,k+1) = H(k+1,k)
         CALL renorm_psi_With_norm2(w1)
         tab_KrylovSpace(k+1) = w1
@@ -1869,10 +1850,10 @@
 
       !- check norm ------------------
       CALL norm2_psi(psi)
-      IF ( psi%norme > psi%max_norme) THEN
+      IF ( psi%norm2 > para_propa%max_norm2) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' STOP propagation: norm > max_norm',                &
-                         psi%norme
+                         psi%norm2
         para_propa%march_error   = .TRUE.
         para_propa%test_max_norm = .TRUE.
         STOP
@@ -1916,11 +1897,11 @@
       IF (allocated(Vec))          CALL dealloc_NParray(Vec,'Vec',name_sub)
       IF (allocated(Eig))          CALL dealloc_NParray(Eig,'Eig',name_sub)
       IF (allocated(UPsiOnKrylov)) CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
-
+      CALL dealloc_psi(w1)
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL norm2_psi(psi)
-        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'norm psi',psi%norm2
         write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
@@ -2070,7 +2051,7 @@
       real (kind=Rkind),     intent(in)     :: T
 
 !------ working variables ---------------------------------
-      TYPE (param_psi), pointer :: w1,w2
+      TYPE (param_psi)          :: w1,w2
       complex (kind=Rkind)      :: cdot
       real (kind=Rkind)         :: E0,microT,microdeltaT,phase,microphase
       integer                   :: n
@@ -2099,9 +2080,6 @@
         write(out_unitp,*) 'order',para_propa%para_poly%npoly
       END IF
 !-----------------------------------------------------------
-
-      w1 => para_propa%work_WP(1)
-      w2 => para_propa%work_WP(2)
 
       allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1))
 
@@ -2164,7 +2142,7 @@
 !          IF (abs(Overlap) == ZERO) CYCLE
 !          CALL norm2_psi(tab_KrylovSpace(j))
 !          w1                 = tab_KrylovSpace(j)
-!          w2                 = tab_KrylovSpace(i) * (conjg(Overlap)/tab_KrylovSpace(j)%norme)
+!          w2                 = tab_KrylovSpace(i) * (conjg(Overlap)/tab_KrylovSpace(j)%norm2)
 !          tab_KrylovSpace(j) = w1-w2
 !        END DO
 !        CALL renorm_psi(tab_KrylovSpace(j))
@@ -2180,10 +2158,10 @@
 
       !- check norm ------------------
       CALL norm2_psi(psi)
-      IF ( psi%norme > psi%max_norme) THEN
+      IF ( psi%norm2 > para_propa%max_norm2) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' STOP propagation: norm > max_norm',                &
-                         psi%norme
+                         psi%norm2
         para_propa%march_error   = .TRUE.
         para_propa%test_max_norm = .TRUE.
         STOP
@@ -2239,7 +2217,7 @@
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL norm2_psi(psi)
-        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'norm psi',psi%norm2
         write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
@@ -2270,7 +2248,7 @@
       real (kind=Rkind),     intent(in)     :: T
 
 !------ working variables ---------------------------------
-      TYPE (param_psi), pointer :: w1,w2
+      TYPE (param_psi)          :: w1,w2
       complex (kind=Rkind)      :: cdot
       real (kind=Rkind)         :: E0,microT,microdeltaT,phase,microphase
 
@@ -2303,9 +2281,6 @@
         write(out_unitp,*) 'order',para_propa%para_poly%npoly
       END IF
 !-----------------------------------------------------------
-
-      w1 => para_propa%work_WP(1)
-      w2 => para_propa%work_WP(2)
 
       allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1))
 
@@ -2443,7 +2418,7 @@
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL norm2_psi(psi)
-        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'norm psi',psi%norm2
         write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
@@ -2585,7 +2560,7 @@
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL norm2_psi(psi)
-        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'norm psi',psi%norm2
         write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
@@ -2618,7 +2593,7 @@
       TYPE (param_psi)   :: psi0,psi
 
 !------ working variables ---------------------------------
-      TYPE (param_psi), pointer :: w1,w2,w3
+      TYPE (param_psi)          :: w1,w2,w3
       TYPE (param_psi)          :: psi_save
 
       complex (kind=Rkind) :: cdot
@@ -2653,10 +2628,6 @@
       END IF
 !-----------------------------------------------------------
       exitall=.FALSE. !< MPI: for controling the exit of all threads
-
-      w1 => para_propa%work_WP(1)
-      w2 => para_propa%work_WP(2)
-      w3 => para_propa%work_WP(3)
 
       psi_save = psi
 
@@ -2761,7 +2732,7 @@
 
             CALL norm2_psi(w2)
 
-            norm_exit = abs(w2%norme*para_propa%para_poly%coef_poly(jt))
+            norm_exit = abs(w2%norm2*para_propa%para_poly%coef_poly(jt))
           ENDIF
 #if(run_MPI)
           CALL MPI_Bcast(norm_exit,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
@@ -2790,7 +2761,7 @@
 #endif
         END DO ! for jt=3,para_propa%para_poly%npoly
 
-        write(out_unitp,*) 'jt_exit,norms',jt_exit,abs(w2%norme),norm_exit
+        write(out_unitp,*) 'jt_exit,norms',jt_exit,abs(w2%norm2),norm_exit
         para_propa%para_poly%npoly_Opt = jt_exit
 
         IF (.NOT. para_propa%march_error .AND. norm_exit > para_propa%para_poly%poly_tol) THEN
@@ -2824,6 +2795,9 @@
       END IF
 
       CALL dealloc_psi(psi_save,delete_all=.TRUE.)
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+      CALL dealloc_psi(w3)
 
 !     - Phase Shift -----------------------------------
       phase = para_H%E0*para_propa%WPdeltaT
@@ -2891,7 +2865,7 @@
       TYPE (param_psi)   :: psi0,psi
 
 !------ working variables ---------------------------------
-      TYPE (param_psi), pointer :: w1,w2,w3
+      TYPE (param_psi)     :: w1,w2,w3
 
       complex (kind=Rkind) :: cdot
       complex (kind=Rkind) :: psi0Hkpsi0(0:para_propa%para_poly%npoly)
@@ -2924,10 +2898,6 @@
 
       END IF
 !-----------------------------------------------------------
-
-      w1 => para_propa%work_WP(1)
-      w2 => para_propa%work_WP(2)
-      w3 => para_propa%work_WP(3)
 
       psi0Hkpsi0(:) = cmplx(ZERO,ZERO,kind=Rkind)
 
@@ -2980,7 +2950,7 @@
 
          CALL norm2_psi(w2)
 
-         norm_exit = abs(w2%norme*para_propa%para_poly%coef_poly(jt))
+         norm_exit = abs(w2%norm2*para_propa%para_poly%coef_poly(jt))
          jt_exit = jt
          IF (debug) write(out_unitp,*) 'jt,norms',jt,norm_exit
 
@@ -2996,7 +2966,7 @@
          psi0Hkpsi0(jt) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
 
       END DO
-      write(out_unitp,*) 'jt_exit,norms',jt_exit,abs(w2%norme),norm_exit
+      write(out_unitp,*) 'jt_exit,norms',jt_exit,abs(w2%norm2),norm_exit
 
       IF (norm_exit > para_propa%para_poly%poly_tol) THEN
         write(out_unitp,*) ' ERROR in march_cheby'
@@ -3047,7 +3017,9 @@
       END DO
       CALL flush_perso(no)
 
-
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+      CALL dealloc_psi(w3)
 
 
 !-----------------------------------------------------------
@@ -3126,12 +3098,12 @@
 
         CALL norm2_psi(w1)
         CALL norm2_psi(psi)
-        !write(out_unitp,*) 'j,wi%n/psi%n',j,w1%norme/psi%norme
-        IF (w1%norme/psi%norme < para_propa%para_poly%poly_tol) EXIT
+        !write(out_unitp,*) 'j,wi%n/psi%n',j,w1%norm2/psi%norm2
+        IF (w1%norm2/psi%norm2 < para_propa%para_poly%poly_tol) EXIT
 
       END DO
       IF (para_propa%write_iter .OR. debug)                             &
-                  write(out_unitp,*) 'j,wi%n/psi%n',j,w1%norme/psi%norme
+                  write(out_unitp,*) 'j,wi%n/psi%n',j,w1%norm2/psi%norm2
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -3179,7 +3151,7 @@
       integer                :: i,ii,j,iqa
       integer                :: max_ecri
       real (kind=Rkind)      :: DeltaT,T      ! time
-      real (kind=Rkind)      :: DeltaE,Deltapsi,epsi,sign,normeg
+      real (kind=Rkind)      :: DeltaE,Deltapsi,epsi,sign,norm2g
       real (kind=Rkind)      :: avH1,avH2,avH3,A,B,C,D,DT1,DT2,S,E1,E2
       complex (kind=Rkind)   :: CavH1,CavH2,CavH3
 
@@ -3284,7 +3256,7 @@
       g = g +    Hpsi *(ONE + Ene0*DeltaT)
       g = g +   H2psi *(          -DeltaT)
       CALL norm2_psi(g)
-      normeg = sqrt(g%norme)
+      norm2g = sqrt(g%norm2)
 
       H2psi = psi + Hpsi * (-DeltaT)
       psi = H2psi * (ONE/sqrt(S))
@@ -3294,16 +3266,16 @@
 
       !- propagation ------------------------------------------
       IF (para_propa%write_iter .OR. debug) THEN
-        write(out_unitp,*) 'WP it sqrt(norme g)',it,                &
-            sqrt(g%norme)*get_Conv_au_TO_unit('E','cm-1')
+        write(out_unitp,*) 'WP it sqrt(norm2 g)',it,                &
+            sqrt(g%norm2)*get_Conv_au_TO_unit('E','cm-1')
       END IF
 
       IF (debug) THEN
         write(out_unitp,*) 'WP it, E',it,                               &
                                   Ene0*get_Conv_au_TO_unit('E','cm-1'), &
                                 DeltaE*get_Conv_au_TO_unit('E','cm-1')
-        write(out_unitp,*) 'WP it sqrt(norme g)',it,                &
-            sqrt(g%norme)*get_Conv_au_TO_unit('E','cm-1')
+        write(out_unitp,*) 'WP it sqrt(norm2 g)',it,                &
+            sqrt(g%norm2)*get_Conv_au_TO_unit('E','cm-1')
         write(out_unitp,*) 'WP it, DeltaT,S',it,DeltaT,S
       END IF
 
@@ -3352,7 +3324,6 @@
 
       integer          :: nb_WP
       TYPE (param_psi) :: WP(nb_WP)
-      TYPE (param_psi), pointer :: w1,w2
 
 !----- for printing --------------------------------------------------
       logical ::print_Op
@@ -3360,10 +3331,12 @@
 
 
 !------ working parameters --------------------------------
-      real (kind=Rkind) :: fac_k,phase
+      TYPE (param_psi)              :: w1,w2
+      TYPE (param_psi) ,allocatable :: work_WP(:)
 
+      real (kind=Rkind)      :: fac_k,phase
       complex (kind=Rkind)   :: Overlap,cdot,rt,rti,norm,coef,coef_ip(3)
-      real (kind=Rkind) :: limit
+      real (kind=Rkind)      :: limit
 
       integer       :: it,it_max,no,max_der,nb_der
       integer       :: i,j,k,m,jt,ip,iq
@@ -3403,7 +3376,7 @@
 
         DO i=1,nb_WP
           CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
-          write(out_unitp,*) 'norm WP',i,WP(i)%norme
+          write(out_unitp,*) 'norm WP',i,WP(i)%norm2
 
           write(out_unitp,*) 'WP BasisRep',i
           CALL ecri_psi(T=ZERO,psi=WP(i),                               &
@@ -3413,12 +3386,6 @@
                         ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
         END DO
       END IF
-!-----------------------------------------------------------
-
-
-!-----------------------------------------------------------
-      w1 => para_propa%work_WP(para_propa%para_poly%npoly+1)
-      w2 => para_propa%work_WP(para_propa%para_poly%npoly+2)
 !-----------------------------------------------------------
 
 !-----------------------------------------------------------
@@ -3438,6 +3405,8 @@
       max_der = nb_der
       write(out_unitp,*) 'max_der,npoly',max_der,para_propa%para_poly%npoly
 
+      CALL alloc_NParray(work_WP,[para_propa%para_poly%npoly-1],        &
+                        'work_WP',name_sub,[0])
 !-----------------------------------------------------------
       DO j=1,nb_WP
 !       Derivative calculation
@@ -3445,24 +3414,21 @@
         DO k=0,para_propa%para_poly%npoly-1
 
           IF (k == 0) THEN
-            para_propa%work_WP(k) = WP(j)
+            work_WP(k) = WP(j)
           ELSE
 !           initialization with the H contribution
-            CALL sub_OpPsi(para_propa%work_WP(k-1),w1,para_H)
-            CALL sub_scaledOpPsi(para_propa%work_WP(k-1),w1,            &
-                                 para_H%E0,ONE)
+            CALL sub_OpPsi(work_WP(k-1),w1,para_H)
+            CALL sub_scaledOpPsi(work_WP(k-1),w1,para_H%E0,ONE)
 !           ici pas de binome car m=0
             coef = -EYE
-            para_propa%work_WP(k) = w1 * coef
+            work_WP(k) = w1 * coef
             DO m=0,k-1
 !             Dip contributions
               DO ip=1,3
                 IF (.NOT. para_field%pola_xyz(ip)) CYCLE
                 coef = -EYE*binomial(k-1,m) * tab_dnE(m,ip)
-                CALL sub_OpPsi(para_propa%work_WP(k-1-m),w1,            &
-                              para_Dip(ip))
-                para_propa%work_WP(k) = para_propa%work_WP(k) +         &
-                                         coef * w1
+                CALL sub_OpPsi(work_WP(k-1-m),w1,para_Dip(ip))
+                work_WP(k) = work_WP(k) + coef * w1
               END DO
             END DO
           END IF
@@ -3472,11 +3438,11 @@
 !           Just the Taylor serie
             IF (k == 0) CYCLE ! because WP(j) is already the zero-order
             fac_k = fac_k * para_propa%WPdeltaT / real(k,kind=Rkind)
-            w1 = para_propa%work_WP(k) * fac_k
+            w1 = work_WP(k) * fac_k
           ELSE
 !           Infinite sum of the derivative of the field
-            CALL sub_OpPsi(para_propa%work_WP(k),w2,para_H)
-            CALL sub_scaledOpPsi(para_propa%work_WP(k),w2,para_H%E0,ONE)
+            CALL sub_OpPsi(work_WP(k),w2,para_H)
+            CALL sub_scaledOpPsi(work_WP(k),w2,para_H%E0,ONE)
             coef = para_propa%WPdeltaT**(k+1) / factor(k+1)
             w1 = w2 * coef
             coef_ip(:) = ZERO
@@ -3492,7 +3458,7 @@
             END DO
             DO ip=1,3
               IF (.NOT. para_field%pola_xyz(ip)) CYCLE
-              CALL sub_OpPsi(para_propa%work_WP(k),w2,para_Dip(ip))
+              CALL sub_OpPsi(work_WP(k),w2,para_Dip(ip))
               w1 = w1 + w2 * coef_ip(ip)
             END DO
           END IF
@@ -3500,12 +3466,12 @@
 
           WP(j) = WP(j) + w1 * (-EYE)
           CALL norm2_psi(w1)
-          write(out_unitp,*) 'norme dkpsi k',k,w1%norme
-          IF (w1%norme < para_propa%para_poly%poly_tol) EXIT
+          write(out_unitp,*) 'norm2 dkpsi k',k,w1%norm2
+          IF (w1%norm2 < para_propa%para_poly%poly_tol) EXIT
 
-          IF (w1%norme > TEN**15) THEN
+          IF (w1%norm2 > TEN**15) THEN
              write(out_unitp,*) ' ERROR in ',name_sub
-             write(out_unitp,*) ' The norme of dnpsi(k) is huge !',w1%norme
+             write(out_unitp,*) ' The norm2 of dnpsi(k) is huge !',w1%norm2
              write(out_unitp,*) ' iteration k:',k
              write(out_unitp,*) ' Reduce the time step, WPDeltaT:',             &
                              para_propa%WPdeltaT
@@ -3521,11 +3487,11 @@
 
 !       - check norm ------------------
         CALL norm2_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.)
-        IF ( WP(j)%norme > WP(j)%max_norme) THEN
+        IF ( WP(j)%norm2 > para_propa%max_norm2) THEN
            T  = T + para_propa%WPdeltaT
            write(out_unitp,*) ' ERROR in ',name_sub
            write(out_unitp,*) ' STOP propagation: norm > max_norm',             &
-                         WP(j)%norme
+                         WP(j)%norm2
            para_propa%march_error   = .TRUE.
            para_propa%test_max_norm = .TRUE.
            STOP
@@ -3533,7 +3499,10 @@
 
       END DO
 
-      CALL dealloc_NParray(tab_dnE,"tab_dnE","march_new0_noD_field")
+      CALL dealloc_NParray(tab_dnE,"tab_dnE",name_sub)
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+      CALL dealloc_NParray(work_WP,'work_WP',name_sub)
 
 !----------------------------------------------------------
       IF (debug) THEN
@@ -3571,7 +3540,7 @@
 
       integer          :: nb_WP
       TYPE (param_psi) :: WP(nb_WP)
-      TYPE (param_psi), pointer :: w1,w2
+
 
 !----- for printing --------------------------------------------------
       logical ::print_Op
@@ -3579,7 +3548,8 @@
 
 
 !------ working parameters --------------------------------
-
+      TYPE (param_psi)              :: w1,w2
+      TYPE (param_psi), allocatable :: work_WP(:)
       complex (kind=Rkind)   :: Overlap,cdot,rt,rti,fac_k,norm
       real (kind=Rkind) :: limit,phase
 
@@ -3624,7 +3594,7 @@
 
         DO i=1,nb_WP
           CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
-          write(out_unitp,*) 'norm WP',i,WP(i)%norme
+          write(out_unitp,*) 'norm WP',i,WP(i)%norm2
 
           write(out_unitp,*) 'WP BasisRep',i
           CALL ecri_psi(T=ZERO,psi=WP(i),                               &
@@ -3638,17 +3608,18 @@
 
 
 !-----------------------------------------------------------
-      w1 => para_propa%work_WP(para_propa%para_poly%npoly+1)
-      w2 => para_propa%work_WP(para_propa%para_poly%npoly+2)
 
       max_der = 0
       nb_der = para_propa%para_poly%npoly-1
       IF (para_field%max_der >= 0)                                      &
            nb_der = min(para_field%max_der,para_propa%para_poly%npoly-1)
 
-      CALL alloc_NParray(tab_dnE,(/nb_der,3/),                            &
+      CALL alloc_NParray(tab_dnE,(/nb_der,3/),                          &
                       "tab_dnE",name_sub,(/0,1/))
       tab_dnE(:,:) = ZERO
+
+      CALL alloc_NParray(work_WP,[para_propa%para_poly%npoly-1],        &
+                        'work_WP',name_sub,[0])
 
 !     - propagation ----------------
       fac_k = para_propa%WPdeltaT
@@ -3666,46 +3637,46 @@
       write(out_unitp,*) 'max_der',max_der
 
       DO j=1,nb_WP
-        para_propa%work_WP(0) = WP(j)
+        work_WP(0) = WP(j)
         max_norm = ZERO
         DO i=0,para_propa%para_poly%npoly-1
 
-          CALL sub_OpPsi(para_propa%work_WP(i),w2,para_H)
-          CALL sub_scaledOpPsi(para_propa%work_WP(i),w2,para_H%E0,ONE)
+          CALL sub_OpPsi(work_WP(i),w2,para_H)
+          CALL sub_scaledOpPsi(work_WP(i),w2,para_H%E0,ONE)
 
-          para_propa%work_WP(i+1) = w2  ! H.psi(i)
+          work_WP(i+1) = w2  ! H.psi(i)
 
 
           fac_k = cmplx(ZERO,-para_propa%WPdeltaT /                     &
                             real(i+1,kind=Rkind),kind=Rkind)
 
 
-          para_propa%work_WP(i+1) = para_propa%work_WP(i+1) * fac_k
+          work_WP(i+1) = work_WP(i+1) * fac_k
 
           DO ip=1,3
             IF (.NOT. para_field%pola_xyz(ip)) CYCLE
             fac_k = cmplx(ZERO,-para_propa%WPdeltaT /                   &
                                  real(i+1,kind=Rkind),kind=Rkind)
 
-            w1 = para_propa%work_WP(i) * (tab_dnE(0,ip)* fac_k)
+            w1 = work_WP(i) * (tab_dnE(0,ip)* fac_k)
 
             DO k=1,min(i,max_der)
               fac_k = fac_k * para_propa%WPdeltaT/real(k,kind=Rkind)
               rt = tab_dnE(k,ip)*fac_k
-              w1 = w1 + para_propa%work_WP(i-k) * rt
+              w1 = w1 + work_WP(i-k) * rt
             END DO
 
             CALL sub_OpPsi(w1,w2,para_Dip(ip))
 
-            para_propa%work_WP(i+1) = para_propa%work_WP(i+1) + w2
+            work_WP(i+1) = work_WP(i+1) + w2
           END DO
 
           IF (taylor) THEN
-            w1 = para_propa%work_WP(i+1)
+            w1 = work_WP(i+1)
           ELSE
 !           H contribution
-            CALL sub_OpPsi(para_propa%work_WP(i),w2,para_H)
-            CALL sub_scaledOpPsi(para_propa%work_WP(i),w2,para_H%E0,ONE)
+            CALL sub_OpPsi(work_WP(i),w2,para_H)
+            CALL sub_scaledOpPsi(work_WP(i),w2,para_H%E0,ONE)
             w1 = w2 * (para_propa%WPdeltaT/real(i+1,kind=Rkind))
 
 !           Dip.field contributions
@@ -3719,7 +3690,7 @@
             END DO
             DO ip=1,3
               IF (.NOT. para_field%pola_xyz(ip)) CYCLE
-              CALL sub_OpPsi(para_propa%work_WP(i),w2,para_Dip(ip))
+              CALL sub_OpPsi(work_WP(i),w2,para_Dip(ip))
               w1 = w1 + w2 * IntE(ip)
             END DO
 
@@ -3730,13 +3701,13 @@
           WP(j) = WP(j) + w1
 
           CALL norm2_psi(w1)
-          IF (w1%norme > max_norm) max_norm = w1%norme
-          write(out_unitp,*) 'norms of w1(i),max_norm',i,w1%norme,max_norm
+          IF (w1%norm2 > max_norm) max_norm = w1%norm2
+          write(out_unitp,*) 'norms of w1(i),max_norm',i,w1%norm2,max_norm
 
-          IF (w1%norme < para_propa%para_poly%poly_tol) EXIT
-          IF (w1%norme > TEN**15) THEN
+          IF (w1%norm2 < para_propa%para_poly%poly_tol) EXIT
+          IF (w1%norm2 > TEN**15) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
-            write(out_unitp,*) ' The norme of dnpsi(i+1) is huge !',w1%norme
+            write(out_unitp,*) ' The norm2 of dnpsi(i+1) is huge !',w1%norm2
             write(out_unitp,*) ' iteration i:',i
             write(out_unitp,*) ' Reduce the time step, WPDeltaT:',              &
                              para_propa%WPdeltaT
@@ -3747,11 +3718,10 @@
 
 
 
-        IF (print_Op) write(out_unitp,*) 'T,max_der,ipoly,norme',               &
-                                  T,max_der,i,w1%norme
+        IF (print_Op) write(out_unitp,*) 'T,max_der,ipoly,norm2',               &
+                                  T,max_der,i,w1%norm2
 
-        para_propa%work_WP(0) =                                         &
-           para_propa%work_WP(min(i+1,para_propa%para_poly%npoly))
+        work_WP(0) = work_WP(min(i+1,para_propa%para_poly%npoly))
 
 !       - Phase Shift -----------------
         phase = para_H%E0*para_propa%WPdeltaT
@@ -3759,11 +3729,11 @@
 
 !       - check norm ------------------
         CALL norm2_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.)
-        IF ( WP(j)%norme > WP(j)%max_norme) THEN
+        IF ( WP(j)%norm2 > para_propa%max_norm2) THEN
           T  = T + para_propa%WPdeltaT
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' STOP propagation: norm > max_norm',              &
-                         WP(j)%norme
+                         WP(j)%norm2
           para_propa%march_error   = .TRUE.
           para_propa%test_max_norm = .TRUE.
           STOP
@@ -3772,6 +3742,9 @@
       END DO
 
       CALL dealloc_NParray(tab_dnE,"tab_dnE",name_sub)
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+      CALL dealloc_NParray(work_WP,'work_WP',name_sub)
 
 !----------------------------------------------------------
       IF (debug) THEN
@@ -3811,8 +3784,7 @@
 
       integer          :: nb_WP
       TYPE (param_psi) :: WP(nb_WP)
-      TYPE (param_psi), pointer :: w1,w2,w3
-      TYPE (param_psi), pointer :: expT,expV
+
 
 !----- for printing --------------------------------------------------
       logical ::print_Op
@@ -3820,7 +3792,8 @@
 
 
 !------ working parameters --------------------------------
-
+      TYPE (param_psi)       :: w1,w2,w3
+      TYPE (param_psi)       :: expT,expV
       complex (kind=Rkind)   :: Overlap,cdot,rt,rti,fac_k,norm
       real (kind=Rkind) :: limit
 
@@ -3856,7 +3829,7 @@
 
         DO i=1,nb_WP
           CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
-          write(out_unitp,*) 'norm WP',i,WP(i)%norme
+          write(out_unitp,*) 'norm WP',i,WP(i)%norm2
 
           write(out_unitp,*) 'WP BasisRep',i
           CALL ecri_psi(T=ZERO,psi=WP(i),                               &
@@ -3872,11 +3845,7 @@
 
 
 !-----------------------------------------------------------
-      w1 => para_propa%work_WP(para_propa%para_poly%npoly+1)
-      w2 => para_propa%work_WP(para_propa%para_poly%npoly+2)
-      w3 => para_propa%work_WP(para_propa%para_poly%npoly+3)
-      expT => para_propa%work_WP(para_propa%para_poly%npoly+4)
-      expV => para_propa%work_WP(para_propa%para_poly%npoly+5)
+
 
       w1 = WP(1)
       w1 = ONE
@@ -3916,17 +3885,23 @@
 
 !       - check norm ------------------
         CALL norm2_psi(WP(j),GridRep=.FALSE.,BasisRep=.TRUE.)
-        IF ( WP(j)%norme > WP(j)%max_norme) THEN
+        IF ( WP(j)%norm2 > para_propa%max_norm2) THEN
           T  = T + para_propa%WPdeltaT
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' STOP propagation: norm > max_norm',              &
-                         WP(j)%norme
+                         WP(j)%norm2
           para_propa%march_error   = .TRUE.
           para_propa%test_max_norm = .TRUE.
           STOP
         END IF
 
       END DO
+
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+      CALL dealloc_psi(w3)
+      CALL dealloc_psi(expT)
+      CALL dealloc_psi(expV)
 
 !----------------------------------------------------------
       IF (debug) THEN
@@ -3936,6 +3911,300 @@
 
 
       END SUBROUTINE march_split_field
+
+!==============================================================
+!
+!     initialisation for the Chebychev and nOD propagation
+!
+!==============================================================
+      SUBROUTINE initialisation1_poly(para_poly,deltaT,type_propa)
+      USE mod_system
+      IMPLICIT NONE
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_poly) :: para_poly
+      real (kind=Rkind) :: deltaT
+      integer           :: type_propa
+
+
+
+      integer       :: npoly_cheby
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='initialisation1_poly'
+      logical, parameter :: debug =.FALSE.
+      !logical, parameter :: debug =.TRUE.
+!-----------------------------------------------------------
+       IF (para_poly%init_done) RETURN
+       IF (debug) THEN
+         write(out_unitp,*) 'BEGINNING ',name_sub
+         write(out_unitp,*) 'deltaT',deltaT
+         write(out_unitp,*) 'Hmax',para_poly%Hmax
+         write(out_unitp,*) 'DHmax',para_poly%DHmax
+         write(out_unitp,*) 'Hmin',para_poly%Hmin
+         CALL flush_perso(out_unitp)
+       END IF
+!-----------------------------------------------------------
+
+      IF (para_poly%Hmin > para_poly%Hmax) THEN
+         write(out_unitp,*) ' ERROR in ',name_sub
+         write(out_unitp,*) 'Hmax',para_poly%Hmax
+         write(out_unitp,*) 'DHmax',para_poly%DHmax
+         write(out_unitp,*) 'Hmin',para_poly%Hmin
+         write(out_unitp,*) ' Hmin > Hmax '
+         !STOP " ERROR in " // name_sub // " : Hmin > Hmax"
+         STOP
+      END IF
+
+!-----------------------------------------------------------
+!     E0 is the zero of energy for energy scaling (i.e. the centre of the range).
+!     ESC is the energy scaling parameter ( so that scaled energy lies between -1 and 1)
+
+      para_poly%deltaE = para_poly%Hmax - para_poly%Hmin
+      para_poly%E0     = para_poly%Hmin + HALF * para_poly%deltaE
+      para_poly%alpha  = HALF * para_poly%deltaE * deltaT
+      para_poly%Esc    = ONE
+
+      IF (type_propa == 1)  para_poly%Esc    = HALF * para_poly%deltaE
+      IF (type_propa == 33) para_poly%E0     = para_poly%Hmin
+      IF (type_propa == 33) para_poly%alpha  = para_poly%deltaE * deltaT
+
+
+      IF (debug) THEN
+        write(out_unitp,*) 'Hmin,Hmax',para_poly%Hmin,para_poly%Hmax
+        write(out_unitp,*) 'deltaE',para_poly%deltaE
+        write(out_unitp,*) 'E0,Esc',para_poly%E0,para_poly%Esc
+        write(out_unitp,*) 'alpha (r)',para_poly%alpha
+        CALL flush_perso(out_unitp)
+      END IF
+!     ------------------------------------------------------
+
+!     ------------------------------------------------------
+      IF (type_propa == 1) THEN
+!       - Chebychev coeficients calculation ------------------
+        CALL cofcheb(para_poly%alpha,npoly_cheby,                       &
+                     para_poly%coef_poly,                               &
+                     para_poly%max_poly,para_poly%poly_tol)
+        IF (npoly_cheby > para_poly%npoly) para_poly%npoly = npoly_cheby
+
+      ELSE
+        CALL cof_nOD(para_poly%alpha,DeltaT,para_poly%npoly,            &
+                     para_poly%coef_poly,                               &
+                     para_poly%max_poly,para_poly%poly_tol)
+      END IF
+!     ------------------------------------------------------
+
+      para_poly%init_done = .TRUE.
+
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'npoly',para_poly%npoly
+         write(out_unitp,*) 'deltaT',deltaT
+         write(out_unitp,*) 'END ',name_sub
+       END IF
+!-----------------------------------------------------------
+       CALL flush_perso(out_unitp)
+
+       END SUBROUTINE initialisation1_poly
+
+
+!==============================================================
+!
+!     Chebychev coeficients calculation
+!     the number of polynomia ncheb is optimized
+!
+!==============================================================
+      !!@description: Calculation of the Chebychev coefficients
+      !!              the number of polynomia ncheb is optimized
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+      SUBROUTINE cofcheb(r,ncheb,cf,nchmx,tol)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer       :: ncheb,nchmx
+      real (kind=Rkind) :: cf(:)
+      real (kind=Rkind) :: r,tol,ctst,chk
+      integer       :: i,nset,k6,ier
+
+
+!----- for debuging --------------------------------------------------
+      logical, parameter :: debug =.FALSE.
+      !logical, parameter :: debug =.TRUE.
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'BEGINNING cofcheb'
+         write(out_unitp,*) 'r,tol',r,tol
+         write(out_unitp,*) 'nchmx',nchmx
+         CALL flush_perso(out_unitp)
+       END IF
+!-----------------------------------------------------------
+
+!----------------------------------------------
+      ncheb = max(ONE,r)
+      IF (debug) write(out_unitp,*) 'r, ncheb : ',r,ncheb
+      IF(MPI_id==0) CALL flush_perso(out_unitp)
+
+      IF (ncheb > nchmx) THEN
+         write(out_unitp,*) ' ERROR in cofcheb'
+         write(out_unitp,*) '*** nchmx too small '
+         write(out_unitp,*) 'nchmx < ncheb',nchmx,ncheb
+         STOP
+      END IF
+
+      CALL cof(r,ncheb,cf)
+
+!     -----------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'Chebychev coeficients',ncheb
+        write(out_unitp,2009) (i,cf(i),i=1,ncheb)
+        CALL flush_perso(out_unitp)
+      END IF
+!     -----------------------------------------
+!----------------------------------------------
+
+!----------------------------------------------
+! Set nch by using tolerance parameter, tol
+
+  30  ctst = abs(cf(ncheb)/cf(1))
+      if(ctst > tol)then
+        ncheb=ncheb+10
+        IF (ncheb > nchmx) THEN
+          write(out_unitp,*) ' ERROR in cofcheb'
+          write(out_unitp,*) '*** nchmx too small '
+          write(out_unitp,*) 'nchmx < ncheb',nchmx,ncheb
+          STOP
+        END IF
+        call cof(r,ncheb,cf)
+      go to 30
+      else
+        nset=ncheb
+        DO  k6=1,nset
+            chk=abs(cf(k6)/cf(1))
+            if(chk <= tol)then
+               ncheb=k6
+               go to 45
+            endif
+        END DO
+      endif
+   45 continue
+!----------------------------------------------
+
+      write(out_unitp,2007) ncheb
+ 2007 format(1x,'Ncheb after optimization = ',i6)
+
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'Chebychev coeficients',ncheb
+        write(out_unitp,2009) (i,cf(i),i=1,ncheb)
+ 2009   format(3(i6,e16.5))
+        write(out_unitp,*) 'END cofcheb'
+      END IF
+!-----------------------------------------------------------
+      IF(MPI_id==0) CALL flush_perso(out_unitp)
+
+      END SUBROUTINE cofcheb
+!==============================================================
+!
+!     Chebychev coeficients calculation
+!
+!==============================================================
+      !!@description: Chebychev coefficients calculation
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+      SUBROUTINE cof(r,ncheb,cf)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer ncheb
+      real (kind=Rkind) :: cf(:)
+      real (kind=Rkind) :: r,r1
+
+      integer       :: i,ier
+
+      r1 = r
+      CALL mmbsjn(r1,ncheb,cf,ier)
+
+      !write(6,*) 'Chebychev coefficients'
+      !write(6,*) '  with r=',r1
+
+      DO i=2,ncheb
+        cf(i) = cf(i) + cf(i)
+        !write(6,*) 'i,cf',i,cf(i)
+      END DO
+!stop
+      END SUBROUTINE cof
+
+!==============================================================
+!
+!     Taylor coeficients calculation (nOD)
+!
+!==============================================================
+      !!@description: Taylor coeficients calculation (nOD)
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+      SUBROUTINE cof_nOD(alpha,DeltaT,nOD,coef,Max_nOD,epsi)
+      USE mod_system
+      IMPLICIT NONE
+
+      integer       :: nOD,Max_nOD
+      real (kind=Rkind) :: alpha,DeltaT,epsi
+      real (kind=Rkind) :: coef(:)
+
+
+
+      real (kind=Rkind) :: reste,xi
+      integer       :: i
+
+!----- for debuging --------------------------------------------------
+      logical, parameter :: debug =.FALSE.
+!     logical, parameter :: debug =.TRUE.
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'BEGINNING cof_nOD'
+         write(out_unitp,*) 'alpha,DeltaT,epsi',alpha,DeltaT,epsi
+         write(out_unitp,*) 'nOD,Max_nOD',nOD,Max_nOD
+       END IF
+!-----------------------------------------------------------
+
+!----------------------------------------------
+
+      !- determination of the order: nOD
+      IF (nOD < 1) THEN
+        i = 1
+        xi = alpha
+        reste = ONE +alpha
+        DO WHILE (abs(log(reste)-alpha) > epsi .AND. i <= Max_nOD)
+          i = i+1
+          xi = xi * alpha / real(i,kind=Rkind)
+          reste = reste +xi
+          !write(out_unitp,*) 'i,xi,reste',i,xi,log(reste)-alpha
+        END DO
+        nOD  = i
+        write(out_unitp,*) 'Optimal nOD1',nOD,log(reste)-alpha
+        DO WHILE (xi > epsi .AND. i <= Max_nOD)
+          i = i+1
+          xi = xi * alpha / real(i,kind=Rkind)
+          !write(out_unitp,*) 'i,xi',i,xi
+        END DO
+        nOD  = i
+        IF (debug) write(out_unitp,*) 'Optimal nOD2',nOD,xi
+      ELSE
+        IF (debug) write(out_unitp,*) 'Fixed   nOD ',nOD
+      END IF
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'END cof_nOD'
+      END IF
+!-----------------------------------------------------------
+
+      END SUBROUTINE cof_nOD
 
       END MODULE mod_march
 

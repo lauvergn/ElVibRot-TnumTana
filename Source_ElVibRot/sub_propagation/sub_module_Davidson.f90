@@ -39,7 +39,7 @@ CONTAINS
 
 !===============================================================================
       SUBROUTINE sub_propagation_Davidson(psi,Ene,nb_diago,max_diago,   &
-                                          para_H,para_propa)
+                                          para_H,para_Davidson,para_propa)
       USE mod_system
       USE mod_Op
       USE mod_psi_set_alloc
@@ -56,6 +56,7 @@ CONTAINS
 
       !----- WP, energy ... -----------------------------------
       TYPE (param_propa)        :: para_propa
+      TYPE (param_Davidson)     :: para_Davidson
 
       integer                   :: nb_diago,nb_diagoR,max_diago
       TYPE (param_psi)          :: psi(max_diago)
@@ -81,7 +82,7 @@ CONTAINS
       integer                   :: ierr,ndim,ndim0,iresidu,fresidu,ndim_Vec0,ndim_ini0
       complex (kind=Rkind)      :: CS
       real (kind=Rkind)         :: RS,a,max_Sii,max_Sij
-      real (kind=Rkind)         :: tab_normeg(max_diago)
+      real (kind=Rkind)         :: tab_norm2g(max_diago)
       character (len=Name_len)  :: info
       real (kind=Rkind)         :: tab_a(max_diago)
 
@@ -97,7 +98,7 @@ CONTAINS
       integer           :: err
       integer           :: max_ecri
       real (kind=Rkind) :: DeltaT,T      ! time
-      real (kind=Rkind) :: DeltaE,Deltapsi,epsi,normeg,th,Hcv
+      real (kind=Rkind) :: DeltaE,Deltapsi,epsi,norm2g,th,Hcv
       real (kind=Rkind) :: E1,RE0,auTOcm_inv,auTOene
       character (len=Name_len) :: WriteUnit
 
@@ -118,8 +119,8 @@ CONTAINS
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
       !-----------------------------------------------------------
-      Hmin_OR_Hmax = para_propa%para_Davidson%Hmax_propa .OR.           &
-                     para_propa%para_Davidson%Hmin_propa
+      Hmin_OR_Hmax = para_Davidson%Hmax_propa .OR.           &
+                     para_Davidson%Hmin_propa
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) ' propagation Davidson'
@@ -127,7 +128,7 @@ CONTAINS
         write(out_unitp,*) ' max_diago',max_diago
         write(out_unitp,*) ' Hmin_OR_Hmax',Hmin_OR_Hmax
 
-        write(out_unitp,*) ' para_Davidson',para_propa%para_Davidson
+        write(out_unitp,*) ' para_Davidson',para_Davidson
         write(out_unitp,*)
         CALL flush_perso(out_unitp)
       END IF
@@ -136,16 +137,16 @@ CONTAINS
       auTOene    = get_Conv_au_TO_WriteUnit('E',WriteUnit)
 
       IF(MPI_id==0) THEN
-        write(out_unitp,*) 'all_lower_states',para_propa%para_Davidson%all_lower_states
-        write(out_unitp,*) 'lower_states    ',para_propa%para_Davidson%lower_states
-        write(out_unitp,*) 'project_WP0     ',para_propa%para_Davidson%project_WP0
-        write(out_unitp,*) 'NewVec_type     ',para_propa%para_Davidson%NewVec_type
+        write(out_unitp,*) 'all_lower_states',para_Davidson%all_lower_states
+        write(out_unitp,*) 'lower_states    ',para_Davidson%lower_states
+        write(out_unitp,*) 'project_WP0     ',para_Davidson%project_WP0
+        write(out_unitp,*) 'NewVec_type     ',para_Davidson%NewVec_type
       ENDIF
      
-      IF (para_propa%para_Davidson%Op_Transfo .AND.                     &
+      IF (para_Davidson%Op_Transfo .AND.                     &
                                      para_H%para_ReadOp%Op_Transfo) THEN
 
-        DE = para_propa%para_Davidson%max_ene
+        DE = para_Davidson%max_ene
         IF(MPI_id==0) THEN
           write(out_unitp,*) 'DE:             ',DE
           write(out_unitp,*) 'degree_Transfo: ',para_H%para_ReadOp%degree_Transfo
@@ -153,25 +154,25 @@ CONTAINS
           write(out_unitp,*) 'Poly_Transfo:   ',para_H%para_ReadOp%Poly_Transfo
         ENDIF
         
-        para_propa%para_Davidson%max_ene = para_H%para_ReadOp%Poly_Transfo(0)
+        para_Davidson%max_ene = para_H%para_ReadOp%Poly_Transfo(0)
         DO i=1,para_H%para_ReadOp%degree_Transfo
-          para_propa%para_Davidson%max_ene = para_propa%para_Davidson%max_ene + &
+          para_Davidson%max_ene = para_Davidson%max_ene + &
             para_H%para_ReadOp%Poly_Transfo(i) * DE**i
         END DO
       END IF
-      para_propa%para_Davidson%save_max_ene = para_propa%para_Davidson%max_ene * &
-                                              para_propa%para_Davidson%scaled_max_ene
+      para_Davidson%save_max_ene = para_Davidson%max_ene * &
+                                              para_Davidson%scaled_max_ene
 
       !------ initialization -------------------------------------
       Log_file%name='Davidson.log'
       CALL file_open(Log_file,iunit)
 
-      With_Grid  = para_propa%para_Davidson%With_Grid
-      With_Basis = .NOT. para_propa%para_Davidson%With_Grid
+      With_Grid  = para_Davidson%With_Grid
+      With_Basis = .NOT. para_Davidson%With_Grid
 
       !para_propa%file_WP%formatted = .TRUE.
-      para_propa%file_WP%name                    = para_propa%para_Davidson%name_file_saveWP
-      para_propa%para_Davidson%formatted_file_WP = para_propa%file_WP%formatted
+      para_propa%file_WP%name                    = para_Davidson%name_file_saveWP
+      para_Davidson%formatted_file_WP = para_propa%file_WP%formatted
 
       !CALL time_perso('Davidson psi0')
       IF(MPI_id==0) THEN
@@ -195,7 +196,7 @@ CONTAINS
         CALL alloc_psi(g,      BasisRep=With_Basis,GridRep=With_Grid)
         ! read guss on master
         CALL ReadWP0_Davidson(psi,psi0,Vec0,nb_diago,max_diago,   &
-                              para_propa%para_Davidson,para_H%cplx)
+                              para_Davidson,para_H%cplx)
 
         ! save the nb_diago wp
         CALL sub_save_psi(psi,nb_diago,para_propa%file_WP)
@@ -212,10 +213,10 @@ CONTAINS
       !===================================================================
       !===================================================================
       nb_diago        = max(1,nb_diago) ! number of Eign value
-      epsi            = para_propa%para_Davidson%conv_resi
-      normeg          = HUNDRED * epsi
+      epsi            = para_Davidson%conv_resi
+      norm2g          = HUNDRED * epsi
       conv_Ene        = HUNDRED * epsi
-      tab_normeg(:)   = normeg
+      tab_norm2g(:)   = norm2g
       convergeEne(:)  = .FALSE.
       convergeResi(:) = .FALSE.
       converge(:)     = .FALSE.
@@ -242,10 +243,10 @@ CONTAINS
       ENDIF
 
       !--------------------------------------------------------------------------------
-      ! loop for davidson with maximum iter number para_propa%para_Davidson%max_it
+      ! loop for davidson with maximum iter number para_Davidson%max_it
       ! careful about the exit when appling MPI
       !--------------------------------------------------------------------------------      
-      DO it=0,para_propa%para_Davidson%max_it
+      DO it=0,para_Davidson%max_it
 
         IF(MPI_id==0) THEN
           write(out_unitp,*) '--------------------------------------------------'
@@ -261,7 +262,7 @@ CONTAINS
 
         
         CALL sub_MakeHPsi_Davidson(it,psi(1:ndim),Hpsi(1:ndim),Ene,ndim0, &
-                                   para_H,para_propa%para_Davidson,iunit)
+                                   para_H,para_Davidson,iunit)
         !CALL time_perso('MakeHPsi done')
 
         IF (debug) write(out_unitp,*) 'Hpsi(:) done',it,ndim,ndim0
@@ -277,7 +278,7 @@ CONTAINS
         IF(MPI_id==0) THEN
           ! H built from psi and Hpsi
           ! add MPI for this subroutine later
-          CALL sub_MakeH_Davidson(it,psi(1:ndim),Hpsi(1:ndim),H,para_propa%para_Davidson)
+          CALL sub_MakeH_Davidson(it,psi(1:ndim),Hpsi(1:ndim),H,para_Davidson)
         ENDIF
         ndim0 = ndim
         !CALL time_perso('MakeH done')
@@ -298,11 +299,11 @@ CONTAINS
         ENDIF ! for MPI_id==0
 
         IF (para_H%sym_Hamil) THEN
-          epsi = max(para_propa%para_Davidson%conv_resi,                &
-                   TEN**para_propa%para_Davidson%conv_hermitian *       &
+          epsi = max(para_Davidson%conv_resi,                &
+                   TEN**para_Davidson%conv_hermitian *       &
                                                non_hermitic)
         ELSE
-          epsi = para_propa%para_Davidson%conv_resi
+          epsi = para_Davidson%conv_resi
         END IF
         !CALL time_perso('MakeH done')
 
@@ -335,7 +336,7 @@ CONTAINS
         END IF
 
         IF (it == 0 .OR. (it > 1 .AND.                                    &
-              mod(it-1,para_propa%para_Davidson%num_resetH) == 0) ) THEN
+              mod(it-1,para_Davidson%num_resetH) == 0) ) THEN
           EneRef(:) = Ene(:)
         END IF
 
@@ -354,7 +355,7 @@ CONTAINS
     
         IF(MPI_id==0) THEN
           CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,min_Ene,para_H%para_PES%min_pot,  &
-                                   psi,psi0,Vec,Vec0,para_propa%para_Davidson,it,.TRUE.)
+                                   psi,psi0,Vec,Vec0,para_Davidson,it,.TRUE.)
           !CALL time_perso('projec done')
 
           !> MPI note:  para_H%ComOp%ZPE is updated just on maaster now
@@ -371,8 +372,8 @@ CONTAINS
           ! Save vec(:) on vec0(:)
           !----------------------------------------------------------
 
-          IF (para_propa%para_Davidson%all_lower_states) THEN
-            nb_diago = count((Ene(1:count(VecToBeIncluded))-ZPE) <= para_propa%para_Davidson%max_Ene)
+          IF (para_Davidson%all_lower_states) THEN
+            nb_diago = count((Ene(1:count(VecToBeIncluded))-ZPE) <= para_Davidson%max_Ene)
             VecToBeIncluded = .FALSE.
             VecToBeIncluded(1:nb_diago) = .TRUE.
           END IF
@@ -382,18 +383,18 @@ CONTAINS
 
           DEne(1:nb_diago) = Ene(1:nb_diago)-Ene0(1:nb_diago)
           conv_Ene = maxval(abs(DEne(1:nb_diago)))
-          write(out_unitp,41) 'convergence (it, normeg/epsi, conv_Ene): ',&
-                                                   it,normeg/epsi,conv_Ene
-          IF (para_propa%para_Davidson%Hmax_propa) THEN
-            write(out_unitp,21) it,ndim,normeg/epsi,iresidu,              &
+          write(out_unitp,41) 'convergence (it, norm2g/epsi, conv_Ene): ',&
+                                                   it,norm2g/epsi,conv_Ene
+          IF (para_Davidson%Hmax_propa) THEN
+            write(out_unitp,21) it,ndim,norm2g/epsi,iresidu,              &
                              -Ene(1:nb_diago)*auTOene
           ELSE
-            write(out_unitp,21) it,ndim,normeg/epsi,iresidu,              &
+            write(out_unitp,21) it,ndim,norm2g/epsi,iresidu,              &
                               Ene(1:nb_diago)*auTOene
           END IF
           
           DO j=1,nb_diago
-            convergeEne(j) = abs(DEne(j)) < para_propa%para_Davidson%conv_Ene
+            convergeEne(j) = abs(DEne(j)) < para_Davidson%conv_Ene
           END DO
           write(out_unitp,41) 'it Diff Ene (' // trim(WriteUnit) // '):    ',it, &
                            DEne(1:nb_diago) * auTOene
@@ -401,7 +402,7 @@ CONTAINS
                                                     convergeEne(1:nb_diago)
           CALL flush_perso(out_unitp)
 
-          write(iunit,21) it,ndim,normeg/epsi,iresidu,Ene(1:ndim)*auTOene
+          write(iunit,21) it,ndim,norm2g/epsi,iresidu,Ene(1:ndim)*auTOene
           CALL flush_perso(iunit)
 
           !----------------------------------------------------------
@@ -409,7 +410,7 @@ CONTAINS
           !-  and convergence --------------------------
           IF (debug) write(out_unitp,*) 'residual',it,ndim,ndim0
           IF (debug) CALL flush_perso(out_unitp)
-          normeg    = -ONE
+          norm2g    = -ONE
           fresidu   = 0
           ! time consuming in MakeResidual_Davidson
           DO j=1,ndim
@@ -417,14 +418,14 @@ CONTAINS
               CALL MakeResidual_Davidson(j,g,psi,Hpsi,Ene,Vec)
 
               CALL norm2_psi(g)
-              tab_normeg(j) = sqrt(g%norme)
+              tab_norm2g(j) = sqrt(g%norm2)
               IF (fresidu == 0) fresidu = j
-              IF (tab_normeg(j) > normeg) THEN
+              IF (tab_norm2g(j) > norm2g) THEN
                 iresidu = j
-                normeg = tab_normeg(iresidu)
+                norm2g = tab_norm2g(iresidu)
               END IF
 
-              convergeResi(j) = tab_normeg(j) < epsi
+              convergeResi(j) = tab_norm2g(j) < epsi
             END IF
             converge(j) = (convergeEne(j) .AND. convergeResi(j))
 
@@ -438,7 +439,7 @@ CONTAINS
     
         IF(MPI_id==0) THEN 
           Ene0(1:nb_diago) = Ene(1:nb_diago)
-          write(out_unitp,41) 'it tab_normeg          ',it,tab_normeg(1:nb_diago)
+          write(out_unitp,41) 'it tab_norm2g          ',it,tab_norm2g(1:nb_diago)
           write(out_unitp,42) 'it convergenceResi(:): ',it,convergeResi(1:nb_diago)
 41        format(a,i3,100(1x,e9.2))
 42        format(a,i3,100(1x,l9))
@@ -463,14 +464,14 @@ CONTAINS
 
           CALL sub_NewVec_Davidson(it,psi,Hpsi,Ene,Ene0,EneRef,Vec,       &
                              converge,VecToBeIncluded,nb_diago,max_diago, &
-                                   para_propa%para_Davidson,fresidu,ndim, &
+                                   para_Davidson,fresidu,ndim, &
                                    para_H%para_ReadOp%Op_Transfo,para_H%para_ReadOp%E0_Transfo)
           !CALL time_perso('NewVec done')
 
           nb_added_states = ndim-ndim0
           save_WP = (ndim == max_diago) .OR. conv .OR.                    &
-                    it == para_propa%para_Davidson%max_it .OR.            &
-           (it > 0 .AND. mod(it,para_propa%para_Davidson%num_resetH) == 0)
+                    it == para_Davidson%max_it .OR.            &
+           (it > 0 .AND. mod(it,para_Davidson%num_resetH) == 0)
            Save_WP = Save_WP .AND. .NOT. Hmin_OR_Hmax
            !- new vectors --------------------------------------------
            !----------------------------------------------------------
@@ -478,10 +479,10 @@ CONTAINS
           write(out_unitp,*) 'ndim,max_diago',ndim,max_diago
           write(out_unitp,*) 'save_WP,conv',save_WP,conv
           IF (debug) THEN
-            write(out_unitp,*) 'it,max_it',it,para_propa%para_Davidson%max_it, &
-                                     (it == para_propa%para_Davidson%max_it)
-            write(out_unitp,*) 'mod(it,para_propa%para_Davidson%num_resetH)',  &
-                                mod(it,para_propa%para_Davidson%num_resetH)
+            write(out_unitp,*) 'it,max_it',it,para_Davidson%max_it, &
+                                     (it == para_Davidson%max_it)
+            write(out_unitp,*) 'mod(it,para_Davidson%num_resetH)',  &
+                                mod(it,para_Davidson%num_resetH)
           END IF
           CALL flush_perso(out_unitp)
 
@@ -491,7 +492,7 @@ CONTAINS
 
             CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,        &
                                      min_Ene,para_H%para_PES%min_pot,     &
-                                     psi,psi0,Vec,Vec0,para_propa%para_Davidson,it,.TRUE.)
+                                     psi,psi0,Vec,Vec0,para_Davidson,it,.TRUE.)
 
             IF (para_H%para_ReadOp%Op_Transfo) THEN
               CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
@@ -588,7 +589,7 @@ CONTAINS
         
         IF (conv) EXIT
 
-      END DO ! for it=0,para_propa%para_Davidson%max_it
+      END DO ! for it=0,para_Davidson%max_it
       write(out_unitp,*) '--------------------------------------------------'
 
       !===================================================================
@@ -614,12 +615,12 @@ CONTAINS
         ! The energies have to be recalculate without T(Op)
         para_H%para_ReadOp%Op_Transfo = .FALSE.
         CALL sub_MakeHPsi_Davidson(it,psi(1:nb_diago),Hpsi(1:nb_diago),Ene,0, &
-                                   para_H,para_propa%para_Davidson,iunit)
+                                   para_H,para_Davidson,iunit)
         DO j=1,nb_diago
           g = Hpsi(j) - psi(j) * Ene(j)
           CALL norm2_psi(g)
-          tab_normeg(j) = sqrt(g%norme)
-          write(out_unitp,*) 'lev:',j,Ene(j)*auTOene,tab_normeg(j)
+          tab_norm2g(j) = sqrt(g%norm2)
+          write(out_unitp,*) 'lev:',j,Ene(j)*auTOene,tab_norm2g(j)
         END DO
       END IF
       CALL file_close(Log_file)
@@ -642,13 +643,13 @@ CONTAINS
         write(out_unitp,*)
       ENDIF
 
-      IF (para_propa%para_Davidson%Hmax_propa) THEN
+      IF (para_Davidson%Hmax_propa) THEN
         para_propa%Hmax = -Ene(1)
         para_H%Hmax     = -Ene(1)
         write(out_unitp,*) 'Hmax (ua)  : ',para_propa%Hmax
         write(out_unitp,*) 'Hmax (cm-1): ',para_propa%Hmax*auTOene
       END IF
-      IF (para_propa%para_Davidson%Hmin_propa) THEN
+      IF (para_Davidson%Hmin_propa) THEN
         para_propa%Hmin = Ene(1)
         para_H%Hmin     = Ene(1)
         write(out_unitp,*) 'Hmin (ua)  : ',para_propa%Hmin
@@ -777,10 +778,10 @@ CONTAINS
 
    DO i=1,nb_diago
      CALL norm2_psi(psi(i))
-     IF (debug) write(out_unitp,*) '   norm^2 of psi(i)',i,psi(i)%norme
-     IF ( abs(psi(i)%norme-ONE) > ONETENTH**8) THEN
+     IF (debug) write(out_unitp,*) '   norm^2 of psi(i)',i,psi(i)%norm2
+     IF ( abs(psi(i)%norm2-ONE) > ONETENTH**8) THEN
        write(out_unitp,*) ' ERROR while reading the vector(s)'
-       write(out_unitp,*) ' ... the norm^2 of psi(i) is /= 1',i,psi(i)%norme
+       write(out_unitp,*) ' ... the norm^2 of psi(i) is /= 1',i,psi(i)%norm2
        STOP
      END IF
    END DO
@@ -1397,7 +1398,7 @@ END SUBROUTINE MakeResidual_Davidson
      END IF
 
      CALL norm2_psi(psi(ndim+1))
-     IF (psi(ndim+1)%norme < ONETENTH**10) CYCLE ! otherwise dependent vector
+     IF (psi(ndim+1)%norm2 < ONETENTH**10) CYCLE ! otherwise dependent vector
 
      !write(out_unitp,*) ' symab: psi(isym), new vec ortho',psi(isym)%symab,psi(ndim+1)%symab
 
@@ -1405,7 +1406,7 @@ END SUBROUTINE MakeResidual_Davidson
      IF (debug) THEN
         write(out_unitp,*) '  symab new vectors',psi(ndim+1)%symab
         CALL norm2_psi(psi(ndim+1))
-        write(out_unitp,*) '  norm^2 of new vectors',psi(ndim+1)%norme
+        write(out_unitp,*) '  norm^2 of new vectors',psi(ndim+1)%norm2
      END IF
 
      CALL Set_symab_OF_psiBasisRep(psi(ndim+1),psi(isym)%symab)

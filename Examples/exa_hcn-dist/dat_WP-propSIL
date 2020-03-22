@@ -10,8 +10,12 @@ cd $DIR_vib
  make
 cd $here
 
+n=$1
+
  x1=0.538516066
  x2=0.461483933
+
+ export OMP_NUM_THREADS=1
 
 
 nice $DIR_vib/vib << ** >res
@@ -24,7 +28,7 @@ nice $DIR_vib/vib << ** >res
          nrho=2
  /
 C
-0.0     1
+X     1
 N     2  1
 H     2 -1 3
 sym  cos(a)      R     r    x    pi   dh
@@ -45,28 +49,25 @@ sym  cos(a)      R     r    x    pi   dh
 3.141592653589793238462643383279d0
 0.0
 
- &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
+ &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80  /
  &inactives
            max_excit=4
            tab_nq(1:2)=8,8
            tab_nb(1:2)=5,5
            max_ene_h=60000. "cm-1"
 /
- &actives test=f direct=0 /
- &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t control=t /
+ &actives test=f comput_S=t /
+ &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t /
  &propa
-        WPTmax=40000.d0 WPdeltaT=10.d0 
-        n_WPecri = 1 WPpsi2 =f WPpsi=t
-        type_WPpropa=24 npoly=1000 poly_tol=1.d-20
-        spectral=t nb_vp_spec=10
+        WPTmax=500.d0 WPdeltaT=10.d0 nb_micro=10 One_Iteration=.TRUE.
+        n_WPecri=1 WPpsi2=t WPpsi=t Write_WPAdia=t
+        type_WPpropa=8 poly_tol=1.d-2
+        DHmax=0.0d0 auto_Hmax=f
+        WP0n_h=1 lect_WP0FBR=f
+
+        TFnexp2=20
+        TFmaxE=20000.
  /
- &control nb_WP=2 gate=f post_control=f
-          alpha=0.7d+1 max_alpha=1.d3 max_iter=20 /
-     1  2
-     2  3
- &field  nb_pulse=1
-         max_der=2 type='grid' type_init_grid='cos'
-         pola_xyz(1:3)=t,f,f 
-         w(1:3,1)=0.0064,0.,0.0
-         E0(1:3,1)=0.01,0.,0.0 /
+ &defWP0 sigma=0.6,Qeq=0.9,imp_k=10.0 /
 **
+

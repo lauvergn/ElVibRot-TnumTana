@@ -286,7 +286,7 @@ relax = .TRUE.
           para_propa%para_Davidson%name_file_saveWP = 'file_WP_Hmin'
 
           CALL sub_propagation_Davidson(Tab_Psi,Ene0,nb_diago,max_diago,&
-                                        para_H,para_propa)
+                              para_H,para_propa%para_Davidson,para_propa)
 
           nb_diago = 0
           para_propa%para_Davidson%Hmin_propa       = .FALSE.
@@ -294,7 +294,7 @@ relax = .TRUE.
           para_propa%para_Davidson%name_file_saveWP = 'file_WP_Hmax'
 
           CALL sub_propagation_Davidson(Tab_Psi,Ene0,nb_diago,max_diago,&
-                                        para_H,para_propa)
+                              para_H,para_propa%para_Davidson,para_propa)
 
           CALL dealloc_array(Tab_Psi,"Tab_Psi",name_sub)
           CALL dealloc_NParray(Ene0,"Ene0",name_sub)
@@ -365,10 +365,6 @@ relax = .TRUE.
 
         para_propa_loc%para_poly%max_poly     = 20
         para_propa_loc%para_poly%npoly        = 20
-
-        CALL alloc_array(para_propa_loc%work_WP,                        &
-                                  (/para_propa_loc%para_poly%npoly+6/), &
-                        "para_propa_loc%work_WP",name_sub,(/0/))
 
         CALL alloc_array(para_propa_loc%para_poly%coef_poly,(/2/),      &
                         "para_propa_loc%para_poly%coef_poly",name_sub)

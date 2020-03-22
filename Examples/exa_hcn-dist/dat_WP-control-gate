@@ -18,7 +18,7 @@ cd $here
 
 nice $DIR_vib/vib << ** >res
  &system /
- &constantes /
+ &constantes ene_unit='eV' /
  &variables 
          zmat=T
          nat=4

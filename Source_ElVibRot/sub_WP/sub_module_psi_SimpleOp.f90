@@ -112,7 +112,7 @@
         END IF
       END IF
 
-      psi%norme = ZERO
+      psi%norm2 = ZERO
       psi%symab = -1
 
 !     write(out_unitp,*) 'END Set_Random_psi'
@@ -190,7 +190,7 @@
       IF (allocated(psi%CvecB)) psi%CvecB(ind_aie_loc) = R
 
 
-      psi%norme = ZERO
+      psi%norm2 = ZERO
       psi%symab = -1
 
       IF (debug) THEN
@@ -273,7 +273,7 @@
       IF (allocated(psi%CvecB)) psi%CvecB(ind_aie_loc) = C
 
 
-      psi%norme = ZERO
+      psi%norm2 = ZERO
       psi%symab = -1
 
       IF (debug) write(out_unitp,*) 'END ',name_sub
@@ -317,7 +317,7 @@
       END IF
 
 
-      psi%norme = ZERO
+      psi%norm2 = ZERO
 
       IF (R == ZERO) THEN
         psi%symab = -2
@@ -364,7 +364,7 @@
       END IF
 
 
-      psi%norme = ZERO
+      psi%norm2 = ZERO
 
 
       IF (abs(C) == ZERO) THEN

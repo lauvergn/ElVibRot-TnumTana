@@ -3745,7 +3745,7 @@
        DO i=1,nb_act1
 
          idyn = RPHTransfo%list_QactTOQdyn(i)
-         iact = mole%liste_QsymTOQact(idyn)
+         iact = mole%liste_QdynTOQact(idyn)
          vi = Qact(iact)
 
          !-- frequencies calculation at Qact(i)+step -------------

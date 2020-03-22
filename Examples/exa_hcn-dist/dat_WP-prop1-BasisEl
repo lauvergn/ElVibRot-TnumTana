@@ -17,7 +17,7 @@ export OMP_NUM_THREADS=1
 
 nice $DIR_vib/vib << ** >res
  &system printlevel=2 /
- &constantes /
+ &constantes ene_unit='eV' /
  &variables
          nrho=2
          Old_Qtransfo=f

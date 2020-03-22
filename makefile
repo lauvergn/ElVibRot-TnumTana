@@ -10,7 +10,7 @@
 MPICORE = gfortran
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -716,17 +716,16 @@ obj:
 # vib script
 vib: 
 	echo "make vib script"
-	echo "#!/bin/bash" > vib
-	echo "cat > namelist" >> vib
-	echo "nice $(DIR_EVRT)/vib.exe < namelist" >> vib
-	echo "rm namelist" >> vib
+	./scripts/make_vib.sh $(DIR_EVRT) $(F90)
 	chmod a+x vib
 
 # clean
 clean: 
-	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib2 vib
+	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib
 	rm -rf *.dSYM
 	rm -f .DS_Store */.DS_Store */*/.DS_Store */*/*/.DS_Store
+	@cd sub_pot ; cp sub_system_save.f sub_system.f
+	@cd sub_pot ; cp sub_system_save.f90 sub_system.f90
 	@cd Examples/exa_hcn-dist ; ./clean
 	@cd Examples/exa_direct-dist ; ./clean
 	@cd Examples/exa_TnumTana_Coord-dist ; ./clean
@@ -747,7 +746,7 @@ clean:
 $(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(QMLibDIR_full)
 	echo EVR-T
 	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(LYNKFLAGS)
-	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
+#	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
 #===============================================
 #
 $(OBJ)/libTnum.a: obj $(Obj_KEO_PrimOp)

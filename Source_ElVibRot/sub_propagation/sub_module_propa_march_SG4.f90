@@ -31,7 +31,7 @@
  USE mod_system
  USE mod_file
  USE mod_psi_set_alloc, ONLY : param_psi
- USE mod_propa,         ONLY : param_propa,cof,Calc_AutoCorr,Write_AutoCorr
+ USE mod_propa,         ONLY : param_propa,Calc_AutoCorr,Write_AutoCorr
  IMPLICIT NONE
 
  INTERFACE march_noD_SG4
@@ -208,12 +208,12 @@
 
  !- check norm ------------------
  CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
- IF (debug) write(out_unitp,*) 'norm^2',psi%norme
+ IF (debug) write(out_unitp,*) 'norm^2',psi%norm2
 
- IF ( psi%norme > psi%max_norme) THEN
+ IF ( psi%norm2 > para_propa%max_norm2) THEN
    T  = T + para_propa%WPdeltaT
    write(out_unitp,*) ' ERROR in ',name_sub
-   write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norme
+   write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norm2
    para_propa%march_error   = .TRUE.
    para_propa%test_max_norm = .TRUE.
    STOP
@@ -226,7 +226,7 @@
 !-----------------------------------------------------------
  IF (debug) THEN
    CALL norm2_psi(psi)
-   write(out_unitp,*) 'norm psi',psi%norme
+   write(out_unitp,*) 'norm psi',psi%norm2
    write(out_unitp,*) 'END ',name_sub
  END IF
 !-----------------------------------------------------------
@@ -628,12 +628,12 @@ nb_thread = 1
 
  !- check norm ------------------
  CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
- IF (debug) write(out_unitp,*) 'norm^2',psi%norme
+ IF (debug) write(out_unitp,*) 'norm^2',psi%norm2
 
- IF ( psi%norme > psi%max_norme) THEN
+ IF ( psi%norm2 > para_propa%max_norm2) THEN
    T  = T + para_propa%WPdeltaT
    write(out_unitp,*) ' ERROR in ',name_sub
-   write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norme
+   write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norm2
    para_propa%march_error   = .TRUE.
    para_propa%test_max_norm = .TRUE.
    STOP
@@ -650,7 +650,7 @@ nb_thread = 1
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL norm2_psi(psi)
-        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'norm psi',psi%norm2
         write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
@@ -953,12 +953,12 @@ nb_thread = 1
 
  !- check norm ------------------
  CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
- IF (debug) write(out_unitp,*) 'norm^2',psi%norme
+ IF (debug) write(out_unitp,*) 'norm^2',psi%norm2
 
- IF ( psi%norme > psi%max_norme) THEN
+ IF ( psi%norm2 > para_propa%max_norm2) THEN
    T  = T + para_propa%WPdeltaT
    write(out_unitp,*) ' ERROR in ',name_sub
-   write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norme
+   write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norm2
    para_propa%march_error   = .TRUE.
    para_propa%test_max_norm = .TRUE.
    STOP
@@ -975,7 +975,7 @@ nb_thread = 1
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL norm2_psi(psi)
-        write(out_unitp,*) 'norm psi',psi%norme
+        write(out_unitp,*) 'norm psi',psi%norm2
         write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------

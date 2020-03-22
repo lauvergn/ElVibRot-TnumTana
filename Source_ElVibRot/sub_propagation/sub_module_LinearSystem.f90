@@ -205,9 +205,9 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
       !===================================================================
       nb_diago        = max(1,nb_diago) ! number of Eign value
       epsi            = para_propa%para_Davidson%conv_resi
-      normeg          = HUNDRED * epsi
+      norm2g          = HUNDRED * epsi
       conv_Ene        = HUNDRED * epsi
-      tab_normeg(:)   = normeg
+      tab_norm2g(:)   = norm2g
       convergeEne(:)  = .FALSE.
       convergeResi(:) = .FALSE.
       converge(:)     = .FALSE.
@@ -374,13 +374,13 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
 
           DEne(1:nb_diago) = Ene(1:nb_diago)-Ene0(1:nb_diago)
           conv_Ene = maxval(abs(DEne(1:nb_diago)))
-          write(out_unitp,41) 'convergence (it, normeg/epsi, conv_Ene): ',&
-                                                   it,normeg/epsi,conv_Ene
+          write(out_unitp,41) 'convergence (it, norm2g/epsi, conv_Ene): ',&
+                                                   it,norm2g/epsi,conv_Ene
           IF (para_propa%para_Davidson%Hmax_propa) THEN
-            write(out_unitp,21) it,ndim,normeg/epsi,iresidu,              &
+            write(out_unitp,21) it,ndim,norm2g/epsi,iresidu,              &
                              -Ene(1:nb_diago)*auTOene
           ELSE
-            write(out_unitp,21) it,ndim,normeg/epsi,iresidu,              &
+            write(out_unitp,21) it,ndim,norm2g/epsi,iresidu,              &
                               Ene(1:nb_diago)*auTOene
           END IF
 
@@ -393,7 +393,7 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
                                                     convergeEne(1:nb_diago)
           CALL flush_perso(out_unitp)
 
-          write(iunit,21) it,ndim,normeg/epsi,iresidu,Ene(1:ndim)*auTOene
+          write(iunit,21) it,ndim,norm2g/epsi,iresidu,Ene(1:ndim)*auTOene
           CALL flush_perso(iunit)
 
           !----------------------------------------------------------
@@ -401,7 +401,7 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
           !-  and convergence --------------------------
           IF (debug) write(out_unitp,*) 'residual',it,ndim,ndim0
           IF (debug) CALL flush_perso(out_unitp)
-          normeg    = -ONE
+          norm2g    = -ONE
           fresidu   = 0
           ! time consuming in MakeResidual_Davidson
           DO j=1,ndim
@@ -409,14 +409,14 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
               CALL MakeResidual_Davidson(j,g,psi,Hpsi,Ene,Vec)
 
               CALL norm2_psi(g)
-              tab_normeg(j) = sqrt(g%norme)
+              tab_norm2g(j) = sqrt(g%norm2)
               IF (fresidu == 0) fresidu = j
-              IF (tab_normeg(j) > normeg) THEN
+              IF (tab_norm2g(j) > norm2g) THEN
                 iresidu = j
-                normeg = tab_normeg(iresidu)
+                norm2g = tab_norm2g(iresidu)
               END IF
 
-              convergeResi(j) = tab_normeg(j) < epsi
+              convergeResi(j) = tab_norm2g(j) < epsi
             END IF
             converge(j) = (convergeEne(j) .AND. convergeResi(j))
 
@@ -430,7 +430,7 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
 
         IF(MPI_id==0) THEN
           Ene0(1:nb_diago) = Ene(1:nb_diago)
-          write(out_unitp,41) 'it tab_normeg          ',it,tab_normeg(1:nb_diago)
+          write(out_unitp,41) 'it tab_norm2g          ',it,tab_norm2g(1:nb_diago)
           write(out_unitp,42) 'it convergenceResi(:): ',it,convergeResi(1:nb_diago)
 41        format(a,i3,100(1x,e9.2))
 42        format(a,i3,100(1x,l9))
@@ -610,8 +610,8 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
         DO j=1,nb_diago
           g = Hpsi(j) - psi(j) * Ene(j)
           CALL norm2_psi(g)
-          tab_normeg(j) = sqrt(g%norme)
-          write(out_unitp,*) 'lev:',j,Ene(j)*auTOene,tab_normeg(j)
+          tab_norm2g(j) = sqrt(g%norm2)
+          write(out_unitp,*) 'lev:',j,Ene(j)*auTOene,tab_norm2g(j)
         END DO
       END IF
       CALL file_close(Log_file)

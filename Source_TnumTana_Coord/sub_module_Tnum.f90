@@ -142,19 +142,19 @@ MODULE mod_Tnum
           integer                            :: itPrim               = -1
           integer                            :: itNM                 = -1
           integer                            :: itRPH                = -1
-          TYPE (Type_ActiveTransfo), pointer, public :: ActiveTransfo        => null() ! it'll point on tab_Qtransfo
-          TYPE (Type_NMTransfo), pointer     :: NMTransfo            => null() ! it'll point on tab_Qtransfo
-          TYPE (Type_RPHTransfo), pointer    :: RPHTransfo           => null() ! it'll point on tab_Qtransfo
-          TYPE (Type_Qtransfo), pointer      :: tab_Qtransfo(:)      => null()
-          TYPE (Type_Qtransfo), pointer      :: tab_Cart_transfo(:)  => null()
-
-
-          TYPE (Type_RPHTransfo), pointer    :: RPHTransfo_inact2n   => null() ! For the inactive coordinates (type 21)
+          TYPE (Type_ActiveTransfo), pointer, public :: ActiveTransfo=> null() ! it'll point on tab_Qtransfo
+          TYPE (Type_NMTransfo),     pointer :: NMTransfo            => null() ! it'll point on tab_Qtransfo
+          TYPE (Type_RPHTransfo),    pointer :: RPHTransfo           => null() ! it'll point on tab_Qtransfo
+          TYPE (Type_Qtransfo),      pointer :: tab_Qtransfo(:)      => null()
+          TYPE (Type_Qtransfo),      pointer :: tab_Cart_transfo(:)  => null()
+          TYPE (Type_RPHTransfo),    pointer :: RPHTransfo_inact2n   => null() ! For the inactive coordinates (type 21)
 
           TYPE (CurviRPH_type)               :: CurviRPH
 
           integer, pointer :: liste_QactTOQsym(:) => null()   ! true pointer
           integer, pointer :: liste_QsymTOQact(:) => null()   ! true pointer
+          integer, pointer :: liste_QactTOQdyn(:) => null()   ! true pointer
+          integer, pointer :: liste_QdynTOQact(:) => null()   ! true pointer
           integer, pointer :: nrho_OF_Qact(:)     => null()   ! enables to define the volume element
           integer, pointer :: nrho_OF_Qdyn(:)     => null()   ! enables to define the volume element
 
@@ -537,6 +537,8 @@ MODULE mod_Tnum
 
         nullify(mole%liste_QactTOQsym)   ! true pointer
         nullify(mole%liste_QsymTOQact)   ! true pointer
+        nullify(mole%liste_QactTOQdyn)   ! true pointer
+        nullify(mole%liste_QdynTOQact)   ! true pointer
 
         IF (associated(mole%nrho_OF_Qact))  THEN
           CALL dealloc_array(mole%nrho_OF_Qact,                         &
@@ -960,7 +962,10 @@ MODULE mod_Tnum
         END IF
 
         mole%liste_QactTOQsym => mole%ActiveTransfo%list_QactTOQdyn
+        mole%liste_QactTOQdyn => mole%ActiveTransfo%list_QactTOQdyn
         mole%liste_QsymTOQact => mole%ActiveTransfo%list_QdynTOQact
+        mole%liste_QdynTOQact => mole%ActiveTransfo%list_QdynTOQact
+
         mole%name_Qdyn        => mole%tab_Qtransfo(nb_Qtransfo)%name_Qout
 
         CALL alloc_array(mole%nrho_OF_Qact,(/mole%nb_var/),             &
@@ -1204,7 +1209,10 @@ MODULE mod_Tnum
         mole%ActiveTransfo => mole%tab_Qtransfo(it)%ActiveTransfo
 
         mole%liste_QactTOQsym => mole%ActiveTransfo%list_QactTOQdyn
+        mole%liste_QactTOQdyn => mole%ActiveTransfo%list_QactTOQdyn
         mole%liste_QsymTOQact => mole%ActiveTransfo%list_QdynTOQact
+        mole%liste_QdynTOQact => mole%ActiveTransfo%list_QdynTOQact
+
         mole%name_Qdyn        => mole%tab_Qtransfo(it)%name_Qout
 
         CALL alloc_array(mole%nrho_OF_Qact,(/mole%nb_var/),             &
@@ -1244,7 +1252,9 @@ MODULE mod_Tnum
         CALL alloc_ActiveTransfo(mole%ActiveTransfo,nb_var)
 
         mole%liste_QactTOQsym => mole%ActiveTransfo%list_QactTOQdyn
+        mole%liste_QactTOQdyn => mole%ActiveTransfo%list_QactTOQdyn
         mole%liste_QsymTOQact => mole%ActiveTransfo%list_QdynTOQact
+        mole%liste_QdynTOQact => mole%ActiveTransfo%list_QdynTOQact
 
         mole%ActiveTransfo%list_QactTOQdyn(:) = 1
 
@@ -1584,9 +1594,12 @@ MODULE mod_Tnum
       END IF
 
 
-      ! the 5 tables are true pointers
+      ! the 6 tables are true pointers
       mole2%liste_QactTOQsym => mole2%ActiveTransfo%list_QactTOQdyn
+      mole2%liste_QactTOQdyn => mole2%ActiveTransfo%list_QactTOQdyn
       mole2%liste_QsymTOQact => mole2%ActiveTransfo%list_QdynTOQact
+      mole2%liste_QdynTOQact => mole2%ActiveTransfo%list_QdynTOQact
+
       mole2%name_Qact        => mole2%tab_Qtransfo(mole2%nb_Qtransfo)%name_Qin
       mole2%name_Qdyn        => mole2%tab_Qtransfo(mole2%nb_Qtransfo)%name_Qout
 

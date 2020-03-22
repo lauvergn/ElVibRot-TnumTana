@@ -348,7 +348,7 @@ END IF
 
    ! derivative with respect to Qj
    DO j=1,mole%nb_act1
-     derive_termQdyn(:) = (/ mole%liste_QactTOQsym(j),0 /)
+     derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(j),0 /)
 
      PsiRj(:,j) = PsiR%V(iqi:iqf)
      CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
@@ -368,7 +368,7 @@ END IF
      PsiRi(:) = PsiRi(:) * Jac(:)
      !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(6)
 
-     derive_termQdyn(:) = (/ mole%liste_QactTOQsym(i),0 /)
+     derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
      CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,&
                                          tab_l,tab_nq,derive_termQdyn)
@@ -585,7 +585,7 @@ END IF
 
    ! derivative with respect to Qj
    DO j=1,mole%nb_act1
-     derive_termQdyn(:) = (/ mole%liste_QactTOQsym(j),0 /)
+     derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(j),0 /)
 
      PsiRj(:,j) = PsiR%V(iqi:iqf)
      CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
@@ -605,7 +605,7 @@ END IF
      PsiRi(:) = PsiRi(:) * Jac(:)
      !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(6)
 
-     derive_termQdyn(:) = (/ mole%liste_QactTOQsym(i),0 /)
+     derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
      CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,&
                                        tab_l,tab_nq,derive_termQdyn)
@@ -1669,7 +1669,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
        ! derivative with respect to Qj
        DO j=1,mole%nb_act1
-         derive_termQdyn(:) = (/ mole%liste_QactTOQsym(j),0 /)
+         derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(j),0 /)
 
          PsiRj(:,j) = PsiR(itab)%V(:)
          CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
@@ -1689,7 +1689,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
          PsiRi(:) = PsiRi(:) * Jac(:)
          !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,itab,i,OMP_GET_THREAD_NUM() ; flush(6)
 
-         derive_termQdyn(:) = (/ mole%liste_QactTOQsym(i),0 /)
+         derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
          CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,&
                                            tab_l,tab_nq,derive_termQdyn)
@@ -1981,7 +1981,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
          ! derivative with respect to Qj
          DO j=1,mole%nb_act1
-           derive_termQdyn(:) = (/ mole%liste_QactTOQsym(j),0 /)
+           derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(j),0 /)
 
            PsiRj(:,j) = PsiR(itab)%V(iqi:iqf)
            CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
@@ -2000,7 +2000,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
            PsiRi(:) = PsiRi(:) * Jac(:)
            !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(6)
 
-           derive_termQdyn(:) = (/ mole%liste_QactTOQsym(i),0 /)
+           derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
            CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,&
                                                tab_l,tab_nq,derive_termQdyn)
@@ -2161,7 +2161,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
      ! derivative with respect to Qj
      DO j=1,mole%nb_act1
-       derive_termQdyn(:) = (/ mole%liste_QactTOQsym(j),0 /)
+       derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(j),0 /)
 
        PsiRj(:,j) = PsiR(itab)%V(:)
        CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
@@ -2181,7 +2181,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
        PsiRi(:) = PsiRi(:) * Jac(:)
        !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,itab,i,OMP_GET_THREAD_NUM() ; flush(6)
 
-       derive_termQdyn(:) = (/ mole%liste_QactTOQsym(i),0 /)
+       derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
        CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,&
                                          tab_l,tab_nq,derive_termQdyn)
@@ -2373,7 +2373,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
      ! derivative with respect to Qj
      DO j=1,mole%nb_act1
-       derive_termQdyn(:) = (/ mole%liste_QactTOQsym(j),0 /)
+       derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(j),0 /)
 
        PsiRj(:,j) = PsiR(itab)%V(:)
        CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
@@ -2393,7 +2393,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
        PsiRi(:) = PsiRi(:) * Jac(:)
        !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,itab,i,OMP_GET_THREAD_NUM() ; flush(6)
 
-       derive_termQdyn(:) = (/ mole%liste_QactTOQsym(i),0 /)
+       derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
        CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,&
                                          tab_l,tab_nq,derive_termQdyn)

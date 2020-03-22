@@ -187,10 +187,10 @@
         END DO
       END IF
       CALL Qsym_TO_Qact(para_Q%Qsym0,para_Q%Qact0,para_Q%nb_var,        &
-                        mole%liste_QactTOQsym)
+                        mole%liste_QactTOQdyn)
       para_Q%Qsym(:) = para_Q%Qsym0(:)
       CALL Qsym_TO_Qact(para_Q%Qsym,para_Q%Qact,para_Q%nb_var,          &
-                        mole%liste_QactTOQsym)
+                        mole%liste_QactTOQdyn)
 
 !......Allocation Tnum
 
@@ -309,7 +309,7 @@
 
 !        variables P and Q
          DO i=1,ND
-           iact = mole%liste_QactTOQsym(i)
+           iact = mole%liste_QactTOQdyn(i)
            GWP%Qmean(i) = para_Q%Qsym(iact)
            GWP%Pmean(i) = PQsym(iact)
          END DO
@@ -716,7 +716,7 @@
       CALL Y_TO_GWP(Y,GWP,N)
 
       DO i=1,ND
-        para_Q%Qsym(mole%liste_QactTOQsym(i))=GWP%Qmean(i)
+        para_Q%Qsym(mole%liste_QactTOQdyn(i))=GWP%Qmean(i)
       END DO
 
       nderiv = 1

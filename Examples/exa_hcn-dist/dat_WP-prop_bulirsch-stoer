@@ -18,7 +18,7 @@ nqi=8
 
 nice $DIR_vib/vib << ** >>res
  &system PGrid_omp=0 /
- &constantes /
+ &constantes ene_unit='eV' /
  &variables 
          zmat=T
          nat=4
@@ -55,7 +55,7 @@ sym  cos(a)      R     r    x    pi   dh
  &actives test=f comput_S=t direct=1 /
  &analyse max_ana=20 ana=f print=f propa=t /
  &propa
-        WPTmax=1000.d0 WPdeltaT=1.d-0
+        WPTmax=100.d0 WPdeltaT=1.d-0
         n_WPecri = 1 WPpsi2 =f WPpsi=t
         type_WPpropa=7 npoly=64
         DHmax=0.0d0 auto_Hmax=t
@@ -63,7 +63,3 @@ sym  cos(a)      R     r    x    pi   dh
  /
  &defWP0 sigma=0.6,Qeq=0.9,imp_k=0.0 /
 **
-exit
-        type_WPpropa=7 npoly=64
-
-

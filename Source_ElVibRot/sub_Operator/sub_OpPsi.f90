@@ -1483,7 +1483,7 @@ STOP 'cplx'
 
      ! first derivatives of sqrt(J/rho)*psi,  in derRGi(:,i)
      DO i=1,para_Op%nb_Qact
-       derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQsym(i),0 /)
+       derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(i),0 /)
        derRGi(:,i) = Psi%RvecG(iqi2:fqi2)
 
        CALL DerivOp_TO_RVecG(derRGi(:,i),Psi%nb_qa,para_Op%BasisnD,  &
@@ -1544,7 +1544,7 @@ STOP 'cplx'
        derRGj(:,j) = derRGj(:,j) * para_Op%ComOp%Jac
 
        ! derivative with respect to Qact_j
-       derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQsym(j),0 /)
+       derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(j),0 /)
        CALL DerivOp_TO_RVecG(derRGj(:,j),Psi%nb_qa,para_Op%BasisnD,derive_termQdyn)
 
        ! add each term to OpPsi%RvecG
@@ -1792,7 +1792,7 @@ STOP 'cplx'
    END IF
 
    DO i=1,para_Op%nb_Qact
-     derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQsym(i),0 /)
+     derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(i),0 /)
      derRGi(:,i,itab) = Psi(itab)%RvecG(:)
      CALL DerivOp_TO_RVecG(derRGi(:,i,itab),Psi(itab)%nb_qa,para_Op%BasisnD,  &
                            derive_termQdyn)
@@ -1860,7 +1860,7 @@ STOP 'cplx'
      derRGj(:,j,itab) = derRGj(:,j,itab) * para_Op%ComOp%Jac
 
      ! derivative with respect to Qact_j
-     derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQsym(j),0 /)
+     derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(j),0 /)
      CALL DerivOp_TO_RVecG(derRGj(:,j,itab),Psi(itab)%nb_qa,para_Op%BasisnD,derive_termQdyn)
 
      IF (debug) THEN

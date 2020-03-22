@@ -434,7 +434,7 @@
       integer  :: nb_bie
 
 !------ pour les frequences -------------------------------
-      real (kind=Rkind) :: d0norme,                                     &
+      real (kind=Rkind) :: d0norm2,                                     &
                            d0Qeq(para_AllOp%tab_Op(1)%mole%nb_inact2n), &
                            d0ehess(para_AllOp%tab_Op(1)%mole%nb_inact2n)
 
