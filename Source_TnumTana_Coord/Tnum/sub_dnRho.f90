@@ -16,7 +16,13 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
@@ -42,26 +48,22 @@ MODULE mod_dnRho
 !
 !=====================================================================
 !
-      SUBROUTINE sub3_dnrho(dnrho,dnjac,                                &
-                            Qact,mole,nderiv,num,step,nrho)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Tnum
-      IMPLICIT NONE
+  SUBROUTINE sub3_dnrho(dnrho,dnjac,Qact,mole,nderiv,num,step,nrho)
+  USE mod_system
+  USE mod_dnSVM
+  USE mod_Tnum
+  IMPLICIT NONE
 
-      TYPE(Type_dnS)    :: dnJac,dnrho
-
-      TYPE (zmatrix), intent(in)    :: mole
-      real (kind=Rkind), intent(inout) :: Qact(mole%nb_var)
-
-      logical           :: num
-      real (kind=Rkind) :: step
-      integer           :: nderiv
-      integer           :: nrho
-
-
-      integer :: i
-
+      !-----------------------------------------------------------------
+      TYPE(Type_dnS),    intent(inout) :: dnrho
+      TYPE(Type_dnS),    intent(in)    :: dnJac
+      TYPE (CoordType),  intent(in)    :: mole
+      real (kind=Rkind), intent(in)    :: Qact(mole%nb_var)
+      logical,           intent(in)    :: num
+      real (kind=Rkind), intent(in)    :: step
+      integer,           intent(in)    :: nderiv
+      integer,           intent(in)    :: nrho
+      !-----------------------------------------------------------------
 
 
 !----- for debuging --------------------------------------------------
@@ -73,7 +75,7 @@ MODULE mod_dnRho
          write(out_unitp,*) 'BEGINNING ',name_sub
          write(out_unitp,*) 'step',step
          write(out_unitp,*)
-         CALL Write_mole(mole)
+         CALL Write_CoordType(mole)
          write(out_unitp,*)
        END IF
 !-----------------------------------------------------------
@@ -112,7 +114,7 @@ MODULE mod_dnRho
        END IF
 !-----------------------------------------------------------
 
-       end subroutine sub3_dnrho
+  end subroutine sub3_dnrho
 !
 !=====================================================================
 !
@@ -124,27 +126,27 @@ MODULE mod_dnRho
 !
 !=====================================================================
 !
-      SUBROUTINE sub3_dnrho_num(dnrho,Qact,mole,nderiv,step)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Tnum
-      !USE mod_paramQ
-      IMPLICIT NONE
+  SUBROUTINE sub3_dnrho_num(dnrho,Qact,mole,nderiv,step)
+  USE mod_system
+  USE mod_dnSVM
+  USE mod_Tnum
+  IMPLICIT NONE
 
-      TYPE (zmatrix), intent(in)    :: mole
-      real (kind=Rkind), intent(inout) :: Qact(mole%nb_var)
+      !-----------------------------------------------------------------
+      TYPE(Type_dnS),    intent(inout) :: dnrho
+      TYPE (CoordType),  intent(in)    :: mole
+      real (kind=Rkind), intent(in)    :: Qact(mole%nb_var)
+      real (kind=Rkind), intent(in)    :: step
+      integer,           intent(in)    :: nderiv
+      !-----------------------------------------------------------------
 
-      TYPE(Type_dnS)    :: dnrho
+
+      !-----------------------------------------------------------------
+      ! local variables
       TYPE(Type_dnS)    :: dnrho1,dnrho2
-
-      logical           :: num
-      real (kind=Rkind) :: step
-      integer           :: nderiv
-      integer           :: nrho
-
-
-      real (kind=Rkind) :: Qacti,Qactj
+      real (kind=Rkind) :: Qact_loc(mole%nb_var)
       integer           :: i,j
+      !-----------------------------------------------------------------
 
 
 
@@ -155,7 +157,7 @@ MODULE mod_dnRho
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
-         CALL Write_mole(mole)
+         CALL Write_CoordType(mole)
          write(out_unitp,*)
        END IF
 !-----------------------------------------------------------
@@ -184,13 +186,12 @@ MODULE mod_dnRho
 
       CALL alloc_dnSVM(dnrho1,dnrho%nb_var_deriv,0)
       CALL alloc_dnSVM(dnrho2,dnrho%nb_var_deriv,0)
+      Qact_loc(:) = Qact(:)
 
       IF (nderiv >= 1) THEN
        DO i=1,mole%nb_act
 
-         Qacti = Qact(i)
-         Qact(i) = Qacti + step
-
+         Qact_loc(i) = Qact(i) + step
          CALL sub3_dnrho_ana(dnrho1,Qact,mole,0)
 !        -----------------------------------------------------
          IF (debug) THEN
@@ -199,7 +200,7 @@ MODULE mod_dnRho
          END IF
 !        -----------------------------------------------------
 
-         Qact(i) = Qacti - step
+         Qact_loc(i) = Qact(i) - step
          CALL sub3_dnrho_ana(dnrho2,Qact,mole,0)
 !        -----------------------------------------------------
          IF (debug) THEN
@@ -212,8 +213,6 @@ MODULE mod_dnRho
          CALL d1d2(dnrho%d0,dnrho1%d0,dnrho2%d0,step)
          dnrho%d1(i)    = dnrho1%d0/dnrho%d0
          IF (nderiv == 2) dnrho%d2(i,i) = dnrho2%d0/dnrho%d0
-
-         Qact(i) = Qacti
 
        END DO
       END IF
@@ -230,12 +229,8 @@ MODULE mod_dnRho
        DO i=1,mole%nb_act
        DO j=i+1,mole%nb_act
 
-         Qacti = Qact(i)
-         Qactj = Qact(j)
-
-         Qact(i) = Qacti + step
-         Qact(j) = Qactj + step
-
+         Qact_loc(i) = Qact(i) + step
+         Qact_loc(j) = Qact(j) + step
          CALL sub3_dnrho_ana(dnrho1,Qact,mole,0)
          dnrho%d2(i,j) = dnrho1%d0
 !        -----------------------------------------------------
@@ -246,8 +241,8 @@ MODULE mod_dnRho
 !        -----------------------------------------------------
 
 
-         Qact(i) = Qacti - step
-         Qact(j) = Qactj - step
+         Qact_loc(i) = Qact(i) - step
+         Qact_loc(j) = Qact(j) - step
          CALL sub3_dnrho_ana(dnrho1,Qact,mole,0)
          dnrho%d2(i,j) = dnrho%d2(i,j) + dnrho1%d0
 !        -----------------------------------------------------
@@ -258,8 +253,8 @@ MODULE mod_dnRho
 !        -----------------------------------------------------
 
 
-         Qact(i) = Qacti - step
-         Qact(j) = Qactj + step
+         Qact_loc(i) = Qact(i) - step
+         Qact_loc(j) = Qact(j) + step
          CALL sub3_dnrho_ana(dnrho1,Qact,mole,0)
          dnrho%d2(i,j) = dnrho%d2(i,j) - dnrho1%d0
 !        -----------------------------------------------------
@@ -271,8 +266,8 @@ MODULE mod_dnRho
 
 
 
-         Qact(i) = Qacti + step
-         Qact(j) = Qactj - step
+         Qact_loc(i) = Qact(i) + step
+         Qact_loc(j) = Qact(j) - step
          CALL sub3_dnrho_ana(dnrho1,Qact,mole,0)
          dnrho%d2(i,j) = dnrho%d2(i,j) - dnrho1%d0
 !        -----------------------------------------------------
@@ -281,19 +276,18 @@ MODULE mod_dnRho
            write(out_unitp,*) 'f1',dnrho1%d0,dnrho%d2(i,j)
          END IF
 !        -----------------------------------------------------
-
 
 
          dnrho%d2(i,j) = dnrho%d2(i,j)/(FOUR*dnrho%d0*step*step)
          dnrho%d2(j,j) = dnrho%d2(i,j)
 
 
-         Qact(i) = Qacti
-         Qact(j) = Qactj
-
        END DO
        END DO
       END IF
+
+      CALL dealloc_dnSVM(dnrho1)
+      CALL dealloc_dnSVM(dnrho2)
 
 
 !-----------------------------------------------------------
@@ -303,10 +297,8 @@ MODULE mod_dnRho
        write(out_unitp,*) 'END ',name_sub
        END IF
 !-----------------------------------------------------------
-      CALL dealloc_dnSVM(dnrho1)
-      CALL dealloc_dnSVM(dnrho2)
 
-      end subroutine sub3_dnrho_num
+  end subroutine sub3_dnrho_num
 !
 !=====================================================================
 !
@@ -317,24 +309,26 @@ MODULE mod_dnRho
 !
 !=====================================================================
 !
-      SUBROUTINE sub3_dnrho_ana(dnrho,Qact,mole,nderiv)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Tnum
-      !USE mod_paramQ
-      IMPLICIT NONE
+  SUBROUTINE sub3_dnrho_ana(dnrho,Qact,mole,nderiv)
+  USE mod_system
+  USE mod_dnSVM
+  USE mod_Tnum
+  IMPLICIT NONE
 
-      TYPE (zmatrix), intent(in)    :: mole
-      real (kind=Rkind), intent(inout) :: Qact(mole%nb_var)
-      TYPE(Type_dnS), intent(inout) :: dnrho
-      integer, intent(in)           :: nderiv
+      !-----------------------------------------------------------------
+      TYPE (CoordType),  intent(in)    :: mole
+      real (kind=Rkind), intent(in)    :: Qact(mole%nb_var)
+      TYPE(Type_dnS),    intent(inout) :: dnrho
+      integer,           intent(in)    :: nderiv
+      !-----------------------------------------------------------------
 
+      !-----------------------------------------------------------------
+      ! local variables
       integer                       :: iQact,jQact,i,dnErr
       integer                       :: type_act,iQact_transfo
       real (kind=Rkind)             :: d0tf,d1tf,d2tf,d3tf
       TYPE (Type_dnS)               :: dntf
-
-      character (len=Name_longlen)  :: nom
+      !-----------------------------------------------------------------
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug = .FALSE.
@@ -344,7 +338,7 @@ MODULE mod_dnRho
       IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
          write(out_unitp,*)
-         CALL Write_mole(mole)
+         CALL Write_CoordType(mole)
          write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
@@ -418,15 +412,15 @@ MODULE mod_dnRho
        END IF
 !-----------------------------------------------------------
 
-       end subroutine sub3_dnrho_ana
-       
-      SUBROUTINE Write_rho(mole)
-      USE mod_system
-      USE mod_Tnum
-      USE mod_MPI
-      IMPLICIT NONE
+  end subroutine sub3_dnrho_ana
 
-      TYPE (zmatrix), intent(in)    :: mole
+  SUBROUTINE Write_rho(mole)
+  USE mod_system
+  USE mod_Tnum
+  USE mod_MPI
+  IMPLICIT NONE
+
+      TYPE (CoordType), intent(in)  :: mole
 
       integer                       :: iQact,type_act,iQact_transfo
       character (len=Name_longlen)  :: name_rho
@@ -440,14 +434,14 @@ MODULE mod_dnRho
       IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
          write(out_unitp,*)
-         CALL Write_mole(mole)
+         CALL Write_CoordType(mole)
          write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
 
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
-!      analysis of rho as a function of the zmatrix definition
+!      analysis of rho as a function of the CoordType definition
        IF (print_level > -1 .AND. MPI_id==0) THEN
 
          write(out_unitp,*)
@@ -489,5 +483,5 @@ MODULE mod_dnRho
          IF(MPI_id==0) write(out_unitp,*)
 
        END IF
-      end subroutine Write_rho
+  end subroutine Write_rho
 END MODULE mod_dnRho

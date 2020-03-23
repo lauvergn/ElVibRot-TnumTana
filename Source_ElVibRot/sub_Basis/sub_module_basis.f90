@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,6 +35,9 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
 MODULE mod_basis
@@ -47,7 +61,7 @@ MODULE mod_basis
       IMPLICIT NONE
 
 
-!----- for the zmatrix and Tnum --------------------------------------
+!----- for the CoordType and Tnum --------------------------------------
       TYPE (basis)          :: basis_set
       integer, intent(in)   :: Set_Val
 
@@ -3307,8 +3321,8 @@ END SUBROUTINE pack_basis
   TYPE (OldParam), intent(inout), optional :: OldPara
 
 
-  !- for the zmatrix  --------------------------------------
-  TYPE (zmatrix) :: mole
+  !- for the CoordType  --------------------------------------
+  TYPE (CoordType) :: mole
 
   real (kind=Rkind) :: Qact(BasisnD%ndim)
 
@@ -3365,7 +3379,7 @@ END SUBROUTINE pack_basis
   integer,                         intent(in)             :: tab_l(:)
   TYPE (Type_nDindex),             intent(in)             :: nDind_DPG    ! multidimensional DP index
   integer,                         intent(in)             :: iq
-  TYPE (zmatrix),                  intent(in)             :: mole
+  TYPE (CoordType),                  intent(in)             :: mole
   integer,                         intent(inout)          :: err_sub
 
 !------ working variables ---------------------------------
@@ -3434,7 +3448,7 @@ END SUBROUTINE pack_basis
   TYPE(basis),                     intent(in)             :: tab_ba(0:,:) ! tab_ba(0:L,D)
   integer,                         intent(in)             :: tab_l(:)
   integer,                         intent(in)             :: tab_iq(:)
-  TYPE (zmatrix),                  intent(in)             :: mole
+  TYPE (CoordType),                  intent(in)             :: mole
   integer,                         intent(inout)          :: err_sub
 
 !------ working variables ---------------------------------
@@ -3492,7 +3506,7 @@ END SUBROUTINE pack_basis
   TYPE(basis),                     intent(in)             :: tab_ba(0:,:) ! tab_ba(0:L,D)
   integer,                         intent(in)             :: tab_l(:)
   integer,                         intent(in)             :: tab_iq(:)
-  TYPE (zmatrix),                  intent(in)             :: mole
+  TYPE (CoordType),                  intent(in)             :: mole
   integer,                         intent(inout)          :: err_sub
 
 !------ working variables ---------------------------------
@@ -4305,7 +4319,7 @@ END SUBROUTINE pack_basis
       !!@param: TODO
       SUBROUTINE nrho_Basis_TO_nhro_Tnum(para_AllBasis,mole)
          TYPE (param_AllBasis), intent(in) :: para_AllBasis
-         TYPE (zmatrix), intent(inout)     :: mole
+         TYPE (CoordType), intent(inout)   :: mole
 
 
          integer      :: iQbasis,iQact,iQdyn,nrho

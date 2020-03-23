@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,6 +35,9 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
       SUBROUTINE sub_HSOp_inact(iq,freq_only,para_AllOp,                &
@@ -31,7 +45,7 @@
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact, qact_to_qdyn_from_activetransfo
+      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact, qact_to_qdyn_from_activetransfo
       USE mod_basis
       USE mod_Op
       USE mod_PrimOp
@@ -50,8 +64,8 @@
 !---- variable pour le test -----------------------------------------
       logical :: test
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), pointer     :: mole      ! true pointer
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType), pointer     :: mole      ! true pointer
       TYPE (Tnum),    pointer     :: para_Tnum ! true pointer
 
 !----- working variables ----------------------------------------
@@ -402,7 +416,7 @@
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
-      USE mod_Coord_KEO, only : zmatrix, Tnum, Qinact2n_TO_Qact_FROM_ActiveTransfo
+      USE mod_Coord_KEO, only : CoordType, Tnum, Qinact2n_TO_Qact_FROM_ActiveTransfo
       USE mod_basis
       USE mod_Op
       USE mod_PrimOp
@@ -426,8 +440,8 @@
 !----- Coordinates ------------------------------------
       real (kind=Rkind)       :: Qact(para_AllOp%tab_Op(1)%mole%nb_var)
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix),pointer     :: mole      ! true pointer
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType),pointer     :: mole      ! true pointer
       TYPE (Tnum),pointer        :: para_Tnum ! true pointer
 
 !------ harmonic matrix : H_bhe, S_bhe  ---------------------
@@ -548,7 +562,7 @@
 
 !       -----------------------------------------------------
         write(out_unitp,*)
-        CALL Write_mole(mole)
+        CALL Write_CoordType(mole)
         write(out_unitp,*)
 !       -----------------------------------------------------
 
@@ -611,9 +625,8 @@
 
 
       CALL sub_dnfreq_4p(dnQeq,dnC,dnLnN,dnEHess,dnHess,dnGrad,dnC_inv, &
-                         pot0_corgrad,    &
-                         Qact,para_Tnum,mole,mole%RPHTransfo_inact2n,   &
-                         nderiv,test)
+                         pot0_corgrad,Qact,para_Tnum,mole,              &
+                         mole%RPHTransfo_inact2n,nderiv,test)
 
       d0Qeq      = dnQeq%d0
       d0ehess    = dnEHess%d0

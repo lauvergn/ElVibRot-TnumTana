@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,6 +35,9 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
      MODULE mod_Auto_Basis
@@ -57,8 +71,8 @@
       USE mod_MPI
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), target :: mole,mole_loc
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType), target :: mole,mole_loc
       TYPE (Tnum), target    :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
@@ -96,7 +110,7 @@
       IF (debug) write(out_unitp,*) 'SGtype,With_BGG',SGtype,With_BGG
       CALL Set_dnGGRep(para_AllBasis%BasisnD,With_BGG)
 
-      CALL mole1TOmole2(mole,mole_loc)
+      CALL CoordType1TOCoordType2(mole,mole_loc)
 
       ComOp_loc%file_HADA%name      = make_FileName('SH_HADA_not_used')
       ComOp_loc%file_HADA%formatted = .TRUE.
@@ -111,7 +125,7 @@
       !> primary memory here
       CALL RecAuto_basis(para_Tnum,mole_loc,para_AllBasis%BasisnD,      &
                          para_PES,para_ReadOp,ComOp_loc)
-      CALL dealloc_zmat(mole_loc)
+      CALL dealloc_CoordType(mole_loc)
       !CALL Write_SymAbelian(para_AllBasis%BasisnD%P_SymAbelian)
 
       para_PES%nb_elec                     = nb_elec_save
@@ -178,8 +192,8 @@
       USE mod_MPI
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), target :: mole,mole_loc
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType), target :: mole,mole_loc
       TYPE (Tnum),    target :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
@@ -364,9 +378,9 @@
         IF (BasisnD%auto_contrac) THEN
           !---------------------------------------------------------------
           ! modification of mole => mole_loc
-          CALL mole1TOmole2(mole,mole_loc)
+          CALL CoordType1TOCoordType2(mole,mole_loc)
 
-          IF (Print_basis) write(out_unitp,*) 'mole1TOmole2 done. Layer:      ',rec
+          IF (Print_basis) write(out_unitp,*) 'CoordType1TOCoordType2 done. Layer:      ',rec
 
           !POGridRep
           IF (BasisnD%ndim == 1 .AND. BasisnD%POGridRep) THEN
@@ -414,7 +428,7 @@
 
           !---------------------------------------------------------------
           ! dealloc local variables
-          CALL dealloc_zmat(mole_loc)
+          CALL dealloc_CoordType(mole_loc)
           CALL flush_perso(out_unitp)
         ELSE ! just contraction (not the automatic procedure)
 
@@ -470,8 +484,8 @@
       USE mod_MPI
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole,mole_loc
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole,mole_loc
       TYPE (Tnum)    :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
@@ -628,8 +642,8 @@
       USE mod_MPI
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), intent(in) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType), intent(in) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
@@ -659,8 +673,8 @@
 
       TYPE(REAL_WU) :: RWU_E
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole_loc
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole_loc
 
 !-------------------------------------------------------------------------
 
@@ -678,7 +692,7 @@
       END IF
 !---------------------------------------------------------------------
       ! modification of mole => mole_loc (we need that for RPH transfo)
-      CALL mole1TOmole2(mole,mole_loc)
+      CALL CoordType1TOCoordType2(mole,mole_loc)
       mole_loc%Cart_transfo                       = .FALSE.
 
       ! save some parameters of para_PES, para_ReadOp, Tnum
@@ -795,7 +809,7 @@
       ! deallocation ....
       CALL dealloc_AllBasis(para_AllBasis_loc)
       CALL dealloc_para_AllOp(para_AllOp_loc)
-      CALL dealloc_zmat(mole_loc)
+      CALL dealloc_CoordType(mole_loc)
       IF (allocated(ComOp%sqRhoOVERJac)) THEN
         CALL dealloc_NParray(ComOp%sqRhoOVERJac,"ComOp%sqRhoOVERJac",name_sub)
       END IF
@@ -834,8 +848,8 @@
       USE mod_Op
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), intent(in) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType), intent(in) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
@@ -927,8 +941,8 @@
       USE mod_Op
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), intent(in) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType), intent(in) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
@@ -1101,8 +1115,8 @@
       USE mod_Op
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), intent(in) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType), intent(in) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
@@ -1314,8 +1328,8 @@
 
       real(kind=Rkind) :: Ene_FROM_basis
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), intent(in) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType), intent(in) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
@@ -1345,8 +1359,8 @@
 
       TYPE(REAL_WU) :: RWU_E
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole_loc
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole_loc
 
 !-------------------------------------------------------------------------
 
@@ -1365,7 +1379,7 @@
 !---------------------------------------------------------------------
 
       ! modification of mole => mole_loc (we need that for RPH transfo)
-      CALL mole1TOmole2(mole,mole_loc)
+      CALL CoordType1TOCoordType2(mole,mole_loc)
       mole_loc%Cart_transfo                       = .FALSE.
 
       ! save some parameters of para_PES, para_ReadOp, Tnum
@@ -1464,7 +1478,7 @@
       ! deallocation ....
       CALL dealloc_AllBasis(para_AllBasis_loc)
       CALL dealloc_para_AllOp(para_AllOp_loc)
-      CALL dealloc_zmat(mole_loc)
+      CALL dealloc_CoordType(mole_loc)
       IF (allocated(ComOp%sqRhoOVERJac)) THEN
         CALL dealloc_NParray(ComOp%sqRhoOVERJac,"ComOp%sqRhoOVERJac",name_sub)
       END IF
@@ -1505,8 +1519,8 @@
       USE mod_Op
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole_loc
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole_loc
       TYPE (Tnum)    :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
@@ -1549,7 +1563,7 @@
       IF (debug) THEN
         write(out_unitp,*)
         !write(out_unitp,*) 'BEGINNING ',name_sub
-        !CALL Write_mole(mole_loc)
+        !CALL Write_CoordType(mole_loc)
         write(out_unitp,*) 'basis before contraction'
         write(out_unitp,*)
         CALL RecWrite_basis(basis_AutoContract)
@@ -1585,7 +1599,7 @@
       para_Tnum%JJ                = 0
 
       ! If needed, change RPH transfo in flexible transfo
-      CALL moleRPH_TO_moleFlex(mole_loc)
+      CALL CoordTypeRPH_TO_CoordTypeFlex(mole_loc)
       mole_loc%Cart_transfo                       = .FALSE.
 
 
@@ -1784,8 +1798,8 @@
       USE mod_Op
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
 
 !----- for the basis set ----------------------------------------------
       TYPE (basis)          :: basis_temp
@@ -1828,11 +1842,11 @@
           mole%ActiveTransfo%list_act_OF_Qdyn(isym) = 1
         END DO
 
-        CALL type_var_analysis(mole)
+        CALL type_var_analysis_OF_CoordType(mole)
 
         IF (debug) THEN
           write(out_unitp,*) 'mole:'
-          CALL Write_mole(mole)
+          CALL Write_CoordType(mole)
         END IF
         !---------------------------------------------------------------
         ! make AllBasis with ONE basis set
@@ -1873,7 +1887,7 @@
       TYPE (param_ComOp)            :: ComOp
 
 !----- for coordinates ----------------------------------------------
-      TYPE (zmatrix)                :: mole
+      TYPE (CoordType)                :: mole
 
       integer, intent(in)       :: nb_bi,nb_elec
 !-------variables for the file names -------------------------------------
@@ -1954,8 +1968,8 @@
       USE mod_propa
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix),target :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType),target :: mole
       TYPE (Tnum),target    :: para_Tnum
 
 !----- for the basis set ----------------------------------------------

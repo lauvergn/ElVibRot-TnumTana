@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,9 +35,11 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
-
  MODULE mod_march_SG4
  USE mod_system
  USE mod_file
@@ -50,7 +63,7 @@
  USE mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
- USE mod_Coord_KEO,                ONLY : zmatrix
+ USE mod_Coord_KEO,                ONLY : CoordType
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                   tabR_AT_iG_TO_tabPackedBasis,TypeRVec,alloc_TypeRVec,dealloc_TypeRVec, &
@@ -82,7 +95,7 @@
 
 
  ! local variables
- TYPE (zmatrix), pointer :: mole
+ TYPE (CoordType), pointer :: mole
  TYPE (basis),   pointer :: BasisnD
 
  TYPE (TypeRVec)    :: PsiRVec,PsiIVec,Psi0Rvec,Psi0Ivec
@@ -367,7 +380,7 @@ END SUBROUTINE march_noD_ONE_DP_SG4
  USE mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
- USE mod_Coord_KEO,                ONLY : zmatrix
+ USE mod_Coord_KEO,                ONLY : CoordType
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                   tabR_AT_iG_TO_tabPackedBasis,TypeRVec,alloc_TypeRVec,dealloc_TypeRVec, &
@@ -403,7 +416,7 @@ END SUBROUTINE march_noD_ONE_DP_SG4
 
 
  ! local variables
- TYPE (zmatrix), pointer :: mole
+ TYPE (CoordType), pointer :: mole
  TYPE (basis),   pointer :: BasisnD
 
  TYPE (TypeRVec)    :: PsiRVec,PsiIVec,Psi0Rvec,Psi0Ivec,Rw1,Iw1,RIw2(2)
@@ -660,7 +673,7 @@ nb_thread = 1
  USE mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
- USE mod_Coord_KEO,                ONLY : zmatrix
+ USE mod_Coord_KEO,                ONLY : CoordType
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                   tabR_AT_iG_TO_tabPackedBasis,TypeRVec,alloc_TypeRVec,dealloc_TypeRVec, &
@@ -696,7 +709,7 @@ nb_thread = 1
 
 
  ! local variables
- TYPE (zmatrix), pointer :: mole
+ TYPE (CoordType), pointer :: mole
  TYPE (basis),   pointer :: BasisnD
 
  TYPE (TypeRVec)    :: PsiRVec,PsiIVec,Psi0Rvec,Psi0Ivec,Rw1,Rw2(1),Iw1,Iw2(1)

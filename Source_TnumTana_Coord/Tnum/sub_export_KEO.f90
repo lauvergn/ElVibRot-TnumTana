@@ -16,7 +16,13 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
@@ -24,7 +30,7 @@ MODULE mod_export_KEO
   USE mod_system
   use mod_dnSVM,    only: type_dnmat, alloc_dnsvm, dealloc_dnsvm,       &
                           alloc_array, set_zero_to_dnsvm, dealloc_array
-  use mod_Tnum,     only: zmatrix, tnum
+  use mod_Tnum,     only: CoordType, tnum
   use mod_dnGG_dng, only: get_dng_dngg
   IMPLICIT NONE
 
@@ -41,8 +47,8 @@ MODULE mod_export_KEO
       IMPLICIT NONE
 
 !     - for Tnum -------------------------------------------
-      TYPE (zmatrix) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (CoordType) :: mole
+      TYPE (Tnum)      :: para_Tnum
       real (kind=Rkind), intent(inout) :: Qact(mole%nb_var)
 
 !     - G,g ... --------------------------------------------
@@ -147,9 +153,9 @@ MODULE mod_export_KEO
      SUBROUTINE export3_d0G_grid1D(Qact,para_Tnum,mole,dnGG,label,epsi_MCTDH)
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
-      TYPE (Tnum)    :: para_Tnum
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
+      TYPE (Tnum)      :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(mole%nb_var)
 

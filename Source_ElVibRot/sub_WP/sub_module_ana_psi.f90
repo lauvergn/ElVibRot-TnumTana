@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,6 +35,9 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
 MODULE mod_ana_psi
@@ -151,6 +165,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
 
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
+    CALL flush_perso(out_unitp)
   END IF
 
   IF (present(Write_Psi)) THEN
@@ -178,6 +193,11 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
     Etemp    = convRWU_TO_R(RWU_Temp ,WorkingUnit=.TRUE.)
 
     pop = exp(-(ana_psi%Ene-ana_psi%ZPE)/Etemp) / ana_psi%Part_func
+  END IF
+
+
+  IF (allocated(tab_WeightChannels)) THEN
+    STOP 'tab_WeightChannels allocated!!'
   END IF
 
   !----------------------------------------------------------------------
@@ -243,8 +263,14 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
     END IF
 
   ELSE ! not propa
+ !write(6,*) 'coucou1' ; flush(6)
+ !IF (allocated(tab_WeightChannels)) STOP 'tab_WeightChannels allocated'
+  !write(6,*) 'alloc tab_WeightChannels',allocated(tab_WeightChannels) ; flush(6)
+  !write(6,*) 'shape tab_WeightChannels',shape(tab_WeightChannels) ; flush(6)
+
     CALL Channel_weight(ana_psi%tab_WeightChannels,psi,                 &
        GridRep=.FALSE.,BasisRep=.TRUE.,Dominant_Channel=Dominant_Channel)
+!write(6,*) 'coucou2' ; flush(6)
 
     RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
     RWU_DE = REAL_WU(ana_psi%Ene-ana_psi%ZPE,'au','E')
@@ -270,6 +296,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
 
       CALL dealloc_NParray(moy_Qba,"moy_Qba",name_sub)
     ELSE
+
       IF (ana_psi%num_psi < 10000 .AND. Dominant_Channel(2) < 10000) THEN
         lformat = String_TO_String( '("lev: ",i4,i4,l3,3(1x,' //      &
                                trim(adjustl(EneIO_format)) // '))' )
@@ -294,6 +321,10 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
                             int_TO_char(psi%nb_bi) // "(1x,f4.0) )" )
 
     write(out_unitp,lformat) (ana_psi%tab_WeightChannels(i_bi,1)*TEN**2,i_bi=1,psi%nb_bi)
+  END IF
+
+  IF (allocated(tab_WeightChannels)) THEN
+    CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","Channel_weight")
   END IF
 
   CALL calc_1Dweight(psi,ana_psi,20,real(ana_psi%num_psi,kind=Rkind),info,.TRUE.)
@@ -411,7 +442,6 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
   IF (allocated(psi_line)) deallocate(psi_line)
   IF (allocated(lformat))  deallocate(lformat)
   IF (allocated(moy_Qba))  deallocate(moy_Qba)
-
 
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
@@ -2109,13 +2139,14 @@ END SUBROUTINE sub_analyze_psi
     write(out_unitp,*) 'BasisRep',BasisRep
     !write(out_unitp,*) 'psi'
     !CALL ecri_psi(psi=psi)
+    CALL flush_perso(out_unitp)
   END IF
 !-------------------------------------------------------
 
   nb_be = get_nb_be_FROM_psi(psi)
   nb_bi = get_nb_bi_FROM_psi(psi)
 
-  !write(6,*) 'nb_bi,nb_be',nb_bi,nb_be
+  !write(6,*) 'nb_bi,nb_be',nb_bi,nb_be ; flush(6)
 
   IF (GridRep .AND. BasisRep) THEN
     write(out_unitp,*) ' ERROR in Channel_weight'
@@ -2123,11 +2154,17 @@ END SUBROUTINE sub_analyze_psi
     STOP
   END IF
 
+  !write(6,*) 'alloc tab_WeightChannels',allocated(tab_WeightChannels) ; flush(6)
+  !write(6,*) 'shape tab_WeightChannels',shape(tab_WeightChannels) ; flush(6)
+
+
   IF (.NOT. allocated(tab_WeightChannels) .AND. nb_bi > 0 .AND. nb_be > 0) THEN
     CALL alloc_NParray(tab_WeightChannels,(/nb_bi,nb_be/),              &
                       "tab_WeightChannels","Channel_weight")
     tab_WeightChannels(:,:) = ZERO
   END IF
+
+  !write(6,*) 'shape tab_WeightChannels',shape(tab_WeightChannels) ; flush(6)
 
   !IF (SGtype == 4) THEN
   !  CALL Channel_weight_SG4(tab_WeightChannels,psi,                 &
@@ -2136,7 +2173,7 @@ END SUBROUTINE sub_analyze_psi
 
   IF (psi%ComOp%contrac_ba_ON_HAC) THEN
 
-    CALL Channel_weight_contracADA(tab_WeightChannels(:,1),psi)
+    CALL Channel_weight_contracHADA(tab_WeightChannels(:,1),psi)
 
   ELSE IF (psi%nb_baie == psi%nb_tot) THEN
 
@@ -2217,7 +2254,7 @@ END SUBROUTINE sub_analyze_psi
     DO i_bi=1,nb_bi
       IF (tab_WeightChannels(i_bi,i_be) > max_w) THEN
         max_w = tab_WeightChannels(i_bi,i_be)
-        Dominant_Channel(:) = (/ i_be,i_bi /)
+        Dominant_Channel(:) = [ i_be,i_bi ]
       END IF
     END DO
     END DO
@@ -2316,7 +2353,7 @@ END SUBROUTINE sub_analyze_psi
 !------------------------------------------------------
 
   END SUBROUTINE Channel_weight_SG4
-      SUBROUTINE Channel_weight_contracADA(w_harm,psi)
+      SUBROUTINE Channel_weight_contracHADA(w_harm,psi)
       USE mod_system
       USE mod_psi_set_alloc
       IMPLICIT NONE
@@ -2332,7 +2369,7 @@ END SUBROUTINE sub_analyze_psi
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
-         write(out_unitp,*) 'BEGINNING Channel_weight_contracADA'
+         write(out_unitp,*) 'BEGINNING Channel_weight_contracHADA'
          write(out_unitp,*) 'nb_bi,nb_ai',psi%nb_bi
        END IF
 !-----------------------------------------------------------
@@ -2354,12 +2391,12 @@ END SUBROUTINE sub_analyze_psi
 
 !----------------------------------------------------------
         IF (debug) THEN
-          write(out_unitp,*) 'END Channel_weight_contracADA'
+          write(out_unitp,*) 'END Channel_weight_contracHADA'
         END IF
 !----------------------------------------------------------
 
 
-      end subroutine Channel_weight_contracADA
+      end subroutine Channel_weight_contracHADA
 
 
 !==============================================================

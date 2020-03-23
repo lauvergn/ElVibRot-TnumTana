@@ -16,14 +16,19 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
-
  module mod_Tana_NumKEO
  use mod_system
- USE mod_Tnum,     only : zmatrix
+ USE mod_Tnum,     only : CoordType
  USE mod_dnRho ! all
 
  USE mod_Tana_OpEl
@@ -49,7 +54,7 @@
    real(kind=Rkind),           intent(inout)             :: Qval(:)
    real(kind=Rkind),           intent(inout)             :: Gana(:,:)
    real(kind=Rkind),           intent(inout)             :: vep
-   TYPE (zmatrix),             intent(in)                :: mole
+   TYPE (CoordType),           intent(in)                :: mole
 
    complex(kind=Rkind)        :: opval
    integer                    :: i,nb_act,nb_var
@@ -148,7 +153,7 @@
 
    IF (debug) THEN
      write(out_unitp,*) 'vep',vep
-     write(6,*) 'G of Tana  '
+     write(out_unitp,*) 'G of Tana  '
      CALL write_mat(Gana,out_unitp,4)
      write(out_unitp,*) 'END ',routine_name
    END IF
@@ -162,7 +167,7 @@
    real(kind=Rkind),           intent(inout)             :: Qval(:)
    real(kind=Rkind),           intent(inout)             :: f2(:,:),f1(:)
    real(kind=Rkind),           intent(inout)             :: vep,rho
-   TYPE (zmatrix),             intent(in)                :: mole
+   TYPE (CoordType),           intent(in)                :: mole
 
    complex(kind=Rkind)        :: opval
    integer                    :: i,nb_var,nb_act
@@ -268,9 +273,9 @@
 
    IF (debug) THEN
      write(out_unitp,*) 'vep',vep
-     write(6,*) 'f1 of Tana  '
+     write(out_unitp,*) 'f1 of Tana  '
      CALL write_vec(f1,out_unitp,4)
-     write(6,*) 'f2 of Tana  '
+     write(out_unitp,*) 'f2 of Tana  '
      CALL write_mat(f2,out_unitp,4)
      write(out_unitp,*) 'END ',routine_name
    END IF

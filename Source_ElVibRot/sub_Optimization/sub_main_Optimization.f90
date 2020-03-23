@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,6 +35,9 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
       SUBROUTINE sub_Optimization_OF_VibParam(max_mem)
@@ -31,7 +45,7 @@
       USE mod_nDindex
       USE mod_dnSVM
       USE mod_Constant
-      USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0
+      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0
       USE mod_PrimOp
       USE mod_basis
       USE BasisMakeGrid
@@ -60,8 +74,8 @@
 !----- physical and mathematical constants ---------------------------
       TYPE (constant) :: const_phys
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 !----- variables for the active and inactive namelists ----------------
@@ -333,7 +347,7 @@
       CALL dealloc_table_at(const_phys%mendeleev)
       !CALL dealloc_param_OTF(para_OTF)
 
-      CALL dealloc_zmat(mole)
+      CALL dealloc_CoordType(mole)
       IF (associated(para_Tnum%Gref)) THEN
         CALL dealloc_array(para_Tnum%Gref,"para_Tnum%Gref",name_sub)
       END IF
@@ -357,7 +371,7 @@
       USE mod_system
       USE mod_nDindex
       USE mod_Constant
-      use mod_Coord_KEO, only: zmatrix, tnum
+      use mod_Coord_KEO, only: CoordType, tnum
       USE mod_PrimOp
 
       USE mod_basis
@@ -369,8 +383,8 @@
       integer           :: nb_Opt
       real (kind=Rkind) :: xOpt(nb_Opt)
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
       logical        :: Cart_Transfo_save
 
@@ -415,7 +429,7 @@
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
-        !CALL Write_mole(mole)
+        !CALL Write_CoordType(mole)
         write(out_unitp,*) 'basis to be optimized'
         write(out_unitp,*)
         !CALL RecWrite_basis(basis_temp)
@@ -596,13 +610,13 @@
       SUBROUTINE Set_ALL_para_FOR_optimization(mole,BasisnD,Qact,Set_Val)
 
       USE mod_system
-      use mod_Coord_KEO, only: zmatrix
+      use mod_Coord_KEO, only: CoordType
       USE mod_basis
       IMPLICIT NONE
 
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), intent(inout)    :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType), intent(inout)    :: mole
       real (kind=Rkind), intent(inout) :: Qact(mole%nb_var)
       TYPE (basis), intent(in)         :: BasisnD
       integer, intent(in)              :: Set_Val
@@ -626,10 +640,10 @@
       CASE ('geometry')
         CALL Set_paramQ_FOR_optimization(Qact,mole,Set_Val)
       CASE ('coordbasis','coordbasis_avene')
-        CALL Set_mole_para_FOR_optimization(mole,Set_Val)
+        CALL Set_OptimizationPara_FROM_CoordType(mole,Set_Val)
         CALL Set_basis_para_FOR_optimization(BasisnD,Set_Val)
       CASE DEFAULT
-        CALL Set_mole_para_FOR_optimization(mole,Set_Val)
+        CALL Set_OptimizationPara_FROM_CoordType(mole,Set_Val)
         CALL Set_basis_para_FOR_optimization(BasisnD,Set_Val)
       END SELECT
 

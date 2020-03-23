@@ -16,11 +16,16 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
-
       MODULE mod_RectilinearNM_Transfo
       use mod_system
       USE mod_dnSVM
@@ -339,7 +344,6 @@
       !!@param: TODO
       SUBROUTINE RectilinearNM_Transfo1TORectilinearNM_Transfo2(RectilinearNM_Transfo1,RectilinearNM_Transfo2)
 
-!      for the zmatrix and Tnum --------------------------------------
       TYPE (Type_RectilinearNM_Transfo), intent(in)    :: RectilinearNM_Transfo1
       TYPE (Type_RectilinearNM_Transfo), intent(inout) :: RectilinearNM_Transfo2
 

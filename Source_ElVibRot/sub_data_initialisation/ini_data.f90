@@ -1,21 +1,33 @@
-!=======================================================================================
-! This file is part of ElVibRot.
+!===========================================================================
+!===========================================================================
+!This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -23,7 +35,11 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
-!=======================================================================================
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
+!===========================================================================
+!===========================================================================
 
 
 !=======================================================================================
@@ -34,10 +50,10 @@
 !              *Note: may not safe with this name
 !              setup with calling 'sub_constantes', 
 !              *Note: a namelist 'constants' is required in input file for this 
-!                     subroutine if call with sub_constantes(const_phys,.Ture.)
+!                     subroutine if call with sub_constantes(const_phys,.TRUE.)
 ! >para_OTF: type param_OTF
 ! >para_Tnum: type Tnum, which contains type param_PES_FromTnum and sum_opnd
-! >mole: type zmatrix
+! >mole: type CoordType
 ! >para_AllBasis: type param_AllBasis, contians four Basis pointers 
 !                 BasisnD,Basis2n,BasisElec,BasisRot
 !                 setup with calling alloc_AllBasis(para_AllBasis)
@@ -56,7 +72,7 @@
                                 int_to_char
       USE mod_dnSVM,     only : Type_dnMat
       USE mod_Constant,  only : constant, sub_constantes, REAL_WU
-      USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0, read_RefGeom
+      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0, read_RefGeom
       use mod_PrimOp,    only : param_otf, param_pes, write_typeop, param_typeop,&
                                 finalyze_tnumtana_coord_primop, init_typeop,     &
                                 derive_termqact_to_derive_termqdyn
@@ -73,8 +89,8 @@
 !----- On the fly parameters (at this time for gaussian) -------------
       TYPE (param_OTF) :: para_OTF
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 !----- variables for the active and inactive namelists ----------------
@@ -143,7 +159,7 @@
 
 !---------------------------------------------------------------------
 !------- read the coordinates ....     -------------------------------
-      CALL Read_mole(mole,para_Tnum,const_phys)
+      CALL Read_CoordType(mole,para_Tnum,const_phys)
 
 !---------------------------------------------------------------------
 !----- Read the namelist:  minimum -----------------------------------

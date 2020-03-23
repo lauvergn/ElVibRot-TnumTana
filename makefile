@@ -655,7 +655,6 @@ Obj_EVRT =\
 # vib (without argument)
 EVR1:obj vib $(VIBEXE)
 	@echo "EVR"
-
 #
 #make all programs (except work)
 all:obj vib $(VIBEXE)
@@ -708,7 +707,7 @@ PhysConst:obj $(PhysConstEXE)
 # QML
 $(QMLibDIR_full):
 	cd $(QMLibDIR) ; make
-   
+
 # obj directory
 obj:
 	mkdir -p obj
@@ -726,6 +725,9 @@ clean:
 	rm -f .DS_Store */.DS_Store */*/.DS_Store */*/*/.DS_Store
 	@cd sub_pot ; cp sub_system_save.f sub_system.f
 	@cd sub_pot ; cp sub_system_save.f90 sub_system.f90
+	@cd Source_TnumTana_Coord/sub_operator_T ; cp calc_f2_f1Q_save.f90    calc_f2_f1Q.f90
+	@cd Source_TnumTana_Coord/sub_operator_T ; cp Sub_X_TO_Q_ana_save.f90 Sub_X_TO_Q_ana.f90
+
 	@cd Examples/exa_hcn-dist ; ./clean
 	@cd Examples/exa_direct-dist ; ./clean
 	@cd Examples/exa_TnumTana_Coord-dist ; ./clean
@@ -907,6 +909,10 @@ $(OBJ)/sub_module_Coord_KEO.o:$(DirTNUM)/sub_module_Coord_KEO.f90
 #
 # Tnum files
 $(OBJ)/calc_f2_f1Q.o:$(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
+	sed "s/zmatrix/CoordType/" $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90 > $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i
+	sed "s/Write_mole/Write_CoordType/" $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i > $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
+	echo Warning the calc_f2_f1Q.f90 file has been modified.
+	rm $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
 $(OBJ)/Sub_X_TO_Q_ana.o:$(DirTNUM)/sub_operator_T/Sub_X_TO_Q_ana.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_operator_T/Sub_X_TO_Q_ana.f90
@@ -1218,6 +1224,9 @@ $(OBJ)/sub_Smolyak_test.o:$(DIRSmolyak)/sub_Smolyak_test.f90
 # potentiel et fonctions dependant du systeme
 # sub_system.o 
 $(OBJ)/sub_system.o:$(DirPot)/sub_system.$(extf)
+	sed "s/zmatrix/CoordType/" $(DirPot)/sub_system.$(extf) > $(DirPot)/sub_system.i
+	echo Warning the sub_system.$(extf) file has been modified.
+	mv $(DirPot)/sub_system.i $(DirPot)/sub_system.$(extf)
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirPot)/sub_system.$(extf)
 $(OBJ)/read_para.o:$(DirPot)/read_para.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirPot)/read_para.f90

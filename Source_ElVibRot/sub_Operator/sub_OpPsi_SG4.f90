@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,10 +35,11 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
-
-
 MODULE mod_OpPsi_SG4
 
 PRIVATE
@@ -42,7 +54,7 @@ CONTAINS
  USE mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
- USE mod_Coord_KEO,                ONLY : zmatrix
+ USE mod_Coord_KEO,                ONLY : CoordType
 
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_RCVec_SGType4,      ONLY : TypeRVec,dealloc_TypeRVec
@@ -61,7 +73,7 @@ CONTAINS
  TYPE (param_Op),  intent(inout)   :: para_Op
 
  ! local variables
- TYPE (zmatrix), pointer :: mole
+ TYPE (CoordType), pointer :: mole
  TYPE (basis),   pointer :: BasisnD
 
  TYPE (TypeRVec)         :: PsiR
@@ -222,7 +234,7 @@ END IF
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
 
- USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
+ USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
 
  USE mod_basis_set_alloc,         ONLY : basis
  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
@@ -241,7 +253,7 @@ END IF
  TYPE (param_Op),                    intent(inout)       :: para_Op
 
  !local variables
- TYPE (zmatrix), pointer :: mole
+ TYPE (CoordType), pointer :: mole
  TYPE(basis),    pointer :: BasisnD
 
  integer :: iq,nb,nq,i,j,D
@@ -426,7 +438,7 @@ END IF
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4
@@ -444,7 +456,7 @@ END IF
 
 
   !local variables
-  TYPE (zmatrix), pointer :: mole
+  TYPE (CoordType), pointer :: mole
   TYPE(basis),    pointer :: BasisnD
 
   integer :: iq,nb,nq,i,j,D
@@ -666,7 +678,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   !$ USE omp_lib, only : OMP_GET_THREAD_NUM
   USE mod_nDindex
 
-  USE mod_Coord_KEO,                ONLY : zmatrix
+  USE mod_Coord_KEO,                ONLY : CoordType
   USE mod_basis_set_alloc,          ONLY : basis
 #if(run_MPI)
   USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
@@ -695,7 +707,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   TYPE (param_Op),  intent(inout)   :: para_Op
 
   ! local variables
-  TYPE (zmatrix), pointer :: mole
+  TYPE (CoordType), pointer :: mole
   TYPE (basis),   pointer :: BasisnD
 
   TYPE (TypeRVec),   allocatable       :: PsiR(:)
@@ -1378,7 +1390,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                                                   tab_l_init,initG,endG)
  USE mod_system
  USE mod_nDindex
- USE mod_Coord_KEO,                ONLY : zmatrix
+ USE mod_Coord_KEO,                ONLY : CoordType
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                   tabR_AT_iG_TO_tabPackedBasis,TypeRVec,dealloc_TypeRVec
@@ -1468,7 +1480,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
@@ -1486,7 +1498,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   TYPE (param_Op),                    intent(inout)    :: para_Op
 
   !local variables
-  TYPE (zmatrix), pointer :: mole
+  TYPE (CoordType), pointer :: mole
   TYPE(basis),    pointer :: BasisnD
 
   integer :: iq,nb,nq,i,j,itab,D
@@ -1748,7 +1760,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
@@ -1766,7 +1778,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   TYPE (param_Op),                    intent(inout)    :: para_Op
 
   !local variables
-  TYPE (zmatrix), pointer :: mole
+  TYPE (CoordType), pointer :: mole
   TYPE(basis),    pointer :: BasisnD
 
   integer :: iq,nb,nq,i,j,itab,D
@@ -2065,7 +2077,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                                                    V,GG,sqRhoOVERJac,Jac)
   USE mod_system
 
-  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact
+  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
@@ -2084,7 +2096,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   real (kind=Rkind),                  intent(in)       :: sqRhoOVERJac(:),Jac(:)
 
   !local variables
-  TYPE (zmatrix), pointer :: mole
+  TYPE (CoordType), pointer :: mole
   TYPE(basis),    pointer :: BasisnD
 
   integer :: iq,nb,nq,i,j,itab,D
@@ -2229,7 +2241,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4
@@ -2247,7 +2259,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
 
   !local variables
-  TYPE (zmatrix), pointer :: mole
+  TYPE (CoordType), pointer :: mole
   TYPE(basis),    pointer :: BasisnD
 
   integer :: iq,nb,nq,i,j,itab,D
@@ -2448,7 +2460,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
   use mod_PrimOp,                  only: param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,   &
                                          param_typeop, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
@@ -2473,7 +2485,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   TYPE (param_Op),                    intent(inout)    :: para_Op
 
   !local variables
-  TYPE (zmatrix), pointer :: mole
+  TYPE (CoordType), pointer :: mole
   TYPE(basis),    pointer :: BasisnD
 
   integer :: iq,nq,D
@@ -2729,7 +2741,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact
+  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
   use mod_PrimOp,                  only: param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
                                          param_typeop, TnumKEO_TO_tab_d0H, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
@@ -2751,7 +2763,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   TYPE (param_Op),                    intent(inout)    :: para_Op
 
   !local variables
-  TYPE (zmatrix), pointer :: mole
+  TYPE (CoordType), pointer :: mole
   TYPE(basis),    pointer :: BasisnD
 
 
@@ -2960,7 +2972,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact
+  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
   use mod_PrimOp,                  ONLY : param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
                                           param_typeop, TnumKEO_TO_tab_d0H, get_d0MatOp_AT_Qact, &
                                           dealloc_tab_of_d0matop
@@ -2981,7 +2993,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   TYPE (param_Op),                    intent(inout)    :: para_Op
 
   !local variables
-  TYPE (zmatrix), pointer :: mole
+  TYPE (CoordType), pointer :: mole
   TYPE(basis),    pointer :: BasisnD
 
 
@@ -3228,7 +3240,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   TYPE (param_Op),                    intent(inout)    :: para_Op
 
   !local variables
-  TYPE (zmatrix), pointer :: mole
+  TYPE (CoordType), pointer :: mole
   TYPE(basis),    pointer :: BasisnD
 
   integer :: iq,nq,D,iOp
@@ -3387,7 +3399,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : zmatrix, get_Qact
+  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
   use mod_PrimOp,                  only: param_d0matop, init_d0matop,   &
                                          param_typeop, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
@@ -3409,7 +3421,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   TYPE (param_Op),                    intent(inout)    :: para_Op
 
   !local variables
-  TYPE (zmatrix), pointer :: mole
+  TYPE (CoordType), pointer :: mole
   TYPE(basis),    pointer :: BasisnD
 
   integer :: iq,nq,D,iOp

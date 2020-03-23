@@ -57,7 +57,7 @@ sym  cos(a)      R     r    x    pi   dh
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
  &inactives
-           max_excit=10
+           max_excit=1
            tab_nq(1:2)=16,16
            max_ene_h=60000. "cm-1"
            contrac_ba_ON_HAC=t max_nb_ba_ON_HAC=30

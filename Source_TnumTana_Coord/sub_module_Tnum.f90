@@ -16,7 +16,13 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
@@ -101,10 +107,7 @@ MODULE mod_Tnum
 
         END TYPE param_PES_FromTnum
 !-------------------------------------------------------------------------------
-
-!-------------------------------------------------------------------------------
-        TYPE zmatrix
-          logical            :: print_done = .FALSE.! if T, the zmat has been already print
+        TYPE CoordType
           logical            :: WriteCC    = .FALSE.
 
           real (kind=Rkind)  :: stepQ = ONETENTH**4
@@ -173,10 +176,17 @@ MODULE mod_Tnum
           real (kind=Rkind)          :: Mtot = ZERO
           real (kind=Rkind)          :: Mtot_inv = ZERO
 
+        END TYPE CoordType
+!-------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+!       The extended type is defined to be able to use the TYPE zmatrix,
+!       which is not a well-chosen name (it was for the first Tnum versions).
+!-------------------------------------------------------------------------------
+        TYPE, EXTENDS (CoordType) :: zmatrix
         END TYPE zmatrix
 !-------------------------------------------------------------------------------
-
-
+!-------------------------------------------------------------------------------
         !!@description: TODO
         !!@param: TODO
 !-------------------------------------------------------------------------------
@@ -214,29 +224,38 @@ MODULE mod_Tnum
         END TYPE Tnum
 !-------------------------------------------------------------------------------
 
-      PUBLIC :: param_PES_FromTnum, zmatrix, Tnum
-      PUBLIC :: Set_masses_Z_TO_mole, Write_mole, Read_mole, dealloc_zmat, mole1TOmole2
-      PUBLIC :: check_charge, type_var_analysis
+      PUBLIC :: param_PES_FromTnum, Tnum
       PUBLIC :: Write_f2f1vep, Write_TcorTrot
-      PUBLIC :: Sub_paraRPH_TO_mole, Sub_mole_TO_paraRPH, Sub_mole_TO_paraRPH_new, get_CurviRPH
-      PUBLIC :: moleRPH_TO_moleFlex
-      PUBLIC :: Set_mole_para_FOR_optimization
+
+      PUBLIC :: zmatrix
+      PUBLIC :: Write_mole, Read_mole, dealloc_zmat, mole1TOmole2
+
+      PUBLIC :: CoordType
+      PUBLIC :: Write_CoordType, Read_CoordType,                        &
+                               dealloc_CoordType, CoordType1TOCoordType2
+      PUBLIC :: check_charge, type_var_analysis_OF_CoordType
+      PUBLIC :: Sub_paraRPH_TO_CoordType, Sub_CoordType_TO_paraRPH,     &
+                                            Sub_CoordType_TO_paraRPH_new
+      PUBLIC :: CoordTypeRPH_TO_CoordTypeFlex
+      PUBLIC :: Set_OptimizationPara_FROM_CoordType
+
+      PUBLIC :: get_CurviRPH
+
+
 
       CONTAINS
-
-
-
-
-      SUBROUTINE Set_masses_Z_TO_mole(mole,Qtransfo)
-
-        TYPE (zmatrix), intent(inout)       :: mole
-        TYPE (Type_Qtransfo), intent(inout) :: Qtransfo
+!================================================================
+! Transfert data from the 1st Qtransfo to the CoordType
+!================================================================
+  SUBROUTINE Set_masses_Z_TO_CoordType(mole,Qtransfo)
+        TYPE (CoordType),     intent(inout) :: mole
+        TYPE (Type_Qtransfo), intent(in)    :: Qtransfo
 
         character (len=Name_len) :: name_transfo
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory,err_io
-      character (len=*), parameter :: name_sub = "Set_masses_Z_TO_mole"
+      character (len=*), parameter :: name_sub = "Set_masses_Z_TO_CoordType"
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
       !-----------------------------------------------------------
@@ -302,29 +321,39 @@ MODULE mod_Tnum
       END IF
       !-----------------------------------------------------------
 
-      END SUBROUTINE Set_masses_Z_TO_mole
+  END SUBROUTINE Set_masses_Z_TO_CoordType
 
 !================================================================
-!       Write the "mole"
+!       Write the "mole" (old with zmatrix type)
+!       Write the CoordType
 !================================================================
+  SUBROUTINE Write_mole(mole,print_mole)
+  TYPE (zmatrix), intent(in)            :: mole
+  logical,        intent(in), optional  :: print_mole
 
-      SUBROUTINE Write_mole(mole,print_mole)
-      TYPE (zmatrix)    :: mole
-      logical, optional :: print_mole
+  IF (present(print_mole)) THEN
+    CALL  Write_CoordType(mole%CoordType,print_mole)
+  ELSE
+    CALL  Write_CoordType(mole%CoordType)
+  END IF
 
+  END SUBROUTINE Write_mole
+
+  SUBROUTINE Write_CoordType(mole,print_mole)
+    TYPE (CoordType), intent(in)             :: mole
+    logical,          intent(in), optional   :: print_mole
 
       integer i,j,ni,it
       logical :: print_mole_loc
 
 
       IF (.NOT. present(print_mole)) THEN
-        IF (mole%print_done .AND. print_level <= 1) RETURN
+        IF (print_CoordType_done .AND. print_level <= 1) RETURN
       END IF
-
-      mole%print_done = .TRUE.
+      print_CoordType_done = .TRUE. ! from sub_module_system
 
         write(out_unitp,*)
-        write(out_unitp,*) 'BEGINNING Write_mole'
+        write(out_unitp,*) 'BEGINNING Write_CoordType'
         write(out_unitp,*)
         write(out_unitp,*)
         write(out_unitp,*) 'Without_Rot:      ',mole%Without_Rot
@@ -442,30 +471,35 @@ MODULE mod_Tnum
 !       -------------------------------------------------------
 !       -------------------------------------------------------
 
-        write(out_unitp,*) 'END Write_mole'
+        write(out_unitp,*) 'END Write_CoordType'
 
 
-      END SUBROUTINE Write_mole
+  END SUBROUTINE Write_CoordType
 
 
 !================================================================
 !
-!     For zmatrix
+!     dealloc zmatrix type or CoordType
 !
 !================================================================
-      !!@description: For zmatrix
-      !!@param: TODO
-      SUBROUTINE dealloc_zmat(mole)
+  SUBROUTINE dealloc_zmat(mole)
+  TYPE (zmatrix), intent(inout) :: mole
 
-       TYPE (zmatrix) :: mole
+    CALL dealloc_CoordType(mole%CoordType)
+
+  END SUBROUTINE dealloc_zmat
+
+  SUBROUTINE dealloc_CoordType(mole)
+  TYPE (CoordType), intent(inout) :: mole
 
        integer        :: it
 
+      character (len=*), parameter :: name_sub='dealloc_CoordType'
 
-      !write(out_unitp,*) 'BEGINNING dealloc_zmat'
+
+      !write(out_unitp,*) 'BEGINNING ',name_sub
       !CALL flush_perso(out_unitp)
 
-        mole%print_done   = .FALSE.
         mole%WriteCC      = .FALSE.
 
         mole%stepQ        = ONETENTH**4
@@ -505,7 +539,7 @@ MODULE mod_Tnum
         mole%opt_param       = 0
 
         IF (allocated(mole%opt_Qdyn)) THEN
-          CALL dealloc_NParray(mole%opt_Qdyn,"mole%opt_Qdyn","dealloc_zmat")
+          CALL dealloc_NParray(mole%opt_Qdyn,"mole%opt_Qdyn",name_sub)
         END IF
 
         nullify(mole%ActiveTransfo)  ! true pointer
@@ -519,7 +553,7 @@ MODULE mod_Tnum
             CALL dealloc_Qtransfo(mole%tab_Qtransfo(it))
           END DO
           CALL dealloc_array(mole%tab_Qtransfo,                         &
-                            "mole%tab_Qtransfo","dealloc_zmat")
+                            "mole%tab_Qtransfo",name_sub)
         END IF
 
         IF (associated(mole%tab_Cart_transfo)) THEN
@@ -527,12 +561,12 @@ MODULE mod_Tnum
             CALL dealloc_Qtransfo(mole%tab_Cart_transfo(it))
           END DO
           CALL dealloc_array(mole%tab_Cart_transfo,                     &
-                            "mole%tab_Cart_transfo","dealloc_zmat")
+                            "mole%tab_Cart_transfo",name_sub)
         END IF
 
       IF (associated(mole%RPHTransfo_inact2n)) THEN
         CALL dealloc_array(mole%RPHTransfo_inact2n,                     &
-                          'mole%RPHTransfo_inact2n','dealloc_zmat')
+                          'mole%RPHTransfo_inact2n',name_sub)
       END IF
 
         nullify(mole%liste_QactTOQsym)   ! true pointer
@@ -542,11 +576,11 @@ MODULE mod_Tnum
 
         IF (associated(mole%nrho_OF_Qact))  THEN
           CALL dealloc_array(mole%nrho_OF_Qact,                         &
-                            "mole%nrho_OF_Qact","dealloc_zmat")
+                            "mole%nrho_OF_Qact",name_sub)
         END IF
         IF (associated(mole%nrho_OF_Qdyn))  THEN
           CALL dealloc_array(mole%nrho_OF_Qdyn,                         &
-                            "mole%nrho_OF_Qdyn","dealloc_zmat")
+                            "mole%nrho_OF_Qdyn",name_sub)
         END IF
 
         mole%nb_act1     = 0
@@ -562,24 +596,37 @@ MODULE mod_Tnum
 
         IF (associated(mole%active_masses))  THEN
           CALL dealloc_array(mole%active_masses,                        &
-                            "mole%active_masses","dealloc_zmat")
+                            "mole%active_masses",name_sub)
         END IF
 
         IF (associated(mole%d0sm))  THEN
-          CALL dealloc_array(mole%d0sm,"mole%d0sm","dealloc_zmat")
+          CALL dealloc_array(mole%d0sm,"mole%d0sm",name_sub)
         END IF
         mole%Mtot         = ZERO
         mole%Mtot_inv     = ZERO
 
-      !write(out_unitp,*) 'END dealloc_zmat'
+      !write(out_unitp,*) 'END ',name_sub
 
-       END SUBROUTINE dealloc_zmat
+  END SUBROUTINE dealloc_CoordType
 !===============================================================================
-!     read parameter for the zmat of Tnum
+!     read zmatrix type or CoordType parameters for Tnum
 !===============================================================================
-      !!@description: read parameter for the zmat of Tnum
-      !!@param: TODO
-      SUBROUTINE Read_mole(mole,para_Tnum,const_phys)
+  !!@description: read zmatrix type parameters for Tnum
+  SUBROUTINE Read_mole(mole,para_Tnum,const_phys)
+  USE mod_constant
+  IMPLICIT NONE
+
+  TYPE (zmatrix),   intent(inout)   :: mole
+  TYPE (Tnum),      intent(inout)   :: para_Tnum
+  TYPE (constant),  intent(inout)   :: const_phys
+
+    CALL Read_CoordType(mole%CoordType,para_Tnum,const_phys)
+
+  END SUBROUTINE Read_mole
+
+  !!@description: read CoordType parameters for Tnum
+  !!@param: TODO
+  SUBROUTINE Read_CoordType(mole,para_Tnum,const_phys)
       USE mod_ActiveTransfo,    only : Read_ActiveTransfo
       USE mod_ZmatTransfo,      only : Read_ZmatTransfo
       USE mod_CartesianTransfo, only : Write_CartesianTransfo
@@ -587,11 +634,10 @@ MODULE mod_Tnum
       USE mod_MPI
       IMPLICIT NONE
 
-
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), intent(inout)   :: mole
-      TYPE (Tnum), intent(inout)      :: para_Tnum
-      TYPE (constant), intent(inout)  :: const_phys
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType), intent(inout)   :: mole
+      TYPE (Tnum),      intent(inout)   :: para_Tnum
+      TYPE (constant),  intent(inout)   :: const_phys
 
 
 !----- physical and mathematical constants ----------------------------
@@ -603,7 +649,7 @@ MODULE mod_Tnum
       logical :: WriteT  ! write T, GG, g
 
 !-------------------------------------------------------
-!     - for the zmatrix --------------------------------
+!     - for the CoordType --------------------------------
       logical :: zmat,bunch,cart,cos_th
 
       integer :: nb_act
@@ -656,7 +702,7 @@ MODULE mod_Tnum
       logical           :: Tana,MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,f2f1_ana
       real (kind=Rkind) :: stepT,stepOp
       integer           :: KEO_TalyorOFQinact2n ! taylor epxansion along coordinate 2n (21) types
-!     - end for the zmatrix ----------------------------
+!     - end for the CoordType ----------------------------
 
 
 !     - divers ------------------------------------------
@@ -685,7 +731,7 @@ MODULE mod_Tnum
 !----- for debuging --------------------------------------------------
       integer :: err_read
       integer :: err_mem,memory
-      character (len=*), parameter :: name_sub='Read_mole'
+      character (len=*), parameter :: name_sub='Read_CoordType'
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
@@ -792,7 +838,7 @@ MODULE mod_Tnum
       END IF
       IF (print_level > 1) write(out_unitp,variables)
 
-
+      IF (stepT  == ZERO)  stepT  = ONETENTH**4
       IF (stepOp == ZERO)  stepOp = stepT
       IF (Rot_Dip_with_EC) Cart_transfo = .TRUE.
 
@@ -878,7 +924,7 @@ MODULE mod_Tnum
           name_transfo = mole%tab_Qtransfo(it)%name_transfo
           CALL string_uppercase_TO_lowercase(name_transfo)
 
-          CALL Set_masses_Z_TO_mole(mole,mole%tab_Qtransfo(it))
+          CALL Set_masses_Z_TO_CoordType(mole,mole%tab_Qtransfo(it))
 
           SELECT CASE (name_transfo)
           CASE ('bunch','bunch_poly')
@@ -981,9 +1027,9 @@ MODULE mod_Tnum
           STOP
         END IF
 
-        !CALL Sub_mole_TO_paraRPH_new(mole) ! transfert nb_inact21 to nb_act1 and change list_act_OF_Qdyn
+        !CALL Sub_CoordType_TO_paraRPH_new(mole) ! transfert nb_inact21 to nb_act1 and change list_act_OF_Qdyn
 
-        CALL type_var_analysis(mole)
+        CALL type_var_analysis_OF_CoordType(mole)
 
         mole%name_Qact => mole%tab_Qtransfo(nb_Qtransfo)%name_Qin
 
@@ -1072,7 +1118,7 @@ MODULE mod_Tnum
 
         CALL Read_ZmatTransfo(mole%tab_Qtransfo(it)%ZmatTransfo,const_phys%mendeleev)
 
-        CALL Set_masses_Z_TO_mole(mole,mole%tab_Qtransfo(it))
+        CALL Set_masses_Z_TO_CoordType(mole,mole%tab_Qtransfo(it))
 
 
         ! for Qout type, name ....
@@ -1223,7 +1269,7 @@ MODULE mod_Tnum
                         "mole%nrho_OF_Qdyn",name_sub)
         mole%nrho_OF_Qdyn(:) = 0
 
-        CALL type_var_analysis(mole)
+        CALL type_var_analysis_OF_CoordType(mole)
         mole%name_Qact        => mole%tab_Qtransfo(it)%name_Qin
 
         CALL flush_perso(out_unitp)
@@ -1359,6 +1405,22 @@ MODULE mod_Tnum
 !=======================================================================
 !=======================================================================
 
+!=======================================================================
+!=======================================================================
+!    special case if mole%ActiveTransfo%list_act_OF_Qdyn(i) = 200
+     IF (count(mole%ActiveTransfo%list_act_OF_Qdyn(:) == 200) > 0) THEN
+       para_Tnum%num_GG = .TRUE.
+       para_Tnum%num_g  = .FALSE.
+       para_Tnum%num_x  = .FALSE.
+       write(out_unitp,*) ' WARNING: ActiveTransfo%list_act_OF_Qdyn(i) = 200'
+       write(out_unitp,*) ' We are using numerical derivatives !!'
+       write(out_unitp,*) ' num_GG,num_g,num_x',para_Tnum%num_GG,  &
+                                      para_Tnum%num_g,para_Tnum%num_x
+       write(out_unitp,*) ' stepT',para_Tnum%stepT
+       write(out_unitp,*)
+     END IF
+!=======================================================================
+!=======================================================================
 
 !=======================================================================
 !===== Ab initio parameters ============================================
@@ -1397,7 +1459,8 @@ MODULE mod_Tnum
      para_Tnum%para_PES_FromTnum%ab_initio_basisEne = ab_initio_basisEne
      para_Tnum%para_PES_FromTnum%ab_initio_basisDip = ab_initio_basisDip
 
-
+!=======================================================================
+!=======================================================================
       IF (debug) THEN
          write(out_unitp,*)
          DO it=1,mole%nb_Qtransfo
@@ -1441,20 +1504,26 @@ MODULE mod_Tnum
         write(out_unitp,*) '================================================='
       ENDIF
       CALL flush_perso(out_unitp)
-      END SUBROUTINE Read_mole
+      END SUBROUTINE Read_CoordType
 !===============================================================================
 
 !================================================================
-!       conversion d0Q (zmat,poly, bunch ...) => d0x
+!       Copy two zmatrix type variables or two CoordType variables
 !================================================================
+  SUBROUTINE mole1TOmole2(mole1,mole2)
+  TYPE (zmatrix), intent(in)    :: mole1
+  TYPE (zmatrix), intent(inout) :: mole2
 
-      !!@description: conversion d0Q (zmat,poly, bunch ...) => d0x
-      !!@param: TODO
-      SUBROUTINE mole1TOmole2(mole1,mole2)
+    CALL CoordType1TOCoordType2(mole1%CoordType,mole2%CoordType)
 
-!      for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), intent(in)    :: mole1
-      TYPE (zmatrix), intent(inout) :: mole2
+  END SUBROUTINE mole1TOmole2
+  !!@description: Copy two CoordType variables
+  !!@param: TODO
+  SUBROUTINE CoordType1TOCoordType2(mole1,mole2)
+
+  ! for the CoordType and Tnum --------------------------------------
+  TYPE (CoordType), intent(in)    :: mole1
+  TYPE (CoordType), intent(inout) :: mole2
 
       integer :: it
       character (len=Name_len) :: name_transfo
@@ -1469,7 +1538,7 @@ MODULE mod_Tnum
       END IF
 
 
-      CALL dealloc_zmat(mole2)
+      CALL dealloc_CoordType(mole2)
 
       IF (mole1%nat < 3 .OR. mole1%nb_var < 1 .OR.                      &
           mole1%nb_act < 1 .OR. mole1%ncart < 9) THEN
@@ -1502,7 +1571,6 @@ MODULE mod_Tnum
       mole2%nb_elec      = mole1%nb_elec
 
       mole2%WriteCC      = mole1%WriteCC
-      mole2%print_done  = .FALSE.
 
       mole2%With_VecCOM     = mole1%With_VecCOM
       mole2%Without_Rot     = mole1%Without_Rot
@@ -1638,14 +1706,14 @@ MODULE mod_Tnum
         CALL flush_perso(out_unitp)
       END IF
 
-     END SUBROUTINE mole1TOmole2
+     END SUBROUTINE CoordType1TOCoordType2
 
 
 !================================================================
 !      check charge multiplicity
 !================================================================
       SUBROUTINE check_charge(mole)
-       TYPE (zmatrix) :: mole
+       TYPE (CoordType), intent(inout) :: mole
 
        IF (print_level > 1) THEN
          write(out_unitp,*)
@@ -1678,9 +1746,8 @@ MODULE mod_Tnum
 !
 !       analysis of list_act_OF_Qdyn(.) to define ActiveTransfo%list_QactTOQdyn(.) and ActiveTransfo%list_QdynTOQact(.)
 !================================================================
-      SUBROUTINE type_var_analysis(mole)
-
-      TYPE (zmatrix) :: mole
+  SUBROUTINE type_var_analysis_OF_CoordType(mole)
+  TYPE (CoordType), intent(inout) :: mole
 
 
       integer :: iv_inact20,iv_rigid0,iv_inact21,iv_act1,iv_inact22
@@ -1690,7 +1757,7 @@ MODULE mod_Tnum
       integer :: nb_Qtransfo,it
 
       integer :: err_mem,memory
-      character (len=*), parameter :: name_sub = 'type_var_analysis'
+      character (len=*), parameter :: name_sub = 'type_var_analysis_OF_CoordType'
       !logical, parameter :: debug = .TRUE.
       logical, parameter :: debug = .FALSE.
 
@@ -1797,7 +1864,7 @@ MODULE mod_Tnum
 
        END DO
 
-!     variable list in zmatrix order ------------------------
+!     variable list in CoordType order ------------------------
 !     =>  ActiveTransfo%list_QdynTOQact
 !
       mole%ActiveTransfo%list_QdynTOQact(:) = 0
@@ -1870,7 +1937,7 @@ MODULE mod_Tnum
       END IF
       IF (debug) write(out_unitp,*) 'END ',name_sub
 
-      END SUBROUTINE type_var_analysis
+  END SUBROUTINE type_var_analysis_OF_CoordType
 
 !================================================================
 ! ++    write the hamiltonian f2 f1
@@ -1929,10 +1996,8 @@ MODULE mod_Tnum
 
        end subroutine Write_TcorTrot
 
-
-      SUBROUTINE Sub_paraRPH_TO_mole(mole)
-
-      TYPE (zmatrix) :: mole
+  SUBROUTINE Sub_paraRPH_TO_CoordType(mole)
+  TYPE (CoordType), intent(inout) :: mole
 
       integer :: it
       !logical, parameter :: debug = .TRUE.
@@ -1942,7 +2007,7 @@ MODULE mod_Tnum
       mole%RPHTransfo%option = 0 ! If option/=0, we set up to option 0 to be able to perform
                            ! the transformations Sub_paraRPH_TO_mole and Sub_mole_TO_paraRPH
 
-      IF (debug) write(out_unitp,*) 'BEGINNING Sub_paraRPH_TO_mole'
+      IF (debug) write(out_unitp,*) 'BEGINNING Sub_paraRPH_TO_CoordType'
 
       mole%ActiveTransfo%list_act_OF_Qdyn(:) = mole%RPHTransfo%list_act_OF_Qdyn(:)
       mole%nb_act1                           = mole%RPHTransfo%nb_act1
@@ -1975,13 +2040,12 @@ MODULE mod_Tnum
       mole%ActiveTransfo%nb_rigid100 = mole%nb_rigid100
       mole%ActiveTransfo%nb_rigid    = mole%nb_rigid
 
-      IF (debug) write(out_unitp,*) 'END Sub_paraRPH_TO_mole'
+      IF (debug) write(out_unitp,*) 'END Sub_paraRPH_TO_CoordType'
 
 
-      END SUBROUTINE Sub_paraRPH_TO_mole
-      SUBROUTINE Sub_mole_TO_paraRPH(mole)
-
-      TYPE (zmatrix) :: mole
+  END SUBROUTINE Sub_paraRPH_TO_CoordType
+  SUBROUTINE Sub_CoordType_TO_paraRPH(mole)
+  TYPE (CoordType), intent(inout) :: mole
 
       integer :: i
       !logical, parameter :: debug = .TRUE.
@@ -1992,7 +2056,7 @@ MODULE mod_Tnum
       ! This transformation is done only if option==0.
       !    For option=1, everything is already done
 
-      IF (debug) write(out_unitp,*) 'BEGINNING Sub_mole_TO_paraRPH'
+      IF (debug) write(out_unitp,*) 'BEGINNING Sub_CoordType_TO_paraRPH'
 
 
       DO i=1,mole%nb_var
@@ -2030,14 +2094,14 @@ MODULE mod_Tnum
       mole%ActiveTransfo%nb_rigid100 = mole%nb_rigid100
       mole%ActiveTransfo%nb_rigid    = mole%nb_rigid
 
-      IF (debug) write(out_unitp,*) 'END Sub_mole_TO_paraRPH'
+      IF (debug) write(out_unitp,*) 'END Sub_CoordType_TO_paraRPH'
 
 
-      END SUBROUTINE Sub_mole_TO_paraRPH
+      END SUBROUTINE Sub_CoordType_TO_paraRPH
 
-      SUBROUTINE Sub_mole_TO_paraRPH_new(mole)
+      SUBROUTINE Sub_CoordType_TO_paraRPH_new(mole)
 
-      TYPE (zmatrix) :: mole
+      TYPE (CoordType) :: mole
 
       integer :: i
       !logical, parameter :: debug = .TRUE.
@@ -2048,7 +2112,7 @@ MODULE mod_Tnum
       ! This transformation is done only if option==0.
       !    For option=1, everything is already done
 
-      IF (debug) write(out_unitp,*) 'BEGINNING Sub_mole_TO_paraRPH_new'
+      IF (debug) write(out_unitp,*) 'BEGINNING Sub_CoordType_TO_paraRPH_new'
 
 
       mole%RPHTransfo%list_act_OF_Qdyn = mole%ActiveTransfo%list_act_OF_Qdyn
@@ -2058,20 +2122,17 @@ MODULE mod_Tnum
                               mole%ActiveTransfo%list_act_OF_Qdyn(i) = 1
       END DO
 
-      IF (debug) write(out_unitp,*) 'END Sub_mole_TO_paraRPH_new'
+      IF (debug) write(out_unitp,*) 'END Sub_CoordType_TO_paraRPH_new'
 
 
-      END SUBROUTINE Sub_mole_TO_paraRPH_new
+      END SUBROUTINE Sub_CoordType_TO_paraRPH_new
 
       ! this subroutine eanbles to perform automatic contraction
-      SUBROUTINE moleRPH_TO_moleFlex(mole)
-      USE mod_FlexibleTransfo, only : Read_FlexibleTransfo
-      IMPLICIT NONE
+  SUBROUTINE CoordTypeRPH_TO_CoordTypeFlex(mole)
+  USE mod_FlexibleTransfo, only : Read_FlexibleTransfo
+  IMPLICIT NONE
 
-!  "_read_flexibletransfo_", referenced from:
-!      ___mod_tnum_MOD_molerph_to_moleflex in sub_module_Tnum.o
-
-      TYPE (zmatrix) :: mole
+  TYPE (CoordType), intent(inout) :: mole
 
       integer :: nb_Qtransfo,nb_Qin
       integer, allocatable :: list_flex(:)
@@ -2080,7 +2141,7 @@ MODULE mod_Tnum
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
-      character (len=*), parameter :: name_sub = "moleRPH_TO_moleFlex"
+      character (len=*), parameter :: name_sub = "CoordTypeRPH_TO_CoordTypeFlex"
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 
@@ -2131,23 +2192,23 @@ MODULE mod_Tnum
          write(out_unitp,*) 'END ',name_sub
        END IF
 
-      END SUBROUTINE moleRPH_TO_moleFlex
+  END SUBROUTINE CoordTypeRPH_TO_CoordTypeFlex
 
-      SUBROUTINE Set_mole_para_FOR_optimization(mole,Set_Val)
 
-      USE mod_system
-      IMPLICIT NONE
+  SUBROUTINE Set_OptimizationPara_FROM_CoordType(mole,Set_Val)
+  USE mod_system
+  IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix), intent(in) :: mole
-      integer, intent(in)        :: Set_Val
+  !----- for the CoordType and Tnum --------------------------------------
+  TYPE (CoordType), intent(in) :: mole
+  integer,          intent(in) :: Set_Val
 
       integer :: i,i1,i2,it,itone,nopt,iQdyn
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       logical, parameter :: debug = .FALSE.
 !      logical, parameter :: debug = .TRUE.
-      character (len=*), parameter :: name_sub = 'Set_mole_para_FOR_optimization'
+      character (len=*), parameter :: name_sub = 'Set_OptimizationPara_FROM_CoordType'
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -2200,6 +2261,6 @@ MODULE mod_Tnum
         CALL flush_perso(out_unitp)
       END IF
 
-      END SUBROUTINE set_mole_para_FOR_optimization
+  END SUBROUTINE Set_OptimizationPara_FROM_CoordType
 END MODULE mod_Tnum
 
