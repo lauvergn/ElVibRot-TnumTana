@@ -38,7 +38,8 @@ MODULE mod_MPI_Aid
   Integer                        :: temp_int         !< temparay integer 
   Integer                        :: temp_int1
   Integer                        :: temp_int2
-  
+  Logical                        :: temp_logi
+    
   !-------------------------------------------------------------------------------------
   INTEGER                       :: memory_RSS   !< memory usage
   
@@ -91,6 +92,7 @@ MODULE mod_MPI_Aid
     module procedure MPI_Recv_matrix_int 
     module procedure MPI_Recv_matrix_complex 
   END INTERFACE
+
 !---------------------------------------------------------------------------------------
   Contains
     !> check total memory used at certain point
@@ -144,7 +146,7 @@ MODULE mod_MPI_Aid
       Character (len=*), intent(in) :: out_message
       
       write(out_channel,*) out_message,' from ',MPI_id
-    ENDSUBROUTINE
+    ENDSUBROUTINE MPI_write
     
     SUBROUTINE MPI0_write(out_channel,out_message)
       USE mod_system
@@ -153,7 +155,7 @@ MODULE mod_MPI_Aid
       Character (len=*), intent(in) :: out_message
       
       IF(MPI_id==0) write(out_channel,*) out_message
-    ENDSUBROUTINE
+    ENDSUBROUTINE MPI0_write
     
     SUBROUTINE MPI0_write_line(out_channel)
       USE mod_system
@@ -161,7 +163,7 @@ MODULE mod_MPI_Aid
       integer :: out_channel,MPIid
             
       IF(MPI_id==0) write(out_channel,*) '------------------------------------------------------------'
-    ENDSUBROUTINE
+    ENDSUBROUTINE MPI0_write_line
     
     SUBROUTINE MPI0_write_dline(out_channel)
       USE mod_system
@@ -169,7 +171,7 @@ MODULE mod_MPI_Aid
       integer :: out_channel,MPIid
       
       IF(MPI_id==0) write(out_channel,*) '============================================================'
-    ENDSUBROUTINE
+    ENDSUBROUTINE MPI0_write_dline
 !---------------------------------------------------------------------------------------
 
 !---------------------------------------------------------------------------------------

@@ -125,8 +125,8 @@ SUBROUTINE init_EVR_new()
           CALL time_perso('MPI start, initial time')
           write(out_unitp,*) ' Initialize MPI with ', MPI_np, 'cores.'
           write(out_unitp,*)
-          write(*,*) 'Integer type of default Fortran Compiler:',sizeof(integer_MPI),  &
-                                                        ', MPI: ',MPI_INTEGER_KIND
+          write(out_unitp,*) 'Integer type of default Fortran Compiler:',              &
+                             sizeof(integer_MPI),', MPI: ',MPI_INTEGER_KIND
           write(out_unitp,*) 'NOTE: MPI version halfway. If get memory error, check if &
                                     the variables are just allocated on master process.'
 #endif
@@ -1219,8 +1219,8 @@ SUBROUTINE init_EVR()
           CALL time_perso('MPI start, initial time')
           write(out_unitp,*) ' Initialize MPI with ', MPI_np, 'cores.'
           write(out_unitp,*)
-          write(*,*) 'Integer type of default Fortran Compiler:',sizeof(integer_MPI),  &
-                                                        ', MPI: ',MPI_INTEGER_KIND
+          write(out_unitp,*) 'Integer type of default Fortran Compiler:',              &
+                              sizeof(integer_MPI),', MPI: ',MPI_INTEGER_KIND
           write(out_unitp,*) 'NOTE: MPI version halfway. If get memory error, check if &
                                     the variables are just allocated on master process.'
 #endif
@@ -2200,9 +2200,9 @@ SUBROUTINE finalyze_EVR()
 
 #if(run_MPI)
         IF(MPI_id==0) THEN
-          write(*,*) 'time check for action: ',                                        &
+          write(out_unitp,*) 'time check for action: ',                                &
                     real(time_MPI_action,Rkind)/real(time_rate,Rkind),' from ',MPI_id
-          write(*,*) 'time MPI comm check: ',                                          &
+          write(out_unitp,*) 'time MPI comm check: ',                                  &
                     real(time_comm,Rkind)/real(time_rate,Rkind),' from ', MPI_id
         ENDIF
         !> end MPI

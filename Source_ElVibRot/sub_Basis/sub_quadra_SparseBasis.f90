@@ -1333,7 +1333,7 @@
 
       CALL Set_nDval_init_FOR_SG4(basis_SG%para_SGType2,version=1)
 
-
+      ! save mapping table on master only
       CALL Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
       !CALL unpack_nDindex(basis_SG%nDindB)
 

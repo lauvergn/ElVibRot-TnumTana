@@ -227,8 +227,8 @@ MODULE mod_SetOp
         nb_SG1=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
         nb_SG2=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
         nb_SG=nb_SG2-nb_SG1+1
-        write(*,*) 'nb_SG,nb_SG1,nb_SG2,total:',nb_SG,nb_SG1,nb_SG2,                   &
-                    para_Op%BasisnD%nb_SG,' from ',MPI_id
+        write(out_unitp,*) 'nb_SG,nb_SG1,nb_SG2,total:',nb_SG,nb_SG1,nb_SG2,           &
+                            para_Op%BasisnD%nb_SG,' from ',MPI_id
       ENDIF
 #endif
 

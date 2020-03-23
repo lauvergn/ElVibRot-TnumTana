@@ -181,15 +181,15 @@ SUBROUTINE Set_symab_OF_psiBasisRep_MPI(psi,symab,changes)
     IF(psi%cplx .AND. allocated(psi%CvecB)) THEN      
       DO ib=bound1_MPI,bound2_MPI
         IF(psi%symab/=Get_symabOFSymAbelianOFBasis_AT_ib(psi%BasisnD,ib)) THEN
+          IF(ABS(psi%RvecB(ib))>1.0E-20) changes=.TRUE.
           psi%CvecB(ib)=CZERO
-          changes=.TRUE.
         ENDIF
       ENDDO
     ELSE IF(.NOT. psi%cplx .AND. allocated(psi%RvecB)) THEN
       DO ib=bound1_MPI,bound2_MPI
         IF(psi%symab/=Get_symabOFSymAbelianOFBasis_AT_ib(psi%BasisnD,ib)) THEN
+          IF(ABS(psi%RvecB(ib))>1.0E-20) changes=.TRUE.
           psi%RvecB(ib)=ZERO
-          changes=.TRUE.
         ENDIF
       ENDDO
     ENDIF
@@ -580,23 +580,23 @@ SUBROUTINE Overlap_HS_matrix_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_G
 
   !-------------------------------------------------------------------------------------
   ! calculate on master without MPI
-  CALL alloc_NParray(H_overlapp,(/ ndim,ndim /),"H",name_sub)
-  CALL alloc_NParray(S_overlapp,(/ ndim,ndim /),"S",name_sub)
-  IF(MPI_id==0) THEN
-    DO ii=1,ndim
-      DO jj=1,ndim
-        CALL Overlap_psi1_psi2(Overlap,psi(jj),Hpsi(ii),With_Grid=With_Grid)
-        H_overlapp(jj,ii)=real(Overlap,kind=Rkind)
-
-        CALL Overlap_psi1_psi2(Overlap,psi(jj), psi(ii),With_Grid=With_Grid)
-        S_overlapp(jj,ii)=real(Overlap,kind=Rkind)
-
-      ENDDO
-    ENDDO
-  ENDIF ! for MPI_id==0
-  
-  CALL MPI_Bcast_matrix(H_overlapp,1,ndim,1,ndim,root_MPI)
-  CALL MPI_Bcast_matrix(S_overlapp,1,ndim,1,ndim,root_MPI)
+!  CALL alloc_NParray(H_overlapp,(/ ndim,ndim /),"H",name_sub)
+!  CALL alloc_NParray(S_overlapp,(/ ndim,ndim /),"S",name_sub)
+!  IF(MPI_id==0) THEN
+!    DO ii=1,ndim
+!      DO jj=1,ndim
+!        CALL Overlap_psi1_psi2(Overlap,psi(jj),Hpsi(ii),With_Grid=With_Grid)
+!        H_overlapp(jj,ii)=real(Overlap,kind=Rkind)
+!
+!        CALL Overlap_psi1_psi2(Overlap,psi(jj), psi(ii),With_Grid=With_Grid)
+!        S_overlapp(jj,ii)=real(Overlap,kind=Rkind)
+!
+!      ENDDO
+!    ENDDO
+!  ENDIF ! for MPI_id==0
+!  
+!  CALL MPI_Bcast_matrix(H_overlapp,1,ndim,1,ndim,root_MPI)
+!  CALL MPI_Bcast_matrix(S_overlapp,1,ndim,1,ndim,root_MPI)
 
   !-------------------------------------------------------------------------------------
   ! calculate with MPI
@@ -606,7 +606,6 @@ SUBROUTINE Overlap_HS_matrix_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_G
 !                              MAXVAL(ABS(S_overlapp-S_overlap)),                       &
 !                              MAXVAL(ABS(H_overlap)),MAXVAL(ABS(S_overlap)),           &
 !                              MAXVAL(ABS(H_overlapp)),MAXVAL(ABS(S_overlapp))
-!  Stop
 
 END SUBROUTINE Overlap_HS_matrix_MPI3
 #endif
@@ -753,7 +752,6 @@ SUBROUTINE Overlap_S_matrix_MPI4(S_overlap,psi,ndim0,ndim,With_Grid)
   !CALL Overlap_psi_psi_MPI(S_overlap,psi,ndim0,ndim,With_Grid)
   ! no distribution  of psi
   CALL calculate_overlap_MPI(psi,ndim0+1,ndim,With_Grid=With_Grid,S_overlap=S_overlap)
-
 
 !  write(*,*) 'S_overlapp check',MAXVAL(ABS(S_overlapp-S_overlap)),    &
 !                                MAXVAL(ABS(S_overlap)),MAXVAL(ABS(S_overlapp))
@@ -1019,7 +1017,7 @@ SUBROUTINE distribute_psi_pack_MPI(psi,ndim1,ndim2,With_Grid)
       ENDIF
       bound1_MPI=i_MPI*nb_per_MPI+1+MIN(i_MPI,nb_rem_MPI)
       bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)+merge(1,0,nb_rem_MPI>i_MPI)
-      
+
       length(i_MPI)=length(i_MPI)+(bound2_MPI-bound1_MPI+1)
     ENDDO
   ENDDO
@@ -1197,7 +1195,8 @@ SUBROUTINE calculate_overlap_MPI(psi,ndim1,ndim2,With_Grid,Hpsi,S_overlap,H_over
     CALL MPI_Bcast_matrix     (H_overlap,1,ndim2,ndim1,ndim2,root_MPI)
   ENDIF 
     
-  !-overlap <psi|psi>-------------------------------------------------------------------  
+  !-overlap <psi|psi>-------------------------------------------------------------------
+  ! calculate half of the matrix. Note the conjucate for complex case 
   IF(present(S_overlap)) THEN 
     DO i=1,ndim1-1
       DO j=ndim1,ndim2
@@ -1261,7 +1260,7 @@ SUBROUTINE calculate_overlap1D_MPI(psi,ndim,With_Grid,Hpsi,S_overlap1D,H_overlap
     write(out_unitp,*) 'variable presented error in calculate_overlap_MPI'  
     STOP
   ENDIF
-  
+
   !-overlap <psi|Hpsi>------------------------------------------------------------------
   IF(present(Hpsi) .AND. present(H_overlap1D)) THEN 
     DO i=1,ndim
@@ -1275,18 +1274,18 @@ SUBROUTINE calculate_overlap1D_MPI(psi,ndim,With_Grid,Hpsi,S_overlap1D,H_overlap
     IF(MPI_id==0) H_overlap1D=Overlap1D_temp
     CALL MPI_BCAST(H_overlap1D,ndim,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
   ENDIF 
-    
+
   !-overlap <psi|psi>-------------------------------------------------------------------  
   IF(present(S_overlap1D)) THEN 
     DO i=1,ndim
       CALL Overlap_psipsi_MPI3(Overlap,psi(i),psi(ndim),With_Grid=With_Grid)
       S_overlap1D(i)=real(Overlap,kind=Rkind)
     ENDDO 
-    
+
     ! collect and broadcast result
-    CALL MPI_Reduce(S_overlap1D,Overlap1D_temp,ndim,MPI_Real8,MPI_SUM,root_MPI,        &
+    CALL MPI_Reduce(S_overlap1D(1:ndim),Overlap1D_temp,ndim,MPI_Real8,MPI_SUM,root_MPI,&
                     MPI_COMM_WORLD,MPI_err)
-    IF(MPI_id==0) S_overlap1D=Overlap1D_temp
+    IF(MPI_id==0) S_overlap1D(1:ndim)=Overlap1D_temp(1:ndim)
     CALL MPI_BCAST(S_overlap1D,ndim,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
   ENDIF
 
@@ -1911,6 +1910,7 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
   USE mod_system
   USE mod_psi_set_alloc
   USE mod_MPI
+  USE mod_MPI_Aid
   IMPLICIT NONE
 
   !-variables for the WP----------------------------------------------------------------
@@ -2021,11 +2021,11 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
   ENDIF
 
   Overlap = cmplx(ZERO,ZERO,kind=Rkind)
-  IF (.NOT. With_Grid_loc) THEN
+  IF(.NOT. With_Grid_loc) THEN
     i_baie=1
     f_baie=psi1%nb_tot
-    IF (psi1%nb_tot == psi1%nb_baie .AND.  locChannel_ie > 0 .AND.  &
-                            locChannel_ie <= psi1%ComOp%nb_bie) THEN
+    IF(psi1%nb_tot==psi1%nb_baie .AND.  locChannel_ie>0 .AND.                          &
+       locChannel_ie <= psi1%ComOp%nb_bie) THEN
       i_baie = 1 + (locChannel_ie-1)*psi1%nb_ba
       f_baie = i_baie-1 + psi1%nb_ba
     END IF

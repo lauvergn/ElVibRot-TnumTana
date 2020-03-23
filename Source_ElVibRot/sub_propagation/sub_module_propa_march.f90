@@ -1576,7 +1576,6 @@
 
 #if(run_MPI)
         w1  = psi
-        !write(*,*) 'para_propa%once_control_Hmin check',para_propa%once_control_Hmin
         IF(para_propa%once_control_Hmin) THEN
           CALL sub_OpPsi(w1,w2,para_H) ! calculate once for Hmax
           CALL sub_Hmax(para_propa,para_H)
@@ -1593,7 +1592,7 @@
           para_H%scaled = .TRUE.
           para_H%E0     = para_propa%para_poly%E0
           para_H%Esc    = para_propa%para_poly%Esc
-          write(*,*) 'Hmin,Hmax check:', para_propa%Hmin,para_propa%Hmax
+          write(out_unitp,*) 'Hmin,Hmax check:', para_propa%Hmin,para_propa%Hmax
         ENDIF
 #endif
 

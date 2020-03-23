@@ -70,6 +70,7 @@ MODULE mod_MPI
   Integer                        :: time_temp1
   Integer                        :: time_temp2
   Integer                        :: time_rate       !< for function system_clock()
+  Integer                        :: time_max       !< for function system_clock()
   ! time_rate in kind=4: COUNT in system_clock represents milliseconds
   ! time_rate in kind>4: COUNT in system_clock represents micro- or nanoseconds
   

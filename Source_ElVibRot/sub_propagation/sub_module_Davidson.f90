@@ -47,7 +47,11 @@ CONTAINS
       USE mod_ana_psi,        ONLY : norm2_psi
       USE mod_psi_Op,         ONLY : sub_LCpsi_TO_psi
       USE mod_psi_io,         ONLY : sub_save_psi
+#if(run_MPI)
+      USE mod_propa,          ONLY : param_propa,param_Davidson,MPI_Bcast_param_Davidson
+#else
       USE mod_propa,          ONLY : param_propa,param_Davidson
+#endif
       USE mod_MPI
       IMPLICIT NONE
 
@@ -207,7 +211,11 @@ CONTAINS
         RealTime = Delta_RealTime(DavidsonTime)
         CALL flush_perso(out_unitp)
       ENDIF ! for MPI_id==0
-
+      
+#if(run_MPI)
+      CALL MPI_Bcast(nb_diago,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
+      CALL MPI_Bcast_param_Davidson(para_propa%para_Davidson)
+#endif
       !CALL time_perso('Davidson psi0')
 !para_mem%mem_debug = .TRUE.
       !===================================================================
@@ -925,6 +933,10 @@ CONTAINS
  auTOene = get_Conv_au_TO_WriteUnit('E')
  ndim = size(psi)
 
+#if(run_MPI) 
+  CALL MPI_BCAST(ndim,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
+#endif
+
  With_Grid  = para_Davidson%With_Grid
  Op_Transfo = para_Davidson%Op_Transfo
 
@@ -1329,7 +1341,7 @@ SUBROUTINE MakeResidual_Davidson_MPI3(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,    
   Integer                                     :: isym
   Integer                                     :: ii
   Integer                                     :: jj
-  
+
   IF(MPI_id==0) THEN
     IF(allocated(g%RvecB)) THEN   
       g%RvecB=ZERO
@@ -1354,13 +1366,13 @@ SUBROUTINE MakeResidual_Davidson_MPI3(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,    
   ENDIF
   CALL MPI_BCAST(case_vec,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
   CALL MPI_BCAST(size_vec,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
-  
+
   nb_per_MPI=size_vec/MPI_np
   nb_rem_MPI=mod(size_vec,MPI_np) 
-  
+
   bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
   bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
-  
+
   SELECT CASE (case_vec)
   CASE(1,3)
     allocate(Rvec(size_vec))
@@ -1384,7 +1396,6 @@ SUBROUTINE MakeResidual_Davidson_MPI3(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,    
         ENDDO
         CALL MPI_Reduce(Rvec,g%RvecB,size_vec,MPI_Real8,MPI_SUM,root_MPI,              &
                         MPI_COMM_WORLD,MPI_err)
-        !write(*,*) 'Rvec check:',jj,Rvec,' from ',MPI_id
       CASE(2)
         Cvec=ZERO
         DO ii=1,ndim
@@ -1413,15 +1424,14 @@ SUBROUTINE MakeResidual_Davidson_MPI3(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,    
         CALL MPI_Reduce(Cvec,g%CvecG,size_vec,MPI_Complex8,MPI_SUM,root_MPI,           &
                         MPI_COMM_WORLD,MPI_err)
       END SELECT
-      
+
       IF(MPI_id==0) THEN
         CALL Set_symab_OF_psiBasisRep(g,symab=psi(isym)%symab)
         CALL norm2_psi(g)
-        !write(*,*) 'g%norme check:',jj,g%norme
         tab_normeg(jj) = sqrt(g%norme)
       ENDIF
-    ENDIF ! for .NOT. converge(jj) .AND. VecToBeIncluded(jj)  
       
+    ENDIF ! for .NOT. converge(jj) .AND. VecToBeIncluded(jj)  
   ENDDO ! for jj=1,ndim
   
   CALL MPI_BCAST(tab_normeg,ndim,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
@@ -2039,7 +2049,7 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
      CASE (1) ! just the residual
        !write(6,*) 'coucou residual'
 #if(run_MPI)
-       CALL MakeResidual_Davidson_j_MPI3(j,psi(ndim+1),psi,Hpsi,Ene,Vec)    
+       CALL MakeResidual_Davidson_j_MPI3(j,psi(ndim+1),psi,Hpsi,Ene,Vec)
 #else
        CALL MakeResidual_Davidson(j,psi(ndim+1),psi,Hpsi,Ene,Vec)
 #endif
@@ -2088,8 +2098,8 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
        !write(6,*) 'coucou Davidson4'
 
        ! first the residual
-#if(run_MPI)   
-       CALL MakeResidual_Davidson_j_MPI3(j,psi(ndim+1),psi,Hpsi,Ene,Vec)    
+#if(run_MPI) 
+       CALL MakeResidual_Davidson_j_MPI3(j,psi(ndim+1),psi,Hpsi,Ene,Vec)
 #else
        CALL MakeResidual_Davidson(j,psi(ndim+1),psi,Hpsi,Ene,Vec)
 #endif
@@ -2131,9 +2141,14 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
      CALL norm_psi_MPI(psi(ndim+1),1) ! get normalization constant
      IF(psi(ndim+1)%norme<ONETENTH**10) CYCLE ! error case
      Norm_Const=psi(ndim+1)%norme
-     CALL Set_symab_OF_psiBasisRep_MPI(psi(ndim+1),psi(isym)%symab,sym_change)  
-     CALL norm_psi_MPI(psi(ndim+1),2) ! normalization
      
+     CALL Set_symab_OF_psiBasisRep_MPI(psi(ndim+1),psi(isym)%symab,sym_change)
+     CALL MPI_Reduce(sym_change,temp_logi,size1_MPI,MPI_LOGICAL,MPI_LOR,               &
+                     root_MPI,MPI_COMM_WORLD,MPI_err)
+     IF(MPI_id==0) sym_change=temp_logi
+     CALL MPI_BCAST(sym_change,size1_MPI,MPI_LOGICAL,root_MPI,MPI_COMM_WORLD,MPI_err)
+     
+     CALL norm_psi_MPI(psi(ndim+1),2) ! normalization
      ! synchronism S_overlap_add
      IF(sym_change) THEN ! Rvec changed in Set_symab_OF_psiBasisRep_MPI
        CALL calculate_overlap1D_MPI(psi,ndim+1,With_Grid=para_Davidson%With_Grid,      &
@@ -2446,6 +2461,7 @@ END SUBROUTINE Schmidt_process_MPI
  IF (ndim > 0 .AND. para_Davidson%num_LowestWP > 0 .AND. para_Davidson%num_LowestWP <= ndim) THEN
    IF (allocated(vec0) .AND. para_Davidson%num_LowestWP <= size(Vec0,dim=1)) THEN
 
+     IF(MPI_id==0) THEN
      ndim0 = size(Vec0,dim=1)
      klowestWP = 0
      S0itmax   = ZERO
@@ -2457,9 +2473,14 @@ END SUBROUTINE Schmidt_process_MPI
          min_Ene   = ene(k)
        END IF
      END DO
+     ENDIF ! MPI_id==0
+#if(run_MPI) 
+     CALL MPI_Bcast(min_Ene,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
+#endif
 
    ELSE IF (para_Davidson%project_WP0 .AND. para_Davidson%num_LowestWP <= para_Davidson%nb_WP0) THEN
 
+     IF(MPI_id==0) THEN
      DO k=1,ndim
        CALL Overlap_psi1_psi2(Overlap,psi(k),psi0(para_Davidson%num_LowestWP))
        Spsi_psi0(k) = real(Overlap,kind=Rkind)
@@ -2475,6 +2496,10 @@ END SUBROUTINE Schmidt_process_MPI
          min_Ene   = ene(k)
        END IF
      END DO
+     ENDIF ! MPI_id==0
+#if(run_MPI) 
+     CALL MPI_Bcast(min_Ene,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
+#endif
 
    END IF
  END IF
@@ -2513,10 +2538,11 @@ END SUBROUTINE Schmidt_process_MPI
 
    ELSE
 
+     ! need futher improvement for MPI here
      CALL sub_projec2_Davidson(Vec,Vec0,VecToBeIncluded,para_Davidson%thresh_project,Ene,min_Ene,print_project)
      nb_diago = count(VecToBeIncluded)
 
-     CALL dealloc_NParray(Vec0,"Vec0",name_sub)
+     IF(allocated(Vec0)) CALL dealloc_NParray(Vec0,"Vec0",name_sub)
      CALL alloc_NParray(Vec0,(/ndim,ndim/),"Vec0",name_sub)
      Vec0(:,:) = Vec(:,:)
    END IF
@@ -2539,6 +2565,7 @@ END SUBROUTINE Schmidt_process_MPI
  SUBROUTINE sub_projec2_Davidson(Vec,Vec0,VecToBeIncluded,thresh,Ene,min_Ene,print_project)
  USE mod_system
  USE mod_Constant, ONLY: get_Conv_au_TO_WriteUnit
+ USE mod_MPI
  IMPLICIT NONE
 
  real (kind=Rkind) :: Vec0(:,:),Vec(:,:)
@@ -2581,6 +2608,8 @@ END SUBROUTINE Schmidt_process_MPI
 
  IF (debug .OR. print_project) write(out_unitp,*) 'Projection <psi|psi0>'
  VecToBeIncluded(:) = .FALSE.
+ 
+ IF(MPI_id==0) THEN
  DO j=1,ndim0
    max_p = ZERO
    DO i=1,ndim
@@ -2604,7 +2633,11 @@ END SUBROUTINE Schmidt_process_MPI
  DO i=1,ndim
    IF (VecToBeIncluded(i)) VecToBeIncluded(i) = (Ene(i) >= min_Ene)
  END DO
+ ENDIF ! MPI_id==0 
 
+#if(run_MPI)
+ CALL MPI_Bcast(VecToBeIncluded,ndim,MPI_Logical,root_MPI,MPI_COMM_WORLD,MPI_err) 
+#endif
  CALL Sort_VecToBeIncluded_Davidson(Ene,Vec,VecToBeIncluded)
 
  IF (debug .OR. print_project) write(out_unitp,*) 'End projection <psi|psi0>'
@@ -2623,6 +2656,7 @@ END SUBROUTINE Schmidt_process_MPI
  USE mod_system
  USE mod_psi_set_alloc
  USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
+ USE mod_MPI
  IMPLICIT NONE
 
  TYPE (param_psi)  :: psi(:),psi0(:)
@@ -2688,6 +2722,7 @@ END SUBROUTINE Schmidt_process_MPI
  IF (debug .OR. print_project) write(out_unitp,*) 'Projection <psi|psi0>'
  VecToBeIncluded(:) = .FALSE.
 
+ IF(MPI_id==0) THEN
  DO j=1,ndim0
  DO k=1,ndim
    CALL Overlap_psi1_psi2(Overlap,psi(k),psi0(j))
@@ -2716,7 +2751,11 @@ END SUBROUTINE Schmidt_process_MPI
  DO i=1,ndim
    IF (VecToBeIncluded(i)) VecToBeIncluded(i) = (Ene(i) >= min_Ene)
  END DO
+ ENDIF ! MPI_id==0 
 
+#if(run_MPI)
+ CALL MPI_Bcast(VecToBeIncluded,ndim,MPI_Logical,root_MPI,MPI_COMM_WORLD,MPI_err) 
+#endif
  CALL Sort_VecToBeIncluded_Davidson(Ene,Vec,VecToBeIncluded)
 
 
