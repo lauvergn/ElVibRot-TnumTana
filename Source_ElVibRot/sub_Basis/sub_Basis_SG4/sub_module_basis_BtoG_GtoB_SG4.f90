@@ -599,6 +599,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   USE mod_param_SGType2
   USE mod_nDindex
   USE mod_MPI
+  USE mod_MPI_Aid
   IMPLICIT NONE
 
   TYPE (basis),     intent(inout)        :: basis_SG
@@ -705,6 +706,12 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   ! It is useless when the program is compliled with kind=8 for the integer (Equivalent to ILkind=8)
   lMax_Srep = sum(int(basis_SG%para_SGType2%tab_nb_OF_SRep(:),kind=ILkind))
   Max_Srep  = sum(basis_SG%para_SGType2%tab_nb_OF_SRep(:))
+#if(run_MPI)  
+  nb_per_MPI=basis_SG%nb_SG/MPI_np
+  nb_rem_MPI=mod(basis_SG%nb_SG,MPI_np) !remainder jobs 
+  iG1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
+  iG2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
+#endif  
 
   IF(MPI_id==0) THEN
     write(out_unitp,*) 'nb of terms (grids)',size(basis_SG%para_SGType2%tab_nb_OF_SRep)
@@ -720,6 +727,13 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
     CALL alloc_NParray(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,(/Max_Srep/), &
                       'basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB',name_sub)
     basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(:) = 0
+#if(run_MPI)
+  ELSE
+    temp_int1=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG1_MPI)                         &
+                -basis_SG%para_SGType2%tab_nb_OF_SRep(iG1_MPI)
+    temp_int2=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG2_MPI)
+    allocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(temp_int1+1:temp_int2))
+#endif
   ENDIF
 
   IF (.NOT. allocated(basis_SG%para_SGType2%nDind_SmolyakRep%Tab_nDval) ) THEN
@@ -835,6 +849,12 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
       ! calculate mapping table on master only
       IF (nDI > 0 .AND. nDI <= basis_SG%nDindB%Max_nDI) THEN
         IF(MPI_id==0) basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep) = nDI
+        IF(MPI_id/=0) THEN
+          IF(iG>=iG1_MPI .AND. iG<=iG2_MPI) THEN
+            write(*,*) 'checkcheckcheck2:',iBSRep,iG
+            basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)=nDI
+          ENDIF
+        ENDIF ! for MPI_id/=0
         !$OMP ATOMIC
         Tab_inD_nDindB(nDI) = Tab_inD_nDindB(nDI) + 1
       END IF

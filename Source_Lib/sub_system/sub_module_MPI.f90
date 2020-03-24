@@ -48,6 +48,8 @@ MODULE mod_MPI
   Integer(kind=MPI_INTEGER_KIND) :: i_MPI        !< fake MPI thread id
   Integer                        :: bound1_MPI   !< up boundary of works for each thread
   Integer                        :: bound2_MPI   !< dn boundary of works for each thread
+  Integer                        :: iG1_MPI      !< up boundary of iGs in action 
+  Integer                        :: iG2_MPI      !< dn boundary of iGs in action 
   Integer                        :: nb_per_MPI   !< number of distribed works per thread
   Integer                        :: nb_rem_MPI   !< remainder of distribed works
 

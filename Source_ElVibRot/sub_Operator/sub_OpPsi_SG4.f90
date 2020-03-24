@@ -796,7 +796,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     nb_per_MPI=BasisnD%para_SGType2%nb_SG/MPI_np
     !If(mod(BasisnD%para_SGType2%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
     nb_rem_MPI=mod(BasisnD%para_SGType2%nb_SG,MPI_np) !remainder jobs 
-    
+
     IF(once_control) THEN
       allocate(BasisnD%para_SGType2%size_PsiR_V(0:MPI_np-1))
       !size of %V for each thread
@@ -823,7 +823,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     !-----------------------------------------------------------------------------------    
     !IF((if_propa .AND. MPI_np>10) .OR. MPI_np>50) THEN 
     ! there is an issue for mapping table here
-    IF(size_PsiR_V(0)<0) THEN  !< 1000000 according to a few effeiciency test
+    IF(size_PsiR_V(0)<1000000) THEN  !< 1000000 according to a few effeiciency test
       ! calculate total length of vectors for each threads------------------------------
       IF(once_control .AND. MPI_id==0) THEN
         write(out_unitp,*) 'action with MPI: Scheme 1'
