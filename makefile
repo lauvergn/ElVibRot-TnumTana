@@ -1709,7 +1709,7 @@ lib_dep_mod_param_RD=$(OBJ)/sub_module_basis_set_alloc.o
 $(lib_dep_mod_param_RD)=$(OBJ)/sub_module_param_RD.o
 
 #mod_VecOFdnS
-lib_dep_mod_VecOFdnS=$(OBJ)/sub_module_MatOFdnS.o
+lib_dep_mod_VecOFdnS=$(OBJ)/sub_module_MatOFdnS.o $(OBJ)/sub_module_dnSVM.o
 $(lib_dep_mod_VecOFdnS)=$(OBJ)/sub_module_VecOFdnS.o
 
 endif
