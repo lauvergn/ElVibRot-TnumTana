@@ -1125,7 +1125,7 @@ MODULE mod_Tnum
         CALL alloc_array(mole%tab_Qtransfo(it)%type_Qout,(/3*(nat+1)/), &
                         "mole%tab_Qtransfo(it)%type_Qout",name_sub)
 
-        CALL alloc_array(mole%tab_Qtransfo(it)%name_Qout,(/3*(nat+1)/),Name_len,&
+        CALL alloc_array(mole%tab_Qtransfo(it)%name_Qout,(/3*(nat+1)/), &
                         "mole%tab_Qtransfo(it)%name_Qout",name_sub)
         mole%tab_Qtransfo(it)%type_Qout(:) = 1 ! cartesian type
 
@@ -1305,8 +1305,7 @@ MODULE mod_Tnum
         mole%ActiveTransfo%list_QactTOQdyn(:) = 1
 
         IF (.NOT. associated(mole%name_Qdyn)) THEN
-          CALL alloc_array(mole%name_Qdyn,(/nb_var/),Name_len,&
-                          "mole%name_Qdyn",name_sub)
+          CALL alloc_array(mole%name_Qdyn,(/nb_var/),"mole%name_Qdyn",name_sub)
         END IF
 
         DO i=1,nb_var

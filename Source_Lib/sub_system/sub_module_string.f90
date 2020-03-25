@@ -28,10 +28,10 @@ MODULE mod_string
   PRIVATE
 
   INTERFACE alloc_array
-    MODULE PROCEDURE alloc_array_OF_ChLendim1
+    MODULE PROCEDURE alloc_array_OF_Stringdim1 ! ,alloc_array_OF_ChLendim1
   END INTERFACE
   INTERFACE dealloc_array
-    MODULE PROCEDURE dealloc_array_OF_ChLendim1
+    MODULE PROCEDURE dealloc_array_OF_Stringdim1
   END INTERFACE
 
   PUBLIC :: alloc_array, dealloc_array
@@ -377,12 +377,48 @@ MODULE mod_string
    !write(out_unitp,*) 'name_string: ',name_string
 
   END SUBROUTINE string_lowercase_TO_uppercase
+  SUBROUTINE alloc_array_OF_Stringdim1(tab,tab_ub,name_var,name_sub,tab_lb)
+  IMPLICIT NONE
 
+  character (len=*), pointer,     intent(inout) :: tab(:)
+  integer,                        intent(in)    :: tab_ub(:)
+  integer, optional,              intent(in)    :: tab_lb(:)
+  character (len=*),              intent(in)    :: name_var,name_sub
+
+  integer, parameter :: ndim=1
+
+  !----- for debuging --------------------------------------------------
+  character (len=*), parameter :: name_sub_alloc = 'alloc_array_OF_Stringdim1'
+  integer :: err_mem,memory
+  logical,parameter :: debug=.FALSE.
+  !logical,parameter :: debug=.TRUE.
+  !----- for debuging --------------------------------------------------
+
+
+   IF (associated(tab))                                             &
+         CALL Write_error_NOT_null(name_sub_alloc,name_var,name_sub)
+
+   CALL sub_test_tab_ub(tab_ub,ndim,name_sub_alloc,name_var,name_sub)
+
+   IF (present(tab_lb)) THEN
+     CALL sub_test_tab_lb(tab_lb,ndim,name_sub_alloc,name_var,name_sub)
+
+     memory = product(tab_ub(:)-tab_lb(:)+1)
+     allocate(tab(tab_lb(1):tab_ub(1)),stat=err_mem)
+   ELSE
+     memory = product(tab_ub(:))
+     allocate(tab(tab_ub(1)),stat=err_mem)
+   END IF
+   memory = len(tab(tab_ub(1))) * size(tab)
+   CALL error_memo_allo(err_mem,memory,name_var,name_sub,'character')
+
+  END SUBROUTINE alloc_array_OF_Stringdim1
   SUBROUTINE alloc_array_OF_ChLendim1(tab,tab_ub,ChLen,name_var,name_sub,tab_lb)
   IMPLICIT NONE
 
   integer,                        intent(in)    :: ChLen
-  character (len=ChLen), pointer, intent(inout) :: tab(:)
+  character (len=*), pointer, intent(inout) :: tab(:)
+  !character (len=ChLen), pointer, intent(inout) :: tab(:)
   integer,                        intent(in)    :: tab_ub(:)
   integer, optional,              intent(in)    :: tab_lb(:)
   character (len=*),              intent(in)    :: name_var,name_sub
@@ -414,14 +450,14 @@ MODULE mod_string
    CALL error_memo_allo(err_mem,memory,name_var,name_sub,'character')
 
   END SUBROUTINE alloc_array_OF_ChLendim1
-  SUBROUTINE dealloc_array_OF_ChLendim1(tab,name_var,name_sub)
+  SUBROUTINE dealloc_array_OF_Stringdim1(tab,name_var,name_sub)
   IMPLICIT NONE
 
   character (len=*), pointer, intent(inout) :: tab(:)
   character (len=*),          intent(in)    :: name_var,name_sub
 
   !----- for debuging --------------------------------------------------
-  character (len=*), parameter :: name_sub_alloc = 'dealloc_array_OF_ChLendim1'
+  character (len=*), parameter :: name_sub_alloc = 'dealloc_array_OF_Stringdim1'
   integer :: err_mem,memory
   logical,parameter :: debug=.FALSE.
   !logical,parameter :: debug=.TRUE.
@@ -436,7 +472,7 @@ MODULE mod_string
    CALL error_memo_allo(err_mem,-memory,name_var,name_sub,'character')
    nullify(tab)
 
-  END SUBROUTINE dealloc_array_OF_ChLendim1
+  END SUBROUTINE dealloc_array_OF_Stringdim1
 
 END MODULE mod_string
 

@@ -24,7 +24,7 @@ D H F H  GDH
  &Coord_transfo name_transfo='active' /
  1 1 1    100 100 100
 
- &minimum read_Qsym0=f read_xyz0=t unit='bohr' /
+ &minimum read_Qsym0=f read_xyz0=t read_xyz0_with_dummy=f unit='bohr' /
  1         -0.342996098          -0.040172529          -1.728271984
  2          0.651991339          -0.040172529          -1.828271984
  3         -0.011152523          -0.040172529           0.238376482

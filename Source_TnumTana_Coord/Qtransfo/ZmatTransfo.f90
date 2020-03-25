@@ -137,7 +137,7 @@
                            "ZmatTransfo%symbole","alloc_ZmatTransfo")
        END IF
        CALL alloc_array(ZmatTransfo%symbole,(/ZmatTransfo%nat/),  &
-              Name_len,"ZmatTransfo%symbole","alloc_ZmatTransfo")
+                       "ZmatTransfo%symbole","alloc_ZmatTransfo")
        ZmatTransfo%symbole(:) = ""
 
 

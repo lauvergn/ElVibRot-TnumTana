@@ -130,7 +130,7 @@ MODULE mod_Tana_keo
       nullify(list_QactTOQpoly)
       CALL alloc_array(list_QactTOQpoly,shape(Qdyn),'list_QactTOQpoly',routine_name)
       nullify(tab_Qname)
-      CALL alloc_array(tab_Qname,shape(Qdyn),Name_len,'tab_Qname',routine_name)
+      CALL alloc_array(tab_Qname,shape(Qdyn),'tab_Qname',routine_name)
 
 
       ndim = size(mole%tab_Qtransfo(1)%BunchTransfo%M_Tana(:,1))
@@ -458,7 +458,7 @@ MODULE mod_Tana_keo
       nullify(list_QactTOQpoly)
       CALL alloc_array(list_QactTOQpoly,shape(Qdyn),'list_QactTOQpoly',routine_name)
       nullify(tab_Qname)
-      CALL alloc_array(tab_Qname,shape(Qdyn),Name_len,'tab_Qname',routine_name)
+      CALL alloc_array(tab_Qname,shape(Qdyn),'tab_Qname',routine_name)
 
 
       ndim = size(mole%tab_Qtransfo(1)%BunchTransfo%M_Tana(:,1))
