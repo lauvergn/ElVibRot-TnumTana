@@ -885,7 +885,6 @@ CONTAINS
 #endif
 
 !------- propagation loop ---------------------------------
-
       T = ZERO
       IF (para_propa%restart) THEN
         CALL ReadWP_restart(T,psi,para_propa%file_WP_restart)

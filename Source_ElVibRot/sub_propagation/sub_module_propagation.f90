@@ -46,7 +46,7 @@
       USE mod_field,         ONLY : param_field
       USE mod_psi_set_alloc, ONLY : param_psi
       USE mod_param_WP0,     ONLY : param_WP0
-      USE mod_type_ana_psi,  ONLY : param_ana_psi
+      USE mod_type_ana_psi
       IMPLICIT NONE
 
 PRIVATE
@@ -332,7 +332,7 @@ PUBLIC :: MPI_Bcast_param_Davidson
       USE mod_field,         ONLY : dealloc_param_field
       USE mod_param_WP0,     ONLY : dealloc_param_WP0
       USE mod_psi_set_alloc, ONLY : dealloc_psi,dealloc_array
-      USE mod_type_ana_psi,  ONLY : dealloc_ana_psi
+      USE mod_type_ana_psi
       IMPLICIT NONE
       TYPE (param_propa), intent(inout) :: para_propa
 
@@ -554,6 +554,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
   USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
   USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi
+  USE mod_type_ana_psi
   USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
   USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
   USE mod_MPI
@@ -572,16 +573,16 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   integer            :: nb_WP
   TYPE (param_psi)   :: WP(:)
 
-  !logical            :: ana_mini = .TRUE.
-  logical            :: ana_mini = .FALSE.
-  logical            :: adia_save
+  logical            :: ana_mini = .TRUE.
+  !logical            :: ana_mini = .FALSE.
+  logical            :: G,G2,B,B2,With_field
 
 !-- working parameters --------------------------------
   TYPE (param_psi)   :: w1,w2
 
-  integer       :: j,i,i_bi,i_be,i_bie
-  complex (kind=Rkind) :: ET  ! energy
-  character (len=:), allocatable           :: info
+  integer                            :: j,i,i_bi,i_be,i_bie
+  complex (kind=Rkind)               :: ET  ! energy
+  character (len=:),    allocatable  :: info
 
   logical :: BasisRep,GridRep,adia_loc,Write_psi2_Grid,Write_psi_Grid
 
@@ -641,17 +642,14 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
     GridRep  = WP(1)%GridRep
   ENDIF
 
-  para_propa%ana_psi%T = T
-
-  adia_save = para_propa%ana_psi%adia
 
   IF (present(adia)) THEN
     adia_loc = adia
   ELSE
     adia_loc = para_propa%Write_WPAdia .OR. para_propa%ana_psi%adia
   END IF
-
   IF (.NOT. para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done) adia_loc = .FALSE.
+
   !-----------------------------------------------------------
   ! => the WPs on the Grid
   IF (.NOT. para_propa%ana_psi%GridDone) THEN
@@ -665,13 +663,11 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   !-----------------------------------------------------------
 
   !-----------------------------------------------------------
+   With_field = present(para_field)
    IF (present(para_field)) THEN
      CALL sub_dnE(dnE,0,T,para_field)
-     para_propa%ana_psi%With_field = .TRUE.
-     para_propa%ana_psi%field      = dnE
    ELSE
-     para_propa%ana_psi%With_field = .FALSE.
-     para_propa%ana_psi%field      = (/ZERO,ZERO,ZERO/)
+     dnE = (/ZERO,ZERO,ZERO/)
    END IF
   !-----------------------------------------------------------
 
@@ -693,12 +689,18 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
     IF(MPI_id==0) THEN
       WP(i)%CAvOp = ET/w1%norm2
 
-      para_propa%ana_psi%num_psi = i
-      para_propa%ana_psi%Ene     = real(WP(i)%CAvOp,kind=Rkind)
+      G  = (para_propa%WPpsi  .AND.para_propa%write_GridRep)
+      G2 = (para_propa%WPpsi2 .AND.para_propa%write_GridRep)
+      B  = (para_propa%WPpsi  .AND.para_propa%write_BasisRep)
+      B2 = (para_propa%WPpsi2 .AND.para_propa%write_BasisRep)
+
+      CALL modif_ana_psi(para_propa%ana_psi,                            &
+                         T=T,num_psi=i,Ene=real(WP(i)%CAvOp,kind=Rkind),&
+                         With_field=With_field,field=dnE,               &
+                         Write_psi_Grid=G,  Write_psi2_Grid=G2,         &
+                         Write_psi_Basis=B, Write_psi2_Basis=B2)
 
       ! => The analysis (diabatic)
-      para_propa%ana_psi%Write_psi2_Grid = Write_psi2_Grid
-      para_propa%ana_psi%Write_psi_Grid  = Write_psi_Grid
       CALL sub_analyze_psi(WP(i),para_propa%ana_psi,adia=.FALSE.)
 
       IF (para_propa%ana_psi%ExactFact > 0) THEN
@@ -722,8 +724,6 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       ! => The analysis (adiabatic)
       IF (adia_loc) THEN
         w1 = WP(i)
-        para_propa%ana_psi%Write_psi2_Grid = Write_psi2_Grid
-        para_propa%ana_psi%Write_psi_Grid  = .FALSE.
         CALL sub_PsiDia_TO_PsiAdia_WITH_MemGrid(w1,para_H)
         CALL sub_analyze_psi(w1,para_propa%ana_psi,adia=.TRUE.)
       END IF
@@ -736,7 +736,6 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   CALL dealloc_psi(w1,delete_all=.TRUE.)
   CALL dealloc_psi(w2,delete_all=.TRUE.)
 
-  para_propa%ana_psi%adia     = adia_save
   para_propa%ana_psi%GridDone = .FALSE.
 
 !----------------------------------------------------------
@@ -753,7 +752,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   USE mod_field,           ONLY : param_field,sub_dnE
 
   USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
-  USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi,Channel_weight
+  USE mod_ana_psi,         ONLY : norm2_psi,Channel_weight
   USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
   USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
   USE mod_MPI
@@ -774,8 +773,6 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
 
 !-- working parameters --------------------------------
   TYPE (param_psi)   :: w2
-
-  !integer       :: j,i,i_bi,i_be,i_bie
 
   integer       :: i,i_bi,i_be
 

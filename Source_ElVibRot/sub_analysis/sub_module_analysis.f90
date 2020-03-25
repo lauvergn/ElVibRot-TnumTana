@@ -44,7 +44,7 @@
       MODULE mod_analysis
       USE mod_system
       use mod_Constant, only: real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit, get_val_FROM_RWU
-      USE mod_type_ana_psi,  only: param_ana_psi
+      USE mod_type_ana_psi
       USE mod_CRP
       IMPLICIT NONE
         TYPE param_ana
@@ -309,6 +309,7 @@
 
       IF (propa) THEN
         CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
+                          propa=propa,T=ZERO,                           &
                           Boltzmann_pop=.FALSE.,                        &
                           adia=psi_adia,                                &
                           AvScalOp=AvScalOp,AvHiterm=AvHiterm,          &
@@ -322,6 +323,7 @@
                           psi1D_Q0=psi1D_Q0,psi2D_Q0=psi2D_Q0,Qana=Qana_cut)
       ELSE
         CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
+                          propa=propa,T=ZERO,                           &
                           Boltzmann_pop=.TRUE.,Temp=Temp,               &
                           adia=psi_adia,                                &
                           AvScalOp=AvScalOp,AvHiterm=AvHiterm,          &
@@ -356,7 +358,7 @@
 !===============================================================================
 
       SUBROUTINE dealloc_para_ana(para_ana)
-      USE mod_type_ana_psi, only : dealloc_ana_psi
+      USE mod_type_ana_psi
       USE mod_system
       IMPLICIT NONE
 

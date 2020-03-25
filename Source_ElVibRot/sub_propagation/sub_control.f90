@@ -482,9 +482,9 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
         CALL renorm_psi(tab_WPt(i))
       END DO
 
-      T = ZERO
-      CALL sub_analyze_tab_psi(T,tab_WP0,para_propa%ana_psi)
-      CALL sub_analyze_tab_psi(T,tab_WPt,para_propa%ana_psi)
+      para_propa%ana_psi%T = T
+      CALL sub_analyze_tab_psi(tab_WP0,para_propa%ana_psi,adia=.FALSE.)
+      CALL sub_analyze_tab_psi(tab_WPt,para_propa%ana_psi,adia=.FALSE.)
 
 !     --------------------------------------------------
 

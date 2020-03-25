@@ -235,7 +235,7 @@ SUBROUTINE sub_ExactFact_analysis_v0(T,psi,ana_psi,para_H,para_field)
   USE mod_field,           ONLY : param_field,sub_dnE
 
   USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,param_ana_psi
-  USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi
+  USE mod_ana_psi,         ONLY : norm2_psi
   USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
   USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
   USE mod_basis

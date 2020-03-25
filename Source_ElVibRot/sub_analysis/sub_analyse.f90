@@ -234,7 +234,7 @@ CONTAINS
         info = String_TO_String( " " //                                 &
            real_TO_char( ene(i)*const_phys%auTOenergy,"f12.6" ) // " : ")
 
-        CALL sub_analyze_psi(tab_Psi(i),para_ana%ana_psi)
+        CALL sub_analyze_psi(tab_Psi(i),para_ana%ana_psi,adia=.FALSE.)
 
         IF (allocated(para_ana%ana_psi%max_RedDensity)) THEN
           IF (.NOT. allocated(AllPsi_max_RedDensity)) THEN
@@ -312,8 +312,11 @@ CONTAINS
       END IF
 !----------------------------------------------------------
 
-      !CALL dealloc_ana_psi(ana_psi)
-      CALL dealloc_NParray(ene,'ene',name_sub)
+      IF (allocated(ene))     CALL dealloc_NParray(ene,'ene',name_sub)
+      IF (allocated(Mat_psi)) CALL dealloc_NParray(Mat_psi,'Mat_psi',name_sub)
+      IF (allocated(AllPsi_max_RedDensity))                              &
+          CALL dealloc_NParray(AllPsi_max_RedDensity,'AllPsi_max_RedDensity',name_sub)
+      IF (allocated(info)) deallocate(info)
 
 !----------------------------------------------------------
       IF (debug) THEN

@@ -47,7 +47,7 @@
       SUBROUTINE sub_VibRot(Tab_Psi,nb_psi,para_H,para_ana)
 
       USE mod_system
-      use mod_Coord_KEO, only: CoordType, tnum, alloc_nparray, dealloc_nparray
+      use mod_Coord_KEO, only: CoordType, tnum
       use mod_PrimOp,    only: param_d0matop, init_d0matop, write_d0matop, dealloc_d0matop
       USE mod_basis
       USE mod_psi_set_alloc

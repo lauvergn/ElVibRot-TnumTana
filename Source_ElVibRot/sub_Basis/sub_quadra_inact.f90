@@ -50,7 +50,7 @@
       SUBROUTINE sub_quadra_inact(Basis2n,mole)
       USE mod_system
       USE mod_nDindex
-      use mod_Coord_KEO, only: CoordType, alloc_nparray
+      use mod_Coord_KEO, only: CoordType
       USE mod_basis
       IMPLICIT NONE
 

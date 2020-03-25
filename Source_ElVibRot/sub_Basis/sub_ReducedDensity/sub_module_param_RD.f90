@@ -52,7 +52,8 @@ IMPLICIT NONE
     integer                     :: basis_index    = 0  ! index of the basis set
     integer                     :: nb             = 0  ! size of the basis set
 
-    TYPE (Type_nDindex)         :: nDindex_ComplBasis  ! multidimensional index for the complementary basis set (without the basis set with this basis_index)
+    TYPE (Type_nDindex)         :: nDindex_ComplBasis  ! multidimensional index for the complementary basis set
+                                                        ! (without the basis set with this basis_index)
     integer                     :: nbb_ComplBasis = 0
 
     integer,        allocatable :: tab_OF_iBComplBasis_AND_ib_TO_iB(:,:)   ! size (nbb_ComplBasis,nb)

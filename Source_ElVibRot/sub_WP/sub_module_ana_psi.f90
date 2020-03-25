@@ -62,22 +62,18 @@ CONTAINS
 !       Rho1D, Rho2D
 !
 !================================================================
-SUBROUTINE sub_analyze_tab_Psi(T,tab_psi,ana_psi,adia,field,Write_Psi)
+SUBROUTINE sub_analyze_tab_Psi(tab_psi,ana_psi,adia)
   USE mod_system
   USE mod_psi_set_alloc
   IMPLICIT NONE
 
-  real (kind=Rkind),    intent(in)           :: T      ! time
   TYPE (param_psi),     intent(inout)        :: tab_psi(:)
   TYPE (param_ana_psi), intent(inout)        :: ana_psi
-  logical,              intent(in), optional :: adia
-  real (kind=Rkind),    intent(in), optional ::field(3)
-  logical,              intent(in), optional :: Write_Psi
+  logical,              intent(in)           :: adia
 
 
 !-- working parameters --------------------------------
   integer           :: i
-  logical           :: Write_Psi_loc,adia_loc
 
 !- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub='sub_analyze_tab_Psi'
@@ -86,48 +82,27 @@ SUBROUTINE sub_analyze_tab_Psi(T,tab_psi,ana_psi,adia,field,Write_Psi)
 !-------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
-    write(out_unitp,*) 'Time',T
     write(out_unitp,*)
+    CALL flush_perso(out_unitp)
    END IF
 !-------------------------------------------------------
 
-  IF (present(Write_Psi)) THEN
-    Write_Psi_loc =  Write_Psi
-  ELSE
-    Write_Psi_loc = .TRUE.
-  END IF
+  DO i=1,size(tab_psi)
+    ana_psi%num_psi = i
+    ana_psi%Ene     = real(tab_psi(i)%CAvOp,kind=Rkind)
+    CALL sub_analyze_psi(tab_psi(i),ana_psi,adia=adia)
+  END DO
 
-  ana_psi%T      = T
-
-  ana_psi%With_field = present(field)
-  IF (present(field)) THEN
-    ana_psi%field      = field
-  ELSE
-    ana_psi%field      = (/ZERO,ZERO,ZERO/)
-  END IF
-
-  IF (present(adia)) THEN
-    DO i=1,size(tab_psi)
-      ana_psi%num_psi = i
-      ana_psi%Ene     = real(tab_psi(i)%CAvOp,kind=Rkind)
-      CALL sub_analyze_psi(tab_psi(i),ana_psi,adia=adia,Write_Psi=Write_Psi_loc)
-    END DO
-  ELSE
-    DO i=1,size(tab_psi)
-      ana_psi%num_psi = i
-      ana_psi%Ene     = real(tab_psi(i)%CAvOp,kind=Rkind)
-      CALL sub_analyze_psi(tab_psi(i),ana_psi,Write_Psi=Write_Psi_loc)
-    END DO
-  END IF
 
 !----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
   END IF
 !----------------------------------------------------------
 END SUBROUTINE sub_analyze_tab_Psi
 
-SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
+SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   USE mod_system
   USE mod_psi_set_alloc
   IMPLICIT NONE
@@ -135,11 +110,9 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
   !----- variables for the WP -------------------------------
   TYPE (param_psi),     intent(inout)         :: psi
   TYPE (param_ana_psi), intent(inout)         :: ana_psi
-  logical,              intent(in),  optional :: adia
-  logical,              intent(in),  optional :: Write_Psi
+  logical,              intent(in)            :: adia
 
 
-  logical                           :: Write_Psi_loc,adia_loc
   integer                           :: i,j,i_be,i_bi
   real (kind=Rkind)                 :: pop,Etemp
   character(len=:), allocatable     :: lformat
@@ -171,18 +144,6 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
     CALL flush_perso(out_unitp)
   END IF
 
-  IF (present(Write_Psi)) THEN
-    Write_Psi_loc =  Write_Psi
-  ELSE
-    Write_Psi_loc = .TRUE.
-  END IF
-
-  IF (present(adia)) THEN
-    adia_loc = adia
-  ELSE
-    adia_loc = ana_psi%adia
-  END IF
-
   IF (psi%ComOp%contrac_ba_ON_HAC) THEN
     ana_psi%AvQ = .FALSE.
   END IF
@@ -199,10 +160,6 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
   END IF
 
 
-  IF (allocated(tab_WeightChannels)) THEN
-    STOP 'tab_WeightChannels allocated!!'
-  END IF
-
   !----------------------------------------------------------------------
   ! tab_WeightChannels
   IF (ana_psi%propa) THEN
@@ -210,16 +167,16 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
     RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
     E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
 
-    IF (adia_loc) THEN
-      CALL Channel_weight(ana_psi%tab_WeightChannels,psi,               &
-                          GridRep=.TRUE.,BasisRep=.FALSE.)
+    IF (adia) THEN
+      CALL Channel_weight(tab_WeightChannels,psi,                       &
+                                        GridRep=.TRUE.,BasisRep=.FALSE.)
       info = '#WPadia ' // int_TO_char(ana_psi%num_psi)
     ELSE
-      CALL Channel_weight(ana_psi%tab_WeightChannels,psi,               &
-                          GridRep=.FALSE.,BasisRep=.TRUE.)
+      CALL Channel_weight(tab_WeightChannels,psi,                       &
+                                        GridRep=.FALSE.,BasisRep=.TRUE.)
       info = '#WP ' // int_TO_char(ana_psi%num_psi)
     END IF
-    Psi_norm2 = sum(ana_psi%tab_WeightChannels)
+    Psi_norm2 = sum(tab_WeightChannels)
 
     ! add the psi number + the time
     psi_line = 'norm^2-WP ' // info // ' ' // real_TO_char(ana_psi%T,Rformat='f12.2')
@@ -237,7 +194,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
     psi_line = psi_line // ' ' // real_TO_char(Psi_norm2,Rformat='f10.7')
     DO i_be=1,psi%nb_be
     DO i_bi=1,psi%nb_bi
-      w = ana_psi%tab_WeightChannels(i_bi,i_be)
+      w = tab_WeightChannels(i_bi,i_be)
       psi_line = psi_line // ' ' // real_TO_char(w,Rformat='f10.7')
     END DO
     END DO
@@ -266,14 +223,9 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
     END IF
 
   ELSE ! not propa
- !write(6,*) 'coucou1' ; flush(6)
- !IF (allocated(tab_WeightChannels)) STOP 'tab_WeightChannels allocated'
-  !write(6,*) 'alloc tab_WeightChannels',allocated(tab_WeightChannels) ; flush(6)
-  !write(6,*) 'shape tab_WeightChannels',shape(tab_WeightChannels) ; flush(6)
-
-    CALL Channel_weight(ana_psi%tab_WeightChannels,psi,                 &
-       GridRep=.FALSE.,BasisRep=.TRUE.,Dominant_Channel=Dominant_Channel)
-!write(6,*) 'coucou2' ; flush(6)
+    CALL Channel_weight(tab_WeightChannels,psi,                         &
+                        GridRep=.FALSE.,BasisRep=.TRUE.,                &
+                        Dominant_Channel=Dominant_Channel)
 
     RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
     RWU_DE = REAL_WU(ana_psi%Ene-ana_psi%ZPE,'au','E')
@@ -323,29 +275,25 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
     lformat = String_TO_String( '("% HAC: ",' //                    &
                             int_TO_char(psi%nb_bi) // "(1x,f4.0) )" )
 
-    write(out_unitp,lformat) (ana_psi%tab_WeightChannels(i_bi,1)*TEN**2,i_bi=1,psi%nb_bi)
+    write(out_unitp,lformat) (tab_WeightChannels(i_bi,1)*TEN**2,i_bi=1,psi%nb_bi)
   END IF
 
-  IF (allocated(tab_WeightChannels)) THEN
-    CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","Channel_weight")
-  END IF
+  CALL calc_1Dweight(psi,ana_psi,tab_WeightChannels,20,real(ana_psi%num_psi,kind=Rkind),info,.TRUE.)
 
-  CALL calc_1Dweight(psi,ana_psi,20,real(ana_psi%num_psi,kind=Rkind),info,.TRUE.)
+  IF (.NOT. adia .AND. .NOT. ana_psi%propa) CALL calc_MaxCoef_psi(psi,ana_psi%T,info)
 
-  IF (.NOT. adia_loc .AND. .NOT. ana_psi%propa) CALL calc_MaxCoef_psi(psi,ana_psi%T,info)
-
-  IF (ana_psi%propa) CALL psi_Qba_ie_psi(ana_psi%T,psi,ana_psi,info)
+  IF (ana_psi%propa) CALL psi_Qba_ie_psi(ana_psi%T,psi,ana_psi,tab_WeightChannels,info)
 
   CALL Rho1D_Rho2D_psi(psi,ana_psi)
 
   CALL write1D2D_psi(psi,ana_psi)
 
   !---------------------------------------------------------------------------
-  IF (Write_Psi_loc .AND. ana_psi%Write_psi) THEN
+  IF (ana_psi%Write_psi) THEN
     ! write one the grid
     IF (ana_psi%Write_psi2_Grid) THEN
       name_filePsi = ana_psi%file_Psi%name
-      IF (adia_loc) THEN
+      IF (adia) THEN
         name_filePsi = trim(name_filePsi) // '_GridAdiaPsi2'
       ELSE
         name_filePsi = trim(name_filePsi) // '_GridPsi2'
@@ -365,7 +313,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
       close(nioPsi)
     END IF
 
-    IF (.NOT. adia_loc .AND. ana_psi%Write_psi_Grid) THEN
+    IF (.NOT. adia .AND. ana_psi%Write_psi_Grid) THEN
       name_filePsi = trim(ana_psi%file_Psi%name) // '_GridPsi'
       IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
 
@@ -382,7 +330,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
     END IF
     !---------------------------------------------------------------------------
 
-    IF (.NOT. adia_loc .AND. ana_psi%Write_psi2_Basis) THEN
+    IF (.NOT. adia .AND. ana_psi%Write_psi2_Basis) THEN
       name_filePsi = trim(ana_psi%file_Psi%name) // '_BasisPsi2'
       IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
 
@@ -408,7 +356,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
 
     END IF
 
-    IF (.NOT. adia_loc .AND. ana_psi%Write_psi_Basis) THEN
+    IF (.NOT. adia .AND. ana_psi%Write_psi_Basis) THEN
       name_filePsi = trim(ana_psi%file_Psi%name) // '_BasisPsi'
       IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
 
@@ -441,6 +389,10 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
 !31       format('C12',f12.1,1x,i2,3(1x,f12.6))
           !CALL calc_nDTk(WP(i),T)
 
+  IF (allocated(tab_WeightChannels)) THEN
+    CALL dealloc_NParray(tab_WeightChannels,                    &
+                        "tab_WeightChannels",name_sub)
+  END IF
   IF (allocated(info))     deallocate(info)
   IF (allocated(psi_line)) deallocate(psi_line)
   IF (allocated(lformat))  deallocate(lformat)
@@ -452,7 +404,6 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
   CALL flush_perso(out_unitp)
 
 END SUBROUTINE sub_analyze_psi
-
 !================================================================
 !
 !     calculation of <psi | Qact(j) | psi>
@@ -638,7 +589,7 @@ END SUBROUTINE sub_analyze_psi
 !     means of Qact1(i) psi  : <psi|Qact(i)|psi>
 !
 !================================================================
-      SUBROUTINE psi_Qba_ie_psi(T,psi,ana_psi,info)
+      SUBROUTINE psi_Qba_ie_psi(T,psi,ana_psi,tab_WeightChannels,info)
       USE mod_system
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
@@ -651,6 +602,7 @@ END SUBROUTINE sub_analyze_psi
       character (len=*) :: info
 
       real (kind=Rkind) :: T
+     real (kind=Rkind), allocatable    :: tab_WeightChannels(:,:)
 
 
       real (kind=Rkind) :: Qmean(psi%nb_act1)
@@ -681,10 +633,10 @@ END SUBROUTINE sub_analyze_psi
       IF (psi%nb_baie > psi%nb_tot) RETURN
 
 
-      IF (.NOT. allocated(ana_psi%tab_WeightChannels)) THEN
+      IF (.NOT. allocated(tab_WeightChannels)) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
-        write(out_unitp,*) 'ana_psi%tab_WeightChannels is not allocated!!'
-        write(out_unitp,*) ' It should be done in sub_analyze_WP_forPropa'
+        write(out_unitp,*) 'tab_WeightChannels is not allocated!!'
+        write(out_unitp,*) ' It should be done in sub_analyze or sub_analyze_WP_forPropa'
         STOP
       END IF
 
@@ -721,14 +673,14 @@ END SUBROUTINE sub_analyze_psi
 
       END DO
 
-      Qmean(:) = Qmean(:) / sum(ana_psi%tab_WeightChannels)
+      Qmean(:) = Qmean(:) / sum(tab_WeightChannels)
 
 
       DO i_be=1,psi%nb_be
       DO i_bi=1,psi%nb_bi
-        IF (ana_psi%tab_WeightChannels(i_bi,i_be) > ONETENTH**7) THEN
+        IF (tab_WeightChannels(i_bi,i_be) > ONETENTH**7) THEN
           Qmean_ie(:,i_bi,i_be) = Qmean_ie(:,i_bi,i_be) /               &
-                                  ana_psi%tab_WeightChannels(i_bi,i_be)
+                                  tab_WeightChannels(i_bi,i_be)
         ELSE
           Qmean_ie(:,i_bi,i_be) = ZERO
         END IF
@@ -1307,7 +1259,7 @@ END SUBROUTINE sub_analyze_psi
 !      calc_1Dweight(psi)
 !
 !==============================================================
-      SUBROUTINE calc_1Dweight(psi,ana_psi,max_1D,T,info,print_w)
+      SUBROUTINE calc_1Dweight(psi,ana_psi,tab_WeightChannels,max_1D,T,info,print_w)
       USE mod_system
       USE mod_dnSVM
       USE mod_psi_set_alloc
@@ -1316,6 +1268,7 @@ END SUBROUTINE sub_analyze_psi
 !----- variables for the WP propagation ----------------------------
       TYPE (param_psi)     :: psi
       TYPE (param_ana_psi) :: ana_psi
+      real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)
 
       integer              :: max_1D
       real (kind=Rkind)    :: T ! time
@@ -1342,7 +1295,7 @@ END SUBROUTINE sub_analyze_psi
         CALL calc_1Dweight_act1(psi,ana_psi,max_1D,T,info,print_w)
       END IF
 
-      CALL calc_1Dweight_inact2n_elec(psi,ana_psi,max_1D,T,info,print_w)
+      CALL calc_1Dweight_inact2n_elec(psi,ana_psi,tab_WeightChannels,max_1D,T,info,print_w)
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -1353,7 +1306,8 @@ END SUBROUTINE sub_analyze_psi
 
       END SUBROUTINE calc_1Dweight
 
-      SUBROUTINE calc_1Dweight_inact2n_elec(psi,ana_psi,max_1D,T,info,print_w)
+      SUBROUTINE calc_1Dweight_inact2n_elec(psi,ana_psi,tab_WeightChannels,&
+                                            max_1D,T,info,print_w)
       USE mod_system
       USE mod_nDindex
       USE mod_psi_set_alloc
@@ -1367,6 +1321,7 @@ END SUBROUTINE sub_analyze_psi
       real (kind=Rkind),allocatable :: weight1D(:,:)
       integer          :: tab(psi%Basis2n%nb_basis+1)
 
+     real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)
       real (kind=Rkind),allocatable :: weight1Dact(:,:)
       real (kind=Rkind)    :: a
 
@@ -1390,11 +1345,18 @@ END SUBROUTINE sub_analyze_psi
         write(out_unitp,*) 'nb_inact2n',psi%Basis2n%nb_basis
         write(out_unitp,*) 'nb_bi,nb_be',psi%nb_bi,psi%nb_be
         write(out_unitp,*) 'nb_bie',psi%nb_bi*psi%nb_be
-        write(out_unitp,*) 'tab_WeightChannels',ana_psi%tab_WeightChannels
+        !write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
       IF (ana_psi%adia) RETURN
-      CALL flush_perso(out_unitp)
+
+      IF (.NOT. allocated(tab_WeightChannels)) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) 'tab_WeightChannels is not allocated!!'
+        write(out_unitp,*) ' It should be done in sub_analyze or sub_analyze_WP_forPropa'
+        STOP
+      END IF
 
       IF (psi%Basis2n%nb_basis == 0) THEN
         max_herm = psi%nb_be-1
@@ -1428,8 +1390,7 @@ END SUBROUTINE sub_analyze_psi
 
           DO j=1,psi%Basis2n%nb_basis+1
             j_herm = tab(j)
-            weight1D(j,j_herm) = weight1D(j,j_herm) +                   &
-                                        ana_psi%tab_WeightChannels(ii,ie)
+            weight1D(j,j_herm) = weight1D(j,j_herm) + tab_WeightChannels(ii,ie)
           END DO
         END DO
         END DO
@@ -1890,7 +1851,7 @@ END SUBROUTINE sub_analyze_psi
       END IF
 
       IF (allocated(tab_WeightChannels)) THEN
-        CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","Channel_weight")
+        CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","norm2_psi (alloc from Channel_weight)")
       END IF
 
 !----------------------------------------------------------
@@ -2106,7 +2067,7 @@ END SUBROUTINE norm_psi_MPI
       psi%norm2 = ONE
 
       IF (allocated(tab_WeightChannels)) THEN
-        CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","Channel_weight (from renorm_psi)")
+        CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","renorm_psi (alloc from Channel_weight)")
       END IF
 
 !----------------------------------------------------------
@@ -2257,17 +2218,11 @@ END SUBROUTINE norm_psi_MPI
   nb_be = get_nb_be_FROM_psi(psi)
   nb_bi = get_nb_bi_FROM_psi(psi)
 
-  !write(6,*) 'nb_bi,nb_be',nb_bi,nb_be ; flush(6)
-
   IF (GridRep .AND. BasisRep) THEN
     write(out_unitp,*) ' ERROR in Channel_weight'
     write(out_unitp,*) ' GridRep=t and BasisRep=t !'
     STOP
   END IF
-
-  !write(6,*) 'alloc tab_WeightChannels',allocated(tab_WeightChannels) ; flush(6)
-  !write(6,*) 'shape tab_WeightChannels',shape(tab_WeightChannels) ; flush(6)
-
 
   IF (.NOT. allocated(tab_WeightChannels) .AND. nb_bi > 0 .AND. nb_be > 0) THEN
     CALL alloc_NParray(tab_WeightChannels,(/nb_bi,nb_be/),              &
@@ -2275,7 +2230,6 @@ END SUBROUTINE norm_psi_MPI
     tab_WeightChannels(:,:) = ZERO
   END IF
 
-  !write(6,*) 'shape tab_WeightChannels',shape(tab_WeightChannels) ; flush(6)
 
   !IF (SGtype == 4) THEN
   !  CALL Channel_weight_SG4(tab_WeightChannels,psi,                 &
