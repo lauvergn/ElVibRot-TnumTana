@@ -85,13 +85,13 @@
 
 !----- for the CoordType and Tnum --------------------------------------------------------
       TYPE (CoordType) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum)      :: para_Tnum
 
 !----- variables for the construction of H ---------------------------------------------
       TYPE (param_AllOp), target  :: para_AllOp
-      TYPE (param_Op), pointer    :: para_H      => null()
-      TYPE (param_Op), pointer    :: para_S      => null()
-      TYPE (param_Op), pointer    :: para_Dip(:) => null()
+      TYPE (param_Op),    pointer :: para_H      => null()
+      TYPE (param_Op),    pointer :: para_S      => null()
+      TYPE (param_Op),    pointer :: para_Dip(:) => null()
       TYPE (param_ComOp)          :: ComOp
       integer                     :: iOp
       real (kind=Rkind)           :: max_Sii,max_Sij
@@ -99,7 +99,7 @@
 !----- variables pour la namelist analyse ----------------------------------------------
       TYPE (param_ana)            :: para_ana
       TYPE (param_intensity)      :: para_intensity
-      TYPE (param_ana_psi)        :: ana_psi
+      TYPE (param_ana_psi)        :: ana_WP0
 
 !----- variables for the WP propagation ------------------------------------------------
       TYPE (param_propa)          :: para_propa
@@ -336,16 +336,18 @@
             IF(MPI_id==0) CALL norm2_psi(WP0(1))
             write(out_unitp,*) ' Norm of |WP0>',WP0(1)%norm2
             IF(MPI_id==0) CALL renorm_psi_With_norm2(WP0(1))
-            T = ZERO
             write(out_unitp,*) ' Analysis of |WP0> or Mu|WP0>'
             write(out_unitp,*)
 
-            para_propa%ana_psi%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
-            WP0(1)%CAvOp           = CZERO
-            para_propa%ana_psi%ZPE = ZERO
+            IF(MPI_id==0) THEN
+              ana_WP0               = para_propa%ana_psi
+              CALL modif_ana_psi(ana_WP0,                               &
+                                 Ene=ZERO,T=ZERO,ZPE=ZERO,Write_Psi=.FALSE.)
+              ana_WP0%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
+              CALL sub_analyze_tab_psi(WP0(:),ana_WP0,adia=.FALSE.)
+              CALL dealloc_ana_psi(ana_WP0)
+            END IF
 
-            IF(MPI_id==0) CALL sub_analyze_tab_psi(T,WP0(:),para_propa%ana_psi,adia=.FALSE.,Write_Psi=.FALSE.)
-            para_propa%ana_psi%file_Psi%name = para_propa%file_WP%name
             write(out_unitp,*)
 
           ELSE ! for optimal control

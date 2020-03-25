@@ -33,20 +33,38 @@ MODULE mod_Coord_KEO
 
   USE mod_Lib_QTransfo,    ONLY : Write_dnx
   USE mod_freq,            ONLY : gaussian_width
-  USE mod_ActiveTransfo
-  USE mod_RPHTransfo
-  USE mod_CartesianTransfo
-  USE mod_export_KEO  ! no only
-  USE mod_Tnum
-  USE mod_paramQ
-  USE mod_dnRho
-  USE mod_dnGG_dng
-  USE mod_dnDetGG_dnDetg
-  USE mod_f2f2Vep
+  USE mod_ActiveTransfo,   ONLY : get_Qact,get_Qact0,Set_AllActive,     &
+                                  Qact_TO_Qdyn_FROM_ActiveTransfo,      &
+                                  Qdyn_TO_Qact_FROM_ActiveTransfo,      &
+                                  Qinact2n_TO_Qact_FROM_ActiveTransfo
+  USE mod_RPHTransfo,      ONLY : Type_RPHpara_AT_Qact1,Type_RPHTransfo,&
+                                  alloc_array,dealloc_array,            &
+                                  alloc_rphpara_at_qact1,switch_rph,    &
+                                  write_rphtransfo,set_rphtransfo,      &
+                                  write_rphpara_at_qact1
+  USE mod_CartesianTransfo, ONLY: calc_dnteckart,calc_dntxdnxin_to_dnxout,&
+                                  calc_eckartrot,dnmwx_multiref
+  !USE mod_export_KEO ! not need anymore !!
+  USE mod_Tnum,            ONLY : Tnum,CoordType,zmatrix,param_PES_FromTnum,&
+                                  Read_CoordType,write_coordtype,           &
+       coordtype1tocoordtype2,dealloc_coordtype,sub_coordtype_to_pararph,   &
+       sub_pararph_to_coordtype,type_var_analysis_of_coordtype,             &
+       CoordTypeRPH_TO_CoordTypeFlex,Set_OptimizationPara_FROM_CoordType
 
-  USE mod_Tana_keo    ! no only
-  USE mod_Tana_Tnum   ! no only
-  USE mod_Tana_Sum_OpnD
+  USE mod_paramQ,          ONLY : sub_dnFCC_TO_dnFcurvi,sub_QactTOdnx,  &
+                                  sub_qacttoqit,sub_qplusdq_to_cart,    &
+                               read_RefGeom,sub_QactTOd0x,sub_d0xTOQact,&
+                                  Set_paramQ_FOR_optimization, &
+                                  Write_Cartg98
+
+  USE mod_dnRho,           ONLY : sub3_dnrho_ana,Write_Rho
+  USE mod_dnGG_dng,        ONLY : get_d0GG,get_dng_dnGG
+  USE mod_dnDetGG_dnDetg,  ONLY : sub3_dndetgg
+  USE mod_f2f2Vep,         ONLY : calc3_f2_f1q_num,calc3_f2_f1q_numtay0qinact2n
+
+  USE mod_Tana_keo,        ONLY : compute_analytical_keo
+  USE mod_Tana_Tnum,       ONLY : comparison_g_from_tnum_tana
+  USE mod_Tana_Sum_OpnD,   ONLY : write_op
   IMPLICIT NONE
 
 END MODULE mod_Coord_KEO

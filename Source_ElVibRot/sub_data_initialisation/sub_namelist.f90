@@ -58,7 +58,7 @@
       USE mod_nDindex
       USE mod_Constant, only : REAL_WU, convRWU_TO_R
       use mod_Coord_KEO, only: CoordType, alloc_array, dealloc_array, &
-                               set_rphtransfo, tnum, alloc_nparray
+                               set_rphtransfo, tnum
       USE mod_basis
       USE mod_Op
       IMPLICIT NONE

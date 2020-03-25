@@ -49,7 +49,7 @@
       SUBROUTINE read_basis5(BasisnD,mole)
       USE mod_system
       USE mod_basis
-      use mod_Coord_KEO, only: CoordType, alloc_array, alloc_nparray, dealloc_nparray
+      use mod_Coord_KEO, only: CoordType
       USE mod_MPI
       IMPLICIT NONE
 

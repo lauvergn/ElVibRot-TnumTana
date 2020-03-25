@@ -60,7 +60,7 @@
           ! population analysis + reduced density
           TYPE (param_file)              :: file_PsiRho
           real (kind=Rkind), allocatable :: max_RedDensity(:)         ! the gaussian weighted (almost the last basis function) reduced density
-          real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)   ! tab_WeightChannels(nb_bi,nb_be)
+          !real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)   ! tab_WeightChannels(nb_bi,nb_be)
           real (kind=Rkind)              :: Psi_norm2     = -ONE      ! norm^2 of psi
           logical                        :: adia          = .FALSE.   ! To perform special analysis with adiabatic states
           logical                        :: Rho1D         = .FALSE.   ! reduced densities (1D) along coordinate
@@ -70,7 +70,7 @@
           integer                        :: Rho_type      = 2         ! Change the weight of rho along the coordiantes:
                                                                       ! Rho_type=0, without rho(Q).w(Q) => dT=dQ
                                                                       ! Rho_type=1, with    rho(Q).w(Q) => dT=rho(Q).w(Q)dQ (=>sum Rho(Q)=1)
-                                                                      ! Rho_type=2, without w(Q);       => dT=w(Q)dQ
+                                                                      ! Rho_type=2, without rho(Q);     => dT=w(Q)dQ
 
           logical                        :: Rho1Dcontract = .FALSE.   ! reduced densities (1D) on contracted basis set (just for the analysis)
           integer,           allocatable :: contractBasis_list(:)     ! list of contracted basis set (for the analysis)
@@ -107,14 +107,13 @@
           logical                        :: Write_psi        = .FALSE. ! write psi (or psi^2 ...)
           logical                        :: Write_psi2_Grid  = .FALSE. ! write the density on the grid
           logical                        :: Write_psi2_Basis = .FALSE. ! write the density on the basis functions
-          logical                        :: Write_psi_Grid   = .FALSE.  ! write psi on the grid
-          logical                        :: Write_psi_Basis  = .FALSE.  ! write psi on the basis
+          logical                        :: Write_psi_Grid   = .FALSE. ! write psi on the grid
+          logical                        :: Write_psi_Basis  = .FALSE. ! write psi on the basis
 
           ! Propagation parameters
           logical                        :: propa         = .FALSE.      ! To perform special analysis of WP
           logical                        :: With_field    = .FALSE.      ! when the field is present
           real (kind=Rkind)              :: T             = ZERO         ! time in au
-          real (kind=Rkind)              :: max_Psi_norm2 =  1.3_Rkind   ! if norm^2 >max_norm^2 => stop the WP propagation
           real (kind=Rkind)              :: field(3)= (/ZERO,ZERO,ZERO/) ! Electric field
 
         END TYPE param_ana_psi
@@ -128,6 +127,7 @@
       SUBROUTINE init_ana_psi(ana_psi,ana,num_psi,adia,           &
                               Write_psi2_Grid,Write_psi2_Basis,   &
                               Write_psi_Grid,Write_psi_Basis,     &
+                              Write_psi,                          &
                               AvQ,Qtransfo_type,                  &
                               AvScalOp,AvHiterm,                  &
                               coherence,coherence_epsi,           &
@@ -135,7 +135,7 @@
                               Rho1D,Rho2D,Weight_Rho,Qana_Weight, &
                               Rho_type,                           &
                               psi1D_Q0,psi2D_Q0,Qana,             &
-                              propa,T,                            &
+                              propa,T,With_field,field,           &
                               Ene,Boltzmann_pop,Temp,Part_func,ZPE)
       IMPLICIT NONE
 
@@ -147,6 +147,7 @@
 
       logical,                        optional :: Write_psi2_Grid,Write_psi2_Basis
       logical,                        optional :: Write_psi_Grid,Write_psi_Basis
+      logical,                        optional :: Write_psi
 
       logical,                        optional :: AvQ,AvScalOp,AvHiterm
       integer,           allocatable, optional :: Qtransfo_type(:)     ! type of the transformation
@@ -168,7 +169,8 @@
 
       logical,                        optional :: propa
       real (kind=Rkind),              optional :: T ! time
-
+      logical,                        optional :: With_field ! when the field is present
+      real (kind=Rkind),              optional :: field(3)   ! Electric field
 
       logical,                        optional :: Boltzmann_pop
       real (kind=Rkind),              optional :: Temp,Part_func,ZPE
@@ -198,7 +200,7 @@
       IF (present(Write_psi_Basis))       ana_psi%Write_psi_Basis       = Write_psi_Basis
       ana_psi%Write_psi = ana_psi%Write_psi2_Grid .OR. ana_psi%Write_psi2_Basis .OR.    &
                           ana_psi%Write_psi_Grid  .OR. ana_psi%Write_psi_Basis
-
+      IF (present(Write_psi))             ana_psi%Write_psi             = Write_psi
       !------------------------------------------------------------
       ! for the reduced denstity analysis
       ana_psi%adia     = .FALSE.     ! To perform special analysis with adiabatic states
@@ -308,16 +310,191 @@
       !------------------------------------------------------------
       ana_psi%propa               = .FALSE.             ! To perform special analysis of WP
       ana_psi%T                   = ZERO                ! time in au
-      ana_psi%Psi_norm2           = -ONE                ! norm^2 of psi
-      ana_psi%max_Psi_norm2       =  1.3_Rkind          ! if norm^2 >max_norm^2 => stop the W
       ana_psi%field(:)            = (/ZERO,ZERO,ZERO/)  ! Electric field
       ana_psi%With_field          = .FALSE.             ! Propagation with a field
+      IF (present(propa))         ana_psi%propa      = propa
+      IF (present(T))             ana_psi%T          = T
+      IF (present(With_field))    ana_psi%With_field = With_field
+      IF (present(field))         ana_psi%field      = field
+      !------------------------------------------------------------
+      ana_psi%Psi_norm2           = -ONE                ! norm^2 of psi
       !------------------------------------------------------------
 
 
       ana_psi%GridDone = .FALSE.
 
       END SUBROUTINE init_ana_psi
+
+      SUBROUTINE modif_ana_psi(ana_psi,ana,num_psi,adia,          &
+                              Write_psi2_Grid,Write_psi2_Basis,   &
+                              Write_psi_Grid,Write_psi_Basis,     &
+                              Write_psi,                          &
+                              AvQ,Qtransfo_type,                  &
+                              AvScalOp,AvHiterm,                  &
+                              coherence,coherence_epsi,           &
+                              ExactFact,                          &
+                              Rho1D,Rho2D,Weight_Rho,Qana_Weight, &
+                              Rho_type,                           &
+                              psi1D_Q0,psi2D_Q0,Qana,             &
+                              propa,T,With_field,field,           &
+                              Ene,Boltzmann_pop,Temp,Part_func,ZPE)
+      IMPLICIT NONE
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_ana_psi), intent(inout)      :: ana_psi
+      logical,                        optional :: ana
+      integer,                        optional :: num_psi
+      logical,                        optional :: adia
+
+      logical,                        optional :: Write_psi2_Grid,Write_psi2_Basis
+      logical,                        optional :: Write_psi_Grid,Write_psi_Basis
+      logical,                        optional :: Write_psi
+
+      logical,                        optional :: AvQ,AvScalOp,AvHiterm
+      integer,           allocatable, optional :: Qtransfo_type(:)     ! type of the transformation
+
+      integer,                        optional :: coherence         ! coherence_tyep (0 non calculation)
+      real (kind=Rkind),              optional :: coherence_epsi    ! To avoid numerical trouble when rho(Q) is almost zero
+
+      integer,                        optional ::ExactFact          ! for the exact factorization analysis
+
+      logical,                        optional :: Rho1D,Rho2D
+      integer,           allocatable, optional :: Weight_Rho(:)        ! enable to use a weight (0=>constant=1, +/-1=>step ...)
+      real (kind=Rkind), allocatable, optional :: Qana_Weight(:)       ! geometry (Qact order) for the analysis (use with Weight_Rho)
+      integer,                        optional :: Rho_type
+
+      logical,                        optional :: psi1D_Q0,psi2D_Q0
+      real (kind=Rkind), allocatable, optional :: Qana(:)              ! geometry (Qact order) for the analysis
+
+      real (kind=Rkind),              optional :: Ene
+
+      logical,                        optional :: propa
+      real (kind=Rkind),              optional :: T ! time
+      logical,                        optional :: With_field ! when the field is present
+      real (kind=Rkind),              optional :: field(3)   ! Electric field
+
+      logical,                        optional :: Boltzmann_pop
+      real (kind=Rkind),              optional :: Temp,Part_func,ZPE
+
+      logical :: ana_weight
+
+      character (len=*), parameter :: name_sub='modif_ana_psi'
+
+
+
+      !------------------------------------------------------------
+      IF (present(ana))         ana_psi%ana         = ana
+      IF (present(num_psi))     ana_psi%num_psi     = num_psi
+      !------------------------------------------------------------
+
+      !------------------------------------------------------------
+      ! write the psi
+      IF (present(Write_psi2_Grid))       ana_psi%Write_psi2_Grid       = Write_psi2_Grid
+      IF (present(Write_psi2_Basis))      ana_psi%Write_psi2_Basis      = Write_psi2_Basis
+      IF (present(Write_psi_Grid))        ana_psi%Write_psi_Grid        = Write_psi_Grid
+      IF (present(Write_psi_Basis))       ana_psi%Write_psi_Basis       = Write_psi_Basis
+      ana_psi%Write_psi = ana_psi%Write_psi2_Grid .OR. ana_psi%Write_psi2_Basis .OR.    &
+                          ana_psi%Write_psi_Grid  .OR. ana_psi%Write_psi_Basis
+      IF (present(Write_psi))             ana_psi%Write_psi             = Write_psi
+
+
+      !------------------------------------------------------------
+      ! for the reduced denstity analysis
+      IF (present(adia))        ana_psi%adia        = adia
+      IF (present(Rho1D))       ana_psi%Rho1D       = Rho1D
+      IF (present(Rho2D))       ana_psi%Rho2D       = Rho2D
+      IF (present(Rho_type))       ana_psi%Rho_type       = Rho_type
+      IF (ana_psi%Rho_type < 0 .OR. ana_psi%Rho_type > 2) ana_psi%Rho_type = 2
+
+      IF (present(Qana_Weight) .AND. present(Weight_Rho)) THEN
+        ana_weight = allocated(Qana_Weight) .AND. allocated(Weight_Rho)
+
+        IF (ana_weight) THEN
+          IF (size(Qana_Weight) /= size(Weight_Rho) ) THEN
+            write(out_unitp,*) 'ERROR in ',name_sub
+            write(out_unitp,*) ' The size of Qana_Weight is different from the size of Weight_Rho'
+            write(out_unitp,*) ' It is not possible!'
+            write(out_unitp,*) ' Check the fortran!!'
+            STOP
+          END IF
+
+          CALL alloc_NParray(ana_psi%Qana_Weight,shape(Qana_Weight),        &
+                            "ana_psi%Qana_Weight",name_sub)
+          ana_psi%Qana_Weight(:) = Qana_Weight(:)
+
+          CALL alloc_NParray(ana_psi%Weight_Rho,shape(Weight_Rho),          &
+                            "ana_psi%Weight_Rho",name_sub)
+          ana_psi%Weight_Rho(:) = Weight_Rho(:)
+
+        END IF
+      END IF
+
+      !------------------------------------------------------------
+
+      !------------------------------------------------------------
+      ! analysis with 1D or 2D cuts
+      IF (present(psi1D_Q0))    ana_psi%psi1D_Q0    = psi1D_Q0
+      IF (present(psi2D_Q0))    ana_psi%psi2D_Q0    = psi2D_Q0
+      IF (present(Qana)) THEN
+        IF (allocated(Qana)) THEN
+          CALL alloc_NParray(ana_psi%Qana,shape(Qana),"ana_psi%Qana",name_sub)
+          ana_psi%Qana(:) = Qana(:)
+        END IF
+      END IF
+      !------------------------------------------------------------
+
+      !------------------------------------------------------------
+      ! Average of Qi ...
+      IF (present(AvQ))         ana_psi%AvQ         = AvQ
+      IF (present(Qtransfo_type)) THEN
+      IF (allocated(Qtransfo_type)) THEN
+        CALL alloc_NParray(ana_psi%Qtransfo_type,shape(Qtransfo_type),  &
+                            "ana_psi%Qtransfo_type",name_sub)
+        ana_psi%Qtransfo_type(:) = Qtransfo_type(:)
+      END IF
+      END IF
+      !------------------------------------------------------------
+
+
+      !------------------------------------------------------------
+      ! Average of the Scalar Operators and/or H term by term
+      IF (present(AvScalOp))         ana_psi%AvScalOp         = AvScalOp
+      IF (present(AvHiterm))         ana_psi%AvHiterm         = AvHiterm
+      !------------------------------------------------------------
+
+
+      !------------------------------------------------------------
+      ! coherence calculation
+      IF (present(coherence)) ana_psi%coherence = coherence
+      IF (present(coherence_epsi)) ana_psi%coherence_epsi = coherence_epsi
+      !------------------------------------------------------------
+
+      !------------------------------------------------------------
+      ! exact factorization analysis
+      IF (present(ExactFact)) ana_psi%ExactFact = ExactFact
+      !------------------------------------------------------------
+
+      !------------------------------------------------------------
+      ! Boltzman population analysis
+      IF (present(Ene))            ana_psi%Ene            = Ene
+      IF (present(Boltzmann_pop))  ana_psi%Boltzmann_pop = Boltzmann_pop
+      IF (present(Temp))           ana_psi%Temp          = Temp
+      IF (present(Part_func))      ana_psi%Part_func     = Part_func
+      IF (present(ZPE))            ana_psi%ZPE           = ZPE
+      !------------------------------------------------------------
+
+      !------------------------------------------------------------
+      IF (present(propa))         ana_psi%propa      = propa
+      IF (present(T))             ana_psi%T          = T
+      IF (present(With_field))    ana_psi%With_field = With_field
+      IF (present(field))         ana_psi%field      = field
+      !------------------------------------------------------------
+
+
+      ana_psi%GridDone = .FALSE.
+
+      END SUBROUTINE modif_ana_psi
+
       SUBROUTINE dealloc_ana_psi(ana_psi)
       IMPLICIT NONE
 
@@ -326,29 +503,40 @@
 
 
       IF (allocated(ana_psi%Qana_Weight)) THEN
-        CALL dealloc_NParray(ana_psi%Qana_Weight,"ana_psi%Qana_Weight","dealloc_ana_psi")
+        CALL dealloc_NParray(ana_psi%Qana_Weight,                       &
+                            "ana_psi%Qana_Weight","dealloc_ana_psi")
       END IF
       IF (allocated(ana_psi%Weight_Rho)) THEN
-        CALL dealloc_NParray(ana_psi%Weight_Rho,"ana_psi%Weight_Rho","dealloc_ana_psi")
+        CALL dealloc_NParray(ana_psi%Weight_Rho,                        &
+                            "ana_psi%Weight_Rho","dealloc_ana_psi")
       END IF
       IF (allocated(ana_psi%Qana)) THEN
         CALL dealloc_NParray(ana_psi%Qana,"ana_psi%Qana","dealloc_ana_psi")
       END IF
 
       IF (allocated(ana_psi%Qtransfo_type)) THEN
-        CALL dealloc_NParray(ana_psi%Qtransfo_type,"ana_psi%Qtransfo_type","dealloc_ana_psi")
+        CALL dealloc_NParray(ana_psi%Qtransfo_type,                     &
+                             "ana_psi%Qtransfo_type","dealloc_ana_psi")
       END IF
 
       IF (allocated(ana_psi%max_RedDensity)) THEN
-        CALL dealloc_NParray(ana_psi%max_RedDensity,"ana_psi%max_RedDensity","dealloc_ana_psi")
+        CALL dealloc_NParray(ana_psi%max_RedDensity,                    &
+                            "ana_psi%max_RedDensity","dealloc_ana_psi")
       END IF
 
-     IF (allocated(ana_psi%tab_WeightChannels)) THEN
-        CALL dealloc_NParray(ana_psi%tab_WeightChannels,                &
-                            "ana_psi%tab_WeightChannels","dealloc_ana_psi")
+!     IF (allocated(ana_psi%tab_WeightChannels)) THEN
+!        CALL dealloc_NParray(ana_psi%tab_WeightChannels,                &
+!                            "ana_psi%tab_WeightChannels","dealloc_ana_psi")
+!      END IF
+
+      IF (allocated(ana_psi%contractBasis_list)) THEN
+        CALL dealloc_NParray(ana_psi%contractBasis_list,                &
+                            "ana_psi%contractBasis_list","dealloc_ana_psi")
       END IF
+
 
       CALL init_ana_psi(ana_psi)
+
       CALL file_dealloc(ana_psi%file_PsiRho)
       CALL file_dealloc(ana_psi%file_PsiCut)
       CALL file_dealloc(ana_psi%file_Psi)
@@ -398,12 +586,12 @@
      ana_psi1%file_PsiRho   = ana_psi2%file_PsiRho
      ana_psi1%Rho_type      = ana_psi2%Rho_type
 
-     IF (allocated(ana_psi2%tab_WeightChannels)) THEN
-        CALL alloc_NParray(ana_psi1%tab_WeightChannels,                      &
-                                         shape(ana_psi2%tab_WeightChannels), &
-                          "ana_psi1%tab_WeightChannels","ana_psi2_TO_ana_psi1")
-        ana_psi1%tab_WeightChannels(:,:) = ana_psi2%tab_WeightChannels(:,:)
-      END IF
+!     IF (allocated(ana_psi2%tab_WeightChannels)) THEN
+!        CALL alloc_NParray(ana_psi1%tab_WeightChannels,                      &
+!                                         shape(ana_psi2%tab_WeightChannels), &
+!                          "ana_psi1%tab_WeightChannels","ana_psi2_TO_ana_psi1")
+!        ana_psi1%tab_WeightChannels(:,:) = ana_psi2%tab_WeightChannels(:,:)
+!      END IF
 
       IF (allocated(ana_psi2%Qana_Weight)) THEN
         CALL alloc_NParray(ana_psi1%Qana_Weight,shape(ana_psi2%Qana_Weight),&
@@ -421,7 +609,12 @@
                           "ana_psi1%max_RedDensity","ana_psi2_TO_ana_psi1")
         ana_psi1%max_RedDensity(:) = ana_psi2%max_RedDensity(:)
      END IF
-
+     IF (allocated(ana_psi2%contractBasis_list)) THEN
+        CALL alloc_NParray(ana_psi1%contractBasis_list,                 &
+                                     shape(ana_psi2%contractBasis_list),&
+                          "ana_psi1%contractBasis_list","ana_psi2_TO_ana_psi1")
+        ana_psi1%contractBasis_list(:) = ana_psi2%contractBasis_list(:)
+     END IF
 
       ana_psi1%psi1D_Q0     = ana_psi2%psi1D_Q0
       ana_psi1%psi2D_Q0     = ana_psi2%psi2D_Q0
@@ -442,7 +635,6 @@
 
      ana_psi1%propa         = ana_psi2%propa
      ana_psi1%T             = ana_psi2%T
-     ana_psi1%max_Psi_norm2 = ana_psi2%max_Psi_norm2
      ana_psi1%field(:)      = ana_psi2%field(:)
      ana_psi1%With_field    = ana_psi2%With_field
      ana_psi1%file_Psi      = ana_psi2%file_Psi
@@ -476,8 +668,8 @@
       CALL file_Write(ana_psi%file_PsiRho)
       IF (allocated(ana_psi%max_RedDensity))                            &
               write(out_unitp,*) 'max_RedDensity',ana_psi%max_RedDensity
-      IF (allocated(ana_psi%tab_WeightChannels))                        &
-       write(out_unitp,*) 'tab_WeightChannels',ana_psi%tab_WeightChannels
+!      IF (allocated(ana_psi%tab_WeightChannels))                        &
+!       write(out_unitp,*) 'tab_WeightChannels',ana_psi%tab_WeightChannels
 
       write(out_unitp,*) 'Psi_norm2',ana_psi%Psi_norm2
       write(out_unitp,*) 'adia',ana_psi%adia
@@ -534,7 +726,6 @@
       write(out_unitp,*) 'propa',ana_psi%propa
       write(out_unitp,*) 'With_field',ana_psi%With_field
       write(out_unitp,*) 'T (time)',ana_psi%T
-      write(out_unitp,*) 'max_Psi_norm2',ana_psi%max_Psi_norm2
       write(out_unitp,*) 'field(:)',ana_psi%field(:)
 
       END SUBROUTINE Write_ana_psi

@@ -65,7 +65,7 @@
       use mod_Basis_Grid_Param
       USE mod_SymAbelian
       USE mod_param_SGType2
-      USE mod_param_RD, ONLY : param_RD
+      USE mod_param_RD
       USE mod_Basis_L_TO_n
       IMPLICIT NONE
 
@@ -723,7 +723,7 @@
       !!@param: TODO
       !!@param: TODO
        RECURSIVE SUBROUTINE dealloc_basis(basis_set,Basis_FOR_SG,keep_Rvec)
-         USE mod_param_RD, ONLY : dealloc_tab_RD
+         USE mod_param_RD
          USE mod_MPI
          IMPLICIT NONE
 
@@ -1353,7 +1353,7 @@
       !!@param: TODO
       !!@param: TODO
       RECURSIVE SUBROUTINE basis2TObasis1(basis_set1,basis_set2,init_only,with_SG,Basis_FOR_SG)
-        USE mod_param_RD, ONLY : assignment (=)
+        USE mod_param_RD
         IMPLICIT NONE
         TYPE (basis), intent(in)    :: basis_set2
         TYPE (basis), intent(inout) :: basis_set1
