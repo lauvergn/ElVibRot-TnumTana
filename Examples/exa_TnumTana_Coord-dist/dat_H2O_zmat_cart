@@ -31,5 +31,5 @@ H 1 2
  RH 0.9894093 angs
  A 100.026877 °
 
- &calculation calc_freq=t calc_hessian=t hessian_old=t hessian_cart=t fchk_name='H2O_freq_sym.fchk' /
+ &calculation calc_freq=t calc_hessian=t fchk_name='H2O_freq_sym.fchk' /
 **

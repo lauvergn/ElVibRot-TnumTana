@@ -839,7 +839,6 @@
       integer       :: iAtA,iAtB
       integer       :: i,nb_Qin,i_Qprim
       integer       :: iQalpha_TO_ivTot,iQbeta_TO_ivTot,iQgamma_TO_ivTot
-      integer       :: nb_at
 
       logical, save :: zmat_order_save        = .FALSE.
       integer, save :: i_Qpoly                = 0
@@ -866,8 +865,8 @@
                         iAtA,iAtB
 
       NAMELIST /Vect_FOR_AxisFrame / Coef_OF_Vect1,Coef_OF_Vect2,       &
-                                     Type_Vect,                         &
-          Coef_Vect_FOR_xFrame,Coef_Vect_FOR_yFrame,Coef_Vect_FOR_zFrame
+                                     Type_Vect,Coef_Vect_FOR_xFrame,    &
+                               Coef_Vect_FOR_yFrame,Coef_Vect_FOR_zFrame
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory,err_io
@@ -946,17 +945,6 @@
           BunchTransfo%ind_vect(4,iv_tot) == 0) THEN
         BunchTransfo%ind_vect(3,iv_tot) = iAtA
         BunchTransfo%ind_vect(4,iv_tot) = iAtB
-      END IF
-      nb_at = BunchTransfo%nat_act + BunchTransfo%nb_G + BunchTransfo%nb_X
-      IF (BunchTransfo%ind_vect(3,iv_tot) < 1     .OR.                  &
-          BunchTransfo%ind_vect(3,iv_tot) > nb_at .OR.                  &
-          BunchTransfo%ind_vect(4,iv_tot) < 1     .OR.                  &
-          BunchTransfo%ind_vect(4,iv_tot) > nb_at) THEN
-        write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' The vector CANNOT be defined: iAtA OR iAtB are out-of-range.'
-        write(out_unitp,*) 'iAtA, iAtB',iAtA,iAtB
-        write(out_unitp,*) ' Check your data!'
-        STOP
       END IF
 
       IF (len_trim(name_Frame) > 0) name_F = String_TO_string("  " // trim(name_Frame))
@@ -2706,7 +2694,7 @@
                            "BunchTransfo%symbole",name_sub)
        END IF
        CALL alloc_array(BunchTransfo%symbole,(/BunchTransfo%nat/),  &
-              Name_len,"BunchTransfo%symbole",name_sub)
+                       "BunchTransfo%symbole",name_sub)
        BunchTransfo%symbole(:) = ""
 
        CALL alloc_array(BunchTransfo%masses_OF_At,(/BunchTransfo%nat_act/),&
@@ -3222,7 +3210,7 @@
         nb_at = BunchTransfo%nat_act + BunchTransfo%nb_G + BunchTransfo%nb_X
         write(out_unitp,*) '  nat_act',BunchTransfo%nat_act
         nullify(name_at)
-        CALL alloc_array(name_at,(/nb_at/),Name_len,"name_at",name_sub)
+        CALL alloc_array(name_at,(/nb_at/),"name_at",name_sub)
 
         read(in_unitp,*,IOSTAT=err_io) (name_at(i),i=1,BunchTransfo%nat_act)
 

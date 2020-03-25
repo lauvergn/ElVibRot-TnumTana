@@ -192,8 +192,7 @@
 
 
 
-        CALL alloc_array(name_at,(/RectilinearNM_Transfo%nat/),Name_len,&
-                        "name_at",name_sub)
+        CALL alloc_array(name_at,(/RectilinearNM_Transfo%nat/),"name_at",name_sub)
 
         read(in_unitp,*,IOSTAT=err_io) (name_at(i),i=1,RectilinearNM_Transfo%nat)
         IF (err_io /= 0) THEN

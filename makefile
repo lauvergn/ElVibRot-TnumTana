@@ -665,9 +665,9 @@ all:obj vib $(VIBEXE)
 	echo "EVR (for eclipse)"
 #
 # vib
-EVR:obj vib $(VIBEXE)
+EVR: obj vib $(VIBEXE)
 	echo "EVR"
-libEVR:obj $(OBJ)/libEVR.a
+libEVR: obj $(OBJ)/libEVR.a
 	echo libEVR.a
 Tnum_FDriver: obj $(Main_TnumTana_FDriverEXE)
 	echo Main_TnumTana_FDriver
@@ -677,22 +677,22 @@ libTnum: obj $(OBJ)/libTnum.a
 	echo libTnum.a
 libTnum.a: obj $(OBJ)/libTnum.a
 	echo libTnum.a
-keotest:obj $(KEOTESTEXE)
+keotest: obj $(KEOTESTEXE)
 	echo "TEST_TnumTana"
-tnum:obj $(TNUMEXE)
+tnum: obj $(TNUMEXE)
 	echo "Tnum"
-Tnum:obj $(TNUMEXE)
+Tnum: obj $(TNUMEXE)
 	echo "Tnum"
-tnum-dist:obj $(TNUMEXE)
+tnum-dist: obj $(TNUMEXE)
 	echo "Tnum"
-Tnum-dist:obj $(TNUMEXE)
+Tnum-dist: obj $(TNUMEXE)
 	echo "Tnum"
-Tnum_MCTDH:obj $(TNUMMCTDHEXE)
+Tnum_MCTDH: obj $(TNUMMCTDHEXE)
 	echo "Tnum_MCTDH"
 #TNUM_MiddasCppEXE
-Tnum_MidasCpp:obj $(TNUM_MiddasCppEXE)
+Tnum_MidasCpp: obj $(TNUM_MiddasCppEXE)
 	echo "Tnum_MidasCpp"
-Midas:obj $(TNUM_MiddasCppEXE)
+Midas: obj $(TNUM_MiddasCppEXE)
 	echo "Tnum_MidasCpp"
 #
 gauss:obj $(GWPEXE)

@@ -114,9 +114,9 @@
       SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,mendeleev)
         USE mod_MPI
 
-        TYPE (Type_Qtransfo), intent(inout) :: Qtransfo
-        integer, intent(inout)              :: nb_Qin
-        TYPE (table_atom), intent(in)       :: mendeleev
+        TYPE (Type_Qtransfo), intent(inout)    :: Qtransfo
+        integer,              intent(inout)    :: nb_Qin
+        TYPE (table_atom),    intent(in)       :: mendeleev
 
         character (len=Name_len) :: name_transfo,name_dum
         integer :: nat,nb_vect,nbcol,nb_flex_act,nb_transfo,nb_G,nb_X
@@ -559,9 +559,8 @@
           Qtransfo%nb_Qout              = 3*nb_vect
           CALL alloc_array(Qtransfo%type_Qin,(/Qtransfo%nb_Qin/),       &
                           "Qtransfo%type_Qin",name_sub)
-          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),Name_len,&
+          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),       &
                           "Qtransfo%name_Qin",name_sub)
-
 
           Qtransfo%BFTransfo%type_Qin => Qtransfo%type_Qin
           Qtransfo%BFTransfo%name_Qin => Qtransfo%name_Qin
@@ -592,7 +591,7 @@
           Qtransfo%nb_Qout            = 3*nat+3
           CALL alloc_array(Qtransfo%type_Qin,(/Qtransfo%nb_Qin/),       &
                           "Qtransfo%type_Qin",name_sub)
-          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),Name_len,&
+          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),       &
                           "Qtransfo%name_Qin",name_sub)
           DO i=1,Qtransfo%nb_Qin
             CALL make_nameQ(Qtransfo%name_Qin(i),"Qana",i,it)
@@ -619,7 +618,7 @@
           Qtransfo%nb_Qout            = nb_Qin ! ncart_act
           CALL alloc_array(Qtransfo%type_Qin,(/Qtransfo%nb_Qin/),       &
                           "Qtransfo%type_Qin",name_sub)
-          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),Name_len,&
+          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),       &
                           "Qtransfo%name_Qin",name_sub)
           DO i=1,Qtransfo%nb_Qin
             CALL make_nameQ(Qtransfo%name_Qin(i),"Qxyz_transfo",i,it)
@@ -641,7 +640,7 @@
         IF (Qtransfo%num_transfo == 1) THEN ! cartessian coordinates (Qout)
           CALL alloc_array(Qtransfo%type_Qout,(/Qtransfo%nb_Qout/),     &
                           "Qtransfo%type_Qout",name_sub)
-          CALL alloc_array(Qtransfo%name_Qout,(/Qtransfo%nb_Qout/),Name_len,&
+          CALL alloc_array(Qtransfo%name_Qout,(/Qtransfo%nb_Qout/),     &
                           "Qtransfo%name_Qout",name_sub)
           Qtransfo%type_Qout(:) = 1 ! cartesian type
           DO i=1,Qtransfo%nb_Qout
@@ -920,18 +919,18 @@
                       "Qtransfo2%type_Qin",name_sub)
       Qtransfo2%type_Qin(:) = Qtransfo1%type_Qin(:)
 
-      CALL alloc_array(Qtransfo2%name_Qin,shape(Qtransfo1%name_Qin),Name_len,&
+      CALL alloc_array(Qtransfo2%name_Qin,shape(Qtransfo1%name_Qin),    &
                       "Qtransfo2%name_Qin",name_sub)
       Qtransfo2%name_Qin(:) = Qtransfo1%name_Qin(:)
 
       ! for type_Qout and name_Qout, it will be done after (from another type_Qin, name_Qin)
       ! except for num_transfo=0
       IF (Qtransfo2%num_transfo == 0) THEN
-        CALL alloc_array(Qtransfo2%type_Qout,shape(Qtransfo1%type_Qout),  &
+        CALL alloc_array(Qtransfo2%type_Qout,shape(Qtransfo1%type_Qout),&
                         "Qtransfo2%type_Qout",name_sub)
         Qtransfo2%type_Qout(:) = Qtransfo1%type_Qout(:)
 
-        CALL alloc_array(Qtransfo2%name_Qout,shape(Qtransfo1%name_Qout),Name_len,&
+        CALL alloc_array(Qtransfo2%name_Qout,shape(Qtransfo1%name_Qout),&
                         "Qtransfo2%name_Qout",name_sub)
         Qtransfo2%name_Qout(:) = Qtransfo1%name_Qout(:)
       END IF
@@ -1486,7 +1485,7 @@
         END IF
 
         IF (.NOT. associated(Qtransfo%name_Qin)) THEN
-          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),Name_len,&
+          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),       &
                           "Qtransfo%name_Qin",name_sub)
         END IF
 

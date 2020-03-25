@@ -44,18 +44,21 @@ MODULE mod_Coord_KEO
                                   write_rphpara_at_qact1
   USE mod_CartesianTransfo, ONLY: calc_dnteckart,calc_dntxdnxin_to_dnxout,&
                                   calc_eckartrot,dnmwx_multiref
-  !USE mod_export_KEO ! not need anymore !!
+  USE mod_export_KEO,      ONLY : export3_MCTDH_T
   USE mod_Tnum,            ONLY : Tnum,CoordType,zmatrix,param_PES_FromTnum,&
                                   Read_CoordType,write_coordtype,           &
-       coordtype1tocoordtype2,dealloc_coordtype,sub_coordtype_to_pararph,   &
-       sub_pararph_to_coordtype,type_var_analysis_of_coordtype,             &
-       CoordTypeRPH_TO_CoordTypeFlex,Set_OptimizationPara_FROM_CoordType
+                                  coordtype1tocoordtype2,dealloc_coordtype, &
+                                  sub_coordtype_to_pararph,                 &
+                                  sub_pararph_to_coordtype,                 &
+                                  type_var_analysis_of_coordtype,           &
+                                  CoordTypeRPH_TO_CoordTypeFlex,            &
+                                  Set_OptimizationPara_FROM_CoordType
 
   USE mod_paramQ,          ONLY : sub_dnFCC_TO_dnFcurvi,sub_QactTOdnx,  &
                                   sub_qacttoqit,sub_qplusdq_to_cart,    &
                                read_RefGeom,sub_QactTOd0x,sub_d0xTOQact,&
-                                  Set_paramQ_FOR_optimization, &
-                                  Write_Cartg98
+                                  Set_paramQ_FOR_optimization,          &
+                                  Write_Cartg98, Write_XYZ
 
   USE mod_dnRho,           ONLY : sub3_dnrho_ana,Write_Rho
   USE mod_dnGG_dng,        ONLY : get_d0GG,get_dng_dnGG
@@ -64,7 +67,7 @@ MODULE mod_Coord_KEO
 
   USE mod_Tana_keo,        ONLY : compute_analytical_keo
   USE mod_Tana_Tnum,       ONLY : comparison_g_from_tnum_tana
-  USE mod_Tana_Sum_OpnD,   ONLY : write_op
+  USE mod_Tana_Sum_OpnD,   ONLY : sum_opnd,write_op,delete_op,Expand_Sum_OpnD_TO_Sum_OpnD
   IMPLICIT NONE
 
 END MODULE mod_Coord_KEO
