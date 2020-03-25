@@ -16,15 +16,20 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
-
    !Description:
    MODULE mod_Tana_write_mctdh
    use mod_system
-   USE mod_Tnum,   only : zmatrix
+   USE mod_Tnum,   only : CoordType
    USE mod_Tana_OpnD
    USE mod_Tana_sum_opnd
    IMPLICIT NONE
@@ -41,7 +46,7 @@
    !! @param:       TWOxKEO       The 2*KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_MidasCppForm(mole, TWOxKEO, i_out, tab_Qname, param_JJ)
-     type (zmatrix),            intent(in)                :: mole
+     type (CoordType),            intent(in)                :: mole
      type (sum_opnd),           intent(in)                :: TWOxKEO
      integer,                   intent(in)                :: i_out
      character (len = *),       intent(in)                :: tab_Qname(:)
@@ -173,7 +178,7 @@
    USE mod_Constant
    IMPLICIT NONE
 
-     type (zmatrix),            intent(in)                :: mole
+     type (CoordType),            intent(in)                :: mole
      integer,                   intent(in)                :: i_out
      character (len = *),       intent(in)                :: tab_Qname(:)
 
@@ -272,7 +277,7 @@
    END SUBROUTINE write_mol_MidasCppForm
 
    SUBROUTINE write_keo_MidasCppForm_old(mole, keo, i_out, tab_Qname, param_JJ)
-     type (zmatrix),            intent(in)                :: mole
+     type (CoordType),            intent(in)                :: mole
      type (sum_opnd),           intent(in)                :: keo
      integer,                   intent(in)                :: i_out
      character (len = *),       intent(in)                :: tab_Qname(:)
@@ -392,7 +397,7 @@
    !! @param:       TWOxKEO       The 2*KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_VSCFform(mole, TWOxKEO, i_out, tab_Qname, param_JJ)
-     type (zmatrix),            intent(in)                :: mole
+     type (CoordType),            intent(in)                :: mole
      type(sum_opnd),            intent(in)                :: TWOxKEO
      integer,                   intent(in)                :: i_out
      character(len=*),          intent(in)                :: tab_Qname(:)
@@ -516,11 +521,11 @@
    END SUBROUTINE write_keo_VSCFform
 
    !! @description: Write the deformation part of the total KEO in a latex format,
-   !! @param:       mole          The generalized variable (type: zmatrix).
+   !! @param:       mole          The generalized variable (type: CoordType).
    !! @param:       TWOxKEO       The 2*KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_Latexform(mole, TWOxKEO, i_out, tab_Qname, param_JJ)
-     type (zmatrix),            intent(in)                :: mole
+     type (CoordType),            intent(in)                :: mole
      type(sum_opnd),            intent(in)                :: TWOxKEO
      integer,                   intent(in)                :: i_out
      character(len=*),          intent(in)                :: tab_Qname(:)
@@ -646,11 +651,11 @@
 
 
    !! @description: Write the total KEO in a MCTDH format,
-   !! @param:       mole          The generalized variable (type: zmatrix). 
+   !! @param:       mole          The generalized variable (type: CoordType).
    !! @param:       keo           The KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_mctdh_form(mole, keo, i_out, tab_Qname, param_JJ, title)
-     type (zmatrix)                                       :: mole
+     type (CoordType)                                       :: mole
      type(sum_opnd),            intent(in)                :: keo
      integer,                   intent(in)                :: i_out
      character(len=*),          intent(in)                :: tab_Qname(:)
@@ -916,7 +921,7 @@
 
    END SUBROUTINE write_keo_mctdh_form
    SUBROUTINE write_keo_mctdh_form_old(mole, keo, i_out, tab_Qname, param_JJ, title)
-     type (zmatrix)                                       :: mole
+     type (CoordType)                                     :: mole
      type(sum_opnd),            intent(in)                :: keo
      integer,                   intent(in)                :: i_out
      character(len=*),          intent(in)                :: tab_Qname(:)

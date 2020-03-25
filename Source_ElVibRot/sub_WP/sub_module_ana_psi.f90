@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,6 +35,9 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
 MODULE mod_ana_psi
@@ -63,7 +77,7 @@ SUBROUTINE sub_analyze_tab_Psi(T,tab_psi,ana_psi,adia,field,Write_Psi)
 
 !-- working parameters --------------------------------
   integer           :: i
-  logical           :: Write_Psi_loc
+  logical           :: Write_Psi_loc,adia_loc
 
 !- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub='sub_analyze_tab_Psi'
@@ -83,13 +97,7 @@ SUBROUTINE sub_analyze_tab_Psi(T,tab_psi,ana_psi,adia,field,Write_Psi)
     Write_Psi_loc = .TRUE.
   END IF
 
-  IF (present(adia)) THEN
-    ana_psi%adia = adia
-  ELSE
-    ana_psi%adia = .FALSE.
-  END IF
   ana_psi%T      = T
-  ana_psi%propa  = .TRUE. !! c'est idiot !!!!!
 
   ana_psi%With_field = present(field)
   IF (present(field)) THEN
@@ -98,11 +106,19 @@ SUBROUTINE sub_analyze_tab_Psi(T,tab_psi,ana_psi,adia,field,Write_Psi)
     ana_psi%field      = (/ZERO,ZERO,ZERO/)
   END IF
 
-  DO i=1,size(tab_psi)
-    ana_psi%num_psi = i
-    ana_psi%Ene     = real(tab_psi(i)%CAvOp,kind=Rkind)
-    CALL sub_analyze_psi(tab_psi(i),ana_psi,Write_Psi=Write_Psi_loc)
-  END DO
+  IF (present(adia)) THEN
+    DO i=1,size(tab_psi)
+      ana_psi%num_psi = i
+      ana_psi%Ene     = real(tab_psi(i)%CAvOp,kind=Rkind)
+      CALL sub_analyze_psi(tab_psi(i),ana_psi,adia=adia,Write_Psi=Write_Psi_loc)
+    END DO
+  ELSE
+    DO i=1,size(tab_psi)
+      ana_psi%num_psi = i
+      ana_psi%Ene     = real(tab_psi(i)%CAvOp,kind=Rkind)
+      CALL sub_analyze_psi(tab_psi(i),ana_psi,Write_Psi=Write_Psi_loc)
+    END DO
+  END IF
 
 !----------------------------------------------------------
   IF (debug) THEN
@@ -111,7 +127,7 @@ SUBROUTINE sub_analyze_tab_Psi(T,tab_psi,ana_psi,adia,field,Write_Psi)
 !----------------------------------------------------------
 END SUBROUTINE sub_analyze_tab_Psi
 
-SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
+SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_Psi)
   USE mod_system
   USE mod_psi_set_alloc
   IMPLICIT NONE
@@ -119,12 +135,13 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
   !----- variables for the WP -------------------------------
   TYPE (param_psi),     intent(inout)         :: psi
   TYPE (param_ana_psi), intent(inout)         :: ana_psi
+  logical,              intent(in),  optional :: adia
   logical,              intent(in),  optional :: Write_Psi
 
 
-  logical           :: Write_Psi_loc
-  integer           :: i,j,i_be,i_bi
-  real (kind=Rkind) :: pop,Etemp
+  logical                           :: Write_Psi_loc,adia_loc
+  integer                           :: i,j,i_be,i_bi
+  real (kind=Rkind)                 :: pop,Etemp
   character(len=:), allocatable     :: lformat
   TYPE(REAL_WU)                     :: RWU_Temp,RWU_E,RWU_DE
   real (kind=Rkind)                 :: E,DE
@@ -151,12 +168,19 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
 
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
+    CALL flush_perso(out_unitp)
   END IF
 
   IF (present(Write_Psi)) THEN
     Write_Psi_loc =  Write_Psi
   ELSE
     Write_Psi_loc = .TRUE.
+  END IF
+
+  IF (present(adia)) THEN
+    adia_loc = adia
+  ELSE
+    adia_loc = ana_psi%adia
   END IF
 
   IF (psi%ComOp%contrac_ba_ON_HAC) THEN
@@ -174,6 +198,11 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
     pop = exp(-(ana_psi%Ene-ana_psi%ZPE)/Etemp) / ana_psi%Part_func
   END IF
 
+
+  IF (allocated(tab_WeightChannels)) THEN
+    STOP 'tab_WeightChannels allocated!!'
+  END IF
+
   !----------------------------------------------------------------------
   ! tab_WeightChannels
   IF (ana_psi%propa) THEN
@@ -181,8 +210,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
     RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
     E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
 
-
-    IF (ana_psi%adia) THEN
+    IF (adia_loc) THEN
       CALL Channel_weight(ana_psi%tab_WeightChannels,psi,               &
                           GridRep=.TRUE.,BasisRep=.FALSE.)
       info = '#WPadia ' // int_TO_char(ana_psi%num_psi)
@@ -238,8 +266,14 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
     END IF
 
   ELSE ! not propa
+ !write(6,*) 'coucou1' ; flush(6)
+ !IF (allocated(tab_WeightChannels)) STOP 'tab_WeightChannels allocated'
+  !write(6,*) 'alloc tab_WeightChannels',allocated(tab_WeightChannels) ; flush(6)
+  !write(6,*) 'shape tab_WeightChannels',shape(tab_WeightChannels) ; flush(6)
+
     CALL Channel_weight(ana_psi%tab_WeightChannels,psi,                 &
        GridRep=.FALSE.,BasisRep=.TRUE.,Dominant_Channel=Dominant_Channel)
+!write(6,*) 'coucou2' ; flush(6)
 
     RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
     RWU_DE = REAL_WU(ana_psi%Ene-ana_psi%ZPE,'au','E')
@@ -251,12 +285,12 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
       CALL sub_Qmoy(psi,moy_Qba,ana_psi)
 
       IF (ana_psi%num_psi < 10000 .AND. Dominant_Channel(2) < 10000) THEN
-        lformat = String_TO_String('("lev: ",i4,i4,l3,' //            &
-                                   int_TO_char(3+size(moy_Qba)) //  &
+        lformat = String_TO_String('("lev: ",i4,i4,l3,' //              &
+                                   int_TO_char(3+size(moy_Qba)) //      &
                        "(1x," // trim(adjustl(EneIO_format)) // "))")
       ELSE
-        lformat = String_TO_String('("lev: ",i0,i0,l3,' //            &
-                                   int_TO_char(3+size(moy_Qba)) //  &
+        lformat = String_TO_String('("lev: ",i0,i0,l3,' //              &
+                                   int_TO_char(3+size(moy_Qba)) //      &
                        "(1x," // trim(adjustl(EneIO_format)) // "))")
       END IF
 
@@ -265,6 +299,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
 
       CALL dealloc_NParray(moy_Qba,"moy_Qba",name_sub)
     ELSE
+
       IF (ana_psi%num_psi < 10000 .AND. Dominant_Channel(2) < 10000) THEN
         lformat = String_TO_String( '("lev: ",i4,i4,l3,3(1x,' //      &
                                trim(adjustl(EneIO_format)) // '))' )
@@ -281,8 +316,6 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
   !----------------------------------------------------------------------
 
   !----------------------------------------------------------------------
-
-
   CALL flush_perso(out_unitp)
 
   IF (psi%nb_bi > 1 .AND. .NOT. ana_psi%propa) THEN
@@ -293,9 +326,13 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
     write(out_unitp,lformat) (ana_psi%tab_WeightChannels(i_bi,1)*TEN**2,i_bi=1,psi%nb_bi)
   END IF
 
+  IF (allocated(tab_WeightChannels)) THEN
+    CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","Channel_weight")
+  END IF
+
   CALL calc_1Dweight(psi,ana_psi,20,real(ana_psi%num_psi,kind=Rkind),info,.TRUE.)
 
-  IF (.NOT. ana_psi%adia .AND. .NOT. ana_psi%propa) CALL calc_MaxCoef_psi(psi,ana_psi%T,info)
+  IF (.NOT. adia_loc .AND. .NOT. ana_psi%propa) CALL calc_MaxCoef_psi(psi,ana_psi%T,info)
 
   IF (ana_psi%propa) CALL psi_Qba_ie_psi(ana_psi%T,psi,ana_psi,info)
 
@@ -308,7 +345,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
     ! write one the grid
     IF (ana_psi%Write_psi2_Grid) THEN
       name_filePsi = ana_psi%file_Psi%name
-      IF (ana_psi%adia) THEN
+      IF (adia_loc) THEN
         name_filePsi = trim(name_filePsi) // '_GridAdiaPsi2'
       ELSE
         name_filePsi = trim(name_filePsi) // '_GridPsi2'
@@ -322,13 +359,13 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
         CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
       END IF
 
-      CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,             &
-                     ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,   &
-                     ecri_psi2=.TRUE.)
+      CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,                   &
+                    ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,          &
+                    ecri_psi2=.TRUE.)
       close(nioPsi)
     END IF
 
-    IF (.NOT. ana_psi%adia .AND. ana_psi%Write_psi_Grid) THEN
+    IF (.NOT. adia_loc .AND. ana_psi%Write_psi_Grid) THEN
       name_filePsi = trim(ana_psi%file_Psi%name) // '_GridPsi'
       IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
 
@@ -338,14 +375,14 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
         CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
       END IF
 
-       CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,            &
-                     ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,   &
-                     ecri_psi2=.FALSE.)
+      CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,                   &
+                    ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,          &
+                    ecri_psi2=.FALSE.)
       close(nioPsi)
     END IF
     !---------------------------------------------------------------------------
 
-    IF (.NOT. ana_psi%adia .AND. ana_psi%Write_psi2_Basis) THEN
+    IF (.NOT. adia_loc .AND. ana_psi%Write_psi2_Basis) THEN
       name_filePsi = trim(ana_psi%file_Psi%name) // '_BasisPsi2'
       IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
 
@@ -371,7 +408,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
 
     END IF
 
-    IF (.NOT. ana_psi%adia .AND. ana_psi%Write_psi_Basis) THEN
+    IF (.NOT. adia_loc .AND. ana_psi%Write_psi_Basis) THEN
       name_filePsi = trim(ana_psi%file_Psi%name) // '_BasisPsi'
       IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
 
@@ -408,7 +445,6 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,Write_Psi)
   IF (allocated(psi_line)) deallocate(psi_line)
   IF (allocated(lformat))  deallocate(lformat)
   IF (allocated(moy_Qba))  deallocate(moy_Qba)
-
 
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
@@ -628,7 +664,7 @@ END SUBROUTINE sub_analyze_psi
       integer       :: i
       real (kind=Rkind) :: WrhonD,temp
 
-      logical       :: psiN,normeGridRep,normeBasisRep
+      logical       :: psiN,norm2GridRep,norm2BasisRep
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub = 'psi_Qba_ie_psi'
@@ -1755,7 +1791,7 @@ END SUBROUTINE sub_analyze_psi
       real (kind=Rkind) :: WrhonD,temp
       integer       :: i_max_w
 
-      logical       :: psiN,normeGridRep,normeBasisRep
+      logical       :: psiN,norm2GridRep,norm2BasisRep
 
       real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)
 
@@ -1767,8 +1803,8 @@ END SUBROUTINE sub_analyze_psi
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING norm2_psi'
         IF (present(ReNorm)) write(out_unitp,*) 'Renormalization of psi',ReNorm
-        IF (present(GridRep)) write(out_unitp,*) 'normeGridRep',GridRep
-        IF (present(BasisRep)) write(out_unitp,*) 'normeBasisRep',BasisRep
+        IF (present(GridRep)) write(out_unitp,*) 'norm2GridRep',GridRep
+        IF (present(BasisRep)) write(out_unitp,*) 'norm2BasisRep',BasisRep
         write(out_unitp,*) 'psi'
         CALL ecri_psi(psi=psi)
       END IF
@@ -1782,60 +1818,60 @@ END SUBROUTINE sub_analyze_psi
 
       IF (present(GridRep)) THEN
         IF (present(BasisRep)) THEN
-          normeGridRep  = GridRep
-          normeBasisRep = BasisRep
+          norm2GridRep  = GridRep
+          norm2BasisRep = BasisRep
         ELSE
-          normeGridRep  = GridRep
-          normeBasisRep = .FALSE.
+          norm2GridRep  = GridRep
+          norm2BasisRep = .FALSE.
         END IF
       ELSE
         IF (present(BasisRep)) THEN
-          normeBasisRep = BasisRep
-          normeGridRep  = .FALSE.
+          norm2BasisRep = BasisRep
+          norm2GridRep  = .FALSE.
         ELSE
           IF (psi%BasisRep .AND. psi%GridRep) THEN
-            normeBasisRep = .TRUE.
-            normeGridRep  = .FALSE.
+            norm2BasisRep = .TRUE.
+            norm2GridRep  = .FALSE.
           ELSE
-            normeBasisRep = psi%BasisRep
-            normeGridRep  = psi%GridRep
+            norm2BasisRep = psi%BasisRep
+            norm2GridRep  = psi%GridRep
           END IF
        END IF
      END IF
 
-      IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep,psiN',normeGridRep,normeBasisRep,psiN
-      IF (normeGridRep .AND. normeBasisRep) THEN
+      IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep,psiN',norm2GridRep,norm2BasisRep,psiN
+      IF (norm2GridRep .AND. norm2BasisRep) THEN
         write(out_unitp,*) ' ERROR in norm2_psi'
-        write(out_unitp,*) ' normeGridRep=t and normeBasisRep=t !'
+        write(out_unitp,*) ' norm2GridRep=t and norm2BasisRep=t !'
         write(out_unitp,*) ' BasisRep,GridRep',psi%BasisRep,psi%GridRep
         STOP
       END IF
 
 
-      CALL Channel_weight(tab_WeightChannels,psi,normeGridRep,normeBasisRep)
+      CALL Channel_weight(tab_WeightChannels,psi,norm2GridRep,norm2BasisRep)
 
       IF (debug)  write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
 
-      psi%norme = sum(tab_WeightChannels)
+      psi%norm2 = sum(tab_WeightChannels)
 
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme,tab_WeightChannels
+        write(out_unitp,*) 'norm2 : ',psi%norm2,tab_WeightChannels
       END IF
 
 
 
       IF (psiN) THEN
 
-        IF (psi%norme .EQ. ZERO ) THEN
+        IF (psi%norm2 .EQ. ZERO ) THEN
           write(out_unitp,*) ' ERROR in norm2_psi'
-          write(out_unitp,*) ' the norm2 is zero !',psi%norme
+          write(out_unitp,*) ' the norm2 is zero !',psi%norm2
           STOP
         END IF
-        temp = ONE/psi%norme
+        temp = ONE/psi%norm2
         tab_WeightChannels = tab_WeightChannels * temp
         temp = sqrt(temp)
 
-        IF (normeGridRep) THEN
+        IF (norm2GridRep) THEN
 !         - normalization of psiGridRep -------------------------
           IF (psi%cplx) THEN
             psi%CvecG(:) = psi%CvecG(:) *cmplx(temp,ZERO,kind=Rkind)
@@ -1850,7 +1886,7 @@ END SUBROUTINE sub_analyze_psi
             psi%RvecB(:) = psi%RvecB(:) * temp
           END IF
         END IF
-        psi%norme = ONE
+        psi%norm2 = ONE
       END IF
 
       IF (allocated(tab_WeightChannels)) THEN
@@ -1859,7 +1895,7 @@ END SUBROUTINE sub_analyze_psi
 
 !----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme,tab_WeightChannels
+        write(out_unitp,*) 'norm2 : ',psi%norm2,tab_WeightChannels
         write(out_unitp,*) 'END norm2_psi'
       END IF
 !----------------------------------------------------------
@@ -1896,45 +1932,45 @@ SUBROUTINE norm_psi_MPI(psi,ReNorm,GridRep,BasisRep)
   Integer                                 :: ii_baie
   Integer                                 :: if_baie
   Integer                                 :: i_max_w
-  Logical                                 :: normeGridRep
-  Logical                                 :: normeBasisRep
+  Logical                                 :: norm2GridRep
+  Logical                                 :: norm2BasisRep
 
   IF(present(GridRep)) THEN
     IF(present(BasisRep)) THEN
-      normeGridRep =GridRep
-      normeBasisRep=BasisRep
+      norm2GridRep =GridRep
+      norm2BasisRep=BasisRep
     ELSE
-      normeGridRep =GridRep
-      normeBasisRep=.FALSE.
+      norm2GridRep =GridRep
+      norm2BasisRep=.FALSE.
     ENDIF
   ELSE
     IF(present(BasisRep)) THEN
-      normeBasisRep = BasisRep
-      normeGridRep  = .FALSE.
+      norm2BasisRep = BasisRep
+      norm2GridRep  = .FALSE.
     ELSE
       IF(psi%BasisRep .AND. psi%GridRep) THEN
-        normeBasisRep = .TRUE.
-        normeGridRep  = .FALSE.
+        norm2BasisRep = .TRUE.
+        norm2GridRep  = .FALSE.
       ELSE
-        normeBasisRep = psi%BasisRep
-        normeGridRep  = psi%GridRep
+        norm2BasisRep = psi%BasisRep
+        norm2GridRep  = psi%GridRep
       ENDIF
     ENDIF
   ENDIF
 
-  IF (normeGridRep .AND. normeBasisRep) THEN
+  IF (norm2GridRep .AND. norm2BasisRep) THEN
     write(out_unitp,*) ' ERROR in norm2_psi'
-    write(out_unitp,*) ' normeGridRep=t and normeBasisRep=t !'
+    write(out_unitp,*) ' norm2GridRep=t and norm2BasisRep=t !'
     write(out_unitp,*) ' BasisRep,GridRep',psi%BasisRep,psi%GridRep
     STOP
   ENDIF
   
   IF(ReNorm==1 .OR. ReNorm==3) THEN
     ! NOTE: tab_WeightChannels obtained correctly only on master
-    CALL Channel_weight_MPI(tab_WeightChannels,psi,normeGridRep,normeBasisRep)
+    CALL Channel_weight_MPI(tab_WeightChannels,psi,norm2GridRep,norm2BasisRep)
 
-    IF(MPI_id==0) psi%norme=sum(tab_WeightChannels)
-    CALL MPI_Bcast(psi%norme,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
+    IF(MPI_id==0) psi%norm2=sum(tab_WeightChannels)
+    CALL MPI_Bcast(psi%norm2,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
     
     IF (allocated(tab_WeightChannels)) THEN
       CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","Channel_weight")
@@ -1942,16 +1978,16 @@ SUBROUTINE norm_psi_MPI(psi,ReNorm,GridRep,BasisRep)
   ENDIF
   
   IF(ReNorm==2 .OR. ReNorm==3) THEN
-    IF (psi%norme .EQ. ZERO ) THEN
+    IF (psi%norm2 .EQ. ZERO ) THEN
       write(out_unitp,*) ' ERROR in norm2_psi'
-      write(out_unitp,*) ' the norm2 is zero !',psi%norme
+      write(out_unitp,*) ' the norm2 is zero !',psi%norm2
       STOP
     END IF
     
-    temp=sqrt(ONE/psi%norme)
+    temp=sqrt(ONE/psi%norm2)
 
     !-normalization---------------------------------------------------------------------
-    IF(normeGridRep) THEN
+    IF(norm2GridRep) THEN
       IF(psi%cplx) THEN
         psi%CvecG=psi%CvecG*cmplx(temp,ZERO,kind=Rkind)
       ELSE
@@ -1964,7 +2000,7 @@ SUBROUTINE norm_psi_MPI(psi,ReNorm,GridRep,BasisRep)
         psi%RvecB=psi%RvecB*temp
       ENDIF
     ENDIF
-    psi%norme=ONE
+    psi%norm2=ONE
   ENDIF
     
   IF(.NOT. (ReNorm==1 .OR. ReNorm==2 .OR. ReNorm==3)) THEN
@@ -1986,7 +2022,7 @@ END SUBROUTINE norm_psi_MPI
       logical,          intent(in),   optional :: GridRep,BasisRep
 
 !------ working variables ---------------------------------
-      logical                        :: normeGridRep,normeBasisRep
+      logical                        :: norm2GridRep,norm2BasisRep
       real (kind=Rkind)              :: temp
       real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)
 
@@ -1997,8 +2033,8 @@ END SUBROUTINE norm_psi_MPI
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING renorm_psi'
-        IF (present(GridRep)) write(out_unitp,*) 'normeGridRep',GridRep
-        IF (present(BasisRep)) write(out_unitp,*) 'normeBasisRep',BasisRep
+        IF (present(GridRep)) write(out_unitp,*) 'norm2GridRep',GridRep
+        IF (present(BasisRep)) write(out_unitp,*) 'norm2BasisRep',BasisRep
         write(out_unitp,*) 'psi'
         CALL ecri_psi(psi=psi)
       END IF
@@ -2006,53 +2042,53 @@ END SUBROUTINE norm_psi_MPI
 
       IF (present(GridRep)) THEN
         IF (present(BasisRep)) THEN
-          normeGridRep  = GridRep
-          normeBasisRep = BasisRep
+          norm2GridRep  = GridRep
+          norm2BasisRep = BasisRep
         ELSE
-          normeGridRep  = GridRep
-          normeBasisRep = .FALSE.
+          norm2GridRep  = GridRep
+          norm2BasisRep = .FALSE.
         END IF
       ELSE
         IF (present(BasisRep)) THEN
-          normeBasisRep = BasisRep
-          normeGridRep  = .FALSE.
+          norm2BasisRep = BasisRep
+          norm2GridRep  = .FALSE.
         ELSE
           IF (psi%BasisRep .AND. psi%GridRep) THEN
-            normeBasisRep = .TRUE.
-            normeGridRep  = .FALSE.
+            norm2BasisRep = .TRUE.
+            norm2GridRep  = .FALSE.
           ELSE
-            normeBasisRep = psi%BasisRep
-            normeGridRep  = psi%GridRep
+            norm2BasisRep = psi%BasisRep
+            norm2GridRep  = psi%GridRep
           END IF
        END IF
      END IF
 
-     IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep',normeGridRep,normeBasisRep
-      IF (normeGridRep .AND. normeBasisRep) THEN
+     IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep',norm2GridRep,norm2BasisRep
+      IF (norm2GridRep .AND. norm2BasisRep) THEN
         write(out_unitp,*) ' ERROR in renorm_psi'
-        write(out_unitp,*) ' normeGridRep=t and normeBasisRep=t !'
+        write(out_unitp,*) ' norm2GridRep=t and norm2BasisRep=t !'
         write(out_unitp,*) ' BasisRep,GridRep',psi%BasisRep,psi%GridRep
         STOP
       END IF
 
-      CALL Channel_weight(tab_WeightChannels,psi,normeGridRep,normeBasisRep)
+      CALL Channel_weight(tab_WeightChannels,psi,norm2GridRep,norm2BasisRep)
 
       IF (debug)  write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
 
-      psi%norme = sum(tab_WeightChannels)
+      psi%norm2 = sum(tab_WeightChannels)
 
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme,tab_WeightChannels
+        write(out_unitp,*) 'norm2 : ',psi%norm2,tab_WeightChannels
       END IF
 
-      IF (psi%norme .EQ. ZERO ) THEN
+      IF (psi%norm2 .EQ. ZERO ) THEN
         write(out_unitp,*) ' ERROR in renorm_psi'
-        write(out_unitp,*) ' the norme is zero !',psi%norme
+        write(out_unitp,*) ' the norm2 is zero !',psi%norm2
         STOP
       END IF
-      temp = sqrt(ONE/psi%norme)
+      temp = sqrt(ONE/psi%norm2)
 
-      IF (normeGridRep) THEN
+      IF (norm2GridRep) THEN
         !- normalization of psiGridRep -------------------------
         IF (psi%cplx) THEN
           psi%CvecG(:) = psi%CvecG(:) *cmplx(temp,ZERO,kind=Rkind)
@@ -2067,7 +2103,7 @@ END SUBROUTINE norm_psi_MPI
           psi%RvecB(:) = psi%RvecB(:) * temp
         END IF
       END IF
-      psi%norme = ONE
+      psi%norm2 = ONE
 
       IF (allocated(tab_WeightChannels)) THEN
         CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","Channel_weight (from renorm_psi)")
@@ -2075,7 +2111,7 @@ END SUBROUTINE norm_psi_MPI
 
 !----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme
+        write(out_unitp,*) 'norm2 : ',psi%norm2
         write(out_unitp,*) 'END renorm_psi'
       END IF
 !----------------------------------------------------------
@@ -2094,7 +2130,7 @@ END SUBROUTINE norm_psi_MPI
       logical,          intent(in),   optional :: GridRep,BasisRep
 
 !------ working variables ---------------------------------
-      logical                        :: normeGridRep,normeBasisRep
+      logical                        :: norm2GridRep,norm2BasisRep
       real (kind=Rkind)              :: temp
 
 !----- for debuging --------------------------------------------------
@@ -2103,8 +2139,8 @@ END SUBROUTINE norm_psi_MPI
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING renorm_psi_With_norm2'
-        IF (present(GridRep))  write(out_unitp,*) 'normeGridRep',GridRep
-        IF (present(BasisRep)) write(out_unitp,*) 'normeBasisRep',BasisRep
+        IF (present(GridRep))  write(out_unitp,*) 'norm2GridRep',GridRep
+        IF (present(BasisRep)) write(out_unitp,*) 'norm2BasisRep',BasisRep
         write(out_unitp,*) 'psi'
         CALL ecri_psi(psi=psi)
       END IF
@@ -2112,47 +2148,47 @@ END SUBROUTINE norm_psi_MPI
 
       IF (present(GridRep)) THEN
         IF (present(BasisRep)) THEN
-          normeGridRep  = GridRep
-          normeBasisRep = BasisRep
+          norm2GridRep  = GridRep
+          norm2BasisRep = BasisRep
         ELSE
-          normeGridRep  = GridRep
-          normeBasisRep = .FALSE.
+          norm2GridRep  = GridRep
+          norm2BasisRep = .FALSE.
         END IF
       ELSE
         IF (present(BasisRep)) THEN
-          normeBasisRep = BasisRep
-          normeGridRep  = .FALSE.
+          norm2BasisRep = BasisRep
+          norm2GridRep  = .FALSE.
         ELSE
           IF (psi%BasisRep .AND. psi%GridRep) THEN
-            normeBasisRep = .TRUE.
-            normeGridRep  = .FALSE.
+            norm2BasisRep = .TRUE.
+            norm2GridRep  = .FALSE.
           ELSE
-            normeBasisRep = psi%BasisRep
-            normeGridRep  = psi%GridRep
+            norm2BasisRep = psi%BasisRep
+            norm2GridRep  = psi%GridRep
           END IF
        END IF
      END IF
 
-     IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep',normeGridRep,normeBasisRep
-      IF (normeGridRep .AND. normeBasisRep) THEN
+     IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep',norm2GridRep,norm2BasisRep
+      IF (norm2GridRep .AND. norm2BasisRep) THEN
         write(out_unitp,*) ' ERROR in renorm_psi_With_norm2'
-        write(out_unitp,*) ' normeGridRep=t and normeBasisRep=t !'
+        write(out_unitp,*) ' norm2GridRep=t and norm2BasisRep=t !'
         write(out_unitp,*) ' BasisRep,GridRep',psi%BasisRep,psi%GridRep
         STOP
       END IF
 
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme
+        write(out_unitp,*) 'norm2 : ',psi%norm2
       END IF
 
-      IF (psi%norme .EQ. ZERO ) THEN
+      IF (psi%norm2 .EQ. ZERO ) THEN
         write(out_unitp,*) ' ERROR in renorm_psi_With_norm2'
-        write(out_unitp,*) ' the norme is zero !',psi%norme
+        write(out_unitp,*) ' the norm2 is zero !',psi%norm2
         STOP
       END IF
-      temp = sqrt(ONE/psi%norme)
+      temp = sqrt(ONE/psi%norm2)
 
-      IF (normeGridRep) THEN
+      IF (norm2GridRep) THEN
         !- normalization of psiGridRep -------------------------
         IF (psi%cplx) THEN
           psi%CvecG(:) = psi%CvecG(:) *cmplx(temp,ZERO,kind=Rkind)
@@ -2167,17 +2203,17 @@ END SUBROUTINE norm_psi_MPI
           psi%RvecB(:) = psi%RvecB(:) * temp
         END IF
       END IF
-      psi%norme = ONE
+      psi%norm2 = ONE
 
 !----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'norme : ',psi%norme
+        write(out_unitp,*) 'norm2 : ',psi%norm2
         write(out_unitp,*) 'END renorm_psi_With_norm2'
       END IF
 !----------------------------------------------------------
 
       END SUBROUTINE renorm_psi_With_norm2
-      
+
   SUBROUTINE Channel_weight(tab_WeightChannels,psi,                 &
                             GridRep,BasisRep,Dominant_Channel)
   USE mod_system
@@ -2214,13 +2250,14 @@ END SUBROUTINE norm_psi_MPI
     write(out_unitp,*) 'BasisRep',BasisRep
     !write(out_unitp,*) 'psi'
     !CALL ecri_psi(psi=psi)
+    CALL flush_perso(out_unitp)
   END IF
 !-------------------------------------------------------
 
   nb_be = get_nb_be_FROM_psi(psi)
   nb_bi = get_nb_bi_FROM_psi(psi)
 
-  !write(6,*) 'nb_bi,nb_be',nb_bi,nb_be
+  !write(6,*) 'nb_bi,nb_be',nb_bi,nb_be ; flush(6)
 
   IF (GridRep .AND. BasisRep) THEN
     write(out_unitp,*) ' ERROR in Channel_weight'
@@ -2228,11 +2265,17 @@ END SUBROUTINE norm_psi_MPI
     STOP
   END IF
 
+  !write(6,*) 'alloc tab_WeightChannels',allocated(tab_WeightChannels) ; flush(6)
+  !write(6,*) 'shape tab_WeightChannels',shape(tab_WeightChannels) ; flush(6)
+
+
   IF (.NOT. allocated(tab_WeightChannels) .AND. nb_bi > 0 .AND. nb_be > 0) THEN
     CALL alloc_NParray(tab_WeightChannels,(/nb_bi,nb_be/),              &
                       "tab_WeightChannels","Channel_weight")
     tab_WeightChannels(:,:) = ZERO
   END IF
+
+  !write(6,*) 'shape tab_WeightChannels',shape(tab_WeightChannels) ; flush(6)
 
   !IF (SGtype == 4) THEN
   !  CALL Channel_weight_SG4(tab_WeightChannels,psi,                 &
@@ -2241,7 +2284,7 @@ END SUBROUTINE norm_psi_MPI
 
   IF (psi%ComOp%contrac_ba_ON_HAC) THEN
 
-    CALL Channel_weight_contracADA(tab_WeightChannels(:,1),psi)
+    CALL Channel_weight_contracHADA(tab_WeightChannels(:,1),psi)
 
   ELSE IF (psi%nb_baie == psi%nb_tot) THEN
 
@@ -2322,7 +2365,7 @@ END SUBROUTINE norm_psi_MPI
     DO i_bi=1,nb_bi
       IF (tab_WeightChannels(i_bi,i_be) > max_w) THEN
         max_w = tab_WeightChannels(i_bi,i_be)
-        Dominant_Channel(:) = (/ i_be,i_bi /)
+        Dominant_Channel(:) = [ i_be,i_bi ]
       END IF
     END DO
     END DO
@@ -2390,7 +2433,7 @@ END SUBROUTINE norm_psi_MPI
   END IF
 
   IF(psi%ComOp%contrac_ba_ON_HAC) THEN
-    IF(MPI_id==0) CALL Channel_weight_contracADA(tab_WeightChannels(:,1),psi)
+    IF(MPI_id==0) CALL Channel_weight_contracHADA(tab_WeightChannels(:,1),psi)
   ELSE IF (psi%nb_baie==psi%nb_tot) THEN
     IF(BasisRep .AND. (allocated(psi%CvecB) .OR. allocated(psi%RvecB)) ) THEN
       nb_per_MPI=psi%nb_tot/MPI_np
@@ -2583,7 +2626,7 @@ END SUBROUTINE Channel_weight_MPI
 !------------------------------------------------------
 
   END SUBROUTINE Channel_weight_SG4
-      SUBROUTINE Channel_weight_contracADA(w_harm,psi)
+      SUBROUTINE Channel_weight_contracHADA(w_harm,psi)
       USE mod_system
       USE mod_psi_set_alloc
       IMPLICIT NONE
@@ -2599,7 +2642,7 @@ END SUBROUTINE Channel_weight_MPI
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
-         write(out_unitp,*) 'BEGINNING Channel_weight_contracADA'
+         write(out_unitp,*) 'BEGINNING Channel_weight_contracHADA'
          write(out_unitp,*) 'nb_bi,nb_ai',psi%nb_bi
        END IF
 !-----------------------------------------------------------
@@ -2621,12 +2664,12 @@ END SUBROUTINE Channel_weight_MPI
 
 !----------------------------------------------------------
         IF (debug) THEN
-          write(out_unitp,*) 'END Channel_weight_contracADA'
+          write(out_unitp,*) 'END Channel_weight_contracHADA'
         END IF
 !----------------------------------------------------------
 
 
-      end subroutine Channel_weight_contracADA
+      end subroutine Channel_weight_contracHADA
 
 !=======================================================================================
 !> MPI version of Channel_weight_contracADA

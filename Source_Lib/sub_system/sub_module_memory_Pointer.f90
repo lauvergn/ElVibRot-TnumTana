@@ -21,7 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_memory_pointer
-      USE mod_NumParameters, only : Rkind, ILkind, out_unitp
+      USE mod_NumParameters, only : Rkind, ILkind, ZERO, CZERO,out_unitp
       use mod_memory, only: write_error_not_null, sub_test_tab_ub, sub_test_tab_lb, &
                             error_memo_allo, write_error_null
       IMPLICIT NONE
@@ -196,9 +196,9 @@ MODULE mod_memory_pointer
       SUBROUTINE alloc_array_OF_Idim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      integer, pointer, intent(inout) :: tab(:)
-      integer, intent(in) :: tab_ub(:)
-      integer, intent(in), optional :: tab_lb(:)
+      integer, pointer, intent(inout)           :: tab(:)
+      integer,          intent(in)              :: tab_ub(:)
+      integer,          intent(in), optional    :: tab_lb(:)
 
       character (len=*), intent(in) :: name_var,name_sub
 
@@ -229,6 +229,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'integer')
+       tab = 0
 
       END SUBROUTINE alloc_array_OF_Idim1
       SUBROUTINE dealloc_array_OF_Idim1(tab,name_var,name_sub)
@@ -293,6 +294,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'integer')
+       tab = 0
 
       END SUBROUTINE alloc_array_OF_Idim2
       SUBROUTINE dealloc_array_OF_Idim2(tab,name_var,name_sub)
@@ -361,6 +363,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2),tab_ub(3)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'integer')
+       tab = 0
 
       END SUBROUTINE alloc_array_OF_Idim3
       SUBROUTINE dealloc_array_OF_Idim3(tab,name_var,name_sub)
@@ -430,6 +433,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2),tab_ub(3),tab_ub(4)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'integer')
+       tab = 0
 
       END SUBROUTINE alloc_array_OF_Idim4
       SUBROUTINE dealloc_array_OF_Idim4(tab,name_var,name_sub)
@@ -501,6 +505,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2),tab_ub(3),tab_ub(4),tab_ub(5)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'integer')
+       tab = 0
 
       END SUBROUTINE alloc_array_OF_Idim5
       SUBROUTINE dealloc_array_OF_Idim5(tab,name_var,name_sub)
@@ -570,6 +575,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'real8')
+       tab = ZERO
 
       END SUBROUTINE alloc_array_OF_Rdim1
       SUBROUTINE dealloc_array_OF_Rdim1(tab,name_var,name_sub)
@@ -635,6 +641,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'real8')
+       tab = ZERO
 
       END SUBROUTINE alloc_array_OF_Rdim2
       SUBROUTINE dealloc_array_OF_Rdim2(tab,name_var,name_sub)
@@ -713,6 +720,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2),tab_ub(3)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'real8')
+       tab = ZERO
 
       END SUBROUTINE alloc_array_OF_Rdim3
       SUBROUTINE dealloc_array_OF_Rdim3(tab,name_var,name_sub)
@@ -782,6 +790,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2),tab_ub(3),tab_ub(4)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'real8')
+       tab = ZERO
 
       END SUBROUTINE alloc_array_OF_Rdim4
       SUBROUTINE dealloc_array_OF_Rdim4(tab,name_var,name_sub)
@@ -852,6 +861,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2),tab_ub(3),tab_ub(4),tab_ub(5)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'real8')
+       tab = ZERO
 
       END SUBROUTINE alloc_array_OF_Rdim5
       SUBROUTINE dealloc_array_OF_Rdim5(tab,name_var,name_sub)
@@ -920,6 +930,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'complex8')
+       tab = CZERO
 
       END SUBROUTINE alloc_array_OF_Cdim1
       SUBROUTINE dealloc_array_OF_Cdim1(tab,name_var,name_sub)
@@ -984,6 +995,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'complex8')
+       tab = CZERO
 
       END SUBROUTINE alloc_array_OF_Cdim2
       SUBROUTINE dealloc_array_OF_Cdim2(tab,name_var,name_sub)
@@ -1052,6 +1064,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2),tab_ub(3)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'complex8')
+       tab = CZERO
 
       END SUBROUTINE alloc_array_OF_Cdim3
       SUBROUTINE dealloc_array_OF_Cdim3(tab,name_var,name_sub)
@@ -1121,6 +1134,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2),tab_ub(3),tab_ub(4)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'complex8')
+       tab = CZERO
 
       END SUBROUTINE alloc_array_OF_Cdim4
       SUBROUTINE dealloc_array_OF_Cdim4(tab,name_var,name_sub)
@@ -1191,6 +1205,7 @@ MODULE mod_memory_pointer
          allocate(tab(tab_ub(1),tab_ub(2),tab_ub(3),tab_ub(4),tab_ub(5)),stat=err_mem)
        END IF
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'complex8')
+       tab = CZERO
 
       END SUBROUTINE alloc_array_OF_Cdim5
       SUBROUTINE dealloc_array_OF_Cdim5(tab,name_var,name_sub)

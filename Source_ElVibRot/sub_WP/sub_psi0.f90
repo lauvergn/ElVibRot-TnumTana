@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,6 +35,9 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
 
@@ -35,7 +49,7 @@
 !   or  lect_WP0BasisRep = .TRUE.
 !
 !     calculating WP0 on the grid (GridRep)
-!          WP0(qi) =  exp[-((Q-Qeq)/sigma)2]*exp[i*imp_k*(Q-Qeq)]
+!          WP0(qi) =  exp[-((Q-Qeq)/sigma)^2]*exp[i*imp_k*(Q-Qeq)]
 !
 !
 !     If WP0BasisRep=.TRUE. => WP0 is BasisRep and nWP0=dim(WP0BasisRep)
@@ -62,8 +76,8 @@
       TYPE (param_WP0) :: para_WP0
       TYPE (param_psi), intent(inout) :: WP0(1)
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
 
 !------ working variables ---------------------------------
       integer  :: nio,nb_WPdum
@@ -124,10 +138,10 @@
           END IF
 
           CALL norm2_psi(WP0(1),GridRep=.TRUE.)
-          IF(MPI_id==0) write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
+          IF(MPI_id==0) write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
           CALL flush_perso(out_unitp)
           CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
-          IF(MPI_id==0) write(out_unitp,*) 'normeWP GridRep',WP0(1)%norme
+          IF(MPI_id==0) write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
           CALL flush_perso(out_unitp)
 
           IF (debug) THEN
@@ -142,9 +156,9 @@
 
             CALL norm2_psi(WP0(1),BasisRep=.TRUE.)
 
-            write(out_unitp,*) 'normeWP BasisRep',WP0(1)%norme
+            write(out_unitp,*) 'norm2WP BasisRep',WP0(1)%norm2
 
-            IF (abs(ONE-WP0(1)%norme) >= ONETENTH**5) THEN
+            IF (abs(ONE-WP0(1)%norm2) >= ONETENTH**5) THEN
               write(out_unitp,*) ' WARNNIG in psi0'
               write(out_unitp,*) ' the transformation GridRep to BasisRep is NOT exact'
               write(out_unitp,*) ' => used more basis functions'
@@ -193,7 +207,7 @@
       END IF ! for para_WP0%New_Read_WP0
 
       IF(MPI_id==0) CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
-      IF(MPI_id==0) write(out_unitp,*) 'normeWP BasisRep',WP0(1)%norme
+      IF(MPI_id==0) write(out_unitp,*) 'norm2WP BasisRep',WP0(1)%norm2
 
       !- clear WP0%...GridRep, if not need ------------------
       IF (para_WP0%WP0BasisRep) THEN
@@ -204,7 +218,7 @@
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*)
-        write(out_unitp,*) 'WP0BasisRep',WP0(1)%norme
+        write(out_unitp,*) 'WP0BasisRep',WP0(1)%norm2
         IF (para_WP0%WP0BasisRep) THEN
           CALL ecri_psi(ZERO,WP0(1),out_unitp,.FALSE.,.TRUE.)
         ELSE
@@ -239,8 +253,8 @@
       TYPE (param_psi)   :: WP0
       integer            :: WP0nb_elec,WP0n_h
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
 
 
       real (kind=Rkind)      :: Qact(WP0%nb_act1)

@@ -1,7 +1,7 @@
 rm -f run_all.log
 
 #for v in 2 3 4 5 6
-for v in 2 3 4
+ for v in 2 3 4
 do
   run_tests $v >> run_all.log
 done

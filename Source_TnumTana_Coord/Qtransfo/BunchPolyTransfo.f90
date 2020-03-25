@@ -16,7 +16,13 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
@@ -833,6 +839,7 @@
       integer       :: iAtA,iAtB
       integer       :: i,nb_Qin,i_Qprim
       integer       :: iQalpha_TO_ivTot,iQbeta_TO_ivTot,iQgamma_TO_ivTot
+      integer       :: nb_at
 
       logical, save :: zmat_order_save        = .FALSE.
       integer, save :: i_Qpoly                = 0
@@ -940,10 +947,14 @@
         BunchTransfo%ind_vect(3,iv_tot) = iAtA
         BunchTransfo%ind_vect(4,iv_tot) = iAtB
       END IF
-      IF (BunchTransfo%ind_vect(3,iv_tot) == 0 .OR.                     &
-          BunchTransfo%ind_vect(4,iv_tot) == 0) THEN
+      nb_at = BunchTransfo%nat_act + BunchTransfo%nb_G + BunchTransfo%nb_X
+      IF (BunchTransfo%ind_vect(3,iv_tot) < 1     .OR.                  &
+          BunchTransfo%ind_vect(3,iv_tot) > nb_at .OR.                  &
+          BunchTransfo%ind_vect(4,iv_tot) < 1     .OR.                  &
+          BunchTransfo%ind_vect(4,iv_tot) > nb_at) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' The vector CANNOT be defined: iAtA OR iAtB are ZERO',iAtA,iAtB
+        write(out_unitp,*) ' The vector CANNOT be defined: iAtA OR iAtB are out-of-range.'
+        write(out_unitp,*) 'iAtA, iAtB',iAtA,iAtB
         write(out_unitp,*) ' Check your data!'
         STOP
       END IF
@@ -3353,6 +3364,17 @@
               write(out_unitp,*) '  while reading the vecors indices.'
               write(out_unitp,*) ' Check your data !!'
               STOP
+            END IF
+            IF (BunchTransfo%ind_vect(3,iv) < 1     .OR.                &
+                BunchTransfo%ind_vect(3,iv) > nb_at .OR.                &
+                BunchTransfo%ind_vect(4,iv) < 1     .OR.                &
+                BunchTransfo%ind_vect(4,iv) > nb_at) THEN
+
+               write(out_unitp,*) ' ERROR in ',name_sub
+               write(out_unitp,*) '  The vector (',iv,') indexes are out-of-range'
+               write(out_unitp,*) '   BunchTransfo%ind_vect(3:4,iv)',BunchTransfo%ind_vect(3:4,iv)
+               write(out_unitp,*) ' Check your data !!'
+               STOP
             END IF
           END DO
           !---------------------------------------------------------------

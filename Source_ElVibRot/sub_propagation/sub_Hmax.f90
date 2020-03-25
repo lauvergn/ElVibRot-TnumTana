@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,9 +35,11 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
-
       SUBROUTINE sub_Hmax(para_propa,para_H)
       USE mod_system
       USE mod_Op
@@ -287,7 +300,7 @@ relax = .TRUE.
           para_propa%para_Davidson%name_file_saveWP = 'file_WP_Hmin'
 
           CALL sub_propagation_Davidson(Tab_Psi,Ene0,nb_diago,max_diago,&
-                                        para_H,para_propa)
+                              para_H,para_propa%para_Davidson,para_propa)
 
           nb_diago = 0
           para_propa%para_Davidson%Hmin_propa       = .FALSE.
@@ -295,7 +308,7 @@ relax = .TRUE.
           para_propa%para_Davidson%name_file_saveWP = 'file_WP_Hmax'
 
           CALL sub_propagation_Davidson(Tab_Psi,Ene0,nb_diago,max_diago,&
-                                        para_H,para_propa)
+                              para_H,para_propa%para_Davidson,para_propa)
 
           CALL dealloc_array(Tab_Psi,"Tab_Psi",name_sub)
           CALL dealloc_NParray(Ene0,"Ene0",name_sub)
@@ -366,10 +379,6 @@ relax = .TRUE.
 
         para_propa_loc%para_poly%max_poly     = 20
         para_propa_loc%para_poly%npoly        = 20
-
-        CALL alloc_array(para_propa_loc%work_WP,                        &
-                                  (/para_propa_loc%para_poly%npoly+6/), &
-                        "para_propa_loc%work_WP",name_sub,(/0/))
 
         CALL alloc_array(para_propa_loc%para_poly%coef_poly,(/2/),      &
                         "para_propa_loc%para_poly%coef_poly",name_sub)

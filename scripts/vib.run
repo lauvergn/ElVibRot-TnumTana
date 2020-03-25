@@ -1,10 +1,15 @@
 #!/bin/bash
 
-cat > namelist
+name_file='namelist'
+name_file0=$name_file
+i=0
+while [ -e $name_file ]
+do
+ i=$(( $i + 1 ))
+ name_file=$name_file0$i
+done
+#echo $name_file
 
-
-
-nice /Users/lauvergn/git/ElVibRot/vib.exe < namelist
-
-
-rm namelist
+cat > $name_file
+nice /Users/lauvergn/git/ElVibRot/vib.exe --input $name_file
+rm $name_file

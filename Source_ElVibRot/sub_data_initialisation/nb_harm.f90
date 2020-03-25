@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,6 +35,9 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
 
@@ -43,7 +57,7 @@
       USE mod_nDindex
       use mod_Constant,  only: get_conv_au_to_unit
 
-      USE mod_Coord_KEO, only : zmatrix, Tnum, gaussian_width, get_Qact0
+      USE mod_Coord_KEO, only : CoordType, Tnum, gaussian_width, get_Qact0
       use mod_PrimOp,    only: param_pes, sub_freq2_rph
       USE mod_basis
       IMPLICIT NONE
@@ -51,8 +65,8 @@
 !----- for the Basis2n -----------------------------------------------
       TYPE (basis)   :: Basis2n
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 !----- for the PES ---------------------------------------------------
@@ -60,7 +74,7 @@
 
 !------ working variables -------------------------------------------
 
-      real (kind=Rkind) :: norme
+      real (kind=Rkind) :: norm2
 
       real (kind=Rkind) :: d0ehess(mole%nb_inact2n)
       real (kind=Rkind) :: d0Qeq(mole%nb_inact2n)
@@ -110,7 +124,7 @@
 
       CALL get_Qact0(Qact,mole%ActiveTransfo)
 
-      CALL sub_freq2_RPH(d0ehess,d0c,d0c_inv,norme,d0hess,d0Qeq,d0g,    &
+      CALL sub_freq2_RPH(d0ehess,d0c,d0c_inv,norm2,d0hess,d0Qeq,d0g,    &
                          pot0_corgrad,                                  &
                          Qact,para_Tnum,mole,mole%RPHTransfo_inact2n)
 

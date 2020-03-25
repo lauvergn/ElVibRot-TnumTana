@@ -1,7 +1,8 @@
 rm -f res res_all res_for_guess res_dum* SH_HADA* file_OpBuilding restart.int spectrum file* fort.* Davidson.log Arpack.log
 rm -f EF*
+rm -f file_WP*
 rm -f Rho* psi* 
 rm -f Eq_KEO.tex mat_f2ij
 rm -f *confli*
-rm -f namelist
+rm -f namelist*
 rm -f Arpack.log_sym

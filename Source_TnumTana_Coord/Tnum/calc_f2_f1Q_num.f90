@@ -16,7 +16,13 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
@@ -29,6 +35,10 @@ MODULE mod_f2f2Vep
   USE mod_dnDetGG_dnDetg
   USE mod_dnRho
   IMPLICIT NONE
+
+  INTERFACE calc3_f2_f1Q_num
+    MODULE PROCEDURE calc3_f2_f1Q_num_CoordType,calc3_f2_f1Q_num_zmatrix
+  END INTERFACE
 
   PRIVATE
   PUBLIC :: calc3_f2_f1Q_num,calc3_f2_f1Q_numTay0Qinact2n
@@ -47,10 +57,8 @@ MODULE mod_f2f2Vep
 !
 !
 !======================================================================
-      SUBROUTINE calc3_f2_f1Q_num(Qact,                                 &
-                                  Tdef2,Tdef1,vep,rho,                  &
-                                  Tcor2,Tcor1,Trot,                     &
-                                  para_Tnum,mole)
+      SUBROUTINE calc3_f2_f1Q_num_zmatrix(Qact,Tdef2,Tdef1,vep,rho,      &
+                                          Tcor2,Tcor1,Trot,para_Tnum,mole)
       USE mod_system
       USE mod_dnSVM
       use mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
@@ -64,6 +72,34 @@ MODULE mod_f2f2Vep
 !----- for the zmatrix and Tnum --------------------------------------
       TYPE (zmatrix) :: mole
       TYPE (Tnum)    :: para_Tnum
+
+      real (kind=Rkind), intent(inout) :: Qact(mole%nb_var)
+      real (kind=Rkind) :: Tdef2(mole%nb_act,mole%nb_act),Tdef1(mole%nb_act)
+      real (kind=Rkind) :: vep,rho
+      real (kind=Rkind) :: Tcor2(mole%nb_act,3),Tcor1(3),Trot(3,3)
+
+
+
+        CALL calc3_f2_f1Q_num_CoordType(Qact,Tdef2,Tdef1,vep,rho,       &
+                              Tcor2,Tcor1,Trot,para_Tnum,mole%CoordType)
+
+
+      END SUBROUTINE calc3_f2_f1Q_num_zmatrix
+      SUBROUTINE calc3_f2_f1Q_num_CoordType(Qact,Tdef2,Tdef1,vep,rho,   &
+                                        Tcor2,Tcor1,Trot,para_Tnum,mole)
+      USE mod_system
+      USE mod_dnSVM
+      use mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
+      USE mod_Tnum
+      USE mod_paramQ
+      USE mod_dnGG_dng
+      USE mod_dnRho ! all
+      USE mod_Tana_NumKEO
+      IMPLICIT NONE
+
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
+      TYPE (Tnum)      :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(mole%nb_var)
 
@@ -100,7 +136,6 @@ MODULE mod_f2f2Vep
       real (kind=Rkind) :: vep
       real (kind=Rkind) :: Tcor2(mole%nb_act,3),Tcor1(3)
       real (kind=Rkind) :: Trot(3,3)
-
       real (kind=Rkind) ::  rho
 
 !-------------------------------------------------------------------------
@@ -114,6 +149,8 @@ MODULE mod_f2f2Vep
 
       TYPE(Type_dnMat) :: dng,dnGG
       integer          :: calc_g,calc_GG
+      !TYPE (zmatrix)   :: mole_zmatrix
+
 !     ----------------------------------------------------------
 
       integer :: nderiv
@@ -132,7 +169,7 @@ MODULE mod_f2f2Vep
          write(out_unitp,*) 'Qact',Qact
          !IF (debug) THEN
          !  write(out_unitp,*)
-         !  CALL Write_mole(mole)
+         !  CALL Write_CoordType(mole)
          !  write(out_unitp,*)
          !END IF
          write(out_unitp,*)
@@ -143,8 +180,10 @@ MODULE mod_f2f2Vep
        END IF
 !-----------------------------------------------------------
       IF (para_Tnum%Tana) THEN
+
         CALL get_Numf2f1vep_WITH_AnaKEO(para_Tnum%ExpandTWOxKEO,Qact,   &
                                         mole,Tdef2,Tdef1,vep,rho)
+
         IF (debug .OR. para_Tnum%WriteT) THEN
           write(out_unitp,*) ' f2,f1,vep with Tana'
           CALL Write_f2f1vep(Tdef2,Tdef1,vep,rho,mole%nb_act)
@@ -160,6 +199,14 @@ MODULE mod_f2f2Vep
       IF (mole%nb_Qtransfo == -1 .OR. para_Tnum%f2f1_ana) THEN
         CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
 
+        ! we have to transfert mole to mole_zmatrix, ...
+        !  ... because calc_f2_f1Q_ana works only with zmatrix type
+        !CALL CoordType1TOCoordType2(mole,mole_zmatrix%CoordType)
+        !CALL calc_f2_f1Q_ana(Qdyn,                                      &
+        !                     Tdef2,Tdef1,vep,rho,                       &
+        !                     Tcor2,Tcor1,Trot,                          &
+        !                     para_Tnum,mole_zmatrix)
+        !CALL dealloc_zmat(mole_zmatrix)
         CALL calc_f2_f1Q_ana(Qdyn,                                      &
                              Tdef2,Tdef1,vep,rho,                       &
                              Tcor2,Tcor1,Trot,                          &
@@ -179,7 +226,6 @@ MODULE mod_f2f2Vep
       CALL alloc_dnSVM(dng,mole%ndimG,mole%ndimG,mole%nb_act,nderiv)
 
       CALL get_dng_dnGG(Qact,para_Tnum,mole,dng,dnGG,nderiv)
-
       !write(out_unitp,*) 'dng'
       !CALL write_dnSVM(dng)
       !write(out_unitp,*) 'dnGG'
@@ -213,7 +259,7 @@ MODULE mod_f2f2Vep
 !-----------------------------------------------------------
 !     f0,fi,Fij calculation
 !-----------------------------------------------------------
-      CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                     &
+      CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                            &
                       nderiv,para_Tnum%num_x,para_Tnum%stepT,           &
                       para_Tnum%nrho)
 !-----------------------------------------------------------
@@ -284,7 +330,7 @@ MODULE mod_f2f2Vep
       END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE calc3_f2_f1Q_num
+      END SUBROUTINE calc3_f2_f1Q_num_CoordType
       SUBROUTINE calc3_f2_f1Q_numTay0Qinact2n(Qact,dnQinact2n,          &
                                               Tdef2,Tdef1,vep,rho,      &
                                               Tcor2,Tcor1,Trot,         &
@@ -297,8 +343,8 @@ MODULE mod_f2f2Vep
       USE mod_dnRho ! all
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix)    :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType)  :: mole
       TYPE (Tnum)       :: para_Tnum
 
       real (kind=Rkind) :: Tdef2(mole%nb_act,mole%nb_act)
@@ -369,7 +415,7 @@ MODULE mod_f2f2Vep
          write(out_unitp,*) 'Qact',Qact
          IF (debug) THEN
            write(out_unitp,*)
-           CALL Write_mole(mole)
+           CALL Write_CoordType(mole)
            write(out_unitp,*)
          END IF
          write(out_unitp,*)
@@ -436,7 +482,7 @@ MODULE mod_f2f2Vep
 !-----------------------------------------------------------
 !     f0,fi,Fij calculation
 !-----------------------------------------------------------
-      CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                     &
+      CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                            &
                       nderiv,para_Tnum%num_x,para_Tnum%stepT,           &
                       para_Tnum%nrho)
 !-----------------------------------------------------------

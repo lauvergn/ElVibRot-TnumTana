@@ -53,6 +53,10 @@ EVRT=../..
       continue
     else
       echo $dat_name $err
+
+      echo ==================== >> save_dat_error
+      cat $dat_name >> save_dat_error
+      echo ==================== >> save_dat_error
     fi
 
  done

@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,9 +35,11 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
-
 MODULE mod_LinearSystem
 USE mod_Constant
 USE mod_MPI 
@@ -205,9 +218,9 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
       !===================================================================
       nb_diago        = max(1,nb_diago) ! number of Eign value
       epsi            = para_propa%para_Davidson%conv_resi
-      normeg          = HUNDRED * epsi
+      norm2g          = HUNDRED * epsi
       conv_Ene        = HUNDRED * epsi
-      tab_normeg(:)   = normeg
+      tab_norm2g(:)   = norm2g
       convergeEne(:)  = .FALSE.
       convergeResi(:) = .FALSE.
       converge(:)     = .FALSE.
@@ -374,13 +387,13 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
 
           DEne(1:nb_diago) = Ene(1:nb_diago)-Ene0(1:nb_diago)
           conv_Ene = maxval(abs(DEne(1:nb_diago)))
-          write(out_unitp,41) 'convergence (it, normeg/epsi, conv_Ene): ',&
-                                                   it,normeg/epsi,conv_Ene
+          write(out_unitp,41) 'convergence (it, norm2g/epsi, conv_Ene): ',&
+                                                   it,norm2g/epsi,conv_Ene
           IF (para_propa%para_Davidson%Hmax_propa) THEN
-            write(out_unitp,21) it,ndim,normeg/epsi,iresidu,              &
+            write(out_unitp,21) it,ndim,norm2g/epsi,iresidu,              &
                              -Ene(1:nb_diago)*auTOene
           ELSE
-            write(out_unitp,21) it,ndim,normeg/epsi,iresidu,              &
+            write(out_unitp,21) it,ndim,norm2g/epsi,iresidu,              &
                               Ene(1:nb_diago)*auTOene
           END IF
 
@@ -393,7 +406,7 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
                                                     convergeEne(1:nb_diago)
           CALL flush_perso(out_unitp)
 
-          write(iunit,21) it,ndim,normeg/epsi,iresidu,Ene(1:ndim)*auTOene
+          write(iunit,21) it,ndim,norm2g/epsi,iresidu,Ene(1:ndim)*auTOene
           CALL flush_perso(iunit)
 
           !----------------------------------------------------------
@@ -401,7 +414,7 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
           !-  and convergence --------------------------
           IF (debug) write(out_unitp,*) 'residual',it,ndim,ndim0
           IF (debug) CALL flush_perso(out_unitp)
-          normeg    = -ONE
+          norm2g    = -ONE
           fresidu   = 0
           ! time consuming in MakeResidual_Davidson
           DO j=1,ndim
@@ -409,14 +422,14 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
               CALL MakeResidual_Davidson(j,g,psi,Hpsi,Ene,Vec)
 
               CALL norm2_psi(g)
-              tab_normeg(j) = sqrt(g%norme)
+              tab_norm2g(j) = sqrt(g%norm2)
               IF (fresidu == 0) fresidu = j
-              IF (tab_normeg(j) > normeg) THEN
+              IF (tab_norm2g(j) > norm2g) THEN
                 iresidu = j
-                normeg = tab_normeg(iresidu)
+                norm2g = tab_norm2g(iresidu)
               END IF
 
-              convergeResi(j) = tab_normeg(j) < epsi
+              convergeResi(j) = tab_norm2g(j) < epsi
             END IF
             converge(j) = (convergeEne(j) .AND. convergeResi(j))
 
@@ -430,7 +443,7 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
 
         IF(MPI_id==0) THEN
           Ene0(1:nb_diago) = Ene(1:nb_diago)
-          write(out_unitp,41) 'it tab_normeg          ',it,tab_normeg(1:nb_diago)
+          write(out_unitp,41) 'it tab_norm2g          ',it,tab_norm2g(1:nb_diago)
           write(out_unitp,42) 'it convergenceResi(:): ',it,convergeResi(1:nb_diago)
 41        format(a,i3,100(1x,e9.2))
 42        format(a,i3,100(1x,l9))
@@ -610,8 +623,8 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
         DO j=1,nb_diago
           g = Hpsi(j) - psi(j) * Ene(j)
           CALL norm2_psi(g)
-          tab_normeg(j) = sqrt(g%norme)
-          write(out_unitp,*) 'lev:',j,Ene(j)*auTOene,tab_normeg(j)
+          tab_norm2g(j) = sqrt(g%norm2)
+          write(out_unitp,*) 'lev:',j,Ene(j)*auTOene,tab_norm2g(j)
         END DO
       END IF
       CALL file_close(Log_file)

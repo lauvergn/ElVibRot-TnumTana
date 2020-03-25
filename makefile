@@ -659,7 +659,6 @@ Obj_EVRT =\
 # vib (without argument)
 EVR1:obj vib $(VIBEXE)
 	@echo "EVR"
-
 #
 #make all programs (except work)
 all:obj vib $(VIBEXE)
@@ -712,7 +711,7 @@ PhysConst:obj $(PhysConstEXE)
 # QML
 $(QMLibDIR_full):
 	cd $(QMLibDIR) ; make
-   
+
 # obj directory
 obj:
 	mkdir -p obj
@@ -720,17 +719,19 @@ obj:
 # vib script
 vib: 
 	echo "make vib script"
-	echo "#!/bin/bash" > vib
-	echo "cat > namelist" >> vib
-	echo "nice $(DIR_EVRT)/vib.exe < namelist" >> vib
-	echo "rm namelist" >> vib
+	./scripts/make_vib.sh $(DIR_EVRT) $(F90)
 	chmod a+x vib
 
 # clean
 clean: 
-	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib2 vib
+	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib
 	rm -rf *.dSYM
 	rm -f .DS_Store */.DS_Store */*/.DS_Store */*/*/.DS_Store
+	@cd sub_pot ; cp sub_system_save.f sub_system.f
+	@cd sub_pot ; cp sub_system_save.f90 sub_system.f90
+	@cd Source_TnumTana_Coord/sub_operator_T ; cp calc_f2_f1Q_save.f90    calc_f2_f1Q.f90
+	@cd Source_TnumTana_Coord/sub_operator_T ; cp Sub_X_TO_Q_ana_save.f90 Sub_X_TO_Q_ana.f90
+
 	@cd Examples/exa_hcn-dist ; ./clean
 	@cd Examples/exa_direct-dist ; ./clean
 	@cd Examples/exa_TnumTana_Coord-dist ; ./clean
@@ -751,7 +752,7 @@ clean:
 $(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(QMLibDIR_full)
 	echo EVR-T
 	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(LYNKFLAGS)
-	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
+#	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
 #===============================================
 #
 $(OBJ)/libTnum.a: obj $(Obj_KEO_PrimOp)
@@ -912,6 +913,10 @@ $(OBJ)/sub_module_Coord_KEO.o:$(DirTNUM)/sub_module_Coord_KEO.f90
 #
 # Tnum files
 $(OBJ)/calc_f2_f1Q.o:$(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
+	sed "s/zmatrix/CoordType/" $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90 > $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i
+	sed "s/Write_mole/Write_CoordType/" $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i > $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
+	echo Warning the calc_f2_f1Q.f90 file has been modified.
+	rm $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
 $(OBJ)/Sub_X_TO_Q_ana.o:$(DirTNUM)/sub_operator_T/Sub_X_TO_Q_ana.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_operator_T/Sub_X_TO_Q_ana.f90
@@ -1223,6 +1228,9 @@ $(OBJ)/sub_Smolyak_test.o:$(DIRSmolyak)/sub_Smolyak_test.f90
 # potentiel et fonctions dependant du systeme
 # sub_system.o 
 $(OBJ)/sub_system.o:$(DirPot)/sub_system.$(extf)
+	sed "s/zmatrix/CoordType/" $(DirPot)/sub_system.$(extf) > $(DirPot)/sub_system.i
+	echo Warning the sub_system.$(extf) file has been modified.
+	mv $(DirPot)/sub_system.i $(DirPot)/sub_system.$(extf)
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirPot)/sub_system.$(extf)
 $(OBJ)/read_para.o:$(DirPot)/read_para.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirPot)/read_para.f90
@@ -1374,7 +1382,7 @@ lib_dep_mod_dnSVM=$(OBJ)/Lib_QTransfo.o $(OBJ)/sub_module_DInd.o                
                   $(OBJ)/RectilinearNM_Transfo.o $(OBJ)/LinearNMTransfo.o              \
                   $(OBJ)/RPHTransfo.o $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o         \
                   $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_module_SimpleOp.o             \
-                  $(OBJ)/sub_module_cart.o
+                  $(OBJ)/sub_module_cart.o $(OBJ)/sub_module_VecOFdnS.o
 $(lib_dep_mod_dnSVM):$(OBJ)/sub_module_dnSVM.o
 
 #mod_dnM
@@ -1417,7 +1425,7 @@ $(lib_dep_mod_nDFit):$(OBJ)/sub_module_nDfit.o
 #mod_Tnum 
 lib_dep_mod_Tnum=$(OBJ)/calc_f2_f1Q.o $(OBJ)/sub_module_paramQ.o $(OBJ)/sub_dnRho.o    \
                  $(OBJ)/sub_export_KEO.o $(OBJ)/sub_system.o                           \
-                 $(OBJ)/sub_module_Tana_NumKEO.o
+                 $(OBJ)/sub_module_Tana_NumKEO.o $(OBJ)/sub_module_paramQ.o
 $(lib_dep_mod_Tnum):$(OBJ)/sub_module_Tnum.o
 
 #mod_paramQ 
@@ -1699,6 +1707,10 @@ $(lib_dep_mod_Davidson)=$(OBJ)/sub_module_Davidson.o
 #mod_param_RD
 lib_dep_mod_param_RD=$(OBJ)/sub_module_basis_set_alloc.o
 $(lib_dep_mod_param_RD)=$(OBJ)/sub_module_param_RD.o
+
+#mod_VecOFdnS
+lib_dep_mod_VecOFdnS=$(OBJ)/sub_module_MatOFdnS.o
+$(lib_dep_mod_VecOFdnS)=$(OBJ)/sub_module_VecOFdnS.o
 
 endif
 #=======================================================================================

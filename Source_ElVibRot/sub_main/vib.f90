@@ -1,22 +1,33 @@
-!======================================================================================= 
-!======================================================================================= 
+!===========================================================================
+!===========================================================================
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,8 +35,11 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
-!======================================================================================= 
-!======================================================================================= 
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
+!===========================================================================
+!===========================================================================
       SUBROUTINE vib(max_mem,test_mem,intensity_only)
       USE mod_system
       USE mod_Constant
@@ -69,8 +83,8 @@
 !----- On the fly parameters (at this time for gaussian) -------------------------------
       TYPE (param_OTF) :: para_OTF
 
-!----- for the zmatrix and Tnum --------------------------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 !----- variables for the construction of H ---------------------------------------------
@@ -317,17 +331,20 @@
                   WP0(1)%RvecB(i_baie:f_baie) = ZERO
                 END IF
               END DO
-            END IF ! for ara_propa%para_WP0%WP0_nb_CleanChannel > 0
+            END IF ! for para_propa%para_WP0%WP0_nb_CleanChannel > 0
 
             IF(MPI_id==0) CALL norm2_psi(WP0(1))
-            write(out_unitp,*) ' Norm of |WP0>',WP0(1)%norme
+            write(out_unitp,*) ' Norm of |WP0>',WP0(1)%norm2
             IF(MPI_id==0) CALL renorm_psi_With_norm2(WP0(1))
             T = ZERO
             write(out_unitp,*) ' Analysis of |WP0> or Mu|WP0>'
             write(out_unitp,*)
 
             para_propa%ana_psi%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
-            IF(MPI_id==0) CALL sub_analyze_tab_psi(T,WP0(:),para_propa%ana_psi,Write_Psi=.FALSE.)
+            WP0(1)%CAvOp           = CZERO
+            para_propa%ana_psi%ZPE = ZERO
+
+            IF(MPI_id==0) CALL sub_analyze_tab_psi(T,WP0(:),para_propa%ana_psi,adia=.FALSE.,Write_Psi=.FALSE.)
             para_propa%ana_psi%file_Psi%name = para_propa%file_WP%name
             write(out_unitp,*)
 
@@ -353,7 +370,7 @@
         !===== Tune the number of threads (for SG4) =====================
         !================================================================
         ! for only one WP (complex)
-        !CALL Tune_SG4threads_HPsi(.TRUE.,1,para_H)
+        CALL Tune_SG4threads_HPsi(.TRUE.,1,para_H)
 
         !================================================================
         !================================================================
@@ -670,7 +687,7 @@
           IF (para_ana%davidson) THEN
 
             CALL sub_propagation_Davidson(Tab_Psi,Ene0,nb_diago,max_diago,             &
-                                          para_H,para_propa)
+                                          para_H,para_propa%para_Davidson,para_propa)
 
           ELSE IF (para_ana%arpack) THEN ! arpack=t
             !CALL sub_propagation_Arpack(Tab_Psi,Ene0,nb_diago,max_diago,  &
@@ -1026,7 +1043,7 @@
       CALL dealloc_table_at(const_phys%mendeleev)
       !CALL dealloc_param_OTF(para_OTF)
 
-      CALL dealloc_zmat(mole)
+      CALL dealloc_CoordType(mole)
       IF (associated(para_Tnum%Gref)) THEN
         CALL dealloc_array(para_Tnum%Gref,"para_Tnum%Gref","vib")
       END IF
@@ -1099,8 +1116,8 @@
 !----- On the fly parameters (at this time for gaussian) -------------
       TYPE (param_OTF) :: para_OTF
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 !----- variables for the construction of H ----------------------------
@@ -1268,8 +1285,8 @@ para_mem%mem_debug = .FALSE.
 !----- On the fly parameters (at this time for gaussian) -------------
       TYPE (param_OTF) :: para_OTF
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 
@@ -1550,7 +1567,7 @@ para_mem%mem_debug = .FALSE.
       CALL dealloc_table_at(const_phys%mendeleev)
       !CALL dealloc_param_OTF(para_OTF)
 
-      CALL dealloc_zmat(mole)
+      CALL dealloc_CoordType(mole)
       IF (associated(para_Tnum%Gref)) THEN
         CALL dealloc_array(para_Tnum%Gref,"para_Tnum%Gref","vib")
       END IF
@@ -1629,7 +1646,9 @@ IMPLICIT NONE
  logical, parameter :: debug=.FALSE.
  !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
-
+#if(run_MPI)
+   RETURN
+#endif
 IF (para_H%BasisnD%SparseGrid_type /= 4) RETURN
 
 para_mem%mem_debug = .FALSE.
@@ -1743,8 +1762,8 @@ END SUBROUTINE Tune_SG4threads_HPsi
 !----- On the fly parameters (at this time for gaussian) -------------
       TYPE (param_OTF) :: para_OTF
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
 
 !----- variables for the construction of H ----------------------------

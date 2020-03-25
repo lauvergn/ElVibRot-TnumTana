@@ -16,14 +16,19 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
-
 MODULE mod_Tana_keo
    use mod_system
-   use mod_Tnum,   only: zmatrix, tnum, write_mole
+   use mod_Tnum,           only : CoordType, tnum, Write_CoordType
    use mod_ActiveTransfo,  only : qact_to_qdyn_from_activetransfo
    USE mod_paramQ
    USE mod_Tana_PiEulerRot
@@ -45,7 +50,7 @@ MODULE mod_Tana_keo
       IMPLICIT NONE
 
       TYPE(sum_opnd),        intent(inout)        :: TWOxKEO
-      TYPE (zmatrix),        intent(inout)        :: mole
+      TYPE (CoordType),      intent(inout)        :: mole
       TYPE (Tnum),           intent(inout)        :: para_Tnum
       real (kind=Rkind),     intent(inout)        :: Qact(:)
 
@@ -98,7 +103,7 @@ MODULE mod_Tana_keo
         end if
       end do
       if (.not. poly .and. para_Tnum%Tana) then
-        CALL Write_mole(mole,.TRUE.)
+        CALL Write_CoordType(mole,.TRUE.)
         write(out_unitp,*) ' ERROR in ',routine_name
         write(out_unitp,*) "Tana works only with the polyspherical coordinates"
         write(out_unitp,*) " Check your data input"
@@ -106,7 +111,7 @@ MODULE mod_Tana_keo
       end if
       frame =  mole%tab_Qtransfo(i_transfo)%BFTransfo%frame
       if (.not.frame) then
-        CALL Write_mole(mole,.TRUE.)
+        CALL Write_CoordType(mole,.TRUE.)
         write(out_unitp,*) ' ERROR in ',routine_name
         write(out_unitp,*) "The first vector should define a frame"
         write(out_unitp,*) " its corresponding data structure frame should be true"
@@ -377,7 +382,7 @@ MODULE mod_Tana_keo
       IMPLICIT NONE
 
       TYPE(sum_opnd),        intent(inout)        :: TWOxKEO
-      TYPE (zmatrix),        intent(inout)        :: mole
+      TYPE (CoordType),      intent(inout)        :: mole
       TYPE (Tnum),           intent(inout)        :: para_Tnum
       real (kind=Rkind),     intent(inout)        :: Qact(:)
 
@@ -426,7 +431,7 @@ MODULE mod_Tana_keo
         end if
       end do
       if (.not. poly .and. para_Tnum%Tana) then
-        CALL Write_mole(mole,.TRUE.)
+        CALL Write_CoordType(mole,.TRUE.)
         write(out_unitp,*) ' ERROR in ',routine_name
         write(out_unitp,*) "Tana works only with the polyspherical coordinates"
         write(out_unitp,*) " Check your data input"
@@ -434,7 +439,7 @@ MODULE mod_Tana_keo
       end if
       frame =  mole%tab_Qtransfo(i_transfo)%BFTransfo%frame
       if (.not.frame) then
-        CALL Write_mole(mole,.TRUE.)
+        CALL Write_CoordType(mole,.TRUE.)
         write(out_unitp,*) ' ERROR in ',routine_name
         write(out_unitp,*) "The first vector should define a frame"
         write(out_unitp,*) " its corresponding data structure frame should be true"

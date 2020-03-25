@@ -1,4 +1,4 @@
-!===========================================================================
+!!===========================================================================
 !===========================================================================
 !This file is part of Tnum-Tana.
 !
@@ -16,12 +16,16 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
-
-   !Description:
 MODULE mod_Tana_vec_operations
    use mod_system
    USE mod_Tana_OpEl     ! all

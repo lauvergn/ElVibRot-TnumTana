@@ -35,7 +35,7 @@ This namelist can be used without parameter. The default values should work for 
 
 * **EVR** (default **T**): The value **T** enables to use **ElVibRot**. The value **F** disables the **ElVibRot** calculation.
 * **intensity_only** (default **F**): The value **T** enables to calculate only the intensities with ElVibRot (for time independent calculation) with the restart file (*restart.int*). It is useful, when one want to change temperature.
-* **analysis_only** (default **F**): The value **T** enables to analyse the wave functions from the "name_file_spectralWP" file obtained from a previous ElVibRot calculation with the same bassis set.
+* **analysis_only** (default **F**): The value **T** enables to analyse the wave functions from the "file_spectralWP" file obtained from a previous ElVibRot calculation with the same bassis set.
 * **optimization** (default **0**):  The value **0** disables the optimization. The value **1** enables the optimization (geometry or other ElVibRot parameters).
 * **nDGrid** (default **F**): The value **T** enables to generate a multidimensional grid (for the nDFit) using a set of curvilinear coordinates
 * **nDFit** (default **F**): The value **T** enables to fit the multidimensional grid to an analytical form. Then it can be used with ElVibRot.
@@ -156,7 +156,7 @@ Remark: when **pot_act=F**, **pot_cart=F** and **pot_itQtransfo=-1**, the scalar
 
 Other parameters:
 
-* **HarD** (default **T**): This parameter is relevant only when Harmonic adiabatic separation is used (HADA or cHAC, coordinate types, 21 or 22 in Tnum). When the value is **T**, the scalar operators and the potential energy surfaces are evaluated only along the "active" coordinates (coordinate type, 1) and a linear and a quadratic contributions are added with *d0d1d2_g* *d0d1d2_h* subroutines (*sub_system.f* or *sub_system.f90_ files). When the value is **F**, the scalar operators and the potential energy surfaces are evaluated only along all coordinates (coordinate types, 1, 21 or 22). It enables to recover exact calculation with coupled Harmonic Adiabatic Channels (cHAC).
+* **HarD** (default **T**): This parameter is relevant only when Harmonic adiabatic separation is used (HADA or cHAC, coordinate types, 21 or 22 in Tnum). When the value is **T**, the scalar operators and the potential energy surfaces are evaluated only along the "active" coordinates (coordinate type, 1) and a linear and a quadratic contributions are added with *d0d1d2_g* *d0d1d2_h* subroutines (*sub_system.f* or *sub_system.f90* files). When the value is **F**, the scalar operators and the potential energy surfaces are evaluated only along all coordinates (coordinate types, 1, 21 or 22). It enables to recover exact calculation with coupled Harmonic Adiabatic Channels (cHAC).
 
 * **deriv_WITH_FiniteDiff** (default **F**): when the value is **T**, it forces the numerical hessian calculation with finite differences.
 
@@ -166,16 +166,16 @@ Other parameters:
 ## 3) Installation
 
 The installation is simple. However, we do not have an fully automatic procedure (like configure ...).
-However, the program uses some fortran 2003 features. Therefore, the compilers gfortran or ifort or pgf90 can be used (probably orthers as well).
+However, the program uses some fortran 2003 features. Therefore, the compilers gfortran or ifort or pgf90 can be used (probably others as well).
 
 You have to select or define your compiler in the "makefile" (the default is gfortran).
 Then, you have to compile the program with the unix command "make".
 
 Currently, the program can be compiled on: 
 * linux platform with 
-   - gfortran (version= 6.3, 8.3, 9.1)
-   - ifort    (version= 18.0.3) Pb with 17.0.1
-   - pgf90    (version= 17.10-0) Pb with 16.4-0
+-   gfortran (version= 6.3, 8.3, 9.1)
+-   ifort    (version= 18.0.3) Pb with 17.0.1
+-   pgf90    (version= 17.10-0) Pb with 16.4-0
 * osx platform with gfortran
 
 
@@ -189,6 +189,6 @@ There are severals options with can be modified in the makefile:
 * QML: Quantum Model Lib.  0 => without QML (default), 1 => with QML.
 * extf: it enables to change the "sub_system" file extention. Possible values: f or f90. Alternativaly, one can use an external unix variable: EXTFextern.
 
-To check that the program has be compile correctly, you can run some tests from the directory: "exa_hcn-dist". Each input data starts with dat.... 
-To run the "dat_Davidson" example, just the type the "dat_Davidson" command. The output will be in the "res" file.
+To check that the program has be compile correctly, you can run some tests from the directory: **exa_hcn-dist**. Each input data starts with dat.... 
+To run the **dat_Davidson** example, just the type the **dat_Davidson** command. The output will be in the **res** file.
 

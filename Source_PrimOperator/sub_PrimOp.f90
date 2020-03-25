@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,13 +35,12 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
-
    MODULE mod_PrimOp
-
-    !USE mod_Coord_KEO
-
     USE mod_nDFit
     USE mod_PrimOp_def
     USE mod_OTF_def
@@ -38,6 +48,24 @@
     USE mod_SimpleOp
 
    IMPLICIT NONE
+
+  INTERFACE Finalyze_TnumTana_Coord_PrimOp
+    MODULE PROCEDURE Finalyze_TnumTana_Coord_PrimOp_zmatrix,            &
+                     Finalyze_TnumTana_Coord_PrimOp_CoordType
+  END INTERFACE
+  INTERFACE get_dnMatOp_AT_Qact
+    MODULE PROCEDURE get_dnMatOp_AT_Qact_zmatrix,            &
+                     get_dnMatOp_AT_Qact_CoordType
+  END INTERFACE
+  INTERFACE get_d0MatOp_AT_Qact
+    MODULE PROCEDURE get_d0MatOp_AT_Qact_zmatrix,            &
+                     get_d0MatOp_AT_Qact_CoordType
+  END INTERFACE
+  INTERFACE TnumKEO_TO_tab_d0H
+    MODULE PROCEDURE TnumKEO_TO_tab_d0H_zmatrix,            &
+                     TnumKEO_TO_tab_d0H_CoordType
+  END INTERFACE
+
 
    PUBLIC
 
@@ -57,11 +85,11 @@
       USE mod_system
       USE mod_SimpleOp,   only : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
       USE mod_PrimOp_def, only : param_PES
-      USE mod_Coord_KEO,  only : zmatrix,Tnum
+      USE mod_Coord_KEO,  only : CoordType,Tnum
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix)   :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)      :: para_Tnum
 
       TYPE (param_PES) :: para_PES
@@ -155,11 +183,11 @@
       USE mod_system
       USE mod_SimpleOp,   only : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
       USE mod_PrimOp_def, only : param_PES
-      USE mod_Coord_KEO,  only : zmatrix,Tnum
+      USE mod_Coord_KEO,  only : CoordType,Tnum
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix)   :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType)   :: mole
       TYPE (Tnum)      :: para_Tnum
 
 
@@ -260,7 +288,29 @@
 !
 !    output : dnE%d..  dnMu(:)%d...
 !================================================================
-      SUBROUTINE get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,para_PES)
+      SUBROUTINE get_d0MatOp_AT_Qact_zmatrix(Qact,d0MatOp,mole,para_Tnum,para_PES)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Coord_KEO
+      IMPLICIT NONE
+
+!----- for the zmatrix and Tnum --------------------------------------
+      TYPE (Tnum)      :: para_Tnum
+      TYPE (zmatrix)   :: mole
+
+!----- for Qact ... ---------------------------------------------
+      real (kind=Rkind), intent(inout) :: Qact(:)
+      TYPE (param_PES) :: para_PES
+
+!----- input output variables ----------------------------------------
+      TYPE (param_d0MatOp), intent(inout) :: d0MatOp(:)
+
+
+      CALL get_d0MatOp_AT_Qact_CoordType(Qact,d0MatOp,mole%CoordType,para_Tnum,para_PES)
+
+      END SUBROUTINE get_d0MatOp_AT_Qact_zmatrix
+
+      SUBROUTINE get_d0MatOp_AT_Qact_CoordType(Qact,d0MatOp,mole,para_Tnum,para_PES)
       USE mod_system
       USE mod_dnSVM
       use mod_nDFit, only: sub_ndfunc_from_ndfit
@@ -270,9 +320,9 @@
       USE mod_OTF
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (Tnum)    :: para_Tnum
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (Tnum)      :: para_Tnum
+      TYPE (CoordType) :: mole
 
 !----- for Qact ... ---------------------------------------------
       real (kind=Rkind), intent(inout) :: Qact(:)
@@ -624,8 +674,35 @@
       END IF
 !-----------------------------------------------------------
 
-     END SUBROUTINE get_d0MatOp_AT_Qact
-     SUBROUTINE get_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv)
+     END SUBROUTINE get_d0MatOp_AT_Qact_CoordType
+     SUBROUTINE get_dnMatOp_AT_Qact_zmatrix(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Coord_KEO
+      IMPLICIT NONE
+
+!----- for the zmatrix and Tnum --------------------------------------
+      TYPE (Tnum)    :: para_Tnum
+      TYPE (zmatrix) :: mole
+
+!----- for Qact ... ---------------------------------------------
+      real (kind=Rkind), intent(inout) :: Qact(:)
+      TYPE (param_PES)                 :: para_PES
+
+!----- input output variables ----------------------------------------
+      TYPE (param_dnMatOp), intent(inout) :: Tab_dnMatOp(:)
+      integer, intent(in), optional       :: nderiv
+
+      IF (present(nderiv)) THEN
+        CALL get_dnMatOp_AT_Qact_CoordType(Qact,Tab_dnMatOp,mole%CoordType,&
+                                           para_Tnum,para_PES,nderiv)
+      ELSE
+        CALL get_dnMatOp_AT_Qact_CoordType(Qact,Tab_dnMatOp,mole%CoordType,&
+                                           para_Tnum,para_PES)
+      END IF
+
+     END  SUBROUTINE get_dnMatOp_AT_Qact_zmatrix
+     SUBROUTINE get_dnMatOp_AT_Qact_CoordType(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv)
       USE mod_system
       USE mod_dnSVM
       use mod_nDFit, only: sub_ndfunc_from_ndfit
@@ -635,9 +712,9 @@
       USE mod_OTF
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
+!----- for the CoordType and Tnum --------------------------------------
       TYPE (Tnum)    :: para_Tnum
-      TYPE (zmatrix) :: mole
+      TYPE (CoordType) :: mole
 
 !----- for Qact ... ---------------------------------------------
       real (kind=Rkind), intent(inout) :: Qact(:)
@@ -1039,7 +1116,7 @@
       END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE get_dnMatOp_AT_Qact
+      END SUBROUTINE get_dnMatOp_AT_Qact_CoordType
 
 
       SUBROUTINE dnOp_num_grid_v2(Qact,Tab_dnMatOp,                     &
@@ -1053,8 +1130,8 @@
       USE mod_OTF
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix)   :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType)   :: mole
       TYPE (Tnum)      :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(:)
@@ -1299,14 +1376,14 @@
       SUBROUTINE TnumKEO_TO_tab_dnH(Qact,Tab_dnH,mole,para_Tnum)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : zmatrix,Tnum,get_dng_dnGG, sub3_dnrho_ana, &
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG, sub3_dnrho_ana, &
                                 calc3_f2_f1Q_num, sub3_dndetGG
       USE mod_SimpleOp
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (Tnum)    :: para_Tnum
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (Tnum)      :: para_Tnum
+      TYPE (CoordType) :: mole
 
 !----- for Qact ... ---------------------------------------------
       real (kind=Rkind), intent(inout) :: Qact(:)
@@ -1409,17 +1486,38 @@
 
       END SUBROUTINE TnumKEO_TO_tab_dnH
 
-      SUBROUTINE TnumKEO_TO_tab_d0H(Qact,d0MatH,mole,para_Tnum)
+      SUBROUTINE TnumKEO_TO_tab_d0H_zmatrix(Qact,d0MatH,mole,para_Tnum)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : zmatrix,Tnum,get_dng_dnGG, sub3_dnrho_ana, &
-                                calc3_f2_f1Q_num, sub3_dndetGG
+      USE mod_Coord_KEO, only : zmatrix,Tnum
       USE mod_SimpleOp
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
       TYPE (Tnum)    :: para_Tnum
       TYPE (zmatrix) :: mole
+
+!----- for Qact ... ---------------------------------------------
+      real (kind=Rkind), intent(inout) :: Qact(:)
+
+!----- input output variables ----------------------------------------
+      TYPE (param_d0MatOp), intent(inout) :: d0MatH
+
+
+      CALL TnumKEO_TO_tab_d0H_CoordType(Qact,d0MatH,mole%CoordType,para_Tnum)
+
+      END SUBROUTINE TnumKEO_TO_tab_d0H_zmatrix
+      SUBROUTINE TnumKEO_TO_tab_d0H_CoordType(Qact,d0MatH,mole,para_Tnum)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG, sub3_dnrho_ana, &
+                                calc3_f2_f1Q_num, sub3_dndetGG
+      USE mod_SimpleOp
+      IMPLICIT NONE
+
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (Tnum)      :: para_Tnum
+      TYPE (CoordType) :: mole
 
 !----- for Qact ... ---------------------------------------------
       real (kind=Rkind), intent(inout) :: Qact(:)
@@ -1569,7 +1667,7 @@
       END IF
 !-----------------------------------------------------------
 !STOP 'TnumKEO_TO_tab_d0H'
-      END SUBROUTINE TnumKEO_TO_tab_d0H
+      END SUBROUTINE TnumKEO_TO_tab_d0H_CoordType
 
 !=============================================================
 !
@@ -1580,14 +1678,15 @@
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant
-      USE mod_Coord_KEO, only : zmatrix,Tnum,get_dng_dnGG, calc_freq
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG
+      USE mod_freq,      only : calc_freq
       USE mod_SimpleOp
       USE mod_PrimOp_def
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
+!----- for the CoordType and Tnum --------------------------------------
       TYPE (Tnum)        :: para_Tnum
-      TYPE (zmatrix)     :: mole
+      TYPE (CoordType)   :: mole
       TYPE (param_PES)   :: para_PES
       real (kind=Rkind), intent(inout) :: Qact(:)
       logical, intent(in), optional :: print_freq
@@ -1716,12 +1815,13 @@
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
+      USE mod_freq
       USE mod_SimpleOp
       USE mod_PrimOp_def
       IMPLICIT NONE
 
-      TYPE (zmatrix) :: mole,mole_1
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (CoordType) :: mole,mole_1
+      TYPE (Tnum)      :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(:)
       TYPE (param_PES)   :: para_PES
@@ -1801,14 +1901,14 @@
 
       ELSE ! both are false
         !- create mole_1 (type=-1 => type=1)
-        CALL mole1TOmole2(mole,mole_1)
+        CALL CoordType1TOCoordType2(mole,mole_1)
         DO i=1,mole_1%nb_var
           IF (mole_1%ActiveTransfo%list_act_OF_Qdyn(i) == -1)           &
                             mole_1%ActiveTransfo%list_act_OF_Qdyn(i) = 1
         END DO
         IF (debug) THEN
           write(out_unitp,*) 'mole_1:'
-          CALL Write_mole(mole_1)
+          CALL Write_CoordType(mole_1)
         END IF
 
         !- calc G_1
@@ -1900,7 +2000,7 @@
 
         CALL dealloc_MatOFdnS(dnE)
         CALL dealloc_MatOFdnS(dnECC)
-        CALL dealloc_zmat(mole_1)
+        CALL dealloc_CoordType(mole_1)
         CALL dealloc_NParray(d0grad,"d0grad",name_sub)
 
       END IF
@@ -1926,8 +2026,8 @@
 !     - frequencies
       CALL alloc_NParray(d0c_inv,(/ nb_NM,nb_NM /),"d0c_inv",name_sub)
       CALL alloc_NParray(d0c_ini,(/ nb_NM,nb_NM /),"d0c_ini",name_sub)
-      CALL alloc_NParray(d0c,(/ nb_NM,nb_NM /),"d0c",name_sub)
-      CALL alloc_NParray(d0eh,(/ nb_NM /),"d0eh",name_sub)
+      CALL alloc_NParray(d0c,    (/ nb_NM,nb_NM /),"d0c",    name_sub)
+      CALL alloc_NParray(d0eh,   (/ nb_NM /),      "d0eh",   name_sub)
 
       IF (mole%NMTransfo%purify_hess) THEN
 
@@ -2121,7 +2221,7 @@
         IF (mole%ActiveTransfo%list_act_OF_Qdyn(i) == -1)               &
                             mole%ActiveTransfo%list_act_OF_Qdyn(i) = 100
       END DO
-      CALL type_var_analysis(mole) ! Qdyn0 => Qact0 is done in this subroutine
+      CALL type_var_analysis_OF_CoordType(mole) ! Qdyn0 => Qact0 is done in this subroutine
       ! but Qact has to be changed
       Qact(:) = mole%ActiveTransfo%Qact0
 
@@ -2181,12 +2281,13 @@
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
+      USE mod_freq
       USE mod_SimpleOp
       USE mod_PrimOp_def
       IMPLICIT NONE
 
-      TYPE (zmatrix) :: mole,mole_1
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (CoordType) :: mole,mole_1
+      TYPE (Tnum)      :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(:)
       TYPE (param_PES) :: para_PES
@@ -2340,7 +2441,7 @@
         CALL flush_perso(out_unitp)
 
         !- create mole_1 (type=-1 => type=1)
-        CALL mole1TOmole2(mole,mole_1)
+        CALL CoordType1TOCoordType2(mole,mole_1)
         ! a changer (utilisation de Qread_TO_Qact !!!
         DO i=1,mole_1%nb_var
           IF (Ind_Coord_PerBlock(i) == Ind_Coord_AtBlock(i_Block)) THEN
@@ -2349,7 +2450,7 @@
             mole_1%ActiveTransfo%list_act_OF_Qdyn(i) = 100
           END IF
         END DO
-        CALL type_var_analysis(mole_1)
+        CALL type_var_analysis_OF_CoordType(mole_1)
         write(out_unitp,*) 'mole_1%...list_act_OF_Qdyn',                &
                                 mole_1%ActiveTransfo%list_act_OF_Qdyn(:)
 
@@ -2364,7 +2465,7 @@
 
         IF (debug) THEN
           write(out_unitp,*) 'mole_1:'
-          CALL Write_mole(mole_1)
+          CALL Write_CoordType(mole_1)
           CALL flush_perso(out_unitp)
         END IF
 
@@ -2475,7 +2576,7 @@
         CALL dealloc_NParray(d0c,     "d0c",     name_sub)
         CALL dealloc_NParray(d0c_inv, "d0c_inv", name_sub)
 
-        CALL dealloc_zmat(mole_1)
+        CALL dealloc_CoordType(mole_1)
 
 
         write(out_unitp,*) '========================================='
@@ -2605,7 +2706,7 @@
         IF (mole%ActiveTransfo%list_act_OF_Qdyn(i) == -1)               &
                             mole%ActiveTransfo%list_act_OF_Qdyn(i) = 100
       END DO
-      CALL type_var_analysis(mole) ! Qdyn0 => Qact0 is done in this subroutine
+      CALL type_var_analysis_OF_CoordType(mole) ! Qdyn0 => Qact0 is done in this subroutine
       ! but Qact has to be changed
 
       CALL get_Qact0(Qact,mole%ActiveTransfo)
@@ -2647,12 +2748,13 @@
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
+      USE mod_freq
       USE mod_SimpleOp
       USE mod_PrimOp_def
       IMPLICIT NONE
 
-      TYPE (zmatrix) :: mole,mole_1
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (CoordType) :: mole,mole_1
+      TYPE (Tnum)      :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(:)
       TYPE (param_PES) :: para_PES
@@ -2811,7 +2913,7 @@
 
         ELSE
           !- create mole_1 (type=-1 => type=1)
-          CALL mole1TOmole2(mole,mole_1)
+          CALL CoordType1TOCoordType2(mole,mole_1)
           ! a changer (utilisation de Qread_TO_Qact !!!
           DO i=1,mole_1%nb_var
             IF (Ind_Coord_PerBlock(i) == Ind_Coord_AtBlock(i_Block)) THEN
@@ -2820,7 +2922,7 @@
               mole_1%ActiveTransfo%list_act_OF_Qdyn(i) = 100
             END IF
           END DO
-          CALL type_var_analysis(mole_1)
+          CALL type_var_analysis_OF_CoordType(mole_1)
           write(out_unitp,*) 'mole_1%...list_act_OF_Qdyn',                &
                                   mole_1%ActiveTransfo%list_act_OF_Qdyn(:)
 
@@ -2834,7 +2936,7 @@
 
           IF (debug) THEN
             write(out_unitp,*) 'mole_1:'
-            CALL Write_mole(mole_1)
+            CALL Write_CoordType(mole_1)
           END IF
 
           CALL alloc_NParray(d0c,     (/nb_NM,nb_NM/),"d0c",     name_sub)
@@ -2943,7 +3045,7 @@
           CALL dealloc_NParray(d0c,     "d0c",     name_sub)
           CALL dealloc_NParray(d0c_inv, "d0c_inv", name_sub)
 
-          CALL dealloc_zmat(mole_1)
+          CALL dealloc_CoordType(mole_1)
         END IF
 
         write(out_unitp,*) '========================================='
@@ -3066,7 +3168,7 @@
         IF (mole%ActiveTransfo%list_act_OF_Qdyn(i) == -1)               &
                             mole%ActiveTransfo%list_act_OF_Qdyn(i) = 100
       END DO
-      CALL type_var_analysis(mole) ! Qdyn0 => Qact0 is done in this subroutine
+      CALL type_var_analysis_OF_CoordType(mole) ! Qdyn0 => Qact0 is done in this subroutine
       ! but Qact has to be changed
 
       CALL get_Qact0(Qact,mole%ActiveTransfo)
@@ -3108,7 +3210,7 @@
                             para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : zmatrix,Tnum,get_dng_dnGG, sub_dnFCC_TO_dnFcurvi
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG, sub_dnFCC_TO_dnFcurvi
 
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -3118,8 +3220,8 @@
       real (kind=Rkind) :: d0k(nb_NM,nb_NM),d0h(nb_NM,nb_NM)
 
 
-      TYPE (zmatrix)     :: mole
-      TYPE (Tnum)        :: para_Tnum
+      TYPE (CoordType)     :: mole
+      TYPE (Tnum)          :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(:)
       TYPE (param_PES)   :: para_PES
@@ -3399,11 +3501,11 @@
       IMPLICIT NONE
 
 
-      !----- for the zmatrix and Tnum --------------------------------------
+      !----- for the CoordType and Tnum --------------------------------------
       TYPE (Type_RPHpara_AT_Qact1), intent(inout) :: RPHpara_AT_Qact1
 
       TYPE (Tnum)             :: para_Tnum
-      TYPE (zmatrix)          :: mole
+      TYPE (CoordType)          :: mole
       TYPE (Type_RPHTransfo)  :: RPHTransfo
 
       real (kind=Rkind), intent(inout) :: Qact(:)
@@ -3514,12 +3616,12 @@
       IMPLICIT NONE
 
 
-      !----- for the zmatrix and Tnum --------------------------------------
+      !----- for the CoordType and Tnum --------------------------------------
       TYPE (Type_RPHpara_AT_Qact1), intent(inout) :: RPHpara_AT_Qact1
       integer :: nb_act1,nb_inact21
 
       TYPE (Tnum)             :: para_Tnum
-      TYPE (zmatrix)          :: mole
+      TYPE (CoordType)        :: mole
       TYPE (Type_RPHTransfo)  :: RPHTransfo
 
       real (kind=Rkind), intent(inout) :: Qact(:)
@@ -3662,12 +3764,12 @@
       IMPLICIT NONE
 
 
-      !----- for the zmatrix and Tnum --------------------------------------
+      !----- for the CoordType and Tnum --------------------------------------
       TYPE (Type_RPHpara_AT_Qact1), intent(inout) :: RPHpara_AT_Qact1
       integer :: nb_act1,nb_inact21
 
       TYPE (Tnum)             :: para_Tnum
-      TYPE (zmatrix)          :: mole
+      TYPE (CoordType)        :: mole
       TYPE (Type_RPHTransfo)  :: RPHTransfo
 
       real (kind=Rkind), intent(inout) :: Qact(:)
@@ -3713,7 +3815,7 @@
 
 
       RPHoption = RPHTransfo%option
-      CALL Sub_paraRPH_TO_mole(mole) ! switch back mole
+      CALL Sub_paraRPH_TO_CoordType(mole) ! switch back mole
       mole%tab_Qtransfo(mole%itRPH)%skip_transfo = .TRUE. ! we have to skip RPH transfo because, ...
                                                           ! this subroutine calculates the RPH parameters
 
@@ -3745,7 +3847,7 @@
        DO i=1,nb_act1
 
          idyn = RPHTransfo%list_QactTOQdyn(i)
-         iact = mole%liste_QsymTOQact(idyn)
+         iact = mole%liste_QdynTOQact(idyn)
          vi = Qact(iact)
 
          !-- frequencies calculation at Qact(i)+step -------------
@@ -3809,7 +3911,7 @@
      CALL dealloc_dnSVM(dnLnN)
 
      mole%tab_Qtransfo(mole%itRPH)%skip_transfo = .FALSE.
-     CALL Sub_mole_TO_paraRPH(mole)
+     CALL Sub_CoordType_TO_paraRPH(mole)
      RPHTransfo%option = RPHoption
 
      IF (debug) THEN
@@ -3835,9 +3937,9 @@
       USE mod_Coord_KEO
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
+!----- for the CoordType and Tnum --------------------------------------
       TYPE (Tnum)    :: para_Tnum
-      TYPE (zmatrix) :: mole
+      TYPE (CoordType) :: mole
 
       real (kind=Rkind), intent(inout) :: Qact(:)
 
@@ -4193,9 +4295,9 @@
       USE mod_Coord_KEO
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
+!----- for the CoordType and Tnum --------------------------------------
       TYPE (Tnum)             :: para_Tnum
-      TYPE (zmatrix)          :: mole
+      TYPE (CoordType)          :: mole
       TYPE (Type_RPHTransfo)  :: RPHTransfo
 
       real (kind=Rkind), intent(inout) :: Qact(:)
@@ -4506,11 +4608,12 @@
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
+      USE mod_freq
       IMPLICIT NONE
 
-      !----- for the zmatrix and Tnum --------------------------------------
+      !----- for the CoordType and Tnum --------------------------------------
       TYPE (Tnum)        :: para_Tnum
-      TYPE (zmatrix)     :: mole
+      TYPE (CoordType)   :: mole
 
       real (kind=Rkind), intent(inout) :: Qact(:)
 
@@ -4739,7 +4842,8 @@
 !-----------------------------------------------------------
       END SUBROUTINE sub_freq2_RPH
 
-      SUBROUTINE Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES,Tana)
+
+      SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_zmatrix(para_Tnum,mole,para_PES,Tana)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
@@ -4752,6 +4856,30 @@
 !----- for the zmatrix and Tnum --------------------------------------
       TYPE (Tnum)        :: para_Tnum
       TYPE (zmatrix)     :: mole
+      TYPE (param_PES)   :: para_PES
+      logical, optional  :: Tana
+
+      IF (present(Tana)) THEN
+        CALL Finalyze_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole%CoordType,para_PES,Tana)
+      ELSE
+        CALL Finalyze_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole%CoordType,para_PES)
+      END IF
+
+
+      END SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_zmatrix
+      SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole,para_PES,Tana)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
+      USE mod_Coord_KEO
+      USE mod_SimpleOp
+      USE mod_PrimOp_def
+      USE mod_MPI
+      IMPLICIT NONE
+
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (Tnum)        :: para_Tnum
+      TYPE (CoordType)   :: mole
       TYPE (param_PES)   :: para_PES
       logical, optional  :: Tana
 
@@ -4991,7 +5119,7 @@
       !END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE Finalyze_TnumTana_Coord_PrimOp
+      END SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_CoordType
 
    END MODULE mod_PrimOp
 

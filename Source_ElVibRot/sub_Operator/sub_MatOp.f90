@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,6 +35,9 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
 MODULE Mod_MatOp
@@ -524,8 +538,7 @@ CONTAINS
 
 !     - spectral representation ------------------------------
       write(out_unitp,*) 'spectral',para_Op%spectral,para_Op%spectral_Op
-      IF ( para_Op%spectral .AND.                                       &
-           para_Op%n_Op == para_Op%spectral_Op ) THEN
+      IF ( para_Op%spectral .AND. para_Op%n_Op == para_Op%spectral_Op ) THEN
         para_Op%diago = .TRUE.
         CALL alloc_para_Op(para_Op)
 
@@ -543,10 +556,16 @@ CONTAINS
                           "para_Op%Cmat",name_sub)
           para_Op%Cmat(:,:) = CZERO
 
-          DO i=1,para_Op%nb_tot
-            para_Op%Cmat(i,i) =                                         &
+          IF (associated(para_Op%ComOp%liste_spec)) THEN
+            DO i=1,para_Op%nb_tot
+              para_Op%Cmat(i,i) =                                       &
                               para_Op%Cdiag(para_Op%ComOp%liste_spec(i))
-          END DO
+            END DO
+          ELSE
+            DO i=1,para_Op%nb_tot
+              para_Op%Cmat(i,i) = para_Op%Cdiag(i)
+            END DO
+          END IF
           para_Op%ComOp%Cvp_spec => para_Op%Cvp
         ELSE
 
@@ -564,10 +583,17 @@ CONTAINS
                           "para_Op%Rmat",name_sub)
           para_Op%Rmat(:,:) = ZERO
 
-          DO i=1,para_Op%nb_tot
-            para_Op%Rmat(i,i) =                                         &
+
+          IF (associated(para_Op%ComOp%liste_spec)) THEN
+            DO i=1,para_Op%nb_tot
+              para_Op%Rmat(i,i) =                                       &
                       para_Op%Rdiag(para_Op%ComOp%liste_spec(i))
-          END DO
+            END DO
+          ELSE
+            DO i=1,para_Op%nb_tot
+              para_Op%Rmat(i,i) = para_Op%Rdiag(i)
+            END DO
+          END IF
           para_Op%ComOp%Rvp_spec => para_Op%Rvp
         END IF
         IF (para_Op%pack_Op)  THEN
@@ -575,8 +601,7 @@ CONTAINS
           CALL dealloc_array(para_Op%dim_Op,"para_Op%dim_Op",name_sub)
         END IF
 
-      ELSE IF ( para_Op%spectral .AND.                                  &
-                para_Op%n_Op /= para_Op%spectral_Op ) THEN
+      ELSE IF ( para_Op%spectral .AND. para_Op%n_Op /= para_Op%spectral_Op ) THEN
         write(out_unitp,*) 'para_Op%ComOp%nb_vp_spec',para_Op%ComOp%nb_vp_spec
         IF (para_Op%cplx) THEN
 
@@ -3278,7 +3303,7 @@ CONTAINS
  integer       :: n
 
  ! local variables
- TYPE (zmatrix), pointer :: mole
+ TYPE (CoordType), pointer :: mole
  TYPE (basis),   pointer :: BasisnD
 
 

@@ -16,11 +16,16 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
-
 MODULE mod_Tana_Tnum
    !!@description: 
    IMPLICIT NONE
@@ -45,7 +50,7 @@ MODULE mod_Tana_Tnum
       IMPLICIT NONE
 
       TYPE(sum_opnd),        intent(inout)        :: TWOxKEO
-      TYPE (zmatrix),        intent(inout)        :: mole
+      TYPE (CoordType),      intent(inout)        :: mole
       TYPE (Tnum),           intent(inout)        :: para_Tnum
       real (kind=Rkind),     intent(inout)        :: Qact(:)
 
@@ -62,6 +67,8 @@ MODULE mod_Tana_Tnum
       TYPE(Type_dnMat)               :: dng,dnGG
       real(kind=Rkind)               :: vep,vep_ana,rho,rho_ana,max_error,vep_error,maxval_f1
 
+   logical, parameter :: debug = .FALSE.
+   !logical, parameter :: debug = .TRUE.
      character (len=*), parameter    :: routine_name='comparison_G_FROM_Tnum_Tana'
 
 !===========================================================
@@ -69,7 +76,6 @@ MODULE mod_Tana_Tnum
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' BEGINNING ',routine_name
-
       nullify(Gana)
       CALL alloc_array(Gana,(/mole%ndimG,mole%ndimG/),'Gana',routine_name)
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,2)
@@ -113,13 +119,11 @@ MODULE mod_Tana_Tnum
       CALL alloc_array(Trot, (/ 3,3 /),                    'Trot', routine_name)
 
       para_Tnum%Tana = .FALSE.
-      CALL   calc3_f2_f1Q_num(Qact,                                  &
-                              Tdef2,Tdef1,vep,rho,                   &
-                              Tcor2,Tcor1,Trot,                      &
+      CALL   calc3_f2_f1Q_num(Qact,Tdef2,Tdef1,vep,rho,Tcor2,Tcor1,Trot,&
                               para_Tnum,mole)
       para_Tnum%Tana = .TRUE.
-      CALL get_Numf2f1vep_WITH_AnaKEO(TWOxKEO,Qact,mole,       &
-                                f2_ana,f1_ana,vep_ana,rho_ana)
+      CALL get_Numf2f1vep_WITH_AnaKEO(TWOxKEO,Qact,mole,                &
+                                          f2_ana,f1_ana,vep_ana,rho_ana)
 
       IF (vep < ONETENTH**6) THEN
         vep_error = abs(vep-vep_ana)
@@ -145,7 +149,29 @@ MODULE mod_Tana_Tnum
       max_error = max( max_error, maxval(abs(f1_ana-Tdef1))/maxval_f1 )
 
       write(out_unitp,'(a,e9.2)') '         max error: ',max_error
-      !Recommended by ifort, W>=D+7, was e8.2
+      IF (max_error > ONETENTH**10 .OR. debug .OR. print_level > 1) THEN
+         write(out_unitp,*) '-----------------------------------'
+         write(out_unitp,*) 'Tnum f2,f1,vep values'
+         write(out_unitp,*) '-----------------------------------'
+         write(out_unitp,*) 'vep',vep
+         write(out_unitp,*) 'f1 of Tnum  '
+         CALL write_vec(Tdef1,out_unitp,4)
+         write(out_unitp,*) 'f2 of Tnum  '
+         CALL write_mat(Tdef2,out_unitp,4)
+         write(out_unitp,*) '-----------------------------------'
+         write(out_unitp,*)
+         write(out_unitp,*) '-----------------------------------'
+         write(out_unitp,*) 'Tana f2,f1,vep values'
+         write(out_unitp,*) '-----------------------------------'
+         write(out_unitp,*) 'vep',vep_ana
+         write(out_unitp,*) 'f1 of Tana  '
+         CALL write_vec(f1_ana,out_unitp,4)
+         write(out_unitp,*) 'f2 of Tana  '
+         CALL write_mat(f2_ana,out_unitp,4)
+         write(out_unitp,*) '-----------------------------------'
+         write(out_unitp,*)
+      END IF
+
 
       CALL dealloc_array(Tdef2, 'Tdef2', routine_name)
       CALL dealloc_array(Tdef1, 'Tdef1', routine_name)

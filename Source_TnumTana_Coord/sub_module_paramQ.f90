@@ -16,48 +16,84 @@
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
 !    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong
+!      Tnum is written David Lauvergnat [1]
+!      Tana is written by Mamadou Ndong [1] and David Lauvergnat [1]
+!         with contributions
+!          Emil Lund klinting (coupling with MidasCpp) [3]'
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 !
 !===========================================================================
 !===========================================================================
 MODULE mod_paramQ
-      use mod_system
-      USE mod_dnSVM
-      use mod_Lib_QTransfo,     only: write_cart, calc_cross_product,   &
-                                      write_dnx, sub3_dnx_at1
-      use mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
-      use mod_CartesianTransfo, only: alloc_cartesiantransfo,           &
-               Set_P_Axis_CartesianTransfo, Set_Ecart_CartesianTransfo, &
-                                   centre_masse, write_cartesiantransfo,&
-                                 sub_dnxmassweight, sub3_dncentre_masse,&
-                         calc_cartesiantransfo_new, sub_dnxnomassweight,&
-                                                  sub3_nodncentre_masse
-      use mod_Qtransfo,         only: write_Qtransfo, calc_Qtransfo
-      use mod_Tnum,             only: tnum, zmatrix, write_mole
+  use mod_system
+  USE mod_dnSVM
+  use mod_Lib_QTransfo,     only: write_cart, calc_cross_product,       &
+                                  write_dnx, sub3_dnx_at1
+  use mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
+  use mod_CartesianTransfo, only: alloc_cartesiantransfo,               &
+           Set_P_Axis_CartesianTransfo, Set_Ecart_CartesianTransfo,     &
+                               centre_masse, write_cartesiantransfo,    &
+                             sub_dnxmassweight, sub3_dncentre_masse,    &
+                     calc_cartesiantransfo_new, sub_dnxnomassweight,    &
+                                              sub3_nodncentre_masse
+  use mod_Qtransfo,         only: write_Qtransfo, calc_Qtransfo
+  use mod_Tnum,             only: tnum, zmatrix, write_mole,            &
+                                  CoordType, Write_CoordType
 
-      USE mod_Constant,         ONLY: get_conv_au_to_unit, real_wu,     &
-                                      rwu_write, convrwu_to_r
-      IMPLICIT NONE
+  USE mod_Constant,         ONLY: get_conv_au_to_unit, real_wu,         &
+                                  rwu_write, convrwu_to_r
+  IMPLICIT NONE
 
-      PRIVATE
-      PUBLIC :: read_RefGeom, Get_Qread
-      PUBLIC :: sub_QactTOQit, sub_QinRead_TO_Qact
-      PUBLIC :: sub_QplusDQ_TO_Cart, sub_QactTOdnMWx, sub_QactTOdnx, sub_QactTOd0x, sub_d0xTOQact
-      PUBLIC :: Write_d0Q, Write_Q_WU, Write_Cartg98, Write_XYZ
-      PUBLIC :: analyze_dnx, sub_dnFCC_TO_dnFcurvi, write_dnx
-      PUBLIC :: Set_paramQ_FOR_optimization
+  INTERFACE sub_QactTOdnx
+    MODULE PROCEDURE sub_QactTOdnx_zmatrix,sub_QactTOdnx_CoordType
+  END INTERFACE
+  INTERFACE sub_QactTOd0x
+    MODULE PROCEDURE sub_QactTOd0x_zmatrix,sub_QactTOd0x_CoordType
+  END INTERFACE
 
-      CONTAINS
+  INTERFACE Write_Cartg98
+    MODULE PROCEDURE Write_Cartg98_zmatrix,Write_Cartg98_CoordType
+  END INTERFACE
+  INTERFACE analyze_dnx
+    MODULE PROCEDURE analyze_dnx_zmatrix,analyze_dnx_CoordType
+  END INTERFACE
+  INTERFACE read_RefGeom
+    MODULE PROCEDURE read_RefGeom_CoordType,read_RefGeom_zmatrix
+  END INTERFACE
+
+
+  PRIVATE
+  PUBLIC :: read_RefGeom, Get_Qread
+  PUBLIC :: sub_QactTOQit, sub_QinRead_TO_Qact
+  PUBLIC :: sub_QplusDQ_TO_Cart, sub_QactTOdnMWx, sub_QactTOdnx, sub_QactTOd0x, sub_d0xTOQact
+  PUBLIC :: Write_d0Q, Write_Q_WU, Write_Cartg98, Write_XYZ
+  PUBLIC :: analyze_dnx, sub_dnFCC_TO_dnFcurvi, write_dnx
+  PUBLIC :: Set_paramQ_FOR_optimization
+
+CONTAINS
 
 !=======================================================================================
 !      Read reference geometry
 !=======================================================================================
-      SUBROUTINE read_RefGeom(mole,para_Tnum)
+      SUBROUTINE read_RefGeom_zmatrix(mole,para_Tnum)
       USE mod_MPI
       IMPLICIT NONE
 
+!----- for the zmatrix and Tnum --------------------------------------
+      TYPE (zmatrix)     :: mole
+      TYPE (Tnum)        :: para_Tnum
 
-!----- variables pour la namelist minimum ----------------------------
+      CALL read_RefGeom_CoordType(mole%CoordType,para_Tnum)
+
+      END SUBROUTINE read_RefGeom_zmatrix
+      SUBROUTINE read_RefGeom_CoordType(mole,para_Tnum)
+      USE mod_MPI
+      IMPLICIT NONE
+
+!----- for the zmatrix and Tnum --------------------------------------
+      TYPE (CoordType)   :: mole
       TYPE (Tnum)        :: para_Tnum
 
       logical            :: read_Qact0,read_Qdyn0,read_Qsym0
@@ -66,8 +102,7 @@ MODULE mod_paramQ
       integer            :: read_itQ0transfo,read_itQtransfo_OF_Qin0
       character (len=Name_len) :: name,unit
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+
 
 !----- The coordinates which are read --------------------------------
       character (len=Name_len), pointer :: QnameRead(:)
@@ -584,7 +619,7 @@ MODULE mod_paramQ
       
       CALL dealloc_NParray(QRead,"QRead",name_sub)
 
-      END SUBROUTINE read_RefGeom
+      END SUBROUTINE read_RefGeom_CoordType
 !=======================================================================================
 
       SUBROUTINE sub_QactTOQit(Qact,Qit,it_QTransfo,mole,print_Qtransfo)
@@ -594,7 +629,7 @@ MODULE mod_paramQ
       IMPLICIT NONE
 
 
-      TYPE (zmatrix), intent(in)                    :: mole
+      TYPE (CoordType), intent(in)                    :: mole
       integer, intent(in)                           :: it_QTransfo
       real (kind=Rkind), intent(in)                 :: Qact(:)
       real (kind=Rkind), intent(inout), allocatable :: Qit(:)
@@ -757,7 +792,7 @@ MODULE mod_paramQ
 
 
       integer           :: it_QinRead
-      TYPE (zmatrix)    :: mole
+      TYPE (CoordType)  :: mole
       real (kind=Rkind) :: Qread(:)
       real (kind=Rkind) :: Qact(:)
 
@@ -856,7 +891,7 @@ MODULE mod_paramQ
       USE mod_Tnum
       IMPLICIT NONE
 
-      TYPE (zmatrix),   intent(inout)      :: mole
+      TYPE (CoordType),   intent(inout)      :: mole
 
 
 
@@ -931,7 +966,7 @@ MODULE mod_paramQ
       IMPLICIT NONE
 
 
-      TYPE (zmatrix)    :: mole
+      TYPE (CoordType)  :: mole
       real (kind=Rkind) :: Qxyz(:),VT(:)
 
 
@@ -1084,7 +1119,7 @@ MODULE mod_paramQ
       IMPLICIT NONE
 
 
-      TYPE (zmatrix)    :: mole
+      TYPE (CoordType)  :: mole
       real (kind=Rkind) :: VT(:)
 
 
@@ -1203,7 +1238,7 @@ MODULE mod_paramQ
       IMPLICIT NONE
 
 
-      TYPE (zmatrix)    :: mole
+      TYPE (CoordType)  :: mole
       real (kind=Rkind) :: Qxyz(:)
       real (kind=Rkind) :: Rot_initial(3,3)
 
@@ -1335,7 +1370,7 @@ MODULE mod_paramQ
       IMPLICIT NONE
 
 
-      TYPE (zmatrix) :: mole
+      TYPE (CoordType) :: mole
       real (kind=Rkind), intent(inout) :: Qact(:)
       TYPE (Type_dnVec) :: dnx0
       TYPE (Type_dnVec) :: dnx
@@ -1431,7 +1466,7 @@ MODULE mod_paramQ
 
 
       real (kind=Rkind), intent(in)             :: Qact(:)
-      TYPE (zmatrix),    intent(in)             :: mole
+      TYPE (CoordType),  intent(in)             :: mole
       TYPE (Type_dnVec), intent(inout)          :: dnMWx
       integer,           intent(in)             :: nderiv
       logical,           intent(in)             :: Gcenter
@@ -1455,7 +1490,7 @@ MODULE mod_paramQ
         write(out_unitp,*) 'ncart',mole%ncart
         write(out_unitp,*) 'Qact =',Qact
         write(out_unitp,*)
-        !CALL Write_mole(mole)
+        !CALL Write_CoordType(mole)
         write(out_unitp,*)
         CALL write_dnx(1,mole%ncart,dnMWx,nderiv_debug)
       END IF
@@ -1491,8 +1526,8 @@ MODULE mod_paramQ
 !================================================================
 !       conversion d0Q (zmat,poly, bunch ...) => d0x (not mass weighted)
 !================================================================
-      RECURSIVE SUBROUTINE sub_QactTOdnx(Qact,dnx,mole,                  &
-                                         nderiv,Gcenter,Cart_Transfo,WriteCC)
+      SUBROUTINE sub_QactTOdnx_zmatrix(Qact,dnx,mole,                   &
+                                     nderiv,Gcenter,Cart_Transfo,WriteCC)
       USE mod_system
       USE mod_dnSVM
       USE mod_Tnum
@@ -1501,6 +1536,39 @@ MODULE mod_paramQ
 
       real (kind=Rkind), intent(in)           :: Qact(:)
       TYPE (zmatrix),    intent(in)           :: mole
+      TYPE (Type_dnVec), intent(inout)        :: dnx
+      integer,           intent(in)           :: nderiv
+      logical,           intent(in)           :: Gcenter
+      logical,           intent(in), optional :: Cart_Transfo,WriteCC
+
+      IF (present(Cart_Transfo)) THEN
+        IF (present(WriteCC)) THEN
+          CALL sub_QactTOdnx_CoordType(Qact,dnx,mole%CoordType,nderiv,Gcenter,&
+                               Cart_Transfo=Cart_Transfo,WriteCC=WriteCC)
+        ELSE
+          CALL sub_QactTOdnx_CoordType(Qact,dnx,mole%CoordType,nderiv,Gcenter,&
+                                              Cart_Transfo=Cart_Transfo)
+        END IF
+      ELSE
+        IF (present(WriteCC)) THEN
+          CALL sub_QactTOdnx_CoordType(Qact,dnx,mole%CoordType,nderiv,Gcenter,&
+                                                        WriteCC=WriteCC)
+        ELSE
+          CALL sub_QactTOdnx_CoordType(Qact,dnx,mole%CoordType,nderiv,Gcenter)
+        END IF
+      END IF
+
+      END SUBROUTINE sub_QactTOdnx_zmatrix
+      RECURSIVE SUBROUTINE sub_QactTOdnx_CoordType(Qact,dnx,mole,       &
+                                     nderiv,Gcenter,Cart_Transfo,WriteCC)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Tnum
+      USE mod_MPI
+      IMPLICIT NONE
+
+      real (kind=Rkind), intent(in)           :: Qact(:)
+      TYPE (CoordType),  intent(in)           :: mole
       TYPE (Type_dnVec), intent(inout)        :: dnx
       integer,           intent(in)           :: nderiv
       logical,           intent(in)           :: Gcenter
@@ -1529,7 +1597,7 @@ MODULE mod_paramQ
         write(out_unitp,*) 'ncart',mole%ncart
         write(out_unitp,*) 'Qact =',Qact
         write(out_unitp,*)
-        !CALL Write_mole(mole)
+        !CALL Write_CoordType(mole)
         write(out_unitp,*)
         CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
       END IF
@@ -1743,18 +1811,30 @@ MODULE mod_paramQ
 !     -----------------------------------------------------------------
 !=================================================
 
-      END SUBROUTINE sub_QactTOdnx
-      SUBROUTINE sub_QactTOd0x(Qxyz,Qact,mole,Gcenter)
+      END SUBROUTINE sub_QactTOdnx_CoordType
+      SUBROUTINE sub_QactTOd0x_zmatrix(Qxyz,Qact,mole,Gcenter)
       USE mod_system
       USE mod_dnSVM
       IMPLICIT NONE
 
-      TYPE (zmatrix) :: mole
-      real (kind=Rkind), intent(in) :: Qact(:)
+      TYPE (zmatrix),     intent(in)     :: mole
+      real (kind=Rkind),  intent(in)     :: Qact(:)
+      real (kind=Rkind),  intent(inout)  :: Qxyz(mole%ncart_act)
+      logical,            intent(in)     :: Gcenter
 
-      real (kind=Rkind) :: Qxyz(mole%ncart_act)
+      CALL sub_QactTOd0x_CoordType(Qxyz,Qact,mole%CoordType,Gcenter)
 
-      logical :: Gcenter
+      END SUBROUTINE sub_QactTOd0x_zmatrix
+      SUBROUTINE sub_QactTOd0x_CoordType(Qxyz,Qact,mole,Gcenter)
+      USE mod_system
+      USE mod_dnSVM
+      IMPLICIT NONE
+
+      TYPE (CoordType),   intent(in)     :: mole
+      real (kind=Rkind),  intent(in)     :: Qact(:)
+      real (kind=Rkind),  intent(inout)  :: Qxyz(mole%ncart_act)
+      logical,            intent(in)     :: Gcenter
+
 
       TYPE (Type_dnVec) :: dnx
       integer :: nderiv
@@ -1772,7 +1852,7 @@ MODULE mod_paramQ
         write(out_unitp,*) 'ncart',mole%ncart
         write(out_unitp,*) 'Qact =',Qact
         write(out_unitp,*)
-        CALL Write_mole(mole)
+        CALL Write_CoordType(mole)
         write(out_unitp,*)
       END IF
 !     -----------------------------------------------------------------
@@ -1805,7 +1885,7 @@ MODULE mod_paramQ
 !=================================================
       CALL dealloc_dnSVM(dnx)
 
-      END SUBROUTINE sub_QactTOd0x
+      END SUBROUTINE sub_QactTOd0x_CoordType
 
       SUBROUTINE sub_d0xTOQact(Qxyz,Qact,mole)
       USE mod_system
@@ -1814,7 +1894,7 @@ MODULE mod_paramQ
       IMPLICIT NONE
 
 
-      TYPE (zmatrix)    :: mole
+      TYPE (CoordType)  :: mole
       real (kind=Rkind) :: Qxyz(:)
       real (kind=Rkind) :: Qact(:)
 
@@ -1838,7 +1918,7 @@ MODULE mod_paramQ
         write(out_unitp,*) 'mole%nb_Qtransfo',mole%nb_Qtransfo
         write(out_unitp,*) 'Qxyz =',Qxyz(:)
         write(out_unitp,*)
-        !CALL Write_mole(mole)
+        !CALL Write_CoordType(mole)
         write(out_unitp,*)
       END IF
       !-----------------------------------------------------------------
@@ -2171,13 +2251,24 @@ MODULE mod_paramQ
 !================================================================
 !       Write Cartesian coordinates (for gaussian)
 !================================================================
-      SUBROUTINE Write_Cartg98(d0x,mole)
+      SUBROUTINE Write_Cartg98_zmatrix(d0x,mole)
       USE mod_system
       IMPLICIT NONE
 
-      TYPE (zmatrix) :: mole
+      TYPE (zmatrix),    intent(in) :: mole
+      real (kind=Rkind), intent(in) :: d0x(mole%ncart)
 
-      real (kind=Rkind) :: d0x(mole%ncart)
+        CALL Write_Cartg98_CoordType(d0x,mole%CoordType)
+
+      END SUBROUTINE Write_Cartg98_zmatrix
+
+      SUBROUTINE Write_Cartg98_CoordType(d0x,mole)
+      USE mod_system
+      IMPLICIT NONE
+
+      TYPE (CoordType),  intent(in) :: mole
+      real (kind=Rkind), intent(in) :: d0x(mole%ncart)
+
       real (kind=Rkind) :: a0
       integer           :: Z_act(mole%nat)
 
@@ -2222,7 +2313,7 @@ MODULE mod_paramQ
       write(out_unitp,*) '= END XYZ format ============================='
       write(out_unitp,*) '=============================================='
 
-      END SUBROUTINE Write_Cartg98
+      END SUBROUTINE Write_Cartg98_CoordType
 
 !================================================================
 !       Write Cartesian coordinates (xyz format)
@@ -2231,7 +2322,7 @@ MODULE mod_paramQ
       USE mod_system
       IMPLICIT NONE
 
-      TYPE (zmatrix),              intent(in) :: mole
+      TYPE (CoordType),            intent(in) :: mole
       real (kind=Rkind),           intent(in) :: d0x(mole%ncart)
       character (len=*), optional, intent(in) :: unit
       integer,           optional, intent(in) :: io_unit
@@ -2283,14 +2374,26 @@ MODULE mod_paramQ
 
       END SUBROUTINE Write_XYZ
 
-
-      SUBROUTINE analyze_dnx(dnx,Qact,mole)
+      SUBROUTINE analyze_dnx_zmatrix(dnx,Qact,mole)
       USE mod_system
       USE mod_dnSVM
       IMPLICIT NONE
 
       TYPE (Type_dnVec) :: dnx
       TYPE (zmatrix)    :: mole
+      real (kind=Rkind) :: Qact(:)
+
+      CALL analyze_dnx_CoordType(dnx,Qact,mole%CoordType)
+
+      END SUBROUTINE analyze_dnx_zmatrix
+
+      SUBROUTINE analyze_dnx_CoordType(dnx,Qact,mole)
+      USE mod_system
+      USE mod_dnSVM
+      IMPLICIT NONE
+
+      TYPE (Type_dnVec) :: dnx
+      TYPE (CoordType)    :: mole
       real (kind=Rkind) :: Qact(:)
 
       integer :: i,j,k
@@ -2352,7 +2455,7 @@ MODULE mod_paramQ
 
         write(out_unitp,*) 'END ',name_sub
 
-      END SUBROUTINE analyze_dnx
+      END SUBROUTINE analyze_dnx_CoordType
 
 
       SUBROUTINE sub_dnFCC_TO_dnFcurvi(Qact,dnFCC,dnFcurvi,mole)
@@ -2362,8 +2465,8 @@ MODULE mod_paramQ
       USE mod_Tnum
       IMPLICIT NONE
 
-      TYPE (zmatrix), intent(in)    :: mole
-      real (kind=Rkind), intent(in) :: Qact(:)
+      TYPE (CoordType),  intent(in)    :: mole
+      real (kind=Rkind), intent(in)    :: Qact(:)
 
 
       TYPE(Type_dnS), intent(in)    :: dnFCC
@@ -2447,9 +2550,9 @@ MODULE mod_paramQ
       IMPLICIT NONE
 
 
-!----- for the zmatrix and Tnum --------------------------------------
+!----- for the CoordType and Tnum --------------------------------------
       real (kind=Rkind), intent(inout) :: Qact(:)
-      TYPE (zmatrix), intent(inout)    :: mole
+      TYPE (CoordType),  intent(inout) :: mole
       integer, intent(in)              :: Set_Val
 
       integer :: nopt,ib,i_RVec,i,i1,i2,iQdyn

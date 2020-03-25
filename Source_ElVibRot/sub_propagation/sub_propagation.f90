@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,9 +35,11 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
-
 MODULE mod_FullPropa
 USE mod_Constant
 USE mod_MPI
@@ -56,7 +69,7 @@ CONTAINS
 !
 !
 !=======================================================================================
-      SUBROUTINE sub_propagation(WP0,para_AllOp,para_propa)
+  SUBROUTINE sub_propagation(WP0,para_AllOp,para_propa)
       USE mod_system
       USE mod_Op
       USE mod_propa
@@ -94,12 +107,13 @@ CONTAINS
       logical :: direct_KEO
 
 !----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='sub_propagation'
       logical, parameter :: debug = .FALSE.
 !     logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
       para_H => para_AllOp%tab_Op(1)
       IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING propagation'
+        write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'n',WP0(1)%nb_tot
         write(out_unitp,*)
         write(out_unitp,*) 'WP0 BasisRep'
@@ -148,7 +162,7 @@ CONTAINS
 
       SELECT CASE (para_propa%type_WPpropa)
 
-      CASE (1,2,5,6,7)
+      CASE (1,2,5,6,7,8,9,10)
 
         IF (SGtype4 .AND. direct_KEO) THEN
           !CALL sub_propagation11_SG4(WP0,WP,1,para_H,para_propa)
@@ -167,15 +181,15 @@ CONTAINS
 
         nb_diago = min(para_propa%max_ana,para_H%nb_tot)
         nullify(psi)
-        CALL alloc_array(psi,(/nb_diago/),"psi","sub_propagation")
+        CALL alloc_array(psi,(/nb_diago/),"psi",name_sub)
         nullify(Ene0)
-        CALL alloc_array(Ene0,(/nb_diago/),"Ene0","sub_propagation")
+        CALL alloc_array(Ene0,(/nb_diago/),"Ene0",name_sub)
 
         CALL sub_propagation34(psi,Ene0,nb_diago,                       &
                                para_H,para_propa)
 
-        CALL dealloc_array(psi,"psi","sub_propagation")
-        CALL dealloc_array(Ene0,"Ene0","sub_propagation")
+        CALL dealloc_array(psi,"psi",name_sub)
+        CALL dealloc_array(Ene0,"Ene0",name_sub)
 
       CASE (22,24,50,52,54,221,222,223)
 
@@ -235,10 +249,9 @@ CONTAINS
                                 para_AllOp,para_propa)
 
       CASE DEFAULT
-
-        write(out_unitp,*) ' sub_propagation : NO spectral propagation'
-        STOP
-
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) ' Unknown type of propagation(',para_propa%type_WPpropa,')'
+        STOP ' ERROR: Unknown type of propagation'
       END SELECT
       write(out_unitp,*) 'Number of Hamiltonian operations (H I psi >)',para_H%nb_OpPsi
 
@@ -249,10 +262,10 @@ CONTAINS
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'END propagation'
+        write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
-      end subroutine sub_propagation
+  end subroutine sub_propagation
 !=======================================================================================
 
 !=======================================================================================
@@ -492,7 +505,7 @@ CONTAINS
       integer       :: i,ii,j,iqa
       integer       :: max_ecri
       real (kind=Rkind) :: DeltaT,T      ! time
-      real (kind=Rkind) :: DeltaE,Deltapsi,epsi,normeg,th
+      real (kind=Rkind) :: DeltaE,Deltapsi,epsi,norm2g,th
       real (kind=Rkind) :: avH1,avH2,avH3,A,B,C,D,DT1,DT2,S,E1,E2
       real (kind=Rkind) :: Qact(para_H%mole%nb_act1)
       real (kind=Rkind) :: psi_q(nb_diago)
@@ -628,14 +641,14 @@ CONTAINS
         CALL sub_PsiOpPsi(CEne0,psi(i),Hpsi,para_H)
         Ene0(i) = CEne0
         DeltaE = para_H%Hmax-para_H%Hmin
-        normeg = para_H%Hmax-para_H%Hmin
+        norm2g = para_H%Hmax-para_H%Hmin
 
         write(out_unitp,*) '-------------------------------------------'
         write(out_unitp,*) 'WP i, E',i,                                 &
                         Ene0(i)*get_Conv_au_TO_unit('E','cm-1'),DeltaE
 
 !       DO WHILE (T .LE. para_propa%WPTmax .AND. abs(DeltaE) .GT. epsi)
-        DO WHILE (T <= para_propa%WPTmax .AND. normeg > ONETENTH**5)
+        DO WHILE (T <= para_propa%WPTmax .AND. norm2g > ONETENTH**5)
 
 !         - Schmidt ortho ------------------------------------
           DO j=1,i-1
@@ -698,9 +711,9 @@ CONTAINS
 !         - propagation ------------------------------------------
           g = Hpsi + psi(i) * (-avH1)
           CALL norm2_psi(g)
-          normeg = sqrt(g%norme)
+          norm2g = sqrt(g%norm2)
           CALL renorm_psi_WITH_norm2(g)
-          write(out_unitp,*) 'it normeg C',it,normeg,C
+          write(out_unitp,*) 'it norm2g C',it,norm2g,C
 
 
           H2psi  = psi(i) * cos(th)
@@ -708,7 +721,7 @@ CONTAINS
 
 
           CALL norm2_psi(psi(i))
-          write(out_unitp,*) 'it norme npsi',it,psi(i)%norme
+          write(out_unitp,*) 'it norm2 npsi',it,psi(i)%norm2
           CALL renorm_psi_WITH_norm2(psi(i))
           CALL sub_PsiOpPsi(CEne0,psi(i),Hpsi,para_H)
           Ene0(i) = CEne0
@@ -722,8 +735,8 @@ CONTAINS
             write(out_unitp,*) 'WP it, E',it,                           &
                        Ene0(i)*get_Conv_au_TO_unit('E','cm-1'),         &
                         DeltaE*get_Conv_au_TO_unit('E','cm-1')
-            write(out_unitp,*) 'WP it sqrt(norme g)',it,                &
-                         sqrt(g%norme)*get_Conv_au_TO_unit('E','cm-1')
+            write(out_unitp,*) 'WP it sqrt(norm2 g)',it,                &
+                         sqrt(g%norm2)*get_Conv_au_TO_unit('E','cm-1')
             write(out_unitp,*) 'WP it, DeltaT,S',it,DeltaT,S
           END IF
 
@@ -888,7 +901,7 @@ CONTAINS
       itmax         = (para_propa%WPTmax-T)/para_propa%WPdeltaT
 
       DO WHILE ( (T - (para_propa%WPTmax-para_propa%WPdeltaT) <         &
-                 para_propa%WPdeltaT/TEN**5) .AND. psi(1)%norme < psi(1)%max_norme)
+                 para_propa%WPdeltaT/TEN**5) .AND. psi(1)%norm2 < para_propa%max_norm2)
 
          IF (mod(it,para_propa%n_WPecri) == 0) THEN
            IF(MPI_id==0) THEN
@@ -918,7 +931,7 @@ CONTAINS
 !----------------------------------------------------------
 
       CALL file_close(para_propa%file_autocorr)
-      IF (psi(1)%norme >= psi(1)%max_norme) STOP
+      IF (psi(1)%norm2 >= para_propa%max_norm2) STOP
 
 !----------------------------------------------------------
       IF (debug) THEN

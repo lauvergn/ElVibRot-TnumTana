@@ -3,20 +3,31 @@
 !This file is part of ElVibRot.
 !
 !    ElVibRot is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU Lesser General Public License as published by
+!    it under the terms of the GNU General Public License as published by
 !    the Free Software Foundation, either version 3 of the License, or
 !    (at your option) any later version.
 !
 !    ElVibRot is distributed in the hope that it will be useful,
 !    but WITHOUT ANY WARRANTY; without even the implied warranty of
 !    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU Lesser General Public License for more details.
+!    GNU General Public License for more details.
 !
-!    You should have received a copy of the GNU Lesser General Public License
+!    You should have received a copy of the GNU General Public License
 !    along with ElVibRot.  If not, see <http://www.gnu.org/licenses/>.
 !
-!    Copyright 2015  David Lauvergnat
-!      with contributions of Mamadou Ndong, Josep Maria Luis
+!    Copyright 2015 David Lauvergnat [1]
+!      with contributions of
+!        Josep Maria Luis (optimization) [2]
+!        Ahai Chen (MPI) [1,4]
+!        Lucien Dupuy (CRP) [5]
+!
+![1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France
+![2]: Institut de Química Computacional and Departament de Química,
+!        Universitat de Girona, Catalonia, Spain
+![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
+![4]: Maison de la Simulation USR 3441, CEA Saclay, France
+![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -24,6 +35,9 @@
 !             http://people.sc.fsu.edu/~jburkardt/
 !        - Somme subroutines of SHTOOLS written by Mark A. Wieczorek under BSD license
 !             http://shtools.ipgp.fr
+!        - Some subroutine of QMRPack (see cpyrit.doc) Roland W. Freund and Noel M. Nachtigal:
+!             https://www.netlib.org/linalg/qmr/
+!
 !===========================================================================
 !===========================================================================
 MODULE mod_nDGridFit
@@ -110,8 +124,8 @@ MODULE mod_nDGridFit
 !----- physical and mathematical constants ---------------------------
       TYPE (constant) :: const_phys
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
       real (kind=Rkind), pointer :: hCC(:,:)
       TYPE(Type_dnMat) :: dnGG
@@ -167,9 +181,9 @@ MODULE mod_nDGridFit
 
       !-----------------------------------------------------------------
       !     - read the coordinate tansformations :
-      !     -   zmatrix, polysperical, bunch...
+      !     -   CoordType, polysperical, bunch...
       !     ------------------------------------------------------------
-      CALL Read_mole(mole,para_Tnum,const_phys)
+      CALL Read_CoordType(mole,para_Tnum,const_phys)
       !     ------------------------------------------------------------
       !-----------------------------------------------------------------
 
@@ -274,7 +288,7 @@ MODULE mod_nDGridFit
 !=====================================================================
       CALL dealloc_table_at(const_phys%mendeleev)
 
-      CALL dealloc_zmat(mole)
+      CALL dealloc_CoordType(mole)
       IF (associated(para_Tnum%Gref)) THEN
         CALL dealloc_array(para_Tnum%Gref,"para_Tnum%Gref",name_sub)
       END IF
@@ -290,15 +304,15 @@ MODULE mod_nDGridFit
       USE mod_dnSVM
       USE mod_nDindex
       USE mod_Constant,  only : get_Conv_au_TO_unit
-      USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0
+      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0
       USE mod_PrimOp
       IMPLICIT NONE
 
       TYPE (param_nDGrid), intent(inout) :: para_nDGrid
 
 !=====================================================================
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix)      :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType)      :: mole
       TYPE (Tnum)         :: para_Tnum
       real (kind=Rkind)   :: Qact(:)
 
@@ -547,15 +561,15 @@ MODULE mod_nDGridFit
       SUBROUTINE sub_nDGrid_WiTHOUT_calc(para_nDGrid,Qact,mole,para_PES)
       USE mod_system
       USE mod_Constant,  only : get_Conv_au_TO_unit
-      USE mod_Coord_KEO, only : zmatrix, Tnum, get_Qact0
+      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0
       USE mod_PrimOp
       IMPLICIT NONE
 
       TYPE (param_nDGrid), intent(inout) :: para_nDGrid
 
 !=====================================================================
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix)      :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType)      :: mole
       TYPE (Tnum)         :: para_Tnum
       real (kind=Rkind)   :: Qact(:)
 
@@ -635,8 +649,8 @@ MODULE mod_nDGridFit
       TYPE (param_nDFit), intent(inout) :: para_nDFit
 
 !=====================================================================
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix)      :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType)      :: mole
       TYPE (Tnum)         :: para_Tnum
       real (kind=Rkind)   :: Qact(:)
 
