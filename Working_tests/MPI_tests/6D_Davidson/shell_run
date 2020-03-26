@@ -116,12 +116,12 @@ X 1 2
  1.
  1.
  1.57
- 0.1
- 0.2
- 0.3
- 0.4
- 0.1
- 0.2
+ 0
+ 0
+ 0
+ 0
+ 0
+ 0
 
 &basis_nD nb_basis=6 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=4 /
 &basis_nD iQdyn=4    name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
@@ -135,7 +135,7 @@ X 1 2
 &actives 
 test=$test 
 direct=2 
-Make_MatOp=t 
+Make_MatOp=f 
 direct_KEO=f 
 Save_MemGrid=t 
 direct_ScalOp=t 
