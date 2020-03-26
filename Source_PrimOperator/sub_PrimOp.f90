@@ -41,11 +41,23 @@
 !===========================================================================
 !===========================================================================
    MODULE mod_PrimOp
-    USE mod_nDFit
-    USE mod_PrimOp_def
-    USE mod_OTF_def
-    USE mod_OTF
-    USE mod_SimpleOp
+     USE mod_nDFit,      ONLY : param_nDFit,nDFunct_WITH_Q,             &
+              ReadWrite_nDFitW,Analysis_nDFit,ndfit1_to_tndfit2,        &
+              analysis_ndfitw,read_ndfit,sub_ndfunc_from_ndfit,Read_Analysis
+     USE mod_PrimOp_def, ONLY : param_PES
+     USE mod_OTF_def,    ONLY : param_otf,assignment (=)
+     USE mod_OTF,        ONLY : read_dndipcc_gauss,read_hess_fchk,      &
+                      read_dnpolarizabilitycc_gauss,read_gradhess_molpro
+     USE mod_SimpleOp,  ONLY : param_typeop,dealloc_typeop,write_typeop,&
+                               init_typeop, assignment (=),             &
+                               derive_termqact_to_derive_termqdyn,      &
+                           param_d0matop, init_d0matop,dealloc_d0matop, &
+                            dealloc_tab_of_d0matop,Write_d0MatOp,       &
+                           get_iop_from_n_op, &
+                                param_dnMatOp,Init_Tab_OF_dnMatOp,      &
+                  Get_Scal_FROM_Tab_OF_dnMatOp,dealloc_tab_of_dnmatop,  &
+              get_grad_from_tab_of_dnmatop,get_hess_from_tab_of_dnmatop,&
+               set_zero_to_tab_of_dnmatop
 
    IMPLICIT NONE
 
@@ -292,6 +304,9 @@
       USE mod_system
       USE mod_dnSVM
       USE mod_Coord_KEO
+      USE mod_OTF_def
+      USE mod_PrimOp_def
+      USE mod_SimpleOp
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -679,6 +694,9 @@
       USE mod_system
       USE mod_dnSVM
       USE mod_Coord_KEO
+      USE mod_OTF_def
+      USE mod_PrimOp_def
+      USE mod_SimpleOp
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------
@@ -5022,11 +5040,6 @@
         END IF
       END IF
 
-      !----- Gcte if needed --------------------------------------------
-      Gref = .TRUE.
-      IF (associated(mole%RPHTransfo)) THEN
-        Gref = Gref .AND. associated(mole%RPHTransfo%RPHpara_AT_Qref)
-      END IF
 
   !----- Gcte if needed --------------------------------------------
   Gref = .TRUE.
