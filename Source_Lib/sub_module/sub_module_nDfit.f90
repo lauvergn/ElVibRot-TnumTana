@@ -27,13 +27,10 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_nDFit
-      use mod_system, only: rkind, zero, four, onetenth, param_file,    &
-                            line_len, name_len, in_unitp, out_unitp,    &
-                            alloc_array, read_name_advno, write_vecmat, &
-                            flush_perso, file_write, one, file_open,    &
-                            file_close, write_int_in_char, dealloc_array, two
-      use mod_nDindex, only: type_ndindex, alloc_array, write_ndindex,  &
-                             dealloc_array, init_ndindexprim, sort_ndindex
+      use mod_system
+      use mod_nDindex, only: assignment(=),type_ndindex, alloc_array,   &
+                             write_ndindex, dealloc_array,              &
+                             init_ndindexprim, sort_ndindex
       IMPLICIT NONE
 
       PRIVATE
@@ -109,7 +106,6 @@
 
       SUBROUTINE Read_Analysis(para_Analysis,Q0)
       USE mod_system
-      USE mod_string
       IMPLICIT NONE
 
       TYPE (param_Analysis), intent(inout) :: para_AnaLysis
@@ -447,7 +443,6 @@
 
       RECURSIVE SUBROUTINE ReadWrite_nDFitW(para_nDFit,ReadData,B,Tab_nDval,conv_ene)
       USE mod_system
-      USE mod_string
       IMPLICIT NONE
 
       logical, intent(in)               :: ReadData  ! if true read, else write
@@ -1008,7 +1003,6 @@
 
       SUBROUTINE nDFit1_TO_TnDFit2()
       USE mod_system
-      USE mod_string
       IMPLICIT NONE
 
       TYPE (param_nDFit) :: para_nDFit1
@@ -1242,7 +1236,6 @@
 
       SUBROUTINE sub_nDFunc_FROM_nDFit(val_nDfit,Q,para_nDFit)
       USE mod_system
-      USE mod_file
       IMPLICIT NONE
 
       real (kind=Rkind), intent(inout)       :: val_nDfit ! value of the function
@@ -1287,7 +1280,6 @@
       END SUBROUTINE sub_nDFunc_FROM_nDFit
       SUBROUTINE sub_ONLYnDFunc_FROM_nDFit(val_nDfit,Q,para_nDFit)
       USE mod_system
-      USE mod_file
       IMPLICIT NONE
 
       real (kind=Rkind), intent(inout)       :: val_nDfit ! value of the function

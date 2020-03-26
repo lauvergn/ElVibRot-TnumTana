@@ -42,24 +42,18 @@
 !===========================================================================
  MODULE mod_basis_set_alloc
 
-  use mod_dnSVM,   only: type_dnmat, type_dncplxmat, type_intvec,        &
+  use mod_dnSVM,   only: assignment(=),type_dnmat,type_dncplxmat,type_intvec,&
                          alloc_array, alloc_dncplxmat, alloc_dnmat,      &
                          dealloc_dnmat, dealloc_dncplxmat, dealloc_array,&
                          dealloc_intvec, sub_intvec1_to_intvec2,         &
-                         write_dnsvm, write_dnmat, write_dncplxmat,      &
-                         assignment (=)
-  use mod_nDindex, only: type_ndindex, dealloc_ndindex,                 &
+                         write_dnsvm, write_dnmat, write_dncplxmat
+  use mod_nDindex, only: assignment (=), type_ndindex, dealloc_ndindex, &
                          ndindex2tondindex1, write_ndindex,             &
                          alloc_array, alloc_nparray,                    &
                          dealloc_nparray, dealloc_array
 
 
-  use mod_system, only: rkind, onetenth, param_file, name_len, one, out_unitp,   &
-                            alloc_array, alloc_nparray, zero, flush_perso,           &
-                            dealloc_nparray, dealloc_array, file_dealloc,            &
-                            write_error_not_null, error_memo_allo, write_error_null, &
-                            sub_test_tab_ub, sub_test_tab_lb, print_level, write_mat,&
-                            string_to_string, int_to_char, write_vec,NewBasisEl
+  use mod_system
 
       use mod_RotBasis_Param ! all
       use mod_Basis_Grid_Param

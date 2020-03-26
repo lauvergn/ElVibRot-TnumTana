@@ -22,7 +22,7 @@
 !===========================================================================
 MODULE mod_RW_MatVec
   USE mod_NumParameters, only: out_unitp, cmatio_format, rmatio_format, rkind, line_len
-  USE mod_file, only : flush_perso
+  USE mod_file
   IMPLICIT NONE
 
   PRIVATE

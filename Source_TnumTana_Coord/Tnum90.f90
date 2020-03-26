@@ -30,14 +30,20 @@
       use mod_system
       use mod_dnSVM
       use mod_Constant
-      use mod_Coord_KEO
+      ! in the use mod_Coord_KEO, we have to use "only", because "calc_freq" is
+      !   a subroutine in mod_Coord_KEO and also a variable in the namelist.
+      use mod_Coord_KEO,  ONLY: assignment(=),CoordType,Tnum,Read_CoordType,&
+                                read_RefGeom,get_Qact0,sub_QactTOdnx,       &
+                                Write_Cartg98,Write_dnx,calc3_f2_f1Q_num,   &
+                                get_dng_dnGG,sub_QplusDQ_TO_Cart,           &
+                                sub_dnFCC_TO_dnFcurvi,dealloc_CoordType
       use mod_PrimOp
 
       IMPLICIT NONE
 
 !     - parameters for para_Tnum -----------------------
       TYPE (constant)  :: const_phys
-      TYPE (CoordType)   :: mole
+      TYPE (CoordType) :: mole
       TYPE (Tnum)      :: para_Tnum
       TYPE (param_PES) :: para_PES
 

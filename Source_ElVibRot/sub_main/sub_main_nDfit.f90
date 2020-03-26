@@ -42,7 +42,7 @@
 !===========================================================================
 MODULE mod_nDGridFit
       USE mod_system
-      USE mod_nDindex, only : Type_nDindex
+      USE mod_nDindex, only : assignment(=),Type_nDindex
       IMPLICIT NONE
 
       TYPE param_nDGrid ! it mays change in the futur (more like "basis" type)
@@ -73,7 +73,7 @@ MODULE mod_nDGridFit
       CONTAINS
 
       SUBROUTINE dealloc_nDGrid(para_nDGrid)
-      USE mod_nDindex, only : dealloc_nDindex
+      USE mod_nDindex, only : assignment(=),dealloc_nDindex
       IMPLICIT NONE
 
       TYPE (param_nDGrid), intent(inout) :: para_nDGrid
@@ -303,8 +303,8 @@ MODULE mod_nDGridFit
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
-      USE mod_Constant,  only : get_Conv_au_TO_unit
-      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0
+      USE mod_Constant,  only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Coord_KEO, only : assignment(=),CoordType, Tnum, get_Qact0
       USE mod_PrimOp
       IMPLICIT NONE
 
@@ -560,8 +560,8 @@ MODULE mod_nDGridFit
       END SUBROUTINE sub_nDGrid
       SUBROUTINE sub_nDGrid_WiTHOUT_calc(para_nDGrid,Qact,mole,para_PES)
       USE mod_system
-      USE mod_Constant,  only : get_Conv_au_TO_unit
-      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0
+      USE mod_Constant,  only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Coord_KEO, only : assignment(=),CoordType, Tnum, get_Qact0
       USE mod_PrimOp
       IMPLICIT NONE
 

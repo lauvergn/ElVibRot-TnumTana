@@ -28,7 +28,7 @@
 !===========================================================================
 MODULE mod_ActiveTransfo
       use mod_system
-      use mod_dnSVM, only: alloc_array, dealloc_array, type_dnvec,   &
+      use mod_dnSVM, only: assignment(=), alloc_array, dealloc_array, type_dnvec,   &
                            type_dns, write_dnsvm, alloc_dnsvm,       &
                            set_zero_to_dnsvm, sub_dns_to_dnvec,      &
                            dealloc_dnsvm

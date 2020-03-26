@@ -1665,7 +1665,6 @@ END SUBROUTINE sub_NewVec_Davidson
 
  SUBROUTINE sub_projec2_Davidson(Vec,Vec0,VecToBeIncluded,thresh,Ene,min_Ene,print_project)
  USE mod_system
- USE mod_Constant, ONLY: get_Conv_au_TO_WriteUnit
  IMPLICIT NONE
 
  real (kind=Rkind) :: Vec0(:,:),Vec(:,:)

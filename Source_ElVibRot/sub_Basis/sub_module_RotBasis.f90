@@ -42,7 +42,7 @@
 !===========================================================================
       MODULE mod_RotBasis_Param
       USE mod_system
-      use mod_nDindex, only: alloc_nparray, dealloc_nparray
+      use mod_nDindex
       IMPLICIT NONE
 
       PRIVATE
@@ -63,13 +63,13 @@
 
         END TYPE RotBasis_Param
 
-        INTERFACE assignment (=)
-          MODULE PROCEDURE RotBasis_Param2TORotBasis_Param1
-        END INTERFACE
+      INTERFACE assignment (=)
+        MODULE PROCEDURE RotBasis_Param2TORotBasis_Param1
+      END INTERFACE
 
-      PUBLIC  RotBasis_Param, assignment (=), alloc_RotBasis_Param, &
-              dealloc_RotBasis_Param, Init_RotBasis_Param, Write_RotBasis_Param, &
-              RotBasis_Param2TORotBasis_Param1
+      PUBLIC :: RotBasis_Param, assignment (=), alloc_RotBasis_Param,   &
+                dealloc_RotBasis_Param, Init_RotBasis_Param,            &
+                Write_RotBasis_Param,RotBasis_Param2TORotBasis_Param1
 
       CONTAINS
 

@@ -263,8 +263,6 @@
       USE mod_psi_SimpleOp
       USE mod_ana_psi
       USE mod_psi_Op
-      USE mod_file
-      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -360,8 +358,6 @@
       SUBROUTINE sub_save_psi(psi,nb_save,file_WP)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_file
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -1430,7 +1426,6 @@ END SUBROUTINE Read_header_saveFile_psi
       USE mod_psi_set_alloc
       USE mod_psi_SimpleOp
       USE mod_psi_Op
-      USE mod_file
       IMPLICIT NONE
 
 

@@ -29,7 +29,7 @@
       MODULE mod_ZmatTransfo
       use mod_system
       USE mod_dnSVM
-      use mod_constant,     only: table_atom, get_mass_tnum
+      use mod_Constant,     only: assignment(=),table_atom, get_mass_tnum
       use mod_Lib_QTransfo ! only all
       IMPLICIT NONE
 

@@ -42,8 +42,8 @@ MODULE mod_paramQ
   use mod_Tnum,             only: tnum, zmatrix, write_mole,            &
                                   CoordType, Write_CoordType
 
-  USE mod_Constant,         ONLY: get_conv_au_to_unit, real_wu,         &
-                                  rwu_write, convrwu_to_r
+  USE mod_Constant,         ONLY: assignment(=),get_conv_au_to_unit,    &
+                                  real_wu, rwu_write, convrwu_to_r
   IMPLICIT NONE
 
   INTERFACE sub_QactTOdnx

@@ -21,9 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_IntVM
-      use mod_system, only: alloc_array, out_unitp, dealloc_array, &
-                            write_error_not_null, sub_test_tab_ub, &
-                            sub_test_tab_lb, error_memo_allo, write_error_null
+      use mod_system
       IMPLICIT NONE
 
       PRIVATE

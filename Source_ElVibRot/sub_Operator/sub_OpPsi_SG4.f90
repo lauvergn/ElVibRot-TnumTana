@@ -54,7 +54,7 @@ CONTAINS
  USE mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
- USE mod_Coord_KEO,                ONLY : CoordType
+ USE mod_Coord_KEO,                ONLY : assignment(=),CoordType
 
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_RCVec_SGType4,      ONLY : TypeRVec,dealloc_TypeRVec
@@ -234,7 +234,7 @@ END IF
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
 
- USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+ USE mod_Coord_KEO,               ONLY : assignment(=),CoordType, get_Qact, get_d0GG
 
  USE mod_basis_set_alloc,         ONLY : basis
  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
@@ -438,7 +438,7 @@ END IF
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : assignment(=),CoordType, get_Qact, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4
@@ -678,7 +678,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   !$ USE omp_lib, only : OMP_GET_THREAD_NUM
   USE mod_nDindex
 
-  USE mod_Coord_KEO,                ONLY : CoordType
+  USE mod_Coord_KEO,                ONLY : assignment(=),CoordType
   USE mod_basis_set_alloc,          ONLY : basis
 #if(run_MPI)
   USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
@@ -1390,7 +1390,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                                                   tab_l_init,initG,endG)
  USE mod_system
  USE mod_nDindex
- USE mod_Coord_KEO,                ONLY : CoordType
+ USE mod_Coord_KEO,                ONLY : assignment(=),CoordType
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                   tabR_AT_iG_TO_tabPackedBasis,TypeRVec,dealloc_TypeRVec
@@ -1480,7 +1480,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : assignment(=),CoordType, get_Qact, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
@@ -1760,7 +1760,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : assignment(=),CoordType, get_Qact, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
@@ -2077,7 +2077,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                                                    V,GG,sqRhoOVERJac,Jac)
   USE mod_system
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
+  USE mod_Coord_KEO,               ONLY : assignment(=),CoordType, get_Qact
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
@@ -2241,7 +2241,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : assignment(=),CoordType, get_Qact, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4
@@ -2460,8 +2460,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
-  use mod_PrimOp,                  only: param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,   &
+  USE mod_Coord_KEO,               ONLY: assignment(=),CoordType, get_Qact, get_d0GG
+  use mod_PrimOp,                  only: assignment(=),param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,   &
                                          param_typeop, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
 
@@ -2741,8 +2741,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
-  use mod_PrimOp,                  only: param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
+  USE mod_Coord_KEO,               ONLY : assignment(=),CoordType, get_Qact
+  use mod_PrimOp,                  only: assignment(=),param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
                                          param_typeop, TnumKEO_TO_tab_d0H, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
 
@@ -2972,8 +2972,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
-  use mod_PrimOp,                  ONLY : param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
+  USE mod_Coord_KEO,               ONLY : assignment(=),CoordType, get_Qact
+  use mod_PrimOp,                  ONLY : assignment(=),param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
                                           param_typeop, TnumKEO_TO_tab_d0H, get_d0MatOp_AT_Qact, &
                                           dealloc_tab_of_d0matop
 
@@ -3399,8 +3399,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
-  use mod_PrimOp,                  only: param_d0matop, init_d0matop,   &
+  USE mod_Coord_KEO,               ONLY: assignment(=),CoordType, get_Qact
+  use mod_PrimOp,                  only: assignment(=),param_d0matop, init_d0matop,   &
                                          param_typeop, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
 

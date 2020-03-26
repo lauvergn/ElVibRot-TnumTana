@@ -699,7 +699,7 @@ GWP:obj $(GWPEXE)
 work:obj $(WORKEXE)
 	echo "work"
 #
-PhysConst:obj $(PhysConstEXE)
+PhysConst: obj $(PhysConstEXE)
 	echo "Physical Constants"
 #===============================================
 #===============================================

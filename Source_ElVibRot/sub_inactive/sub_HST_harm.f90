@@ -45,7 +45,7 @@
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact, qact_to_qdyn_from_activetransfo
+      USE mod_Coord_KEO, only : assignment(=),CoordType, Tnum, get_Qact, qact_to_qdyn_from_activetransfo
       USE mod_basis
       USE mod_Op
       USE mod_PrimOp
@@ -416,7 +416,7 @@
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
-      USE mod_Coord_KEO, only : CoordType, Tnum, Qinact2n_TO_Qact_FROM_ActiveTransfo
+      USE mod_Coord_KEO, only : assignment(=),CoordType, Tnum, Qinact2n_TO_Qact_FROM_ActiveTransfo
       USE mod_basis
       USE mod_Op
       USE mod_PrimOp

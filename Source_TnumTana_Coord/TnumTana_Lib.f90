@@ -157,7 +157,7 @@ SUBROUTINE Init_TnumTana_FOR_Driver_FOR_c(nb_act,nb_cart,init_sub)  BIND(C, name
 END SUBROUTINE Init_TnumTana_FOR_Driver_FOR_c
 SUBROUTINE Qact_TO_Qcart_TnumTanaDriver_FOR_c(Qact,nb_act,Qcart,nb_cart) BIND(C, name="Qact_TO_Qcart_TnumTanaDriver_FOR_c")
   USE, INTRINSIC :: ISO_C_BINDING,             ONLY : C_INT,C_DOUBLE
-  USE            :: mod_system,                ONLY : Rkind,out_unitp
+  USE            :: mod_system
   USE            :: Module_ForTnumTana_Driver, ONLY : mole,init,sub_QactTOd0x
   IMPLICIT NONE
 
@@ -196,7 +196,7 @@ SUBROUTINE Qact_TO_Qcart_TnumTanaDriver_FOR_c(Qact,nb_act,Qcart,nb_cart) BIND(C,
 END SUBROUTINE Qact_TO_Qcart_TnumTanaDriver_FOR_c
 SUBROUTINE Qcart_TO_Qact_TnumTanaDriver_FOR_c(Qact,nb_act,Qcart,nb_cart) BIND(C, name="Qcart_TO_Qact_TnumTanaDriver_FOR_c")
   USE, INTRINSIC :: ISO_C_BINDING,             ONLY : C_INT,C_DOUBLE
-  USE            :: mod_system,                ONLY : Rkind,out_unitp
+  USE            :: mod_system
   USE            :: Module_ForTnumTana_Driver, ONLY : mole,Init,sub_d0xTOQact
   IMPLICIT NONE
 

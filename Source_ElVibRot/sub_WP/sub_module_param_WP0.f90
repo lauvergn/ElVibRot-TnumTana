@@ -42,7 +42,6 @@
 !===========================================================================
       MODULE mod_param_WP0
       USE mod_system
-      USE mod_file
       IMPLICIT NONE
 
         TYPE param_WP0

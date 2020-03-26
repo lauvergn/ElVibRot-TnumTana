@@ -42,14 +42,13 @@
 !===========================================================================
  MODULE mod_march
  USE mod_system
- USE mod_file
  USE mod_field,         ONLY : param_field
  USE mod_psi_set_alloc, ONLY : param_psi
  USE mod_propa,         ONLY : param_propa,param_poly,Calc_AutoCorr,    &
                                Write_AutoCorr,SaveWP_restart,           &
                                sub_analyze_mini_WP_OpWP
  USE mod_march_SG4
- use mod_Constant,      only: get_conv_au_to_unit
+ use mod_Constant,      only: assignment(=),get_conv_au_to_unit
  IMPLICIT NONE
 
  PRIVATE

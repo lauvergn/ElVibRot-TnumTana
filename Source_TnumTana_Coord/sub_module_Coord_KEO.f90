@@ -29,10 +29,10 @@
 MODULE mod_Coord_KEO
 
 
-  USE mod_Constant
-
   USE mod_Lib_QTransfo,    ONLY : Write_dnx
-  USE mod_freq,            ONLY : gaussian_width
+  USE mod_freq,            ONLY : gaussian_width,calc_freq,             &
+                                  calc_freq_block,calc_freq_with_d0c,   &
+                                  h0_symmetrization,sort_with_tab
   USE mod_ActiveTransfo,   ONLY : get_Qact,get_Qact0,Set_AllActive,     &
                                   Qact_TO_Qdyn_FROM_ActiveTransfo,      &
                                   Qdyn_TO_Qact_FROM_ActiveTransfo,      &
@@ -67,7 +67,8 @@ MODULE mod_Coord_KEO
 
   USE mod_Tana_keo,        ONLY : compute_analytical_keo
   USE mod_Tana_Tnum,       ONLY : comparison_g_from_tnum_tana
-  USE mod_Tana_Sum_OpnD,   ONLY : sum_opnd,write_op,delete_op,Expand_Sum_OpnD_TO_Sum_OpnD
+  USE mod_Tana_Sum_OpnD,   ONLY : assignment(=),sum_opnd,write_op,      &
+                                  delete_op,Expand_Sum_OpnD_TO_Sum_OpnD
   IMPLICIT NONE
 
 END MODULE mod_Coord_KEO

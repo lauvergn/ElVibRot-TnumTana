@@ -16,7 +16,6 @@
                                  para_Tnum,mole)
       USE mod_system
       USE mod_Tnum
-      USE mod_file
       IMPLICIT NONE
 
 !----- for the zmatrix and Tnum --------------------------------------

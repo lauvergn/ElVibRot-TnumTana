@@ -141,7 +141,7 @@
 
       USE mod_system
       USE mod_dnSVM
-      use mod_Coord_KEO, only: CoordType, tnum, alloc_array, dealloc_array
+      use mod_Coord_KEO, only: assignment(=),CoordType, tnum, alloc_array, dealloc_array
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
@@ -332,7 +332,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 !---------------------------------------------------------------------------
 !
  USE mod_system
- use mod_Coord_KEO, only: CoordType, tnum, alloc_array, dealloc_array
+ use mod_Coord_KEO, only: assignment(=),CoordType, tnum, alloc_array, dealloc_array
  USE mod_PrimOp
  USE mod_basis
  USE mod_Op
@@ -499,7 +499,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 !---------------------------------------------------------------------
 !
  USE mod_system 
- USE mod_Coord_KEO, only: CoordType, tnum, alloc_array, dealloc_array
+ USE mod_Coord_KEO, only: assignment(=),CoordType, tnum, alloc_array, dealloc_array
  USE mod_PrimOp
  USE mod_basis
  USE mod_Op
@@ -584,7 +584,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 !---------------------------------------------------------------------------
  USE mod_system
  USE mod_dnSVM
- USE mod_Coord_KEO, only: CoordType, tnum, alloc_array, dealloc_array,get_Qact0,sub_QactTOdnx
+ USE mod_Coord_KEO, only: assignment(=),CoordType, tnum, alloc_array, dealloc_array,get_Qact0,sub_QactTOdnx
  USE mod_PrimOp
  USE mod_basis
  USE mod_Op

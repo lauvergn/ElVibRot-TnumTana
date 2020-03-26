@@ -21,10 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_MatOFdnS
-      use mod_system, only: out_unitp, write_error_not_null, sub_test_tab_ub, &
-                            sub_test_tab_lb, error_memo_allo, write_error_null, &
-                            rkind, alloc_array, write_vecmat, dealloc_array, &
-                            flush_perso, one, zero, ten, onetenth, half, pi, two
+      use mod_system
       use mod_dnS, only: type_dns, alloc_dns, dealloc_dns, check_alloc_dns, &
                          write_dns, alloc_array, dealloc_array, sub_dns1_to_dns2, &
                          sub_dns1_prod_dns2_to_dns3, sub_dns1_wplus_dns2_to_dns3, &

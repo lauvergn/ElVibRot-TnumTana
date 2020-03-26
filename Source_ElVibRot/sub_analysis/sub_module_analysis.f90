@@ -43,7 +43,7 @@
 
       MODULE mod_analysis
       USE mod_system
-      use mod_Constant, only: real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit, get_val_FROM_RWU
+      use mod_Constant, only: assignment(=),real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit, get_val_FROM_RWU
       USE mod_type_ana_psi
       USE mod_CRP
       IMPLICIT NONE
@@ -151,10 +151,11 @@
       integer,           allocatable :: Qtransfo_type(:) ! type of the transformation
       logical                        :: AvScalOp,AvHiterm
 
-      logical       :: QTransfo,formatted_file_WP
-      logical        :: Spectral_ScalOp
-      TYPE (REAL_WU) :: CRP_Ene,CRP_DEne,ene0,Ezpe,max_ene
+      logical           :: QTransfo,formatted_file_WP
+      logical           :: Spectral_ScalOp
+      TYPE (REAL_WU)    :: CRP_Ene,CRP_DEne,ene0,Ezpe,max_ene
       real (kind=Rkind) :: Temp
+      integer           :: It_diag
 
       character (len=Line_len) :: name_file_spectralWP
       character (len=name_len) :: name_dum
@@ -235,11 +236,19 @@
 
       IF (print_level > 0) write(out_unitp,analyse)
       write(out_unitp,*)
-      IF (davidson .AND. arpack) THEN
+
+
+      It_diag = 0
+      IF (davidson) It_diag = It_diag + 1
+      IF (arpack)   It_diag = It_diag + 1
+      IF (filter)   It_diag = It_diag + 1
+      IF (it_diag > 1) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' davidson=t and arpack=t'
+        write(out_unitp,*) ' Two or more Iterative Diagonalization Procedures are selected!!'
+        write(out_unitp,*) ' davidson,arpack,filter',davidson,arpack,filter
+
         write(out_unitp,*) ' You HAVE to select only one!'
-        STOP
+        STOP 'ERROR: Two or more Iterative Diagonalization Procedures.'
       END IF
       IF (.NOT. formatted_file_WP) FilePsiVersion = 1
       IF(MPI_id==0) write(out_unitp,*) 'name_file_spectralWP,formatted_file_WP: ', &
@@ -279,6 +288,17 @@
       para_ana%MaxWP_TO_Write_MatOp = MaxWP_TO_Write_MatOp
       para_ana%name_file_spectralWP = name_file_spectralWP
       para_ana%formatted_file_WP    = formatted_file_WP
+
+
+      IF (len_trim(name_file_spectralWP) == 0 .AND. MPI_id == 0) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) '  Empty file name: "name_file_spectralWP" !!'
+        write(out_unitp,*) 'name_file_spectralWP,formatted_file_WP: ',  &
+                                  name_file_spectralWP,formatted_file_WP
+        write(out_unitp,*) '  Check your data!!'
+        STOP 'ERROR: Empty file name.'
+      END IF
+
 
       IF (get_val_FROM_RWU(max_ene) <= ZERO) THEN
         para_ana%max_ene         = huge(ONE)

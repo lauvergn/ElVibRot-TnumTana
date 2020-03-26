@@ -45,7 +45,7 @@
       USE mod_nDindex
       USE mod_dnSVM
       USE mod_Constant
-      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0
+      USE mod_Coord_KEO, only : assignment(=),CoordType, Tnum, get_Qact0
       USE mod_PrimOp
       USE mod_basis
       USE BasisMakeGrid
@@ -371,7 +371,7 @@
       USE mod_system
       USE mod_nDindex
       USE mod_Constant
-      use mod_Coord_KEO, only: CoordType, tnum
+      use mod_Coord_KEO, only: assignment(=),CoordType, tnum
       USE mod_PrimOp
 
       USE mod_basis
@@ -610,7 +610,7 @@
       SUBROUTINE Set_ALL_para_FOR_optimization(mole,BasisnD,Qact,Set_Val)
 
       USE mod_system
-      use mod_Coord_KEO, only: CoordType
+      use mod_Coord_KEO, only: assignment(=),CoordType
       USE mod_basis
       IMPLICIT NONE
 

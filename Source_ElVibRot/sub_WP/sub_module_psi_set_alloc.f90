@@ -91,7 +91,7 @@
         integer              :: IndAvOp  = -1          ! operator type  (usualy H, IndAvOp=0)
         logical              :: convAvOp = .FALSE.     ! TRUE, if the average value is calculated with a converged wavefunction
 
-        real (kind=Rkind)              :: norm2             = -ONE       ! norm^2 of psi
+        real (kind=Rkind)    :: norm2    = -ONE       ! norm^2 of psi
 
         END TYPE param_psi
 
@@ -235,8 +235,10 @@
       END SUBROUTINE alloc_psi
 !=======================================================================================
 
-  FUNCTION print_alloc_psi(psi)
-  USE mod_string
+ FUNCTION print_alloc_psi(psi)
+ USE mod_system
+ IMPLICIT NONE
+
   character(len=:), allocatable     :: print_alloc_psi
 
   TYPE (param_psi), intent(in) :: psi
