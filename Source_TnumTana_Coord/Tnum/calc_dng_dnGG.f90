@@ -471,7 +471,7 @@ MODULE mod_dnGG_dng
     END IF
     !-----------------------------------------------------------------
 
-    IF (para_Tnum%Gcte) THEN
+    IF (para_Tnum%Gcte .AND. associated(para_Tnum%Gref)) THEN
       !-----------------------------------------------------------------
       ! with constant metric tensor
       IF (present(dnGG)) THEN
@@ -619,12 +619,10 @@ MODULE mod_dnGG_dng
           CALL inv_m1_TO_m2(para_Tnum%Gref,dng%d0,mole%ndimG,0,ZERO)
         END IF
       ELSE
-        IF (present(dnGG)) THEN
-          CALL sub_ZERO_TO_dnMat(dnGG,nderiv=0)
-        END IF
-        IF (present(dng)) THEN
-          CALL sub_ZERO_TO_dnMat(dng,nderiv=0)
-        END IF
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) ' You cannot call this subroutine when para_Tnum%Gref in not associated.'
+        write(out_unitp,*) '  check the fortran!!'
+        STOP 'ERROR in get_dng_dnGG_WITH_Gcte, para_Tnum%Gref is not associated.'
       END IF
 
   END SUBROUTINE get_dng_dnGG_WITH_Gcte
@@ -877,7 +875,7 @@ MODULE mod_dnGG_dng
       write(out_unitp,*)
       write(out_unitp,*) 'Qact',Qact
       write(out_unitp,*)
-      CALL Write_CoordType(mole)
+      !CALL Write_CoordType(mole)
       write(out_unitp,*)
       write(out_unitp,*)
       write(out_unitp,*) 'num_GG,num_g',para_Tnum%num_GG,para_Tnum%num_g
