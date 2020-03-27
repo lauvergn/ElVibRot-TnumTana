@@ -56,6 +56,9 @@ PUBLIC :: read_propagation,read_davidson
 PUBLIC :: dealloc_param_propa,sub_analyze_WP_OpWP,sub_analyze_mini_WP_OpWP
 PUBLIC :: Read_AutoCorr,Write_AutoCorr,Calc_AutoCorr
 PUBLIC :: SaveWP_restart,ReadWP_restart
+#if(run_MPI)
+PUBLIC :: MPI_Bcast_param_Davidson
+#endif
 
       !!@description: TODO
       !!@param: TODO
@@ -120,6 +123,7 @@ PUBLIC :: SaveWP_restart,ReadWP_restart
          real (kind=Rkind) :: precond_tol
 
          logical :: save_all
+         integer :: save_interal
          real (kind=Rkind) :: save_max_ene,scaled_max_ene
          integer :: save_max_nb
          character (len=Line_len) :: name_file_saveWP
@@ -1526,6 +1530,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       logical :: save_all
        real (kind=Rkind) :: scaled_max_ene
       integer :: save_max_nb
+      integer :: save_interal !< save WP every 'save_interal' step
       character (len=Line_len) :: name_file_saveWP
 
       logical :: lower_states,all_lower_states,project_wp0
@@ -1565,7 +1570,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
                          Op_Transfo,E0_filter,W_filter,                 &
                          L_filter,M_filter,DeltaM_filter,Mmax_filter,   &
                        DHmax,auto_Hmax,Hmin,Hmax,Hmin_propa,Hmax_propa, &
-                         max_poly,poly_tol
+                         max_poly,poly_tol,save_interal
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='read_Davidson'
@@ -1614,6 +1619,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       save_all          = .FALSE.
       save_max_nb       = -1 ! If -1, we did not use this number (default)
       name_file_saveWP  = 'file_WP'
+      save_interal      = 1
 
       ! for the filter diagonalization
       E0_filter         = REAL_WU(ZERO,      'cm-1','E')  ! the center of the window in ua (but read in cm-1)
@@ -1736,6 +1742,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       para_Davidson%conv_hermitian    = conv_hermitian
 
       para_Davidson%save_all          = save_all
+      para_Davidson%save_interal      = save_interal
       para_Davidson%scaled_max_ene    = scaled_max_ene
       para_Davidson%save_max_nb       = save_max_nb
       para_Davidson%name_file_saveWP  = make_FileName(name_file_saveWP)
@@ -1761,5 +1768,107 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
       END SUBROUTINE read_davidson
 
-      END MODULE mod_propa
 
+#if(run_MPI)
+!=======================================================================================
+!> for boardcast derived types: param_Davidson   
+!=======================================================================================
+      SUBROUTINE MPI_Bcast_param_Davidson(param_DS)
+        USE mod_MPI
+        USE mod_MPI_Aid
+        IMPLICIT NONE
+        
+        TYPE(param_Davidson),intent(in)             :: param_DS
+        
+        TYPE(MPI_Datatype)                    :: type_MPI(47)
+        TYPE(MPI_Datatype)                    :: param_Davidson_MPI
+        Integer(KIND=MPI_ADDRESS_KIND)        :: disp(47)
+        Integer(KIND=MPI_INTEGER_KIND)        :: block_length(47)
+        Integer(KIND=MPI_ADDRESS_KIND)        :: base
+        Integer                               :: n_count(3)
+        Integer                               :: ii
+
+        CAll MPI_GET_ADDRESS(param_DS%num_resetH,            disp(1),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%num_checkS,            disp(2),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%residual_max_nb,       disp(3),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%max_it,                disp(4),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%nb_WP,                 disp(5),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%max_WP,                disp(6),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%num_LowestWP,          disp(7),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%nb_WP0,                disp(8),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%nb_readWP,             disp(9),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%nb_readWP_OF_List,     disp(10),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%save_interal,          disp(11),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%save_max_nb,           disp(12),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%symab,                 disp(13),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%conv_hermitian,        disp(14),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%NewVec_type,           disp(15),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%L_filter,              disp(16),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%Lmax_filter,           disp(17),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%M_filter,              disp(18),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%DeltaM_filter,         disp(19),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%Mmax_filter,           disp(20),MPI_err) 
+        
+        CAll MPI_GET_ADDRESS(param_DS%one_by_one,            disp(21),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%read_WP,               disp(22),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%read_listWP,           disp(23),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%precond,               disp(24),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%formatted_file_readWP, disp(25),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%save_all,              disp(26),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%formatted_file_WP,     disp(27),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%all_lower_states,      disp(28),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%lower_states,          disp(29),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%project_WP0,           disp(30),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%Hmin_propa,            disp(31),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%Hmax_propa,            disp(32),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%With_Grid,             disp(33),MPI_err) 
+
+        CAll MPI_GET_ADDRESS(param_DS%precond_tol,           disp(34),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%save_max_ene,          disp(35),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%scaled_max_ene,        disp(36),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%thresh_project,        disp(37),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%Max_ene,               disp(38),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%RMS_ene,               disp(39),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%conv_ene,              disp(40),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%RMS_resi,              disp(41),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%conv_resi,             disp(42),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%E0_filter,             disp(43),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%W_filter,              disp(44),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%LambdaMin,             disp(45),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%conv_resi,             disp(46),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%LambdaMax,             disp(47),MPI_err) 
+        
+        n_count(1)=20
+        n_count(2)=33
+        n_count(3)=47
+        
+        base=disp(1)
+        DO ii=1,n_count(3)
+          disp(ii)=disp(ii)-base
+          block_length(ii)=1
+        ENDDO 
+        
+        DO ii=1,n_count(1)
+          type_MPI(ii)=MPI_int_fortran 
+        ENDDO
+
+        DO ii=n_count(1)+1,n_count(2)
+          type_MPI(ii)=MPI_Logical
+        ENDDO
+        
+        DO ii=n_count(2)+1,n_count(3)
+          type_MPI(ii)=MPI_real_fortran
+        ENDDO
+        
+        CALL MPI_TYPE_CREATE_STRUCT(n_count(3),block_length,disp,type_MPI,             &
+                                    param_Davidson_MPI,MPI_err) 
+        CALL MPI_TYPE_COMMIT(param_Davidson_MPI,MPI_err) 
+        CALL MPI_Bcast(param_DS,size1_MPI,param_Davidson_MPI,root_MPI,                 &
+                       MPI_COMM_WORLD,MPI_err) 
+
+      ENDSUBROUTINE MPI_Bcast_param_Davidson
+!=======================================================================================
+#endif
+
+
+      END MODULE mod_propa

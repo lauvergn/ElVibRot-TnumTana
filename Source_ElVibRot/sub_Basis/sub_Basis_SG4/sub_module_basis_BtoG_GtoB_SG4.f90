@@ -615,6 +615,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   USE mod_param_SGType2
   USE mod_nDindex
   USE mod_MPI
+  USE mod_MPI_Aid
   IMPLICIT NONE
 
   TYPE (basis),     intent(inout)        :: basis_SG
@@ -721,6 +722,12 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   ! It is useless when the program is compliled with kind=8 for the integer (Equivalent to ILkind=8)
   lMax_Srep = sum(int(basis_SG%para_SGType2%tab_nb_OF_SRep(:),kind=ILkind))
   Max_Srep  = sum(basis_SG%para_SGType2%tab_nb_OF_SRep(:))
+#if(run_MPI)  
+  nb_per_MPI=basis_SG%nb_SG/MPI_np
+  nb_rem_MPI=mod(basis_SG%nb_SG,MPI_np) !remainder jobs 
+  iG1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
+  iG2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
+#endif  
 
   IF(MPI_id==0) THEN
     write(out_unitp,*) 'nb of terms (grids)',size(basis_SG%para_SGType2%tab_nb_OF_SRep)
@@ -732,9 +739,18 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   IF (lMax_Srep /= int(Max_Srep,kind=ILkind)) STOP 'ERROR Max_Srep is too large!!'
   CALL flush_perso(out_unitp)
 
-  CALL alloc_NParray(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,(/Max_Srep/), &
-                    'basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB',name_sub)
-  basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(:) = 0
+  IF(MPI_id==0) THEN
+    CALL alloc_NParray(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,(/Max_Srep/), &
+                      'basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB',name_sub)
+    basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(:) = 0
+#if(run_MPI)
+  ELSE
+    temp_int1=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG1_MPI)                         &
+                -basis_SG%para_SGType2%tab_nb_OF_SRep(iG1_MPI)
+    temp_int2=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG2_MPI)
+    allocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(temp_int1+1:temp_int2))
+#endif
+  ENDIF
 
   IF (.NOT. allocated(basis_SG%para_SGType2%nDind_SmolyakRep%Tab_nDval) ) THEN
     CALL alloc_NParray(tab_l, (/basis_SG%nDindB%ndim/),'tab_l',name_sub)
@@ -846,8 +862,17 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
 
       !write(6,*) 'nDI,Max_nDI', nDI,basis_SG%nDindB%Max_nDI ; flush(6)
 
+      ! calculate mapping table on master only
       IF (nDI > 0 .AND. nDI <= basis_SG%nDindB%Max_nDI) THEN
-        basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep) = nDI ! mapping table here
+        IF(MPI_id==0) basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep) = nDI
+#if(run_MPI)
+        IF(MPI_id/=0) THEN
+          IF(iG>=iG1_MPI .AND. iG<=iG2_MPI) THEN
+            write(*,*) 'checkcheckcheck2:',iBSRep,iG
+            basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)=nDI
+          ENDIF
+        ENDIF ! for MPI_id/=0
+#endif
         !$OMP ATOMIC
         Tab_inD_nDindB(nDI) = Tab_inD_nDindB(nDI) + 1
       END IF
@@ -869,12 +894,15 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
     CALL flush_perso(out_unitp)
   END IF
 
-  IF(MPI_id==0) write(out_unitp,*) 'count 0',count(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB == 0)
-  IF (count(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB == 0) > 0 .AND. MPI_id==0) THEN
-    write(out_unitp,*) 'WARNING in ',name_sub
-    write(out_unitp,*) 'The Smolyak Basis has more basis function than the nD-Basis'
-    write(out_unitp,*) ' Probably LB < LG'
-  END IF
+  IF(MPI_id==0) THEN
+    write(out_unitp,*) 'count 0',count(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB == 0)
+    IF (count(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB == 0) > 0 .AND. MPI_id==0) THEN
+      write(out_unitp,*) 'WARNING in ',name_sub
+      write(out_unitp,*) 'The Smolyak Basis has more basis function than the nD-Basis'
+      write(out_unitp,*) ' Probably LB < LG'
+    END IF
+  ENDIF
+  
   IF (count(Tab_inD_nDindB == 0) > 0) THEN
     write(out_unitp,*) 'ERROR in ',name_sub
     write(out_unitp,*) ' Propblem with the mapping!'
@@ -1183,8 +1211,9 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
   
   temp_int=SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0
   DO itab=1,Psi_size_MPI0
-    IF(allocated(PsiR(itab)%V)) deallocate(PsiR(itab)%V)
-    allocate(PsiR(itab)%V(temp_int))
+    CALL allocate_array(PsiR(itab)%V,temp_int)
+    !IF(allocated(PsiR(itab)%V)) deallocate(PsiR(itab)%V)
+    !allocate(PsiR(itab)%V(temp_int))
   ENDDO
   CALL allocate_array(temp_list,temp_int)
   once1=.TRUE.
@@ -1199,7 +1228,7 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
         IF (nDI_ib0>0 .AND. nDI_ib0<=Max_nDI_ib0) THEN
           nDI=(ib0-1)*Max_nDI_ib0               +nDI_ib0
           iB =(ib0-1)*SGType2%tab_nb_OF_SRep(iG)+iB_ib0
-          ! note V_allcount contains the information of nDI
+
           temp_length=temp_length+1
           IF(once1) THEN
             SGType2%V_allcount=SGType2%V_allcount+1
@@ -1220,14 +1249,17 @@ END SUBROUTINE tabPackedBasis_TO_tabR_MPI
 !=======================================================================================
 
 !=======================================================================================
-! subroutine for ccounting the length of compact basis to be send to each threads
+!> subroutine for ccounting the length of compact basis to be send to each threads
 !
-! reduce_index_mpi: count the overall length for each threads
-! nDI_index: temp index for all possible nDI for each threads
+!> reduce_index_mpi: count the overall length for each threads
+!> nDI_index: temp index for all possible nDI for each threads
+!> nDI_index_list: record the relevant position of each elements in nDI_index
+!
+!> Warning: time consuming and memory consuming, need improvements
 !---------------------------------------------------------------------------------------
 #if(run_MPI)
-SUBROUTINE PackedBasis_TO_tabR_index_MPI(iG,SGType2,reduce_index_mpi,nDI_index,            &
-                                     Max_nDI_ib0,nDI_index_list)
+SUBROUTINE PackedBasis_TO_tabR_index_MPI(iG,SGType2,reduce_index_mpi,nDI_index,        &
+                                         Max_nDI_ib0,nDI_index_list)
   USE mod_system
   USE mod_basis_set_alloc
   USE mod_param_SGType2
@@ -1261,32 +1293,36 @@ SUBROUTINE PackedBasis_TO_tabR_index_MPI(iG,SGType2,reduce_index_mpi,nDI_index, 
         nDI=(ib0-1)*Max_nDI_ib0               +nDI_ib0
         iB =(ib0-1)*SGType2%tab_nb_OF_SRep(iG)+iB_ib0  
         !write(*,*) 'checkinging iB,nDI',iB,nDI,iG,ib0,iB_ib0
+        ! counts actual number of V
         SGType2%V_allcount=SGType2%V_allcount+1
-        DO ii=1,MAX(reduce_index_mpi,1)
-          IF(nDI_index(ii)==nDI) THEN
-            IF(MPI_id/=0) nDI_index_list(SGType2%V_allcount)=ii
-            EXIT
-          ENDIF
-        ENDDO
+        
+        !> record the mapping list on non-root threads according to nDI-----------------
+        IF(MPI_id/=0) THEN
+          DO ii=1,MAX(reduce_index_mpi,1)
+            IF(nDI_index(ii)==nDI) THEN
+              nDI_index_list(SGType2%V_allcount)=ii
+              EXIT
+            ENDIF
+          ENDDO
+        ENDIF ! for MPI_id/=0-----------------------------------------------------------
+        
+        ! if nDI is not on the current list, include the new nDI in the "nDI_index"
         IF(ii>MAX(reduce_index_mpi,1)) THEN
           reduce_index_mpi=reduce_index_mpi+1
           nDI_index(reduce_index_mpi)=nDI
           IF(MPI_id/=0) nDI_index_list(SGType2%V_allcount)=reduce_index_mpi
-          ! if exceed the size of the current table
+          
+          !> if exceed the size of current array----------------------------------------
           IF(reduce_index_mpi==SGType2%num_nDI_index) THEN
-            ! may be a waste of space sometimes
-            SGType2%num_nDI_index=SGType2%num_nDI_index+Max(SGType2%num_nDI_index/3,500) 
-!            CALL allocate_array(nDI_index_temp,reduce_index_mpi)
-!            nDI_index_temp=nDI_index
-!            CALL allocate_array(nDI_index,SGType2%num_nDI_index)
-!            nDI_index(1:reduce_index_mpi)=nDI_index_temp
-!            deallocate(nDI_index_temp)
-            ! use "move_alloc" instead
+            !> for a banlance of new allocation and memory waste
+            SGType2%num_nDI_index=SGType2%num_nDI_index+Max(SGType2%num_nDI_index/5,500) 
+            !> nDI_index_temp -> nDI_index
+            ! nDI_index_temp is deallocated automatically
             CALL allocate_array(nDI_index_temp,SGType2%num_nDI_index)
             nDI_index_temp(1:reduce_index_mpi)=nDI_index
-            CALL move_alloc(nDI_index_temp,nDI_index) ! nDI_index_temp -> nDI_index
-            ! nDI_index_temp is deallocated automatically
-          ENDIF ! for reduce_index_mpi==SGType2%num_nDI_index
+            CALL move_alloc(nDI_index_temp,nDI_index) 
+          ENDIF ! for reduce_index_mpi==SGType2%num_nDI_index---------------------------
+          
         ENDIF ! for ii>MAX(reduce_index_mpi,1)
       ENDIF ! for nDI_ib0 > 0 .AND. nDI_ib0 <= Max_nDI_ib0
     ENDDO

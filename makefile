@@ -1,7 +1,7 @@
 #=================================================================================
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-#F90 = mpifort
+# F90 = mpifort
  F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
@@ -9,8 +9,13 @@
 ## MPI compiled with: gfortran or ifort
 MPICORE = gfortran
 
+## debug_make=0 to enable parallel make
+## debug_make=1 for fast debug make, no parallel
+## NOTE: it seems there are some issues for parallel sometime
+debug_make=1
+
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -1272,9 +1277,11 @@ doxy:
 $(HTML) : $(REFPATH)/%.html : sub_module/%.f90
 	@perl $(DOCGEN) $(DOCINDEX) $< $@
 
-#========================================================================================
-#========================================================================================
+#=======================================================================================
+#=======================================================================================
 #add dependence for parallelization
+
+ifeq ($(debug_make),0)
 
 #mod_MPI
 lib_dep_mod_MPI=$(OBJ)/sub_module_string.o $(OBJ)/sub_module_memory_NotPointer.o
@@ -1283,7 +1290,7 @@ $(lib_dep_mod_MPI):$(OBJ)/sub_module_MPI.o
 #mod_memory
 lib_dep_mod_memory=$(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_string.o       \
                    $(OBJ)/sub_module_memory_NotPointer.o                               \
-                   $(OBJ)/sub_module_memory_Pointer.o
+                   $(OBJ)/sub_module_memory_Pointer.o 
 $(lib_dep_mod_memory):$(OBJ)/sub_module_memory.o
 
 # mod_system
@@ -1333,8 +1340,16 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_main_Optimization.o  $(OBJ)/sub_Smolyak_DInd.o           \
                    $(OBJ)/sub_Smolyak_ba.o $(OBJ)/sub_module_cart.o                    \
                    $(OBJ)/sub_Smolyak_RDP.o $(OBJ)/sub_Smolyak_test.o                  \
-                   $(OBJ)/$(VIBMAIN).o
+                   $(OBJ)/$(VIBMAIN).o $(OBJ)/QMRPACK_lib.o $(OBJ)/EVR_Module.o
 $(lib_dep_mod_system):$(OBJ)/sub_module_system.o
+
+#mod_EVR 
+lib_dep_mod_EVR=$(OBJ)/EVR_driver.o
+$(lib_dep_mod_EVR)=$(OBJ)/EVR_Module.o
+
+#mod_CRP
+lib_dep_mod_CRP=$(OBJ)/versionEVR-T.o $(OBJ)/sub_module_analysis.o $(OBJ)/EVR_driver.o
+$(lib_dep_mod_CRP)=$(OBJ)/sub_CRP.o
 
 #mod_Coord_KEO    
 lib_dep_mod_Coord_KEO=$(OBJ)/sub_Auto_Basis.o $(OBJ)/sub_PrimOp_def.o                  \
@@ -1343,9 +1358,10 @@ lib_dep_mod_Coord_KEO=$(OBJ)/sub_Auto_Basis.o $(OBJ)/sub_PrimOp_def.o           
                       $(OBJ)/sub_main_nDfit.o
 $(lib_dep_mod_Coord_KEO):$(OBJ)/sub_module_Coord_KEO.o
 
-#mod_Constant  
+#mod_Constant
 lib_dep_mod_Constant=$(OBJ)/sub_analyse.o $(OBJ)/sub_freq.o $(OBJ)/sub_diago_H.o       \
-                     $(OBJ)/sub_module_analysis.o
+                     $(OBJ)/sub_module_analysis.o $(OBJ)/EVR_Module.o                  \
+                     $(OBJ)/sub_CRP.o
 $(lib_dep_mod_Constant):$(OBJ)/sub_module_constant.o
 
 #mod_NumParameters
@@ -1367,7 +1383,7 @@ lib_dep_mod_dnSVM=$(OBJ)/Lib_QTransfo.o $(OBJ)/sub_module_DInd.o                
                   $(OBJ)/RectilinearNM_Transfo.o $(OBJ)/LinearNMTransfo.o              \
                   $(OBJ)/RPHTransfo.o $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o         \
                   $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_module_SimpleOp.o             \
-                  $(OBJ)/sub_module_cart.o
+                  $(OBJ)/sub_module_cart.o $(OBJ)/sub_module_VecOFdnS.o
 $(lib_dep_mod_dnSVM):$(OBJ)/sub_module_dnSVM.o
 
 #mod_dnM
@@ -1410,7 +1426,7 @@ $(lib_dep_mod_nDFit):$(OBJ)/sub_module_nDfit.o
 #mod_Tnum 
 lib_dep_mod_Tnum=$(OBJ)/calc_f2_f1Q.o $(OBJ)/sub_module_paramQ.o $(OBJ)/sub_dnRho.o    \
                  $(OBJ)/sub_export_KEO.o $(OBJ)/sub_system.o                           \
-                 $(OBJ)/sub_module_Tana_NumKEO.o
+                 $(OBJ)/sub_module_Tana_NumKEO.o $(OBJ)/sub_module_paramQ.o
 $(lib_dep_mod_Tnum):$(OBJ)/sub_module_Tnum.o
 
 #mod_paramQ 
@@ -1532,7 +1548,8 @@ lib_dep_mod_Op=$(OBJ)/sub_HST_harm.o $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_ha
                $(OBJ)/sub_CRP.o $(OBJ)/sub_VibRot.o $(OBJ)/sub_analyse.o               \
                $(OBJ)/sub_Auto_Basis.o $(OBJ)/sub_intensity.o                          \
                $(OBJ)/sub_quadra_SparseBasis.o $(OBJ)/sub_module_SimulatedAnnealing.o  \
-               $(OBJ)/sub_module_BFGS.o $(OBJ)/ini_data.o $(OBJ)/sub_namelist.o 
+               $(OBJ)/sub_module_BFGS.o $(OBJ)/ini_data.o $(OBJ)/sub_namelist.o        \
+               $(OBJ)/QMRPACK_lib.o
 $(lib_dep_mod_Op):$(OBJ)/sub_module_Op.o
 
 #mod_psi_io 
@@ -1552,7 +1569,7 @@ lib_dep_mod_propa=$(OBJ)/sub_module_propa_march.o $(OBJ)/sub_module_propa_march_
                   $(OBJ)/sub_module_propa_march_SG4.o $(OBJ)/sub_module_propa_march.o  \
                   $(OBJ)/sub_TF_autocorr.o $(OBJ)/vib.o $(OBJ)/sub_module_Filter.o     \
                   $(OBJ)/sub_main_Optimization.o $(OBJ)/sub_module_Davidson.o          \
-                  $(OBJ)/sub_module_Arpack.o $(OBJ)/ini_data.o
+                  $(OBJ)/sub_module_Arpack.o $(OBJ)/ini_data.o 
 $(lib_dep_mod_propa):$(OBJ)/sub_module_propagation.o
 
 #mod_march_SG4
@@ -1675,7 +1692,29 @@ $(lib_dep_mod_ExactFact):$(OBJ)/sub_module_ExactFact.o
 #mod_psi_B_TO_G
 lib_dep_mod_psi_B_TO_G=$(OBJ)/sub_module_ana_psi.o
 $(lib_dep_mod_psi_B_TO_G):$(OBJ)/sub_module_psi_B_TO_G.o
-#========================================================================================
+
+#mod_CartesianTransfo
+lib_dep_mod_CartesianTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_CartesianTransfo):$(OBJ)/CartesianTransfo.o
+
+#mod_Tana_Sum_OpnD
+lib_dep_mod_Tana_Sum_OpnD=$(OBJ)/sub_module_Tana_VecSumOpnD.o
+$(lib_dep_mod_Tana_Sum_OpnD):$(OBJ)/sub_module_Tana_SumOpnD.o
+
+#mod_Davidson
+lib_dep_mod_Davidson=$(OBJ)/sub_Hmax.o
+$(lib_dep_mod_Davidson)=$(OBJ)/sub_module_Davidson.o
+
+#mod_param_RD
+lib_dep_mod_param_RD=$(OBJ)/sub_module_basis_set_alloc.o
+$(lib_dep_mod_param_RD)=$(OBJ)/sub_module_param_RD.o
+
+#mod_VecOFdnS
+lib_dep_mod_VecOFdnS=$(OBJ)/sub_module_MatOFdnS.o $(OBJ)/sub_module_dnSVM.o
+$(lib_dep_mod_VecOFdnS)=$(OBJ)/sub_module_VecOFdnS.o
+
+endif
+#=======================================================================================
 
 #=======================================================================================
 #=======================================================================================
@@ -1698,9 +1737,14 @@ test:
 ifeq ($(F90),mpifort) 
 	@echo "test for MPI > MPI_test.log"
   # Davidson test
-	@echo "test for Davidson, result in ./Working_tests/MPI_tests/6D_Davidson/result/"
-	@echo "> test for Davidson" > MPI_test.log
+  # 6D
+	@echo "test for Davidson 6D, result in ./Working_tests/MPI_tests/6D_Davidson/result/"
+	@echo "> test for Davidson 6D" > MPI_test.log
 	@cd ./Working_tests/MPI_tests/6D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
+  # 21D
+	@echo "test for Davidson 21D, result in ./Working_tests/MPI_tests/21D_Davidson/result/"
+	@echo "> test for Davidson 21D" >> MPI_test.log
+	@cd ./Working_tests/MPI_tests/21D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
   # Arpack test
   ifeq ($(ARPACK),1) 
 	  @echo "test for Arpack, result in ./Working_tests/MPI_tests/6D_arpack/result/"
@@ -1718,10 +1762,19 @@ endif
 ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))  
 	@echo "test for" $(F90)$(parall_name) ">" $(F90)$(parall_name)"_test.log"
   # Davidson test
-	@echo "test for Davidson, result in ./Working_tests/MPI_tests/6D_Davidson"$(parall_name)"/result/"
-	@echo "> test for Davidson" > $(F90)$(parall_name)_test.log
+  # 6D
+	@echo "test for Davidson 6D, result in ./Working_tests/MPI_tests/6D_Davidson"$(parall_name)"/result/"
+	@echo "> test for Davidson 6D" > $(F90)$(parall_name)_test.log
 	@cp -rf ./Working_tests/MPI_tests/6D_Davidson ./Working_tests/MPI_tests/6D_Davidson$(parall_name)
 	@cd ./Working_tests/MPI_tests/6D_Davidson$(parall_name); \
+	    sed -e "s/parall=MPI/parall=${parall}/g" shell_run  > shell_runp ; \
+	    mv shell_runp shell_run; chmod 777 *; \
+	    ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
+  # 21D
+	@echo "test for Davidson 21D, result in ./Working_tests/MPI_tests/21D_Davidson"$(parall_name)"/result/"
+	@echo "> test for Davidson 21D" >> $(F90)$(parall_name)_test.log
+	@cp -rf ./Working_tests/MPI_tests/21D_Davidson ./Working_tests/MPI_tests/21D_Davidson$(parall_name)
+	@cd ./Working_tests/MPI_tests/21D_Davidson$(parall_name); \
 	    sed -e "s/parall=MPI/parall=${parall}/g" shell_run  > shell_runp ; \
 	    mv shell_runp shell_run; chmod 777 *; \
 	    ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
@@ -1753,7 +1806,4 @@ cleantest:
 	@echo "clean test file"
 	@rm -rf ./Working_tests/MPI_tests/*/result
 	@echo "removed ./Working_tests/MPI_tests/*/result"
-# @rm -rf ./Working_tests/MPI_tests/6D_Davidson/result
-# @rm -rf ./Working_tests/MPI_tests/6D_arpack/result
-# @rm -rf ./Working_tests/MPI_tests/12D_propagation/result
 	@echo "clean test file done"

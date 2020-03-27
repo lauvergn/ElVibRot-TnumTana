@@ -5,7 +5,98 @@
 ----------------------------------------------------------------------------------------
 @ log
 
-> MPI_vm1.1 (branch: MPI_working)
+> MPI_Vm1.7
+  - bug in time count fixed
+  
+  - bug fix for clathrate in action, Schmidt_process_MPI and nb_diago 
+  
+  - bug fix for all_lower_states=f 
+
+  - remove allocation of mapping table on the non-root threads
+  
+  - NOTE: there is possible a bug in Arpack. check it later
+  
+  - add MPI derived type communication for param_Davidson
+
+> MPI_Vm1.6
+  - improve MPI for davidson, add function
+    distribute_psi_pack_MPI
+    
+  - add test for 21D in makefile
+  
+  - a bug corrected in distribute_psi_MPI
+  
+  - a bug in mod_CRP in the merge new version
+  
+  - the out-of-date subroutines will be cleaned in the next version 
+    once the code confirmed stable
+    
+> MPI_Vm1.5 (branch: MPI_working)
+  - improve the code structure, shorten code ...
+    distribute_psi_MPI
+    calculate_overlap_MPI
+    interface increase_martix 
+    calculate_overlap1D_MPI
+  
+> MPI_Vm1.4 (branch: MPI_working)
+  - Davidson improved, v1-4
+    added functions:
+      Overlap_S_matrix_MPI4*
+      Overlap_H_matrix_MPI4*
+      Set_symab_OF_psiBasisRep_MPI
+      norm_psi_MPI
+      Schmidt_process_MPI
+
+  - update:
+    mod_MPI
+    mod_MPI_Aid
+
+> MPI_Vm1.3 (branch: MPI_working)
+  - Davidson improved, v1-3
+    added functions: 
+      Overlap_psi_Hpsi_matrix_MPI
+      Overlap_psi_Hpsi_matrix_MPI2
+      Overlap_HS_matrix_MPI3
+      Overlap_psi_psi_MPI*
+      Overlap_psi_Hpsi_MPI*
+      Overlap_psi1_psi2_MPI
+      Overlap_psi1_psi2_MPI2
+      Overlap_psi1_psi2_MPI3*
+      Overlap_psipsi_MPI
+      Overlap_psipsi_MPI3*
+      MakeResidual_Davidson_MPI
+      MakeResidual_Davidson_MPI3*
+      MakeResidual_Davidson_j_MPI
+      MakeResidual_Davidson_j_MPI3*
+      
+    modified functions: 
+      sub_MakeHPsi_Davidson
+      sub_MakeH_Davidson
+      sub_NewVec_Davidson
+      sub_MakeS_Davidson
+      sub_propagation_Davidson
+      
+  - makefile update
+  
+  - MPI functions added for easier access of matrix with MPI
+    NOTE: do not use for extremely big matrix
+      MPI_Send_matrix
+      MPI_Recv_matrix
+      MPI_Reduce_sum_matrix
+      MPI_Bcast_matrix
+       * for real, integer, and complex type currently
+
+  - a better version of Davidson MPI, waiting for issue in Schmidt process 
+
+  - issue  
+    Schmidt process
+
+> MPI_Vm1.2 (branch: MPI_working)
+  - Improve Davidson
+    MPI for Overlap_psi1_psi2 in sub_MakeH_Davidson
+    psi overlap improvement
+
+> MPI_Vm1.1 (branch: MPI_working)
 
   - makefile parallelization, dependence added (first draft)
     current improvements: 
@@ -22,6 +113,7 @@
     get rid of varilables "namelist_from_file";
     remember to use vib.exe to ensure "rm namelist" to prevent 
     the reading of old namelist;
+    
   - add example for reading namelist from shell directly. 
     change 2147483647 to huge(0_4) 
   
@@ -100,7 +192,7 @@
   * local installed version 
     Warning: Fortran 2018 Feature Removed: DO 260 End Tag Shared at (1)
     
-----------------------------------------------------------------------------------------
+========================================================================================
 @ arxiv
 
 > styx configuration
@@ -119,3 +211,71 @@
     # MPI with gfortran
     export PATH=/usr/local/prod/openmpi/openmpi-3.1.2/ifort_64/bin:$PATH
     export LD_LIBRARY_PATH=/usr/local/prod/openmpi/openmpi-3.1.2/ifort_64/lib:$LD_LIBRARY_PATH
+    
+> env note
+  - mpifort 32 bit
+    @styx: use 32 bit MPI installed at default env
+    Davidson     : pass
+    Arpack       : pass
+    propagation  : pass
+    
+    @styx: use 32 bit MPI installed with gfortran910
+    intel18_init
+    gcc_910_init    
+    MPI install
+    ./configure F77=gfortran FC=gfortran --prefix=/u/achen/Software/openmpi_gfortran910
+    Davidson     : pass
+    Arpack       : error in dmout.f,confication 
+    propagation  : pass    
+
+  - mpifort 64 bit
+    @styx: use 64 bit MPI installed at default env (gfortran630)
+    Davidson     : pass
+    Arpack       : working
+
+    @styx: use 64 bit MPI installed with gfortran910    
+    intel18_init
+    gcc_910_init
+    MPI install
+    ./configure F77=gfortran FC=gfortran --prefix=/u/achen/Software/openmpi64_gfortran910 FFLAGS=-fdefault-integer-8 FCFLAGS=-fdefault-integer-8
+    **issue for new version compiler in styx
+
+  - gfortran 630 (styx default): 
+    Davidson    + openmp : pass
+    Arpack      + openmp : pass
+    propagation + openmp : pass
+          
+  - gfortran 910: 
+    styx: gcc_910_init
+    Davidson    + openmp : pass
+    Arpack      + openmp : error in dmout.f
+    propagation + openmp : pass
+
+  - ifort2011.5.220 (styx default)
+    out of data
+    
+  - ifort2018.3.222
+    styx: intel18_init
+    Davidson    + openmp : pass
+    Arpack      + openmp : error in dmout.f
+    propagation + openmp : pass
+    
+  - pgf90 17.10 
+    pgi170_init
+    Davidson             : pass
+    Arpack               : error in dmout.f
+    propagation          : pass
+    
+  = examples with old namelist
+  - gfortran             : pass
+  - ifort                :  
+  - pgf90                :
+  
+> makefile parallelization 
+  num_cores=2: 1.8; 
+  num_cores=3: 2.3; 
+  num_cores=4: 2.7;
+  num_cores=5: 2.8;
+  suggest to run with: make -j 3 
+  
+> 

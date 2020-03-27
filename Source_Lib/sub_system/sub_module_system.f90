@@ -237,7 +237,7 @@ MODULE mod_system
 
         integer :: tab_time(8) = 0
         real (kind=Rkind) :: t_real
-        integer       :: count,count_work,freq
+        integer       :: count,count_work,freq,count_max
         real          :: t_cpu
         integer, save :: count_old,count_ini
         real, save    :: t_cpu_old,t_cpu_ini
@@ -251,7 +251,7 @@ MODULE mod_system
  21     format('     Time and date in ',a,' : ',i2,'h:',                &
                i2,'m:',i2,'.',i3,'s, the ',i2,'/',i2,'/',i4)
 
-        CALL system_clock(count=count,count_rate=freq)
+        CALL system_clock(count=count,count_rate=freq,count_max=count_max)
         call cpu_time(t_cpu)
 
         IF (begin) THEN
@@ -267,6 +267,7 @@ MODULE mod_system
 !       cpu time in the subroutine: "name"
 
         count_work = count-count_old
+        count_work=merge(count-count_old,count-count_old+count_max,count>count_old)
         seconds = count_work/freq
 
         minutes = seconds/60

@@ -50,6 +50,7 @@
       USE mod_FullPropa
       USE mod_Davidson
       USE mod_MPI
+      USE mod_MPI_Aid
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
