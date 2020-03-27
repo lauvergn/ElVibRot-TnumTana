@@ -27,8 +27,8 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_module_DInd
-use mod_system, only: out_unitp
-use mod_dnSVM, only: type_intvec, write_intvec
+use mod_system
+use mod_dnSVM, only: assignment(=),type_intvec, write_intvec
 IMPLICIT NONE
 
 PRIVATE
@@ -51,8 +51,8 @@ END TYPE TypeTab_DInd
 INTERFACE assignment (=)
   MODULE PROCEDURE TypeDInd2TOTypeDInd1,nDInd2TOnDInd1
 END INTERFACE
-PUBLIC :: assignment (=)
 
+PUBLIC :: assignment (=)
 PUBLIC :: TypeDInd, alloc_TypeDInd, dealloc_TypeDInd, Write_TypeDInd
 PUBLIC :: TypeTab_DInd, Write_Tab_nDInd,dealloc_nDInd,nDInd2TOnDInd1
 PUBLIC :: Set_nDInd_01order,Set_nDInd_10order, Set_nDInd_01order_L,Set_nDInd_10order_L

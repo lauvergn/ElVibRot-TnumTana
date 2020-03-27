@@ -42,7 +42,7 @@
 !===========================================================================
    MODULE mod_PrimOp_def
    USE mod_system
-   USE mod_OTF_def, only: param_OTF
+   USE mod_OTF_def, only: assignment(=),param_OTF
    use mod_nDFit,   only: param_ndfit
    IMPLICIT NONE
      PRIVATE
@@ -95,7 +95,7 @@
    CONTAINS
 
       SUBROUTINE write_param_PES(para_PES)
-      USE mod_OTF_def, only: write_OTF
+      USE mod_OTF_def, only: assignment(=),write_OTF
       USE mod_nDFit,   only: write_ndfit
 
       TYPE (param_PES) :: para_PES
@@ -167,8 +167,8 @@
       END SUBROUTINE write_param_PES
 
       SUBROUTINE Sub_PES_FromTnum_TO_PES(para_PES,para_PES_FromTnum)
-      USE mod_OTF_def,   only: init_G03_OTF
-      USE mod_Coord_KEO, only: param_PES_FromTnum
+      USE mod_OTF_def,   only: assignment(=),init_G03_OTF
+      USE mod_Coord_KEO, only: assignment(=),param_PES_FromTnum
       IMPLICIT NONE
 
       TYPE (param_PES)          :: para_PES

@@ -949,7 +949,6 @@
       USE mod_Auto_Basis
       USE mod_basis_BtoG_GtoB_SGType4
       USE mod_module_DInd
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------

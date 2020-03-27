@@ -28,16 +28,14 @@
 !===========================================================================
 
       MODULE mod_nDindex
-      use mod_system, only: rkind, one, zero, out_unitp, alloc_nparray, alloc_array,   &
-                            flush_perso, dealloc_nparray, inferior_tab, dealloc_array, &
-                            write_error_not_null, error_memo_allo, write_error_null,   &
-                            sub_test_tab_ub, sub_test_tab_lb, name_longlen
-      use mod_module_DInd, only: typedind, set_ndind_01order, set_ndind_10order,       &
+      use mod_system
+      use mod_module_DInd, only: assignment (=), typedind, set_ndind_01order,          &
+                                 set_ndind_10order,       &
                                  set_ndind_01order_l, set_ndind_10order_l,             &
                                  dealloc_ndind, ndind2tondind1, write_tab_ndind
-      use mod_dnSVM, only: type_dnvec, type_intvec, alloc_array, alloc_dnsvm,          &
+      use mod_dnSVM, only: assignment (=), type_dnvec, type_intvec, alloc_array,       &
                            sub_intvec1_to_intvec2, dealloc_dnsvm, dealloc_array,       &
-                           sub_dnvec1_to_dnvec2
+                           alloc_dnsvm, sub_dnvec1_to_dnvec2
       IMPLICIT NONE
 
         PRIVATE
@@ -118,7 +116,7 @@
         END INTERFACE
 
         PUBLIC :: Type_nDindex,alloc_nDindex,dealloc_nDindex,Write_nDindex
-        PUBLIC :: nDindex2TOnDindex1,nDindex2TOnDindex1_InitOnly
+        PUBLIC :: assignment (=),nDindex2TOnDindex1,nDindex2TOnDindex1_InitOnly
 
         PUBLIC :: alloc_array,dealloc_array,alloc_NParray,dealloc_NParray
         PUBLIC :: init_nDindexPrim,init_nDindex_typeTAB

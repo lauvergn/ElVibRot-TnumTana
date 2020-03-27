@@ -67,11 +67,11 @@
           MODULE PROCEDURE L_TO_n_para2_TO_L_TO_n_para1
         END INTERFACE
 
-        PUBLIC Basis_L_TO_n, assignment (=), init_Basis_L_TO_n,  &
-               Write_Basis_L_TO_n, Set_Basis_L_TO_n,             &
-               alloc_Basis_L_TO_n, dealloc_Basis_L_TO_n,         &
-               Get_n_FROM_Basis_L_TO_n, Get_L_FROM_Basis_L_TO_n, &
-               check_Basis_L_TO_n
+        PUBLIC :: Basis_L_TO_n, assignment (=), init_Basis_L_TO_n,      &
+                  Write_Basis_L_TO_n, Set_Basis_L_TO_n,                 &
+                  alloc_Basis_L_TO_n, dealloc_Basis_L_TO_n,             &
+                  Get_n_FROM_Basis_L_TO_n, Get_L_FROM_Basis_L_TO_n,     &
+                  check_Basis_L_TO_n
 
       CONTAINS
 
@@ -677,6 +677,7 @@
       L_TO_n_para1%max_n       = L_TO_n_para2%max_n
 
       IF (allocated(L_TO_n_para2%tab_L_TO_n)) L_TO_n_para1%tab_L_TO_n  = L_TO_n_para2%tab_L_TO_n
+      IF (allocated(L_TO_n_para2%tab_n_TO_L)) L_TO_n_para1%tab_n_TO_L  = L_TO_n_para2%tab_n_TO_L
 
 !---------------------------------------------------------------------
       IF (debug) THEN

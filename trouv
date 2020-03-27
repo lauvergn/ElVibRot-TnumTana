@@ -1,14 +1,15 @@
-fich='exa*/*.f exa*/*/*.f'
 
+list1=$1
 fich='Source*/*f90 Source*/*/*f90 Source*/*/*/*f90 Source*/*f Source*/*/*f Source*/*/*/*f sub*/*f90 sub*/*f '
 
-list1=' ifix idint float sngl dble aint dint anint dnint nint idnint iabs dabs cabs amod dmod isign dsign idim ddim max0 amax1 dmax1 amax0 max1  min0 amin1 dmin1 min1 amin0 '
-#list3=' imag conjg'
- list2=' dsqrt csqrt dexp cexp alog clog dlog dsin csin dcos ccos dtan dasin dacos datan catan dsinh dcosh dtanh '
-list1=' 0\.d0 1\.d0 2\.d0 0\.5d0'
-list1=' kind\ =\ 8 '
+#fich='exa*/*.f exa*/*/*.f'
 
- list1=$1
+#list1=' ifix idint float sngl dble aint dint anint dnint nint idnint iabs dabs cabs amod dmod isign dsign idim ddim max0 amax1 dmax1 amax0 max1  min0 amin1 dmin1 min1 amin0 '
+#list3=' imag conjg'
+#list2=' dsqrt csqrt dexp cexp alog clog dlog dsin csin dcos ccos dtan dasin dacos datan catan dsinh dcosh dtanh '
+#list1=' 0\.d0 1\.d0 2\.d0 0\.5d0'
+#list1=' kind\ =\ 8 '
+
 
 for i in $list1
 do

@@ -56,8 +56,8 @@
       SUBROUTINE read_inactive(Basis2n,ComOp,mole)
       USE mod_system
       USE mod_nDindex
-      USE mod_Constant, only : REAL_WU, convRWU_TO_R
-      use mod_Coord_KEO, only: CoordType, alloc_array, dealloc_array, &
+      USE mod_Constant,  only: assignment(=),REAL_WU, convRWU_TO_R
+      use mod_Coord_KEO, only: assignment(=),CoordType, alloc_array, dealloc_array, &
                                set_rphtransfo, tnum
       USE mod_basis
       USE mod_Op
@@ -287,7 +287,7 @@
 
       USE mod_system
       USE mod_nDindex
-      USE mod_Constant, only : REAL_WU,convRWU_TO_R
+      USE mod_Constant, only : assignment(=),REAL_WU,convRWU_TO_R
       USE mod_PrimOp
       USE mod_Op
       USE mod_basis

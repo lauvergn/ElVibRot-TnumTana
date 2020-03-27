@@ -43,7 +43,7 @@
 
       MODULE mod_analysis
       USE mod_system
-      use mod_Constant, only: real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit, get_val_FROM_RWU
+      use mod_Constant, only: assignment(=),real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit, get_val_FROM_RWU
       USE mod_type_ana_psi
       USE mod_CRP
       IMPLICIT NONE

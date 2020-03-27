@@ -121,7 +121,8 @@ module mod_Tana_Sum_OpnD
    PUBLIC :: Simplify_Sum_OpnD, Transpose_Mat_OF_sum_opnd
 
    PUBLIC :: alloc_array, dealloc_array, alloc_NParray, dealloc_NParray
-   PUBLIC :: copy_F1_into_F2, get_F1_plus_F2_to_F_sum_nd, get_F1_times_F2_to_F_nd, operator (*), assignment (=)
+   PUBLIC :: copy_F1_into_F2, get_F1_plus_F2_to_F_sum_nd, get_F1_times_F2_to_F_nd
+   PUBLIC :: operator (*), assignment (=)
    PUBLIC :: Der1_OF_OpnD_TO_Sum_OpnD, Der1_OF_Sum_OpnD_TO_Sum_OpnD
    PUBLIC :: Expand_Sum_OpnD_TO_Sum_OpnD, F1_sum_nd_PLUS_TO_Fres_sum_nd
    PUBLIC :: F1_nd_MINUS_TO_Fres_sum_nd, F1_sum_nd_MINUS_TO_Fres_sum_nd

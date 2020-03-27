@@ -57,6 +57,7 @@ INTERFACE assignment(=)
   module procedure TypeRVec2_TO_TypeRVec1,tabR2_TO_TypeRVec1
 END INTERFACE
 
+PUBLIC  assignment(=)
 PUBLIC  TypeRVec, alloc_TypeRVec, dealloc_TypeRVec, Write_TypeRVec, &
         TypeRVec2_TO_TypeRVec1, tabR2_TO_TypeRVec1,                 &
         sub_ReadRVec, sub_WriteRVec

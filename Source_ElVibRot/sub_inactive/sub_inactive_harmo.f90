@@ -56,7 +56,7 @@
                               wherm,Vinact,ScalOp)
       USE mod_system
       USE mod_nDindex
-      use mod_PrimOp, only: param_pes, param_d0matop
+      use mod_PrimOp, only: assignment(=),param_pes, param_d0matop
       USE mod_basis
       IMPLICIT NONE
 

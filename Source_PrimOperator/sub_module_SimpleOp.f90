@@ -42,7 +42,7 @@
 !===========================================================================
   MODULE mod_SimpleOp
    use mod_system
-   use mod_dnSVM, only: type_dns, alloc_array, alloc_dns, dealloc_array,   &
+   use mod_dnSVM, only: assignment(=),type_dns, alloc_array, alloc_dns, dealloc_array,   &
                         write_matofdns, sub_weightder_dns
    IMPLICIT NONE
 
@@ -110,16 +110,16 @@
           MODULE PROCEDURE Init_d0MatOp_with_var,Init_d0MatOp_with_param_TypeOp
        END INTERFACE
 
-   PUBLIC param_TypeOp, param_d0MatOp, param_dnMatOp, assignment (=)
-   PUBLIC dealloc_TypeOp, dealloc_d0MatOp, dealloc_Tab_OF_d0MatOp, dealloc_Tab_OF_dnMatOp
-   PUBLIC Init_TypeOp, Init_d0MatOp, Init_Tab_OF_d0MatOp, Init_Tab_OF_dnMatOp, Get_iOp_FROM_n_Op
-   PUBLIC Write_TypeOp,Write_d0MatOp,Write_dnMatOp
-   PUBLIC Set_ZERO_TO_Tab_OF_dnMatOp, Write_Tab_OF_dnMatOp, Write_Tab_OF_d0MatOp
-   PUBLIC derive_termQact_TO_derive_termQdyn
-   PUBLIC Get_Scal_FROM_Tab_OF_dnMatOp, Get_Grad_FROM_Tab_OF_dnMatOp, &
-          Get_Hess_FROM_Tab_OF_dnMatOp
-   PUBLIC d0MatOp_TO_dnMatOp, d0MatOp_wADDTO_dnMatOp, dnMatOp2Der_TO_dnMatOp1Der, &
-          WeightDer_dnMatOp
+   PUBLIC :: param_TypeOp, param_d0MatOp, param_dnMatOp, assignment (=)
+   PUBLIC :: dealloc_TypeOp, dealloc_d0MatOp, dealloc_Tab_OF_d0MatOp, dealloc_Tab_OF_dnMatOp
+   PUBLIC :: Init_TypeOp, Init_d0MatOp, Init_Tab_OF_d0MatOp, Init_Tab_OF_dnMatOp, Get_iOp_FROM_n_Op
+   PUBLIC :: Write_TypeOp,Write_d0MatOp,Write_dnMatOp
+   PUBLIC :: Set_ZERO_TO_Tab_OF_dnMatOp, Write_Tab_OF_dnMatOp, Write_Tab_OF_d0MatOp
+   PUBLIC :: derive_termQact_TO_derive_termQdyn
+   PUBLIC :: Get_Scal_FROM_Tab_OF_dnMatOp, Get_Grad_FROM_Tab_OF_dnMatOp, &
+             Get_Hess_FROM_Tab_OF_dnMatOp
+   PUBLIC :: d0MatOp_TO_dnMatOp, d0MatOp_wADDTO_dnMatOp, dnMatOp2Der_TO_dnMatOp1Der, &
+             WeightDer_dnMatOp
 
    CONTAINS
 

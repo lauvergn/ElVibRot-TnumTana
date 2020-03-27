@@ -42,7 +42,8 @@
 !===========================================================================
       MODULE mod_propa
       USE mod_system
-      USE mod_Constant,      ONLY : get_conv_au_to_unit, real_wu, convrwu_to_r
+      USE mod_Constant,      ONLY : assignment(=),get_conv_au_to_unit,  &
+                          real_wu, convrwu_to_r,convRWU_WorkingUnit_TO_R
       USE mod_field,         ONLY : param_field
       USE mod_psi_set_alloc, ONLY : param_psi
       USE mod_param_WP0,     ONLY : param_WP0
@@ -350,7 +351,6 @@ PUBLIC :: MPI_Bcast_param_Davidson
       SUBROUTINE SaveWP_restart(T,WP,file_restart)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_file
       IMPLICIT NONE
 
 
@@ -398,7 +398,6 @@ PUBLIC :: MPI_Bcast_param_Davidson
       SUBROUTINE ReadWP_restart(T,WP,file_restart)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_file
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -899,7 +898,6 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       USE mod_system
       USE mod_psi_set_alloc, ONLY : alloc_array
       USE mod_param_WP0,     ONLY : alloc_param_WP0
-      USE mod_Constant
       USE mod_MPI
       IMPLICIT NONE
 
