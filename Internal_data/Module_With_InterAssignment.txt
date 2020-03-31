@@ -1,0 +1,50 @@
+module with interface assigment (=):
+=> made the "assignment(=)," PUBLIC
+Rq: NP for "not private"
+Rq: mod_system, mod_dnSVM, mod_Constant, mod_Coord_KEO, mod_PrimOp  must be check !!!
+
+                                    Check USE	in 
+#EVR
+mod_basis_BtoG_GtoB_SGType4				
+mod_basis_RCVec_SGType4					
+mod_param_RD							all
+mod_Basis_Grid_Param					all
+mod_Basis_L_TO_n						all
+mod_param_SGType2						all
+mod_RotBasis_Param						all
+mod_OpGrid             NP
+mod_ReadOp             NP				all
+mod_Smolyak_DInd
+mod_Smolyak_RDP        NP
+mod_psi_set_alloc      NP
+mod_psi_SimpleOp       NP				all
+mod_type_ana_psi       NP				all
+
+
+
+#lib
+mod_dnM									all			mod_dnSVM
+mod_dnV									OK			mod_dnSVM
+mod_dnSVM								OK
+
+mod_module_DInd							OK
+mod_nDindex								OK
+
+mod_file								all			mod_system
+mod_FracInteger							all			mod_system
+mod_system								all
+
+#PhysConst
+mod_RealWithUnit						all			mod_Constant
+mod_Constant							OK
+
+#Tnum+PrimOp
+mod_OTF_def								OK			mod_PrimOp
+mod_SimpleOp							OK			mod_PrimOp
+mod_PrimOp								OK
+
+mod_Tana_Op1D							all
+mod_Tana_OpEl							OK
+mod_Tana_OpnD							OK
+mod_Tana_Sum_OpnD						OK			mod_Coord_KEO
+mod_Coord_KEO							OK
