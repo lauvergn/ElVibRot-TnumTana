@@ -1,8 +1,8 @@
 #=================================================================================
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-# F90 = mpifort
- F90 = gfortran
+ F90 = mpifort
+# F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
 
@@ -28,7 +28,7 @@ endif
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 0
+ARPACK = 1
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -1345,17 +1345,18 @@ $(lib_dep_mod_system):$(OBJ)/sub_module_system.o
 
 #mod_EVR 
 lib_dep_mod_EVR=$(OBJ)/EVR_driver.o
-$(lib_dep_mod_EVR)=$(OBJ)/EVR_Module.o
+$(lib_dep_mod_EVR):$(OBJ)/EVR_Module.o
 
 #mod_CRP
-lib_dep_mod_CRP=$(OBJ)/versionEVR-T.o $(OBJ)/sub_module_analysis.o $(OBJ)/EVR_driver.o
-$(lib_dep_mod_CRP)=$(OBJ)/sub_CRP.o
+lib_dep_mod_CRP=$(OBJ)/versionEVR-T.o $(OBJ)/sub_module_analysis.o $(OBJ)/EVR_driver.o \
+                $(OBJ)/QMRPACK_lib.o
+$(lib_dep_mod_CRP):$(OBJ)/sub_CRP.o
 
-#mod_Coord_KEO    
+#mod_Coord_KEO
 lib_dep_mod_Coord_KEO=$(OBJ)/sub_Auto_Basis.o $(OBJ)/sub_PrimOp_def.o                  \
                       $(OBJ)/sub_module_basis.o $(OBJ)/sub_quadra_SparseBasis2n.o      \
                       $(OBJ)/cart.o $(OBJ)/nb_harm.o $(OBJ)/sub_main_Optimization.o    \
-                      $(OBJ)/sub_main_nDfit.o
+                      $(OBJ)/sub_main_nDfit.o $(OBJ)/EVR_Module.o
 $(lib_dep_mod_Coord_KEO):$(OBJ)/sub_module_Coord_KEO.o
 
 #mod_Constant
@@ -1383,7 +1384,7 @@ lib_dep_mod_dnSVM=$(OBJ)/Lib_QTransfo.o $(OBJ)/sub_module_DInd.o                
                   $(OBJ)/RectilinearNM_Transfo.o $(OBJ)/LinearNMTransfo.o              \
                   $(OBJ)/RPHTransfo.o $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o         \
                   $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_module_SimpleOp.o             \
-                  $(OBJ)/sub_module_cart.o $(OBJ)/sub_module_VecOFdnS.o
+                  $(OBJ)/sub_module_cart.o
 $(lib_dep_mod_dnSVM):$(OBJ)/sub_module_dnSVM.o
 
 #mod_dnM
@@ -1522,8 +1523,9 @@ $(lib_dep_mod_psi_set_alloc):$(OBJ)/sub_module_psi_set_alloc.o
 lib_dep_mod_ana_psi=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_module_psi_Op.o
 $(lib_dep_mod_ana_psi):$(OBJ)/sub_module_ana_psi.o
 
-#mod_psi_Op 
-lib_dep_mod_psi_Op=$(OBJ)/sub_psi0.o $(OBJ)/sub_module_psi_io.o $(OBJ)/sub_OpPsi_SG4.o
+#mod_psi_Op
+lib_dep_mod_psi_Op=$(OBJ)/sub_psi0.o $(OBJ)/sub_module_psi_io.o $(OBJ)/sub_OpPsi_SG4.o \
+                   $(OBJ)/EVR_Module.o
 $(lib_dep_mod_psi_Op):$(OBJ)/sub_module_psi_Op.o
 
 #mod_OpGrid
@@ -1564,12 +1566,12 @@ $(lib_dep_mod_MatOp):$(OBJ)/sub_MatOp.o
 lib_dep_mod_OpPsi=$(OBJ)/sub_MatOp.o
 $(lib_dep_mod_OpPsi):$(OBJ)/sub_OpPsi.o
 
-#mod_propa     
+#mod_propa
 lib_dep_mod_propa=$(OBJ)/sub_module_propa_march.o $(OBJ)/sub_module_propa_march_SG4.o  \
                   $(OBJ)/sub_module_propa_march_SG4.o $(OBJ)/sub_module_propa_march.o  \
                   $(OBJ)/sub_TF_autocorr.o $(OBJ)/vib.o $(OBJ)/sub_module_Filter.o     \
                   $(OBJ)/sub_main_Optimization.o $(OBJ)/sub_module_Davidson.o          \
-                  $(OBJ)/sub_module_Arpack.o $(OBJ)/ini_data.o 
+                  $(OBJ)/sub_module_Arpack.o $(OBJ)/ini_data.o $(OBJ)/EVR_Module.o
 $(lib_dep_mod_propa):$(OBJ)/sub_module_propagation.o
 
 #mod_march_SG4
@@ -1581,7 +1583,7 @@ lib_dep_mod_march=$(OBJ)/sub_propagation.o
 $(lib_dep_mod_march):$(OBJ)/sub_module_propa_march.o
 
 #mod_FullPropa
-lib_dep_mod_FullPropa=$(OBJ)/sub_control.o $(OBJ)/sub_Hmax.o
+lib_dep_mod_FullPropa=$(OBJ)/sub_control.o $(OBJ)/sub_Hmax.o $(OBJ)/EVR_driver.o
 $(lib_dep_mod_FullPropa):$(OBJ)/sub_propagation.o
 
 #mod_Smolyak_DInd 
@@ -1637,10 +1639,10 @@ $(lib_dep_mod_dnRho):$(OBJ)/sub_dnRho.o
 lib_dep_mod_Tana_write_mctdh=$(OBJ)/sub_module_Tana_keo.o
 $(lib_dep_mod_Tana_write_mctdh):$(OBJ)/sub_module_Tana_Export_KEO.o
 
-#mod_PrimOp   
+#mod_PrimOp
 lib_dep_mod_PrimOp=$(OBJ)/sub_inactive_harmo.o $(OBJ)/sub_module_SetOp.o               \
                    $(OBJ)/sub_paraRPH.o $(OBJ)/nb_harm.o $(OBJ)/sub_main_Optimization.o\
-                   $(OBJ)/sub_main_nDfit.o 
+                   $(OBJ)/sub_main_nDfit.o $(OBJ)/EVR_Module.o
 $(lib_dep_mod_PrimOp):$(OBJ)/sub_PrimOp.o
 
 #mod_SimulatedAnnealing
@@ -1652,7 +1654,7 @@ lib_dep_mod_FullPropa=$(OBJ)/vib.o
 $(lib_dep_mod_FullPropa):$(OBJ)/sub_propagation.o
 
 #mod_FullControl
-lib_dep_mod_FullControl=$(OBJ)/vib.o
+lib_dep_mod_FullControl=$(OBJ)/vib.o $(OBJ)/EVR_driver.o
 $(lib_dep_mod_FullControl):$(OBJ)/sub_control.o
 
 #mod_Smolyak_ba
@@ -1703,15 +1705,19 @@ $(lib_dep_mod_Tana_Sum_OpnD):$(OBJ)/sub_module_Tana_SumOpnD.o
 
 #mod_Davidson
 lib_dep_mod_Davidson=$(OBJ)/sub_Hmax.o
-$(lib_dep_mod_Davidson)=$(OBJ)/sub_module_Davidson.o
+$(lib_dep_mod_Davidson):$(OBJ)/sub_module_Davidson.o
 
 #mod_param_RD
 lib_dep_mod_param_RD=$(OBJ)/sub_module_basis_set_alloc.o
-$(lib_dep_mod_param_RD)=$(OBJ)/sub_module_param_RD.o
+$(lib_dep_mod_param_RD):$(OBJ)/sub_module_param_RD.o
 
 #mod_VecOFdnS
 lib_dep_mod_VecOFdnS=$(OBJ)/sub_module_MatOFdnS.o $(OBJ)/sub_module_dnSVM.o
-$(lib_dep_mod_VecOFdnS)=$(OBJ)/sub_module_VecOFdnS.o
+$(lib_dep_mod_VecOFdnS):$(OBJ)/sub_module_VecOFdnS.o
+
+#mod_analysis
+lib_dep_mod_analysis=$(OBJ)/sub_analyse.o $(OBJ)/sub_NLO.o
+$(lib_dep_mod_analysis):$(OBJ)/sub_module_analysis.o
 
 endif
 #=======================================================================================
