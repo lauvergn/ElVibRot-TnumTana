@@ -5,7 +5,12 @@
 ----------------------------------------------------------------------------------------
 @ log
 
-> MPI_Vm1.7
+> MPI_Vm1.8
+  - bug in makefile fixed
+  
+  - action with MPI modified
+
+> MPI_Vm1.7 (merged with master 03/27/2020)
   - bug in time count fixed
   
   - bug fix for clathrate in action, Schmidt_process_MPI and nb_diago 
