@@ -45,19 +45,18 @@ USE mod_system
 use mod_nDindex
 IMPLICIT NONE
 
-  !PRIVATE
+  PRIVATE
 
   TYPE param_RD
-    logical                     :: RD_analysis    = .FALSE.
-    integer                     :: basis_index    = 0  ! index of the basis set
-    integer                     :: nb             = 0  ! size of the basis set
+    logical                        :: RD_analysis    = .FALSE.
+    integer                        :: basis_index    = 0  ! index of the basis set
+    integer                        :: nb             = 0  ! size of the basis set
 
-    TYPE (Type_nDindex)         :: nDindex_ComplBasis  ! multidimensional index for the complementary basis set
+    TYPE (Type_nDindex)            :: nDindex_ComplBasis  ! multidimensional index for the complementary basis set
                                                         ! (without the basis set with this basis_index)
-    integer                     :: nbb_ComplBasis = 0
+    integer                        :: nbb_ComplBasis = 0
 
-    integer,        allocatable :: tab_OF_iBComplBasis_AND_ib_TO_iB(:,:)   ! size (nbb_ComplBasis,nb)
-
+    integer,           allocatable :: tab_OF_iBComplBasis_AND_ib_TO_iB(:,:)   ! size (nbb_ComplBasis,nb)
     real (kind=rkind), allocatable :: cbb(:,:)         ! coefficient of the contracted basis set
 
 
@@ -67,6 +66,9 @@ IMPLICIT NONE
 INTERFACE assignment (=)
   MODULE PROCEDURE RD2_TO_RD1,tab_RD2_TO_RD1
 END INTERFACE
+
+PUBLIC :: assignment (=),RD2_TO_RD1,tab_RD2_TO_RD1
+PUBLIC :: param_RD,dealloc_RD,init_RD,calc_RD,dealloc_tab_RD
 
 CONTAINS
 
@@ -115,11 +117,14 @@ character (len=*), parameter :: name_sub='RD2_TO_RD1'
       CALL alloc_NParray(para_RD1%tab_OF_iBComplBasis_AND_ib_TO_iB,     &
                    shape(para_RD2%tab_OF_iBComplBasis_AND_ib_TO_iB),    &
                         'para_RD1%tab_OF_iBComplBasis_AND_ib_TO_iB',name_sub)
+      para_RD1%tab_OF_iBComplBasis_AND_ib_TO_iB(:,:) =                  &
+                               para_RD2%tab_OF_iBComplBasis_AND_ib_TO_iB
     END IF
 
     IF (allocated(para_RD2%cbb)) THEN
       CALL alloc_NParray(para_RD1%cbb,shape(para_RD2%cbb),              &
                         'para_RD1%cbb',name_sub)
+      para_RD1%cbb(:,:) = para_RD2%cbb
     END IF
 
 END SUBROUTINE RD2_TO_RD1

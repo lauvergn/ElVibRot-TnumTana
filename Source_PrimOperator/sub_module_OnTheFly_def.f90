@@ -74,7 +74,7 @@
           MODULE PROCEDURE OTF2_TO_OTF1
       END INTERFACE
 
-      PUBLIC param_OTF,assignment (=), write_OTF, init_G03_OTF
+      PUBLIC :: param_OTF,assignment (=), write_OTF, init_G03_OTF
 
       CONTAINS
 

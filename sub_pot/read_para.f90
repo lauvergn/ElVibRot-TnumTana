@@ -33,7 +33,6 @@
 !================================================================
       SUBROUTINE read_para0d(F,nn,max_points,nom1,exist)
       USE mod_system
-      USE mod_file
       IMPLICIT NONE
 
        integer :: nn
@@ -79,7 +78,6 @@
 !================================================================
       SUBROUTINE read_para1d(F,nn,max_points,nb_fit,nom1,exist)
       USE mod_system
-      USE mod_file
       IMPLICIT NONE
 
        integer :: nn,nb_fit
@@ -128,7 +126,6 @@
 !================================================================
       SUBROUTINE read_para2d(F,nn,nb_fit,max_fit,max_points,nom1,exist)
       USE mod_system
-      USE mod_file
       IMPLICIT NONE
 
        integer :: max_points,max_fit,nb_fit
@@ -191,7 +188,6 @@
       SUBROUTINE read_para3d(F,n,ndim,nb_fit,max_fit,max_points,        &
                               nom1,exist)
       USE mod_system
-      USE mod_file
       IMPLICIT NONE
 
        integer :: max_points,max_fit,ndim
@@ -251,7 +247,6 @@
 !================================================================
       SUBROUTINE read_para4d(F,n,ndim,nt,max_points,nom1,exist)
       USE mod_system
-      USE mod_file
       IMPLICIT NONE
 
        integer :: max_points,ndim,nt

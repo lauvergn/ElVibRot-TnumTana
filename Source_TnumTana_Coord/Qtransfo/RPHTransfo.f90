@@ -2081,11 +2081,8 @@ END SUBROUTINE Read_RPHpara2
 END MODULE mod_RPHTransfo
 
 MODULE CurviRPH_mod
-use mod_system, only: rkind, zero, in_unitp, out_unitp, flush_perso, Name_len,   &
-                      write_mat, write_vecmat, read_mat, write_vec, int_to_char, &
-                      alloc_NParray, dealloc_NParray
+use mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
-
 implicit NONE
 
   PRIVATE

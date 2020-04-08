@@ -42,7 +42,7 @@
 !===========================================================================
 MODULE mod_Smolyak_ba
 use mod_Smolyak_DInd, only: l_to_n
-use mod_system, only: rkind, onetenth, zero, one
+use mod_system
 IMPLICIT NONE
 
 integer :: Bmin=1

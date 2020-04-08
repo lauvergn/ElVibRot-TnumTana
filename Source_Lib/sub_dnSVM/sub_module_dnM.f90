@@ -21,14 +21,10 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_dnM
-      use mod_system, only: rkind, alloc_array, zero, out_unitp, &
-                            dealloc_array, write_error_not_null, &
-                            sub_test_tab_ub, sub_test_tab_lb,    &
-                            error_memo_allo, write_error_null,   &
-                            czero, write_vecmat, one, two
+      use mod_system
       use mod_dnS, only: alloc_array, dealloc_array, type_dns,   &
                          check_alloc_dns, alloc_dns, write_dns
-      use mod_dnV, only: alloc_array, dealloc_array, type_dnvec, &
+      use mod_dnV, only: assignment(=), alloc_array, dealloc_array, type_dnvec, &
                          check_alloc_dnvec, alloc_dnvec
       IMPLICIT NONE
 

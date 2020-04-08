@@ -42,9 +42,10 @@
 !===========================================================================
 MODULE mod_param_SGType2
 USE mod_system
-use mod_nDindex, only: type_ndindex, dealloc_ndindex, dealloc_nparray,  &
+use mod_nDindex, only: assignment (=),type_ndindex, dealloc_ndindex,    &
                        alloc_nparray, init_ndval_of_ndindex,            &
-                       add_one_to_ndindex, calc_ndi, calc_ndindex
+                       add_one_to_ndindex, calc_ndi, calc_ndindex,      &
+                       dealloc_nparray
 USE mod_MPI
 USE mod_MPI_Aid
 IMPLICIT NONE
@@ -114,10 +115,10 @@ INTERFACE assignment (=)
   MODULE PROCEDURE SGType2_2TOSGType2_1
 END INTERFACE
 
- PUBLIC param_SGType2, assignment (=), dealloc_SGType2, Set_nDval_init_FOR_SG4
- PUBLIC OldParam, Write_OldParam
- PUBLIC get_iqSG_iSG_FROM_iq, get_Tabiq_Tabil_FROM_iq, get_Tabiq_Tabil_FROM_iq_old
- PUBLIC calc_Weight_OF_SRep
+ PUBLIC :: param_SGType2, assignment (=), dealloc_SGType2, Set_nDval_init_FOR_SG4
+ PUBLIC :: OldParam, Write_OldParam
+ PUBLIC :: get_iqSG_iSG_FROM_iq, get_Tabiq_Tabil_FROM_iq, get_Tabiq_Tabil_FROM_iq_old
+ PUBLIC :: calc_Weight_OF_SRep
 
 CONTAINS
 SUBROUTINE Write_OldParam(OldPara)

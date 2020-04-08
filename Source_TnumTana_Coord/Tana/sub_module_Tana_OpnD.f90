@@ -28,7 +28,6 @@
 !===========================================================================
  module mod_Tana_OpnD
  use mod_system
- use mod_FracInteger
  use mod_Tana_OpEl ! all
  use mod_Tana_Op1D ! all
  IMPLICIT NONE

@@ -28,7 +28,7 @@
 !===========================================================================
       MODULE mod_FlexibleTransfo
       use mod_system
-      use mod_dnSVM, only: type_dnvec, type_dns, check_alloc_dnvec,    &
+      use mod_dnSVM, only: assignment(=),type_dnvec, type_dns, check_alloc_dnvec,    &
                            alloc_dnsvm, sub_dnvec1_to_dnvec2_withivec, &
                            dealloc_dnsvm, write_dnvec
       IMPLICIT NONE

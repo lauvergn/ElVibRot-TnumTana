@@ -22,8 +22,7 @@
 !===========================================================================
 
 MODULE mod_VecOFdnS
-      use mod_system, only: write_error_not_null, sub_test_tab_ub, sub_test_tab_lb, &
-                            error_memo_allo, write_error_null, out_unitp, rkind, zero, half
+      use mod_system
       use mod_dnS, only: type_dns, alloc_dns, dealloc_dns, check_alloc_dns, write_dns, &
                          sub_dns1_prod_dns2_to_dns3, sub_dns1_minus_dns2_to_dns3, &
                          sub_zero_to_dns, sub_dns1_plus_dns2_to_dns3, sub_dns1_to_dntr2, &

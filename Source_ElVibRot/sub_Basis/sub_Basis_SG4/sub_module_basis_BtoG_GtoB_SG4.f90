@@ -67,8 +67,10 @@ TYPE Type_SmolyakRepC
   TYPE (TypeCVec), allocatable :: SmolyakRep(:)
 END TYPE Type_SmolyakRepC
 INTERFACE assignment(=)
-  module procedure SmolyakRep2_TO_SmolyakRep1,  SmolyakRep2_TO_tabR1, tabR2_TO_SmolyakRep1, R2_TO_SmolyakRep1
-  !module procedure SmolyakRepC2_TO_SmolyakRepC1,SmolyakRepC2_TO_tabR1,tabR2_TO_SmolyakRepC1,R2_TO_SmolyakRepC1
+  module procedure SmolyakRep2_TO_SmolyakRep1,  SmolyakRep2_TO_tabR1, &
+                   tabR2_TO_SmolyakRep1, R2_TO_SmolyakRep1
+  !module procedure SmolyakRepC2_TO_SmolyakRepC1,SmolyakRepC2_TO_tabR1,&
+  !                         tabR2_TO_SmolyakRepC1,R2_TO_SmolyakRepC1
 END INTERFACE
 
 INTERFACE operator(*)

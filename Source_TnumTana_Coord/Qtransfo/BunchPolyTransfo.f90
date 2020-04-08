@@ -29,7 +29,7 @@
       MODULE mod_BunchPolyTransfo
       use mod_system
       use mod_dnSVM ! only all
-      use mod_constant,     only: table_atom, get_mass_tnum
+      use mod_Constant,     only: assignment(=),table_atom, get_mass_tnum
       use mod_Lib_QTransfo, only: write_dnx, sub3_dnvec_toxf, func_ic
       USE mod_Tana_OpEl
       USE mod_Tana_Op1D

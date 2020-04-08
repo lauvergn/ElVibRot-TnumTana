@@ -21,11 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_dnS
-      use mod_system, only: rkind, out_unitp, flush_perso, &
-                            sub_test_tab_ub, sub_test_tab_lb, error_memo_allo, &
-                            write_error_not_null, write_error_null, alloc_array, dealloc_array, &
-                            zero, one, three, two, nine, eight, pi, half, four, six, ten, onetenth
-
+      use mod_system
       IMPLICIT NONE
 
       PRIVATE

@@ -28,7 +28,7 @@
 !===========================================================================
 MODULE mod_dnGG_dng
   use mod_system
-  use mod_dnSVM,   only: type_dnmat, type_dns, alloc_dnsvm, dealloc_dnsvm,     &
+  use mod_dnSVM,   only: assignment(=),type_dnmat,type_dns,alloc_dnsvm,dealloc_dnsvm, &
                          write_dnsvm, sub_zero_to_dnmat, inv_dnmat1_to_dnmat2, &
                          type_dnvec, alloc_array, dealloc_array
   use mod_paramQ,  only: sub_QactTOdnMWx, Write_dnx, analyze_dnx

@@ -28,7 +28,7 @@
 !===========================================================================
 MODULE mod_export_KEO
   USE mod_system
-  use mod_dnSVM,    only: type_dnmat, alloc_dnsvm, dealloc_dnsvm,       &
+  use mod_dnSVM,    only: assignment(=),type_dnmat, alloc_dnsvm, dealloc_dnsvm,       &
                           alloc_array, set_zero_to_dnsvm, dealloc_array
   use mod_Tnum,     only: CoordType, tnum
   use mod_dnGG_dng, only: get_dng_dngg

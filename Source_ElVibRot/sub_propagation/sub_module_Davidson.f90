@@ -27,7 +27,7 @@
 ![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 ![4]: Maison de la Simulation USR 3441, CEA Saclay, France
 ![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
-!         Université de Montpellier, France
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -2577,8 +2577,6 @@ END SUBROUTINE Schmidt_process_MPI
 
  SUBROUTINE sub_projec2_Davidson(Vec,Vec0,VecToBeIncluded,thresh,Ene,min_Ene,print_project)
  USE mod_system
- USE mod_Constant, ONLY: get_Conv_au_TO_WriteUnit
- USE mod_MPI
  IMPLICIT NONE
 
  real (kind=Rkind) :: Vec0(:,:),Vec(:,:)

@@ -42,7 +42,6 @@
 !===========================================================================
       MODULE mod_field
       USE mod_system
-      USE mod_file
       IMPLICIT NONE
         integer, parameter :: max_pulse = 110
 

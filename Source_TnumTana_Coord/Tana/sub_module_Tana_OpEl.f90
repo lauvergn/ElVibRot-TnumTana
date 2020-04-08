@@ -28,7 +28,6 @@
 !===========================================================================
  module mod_Tana_OpEl
  use mod_system
- use mod_FracInteger
  IMPLICIT NONE
  PRIVATE
 
