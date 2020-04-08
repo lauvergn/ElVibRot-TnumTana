@@ -816,7 +816,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
     CALL system_clock(time_point2,time_rate,time_max)
     time_MPI_action=time_MPI_action+merge(time_point2-time_point1,                     &
-                               time_point2-time_point1+time_max,time_point2>time_point1)
+                               time_point2-time_point1+time_max,time_point2>=time_point1)
     IF(once_control .AND. MPI_id==0)                                                   &
                    write(out_unitp,*) 'time MPI comm check: ',time_comm,' from ', MPI_id
     IF(once_control) CALL time_perso('MPI loop in action end') 
