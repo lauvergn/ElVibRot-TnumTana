@@ -1603,6 +1603,7 @@
 
       E0 = para_H%E0
       H(:,:) = CZERO
+      ! loop for H|psi>, H^2|psi>, H^3|psi>...
       DO j=2,para_propa%para_poly%npoly+1
         CALL sub_OpPsi(Psi  =tab_KrylovSpace(j-1),                      &
                        OpPsi=tab_KrylovSpace(j),para_Op=para_H)
@@ -1627,6 +1628,8 @@
           H(j-1,i) = conjg(Overlap)
         END DO
 
+        ! psi(t+dt)=sum_{i}^{n} <Vec|psi_0>exp(-i*Ei*dt) |Vec>
+        ! n=j-1
         CALL UPsi_spec(UPsiOnKrylov,H(1:j-1,1:j-1),Vec,Eig,             &
                               para_propa%WPdeltaT,j-1,With_diago=.TRUE.)
         !write(6,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
@@ -2579,6 +2582,8 @@
 !STOP
 
  END SUBROUTINE march_Spectral
+ 
+
 !=======================================================================================      
 !     march cheby
 !=======================================================================================      
