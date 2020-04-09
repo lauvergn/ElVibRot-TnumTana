@@ -1,8 +1,8 @@
 #=================================================================================
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-# F90 = mpifort
- F90 = gfortran
+ F90 = mpifort
+# F90 = gfortran
 #F90 = ifort
 #F90 = pgf90
 
@@ -28,7 +28,7 @@ endif
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 0
+ARPACK = 1
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -1632,7 +1632,7 @@ lib_dep_mod_Tana_vec_operations=(OBJ)/sub_module_Tana_op.o $(OBJ)/sub_module_Tan
 $(lib_dep_mod_Tana_vec_operations):$(OBJ)/sub_module_Tana_vec_operations.o
 
 #mod_dnRho
-lib_dep_mod_dnRho=$(OBJ)/sub_module_Tana_NumKEO.o
+lib_dep_mod_dnRho=$(OBJ)/sub_module_Tana_NumKEO.o $(OBJ)/calc_dng_dnGG.o
 $(lib_dep_mod_dnRho):$(OBJ)/sub_dnRho.o
 
 #mod_Tana_write_mctdh
@@ -1673,10 +1673,11 @@ $(lib_dep_mod_Smolyak_test):$(OBJ)/sub_Smolyak_module.o
 lib_dep_mod_nDGridFit=$(OBJ)/$(VIBMAIN).o
 $(lib_dep_mod_nDGridFit):$(OBJ)/sub_main_nDfit.o
 
-#mod_Auto_Basis    
+#mod_Auto_Basis
 lib_dep_mod_Auto_Basis=$(OBJ)/sub_quadra_SparseBasis.o                                 \
                        $(OBJ)/sub_module_SimulatedAnnealing.o                          \
-                       $(OBJ)/sub_module_BFGS.o $(OBJ)/sub_namelist.o $(OBJ)/ini_data.o
+                       $(OBJ)/sub_module_BFGS.o $(OBJ)/sub_namelist.o                  \
+                       $(OBJ)/ini_data.o $(OBJ)/vib.o $(OBJ)/EVR_driver.o
 $(lib_dep_mod_Auto_Basis):$(OBJ)/sub_Auto_Basis.o
 
 #mod_Optimization
@@ -1716,8 +1717,13 @@ lib_dep_mod_VecOFdnS=$(OBJ)/sub_module_MatOFdnS.o $(OBJ)/sub_module_dnSVM.o
 $(lib_dep_mod_VecOFdnS):$(OBJ)/sub_module_VecOFdnS.o
 
 #mod_analysis
-lib_dep_mod_analysis=$(OBJ)/sub_analyse.o $(OBJ)/sub_NLO.o
+lib_dep_mod_analysis=$(OBJ)/sub_analyse.o $(OBJ)/sub_NLO.o $(OBJ)/sub_VibRot.o         \
+                     $(OBJ)/sub_intensity.o
 $(lib_dep_mod_analysis):$(OBJ)/sub_module_analysis.o
+
+#mod_fullanalysis
+lib_dep_mod_fullanalysis=$(OBJ)/sub_Auto_Basis.o
+$(lib_dep_mod_fullanalysis):$(OBJ)/sub_analyse.o
 
 endif
 #=======================================================================================

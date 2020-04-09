@@ -709,19 +709,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   logical                              :: not_init
 
 #if(run_MPI)
-  integer                                :: iG_MPI,ii  
-  integer                                :: PsiR_V_iG_size
-  integer                                :: PsiR_count1
-  integer                                :: PsiR_count2
-  integer                                :: PsiR_count_iG
-  integer(kind=MPI_INTEGER_KIND)         :: PsiR_temp_length(0:MPI_np-1)
-
-  integer(kind=MPI_INTEGER_KIND),pointer :: size_PsiR_V(:) 
-  integer(kind=MPI_INTEGER_KIND),pointer :: Psi_size_MPI0
-  integer(kind=MPI_INTEGER_KIND),pointer :: reduce_Vlength
-  integer,pointer                        :: Max_nDI_ib0
-  integer,pointer                        :: V_allcount
-  integer,pointer                        :: V_allcount2
+  integer(kind=MPI_INTEGER_KIND),pointer :: size_PsiR_V(:)
 #endif
 
   !----- for debuging ----------------------------------------------
@@ -775,9 +763,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   END IF
 
 #if(run_MPI)  
-  IF(openmpi) THEN 
-    Psi_size_MPI0  => BasisnD%para_SGType2%Psi_size_MPI0  
-    
+  IF(openmpi) THEN
     CALL system_clock(time_point1,time_rate,time_max)
     IF(once_control) CALL time_perso('MPI loop in action begin')
     ! jobs equally assigned to different threads
