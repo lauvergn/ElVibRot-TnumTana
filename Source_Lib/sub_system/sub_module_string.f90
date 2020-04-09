@@ -52,9 +52,9 @@ MODULE mod_string
   END FUNCTION string_IS_empty
 
   FUNCTION String_TO_String(string,ltrim)
-  character(len=:), allocatable     :: String_TO_String
-  character(len=*), intent(in)      :: string
-  logical, optional,intent(in)      :: ltrim
+  character(len=:), allocatable                 :: String_TO_String
+  character(len=*),             intent(in)      :: string
+  logical,          optional,   intent(in)      :: ltrim
 
   logical :: ltrim_loc
 

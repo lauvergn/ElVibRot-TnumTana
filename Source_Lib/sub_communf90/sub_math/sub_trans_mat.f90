@@ -1428,7 +1428,7 @@
 
         DO i=1,nlc
           DO j=1,ncc
-            c(i,j) = dcmplx(ZERO,ZERO)
+            c(i,j) = cmplx(ZERO,ZERO,kind=Rkind)
             DO k=1,nca
               c(i,j) = c(i,j) + a(i,k)*b(k,j)
             END DO
@@ -1470,7 +1470,7 @@
 
       DO i=1,nlc
         DO j=1,ncc
-          c(i,j) = dcmplx(ZERO,ZERO)
+          c(i,j) = cmplx(ZERO,ZERO,kind=Rkind)
           DO k=1,dim_a(i)
             ki = ind_a(k,i)
             c(i,j) = c(i,j) + a(i,ki)*b(ki,j)

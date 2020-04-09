@@ -1698,9 +1698,9 @@ END SUBROUTINE sub_analyze_psi
         !write(out_unitp,'(a,a,20i4)') 'max_indGr at ',trim(info),max_indGr(:)
         write(out_unitp,'(a,a)',advance='no') 'max_ind ' // state_name // ' at ',trim(info)
         DO i=1,size(max_indGr)-1
-          write(out_unitp,'(X,i0)',advance='no') max_indGr(i)
+          write(out_unitp,'(1X,i0)',advance='no') max_indGr(i)
         END DO
-        write(out_unitp,'(X,i0)') max_indGr(size(max_indGr))
+        write(out_unitp,'(1X,i0)') max_indGr(size(max_indGr))
 
         CALL flush_perso(out_unitp)
       END IF

@@ -2041,15 +2041,13 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
 
  end subroutine Simplify_Sum_OF_Op1D
  subroutine Export_Latex_Op1d(F1d,qname,F1dName)
-   type(op1d),          intent(in)       :: F1d
+   type(op1d),                       intent(in)       :: F1d
+   character (len =*),               intent(in)       :: Qname
+   character (len = :), allocatable, intent(inout)    :: F1dName
 
-   character (len =*), intent(in)       :: qname
-
-   character (len = :), allocatable     :: F1dName
-
-
+   !local variables
+   character (len = :), allocatable      :: FelName,F1dName_loc
    character (len = Name_len)     ::       cindexq
-   character (len = :), allocatable     :: FelName
    integer :: k
    character (len = *), parameter :: mult = ' '
 
@@ -2063,28 +2061,32 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
 
 
    IF (size(F1d%prod_opel) > 0) THEN
-     CALL Export_Latex_OpEl(F1d%prod_opel(1),qname,F1dName)
+     CALL Export_Latex_OpEl(F1d%prod_opel(1),qname,F1dName_loc)
 
      DO k=2,size(F1d%prod_opel)
        CALL Export_Latex_OpEl(F1d%prod_opel(k),qname,Felname)
-       F1dName = String_TO_String( F1dName // mult // Felname)
+       F1dName_loc = String_TO_String( F1dName_loc // mult // Felname)
      END DO
      IF (allocated(FelName)) deallocate(FelName)
 
    ELSE
-     F1dName = String_TO_String('')
+     F1dName_loc = String_TO_String('')
    END IF
+
+   F1dName = F1dName_loc
+
+   IF (allocated(F1dName_loc)) deallocate(F1dName_loc)
+
 
  end subroutine Export_Latex_Op1d
 
  subroutine Export_Midas_Op1d(F1d, Qname, F1dName)
-   type(op1d),          intent(in)       :: F1d
+   type(op1d),                       intent(in)       :: F1d
+   character (len =*),               intent(in)       :: Qname
+   character (len = :), allocatable, intent(inout)    :: F1dName
 
-   character (len =*),  intent(in)       :: Qname
-
-   character (len = :), allocatable      :: F1dName
-
-   character (len = :), allocatable      :: FelName
+   !local variables
+   character (len = :), allocatable      :: FelName,F1dName_loc
    integer :: k
    character (len = *), parameter        :: mult = '*'
 
@@ -2093,26 +2095,31 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    !CALL write_op(F1d)
 
    IF (size(F1d%prod_opel) > 0) THEN
-     CALL Export_Midas_OpEl(F1d%prod_opel(1), Qname, F1dName)
+     CALL Export_Midas_OpEl(F1d%prod_opel(1), Qname, F1dName_loc)
 
      DO k = 2, size(F1d%prod_opel)
        CALL Export_Midas_OpEl(F1d%prod_opel(k), Qname, Felname)
-       F1dName = String_TO_String( F1dName // mult // Felname)
+       F1dName_loc = String_TO_String( F1dName_loc // mult // Felname)
      END DO
      IF (allocated(FelName)) deallocate(FelName)
 
    ELSE
-     F1dName = String_TO_String('')
+     F1dName_loc = String_TO_String('')
    END IF
+
+   F1dName = F1dName_loc
+
+   IF (allocated(F1dName_loc)) deallocate(F1dName_loc)
 
  end subroutine Export_Midas_Op1d
 
  subroutine Export_MCTDH_Op1d(F1d,F1dName)
-   type(op1d),          intent(inout)   :: F1d
-   character (len = :), allocatable     :: F1dName
+   type(op1d),                       intent(inout)   :: F1d
+   character (len = :), allocatable, intent(inout)   :: F1dName
 
 
-   character (len = :), allocatable     :: FelName
+   ! local variables
+   character (len = :), allocatable     :: FelName,F1dName_loc
    integer :: k
    character (len = *), parameter :: mult = '*'
 
@@ -2123,29 +2130,33 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
 
 
    IF (size(F1d%prod_opel) > 0) THEN
-     CALL Export_MCTDH_OpEl(F1d%prod_opel(1),F1dName)
+     CALL Export_MCTDH_OpEl(F1d%prod_opel(1),F1dName_loc)
 
      DO k=2,size(F1d%prod_opel)
        CALL Export_MCTDH_OpEl(F1d%prod_opel(k),Felname)
-       F1dName = String_TO_String( F1dName // mult // Felname)
+       F1dName_loc = String_TO_String( F1dName_loc // mult // Felname)
      END DO
      IF (allocated(FelName)) deallocate(FelName)
 
    ELSE
-     F1dName = String_TO_String('')
+     F1dName_loc = String_TO_String('')
    END IF
+
+   F1dName = F1dName_loc
+
+   IF (allocated(F1dName_loc)) deallocate(F1dName_loc)
+
 
  end subroutine Export_MCTDH_Op1d
 
  subroutine Export_VSCF_Op1d(F1d,qname,F1dName)
-   type(op1d),          intent(in)       :: F1d
-
-   character (len =*), intent(in)       :: qname
-
-   character (len = :), allocatable     :: F1dName
+   type(op1d),                       intent(in)     :: F1d
+   character (len =*),               intent(in)     :: qname
+   character (len = :), allocatable, intent(inout)  :: F1dName
 
 
-   character (len = :), allocatable     :: FelName
+   !local variable
+   character (len = :), allocatable     :: FelName,F1dName_loc
    integer :: k
    character (len = *), parameter :: mult = ' '
 
@@ -2156,17 +2167,22 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
 
 
    IF (size(F1d%prod_opel) > 0) THEN
-     CALL Export_VSCF_OpEl(F1d%prod_opel(1),qname,F1dName)
+     CALL Export_VSCF_OpEl(F1d%prod_opel(1),qname,F1dName_loc)
 
      DO k=2,size(F1d%prod_opel)
        CALL Export_VSCF_OpEl(F1d%prod_opel(k),qname,Felname)
-       F1dName = String_TO_String( F1dName // mult // Felname)
+       F1dName_loc = String_TO_String( F1dName_loc // mult // Felname)
      END DO
      IF (allocated(FelName)) deallocate(FelName)
 
    ELSE
-     F1dName = String_TO_String('')
+     F1dName_loc = String_TO_String('')
    END IF
+
+   F1dName = F1dName_loc
+
+   IF (allocated(F1dName_loc)) deallocate(F1dName_loc)
+
 
  end subroutine Export_VSCF_Op1d
 

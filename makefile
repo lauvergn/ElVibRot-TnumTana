@@ -3,6 +3,7 @@
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 # F90 = mpifort
  F90 = gfortran
+#F90 = nagfor
 #F90 = ifort
 #F90 = pgf90
 
@@ -12,7 +13,7 @@ MPICORE = gfortran
 ## debug_make=0 to enable parallel make
 ## debug_make=1 for fast debug make, no parallel
 ## NOTE: it seems there are some issues for parallel sometime
-debug_make=1
+debug_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 0
@@ -34,7 +35,7 @@ CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 1
+QML = 0
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -108,7 +109,53 @@ endif
 CompC=gcc
 
 #=================================================================================
-# ifort compillation v12 with mkl
+# nag compillation (nagfor)
+#=================================================================================
+ifeq ($(F90),nagfor)
+   # for c++ preprocessing
+   ifeq ($(OMP),1)
+     CPPpre  = -fpp -Drun_openMP=1
+   else
+     CPPpre  = -fpp
+   endif
+   
+   # omp management
+   ifeq ($(OMP),0)
+      OMPFLAG =
+   else
+      OMPFLAG = -openmp
+   endif
+   # opt management
+   ifeq ($(OPT),1)
+      F90FLAGS = -O4  $(OMPFLAG) -o −compatible -Ounroll=4 -s
+   else
+      #F90FLAGS = -O0 $(OMPFLAG) -g -C=all -mtrace=all
+      #  -C=undefined is not compatible with -framework Accelerate
+      # -kind=byte is not working
+      #with -mtrace=all add information on the memmory allocation/deallocation.
+      ifeq ($(OMP),0)
+        F90FLAGS = -O0 $(OMPFLAG) -g -compatible  -gline -C -C=alias -C=intovf
+      else
+        F90FLAGS = -O0 $(OMPFLAG) -g -C=all
+      endif
+   endif
+
+   ifeq ($(LAPACK),1)
+     F90LIB = -framework Accelerate
+   else
+     F90LIB = 
+   endif
+  
+   ifeq ($(INT),8)
+     F90FLAGS := $(F90FLAGS) -i8 
+   endif
+
+   F90_VER = $(shell $(F90) -V 3>&1 1>&2 2>&3 | head -1 )
+
+endif
+
+#=================================================================================
+# ifort compillation v17 with mkl
 #=================================================================================
 ifeq ($(F90),ifort)
    # for c++ preprocessing
@@ -147,7 +194,7 @@ endif
 #=================================================================================
 
 #=================================================================================
-# pgf90 compillation v12 with mkl
+# pgf90 compillation
 #=================================================================================
 ifeq ($(F90),pgf90)
    # for c++ preprocessing
@@ -351,6 +398,7 @@ $(info ***********************************************************************)
 #
 CPPSHELL = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
            -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
+           -D__COMPILER="'$(F90)'" \
            -D__COMPILER_VER="'$(F90_VER)'" \
            -D__COMPILER_OPT="'$(F90FLAGS)'" \
            -D__COMPILER_LIBS="'$(F90LIB)'" \

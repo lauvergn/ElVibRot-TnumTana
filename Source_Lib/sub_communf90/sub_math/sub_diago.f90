@@ -5,6 +5,7 @@
 !
 !=======================================================================================
       SUBROUTINE diagonalization(Mat,Eig,Vec,n,type_diag,sort,phase)
+      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64,int32
       USE mod_system
       USE mod_MPI
       IMPLICIT NONE
@@ -24,48 +25,75 @@
       real(kind=Rkind), allocatable :: work(:),saveMat(:,:)
       real(kind=Rkind) :: dummy(1,1)
 
-      integer(kind=4)  :: n4,lwork4,lda4,ldvr4,ierr4
+      integer(kind=int32)  :: n4,lwork4,lda4,ldvr4,ierr4
 
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='diagonalization'
       logical, parameter :: debug = .FALSE.
-!      logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
-
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'n        ',n
+        write(out_unitp,*) 'type_diag',type_diag
+        write(out_unitp,*) 'sort     ',sort
+        write(out_unitp,*) 'phase    ',phase
+        CALL flush_perso(out_unitp)
+      END IF
       !when lapack is used and Rkind/= 8 (not a double), it switch to type_diag=2
+      ! DML: with nagfor, we cannot test Rkind against 8, we have to use real64 (of the ISO_FORTRAN_ENV module)
+      !      ... because of a double precision real kind is not 8 with nagfor !!
       type_diag_loc = type_diag
-      IF (Rkind /= 8 .AND. (type_diag_loc == 3 .OR. type_diag_loc == 4)) type_diag_loc = 2
+      IF (Rkind /= real64 .AND. (type_diag_loc == 3 .OR. type_diag_loc == 4)) type_diag_loc = 2
+      ! type_diag_loc = 2 does not work with nagfor !!!
+
+      !type_diag_loc = 3 ! for nagfor
 
       SELECT CASE (type_diag_loc)
       CASE(1)
+        IF (debug) write(out_unitp,*) 'jacobi2'
+        CALL flush_perso(out_unitp)
         CALL jacobi2(Mat,n,Eig,Vec)
       CASE(2)
+        IF (debug) write(out_unitp,*) 'tred2+tql2'
+        CALL flush_perso(out_unitp)
+
         CALL tred2(n,n,Mat,Eig,trav,Vec)
         CALL tql2(n,n,Eig,trav,Vec,ierr)
-      CASE(3) ! lapack77
 
+!      CASE(395) ! lapack95
+!        IF (debug) write(out_unitp,*) 'lapack95: LA_SYEVD'
+!        CALL flush_perso(out_unitp)
+!        Vec(:,:) = Mat
+!        CALL LA_SYEVD(Vec,Eig)
+      CASE(3) ! lapack77
 #if __LAPACK == 1
+        IF (debug) write(out_unitp,*) 'lapack77: DSYEV'
+        CALL flush_perso(out_unitp)
+
         lwork = 3*n-1
-        ! lapack subroutines need integer (kind=4), therefore, we add a conversion, otherwise
-        ! it fails when integers (kind=8) are used (at the complation).
-        n4 = int(n,kind=4)
-        lwork4 = int(lwork,kind=4)
+        ! lapack subroutines need integer (kind=4 or int32), therefore, we add a conversion, otherwise
+        ! it fails when integers (kind=8 or int64) are used (at the compilation).
+        n4     = int(n,kind=int32)
+        lwork4 = int(lwork,kind=int32)
         CALL alloc_NParray(work,(/ lwork /),'work',name_sub)
         Vec(:,:) = Mat(:,:)
-        CALL DSYEV('V','U',n4,Vec,n4,Eig,work,lwork,ierr4)
-        IF (debug) write(out_unitp,*)'ierr=',ierr4
-        IF (ierr4 /= 0) THEN
+        CALL DSYEV('V','U',n4,Vec,n4,Eig,work,lwork4,ierr4)
+        IF (debug) write(out_unitp,*) 'ierr=',ierr4
+        CALL flush_perso(out_unitp)
+
+        IF (ierr4 /= 0_int32) THEN
            write(out_unitp,*) ' ERROR in ',name_sub,' from ', MPI_id
            write(out_unitp,*) ' DSYEV lapack subroutine has FAILED!'
            STOP
         END IF
         CALL dealloc_NParray(work,'work',name_sub)
 
-        ! lapack95
-        !CALL LA_SYEVD(Vec,E)
-
 #else
+        IF (debug) write(out_unitp,*) 'tred2+tql2'
+        CALL flush_perso(out_unitp)
+
         CALL tred2(n,n,Mat,Eig,trav,Vec)
         CALL tql2(n,n,Eig,trav,Vec,ierr)
 #endif
@@ -73,22 +101,26 @@
       CASE(4) ! lapack77 (non-symmetric)
 
 #if __LAPACK == 1
+        IF (debug) write(out_unitp,*) 'lapack77: DGEEV (non-symmetric)'
+        CALL flush_perso(out_unitp)
+
         lwork = (2+64)*n
         ldvr  = n
         lda   = n
 
-        n4     = int(n,kind=4)
-        lwork4 = int(lwork,kind=4)
-        lda4   = int(lda,kind=4)
-        ldvr4  = int(ldvr,kind=4)
+        n4     = int(n,kind=int32)
+        lwork4 = int(lwork,kind=int32)
+        lda4   = int(lda,kind=int32)
+        ldvr4  = int(ldvr,kind=int32)
 
         CALL alloc_NParray(work,(/ lwork /),'work',name_sub)
         CALL alloc_NParray(saveMat,(/ n,n /),'saveMat',name_sub)
         saveMat(:,:) = Mat(:,:)
 
-        CALL DGEEV('N','V',n4,saveMat,lda4,Eig,IEig,dummy,int(1,kind=4),Vec,ldvr4,work,lwork4,ierr4)
+        CALL DGEEV('N','V',n4,saveMat,lda4,Eig,IEig,dummy,              &
+                  int(1,kind=int32),Vec,ldvr4,work,lwork4,ierr4)
         IF (debug) write(out_unitp,*)'ierr=',ierr4
-        IF (ierr4 /= 0) THEN
+        IF (ierr4 /= 0_int32) THEN
            write(out_unitp,*) ' ERROR in ',name_sub,' from ', MPI_id
            write(out_unitp,*) ' DGEEV lapack subroutine has FAILED!'
            STOP
@@ -103,15 +135,22 @@
         CALL dealloc_NParray(work,'work',name_sub)
         CALL dealloc_NParray(saveMat,'saveMat',name_sub)
 #else
+        IF (debug) write(out_unitp,*) 'tred2+tql2'
+        CALL flush_perso(out_unitp)
+
         CALL tred2(n,n,Mat,Eig,trav,Vec)
         CALL tql2(n,n,Eig,trav,Vec,ierr)
 #endif
 
 
       CASE DEFAULT
+        IF (debug) write(out_unitp,*) 'jacobi2 (default)'
+        CALL flush_perso(out_unitp)
+
         CALL jacobi2(Mat,n,Eig,Vec)
       END SELECT
-
+        IF (debug) write(out_unitp,*) 'diagonalization done'
+        CALL flush_perso(out_unitp)
 
       SELECT CASE (sort)
       CASE(1)
@@ -125,15 +164,29 @@
       CASE DEFAULT ! no sort
         CONTINUE
       END SELECT
+        IF (debug) write(out_unitp,*) 'sort done'
+        CALL flush_perso(out_unitp)
+
 
       DO i=1,n
         Vec(:,i) = Vec(:,i)/sqrt(dot_product(Vec(:,i),Vec(:,i)))
       END DO
+        IF (debug) write(out_unitp,*) 'normalization done'
+        CALL flush_perso(out_unitp)
 
       IF (phase) CALL Unique_phase(n,Vec,n)
+        IF (debug) write(out_unitp,*) 'phase done'
+        CALL flush_perso(out_unitp)
+
+
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
 
       END SUBROUTINE diagonalization
       SUBROUTINE diagonalization_HerCplx(Mat,Eig,Vec,n,type_diag,sort,phase)
+      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64,int32
       USE mod_system
       USE mod_MPI
       IMPLICIT NONE
@@ -153,7 +206,7 @@
       complex(kind=Rkind), allocatable :: work(:),saveMat(:,:)
       real(kind=Rkind),    allocatable :: rwork(:)
 
-      integer(kind=4)  :: n4,lwork4,ierr4
+      integer(kind=int32)  :: n4,lwork4,ierr4
 
 
 !----- for debuging --------------------------------------------------
@@ -180,14 +233,14 @@
 
         Vec(:,:) = Mat(:,:)
 
-        ! lapack subroutines need integer (kind=4), therefore, we add a conversion, otherwise
-        ! it fails when integers (kind=8) are used (at the compilation).
-        n4     = int(n,kind=4)
-        lwork4 = int(lwork,kind=4)
+        ! lapack subroutines need integer (kind=int32 or 4), therefore, we add a conversion, otherwise
+        ! it fails when integers (kind=int64 or 8) are used (at the compilation).
+        n4     = int(n,kind=int32)
+        lwork4 = int(lwork,kind=int32)
         CALL ZHEEV('V','U',n4,Vec,n4,Eig, work,lwork4, rwork, ierr4)
 
         IF (debug) write(out_unitp,*)'ierr=',ierr4
-        IF (ierr4 /= 0) THEN
+        IF (ierr4 /= 0_int32) THEN
            write(out_unitp,*) ' ERROR in ',name_sub,' from ', MPI_id
            write(out_unitp,*) ' ZHEEV lapack subroutine has FAILED!'
            STOP
@@ -570,7 +623,7 @@
 !     real(kind=Rkind) ZERO,ONE,TWO
 !     DATA ZERO/0./,ONE/1./,TWO/2./
 
-      real(kind=Rkind)  g,pp,h,r,c,s,f,b
+      real(kind=Rkind)  g,pp,h,r,c,s,f,b,rbis
       integer l1,j,m,mml,ii,k,l,ierr,i
 !
 !RAY  1
@@ -605,8 +658,15 @@
       L1=L+1
       G=D(L)
       PP=(D(L1)-G)/(TWO*E(L))
-      R=SQRT(PP*PP+ONE)
-      D(L)=E(L)/(PP+SIGN(R,PP))
+      ! dml 31/03/2020, overflow for pp*pp+ONE when pp is too large.
+      !write(6,*) 'PP*PP+ONE',PP*PP+ONE ; flush(6)
+      !write(6,*) 'sqrt(PP*PP+ONE)',sqrt(PP*PP+ONE) ; flush(6)
+      IF (PP > TEN**10) THEN
+        D(L)=E(L)/(PP+PP)
+      ELSE
+        R=SQRT(PP*PP+ONE)
+        D(L)=E(L)/(PP+SIGN(R,PP))
+      END IF
       H=G-D(L)
       DO 140 I=L1,N
   140 D(I)=D(I)-H
@@ -1138,4 +1198,3 @@
   500 CONTINUE
       RETURN
       end subroutine cTred2
-

@@ -547,6 +547,7 @@ MODULE mod_basis
       IF (debug) THEN
         CALL RecWrite_basis(basis_primi)
         write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
       END IF
 !---------------------------------------------------------------------
       END SUBROUTINE construct_primitive_basis
@@ -1886,7 +1887,7 @@ MODULE mod_basis
             Check_bGB = basis_set%dnRGB%d1(:,1:nb,i)-matmul(basis_set%dnRGG%d1(:,:,i),basis_set%dnRGB%d0(:,1:nb))
             Max_err_Check_bGB = max(Max_err_Check_bGB,maxval(abs(Check_bGB)))
             IF (debug .OR. maxval(abs(Check_bGB)) > ONETENTH**8) THEN
-              write(out_unitp,'(a,x,i0,2x,e9.2)') 'Check_bGB%d1',i,maxval(abs(Check_bGB))
+              write(out_unitp,'(a,1x,i0,2x,e9.2)') 'Check_bGB%d1',i,maxval(abs(Check_bGB))
               !CALL Write_VecMat(Check_bGB,out_unitp,5)
             END IF
           END DO
@@ -1897,7 +1898,7 @@ MODULE mod_basis
             Check_bGB = basis_set%dnRGB%d2(:,1:nb,i,j)-matmul(basis_set%dnRGG%d2(:,:,i,j),basis_set%dnRGB%d0(:,1:nb))
             Max_err_Check_bGB = max(Max_err_Check_bGB,maxval(abs(Check_bGB)))
             IF (debug .OR. maxval(abs(Check_bGB)) > ONETENTH**8) THEN
-              write(out_unitp,'(a,x,i0x,i0,e9.2)') 'Check_bGB%d2',i,j,maxval(abs(Check_bGB))
+              write(out_unitp,'(a,1x,i0,1x,i0,e9.2)') 'Check_bGB%d2',i,j,maxval(abs(Check_bGB))
               !CALL Write_VecMat(Check_bGB,out_unitp,5)
             END IF
           END DO
@@ -3817,7 +3818,8 @@ END SUBROUTINE pack_basis
       integer           :: nDval_SG2(BasisnD%nb_basis)
       integer           :: nDl_SG2(BasisnD%nb_basis)
 
-      integer           :: i_SG = 0
+      integer           :: i_SG
+      integer           :: i_SG2 = 0
       integer           :: err_sub
 
 !----- for debuging --------------------------------------------------
@@ -3926,9 +3928,9 @@ END SUBROUTINE pack_basis
            write(6,*) 'ib,nDvalB',ib,':',nDvalB
 
            CALL get_Tabiq_Tabil_FROM_iq_old(nDval_SG2,nDl_SG2,          &
-                      i_SG,iq_SG,iq,BasisnD%para_SGType2)
+                                     i_SG2,iq_SG,iq,BasisnD%para_SGType2)
 
-           write(6,*) 'iq,i_SG',iq,i_SG
+           write(6,*) 'iq,i_SG2',iq,i_SG2
            write(6,*) 'tab_l',nDl_SG2
            write(6,*) 'tab_iq',nDval_SG2
 

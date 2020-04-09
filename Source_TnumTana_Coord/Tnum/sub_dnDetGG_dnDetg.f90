@@ -374,8 +374,8 @@ MODULE mod_dnDetGG_dnDetg
       TYPE(Type_dnS)    :: dnLndetMat
       TYPE(Type_dnMat)  :: dnMat
       integer           :: nderiv
+      integer           :: ncart
       real (kind=Rkind) :: masses(ncart),Mtot_inv
-      integer :: ncart
 
       TYPE(Type_dnMat)  :: dnMat_save
       real (kind=Rkind) :: d0Matii_inv(dnMat%nb_var_Matl)

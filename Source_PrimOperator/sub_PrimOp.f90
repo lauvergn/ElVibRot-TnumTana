@@ -1828,7 +1828,7 @@
 
         DO i=1,size(freq),3
           i2 = min(i+2,mole%nb_act)
-          write(out_unitp,'(a,i0,"-",i0,3(x,f0.4))') 'frequencies (cm-1): ',  &
+          write(out_unitp,'(a,i0,"-",i0,3(1x,f0.4))') 'frequencies (cm-1): ',  &
                                  i,i2,freq(i:i2) * get_Conv_au_TO_unit('E','cm-1')
         END DO
 
@@ -2529,7 +2529,7 @@
 
         DO i=1,mole_1%nb_act,3
           i2 = min(i+2,mole_1%nb_act)
-          write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
+          write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                           i,i2,d0eh(i:i2)*auTOcm_inv
         END DO
         CALL flush_perso(out_unitp)
@@ -2619,7 +2619,7 @@
 
       DO i=1,mole%nb_act,3
         i2 = min(i+2,mole%nb_act)
-        write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
+        write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                           i,i2,d0eh_all(i:i2)*auTOcm_inv
       END DO
       CALL alloc_array(mole%NMTransfo%d0eh,(/ nb_NM /),                 &
@@ -3000,7 +3000,7 @@
 
           DO i=1,mole_1%nb_act,3
             i2 = min(i+2,mole_1%nb_act)
-            write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
+            write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                             i,i2,d0eh(i:i2)*auTOcm_inv
           END DO
 
@@ -3088,7 +3088,7 @@
 
       DO i=1,mole%nb_act,3
         i2 = min(i+2,mole%nb_act)
-        write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
+        write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                           i,i2,d0eh_all(i:i2)*auTOcm_inv
       END DO
       CALL alloc_array(mole%NMTransfo%d0eh,(/ nb_NM /),                 &
@@ -3423,7 +3423,7 @@
         IF (para_Tnum%WriteT .OR. debug .OR. print_level > 0) THEN
           write(out_unitp,*) 'gradient:'
           DO i=1,nb_NM
-            write(out_unitp,'(a,x,i0,x,f12.6)') 'Q',i,d0grad(i)
+            write(out_unitp,'(a,1x,i0,1x,f12.6)') 'Q',i,d0grad(i)
           END DO
           CALL flush_perso(out_unitp)
         END IF

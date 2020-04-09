@@ -399,7 +399,7 @@
       !!@param: TODO
       !!@param: TODO
           FUNCTION psi1_plus_psi2(psi1,psi2)
-            TYPE (param_psi), intent (in) :: psi1,psi2
+            TYPE (param_psi), intent(in) :: psi1,psi2
             TYPE (param_psi) :: psi1_plus_psi2
             integer           :: err,i
 
@@ -638,7 +638,7 @@
       !!@param: TODO
       !!@param: TODO
           FUNCTION psi1_minus_psi2(psi1,psi2)
-            TYPE (param_psi), intent (in) :: psi1,psi2
+            TYPE (param_psi), intent(in) :: psi1,psi2
             TYPE (param_psi) :: psi1_minus_psi2
             integer          :: err,i
 

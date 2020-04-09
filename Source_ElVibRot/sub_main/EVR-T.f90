@@ -41,6 +41,7 @@
 !===========================================================================
 !===========================================================================
     PROGRAM ElVibRot
+      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : INPUT_UNIT
       USE mod_system
 !$    USE omp_lib, only : omp_get_max_threads
       USE mod_nDGridFit

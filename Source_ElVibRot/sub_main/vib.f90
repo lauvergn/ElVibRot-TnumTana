@@ -74,7 +74,7 @@
       logical  :: intensity_only
       integer  :: nio_res_int
 
-      integer   max_mem
+      integer (kind=ILkind)  :: max_mem
       logical   test_mem
 
 !----- physical and mathematical constants ---------------------------------------------

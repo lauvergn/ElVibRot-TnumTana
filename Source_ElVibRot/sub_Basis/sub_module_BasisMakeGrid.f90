@@ -1350,10 +1350,10 @@ STOP
       IMPLICIT NONE
 !---------------------------------------------------------------------
 !---------- variables passees en argument ----------------------------
+      integer,           intent(in)    :: nb,nq
       real (kind=Rkind), intent(inout) :: w(nq)
       real (kind=Rkind), intent(in)    :: d0RGB(nq,nb)
 
-      integer,           intent(in)    ::  nb,nq
 
 
 !---------- working variables ----------------------------------------

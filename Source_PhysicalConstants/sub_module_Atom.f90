@@ -956,12 +956,12 @@ PRIVATE
           DO A=0,mendeleev%max_A
             IF (.NOT. mendeleev%at(Z,A)%SetIsotope) CYCLE
             IF (Z == 0) THEN
-              write(out_unitp,'(x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
+              write(out_unitp,'(1x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
             ELSE IF (Z == 1 .AND. (A == 2 .OR. A == 3)) THEN
-              write(out_unitp,'(x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
+              write(out_unitp,'(1x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
               write(out_unitp,'(" (or ",i0,a,")")',advance='no') A,trim(mendeleev%at(Z,1)%symbol)
             ELSE
-              write(out_unitp,'(x,i0,a)',advance='no') A,trim(mendeleev%at(Z,A)%symbol)
+              write(out_unitp,'(1x,i0,a)',advance='no') A,trim(mendeleev%at(Z,A)%symbol)
             END IF
           END DO
           write(out_unitp,*)

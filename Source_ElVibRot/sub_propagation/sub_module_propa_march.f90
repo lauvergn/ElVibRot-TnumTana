@@ -768,7 +768,7 @@
 
     !extrapolation
     DO i=1,j
-      x = real(2*j+2,kind=8)/real(2*(j-i)+2,kind=8)
+      x = real(2*j+2,kind=Rkind)/real(2*(j-i)+2,kind=Rkind)
       x = ONE/(x**2-ONE)
       yerr = yt1(i-1)-yt0(i-1)
       yt1(i) = yt1(i-1) + yerr*x
@@ -1742,7 +1742,7 @@
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),       intent(in)     :: para_H
+      TYPE (param_Op)     :: para_H
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa),    intent(inout)  :: para_propa
@@ -1926,12 +1926,12 @@
 
 
 !----- variables for the WP propagation ----------------------------
+      integer,                           intent(in)     :: n
       complex (kind=Rkind),              intent(in)     :: H(n,n)
       complex (kind=Rkind), allocatable, intent(inout)  :: Vec(:,:)
       real (kind=Rkind),    allocatable, intent(inout)  :: Eig(:)
       complex (kind=Rkind), allocatable, intent(inout)  :: UPsiOnKrylov(:)
       real (kind=Rkind),                 intent(in)     :: deltaT
-      integer,                           intent(in)     :: n
       logical,                           intent(in)     :: With_diago
 
 !------ working variables ---------------------------------
@@ -1997,10 +1997,10 @@
 
 
 !----- variables for the WP propagation ----------------------------
+      integer,               intent(in)     :: n
       complex (kind=Rkind),  intent(in)     :: H(n,n)
       complex (kind=Rkind),  intent(inout)  :: UPsiOnKrylov(n)
       real (kind=Rkind),     intent(in)     :: deltaT
-      integer,               intent(in)     :: n
 
 !------ working variables ---------------------------------
       complex (kind=Rkind) :: Vec(n,n)
@@ -2053,7 +2053,7 @@
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),       intent(in)     :: para_H
+      TYPE (param_Op)    :: para_H
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa),    intent(inout)  :: para_propa
@@ -2250,7 +2250,7 @@
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),       intent(in)     :: para_H
+      TYPE (param_Op)     :: para_H
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa),    intent(in)     :: para_propa
@@ -2460,7 +2460,7 @@
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),       intent(in)     :: para_H
+      TYPE (param_Op)     :: para_H
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa),    intent(in)     :: para_propa
@@ -4163,14 +4163,14 @@
       USE mod_system
       IMPLICIT NONE
 
-      integer       :: nOD,Max_nOD
+      integer           :: nOD,Max_nOD
       real (kind=Rkind) :: alpha,DeltaT,epsi
       real (kind=Rkind) :: coef(:)
 
 
 
       real (kind=Rkind) :: reste,xi
-      integer       :: i
+      integer           :: i
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug =.FALSE.

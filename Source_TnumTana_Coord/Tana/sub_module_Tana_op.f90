@@ -1418,19 +1418,19 @@
    END  SUBROUTINE get_Lz_F_system_parent
 
 
-   !! @description: Defines the KOE 
+   !! @description: Defines the KEO
    !! @param:       TWOxKEO The output
    !! @param:       nvec    Integer corresponding to the size of the system
    RECURSIVE SUBROUTINE get_opKEO(F_system, TWOxKEO, P_Euler, M_mass_out, &
                                   scalar_PiPj, F_system_parent)
      USE mod_BunchPolyTransfo, only : Type_BFTransfo
 
-     type(Type_BFtransfo),        intent(inout)       :: F_system
-     type(sum_opnd),              intent(inout)       :: TWOxKEO
-     type(Type_PiEulerRot),       intent(inout)       :: P_Euler(:) 
-     type(sum_opnd),              intent(in)          :: M_mass_out(:,:)
-     logical,                     intent(inout)       :: scalar_PiPj(:,:)
-     type(Type_BFtransfo), optional, intent(in)       :: F_system_parent
+     type(Type_BFtransfo),           intent(inout)       :: F_system
+     type(sum_opnd),                 intent(inout)       :: TWOxKEO
+     type(Type_PiEulerRot),          intent(inout)       :: P_Euler(:)
+     type(sum_opnd),                 intent(in)          :: M_mass_out(:,:)
+     logical,                        intent(inout)       :: scalar_PiPj(:,:)
+     type(Type_BFtransfo), optional, intent(in)          :: F_system_parent
 
      integer                         :: i, j
      integer                         :: i_syst, j_syst
@@ -1467,19 +1467,34 @@
      if(F_system%frame) then
 
        if (compare_tab(F_system%euler, (/.false., .true., .true./))) then
-         call get_opKEO_subsyst_2euler(F_system, P_Euler, M_mass_out,   &
+
+         IF (present(F_system_parent)) THEN
+           call get_opKEO_subsyst_2euler(F_system, P_Euler, M_mass_out,   &
                                        scalar_PiPj, F_system_parent)
+         ELSE
+           STOP 'ERROR in get_opKEO: F_system_parent is absent'
+         END IF
 
        ELSE
 
          IF (F_system%nb_vect_tot == 1) THEN
 
-           CALL get_opKEO_subsyst_nvectot1(F_system, P_Euler,M_mass_out,&
-                                           scalar_PiPj,F_system_parent)
-         ELSE
+           IF (present(F_system_parent)) THEN
+             CALL get_opKEO_subsyst_nvectot1(F_system, P_Euler,M_mass_out,&
+                                             scalar_PiPj,F_system_parent)
+           ELSE
+             STOP 'ERROR in get_opKEO: F_system_parent is absent'
+           END IF
 
-           CALL get_opKEO_subsyst(F_system, P_Euler,M_mass_out,         &
-                                  scalar_PiPj,F_system_parent)
+         ELSE
+           CALL get_opKEO_subsyst(F_system, P_Euler,M_mass_out,scalar_PiPj)
+!           IF (present(F_system_parent)) THEN
+!             CALL get_opKEO_subsyst(F_system, P_Euler,M_mass_out,       &
+!                                    scalar_PiPj,F_system_parent)
+!           ELSE
+!             STOP 'ERROR in get_opKEO: F_system_parent is absent'
+!           END IF
+
          END IF
        END IF
 
@@ -1507,15 +1522,16 @@
    !! @param:       KOE          The output 
    !! @param:       nvec    Integer corresponding to the size of the system
    !! @param:       M_mass  The mass matrix
-   RECURSIVE SUBROUTINE get_opKEO_subsyst(F_system, P_Euler, M_mass_out, scalar_PiPj, &
-                                          F_system_parent)
+   !RECURSIVE SUBROUTINE get_opKEO_subsyst(F_system, P_Euler, M_mass_out, scalar_PiPj, &
+   !                                       F_system_parent)
+   RECURSIVE SUBROUTINE get_opKEO_subsyst(F_system, P_Euler, M_mass_out, scalar_PiPj)
      USE mod_BunchPolyTransfo, only : Type_BFTransfo
 
      type(Type_BFtransfo),                 intent(inout)      :: F_system
      type(Type_PiEulerRot),                intent(inout)      :: P_Euler(:)
      type(sum_opnd),                       intent(in)         :: M_mass_out(:,:)
      logical,                              intent(inout)      :: scalar_PiPj(:,:)
-     type(Type_BFtransfo),                 intent(in)         :: F_system_parent
+     !type(Type_BFtransfo),                 intent(in)         :: F_system_parent
 
      type(sum_opnd)                  :: RR_inv,MPRPR,PRPR,PiPi,MPiPi
      type(sum_opnd)                  :: LiLi,JLi,LiJ,JJ,L1L1
@@ -1529,9 +1545,9 @@
      type(sum_opnd), pointer             :: Liz_parent(:)
      type(vec_sum_opnd)                  :: L1_bis
      type(vec_sum_opnd)                  :: L1dag_bis
-     type(sum_opnd),     allocatable         :: Mat_R(:,:)
-     type(sum_opnd),     allocatable         :: Mat_RTranspo(:,:)
-     type(sum_opnd),     allocatable         :: Mres(:,:)
+     type(sum_opnd),     allocatable     :: Mat_R(:,:)
+     type(sum_opnd),     allocatable     :: Mat_RTranspo(:,:)
+     type(sum_opnd),     allocatable     :: Mres(:,:)
 
      type(vec_sum_opnd)                  :: V1_tmp
      type(vec_sum_opnd)                  :: V2_tmp

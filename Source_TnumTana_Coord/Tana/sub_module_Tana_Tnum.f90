@@ -76,6 +76,7 @@ MODULE mod_Tana_Tnum
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' BEGINNING ',routine_name
+      CALL flush_perso(out_unitp)
       nullify(Gana)
       CALL alloc_array(Gana,(/mole%ndimG,mole%ndimG/),'Gana',routine_name)
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,2)
@@ -95,6 +96,7 @@ MODULE mod_Tana_Tnum
       write(out_unitp,*) '         max diff G: ',maxval(abs(Gana-dnGG%d0))
       write(out_unitp,*) 'Relative max diff G: ',maxval(abs(Gana-dnGG%d0))/maxval(abs(dnGG%d0))
       write(out_unitp,*)
+      CALL flush_perso(out_unitp)
 
       max_error = maxval(abs(Gana-dnGG%d0))/maxval(abs(dnGG%d0))
 
@@ -122,6 +124,8 @@ MODULE mod_Tana_Tnum
       CALL   calc3_f2_f1Q_num(Qact,Tdef2,Tdef1,vep,rho,Tcor2,Tcor1,Trot,&
                               para_Tnum,mole)
       para_Tnum%Tana = .TRUE.
+
+
       CALL get_Numf2f1vep_WITH_AnaKEO(TWOxKEO,Qact,mole,                &
                                           f2_ana,f1_ana,vep_ana,rho_ana)
 
@@ -142,8 +146,9 @@ MODULE mod_Tana_Tnum
       write(out_unitp,*) '        max diff vep: ',abs(vep-vep_ana)
       write(out_unitp,*) '       vep from Tana: ',vep_ana
       write(out_unitp,*) '       vep from Tnum: ',vep
-
       write(out_unitp,*)
+      CALL flush_perso(out_unitp)
+
       IF (mole%nb_act == mole%nb_var) max_error = max( max_error, vep_error )
       max_error = max( max_error, maxval(abs(f2_ana-Tdef2))/maxval(abs(Tdef2)) )
       max_error = max( max_error, maxval(abs(f1_ana-Tdef1))/maxval_f1 )

@@ -79,6 +79,11 @@ MODULE mod_system
 #else
       character (len=Line_len) :: compile_host = "unknown: -D__COMPILE_HOST=?"
 #endif
+#if defined(__COMPILER)
+      character (len=Line_len) :: compiler = __COMPILER
+#else
+      character (len=Line_len) :: compiler = "unknown: -D__COMPILER=?"
+#endif
 #if defined(__COMPILER_VER)
       character (len=Line_len) :: compiler_ver = __COMPILER_VER
 #else

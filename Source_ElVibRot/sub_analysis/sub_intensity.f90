@@ -454,8 +454,8 @@
 
 
 !----- Operator variables --------------------------------------------
-      TYPE (param_Op)  :: para_ScalOp(nb_ScalOp),para_H
       integer          :: nb_ScalOp
+      TYPE (param_Op)  :: para_ScalOp(nb_ScalOp),para_H
 
 
       integer :: nb_aie,nb_ana,nio
@@ -548,7 +548,7 @@
       write(out_unitp,*) '==================================================='
       write(out_unitp,*) '==================================================='
       DO i=1,nb_ana
-        write(out_unitp,'(i0,20(x,f0.4))') i,(abs(para_ScalOp(k)%Rmat(i,1)),k=1,nb_ScalOp)
+        write(out_unitp,'(i0,20(1x,f0.4))') i,(abs(para_ScalOp(k)%Rmat(i,1)),k=1,nb_ScalOp)
       END DO
       write(out_unitp,*) '==================================================='
       write(out_unitp,*) '==================================================='
@@ -1074,7 +1074,7 @@
             write(out_unitp,11) 'i j levels: ',i,j,' Ej-Ei: ',                     &
               RWU_Write(REAL_WU(e0,'au','E'),WithUnit=.TRUE.,WorkingUnit=.FALSE.), &
               ' Intensity:',I0/TEN**3,' (km.mol-1)'
- 11         format(a,i0,x,i0,a,a,a,f20.10,a)
+ 11         format(a,i0,1x,i0,a,a,a,f20.10,a)
           END IF
         END IF
       END DO

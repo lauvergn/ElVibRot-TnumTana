@@ -239,7 +239,10 @@
          write(out_unitp,*) 'cos_th',ZmatTransfo%cos_th
        END IF
 
-       it = 0
+       it         = 0
+       Z(:)       = -1
+       symbole(:) = ""
+       masses(:)  = ZERO
 
        ! allocation of the variables:
        CALL alloc_ZmatTransfo(ZmatTransfo)

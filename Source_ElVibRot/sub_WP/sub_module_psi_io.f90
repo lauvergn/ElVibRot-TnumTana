@@ -1268,7 +1268,7 @@ IF (done_basis_is_smaller) write(out_unitp,*) ' WARNNING the basis is smaller'
 !-----------------------------------------------------------
 IF (debug) THEN
   write(out_unitp,*) ' list_nDindBasis1_TO_nDindBasis2'
-  write(out_unitp,'(10(I0,X))') list_nDindBasis1_TO_nDindBasis2(:)
+  write(out_unitp,'(10(I0,1X))') list_nDindBasis1_TO_nDindBasis2(:)
   write(out_unitp,*) 'END ',name_sub
 END IF
 
@@ -1395,7 +1395,7 @@ IF (nb_tot > 0) THEN
 
   IF (debug) THEN
     write(out_unitp,*) 'list_nDindBasis1_TO_nDindBasis2'
-    write(out_unitp,'(10(I0,X))') list_nDindBasis1_TO_nDindBasis2(:)
+    write(out_unitp,'(10(I0,1X))') list_nDindBasis1_TO_nDindBasis2(:)
   END IF
 
   IF (Version_File == 0) THEN ! Version_File=0, option=2

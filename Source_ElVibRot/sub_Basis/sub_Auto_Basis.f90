@@ -359,6 +359,7 @@
         END IF
 
         IF (Print_basis) write(out_unitp,*) 'Primitive basis done. Layer:      ',rec
+        CALL flush_perso(out_unitp)
 
       END IF
       CALL flush_perso(out_unitp)

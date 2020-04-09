@@ -609,11 +609,12 @@ subroutine check_allocate_opnd(F_nd)
  end function get_Jac_OF_Q
 
  subroutine Export_Latex_Opnd(Fnd,tab_Qname,FndName)
-   type(opnd),          intent(in)      :: Fnd
-   character (len = :), allocatable     :: FndName
-   character(len=*),   intent(in)       :: tab_Qname(:)
+   type(opnd),                       intent(in)      :: Fnd
+   character (len = :), allocatable, intent(inout)     :: FndName
+   character(len=*),                 intent(in)       :: tab_Qname(:)
 
-   character (len = :), allocatable     :: qname
+   ! local variables
+   character (len = :), allocatable     :: qname,FndName_loc
    character (len = :), allocatable     :: F1dName
    integer :: j,m
    character (len = *), parameter       :: mult = ' '
@@ -622,7 +623,7 @@ subroutine check_allocate_opnd(F_nd)
 
 
    !CALL write_op(Fnd)
-   FndName = String_TO_String('')
+   FndName_loc = String_TO_String('')
 
    IF (size(Fnd%prod_op1d) > 0) THEN
      DO j=1,size(Fnd%prod_op1d)
@@ -634,25 +635,29 @@ subroutine check_allocate_opnd(F_nd)
        end if
 
        CALL Export_Latex_Op1D(Fnd%prod_op1d(j),qname,F1dName)
-       FndName = String_TO_String( FndName // mult // F1dName)
+       FndName_loc = String_TO_String( FndName_loc // mult // F1dName)
      END DO
      IF (allocated(F1dName)) deallocate(F1dName)
 
    ELSE
-     FndName = String_TO_String('')
+     FndName_loc = String_TO_String('')
    END IF
 
-   IF (allocated(qname))   deallocate(qname)
+   FndName = FndName_loc
+
+   IF (allocated(FndName_loc))   deallocate(FndName_loc)
+   IF (allocated(qname))         deallocate(qname)
 
  end subroutine Export_Latex_Opnd
 
  subroutine Export_Midas_Opnd(Fnd, tab_Qname, FndName)
-   type(opnd),          intent(in)      :: Fnd
-   character (len = :), allocatable     :: FndName
-   character(len=*),    intent(in)      :: tab_Qname(:)
+   type(opnd),                       intent(in)      :: Fnd
+   character (len = :), allocatable, intent(inout)   :: FndName
+   character(len=*),                 intent(in)      :: tab_Qname(:)
 
+   ! local variables
    character (len = :), allocatable     :: qname, Qdispname !Emil new
-   character (len = :), allocatable     :: F1dName
+   character (len = :), allocatable     :: F1dName,FndName_loc
    integer :: j,m
    character (len = *), parameter       :: mult = ' '
    character (len = Name_len)           :: cindexq
@@ -660,7 +665,7 @@ subroutine check_allocate_opnd(F_nd)
    character (len = *), parameter       :: routine_name = 'Export_Midas_Opnd'
 
    !CALL write_op(Fnd)
-   FndName = String_TO_String('')
+   FndName_loc = String_TO_String('')
 
    IF (size(Fnd%prod_op1d) > 0) THEN
      DO j = 1, size(Fnd%prod_op1d)
@@ -671,26 +676,30 @@ subroutine check_allocate_opnd(F_nd)
 
        CALL Export_Midas_Op1D(Fnd%prod_op1d(j), Qdispname, F1dName) !Emil change
        !CALL Export_Midas_Op1D(Fnd%prod_op1d(j), 'Q', F1dName) ! old one DML
-       FndName = String_TO_String( FndName // mult // F1dName // Qname)
+       FndName_loc = String_TO_String( FndName_loc // mult // F1dName // Qname)
      END DO
      IF (allocated(F1dName)) deallocate(F1dName)
      IF (allocated(Qdispname)) deallocate(Qdispname) !Emil new
 
    ELSE
-     FndName = String_TO_String('')
+     FndName_loc = String_TO_String('')
    END IF
 
-   IF (allocated(qname)) deallocate(qname)
+   FndName = FndName_loc
+
+   IF (allocated(FndName_loc))   deallocate(FndName_loc)
+   IF (allocated(qname))         deallocate(qname)
 
  end subroutine Export_Midas_Opnd
 
  subroutine Export_MCTDH_Opnd(Fnd,FndName,nb_act)
-   type(opnd),          intent(inout)   :: Fnd
-   integer,             intent(in)      :: nb_act
-   character (len = :), allocatable     :: FndName
+   type(opnd),                       intent(inout)   :: Fnd
+   integer,                          intent(in)      :: nb_act
+   character (len = :), allocatable, intent(inout)   :: FndName
 
 
-   character (len = :), allocatable     :: F1dName
+   ! local variables
+   character (len = :), allocatable     :: F1dName,FndName_loc
    character (len = :), allocatable     :: SepCoord
 
    integer :: j,m,idq
@@ -700,7 +709,7 @@ subroutine check_allocate_opnd(F_nd)
 
 
    !CALL write_op(Fnd)
-   FndName = String_TO_String('')
+   FndName_loc = String_TO_String('')
 
    First_idq5 = .TRUE.
    IF (size(Fnd%prod_op1d) > 0) THEN
@@ -720,22 +729,27 @@ subroutine check_allocate_opnd(F_nd)
        END IF
 
        CALL Export_MCTDH_Op1D(Fnd%prod_op1d(j),F1dName)
-       FndName = String_TO_String( FndName // SepCoord // F1dName)
+       FndName_loc = String_TO_String( FndName_loc // SepCoord // F1dName)
      END DO
      IF (allocated(F1dName))    deallocate(F1dName)
      IF (allocated(SepCoord))   deallocate(SepCoord)
 
    END IF
 
+   FndName = FndName_loc
+
+   IF (allocated(FndName_loc))   deallocate(FndName_loc)
+
  end subroutine Export_MCTDH_Opnd
 
  subroutine Export_VSCF_Opnd(Fnd,tab_Qname,FndName)
-   type(opnd),          intent(in)      :: Fnd
-   character (len = :), allocatable     :: FndName
-   character(len=*),   intent(in)       :: tab_Qname(:)
+   type(opnd),                       intent(in)      :: Fnd
+   character (len = :), allocatable, intent(inout)   :: FndName
+   character(len=*),                 intent(in)      :: tab_Qname(:)
 
 
-   character (len = :), allocatable     :: qname
+   !local variables
+   character (len = :), allocatable     :: qname,FndName_loc
    character (len = :), allocatable     :: F1dName
    integer :: j,m
    character (len = *), parameter       :: mult = ' '
@@ -744,7 +758,7 @@ subroutine check_allocate_opnd(F_nd)
 
 
    !CALL write_op(Fnd)
-   FndName = String_TO_String('')
+   FndName_loc = String_TO_String('')
 
    IF (size(Fnd%prod_op1d) > 0) THEN
      DO j=1,size(Fnd%prod_op1d)
@@ -752,15 +766,18 @@ subroutine check_allocate_opnd(F_nd)
        qname = String_TO_String('Q' // int_TO_char(m) )
 
        CALL Export_VSCF_Op1D(Fnd%prod_op1d(j),qname,F1dName)
-       FndName = String_TO_String( FndName // mult // F1dName)
+       FndName_loc = String_TO_String( FndName_loc // mult // F1dName)
      END DO
      IF (allocated(F1dName)) deallocate(F1dName)
 
    ELSE
-     FndName = String_TO_String('')
+     FndName_loc = String_TO_String('')
    END IF
 
-   IF (allocated(qname))   deallocate(qname)
+   FndName = FndName_loc
+
+   IF (allocated(FndName_loc))   deallocate(FndName_loc)
+   IF (allocated(qname))         deallocate(qname)
 
 
  end subroutine Export_VSCF_Opnd

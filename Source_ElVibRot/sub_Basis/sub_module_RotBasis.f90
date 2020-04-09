@@ -48,18 +48,17 @@
       PRIVATE
 
         TYPE RotBasis_Param
-          integer :: Jrot   = -1                    !  J value
-          integer :: nb_Rot = 0                     !  size of the operator (2*Jrot+1)
-
-          integer :: nb_term = 0
-          integer :: tab_der_TO_iterm(-3:0,-3:0)    ! i1 or i2 =-3,-2,-1   => Jz, Jy, Jx
+          integer                       :: Jrot                        = -1 !  J value
+          integer                       :: nb_Rot                      = 0  !  size of the operator (2*Jrot+1)
+          integer                       :: nb_term                     = 0
+          integer                       :: tab_der_TO_iterm(-3:0,-3:0) = 0
+                                                    ! i1 or i2 =-3,-2,-1   => Jz, Jy, Jx
                                                     ! ex: -2,-1            => JyJx+JxJy operator
                                                     ! ex: -2, 0 or 0,-2    => Jy operator
 
-          integer, allocatable :: tab_iterm_TO_der(:,:) !  ...(2,nb_term)
-
-          real(kind=Rkind), allocatable :: tab_RotOp(:,:,:)  ! tab_RotOp(nb_Rot,nb_Rot,0:nb_term)
-                                                    ! tab_RotOp(:,:,0) is not used but it needs when tab_der_TO_iterm(0,0)=0
+          integer,          allocatable :: tab_iterm_TO_der(:,:)            !  ...(2,nb_term)
+          real(kind=Rkind), allocatable :: tab_RotOp(:,:,:)                 ! tab_RotOp(nb_Rot,nb_Rot,0:nb_term)
+                                                                            ! tab_RotOp(:,:,0) is not used but it needs when tab_der_TO_iterm(0,0)=0
 
         END TYPE RotBasis_Param
 

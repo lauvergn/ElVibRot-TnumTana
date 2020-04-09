@@ -116,13 +116,13 @@ CONTAINS
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),      intent(in)           :: para_Op
+      TYPE (param_Op)                            :: para_Op
       integer,              intent(in), optional :: iOp
       complex (kind=Rkind), intent(inout)        :: E
 
 !----- variables for the WP ----------------------------------------
-      TYPE (param_psi),     intent(in)           :: Psi
-      TYPE (param_psi),     intent(inout)        :: OpPsi
+      TYPE (param_psi)    :: Psi
+      TYPE (param_psi)    :: OpPsi
 
   !----- for debuging --------------------------------------------------
   logical, parameter :: debug = .FALSE.
@@ -1917,7 +1917,7 @@ STOP 'cplx'
 
       SUBROUTINE sub_OpPsi_WITH_FileGrid_type12_BGG(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
-      USE mod_SetOp,              ONLY : param_Op
+      USE mod_SetOp,           ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
       USE mod_OpGrid,          ONLY : sub_ReadSeq_Grid_iterm,sub_ReadDir_Grid_iterm
@@ -2569,7 +2569,7 @@ STOP 'cplx'
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op)  :: para_Op
+      TYPE (param_Op)              :: para_Op
       integer,         intent(in)  :: iterm
 
 !----- variables for the WP ----------------------------------------
@@ -2713,8 +2713,8 @@ STOP 'cplx'
       SUBROUTINE sub_OpiPsi(Psi,OpPsi,para_Op,iOp)
       USE mod_system
       USE mod_SetOp,           ONLY : param_Op,write_param_Op,alloc_para_Op,read_OpGrid_OF_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,assignment (=)
-      USE mod_psi_SimpleOp,    ONLY : assignment (=)
+      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,assignment(=)
+      USE mod_psi_SimpleOp,    ONLY : assignment(=)
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
       IMPLICIT NONE
 
@@ -2906,8 +2906,7 @@ STOP 'cplx'
       SUBROUTINE sub_sqRhoOVERJac_Psi(Psi,para_Op,inv)
       USE mod_system
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op
 
       IMPLICIT NONE
 
@@ -3254,7 +3253,7 @@ END SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid
        DO iOp=1,para_H%nb_Term
 
          CALL sub_PsiOpPsi(avOp,Psi,OpPsi,para_H,iOp)
-         write(out_unitp,"(i0,a,i0,a,2(i0,x),2a,f15.9,1x,f15.9)") iPsi,  &
+         write(out_unitp,"(i0,a,i0,a,2(i0,1x),2a,f15.9,1x,f15.9)") iPsi,  &
           ' H(',iOp,') der[',para_H%derive_termQact(:,iOp),']: ',info,avOp
 
          CALL flush_perso(out_unitp)

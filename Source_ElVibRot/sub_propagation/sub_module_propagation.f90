@@ -66,16 +66,19 @@ PUBLIC :: MPI_Bcast_param_Davidson
       !!@param: TODO
         TYPE param_poly
 
-        logical           :: init_done = .FALSE.
-
-        real (kind=Rkind) :: DHmax,Hmax,Hmin        ! parameters
-        real (kind=Rkind) :: deltaE,Esc,E0          ! parameters
-        real (kind=Rkind) :: alpha                  ! parameters
-        real (kind=Rkind) :: poly_tol
-        integer           :: max_poly               ! max number of polynomials
-        real (kind=Rkind), pointer :: coef_poly(:) => null()  !
-        integer           :: npoly                  ! number polynomials
-        integer           :: npoly_Opt              ! optimal number polynomials
+        logical                    :: init_done       = .FALSE.
+        real (kind=Rkind)          :: DHmax           = -TEN
+        real (kind=Rkind)          :: Hmax            = ZERO
+        real (kind=Rkind)          :: Hmin            = ZERO
+        real (kind=Rkind)          :: deltaE          = ZERO
+        real (kind=Rkind)          :: Esc             = ONE
+        real (kind=Rkind)          :: E0              = ZERO
+        real (kind=Rkind)          :: alpha           = ZERO
+        real (kind=Rkind)          :: poly_tol        = ZERO
+        integer                    :: max_poly        = 500 ! max number of polynomials
+        real (kind=Rkind), pointer :: coef_poly(:)    => null()  !
+        integer                    :: npoly           = 0 ! number polynomials
+        integer                    :: npoly_Opt       = 0 ! optimal number polynomials
 
         END TYPE param_poly
         TYPE param_control
@@ -111,37 +114,62 @@ PUBLIC :: MPI_Bcast_param_Davidson
         complex (kind=Rkind), pointer :: Mgatet(:,:) => null()  ! gate Matrix (fort WPt)
 
         END TYPE param_control
+
         TYPE param_Davidson
-         integer :: num_resetH,num_checkS
-         logical :: one_by_one
-         integer :: residual_max_nb
-         integer :: max_it,nb_WP,max_WP,num_LowestWP,nb_WP0
 
-         logical :: read_WP,read_listWP,precond,formatted_file_readWP
-         integer :: nb_readWP,nb_readWP_OF_List
-         character (len=Line_len) :: name_file_readWP
-         real (kind=Rkind) :: precond_tol
+         integer :: num_resetH =-1 ! -1 no reset
+         integer :: num_checkS = 10
+         integer :: max_it     = 100
 
-         logical :: save_all
-         integer :: save_interal
-         real (kind=Rkind) :: save_max_ene,scaled_max_ene
-         integer :: save_max_nb
-         character (len=Line_len) :: name_file_saveWP
-         logical :: formatted_file_WP
+         integer :: nb_WP        = 0
+         integer :: max_WP       = 0
+         integer :: num_LowestWP = -1        ! With this number, the WP with lower energy are excluded
+         integer :: nb_WP0       = 0
 
-         logical :: all_lower_states,lower_states,project_WP0,Op_Transfo
-         logical :: Hmin_propa,Hmax_propa
+
+         logical :: read_WP                            = .FALSE. ! T => read the the WP in file_WP
+         logical :: read_listWP                        = .FALSE. ! T => read a list of WP (nb_readWP)
+         logical :: formatted_file_readWP              = .TRUE.
+         integer :: nb_readWP                          = -1      ! if -1 => nb_diago, ortherwise more WP
+         integer :: nb_readWP_OF_List                  = 0     ! 0 => all
+         character (len=Line_len) :: name_file_readWP  = 'file_WP'
+
+         logical :: precond                            = .FALSE. ! precondition (not used)
+         real (kind=Rkind) :: precond_tol              = ONETENTH
+
+         logical :: save_all                           = .FALSE.
+         integer :: save_interal                       = 1 ! for MPI ???
+         real (kind=Rkind) :: save_max_ene             = -huge(ONE)
+         real (kind=Rkind) :: scaled_max_ene           = 1.1_Rkind ! save_max_ene = scaled_max_ene * max_ene
+         integer :: save_max_nb                        = -1 ! If -1, we did not use this number (default)
+         character (len=Line_len) :: name_file_saveWP  = 'file_WP'
+         logical :: formatted_file_WP                  = .TRUE.
+
+         logical :: all_lower_states  = .FALSE. ! T => converge all the lower states (E<Max_ene)
+         logical :: lower_states      = .FALSE. ! T => converge on the lower states
+         logical :: project_WP0       = .FALSE. ! T => project on WP0 (revelant if lower_states=f)
+         logical :: one_by_one        = .FALSE. ! T => converge vector one by one
+         integer :: residual_max_nb   = huge(1) ! the number maximal of residual
+
+         logical :: Op_Transfo        = .FALSE.
+
+
+         logical :: Hmin_propa = .FALSE.  ! with Davidson
+         logical :: Hmax_propa = .FALSE.  ! with Davidson
          real (kind=Rkind) :: thresh_project = 0.8_Rkind
 
-         real (kind=Rkind) :: Max_ene
-         integer           :: symab
+         real (kind=Rkind) :: Max_ene = -HUGE(ONE)
+         integer           :: symab = -1 ! -1 nosym
 
 
-         real (kind=Rkind) :: RMS_ene,conv_ene
-         real (kind=Rkind) :: RMS_resi,conv_resi
-         integer :: conv_hermitian
-         integer :: NewVec_type = 2
-         logical :: With_Grid   = .FALSE.
+         real (kind=Rkind) :: RMS_ene   = ZERO ! not used
+         real (kind=Rkind) :: conv_ene  = ONETENTH**7
+         real (kind=Rkind) :: RMS_resi  = ZERO ! not used
+         real (kind=Rkind) :: conv_resi = FIVE*ONETENTH**5
+
+         integer :: conv_hermitian    = 0 ! convergence if max_ene < 10**conv_hermitian * "non_hermitic"
+         integer :: NewVec_type       = 2
+         logical :: With_Grid         = .FALSE.
 
          ! parameters specific to the filter diagonalization
          real (kind=Rkind) :: E0_filter     = ZERO   ! the center of the windowin ua (but read in cm-1)
@@ -162,23 +190,26 @@ PUBLIC :: MPI_Bcast_param_Davidson
       !!@param: TODO
         TYPE param_propa
 
-
-        real (kind=Rkind)   ::  Hmax,Hmin     !
-        logical             ::  once_control_Hmin=.TRUE.!< control the calculation of 
+        real (kind=Rkind)   ::  Hmax              = ZERO
+        real (kind=Rkind)   ::  Hmin              = ZERO
+        logical             ::  once_control_Hmin =.TRUE.!< control the calculation of
                                                         !! Hmin once at the first action
-        logical             ::  auto_Hmax     !  .TRUE. => Hmax is obtained with a propagation
+        logical             ::  auto_Hmax         = .FALSE.    !  .TRUE. => Hmax is obtained with a propagation
                                               !            with imaginary time (type_WPpropa=-3)
                                               !            (default .FALSE.)
-        real (kind=Rkind)   ::  WPTmax        ! propagation time in au
+        real (kind=Rkind)   ::  WPTmax       = HUNDRED ! propagation time in au
         real (kind=Rkind)   ::  WPT0          ! initial time in au
-        logical             ::  restart       ! restart the propagation
+        logical             ::  restart      = .FALSE. ! restart the propagation
 
-        real (kind=Rkind)   ::  WPdeltaT      ! time step in au
-        integer             ::  nb_micro      ! nb of microiterations
+        real (kind=Rkind)   ::  WPdeltaT      = TEN ! time step in au
+        integer             ::  nb_micro      = 1 ! nb of microiterations
+        logical             ::  One_Iteration = .FALSE. ! Propagation stops after one time step.
 
-        integer             ::  max_ana       ! nb of wavefunctions calculated with imaginary propagation
 
-        integer             ::  type_WPpropa  ! propagation type :
+
+        integer             ::  max_ana      = 0 ! nb of wavefunctions calculated with imaginary propagation
+
+        integer             ::  type_WPpropa = 0 ! propagation type :
                                               !  1 Chebychev (default)
                                               !  2 nOD (Taylor)
                                               !  5 RK4
@@ -198,41 +229,38 @@ PUBLIC :: MPI_Bcast_param_Davidson
 
 
         logical                  :: With_field = .FALSE.   ! propagation with a field
-        character (len=Name_len) :: name_WPpropa  !  spectral (not working)
+        character (len=Name_len) :: name_WPpropa = ' ' !  spectral (not working)
                                               !  cheby (default)
                                               !  nOD
                                               !  Hmin,Hmax (imaginary propagation: nOD)
                                               !  TDnOD
 
-        logical         ::       spectral     ! Def (f). If T => spectral propagatio
+        logical         ::       spectral    = .FALSE. ! Def (f). If T => spectral propagatio
 
 
-        integer         ::       type_corr    !  kind of correlation function
-                                              !  default 0 => <psi0(T)|psi(T)>
-                                              !  1 =>  psi(T,i_qa_corr,...) (for a grid point)
-        integer         ::       i_qa_corr    !  grid point for type_corr = 1
-        integer         ::       channel_ie_corr !   Channel for type_corr = 1
-        integer         ::       Op_corr      !  defined the Operator when type_corr=2
+        integer         ::       type_corr       = 0 !  kind of correlation function
+                                                     !  default 0 => <psi0(T)|psi(T)>
+                                                     !  1 =>  psi(T,i_qa_corr,...) (for a grid point)
+        integer         ::       i_qa_corr       = 0 !  grid point for type_corr = 1
+        integer         ::       channel_ie_corr = 0 !   Channel for type_corr = 1
+        integer         ::       Op_corr         = 0 !  defined the Operator when type_corr=2
 
-
-
-        integer         ::       n_WPecri        !  write WP every n_WPecri time steps
-        logical         ::       WPpsi           !  write WP
-        logical         ::       WPpsi2          !  write WP2
-        logical         ::       write_iter      !  write iteration
-        logical         ::       write_GridRep   !  write WP of the grid
-        logical         ::       write_BasisRep  !  write WP of the basis
-        logical         ::       write_WPAdia    !  if T, write WP on the adiabatic PES (otherwise on the diabatic ones)
+        integer         ::       n_WPecri        = 1 !  write WP every n_WPecri time steps
+        logical         ::       WPpsi           = .FALSE. !  write WP
+        logical         ::       WPpsi2          = .FALSE. !  write WP2
+        logical         ::       write_iter      = .TRUE. !  write iteration
+        logical         ::       write_GridRep   = .TRUE. !  write WP of the grid
+        logical         ::       write_BasisRep  = .FALSE.!  write WP of the basis
+        logical         ::       write_WPAdia    = .FALSE. !  if T, write WP on the adiabatic PES (otherwise on the diabatic ones)
 
         TYPE (param_ana_psi)  :: ana_psi         ! to control the WP analysis
 
 
-        logical           ::       control         !  use control (need type_WPpropa 24)
-        logical           ::       test_max_norm   ! IF .TRUE., Error in the propagation (norm too large)
+        logical           ::       control       = .FALSE.  !  use control (need type_WPpropa 24)
+        logical           ::       test_max_norm = .FALSE.  ! IF .TRUE., Error in the propagation (norm too large)
         real (kind=Rkind) ::       max_norm2 = 1.3_Rkind ! ! if wp%norm^2 > max_norm^2 => stop
-        logical           ::       march_error     ! IF .TRUE., Error in the propagation
+        logical           ::       march_error = .FALSE.    ! IF .TRUE., Error in the propagation
         integer           ::       num_Op = 0      !  Operator used for the propagation (H)
-        logical           ::       One_Iteration = .FALSE. ! Propagation stops after one time step.
 
 !----- variables for the WP propagation ----------------------------
 
@@ -245,8 +273,9 @@ PUBLIC :: MPI_Bcast_param_Davidson
         TYPE(param_poly)     :: para_poly
         TYPE(param_field)    :: para_field
 
-        integer           :: TFnexp2
-        real (kind=Rkind) :: TFmaxE,TFminE
+        integer           :: TFnexp2 = 15
+        real (kind=Rkind) :: TFmaxE  = HUGE(ONE)
+        real (kind=Rkind) :: TFminE  = ZERO
 
         END TYPE param_propa
 

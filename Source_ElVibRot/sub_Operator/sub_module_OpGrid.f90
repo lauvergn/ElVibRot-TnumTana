@@ -807,7 +807,7 @@
           END IF
 
           IF (print_level>-1 .AND. MPI_id==0) THEN
-            write(out_unitp,'(i5,x,i6,2x,2i5,l3,x,l4,x,2e11.2,x,l3)')   &
+            write(out_unitp,'(i5,1x,i6,2x,2i5,l3,1x,l4,1x,2e11.2,1x,l3)')   &
                    n_Op,k_term,OpGrid(k_term)%derive_termQact(:),       &
                    OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
                    OpGrid(k_term)%Op_min,OpGrid(k_term)%Op_max,         &
@@ -820,7 +820,7 @@
                  (sum(abs(OpGrid(k_term)%Mat_cte(:,:))) < ONETENTH**12)
 
           IF (print_level>-1 .AND. MPI_id==0) THEN
-            write(out_unitp,'(i5,x,i6,2x,2i5,l3,x,l4,24x,l3)') n_Op,k_term,    &
+            write(out_unitp,'(i5,1x,i6,2x,2i5,l3,1x,l4,24x,l3)') n_Op,k_term,    &
                    OpGrid(k_term)%derive_termQact(:),                   &
                    OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
                    (.NOT. associated(OpGrid(k_term)%Grid))

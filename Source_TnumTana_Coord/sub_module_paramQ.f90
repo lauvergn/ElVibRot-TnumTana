@@ -2005,7 +2005,7 @@ CONTAINS
         write(out_unitp,*) '-----------------------------------------'
         DO i=1,size(d0Q),iblock
           iend = min(size(d0Q),i+iblock-1)
-          write(out_unitp,'(a,a,i0,x,6(x,f0.4))') name_info,',it_Qtransfo: ',it,d0Q(i:iend)
+          write(out_unitp,'(a,a,i0,1x,6(1x,f0.4))') name_info,',it_Qtransfo: ',it,d0Q(i:iend)
         END DO
         write(out_unitp,*) '-----------------------------------------'
         CALL flush_perso(out_unitp)
@@ -2256,7 +2256,7 @@ CONTAINS
       IMPLICIT NONE
 
       TYPE (zmatrix),    intent(in) :: mole
-      real (kind=Rkind), intent(in) :: d0x(mole%ncart)
+      real (kind=Rkind), intent(in) :: d0x(:)
 
         CALL Write_Cartg98_CoordType(d0x,mole%CoordType)
 
@@ -2267,12 +2267,14 @@ CONTAINS
       IMPLICIT NONE
 
       TYPE (CoordType),  intent(in) :: mole
-      real (kind=Rkind), intent(in) :: d0x(mole%ncart)
+      real (kind=Rkind), intent(in) :: d0x(:)
 
       real (kind=Rkind) :: a0
       integer           :: Z_act(mole%nat)
 
-      integer       :: i,iZ
+      integer       :: i,iZ,ncart
+
+      ncart = size(d0x)
 
 
       Z_act(:) = -1
@@ -2289,7 +2291,7 @@ CONTAINS
       iZ = 0
       write(out_unitp,*) '=============================================='
       write(out_unitp,*) '= Gaussian CC ================================'
-      DO i=1,mole%ncart,3
+      DO i=1,ncart,3
         iZ = iZ + 1
         write(out_unitp,111) Z_act(iZ),0,d0x(i+0:i+2)*a0
  111    format(1x,2(1x,i5),3(2x,f20.9))
@@ -2300,11 +2302,11 @@ CONTAINS
 
       write(out_unitp,*) '=============================================='
       write(out_unitp,*) '= XYZ format ================================='
-      write(out_unitp,*) mole%nat_act
+      write(out_unitp,*) ncart/3
       write(out_unitp,*)
 
       iZ = 0
-      DO i=1,mole%ncart_act,3
+      DO i=1,ncart,3
         iZ = iZ + 1
         write(out_unitp,112) Z_act(iZ),d0x(i+0)*a0,d0x(i+1)*a0,d0x(i+2)*a0
  112    format(2x,i5,3(2x,f20.9))

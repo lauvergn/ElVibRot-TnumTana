@@ -63,15 +63,16 @@ MODULE mod_RW_MatVec
        character (len=*), optional,    intent(in)     :: name_info
 
 
-       character (len=:), allocatable :: NMatformat
+       ! local variables
+       character (len=:), allocatable :: NMatformat,wformat_loc
        integer                        :: ilen
 
        IF (allocated(wformat)) deallocate(wformat)
 
        IF (present(name_info)) THEN
-         wformat = String_TO_String('(2x,"' // trim(adjustl(name_info)) // ' ",')
+         wformat_loc = String_TO_String('(2x,"' // trim(adjustl(name_info)) // ' ",')
        ELSE
-         wformat = String_TO_String('(')
+         wformat_loc = String_TO_String('(')
        END IF
 
        IF (present(Rformat)) THEN
@@ -103,7 +104,7 @@ MODULE mod_RW_MatVec
 #if(run_MPI)
            write(*,*) 'max_col check:',max_col,ilen, ' from ',MPI_id
 #endif
-           wformat = String_TO_String(wformat // '1x,i' //              &
+           wformat_loc = String_TO_String(wformat_loc // '1x,i' //      &
                        int_TO_char(ilen) // ',2x,' //                   &
                        int_TO_char(max_col) // '(' //                   &
                        trim(adjustl(NMatformat)) // ',1x))')
@@ -111,7 +112,7 @@ MODULE mod_RW_MatVec
 
        ELSE
 
-           wformat = String_TO_String(wformat //                         &
+           wformat_loc = String_TO_String(wformat_loc //                 &
                        int_TO_char(max_col)   // '(' //                  &
                        trim(adjustl(NMatformat)) // ',1x))')
 
@@ -121,7 +122,10 @@ MODULE mod_RW_MatVec
        !write(6,*) 'wformat: ',wformat
        !flush(6)
 
+       wformat = wformat_loc
+
        deallocate(NMatformat)
+       deallocate(wformat_loc)
 
        !write(out_unitp,*) 'format?: ',trim(wformat)
       END SUBROUTINE sub_Format_OF_Line

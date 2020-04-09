@@ -157,7 +157,7 @@ CONTAINS
       END IF
 
        write(out_unitp,*)
-       Q =  part_func(ene,nb_psi_in,para_ana%Temp,const_phys)
+       Q =  part_func(ene,nb_psi_in,para_ana%Temp)
 
       ! initialization for RD analysis
       IF (para_H%BasisnD%nb_basis > 1) THEN
@@ -496,7 +496,7 @@ CONTAINS
        DO iOp=1,para_AllOp%tab_Op(1)%nb_Term
 
          CALL sub_PsiOpPsi(avOp,Psi,OpPsi,para_AllOp%tab_Op(1),iOp)
-         write(out_unitp,"(i0,a,i0,a,2(i0,x),2a,f15.9,1x,f15.9)") iPsi,  &
+         write(out_unitp,"(i0,a,i0,a,2(i0,1x),2a,f15.9,1x,f15.9)") iPsi,  &
           ' H(',iOp,') der[',para_AllOp%tab_Op(1)%derive_termQact(:,iOp),&
           ']: ',info,avOp
 

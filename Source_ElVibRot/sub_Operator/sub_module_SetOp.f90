@@ -57,8 +57,8 @@ MODULE mod_SetOp
         ! type param_Op
         TYPE, EXTENDS(param_TypeOp) :: param_Op
 
-          logical                        :: init_var   = .FALSE.
-          logical                        :: alloc      = .FALSE.
+          logical                        :: init_var      = .FALSE.
+          logical                        :: alloc         = .FALSE.
 
           logical                        :: alloc_Mat     = .FALSE.
           logical                        :: Mat_done      = .FALSE.
@@ -78,7 +78,7 @@ MODULE mod_SetOp
 
           !-- for Tnum and mole ----------------------------------------------
           TYPE (CoordType), pointer      :: mole            => null() ! true POINTER
-          TYPE (Tnum)   , pointer        :: para_Tnum       => null() ! true POINTER
+          TYPE (Tnum),      pointer      :: para_Tnum       => null() ! true POINTER
 
           !-- for param_PES --------------------------------------------------
           TYPE (param_PES), pointer      :: para_PES        => null() ! true POINTER
@@ -1045,7 +1045,7 @@ MODULE mod_SetOp
       ELSE
         write(out_unitp,*) ' ERROR in param_Op1TOparam_Op2'
         write(out_unitp,*) '  CANNOT be associated'
-        write(out_unitp,*) ' asso para_Op1%',associated(para_Op1%para_AllBasis)
+        write(out_unitp,*) ' asso para_Op1%para_AllBasis',associated(para_Op1%para_AllBasis)
         write(out_unitp,*) ' CHECK the source'
         STOP
       END IF
@@ -1379,7 +1379,7 @@ MODULE mod_SetOp
          IF (print_level>-1 .AND. MPI_id==0) THEN
            write(out_unitp,*)'--------------------------------------------------------------'
            write(out_unitp,*)'n_Op,k_term,derive_term,cte,zero,    minval,    maxval,dealloc'
-           write(out_unitp,'(i5,x,a)') para_Op%n_Op,'This Operator is not allocated'
+           write(out_unitp,'(i5,1x,a)') para_Op%n_Op,'This Operator is not allocated'
            write(out_unitp,*)'--------------------------------------------------------------'
          END IF
          RETURN

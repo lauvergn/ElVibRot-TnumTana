@@ -121,7 +121,10 @@
         nb_inact21 = mole%nb_inact2n
       END IF
 
-      IF (nb_inact21 <= 0) RETURN
+      IF (nb_inact21 <= 0) THEN
+        read(in_unitp,inactives) ! for nagfor we must read the inactive namelist
+        RETURN
+      END IF
       IF (nb_inact21 > max_inact2n) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) 'max_inact2n is too small',max_inact2n

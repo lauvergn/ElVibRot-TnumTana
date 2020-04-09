@@ -293,6 +293,10 @@
         CALL flush_perso(out_unitp)
       END IF
 
+
+      max_Sii = ZERO
+      max_Sij = ZERO
+
 !$OMP   PARALLEL &
 !$OMP   DEFAULT(NONE) &
 !$OMP   SHARED(para_AllOp,max_Sii,max_Sij,iqf) &

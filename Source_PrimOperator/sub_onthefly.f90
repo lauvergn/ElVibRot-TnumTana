@@ -93,7 +93,7 @@ MODULE mod_OTF
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'Qxyz'
-        write(out_unitp,'(3(x,f16.6))') Qxyz
+        write(out_unitp,'(3(1x,f16.6))') Qxyz
         write(out_unitp,*) 'nderivE,nderivMu',nderivE,nderivMu
         write(out_unitp,*)
       END IF
@@ -378,7 +378,9 @@ END IF
       !- gaussian execution -------------------------------------------
       CALL file_delete(para_OTF%file_log)
 
-      CALL system(para_OTF%commande_unix)
+      !CALL system(para_OTF%commande_unix)
+      CALL EXECUTE_COMMAND_LINE(para_OTF%commande_unix)
+
 
       located = .FALSE.
       CALL file_open(para_OTF%file_log,nio,append=.TRUE.)
@@ -946,7 +948,8 @@ END IF
 !       - gamess execution -------------------------------------------
         CALL file_delete(para_OTF%file_log)
 
-        CALL system(para_OTF%commande_unix)
+        !CALL system(para_OTF%commande_unix)
+        CALL EXECUTE_COMMAND_LINE(para_OTF%commande_unix)
 
 
         located = .FALSE.
@@ -1523,7 +1526,8 @@ END IF
 
       !----------------------------------------------------------------
       !- system call => ab initio calulation --------------------------
-      CALL system(para_PES%para_OTF%commande_unix // " " // int_TO_char(para_PES%nb_elec) )
+      !CALL system(para_PES%para_OTF%commande_unix // " " // int_TO_char(para_PES%nb_elec) )
+      CALL EXECUTE_COMMAND_LINE(para_PES%para_OTF%commande_unix // " " // int_TO_char(para_PES%nb_elec) )
 
       located = .FALSE.
       CALL file_open(para_PES%para_OTF%file_log,nio,append=.TRUE.)

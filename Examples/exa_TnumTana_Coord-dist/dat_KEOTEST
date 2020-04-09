@@ -13,8 +13,7 @@ $DIR_vib/TEST_TnumTana.exe << ** > res
          JJ=1
  /
  &Coord_transfo name_transfo='bunch_poly' nb_vect=2 nb_X=0 inTOout=f /
-8. 1. 1.
-O H H
+8. 1. 1.  O H H
 
  &Coord_transfo name_transfo='poly' cos_th=t /
      &vector nb_vect=1 Frame=t iAtA=1 iAtB=2 cos_th=t / : R1 (0H1)

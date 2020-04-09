@@ -203,7 +203,7 @@
        integer n(0:ndim)
 
        integer i,ii,l,m,lll,mmm
-       real (kind=Rkind) :: xi,xl,th(1),phi(1)
+       real (kind=Rkind) :: xi,xl,th,phi(1)
 
 !      ---------------------------------------------------------------
        real (kind=Rkind) :: Ylm,poly_legendre,v27
@@ -348,8 +348,8 @@
 
        c=cos(x(1))
 
-       ep = exp(beta*(x(2)-Req))
-       em = exp(-beta*(x(2)-Req))
+!       ep = exp(beta*(x(2)-Req))
+!       em = exp(-beta*(x(2)-Req))
 !      th = ( (ep-em)/(ep+em) + ONE)*HALF * exp(-beta2*x(2))
        th = exp(-beta2*x(2))
 

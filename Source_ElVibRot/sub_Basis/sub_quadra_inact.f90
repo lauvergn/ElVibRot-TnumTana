@@ -108,7 +108,7 @@
 
         CALL alloc_init_basis(Basis2n%tab_Pbasis(i)%Pbasis)
 
-        CALL sub_quadra_hermite(Basis2n%tab_Pbasis(i)%Pbasis,-1,num,step)
+        CALL sub_quadra_hermite(Basis2n%tab_Pbasis(i)%Pbasis,-1)
         tab_nq(i) = get_nq_FROM_basis(Basis2n%tab_Pbasis(i)%Pbasis)
         Basis2n%tab_Pbasis(i)%Pbasis%A(:)              = ZERO
         Basis2n%tab_Pbasis(i)%Pbasis%B(:)              = ZERO

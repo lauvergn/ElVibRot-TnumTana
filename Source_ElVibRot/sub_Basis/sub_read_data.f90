@@ -715,7 +715,7 @@
             write(out_unitp,*) ' Check your data !!'
             STOP
           END IF
-          write(out_unitp,'(2a,11(x,i0))') 'dummy_name ',dummy_name,Tab_L_TO_n
+          write(out_unitp,'(2a,11(1x,i0))') 'dummy_name ',dummy_name,Tab_L_TO_n
           CALL Set_Basis_L_TO_n(basis_temp%L_TO_nb,max_n=max_nb,Tab_L_TO_n=Tab_L_TO_n)
 
 
@@ -731,7 +731,7 @@
             write(out_unitp,*) ' Check your data !!'
             STOP
           END IF
-          write(out_unitp,'(2a,11(x,i0))') 'dummy_name ',dummy_name,Tab_L_TO_n
+          write(out_unitp,'(2a,11(1x,i0))') 'dummy_name ',dummy_name,Tab_L_TO_n
           CALL Set_Basis_L_TO_n(basis_temp%L_TO_nq,max_n=max_nq,Tab_L_TO_n=Tab_L_TO_n)
 
           CALL dealloc_NParray(Tab_L_TO_n,"Tab_L_TO_n",name_sub)
