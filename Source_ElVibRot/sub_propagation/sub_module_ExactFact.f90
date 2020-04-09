@@ -109,7 +109,7 @@ SUBROUTINE sub_ExactFact_analysis(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
    END IF
 !-------------------------------------------------------
 
-! normally, the psi is known on the basis ( psi%CvecB(:) ) and on the grid ( psi%CvecG(:) )
+  ! normally, the psi is known on the basis ( psi%CvecB(:) ) and on the grid ( psi%CvecG(:) )
   IF (.NOT. allocated(psi%CvecG) ) THEN
     write(out_unitp,*) 'ERROR in ',name_sub
     write(out_unitp,*) '  psi%CvecG is not allocated'
