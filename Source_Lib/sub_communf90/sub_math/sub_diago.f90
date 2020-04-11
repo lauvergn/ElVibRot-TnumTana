@@ -67,7 +67,7 @@
 !        CALL flush_perso(out_unitp)
 !        Vec(:,:) = Mat
 !        CALL LA_SYEVD(Vec,Eig)
-      CASE(3) ! lapack77
+      CASE(3,377) ! lapack77
 #if __LAPACK == 1
         IF (debug) write(out_unitp,*) 'lapack77: DSYEV'
         CALL flush_perso(out_unitp)
@@ -98,7 +98,7 @@
         CALL tql2(n,n,Eig,trav,Vec,ierr)
 #endif
 
-      CASE(4) ! lapack77 (non-symmetric)
+      CASE(4,477) ! lapack77 (non-symmetric)
 
 #if __LAPACK == 1
         IF (debug) write(out_unitp,*) 'lapack77: DGEEV (non-symmetric)'
