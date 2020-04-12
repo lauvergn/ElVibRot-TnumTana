@@ -55,8 +55,6 @@
         !-- for ComOp ------------------------------------------------------
         TYPE (param_ComOp), pointer :: ComOp => null()     ! .TRUE. pointer
 
-        logical       :: builtINsub = .FALSE.            ! (F) for the use of memory collector
-
         logical       :: init       = .FALSE.            ! (F) all constantes are initialized
         logical       :: cplx       = .FALSE.            ! (T) if T => psi is complex (use of Cvec)
                                                          ! otherwise psi is real (use of Rvec)
@@ -93,12 +91,17 @@
 
         real (kind=Rkind)    :: norm2    = -ONE       ! norm^2 of psi
 
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(psi) :: CplxPsi_TO_RCpsi
+          PROCEDURE, PRIVATE, PASS(psi) :: RCPsi_TO_CplxPsi
+          PROCEDURE, PRIVATE :: psi2TOpsi1
+          PROCEDURE, PRIVATE :: R_TOpsi
+          PROCEDURE, PRIVATE :: C_TOpsi
+          GENERIC,   PUBLIC  :: assignment(=) => psi2TOpsi1,            &
+                                    CplxPsi_TO_RCpsi, RCPsi_TO_CplxPsi, &
+                                    R_TOpsi, C_TOpsi
+          FINAL              :: dealloc_all_psi
         END TYPE param_psi
-
-        !!@description: TODO
-        INTERFACE assignment (=)
-          MODULE PROCEDURE psi2TOpsi1, CplxPsi_TO_RCpsi, RCPsi_TO_CplxPsi
-        END INTERFACE
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_Psidim1
@@ -311,6 +314,35 @@
       !!@param: TODO
       !!@param: TODO
       !!@param: TODO
+  SUBROUTINE dealloc_all_psi(psi)
+      TYPE (param_psi)   :: psi
+
+      !----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='dealloc_all_psi'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      !-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+      !-----------------------------------------------------------
+
+      CALL dealloc_psi(psi,delete_all=.TRUE.)
+      psi%BasisRep        = .TRUE.
+      psi%GridRep         = .FALSE.
+
+      nullify(psi%BasisnD)
+      nullify(psi%Basis2n)
+
+      !-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+      !-----------------------------------------------------------
+
+  END SUBROUTINE dealloc_all_psi
       SUBROUTINE dealloc_psi(psi,delete_all)
 
 
@@ -383,8 +415,6 @@
         IF (debug) write(out_unitp,*) 'dealloc: init param'
 
         nullify(psi%ComOp)
-
-        psi%builtINsub      = .FALSE.
 
         psi%init            = .FALSE.
         psi%cplx            = .FALSE.
@@ -635,8 +665,8 @@
       SUBROUTINE psi2TOpsi1(psi1,psi2)
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi), intent(inout) :: psi1
-      TYPE (param_psi), intent(in)    :: psi2
+      CLASS (param_psi), intent(inout) :: psi1
+      CLASS (param_psi), intent(in)    :: psi2
 
 
       integer  :: i,n1
@@ -728,8 +758,6 @@
      psi1%convAvOp        = psi2%convAvOp
 
       psi1%norm2          = psi2%norm2
-
-      !IF (psi2%builtINsub) CALL dealloc_psi(psi2)
 
       END SUBROUTINE psi2TOpsi1
 
@@ -866,8 +894,6 @@
 
       END IF
 
-      !IF (psi2%builtINsub) CALL dealloc_psi(psi2)
-
 !     write(out_unitp,*) 'END copy_psi2TOpsi1'
 
       END SUBROUTINE copy_psi2TOpsi1
@@ -877,8 +903,8 @@
       USE mod_MPI
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi),intent(inout) :: RCPsi(2)
-      TYPE (param_psi), intent(in)   :: psi
+      TYPE (param_psi),  intent(inout) :: RCPsi(2)
+      CLASS (param_psi), intent(in)    :: psi
 
 !     write(out_unitp,*) 'BEGINNING CplxPsi_TO_RCpsi'
       IF (.NOT. Psi%cplx) STOP 'ERROR psi MUST be complex'
@@ -907,8 +933,8 @@
       SUBROUTINE RCPsi_TO_CplxPsi(Psi,RCPsi)
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi), intent(in)    :: RCPsi(2)
-      TYPE (param_psi), intent(inout) :: psi
+      TYPE (param_psi),  intent(in)    :: RCPsi(2)
+      CLASS (param_psi), intent(inout) :: psi
 
 !     write(out_unitp,*) 'BEGINNING RCPsi_TO_CplxPsi'
 
@@ -929,6 +955,103 @@
 !     write(out_unitp,*) 'END RCPsi_TO_CplxPsi'
 
       END SUBROUTINE RCPsi_TO_CplxPsi
+
+!================================================================
+!
+!     psi = R
+!     psi = C
+!
+!================================================================
+      SUBROUTINE R_TOpsi(psi,R)
+
+!----- variables for the WP propagation ----------------------------
+      CLASS (param_psi), intent(inout) :: psi
+      real (kind=Rkind), intent(in)    :: R
+
+      integer :: i
+
+!     write(out_unitp,*) 'BEGINNING R_TOpsi'
+
+       CALL alloc_psi(psi)
+
+      IF (psi%BasisRep) THEN
+        IF (allocated(psi%RvecB)) THEN
+          psi%RvecB(:) = R
+        END IF
+        IF (allocated(psi%CvecB)) THEN
+          psi%CvecB(:) = cmplx(R,ZERO,kind=Rkind)
+        END IF
+      END IF
+
+      IF (psi%GridRep) THEN
+        IF (allocated(psi%RvecG)) THEN
+          psi%RvecG(:) = R
+        END IF
+        IF (allocated(psi%CvecG)) THEN
+          psi%CvecG(:) = cmplx(R,ZERO,kind=Rkind)
+        END IF
+      END IF
+
+
+      psi%norm2 = ZERO
+
+      IF (R == ZERO) THEN
+        psi%symab = -2
+      ELSE
+        psi%symab = -1
+      END IF
+
+!     write(out_unitp,*) 'END R_TOpsi'
+
+      END SUBROUTINE R_TOpsi
+
+      !!@description: TODO
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+      SUBROUTINE C_TOpsi(psi,C)
+
+!----- variables for the WP propagation ----------------------------
+      CLASS (param_psi),    intent(inout) :: psi
+      complex (kind=Rkind), intent(in)    :: C
+
+      integer :: i
+
+!     write(out_unitp,*) 'BEGINNING C_TOpsi'
+
+       CALL alloc_psi(psi)
+
+      IF (psi%BasisRep) THEN
+        IF (allocated(psi%RvecB)) THEN
+          psi%RvecB(:) = real(C,kind=Rkind)
+        END IF
+        IF (allocated(psi%CvecB)) THEN
+          psi%CvecB(:) = C
+        END IF
+      END IF
+
+      IF (psi%GridRep) THEN
+        IF (allocated(psi%RvecG)) THEN
+          psi%RvecG(:) = real(C,kind=Rkind)
+        END IF
+        IF (allocated(psi%CvecG)) THEN
+          psi%CvecG(:) = C
+        END IF
+      END IF
+
+
+      psi%norm2 = ZERO
+
+
+      IF (abs(C) == ZERO) THEN
+        psi%symab = -2
+      ELSE
+        psi%symab = -1
+      END IF
+
+!     write(out_unitp,*) 'END C_TOpsi'
+
+      END SUBROUTINE C_TOpsi
 !================================================================
 !
 !     write the initialization parameters
@@ -954,8 +1077,6 @@
                   associated(psi%BasisnD),associated(psi%Basis2n),      &
                   associated(psi%ComOp)
       write(out_unitp,*) 'symab, bits(symab)',WriteTOstring_symab(psi%symab)
-
-      write(out_unitp,*) 'builtINsub',psi%builtINsub
 
       write(out_unitp,*) 'init,cplx',psi%init,psi%cplx
 

@@ -77,12 +77,6 @@
           MODULE PROCEDURE psi_time_C
         END INTERFACE
 
-        !!@description: TODO
-        INTERFACE assignment (=)
-          MODULE PROCEDURE R_TOpsi
-          MODULE PROCEDURE C_TOpsi
-        END INTERFACE
-
         CONTAINS
 
       SUBROUTINE Set_Random_psi(psi,option)
@@ -292,103 +286,6 @@
       IF (debug) write(out_unitp,*) 'END ',name_sub
 
       END SUBROUTINE Set_psi_With_index_C
-
-!================================================================
-!
-!     psi = R
-!     psi = C
-!
-!================================================================
-      SUBROUTINE R_TOpsi(psi,R)
-
-!----- variables for the WP propagation ----------------------------
-      TYPE (param_psi),intent(inout) :: psi
-      real (kind=Rkind),intent(in)       :: R
-
-      integer :: i
-
-!     write(out_unitp,*) 'BEGINNING R_TOpsi'
-
-       CALL alloc_psi(psi)
-
-      IF (psi%BasisRep) THEN
-        IF (allocated(psi%RvecB)) THEN
-          psi%RvecB(:) = R
-        END IF
-        IF (allocated(psi%CvecB)) THEN
-          psi%CvecB(:) = cmplx(R,ZERO,kind=Rkind)
-        END IF
-      END IF
-
-      IF (psi%GridRep) THEN
-        IF (allocated(psi%RvecG)) THEN
-          psi%RvecG(:) = R
-        END IF
-        IF (allocated(psi%CvecG)) THEN
-          psi%CvecG(:) = cmplx(R,ZERO,kind=Rkind)
-        END IF
-      END IF
-
-
-      psi%norm2 = ZERO
-
-      IF (R == ZERO) THEN
-        psi%symab = -2
-      ELSE
-        psi%symab = -1
-      END IF
-
-!     write(out_unitp,*) 'END R_TOpsi'
-
-      END SUBROUTINE R_TOpsi
-
-      !!@description: TODO
-      !!@param: TODO
-      !!@param: TODO
-      !!@param: TODO
-      SUBROUTINE C_TOpsi(psi,C)
-
-!----- variables for the WP propagation ----------------------------
-      TYPE (param_psi),intent(inout) :: psi
-      complex (kind=Rkind),intent(in)    :: C
-
-      integer :: i
-
-!     write(out_unitp,*) 'BEGINNING C_TOpsi'
-
-       CALL alloc_psi(psi)
-
-      IF (psi%BasisRep) THEN
-        IF (allocated(psi%RvecB)) THEN
-          psi%RvecB(:) = real(C,kind=Rkind)
-        END IF
-        IF (allocated(psi%CvecB)) THEN
-          psi%CvecB(:) = C
-        END IF
-      END IF
-
-      IF (psi%GridRep) THEN
-        IF (allocated(psi%RvecG)) THEN
-          psi%RvecG(:) = real(C,kind=Rkind)
-        END IF
-        IF (allocated(psi%CvecG)) THEN
-          psi%CvecG(:) = C
-        END IF
-      END IF
-
-
-      psi%norm2 = ZERO
-
-
-      IF (abs(C) == ZERO) THEN
-        psi%symab = -2
-      ELSE
-        psi%symab = -1
-      END IF
-
-!     write(out_unitp,*) 'END C_TOpsi'
-
-      END SUBROUTINE C_TOpsi
 !================================================================
 !
 !     psi+psi, psi+R, R+psi....
@@ -408,7 +305,6 @@
 
 !           - define and allocate psi1_plus_psi2 ----
             CALL copy_psi2TOpsi1(psi1_plus_psi2,psi1)
-            psi1_plus_psi2%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -446,9 +342,6 @@
               psi1_plus_psi2%symab = -1
             END IF
 
-            !IF (psi1%builtINsub) CALL dealloc_psi(psi1)
-            !IF (psi2%builtINsub) CALL dealloc_psi(psi2)
-
 !           write(out_unitp,*) 'END psi1_plus_psi2'
 
           END FUNCTION psi1_plus_psi2
@@ -469,7 +362,6 @@
 
 !           - define and allocate R_plus_psi ----
             CALL copy_psi2TOpsi1(R_plus_psi,psi)
-            R_plus_psi%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -492,7 +384,6 @@
               R_plus_psi%symab = -1
             END IF
 
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END R_plus_psi'
 
           END FUNCTION R_plus_psi
@@ -511,7 +402,6 @@
 
 !           - define and allocate psi_plus_R ----
             CALL copy_psi2TOpsi1(psi_plus_R,psi)
-            psi_plus_R%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -534,7 +424,6 @@
               psi_plus_R%symab = -1
             END IF
 
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END psi_plus_R'
 
           END FUNCTION psi_plus_R
@@ -553,7 +442,6 @@
 
 !           - define and allocate C_plus_psi ----
             CALL copy_psi2TOpsi1(C_plus_psi,psi)
-            C_plus_psi%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -579,7 +467,6 @@
               C_plus_psi%symab = -1
             END IF
 
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END C_plus_psi'
 
           END FUNCTION C_plus_psi
@@ -598,7 +485,6 @@
 
 !           - define and allocate psi_plus_C ----
             CALL copy_psi2TOpsi1(psi_plus_C,psi)
-            psi_plus_C%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -624,7 +510,6 @@
               psi_plus_C%symab = -1
             END IF
 
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END psi_plus_C'
 
           END FUNCTION psi_plus_C
@@ -647,7 +532,6 @@
 
 !           - define and allocate psi1_minus_psi2 ----
             CALL copy_psi2TOpsi1(psi1_minus_psi2,psi1)
-            psi1_minus_psi2%builtINsub = .TRUE.
 !           -----------------------------------------
 
             IF (psi1%GridRep .AND. psi2%GridRep) THEN
@@ -685,10 +569,6 @@
               psi1_minus_psi2%symab = -1
             END IF
 
-
-            !IF (psi1%builtINsub) CALL dealloc_psi(psi1)
-            !IF (psi2%builtINsub) CALL dealloc_psi(psi2)
-
 !           write(out_unitp,*) 'END psi1_minus_psi2'
 
           END FUNCTION psi1_minus_psi2
@@ -708,7 +588,6 @@
 
 !           - define and allocate R_minus_psi ----
             CALL copy_psi2TOpsi1(R_minus_psi,psi)
-            R_minus_psi%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -732,7 +611,6 @@
             END IF
 
 
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END R_minus_psi'
 
           END FUNCTION R_minus_psi
@@ -751,7 +629,6 @@
 
 !           - define and allocate psi_minus_R ----
             CALL copy_psi2TOpsi1(psi_minus_R,psi)
-            psi_minus_R%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -774,8 +651,6 @@
               psi_minus_R%symab = -1
             END IF
 
-
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END psi_minus_R'
 
           END FUNCTION psi_minus_R
@@ -794,7 +669,6 @@
 
 !           - define and allocate C_minus_psi ----
             CALL copy_psi2TOpsi1(C_minus_psi,psi)
-            C_minus_psi%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -820,7 +694,6 @@
               C_minus_psi%symab = -1
             END IF
 
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END C_minus_psi'
 
           END FUNCTION C_minus_psi
@@ -836,7 +709,6 @@
 
 !           - define and allocate psi_minus_C ----
             CALL copy_psi2TOpsi1(psi_minus_C,psi)
-            psi_minus_C%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -862,7 +734,6 @@
               psi_minus_C%symab = -1
             END IF
 
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END psi_minus_C'
 
           END FUNCTION psi_minus_C
@@ -882,7 +753,6 @@
 
 !           - define and allocate R_time_psi ----
             CALL copy_psi2TOpsi1(R_time_psi,psi)
-            R_time_psi%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -904,7 +774,6 @@
 
             R_time_psi%symab = psi%symab
 
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END R_time_psi'
 
           END FUNCTION R_time_psi
@@ -922,7 +791,6 @@
 
 !           - define and allocate psi_time_R ----
             CALL copy_psi2TOpsi1(psi_time_R,psi)
-            psi_time_R%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -944,7 +812,6 @@
 
             psi_time_R%symab = psi%symab
 
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END psi_time_R'
 
           END FUNCTION psi_time_R
@@ -960,7 +827,6 @@
 
 !           - define and allocate C_time_psi ----
             CALL copy_psi2TOpsi1(C_time_psi,psi)
-            C_time_psi%builtINsub = .TRUE.
 !           -----------------------------------------
 
 
@@ -988,7 +854,6 @@
 
             C_time_psi%symab = psi%symab
 
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END C_time_psi'
 
           END FUNCTION C_time_psi
@@ -1006,7 +871,6 @@
 
 !           - define and allocate psi_time_C ----
             CALL copy_psi2TOpsi1(psi_time_C,psi)
-            psi_time_C%builtINsub = .TRUE.
 !           -----------------------------------------
 
             IF (psi%BasisRep) THEN
@@ -1032,8 +896,6 @@
             END IF
 
             psi_time_C%symab = psi%symab
-
-            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 
             !write(out_unitp,*) 'END psi_time_C'
             !CALL flush_perso(out_unitp)

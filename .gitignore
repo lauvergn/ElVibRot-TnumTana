@@ -2,3 +2,5 @@
 obj/*
 /makefile_CRP
 vib
+/comp.log
+/vib.exe

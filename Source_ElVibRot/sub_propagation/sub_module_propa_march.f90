@@ -1605,6 +1605,7 @@
       H(:,:) = CZERO
       ! loop for H|psi>, H^2|psi>, H^3|psi>...
       DO j=2,para_propa%para_poly%npoly+1
+        IF (debug) write(out_unitp,*) 'in ',name_sub,' it:',j-1
         CALL sub_OpPsi(Psi  =tab_KrylovSpace(j-1),                      &
                        OpPsi=tab_KrylovSpace(j),para_Op=para_H)
         IF (j == 2) THEN
@@ -1799,6 +1800,7 @@
       E0 = para_H%E0
       H(:,:) = CZERO
       DO k=1,para_propa%para_poly%npoly
+        IF (debug) write(out_unitp,*) 'in ',name_sub,' it:',k
 
         IF (para_propa%nb_micro > 1) THEN
           psi0_psiKrylovSpace(k) = Calc_AutoCorr(psi0,tab_KrylovSpace(k),&
