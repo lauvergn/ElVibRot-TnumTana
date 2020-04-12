@@ -2264,8 +2264,11 @@
     integer,             intent(in),    optional     :: iG
     integer,             intent(inout), optional     :: err_sub
 
-    integer :: nDI,i,err_sub_loc
+    integer :: i,err_sub_loc
     logical :: test
+
+    integer, save :: nDI = 1
+
 
 !----------------------------------------------------------
       character (len=*), parameter :: name_sub='ADD_ONE_TO_nDindex'
@@ -2292,9 +2295,11 @@
       ELSE
         IF (any(nDval < nDindex%nDinit(:))) THEN
           nDval(:) = nDindex%Tab_nDval(:,1)
+          nDI = 1
         ELSE IF (any(nDval > nDindex%nDend(:))) THEN
           nDval(:) = nDindex%Tab_nDval(:,nDindex%Max_nDI)
           nDval(1) = nDval(1) + 1
+          nDI = nDindex%Max_nDI + 1
         ELSE
           CALL calc_nDI(nDI,nDval,nDindex,err_sub_loc)
           IF (err_sub_loc == 0 .AND. nDI < nDindex%Max_nDI) THEN

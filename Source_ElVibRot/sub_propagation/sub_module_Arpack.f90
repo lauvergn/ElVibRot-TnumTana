@@ -172,7 +172,7 @@ CONTAINS
 #if(run_MPI)
       CALL MPI_Bcast(n,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
 #endif
-      
+
       IF (nb_diago == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' nb_diago=0 is not possible with ARPACK'
@@ -433,10 +433,17 @@ CONTAINS
 
               CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,                    &
                                          para_H,cplxE,para_propa,int(n,4))
-
+#if __ARPACK == 1
               call daxpy(n, -d(j,1), v(1,j), 1, ax, 1)
               d(j,3) = dnrm2(n, ax, 1)
               d(j,3) = d(j,3) / abs(d(j,1))
+#else
+              write(out_unitp,*) 'ERROR in ',name_sub
+              write(out_unitp,*) ' The ARPACK library is not present!'
+              write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+              STOP 'ARPACK has been removed'
+#endif
+
 
               Ene(j)          = d(j,1)
               psi(j)%CAvOp    = cmplx(d(j,1),ZERO,kind=Rkind)
@@ -458,6 +465,7 @@ CONTAINS
 #if __ARPACK == 1
               call daxpy(n, -d(j,1), v(1,j), 1, ax, 1)
               call daxpy(n, d(j,2), v(1,j+1), 1, ax, 1)
+              d(j,3) = dnrm2(n, ax, 1)
 #else
               write(out_unitp,*) 'ERROR in ',name_sub
               write(out_unitp,*) ' The ARPACK library is not present!'
@@ -465,7 +473,6 @@ CONTAINS
               STOP 'ARPACK has been removed'
 #endif
 
-              d(j,3) = dnrm2(n, ax, 1)
 
               Ene(j)          = d(j,1)
               psi(j)%CAvOp    = cmplx(d(j,1),d(j,2),kind=Rkind)
@@ -485,16 +492,16 @@ CONTAINS
 #if __ARPACK == 1
               call daxpy(n, -d(j,2), v(1,j), 1, ax, 1)
               call daxpy(n, -d(j,1), v(1,j+1), 1, ax, 1)
+              d(j,3) = dlapy2( d(j,3), dnrm2(n, ax, 1) )
+              d(j,3) = d(j,3) / dlapy2(d(j,1),d(j,2))
+              d(j+1,3) = d(j,3)
+              first = .false.
 #else
               write(out_unitp,*) 'ERROR in ',name_sub
               write(out_unitp,*) ' The ARPACK library is not present!'
               write(out_unitp,*) 'Use Arpack=f and Davidson=t'
               STOP 'ARPACK has been removed'
 #endif
-              d(j,3) = dlapy2( d(j,3), dnrm2(n, ax, 1) )
-              d(j,3) = d(j,3) / dlapy2(d(j,1),d(j,2))
-              d(j+1,3) = d(j,3)
-              first = .false.
             else
               first = .true.
             end if
@@ -1034,12 +1041,13 @@ CONTAINS
             !IF(MPI_id==0) ax(:) = Hpsi_loc%RvecB(:)
 
 #if __ARPACK == 1
-            IF(MPI_id==0) call daxpy(n, -d(j,1), v(:,j), 1, ax, 1)
-#endif
             IF(MPI_id==0) THEN
+              call daxpy(n, -d(j,1), v(:,j), 1, ax, 1)
               d(j,2) = dnrm2(n, ax, 1)
               d(j,2) = d(j,2) / abs(d(j,1))
-
+            END IF
+#endif
+            IF(MPI_id==0) THEN
               IF (debug) write(out_unitp,*) 'j,ene ?',j,              &
                              d(j,1) * get_Conv_au_TO_unit('E','cm-1')
 

@@ -156,13 +156,16 @@
         write(out_unitp,*) ' nb_qa',nqa
         STOP
       END IF
-      IF(MPI_id==0) write(out_unitp,*) 'nDindB%nDsize',para_AllBasis%BasisnD%nDindB%nDsize
-      !CALL Write_nDindex(para_AllBasis%BasisnD%nDindB,"BasisnD%nDinB ")
+      IF(MPI_id==0) THEN
+        IF (allocated(para_AllBasis%BasisnD%nDindB%nDsize))             &
+          write(out_unitp,*) 'nDindB%nDsize',para_AllBasis%BasisnD%nDindB%nDsize
+        !CALL Write_nDindex(para_AllBasis%BasisnD%nDindB,"BasisnD%nDinB ")
 
-      IF(MPI_id==0) write(out_unitp,*) 'nDindG%nDsize',para_AllBasis%BasisnD%nDindG%nDsize
-      !CALL Write_nDindex(para_AllBasis%BasisnD%nDindG,"BasisnD%nDinG ")
-
-      !CALL write_param_ComOp(ComOp)
+         IF (allocated(para_AllBasis%BasisnD%nDindG%nDsize))             &
+           write(out_unitp,*) 'nDindG%nDsize',para_AllBasis%BasisnD%nDindG%nDsize
+         !CALL Write_nDindex(para_AllBasis%BasisnD%nDindG,"BasisnD%nDinG ")
+         !CALL write_param_ComOp(ComOp)
+      END IF
 
       IF (debug) THEN
         write(out_unitp,*) '==== NEW BASIS ======================================='

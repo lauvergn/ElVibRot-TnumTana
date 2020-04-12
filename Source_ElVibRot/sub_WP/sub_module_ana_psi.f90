@@ -591,32 +591,30 @@ END SUBROUTINE sub_analyze_psi
 !================================================================
       SUBROUTINE psi_Qba_ie_psi(T,psi,ana_psi,tab_WeightChannels,info)
       USE mod_system
+      USE mod_param_SGType2
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       IMPLICIT NONE
 
 !----- variables for the WP ----------------------------------------
-      TYPE (param_psi),     intent(inout) :: psi
-      TYPE (param_ana_psi), intent(in)    :: ana_psi
-
-      character (len=*) :: info
-
-      real (kind=Rkind) :: T
-     real (kind=Rkind), allocatable    :: tab_WeightChannels(:,:)
+      TYPE (param_psi),     intent(inout)           :: psi
+      TYPE (param_ana_psi), intent(in)              :: ana_psi
+      character (len=*),    intent(in)              :: info
+      real (kind=Rkind),    intent(in)              :: T
+      real (kind=Rkind),    intent(in), allocatable :: tab_WeightChannels(:,:)
 
 
+!------ working variables ---------------------------------
+      TYPE(OldParam)    :: OldPara
       real (kind=Rkind) :: Qmean(psi%nb_act1)
       real (kind=Rkind) :: Qmean_ie(psi%nb_act1,psi%nb_bi,psi%nb_be)
       real (kind=Rkind) :: x(Psi%BasisnD%ndim)
-
-!------ working variables ---------------------------------
-      integer       :: i_qa,i_qaie
-      integer       :: i_be,i_bi,i_ba,i_baie
-      integer       :: ii_baie,if_baie
-      integer       :: i
+      integer           :: i_qa,i_qaie
+      integer           :: i_be,i_bi,i_ba,i_baie
+      integer           :: ii_baie,if_baie
+      integer           :: i
       real (kind=Rkind) :: WrhonD,temp
-
-      logical       :: psiN,norm2GridRep,norm2BasisRep
+      logical           :: psiN,norm2GridRep,norm2BasisRep
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub = 'psi_Qba_ie_psi'
@@ -649,10 +647,10 @@ END SUBROUTINE sub_analyze_psi
       DO i_qa=1,psi%nb_qa
 
         !- calculation of WrhonD ------------------------------
-        WrhonD = Rec_WrhonD(psi%BasisnD,i_qa)
+        WrhonD = Rec_WrhonD(psi%BasisnD,i_qa,OldPara)
 
         !- calculation of x -------------------------------
-        CALL Rec_x(x,psi%BasisnD,i_qa)
+        CALL Rec_x(x,psi%BasisnD,i_qa,OldPara)
 
         DO i_be=1,psi%nb_be
         DO i_bi=1,psi%nb_bi
@@ -693,6 +691,8 @@ END SUBROUTINE sub_analyze_psi
       END DO
  11   format(2a,' ',f12.4,' ',i4,' ',100(' ',f6.3))
       CALL flush_perso(out_unitp)
+
+      CALL dealloc_OldParam(OldPara)
 
 !----------------------------------------------------------
       IF (debug) THEN

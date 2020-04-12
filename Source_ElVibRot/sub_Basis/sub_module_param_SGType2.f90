@@ -118,7 +118,7 @@ END INTERFACE
  PUBLIC :: param_SGType2, assignment (=), dealloc_SGType2, Set_nDval_init_FOR_SG4
  PUBLIC :: OldParam, Write_OldParam
  PUBLIC :: get_iqSG_iSG_FROM_iq, get_Tabiq_Tabil_FROM_iq, get_Tabiq_Tabil_FROM_iq_old
- PUBLIC :: calc_Weight_OF_SRep
+ PUBLIC :: calc_Weight_OF_SRep,dealloc_OldParam
 
 CONTAINS
 SUBROUTINE Write_OldParam(OldPara)
@@ -139,6 +139,23 @@ character (len=*), parameter :: name_sub='Write_OldParam'
   CALL flush_perso(out_unitp)
 
 END SUBROUTINE Write_OldParam
+SUBROUTINE dealloc_OldParam(OldPara)
+
+TYPE (OldParam), intent(inout) :: OldPara
+
+character (len=*), parameter :: name_sub='dealloc_OldParam'
+
+    OldPara%i_SG = 0
+
+    OldPara%iq    = 0
+    OldPara%iq_SG = 0
+
+    OldPara%ib    = 0
+    OldPara%ib_SG = 0
+
+    IF (allocated(OldPara%tab_l_AT_SG)) deallocate(OldPara%tab_l_AT_SG)
+
+END SUBROUTINE dealloc_OldParam
 
 
 SUBROUTINE dealloc_SGType2(SGType2)

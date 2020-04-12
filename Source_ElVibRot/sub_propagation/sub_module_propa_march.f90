@@ -1552,7 +1552,7 @@
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),       intent(in)     :: para_H
+      TYPE (param_Op)                      :: para_H
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa),    intent(inout)  :: para_propa

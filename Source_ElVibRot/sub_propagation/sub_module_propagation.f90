@@ -800,7 +800,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   TYPE (param_psi)   :: WP(:)
 
 !-- working parameters --------------------------------
-  TYPE (param_psi)   :: w2
+  TYPE (param_psi)   :: w1,w2
 
   integer       :: i,i_bi,i_be
 
@@ -821,6 +821,8 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   logical, parameter :: debug=.FALSE.
 ! logical, parameter :: debug=.TRUE.
 !-------------------------------------------------------
+  IF (MPI_id /=0 ) RETURN
+
   IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
    write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
@@ -843,26 +845,26 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   END IF
 !-----------------------------------------------------------
 
-
   !-----------------------------------------------------------
   IF(MPI_id==0) w2 = WP(1) ! just for the initialization
   IF(MPI_id==0) CALL alloc_psi(w2)
 
   DO i=1,nb_WP
+    w1 = WP(i)
     !-----------------------------------------------------------
     ! => Analysis for diabatic potential (always done)
 
     ! =>first the energy
-    IF(MPI_id==0) CALL norm2_psi(WP(i))
-    CALL sub_PsiOpPsi(ET,WP(i),w2,para_H)
+    IF(MPI_id==0) CALL norm2_psi(w1)
+    CALL sub_PsiOpPsi(ET,w1,w2,para_H)
     
     IF(MPI_id==0) THEN
-      WP(i)%CAvOp = ET/WP(i)%norm2
+      w1%CAvOp = ET/w1%norm2
 
-      RWU_E  = REAL_WU(real(WP(i)%CAvOp,kind=Rkind),'au','E')
+      RWU_E  = REAL_WU(real(w1%CAvOp,kind=Rkind),'au','E')
       E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
 
-      CALL Channel_weight(tab_WeightChannels,WP(i),GridRep=.FALSE.,BasisRep=.TRUE.)
+      CALL Channel_weight(tab_WeightChannels,w1,GridRep=.FALSE.,BasisRep=.TRUE.)
       Psi_norm2 = sum(tab_WeightChannels)
 
       ! add the psi number + the time
@@ -892,6 +894,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   END DO
 
   CALL dealloc_psi(w2,delete_all=.TRUE.)
+  CALL dealloc_psi(w1,delete_all=.TRUE.)
 
   IF (allocated(tab_WeightChannels)) deallocate(tab_WeightChannels)
   IF (allocated(psi_line))           deallocate(psi_line)

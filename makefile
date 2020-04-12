@@ -13,13 +13,13 @@ MPICORE = gfortran
 ## debug_make=0 to enable parallel make
 ## debug_make=1 for fast debug make, no parallel
 ## NOTE: it seems there are some issues for parallel sometime
-debug_make=0
+debug_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 1
+OMP = 0
 ifeq ($(F90),mpifort)
   OMP = 0
 endif
@@ -35,7 +35,7 @@ CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 1
+QML = 0
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -79,17 +79,20 @@ endif
 #=================================================================================
 # Quantum Model Lib (ECAM)
 QMLibDIR := /Users/lauvergn/git/QuantumModelLib
-DIRLIB += -L$(QMLibDIR)
-QMLIB := -lQMLib
-QMLibDIR_full := $(QMLibDIR)/libQMLib.a
 ifeq  ($(strip $(QML)),)
   QMLIB := 
   QMLibDIR_full :=
+else
+  ifeq ($(QML),0)
+    QMLIB := 
+    QMLibDIR_full :=
+  else
+    DIRLIB += -L$(QMLibDIR)
+    QMLIB := -lQMLib
+    QMLibDIR_full := $(QMLibDIR)/libQMLib.a
+  endif
 endif
-ifeq ($(QML),0)
-  QMLIB := 
-  QMLibDIR_full :=
-endif
+
 #=================================================================================
 #
 #=================================================================================
@@ -127,16 +130,20 @@ ifeq ($(F90),nagfor)
    endif
    # opt management
    ifeq ($(OPT),1)
-      F90FLAGS = -O4  $(OMPFLAG) -o −compatible -Ounroll=4 -s
+      F90FLAGS = -O4  $(OMPFLAG) -o -compatible -Ounroll=4 -s
    else
       #F90FLAGS = -O0 $(OMPFLAG) -g -C=all -mtrace=all
-      #  -C=undefined is not compatible with -framework Accelerate
-      # -kind=byte is not working
+      #  -C=undefined is not compatible with: (i) -framework Accelerate or lapack lib (ii) openmp
       #with -mtrace=all add information on the memmory allocation/deallocation.
+      # The option -C=dangling causes troubles since it is used => -C=all cannot be used.
       ifeq ($(OMP),0)
-        F90FLAGS = -O0 $(OMPFLAG) -g -compatible  -gline -C -C=alias -C=intovf
+        ifeq ($(LAPACK),0)
+          F90FLAGS = -O0            -g -gline -C -C=alias -C=intovf -C=undefined
+        else
+          F90FLAGS = -O0 $(OMPFLAG) -g        -C -C=alias -C=intovf 
+        endif
       else
-        F90FLAGS = -O0 $(OMPFLAG) -g -C=all
+        F90FLAGS = -O0 $(OMPFLAG) -g        -C -C=alias -C=intovf 
       endif
    endif
 
@@ -701,63 +708,61 @@ Obj_EVRT =\
   $(Obj_Smolyak_test) \
   $(LIBARPACK)
 #
-#
-#
 #===============================================
 #==============================================
-# vib (without argument)
-EVR1:obj vib $(VIBEXE)
-	@echo "EVR"
-#
-#make all programs (except work)
-all:obj vib $(VIBEXE)
-	echo "EVR (for eclipse)"
-#
-# vib
-EVR: obj vib $(VIBEXE)
+#ElVibRot:
+
+#make all : EVR
+.PHONY: all evr EVR libEVR
+evr EVR all :obj vib $(VIBEXE)
 	echo "EVR"
 libEVR: obj $(OBJ)/libEVR.a
-	echo libEVR.a
+	echo "libEVR.a"
+#============================================================================
+# All tnum/Tana ...
+.PHONY: Tnum_FDriver Tnum_cDriver libTnum libTnum.a keotest
+.PHONY: tnum Tnum tnum-dist Tnum-dist Tnum_MCTDH Tnum_MidasCpp Midas midas
+
 Tnum_FDriver: obj $(Main_TnumTana_FDriverEXE)
-	echo Main_TnumTana_FDriver
+	echo "Main_TnumTana_FDriver"
 Tnum_cDriver: obj $(Main_TnumTana_cDriverEXE)
-	echo Main_TnumTana_cDriver
-libTnum: obj $(OBJ)/libTnum.a
-	echo libTnum.a
-libTnum.a: obj $(OBJ)/libTnum.a
-	echo libTnum.a
+	echo "Main_TnumTana_cDriver"
+#
+libTnum libTnum.a: obj $(OBJ)/libTnum.a
+	echo "libTnum.a"
+#
 keotest: obj $(KEOTESTEXE)
 	echo "TEST_TnumTana"
-tnum: obj $(TNUMEXE)
+
+tnum Tnum tnum-dist Tnum-dist: obj $(TNUMEXE)
 	echo "Tnum"
-Tnum: obj $(TNUMEXE)
-	echo "Tnum"
-tnum-dist: obj $(TNUMEXE)
-	echo "Tnum"
-Tnum-dist: obj $(TNUMEXE)
-	echo "Tnum"
+#
 Tnum_MCTDH: obj $(TNUMMCTDHEXE)
 	echo "Tnum_MCTDH"
-#TNUM_MiddasCppEXE
-Tnum_MidasCpp: obj $(TNUM_MiddasCppEXE)
-	echo "Tnum_MidasCpp"
-Midas: obj $(TNUM_MiddasCppEXE)
-	echo "Tnum_MidasCpp"
 #
-gauss:obj $(GWPEXE)
-	echo "GWP"
-GWP:obj $(GWPEXE)
+#TNUM_MiddasCppEXE
+Tnum_MidasCpp Midas midas: obj $(TNUM_MiddasCppEXE)
+	echo "Tnum_MidasCpp"
+#============================================================================
+# Some all programs
+.PHONY: gauss GWP work
+gauss GWP: obj $(GWPEXE)
 	echo "GWP"
 #
 work:obj $(WORKEXE)
 	echo "work"
-#
+#============================================================================
+# Physical Constants
+.PHONY: PhysConst
 PhysConst: obj $(PhysConstEXE)
 	echo "Physical Constants"
 #===============================================
 #===============================================
 #
 # QML
+.PHONY: qml QML
+qml QML: $(QMLibDIR_full)
+	echo "make qml library"
 $(QMLibDIR_full):
 	cd $(QMLibDIR) ; make
 
@@ -772,6 +777,7 @@ vib:
 	chmod a+x vib
 
 # clean
+.PHONY: clean
 clean: 
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib
 	rm -rf *.dSYM

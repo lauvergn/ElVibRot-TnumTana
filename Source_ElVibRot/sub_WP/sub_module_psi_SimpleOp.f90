@@ -446,8 +446,8 @@
               psi1_plus_psi2%symab = -1
             END IF
 
-            IF (psi1%builtINsub) CALL dealloc_psi(psi1)
-            IF (psi2%builtINsub) CALL dealloc_psi(psi2)
+            !IF (psi1%builtINsub) CALL dealloc_psi(psi1)
+            !IF (psi2%builtINsub) CALL dealloc_psi(psi2)
 
 !           write(out_unitp,*) 'END psi1_plus_psi2'
 
@@ -492,7 +492,7 @@
               R_plus_psi%symab = -1
             END IF
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END R_plus_psi'
 
           END FUNCTION R_plus_psi
@@ -534,7 +534,7 @@
               psi_plus_R%symab = -1
             END IF
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END psi_plus_R'
 
           END FUNCTION psi_plus_R
@@ -579,7 +579,7 @@
               C_plus_psi%symab = -1
             END IF
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END C_plus_psi'
 
           END FUNCTION C_plus_psi
@@ -624,7 +624,7 @@
               psi_plus_C%symab = -1
             END IF
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END psi_plus_C'
 
           END FUNCTION psi_plus_C
@@ -686,8 +686,8 @@
             END IF
 
 
-            IF (psi1%builtINsub) CALL dealloc_psi(psi1)
-            IF (psi2%builtINsub) CALL dealloc_psi(psi2)
+            !IF (psi1%builtINsub) CALL dealloc_psi(psi1)
+            !IF (psi2%builtINsub) CALL dealloc_psi(psi2)
 
 !           write(out_unitp,*) 'END psi1_minus_psi2'
 
@@ -732,7 +732,7 @@
             END IF
 
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END R_minus_psi'
 
           END FUNCTION R_minus_psi
@@ -775,7 +775,7 @@
             END IF
 
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END psi_minus_R'
 
           END FUNCTION psi_minus_R
@@ -820,7 +820,7 @@
               C_minus_psi%symab = -1
             END IF
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END C_minus_psi'
 
           END FUNCTION C_minus_psi
@@ -862,7 +862,7 @@
               psi_minus_C%symab = -1
             END IF
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END psi_minus_C'
 
           END FUNCTION psi_minus_C
@@ -904,7 +904,7 @@
 
             R_time_psi%symab = psi%symab
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END R_time_psi'
 
           END FUNCTION R_time_psi
@@ -944,7 +944,7 @@
 
             psi_time_R%symab = psi%symab
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END psi_time_R'
 
           END FUNCTION psi_time_R
@@ -988,7 +988,7 @@
 
             C_time_psi%symab = psi%symab
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 !           write(out_unitp,*) 'END C_time_psi'
 
           END FUNCTION C_time_psi
@@ -1033,7 +1033,7 @@
 
             psi_time_C%symab = psi%symab
 
-            IF (psi%builtINsub) CALL dealloc_psi(psi)
+            !IF (psi%builtINsub) CALL dealloc_psi(psi)
 
             !write(out_unitp,*) 'END psi_time_C'
             !CALL flush_perso(out_unitp)

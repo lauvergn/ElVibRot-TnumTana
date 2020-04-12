@@ -729,7 +729,7 @@
 
       psi1%norm2          = psi2%norm2
 
-      IF (psi2%builtINsub) CALL dealloc_psi(psi2)
+      !IF (psi2%builtINsub) CALL dealloc_psi(psi2)
 
       END SUBROUTINE psi2TOpsi1
 
@@ -866,7 +866,7 @@
 
       END IF
 
-      IF (psi2%builtINsub) CALL dealloc_psi(psi2)
+      !IF (psi2%builtINsub) CALL dealloc_psi(psi2)
 
 !     write(out_unitp,*) 'END copy_psi2TOpsi1'
 

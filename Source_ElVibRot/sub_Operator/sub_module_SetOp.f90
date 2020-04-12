@@ -1368,10 +1368,12 @@ MODULE mod_SetOp
       !!@param: TODO
       SUBROUTINE Analysis_OpGrid_OF_Op(para_Op)
       USE mod_MPI
+      USE mod_param_SGType2
       TYPE (param_Op), intent(inout) :: para_Op
 
-      integer       :: k_term,iq,iterm00
+      integer          :: k_term,iq,iterm00
       real(kind=Rkind) :: Qact(para_Op%mole%nb_var)
+      TYPE(OldParam)   :: OldPara
 
       character (len=*), parameter :: name_sub='Analysis_OpGrid_OF_Op'
 
@@ -1385,18 +1387,19 @@ MODULE mod_SetOp
          RETURN
        END IF
 
+
        CALL Analysis_OpGrid(para_Op%OpGrid,para_Op%n_Op)
 
        IF (print_level>-1) THEN
          iterm00 = para_Op%derive_term_TO_iterm(0,0)
          iq = para_Op%OpGrid(iterm00)%iq_min
          IF (iq > 0) THEN
-           CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
+           CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole,OldPara)
            IF(MPI_id==0) write(out_unitp,*) 'iq_min,Op_min,Qact',iq,para_Op%OpGrid(iterm00)%Op_min,Qact(1:para_Op%mole%nb_act1)
          END IF
          iq = para_Op%OpGrid(iterm00)%iq_max
          IF (iq > 0) THEN
-           CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
+           CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole,OldPara)
            IF(MPI_id==0) write(out_unitp,*) 'iq_max,Op_max,Qact',iq,para_Op%OpGrid(iterm00)%Op_max,Qact(1:para_Op%mole%nb_act1)
          END IF
        END IF
@@ -1406,7 +1409,8 @@ MODULE mod_SetOp
          CALL Analysis_OpGrid(para_Op%imOpGrid,para_Op%n_Op)
        END IF
 
-      END SUBROUTINE Analysis_OpGrid_OF_Op
+       CALL dealloc_OldParam(OldPara)
+    END SUBROUTINE Analysis_OpGrid_OF_Op
 
 !=======================================================================================
 !     initialization of psi
