@@ -1679,6 +1679,7 @@ END SUBROUTINE sub_analyze_psi
 
           IF (allocated(psi%BasisnD%para_RD)) THEN
           IF (psi%BasisnD%para_RD(iq)%RD_analysis) THEN
+
             CALL calc_RD(psi%BasisnD%para_RD(iq),psi%RvecB,DiagRDcontrac=DiagRDcontrac)
             n = min(ndim_AT_ib(iq),size(DiagRDcontrac))
             weight1Dact(iq,1:n) = DiagRDcontrac(1:n)

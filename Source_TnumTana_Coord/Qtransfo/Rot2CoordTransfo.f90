@@ -200,7 +200,7 @@
 
           CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnQ1old,dnCosTheta,dnQ1new,nderiv)
           CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnQ2old,dnSinTheta,dnTemp,nderiv)
-          CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnQ1new,ONE,dnTemp,-ONE,dnQ1new,nderiv)
+          CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnTemp,-ONE,dnQ1new,ONE,nderiv)
 
           CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnQ2old,dnCosTheta,dnQ2new,nderiv)
           CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnQ1old,dnSinTheta,dnTemp,nderiv)
@@ -233,7 +233,7 @@
 
           CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnQ2old,dnCosTheta,dnQ2new,nderiv)
           CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnQ1old,dnSinTheta,dnTemp,nderiv)
-          CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnQ2new,ONE,dnTemp,-ONE,dnQ2new,nderiv)
+          CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnTemp,-ONE,dnQ2new,ONE,nderiv)
 
 
           ! transfert dnY in dnQout

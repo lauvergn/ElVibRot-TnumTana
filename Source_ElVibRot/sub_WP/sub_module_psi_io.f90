@@ -95,7 +95,7 @@
         write(out_unitp,*) ' para_WP0%nb_WP0            ',para_WP0%nb_WP0
         write(out_unitp,*) ' para_WP0%read_listWP0      ',para_WP0%read_listWP0
         write(out_unitp,*) ' para_WP0%read_file         ',para_WP0%read_file
-        write(out_unitp,*) ' para_WP0%file_WP0          ',para_WP0%file_WP0%name
+        write(out_unitp,*) ' para_WP0%file_WP0          ',trim(adjustl(para_WP0%file_WP0%name))
         write(out_unitp,*) ' para_WP0%WP0cplx           ',para_WP0%WP0cplx
         write(out_unitp,*) ' para_WP0%file_WP0%formatted',para_WP0%file_WP0%formatted
         write(out_unitp,*)
@@ -1285,7 +1285,7 @@ IMPLICIT NONE
 !----- variables for the WP propagation ----------------------------
 integer,              intent(inout) :: nb_read,Version_File
 TYPE (param_psi),     intent(inout) :: psi(:)
-TYPE (param_file),    intent(in)    :: file_WP
+TYPE (param_file),    intent(inout) :: file_WP
 integer, allocatable, intent(inout) :: list_nDindBasis1_TO_nDindBasis2(:)
 
 

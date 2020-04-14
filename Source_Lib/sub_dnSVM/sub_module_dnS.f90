@@ -50,8 +50,9 @@ MODULE mod_dnS
 
       PUBLIC :: Type_dnS, alloc_dnS, dealloc_dnS, check_alloc_dnS, Write_dnS
       PUBLIC :: sub_dnS1_TO_dnS2, sub_dnS1_TO_dnS2_partial,sub_dnS1_TO_dnS2_partial_new
-      PUBLIC :: sub_dnS1_PLUS_dnS2_TO_dnS2,sub_ABSdnS1_PLUS_dnS2_TO_dnS2,sub_dnS1_wPLUS_dnS2_TO_dnS3,sub_dnS1_PLUS_dnS2_TO_dnS3
-      PUBLIC :: sub_dnS1_MINUS_dnS2_TO_dnS3,sub_dnS1_PROD_w_TO_dnS2,sub_dnS1_PROD_dnS2_TO_dnS3
+      PUBLIC :: sub_dnS1_PLUS_dnS2_TO_dnS2,sub_ABSdnS1_PLUS_dnS2_TO_dnS2
+      PUBLIC :: sub_dnS1_wPLUS_dnS2_TO_dnS3, sub_dnS1_wPLUS_dnS2_TO_dnS2
+      PUBLIC :: sub_dnS1_PROD_w_TO_dnS2,sub_dnS1_PROD_dnS2_TO_dnS3
       PUBLIC :: sub_dnS1_TO_dntR2,sub_dntf,sub_dnf2_O_dnf3_TO_dnf1, sub_dntf_WITH_INV
       PUBLIC :: sub_ZERO_TO_dnS,sub_Weight_dnS,sub_WeightDer_dnS
       PUBLIC :: alloc_array, dealloc_array
@@ -658,6 +659,66 @@ MODULE mod_dnS
       END IF
 !      -----------------------------------------------------------------
       END SUBROUTINE sub_dnS1_wPLUS_dnS2_TO_dnS3
+      SUBROUTINE sub_dnS1_wPLUS_dnS2_TO_dnS2(dnS1,w1,dnS2,w2,nderiv)
+      !USE mod_system
+      IMPLICIT NONE
+
+       TYPE (Type_dnS)    :: dnS2,dnS1
+       integer, optional  :: nderiv
+
+       real(kind=Rkind) :: w1,w2
+       integer :: nderiv_loc
+
+!     -----------------------------------------------------------------
+!     logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      character (len=*), parameter ::                                   &
+                                  name_sub='sub_dnS1_wPLUS_dnS2_TO_dnS2'
+!     -----------------------------------------------------------------
+      CALL check_alloc_dnS(dnS1,'dnS1',name_sub)
+      CALL check_alloc_dnS(dnS2,'dnS2',name_sub)
+
+
+      nderiv_loc = min(dnS1%nderiv,dnS2%nderiv)
+      IF (present(nderiv)) nderiv_loc = min(nderiv_loc,nderiv)
+
+
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nderiv',nderiv_loc
+        write(out_unitp,*)
+        write(out_unitp,*) 'dnS1'
+        CALL Write_dnS(dnS1)
+        write(out_unitp,*) 'dnS2'
+        CALL Write_dnS(dnS2)
+      END IF
+!     -----------------------------------------------------------------
+
+!      -----------------------------------------------------------------
+       dnS2%d0 = w2 * dnS2%d0 + w1 * dnS1%d0
+!      -----------------------------------------------------------------
+       IF (nderiv_loc == 1) THEN
+         dnS2%d1(:) = w2 *dnS2%d1(:) + w1 * dnS1%d1(:)
+!      -----------------------------------------------------------------
+       ELSE IF (nderiv_loc == 2) THEN
+         dnS2%d1(:)   = w2 *dnS2%d1(:)   + w1 * dnS1%d1(:)
+         dnS2%d2(:,:) = w2 *dnS2%d2(:,:) + w1 * dnS1%d2(:,:)
+!      -----------------------------------------------------------------
+       ELSE IF (nderiv_loc == 3) THEN
+         dnS2%d1(:)     = w2 * dnS2%d1(:)     + w1 * dnS1%d1(:)
+         dnS2%d2(:,:)   = w2 * dnS2%d2(:,:)   + w1 * dnS1%d2(:,:)
+         dnS2%d3(:,:,:) = w2 * dnS2%d3(:,:,:) + w1 * dnS1%d3(:,:,:)
+       END IF
+
+!      -----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'dnS2'
+        CALL Write_dnS(dnS2)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!      -----------------------------------------------------------------
+      END SUBROUTINE sub_dnS1_wPLUS_dnS2_TO_dnS2
       SUBROUTINE sub_dnS1_PLUS_dnS2_TO_dnS3(dnS1,dnS2,dnS3,nderiv)
       !USE mod_system
       IMPLICIT NONE
@@ -766,7 +827,6 @@ MODULE mod_dnS
 !     -----------------------------------------------------------------
 
       END SUBROUTINE sub_dnS1_PROD_w_TO_dnS2
-
       SUBROUTINE sub_dnS1_PROD_dnS2_TO_dnS3(dnS1,dnS2,dnS3,nderiv)
       !USE mod_system
       IMPLICIT NONE

@@ -3730,9 +3730,9 @@
         CALL sub_ZERO_TO_dnS(dnW1)
         DO iref=1,nb_ref
           !dnW1 = dnW1 + dnSwitch(iref)*RPHTransfo%RPHpara2%QoutRef(nb_act1+iQinact21,iref)
-          CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW1,ONE,                    &
-             dnSwitch(iref),RPHTransfo%RPHpara2%QoutRef(nb_act1+iQinact21,iref),&
-                                           dnW1)
+          CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnSwitch(iref),              &
+                    RPHTransfo%RPHpara2%QoutRef(nb_act1+iQinact21,iref),&
+                                           dnW1,ONE)
         END DO
         CALL sub_dnS_TO_dnVec(dnW1,RPHpara_AT_Qact1%dnQopt,iQinact21)
       END DO
@@ -3754,9 +3754,9 @@
 
           CALL sub_ZERO_TO_dnS(dnW1)
           DO iref=1,nb_ref
-            CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW1,ONE,                  &
-                dnSwitch(iref),RPHTransfo%RPHpara2%CinvRef(iq,nb_act1+jQinact21,iref), &
-                                             dnW1)
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnSwitch(iref),            &
+                RPHTransfo%RPHpara2%CinvRef(iq,nb_act1+jQinact21,iref), &
+                                             dnW1,ONE)
           END DO
           CALL sub_dnS_TO_dnMat(dnW1,RPHpara_AT_Qact1%dnC_inv,iQinact21,jQinact21)
 

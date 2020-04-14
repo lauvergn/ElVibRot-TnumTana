@@ -1669,7 +1669,10 @@
         STOP
       END IF
 
-      IF (debug) write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n))
+      IF (debug) THEN
+        write(out_unitp,*) 'Eig',Eig(1:n)
+        write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n))
+      END IF
 
       Psi = ZERO
       DO i=1,n

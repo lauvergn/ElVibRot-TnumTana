@@ -32,9 +32,9 @@ c    R1 = R_CH
 c    R2 = R_CN
 c    R3 = R_HN
       IF (nb_be == 1 ) THEN
-        !write(6,*) 'C',Qcart(1:3)
-        !write(6,*) 'N',Qcart(4:6)
-        !write(6,*) 'H',Qcart(7:9)
+         write(6,*) 'C',Qcart(1:3)
+         write(6,*) 'N',Qcart(4:6)
+         write(6,*) 'H',Qcart(7:9)
         V1(:) = Qcart(7:9)-Qcart(1:3) !C-H
         V2(:) = Qcart(4:6)-Qcart(1:3) !C-N
         V3(:) = Qcart(7:9)-Qcart(4:6) !N-H
@@ -94,25 +94,27 @@ c     parameter (autoeV=27.21183d0)
       real(kind=Rkind) S1,S2,S3,S12,S22,S32,POLY
       real(kind=Rkind) E1,E2,E3,HY1,HY2,HY3,SWITCH,V123
 
-      T  = Q(1)
-      pR = Q(2)
-      gR = Q(3)
+      ! Here has the original potential in function of the 3 distances
+      !T  = Q(1)
+      !pR = Q(2)
+      !gR = Q(3)
 
-      mB=12._Rkind
-      mC=14.003074_Rkind
-      mH=1.007825_Rkind
+      !mB=12._Rkind
+      !mC=14.003074_Rkind
+      !mH=1.007825_Rkind
 
-c     T=cos(TT)
-      RN=mC/(mB+mC)
-      RC=ONE-RN
-      r1=pR**2+(RN*gR)**2-TWO*pR*gR*RN*T
-      R1=sqrt(r1)
-      R2=gR
-      R3=sqrt(pR**2+(RC*gR)**2+TWO*pR*gR*RC*T)
+c     !T=cos(TT)
+      !RN=mC/(mB+mC)
+      !RC=ONE-RN
+      !r1=pR**2+(RN*gR)**2-TWO*pR*gR*RN*T
+      !R1=sqrt(r1)
+      !R2=gR
+      !R3=sqrt(pR**2+(RC*gR)**2+TWO*pR*gR*RC*T)
+
       R1=Q(1)
       R2=Q(2)
       R3=Q(3)
-      !write(out_unitp,*) r1,r2,r3
+       write(out_unitp,*) r1,r2,r3
       R1=R1*autoA
       R2=R2*autoA
       R3=R3*autoA

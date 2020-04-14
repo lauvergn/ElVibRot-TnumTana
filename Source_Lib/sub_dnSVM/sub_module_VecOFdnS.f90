@@ -23,10 +23,7 @@
 
 MODULE mod_VecOFdnS
       use mod_system
-      use mod_dnS, only: type_dns, alloc_dns, dealloc_dns, check_alloc_dns, write_dns, &
-                         sub_dns1_prod_dns2_to_dns3, sub_dns1_minus_dns2_to_dns3, &
-                         sub_zero_to_dns, sub_dns1_plus_dns2_to_dns3, sub_dns1_to_dntr2, &
-                         sub_dns1_to_dns2, sub_weight_dns
+      use mod_dnS
       IMPLICIT NONE
 
       PRIVATE
@@ -228,17 +225,20 @@ MODULE mod_VecOFdnS
 
       CALL alloc_dnS(dnWork,minval(Vec1OFdnS%nb_var_deriv),nderiv)
 
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(2),Vec2OFdnS(3),Vec3OFdnS(1),nderiv)
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(3),Vec2OFdnS(2),dnWork,nderiv)
-      CALL sub_dnS1_MINUS_dnS2_TO_dnS3(Vec3OFdnS(1),dnWork,Vec3OFdnS(1),nderiv)
+      CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(2),Vec2OFdnS(3),Vec3OFdnS(1),nderiv)
+      CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(3),Vec2OFdnS(2),dnWork,nderiv)
+      !CALL sub_dnS1_MINUS_dnS2_TO_dnS3(Vec3OFdnS(1),dnWork,Vec3OFdnS(1),nderiv)
+      CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnWork,-ONE,Vec3OFdnS(1),ONE,nderiv)
 
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(3),Vec2OFdnS(1),Vec3OFdnS(2),nderiv)
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(1),Vec2OFdnS(3),dnWork,nderiv)
-      CALL sub_dnS1_MINUS_dnS2_TO_dnS3(Vec3OFdnS(2),dnWork,Vec3OFdnS(2),nderiv)
+      CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(3),Vec2OFdnS(1),Vec3OFdnS(2),nderiv)
+      CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(1),Vec2OFdnS(3),dnWork,nderiv)
+      !CALL sub_dnS1_MINUS_dnS2_TO_dnS3(Vec3OFdnS(2),dnWork,Vec3OFdnS(2),nderiv)
+      CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnWork,-ONE,Vec3OFdnS(2),ONE,nderiv)
 
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(1),Vec2OFdnS(2),Vec3OFdnS(3),nderiv)
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(2),Vec2OFdnS(1),dnWork,nderiv)
-      CALL sub_dnS1_MINUS_dnS2_TO_dnS3(Vec3OFdnS(3),dnWork,Vec3OFdnS(3),nderiv)
+      CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(1),Vec2OFdnS(2),Vec3OFdnS(3),nderiv)
+      CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(2),Vec2OFdnS(1),dnWork,nderiv)
+      !CALL sub_dnS1_MINUS_dnS2_TO_dnS3(Vec3OFdnS(3),dnWork,Vec3OFdnS(3),nderiv)
+      CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnWork,-ONE,Vec3OFdnS(3),ONE,nderiv)
 
       CALL dealloc_dnS(dnWork)
 
@@ -255,8 +255,8 @@ MODULE mod_VecOFdnS
 
       END SUBROUTINE Vec1OFdnS_CROSSPRODUCT_Vec2OFdnS_TO_Vec3OFdnS
 
-      SUBROUTINE Vec1OFdnS_DOTPRODUCT_Vec2OFdnS_TO_dnS3(Vec1OFdnS,Vec2OFdnS,    &
-                                                    dnS3,nderiv)
+      SUBROUTINE Vec1OFdnS_DOTPRODUCT_Vec2OFdnS_TO_dnS3(Vec1OFdnS,Vec2OFdnS,&
+                                                        dnS3,nderiv)
       !USE mod_system
       IMPLICIT NONE
 
@@ -300,8 +300,9 @@ MODULE mod_VecOFdnS
       CALL sub_ZERO_TO_dnS(dnS3,nderiv)
       DO i=lbound(Vec1OFdnS,dim=1),ubound(Vec1OFdnS,dim=1)
 
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(i),Vec2OFdnS(i),dnWork,nderiv)
-        CALL sub_dnS1_PLUS_dnS2_TO_dnS3(dnS3,dnWork,dnS3,nderiv)
+        CALL sub_dnS1_PROD_dnS2_TO_dnS3(Vec1OFdnS(i),Vec2OFdnS(i),      &
+                                        dnWork,nderiv)
+        CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnWork,ONE,dnS3,ONE,nderiv)
 
       END DO
 

@@ -2253,7 +2253,7 @@ STOP
       IMPLICIT NONE
 
       ! Operator (Hamiltonian)
-      TYPE (param_Op), intent(in)   :: para_Op
+      TYPE (param_Op)   :: para_Op
 
       !-----vector ----------------------------
       TYPE (param_psi), intent(inout)    :: Tnq1(0:)   ! vector for the chebychev recursion
@@ -2336,7 +2336,7 @@ STOP
 
 
       ! Operator (Hamiltonian)
-      TYPE (param_Op), intent(in)   :: para_H
+      TYPE (param_Op)              :: para_H
       TYPE (param_propa)           :: para_propa
 
       !-----vector ----------------------------
@@ -2415,7 +2415,7 @@ STOP
 
 
       ! Operator (Hamiltonian)
-      TYPE (param_Op), intent(in)  :: para_H
+      TYPE (param_Op)              :: para_H
       TYPE (param_propa)           :: para_propa
 
       !-----vector ----------------------------
@@ -2480,7 +2480,7 @@ STOP
       IMPLICIT NONE
 
       ! Operator (Hamiltonian)
-      TYPE (param_Op), intent(in)  :: para_H
+      TYPE (param_Op)              :: para_H
       TYPE (param_propa)           :: para_propa
 
       !-----vector ----------------------------

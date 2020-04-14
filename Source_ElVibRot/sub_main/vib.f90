@@ -1107,7 +1107,7 @@
       logical  :: intensity_only
       integer  :: nio_res_int
 
-      integer   max_mem
+      integer (kind=ILkind)  :: max_mem
       logical   test_mem
 
 
@@ -1276,7 +1276,7 @@ para_mem%mem_debug = .FALSE.
       logical  :: intensity_only
       integer  :: nio_res_int
 
-      integer   max_mem
+      integer (kind=ILkind)  :: max_mem
       logical   test_mem
 
 
@@ -1753,7 +1753,7 @@ END SUBROUTINE Tune_SG4threads_HPsi
       logical  :: intensity_only
       integer  :: nio_res_int
 
-      integer   max_mem
+      integer (kind=ILkind)  :: max_mem
       logical   test_mem
 
 

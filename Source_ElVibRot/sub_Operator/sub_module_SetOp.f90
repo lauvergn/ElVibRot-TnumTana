@@ -41,7 +41,6 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_SetOp
-
       USE mod_system
       use mod_PrimOp, only: assignment(=),param_typeop, param_pes, dealloc_typeop,    &
                             write_typeop, param_d0matop, init_d0matop,  &
@@ -66,19 +65,17 @@ MODULE mod_SetOp
           logical                        :: Read_Mat      = .FALSE. ! if t=> the matrix is read
           logical                        :: sym_Hamil     = .TRUE.  ! if t => the Hamiltonian is symmetrized
 
-
           logical                        :: print_done = .FALSE. ! T if already print
           logical                        :: read_Op    = .FALSE. ! (def=f) if t=> the matrix operator will be read
 
-
           !-- for the basis set ----------------------------------------------
           TYPE (param_AllBasis), pointer :: para_AllBasis   => null() ! true POINTER
-          TYPE (Basis), pointer          :: BasisnD,Basis2n => null() ! true POINTER
+          TYPE (Basis),          pointer :: BasisnD,Basis2n => null() ! true POINTER
           integer                        :: symab           =  -1
 
           !-- for Tnum and mole ----------------------------------------------
-          TYPE (CoordType), pointer      :: mole            => null() ! true POINTER
-          TYPE (Tnum),      pointer      :: para_Tnum       => null() ! true POINTER
+          TYPE (CoordType),      pointer :: mole            => null() ! true POINTER
+          TYPE (Tnum),           pointer :: para_Tnum       => null() ! true POINTER
 
           !-- for param_PES --------------------------------------------------
           TYPE (param_PES), pointer      :: para_PES        => null() ! true POINTER

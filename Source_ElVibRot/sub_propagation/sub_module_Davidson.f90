@@ -210,7 +210,7 @@ CONTAINS
           Hpsi(i)%GridRep  = .TRUE.
         END DO
       END IF
-      
+
       CALL init_psi(g,para_H,para_H%cplx)
       CALL alloc_psi(g,      BasisRep=With_Basis,GridRep=With_Grid)
       IF(MPI_id==0) THEN
@@ -224,7 +224,7 @@ CONTAINS
         RealTime = Delta_RealTime(DavidsonTime)
         CALL flush_perso(out_unitp)
       ENDIF ! for MPI_id==0
-      
+
 #if(run_MPI)
       CALL MPI_Bcast(nb_diago,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
       CALL MPI_Bcast_param_Davidson(para_Davidson)
@@ -374,7 +374,6 @@ CONTAINS
         IF (debug) CALL flush_perso(out_unitp)
         !- diagonalization
         !----------------------------------------------------------
-
 
         !----------------------------------------------------------
         ! Save vec(:) on vec0(:)
@@ -2436,6 +2435,7 @@ END SUBROUTINE Schmidt_process_MPI
  real (kind=Rkind), allocatable :: Vec0(:,:),Vec(:,:)
  real (kind=Rkind) :: S0itmax,S0it
  integer :: klowestWP
+ logical :: test_vec0
 
  complex (kind=Rkind) :: Overlap
  real (kind=Rkind)    :: Spsi_psi0(size(Vec(:,1)))
@@ -2472,7 +2472,11 @@ END SUBROUTINE Schmidt_process_MPI
  END IF
  klowestWP = 0
  IF (ndim > 0 .AND. para_Davidson%num_LowestWP > 0 .AND. para_Davidson%num_LowestWP <= ndim) THEN
-   IF (allocated(vec0) .AND. para_Davidson%num_LowestWP <= size(Vec0,dim=1)) THEN
+
+   test_vec0 = allocated(vec0)
+   IF (test_vec0) test_vec0 = (para_Davidson%num_LowestWP <= size(Vec0,dim=1))
+
+   IF ( test_vec0 ) THEN
 
      IF(MPI_id==0) THEN
      ndim0 = size(Vec0,dim=1)

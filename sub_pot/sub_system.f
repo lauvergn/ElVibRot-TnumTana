@@ -1,324 +1,345 @@
 c
-c================================================================
-c    calc_Op : calculation of the potential and dipolar matrices
-c    mat_V(nb_be,nb_be) and mat_dip(nb_be,nb_be,3)
-c    nb_be : nb of elctronic surface
-c    Q are the coordinates in active order or syl order
-c    dipolar calculation if calc_dip = T
-c================================================================
+C=======================================================================
+C    calcN_op: calculation of the potential and scalar operator matrices
+C     - mat_V(nb_be,nb_be):   potential (real part)
+C     - mat_imV(nb_be,nb_be): potential (imaginary part)
+C     - mat_ScalOp(nb_be,nb_be,nb_ScalOp): scalar operators (dipole ...)
+C    nb_be:     nb of diabatic electronic states
+C    nb_ScalOp: nb of scalar operators
+C
+C    Qpot are the coordinates (active, dynamic Cartesian ... ones)
+C    nb_Qpot: nb of coordinates
+C
+C     mole: coordinate definition
+C=======================================================================
       SUBROUTINE calcN_op(mat_V,mat_imV,mat_ScalOp,nb_be,nb_ScalOp,
-     *                    Qact,nb_var,mole,
-     *                    calc_ScalOp,pot_cplx)
-
-      USE mod_Tnum
+     *                    Qpot,nb_Qpot,mole,calc_ScalOp,pot_cplx)
       USE mod_system
-      USE mod_Constant
+      USE mod_Tnum
       IMPLICIT NONE
 
-c----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole
+      !----- for the coordinate definition------------------------------
+      TYPE (CoordType)    :: mole
 
-
-      integer           :: nb_be,nb_ScalOp,nb_var
+      integer           :: nb_be,nb_ScalOp,nb_Qpot
       logical           :: calc_ScalOp,pot_cplx
-      real (kind=Rkind) :: mat_V(nb_be,nb_be),mat_imV(nb_be,nb_be)
+      real (kind=Rkind) :: mat_V(nb_be,nb_be)
+      real (kind=Rkind) :: mat_imV(nb_be,nb_be)
       real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
-      real (kind=Rkind) :: Qact(nb_var)
+      real (kind=Rkind) :: Qpot(nb_Qpot)
 
-      integer,parameter :: ndim=6
-      real (kind=Rkind) :: im_pot0
-      real (kind=Rkind) :: Q(ndim)
-      real (kind=Rkind) :: Q2(ndim)
 
-     
-      real (kind=Rkind) :: w10a,w6a,w1,w9a,w16b,w18b
-      real (kind=Rkind) :: delta
-      real (kind=Rkind) :: lambda
-      real (kind=Rkind) :: k6a1,k6a2
-      real (kind=Rkind) :: k11,k12
-      real (kind=Rkind) :: k9a1,k9a2
-      real (kind=Rkind) :: k16b1,k16b2
-      real (kind=Rkind) :: k18b1,k18b2
-
-    
-       w10a   = convRWU_WorkingUnit_TO_R(REAL_WU(0.09357,'ev','E'))
-       w6a    = convRWU_WorkingUnit_TO_R(REAL_WU(0.0740,'ev','E'))
-       w1     = convRWU_WorkingUnit_TO_R(REAL_WU(0.1273,'ev','E'))
-       w9a    = convRWU_WorkingUnit_TO_R(REAL_WU(0.1568,'ev','E'))
-       w16b   = convRWU_WorkingUnit_TO_R(REAL_WU(0.3242,'ev','E'))
-       w18b   = convRWU_WorkingUnit_TO_R(REAL_WU(0.3621,'ev','E'))
-
-       delta  = convRWU_WorkingUnit_TO_R(REAL_WU(0.46165,'ev','E'))
-       lambda = convRWU_WorkingUnit_TO_R(REAL_WU(0.1825,'ev','E'))
-
-       k6a1   = convRWU_WorkingUnit_TO_R(REAL_WU(-0.0964,'ev','E'))
-       k6a2   = convRWU_WorkingUnit_TO_R(REAL_WU(0.1194,'ev','E'))
-       k11    = convRWU_WorkingUnit_TO_R(REAL_WU(0.0470,'ev','E'))
-       k12    = convRWU_WorkingUnit_TO_R(REAL_WU(0.2012,'ev','E'))
-       k9a1   = convRWU_WorkingUnit_TO_R(REAL_WU(0.1594,'ev','E'))
-       k9a2   = convRWU_WorkingUnit_TO_R(REAL_WU(0.0484,'ev','E'))
-       k16b1  = convRWU_WorkingUnit_TO_R(REAL_WU(0.0717,'ev','E'))
-       k16b2  = convRWU_WorkingUnit_TO_R(REAL_WU(-0.0717,'ev','E'))
-       k18b1  = convRWU_WorkingUnit_TO_R(REAL_WU(0.0780,'ev','E'))
-       k18b2  = convRWU_WorkingUnit_TO_R(REAL_WU(-0.0780,'ev','E'))
-
-      !write(6,*) 'w (au)',w10a,w6a,w1,w9a
-
-      Q  = Qact(4:ndim+3)
-      Q2 = Q*Q
-
-      IF (nb_be == 2 ) THEN
-        mat_V(:,:) = ZERO
-        mat_V(1,1) = HALF*( w10a*Q2(1)+w6a*Q2(2)+w1*Q2(3)+w9a*Q2(4)+
-     *                      w16b*Q2(5)+w18b*Q2(6) )
-        mat_V(2,2) = mat_V(1,1) + delta + 
-     *             k6a2*Q(2)+k12*Q(3)+k9a2*Q(4)+k16b2*Q(5)+k18b2*Q(6)
-        mat_V(1,1) = mat_V(1,1) - delta + 
-     *             k6a1*Q(2)+k11*Q(3)+k9a1*Q(4)+k16b1*Q(5)+k18b1*Q(6)
-        mat_V(1,2) = lambda*Q(1)
-        mat_V(2,1) = lambda*Q(1)
-
-c       write(6,*) 'Q,V',Q,mat_V
-        IF (pot_cplx) mat_imV(1,1) = im_pot0(Q,ndim)
-c       write(6,*) 'Q,imV',Q,mat_imV
-        IF (calc_ScalOp) THEN
-          CALL sub_scalar(mat_ScalOp(1,1,:),nb_ScalOp,Q,ndim,
-     *                    mole)
-        END IF
-      ELSE
-        write(6,*) ' ERROR in calc_op'
-        write(6,*) ' It needs two PES'
-        write(6,*) ' Rq: nb_be',nb_be
-        STOP
+      !-----------------------------------------------------------------
+      mat_V(:,:) = ZERO
+      IF (pot_cplx) THEN
+        mat_imV(:,:) = ZERO
       END IF
+      IF (calc_ScalOp) THEN
+          mat_ScalOp(:,:,:) = ZERO
+      END IF
+      !-----------------------------------------------------------------
 
-      RETURN
-      END
-C================================================================
-C    subroutine calculant le gradient
-C================================================================
-      SUBROUTINE d0d1d2_g(d0g,d1g,d2g,Qsym0,mole,deriv,num,step)
-      USE mod_Tnum
+      STOP 'STOP in calcN_op: you have to set-up the potential!!'
+
+      END SUBROUTINE calcN_op
+C
+C=======================================================================
+C    fonction pot_rest(x)
+C=======================================================================
+      FUNCTION pot_rest(Qact,Delta_Qact,nb_inact2n)
+      USE mod_system
+      IMPLICIT NONE
+      real (kind=Rkind) :: pot_rest
+
+
+      real (kind=Rkind) :: Qact(1)
+      integer           :: nb_inact2n
+      real (kind=Rkind) :: Delta_Qact(nb_inact2n)
+
+      !-----------------------------------------------------------------
+      pot_rest = ZERO
+      !-----------------------------------------------------------------
+
+
+      !-----------------------------------------------------------------
+      STOP 'The function pot_rest MUST be make'
+      !-----------------------------------------------------------------
+
+
+      END FUNCTION pot_rest
+
+C=======================================================================
+C    sub hessian
+C=======================================================================
+      SUBROUTINE sub_hessian(h)
       USE mod_system
       IMPLICIT NONE
 
-c----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole
+       real (kind=Rkind) :: h
+
+      !-----------------------------------------------------------------
+       h = ZERO
+      !-----------------------------------------------------------------
+
+      !-----------------------------------------------------------------
+      STOP 'The subroutine sub_hessian MUST be make'
+      !-----------------------------------------------------------------
+
+
+      END SUBROUTINE sub_hessian
+C=======================================================================
+C     analytical gradient along the path
+C=======================================================================
+      SUBROUTINE d0d1d2_g(d0g,d1g,d2g,Qdyn,mole,deriv,num,step)
+      USE mod_system
+      USE mod_Tnum
+      IMPLICIT NONE
+
+      !----- for the CoordType and Tnum ---------------------------------
+      TYPE (CoordType)    :: mole
 
       real (kind=Rkind) :: d0g(mole%nb_inact2n)
       real (kind=Rkind) :: d1g(mole%nb_inact2n,mole%nb_act1)
       real (kind=Rkind) :: 
-     *                d2g(mole%nb_inact2n,mole%nb_act1,mole%nb_act1)
+     *                    d2g(mole%nb_inact2n,mole%nb_act1,mole%nb_act1)
 
-      real (kind=Rkind) :: Qsym0(mole%nb_var)
+      real (kind=Rkind) :: Qdyn(mole%nb_var)
       real (kind=Rkind) :: step
-      logical       :: deriv,num
+      logical           :: deriv,num
+
+      real (kind=Rkind) :: Qact1(mole%nb_act1)
+
+      !----- for debuging ----------------------------------------------
+      !logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      character (len=*), parameter :: name_sub='d0d1d2_g'
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nb_var',mole%nb_var
+        write(out_unitp,*) 'nb_act1',mole%nb_act1
+        write(out_unitp,*) 'nb_inact22,nb_inact21',
+     *                   mole%nb_inact22,mole%nb_inact21
+        write(out_unitp,*) 'nb_inact2n',mole%nb_inact2n
+        write(out_unitp,*) 'deriv',deriv
+      END IF
+      !-----------------------------------------------------------------
+
+      !-----------------------------------------------------------------
+      Qact1(:) = Qdyn(mole%liste_QactTOQdyn(1:mole%nb_act1))
+      !-----------------------------------------------------------------
+
+      !-----------------------------------------------------------------
+      d0g(:)     = ZERO
+      d1g(:,:)   = ZERO
+      d2g(:,:,:) = ZERO
+      !-----------------------------------------------------------------
+
+      !-----------------------------------------------------------------
+      STOP 'The subroutine d0d1d2_g MUST be make'
+      !-----------------------------------------------------------------
 
 
-      d0g = 0.d0
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'd0g at Qact:',Qact1
+        write(out_unitp,*) d0g(:)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+      !-----------------------------------------------------------------
 
-
-      END
-C================================================================
-C    subroutine calculant la matrice hessienne en coordonnees cartesiennes
-C    !!! il faut changer le paramtre n  (3*nb_at)
-C    et le nom de file_FChk%name
-C================================================================
-      SUBROUTINE sub_hessian(hh)
-      USE mod_file
+      END SUBROUTINE d0d1d2_g
+C=======================================================================
+C     analytical hessian along the path (only d0h is used!!)
+C=======================================================================
+      SUBROUTINE d0d1d2_h(d0h,d1h,d2h,Qdyn,mole,deriv,num,step)
       USE mod_system
-      IMPLICIT NONE
-
-      integer, parameter :: n = 9
-      real (kind=Rkind) :: h(n,n),hh(n,n)
-      integer  ::  err
-
-      hh = zero
-      END
-      SUBROUTINE H0_sym(h,n)
-      USE mod_system
-      IMPLICIT NONE
-        integer       :: n
-        real (kind=Rkind) :: h(n,n)
-        integer       :: n1 = 9
-        integer       :: n2 = 18
-
-
-        real (kind=Rkind) :: d
-
-
-        RETURN
-
-
-        d = h(n1,n1)
-        h(:,n1) = 0.d0
-        h(n1,:) = 0.d0
-        h(n1,n1) = d
-        
-
-        d = h(n2,n2)
-        h(:,n2) = 0.d0
-        h(n2,:) = 0.d0
-        h(n2,n2) = d
-        write(6,*) 'hessian sym'
-        CALL ecriture(h,n,n,5,.TRUE.,n)
-        
-      END
-C================================================================
-C    fonction pot_rest(x)
-C================================================================
-      FUNCTION pot_rest(Qact,Delta_Qact,nb_inact2n)
-      USE mod_system
-      IMPLICIT NONE
-
-       real (kind=Rkind) :: pot_rest
-       real (kind=Rkind) :: Qact(1)
-       integer       :: nb_inact2n
-       real (kind=Rkind) :: Delta_Qact(nb_inact2n)
-
-       pot_rest = 0.d0
-
-       END
-C================================================================
-C    fonction im_pot0(x)
-C================================================================
-      FUNCTION im_pot0(Q,n)
-      USE mod_system
-      IMPLICIT NONE
-
-       real (kind=Rkind) :: im_pot0
-       integer :: i,n
-       real (kind=Rkind) :: Q(n)
-       real (kind=Rkind) :: Q0=8.d0,z
-
-       z = 0.d0
-       DO i=1,n
-        IF (abs(Q(i)) > Q0) THEN
-           z = z -(abs(Q(i)) - Q0)**3
-        END IF
-       END DO
-       !write(6,*) Q,z
-
-       im_pot0 = z
-
-       RETURN
-       END
-C================================================================
-C    subroutine calculant la matrice hessienne
-C    en fonction de x=cos(theta)
-C================================================================
-       SUBROUTINE d0d1d2_h(d0h,d1h,d2h,
-     *                     Qsym0,mole,deriv,num,step)
-
       USE mod_Tnum
-      USE mod_system
       IMPLICIT NONE
 
-c----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole
+      !----- for the CoordType and Tnum ----------------------------------
+      TYPE (CoordType)    :: mole
 
-      
-      real (kind=Rkind) ::  Qsym0(mole%nb_var)
+      real (kind=Rkind) :: Qdyn(mole%nb_var)
 
+
+      real (kind=Rkind) :: d0h(mole%nb_inact2n,mole%nb_inact2n)
+      real (kind=Rkind) :: d1h(mole%nb_inact2n,mole%nb_inact2n)
+      real (kind=Rkind) :: d2h(mole%nb_inact2n,mole%nb_inact2n)
 
       real (kind=Rkind) :: step
-      logical deriv,num
+      logical           :: deriv,num
 
-      real (kind=Rkind) :: d0h
-      real (kind=Rkind) :: d1h
-      real (kind=Rkind) :: d2h
 
-c----- for debuging ----------------------------------
-      logical debug
-      parameter (debug=.FALSE.)
-c     parameter (debug=.TRUE.)
-c---------------------------------------------------------------------
+      real (kind=Rkind) :: Qact1(mole%nb_act1)
+
+      !----- for debuging ----------------------------------------------
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub='d0d1d2_h'
+      !-----------------------------------------------------------------
       IF (debug) THEN
-      write(6,*)
-      write(6,*) 'BEGINNING d0d1d2_h'
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nb_var',mole%nb_var
+        write(out_unitp,*) 'nb_act1',mole%nb_act1
+        write(out_unitp,*) 'nb_inact22,nb_inact21',
+     *            mole%nb_inact22,mole%nb_inact21
+        write(out_unitp,*) 'nb_inact2n',mole%nb_inact2n
       END IF
-c---------------------------------------------------------------------
+      !-----------------------------------------------------------------
 
+      !-----------------------------------------------------------------
+      Qact1(:) = Qdyn(mole%liste_QactTOQdyn(1:mole%nb_act1))
+      !-----------------------------------------------------------------
 
-      STOP 'd0d1d2_h'
+      !-----------------------------------------------------------------
+      d0h(:,:) = ZERO
+      !-----------------------------------------------------------------
 
-      END
-C================================================================
-C    analytical derivative (Qeq Qeq' Qeq" Qeq'") calculation
-c    for the variable i_qsym
-C================================================================
-      SUBROUTINE d0d1d2d3_Qeq(i_qsym,
-     *                        d0req,d1req,d2req,d3req,
-     *                        Qsym0,mole,nderiv)
+      !-----------------------------------------------------------------
+      STOP 'The subroutine d0d1d2_h MUST be make'
+      !-----------------------------------------------------------------
 
-      USE mod_Tnum
-      USE mod_system
-      IMPLICIT NONE
-
-c----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole
-
-       integer i_qsym
-       real (kind=Rkind) ::  Qsym0(mole%nb_var)
-
-       integer nderiv
-
-       real (kind=Rkind) ::  d0req
-       real (kind=Rkind) ::  d1req
-       real (kind=Rkind) ::  d2req
-       real (kind=Rkind) ::  d3req
-
-
-c----- for debuging ----------------------------------
-      logical debug
-      parameter (debug=.FALSE.)
-c     parameter (debug=.TRUE.)
-c---------------------------------------------------------------------
+      !-----------------------------------------------------------------
       IF (debug) THEN
-        write(6,*) 'BEGINNING d0d1d2d3_Qeq'
-        write(6,*) 'i_qsym',i_qsym
+        write(out_unitp,*) 'Qact1',Qact1
+        write(out_unitp,*) 'd0h at Qact1'
+        CALL Write_Mat(d0h,6,4)
+        write(out_unitp,*) 'END ',name_sub
       END IF
-c---------------------------------------------------------------------
+      !-----------------------------------------------------------------
 
-      STOP 'd0d1d2d3_Qeq'
-
-      RETURN
-      END
-
-C================================================================
-C    analytical derivative (dnQflex : Qflex Qflex' Qflex" Qflex'") calculation
-c    for the variable iq
-C================================================================
+      END SUBROUTINE d0d1d2_h
+C=======================================================================
+C     analytical derivative (dnQflex : Qflex Qflex' Qflex" Qflex'") calculation
+C     for the variable iq
+C=======================================================================
       SUBROUTINE calc_dnQflex(iq,dnQflex,Qact,nb_act,nderiv,it)
       USE mod_system
       USE mod_dnSVM
       IMPLICIT NONE
 
-       integer :: iq,nb_act
-       real (kind=Rkind) ::  Qact(nb_act)
-       integer :: nderiv,it
-       TYPE (Type_dnS)   :: dnQflex
-       STOP 'dnQflex'
-       END
-c
+      integer           :: iq,nb_act
+      real (kind=Rkind) :: Qact(nb_act)
+      integer           :: nderiv,it
+      TYPE (Type_dnS)   :: dnQflex
+
+
+      ! for debuging ---------------------------------------------------
+      character (len=*), parameter :: name_sub='dnQflex'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      ! for debuging ---------------------------------------------------
+
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nb_act',nb_act
+        write(out_unitp,*) 'iq',iq
+      END IF
+      !-----------------------------------------------------------------
+
+
+      !-----------------------------------------------------------------
+      CALL sub_ZERO_TO_dnS(dnQflex)
+
+      ! Zero order dervivative
+      dnQflex%d0 = ZERO
+      ! First order dervivatives
+      dnQflex%d1(:) = ZERO
+      ! Second order dervivatives
+      dnQflex%d2(:,:) = ZERO
+      ! Third order dervivatives
+      dnQflex%d3(:,:,:) = ZERO
+      !-----------------------------------------------------------------
+
+      !-----------------------------------------------------------------
+      STOP 'The subroutine calc_dnQflex MUST be make'
+      !-----------------------------------------------------------------
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'dnQflex : ',Qact
+        CALL write_dnS(dnQflex,nderiv)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+      !-----------------------------------------------------------------
+
+       END SUBROUTINE calc_dnQflex
 C================================================================
-c    dipole read
+C     analytical derivative (Qopt Qopt' Qopt" Qopt'") calculation
+c     for the variable i_Qdyn
+C     derivative with respect to Qact1(:) coordinates
 C================================================================
-      SUBROUTINE sub_scalar(scalar,nb_scalar,Q,n,mole)
-      USE mod_Tnum
-      USE mod_paramQ
+      SUBROUTINE d0d1d2d3_Qeq(i_Qdyn,
+     *                        d0Qopt,d1Qopt,d2Qopt,d3Qopt,
+     *                        Qdyn,mole,nderiv)
       USE mod_system
+      USE mod_Tnum
       IMPLICIT NONE
 
-c----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole
+      !----- for the CoordType and Tnum ----------------------------------
+      TYPE (CoordType)    :: mole
 
-      integer           :: n,nb_scalar
-      real (kind=Rkind) :: Q(n)
-      real (kind=Rkind) :: scalar(nb_scalar)
+      integer           :: i_Qdyn
+
+      real (kind=Rkind) :: Qdyn(mole%nb_var)
+
+      integer           :: nderiv
+
+      real (kind=Rkind) :: d0Qopt
+      real (kind=Rkind) :: d1Qopt(mole%nb_act1)
+      real (kind=Rkind) :: d2Qopt(mole%nb_act1,mole%nb_act1)
+      real (kind=Rkind) ::
+     *                   d3Qopt(mole%nb_act1,mole%nb_act1,mole%nb_act1)
 
 
+      !local variables
+      real (kind=Rkind) :: Qact1(mole%nb_act1)
 
-      scalar(:)   = ZERO
 
-      END
+      !----- for debuging ----------------------------------------------
+      character (len=*), parameter :: name_sub='d0d1d2d3_Qeq'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      !----- for debuging ----------------------------------------------
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nb_inact20,nb_act',
+     *                     mole%nb_inact20,mole%nb_act
+        write(out_unitp,*) 'nb_var',mole%nb_var
+        write(out_unitp,*) 'i_Qdyn',i_Qdyn
+      END IF
+      !-----------------------------------------------------------------
+
+      !-----------------------------------------------------------------
+      Qact1(:) = Qdyn(mole%liste_QactTOQdyn(1:mole%nb_act1))
+      !-----------------------------------------------------------------
+
+      !-----------------------------------------------------------------
+      d0Qopt        = ZERO
+      d1Qopt(:)     = ZERO
+      d2Qopt(:,:)   = ZERO
+      d3Qopt(:,:,:) = ZERO
+      !-----------------------------------------------------------------
+
+      STOP 'The subroutine d0d1d2d3_Qeq MUST be make'
+
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'Qact1 : ',Qact1
+        write(out_unitp,*) 'd0Qopt : ',d0Qopt
+        write(out_unitp,*) 'd1Qopt : ',d1Qopt
+        write(out_unitp,*) 'd2Qopt : ',d2Qopt
+        write(out_unitp,*) 'd3Qopt : ',d3Qopt
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+      !-----------------------------------------------------------------
+
+      END SUBROUTINE d0d1d2d3_Qeq

@@ -33,7 +33,7 @@ MODULE mod_paramQ
                                   write_dnx, sub3_dnx_at1
   use mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
   use mod_CartesianTransfo, only: alloc_cartesiantransfo,               &
-           Set_P_Axis_CartesianTransfo, Set_Ecart_CartesianTransfo,     &
+           Set_P_Axis_CartesianTransfo, Set_Eckart_CartesianTransfo,     &
                                centre_masse, write_cartesiantransfo,    &
                              sub_dnxmassweight, sub3_dncentre_masse,    &
                      calc_cartesiantransfo_new, sub_dnxnomassweight,    &
@@ -596,7 +596,7 @@ CONTAINS
         ELSE
           IF (mole%tab_Cart_transfo(1)%CartesianTransfo%Eckart .OR.        &
              mole%tab_Cart_transfo(1)%CartesianTransfo%MultiRefEckart) THEN
-            CALL Set_Ecart_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
+            CALL Set_Eckart_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
           END IF
         END IF
 
@@ -1785,7 +1785,6 @@ CONTAINS
         !=================================================
         IF (Gcenter .AND. mole%Centered_ON_CoM) THEN
           icG = mole%ncart-2
-
           CALL sub3_dncentre_masse(mole%ncart_act,mole%nb_act,mole%ncart, &
                                      dnx,mole%masses,mole%Mtot_inv,icG,nderiv)
         END IF

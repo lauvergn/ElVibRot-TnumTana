@@ -2,8 +2,8 @@
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 # F90 = mpifort
-#F90 = gfortran
- F90 = nagfor
+ F90 = gfortran
+#F90 = nagfor
 #F90 = ifort
 #F90 = pgf90
 
@@ -130,20 +130,21 @@ ifeq ($(F90),nagfor)
    endif
    # opt management
    ifeq ($(OPT),1)
-      F90FLAGS = -O4  $(OMPFLAG) -o -compatible -Ounroll=4 -s
+      F90FLAGS = -O4  $(OMPFLAG) -o -compatible -kind=byte -Ounroll=4 -s
    else
       #F90FLAGS = -O0 $(OMPFLAG) -g -C=all -mtrace=all
       #  -C=undefined is not compatible with: (i) -framework Accelerate or lapack lib (ii) openmp
       #with -mtrace=all add information on the memmory allocation/deallocation.
       # The option -C=dangling causes troubles since it is used => -C=all cannot be used.
+      # -gline is not compatible with openmp
       ifeq ($(OMP),0)
         ifeq ($(LAPACK),0)
-          F90FLAGS = -O0            -g -gline -C -C=alias -C=intovf -C=undefined
+          F90FLAGS = -O0            -g -gline -kind=byte -C -C=alias -C=intovf -C=undefined
         else
-          F90FLAGS = -O0 $(OMPFLAG) -g        -C -C=alias -C=intovf 
+          F90FLAGS = -O0 $(OMPFLAG) -g -gline -kind=byte -C -C=alias -C=intovf 
         endif
       else
-        F90FLAGS = -O0 $(OMPFLAG) -g        -C -C=alias -C=intovf 
+          F90FLAGS = -O0 $(OMPFLAG) -g        -kind=byte -C -C=alias -C=intovf 
       endif
    endif
 

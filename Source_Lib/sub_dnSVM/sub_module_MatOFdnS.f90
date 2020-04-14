@@ -22,14 +22,8 @@
 !===========================================================================
       MODULE mod_MatOFdnS
       use mod_system
-      use mod_dnS, only: type_dns, alloc_dns, dealloc_dns, check_alloc_dns, &
-                         write_dns, alloc_array, dealloc_array, sub_dns1_to_dns2, &
-                         sub_dns1_prod_dns2_to_dns3, sub_dns1_wplus_dns2_to_dns3, &
-                         sub_dns1_prod_w_to_dns2, sub_zero_to_dns, sub_dns1_to_dntr2, &
-                         sub_dns1_plus_dns2_to_dns3, sub_weight_dns
-      use mod_VecOFdnS, only: alloc_array, dealloc_array, normalization_of_vecofdns, &
-                              alloc_vecofdns, vec1ofdns_dotproduct_vec2ofdns_to_dns3, &
-                              dealloc_vecofdns, check_alloc_vecofdns
+      use mod_dnS
+      use mod_VecOFdnS
       IMPLICIT NONE
 
       PRIVATE
@@ -347,14 +341,14 @@
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(MatOFdnS(1,3),MatOFdnS(3,2),dnW2)
         CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW1,ONE,dnW2,-ONE,dnW3)
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(MatOFdnS(2,1),dnW3,dnW2)
-        CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnDet,ONE,dnW2,-ONE,dnDet)
+        CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2,-ONE,dnDet,ONE)
 
         !third line
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(MatOFdnS(1,2),MatOFdnS(2,3),dnW1)
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(MatOFdnS(1,3),MatOFdnS(2,2),dnW2)
         CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW1,ONE,dnW2,-ONE,dnW3)
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(MatOFdnS(3,1),dnW3,dnW2)
-        CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnDet,ONE,dnW2, ONE,dnDet)
+        CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2, ONE,dnDet,ONE)
 
         !write(out_unitp,*) 'det(MatOFdnS)'
         !CALL Write_dnS(dnDet)
@@ -1474,7 +1468,7 @@
           END DO
           IF (EigVecdnS(max_j,i)%d0 < ZERO) THEN
             DO j=1,N
-              CALL sub_dnS1_PROD_w_TO_dnS2(EigVecdnS(j,i),-ONE,EigVecdnS(j,i),nderiv_loc)
+              CALL sub_Weight_dnS(EigVecdnS(j,i),-ONE,nderiv_loc)
             END DO
           END IF
         END DO
@@ -1956,8 +1950,10 @@
         DO j=lbound(Mat3OFdnS,dim=2),ubound(Mat3OFdnS,dim=2)
           CALL sub_ZERO_TO_dnS(Mat3OFdnS(i,j),nderiv_loc)
           DO k=lbound(Mat1OFdnS,dim=2),ubound(Mat1OFdnS,dim=2)
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(Mat1OFdnS(i,k),Mat2OFdnS(k,j),dnWork,nderiv_loc)
-            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(Mat3OFdnS(i,j),dnWork,Mat3OFdnS(i,j),nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(Mat1OFdnS(i,k),             &
+                                       Mat2OFdnS(k,j),dnWork,nderiv_loc)
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnWork,ONE,Mat3OFdnS(i,j), &
+                                             ONE,nderiv_loc)
 
           END DO
         END DO
@@ -2041,8 +2037,10 @@
         DO i=lbound(Vec3OFdnS,dim=1),ubound(Vec3OFdnS,dim=1)
           CALL sub_ZERO_TO_dnS(Vec3OFdnS(i),nderiv_loc)
           DO k=lbound(Mat1OFdnS,dim=2),ubound(Mat1OFdnS,dim=2)
-            CALL sub_dnS1_PROD_dnS2_TO_dnS3(Mat1OFdnS(i,k),Vec2OFdnS(k),dnWork,nderiv_loc)
-            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(Vec3OFdnS(i),dnWork,Vec3OFdnS(i),nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(Mat1OFdnS(i,k),             &
+                                         Vec2OFdnS(k),dnWork,nderiv_loc)
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnWork,ONE,Vec3OFdnS(i),   &
+                                             ONE,nderiv_loc)
 
           END DO
         END DO

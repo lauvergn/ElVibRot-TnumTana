@@ -2022,12 +2022,10 @@ END SUBROUTINE Read_RPHpara2
 
             CALL sub_dnS1_TO_dntR2(dnW1,dnW2,-91) ! (Qact-Qrefact)^2
 
-            CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW2,ONE,dnDist2(iref),ONE,&
-                                             dnDist2(iref))
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2,ONE,dnDist2(iref),ONE)
 
           END DO
-          CALL sub_dnS1_PROD_w_TO_dnS2(dnDist2(iref),                   &
-                             ONE/real(nb_act1,kind=Rkind),dnDist2(iref))  ! divide by nb_act1
+          CALL sub_Weight_dnS(dnDist2(iref),ONE/real(nb_act1,kind=Rkind))  ! divide by nb_act1
 
         END DO
         IF (debug) write(out_unitp,*) 'dnDist2',dnDist2(:)%d0
@@ -2036,7 +2034,7 @@ END SUBROUTINE Read_RPHpara2
         DO iref=1,nb_ref
 
           CALL sub_ZERO_TO_dnS(dnSumExp) ! the sum of the exp
-          dnSumExp%d0 = ONE ! because the exp with kref = iref is not the next loop
+          dnSumExp%d0 = ONE ! because the exp with kref = iref is not in the next loop
 
           DO kref=1,nb_ref
             IF (iref == kref) CYCLE
@@ -2047,8 +2045,7 @@ END SUBROUTINE Read_RPHpara2
             cte(:) = ZERO ; cte(1) = ONE
             CALL sub_dnS1_TO_dntR2(dnW1,dnW2,80,cte=cte) ! exp(sc*(dist2_i-dist2_k))
             IF (debug) write(out_unitp,*) 'iref,kref,dnExp',iref,kref,dnW2%d0
-            CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW2,ONE,dnSumExp,ONE,     &
-                                             dnSumExp)             ! sum of the exp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2,ONE,dnSumExp,ONE)  ! sum of the exp
           END DO
           CALL sub_dnS1_TO_dntR2(dnSumExp,dnSwitch(iref),90) ! 1/sum(exp ....)
 

@@ -91,7 +91,7 @@ MODULE mod_CartesianTransfo
       PUBLIC :: Type_CartesianTransfo, alloc_CartesianTransfo, dealloc_CartesianTransfo
       PUBLIC :: Read_CartesianTransfo, Write_CartesianTransfo
       PUBLIC :: CartesianTransfo1TOCartesianTransfo2, calc_CartesianTransfo_new
-      PUBLIC :: Set_P_Axis_CartesianTransfo, Set_Ecart_CartesianTransfo
+      PUBLIC :: Set_P_Axis_CartesianTransfo, Set_Eckart_CartesianTransfo
       PUBLIC :: calc_dnTxdnXin_TO_dnXout, calc_EckartRot, calc_dnTEckart, dnMWX_MultiRef
       PUBLIC :: centre_masse, sub3_dncentre_masse, sub3_NOdncentre_masse
       PUBLIC :: sub_dnxMassWeight, sub_dnxNOMassWeight
@@ -882,7 +882,7 @@ MODULE mod_CartesianTransfo
                                            Qact,nderiv,inTOout)
 
         TYPE (Type_dnVec),            intent(inout)  :: dnQin,dnQout
-        TYPE (Type_CartesianTransfo), intent(in)     :: CartesianTransfo
+        TYPE (Type_CartesianTransfo), intent(inout)  :: CartesianTransfo
         real (kind=Rkind),            intent(in)     :: Qact(:)
         integer,                      intent(in)     :: nderiv
         logical,                      intent(in)     :: inTOout
@@ -891,7 +891,7 @@ MODULE mod_CartesianTransfo
         TYPE(Type_dnS)    :: dnT(3,3)
         TYPE(Type_dnS)    :: dnMWXref(3,CartesianTransfo%nat_act)
         integer           :: ncart_act,icG,ncart,nb_act
-        real (kind=Rkind) :: Mtot_inv
+        real (kind=Rkind) :: Mtot_inv,masses(dnQin%nb_var_vec)
 
         character (len=Name_longlen) :: RMatIO_format_save
 
@@ -933,9 +933,11 @@ MODULE mod_CartesianTransfo
             nb_act   = dnQin%nb_var_deriv
             icG      = ncart-2
             Mtot_inv = ONE/sum(CartesianTransfo%masses_at)
+            masses(:) = ZERO
+            masses(1:size(CartesianTransfo%d0sm)) = CartesianTransfo%d0sm**2
 
             CALL sub3_dncentre_masse(CartesianTransfo%ncart_act,nb_act,ncart,        &
-                                     dnQin,CartesianTransfo%d0sm**2,Mtot_inv,icG,nderiv)
+                                     dnQin,masses,Mtot_inv,icG,nderiv)
 !write(6,*) 'Eckart or P_Axis COM',dnQin%d0(icG:ncart) ; flush(6)
 
           END IF
@@ -1043,14 +1045,14 @@ MODULE mod_CartesianTransfo
 
       END SUBROUTINE Set_P_Axis_CartesianTransfo
 
-      SUBROUTINE Set_Ecart_CartesianTransfo(CartesianTransfo)
+      SUBROUTINE Set_Eckart_CartesianTransfo(CartesianTransfo)
       USE mod_Constant,         ONLY: assignment(=),get_conv_au_to_unit
 
       TYPE (Type_CartesianTransfo), intent(inout)          :: CartesianTransfo
 
       integer :: iat,iref
 
-      character (len=*), parameter :: name_sub='Set_Ecart_CartesianTransfo'
+      character (len=*), parameter :: name_sub='Set_Eckart_CartesianTransfo'
 
       write(out_unitp,*) 'BEGINNING ',name_sub
 
@@ -1066,7 +1068,7 @@ MODULE mod_CartesianTransfo
 
       write(out_unitp,*) 'END ',name_sub
 
-      END SUBROUTINE Set_Ecart_CartesianTransfo
+      END SUBROUTINE Set_Eckart_CartesianTransfo
 
       SUBROUTINE P_Axis_CartesianTransfo(CartesianTransfo,i_ref)
       USE mod_Constant,         ONLY: assignment(=),get_conv_au_to_unit
@@ -1434,9 +1436,9 @@ MODULE mod_CartesianTransfo
 
       SUBROUTINE calc_EckartRot(dnx,T,CartesianTransfo,Qact)
 
-        TYPE (Type_dnVec), intent(inout)  :: dnx
-        TYPE (Type_CartesianTransfo), intent(in) :: CartesianTransfo
-        real (kind=Rkind), intent(in) :: Qact(:)
+        TYPE (Type_dnVec),            intent(inout)  :: dnx
+        TYPE (Type_CartesianTransfo), intent(inout)  :: CartesianTransfo
+        real (kind=Rkind),            intent(in)     :: Qact(:)
 
         real (kind=Rkind) :: T(3,3),d0x(3,CartesianTransfo%ncart_act/3)
         real (kind=Rkind) :: Rot_Eckart(3)
@@ -1569,12 +1571,11 @@ MODULE mod_CartesianTransfo
 
       SUBROUTINE calc_dnTEckart(dnXin,dnT,dnMWXref,CartesianTransfo,nderiv)
 
-        TYPE (Type_dnVec), intent(in)              :: dnXin
-        TYPE(Type_dnS), intent(in)                 :: dnT(3,3)
-        TYPE(Type_dnS), intent(in)                 :: dnMWXref(:,:)
-
-        TYPE (Type_CartesianTransfo)   :: CartesianTransfo
-        integer, intent(in)                        :: nderiv
+        TYPE (Type_dnVec),            intent(in)     :: dnXin
+        TYPE(Type_dnS),               intent(inout)  :: dnT(3,3)
+        TYPE(Type_dnS),               intent(in)     :: dnMWXref(:,:)
+        TYPE (Type_CartesianTransfo), intent(inout)  :: CartesianTransfo
+        integer,                      intent(in)     :: nderiv
 
 
         integer           :: i,j,ic
@@ -1684,7 +1685,7 @@ MODULE mod_CartesianTransfo
           IF (dp(i) < ZERO) THEN ! change sign of dnVec2
             !write(6,*) 'change sign of vec: ',isort_dp(i)
             DO j=1,3
-              CALL sub_dnS1_PROD_w_TO_dnS2(dnVec2(j,i),-ONE,dnVec2(j,i),nderiv)
+              CALL sub_Weight_dnS(dnVec2(j,i),-ONE,nderiv)
             END DO
           END IF
         END DO
@@ -1704,7 +1705,7 @@ MODULE mod_CartesianTransfo
           DO i=1,3
             IF (sign_Vec(i) == -ONE) THEN
               DO j=1,3
-                CALL sub_dnS1_PROD_w_TO_dnS2(dnVec2(j,i),sign_Vec(i),dnVec2(j,i),nderiv)
+                CALL sub_Weight_dnS(dnVec2(j,i),sign_Vec(i),nderiv)
               END DO
             END IF
           END DO
@@ -1792,7 +1793,7 @@ MODULE mod_CartesianTransfo
       RECURSIVE SUBROUTINE dnMWX_MultiRef(dnMWXref,CartesianTransfo,Qact,dnx,iref)
 
         TYPE (Type_dnS),              intent(inout)           :: dnMWXref(:,:)
-        TYPE (Type_CartesianTransfo), intent(in)              :: CartesianTransfo
+        TYPE (Type_CartesianTransfo), intent(inout)           :: CartesianTransfo
         TYPE (Type_dnVec),            intent(in)              :: dnx
         real (kind=Rkind),            intent(in)              :: Qact(:)
         integer,                      intent(in),   optional  :: iref
@@ -1865,9 +1866,9 @@ MODULE mod_CartesianTransfo
           DO iref_loc=1,CartesianTransfo%nb_RefGeometry
           DO iat=1,CartesianTransfo%nat_act
           DO i=1,3
-            CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnSwitch(iref_loc),        &
-                                CartesianTransfo%MWQxyz(i,iat,iref_loc),  &
-                                       dnMWXref(i,iat),ONE,dnMWXref(i,iat))
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnSwitch(iref_loc),        &
+                                CartesianTransfo%MWQxyz(i,iat,iref_loc),&
+                                       dnMWXref(i,iat),ONE)
           END DO
           END DO
           END DO
@@ -2142,15 +2143,14 @@ MODULE mod_CartesianTransfo
             ixyz = mod(ic-1,3)+1
             dnW1%d0 = dnW1%d0 - CartesianTransfo%MWQxyz(ixyz,iat,iref) ! x-xref
 
-            CALL sub_dnS1_PROD_w_TO_dnS2(dnW1,ONE/CartesianTransfo%d0sm(ic),dnW1) ! remove the mass-weighted
+            CALL sub_Weight_dnS(dnW1,ONE/CartesianTransfo%d0sm(ic)) ! remove the mass-weighted
 
             CALL sub_dnS1_TO_dntR2(dnW1,dnW2,-91) ! (x-xref)^2
 
-            CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW2,ONE,dnDist2(iref),ONE,&
-                                             dnDist2(iref))             ! add (x-xref)^2 to dnDist2
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2,ONE,dnDist2(iref),ONE) ! add (x-xref)^2 to dnDist2
           END DO
-          CALL sub_dnS1_PROD_w_TO_dnS2(dnDist2(iref),                   &
-            ONE/real(CartesianTransfo%nat_act,kind=Rkind),dnDist2(iref))  ! divide by nat_act
+          CALL sub_Weight_dnS(dnDist2(iref),                            &
+                          ONE/real(CartesianTransfo%nat_act,kind=Rkind))  ! divide by nat_act
 
         END DO
         IF (debug) write(out_unitp,*) 'dnDist2',dnDist2(:)%d0
@@ -2159,7 +2159,7 @@ MODULE mod_CartesianTransfo
         DO iref=1,CartesianTransfo%nb_RefGeometry
 
           CALL sub_ZERO_TO_dnS(dnSumExp) ! the sum of the exp
-          dnSumExp%d0 = ONE ! because the exp with kref = iref is not the next loop
+          dnSumExp%d0 = ONE ! because the exp with kref = iref is not in the next loop
 
           DO kref=1,CartesianTransfo%nb_RefGeometry
             IF (iref == kref) CYCLE
@@ -2170,8 +2170,7 @@ MODULE mod_CartesianTransfo
             cte(:) = ZERO ; cte(1) = ONE
             CALL sub_dnS1_TO_dntR2(dnW1,dnW2,80,cte=cte) ! exp(sc*(dist2_i-dist2_k))
             IF (debug) write(out_unitp,*) 'iref,kref,dnExp',iref,kref,dnW2%d0
-            CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW2,ONE,dnSumExp,ONE,     &
-                                             dnSumExp)             ! sum of the exp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2,ONE,dnSumExp,ONE) ! sum of the exp
           END DO
           CALL sub_dnS1_TO_dntR2(dnSumExp,dnSwitch(iref),90) ! 1/sum(exp ....)
 
@@ -2202,7 +2201,7 @@ MODULE mod_CartesianTransfo
 
         TYPE (Type_dnS), intent(inout)           :: dnSwitch(:)
         TYPE (Type_dnVec), intent(in)            :: dnx
-        TYPE (Type_CartesianTransfo), intent(in) :: CartesianTransfo
+        TYPE (Type_CartesianTransfo), intent(inout) :: CartesianTransfo
 
 
         TYPE (Type_dnS), pointer :: dnDist2(:)
@@ -2268,15 +2267,14 @@ MODULE mod_CartesianTransfo
 
             dnW1%d0 = dnW1%d0 - CartesianTransfo%MWQxyz(ixyz,iat,iref) ! x-xref
 
-            CALL sub_dnS1_PROD_w_TO_dnS2(dnW1,ONE/CartesianTransfo%d0sm(ic),dnW1) ! remove the mass-weighted
+            CALL sub_Weight_dnS(dnW1,ONE/CartesianTransfo%d0sm(ic)) ! remove the mass-weighted
 
             CALL sub_dnS1_TO_dntR2(dnW1,dnW2,-91) ! (x-xref)^2
 
-            CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW2,ONE,dnDist2(iref),ONE,&
-                                             dnDist2(iref))             ! add (x-xref)^2 to dnDist2
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2,ONE,dnDist2(iref),ONE) ! add (x-xref)^2 to dnDist2
           END DO
-          CALL sub_dnS1_PROD_w_TO_dnS2(dnDist2(iref),                   &
-            ONE/real(CartesianTransfo%nat_act,kind=Rkind),dnDist2(iref))  ! divide by nat_act
+          CALL sub_Weight_dnS(dnDist2(iref),                            &
+                           ONE/real(CartesianTransfo%nat_act,kind=Rkind))  ! divide by nat_act
         END DO
         IF (debug) write(out_unitp,*) 'dnDist2',dnDist2(:)%d0
         !write(98,*) dnDist2(:)%d0
@@ -2284,7 +2282,7 @@ MODULE mod_CartesianTransfo
         DO iref=1,CartesianTransfo%nb_RefGeometry
 
           CALL sub_ZERO_TO_dnS(dnSumExp) ! the sum of the exp
-          dnSumExp%d0 = ONE ! because the exp with kref = iref is not the next loop
+          dnSumExp%d0 = ONE ! because the exp with kref = iref is not in the next loop
 
           DO kref=1,CartesianTransfo%nb_RefGeometry
             IF (iref == kref) CYCLE
@@ -2295,8 +2293,7 @@ MODULE mod_CartesianTransfo
             cte(:) = ZERO ; cte(1) = ONE
             CALL sub_dnS1_TO_dntR2(dnW1,dnW2,80,cte=cte) ! exp(sc*(dist2_i-dist2_k))
             IF (debug) write(out_unitp,*) 'iref,kref,dnExp',iref,kref,dnW2%d0
-            CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW2,ONE,dnSumExp,ONE,     &
-                                             dnSumExp)             ! sum of the exp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2,ONE,dnSumExp,ONE)  ! sum of the exp
           END DO
           CALL sub_dnS1_TO_dntR2(dnSumExp,dnSwitch(iref),90) ! 1/sum(exp ....)
 

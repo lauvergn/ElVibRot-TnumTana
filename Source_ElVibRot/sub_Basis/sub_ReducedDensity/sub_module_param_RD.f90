@@ -250,6 +250,13 @@ character (len=*), parameter :: name_sub='calc_RD'
   END IF
   !-----------------------------------------------------------
 
+  IF (.NOT. allocated(RvecB)) THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) 'RvecB is not allocated!!'
+    write(out_unitp,*) ' Check the fortran.'
+    STOP ' ERROR RvecB(:) is not allocated'
+  END IF
+
   printRD_loc = .FALSE.
   IF (present(printRD)) printRD_loc = printRD
   printRD_loc = printRD_loc .OR. debug
