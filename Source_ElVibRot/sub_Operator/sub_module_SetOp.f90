@@ -1418,14 +1418,14 @@ MODULE mod_SetOp
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi)   :: psi
-      logical            :: cplx
+      TYPE (param_psi), intent(inout)   :: psi
+      logical,          intent(in)      :: cplx
 
-!----- variables for the construction of H ---------------------------
-      TYPE (param_Op) :: para_H
+!----- Operator to link BasisnD, Basis2n, ComOp ---------------------
+      TYPE (param_Op),  intent(in)      :: para_H
 
 !----- for debuging --------------------------------------------------
-      !logical, parameter :: debug = .TRUE.
+       !logical, parameter :: debug = .TRUE.
        logical, parameter :: debug = .FALSE.
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -1452,6 +1452,7 @@ MODULE mod_SetOp
        STOP
      END IF
 !-----------------------------------------------------------
+
 
 !----- link ComOp -----------------------------------------
       IF (associated(para_H%ComOp)) THEN

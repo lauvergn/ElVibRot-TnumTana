@@ -250,6 +250,12 @@ character (len=*), parameter :: name_sub='calc_RD'
   END IF
   !-----------------------------------------------------------
 
+  IF (.NOT. allocated(RvecB)) THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) '  RvecB in not allocated'
+    STOP 'ERROR in calc_RD: RvecB in not allocated'
+  END IF
+
   printRD_loc = .FALSE.
   IF (present(printRD)) printRD_loc = printRD
   printRD_loc = printRD_loc .OR. debug

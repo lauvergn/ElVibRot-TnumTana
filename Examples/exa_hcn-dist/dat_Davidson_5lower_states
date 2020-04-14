@@ -57,7 +57,7 @@ pi 3.14159265358979323844d0
 dh 0.0
 
 
- &basis_nD iQdyn(1)=1 name="Pl0" nb=51 nq=80 contrac=t nbc=20 name_contrac_file="ONE_MODE/cc1_51_80" /
+ &basis_nD iQdyn(1)=1 name="Pl0" nb=51 nq=80 contrac=t contrac_analysis=t nbc=20 name_contrac_file="ONE_MODE/cc1_51_80" /
  &basis_nD iQdyn(1)=2 name="Hm"  nb=10 nq=15 Q0=3.2 scaleQ=5.1 /
  &basis_nD iQdyn(1)=3 name="Hm"  nb=10 nq=15 Q0=2.2 scaleQ=11.0 /
 
@@ -89,3 +89,6 @@ end wp0
  1 2 1    1 1   1.0
 end wp0
 **
+
+exit
+ &basis_nD iQdyn(1)=1 name="Pl0" nb=51 nq=80 contrac=t nbc=20 name_contrac_file="ONE_MODE/cc1_51_80" /
