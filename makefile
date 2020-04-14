@@ -2,8 +2,8 @@
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 # F90 = mpifort
- F90 = gfortran
-#F90 = nagfor
+#F90 = gfortran
+ F90 = nagfor
 #F90 = ifort
 #F90 = pgf90
 
@@ -805,9 +805,9 @@ clean:
 #===============================================
 #===============================================
 #
-$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(QMLibDIR_full)
+$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(QMLibDIR_full)
 	echo EVR-T
-	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(LYNKFLAGS)
+	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(LYNKFLAGS)
 #	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
 #===============================================
 #

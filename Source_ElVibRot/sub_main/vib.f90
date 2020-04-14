@@ -64,7 +64,7 @@
       USE mod_fullanalysis
       USE mod_Auto_Basis
       USE mod_MPI
-      USE mod_MPI_Aid     
+      USE mod_MPI_Aid
       IMPLICIT NONE
 
 !---------------------------------------------------------------------------------------
@@ -1766,7 +1766,7 @@ END SUBROUTINE Tune_SG4threads_HPsi
 
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum)      :: para_Tnum
 
 !----- variables for the construction of H ----------------------------
       TYPE (param_ComOp)  :: ComOp
@@ -1860,15 +1860,11 @@ END SUBROUTINE Tune_SG4threads_HPsi
                   Get_nbPERsym_FROM_SymAbelianOFAllBasis(para_AllBasis, &
                                         para_propa%para_Davidson%symab))
         END IF
-        write(6,*) 'max_diago',max_diago
 
         para_WP0%nb_WP0              = 0
         para_WP0%read_file           = .TRUE.
         para_propa%file_WP%formatted = para_propa%para_Davidson%formatted_file_readWP
         para_WP0%file_WP0            = para_propa%file_WP
-        write(6,*) 'name WP0',para_WP0%file_WP0%name
-!        para_WP0%file_WP0            = 'file_WP'
-
         para_WP0%read_listWP0        = para_propa%para_Davidson%read_listWP
         para_WP0%WP0cplx             = para_H%cplx
         para_propa%file_WP%name      = para_propa%para_Davidson%name_file_saveWP
@@ -1883,7 +1879,7 @@ END SUBROUTINE Tune_SG4threads_HPsi
       ! allocation
       CALL alloc_NParray(Tab_WP,(/max_diago/),"Tab_WP","sub_Analysis_Only")
       DO i=1,size(Tab_WP)
-        CALL init_psi(Tab_WP(i),para_H,para_propa%para_WP0%WP0cplx)
+        CALL init_psi(Tab_WP(i),para_H,para_WP0%WP0cplx)
       END DO
 
       ! read the WPs

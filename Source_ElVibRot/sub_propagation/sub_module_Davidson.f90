@@ -498,9 +498,9 @@ CONTAINS
                                    para_H%para_ReadOp%E0_Transfo,S_overlap)
 
           nb_added_states = ndim-ndim0
-          save_WP = (ndim == max_diago) .OR. conv .OR.                    &
-                    it == para_Davidson%max_it .OR.            &
-           (it > 0 .AND. mod(it,para_Davidson%num_resetH) == 0)
+          save_WP = (ndim == max_diago) .OR. conv .OR.                  &
+                     it == para_Davidson%max_it .OR.                    &
+                     (it > 0 .AND. mod(it,para_Davidson%num_resetH) == 0)
            Save_WP = Save_WP .AND. .NOT. Hmin_OR_Hmax
            !- new vectors --------------------------------------------
            !----------------------------------------------------------
@@ -517,7 +517,6 @@ CONTAINS
 
           !----------------------------------------------------------
           !- save psi(:) on file
-          save_WP=.FALSE.
           IF (save_WP) THEN
             IF(MPI_id==0) THEN
             CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,        &
