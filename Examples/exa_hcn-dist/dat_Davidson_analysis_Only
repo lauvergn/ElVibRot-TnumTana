@@ -17,7 +17,7 @@ cd $here
  x2=0.461483933
 
 nice $DIR_vib/vib << ** >res_for_guess
- &system /
+ &system printlevel=2 /
  &constantes /
  &variables zmat=T nat=4 sym=T nrho=2 /
 C

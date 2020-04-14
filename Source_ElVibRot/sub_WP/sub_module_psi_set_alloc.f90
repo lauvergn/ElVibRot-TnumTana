@@ -1131,12 +1131,12 @@
 !----- variables for the WP ----------------------------------------
       TYPE (param_psi)            :: psi
       real (kind=Rkind), optional :: T ! time
-      integer, optional           :: nioWP
+      integer,           optional :: nioWP
 
-      logical, optional           :: ecri_GridRep,ecri_BasisRep
-      logical, optional           :: channel_all,channel_pack
-      logical, optional           :: ecri_psi2
-      integer, optional           :: ecri_nume,ecri_numi
+      logical,           optional :: ecri_GridRep,ecri_BasisRep
+      logical,           optional :: channel_all,channel_pack
+      logical,           optional :: ecri_psi2
+      integer,           optional :: ecri_nume,ecri_numi
 
 
 

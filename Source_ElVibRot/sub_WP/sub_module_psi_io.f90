@@ -62,11 +62,11 @@
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
-      integer, intent(in) :: max_WP
-      TYPE (param_WP0), intent(inout) :: para_WP0
-      TYPE (param_psi), intent(inout) :: psi0(max_WP)
-      integer, intent(in), optional   :: symab
-      logical, intent(in), optional   :: ortho
+      integer,             intent(in)               :: max_WP
+      TYPE (param_WP0),    intent(inout)            :: para_WP0
+      TYPE (param_psi),    intent(inout)            :: psi0(max_WP)
+      integer,             intent(in),   optional   :: symab
+      logical,             intent(in),   optional   :: ortho
 
 !------ working parameters --------------------------------
       logical                  :: cplx,ortho_loc
@@ -98,6 +98,7 @@
         write(out_unitp,*) ' para_WP0%file_WP0          ',trim(adjustl(para_WP0%file_WP0%name))
         write(out_unitp,*) ' para_WP0%WP0cplx           ',para_WP0%WP0cplx
         write(out_unitp,*) ' para_WP0%file_WP0%formatted',para_WP0%file_WP0%formatted
+        write(out_unitp,*) ' max_WP                     ',max_WP
         write(out_unitp,*)
       END IF
 
@@ -174,6 +175,8 @@
             IF (ilist > para_WP0%nb_WP0 .OR. ilist > max_WP) EXIT
           END DO
           para_WP0%nb_WP0 = ilist - 1
+          IF (debug) write(out_unitp,*) ' read with lect_psiBasisRepnotall_nD ' // &
+                                     '(Version_File=0, option=1): done'
         ELSE ! Version_File=0, option=2 or Version_File=1 (with the namelist)
           nb_tot_file = size(list_nDindBasis1_TO_nDindBasis2)
 
@@ -181,6 +184,7 @@
           DO i=1,nb_readWP_file
             IF (debug .OR. print_level > 1) write(out_unitp,*) 'i,ilist',i,ilist
             CALL flush_perso(out_unitp)
+
             CALL Read_psi_nDBasis(psi0(ilist),nioWP,                     &
                                para_WP0%file_WP0%formatted,Version_File, &
                              list_nDindBasis1_TO_nDindBasis2,nb_tot_file)
@@ -193,6 +197,8 @@
           CALL dealloc_NParray(list_nDindBasis1_TO_nDindBasis2,         &
                               "list_nDindBasis1_TO_nDindBasis2",name_sub)
 
+          IF (debug) write(out_unitp,*) ' read with Read_psi_nDBasis ' //&
+                    '(Version_File=0, option=2 or Version_File=1): done'
         END IF
 
         close(nioWP)
@@ -206,7 +212,8 @@
           write(out_unitp,*) ' write in',out_unitp,i
           CALL flush_perso(out_unitp)
           IF(MPI_id==0) CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ONETENTH**4,.TRUE.,i)
-          !CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ZERO,.TRUE.,i)
+          IF (debug) write(out_unitp,*) ' read with lect_psiBasisRepnotall_nD ' // &
+                              '(Version_File=0, option=1 ???): done'
         END DO
       END IF
 

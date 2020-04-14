@@ -236,7 +236,7 @@ CONTAINS
       ! LOOP
       !===================================================================
       !===================================================================
-      nb_diago        = max(1,nb_diago) ! number of Eign value
+      nb_diago        = max(1,nb_diago) ! number of Eigenvalues
       epsi            = para_Davidson%conv_resi
       norm2g          = HUNDRED * epsi
       conv_Ene        = HUNDRED * epsi
@@ -648,7 +648,7 @@ CONTAINS
       CALL flush_perso(out_unitp)
 
       IF (para_H%para_ReadOp%Op_Transfo) THEN
-        ! The energies have to be recalculate without T(Op)
+        ! The energies have to be recalculated without T(Op)
         para_H%para_ReadOp%Op_Transfo = .FALSE.
 #if(run_MPI)
         CALL sub_MakeHPsi_Davidson(it,psi(1:nb_diago),Hpsi(1:nb_diago),Ene,0,para_H,   &
@@ -697,12 +697,10 @@ CONTAINS
         write(out_unitp,*) 'Hmin (cm-1): ',para_propa%Hmin*auTOene
       END IF
 
-      IF(MPI_id==0) THEN
-        write(out_unitp,*)
-        write(out_unitp,*) '==========================================='
-        write(out_unitp,*) '==========================================='
-        CALL flush_perso(out_unitp)
-      ENDIF
+      write(out_unitp,*)
+      write(out_unitp,*) '==========================================='
+      write(out_unitp,*) '==========================================='
+      CALL flush_perso(out_unitp)
       
       !----------------------------------------------------------
       IF (allocated(Vec))  THEN
@@ -736,6 +734,10 @@ CONTAINS
 
       !----------------------------------------------------------
       IF (debug) THEN
+        DO i=1,nb_diago
+          write(out_unitp,*) 'psi(i), i:',i
+          CALL ecri_psi(psi=psi(i))
+        END DO
         write(out_unitp,*) 'END ',name_sub
       END IF
       !----------------------------------------------------------
