@@ -72,10 +72,6 @@ sym  cos(a)      R     r    x    pi   dh
    &basis_nD iQdyn(1)=1 name="Pl0" L_TO_nq_A=1 L_TO_nq_B=10 /
    &basis_nD iQdyn(1)=2 name="Hm" /
    &basis_nD iQdyn(1)=3 name="Hm" /
-
- &basis_nD iQdyn(1)=1 name="Pl0" nb=51 nq=80 /
- &basis_nD iQdyn(1)=2 name="Hm" nb=10 nq=15 Q0=0. scaleQ=1.0 /
- &basis_nD iQdyn(1)=3 name="Hm" nb=10 nq=15 Q0=0. scaleQ=1.0 /
  &inactives /
 
  &actives test=$test direct=2 Type_HamilOp=10 direct_KEO=t /

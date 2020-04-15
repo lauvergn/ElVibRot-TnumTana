@@ -39,7 +39,7 @@ MODULE mod_string
   PUBLIC :: int_TO_char, Write_int_IN_char, real_TO_char, Write_real_IN_char
   PUBLIC :: logical_TO_char
   PUBLIC :: String_TO_String, make_nameQ, nom_i, nom_ii
-  PUBLIC :: read_name_advNo, string_uppercase_TO_lowercase
+  PUBLIC :: read_name_advNo, Read_line, string_uppercase_TO_lowercase
 
   CONTAINS
 
@@ -75,6 +75,29 @@ MODULE mod_string
   END IF
 
   END FUNCTION String_TO_String
+
+  FUNCTION Read_line(nio)
+  character(len=:), allocatable                 :: Read_line
+  integer,                      intent(in)      :: nio
+
+  integer                        :: ioerr
+
+  character(len=:), allocatable    :: line
+  character(len=1)                 :: ch
+
+
+  line = ""
+  DO
+    read(nio,'(a1)',IOSTAT=ioerr,advance='no') ch
+    IF (ioerr /= 0) EXIT
+    line = line // ch
+  END DO
+
+
+  Read_line = line
+  deallocate(Read_line)
+
+  END FUNCTION Read_line
 
 
   !! @description: Write an interger type in the character typ

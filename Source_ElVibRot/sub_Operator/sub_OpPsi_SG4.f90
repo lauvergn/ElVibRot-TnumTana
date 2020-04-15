@@ -827,7 +827,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     !---------------------------------------------------------------------------
     ! for direct_KEO case
     IF (SG4_omp == 0 .AND. para_Op%direct_KEO) THEN
-      write(6,*) 'coucou : SG4_omp == 0 .AND. para_Op%direct_KEO'  ; flush(6)
+      !write(6,*) 'coucou : SG4_omp == 0 .AND. para_Op%direct_KEO'  ; flush(6)
 
       DO iG=1,BasisnD%para_SGType2%nb_SG
 
@@ -2279,7 +2279,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
    END IF
 
    ! G calculation
-   CALL alloc_NParray(GGiq,(/nq,mole%nb_act1,mole%nb_act1/),'GGiq',name_sub)
+   IF (KEO) CALL alloc_NParray(GGiq,(/nq,mole%nb_act1,mole%nb_act1/),'GGiq',name_sub)
 
    tab_iq(:) = 1 ; tab_iq(1) = 0
 

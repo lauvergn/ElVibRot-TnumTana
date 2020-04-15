@@ -328,8 +328,8 @@ CONTAINS
             END IF
             CALL dealloc_NParray(List_Qact1,'List_Qact1',name_sub)
 
-            CALL alloc_NParray(List_Qact1,(/ nb_act1_RPH, size(List_Qact1,dim=2)+1 /),'List_Qact1',name_sub)
-            List_Qact1 = List_tmp_Qact1
+            CALL alloc_NParray(List_Qact1,shape(List_tmp_Qact1),'List_Qact1',name_sub)
+            List_Qact1(:,:) = List_tmp_Qact1
             CALL dealloc_NParray(List_tmp_Qact1,'List_tmp_Qact1',name_sub)
 
           END IF
@@ -508,7 +508,7 @@ CONTAINS
             END IF
             CALL dealloc_NParray(List_Qact1,'List_Qact1',name_sub)
 
-            CALL alloc_NParray(List_Qact1,(/ nb_act1_RPH, size(List_Qact1,dim=2)+1 /),'List_Qact1',name_sub)
+            CALL alloc_NParray(List_Qact1,shape(List_tmp_Qact1),'List_Qact1',name_sub)
             List_Qact1 = List_tmp_Qact1
             CALL dealloc_NParray(List_tmp_Qact1,'List_tmp_Qact1',name_sub)
 

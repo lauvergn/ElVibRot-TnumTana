@@ -51,7 +51,6 @@ pi 3.141592653589793238462643383279d0
 dh 0.0
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
- &basis_nD iQact(1)=2 name="boxAB" nb=31 nq=32 A=1.7 B=2.7 /
  &inactives /
 
  &actives test=f direct=2 /

@@ -92,11 +92,11 @@
         real (kind=Rkind)    :: norm2    = -ONE       ! norm^2 of psi
 
         CONTAINS
-          PROCEDURE, PRIVATE, PASS(psi) :: CplxPsi_TO_RCpsi
-          PROCEDURE, PRIVATE, PASS(psi) :: RCPsi_TO_CplxPsi
-          PROCEDURE, PRIVATE :: psi2TOpsi1
-          PROCEDURE, PRIVATE :: R_TOpsi
-          PROCEDURE, PRIVATE :: C_TOpsi
+          PROCEDURE, PRIVATE, PASS(psi)  :: CplxPsi_TO_RCpsi
+          PROCEDURE, PRIVATE, PASS(psi)  :: RCPsi_TO_CplxPsi
+          PROCEDURE, PRIVATE, PASS(psi1) :: psi2TOpsi1
+          PROCEDURE, PRIVATE, PASS(psi)  :: R_TOpsi
+          PROCEDURE, PRIVATE, PASS(psi)  :: C_TOpsi
           GENERIC,   PUBLIC  :: assignment(=) => psi2TOpsi1,            &
                                     CplxPsi_TO_RCpsi, RCPsi_TO_CplxPsi, &
                                     R_TOpsi, C_TOpsi
@@ -666,7 +666,7 @@
 
 !----- variables for the WP propagation ----------------------------
       CLASS (param_psi), intent(inout) :: psi1
-      CLASS (param_psi), intent(in)    :: psi2
+      TYPE (param_psi),  intent(in)    :: psi2
 
 
       integer  :: i,n1

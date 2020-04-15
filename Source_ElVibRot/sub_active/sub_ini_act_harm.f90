@@ -252,11 +252,14 @@
       iqf = 0
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Save_FileGrid) THEN
         IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
-          iqf = 0
           IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Restart_Grid) THEN
+            write(out_unitp,*) '----------------------------------------'
+            write(out_unitp,*) 'Restart_Grid=t'
             CALL check_HADA(iqf,para_AllOp%tab_Op(1)%ComOp)
             IF (iqf > para_AllOp%tab_Op(1)%nb_qa) iqf = 0
             iqf = max(para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint,iqf+1)
+            write(out_unitp,*) 'First new grid point:',iqf
+            write(out_unitp,*) '----------------------------------------'
           ELSE
             iqf = para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint
             lformatted = para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted
@@ -269,7 +272,6 @@
           CALL Open_File_OF_tab_Op(para_AllOp%tab_Op)
           iqf = 0
         END IF
-        iqf = 0
       END IF
 
       IF (print_level > 1) THEN
@@ -305,7 +307,7 @@
 
 !$OMP   DO SCHEDULE(STATIC)
         DO iq=1,iqf-1
-
+write(6,*) 'freq_only'
           freq_only = .TRUE.
           CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,  &
                para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)
@@ -390,7 +392,7 @@
       END IF
       !-------------------------------------------------------------------
 
-RETURN
+
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint <       &
           para_AllOp%tab_Op(1)%nb_qa .OR.                                       &
           para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint > 1) THEN

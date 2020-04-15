@@ -1439,7 +1439,7 @@ MODULE mod_dnS
          ! x + cte2*x^2
          CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dntf1,ONE,dntf2,cte(2),dntf)
          ! ... + cte3*^3
-         CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dntf,ONE,dntf3,cte(3),dntf)
+         CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dntf3,cte(3),dntf,ONE)
          ! ....   + cte1
          dntf%d0 = dntf%d0 + cte(1)
 

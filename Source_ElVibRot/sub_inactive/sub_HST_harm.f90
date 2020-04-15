@@ -631,11 +631,14 @@
       d0Qeq      = dnQeq%d0
       d0ehess    = dnEHess%d0
 
-      IF (print_level > 0) write(out_unitp,12) Qact(1:nb_act1),dnQeq%d0
- 12   format('Qeq',20(' ',f10.6))
-      IF (print_level > 0) write(out_unitp,11) Qact(1:nb_act1),pot0_corgrad
- 11   format('pot0_corgrad',10(' ',f10.6))
-      CALL flush_perso(out_unitp)
+      IF (print_level > 0) THEN
+        !IF (freq_only) write(out_unitp,*) ' freq_only'
+        write(out_unitp,12) Qact(1:nb_act1),dnQeq%d0
+ 12     format('Qeq',20(' ',f10.6))
+        write(out_unitp,11) Qact(1:nb_act1),pot0_corgrad
+ 11     format('pot0_corgrad',10(' ',f10.6))
+        CALL flush_perso(out_unitp)
+      END IF
 
 !-----------------------------------------------------------------
 !-----------------------------------------------------------------
@@ -860,7 +863,7 @@
       CALL dealloc_NParray(d0f_bhe,"d0f_bhe",name_sub)
 
 
-      END IF
+      END IF ! end .NOT. freq_only
 
 !     ------ free memory -----------------------------------------
 

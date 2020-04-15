@@ -2,8 +2,8 @@
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 # F90 = mpifort
-#F90 = gfortran
- F90 = nagfor
+ F90 = gfortran
+#F90 = nagfor
 #F90 = ifort
 #F90 = pgf90
 
@@ -29,13 +29,13 @@ endif
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 0
+ARPACK = 1
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 0
+QML = 1
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -79,6 +79,15 @@ endif
 #=================================================================================
 # Quantum Model Lib (ECAM)
 QMLibDIR := /Users/lauvergn/git/QuantumModelLib
+ifneq "$(wildcard $(QMLibDIR) )" ""
+  # QMLibDIR exists:
+  $(info QMLibDIR exists)
+else
+  # QMLibDIR does not exist:
+  $(info QMLibDIR does not exist)
+  QML=0
+endif
+
 ifeq  ($(strip $(QML)),)
   QMLIB := 
   QMLibDIR_full :=
@@ -374,8 +383,8 @@ LYNK90 = $(F90_FLAGS)
 ifeq ($(ARPACK),1)
   # Arpack management with the OS
   ifeq ($(OS),Darwin)    # OSX
-    ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
-    #ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
+    #ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
+    ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
   else                   # Linux
     ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
     #ARPACKLIB=/usr/lib64/libarpack.a

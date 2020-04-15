@@ -1262,13 +1262,14 @@
           CALL sub_OpPsi(work_WP(i),w2,para_H)
           CALL sub_scaledOpPsi(work_WP(i),w2,para_H%E0,ONE)
 
-          work_WP(i+1) = w2  ! H.psi(i)
+          !work_WP(i+1) = w2  ! H.psi(i)
 
 
           fac_k = cmplx(ZERO,-para_propa%WPdeltaT /                     &
                            real(i+1,kind=Rkind),kind=Rkind)
 
-          work_WP(i+1) = work_WP(i+1) * fac_k
+
+          work_WP(i+1) = w2 * fac_k
 
           DO ip=1,3
             IF (.NOT. para_field%pola_xyz(ip)) CYCLE
@@ -1288,11 +1289,12 @@
             CALL sub_OpPsi(w1,w2,para_Dip(ip))
 
             work_WP(i+1) = work_WP(i+1) + w2
+
           END DO
           WP(j) = WP(j) + work_WP(i+1)
 
           CALL norm2_psi(work_WP(i+1))
-!         write(out_unitp,*) 'norm2 psi i+1',i+1,work_WP(i+1)%norm2
+          !write(out_unitp,*) 'norm2 psi i+1',i+1,work_WP(i+1)%norm2
           IF (work_WP(i+1)%norm2 < para_propa%para_poly%poly_tol) EXIT
           IF (work_WP(i+1)%norm2 > TEN**15) THEN
              write(out_unitp,*) ' ERROR in ',name_sub

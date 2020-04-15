@@ -3606,7 +3606,7 @@
      END IF
 
 
-     CALL Det_OF_m1(RPHpara_AT_Qact1%dnC_inv%d0,det,RPHTransfo%nb_inact21,0)
+     CALL Det_OF_m1(RPHpara_AT_Qact1%dnC_inv%d0,det,RPHTransfo%nb_inact21)
      IF (debug) write(out_unitp,*) 'det of dnC_inv',det
 
 

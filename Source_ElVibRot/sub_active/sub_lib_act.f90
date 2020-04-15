@@ -638,7 +638,6 @@
           read(nio,*) name1,name2
         END IF
 
-
         IF (trim(name2) /= 'Beginning') THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' The beginning of the record is not correct'
@@ -646,7 +645,6 @@
           write(out_unitp,*) ' Probably, you should restart with Read_Grid=f'
           STOP
         END IF
-
 
         read(nio,*) name1,iqr
         !write(out_unitp,*) 'name1,iqr',name1,iqr

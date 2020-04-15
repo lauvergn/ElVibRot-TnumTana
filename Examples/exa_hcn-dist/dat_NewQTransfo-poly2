@@ -45,10 +45,11 @@ sym  cos(a)      R     r
 2.179
 
  &basis_nD iQdyn(1)=1 name="Pl0" nb=51 nq=80 /
- &basis_nD iQdyn(1)=2 name="Hm" nb=10 nq=15 Q0=3.2 scaleQ=5.1 /
- &basis_nD iQdyn(1)=3 name="Hm" nb=10 nq=15 Q0=2.2 scaleQ=11.0 /
-
  &inactives /
+
  &actives test=f comput_S=t /
  &analyse max_ana=40 max_ene=20000.d0 print=f /
 **
+exit
+ &basis_nD iQdyn(1)=2 name="Hm" nb=10 nq=15 Q0=3.2 scaleQ=5.1 /
+ &basis_nD iQdyn(1)=3 name="Hm" nb=10 nq=15 Q0=2.2 scaleQ=11.0 /

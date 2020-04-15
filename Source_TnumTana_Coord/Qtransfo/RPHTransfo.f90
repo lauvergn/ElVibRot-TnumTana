@@ -2346,12 +2346,13 @@ implicit NONE
   real (kind=Rkind), allocatable :: Grad(:,:),hess(:,:,:)
   logical,           allocatable :: tab_Grad(:),tab_Hess(:)
 
+
   namelist / CurviRPH / nb_pts,gradient,option
 
 !----- for debuging ----------------------------------
   character (len=*),parameter :: name_sub='Init_CurviRPH'
-  logical, parameter :: debug=.FALSE.
-  !logical, parameter :: debug=.TRUE.
+  !logical, parameter :: debug=.FALSE.
+  logical, parameter :: debug=.TRUE.
 !----- for debuging ----------------------------------
 
   !IF (debug) THEN
@@ -2367,6 +2368,7 @@ implicit NONE
     option   = -1
     read(in_unitp,CurviRPH)
     IF (option < 0) option = 0
+    write(out_unitp,CurviRPH)
 
     IF (nb_pts < 1) STOP 'ERROR in Init_CurviRPH: nb_pts<1'
 
@@ -2410,12 +2412,13 @@ implicit NONE
       IF (tab_Hess(i)) THEN
         ih = ih + 1
         !read hessian
-        CALL Read_Mat(hess(:,:,ih),5,5,IOerr)
+        CALL Read_Mat(hess(:,:,ih),in_unitp,5,IOerr)
         write(out_unitp,*) 'IOerr',IOerr
         IF (debug) THEN
           write(out_unitp,*) 'hess'
           CALL Write_Mat(hess(:,:,ih),out_unitp,5)
         END IF
+        IF (IOerr /= 0) STOP 'ERROR while reading the hessian'
       END IF
     END DO
     write(out_unitp,*) 'nb_pts for Qref ',CurviRPH2%nb_pts_ForQref
@@ -2509,6 +2512,7 @@ implicit NONE
                       'fQpath',    name_sub)
     DO i=1,CurviRPH%nb_pts_ForQref
     DO j=1,CurviRPH%nb_dev_ForQref
+      write(6,*) 'i,j,CurviRPH%Qpath_ForQref(i)',i,j,CurviRPH%Qpath_ForQref(i) ; flush(6)
       fQpath(j,i) = funcQpath(CurviRPH%Qpath_ForQref(i),j)
     END DO
     END DO
@@ -2846,11 +2850,14 @@ implicit NONE
   !t = Qpath
   t = R0 * tanh(Qpath/R0) ! type 74 of dnS
 
-  funcQpath = t**(i-1)
+  IF (i == 1) THEN
+    funcQpath = ONE
+  ELSE
+    funcQpath = t**(i-1)
+  END IF
 
          ! t(x) =  R0.tanh(x/R0) x E ]-inf,inf[
          ! -R0 < t(x) < R0   R0=cte(1)
-
 
   END FUNCTION funcQpath
 

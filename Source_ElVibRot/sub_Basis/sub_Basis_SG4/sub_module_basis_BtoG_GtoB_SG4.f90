@@ -2712,7 +2712,7 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
 
 
  nnb = product(tab_nb)
- CALL alloc_NParray(RB,(/ nnb,nb0 /),'RB',name_sub)
+ CALL alloc_NParray(RB,(/ nnb,nb0_loc /),'RB',name_sub)
  RB(:,:) = ZERO
 
  DO ib0=1,nb0_loc

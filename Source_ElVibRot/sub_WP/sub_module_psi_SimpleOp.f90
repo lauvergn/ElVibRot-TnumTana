@@ -296,8 +296,9 @@
       !!@param: TODO
       !!@param: TODO
           FUNCTION psi1_plus_psi2(psi1,psi2)
+            TYPE (param_psi)             :: psi1_plus_psi2
             TYPE (param_psi), intent(in) :: psi1,psi2
-            TYPE (param_psi) :: psi1_plus_psi2
+
             integer           :: err,i
 
 !           write(out_unitp,*) 'BEGINNING psi1_plus_psi2'
@@ -861,12 +862,16 @@
           !!@description: TODO
 !=======================================================================================
           FUNCTION psi_time_C(psi,C)
-            TYPE (param_psi), intent (in) :: psi
+            TYPE (param_psi)                  :: psi_time_C
+
+            TYPE (param_psi),     intent (in) :: psi
             complex (kind=Rkind), intent (in) :: C
-            TYPE (param_psi)  :: psi_time_C
+
             integer           :: err,i
 
             !write(out_unitp,*) 'BEGINNING psi_time_C'
+            !write(out_unitp,*) 'psi%CvecB',psi%CvecB
+            !write(out_unitp,*) 'C',C
             !CALL flush_perso(out_unitp)
 
 !           - define and allocate psi_time_C ----
@@ -875,7 +880,7 @@
 
             IF (psi%BasisRep) THEN
               IF (psi%cplx) THEN
-                IF(MPI_id==0) psi_time_C%CvecB = psi%CvecB * C
+                IF(MPI_id==0) psi_time_C%CvecB(:) = psi%CvecB * C
               ELSE
                 write(out_unitp,*) ' ERROR : in psi_time_C'
                 write(out_unitp,*) ' I cannot multiply a real psi and a complex'
@@ -886,7 +891,7 @@
 
             IF (psi%GridRep) THEN
               IF (psi%cplx) THEN
-                IF(MPI_id==0) psi_time_C%CvecG = psi%CvecG * C
+                IF(MPI_id==0) psi_time_C%CvecG(:) = psi%CvecG * C
               ELSE
                 write(out_unitp,*) ' ERROR : in psi_time_C'
                 write(out_unitp,*) ' I cannot multiply a real psi and a complex'
