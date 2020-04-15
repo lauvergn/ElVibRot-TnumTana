@@ -56,7 +56,6 @@ CONTAINS
       USE mod_system
       USE mod_Op
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi,        ONLY : norm2_psi
       USE mod_psi_Op,         ONLY : sub_LCpsi_TO_psi
       USE mod_psi_io,         ONLY : sub_save_psi
@@ -1969,7 +1968,6 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
                                 Op_Transfo,E0_Transfo,S_overlap)
  USE mod_system
  USE mod_psi_set_alloc
- USE mod_psi_SimpleOp
 #if(run_MPI)
  USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi,norm_psi_MPI
  USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep,Set_symab_OF_psiBasisRep_MPI, &
@@ -2278,7 +2276,6 @@ END SUBROUTINE sub_NewVec_Davidson
 SUBROUTINE Schmidt_process_MPI(S_Overlap1D,psi,ndim,isym,With_Grid) 
   USE mod_system
   USE mod_psi_set_alloc
-  USE mod_psi_SimpleOp
   USE mod_ana_psi,        ONLY:norm_psi_mpi
   USE mod_psi_Op,         ONLY:Set_symab_OF_psiBasisRep_MPI,distribute_psi_MPI,        &
                                calculate_overlap1D_MPI

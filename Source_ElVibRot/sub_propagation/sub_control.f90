@@ -42,7 +42,8 @@
 !===========================================================================
 MODULE mod_FullControl
 USE mod_Constant
- IMPLICIT NONE
+USE mod_type_ana_psi
+IMPLICIT NONE
 
  PRIVATE
  PUBLIC :: sub_nonOpt_control,sub_Opt_control
@@ -62,7 +63,6 @@ USE mod_Constant
       USE mod_FullPropa
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
       USE mod_ana_psi
       IMPLICIT NONE
 
@@ -298,7 +298,6 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       !USE mod_psi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
       USE mod_ana_psi
       USE mod_psi_io
       IMPLICIT NONE

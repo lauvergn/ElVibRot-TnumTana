@@ -44,6 +44,8 @@ MODULE mod_ana_psi
   USE mod_system
   USE mod_nDindex
   USE mod_Constant
+  USE mod_type_ana_psi
+  USE mod_basis
   IMPLICIT NONE
 
   PRIVATE
@@ -2540,7 +2542,8 @@ END SUBROUTINE Channel_weight_MPI
   nb_bi = get_nb_bi_FROM_psi(psi)
 
   IF (psi%cplx) THEN
-    CALL CplxPsi_TO_RCpsi(RCPsi,Psi)
+    RCPsi = Psi
+    !CALL CplxPsi_TO_RCpsi(RCPsi,Psi)
 
     !For the real part
 

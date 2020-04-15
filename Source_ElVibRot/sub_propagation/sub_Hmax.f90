@@ -44,7 +44,6 @@
       USE mod_system
       USE mod_Op
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi
       USE mod_propa
       USE mod_FullPropa
@@ -337,7 +336,6 @@ relax = .TRUE.
       USE mod_system
       USE mod_Op
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi
       USE mod_propa
       USE mod_FullPropa
@@ -492,7 +490,6 @@ relax = .TRUE.
       USE mod_system
       USE mod_Op
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi
       USE mod_march
       USE mod_propa

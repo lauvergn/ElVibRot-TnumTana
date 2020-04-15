@@ -59,7 +59,6 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
       USE mod_system
       USE mod_Op
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi,        ONLY : norm2_psi
       USE mod_psi_Op,         ONLY : sub_LCpsi_TO_psi
       USE mod_psi_io,         ONLY : sub_save_psi
@@ -107,7 +106,6 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
       USE mod_system
       USE mod_Op
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi,        ONLY : norm2_psi
       USE mod_psi_Op,         ONLY : sub_LCpsi_TO_psi
       USE mod_psi_io,         ONLY : sub_save_psi

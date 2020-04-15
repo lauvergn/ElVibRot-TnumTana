@@ -261,7 +261,6 @@ CONTAINS
       USE mod_system
       USE mod_SetOp,           ONLY : param_Op,write_param_Op,read_OpGrid_OF_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,copy_psi2TOpsi1,assignment (=)
-      USE mod_psi_SimpleOp,    ONLY : assignment (=)
       USE mod_psi_B_TO_G,      ONLY : sub_PsiGridRep_TO_BasisRep
       USE mod_SymAbelian,      ONLY : Calc_symab1_EOR_symab2
       USE mod_psi_Op,          ONLY : Set_symab_OF_psiBasisRep
@@ -2564,7 +2563,6 @@ STOP 'cplx'
       USE mod_system
       USE mod_SetOp,              ONLY : param_Op,write_param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_SimpleOp,    ONLY : assignment (=)
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep
       IMPLICIT NONE
 
@@ -2714,7 +2712,6 @@ STOP 'cplx'
       USE mod_system
       USE mod_SetOp,           ONLY : param_Op,write_param_Op,alloc_para_Op,read_OpGrid_OF_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,assignment(=)
-      USE mod_psi_SimpleOp,    ONLY : assignment(=)
       USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
       IMPLICIT NONE
 

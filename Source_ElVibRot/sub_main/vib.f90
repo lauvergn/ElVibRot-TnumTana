@@ -50,7 +50,6 @@
       USE mod_psi_set_alloc
       USE mod_psi_Op
       USE mod_ana_psi
-      USE mod_psi_SimpleOp
 
       USE mod_propa
       USE mod_FullPropa
@@ -1091,7 +1090,6 @@
       USE mod_analysis
       USE mod_propa
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_psi_B_TO_G
       IMPLICIT NONE
 
@@ -1248,7 +1246,6 @@ para_mem%mem_debug = .FALSE.
       USE mod_PrimOp
       USE mod_basis
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_psi_io
 
@@ -1511,11 +1508,7 @@ para_mem%mem_debug = .FALSE.
         Tab_Psi(i)   = ZERO
         Tab_OpPsi(i) = Tab_Psi(i)
 
-        IF (cplx) THEN
-          CALL Set_psi_With_index_R(Tab_Psi(i),ONE,ind_aie=i)
-        ELSE
-          CALL Set_psi_With_index_C(Tab_Psi(i),CONE,ind_aie=i)
-        END IF
+        CALL Set_psi_With_index(Tab_Psi(i),ONE,ind_aie=i)
 
         !CALL Set_Random_psi(Tab_Psi(i))
 
@@ -1613,7 +1606,6 @@ END SUBROUTINE Sub_OpPsi_test
 SUBROUTINE Tune_SG4threads_HPsi(cplx,nb_psi,para_H)
 USE mod_system
 USE mod_psi_set_alloc
-USE mod_psi_SimpleOp
 USE mod_psi_Op
 
 USE mod_Op

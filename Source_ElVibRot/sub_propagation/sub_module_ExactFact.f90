@@ -43,6 +43,8 @@
 MODULE mod_ExactFact
   USE mod_system
   USE mod_Constant
+  USE mod_basis
+  USE mod_type_ana_psi
   IMPLICIT NONE
 
   PRIVATE
@@ -64,7 +66,6 @@ SUBROUTINE sub_ExactFact_analysis(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
   USE mod_psi_set_alloc
   USE mod_ana_psi
   USE mod_psi_B_TO_G
-  USE mod_psi_SimpleOp
   USE mod_basis
 
   IMPLICIT NONE
@@ -154,7 +155,6 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
   USE mod_psi_set_alloc
   USE mod_ana_psi
   USE mod_psi_B_TO_G
-  USE mod_psi_SimpleOp
   USE mod_basis
 
   IMPLICIT NONE
@@ -262,7 +262,6 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,ana_psi,para_H,Tmax,deltaT)
   USE mod_psi_set_alloc
   USE mod_ana_psi
   USE mod_psi_B_TO_G
-  USE mod_psi_SimpleOp
   USE mod_basis
 
   IMPLICIT NONE
@@ -357,7 +356,6 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
   USE mod_psi_set_alloc
   USE mod_ana_psi
   USE mod_psi_B_TO_G
-  USE mod_psi_SimpleOp
   USE mod_basis
 
   IMPLICIT NONE
@@ -462,7 +460,6 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
   USE mod_psi_set_alloc
   USE mod_ana_psi
   USE mod_psi_B_TO_G
-  USE mod_psi_SimpleOp
   USE mod_basis
 
   IMPLICIT NONE
@@ -632,10 +629,9 @@ SUBROUTINE sub_ExactFact_analysis_v0(T,psi,ana_psi,para_H,para_field)
   USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi
   USE mod_field,           ONLY : param_field,sub_dnE
 
-  USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,param_ana_psi
+  USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
   USE mod_ana_psi,         ONLY : norm2_psi
   USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
-  USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
   USE mod_basis
 
   IMPLICIT NONE

@@ -56,7 +56,6 @@ CONTAINS
       USE mod_Op
 
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi
       USE mod_psi_B_TO_G
       USE mod_psi_Op
@@ -601,7 +600,6 @@ CONTAINS
       USE mod_Op
 
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi
       USE mod_psi_B_TO_G
       USE mod_psi_Op,         ONLY : Overlap_psi1_psi2,Set_symab_OF_psiBasisRep
@@ -683,7 +681,6 @@ CONTAINS
       USE mod_Op
 
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_ana_psi
       USE mod_psi_B_TO_G
@@ -1136,7 +1133,6 @@ CONTAINS
  USE mod_system
 
  USE mod_psi_set_alloc
- USE mod_psi_SimpleOp
  USE mod_psi_B_TO_G,     ONLY : sub_PsiBasisRep_TO_GridRep
  USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi
  USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep

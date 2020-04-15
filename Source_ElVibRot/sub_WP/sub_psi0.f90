@@ -73,11 +73,11 @@
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_WP0) :: para_WP0
+      TYPE (param_WP0), intent(in)    :: para_WP0
       TYPE (param_psi), intent(inout) :: WP0(1)
 
 !----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole
+      TYPE (CoordType), intent(in)    :: mole
 
 !------ working variables ---------------------------------
       integer  :: nio,nb_WPdum
@@ -243,6 +243,7 @@
       SUBROUTINE psi0_gaussGridRep(WP0,para_WP0,mole)
       USE mod_system
       USE mod_Coord_KEO
+      USE mod_basis
       USE mod_psi_set_alloc
       USE mod_param_WP0
       IMPLICIT NONE

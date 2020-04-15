@@ -2461,7 +2461,6 @@ CONTAINS
       USE mod_SetOp
       USE mod_OpPsi
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_MPI
       IMPLICIT NONE
@@ -2625,7 +2624,7 @@ CONTAINS
       USE mod_SetOp
       USE mod_OpPsi
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
+
       USE mod_psi_Op
       USE mod_MPI
       IMPLICIT NONE
@@ -2764,7 +2763,7 @@ CONTAINS
       USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
+
       USE mod_psi_Op
       IMPLICIT NONE
 
@@ -2881,7 +2880,7 @@ CONTAINS
       USE mod_SetOp
       USE mod_OpPsi
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
+
       USE mod_psi_Op
       IMPLICIT NONE
 
@@ -2993,7 +2992,7 @@ CONTAINS
       USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
+
       USE mod_psi_Op
       USE mod_basis_BtoG_GtoB_SGType4
       IMPLICIT NONE
@@ -3139,7 +3138,7 @@ CONTAINS
       USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
+
       USE mod_psi_Op
       USE mod_basis_BtoG_GtoB_SGType4
       IMPLICIT NONE
@@ -3290,7 +3289,7 @@ CONTAINS
       USE mod_OpPsi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
+
       USE mod_psi_Op
       USE mod_basis_BtoG_GtoB_SGType4
       IMPLICIT NONE
@@ -3415,7 +3414,7 @@ CONTAINS
       USE mod_SetOp
       USE mod_OpPsi
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
+
       USE mod_psi_Op
       USE mod_MPI
       IMPLICIT NONE

@@ -657,7 +657,7 @@ Obj_WP = \
  $(OBJ)/sub_module_type_ana_psi.o $(OBJ)/sub_module_param_WP0.o \
  $(OBJ)/sub_module_psi_set_alloc.o \
  $(OBJ)/sub_module_psi_B_TO_G.o $(OBJ)/sub_module_ana_psi.o \
- $(OBJ)/sub_module_psi_SimpleOp.o $(OBJ)/sub_module_psi_Op.o \
+ $(OBJ)/sub_module_psi_Op.o \
  $(OBJ)/sub_module_psi_io.o\
  $(OBJ)/sub_psi0.o
 
@@ -1126,8 +1126,6 @@ $(OBJ)/sub_module_psi_set_alloc.o:$(DIRWP)/sub_module_psi_set_alloc.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_set_alloc.f90
 $(OBJ)/sub_module_ana_psi.o:$(DIRWP)/sub_module_ana_psi.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_ana_psi.f90
-$(OBJ)/sub_module_psi_SimpleOp.o:$(DIRWP)/sub_module_psi_SimpleOp.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_SimpleOp.f90
 $(OBJ)/sub_module_psi_B_TO_G.o:$(DIRWP)/sub_module_psi_B_TO_G.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_B_TO_G.f90
 $(OBJ)/sub_module_psi_Op.o:$(DIRWP)/sub_module_psi_Op.f90
@@ -1390,7 +1388,7 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_quadra_SparseBasis2n.o                                   \
                    $(OBJ)/sub_SymAbelian_OF_Basis.o $(OBJ)/sub_module_type_ana_psi.o   \
                    $(OBJ)/sub_module_param_WP0.o $(OBJ)/sub_module_psi_set_alloc.o     \
-                   $(OBJ)/sub_module_psi_SimpleOp.o $(OBJ)/sub_module_OpGrid.o         \
+                   $(OBJ)/sub_module_OpGrid.o                                          \
                    $(OBJ)/sub_inactive_harmo.o $(OBJ)/sub_changement_de_var.o          \
                    $(OBJ)/sub_ana_HS.o $(OBJ)/sub_diago_H.o $(OBJ)/sub_paraRPH.o       \
                    $(OBJ)/sub_module_field.o $(OBJ)/sub_module_propa_march_SG4.o       \
@@ -1580,7 +1578,7 @@ $(lib_dep_BasisMakeGrid):$(OBJ)/sub_module_BasisMakeGrid.o
 
 #mod_psi_set_alloc  
 lib_dep_mod_psi_set_alloc=$(OBJ)/sub_module_psi_B_TO_G.o $(OBJ)/sub_module_ana_psi.o   \
-                          $(OBJ)/sub_module_psi_SimpleOp.o $(OBJ)/sub_module_SetOp.o
+                          $(OBJ)/sub_module_SetOp.o
 $(lib_dep_mod_psi_set_alloc):$(OBJ)/sub_module_psi_set_alloc.o
 
 #mod_ana_psi

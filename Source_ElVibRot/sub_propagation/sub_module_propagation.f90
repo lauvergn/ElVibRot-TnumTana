@@ -584,7 +584,6 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi
   USE mod_type_ana_psi
   USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
-  USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
   USE mod_MPI
   IMPLICIT NONE
 
@@ -782,7 +781,6 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
   USE mod_ana_psi,         ONLY : norm2_psi,Channel_weight
   USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
-  USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
   USE mod_MPI
   IMPLICIT NONE
 

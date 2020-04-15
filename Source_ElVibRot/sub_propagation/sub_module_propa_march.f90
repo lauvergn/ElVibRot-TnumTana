@@ -43,7 +43,7 @@
  MODULE mod_march
  USE mod_system
  USE mod_field,         ONLY : param_field
- USE mod_psi_set_alloc, ONLY : param_psi
+ USE mod_psi_set_alloc, ONLY : param_psi,alloc_NParray,dealloc_NParray,dealloc_psi
  USE mod_propa,         ONLY : param_propa,param_poly,Calc_AutoCorr,    &
                                Write_AutoCorr,SaveWP_restart,           &
                                sub_analyze_mini_WP_OpWP
@@ -252,7 +252,6 @@
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -380,8 +379,7 @@
       USE mod_system
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_ana_psi,         ONLY : norm2_psi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -534,7 +532,6 @@
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -674,7 +671,6 @@
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -837,7 +833,6 @@
       USE mod_Op,              ONLY : param_Op
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -993,9 +988,7 @@
       USE mod_system
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
-
+      USE mod_ana_psi,         ONLY : norm2_psi
       USE mod_field,           ONLY : param_field,sub_dnE
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
@@ -1078,8 +1071,7 @@
       USE mod_system
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_ana_psi,         ONLY : norm2_psi
       USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
@@ -1152,7 +1144,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1362,7 +1353,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1548,7 +1538,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
 
       IMPLICIT NONE
@@ -1745,7 +1734,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi,renorm_psi_With_norm2
-      USE mod_psi_SimpleOp
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
 
       IMPLICIT NONE
@@ -2057,7 +2045,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
 
       IMPLICIT NONE
@@ -2254,7 +2241,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
 
       IMPLICIT NONE
@@ -2464,7 +2450,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
 
       IMPLICIT NONE
@@ -2604,7 +2589,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       USE mod_propa
       USE mod_MPI
       IMPLICIT NONE
@@ -2877,7 +2861,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3070,7 +3053,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3150,8 +3132,6 @@
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
       USE mod_ana_psi,         ONLY : norm2_psi
-
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3334,7 +3314,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3550,7 +3529,6 @@
 
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3794,7 +3772,6 @@
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------

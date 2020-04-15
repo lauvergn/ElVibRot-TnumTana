@@ -43,6 +43,7 @@
 MODULE mod_Filter
 USE mod_system
 USE mod_Constant
+USE mod_psi_set_alloc, ONLY : param_psi,alloc_psi,dealloc_psi
 IMPLICIT NONE
 TYPE param_filter
 
@@ -71,7 +72,6 @@ CONTAINS
       USE mod_system
       USE mod_Op
       USE mod_ana_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
@@ -579,7 +579,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_ana_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
@@ -963,7 +962,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_ana_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
@@ -1339,7 +1337,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_ana_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
@@ -1649,7 +1646,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_ana_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
@@ -1943,7 +1939,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_ana_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
@@ -2249,7 +2244,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_ana_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
       ! Operator (Hamiltonian)
@@ -2329,7 +2323,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_ana_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
@@ -2408,7 +2401,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_ana_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
@@ -2474,7 +2466,6 @@ STOP
       USE mod_system
       USE mod_Op
       USE mod_ana_psi
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE

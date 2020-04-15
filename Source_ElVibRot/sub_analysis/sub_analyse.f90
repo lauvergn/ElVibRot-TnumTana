@@ -676,6 +676,7 @@ CONTAINS
       SUBROUTINE write_psi2_new(Tab_Psi)
 
       USE mod_system
+      USE mod_basis
       USE mod_ana_psi
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G

@@ -42,6 +42,8 @@
 !===========================================================================
       MODULE mod_psi_io
       USE mod_system
+      USE mod_nDindex
+      USE mod_basis
       IMPLICIT NONE
 
       PRIVATE
@@ -267,7 +269,6 @@
       SUBROUTINE sub_save_LCpsi(psi,Vec,ndim,nb_save,file_WP)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi
       USE mod_psi_Op
       IMPLICIT NONE
@@ -563,7 +564,6 @@
       SUBROUTINE lect_psiBasisRepnotall_nD(WP0,nioWP,WP0cplx,lformated)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 
@@ -922,7 +922,6 @@ SUBROUTINE Read_psi_nDBasis(Psi,nioPsi,lformated,version,  &
                             list_nDindBasis1_TO_nDindBasis2,nb_tot)
 USE mod_system
 USE mod_psi_set_alloc
-USE mod_psi_SimpleOp
 IMPLICIT NONE
 
 
@@ -1431,7 +1430,6 @@ END SUBROUTINE Read_header_saveFile_psi
       SUBROUTINE Write_header_saveFile_psi(psi,nb_save,file_WP)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       IMPLICIT NONE
 
@@ -1598,7 +1596,6 @@ END SELECT
       SUBROUTINE Write_Psi_nDBasis(Psi,nioPsi,iPsi,epsi,lformated,version)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 

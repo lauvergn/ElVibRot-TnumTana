@@ -74,7 +74,6 @@
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
  USE mod_ana_psi,         ONLY : norm2_psi,ReNorm_psi
- USE mod_psi_SimpleOp
  USE mod_MPI
  IMPLICIT NONE
 
@@ -391,7 +390,6 @@ END SUBROUTINE march_noD_ONE_DP_SG4
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
  USE mod_ana_psi,         ONLY : norm2_psi,ReNorm_psi
- USE mod_psi_SimpleOp
  USE mod_MPI
  IMPLICIT NONE
 
@@ -684,7 +682,6 @@ nb_thread = 1
  USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
  USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
  USE mod_ana_psi,         ONLY : norm2_psi,ReNorm_psi
- USE mod_psi_SimpleOp
  USE mod_MPI
  IMPLICIT NONE
 
