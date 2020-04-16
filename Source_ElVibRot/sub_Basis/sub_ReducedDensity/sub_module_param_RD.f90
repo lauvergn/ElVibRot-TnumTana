@@ -199,7 +199,7 @@ character (len=*), parameter :: name_sub='init_RD'
   IF (present(Rvec)) THEN
   IF (allocated(Rvec)) THEN
 
-    !write(6,*) 'shape(Rvec)',shape(Rvec)
+    !write(out_unitp,*) 'shape(Rvec)',shape(Rvec)
 
     CALL alloc_NParray(para_RD%cbb,shape(Rvec),'para_RD%cbb',name_sub)
     para_RD%cbb(:,:) = Rvec
@@ -214,10 +214,10 @@ character (len=*), parameter :: name_sub='init_RD'
 
   !-----------------------------------------------------------
   IF (debug) THEN
-    write(6,*) 'tab_OF_iBComplBasis_AND_ib_TO_iB'
+    write(out_unitp,*) 'tab_OF_iBComplBasis_AND_ib_TO_iB'
     DO iB=1,para_RD%nDindex_ComplBasis%Max_nDI
       CALL calc_nDindex(nDindB,iB,nDval)
-      write(6,*) 'iB:',nDval(:),':',para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB(:,iB)
+      write(out_unitp,*) 'iB:',nDval(:),':',para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB(:,iB)
     END DO
     write(out_unitp,*) 'END ',name_sub
   END IF

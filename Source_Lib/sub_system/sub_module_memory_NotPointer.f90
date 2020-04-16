@@ -643,8 +643,8 @@ MODULE mod_memory_NotPointer
        CALL sub_test_tab_ub(tab_ub,ndim,name_sub_alloc,name_var,name_sub)
 
        IF (present(tab_lb)) THEN
-         !write(6,*) 'tab_lb',tab_lb
-         !write(6,*) 'tab_ub',tab_ub
+         !write(out_unitp,*) 'tab_lb',tab_lb
+         !write(out_unitp,*) 'tab_ub',tab_ub
 
          CALL sub_test_tab_lb(tab_lb,ndim,name_sub_alloc,name_var,name_sub)
 
@@ -657,8 +657,8 @@ MODULE mod_memory_NotPointer
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'real8')
        tab = ZERO
 
-       !write(6,*) 'lbound',lbound(tab)
-       !write(6,*) 'ubound',ubound(tab)
+       !write(out_unitp,*) 'lbound',lbound(tab)
+       !write(out_unitp,*) 'ubound',ubound(tab)
 
       END SUBROUTINE alloc_array_OF_Rdim1
 
@@ -689,8 +689,8 @@ MODULE mod_memory_NotPointer
        CALL sub_test_Bigtab_ub(tab_ub,ndim,name_sub_alloc,name_var,name_sub)
 
        IF (present(tab_lb)) THEN
-         !write(6,*) 'tab_lb',tab_lb
-         !write(6,*) 'tab_ub',tab_ub
+         !write(out_unitp,*) 'tab_lb',tab_lb
+         !write(out_unitp,*) 'tab_ub',tab_ub
 
          CALL sub_test_Bigtab_lb(tab_lb,ndim,name_sub_alloc,name_var,name_sub)
 
@@ -703,8 +703,8 @@ MODULE mod_memory_NotPointer
        CALL error_lmemo_allo(err_mem,memory,name_var,name_sub,'real8')
        tab = ZERO
 
-       !write(6,*) 'lbound',lbound(tab)
-       !write(6,*) 'ubound',ubound(tab)
+       !write(out_unitp,*) 'lbound',lbound(tab)
+       !write(out_unitp,*) 'ubound',ubound(tab)
 
       END SUBROUTINE alloc_BigArray_OF_Rdim1
       SUBROUTINE dealloc_array_OF_Rdim1(tab,name_var,name_sub)

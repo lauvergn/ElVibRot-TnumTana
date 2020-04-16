@@ -414,7 +414,7 @@
           Z(IP)=ZERO
 23      CONTINUE
 24    CONTINUE
-      write(6,*) max_it,' iterations should never happen'
+      write(out_unitp,*) max_it,' iterations should never happen'
       STOP
 
       end subroutine JACOBI
@@ -530,7 +530,7 @@
 
       END DO ! end main loop
 
-      write(6,*) max_it,' iterations should never happen'
+      write(out_unitp,*) max_it,' iterations should never happen'
       STOP
 
       end subroutine JACOBI2
@@ -665,7 +665,7 @@
 !     MACHEP=16.**(-13)
 !      MACHEP=epsilon(ONE)
       MACHEP=tiny(ONE)
-      !write(6,*) 'MACHEP',epsilon(ONE),tiny(ONE),MACHEP
+      !write(out_unitp,*) 'MACHEP',epsilon(ONE),tiny(ONE),MACHEP
 !IBM  simple precision
 !     MACHEP=16.**(-5)
       IERR=0
@@ -692,8 +692,8 @@
       G=D(L)
       PP=(D(L1)-G)/(TWO*E(L))
       ! dml 31/03/2020, overflow for pp*pp+ONE when pp is too large.
-      !write(6,*) 'PP*PP+ONE',PP*PP+ONE ; flush(6)
-      !write(6,*) 'sqrt(PP*PP+ONE)',sqrt(PP*PP+ONE) ; flush(6)
+      !write(out_unitp,*) 'PP*PP+ONE',PP*PP+ONE ; flush(out_unitp)
+      !write(out_unitp,*) 'sqrt(PP*PP+ONE)',sqrt(PP*PP+ONE) ; flush(out_unitp)
       IF (PP > TEN**10) THEN
         D(L)=E(L)/(PP+PP)
       ELSE

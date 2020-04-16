@@ -234,13 +234,13 @@ MODULE mod_dnDetGG_dnDetg
 
       IF (new) THEN
         CALL Det_OF_m1(dnGG%d0,det,dnGG%nb_var_Matl)
-        write(6,*) 'nGG%d0 and det,jac',det,ONE/sqrt(det)
+        write(out_unitp,*) 'nGG%d0 and det,jac',det,ONE/sqrt(det)
         CALL Write_Mat(dnGG%d0,6,6)
         CALL Det_OF_dnMat_TO_dnS(dnGG,dndetA,nderiv)
         mass = product(masses,mask=(masses > ONETENTH**5))
-        write(6,*) 'masses',masses
+        write(out_unitp,*) 'masses',masses
 
-        write(6,*) 'mass',mass
+        write(out_unitp,*) 'mass',mass
 
 
         IF (nderiv >= 1) THEN ! d_i det / det

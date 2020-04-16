@@ -96,33 +96,33 @@
 
      iG = 0
      jG = 0
-     !write(6,*) 'term:',i
+     !write(out_unitp,*) 'term:',i
      IF (pq(1) > 0 .AND. pq(2) > 0) THEN ! def
-       !write(6,*) 'def'
+       !write(out_unitp,*) 'def'
        iG = pq(1)
        jG = pq(2)
      ELSE IF (pq(1) > 0 .AND. JJ(1) > 0) THEN ! cor
-       !write(6,*) 'cor'
+       !write(out_unitp,*) 'cor'
        iG = pq(1)
        jG = JJ(1) -(nb_var-nb_act)
      ELSE IF (JJ(1) > 0 .AND. JJ(2) > 0) THEN ! rot
-       !write(6,*) 'rot'
+       !write(out_unitp,*) 'rot'
        iG = JJ(1) -(nb_var-nb_act)
        jG = JJ(2) -(nb_var-nb_act)
      ELSE IF (JJ(1) == 0 .AND. pq(1) > 0) THEN ! rot
-       !write(6,*) 'pq^1'
+       !write(out_unitp,*) 'pq^1'
        !CALL write_op(TWOxKEO%sum_prod_op1d(i),header=.TRUE.)
        iG = pq(1)
        jG = 0
      ELSE IF(JJ(1) > 0 .AND. pq(1) == 0) THEN ! rot
-       !write(6,*) 'J^1'
+       !write(out_unitp,*) 'J^1'
        !CALL write_op(TWOxKEO%sum_prod_op1d(i),header=.TRUE.)
        iG = JJ(1) -(nb_var-nb_act)
        jG = 0
      END IF
 
-     !write(6,*) 'pq,JJ',pq,JJ
-     !write(6,*) 'iG,jG',iG,jG
+     !write(out_unitp,*) 'pq,JJ',pq,JJ
+     !write(out_unitp,*) 'iG,jG',iG,jG
 
      IF (iG > nb_act+3 .OR. jG > nb_act+3 .OR. iG < 0 .OR. jG < 0) THEN
        write(out_unitp,*) ' ERROR in ',routine_name
@@ -135,7 +135,7 @@
      END IF
 
      IF (iG == 0 .AND. jG == 0) THEN ! vep
-       !write(6,*) 'i,iG,jG (vep)',i,iG,jG
+       !write(out_unitp,*) 'i,iG,jG (vep)',i,iG,jG
        !CALL write_op(TWOxKEO%sum_prod_op1d(i))
        vep = vep + HALF * real(opval,kind=Rkind)
      ELSE IF (iG > 0 .AND. jG > 0) THEN ! Gdef
@@ -218,36 +218,36 @@
      nb_J = count(JJ>0)
      iG = 0
      jG = 0
-     !write(6,*) 'term:',i
+     !write(out_unitp,*) 'term:',i
      IF (pq(1) > 0 .AND. pq(2) > 0) THEN ! def
-       !write(6,*) 'def'
+       !write(out_unitp,*) 'def'
        iG = pq(1)
        jG = pq(2)
      ELSE IF (pq(1) > 0 .AND. JJ(1) > 0) THEN ! cor
-       !write(6,*) 'cor'
+       !write(out_unitp,*) 'cor'
        iG = pq(1)
        jG = JJ(1) -(nb_var-nb_act)
      ELSE IF (JJ(1) > 0 .AND. JJ(2) > 0) THEN ! rot
-       !write(6,*) 'rot'
+       !write(out_unitp,*) 'rot'
        iG = JJ(1) -(nb_var-nb_act)
        jG = JJ(2) -(nb_var-nb_act)
      ELSE IF (JJ(1) == 0 .AND. pq(1) > 0) THEN ! f1
-       !write(6,*) 'pq^1'
+       !write(out_unitp,*) 'pq^1'
        iG = pq(1)
        jG = 0
      ELSE IF (JJ(2) == 0 .AND. pq(2) > 0) THEN ! f1
-       !write(6,*) 'pq^1'
+       !write(out_unitp,*) 'pq^1'
        iG = pq(2)
        jG = 0
      ELSE IF(JJ(1) > 0 .AND. pq(1) == 0) THEN ! rot/cor
-       !write(6,*) 'J^1'
+       !write(out_unitp,*) 'J^1'
        iG = JJ(1) -(nb_var-nb_act)
        jG = 0
      END IF
 
-     !IF (nb_J == 0) write(6,*) 'i (sum)',i,' Pq',pq
-     !write(6,*) 'pq,JJ',pq,JJ
-     !write(6,*) 'iG,jG',iG,jG
+     !IF (nb_J == 0) write(out_unitp,*) 'i (sum)',i,' Pq',pq
+     !write(out_unitp,*) 'pq,JJ',pq,JJ
+     !write(out_unitp,*) 'iG,jG',iG,jG
 
      IF (iG > nb_act+3 .OR. jG > nb_act+3 .OR. iG < 0 .OR. jG < 0) THEN
        write(out_unitp,*) ' ERROR in ',routine_name
@@ -266,7 +266,7 @@
        f2(iG,jG) = f2(iG,jG) -HALF * real(opval,kind=Rkind)
        f2(jG,iG) = f2(iG,jG)
      ELSE IF (iG > 0 .AND. jG == 0 .AND. nb_J == 0) THEN ! f1
-       !write(6,*) 'add f1',iG
+       !write(out_unitp,*) 'add f1',iG
        ! the (-EYE) is comming from Pq = -EYE d/dq
        f1(iG) = f1(iG) + HALF * real(-EYE*opval,kind=Rkind)
      END IF

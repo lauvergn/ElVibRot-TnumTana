@@ -137,8 +137,6 @@
     logical, parameter :: debug = .FALSE.
     character (len=*), parameter :: name_sub='Init_TypeOp'
 
-
-    !write(6,*) 'coucou Init_TypeOp',type_Op
     IF (debug) THEN
       write(out_unitp,*) ' BEGINNING: ',name_sub
       write(out_unitp,*) ' nb_Qact: ',nb_Qact

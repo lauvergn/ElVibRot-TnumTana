@@ -928,7 +928,6 @@ MODULE mod_CartesianTransfo
 
           ! for New_Orient, the rotation must be done before the CM
           IF (CartesianTransfo%Eckart .OR. CartesianTransfo%P_Axis_ref) THEN
-            !write(6,*) 'coucou0',CartesianTransfo%Eckart ; flush(6)
             ncart    = dnQin%nb_var_vec
             nb_act   = dnQin%nb_var_deriv
             icG      = ncart-2
@@ -938,7 +937,6 @@ MODULE mod_CartesianTransfo
 
             CALL sub3_dncentre_masse(CartesianTransfo%ncart_act,nb_act,ncart,        &
                                      dnQin,masses,Mtot_inv,icG,nderiv)
-!write(6,*) 'Eckart or P_Axis COM',dnQin%d0(icG:ncart) ; flush(6)
 
           END IF
 
@@ -1683,7 +1681,7 @@ MODULE mod_CartesianTransfo
         DO i=1,2
           dp(i) = dot_product(dnVec1(:,i)%d0,dnVec2(:,i)%d0)
           IF (dp(i) < ZERO) THEN ! change sign of dnVec2
-            !write(6,*) 'change sign of vec: ',isort_dp(i)
+            !write(out_unitp,*) 'change sign of vec: ',isort_dp(i)
             DO j=1,3
               CALL sub_Weight_dnS(dnVec2(j,i),-ONE,nderiv)
             END DO
@@ -2005,7 +2003,7 @@ MODULE mod_CartesianTransfo
           !   => a*(cos(x)-b)=0 if x=phase/2 (in the middle of two reference geometries, x=0 and x=phase)
           b  = cos(phase*HALF)
           a  = ONE/(ONE-b)
-          !write(6,*) 'a,b',a,b
+          !write(out_unitp,*) 'a,b',a,b
 
           DO iref=1,CartesianTransfo%nb_RefGeometry
             cte(:) =  ZERO
@@ -2423,10 +2421,10 @@ MODULE mod_CartesianTransfo
         integer :: i,ic
         real (kind=Rkind) ::  xG(3)
 
-        !write(6,*) 'ncart_act,ncart',ncart_act,ncart
-        !write(6,*) 'Mtot_inv',Mtot_inv
-        !write(6,*) 'masses',masses(:)
-        !write(6,*) 'd0x',d0x
+        !write(out_unitp,*) 'ncart_act,ncart',ncart_act,ncart
+        !write(out_unitp,*) 'Mtot_inv',Mtot_inv
+        !write(out_unitp,*) 'masses',masses(:)
+        !write(out_unitp,*) 'd0x',d0x
 
         DO i=1,3
           xG(i) = ZERO
@@ -2443,7 +2441,7 @@ MODULE mod_CartesianTransfo
         IF (present(VG))  VG(:) = xG(:)
 
         !write(out_unitp,*) 'G =',xG(:)
-        !write(6,*) 'd0x',d0x
+        !write(out_unitp,*) 'd0x',d0x
 
       END SUBROUTINE centre_masse
 
@@ -2515,8 +2513,8 @@ MODULE mod_CartesianTransfo
         integer :: i,ic
         real (kind=Rkind) ::  xG(3)
 
-        !write(6,*) 'ncart_act,ncart',ncart_act,ncart
-        !write(6,*) 'd0x',d0x
+        !write(out_unitp,*) 'ncart_act,ncart',ncart_act,ncart
+        !write(out_unitp,*) 'd0x',d0x
 
         xG(:) = d0x(icG+0:icG+2)
 
@@ -2528,7 +2526,7 @@ MODULE mod_CartesianTransfo
         END DO
 
         !write(out_unitp,*) 'G =',xG(:)
-        !write(6,*) 'd0x',d0x
+        !write(out_unitp,*) 'd0x',d0x
 
       END SUBROUTINE NOcentre_masse
 !================================================================

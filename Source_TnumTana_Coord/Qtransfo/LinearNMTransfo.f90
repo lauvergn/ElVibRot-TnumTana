@@ -486,7 +486,7 @@
 
       DO i=1,nb_transfo
          V(:) = matmul(LinearTransfo%mat_inv,LC_read(i,:))
-         !write(6,*) 'mat_inv*LC_read,',i,V
+         !write(out_unitp,*) 'mat_inv*LC_read,',i,V
          V(i) = V(i)-ONE
          write(out_unitp,*) 'Norm of mat_inv*LC_read-LC_read,',i,dot_product(V,V)
       END DO

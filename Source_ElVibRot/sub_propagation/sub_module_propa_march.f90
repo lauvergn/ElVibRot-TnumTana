@@ -784,14 +784,14 @@
       CALL dealloc_psi(yt1(i),delete_all=.TRUE.)
     END DO
     deallocate(yt1)
-    !write(6,*) 'march_bs',j,err1
+    !write(out_unitp,*) 'march_bs',j,err1
 
     !IF (err1 < 1.d-6 .OR. err1 > err0) EXIT
     IF (err1 < 1.d-10) EXIT
 
     err0 = err1
   END DO
-  write(6,*) 'end march_bs',min(j,order),err1
+  write(out_unitp,*) 'end march_bs',min(j,order),err1
 
   WP = yt0(min(j,order))
   DO i=lbound(yt0,dim=1),ubound(yt0,dim=1)
@@ -911,7 +911,7 @@
           write(out_unitp,*) ' order: ',order
         STOP
       END IF
-!write(6,*) 'order_loc',order_loc
+!write(out_unitp,*) 'order_loc',order_loc
       DTT        = para_propa%WPdeltaT / real(order_loc,kind=Rkind)
 
       zkm = WP
@@ -1400,22 +1400,22 @@
 
  21 format(a,100(x,e12.5))
 
-      !write(6,21) 'Rw1',Real(w1%CvecB,kind=Rkind)
-      !write(6,21) 'Iw1',AImag(w1%CvecB)
+      !write(out_unitp,21) 'Rw1',Real(w1%CvecB,kind=Rkind)
+      !write(out_unitp,21) 'Iw1',AImag(w1%CvecB)
 
       DO j=1,para_propa%para_poly%npoly
 
-        !write(6,21) 'Rw1',Real(w1%CvecB,kind=Rkind)
-        !write(6,21) 'Iw1',AImag(w1%CvecB)
+        !write(out_unitp,21) 'Rw1',Real(w1%CvecB,kind=Rkind)
+        !write(out_unitp,21) 'Iw1',AImag(w1%CvecB)
 
         IF (j > 1) CALL sub_OpPsi(w1,w2,para_H) ! already done in PsiHPsi
-        !write(6,21) 'Rw2',Real(w2%CvecB,kind=Rkind)
-        !write(6,21) 'Iw2',AImag(w2%CvecB)
+        !write(out_unitp,21) 'Rw2',Real(w2%CvecB,kind=Rkind)
+        !write(out_unitp,21) 'Iw2',AImag(w2%CvecB)
 
         CALL sub_scaledOpPsi(w1,w2,para_H%E0,ONE)
 
-        !write(6,21) 'Rw2',Real(w2%CvecB,kind=Rkind)
-        !write(6,21) 'Iw2',AImag(w2%CvecB)
+        !write(out_unitp,21) 'Rw2',Real(w2%CvecB,kind=Rkind)
+        !write(out_unitp,21) 'Iw2',AImag(w2%CvecB)
 
         w1 = w2
 
@@ -1427,13 +1427,13 @@
           cmplx(ZERO,-para_propa%WPdeltaT/real(j,kind=Rkind),kind=Rkind)
         w2 = w1 * rtj
 
-        !write(6,21) 'Rw2*rtj',Real(w2%CvecB,kind=Rkind)
-        !write(6,21) 'Iw2*rtj',AImag(w2%CvecB)
+        !write(out_unitp,21) 'Rw2*rtj',Real(w2%CvecB,kind=Rkind)
+        !write(out_unitp,21) 'Iw2*rtj',AImag(w2%CvecB)
 
         psi = psi + w2
 
-        !write(6,21) 'Rpsi',Real(psi%CvecB,kind=Rkind)
-        !write(6,21) 'Ipsi',AImag(psi%CvecB)
+        !write(out_unitp,21) 'Rpsi',Real(psi%CvecB,kind=Rkind)
+        !write(out_unitp,21) 'Ipsi',AImag(psi%CvecB)
 
         CALL norm2_psi(w2)
 
@@ -1624,7 +1624,7 @@
         ! n=j-1
         CALL UPsi_spec(UPsiOnKrylov,H(1:j-1,1:j-1),Vec,Eig,             &
                               para_propa%WPdeltaT,j-1,With_diago=.TRUE.)
-        !write(6,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
+        !write(out_unitp,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
         IF (abs(UPsiOnKrylov(j-1)) < para_propa%para_poly%poly_tol .OR. &
             j == para_propa%para_poly%npoly+1) THEN
           n = j-1
@@ -1829,7 +1829,7 @@
         !  (i) k reaches npoly (ii) the scheme converges
         CALL UPsi_spec(UPsiOnKrylov,H(1:k,1:k),Vec,Eig,                 &
                                 para_propa%WPdeltaT,k,With_diago=.TRUE.)
-        !write(6,*) k,'abs(UPsiOnKrylov(k)',abs(UPsiOnKrylov(k))
+        !write(out_unitp,*) k,'abs(UPsiOnKrylov(k)',abs(UPsiOnKrylov(k))
         IF (abs(UPsiOnKrylov(k)) < para_propa%para_poly%poly_tol .OR. &
             k == para_propa%para_poly%npoly) THEN
           n = k
@@ -2116,11 +2116,11 @@
         END DO
 
         CALL UPsi_spec_v1(UPsiOnKrylov(1:j-1),H(1:j-1,1:j-1),para_propa%WPdeltaT,j-1)
-        !write(6,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
+        !write(out_unitp,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
         IF (abs(UPsiOnKrylov(j-1)) < para_propa%para_poly%poly_tol .OR. &
             j == para_propa%para_poly%npoly+1) THEN
           n = j-1
-          write(6,*) n,'abs(UPsiOnKrylov(n)',abs(UPsiOnKrylov(n))
+          write(out_unitp,*) n,'abs(UPsiOnKrylov(n)',abs(UPsiOnKrylov(n))
           EXIT
         END IF
 
@@ -2367,7 +2367,7 @@
         write(out_unitp,*) 'H'
         CALL Write_Mat(H,out_unitp,6)
 
-        write(6,*) 'Eig1',dot_product(Vec(:,1),matmul(H,Vec(:,1)))
+        write(out_unitp,*) 'Eig1',dot_product(Vec(:,1),matmul(H,Vec(:,1)))
 
         H = CZERO
         DO i=1,para_propa%para_poly%npoly
@@ -4129,12 +4129,12 @@
       r1 = r
       CALL mmbsjn(r1,ncheb,cf,ier)
 
-      !write(6,*) 'Chebychev coefficients'
-      !write(6,*) '  with r=',r1
+      !write(out_unitp,*) 'Chebychev coefficients'
+      !write(out_unitp,*) '  with r=',r1
 
       DO i=2,ncheb
         cf(i) = cf(i) + cf(i)
-        !write(6,*) 'i,cf',i,cf(i)
+        !write(out_unitp,*) 'i,cf',i,cf(i)
       END DO
 !stop
       END SUBROUTINE cof

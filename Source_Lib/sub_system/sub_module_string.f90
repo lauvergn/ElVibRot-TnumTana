@@ -330,7 +330,7 @@ MODULE mod_string
       read(nio,'(a1)',IOSTAT=err_io,advance='no') chara
 
       IF (err_io /= 0)   EXIT
-      !write(6,*) 'ic,chara',ic,'"',chara,'"'
+      !write(out_unitp,*) 'ic,chara',ic,'"',chara,'"'
       IF (chara == ' ' .AND. .NOT. first) EXIT
 
       IF (chara == ' ' .AND. first) CYCLE
@@ -340,7 +340,7 @@ MODULE mod_string
       first = .FALSE.
 
     END DO
-    !write(6,*) 'Read_name: ',trim(Read_name)
+    !write(out_unitp,*) 'Read_name: ',trim(Read_name)
 
   END SUBROUTINE read_name_advNo
 

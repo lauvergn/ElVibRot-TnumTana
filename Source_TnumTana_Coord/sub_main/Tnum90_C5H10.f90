@@ -126,7 +126,7 @@
       xc12(1) = sum(xread(1,1:15))
       xc12(2) = sum(xread(2,1:15))
       xc12(3) = sum(xread(3,1:15))
-      write(6,*) 'xc12',xc12
+      write(out_unitp,*) 'xc12',xc12
 
       DO i=1,15
         xread(:,i) = xread(:,i) - xc12(:)
@@ -255,7 +255,7 @@ stop
       write(out_unitp,*) '======================================================'
 
       CALL sub_dnFCC_TO_dnFcurvi(para_Q%Qact,dnFCC,dnFcurvi,mole)
-      write(6,*) 'Curvilinear hessian:'
+      write(out_unitp,*) 'Curvilinear hessian:'
       CALL Write_VecMat(dnFcurvi%d2,out_unitp,5)
 
       ! frequencies calculation
@@ -313,7 +313,7 @@ stop
 
 
       CALL sub_dnFCC_TO_dnFcurvi(para_Q%Qact,dnFCC,dnFcurvi,mole)
-      write(6,*) 'Curvilinear hessian:'
+      write(out_unitp,*) 'Curvilinear hessian:'
       CALL Write_VecMat(dnFcurvi%d2,out_unitp,5)
 
       ! frequencies calculation

@@ -271,7 +271,7 @@
 
             name_Op = '-' // trim(para_AllOp%tab_Op(iOp)%name_Op) // '-----'
 
-            !write(6,*) 'para_AllOp%tab_Op(iOp)%nb_term',iOp,para_AllOp%tab_Op(iOp)%nb_term
+            !write(out_unitp,*) 'para_AllOp%tab_Op(iOp)%nb_term',iOp,para_AllOp%tab_Op(iOp)%nb_term
             DO k_term=1,para_AllOp%tab_Op(iOp)%nb_term
               para_AllOp%tab_Op(iOp)%OpGrid(k_term)%para_FileGrid%Save_FileGrid_done = .TRUE.
 

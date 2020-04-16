@@ -128,11 +128,11 @@ CONTAINS
  IF (OpPsi_omp == 0) THEN
    DO iG=1,BasisnD%para_SGType2%nb_SG
 
-     !write(6,*) 'iG',iG
+     !write(out_unitp,*) 'iG',iG
      !transfert part of the psi%RvecB(:) to PsiR%V
      CALL tabPackedBasis_TO_tabR_AT_iG(PsiR%V,psi%RvecB,    &
                                          iG,BasisnD%para_SGType2)
-     !write(6,*) 'iG,PsiR',iG,PsiR%V
+     !write(out_unitp,*) 'iG,PsiR',iG,PsiR%V
 
      CALL sub_OpPsi_OF_ONEDP_FOR_SGtype4_ompGrid(PsiR,iG,para_Op)
 
@@ -150,7 +150,7 @@ CONTAINS
        CALL flush_perso(out_unitp)
      END IF
 
-     !write(6,*) 'iG done:',iG ; flush(6)
+     !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
    END DO
  ELSE
 
@@ -178,10 +178,10 @@ CONTAINS
 
      CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
 
-     !write(6,*) 'iG',iG ; flush(6)
+     !write(out_unitp,*) 'iG',iG ; flush(out_unitp)
      !transfert part of the psi%RvecB(:) to PsiR%V
      CALL tabPackedBasis_TO_tabR_AT_iG(PsiR%V,psi%RvecB,iG,BasisnD%para_SGType2)
-     !write(6,*) 'iG,PsiR',iG,PsiR%V ; flush(6)
+     !write(out_unitp,*) 'iG,PsiR',iG,PsiR%V ; flush(out_unitp)
 
      CALL sub_OpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,tab_l,para_Op)
 
@@ -199,7 +199,7 @@ CONTAINS
        CALL flush_perso(out_unitp)
      END IF
 
-     !write(6,*) 'iG done:',iG ; flush(6)
+     !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
    END DO
    CALL dealloc_NParray(tab_l,'tabl_l',name_sub)
   !$OMP   END PARALLEL
@@ -292,8 +292,8 @@ END IF
  END IF
  !-----------------------------------------------------------------
 
-  !write(6,*) '================================' ; flush(6)
-  !write(6,*) '============ START =============' ; flush(6)
+  !write(out_unitp,*) '================================' ; flush(out_unitp)
+  !write(out_unitp,*) '============ START =============' ; flush(out_unitp)
 
   mole    => para_Op%mole
   BasisnD => para_Op%BasisnD
@@ -319,20 +319,20 @@ END IF
 
  CALL get_OpGrid_type10_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V,GGiq,sqRhoOVERJac,Jac)
 
- !write(6,*) ' GGiq:',GGiq
- !write(6,*) ' Jac :',Jac
- !write(6,*) ' sqRhoOVERJac :',sqRhoOVERJac
- !write(6,*) 'd0GG ... done' ; flush(6)
+ !write(out_unitp,*) ' GGiq:',GGiq
+ !write(out_unitp,*) ' Jac :',Jac
+ !write(out_unitp,*) ' sqRhoOVERJac :',sqRhoOVERJac
+ !write(out_unitp,*) 'd0GG ... done' ; flush(out_unitp)
  CALL alloc_NParray(OpPsiR,(/nq/),'OpPsiR',name_sub)
 
- !write(6,*) ' V Basis of PsiR :',PsiR%V
+ !write(out_unitp,*) ' V Basis of PsiR :',PsiR%V
 
  ! partial B to G
  CALL BDP_TO_GDP_OF_SmolyakRep(PsiR%V,BasisnD%tab_basisPrimSG,        &
                                  tab_l,tab_nq,tab_nb,nb0)
  ! now PsiR is on the grid
- !write(6,*) ' R Grid of PsiR :',PsiR%V
- !write(6,*) ' R Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+ !write(out_unitp,*) ' R Grid of PsiR :',PsiR%V
+ !write(out_unitp,*) ' R Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
  ! VPsi calculation, it has to be done before because V is not diagonal
  CALL alloc_NParray(VPsi,(/nq,nb0/),'VPsi',name_sub)
@@ -354,8 +354,8 @@ END IF
    ! multiplication by sqRhoOVERJac
    PsiR%V(iqi:iqf) = PsiR%V(iqi:iqf) * sqRhoOVERJac(:)
 
-   !write(6,*) ' R*sq Grid of PsiR :',PsiR%V
-   !write(6,*) ' R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+   !write(out_unitp,*) ' R*sq Grid of PsiR :',PsiR%V
+   !write(out_unitp,*) ' R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
 
    ! derivative with respect to Qj
@@ -366,9 +366,9 @@ END IF
      CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
                                          tab_l,tab_nq,derive_termQdyn)
 
-     !write(6,*) 'dQj Grid of PsiR',j,PsiRj(:,j) ; flush(6)
+     !write(out_unitp,*) 'dQj Grid of PsiR',j,PsiRj(:,j) ; flush(out_unitp)
    END DO
-   !write(6,*) ' dQj R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+   !write(out_unitp,*) ' dQj R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
    OpPsiR(:) = ZERO
    DO i=1,mole%nb_act1
@@ -378,24 +378,24 @@ END IF
        PsiRi(:) = PsiRi(:) + GGiq(:,j,i) * PsiRj(:,j)
      END DO
      PsiRi(:) = PsiRi(:) * Jac(:)
-     !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
      derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
      CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,&
                                          tab_l,tab_nq,derive_termQdyn)
 
-     !write(6,*) 'shape OpPsiR,PsiRi ',shape(OpPsiR),shape(PsiRi)
-     !write(6,*) 'DerivOp_TO_RDP_OF_SmolaykRep : done',OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) 'shape OpPsiR,PsiRi ',shape(OpPsiR),shape(PsiRi)
+     !write(out_unitp,*) 'DerivOp_TO_RDP_OF_SmolaykRep : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
      OpPsiR(:) = OpPsiR(:) + PsiRi(:)
    END DO
 
-   !write(6,*) ' dQi Jac Gij* ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+   !write(out_unitp,*) ' dQi Jac Gij* ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
    OpPsiR(:) =   -HALF*OpPsiR(:) / ( Jac(:)*sqRhoOVERJac(:) ) + VPsi(:,ib0)
-   !write(6,*) ' OpPsiR Grid of PsiR',OpPsiR
-   !write(6,*) ' OpPsiR Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+   !write(out_unitp,*) ' OpPsiR Grid of PsiR',OpPsiR
+   !write(out_unitp,*) ' OpPsiR Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
    !tranfert OpPsiR (on the grid) to PsiR
    PsiR%V(iqi:iqf) = OpPsiR(:)
@@ -410,7 +410,7 @@ END IF
  CALL GDP_TO_BDP_OF_SmolyakRep(PsiR%V,BasisnD%tab_basisPrimSG,&
                                tab_l,tab_nq,tab_nb,nb0)
  ! now PsiR%V is on the Basis
- !write(6,*) ' V Basis of OpPsiR :',PsiR%V
+ !write(out_unitp,*) ' V Basis of OpPsiR :',PsiR%V
 
  IF (allocated(PsiRi))        CALL dealloc_NParray(PsiRi,       'PsiRi',       name_sub)
  IF (allocated(PsiRj))        CALL dealloc_NParray(PsiRj,       'PsiRj',       name_sub)
@@ -423,8 +423,8 @@ END IF
  IF (allocated(Jac))          CALL dealloc_NParray(Jac,         'Jac',         name_sub)
  IF (allocated(V))            CALL dealloc_NParray(V,           'V',           name_sub)
 
- !write(6,*) '============ END ===============' ; flush(6)
- !write(6,*) '================================' ; flush(6)
+ !write(out_unitp,*) '============ END ===============' ; flush(out_unitp)
+ !write(out_unitp,*) '================================' ; flush(out_unitp)
 
  !-----------------------------------------------------------
  IF (debug) THEN
@@ -497,8 +497,8 @@ END IF
   !-----------------------------------------------------------------
   !CALL Check_mem()
 
-   !write(6,*) '================================' ; flush(6)
-   !write(6,*) '============ START =============' ; flush(6)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
+   !write(out_unitp,*) '============ START =============' ; flush(out_unitp)
 
 
   IF (Grid_omp == 0 .AND. OpPsi_omp > 0) THEN
@@ -568,8 +568,8 @@ END IF
    CALL BDP_TO_GDP_OF_SmolyakRep(PsiR%V,BasisnD%tab_basisPrimSG,  &
                                  tab_l,tab_nq,tab_nb,nb0)
    ! now PsiR is on the grid
-   !write(6,*) ' R Grid of PsiR :',PsiR%V
-   !write(6,*) ' R Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+   !write(out_unitp,*) ' R Grid of PsiR :',PsiR%V
+   !write(out_unitp,*) ' R Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
  ! VPsi calculation, it has to be done before because V is not diagonal
  CALL alloc_NParray(VPsi,(/nq,nb0/),'VPsi',name_sub)
@@ -591,8 +591,8 @@ END IF
    ! multiplication by sqRhoOVERJac
    PsiR%V(iqi:iqf) = PsiR%V(iqi:iqf) * sqRhoOVERJac(:)
 
-   !write(6,*) ' R*sq Grid of PsiR :',PsiR
-   !write(6,*) ' R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+   !write(out_unitp,*) ' R*sq Grid of PsiR :',PsiR
+   !write(out_unitp,*) ' R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
 
    ! derivative with respect to Qj
@@ -603,9 +603,9 @@ END IF
      CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
                                          tab_l,tab_nq,derive_termQdyn)
 
-     !write(6,*) 'dQj Grid of PsiR',j,PsiRj(:,j) ; flush(6)
+     !write(out_unitp,*) 'dQj Grid of PsiR',j,PsiRj(:,j) ; flush(out_unitp)
    END DO
-   !write(6,*) ' dQj R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+   !write(out_unitp,*) ' dQj R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
    OpPsiR(:) = ZERO
    DO i=1,mole%nb_act1
@@ -615,7 +615,7 @@ END IF
        PsiRi(:) = PsiRi(:) + GGiq(:,j,i) * PsiRj(:,j)
      END DO
      PsiRi(:) = PsiRi(:) * Jac(:)
-     !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
      derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
@@ -625,11 +625,11 @@ END IF
      OpPsiR(:) = OpPsiR(:) + PsiRi(:)
 
    END DO
-   !write(6,*) ' dQi Jac Gij* ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+   !write(out_unitp,*) ' dQi Jac Gij* ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
    OpPsiR(:) =   -HALF*OpPsiR(:) / ( Jac(:)*sqRhoOVERJac(:) ) + VPsi(:,ib0)
-   !write(6,*) ' OpPsiR Grid of PsiR',OpPsiR
-   !write(6,*) ' OpPsiR Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+   !write(out_unitp,*) ' OpPsiR Grid of PsiR',OpPsiR
+   !write(out_unitp,*) ' OpPsiR Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
    !tranfert OpPsiR (on the grid) to PsiR
    PsiR%V(iqi:iqf) = OpPsiR(:)
@@ -657,8 +657,8 @@ END IF
  IF (allocated(Jac))          CALL dealloc_NParray(Jac,         'Jac',         name_sub)
  IF (allocated(V))            CALL dealloc_NParray(V,           'V',           name_sub)
 
- !write(6,*) '============ END ===============' ; flush(6)
- !write(6,*) '================================' ; flush(6)
+ !write(out_unitp,*) '============ END ===============' ; flush(out_unitp)
+ !write(out_unitp,*) '================================' ; flush(out_unitp)
 
  !-----------------------------------------------------------
  IF (debug) THEN
@@ -827,30 +827,28 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     !---------------------------------------------------------------------------
     ! for direct_KEO case
     IF (SG4_omp == 0 .AND. para_Op%direct_KEO) THEN
-      !write(6,*) 'coucou : SG4_omp == 0 .AND. para_Op%direct_KEO'  ; flush(6)
 
       DO iG=1,BasisnD%para_SGType2%nb_SG
 
-        !write(6,*) 'iG',iG ;    CALL flush_perso(out_unitp)
         !transfert part of the psi(:)%RvecB(:) to PsiR(itab)%V
         allocate(PsiR(size(Psi)))
         ! transfer form basis to grid-------------------------------------------
         DO itab=1,size(Psi)
           CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,    &
                                             iG,BasisnD%para_SGType2)
-          !write(6,*) 'iG,itab,PsiR',iG,itab,PsiR(itab)%V  ;    CALL flush_perso(out_unitp)
+          !write(out_unitp,*) 'iG,itab,PsiR',iG,itab,PsiR(itab)%V  ;    CALL flush_perso(out_unitp)
         END DO
-        !write(6,*) 'iG',iG, ' unpack done' ;    CALL flush_perso(out_unitp)
+        !write(out_unitp,*) 'iG',iG, ' unpack done' ;    CALL flush_perso(out_unitp)
 
         CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_ompGrid(PsiR,iG,para_Op)
-        !write(6,*) 'iG',iG, ' TabOpPsi done' ;    CALL flush_perso(out_unitp)
+        !write(out_unitp,*) 'iG',iG, ' TabOpPsi done' ;    CALL flush_perso(out_unitp)
 
         !transfert back, PsiR(itab)%V (HPsi) to the psi(:)%RvecB(:)
         DO itab=1,size(Psi)
           CALL tabR_AT_iG_TO_tabPackedBasis(OpPsi(itab)%RvecB,PsiR(itab)%V,  &
                          iG,BasisnD%para_SGType2,BasisnD%WeightSG(iG))
         END DO
-        !write(6,*) 'iG',iG, ' pack done' ;    CALL flush_perso(out_unitp)
+        !write(out_unitp,*) 'iG',iG, ' pack done' ;    CALL flush_perso(out_unitp)
 
         !deallocate PsiR(:)
         DO itab=1,size(Psi)
@@ -864,10 +862,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
           CALL flush_perso(out_unitp)
         END IF
 
-        !write(6,*) 'iG done:',iG ; flush(6)
       END DO
     ELSE IF (allocated(BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
-      !write(6,*) 'coucou : allo Tab_nDval=t' ; flush(6)
 
       packet_size=max(1,BasisnD%para_SGType2%nb_SG/SG4_maxth/10)
       !$OMP   PARALLEL DEFAULT(NONE)                              &
@@ -882,12 +878,10 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       !!$OMP   DO SCHEDULE(GUIDED)
       !$OMP   DO SCHEDULE(STATIC)
       DO iG=1,BasisnD%para_SGType2%nb_SG
-        !write(6,*) 'iG',iG ; flush(6)
         !transfert part of the psi(:)%RvecB(:) to PsiR(itab)%V
         DO itab=1,size(Psi)
           CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,  &
                                             iG,BasisnD%para_SGType2)
-          !write(6,*) 'iG,itab,PsiR',iG,itab,PsiR(itab)%V
         END DO
 
         CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,                    &
@@ -910,14 +904,13 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
           CALL flush_perso(out_unitp)
         END IF
 
-        !write(6,*) 'iG done:',iG ; flush(6)
+        !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
       END DO
       !$OMP   END DO
       deallocate(PsiR)
       !$OMP   END PARALLEL
 
     ELSE IF (BasisnD%para_SGType2%nb_tasks /= BasisnD%para_SGType2%nb_threads) THEN ! version 2
-      !write(6,*) 'coucou : nb_tasks /= nb_threads'  ; flush(6)
 
       !$OMP parallel do                                             &
       !$OMP default(none)                                           &
@@ -931,7 +924,6 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       END DO
       !$OMP   END PARALLEL DO
     ELSE
-      !write(6,*) 'coucou : with para_SGType2%nb_threads' ; flush(6)
       !to be sure to have the correct number of threads, we use
       !   BasisnD%para_SGType2%nb_threads 
 
@@ -950,11 +942,11 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       tab_l(:) = BasisnD%para_SGType2%nDval_init(:,ith+1)
       !--------------------------------------------------------------
 
-      !write(6,*) 'ith,tab_l(:)',ith,':',tab_l
+      !write(out_unitp,*) 'ith,tab_l(:)',ith,':',tab_l
 
       ! we are not using the parallel do, to be able to use the correct initialized tab_l with nDval_init
       DO iG=BasisnD%para_SGType2%iG_th(ith+1),BasisnD%para_SGType2%fG_th(ith+1)
-        !write(6,*) 'iG',iG ; flush(6)
+        !write(out_unitp,*) 'iG',iG ; flush(out_unitp)
 
         CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
 
@@ -963,7 +955,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         DO itab=1,size(Psi)
           CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,    &
                                             iG,BasisnD%para_SGType2)
-          !write(6,*) 'iG,itab,PsiR',iG,itab,PsiR(itab)%V
+          !write(out_unitp,*) 'iG,itab,PsiR',iG,itab,PsiR(itab)%V
         END DO
 
         CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,tab_l,para_Op)
@@ -986,7 +978,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
           CALL flush_perso(out_unitp)
         END IF
 
-        !write(6,*) 'iG done:',iG ; flush(6)
+        !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
       END DO
       CALL dealloc_NParray(tab_l,'tabl_l',name_sub)
       !$OMP   END PARALLEL
@@ -1011,10 +1003,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
   IF(MPI_id==0) THEN
     DO i=1,size(OpPsi)
-      !write(6,*) 'coucou symab Op psi',i,para_Op%symab,Psi(i)%symab
       OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,Psi(i)%symab)
       CALL Set_symab_OF_psiBasisRep(OpPsi(i),OpPsi_symab)
-      !write(6,*) 'coucou symab Op.psi',i,OpPsi(i)%symab
  
       !write(out_unitp,*) 'para_Op,psi symab ',i,para_Op%symab,Psi(i)%symab
       !write(out_unitp,*) 'OpPsi_symab',i,OpPsi(i)%symab
@@ -1084,13 +1074,13 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
      CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
 
-     !write(6,*) 'iG',iG
+     !write(out_unitp,*) 'iG',iG
      !transfert part of the psi(:)%RvecB(:) to PsiR(itab)%V
      allocate(PsiR(size(Psi)))
      DO itab=1,size(Psi)
        CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,    &
                                          iG,BasisnD%para_SGType2)
-       !write(6,*) 'iG,itab,PsiR',iG,itab,PsiR(itab)%V
+       !write(out_unitp,*) 'iG,itab,PsiR',iG,itab,PsiR(itab)%V
      END DO
 
      CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,tab_l,para_Op)
@@ -1190,8 +1180,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   !-----------------------------------------------------------------
   !CALL Check_mem()
 
-   !write(6,*) '================================' ; flush(6)
-   !write(6,*) '============ START =============' ; flush(6)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
+   !write(out_unitp,*) '============ START =============' ; flush(out_unitp)
 
    mole    => para_Op%mole
    BasisnD => para_Op%BasisnD
@@ -1318,14 +1308,14 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
        END IF
 
        ! now PsiR is on the grid
-       !write(6,*) ' R Grid of PsiR(itab) :',PsiR(itab)%V
-       !write(6,*) ' R Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+       !write(out_unitp,*) ' R Grid of PsiR(itab) :',PsiR(itab)%V
+       !write(out_unitp,*) ' R Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
        ! multiplication by sqRhoOVERJac
        PsiR(itab)%V(:) = PsiR(itab)%V(:) * sqRhoOVERJac(:)
 
-       !write(6,*) ' R*sq Grid of PsiR(itab) :',PsiR
-       !write(6,*) ' R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+       !write(out_unitp,*) ' R*sq Grid of PsiR(itab) :',PsiR
+       !write(out_unitp,*) ' R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
 
        ! derivative with respect to Qj
@@ -1336,9 +1326,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
          CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
                                            tab_l,tab_nq,derive_termQdyn)
 
-         !write(6,*) 'dQj Grid of PsiR(itab)',j,PsiRj(:,j) ; flush(6)
+         !write(out_unitp,*) 'dQj Grid of PsiR(itab)',j,PsiRj(:,j) ; flush(out_unitp)
        END DO
-       !write(6,*) ' dQj R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+       !write(out_unitp,*) ' dQj R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
        OpPsiR(:) = ZERO
        DO i=1,mole%nb_act1
@@ -1348,7 +1338,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
            PsiRi(:) = PsiRi(:) + GGiq(:,j,i) * PsiRj(:,j)
          END DO
          PsiRi(:) = PsiRi(:) * Jac(:)
-         !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,itab,i,OMP_GET_THREAD_NUM() ; flush(6)
+         !write(out_unitp,*) ' Jac Gij* ... Grid of SRep : done',iG,itab,i,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
          derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
@@ -1358,11 +1348,11 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
          OpPsiR(:) = OpPsiR(:) + PsiRi(:)
 
        END DO
-       !write(6,*) ' dQi Jac Gij* ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+       !write(out_unitp,*) ' dQi Jac Gij* ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
        OpPsiR(:) = (  -HALF*OpPsiR(:)/Jac(:) + PsiR(itab)%V(:)*V(:,1,1) ) / sqRhoOVERJac(:)
-       !write(6,*) ' OpPsiR Grid of PsiR(itab)',OpPsiR
-       !write(6,*) ' OpPsiR Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+       !write(out_unitp,*) ' OpPsiR Grid of PsiR(itab)',OpPsiR
+       !write(out_unitp,*) ' OpPsiR Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
        !tranfert OpPsiR (on the grid) to PsiR(itab)
        PsiR(itab)%V(:) = OpPsiR(:)
@@ -1393,8 +1383,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
    IF (allocated(tab_nb)) CALL dealloc_NParray(tab_nb,'tab_nb',name_sub)
    IF (allocated(tab_nq)) CALL dealloc_NParray(tab_nq,'tab_nq',name_sub)
-   !write(6,*) '============ END ===============' ; flush(6)
-   !write(6,*) '================================' ; flush(6)
+   !write(out_unitp,*) '============ END ===============' ; flush(out_unitp)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
   !-----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
@@ -1475,8 +1465,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   !-----------------------------------------------------------------
   !CALL Check_mem()
 
-   !write(6,*) '================================' ; flush(6)
-   !write(6,*) '============ START =============' ; flush(6)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
+   !write(out_unitp,*) '============ START =============' ; flush(out_unitp)
 
    mole    => para_Op%mole
    BasisnD => para_Op%BasisnD
@@ -1636,8 +1626,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
          ! multiplication by sqRhoOVERJac
          PsiR(itab)%V(iqi:iqf) = PsiR(itab)%V(iqi:iqf) * sqRhoOVERJac(:)
 
-         !write(6,*) ' R*sq Grid of PsiR :',PsiR%V
-         !write(6,*) ' R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+         !write(out_unitp,*) ' R*sq Grid of PsiR :',PsiR%V
+         !write(out_unitp,*) ' R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
 
          ! derivative with respect to Qj
@@ -1647,9 +1637,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
            PsiRj(:,j) = PsiR(itab)%V(iqi:iqf)
            CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
                                              tab_l,tab_nq,derive_termQdyn)
-           !write(6,*) 'dQj Grid of PsiR',j,PsiRj(:,j) ; flush(6)
+           !write(out_unitp,*) 'dQj Grid of PsiR',j,PsiRj(:,j) ; flush(out_unitp)
          END DO
-         !write(6,*) ' dQj R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+         !write(out_unitp,*) ' dQj R*sq ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
          OpPsiR(:) = ZERO
          DO i=1,mole%nb_act1
@@ -1659,24 +1649,24 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
              PsiRi(:) = PsiRi(:) + GGiq(:,j,i) * PsiRj(:,j)
            END DO
            PsiRi(:) = PsiRi(:) * Jac(:)
-           !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(6)
+           !write(out_unitp,*) ' Jac Gij* ... Grid of SRep : done',iG,i,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
            derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
            CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,&
                                                tab_l,tab_nq,derive_termQdyn)
 
-           !write(6,*) 'shape OpPsiR,PsiRi ',shape(OpPsiR),shape(PsiRi)
-           !write(6,*) 'DerivOp_TO_RDP_OF_SmolaykRep : done',OMP_GET_THREAD_NUM() ; flush(6)
+           !write(out_unitp,*) 'shape OpPsiR,PsiRi ',shape(OpPsiR),shape(PsiRi)
+           !write(out_unitp,*) 'DerivOp_TO_RDP_OF_SmolaykRep : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
            OpPsiR(:) = OpPsiR(:) + PsiRi(:)
          END DO
 
-         !write(6,*) ' dQi Jac Gij* ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+         !write(out_unitp,*) ' dQi Jac Gij* ... Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
          OpPsiR(:) =   -HALF*OpPsiR(:) / ( Jac(:)*sqRhoOVERJac(:) ) + VPsi(:,ib0)
-         !write(6,*) ' OpPsiR Grid of PsiR',OpPsiR
-         !write(6,*) ' OpPsiR Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(6)
+         !write(out_unitp,*) ' OpPsiR Grid of PsiR',OpPsiR
+         !write(out_unitp,*) ' OpPsiR Grid of PsiR : done',OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
          !tranfert OpPsiR (on the grid) to PsiR
          PsiR(itab)%V(iqi:iqf) = OpPsiR(:)
@@ -1710,8 +1700,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
    IF (allocated(tab_nb)) CALL dealloc_NParray(tab_nb,'tab_nb',name_sub)
    IF (allocated(tab_nq)) CALL dealloc_NParray(tab_nq,'tab_nq',name_sub)
-   !write(6,*) '============ END ===============' ; flush(6)
-   !write(6,*) '================================' ; flush(6)
+   !write(out_unitp,*) '============ END ===============' ; flush(out_unitp)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
   !-----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
@@ -1781,8 +1771,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   !-----------------------------------------------------------------
   !CALL Check_mem()
 
-   !write(6,*) '================================' ; flush(6)
-   !write(6,*) '============ START =============' ; flush(6)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
+   !write(out_unitp,*) '============ START =============' ; flush(out_unitp)
 
    mole    => para_Op%mole
    BasisnD => para_Op%BasisnD
@@ -1816,8 +1806,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
      ! multiplication by sqRhoOVERJac
      PsiR(itab)%V(:) = PsiR(itab)%V(:) * sqRhoOVERJac(:)
 
-     !write(6,*) ' R*sq Grid of PsiR(itab) :',PsiR
-     !write(6,*) ' R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) ' R*sq Grid of PsiR(itab) :',PsiR
+     !write(out_unitp,*) ' R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
 
      ! derivative with respect to Qj
@@ -1828,9 +1818,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
        CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
                                          tab_l,tab_nq,derive_termQdyn)
 
-       !write(6,*) 'dQj Grid of PsiR(itab)',j,PsiRj(:,j) ; flush(6)
+       !write(out_unitp,*) 'dQj Grid of PsiR(itab)',j,PsiRj(:,j) ; flush(out_unitp)
      END DO
-     !write(6,*) ' dQj R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) ' dQj R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
      OpPsiR(:) = ZERO
      DO i=1,mole%nb_act1
@@ -1840,7 +1830,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
          PsiRi(:) = PsiRi(:) + GG(:,j,i) * PsiRj(:,j)
        END DO
        PsiRi(:) = PsiRi(:) * Jac(:)
-       !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,itab,i,OMP_GET_THREAD_NUM() ; flush(6)
+       !write(out_unitp,*) ' Jac Gij* ... Grid of SRep : done',iG,itab,i,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
        derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
@@ -1850,11 +1840,11 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
        OpPsiR(:) = OpPsiR(:) + PsiRi(:)
 
      END DO
-     !write(6,*) ' dQi Jac Gij* ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) ' dQi Jac Gij* ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
      OpPsiR(:) = (  -HALF*OpPsiR(:)/Jac(:) + PsiR(itab)%V(:)*V(:) ) / sqRhoOVERJac(:)
-     !write(6,*) ' OpPsiR Grid of PsiR(itab)',OpPsiR
-     !write(6,*) ' OpPsiR Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) ' OpPsiR Grid of PsiR(itab)',OpPsiR
+     !write(out_unitp,*) ' OpPsiR Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
      !tranfert OpPsiR (on the grid) to PsiR(itab)
      PsiR(itab)%V(:) = OpPsiR(:)
@@ -1874,8 +1864,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
    IF (allocated(tab_nq))       CALL dealloc_NParray(tab_nq,      'tab_nq',      name_sub)
    IF (allocated(tab_l))        CALL dealloc_NParray(tab_l,       'tab_l',       name_sub)
 
-   !write(6,*) '============ END ===============' ; flush(6)
-   !write(6,*) '================================' ; flush(6)
+   !write(out_unitp,*) '============ END ===============' ; flush(out_unitp)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
 
   !-----------------------------------------------------------
   IF (debug) THEN
@@ -1949,8 +1939,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   !-----------------------------------------------------------------
   !CALL Check_mem()
 
-   !write(6,*) '================================' ; flush(6)
-   !write(6,*) '============ START =============' ; flush(6)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
+   !write(out_unitp,*) '============ START =============' ; flush(out_unitp)
 
 
   IF (Grid_omp == 0 .AND. OpPsi_omp > 0) THEN
@@ -2022,14 +2012,14 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
      CALL BDP_TO_GDP_OF_SmolyakRep(PsiR(itab)%V,BasisnD%tab_basisPrimSG,&
                                    tab_l,tab_nq,tab_nb)
      ! now PsiR is on the grid
-     !write(6,*) ' R Grid of PsiR(itab) :',PsiR(itab)%V
-     !write(6,*) ' R Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) ' R Grid of PsiR(itab) :',PsiR(itab)%V
+     !write(out_unitp,*) ' R Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
      ! multiplication by sqRhoOVERJac
      PsiR(itab)%V(:) = PsiR(itab)%V(:) * sqRhoOVERJac(:)
 
-     !write(6,*) ' R*sq Grid of PsiR(itab) :',PsiR
-     !write(6,*) ' R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) ' R*sq Grid of PsiR(itab) :',PsiR
+     !write(out_unitp,*) ' R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
 
      ! derivative with respect to Qj
@@ -2040,9 +2030,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
        CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG, &
                                          tab_l,tab_nq,derive_termQdyn)
 
-       !write(6,*) 'dQj Grid of PsiR(itab)',j,PsiRj(:,j) ; flush(6)
+       !write(out_unitp,*) 'dQj Grid of PsiR(itab)',j,PsiRj(:,j) ; flush(out_unitp)
      END DO
-     !write(6,*) ' dQj R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) ' dQj R*sq ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
      OpPsiR(:) = ZERO
      DO i=1,mole%nb_act1
@@ -2052,7 +2042,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
          PsiRi(:) = PsiRi(:) + GGiq(:,j,i) * PsiRj(:,j)
        END DO
        PsiRi(:) = PsiRi(:) * Jac(:)
-       !write(6,*) ' Jac Gij* ... Grid of SRep : done',iG,itab,i,OMP_GET_THREAD_NUM() ; flush(6)
+       !write(out_unitp,*) ' Jac Gij* ... Grid of SRep : done',iG,itab,i,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
        derive_termQdyn(:) = (/ mole%liste_QactTOQdyn(i),0 /)
 
@@ -2062,11 +2052,11 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
        OpPsiR(:) = OpPsiR(:) + PsiRi(:)
 
      END DO
-     !write(6,*) ' dQi Jac Gij* ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) ' dQi Jac Gij* ... Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
      OpPsiR(:) = (  -HALF*OpPsiR(:)/Jac(:) + PsiR(itab)%V(:)*V(:,1,1) ) / sqRhoOVERJac(:)
-     !write(6,*) ' OpPsiR Grid of PsiR(itab)',OpPsiR
-     !write(6,*) ' OpPsiR Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(6)
+     !write(out_unitp,*) ' OpPsiR Grid of PsiR(itab)',OpPsiR
+     !write(out_unitp,*) ' OpPsiR Grid of PsiR(itab) : done',itab,OMP_GET_THREAD_NUM() ; flush(out_unitp)
 
      !tranfert OpPsiR (on the grid) to PsiR(itab)
      PsiR(itab)%V(:) = OpPsiR(:)
@@ -2093,8 +2083,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
    IF (allocated(Jac))          CALL dealloc_NParray(Jac,         'Jac',         name_sub)
    IF (allocated(V))            CALL dealloc_NParray(V,           'V',           name_sub)
 
-   !write(6,*) '============ END ===============' ; flush(6)
-   !write(6,*) '================================' ; flush(6)
+   !write(out_unitp,*) '============ END ===============' ; flush(out_unitp)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
 
   !-----------------------------------------------------------
   IF (debug) THEN
@@ -2169,8 +2159,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   END IF
   !-----------------------------------------------------------------
 
-   !write(6,*) '================================' ; flush(6)
-   !write(6,*) '============ START =============' ; flush(6)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
+   !write(out_unitp,*) '============ START =============' ; flush(out_unitp)
 
    mole    => para_Op%mole
    BasisnD => para_Op%BasisnD
@@ -2366,8 +2356,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     deallocate(d0MatOp)
   END IF
 
-   !write(6,*) '============ END ===============' ; flush(6)
-   !write(6,*) '================================' ; flush(6)
+   !write(out_unitp,*) '============ END ===============' ; flush(out_unitp)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
 
   !-----------------------------------------------------------
   IF (debug) THEN
@@ -2445,8 +2435,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   END IF
   !-----------------------------------------------------------------
 
- IF (iG == 1 .AND. debug) write(6,*) '================================' ; flush(6)
- IF (iG == 1 .AND. debug) write(6,*) '============ START =============' ; flush(6)
+ IF (iG == 1 .AND. debug) write(out_unitp,*) '================================' ; flush(out_unitp)
+ IF (iG == 1 .AND. debug) write(out_unitp,*) '============ START =============' ; flush(out_unitp)
 
    mole    => para_Op%mole
    BasisnD => para_Op%BasisnD
@@ -2471,7 +2461,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
    !transfert part of the scalar part of the potential
    iterm00 = para_Op%derive_term_TO_iterm(0,0)
    iOp     = Get_iOp_FROM_n_Op(para_Op%n_Op)
-   !write(6,*) name_sub,' iOp',iOp
+   !write(out_unitp,*) name_sub,' iOp',iOp
 
    IF (debug) THEN
      write(out_unitp,*) iG,'Save_MemGrid,Save_MemGrid_done',            &
@@ -2601,8 +2591,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     deallocate(d0MatOp)
   END IF
 
- IF (iG == 1 .AND. debug)  write(6,*) '============ END ===============' ; flush(6)
- IF (iG == 1 .AND. debug)  write(6,*) '================================' ; flush(6)
+ IF (iG == 1 .AND. debug)  write(out_unitp,*) '============ END ===============' ; flush(out_unitp)
+ IF (iG == 1 .AND. debug)  write(out_unitp,*) '================================' ; flush(out_unitp)
 
   !-----------------------------------------------------------
   IF (debug) THEN
@@ -2675,8 +2665,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   END IF
   !-----------------------------------------------------------------
 
- IF (iG == 1 .AND. debug) write(6,*) '================================' ; flush(6)
- IF (iG == 1 .AND. debug) write(6,*) '============ START =============' ; flush(6)
+ IF (iG == 1 .AND. debug) write(out_unitp,*) '================================' ; flush(out_unitp)
+ IF (iG == 1 .AND. debug) write(out_unitp,*) '============ START =============' ; flush(out_unitp)
 
    mole    => para_Op%mole
    BasisnD => para_Op%BasisnD
@@ -2701,7 +2691,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
    !transfert part of the scalar part of the potential
    iterm00 = para_Op%derive_term_TO_iterm(0,0)
    iOp     = Get_iOp_FROM_n_Op(para_Op%n_Op)
-   !write(6,*) name_sub,' iOp',iOp
+   !write(out_unitp,*) name_sub,' iOp',iOp
 
    IF (iG == 1 .AND. debug) THEN
      write(out_unitp,*) iG,'Save_MemGrid,Save_MemGrid_done',            &
@@ -2854,8 +2844,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     deallocate(d0MatOp)
   END IF
 
- IF (iG == 1 .AND. debug)  write(6,*) '============ END ===============' ; flush(6)
- IF (iG == 1 .AND. debug)  write(6,*) '================================' ; flush(6)
+ IF (iG == 1 .AND. debug)  write(out_unitp,*) '============ END ===============' ; flush(out_unitp)
+ IF (iG == 1 .AND. debug)  write(out_unitp,*) '================================' ; flush(out_unitp)
 
   !-----------------------------------------------------------
   IF (debug) THEN
@@ -2924,8 +2914,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   END IF
   !-----------------------------------------------------------------
 
-   !write(6,*) '================================' ; flush(6)
-   !write(6,*) '============ START =============' ; flush(6)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
+   !write(out_unitp,*) '============ START =============' ; flush(out_unitp)
 
    mole    => para_Op%mole
    BasisnD => para_Op%BasisnD
@@ -2935,8 +2925,6 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
    nq  = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
    nb0 = BasisnD%para_SGType2%nb0
    iterm00 = para_Op%derive_term_TO_iterm(0,0)
-   !write(6,*) 'coucou',iG,nq
-
 
    IF (debug) THEN
      write(out_unitp,*) iG,'Save_MemGrid,Save_MemGrid_done',            &
@@ -3029,8 +3017,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
    END IF
 
 
-  !write(6,*) '============ END ===============' ; flush(6)
-  !write(6,*) '================================' ; flush(6)
+  !write(out_unitp,*) '============ END ===============' ; flush(out_unitp)
+  !write(out_unitp,*) '================================' ; flush(out_unitp)
 
   !-----------------------------------------------------------
   IF (debug) THEN
@@ -3104,8 +3092,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   END IF
   !-----------------------------------------------------------------
 
-   !write(6,*) '================================' ; flush(6)
-   !write(6,*) '============ START =============' ; flush(6)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
+   !write(out_unitp,*) '============ START =============' ; flush(out_unitp)
 
    mole    => para_Op%mole
    BasisnD => para_Op%BasisnD
@@ -3269,8 +3257,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     deallocate(d0MatOp)
   END IF
 
-   !write(6,*) '============ END ===============' ; flush(6)
-   !write(6,*) '================================' ; flush(6)
+   !write(out_unitp,*) '============ END ===============' ; flush(out_unitp)
+   !write(out_unitp,*) '================================' ; flush(out_unitp)
 
   !-----------------------------------------------------------
   IF (debug) THEN

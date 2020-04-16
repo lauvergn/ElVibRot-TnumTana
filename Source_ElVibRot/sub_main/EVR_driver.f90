@@ -519,7 +519,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
 
   ith=1
   !$ ith=OMP_GET_THREAD_NUM()+1
-  write(6,*) 'ith',ith ; flush(6)
+  write(out_unitp,*) 'ith',ith ; flush(out_unitp)
 
       para_H => tab_EVRT(ith)%para_AllOp%tab_Op(1)
 
@@ -647,10 +647,6 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           END IF ! for para_AllOp%tab_Op(2)%para_ReadOp%comput_S
 
           CALL sub_MatOp(para_H,tab_EVRT(ith)%para_ana%print)
-
-          ! temp
-          !CALL sub_MatOp(para_AllOp%tab_Op(3),para_ana%print)
-          !stop 'coucou'
 
           IF(MPI_id==0 .AND. print_level > -1) THEN
             write(out_unitp,*)
@@ -2018,7 +2014,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
 !=====================================================================
 !=====================================================================
 !RETURN
-write(6,*) 'intensity',para_EVRT%para_ana%intensity ; flush(6)
+write(out_unitp,*) 'intensity',para_EVRT%para_ana%intensity ; flush(out_unitp)
 
       IF (.NOT. para_H%cplx .AND. para_EVRT%para_ana%intensity) THEN
         IF(MPI_id==0 .AND. print_level > -1) THEN

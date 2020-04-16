@@ -78,8 +78,8 @@ IMPLICIT NONE
   CALL dealloc_TypeRVec(Rvec)
 
   IF (nvec < 1) THEN
-    write(6,*) ' ERROR in alloc_TypeRVec'
-    write(6,*) ' nvec < 1',nvec
+    write(out_unitp,*) ' ERROR in alloc_TypeRVec'
+    write(out_unitp,*) ' nvec < 1',nvec
     STOP
   END IF
 
@@ -256,8 +256,8 @@ IMPLICIT NONE
   CALL dealloc_TypeCVec(vec)
 
   IF (nvec < 1) THEN
-    write(6,*) ' ERROR in alloc_TypeCVec'
-    write(6,*) ' nvec < 1',nvec
+    write(out_unitp,*) ' ERROR in alloc_TypeCVec'
+    write(out_unitp,*) ' nvec < 1',nvec
     STOP
   END IF
 

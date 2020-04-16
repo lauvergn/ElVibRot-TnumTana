@@ -1529,7 +1529,7 @@
 
 
       IF (BFTransfo%Frame) THEN
-        !write(6,*) 'BFTransfo%euler : ',BFTransfo%euler(:)
+        !write(out_unitp,*) 'BFTransfo%euler : ',BFTransfo%euler(:)
         !==========================================
         ! 1st vector
         !write(out_unitp,*) 'd0,iv_in,name_frame',iv_in,BFTransfo%name_Frame
@@ -1967,7 +1967,7 @@
 
 
       IF (BFTransfo%Frame) THEN
-        write(6,*) 'BFTransfo%euler : ',BFTransfo%euler(:)
+        write(out_unitp,*) 'BFTransfo%euler : ',BFTransfo%euler(:)
         !==========================================
         ! 1st vector
         write(out_unitp,*) 'd0,iv_in,name_frame',iv_in,BFTransfo%name_Frame
@@ -3742,10 +3742,10 @@
       write(out_unitp,*) 'nb_vect',BunchTransfo%nb_vect
 
 
-     write(6,*) 'A(iv,iat): Xat=>Vect'
+     write(out_unitp,*) 'A(iv,iat): Xat=>Vect'
      CALL Write_Mat(BunchTransfo%A,out_unitp,5)
 
-     write(6,*) 'A_inv(iat,iv): Vect=>Xat'
+     write(out_unitp,*) 'A_inv(iat,iv): Vect=>Xat'
      CALL Write_Mat(BunchTransfo%A_inv,out_unitp,5)
 
 

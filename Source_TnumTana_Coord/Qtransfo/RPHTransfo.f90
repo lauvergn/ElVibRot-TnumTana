@@ -1058,9 +1058,9 @@
 
          ! find the iQa from tab_RPHpara_AT_Qact1
          Qact1(:)        = dnQin%d0(1:RPHTransfo%nb_act1)
-         !write(6,*) 'Qact1',Qact1(:)
+         !write(out_unitp,*) 'Qact1',Qact1(:)
          DO iQa=1,RPHTransfo%nb_Qa
-           !write(6,*) 'iQa,Qact1 from RPH',iQa,RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1
+           !write(out_unitp,*) 'iQa,Qact1 from RPH',iQa,RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1
            IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1)) < ONETENTH**5) EXIT
          END DO
 
@@ -1297,15 +1297,15 @@
            IF (RPHTransfo%list_act_OF_Qdyn(iQ) == 21) THEN
              CALL sub_dnS1_TO_dnS2_partial(dnQallder,dnQ,nderiv)
              iQinact = iQinact + 1
-             !write(6,*) 'save iQ var in dnVecQin iQinact',iQ,iQinact
+             !write(out_unitp,*) 'save iQ var in dnVecQin iQinact',iQ,iQinact
              CALL sub_dnS_TO_dnVec(dnQ,dnVecQin,iQinact,nderiv)
            ELSE IF (RPHTransfo%list_act_OF_Qdyn(iQ) == 1) THEN
              iQact = iQact + 1
-             !write(6,*) 'save act iQ var in dnQout',iQ
+             !write(out_unitp,*) 'save act iQ var in dnQout',iQ
              CALL sub_dnS_TO_dnVec(dnQallder,dnQout,iQ,nderiv)
              Qact1(iQact) = dnQallder%d0
            ELSE ! rigid...
-             !write(6,*) 'save const iQ var in dnQout',iQ
+             !write(out_unitp,*) 'save const iQ var in dnQout',iQ
              CALL sub_dnS_TO_dnVec(dnQallder,dnQout,iQ,nderiv)
            END IF
          END DO
@@ -1742,7 +1742,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
   END IF
 
   read(in_unitp,*,IOSTAT=err_read) phase(:)
-  write(6,*) 'phase',phase
+  write(out_unitp,*) 'phase',phase
 
   RPHpara2%Switch_Type = Switch_Type
   RPHpara2%nb_ref      = nb_ref
@@ -1763,7 +1763,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
   DO iref=1,nb_ref
 
     read(in_unitp,*,IOSTAT=err_read) RPHpara2%QoutRef(:,iref)
-    write(6,*) 'QoutRef',RPHpara2%QoutRef(:,iref)
+    write(out_unitp,*) 'QoutRef',RPHpara2%QoutRef(:,iref)
 
     IF (err_read /= 0) THEN
       write(out_unitp,*) ' ERROR in ',name_sub
@@ -1813,10 +1813,10 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
     END DO
   END IF
 
-  ! phase from     write(6,*) 'QoutRef',RPHpara2%QoutRef(:,iref)
+  ! phase from     write(out_unitp,*) 'QoutRef',RPHpara2%QoutRef(:,iref)
   DO iref=2,nb_ref
     Rphase = RPHpara2%QoutRef(:,iref)-RPHpara2%QoutRef(:,iref-1)
-  write(6,'(a,100f6.3)') 'Rphase',Rphase
+  write(out_unitp,'(a,100f6.3)') 'Rphase',Rphase
 
     WHERE ( abs(Rphase) > ONETENTH**8 )
       Rphase = -ONE
@@ -1824,7 +1824,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
       Rphase = ONE
     END WHERE
   END DO
-  write(6,'(a,100f3.0)') 'Rphase',Rphase
+  write(out_unitp,'(a,100f3.0)') 'Rphase',Rphase
 
   Rphase = real(phase,kind=Rkind)
 
@@ -1847,8 +1847,8 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
       END DO
       listNM_selected(RPHpara2%listNM_act1(iact1)) = 1
     END DO
-    write(6,*) 'RPHpara2%listNM_act1',RPHpara2%listNM_act1
-    !write(6,*) 'listNM_selected',listNM_selected
+    write(out_unitp,*) 'RPHpara2%listNM_act1',RPHpara2%listNM_act1
+    !write(out_unitp,*) 'listNM_selected',listNM_selected
   END DO
 
   RPHpara2%OrderNM_iRef(:,1) = (/ (i,i=1,nb_var) /) ! because we use the first set to define the other orderings
@@ -2512,7 +2512,7 @@ implicit NONE
                       'fQpath',    name_sub)
     DO i=1,CurviRPH%nb_pts_ForQref
     DO j=1,CurviRPH%nb_dev_ForQref
-      write(6,*) 'i,j,CurviRPH%Qpath_ForQref(i)',i,j,CurviRPH%Qpath_ForQref(i) ; flush(6)
+      write(out_unitp,*) 'i,j,CurviRPH%Qpath_ForQref(i)',i,j,CurviRPH%Qpath_ForQref(i) ; flush(out_unitp)
       fQpath(j,i) = funcQpath(CurviRPH%Qpath_ForQref(i),j)
     END DO
     END DO
@@ -2763,7 +2763,7 @@ implicit NONE
 
     DO iq=1,CurviRPH%nb_Q21
       val = dot_product(fQpath,CurviRPH%CoefQref(:,iq))
-      !write(6,*) 'Err Qref',i,iq,val,CurviRPH%Qref(iq,i),val-CurviRPH%Qref(iq,i)
+      !write(out_unitp,*) 'Err Qref',i,iq,val,CurviRPH%Qref(iq,i),val-CurviRPH%Qref(iq,i)
       ErrQref = max(ErrQref,abs(val-CurviRPH%Qref(iq,i)))
     END DO
 
@@ -2812,7 +2812,7 @@ implicit NONE
       DO iq=1,CurviRPH%nb_Q21
       DO jq=1,CurviRPH%nb_Q21
         val = dot_product(fQpath,CurviRPH%CoefHess(:,jq,iq))
-        !write(6,*) 'Err Hess',i,iq,jq,val,CurviRPH%Hess(jq,iq,i),val-CurviRPH%Hess(jq,iq,i)
+        !write(out_unitp,*) 'Err Hess',i,iq,jq,val,CurviRPH%Hess(jq,iq,i),val-CurviRPH%Hess(jq,iq,i)
         ErrHess = max(ErrHess,abs(val-CurviRPH%Hess(jq,iq,i)))
       END DO
       END DO

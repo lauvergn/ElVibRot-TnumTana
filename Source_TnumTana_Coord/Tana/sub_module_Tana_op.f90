@@ -608,7 +608,6 @@
 
      IF (Li_loc) THEN
        call allocate_op(L,3)
-       write(6,*) 'coucou Lx Ly Lz'
        L%vec_sum(1) = get_Lx(theta)
        L%vec_sum(2) = get_Ly(theta)
        L%vec_sum(3) = get_Lz(phi)
@@ -717,23 +716,23 @@
        STOP
      end if
 
-     !write(6,*) 'get_opL1'
+     !write(out_unitp,*) 'get_opL1'
 
      call copy_F1_into_F2(J, Vtmp)
-     !write(6,*) 'J'
+     !write(out_unitp,*) 'J'
      !CALL write_op(J)
-     !write(6,*) 'END J'
+     !write(out_unitp,*) 'END J'
 
      do i = 2, size(L_all)
-       !write(6,*) 'L(i)',i
+       !write(out_unitp,*) 'L(i)',i
        !CALL write_op(L_all(i))
-       !write(6,*) 'END L(i)',i
+       !write(out_unitp,*) 'END L(i)',i
        call V1_plus_V2_in_Vres(V1 = Vtmp, V2 = L_all(i), Vres = L1, minus = .true.)
        call copy_F1_into_F2(L1, Vtmp)
      end do
      call delete_op(Vtmp)
 
-     !write(6,*) 'END get_opL1'
+     !write(out_unitp,*) 'END get_opL1'
 
 
    END SUBROUTINE get_opL1
@@ -2380,9 +2379,9 @@
      end do
      CALL dealloc_NParray(Liz_parent,'Liz_parent',routine_name)
 
-     !write(6,*) 'Ja_sum'
+     !write(out_unitp,*) 'Ja_sum'
      !call write_op(Ja_sum, out_unitp, header=.true.)
-     !write(6,*) 'END Ja_sum'
+     !write(out_unitp,*) 'END Ja_sum'
 
      call get_opJ_projected_into_BFEq171(F_system%J,    Ja_sum,     F_system%QEuler(2),F_system%QEuler(3))
      call get_opJ_projected_into_BFEq171(F_system%Jdag, Ja_sum_dag, F_system%QEuler(2),F_system%QEuler(3), dag = .true.)
@@ -2619,9 +2618,9 @@
 
      end if
 
-     !write(6,*) 'L1L1'
+     !write(out_unitp,*) 'L1L1'
      !CALL write_op(L1L1)
-     !write(6,*) 'END L1L1'
+     !write(out_unitp,*) 'END L1L1'
      !STOP
 
      write(out_unitp,*) 'computation of P1, for S_(',F_system%tab_num_frame,')'
@@ -2857,9 +2856,9 @@
    ! remove all terms with PQi PQj where Qi or Qj are inactive coordinates
    DO i = 1, size(TWOxKEO%sum_prod_op1d)
      CALL get_pqJL_OF_OpnD(Pq,JJ,LL,TWOxKEO%sum_prod_op1d(i))
-     !write(6,*)
-     !write(6,*) 'i (sum), Pq',i,Pq
-     !write(6,*) 'i (sum), #Pq inact',i,count(Pq>nb_act)
+     !write(out_unitp,*)
+     !write(out_unitp,*) 'i (sum), Pq',i,Pq
+     !write(out_unitp,*) 'i (sum), #Pq inact',i,count(Pq>nb_act)
      !CALL write_op(TWOxKEO%sum_prod_op1d(i))
 
      IF ( count(Pq>nb_act) > 0 ) THEN
@@ -2886,22 +2885,22 @@
        indexq = get_indexQ_OF_Op1D(TWOxKEO%sum_prod_op1d(i)%prod_op1d(k))
 
        IF (indexq > nb_act .AND. indexq <= nb_var) THEN
-         !write(6,*) 'inactiv coord, i (sum),k (op1d)',i,k
-         !write(6,*) 'inactiv coord, indexq',indexq
+         !write(out_unitp,*) 'inactiv coord, i (sum),k (op1d)',i,k
+         !write(out_unitp,*) 'inactiv coord, indexq',indexq
          CALL get_NumVal_Op1D(opval,Qval(indexq),TWOxKEO%sum_prod_op1d(i)%prod_op1d(k))
-         !write(6,*) 'old Cn',i,k,TWOxKEO%Cn(i)
+         !write(out_unitp,*) 'old Cn',i,k,TWOxKEO%Cn(i)
 
-         !write(6,*) 'inactiv coord, opval',opval
+         !write(out_unitp,*) 'inactiv coord, opval',opval
 
          TWOxKEO%Cn(i) = TWOxKEO%Cn(i) * opval
          TWOxKEO%sum_prod_op1d(i)%prod_op1d(k) = cone ! IdOp
-         !write(6,*) 'new Cn',i,k,TWOxKEO%Cn(i)
+         !write(out_unitp,*) 'new Cn',i,k,TWOxKEO%Cn(i)
 
        END IF
 
      END DO
-     !write(6,*)
-     !write(6,*) 'i (sum)',i
+     !write(out_unitp,*)
+     !write(out_unitp,*) 'i (sum)',i
      !CALL write_op(TWOxKEO%sum_prod_op1d(i))
 
      call Simplify_OpnD(TWOxKEO%sum_prod_op1d(i)) ! remove Id op
@@ -3107,33 +3106,33 @@
 
        iG = 0
        jG = 0
-       !write(6,*) 'term:',i
+       !write(out_unitp,*) 'term:',i
        IF (pq(1) > 0 .AND. pq(2) > 0) THEN ! def
-         !write(6,*) 'def'
+         !write(out_unitp,*) 'def'
          iG = pq(1)
          jG = pq(2)
        ELSE IF (pq(1) > 0 .AND. JJ(1) > 0) THEN ! cor
-         !write(6,*) 'cor'
+         !write(out_unitp,*) 'cor'
          iG = pq(1)
          jG = JJ(1) -(nb_var-nb_act)
        ELSE IF (JJ(1) > 0 .AND. JJ(2) > 0) THEN ! rot
-         !write(6,*) 'rot'
+         !write(out_unitp,*) 'rot'
          iG = JJ(1) -(nb_var-nb_act)
          jG = JJ(2) -(nb_var-nb_act)
        ELSE IF (JJ(1) == 0 .AND. pq(1) > 0) THEN ! rot
-         !write(6,*) 'pq^1'
+         !write(out_unitp,*) 'pq^1'
          !CALL write_op(TWOxKEO%sum_prod_op1d(i),header=.TRUE.)
          iG = pq(1)
          jG = 0
        ELSE IF(JJ(1) > 0 .AND. pq(1) == 0) THEN ! rot
-         !write(6,*) 'J^1'
+         !write(out_unitp,*) 'J^1'
          !CALL write_op(TWOxKEO%sum_prod_op1d(i),header=.TRUE.)
          iG = JJ(1) -(nb_var-nb_act)
          jG = 0
        END IF
 
-       !write(6,*) i,'pq,JJ',pq,JJ
-       !write(6,*) i,'iG,jG',iG,jG
+       !write(out_unitp,*) i,'pq,JJ',pq,JJ
+       !write(out_unitp,*) i,'iG,jG',iG,jG
 
        IF (iG > nb_act+3 .OR. jG > nb_act+3 .OR. iG < 0 .OR. jG < 0) THEN
          write(out_unitp,*) ' ERROR in ',routine_name

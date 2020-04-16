@@ -130,8 +130,8 @@
 
       para_PES%nb_elec                     = nb_elec_save
       para_Tnum%JJ                         = JJ_save
-      !write(6,*) 'nb_bi ?',get_nb_bi_FROM_AllBasis(para_AllBasis)
-      !write(6,*) 'nb_bi ?',nb_bi_save ; STOP
+      !write(out_unitp,*) 'nb_bi ?',get_nb_bi_FROM_AllBasis(para_AllBasis)
+      !write(out_unitp,*) 'nb_bi ?',nb_bi_save ; STOP
 
       CALL All2_param_TO_ComOp(ComOp,para_AllBasis,mole,nb_bi_save,     &
                                para_PES%nb_elec,                        &
@@ -907,7 +907,7 @@
       CALL construct_primitive_basis(basis_temp)
 
 
-      !write(6,*) 'In ',name_sub,' basis_temp%type',basis_temp%type,HObasis
+      !write(out_unitp,*) 'In ',name_sub,' basis_temp%type',basis_temp%type,HObasis
       HObasis = (basis_temp%type == 20 .OR. basis_temp%type == 21 .OR.     &
                  basis_temp%type == 200 .OR. basis_temp%type == 201)
 
@@ -1162,9 +1162,9 @@
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
 
-      !write(6,*) 'type_Qin',mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(:)
-      !write(6,*) 'iQdyn',basis_temp%iQdyn(1)
-      !write(6,*) 'type_Qin',mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(basis_temp%iQdyn(1))
+      !write(out_unitp,*) 'type_Qin',mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(:)
+      !write(out_unitp,*) 'iQdyn',basis_temp%iQdyn(1)
+      !write(out_unitp,*) 'type_Qin',mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(basis_temp%iQdyn(1))
       type_Q = mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(basis_temp%iQdyn(1))
 
 

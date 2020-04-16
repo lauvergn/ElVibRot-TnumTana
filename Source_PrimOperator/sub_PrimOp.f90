@@ -420,8 +420,8 @@
       !----------------------------------------------------------------
       IF (.NOT. para_PES%Read_OnTheFly_only) THEN
         CALL sub_QactTOQit(Qact,Qit,para_PES%pot_itQtransfo,mole,.FALSE.)
-        !write(6,*) 'Qact',Qact
-        !write(6,*) 'Qit',Qit
+        !write(out_unitp,*) 'Qact',Qact
+        !write(out_unitp,*) 'Qit',Qit
       ELSE
         ! why this allocation ????
         IF (allocated(Qit)) CALL dealloc_NParray(Qit,'Qit',name_sub)
@@ -582,7 +582,7 @@
           IF (para_PES%HarD .AND. associated(mole%RPHTransfo) .AND. para_PES%nb_elec == 1) THEN
             !here it should be Qin of RPH (therefore Qdyn ?????)
             CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
-            !write(6,*) 'test HARD without HAC'
+            !write(out_unitp,*) 'test HARD without HAC'
 
             ! transfert the dnQin coordinates: type21 in dnVecQin and ....
             !   the other (active, rigid ..) in dnQout
@@ -604,8 +604,8 @@
                 Qact1(iQact1) = Qdyn(iQ)
               END IF
             END DO
-            !write(6,*) 'Qact1',Qact1
-            !write(6,*) 'Qinact21',Qinact21
+            !write(out_unitp,*) 'Qact1',Qact1
+            !write(out_unitp,*) 'Qinact21',Qinact21
 
             ! find the iQa from tab_RPHpara_AT_Qact1
             DO iQa=1,mole%RPHTransfo%nb_Qa
@@ -626,10 +626,10 @@
              Vinact = HALF*sum(mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)*Qinact21(:)**2)
            END IF
 
-            !write(6,*) 'iQa',iQa
-            !write(6,*) 'Qinact21',Qinact21(:)
-            !write(6,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
-            !write(6,*) 'Vinact',Vinact
+            !write(out_unitp,*) 'iQa',iQa
+            !write(out_unitp,*) 'Qinact21',Qinact21(:)
+            !write(out_unitp,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
+            !write(out_unitp,*) 'Vinact',Vinact
 
             DO ie=1,para_PES%nb_elec
               d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                       &
@@ -824,8 +824,8 @@
       !----------------------------------------------------------------
       IF (.NOT. para_PES%Read_OnTheFly_only) THEN
         CALL sub_QactTOQit(Qact,Qit,para_PES%pot_itQtransfo,mole,.FALSE.)
-        !write(6,*) 'Qact',Qact
-        !write(6,*) 'Qit',Qit
+        !write(out_unitp,*) 'Qact',Qact
+        !write(out_unitp,*) 'Qit',Qit
       ELSE
         ! why this allocation ????
         IF (allocated(Qit)) CALL dealloc_NParray(Qit,'Qit',name_sub)
@@ -969,7 +969,7 @@
           IF (para_PES%HarD .AND. associated(mole%RPHTransfo) .AND. para_PES%nb_elec == 1) THEN
             !here it should be Qin of RPH (therefore Qdyn ?????)
             CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
-            !write(6,*) 'test HARD without HAC'
+            !write(out_unitp,*) 'test HARD without HAC'
 
             ! transfert the dnQin coordinates: type21 in dnVecQin and ....
             !   the other (active, rigid ..) in dnQout
@@ -991,8 +991,8 @@
                 Qact1(iQact1) = Qdyn(iQ)
               END IF
             END DO
-            !write(6,*) 'Qact1',Qact1
-            !write(6,*) 'Qinact21',Qinact21
+            !write(out_unitp,*) 'Qact1',Qact1
+            !write(out_unitp,*) 'Qinact21',Qinact21
 
             ! find the iQa from tab_RPHpara_AT_Qact1
             DO iQa=1,mole%RPHTransfo%nb_Qa
@@ -1015,10 +1015,10 @@
 
 
 
-            !write(6,*) 'iQa',iQa
-            !write(6,*) 'Qinact21',Qinact21(:)
-            !write(6,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
-            !write(6,*) 'Vinact',Vinact
+            !write(out_unitp,*) 'iQa',iQa
+            !write(out_unitp,*) 'Qinact21',Qinact21(:)
+            !write(out_unitp,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
+            !write(out_unitp,*) 'Vinact',Vinact
 
 
             DO ie=1,para_PES%nb_elec
@@ -1268,7 +1268,7 @@
 !----- d/Qqi et d2/dQi2 of pot0 ----------------------------------
 !-----------------------------------------------------------------
       DO i=1,mole%nb_act
-        !write(6,*) 'diag,i:',i ; flush(6)
+        !write(out_unitp,*) 'diag,i:',i ; flush(out_unitp)
 
         ith = 1
         !$ ith = omp_get_thread_num()+1
@@ -1327,7 +1327,7 @@
 !      d2/dQidQj = ( v(Qi+,Qj+)+v(Qi-,Qj-)-v(Qi-,Qj+)-v(Qi+,Qj-) )/(4*s*s)
 !-----------------------------------------------------------------
       DO i=1,mole%nb_act
-      !write(6,*) 'non-diag,i:',i ; flush(6)
+      !write(out_unitp,*) 'non-diag,i:',i ; flush(out_unitp)
       DO j=i+1,mole%nb_act
 
         ith = 1
@@ -1598,8 +1598,8 @@
 
       END IF
 
-      !write(6,*) 'nrho,Qact,vep',para_Tnum%nrho,Qact(1:mole%nb_act),vep
-      !IF (d0MatH%ReVal(1,1,1) < -0.01_Rkind) write(6,*) 'V',d0MatH%ReVal(1,1,1)
+      !write(out_unitp,*) 'nrho,Qact,vep',para_Tnum%nrho,Qact(1:mole%nb_act),vep
+      !IF (d0MatH%ReVal(1,1,1) < -0.01_Rkind) write(out_unitp,*) 'V',d0MatH%ReVal(1,1,1)
 
       DO ie=1,d0MatH%nb_bie
         ! T2
@@ -2566,8 +2566,8 @@
               abs(mole_1%ActiveTransfo%list_act_OF_Qdyn(i)) /= 1) CYCLE
             iQ = iQ + 1
             ScalePara_NM(i) = sqrt(d0k_save(iQ,iQ))
-            !write(6,*) 'i,iQ,d0h,d0k',i,iQ,d0h(iQ,iQ),d0k(iQ,iQ)
-            !write(6,*) 'i,iQ,ScalePara_NM(i)',i,iQ,ScalePara_NM(i)
+            !write(out_unitp,*) 'i,iQ,d0h,d0k',i,iQ,d0h(iQ,iQ),d0k(iQ,iQ)
+            !write(out_unitp,*) 'i,iQ,ScalePara_NM(i)',i,iQ,ScalePara_NM(i)
           END DO
         END IF
 
@@ -3035,8 +3035,8 @@
                 abs(mole_1%ActiveTransfo%list_act_OF_Qdyn(i)) /= 1) CYCLE
               iQ = iQ + 1
               ScalePara_NM(i) = sqrt(d0k_save(iQ,iQ))
-              !write(6,*) 'i,iQ,d0h,d0k',i,iQ,d0h(iQ,iQ),d0k(iQ,iQ)
-              !write(6,*) 'i,iQ,ScalePara_NM(i)',i,iQ,ScalePara_NM(i)
+              !write(out_unitp,*) 'i,iQ,d0h,d0k',i,iQ,d0h(iQ,iQ),d0k(iQ,iQ)
+              !write(out_unitp,*) 'i,iQ,ScalePara_NM(i)',i,iQ,ScalePara_NM(i)
             END DO
           END IF
 
@@ -3719,7 +3719,7 @@
       CALL alloc_array(dnSwitch,(/nb_ref/),"dnSwitch",name_sub)
       CALL alloc_VecOFdnS(dnSwitch,nb_act1,nderiv)
       CALL Switch_RPH(dnSwitch,dnQact,QrefQact,sc,nderiv)
-      !write(6,*) 'dnSwitch(:)',dnSwitch(:)%d0
+      !write(out_unitp,*) 'dnSwitch(:)',dnSwitch(:)%d0
 
       CALL alloc_dnSVM(dnW1,  nb_act1,           nderiv)
 
@@ -5019,7 +5019,7 @@
 !                                 mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1: &
 !                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) - &
 !                                       mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt%d0
-!          write(6,*) 'delta, mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(6)
+!          write(out_unitp,*) 'delta, mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(out_unitp)
 !          !Qdyn0 = matmul(Delta_Qdyn0, ...dnC%d0)
 !          mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
 !                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
@@ -5027,7 +5027,7 @@
 !                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21),  &
 !                               mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC%d0)
 !
-!          write(6,*) 'mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(6)
+!          write(out_unitp,*) 'mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(out_unitp)
 
           CALL Qdyn_TO_Qact_FROM_ActiveTransfo(mole%ActiveTransfo%Qdyn0,  &
                                                mole%ActiveTransfo%Qact0,  &

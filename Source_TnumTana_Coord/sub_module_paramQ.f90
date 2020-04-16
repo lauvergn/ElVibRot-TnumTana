@@ -147,9 +147,6 @@ CONTAINS
       !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='read_RefGeom'
       !-----------------------------------------------------------------
-  write(6,*) 'coucou ',name_sub
-  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
-  flush(6)
 
 
       IF(MPI_id==0) write(out_unitp,*) 'BEGINNING ',name_sub
@@ -473,9 +470,6 @@ CONTAINS
 
       END IF
       ! ----------------------------------------------
-  write(6,*) 'coucou2 ',name_sub
-  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
-  flush(6)
 
       CALL sub_QinRead_TO_Qact(Qread,Qact,mole,read_itQtransfo_OF_Qin0)
       CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
@@ -824,11 +818,6 @@ CONTAINS
       ! since it is going from out to in, it is better to use it_QoutRead (= it_QinRead+1)
       it_QoutRead = it_QinRead + 1
 
-  write(6,*) 'coucou ',name_sub
-  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
-  flush(6)
-
-
       IF (it_QoutRead == mole%nb_Qtransfo+1) THEN ! read_Qact0
         Qact(:) = Qread(:)
       ELSE
@@ -840,9 +829,7 @@ CONTAINS
         dnQout%d0(1:size(Qread)) = Qread(:)
 
         DO it=it_QoutRead,mole%nb_Qtransfo
-  write(6,*) 'coucou0 ',it,name_sub
-  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
-  flush(6)
+
           CALL alloc_dnSVM(dnQin,mole%tab_Qtransfo(it)%nb_Qin,nb_act,0)
 
           IF (debug) THEN
@@ -863,9 +850,7 @@ CONTAINS
 
           CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv=0)
           CALL dealloc_dnSVM(dnQin)
-  write(6,*) 'coucou2 ',it,name_sub
-  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
-  flush(6)
+
         END DO
 
         Qact(:) = dnQout%d0(1:size(Qact))
@@ -1761,10 +1746,7 @@ CONTAINS
         !=================================================
         IF (Cart_Transfo_loc) THEN
 
-          ! write(6,*) 'coucou Cart_Transfo_loc',Cart_Transfo_loc
           IF (debug) write(out_unitp,*) ' calc_CartesianTransfo_new?',Cart_Transfo_loc
-
-
 
           CALL calc_CartesianTransfo_new(dnx,dnx,                      &
                             mole%tab_Cart_transfo(1)%CartesianTransfo, &
@@ -2125,7 +2107,7 @@ CONTAINS
         DO i=1,size(Q)/3
 
           read(in_unitp,*,IOSTAT=err_io) name_Q(3*i-2),Q(3*i-2:3*i)
-          !write(6,*) name_Q(3*i-2),Q(3*i-2:3*i)*.52d0
+          !write(out_unitp,*) name_Q(3*i-2),Q(3*i-2:3*i)*.52d0
 
           IF (err_io /= 0) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
@@ -2154,7 +2136,7 @@ CONTAINS
             END SELECT
             Q(i) = convRWU_TO_R(QWU)
 
-            !write(6,*) 'i,QWU, conv',i,QWU,Q(i)
+            !write(out_unitp,*) 'i,QWU, conv',i,QWU,Q(i)
 
 
           END DO
@@ -2190,8 +2172,8 @@ CONTAINS
            END IF
 
            IF(MPI_id==0) THEN
-             write(6,*) i,name_Q(i),':',Q(i),':',trim(adjustl(Read_name))
-             write(6,*) i,'type_Q(i) :',type_Q(i)
+             write(out_unitp,*) i,name_Q(i),':',Q(i),':',trim(adjustl(Read_name))
+             write(out_unitp,*) i,'type_Q(i) :',type_Q(i)
            ENDIF
 
            IF (len_trim(Read_name) > 0) THEN
@@ -2227,7 +2209,7 @@ CONTAINS
           END IF
 
           Q(i) = convRWU_TO_R(QWU,WorkingUnit=.TRUE.)
-          IF(MPI_id==0) write(6,*) i,QWU,'working value Q(i)',Q(i)
+          IF(MPI_id==0) write(out_unitp,*) i,QWU,'working value Q(i)',Q(i)
 
         END DO
       END IF

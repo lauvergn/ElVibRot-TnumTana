@@ -1516,15 +1516,15 @@ subroutine Expand_Sum_OpnD_TO_Sum_OpnD(F_Sum_nD,ExpandF_Sum_nD,With_Vep)
 
    ndim = 0
    DO i=1,size(F_sum_nd%sum_prod_op1d)
-     !write(6,*)
-     !write(6,*) 'i (sum)',i
+     !write(out_unitp,*)
+     !write(out_unitp,*) 'i (sum)',i
      !CALL write_op(F_sum_nd%sum_prod_op1d(i))
      CALL Expand_OpnD_TO_SumOpnD(F_sum_nd%sum_prod_op1d(i),             &
                                  Temp_ExpandF_Sum_nD(i)%sum_prod_op1d)
      ndimi = size(Temp_ExpandF_Sum_nD(i)%sum_prod_op1d)
      CALL alloc_NParray(Temp_ExpandF_Sum_nD(i)%Cn,(/ ndimi /),'Cn',routine_name)
      Temp_ExpandF_Sum_nD(i)%Cn = CONE
-     !write(6,*) 'Expansion',i
+     !write(out_unitp,*) 'Expansion',i
      !CALL write_op(Temp_ExpandF_Sum_nD(i))
 
      ndim = ndim + ndimi

@@ -849,7 +849,7 @@ CONTAINS
      CALL sub_PsiBasisRep_TO_GridRep(psi(i))
      CALL alloc_psi(psi(i),BasisRep=.FALSE.,GridRep=.TRUE.)
      !CALL Overlap_psi1_psi2(Overlap,psi(i),psi(i),With_Grid=.TRUE.)
-     !write(6,*) 'Norm DVR',Overlap
+     !write(out_unitp,*) 'Norm DVR',Overlap
    END DO
    DO i=max(1,nb_diago),max_diago
      psi(i)%BasisRep  = .FALSE.
@@ -2058,7 +2058,6 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
 
      SELECT CASE (para_Davidson%NewVec_type)
      CASE (1) ! just the residual
-       !write(6,*) 'coucou residual'
 #if(run_MPI)
        CALL MakeResidual_Davidson_j_MPI3(j,psi(ndim+1),psi,Hpsi,Ene,Vec)
 #else
@@ -2089,7 +2088,6 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
        END DO
 
      CASE (3) ! Davidson
-       !write(6,*) 'coucou Davidson3'
 
        DO i=1,ndim0
          Di = EneRef(i)
@@ -2106,8 +2104,6 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
          END IF
        END DO
      CASE (4) ! Davidson+precondioner
-       !write(6,*) 'coucou Davidson4'
-
        ! first the residual
 #if(run_MPI) 
        CALL MakeResidual_Davidson_j_MPI3(j,psi(ndim+1),psi,Hpsi,Ene,Vec)
@@ -2225,7 +2221,7 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
      !write(out_unitp,*) ' symab: psi(isym), new renormalized vector ',psi(isym)%symab,psi(ndim+1)%symab
 
      !- Schmidt ortho ------------------------------------
-     !write(6,*) 'n+1, vec',ndim+1,psi(ndim+1)%RvecB
+     !write(out_unitp,*) 'n+1, vec',ndim+1,psi(ndim+1)%RvecB
      !write(out_unitp,*) ' new vec symab, bits(symab)',WriteTOstring_symab(psi(ndim+1)%symab)
 #endif     
      ndim = ndim + 1

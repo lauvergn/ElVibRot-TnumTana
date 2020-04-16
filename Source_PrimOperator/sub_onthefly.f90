@@ -1955,7 +1955,7 @@ END IF
       located = .FALSE.
       format_label='(A' // int_TO_char(len(label)) // ')'
 
-      !write(6,*) 'format_label',format_label
+      !write(out_unitp,*) 'format_label',format_label
 !     write(out_unitp,*) 'label to find:',label,located
       DO
         i_line = i_line + 1
@@ -1977,7 +1977,7 @@ END IF
  999  CONTINUE
       i_line = 0
 
-      !write(6,*) 'Find_Label: ',label,located
+      !write(out_unitp,*) 'Find_Label: ',label,located
       END SUBROUTINE Find_Label
 
       SUBROUTINE NFind_Label(nio,label,located,iformat)

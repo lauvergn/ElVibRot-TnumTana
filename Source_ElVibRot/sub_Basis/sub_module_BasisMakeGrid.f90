@@ -1436,7 +1436,7 @@ STOP
       END IF
 !---------------------------------------------------------------------
       nq = get_nq_FROM_basis(basis_temp)
-      ! write(6,*) 'nb,nq',basis_temp%nb,nq
+      ! write(out_unitp,*) 'nb,nq',basis_temp%nb,nq
       IF (.NOT. allocated(basis_temp%x) ) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' You cannot use this subroutine the grid is not done!'
@@ -1518,7 +1518,7 @@ STOP
       END IF
 !---------------------------------------------------------------------
       nq = get_nq_FROM_basis(basis_temp)
-      ! write(6,*) 'nb,nq',basis_temp%nb,nq
+      ! write(out_unitp,*) 'nb,nq',basis_temp%nb,nq
       IF (.NOT. allocated(basis_temp%x) ) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' You cannot use this subroutine the grid is not done!'
@@ -1599,7 +1599,7 @@ STOP
       END IF
 !---------------------------------------------------------------------
       nq = get_nq_FROM_basis(basis_temp)
-      ! write(6,*) 'nb,nq',basis_temp%nb,nq
+      ! write(out_unitp,*) 'nb,nq',basis_temp%nb,nq
 
       IF (.NOT. allocated(basis_temp%x) ) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -1895,7 +1895,7 @@ STOP
           CALL Random_grid(basis_cuba%x,x0,SQ,QA,QB,basis_cuba%ndim,basis_cuba%nqc,option_rand_grid)
           NormB = Norm_OF_grid_basis(basis_cuba,type_weight,err_cuba)
         END DO
-        !write(6,*) 'NormB',imc,NormB
+        !write(out_unitp,*) 'NormB',imc,NormB
         NormA = NormA + NormB
         IF (NormB > Norm_max) Norm_max = NormB
 
@@ -1983,7 +1983,7 @@ STOP
         CASE DEFAULT
           Temp = SA_para%ExpCoolParam * Temp ! Exponential cooling
         END SELECT
-        !write(6,*) 'imc,Temp,Temp_max,ResetTempScal,Norm_min',imc,Temp,Temp_max,ResetTempScal
+        !write(out_unitp,*) 'imc,Temp,Temp_max,ResetTempScal,Norm_min',imc,Temp,Temp_max,ResetTempScal
 
         IF (Temp < SA_para%ResetTempScal*Temp_max) THEN
 

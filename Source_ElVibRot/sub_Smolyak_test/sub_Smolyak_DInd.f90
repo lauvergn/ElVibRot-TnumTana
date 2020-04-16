@@ -129,16 +129,16 @@ TYPE(TypeDInd) :: DInd
 
 integer :: I
 
-write(6,*) 'BEGINNING Write_TypeDind'
-write(6,*) 'ndim',DInd%ndim
-write(6,*) 'MaxnD',DInd%MaxnD
-write(6,*) 'tab_q(:)',DInd%tab_q(:)
-write(6,*) 'I,L,indD_OF_Dm1,ind(:)'
+write(out_unitp,*) 'BEGINNING Write_TypeDind'
+write(out_unitp,*) 'ndim',DInd%ndim
+write(out_unitp,*) 'MaxnD',DInd%MaxnD
+write(out_unitp,*) 'tab_q(:)',DInd%tab_q(:)
+write(out_unitp,*) 'I,L,indD_OF_Dm1,ind(:)'
 DO I=1,DInd%MaxnD
-  write(6,*) I,DInd%i_TO_l(I),DInd%indD_OF_Dm1(I),':',DInd%tab_ind(:,I)
+  write(out_unitp,*) I,DInd%i_TO_l(I),DInd%indD_OF_Dm1(I),':',DInd%tab_ind(:,I)
 END DO
-write(6,*) 'END Write_TypeDind'
-flush(6)
+write(out_unitp,*) 'END Write_TypeDind'
+flush(out_unitp)
 
 END SUBROUTINE Write_TypeDInd
 SUBROUTINE Set_Smolyak_nDInd(SnDind,D,Lmin,Lmax)
@@ -243,17 +243,17 @@ DO id=2,D+1
         nDind(id)%tab_ind(nDind(id)%ndim,iG) = i
         nDind(id)%i_TO_l(iG)                 = lll
         nDind(id)%indD_OF_Dm1(iG)            = iGm1
-        !write(6,*) 'id,iG,l(:)',id,iG,nDind(id)%tab_ind(:,iG),nDind(id)%indD_OF_Dm1(iG) ; flush(6)
+        !write(out_unitp,*) 'id,iG,l(:)',id,iG,nDind(id)%tab_ind(:,iG),nDind(id)%indD_OF_Dm1(iG) ; flush(out_unitp)
       END IF
     END DO
   END DO
-  !write(6,*) '======================================='
-  !write(6,*) 'id,tab_q ',id,':',nDind(id)%tab_q
-  !write(6,*) 'id,MaxnD ',id,':',nDind(id)%MaxnD
-  !write(6,*) 'id,i_TO_l',id,':',i_TO_l(:)
+  !write(out_unitp,*) '======================================='
+  !write(out_unitp,*) 'id,tab_q ',id,':',nDind(id)%tab_q
+  !write(out_unitp,*) 'id,MaxnD ',id,':',nDind(id)%MaxnD
+  !write(out_unitp,*) 'id,i_TO_l',id,':',i_TO_l(:)
   deallocate(i_TO_l)
   !CALL Write_TypeDInd(nDind(id))
-  !flush(6)
+  !flush(out_unitp)
 
 END DO
 
@@ -322,16 +322,16 @@ DO id=D-1,0,-1
         nDind(id)%tab_ind(1,iG) = l
 
         nDind(id)%indD_OF_Dm1(iG)    = iGp1
-        !write(6,*) 'id,iG,l(:)',id,iG,nDind(id)%tab_ind(:,iG),nDind(id)%indD_OF_Dm1(iG) ; flush(6)
+        !write(out_unitp,*) 'id,iG,l(:)',id,iG,nDind(id)%tab_ind(:,iG),nDind(id)%indD_OF_Dm1(iG) ; flush(out_unitp)
 
       END IF
     END DO
   END DO
-  !write(6,*) '======================================='
-  !write(6,*) 'id,tab_q',id,':',nDind(id)%tab_q
-  !write(6,*) 'id,MaxnD',id,':',nDind(id)%MaxnD
+  !write(out_unitp,*) '======================================='
+  !write(out_unitp,*) 'id,tab_q',id,':',nDind(id)%tab_q
+  !write(out_unitp,*) 'id,MaxnD',id,':',nDind(id)%MaxnD
   !CALL Write_TypeDInd(nDind(id))
-  flush(6)
+  flush(out_unitp)
 
 END DO
 
@@ -365,13 +365,13 @@ TYPE(TypeDInd), allocatable :: nDind(:)
 
 integer :: i
 
-write(6,*) 'BEGINNING Write_nDInd'
+write(out_unitp,*) 'BEGINNING Write_nDInd'
 
 DO i=lbound(nDind,dim=1),ubound(nDind,dim=1)
-  write(6,*) 'index:',i
+  write(out_unitp,*) 'index:',i
   CALL Write_TypeDInd(nDind(i))
 END DO
-write(6,*) 'END Write_nDInd'
+write(out_unitp,*) 'END Write_nDInd'
 
 END SUBROUTINE Write_nDInd
 
@@ -397,8 +397,8 @@ CALL tabi_TO_InD(II,D,tabn,tabi)
 
 
 IF (II /= InD) STOP 'II /= InD'
-!write(6,*) 'InD,tabn',InD,tabn
-!write(6,*) 'InD,tabi',II,tabi
+!write(out_unitp,*) 'InD,tabn',InD,tabn
+!write(out_unitp,*) 'InD,tabi',II,tabi
 
 END SUBROUTINE InD_TO_tabi
 SUBROUTINE tabi_TO_InD(InD,D,tabn,tabi)
@@ -417,8 +417,8 @@ DO id=D,1,-1
   InD = tabi(id) + tabn(id)*(InD-1)
 END DO
 
-!write(6,*) 'InD,tabn',InD,tabn
-!write(6,*) 'InD,tabi',InD,tabi
+!write(out_unitp,*) 'InD,tabn',InD,tabn
+!write(out_unitp,*) 'InD,tabi',InD,tabi
 
 END SUBROUTINE tabi_TO_InD
 

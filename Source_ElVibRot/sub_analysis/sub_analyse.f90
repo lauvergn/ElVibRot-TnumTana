@@ -492,7 +492,7 @@ CONTAINS
 
        !for H
        IF (para_AllOp%tab_Op(1)%name_Op /= 'H') STOP 'wrong Operator !!'
-       write(6,*) 'nb_Term',para_AllOp%tab_Op(1)%nb_Term ; flush(6)
+       write(out_unitp,*) 'nb_Term',para_AllOp%tab_Op(1)%nb_Term ; flush(out_unitp)
        DO iOp=1,para_AllOp%tab_Op(1)%nb_Term
 
          CALL sub_PsiOpPsi(avOp,Psi,OpPsi,para_AllOp%tab_Op(1),iOp)

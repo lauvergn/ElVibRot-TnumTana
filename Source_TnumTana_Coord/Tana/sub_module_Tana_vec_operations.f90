@@ -385,7 +385,7 @@ MODULE mod_Tana_vec_operations
      call delete_op(Ptf)
      call delete_op(Ptf_dag)
 
-     !write(6,*) 'LiLi from ',routine_name
+     !write(out_unitp,*) 'LiLi from ',routine_name
      !CALL write_op(LiLi)
 
    END SUBROUTINE Li_scalar_Li_from_Eq75

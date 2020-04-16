@@ -1642,13 +1642,9 @@ MODULE mod_Tnum
 
       CALL CurviRPH1_TO_CurviRPH2(mole1%CurviRPH,mole2%CurviRPH)
 
-      !write(6,*) 'cart transfo?',mole1%Cart_transfo
-      !write(6,*) 'asso tab_Cart_transfo?',associated(mole1%tab_Cart_transfo)
-
       !IF (mole1%Cart_transfo .AND. associated(mole1%tab_Cart_transfo)) THEN
       IF (associated(mole1%tab_Cart_transfo)) THEN
 
-        !write(6,*) 'coucou ct1=>ct2'
         CALL alloc_array(mole2%tab_Cart_transfo,                        &
                                          shape(mole1%tab_Cart_transfo), &
                         "mole2%tab_Cart_transfo",name_sub)
@@ -1913,7 +1909,7 @@ MODULE mod_Tnum
 
          iQout = mole%ActiveTransfo%list_QactTOQdyn(iQin)
          !write(out_unitp,*) 'iQin,iQout,type_Qout',iQin,iQout,mole%tab_Qtransfo(nb_Qtransfo)%type_Qout(iQout)
-         !flush(6)
+         !flush(out_unitp)
          mole%tab_Qtransfo(nb_Qtransfo)%type_Qin(iQin) =                &
                         mole%tab_Qtransfo(nb_Qtransfo)%type_Qout(iQout)
          mole%tab_Qtransfo(nb_Qtransfo)%name_Qin(iQin) =                &

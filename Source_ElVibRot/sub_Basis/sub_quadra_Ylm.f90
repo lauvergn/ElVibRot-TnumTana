@@ -337,7 +337,7 @@
             base%nDindB%Tab_Norm(ibb) = real(ibbl,kind=Rkind)
           END DO
           END DO
-          !write(6,*) 'base%nDindB%Tab_L',base%nDindB%Tab_L
+          !write(out_unitp,*) 'base%nDindB%Tab_L',base%nDindB%Tab_L
           !STOP 'With_L'
       ELSE
         CALL init_nDindexPrim(base%nDindB,ndim=1,nDsize=(/ base%nb /),  &
@@ -361,8 +361,8 @@
         !IF (mod(ibm,2) == 0)   symab_mfourier = 1 ! odd, m (the true m)
         !symab = Calc_symab1_EOR_symab2(symab_l,symab_mfourier)
         !CALL Set_symabOFSymAbelian_AT_ib(base%P_SymAbelian,ib,symab)
-        !write(6,*) 'ib,symab_l,symab_mfourier',ib,symab_l,symab_mfourier
-        !write(6,*) 'ib,symab',ib,symab
+        !write(out_unitp,*) 'ib,symab_l,symab_mfourier',ib,symab_l,symab_mfourier
+        !write(out_unitp,*) 'ib,symab',ib,symab
 
         SELECT CASE (Read_symab)
         CASE (-1)

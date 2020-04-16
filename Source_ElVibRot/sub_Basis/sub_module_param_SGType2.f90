@@ -829,13 +829,13 @@ IF (debug) THEN
 END IF
 
 IF (present(OldPara)) THEN
-  !write(6,*) 'OldPara ',name_sub,OldPara
+  !write(out_unitp,*) 'OldPara ',name_sub,OldPara
   iSG = OldPara%i_SG
 END IF
 
 
-!write(6,*) 'alloc tab_Sum_nq_OF_SRep',allocated(SGType2%tab_Sum_nq_OF_SRep)
-!flush(6)
+!write(out_unitp,*) 'alloc tab_Sum_nq_OF_SRep',allocated(SGType2%tab_Sum_nq_OF_SRep)
+!flush(out_unitp)
 IF (iSG > 1 .AND. iSG <= size(SGType2%tab_Sum_nq_OF_SRep)) THEN
   iqSG = iq - SGType2%tab_Sum_nq_OF_SRep(iSG-1)
 
@@ -912,7 +912,7 @@ END IF
 
 !first calculation of i_SG and iq_SG from iq and OldPara (if available)
 IF (present(OldPara)) THEN
-  !write(6,*) 'OldPara ',name_sub,OldPara
+  !write(out_unitp,*) 'OldPara ',name_sub,OldPara
   i_SG = OldPara%i_SG
 END IF
 

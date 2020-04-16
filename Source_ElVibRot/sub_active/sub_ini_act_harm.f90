@@ -307,7 +307,7 @@
 
 !$OMP   DO SCHEDULE(STATIC)
         DO iq=1,iqf-1
-write(6,*) 'freq_only'
+write(out_unitp,*) 'freq_only'
           freq_only = .TRUE.
           CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,  &
                para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)

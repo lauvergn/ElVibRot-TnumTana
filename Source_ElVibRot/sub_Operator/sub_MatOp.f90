@@ -1216,8 +1216,8 @@ CONTAINS
             END DO
             MatRV%ReVal(:,ib1,iterm_Op) = matmul(td0b(:,1:nplus),VecQ(1:nplus))
           END DO
-          !write(6,*) '===================================================='
-          !write(6,*) 'MatRV%ReVal',iterm_Op,MatRV%derive_termQact(:,iterm_Op)
+          !write(out_unitp,*) '===================================================='
+          !write(out_unitp,*) 'MatRV%ReVal',iterm_Op,MatRV%derive_termQact(:,iterm_Op)
           !CALL Write_Mat(MatRV%ReVal(:,:,iterm_Op),out_unitp,5)
 
 
@@ -1225,7 +1225,7 @@ CONTAINS
           J1       = MatRV%derive_termQact(1,iterm_Op)
           J2       = MatRV%derive_termQact(2,iterm_Op)
           iterm_BasisRot = para_Op%BasisnD%RotBasis%tab_der_TO_iterm(J1,J2)
-          !write(6,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
+          !write(out_unitp,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
 
           DO ibRot=1,para_Op%nb_bRot
           DO jbRot=1,para_Op%nb_bRot
@@ -1238,9 +1238,9 @@ CONTAINS
             f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
-              write(6,*) 'J1,J2',J1,J2
-              write(6,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
-              write(6,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
+              write(out_unitp,*) 'J1,J2',J1,J2
+              write(out_unitp,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
+              write(out_unitp,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
             END IF
 
             IF (para_Op%cplx) THEN
@@ -1674,7 +1674,7 @@ CONTAINS
         DO J2=-3,-1
           iterm_Op       = MatRV%derive_term_TO_iterm(J1,J2)
           iterm_BasisRot = para_Op%BasisnD%RotBasis%tab_der_TO_iterm(J1,J2)
-          !write(6,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
+          !write(out_unitp,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
 
           DO ibRot=1,para_Op%nb_bRot
           DO jbRot=1,para_Op%nb_bRot
@@ -1687,9 +1687,9 @@ CONTAINS
             f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
-              write(6,*) 'J1,J2',J1,J2
-              write(6,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
-              write(6,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
+              write(out_unitp,*) 'J1,J2',J1,J2
+              write(out_unitp,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
+              write(out_unitp,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
             END IF
 
             IF (para_Op%cplx) THEN
@@ -1725,9 +1725,9 @@ CONTAINS
             f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
-              write(6,*) 'J1',J1
-              write(6,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
-              write(6,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
+              write(out_unitp,*) 'J1',J1
+              write(out_unitp,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
+              write(out_unitp,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
             END IF
 
             IF (para_Op%cplx) THEN
@@ -2136,7 +2136,7 @@ CONTAINS
           J1       = para_Op%BasisnD%RotBasis%tab_iterm_TO_der(1,iterm_BasisRot)
           J2       = para_Op%BasisnD%RotBasis%tab_iterm_TO_der(2,iterm_BasisRot)
           iterm_Op = MatRV%derive_term_TO_iterm(J1,J2)
-          !write(6,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
+          !write(out_unitp,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
 
           DO ibRot=1,para_Op%nb_bRot
           DO jbRot=1,para_Op%nb_bRot
@@ -2149,9 +2149,9 @@ CONTAINS
             f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
-              write(6,*) 'J1,J2',J1,J2
-              write(6,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
-              write(6,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
+              write(out_unitp,*) 'J1,J2',J1,J2
+              write(out_unitp,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
+              write(out_unitp,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
             END IF
 
             IF (para_Op%cplx) THEN
@@ -2822,13 +2822,13 @@ CONTAINS
             psi%RvecB(i) = ONE
 
             CALL Set_symab_OF_psiBasisRep(psi)
-            !write(6,*) 'i',i,psi%RvecB ; flush(6)
+            !write(out_unitp,*) 'i',i,psi%RvecB ; flush(out_unitp)
 
             Hpsi = psi
             CALL sub_PsiBasisRep_TO_GridRep(Hpsi)
-            !write(6,*) 'i',i,Hpsi%RvecG ; flush(6)
+            !write(out_unitp,*) 'i',i,Hpsi%RvecG ; flush(out_unitp)
             CALL sub_PsiGridRep_TO_BasisRep(Hpsi)
-            !write(6,*) 'i',i,Hpsi%RvecB ; flush(6)
+            !write(out_unitp,*) 'i',i,Hpsi%RvecB ; flush(out_unitp)
 
             para_Op%Rmat(:,i)  = Hpsi%RvecB(:)
           END IF
@@ -3343,11 +3343,11 @@ CONTAINS
    tab_l(:) = BasisnD%para_SGType2%nDval_init(:,ith+1)
    !--------------------------------------------------------------
 
-   !write(6,*) 'ith,tab_l(:)',ith,':',tab_l
+   !write(out_unitp,*) 'ith,tab_l(:)',ith,':',tab_l
 
    ! we are not using the parallel do, to be able to use the correct initialized tab_l with nDval_init
    DO iG=BasisnD%para_SGType2%iG_th(ith+1),BasisnD%para_SGType2%fG_th(ith+1)
-     !write(6,*) 'iG',iG ; flush(6)
+     !write(out_unitp,*) 'iG',iG ; flush(out_unitp)
 
      CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
 
@@ -3359,25 +3359,25 @@ CONTAINS
        iBSRep = BasisnD%para_SGType2%tab_Sum_nb_OF_SRep(iG-1)
      END IF
 
-     !write(6,*) 'iG,iBSRep,nb,WeightSG',iG,iBSRep,nb,BasisnD%WeightSG(iG)
+     !write(out_unitp,*) 'iG,iBSRep,nb,WeightSG',iG,iBSRep,nb,BasisnD%WeightSG(iG)
 
      DO ib=1,nb
        ipb = BasisnD%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep+ib)
        IF (ipb == 0) CYCLE
-       !write(6,*) 'ib,ipb',ib,ipb
+       !write(out_unitp,*) 'ib,ipb',ib,ipb
 
        DO jb=1,nb
          jpb = BasisnD%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep+jb)
          IF (jpb == 0) CYCLE
 
-         !write(6,*) 'jb,jpb',jb,jpb
+         !write(out_unitp,*) 'jb,jpb',jb,jpb
 
          para_Op%Rmat(ipb,jpb) = para_Op%Rmat(ipb,jpb) + BasisnD%WeightSG(iG)
 
        END DO
      END DO
 
-     !write(6,*) 'iG done:',iG ; flush(6)
+     !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
    END DO
    CALL dealloc_NParray(tab_l,'tabl_l',name_sub)
 
@@ -3388,7 +3388,7 @@ CONTAINS
 
    CALL Write_Mat(para_Op%Rmat,out_unitp,5)
 
-   write(6,*) 'for MatOp**2'
+   write(out_unitp,*) 'for MatOp**2'
    para_Op%Rmat = matmul(para_Op%Rmat,para_Op%Rmat)
 
    write(out_unitp,*) '# 1',count(para_Op%Rmat == 1)

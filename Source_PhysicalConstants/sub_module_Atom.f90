@@ -813,7 +813,7 @@ PRIVATE
 
         ! first the symbol, then ZZ
         symb = name2(pos+1:len(name2))
-        !write(6,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
+        !write(out_unitp,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
 
         DO ZZ=0,mendeleev%max_Z
           DO AA=0,mendeleev%max_A ! find the first isotope with Z
@@ -831,7 +831,7 @@ PRIVATE
         IF (pos > 0) THEN ! isotope defined as: AX (2H or 13C or 28Si)
           read(name2(1:pos),*,IOSTAT=err_mass_loc) AA
         END IF
-        !write(6,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
+        !write(out_unitp,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
 
         deallocate(name2)
       END IF
@@ -852,8 +852,8 @@ PRIVATE
         DO AA=0,mendeleev%max_A ! find the first isotope with Z
           IF (mendeleev%at(ZZ,AA)%MainIsotope) EXIT
         END DO
-        !write(6,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
-        !flush(6)
+        !write(out_unitp,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
+        !flush(out_unitp)
 
       ELSE IF (AA < 0 .OR. AA > ubound(mendeleev%at,dim=2)) THEN
         write(out_unitp,*) ' ERROR in : get_mass_Tnum'

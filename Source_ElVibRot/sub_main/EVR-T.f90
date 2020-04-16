@@ -428,7 +428,7 @@ SUBROUTINE read_arg(input_filename)
     input_filename = 'namelist'
   END IF
 
-  write(6,*) '=================================='
-  write(6,*) '=================================='
+  write(out_unitp,*) '=================================='
+  write(out_unitp,*) '=================================='
 
 END SUBROUTINE read_arg

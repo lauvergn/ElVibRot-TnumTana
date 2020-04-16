@@ -1045,7 +1045,7 @@
       logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
 
-      !write(6,*) 'SUBROUTINE ',trim(name_sub)
+      !write(out_unitp,*) 'SUBROUTINE ',trim(name_sub)
       !-- Read the new parameters
         MR_order             = -1  ! order of the multimode representation (-1: not use)
         MaxNorm              = FOUR
@@ -1181,8 +1181,8 @@
           nb_coupling1    = count(para_nDFit1%nDvalB(:,iB) > 0)
           nb_coupling_act = count(para_nDFit1%nDvalB(list_Qact(1:nb_Qact),iB) > 0)
           nb_coupling_inact = nb_coupling1 - nb_coupling_act
-          !write(6,*) 'iB,tab',iB,':',para_nDFit1%nDvalB(:,iB)
-          !write(6,*) 'nb_coupling_act,nb_coupling_inact',nb_coupling_act,nb_coupling_inact
+          !write(out_unitp,*) 'iB,tab',iB,':',para_nDFit1%nDvalB(:,iB)
+          !write(out_unitp,*) 'nb_coupling_act,nb_coupling_inact',nb_coupling_act,nb_coupling_inact
 
           !    act         inact    keep
           !1    0           0        +T
@@ -1387,13 +1387,13 @@
 
       V = ONE
       IF (present(nDvalB)) THEN
-        !write(6,*) 'nDvalB',nDvalB
+        !write(out_unitp,*) 'nDvalB',nDvalB
         DO i=1,size(tQ)
           V = V * Funct_1D(tQ(i),nDvalB(i),para_nDFit%ntyp(i),0)
         END DO
 
       ELSE
-        !write(6,*) 'nDvalB',para_nDFit%nDindB%Tab_nDval(:,inD)
+        !write(out_unitp,*) 'nDvalB',para_nDFit%nDindB%Tab_nDval(:,inD)
         DO i=1,size(tQ)
           V = V * Funct_1D(tQ(i),para_nDFit%nDindB%Tab_nDval(i,inD),    &
                                                    para_nDFit%ntyp(i),0)

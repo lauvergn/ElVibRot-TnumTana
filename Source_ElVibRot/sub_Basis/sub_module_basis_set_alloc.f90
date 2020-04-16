@@ -406,7 +406,7 @@
            basis_set%tab_ndim_index(:,:) = 0
          END IF
 
-         !write(6,*) 'cplx,nb,nq,ndim',basis_set%cplx,basis_set%nb,nq,basis_set%ndim
+         !write(out_unitp,*) 'cplx,nb,nq,ndim',basis_set%cplx,basis_set%nb,nq,basis_set%ndim
          CALL flush_perso(6)
 
          IF (basis_set%cplx) THEN

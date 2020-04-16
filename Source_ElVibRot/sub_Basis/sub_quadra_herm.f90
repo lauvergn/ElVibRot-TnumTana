@@ -794,7 +794,7 @@
         IF (base%print_info_OF_basisDP .AND. print_level > -1) THEN
           write(out_unitp,*) 'cubature',nq
           DO iQ=1,nq
-            write(6,*) iQ,base%x(:,iQ),base%w(iQ)
+            write(out_unitp,*) iQ,base%x(:,iQ),base%w(iQ)
           END DO
         END IF
 

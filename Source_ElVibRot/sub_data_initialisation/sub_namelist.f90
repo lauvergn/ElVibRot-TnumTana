@@ -181,8 +181,8 @@
           max_excit = sum(tab_nb(1:nb_inact21))-nb_inact21
         END IF
 
-        write(6,*) 'max_excit',max_excit
-        write(6,*) 'tab_nb(:)',tab_nb(1:nb_inact21)
+        write(out_unitp,*) 'max_excit',max_excit
+        write(out_unitp,*) 'tab_nb(:)',tab_nb(1:nb_inact21)
 
         nDinit(:) = 0
         CALL alloc_array(Basis2n%nDindB,'Basis2n%nDindB',name_sub)

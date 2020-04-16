@@ -144,7 +144,6 @@
    CALL flush_perso(out_unitp)
  END IF
 
- !write(6,*) 'coucou : with para_SGType2%nb_threads' ; flush(6)
  !to be sure to have the correct number of threads, we use
  !   BasisnD%para_SGType2%nb_threads
  !$OMP parallel                                                  &
@@ -169,7 +168,7 @@
 
    CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG,err_sub=err_sub)
 
-   !write(6,*) 'iG',iG
+   !write(out_unitp,*) 'iG',iG
    !transfert part of the psi%RvecB(:) to PsiRvec%R and psi0%RvecB(:) to Psi0Rvec%R
    ! the real and imaginary part are splited
 
@@ -197,7 +196,7 @@
      CALL flush_perso(out_unitp)
    END IF
 
-   !write(6,*) 'iG done:',iG ; flush(6)
+   !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
  END DO
  CALL dealloc_NParray(tab_l,'tabl_l',name_sub)
  !$OMP   END PARALLEL
@@ -493,7 +492,7 @@ nb_thread = 1
    tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
    tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
 
-   !write(6,*) 'iG',iG
+   !write(out_unitp,*) 'iG',iG
    !transfert part of the psi%RvecB(:) to PsiRvec%R and psi0%RvecB(:) to Psi0Rvec%R
    ! the real and imaginary part are splited
    CALL tabPackedBasis_TO_tabR_AT_iG(PsiRvec%V, RPsi%RvecB, iG,BasisnD%para_SGType2)
@@ -606,7 +605,7 @@ nb_thread = 1
      CALL flush_perso(out_unitp)
    END IF
 
-   !write(6,*) 'iG done:',iG ; flush(6)
+   !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
  END DO
 
  Psi%CvecB(:) = cmplx(MarchRPsi%RvecB,MarchIPsi%RvecB,kind=Rkind)
@@ -785,7 +784,7 @@ nb_thread = 1
    tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
    tab_nb(:) = getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
 
-   !write(6,*) 'iG',iG
+   !write(out_unitp,*) 'iG',iG
    !transfert part of the psi%RvecB(:) to PsiRvec%R and psi0%RvecB(:) to Psi0Rvec%R
    ! the real and imaginary part are splited
    CALL tabPackedBasis_TO_tabR_AT_iG(PsiRvec%V, RPsi%RvecB, iG,BasisnD%para_SGType2)
@@ -823,8 +822,8 @@ nb_thread = 1
 
    E0 = (dot_product(Rw1%V,Rw2(1)%V)+dot_product(Iw1%V,Iw2(1)%V))/norm2_AT_iG
 
-       !write(6,21) 'Rw1',Rw1%V
-       !write(6,21) 'Iw1',Iw1%V
+       !write(out_unitp,21) 'Rw1',Rw1%V
+       !write(out_unitp,21) 'Iw1',Iw1%V
 
    rtj          = CONE
 
@@ -837,16 +836,16 @@ nb_thread = 1
      CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(Rw2,iG,tab_l,para_H) ! in w2, we have H.Rw1
      CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(Iw2,iG,tab_l,para_H) ! in w2, we have H.Iw1
 
-        !write(6,21) 'Rw1',Rw1%V
-        !write(6,21) 'Iw1',Iw1%V
-        !write(6,21) 'Rw2',Rw2(1)%V
-        !write(6,21) 'Iw2',Iw2(1)%V
+        !write(out_unitp,21) 'Rw1',Rw1%V
+        !write(out_unitp,21) 'Iw1',Iw1%V
+        !write(out_unitp,21) 'Rw2',Rw2(1)%V
+        !write(out_unitp,21) 'Iw2',Iw2(1)%V
 
      Rw2(1)%V(:) = Rw2(1)%V - E0 * Rw1%V ! equivalent sub_scaledOpPsi
      Iw2(1)%V(:) = Iw2(1)%V - E0 * Iw1%V ! equivalent sub_scaledOpPsi
 
-        !write(6,21) 'Rw2',Rw2(1)%V
-        !write(6,21) 'Iw2',Iw2(1)%V
+        !write(out_unitp,21) 'Rw2',Rw2(1)%V
+        !write(out_unitp,21) 'Iw2',Iw2(1)%V
 
      Rw1%V(:)    = Rw2(1)%V
      Iw1%V(:)    = Iw2(1)%V
@@ -862,14 +861,14 @@ nb_thread = 1
      Rw2(1)%V(:) = Rw1%V * real(rtj,kind=Rkind) - Iw1%V * Aimag(rtj)
      Iw2(1)%V(:) = Rw1%V * Aimag(rtj)           + Iw1%V * real(rtj,kind=Rkind)
 
-        !write(6,21) 'Rw2*rtj',Rw2(1)%V
-        !write(6,21) 'Iw2*rtj',Iw2(1)%V
+        !write(out_unitp,21) 'Rw2*rtj',Rw2(1)%V
+        !write(out_unitp,21) 'Iw2*rtj',Iw2(1)%V
 
      PsiRvec%V(:) = PsiRvec%V + Rw2(1)%V
      PsiIvec%V(:) = PsiIvec%V + Iw2(1)%V
 
-        !write(6,21) 'Rpsi',PsiRvec%V
-        !write(6,21) 'Ipsi',PsiIvec%V
+        !write(out_unitp,21) 'Rpsi',PsiRvec%V
+        !write(out_unitp,21) 'Ipsi',PsiIvec%V
 
      norm2_w2 = (dot_product(Rw2(1)%V,Rw2(1)%V) + dot_product(Iw2(1)%V,Iw2(1)%V)) / norm2_AT_iG
 
@@ -920,7 +919,7 @@ nb_thread = 1
      CALL flush_perso(out_unitp)
    END IF
 
-   !write(6,*) 'iG done:',iG ; flush(6)
+   !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
  END DO
 
  Psi%CvecB(:) = cmplx(MarchRPsi%RvecB,MarchIPsi%RvecB,kind=Rkind)

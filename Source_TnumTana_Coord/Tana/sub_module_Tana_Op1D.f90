@@ -1151,7 +1151,7 @@
      IF (debug) THEN
        write(out_unitp,*) 'Fres'
        CALL write_op(Fres)
-       write(6,*) 'END ',routine_name
+       write(out_unitp,*) 'END ',routine_name
        CALL flush_perso(out_unitp)
      END IF
 
@@ -1426,7 +1426,7 @@ END SUBROUTINE Change_PQ_OF_Op1D_TO_Id_OF_Op1D
 
    END DO
 
-   !write(6,*) 'iSum',iSum ; flush(6)
+   !write(out_unitp,*) 'iSum',iSum ; flush(out_unitp)
 
 
    DO i=1,ndim0
@@ -1448,7 +1448,7 @@ END SUBROUTINE Change_PQ_OF_Op1D_TO_Id_OF_Op1D
        ndim1j = size(Op1D_OF_d1OpElj%Sum_op1D(1)%prod_opel)
 
        ndim_term = ndim0 + ndim1i + ndim1j
-       !write(6,*) 'ndim0,ndim1i,ndim1j,ndim_term',ndim0,ndim1i,ndim1j,ndim_term
+       !write(out_unitp,*) 'ndim0,ndim1i,ndim1j,ndim_term',ndim0,ndim1i,ndim1j,ndim_term
 
        iSum = iSum + 1
        CALL allocate_op(d2Op1D%Sum_op1D(ISum),ndim_term)
@@ -1459,12 +1459,12 @@ END SUBROUTINE Change_PQ_OF_Op1D_TO_Id_OF_Op1D
 
        i1 = ndim0+1
        i2 = i1-1+ndim1i
-       write(6,*) 'i,j,i1,i2',i,j,i1,i2 ; flush(6)
+       write(out_unitp,*) 'i,j,i1,i2',i,j,i1,i2 ; flush(out_unitp)
        d2Op1D%Sum_op1D(ISum)%prod_opel(i1:i2)       = Op1D_OF_d1OpEli%Sum_op1D(1)%prod_opel(:)
 
        i1 = i2+1
        i2 = i1-1+ndim1j
-       write(6,*) 'i,j,i1,i2',i,j,i1,i2 ; flush(6)
+       write(out_unitp,*) 'i,j,i1,i2',i,j,i1,i2 ; flush(out_unitp)
        d2Op1D%Sum_op1D(ISum)%prod_opel(i1:i2)       = Op1D_OF_d1OpElj%Sum_op1D(1)%prod_opel(:)
 
        CALL Simplify_Op1D(d2Op1D%Sum_op1D(ISum))
@@ -1477,7 +1477,7 @@ END SUBROUTINE Change_PQ_OF_Op1D_TO_Id_OF_Op1D
    CALL Simplify_Sum_OF_Op1D(d2Op1D)
 
 
-   !write(6,*) 'iSum',iSum ; flush(6)
+   !write(out_unitp,*) 'iSum',iSum ; flush(out_unitp)
 
    CALL delete_op(Op1D_OF_d0OpEli)
    CALL delete_op(Op1D_OF_d1OpEli)
@@ -1575,7 +1575,7 @@ subroutine Expand_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
      END IF
 
    END DO
-   !write(6,*) 'tab_ndim',tab_ndim ; flush(6)
+   !write(out_unitp,*) 'tab_ndim',tab_ndim ; flush(out_unitp)
 
    ! Then allocation of the FS_Op1D(:)%prod_opel with tab_ndim
    DO index_split=1,size(FS_Op1D)
@@ -1754,8 +1754,8 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
        !alfa and r_sin are such : el%alfa = (2*alfa+r) with r < 2. alfa MUST be an integer
        alfa    = SplitOp1D%prod_opel(i)%alfa%num/(2*SplitOp1D%prod_opel(i)%alfa%den)
        r_sin   = SplitOp1D%prod_opel(i)%alfa - (alfa+alfa)
-       !write(6,*) 'Fel%alfa: ',frac_to_string(SplitOp1D%prod_opel(i)%alfa)
-       !write(6,*) 'alfa,r_sin: ',frac_to_string(alfa),' ',frac_to_string(r_sin)
+       !write(out_unitp,*) 'Fel%alfa: ',frac_to_string(SplitOp1D%prod_opel(i)%alfa)
+       !write(out_unitp,*) 'alfa,r_sin: ',frac_to_string(alfa),' ',frac_to_string(r_sin)
 
        idf_sin = SplitOp1D%prod_opel(i)%idf
        IF (idf_sin == 3) THEN
@@ -1943,7 +1943,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
      CALL Sort_TabOpEl(F_1d%prod_opel(ii:size(F_1d%prod_opel)))
 
 
-     !write(6,*) ' after sort'
+     !write(out_unitp,*) ' after sort'
      !CALL write_op(F_1d)
 
 
@@ -1951,13 +1951,13 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
      !  Q * Q => Q^2    , P * P => P^2 ....
      CALL Merge_TabOpEl(F_1d%prod_opel)
 
-     !write(6,*) ' after merge'
+     !write(out_unitp,*) ' after merge'
      !CALL write_op(F_1d)
 
      ! 3) remove Id operator
      CALL remove_Idop_in_F_1d(F_1d)
 
-     !write(6,*) ' after remove Id'
+     !write(out_unitp,*) ' after remove Id'
      !CALL write_op(F_1d)
 
    END IF
