@@ -200,7 +200,7 @@ DO id=2,D+1
       test = lll <= Lmax
       IF (id==D+1) test = test .AND. lll >= Lmin
       IF (test) nG = nG + 1
-      !write(6,*) 'iGm1,i,ll,l,test,nG',iGm1,i,ll,l,test,nG
+      !write(out_unitp,*) 'iGm1,i,ll,l,test,nG',iGm1,i,ll,l,test,nG
     END DO
   END DO
   CALL alloc_TypeDInd(nDind(id),ndim=id-1,MaxnD=nG)

@@ -1923,7 +1923,7 @@ END FUNCTION Qnamealfa_Latex
 
      character (len=*), parameter   :: routine_name='get_NumVal_OpEl'
 
-     !write(6,*) 'Fel%idf,Fel%alfa,qval',Fel%idf,Fel%alfa,qval ; flush(6)
+     !write(out_unitp,*) 'Fel%idf,Fel%alfa,qval',Fel%idf,Fel%alfa,qval ; flush(out_unitp)
 
    ! we need to split when Fel%alfa is an integer or half-integer (used as as a real, ralfa)
    !   because qval**ralfa is not working when qval <= ZERO [ qval**ralfa = exp(ralfa*log(qval) ]

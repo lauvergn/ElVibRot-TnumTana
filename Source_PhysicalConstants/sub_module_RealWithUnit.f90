@@ -418,14 +418,14 @@
 
       skip_conv = (RWU%val == huge(ONE) .OR. RWU%val == -huge(ONE))
 
-      !write(6,*) 'RWU',RWU,skip_conv
+      !write(out_unitp,*) 'RWU',RWU,skip_conv
 
       ! first find the quantity
       iq = get_Index_OF_Quantity(RWU%quantity)
 
       name_RWUunit = RWU%unit
       CALL string_uppercase_TO_lowercase(name_RWUunit)
-      !write(6,*) 'name_RWUunit',name_RWUunit
+      !write(out_unitp,*) 'name_RWUunit',name_RWUunit
 
       IF (iq <= size(Tab_conv_FOR_quantity)) THEN
         ! modify quantity to have the correct case
@@ -437,7 +437,7 @@
           name_unit = Tab_conv_FOR_quantity(iq)%conv(i)%unit
           CALL string_uppercase_TO_lowercase(name_unit)
 
-          !write(6,*) 'i,name_unit',i,name_unit,name_RWUunit,(name_RWUunit == name_unit)
+          !write(out_unitp,*) 'i,name_unit',i,name_unit,name_RWUunit,(name_RWUunit == name_unit)
 
           IF (name_RWUunit == name_unit) THEN
             IF (WorkingUnit_loc) THEN ! working unit
@@ -456,7 +456,7 @@
         IF (.NOT. skip_conv) convRWU_TO_RWU%val  = RWU%val * conv
       END IF
 
-      !write(6,*) 'conv',conv,skip_conv
+      !write(out_unitp,*) 'conv',conv,skip_conv
 
       END FUNCTION convRWU_TO_RWU
 
@@ -628,7 +628,7 @@
           name_unit = Tab_conv_FOR_quantity(iq)%conv(iu)%unit
           CALL string_uppercase_TO_lowercase(name_unit)
 
-          !write(6,*) 'i,name_unit',i,name_unit,name_RWUunit,(name_RWUunit == name_unit)
+          !write(out_unitp,*) 'i,name_unit',i,name_unit,name_RWUunit,(name_RWUunit == name_unit)
 
           IF (unit_loc == name_unit) EXIT
         END DO

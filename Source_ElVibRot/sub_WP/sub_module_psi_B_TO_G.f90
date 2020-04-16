@@ -226,7 +226,6 @@ CONTAINS
         IF (NewBasisEl) THEN
           CALL RecCvecG_TO_CvecB(psi%CvecG,psi%CvecB,psi%nb_qaie,psi%nb_baie,psi%BasisnD)
         ELSE IF (psi%BasisnD%SparseGrid_type == 4) THEN ! special case with SG4
-write(6,*) 'coucou SG4', name_sub
           CALL RecCvecG_TO_CvecB(psi%CvecG,psi%CvecB,psi%nb_qaie,psi%nb_baie,psi%BasisnD)
         ELSE
           iqaie0 = 1

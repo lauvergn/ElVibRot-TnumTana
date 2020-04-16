@@ -136,12 +136,12 @@ CONTAINS
 
       ! Check if the nb_act1_RPH coordinates belong to one basis set (primitive ?)
       ! 1) RPHTransfo MUST be the 2d transformation after the active one.
-      !write(6,*) 'asso RPH, itRPH,nb_Qtransfo',associated(mole%RPHTransfo),mole%itRPH,mole%nb_Qtransfo
+      !write(out_unitp,*) 'asso RPH, itRPH,nb_Qtransfo',associated(mole%RPHTransfo),mole%itRPH,mole%nb_Qtransfo
       RPHCoord_IN_OneBasis = associated(mole%RPHTransfo) .AND. (mole%itRPH == mole%nb_Qtransfo-1)
 
       RPHCoord_IN_OneBasis = RPHCoord_IN_OneBasis .AND.                 &
         (count(mole%RPHTransfo%list_act_OF_Qdyn(1:nb_act1_RPH) == 1) == nb_act1_RPH)
-      !write(6,*) 'list_act_OF_Qdyn',mole%RPHTransfo%list_act_OF_Qdyn
+      !write(out_unitp,*) 'list_act_OF_Qdyn',mole%RPHTransfo%list_act_OF_Qdyn
 
 
       ! 2) basis functions of BasisnD are defined as a product (BasisnD%nb_basis > 0)
@@ -151,7 +151,7 @@ CONTAINS
       ! 3) Check nb_act1_RPH coordinates belong to one primitive basis set
       IF (RPHCoord_IN_OneBasis) THEN
         DO ib=1,BasisnD%nb_basis
-          !write(6,*) 'ib,iQdyn',ib,':',BasisnD%tab_Pbasis(ib)%Pbasis%iQdyn(:)
+          !write(out_unitp,*) 'ib,iQdyn',ib,':',BasisnD%tab_Pbasis(ib)%Pbasis%iQdyn(:)
           IF (BasisnD%tab_Pbasis(ib)%Pbasis%ndim == nb_act1_RPH) THEN
             IF (all(BasisnD%tab_Pbasis(ib)%Pbasis%iQdyn ==              &
                   mole%RPHTransfo%list_QactTOQdyn(1:nb_act1_RPH)) ) EXIT
@@ -259,7 +259,7 @@ CONTAINS
       CASE Default
          STOP ' no default'
       END SELECT
-      write(6,*) 'L,ib,nq',L,ib,nq ; flush(6)
+      write(out_unitp,*) 'L,ib,nq',L,ib,nq ; flush(out_unitp)
 
 
 
@@ -290,7 +290,7 @@ CONTAINS
            STOP ' no default'
         END SELECT
 
-        !write(6,*) 'L,iq,Qact1_fromBasisnD',L,iq-1,':',Qact1_fromBasisnD
+        !write(out_unitp,*) 'L,iq,Qact1_fromBasisnD',L,iq-1,':',Qact1_fromBasisnD
 
 
         IF (.NOT. allocated(List_Qact1)) THEN ! first point
@@ -301,11 +301,9 @@ CONTAINS
           Find_in_List = .FALSE.
           iq_list_small = 0
           DO iq_list=1,size(List_Qact1,dim=2)
-            !write(6,*) 'coucou iq,iq_list',iq,iq_list ; flush(6)
             comp = compar_GridPoint(List_Qact1(:,iq_list),Qact1_fromBasisnD,nb_act1_RPH)
             IF (comp == -1) iq_list_small = iq_list
             Find_in_List = (comp == 0)
-            !write(6,*) 'coucou iq,iq_list,comp',iq,iq_list,comp ; flush(6)
 
             IF (Find_in_List) EXIT
           END DO
@@ -464,12 +462,12 @@ CONTAINS
         END IF
 
         CALL Rec_Qact(Qact,BasisnD,iq,mole,OldPara)
-        !write(6,*) 'iq,size(List_Qact1,dim=2),Qact',iq,size(List_Qact1,dim=2),Qact ; flush(6)
+        !write(out_unitp,*) 'iq,size(List_Qact1,dim=2),Qact',iq,size(List_Qact1,dim=2),Qact ; flush(out_unitp)
         CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
-        !write(6,*) 'Qdyn',Qdyn
+        !write(out_unitp,*) 'Qdyn',Qdyn
 
         Qact1_fromBasisnD(:) = Qdyn(mole%RPHTransfo%list_QactTOQdyn(1:nb_act1_RPH))
-        !write(6,*) 'Qact1_fromBasisnD',Qact1_fromBasisnD
+        !write(out_unitp,*) 'Qact1_fromBasisnD',Qact1_fromBasisnD
 
 
         IF (.NOT. allocated(List_Qact1)) THEN ! first point
@@ -480,13 +478,9 @@ CONTAINS
           Find_in_List = .FALSE.
           iq_list_small = 0
           DO iq_list=1,size(List_Qact1,dim=2)
-            !write(6,*) 'coucou iq,iq_list',iq,iq_list ; flush(6)
             comp = compar_GridPoint(List_Qact1(:,iq_list),Qact1_fromBasisnD,nb_act1_RPH)
             IF (comp == -1) iq_list_small = iq_list
             Find_in_List = (comp == 0)
-            !write(6,*) 'coucou iq,iq_list,comp',iq,iq_list,comp ; flush(6)
-
-            !Find_in_List = (sum(abs(List_Qact1(:,iq_list)-Qact1_fromBasisnD)) <= ONETENTH**5)
             IF (Find_in_List) EXIT
           END DO
 

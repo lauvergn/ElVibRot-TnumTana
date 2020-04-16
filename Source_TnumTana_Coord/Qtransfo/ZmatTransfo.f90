@@ -676,7 +676,7 @@
             dnEz2%d0(:) = (/ ZERO,ZERO,ONE /)
           END IF
 
-          !write(6,*) 'dnEz2',dnEz2%d0
+          !write(out_unitp,*) 'dnEz2',dnEz2%d0
 
           CALL sub3_dnx_AT2_new(dnx,icf,ic1,dnd,dnEz2,nderiv,check)
 
@@ -762,9 +762,9 @@
                 END IF
               END IF
             END IF
-            !write(6,*) 'New_Orient',ZmatTransfo%New_Orient
-            !write(6,*) 'dnEx3',dnEx3%d0
-            !write(6,*) 'dnEz3',dnEz3%d0
+            !write(out_unitp,*) 'New_Orient',ZmatTransfo%New_Orient
+            !write(out_unitp,*) 'dnEx3',dnEx3%d0
+            !write(out_unitp,*) 'dnEz3',dnEz3%d0
 
             CALL sub3_dnx_AT3_new(dnx,icf,ic1,check,                    &
                                   dnd,dnCval,dnSval,                    &
@@ -822,9 +822,9 @@
                   END IF
                 END IF
                 CALL calc_cross_product(dnEz3%d0,nEz3,dnEx3%d0,nEx3,dnEy3%d0,nEy3)
-                !write(6,*) 'dnEx3',dnEx3%d0
-                !write(6,*) 'dnEy3',dnEy3%d0
-                !write(6,*) 'dnEz3',dnEz3%d0
+                !write(out_unitp,*) 'dnEx3',dnEx3%d0
+                !write(out_unitp,*) 'dnEy3',dnEy3%d0
+                !write(out_unitp,*) 'dnEz3',dnEz3%d0
 
                 i_q = i_q + 1
                 CALL sub_dnVec_TO_dnS(dnQzmat,dnd,i_q)

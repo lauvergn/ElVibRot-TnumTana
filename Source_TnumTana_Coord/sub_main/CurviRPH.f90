@@ -51,11 +51,11 @@ implicit NONE
   Qpath = 0.5_Rkind
   CALL get_CurviRPH(Qpath,CurviRPH_param,Q21,Grad,Hess)
 
-  write(6,*) 'points:',i,Qpath(:)
-  write(6,*) 'Q21',Q21(:)
-  IF (CurviRPH_param%gradient) write(6,*) 'Grad',Grad(:)
+  write(out_unitp,*) 'points:',i,Qpath(:)
+  write(out_unitp,*) 'Q21',Q21(:)
+  IF (CurviRPH_param%gradient) write(out_unitp,*) 'Grad',Grad(:)
 
-  write(6,*) 'Hess'
+  write(out_unitp,*) 'Hess'
   CALL Write_Mat(Hess,6,5)
 
 END PROGRAM CurviRPH
@@ -77,8 +77,8 @@ END PROGRAM CurviRPH
 !
 !read(5,*) nb_pts,ndim
 !nb_dev = nb_pts
-!write(6,*) 'nb_pts,nb_dev,ndim',nb_pts,nb_dev,ndim
-!flush(6)
+!write(out_unitp,*) 'nb_pts,nb_dev,ndim',nb_pts,nb_dev,ndim
+!flush(out_unitp)
 !
 !allocate(Q(ndim,nb_pts))
 !allocate(g(ndim,nb_pts))
@@ -96,7 +96,7 @@ END PROGRAM CurviRPH
 !
 !DO i=1,nb_pts
 !  read(5,*) Qpath(i)
-!  write(6,*) 'Qpath',Qpath(i)
+!  write(out_unitp,*) 'Qpath',Qpath(i)
 !  DO j=1,nb_dev
 !    fQ(j,i) = Qpath(i)**(j-1)
 !  END DO
@@ -105,7 +105,7 @@ END PROGRAM CurviRPH
 !
 !  !DO iq=1,ndim
 !  !  read(5,*) name_dum,Q(iq,i)
-!  !  write(6,*) 'Q',i,Q(iq,i)
+!  !  write(out_unitp,*) 'Q',i,Q(iq,i)
 !  !END DO
 !  !read gradient
 !  IF (gradient) THEN
@@ -115,7 +115,7 @@ END PROGRAM CurviRPH
 !  END IF
 !  !read hessian
 !  CALL Read_Mat(hess(:,:,i),5,5,IOerr)
-!  write(6,*) 'IOerr',IOerr
+!  write(out_unitp,*) 'IOerr',IOerr
 !  CALL Write_Mat(hess(:,:,i),6,5)
 !
 !END DO
@@ -128,14 +128,14 @@ END PROGRAM CurviRPH
 !!for the fit of Q
 !DO iq=1,ndim
 !  aq(:,iq) = matmul(Q(iq,:),fQ_inv(:,:))
-!  write(6,*) 'a(:)',iq,aq(:,iq)
+!  write(out_unitp,*) 'a(:)',iq,aq(:,iq)
 !END DO
 !
 !!for the fit of g
 !IF (gradient) THEN
 !  DO iq=1,ndim
 !    ag(:,iq) = matmul(g(iq,:),fQ_inv(:,:))
-!    write(6,*) 'a(:)',iq,ag(:,iq)
+!    write(out_unitp,*) 'a(:)',iq,ag(:,iq)
 !  END DO
 !END IF
 !
@@ -143,22 +143,22 @@ END PROGRAM CurviRPH
 !DO iq=1,ndim
 !DO jq=1,ndim
 !  ahess(:,jq,iq) = matmul(hess(jq,iq,:),fQ_inv(:,:))
-!  write(6,*) 'a(:)',iq,jq,ahess(:,jq,iq)
+!  write(out_unitp,*) 'a(:)',iq,jq,ahess(:,jq,iq)
 !END DO
 !END DO
 !
 !
 !DO i=1,nb_pts
-!  write(6,*) 'points:',i,Qpath(i)
+!  write(out_unitp,*) 'points:',i,Qpath(i)
 !  fQpath(:) = fQ(:,i)
 !
 !  DO iq=1,ndim
-!    write(6,*) 'Q',iq,Q(iq,i),Q(iq,i)-dot_product(fQpath,aq(:,iq))
+!    write(out_unitp,*) 'Q',iq,Q(iq,i),Q(iq,i)-dot_product(fQpath,aq(:,iq))
 !  END DO
 !
 !  DO iq=1,ndim
 !  DO jq=1,ndim
-!    write(6,*) 'Q',jq,iq,hess(jq,iq,i),hess(jq,iq,i)-dot_product(fQpath,ahess(:,jq,iq))
+!    write(out_unitp,*) 'Q',jq,iq,hess(jq,iq,i),hess(jq,iq,i)-dot_product(fQpath,ahess(:,jq,iq))
 !  END DO
 !  END DO
 !

@@ -524,7 +524,7 @@
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Set_file_OF_OpGrid'
 
-      !write(6,*) ' in ',name_sub,' asso OpGrid ',associated(OpGrid), 'name_Op: ',name_Op
+      !write(out_unitp,*) ' in ',name_sub,' asso OpGrid ',associated(OpGrid), 'name_Op: ',name_Op
       IF (.NOT. associated(OpGrid)) RETURN
       IF (size(OpGrid) < 1) RETURN
 

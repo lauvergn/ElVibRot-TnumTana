@@ -67,7 +67,7 @@
        IF (begin .OR. nsurf .NE. newsurf) THEN
          newsurf = nsurf
          CALL read_para1d(F,nn,n,ndim,max_fit,nom,exist,nsurf)
-         write(6,*) nom,nn,n,ndim,nsurf
+         write(out_unitp,*) nom,nn,n,ndim,nsurf
          IF ( .NOT. exist) STOP
          begin=.FALSE.
        END IF
@@ -75,7 +75,7 @@
 !---------------------------------------------------------------
 
        nn = n(0)
-!      write(6,*) 'BEGINING v_inter2',ntyp,ndim,nn,n
+!      write(out_unitp,*) 'BEGINING v_inter2',ntyp,ndim,nn,n
 
        SELECT CASE (ntyp)
          CASE (1)
@@ -153,7 +153,7 @@
 
 
 
-!      write(6,*) 'END v_inter2',x,v_inter2
+!      write(out_unitp,*) 'END v_inter2',x,v_inter2
 
        end function v_inter2
 !================================================================
@@ -272,18 +272,18 @@
        real*8 v_typ
 !      ---------------------------------------------------------
 
-!      write(6,*) 'BEGINING vgene_inter',ndim,nn,n
+!      write(out_unitp,*) 'BEGINING vgene_inter',ndim,nn,n
 
 
        z=ZERO
        DO kl=1,nn
          z = z + F(kl) * v_typ(x,ndim,kl,n)
-!        write(6,*) z,F(kl),ndim,nn,n
+!        write(out_unitp,*) z,F(kl),ndim,nn,n
        END DO
 
        vgene_inter = z
 
-!      write(6,*) 'END vgene_inter',x,z,ndim,nn,n
+!      write(out_unitp,*) 'END vgene_inter',x,z,ndim,nn,n
 
        end function vgene_inter
 !================================================================
@@ -308,21 +308,21 @@
        real(kind=Rkind) :: v
 !      ---------------------------------------------------------
 
-!      write(6,*) 'BEGINING vgene_inter2',ndim,nn,n
-!      write(6,*) 'F(:)',F
-!      write(6,*) 'x',x
+!      write(out_unitp,*) 'BEGINING vgene_inter2',ndim,nn,n
+!      write(out_unitp,*) 'F(:)',F
+!      write(out_unitp,*) 'x',x
 
 
        z=ZERO
        DO kl=1,nn
          z = z + F(kl) * v(x,ndim,kl,n,ntyp)
-         !write(6,*) z,F(kl),ndim,nn,n
+         !write(out_unitp,*) z,F(kl),ndim,nn,n
          !CALL flush_perso(6)
        END DO
 
        vgene_inter2 = z
 
-!      write(6,*) 'END vgene_inter2',x,z,ndim,nn,n
+!      write(out_unitp,*) 'END vgene_inter2',x,z,ndim,nn,n
 
        end function vgene_inter2
 

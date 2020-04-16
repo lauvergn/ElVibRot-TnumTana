@@ -574,7 +574,7 @@
 !-----------------------------------------------------------------
 !-----------------------------------------------------------------
 !     -- Matrix initialisation -----------------------------------
-      !write(6,*) 'nb_Op',nb_Op
+      !write(out_unitp,*) 'nb_Op',nb_Op
       DO iOp=1,nb_Op
         d0MatHADAOp(iOp)%ReVal(:,:,:) = ZERO
         IF (d0MatHADAOp(iOp)%cplx) d0MatHADAOp(iOp)%ImVal(:,:) = ZERO

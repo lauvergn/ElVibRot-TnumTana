@@ -97,7 +97,7 @@
      DO i = 1, size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 0) CYCLE
        CALL Export_Midas_Opnd(TWOxKEO%sum_prod_op1d(i), tab_Qname, FnDname)
@@ -114,7 +114,7 @@
      IF (param_JJ > 0) THEN
        DO i = 1,size(TWOxKEO%sum_prod_op1d)
          CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (nb_J /= 2) CYCLE
          CALL Export_Midas_Opnd(TWOxKEO%sum_prod_op1d(i), tab_Qname, FnDname)
@@ -130,7 +130,7 @@
        ! Coriolis part: Pq x Jj (i,j) = x,y,z
        DO i = 1,size(TWOxKEO%sum_prod_op1d)
          CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (.NOT. (nb_pq == 1 .AND. nb_J == 1)) CYCLE
          CALL Export_Midas_Opnd(TWOxKEO%sum_prod_op1d(i), tab_Qname, FnDname)
@@ -146,7 +146,7 @@
        ! Coriolis part: Jj (i,j) = x,y,z
        DO i = 1, size(TWOxKEO%sum_prod_op1d)
          CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (.NOT. (nb_pq == 0 .AND. nb_J == 1)) CYCLE
          CALL Export_Midas_Opnd(TWOxKEO%sum_prod_op1d(i), tab_Qname, FnDname)
@@ -315,9 +315,9 @@
      DO i = 1, size(keo%sum_prod_op1d)
        Cn = real(keo%Cn(i),kind=Rkind)
        IF (aimag(keo%Cn(i)) /= ZERO) STOP 'Cn is complex'
-       !write(6,*)
+       !write(out_unitp,*)
        CALL get_pq_OF_OpnD(pq1, pq2, nb_pq, nb_J, nb_L, mole%nb_var, keo%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J > 0) CYCLE
 
@@ -332,9 +332,9 @@
        DO i = 1,size(keo%sum_prod_op1d)
          Cn = real(keo%Cn(i),kind=Rkind)
          IF (aimag(keo%Cn(i)) /= ZERO) STOP 'Cn is complex'
-         !write(6,*)
+         !write(out_unitp,*)
          CALL get_pq_OF_OpnD(pq1, pq2, nb_pq, nb_J, nb_L, mole%nb_var, keo%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (nb_J /= 2) CYCLE
 
@@ -351,9 +351,9 @@
        DO i = 1,size(keo%sum_prod_op1d)
          Cn = real(keo%Cn(i),kind=Rkind)
          IF (aimag(keo%Cn(i)) /= ZERO) STOP 'Cn is complex'
-         !write(6,*)
+         !write(out_unitp,*)
          CALL get_pq_OF_OpnD(pq1, pq2, nb_pq, nb_J, nb_L, mole%nb_var, keo%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (.NOT. (nb_pq == 1 .AND. nb_J == 1)) CYCLE
 
@@ -370,9 +370,9 @@
        DO i = 1, size(keo%sum_prod_op1d)
          Cn = real(keo%Cn(i),kind=Rkind)
          IF (aimag(keo%Cn(i)) /= ZERO) STOP 'Cn is complex'
-         !write(6,*)
+         !write(out_unitp,*)
          CALL get_pq_OF_OpnD(pq1, pq2, nb_pq, nb_J, nb_L, mole%nb_var, keo%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (.NOT. (nb_pq == 0 .AND. nb_J == 1)) CYCLE
 
@@ -420,7 +420,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 0 .OR. nb_pq == 0) CYCLE
        CALL Export_VSCF_Opnd(TWOxKEO%sum_prod_op1d(i),tab_Qname,FnDname)
@@ -438,7 +438,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 0 .OR. nb_pq /= 0) CYCLE
 
@@ -459,7 +459,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 2) CYCLE
 
@@ -478,7 +478,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 1 .AND. nb_J == 1)) CYCLE
 
@@ -498,7 +498,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 0 .AND. nb_J == 1)) CYCLE
 
@@ -553,7 +553,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 0 .OR. nb_pq == 0) CYCLE
 
@@ -571,7 +571,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 0 .OR. nb_pq /= 0) CYCLE
 
@@ -589,7 +589,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 2) CYCLE
 
@@ -606,7 +606,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 1 .AND. nb_J == 1)) CYCLE
 
@@ -624,7 +624,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 0 .AND. nb_J == 1)) CYCLE
 
@@ -803,7 +803,7 @@
      ! Deformation only (without the vep)
      DO i = 1,size(TWOxKEO_MCTDH%sum_prod_op1d)
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO_MCTDH%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J > 0 .OR. nb_pq == 0) CYCLE
 
@@ -824,7 +824,7 @@
      DO i = 1,size(TWOxKEO_MCTDH%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO_MCTDH%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J > 0 .OR. nb_pq /= 0) CYCLE
 
@@ -845,7 +845,7 @@
      DO i = 1,size(TWOxKEO_MCTDH%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO_MCTDH%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 2) CYCLE
 
@@ -865,7 +865,7 @@
      DO i = 1,size(TWOxKEO_MCTDH%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO_MCTDH%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 1 .AND. nb_J == 1)) CYCLE
 
@@ -886,9 +886,9 @@
      write(i_out,*)
      DO i = 1,size(TWOxKEO_MCTDH%sum_prod_op1d)
 
-       !write(6,*)
+       !write(out_unitp,*)
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO_MCTDH%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 0 .AND. nb_J == 1)) CYCLE
 
@@ -1181,7 +1181,7 @@
      END IF
      error = .FALSE.
 
-     !write(6,*) 'opname, alfa,l_qJ: ',opname, alfa, l_qJ_loc
+     !write(out_unitp,*) 'opname, alfa,l_qJ: ',opname, alfa, l_qJ_loc
 
      if(alfa == 1) then
        if (trim(opname) == "Pqr" .or. &
@@ -1287,7 +1287,7 @@
          error = .TRUE.
        end if
      end if
-     !write(6,*) 'new opname: ',opname
+     !write(out_unitp,*) 'new opname: ',opname
 
      IF (error) opname = 'ERR: "' // trim(opname) // '"'
    END SUBROUTINE export_mctdh_name

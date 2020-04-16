@@ -594,8 +594,8 @@ DO iG=1,size(BgG)
 
       !gwc(1:nq) = BgG(iG)%RDP(ibb,iqqi+1:iqqf)*tab_ba(li,iq)%wrho(:)
       gwc(1:nq) = BgG(iG)%RDP(ibb,iqqi+1:iqqf)* get_wrho_OF_basis(tab_ba(li,iq))
-      !write(6,*) 'wrho o',tab_ba(li,iq)%wrho(:)
-      !write(6,*) 'wrho n',get_wrho_OF_basis(tab_ba(li,iq))
+      !write(out_unitp,*) 'wrho o',tab_ba(li,iq)%wrho(:)
+      !write(out_unitp,*) 'wrho n',get_wrho_OF_basis(tab_ba(li,iq))
 
       IF (id == 1) THEN
         !b(1:nb)   = matmul(gwc(1:nq),tab_ba(li,iq)%dnRGB%d0(:,1:nb)) * WSG(iG)
@@ -724,7 +724,7 @@ DO iG=iG1+1,iG2
     tab_ibbnew_AT_ibb(ibb) = ibbNew
     lbb = ind_Basis(id)%i_TO_l(ibb)
     ibbNew = ibbNew + tab_ba(LB-lbb,id)%nb
-    !write(6,*) 'ibb,lbb,nb,ibbNew',ibb,lbb,tab_ba(LB-lbb,id)%nb,ibbNew
+    !write(out_unitp,*) 'ibb,lbb,nb,ibbNew',ibb,lbb,tab_ba(LB-lbb,id)%nb,ibbNew
   END DO
 
   liq = ind_Grid(id-1)%tab_ind(1,iG)
@@ -752,9 +752,9 @@ DO iG=iG1+1,iG2
       li = min( liq , LB-lbb )
       nb = tab_ba(li,id)%nb
 
-      !write(6,*) 'iGm1,ibbNew,nb,iqq',iGm1,ibbNew,nb,iqq ; flush(6)
-      !write(6,*) 'shape BgG+RDP',shape(BgG) ; flush(6)
-      !write(6,*) 'shape BgG()%RDP',shape(BgG(iGm1)%RDP) ; flush(6)
+      !write(out_unitp,*) 'iGm1,ibbNew,nb,iqq',iGm1,ibbNew,nb,iqq ; flush(out_unitp)
+      !write(out_unitp,*) 'shape BgG+RDP',shape(BgG) ; flush(out_unitp)
+      !write(out_unitp,*) 'shape BgG()%RDP',shape(BgG(iGm1)%RDP) ; flush(out_unitp)
 
       b(1:nb)   = BgG(iGm1)%RDP(ibbNew+1:ibbNew+nb,iqq)
 
@@ -1088,7 +1088,7 @@ DO id=D,1,-1
   !CALL Set_BgG_FOR_id(WPG,ind_Grid,ind_Basis,tab_ba,D,LG,id,.FALSE.)
 
   CALL BbG_TO_BgG(WPG,ind_Grid,ind_Basis,tab_ba,D,LG,LB,id)
-  IF (debug) write(6,*) 'id',id
+  IF (debug) write(out_unitp,*) 'id',id
 
   IF (debug) CALL Size_TabRDP(WPG,nb_BG)
 
@@ -1230,13 +1230,9 @@ DO iG=1,size(WPG)
   allocate(RGgG(nq1,nq2,nq3))
   RGgG(:,:,:) = reshape(WPG(iG)%RDP,(/ nq1,nq2,nq3 /))
 
-!write(6,*) 'coucou BGG,nq2',nq2
-!write(6,*) 'coucou BGG,nq from tab_ba  ',get_nq_FROM_basis(tab_ba(l2,iqd))
-!flush(6)
+
   CALL alloc_NParray(BGG,(/ nq2,nq2 /),"BGG",name_sub)
   CALL Get_MatdnRGG(tab_ba(l2,iqd),BGG,dnba_ind)
-!write(6,*) 'BGG,dnba_ind',dnba_ind
-!CALL Write_Mat(BGG,6,5)
 
   BGG = transpose(BGG)
   DO iq3=1,nq3

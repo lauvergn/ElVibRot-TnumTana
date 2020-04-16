@@ -118,9 +118,9 @@ MODULE mod_RW_MatVec
 
 
        END IF
-       !write(6,*) 'NMatformat: ',NMatformat
-       !write(6,*) 'wformat: ',wformat
-       !flush(6)
+       !write(out_unitp,*) 'NMatformat: ',NMatformat
+       !write(out_unitp,*) 'wformat: ',wformat
+       !flush(out_unitp)
 
        wformat = wformat_loc
 

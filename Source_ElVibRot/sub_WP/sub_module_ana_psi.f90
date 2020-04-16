@@ -800,7 +800,7 @@ END SUBROUTINE sub_analyze_psi
         END DO
 
       END DO
-      !write(6,*) 'nDval0,Qana',nDval0,ana_psi%Qana
+      !write(out_unitp,*) 'nDval0,Qana',nDval0,ana_psi%Qana
 
       i_bie = 1
 
@@ -1509,7 +1509,7 @@ END SUBROUTINE sub_analyze_psi
           i_e_maxC2 = i_e
           i_R_maxC2 = i_R
         END IF
-        !write(6,*) i_bhe,C,'i_b_maxC1,i_b_maxC2',i_b_maxC1,i_b_maxC2
+        !write(out_unitp,*) i_bhe,C,'i_b_maxC1,i_b_maxC2',i_b_maxC1,i_b_maxC2
       END DO
       END DO
       END DO
@@ -1666,7 +1666,7 @@ END SUBROUTINE sub_analyze_psi
         END DO
       END IF
 
-      !write(6,*) 'ndim_AT_ib',ndim_AT_ib(:)
+      !write(out_unitp,*) 'ndim_AT_ib',ndim_AT_ib(:)
       IF (print_w .OR. debug) THEN
         DO iq=1,psi%BasisnD%nDindB%ndim
           IF (sum(weight1Dact(iq,1:ndim_AT_ib(iq)))-ONE > ONETENTH**7)  &
@@ -1706,7 +1706,7 @@ END SUBROUTINE sub_analyze_psi
         CALL flush_perso(out_unitp)
       END IF
 
-      !write(6,*) 'max_RedDensity
+      !write(out_unitp,*) 'max_RedDensity
       IF (.NOT. allocated(ana_psi%max_RedDensity)) THEN
         CALL alloc_NParray(ana_psi%max_RedDensity,(/psi%BasisnD%nDindB%ndim/), &
                           "ana_psi%max_RedDensity",name_sub)
@@ -2275,7 +2275,7 @@ END SUBROUTINE norm_psi_MPI
 !        IF (SG4) THEN
 !          CALL get_iqSG_iSG_FROM_iq(iSG,iqSG,i_qa,psi%BasisnD%para_SGType2,OldPara,err_sub)
 !          WrhonD = WrhonD * psi%BasisnD%WeightSG(iSG)
-!          !write(6,*) 'i_qa,iSG',i_qa,iSG,psi%BasisnD%WeightSG(iSG)
+!          !write(out_unitp,*) 'i_qa,iSG',i_qa,iSG,psi%BasisnD%WeightSG(iSG)
 !        END IF
 
         DO i_be=1,nb_be
@@ -2572,7 +2572,7 @@ END SUBROUTINE Channel_weight_MPI
     Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
   END IF
 
-  write(6,*) 'Norm2_SG4',Norm2
+  write(out_unitp,*) 'Norm2_SG4',Norm2
 
 !------------------------------------------------------
   IF (debug) THEN

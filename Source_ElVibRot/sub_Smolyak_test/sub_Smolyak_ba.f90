@@ -180,7 +180,7 @@ deriv =.TRUE.
 step  = ONETENTH**4
 
 ! the 1D-basis
-  !write(6,*) 'B',B
+  !write(out_unitp,*) 'B',B
 
   CALL alloc_TypeBa(ba,nb,nq)
 
@@ -190,13 +190,13 @@ step  = ONETENTH**4
   END DO
 
   IF (debug) THEN
-    write(6,*) '==== ba =========== nb,nq',nb,nq
-    write(6,*) '  ib_TO_lb',ba%ib_TO_lb(:)
+    write(out_unitp,*) '==== ba =========== nb,nq',nb,nq
+    write(out_unitp,*) '  ib_TO_lb',ba%ib_TO_lb(:)
   END IF
 
   CALL hercom(nq,ba%x,ba%w)
-  !write(6,*) 'l,x',ba%x
-  !write(6,*) 'l,w',ba%w
+  !write(out_unitp,*) 'l,x',ba%x
+  !write(out_unitp,*) 'l,w',ba%w
   DO ib=1,nb
   DO iq=1,nq
     CALL d0d1d2poly_Hermite_exp(ba%x(iq),ib-1,d0,d1,d2,deriv,num,step)
@@ -210,19 +210,19 @@ step  = ONETENTH**4
   END DO
   END DO
 
-  IF (debug) write(6,*) '===================== ortho ?'
+  IF (debug) write(out_unitp,*) '===================== ortho ?'
   max_S = ZERO
   DO ib=1,nb
   DO jb=1,nb
     S = dot_product(ba%d0b(:,ib),ba%twd0b(:,jb))
     IF (ib == jb) S=S-ONE
     IF (abs(S) > max_S) max_S = S
-    !write(6,*) 'ib,jb',ib,jb,S
+    !write(out_unitp,*) 'ib,jb',ib,jb,S
   END DO
   END DO
-  IF (debug) write(6,*) '===================== max_S:',max_S
+  IF (debug) write(out_unitp,*) '===================== max_S:',max_S
 
-  IF (debug) write(6,*) '===================== Set d1bGG and d2bGG'
+  IF (debug) write(out_unitp,*) '===================== Set d1bGG and d2bGG'
   allocate(Check_bGB(nb,nq))
 
   IF (new) THEN
@@ -233,7 +233,7 @@ step  = ONETENTH**4
     CALL inv_m1_TO_m2(d0b,d0b_pseudoInv,nq,0,ZERO) ! not SVD
     !write(out_unitp,*) 'd0b_pseudoInv'
     !CALL Write_VecMat(d0b_pseudoInv,out_unitp,5)
-    !flush(6)
+    !flush(out_unitp)
     deallocate(d0b)
 
   ELSE
@@ -261,12 +261,12 @@ step  = ONETENTH**4
   ba%d2bGG =  matmul(ba%d2b,d0b_pseudoInv(1:nb,:))
 
   Check_bGB = ba%d1b-matmul(ba%d1bGG,ba%d0b)
-  IF (debug) write(6,*) 'WARNING Check_bGB%d1',maxval(abs(Check_bGB))
-  IF (maxval(abs(Check_bGB)) > ONETENTH**10) write(6,*) 'WARNING Check_bGB%d1',maxval(abs(Check_bGB))
+  IF (debug) write(out_unitp,*) 'WARNING Check_bGB%d1',maxval(abs(Check_bGB))
+  IF (maxval(abs(Check_bGB)) > ONETENTH**10) write(out_unitp,*) 'WARNING Check_bGB%d1',maxval(abs(Check_bGB))
 
   Check_bGB = ba%d2b-matmul(ba%d2bGG,ba%d0b)
-  IF (debug) write(6,*) 'WARNING Check_bGB%d2',maxval(abs(Check_bGB))
-  IF (maxval(abs(Check_bGB)) > ONETENTH**10) write(6,*) 'WARNING Check_bGB%d2',maxval(abs(Check_bGB))
+  IF (debug) write(out_unitp,*) 'WARNING Check_bGB%d2',maxval(abs(Check_bGB))
+  IF (maxval(abs(Check_bGB)) > ONETENTH**10) write(out_unitp,*) 'WARNING Check_bGB%d2',maxval(abs(Check_bGB))
 
   deallocate(Check_bGB)
   deallocate(d0b_pseudoInv)
@@ -310,8 +310,8 @@ step  = ONETENTH**4
 
 
   IF (debug) THEN
-    write(6,*) '==== tab_DelatBa =========== nb,nq',nb,nq
-    write(6,*) '  ib_TO_lb',DelatBa%ib_TO_lb(:)
+    write(out_unitp,*) '==== tab_DelatBa =========== nb,nq',nb,nq
+    write(out_unitp,*) '  ib_TO_lb',DelatBa%ib_TO_lb(:)
   END IF
 
   IF (nq1 > 0) THEN
@@ -319,8 +319,8 @@ step  = ONETENTH**4
     DelatBa%w(1:nq1) = -DelatBa%w(1:nq1)
   END IF
   CALL hercom(nq2,DelatBa%x(nq1+1:nq),DelatBa%w(nq1+1:nq))
-  !write(6,*) 'l,x',DelatBa%x
-  !write(6,*) 'l,w',DelatBa%w
+  !write(out_unitp,*) 'l,x',DelatBa%x
+  !write(out_unitp,*) 'l,w',DelatBa%w
   DO ib=1,nb
   DO iq=1,nq
     CALL d0d1d2poly_Hermite_exp(DelatBa%x(iq),nb1+ib-1,d0,d1,d2,deriv,num,step)
@@ -333,20 +333,20 @@ step  = ONETENTH**4
   END DO
   END DO
 
-  !IF (debug) write(6,*) '===================== d0b'
+  !IF (debug) write(out_unitp,*) '===================== d0b'
   !IF (debug) CALL Write_Mat(DelatBa%d0b,6,5)
 
-  !IF (debug) write(6,*) '===================== ortho ?'
+  !IF (debug) write(out_unitp,*) '===================== ortho ?'
   max_S = ZERO
   DO ib=1,nb
   DO jb=1,nb
     S = dot_product(DelatBa%d0b(:,ib),DelatBa%twd0b(jb,:))
     IF (ib == jb) S=S-ONE
     IF (abs(S) > max_S) max_S = S
-    !write(6,*) 'ib,jb',ib,jb,S
+    !write(out_unitp,*) 'ib,jb',ib,jb,S
   END DO
   END DO
-  IF (debug) write(6,*) '===================== max_S:',max_S
+  IF (debug) write(out_unitp,*) '===================== max_S:',max_S
 
 
 END SUBROUTINE Set_Delatba
@@ -383,10 +383,10 @@ step  = ONETENTH**4
   nq = max(nq1,nq2)
   IF (l > 1 .AND. 2*nb /= (nq2-nq1) ) THEN
 
-    write(6,*) 'l,D,LB,LG',l,D,LB,LG
+    write(out_unitp,*) 'l,D,LB,LG',l,D,LB,LG
 
-    write(6,*) 'nb1,nb2,nb',nb1,nb2,nb
-    write(6,*) 'nq1,nq2,nq',nq1,nq2,nq
+    write(out_unitp,*) 'nb1,nb2,nb',nb1,nb2,nb
+    write(out_unitp,*) 'nq1,nq2,nq',nq1,nq2,nq
 
     STOP 'ERROR in Set_Delatba_nested1'
   END IF
@@ -398,7 +398,7 @@ step  = ONETENTH**4
   CALL grid_HermiteNested1(DelatBa%x,DelatBa%w,nq2,DelatBa%nq_max_Nested)
   IF (nq1 > 0) THEN
     CALL grid_HermiteNested1(x1,w1,nq1,DelatBa%nq_max_Nested)
-    write(6,*) 'max diff x1 x2',maxval(DelatBa%x(1+nb:nq2-nb)-x1)
+    write(out_unitp,*) 'max diff x1 x2',maxval(DelatBa%x(1+nb:nq2-nb)-x1)
     DelatBa%w(1+nb:nq2-nb) = DelatBa%w(1+nb:nq2-nb) - w1
   END IF
 
@@ -407,12 +407,12 @@ step  = ONETENTH**4
 
 
   IF (debug) THEN
-    write(6,*) '==== tab_DelatBa =========== nb,nq',nb,nq
-    write(6,*) '  ib_TO_lb',DelatBa%ib_TO_lb(:)
+    write(out_unitp,*) '==== tab_DelatBa =========== nb,nq',nb,nq
+    write(out_unitp,*) '  ib_TO_lb',DelatBa%ib_TO_lb(:)
   END IF
 
-  !write(6,*) 'l,x',DelatBa%x
-  !write(6,*) 'l,w',DelatBa%w
+  !write(out_unitp,*) 'l,x',DelatBa%x
+  !write(out_unitp,*) 'l,w',DelatBa%w
   DO ib=1,nb
   DO iq=1,nq
     CALL d0d1d2poly_Hermite_exp(DelatBa%x(iq),nb1+ib-1,d0,d1,d2,deriv,num,step)
@@ -425,20 +425,20 @@ step  = ONETENTH**4
   END DO
   END DO
 
-  !IF (debug) write(6,*) '===================== d0b'
+  !IF (debug) write(out_unitp,*) '===================== d0b'
   !IF (debug) CALL Write_Mat(DelatBa%d0b,6,5)
 
-  !IF (debug) write(6,*) '===================== ortho ?'
+  !IF (debug) write(out_unitp,*) '===================== ortho ?'
   max_S = ZERO
   DO ib=1,nb
   DO jb=1,nb
     S = dot_product(DelatBa%d0b(:,ib),DelatBa%twd0b(jb,:))
     IF (ib == jb) S=S-ONE
     IF (abs(S) > max_S) max_S = S
-    !write(6,*) 'ib,jb',ib,jb,S
+    !write(out_unitp,*) 'ib,jb',ib,jb,S
   END DO
   END DO
-  IF (debug) write(6,*) '===================== max_S:',max_S
+  IF (debug) write(out_unitp,*) '===================== max_S:',max_S
 
 
 END SUBROUTINE Set_Delatba_nested1
@@ -462,7 +462,7 @@ IF (.NOT. allocated(tab_ba)) allocate(tab_ba(0:LG,D))
 
 ! the 1D-basis
 DO id=1,D
-  write(6,*) 'id,B',id,min(id,Bmin)
+  write(out_unitp,*) 'id,B',id,min(id,Bmin)
 
 DO l=0,ubound(tab_ba,dim=1)
   B = min(id,Bmin)

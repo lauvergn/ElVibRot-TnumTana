@@ -21,6 +21,7 @@
 !===========================================================================
 !===========================================================================
  MODULE mod_FracInteger
+ USE mod_NumParameters
  IMPLICIT NONE
 
  ! fraction num/den
@@ -88,30 +89,30 @@ PUBLIC :: frac_simplification
    read(5,'(a)') FracString
    frac3 = string_TO_frac(FracString)
 
-   write(6,*) 'frac1: ',frac_TO_string(frac1)
-   write(6,*) 'frac2: ',frac_TO_string(frac2)
-   write(6,*) 'frac3: ',frac_TO_string(frac3)
+   write(out_unitp,*) 'frac1: ',frac_TO_string(frac1)
+   write(out_unitp,*) 'frac2: ',frac_TO_string(frac2)
+   write(out_unitp,*) 'frac3: ',frac_TO_string(frac3)
 
 frac4=frac3/frac2
 
-   write(6,*) 'frac4: ',frac_TO_string(frac4)
+   write(out_unitp,*) 'frac4: ',frac_TO_string(frac4)
 
    STOP
-   write(6,*)
-   write(6,*) 'frac1+frac2: ',frac_TO_string(frac1+frac2)
-   write(6,*) 'frac1-frac2: ',frac_TO_string(frac1-frac2)
-   write(6,*) 'frac1*frac2: ',frac_TO_string(frac1*frac2)
-   write(6,*) 'frac1/frac2: ',frac_TO_string(frac1/frac2)
-   write(6,*)
-   write(6,*) 'frac1 == frac2 ?: ',(frac1 == frac2)
-   write(6,*) 'frac1 /= frac2 ?: ',(frac1 /= frac2)
-   write(6,*) 'frac1 == frac1 ?: ',(frac1 == frac1)
-   write(6,*) 'frac1 /= frac1 ?: ',(frac1 /= frac1)
-   write(6,*)
-   write(6,*) 'frac1 <  frac2 ?: ',(frac1 < frac2)
-   write(6,*) 'frac1 >  frac2 ?: ',(frac1 > frac2)
-   write(6,*) 'frac1 >= frac1 ?: ',(frac1 >= frac1)
-   write(6,*) 'frac1 <= frac1 ?: ',(frac1 <= frac1)
+   write(out_unitp,*)
+   write(out_unitp,*) 'frac1+frac2: ',frac_TO_string(frac1+frac2)
+   write(out_unitp,*) 'frac1-frac2: ',frac_TO_string(frac1-frac2)
+   write(out_unitp,*) 'frac1*frac2: ',frac_TO_string(frac1*frac2)
+   write(out_unitp,*) 'frac1/frac2: ',frac_TO_string(frac1/frac2)
+   write(out_unitp,*)
+   write(out_unitp,*) 'frac1 == frac2 ?: ',(frac1 == frac2)
+   write(out_unitp,*) 'frac1 /= frac2 ?: ',(frac1 /= frac2)
+   write(out_unitp,*) 'frac1 == frac1 ?: ',(frac1 == frac1)
+   write(out_unitp,*) 'frac1 /= frac1 ?: ',(frac1 /= frac1)
+   write(out_unitp,*)
+   write(out_unitp,*) 'frac1 <  frac2 ?: ',(frac1 < frac2)
+   write(out_unitp,*) 'frac1 >  frac2 ?: ',(frac1 > frac2)
+   write(out_unitp,*) 'frac1 >= frac1 ?: ',(frac1 >= frac1)
+   write(out_unitp,*) 'frac1 <= frac1 ?: ',(frac1 <= frac1)
 
  END SUBROUTINE test2_FracInteger
 
@@ -125,82 +126,82 @@ frac4=frac3/frac2
    frac1 = FracInteger(1,2)
    frac2 = 2
 
-   write(6,*) 'frac1: ',frac_TO_string(frac1)
-   write(6,*) 'frac2: ',frac_TO_string(frac2)
-   write(6,*) 'frac1: ',frac_TO_real(frac1)
-   write(6,*)
-   write(6,*) 'frac1+frac2: ',frac_TO_string(frac1+frac2)
-   write(6,*) 'frac1-frac2: ',frac_TO_string(frac1-frac2)
-   write(6,*) 'frac1*frac2: ',frac_TO_string(frac1*frac2)
-   write(6,*) 'frac1/frac2: ',frac_TO_string(frac1/frac2)
-   write(6,*)
-   write(6,*) 'frac1 == frac2 ?: ',(frac1 == frac2)
-   write(6,*) 'frac1 /= frac2 ?: ',(frac1 /= frac2)
-   write(6,*) 'frac1 == frac1 ?: ',(frac1 == frac1)
-   write(6,*) 'frac1 /= frac1 ?: ',(frac1 /= frac1)
-   write(6,*)
-   write(6,*) 'frac1 < frac2 ?: ',(frac1 < frac2)
-   write(6,*) 'frac1 > frac2 ?: ',(frac1 > frac2)
-   write(6,*) 'frac1 >= frac1 ?: ',(frac1 >= frac1)
-   write(6,*) 'frac1 <= frac1 ?: ',(frac1 <= frac1)
+   write(out_unitp,*) 'frac1: ',frac_TO_string(frac1)
+   write(out_unitp,*) 'frac2: ',frac_TO_string(frac2)
+   write(out_unitp,*) 'frac1: ',frac_TO_real(frac1)
+   write(out_unitp,*)
+   write(out_unitp,*) 'frac1+frac2: ',frac_TO_string(frac1+frac2)
+   write(out_unitp,*) 'frac1-frac2: ',frac_TO_string(frac1-frac2)
+   write(out_unitp,*) 'frac1*frac2: ',frac_TO_string(frac1*frac2)
+   write(out_unitp,*) 'frac1/frac2: ',frac_TO_string(frac1/frac2)
+   write(out_unitp,*)
+   write(out_unitp,*) 'frac1 == frac2 ?: ',(frac1 == frac2)
+   write(out_unitp,*) 'frac1 /= frac2 ?: ',(frac1 /= frac2)
+   write(out_unitp,*) 'frac1 == frac1 ?: ',(frac1 == frac1)
+   write(out_unitp,*) 'frac1 /= frac1 ?: ',(frac1 /= frac1)
+   write(out_unitp,*)
+   write(out_unitp,*) 'frac1 < frac2 ?: ',(frac1 < frac2)
+   write(out_unitp,*) 'frac1 > frac2 ?: ',(frac1 > frac2)
+   write(out_unitp,*) 'frac1 >= frac1 ?: ',(frac1 >= frac1)
+   write(out_unitp,*) 'frac1 <= frac1 ?: ',(frac1 <= frac1)
 
-   write(6,*)
-   write(6,*)
+   write(out_unitp,*)
+   write(out_unitp,*)
    frac1 = FracInteger(1,6)
    frac2 = FracInteger(18,12)
-   write(6,*) 'frac1: ',frac_TO_string(frac1)
-   write(6,*) 'frac2: ',frac_TO_string(frac2)
-   write(6,*) 'frac1+frac2: ',frac_TO_string(frac1+frac2)
+   write(out_unitp,*) 'frac1: ',frac_TO_string(frac1)
+   write(out_unitp,*) 'frac2: ',frac_TO_string(frac2)
+   write(out_unitp,*) 'frac1+frac2: ',frac_TO_string(frac1+frac2)
 
    frac1 = 6
-   write(6,*) 'frac1: ',frac_TO_string(frac1)
+   write(out_unitp,*) 'frac1: ',frac_TO_string(frac1)
 
 
-   write(6,*) 'table of FracInteger:'
+   write(out_unitp,*) 'table of FracInteger:'
    tab_frac1 = [ FracInteger(1,2), FracInteger(1,3), FracInteger(1,4) ]
-   write(6,*) 'tab_frac1            ',tab_frac1
+   write(out_unitp,*) 'tab_frac1            ',tab_frac1
 
    tab_frac2 = tab_frac1
-   write(6,*) 'tab_frac2=tab_frac1  ',tab_frac2
-   write(6,*)
+   write(out_unitp,*) 'tab_frac2=tab_frac1  ',tab_frac2
+   write(out_unitp,*)
 
    tab_frac2 = 5*tab_frac1
-   write(6,*) '5*tab_frac1          ',tab_frac2
+   write(out_unitp,*) '5*tab_frac1          ',tab_frac2
    tab_frac2 = tab_frac1*5
-   write(6,*) 'tab_frac1*5          ',tab_frac2
+   write(out_unitp,*) 'tab_frac1*5          ',tab_frac2
    tab_frac2 = frac1*tab_frac1
-   write(6,*) 'frac1*tab_frac1      ',tab_frac2
+   write(out_unitp,*) 'frac1*tab_frac1      ',tab_frac2
    tab_frac2 = tab_frac1*frac1
-   write(6,*) 'tab_frac1*frac1      ',tab_frac2
+   write(out_unitp,*) 'tab_frac1*frac1      ',tab_frac2
    tab_frac2 = tab_frac1*tab_frac1
-   write(6,*) 'tab_frac1*tab_frac1  ',tab_frac2
-   write(6,*)
+   write(out_unitp,*) 'tab_frac1*tab_frac1  ',tab_frac2
+   write(out_unitp,*)
 
    tab_frac2 = 5/tab_frac1
-   write(6,*) '5/tab_frac1          ',tab_frac2
+   write(out_unitp,*) '5/tab_frac1          ',tab_frac2
    tab_frac2 = tab_frac1/5
-   write(6,*) 'tab_frac1/5          ',tab_frac2
+   write(out_unitp,*) 'tab_frac1/5          ',tab_frac2
    tab_frac2 = tab_frac1/tab_frac1
-   write(6,*) 'tab_frac1/tab_frac1  ',tab_frac2
+   write(out_unitp,*) 'tab_frac1/tab_frac1  ',tab_frac2
    tab_frac2 = tab_frac1/0
-   write(6,*) 'tab_frac1/0          ',tab_frac2
-   write(6,*)
+   write(out_unitp,*) 'tab_frac1/0          ',tab_frac2
+   write(out_unitp,*)
 
    tab_frac2 = tab_frac1 + tab_frac1
-   write(6,*) 'tab_frac1+tab_frac1  ',tab_frac2
+   write(out_unitp,*) 'tab_frac1+tab_frac1  ',tab_frac2
    tab_frac2 = tab_frac1 + 5
-   write(6,*) 'tab_frac1+5          ',tab_frac2
+   write(out_unitp,*) 'tab_frac1+5          ',tab_frac2
    tab_frac2 = 5+tab_frac1
-   write(6,*) '5+tab_frac1          ',tab_frac2
-   write(6,*)
+   write(out_unitp,*) '5+tab_frac1          ',tab_frac2
+   write(out_unitp,*)
 
    tab_frac2 = tab_frac1 - tab_frac1
-   write(6,*) 'tab_frac1-tab_frac1  ',tab_frac2
+   write(out_unitp,*) 'tab_frac1-tab_frac1  ',tab_frac2
    tab_frac2 = tab_frac1 - 5
-   write(6,*) 'tab_frac1-5          ',tab_frac2
+   write(out_unitp,*) 'tab_frac1-5          ',tab_frac2
    tab_frac2 = 5-tab_frac1
-   write(6,*) '5-tab_frac1          ',tab_frac2
-   write(6,*)
+   write(out_unitp,*) '5-tab_frac1          ',tab_frac2
+   write(out_unitp,*)
 
  END SUBROUTINE test_FracInteger
 
@@ -232,9 +233,9 @@ frac4=frac3/frac2
    ELSE
      islash = index(String,'/')
      IF (islash == 0 .OR. islash == 1 .OR. islash == len(String)) THEN
-       write(6,*) ' ERROR in string_TO_frac'
-       write(6,*) ' The string does not contain a "/" or its postion is wrong'
-       write(6,*) ' String: ',String
+       write(out_unitp,*) ' ERROR in string_TO_frac'
+       write(out_unitp,*) ' The string does not contain a "/" or its postion is wrong'
+       write(out_unitp,*) ' String: ',String
        STOP ' ERROR in string_TO_frac'
      END IF
      read(String(1:islash-1),*) frac%num

@@ -137,10 +137,9 @@
           END IF
 
           CALL sub_OpPsi(Tab_Psi(iv),OpPsi,para_H,MatRV%derive_termQact(:,iterm_Op))
-!write(6,*) 'coucou oppsi' ; flush(6)
           DO jv=1,nb_psi
             CALL Overlap_psi1_psi2(C_over,Tab_Psi(jv),OpPsi)
-            !write(6,*) 'jv,iv,C_over',jv,iv,C_over
+            !write(out_unitp,*) 'jv,iv,C_over',jv,iv,C_over
             MatRV%ReVal(jv,iv,iterm_Op) = real(C_over,kind=Rkind)
             IF (MatRV%cplx) MatRV%ImVal(jv,iv) = aimag(C_over)
           END DO
@@ -173,7 +172,7 @@
           J1       = MatRV%derive_termQact(1,iterm_Op)
           J2       = MatRV%derive_termQact(2,iterm_Op)
           iterm_BasisRot = para_H%BasisnD%RotBasis%tab_der_TO_iterm(J1,J2)
-          !write(6,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
+          !write(out_unitp,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
 
           DO ibRot=1,nb_bRot
           DO jbRot=1,nb_bRot

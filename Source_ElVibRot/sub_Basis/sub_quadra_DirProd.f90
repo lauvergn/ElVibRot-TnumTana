@@ -91,7 +91,6 @@
 !-----------------------------------------------------------------------
      nb_basis                       = basis_DP%nb_basis
      IF (debug) basis_DP%print_info_OF_basisDP = .TRUE.
-     !write(out_unitp,*) 'coucou DP' ; CALL flush_perso(out_unitp)
      !--- check if the basis is complex => STOP -----------------------
      DO i=1,basis_DP%nb_basis
         basis_DP%cplx = basis_DP%tab_Pbasis(i)%Pbasis%cplx
@@ -260,7 +259,6 @@
       CALL dealloc_nDindex(basis_DP%nDindB)
       CALL alloc_nDindex(basis_DP%nDindB,ndim=nb_basis)
 
-      !write(6,*) 'coucou 0' ; CALL flush_perso(out_unitp)
       IF (basis_DP%Type_OF_nDindB == 0) THEN
         CALL alloc_array(basis_DP%nDindB%tab_nDNorm,(/ nb_basis /),     &
                         'basis_DP%nDindB%tab_nDNorm',name_sub)
@@ -283,8 +281,6 @@
 
       END IF
 
-      !write(6,*) 'coucou 1' ; CALL flush_perso(out_unitp)
-
       DO ib=1,nb_basis
         IF (allocated(basis_DP%tab_Pbasis(ib)%Pbasis%nDindB%nDweight)) THEN
           weight(ib) = basis_DP%tab_Pbasis(ib)%Pbasis%nDindB%nDweight(1)
@@ -294,14 +290,11 @@
         tab_nb(ib) = basis_DP%tab_Pbasis(ib)%Pbasis%nb
       END DO
 
-      !write(6,*) 'coucou 2' ;CALL flush_perso(out_unitp)
-
       CALL init_nDindexPrim(nDindex=basis_DP%nDindB,ndim=nb_basis,      &
                             Type_OF_nDindex=basis_DP%Type_OF_nDindB,    &
                             MaxNorm=basis_DP%Norm_OF_nDindB,            &
                             nDsize=tab_nb,nDweight=weight,              &
                             MaxCoupling=basis_DP%MaxCoupling_OF_nDindB)
-      !write(6,*) 'coucou 3' ;CALL flush_perso(out_unitp)
 
       IF (debug) CALL Write_nDindex(basis_DP%nDindB,'nDindB: ')
 
@@ -318,7 +311,6 @@
 
 
       IF (basis_DP%nDindB%Type_OF_nDindex == 0) THEN
-        !write(6,*) 'coucou 4.0' ;CALL flush_perso(out_unitp)
 
         DO ibasis=1,nb_basis
           IF (ibasis == 1) THEN
@@ -366,7 +358,6 @@
         END DO
 
       ELSE   ! for true direct-product (not SparseBasis)
-        !write(6,*) 'coucou 4.1' ;CALL flush_perso(out_unitp)
 
         nnb = basis_DP%nb
         DO ibasis=nb_basis,1,-1
@@ -384,8 +375,6 @@
           CALL flush_perso(out_unitp)
         END DO
       END IF
-
-      !write(6,*) 'coucou 5' ;CALL flush_perso(out_unitp)
 
       ! verification ....
       DO ibasis=1,nb_basis

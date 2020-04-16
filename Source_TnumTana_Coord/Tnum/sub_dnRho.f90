@@ -343,7 +343,7 @@ MODULE mod_dnRho
       END IF
 !-----------------------------------------------------------
 
-       !write(6,*) 'mole%nrho_OF_Qact',mole%nrho_OF_Qact
+       !write(out_unitp,*) 'mole%nrho_OF_Qact',mole%nrho_OF_Qact
 !      - initialisation --------------------------------------------------
        CALL alloc_dnSVM(dntf,1,3)
 

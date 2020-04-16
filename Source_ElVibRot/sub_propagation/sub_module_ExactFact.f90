@@ -739,11 +739,11 @@ SUBROUTINE sub_ExactFact_analysis_v0(T,psi,ana_psi,para_H,para_field)
   CALL alloc_NParray(Qact1,(/ para_H%mole%nb_act1 /),'Qact1',name_sub)
   DO iq=1,psi%nb_qa
     CALL Rec_Qact(Qact1,psi%BasisnD,iq,para_H%mole)
-    write(6,*) 'EF_Scal_Pot',T,Qact1,chi2(iq),                          &
+    write(out_unitp,*) 'EF_Scal_Pot',T,Qact1,chi2(iq),                          &
            (para_H%OpGrid(iterm_pot)%Grid(iq,ie,ie),ie=1,psi%nb_be),    &
            EF_Scal_Pot(iq),EF_Scal_Pot(iq)/chi2(iq)
   END DO
-  write(6,*)
+  write(out_unitp,*)
   CALL dealloc_NParray(Qact1,'Qact1',name_sub)
   !---------------------------------------------------------------------
 

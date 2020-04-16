@@ -622,7 +622,7 @@ MODULE mod_nDGridFit
           read(nioGrid2,*,IOSTAT=err_read) name_dum,idum,Q(:)
 
           IF (err_read < 0) EXIT
-          !write(6,*) name_dum,idum,Q(:),val(1)/auTOenergy,val(2:4)
+          !write(out_unitp,*) name_dum,idum,Q(:),val(1)/auTOenergy,val(2:4)
           iGPtot = iGPtot + 1
         END DO
         para_nDGrid%nb_G = iGPtot
@@ -765,8 +765,8 @@ MODULE mod_nDGridFit
 
         IF (para_nDFit%svd) THEN
           !une facon.... SVD
-          !write(6,*) 'a',a
-          !write(6,*) 'b',b
+          !write(out_unitp,*) 'a',a
+          !write(out_unitp,*) 'b',b
           CALL SVDCMP(A,nb_B,nb_B,w,vv,nb_B)
           !Find maximum singular value
           wmax = maxval(w)

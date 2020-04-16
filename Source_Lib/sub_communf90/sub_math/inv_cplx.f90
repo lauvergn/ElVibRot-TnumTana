@@ -25,10 +25,10 @@
 
        CALL inversion_cplx(c,a_save,trav,index,n)
 
-       write(6,*) c
-       write(6,*)
+       write(out_unitp,*) c
+       write(out_unitp,*)
 
-       write(6,*) matmul(c,a)
+       write(out_unitp,*) matmul(c,a)
 
 
 

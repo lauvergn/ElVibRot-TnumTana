@@ -24,20 +24,20 @@ allocate(EigenVal(nb))
 allocate(EigenVecB(nb,nb))
 allocate(EigenVecG(nq,nb))
 allocate(RhoWeight(nq))
-write(6,*) 'END init_EVR'
+write(out_unitp,*) 'END init_EVR'
 
 CALL levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
-write(6,*) 'nb_vec',nb_vec
-write(6,*) 'EigenVal(:)',EigenVal(1:nb_vec)
+write(out_unitp,*) 'nb_vec',nb_vec
+write(out_unitp,*) 'EigenVal(:)',EigenVal(1:nb_vec)
 
-write(6,*) 'modify Q0'
+write(out_unitp,*) 'modify Q0'
 nb_pts = 10
 DO i=1,2*nb_pts-1
   th = -1.d0+real(i,kind=8)/real(nb_pts,kind=8)
   Q0(:) = [th,3.187_8, 2.179_8,0._8,3.141593_8,0._8]
   CALL Modify_TnumRefGeom_Q0(Q0,nb_Q0,.TRUE.)
   CALL levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
-  write(6,*) 'EigenVal(:)',EigenVal(1:nb_vec)
+  write(out_unitp,*) 'EigenVal(:)',EigenVal(1:nb_vec)
 END DO
 CALL finalyze_EVR()
 END

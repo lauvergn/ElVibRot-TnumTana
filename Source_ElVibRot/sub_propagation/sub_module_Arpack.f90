@@ -288,7 +288,7 @@ CONTAINS
         write(out_unitp,*) 'Use Arpack=f and Davidson=t'
         STOP 'ARPACK has been removed'
 #endif
-        !write(6,*) 'it,ido',it,ido
+        !write(out_unitp,*) 'it,ido',it,ido
 
         IF (abs(ido) /= 1) EXIT
 

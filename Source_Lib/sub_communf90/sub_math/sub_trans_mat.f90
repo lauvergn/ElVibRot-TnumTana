@@ -34,12 +34,12 @@
        CASE (1) ! svd
          CALL SVDCMP(m1w,n,n,trav,vv,n)
          ! Find maximum singular value
-         !write(6,*) 'SVD : epsi',epsi
-         !write(6,*) 'SVD : trav',trav
+         !write(out_unitp,*) 'SVD : epsi',epsi
+         !write(out_unitp,*) 'SVD : trav',trav
 
          wmax = maxval(trav(:))
          wmin = wmax * epsi
-         !write(6,*) 'SVD : count non zero',count(trav >= wmin)
+         !write(out_unitp,*) 'SVD : count non zero',count(trav >= wmin)
          ! Zero the "small" singular values
          WHERE (trav < WMIN) trav = ZERO
 
@@ -197,7 +197,7 @@
            CALL SVBKSB(aa,trav,vv,n,n,b,x,n)
 
 
-           !write(6,*) 'solve?',sum(abs(matmul(a,x)-b))
+           !write(out_unitp,*) 'solve?',sum(abs(matmul(a,x)-b))
            !STOP
         ELSE
           ! une autre ...
@@ -331,9 +331,9 @@
          ENDIF
  16     CONTINUE
         IF (imax ==0) THEN
-          write(6,*) ' ERROR in ludcmp'
-          write(6,*) ' imax = 0 !!!'
-          write(6,*) ' matrix a:'
+          write(out_unitp,*) ' ERROR in ludcmp'
+          write(out_unitp,*) ' imax = 0 !!!'
+          write(out_unitp,*) ' matrix a:'
           CALL ecriture(a,n,n,4,.TRUE.,n)
           STOP
         END IF
@@ -844,14 +844,14 @@
        real(kind=Rkind) v(n+n)
 
 !      DO i=1,2*n
-!      write(6,*) i,v(i)
+!      write(out_unitp,*) i,v(i)
 !      END DO
        DO i=0,n-1
          v(n+n-i-i) = ZERO
          v(n+n-i-i-1) = v(n-i)
        END DO
 !      DO i=1,n
-!      write(6,*) i,v(i+i-1),v(i+i)
+!      write(out_unitp,*) i,v(i+i-1),v(i+i)
 !      END DO
 
        END SUBROUTINE vectRealTOCplx
@@ -897,9 +897,9 @@
 !     parameter (debug=.TRUE.)
 !---------------------------------------------------------------------
       IF (debug) THEN
-      write(6,*) 'BEGINNING mat_epsiTOzero'
-      write(6,*) 'epsi',epsi
-      write(6,*) 'a',n
+      write(out_unitp,*) 'BEGINNING mat_epsiTOzero'
+      write(out_unitp,*) 'epsi',epsi
+      write(out_unitp,*) 'a',n
       CALL ecriture(a,n,n,5,.TRUE.,n)
       END IF
 !---------------------------------------------------------------------
@@ -915,9 +915,9 @@
 
 !---------------------------------------------------------------------
       IF (debug) THEN
-      write(6,*) 'new a'
+      write(out_unitp,*) 'new a'
       CALL ecriture(a,n,n,5,.TRUE.,n)
-      write(6,*) 'END mat_epsiTOzero'
+      write(out_unitp,*) 'END mat_epsiTOzero'
       END IF
 !---------------------------------------------------------------------
 
@@ -1089,7 +1089,7 @@
 
        v(i) = x
 
-!      write(6,*) 'const_d0v : n i v(i)',n,i,v(i)
+!      write(out_unitp,*) 'const_d0v : n i v(i)',n,i,v(i)
 
        end subroutine const_d0v
 !
@@ -1110,7 +1110,7 @@
         d1v(i,k) = d1x(k)
        END DO
 
-!      write(6,*) 'const_d1v : i d1v(i.)',i,(d1v(i,k),k=1,nd)
+!      write(out_unitp,*) 'const_d1v : i d1v(i.)',i,(d1v(i,k),k=1,nd)
 
        end subroutine const_d1v
 !
@@ -1133,7 +1133,7 @@
        END DO
        END DO
 
-!      write(6,*) 'const_d1v : i d1v(i.)',i,(d1v(i,k),k=1,nd)
+!      write(out_unitp,*) 'const_d1v : i d1v(i.)',i,(d1v(i,k),k=1,nd)
 
        end subroutine const_d2v
 !
@@ -1178,7 +1178,7 @@
        DO i=1,n
          v1(i)= v2(i)
        END DO
-!      write(6,*) v1
+!      write(out_unitp,*) v1
 
        RETURN
        end subroutine copy_vect
@@ -1199,7 +1199,7 @@
        DO i=1,n
          v1(i)= v2(i)
        END DO
-!      write(6,*) v1
+!      write(out_unitp,*) v1
 
        RETURN
        end subroutine copy_vect_cplx
@@ -1379,9 +1379,9 @@
         integer i,j,k
 
         IF (nca .NE. nlb) THEN
-          write(6,*) ' ERREUR : stop dans matmult'
-          write(6,*) 'le nombre de colonnes de A (',nca,') doit'
-          write(6,*) 'etre egal au nombre de lignes de B (',nlb,')'
+          write(out_unitp,*) ' ERREUR : stop dans matmult'
+          write(out_unitp,*) 'le nombre de colonnes de A (',nca,') doit'
+          write(out_unitp,*) 'etre egal au nombre de lignes de B (',nlb,')'
           STOP
         END IF
 
@@ -1418,11 +1418,11 @@
         integer i,j,k
 
         IF (nca .NE. nlb .OR. ncc .NE. ncb .OR. nla .NE. nlc) THEN
-          write(6,*) ' ERROR : stop in matmult_cr'
-          write(6,*) 'nla,nca',nla,nca
-          write(6,*) 'nlb,ncb',nlb,ncb
-          write(6,*) 'nlc,ncc',nlc,ncc
-          write(6,*) 'You MUST have: nca=nlb ncb=ncc nla=nlc'
+          write(out_unitp,*) ' ERROR : stop in matmult_cr'
+          write(out_unitp,*) 'nla,nca',nla,nca
+          write(out_unitp,*) 'nlb,ncb',nlb,ncb
+          write(out_unitp,*) 'nlc,ncc',nlc,ncc
+          write(out_unitp,*) 'You MUST have: nca=nlb ncb=ncc nla=nlc'
           STOP
         END IF
 
@@ -1459,11 +1459,11 @@
       integer i,j,k,ki
 
       IF (nca .NE. nlb .OR. ncc .NE. ncb .OR. nla .NE. nlc) THEN
-          write(6,*) ' ERROR : stop in matmult_cr'
-          write(6,*) 'nla,nca',nla,nca
-          write(6,*) 'nlb,ncb',nlb,ncb
-          write(6,*) 'nlc,ncc',nlc,ncc
-          write(6,*) 'You MUST have: nca=nlb ncb=ncc nla=nlc'
+          write(out_unitp,*) ' ERROR : stop in matmult_cr'
+          write(out_unitp,*) 'nla,nca',nla,nca
+          write(out_unitp,*) 'nlb,ncb',nlb,ncb
+          write(out_unitp,*) 'nlc,ncc',nlc,ncc
+          write(out_unitp,*) 'You MUST have: nca=nlb ncb=ncc nla=nlc'
           STOP
       END IF
 
@@ -1601,7 +1601,7 @@
         real(kind=Rkind) mm(max_niv,max_niv)
         real(kind=Rkind) c(max_niv,max_niv)
 
-!      write(6,*) 'tcmc_old m c'
+!      write(out_unitp,*) 'tcmc_old m c'
 !      CALL ecriture(m,n,n,5,.TRUE.,max_niv)
 !      CALL ecriture(c,n,n,5,.TRUE.,max_niv)
        DO i=1,n
@@ -1614,7 +1614,7 @@
            END DO
          END DO
        END DO
-!      write(6,*) 'tcmc_old mm'
+!      write(out_unitp,*) 'tcmc_old mm'
 !      CALL ecriture(mm,n,n,5,.TRUE.,max_niv)
 
        RETURN

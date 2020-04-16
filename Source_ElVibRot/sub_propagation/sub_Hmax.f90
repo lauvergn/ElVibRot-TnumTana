@@ -273,7 +273,7 @@ relax = .TRUE.
         IF (relax) THEN
           CALL sub_Auto_HmaxHmin_relax(para_propa,para_H)
         ELSE
-          write(6,*) 'Davidson Hmin Hmax' ; flush(6)
+          write(out_unitp,*) 'Davidson Hmin Hmax' ; flush(out_unitp)
           para_propa%para_Davidson%nb_WP            = 0
           para_propa%para_Davidson%lower_states     = .TRUE.
           para_propa%para_Davidson%project_WP0      = .FALSE.
@@ -314,7 +314,7 @@ relax = .TRUE.
           CALL dealloc_NParray(Ene0,"Ene0",name_sub)
           nullify(Tab_Psi)
 
-          write(6,*) 'END Davidson Hmin Hmax' ; flush(6)
+          write(out_unitp,*) 'END Davidson Hmin Hmax' ; flush(out_unitp)
 
 
         END IF

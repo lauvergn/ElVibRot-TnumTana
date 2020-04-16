@@ -350,9 +350,9 @@ nb = size(P0_cheby)
 
     IF (debug) write(out_unitp,*) 'l,end err of f',l,sum(abs(f(nb-10:nb,l)))/TEN
     CALL flush_perso(out_unitp)
-    !write(6,*) '========================================='
-    !write(6,*) 'f(:,l)',l
-    !write(6,'(10f10.6)') ,f(:,l)
+    !write(out_unitp,*) '========================================='
+    !write(out_unitp,*) 'f(:,l)',l
+    !write(out_unitp,'(10f10.6)') ,f(:,l)
 
   END DO
   CALL dealloc_NParray(x_cheby,'x_cheby',name_sub)
@@ -734,14 +734,14 @@ STOP
 
     IF (debug) write(out_unitp,*) 'l,end err of f',l,sum(abs(f(nb-10:nb,l)))/TEN
     CALL flush_perso(out_unitp)
-    !write(6,*) '========================================='
-    !write(6,*) 'f(:,l)',l
-    !write(6,'(10f10.6)') ,f(:,l)
+    !write(out_unitp,*) '========================================='
+    !write(out_unitp,*) 'f(:,l)',l
+    !write(out_unitp,'(10f10.6)') ,f(:,l)
 
     !DO k=1,nq
     !  ff_filter = dot_product(f(:,l),d0P_cheby(k,:))
     !  wfl(k) = f_filter_gauss(x_cheby(k),El,sigma)
-    !  write(66,*) x_cheby(k),wfl(k),ff_filter,log10(abs(ff_filter-wfl(k)))
+    !  write(out_unitp6,*) x_cheby(k),wfl(k),ff_filter,log10(abs(ff_filter-wfl(k)))
     !END DO
 
   END DO
@@ -1118,7 +1118,7 @@ STOP
 
            acDeltaj = pi/real(JJ,kind=Rkind)
            acEj = -HALF*acDeltaj
-           !write(6,*) 'acDeltaj,acEj',acDeltaj,acEj
+           !write(out_unitp,*) 'acDeltaj,acEj',acDeltaj,acEj
            DO j=1,JJ
              acEj = acEj + acDeltaj
 
@@ -1132,9 +1132,9 @@ STOP
          END DO
          IF (debug) write(out_unitp,*) 'l,end err of f',l,sum(abs(f(mf-10:mf,l)))/TEN
          CALL flush_perso(out_unitp)
-         !write(6,*) '========================================='
-         !write(6,*) 'f(:,l)',l
-         !write(6,'(10f10.6)') ,f(:,l)
+         !write(out_unitp,*) '========================================='
+         !write(out_unitp,*) 'f(:,l)',l
+         !write(out_unitp,'(10f10.6)') ,f(:,l)
 
          acDeltaj = pi/real(JJ,kind=Rkind)
          acEj = -HALF*acDeltaj
@@ -1868,7 +1868,7 @@ STOP
                                                non_hermitic)
 
       CALL Set_ZPE_OF_ComOp(para_H%ComOp,ZPE=para_propa%Hmin,forced=.TRUE.)
-      write(6,*) 'ZPE',para_H%ComOp%ZPE
+      write(out_unitp,*) 'ZPE',para_H%ComOp%ZPE
 
         IF (para_H%sym_Hamil) THEN
           CALL diagonalization(H,Ene(1:nb_diago),Vec,nb_diago,3,1,.FALSE.)
@@ -2066,7 +2066,7 @@ STOP
                                  HALF*para_propa%para_Davidson%W_filter
      IF (Lambda < para_propa%Hmin) Lambda = para_propa%Hmin
      DO j=1,para_propa%para_Davidson%L_filter
-       write(6,*) 'j,Lambda (cm-1)',j,Lambda * auTOcm_inv
+       write(out_unitp,*) 'j,Lambda (cm-1)',j,Lambda * auTOcm_inv
        phi_j(j) = acos((Lambda-para_H%E0)/para_H%Esc)
        Lambda = Lambda + Delta_Lambda
      END DO
@@ -2109,13 +2109,13 @@ STOP
       jorth = 0
       DO j=1,para_propa%para_Davidson%L_filter
         CALL renorm_psi(z(j))
-        write(6,*) 'j,norm',j,z(j)%norm2
+        write(out_unitp,*) 'j,norm',j,z(j)%norm2
 
         DO i=1,jorth
           CALL norm2_psi(z(i))
-          !write(6,*) '    i,norm',i,z(i)%norm2
+          !write(out_unitp,*) '    i,norm',i,z(i)%norm2
           CALL Overlap_psi1_psi2(Overlap,z(j),z(i))
-          !write(6,*) '    j,i,S(j,i)',j,i,real(Overlap,kind=Rkind)
+          !write(out_unitp,*) '    j,i,S(j,i)',j,i,real(Overlap,kind=Rkind)
 
           z(j) = z(j) - z(i) * real(Overlap,kind=Rkind)
         END DO
@@ -2125,7 +2125,7 @@ STOP
           z(j) = z(j) - z(i) * RS
         END DO
         CALL norm2_psi(z(j))
-        !write(6,*) 'j,norm',j,z(j)%norm2
+        !write(out_unitp,*) 'j,norm',j,z(j)%norm2
         IF (z(j)%norm2 > ONETENTH**6) THEN
           jorth = jorth + 1
           z(j) = z(j) * (ONE/sqrt(z(j)%norm2))
@@ -2133,8 +2133,8 @@ STOP
         ELSE
           z(j) = ZERO
         END IF
-        write(6,*) 'jorth',jorth
-        write(6,*)
+        write(out_unitp,*) 'jorth',jorth
+        write(out_unitp,*)
 
       END DO
       nb_diago = jorth

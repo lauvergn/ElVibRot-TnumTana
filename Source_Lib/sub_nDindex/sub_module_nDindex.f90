@@ -1243,12 +1243,12 @@
         integer :: nDval_temp(nDindex%ndim)
 
 
-        !write(6,*) 'ifirst,ilast,ipivot',ifirst,ilast,ipivot
+        !write(out_unitp,*) 'ifirst,ilast,ipivot',ifirst,ilast,ipivot
 
 
         CALL calc_nDindex(nDindex,tab_Sort_nDI(ipivot),nDval0)
         nDval0(ibasis) = 0
-        !write(6,*) 'nDval0',nDval0
+        !write(out_unitp,*) 'nDval0',nDval0
         !permutation ipivot <=> ilast (nDval0 ne change pas)
         itemp                = tab_Sort_nDI(ipivot)
         tab_Sort_nDI(ipivot) = tab_Sort_nDI(ilast)
@@ -1259,11 +1259,11 @@
         DO i=ifirst,ilast-1
           CALL calc_nDindex(nDindex,tab_Sort_nDI(i),nDvali)
           nDvali(ibasis) = 0
-          !write(6,*) 'nDvali',nDvali
-          !write(6,*) 'j,i',j,i
+          !write(out_unitp,*) 'nDvali',nDvali
+          !write(out_unitp,*) 'j,i',j,i
 
           IF (inferior_tab(nDvali,nDval0)) THEN
-            !write(6,*) 'perm i,j',i,j
+            !write(out_unitp,*) 'perm i,j',i,j
 
             itemp           = tab_Sort_nDI(i)
             tab_Sort_nDI(i) = tab_Sort_nDI(j)
@@ -1273,7 +1273,7 @@
           END IF
 
         END DO
-        !write(6,*) 'j pivot ?',j
+        !write(out_unitp,*) 'j pivot ?',j
 
         itemp               = tab_Sort_nDI(ilast)
         tab_Sort_nDI(ilast) = tab_Sort_nDI(j)
@@ -1741,7 +1741,7 @@
           CALL calc_nDindex(nDindex,nDI,nDindex%Tab_nDval(:,nDI))
           nDindex%Tab_Norm(nDI) = calc_Norm_OF_nDval(nDindex%Tab_nDval(:,nDI),nDindex)
           nDindex%Tab_L(nDI)    = calc_L_OF_nDval(nDindex%Tab_nDval(:,nDI),nDindex)
-          !write(6,*) 'nDI,nDval,Norm',nDI,nDindex%Tab_nDval(:,nDI),nDindex%Tab_Norm(nDI)
+          !write(out_unitp,*) 'nDI,nDval,Norm',nDI,nDindex%Tab_nDval(:,nDI),nDindex%Tab_Norm(nDI)
 
         END DO
 
@@ -2185,9 +2185,9 @@
 
   integer :: loc_nDI,i
 
-  !write(6,*) 'in calc_nDval_m1: nDI',nDI
-  !write(6,*) 'in calc_nDval_m1: nDsize',nDsize
-  !write(6,*) 'in calc_nDval_m1: ndim',ndim
+  !write(out_unitp,*) 'in calc_nDval_m1: nDI',nDI
+  !write(out_unitp,*) 'in calc_nDval_m1: nDsize',nDsize
+  !write(out_unitp,*) 'in calc_nDval_m1: ndim',ndim
 
   nDval(:) = 0
   loc_nDI = nDI-1
@@ -2195,7 +2195,7 @@
     nDval(i) = mod(loc_nDI,nDsize(i))+1
     loc_nDI = int(loc_nDI/nDsize(i))
   END DO
-  !write(6,*) 'in calc_nDval_m1: nDval',nDval
+  !write(out_unitp,*) 'in calc_nDval_m1: nDval',nDval
 
 
   END SUBROUTINE calc_nDval_m1
@@ -2230,8 +2230,8 @@
       write(out_unitp,*) ' nDindex is not initialized!'
       STOP
     END IF
-!write(6,*) 'shape nDval',shape(nDval) ; flush(6)
-!write(6,*) 'shape nDinit',shape(nDindex%nDinit) ; flush(6)
+!write(out_unitp,*) 'shape nDval',shape(nDval) ; flush(out_unitp)
+!write(out_unitp,*) 'shape nDinit',shape(nDindex%nDinit) ; flush(out_unitp)
 
     nDval(:) = nDindex%nDinit(:)
 
@@ -2542,9 +2542,9 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
            all(nDval <= nDindex%nDend)                  .AND.           &
            nb_Coupling <= nDindex%MaxCoupling .AND. nb_Coupling >= nDindex%MinCoupling
 
-  !write(6,*) 'nDval      ',nDval
-  !write(6,*) 'L1,L2,L    ',L1,L2,L
-  !write(6,*) 'nb_Coupling',nb_Coupling
+  !write(out_unitp,*) 'nDval      ',nDval
+  !write(out_unitp,*) 'L1,L2,L    ',L1,L2,L
+  !write(out_unitp,*) 'nb_Coupling',nb_Coupling
 
   END FUNCTION InList_nDindex_type5
 
@@ -2650,7 +2650,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
           found = ( all(nDval == nDindex%Tab_nDval(:,ibm)) )
           IF (found) THEN
             ib = ibm
-            IF (debug) write(6,*) 'found in [1 ... nDI-1], it',nDI-ib
+            IF (debug) write(out_unitp,*) 'found in [1 ... nDI-1], it',nDI-ib
             EXIT
           END IF
         END IF
@@ -2802,7 +2802,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
        found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
        IF (found) EXIT
       END DO
-      IF (debug .AND. found) write(6,*) 'found in [1 ... nDI-1], it',ib
+      IF (debug .AND. found) write(out_unitp,*) 'found in [1 ... nDI-1], it',ib
       !CALL flush_perso(out_unitp)
 
     END IF
@@ -2945,7 +2945,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
        found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
        IF (found) EXIT
       END DO
-      IF (debug .AND. found) write(6,*) 'found in [1 ... nDI-1], it',ib
+      IF (debug .AND. found) write(out_unitp,*) 'found in [1 ... nDI-1], it',ib
       !CALL flush_perso(out_unitp)
 
     END IF
@@ -3088,7 +3088,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
 
         IF (present(err_sub)) err_sub = 0
 
-        !write(6,*) 'asso Tab_i_TO_l and Tab_nDNorm',                    &
+        !write(out_unitp,*) 'asso Tab_i_TO_l and Tab_nDNorm',                    &
         !   associated(nDindex%Tab_i_TO_l),associated(nDindex%Tab_nDNorm)
 
         IF (associated(nDindex%Tab_nDNorm)) THEN
@@ -3152,7 +3152,6 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
           calc_Norm_OF_nDval = real(iNorm,kind=Rkind)
         ELSE
           IF (nDindex%NormWithInit) THEN
-            !write(out_unitp,*) 'coucou NormWithInit',nDindex%nDinit(:),nDindex%nb_OF_MinNorm
             Norm = ZERO
             DO i=1,nDindex%ndim
               iNorm = (max(nDval(i)-nDindex%nb_OF_MinNorm,0)+nDindex%Div_nb_TO_Norm-1)/nDindex%Div_nb_TO_Norm
@@ -3171,7 +3170,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
 !              END IF
             END DO
             calc_Norm_OF_nDval = Norm
-            !write(6,*) 'nDval,Norm',nDval,Norm
+            !write(out_unitp,*) 'nDval,Norm',nDval,Norm
             !calc_Norm_OF_nDval = sum(real(nDval-nDindex%nDinit,kind=Rkind)*nDindex%nDweight)
           ELSE
             calc_Norm_OF_nDval = sum(real(nDval,kind=Rkind)*nDindex%nDweight)
@@ -3195,7 +3194,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
 
         IF (present(err_sub)) err_sub = 0
 
-        !write(6,*) 'asso Tab_i_TO_l and Tab_nDNorm',                    &
+        !write(out_unitp,*) 'asso Tab_i_TO_l and Tab_nDNorm',                    &
         !   associated(nDindex%Tab_i_TO_l),associated(nDindex%Tab_nDNorm)
 
         IF (associated(nDindex%Tab_nDNorm)) THEN
@@ -3258,7 +3257,6 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
           calc_L_OF_nDval = iNorm
         ELSE
           IF (nDindex%NormWithInit) THEN
-            !write(out_unitp,*) 'coucou NormWithInit',nDindex%nDinit(:),nDindex%nb_OF_MinNorm
             Norm = ZERO
             DO i=1,nDindex%ndim
               iNorm = (max(nDval(i)-nDindex%nb_OF_MinNorm,0)+nDindex%Div_nb_TO_Norm-1)/nDindex%Div_nb_TO_Norm
@@ -3277,7 +3275,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
 !              END IF
             END DO
             calc_L_OF_nDval = int(Norm)
-            !write(6,*) 'nDval,Norm',nDval,Norm
+            !write(out_unitp,*) 'nDval,Norm',nDval,Norm
             !calc_Norm_OF_nDval = sum(real(nDval-nDindex%nDinit,kind=Rkind)*nDindex%nDweight)
           ELSE
             calc_L_OF_nDval = int(sum(real(nDval,kind=Rkind)*nDindex%nDweight))

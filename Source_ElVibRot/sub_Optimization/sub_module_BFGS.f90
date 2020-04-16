@@ -522,7 +522,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
  call proescvec(p,p,sum,n)
  sum=sqrt(sum)
 !
-! write(6,*) 'sum=', sum, 'stpmax=', stpmax
+! write(out_unitp,*) 'sum=', sum, 'stpmax=', stpmax
 !
  call flush_perso(6)
  if(sum.gt.stpmax)then
@@ -607,8 +607,8 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
  TYPE (Type_dnVec)    :: dnx
 
 
- !write(6,*) 'dfunc subroutine',mole%nb_act,nderiv_dnE
- !write(6,*) 'xt = ', xt
+ !write(out_unitp,*) 'dfunc subroutine',mole%nb_act,nderiv_dnE
+ !write(out_unitp,*) 'xt = ', xt
 
  Qact(:) = ZERO
  Qact(1:mole%nb_act)=xt
@@ -623,8 +623,8 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
    CALL dealloc_dnSVM(dnx)
  END IF
 
-! write(6,*) 'Qact = ',Qact
-! flush(6)
+! write(out_unitp,*) 'Qact = ',Qact
+! flush(out_unitp)
 !
 ! The subroutine below enables to calculate the energy, the gradient and/or the hessian
 ! nderiv_dnE = 0 : => energy only
@@ -648,8 +648,8 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 !     With nderiv_alloc=2 and nderiv_dnE=1, you can calculate the energy and the gradient
 !     and update the hessian in MatdnE(1,1)%d2(:,:), if you want.
  
-!  write(6,*) ' MatdnE(1,1)%d0 = ', MatdnE(1,1)%d0
-!  write(6,*) ' MatdnE(1,1)%d1 = ', MatdnE(1,1)%d1
+!  write(out_unitp,*) ' MatdnE(1,1)%d0 = ', MatdnE(1,1)%d0
+!  write(out_unitp,*) ' MatdnE(1,1)%d1 = ', MatdnE(1,1)%d1
 !
   f = Get_Scal_FROM_Tab_OF_dnMatOp(dnMatOp,1)
   if (nderiv_dnE >= 1) CALL Get_Grad_FROM_Tab_OF_dnMatOp(df,dnMatOp,1)
@@ -657,8 +657,8 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
   write(out_unitp,*) ' Energy = ',f
   IF (nderiv_dnE >= 1) write(out_unitp,*) ' Active modes gradient norm = ',sqrt(dot_product(df,df))
   IF (print_level > 1) write(out_unitp,*) ' Active modes gradient = ', df
-  !write(6,*) 'end dfunc subroutine'
-  !flush(6)
+  !write(out_unitp,*) 'end dfunc subroutine'
+  !flush(out_unitp)
 
  END SUBROUTINE dfunc
 ! ------------------------------------------------------------------------

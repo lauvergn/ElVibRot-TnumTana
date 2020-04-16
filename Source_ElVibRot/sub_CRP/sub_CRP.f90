@@ -258,7 +258,7 @@ END SUBROUTINE read_CRP
         !DO i=1,tab_Op(1)%nb_tot
         !  Ginv(i,i) = Ginv(i,i) - CONE
         !END DO
-        !write(6,*) 'id diff ?',maxval(abs(Ginv))
+        !write(out_unitp,*) 'id diff ?',maxval(abs(Ginv))
 
 
         gGgG(:,:) = matmul(tab_Op(3)%Rmat,matmul(G,matmul(tab_Op(4)%Rmat,conjg(G))))
@@ -386,7 +386,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op, nb_Op, para_CRP,Ene)
          Krylov_vectors(i,0) = cmplx(ranr,rani,kind=Rkind)
       end do
       CALL ReNorm_CplxVec(Krylov_vectors(:,0))
-      !write(6,*) 'Krylov_vectors(:,0)',Krylov_vectors(:,0) ; stop
+      !write(out_unitp,*) 'Krylov_vectors(:,0)',Krylov_vectors(:,0) ; stop
 
       IF (para_CRP%LinSolv_type == 'matinv') THEN
          DO i=1,nb_Op
@@ -417,9 +417,9 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op, nb_Op, para_CRP,Ene)
       oldcrp = ZERO
       do nks=1,para_CRP%KS_max_it
 
-         write(6,*) '######################'
-         write(6,*) '# in KS iterations, n=',nks
-         write(6,*) '# before p_multiply'
+         write(out_unitp,*) '######################'
+         write(out_unitp,*) '# in KS iterations, n=',nks
+         write(out_unitp,*) '# before p_multiply'
          call flush_perso(out_unitp)
 
          SELECT CASE ( para_CRP%LinSolv_type )
@@ -438,15 +438,15 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op, nb_Op, para_CRP,Ene)
             call p_multiplyGMRES(Krylov_vectors(:,nks-1),Krylov_vectors(:,nks),&
                                  tab_Op,nb_Op,Ene,ncooked,M1,para_CRP%LinSolv_accuracy)
 #else
-           write(6,*) ' ERROR in',name_sub
-           write(6,*) '  CERFACS GMRES is not implemented.'
-           write(6,*) '  You have to choose between: "MatInv" or "QMR".'
+           write(out_unitp,*) ' ERROR in',name_sub
+           write(out_unitp,*) '  CERFACS GMRES is not implemented.'
+           write(out_unitp,*) '  You have to choose between: "MatInv" or "QMR".'
            STOP ' ERROR CERFACS GMRES is not implemented'
 #endif
          CASE Default
-           write(6,*) ' ERROR in',name_sub
-           write(6,*) '  No Default for LinSolv_type:',para_CRP%LinSolv_type
-           write(6,*) '  You have to choose between: "MatInv" or "QMR".'
+           write(out_unitp,*) ' ERROR in',name_sub
+           write(out_unitp,*) '  No Default for LinSolv_type:',para_CRP%LinSolv_type
+           write(out_unitp,*) '  You have to choose between: "MatInv" or "QMR".'
 
            STOP ' ERROR No Default for LinSolv_type'
          END SELECT

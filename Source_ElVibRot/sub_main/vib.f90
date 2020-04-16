@@ -577,10 +577,6 @@
 
           CALL sub_MatOp(para_H,para_ana%print)
 
-          ! temp
-          !CALL sub_MatOp(para_AllOp%tab_Op(3),para_ana%print)
-          !stop 'coucou'
-        
           IF(MPI_id==0) THEN
             write(out_unitp,*)
             write(out_unitp,*)
@@ -1230,7 +1226,7 @@ para_mem%mem_debug = .FALSE.
       write(out_unitp,*)
 
       WP3 = WP1-WP0
-      write(6,*) 'max diff',maxval(abs(WP3%RvecB))
+      write(out_unitp,*) 'max diff',maxval(abs(WP3%RvecB))
 !END DO
       write(out_unitp,*) '================================================'
       write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!'

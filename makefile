@@ -29,13 +29,13 @@ endif
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 1
+ARPACK = 0
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 1
+QML = 0
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -723,10 +723,10 @@ Obj_EVRT =\
 #ElVibRot:
 
 #make all : EVR
-.PHONY: all evr EVR libEVR
+.PHONY: all evr EVR libEVR libevr
 evr EVR all :obj vib $(VIBEXE)
 	echo "EVR"
-libEVR: obj $(OBJ)/libEVR.a
+libEVR libevr: obj $(OBJ)/libEVR.a
 	echo "libEVR.a"
 #============================================================================
 # All tnum/Tana ...
@@ -798,6 +798,7 @@ clean:
 	@cd Source_TnumTana_Coord/sub_operator_T ; cp Sub_X_TO_Q_ana_save.f90 Sub_X_TO_Q_ana.f90
 
 	@cd Examples/exa_hcn-dist ; ./clean
+	@cd Examples/exa_TnumDriver ; ./clean
 	@cd Examples/exa_direct-dist ; ./clean
 	@cd Examples/exa_TnumTana_Coord-dist ; ./clean
 	@cd Examples/exa_PhysicalConstants ; ./clean

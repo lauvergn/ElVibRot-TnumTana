@@ -127,7 +127,7 @@ MODULE mod_dnGG_dng
 
       CALL sub3_dnDetGG(dnJac,dnGG,nderiv_loc,                          &
                                  mole%masses,mole%Mtot_inv,mole%ncart)
-      !write(6,*) 'dnJac'
+      !write(out_unitp,*) 'dnJac'
       !CALL write_dnS(dnJac)
       !----------------------------------------------------
       !-- f0,fi,Fij calculation
@@ -137,7 +137,7 @@ MODULE mod_dnGG_dng
                       para_Tnum%nrho)
       rho = dnrho%d0
       !write(out_unitp,*) 'rho :',rho
-      !write(6,*) 'dnrho'
+      !write(out_unitp,*) 'dnrho'
       !CALL write_dnS(dnrho)
       !----------------------------------------------------
       !-- vep calculation

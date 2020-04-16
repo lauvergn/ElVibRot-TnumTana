@@ -1577,7 +1577,7 @@ subroutine check_allocate_opnd(F_nd)
    ELSE
      nb_J = 0
    END IF
-   !write(6,*) 'n,nb_J',n,nb_J
+   !write(out_unitp,*) 'n,nb_J',n,nb_J
    IF (nb_J > 0) THEN
      temp_OpnD = FOpnD
 
@@ -1586,8 +1586,8 @@ subroutine check_allocate_opnd(F_nd)
      DO i=n,1,-1
        idqi = get_idq_OF_Op1D(temp_OpnD%prod_op1D(i))
         Li = (idqi == 5) ! Jx,Jy,Jz
-        !write(6,*) 'idqi,Li',idqi,Li ; flush(6)
-        !write(6,*) 'i,ii,i_JJ',i,ii,i_JJ ; flush(6)
+        !write(out_unitp,*) 'idqi,Li',idqi,Li ; flush(out_unitp)
+        !write(out_unitp,*) 'i,ii,i_JJ',i,ii,i_JJ ; flush(out_unitp)
         IF (Li) THEN
           FOpnD%prod_op1D(i_JJ) = temp_OpnD%prod_op1D(i)
           i_JJ = i_JJ-1

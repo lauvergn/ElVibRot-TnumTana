@@ -110,7 +110,7 @@
         Tdef2(i,i) = -HALF*w(i)*eVTOau
       END DO
 
-      !write(6,*) 'Tdef',Tdef2
+      !write(out_unitp,*) 'Tdef',Tdef2
 
 !-----------------------------------------------------------
       IF (debug .OR. para_Tnum%WriteT) THEN

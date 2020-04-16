@@ -156,8 +156,8 @@ MODULE mod_dnS
 
         nd = dnS%nb_var_deriv
 
-        !write(6,*) 'dnS%nb_var_deriv,dnS%nderiv',dnS%nb_var_deriv,dnS%nderiv
-        !write(6,*) 'dnS%alloc',dnS%alloc
+        !write(out_unitp,*) 'dnS%nb_var_deriv,dnS%nderiv',dnS%nb_var_deriv,dnS%nderiv
+        !write(out_unitp,*) 'dnS%alloc',dnS%alloc
 
         IF (dnS%alloc) RETURN
         dnS%alloc = .TRUE.
@@ -199,7 +199,7 @@ MODULE mod_dnS
         integer :: err_mem,memory
 
         !write(out_unitp,*) 'BEGINNING dealloc_dnS'
-        !write(6,*) 'dnS%nb_var_deriv,dnS%nderiv',dnS%nb_var_deriv,dnS%nderiv
+        !write(out_unitp,*) 'dnS%nb_var_deriv,dnS%nderiv',dnS%nb_var_deriv,dnS%nderiv
         !CALL Write_dnS(dnS)
 
         dnS%d0           = ZERO
@@ -1305,12 +1305,7 @@ MODULE mod_dnS
          dntf%d2 = -TWO/cte(1) * t/c2
          dntf%d3 = TWO/cte(1)**2 * (TWO*s2-1)/c2**2
 
-         !write(6,*) 'coucou 74',x,dntf%d0
-
-
        CASE (-74)
-         !write(6,*) 'coucou -74'
-
          ! invers of R0.tanh(x/R0) x E ]-inf,inf[  (invers)
          ! t(x) = R0 atanh(x/R0) R0=cte(1)
          xx = x/cte(1)
