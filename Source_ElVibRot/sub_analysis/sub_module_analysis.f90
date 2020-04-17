@@ -43,8 +43,8 @@
 
       MODULE mod_analysis
       USE mod_system
-      use mod_Constant, only: assignment(=),real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit, get_val_FROM_RWU
-      USE mod_type_ana_psi
+      use mod_Constant, only : assignment(=),real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit, get_val_FROM_RWU
+      USE mod_psi,      ONLY : param_ana_psi
       USE mod_CRP
       IMPLICIT NONE
         TYPE param_ana
@@ -123,7 +123,7 @@
 !===============================================================================
       SUBROUTINE read_analyse(para_ana,Qana)
       USE mod_system
-      USE mod_type_ana_psi
+      USE mod_psi,      ONLY : param_ana_psi,init_ana_psi,Write_ana_psi
       USE mod_MPI
       IMPLICIT NONE
 
@@ -378,8 +378,8 @@
 !===============================================================================
 
       SUBROUTINE dealloc_para_ana(para_ana)
-      USE mod_type_ana_psi
       USE mod_system
+      USE mod_psi,      ONLY : param_ana_psi,dealloc_ana_psi
       IMPLICIT NONE
 
 !----- variables pour la namelist analyse ----------------------------

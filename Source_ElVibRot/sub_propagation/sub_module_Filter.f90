@@ -43,7 +43,7 @@
 MODULE mod_Filter
 USE mod_system
 USE mod_Constant
-USE mod_psi_set_alloc, ONLY : param_psi,alloc_psi,dealloc_psi
+USE mod_psi, ONLY : param_psi,alloc_psi,dealloc_psi
 IMPLICIT NONE
 TYPE param_filter
 
@@ -70,9 +70,11 @@ CONTAINS
       SUBROUTINE sub_GaussianFilterDiagonalization(psi,Ene,nb_diago,max_diago, &
                                                    para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi
+
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -372,17 +374,7 @@ nb = size(P0_cheby)
   CALL init_psi(g,para_H,para_H%cplx)
 
   CALL alloc_psi(q1)
-  IF (q1%cplx) THEN
-    DO i=1,q1%nb_tot
-      CALL random_number(a)
-      q1%CvecB(i) = cmplx(a,ZERO,kind=Rkind)
-    END DO
-  ELSE
-    DO i=1,q1%nb_tot
-      CALL random_number(a)
-      q1%RvecB(i) = a
-    END DO
-  END IF
+  CALL Set_Random_psi(q1)
   CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
   CALL renorm_psi(q1,BasisRep=.TRUE.)
 !- vector initialization:  q1 -----------
@@ -577,9 +569,10 @@ STOP
       SUBROUTINE sub_BlockFilterDiagonalization(psi,Ene,nb_diago,max_diago, &
                                                    para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -753,17 +746,7 @@ STOP
   CALL init_psi(g,para_H,para_H%cplx)
 
   CALL alloc_psi(q1)
-  IF (q1%cplx) THEN
-    DO i=1,q1%nb_tot
-      CALL random_number(a)
-      q1%CvecB(i) = cmplx(a,ZERO,kind=Rkind)
-    END DO
-  ELSE
-    DO i=1,q1%nb_tot
-      CALL random_number(a)
-      q1%RvecB(i) = a
-    END DO
-  END IF
+  CALL Set_Random_psi(q1)
   CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
   CALL renorm_psi(q1,BasisRep=.TRUE.)
 !- vector initialization:  q1 -----------
@@ -960,9 +943,10 @@ STOP
       SUBROUTINE sub_GaussianFilterDiagonalization_v0(psi,Ene,nb_diago,max_diago, &
                                                    para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -1054,17 +1038,7 @@ STOP
       CALL init_psi(g,para_H,para_H%cplx)
 
       CALL alloc_psi(q1)
-      IF (q1%cplx) THEN
-        DO i=1,q1%nb_tot
-          CALL random_number(a)
-          q1%CvecB(i) = cmplx(a,ZERO,kind=Rkind)
-        END DO
-      ELSE
-        DO i=1,q1%nb_tot
-          CALL random_number(a)
-          q1%RvecB(i) = a
-        END DO
-      END IF
+      CALL Set_Random_psi(q1)
       CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
       CALL renorm_psi(q1,BasisRep=.TRUE.)
       !- vector initialization:  q1 + others -----------
@@ -1335,9 +1309,10 @@ STOP
       SUBROUTINE sub_FilterDiagonalization(psi,Ene,nb_diago,max_diago, &
                                            para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -1644,9 +1619,11 @@ STOP
       SUBROUTINE sub_FilterDiagonalization_v1(psi,Ene,nb_diago,max_diago, &
                                            para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi,  &
+                             sub_Lowdin
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -1937,9 +1914,10 @@ STOP
       SUBROUTINE sub_FilterDiagonalization_v0(psi,Ene,nb_diago,max_diago, &
                                            para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -2242,8 +2220,8 @@ STOP
 
      SUBROUTINE sub_chebychev_recursion(Tnq1,q1,m0,mf,para_Op)
       USE mod_system
+      USE mod_psi,     ONLY : param_psi,dealloc_psi
       USE mod_Op
-      USE mod_ana_psi
       IMPLICIT NONE
 
       ! Operator (Hamiltonian)
@@ -2321,9 +2299,8 @@ STOP
 
      SUBROUTINE sub_Z_vectors(z,Tnq1,m0,mf,para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,sub_Lowdin,sub_Schmidt
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -2399,9 +2376,8 @@ STOP
 
      SUBROUTINE sub_Z_vectors_withf(z,Tnq1,mf,para_H,para_propa,f)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,sub_Lowdin,sub_Schmidt
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -2464,9 +2440,8 @@ STOP
 
      SUBROUTINE sub_newZ_vectors_withf(z,Tnq1,nb,para_H,para_propa,f)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,sub_Lowdin,sub_Schmidt
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 

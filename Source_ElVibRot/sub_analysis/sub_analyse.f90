@@ -52,13 +52,14 @@ CONTAINS
                              para_intensity,para_AllOp,const_phys)
       USE mod_system
       USE mod_Coord_KEO
+
       USE mod_basis
       USE mod_param_RD
-      USE mod_ana_psi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_psi_io
-      USE mod_type_ana_psi
+
+      USE mod_psi,    ONLY : param_psi,Write_Psi_nDBasis,               &
+                             sub_PsiGridRep_TO_BasisRep,sub_analyze_psi,&
+                             Write_header_saveFile_psi
+
       USE mod_Op
       USE mod_analysis
       USE mod_MPI
@@ -340,8 +341,8 @@ CONTAINS
       SUBROUTINE sub_moyABC(Psi,iPsi,info,ABC,para_AllOp)
 
       USE mod_system
+      USE mod_psi,      ONLY : param_psi,dealloc_psi
       USE mod_Op
-      USE mod_psi_set_alloc
       IMPLICIT NONE
 
       TYPE (param_psi)               :: Psi
@@ -353,9 +354,9 @@ CONTAINS
 
 
 !----- for the CoordType and Tnum --------------------------------------
-       TYPE (param_psi)          :: OpPsi
-      TYPE (CoordType),pointer     :: mole      ! true pointer
-      TYPE (Tnum),pointer        :: para_Tnum ! true pointer
+      TYPE (param_psi)            :: OpPsi
+      TYPE (CoordType),pointer    :: mole      ! true pointer
+      TYPE (Tnum),pointer         :: para_Tnum ! true pointer
 
       real (kind=Rkind) :: avMhu(3,3),TensorI(3,3),mat(3,3)
       real (kind=Rkind) :: trav1(3),mat1(3,3),dummy
@@ -441,8 +442,8 @@ CONTAINS
        SUBROUTINE sub_moyScalOp(Psi,iPsi,info,para_AllOp)
 
       USE mod_system
+      USE mod_psi,      ONLY : param_psi,dealloc_psi
       USE mod_Op
-      USE mod_psi_set_alloc
       IMPLICIT NONE
 
       TYPE (param_psi)               :: Psi
@@ -677,9 +678,7 @@ CONTAINS
 
       USE mod_system
       USE mod_basis
-      USE mod_ana_psi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
+      USE mod_psi,      ONLY : param_psi,sub_PsiBasisRep_TO_GridRep
       IMPLICIT NONE
 
 
@@ -769,9 +768,7 @@ CONTAINS
       SUBROUTINE write_cube(Tab_Psi)
 
       USE mod_system
-      USE mod_ana_psi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
+      USE mod_psi,      ONLY : param_psi,sub_PsiBasisRep_TO_GridRep
       IMPLICIT NONE
 
 

@@ -48,9 +48,7 @@ MODULE mod_EVR
  USE mod_PrimOp
  USE mod_basis
 
- USE mod_psi_set_alloc
- USE mod_psi_Op
- USE mod_ana_psi
+ USE mod_psi
 
  USE mod_propa
  USE mod_Op

@@ -39,7 +39,7 @@ done
 
 #echo For \"$file\", the largest relative difference between constants: $d
 echo The largest relative difference between constants: $d
-echo $d | LANG=C awk '{epsi=0.0000001 ; if ($1 > epsi) {print "    ERROR, relative diff > " epsi} else {print "    No ERROR, relative diff <= " epsi}}'
+echo $d | LANG=C awk '{epsi=0.0000001 ; if ($1 > epsi) {print "    ERROR, relative diff > " epsi} else {print "    No PROBLEM, relative diff <= " epsi}}'
 
 
  rm $fNew $fOld

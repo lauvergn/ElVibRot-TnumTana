@@ -49,7 +49,7 @@
       USE mod_PrimOp
       USE mod_basis
       USE BasisMakeGrid
-      USE mod_psi_set_alloc
+      USE mod_psi
       USE mod_propa
       USE mod_Op
       USE mod_analysis
@@ -93,7 +93,6 @@
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa) :: para_propa
-      TYPE (param_psi)   :: WP0(1)
 
 
 !----- variables for the namelist actives ----------------------------
@@ -136,7 +135,7 @@
                         para_AllBasis,BasisnD_Save,                     &
                         para_PES,ComOp,para_AllOp,                      &
                         para_ana,para_intensity,intensity_only,         &
-                        para_propa,WP0(1))
+                        para_propa)
 
       write(out_unitp,*)
       write(out_unitp,*)
@@ -358,7 +357,6 @@
 
 
       CALL dealloc_param_propa(para_propa)
-      CALL dealloc_psi(WP0(1))
 
       CALL dealloc_AllBasis(para_AllBasis)
 

@@ -2925,9 +2925,9 @@
 
      type(opnd)                                       :: rho
      type(Type_BFtransfo),        intent(in)          :: F_system
-     TYPE(FracInteger), optional, intent(in)          :: alfa
+     TYPE(Frac_t),      optional, intent(in)          :: alfa
 
-     TYPE(FracInteger)               :: alfa_loc
+     TYPE(Frac_t)               :: alfa_loc
      integer                         :: i
      character (len =*), parameter   :: routine_name='get_rho'
 
@@ -2963,9 +2963,9 @@
 
      type(Type_BFtransfo),        intent(in)          :: F_system
      type(opnd)                                       :: Jac
-     TYPE(FracInteger), optional, intent(in)          :: alfa
+     TYPE(Frac_t),      optional, intent(in)          :: alfa
 
-     TYPE(FracInteger)               :: alfa_loc
+     TYPE(Frac_t)               :: alfa_loc
      integer                         :: i
      character (len =*), parameter   :: routine_name='get_Jac'
 
@@ -3005,15 +3005,15 @@
 
      type(opnd)                 :: Jac,rho
      type(opnd)                 :: x,x_inv
-     TYPE(FracInteger)          :: Fp12,Fm12
+     TYPE(Frac_t)               :: Fp12,Fm12
      integer                    :: i
 
      SELECT CASE(nrho)
      CASE (0) ! rho=Jac => the KEO is Euclidean
        CONTINUE
      CASE (1) ! rho=1
-       Fp12  = FracInteger( 1,2)
-       Fm12  = FracInteger(-1,2)
+       Fp12  = Frac_t( 1,2)
+       Fm12  = Frac_t(-1,2)
        x     = CONE
        x_inv = CONE
 
@@ -3027,8 +3027,8 @@
 
        keo = x_inv * keo * x
      CASE (2,3)
-       Fp12 = FracInteger( 1,2)
-       Fm12 = FracInteger(-1,2)
+       Fp12 = Frac_t( 1,2)
+       Fm12 = Frac_t(-1,2)
        x     = CONE
        x_inv = CONE
 
@@ -3079,7 +3079,7 @@
      type(opnd), allocatable    :: d1lnrho(:)
      type(Sum_OF_op1d)          :: d1Op1D ! it will contain a sum of Op1D
 
-     TYPE(FracInteger)          :: Fm1
+     TYPE(Frac_t)          :: Fm1
 
 
      logical, parameter :: debug = .TRUE.
@@ -3205,7 +3205,7 @@
      END DO
      rho     = CONE
      rho_inv = CONE
-     Fm1     = FracInteger(-1,1)
+     Fm1     = Frac_t(-1,1)
      SELECT CASE(nrho)
      CASE (0) ! rho=Jac => the KEO is Euclidean
         !rho         = get_Jac(F_system)
@@ -3307,7 +3307,7 @@
 
      integer                        :: indexq1, indexq2
      complex (kind=Rkind)           :: coeff1, coeff2
-     TYPE(FracInteger)              :: alfa
+     TYPE(Frac_t)                   :: alfa
 
      call init_to_opzero(F_sum_nd = V_extr)
 

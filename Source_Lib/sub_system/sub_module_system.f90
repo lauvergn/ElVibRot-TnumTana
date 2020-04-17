@@ -25,7 +25,7 @@ MODULE mod_system
       USE mod_string
       USE mod_file
       USE mod_RW_MatVec
-      USE mod_FracInteger
+      USE mod_Frac
       USE mod_memory
       USE mod_memory_Pointer
       USE mod_memory_NotPointer

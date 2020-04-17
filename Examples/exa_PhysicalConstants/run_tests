@@ -1,12 +1,22 @@
 #!/bin/bash
 
+here=`pwd`
+DIR_vib=$here/../..
+
+cd $DIR_vib
+# make PhysConst
+cd $here
+PCEXE=$DIR_vib/PhysConst.exe
+
 OldTestsDir=output_28nov2018
 
 ./clean
 
 for dat_name in dat*
 do
-   ./$dat_name
+   res_name=`echo res_$dat_name | sed 's/dat_//'`
+   echo $res_name
+   $PCEXE < $dat_name > $res_name
 done
 
 

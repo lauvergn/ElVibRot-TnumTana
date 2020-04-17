@@ -53,13 +53,9 @@ CONTAINS
       SUBROUTINE sub_propagation_Arpack(psi,Ene,nb_diago,max_diago,     &
                                         para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,trie_psi,dealloc_psi,  &
+                             param_WP0
       USE mod_Op
-
-      USE mod_psi_set_alloc
-      USE mod_ana_psi
-      USE mod_psi_B_TO_G
-      USE mod_psi_Op
-      USE mod_param_WP0
       USE mod_propa
       USE mod_MPI
       IMPLICIT NONE
@@ -572,7 +568,6 @@ CONTAINS
 !     | Done with program dndrv1. |
 !     %---------------------------%
 
-
       CALL dealloc_psi(Hpsi_loc,delete_all=.TRUE.)
       CALL dealloc_psi(psi_loc,delete_all=.TRUE.)
 
@@ -592,18 +587,13 @@ CONTAINS
 !----------------------------------------------------------
       END SUBROUTINE sub_propagation_Arpack
 !=======================================================================================
-
+!
 !=======================================================================================
       SUBROUTINE sub_OpV1_TO_V2_Arpack(V1,V2,psi1,psi2,                 &
                                        para_H,cplxE,para_propa,n)
       USE mod_system
       USE mod_Op
-
-      USE mod_psi_set_alloc
-      USE mod_ana_psi
-      USE mod_psi_B_TO_G
-      USE mod_psi_Op,         ONLY : Overlap_psi1_psi2,Set_symab_OF_psiBasisRep
-      USE mod_param_WP0
+      USE mod_psi,    ONLY : param_psi,Overlap_psi1_psi2,Set_symab_OF_psiBasisRep
       USE mod_propa
       USE mod_MPI
       IMPLICIT NONE
@@ -678,13 +668,9 @@ CONTAINS
       SUBROUTINE sub_propagation_Arpack_Sym(psi,Ene,nb_diago,max_diago, &
                                           para_H,para_propa)
       USE mod_system
-      USE mod_Op
+      USE mod_psi,    ONLY : param_psi,alloc_psi,dealloc_psi,param_WP0
 
-      USE mod_psi_set_alloc
-      USE mod_psi_Op
-      USE mod_ana_psi
-      USE mod_psi_B_TO_G
-      USE mod_param_WP0
+      USE mod_Op
       USE mod_propa
       USE mod_MPI
       IMPLICIT NONE
@@ -1131,14 +1117,12 @@ CONTAINS
 
  SUBROUTINE ReadWP0_Arpack(psi,nb_diago,max_diago,para_Davidson,cplx)
  USE mod_system
+ USE mod_psi,    ONLY : param_psi,norm2_psi,renorm_psi,dealloc_psi,     &
+                        Set_symab_OF_psiBasisRep,copy_psi2TOpsi1,       &
+                        sub_PsiBasisRep_TO_GridRep,alloc_psi,           &
+                        param_WP0,sub_read_psi0,set_random_psi
 
- USE mod_psi_set_alloc
- USE mod_psi_B_TO_G,     ONLY : sub_PsiBasisRep_TO_GridRep
- USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi
- USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep
- USE mod_psi_io,         ONLY : sub_read_psi0
- USE mod_param_WP0,      ONLY : param_WP0
- USE mod_propa,          ONLY : param_Davidson
+ USE mod_propa,  ONLY : param_Davidson
  IMPLICIT NONE
 
 

@@ -42,12 +42,10 @@
 !===========================================================================
       MODULE mod_propa
       USE mod_system
-      USE mod_Constant,      ONLY : assignment(=),get_conv_au_to_unit,  &
-                          real_wu, convrwu_to_r,convRWU_WorkingUnit_TO_R
-      USE mod_field,         ONLY : param_field
-      USE mod_psi_set_alloc, ONLY : param_psi
-      USE mod_param_WP0,     ONLY : param_WP0
-      USE mod_type_ana_psi
+      USE mod_Constant,  ONLY : assignment(=),get_conv_au_to_unit,real_wu,&
+                                convrwu_to_r,convRWU_WorkingUnit_TO_R
+      USE mod_psi,       ONLY : param_WP0,param_ana_psi
+      USE mod_field,     ONLY : param_field
       IMPLICIT NONE
 
 PRIVATE
@@ -359,11 +357,11 @@ PUBLIC :: MPI_Bcast_param_Davidson
 !================================================================
       SUBROUTINE dealloc_param_propa(para_propa)
       USE mod_system
-      USE mod_field,         ONLY : dealloc_param_field
-      USE mod_param_WP0,     ONLY : dealloc_param_WP0
-      USE mod_psi_set_alloc, ONLY : dealloc_psi,dealloc_array
-      USE mod_type_ana_psi
+      USE mod_field, ONLY : dealloc_param_field
+      USE mod_psi,   ONLY : param_WP0,dealloc_param_WP0,dealloc_ana_psi,&
+                            dealloc_psi,dealloc_array
       IMPLICIT NONE
+
       TYPE (param_propa), intent(inout) :: para_propa
 
       integer :: i
@@ -379,7 +377,7 @@ PUBLIC :: MPI_Bcast_param_Davidson
 
       SUBROUTINE SaveWP_restart(T,WP,file_restart)
       USE mod_system
-      USE mod_psi_set_alloc
+      USE mod_psi,    ONLY : param_psi
       IMPLICIT NONE
 
 
@@ -426,7 +424,7 @@ PUBLIC :: MPI_Bcast_param_Davidson
       END SUBROUTINE SaveWP_restart
       SUBROUTINE ReadWP_restart(T,WP,file_restart)
       USE mod_system
-      USE mod_psi_set_alloc
+      USE mod_psi,    ONLY : param_psi
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -486,9 +484,8 @@ PUBLIC :: MPI_Bcast_param_Davidson
 
       FUNCTION Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC)
       USE mod_system
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+      USE mod_psi,    ONLY : param_psi,ecri_psi,Overlap_psi1_psi2,      &
+                             sub_PsiBasisRep_TO_GridRep
       USE mod_MPI
       IMPLICIT NONE
 
@@ -580,10 +577,9 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_field,           ONLY : param_field,sub_dnE
   USE mod_ExactFact
 
-  USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
-  USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi
-  USE mod_type_ana_psi
-  USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
+  USE mod_psi, ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,         &
+                      sub_analyze_psi,norm2_psi,alloc_psi,modif_ana_psi,&
+                      sub_PsiBasisRep_TO_GridRep
   USE mod_MPI
   IMPLICIT NONE
 
@@ -775,12 +771,12 @@ END SUBROUTINE sub_analyze_WP_OpWP
 
 SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_system
-  USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
-  USE mod_field,           ONLY : param_field,sub_dnE
+  USE mod_Op,    ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
+  USE mod_field, ONLY : param_field,sub_dnE
 
-  USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
-  USE mod_ana_psi,         ONLY : norm2_psi,Channel_weight
-  USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
+  USE mod_psi,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,       &
+                      sub_analyze_psi,norm2_psi,alloc_psi,modif_ana_psi,&
+                      Channel_weight,sub_PsiBasisRep_TO_GridRep
   USE mod_MPI
   IMPLICIT NONE
 
@@ -926,8 +922,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 !================================================================
       SUBROUTINE read_propagation(para_propa,nb_act1,nb_vp_spec_out)
       USE mod_system
-      USE mod_psi_set_alloc, ONLY : alloc_array
-      USE mod_param_WP0,     ONLY : alloc_param_WP0
+      USE mod_psi,     ONLY : alloc_param_WP0
       USE mod_MPI
       IMPLICIT NONE
 

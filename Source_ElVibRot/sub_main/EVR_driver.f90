@@ -333,7 +333,7 @@ SUBROUTINE init_EVR_new()
                         tab_EVRT(ith)%para_PES,tab_EVRT(ith)%ComOp,                &
                         tab_EVRT(ith)%para_AllOp,tab_EVRT(ith)%para_ana,           &
                         tab_EVRT(ith)%para_intensity,intensity_only, &
-                        tab_EVRT(ith)%para_propa,tab_EVRT(ith)%WP0)
+                        tab_EVRT(ith)%para_propa)
 
         !CALL system_mem_usage(memory_RSS,'after ini_data')
         CALL dealloc_Basis(BasisnD_Save)
@@ -475,7 +475,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_Auto_Basis
-      USE mod_psi_B_TO_G
+      USE mod_psi
       USE mod_MPI_Aid
       IMPLICIT NONE
 
@@ -1417,7 +1417,7 @@ SUBROUTINE init_EVR()
                         para_EVRT%para_PES,para_EVRT%ComOp,                &
                         para_EVRT%para_AllOp,para_EVRT%para_ana,           &
                         para_EVRT%para_intensity,para_EVRT%intensity_only, &
-                        para_EVRT%para_propa,para_EVRT%WP0)
+                        para_EVRT%para_propa)
 
         !CALL system_mem_usage(memory_RSS,'after ini_data')
         CALL dealloc_Basis(BasisnD_Save)
@@ -1527,7 +1527,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_Auto_Basis
-      USE mod_psi_B_TO_G
+      USE mod_psi
       USE mod_MPI_Aid
       IMPLICIT NONE
 

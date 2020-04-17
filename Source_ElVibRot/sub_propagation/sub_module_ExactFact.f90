@@ -41,10 +41,9 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_ExactFact
-  USE mod_system
-  USE mod_Constant
-  USE mod_basis
-  USE mod_type_ana_psi
+  !USE mod_system
+  !USE mod_Constant
+  !USE mod_basis
   IMPLICIT NONE
 
   PRIVATE
@@ -60,13 +59,11 @@ CONTAINS
 !================================================================
 SUBROUTINE sub_ExactFact_analysis(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
   USE mod_system
+  USE mod_basis
+  USE mod_psi,    ONLY : param_psi,param_ana_psi
   USE mod_Op
   USE mod_field
 
-  USE mod_psi_set_alloc
-  USE mod_ana_psi
-  USE mod_psi_B_TO_G
-  USE mod_basis
 
   IMPLICIT NONE
 
@@ -125,7 +122,7 @@ SUBROUTINE sub_ExactFact_analysis(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
   SELECT CASE (ana_psi%ExactFact)
   CASE (1)
     IF (T == ZERO) THEN
-      CALL sub_ExactFact_analysis_gV(psi,ana_psi,para_H,Tmax,deltaT)
+      CALL sub_ExactFact_analysis_gV(psi,para_H,Tmax,deltaT)
     END IF
     CALL sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
   CASE (2)
@@ -149,14 +146,13 @@ SUBROUTINE sub_ExactFact_analysis(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
 END SUBROUTINE sub_ExactFact_analysis
 SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
   USE mod_system
+  USE mod_basis
+  USE mod_psi,    ONLY : param_psi,param_ana_psi,dealloc_psi,           &
+                         sub_PsiBasisRep_TO_GridRep,                    &
+                         sub_PsiGridRep_TO_BasisRep,                    &
+                         sub_d0d1d2PsiBasisRep_TO_GridRep
   USE mod_Op
   USE mod_field
-
-  USE mod_psi_set_alloc
-  USE mod_ana_psi
-  USE mod_psi_B_TO_G
-  USE mod_basis
-
   IMPLICIT NONE
 
 
@@ -254,21 +250,16 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
 !----------------------------------------------------------
 
 END SUBROUTINE sub_ExactFact_analysis_option2
-SUBROUTINE sub_ExactFact_analysis_gV(psi,ana_psi,para_H,Tmax,deltaT)
+SUBROUTINE sub_ExactFact_analysis_gV(psi,para_H,Tmax,deltaT)
   USE mod_system
+  USE mod_basis
+  USE mod_psi,    ONLY : param_psi
   USE mod_Op
   USE mod_field
-
-  USE mod_psi_set_alloc
-  USE mod_ana_psi
-  USE mod_psi_B_TO_G
-  USE mod_basis
-
   IMPLICIT NONE
 
   TYPE (param_psi),     intent(inout)        :: psi
 
-  TYPE (param_ana_psi), intent(inout)        :: ana_psi
   real (kind=Rkind),    intent(in)           :: Tmax,deltaT ! Tmax, deltaT: Time step
 
 !----- for the operator ----------------------------
@@ -283,14 +274,6 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,ana_psi,para_H,Tmax,deltaT)
   real (kind=Rkind)    :: Wrho
   real (kind=Rkind)    :: grid(psi%nb_act1)
   integer              :: iact1,idyn,nio
-!  complex (kind=Rkind) :: d0psi(psi%nb_qa,psi%nb_be)
-!  complex (kind=Rkind) :: d1psi(psi%nb_qa,psi%nb_be,psi%nb_act1)
-!  complex (kind=Rkind) :: dtpsi(psi%nb_qa,psi%nb_be)
-!  complex (kind=Rkind) :: d1dtpsi(psi%nb_qa,psi%nb_be,psi%nb_act1)
-!  complex (kind=Rkind) :: d1dtpsi_2(psi%nb_qa,psi%nb_be,psi%nb_act1)
-!
-!  TYPE (param_psi)     :: dpsi,ddpsi
-
 
 !- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub='sub_ExactFact_analysis_gV'
@@ -331,6 +314,7 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,ana_psi,para_H,Tmax,deltaT)
 
     ! set the grid and the diabatic potential
     ! this is written only for T=0, hence we write ZERO
+    iterm_pot = para_H%derive_term_TO_iterm(0,0)
     write(nio,*) '# T, iq, Wrho, grid(ia), DiabPot(je,ie)'
     DO iq=1,psi%nb_qa
       CALL Rec_Qact(Grid(:),psi%BasisnD,iq,para_H%mole)
@@ -350,14 +334,13 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,ana_psi,para_H,Tmax,deltaT)
 END SUBROUTINE sub_ExactFact_analysis_gV
 SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
   USE mod_system
+  USE mod_basis
+  USE mod_psi,    ONLY : param_psi,param_ana_psi,dealloc_psi,           &
+                         sub_PsiBasisRep_TO_GridRep,                    &
+                         sub_PsiGridRep_TO_BasisRep,                    &
+                         sub_d0d1d2PsiBasisRep_TO_GridRep
   USE mod_Op
   USE mod_field
-
-  USE mod_psi_set_alloc
-  USE mod_ana_psi
-  USE mod_psi_B_TO_G
-  USE mod_basis
-
   IMPLICIT NONE
 
 
@@ -454,14 +437,13 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
 END SUBROUTINE sub_ExactFact_analysis_option1
 SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
   USE mod_system
+  USE mod_basis
+  USE mod_psi,    ONLY : param_psi,param_ana_psi,dealloc_psi,           &
+                         sub_PsiBasisRep_TO_GridRep,                    &
+                         sub_PsiGridRep_TO_BasisRep,                    &
+                         sub_d0d1d2PsiBasisRep_TO_GridRep
   USE mod_Op
   USE mod_field
-
-  USE mod_psi_set_alloc
-  USE mod_ana_psi
-  USE mod_psi_B_TO_G
-  USE mod_basis
-
   IMPLICIT NONE
 
 
@@ -626,14 +608,11 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
 END SUBROUTINE sub_ExactFact_analysis_v1
 SUBROUTINE sub_ExactFact_analysis_v0(T,psi,ana_psi,para_H,para_field)
   USE mod_system
-  USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi
-  USE mod_field,           ONLY : param_field,sub_dnE
-
-  USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
-  USE mod_ana_psi,         ONLY : norm2_psi
-  USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
   USE mod_basis
+  USE mod_psi,    ONLY : param_psi,param_ana_psi
 
+  USE mod_Op,     ONLY : param_Op,sub_PsiOpPsi
+  USE mod_field,  ONLY : param_field,sub_dnE
   IMPLICIT NONE
 
 

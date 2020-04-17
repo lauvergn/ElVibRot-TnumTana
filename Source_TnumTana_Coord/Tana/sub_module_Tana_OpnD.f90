@@ -512,11 +512,11 @@ subroutine check_allocate_opnd(F_nd)
  END FUNCTION get_sin
 
  function get_rho_OF_Q(Q,alfa) RESULT(rho)
- type(opel), intent(in)                   :: Q
- type(OpnD)                               :: rho
- TYPE(FracInteger), optional, intent(in)  :: alfa
+ type(opel), intent(in)              :: Q
+ type(OpnD)                          :: rho
+ TYPE(Frac_t), optional, intent(in)  :: alfa
 
- TYPE(FracInteger)               :: alfa_loc
+ TYPE(Frac_t)               :: alfa_loc
  integer :: idf
  character (len = *), parameter :: routine_name = 'get_rho_OF_Q'
 
@@ -559,11 +559,11 @@ subroutine check_allocate_opnd(F_nd)
 
  end function get_rho_OF_Q
  function get_Jac_OF_Q(Q,alfa) RESULT(jac)
- type(opel), intent(in)                   :: Q
- type(OpnD)                               :: Jac
- TYPE(FracInteger), optional, intent(in)  :: alfa
+ type(opel), intent(in)              :: Q
+ type(OpnD)                          :: Jac
+ TYPE(Frac_t), optional, intent(in)  :: alfa
 
- TYPE(FracInteger)               :: alfa_loc
+ TYPE(Frac_t)               :: alfa_loc
 
  integer :: idf
  character (len = *), parameter :: routine_name = 'get_Jac_OF_Q'

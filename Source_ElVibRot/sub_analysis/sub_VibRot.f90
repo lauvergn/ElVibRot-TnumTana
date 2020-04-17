@@ -50,8 +50,7 @@
       use mod_Coord_KEO, only: assignment(=),CoordType, tnum
       use mod_PrimOp,    only: assignment(=),param_d0matop, init_d0matop, write_d0matop, dealloc_d0matop
       USE mod_basis
-      USE mod_psi_set_alloc
-      USE mod_psi_Op
+      USE mod_psi,       ONLY : param_psi,Overlap_psi1_psi2
       USE mod_Op
       USE mod_analysis
       IMPLICIT NONE

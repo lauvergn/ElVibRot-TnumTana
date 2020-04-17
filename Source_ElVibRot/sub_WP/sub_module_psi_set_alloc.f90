@@ -548,8 +548,8 @@
       SUBROUTINE dealloc_array_OF_Psidim1(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      TYPE (param_psi), pointer, intent(inout) :: tab(:)
-      character (len=*), intent(in) :: name_var,name_sub
+      TYPE (param_psi),  pointer, intent(inout) :: tab(:)
+      character (len=*),          intent(in)    :: name_var,name_sub
 
       integer :: i
 !----- for debuging --------------------------------------------------
@@ -614,8 +614,8 @@
       SUBROUTINE dealloc_NParray_OF_Psidim1(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      TYPE (param_psi), allocatable, intent(inout) :: tab(:)
-      character (len=*), intent(in) :: name_var,name_sub
+      TYPE (param_psi),  allocatable, intent(inout) :: tab(:)
+      character (len=*),              intent(in)    :: name_var,name_sub
 
       integer :: i
 !----- for debuging --------------------------------------------------

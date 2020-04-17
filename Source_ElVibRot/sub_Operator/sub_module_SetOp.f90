@@ -1414,8 +1414,7 @@ MODULE mod_SetOp
 !=======================================================================================
       SUBROUTINE init_psi(psi,para_H,cplx)
       USE mod_system
-      USE mod_psi_set_alloc
-      !USE mod_psi
+      USE mod_psi, ONLY : param_psi,ecri_init_psi
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------

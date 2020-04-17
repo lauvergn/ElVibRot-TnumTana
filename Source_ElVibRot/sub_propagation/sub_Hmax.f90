@@ -43,8 +43,8 @@
       SUBROUTINE sub_Hmax(para_propa,para_H)
       USE mod_system
       USE mod_Op
-      USE mod_psi_set_alloc
-      USE mod_ana_psi
+      USE mod_psi,      ONLY : param_psi,Set_psi_With_index,renorm_psi, &
+                         alloc_psi,dealloc_psi,alloc_array,dealloc_array
       USE mod_propa
       USE mod_FullPropa
       USE mod_Davidson
@@ -334,9 +334,9 @@ relax = .TRUE.
 !=======================================================================================            
       SUBROUTINE sub_Auto_HmaxHmin_relax(para_propa,para_H)
       USE mod_system
+      USE mod_psi,      ONLY : param_psi,renorm_psi,alloc_psi,dealloc_psi,&
+                               Set_psi_With_index
       USE mod_Op
-      USE mod_psi_set_alloc
-      USE mod_ana_psi
       USE mod_propa
       USE mod_FullPropa
       IMPLICIT NONE
@@ -408,21 +408,6 @@ relax = .TRUE.
 
         WP0 = ZERO
         CALL Set_psi_With_index(WP0,R=ONE,ind_aie=WP0%nb_tot)
-!        IF (WP0%cplx) THEN
-!          WP0%CvecB(WP0%nb_tot) = CONE
-!        ELSE
-!          WP0%RvecB(WP0%nb_tot) = ONE
-!        END IF
-
-        !CALL Set_Random_psi(WP0)
-!        DO i=1,WP0%nb_tot
-!          CALL random_number(a)
-!          IF (WP0%cplx) THEN
-!           WP0%CvecB(WP0%nb_tot+1-i) = cmplx(a-HALF,ZERO,kind=Rkind)
-!          ELSE
-!            WP0%RvecB(WP0%nb_tot+1-i) = a-HALF
-!          END IF
-!        END DO
         WP0%symab = -1
         CALL renorm_psi(WP0,BasisRep=.TRUE.)
 
@@ -442,21 +427,6 @@ relax = .TRUE.
 
         WP0 = ZERO
         CALL Set_psi_With_index(WP0,R=ONE,ind_aie=1)
-!        IF (WP0%cplx) THEN
-!          WP0%CvecB(1) = CONE
-!        ELSE
-!          WP0%RvecB(1) = ONE
-!        END IF
-
-        !CALL Set_Random_psi(WP0)
-!        DO i=1,max(WP0%nb_tot/100,1)
-!          CALL random_number(a)
-!          IF (WP0%cplx) THEN
-!           WP0%CvecB(i) = cmplx(a-HALF,ZERO,kind=Rkind)
-!          ELSE
-!            WP0%RvecB(i) = a-HALF
-!          END IF
-!        END DO
         WP0%symab = -1
         CALL renorm_psi(WP0,BasisRep=.TRUE.)
 
@@ -488,9 +458,9 @@ relax = .TRUE.
       ! we are using the fact that chebychev propagation is very sensitive to the spectral range
       SUBROUTINE sub_Auto_Hmax_cheby(para_propa,para_H)
       USE mod_system
+      USE mod_psi,      ONLY : param_psi,renorm_psi,alloc_psi,dealloc_psi,&
+                               Set_Random_psi
       USE mod_Op
-      USE mod_psi_set_alloc
-      USE mod_ana_psi
       USE mod_march
       USE mod_propa
       USE mod_FullPropa

@@ -2096,7 +2096,7 @@
       USE mod_system
       USE mod_nDindex
       USE mod_Op
-      USE mod_psi_set_alloc
+      USE mod_psi,          ONLY : param_psi,alloc_psi,alloc_NParray,dealloc_NParray
       USE mod_propa
       USE mod_analysis
       USE mod_fullanalysis
@@ -2357,9 +2357,6 @@
         CALL sub_analyse(Tab_Psi,nb_ba,para_H_HADA,                     &
                            para_ana,para_intensity,para_AllOp,const_phys)
 
-      END DO
-      DO i=1,nb_ba
-        CALL dealloc_psi(Tab_Psi(i))
       END DO
       CALL dealloc_NParray(Tab_Psi,'Tab_Psi',name_sub)
 

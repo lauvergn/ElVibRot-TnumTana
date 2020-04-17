@@ -491,7 +491,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op, nb_Op, para_CRP,Ene)
 END SUBROUTINE calc_crp_p_lanczos
 SUBROUTINE Gpsi(Vect,tab_Op,nb_Op,Ene,l_conjg)
       use mod_system
-      USE mod_psi_set_alloc
+      USE mod_psi,     ONLY : param_psi,alloc_psi,dealloc_psi
       USE mod_Op
       implicit none
 
@@ -500,8 +500,8 @@ SUBROUTINE Gpsi(Vect,tab_Op,nb_Op,Ene,l_conjg)
       TYPE (param_Op)   :: tab_Op(nb_Op)
       logical           :: print_Op
       !logical, parameter:: cplx=.TRUE.
-      TYPE (param_psi)   :: Tab_Psi
-      TYPE (param_psi)   :: Tab_OpPsi
+      TYPE (param_psi)   :: Psi
+      TYPE (param_psi)   :: OpPsi
       character(len=3) :: l_conjg
       complex(kind=Rkind), dimension(tab_Op(1)%nb_tot) :: Vect
       integer         :: i
@@ -510,44 +510,44 @@ SUBROUTINE Gpsi(Vect,tab_Op,nb_Op,Ene,l_conjg)
          Vect(:)=conjg(Vect(:))
       end if
 
-      CALL init_psi(Tab_Psi,tab_Op(1),cplx=.TRUE.)
-      CALL alloc_psi(Tab_Psi,BasisRep=.TRUE.,GridRep=.FALSE.)
+      CALL init_psi(Psi,tab_Op(1),cplx=.TRUE.)
+      CALL alloc_psi(Psi,BasisRep=.TRUE.,GridRep=.FALSE.)
 
-      Tab_Psi%cvecB(:)=Vect(:)
-      Tab_OpPsi = Tab_Psi
+      Psi%cvecB(:)=Vect(:)
+      OpPsi = Psi
 
-      call sub_OpPsi(Tab_Psi,Tab_OpPsi,tab_Op(1))
+      call sub_OpPsi(Psi,OpPsi,tab_Op(1))
 
-      Vect(:)= Vect(:)*Ene - Tab_OpPsi%cvecB(:)
+      Vect(:)= Vect(:)*Ene - OpPsi%cvecB(:)
 
 
-      call sub_OpPsi(Tab_Psi,Tab_OpPsi,tab_Op(4))
+      call sub_OpPsi(Psi,OpPsi,tab_Op(4))
 
-      Vect(:) = Vect(:)+EYE*HALF*Tab_OpPsi%cvecB(:)
+      Vect(:) = Vect(:)+EYE*HALF*OpPsi%cvecB(:)
 
-      call sub_OpPsi(Tab_Psi,Tab_OpPsi,tab_Op(3))
+      call sub_OpPsi(Psi,OpPsi,tab_Op(3))
 
-      Vect(:) = Vect(:)+EYE*HALF*Tab_OpPsi%cvecB(:)
+      Vect(:) = Vect(:)+EYE*HALF*OpPsi%cvecB(:)
 
       if (l_conjg == 'CJG') then
          Vect(:)=conjg(Vect(:))
       end if
 
-      call dealloc_psi(Tab_Psi, .TRUE.)
-      call dealloc_psi(Tab_OpPsi, .TRUE.)
+      call dealloc_psi(Psi, .TRUE.)
+      call dealloc_psi(OpPsi, .TRUE.)
 END SUBROUTINE
 
 SUBROUTINE OpOnVec(Vect,tab_Op,l_conjg)
       use mod_system
-      USE mod_psi_set_alloc
+      USE mod_psi,     ONLY : param_psi,alloc_psi,dealloc_psi
       USE mod_Op
       implicit none
 
       TYPE (param_Op)   :: tab_Op
       logical           :: print_Op
       logical, parameter:: cplx=.TRUE.
-      TYPE (param_psi)   :: Tab_Psi
-      TYPE (param_psi)   :: Tab_OpPsi
+      TYPE (param_psi)   :: Psi
+      TYPE (param_psi)   :: OpPsi
       character(len=3) :: l_conjg
       complex(kind=Rkind), dimension(tab_Op%nb_tot) :: Vect
       integer         :: i
@@ -556,22 +556,22 @@ SUBROUTINE OpOnVec(Vect,tab_Op,l_conjg)
          Vect(:)=conjg(Vect(:))
       end if
 
-      CALL init_psi(Tab_Psi,tab_Op,cplx)
-      CALL alloc_psi(Tab_Psi,BasisRep=.TRUE.,GridRep=.FALSE.)
+      CALL init_psi(Psi,tab_Op,cplx)
+      CALL alloc_psi(Psi,BasisRep=.TRUE.,GridRep=.FALSE.)
 
-      Tab_Psi%cvecB(:)=Vect(:)
-      Tab_OpPsi = Tab_Psi
+      Psi%cvecB(:)=Vect(:)
+      OpPsi = Psi
 
-      call sub_OpPsi(Tab_Psi,Tab_OpPsi,tab_Op)
+      call sub_OpPsi(Psi,OpPsi,tab_Op)
 
-      Vect(:) = Tab_OpPsi%cvecB(:)
+      Vect(:) = OpPsi%cvecB(:)
 
       if (l_conjg == 'CJG') then
          Vect(:)=conjg(Vect(:))
       end if
 
-      call dealloc_psi(Tab_Psi, .TRUE.)
-      call dealloc_psi(Tab_OpPsi, .TRUE.)
+      call dealloc_psi(Psi, .TRUE.)
+      call dealloc_psi(OpPsi, .TRUE.)
 END SUBROUTINE OpOnVec
 
 SUBROUTINE ReNorm_CplxVec(Vect)

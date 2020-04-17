@@ -42,13 +42,14 @@
 !===========================================================================
  MODULE mod_march
  USE mod_system
- USE mod_field,         ONLY : param_field
- USE mod_psi_set_alloc, ONLY : param_psi,alloc_NParray,dealloc_NParray,dealloc_psi
+ use mod_Constant,      ONLY: assignment(=),get_conv_au_to_unit
+ USE mod_psi,           ONLY : param_psi,alloc_NParray,dealloc_NParray,dealloc_psi
  USE mod_propa,         ONLY : param_propa,param_poly,Calc_AutoCorr,    &
                                Write_AutoCorr,SaveWP_restart,           &
                                sub_analyze_mini_WP_OpWP
+ USE mod_field,         ONLY : param_field
+
  USE mod_march_SG4
- use mod_Constant,      only: assignment(=),get_conv_au_to_unit
  IMPLICIT NONE
 
  PRIVATE
@@ -61,9 +62,8 @@
       SUBROUTINE march_gene(T,WP,WP0,nb_WP,print_Op,                    &
                             para_H,para_propa,tab_Op,para_field)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -249,9 +249,8 @@
       SUBROUTINE march_RK2_field(T,WP,nb_WP,print_Op,                   &
                                  para_H,para_Dip,para_field,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -377,9 +376,8 @@
       SUBROUTINE march_RK4_field(T,WP,nb_WP,print_Op,                   &
                                  para_H,para_Dip,para_field,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -529,9 +527,8 @@
       END SUBROUTINE march_RK4_field
       SUBROUTINE march_RK4(T,no,WP,WP0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -668,9 +665,8 @@
       END SUBROUTINE march_RK4
       SUBROUTINE march_BS(T,no,WP,WP0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,dealloc_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -830,9 +826,8 @@
       END SUBROUTINE march_BS
       SUBROUTINE march_ModMidPoint(T,no,WP,WP0,para_H,para_propa,order)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,dealloc_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -986,11 +981,9 @@
       SUBROUTINE fcn_field(T,WP,dWP,para_H,para_Dip,                    &
                            para_field,w1)
       USE mod_system
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op,sub_OpPsi,sub_scaledOpPsi
+      USE mod_field, ONLY : param_field,sub_dnE
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1070,9 +1063,8 @@
       SUBROUTINE fcn(WP,dWP,para_H)
       USE mod_system
 
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1138,12 +1130,9 @@
                                  para_H,para_Dip,                       &
                                  para_field,para_propa)
       USE mod_system
-
-      USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op,sub_OpPsi,sub_scaledOpPsi
+      USE mod_field, ONLY : param_field,sub_dnE
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1349,10 +1338,8 @@
       !!@param: TODO
       SUBROUTINE march_noD(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op,sub_PsiOpPsi,sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1534,12 +1521,8 @@
       !!@param: TODO
   SUBROUTINE march_SIP(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,Overlap_psi1_psi2
+      USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1730,11 +1713,9 @@
   END SUBROUTINE march_SIP
   SUBROUTINE march_SIL(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi,renorm_psi_With_norm2
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+      USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,    &
+                            renorm_psi_With_norm2,Overlap_psi1_psi2
 
       IMPLICIT NONE
 
@@ -2041,12 +2022,8 @@
   END SUBROUTINE UPsi_spec_v1
   SUBROUTINE march_SIP_v1(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,Overlap_psi1_psi2
+      USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2237,12 +2214,8 @@
   END SUBROUTINE march_SIP_v1
   SUBROUTINE march_SIP_v0(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,Overlap_psi1_psi2
+      USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2446,12 +2419,8 @@
       !!@param: TODO
   SUBROUTINE march_Spectral(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,Overlap_psi1_psi2
+      USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2585,10 +2554,8 @@
       !!@param: TODO
       SUBROUTINE march_cheby(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       USE mod_propa
       USE mod_MPI
       IMPLICIT NONE
@@ -2857,10 +2824,8 @@
 
       SUBROUTINE march_cheby_old(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3049,10 +3014,8 @@
       !!@param: TODO
       SUBROUTINE march_nOD_im(T,no,psi,psi0,w1,w2,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3128,10 +3091,8 @@
       !!@param: TODO
       SUBROUTINE march_FOD_Opti_im(psi,Ene0,T,it,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-      USE mod_ana_psi,         ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,dealloc_psi,Overlap_psi1_psi2,norm2_psi
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3308,12 +3269,9 @@
                                       para_H,para_Dip,                  &
                                       para_field,para_propa)
       USE mod_system
-
-      USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_field, ONLY : param_field,sub_dnE
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3523,12 +3481,9 @@
       SUBROUTINE march_new_noD_field(T,WP,nb_WP,print_Op,               &
                                      para_H,para_Dip,para_field,para_propa)
       USE mod_system
-
-      USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_field, ONLY : param_field,sub_dnE
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3765,13 +3720,12 @@
                                  para_H,para_Dip,                       &
                                  para_field,para_propa)
       USE mod_system
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,               &
+                            sub_PsiBasisRep_TO_GridRep,                 &
+                            sub_PsiGridRep_TO_BasisRep
+      USE mod_field, ONLY : param_field,sub_dnE
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_OpiPsi,sub_scaledOpPsi
 
-      USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_OpiPsi,sub_scaledOpPsi
-
-      USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------

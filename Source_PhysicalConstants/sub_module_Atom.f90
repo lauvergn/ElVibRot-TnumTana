@@ -840,7 +840,9 @@ PRIVATE
     IF (ZZ < 0 .OR. ZZ > ubound(mendeleev%at,dim=1)) THEN
        write(out_unitp,*) ' ERROR in : get_mass_Tnum'
        write(out_unitp,*) 'ZZ,AA',ZZ,AA
-       write(out_unitp,*) ' I CANNOT find Z in "',trim(adjustl(name)),'"'
+       IF (present(name)) THEN
+          write(out_unitp,*) ' I CANNOT find Z in "',trim(adjustl(name)),'"'
+       END IF
        IF (present(Z)) THEN
          write(out_unitp,*) ' ... or Z (from the argument) is out of range'
        END IF
@@ -858,7 +860,9 @@ PRIVATE
       ELSE IF (AA < 0 .OR. AA > ubound(mendeleev%at,dim=2)) THEN
         write(out_unitp,*) ' ERROR in : get_mass_Tnum'
         write(out_unitp,*) 'ZZ,AA',ZZ,AA
-        write(out_unitp,*) ' I CANNOT read A in "',trim(adjustl(name)),'"'
+        IF (present(name)) THEN
+          write(out_unitp,*) ' I CANNOT read A in "',trim(adjustl(name)),'"'
+        END IF
         IF (present(A)) THEN
           write(out_unitp,*) ' ... or A (from the argument) is out of range'
         END IF
@@ -866,7 +870,9 @@ PRIVATE
       ELSE IF (.NOT. mendeleev%at(ZZ,AA)%SetIsotope) THEN
         write(out_unitp,*) 'ZZ,AA',ZZ,AA
         write(out_unitp,*) ' ERROR in : get_mass_Tnum'
-        write(out_unitp,*) ' This isotope is not defined in "',trim(adjustl(name)),'"'
+        IF (present(name)) THEN
+          write(out_unitp,*) ' This isotope is not defined in "',trim(adjustl(name)),'"'
+        END IF
         err_mass_loc = -1
       END IF
     END IF
@@ -882,11 +888,14 @@ PRIVATE
 
       get_mass_Tnum = mendeleev%at(ZZ,AA)%mass
     ELSE
-          write(out_unitp,*) ' ERROR : get_mass_Tnum'
-          write(out_unitp,*) ' I CANNOT get the right isotope'
-          write(out_unitp,*) ' Your atom is NOT in my list !!'
-          write(out_unitp,*) ' Your atom: "',trim(name),'"'
-          CALL List_OF_table_at(mendeleev)
+      write(out_unitp,*) ' ERROR : get_mass_Tnum'
+      write(out_unitp,*) ' I CANNOT get the right isotope'
+      write(out_unitp,*) ' Your atom is NOT in my list !!'
+        write(out_unitp,*) 'ZZ,AA',ZZ,AA
+      IF (present(name)) THEN
+        write(out_unitp,*) ' Your atom: "',trim(name),'"'
+      END IF
+      CALL List_OF_table_at(mendeleev)
       IF (present(err_mass)) THEN
         mass = -ONE
         err_mass = -1

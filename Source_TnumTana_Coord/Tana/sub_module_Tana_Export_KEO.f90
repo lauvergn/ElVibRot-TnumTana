@@ -928,7 +928,7 @@
      integer,                   intent(in)                :: param_JJ
      character(len=*), optional,intent(inout)             :: title
 
-     TYPE(FracInteger)                          :: alfa
+     TYPE(Frac_t)                               :: alfa
      integer                                    :: error
      integer                                    :: i, j, j1, k, l, m, n
      integer                                    :: ndim_sum, idf
@@ -1169,7 +1169,7 @@
    SUBROUTINE export_mctdh_name(opname, alfa, l_qJ)
      character(len=*),          intent(inout)             :: opname
      logical, optional,         intent(in)                :: l_qJ
-     TYPE(FracInteger),         intent(in)                :: alfa
+     TYPE(Frac_t),              intent(in)                :: alfa
 
      logical                    :: l_qJ_loc,error
      character (len = Name_len) :: calfa

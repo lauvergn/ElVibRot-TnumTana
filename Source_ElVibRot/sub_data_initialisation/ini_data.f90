@@ -44,7 +44,7 @@
 
 !=======================================================================================
 !     INITIALIZATION of most of parameters :
-!        mole, WP0, Operators....
+!        mole, Operators....
 !
 ! >const_phys: type constant contains all the physical constants
 !              *Note: may not safe with this name
@@ -65,7 +65,7 @@
                           para_AllBasis,BasisnD_Save,                   &
                           para_PES,ComOp,para_AllOp,                    &
                           para_ana,para_intensity,intensity_only,       &
-                          para_propa,WP0)
+                          para_propa)
 
       use mod_system
       USE mod_dnSVM,     only : assignment(=),Type_dnMat
@@ -79,7 +79,6 @@
       USE mod_Op
       USE mod_analysis
       USE mod_propa
-      USE mod_psi_set_alloc
       USE mod_Auto_Basis
       USE mod_MPI
       IMPLICIT NONE
@@ -104,7 +103,6 @@
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa)     :: para_propa
-      TYPE (param_psi)       :: WP0
       integer                :: nb_vp_specWP
 
 !----- variables pour la namelist minimum ----------------------------

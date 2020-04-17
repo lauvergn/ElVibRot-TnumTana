@@ -1710,7 +1710,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    type(Sum_OF_op1d)          :: SumOp1D_i ! it will contain a sum of Op1D
    type(Sum_OF_op1d)          :: SumOp1D_ExpandSin ! it will contain a sum of Op1D
 
-   TYPE(FracInteger)             :: alfa,r_sin
+   TYPE(Frac_t)               :: alfa,r_sin
 
    integer           :: idf_sin,idf_cos
    real (kind=Rkind) :: binomial

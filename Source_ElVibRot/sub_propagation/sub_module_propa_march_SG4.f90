@@ -42,8 +42,8 @@
 !===========================================================================
  MODULE mod_march_SG4
  USE mod_system
- USE mod_psi_set_alloc, ONLY : param_psi
- USE mod_propa,         ONLY : param_propa,Calc_AutoCorr,Write_AutoCorr
+ USE mod_psi,    ONLY : param_psi
+ USE mod_propa,  ONLY : param_propa,Calc_AutoCorr,Write_AutoCorr
  IMPLICIT NONE
 
  INTERFACE march_noD_SG4
@@ -69,11 +69,12 @@
                   BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
                   getbis_tab_nq,getbis_tab_nb
 
+ USE mod_psi,      ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,   &
+                          dealloc_psi,ecri_psi,Overlap_psi1_psi2,&
+                          norm2_psi,ReNorm_psi
+
  USE mod_Op,              ONLY : param_Op,write_param_Op
  USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
- USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
- USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
- USE mod_ana_psi,         ONLY : norm2_psi,ReNorm_psi
  USE mod_MPI
  IMPLICIT NONE
 
@@ -384,11 +385,13 @@ END SUBROUTINE march_noD_ONE_DP_SG4
                   BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
                   getbis_tab_nq,getbis_tab_nb
 
+ USE mod_psi,             ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,   &
+                                 dealloc_psi,ecri_psi,Overlap_psi1_psi2,&
+                                 norm2_psi,ReNorm_psi
+
  USE mod_Op,              ONLY : param_Op,write_param_Op
  USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
- USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
- USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
- USE mod_ana_psi,         ONLY : norm2_psi,ReNorm_psi
+
  USE mod_MPI
  IMPLICIT NONE
 
@@ -676,11 +679,12 @@ nb_thread = 1
                   BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
                   getbis_tab_nq,getbis_tab_nb
 
+ USE mod_psi,             ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,   &
+                                 dealloc_psi,ecri_psi,Overlap_psi1_psi2,&
+                                 norm2_psi,ReNorm_psi
+
  USE mod_Op,              ONLY : param_Op,write_param_Op
  USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
- USE mod_psi_set_alloc,   ONLY : param_psi,copy_psi2TOpsi1,alloc_psi,dealloc_psi,ecri_psi
- USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
- USE mod_ana_psi,         ONLY : norm2_psi,ReNorm_psi
  USE mod_MPI
  IMPLICIT NONE
 

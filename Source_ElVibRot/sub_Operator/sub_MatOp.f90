@@ -51,7 +51,7 @@ CONTAINS
       USE mod_system
       USE mod_Constant
       USE mod_SetOp
-      USE mod_MPI   
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -215,8 +215,7 @@ CONTAINS
       SUBROUTINE sub_build_MatOp(WP,nb_WP,para_Op,hermitic,print_mat)
       USE mod_system
       USE mod_Constant
-      USE mod_psi_set_alloc
-      USE mod_psi_Op
+      USE mod_psi, ONLY : param_psi, alloc_NParray, dealloc_NParray, copy_psi2TOpsi1, Overlap_psi1_psi2
       USE mod_SetOp
       USE mod_OpPsi
       IMPLICIT NONE
@@ -359,9 +358,6 @@ CONTAINS
       END IF
 
 !     - free memories -------
-      DO i=1,nb_WP
-        CALL dealloc_psi(OpWP(i))
-      END DO
       CALL dealloc_NParray(OpWP,"OpWP",name_sub)
 
       IF (allocated(CMatOp)) THEN
@@ -2458,10 +2454,9 @@ CONTAINS
       
       SUBROUTINE sub_MatOp_direct1(para_Op)
       USE mod_system
+      USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,alloc_NParray,dealloc_NParray
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_Op
       USE mod_MPI
       IMPLICIT NONE
 
@@ -2599,10 +2594,6 @@ CONTAINS
 
 !---- deallocation -------------------------------------
       IF(MPI_id==0) THEN
-        DO i=1,n
-          CALL dealloc_psi(Hpsi(i))
-          CALL dealloc_psi(psi(i))
-        END DO
         CALL dealloc_NParray(psi ,"psi", name_sub)
         CALL dealloc_NParray(Hpsi,"Hpsi",name_sub)
       ENDIF
@@ -2621,11 +2612,11 @@ CONTAINS
       USE mod_system
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
 
+      USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,       &
+                              alloc_array,dealloc_array
+
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-
-      USE mod_psi_Op
       USE mod_MPI
       IMPLICIT NONE
 
@@ -2738,10 +2729,6 @@ CONTAINS
       END IF
 
 !---- deallocation -------------------------------------
-      DO ith=1,nb_thread
-        CALL dealloc_psi(Hpsi(ith))
-        CALL dealloc_psi(psi(ith))
-      END DO
       CALL dealloc_array(psi ,"psi", name_sub)
       CALL dealloc_array(Hpsi,"Hpsi",name_sub)
 !     ----------------------------------------------------------
@@ -2759,12 +2746,11 @@ CONTAINS
 
       SUBROUTINE sub_MatOp_direct1_Overlap(para_Op)
       USE mod_system
+      USE mod_psi,     ONLY : param_psi,dealloc_psi,                    &
+                              Set_symab_OF_psiBasisRep,                 &
+                              sub_PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-
-      USE mod_psi_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2877,11 +2863,9 @@ CONTAINS
       END SUBROUTINE sub_MatOp_direct1_Overlap
       SUBROUTINE sub_MatOp_Grid(para_Op)
       USE mod_system
+      USE mod_psi,     ONLY : param_psi,dealloc_psi
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-
-      USE mod_psi_Op
       IMPLICIT NONE
 
 
@@ -2988,13 +2972,10 @@ CONTAINS
       END SUBROUTINE sub_MatOp_Grid
       SUBROUTINE sub_MatOp_Overlap_SG4(para_Op)
       USE mod_system
+      USE mod_basis_BtoG_GtoB_SGType4
+      USE mod_psi,     ONLY : param_psi,alloc_psi,dealloc_psi
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-
-      USE mod_psi_Op
-      USE mod_basis_BtoG_GtoB_SGType4
       IMPLICIT NONE
 
 
@@ -3134,13 +3115,10 @@ CONTAINS
       END SUBROUTINE sub_MatOp_Overlap_SG4
       SUBROUTINE sub_MatOp_V_SG4(para_Op)
       USE mod_system
+      USE mod_basis_BtoG_GtoB_SGType4
+      USE mod_psi,     ONLY : param_psi,alloc_psi,dealloc_psi
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-
-      USE mod_psi_Op
-      USE mod_basis_BtoG_GtoB_SGType4
       IMPLICIT NONE
 
 
@@ -3285,13 +3263,11 @@ CONTAINS
       END SUBROUTINE sub_MatOp_V_SG4
       SUBROUTINE sub_MatOp_OpExact_SG4(para_Op)
       USE mod_system
+      USE mod_basis_BtoG_GtoB_SGType4
+      !USE mod_psi,     ONLY : param_psi,alloc_psi,dealloc_psi
+
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-
-      USE mod_psi_Op
-      USE mod_basis_BtoG_GtoB_SGType4
       IMPLICIT NONE
 
 
@@ -3303,7 +3279,7 @@ CONTAINS
 
  ! local variables
  TYPE (CoordType), pointer :: mole
- TYPE (basis),   pointer :: BasisnD
+ TYPE (basis),     pointer :: BasisnD
 
 
  integer                :: ib,jb,ipb,jpb,i,iG,ith,nb,iBSRep
@@ -3411,11 +3387,9 @@ CONTAINS
 !===============================================================================     
       SUBROUTINE sub_OpBasisFi(para_Op,i)
       USE mod_system
+      USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,dealloc_psi
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-
-      USE mod_psi_Op
       USE mod_MPI
       IMPLICIT NONE
 

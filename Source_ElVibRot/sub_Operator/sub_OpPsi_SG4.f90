@@ -61,7 +61,7 @@ CONTAINS
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                                           tabR_AT_iG_TO_tabPackedBasis
 
- USE mod_psi_set_alloc,            ONLY : param_psi,ecri_psi,assignment (=)
+ USE mod_psi,                      ONLY : param_psi,ecri_psi
 
  USE mod_SetOp,                    ONLY : param_Op,write_param_Op
  USE mod_MPI
@@ -679,14 +679,16 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_nDindex
 
   USE mod_Coord_KEO,                ONLY : assignment(=),CoordType
+
+  USE mod_SymAbelian,               ONLY : Calc_symab1_EOR_symab2
+
   USE mod_basis_set_alloc,          ONLY : basis
   USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                                            tabR_AT_iG_TO_tabPackedBasis, &
                                            TypeRVec,dealloc_TypeRVec
-  USE mod_SymAbelian,               ONLY : Calc_symab1_EOR_symab2
-  USE mod_psi_Op,                   ONLY : Set_symab_OF_psiBasisRep
+  USE mod_psi,                      ONLY : param_psi,ecri_psi,          &
+                                           Set_symab_OF_psiBasisRep
 
-  USE mod_psi_set_alloc,            ONLY : param_psi,ecri_psi
   USE mod_SetOp,                    ONLY : param_Op,write_param_Op
   USE mod_MPI
   USE mod_MPI_Aid
@@ -1032,8 +1034,10 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
  USE mod_Coord_KEO,                ONLY : assignment(=),CoordType
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
-                  tabR_AT_iG_TO_tabPackedBasis,TypeRVec,dealloc_TypeRVec
- USE mod_psi_set_alloc,            ONLY : param_psi,ecri_psi
+                                          tabR_AT_iG_TO_tabPackedBasis, &
+                                          TypeRVec,dealloc_TypeRVec
+
+ USE mod_psi,                      ONLY : param_psi,ecri_psi
  USE mod_SetOp,                    ONLY : param_Op,write_param_Op
  IMPLICIT NONE
 
@@ -3284,7 +3288,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                                              PackedBasis_TO_tabR_index_MPI,&
                                              tabR_TO_tabPackedBasis_MPI,   &
                                              tabPackedBasis_TO_tabR_MPI
-    USE mod_psi_set_alloc,            ONLY : param_psi
+    USE mod_psi,                      ONLY : param_psi
     USE mod_SetOp,                    ONLY : param_Op
     USE mod_MPI
     USE mod_MPI_Aid
@@ -3526,7 +3530,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                                              tabR_TO_tabPackedBasis_MPI,   &
                                              tabPackedBasis_TO_tabR_MPI
 
-    USE mod_psi_set_alloc,            ONLY : param_psi
+    USE mod_psi,                      ONLY : param_psi
     USE mod_SetOp,                    ONLY : param_Op
     USE mod_MPI
     USE mod_MPI_Aid

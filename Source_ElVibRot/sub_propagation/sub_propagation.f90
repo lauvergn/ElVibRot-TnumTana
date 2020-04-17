@@ -43,7 +43,6 @@
 MODULE mod_FullPropa
 USE mod_Constant
 USE mod_MPI
-USE mod_type_ana_psi
 IMPLICIT NONE
 
 PRIVATE
@@ -74,7 +73,7 @@ CONTAINS
       USE mod_system
       USE mod_Op
       USE mod_propa
-      USE mod_psi_set_alloc
+      USE mod_psi,    ONLY : param_psi,ecri_psi,alloc_array,dealloc_array,dealloc_psi
       USE mod_field
       IMPLICIT NONE
 
@@ -274,13 +273,12 @@ CONTAINS
 !=======================================================================================
       SUBROUTINE sub_propagation3(E0,psi0,psi,para_H,para_propa)
       USE mod_system
-      USE mod_psi_B_TO_G
+      USE mod_psi,     ONLY : param_psi,ecri_psi,dealloc_psi,           &
+                              renorm_psi,Write_Psi_nDBasis,             &
+                              param_ana_psi
       USE mod_Op
       USE mod_propa
       USE mod_march
-      USE mod_psi_set_alloc
-      USE mod_psi_io
-      USE mod_ana_psi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -473,12 +471,12 @@ CONTAINS
 
       SUBROUTINE sub_propagation34(psi,Ene0,nb_diago,para_H,para_propa)
       USE mod_system
+      USE mod_psi,  ONLY : param_psi,alloc_psi,dealloc_psi,ecri_psi,     &
+                           Write_Psi_nDBasis,Set_psi_With_index,trie_psi,&
+                           norm2_psi,renorm_psi,renorm_psi_WITH_norm2,   &
+                           sub_PsiGridRep_TO_BasisRep,Overlap_psi1_psi2
+
       USE mod_Op
-      !USE mod_psi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_ana_psi
-      USE mod_psi_Op
       USE mod_propa
       USE mod_march
       IMPLICIT NONE
@@ -590,22 +588,7 @@ CONTAINS
         DO i=1,nb_diago
           CALL init_psi(psi(i),para_H,cplx)
           CALL alloc_psi(psi(i))
-          IF (psi(i)%cplx) THEN
-            psi(i)%CvecB(:) = ZERO
-            psi(i)%CvecB(i) = ONE
-!           DO j=1,psi(i)%nb_baie
-!             CALL random_number(a)
-!             psi(i)%CvecB(j) = cmplx(a-HALF,ZERO,kind=Rkind)
-!           END DO
-          ELSE
-            psi(i)%RvecB(:) = ZERO
-            psi(i)%RvecB(i) = ONE
-!           DO j=1,psi(i)%nb_baie
-!             CALL random_number(a)
-!             psi(i)%RvecB(j) = a-HALF
-!           END DO
-          END IF
-
+          CALL Set_psi_With_index(psi(i),ONE,ind_aie=i)
         END DO
 
       END IF
@@ -799,9 +782,7 @@ CONTAINS
       SUBROUTINE sub_propagation11(psi0,psi,nb_WP,para_H,para_propa)
       USE mod_system
       USE mod_Op
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_ana_psi
+      USE mod_psi,    ONLY : param_psi,ecri_psi
       USE mod_propa
       USE mod_march
       USE mod_MPI
@@ -953,13 +934,10 @@ CONTAINS
                                    para_field_new,make_field,           &
                                    para_H,para_Dip,para_propa)
       USE mod_system
-      USE mod_psi_B_TO_G
+      USE mod_psi,    ONLY : param_psi,ecri_psi,renorm_psi
       USE mod_Op
       USE mod_propa
       USE mod_march
-      !USE mod_psi
-      USE mod_psi_set_alloc
-      USE mod_ana_psi
       USE mod_field
       IMPLICIT NONE
 
@@ -1131,14 +1109,12 @@ CONTAINS
                                    para_field_new,make_field,           &
                                    para_AllOp,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,dealloc_psi,ecri_psi,  &
+                             sub_PsiBasisRep_TO_GridRep,sub_save_psi,   &
+                             sub_PsiGridRep_TO_BasisRep,overlap_psi1_psi2
       USE mod_Op
       USE mod_propa
       USE mod_march
-      !USE mod_psi
-      USE mod_psi_set_alloc
-      USE mod_psi_Op
-      USE mod_psi_io
-      USE mod_ana_psi
       USE mod_field
       IMPLICIT NONE
 

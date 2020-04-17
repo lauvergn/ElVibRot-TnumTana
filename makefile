@@ -35,7 +35,7 @@ CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 0
+QML = 1
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -513,6 +513,8 @@ DIRSmolyak = $(DirEVR)/sub_Smolyak_test
 DIROpt     = $(DirEVR)/sub_Optimization
 DIRCRP     = $(DirEVR)/sub_CRP
 
+DIRUT      = $(DIR_EVRT)/UnitTests
+
 #============================================================================
 #Libs, Minimize Only list: OK
 # USE mod_system
@@ -521,7 +523,7 @@ Obj_Primlib  = \
   $(OBJ)/sub_module_NumParameters.o \
   $(OBJ)/sub_module_memory.o $(OBJ)/sub_module_string.o \
   $(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_memory_NotPointer.o \
-  $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/sub_module_FracInteger.o \
+  $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/mod_Frac.o \
   $(OBJ)/sub_module_system.o \
   $(OBJ)/sub_module_MPI_Aid.o 
 
@@ -658,8 +660,8 @@ Obj_WP = \
  $(OBJ)/sub_module_psi_set_alloc.o \
  $(OBJ)/sub_module_psi_B_TO_G.o $(OBJ)/sub_module_ana_psi.o \
  $(OBJ)/sub_module_psi_Op.o \
- $(OBJ)/sub_module_psi_io.o\
- $(OBJ)/sub_psi0.o
+ $(OBJ)/sub_module_psi_io.o \
+ $(OBJ)/mod_psi.o
 
 Obj_propagation = \
  $(OBJ)/sub_module_field.o $(OBJ)/sub_module_ExactFact.o $(OBJ)/sub_module_propagation.o \
@@ -766,6 +768,28 @@ work:obj $(WORKEXE)
 .PHONY: PhysConst
 PhysConst: obj $(PhysConstEXE)
 	echo "Physical Constants"
+#============================================================================
+# Unitary tests
+.PHONY: ut UT UnitTests
+ut UT UnitTests: UT_Frac UT_PhysConst
+#
+.PHONY: UT_Frac ut_frac
+UT_Frac ut_frac : UnitTests_Frac.exe
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the Frac module"
+	@UnitTests_Frac.exe > $(DIRUT)/res_UT_Frac ; awk -f $(DIRUT)/frac.awk $(DIRUT)/res_UT_Frac
+	@echo "---------------------------------------"
+UnitTests_Frac.exe: obj $(OBJ)/UnitTests_Frac.o $(Obj_lib)
+	$(LYNK90)   -o UnitTests_Frac.exe $(OBJ)/UnitTests_Frac.o $(Obj_lib) $(LYNKFLAGS)
+$(OBJ)/UnitTests_Frac.o: $(DIRUT)/UnitTests_Frac.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRUT)/UnitTests_Frac.f90
+#
+.PHONY: UT_PhysConst ut_physconst
+UT_PhysConst ut_physconst: PhysConst
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the PhysConst module"
+	@cd Examples/exa_PhysicalConstants ; ./run_tests > $(DIRUT)/res_UT_PhysConst ; $(DIRUT)/PhysConst.sh $(DIRUT)/res_UT_PhysConst
+	@echo "---------------------------------------"
 #===============================================
 #===============================================
 #
@@ -861,8 +885,8 @@ $(OBJ)/sub_module_MPI.o:$(DirSys)/sub_module_MPI.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirSys)/sub_module_MPI.f90
 $(OBJ)/sub_module_NumParameters.o:$(DirSys)/sub_module_NumParameters.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_NumParameters.f90
-$(OBJ)/sub_module_FracInteger.o:$(DirSys)/sub_module_FracInteger.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_FracInteger.f90
+$(OBJ)/mod_Frac.o:$(DirSys)/mod_Frac.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/mod_Frac.f90
 $(OBJ)/sub_module_memory.o:$(DirSys)/sub_module_memory.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_memory.f90
 $(OBJ)/sub_module_memory_Pointer.o:$(DirSys)/sub_module_memory_Pointer.f90
@@ -1133,8 +1157,8 @@ $(OBJ)/sub_module_psi_Op.o:$(DIRWP)/sub_module_psi_Op.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_Op.f90
 $(OBJ)/sub_module_psi_io.o:$(DIRWP)/sub_module_psi_io.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_io.f90
-$(OBJ)/sub_psi0.o:$(DIRWP)/sub_psi0.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_psi0.f90
+$(OBJ)/mod_psi.o:$(DIRWP)/mod_psi.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/mod_psi.f90
 $(OBJ)/sub_ana_psi.o:$(DIRWP)/sub_ana_psi.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_ana_psi.f90
 #
@@ -1471,7 +1495,7 @@ $(lib_dep_mod_file):$(OBJ)/sub_module_file.o
 
 #mod_string
 lib_dep_mod_string=$(OBJ)/sub_module_system.o $(OBJ)/sub_module_RealWithUnit.o         \
-                   $(OBJ)/sub_module_FracInteger.o $(OBJ)/sub_module_file.o
+                   $(OBJ)/mod_Frac.o $(OBJ)/sub_module_file.o
 $(lib_dep_mod_string):$(OBJ)/sub_module_string.o
 
 #mod_RW_MatVec
@@ -1587,7 +1611,7 @@ lib_dep_mod_ana_psi=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_module_psi_Op.o
 $(lib_dep_mod_ana_psi):$(OBJ)/sub_module_ana_psi.o
 
 #mod_psi_Op
-lib_dep_mod_psi_Op=$(OBJ)/sub_psi0.o $(OBJ)/sub_module_psi_io.o $(OBJ)/sub_OpPsi_SG4.o \
+lib_dep_mod_psi_Op=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_OpPsi_SG4.o \
                    $(OBJ)/EVR_Module.o
 $(lib_dep_mod_psi_Op):$(OBJ)/sub_module_psi_Op.o
 
@@ -1618,7 +1642,7 @@ lib_dep_mod_Op=$(OBJ)/sub_HST_harm.o $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_ha
 $(lib_dep_mod_Op):$(OBJ)/sub_module_Op.o
 
 #mod_psi_io 
-lib_dep_mod_psi_io=$(OBJ)/sub_psi0.o $(OBJ)/sub_analyse.o
+lib_dep_mod_psi_io=$(OBJ)/sub_analyse.o
 $(lib_dep_mod_psi_io):$(OBJ)/sub_module_psi_io.o
 
 #mod_MatOp

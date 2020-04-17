@@ -54,10 +54,10 @@
         !! @param: opname  name of to the  elementary op.
         !! @param: coeff   Coefficient in front of the operator.
         TYPE OpEl
-          integer                   :: idf        = 0
-          integer                   :: idq        = 0
-          integer                   :: iv         = 0
-          TYPE(FracInteger)         :: alfa       = FracInteger(0,1)
+          integer              :: idf        = 0
+          integer              :: idq        = 0
+          integer              :: iv         = 0
+          TYPE(Frac_t)         :: alfa
 
           integer                   :: indexq     = 0
           character(len = Name_len) :: opname     = 'init0'
@@ -309,12 +309,12 @@
    type(opel),                   intent(inout)   :: Fel
    integer,                      intent(in)      :: idf
    integer,                      intent(in)      :: idq
-   TYPE(FracInteger),            intent(in)      :: alfa
+   TYPE(Frac_t),                 intent(in)      :: alfa
    integer,                      intent(in)      :: indexq
    complex(kind = Rkind),        intent(in)      :: coeff
    integer, optional,            intent(inout)   :: err_el
 
-   TYPE(FracInteger) :: alfa_loc
+   TYPE(Frac_t) :: alfa_loc
    integer :: err_el_loc
    character (len = Name_len)     ::       calfa
    character (len = Name_len)     ::       cindex
@@ -744,13 +744,13 @@
    integer, optional,            intent(in)      :: alfa_den
    integer, optional,            intent(inout)   :: err_el
 
-   TYPE(FracInteger) :: alfa_loc
+   TYPE(Frac_t) :: alfa_loc
 
 
    IF (present(alfa_den)) THEN
-     alfa_loc = FracInteger(alfa,alfa_den)
+     alfa_loc = Frac_t(alfa,alfa_den)
    ELSE
-     alfa_loc = FracInteger(alfa,1)
+     alfa_loc = Frac_t(alfa,1)
    END IF
 
    IF (present(err_el)) THEN
@@ -848,7 +848,7 @@
 FUNCTION Qnamealfa_MCTDH(Qname,alfa)
   character(len=:),   allocatable                 :: Qnamealfa_MCTDH
   character(len=*),               intent(in)      :: Qname
-  TYPE(FracInteger),              intent(in)      :: alfa
+  TYPE(Frac_t),              intent(in)      :: alfa
 
 
   real(kind=Rkind)                  :: ralfa
@@ -1009,10 +1009,10 @@ END FUNCTION Qnamealfa_MCTDH
 FUNCTION fnamealfa_Latex(fname,Qname,alfa)
   character(len=:), allocatable     :: fnamealfa_Latex
   character(len=*), intent(in)      :: fname,Qname
-  TYPE(FracInteger), intent(in)     :: alfa
+  TYPE(Frac_t),     intent(in)      :: alfa
 
   character(len=:), allocatable     :: fnamealfa_loc
-  TYPE(FracInteger)                 :: alfa_loc
+  TYPE(Frac_t)                 :: alfa_loc
 
 
   IF (allocated(fnamealfa_loc)) deallocate(fnamealfa_loc)
@@ -1022,7 +1022,7 @@ FUNCTION fnamealfa_Latex(fname,Qname,alfa)
     alfa_loc = alfa
   ELSE
     fnamealfa_loc = String_TO_String( "\frac{1}{" // fname)
-    alfa_loc = FracInteger(-alfa%num,alfa%den)
+    alfa_loc = Frac_t(-alfa%num,alfa%den)
   END IF
 
   IF (alfa /= 0) THEN
@@ -1044,10 +1044,10 @@ END FUNCTION fnamealfa_Latex
 FUNCTION Qnamealfa_Latex(Qname,alfa)
   character(len=:), allocatable     :: Qnamealfa_Latex
   character(len=*), intent(in)      :: Qname
-  TYPE(FracInteger),intent(in)      :: alfa
+  TYPE(Frac_t),     intent(in)      :: alfa
   character(len=:), allocatable     :: Qnamealfa_loc
 
-  TYPE(FracInteger)                 :: alfa_loc
+  TYPE(Frac_t)                 :: alfa_loc
 
   IF (allocated(Qnamealfa_Latex)) deallocate(Qnamealfa_Latex)
 
@@ -1056,7 +1056,7 @@ FUNCTION Qnamealfa_Latex(Qname,alfa)
     alfa_loc = alfa
   ELSE
     Qnamealfa_loc = String_TO_String( "\frac{1}{" // "{" // Qname // "}")
-    alfa_loc = FracInteger(-alfa%num,alfa%den)
+    alfa_loc = Frac_t(-alfa%num,alfa%den)
   END IF
 
   IF (alfa /= 0) THEN
@@ -1639,14 +1639,14 @@ END FUNCTION Qnamealfa_Latex
 
    type(opel),                    intent(in)    :: F1_el
    type(opel),                    intent(inout) :: F2_el
-   integer, optional,             intent(in)    :: idf
-   integer, optional,             intent(in)    :: idq
-   integer, optional,             intent(in)    :: alfa
-   TYPE(FracInteger), optional,   intent(in)    :: frac_alfa
-   integer, optional,             intent(in)    :: indexq
+   integer,           optional,   intent(in)    :: idf
+   integer,           optional,   intent(in)    :: idq
+   integer,           optional,   intent(in)    :: alfa
+   TYPE(Frac_t),      optional,   intent(in)    :: frac_alfa
+   integer,           optional,   intent(in)    :: indexq
    complex(kind=Rkind), optional, intent(in)    :: coeff
 
-   TYPE(FracInteger) :: alfa_loc
+   TYPE(Frac_t) :: alfa_loc
    character (len=*), parameter :: routine_name="copy_F1_el_into_F2_el"
 
    call get_opel(Fel = F2_el, idf = F1_el%idf, idq = F1_el%idq, &
@@ -1689,7 +1689,7 @@ END FUNCTION Qnamealfa_Latex
    type(opel),                 intent(inout)  :: OpEl1
    real(kind=Rkind),           intent(in)     :: R
 
-   TYPE(FracInteger) :: alfa_loc
+   TYPE(Frac_t) :: alfa_loc
    character (len=*), parameter :: routine_name="R_TO_OpEl"
 
    IF (R == ZERO) THEN ! zero
@@ -1709,7 +1709,7 @@ END FUNCTION Qnamealfa_Latex
    type(opel),                 intent(inout)  :: OpEl1
    complex(kind=Rkind),        intent(in)     :: C
 
-   TYPE(FracInteger) :: alfa_loc
+   TYPE(Frac_t) :: alfa_loc
    character (len=*), parameter :: routine_name="C_TO_OpEl"
 
    IF (C == CZERO) THEN
@@ -2150,7 +2150,7 @@ END FUNCTION Qnamealfa_Latex
        CALL get_opel(SplitOpEl(1),                                      &
                      idf    = 4,                                        &
                      idq    = F_OpEl%idq,                               &
-                     alfa   = FracInteger(1,1),                         &
+                     alfa   = Frac_t(1,1),                         &
                      indexq = F_OpEl%indexq,                            &
                      coeff  = F_OpEl%coeff)  ! PQ
 
@@ -2173,7 +2173,7 @@ END FUNCTION Qnamealfa_Latex
        CALL get_opel(SplitOpEl(2),                                      &
                      idf    = 4,                                        &
                      idq    = F_OpEl%idq,                               &
-                     alfa   = FracInteger(1,1),                         &
+                     alfa   = Frac_t(1,1),                              &
                      indexq = F_OpEl%indexq,                            &
                      coeff  = F_OpEl%coeff)  ! PQ
 
@@ -2187,7 +2187,7 @@ END FUNCTION Qnamealfa_Latex
                                                              ! cos(Q)^alfa => -Sin(Q) * cos(Q)^alfa-1
 !  It doesn't work when OpEl contains a P or J or L
 
-   TYPE(FracInteger)    :: alfa_prim
+   TYPE(Frac_t)    :: alfa_prim
    real(kind=Rkind)     :: ralfa
    complex(kind=Rkind)  :: coeff
    character (len=*), parameter   :: routine_name='Der1_OF_d0OpEl_TO_d1OpEl'
@@ -2222,7 +2222,7 @@ END FUNCTION Qnamealfa_Latex
      CALL get_opel(d1OpEl(1),                                           &
                      idf    = 2,                                        &
                      idq    = d0OpEl%idq,                               &
-                     alfa   = FracInteger(1,1),                         &
+                     alfa   = Frac_t(1,1),                              &
                      indexq = d0OpEl%indexq,                            &
                      coeff  = cone)
 
@@ -2240,7 +2240,7 @@ END FUNCTION Qnamealfa_Latex
      CALL get_opel(d1OpEl(1),                                           &
                      idf    = 6,                                        &
                      idq    = d0OpEl%idq,                               &
-                     alfa   = FracInteger(1,1),                         &
+                     alfa   = Frac_t(1,1),                              &
                      indexq = d0OpEl%indexq,                            &
                      coeff  = -cone)
 
@@ -2248,7 +2248,7 @@ END FUNCTION Qnamealfa_Latex
      CALL get_opel(d1OpEl(1),                                           &
                      idf    = 5,                                        &
                      idq    = d0OpEl%idq,                               &
-                     alfa   = FracInteger(1,1),                         &
+                     alfa   = Frac_t(1,1),                              &
                      indexq = d0OpEl%indexq,                            &
                      coeff  = cone)
 
@@ -2256,7 +2256,7 @@ END FUNCTION Qnamealfa_Latex
      CALL get_opel(d1OpEl(1),                                           &
                      idf    = 5,                                        &
                      idq    = d0OpEl%idq,                               &
-                     alfa   = FracInteger(-2,1),                        &
+                     alfa   = Frac_t(-2,1),                             &
                      indexq = d0OpEl%indexq,                            &
                      coeff  = cone)
 
@@ -2264,7 +2264,7 @@ END FUNCTION Qnamealfa_Latex
      CALL get_opel(d1OpEl(1),                                           &
                      idf    = 6,                                        &
                      idq    = d0OpEl%idq,                               &
-                     alfa   = FracInteger(-2,1),                        &
+                     alfa   = Frac_t(-2,1),                             &
                      indexq = d0OpEl%indexq,                            &
                      coeff  = -cone)
 

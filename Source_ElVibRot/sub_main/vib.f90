@@ -47,9 +47,8 @@
       USE mod_PrimOp
       USE mod_basis
 
-      USE mod_psi_set_alloc
-      USE mod_psi_Op
-      USE mod_ana_psi
+      USE mod_psi
+
 
       USE mod_propa
       USE mod_FullPropa
@@ -162,7 +161,7 @@
                         para_AllBasis,BasisnD_Save,                     &
                         para_PES,ComOp,para_AllOp,                      &
                         para_ana,para_intensity,intensity_only,         &
-                        para_propa,WP0(1))
+                        para_propa)
 
 !#if(run_MPI)
       !if_propa=para_ana%propa !< add to some type  later
@@ -1082,11 +1081,10 @@
       USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
+      USE mod_psi
       USE mod_Op
       USE mod_analysis
       USE mod_propa
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
       IMPLICIT NONE
 
 !
@@ -1161,7 +1159,7 @@
                         para_AllBasis,BasisnD_Save,                     &
                         para_PES,ComOp,para_AllOp,                      &
                         para_ana,para_intensity,intensity_only,         &
-                        para_propa,WP0)
+                        para_propa)
 
       write(out_unitp,*)
       write(out_unitp,*)
@@ -1241,9 +1239,7 @@ para_mem%mem_debug = .FALSE.
       USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
-      USE mod_psi_set_alloc
-      USE mod_psi_Op
-      USE mod_psi_io
+      USE mod_psi
 
       USE mod_propa
       USE mod_FullPropa
@@ -1362,7 +1358,7 @@ para_mem%mem_debug = .FALSE.
                         para_AllBasis,BasisnD_Save,                     &
                         para_PES,ComOp,para_AllOp,                      &
                         para_ana,para_intensity,intensity_only,         &
-                        para_propa,WP0)
+                        para_propa)
 
       para_H => para_AllOp%tab_Op(1)
       CALL dealloc_Basis(BasisnD_Save)
@@ -1506,8 +1502,6 @@ para_mem%mem_debug = .FALSE.
 
         CALL Set_psi_With_index(Tab_Psi(i),ONE,ind_aie=i)
 
-        !CALL Set_Random_psi(Tab_Psi(i))
-
       END DO
 
 para_mem%mem_debug = .FALSE.
@@ -1601,9 +1595,7 @@ END SUBROUTINE Sub_OpPsi_test
 
 SUBROUTINE Tune_SG4threads_HPsi(cplx,nb_psi,para_H)
 USE mod_system
-USE mod_psi_set_alloc
-USE mod_psi_Op
-
+USE mod_psi,     ONLY : param_psi,alloc_psi,dealloc_NParray,Set_Random_psi
 USE mod_Op
 IMPLICIT NONE
 
@@ -1654,15 +1646,7 @@ DO i=1,nb_psi_loc
   CALL alloc_psi(Tab_Psi(i),BasisRep=.TRUE.,GridRep=.FALSE.)
   Tab_Psi(i)   = ZERO
   Tab_OpPsi(i) = Tab_Psi(i)
-  IF (cplx) THEN
-    DO ib=1,size(Tab_Psi(i)%CvecB)
-      CALL random_number(a)
-      CALL random_number(b)
-      Tab_Psi(i)%CvecB(ib) = cmplx(a,b,kind=Rkind)
-    END DO
-  ELSE
-    CALL random_number(Tab_Psi(i)%RvecB)
-  END IF
+  CALL Set_Random_psi(Tab_Psi(i))
 END DO
 
 
@@ -1703,10 +1687,6 @@ SG4_maxth = opt_PSG4_maxth
 write(out_unitp,*) 'Optimal threads: ',SG4_maxth,' Delta Real Time',RealTime(SG4_maxth)
 
 
-DO i=1,size(Tab_Psi)
-  CALL dealloc_psi(Tab_Psi(i),  delete_all=.TRUE.)
-  CALL dealloc_psi(Tab_OpPsi(i),delete_all=.TRUE.)
-END DO
 CALL dealloc_NParray(Tab_OpPsi,'Tab_OpPsi',name_sub)
 CALL dealloc_NParray(Tab_Psi,  'Tab_Psi',  name_sub)
 
@@ -1717,14 +1697,12 @@ END SUBROUTINE Tune_SG4threads_HPsi
       USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
+      USE mod_psi
+
       USE mod_Op
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_propa
-      USE mod_ana_psi
-      USE mod_psi_set_alloc
-      USE mod_param_WP0
-      USE mod_psi_io
       USE mod_Auto_Basis
 
       IMPLICIT NONE
@@ -1806,7 +1784,7 @@ END SUBROUTINE Tune_SG4threads_HPsi
                         para_AllBasis,BasisnD_Save,                     &
                         para_PES,ComOp,para_AllOp,                      &
                         para_ana,para_intensity,intensity_only,         &
-                        para_propa,WP0)
+                        para_propa)
 
       para_H => para_AllOp%tab_Op(1)
       CALL init_psi(WP0,para_H,para_propa%para_WP0%WP0cplx)
