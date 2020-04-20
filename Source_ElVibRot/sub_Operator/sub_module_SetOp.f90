@@ -42,7 +42,7 @@
 !===========================================================================
 MODULE mod_SetOp
       USE mod_system
-      use mod_PrimOp, only: assignment(=),param_typeop, param_pes, dealloc_typeop,    &
+      use mod_PrimOp, only: param_typeop, param_pes, dealloc_typeop,    &
                             write_typeop, param_d0matop, init_d0matop,  &
                             dealloc_d0matop
 

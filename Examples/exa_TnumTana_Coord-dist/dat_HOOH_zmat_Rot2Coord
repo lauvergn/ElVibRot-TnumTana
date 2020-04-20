@@ -1,0 +1,35 @@
+here=`pwd`
+DIR_vib=../..
+cd $DIR_vib
+  make Tnum
+cd $here
+
+$DIR_vib/Tnum90.exe << ** > res
+ &variables
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+         nrho=2
+ /
+ &Coord_transfo name_transfo='zmat' nat=4 /
+O
+O 1
+H 1 2
+H 1 2 3
+
+ &Coord_transfo name_transfo='Rot2Coord' /
+   &Rot2Coord num_Rot=6 list_2Coord(1:2)=2,4 /
+
+ &Coord_transfo name_transfo='active' opt_transfo=1 /
+1 1 1 1 1 1
+
+ &minimum OnTheFly=t read_itQ0transfo=1 read_nameQ=t unit='angs' /
+ ROO 1.4
+ RH1 1.0
+ A1  100.
+ RH2 1.0
+ A2  100.
+ D    60.
+
+ &calculation calc_QTOx=t calc_Tnum=t /
+**
+

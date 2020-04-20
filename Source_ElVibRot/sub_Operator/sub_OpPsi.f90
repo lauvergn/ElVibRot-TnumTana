@@ -1366,7 +1366,7 @@ CONTAINS
 
       SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
-      USE mod_Coord_KEO,       ONLY : assignment(=),get_Qact, get_d0GG
+      USE mod_Coord_KEO,       ONLY : get_Qact, get_d0GG
       USE mod_basis,           ONLY : rec_Qact
       USE mod_basis_BtoG_GtoB, ONLY : DerivOp_TO_RVecG
 
@@ -1630,7 +1630,7 @@ STOP 'cplx'
  !SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
  SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid)
  USE mod_system
- USE mod_Coord_KEO,               ONLY : assignment(=),get_Qact, get_d0GG
+ USE mod_Coord_KEO,               ONLY : get_Qact, get_d0GG
 
  USE mod_basis,                   ONLY : rec_Qact
  USE mod_basis_BtoG_GtoB,         ONLY : DerivOp_TO_RVecG
@@ -2365,7 +2365,7 @@ STOP 'cplx'
 
       SUBROUTINE  sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp,pot_only)
       USE mod_system
-      USE mod_PrimOp,  ONLY : assignment(=),param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
+      USE mod_PrimOp,  ONLY : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
       USE mod_psi,     ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi, &
                               alloc_array,dealloc_array,                &
                               sub_d0d1d2PsiBasisRep_TO_GridRep,         &

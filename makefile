@@ -2,8 +2,8 @@
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 # F90 = mpifort
- F90 = gfortran
-#F90 = nagfor
+#F90 = gfortran
+ F90 = nagfor
 #F90 = ifort
 #F90 = pgf90
 
@@ -33,13 +33,17 @@ ARPACK = 0
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
-LAPACK = 1
+LAPACK = 0
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 1
+QML = 0
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
 extf = $(EXTFextern)
+## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
+# NVHYP  = 1 : with intrinsic inverse hyperbolic functions
+# NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic ones)
+INVHYP  = 1
 #
 ## Operating system, OS? automatic using uname:
 OS=$(shell uname)
@@ -372,6 +376,7 @@ $(info ***********F90LIB:           $(F90LIB))
 $(info ***********subsystem file:   sub_system.$(extf))
 $(info ***********DIR of potlib.a:  $(ExternalDIR))
 $(info ***********potLib:           $(PESLIB))
+$(info ***********INVHYP:           $(INVHYP))
 $(info ***********************************************************************)
 
 F90_FLAGS = $(F90) $(F90FLAGS)
@@ -425,6 +430,7 @@ CPPSHELL = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
            -D__TANA_VER="'$(TANA_ver)'"
 CPPSHELL_ARPACK  = -D__ARPACK="$(ARPACK)"
 CPPSHELL_CERFACS = -D__CERFACS="$(CERFACS)"
+CPPSHELL_INVHYP  = -D__INVHYP="$(INVHYP)"
 CPPSHELL_DIAGO   = -D__LAPACK="$(LAPACK)"
 CPPSHELL_QML     = -D__QML="$(QML)"
 #==========================================
@@ -537,6 +543,7 @@ Obj_io = $(OBJ)/sub_io.o
 
 # dnSVM, Minimize Only list: OK
 # USE mod_dnSVM
+# mod_dnS is a new version developped for QML
 Obj_dnSVM = \
   $(OBJ)/sub_module_dnS.o $(OBJ)/sub_module_VecOFdnS.o $(OBJ)/sub_module_MatOFdnS.o \
   $(OBJ)/sub_module_dnV.o $(OBJ)/sub_module_dnM.o $(OBJ)/sub_module_IntVM.o \
@@ -755,6 +762,13 @@ Tnum_MCTDH: obj $(TNUMMCTDHEXE)
 #TNUM_MiddasCppEXE
 Tnum_MidasCpp Midas midas: obj $(TNUM_MiddasCppEXE)
 	echo "Tnum_MidasCpp"
+#
+.PHONY: Tana_test
+Tana_test: Tana_test.exe
+Tana_test.exe: obj $(Obj_lib) $(OBJ)/libTnum.a $(OBJ)/Tana_test.o 
+	$(LYNK90)   -o Tana_test.exe $(OBJ)/Tana_test.o $(OBJ)/libTnum.a $(LYNKFLAGS)
+$(OBJ)/Tana_test.o: $(DirTNUM)/sub_main/Tana_test.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_main/Tana_test.f90
 #============================================================================
 # Some all programs
 .PHONY: gauss GWP work
@@ -779,7 +793,7 @@ UT_Frac ut_frac : UnitTests_Frac.exe
 	@echo "Unitary tests for the Frac module"
 	@UnitTests_Frac.exe > $(DIRUT)/res_UT_Frac ; awk -f $(DIRUT)/frac.awk $(DIRUT)/res_UT_Frac
 	@echo "---------------------------------------"
-UnitTests_Frac.exe: obj $(OBJ)/UnitTests_Frac.o $(Obj_lib)
+UnitTests_Frac.exe: obj $(Obj_lib) $(OBJ)/UnitTests_Frac.o
 	$(LYNK90)   -o UnitTests_Frac.exe $(OBJ)/UnitTests_Frac.o $(Obj_lib) $(LYNKFLAGS)
 $(OBJ)/UnitTests_Frac.o: $(DIRUT)/UnitTests_Frac.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRUT)/UnitTests_Frac.f90
@@ -909,6 +923,8 @@ $(OBJ)/sub_module_DInd.o:$(DirnDind)/sub_module_DInd.f90
 $(OBJ)/sub_module_nDindex.o:$(DirnDind)/sub_module_nDindex.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirnDind)/sub_module_nDindex.f90
 ###
+$(OBJ)/mod_dnS.o:$(DirdnSVM)/mod_dnS.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DirdnSVM)/mod_dnS.f90
 $(OBJ)/sub_module_dnS.o:$(DirdnSVM)/sub_module_dnS.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnS.f90
 $(OBJ)/sub_module_VecOFdnS.o:$(DirdnSVM)/sub_module_VecOFdnS.f90

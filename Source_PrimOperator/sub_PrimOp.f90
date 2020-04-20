@@ -45,14 +45,14 @@
               ReadWrite_nDFitW,Analysis_nDFit,ndfit1_to_tndfit2,        &
               analysis_ndfitw,read_ndfit,sub_ndfunc_from_ndfit,Read_Analysis
      USE mod_PrimOp_def, ONLY : param_PES
-     USE mod_OTF_def,    ONLY : param_otf,assignment (=)
+     USE mod_OTF_def,    ONLY : param_otf
      USE mod_OTF,        ONLY : read_dndipcc_gauss,read_hess_fchk,      &
                       read_dnpolarizabilitycc_gauss,read_gradhess_molpro
-     USE mod_SimpleOp,  ONLY : assignment(=),param_typeop,dealloc_typeop,&
-                               write_typeop, init_typeop,                &
-                               derive_termqact_to_derive_termqdyn,       &
-                           param_d0matop, init_d0matop,dealloc_d0matop,  &
-                            dealloc_tab_of_d0matop,Write_d0MatOp,        &
+     USE mod_SimpleOp,  ONLY : param_typeop,dealloc_typeop,             &
+                               write_typeop, init_typeop,               &
+                               derive_termqact_to_derive_termqdyn,      &
+                           param_d0matop, init_d0matop,dealloc_d0matop, &
+                            dealloc_tab_of_d0matop,Write_d0MatOp,       &
                                get_iop_from_n_op, &
                                 param_dnMatOp,Init_Tab_OF_dnMatOp,      &
                   Get_Scal_FROM_Tab_OF_dnMatOp,dealloc_tab_of_dnmatop,  &
@@ -85,7 +85,6 @@
              pot2,sub_freq2_rph,sub_dnfreq_4p,set_rphpara_at_qact1
 
    ! Public things from other modules
-   PUBLIC :: assignment (=)
    PUBLIC :: param_nDFit,nDFunct_WITH_Q,                                &
              ReadWrite_nDFitW,Analysis_nDFit,ndfit1_to_tndfit2,         &
              analysis_ndfitw,read_ndfit,sub_ndfunc_from_ndfit,Read_Analysis
@@ -111,9 +110,9 @@
 !===============================================================================
       SUBROUTINE Sub_init_dnOp(mole,para_Tnum,para_PES)
       USE mod_system
-      USE mod_SimpleOp,   only : assignment(=),param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
+      USE mod_SimpleOp,   only : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
       USE mod_PrimOp_def, only : param_PES
-      USE mod_Coord_KEO,  only : assignment(=),CoordType,Tnum
+      USE mod_Coord_KEO,  only : CoordType,Tnum
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------
@@ -209,9 +208,9 @@
 
       SUBROUTINE Sub_init_dnOp_old(mole,para_Tnum,para_PES)
       USE mod_system
-      USE mod_SimpleOp,   only : assignment(=),param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
+      USE mod_SimpleOp,   only : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
       USE mod_PrimOp_def, only : param_PES
-      USE mod_Coord_KEO,  only : assignment(=),CoordType,Tnum
+      USE mod_Coord_KEO,  only : CoordType,Tnum
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------
@@ -1410,7 +1409,7 @@
       SUBROUTINE TnumKEO_TO_tab_dnH(Qact,Tab_dnH,mole,para_Tnum)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : assignment(=),CoordType,Tnum,get_dng_dnGG,&
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG,&
                                 sub3_dnrho_ana,calc3_f2_f1Q_num, sub3_dndetGG
       USE mod_SimpleOp
       IMPLICIT NONE
@@ -1523,7 +1522,7 @@
       SUBROUTINE TnumKEO_TO_tab_d0H_zmatrix(Qact,d0MatH,mole,para_Tnum)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : assignment(=),zmatrix,Tnum
+      USE mod_Coord_KEO, only : zmatrix,Tnum
       USE mod_SimpleOp
       IMPLICIT NONE
 
@@ -1544,7 +1543,7 @@
       SUBROUTINE TnumKEO_TO_tab_d0H_CoordType(Qact,d0MatH,mole,para_Tnum)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : assignment(=),CoordType,Tnum,get_dng_dnGG, &
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG,            &
                                 sub3_dnrho_ana,calc3_f2_f1Q_num, sub3_dndetGG
       USE mod_SimpleOp
       IMPLICIT NONE
@@ -1712,7 +1711,7 @@
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant
-      USE mod_Coord_KEO, only : assignment(=),CoordType,Tnum,get_dng_dnGG,calc_freq
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG,calc_freq
       USE mod_SimpleOp
       USE mod_PrimOp_def
       IMPLICIT NONE
@@ -1846,7 +1845,7 @@
       SUBROUTINE calc3_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -2311,7 +2310,7 @@
       SUBROUTINE calc4_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -2777,7 +2776,7 @@
       SUBROUTINE calc5_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_Coord_KEO
       USE mod_SimpleOp
@@ -3241,7 +3240,7 @@
                             para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : assignment(=),CoordType,Tnum,get_dng_dnGG, sub_dnFCC_TO_dnFcurvi
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG, sub_dnFCC_TO_dnFcurvi
 
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -3642,7 +3641,7 @@
                                            Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -3790,7 +3789,7 @@
                                       Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -3964,7 +3963,7 @@
                                para_Tnum,mole,RPHTransfo,nderiv,test)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -4322,7 +4321,7 @@
                                para_Tnum,mole,RPHTransfo,nderiv,test)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -4637,7 +4636,7 @@
                                Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -4876,7 +4875,7 @@
       SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_zmatrix(para_Tnum,mole,para_PES,Tana)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=), get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -4895,12 +4894,11 @@
         CALL Finalyze_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole%CoordType,para_PES)
       END IF
 
-
       END SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_zmatrix
       SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole,para_PES,Tana)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -5107,7 +5105,12 @@
         CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
         IF (debug) CALL write_op(para_Tnum%TWOxKEO,header=.TRUE.)
 
+        write(out_unitp,*) '--- First comparison with internal analytical KEO'
         CALL comparison_G_FROM_Tnum_Tana(para_Tnum%ExpandTWOxKEO,mole,para_Tnum,Qact)
+
+        ! second comparison with the reading of the KEO in MCTDH format
+        write(out_unitp,*) '--- Second comparison with MCTDH read KEO'
+        CALL comparison_G_FROM_Tnum_ReadKEO(mole,para_Tnum,Qact)
 
         write(out_unitp,*)
         CALL time_perso('Tana')

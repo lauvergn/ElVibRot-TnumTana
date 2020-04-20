@@ -28,7 +28,7 @@
 !===========================================================================
 MODULE mod_ActiveTransfo
       use mod_system
-      use mod_dnSVM, only: assignment(=), alloc_array, dealloc_array, type_dnvec,   &
+      use mod_dnSVM, only: alloc_array, dealloc_array, type_dnvec,   &
                            type_dns, write_dnsvm, alloc_dnsvm,       &
                            set_zero_to_dnsvm, sub_dns_to_dnvec,      &
                            dealloc_dnsvm
@@ -759,11 +759,15 @@ MODULE mod_ActiveTransfo
 
 !---------------------------------------------------------------------
       logical, parameter :: debug = .FALSE.
-!     logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING Qact_TO_Qdyn_FROM_ActiveTransfo'
         write(out_unitp,*) 'Qact',Qact
+        write(out_unitp,*) 'size Qact',size(Qact)
+        write(out_unitp,*) 'size Qdyn',size(Qdyn)
+        write(out_unitp,*) 'size list_QdynTOQact',size(ActiveTransfo%list_QdynTOQact)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -773,6 +777,7 @@ MODULE mod_ActiveTransfo
       IF (debug) THEN
         write(out_unitp,*) 'Qdyn',Qdyn
         write(out_unitp,*) 'END Qact_TO_Qdyn_FROM_ActiveTransfo'
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 

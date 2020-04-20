@@ -332,7 +332,7 @@
             END IF ! for para_propa%para_WP0%WP0_nb_CleanChannel > 0
 
             IF(MPI_id==0) CALL norm2_psi(WP0(1))
-            write(out_unitp,*) ' Norm of |WP0>',WP0(1)%norm2
+            write(out_unitp,*) ' Norm^2 of |WP0>',WP0(1)%norm2
             IF(MPI_id==0) CALL renorm_psi_With_norm2(WP0(1))
             write(out_unitp,*) ' Analysis of |WP0> or Mu|WP0>'
             write(out_unitp,*)

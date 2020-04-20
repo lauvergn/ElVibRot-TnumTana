@@ -28,43 +28,37 @@
 !===========================================================================
 MODULE mod_module_DInd
 use mod_system
-use mod_dnSVM, only: assignment(=),type_intvec, write_intvec
+use mod_dnSVM, only: type_intvec, write_intvec
 IMPLICIT NONE
 
 PRIVATE
 
 TYPE TypeDInd
-  integer :: ndim  = 0
-  integer :: MaxnD = -1
+  integer              :: ndim  = 0
+  integer              :: MaxnD = -1
   integer, allocatable :: tab_ind(:,:)
   integer, allocatable :: indD_OF_Dm1(:)
   integer, allocatable :: i_TO_l(:)         ! give the l value for i (usefull when i /= l+1)
   integer, allocatable :: lmax_TO_nb(:)     ! give the nb value for l (number of terms with l<=lmax)
 
   integer, allocatable :: tab_q(:)          ! size: ndim
+CONTAINS
+  PROCEDURE, PRIVATE, PASS(DInd1) :: TypeDInd2TOTypeDInd1
+  GENERIC,   PUBLIC  :: assignment(=) => TypeDInd2TOTypeDInd1
 END TYPE TypeDInd
 
-TYPE TypeTab_DInd
-  TYPE (TypeDInd), allocatable    :: nDind(:)
-END TYPE TypeTab_DInd
-
-INTERFACE assignment (=)
-  MODULE PROCEDURE TypeDInd2TOTypeDInd1,nDInd2TOnDInd1
-END INTERFACE
-
-PUBLIC :: assignment (=)
 PUBLIC :: TypeDInd, alloc_TypeDInd, dealloc_TypeDInd, Write_TypeDInd
-PUBLIC :: TypeTab_DInd, Write_Tab_nDInd,dealloc_nDInd,nDInd2TOnDInd1
+PUBLIC :: Write_Tab_nDInd,dealloc_nDInd,nDInd2TOnDInd1
 PUBLIC :: Set_nDInd_01order,Set_nDInd_10order, Set_nDInd_01order_L,Set_nDInd_10order_L
 PUBLIC :: InD_TO_tabi,tabi_TO_InD
 
 CONTAINS
 
-SUBROUTINE alloc_TypeDInd(DInd,ndim,MaxnD)
+ELEMENTAL SUBROUTINE alloc_TypeDInd(DInd,ndim,MaxnD)
 IMPLICIT NONE
 
-integer        :: ndim,MaxnD
-TYPE(TypeDInd) :: DInd
+integer,        intent(in)    :: ndim,MaxnD
+TYPE(TypeDInd), intent(inout) :: DInd
 
 
 CALL dealloc_TypeDInd(DInd)
@@ -80,14 +74,14 @@ allocate(DInd%tab_q(ndim))
 ! lmax_TO_nb will be allocated later
 
 END SUBROUTINE alloc_TypeDInd
-SUBROUTINE dealloc_TypeDInd(DInd)
+ELEMENTAL SUBROUTINE dealloc_TypeDInd(DInd)
 IMPLICIT NONE
 
-TYPE(TypeDInd) :: DInd
+TYPE(TypeDInd), intent(inout) :: DInd
 
 
 DInd%ndim  = 0
-DInd%MaxnD = 0
+DInd%MaxnD = -1
 IF (allocated(DInd%tab_ind))          deallocate(DInd%tab_ind)
 IF (allocated(DInd%i_TO_l))           deallocate(DInd%i_TO_l)
 IF (allocated(DInd%lmax_TO_nb))       deallocate(DInd%lmax_TO_nb)
@@ -96,11 +90,11 @@ IF (allocated(DInd%tab_q))            deallocate(DInd%tab_q)
 
 
 END SUBROUTINE dealloc_TypeDInd
-SUBROUTINE TypeDInd2TOTypeDInd1(DInd1,DInd2)
+ELEMENTAL SUBROUTINE TypeDInd2TOTypeDInd1(DInd1,DInd2)
 IMPLICIT NONE
 
-TYPE(TypeDInd), intent(inout) :: DInd1
-TYPE(TypeDInd), intent(in)    :: DInd2
+CLASS(TypeDInd), intent(inout) :: DInd1
+TYPE(TypeDInd),  intent(in)     :: DInd2
 
 integer :: lmax
 
@@ -120,7 +114,7 @@ END SUBROUTINE TypeDInd2TOTypeDInd1
 SUBROUTINE Write_TypeDInd(DInd)
 IMPLICIT NONE
 
-TYPE(TypeDInd) :: DInd
+TYPE(TypeDInd), intent(in) :: DInd
 
 integer :: I
 

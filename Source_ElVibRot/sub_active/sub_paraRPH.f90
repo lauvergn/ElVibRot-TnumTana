@@ -461,10 +461,13 @@ CONTAINS
         END IF
         END IF
 
+        Qact(:) = ZERO
         CALL Rec_Qact(Qact,BasisnD,iq,mole,OldPara)
-        !write(out_unitp,*) 'iq,size(List_Qact1,dim=2),Qact',iq,size(List_Qact1,dim=2),Qact ; flush(out_unitp)
+        !write(out_unitp,*) 'iq,size(List_Qact1,dim=2),Qact',iq,size(List_Qact1,dim=2),Qact
+        !flush(out_unitp)
         CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
         !write(out_unitp,*) 'Qdyn',Qdyn
+        !flush(out_unitp)
 
         Qact1_fromBasisnD(:) = Qdyn(mole%RPHTransfo%list_QactTOQdyn(1:nb_act1_RPH))
         !write(out_unitp,*) 'Qact1_fromBasisnD',Qact1_fromBasisnD

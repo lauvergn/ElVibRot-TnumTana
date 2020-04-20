@@ -49,7 +49,7 @@
       SUBROUTINE read_basis5(BasisnD,mole)
       USE mod_system
       USE mod_basis
-      use mod_Coord_KEO, only: assignment(=),CoordType
+      use mod_Coord_KEO, only: CoordType
       USE mod_MPI
       IMPLICIT NONE
 
@@ -238,7 +238,7 @@
 
       USE mod_system
       USE mod_basis
-      USE mod_Coord_KEO, only: assignment(=),CoordType
+      USE mod_Coord_KEO, only: CoordType
       USE mod_MPI
       IMPLICIT NONE
 
@@ -340,7 +340,7 @@
       SUBROUTINE read5_basis_nD(basis_temp,mole)
       USE mod_system
       use mod_Constant
-      use mod_Coord_KEO, only: assignment(=),CoordType
+      use mod_Coord_KEO, only: CoordType
       USE mod_basis
       IMPLICIT NONE
 

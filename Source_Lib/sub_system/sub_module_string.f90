@@ -76,11 +76,13 @@ MODULE mod_string
 
   END FUNCTION String_TO_String
 
-  FUNCTION Read_line(nio)
+  FUNCTION Read_line(nio,ioerr)
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : IOSTAT_END,IOSTAT_EOR
+
   character(len=:), allocatable                 :: Read_line
   integer,                      intent(in)      :: nio
+  integer,                      intent(inout)   :: ioerr
 
-  integer                        :: ioerr
 
   character(len=:), allocatable    :: line
   character(len=1)                 :: ch
@@ -90,12 +92,14 @@ MODULE mod_string
   DO
     read(nio,'(a1)',IOSTAT=ioerr,advance='no') ch
     IF (ioerr /= 0) EXIT
+    !write(6,*) 'ch: ',ch ; flush(6)
     line = line // ch
   END DO
-
+  IF (ioerr == IOSTAT_EOR) ioerr = 0 ! end of record: the full line is read.
 
   Read_line = line
-  deallocate(Read_line)
+
+  deallocate(line)
 
   END FUNCTION Read_line
 

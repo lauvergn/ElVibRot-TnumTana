@@ -39,36 +39,36 @@ EVRT=../..
     echo $dat_name >> res_all
     echo nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$tv type100=$type100 zmat_order=$zmat_order >> res_all
 
+
     res_name="res_cos_th-"$cos_th"_cart-"$cart"_"$dat_name
 
     $EVRT/Tnum90_MCTDH.exe < $dat_name > $res_name
 
+    echo "================================== ">> res_all_full
+    echo $dat_name >> res_all_full
+    echo nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$tv type100=$type100 zmat_order=$zmat_order >> res_all_full
+    cat $res_name >> res_all_full
+
     err=`grep -a "max error" $res_name`
     echo $dat_name $err >> res_all
-    Large_err=`echo $err | LANG=C awk '{if ($3 > 1.e-10) print $0}'`
 
+    #Large_err=`echo $err | LANG=C awk '{if ($3 > 1.e-10) print $0}'`
+    # version with two tests
+    Large_err=`echo $err | LANG=C awk '{ if ($3 > 1.e-10) print $1" "$2" "$3; if ($6 > 1.e-10) print $4" "$5" "$6}'`
     #echo Large_err=$Large_err
+
     if test -z "$Large_err"
     then
       continue
     else
-      echo $dat_name $err
+      e1=`echo $err | awk '{print $1" "$2" "$3}'`
+      e2=`echo $err | awk '{print $4" "$5" "$6}'`
+      echo $dat_name $e1
+      echo $dat_name $e2
 
       echo ==================== >> save_dat_error
       cat $dat_name >> save_dat_error
       echo ==================== >> save_dat_error
     fi
 
- done
-
-exit
-
-err=`LANG=C awk '/max error:/ {if ($4 > 1.e-10) print $0}' res_all`
-
-
-if test -z "$err"
-then
-     echo "No error!"
-else
-     echo "Error(s) detected!!"
-fi
+done

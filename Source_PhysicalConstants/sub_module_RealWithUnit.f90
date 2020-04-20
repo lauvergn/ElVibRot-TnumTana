@@ -32,7 +32,10 @@
         real (kind=Rkind)        :: val      = ZERO
         character (len=Name_len) :: unit     = ''
         character (len=Name_len) :: quantity = ''
-
+      CONTAINS
+        PROCEDURE, PRIVATE, PASS(RWU2) :: RWU2_TO_R1
+        PROCEDURE, PRIVATE, PASS(RWU1) :: RWU2_TO_RWU1
+        GENERIC,   PUBLIC  :: assignment(=) => RWU2_TO_R1,RWU2_TO_RWU1
       END TYPE REAL_WU
 
       TYPE Type_TabConvRWU ! real with unit
@@ -40,15 +43,13 @@
         TYPE(REAL_WU), allocatable :: conv(:)
         TYPE(REAL_WU)              :: Work_unit
         TYPE(REAL_WU)              :: Write_unit
+      CONTAINS
+        PROCEDURE, PRIVATE, PASS(TabConvRWU1) :: TabConvRWU2_TO_TabConvRWU1
+        GENERIC,   PUBLIC  :: assignment(=) => TabConvRWU2_TO_TabConvRWU1
       END TYPE Type_TabConvRWU
 
       TYPE(Type_TabConvRWU), allocatable, public :: Tab_conv_FOR_quantity(:) ! conversion factor to the working unit
 
-
-     INTERFACE assignment (=)
-       MODULE PROCEDURE RWU2_TO_R1,RWU2_TO_RWU1,                        &
-             TabConvRWU2_TO_TabConvRWU1,TabConvRWU2_TO_TabConvRWU1_dim1
-     END INTERFACE
 
      PUBLIC :: REAL_WU, Type_TabConvRWU, assignment (=)
      PUBLIC :: dealloc_TabConvRWU, dealloc_TabConvRWU_dim1, Write_TabConvRWU, Write_TabConvRWU_dim1
@@ -61,7 +62,7 @@
 
       CONTAINS
       SUBROUTINE RWU2_TO_R1(R1,RWU2)
-      TYPE(REAL_WU),     intent(in)      :: RWU2
+      CLASS(REAL_WU),    intent(in)      :: RWU2
       real (kind=Rkind), intent(inout)   :: R1
 
       R1 = RWU2%val
@@ -75,8 +76,8 @@
 
       END FUNCTION get_val_FROM_RWU
       SUBROUTINE RWU2_TO_RWU1(RWU1,RWU2)
-      TYPE(REAL_WU), intent(in)      :: RWU2
-      TYPE(REAL_WU), intent(inout)   :: RWU1
+      TYPE(REAL_WU),  intent(in)      :: RWU2
+      CLASS(REAL_WU), intent(inout)   :: RWU1
 
       RWU1%val      = RWU2%val
       RWU1%unit     = RWU2%unit
@@ -98,8 +99,8 @@
       END SUBROUTINE dealloc_TabConvRWU
 
       SUBROUTINE TabConvRWU2_TO_TabConvRWU1(TabConvRWU1,TabConvRWU2)
-      TYPE(Type_TabConvRWU), intent(in)      :: TabConvRWU2
-      TYPE(Type_TabConvRWU), intent(inout)   :: TabConvRWU1
+      TYPE(Type_TabConvRWU),  intent(in)      :: TabConvRWU2
+      CLASS(Type_TabConvRWU), intent(inout)   :: TabConvRWU1
 
       integer :: i
 

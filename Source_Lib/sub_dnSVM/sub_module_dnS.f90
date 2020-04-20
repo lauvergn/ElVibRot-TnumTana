@@ -22,6 +22,7 @@
 !===========================================================================
 MODULE mod_dnS
       use mod_system
+      !USE mod_QML_dnS
       IMPLICIT NONE
 
       PRIVATE
@@ -56,6 +57,9 @@ MODULE mod_dnS
       PUBLIC :: sub_dnS1_TO_dntR2,sub_dntf,sub_dnf2_O_dnf3_TO_dnf1, sub_dntf_WITH_INV
       PUBLIC :: sub_ZERO_TO_dnS,sub_Weight_dnS,sub_WeightDer_dnS
       PUBLIC :: alloc_array, dealloc_array
+
+                 ! with the new dnS_t (QML)
+      !PUBLIC :: sub_dnSt1_TO_dnS2,sub_dnS1_TO_dnSt2
 
       CONTAINS
 
@@ -300,7 +304,47 @@ MODULE mod_dnS
 !        dnS2 = dnS1 , dnVec2 = dnVec1 ...
 !        transfer Vec(iVec) => R or R => Vec(iVec)
 !================================================================
-
+!      SUBROUTINE sub_dnSt1_TO_dnS2(dnS1,dnS2)
+!        TYPE (dnS_t)    :: dnS1
+!        TYPE (Type_dnS) :: dnS2
+!
+!        integer :: nderiv,nb_var_deriv
+!
+!        nb_var_deriv = QML_get_ndim_FROM_dnS(dnS1)
+!        nderiv       = QML_get_nderiv_FROM_dnS(dnS1)
+!
+!        IF (.NOT. dnS2%alloc) THEN
+!          CALL alloc_dnS(dnS2,nb_var_deriv,nderiv)
+!        END IF
+!
+!        SELECT CASE (nderiv)
+!        CASE (0)
+!          CALL QML_sub_get_dn_FROM_dnS(dnS1,dnS2%d0)
+!        CASE (1)
+!          CALL QML_sub_get_dn_FROM_dnS(dnS1,dnS2%d0,dnS2%d1)
+!        CASE (2)
+!          CALL QML_sub_get_dn_FROM_dnS(dnS1,dnS2%d0,dnS2%d1,dnS2%d2)
+!        CASE (3)
+!          CALL QML_sub_get_dn_FROM_dnS(dnS1,dnS2%d0,dnS2%d1,dnS2%d2,dnS2%d3)
+!        END SELECT
+!
+!      END SUBROUTINE sub_dnSt1_TO_dnS2
+!      SUBROUTINE sub_dnS1_TO_dnSt2(dnS1,dnS2)
+!        TYPE (Type_dnS) :: dnS1
+!        TYPE (dnS_t)    :: dnS2
+!
+!        SELECT CASE (dnS1%nderiv)
+!        CASE (0)
+!          CALL QML_set_dnS(dnS2,dnS1%d0)
+!        CASE (1)
+!          CALL QML_set_dnS(dnS2,dnS1%d0,dnS1%d1)
+!        CASE (2)
+!          CALL QML_set_dnS(dnS2,dnS1%d0,dnS1%d1,dnS1%d2)
+!        CASE (3)
+!          CALL QML_set_dnS(dnS2,dnS1%d0,dnS1%d1,dnS1%d2,dnS1%d3)
+!        END SELECT
+!
+!      END SUBROUTINE sub_dnS1_TO_dnSt2
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE sub_dnS1_TO_dnS2(dnS1,dnS2,nderiv)

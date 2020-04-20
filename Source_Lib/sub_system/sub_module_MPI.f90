@@ -29,7 +29,7 @@ MODULE mod_MPI
   !!  while the other assistant variables are end with ..._MPI
   !-------------------------------------------------------------------------------------
   Integer(kind=MPI_INTEGER_KIND) :: MPI_err      !< error flag for MPI
-  Integer(kind=MPI_INTEGER_KIND) :: MPI_id       !< rocess ID, 0~MPI_np-1
+  Integer(kind=MPI_INTEGER_KIND) :: MPI_id=0     !< rocess ID, 0~MPI_np-1
   Integer(kind=MPI_INTEGER_KIND) :: MPI_np       !< total number of MPI threads
   
   !> note the difference on MPI_stat in "USE MPI" and "USE MPI_F08"
@@ -133,7 +133,7 @@ MODULE mod_MPI
   END SUBROUTINE MPI_initialization
   
 #else
-  Integer                        :: MPI_id     !< fake MPI_id, for convenience
+  Integer                        :: MPI_id=0     !< fake MPI_id, for convenience
 #endif
 
 END MODULE mod_MPI

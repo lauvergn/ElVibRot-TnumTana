@@ -131,6 +131,8 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   integer                           :: nioPsi
   character (len=Line_len)          :: name_filePsi      = " "     ! name of the file
 
+  logical :: Grid,Basis
+
   !----- dynamic allocation memory ------------------------------------
   real (kind=Rkind), allocatable :: moy_Qba(:)
   real (kind=Rkind), allocatable :: Mij(:,:,:)
@@ -145,6 +147,10 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
     write(out_unitp,*) 'BEGINNING ',name_sub
     CALL flush_perso(out_unitp)
   END IF
+
+  ! save the GridRep and BasisRep values to be able to deallocate the unused representation
+  Grid  = psi%GridRep
+  Basis = psi%BasisRep
 
   IF (psi%ComOp%contrac_ba_ON_HAC) THEN
     ana_psi%AvQ = .FALSE.
@@ -399,6 +405,9 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   IF (allocated(psi_line)) deallocate(psi_line)
   IF (allocated(lformat))  deallocate(lformat)
   IF (allocated(moy_Qba))  deallocate(moy_Qba)
+
+  ! enable to deallocate the unsed representation.
+  CALL alloc_psi(psi,BasisRep=Basis,GridRep=Grid)
 
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
@@ -2272,7 +2281,7 @@ END SUBROUTINE norm_psi_MPI
       DO i_qa=1,psi%nb_qa
 
         !- calculation of WrhonD ------------------------------
-        WrhonD = Rec_WrhonD(psi%BasisnD,i_qa)
+        WrhonD = Rec_WrhonD(psi%BasisnD,i_qa,OldPara)
 
 !        IF (SG4) THEN
 !          CALL get_iqSG_iSG_FROM_iq(iSG,iqSG,i_qa,psi%BasisnD%para_SGType2,OldPara,err_sub)

@@ -262,7 +262,7 @@ CONTAINS
       real (kind=Rkind)      :: czk,szk
       integer                :: i_act
       integer                :: i_qa,i_qaie
-
+      TYPE (OldParam)        :: OldPara
 !------ dipole moment ----------------------------------------------------
       real (kind=Rkind)      :: rhonD
 
@@ -301,9 +301,9 @@ CONTAINS
       DO i_qa=1,WP0%nb_qa
 
 !       - calculation of Qact -------------------------------
-        CALL Rec_Qact(Qact,WP0%BasisnD,i_qa,mole)
+        CALL Rec_Qact(Qact,WP0%BasisnD,i_qa,mole,OldPara)
 !       - calculation of WrhonD ------------------------------
-        rhonD = Rec_rhonD(WP0%BasisnD,i_qa)
+        rhonD = Rec_rhonD(WP0%BasisnD,i_qa,OldPara)
 
 !       ------------------------------------------------
         ze = ZERO

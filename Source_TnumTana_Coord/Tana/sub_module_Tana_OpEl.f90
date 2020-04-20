@@ -62,6 +62,10 @@
           integer                   :: indexq     = 0
           character(len = Name_len) :: opname     = 'init0'
           complex(kind = Rkind)     :: coeff      = CZERO
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(OpEl1) :: R_TO_OpEl
+          PROCEDURE, PRIVATE, PASS(OpEl1) :: C_TO_OpEl
+          GENERIC,   PUBLIC  :: assignment(=) => R_TO_OpEl,C_TO_OpEl
         END TYPE OpEl
 
       INTERFACE alloc_NParray
@@ -95,10 +99,6 @@
      module procedure write_opel
    END INTERFACE
 
-   INTERFACE assignment (=)
-     MODULE PROCEDURE R_TO_OpEl,C_TO_OpEl
-   END INTERFACE
-
    INTERFACE operator (*)
      MODULE PROCEDURE R_times_OpEl,OpEl_times_R,C_times_OpEl,OpEl_times_C
    END INTERFACE
@@ -106,11 +106,12 @@
    PUBLIC :: OpEl, alloc_NParray, dealloc_NParray, check_NParray
    PUBLIC :: compare_op, compare_indexq, copy_F1_into_F2, write_op
    PUBLIC :: set_opel
-   PUBLIC :: assignment (=), operator (*)
+   PUBLIC :: operator (*)
    PUBLIC :: Export_MCTDH_OpEl, Export_Latex_OpEl, Export_Midas_OpEl, Export_VSCF_OpEl
    PUBLIC :: Change_PQ_OF_OpEl_TO_Id_OF_OpEl, Der1_OF_d0OpEl_TO_d1OpEl
    PUBLIC :: get_NumVal_OpEl, get_pqJL_OF_OpEl
    PUBLIC :: Merge_TabOpEl, Sort_TabOpEl, Split_OpEl_TO_SplitOpEl
+   PUBLIC :: StringMCTDH_TO_opel
 
   contains
 
@@ -373,7 +374,7 @@
        Fel%alfa     = 1
 
      case(2) 
-       IF (idq /= 1 .AND. idq /= 2 .AND. idq /=  -3 .AND. idq /= -7) THEN
+       IF (idq /= 1 .AND. idq /= 2 .AND. idq /=  -3 .AND. idq /= -7 .AND. idq /= 0) THEN
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
          write(out_unitp,*) 'idf=', idf
@@ -390,6 +391,8 @@
          Fel%opname = 'u'//calfa
        else if(idq == -7) then
          Fel%opname = 'ub'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'q'//calfa
        end if
 
      case(3) 
@@ -397,6 +400,8 @@
          Fel%opname = 'qus'//calfa
        else if(idq == -7) then
          Fel%opname = 'qubs'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'q'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -425,6 +430,8 @@
          Fel%opname = 'Pqub' // calfa
        else if(idq == 8) then
          Fel%opname = 'Pqg' // calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -444,6 +451,8 @@
            Fel%opname = 'cosqb'//calfa
          else if(idq == 8) then
            Fel%opname = 'cosqg'//calfa
+         else if(idq == 0) then
+           Fel%opname = 'cosq'//calfa
          else
            write(out_unitp,*) 'ERROR in ',routine_name
            write(out_unitp,*) 'idq=', idq
@@ -465,6 +474,8 @@
            Fel%opname = 'sinqb'//calfa
          else if(idq == 8) then
            Fel%opname = 'sinqg'//calfa
+         else if(idq == 0) then
+           Fel%opname = 'sinq'//calfa
          else
            write(out_unitp,*) 'ERROR in ',routine_name
            write(out_unitp,*) 'idq=', idq
@@ -487,6 +498,8 @@
            Fel%opname = 'tanqb'//calfa
          else if(idq == 8) then
            Fel%opname = 'tanqg'//calfa
+         else if(idq == 0) then
+           Fel%opname = 'tanq'//calfa
          else
            write(out_unitp,*) 'ERROR in ',routine_name
            write(out_unitp,*) 'idq=', idq
@@ -509,6 +522,8 @@
            Fel%opname = 'cotqb'//calfa
          else if(idq == 8) then
            Fel%opname = 'cotqg'//calfa
+         else if(idq == 0) then
+           Fel%opname = 'cotq'//calfa
          else
            write(out_unitp,*) 'ERROR in ',routine_name
            write(out_unitp,*) 'idq=', idq
@@ -537,6 +552,8 @@
          Fel%opname = 'Pqr_r'//calfa
        else if(idq == -3) then
          Fel%opname = 'Pqu_u'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_q'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -554,6 +571,8 @@
          Fel%opname = 'r'//calfa//'_Pqr'
        else if(idq == -3) then
          Fel%opname = 'u'//calfa//'_Pqu'
+       else if(idq == 0) then
+         Fel%opname = 'q'//calfa//'_Pq'
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -569,6 +588,8 @@
          Fel%opname = 'Pqt_cosqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_cosqf'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_cosq'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -584,6 +605,8 @@
          Fel%opname = 'cosqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'cosqf'//calfa//'_Pqf'
+       else if(idq == 0) then
+         Fel%opname = 'cosq'//calfa//'_Pq'
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -599,6 +622,8 @@
          Fel%opname = 'Pqt_sinqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_sinqf'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_sinq'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -614,6 +639,8 @@
          Fel%opname = 'sinqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'sinqf'//calfa//'_Pqf'
+       else if(idq == 0) then
+         Fel%opname = 'sinq'//calfa//'_Pq'
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -629,6 +656,8 @@
          Fel%opname = 'Pqt_tanqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_tanqf'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_tanq'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -644,6 +673,8 @@
          Fel%opname = 'tanqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'tanqf'//calfa//'_Pqf'
+       else if(idq == 0) then
+         Fel%opname = 'tanq'//calfa//'_Pq'
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -659,6 +690,8 @@
          Fel%opname = 'Pqt_cotqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_cotqf'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_cotq'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -674,6 +707,8 @@
          Fel%opname = 'cotqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'cotqf'//calfa//'_Pqf'
+       else if(idq == 0) then
+         Fel%opname = 'cotq'//calfa//'_Pq'
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -685,27 +720,30 @@
        end if
 
      case(22) 
-       if(idq /= -3) then
+       if(idq == -3) then
+         Fel%opname = 'Pqu_qus'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_q'//calfa
+       else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
          write(out_unitp,*) 'idf=', idf
          write(out_unitp,*) "for idf = 22, idq should be: -3 (=u)"
          err_el_loc = 1
          !STOP
-       else
-         Fel%opname = 'Pqu_qus'//calfa
        end if 
 
      case(23) 
-       if(idq /= -3) then
+       if(idq == -3) then
+         Fel%opname = 'qus'//calfa//'_Pqu'
+       else if(idq == 0) then
+         Fel%opname = 'q'//calfa//'_Pq'
+       else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
          write(out_unitp,*) 'idf=', idf
          write(out_unitp,*) "for idf = 23, idq should be: -3 (=u)"
          err_el_loc = 1
-
-       else
-         Fel%opname = 'qus'//calfa//'_Pqu'
        end if 
 
      case(24) 
@@ -733,6 +771,119 @@
      END IF
 
  end subroutine get_opel
+
+ subroutine StringMCTDH_TO_opel(Fel, String, indexq, err_el)
+   type(opel),                   intent(inout)   :: Fel
+   character (len=*),            intent(in)      :: String
+   integer,                      intent(in)      :: indexq
+   integer, optional,            intent(inout)   :: err_el
+
+   integer          :: err_el_loc
+   integer          :: i_exp
+   real(kind=Rkind) :: r_exp
+
+   character (len=:), allocatable :: String_loc
+
+   logical, parameter :: debug = .FALSE.
+   !logical, parameter :: debug = .TRUE.
+   character (len = *), parameter :: routine_name = 'StringMCTDH_TO_opel'
+
+   err_el_loc = 0
+
+   Fel%idf      = -1
+   Fel%idq      = 0
+   Fel%alfa     = 0
+   Fel%indexq   = indexq
+   Fel%coeff    = CONE
+
+   ! find sin ..., dq, qs or q (q must be at the end)
+   String_loc = trim(adjustl(String))
+   CALL string_uppercase_TO_lowercase(String_loc)
+   IF (debug) write(out_unitp,*) 'String_loc: ',String_loc
+   flush(out_unitp)
+
+   IF (index(String_loc,'sin') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'sin'
+     Fel%idf    = 6
+   ELSE IF (index(String_loc,'cos') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'cos'
+     Fel%idf = 5
+   ELSE IF (index(String_loc,'tan') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'tan'
+     Fel%idf = 7
+   ELSE IF (index(String_loc,'cot') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'cot'
+     Fel%idf = 8
+   ELSE IF (index(String_loc,'qs') > 0) THEN
+     String_loc = String_loc(3:len(String_loc))
+     Fel%opname = 'qs'
+     Fel%idf = 3
+   ELSE IF (index(String_loc,'dq') > 0) THEN
+     String_loc = String_loc(3:len(String_loc))
+     Fel%opname = 'dq'
+     Fel%idf = 4
+
+   ELSE IF (index(String_loc,'q') > 0) THEN
+     String_loc = String_loc(2:len(String_loc))
+     Fel%opname = 'q'
+     Fel%idf = 2
+   ELSE
+     STOP 'other operateurs not yet'
+   END IF
+   IF (debug)  write(out_unitp,*) 'Fel%idf',Fel%idf
+   IF (debug)  write(out_unitp,*) 'String_loc: ',String_loc
+
+   IF (index(String_loc,'^') > 0) THEN ! we must be sure that ^ exist
+     ! the exponent MUST be just after the operator/function/q
+     IF (String_loc(1:1) /= '^') THEN
+       write(out_unitp,*) 'String_loc: ',String_loc
+       write(out_unitp,*) 'ERROR in StringMCTDH_TO_opel: wrong ^ position.'
+       STOP 'ERROR in StringMCTDH_TO_opel: wrong ^ position'
+     END IF
+
+     String_loc = String_loc(2:len(String_loc))
+     IF (debug)  write(out_unitp,*) 'String_loc: ',String_loc
+     read(String_loc,*,iostat=err_el_loc) i_exp
+     IF (err_el_loc /= 0) THEN
+       ! the exponent is not an integer => real ?
+       read(String_loc,*,iostat=err_el_loc) r_exp
+       IF (err_el_loc /= 0) THEN
+         write(out_unitp,*) 'String_loc: ',String_loc
+         write(out_unitp,*) 'ERROR in StringMCTDH_TO_opel while readind the exponent'
+         STOP 'ERROR in StringMCTDH_TO_opel while readind the exponent'
+       END IF
+       ! in this case the r_exp should be a half-integer: i/2
+       r_exp = r_exp*TWO
+       Fel%alfa = frac_t(NINT(r_exp),2)
+     ELSE
+       Fel%alfa     = i_exp
+     END IF
+   ELSE
+     Fel%alfa     = 1
+   END IF
+
+   IF (Fel%idf == 4) THEN ! test for dq = d./dq operator
+     ! MCTDH works with d./dq and in Tana P_q = -i hbar d./dq
+     Fel%coeff = (-EYE)**Fel%alfa%num ! Fel%alfa%den MUST be equal to 1
+   END IF
+
+
+   IF (debug) CALL write_opel(Fel,header=.TRUE.)
+
+
+   IF (present(err_el)) THEN
+     err_el = err_el_loc
+   ELSE
+     IF (err_el_loc /= 0) STOP 'ERROR in StringMCTDH_TO_opel'
+   END IF
+
+   deallocate(String_loc)
+
+ end subroutine StringMCTDH_TO_opel
 
  function set_opel(idf, idq, alfa, indexq, coeff, alfa_den, err_el)
    type(opel)                                    :: set_opel
@@ -848,7 +999,7 @@
 FUNCTION Qnamealfa_MCTDH(Qname,alfa)
   character(len=:),   allocatable                 :: Qnamealfa_MCTDH
   character(len=*),               intent(in)      :: Qname
-  TYPE(Frac_t),              intent(in)      :: alfa
+  TYPE(Frac_t),                   intent(in)      :: alfa
 
 
   real(kind=Rkind)                  :: ralfa
@@ -1088,6 +1239,15 @@ END FUNCTION Qnamealfa_Latex
 
    FelName_loc = String_TO_String('')
    !CALL write_op(Fel)
+
+   !DML test if we have half integer
+   IF ( .NOT. frac_IS_integer(Fel%alfa)) THEN
+     calfa = '^(' // frac_TO_string(Fel%alfa) // ')'
+     write(out_unitp,*) 'ERROR in ',routine_name
+     write(out_unitp,*) 'Fel%alfa=',calfa
+     write(out_unitp,*) " MidasCpp is not working with half-integers"
+     STOP " MidasCpp is not working with half-integers"
+   END IF
 
    !Emil change
    calfa = '^' // frac_TO_string(Fel%alfa)
@@ -1686,7 +1846,7 @@ END FUNCTION Qnamealfa_Latex
 
  subroutine R_TO_OpEl(OpEl1,R)
 
-   type(opel),                 intent(inout)  :: OpEl1
+   CLASS(opel),                intent(inout)  :: OpEl1
    real(kind=Rkind),           intent(in)     :: R
 
    TYPE(Frac_t) :: alfa_loc
@@ -1706,7 +1866,7 @@ END FUNCTION Qnamealfa_Latex
 
  subroutine C_TO_OpEl(OpEl1,C)
 
-   type(opel),                 intent(inout)  :: OpEl1
+   CLASS(opel),                intent(inout)  :: OpEl1
    complex(kind=Rkind),        intent(in)     :: C
 
    TYPE(Frac_t) :: alfa_loc
@@ -1837,6 +1997,7 @@ END FUNCTION Qnamealfa_Latex
      integer                        :: error
      integer                        :: i_open
      logical                        :: header_loc
+     character(len=:), allocatable  :: string_alpha
 
      character (len=*), parameter   :: routine_name='write_opel'
 
@@ -1854,8 +2015,15 @@ END FUNCTION Qnamealfa_Latex
        write(i_open, '(A)')  "   idf          iqd        alfa       alfa_den       &
               &indexq           op_name                  coeff"
      end if
-     write(i_open,"(3x, 5(I2,10x), 3x, A, (E13.4,' Ix ',E13.4))" ) Fel%idf, Fel%idq, Fel%alfa%num, &
-                 Fel%alfa%den, Fel%indexq, Fel%opname,Fel%coeff
+
+     string_alpha = Frac_TO_string(Fel%alfa)
+
+     write(i_open,"(3x, 2(I2,10x),    A4,6x,      (I2,10x),3x, A, (E13.4,' Ix ',E13.4))" )  &
+                  Fel%idf,Fel%idq, string_alpha, Fel%indexq, Fel%opname,Fel%coeff
+     CALL flush_perso(i_open)
+
+     deallocate(string_alpha)
+
    END SUBROUTINE write_opel
 
    FUNCTION get_coeff_OF_OpEl(Fel)

@@ -37,7 +37,7 @@
    PRIVATE
    PUBLIC :: write_keo_LatexForm
    PUBLIC :: write_keo_VSCFForm
-   PUBLIC :: write_keo_MCTDH_Form
+   PUBLIC :: write_keo_MCTDH_Form,read_keo_mctdh_form
    PUBLIC :: write_keo_MidasCppForm,write_mol_MidasCppForm
 
    CONTAINS 
@@ -46,6 +46,8 @@
    !! @param:       TWOxKEO       The 2*KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_MidasCppForm(mole, TWOxKEO, i_out, tab_Qname, param_JJ)
+   IMPLICIT NONE
+
      type (CoordType),            intent(in)                :: mole
      type (sum_opnd),           intent(in)                :: TWOxKEO
      integer,                   intent(in)                :: i_out
@@ -277,6 +279,8 @@
    END SUBROUTINE write_mol_MidasCppForm
 
    SUBROUTINE write_keo_MidasCppForm_old(mole, keo, i_out, tab_Qname, param_JJ)
+   IMPLICIT NONE
+
      type (CoordType),            intent(in)                :: mole
      type (sum_opnd),           intent(in)                :: keo
      integer,                   intent(in)                :: i_out
@@ -397,6 +401,8 @@
    !! @param:       TWOxKEO       The 2*KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_VSCFform(mole, TWOxKEO, i_out, tab_Qname, param_JJ)
+   IMPLICIT NONE
+
      type (CoordType),            intent(in)                :: mole
      type(sum_opnd),            intent(in)                :: TWOxKEO
      integer,                   intent(in)                :: i_out
@@ -525,6 +531,8 @@
    !! @param:       TWOxKEO       The 2*KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_Latexform(mole, TWOxKEO, i_out, tab_Qname, param_JJ)
+   IMPLICIT NONE
+
      type (CoordType),            intent(in)                :: mole
      type(sum_opnd),            intent(in)                :: TWOxKEO
      integer,                   intent(in)                :: i_out
@@ -649,12 +657,89 @@
 
    END SUBROUTINE write_keo_Latexform
 
+   !SUBROUTINE read_keo_mctdh_form(mole, keo,io)
+   SUBROUTINE read_keo_mctdh_form(nb_act, keo,io)
+   USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : IOSTAT_END,IOSTAT_EOR
+   IMPLICIT NONE
 
+     !type (CoordType),          intent(in)                :: mole
+     integer,                   intent(in)                :: nb_act
+     type(sum_opnd),            intent(inout)             :: keo
+     integer,                   intent(in)                :: io
+
+     character (len=Line_len)                   :: readline
+
+     character (len = :), allocatable           :: line
+     TYPE(OpnD)                                 :: FnD
+
+     integer                                    :: i_modes,i_end,i_pipe
+     integer                                    :: io_err
+
+     logical, parameter :: debug = .FALSE.
+     !logical, parameter :: debug = .TRUE.
+     character (len = Name_longlen) :: routine_name='read_keo_mctdh_form'
+
+     CALL delete_op(keo)
+     keo = ZERO
+     ! first read util modes is found
+     i_modes = 0
+     DO
+       read(io,*,iostat=io_err) readline
+       CALL string_uppercase_TO_lowercase(readline)
+       IF (io_err /= 0) EXIT
+       i_modes = index(readline,'modes')
+       IF (i_modes > 0) EXIT
+     END DO
+     IF (io_err /= 0) STOP 'ERROR in read_keo_mctdh_form: modes keyword not found'
+
+     IF (debug) write(out_unitp,*) 'found modes line: ',readline ; flush(out_unitp)
+
+     DO ! loop on the lines. Operator line is found when a | is present.
+       !read(io,*,iostat=io_err) readline
+       !CALL string_uppercase_TO_lowercase(readline)
+
+       line = Read_line(io,io_err)
+       IF (io_err /= 0) EXIT
+
+       CALL string_uppercase_TO_lowercase(line)
+       line = trim(adjustl(line))
+       IF (debug) write(out_unitp,*) 'line: ',line ; flush(out_unitp)
+
+       ! first test the end with "end-hamiltonian-section"
+       i_end = index(line,'end-hamiltonian-section')
+       IF (i_end > 0) EXIT
+
+       i_pipe = index(line,'|')
+       IF (i_pipe > 0) THEN
+         IF (debug) write(out_unitp,*) 'operator line: ',line ; flush(out_unitp)
+         CALL StringMCTDH_TO_Opnd(FnD,line,nb_act=nb_act)
+         IF (debug)  CALL write_op(FnD,header=.TRUE.)
+
+         CALL F1_nd_PLUS_TO_Fres_sum_nd(FnD,keo)
+         !keo = keo + FnD
+       END IF
+
+     END DO
+
+     IF (io_err /= 0) STOP 'ERROR in read_keo_mctdh_form: reading operator lines'
+
+     IF (debug) write(out_unitp,*) 'found end-hamiltonian-section: ',line ; flush(out_unitp)
+
+     IF (debug)  CALL write_op(keo,header=.TRUE.)
+
+
+     CALL delete_op(FnD)
+
+
+
+   END SUBROUTINE read_keo_mctdh_form
    !! @description: Write the total KEO in a MCTDH format,
    !! @param:       mole          The generalized variable (type: CoordType).
    !! @param:       keo           The KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_mctdh_form(mole, keo, i_out, tab_Qname, param_JJ, title)
+   IMPLICIT NONE
+
      type (CoordType)                                       :: mole
      type(sum_opnd),            intent(in)                :: keo
      integer,                   intent(in)                :: i_out
@@ -777,8 +862,8 @@
      end do
      write(i_out, *)
      write(i_out, '(A)')  "END-PARAMETER-SECTION"
-      write(i_out, *)
-      write(i_out, *)
+     write(i_out, *)
+     write(i_out, *)
      write(i_out, '(A)')  "HAMILTONIAN-SECTION"
      write(i_out,'(A)',advance='no') &
      '--------------------------------------------------------------------'
@@ -921,6 +1006,8 @@
 
    END SUBROUTINE write_keo_mctdh_form
    SUBROUTINE write_keo_mctdh_form_old(mole, keo, i_out, tab_Qname, param_JJ, title)
+   IMPLICIT NONE
+
      type (CoordType)                                     :: mole
      type(sum_opnd),            intent(in)                :: keo
      integer,                   intent(in)                :: i_out
@@ -1167,6 +1254,8 @@
    !! @param:       opname        The defined local name 
    !! @param:       alfa          The power of the operator 
    SUBROUTINE export_mctdh_name(opname, alfa, l_qJ)
+   IMPLICIT NONE
+
      character(len=*),          intent(inout)             :: opname
      logical, optional,         intent(in)                :: l_qJ
      TYPE(Frac_t),              intent(in)                :: alfa
@@ -1293,6 +1382,8 @@
    END SUBROUTINE export_mctdh_name
 
    FUNCTION get_Coef_name(Cn_new,MCTDH,With_format,err) RESULT (Coef_name)
+   IMPLICIT NONE
+
      complex(kind=Rkind), intent(in)            :: Cn_new
      logical, optional,   intent(in)            :: MCTDH,With_format
      integer, optional,   intent(inout)         :: err

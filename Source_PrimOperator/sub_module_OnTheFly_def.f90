@@ -68,13 +68,13 @@
           TYPE (param_file)   :: file_log
           TYPE (param_file)   :: file_FChk
           TYPE (param_file)   :: file_pun
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(para_OTF1) :: OTF2_TO_OTF1
+          GENERIC,   PUBLIC  :: assignment(=) => OTF2_TO_OTF1
         END TYPE param_OTF
 
-      INTERFACE assignment (=)
-          MODULE PROCEDURE OTF2_TO_OTF1
-      END INTERFACE
 
-      PUBLIC :: param_OTF,assignment (=), write_OTF, init_G03_OTF
+      PUBLIC :: param_OTF, write_OTF, init_G03_OTF
 
       CONTAINS
 
@@ -184,8 +184,8 @@
 
       SUBROUTINE OTF2_TO_OTF1(para_OTF1,para_OTF2)
 
-      TYPE (param_OTF), intent(inout)    :: para_OTF1
-      TYPE (param_OTF), intent(in)       :: para_OTF2
+      CLASS (param_OTF), intent(inout)    :: para_OTF1
+      TYPE (param_OTF),  intent(in)       :: para_OTF2
 
        para_OTF1%charge          = para_OTF2%charge
        para_OTF1%multiplicity    = para_OTF2%multiplicity

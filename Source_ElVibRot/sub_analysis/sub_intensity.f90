@@ -51,7 +51,7 @@
                                intensity_only,nio_res_int)
 
       USE mod_system
-      use mod_Constant, only: assignment(=), constant, rwu_write,       &
+      use mod_Constant, only: constant, rwu_write,                      &
                               real_wu, convrwu_to_r, get_conv_au_to_unit
       USE mod_Coord_KEO
       USE mod_basis
@@ -575,8 +575,7 @@
                                width,emin,emax,                         &
                                file_spectrum,file_intensity)
       USE mod_system
-      use mod_Constant, only: assignment(=), constant, RWU_Write,REAL_WU,&
-                              get_Conv_au_TO_unit
+      use mod_Constant, only: constant, RWU_Write,REAL_WU,get_Conv_au_TO_unit
       IMPLICIT NONE
 
 !----- physical and mathematical constants ---------------------------
@@ -704,7 +703,7 @@
                           E0,Svif,Temp,Q,Jmax,const_phys,               &
                           width,emin,pas,spectre,n,nio_int)
       USE mod_system
-      USE mod_Constant, only: assignment(=), constant
+      USE mod_Constant, only: constant
       IMPLICIT NONE
 
 !----- physical and mathematical constants ---------------------------
@@ -789,7 +788,7 @@
       SUBROUTINE calc_Imax(Imax,Evi,Ai,Bi,Ci,Evf,Af,Bf,Cf,              &
                            Svif,Temp,Q,Jmax,const_phys)
       USE mod_system
-      USE mod_Constant, only: assignment(=), constant
+      USE mod_Constant, only: constant
       IMPLICIT NONE
 
 !----- physical and mathematical constants ---------------------------
@@ -871,7 +870,7 @@
 !     P : population sums over rotational levels
       SUBROUTINE calc_Q_VR(Q,P,E0,Ev,A,B,C,Temp,Jmax,const_phys)
       USE mod_system
-      USE mod_Constant, only: assignment(=), constant
+      USE mod_Constant, only: constant
       IMPLICIT NONE
 
 
@@ -907,7 +906,7 @@
       end subroutine calc_Q_VR
       FUNCTION part_func(ene,nb_aie,Temp)
       USE mod_system
-      use mod_Constant, only: assignment(=), real_wu,convRWU_TO_R
+      use mod_Constant, only:real_wu,convRWU_TO_R
       implicit none
 
       real (kind=Rkind) :: part_func
@@ -968,7 +967,7 @@
 !================================================================
       FUNCTION pop2_i(enei,ene0,Temp)
       USE mod_system
-      use mod_Constant, only: assignment(=),real_wu,convRWU_TO_R
+      use mod_Constant, only: real_wu,convRWU_TO_R
       IMPLICIT NONE
 
       real (kind=Rkind) :: pop2_i
@@ -1015,7 +1014,7 @@
       SUBROUTINE sub_spectre(Mat_Aif,ene,nb_ana,                        &
                              Ewidth,emin,emax,file_spectrum)
       USE mod_system
-      use mod_Constant, only: assignment(=), REAL_WU,get_Conv_au_TO_unit,RWU_Write
+      use mod_Constant, only: REAL_WU,get_Conv_au_TO_unit,RWU_Write
       IMPLICIT NONE
 
       integer           :: nb_ana

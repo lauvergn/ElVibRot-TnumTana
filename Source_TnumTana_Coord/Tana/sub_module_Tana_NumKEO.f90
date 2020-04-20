@@ -218,29 +218,29 @@
      nb_J = count(JJ>0)
      iG = 0
      jG = 0
-     !write(out_unitp,*) 'term:',i
+     IF (debug) write(out_unitp,*) 'term:',i,'pq',pq,'JJ',JJ,'LL',LL
      IF (pq(1) > 0 .AND. pq(2) > 0) THEN ! def
-       !write(out_unitp,*) 'def'
+       IF (debug) write(out_unitp,*) 'def'
        iG = pq(1)
        jG = pq(2)
      ELSE IF (pq(1) > 0 .AND. JJ(1) > 0) THEN ! cor
-       !write(out_unitp,*) 'cor'
+       IF (debug) write(out_unitp,*) 'cor'
        iG = pq(1)
        jG = JJ(1) -(nb_var-nb_act)
      ELSE IF (JJ(1) > 0 .AND. JJ(2) > 0) THEN ! rot
-       !write(out_unitp,*) 'rot'
+       IF (debug) write(out_unitp,*) 'rot'
        iG = JJ(1) -(nb_var-nb_act)
        jG = JJ(2) -(nb_var-nb_act)
      ELSE IF (JJ(1) == 0 .AND. pq(1) > 0) THEN ! f1
-       !write(out_unitp,*) 'pq^1'
+       IF (debug) write(out_unitp,*) 'pq^1'
        iG = pq(1)
        jG = 0
      ELSE IF (JJ(2) == 0 .AND. pq(2) > 0) THEN ! f1
-       !write(out_unitp,*) 'pq^1'
+       IF (debug) write(out_unitp,*) 'pq^1'
        iG = pq(2)
        jG = 0
      ELSE IF(JJ(1) > 0 .AND. pq(1) == 0) THEN ! rot/cor
-       !write(out_unitp,*) 'J^1'
+       IF (debug) write(out_unitp,*) 'J^1'
        iG = JJ(1) -(nb_var-nb_act)
        jG = 0
      END IF
@@ -260,13 +260,15 @@
      END IF
 
      IF (iG == 0 .AND. jG == 0) THEN ! vep
+       IF (debug)  write(out_unitp,*) 'add vep',iG
        vep = vep + HALF * real(opval,kind=Rkind)
      ELSE IF (iG > 0 .AND. jG > 0 .AND. nb_J == 0) THEN ! f2
+       IF (debug)  write(out_unitp,*) 'add f2',iG
        ! the (-) is comming from Pq^2 = (-EYE d/dq)^2 = - d/dq ^2
        f2(iG,jG) = f2(iG,jG) -HALF * real(opval,kind=Rkind)
        f2(jG,iG) = f2(iG,jG)
      ELSE IF (iG > 0 .AND. jG == 0 .AND. nb_J == 0) THEN ! f1
-       !write(out_unitp,*) 'add f1',iG
+       IF (debug) write(out_unitp,*) 'add f1',iG
        ! the (-EYE) is comming from Pq = -EYE d/dq
        f1(iG) = f1(iG) + HALF * real(-EYE*opval,kind=Rkind)
      END IF

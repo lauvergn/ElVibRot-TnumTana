@@ -54,14 +54,12 @@ MODULE mod_file
         integer                               :: nb_thread      = 0
         character (len=Line_len), allocatable :: tab_name_th(:)
         integer, allocatable                  :: tab_unit(:)
-
+      CONTAINS
+        PROCEDURE, PRIVATE, PASS(file1) :: file2TOfile1
+        GENERIC,   PUBLIC  :: assignment(=) => file2TOfile1
       END TYPE param_file
 
-      INTERFACE assignment (=)
-          MODULE PROCEDURE file2TOfile1
-      END INTERFACE
-
-      PUBLIC :: param_file, assignment (=),file_GetUnit, file_open, file_open2
+      PUBLIC :: param_file,file_GetUnit, file_open, file_open2
       PUBLIC :: file_close, file_delete, file_dealloc, file_write, make_FileName
       PUBLIC :: err_file_name,check_file_exist_WITH_file_name
       PUBLIC :: flush_perso,join_path
@@ -70,8 +68,8 @@ MODULE mod_file
 
       SUBROUTINE file2TOfile1(file1,file2)
 
-      TYPE(param_file), intent(inout)  :: file1
-      TYPE(param_file), intent(in)     :: file2
+      CLASS(param_file), intent(inout)  :: file1
+      TYPE(param_file),  intent(in)     :: file2
 
 
       integer :: err_mem,memory

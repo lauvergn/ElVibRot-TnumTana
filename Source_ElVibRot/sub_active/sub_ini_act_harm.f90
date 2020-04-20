@@ -392,7 +392,7 @@ write(out_unitp,*) 'freq_only'
       END IF
       !-------------------------------------------------------------------
 
-
+      IF (.NOT. para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Read_FileGrid) THEN
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint <       &
           para_AllOp%tab_Op(1)%nb_qa .OR.                                       &
           para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint > 1) THEN
@@ -407,6 +407,7 @@ write(out_unitp,*) 'freq_only'
         write(out_unitp,*)
         write(out_unitp,*) 'STOP in ',name_sub
         STOP
+      END IF
       END IF
 
       END SUBROUTINE sub_qa_bhe

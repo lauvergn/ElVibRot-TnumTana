@@ -28,7 +28,7 @@
 !===========================================================================
 MODULE mod_freq
       use mod_system
-      USE mod_Constant, ONLY: assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, ONLY: get_Conv_au_TO_unit
       IMPLICIT NONE
 
       PRIVATE

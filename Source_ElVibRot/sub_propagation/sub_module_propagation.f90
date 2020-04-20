@@ -42,7 +42,7 @@
 !===========================================================================
       MODULE mod_propa
       USE mod_system
-      USE mod_Constant,  ONLY : assignment(=),get_conv_au_to_unit,real_wu,&
+      USE mod_Constant,  ONLY : get_conv_au_to_unit,real_wu,            &
                                 convrwu_to_r,convRWU_WorkingUnit_TO_R
       USE mod_psi,       ONLY : param_WP0,param_ana_psi
       USE mod_field,     ONLY : param_field

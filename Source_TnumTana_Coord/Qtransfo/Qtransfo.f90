@@ -29,7 +29,7 @@
       MODULE mod_Qtransfo
       use mod_system
       USE mod_dnSVM
-      use mod_Constant, only: assignment(=),table_atom
+      use mod_Constant, only: table_atom
 
       USE mod_CartesianTransfo
       USE mod_QTOXanaTransfo

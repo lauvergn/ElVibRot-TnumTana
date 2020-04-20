@@ -45,7 +45,7 @@ MODULE mod_Tana_keo
    CONTAINS
 
    SUBROUTINE compute_analytical_KEO(TWOxKEO,mole, para_Tnum, Qact)
-      USE mod_Tana_OpEl , ONLY : opel, assignment(=)
+      USE mod_Tana_OpEl , ONLY : opel
       USE mod_Tana_op,    ONLY : add_Vextr_new, Get_F2_F1_FROM_TWOxKEO
       IMPLICIT NONE
 
@@ -73,7 +73,7 @@ MODULE mod_Tana_keo
 
 !     - working parameters ------------------------------------------
       integer :: iQpoly,iQprim,iQact,Qpoly_type
-      integer :: i,n, j,k, i_transfo,nio
+      integer :: i,n, j,k, i_transfo,nio,io_mctdh
       integer :: nb_act, i_var
       logical :: frame,poly
       integer :: nb_terms_KEO_withoutVep,nb_terms_KEO_withVep
@@ -275,8 +275,9 @@ MODULE mod_Tana_keo
           write(out_unitp,*) ' GET F2 F1 (in reduced dimension)'
           CALL flush_perso(out_unitp)
           CALL  Get_F2_F1_FROM_TWOxKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,&
-                                     TWOxKEO,para_Tnum%ExpandTWOxKEO,       &
-                                     tabQact_Qel,mole%nb_act,mole%nb_var,para_Tnum%nrho)
+                                       TWOxKEO,para_Tnum%ExpandTWOxKEO,       &
+                                       tabQact_Qel,mole%nb_act,mole%nb_var,   &
+                                       para_Tnum%nrho)
           IF (debug) CALL write_op(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
           write(out_unitp,*) '================================================='
         ELSE
@@ -304,6 +305,10 @@ MODULE mod_Tana_keo
 
       tab_Qname(:) = tab_Qname(list_QactTOQpoly(:)) ! to change the order du to the "constraints"
 
+      CALL file_open2(name_file='keo.op',iunit=io_mctdh)
+      CALL write_keo_mctdh_form(mole, para_Tnum%TWOxKEO,io_mctdh,       &
+                                tab_Qname, para_Tnum%JJ)
+      close(io_mctdh)
       IF (para_Tnum%MCTDHForm) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) "output MCTDH format"
@@ -377,7 +382,7 @@ MODULE mod_Tana_keo
 
    END SUBROUTINE compute_analytical_KEO
    SUBROUTINE compute_analytical_KEO_old(TWOxKEO,mole, para_Tnum, Qact)
-      USE mod_Tana_OpEl , ONLY : opel, assignment(=)
+      USE mod_Tana_OpEl , ONLY : opel
       USE mod_Tana_op,    ONLY : add_Vextr_new, Get_F2_F1_FROM_TWOxKEO
       IMPLICIT NONE
 
@@ -796,7 +801,7 @@ MODULE mod_Tana_keo
    !!                          information will be saved (type: system)
    recursive subroutine extract_qval_F_system(F_system, tab_Q, tab_Qactiv, &
                                               tab_Qname, tab_Qel, i_var, with_Li)
-     USE mod_Tana_OpEl , ONLY : opel, assignment(=)
+     USE mod_Tana_OpEl ,       ONLY : opel
      USE mod_BunchPolyTransfo, only : Type_BFTransfo
 
      type(Type_BFTransfo),            intent(inout)      :: F_system

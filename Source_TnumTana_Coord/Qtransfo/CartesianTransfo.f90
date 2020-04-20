@@ -309,7 +309,7 @@ MODULE mod_CartesianTransfo
 
       END SUBROUTINE dealloc_CartesianTransfo
       SUBROUTINE Read_CartesianTransfo(CartesianTransfo)
-      USE mod_Constant,         ONLY: assignment(=),get_conv_au_to_unit
+      USE mod_Constant,         ONLY: get_conv_au_to_unit
       TYPE (Type_CartesianTransfo), intent(inout) :: CartesianTransfo
 
 
@@ -707,7 +707,7 @@ MODULE mod_CartesianTransfo
       END SUBROUTINE Read_MultiRef_type1_OF_CartesianTransfo
 
       SUBROUTINE Write_CartesianTransfo(CartesianTransfo)
-      USE mod_Constant,         ONLY: assignment(=),get_conv_au_to_unit
+      USE mod_Constant,         ONLY: get_conv_au_to_unit
       TYPE (Type_CartesianTransfo) :: CartesianTransfo
 
 
@@ -999,7 +999,7 @@ MODULE mod_CartesianTransfo
       END SUBROUTINE calc_CartesianTransfo_new
 
       SUBROUTINE Set_COM_Qyz(CartesianTransfo)
-      USE mod_Constant,         ONLY: assignment(=),get_conv_au_to_unit
+      USE mod_Constant,         ONLY: get_conv_au_to_unit
 
       TYPE (Type_CartesianTransfo), intent(inout)          :: CartesianTransfo
 
@@ -1019,7 +1019,7 @@ MODULE mod_CartesianTransfo
       END SUBROUTINE Set_COM_Qyz
 
       SUBROUTINE Set_P_Axis_CartesianTransfo(CartesianTransfo)
-      USE mod_Constant,         ONLY: assignment(=),get_conv_au_to_unit
+      USE mod_Constant,         ONLY: get_conv_au_to_unit
 
       TYPE (Type_CartesianTransfo), intent(inout)          :: CartesianTransfo
 
@@ -1044,7 +1044,7 @@ MODULE mod_CartesianTransfo
       END SUBROUTINE Set_P_Axis_CartesianTransfo
 
       SUBROUTINE Set_Eckart_CartesianTransfo(CartesianTransfo)
-      USE mod_Constant,         ONLY: assignment(=),get_conv_au_to_unit
+      USE mod_Constant,         ONLY: get_conv_au_to_unit
 
       TYPE (Type_CartesianTransfo), intent(inout)          :: CartesianTransfo
 
@@ -1069,7 +1069,7 @@ MODULE mod_CartesianTransfo
       END SUBROUTINE Set_Eckart_CartesianTransfo
 
       SUBROUTINE P_Axis_CartesianTransfo(CartesianTransfo,i_ref)
-      USE mod_Constant,         ONLY: assignment(=),get_conv_au_to_unit
+      USE mod_Constant,         ONLY: get_conv_au_to_unit
 
       TYPE (Type_CartesianTransfo), intent(inout)          :: CartesianTransfo
       integer,                      intent(in),   optional :: i_ref

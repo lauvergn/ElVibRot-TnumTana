@@ -43,7 +43,7 @@
 MODULE mod_OTF
    USE mod_system
    USE mod_dnSVM
-   use mod_OTF_def,    only: assignment(=),param_otf
+   use mod_OTF_def,    only: param_otf
    use mod_PrimOp_def, only: param_pes, write_param_pes
    USE mod_Constant
    IMPLICIT NONE
@@ -66,7 +66,7 @@ MODULE mod_OTF
       SUBROUTINE dnOp_grid_OnTheFly(Qxyz,MatdnECC,nderivE,              &
                                     MatdnMuCC,nderivMu,                 &
                                     mole,para_PES)
-      use mod_Coord_KEO,  only: assignment(=),CoordType
+      use mod_Coord_KEO,  only: CoordType
 
       IMPLICIT NONE
 
@@ -165,7 +165,7 @@ END IF
       END SUBROUTINE dnOp_grid_OnTheFly
       SUBROUTINE pot_mu_onthefly_gauss(Qxyz,dnECC,nderivE,dnMuCC,nderivMu,&
                                         mole,para_PES,err_calc)
-      use mod_Coord_KEO,  only: assignment(=),CoordType
+      use mod_Coord_KEO,  only: CoordType
 
       USE mod_system
       USE mod_dnSVM
@@ -256,7 +256,7 @@ END IF
                                         mole,para_PES,para_OTF,err_calc)
 
       USE mod_system
-      use mod_Coord_KEO,  only: assignment(=),CoordType
+      use mod_Coord_KEO,  only: CoordType
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -780,7 +780,7 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO,  only: assignment(=),CoordType
+      USE mod_Coord_KEO,  only: CoordType
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -855,7 +855,7 @@ END IF
                                         mole,para_PES,para_OTF)
 
       USE mod_system
-      USE mod_Coord_KEO,  only: assignment(=),CoordType
+      USE mod_Coord_KEO,  only: CoordType
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -1374,7 +1374,7 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO,  only: assignment(=),CoordType
+      USE mod_Coord_KEO,  only: CoordType
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -1459,7 +1459,7 @@ END IF
                                           mole,para_PES,para_OTF)
 
       USE mod_system
-      USE mod_Coord_KEO,  only: assignment(=),CoordType
+      USE mod_Coord_KEO,  only: CoordType
       USE mod_PrimOp_def
       IMPLICIT NONE
 

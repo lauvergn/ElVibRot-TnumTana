@@ -28,7 +28,7 @@
 !===========================================================================
       MODULE mod_nDFit
       use mod_system
-      use mod_nDindex, only: assignment(=),type_ndindex, alloc_array,   &
+      use mod_nDindex, only: type_ndindex, alloc_array,                 &
                              write_ndindex, dealloc_array,              &
                              init_ndindexprim, sort_ndindex
       IMPLICIT NONE

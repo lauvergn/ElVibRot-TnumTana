@@ -32,7 +32,7 @@
       use mod_Constant
       ! in the use mod_Coord_KEO, we have to use "only", because "calc_freq" is
       !   a subroutine in mod_Coord_KEO and also a variable in the namelist.
-      use mod_Coord_KEO,  ONLY: assignment(=),CoordType,Tnum,Read_CoordType,&
+      use mod_Coord_KEO,  ONLY: CoordType,Tnum,Read_CoordType,              &
                                 read_RefGeom,get_Qact0,sub_QactTOdnx,       &
                                 Write_Cartg98,Write_dnx,calc3_f2_f1Q_num,   &
                                 get_dng_dnGG,sub_QplusDQ_TO_Cart,           &

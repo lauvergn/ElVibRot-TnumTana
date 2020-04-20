@@ -33,7 +33,7 @@ MODULE mod_paramQ
                                   write_dnx, sub3_dnx_at1
   use mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
   use mod_CartesianTransfo, only: alloc_cartesiantransfo,               &
-           Set_P_Axis_CartesianTransfo, Set_Eckart_CartesianTransfo,     &
+           Set_P_Axis_CartesianTransfo, Set_Eckart_CartesianTransfo,    &
                                centre_masse, write_cartesiantransfo,    &
                              sub_dnxmassweight, sub3_dncentre_masse,    &
                      calc_cartesiantransfo_new, sub_dnxnomassweight,    &
@@ -42,7 +42,7 @@ MODULE mod_paramQ
   use mod_Tnum,             only: tnum, zmatrix, write_mole,            &
                                   CoordType, Write_CoordType
 
-  USE mod_Constant,         ONLY: assignment(=),get_conv_au_to_unit,    &
+  USE mod_Constant,         ONLY: get_conv_au_to_unit,                  &
                                   real_wu, rwu_write, convrwu_to_r
   IMPLICIT NONE
 

@@ -41,12 +41,10 @@ MODULE mod_dnV
           real (kind=Rkind), pointer  :: d1(:,:)      => null()
           real (kind=Rkind), pointer  :: d2(:,:,:)    => null()
           real (kind=Rkind), pointer  :: d3(:,:,:,:)  => null()
-
+      CONTAINS
+        PROCEDURE, PRIVATE, PASS(dnVec1) :: sub_dnVec2_TO_dnVec1
+        GENERIC,   PUBLIC  :: assignment(=) => sub_dnVec2_TO_dnVec1
       END TYPE Type_dnVec
-
-        INTERFACE assignment (=)
-          MODULE PROCEDURE sub_dnVec2_TO_dnVec1
-        END INTERFACE
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_dnVecdim1,alloc_array_OF_dnVecdim2
@@ -55,10 +53,10 @@ MODULE mod_dnV
         MODULE PROCEDURE dealloc_array_OF_dnVecdim1,dealloc_array_OF_dnVecdim2
       END INTERFACE
 
-      PUBLIC :: Type_dnVec, assignment (=), alloc_array, dealloc_array
+      PUBLIC :: Type_dnVec, alloc_array, dealloc_array
       PUBLIC :: alloc_dnVec, dealloc_dnVec, check_alloc_dnVec, Write_dnVec, sub_Normalize_dnVec
 
-      PUBLIC :: sub_dnVec_TO_dnS, sub_dnS_TO_dnVec, sub_dnVec2_TO_dnVec1, sub_dnVec1_TO_dnVec2
+      PUBLIC :: sub_dnVec_TO_dnS, sub_dnS_TO_dnVec, sub_dnVec1_TO_dnVec2
       PUBLIC :: sub_PartdnVec1_TO_PartdnVec2, sub_dnVec1_TO_dnVec2_WithIvec, sub_dnVec1_TO_dnVec2_partial
       PUBLIC :: sub_dnVec1_wTO_dnVec2
 
@@ -68,6 +66,9 @@ MODULE mod_dnV
       PUBLIC :: sub_dot_product_dnVec1_dnVec2_TO_dnS, Sub_crossproduct_dnVec1_dnVec2_TO_dnVec3
       PUBLIC :: dnVec2_O_dnVec1_TO_dnVec3
       PUBLIC :: sub_dnVec1_PROD_dnS2_TO_dnVec3
+
+      ! with new type: dnS_t (QML)
+      !PUBLIC :: sub_dnVec_TO_dnSt,sub_dnSt_TO_dnVec
 
       CONTAINS
 !
@@ -389,6 +390,93 @@ MODULE mod_dnV
 !================================================================
       !!@description: TODO
       !!@param: TODO
+!      SUBROUTINE sub_dnVec_TO_dnSt(dnVec,dnS,iVec)
+!      USE mod_QML_dnS
+!
+!        TYPE (Type_dnVec) :: dnVec
+!        TYPE (dnS_t)      :: dnS
+!        integer           :: iVec
+!
+!        character (len=*), parameter :: name_sub='sub_dnVec_TO_dnSt'
+!
+!        CALL check_alloc_dnVec(dnVec,'dnVec',name_sub)
+!
+!        IF (iVec < 0 .OR. iVec > dnVec%nb_var_Vec) THEN
+!          write(out_unitp,*) ' ERROR in ',name_sub
+!          write(out_unitp,*) ' iVec < 0 or iVec > dnVec%nb_var_Vec',            &
+!                    dnVec%nb_var_vec,iVec
+!          STOP
+!        END IF
+!
+!        SELECT CASE (dnVec%nderiv)
+!        CASE (0)
+!          CALL QML_set_dnS(dnS,dnVec%d0(iVec))
+!        CASE (1)
+!          CALL QML_set_dnS(dnS,dnVec%d0(iVec),     &
+!                               dnVec%d1(iVec,:))
+!        CASE (2)
+!          CALL QML_set_dnS(dnS,dnVec%d0(iVec),     &
+!                               dnVec%d1(iVec,:),   &
+!                               dnVec%d2(iVec,:,:))
+!        CASE (3)
+!          CALL QML_set_dnS(dnS,dnVec%d0(iVec),     &
+!                               dnVec%d1(iVec,:),   &
+!                               dnVec%d2(iVec,:,:), &
+!                               dnVec%d3(iVec,:,:,:))
+!        END SELECT
+!
+!      END SUBROUTINE sub_dnVec_TO_dnSt
+!      SUBROUTINE sub_dnSt_TO_dnVec(dnS,dnVec,iVec)
+!      USE mod_QML_dnS
+!
+!        TYPE (Type_dnVec) :: dnVec
+!        TYPE (dnS_t)      :: dnS
+!        integer           :: iVec
+!
+!        integer           :: nderiv,nb_var_deriv
+!        character (len=*), parameter :: name_sub='sub_dnSt_TO_dnVec'
+!
+!        nb_var_deriv = QML_get_ndim_FROM_dnS(dnS)
+!        nderiv       = QML_get_nderiv_FROM_dnS(dnS)
+!
+!        CALL check_alloc_dnVec(dnVec,'dnVec',name_sub)
+!
+!        nderiv = min(dnVec%nderiv,nderiv)
+!
+!        IF (nderiv > 0) THEN ! it has to be test because ndim of dnS is zero when nderiv=0
+!        IF (dnVec%nb_var_deriv /= nb_var_deriv) THEN
+!          write(out_unitp,*) ' ERROR in ',name_sub
+!          write(out_unitp,*) ' nb_var_deriv in dnVec and dnS are different!',   &
+!                    dnVec%nb_var_deriv,nb_var_deriv
+!          STOP
+!        END IF
+!        END IF
+!
+!        IF (iVec < 0 .OR. iVec > dnVec%nb_var_Vec) THEN
+!          write(out_unitp,*) ' ERROR in ',name_sub
+!          write(out_unitp,*) ' iVec < 0 or iVec > dnVec%nb_var_Vec',            &
+!                    dnVec%nb_var_vec,iVec
+!          STOP
+!        END IF
+!
+!        SELECT CASE (nderiv)
+!        CASE (0)
+!          CALL QML_sub_get_dn_FROM_dnS(dnS,dnVec%d0(iVec))
+!        CASE (1)
+!          CALL QML_sub_get_dn_FROM_dnS(dnS,dnVec%d0(iVec),     &
+!                                           dnVec%d1(iVec,:))
+!        CASE (2)
+!          CALL QML_sub_get_dn_FROM_dnS(dnS,dnVec%d0(iVec),     &
+!                                           dnVec%d1(iVec,:),   &
+!                                           dnVec%d2(iVec,:,:))
+!        CASE (3)
+!          CALL QML_sub_get_dn_FROM_dnS(dnS,dnVec%d0(iVec),     &
+!                                           dnVec%d1(iVec,:),   &
+!                                           dnVec%d2(iVec,:,:), &
+!                                           dnVec%d3(iVec,:,:,:))
+!        END SELECT
+!
+!      END SUBROUTINE sub_dnSt_TO_dnVec
       SUBROUTINE sub_dnVec_TO_dnS(dnVec,dnS,iVec,nderiv)
       use mod_dnS, only: type_dns, alloc_dns, check_alloc_dns, write_dns
 
@@ -840,8 +928,8 @@ MODULE mod_dnV
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE sub_dnVec2_TO_dnVec1(dnVec1,dnVec2)
-        TYPE (Type_dnVec), intent(inout) :: dnVec1
-        TYPE (Type_dnVec), intent(in)    :: dnVec2
+        CLASS (Type_dnVec), intent(inout) :: dnVec1
+        TYPE (Type_dnVec), intent(in)     :: dnVec2
 
         character (len=*), parameter :: name_sub='sub_dnVec2_TO_dnVec1'
 

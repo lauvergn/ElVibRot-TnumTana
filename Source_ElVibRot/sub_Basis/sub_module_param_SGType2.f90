@@ -42,7 +42,7 @@
 !===========================================================================
 MODULE mod_param_SGType2
 USE mod_system
-use mod_nDindex, only: assignment (=),type_ndindex, dealloc_ndindex,    &
+use mod_nDindex, only: type_ndindex, dealloc_ndindex,                   &
                        alloc_nparray, init_ndval_of_ndindex,            &
                        add_one_to_ndindex, calc_ndi, calc_ndindex,      &
                        dealloc_nparray

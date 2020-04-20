@@ -42,6 +42,11 @@
       PUBLIC :: Read_Rot2CoordTransfo, Write_Rot2CoordTransfo, calc_Rot2CoordTransfo
       PUBLIC :: Rot2CoordTransfo1TORot2CoordTransfo2
 
+      INTERFACE calc_Rot2CoordTransfo
+       !MODULE PROCEDURE calc_Rot2CoordTransfo_new
+       MODULE PROCEDURE calc_Rot2CoordTransfo_old
+      END INTERFACE
+
       CONTAINS
 
       SUBROUTINE alloc_Rot2CoordTransfo(Rot2CoordTransfo,nb_transfo)
@@ -142,7 +147,126 @@
 
       END SUBROUTINE Write_Rot2CoordTransfo
 
-      SUBROUTINE calc_Rot2CoordTransfo(dnQin,dnQout,Rot2CoordTransfo,   &
+!      SUBROUTINE calc_Rot2CoordTransfo_new(dnQin,dnQout,Rot2CoordTransfo,   &
+!                                       nderiv,inTOout)
+!      USE mod_QML_dnS
+!
+!        TYPE (Type_dnVec), intent(inout)              :: dnQin,dnQout
+!        TYPE (Type_Rot2CoordTransfo),pointer, intent(in) :: Rot2CoordTransfo(:)
+!        integer, intent(in)                           :: nderiv
+!        logical, intent(in)                           :: inTOout
+!
+!        TYPE (dnS_t) :: dnTheta,dnCosTheta,dnSinTheta
+!
+!        TYPE (dnS_t) :: dnQ1old,dnQ2old
+!        TYPE (dns_t) :: dnQ1new,dnQ2new
+!
+!        integer :: i
+!
+!!----- for debuging ----------------------------------
+!       character (len=*),parameter :: name_sub='calc_Rot2CoordTransfo_new'
+!       logical, parameter :: debug=.FALSE.
+!       !logical, parameter :: debug=.TRUE.
+!!----- for debuging ----------------------------------
+!
+!
+!!---------------------------------------------------------------------
+!      IF (debug) THEN
+!        write(out_unitp,*) 'BEGINNING ',name_sub
+!        IF (inTOout) THEN
+!          write(out_unitp,*) 'dnQin'
+!          CALL Write_dnSVM(dnQin,nderiv)
+!        ELSE
+!          write(out_unitp,*) 'dnQout'
+!          CALL Write_dnSVM(dnQout,nderiv)
+!        END IF
+!      END IF
+!!---------------------------------------------------------------------
+!
+!      IF (.NOT. associated(Rot2CoordTransfo)) THEN
+!        write(out_unitp,*) ' ERROR in ',name_sub
+!        write(out_unitp,*) ' Rot2CoordTransfo is NOT associated'
+!        write(out_unitp,*) ' Check source !!'
+!        STOP
+!      END IF
+!
+!      CALL check_alloc_dnVec(dnQin,'dnQin',name_sub)
+!      CALL check_alloc_dnVec(dnQout,'dnQout',name_sub)
+!
+!      IF (inTOout) THEN
+!        CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv)
+!
+!        DO i=1,size(Rot2CoordTransfo)
+!          ! get from dnQin
+!          CALL sub_dnVec_TO_dnSt(dnQin,dnTheta,Rot2CoordTransfo(i)%num_Rot)
+!
+!          CALL sub_dnVec_TO_dnSt(dnQin,dnQ1old,Rot2CoordTransfo(i)%list_2Coord(1))
+!          CALL sub_dnVec_TO_dnSt(dnQin,dnQ2old,Rot2CoordTransfo(i)%list_2Coord(2))
+!
+!
+!          dnCosTheta = cos(dnTheta)
+!          dnSinTheta = sin(dnTheta)
+!
+!          dnQ1new = dnCosTheta * dnQ1old - dnSinTheta * dnQ2old
+!          dnQ2new = dnSinTheta * dnQ1old + dnCosTheta * dnQ2old
+!
+!          ! transfert in dnQout
+!          CALL sub_dnSt_TO_dnVec(dnQ1new,dnQout,Rot2CoordTransfo(i)%list_2Coord(1))
+!          CALL sub_dnSt_TO_dnVec(dnQ2new,dnQout,Rot2CoordTransfo(i)%list_2Coord(2))
+!
+!        END DO
+!
+!      ELSE
+!        CALL sub_dnVec1_TO_dnVec2(dnQout,dnQin,nderiv)
+!
+!        DO i=1,size(Rot2CoordTransfo)
+!          ! get from dnQout
+!          CALL sub_dnVec_TO_dnSt(dnQout,dnTheta,Rot2CoordTransfo(i)%num_Rot)
+!
+!          CALL sub_dnVec_TO_dnSt(dnQout,dnQ1old,Rot2CoordTransfo(i)%list_2Coord(1))
+!          CALL sub_dnVec_TO_dnSt(dnQout,dnQ2old,Rot2CoordTransfo(i)%list_2Coord(2))
+!
+!
+!          dnCosTheta = cos(dnTheta)
+!          dnSinTheta = sin(dnTheta)
+!
+!          dnQ1new =  dnCosTheta * dnQ1old + dnSinTheta * dnQ2old
+!          dnQ2new = -dnSinTheta * dnQ1old + dnCosTheta * dnQ2old
+!
+!          ! transfert in dnQin
+!          CALL sub_dnSt_TO_dnVec(dnQ1new,dnQin,Rot2CoordTransfo(i)%list_2Coord(1))
+!          CALL sub_dnSt_TO_dnVec(dnQ2new,dnQin,Rot2CoordTransfo(i)%list_2Coord(2))
+!
+!        END DO
+!
+!
+!
+!      END IF
+!
+!      CALL QML_dealloc_dnS(dnTheta)
+!      CALL QML_dealloc_dnS(dnCosTheta)
+!      CALL QML_dealloc_dnS(dnSinTheta)
+!      CALL QML_dealloc_dnS(dnQ1old)
+!      CALL QML_dealloc_dnS(dnQ2old)
+!      CALL QML_dealloc_dnS(dnQ1new)
+!      CALL QML_dealloc_dnS(dnQ2new)
+!
+!!---------------------------------------------------------------------
+!      IF (debug) THEN
+!        IF (inTOout) THEN
+!          write(out_unitp,*)
+!          write(out_unitp,*) 'dnQout'
+!          CALL Write_dnSVM(dnQout,nderiv)
+!        ELSE
+!          write(out_unitp,*) 'dnQin'
+!          CALL Write_dnSVM(dnQin,nderiv)
+!        END IF
+!        write(out_unitp,*) 'END ',name_sub
+!      END IF
+!!---------------------------------------------------------------------
+!      END SUBROUTINE calc_Rot2CoordTransfo_new
+
+      SUBROUTINE calc_Rot2CoordTransfo_old(dnQin,dnQout,Rot2CoordTransfo,   &
                                     nderiv,inTOout)
 
         TYPE (Type_dnVec), intent(inout)              :: dnQin,dnQout
@@ -160,7 +284,7 @@
         integer :: i
 
 !----- for debuging ----------------------------------
-       character (len=*),parameter :: name_sub='calc_Rot2CoordTransfo'
+       character (len=*),parameter :: name_sub='calc_Rot2CoordTransfo_old'
        logical, parameter :: debug=.FALSE.
        !logical, parameter :: debug=.TRUE.
 !----- for debuging ----------------------------------
@@ -260,7 +384,7 @@
         write(out_unitp,*) 'END ',name_sub
       END IF
 !---------------------------------------------------------------------
-      END SUBROUTINE calc_Rot2CoordTransfo
+      END SUBROUTINE calc_Rot2CoordTransfo_old
 
       SUBROUTINE Rot2CoordTransfo1TORot2CoordTransfo2(Rot2CoordTransfo1,Rot2CoordTransfo2)
         TYPE (Type_Rot2CoordTransfo),pointer, intent(in)    :: Rot2CoordTransfo1(:)

@@ -42,7 +42,7 @@
 !===========================================================================
  MODULE mod_march
  USE mod_system
- use mod_Constant,      ONLY: assignment(=),get_conv_au_to_unit
+ use mod_Constant,      ONLY : get_conv_au_to_unit
  USE mod_psi,           ONLY : param_psi,alloc_NParray,dealloc_NParray,dealloc_psi
  USE mod_propa,         ONLY : param_propa,param_poly,Calc_AutoCorr,    &
                                Write_AutoCorr,SaveWP_restart,           &
@@ -123,7 +123,7 @@
       IF (para_propa%One_Iteration) THEN
         IF(MPI_id==0) THEN
           write(out_unitp,*) '================================================='
-          write(out_unitp,*) ' VIB: BEGINNING march_gene'
+          write(out_unitp,*) ' VIB: BEGINNING ',name_sub
           CALL time_perso('march_gene')
           write(out_unitp,*)
         ENDIF
@@ -217,6 +217,8 @@
           write(out_unitp,*) ' VIB: END march_gene'
           write(out_unitp,*) '================================================='
           write(out_unitp,*) 'Propagation stops after one time step.'
+          write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!'
+          write(out_unitp,*) '================================================'
         ENDIF
         STOP 'Propagation stops after one time step.'
       END IF
@@ -1237,6 +1239,7 @@
                         'work_WP',name_sub,[0])
       DO j=1,nb_WP
         work_WP(0) = WP(j)
+
         DO i=0,para_propa%para_poly%npoly-1
 
           CALL sub_OpPsi(work_WP(i),w2,para_H)

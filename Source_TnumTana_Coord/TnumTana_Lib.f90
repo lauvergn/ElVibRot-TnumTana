@@ -27,6 +27,7 @@
 !===========================================================================
 !===========================================================================
 SUBROUTINE Qact_TO_cart(Qact,nb_act,Qcart,nb_cart)
+  USE mod_system
   USE Module_ForTnumTana_Driver
   IMPLICIT NONE
 
@@ -85,7 +86,7 @@ SUBROUTINE Qact_TO_cart(Qact,nb_act,Qcart,nb_cart)
 
 END SUBROUTINE Qact_TO_cart
 SUBROUTINE Init_InputUnit_Driver(InputUnit)
-  USE mod_NumParameters
+  USE mod_system
   IMPLICIT NONE
 
   integer,           intent(in)     :: InputUnit
@@ -99,7 +100,7 @@ SUBROUTINE Init_InputUnit_Driver(InputUnit)
 
 END SUBROUTINE Init_InputUnit_Driver
 SUBROUTINE Init_OutputUnit_Driver(OutputUnit)
-  USE mod_NumParameters
+  USE mod_system
   IMPLICIT NONE
 
   integer,           intent(in)     :: OutputUnit

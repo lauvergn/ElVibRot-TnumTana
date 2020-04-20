@@ -29,24 +29,24 @@
 
       MODULE mod_nDindex
       use mod_system
-      use mod_module_DInd, only: assignment (=), typedind, set_ndind_01order,          &
-                                 set_ndind_10order,       &
-                                 set_ndind_01order_l, set_ndind_10order_l,             &
+      use mod_module_DInd, only: typedind, set_ndind_01order,             &
+                                 set_ndind_10order,                       &
+                                 set_ndind_01order_l, set_ndind_10order_l,&
                                  dealloc_ndind, ndind2tondind1, write_tab_ndind
-      use mod_dnSVM, only: assignment (=), type_dnvec, type_intvec, alloc_array,       &
-                           sub_intvec1_to_intvec2, dealloc_dnsvm, dealloc_array,       &
+      use mod_dnSVM, only: type_dnvec, type_intvec, alloc_array,            &
+                         sub_intvec1_to_intvec2,dealloc_dnsvm,dealloc_array,&
                            alloc_dnsvm, sub_dnvec1_to_dnvec2
       IMPLICIT NONE
 
-        PRIVATE
+      PRIVATE
 
-        integer, parameter :: err_Max_nDI = 1
-        integer, parameter :: err_nDI     = 2
-        integer, parameter :: err_nDval   = 3
+      integer, parameter :: err_Max_nDI = 1
+      integer, parameter :: err_nDI     = 2
+      integer, parameter :: err_nDval   = 3
 
       !!@description: TODO
       !!@param: TODO
-        TYPE Type_nDindex
+      TYPE Type_nDindex
 
         logical                       :: alloc           = .FALSE. ! IF F, tables haven't been allocated.
         logical                       :: init            = .FALSE. ! IF F, tables haven't been initialized
@@ -93,13 +93,10 @@
         TYPE (Type_IntVec), pointer   :: Tab_i_TO_l(:)   => null() ! equivalent to Tab_nDNorm
 
         TYPE(TypeDInd),  allocatable  :: Tab_DInd(:) ! for SGtype2
-
-
-        END TYPE Type_nDindex
-
-        INTERFACE assignment (=)
-          MODULE PROCEDURE nDindex2TOnDindex1
-        END INTERFACE
+      CONTAINS
+        PROCEDURE, PRIVATE, PASS(nDindex1) :: nDindex2TOnDindex1
+        GENERIC,   PUBLIC  :: assignment(=) => nDindex2TOnDindex1
+      END TYPE Type_nDindex
 
         INTERFACE alloc_array
           MODULE PROCEDURE alloc_array_OF_nDindexdim0,alloc_array_OF_nDindexdim1
@@ -116,7 +113,7 @@
         END INTERFACE
 
         PUBLIC :: Type_nDindex,alloc_nDindex,dealloc_nDindex,Write_nDindex
-        PUBLIC :: assignment (=),nDindex2TOnDindex1,nDindex2TOnDindex1_InitOnly
+        PUBLIC :: nDindex2TOnDindex1,nDindex2TOnDindex1_InitOnly
 
         PUBLIC :: alloc_array,dealloc_array,alloc_NParray,dealloc_NParray
         PUBLIC :: init_nDindexPrim,init_nDindex_typeTAB
@@ -1870,8 +1867,8 @@
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE nDindex2TOnDindex1(nDindex1,nDindex2)
-        TYPE (Type_nDindex), intent(inout) :: nDindex1
-        TYPE (Type_nDindex), intent(in)  :: nDindex2
+        CLASS (Type_nDindex), intent(inout) :: nDindex1
+        TYPE (Type_nDindex),  intent(in)    :: nDindex2
 
         integer :: i
         integer :: err_mem,memory

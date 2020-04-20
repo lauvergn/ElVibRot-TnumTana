@@ -62,7 +62,7 @@
  USE mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
- USE mod_Coord_KEO,                ONLY : assignment(=),CoordType
+ USE mod_Coord_KEO,                ONLY : CoordType
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                   tabR_AT_iG_TO_tabPackedBasis,TypeRVec,alloc_TypeRVec,dealloc_TypeRVec, &
@@ -378,7 +378,7 @@ END SUBROUTINE march_noD_ONE_DP_SG4
  USE mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
- USE mod_Coord_KEO,                ONLY : assignment(=),CoordType
+ USE mod_Coord_KEO,                ONLY : CoordType
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                   tabR_AT_iG_TO_tabPackedBasis,TypeRVec,alloc_TypeRVec,dealloc_TypeRVec, &
@@ -672,7 +672,7 @@ nb_thread = 1
  USE mod_system
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
- USE mod_Coord_KEO,                ONLY : assignment(=),CoordType
+ USE mod_Coord_KEO,                ONLY : CoordType
  USE mod_basis_set_alloc,          ONLY : basis
  USE mod_basis_BtoG_GtoB_SGType4,  ONLY : tabPackedBasis_TO_tabR_AT_iG, &
                   tabR_AT_iG_TO_tabPackedBasis,TypeRVec,alloc_TypeRVec,dealloc_TypeRVec, &
