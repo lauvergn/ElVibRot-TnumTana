@@ -57,7 +57,6 @@
       use mod_Basis_Grid_Param
       USE mod_SymAbelian
       USE mod_param_SGType2
-      USE mod_param_RD
       USE mod_Basis_L_TO_n
       IMPLICIT NONE
 
@@ -204,9 +203,6 @@
           TYPE (basis), pointer       :: tab_basisPrimSG(:,:)     => null() ! tab_basis(nb_basis,0:Lmax)
 
           TYPE (param_SGType2)        :: para_SGType2
-
-          TYPE (param_RD), allocatable :: para_RD(:) ! it is allocated only for BasisnD. The size is nb_basis
-
 
           TYPE (RotBasis_Param)       :: RotBasis
 
@@ -957,7 +953,6 @@
 
          CALL dealloc_SGType2(basis_set%para_SGType2)
          CALL dealloc_RotBasis_Param(basis_set%RotBasis)
-         CALL dealloc_tab_RD(basis_set%para_RD)
 
        END SUBROUTINE dealloc_basis
 
@@ -1691,9 +1686,6 @@
         basis_set1%para_SGType2 = basis_set2%para_SGType2
 
         basis_set1%RotBasis     = basis_set2%RotBasis
-
-        !basis_set1%para_RD      = basis_set2%para_RD
-
 
       END SUBROUTINE basis2TObasis1
 

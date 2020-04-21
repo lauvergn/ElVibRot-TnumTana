@@ -161,8 +161,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   IF (ana_psi%Boltzmann_pop) THEN
 
     RWU_Temp = REAL_WU(ana_psi%Temp,'°K','E')
-    !Etemp   = RWU_Temp  ! Temperature convertion in Hartree
-    Etemp    = convRWU_TO_R(RWU_Temp ,WorkingUnit=.TRUE.)
+    Etemp    = convRWU_TO_R_WITH_WorkingUnit(RWU_Temp)
 
     pop = exp(-(ana_psi%Ene-ana_psi%ZPE)/Etemp) / ana_psi%Part_func
   END IF
@@ -173,7 +172,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   IF (ana_psi%propa) THEN
 
     RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
-    E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
+    E      = convRWU_TO_R_WITH_WritingUnit(RWU_E)
 
     IF (adia) THEN
       CALL Channel_weight(tab_WeightChannels,psi,                       &
@@ -237,8 +236,8 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
     RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
     RWU_DE = REAL_WU(ana_psi%Ene-ana_psi%ZPE,'au','E')
-    E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
-    DE     = convRWU_TO_R(RWU_DE,WorkingUnit=.FALSE.)
+    E      = convRWU_TO_R_WITH_WritingUnit(RWU_E)
+    DE     = convRWU_TO_R_WITH_WritingUnit(RWU_DE)
 
     IF (ana_psi%AvQ) THEN
       CALL alloc_NParray(moy_Qba,(/2*Psi%BasisnD%ndim/),"moy_Qba",name_sub)
@@ -1580,59 +1579,81 @@ END SUBROUTINE sub_analyze_psi
 
       end subroutine calc_MaxCoef_psi
 
-      SUBROUTINE calc_1Dweight_act1(psi,ana_psi,max_1D,T,info,print_w)
-      USE mod_system
-      USE mod_nDindex
-      USE mod_psi_set_alloc
-      USE mod_type_ana_psi
-      USE mod_param_RD
-      USE mod_MPI
-      IMPLICIT NONE
+  SUBROUTINE calc_1Dweight_act1(psi,ana_psi,max_1D,T,info,print_w)
+    USE mod_system
+    USE mod_nDindex
+    USE mod_psi_set_alloc
+    USE mod_type_ana_psi
+    USE mod_param_RD
+    USE mod_MPI
+    IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi)     :: psi
-      TYPE (param_ana_psi) :: ana_psi
+    TYPE (param_psi)     :: psi
+    TYPE (param_ana_psi) :: ana_psi
 
-      real (kind=Rkind), allocatable :: weight1Dact(:,:)
-      real (kind=Rkind)    :: a
+    real (kind=Rkind), allocatable :: weight1Dact(:,:)
+    real (kind=Rkind)    :: a
 
-      real (kind=Rkind)    :: T ! time
-      character (len=*)    :: info
-      logical          :: print_w
+    real (kind=Rkind)    :: T ! time
+    character (len=*)    :: info
+    logical          :: print_w
 
-      integer          :: i,ie,ii,ib,ibie,iq,ibiq,n
-      integer          :: max_dim,max_1D
-      integer          :: max_indGr(psi%BasisnD%nDindB%ndim)
-      integer          :: ndim_AT_ib(psi%BasisnD%nDindB%ndim)
-      integer          :: nDval(psi%BasisnD%nDindB%ndim)
+    integer          :: i,ie,ii,ib,ibie,iq,ibiq,n
+    integer          :: max_dim,max_1D
+    integer          :: max_indGr(psi%BasisnD%nDindB%ndim)
+    integer          :: ndim_AT_ib(psi%BasisnD%nDindB%ndim)
+    integer          :: nDval(psi%BasisnD%nDindB%ndim)
 
-      character (len=:), allocatable :: state_name
+    character (len=:), allocatable :: state_name
 
-      real (kind=Rkind)              :: r2
-      real (kind=Rkind), allocatable :: DiagRDcontrac(:) ! diagonal reduced density matrix with the contracted basis set (nbc,nbc)
+    real (kind=Rkind)              :: r2
+    real (kind=Rkind), allocatable :: DiagRDcontrac(:) ! diagonal reduced density matrix with the contracted basis set (nbc,nbc)
+    TYPE (param_RD),   allocatable :: para_RD(:) ! it is allocated only for BasisnD. The size is nb_basis
 
 !----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub='calc_1Dweight_act1'
-      logical, parameter :: debug =.FALSE.
-!     logical, parameter :: debug =.TRUE.
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) 'nb_inact2n',psi%Basis2n%nb_basis
-        write(out_unitp,*) 'nb_bi,nb_be',psi%nb_bi,psi%nb_be
-      END IF
-!-----------------------------------------------------------
-      CALL flush_perso(out_unitp)
-      IF (psi%nb_baie /= psi%nb_tot) RETURN
-      IF (ana_psi%adia) RETURN
+    character (len=*), parameter :: name_sub='calc_1Dweight_act1'
+    logical, parameter :: debug =.FALSE.
+!   logical, parameter :: debug =.TRUE.
+!---------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) 'nb_inact2n',psi%Basis2n%nb_basis
+      write(out_unitp,*) 'nb_bi,nb_be',psi%nb_bi,psi%nb_be
+    END IF
+!---------------------------------------------------------
+    CALL flush_perso(out_unitp)
+    IF (psi%nb_baie /= psi%nb_tot) RETURN
+    IF (ana_psi%adia) RETURN
 
-      IF (allocated(Psi%BasisnD%nDindB%Tab_nDval)) THEN
-        max_dim = maxval(Psi%BasisnD%nDindB%Tab_nDval)
-      ELSE
-        max_dim = maxval(psi%BasisnD%nDindB%nDsize(1:psi%BasisnD%nDindB%ndim))
-      END IF
-      CALL alloc_NParray(weight1Dact,(/psi%BasisnD%nDindB%ndim,max_dim/), &
-                        "weight1Dact",name_sub)
+    IF (allocated(Psi%BasisnD%nDindB%Tab_nDval)) THEN
+      max_dim = maxval(Psi%BasisnD%nDindB%Tab_nDval)
+    ELSE
+      max_dim = maxval(psi%BasisnD%nDindB%nDsize(1:psi%BasisnD%nDindB%ndim))
+    END IF
+    CALL alloc_NParray(weight1Dact,(/psi%BasisnD%nDindB%ndim,max_dim/), &
+                      "weight1Dact",name_sub)
+
+    !---- RD analysis (for contrac_analysis=t) -------------------------
+    ! initialization for RD analysis
+    IF (psi%BasisnD%nb_basis > 1) THEN
+      allocate(para_RD(psi%BasisnD%nb_basis))
+
+      para_RD(:)%RD_analysis = .FALSE.
+      DO ib=1,size(para_RD)
+        para_RD(ib)%RD_analysis =                                       &
+                      psi%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_analysis
+
+        para_RD(ib)%basis_index = ib
+        IF (allocated(psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)) THEN
+          CALL init_RD(para_RD(ib),psi%BasisnD%nDindB,            &
+                       psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)
+        ELSE
+          CALL init_RD(para_RD(ib),psi%BasisnD%nDindB)
+        END IF
+
+      END DO
+    END IF
 
     ibie = 0
     DO ie=1,psi%nb_be
@@ -1680,29 +1701,55 @@ END SUBROUTINE sub_analyze_psi
       !write(out_unitp,*) 'ndim_AT_ib',ndim_AT_ib(:)
       IF (print_w .OR. debug) THEN
         DO iq=1,psi%BasisnD%nDindB%ndim
-          IF (sum(weight1Dact(iq,1:ndim_AT_ib(iq)))-ONE > ONETENTH**7)  &
-                write(out_unitp,21) state_name // ' Sum(RD)/=1',trim(info),&
-                             iq,T,sum(weight1Dact(iq,1:ndim_AT_ib(iq)))
-          IF(MPI_id==0) write(out_unitp,21) state_name // ' ',trim(info),iq,T,           &
-                           weight1Dact(iq,1:min(max_1D,ndim_AT_ib(iq)))
+          IF (sum(weight1Dact(iq,1:ndim_AT_ib(iq)))-ONE > ONETENTH**7) THEN
+            write(out_unitp,21) state_name // ' Sum(RD)/=1',trim(info), &
+                              iq,T,sum(weight1Dact(iq,1:ndim_AT_ib(iq)))
+          END IF
+          write(out_unitp,21) state_name // ' ',trim(info),iq,T,        &
+                            weight1Dact(iq,1:min(max_1D,ndim_AT_ib(iq)))
  21       format(a,a,i3,1x,f17.4,300(1x,e10.3))
           CALL flush_perso(out_unitp)
 
-          IF (allocated(psi%BasisnD%para_RD)) THEN
-          IF (psi%BasisnD%para_RD(iq)%RD_analysis) THEN
+          !---- RD analysis --------------------------------------------
+          ! initialization for RD analysis
+!          IF (psi%BasisnD%nb_basis > 1) THEN
+!            allocate(para_RD(psi%BasisnD%nb_basis))
+!
+!            para_RD(:)%RD_analysis = .FALSE.
+!            DO ib=1,size(para_RD)
+!              para_RD(ib)%RD_analysis =                                 &
+!                      psi%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_analysis
+!
+!              para_RD(ib)%basis_index = ib
+!              IF (allocated(psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)) THEN
+!                CALL init_RD(para_RD(ib),psi%BasisnD%nDindB,            &
+!                             psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)
+!              ELSE
+!                CALL init_RD(para_RD(ib),psi%BasisnD%nDindB)
+!              END IF
+!
+!            END DO
+!          END IF
 
-            CALL calc_RD(psi%BasisnD%para_RD(iq),psi%RvecB,DiagRDcontrac=DiagRDcontrac)
+          !---- RD analysis --------------------------------------------
+          ! RD analysis
+          IF (allocated(para_RD)) THEN
+          IF (para_RD(iq)%RD_analysis) THEN
+
+            CALL calc_RD(para_RD(iq),psi%RvecB,DiagRDcontrac=DiagRDcontrac)
             n = min(ndim_AT_ib(iq),size(DiagRDcontrac))
             weight1Dact(iq,1:n) = DiagRDcontrac(1:n)
-            write(out_unitp,21) state_name // 'c',trim(info),iq,T,           &
+            write(out_unitp,21) state_name // 'c',trim(info),iq,T,      &
                            weight1Dact(iq,1:min(max_1D,n))
             CALL flush_perso(out_unitp)
 
             !write(out_unitp,*) 'Diag RD contracted',iq,DiagRDcontrac
-            IF (allocated(DiagRDcontrac)) CALL dealloc_NParray(DiagRDcontrac,'DiagRDcontrac',name_sub)
+            IF (allocated(DiagRDcontrac)) THEN
+              CALL dealloc_NParray(DiagRDcontrac,'DiagRDcontrac',name_sub)
+            END IF
           END IF
           END IF
-
+          !---- END RD analysis ----------------------------------------
 
           max_indGr(iq) = sum(maxloc(weight1Dact(iq,1:ndim_AT_ib(iq))))
         END DO
@@ -1735,14 +1782,17 @@ END SUBROUTINE sub_analyze_psi
 
     END DO
     END DO
+
     CALL dealloc_NParray(weight1Dact,"weight1Dact",name_sub)
+    CALL dealloc_tab_RD(para_RD)
+
 !-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'END ',name_sub
-      END IF
+    IF (debug) THEN
+      write(out_unitp,*) 'END ',name_sub
+    END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE calc_1Dweight_act1
+    END SUBROUTINE calc_1Dweight_act1
 
 
 !=======================================================================================      

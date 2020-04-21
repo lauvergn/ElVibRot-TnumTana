@@ -42,8 +42,8 @@ MODULE mod_paramQ
   use mod_Tnum,             only: tnum, zmatrix, write_mole,            &
                                   CoordType, Write_CoordType
 
-  USE mod_Constant,         ONLY: get_conv_au_to_unit,                  &
-                                  real_wu, rwu_write, convrwu_to_r
+  USE mod_Constant,         ONLY: real_wu,get_conv_au_to_unit,          &
+                                  rwu_write,convRWU_TO_R_WITH_WorkingUnit
   IMPLICIT NONE
 
   INTERFACE sub_QactTOdnx
@@ -2134,7 +2134,7 @@ CONTAINS
             CASE default
               QWU = REAL_WU(Q(i),'',     'no_dim')
             END SELECT
-            Q(i) = convRWU_TO_R(QWU)
+            Q(i) = convRWU_TO_R_WITH_WorkingUnit(QWU)
 
             !write(out_unitp,*) 'i,QWU, conv',i,QWU,Q(i)
 
@@ -2208,7 +2208,7 @@ CONTAINS
 
           END IF
 
-          Q(i) = convRWU_TO_R(QWU,WorkingUnit=.TRUE.)
+          Q(i) = convRWU_TO_R_WITH_WorkingUnit(QWU)
           IF(MPI_id==0) write(out_unitp,*) i,QWU,'working value Q(i)',Q(i)
 
         END DO

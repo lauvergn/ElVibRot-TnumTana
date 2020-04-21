@@ -54,6 +54,10 @@ END TYPE TypeRDP
 
 TYPE TypeRVec
   real(kind=Rkind), allocatable :: R(:)
+CONTAINS
+  PROCEDURE, PRIVATE, PASS(Rvec1) :: TypeRVec2_TO_TypeRVec1
+  PROCEDURE, PRIVATE, PASS(Rvec1) :: tabR2_TO_TypeRVec1
+  GENERIC,   PUBLIC  :: assignment(=) => TypeRVec2_TO_TypeRVec1,tabR2_TO_TypeRVec1
 END TYPE TypeRVec
 
 TYPE Type_SmolyakRep
@@ -62,12 +66,13 @@ TYPE Type_SmolyakRep
   integer :: k        = -1
   logical :: k_type_b = .TRUE.
   TYPE (TypeRVec), allocatable :: SmolyakRep(:)
+CONTAINS
+  PROCEDURE, PRIVATE, PASS(SRep2) :: SmolyakRep2_TO_tabR1
+  PROCEDURE, PRIVATE, PASS(SRep1) :: R2_TO_SmolyakRep1
+  PROCEDURE, PRIVATE, PASS(SRep1) :: tabR2_TO_SmolyakRep1
+  GENERIC,   PUBLIC  :: assignment(=) => R2_TO_SmolyakRep1,             &
+                              SmolyakRep2_TO_tabR1,tabR2_TO_SmolyakRep1
 END TYPE Type_SmolyakRep
-
-INTERFACE assignment(=)
-  module procedure TypeRVec2_TO_TypeRVec1,tabR2_TO_TypeRVec1
-  module procedure SmolyakRep2_TO_tabR1,tabR2_TO_SmolyakRep1,R2_TO_SmolyakRep1
-END INTERFACE
 
 INTERFACE operator(*)
   module procedure SmolyakRep1_TIME_SmolyakRe2
@@ -125,8 +130,8 @@ END SUBROUTINE Write_TypeRVec
 SUBROUTINE TypeRVec2_TO_TypeRVec1(Rvec1,Rvec2)
 IMPLICIT NONE
 
-  TYPE (TypeRVec), intent(inout) :: Rvec1
-  TYPE (TypeRVec), intent(in)    :: Rvec2
+  CLASS (TypeRVec), intent(inout) :: Rvec1
+  TYPE (TypeRVec),  intent(in)    :: Rvec2
 
   CALL dealloc_TypeRVec(Rvec1)
 
@@ -136,8 +141,8 @@ END SUBROUTINE TypeRVec2_TO_TypeRVec1
 SUBROUTINE tabR2_TO_TypeRVec1(Rvec1,tabR2)
 IMPLICIT NONE
 
-  TYPE (TypeRVec),                intent(inout) :: Rvec1
-  real(kind=Rkind), allocatable,  intent(in)    :: tabR2(:)
+  CLASS (TypeRVec),                intent(inout) :: Rvec1
+  real(kind=Rkind), allocatable,   intent(in)    :: tabR2(:)
 
   CALL dealloc_TypeRVec(Rvec1)
 
@@ -432,8 +437,8 @@ END FUNCTION MaxVal_SmolyakRep
 SUBROUTINE SmolyakRep2_TO_tabR1(tabR1,SRep2)
 IMPLICIT NONE
 
-real(kind=Rkind), allocatable,   intent(inout)  :: tabR1(:)
-TYPE(Type_SmolyakRep),           intent(in)     :: SRep2
+real(kind=Rkind), allocatable,     intent(inout)  :: tabR1(:)
+CLASS (Type_SmolyakRep),           intent(in)     :: SRep2
 
 integer               :: iG,nb_BG,nR,itabR
 
@@ -457,8 +462,8 @@ END SUBROUTINE SmolyakRep2_TO_tabR1
 SUBROUTINE tabR2_TO_SmolyakRep1(SRep1,tabR2)
 IMPLICIT NONE
 
-real(kind=Rkind), allocatable,   intent(in)     :: tabR2(:)
-TYPE(Type_SmolyakRep),           intent(inout)  :: SRep1
+real (kind=Rkind), allocatable,   intent(in)     :: tabR2(:)
+CLASS (Type_SmolyakRep),          intent(inout)  :: SRep1
 
 integer               :: iG,nb_BG,nR,itabR
 
@@ -487,8 +492,8 @@ END SUBROUTINE tabR2_TO_SmolyakRep1
 SUBROUTINE R2_TO_SmolyakRep1(SRep1,R2)
 IMPLICIT NONE
 
-real(kind=Rkind),                intent(in)     :: R2
-TYPE(Type_SmolyakRep),           intent(inout)  :: SRep1
+real (kind=Rkind),                 intent(in)     :: R2
+CLASS (Type_SmolyakRep),           intent(inout)  :: SRep1
 
 integer               :: iG,nb_BG
 

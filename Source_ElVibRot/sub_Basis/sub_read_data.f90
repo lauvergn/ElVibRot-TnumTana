@@ -816,7 +816,7 @@
       basis_temp%auto_contrac             = auto_contrac
       basis_temp%make_cubature            = make_cubature
       basis_temp%restart_make_cubature    = restart_make_cubature
-      basis_temp%max_ene_contrac          = convRWU_TO_R(max_ene_contrac)
+      basis_temp%max_ene_contrac          = convRWU_TO_R_WITH_WorkingUnit(max_ene_contrac)
       basis_temp%max_nbc                  = max_nbc
       basis_temp%min_nbc                  = min_nbc
       basis_temp%auto_contrac_type1_TO    = auto_contrac_type1_TO

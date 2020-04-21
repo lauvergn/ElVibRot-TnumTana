@@ -52,7 +52,7 @@
 
       USE mod_system
       use mod_Constant, only: constant, rwu_write,                      &
-                              real_wu, convrwu_to_r, get_conv_au_to_unit
+                              real_wu, get_conv_au_to_unit
       USE mod_Coord_KEO
       USE mod_basis
       USE mod_Op
@@ -906,7 +906,7 @@
       end subroutine calc_Q_VR
       FUNCTION part_func(ene,nb_aie,Temp)
       USE mod_system
-      use mod_Constant, only:real_wu,convRWU_TO_R
+      use mod_Constant, only:real_wu,convRWU_TO_R_WITH_WorkingUnit
       implicit none
 
       real (kind=Rkind) :: part_func
@@ -938,8 +938,7 @@
 !-----------------------------------------------------------
 
       RWU_Temp = REAL_WU(Temp,'°K','E')
-      !Etemp   = RWU_Temp  ! Temperature convertion in Hartree
-      Etemp    = convRWU_TO_R(RWU_Temp ,WorkingUnit=.TRUE.)
+      Etemp    = convRWU_TO_R_WITH_WorkingUnit(RWU_Temp)
 
       zpe = minval(ene)
 
@@ -967,7 +966,7 @@
 !================================================================
       FUNCTION pop2_i(enei,ene0,Temp)
       USE mod_system
-      use mod_Constant, only: real_wu,convRWU_TO_R
+      use mod_Constant, only: real_wu,convRWU_TO_R_WITH_WorkingUnit
       IMPLICIT NONE
 
       real (kind=Rkind) :: pop2_i
@@ -994,7 +993,7 @@
 !-----------------------------------------------------------
 
       RWU_Temp = REAL_WU(Temp,'°K','E')
-      Etemp    = convRWU_TO_R(RWU_Temp ,WorkingUnit=.TRUE.)
+      Etemp    = convRWU_TO_R_WITH_WorkingUnit(RWU_Temp)
 
       pop2_i = exp(-(enei-ene0)/Etemp)
 

@@ -53,21 +53,16 @@ IMPLICIT NONE
     integer                        :: nb             = 0  ! size of the basis set
 
     TYPE (Type_nDindex)            :: nDindex_ComplBasis  ! multidimensional index for the complementary basis set
-                                                        ! (without the basis set with this basis_index)
+                                                          ! (without the basis set with this basis_index)
     integer                        :: nbb_ComplBasis = 0
 
     integer,           allocatable :: tab_OF_iBComplBasis_AND_ib_TO_iB(:,:)   ! size (nbb_ComplBasis,nb)
     real (kind=rkind), allocatable :: cbb(:,:)         ! coefficient of the contracted basis set
-
-
+  CONTAINS
+    PROCEDURE, PRIVATE, PASS(para_RD1) :: RD2_TO_RD1
+    GENERIC,   PUBLIC  :: assignment(=) => RD2_TO_RD1
   END TYPE param_RD
 
-
-INTERFACE assignment (=)
-  MODULE PROCEDURE RD2_TO_RD1,tab_RD2_TO_RD1
-END INTERFACE
-
-PUBLIC :: assignment (=),RD2_TO_RD1,tab_RD2_TO_RD1
 PUBLIC :: param_RD,dealloc_RD,init_RD,calc_RD,dealloc_tab_RD
 
 CONTAINS
@@ -97,8 +92,8 @@ END SUBROUTINE dealloc_RD
 
 SUBROUTINE RD2_TO_RD1(para_RD1,para_RD2)
 
-TYPE (param_RD), intent(inout) :: para_RD1
-TYPE (param_RD), intent(in)    :: para_RD2
+CLASS (param_RD), intent(inout) :: para_RD1
+TYPE (param_RD),  intent(in)    :: para_RD2
 
 integer :: i
 
@@ -315,18 +310,18 @@ END SUBROUTINE calc_RD
 
 SUBROUTINE dealloc_tab_RD(para_RD)
 
-TYPE (param_RD),     intent(inout), allocatable :: para_RD(:)
+  TYPE (param_RD),     intent(inout), allocatable :: para_RD(:)
 
-integer :: i
+  integer :: i
 
-character (len=*), parameter :: name_sub='dealloc_tab_RD'
+  character (len=*), parameter :: name_sub='dealloc_tab_RD'
 
-    IF (allocated(para_RD)) THEN
-      DO i=1,size(para_RD)
-         CALL dealloc_RD(para_RD(i))
-      END DO
-      deallocate(para_RD)
-    END IF
+  IF (allocated(para_RD)) THEN
+    DO i=1,size(para_RD)
+       CALL dealloc_RD(para_RD(i))
+    END DO
+    deallocate(para_RD)
+  END IF
 
 
 END SUBROUTINE dealloc_tab_RD

@@ -43,7 +43,8 @@
 
       MODULE mod_analysis
       USE mod_system
-      use mod_Constant, only : real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit, get_val_FROM_RWU
+      use mod_Constant, only : real_wu, convRWU_TO_R_WITH_WorkingUnit,  &
+                               rwu_write, get_conv_au_to_unit
       USE mod_psi,      ONLY : param_ana_psi
       USE mod_CRP
       IMPLICIT NONE
@@ -299,12 +300,8 @@
         STOP 'ERROR: Empty file name.'
       END IF
 
-
-      IF (get_val_FROM_RWU(max_ene) <= ZERO) THEN
-        para_ana%max_ene         = huge(ONE)
-      ELSE
-        para_ana%max_ene         = convRWU_TO_R(max_ene)
-      END IF
+      para_ana%max_ene         = convRWU_TO_R_WITH_WorkingUnit(max_ene)
+      IF (para_ana%max_ene <= ZERO) para_ana%max_ene = huge(ONE)
       para_ana%max_ana         = max_ana
 
       para_ana%ana             = ana
@@ -317,7 +314,7 @@
 
       para_ana%CRP             = CRP
 
-      para_ana%Ezpe            = convRWU_TO_R(Ezpe)
+      para_ana%Ezpe            = convRWU_TO_R_WITH_WorkingUnit(Ezpe)
       para_ana%Temp            = Temp
 
       para_ana%VibRot          = VibRot
@@ -490,9 +487,9 @@
         para_intensity%dip_Qact  = dip_Qact
 
         para_intensity%l_lorentz   = l_lorentz
-        para_intensity%Emin        = convRWU_TO_R(Emin)
-        para_intensity%Emax        = convRWU_TO_R(Emax)
-        para_intensity%Ewidth      = convRWU_TO_R(Ewidth)
+        para_intensity%Emin        = convRWU_TO_R_WITH_WorkingUnit(Emin)
+        para_intensity%Emax        = convRWU_TO_R_WITH_WorkingUnit(Emax)
+        para_intensity%Ewidth      = convRWU_TO_R_WITH_WorkingUnit(Ewidth)
         para_intensity%nEstep      = nEstep
 
 

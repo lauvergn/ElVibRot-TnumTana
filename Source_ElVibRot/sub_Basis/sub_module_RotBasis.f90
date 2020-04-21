@@ -59,14 +59,12 @@
           integer,          allocatable :: tab_iterm_TO_der(:,:)            !  ...(2,nb_term)
           real(kind=Rkind), allocatable :: tab_RotOp(:,:,:)                 ! tab_RotOp(nb_Rot,nb_Rot,0:nb_term)
                                                                             ! tab_RotOp(:,:,0) is not used but it needs when tab_der_TO_iterm(0,0)=0
-
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(RotBasis_Para1) :: RotBasis_Param2TORotBasis_Param1
+          GENERIC,   PUBLIC  :: assignment(=) => RotBasis_Param2TORotBasis_Param1
         END TYPE RotBasis_Param
 
-      INTERFACE assignment (=)
-        MODULE PROCEDURE RotBasis_Param2TORotBasis_Param1
-      END INTERFACE
-
-      PUBLIC :: RotBasis_Param, assignment (=), alloc_RotBasis_Param,   &
+      PUBLIC :: RotBasis_Param, alloc_RotBasis_Param,                   &
                 dealloc_RotBasis_Param, Init_RotBasis_Param,            &
                 Write_RotBasis_Param,RotBasis_Param2TORotBasis_Param1
 
@@ -740,8 +738,8 @@
       SUBROUTINE RotBasis_Param2TORotBasis_Param1(RotBasis_Para1,       &
                                                          RotBasis_Para2)
 
-      TYPE (RotBasis_Param), intent(inout) :: RotBasis_Para1
-      TYPE (RotBasis_Param), intent(in)    :: RotBasis_Para2
+      CLASS (RotBasis_Param), intent(inout) :: RotBasis_Para1
+      TYPE (RotBasis_Param),  intent(in)    :: RotBasis_Para2
 
 !---------------------------------------------------------------------
       integer :: err_mem,memory

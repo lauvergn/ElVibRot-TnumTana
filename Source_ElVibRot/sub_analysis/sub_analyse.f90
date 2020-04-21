@@ -160,26 +160,6 @@ CONTAINS
        write(out_unitp,*)
        Q =  part_func(ene,nb_psi_in,para_ana%Temp)
 
-      ! initialization for RD analysis
-      IF (para_H%BasisnD%nb_basis > 1) THEN
-        IF (allocated(para_H%BasisnD%para_RD)) THEN
-          deallocate(para_H%BasisnD%para_RD)
-        END IF
-        allocate(para_H%BasisnD%para_RD(para_H%BasisnD%nb_basis))
-        para_H%BasisnD%para_RD(:)%RD_analysis = .FALSE.
-        DO ib=1,para_H%BasisnD%nb_basis
-          para_H%BasisnD%para_RD(ib)%RD_analysis = para_H%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_analysis
-
-          para_H%BasisnD%para_RD(ib)%basis_index = ib
-          IF (allocated(para_H%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)) THEN
-            CALL init_RD(para_H%BasisnD%para_RD(ib),para_H%BasisnD%nDindB,para_H%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)
-          ELSE
-            CALL init_RD(para_H%BasisnD%para_RD(ib),para_H%BasisnD%nDindB)
-          END IF
-
-        END DO
-      END IF
-
       file_WPspectral%name = make_FileName(para_ana%name_file_spectralWP)
       CALL file_open(file_WPspectral,nioWP,lformatted=para_ana%formatted_file_WP)
 
@@ -197,8 +177,8 @@ CONTAINS
 
         RWU_E  = REAL_WU(ene(i),'au','E')
         RWU_DE = REAL_WU(ene(i)-para_H%ComOp%ZPE,'au','E')
-        E  = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
-        DE = convRWU_TO_R(RWU_DE,WorkingUnit=.FALSE.)
+        E  = convRWU_TO_R_WITH_WritingUnit(RWU_E)
+        DE = convRWU_TO_R_WITH_WritingUnit(RWU_DE)
 
 
         IF (i < 10000) THEN

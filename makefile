@@ -2,8 +2,8 @@
 #=================================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 # F90 = mpifort
-#F90 = gfortran
- F90 = nagfor
+ F90 = gfortran
+#F90 = nagfor
 #F90 = ifort
 #F90 = pgf90
 
@@ -33,7 +33,7 @@ ARPACK = 0
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
-LAPACK = 0
+LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
 QML = 0
 #

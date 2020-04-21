@@ -96,7 +96,9 @@ IMPLICIT NONE
     integer                                    :: V_allcount
     integer                                    :: V_allcount2
 #endif    
-
+  CONTAINS
+    PROCEDURE, PRIVATE, PASS(SGType2_1) :: SGType2_2TOSGType2_1
+    GENERIC,   PUBLIC  :: assignment(=) => SGType2_2TOSGType2_1
   END TYPE param_SGType2
 
   TYPE OldParam
@@ -111,11 +113,7 @@ IMPLICIT NONE
     integer, allocatable         :: tab_l_AT_SG(:) ! associated to i_SG
   END TYPE OldParam
 
-INTERFACE assignment (=)
-  MODULE PROCEDURE SGType2_2TOSGType2_1
-END INTERFACE
-
- PUBLIC :: param_SGType2, assignment (=), dealloc_SGType2, Set_nDval_init_FOR_SG4
+ PUBLIC :: param_SGType2, dealloc_SGType2, Set_nDval_init_FOR_SG4
  PUBLIC :: OldParam, Write_OldParam
  PUBLIC :: get_iqSG_iSG_FROM_iq, get_Tabiq_Tabil_FROM_iq, get_Tabiq_Tabil_FROM_iq_old
  PUBLIC :: calc_Weight_OF_SRep,dealloc_OldParam
@@ -223,8 +221,8 @@ END SUBROUTINE dealloc_SGType2
 
 SUBROUTINE SGType2_2TOSGType2_1(SGType2_1,SGType2_2)
 
-TYPE (param_SGType2), intent(inout) :: SGType2_1
-TYPE (param_SGType2), intent(in)    :: SGType2_2
+CLASS (param_SGType2), intent(inout) :: SGType2_1
+TYPE (param_SGType2),  intent(in)    :: SGType2_2
 
 integer :: i
 

@@ -43,7 +43,8 @@
       MODULE mod_propa
       USE mod_system
       USE mod_Constant,  ONLY : get_conv_au_to_unit,real_wu,            &
-                                convrwu_to_r,convRWU_WorkingUnit_TO_R
+                                convRWU_TO_R_WITH_WorkingUnit,          &
+                                convRWU_TO_R_WITH_WritingUnit
       USE mod_psi,       ONLY : param_WP0,param_ana_psi
       USE mod_field,     ONLY : param_field
       IMPLICIT NONE
@@ -856,7 +857,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
       w1%CAvOp = ET/w1%norm2
 
       RWU_E  = REAL_WU(real(w1%CAvOp,kind=Rkind),'au','E')
-      E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
+      E      = convRWU_TO_R_WITH_WritingUnit(RWU_E)
 
       CALL Channel_weight(tab_WeightChannels,w1,GridRep=.FALSE.,BasisRep=.TRUE.)
       Psi_norm2 = sum(tab_WeightChannels)
@@ -1100,8 +1101,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         IF (print_level > 0) write(out_unitp,propa)
 
 
-        para_propa%WPTmax                 = convRWU_WorkingUnit_TO_R(WPTmax)
-        para_propa%WPdeltaT               = convRWU_WorkingUnit_TO_R(WPdeltaT)
+        para_propa%WPTmax                 = convRWU_TO_R_WITH_WorkingUnit(WPTmax)
+        para_propa%WPdeltaT               = convRWU_TO_R_WITH_WorkingUnit(WPdeltaT)
         para_propa%nb_micro               = nb_micro
         para_propa%One_Iteration          = One_Iteration
         para_propa%para_poly%max_poly     = max_poly
@@ -1362,8 +1363,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         para_propa%TFnexp2        = TFnexp2
 
 
-        para_propa%TFmaxE       = convRWU_WorkingUnit_TO_R(TFmaxE)
-        para_propa%TFminE       = convRWU_WorkingUnit_TO_R(TFminE)
+        para_propa%TFmaxE       = convRWU_TO_R_WITH_WorkingUnit(TFmaxE)
+        para_propa%TFminE       = convRWU_TO_R_WITH_WorkingUnit(TFminE)
 
         IF (para_propa%control) THEN
           para_propa%with_field    = .TRUE.
@@ -1384,7 +1385,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
           cplx_gate    = .FALSE.
           read(in_unitp,control)
 
-          IF (Tenvelopp == ZERO) Tenvelopp = convRWU_TO_R(WPTmax)
+          IF (Tenvelopp == ZERO) Tenvelopp = convRWU_TO_R_WITH_WorkingUnit(WPTmax)
           IF (print_level > 0) write(out_unitp,control)
 
           IF (nb_WP < 1) THEN
@@ -1677,8 +1678,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
       ! for the filter diagonalization
       IF (DeltaM_filter == 0) DeltaM_filter = L_filter
-      para_Davidson%E0_filter     = convRWU_TO_R(E0_filter)
-      para_Davidson%W_filter      = convRWU_TO_R(W_filter)
+      para_Davidson%E0_filter     = convRWU_TO_R_WITH_WorkingUnit(E0_filter)
+      para_Davidson%W_filter      = convRWU_TO_R_WITH_WorkingUnit(W_filter)
 
       para_Davidson%L_filter      = L_filter
       para_Davidson%M_filter      = M_filter
@@ -1747,7 +1748,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
       para_Davidson%lower_states          = lower_states
       para_Davidson%all_lower_states      = all_lower_states
-      para_Davidson%Max_ene               = convRWU_TO_R(Max_ene)
+      para_Davidson%Max_ene               = convRWU_TO_R_WITH_WorkingUnit(Max_ene)
 
       para_Davidson%project_WP0           = project_WP0
       para_Davidson%residual_max_nb       = residual_max_nb
@@ -1757,8 +1758,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
 
       para_Davidson%symab             = symab
-      para_Davidson%conv_ene          = convRWU_TO_R(conv_ene)
-      para_Davidson%conv_resi         = convRWU_TO_R(conv_resi)
+      para_Davidson%conv_ene          = convRWU_TO_R_WITH_WorkingUnit(conv_ene)
+      para_Davidson%conv_resi         = convRWU_TO_R_WITH_WorkingUnit(conv_resi)
 
       para_Davidson%max_it            = max_it
 

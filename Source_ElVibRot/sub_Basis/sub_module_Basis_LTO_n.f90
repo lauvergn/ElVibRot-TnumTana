@@ -60,14 +60,12 @@
           integer                     :: max_n            = huge(1) ! value such n(L)<= max_n
           integer, allocatable        :: Tab_L_TO_n(:)
           integer, allocatable        :: Tab_n_TO_L(:)
-
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(L_TO_n_para1) :: L_TO_n_para2_TO_L_TO_n_para1
+          GENERIC,   PUBLIC  :: assignment(=) => L_TO_n_para2_TO_L_TO_n_para1
         END TYPE Basis_L_TO_n
 
-        INTERFACE assignment (=)
-          MODULE PROCEDURE L_TO_n_para2_TO_L_TO_n_para1
-        END INTERFACE
-
-        PUBLIC :: Basis_L_TO_n, assignment (=), init_Basis_L_TO_n,      &
+        PUBLIC :: Basis_L_TO_n, init_Basis_L_TO_n,                      &
                   Write_Basis_L_TO_n, Set_Basis_L_TO_n,                 &
                   alloc_Basis_L_TO_n, dealloc_Basis_L_TO_n,             &
                   Get_n_FROM_Basis_L_TO_n, Get_L_FROM_Basis_L_TO_n,     &
@@ -647,8 +645,8 @@
       END SUBROUTINE check_Basis_L_TO_n
 
       SUBROUTINE L_TO_n_para2_TO_L_TO_n_para1(L_TO_n_para1,L_TO_n_para2)
-      TYPE (Basis_L_TO_n), intent(inout) :: L_TO_n_para1
-      TYPE (Basis_L_TO_n), intent(in)    :: L_TO_n_para2
+      CLASS (Basis_L_TO_n), intent(inout) :: L_TO_n_para1
+      TYPE (Basis_L_TO_n),  intent(in)    :: L_TO_n_para2
 
 
 !---------------------------------------------------------------------

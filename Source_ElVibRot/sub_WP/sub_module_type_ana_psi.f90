@@ -118,14 +118,14 @@
       real (kind=Rkind)              :: T             = ZERO         ! time in au
       real (kind=Rkind)              :: field(3)= (/ZERO,ZERO,ZERO/) ! Electric field
 
+    CONTAINS
+      PROCEDURE, PRIVATE, PASS(ana_psi1) :: ana_psi2_TO_ana_psi1
+      GENERIC,   PUBLIC  :: assignment(=) => ana_psi2_TO_ana_psi1
     END TYPE param_ana_psi
 
-    INTERFACE assignment (=)
-      MODULE PROCEDURE ana_psi2_TO_ana_psi1
-    END INTERFACE
 
   PUBLIC :: param_ana_psi,init_ana_psi,modif_ana_psi
-  PUBLIC :: assignment (=),dealloc_ana_psi,Write_ana_psi
+  PUBLIC :: dealloc_ana_psi,Write_ana_psi
 
   CONTAINS
 
@@ -554,8 +554,8 @@
     IMPLICIT NONE
 
 !--- variables for the WP propagation ----------------------------
-    TYPE (param_ana_psi), intent(inout) :: ana_psi1
-    TYPE (param_ana_psi), intent(in)    :: ana_psi2
+    CLASS (param_ana_psi), intent(inout) :: ana_psi1
+    TYPE (param_ana_psi),  intent(in)    :: ana_psi2
 
     ana_psi1%ana           = ana_psi2%ana
     ana_psi1%num_psi       = ana_psi2%num_psi

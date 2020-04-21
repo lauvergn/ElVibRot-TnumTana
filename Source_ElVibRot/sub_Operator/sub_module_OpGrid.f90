@@ -77,6 +77,9 @@
            integer                  :: First_GridPoint = 0         ! if =0 calculation for all active grid points
            integer                  :: Last_GridPoint  = 0         ! if =0 calculation for all active grid points
 
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(para_FileGrid1) :: para_FileGrid2TOpara_FileGrid1
+          GENERIC,   PUBLIC  :: assignment(=) => para_FileGrid2TOpara_FileGrid1
         END TYPE param_FileGrid
 
         TYPE param_OpGrid
@@ -106,9 +109,6 @@
 
         END TYPE param_OpGrid
 
-      INTERFACE assignment (=)
-        MODULE PROCEDURE para_FileGrid2TOpara_FileGrid1
-      END INTERFACE
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_OpGriddim1
@@ -122,8 +122,8 @@
 
       SUBROUTINE para_FileGrid2TOpara_FileGrid1(para_FileGrid1,para_FileGrid2)
 
-      TYPE (param_FileGrid), intent(inout) :: para_FileGrid1
-      TYPE (param_FileGrid), intent(in)    :: para_FileGrid2
+      CLASS (param_FileGrid), intent(inout) :: para_FileGrid1
+      TYPE (param_FileGrid),  intent(in)    :: para_FileGrid2
 
       para_FileGrid1%Read_FileGrid      = para_FileGrid2%Read_FileGrid
 

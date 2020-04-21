@@ -48,18 +48,16 @@ PRIVATE
 
 TYPE TypeRVec
   real(kind=Rkind), allocatable :: V(:)
+CONTAINS
+  PROCEDURE, PRIVATE, PASS(Rvec1) :: TypeRVec2_TO_TypeRVec1
+  PROCEDURE, PRIVATE, PASS(Rvec1) :: tabR2_TO_TypeRVec1
+  GENERIC,   PUBLIC  :: assignment(=) => TypeRVec2_TO_TypeRVec1,tabR2_TO_TypeRVec1
 END TYPE TypeRVec
 TYPE TypeCVec
   complex(kind=Rkind), allocatable :: V(:)
 END TYPE TypeCVec
 
-INTERFACE assignment(=)
-  module procedure TypeRVec2_TO_TypeRVec1,tabR2_TO_TypeRVec1
-END INTERFACE
-
-PUBLIC  assignment(=)
 PUBLIC  TypeRVec, alloc_TypeRVec, dealloc_TypeRVec, Write_TypeRVec, &
-        TypeRVec2_TO_TypeRVec1, tabR2_TO_TypeRVec1,                 &
         sub_ReadRVec, sub_WriteRVec
 
 PUBLIC  TypeCVec, alloc_TypeCVec, dealloc_TypeCVec, Write_TypeCVec, &
@@ -115,8 +113,8 @@ SUBROUTINE TypeRVec2_TO_TypeRVec1(Rvec1,Rvec2)
 USE mod_system
 IMPLICIT NONE
 
-  TYPE (TypeRVec), intent(inout) :: Rvec1
-  TYPE (TypeRVec), intent(in)    :: Rvec2
+  CLASS (TypeRVec), intent(inout) :: Rvec1
+  TYPE (TypeRVec),  intent(in)    :: Rvec2
 
   IF (allocated(Rvec2%V)) THEN
     CALL alloc_TypeRVec(Rvec1,nvec=size(Rvec2%V))
@@ -130,7 +128,7 @@ SUBROUTINE tabR2_TO_TypeRVec1(Rvec1,tabR2)
 USE mod_system
 IMPLICIT NONE
 
-  TYPE (TypeRVec),                intent(inout) :: Rvec1
+  CLASS (TypeRVec),               intent(inout) :: Rvec1
   real(kind=Rkind), allocatable,  intent(in)    :: tabR2(:)
 
   IF (allocated(tabR2)) THEN

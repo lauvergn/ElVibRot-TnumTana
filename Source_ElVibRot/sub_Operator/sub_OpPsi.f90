@@ -1636,7 +1636,7 @@ STOP 'cplx'
  USE mod_basis_BtoG_GtoB,         ONLY : DerivOp_TO_RVecG
  USE mod_basis_BtoG_GtoB_SGType4, ONLY : Type_SmolyakRep,Write_SmolyakRep,   &
                                          alloc_SmolyakRep,dealloc_SmolyakRep,&
-                                         tabR2_TO_SmolyakRep1,tabR2bis_TO_SmolyakRep1
+                                         tabR2bis_TO_SmolyakRep1
 
  USE mod_psi,                     ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,&
                                          sub_PsiBasisRep_TO_GridRep
@@ -1789,8 +1789,7 @@ STOP 'cplx'
 
    IF (debug) THEN
      write(out_unitp,*) 'Psi * sqRhoOVERJac'
-     CALL tabR2_TO_SmolyakRep1(SRep,Psi(itab)%RvecG)
-     !SRep = Psi(itab)%RvecG
+     SRep = Psi(itab)%RvecG
      CALL Write_SmolyakRep(SRep)
    END IF
 

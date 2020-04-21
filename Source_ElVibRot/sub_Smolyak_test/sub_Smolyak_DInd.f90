@@ -53,15 +53,15 @@ TYPE TypeDInd
   integer, allocatable :: indD_OF_Dm1(:)
   integer, allocatable :: i_TO_l(:)  ! give the l value for i (usefull when i /= l+1)
   integer, allocatable :: tab_q(:)   ! size: ndim
+CONTAINS
+  PROCEDURE, PRIVATE, PASS(DInd1) :: TypeDInd2_TO_TypeDInd1
+  GENERIC,   PUBLIC  :: assignment(=) => TypeDInd2_TO_TypeDInd1
 END TYPE TypeDInd
 
-INTERFACE assignment(=)
-  module procedure TypeDInd2_TO_TypeDInd1
-END INTERFACE
 
-PUBLIC :: TypeDInd, assignment(=), alloc_TypeDInd, dealloc_TypeDInd, Write_TypeDInd, &
-          Set_Smolyak_nDInd, Set_nDInd,Set_nDInd_01order,Set_nDInd_10order,dealloc_nDInd, write_nDInd, &
-          InD_TO_tabi, tabi_TO_InD, l_TO_n
+PUBLIC :: TypeDInd, alloc_TypeDInd, dealloc_TypeDInd, Write_TypeDInd,   &
+        Set_Smolyak_nDInd,Set_nDInd,Set_nDInd_01order,Set_nDInd_10order,&
+        dealloc_nDInd, write_nDInd,InD_TO_tabi, tabi_TO_InD, l_TO_n
 
 
 CONTAINS
@@ -104,8 +104,8 @@ SUBROUTINE TypeDInd2_TO_TypeDInd1(DInd1,DInd2)
 USE mod_system
 IMPLICIT NONE
 
-TYPE(TypeDInd),    intent(in)    :: DInd2
-TYPE(TypeDInd),    intent(inout) :: DInd1
+TYPE (TypeDInd),     intent(in)    :: DInd2
+CLASS (TypeDInd),    intent(inout) :: DInd1
 
 
 CALL dealloc_TypeDInd(DInd1)

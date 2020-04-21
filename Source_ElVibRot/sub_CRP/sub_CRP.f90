@@ -108,8 +108,8 @@ IMPLICIT NONE
   IF (print_level > 0) write(out_unitp,CRP)
   write(out_unitp,*)
 
-  para_CRP%Ene              = convRWU_TO_R(Ene)
-  para_CRP%DEne             = convRWU_TO_R(DEne)
+  para_CRP%Ene              = convRWU_TO_R_WITH_WorkingUnit(Ene)
+  para_CRP%DEne             = convRWU_TO_R_WITH_WorkingUnit(DEne)
   para_CRP%nb_Ene           = nb_Ene
   para_CRP%CRP_Type         = CRP_Type
   para_CRP%KS_max_it        = KS_max_it

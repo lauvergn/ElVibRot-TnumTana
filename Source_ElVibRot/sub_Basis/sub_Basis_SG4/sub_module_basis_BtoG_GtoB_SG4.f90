@@ -59,6 +59,14 @@ TYPE Type_SmolyakRep
   logical                      :: Grid     = .FALSE.
   logical                      :: Delta    = .FALSE.
   TYPE (TypeRVec), allocatable :: SmolyakRep(:)
+CONTAINS
+  PROCEDURE, PRIVATE, PASS(SRep1) :: SmolyakRep2_TO_SmolyakRep1
+  PROCEDURE, PRIVATE, PASS(SRep2) :: SmolyakRep2_TO_tabR1
+  PROCEDURE, PRIVATE, PASS(SRep1) :: R2_TO_SmolyakRep1
+  PROCEDURE, PRIVATE, PASS(SRep1) :: tabR2_TO_SmolyakRep1
+  GENERIC,   PUBLIC  :: assignment(=) => SmolyakRep2_TO_SmolyakRep1,    &
+                              SmolyakRep2_TO_tabR1,tabR2_TO_SmolyakRep1,&
+                               R2_TO_SmolyakRep1
 END TYPE Type_SmolyakRep
 TYPE Type_SmolyakRepC
   integer                      :: nb0      = 0         ! to deal with several electronic PES, rot basis, or channels (HAC)
@@ -66,12 +74,7 @@ TYPE Type_SmolyakRepC
   logical                      :: Delta    = .FALSE.
   TYPE (TypeCVec), allocatable :: SmolyakRep(:)
 END TYPE Type_SmolyakRepC
-INTERFACE assignment(=)
-  module procedure SmolyakRep2_TO_SmolyakRep1,  SmolyakRep2_TO_tabR1, &
-                   tabR2_TO_SmolyakRep1, R2_TO_SmolyakRep1
-  !module procedure SmolyakRepC2_TO_SmolyakRepC1,SmolyakRepC2_TO_tabR1,&
-  !                         tabR2_TO_SmolyakRepC1,R2_TO_SmolyakRepC1
-END INTERFACE
+
 
 INTERFACE operator(*)
   module procedure SmolyakRep1_TIME_SmolyakRep2,SmolyakRepC1_TIME_SmolyakRepC2
@@ -89,7 +92,7 @@ PUBLIC  Type_SmolyakRepC, alloc2_SmolyakRepC, dealloc_SmolyakRepC, DerivOp_TO3_G
 PUBLIC  alloc_SmolyakRep_only
 PUBLIC  Write_SmolyakRep, alloc_SmolyakRep
 PUBLIC  tabR_AT_iG_TO_tabPackedBasis, tabPackedBasis_TO_tabR_AT_iG
-PUBLIC  tabR2bis_TO_SmolyakRep1, tabR2_TO_SmolyakRep1
+PUBLIC  tabR2bis_TO_SmolyakRep1
 PUBLIC  tabR2grid_TO_tabR1_AT_iG, tabR2gridbis_TO_tabR1_AT_iG
 PUBLIC  BDP_TO_GDP_OF_SmolyakRep, GDP_TO_BDP_OF_SmolyakRep
 PUBLIC  DerivOp_TO_RDP_OF_SmolaykRep
@@ -1469,7 +1472,7 @@ USE mod_system
 IMPLICIT NONE
 
 real(kind=Rkind), allocatable,   intent(inout)  :: tabR1(:)
-TYPE(Type_SmolyakRep),           intent(in)     :: SRep2
+CLASS (Type_SmolyakRep),         intent(in)     :: SRep2
 
 real(kind=Rkind), allocatable  :: tab(:,:)
 real(kind=Rkind), allocatable  :: V(:,:)
@@ -1564,7 +1567,7 @@ integer               :: iG,nb_BG,nR,itabR
 
 nb_BG = Size_SmolyakRepC(SRep2)
 IF (nb_BG /= size(tabC1)) THEN
-  write(out_unitp,*) ' ERROR in SmolyakRep2_TO_tabR1bis'
+  write(out_unitp,*) ' ERROR in SmolyakRepC2_TO_tabC1bis'
   write(out_unitp,*) ' size of tabR1 and SRep2 are different',size(tabC1),nb_BG
   STOP
 END IF
@@ -1583,8 +1586,8 @@ SUBROUTINE tabR2_TO_SmolyakRep1(SRep1,tabR2)
 USE mod_system
 IMPLICIT NONE
 
-real(kind=Rkind), allocatable,   intent(in)     :: tabR2(:)
-TYPE(Type_SmolyakRep),           intent(inout)  :: SRep1
+real(kind=Rkind),                intent(in)     :: tabR2(:)
+CLASS (Type_SmolyakRep),         intent(inout)  :: SRep1
 
 real(kind=Rkind), allocatable  :: tab(:,:)
 real(kind=Rkind), allocatable  :: V(:,:)
@@ -1639,7 +1642,7 @@ integer               :: ib0,nb,nb_AT_iG
 
 nb_BG = Size_SmolyakRep(SRep1)
 IF (size(tabR2) /= nb_BG) THEN
-  write(out_unitp,*) ' ERROR in tabR2_TO_SmolyakRep1'
+  write(out_unitp,*) ' ERROR in tabR2bis_TO_SmolyakRep1'
   write(out_unitp,*) ' sizes are different!!'
   write(out_unitp,*) ' sizes of tabR2 and SRep1',size(tabR2),nb_BG
   STOP
@@ -1684,7 +1687,7 @@ integer               :: ib0,nb,nb_AT_iG
 
 nb_BG = Size_SmolyakRepC(SRep1)
 IF (size(tabC2) /= nb_BG) THEN
-  write(out_unitp,*) ' ERROR in tabR2_TO_SmolyakRep1'
+  write(out_unitp,*) ' ERROR in tabC2bis_TO_SmolyakRepC1'
   write(out_unitp,*) ' sizes are different!!'
   write(out_unitp,*) ' sizes of tabR2 and SRep1',size(tabC2),nb_BG
   STOP
@@ -1795,7 +1798,7 @@ USE mod_system
 IMPLICIT NONE
 
 real(kind=Rkind),                intent(in)     :: R2
-TYPE(Type_SmolyakRep),           intent(inout)  :: SRep1
+CLASS (Type_SmolyakRep),         intent(inout)  :: SRep1
 
 integer               :: iG,nb_BG
 
@@ -1962,7 +1965,7 @@ USE mod_system
 IMPLICIT NONE
 
 TYPE(Type_SmolyakRep),           intent(in)     :: SRep2
-TYPE(Type_SmolyakRep),           intent(inout)  :: SRep1
+CLASS(Type_SmolyakRep),          intent(inout)  :: SRep1
 
 integer               :: iG
 
