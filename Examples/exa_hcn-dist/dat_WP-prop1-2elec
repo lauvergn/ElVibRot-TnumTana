@@ -13,6 +13,8 @@ cd $here
  x1=0.538516066
  x2=0.461483933
 
+rm /utmp/lauvergn/*
+
 
 nice $DIR_vib/vib << ** >res
  &system File_path='/utmp/lauvergn' /
@@ -57,12 +59,12 @@ dh 0.0
  &actives test=f direct=2 /
  &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t 
           print_psi=0 psi1D_Q0=t psi2D_Q0=t
-          Rho1D=t Rho2D=t Rho_type=1 coherence=0 ExactFact=1 /
+          Rho1D=t Rho2D=t Rho_type=1 coherence=1 ExactFact=1 /
 
  &propa
         WPTmax=10. 'fs' WPdeltaT=1. 'fs' nb_micro=1
 
-        n_WPecri=1 WPpsi2=t WPpsi=t Write_WPAdia=f
+        n_WPecri=1 WPpsi2=t WPpsi=t Write_WPAdia=t
 
         type_WPpropa=1 poly_tol=1.d-12 auto_Hmax=f
 
@@ -75,7 +77,3 @@ dh 0.0
 **
 
 ls /utmp/lauvergn
-exit
-&basis_nD nb_basis=2 name="direct_prod" Type_OF_nDindB=0 Norm_OF_nDindB=50. packed=f /
- &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
- &basis_nD iQact(1)=2 name="boxAB" nb=31 nq=32 A=1.7 B=2.7 /

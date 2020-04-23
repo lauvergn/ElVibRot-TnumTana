@@ -884,7 +884,118 @@
    deallocate(String_loc)
 
  end subroutine StringMCTDH_TO_opel
+ subroutine StringMidas_TO_opel(Fel, String, indexq, err_el)
+   type(opel),                   intent(inout)   :: Fel
+   character (len=*),            intent(in)      :: String
+   integer,                      intent(in)      :: indexq
+   integer, optional,            intent(inout)   :: err_el
 
+   integer          :: err_el_loc
+   integer          :: i_exp
+   real(kind=Rkind) :: r_exp
+
+   character (len=:), allocatable :: String_loc
+
+   logical, parameter :: debug = .FALSE.
+   !logical, parameter :: debug = .TRUE.
+   character (len = *), parameter :: routine_name = 'StringMidas_TO_opel'
+
+   err_el_loc = 0
+
+   Fel%idf      = -1
+   Fel%idq      = 0
+   Fel%alfa     = 0
+   Fel%indexq   = indexq
+   Fel%coeff    = CONE
+
+   ! find sin ..., dq, qs or q (q must be at the end)
+   String_loc = trim(adjustl(String))
+   CALL string_uppercase_TO_lowercase(String_loc)
+   IF (debug) write(out_unitp,*) 'String_loc: ',String_loc
+   flush(out_unitp)
+
+   IF (index(String_loc,'sin') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'sin'
+     Fel%idf    = 6
+   ELSE IF (index(String_loc,'cos') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'cos'
+     Fel%idf = 5
+   ELSE IF (index(String_loc,'tan') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'tan'
+     Fel%idf = 7
+   ELSE IF (index(String_loc,'cot') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'cot'
+     Fel%idf = 8
+   ELSE IF (index(String_loc,'qs') > 0) THEN
+     String_loc = String_loc(3:len(String_loc))
+     Fel%opname = 'qs'
+     Fel%idf = 3
+   ELSE IF (index(String_loc,'dq') > 0) THEN
+     String_loc = String_loc(3:len(String_loc))
+     Fel%opname = 'dq'
+     Fel%idf = 4
+
+   ELSE IF (index(String_loc,'q') > 0) THEN
+     String_loc = String_loc(2:len(String_loc))
+     Fel%opname = 'q'
+     Fel%idf = 2
+   ELSE
+     STOP 'other operateurs not yet'
+   END IF
+   IF (debug)  write(out_unitp,*) 'Fel%idf',Fel%idf
+   IF (debug)  write(out_unitp,*) 'String_loc: ',String_loc
+
+   IF (index(String_loc,'^') > 0) THEN ! we must be sure that ^ exist
+     ! the exponent MUST be just after the operator/function/q
+     IF (String_loc(1:1) /= '^') THEN
+       write(out_unitp,*) 'String_loc: ',String_loc
+       write(out_unitp,*) 'ERROR in StringMidas_TO_opel: wrong ^ position.'
+       STOP 'ERROR in StringMidas_TO_opel: wrong ^ position'
+     END IF
+
+     String_loc = String_loc(2:len(String_loc))
+     IF (debug)  write(out_unitp,*) 'String_loc: ',String_loc
+     read(String_loc,*,iostat=err_el_loc) i_exp
+     IF (err_el_loc /= 0) THEN
+       ! the exponent is not an integer => real ?
+       read(String_loc,*,iostat=err_el_loc) r_exp
+       IF (err_el_loc /= 0) THEN
+         write(out_unitp,*) 'String_loc: ',String_loc
+         write(out_unitp,*) 'ERROR in StringMidas_TO_opel while readind the exponent'
+         STOP 'ERROR in StringMidas_TO_opel while readind the exponent'
+       END IF
+       ! in this case the r_exp should be a half-integer: i/2
+       r_exp = r_exp*TWO
+       Fel%alfa = frac_t(NINT(r_exp),2)
+     ELSE
+       Fel%alfa     = i_exp
+     END IF
+   ELSE
+     Fel%alfa     = 1
+   END IF
+
+   IF (Fel%idf == 4) THEN ! test for dq = d./dq operator
+     ! MCTDH works with d./dq and in Tana P_q = -i hbar d./dq
+     Fel%coeff = (-EYE)**Fel%alfa%num ! Fel%alfa%den MUST be equal to 1
+   END IF
+
+
+   IF (debug) CALL write_opel(Fel,header=.TRUE.)
+
+
+   IF (present(err_el)) THEN
+     err_el = err_el_loc
+   ELSE
+     IF (err_el_loc /= 0) STOP 'ERROR in StringMidas_TO_opel'
+   END IF
+
+   deallocate(String_loc)
+
+ end subroutine StringMidas_TO_opel
  function set_opel(idf, idq, alfa, indexq, coeff, alfa_den, err_el)
    type(opel)                                    :: set_opel
    integer,                      intent(in)      :: idf

@@ -49,7 +49,6 @@
 
       USE mod_psi
 
-
       USE mod_propa
       USE mod_FullPropa
       USE mod_FullControl
@@ -468,7 +467,7 @@
         ELSE
           IF(MPI_id==0) write(out_unitp,*) ' Calculation of Hmax is skiped'
         ENDIF
-        
+
         IF(MPI_id==0) THEN
           write(out_unitp,*)
           CALL time_perso('sub_Hmax end')

@@ -48,8 +48,7 @@
                          dealloc_dnmat, dealloc_dncplxmat, dealloc_array,&
                          dealloc_intvec, sub_intvec1_to_intvec2,         &
                          write_dnsvm, write_dnmat, write_dncplxmat
-  use mod_nDindex, only: type_ndindex, dealloc_ndindex,                 &
-                         ndindex2tondindex1, write_ndindex,             &
+  use mod_nDindex, only: type_ndindex, write_ndindex, dealloc_ndindex,  &
                          alloc_array, alloc_nparray,                    &
                          dealloc_nparray, dealloc_array
 
@@ -1534,8 +1533,7 @@
             END DO
           END IF
         END IF
-
-        CALL nDindex2TOnDindex1(basis_set1%nDindG,basis_set2%nDindG)
+        basis_set1%nDindG = basis_set2%nDindG
 
         IF (.NOT. Basis_FOR_SG_loc) THEN
           IF (.NOT. associated(basis_set2%nDindB)) THEN
@@ -1544,12 +1542,11 @@
             write(out_unitp,*) ' nDindB of basis_set2 is not associated'
             STOP
           END IF
-          CALL nDindex2TOnDindex1(basis_set1%nDindB,basis_set2%nDindB)
+          basis_set1%nDindB = basis_set2%nDindB
           IF (associated(basis_set2%nDindB_uncontracted)) THEN
             CALL alloc_array(basis_set1%nDindB_uncontracted,            &
                             'basis_set1%nDindB_uncontracted',name_sub)
-            CALL nDindex2TOnDindex1(basis_set1%nDindB_uncontracted,     &
-                                         basis_set2%nDindB_uncontracted)
+            basis_set1%nDindB_uncontracted = basis_set2%nDindB_uncontracted
           END IF
         END IF
 

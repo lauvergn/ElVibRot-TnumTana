@@ -555,7 +555,7 @@ CONTAINS
          ! Primitive basis augmented with the POGridRep grid points
          CALL basis2TObasis1(basis_POGridRep,basis_temp)
          CALL dealloc_basis(basis_POGridRep)
-         CALL nDindex2TOnDindex1(basis_POGridRep%nDindB,basis_temp%nDindB)
+         basis_POGridRep%nDindB = basis_temp%nDindB
          basis_POGridRep%nb     = nb0 ! nb before contraction
          nq = get_nq_FROM_basis(basis_temp)
          CALL Set_nq_OF_basis(basis_POGridRep,nq)

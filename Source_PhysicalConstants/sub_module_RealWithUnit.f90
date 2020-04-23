@@ -491,7 +491,7 @@
   FUNCTION RWU_WriteUnit(quantity,WorkingUnit)
     character (len=:), allocatable  :: RWU_WriteUnit
 
-    logical, intent(in)           :: WorkingUnit
+    logical,           intent(in) :: WorkingUnit
     character (len=*), intent(in) :: quantity
 
     integer :: clen,i

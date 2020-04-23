@@ -224,8 +224,8 @@ MODULE mod_Tana_keo
       write(out_unitp,*) ' Computation of the 2xKEO (in full dimension)'
       CALL flush_perso(out_unitp)
 
-      call  get_opKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,  TWOxKEO, &
-                      P_Euler, M_mass_out, scalar_PiPj)
+      call get_opKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,  TWOxKEO,  &
+                     P_Euler, M_mass_out, scalar_PiPj)
 
       nb_terms_KEO_withoutVep = size(TWOxKEO%sum_prod_op1d)
 
@@ -260,12 +260,14 @@ MODULE mod_Tana_keo
       CALL flush_perso(out_unitp)
       CALL get_KEO_for_Qactiv(TWOxKEO, constraint,Qact,tabQpoly_Qel,tabQact_Qel, &
                               list_Qactiv,list_QpolytoQact)
+      IF (debug) CALL write_op(TWOxKEO,header=.TRUE.)
       write(out_unitp,*) '================================================='
+      CALL flush_perso(out_unitp)
 
 
 
       IF (With_Li) THEN
-        CALL write_keo_VSCFform(mole, para_Tnum%TWOxKEO, out_unitp, tab_Qname, para_Tnum%JJ)
+        CALL write_keo_VSCFform(mole,TWOxKEO, out_unitp, tab_Qname, para_Tnum%JJ)
         STOP
       ELSE
         !new = .TRUE.
@@ -292,7 +294,7 @@ MODULE mod_Tana_keo
           write(out_unitp,*) '================================================='
         END IF
       END IF
-
+      !para_Tnum%TWOxKEO = TWOxKEO ! usefull ?
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' output of the analytical  KEO'
@@ -303,18 +305,19 @@ MODULE mod_Tana_keo
       write(out_unitp,*) '================================================='
       CALL flush_perso(out_unitp)
 
-      tab_Qname(:) = tab_Qname(list_QactTOQpoly(:)) ! to change the order du to the "constraints"
+      tab_Qname(:) = tab_Qname(list_QactTOQpoly(:)) ! to change the order due to the "constraints"
 
       CALL file_open2(name_file='keo.op',iunit=io_mctdh)
-      CALL write_keo_mctdh_form(mole, para_Tnum%TWOxKEO,io_mctdh,       &
+      CALL write_keo_mctdh_form(mole,TWOxKEO,io_mctdh,       &
                                 tab_Qname, para_Tnum%JJ)
       close(io_mctdh)
+
       IF (para_Tnum%MCTDHForm) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) "output MCTDH format"
         write(out_unitp,*) '-------------------------------------------------'
         !call write_keo_mctdh_form(mole, para_Tnum%ExpandTWOxKEO, out_unitp, tab_Qname, para_Tnum%JJ)
-        call write_keo_mctdh_form(mole, para_Tnum%TWOxKEO, out_unitp, tab_Qname, para_Tnum%JJ)
+        call write_keo_mctdh_form(mole,TWOxKEO, out_unitp, tab_Qname, para_Tnum%JJ)
 
         write(out_unitp,*) '================================================='
       END IF
@@ -323,7 +326,7 @@ MODULE mod_Tana_keo
         write(out_unitp,*) '================================================='
         write(out_unitp,*) 'VSCF form'
         write(out_unitp,*) '-------------------------------------------------'
-        !CALL write_keo_VSCFform(mole, para_Tnum%TWOxKEO, out_unitp, tab_Qname, para_Tnum%JJ)
+        !CALL write_keo_VSCFform(mole,TWOxKEO, out_unitp, tab_Qname, para_Tnum%JJ)
         CALL write_keo_VSCFform(mole, para_Tnum%ExpandTWOxKEO, out_unitp, tab_Qname, para_Tnum%JJ)
         write(out_unitp,*) '================================================='
       END IF

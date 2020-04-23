@@ -392,9 +392,9 @@
 
         IF (i_SG == 1) THEN
           !-- copy tab_PbasisSG(i_SG)%Pbasis%nDindB in basis_SG%nDindB --------- !! utile ???
-          CALL nDindex2TOnDindex1(basis_SG%nDindB,basis_SG%tab_PbasisSG(1)%Pbasis%nDindB)
-!          write(out_unitp,*) 'nDindB'
-!          CALL Write_nDindex(basis_SG%nDindB)
+          basis_SG%nDindB = basis_SG%tab_PbasisSG(1)%Pbasis%nDindB
+          !write(out_unitp,*) 'nDindB'
+          !CALL Write_nDindex(basis_SG%nDindB)
           basis_SG%nb = basis_SG%nDindB%Max_nDI
 
           ! transfert of tab_symab ---------------------------------------

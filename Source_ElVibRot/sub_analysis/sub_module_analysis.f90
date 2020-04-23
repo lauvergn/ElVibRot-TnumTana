@@ -339,15 +339,20 @@
                           Weight_Rho=Weight_Rho,Qana_Weight=Qana_Weight,&
                           psi1D_Q0=psi1D_Q0,psi2D_Q0=psi2D_Q0,Qana=Qana_cut)
       ELSE
+!                          Write_psi2_Grid=(print_psi > 0 .AND. psi2),   &
+!                          Write_psi2_Basis=(print_psi > 0 .AND. psi2),  &
+!                        Write_psi_Grid=(print_psi > 0 .AND. .NOT. psi2),&
+!                       Write_psi_Basis=(print_psi > 0 .AND. .NOT. psi2),&
+
         CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
                           propa=propa,T=ZERO,                           &
                           Boltzmann_pop=.TRUE.,Temp=Temp,               &
                           adia=psi_adia,                                &
                           AvScalOp=AvScalOp,AvHiterm=AvHiterm,          &
-                          Write_psi2_Grid=(print_psi > 0 .AND. psi2),   &
-                          Write_psi2_Basis=(print_psi > 0 .AND. psi2),  &
-                        Write_psi_Grid=(print_psi > 0 .AND. .NOT. psi2),&
-                       Write_psi_Basis=(print_psi > 0 .AND. .NOT. psi2),&
+                          Write_psi2_Grid=.FALSE.,                      &
+                          Write_psi2_Basis=.FALSE.,                     &
+                          Write_psi_Grid=.FALSE.,                       &
+                          Write_psi_Basis=.FALSE.,                      &
                           rho1D=rho1D,rho2D=rho2D,Rho_type=Rho_type,    &
                           Weight_Rho=Weight_Rho,Qana_Weight=Qana_Weight,&
                           psi1D_Q0=psi1D_Q0,psi2D_Q0=psi2D_Q0,Qana=Qana_cut)

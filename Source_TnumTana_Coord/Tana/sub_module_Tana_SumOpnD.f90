@@ -502,27 +502,32 @@ module mod_Tana_Sum_OpnD
        write(i_open, '(40x, A)') '========== writing a sum of nd operators ======== '
        write(i_open, *)
      end if
-     do i = 1, size(F_sum_nd%sum_prod_op1d)
-       CALL get_pqJL_OF_OpnD(pq,J,L,F_sum_nd%sum_prod_op1d(i))
-       nb_PJ = count(pq > 0)+count(J>0)
 
-       IF (real(F_sum_nd%Cn(i),kind=Rkind) /= ZERO .AND. aimag(F_sum_nd%Cn(i)) /=ZERO) THEN
-         type_coef = 'C'
-         write(i_open, *) ' WARNING this term is complex!!'
-       ELSE IF (real(F_sum_nd%Cn(i),kind=Rkind) == ZERO) THEN
-         type_coef = 'I'
-         IF (nb_PJ /= 1) write(i_open, *) ' WARNING this term MUST be real!!'
-       ELSE
-         type_coef = 'R'
-         IF (nb_PJ == 1) write(i_open, *) ' WARNING this term MUST be imaginary!!'
+     IF (allocated(F_sum_nd%sum_prod_op1d)) THEN
+       do i = 1, size(F_sum_nd%sum_prod_op1d)
+         CALL get_pqJL_OF_OpnD(pq,J,L,F_sum_nd%sum_prod_op1d(i))
+         nb_PJ = count(pq > 0)+count(J>0)
 
-       END IF
-       write(i_open, "(A, 3x, I4, 3x, A, 1x, (E13.4,' Ix ',E13.4))") 'term', i, ', C_I=', F_sum_nd%Cn(i)
-       !write(i_open, *) 'term', i, ', C_I= ',type_coef, F_sum_nd%Cn(i),' nb_P+J',nb_PJ
-       write(i_open, *)
-       call write_op(F_sum_nd%sum_prod_op1d(i), i_open)
-       write(i_open, *)
-     end do
+         IF (real(F_sum_nd%Cn(i),kind=Rkind) /= ZERO .AND. aimag(F_sum_nd%Cn(i)) /=ZERO) THEN
+           type_coef = 'C'
+           write(i_open, *) ' WARNING this term is complex!!'
+         ELSE IF (real(F_sum_nd%Cn(i),kind=Rkind) == ZERO) THEN
+           type_coef = 'I'
+           IF (nb_PJ /= 1) write(i_open, *) ' WARNING this term MUST be real!!'
+         ELSE
+           type_coef = 'R'
+           IF (nb_PJ == 1) write(i_open, *) ' WARNING this term MUST be imaginary!!'
+
+         END IF
+         write(i_open, "(A, 3x, I4, 3x, A, 1x, (E13.4,' Ix ',E13.4))") 'term', i, ', C_I=', F_sum_nd%Cn(i)
+         !write(i_open, *) 'term', i, ', C_I= ',type_coef, F_sum_nd%Cn(i),' nb_P+J',nb_PJ
+         write(i_open, *)
+         call write_op(F_sum_nd%sum_prod_op1d(i), i_open)
+         write(i_open, *)
+       end do
+     ELSE
+       write(i_open, *) ' The operator empty (is not allocated)'
+     END IF
      CALL flush_perso(i_open)
 
    END SUBROUTINE write_sum_opnd
@@ -694,14 +699,18 @@ module mod_Tana_Sum_OpnD
 
    character (len=*), parameter :: routine_name="SumOpnD2_TO_SumOpnD1"
 
-   call allocate_op(SumOpnD1,size(SumOpnD2%sum_prod_op1d))
+   IF (allocated(SumOpnD2%sum_prod_op1d) ) THEN
+     call allocate_op(SumOpnD1,size(SumOpnD2%sum_prod_op1d))
 
-   do i = 1,size(SumOpnD2%sum_prod_op1d)
-     SumOpnD1%sum_prod_op1d(i) = SumOpnD2%sum_prod_op1d(i)
-     SumOpnD1%Cn(i)            = SumOpnD2%Cn(i)
-   end do
+     do i = 1,size(SumOpnD2%sum_prod_op1d)
+       SumOpnD1%sum_prod_op1d(i) = SumOpnD2%sum_prod_op1d(i)
+       SumOpnD1%Cn(i)            = SumOpnD2%Cn(i)
+     end do
 
-   CALL simplify_sum_opnd(SumOpnD1)
+     CALL simplify_sum_opnd(SumOpnD1)
+   ELSE
+     call delete_op(SumOpnD1)
+   END IF
 
  end subroutine SumOpnD2_TO_SumOpnD1
  subroutine OpnD2_TO_SumOpnD1(SumOpnD1,OpnD2)

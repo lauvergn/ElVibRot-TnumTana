@@ -199,7 +199,7 @@ CONTAINS
       para_ana%ana_psi%Temp       = para_ana%Temp
 
       write(out_unitp,*) 'population at T, Q',para_ana%Temp,Q
-      write(out_unitp,*) 'Energy level (',const_phys%ene_unit,') pop and means :'
+      write(out_unitp,*) 'Energy level (',const_phys%ene_unit,') pop and averages :'
       CALL flush_perso(out_unitp)
 
       DO i=1,nb_psi_in

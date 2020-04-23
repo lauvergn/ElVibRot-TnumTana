@@ -732,6 +732,9 @@
     write(out_unitp,*) 'With_field',ana_psi%With_field
     write(out_unitp,*) 'T (time)',ana_psi%T
     write(out_unitp,*) 'field(:)',ana_psi%field(:)
+    write(out_unitp,*)
+    flush(out_unitp)
+    write(out_unitp,*) 'END ',name_sub
 
     END SUBROUTINE Write_ana_psi
 

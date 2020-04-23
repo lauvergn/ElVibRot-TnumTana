@@ -302,12 +302,11 @@
 !$OMP   PARALLEL &
 !$OMP   DEFAULT(NONE) &
 !$OMP   SHARED(para_AllOp,max_Sii,max_Sij,iqf) &
-!$OMP   PRIVATE(iq,freq_only,OldPara) &
+!$OMP   PRIVATE(iq,out_unitp,freq_only,OldPara) &
 !$OMP   NUM_THREADS(Grid_maxth)
 
 !$OMP   DO SCHEDULE(STATIC)
         DO iq=1,iqf-1
-write(out_unitp,*) 'freq_only'
           freq_only = .TRUE.
           CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,  &
                para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)

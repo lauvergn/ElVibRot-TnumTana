@@ -950,7 +950,7 @@ MODULE mod_basis
       END IF
       CALL alloc_array(basis_set%nDindB_uncontracted,                   &
                       'basis_set%nDindB_uncontracted',name_sub)
-      CALL nDindex2TOnDindex1(basis_set%nDindB_uncontracted,basis_set%nDindB)
+      basis_set%nDindB_uncontracted = basis_set%nDindB
 
       !- Finally, nDindB + the new Tab_Norm
       IF (basis_set%contrac_WITH_nDindB) THEN

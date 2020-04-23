@@ -13,6 +13,8 @@ do
   echo "=======================================" >> res_all
   echo "=======================================" >> res_all
   echo $name >> cpu_all
+  ls _* >> cpu_all
+  rm -f _BasisPsi	_GridPsi
   #tail -40 res >> cpu_all
   grep "lev:    1" res | tail -1 | awk '{print $1 " " $2 " " $3 " " $4 " " $5}' >> cpu_all
   grep "lev:    2" res | tail -1 | awk '{print $1 " " $2 " " $3 " " $4 " " $5}' >> cpu_all

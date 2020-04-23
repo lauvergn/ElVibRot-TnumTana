@@ -1120,7 +1120,7 @@ CONTAINS
  USE mod_psi,    ONLY : param_psi,norm2_psi,renorm_psi,dealloc_psi,     &
                         Set_symab_OF_psiBasisRep,copy_psi2TOpsi1,       &
                         sub_PsiBasisRep_TO_GridRep,alloc_psi,           &
-                        param_WP0,sub_read_psi0,set_random_psi
+                        param_WP0,sub_read_psi0,set_random_psi, ecri_init_psi
 
  USE mod_propa,  ONLY : param_Davidson
  IMPLICIT NONE

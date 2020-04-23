@@ -110,7 +110,7 @@ PUBLIC  tabPackedBasis_TO_tabR_MPI,tabR_TO_tabPackedBasis_MPI
 
 PUBLIC  typeRvec, alloc_typeRvec, dealloc_typeRvec
 PUBLIC  typeCvec, alloc_typeCvec, dealloc_typeCvec
-PUBLIC  assignment(=), operator(*), operator(+), operator(-)
+PUBLIC  operator(*), operator(+), operator(-)
 
 CONTAINS
 

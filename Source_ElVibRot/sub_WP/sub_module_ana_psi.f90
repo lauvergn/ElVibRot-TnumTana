@@ -158,11 +158,9 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
   !----------------------------------------------------------------------
   ! Boltzmann population
-  IF (ana_psi%Boltzmann_pop) THEN
-
+  IF (ana_psi%Boltzmann_pop .AND. ana_psi%Temp > ZERO .AND. ana_psi%Part_func > ZERO) THEN
     RWU_Temp = REAL_WU(ana_psi%Temp,'°K','E')
     Etemp    = convRWU_TO_R_WITH_WorkingUnit(RWU_Temp)
-
     pop = exp(-(ana_psi%Ene-ana_psi%ZPE)/Etemp) / ana_psi%Part_func
   END IF
 
@@ -297,6 +295,13 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
   !---------------------------------------------------------------------------
   IF (ana_psi%Write_psi) THEN
+
+    IF (string_IS_empty(ana_psi%file_Psi%name)) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' The file name in "file_Psi%name" is empty !'
+      STOP
+    END IF
+
     ! write one the grid
     IF (ana_psi%Write_psi2_Grid) THEN
       name_filePsi = ana_psi%file_Psi%name
@@ -360,7 +365,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
                       ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
                       ecri_psi2=.FALSE.)
       END IF
-
+      close(nioPsi)
     END IF
 
     IF (.NOT. adia .AND. ana_psi%Write_psi_Basis) THEN
@@ -386,6 +391,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
                       ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
                       ecri_psi2=.FALSE.)
       END IF
+      close(nioPsi)
 
     END IF
   END IF
@@ -753,7 +759,6 @@ END SUBROUTINE sub_analyze_psi
 !------ working variables ---------------------------------
       TYPE (param_file)              :: file_psi
       integer                        :: nio,nqi,nqj
-
       character (len=:), allocatable  :: state_name
 
 !----- for debuging --------------------------------------------------
@@ -777,7 +782,6 @@ END SUBROUTINE sub_analyze_psi
         write(out_unitp,*) 'nb_act1 /= BasisnD%nb_basis',psi%nb_act1,psi%BasisnD%nb_basis
         RETURN
       END IF
-
 
       IF (.NOT. ana_psi%GridDone) CALL sub_PsiBasisRep_TO_GridRep(psi)
 
@@ -904,29 +908,37 @@ END SUBROUTINE sub_analyze_psi
 
         DO ib=1,psi%BasisnD%nb_basis
 
-          state_name = make_FileName('psi1D_')
-          !state_name = 'psi1D_'
-          IF (ana_psi%adia) state_name = 'psiAdia1D_'
-          file_psi%name = state_name // int_TO_char(ana_psi%num_psi) // '-' // int_TO_char(ib)
+          IF (ana_psi%adia) THEN
+            state_name = make_FileName('psiAdia1D_')
+          ELSE
+            state_name = make_FileName('psi1D_')
+          END IF
+          file_psi%name = state_name // int_TO_char(ana_psi%num_psi) // &
+                                                  '-' // int_TO_char(ib)
 
           IF (ana_psi%propa .AND. ana_psi%T > ZERO) THEN
             CALL file_open(file_psi,nio,append=.TRUE.)
+          ELSE
+            CALL file_open(file_psi,nio)
+          END IF
+
+          IF (ana_psi%propa) THEN
+
             DO iq=1,Tab1D_Qact(ib)%nb_var_vec
               write(nio,*) ana_psi%T,iq,Tab1D_Qact(ib)%d0(iq),Tab1D_Rpsi(ib)%d0(iq),  &
                              Tab1D_Cpsi(ib)%d0(iq),Tab1D_psi2(ib)%d0(iq)
             END DO
             write(nio,*)
-            close(nio)
 
           ELSE
-            CALL file_open(file_psi,nio)
+
             DO iq=1,Tab1D_Qact(ib)%nb_var_vec
               write(nio,*) iq,Tab1D_Qact(ib)%d0(iq),Tab1D_Rpsi(ib)%d0(iq),  &
                              Tab1D_Cpsi(ib)%d0(iq),Tab1D_psi2(ib)%d0(iq)
             END DO
-            close(nio)
           END IF
 
+          close(nio)
 
         END DO
       END IF
@@ -935,13 +947,23 @@ END SUBROUTINE sub_analyze_psi
 
         DO ib=1,psi%BasisnD%nb_basis
         DO jb=ib+1,psi%BasisnD%nb_basis
-          state_name = 'psi2D_'
-          IF (ana_psi%adia) state_name = 'psiAdia2D_'
-          file_psi%name = state_name // int_TO_char(ana_psi%num_psi) //     &
-                  '-' // int_TO_char(ib)  // '-' // int_TO_char(jb)
+
+          IF (ana_psi%adia) THEN
+            state_name = make_FileName('psiAdia2D_')
+          ELSE
+            state_name = make_FileName('psi2D_')
+          END IF
+          file_psi%name = state_name // int_TO_char(ana_psi%num_psi) // &
+                       '-' // int_TO_char(ib)  // '-' // int_TO_char(jb)
+
+          IF (ana_psi%propa .AND. ana_psi%T > ZERO) THEN
+            CALL file_open(file_psi,nio,append=.TRUE.)
+          ELSE
+            CALL file_open(file_psi,nio)
+          END IF
 
           IF (ana_psi%propa) THEN
-            CALL file_open(file_psi,nio,append=.TRUE.)
+
             DO iq=1,Tab1D_Qact(ib)%nb_var_vec
             DO jq=1,Tab1D_Qact(jb)%nb_var_vec
 
@@ -952,10 +974,9 @@ END SUBROUTINE sub_analyze_psi
             write(nio,*)
             END DO
             write(nio,*)
-            close(nio)
 
           ELSE
-            CALL file_open(file_psi,nio)
+
             DO iq=1,Tab1D_Qact(ib)%nb_var_vec
             DO jq=1,Tab1D_Qact(jb)%nb_var_vec
 
@@ -965,8 +986,9 @@ END SUBROUTINE sub_analyze_psi
             END DO
             write(nio,*)
             END DO
-            close(nio)
           END IF
+
+          close(nio)
 
         END DO
         END DO
@@ -1041,9 +1063,11 @@ END SUBROUTINE sub_analyze_psi
           !- loop on coordinates ----------------------------------
           DO i_basis_act1=1,psi%BasisnD%nb_basis
 
-            state_name = make_FileName('Rho1D_')
-            !state_name = 'Rho1D_'
-            IF (ana_psi%adia) state_name = 'RhoAdia1D_'
+            IF (ana_psi%adia) THEN
+              state_name = make_FileName('RhoAdia1D_')
+            ELSE
+              state_name = make_FileName('Rho1D_')
+            END IF
             file_Rho%name = state_name // int_TO_char(ana_psi%num_psi) // &
                                     '-' // int_TO_char(i_basis_act1)
 
@@ -1120,18 +1144,16 @@ END SUBROUTINE sub_analyze_psi
             write(out_unitp,*) 'rho1D of ',ana_psi%num_psi,i_basis_act1
             IF (ana_psi%propa) THEN
               DO i=1,psi%BasisnD%nDindG%nDsize(i_basis_act1)
-                write(nioRho,*) ana_psi%T,ana_psi%num_psi,i,                &
+                write(nioRho,*) ana_psi%T,i,                            &
                   psi%BasisnD%tab_Pbasis(i_basis_act1)%Pbasis%x(:,i),rho1D(i,:,:)
               END DO
               write(nioRho,*)
             ELSE
               DO i=1,psi%BasisnD%nDindG%nDsize(i_basis_act1)
-                write(nioRho,*) ana_psi%num_psi,i,                          &
+                write(nioRho,*) i,                                      &
                   psi%BasisnD%tab_Pbasis(i_basis_act1)%Pbasis%x(:,i),rho1D(i,:,:)
               END DO
             END IF
-
-
 
             CALL dealloc_NParray(rho1D,'rho1D',name_sub)
             close(nioRho)
@@ -1144,12 +1166,15 @@ END SUBROUTINE sub_analyze_psi
           DO i_basis_act1=1,psi%BasisnD%nb_basis
           DO j_basis_act1=i_basis_act1+1,psi%BasisnD%nb_basis
 
-            state_name = 'Rho2D_'
-            IF (ana_psi%adia) state_name = 'RhoAdia2D_'
+            IF (ana_psi%adia) THEN
+              state_name = make_FileName('RhoAdia2D_')
+            ELSE
+              state_name = make_FileName('Rho2D_')
+            END IF
             file_Rho%name = state_name // int_TO_char(ana_psi%num_psi) // &
                '-' // int_TO_char(i_basis_act1) // '-' // int_TO_char(j_basis_act1)
 
-            IF (ana_psi%propa) THEN
+            IF (ana_psi%propa .AND. ana_psi%T > ZERO) THEN
               CALL file_open(file_Rho,nioRho,append=.TRUE.)
             ELSE
               CALL file_open(file_Rho,nioRho)
@@ -1225,7 +1250,7 @@ END SUBROUTINE sub_analyze_psi
             IF (ana_psi%propa) THEN
               DO i=1,psi%BasisnD%nDindG%nDsize(i_basis_act1)
               DO j=1,psi%BasisnD%nDindG%nDsize(j_basis_act1)
-                write(nioRho,*) ana_psi%T,ana_psi%num_psi,i,j,              &
+                write(nioRho,*) ana_psi%T,i,j,                          &
                  psi%BasisnD%tab_Pbasis(i_basis_act1)%Pbasis%x(:,i),    &
                  psi%BasisnD%tab_Pbasis(j_basis_act1)%Pbasis%x(:,j),    &
                  rho2D(i,j,:,:)
@@ -1236,7 +1261,7 @@ END SUBROUTINE sub_analyze_psi
             ELSE
               DO i=1,psi%BasisnD%nDindG%nDsize(i_basis_act1)
               DO j=1,psi%BasisnD%nDindG%nDsize(j_basis_act1)
-                write(nioRho,*) ana_psi%num_psi,i,j,                        &
+                write(nioRho,*) i,j,                                    &
                  psi%BasisnD%tab_Pbasis(i_basis_act1)%Pbasis%x(:,i),    &
                  psi%BasisnD%tab_Pbasis(j_basis_act1)%Pbasis%x(:,j),    &
                  rho2D(i,j,:,:)

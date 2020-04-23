@@ -67,25 +67,26 @@ MODULE mod_file
       CONTAINS
 
       SUBROUTINE file2TOfile1(file1,file2)
-
       CLASS(param_file), intent(inout)  :: file1
       TYPE(param_file),  intent(in)     :: file2
-
 
       integer :: err_mem,memory
       !write(out_unitp,*) 'BEGINNING file_GetUnit'
 
+        ! to store/use data of several files using threads
+        integer                               :: nb_thread      = 0
+        character (len=Line_len), allocatable :: tab_name_th(:)
+        integer, allocatable                  :: tab_unit(:)
       !IF (.NOT. file2%init) RETURN
 
       file1%name      = file2%name
       file1%unit      = file2%unit
       file1%formatted = file2%formatted
+      file1%append    = file2%append
       file1%old       = file2%old
       file1%seq       = file2%seq
       file1%frecl     = file2%frecl
       file1%init      = file2%init
-
-      file1%nb_thread = file2%nb_thread
 
       IF (allocated(file2%tab_unit) .AND. allocated(file2%tab_name_th)) THEN
         memory = file1%nb_thread

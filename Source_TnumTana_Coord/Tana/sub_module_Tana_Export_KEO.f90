@@ -740,7 +740,7 @@
    SUBROUTINE write_keo_mctdh_form(mole, keo, i_out, tab_Qname, param_JJ, title)
    IMPLICIT NONE
 
-     type (CoordType)                                       :: mole
+     type (CoordType)                                     :: mole
      type(sum_opnd),            intent(in)                :: keo
      integer,                   intent(in)                :: i_out
      character(len=*),          intent(in)                :: tab_Qname(:)
@@ -773,10 +773,20 @@
      integer, allocatable                       :: list(:)
      logical                                    :: l_qact
      logical                                    :: op_JiJj
+
+     !logical, parameter :: debug = .FALSE.
+     logical, parameter :: debug = .TRUE.
      character (len = Name_longlen) :: routine_name='write_keo_mctdh_form'
 
+     IF (debug) THEN
+       write(out_unitp,*) 'BEGINNING ',routine_name
+       flush(out_unitp)
+       CALL write_op(keo,header=.TRUE.)
+       flush(out_unitp)
+     END IF
+
      TWOxKEO_MCTDH = keo
-     
+
      ndim_sum = size(TWOxKEO_MCTDH%sum_prod_op1d)
      write(i_out, '(A)')  "Op_DEFINE-SECTION"
      write(i_out, '(2x,A)')  "title"
@@ -905,6 +915,7 @@
      ! only the vep
      write(i_out,*)
      write(i_out,*)
+     flush(i_out)
 
      DO i = 1,size(TWOxKEO_MCTDH%sum_prod_op1d)
 
@@ -1003,6 +1014,12 @@
      deallocate(l_JJ)
      deallocate(l_qJ)
      deallocate(list)
+     CALL delete_op(TWOxKEO_MCTDH)
+
+     IF (debug) THEN
+       write(out_unitp,*) 'END ',routine_name
+       flush(out_unitp)
+     END IF
 
    END SUBROUTINE write_keo_mctdh_form
    SUBROUTINE write_keo_mctdh_form_old(mole, keo, i_out, tab_Qname, param_JJ, title)

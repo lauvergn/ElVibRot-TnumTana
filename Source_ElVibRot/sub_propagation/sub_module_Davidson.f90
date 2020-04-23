@@ -189,7 +189,7 @@ CONTAINS
       With_Basis = .NOT. para_Davidson%With_Grid
 
       !para_propa%file_WP%formatted = .TRUE.
-      para_propa%file_WP%name                    = para_Davidson%name_file_saveWP
+      para_propa%file_WP%name         = para_Davidson%name_file_saveWP
       para_Davidson%formatted_file_WP = para_propa%file_WP%formatted
 
       !CALL time_perso('Davidson psi0')

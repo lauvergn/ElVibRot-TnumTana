@@ -501,7 +501,8 @@
 
 !-- Write some constantes ------------------------------------
   IF(MPI_id==0) THEN
-                         write(out_unitp,*)  ' energy unit     : ',const_phys%ene_unit
+                         write(out_unitp,*)  ' Writing energy unit : ',RWU_WriteUnit('E',WorkingUnit=.FALSE.)
+                         write(out_unitp,*)  ' Working energy unit : ',RWU_WriteUnit('E',WorkingUnit=.TRUE.)
                          write(out_unitp,21) ' auTOenergy      = ',const_phys%auTOenergy
                          write(out_unitp,21) ' auTOcm_inv      = ',const_phys%auTOcm_inv
                          write(out_unitp,21) ' auTOeV          = ',const_phys%auTOeV

@@ -221,7 +221,7 @@ MODULE mod_string
       allocate(character(len=clen) :: name_int)
 
       ! write i in name_int
-      IF(MPI_id==0) write(name_int,'(i0)') i
+      write(name_int,'(i0)') i
 
       ! transfert name_int in int_TO_char
       int_TO_char = String_TO_String(name_int)

@@ -77,7 +77,7 @@ SUBROUTINE sub_ExactFact_analysis(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
 
   integer :: iterm_pot
 !----- for the operator ----------------------------
-  TYPE (param_Op),    intent(in)           :: para_H
+  TYPE (param_Op)                          :: para_H
   TYPE (param_field), intent(in), optional :: para_field
 
 !- for debuging --------------------------------------------------
@@ -162,7 +162,7 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
   TYPE (param_ana_psi), intent(inout)        :: ana_psi
 
 !----- for the operator ----------------------------
-  TYPE (param_Op),    intent(in)           :: para_H
+  TYPE (param_Op)           :: para_H
 
 
 !-- working parameters --------------------------------
@@ -170,6 +170,7 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
 
   !real (kind=Rkind)    :: Wrho(psi%nb_qa)
   real (kind=Rkind)    :: grid(psi%nb_act1)
+  real (kind=Rkind)    :: Qact(para_H%mole%nb_var)
   integer              :: iact1,idyn,nio
   complex (kind=Rkind) :: d0psi(psi%nb_qa,psi%nb_be)
   complex (kind=Rkind) :: d1psi(psi%nb_qa,psi%nb_be,psi%nb_act1)
@@ -181,6 +182,7 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
 
 
   TYPE (param_psi)     :: dpsi
+  character (len=:), allocatable  :: name_file
 
 
 !- for debuging --------------------------------------------------
@@ -195,12 +197,14 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
    END IF
 !-------------------------------------------------------
 
+  name_file = make_FileName('EF_parameter_dpsi')
   IF (T == ZERO) THEN
-    CALL file_open2(name_file='EF_parameter_dpsi',iunit=nio,lformatted=.TRUE.,append=.FALSE.)
+    CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.FALSE.)
     write(nio,*) '# T, iq, grid(ia), Psi(ie), dPsi(ie)/dT, dPsi(ie)/dQia, d^2Psi(ie)/dTdQia'
   ELSE
-    CALL file_open2(name_file='EF_parameter_dpsi',iunit=nio,lformatted=.TRUE.,append=.TRUE.)
+    CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.TRUE.)
   END IF
+  deallocate(name_file)
 
   ! no derivative
   d0psi(:,:) = reshape(psi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
@@ -232,7 +236,8 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
 
   ! print the informations
   DO iq=1,psi%nb_qa
-    CALL Rec_Qact(Grid(:),psi%BasisnD,iq,para_H%mole)
+    CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
+    Grid(:) = Qact(1:psi%nb_act1)
     write(nio,*) T,iq,Grid(:),d0psi(iq,:),dtpsi(iq,:),d1psi(iq,:,:),d1dtpsi(iq,:,:)
   END DO
   write(nio,*)
@@ -263,17 +268,19 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,para_H,Tmax,deltaT)
   real (kind=Rkind),    intent(in)           :: Tmax,deltaT ! Tmax, deltaT: Time step
 
 !----- for the operator ----------------------------
-  TYPE (param_Op),    intent(in)           :: para_H
+  TYPE (param_Op)           :: para_H
 
 
 !-- working parameters --------------------------------
   integer              :: ie,je,iqe,jqe,iq,iterm_pot
   integer, allocatable :: tab_nq(:)
-  real (kind=Rkind)    :: Qact0(psi%nb_act1),d0GG(psi%nb_act1,psi%nb_act1)
+  real (kind=Rkind)    :: d0GG(psi%nb_act1,psi%nb_act1)
 
   real (kind=Rkind)    :: Wrho
   real (kind=Rkind)    :: grid(psi%nb_act1)
+  real (kind=Rkind)    :: Qact(para_H%mole%nb_var)
   integer              :: iact1,idyn,nio
+  character (len=:), allocatable  :: name_file
 
 !- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub='sub_ExactFact_analysis_gV'
@@ -286,7 +293,10 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,para_H,Tmax,deltaT)
    END IF
 !-------------------------------------------------------
 
-    CALL file_open2(name_file='EF_parameter_gV',iunit=nio,lformatted=.TRUE.,append=.FALSE.)
+  name_file = make_FileName('EF_parameter_gV')
+  CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.FALSE.)
+  deallocate(name_file)
+
 
     write(nio,*) 'nb_be',psi%nb_be,' number of electronic surfaces'
     write(nio,*) 'nb_act1',psi%nb_act1,' number of active coordinates'
@@ -305,8 +315,8 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,para_H,Tmax,deltaT)
     IF (associated(para_H%para_Tnum%Gref)) THEN
       d0GG = para_H%para_Tnum%Gref(1:psi%nb_act1,1:psi%nb_act1)
     ELSE
-      CALL get_Qact0(Qact0,para_H%mole%ActiveTransfo)
-      CALL get_d0GG(Qact0,para_H%para_Tnum,para_H%mole,d0GG,def=.TRUE.)
+      CALL get_Qact0(Qact,para_H%mole%ActiveTransfo)
+      CALL get_d0GG(Qact,para_H%para_Tnum,para_H%mole,d0GG,def=.TRUE.)
     END IF
     write(nio,*) ' metric Tensor (nb_act1 x nb_act1)',psi%nb_act1
     CALL Write_Mat(d0GG,nio,psi%nb_act1)
@@ -317,7 +327,8 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,para_H,Tmax,deltaT)
     iterm_pot = para_H%derive_term_TO_iterm(0,0)
     write(nio,*) '# T, iq, Wrho, grid(ia), DiabPot(je,ie)'
     DO iq=1,psi%nb_qa
-      CALL Rec_Qact(Grid(:),psi%BasisnD,iq,para_H%mole)
+      CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
+      Grid(:) = Qact(1:psi%nb_act1)
       Wrho = Rec_WrhonD(psi%BasisnD,iq)
       write(nio,*) ZERO,iq,Wrho,Grid(:),para_H%OpGrid(iterm_pot)%Grid(iq,:,:)
     END DO
@@ -350,14 +361,15 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
   TYPE (param_ana_psi), intent(inout)        :: ana_psi
 
 !----- for the operator ----------------------------
-  TYPE (param_Op),    intent(in)           :: para_H
-
+  TYPE (param_Op)        :: para_H
 
 !-- working parameters --------------------------------
   integer              :: ie,je,iqe,jqe,iq,iterm_pot
 
   !real (kind=Rkind)    :: Wrho(psi%nb_qa)
   real (kind=Rkind)    :: grid(psi%nb_act1)
+  real (kind=Rkind)    :: Qact(para_H%mole%nb_var)
+
   integer              :: iact1,idyn,nio
   complex (kind=Rkind) :: d0psi(psi%nb_qa,psi%nb_be)
   complex (kind=Rkind) :: d1psi(psi%nb_qa,psi%nb_be,psi%nb_act1)
@@ -366,6 +378,7 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
   complex (kind=Rkind) :: d1dtpsi_2(psi%nb_qa,psi%nb_be,psi%nb_act1)
 
   TYPE (param_psi)     :: dpsi
+  character (len=:), allocatable  :: name_file
 
 
 !- for debuging --------------------------------------------------
@@ -380,12 +393,14 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
    END IF
 !-------------------------------------------------------
 
+  name_file = make_FileName('EF_parameter_dpsi')
   IF (T == ZERO) THEN
-    CALL file_open2(name_file='EF_parameter_dpsi',iunit=nio,lformatted=.TRUE.,append=.FALSE.)
+    CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.FALSE.)
     write(nio,*) '# T, iq, grid(ia), Psi(ie), dPsi(ie)/dT, dPsi(ie)/dQia, d^2Psi(ie)/dTdQia'
   ELSE
-    CALL file_open2(name_file='EF_parameter_dpsi',iunit=nio,lformatted=.TRUE.,append=.TRUE.)
+    CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.TRUE.)
   END IF
+  deallocate(name_file)
 
   ! no derivative
   d0psi(:,:) = reshape(psi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
@@ -417,7 +432,8 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
 
   ! print the informations
   DO iq=1,psi%nb_qa
-    CALL Rec_Qact(Grid(:),psi%BasisnD,iq,para_H%mole)
+    CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
+    Grid(:) = Qact(1:psi%nb_act1)
     write(nio,*) T,iq,Grid(:),d0psi(iq,:),dtpsi(iq,:),d1psi(iq,:,:),d1dtpsi(iq,:,:)
   END DO
   write(nio,*)
@@ -454,14 +470,16 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
   TYPE (param_ana_psi), intent(inout)        :: ana_psi
 
 !----- for the operator ----------------------------
-  TYPE (param_Op),    intent(in)           :: para_H
+  TYPE (param_Op)           :: para_H
   TYPE (param_field), intent(in), optional :: para_field
 
 
 !-- working parameters --------------------------------
   integer              :: ie,je,iqe,jqe,iq,iterm_pot
   integer, allocatable :: tab_nq(:)
-  real (kind=Rkind)    :: Qact0(psi%nb_act1),d0GG(psi%nb_act1,psi%nb_act1)
+  real (kind=Rkind)    :: d0GG(psi%nb_act1,psi%nb_act1)
+  real (kind=Rkind)    :: Qact(para_H%mole%nb_var)
+
 
   real (kind=Rkind)    :: Wrho(psi%nb_qa)
   real (kind=Rkind)    :: grid(psi%nb_act1,psi%nb_qa)
@@ -473,6 +491,7 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
   complex (kind=Rkind) :: d1dtpsi_2(psi%nb_qa,psi%nb_be,psi%nb_act1)
 
   TYPE (param_psi)     :: dpsi,ddpsi
+  character (len=:), allocatable  :: name_file
 
 
 !- for debuging --------------------------------------------------
@@ -515,7 +534,8 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
   END IF
 
   IF (T == ZERO) THEN
-    CALL file_open2(name_file='EF_parameter_gV',iunit=nio,lformatted=.TRUE.,append=.FALSE.)
+    name_file = make_FileName('EF_parameter_gV')
+    CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.FALSE.)
 
     write(nio,*) 'nb_be',psi%nb_be,' number of electronic surfaces'
     write(nio,*) 'nb_act1',psi%nb_act1,' number of active coordinates'
@@ -534,8 +554,8 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
     IF (associated(para_H%para_Tnum%Gref)) THEN
       d0GG = para_H%para_Tnum%Gref(1:psi%nb_act1,1:psi%nb_act1)
     ELSE
-      CALL get_Qact0(Qact0,para_H%mole%ActiveTransfo)
-      CALL get_d0GG(Qact0,para_H%para_Tnum,para_H%mole,d0GG,def=.TRUE.)
+      CALL get_Qact0(Qact,para_H%mole%ActiveTransfo)
+      CALL get_d0GG(Qact,para_H%para_Tnum,para_H%mole,d0GG,def=.TRUE.)
     END IF
     write(nio,*) ' metric Tensor (nb_act1 x nb_act1)',psi%nb_act1
     CALL Write_Mat(d0GG,nio,psi%nb_act1)
@@ -544,18 +564,22 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
     ! set the grid and the diabatic potential
     write(nio,*) '# T, iq, Wrho, grid(ia), DiabPot(je,ie)'
     DO iq=1,psi%nb_qa
-      CALL Rec_Qact(Grid(:,iq),psi%BasisnD,iq,para_H%mole)
+      CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
+      Grid(:,iQ) = Qact(1:psi%nb_act1)
       Wrho(iq) = Rec_WrhonD(psi%BasisnD,iq)
       write(nio,*) T,iq,Wrho(iq),Grid(:,iq),para_H%OpGrid(iterm_pot)%Grid(iq,:,:)
     END DO
     write(nio,*)
     close(nio)
 
-    CALL file_open2(name_file='EF_parameter_dpsi',iunit=nio,lformatted=.TRUE.,append=.FALSE.)
+    name_file = make_FileName('EF_parameter_dpsi')
+    CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.FALSE.)
     write(nio,*) '# T, iq, grid(ia), Psi(ie), dPsi(ie)/dT, dPsi(ie)/dQia, d^2Psi(ie)/dTdQia'
   ELSE
-    CALL file_open2(name_file='EF_parameter_dpsi',iunit=nio,lformatted=.TRUE.,append=.TRUE.)
+    name_file = make_FileName('EF_parameter_dpsi')
+    CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.TRUE.)
   END IF
+  deallocate(name_file)
 
 
   ! no derivative
@@ -588,7 +612,8 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
 
   ! print the informations
   DO iq=1,psi%nb_qa
-    CALL Rec_Qact(Grid(:,iq),psi%BasisnD,iq,para_H%mole)
+    CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
+    Grid(:,iq) = Qact(1:psi%nb_act1)
     write(nio,*) T,iq,Grid(:,iq),d0psi(iq,:),dtpsi(iq,:),d1psi(iq,:,:),d1dtpsi(iq,:,:)
   END DO
   write(nio,*)
@@ -622,7 +647,7 @@ SUBROUTINE sub_ExactFact_analysis_v0(T,psi,ana_psi,para_H,para_field)
   TYPE (param_ana_psi), intent(inout)        :: ana_psi
 
 !----- for the operator ----------------------------
-  TYPE (param_Op),    intent(in)           :: para_H
+  TYPE (param_Op)          :: para_H
   TYPE (param_field), intent(in), optional :: para_field
 
 
@@ -630,7 +655,8 @@ SUBROUTINE sub_ExactFact_analysis_v0(T,psi,ana_psi,para_H,para_field)
   integer           :: ie,je,iqe,jqe,iq,iterm_pot
   real (kind=Rkind), allocatable :: chi2(:),chi(:)
   real (kind=Rkind), allocatable :: EF_Scal_Pot(:) ! exact factorisation scalar potential
-  real (kind=Rkind), allocatable :: Qact1(:)
+  real (kind=Rkind), allocatable :: Qact(:)
+  character (len=:), allocatable :: name_file
 
 !- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub='sub_ExactFact_analysis_v0'
@@ -711,15 +737,15 @@ SUBROUTINE sub_ExactFact_analysis_v0(T,psi,ana_psi,para_H,para_field)
   !EF_Scal_Pot(:) =  EF_Scal_Pot(:)/chi2(:)
 
   ! Write the EF_Scal_Pot(:)
-  CALL alloc_NParray(Qact1,(/ para_H%mole%nb_act1 /),'Qact1',name_sub)
+  CALL alloc_NParray(Qact,(/ para_H%mole%nb_var /),'Qact',name_sub)
   DO iq=1,psi%nb_qa
-    CALL Rec_Qact(Qact1,psi%BasisnD,iq,para_H%mole)
-    write(out_unitp,*) 'EF_Scal_Pot',T,Qact1,chi2(iq),                          &
+    CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
+    write(out_unitp,*) 'EF_Scal_Pot',T,Qact(1:para_H%mole%nb_act1),chi2(iq),&
            (para_H%OpGrid(iterm_pot)%Grid(iq,ie,ie),ie=1,psi%nb_be),    &
            EF_Scal_Pot(iq),EF_Scal_Pot(iq)/chi2(iq)
   END DO
   write(out_unitp,*)
-  CALL dealloc_NParray(Qact1,'Qact1',name_sub)
+  CALL dealloc_NParray(Qact,'Qact',name_sub)
   !---------------------------------------------------------------------
 
 

@@ -208,7 +208,7 @@
       CALL SaveWP_restart(T+para_propa%WPdeltaT,WP,para_propa%file_WP_restart)
 
       IF (para_propa%One_Iteration) THEN
-        CALL sub_analyze_mini_WP_OpWP(T+para_propa%WPdeltaT,WP,1,para_H,para_propa)
+        CALL sub_analyze_mini_WP_OpWP(T+para_propa%WPdeltaT,WP,1,para_H)
 
         IF(MPI_id==0) THEN
           write(out_unitp,*)

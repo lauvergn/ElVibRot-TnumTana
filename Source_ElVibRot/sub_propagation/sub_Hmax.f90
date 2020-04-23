@@ -44,7 +44,8 @@
       USE mod_system
       USE mod_Op
       USE mod_psi,      ONLY : param_psi,Set_psi_With_index,renorm_psi, &
-                         alloc_psi,dealloc_psi,alloc_array,dealloc_array
+                       alloc_psi,dealloc_psi,alloc_array,dealloc_array, &
+                       Write_ana_psi
       USE mod_propa
       USE mod_FullPropa
       USE mod_Davidson
@@ -57,7 +58,7 @@
 
 !----- variables for the WP ----------------------------------------
       TYPE (param_psi)   :: psi,Hpsi
-      TYPE (param_propa) :: para_propa,para_propa_loc
+      TYPE (param_propa) :: para_propa
 
 !------ active Matrix H ------------------------------------------
       real (kind=Rkind)    :: Hinter
@@ -97,6 +98,7 @@
         write(out_unitp,*) 'BEGINNING ',name_sub,' ',para_H%nb_tot
         write(out_unitp,*) 'Hmin,Hmax',para_H%Hmin,para_H%Hmax
         CALL flush_perso(out_unitp)
+        CALL Write_ana_psi(para_propa%ana_psi)
       END IF
 !-----------------------------------------------------------
 
@@ -335,7 +337,7 @@ relax = .TRUE.
       SUBROUTINE sub_Auto_HmaxHmin_relax(para_propa,para_H)
       USE mod_system
       USE mod_psi,      ONLY : param_psi,renorm_psi,alloc_psi,dealloc_psi,&
-                               Set_psi_With_index
+                               Set_psi_With_index,Write_ana_psi
       USE mod_Op
       USE mod_propa
       USE mod_FullPropa
@@ -345,7 +347,7 @@ relax = .TRUE.
       TYPE (param_Op)  :: para_H
 
 !----- variables for the WP ----------------------------------------
-      TYPE (param_psi)   :: WP0,WP
+      TYPE (param_psi)   :: WP0(1),WP(1)
       TYPE (param_propa) :: para_propa,para_propa_loc
 
 !----- working parameters --------------------------------------------
@@ -362,7 +364,7 @@ relax = .TRUE.
       write(out_unitp,*) 'BEGINNING ',name_sub,' ',para_H%nb_tot
       write(out_unitp,*) 'Hmin,Hmax',para_H%Hmin,para_H%Hmax
       IF (debug) THEN
-
+        CALL Write_ana_psi(para_propa%ana_psi)
       END IF
 !-----------------------------------------------------------
 
@@ -389,15 +391,15 @@ relax = .TRUE.
         para_propa_loc%WPpsi2            = .FALSE.
         para_propa_loc%WPpsi             = .FALSE.
         para_propa_loc%file_autocorr%name= 'WP_auto'
+        para_propa_loc%ana_psi           = para_propa%ana_psi
 
+        CALL init_psi(WP(1),para_H,para_H%cplx)
+        WP(1)%GridRep = .TRUE.
+        CALL alloc_psi(WP(1))
 
-        CALL init_psi(WP,para_H,para_H%cplx)
-        WP%GridRep = .TRUE.
-        CALL alloc_psi(WP)
-
-        CALL init_psi(WP0,para_H,para_H%cplx)
-        WP0%BasisRep = .TRUE.
-        CALL alloc_psi(WP0)
+        CALL init_psi(WP0(1),para_H,para_H%cplx)
+        WP0(1)%BasisRep = .TRUE.
+        CALL alloc_psi(WP0(1))
 
         !---- for Hmax -----------------------------------------
         para_propa_loc%name_WPpropa      = 'Emax'
@@ -406,10 +408,10 @@ relax = .TRUE.
         para_propa_loc%ana_psi%propa     = .TRUE.
         para_propa_loc%ana_psi%Write_psi = .FALSE.
 
-        WP0 = ZERO
-        CALL Set_psi_With_index(WP0,R=ONE,ind_aie=WP0%nb_tot)
-        WP0%symab = -1
-        CALL renorm_psi(WP0,BasisRep=.TRUE.)
+        WP0(1) = ZERO
+        CALL Set_psi_With_index(WP0(1),R=ONE,ind_aie=WP0(1)%nb_tot)
+        WP0(1)%symab = -1
+        CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
 
         para_propa_loc%type_WPpropa = -3
         CALL sub_propagation3(Emax,WP0,WP,para_H,para_propa_loc)
@@ -425,10 +427,10 @@ relax = .TRUE.
         para_propa_loc%para_poly%poly_tol = ONETENTH**8
         para_propa_loc%WPdeltaT           = ONE
 
-        WP0 = ZERO
-        CALL Set_psi_With_index(WP0,R=ONE,ind_aie=1)
-        WP0%symab = -1
-        CALL renorm_psi(WP0,BasisRep=.TRUE.)
+        WP0(1) = ZERO
+        CALL Set_psi_With_index(WP0(1),R=ONE,ind_aie=1)
+        WP0(1)%symab = -1
+        CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
 
         para_propa_loc%type_WPpropa = 3
         CALL sub_propagation3(Emax,WP0,WP,para_H,para_propa_loc)
@@ -436,8 +438,8 @@ relax = .TRUE.
         !---- END for Hmin -------------------------------------
 
 
-        CALL dealloc_psi(WP0)
-        CALL dealloc_psi(WP)
+        CALL dealloc_psi(WP0(1))
+        CALL dealloc_psi(WP(1))
 
         CALL dealloc_param_propa(para_propa_loc)
 
@@ -459,7 +461,7 @@ relax = .TRUE.
       SUBROUTINE sub_Auto_Hmax_cheby(para_propa,para_H)
       USE mod_system
       USE mod_psi,      ONLY : param_psi,renorm_psi,alloc_psi,dealloc_psi,&
-                               Set_Random_psi
+                               Set_Random_psi,Write_ana_psi
       USE mod_Op
       USE mod_march
       USE mod_propa

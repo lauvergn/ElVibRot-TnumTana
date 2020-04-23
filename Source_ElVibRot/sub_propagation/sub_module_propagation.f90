@@ -44,7 +44,7 @@
       USE mod_system
       USE mod_Constant,  ONLY : get_conv_au_to_unit,real_wu,            &
                                 convRWU_TO_R_WITH_WorkingUnit,          &
-                                convRWU_TO_R_WITH_WritingUnit
+                                convRWU_TO_R_WITH_WritingUnit,RWU_WriteUnit
       USE mod_psi,       ONLY : param_WP0,param_ana_psi
       USE mod_field,     ONLY : param_field
       IMPLICIT NONE
@@ -580,7 +580,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
   USE mod_psi, ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,         &
                       sub_analyze_psi,norm2_psi,alloc_psi,modif_ana_psi,&
-                      sub_PsiBasisRep_TO_GridRep
+                      sub_PsiBasisRep_TO_GridRep,Write_ana_psi
   USE mod_MPI
   IMPLICIT NONE
 
@@ -597,8 +597,8 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   integer            :: nb_WP
   TYPE (param_psi)   :: WP(:)
 
-  logical            :: ana_mini = .TRUE.
-  !logical            :: ana_mini = .FALSE.
+  !logical            :: ana_mini = .TRUE.
+  logical            :: ana_mini = .FALSE.
   logical            :: G,G2,B,B2,With_field
 
 !-- working parameters --------------------------------
@@ -621,11 +621,11 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 !-------------------------------------------------------
   IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
-   write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
    write(out_unitp,*)
    write(out_unitp,*) 'nb_ba,nb_qa',WP(1)%nb_ba,WP(1)%nb_qa
    write(out_unitp,*) 'nb_bi',WP(1)%nb_bi
    write(out_unitp,*)
+   CALL Write_ana_psi(para_propa%ana_psi)
 
    DO i=1,nb_WP
      CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
@@ -644,15 +644,15 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   IF (ana_mini) THEN
     IF (present(adia)) THEN
       IF (present(para_field)) THEN
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia=adia,para_field=para_field)
       ELSE
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia=adia)
       END IF
     ELSE
       IF (present(para_field)) THEN
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,para_field=para_field)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_field=para_field)
       ELSE
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H)
       END IF
     END IF
     RETURN
@@ -770,7 +770,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 END SUBROUTINE sub_analyze_WP_OpWP
 !=======================================================================================
 
-SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
+SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
   USE mod_system
   USE mod_Op,    ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
   USE mod_field, ONLY : param_field,sub_dnE
@@ -787,7 +787,6 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   TYPE (param_Op)   :: para_H
 
 !- variables for the WP propagation ----------------------------
-  TYPE (param_propa) :: para_propa
   TYPE (param_field), optional :: para_field
   logical,            optional :: adia
 
@@ -807,6 +806,9 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
 
   real (kind=Rkind), allocatable    :: tab_WeightChannels(:,:)
   real (kind=Rkind)                 :: Psi_norm2
+  logical                           :: With_ENE = .TRUE.
+  !logical                           :: With_ENE = .FALSE.
+
 !- for the field --------------------------------------------------
   real (kind=Rkind)    :: dnE(3)
 !- for the field --------------------------------------------------
@@ -820,7 +822,6 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
 
   IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
-   write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
    write(out_unitp,*)
    write(out_unitp,*) 'nb_ba,nb_qa',WP(1)%nb_ba,WP(1)%nb_qa
    write(out_unitp,*) 'nb_bi',WP(1)%nb_bi
@@ -841,50 +842,54 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
 !-----------------------------------------------------------
 
   !-----------------------------------------------------------
-  IF(MPI_id==0) w2 = WP(1) ! just for the initialization
-  IF(MPI_id==0) CALL alloc_psi(w2)
+  w2 = WP(1) ! just for the initialization
+  CALL alloc_psi(w2)
 
   DO i=1,nb_WP
+
     w1 = WP(i)
     !-----------------------------------------------------------
     ! => Analysis for diabatic potential (always done)
 
-    ! =>first the energy
-    IF(MPI_id==0) CALL norm2_psi(w1)
-    CALL sub_PsiOpPsi(ET,w1,w2,para_H)
-    
-    IF(MPI_id==0) THEN
-      w1%CAvOp = ET/w1%norm2
+    CALL Channel_weight(tab_WeightChannels,w1,GridRep=.FALSE.,BasisRep=.TRUE.)
+    Psi_norm2 = sum(tab_WeightChannels)
+
+    ! add the psi number + the time
+    psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat='f12.2')
+
+    IF (With_ENE) THEN
+      ! =>first the energy
+      CALL sub_PsiOpPsi(ET,w1,w2,para_H)
+      w1%CAvOp = ET/Psi_norm2
 
       RWU_E  = REAL_WU(real(w1%CAvOp,kind=Rkind),'au','E')
       E      = convRWU_TO_R_WITH_WritingUnit(RWU_E)
 
-      CALL Channel_weight(tab_WeightChannels,w1,GridRep=.FALSE.,BasisRep=.TRUE.)
-      Psi_norm2 = sum(tab_WeightChannels)
-
-      ! add the psi number + the time
-      psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat='f12.2')
-
       ! add the energy
       psi_line = psi_line // ' ' // real_TO_char(E,Rformat='f8.5')
 
-      ! add the field (if necessary)
-      IF (present(para_field)) THEN
-        CALL sub_dnE(dnE,0,T,para_field)
-        psi_line = psi_line // ' ' // real_TO_char(dnE(1),Rformat='f8.5')
-        psi_line = psi_line // ' ' // real_TO_char(dnE(2),Rformat='f8.5')
-        psi_line = psi_line // ' ' // real_TO_char(dnE(3),Rformat='f8.5')
-      END IF
+    ELSE
+      ! add the energy
+      psi_line = psi_line // ' ' // 'xxxxxxxx'
+    END IF
 
-      psi_line = psi_line // ' ' // real_TO_char(Psi_norm2,Rformat='f10.7')
-      DO i_be=1,WP(i)%nb_be
-      DO i_bi=1,WP(i)%nb_bi
-        psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
-      END DO
-      END DO
+    ! add the field (if necessary)
+    IF (present(para_field)) THEN
+      CALL sub_dnE(dnE,0,T,para_field)
+      psi_line = psi_line // ' ' // real_TO_char(dnE(1),Rformat='f8.5')
+      psi_line = psi_line // ' ' // real_TO_char(dnE(2),Rformat='f8.5')
+      psi_line = psi_line // ' ' // real_TO_char(dnE(3),Rformat='f8.5')
+    END IF
 
-      write(out_unitp,*) psi_line
-    ENDIF ! for MPI_id==0
+    psi_line = psi_line // ' ' // real_TO_char(Psi_norm2,Rformat='f10.7')
+    DO i_be=1,WP(i)%nb_be
+    DO i_bi=1,WP(i)%nb_bi
+      psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
+    END DO
+    END DO
+
+    write(out_unitp,*) psi_line
+
 
   END DO
 

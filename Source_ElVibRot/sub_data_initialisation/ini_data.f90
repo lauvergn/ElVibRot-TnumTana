@@ -354,7 +354,13 @@
         para_propa%para_Davidson%formatted_file_readWP = para_ana%formatted_file_WP ! to set the same default as in para_ana%formatted_file_WP
         para_propa%para_Davidson%formatted_file_WP     = para_ana%formatted_file_WP ! idem
 
+
+
         CALL read_Davidson(para_propa%para_Davidson,para_propa)
+
+       para_propa%file_WP%name    = para_propa%para_Davidson%name_file_saveWP
+
+       para_ana%ana_psi%file_Psi  = para_propa%file_WP
 
       END IF
 

@@ -153,8 +153,7 @@ character (len=*), parameter :: name_sub='init_RD'
 
   write(out_unitp,*) 'para_RD%nb: ',para_RD%nb
 
-
-  CALL nDindex2TOnDindex1_InitOnly(para_RD%nDindex_ComplBasis,nDindB)
+  para_RD%nDindex_ComplBasis = nDindB
 
   para_RD%nDindex_ComplBasis%nDsize(ibasis) = 1
   para_RD%nDindex_ComplBasis%nDend(ibasis)  = 1
