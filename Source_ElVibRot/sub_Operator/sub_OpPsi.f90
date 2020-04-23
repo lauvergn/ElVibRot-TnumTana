@@ -110,19 +110,18 @@ CONTAINS
 !======================================================
       SUBROUTINE sub_PsiOpPsi(E,Psi,OpPsi,para_Op,iOp)
       USE mod_system
+      USE mod_psi,             ONLY : param_psi,ecri_psi,Overlap_psi1_psi2
       USE mod_SetOp,           ONLY : param_Op,write_param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),      intent(in)           :: para_Op
+      TYPE (param_Op)                            :: para_Op
       integer,              intent(in), optional :: iOp
       complex (kind=Rkind), intent(inout)        :: E
 
 !----- variables for the WP ----------------------------------------
-      TYPE (param_psi),     intent(in)           :: Psi
-      TYPE (param_psi),     intent(inout)        :: OpPsi
+      TYPE (param_psi)    :: Psi
+      TYPE (param_psi)    :: OpPsi
 
   !----- for debuging --------------------------------------------------
   logical, parameter :: debug = .FALSE.
@@ -165,8 +164,8 @@ CONTAINS
 !===============================================================================
       SUBROUTINE sub_OpPsi(Psi,OpPsi,para_Op,derOp,With_Grid,TransfoOp)
       USE mod_system
+      USE mod_psi,             ONLY : param_psi,ecri_psi,dealloc_psi
       USE mod_SetOp,           ONLY : param_Op,write_param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -259,12 +258,13 @@ CONTAINS
 !===============================================================================
       SUBROUTINE sub_PrimOpPsi(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
-      USE mod_SetOp,           ONLY : param_Op,write_param_Op,read_OpGrid_OF_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,copy_psi2TOpsi1,assignment (=)
-      USE mod_psi_SimpleOp,    ONLY : assignment (=)
-      USE mod_psi_B_TO_G,      ONLY : sub_PsiGridRep_TO_BasisRep
-      USE mod_SymAbelian,      ONLY : Calc_symab1_EOR_symab2
-      USE mod_psi_Op,          ONLY : Set_symab_OF_psiBasisRep
+      USE mod_SymAbelian,     ONLY : Calc_symab1_EOR_symab2
+      USE mod_psi,            ONLY : param_psi,ecri_psi,copy_psi2TOpsi1,&
+                                     alloc_psi,dealloc_psi,             &
+                                     Set_symab_OF_psiBasisRep,          &
+                                     sub_PsiGridRep_TO_BasisRep
+
+      USE mod_SetOp,          ONLY : param_Op,write_param_Op,read_OpGrid_OF_Op
       USE mod_MPI
       IMPLICIT NONE
 
@@ -463,19 +463,19 @@ CONTAINS
 
                       ! Real part
                       RPsi%RvecB(:) = Real(Psi%CvecB(:),kind=Rkind)
-                      !write(6,*) 'Real part of Psi'
+                      !write(out_unitp,*) 'Real part of Psi'
                       !CALL ecri_psi(Psi=RPsi)
                       CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
-                      !write(6,*) 'Real part of OpPsi'
+                      !write(out_unitp,*) 'Real part of OpPsi'
                       !CALL ecri_psi(Psi=ROpPsi)
                       OpPsi%CvecG(:) = cmplx(ROpPsi%RvecG,kind=Rkind)
 
                       ! Imaginary part
                       RPsi%RvecB(:) = aimag(Psi%CvecB(:))
-                      !write(6,*) 'Imag part of Psi'
+                      !write(out_unitp,*) 'Imag part of Psi'
                       !CALL ecri_psi(Psi=RPsi)
                       CALL sub_OpPsi_WITH_MemGrid_BGG_Hamil10(RPsi,ROpPsi,para_Op,derOp_loc,.FALSE.,pot_only=pot_only_loc)
-                      !write(6,*) 'Imag part of OpPsi'
+                      !write(out_unitp,*) 'Imag part of OpPsi'
                       !CALL ecri_psi(Psi=ROpPsi)
                       OpPsi%CvecG(:) = OpPsi%CvecG + EYE * ROpPsi%RvecG
 
@@ -555,8 +555,8 @@ CONTAINS
 !=======================================================================================
       SUBROUTINE sub_TabOpPsi(TabPsi,TabOpPsi,para_Op,derOp,With_Grid,TransfoOp)
       USE mod_system
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
+      USE mod_psi,        ONLY : param_psi,ecri_psi,dealloc_psi
+      USE mod_SetOp,      ONLY : param_Op,write_param_Op
       USE mod_MPI
       IMPLICIT NONE
 
@@ -601,7 +601,6 @@ CONTAINS
       END IF
       !-----------------------------------------------------------------
 !CALL Check_mem()
-!write(6,*) 'coucou ',name_sub
 
       !-----------------------------------------------------------------
       IF (present(derOp)) THEN
@@ -653,11 +652,11 @@ CONTAINS
 !=======================================================================================
       SUBROUTINE sub_PrimTabOpPsi(TabPsi,TabOpPsi,para_Op,derOp,With_Grid)
       USE mod_system
-      USE mod_SetOp,           ONLY : param_Op,read_OpGrid_OF_Op,Write_FileGrid
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
-      USE mod_psi_B_TO_G,      ONLY : sub_PsiGridRep_TO_BasisRep
-      USE mod_SymAbelian,      ONLY : Calc_symab1_EOR_symab2
-      USE mod_psi_Op,          ONLY : Set_symab_OF_psiBasisRep
+      USE mod_SymAbelian,    ONLY : Calc_symab1_EOR_symab2
+      USE mod_psi,           ONLY : param_psi,alloc_psi,dealloc_psi,    &
+                                    ecri_psi,Set_symab_OF_psiBasisRep,  &
+                                    sub_PsiGridRep_TO_BasisRep
+      USE mod_SetOp,         ONLY : param_Op,read_OpGrid_OF_Op,Write_FileGrid
       USE mod_MPI
       IMPLICIT NONE
 
@@ -729,7 +728,6 @@ CONTAINS
       !IF (SGtype4 .AND. direct_KEO) THEN
 
       IF (SGtype4) THEN
-        !write(6,*) 'coucou sub_TabOpPsi_FOR_SGtype4: ',para_Op%name_Op,' ',size(TabPsi)
         ! para_Op%BasisnD%SparseGrid_type=4
         CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)
         !para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
@@ -803,8 +801,8 @@ CONTAINS
 !=======================================================================================
       SUBROUTINE sub_OpPsi_WITH_MatOp(Psi,OpPsi,para_Op)
       USE mod_system
-      USE mod_SetOp,           ONLY : param_Op,write_param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
+      USE mod_psi,        ONLY : param_psi,ecri_psi
+      USE mod_SetOp,      ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -914,10 +912,11 @@ CONTAINS
 
       SUBROUTINE sub_OpPsi_WITH_MemGrid(Psi,OpPsi,para_Op,derOp,pot_only)
       USE mod_system
-!$    USE omp_lib, only : OMP_GET_THREAD_NUM
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,alloc_array,dealloc_array
-      USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiBasisRep_TO_GridRep
+!$    USE omp_lib,      only : OMP_GET_THREAD_NUM
+      USE mod_psi,      ONLY : param_psi,ecri_psi,                      &
+                               alloc_psi,alloc_array,dealloc_array,     &
+                               sub_d0d1d2PsiBasisRep_TO_GridRep,        &
+                               sub_PsiBasisRep_TO_GridRep
       USE mod_SetOp,           ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
@@ -1090,10 +1089,6 @@ CONTAINS
           !$OMP end parallel do
 
           !---- deallocation -------------------------------------
-          DO ith=1,nb_thread
-            CALL dealloc_psi(thread_OpPsi(ith))
-            CALL dealloc_psi(thread_Psi(ith))
-          END DO
           CALL dealloc_array(thread_Psi,  "thread_Psi",  name_sub)
           CALL dealloc_array(thread_OpPsi,"thread_OpPsi",name_sub)
 
@@ -1161,9 +1156,7 @@ CONTAINS
       SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
       USE mod_basis_BtoG_GtoB, ONLY : DerivOp_TO_CVecG,DerivOp_TO_RVecG
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
+      USE mod_psi,             ONLY : param_psi,ecri_psi,sub_PsiBasisRep_TO_GridRep
       USE mod_SetOp,           ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
@@ -1373,12 +1366,12 @@ CONTAINS
 
       SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
-      USE mod_Coord_KEO,       ONLY : assignment(=),get_Qact, get_d0GG
+      USE mod_Coord_KEO,       ONLY : get_Qact, get_d0GG
       USE mod_basis,           ONLY : rec_Qact
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
       USE mod_basis_BtoG_GtoB, ONLY : DerivOp_TO_RVecG
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
+
+      USE mod_psi,             ONLY : param_psi,ecri_psi,sub_PsiBasisRep_TO_GridRep
+      USE mod_SetOp,           ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
 
@@ -1508,7 +1501,6 @@ STOP 'cplx'
         iq2 = min(iblock*block_size,Psi%nb_qa)
         IF (para_Op%direct_KEO) THEN
 
-          !write(6,*) 'coucou direct KEO',iq1,iq2
           !$OMP parallel default(none)                 &
           !$OMP shared(para_Op,GGiq,iq1,iq2)           &
           !$OMP private(iq,Qact)                       &
@@ -1638,18 +1630,18 @@ STOP 'cplx'
  !SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
  SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid)
  USE mod_system
- USE mod_Coord_KEO,               ONLY : assignment(=),get_Qact, get_d0GG
+ USE mod_Coord_KEO,               ONLY : get_Qact, get_d0GG
 
  USE mod_basis,                   ONLY : rec_Qact
  USE mod_basis_BtoG_GtoB,         ONLY : DerivOp_TO_RVecG
- USE mod_basis_BtoG_GtoB_SGType4, ONLY : Type_SmolyakRep,Write_SmolyakRep, &
+ USE mod_basis_BtoG_GtoB_SGType4, ONLY : Type_SmolyakRep,Write_SmolyakRep,   &
                                          alloc_SmolyakRep,dealloc_SmolyakRep,&
-                                         tabR2_TO_SmolyakRep1,tabR2bis_TO_SmolyakRep1
+                                         tabR2bis_TO_SmolyakRep1
 
- USE mod_psi_set_alloc,           ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
- USE mod_psi_B_TO_G,              ONLY : sub_PsiBasisRep_TO_GridRep
+ USE mod_psi,                     ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,&
+                                         sub_PsiBasisRep_TO_GridRep
 
- USE mod_SetOp,                      ONLY : param_Op,write_param_Op
+ USE mod_SetOp,                   ONLY : param_Op,write_param_Op
 
  IMPLICIT NONE
 
@@ -1710,7 +1702,6 @@ STOP 'cplx'
  IF (Psi(1)%cplx) STOP 'cplx'
  IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1'
 
-!write(6,*) 'coucou new ',name_sub
  IF (BasisTOGrid_omp == 0) THEN
    nb_thread = 1
  ELSE
@@ -1781,9 +1772,9 @@ STOP 'cplx'
    OpPsi(itab)%RvecG(:) = ZERO
  END IF
 
- !write(6,*) 'sqRhoOVERJac',para_Op%ComOp%sqRhoOVERJac(:)
- !write(6,*) 'Jac',para_Op%ComOp%Jac(:)
- !write(6,*) 'V',para_Op%OpGrid(iterm)%Grid(:,1,1)
+ !write(out_unitp,*) 'sqRhoOVERJac',para_Op%ComOp%sqRhoOVERJac(:)
+ !write(out_unitp,*) 'Jac',para_Op%ComOp%Jac(:)
+ !write(out_unitp,*) 'V',para_Op%OpGrid(iterm)%Grid(:,1,1)
 
  !Transfert sqRhoOVERJac, Jac and the potential in Smolyak rep (Grid)
  IF (debug) THEN
@@ -1797,9 +1788,8 @@ STOP 'cplx'
  DO itab=1,size(Psi)
 
    IF (debug) THEN
-     write(6,*) 'Psi * sqRhoOVERJac'
-     CALL tabR2_TO_SmolyakRep1(SRep,Psi(itab)%RvecG)
-     !SRep = Psi(itab)%RvecG
+     write(out_unitp,*) 'Psi * sqRhoOVERJac'
+     SRep = Psi(itab)%RvecG
      CALL Write_SmolyakRep(SRep)
    END IF
 
@@ -1809,7 +1799,7 @@ STOP 'cplx'
      CALL DerivOp_TO_RVecG(derRGi(:,i,itab),Psi(itab)%nb_qa,para_Op%BasisnD,  &
                            derive_termQdyn)
      IF (debug) THEN
-       write(6,*) 'dQi ',i
+       write(out_unitp,*) 'dQi ',i
        CALL tabR2bis_TO_SmolyakRep1(SRep,derRGi(:,i,itab))
        CALL Write_SmolyakRep(SRep)
      END IF
@@ -1831,7 +1821,6 @@ STOP 'cplx'
     iq2 = min(iblock*block_size,Psi(1)%nb_qa)
     IF (para_Op%direct_KEO) THEN
 
-      !write(6,*) 'coucou direct KEO',iq1,iq2
       !$OMP parallel default(none)                 &
       !$OMP shared(para_Op,GGiq,iq1,iq2)  &
       !$OMP private(iq,Qact)                       &
@@ -1842,7 +1831,7 @@ STOP 'cplx'
         CALL get_Qact(Qact,para_Op%mole%ActiveTransfo) ! rigid, flexible coordinates
         CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
         CALL get_d0GG(Qact,para_Op%para_Tnum,para_Op%mole,d0GG=GGiq(iq-iq1+1,:,:),def=.TRUE.)
-        !write(6,*) 'iq,Gij',iq,GGiq(iq-iq1+1,:,:)
+        !write(out_unitp,*) 'iq,Gij',iq,GGiq(iq-iq1+1,:,:)
       END DO
       !$OMP end do
       CALL dealloc_NParray(Qact,'Qact',name_sub)
@@ -1876,7 +1865,7 @@ STOP 'cplx'
      CALL DerivOp_TO_RVecG(derRGj(:,j,itab),Psi(itab)%nb_qa,para_Op%BasisnD,derive_termQdyn)
 
      IF (debug) THEN
-       write(6,*) 'dQj ',j
+       write(out_unitp,*) 'dQj ',j
        CALL tabR2bis_TO_SmolyakRep1(SRep,derRGj(:,j,itab))
        CALL Write_SmolyakRep(SRep)
      END IF
@@ -1894,7 +1883,7 @@ STOP 'cplx'
    CALL sub_sqRhoOVERJac_Psi(OpPsi(itab),para_Op,inv=.TRUE.)
 
    IF (debug) THEN
-     write(6,*) 'OpPsi Grid '
+     write(out_unitp,*) 'OpPsi Grid '
      CALL tabR2bis_TO_SmolyakRep1(SRep,OpPsi(itab)%RvecG)
      CALL Write_SmolyakRep(SRep)
    END IF
@@ -1917,11 +1906,13 @@ STOP 'cplx'
 
       SUBROUTINE sub_OpPsi_WITH_FileGrid_type12_BGG(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
-      USE mod_SetOp,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
-      USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
-      USE mod_OpGrid,          ONLY : sub_ReadSeq_Grid_iterm,sub_ReadDir_Grid_iterm
       USE mod_basis_BtoG_GtoB, ONLY : DerivOp_TO_CVecG,DerivOp_TO_RVecG
+
+      USE mod_psi,             ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,&
+                                      sub_PsiBasisRep_TO_GridRep
+
+      USE mod_SetOp,           ONLY : param_Op
+      USE mod_OpGrid,          ONLY : sub_ReadSeq_Grid_iterm,sub_ReadDir_Grid_iterm
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -2160,10 +2151,12 @@ STOP 'cplx'
 
       SUBROUTINE sub_OpPsi_WITH_FileGrid_type12(Psi,OpPsi,para_Op,derOp,pot_only)
       USE mod_system
-      USE mod_SetOp,           ONLY : param_Op,write_param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiBasisRep_TO_GridRep
-      USE mod_OpGrid,          ONLY : sub_ReadSeq_Grid_iterm,sub_ReadDir_Grid_iterm
+      USE mod_psi,          ONLY : param_psi,ecri_psi,                  &
+                                   sub_d0d1d2PsiBasisRep_TO_GridRep,    &
+                                   sub_PsiBasisRep_TO_GridRep
+
+      USE mod_SetOp,        ONLY : param_Op,write_param_Op
+      USE mod_OpGrid,       ONLY : sub_ReadSeq_Grid_iterm,sub_ReadDir_Grid_iterm
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -2371,10 +2364,13 @@ STOP 'cplx'
 
       SUBROUTINE  sub_OpPsi_WITH_FileGrid_type0(Psi,OpPsi,para_Op,derOp,pot_only)
       USE mod_system
-      USE mod_PrimOp,          ONLY : assignment(=),param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
-      USE mod_SetOp,           ONLY : param_Op,write_param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,alloc_array,dealloc_array
-      USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiBasisRep_TO_GridRep
+      USE mod_PrimOp,  ONLY : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
+      USE mod_psi,     ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi, &
+                              alloc_array,dealloc_array,                &
+                              sub_d0d1d2PsiBasisRep_TO_GridRep,         &
+                              sub_PsiBasisRep_TO_GridRep
+
+      USE mod_SetOp,   ONLY : param_Op,write_param_Op
 
       IMPLICIT NONE
 
@@ -2562,14 +2558,12 @@ STOP 'cplx'
 
       SUBROUTINE sub_itermOpPsi_GridRep(Psi,OpPsi,iterm,para_Op)
       USE mod_system
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_SimpleOp,    ONLY : assignment (=)
-      USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep
+      USE mod_SetOp,    ONLY : param_Op,write_param_Op
+      USE mod_psi,      ONLY : param_psi,ecri_psi,sub_d0d1d2PsiBasisRep_TO_GridRep
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op)  :: para_Op
+      TYPE (param_Op)              :: para_Op
       integer,         intent(in)  :: iterm
 
 !----- variables for the WP ----------------------------------------
@@ -2660,7 +2654,7 @@ STOP 'cplx'
 !=======================================================================================
       SUBROUTINE sub_scaledOpPsi(Psi,OpPsi,E0,Esc)
       USE mod_system
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi
       USE mod_MPI
       IMPLICIT NONE
 
@@ -2712,10 +2706,10 @@ STOP 'cplx'
 !=======================================================================================
       SUBROUTINE sub_OpiPsi(Psi,OpPsi,para_Op,iOp)
       USE mod_system
-      USE mod_SetOp,           ONLY : param_Op,write_param_Op,alloc_para_Op,read_OpGrid_OF_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,assignment (=)
-      USE mod_psi_SimpleOp,    ONLY : assignment (=)
-      USE mod_psi_B_TO_G,      ONLY : sub_d0d1d2PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
+      USE mod_SetOp,   ONLY : param_Op,write_param_Op,alloc_para_Op,read_OpGrid_OF_Op
+      USE mod_psi,     ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi, &
+                              sub_d0d1d2PsiBasisRep_TO_GridRep,         &
+                              sub_PsiGridRep_TO_BasisRep
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2905,9 +2899,8 @@ STOP 'cplx'
 
       SUBROUTINE sub_sqRhoOVERJac_Psi(Psi,para_Op,inv)
       USE mod_system
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-
-      USE mod_SetOp,              ONLY : param_Op,write_param_Op
+      USE mod_psi,       ONLY : param_psi,ecri_psi
+      USE mod_SetOp,     ONLY : param_Op,write_param_Op
 
       IMPLICIT NONE
 
@@ -2932,8 +2925,6 @@ STOP 'cplx'
       !-----------------------------------------------------------------
 
       IF (para_Op%para_Tnum%nrho /= 0) RETURN
-
-      !write(6,*) 'coucou ',name_sub,' ',inv
 
       n = para_Op%nb_tot
       IF (debug) THEN
@@ -3028,8 +3019,8 @@ STOP 'cplx'
 
 SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
   USE mod_system
-  USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-  USE mod_SetOp,           ONLY : param_Op,write_param_Op
+  USE mod_psi,      ONLY : param_psi,ecri_psi
+  USE mod_SetOp,    ONLY : param_Op,write_param_Op
   IMPLICIT NONE
 
   !----- variables pour la namelist minimum ------------------------
@@ -3135,28 +3126,28 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
             DO iq=1,Psi%nb_qa
 
               V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
-!write(6,*) 'V(:,:)',V(:,:)
+!write(out_unitp,*) 'V(:,:)',V(:,:)
 
               CALL diagonalization(V,                               &
                          EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
-!write(6,*) 'EigenVec',iq,EigenVec
-!write(6,*) 'Ortho EigenVec ?',iq,matmul(transpose(EigenVec),EigenVec)
-!write(6,*) 'Ortho EigenVec ?',iq,matmul(EigenVec,transpose(EigenVec))
+!write(out_unitp,*) 'EigenVec',iq,EigenVec
+!write(out_unitp,*) 'Ortho EigenVec ?',iq,matmul(transpose(EigenVec),EigenVec)
+!write(out_unitp,*) 'Ortho EigenVec ?',iq,matmul(EigenVec,transpose(EigenVec))
 
               Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
-!write(6,*) '<Vdia>',dot_product(Cpsi_iq,matmul(V,Cpsi_iq))
+!write(out_unitp,*) '<Vdia>',dot_product(Cpsi_iq,matmul(V,Cpsi_iq))
 
                   !DO i1_bi=1,para_H%nb_bie
                   !  iqbi = iq + (i1_bi-1) * Psi%nb_qa
                   !  Cpsi_iq(i1_bi) = Psi%CvecG(iqbi)
                   !END DO
-!write(6,*) 'Cpsi_iq',iq,Cpsi_iq
+!write(out_unitp,*) 'Cpsi_iq',iq,Cpsi_iq
 
                   !Cpsi_iq(:) = matmul(EigenVec,Cpsi_iq)
                   !Cpsi_iq(:) = matmul(Cpsi_iq,EigenVec)
               Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
 
-!write(6,*) '<Vadia>',dot_product(Cpsi_iq,(EigenVal*Cpsi_iq))
+!write(out_unitp,*) '<Vadia>',dot_product(Cpsi_iq,(EigenVal*Cpsi_iq))
 
 
               Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
@@ -3164,7 +3155,7 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
                   !  iqbi = iq + (i1_bi-1) * Psi%nb_qa
                   !  Psi%CvecG(iqbi) = Cpsi_iq(i1_bi)
                   !END DO
-!write(6,*) 'Cpsi_iq',iq,Cpsi_iq
+!write(out_unitp,*) 'Cpsi_iq',iq,Cpsi_iq
 
             END DO
           ELSE
@@ -3219,8 +3210,8 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
 END SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid
       SUBROUTINE sub_psiHitermPsi(Psi,iPsi,info,para_H)
       USE mod_system
-      USE mod_SetOp,           ONLY : param_Op
-      USE mod_psi_set_alloc
+      USE mod_SetOp,    ONLY : param_Op
+      USE mod_psi,      ONLY : param_psi,dealloc_psi
       IMPLICIT NONE
 
       TYPE (param_psi)               :: Psi
@@ -3250,11 +3241,11 @@ END SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid
 
        !for H
        IF (para_H%name_Op /= 'H') STOP 'wrong Operator !!'
-       write(6,*) 'nb_Term',para_H%nb_Term ; flush(6)
+       write(out_unitp,*) 'nb_Term',para_H%nb_Term ; flush(out_unitp)
        DO iOp=1,para_H%nb_Term
 
          CALL sub_PsiOpPsi(avOp,Psi,OpPsi,para_H,iOp)
-         write(out_unitp,"(i0,a,i0,a,2(i0,x),2a,f15.9,1x,f15.9)") iPsi,  &
+         write(out_unitp,"(i0,a,i0,a,2(i0,1x),2a,f15.9,1x,f15.9)") iPsi,  &
           ' H(',iOp,') der[',para_H%derive_termQact(:,iOp),']: ',info,avOp
 
          CALL flush_perso(out_unitp)

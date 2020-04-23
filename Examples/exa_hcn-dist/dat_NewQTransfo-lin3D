@@ -11,8 +11,8 @@ cd $DIR_vib
  make
 cd $here
 
-nb=10
-nq=15
+nb=6
+nq=10
 
  x1=0.538516066
  x2=0.461483933

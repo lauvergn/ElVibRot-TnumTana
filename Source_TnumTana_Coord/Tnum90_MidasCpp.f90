@@ -43,7 +43,7 @@
 
       TYPE(Type_dnMat) :: dnGG
 
-      TYPE(sum_opnd)   :: TWOxKEO,ExpandTWOxKEO
+      TYPE(sum_opnd)   :: TWOxKEO
 
 
       real (kind=Rkind), allocatable :: Qact(:)
@@ -132,20 +132,12 @@
          CALL time_perso('Tana')
 
          CALL compute_analytical_KEO(TWOxKEO,mole,para_Tnum,Qact)
-
          IF (print_level > 2) CALL write_op(TWOxKEO,header=.TRUE.)
+         IF (print_level > 2) CALL write_op(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
 
-         write(out_unitp,*) '================================================='
-         write(out_unitp,*) ' Expand 2xKEO (in reduced dimension)'
-         CALL Expand_Sum_OpnD_TO_Sum_OpnD(TWOxKEO, ExpandTWOxKEO)
-         IF (print_level > 2)  CALL write_op(ExpandTWOxKEO,header=.TRUE.)
-         write(out_unitp,*) '================================================='
-
-         CALL comparison_G_FROM_Tnum_Tana(ExpandTWOxKEO,mole,para_Tnum,Qact)
+         CALL comparison_G_FROM_Tnum_Tana(para_Tnum%ExpandTWOxKEO,mole,para_Tnum,Qact)
 
          CALL delete_op(TWOxKEO)
-         CALL delete_op(ExpandTWOxKEO)
-
 
          ! calculation of the G matrix. Then print the diagonal elements
          CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,nderiv=0)

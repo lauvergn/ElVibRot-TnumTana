@@ -224,7 +224,7 @@ MODULE mod_basis
       END IF
 !---------------------------------------------------------------------
 
-      !write(6,*) 'scaleQ,QO',basis_primi%scaleQ,basis_primi%Q0
+      !write(out_unitp,*) 'scaleQ,QO',basis_primi%scaleQ,basis_primi%Q0
 
       IF (.NOT. basis_primi%active) RETURN
 
@@ -454,7 +454,7 @@ MODULE mod_basis
       CALL dealloc_basis(basis_temp)
 
       nq = get_nq_FROM_basis(basis_primi)
-      !write(6,*) 'basis_primi nq',nq
+      !write(out_unitp,*) 'basis_primi nq',nq
       IF (nq < 1) RETURN
 
       basis_primi%primitive      = .TRUE.
@@ -540,13 +540,14 @@ MODULE mod_basis
       END IF
 
 !    DO k=1,size(basis_primi%x,dim=2)
-!      write(666,'(101(x,f10.5))') basis_primi%x(:,k),basis_primi%dnRGB%d0(k,1:min(10,basis_primi%nb))
+!      write(out_unitp66,'(101(x,f10.5))') basis_primi%x(:,k),basis_primi%dnRGB%d0(k,1:min(10,basis_primi%nb))
 !    END DO
 
 !---------------------------------------------------------------------
       IF (debug) THEN
         CALL RecWrite_basis(basis_primi)
         write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
       END IF
 !---------------------------------------------------------------------
       END SUBROUTINE construct_primitive_basis
@@ -608,7 +609,7 @@ MODULE mod_basis
       CASE ("ho","hm","hermite")
 
         d0b = sqrt(basis_temp%scaleQ(1))*poly_Hermite_exp(x,ib-1)
-        !write(6,*) 'ib,x,d0b',ib,x,d0b
+        !write(out_unitp,*) 'ib,x,d0b',ib,x,d0b
       CASE ("ho_0","hm_0")
         STOP
 
@@ -949,7 +950,7 @@ MODULE mod_basis
       END IF
       CALL alloc_array(basis_set%nDindB_uncontracted,                   &
                       'basis_set%nDindB_uncontracted',name_sub)
-      CALL nDindex2TOnDindex1(basis_set%nDindB_uncontracted,basis_set%nDindB)
+      basis_set%nDindB_uncontracted = basis_set%nDindB
 
       !- Finally, nDindB + the new Tab_Norm
       IF (basis_set%contrac_WITH_nDindB) THEN
@@ -1113,8 +1114,6 @@ MODULE mod_basis
           write(out_unitp,*) 'ib,nDval,Normi',ib,':',nDval,Normi
         END DO
       END IF
-
-      !write(out_unitp,*) ' coucou sorted basis'
 
       !write(out_unitp,*) 'Permutation'
       DO ib=1,basis_set%nb
@@ -1363,9 +1362,9 @@ MODULE mod_basis
         END DO
         END DO
 
-        !write(6,*) 'alloc + shape x',allocated(basis_sc%x),shape(basis_sc%x)
-        !write(6,*) 'nq',get_nq_FROM_basis(basis_sc)
-        !flush(6)
+        !write(out_unitp,*) 'alloc + shape x',allocated(basis_sc%x),shape(basis_sc%x)
+        !write(out_unitp,*) 'nq',get_nq_FROM_basis(basis_sc)
+        !flush(out_unitp)
         DO i=1,basis_sc%ndim
           basis_sc%x(i,:) = basis_sc%Q0(i) + basis_sc%x(i,:) / basis_sc%scaleQ(i)
         END DO
@@ -1886,7 +1885,7 @@ MODULE mod_basis
             Check_bGB = basis_set%dnRGB%d1(:,1:nb,i)-matmul(basis_set%dnRGG%d1(:,:,i),basis_set%dnRGB%d0(:,1:nb))
             Max_err_Check_bGB = max(Max_err_Check_bGB,maxval(abs(Check_bGB)))
             IF (debug .OR. maxval(abs(Check_bGB)) > ONETENTH**8) THEN
-              write(out_unitp,'(a,x,i0,2x,e9.2)') 'Check_bGB%d1',i,maxval(abs(Check_bGB))
+              write(out_unitp,'(a,1x,i0,2x,e9.2)') 'Check_bGB%d1',i,maxval(abs(Check_bGB))
               !CALL Write_VecMat(Check_bGB,out_unitp,5)
             END IF
           END DO
@@ -1897,7 +1896,7 @@ MODULE mod_basis
             Check_bGB = basis_set%dnRGB%d2(:,1:nb,i,j)-matmul(basis_set%dnRGG%d2(:,:,i,j),basis_set%dnRGB%d0(:,1:nb))
             Max_err_Check_bGB = max(Max_err_Check_bGB,maxval(abs(Check_bGB)))
             IF (debug .OR. maxval(abs(Check_bGB)) > ONETENTH**8) THEN
-              write(out_unitp,'(a,x,i0x,i0,e9.2)') 'Check_bGB%d2',i,j,maxval(abs(Check_bGB))
+              write(out_unitp,'(a,1x,i0,1x,i0,e9.2)') 'Check_bGB%d2',i,j,maxval(abs(Check_bGB))
               !CALL Write_VecMat(Check_bGB,out_unitp,5)
             END IF
           END DO
@@ -2083,8 +2082,8 @@ STOP 'pack and SG2 does not work!!!'
          ELSE  ! two (or more) identical points, just one is consider. But the weight must be changed
            iq1 = abs(tab_iqXmin(iq))
 
-           write(6,*) 'd0RGB,wrho',iq0,basis_set%dnRGB%d0(iq0,:),basis_set%wrho(iq0)
-           write(6,*) 'd0RGB,wrho',iq1,basis_loc%dnRGB%d0(iq1,:),Rec_WrhonD(basis_set,iq1)
+           write(out_unitp,*) 'd0RGB,wrho',iq0,basis_set%dnRGB%d0(iq0,:),basis_set%wrho(iq0)
+           write(out_unitp,*) 'd0RGB,wrho',iq1,basis_loc%dnRGB%d0(iq1,:),Rec_WrhonD(basis_set,iq1)
 
 
            ! be carrefull, rho remains unchanged. It just function of Xmin
@@ -2323,7 +2322,7 @@ END SUBROUTINE pack_basis
       IF (.NOT. basis_temp%check_basis .OR. .NOT. basis_temp%packed_done) RETURN
       !IF (.NOT. basis_temp%packed_done) RETURN
       nq = get_nq_FROM_basis(basis_temp)
-      !write(6,*) 'nq,nb',nq,basis_temp%nb
+      !write(out_unitp,*) 'nq,nb',nq,basis_temp%nb
       IF ( (basis_temp%nb*nq) > 1000000000) RETURN
 
       Print_basis = basis_temp%print_info_OF_basisDP .AND. print_level > -1 .OR. debug
@@ -2524,8 +2523,8 @@ END SUBROUTINE pack_basis
        ELSE ! BasisnD%nb_basis MUST BE > 0
          IF (BasisnD%nb_basis == 0 ) THEN
             CALL RecWriteMini_basis(BasisnD)
-            write(6,*) ' ERROR in ',name_sub
-            write(6,*) ' This basis should be packed'
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' This basis should be packed'
 
             STOP
          END IF
@@ -2684,7 +2683,7 @@ END SUBROUTINE pack_basis
        ELSE IF (BasisnD%packed_done) THEN
          !CALL RecWrite_basis(BasisnD,write_all=.TRUE.)
          !IF (.NOT. allocated(BasisnD%wrho)) STOP 'problem with primitive basis. wrho is not allocated !!'
-         !write(6,*) 'shape wrho, iq',shape(BasisnD%wrho),iq
+         !write(out_unitp,*) 'shape wrho, iq',shape(BasisnD%wrho),iq
          WrhonD = BasisnD%wrho(iq)
        ELSE ! BasisnD%nb_basis MUST BE > 0
          IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_WrhonD !!!'
@@ -2713,7 +2712,7 @@ END SUBROUTINE pack_basis
            CALL get_Tabiq_Tabil_FROM_iq_old(nDval_SG2,nDl_SG2,          &
                                      i_SG,iq_SG,iq,BasisnD%para_SGType2)
 !           IF (present(OldPara)) THEN
-!             !write(6,*) 'OldPara in Rec_WrhonD:',OldPara
+!             !write(out_unitp,*) 'OldPara in Rec_WrhonD:',OldPara
 !             CALL get_Tabiq_Tabil_FROM_iq(nDval_SG2,nDl_SG2,          &
 !                                     i_SG,iq_SG,iq,BasisnD%para_SGType2,&
 !                                     OldPara,err_sub=err_sub)
@@ -2853,7 +2852,7 @@ END SUBROUTINE pack_basis
                iqi_loc = iqi_loc + get_nq_FROM_basis(BasisnD%tab_basisPrimSG(Lm,ib))
              END DO
              ndim  = BasisnD%tab_basisPrimSG(L,ib)%ndim
-             write(6,*) 'ib,L,idim,ndim',ib,L,idim,ndim
+             write(out_unitp,*) 'ib,L,idim,ndim',ib,L,idim,ndim
              CALL Rec_tab_iq(tab_iq(idim+1:idim+ndim),                  &
                          BasisnD%tab_basisPrimSG(L,ib),iq_ib,iqi=iqi_loc)
              idim = idim+ndim
@@ -3148,13 +3147,13 @@ END SUBROUTINE pack_basis
          CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
-      !write(6,*) ' in ',name_sub,'iq',iq
+      !write(out_unitp,*) ' in ',name_sub,'iq',iq
 
 
        IF (BasisnD%ndim == 0) THEN
          CONTINUE ! no grid point
        ELSE IF (BasisnD%packed_done) THEN
-         !write(6,*) 'iq',iq ; flush(6)
+         !write(out_unitp,*) 'iq',iq ; flush(out_unitp)
          x(:) = BasisnD%x(:,iq)
        ELSE ! BasisnD%nb_basis MUST BE > 0
          IF (BasisnD%nb_basis == 0 ) STOP ' ERROR with packed in Rec_x!!!'
@@ -3181,7 +3180,7 @@ END SUBROUTINE pack_basis
 !         CASE (2) ! Sparse basis (Smolyak 2d implementation)
 !
 !           IF (present(OldPara)) THEN
-!             !write(6,*) 'OldPara in Rec_x:',OldPara
+!             !write(out_unitp,*) 'OldPara in Rec_x:',OldPara
 !             CALL get_Tabiq_Tabil_FROM_iq(nDval_SG2,nDl_SG2,          &
 !                                     i_SG,iq_SG,iq,BasisnD%para_SGType2,&
 !                                     OldPara,err_sub=err_sub)
@@ -3233,7 +3232,7 @@ END SUBROUTINE pack_basis
 
        END IF
 
-      !write(6,*) ' out ',name_sub,'iq,x',iq,x
+      !write(out_unitp,*) ' out ',name_sub,'iq,x',iq,x
 
 !     -------------------------------------------------------
       IF (debug) THEN
@@ -3817,7 +3816,8 @@ END SUBROUTINE pack_basis
       integer           :: nDval_SG2(BasisnD%nb_basis)
       integer           :: nDl_SG2(BasisnD%nb_basis)
 
-      integer           :: i_SG = 0
+      integer           :: i_SG
+      integer           :: i_SG2 = 0
       integer           :: err_sub
 
 !----- for debuging --------------------------------------------------
@@ -3923,14 +3923,14 @@ END SUBROUTINE pack_basis
 
          CASE (2) ! Sparse basis (Smolyak 2d  implementation)
            CALL calc_nDindex(BasisnD%nDindB,ib,nDvalB)
-           write(6,*) 'ib,nDvalB',ib,':',nDvalB
+           write(out_unitp,*) 'ib,nDvalB',ib,':',nDvalB
 
            CALL get_Tabiq_Tabil_FROM_iq_old(nDval_SG2,nDl_SG2,          &
-                      i_SG,iq_SG,iq,BasisnD%para_SGType2)
+                                     i_SG2,iq_SG,iq,BasisnD%para_SGType2)
 
-           write(6,*) 'iq,i_SG',iq,i_SG
-           write(6,*) 'tab_l',nDl_SG2
-           write(6,*) 'tab_iq',nDval_SG2
+           write(out_unitp,*) 'iq,i_SG2',iq,i_SG2
+           write(out_unitp,*) 'tab_l',nDl_SG2
+           write(out_unitp,*) 'tab_iq',nDval_SG2
 
            d0b      = ONE
            d1b(:)   = ONE
@@ -3942,7 +3942,7 @@ END SUBROUTINE pack_basis
              iqi   = nDval_SG2(i)
              ibi   = nDvalB(i)
 
-             write(6,*) 'ibasis,L,iqi,ibi',i,L,iqi,ibi
+             write(out_unitp,*) 'ibasis,L,iqi,ibi',i,L,iqi,ibi
 
              ndimi = BasisnD%tab_basisPrimSG(L,ib)%ndim
              i1    = i0 + ndimi

@@ -38,16 +38,11 @@ r 2.179
 R 3.187
 cosa .9
 
- &basis_nD iQdyn(1)=1 name="Hm"  nb=10 nq=15 Q0=2.2 scaleQ=11.0 /
- &basis_nD iQdyn(1)=2 name="Hm"  nb=10 nq=15 Q0=3.2 scaleQ=5.1 /
+ &basis_nD iQdyn(1)=1 name="Hm"  nb=6 nq=10 Q0=2.2 scaleQ=11.0 /
+ &basis_nD iQdyn(1)=2 name="Hm"  nb=6 nq=10 Q0=3.2 scaleQ=5.1 /
  &basis_nD iQact(1)=3 name="Pl0" nb=51 nq=80 /
  &inactives /
 
  &actives test=f direct=2 /
  &analyse max_ana=40 max_ene=20000. 'cm-1' /
 **
-exit
- &basis_nD iQdyn(1)=1 name="Hm"  nb=10 nq=15 Q0=2.2 scaleQ=11.0 /
- &basis_nD iQdyn(1)=2 name="Hm"  nb=10 nq=15 Q0=3.2 scaleQ=5.1 /
- &basis_nD iQact(1)=3 name="Pl0" nb=51 nq=80 /
- &minimum pot0=-0.499465823200 pot_itQtransfo=0 read_Qsym0=t unit='bohr' /

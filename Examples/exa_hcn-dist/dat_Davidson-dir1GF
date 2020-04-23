@@ -17,7 +17,7 @@ cd $here
  x2=0.461483933
 
 nice $DIR_vib/vib << ** >res
- &system PGrid_omp=1 /
+ &system PGrid_omp=1 printlevel=2 /
  &constantes /
  &variables 
          zmat=T

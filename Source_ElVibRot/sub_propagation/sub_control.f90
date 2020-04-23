@@ -41,8 +41,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_FullControl
-USE mod_Constant
- IMPLICIT NONE
+IMPLICIT NONE
 
  PRIVATE
  PUBLIC :: sub_nonOpt_control,sub_Opt_control
@@ -56,14 +55,13 @@ USE mod_Constant
  !================================================================
  SUBROUTINE sub_nonOpt_control(para_AllOp,para_propa)
       USE mod_system
+      USE mod_Constant
+      USE mod_psi,    ONLY : param_psi,alloc_psi,alloc_array,dealloc_array, &
+                             renorm_psi,ecri_psi,sub_PsiBasisRep_TO_GridRep
       USE mod_Op
       USE mod_field
       USE mod_propa
       USE mod_FullPropa
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
-      USE mod_ana_psi
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -71,7 +69,7 @@ USE mod_Constant
 
 !----- for the control --------------------------------------------
       integer :: nb_WP,nb_WPba
-      TYPE (param_psi), pointer  :: tab_WP0(:),tab_WPt(:),tab_WP(:)
+      TYPE (param_psi),  pointer :: tab_WP0(:),tab_WPt(:),tab_WP(:)
       real (kind=Rkind), pointer :: Obj(:)
       real (kind=Rkind)              :: SObj
       integer :: it
@@ -291,16 +289,14 @@ USE mod_Constant
 !================================================================
 SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       USE mod_system
+      USE mod_Constant
+      USE mod_psi,    ONLY : param_psi,alloc_psi,alloc_array,dealloc_array, &
+                            renorm_psi,norm2_psi,sub_PsiBasisRep_TO_GridRep,&
+                             sub_analyze_tab_psi,ecri_psi,sub_read_psi0
       USE mod_Op
       USE mod_field
       USE mod_propa
       USE mod_FullPropa
-      !USE mod_psi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
-      USE mod_ana_psi
-      USE mod_psi_io
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -324,9 +320,6 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
 !----- for printing --------------------------------------------------
       logical :: print_cont
       logical :: make_field
-
-      integer                          :: max_ecri = 25
-      TYPE (param_ana_psi)             :: ana_psi
 
 !------ working variables ---------------------------------
       integer           :: i,j,jt,iDip,iOp
@@ -482,7 +475,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
         CALL renorm_psi(tab_WPt(i))
       END DO
 
-      para_propa%ana_psi%T = T
+      para_propa%ana_psi%T = ZERO
       CALL sub_analyze_tab_psi(tab_WP0,para_propa%ana_psi,adia=.FALSE.)
       CALL sub_analyze_tab_psi(tab_WPt,para_propa%ana_psi,adia=.FALSE.)
 
@@ -685,27 +678,14 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
 
 
       ! - deallocate WP ------------------------------------
-      DO i=1,size(tab_WP0)
-        CALL dealloc_psi(tab_WP0(i),delete_all=.TRUE.)
-      END DO
-      DO i=1,size(tab_WPt)
-        CALL dealloc_psi(tab_WPt(i),delete_all=.TRUE.)
-      END DO
-      DO i=1,size(tab_WP)
-        CALL dealloc_psi(tab_WP(i),delete_all=.TRUE.)
-      END DO
-      DO i=1,size(tab_WP_save)
-        CALL dealloc_psi(tab_WP_save(i),delete_all=.TRUE.)
-      END DO
-
-      nullify(para_H)
-
       CALL dealloc_array(tab_WP0,    "tab_WP0",    name_sub)
       CALL dealloc_array(tab_WPt,    "tab_WPt",    name_sub)
       CALL dealloc_array(tab_WP,     "tab_WP",     name_sub)
       CALL dealloc_array(tab_WP_save,"tab_WP_save",name_sub)
+
       CALL dealloc_array(Obj,        "Obj",        name_sub)
 
+      nullify(para_H)
       CALL dealloc_param_field(para_field_new)
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -728,12 +708,11 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
                                    para_field_new,make_field,Obj0,      &
                                    para_H,para_Dip,para_propa)
       USE mod_system
+      USE mod_Constant
+      USE mod_psi,    ONLY : param_psi,renorm_psi,ecri_psi
       USE mod_Op
       USE mod_propa
       USE mod_march
-      !USE mod_psi
-      USE mod_psi_set_alloc
-      USE mod_ana_psi
       USE mod_field
       IMPLICIT NONE
 
@@ -923,13 +902,10 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       SUBROUTINE build_field(T,WP,nb_WP,para_field_new,Obj0,            &
                              para_Dip,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,dealloc_psi,Overlap_psi1_psi2
       USE mod_Op
       USE mod_field
       USE mod_propa
-      !USE mod_psi
-      USE mod_psi_set_alloc
-      USE mod_ana_psi
-      USE mod_psi_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1031,10 +1007,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       SUBROUTINE calc_fidelity(nb_WP,SObj,Obj,tab_WP,tab_WPt,           &
                                T,it,alpha,print_fid)
       USE mod_system
-      !USE mod_psi
-      USE mod_psi_set_alloc
-      USE mod_ana_psi
-      USE mod_psi_Op
+      USE mod_psi,    ONLY : param_psi,Overlap_psi1_psi2
       IMPLICIT NONE
 
 !-------------------------------------------------------------------------

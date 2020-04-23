@@ -29,7 +29,7 @@
       MODULE mod_RectilinearNM_Transfo
       use mod_system
       USE mod_dnSVM
-      use mod_Constant,     only: assignment(=),table_atom, get_mass_tnum
+      use mod_Constant,     only: table_atom, get_mass_tnum
       IMPLICIT NONE
 
       PRIVATE

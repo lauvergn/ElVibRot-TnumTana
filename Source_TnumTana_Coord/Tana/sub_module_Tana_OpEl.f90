@@ -54,14 +54,18 @@
         !! @param: opname  name of to the  elementary op.
         !! @param: coeff   Coefficient in front of the operator.
         TYPE OpEl
-          integer                   :: idf        = 0
-          integer                   :: idq        = 0
-          integer                   :: iv         = 0
-          TYPE(FracInteger)         :: alfa       = FracInteger(0,1)
+          integer              :: idf        = 0
+          integer              :: idq        = 0
+          integer              :: iv         = 0
+          TYPE(Frac_t)         :: alfa
 
           integer                   :: indexq     = 0
           character(len = Name_len) :: opname     = 'init0'
           complex(kind = Rkind)     :: coeff      = CZERO
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(OpEl1) :: R_TO_OpEl
+          PROCEDURE, PRIVATE, PASS(OpEl1) :: C_TO_OpEl
+          GENERIC,   PUBLIC  :: assignment(=) => R_TO_OpEl,C_TO_OpEl
         END TYPE OpEl
 
       INTERFACE alloc_NParray
@@ -95,10 +99,6 @@
      module procedure write_opel
    END INTERFACE
 
-   INTERFACE assignment (=)
-     MODULE PROCEDURE R_TO_OpEl,C_TO_OpEl
-   END INTERFACE
-
    INTERFACE operator (*)
      MODULE PROCEDURE R_times_OpEl,OpEl_times_R,C_times_OpEl,OpEl_times_C
    END INTERFACE
@@ -106,11 +106,12 @@
    PUBLIC :: OpEl, alloc_NParray, dealloc_NParray, check_NParray
    PUBLIC :: compare_op, compare_indexq, copy_F1_into_F2, write_op
    PUBLIC :: set_opel
-   PUBLIC :: assignment (=), operator (*)
+   PUBLIC :: operator (*)
    PUBLIC :: Export_MCTDH_OpEl, Export_Latex_OpEl, Export_Midas_OpEl, Export_VSCF_OpEl
    PUBLIC :: Change_PQ_OF_OpEl_TO_Id_OF_OpEl, Der1_OF_d0OpEl_TO_d1OpEl
    PUBLIC :: get_NumVal_OpEl, get_pqJL_OF_OpEl
    PUBLIC :: Merge_TabOpEl, Sort_TabOpEl, Split_OpEl_TO_SplitOpEl
+   PUBLIC :: StringMCTDH_TO_opel
 
   contains
 
@@ -309,12 +310,12 @@
    type(opel),                   intent(inout)   :: Fel
    integer,                      intent(in)      :: idf
    integer,                      intent(in)      :: idq
-   TYPE(FracInteger),            intent(in)      :: alfa
+   TYPE(Frac_t),                 intent(in)      :: alfa
    integer,                      intent(in)      :: indexq
    complex(kind = Rkind),        intent(in)      :: coeff
    integer, optional,            intent(inout)   :: err_el
 
-   TYPE(FracInteger) :: alfa_loc
+   TYPE(Frac_t) :: alfa_loc
    integer :: err_el_loc
    character (len = Name_len)     ::       calfa
    character (len = Name_len)     ::       cindex
@@ -373,7 +374,7 @@
        Fel%alfa     = 1
 
      case(2) 
-       IF (idq /= 1 .AND. idq /= 2 .AND. idq /=  -3 .AND. idq /= -7) THEN
+       IF (idq /= 1 .AND. idq /= 2 .AND. idq /=  -3 .AND. idq /= -7 .AND. idq /= 0) THEN
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
          write(out_unitp,*) 'idf=', idf
@@ -390,6 +391,8 @@
          Fel%opname = 'u'//calfa
        else if(idq == -7) then
          Fel%opname = 'ub'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'q'//calfa
        end if
 
      case(3) 
@@ -397,6 +400,8 @@
          Fel%opname = 'qus'//calfa
        else if(idq == -7) then
          Fel%opname = 'qubs'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'q'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -425,6 +430,8 @@
          Fel%opname = 'Pqub' // calfa
        else if(idq == 8) then
          Fel%opname = 'Pqg' // calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -444,6 +451,8 @@
            Fel%opname = 'cosqb'//calfa
          else if(idq == 8) then
            Fel%opname = 'cosqg'//calfa
+         else if(idq == 0) then
+           Fel%opname = 'cosq'//calfa
          else
            write(out_unitp,*) 'ERROR in ',routine_name
            write(out_unitp,*) 'idq=', idq
@@ -465,6 +474,8 @@
            Fel%opname = 'sinqb'//calfa
          else if(idq == 8) then
            Fel%opname = 'sinqg'//calfa
+         else if(idq == 0) then
+           Fel%opname = 'sinq'//calfa
          else
            write(out_unitp,*) 'ERROR in ',routine_name
            write(out_unitp,*) 'idq=', idq
@@ -487,6 +498,8 @@
            Fel%opname = 'tanqb'//calfa
          else if(idq == 8) then
            Fel%opname = 'tanqg'//calfa
+         else if(idq == 0) then
+           Fel%opname = 'tanq'//calfa
          else
            write(out_unitp,*) 'ERROR in ',routine_name
            write(out_unitp,*) 'idq=', idq
@@ -509,6 +522,8 @@
            Fel%opname = 'cotqb'//calfa
          else if(idq == 8) then
            Fel%opname = 'cotqg'//calfa
+         else if(idq == 0) then
+           Fel%opname = 'cotq'//calfa
          else
            write(out_unitp,*) 'ERROR in ',routine_name
            write(out_unitp,*) 'idq=', idq
@@ -537,6 +552,8 @@
          Fel%opname = 'Pqr_r'//calfa
        else if(idq == -3) then
          Fel%opname = 'Pqu_u'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_q'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -554,6 +571,8 @@
          Fel%opname = 'r'//calfa//'_Pqr'
        else if(idq == -3) then
          Fel%opname = 'u'//calfa//'_Pqu'
+       else if(idq == 0) then
+         Fel%opname = 'q'//calfa//'_Pq'
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -569,6 +588,8 @@
          Fel%opname = 'Pqt_cosqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_cosqf'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_cosq'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -584,6 +605,8 @@
          Fel%opname = 'cosqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'cosqf'//calfa//'_Pqf'
+       else if(idq == 0) then
+         Fel%opname = 'cosq'//calfa//'_Pq'
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -599,6 +622,8 @@
          Fel%opname = 'Pqt_sinqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_sinqf'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_sinq'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -614,6 +639,8 @@
          Fel%opname = 'sinqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'sinqf'//calfa//'_Pqf'
+       else if(idq == 0) then
+         Fel%opname = 'sinq'//calfa//'_Pq'
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -629,6 +656,8 @@
          Fel%opname = 'Pqt_tanqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_tanqf'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_tanq'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -644,6 +673,8 @@
          Fel%opname = 'tanqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'tanqf'//calfa//'_Pqf'
+       else if(idq == 0) then
+         Fel%opname = 'tanq'//calfa//'_Pq'
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -659,6 +690,8 @@
          Fel%opname = 'Pqt_cotqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_cotqf'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_cotq'//calfa
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -674,6 +707,8 @@
          Fel%opname = 'cotqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'cotqf'//calfa//'_Pqf'
+       else if(idq == 0) then
+         Fel%opname = 'cotq'//calfa//'_Pq'
        else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -685,27 +720,30 @@
        end if
 
      case(22) 
-       if(idq /= -3) then
+       if(idq == -3) then
+         Fel%opname = 'Pqu_qus'//calfa
+       else if(idq == 0) then
+         Fel%opname = 'Pq_q'//calfa
+       else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
          write(out_unitp,*) 'idf=', idf
          write(out_unitp,*) "for idf = 22, idq should be: -3 (=u)"
          err_el_loc = 1
          !STOP
-       else
-         Fel%opname = 'Pqu_qus'//calfa
        end if 
 
      case(23) 
-       if(idq /= -3) then
+       if(idq == -3) then
+         Fel%opname = 'qus'//calfa//'_Pqu'
+       else if(idq == 0) then
+         Fel%opname = 'q'//calfa//'_Pq'
+       else
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
          write(out_unitp,*) 'idf=', idf
          write(out_unitp,*) "for idf = 23, idq should be: -3 (=u)"
          err_el_loc = 1
-
-       else
-         Fel%opname = 'qus'//calfa//'_Pqu'
        end if 
 
      case(24) 
@@ -734,6 +772,230 @@
 
  end subroutine get_opel
 
+ subroutine StringMCTDH_TO_opel(Fel, String, indexq, err_el)
+   type(opel),                   intent(inout)   :: Fel
+   character (len=*),            intent(in)      :: String
+   integer,                      intent(in)      :: indexq
+   integer, optional,            intent(inout)   :: err_el
+
+   integer          :: err_el_loc
+   integer          :: i_exp
+   real(kind=Rkind) :: r_exp
+
+   character (len=:), allocatable :: String_loc
+
+   logical, parameter :: debug = .FALSE.
+   !logical, parameter :: debug = .TRUE.
+   character (len = *), parameter :: routine_name = 'StringMCTDH_TO_opel'
+
+   err_el_loc = 0
+
+   Fel%idf      = -1
+   Fel%idq      = 0
+   Fel%alfa     = 0
+   Fel%indexq   = indexq
+   Fel%coeff    = CONE
+
+   ! find sin ..., dq, qs or q (q must be at the end)
+   String_loc = trim(adjustl(String))
+   CALL string_uppercase_TO_lowercase(String_loc)
+   IF (debug) write(out_unitp,*) 'String_loc: ',String_loc
+   flush(out_unitp)
+
+   IF (index(String_loc,'sin') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'sin'
+     Fel%idf    = 6
+   ELSE IF (index(String_loc,'cos') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'cos'
+     Fel%idf = 5
+   ELSE IF (index(String_loc,'tan') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'tan'
+     Fel%idf = 7
+   ELSE IF (index(String_loc,'cot') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'cot'
+     Fel%idf = 8
+   ELSE IF (index(String_loc,'qs') > 0) THEN
+     String_loc = String_loc(3:len(String_loc))
+     Fel%opname = 'qs'
+     Fel%idf = 3
+   ELSE IF (index(String_loc,'dq') > 0) THEN
+     String_loc = String_loc(3:len(String_loc))
+     Fel%opname = 'dq'
+     Fel%idf = 4
+
+   ELSE IF (index(String_loc,'q') > 0) THEN
+     String_loc = String_loc(2:len(String_loc))
+     Fel%opname = 'q'
+     Fel%idf = 2
+   ELSE
+     STOP 'other operateurs not yet'
+   END IF
+   IF (debug)  write(out_unitp,*) 'Fel%idf',Fel%idf
+   IF (debug)  write(out_unitp,*) 'String_loc: ',String_loc
+
+   IF (index(String_loc,'^') > 0) THEN ! we must be sure that ^ exist
+     ! the exponent MUST be just after the operator/function/q
+     IF (String_loc(1:1) /= '^') THEN
+       write(out_unitp,*) 'String_loc: ',String_loc
+       write(out_unitp,*) 'ERROR in StringMCTDH_TO_opel: wrong ^ position.'
+       STOP 'ERROR in StringMCTDH_TO_opel: wrong ^ position'
+     END IF
+
+     String_loc = String_loc(2:len(String_loc))
+     IF (debug)  write(out_unitp,*) 'String_loc: ',String_loc
+     read(String_loc,*,iostat=err_el_loc) i_exp
+     IF (err_el_loc /= 0) THEN
+       ! the exponent is not an integer => real ?
+       read(String_loc,*,iostat=err_el_loc) r_exp
+       IF (err_el_loc /= 0) THEN
+         write(out_unitp,*) 'String_loc: ',String_loc
+         write(out_unitp,*) 'ERROR in StringMCTDH_TO_opel while readind the exponent'
+         STOP 'ERROR in StringMCTDH_TO_opel while readind the exponent'
+       END IF
+       ! in this case the r_exp should be a half-integer: i/2
+       r_exp = r_exp*TWO
+       Fel%alfa = frac_t(NINT(r_exp),2)
+     ELSE
+       Fel%alfa     = i_exp
+     END IF
+   ELSE
+     Fel%alfa     = 1
+   END IF
+
+   IF (Fel%idf == 4) THEN ! test for dq = d./dq operator
+     ! MCTDH works with d./dq and in Tana P_q = -i hbar d./dq
+     Fel%coeff = (-EYE)**Fel%alfa%num ! Fel%alfa%den MUST be equal to 1
+   END IF
+
+
+   IF (debug) CALL write_opel(Fel,header=.TRUE.)
+
+
+   IF (present(err_el)) THEN
+     err_el = err_el_loc
+   ELSE
+     IF (err_el_loc /= 0) STOP 'ERROR in StringMCTDH_TO_opel'
+   END IF
+
+   deallocate(String_loc)
+
+ end subroutine StringMCTDH_TO_opel
+ subroutine StringMidas_TO_opel(Fel, String, indexq, err_el)
+   type(opel),                   intent(inout)   :: Fel
+   character (len=*),            intent(in)      :: String
+   integer,                      intent(in)      :: indexq
+   integer, optional,            intent(inout)   :: err_el
+
+   integer          :: err_el_loc
+   integer          :: i_exp
+   real(kind=Rkind) :: r_exp
+
+   character (len=:), allocatable :: String_loc
+
+   logical, parameter :: debug = .FALSE.
+   !logical, parameter :: debug = .TRUE.
+   character (len = *), parameter :: routine_name = 'StringMidas_TO_opel'
+
+   err_el_loc = 0
+
+   Fel%idf      = -1
+   Fel%idq      = 0
+   Fel%alfa     = 0
+   Fel%indexq   = indexq
+   Fel%coeff    = CONE
+
+   ! find sin ..., dq, qs or q (q must be at the end)
+   String_loc = trim(adjustl(String))
+   CALL string_uppercase_TO_lowercase(String_loc)
+   IF (debug) write(out_unitp,*) 'String_loc: ',String_loc
+   flush(out_unitp)
+
+   IF (index(String_loc,'sin') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'sin'
+     Fel%idf    = 6
+   ELSE IF (index(String_loc,'cos') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'cos'
+     Fel%idf = 5
+   ELSE IF (index(String_loc,'tan') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'tan'
+     Fel%idf = 7
+   ELSE IF (index(String_loc,'cot') > 0) THEN
+     String_loc = String_loc(4:len(String_loc))
+     Fel%opname = 'cot'
+     Fel%idf = 8
+   ELSE IF (index(String_loc,'qs') > 0) THEN
+     String_loc = String_loc(3:len(String_loc))
+     Fel%opname = 'qs'
+     Fel%idf = 3
+   ELSE IF (index(String_loc,'dq') > 0) THEN
+     String_loc = String_loc(3:len(String_loc))
+     Fel%opname = 'dq'
+     Fel%idf = 4
+
+   ELSE IF (index(String_loc,'q') > 0) THEN
+     String_loc = String_loc(2:len(String_loc))
+     Fel%opname = 'q'
+     Fel%idf = 2
+   ELSE
+     STOP 'other operateurs not yet'
+   END IF
+   IF (debug)  write(out_unitp,*) 'Fel%idf',Fel%idf
+   IF (debug)  write(out_unitp,*) 'String_loc: ',String_loc
+
+   IF (index(String_loc,'^') > 0) THEN ! we must be sure that ^ exist
+     ! the exponent MUST be just after the operator/function/q
+     IF (String_loc(1:1) /= '^') THEN
+       write(out_unitp,*) 'String_loc: ',String_loc
+       write(out_unitp,*) 'ERROR in StringMidas_TO_opel: wrong ^ position.'
+       STOP 'ERROR in StringMidas_TO_opel: wrong ^ position'
+     END IF
+
+     String_loc = String_loc(2:len(String_loc))
+     IF (debug)  write(out_unitp,*) 'String_loc: ',String_loc
+     read(String_loc,*,iostat=err_el_loc) i_exp
+     IF (err_el_loc /= 0) THEN
+       ! the exponent is not an integer => real ?
+       read(String_loc,*,iostat=err_el_loc) r_exp
+       IF (err_el_loc /= 0) THEN
+         write(out_unitp,*) 'String_loc: ',String_loc
+         write(out_unitp,*) 'ERROR in StringMidas_TO_opel while readind the exponent'
+         STOP 'ERROR in StringMidas_TO_opel while readind the exponent'
+       END IF
+       ! in this case the r_exp should be a half-integer: i/2
+       r_exp = r_exp*TWO
+       Fel%alfa = frac_t(NINT(r_exp),2)
+     ELSE
+       Fel%alfa     = i_exp
+     END IF
+   ELSE
+     Fel%alfa     = 1
+   END IF
+
+   IF (Fel%idf == 4) THEN ! test for dq = d./dq operator
+     ! MCTDH works with d./dq and in Tana P_q = -i hbar d./dq
+     Fel%coeff = (-EYE)**Fel%alfa%num ! Fel%alfa%den MUST be equal to 1
+   END IF
+
+
+   IF (debug) CALL write_opel(Fel,header=.TRUE.)
+
+
+   IF (present(err_el)) THEN
+     err_el = err_el_loc
+   ELSE
+     IF (err_el_loc /= 0) STOP 'ERROR in StringMidas_TO_opel'
+   END IF
+
+   deallocate(String_loc)
+
+ end subroutine StringMidas_TO_opel
  function set_opel(idf, idq, alfa, indexq, coeff, alfa_den, err_el)
    type(opel)                                    :: set_opel
    integer,                      intent(in)      :: idf
@@ -744,13 +1006,13 @@
    integer, optional,            intent(in)      :: alfa_den
    integer, optional,            intent(inout)   :: err_el
 
-   TYPE(FracInteger) :: alfa_loc
+   TYPE(Frac_t) :: alfa_loc
 
 
    IF (present(alfa_den)) THEN
-     alfa_loc = FracInteger(alfa,alfa_den)
+     alfa_loc = Frac_t(alfa,alfa_den)
    ELSE
-     alfa_loc = FracInteger(alfa,1)
+     alfa_loc = Frac_t(alfa,1)
    END IF
 
    IF (present(err_el)) THEN
@@ -762,11 +1024,11 @@
  end function set_opel
 
  subroutine Export_MCTDH_OpEl(Fel,FelName)
-   type(opel),          intent(inout)                   :: Fel
-
+   type(opel),                       intent(inout) :: Fel
    character (len = :), allocatable, intent(inout) :: FelName
 
-   character (len = :), allocatable     :: PName,SQName,QName
+   ! local variable
+   character (len = :), allocatable     :: PName,SQName,QName,FelName_loc
 
    character (len = *), parameter :: routine_name = 'Export_MCTDH_OpEl'
 
@@ -781,53 +1043,53 @@
 
    select case (Fel%idf)
      case(0) ! 0
-       FelName = String_TO_String('0')
+       FelName_loc = String_TO_String('0')
      case(1) ! Id
-       FelName = String_TO_String('1')
+       FelName_loc = String_TO_String('1')
 
      case(2) ! q^alfa
-       FelName  = Qnamealfa_MCTDH(Qname,Fel%alfa)
+       FelName_loc  = Qnamealfa_MCTDH(Qname,Fel%alfa)
 
      case(3) ! sqrt(1-Q^2)^alfa
-       !FelName = String_TO_String('\sqrt{1-' // FuncQName // '^2}' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
+       !FelName_loc = String_TO_String('\sqrt{1-' // FuncQName // '^2}' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
 
-       FelName  = Qnamealfa_MCTDH(SQname,Fel%alfa)
+       FelName_loc  = Qnamealfa_MCTDH(SQname,Fel%alfa)
 
      case(4) ! PQ^alfa
-       FelName  = Qnamealfa_MCTDH(PName,Fel%alfa)
+       FelName_loc  = Qnamealfa_MCTDH(PName,Fel%alfa)
        Fel%coeff = (-EYE)**Fel%alfa%num * Fel%coeff ! Fel%alfa%den MUST be equal to 1
 
      case(5) ! cos(Q)^alfa
-       FelName  = Qnamealfa_MCTDH('cos',Fel%alfa)
+       FelName_loc  = Qnamealfa_MCTDH('cos',Fel%alfa)
 
      case(6) ! sin(Q)^alfa
-       FelName = Qnamealfa_MCTDH('sin',Fel%alfa)
+       FelName_loc = Qnamealfa_MCTDH('sin',Fel%alfa)
 
      case(7) ! tan(Q)^alfa
-       FelName = Qnamealfa_MCTDH('tan',Fel%alfa)
+       FelName_loc = Qnamealfa_MCTDH('tan',Fel%alfa)
 
      case(8) ! cot(Q)^alfa
-       FelName = Qnamealfa_MCTDH('cot',Fel%alfa)
+       FelName_loc = Qnamealfa_MCTDH('cot',Fel%alfa)
 
      case(9) ! Jx
        IF (Fel%alfa == 1) THEN
-         FelName = String_TO_String('Jx')
+         FelName_loc = String_TO_String('Jx')
        ELSE ! no more than alfa=2
-         FelName = String_TO_String('Jx*Jx')
+         FelName_loc = String_TO_String('Jx*Jx')
        END IF
 
      case(10) ! Jy
        IF (Fel%alfa == 1) THEN
-         FelName = String_TO_String('Jy')
+         FelName_loc = String_TO_String('Jy')
          Fel%coeff = -EYE*Fel%coeff
 
        ELSE ! no more than alfa=2
-         FelName = String_TO_String('Jy*Jy')
+         FelName_loc = String_TO_String('Jy*Jy')
          Fel%coeff = -Fel%coeff
        END IF
      case(11) ! Jz  (because Jz .psi = k Psi
-       FelName  = Qnamealfa_MCTDH(Qname,Fel%alfa)
+       FelName_loc  = Qnamealfa_MCTDH(Qname,Fel%alfa)
 
      case default
            write(out_unitp,*) 'ERROR in ',routine_name
@@ -837,17 +1099,21 @@
            STOP
      end select
 
-     IF (allocated(QName))     deallocate(QName)
-     IF (allocated(PName))     deallocate(PName)
-     IF (allocated(SQName))    deallocate(SQName)
+     FelName = FelName_loc
+
+     IF (allocated(FelName_loc))  deallocate(FelName_loc)
+     IF (allocated(QName))        deallocate(QName)
+     IF (allocated(PName))        deallocate(PName)
+     IF (allocated(SQName))       deallocate(SQName)
 
  end subroutine Export_MCTDH_OpEl
 FUNCTION Qnamealfa_MCTDH(Qname,alfa)
-  character(len=:), allocatable     :: Qnamealfa_MCTDH
-  character(len=*), intent(in)      :: Qname
-  TYPE(FracInteger), intent(in)     :: alfa
-  real(kind=Rkind)                  :: ralfa
+  character(len=:),   allocatable                 :: Qnamealfa_MCTDH
+  character(len=*),               intent(in)      :: Qname
+  TYPE(Frac_t),                   intent(in)      :: alfa
 
+
+  real(kind=Rkind)                  :: ralfa
 
   IF (allocated(Qnamealfa_MCTDH)) deallocate(Qnamealfa_MCTDH)
 
@@ -864,19 +1130,21 @@ FUNCTION Qnamealfa_MCTDH(Qname,alfa)
 END FUNCTION Qnamealfa_MCTDH
 
  subroutine Export_Latex_OpEl(Fel,qname,FelName)
-   type(opel),          intent(in)                   :: Fel
-   character (len =*), intent(in)                    :: qname
-
+   type(opel),                       intent(in)    :: Fel
+   character (len =*),               intent(in)    :: qname
    character (len = :), allocatable, intent(inout) :: FelName
 
-   character (len = :), allocatable     :: PName,SQName
+
+   !local variables
+   character (len = :), allocatable     :: PName,SQName,FelName_loc
 
    character (len = *), parameter :: routine_name = 'Export_Latex_OpEl'
+
 
    IF (allocated(FelName)) deallocate(FelName)
 
 
-   FelName = String_TO_String('')
+   FelName_loc = String_TO_String('')
    !CALL write_op(Fel)
 
    PName     = String_TO_String('\hat{P}_{' // qname // '}')
@@ -884,107 +1152,107 @@ END FUNCTION Qnamealfa_MCTDH
 
    select case (Fel%idf)
      case(0) ! 0
-       FelName = String_TO_String('0')
+       FelName_loc = String_TO_String('0')
      case(1) ! Id
-       FelName = String_TO_String('1')
+       FelName_loc = String_TO_String('1')
 
      case(2) ! q^alfa
-       FelName  = Qnamealfa_Latex(Qname,Fel%alfa)
+       FelName_loc  = Qnamealfa_Latex(Qname,Fel%alfa)
 
      case(3) ! sqrt(1-Q^2)^alfa
-       !FelName = String_TO_String('\sqrt{1-' // FuncQName // '^2}' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
+       !FelName_loc = String_TO_String('\sqrt{1-' // FuncQName // '^2}' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
 
-       FelName  = Qnamealfa_Latex(SQname,Fel%alfa)
+       FelName_loc  = Qnamealfa_Latex(SQname,Fel%alfa)
 
      case(4) ! PQ^alfa
-       FelName  = Qnamealfa_Latex(PName,Fel%alfa)
+       FelName_loc  = Qnamealfa_Latex(PName,Fel%alfa)
 
      case(5) ! cos(Q)^alfa
-       FelName  = fnamealfa_Latex('\cos',Qname,Fel%alfa)
+       FelName_loc  = fnamealfa_Latex('\cos',Qname,Fel%alfa)
 
      case(6) ! sin(Q)^alfa
-       FelName = fnamealfa_Latex('\sin',Qname,Fel%alfa)
+       FelName_loc = fnamealfa_Latex('\sin',Qname,Fel%alfa)
 
      case(7) ! tan(Q)^alfa
-       FelName = fnamealfa_Latex('\tan',Qname,Fel%alfa)
+       FelName_loc = fnamealfa_Latex('\tan',Qname,Fel%alfa)
 
      case(8) ! cot(Q)^alfa
-       FelName = fnamealfa_Latex('\cot',Qname,Fel%alfa)
+       FelName_loc = fnamealfa_Latex('\cot',Qname,Fel%alfa)
 
      case(9) ! Jx
-       FelName = Qnamealfa_Latex('\hat{J}_x',Fel%alfa)
+       FelName_loc = Qnamealfa_Latex('\hat{J}_x',Fel%alfa)
 
-       !FelName = String_TO_String('\hat{J}_x')
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
+       !FelName_loc = String_TO_String('\hat{J}_x')
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
      case(10) ! Jy
-       FelName = Qnamealfa_Latex('\hat{J}_y',Fel%alfa)
+       FelName_loc = Qnamealfa_Latex('\hat{J}_y',Fel%alfa)
 
      case(11) ! Jz
-       FelName = Qnamealfa_Latex('\hat{J}_z',Fel%alfa)
+       FelName_loc = Qnamealfa_Latex('\hat{J}_z',Fel%alfa)
 
      case(12) ! PQ Q^alfa
-       FelName = Qnamealfa_Latex(Qname,Fel%alfa)
-       FelName = String_TO_String(PName // FelName)
+       FelName_loc = Qnamealfa_Latex(Qname,Fel%alfa)
+       FelName_loc = String_TO_String(PName // FelName_loc)
 
      case(13) ! Q^alfa PQ
-       FelName = Qnamealfa_Latex(Qname,Fel%alfa)
-       FelName = String_TO_String(FelName // PName)
+       FelName_loc = Qnamealfa_Latex(Qname,Fel%alfa)
+       FelName_loc = String_TO_String(FelName_loc // PName)
 
      case(14) ! PQ cos(Q)^alfa
-       FelName = fnamealfa_Latex('\cos',Qname,Fel%alfa)
-       FelName = String_TO_String(PName // FelName)
+       FelName_loc = fnamealfa_Latex('\cos',Qname,Fel%alfa)
+       FelName_loc = String_TO_String(PName // FelName_loc)
 
      case(15) ! cos(Q)^alfa PQ
-       FelName = fnamealfa_Latex('\cos',Qname,Fel%alfa)
-       FelName = String_TO_String(FelName // PName)
+       FelName_loc = fnamealfa_Latex('\cos',Qname,Fel%alfa)
+       FelName_loc = String_TO_String(FelName_loc // PName)
 
      case(16)  ! PQ sin(Q)^alfa
-       FelName = fnamealfa_Latex('\sin',Qname,Fel%alfa)
-       FelName = String_TO_String(PName // FelName)
+       FelName_loc = fnamealfa_Latex('\sin',Qname,Fel%alfa)
+       FelName_loc = String_TO_String(PName // FelName_loc)
 
      case(17) ! sin(Q)^alfa PQ
-       FelName = fnamealfa_Latex('\sin',Qname,Fel%alfa)
-       FelName = String_TO_String(FelName // PName)
+       FelName_loc = fnamealfa_Latex('\sin',Qname,Fel%alfa)
+       FelName_loc = String_TO_String(FelName_loc // PName)
 
      case(18)   ! PQ tan(Q)^alfa
-       FelName = fnamealfa_Latex('\tan',Qname,Fel%alfa)
-       FelName = String_TO_String(PName // FelName)
+       FelName_loc = fnamealfa_Latex('\tan',Qname,Fel%alfa)
+       FelName_loc = String_TO_String(PName // FelName_loc)
 
 
      case(19) ! tan(Q)^alfa PQ
-       FelName  = fnamealfa_Latex('\tan',Qname,Fel%alfa)
-       FelName = String_TO_String(FelName // PName)
+       FelName_loc  = fnamealfa_Latex('\tan',Qname,Fel%alfa)
+       FelName_loc = String_TO_String(FelName_loc // PName)
 
      case(20)   ! PQ cot(Q)^alfa
-      FelName  = fnamealfa_Latex('\cot',Qname,Fel%alfa)
-       FelName = String_TO_String(PName // FelName)
+      FelName_loc  = fnamealfa_Latex('\cot',Qname,Fel%alfa)
+       FelName_loc = String_TO_String(PName // FelName_loc)
 
      case(21)  ! cot(Q)^alfa PQ
-       FelName  = fnamealfa_Latex('\cot',Qname,Fel%alfa)
-       FelName = String_TO_String(FelName // PName)
+       FelName_loc  = fnamealfa_Latex('\cot',Qname,Fel%alfa)
+       FelName_loc = String_TO_String(FelName_loc // PName)
 
      case(22)   ! PQ sqrt(1-Q^2)^alfa = PQ sQ^alfa
-       !FelName = String_TO_String(PName // '\sqrt{1-' // FuncQName // '^2}' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
+       !FelName_loc = String_TO_String(PName // '\sqrt{1-' // FuncQName // '^2}' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
 
-       FelName = Qnamealfa_Latex(SQname,Fel%alfa)
-       FelName = String_TO_String(PName // FelName)
+       FelName_loc = Qnamealfa_Latex(SQname,Fel%alfa)
+       FelName_loc = String_TO_String(PName // FelName_loc)
 
      case(23) ! sqrt(1-Q^2)^alfa PQ
-       !FelName = String_TO_String('\sqrt{1-' // FuncQName // '^2}' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       !FelName = String_TO_String(FelName // PName)
+       !FelName_loc = String_TO_String('\sqrt{1-' // FuncQName // '^2}' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       !FelName_loc = String_TO_String(FelName_loc // PName)
 
-       FelName = Qnamealfa_Latex(SQname,Fel%alfa)
-       FelName = String_TO_String(FelName // PName)
+       FelName_loc = Qnamealfa_Latex(SQname,Fel%alfa)
+       FelName_loc = String_TO_String(FelName_loc // PName)
 
      case(24) ! Lx
-       FelName = String_TO_String('\hat{L}_x')
+       FelName_loc = String_TO_String('\hat{L}_x')
      case(25) ! Ly
-       FelName = String_TO_String('\hat{L}_y')
+       FelName_loc = String_TO_String('\hat{L}_y')
      case(26) ! Lz
-       FelName = String_TO_String('\hat{L}_z')
+       FelName_loc = String_TO_String('\hat{L}_z')
 
      case default
            write(out_unitp,*) 'ERROR in ',routine_name
@@ -993,18 +1261,20 @@ END FUNCTION Qnamealfa_MCTDH
            write(out_unitp,*) "   illegal value of idf . (Internal Bug)"
            STOP
      end select
+     FelName = FelName_loc
 
-     IF (allocated(PName))     deallocate(PName)
-     IF (allocated(SQName))    deallocate(SQName)
+     IF (allocated(FelName_loc))  deallocate(FelName_loc)
+     IF (allocated(PName))        deallocate(PName)
+     IF (allocated(SQName))       deallocate(SQName)
 
  end subroutine Export_Latex_OpEl
 FUNCTION fnamealfa_Latex(fname,Qname,alfa)
   character(len=:), allocatable     :: fnamealfa_Latex
   character(len=*), intent(in)      :: fname,Qname
-  TYPE(FracInteger), intent(in)     :: alfa
+  TYPE(Frac_t),     intent(in)      :: alfa
 
   character(len=:), allocatable     :: fnamealfa_loc
-  TYPE(FracInteger)                 :: alfa_loc
+  TYPE(Frac_t)                 :: alfa_loc
 
 
   IF (allocated(fnamealfa_loc)) deallocate(fnamealfa_loc)
@@ -1014,7 +1284,7 @@ FUNCTION fnamealfa_Latex(fname,Qname,alfa)
     alfa_loc = alfa
   ELSE
     fnamealfa_loc = String_TO_String( "\frac{1}{" // fname)
-    alfa_loc = FracInteger(-alfa%num,alfa%den)
+    alfa_loc = Frac_t(-alfa%num,alfa%den)
   END IF
 
   IF (alfa /= 0) THEN
@@ -1036,10 +1306,10 @@ END FUNCTION fnamealfa_Latex
 FUNCTION Qnamealfa_Latex(Qname,alfa)
   character(len=:), allocatable     :: Qnamealfa_Latex
   character(len=*), intent(in)      :: Qname
-  TYPE(FracInteger),intent(in)      :: alfa
+  TYPE(Frac_t),     intent(in)      :: alfa
   character(len=:), allocatable     :: Qnamealfa_loc
 
-  TYPE(FracInteger)                 :: alfa_loc
+  TYPE(Frac_t)                 :: alfa_loc
 
   IF (allocated(Qnamealfa_Latex)) deallocate(Qnamealfa_Latex)
 
@@ -1048,7 +1318,7 @@ FUNCTION Qnamealfa_Latex(Qname,alfa)
     alfa_loc = alfa
   ELSE
     Qnamealfa_loc = String_TO_String( "\frac{1}{" // "{" // Qname // "}")
-    alfa_loc = FracInteger(-alfa%num,alfa%den)
+    alfa_loc = Frac_t(-alfa%num,alfa%den)
   END IF
 
   IF (alfa /= 0) THEN
@@ -1065,20 +1335,30 @@ FUNCTION Qnamealfa_Latex(Qname,alfa)
 
 END FUNCTION Qnamealfa_Latex
  subroutine Export_Midas_OpEl(Fel, Qname, FelName)
-   type(opel),          intent(in)                    :: Fel
-   character (len =*),  intent(in)                    :: Qname
-
+   type(opel),                       intent(in)       :: Fel
+   character (len =*),               intent(in)       :: Qname
    character (len = :), allocatable, intent(inout)    :: FelName
 
-   character (len = :), allocatable                   :: PName, SQName, FuncQName
+
+   ! local variables
+   character (len = :), allocatable                   :: PName, SQName, FuncQName,FelName_loc
    character (len = Name_len)                         :: calfa
 
    character (len = *), parameter                     :: routine_name = 'Export_Midas_OpEl'
 
    IF (allocated(FelName)) deallocate(FelName)
 
-   FelName = String_TO_String('')
+   FelName_loc = String_TO_String('')
    !CALL write_op(Fel)
+
+   !DML test if we have half integer
+   IF ( .NOT. frac_IS_integer(Fel%alfa)) THEN
+     calfa = '^(' // frac_TO_string(Fel%alfa) // ')'
+     write(out_unitp,*) 'ERROR in ',routine_name
+     write(out_unitp,*) 'Fel%alfa=',calfa
+     write(out_unitp,*) " MidasCpp is not working with half-integers"
+     STOP " MidasCpp is not working with half-integers"
+   END IF
 
    !Emil change
    calfa = '^' // frac_TO_string(Fel%alfa)
@@ -1089,150 +1369,150 @@ END FUNCTION Qnamealfa_Latex
 
    select case (Fel%idf)
      case(0) ! 0
-       FelName = String_TO_String('0')
+       FelName_loc = String_TO_String('0')
      case(1) ! Id
-       FelName = String_TO_String('1')
+       FelName_loc = String_TO_String('1')
 
      !Emil change:
      case(2) ! q^alfa
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String('(' // FuncQName // ')' // trim(calfa))
+         FelName_loc = String_TO_String('(' // FuncQName // ')' // trim(calfa))
        ELSE
-         FelName = String_TO_String('(' // QName // ')')
+         FelName_loc = String_TO_String('(' // QName // ')')
        END IF
 
      case(3) ! sqrt(1-Q^2)^alfa
-       !FelName = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
+       !FelName_loc = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
 
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String('(' // SQName // ')')
-         FelName = String_TO_String(FelName // trim(calfa))
+         FelName_loc = String_TO_String('(' // SQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // trim(calfa))
        ELSE
-         FelName = String_TO_String(SQName)
+         FelName_loc = String_TO_String(SQName)
        END IF
 
 
      case(4) ! PQ^alfa
-       FelName = String_TO_String(PName)
-       FelName = String_TO_String(FelName // trim(calfa))
+       FelName_loc = String_TO_String(PName)
+       FelName_loc = String_TO_String(FelName_loc // trim(calfa))
 
      !Emil change:
      case(5) ! cos(Q)^alfa
-       FelName = String_TO_String('COS')
+       FelName_loc = String_TO_String('COS')
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String(FelName // '(' // FuncQName // ')' // trim(calfa))
+         FelName_loc = String_TO_String(FelName_loc // '(' // FuncQName // ')' // trim(calfa))
        ELSE
-         FelName = String_TO_String(FelName // '(' // FuncQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // '(' // FuncQName // ')')
        END IF
 
      !Emil change:
      case(6) ! sin(Q)^alfa
-       FelName = String_TO_String('SIN')
+       FelName_loc = String_TO_String('SIN')
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String(FelName // '(' // FuncQName // ')' // trim(calfa))
+         FelName_loc = String_TO_String(FelName_loc // '(' // FuncQName // ')' // trim(calfa))
        ELSE
-         FelName = String_TO_String(FelName // '(' // FuncQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // '(' // FuncQName // ')')
        END IF
 
      case(7) ! tan(Q)^alfa
-       FelName = String_TO_String('tan')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // '(' // FuncQName // ')')
+       FelName_loc = String_TO_String('tan')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       FelName_loc = String_TO_String(FelName_loc // '(' // FuncQName // ')')
 
      case(8) ! cot(Q)^alfa
-       FelName = String_TO_String('cot')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // '(' // FuncQName // ')')
+       FelName_loc = String_TO_String('cot')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       FelName_loc = String_TO_String(FelName_loc // '(' // FuncQName // ')')
 
      case(9) ! Jx
-       FelName = String_TO_String('Jx')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
+       FelName_loc = String_TO_String('Jx')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
      case(10) ! Jy
-       FelName = String_TO_String('Jy')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
+       FelName_loc = String_TO_String('Jy')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
      case(11) ! Jz
-       FelName = String_TO_String('Jz')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
+       FelName_loc = String_TO_String('Jz')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
 
      case(12) ! PQ Q^alfa
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String(PName // FuncQName // trim(calfa))
+         FelName_loc = String_TO_String(PName // FuncQName // trim(calfa))
        ELSE
-         FelName = String_TO_String(PName // QName )
+         FelName_loc = String_TO_String(PName // QName )
        END IF
 
      case(13) ! Q^alfa PQ
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String(FuncQName // trim(calfa) // PName)
+         FelName_loc = String_TO_String(FuncQName // trim(calfa) // PName)
        ELSE
-         FelName = String_TO_String(QName // PName)
+         FelName_loc = String_TO_String(QName // PName)
        END IF
 
      case(14) ! PQ cos(Q)^alfa
-       FelName = String_TO_String(PName // 'cos')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String(PName // 'cos')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(15) ! cos(Q)^alfa PQ
-       FelName = String_TO_String('cos')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // FuncQName // PName)
+       FelName_loc = String_TO_String('cos')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       FelName_loc = String_TO_String(FelName_loc // FuncQName // PName)
 
      case(16)  ! PQ sin(Q)^alfa
-       FelName = String_TO_String(PName // 'sin')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String(PName // 'sin')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(17) ! sin(Q)^alfa PQ
-       FelName = String_TO_String('sin')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // FuncQName // PName)
+       FelName_loc = String_TO_String('sin')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       FelName_loc = String_TO_String(FelName_loc // FuncQName // PName)
 
      case(18)   ! PQ tan(Q)^alfa
-       FelName = String_TO_String(PName // 'tan')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String(PName // 'tan')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(19) ! tan(Q)^alfa PQ
-       FelName = String_TO_String('tan')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // FuncQName // PName)
+       FelName_loc = String_TO_String('tan')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       FelName_loc = String_TO_String(FelName_loc // FuncQName // PName)
 
      case(20)   ! PQ cot(Q)^alfa
-       FelName = String_TO_String(PName // 'cot')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String(PName // 'cot')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(21)  ! cot(Q)^alfa PQ
-       FelName = String_TO_String('cot')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       FelName = String_TO_String(FelName // FuncQName // PName)
+       FelName_loc = String_TO_String('cot')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       FelName_loc = String_TO_String(FelName_loc // FuncQName // PName)
 
      case(22)   ! PQ sqrt(1-Q^2)^alfa
-       !FelName = String_TO_String(PName // 'sqrt(1-' // FuncQName // '^2)' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
+       !FelName_loc = String_TO_String(PName // 'sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
 
-       FelName = String_TO_String(PName)
+       FelName_loc = String_TO_String(PName)
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String(FelName // '(' // SQName // ')')
-         FelName = String_TO_String(FelName // trim(calfa))
+         FelName_loc = String_TO_String(FelName_loc // '(' // SQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // trim(calfa))
        ELSE
-         FelName = String_TO_String(FelName // SQName)
+         FelName_loc = String_TO_String(FelName_loc // SQName)
        END IF
 
      case(23) ! sqrt(1-Q^2)^alfa PQ
-       !FelName = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       !FelName = String_TO_String(FelName // PName)
+       !FelName_loc = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       !FelName_loc = String_TO_String(FelName_loc // PName)
 
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String('(' // SQName // ')')
-         FelName = String_TO_String(FelName // trim(calfa))
+         FelName_loc = String_TO_String('(' // SQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // trim(calfa))
        ELSE
-         FelName = String_TO_String(SQName)
+         FelName_loc = String_TO_String(SQName)
        END IF
-       FelName = String_TO_String(FelName // PName)
+       FelName_loc = String_TO_String(FelName_loc // PName)
 
 
      case default
@@ -1243,28 +1523,30 @@ END FUNCTION Qnamealfa_Latex
            STOP
      end select
 
+     FelName = FelName_loc
 
-     IF (allocated(PName))     deallocate(PName)
-     IF (allocated(SQName))    deallocate(SQName)
-     IF (allocated(FuncQName)) deallocate(FuncQName)
+     IF (allocated(FelName_loc))  deallocate(FelName_loc)
+     IF (allocated(PName))        deallocate(PName)
+     IF (allocated(SQName))       deallocate(SQName)
+     IF (allocated(FuncQName))    deallocate(FuncQName)
 
 
  end subroutine Export_Midas_OpEl
 
  subroutine Export_Midas_OpEl_new(Fel, Qname, FelName)
-   type(opel),          intent(in)                    :: Fel
-   character (len =*),  intent(in)                    :: Qname
-
+   type(opel),                       intent(in)       :: Fel
+   character (len =*),               intent(in)       :: Qname
    character (len = :), allocatable, intent(inout)    :: FelName
 
-   character (len = :), allocatable                   :: PName, SQName, FuncQName
+   ! local variables
+   character (len = :), allocatable                   :: PName, SQName, FuncQName,FelName_loc
    character (len = Name_len)                         :: calfa
 
    character (len = *), parameter                     :: routine_name = 'Export_Midas_OpEl'
 
    IF (allocated(FelName)) deallocate(FelName)
 
-   FelName = String_TO_String('')
+   FelName_loc = String_TO_String('')
    !CALL write_op(Fel)
 
 !Emil and DML change
@@ -1289,100 +1571,100 @@ END FUNCTION Qnamealfa_Latex
 
    select case (Fel%idf)
      case(0) ! 0
-       FelName = String_TO_String('0')
+       FelName_loc = String_TO_String('0')
      case(1) ! Id
-       FelName = String_TO_String('1')
+       FelName_loc = String_TO_String('1')
 
 !Emil change:
      case(2) ! q^alfa
-       FelName = String_TO_String('(' // FuncQName // ')' // trim(calfa))
+       FelName_loc = String_TO_String('(' // FuncQName // ')' // trim(calfa))
 
      case(3) ! sqrt(1-Q^2)^alfa
-       !FelName = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
+       !FelName_loc = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
 
        !???????????? DML
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String('(' // SQName // ')')
-         FelName = String_TO_String(FelName // trim(calfa))
+         FelName_loc = String_TO_String('(' // SQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // trim(calfa))
        ELSE
-         FelName = String_TO_String(SQName)
+         FelName_loc = String_TO_String(SQName)
        END IF
 
 
      case(4) ! PQ^alfa
-       FelName = String_TO_String(PName // trim(calfa))
+       FelName_loc = String_TO_String(PName // trim(calfa))
 
      !Emil change:
      case(5) ! cos(Q)^alfa
-       FelName = String_TO_String('COS(' // FuncQName // ')' // trim(calfa))
+       FelName_loc = String_TO_String('COS(' // FuncQName // ')' // trim(calfa))
 
      !Emil change:
      case(6) ! sin(Q)^alfa
-       FelName = String_TO_String('SIN(' // FuncQName // ')' // trim(calfa))
+       FelName_loc = String_TO_String('SIN(' // FuncQName // ')' // trim(calfa))
 
      case(7) ! tan(Q)^alfa
-       FelName = String_TO_String('TAN(' // FuncQName // ')' // trim(calfa))
+       FelName_loc = String_TO_String('TAN(' // FuncQName // ')' // trim(calfa))
 
      case(8) ! cot(Q)^alfa
-       FelName = String_TO_String('COT(' // FuncQName // ')' // trim(calfa))
+       FelName_loc = String_TO_String('COT(' // FuncQName // ')' // trim(calfa))
 
      case(9) ! Jx
-       FelName = String_TO_String('Jx' // trim(calfa))
+       FelName_loc = String_TO_String('Jx' // trim(calfa))
      case(10) ! Jy
-       FelName = String_TO_String('Jy' // trim(calfa))
+       FelName_loc = String_TO_String('Jy' // trim(calfa))
      case(11) ! Jz
-       FelName = String_TO_String('Jz' // trim(calfa))
+       FelName_loc = String_TO_String('Jz' // trim(calfa))
 
      case(12) ! PQ Q^alfa
-       FelName = String_TO_String(PName // '(' // FuncQName // ')' // trim(calfa))
+       FelName_loc = String_TO_String(PName // '(' // FuncQName // ')' // trim(calfa))
      case(13) ! Q^alfa PQ
-       FelName = String_TO_String('(' // FuncQName // ')' // trim(calfa) // PName)
+       FelName_loc = String_TO_String('(' // FuncQName // ')' // trim(calfa) // PName)
 
      case(14) ! PQ cos(Q)^alfa
-       FelName = String_TO_String(PName // 'COS(' // FuncQName // ')' // trim(calfa))
+       FelName_loc = String_TO_String(PName // 'COS(' // FuncQName // ')' // trim(calfa))
      case(15) ! cos(Q)^alfa PQ
-       FelName = String_TO_String('COS(' // FuncQName // ')' // trim(calfa) // PName)
+       FelName_loc = String_TO_String('COS(' // FuncQName // ')' // trim(calfa) // PName)
 
      case(16)  ! PQ sin(Q)^alfa
-       FelName = String_TO_String(PName // 'SIN(' // FuncQName // ')' // trim(calfa))
+       FelName_loc = String_TO_String(PName // 'SIN(' // FuncQName // ')' // trim(calfa))
      case(17) ! sin(Q)^alfa PQ
-       FelName = String_TO_String('SIN(' // FuncQName // ')' // trim(calfa) // PName)
+       FelName_loc = String_TO_String('SIN(' // FuncQName // ')' // trim(calfa) // PName)
 
      case(18)   ! PQ tan(Q)^alfa
-       FelName = String_TO_String(PName // 'TAN(' // FuncQName // ')' // trim(calfa))
+       FelName_loc = String_TO_String(PName // 'TAN(' // FuncQName // ')' // trim(calfa))
      case(19) ! tan(Q)^alfa PQ
-       FelName = String_TO_String('TAN(' // FuncQName // ')' // trim(calfa) // PName)
+       FelName_loc = String_TO_String('TAN(' // FuncQName // ')' // trim(calfa) // PName)
 
      case(20)   ! PQ cot(Q)^alfa
-       FelName = String_TO_String(PName // 'COT(' // FuncQName // ')' // trim(calfa))
+       FelName_loc = String_TO_String(PName // 'COT(' // FuncQName // ')' // trim(calfa))
      case(21)  ! cot(Q)^alfa PQ
-       FelName = String_TO_String('COT(' // FuncQName // ')' // trim(calfa) // PName)
+       FelName_loc = String_TO_String('COT(' // FuncQName // ')' // trim(calfa) // PName)
 
      case(22)   ! PQ sqrt(1-Q^2)^alfa
-       !FelName = String_TO_String(PName // 'sqrt(1-' // FuncQName // '^2)' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
+       !FelName_loc = String_TO_String(PName // 'sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
 
-       FelName = String_TO_String(PName)
+       FelName_loc = String_TO_String(PName)
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String(FelName // '(' // SQName // ')')
-         FelName = String_TO_String(FelName // trim(calfa))
+         FelName_loc = String_TO_String(FelName_loc // '(' // SQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // trim(calfa))
        ELSE
-         FelName = String_TO_String(FelName // SQName)
+         FelName_loc = String_TO_String(FelName_loc // SQName)
        END IF
 
      case(23) ! sqrt(1-Q^2)^alfa PQ
-       !FelName = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // trim(calfa))
-       !FelName = String_TO_String(FelName // PName)
+       !FelName_loc = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // trim(calfa))
+       !FelName_loc = String_TO_String(FelName_loc // PName)
 
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String('(' // SQName // ')' // trim(calfa))
-         FelName = String_TO_String(FelName // trim(calfa))
+         FelName_loc = String_TO_String('(' // SQName // ')' // trim(calfa))
+         FelName_loc = String_TO_String(FelName_loc // trim(calfa))
        ELSE
-         FelName = String_TO_String(SQName)
+         FelName_loc = String_TO_String(SQName)
        END IF
-       FelName = String_TO_String(FelName // PName)
+       FelName_loc = String_TO_String(FelName_loc // PName)
 
 
      case default
@@ -1393,21 +1675,23 @@ END FUNCTION Qnamealfa_Latex
        STOP
      end select
 
+     FelName = FelName_loc
 
-     IF (allocated(PName))     deallocate(PName)
-     IF (allocated(SQName))    deallocate(SQName)
-     IF (allocated(FuncQName)) deallocate(FuncQName)
+     IF (allocated(FelName_loc))  deallocate(FelName_loc)
+     IF (allocated(PName))        deallocate(PName)
+     IF (allocated(SQName))       deallocate(SQName)
+     IF (allocated(FuncQName))    deallocate(FuncQName)
 
 
  end subroutine Export_Midas_OpEl_new
 
  subroutine Export_VSCF_OpEl(Fel,qname,FelName)
-   type(opel),          intent(in)                   :: Fel
-   character (len =*), intent(in)                    :: qname
-
+   type(opel),                       intent(in)    :: Fel
+   character (len =*),               intent(in)    :: qname
    character (len = :), allocatable, intent(inout) :: FelName
 
-   character (len = :), allocatable     :: PName,SQName,FuncQName
+   ! local variable
+   character (len = :), allocatable     :: PName,SQName,FuncQName,FelName_loc
    character (len = :), allocatable     :: calfa
 
    character (len = *), parameter :: routine_name = 'Export_VSCF_OpEl'
@@ -1415,7 +1699,7 @@ END FUNCTION Qnamealfa_Latex
    IF (allocated(FelName)) deallocate(FelName)
 
 
-   FelName = String_TO_String('')
+   FelName_loc = ''
    !CALL write_op(Fel)
 
    calfa        = String_TO_String( '^(' // frac_TO_string(Fel%alfa) // ')' )
@@ -1425,148 +1709,148 @@ END FUNCTION Qnamealfa_Latex
 
    select case (Fel%idf)
      case(0) ! 0
-       FelName = String_TO_String('0')
+       FelName_loc = String_TO_String('0')
      case(1) ! Id
-       FelName = String_TO_String('1')
+       FelName_loc = String_TO_String('1')
 
      case(2) ! q^alfa
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String(FuncQName // calfa)
+         FelName_loc = String_TO_String(FuncQName // calfa)
        ELSE
-         FelName = String_TO_String(QName)
+         FelName_loc = String_TO_String(QName)
        END IF
 
      case(3) ! sqrt(1-Q^2)^alfa
-       !FelName = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
+       !FelName_loc = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
 
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String('(' // SQName // ')')
-         FelName = String_TO_String(FelName // calfa)
+         FelName_loc = String_TO_String('(' // SQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // calfa)
        ELSE
-         FelName = String_TO_String(SQName)
+         FelName_loc = String_TO_String(SQName)
        END IF
 
 
      case(4) ! PQ^alfa
-       FelName = String_TO_String(PName)
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
+       FelName_loc = String_TO_String(PName)
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
 
      case(5) ! cos(Q)^alfa
-       FelName = String_TO_String('cos')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String('cos')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(6) ! sin(Q)^alfa
-       FelName = String_TO_String('sin')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String('sin')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(7) ! tan(Q)^alfa
-       FelName = String_TO_String('tan')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String('tan')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(8) ! cot(Q)^alfa
-       FelName = String_TO_String('cot')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String('cot')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(9) ! Jx
-       FelName = String_TO_String('Jx')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
+       FelName_loc = String_TO_String('Jx')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
      case(10) ! Jy
-       FelName = String_TO_String('Jy')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
+       FelName_loc = String_TO_String('Jy')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
      case(11) ! Jz
-       FelName = String_TO_String('Jz')
-        IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
+       FelName_loc = String_TO_String('Jz')
+        IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
 
      case(12) ! PQ Q^alfa
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String(PName // FuncQName // calfa)
+         FelName_loc = String_TO_String(PName // FuncQName // calfa)
        ELSE
-         FelName = String_TO_String(PName // QName )
+         FelName_loc = String_TO_String(PName // QName )
        END IF
 
      case(13) ! Q^alfa PQ
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String(FuncQName // calfa // PName)
+         FelName_loc = String_TO_String(FuncQName // calfa // PName)
        ELSE
-         FelName = String_TO_String(QName // PName)
+         FelName_loc = String_TO_String(QName // PName)
        END IF
 
      case(14) ! PQ cos(Q)^alfa
-       FelName = String_TO_String(PName // 'cos')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String(PName // 'cos')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(15) ! cos(Q)^alfa PQ
-       FelName = String_TO_String('cos')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName // PName)
+       FelName_loc = String_TO_String('cos')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName // PName)
 
      case(16)  ! PQ sin(Q)^alfa
-       FelName = String_TO_String(PName // 'sin')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String(PName // 'sin')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(17) ! sin(Q)^alfa PQ
-       FelName = String_TO_String('sin')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName // PName)
+       FelName_loc = String_TO_String('sin')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName // PName)
 
      case(18)   ! PQ tan(Q)^alfa
-       FelName = String_TO_String(PName // 'tan')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String(PName // 'tan')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(19) ! tan(Q)^alfa PQ
-       FelName = String_TO_String('tan')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName // PName)
+       FelName_loc = String_TO_String('tan')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName // PName)
 
      case(20)   ! PQ cot(Q)^alfa
-       FelName = String_TO_String(PName // 'cot')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName)
+       FelName_loc = String_TO_String(PName // 'cot')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
 
      case(21)  ! cot(Q)^alfa PQ
-       FelName = String_TO_String('cot')
-       IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       FelName = String_TO_String(FelName // FuncQName // PName)
+       FelName_loc = String_TO_String('cot')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName // PName)
 
      case(22)   ! PQ sqrt(1-Q^2)^alfa
-       !FelName = String_TO_String(PName // 'sqrt(1-' // FuncQName // '^2)' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
+       !FelName_loc = String_TO_String(PName // 'sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
 
-       FelName = String_TO_String(PName)
+       FelName_loc = String_TO_String(PName)
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String(FelName // '(' // SQName // ')')
-         FelName = String_TO_String(FelName // calfa)
+         FelName_loc = String_TO_String(FelName_loc // '(' // SQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // calfa)
        ELSE
-         FelName = String_TO_String(FelName // SQName)
+         FelName_loc = String_TO_String(FelName_loc // SQName)
        END IF
 
      case(23) ! sqrt(1-Q^2)^alfa PQ
-       !FelName = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
-       !IF (Fel%alfa /= 1) FelName = String_TO_String(FelName // calfa)
-       !FelName = String_TO_String(FelName // PName)
+       !FelName_loc = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       !FelName_loc = String_TO_String(FelName_loc // PName)
 
        IF (Fel%alfa /= 1) THEN
-         FelName = String_TO_String('(' // SQName // ')')
-         FelName = String_TO_String(FelName // calfa)
+         FelName_loc = String_TO_String('(' // SQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // calfa)
        ELSE
-         FelName = String_TO_String(SQName)
+         FelName_loc = String_TO_String(SQName)
        END IF
-       FelName = String_TO_String(FelName // PName)
+       FelName_loc = String_TO_String(FelName_loc // PName)
 
      case(24) ! Lx
-       FelName = String_TO_String('Lx')
+       FelName_loc = String_TO_String('Lx')
      case(25) ! Ly
-       FelName = String_TO_String('Ly')
+       FelName_loc = String_TO_String('Ly')
      case(26) ! Lz
-       FelName = String_TO_String('Lz')
+       FelName_loc = String_TO_String('Lz')
 
      case default
            write(out_unitp,*) 'ERROR in ',routine_name
@@ -1575,11 +1859,13 @@ END FUNCTION Qnamealfa_Latex
            write(out_unitp,*) "   illegal value of idf . (Internal Bug)"
            STOP
      end select
+     FelName = FelName_loc
 
-     IF (allocated(calfa))     deallocate(calfa)
-     IF (allocated(PName))     deallocate(PName)
-     IF (allocated(SQName))    deallocate(SQName)
-     IF (allocated(FuncQName)) deallocate(FuncQName)
+     IF (allocated(FelName_loc))  deallocate(FelName_loc)
+     IF (allocated(calfa))        deallocate(calfa)
+     IF (allocated(PName))        deallocate(PName)
+     IF (allocated(SQName))       deallocate(SQName)
+     IF (allocated(FuncQName))    deallocate(FuncQName)
 
 
  end subroutine Export_VSCF_OpEl
@@ -1624,14 +1910,14 @@ END FUNCTION Qnamealfa_Latex
 
    type(opel),                    intent(in)    :: F1_el
    type(opel),                    intent(inout) :: F2_el
-   integer, optional,             intent(in)    :: idf
-   integer, optional,             intent(in)    :: idq
-   integer, optional,             intent(in)    :: alfa
-   TYPE(FracInteger), optional,   intent(in)    :: frac_alfa
-   integer, optional,             intent(in)    :: indexq
+   integer,           optional,   intent(in)    :: idf
+   integer,           optional,   intent(in)    :: idq
+   integer,           optional,   intent(in)    :: alfa
+   TYPE(Frac_t),      optional,   intent(in)    :: frac_alfa
+   integer,           optional,   intent(in)    :: indexq
    complex(kind=Rkind), optional, intent(in)    :: coeff
 
-   TYPE(FracInteger) :: alfa_loc
+   TYPE(Frac_t) :: alfa_loc
    character (len=*), parameter :: routine_name="copy_F1_el_into_F2_el"
 
    call get_opel(Fel = F2_el, idf = F1_el%idf, idq = F1_el%idq, &
@@ -1671,10 +1957,10 @@ END FUNCTION Qnamealfa_Latex
 
  subroutine R_TO_OpEl(OpEl1,R)
 
-   type(opel),                 intent(inout)  :: OpEl1
+   CLASS(opel),                intent(inout)  :: OpEl1
    real(kind=Rkind),           intent(in)     :: R
 
-   TYPE(FracInteger) :: alfa_loc
+   TYPE(Frac_t) :: alfa_loc
    character (len=*), parameter :: routine_name="R_TO_OpEl"
 
    IF (R == ZERO) THEN ! zero
@@ -1691,10 +1977,10 @@ END FUNCTION Qnamealfa_Latex
 
  subroutine C_TO_OpEl(OpEl1,C)
 
-   type(opel),                 intent(inout)  :: OpEl1
+   CLASS(opel),                intent(inout)  :: OpEl1
    complex(kind=Rkind),        intent(in)     :: C
 
-   TYPE(FracInteger) :: alfa_loc
+   TYPE(Frac_t) :: alfa_loc
    character (len=*), parameter :: routine_name="C_TO_OpEl"
 
    IF (C == CZERO) THEN
@@ -1822,6 +2108,7 @@ END FUNCTION Qnamealfa_Latex
      integer                        :: error
      integer                        :: i_open
      logical                        :: header_loc
+     character(len=:), allocatable  :: string_alpha
 
      character (len=*), parameter   :: routine_name='write_opel'
 
@@ -1839,8 +2126,15 @@ END FUNCTION Qnamealfa_Latex
        write(i_open, '(A)')  "   idf          iqd        alfa       alfa_den       &
               &indexq           op_name                  coeff"
      end if
-     write(i_open,"(3x, 5(I2,10x), 3x, A, (E13.4,' Ix ',E13.4))" ) Fel%idf, Fel%idq, Fel%alfa%num, &
-                 Fel%alfa%den, Fel%indexq, Fel%opname,Fel%coeff
+
+     string_alpha = Frac_TO_string(Fel%alfa)
+
+     write(i_open,"(3x, 2(I2,10x),    A4,6x,      (I2,10x),3x, A, (E13.4,' Ix ',E13.4))" )  &
+                  Fel%idf,Fel%idq, string_alpha, Fel%indexq, Fel%opname,Fel%coeff
+     CALL flush_perso(i_open)
+
+     deallocate(string_alpha)
+
    END SUBROUTINE write_opel
 
    FUNCTION get_coeff_OF_OpEl(Fel)
@@ -1904,59 +2198,116 @@ END FUNCTION Qnamealfa_Latex
      complex(kind=Rkind),       intent(inout)    :: ValOpEl
 
      real(kind=Rkind)       :: ralfa,RvalOp
+     integer                :: ialfa
 
      character (len=*), parameter   :: routine_name='get_NumVal_OpEl'
 
-   ralfa = Frac_TO_Real(Fel%alfa)
+     !write(out_unitp,*) 'Fel%idf,Fel%alfa,qval',Fel%idf,Fel%alfa,qval ; flush(out_unitp)
 
-   select case (Fel%idf)
-     case(0) ! zero
-       RValOp = zero
-     case(1) ! id
-       RValOp = one
-     case(2) ! qval**alfa
-       RValOp = qval**ralfa
-     case(3)
-       RValOp = sqrt(one-qval**2)**ralfa
-     case(4)
-       ValOpEl = Fel%coeff**ralfa
-     case(5)
-       RValOp = cos(qval)**ralfa
-     case(6)
-       RValOp = sin(qval)**ralfa
-     case(7)
-       RValOp = tan(qval)**ralfa
-     case(8)
-       RValOp = ONE / tan(qval)**ralfa
-     case(9,10,11)
-       RValOp = ONE
-     case(12)
-       RValOp = qval**ralfa
-     case(13)
-       RValOp = qval**ralfa
-     case(14)
-       RValOp = cos(qval)**ralfa
-     case(15)
-       RValOp = cos(qval)**ralfa
-     case(16)
-       RValOp = sin(qval)**ralfa
-     case(17)
-       RValOp = sin(qval)**ralfa
-     case(18,19)
-       RValOp = tan(qval)**ralfa
-     case(20,21)
-       RValOp = ONE/tan(qval)**ralfa
-     case(22,23)
-       RValOp = sqrt(one-qval**2)**ralfa
-     case(24,25,26)
-       RValOp = ONE
-     case default
-       write(out_unitp,*) 'ERROR in ',routine_name
-       write(out_unitp,*) 'idf=',Fel%idf
-       write(out_unitp,*) "This idf is not registered for an elementary operator"
-       write(out_unitp,*) "   illegal value of idf . (Internal Bug)"
-       STOP
-     end select
+   ! we need to split when Fel%alfa is an integer or half-integer (used as as a real, ralfa)
+   !   because qval**ralfa is not working when qval <= ZERO [ qval**ralfa = exp(ralfa*log(qval) ]
+   !     when ralfa=1.0, its works with gfortran, ifort but not with nagfor.
+   IF (Fel%alfa%den == 1) THEN
+     ialfa = Fel%alfa%num
+     select case (Fel%idf)
+       case(0) ! zero
+         RValOp = zero
+       case(1) ! id
+         RValOp = one
+       case(2) ! qval**alfa
+         RValOp = qval**ialfa
+       case(3)
+         RValOp = sqrt(one-qval**2)**ialfa
+       case(4)
+         ValOpEl = Fel%coeff**ialfa
+       case(5)
+         RValOp = cos(qval)**ialfa
+       case(6)
+         RValOp = sin(qval)**ialfa
+       case(7)
+         RValOp = tan(qval)**ialfa
+       case(8)
+         RValOp = ONE / tan(qval)**ialfa
+       case(9,10,11)
+         RValOp = ONE
+       case(12)
+         RValOp = qval**ialfa
+       case(13)
+         RValOp = qval**ialfa
+       case(14)
+         RValOp = cos(qval)**ialfa
+       case(15)
+         RValOp = cos(qval)**ialfa
+       case(16)
+         RValOp = sin(qval)**ialfa
+       case(17)
+         RValOp = sin(qval)**ialfa
+       case(18,19)
+         RValOp = tan(qval)**ialfa
+       case(20,21)
+         RValOp = ONE/tan(qval)**ialfa
+       case(22,23)
+         RValOp = sqrt(one-qval**2)**ialfa
+       case(24,25,26)
+         RValOp = ONE
+       case default
+         write(out_unitp,*) 'ERROR in ',routine_name
+         write(out_unitp,*) 'idf=',Fel%idf
+         write(out_unitp,*) "This idf is not registered for an elementary operator"
+         write(out_unitp,*) "   illegal value of idf . (Internal Bug)"
+         STOP
+       end select
+   ELSE
+     ralfa = Frac_TO_Real(Fel%alfa)
+     select case (Fel%idf)
+       case(0) ! zero
+         RValOp = zero
+       case(1) ! id
+         RValOp = one
+       case(2) ! qval**alfa
+         RValOp = qval**ralfa
+       case(3)
+         RValOp = sqrt(one-qval**2)**ralfa
+       case(4)
+         ValOpEl = Fel%coeff**ralfa
+       case(5)
+         RValOp = cos(qval)**ralfa
+       case(6)
+         RValOp = sin(qval)**ralfa
+       case(7)
+         RValOp = tan(qval)**ralfa
+       case(8)
+         RValOp = ONE / tan(qval)**ralfa
+       case(9,10,11)
+         RValOp = ONE
+       case(12)
+         RValOp = qval**ralfa
+       case(13)
+         RValOp = qval**ralfa
+       case(14)
+         RValOp = cos(qval)**ralfa
+       case(15)
+         RValOp = cos(qval)**ralfa
+       case(16)
+         RValOp = sin(qval)**ralfa
+       case(17)
+         RValOp = sin(qval)**ralfa
+       case(18,19)
+         RValOp = tan(qval)**ralfa
+       case(20,21)
+         RValOp = ONE/tan(qval)**ralfa
+       case(22,23)
+         RValOp = sqrt(one-qval**2)**ralfa
+       case(24,25,26)
+         RValOp = ONE
+       case default
+         write(out_unitp,*) 'ERROR in ',routine_name
+         write(out_unitp,*) 'idf=',Fel%idf
+         write(out_unitp,*) "This idf is not registered for an elementary operator"
+         write(out_unitp,*) "   illegal value of idf . (Internal Bug)"
+         STOP
+       end select
+     END IF
 
      IF (Fel%idf /= 4) THEN ! already done for idf=4
         ValOpEl =  Fel%coeff * real(RvalOp,kind=Rkind)
@@ -2078,7 +2429,7 @@ END FUNCTION Qnamealfa_Latex
        CALL get_opel(SplitOpEl(1),                                      &
                      idf    = 4,                                        &
                      idq    = F_OpEl%idq,                               &
-                     alfa   = FracInteger(1,1),                         &
+                     alfa   = Frac_t(1,1),                         &
                      indexq = F_OpEl%indexq,                            &
                      coeff  = F_OpEl%coeff)  ! PQ
 
@@ -2101,7 +2452,7 @@ END FUNCTION Qnamealfa_Latex
        CALL get_opel(SplitOpEl(2),                                      &
                      idf    = 4,                                        &
                      idq    = F_OpEl%idq,                               &
-                     alfa   = FracInteger(1,1),                         &
+                     alfa   = Frac_t(1,1),                              &
                      indexq = F_OpEl%indexq,                            &
                      coeff  = F_OpEl%coeff)  ! PQ
 
@@ -2115,7 +2466,7 @@ END FUNCTION Qnamealfa_Latex
                                                              ! cos(Q)^alfa => -Sin(Q) * cos(Q)^alfa-1
 !  It doesn't work when OpEl contains a P or J or L
 
-   TYPE(FracInteger)    :: alfa_prim
+   TYPE(Frac_t)    :: alfa_prim
    real(kind=Rkind)     :: ralfa
    complex(kind=Rkind)  :: coeff
    character (len=*), parameter   :: routine_name='Der1_OF_d0OpEl_TO_d1OpEl'
@@ -2150,7 +2501,7 @@ END FUNCTION Qnamealfa_Latex
      CALL get_opel(d1OpEl(1),                                           &
                      idf    = 2,                                        &
                      idq    = d0OpEl%idq,                               &
-                     alfa   = FracInteger(1,1),                         &
+                     alfa   = Frac_t(1,1),                              &
                      indexq = d0OpEl%indexq,                            &
                      coeff  = cone)
 
@@ -2168,7 +2519,7 @@ END FUNCTION Qnamealfa_Latex
      CALL get_opel(d1OpEl(1),                                           &
                      idf    = 6,                                        &
                      idq    = d0OpEl%idq,                               &
-                     alfa   = FracInteger(1,1),                         &
+                     alfa   = Frac_t(1,1),                              &
                      indexq = d0OpEl%indexq,                            &
                      coeff  = -cone)
 
@@ -2176,7 +2527,7 @@ END FUNCTION Qnamealfa_Latex
      CALL get_opel(d1OpEl(1),                                           &
                      idf    = 5,                                        &
                      idq    = d0OpEl%idq,                               &
-                     alfa   = FracInteger(1,1),                         &
+                     alfa   = Frac_t(1,1),                              &
                      indexq = d0OpEl%indexq,                            &
                      coeff  = cone)
 
@@ -2184,7 +2535,7 @@ END FUNCTION Qnamealfa_Latex
      CALL get_opel(d1OpEl(1),                                           &
                      idf    = 5,                                        &
                      idq    = d0OpEl%idq,                               &
-                     alfa   = FracInteger(-2,1),                        &
+                     alfa   = Frac_t(-2,1),                             &
                      indexq = d0OpEl%indexq,                            &
                      coeff  = cone)
 
@@ -2192,7 +2543,7 @@ END FUNCTION Qnamealfa_Latex
      CALL get_opel(d1OpEl(1),                                           &
                      idf    = 6,                                        &
                      idq    = d0OpEl%idq,                               &
-                     alfa   = FracInteger(-2,1),                        &
+                     alfa   = Frac_t(-2,1),                             &
                      indexq = d0OpEl%indexq,                            &
                      coeff  = -cone)
 

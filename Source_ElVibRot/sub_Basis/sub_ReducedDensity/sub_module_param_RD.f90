@@ -53,21 +53,16 @@ IMPLICIT NONE
     integer                        :: nb             = 0  ! size of the basis set
 
     TYPE (Type_nDindex)            :: nDindex_ComplBasis  ! multidimensional index for the complementary basis set
-                                                        ! (without the basis set with this basis_index)
+                                                          ! (without the basis set with this basis_index)
     integer                        :: nbb_ComplBasis = 0
 
     integer,           allocatable :: tab_OF_iBComplBasis_AND_ib_TO_iB(:,:)   ! size (nbb_ComplBasis,nb)
     real (kind=rkind), allocatable :: cbb(:,:)         ! coefficient of the contracted basis set
-
-
+  CONTAINS
+    PROCEDURE, PRIVATE, PASS(para_RD1) :: RD2_TO_RD1
+    GENERIC,   PUBLIC  :: assignment(=) => RD2_TO_RD1
   END TYPE param_RD
 
-
-INTERFACE assignment (=)
-  MODULE PROCEDURE RD2_TO_RD1,tab_RD2_TO_RD1
-END INTERFACE
-
-PUBLIC :: assignment (=),RD2_TO_RD1,tab_RD2_TO_RD1
 PUBLIC :: param_RD,dealloc_RD,init_RD,calc_RD,dealloc_tab_RD
 
 CONTAINS
@@ -97,8 +92,8 @@ END SUBROUTINE dealloc_RD
 
 SUBROUTINE RD2_TO_RD1(para_RD1,para_RD2)
 
-TYPE (param_RD), intent(inout) :: para_RD1
-TYPE (param_RD), intent(in)    :: para_RD2
+CLASS (param_RD), intent(inout) :: para_RD1
+TYPE (param_RD),  intent(in)    :: para_RD2
 
 integer :: i
 
@@ -158,8 +153,7 @@ character (len=*), parameter :: name_sub='init_RD'
 
   write(out_unitp,*) 'para_RD%nb: ',para_RD%nb
 
-
-  CALL nDindex2TOnDindex1_InitOnly(para_RD%nDindex_ComplBasis,nDindB)
+  para_RD%nDindex_ComplBasis = nDindB
 
   para_RD%nDindex_ComplBasis%nDsize(ibasis) = 1
   para_RD%nDindex_ComplBasis%nDend(ibasis)  = 1
@@ -199,7 +193,7 @@ character (len=*), parameter :: name_sub='init_RD'
   IF (present(Rvec)) THEN
   IF (allocated(Rvec)) THEN
 
-    !write(6,*) 'shape(Rvec)',shape(Rvec)
+    !write(out_unitp,*) 'shape(Rvec)',shape(Rvec)
 
     CALL alloc_NParray(para_RD%cbb,shape(Rvec),'para_RD%cbb',name_sub)
     para_RD%cbb(:,:) = Rvec
@@ -214,10 +208,10 @@ character (len=*), parameter :: name_sub='init_RD'
 
   !-----------------------------------------------------------
   IF (debug) THEN
-    write(6,*) 'tab_OF_iBComplBasis_AND_ib_TO_iB'
+    write(out_unitp,*) 'tab_OF_iBComplBasis_AND_ib_TO_iB'
     DO iB=1,para_RD%nDindex_ComplBasis%Max_nDI
       CALL calc_nDindex(nDindB,iB,nDval)
-      write(6,*) 'iB:',nDval(:),':',para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB(:,iB)
+      write(out_unitp,*) 'iB:',nDval(:),':',para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB(:,iB)
     END DO
     write(out_unitp,*) 'END ',name_sub
   END IF
@@ -249,6 +243,13 @@ character (len=*), parameter :: name_sub='calc_RD'
     write(out_unitp,*) 'BEGINNING ',name_sub
   END IF
   !-----------------------------------------------------------
+
+  IF (.NOT. allocated(RvecB)) THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) 'RvecB is not allocated!!'
+    write(out_unitp,*) ' Check the fortran.'
+    STOP ' ERROR RvecB(:) is not allocated'
+  END IF
 
   printRD_loc = .FALSE.
   IF (present(printRD)) printRD_loc = printRD
@@ -308,18 +309,18 @@ END SUBROUTINE calc_RD
 
 SUBROUTINE dealloc_tab_RD(para_RD)
 
-TYPE (param_RD),     intent(inout), allocatable :: para_RD(:)
+  TYPE (param_RD),     intent(inout), allocatable :: para_RD(:)
 
-integer :: i
+  integer :: i
 
-character (len=*), parameter :: name_sub='dealloc_tab_RD'
+  character (len=*), parameter :: name_sub='dealloc_tab_RD'
 
-    IF (allocated(para_RD)) THEN
-      DO i=1,size(para_RD)
-         CALL dealloc_RD(para_RD(i))
-      END DO
-      deallocate(para_RD)
-    END IF
+  IF (allocated(para_RD)) THEN
+    DO i=1,size(para_RD)
+       CALL dealloc_RD(para_RD(i))
+    END DO
+    deallocate(para_RD)
+  END IF
 
 
 END SUBROUTINE dealloc_tab_RD

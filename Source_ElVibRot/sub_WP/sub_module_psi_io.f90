@@ -42,6 +42,8 @@
 !===========================================================================
       MODULE mod_psi_io
       USE mod_system
+      USE mod_nDindex
+      USE mod_basis
       IMPLICIT NONE
 
       PRIVATE
@@ -62,11 +64,11 @@
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
-      integer, intent(in) :: max_WP
-      TYPE (param_WP0), intent(inout) :: para_WP0
-      TYPE (param_psi), intent(inout) :: psi0(max_WP)
-      integer, intent(in), optional   :: symab
-      logical, intent(in), optional   :: ortho
+      integer,             intent(in)               :: max_WP
+      TYPE (param_WP0),    intent(inout)            :: para_WP0
+      TYPE (param_psi),    intent(inout)            :: psi0(max_WP)
+      integer,             intent(in),   optional   :: symab
+      logical,             intent(in),   optional   :: ortho
 
 !------ working parameters --------------------------------
       logical                  :: cplx,ortho_loc
@@ -95,9 +97,10 @@
         write(out_unitp,*) ' para_WP0%nb_WP0            ',para_WP0%nb_WP0
         write(out_unitp,*) ' para_WP0%read_listWP0      ',para_WP0%read_listWP0
         write(out_unitp,*) ' para_WP0%read_file         ',para_WP0%read_file
-        write(out_unitp,*) ' para_WP0%file_WP0          ',para_WP0%file_WP0%name
+        write(out_unitp,*) ' para_WP0%file_WP0          ',trim(adjustl(para_WP0%file_WP0%name))
         write(out_unitp,*) ' para_WP0%WP0cplx           ',para_WP0%WP0cplx
         write(out_unitp,*) ' para_WP0%file_WP0%formatted',para_WP0%file_WP0%formatted
+        write(out_unitp,*) ' max_WP                     ',max_WP
         write(out_unitp,*)
       END IF
 
@@ -174,6 +177,8 @@
             IF (ilist > para_WP0%nb_WP0 .OR. ilist > max_WP) EXIT
           END DO
           para_WP0%nb_WP0 = ilist - 1
+          IF (debug) write(out_unitp,*) ' read with lect_psiBasisRepnotall_nD ' // &
+                                     '(Version_File=0, option=1): done'
         ELSE ! Version_File=0, option=2 or Version_File=1 (with the namelist)
           nb_tot_file = size(list_nDindBasis1_TO_nDindBasis2)
 
@@ -181,6 +186,7 @@
           DO i=1,nb_readWP_file
             IF (debug .OR. print_level > 1) write(out_unitp,*) 'i,ilist',i,ilist
             CALL flush_perso(out_unitp)
+
             CALL Read_psi_nDBasis(psi0(ilist),nioWP,                     &
                                para_WP0%file_WP0%formatted,Version_File, &
                              list_nDindBasis1_TO_nDindBasis2,nb_tot_file)
@@ -193,6 +199,8 @@
           CALL dealloc_NParray(list_nDindBasis1_TO_nDindBasis2,         &
                               "list_nDindBasis1_TO_nDindBasis2",name_sub)
 
+          IF (debug) write(out_unitp,*) ' read with Read_psi_nDBasis ' //&
+                    '(Version_File=0, option=2 or Version_File=1): done'
         END IF
 
         close(nioWP)
@@ -206,7 +214,8 @@
           write(out_unitp,*) ' write in',out_unitp,i
           CALL flush_perso(out_unitp)
           IF(MPI_id==0) CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ONETENTH**4,.TRUE.,i)
-          !CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ZERO,.TRUE.,i)
+          IF (debug) write(out_unitp,*) ' read with lect_psiBasisRepnotall_nD ' // &
+                              '(Version_File=0, option=1 ???): done'
         END DO
       END IF
 
@@ -260,7 +269,6 @@
       SUBROUTINE sub_save_LCpsi(psi,Vec,ndim,nb_save,file_WP)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi
       USE mod_psi_Op
       IMPLICIT NONE
@@ -556,7 +564,6 @@
       SUBROUTINE lect_psiBasisRepnotall_nD(WP0,nioWP,WP0cplx,lformated)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 
@@ -915,7 +922,6 @@ SUBROUTINE Read_psi_nDBasis(Psi,nioPsi,lformated,version,  &
                             list_nDindBasis1_TO_nDindBasis2,nb_tot)
 USE mod_system
 USE mod_psi_set_alloc
-USE mod_psi_SimpleOp
 IMPLICIT NONE
 
 
@@ -1268,7 +1274,7 @@ IF (done_basis_is_smaller) write(out_unitp,*) ' WARNNING the basis is smaller'
 !-----------------------------------------------------------
 IF (debug) THEN
   write(out_unitp,*) ' list_nDindBasis1_TO_nDindBasis2'
-  write(out_unitp,'(10(I0,X))') list_nDindBasis1_TO_nDindBasis2(:)
+  write(out_unitp,'(10(I0,1X))') list_nDindBasis1_TO_nDindBasis2(:)
   write(out_unitp,*) 'END ',name_sub
 END IF
 
@@ -1285,7 +1291,7 @@ IMPLICIT NONE
 !----- variables for the WP propagation ----------------------------
 integer,              intent(inout) :: nb_read,Version_File
 TYPE (param_psi),     intent(inout) :: psi(:)
-TYPE (param_file),    intent(in)    :: file_WP
+TYPE (param_file),    intent(inout) :: file_WP
 integer, allocatable, intent(inout) :: list_nDindBasis1_TO_nDindBasis2(:)
 
 
@@ -1395,7 +1401,7 @@ IF (nb_tot > 0) THEN
 
   IF (debug) THEN
     write(out_unitp,*) 'list_nDindBasis1_TO_nDindBasis2'
-    write(out_unitp,'(10(I0,X))') list_nDindBasis1_TO_nDindBasis2(:)
+    write(out_unitp,'(10(I0,1X))') list_nDindBasis1_TO_nDindBasis2(:)
   END IF
 
   IF (Version_File == 0) THEN ! Version_File=0, option=2
@@ -1424,7 +1430,6 @@ END SUBROUTINE Read_header_saveFile_psi
       SUBROUTINE Write_header_saveFile_psi(psi,nb_save,file_WP)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_psi_Op
       IMPLICIT NONE
 
@@ -1591,7 +1596,6 @@ END SELECT
       SUBROUTINE Write_Psi_nDBasis(Psi,nioPsi,iPsi,epsi,lformated,version)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 

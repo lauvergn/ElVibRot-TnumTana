@@ -27,7 +27,7 @@ CompFile()
 n1=`head -$1 $fNew | tail -1`
 n2=`head -$1 $fOld | tail -1`
 d=$2
-echo $n1 $n2 $d | LANG=C awk '{x=sqrt(($1-$2)^2) ; if (x > $3) {print sqrt((x/$1)^2)} else {print sqrt(($3/$1)^2)}}'
+echo $n1 $n2 $d | LANG=C awk '{x=sqrt(($1-$2)^2) ; if (x > $3) {print sqrt((x/$1)^2)} else {print $3}}'
 }
 
 d=0.0
@@ -39,7 +39,7 @@ done
 
 #echo For \"$file\", the largest relative difference between constants: $d
 echo The largest relative difference between constants: $d
-echo $d | LANG=C awk '{epsi=0.0000001 ; if ($1 > epsi) {print "    ERROR, relative diff > " epsi} else {print "    No ERROR, relative diff <= " epsi}}'
+echo $d | LANG=C awk '{epsi=0.0000001 ; if ($1 > epsi) {print "    ERROR, relative diff > " epsi} else {print "    No PROBLEM, relative diff <= " epsi}}'
 
 
  rm $fNew $fOld

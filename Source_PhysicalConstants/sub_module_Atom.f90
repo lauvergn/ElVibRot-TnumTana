@@ -813,7 +813,7 @@ PRIVATE
 
         ! first the symbol, then ZZ
         symb = name2(pos+1:len(name2))
-        !write(6,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
+        !write(out_unitp,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
 
         DO ZZ=0,mendeleev%max_Z
           DO AA=0,mendeleev%max_A ! find the first isotope with Z
@@ -831,7 +831,7 @@ PRIVATE
         IF (pos > 0) THEN ! isotope defined as: AX (2H or 13C or 28Si)
           read(name2(1:pos),*,IOSTAT=err_mass_loc) AA
         END IF
-        !write(6,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
+        !write(out_unitp,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
 
         deallocate(name2)
       END IF
@@ -840,7 +840,9 @@ PRIVATE
     IF (ZZ < 0 .OR. ZZ > ubound(mendeleev%at,dim=1)) THEN
        write(out_unitp,*) ' ERROR in : get_mass_Tnum'
        write(out_unitp,*) 'ZZ,AA',ZZ,AA
-       write(out_unitp,*) ' I CANNOT find Z in "',trim(adjustl(name)),'"'
+       IF (present(name)) THEN
+          write(out_unitp,*) ' I CANNOT find Z in "',trim(adjustl(name)),'"'
+       END IF
        IF (present(Z)) THEN
          write(out_unitp,*) ' ... or Z (from the argument) is out of range'
        END IF
@@ -852,13 +854,15 @@ PRIVATE
         DO AA=0,mendeleev%max_A ! find the first isotope with Z
           IF (mendeleev%at(ZZ,AA)%MainIsotope) EXIT
         END DO
-        !write(6,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
-        !flush(6)
+        !write(out_unitp,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
+        !flush(out_unitp)
 
       ELSE IF (AA < 0 .OR. AA > ubound(mendeleev%at,dim=2)) THEN
         write(out_unitp,*) ' ERROR in : get_mass_Tnum'
         write(out_unitp,*) 'ZZ,AA',ZZ,AA
-        write(out_unitp,*) ' I CANNOT read A in "',trim(adjustl(name)),'"'
+        IF (present(name)) THEN
+          write(out_unitp,*) ' I CANNOT read A in "',trim(adjustl(name)),'"'
+        END IF
         IF (present(A)) THEN
           write(out_unitp,*) ' ... or A (from the argument) is out of range'
         END IF
@@ -866,7 +870,9 @@ PRIVATE
       ELSE IF (.NOT. mendeleev%at(ZZ,AA)%SetIsotope) THEN
         write(out_unitp,*) 'ZZ,AA',ZZ,AA
         write(out_unitp,*) ' ERROR in : get_mass_Tnum'
-        write(out_unitp,*) ' This isotope is not defined in "',trim(adjustl(name)),'"'
+        IF (present(name)) THEN
+          write(out_unitp,*) ' This isotope is not defined in "',trim(adjustl(name)),'"'
+        END IF
         err_mass_loc = -1
       END IF
     END IF
@@ -882,11 +888,14 @@ PRIVATE
 
       get_mass_Tnum = mendeleev%at(ZZ,AA)%mass
     ELSE
-          write(out_unitp,*) ' ERROR : get_mass_Tnum'
-          write(out_unitp,*) ' I CANNOT get the right isotope'
-          write(out_unitp,*) ' Your atom is NOT in my list !!'
-          write(out_unitp,*) ' Your atom: "',trim(name),'"'
-          CALL List_OF_table_at(mendeleev)
+      write(out_unitp,*) ' ERROR : get_mass_Tnum'
+      write(out_unitp,*) ' I CANNOT get the right isotope'
+      write(out_unitp,*) ' Your atom is NOT in my list !!'
+        write(out_unitp,*) 'ZZ,AA',ZZ,AA
+      IF (present(name)) THEN
+        write(out_unitp,*) ' Your atom: "',trim(name),'"'
+      END IF
+      CALL List_OF_table_at(mendeleev)
       IF (present(err_mass)) THEN
         mass = -ONE
         err_mass = -1
@@ -956,12 +965,12 @@ PRIVATE
           DO A=0,mendeleev%max_A
             IF (.NOT. mendeleev%at(Z,A)%SetIsotope) CYCLE
             IF (Z == 0) THEN
-              write(out_unitp,'(x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
+              write(out_unitp,'(1x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
             ELSE IF (Z == 1 .AND. (A == 2 .OR. A == 3)) THEN
-              write(out_unitp,'(x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
+              write(out_unitp,'(1x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
               write(out_unitp,'(" (or ",i0,a,")")',advance='no') A,trim(mendeleev%at(Z,1)%symbol)
             ELSE
-              write(out_unitp,'(x,i0,a)',advance='no') A,trim(mendeleev%at(Z,A)%symbol)
+              write(out_unitp,'(1x,i0,a)',advance='no') A,trim(mendeleev%at(Z,A)%symbol)
             END IF
           END DO
           write(out_unitp,*)

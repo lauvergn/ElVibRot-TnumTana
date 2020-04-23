@@ -251,11 +251,14 @@
       iqf = 0
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Save_FileGrid) THEN
         IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
-          iqf = 0
           IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Restart_Grid) THEN
+            write(out_unitp,*) '----------------------------------------'
+            write(out_unitp,*) 'Restart_Grid=t'
             CALL check_HADA(iqf,para_AllOp%tab_Op(1)%ComOp)
             IF (iqf > para_AllOp%tab_Op(1)%nb_qa) iqf = 0
             iqf = max(para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint,iqf+1)
+            write(out_unitp,*) 'First new grid point:',iqf
+            write(out_unitp,*) '----------------------------------------'
           ELSE
             iqf = para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint
             lformatted = para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted
@@ -268,7 +271,6 @@
           CALL Open_File_OF_tab_Op(para_AllOp%tab_Op)
           iqf = 0
         END IF
-        iqf = 0
       END IF
 
       IF (print_level > 1) THEN
@@ -292,15 +294,18 @@
         CALL flush_perso(out_unitp)
       END IF
 
+
+      max_Sii = ZERO
+      max_Sij = ZERO
+
 !$OMP   PARALLEL &
 !$OMP   DEFAULT(NONE) &
 !$OMP   SHARED(para_AllOp,max_Sii,max_Sij,iqf) &
-!$OMP   PRIVATE(iq,freq_only,OldPara) &
+!$OMP   PRIVATE(iq,out_unitp,freq_only,OldPara) &
 !$OMP   NUM_THREADS(Grid_maxth)
 
 !$OMP   DO SCHEDULE(STATIC)
         DO iq=1,iqf-1
-
           freq_only = .TRUE.
           CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,  &
                para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)
@@ -385,7 +390,7 @@
       END IF
       !-------------------------------------------------------------------
 
-RETURN
+      IF (.NOT. para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Read_FileGrid) THEN
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint <       &
           para_AllOp%tab_Op(1)%nb_qa .OR.                                       &
           para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint > 1) THEN
@@ -400,6 +405,7 @@ RETURN
         write(out_unitp,*)
         write(out_unitp,*) 'STOP in ',name_sub
         STOP
+      END IF
       END IF
 
       END SUBROUTINE sub_qa_bhe

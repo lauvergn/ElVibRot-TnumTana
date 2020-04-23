@@ -47,6 +47,8 @@
  USE mod_type_ana_psi
  IMPLICIT NONE
 
+ PRIVATE
+
         TYPE param_psi
         !-- for the basis set ----------------------------------------------
         TYPE (Basis), pointer       :: BasisnD => null()   ! .TRUE. pointer
@@ -54,8 +56,6 @@
         integer                     :: symab   = -1
         !-- for ComOp ------------------------------------------------------
         TYPE (param_ComOp), pointer :: ComOp => null()     ! .TRUE. pointer
-
-        logical       :: builtINsub = .FALSE.            ! (F) for the use of memory collector
 
         logical       :: init       = .FALSE.            ! (F) all constantes are initialized
         logical       :: cplx       = .FALSE.            ! (T) if T => psi is complex (use of Cvec)
@@ -100,12 +100,58 @@
 
         real (kind=Rkind)    :: norm2    = -ONE       ! norm^2 of psi
 
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(psi)  :: CplxPsi_TO_RCpsi
+          PROCEDURE, PRIVATE, PASS(psi)  :: RCPsi_TO_CplxPsi
+          PROCEDURE, PRIVATE, PASS(psi1) :: psi2TOpsi1
+          PROCEDURE, PRIVATE, PASS(psi)  :: R_TOpsi
+          PROCEDURE, PRIVATE, PASS(psi)  :: C_TOpsi
+          GENERIC,   PUBLIC  :: assignment(=) => psi2TOpsi1,            &
+                                    CplxPsi_TO_RCpsi, RCPsi_TO_CplxPsi, &
+                                    R_TOpsi, C_TOpsi
+
+          PROCEDURE, PRIVATE             :: psi1_plus_psi2
+          PROCEDURE, PRIVATE, PASS(psi)  :: R_plus_psi
+          PROCEDURE, PRIVATE, PASS(psi)  :: psi_plus_R
+          PROCEDURE, PRIVATE, PASS(psi)  :: C_plus_psi
+          PROCEDURE, PRIVATE, PASS(psi)  :: psi_plus_C
+          PROCEDURE, PRIVATE, PASS(psi)  :: plus_psi
+          GENERIC,   PUBLIC  :: operator(+) => psi1_plus_psi2,          &
+                                               R_plus_psi, psi_plus_R,  &
+                                               C_plus_psi, psi_plus_C,  &
+                                               plus_psi
+
+          PROCEDURE, PRIVATE             :: psi1_minus_psi2
+          PROCEDURE, PRIVATE, PASS(psi)  :: R_minus_psi
+          PROCEDURE, PRIVATE, PASS(psi)  :: psi_minus_R
+          PROCEDURE, PRIVATE, PASS(psi)  :: C_minus_psi
+          PROCEDURE, PRIVATE, PASS(psi)  :: psi_minus_C
+          PROCEDURE, PRIVATE, PASS(psi)  :: minus_psi
+          GENERIC,   PUBLIC  :: operator(-) => psi1_minus_psi2,         &
+                                              R_minus_psi, psi_minus_R, &
+                                              C_minus_psi, psi_minus_C, &
+                                              minus_psi
+
+          PROCEDURE, PRIVATE, PASS(psi)  :: R_time_psi
+          PROCEDURE, PRIVATE, PASS(psi)  :: psi_time_R
+          PROCEDURE, PRIVATE, PASS(psi)  :: C_time_psi
+          PROCEDURE, PRIVATE, PASS(psi)  :: psi_time_C
+          GENERIC,   PUBLIC  :: operator(*) => R_time_psi, psi_time_R,  &
+                                               C_time_psi, psi_time_C
+
+          PROCEDURE, PRIVATE, PASS(psi)  :: psi_over_R
+          PROCEDURE, PRIVATE, PASS(psi)  :: psi_over_C
+          GENERIC,   PUBLIC  :: operator(/) => psi_over_R, psi_over_C
+
+
+          FINAL              :: dealloc_all_psi
         END TYPE param_psi
 
-        !!@description: TODO
-        INTERFACE assignment (=)
-          MODULE PROCEDURE psi2TOpsi1, CplxPsi_TO_RCpsi, RCPsi_TO_CplxPsi
-        END INTERFACE
+ PUBLIC :: param_psi,Set_psi_With_index,Set_Random_psi,copy_psi2TOpsi1
+ PUBLIC :: ecri_init_psi,ecri_psi
+ PUBLIC :: get_nb_be_FROM_psi,get_nb_bi_FROM_psi
+ PUBLIC :: alloc_array,dealloc_array,alloc_NParray,dealloc_NParray
+ PUBLIC :: alloc_psi,dealloc_psi
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_Psidim1
@@ -122,6 +168,13 @@
       INTERFACE dealloc_NParray
         MODULE PROCEDURE dealloc_NParray_OF_Psidim1
       END INTERFACE
+
+      !!@description: TODO
+      INTERFACE Set_psi_With_index
+        MODULE PROCEDURE Set_psi_With_index_R
+        MODULE PROCEDURE Set_psi_With_index_C
+      END INTERFACE
+
 
  CONTAINS
 
@@ -318,6 +371,35 @@
       !!@param: TODO
       !!@param: TODO
       !!@param: TODO
+  SUBROUTINE dealloc_all_psi(psi)
+      TYPE (param_psi)   :: psi
+
+      !----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='dealloc_all_psi'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      !-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+      !-----------------------------------------------------------
+
+      CALL dealloc_psi(psi,delete_all=.TRUE.)
+      psi%BasisRep        = .TRUE.
+      psi%GridRep         = .FALSE.
+
+      nullify(psi%BasisnD)
+      nullify(psi%Basis2n)
+
+      !-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+      !-----------------------------------------------------------
+
+  END SUBROUTINE dealloc_all_psi
       SUBROUTINE dealloc_psi(psi,delete_all)
 
 
@@ -398,8 +480,6 @@
         IF (debug) write(out_unitp,*) 'dealloc: init param'
 
         nullify(psi%ComOp)
-
-        psi%builtINsub      = .FALSE.
 
         psi%init            = .FALSE.
         psi%cplx            = .FALSE.
@@ -483,8 +563,8 @@
       SUBROUTINE dealloc_array_OF_Psidim1(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      TYPE (param_psi), pointer, intent(inout) :: tab(:)
-      character (len=*), intent(in) :: name_var,name_sub
+      TYPE (param_psi),  pointer, intent(inout) :: tab(:)
+      character (len=*),          intent(in)    :: name_var,name_sub
 
       integer :: i
 !----- for debuging --------------------------------------------------
@@ -549,8 +629,8 @@
       SUBROUTINE dealloc_NParray_OF_Psidim1(tab,name_var,name_sub)
       IMPLICIT NONE
 
-      TYPE (param_psi), allocatable, intent(inout) :: tab(:)
-      character (len=*), intent(in) :: name_var,name_sub
+      TYPE (param_psi),  allocatable, intent(inout) :: tab(:)
+      character (len=*),              intent(in)    :: name_var,name_sub
 
       integer :: i
 !----- for debuging --------------------------------------------------
@@ -650,8 +730,8 @@
       SUBROUTINE psi2TOpsi1(psi1,psi2)
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi), intent(inout) :: psi1
-      TYPE (param_psi), intent(in)    :: psi2
+      CLASS (param_psi), intent(inout) :: psi1
+      TYPE (param_psi),  intent(in)    :: psi2
 
 
       integer  :: i,n1
@@ -743,8 +823,6 @@
      psi1%convAvOp        = psi2%convAvOp
 
       psi1%norm2          = psi2%norm2
-
-      IF (psi2%builtINsub) CALL dealloc_psi(psi2)
 
       END SUBROUTINE psi2TOpsi1
 
@@ -881,8 +959,6 @@
 
       END IF
 
-      IF (psi2%builtINsub) CALL dealloc_psi(psi2)
-
 !     write(out_unitp,*) 'END copy_psi2TOpsi1'
 
       END SUBROUTINE copy_psi2TOpsi1
@@ -892,8 +968,8 @@
       USE mod_MPI
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi),intent(inout) :: RCPsi(2)
-      TYPE (param_psi), intent(in)   :: psi
+      TYPE (param_psi),  intent(inout) :: RCPsi(2)
+      CLASS (param_psi), intent(in)    :: psi
 
 !     write(out_unitp,*) 'BEGINNING CplxPsi_TO_RCpsi'
       IF (.NOT. Psi%cplx) STOP 'ERROR psi MUST be complex'
@@ -922,8 +998,8 @@
       SUBROUTINE RCPsi_TO_CplxPsi(Psi,RCPsi)
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi), intent(in)    :: RCPsi(2)
-      TYPE (param_psi), intent(inout) :: psi
+      TYPE (param_psi),  intent(in)    :: RCPsi(2)
+      CLASS (param_psi), intent(inout) :: psi
 
 !     write(out_unitp,*) 'BEGINNING RCPsi_TO_CplxPsi'
 
@@ -944,6 +1020,1052 @@
 !     write(out_unitp,*) 'END RCPsi_TO_CplxPsi'
 
       END SUBROUTINE RCPsi_TO_CplxPsi
+
+!================================================================
+!
+!     psi = R
+!     psi = C
+!
+!================================================================
+      SUBROUTINE R_TOpsi(psi,R)
+
+!----- variables for the WP propagation ----------------------------
+      CLASS (param_psi), intent(inout) :: psi
+      real (kind=Rkind), intent(in)    :: R
+
+      integer :: i
+
+!     write(out_unitp,*) 'BEGINNING R_TOpsi'
+
+       CALL alloc_psi(psi)
+
+      IF (psi%BasisRep) THEN
+        IF (allocated(psi%RvecB)) THEN
+          psi%RvecB(:) = R
+        END IF
+        IF (allocated(psi%CvecB)) THEN
+          psi%CvecB(:) = cmplx(R,ZERO,kind=Rkind)
+        END IF
+      END IF
+
+      IF (psi%GridRep) THEN
+        IF (allocated(psi%RvecG)) THEN
+          psi%RvecG(:) = R
+        END IF
+        IF (allocated(psi%CvecG)) THEN
+          psi%CvecG(:) = cmplx(R,ZERO,kind=Rkind)
+        END IF
+      END IF
+
+
+      psi%norm2 = ZERO
+
+      IF (R == ZERO) THEN
+        psi%symab = -2
+      ELSE
+        psi%symab = -1
+      END IF
+
+!     write(out_unitp,*) 'END R_TOpsi'
+
+      END SUBROUTINE R_TOpsi
+
+      !!@description: TODO
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+      SUBROUTINE C_TOpsi(psi,C)
+
+!----- variables for the WP propagation ----------------------------
+      CLASS (param_psi),    intent(inout) :: psi
+      complex (kind=Rkind), intent(in)    :: C
+
+      integer :: i
+
+!     write(out_unitp,*) 'BEGINNING C_TOpsi'
+
+       CALL alloc_psi(psi)
+
+      IF (psi%BasisRep) THEN
+        IF (allocated(psi%RvecB)) THEN
+          psi%RvecB(:) = real(C,kind=Rkind)
+        END IF
+        IF (allocated(psi%CvecB)) THEN
+          psi%CvecB(:) = C
+        END IF
+      END IF
+
+      IF (psi%GridRep) THEN
+        IF (allocated(psi%RvecG)) THEN
+          psi%RvecG(:) = real(C,kind=Rkind)
+        END IF
+        IF (allocated(psi%CvecG)) THEN
+          psi%CvecG(:) = C
+        END IF
+      END IF
+
+
+      psi%norm2 = ZERO
+
+
+      IF (abs(C) == ZERO) THEN
+        psi%symab = -2
+      ELSE
+        psi%symab = -1
+      END IF
+
+!     write(out_unitp,*) 'END C_TOpsi'
+
+      END SUBROUTINE C_TOpsi
+
+      SUBROUTINE Set_Random_psi(psi,option)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi),intent(inout)          :: psi
+      integer,         intent(in),   optional :: option
+
+      integer          :: i
+      real(kind=Rkind) :: a,b
+
+
+!     write(out_unitp,*) 'BEGINNING Set_Random_psi'
+
+       CALL alloc_psi(psi)
+
+      IF (psi%BasisRep) THEN
+        IF (allocated(psi%RvecB)) THEN
+          CALL random_number(psi%RvecB(:))
+        END IF
+        IF (allocated(psi%CvecB)) THEN
+          DO i=1,size(psi%CvecB)
+            CALL random_number(a)
+            CALL random_number(b)
+            psi%CvecB(i) = cmplx(a,b,kind=Rkind)
+          END DO
+        END IF
+      END IF
+
+      IF (psi%GridRep) THEN
+        IF (allocated(psi%RvecG)) THEN
+          CALL random_number(psi%RvecG(:))
+        END IF
+        IF (allocated(psi%CvecG)) THEN
+          DO i=1,size(psi%CvecG)
+            CALL random_number(a)
+            CALL random_number(b)
+            psi%CvecG(i) = cmplx(a,b,kind=Rkind)
+          END DO
+        END IF
+      END IF
+
+      psi%norm2 = ZERO
+      psi%symab = -1
+
+!     write(out_unitp,*) 'END Set_Random_psi'
+
+      END SUBROUTINE Set_Random_psi
+
+      SUBROUTINE Set_psi_With_index_R(psi,R,ind_a,ind_i,ind_e,ind_aie)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi),intent(inout)          :: psi
+      real(kind=Rkind),intent(in)             :: R
+      integer,         intent(in),   optional :: ind_a,ind_i,ind_e,ind_aie
+
+      integer          :: ind_a_loc,ind_i_loc,ind_e_loc,ind_aie_loc
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='Set_psi_With_index_R'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) write(out_unitp,*) 'BEGINNING ',name_sub
+
+      IF (present(ind_aie) .AND. present(ind_a)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both ind_aie and ind_a are present !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+      IF (.NOT. present(ind_aie) .AND. .NOT. present(ind_a)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both ind_aie and ind_a are absent !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (.NOT. allocated(psi%RvecB) .AND. .NOT. allocated(psi%CvecB)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both psi%RvecB and psi%CvecB are not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(ind_a)) THEN
+        ind_a_loc = ind_a
+
+        IF (present(ind_i)) THEN
+          ind_i_loc = ind_i-1
+        ELSE
+          ind_i_loc = 0
+        END IF
+
+        IF (present(ind_e)) THEN
+          ind_e_loc = ind_e-1
+        ELSE
+          ind_e_loc = 0
+        END IF
+
+        ind_aie_loc = ind_a_loc + (ind_i_loc+ind_e_loc*psi%nb_bi) * psi%nb_ba
+
+      ELSE ! it means ind_aie is present
+        ind_aie_loc = ind_aie
+      END IF
+
+      IF (ind_aie_loc < 1 .OR. ind_aie_loc > psi%nb_tot) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' ind_aie_loc is out of range. ind_aie_loc:',ind_aie_loc
+        write(out_unitp,*) '    ind_aie_loc:',ind_aie_loc
+        write(out_unitp,*) '    range: [1   ...',psi%nb_tot,']'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+
+      IF (allocated(psi%RvecB)) psi%RvecB(ind_aie_loc) = R
+      IF (allocated(psi%CvecB)) psi%CvecB(ind_aie_loc) = R
+
+
+      psi%norm2 = ZERO
+      psi%symab = -1
+
+      IF (debug) THEN
+        write(out_unitp,*) 'ind_aie_loc ',ind_aie_loc
+        write(out_unitp,*) 'END ',name_sub
+        flush(out_unitp)
+      END IF
+
+      END SUBROUTINE Set_psi_With_index_R
+
+      SUBROUTINE Set_psi_With_index_C(psi,C,ind_a,ind_i,ind_e,ind_aie)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi),intent(inout)          :: psi
+      complex(kind=Rkind),intent(in)          :: C
+      integer,         intent(in),   optional :: ind_a,ind_i,ind_e,ind_aie
+
+      integer          :: ind_a_loc,ind_i_loc,ind_e_loc,ind_aie_loc
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='Set_psi_With_index_C'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) write(out_unitp,*) 'BEGINNING ',name_sub
+
+      IF (present(ind_aie) .AND. present(ind_a)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both ind_aie and ind_a are present !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+      IF (.NOT. present(ind_aie) .AND. .NOT. present(ind_a)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both ind_aie and ind_a are absent !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (.NOT. allocated(psi%RvecB) .AND. .NOT. allocated(psi%CvecB)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' Both psi%RvecB and psi%CvecB are not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(ind_a)) THEN
+        ind_a_loc = ind_a
+
+        IF (present(ind_i)) THEN
+          ind_i_loc = ind_i-1
+        ELSE
+          ind_i_loc = 0
+        END IF
+
+        IF (present(ind_e)) THEN
+          ind_e_loc = ind_e-1
+        ELSE
+          ind_e_loc = 0
+        END IF
+
+        ind_aie_loc = ind_a_loc + (ind_i_loc+ind_e_loc*psi%nb_bi) * psi%nb_ba
+
+      ELSE ! it means ind_aie is present
+        ind_aie_loc = ind_aie
+      END IF
+
+
+      IF (ind_aie_loc < 1 .OR. ind_aie_loc > psi%nb_tot) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' ind_aie_loc is out of range. ind_aie_loc:',ind_aie_loc
+        write(out_unitp,*) '    ind_aie_loc:',ind_aie_loc
+        write(out_unitp,*) '    range: [1   ...',psi%nb_tot,']'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+
+      IF (allocated(psi%RvecB)) psi%RvecB(ind_aie_loc) = C
+      IF (allocated(psi%CvecB)) psi%CvecB(ind_aie_loc) = C
+
+
+      psi%norm2 = ZERO
+      psi%symab = -1
+
+      IF (debug) write(out_unitp,*) 'END ',name_sub
+
+      END SUBROUTINE Set_psi_With_index_C
+!================================================================
+!
+!     psi+psi, psi+R, R+psi....
+!
+!================================================================
+      !!@description: TODO
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+          FUNCTION psi1_plus_psi2(psi1,psi2)
+            TYPE (param_psi)             :: psi1_plus_psi2
+            CLASS (param_psi), intent(in) :: psi1,psi2
+
+            integer           :: err,i
+
+!           write(out_unitp,*) 'BEGINNING psi1_plus_psi2'
+
+
+!           - define and allocate psi1_plus_psi2 ----
+            CALL copy_psi2TOpsi1(psi1_plus_psi2,psi1)
+!           -----------------------------------------
+
+
+            IF (psi1%GridRep .AND. psi2%GridRep) THEN
+              IF (psi1%cplx .AND. psi2%cplx) THEN
+                psi1_plus_psi2%CvecG = psi1%CvecG + psi2%CvecG
+              ELSE IF (.NOT. psi1%cplx .AND. .NOT. psi2%cplx) THEN
+                psi1_plus_psi2%RvecG = psi1%RvecG + psi2%RvecG
+              ELSE
+                write(out_unitp,*) ' ERROR : I CANNOT mix real and complex psi !!'
+                write(out_unitp,*) ' psi1%cplx,psi2%cplx',psi1%cplx,psi2%cplx
+                STOP
+              END IF
+            END IF
+
+            IF (psi1%BasisRep .AND. psi2%BasisRep) THEN
+              IF (psi1%cplx .AND. psi2%cplx) THEN
+                psi1_plus_psi2%CvecB = psi1%CvecB + psi2%CvecB
+              ELSE IF (.NOT. psi1%cplx .AND. .NOT. psi2%cplx) THEN
+                psi1_plus_psi2%RvecB = psi1%RvecB + psi2%RvecB
+              ELSE
+                write(out_unitp,*) ' ERROR : I CANNOT mix real and complex psi !!'
+                write(out_unitp,*) ' psi1%cplx,psi2%cplx',psi1%cplx,psi2%cplx
+                STOP
+              END IF
+            END IF
+
+            IF (psi1%symab == psi2%symab) THEN
+               psi1_plus_psi2%symab = psi1%symab
+            ELSE IF (psi1%symab == -2) THEN
+               psi1_plus_psi2%symab = psi2%symab
+            ELSE IF (psi2%symab == -2) THEN
+               psi1_plus_psi2%symab = psi1%symab
+            ELSE
+              psi1_plus_psi2%symab = -1
+            END IF
+
+!           write(out_unitp,*) 'END psi1_plus_psi2'
+
+          END FUNCTION psi1_plus_psi2
+
+
+      !!@description: TODO
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+          FUNCTION R_plus_psi(R,psi)
+            CLASS (param_psi), intent (in) :: psi
+            real (kind=Rkind),    intent (in) :: R
+            TYPE (param_psi) :: R_plus_psi
+            integer           :: err,i
+
+
+!           write(out_unitp,*) 'BEGINNING R_plus_psi'
+
+!           - define and allocate R_plus_psi ----
+            CALL copy_psi2TOpsi1(R_plus_psi,psi)
+!           -----------------------------------------
+
+
+            IF (.NOT. psi%BasisRep) THEN
+              write(out_unitp,*) ' ERROR in R_plus_psi: I CANNOT use psi in GridRep !!'
+              write(out_unitp,*) ' psi%BasisRep',psi%BasisRep
+              STOP
+            END IF
+
+
+            IF (psi%cplx) THEN
+              R_plus_psi%CvecB = psi%CvecB + cmplx(R,kind=Rkind)
+            ELSE
+              R_plus_psi%RvecB = psi%RvecB + R
+            END IF
+
+            IF (R == ZERO) THEN
+              R_plus_psi%symab = psi%symab
+            ELSE
+              R_plus_psi%symab = -1
+            END IF
+
+!           write(out_unitp,*) 'END R_plus_psi'
+
+          END FUNCTION R_plus_psi
+      !!@description: TODO
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+          FUNCTION psi_plus_R(psi,R)
+            CLASS (param_psi), intent (in) :: psi
+            real (kind=Rkind),    intent (in) :: R
+            TYPE (param_psi)  :: psi_plus_R
+            integer           :: err,i
+
+!           write(out_unitp,*) 'BEGINNING psi_plus_R'
+
+!           - define and allocate psi_plus_R ----
+            CALL copy_psi2TOpsi1(psi_plus_R,psi)
+!           -----------------------------------------
+
+
+            IF (.NOT. psi%BasisRep) THEN
+              write(out_unitp,*) ' ERROR in psi_plus_R: I CANNOT use psi in GridRep !!'
+              write(out_unitp,*) ' psi%BasisRep',psi%BasisRep
+              STOP
+            END IF
+
+
+            IF (psi%cplx) THEN
+              psi_plus_R%CvecB = psi%CvecB + cmplx(R,kind=Rkind)
+            ELSE
+              psi_plus_R%RvecB = psi%RvecB + R
+            END IF
+
+            IF (R == ZERO) THEN
+              psi_plus_R%symab = psi%symab
+            ELSE
+              psi_plus_R%symab = -1
+            END IF
+
+!           write(out_unitp,*) 'END psi_plus_R'
+
+          END FUNCTION psi_plus_R
+
+      !!@description: TODO
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+          FUNCTION C_plus_psi(C,psi)
+            CLASS (param_psi), intent (in) :: psi
+            complex (kind=Rkind), intent (in) :: C
+            TYPE (param_psi)  :: C_plus_psi
+            integer           :: err,i
+
+!           write(out_unitp,*) 'BEGINNING C_plus_psi'
+
+!           - define and allocate C_plus_psi ----
+            CALL copy_psi2TOpsi1(C_plus_psi,psi)
+!           -----------------------------------------
+
+
+            IF (.NOT. psi%BasisRep) THEN
+              write(out_unitp,*) ' ERROR C_plus_psi: I CANNOT use psi in GridRep !!'
+              write(out_unitp,*) ' psi%BasisRep',psi%BasisRep
+              STOP
+            END IF
+
+
+            IF (psi%cplx) THEN
+              C_plus_psi%CvecB = psi%CvecB + C
+            ELSE
+              write(out_unitp,*) ' ERROR : in C_plus_psi'
+              write(out_unitp,*) ' I cannot sum a real psi and a complex'
+              write(out_unitp,*) 'psi%cplx,C',psi%cplx,C
+              STOP
+            END IF
+
+            IF (abs(C) == ZERO) THEN
+              C_plus_psi%symab = psi%symab
+            ELSE
+              C_plus_psi%symab = -1
+            END IF
+
+!           write(out_unitp,*) 'END C_plus_psi'
+
+          END FUNCTION C_plus_psi
+
+      !!@description: TODO
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+          FUNCTION psi_plus_C(psi,C)
+            CLASS (param_psi), intent (in) :: psi
+            complex (kind=Rkind), intent (in) :: C
+            TYPE (param_psi)  :: psi_plus_C
+            integer           :: err,i
+
+!           write(out_unitp,*) 'BEGINNING psi_plus_C'
+
+!           - define and allocate psi_plus_C ----
+            CALL copy_psi2TOpsi1(psi_plus_C,psi)
+!           -----------------------------------------
+
+
+            IF (.NOT. psi%BasisRep) THEN
+              write(out_unitp,*) ' ERROR psi_plus_C: I CANNOT use psi in GridRep !!'
+              write(out_unitp,*) ' psi%BasisRep',psi%BasisRep
+              STOP
+            END IF
+
+
+            IF (psi%cplx) THEN
+              psi_plus_C%CvecB = psi%CvecB + C
+            ELSE
+              write(out_unitp,*) ' ERROR : in psi_plus_C'
+              write(out_unitp,*) ' I cannot sum a real psi and a complex'
+              write(out_unitp,*) 'psi%cplx,C',psi%cplx,C
+              STOP
+            END IF
+
+            IF (abs(C) == ZERO) THEN
+              psi_plus_C%symab = psi%symab
+            ELSE
+              psi_plus_C%symab = -1
+            END IF
+
+!           write(out_unitp,*) 'END psi_plus_C'
+
+          END FUNCTION psi_plus_C
+          FUNCTION plus_psi(psi)
+            CLASS (param_psi), intent (in) :: psi
+            TYPE (param_psi) :: plus_psi
+
+
+!           write(out_unitp,*) 'BEGINNING plus_psi'
+
+            CALL copy_psi2TOpsi1(plus_psi,psi)
+
+!           write(out_unitp,*) 'END plus_psi'
+
+          END FUNCTION plus_psi
+!================================================================
+!
+!     psi-psi, psi-R, R-psi....
+!
+!================================================================
+      !!@description: TODO
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+          FUNCTION psi1_minus_psi2(psi1,psi2)
+            CLASS (param_psi), intent(in) :: psi1,psi2
+            TYPE (param_psi) :: psi1_minus_psi2
+            integer          :: err,i
+
+
+!           write(out_unitp,*) 'BEGINNING psi1_minus_psi2'
+
+!           - define and allocate psi1_minus_psi2 ----
+            CALL copy_psi2TOpsi1(psi1_minus_psi2,psi1)
+!           -----------------------------------------
+
+            IF (psi1%GridRep .AND. psi2%GridRep) THEN
+              IF (psi1%cplx .AND. psi2%cplx) THEN
+                psi1_minus_psi2%CvecG = psi1%CvecG - psi2%CvecG
+              ELSE IF (.NOT. psi1%cplx .AND. .NOT. psi2%cplx) THEN
+                psi1_minus_psi2%RvecG = psi1%RvecG - psi2%RvecG
+              ELSE
+                write(out_unitp,*) ' ERROR : I CANNOT mix real and complex psi !!'
+                write(out_unitp,*) ' psi1%cplx,psi2%cplx',psi1%cplx,psi2%cplx
+                STOP
+              END IF
+            END IF
+
+            IF (psi1%BasisRep .AND. psi2%BasisRep) THEN
+              IF (psi1%cplx .AND. psi2%cplx) THEN
+                psi1_minus_psi2%CvecB = psi1%CvecB - psi2%CvecB
+              ELSE IF (.NOT. psi1%cplx .AND. .NOT. psi2%cplx) THEN
+                psi1_minus_psi2%RvecB = psi1%RvecB - psi2%RvecB
+              ELSE
+                write(out_unitp,*) ' ERROR : I CANNOT mix real and complex psi !!'
+                write(out_unitp,*) ' psi1%cplx,psi2%cplx',psi1%cplx,psi2%cplx
+                STOP
+              END IF
+            END IF
+
+
+            IF (psi1%symab == psi2%symab) THEN
+               psi1_minus_psi2%symab = psi1%symab
+            ELSE IF (psi1%symab == -2) THEN
+               psi1_minus_psi2%symab = psi2%symab
+            ELSE IF (psi2%symab == -2) THEN
+               psi1_minus_psi2%symab = psi1%symab
+            ELSE
+              psi1_minus_psi2%symab = -1
+            END IF
+
+!           write(out_unitp,*) 'END psi1_minus_psi2'
+
+          END FUNCTION psi1_minus_psi2
+
+      !!@description: TODO
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+          FUNCTION R_minus_psi(R,psi)
+            CLASS (param_psi),    intent (in) :: psi
+            real (kind=Rkind),    intent (in) :: R
+            TYPE (param_psi) :: R_minus_psi
+
+
+!           write(out_unitp,*) 'BEGINNING R_minus_psi'
+
+!           - define and allocate R_minus_psi ----
+            CALL copy_psi2TOpsi1(R_minus_psi,psi)
+!           -----------------------------------------
+
+
+            IF (.NOT. psi%BasisRep) THEN
+              write(out_unitp,*) ' ERROR R_minus_psi: I CANNOT use psi in GridRep !!'
+              write(out_unitp,*) ' psi%BasisRep',psi%BasisRep
+              STOP
+            END IF
+
+
+            IF (psi%cplx) THEN
+              R_minus_psi%CvecB = cmplx(R,kind=Rkind) - psi%CvecB
+            ELSE
+              R_minus_psi%RvecB = R - psi%RvecB
+            END IF
+
+            IF (R == ZERO) THEN
+              R_minus_psi%symab = psi%symab
+            ELSE
+              R_minus_psi%symab = -1
+            END IF
+
+
+!           write(out_unitp,*) 'END R_minus_psi'
+
+          END FUNCTION R_minus_psi
+
+      !!@description: TODO
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+          FUNCTION psi_minus_R(psi,R)
+            CLASS (param_psi), intent (in) :: psi
+            real (kind=Rkind),    intent (in) :: R
+            TYPE (param_psi)  :: psi_minus_R
+            integer           :: err,i
+
+!           write(out_unitp,*) 'BEGINNING psi_minus_R'
+
+!           - define and allocate psi_minus_R ----
+            CALL copy_psi2TOpsi1(psi_minus_R,psi)
+!           -----------------------------------------
+
+
+            IF (.NOT. psi%BasisRep) THEN
+              write(out_unitp,*) ' ERROR psi_minus_R: I CANNOT use psi in GridRep !!'
+              write(out_unitp,*) ' psi%BasisRep',psi%BasisRep
+              STOP
+            END IF
+
+
+            IF (psi%cplx) THEN
+              psi_minus_R%CvecB = psi%CvecB - cmplx(R,kind=Rkind)
+            ELSE
+              psi_minus_R%RvecB = psi%RvecB - R
+            END IF
+
+            IF (R == ZERO) THEN
+              psi_minus_R%symab = psi%symab
+            ELSE
+              psi_minus_R%symab = -1
+            END IF
+
+!           write(out_unitp,*) 'END psi_minus_R'
+
+          END FUNCTION psi_minus_R
+
+      !!@description: TODO
+      !!@param: TODO
+      !!@param: TODO
+      !!@param: TODO
+          FUNCTION C_minus_psi(C,psi)
+            CLASS (param_psi), intent (in) :: psi
+            complex (kind=Rkind), intent (in) :: C
+            TYPE (param_psi)  :: C_minus_psi
+            integer           :: err,i
+
+!           write(out_unitp,*) 'BEGINNING C_minus_psi'
+
+!           - define and allocate C_minus_psi ----
+            CALL copy_psi2TOpsi1(C_minus_psi,psi)
+!           -----------------------------------------
+
+
+            IF (.NOT. psi%BasisRep) THEN
+              write(out_unitp,*) ' ERROR C_minus_psi: I CANNOT use psi in GridRep !!'
+              write(out_unitp,*) ' psi%BasisRep',psi%BasisRep
+              STOP
+            END IF
+
+
+            IF (psi%cplx) THEN
+              C_minus_psi%CvecB = C - psi%CvecB
+            ELSE
+              write(out_unitp,*) ' ERROR : in C_minus_psi'
+              write(out_unitp,*) ' I cannot sum a real psi and a complex'
+              write(out_unitp,*) 'psi%cplx,C',psi%cplx,C
+              STOP
+            END IF
+
+            IF (abs(C) == ZERO) THEN
+              C_minus_psi%symab = psi%symab
+            ELSE
+              C_minus_psi%symab = -1
+            END IF
+
+!           write(out_unitp,*) 'END C_minus_psi'
+
+          END FUNCTION C_minus_psi
+
+          !!@description: TODO
+          FUNCTION psi_minus_C(psi,C)
+            CLASS (param_psi), intent (in) :: psi
+            complex (kind=Rkind), intent (in) :: C
+            TYPE (param_psi)  :: psi_minus_C
+            integer           :: err,i
+
+!           write(out_unitp,*) 'BEGINNING psi_minus_C'
+
+!           - define and allocate psi_minus_C ----
+            CALL copy_psi2TOpsi1(psi_minus_C,psi)
+!           -----------------------------------------
+
+
+            IF (.NOT. psi%BasisRep) THEN
+              write(out_unitp,*) ' ERROR psi_minus_C: I CANNOT use psi in GridRep !!'
+              write(out_unitp,*) ' psi%BasisRep',psi%BasisRep
+              STOP
+            END IF
+
+
+            IF (psi%cplx) THEN
+              psi_minus_C%CvecB = psi%CvecB - C
+            ELSE
+              write(out_unitp,*) ' ERROR : in psi_minus_C'
+              write(out_unitp,*) ' I cannot sum a real psi and a complex'
+              write(out_unitp,*) 'psi%cplx,C',psi%cplx,C
+              STOP
+            END IF
+
+            IF (abs(C) == ZERO) THEN
+              psi_minus_C%symab = psi%symab
+            ELSE
+              psi_minus_C%symab = -1
+            END IF
+
+!           write(out_unitp,*) 'END psi_minus_C'
+
+          END FUNCTION psi_minus_C
+
+          FUNCTION minus_psi(psi)
+            CLASS (param_psi),    intent (in) :: psi
+            TYPE (param_psi) :: minus_psi
+
+
+!           write(out_unitp,*) 'BEGINNING minus_psi'
+
+!           - define and allocate minus_psi ----
+            CALL copy_psi2TOpsi1(minus_psi,psi)
+!           -----------------------------------------
+
+          IF (psi%BasisRep) THEN
+            IF (psi%cplx) THEN
+              minus_psi%CvecB(:) =  - psi%CvecB
+            ELSE
+              minus_psi%RvecB(:) =  - psi%RvecB
+            END IF
+          END IF
+
+          IF (psi%GridRep) THEN
+            IF (psi%cplx) THEN
+              minus_psi%CvecG(:) =  - psi%CvecG
+            ELSE
+              minus_psi%RvecG(:) =  - psi%RvecG
+            END IF
+          END IF
+
+!           write(out_unitp,*) 'END minus_psi'
+
+          END FUNCTION minus_psi
+!================================================================
+!
+!         psi*R ....
+!
+!================================================================
+          !!@description: TODO
+          FUNCTION R_time_psi(R,psi)
+            CLASS (param_psi), intent (in) :: psi
+            real (kind=Rkind),    intent (in) :: R
+            TYPE (param_psi) :: R_time_psi
+            integer           :: err,i
+
+!           write(out_unitp,*) 'BEGINNING R_time_psi'
+
+!           - define and allocate R_time_psi ----
+            CALL copy_psi2TOpsi1(R_time_psi,psi)
+!           -----------------------------------------
+
+
+            IF (psi%GridRep) THEN
+              IF (psi%cplx) THEN
+                R_time_psi%CvecG = psi%CvecG * cmplx(R,kind=Rkind)
+              ELSE
+                R_time_psi%RvecG = psi%RvecG * R
+              END IF
+            END IF
+
+            IF (psi%BasisRep) THEN
+              IF (psi%cplx) THEN
+                R_time_psi%CvecB = psi%CvecB * cmplx(R,kind=Rkind)
+              ELSE
+                R_time_psi%RvecB = psi%RvecB * R
+              END IF
+            END IF
+
+            R_time_psi%symab = psi%symab
+
+!           write(out_unitp,*) 'END R_time_psi'
+
+          END FUNCTION R_time_psi
+
+          FUNCTION psi_time_R(psi,R)
+            USE mod_MPI
+
+            CLASS (param_psi), intent (in) :: psi
+            real (kind=Rkind),    intent (in) :: R
+            TYPE (param_psi)  :: psi_time_R
+            integer           :: err,i
+
+!           write(out_unitp,*) 'BEGINNING psi_time_R'
+
+!           - define and allocate psi_time_R ----
+            CALL copy_psi2TOpsi1(psi_time_R,psi)
+!           -----------------------------------------
+
+
+            IF (psi%GridRep) THEN
+              IF (psi%cplx) THEN
+                IF(MPI_id==0) psi_time_R%CvecG = psi%CvecG * cmplx(R,kind=Rkind)
+              ELSE
+                IF(MPI_id==0) psi_time_R%RvecG = psi%RvecG * R
+              END IF
+            END IF
+
+            IF (psi%BasisRep) THEN
+              IF (psi%cplx) THEN
+                IF(MPI_id==0) psi_time_R%CvecB = psi%CvecB * cmplx(R,kind=Rkind)
+              ELSE
+                IF(MPI_id==0) psi_time_R%RvecB = psi%RvecB * R
+              END IF
+            END IF
+
+            psi_time_R%symab = psi%symab
+
+!           write(out_unitp,*) 'END psi_time_R'
+
+          END FUNCTION psi_time_R
+
+          !!@description: TODO
+          FUNCTION C_time_psi(C,psi)
+            CLASS (param_psi), intent (in) :: psi
+            complex (kind=Rkind), intent (in) :: C
+            TYPE (param_psi)  :: C_time_psi
+            integer           :: err,i
+
+!           write(out_unitp,*) 'BEGINNING C_time_psi'
+
+!           - define and allocate C_time_psi ----
+            CALL copy_psi2TOpsi1(C_time_psi,psi)
+!           -----------------------------------------
+
+
+            IF (psi%BasisRep) THEN
+              IF (psi%cplx) THEN
+                C_time_psi%CvecB = psi%CvecB * C
+              ELSE
+                write(out_unitp,*) ' ERROR : in C_time_psi'
+                write(out_unitp,*) ' I cannot multiply a real psi and a complex'
+                write(out_unitp,*) 'psi%cplx,C',psi%cplx,C
+                STOP
+              END IF
+            END IF
+
+            IF (psi%GridRep) THEN
+              IF (psi%cplx) THEN
+                C_time_psi%CvecG = psi%CvecG * C
+              ELSE
+                write(out_unitp,*) ' ERROR : in C_time_psi'
+                write(out_unitp,*) ' I cannot multiply a real psi and a complex'
+                write(out_unitp,*) 'psi%cplx,C',psi%cplx,C
+                STOP
+              END IF
+            END IF
+
+            C_time_psi%symab = psi%symab
+
+!           write(out_unitp,*) 'END C_time_psi'
+
+          END FUNCTION C_time_psi
+
+          !!@description: TODO
+!=======================================================================================
+          FUNCTION psi_time_C(psi,C)
+            TYPE (param_psi)                  :: psi_time_C
+
+            CLASS (param_psi),     intent (in) :: psi
+            complex (kind=Rkind),  intent (in) :: C
+
+            integer           :: err,i
+
+            !write(out_unitp,*) 'BEGINNING psi_time_C'
+            !write(out_unitp,*) 'psi%CvecB',psi%CvecB
+            !write(out_unitp,*) 'C',C
+            !CALL flush_perso(out_unitp)
+
+!           - define and allocate psi_time_C ----
+            CALL copy_psi2TOpsi1(psi_time_C,psi)
+!           -----------------------------------------
+
+            IF (psi%BasisRep) THEN
+              IF (psi%cplx) THEN
+                IF(MPI_id==0) psi_time_C%CvecB(:) = psi%CvecB * C
+              ELSE
+                write(out_unitp,*) ' ERROR : in psi_time_C'
+                write(out_unitp,*) ' I cannot multiply a real psi and a complex'
+                write(out_unitp,*) 'psi%cplx,C',psi%cplx,C
+                STOP
+              END IF
+            END IF
+
+            IF (psi%GridRep) THEN
+              IF (psi%cplx) THEN
+                IF(MPI_id==0) psi_time_C%CvecG(:) = psi%CvecG * C
+              ELSE
+                write(out_unitp,*) ' ERROR : in psi_time_C'
+                write(out_unitp,*) ' I cannot multiply a real psi and a complex'
+                write(out_unitp,*) 'psi%cplx,C',psi%cplx,C
+                STOP
+              END IF
+            END IF
+
+            psi_time_C%symab = psi%symab
+
+            !write(out_unitp,*) 'END psi_time_C'
+            !CALL flush_perso(out_unitp)
+
+          END FUNCTION psi_time_C
+
+
+          FUNCTION psi_over_R(psi,R)
+            USE mod_MPI
+
+            CLASS (param_psi),    intent (in) :: psi
+            real (kind=Rkind),    intent (in) :: R
+            TYPE (param_psi)  :: psi_over_R
+
+!           write(out_unitp,*) 'BEGINNING psi_over_R'
+
+!           - define and allocate psi_over_R ----
+            CALL copy_psi2TOpsi1(psi_over_R,psi)
+!           -----------------------------------------
+
+
+            IF (psi%GridRep) THEN
+              IF (psi%cplx) THEN
+                IF(MPI_id==0) psi_over_R%CvecG = psi%CvecG / cmplx(R,kind=Rkind)
+              ELSE
+                IF(MPI_id==0) psi_over_R%RvecG = psi%RvecG / R
+              END IF
+            END IF
+
+            IF (psi%BasisRep) THEN
+              IF (psi%cplx) THEN
+                IF(MPI_id==0) psi_over_R%CvecB = psi%CvecB / cmplx(R,kind=Rkind)
+              ELSE
+                IF(MPI_id==0) psi_over_R%RvecB = psi%RvecB / R
+              END IF
+            END IF
+
+            psi_over_R%symab = psi%symab
+
+!           write(out_unitp,*) 'END psi_over_R'
+
+          END FUNCTION psi_over_R
+          FUNCTION psi_over_C(psi,C)
+            TYPE (param_psi)                   :: psi_over_C
+
+            CLASS (param_psi),     intent (in) :: psi
+            complex (kind=Rkind),  intent (in) :: C
+
+            !write(out_unitp,*) 'BEGINNING psi_over_C'
+            !write(out_unitp,*) 'psi%CvecB',psi%CvecB
+            !write(out_unitp,*) 'C',C
+            !CALL flush_perso(out_unitp)
+
+!           - define and allocate psi_over_C ----
+            CALL copy_psi2TOpsi1(psi_over_C,psi)
+!           -----------------------------------------
+
+            IF (psi%BasisRep) THEN
+              IF (psi%cplx) THEN
+                IF(MPI_id==0) psi_over_C%CvecB(:) = psi%CvecB / C
+              ELSE
+                write(out_unitp,*) ' ERROR : in psi_over_C'
+                write(out_unitp,*) ' I cannot divide a real psi by a complex'
+                write(out_unitp,*) 'psi%cplx,C',psi%cplx,C
+                STOP
+              END IF
+            END IF
+
+            IF (psi%GridRep) THEN
+              IF (psi%cplx) THEN
+                IF(MPI_id==0) psi_over_C%CvecG(:) = psi%CvecG / C
+              ELSE
+                write(out_unitp,*) ' ERROR : in psi_over_C'
+                write(out_unitp,*) ' I cannot divide a real psi by a complex'
+                write(out_unitp,*) 'psi%cplx,C',psi%cplx,C
+                STOP
+              END IF
+            END IF
+
+            psi_over_C%symab = psi%symab
+
+            !write(out_unitp,*) 'END psi_over_C'
+            !CALL flush_perso(out_unitp)
+
+          END FUNCTION psi_over_C
+!=======================================================================================
 !================================================================
 !
 !     write the initialization parameters
@@ -969,8 +2091,6 @@
                   associated(psi%BasisnD),associated(psi%Basis2n),      &
                   associated(psi%ComOp)
       write(out_unitp,*) 'symab, bits(symab)',WriteTOstring_symab(psi%symab)
-
-      write(out_unitp,*) 'builtINsub',psi%builtINsub
 
       write(out_unitp,*) 'init,cplx',psi%init,psi%cplx
 
@@ -1025,12 +2145,12 @@
 !----- variables for the WP ----------------------------------------
       TYPE (param_psi)            :: psi
       real (kind=Rkind), optional :: T ! time
-      integer, optional           :: nioWP
+      integer,           optional :: nioWP
 
-      logical, optional           :: ecri_GridRep,ecri_BasisRep
-      logical, optional           :: channel_all,channel_pack
-      logical, optional           :: ecri_psi2
-      integer, optional           :: ecri_nume,ecri_numi
+      logical,           optional :: ecri_GridRep,ecri_BasisRep
+      logical,           optional :: channel_all,channel_pack
+      logical,           optional :: ecri_psi2
+      integer,           optional :: ecri_nume,ecri_numi
 
 
 

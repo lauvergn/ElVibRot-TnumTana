@@ -22,14 +22,8 @@
 !===========================================================================
       MODULE mod_MatOFdnS
       use mod_system
-      use mod_dnS, only: type_dns, alloc_dns, dealloc_dns, check_alloc_dns, &
-                         write_dns, alloc_array, dealloc_array, sub_dns1_to_dns2, &
-                         sub_dns1_prod_dns2_to_dns3, sub_dns1_wplus_dns2_to_dns3, &
-                         sub_dns1_prod_w_to_dns2, sub_zero_to_dns, sub_dns1_to_dntr2, &
-                         sub_dns1_plus_dns2_to_dns3, sub_weight_dns
-      use mod_VecOFdnS, only: alloc_array, dealloc_array, normalization_of_vecofdns, &
-                              alloc_vecofdns, vec1ofdns_dotproduct_vec2ofdns_to_dns3, &
-                              dealloc_vecofdns, check_alloc_vecofdns
+      use mod_dnS
+      use mod_VecOFdnS
       IMPLICIT NONE
 
       PRIVATE
@@ -347,14 +341,14 @@
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(MatOFdnS(1,3),MatOFdnS(3,2),dnW2)
         CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW1,ONE,dnW2,-ONE,dnW3)
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(MatOFdnS(2,1),dnW3,dnW2)
-        CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnDet,ONE,dnW2,-ONE,dnDet)
+        CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2,-ONE,dnDet,ONE)
 
         !third line
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(MatOFdnS(1,2),MatOFdnS(2,3),dnW1)
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(MatOFdnS(1,3),MatOFdnS(2,2),dnW2)
         CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW1,ONE,dnW2,-ONE,dnW3)
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(MatOFdnS(3,1),dnW3,dnW2)
-        CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnDet,ONE,dnW2, ONE,dnDet)
+        CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2, ONE,dnDet,ONE)
 
         !write(out_unitp,*) 'det(MatOFdnS)'
         !CALL Write_dnS(dnDet)
@@ -671,7 +665,7 @@
                                       MatdnS(ip,iq),                    &
                                       dnTh,dnWork1,dnWork2,dnWork3,type_cs)
             CALL Calc_MaxVal_OF_dnS(dnTh,max_dnSmatpq)
-            !write(6,*) 'it,ip,iq,max_dnSmatpq',it,ip,iq,max_dnSmatpq
+            !write(out_unitp,*) 'it,ip,iq,max_dnSmatpq',it,ip,iq,max_dnSmatpq
             IF (max_dnSmatpq < tresh) CYCLE
             IF (max_dnSmatpq > max_matpq)  max_matpq = max_dnSmatpq
 
@@ -1072,7 +1066,7 @@
           write(out_unitp,*) 'Eigenvector (in line) Matrix of dnS (not converged)'
           CALL Write_MatOFdnS(EigVecdnS,nderiv)
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(6,*) max_it,' iterations should never happen'
+          write(out_unitp,*) max_it,' iterations should never happen'
           STOP
         END IF
 
@@ -1227,7 +1221,7 @@
           write(out_unitp,*) 'Eigenvector (in line) Matrix of dnS (not converged)'
           CALL Write_MatOFdnS(EigVecdnS,nderiv)
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(6,*) max_it,' iterations should never happen'
+          write(out_unitp,*) max_it,' iterations should never happen'
           STOP
         END IF
 
@@ -1372,7 +1366,7 @@
           write(out_unitp,*) 'Eigenvector (in line) Matrix of dnS (not converged)'
           CALL Write_MatOFdnS(EigVecdnS,nderiv)
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(6,*) max_it,' iterations should never happen'
+          write(out_unitp,*) max_it,' iterations should never happen'
           STOP
         END IF
 
@@ -1474,7 +1468,7 @@
           END DO
           IF (EigVecdnS(max_j,i)%d0 < ZERO) THEN
             DO j=1,N
-              CALL sub_dnS1_PROD_w_TO_dnS2(EigVecdnS(j,i),-ONE,EigVecdnS(j,i),nderiv_loc)
+              CALL sub_Weight_dnS(EigVecdnS(j,i),-ONE,nderiv_loc)
             END DO
           END IF
         END DO
@@ -1605,7 +1599,7 @@
 
           ! atan(Mat(p,q)/delta)=atan(dnWork2) => dnWork1  (2*th)
           CALL sub_dnS1_TO_dntR2(dnWork2,dnWork1,70)
-          !write(6,*) '2th',dnWork1%d0
+          !write(out_unitp,*) '2th',dnWork1%d0
 
           ! theta
           CALL sub_dnS1_PROD_w_TO_dnS2(dnWork1,HALF,dnTh)
@@ -1620,7 +1614,7 @@
           ! atan(delta/Mat(p,q))=atan(dnWork2) => dnWork1  (2*thbis)
           CALL sub_dnS1_TO_dntR2(dnWork2,dnWork1,70)
 
-          !write(6,*) '2thbis',dnWork1%d0
+          !write(out_unitp,*) '2thbis',dnWork1%d0
 
 
           IF (dnWork1%d0 > 0) THEN
@@ -1641,7 +1635,7 @@
         CALL sub_dnS1_TO_dntR2(dnTh,dnSin,3)
 
 
-        !write(6,*) 'type_cs=2',dnTh%d0, (abs(dnTh%d0)< PI/FOUR)
+        !write(out_unitp,*) 'type_cs=2',dnTh%d0, (abs(dnTh%d0)< PI/FOUR)
 
 
         CALL dealloc_dnS(dnDelta)
@@ -1709,7 +1703,7 @@
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnS1,dnS1,dnWork2)
         CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnWork1,ONE,dnWork2,ONE,dnNorm1)
         CALL Calc_MaxVal_OF_dnS(dnNorm1,norm1)
-        !write(6,*) 'dnNorm1',norm1
+        !write(out_unitp,*) 'dnNorm1',norm1
 
         !Cos and sin from the second formula
         ! s = -delta+sqrt(delta**2+dnMatpq%d0**2) = -delta + BigDelta
@@ -1721,11 +1715,11 @@
         CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnS2,dnS2,dnWork2)
         CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnWork1,ONE,dnWork2,ONE,dnNorm2)
         CALL Calc_MaxVal_OF_dnS(dnNorm2,norm2)
-        !write(6,*) 'dnNorm2',norm2
+        !write(out_unitp,*) 'dnNorm2',norm2
         IF (abs(dnNorm1%d0) < ONETENTH**10 .AND. abs(dnNorm2%d0) < ONETENTH**10) THEN
           write(out_unitp,*) 'Warning: degenerated matrix'
         END IF
-        !write(6,*) 'type_cs=1, norm1,norm2',norm1,norm2
+        !write(out_unitp,*) 'type_cs=1, norm1,norm2',norm1,norm2
 
         IF (norm1 >= norm2) THEN
           CALL sub_dnS1_TO_dntR2(dnNorm1,dnWork1,91) ! sqrt
@@ -1734,7 +1728,7 @@
           CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnC1,dnNorm1,dnCos)
           CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnS1,dnNorm1,dnSin)
 
-          !write(6,*) 'type_cs=1, 1st formula',dnCos%d0,dnSin%d0
+          !write(out_unitp,*) 'type_cs=1, 1st formula',dnCos%d0,dnSin%d0
 
         ELSE
           CALL sub_dnS1_TO_dntR2(dnNorm2,dnWork2,91) ! sqrt
@@ -1743,7 +1737,7 @@
           CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnC2,dnNorm2,dnCos)
           CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnS2,dnNorm2,dnSin)
 
-          !write(6,*) 'type_cs=1, 2d formula',dnCos%d0,dnSin%d0
+          !write(out_unitp,*) 'type_cs=1, 2d formula',dnCos%d0,dnSin%d0
 
         END IF
         CALL sub_dnS1_TO_dnS2(dnSin,dnTh)  ! to be able to test ...
@@ -1956,8 +1950,10 @@
         DO j=lbound(Mat3OFdnS,dim=2),ubound(Mat3OFdnS,dim=2)
           CALL sub_ZERO_TO_dnS(Mat3OFdnS(i,j),nderiv_loc)
           DO k=lbound(Mat1OFdnS,dim=2),ubound(Mat1OFdnS,dim=2)
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(Mat1OFdnS(i,k),Mat2OFdnS(k,j),dnWork,nderiv_loc)
-            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(Mat3OFdnS(i,j),dnWork,Mat3OFdnS(i,j),nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(Mat1OFdnS(i,k),             &
+                                       Mat2OFdnS(k,j),dnWork,nderiv_loc)
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnWork,ONE,Mat3OFdnS(i,j), &
+                                             ONE,nderiv_loc)
 
           END DO
         END DO
@@ -2041,8 +2037,10 @@
         DO i=lbound(Vec3OFdnS,dim=1),ubound(Vec3OFdnS,dim=1)
           CALL sub_ZERO_TO_dnS(Vec3OFdnS(i),nderiv_loc)
           DO k=lbound(Mat1OFdnS,dim=2),ubound(Mat1OFdnS,dim=2)
-            CALL sub_dnS1_PROD_dnS2_TO_dnS3(Mat1OFdnS(i,k),Vec2OFdnS(k),dnWork,nderiv_loc)
-            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(Vec3OFdnS(i),dnWork,Vec3OFdnS(i),nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(Mat1OFdnS(i,k),             &
+                                         Vec2OFdnS(k),dnWork,nderiv_loc)
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnWork,ONE,Vec3OFdnS(i),   &
+                                             ONE,nderiv_loc)
 
           END DO
         END DO

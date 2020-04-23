@@ -37,7 +37,7 @@
    PRIVATE
    PUBLIC :: write_keo_LatexForm
    PUBLIC :: write_keo_VSCFForm
-   PUBLIC :: write_keo_MCTDH_Form
+   PUBLIC :: write_keo_MCTDH_Form,read_keo_mctdh_form
    PUBLIC :: write_keo_MidasCppForm,write_mol_MidasCppForm
 
    CONTAINS 
@@ -46,6 +46,8 @@
    !! @param:       TWOxKEO       The 2*KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_MidasCppForm(mole, TWOxKEO, i_out, tab_Qname, param_JJ)
+   IMPLICIT NONE
+
      type (CoordType),            intent(in)                :: mole
      type (sum_opnd),           intent(in)                :: TWOxKEO
      integer,                   intent(in)                :: i_out
@@ -97,7 +99,7 @@
      DO i = 1, size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 0) CYCLE
        CALL Export_Midas_Opnd(TWOxKEO%sum_prod_op1d(i), tab_Qname, FnDname)
@@ -114,7 +116,7 @@
      IF (param_JJ > 0) THEN
        DO i = 1,size(TWOxKEO%sum_prod_op1d)
          CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (nb_J /= 2) CYCLE
          CALL Export_Midas_Opnd(TWOxKEO%sum_prod_op1d(i), tab_Qname, FnDname)
@@ -130,7 +132,7 @@
        ! Coriolis part: Pq x Jj (i,j) = x,y,z
        DO i = 1,size(TWOxKEO%sum_prod_op1d)
          CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (.NOT. (nb_pq == 1 .AND. nb_J == 1)) CYCLE
          CALL Export_Midas_Opnd(TWOxKEO%sum_prod_op1d(i), tab_Qname, FnDname)
@@ -146,7 +148,7 @@
        ! Coriolis part: Jj (i,j) = x,y,z
        DO i = 1, size(TWOxKEO%sum_prod_op1d)
          CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (.NOT. (nb_pq == 0 .AND. nb_J == 1)) CYCLE
          CALL Export_Midas_Opnd(TWOxKEO%sum_prod_op1d(i), tab_Qname, FnDname)
@@ -277,6 +279,8 @@
    END SUBROUTINE write_mol_MidasCppForm
 
    SUBROUTINE write_keo_MidasCppForm_old(mole, keo, i_out, tab_Qname, param_JJ)
+   IMPLICIT NONE
+
      type (CoordType),            intent(in)                :: mole
      type (sum_opnd),           intent(in)                :: keo
      integer,                   intent(in)                :: i_out
@@ -315,9 +319,9 @@
      DO i = 1, size(keo%sum_prod_op1d)
        Cn = real(keo%Cn(i),kind=Rkind)
        IF (aimag(keo%Cn(i)) /= ZERO) STOP 'Cn is complex'
-       !write(6,*)
+       !write(out_unitp,*)
        CALL get_pq_OF_OpnD(pq1, pq2, nb_pq, nb_J, nb_L, mole%nb_var, keo%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J > 0) CYCLE
 
@@ -332,9 +336,9 @@
        DO i = 1,size(keo%sum_prod_op1d)
          Cn = real(keo%Cn(i),kind=Rkind)
          IF (aimag(keo%Cn(i)) /= ZERO) STOP 'Cn is complex'
-         !write(6,*)
+         !write(out_unitp,*)
          CALL get_pq_OF_OpnD(pq1, pq2, nb_pq, nb_J, nb_L, mole%nb_var, keo%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (nb_J /= 2) CYCLE
 
@@ -351,9 +355,9 @@
        DO i = 1,size(keo%sum_prod_op1d)
          Cn = real(keo%Cn(i),kind=Rkind)
          IF (aimag(keo%Cn(i)) /= ZERO) STOP 'Cn is complex'
-         !write(6,*)
+         !write(out_unitp,*)
          CALL get_pq_OF_OpnD(pq1, pq2, nb_pq, nb_J, nb_L, mole%nb_var, keo%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (.NOT. (nb_pq == 1 .AND. nb_J == 1)) CYCLE
 
@@ -370,9 +374,9 @@
        DO i = 1, size(keo%sum_prod_op1d)
          Cn = real(keo%Cn(i),kind=Rkind)
          IF (aimag(keo%Cn(i)) /= ZERO) STOP 'Cn is complex'
-         !write(6,*)
+         !write(out_unitp,*)
          CALL get_pq_OF_OpnD(pq1, pq2, nb_pq, nb_J, nb_L, mole%nb_var, keo%sum_prod_op1d(i))
-         !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+         !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
          IF (.NOT. (nb_pq == 0 .AND. nb_J == 1)) CYCLE
 
@@ -397,6 +401,8 @@
    !! @param:       TWOxKEO       The 2*KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_VSCFform(mole, TWOxKEO, i_out, tab_Qname, param_JJ)
+   IMPLICIT NONE
+
      type (CoordType),            intent(in)                :: mole
      type(sum_opnd),            intent(in)                :: TWOxKEO
      integer,                   intent(in)                :: i_out
@@ -420,7 +426,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 0 .OR. nb_pq == 0) CYCLE
        CALL Export_VSCF_Opnd(TWOxKEO%sum_prod_op1d(i),tab_Qname,FnDname)
@@ -438,7 +444,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 0 .OR. nb_pq /= 0) CYCLE
 
@@ -459,7 +465,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 2) CYCLE
 
@@ -478,7 +484,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 1 .AND. nb_J == 1)) CYCLE
 
@@ -498,7 +504,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 0 .AND. nb_J == 1)) CYCLE
 
@@ -525,6 +531,8 @@
    !! @param:       TWOxKEO       The 2*KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_Latexform(mole, TWOxKEO, i_out, tab_Qname, param_JJ)
+   IMPLICIT NONE
+
      type (CoordType),            intent(in)                :: mole
      type(sum_opnd),            intent(in)                :: TWOxKEO
      integer,                   intent(in)                :: i_out
@@ -553,7 +561,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 0 .OR. nb_pq == 0) CYCLE
 
@@ -571,7 +579,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 0 .OR. nb_pq /= 0) CYCLE
 
@@ -589,7 +597,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 2) CYCLE
 
@@ -606,7 +614,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 1 .AND. nb_J == 1)) CYCLE
 
@@ -624,7 +632,7 @@
      DO i = 1,size(TWOxKEO%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 0 .AND. nb_J == 1)) CYCLE
 
@@ -649,13 +657,90 @@
 
    END SUBROUTINE write_keo_Latexform
 
+   !SUBROUTINE read_keo_mctdh_form(mole, keo,io)
+   SUBROUTINE read_keo_mctdh_form(nb_act, keo,io)
+   USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : IOSTAT_END,IOSTAT_EOR
+   IMPLICIT NONE
 
+     !type (CoordType),          intent(in)                :: mole
+     integer,                   intent(in)                :: nb_act
+     type(sum_opnd),            intent(inout)             :: keo
+     integer,                   intent(in)                :: io
+
+     character (len=Line_len)                   :: readline
+
+     character (len = :), allocatable           :: line
+     TYPE(OpnD)                                 :: FnD
+
+     integer                                    :: i_modes,i_end,i_pipe
+     integer                                    :: io_err
+
+     logical, parameter :: debug = .FALSE.
+     !logical, parameter :: debug = .TRUE.
+     character (len = Name_longlen) :: routine_name='read_keo_mctdh_form'
+
+     CALL delete_op(keo)
+     keo = ZERO
+     ! first read util modes is found
+     i_modes = 0
+     DO
+       read(io,*,iostat=io_err) readline
+       CALL string_uppercase_TO_lowercase(readline)
+       IF (io_err /= 0) EXIT
+       i_modes = index(readline,'modes')
+       IF (i_modes > 0) EXIT
+     END DO
+     IF (io_err /= 0) STOP 'ERROR in read_keo_mctdh_form: modes keyword not found'
+
+     IF (debug) write(out_unitp,*) 'found modes line: ',readline ; flush(out_unitp)
+
+     DO ! loop on the lines. Operator line is found when a | is present.
+       !read(io,*,iostat=io_err) readline
+       !CALL string_uppercase_TO_lowercase(readline)
+
+       line = Read_line(io,io_err)
+       IF (io_err /= 0) EXIT
+
+       CALL string_uppercase_TO_lowercase(line)
+       line = trim(adjustl(line))
+       IF (debug) write(out_unitp,*) 'line: ',line ; flush(out_unitp)
+
+       ! first test the end with "end-hamiltonian-section"
+       i_end = index(line,'end-hamiltonian-section')
+       IF (i_end > 0) EXIT
+
+       i_pipe = index(line,'|')
+       IF (i_pipe > 0) THEN
+         IF (debug) write(out_unitp,*) 'operator line: ',line ; flush(out_unitp)
+         CALL StringMCTDH_TO_Opnd(FnD,line,nb_act=nb_act)
+         IF (debug)  CALL write_op(FnD,header=.TRUE.)
+
+         CALL F1_nd_PLUS_TO_Fres_sum_nd(FnD,keo)
+         !keo = keo + FnD
+       END IF
+
+     END DO
+
+     IF (io_err /= 0) STOP 'ERROR in read_keo_mctdh_form: reading operator lines'
+
+     IF (debug) write(out_unitp,*) 'found end-hamiltonian-section: ',line ; flush(out_unitp)
+
+     IF (debug)  CALL write_op(keo,header=.TRUE.)
+
+
+     CALL delete_op(FnD)
+
+
+
+   END SUBROUTINE read_keo_mctdh_form
    !! @description: Write the total KEO in a MCTDH format,
    !! @param:       mole          The generalized variable (type: CoordType).
    !! @param:       keo           The KEO operator
    !! @param:       i_out         The id of the output file
    SUBROUTINE write_keo_mctdh_form(mole, keo, i_out, tab_Qname, param_JJ, title)
-     type (CoordType)                                       :: mole
+   IMPLICIT NONE
+
+     type (CoordType)                                     :: mole
      type(sum_opnd),            intent(in)                :: keo
      integer,                   intent(in)                :: i_out
      character(len=*),          intent(in)                :: tab_Qname(:)
@@ -688,10 +773,20 @@
      integer, allocatable                       :: list(:)
      logical                                    :: l_qact
      logical                                    :: op_JiJj
+
+     !logical, parameter :: debug = .FALSE.
+     logical, parameter :: debug = .TRUE.
      character (len = Name_longlen) :: routine_name='write_keo_mctdh_form'
 
+     IF (debug) THEN
+       write(out_unitp,*) 'BEGINNING ',routine_name
+       flush(out_unitp)
+       CALL write_op(keo,header=.TRUE.)
+       flush(out_unitp)
+     END IF
+
      TWOxKEO_MCTDH = keo
-     
+
      ndim_sum = size(TWOxKEO_MCTDH%sum_prod_op1d)
      write(i_out, '(A)')  "Op_DEFINE-SECTION"
      write(i_out, '(2x,A)')  "title"
@@ -777,8 +872,8 @@
      end do
      write(i_out, *)
      write(i_out, '(A)')  "END-PARAMETER-SECTION"
-      write(i_out, *)
-      write(i_out, *)
+     write(i_out, *)
+     write(i_out, *)
      write(i_out, '(A)')  "HAMILTONIAN-SECTION"
      write(i_out,'(A)',advance='no') &
      '--------------------------------------------------------------------'
@@ -803,7 +898,7 @@
      ! Deformation only (without the vep)
      DO i = 1,size(TWOxKEO_MCTDH%sum_prod_op1d)
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO_MCTDH%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J > 0 .OR. nb_pq == 0) CYCLE
 
@@ -820,11 +915,12 @@
      ! only the vep
      write(i_out,*)
      write(i_out,*)
+     flush(i_out)
 
      DO i = 1,size(TWOxKEO_MCTDH%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO_MCTDH%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J > 0 .OR. nb_pq /= 0) CYCLE
 
@@ -845,7 +941,7 @@
      DO i = 1,size(TWOxKEO_MCTDH%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO_MCTDH%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (nb_J /= 2) CYCLE
 
@@ -865,7 +961,7 @@
      DO i = 1,size(TWOxKEO_MCTDH%sum_prod_op1d)
 
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO_MCTDH%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 1 .AND. nb_J == 1)) CYCLE
 
@@ -886,9 +982,9 @@
      write(i_out,*)
      DO i = 1,size(TWOxKEO_MCTDH%sum_prod_op1d)
 
-       !write(6,*)
+       !write(out_unitp,*)
        CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO_MCTDH%sum_prod_op1d(i))
-       !write(6,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
 
        IF (.NOT. (nb_pq == 0 .AND. nb_J == 1)) CYCLE
 
@@ -918,9 +1014,17 @@
      deallocate(l_JJ)
      deallocate(l_qJ)
      deallocate(list)
+     CALL delete_op(TWOxKEO_MCTDH)
+
+     IF (debug) THEN
+       write(out_unitp,*) 'END ',routine_name
+       flush(out_unitp)
+     END IF
 
    END SUBROUTINE write_keo_mctdh_form
    SUBROUTINE write_keo_mctdh_form_old(mole, keo, i_out, tab_Qname, param_JJ, title)
+   IMPLICIT NONE
+
      type (CoordType)                                     :: mole
      type(sum_opnd),            intent(in)                :: keo
      integer,                   intent(in)                :: i_out
@@ -928,7 +1032,7 @@
      integer,                   intent(in)                :: param_JJ
      character(len=*), optional,intent(inout)             :: title
 
-     TYPE(FracInteger)                          :: alfa
+     TYPE(Frac_t)                               :: alfa
      integer                                    :: error
      integer                                    :: i, j, j1, k, l, m, n
      integer                                    :: ndim_sum, idf
@@ -1167,9 +1271,11 @@
    !! @param:       opname        The defined local name 
    !! @param:       alfa          The power of the operator 
    SUBROUTINE export_mctdh_name(opname, alfa, l_qJ)
+   IMPLICIT NONE
+
      character(len=*),          intent(inout)             :: opname
      logical, optional,         intent(in)                :: l_qJ
-     TYPE(FracInteger),         intent(in)                :: alfa
+     TYPE(Frac_t),              intent(in)                :: alfa
 
      logical                    :: l_qJ_loc,error
      character (len = Name_len) :: calfa
@@ -1181,7 +1287,7 @@
      END IF
      error = .FALSE.
 
-     !write(6,*) 'opname, alfa,l_qJ: ',opname, alfa, l_qJ_loc
+     !write(out_unitp,*) 'opname, alfa,l_qJ: ',opname, alfa, l_qJ_loc
 
      if(alfa == 1) then
        if (trim(opname) == "Pqr" .or. &
@@ -1287,12 +1393,14 @@
          error = .TRUE.
        end if
      end if
-     !write(6,*) 'new opname: ',opname
+     !write(out_unitp,*) 'new opname: ',opname
 
      IF (error) opname = 'ERR: "' // trim(opname) // '"'
    END SUBROUTINE export_mctdh_name
 
    FUNCTION get_Coef_name(Cn_new,MCTDH,With_format,err) RESULT (Coef_name)
+   IMPLICIT NONE
+
      complex(kind=Rkind), intent(in)            :: Cn_new
      logical, optional,   intent(in)            :: MCTDH,With_format
      integer, optional,   intent(inout)         :: err

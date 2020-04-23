@@ -41,25 +41,21 @@
 !===========================================================================
 !===========================================================================
  MODULE mod_basis_set_alloc
+  use mod_system
 
-  use mod_dnSVM,   only: assignment(=),type_dnmat,type_dncplxmat,type_intvec,&
+  use mod_dnSVM,   only: type_dnmat,type_dncplxmat,type_intvec,          &
                          alloc_array, alloc_dncplxmat, alloc_dnmat,      &
                          dealloc_dnmat, dealloc_dncplxmat, dealloc_array,&
                          dealloc_intvec, sub_intvec1_to_intvec2,         &
                          write_dnsvm, write_dnmat, write_dncplxmat
-  use mod_nDindex, only: assignment (=), type_ndindex, dealloc_ndindex, &
-                         ndindex2tondindex1, write_ndindex,             &
+  use mod_nDindex, only: type_ndindex, write_ndindex, dealloc_ndindex,  &
                          alloc_array, alloc_nparray,                    &
                          dealloc_nparray, dealloc_array
-
-
-  use mod_system
 
       use mod_RotBasis_Param ! all
       use mod_Basis_Grid_Param
       USE mod_SymAbelian
       USE mod_param_SGType2
-      USE mod_param_RD
       USE mod_Basis_L_TO_n
       IMPLICIT NONE
 
@@ -79,73 +75,72 @@
           integer, allocatable :: tab_ndim_index(:,:)   ! tab_ndim_index(ndim,nb). This table is defined only
                                                         ! when the basis is packed
 
-          integer :: nb = 0                            !  nb of basis functions
-          integer :: nb_init = 0                       !  nb of basis functions (before contraction)
-          TYPE (Basis_Grid_Param) :: Basis_Grid_Para
+          integer                        :: nb = 0                            !  nb of basis functions
+          integer                        :: nb_init = 0                       !  nb of basis functions (before contraction)
+          TYPE (Basis_Grid_Param)        :: Basis_Grid_Para
 
           real (kind=Rkind), allocatable :: EneH0(:)     ! EeneH0(nb) : EeneH0(ib)=<d0b(:,ib) I H0 I d0b(:,ib)>
 
-          TYPE (Type_dnMat)     :: dnRGB     ! basis functions d0b(nq,nb) ....
-          TYPE (Type_dnCplxMat) :: dnCGB     ! basis functions d0cb(nq,nb)
-          TYPE (Type_dnMat)     :: dnRBG     ! basis functions td0b(nb,nq)  (transpose)
-          TYPE (Type_dnCplxMat) :: dnCBG     ! basis functions td0cb(nb,nq) (transpose)
-          TYPE (Type_dnMat)     :: dnRBGwrho ! basis functions td0b(nq,nb)  (transpose+wrho)
-          TYPE (Type_dnCplxMat) :: dnCBGwrho ! basis functions td0cb(nq,nb) (transpose+wrho)
+          TYPE (Type_dnMat)              :: dnRGB     ! basis functions d0b(nq,nb) ....
+          TYPE (Type_dnCplxMat)          :: dnCGB     ! basis functions d0cb(nq,nb)
+          TYPE (Type_dnMat)              :: dnRBG     ! basis functions td0b(nb,nq)  (transpose)
+          TYPE (Type_dnCplxMat)          :: dnCBG     ! basis functions td0cb(nb,nq) (transpose)
+          TYPE (Type_dnMat)              :: dnRBGwrho ! basis functions td0b(nq,nb)  (transpose+wrho)
+          TYPE (Type_dnCplxMat)          :: dnCBGwrho ! basis functions td0cb(nq,nb) (transpose+wrho)
 
 
           ! the projection of d1b and d2b => d0b
           logical                        :: dnBBRep      = .FALSE. ! (F) If we calculate the BasisRep representation
           logical                        :: dnBBRep_done = .FALSE. ! (F) If we calculate the BasisRep representation
 
-          TYPE (Type_dnMat)     :: dnRBB ! matrices which enables to tranform d./dQ d2./dQ2 on the basis
-          TYPE (Type_dnCplxMat) :: dnCBB ! matrices which enables to tranform d./dQ d2./dQ2 on the basis
+          TYPE (Type_dnMat)              :: dnRBB ! matrices which enables to tranform d./dQ d2./dQ2 on the basis
+          TYPE (Type_dnCplxMat)          :: dnCBB ! matrices which enables to tranform d./dQ d2./dQ2 on the basis
 
           logical                        :: dnGGRep      = .FALSE. ! (T) If we calculate the dnRGG
           logical                        :: dnGGRep_done = .FALSE. ! (F) If we calculate the dnRGG
-          TYPE (Type_dnMat) :: dnRGG ! matrices which enables to tranform d./dQ d2./dQ2 on the grid
+          TYPE (Type_dnMat)              :: dnRGG ! matrices which enables to tranform d./dQ d2./dQ2 on the grid
 
-          logical                           :: cplx = .FALSE. !  .T. if the basis set is complex (def .F.)
+          logical                        :: cplx = .FALSE. !  .T. if the basis set is complex (def .F.)
 
-
-          integer                       :: nq_max_Nested = -1        ! Value to calculate Nested grid point (with Nested=1)
+          integer                        :: nq_max_Nested = -1        ! Value to calculate Nested grid point (with Nested=1)
                                                                      ! With the value -1, the value is automatically defined
-          integer                       :: Nested        =  0        ! When value > 0, we use Nested Grid
-          real (kind=Rkind), allocatable    :: x(:,:)  !  grid points x(ndim,nq)
-          real (kind=Rkind), allocatable    :: w(:)    !  weight w(nq)
-          real (kind=Rkind), allocatable    :: rho(:)  !  rho : wrho(nq)
-          real (kind=Rkind), allocatable    :: wrho(:) ! weight * rho : wrho(nq)
-          integer, allocatable              :: nrho(:) ! nrho(dim), to define the volume element for Tnum
+          integer                        :: Nested        =  0        ! When value > 0, we use Nested Grid
+          real (kind=Rkind), allocatable :: x(:,:)  !  grid points x(ndim,nq)
+          real (kind=Rkind), allocatable :: w(:)    !  weight w(nq)
+          real (kind=Rkind), allocatable :: rho(:)  !  rho : wrho(nq)
+          real (kind=Rkind), allocatable :: wrho(:) ! weight * rho : wrho(nq)
+          integer,           allocatable :: nrho(:) ! nrho(dim), to define the volume element for Tnum
 
-          logical                    :: check_basis            = .TRUE.   ! if T, the basis set is checked (ortho ...)
-          logical                    :: check_nq_OF_basis      = .TRUE.   ! if T, the nq is adapted to nb (nq>= nb)
-          logical                    :: packed                 = .FALSE.  ! packed=.T. if the basis set is packed (true nD basis)
-          logical                    :: packed_done            = .FALSE.  ! packed_done=.T., if the basis has been packed
+          logical                        :: check_basis            = .TRUE.   ! if T, the basis set is checked (ortho ...)
+          logical                        :: check_nq_OF_basis      = .TRUE.   ! if T, the nq is adapted to nb (nq>= nb)
+          logical                        :: packed                 = .FALSE.  ! packed=.T. if the basis set is packed (true nD basis)
+          logical                        :: packed_done            = .FALSE.  ! packed_done=.T., if the basis has been packed
                                                                           ! Remark: A nD-contracted basis is allways packed
 
-          logical                    :: primitive              = .FALSE.  ! IF True, the basis set is a primitive basis
-          logical                    :: primitive_done         = .FALSE.  ! This parameter is used to check if primitive basis-sets or set-up
-                                                                          ! for direct-product basis-set
+          logical                        :: primitive              = .FALSE.  ! IF True, the basis set is a primitive basis
+          logical                        :: primitive_done         = .FALSE.  ! This parameter is used to check if primitive basis-sets or set-up
+                                                                              ! for direct-product basis-set
 
-          logical                    :: auto_basis             = .FALSE.  ! it is done automatically
+          logical                        :: auto_basis             = .FALSE.  ! it is done automatically
 
-          logical                    :: contrac                = .FALSE.  !  .T. if the basis set is contracted
-          logical                    :: auto_contrac           = .FALSE.  ! it is done automatically
-          logical                    :: contrac_analysis       = .FALSE.  ! perform contraction, but only for the analysis (RD)
-          real (kind=Rkind)          :: max_ene_contrac        = ONETENTH ! maximal energy to select nbc (in ua)
-          integer                    :: max_nbc                = 0
-          integer                    :: min_nbc                = 0
-          integer                    :: auto_contrac_type1_TO  = 100      ! type 1 coordinates of other basis are changed
-          integer                    :: auto_contrac_type21_TO = 100      ! type 1 coordinates of other basis are changed
-          logical                    :: POGridRep              = .FALSE.  ! used PO-GridRep (auto_contrac=t)
-          logical                    :: POGridRep_polyortho    = .FALSE.  ! used PO-GridRep with othonormal poly (auto_contrac=t)
-          integer                    :: nqPLUSnbc_TO_nqc       = 0        ! grid points add to nbc to get nqc (POGridRep)
-          logical                    :: xPOGridRep_done        = .FALSE.  ! (F). If T construct a basis with a x already present
-          integer                    :: nbc                    = 0        ! nb of basis functions after contraction
-          integer                    :: nqc                    = 0        !  nb of grid points after contraction
-          logical                    :: make_cubature          = .FALSE.
-          logical                    :: Restart_make_cubature  = .FALSE.
-          logical                    :: read_contrac_file      = .FALSE.  ! .T. if the basis set is contracted
-          TYPE(param_file)           :: file_contrac                      ! file for read contraction coef
+          logical                        :: contrac                = .FALSE.  !  .T. if the basis set is contracted
+          logical                        :: auto_contrac           = .FALSE.  ! it is done automatically
+          logical                        :: contrac_analysis       = .FALSE.  ! perform contraction, but only for the analysis (RD)
+          real (kind=Rkind)              :: max_ene_contrac        = ONETENTH ! maximal energy to select nbc (in ua)
+          integer                        :: max_nbc                = 0
+          integer                        :: min_nbc                = 0
+          integer                        :: auto_contrac_type1_TO  = 100      ! type 1 coordinates of other basis are changed
+          integer                        :: auto_contrac_type21_TO = 100      ! type 1 coordinates of other basis are changed
+          logical                        :: POGridRep              = .FALSE.  ! used PO-GridRep (auto_contrac=t)
+          logical                        :: POGridRep_polyortho    = .FALSE.  ! used PO-GridRep with othonormal poly (auto_contrac=t)
+          integer                        :: nqPLUSnbc_TO_nqc       = 0        ! grid points add to nbc to get nqc (POGridRep)
+          logical                        :: xPOGridRep_done        = .FALSE.  ! (F). If T construct a basis with a x already present
+          integer                        :: nbc                    = 0        ! nb of basis functions after contraction
+          integer                        :: nqc                    = 0        !  nb of grid points after contraction
+          logical                        :: make_cubature          = .FALSE.
+          logical                        :: Restart_make_cubature  = .FALSE.
+          logical                        :: read_contrac_file      = .FALSE.  ! .T. if the basis set is contracted
+          TYPE(param_file)               :: file_contrac                      ! file for read contraction coef
           real (kind=Rkind), allocatable :: Rvec(:,:)                     ! real eigenvectors for the contraction
 
           integer                        :: type      = 0     ! basis type
@@ -164,31 +159,31 @@
 
 
 
-          integer                     :: nb_basis                 = 0
-          logical                     :: tab_basis_done           = .FALSE. ! When it TRUE the tab_Pbasis(:) are set up
-          logical                     :: tab_basis_linked         = .FALSE. ! When it TRUE the tab_Pbasis(:)%Pbasis points to other basis
+          integer                        :: nb_basis                 = 0
+          logical                        :: tab_basis_done           = .FALSE. ! When it TRUE the tab_Pbasis(:) are set up
+          logical                        :: tab_basis_linked         = .FALSE. ! When it TRUE the tab_Pbasis(:)%Pbasis points to other basis
 
-          TYPE (P_basis), pointer     :: tab_Pbasis(:)            => null() !  tab_Pbasis(nb_basis)
-          TYPE (Type_IntVec), pointer :: Tab_OF_Tabnb2(:)         => null() ! Tab_OF_Tabnb2(nb_basis), for SparseBasis or Pruned basis
-          TYPE (Type_nDindex)         :: nDindG                             ! enable to use multidimensional index for the grid
-          TYPE (Type_nDindex), pointer:: nDindB                   => null() ! enable to use multidimensional index for the basis functions
-          TYPE (Type_nDindex), pointer:: nDindB_uncontracted      => null() ! enable to use multidimensional index for the uncontracted basis functions
-          integer                     :: Type_OF_nDindB           = 1       ! enable to chose the initialization of nDindB
-          integer                     :: nDinit_OF_nDindB         = 1       ! enable to chose nDinit of nDindB
-          real (kind=Rkind)           :: Norm_OF_nDindB           = huge(1) ! Norm for the initialization of nDindB
-          real (kind=Rkind)           :: weight_OF_nDindB         = ONE     ! weight for the initialization of nDindB
-          integer                     :: MaxCoupling_OF_nDindB    = -1      ! number of coupling modes (default all)
-          integer                     :: nb_OF_MinNorm_OF_nDindB  = 1
-          integer                     :: Div_nb_TO_Norm_OF_nDindB = 1
-          logical                     :: contrac_WITH_nDindB      = .FALSE.
+          TYPE (P_basis), pointer        :: tab_Pbasis(:)            => null() !  tab_Pbasis(nb_basis)
+          TYPE (Type_IntVec), pointer    :: Tab_OF_Tabnb2(:)         => null() ! Tab_OF_Tabnb2(nb_basis), for SparseBasis or Pruned basis
+          TYPE (Type_nDindex)            :: nDindG                             ! enable to use multidimensional index for the grid
+          TYPE (Type_nDindex), pointer   :: nDindB                   => null() ! enable to use multidimensional index for the basis functions
+          TYPE (Type_nDindex), pointer   :: nDindB_uncontracted      => null() ! enable to use multidimensional index for the uncontracted basis functions
+          integer                        :: Type_OF_nDindB           = 1       ! enable to chose the initialization of nDindB
+          integer                        :: nDinit_OF_nDindB         = 1       ! enable to chose nDinit of nDindB
+          real (kind=Rkind)              :: Norm_OF_nDindB           = huge(1) ! Norm for the initialization of nDindB
+          real (kind=Rkind)              :: weight_OF_nDindB         = ONE     ! weight for the initialization of nDindB
+          integer                        :: MaxCoupling_OF_nDindB    = -1      ! number of coupling modes (default all)
+          integer                        :: nb_OF_MinNorm_OF_nDindB  = 1
+          integer                        :: Div_nb_TO_Norm_OF_nDindB = 1
+          logical                        :: contrac_WITH_nDindB      = .FALSE.
 
-          integer                     :: SparseGrid_type          = 0 ! 0 no sparse grid
-                                                                      ! 1 old several nD-grids
-                                                                      ! 2 new sparse grid with ONE nD-grids
+          integer                        :: SparseGrid_type          = 0 ! 0 no sparse grid
+                                                                         ! 1 old several nD-grids
+                                                                         ! 2 new sparse grid with ONE nD-grids
 
-          logical                     :: SparseGrid_With_Cuba    = .TRUE. ! When 2 or more are true, the program choses the optimal one
-          logical                     :: SparseGrid_With_Smolyak = .TRUE. ! When only one is true, the program tries to use only one
-          logical                     :: SparseGrid_With_DP      = .TRUE. ! Remark: when only SparseGrid_With_Cuba=T, and the grid does not exit the program stops
+          logical                        :: SparseGrid_With_Cuba    = .TRUE. ! When 2 or more are true, the program choses the optimal one
+          logical                        :: SparseGrid_With_Smolyak = .TRUE. ! When only one is true, the program tries to use only one
+          logical                        :: SparseGrid_With_DP      = .TRUE. ! Remark: when only SparseGrid_With_Cuba=T, and the grid does not exit the program stops
 
           TYPE (Basis_L_TO_n)         :: L_TO_nq
           TYPE (Basis_L_TO_n)         :: L_TO_nb
@@ -207,9 +202,6 @@
           TYPE (basis), pointer       :: tab_basisPrimSG(:,:)     => null() ! tab_basis(nb_basis,0:Lmax)
 
           TYPE (param_SGType2)        :: para_SGType2
-
-          TYPE (param_RD), allocatable :: para_RD(:) ! it is allocated only for BasisnD. The size is nb_basis
-
 
           TYPE (RotBasis_Param)       :: RotBasis
 
@@ -407,7 +399,7 @@
            basis_set%tab_ndim_index(:,:) = 0
          END IF
 
-         !write(6,*) 'cplx,nb,nq,ndim',basis_set%cplx,basis_set%nb,nq,basis_set%ndim
+         !write(out_unitp,*) 'cplx,nb,nq,ndim',basis_set%cplx,basis_set%nb,nq,basis_set%ndim
          CALL flush_perso(6)
 
          IF (basis_set%cplx) THEN
@@ -960,7 +952,6 @@
 
          CALL dealloc_SGType2(basis_set%para_SGType2)
          CALL dealloc_RotBasis_Param(basis_set%RotBasis)
-         CALL dealloc_tab_RD(basis_set%para_RD)
 
        END SUBROUTINE dealloc_basis
 
@@ -1542,8 +1533,7 @@
             END DO
           END IF
         END IF
-
-        CALL nDindex2TOnDindex1(basis_set1%nDindG,basis_set2%nDindG)
+        basis_set1%nDindG = basis_set2%nDindG
 
         IF (.NOT. Basis_FOR_SG_loc) THEN
           IF (.NOT. associated(basis_set2%nDindB)) THEN
@@ -1552,12 +1542,11 @@
             write(out_unitp,*) ' nDindB of basis_set2 is not associated'
             STOP
           END IF
-          CALL nDindex2TOnDindex1(basis_set1%nDindB,basis_set2%nDindB)
+          basis_set1%nDindB = basis_set2%nDindB
           IF (associated(basis_set2%nDindB_uncontracted)) THEN
             CALL alloc_array(basis_set1%nDindB_uncontracted,            &
                             'basis_set1%nDindB_uncontracted',name_sub)
-            CALL nDindex2TOnDindex1(basis_set1%nDindB_uncontracted,     &
-                                         basis_set2%nDindB_uncontracted)
+            basis_set1%nDindB_uncontracted = basis_set2%nDindB_uncontracted
           END IF
         END IF
 
@@ -1694,9 +1683,6 @@
         basis_set1%para_SGType2 = basis_set2%para_SGType2
 
         basis_set1%RotBasis     = basis_set2%RotBasis
-
-        !basis_set1%para_RD      = basis_set2%para_RD
-
 
       END SUBROUTINE basis2TObasis1
 

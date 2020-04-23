@@ -39,7 +39,7 @@ MODULE mod_string
   PUBLIC :: int_TO_char, Write_int_IN_char, real_TO_char, Write_real_IN_char
   PUBLIC :: logical_TO_char
   PUBLIC :: String_TO_String, make_nameQ, nom_i, nom_ii
-  PUBLIC :: read_name_advNo, string_uppercase_TO_lowercase
+  PUBLIC :: read_name_advNo, Read_line, string_uppercase_TO_lowercase
 
   CONTAINS
 
@@ -52,9 +52,9 @@ MODULE mod_string
   END FUNCTION string_IS_empty
 
   FUNCTION String_TO_String(string,ltrim)
-  character(len=:), allocatable     :: String_TO_String
-  character(len=*), intent(in)      :: string
-  logical, optional,intent(in)      :: ltrim
+  character(len=:), allocatable                 :: String_TO_String
+  character(len=*),             intent(in)      :: string
+  logical,          optional,   intent(in)      :: ltrim
 
   logical :: ltrim_loc
 
@@ -75,6 +75,33 @@ MODULE mod_string
   END IF
 
   END FUNCTION String_TO_String
+
+  FUNCTION Read_line(nio,ioerr)
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : IOSTAT_END,IOSTAT_EOR
+
+  character(len=:), allocatable                 :: Read_line
+  integer,                      intent(in)      :: nio
+  integer,                      intent(inout)   :: ioerr
+
+
+  character(len=:), allocatable    :: line
+  character(len=1)                 :: ch
+
+
+  line = ""
+  DO
+    read(nio,'(a1)',IOSTAT=ioerr,advance='no') ch
+    IF (ioerr /= 0) EXIT
+    !write(6,*) 'ch: ',ch ; flush(6)
+    line = line // ch
+  END DO
+  IF (ioerr == IOSTAT_EOR) ioerr = 0 ! end of record: the full line is read.
+
+  Read_line = line
+
+  deallocate(line)
+
+  END FUNCTION Read_line
 
 
   !! @description: Write an interger type in the character typ
@@ -194,7 +221,7 @@ MODULE mod_string
       allocate(character(len=clen) :: name_int)
 
       ! write i in name_int
-      IF(MPI_id==0) write(name_int,'(i0)') i
+      write(name_int,'(i0)') i
 
       ! transfert name_int in int_TO_char
       int_TO_char = String_TO_String(name_int)
@@ -307,7 +334,7 @@ MODULE mod_string
       read(nio,'(a1)',IOSTAT=err_io,advance='no') chara
 
       IF (err_io /= 0)   EXIT
-      !write(6,*) 'ic,chara',ic,'"',chara,'"'
+      !write(out_unitp,*) 'ic,chara',ic,'"',chara,'"'
       IF (chara == ' ' .AND. .NOT. first) EXIT
 
       IF (chara == ' ' .AND. first) CYCLE
@@ -317,7 +344,7 @@ MODULE mod_string
       first = .FALSE.
 
     END DO
-    !write(6,*) 'Read_name: ',trim(Read_name)
+    !write(out_unitp,*) 'Read_name: ',trim(Read_name)
 
   END SUBROUTINE read_name_advNo
 

@@ -54,7 +54,7 @@ sym  cos(a)      R     r    x    pi   dh
 3.14159265358d0
 0.0
 
- &basis_nD nb_basis=2 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=2 /
+ &basis_nD nb_basis=2 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=4 /
    &basis_nD iQdyn(1)=1 name="Pl0" L_TO_nq_A=1 L_TO_nq_B=10 /
    &basis_nD nb_basis=2 name="direct_prod" /
      &basis_nD iQdyn(1)=2 name="Hm" /

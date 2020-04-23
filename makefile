@@ -3,8 +3,9 @@
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
  F90 = mpifort
 # F90 = gfortran
-#F90 = ifort
-#F90 = pgf90
+# F90 = nagfor
+# F90 = ifort
+# F90 = pgf90
 
 ## MPI compiled with: gfortran or ifort
 MPICORE = gfortran
@@ -14,10 +15,10 @@ MPICORE = gfortran
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 1
+OMP = 0
 ifeq ($(F90),mpifort)
   OMP = 0
 endif
@@ -31,13 +32,17 @@ ARPACK = 1
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
-LAPACK = 1
+LAPACK = 0
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
 QML = 0
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
 extf = $(EXTFextern)
+## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
+# NVHYP  = 1 : with intrinsic inverse hyperbolic functions
+# NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic ones)
+INVHYP  = 1
 #
 ## Operating system, OS? automatic using uname:
 OS=$(shell uname)
@@ -77,17 +82,29 @@ endif
 #=================================================================================
 # Quantum Model Lib (ECAM)
 QMLibDIR := /Users/lauvergn/git/QuantumModelLib
-DIRLIB += -L$(QMLibDIR)
-QMLIB := -lQMLib
-QMLibDIR_full := $(QMLibDIR)/libQMLib.a
+ifneq "$(wildcard $(QMLibDIR) )" ""
+  # QMLibDIR exists:
+  $(info QMLibDIR exists)
+else
+  # QMLibDIR does not exist:
+  $(info QMLibDIR does not exist)
+  QML=0
+endif
+
 ifeq  ($(strip $(QML)),)
   QMLIB := 
   QMLibDIR_full :=
+else
+  ifeq ($(QML),0)
+    QMLIB := 
+    QMLibDIR_full :=
+  else
+    DIRLIB += -L$(QMLibDIR)
+    QMLIB := -lQMLib
+    QMLibDIR_full := $(QMLibDIR)/libQMLib.a
+  endif
 endif
-ifeq ($(QML),0)
-  QMLIB := 
-  QMLibDIR_full :=
-endif
+
 #=================================================================================
 #
 #=================================================================================
@@ -107,7 +124,58 @@ endif
 CompC=gcc
 
 #=================================================================================
-# ifort compillation v12 with mkl
+# nag compillation (nagfor)
+#=================================================================================
+ifeq ($(F90),nagfor)
+   # for c++ preprocessing
+   ifeq ($(OMP),1)
+     CPPpre  = -fpp -Drun_openMP=1
+   else
+     CPPpre  = -fpp
+   endif
+   
+   # omp management
+   ifeq ($(OMP),0)
+      OMPFLAG =
+   else
+      OMPFLAG = -openmp
+   endif
+   # opt management
+   ifeq ($(OPT),1)
+      F90FLAGS = -O4  $(OMPFLAG) -o -compatible -kind=byte -Ounroll=4 -s
+   else
+      #F90FLAGS = -O0 $(OMPFLAG) -g -C=all -mtrace=all
+      #  -C=undefined is not compatible with: (i) -framework Accelerate or lapack lib (ii) openmp
+      #with -mtrace=all add information on the memmory allocation/deallocation.
+      # The option -C=dangling causes troubles since it is used => -C=all cannot be used.
+      # -gline is not compatible with openmp
+      ifeq ($(OMP),0)
+        ifeq ($(LAPACK),0)
+          F90FLAGS = -O0            -g -gline -kind=byte -C -C=alias -C=intovf -C=undefined
+        else
+          F90FLAGS = -O0 $(OMPFLAG) -g -gline -kind=byte -C -C=alias -C=intovf 
+        endif
+      else
+          F90FLAGS = -O0 $(OMPFLAG) -g        -kind=byte -C -C=alias -C=intovf 
+      endif
+   endif
+
+   ifeq ($(LAPACK),1)
+     F90LIB = -framework Accelerate
+   else
+     F90LIB = 
+   endif
+  
+   ifeq ($(INT),8)
+     F90FLAGS := $(F90FLAGS) -i8 
+   endif
+
+   F90_VER = $(shell $(F90) -V 3>&1 1>&2 2>&3 | head -1 )
+
+endif
+
+#=================================================================================
+# ifort compillation v17 with mkl
 #=================================================================================
 ifeq ($(F90),ifort)
    # for c++ preprocessing
@@ -146,7 +214,7 @@ endif
 #=================================================================================
 
 #=================================================================================
-# pgf90 compillation v12 with mkl
+# pgf90 compillation
 #=================================================================================
 ifeq ($(F90),pgf90)
    # for c++ preprocessing
@@ -307,6 +375,7 @@ $(info ***********F90LIB:           $(F90LIB))
 $(info ***********subsystem file:   sub_system.$(extf))
 $(info ***********DIR of potlib.a:  $(ExternalDIR))
 $(info ***********potLib:           $(PESLIB))
+$(info ***********INVHYP:           $(INVHYP))
 $(info ***********************************************************************)
 
 F90_FLAGS = $(F90) $(F90FLAGS)
@@ -318,8 +387,8 @@ LYNK90 = $(F90_FLAGS)
 ifeq ($(ARPACK),1)
   # Arpack management with the OS
   ifeq ($(OS),Darwin)    # OSX
-    ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
-    #ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
+    #ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
+    ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
   else                   # Linux
     ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
     #ARPACKLIB=/usr/lib64/libarpack.a
@@ -350,6 +419,7 @@ $(info ***********************************************************************)
 #
 CPPSHELL = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
            -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
+           -D__COMPILER="'$(F90)'" \
            -D__COMPILER_VER="'$(F90_VER)'" \
            -D__COMPILER_OPT="'$(F90FLAGS)'" \
            -D__COMPILER_LIBS="'$(F90LIB)'" \
@@ -359,6 +429,7 @@ CPPSHELL = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
            -D__TANA_VER="'$(TANA_ver)'"
 CPPSHELL_ARPACK  = -D__ARPACK="$(ARPACK)"
 CPPSHELL_CERFACS = -D__CERFACS="$(CERFACS)"
+CPPSHELL_INVHYP  = -D__INVHYP="$(INVHYP)"
 CPPSHELL_DIAGO   = -D__LAPACK="$(LAPACK)"
 CPPSHELL_QML     = -D__QML="$(QML)"
 #==========================================
@@ -447,6 +518,8 @@ DIRSmolyak = $(DirEVR)/sub_Smolyak_test
 DIROpt     = $(DirEVR)/sub_Optimization
 DIRCRP     = $(DirEVR)/sub_CRP
 
+DIRUT      = $(DIR_EVRT)/UnitTests
+
 #============================================================================
 #Libs, Minimize Only list: OK
 # USE mod_system
@@ -455,7 +528,7 @@ Obj_Primlib  = \
   $(OBJ)/sub_module_NumParameters.o \
   $(OBJ)/sub_module_memory.o $(OBJ)/sub_module_string.o \
   $(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_memory_NotPointer.o \
-  $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/sub_module_FracInteger.o \
+  $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/mod_Frac.o \
   $(OBJ)/sub_module_system.o \
   $(OBJ)/sub_module_MPI_Aid.o 
 
@@ -469,6 +542,7 @@ Obj_io = $(OBJ)/sub_io.o
 
 # dnSVM, Minimize Only list: OK
 # USE mod_dnSVM
+# mod_dnS is a new version developped for QML
 Obj_dnSVM = \
   $(OBJ)/sub_module_dnS.o $(OBJ)/sub_module_VecOFdnS.o $(OBJ)/sub_module_MatOFdnS.o \
   $(OBJ)/sub_module_dnV.o $(OBJ)/sub_module_dnM.o $(OBJ)/sub_module_IntVM.o \
@@ -591,9 +665,9 @@ Obj_WP = \
  $(OBJ)/sub_module_type_ana_psi.o $(OBJ)/sub_module_param_WP0.o \
  $(OBJ)/sub_module_psi_set_alloc.o \
  $(OBJ)/sub_module_psi_B_TO_G.o $(OBJ)/sub_module_ana_psi.o \
- $(OBJ)/sub_module_psi_SimpleOp.o $(OBJ)/sub_module_psi_Op.o \
- $(OBJ)/sub_module_psi_io.o\
- $(OBJ)/sub_psi0.o
+ $(OBJ)/sub_module_psi_Op.o \
+ $(OBJ)/sub_module_psi_io.o \
+ $(OBJ)/mod_psi.o
 
 Obj_propagation = \
  $(OBJ)/sub_module_field.o $(OBJ)/sub_module_ExactFact.o $(OBJ)/sub_module_propagation.o \
@@ -652,63 +726,90 @@ Obj_EVRT =\
   $(Obj_Smolyak_test) \
   $(LIBARPACK)
 #
-#
-#
 #===============================================
 #==============================================
-# vib (without argument)
-EVR1:obj vib $(VIBEXE)
-	@echo "EVR"
-#
-#make all programs (except work)
-all:obj vib $(VIBEXE)
-	echo "EVR (for eclipse)"
-#
-# vib
-EVR: obj vib $(VIBEXE)
+#ElVibRot:
+
+#make all : EVR
+.PHONY: all evr EVR libEVR libevr
+evr EVR all :obj vib $(VIBEXE)
 	echo "EVR"
-libEVR: obj $(OBJ)/libEVR.a
-	echo libEVR.a
+libEVR libevr: obj $(OBJ)/libEVR.a
+	echo "libEVR.a"
+#============================================================================
+# All tnum/Tana ...
+.PHONY: Tnum_FDriver Tnum_cDriver libTnum libTnum.a keotest
+.PHONY: tnum Tnum tnum-dist Tnum-dist Tnum_MCTDH Tnum_MidasCpp Midas midas
+
 Tnum_FDriver: obj $(Main_TnumTana_FDriverEXE)
-	echo Main_TnumTana_FDriver
+	echo "Main_TnumTana_FDriver"
 Tnum_cDriver: obj $(Main_TnumTana_cDriverEXE)
-	echo Main_TnumTana_cDriver
-libTnum: obj $(OBJ)/libTnum.a
-	echo libTnum.a
-libTnum.a: obj $(OBJ)/libTnum.a
-	echo libTnum.a
+	echo "Main_TnumTana_cDriver"
+#
+libTnum libTnum.a: obj $(OBJ)/libTnum.a
+	echo "libTnum.a"
+#
 keotest: obj $(KEOTESTEXE)
 	echo "TEST_TnumTana"
-tnum: obj $(TNUMEXE)
+
+tnum Tnum tnum-dist Tnum-dist: obj $(TNUMEXE)
 	echo "Tnum"
-Tnum: obj $(TNUMEXE)
-	echo "Tnum"
-tnum-dist: obj $(TNUMEXE)
-	echo "Tnum"
-Tnum-dist: obj $(TNUMEXE)
-	echo "Tnum"
+#
 Tnum_MCTDH: obj $(TNUMMCTDHEXE)
 	echo "Tnum_MCTDH"
+#
 #TNUM_MiddasCppEXE
-Tnum_MidasCpp: obj $(TNUM_MiddasCppEXE)
-	echo "Tnum_MidasCpp"
-Midas: obj $(TNUM_MiddasCppEXE)
+Tnum_MidasCpp Midas midas: obj $(TNUM_MiddasCppEXE)
 	echo "Tnum_MidasCpp"
 #
-gauss:obj $(GWPEXE)
-	echo "GWP"
-GWP:obj $(GWPEXE)
+.PHONY: Tana_test
+Tana_test: Tana_test.exe
+Tana_test.exe: obj $(Obj_lib) $(OBJ)/libTnum.a $(OBJ)/Tana_test.o 
+	$(LYNK90)   -o Tana_test.exe $(OBJ)/Tana_test.o $(OBJ)/libTnum.a $(LYNKFLAGS)
+$(OBJ)/Tana_test.o: $(DirTNUM)/sub_main/Tana_test.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_main/Tana_test.f90
+#============================================================================
+# Some all programs
+.PHONY: gauss GWP work
+gauss GWP: obj $(GWPEXE)
 	echo "GWP"
 #
 work:obj $(WORKEXE)
 	echo "work"
-#
+#============================================================================
+# Physical Constants
+.PHONY: PhysConst
 PhysConst: obj $(PhysConstEXE)
 	echo "Physical Constants"
+#============================================================================
+# Unitary tests
+.PHONY: ut UT UnitTests
+ut UT UnitTests: UT_Frac UT_PhysConst
+#
+.PHONY: UT_Frac ut_frac
+UT_Frac ut_frac : UnitTests_Frac.exe
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the Frac module"
+	@UnitTests_Frac.exe > $(DIRUT)/res_UT_Frac ; awk -f $(DIRUT)/frac.awk $(DIRUT)/res_UT_Frac
+	@echo "---------------------------------------"
+UnitTests_Frac.exe: obj $(Obj_lib) $(OBJ)/UnitTests_Frac.o
+	$(LYNK90)   -o UnitTests_Frac.exe $(OBJ)/UnitTests_Frac.o $(Obj_lib) $(LYNKFLAGS)
+$(OBJ)/UnitTests_Frac.o: $(DIRUT)/UnitTests_Frac.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRUT)/UnitTests_Frac.f90
+#
+.PHONY: UT_PhysConst ut_physconst
+UT_PhysConst ut_physconst: PhysConst
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the PhysConst module"
+	@cd Examples/exa_PhysicalConstants ; ./run_tests > $(DIRUT)/res_UT_PhysConst ; $(DIRUT)/PhysConst.sh $(DIRUT)/res_UT_PhysConst
+	@echo "---------------------------------------"
 #===============================================
 #===============================================
 #
 # QML
+.PHONY: qml QML
+qml QML: $(QMLibDIR_full)
+	echo "make qml library"
 $(QMLibDIR_full):
 	cd $(QMLibDIR) ; make
 
@@ -723,6 +824,7 @@ vib:
 	chmod a+x vib
 
 # clean
+.PHONY: clean
 clean: 
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib
 	rm -rf *.dSYM
@@ -733,6 +835,7 @@ clean:
 	@cd Source_TnumTana_Coord/sub_operator_T ; cp Sub_X_TO_Q_ana_save.f90 Sub_X_TO_Q_ana.f90
 
 	@cd Examples/exa_hcn-dist ; ./clean
+	@cd Examples/exa_TnumDriver ; ./clean
 	@cd Examples/exa_direct-dist ; ./clean
 	@cd Examples/exa_TnumTana_Coord-dist ; ./clean
 	@cd Examples/exa_PhysicalConstants ; ./clean
@@ -749,9 +852,9 @@ clean:
 #===============================================
 #===============================================
 #
-$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(QMLibDIR_full)
+$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(QMLibDIR_full)
 	echo EVR-T
-	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(OBJ)/libEVR.a $(LYNKFLAGS)
+	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(LYNKFLAGS)
 #	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
 #===============================================
 #
@@ -795,8 +898,8 @@ $(OBJ)/sub_module_MPI.o:$(DirSys)/sub_module_MPI.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirSys)/sub_module_MPI.f90
 $(OBJ)/sub_module_NumParameters.o:$(DirSys)/sub_module_NumParameters.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_NumParameters.f90
-$(OBJ)/sub_module_FracInteger.o:$(DirSys)/sub_module_FracInteger.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_FracInteger.f90
+$(OBJ)/mod_Frac.o:$(DirSys)/mod_Frac.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/mod_Frac.f90
 $(OBJ)/sub_module_memory.o:$(DirSys)/sub_module_memory.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/sub_module_memory.f90
 $(OBJ)/sub_module_memory_Pointer.o:$(DirSys)/sub_module_memory_Pointer.f90
@@ -819,6 +922,8 @@ $(OBJ)/sub_module_DInd.o:$(DirnDind)/sub_module_DInd.f90
 $(OBJ)/sub_module_nDindex.o:$(DirnDind)/sub_module_nDindex.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirnDind)/sub_module_nDindex.f90
 ###
+$(OBJ)/mod_dnS.o:$(DirdnSVM)/mod_dnS.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DirdnSVM)/mod_dnS.f90
 $(OBJ)/sub_module_dnS.o:$(DirdnSVM)/sub_module_dnS.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnS.f90
 $(OBJ)/sub_module_VecOFdnS.o:$(DirdnSVM)/sub_module_VecOFdnS.f90
@@ -1061,16 +1166,14 @@ $(OBJ)/sub_module_psi_set_alloc.o:$(DIRWP)/sub_module_psi_set_alloc.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_set_alloc.f90
 $(OBJ)/sub_module_ana_psi.o:$(DIRWP)/sub_module_ana_psi.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_ana_psi.f90
-$(OBJ)/sub_module_psi_SimpleOp.o:$(DIRWP)/sub_module_psi_SimpleOp.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_SimpleOp.f90
 $(OBJ)/sub_module_psi_B_TO_G.o:$(DIRWP)/sub_module_psi_B_TO_G.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_psi_B_TO_G.f90
 $(OBJ)/sub_module_psi_Op.o:$(DIRWP)/sub_module_psi_Op.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_Op.f90
 $(OBJ)/sub_module_psi_io.o:$(DIRWP)/sub_module_psi_io.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_module_psi_io.f90
-$(OBJ)/sub_psi0.o:$(DIRWP)/sub_psi0.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/sub_psi0.f90
+$(OBJ)/mod_psi.o:$(DIRWP)/mod_psi.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRWP)/mod_psi.f90
 $(OBJ)/sub_ana_psi.o:$(DIRWP)/sub_ana_psi.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_ana_psi.f90
 #
@@ -1325,7 +1428,7 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_quadra_SparseBasis2n.o                                   \
                    $(OBJ)/sub_SymAbelian_OF_Basis.o $(OBJ)/sub_module_type_ana_psi.o   \
                    $(OBJ)/sub_module_param_WP0.o $(OBJ)/sub_module_psi_set_alloc.o     \
-                   $(OBJ)/sub_module_psi_SimpleOp.o $(OBJ)/sub_module_OpGrid.o         \
+                   $(OBJ)/sub_module_OpGrid.o                                          \
                    $(OBJ)/sub_inactive_harmo.o $(OBJ)/sub_changement_de_var.o          \
                    $(OBJ)/sub_ana_HS.o $(OBJ)/sub_diago_H.o $(OBJ)/sub_paraRPH.o       \
                    $(OBJ)/sub_module_field.o $(OBJ)/sub_module_propa_march_SG4.o       \
@@ -1407,7 +1510,7 @@ $(lib_dep_mod_file):$(OBJ)/sub_module_file.o
 
 #mod_string
 lib_dep_mod_string=$(OBJ)/sub_module_system.o $(OBJ)/sub_module_RealWithUnit.o         \
-                   $(OBJ)/sub_module_FracInteger.o $(OBJ)/sub_module_file.o
+                   $(OBJ)/mod_Frac.o $(OBJ)/sub_module_file.o
 $(lib_dep_mod_string):$(OBJ)/sub_module_string.o
 
 #mod_RW_MatVec
@@ -1515,7 +1618,7 @@ $(lib_dep_BasisMakeGrid):$(OBJ)/sub_module_BasisMakeGrid.o
 
 #mod_psi_set_alloc  
 lib_dep_mod_psi_set_alloc=$(OBJ)/sub_module_psi_B_TO_G.o $(OBJ)/sub_module_ana_psi.o   \
-                          $(OBJ)/sub_module_psi_SimpleOp.o $(OBJ)/sub_module_SetOp.o
+                          $(OBJ)/sub_module_SetOp.o
 $(lib_dep_mod_psi_set_alloc):$(OBJ)/sub_module_psi_set_alloc.o
 
 #mod_ana_psi
@@ -1523,7 +1626,7 @@ lib_dep_mod_ana_psi=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_module_psi_Op.o
 $(lib_dep_mod_ana_psi):$(OBJ)/sub_module_ana_psi.o
 
 #mod_psi_Op
-lib_dep_mod_psi_Op=$(OBJ)/sub_psi0.o $(OBJ)/sub_module_psi_io.o $(OBJ)/sub_OpPsi_SG4.o \
+lib_dep_mod_psi_Op=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_OpPsi_SG4.o \
                    $(OBJ)/EVR_Module.o
 $(lib_dep_mod_psi_Op):$(OBJ)/sub_module_psi_Op.o
 
@@ -1554,7 +1657,7 @@ lib_dep_mod_Op=$(OBJ)/sub_HST_harm.o $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_ha
 $(lib_dep_mod_Op):$(OBJ)/sub_module_Op.o
 
 #mod_psi_io 
-lib_dep_mod_psi_io=$(OBJ)/sub_psi0.o $(OBJ)/sub_analyse.o
+lib_dep_mod_psi_io=$(OBJ)/sub_analyse.o
 $(lib_dep_mod_psi_io):$(OBJ)/sub_module_psi_io.o
 
 #mod_MatOp

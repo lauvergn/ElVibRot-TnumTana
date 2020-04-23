@@ -1058,9 +1058,9 @@
 
          ! find the iQa from tab_RPHpara_AT_Qact1
          Qact1(:)        = dnQin%d0(1:RPHTransfo%nb_act1)
-         !write(6,*) 'Qact1',Qact1(:)
+         !write(out_unitp,*) 'Qact1',Qact1(:)
          DO iQa=1,RPHTransfo%nb_Qa
-           !write(6,*) 'iQa,Qact1 from RPH',iQa,RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1
+           !write(out_unitp,*) 'iQa,Qact1 from RPH',iQa,RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1
            IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1)) < ONETENTH**5) EXIT
          END DO
 
@@ -1297,15 +1297,15 @@
            IF (RPHTransfo%list_act_OF_Qdyn(iQ) == 21) THEN
              CALL sub_dnS1_TO_dnS2_partial(dnQallder,dnQ,nderiv)
              iQinact = iQinact + 1
-             !write(6,*) 'save iQ var in dnVecQin iQinact',iQ,iQinact
+             !write(out_unitp,*) 'save iQ var in dnVecQin iQinact',iQ,iQinact
              CALL sub_dnS_TO_dnVec(dnQ,dnVecQin,iQinact,nderiv)
            ELSE IF (RPHTransfo%list_act_OF_Qdyn(iQ) == 1) THEN
              iQact = iQact + 1
-             !write(6,*) 'save act iQ var in dnQout',iQ
+             !write(out_unitp,*) 'save act iQ var in dnQout',iQ
              CALL sub_dnS_TO_dnVec(dnQallder,dnQout,iQ,nderiv)
              Qact1(iQact) = dnQallder%d0
            ELSE ! rigid...
-             !write(6,*) 'save const iQ var in dnQout',iQ
+             !write(out_unitp,*) 'save const iQ var in dnQout',iQ
              CALL sub_dnS_TO_dnVec(dnQallder,dnQout,iQ,nderiv)
            END IF
          END DO
@@ -1742,7 +1742,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
   END IF
 
   read(in_unitp,*,IOSTAT=err_read) phase(:)
-  write(6,*) 'phase',phase
+  write(out_unitp,*) 'phase',phase
 
   RPHpara2%Switch_Type = Switch_Type
   RPHpara2%nb_ref      = nb_ref
@@ -1763,7 +1763,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
   DO iref=1,nb_ref
 
     read(in_unitp,*,IOSTAT=err_read) RPHpara2%QoutRef(:,iref)
-    write(6,*) 'QoutRef',RPHpara2%QoutRef(:,iref)
+    write(out_unitp,*) 'QoutRef',RPHpara2%QoutRef(:,iref)
 
     IF (err_read /= 0) THEN
       write(out_unitp,*) ' ERROR in ',name_sub
@@ -1813,10 +1813,10 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
     END DO
   END IF
 
-  ! phase from     write(6,*) 'QoutRef',RPHpara2%QoutRef(:,iref)
+  ! phase from     write(out_unitp,*) 'QoutRef',RPHpara2%QoutRef(:,iref)
   DO iref=2,nb_ref
     Rphase = RPHpara2%QoutRef(:,iref)-RPHpara2%QoutRef(:,iref-1)
-  write(6,'(a,100f6.3)') 'Rphase',Rphase
+  write(out_unitp,'(a,100f6.3)') 'Rphase',Rphase
 
     WHERE ( abs(Rphase) > ONETENTH**8 )
       Rphase = -ONE
@@ -1824,7 +1824,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
       Rphase = ONE
     END WHERE
   END DO
-  write(6,'(a,100f3.0)') 'Rphase',Rphase
+  write(out_unitp,'(a,100f3.0)') 'Rphase',Rphase
 
   Rphase = real(phase,kind=Rkind)
 
@@ -1847,8 +1847,8 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
       END DO
       listNM_selected(RPHpara2%listNM_act1(iact1)) = 1
     END DO
-    write(6,*) 'RPHpara2%listNM_act1',RPHpara2%listNM_act1
-    !write(6,*) 'listNM_selected',listNM_selected
+    write(out_unitp,*) 'RPHpara2%listNM_act1',RPHpara2%listNM_act1
+    !write(out_unitp,*) 'listNM_selected',listNM_selected
   END DO
 
   RPHpara2%OrderNM_iRef(:,1) = (/ (i,i=1,nb_var) /) ! because we use the first set to define the other orderings
@@ -2022,12 +2022,10 @@ END SUBROUTINE Read_RPHpara2
 
             CALL sub_dnS1_TO_dntR2(dnW1,dnW2,-91) ! (Qact-Qrefact)^2
 
-            CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW2,ONE,dnDist2(iref),ONE,&
-                                             dnDist2(iref))
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2,ONE,dnDist2(iref),ONE)
 
           END DO
-          CALL sub_dnS1_PROD_w_TO_dnS2(dnDist2(iref),                   &
-                             ONE/real(nb_act1,kind=Rkind),dnDist2(iref))  ! divide by nb_act1
+          CALL sub_Weight_dnS(dnDist2(iref),ONE/real(nb_act1,kind=Rkind))  ! divide by nb_act1
 
         END DO
         IF (debug) write(out_unitp,*) 'dnDist2',dnDist2(:)%d0
@@ -2036,7 +2034,7 @@ END SUBROUTINE Read_RPHpara2
         DO iref=1,nb_ref
 
           CALL sub_ZERO_TO_dnS(dnSumExp) ! the sum of the exp
-          dnSumExp%d0 = ONE ! because the exp with kref = iref is not the next loop
+          dnSumExp%d0 = ONE ! because the exp with kref = iref is not in the next loop
 
           DO kref=1,nb_ref
             IF (iref == kref) CYCLE
@@ -2047,8 +2045,7 @@ END SUBROUTINE Read_RPHpara2
             cte(:) = ZERO ; cte(1) = ONE
             CALL sub_dnS1_TO_dntR2(dnW1,dnW2,80,cte=cte) ! exp(sc*(dist2_i-dist2_k))
             IF (debug) write(out_unitp,*) 'iref,kref,dnExp',iref,kref,dnW2%d0
-            CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW2,ONE,dnSumExp,ONE,     &
-                                             dnSumExp)             ! sum of the exp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnW2,ONE,dnSumExp,ONE)  ! sum of the exp
           END DO
           CALL sub_dnS1_TO_dntR2(dnSumExp,dnSwitch(iref),90) ! 1/sum(exp ....)
 
@@ -2349,12 +2346,13 @@ implicit NONE
   real (kind=Rkind), allocatable :: Grad(:,:),hess(:,:,:)
   logical,           allocatable :: tab_Grad(:),tab_Hess(:)
 
+
   namelist / CurviRPH / nb_pts,gradient,option
 
 !----- for debuging ----------------------------------
   character (len=*),parameter :: name_sub='Init_CurviRPH'
-  logical, parameter :: debug=.FALSE.
-  !logical, parameter :: debug=.TRUE.
+  !logical, parameter :: debug=.FALSE.
+  logical, parameter :: debug=.TRUE.
 !----- for debuging ----------------------------------
 
   !IF (debug) THEN
@@ -2370,6 +2368,7 @@ implicit NONE
     option   = -1
     read(in_unitp,CurviRPH)
     IF (option < 0) option = 0
+    write(out_unitp,CurviRPH)
 
     IF (nb_pts < 1) STOP 'ERROR in Init_CurviRPH: nb_pts<1'
 
@@ -2413,12 +2412,13 @@ implicit NONE
       IF (tab_Hess(i)) THEN
         ih = ih + 1
         !read hessian
-        CALL Read_Mat(hess(:,:,ih),5,5,IOerr)
+        CALL Read_Mat(hess(:,:,ih),in_unitp,5,IOerr)
         write(out_unitp,*) 'IOerr',IOerr
         IF (debug) THEN
           write(out_unitp,*) 'hess'
           CALL Write_Mat(hess(:,:,ih),out_unitp,5)
         END IF
+        IF (IOerr /= 0) STOP 'ERROR while reading the hessian'
       END IF
     END DO
     write(out_unitp,*) 'nb_pts for Qref ',CurviRPH2%nb_pts_ForQref
@@ -2512,6 +2512,7 @@ implicit NONE
                       'fQpath',    name_sub)
     DO i=1,CurviRPH%nb_pts_ForQref
     DO j=1,CurviRPH%nb_dev_ForQref
+      write(out_unitp,*) 'i,j,CurviRPH%Qpath_ForQref(i)',i,j,CurviRPH%Qpath_ForQref(i) ; flush(out_unitp)
       fQpath(j,i) = funcQpath(CurviRPH%Qpath_ForQref(i),j)
     END DO
     END DO
@@ -2762,7 +2763,7 @@ implicit NONE
 
     DO iq=1,CurviRPH%nb_Q21
       val = dot_product(fQpath,CurviRPH%CoefQref(:,iq))
-      !write(6,*) 'Err Qref',i,iq,val,CurviRPH%Qref(iq,i),val-CurviRPH%Qref(iq,i)
+      !write(out_unitp,*) 'Err Qref',i,iq,val,CurviRPH%Qref(iq,i),val-CurviRPH%Qref(iq,i)
       ErrQref = max(ErrQref,abs(val-CurviRPH%Qref(iq,i)))
     END DO
 
@@ -2811,7 +2812,7 @@ implicit NONE
       DO iq=1,CurviRPH%nb_Q21
       DO jq=1,CurviRPH%nb_Q21
         val = dot_product(fQpath,CurviRPH%CoefHess(:,jq,iq))
-        !write(6,*) 'Err Hess',i,iq,jq,val,CurviRPH%Hess(jq,iq,i),val-CurviRPH%Hess(jq,iq,i)
+        !write(out_unitp,*) 'Err Hess',i,iq,jq,val,CurviRPH%Hess(jq,iq,i),val-CurviRPH%Hess(jq,iq,i)
         ErrHess = max(ErrHess,abs(val-CurviRPH%Hess(jq,iq,i)))
       END DO
       END DO
@@ -2849,11 +2850,14 @@ implicit NONE
   !t = Qpath
   t = R0 * tanh(Qpath/R0) ! type 74 of dnS
 
-  funcQpath = t**(i-1)
+  IF (i == 1) THEN
+    funcQpath = ONE
+  ELSE
+    funcQpath = t**(i-1)
+  END IF
 
          ! t(x) =  R0.tanh(x/R0) x E ]-inf,inf[
          ! -R0 < t(x) < R0   R0=cte(1)
-
 
   END FUNCTION funcQpath
 

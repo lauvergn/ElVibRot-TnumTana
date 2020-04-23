@@ -4,6 +4,8 @@ cd $DIR_vib
   make Tnum
 cd $here
 
+# opt HF/STO-3G with gaussian09
+
 $DIR_vib/Tnum90.exe << ** > res
  &variables
          Old_Qtransfo=f nb_Qtransfo=2
@@ -25,7 +27,6 @@ H 1 2
       1                   0.000000    0.758081   -0.508642
       1                   0.000000   -0.758081   -0.508642
 
-# opt HF/STO-3G with gaussian09
  &minimum pot0=-74.9659012171  pot_act=f read_itQ0transfo=1 unit='angs' /
  RH 0.9894093 angs
  RH 0.9894093 angs

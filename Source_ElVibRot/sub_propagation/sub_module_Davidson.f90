@@ -54,12 +54,12 @@ CONTAINS
       SUBROUTINE sub_propagation_Davidson(psi,Ene,nb_diago,max_diago,   &
                                           para_H,para_Davidson,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,dealloc_psi,norm2_psi, &
+                             alloc_NParray,dealloc_NParray,ecri_psi,    &
+                             sub_LCpsi_TO_psi,sub_save_psi
+
       USE mod_Op
-      USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
-      USE mod_ana_psi,        ONLY : norm2_psi
-      USE mod_psi_Op,         ONLY : sub_LCpsi_TO_psi
-      USE mod_psi_io,         ONLY : sub_save_psi
+
 #if(run_MPI)
       USE mod_propa,          ONLY : param_propa,param_Davidson,MPI_Bcast_param_Davidson
 #else
@@ -189,7 +189,7 @@ CONTAINS
       With_Basis = .NOT. para_Davidson%With_Grid
 
       !para_propa%file_WP%formatted = .TRUE.
-      para_propa%file_WP%name                    = para_Davidson%name_file_saveWP
+      para_propa%file_WP%name         = para_Davidson%name_file_saveWP
       para_Davidson%formatted_file_WP = para_propa%file_WP%formatted
 
       !CALL time_perso('Davidson psi0')
@@ -210,7 +210,7 @@ CONTAINS
           Hpsi(i)%GridRep  = .TRUE.
         END DO
       END IF
-      
+
       CALL init_psi(g,para_H,para_H%cplx)
       CALL alloc_psi(g,      BasisRep=With_Basis,GridRep=With_Grid)
       IF(MPI_id==0) THEN
@@ -224,7 +224,7 @@ CONTAINS
         RealTime = Delta_RealTime(DavidsonTime)
         CALL flush_perso(out_unitp)
       ENDIF ! for MPI_id==0
-      
+
 #if(run_MPI)
       CALL MPI_Bcast(nb_diago,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
       CALL MPI_Bcast_param_Davidson(para_Davidson)
@@ -236,7 +236,7 @@ CONTAINS
       ! LOOP
       !===================================================================
       !===================================================================
-      nb_diago        = max(1,nb_diago) ! number of Eign value
+      nb_diago        = max(1,nb_diago) ! number of Eigenvalues
       epsi            = para_Davidson%conv_resi
       norm2g          = HUNDRED * epsi
       conv_Ene        = HUNDRED * epsi
@@ -375,7 +375,6 @@ CONTAINS
         !- diagonalization
         !----------------------------------------------------------
 
-
         !----------------------------------------------------------
         ! Save vec(:) on vec0(:)
         IF (debug) write(out_unitp,*) 'selec',it,ndim,ndim0
@@ -499,9 +498,9 @@ CONTAINS
                                    para_H%para_ReadOp%E0_Transfo,S_overlap)
 
           nb_added_states = ndim-ndim0
-          save_WP = (ndim == max_diago) .OR. conv .OR.                    &
-                    it == para_Davidson%max_it .OR.            &
-           (it > 0 .AND. mod(it,para_Davidson%num_resetH) == 0)
+          save_WP = (ndim == max_diago) .OR. conv .OR.                  &
+                     it == para_Davidson%max_it .OR.                    &
+                     (it > 0 .AND. mod(it,para_Davidson%num_resetH) == 0)
            Save_WP = Save_WP .AND. .NOT. Hmin_OR_Hmax
            !- new vectors --------------------------------------------
            !----------------------------------------------------------
@@ -518,7 +517,6 @@ CONTAINS
 
           !----------------------------------------------------------
           !- save psi(:) on file
-          !save_WP=.FALSE.
           IF (save_WP) THEN
             IF(MPI_id==0) THEN
             CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,        &
@@ -650,7 +648,7 @@ CONTAINS
       CALL flush_perso(out_unitp)
 
       IF (para_H%para_ReadOp%Op_Transfo) THEN
-        ! The energies have to be recalculate without T(Op)
+        ! The energies have to be recalculated without T(Op)
         para_H%para_ReadOp%Op_Transfo = .FALSE.
 #if(run_MPI)
         CALL sub_MakeHPsi_Davidson(it,psi(1:nb_diago),Hpsi(1:nb_diago),Ene,0,para_H,   &
@@ -699,12 +697,10 @@ CONTAINS
         write(out_unitp,*) 'Hmin (cm-1): ',para_propa%Hmin*auTOene
       END IF
 
-      IF(MPI_id==0) THEN
-        write(out_unitp,*)
-        write(out_unitp,*) '==========================================='
-        write(out_unitp,*) '==========================================='
-        CALL flush_perso(out_unitp)
-      ENDIF
+      write(out_unitp,*)
+      write(out_unitp,*) '==========================================='
+      write(out_unitp,*) '==========================================='
+      CALL flush_perso(out_unitp)
       
       !----------------------------------------------------------
       IF (allocated(Vec))  THEN
@@ -738,6 +734,10 @@ CONTAINS
 
       !----------------------------------------------------------
       IF (debug) THEN
+        DO i=1,nb_diago
+          write(out_unitp,*) 'psi(i), i:',i
+          CALL ecri_psi(psi=psi(i))
+        END DO
         write(out_unitp,*) 'END ',name_sub
       END IF
       !----------------------------------------------------------
@@ -746,17 +746,14 @@ CONTAINS
 !=======================================================================================
 
 !=======================================================================================
- SUBROUTINE ReadWP0_Davidson(psi,psi0,Vec0,nb_diago,max_diago,   &
+ SUBROUTINE ReadWP0_Davidson(psi,psi0,Vec0,nb_diago,max_diago,          &
                              para_Davidson,cplx)
  USE mod_system
+ USE mod_psi,     ONLY : param_psi,alloc_psi,norm2_psi,renorm_psi,      &
+                   Set_symab_OF_psiBasisRep,sub_PsiBasisRep_TO_GridRep, &
+                   sub_read_psi0,param_WP0,Set_Random_psi,ecri_init_psi
 
- USE mod_psi_set_alloc
- USE mod_psi_B_TO_G,     ONLY : sub_PsiBasisRep_TO_GridRep
- USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi
- USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep
- USE mod_psi_io,         ONLY : sub_read_psi0
- USE mod_param_WP0,      ONLY : param_WP0
- USE mod_propa,          ONLY : param_Davidson
+ USE mod_propa,   ONLY : param_Davidson
  USE mod_MPI
  IMPLICIT NONE
 
@@ -833,14 +830,7 @@ CONTAINS
    para_Davidson%nb_WP0 = 0
    nb_diago = 1
    CALL alloc_psi(psi(1))
-   DO i=1,psi(1)%nb_tot
-     CALL random_number(a)
-     IF (psi(1)%cplx) THEN
-       psi(1)%CvecB(i) = cmplx(a,ZERO,kind=Rkind)
-     ELSE
-       psi(1)%RvecB(i) = a
-     END IF
-   END DO
+   CALL Set_Random_psi(psi(1))
    CALL Set_symab_OF_psiBasisRep(psi(1),para_Davidson%symab)
    CALL renorm_psi(psi(1),BasisRep=.TRUE.)
  END IF
@@ -850,7 +840,7 @@ CONTAINS
      CALL sub_PsiBasisRep_TO_GridRep(psi(i))
      CALL alloc_psi(psi(i),BasisRep=.FALSE.,GridRep=.TRUE.)
      !CALL Overlap_psi1_psi2(Overlap,psi(i),psi(i),With_Grid=.TRUE.)
-     !write(6,*) 'Norm DVR',Overlap
+     !write(out_unitp,*) 'Norm DVR',Overlap
    END DO
    DO i=max(1,nb_diago),max_diago
      psi(i)%BasisRep  = .FALSE.
@@ -886,19 +876,20 @@ CONTAINS
 
 !=======================================================================================
 #if(run_MPI)
- SUBROUTINE sub_MakeHPsi_Davidson(it,psi,Hpsi,Ene,ndim0,                               &
-                                 para_H,para_Davidson,iunit,H_overlap,S_overlap,save_WP)
- USE mod_psi_Op,         ONLY:Overlap_HS_matrix_MPI3,Overlap_H_matrix_MPI4
+ SUBROUTINE sub_MakeHPsi_Davidson(it,psi,Hpsi,Ene,ndim0,                &
+                                  para_H,para_Davidson,iunit,           &
+                                  H_overlap,S_overlap,save_WP)
+ USE mod_system
+ USE mod_psi,         ONLY: param_psi,Overlap_HS_matrix_MPI3,Overlap_H_matrix_MPI4
 #else
  SUBROUTINE sub_MakeHPsi_Davidson(it,psi,Hpsi,Ene,ndim0,                &
                                   para_H,para_Davidson,iunit)
- USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
+ USE mod_system
+ USE mod_psi,         ONLY : param_psi,Overlap_psi1_psi2
 #endif
 
- USE mod_system
- USE mod_Op,             ONLY : param_Op, sub_TabOpPsi,sub_scaledOpPsi
- USE mod_psi_set_alloc
- USE mod_propa,          ONLY : param_Davidson
+ USE mod_Op,          ONLY : param_Op, sub_TabOpPsi,sub_scaledOpPsi
+ USE mod_propa,       ONLY : param_Davidson
  USE mod_MPI
  IMPLICIT NONE
 
@@ -1043,9 +1034,8 @@ CONTAINS
 #endif
 
  USE mod_system
- USE mod_psi_set_alloc
- USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
- USE mod_propa,          ONLY : param_Davidson
+ USE mod_psi,    ONLY : param_psi,Overlap_psi1_psi2
+ USE mod_propa,  ONLY : param_Davidson
  USE mod_MPI
  IMPLICIT NONE
 
@@ -1167,9 +1157,8 @@ CONTAINS
 #endif
 
  USE mod_system
- USE mod_psi_set_alloc
- USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
- USE mod_propa,          ONLY : param_Davidson
+ USE mod_psi,         ONLY : param_psi,Overlap_psi1_psi2
+ USE mod_propa,       ONLY : param_Davidson
  IMPLICIT NONE
 
 
@@ -1238,9 +1227,9 @@ ndim = size(psi)
 
  SUBROUTINE MakeResidual_Davidson(j,g,psi,Hpsi,Ene,Vec)
  USE mod_system
- USE mod_psi_set_alloc
- USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep,Overlap_psi1_psi2
- USE mod_propa,          ONLY : param_Davidson
+ USE mod_psi,    ONLY : param_psi,Set_symab_OF_psiBasisRep,             &
+                        Overlap_psi1_psi2,dealloc_psi
+ USE mod_propa,  ONLY : param_Davidson
  IMPLICIT NONE
 
 
@@ -1321,13 +1310,11 @@ SUBROUTINE MakeResidual_Davidson_MPI3(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,    
                                       VecToBeIncluded,tab_norm2g,norm2g,convergeResi,  &
                                       convergeEne,fresidu,iresidu,nb_diago,epsi)
   USE mod_system
-  USE mod_psi_set_alloc
-  USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep
-  USE mod_propa,          ONLY : param_Davidson
-  USE mod_ana_psi
+  USE mod_psi,     ONLY : param_psi,norm2_psi,Set_symab_OF_psiBasisRep
+  USE mod_propa,   ONLY : param_Davidson
   USE mod_MPI
   IMPLICIT NONE
-  
+
   TYPE(param_psi), intent(inout)              :: g
   TYPE(param_psi), intent(in)                 :: psi(:)
   TYPE(param_psi), intent(in)                 :: Hpsi(:)
@@ -1347,7 +1334,7 @@ SUBROUTINE MakeResidual_Davidson_MPI3(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,    
   Logical,         intent(inout)              :: conv
 
 
-  Real(kind=Rkind),allocatable                :: Rvec(:)
+  Real(kind=Rkind),   allocatable             :: Rvec(:)
   Complex(kind=Rkind),allocatable             :: Cvec(:)
   Integer                                     :: case_vec
   Integer                                     :: size_vec
@@ -1479,10 +1466,8 @@ END SUBROUTINE MakeResidual_Davidson_MPI3
 !=======================================================================================
 SUBROUTINE MakeResidual_Davidson_j_MPI3(jj,g,psi,Hpsi,Ene,Vec)
   USE mod_system
-  USE mod_psi_set_alloc
-  USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep
-  USE mod_propa,          ONLY : param_Davidson
-  USE mod_ana_psi
+  USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep
+  USE mod_propa,   ONLY : param_Davidson
   USE mod_MPI
   IMPLICIT NONE
   
@@ -1607,10 +1592,8 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI3
 !=======================================================================================
 SUBROUTINE MakeResidual_Davidson_core(jj,g,psi,Hpsi,Ene,Vec,case_vec,size_vec,ndim)
   USE mod_system
-  USE mod_psi_set_alloc
-  USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep
-  USE mod_propa,          ONLY : param_Davidson
-  USE mod_ana_psi
+  USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep
+  USE mod_propa,   ONLY : param_Davidson
   USE mod_MPI
   IMPLICIT NONE
   
@@ -1704,10 +1687,8 @@ SUBROUTINE MakeResidual_Davidson_MPI(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,     
                                      VecToBeIncluded,tab_norm2g,norm2g,convergeResi,   &
                                      convergeEne,fresidu,iresidu,nb_diago,epsi)
   USE mod_system
-  USE mod_psi_set_alloc
-  USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep
-  USE mod_propa,          ONLY : param_Davidson
-  USE mod_ana_psi
+  USE mod_psi,     ONLY : param_psi,norm2_psi,Set_symab_OF_psiBasisRep
+  USE mod_propa,   ONLY : param_Davidson
   USE mod_MPI
   IMPLICIT NONE
   
@@ -1854,10 +1835,8 @@ END SUBROUTINE MakeResidual_Davidson_MPI
 !=======================================================================================
 SUBROUTINE MakeResidual_Davidson_j_MPI(jj,g,psi,Hpsi,Ene,Vec)
   USE mod_system
-  USE mod_psi_set_alloc
-  USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep
-  USE mod_propa,          ONLY : param_Davidson
-  USE mod_ana_psi
+  USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep
+  USE mod_propa,   ONLY : param_Davidson
   USE mod_MPI
   IMPLICIT NONE
   
@@ -1968,17 +1947,16 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
                                 para_Davidson,fresidu,ndim,        &
                                 Op_Transfo,E0_Transfo,S_overlap)
  USE mod_system
- USE mod_psi_set_alloc
- USE mod_psi_SimpleOp
 #if(run_MPI)
- USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi,norm_psi_MPI
- USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep,Set_symab_OF_psiBasisRep_MPI, &
-                                calculate_overlap_MPI,calculate_overlap1D_MPI
+ USE mod_psi,      ONLY : param_psi,dealloc_psi,norm2_psi,renorm_psi,   &
+                          norm_psi_MPI,Set_symab_OF_psiBasisRep_MPI,    &
+                          Set_symab_OF_psiBasisRep,                     &
+                          calculate_overlap_MPI,calculate_overlap1D_MPI
 #else
- USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi
- USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep,Overlap_psi1_psi2
+ USE mod_psi,      ONLY : param_psi,dealloc_psi,norm2_psi,renorm_psi,   &
+                          Set_symab_OF_psiBasisRep,Overlap_psi1_psi2
 #endif
- USE mod_propa,          ONLY : param_Davidson
+ USE mod_propa,    ONLY : param_Davidson
  USE mod_MPI
  USE mod_MPI_Aid
  IMPLICIT NONE
@@ -2060,7 +2038,6 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
 
      SELECT CASE (para_Davidson%NewVec_type)
      CASE (1) ! just the residual
-       !write(6,*) 'coucou residual'
 #if(run_MPI)
        CALL MakeResidual_Davidson_j_MPI3(j,psi(ndim+1),psi,Hpsi,Ene,Vec)
 #else
@@ -2091,7 +2068,6 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
        END DO
 
      CASE (3) ! Davidson
-       !write(6,*) 'coucou Davidson3'
 
        DO i=1,ndim0
          Di = EneRef(i)
@@ -2108,8 +2084,6 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
          END IF
        END DO
      CASE (4) ! Davidson+precondioner
-       !write(6,*) 'coucou Davidson4'
-
        ! first the residual
 #if(run_MPI) 
        CALL MakeResidual_Davidson_j_MPI3(j,psi(ndim+1),psi,Hpsi,Ene,Vec)
@@ -2227,7 +2201,7 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
      !write(out_unitp,*) ' symab: psi(isym), new renormalized vector ',psi(isym)%symab,psi(ndim+1)%symab
 
      !- Schmidt ortho ------------------------------------
-     !write(6,*) 'n+1, vec',ndim+1,psi(ndim+1)%RvecB
+     !write(out_unitp,*) 'n+1, vec',ndim+1,psi(ndim+1)%RvecB
      !write(out_unitp,*) ' new vec symab, bits(symab)',WriteTOstring_symab(psi(ndim+1)%symab)
 #endif     
      ndim = ndim + 1
@@ -2277,12 +2251,10 @@ END SUBROUTINE sub_NewVec_Davidson
 #if(run_MPI)
 SUBROUTINE Schmidt_process_MPI(S_Overlap1D,psi,ndim,isym,With_Grid) 
   USE mod_system
-  USE mod_psi_set_alloc
-  USE mod_psi_SimpleOp
-  USE mod_ana_psi,        ONLY:norm_psi_mpi
-  USE mod_psi_Op,         ONLY:Set_symab_OF_psiBasisRep_MPI,distribute_psi_MPI,        &
-                               calculate_overlap1D_MPI
-  USE mod_propa,          ONLY:param_Davidson
+  USE mod_psi,   ONLY : param_psi,norm_psi_mpi,                         &
+                        Set_symab_OF_psiBasisRep_MPI,distribute_psi_MPI,&
+                       calculate_overlap1D_MPI
+  USE mod_propa, ONLY:param_Davidson
   USE mod_MPI
   USE mod_MPI_Aid
   IMPLICIT NONE
@@ -2417,9 +2389,8 @@ END SUBROUTINE Schmidt_process_MPI
                                 psi,psi0,Vec,Vec0,para_Davidson,it,             &
                                 print_project)
  USE mod_system
- USE mod_psi_set_alloc
- USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
- USE mod_propa,          ONLY : param_Davidson
+ USE mod_psi,     ONLY : param_psi,Overlap_psi1_psi2
+ USE mod_propa,   ONLY : param_Davidson
  USE mod_MPI
  IMPLICIT NONE
 
@@ -2436,6 +2407,7 @@ END SUBROUTINE Schmidt_process_MPI
  real (kind=Rkind), allocatable :: Vec0(:,:),Vec(:,:)
  real (kind=Rkind) :: S0itmax,S0it
  integer :: klowestWP
+ logical :: test_vec0
 
  complex (kind=Rkind) :: Overlap
  real (kind=Rkind)    :: Spsi_psi0(size(Vec(:,1)))
@@ -2472,7 +2444,11 @@ END SUBROUTINE Schmidt_process_MPI
  END IF
  klowestWP = 0
  IF (ndim > 0 .AND. para_Davidson%num_LowestWP > 0 .AND. para_Davidson%num_LowestWP <= ndim) THEN
-   IF (allocated(vec0) .AND. para_Davidson%num_LowestWP <= size(Vec0,dim=1)) THEN
+
+   test_vec0 = allocated(vec0)
+   IF (test_vec0) test_vec0 = (para_Davidson%num_LowestWP <= size(Vec0,dim=1))
+
+   IF ( test_vec0 ) THEN
 
      IF(MPI_id==0) THEN
      ndim0 = size(Vec0,dim=1)
@@ -2665,8 +2641,7 @@ END SUBROUTINE Schmidt_process_MPI
  SUBROUTINE sub_projec3_Davidson(Vec,psi,psi0,VecToBeIncluded,thresh,   &
                                  Ene,min_Ene,print_project)
  USE mod_system
- USE mod_psi_set_alloc
- USE mod_psi_Op,         ONLY : Overlap_psi1_psi2
+ USE mod_psi,     ONLY : param_psi,Overlap_psi1_psi2
  USE mod_MPI
  IMPLICIT NONE
 

@@ -20,7 +20,8 @@ C
 C**********************************************************************
 C     
       SUBROUTINE ZSCPX (NDIM,NLEN,NLIM,VECS,TOL,INFO)
-C     
+      use mod_system, only : Rkind
+
 C     Purpose:
 C     This subroutine uses the QMR algorithm based  on the coupled two-
 C     term variant of the Lanczos  process without look-ahead  to solve
@@ -74,7 +75,7 @@ C     March 30, 1993
 C     
 C**********************************************************************
 C     
-      INTRINSIC CDABS, DABS, DBLE, DCMPLX, DCONJG, DMAX1, DSQRT, MAX0
+      !INTRINSIC CDABS, DABS, DBLE, DCMPLX, DCONJG, DMAX1, DSQRT, MAX0
       EXTERNAL DLAMCH, DZNRM2, ZAXPBY, ZDOTU, ZRANDN, ZROTG, ZSCPXO
       DOUBLE COMPLEX ZDOTU
       DOUBLE PRECISION DLAMCH, DZNRM2, ZSCPXO
@@ -198,7 +199,7 @@ C
 C     This is one step of the coupled two-term Lanczos algorithm.
 C     Check whether E_n is nonsingular.
 C     
- 20   IF (CDABS(ENN).EQ.DZERO) THEN
+ 20   IF (abs(ENN).EQ.DZERO) THEN
          IERR = 8
          GO TO 70
       END IF
@@ -216,12 +217,12 @@ C     SYM  SCW  = DZNRM2(NLEN,VECS(1,3),1)
       GAMN   = GAMN * SCPN / SCQN * SCV / SCW
       DNN    = ZDOTU(NLEN,VECS(1,3),1,VECS(1,3),1) / ( SCV * SCW )
       IF ((SCV.GE.TMAX).OR.(SCV.LE.TMIN)) THEN
-         ZTMP = DCMPLX(DONE / SCV,DZERO)
+         ZTMP = cmplx(DONE / SCV,DZERO,kind=Rkind)
          CALL ZAXPBY (NLEN,VECS(1,3),ZTMP,VECS(1,3),ZZERO,VECS(1,3))
          SCV = DONE
       END IF
       IF ((SCW.GE.TMAX).OR.(SCW.LE.TMIN)) THEN
-         ZTMP = DCMPLX(DONE / SCW,DZERO)
+         ZTMP = cmplx(DONE / SCW,DZERO,kind=Rkind)
 C     SYM     CALL ZAXPBY (NLEN,VECS(1,3),ZTMP,VECS(1,3),ZZERO,VECS(1,3))
          SCW = DONE
       END IF
@@ -240,7 +241,7 @@ C     SYM  CALL ZAXPBY (NLEN,VECS(1,4),ZONE,VECS(1,3),-ZTMP,VECS(1,4))
 C     
 C     Check whether D_n is nonsingular.
 C     
-      IF (CDABS(DNN).EQ.DZERO) THEN
+      IF (abs(DNN).EQ.DZERO) THEN
          IERR = 8
          GO TO 70
       END IF
@@ -302,7 +303,7 @@ C
 C     
 C     Apply the new rotation to the right-hand side vector.
 C     
-      RHSNP1 = -DCONJG(SINN) * RHSN
+      RHSNP1 = -conjg(SINN) * RHSN
       RHSN   =  COSN * RHSN
 C     
 C     Compute the next search direction s_i.
@@ -315,7 +316,7 @@ C
       SCS  = SCPN / RHN
       ZTMP = SCS * RHSN
       CALL ZAXPBY (NLEN,VECS(1,1),ZONE,VECS(1,1),ZTMP,VECS(1,5))
-      IF ((CDABS(SCS).GE.TMAX).OR.(CDABS(SCS).LE.TMIN)) THEN
+      IF ((abs(SCS).GE.TMAX).OR.(abs(SCS).LE.TMIN)) THEN
          CALL ZAXPBY (NLEN,VECS(1,5),SCS,VECS(1,5),ZZERO,VECS(1,5))
          SCS = ZONE
       END IF
@@ -325,7 +326,7 @@ C     If the scaled upper bound is within one order of magnitude of the
 C     target convergence norm, compute the true residual norm.
 C     
       RHSN = RHSNP1
-      UNRM = DSQRT(DBLE(N+1)) * MAXOMG * CDABS(RHSNP1) / R0
+      UNRM = DSQRT(DBLE(N+1)) * MAXOMG * abs(RHSNP1) / R0
       UCHK = UNRM
       IF ((TRES.EQ.0).AND.(UNRM/TOL.GT.DTEN).AND.(N.LT.NLIM)) GO TO 60
 C     
@@ -800,7 +801,7 @@ C**********************************************************************
       EXTERNAL           DLAMC1, DLAMC4, DLAMC5
 *     ..
 *     .. Intrinsic Functions ..
-      INTRINSIC          ABS, MAX, MIN
+      !INTRINSIC          ABS, MAX, MIN
 *     ..
 *     .. Save statement ..
       SAVE               FIRST, IWARN, LBETA, LEMAX, LEMIN, LEPS, LRMAX,
@@ -1162,7 +1163,7 @@ C**********************************************************************
       EXTERNAL           DLAMC3
 *     ..
 *     .. Intrinsic Functions ..
-      INTRINSIC          MOD
+      !INTRINSIC          MOD
 *     ..
 *     .. Executable Statements ..
 *
@@ -1399,6 +1400,7 @@ c
   300 continue
       return
       end
+
       LOGICAL          FUNCTION LSAME( CA, CB )
 *
 *  -- LAPACK auxiliary routine (version 1.1) --
@@ -1424,7 +1426,7 @@ c
 *          CA and CB specify the single characters to be compared.
 *
 *     .. Intrinsic Functions ..
-      INTRINSIC          ICHAR
+      !INTRINSIC          ICHAR
 *     ..
 *     .. Local Scalars ..
       INTEGER            INTA, INTB, ZCODE
@@ -1500,6 +1502,8 @@ C
 C**********************************************************************
 C     
       SUBROUTINE ZAXPBY (N,ZZ,ZA,ZX,ZB,ZY)
+      use mod_system, only : Rkind
+
 C     
 C     Purpose:
 C     This subroutine computes ZZ = ZA * ZX + ZB * ZY.  Several special
@@ -1535,7 +1539,7 @@ C     March 23, 1993
 C     
 C**********************************************************************
 C     
-      INTRINSIC DIMAG, DREAL
+      !INTRINSIC DIMAG, DREAL
 C     
       INTEGER N
       DOUBLE COMPLEX ZA, ZB, ZX(N), ZY(N), ZZ(N)
@@ -1547,10 +1551,10 @@ C
 C     
       IF (N.LE.0) RETURN
 C     
-      DAI = DIMAG(ZA)
-      DAR = DREAL(ZA)
-      DBI = DIMAG(ZB)
-      DBR = DREAL(ZB)
+      DAI = aimag(ZA)
+      DAR = real(ZA,kind=Rkind)
+      DBI = aimag(ZB)
+      DBR = real(ZB,kind=Rkind)
       IF ((DAR.EQ.0.0D0).AND.(DAI.EQ.0.0D0)) THEN
          IF ((DBR.EQ.0.0D0).AND.(DBI.EQ.0.0D0)) THEN
 C     ZA = 0.0, ZB = 0.0 => ZZ = 0.0.
@@ -1683,6 +1687,8 @@ c
 C**********************************************************************
 C     
       SUBROUTINE ZRANDN (N,ZX,SEED)
+      use mod_system, only : Rkind
+
 C     
 C     Purpose:
 C     Fills the vector ZX with random numbers  between 0 and 1.  If the
@@ -1700,7 +1706,7 @@ C     April 23, 1993
 C     
 C**********************************************************************
 C     
-      INTRINSIC DBLE, DCMPLX, IABS, MOD
+      !INTRINSIC DBLE, DCMPLX, IABS, MOD
 C     
       INTEGER N, SEED
       DOUBLE COMPLEX ZX(N)
@@ -1748,7 +1754,7 @@ C
          IS    = IABS(MOD(IM*IS,IMAX))
          IMAGX = DBLE(IS) / DMAX
          IS    = IABS(MOD(IM*IS,IMAX))
-         ZX(I) = DCMPLX(REALX,IMAGX)
+         ZX(I) = cmplx(REALX,IMAGX,kind=Rkind)
  40   CONTINUE
 C     
       RETURN
@@ -1756,22 +1762,23 @@ C
 C
 C**********************************************************************
       subroutine zrotg(ca,cb,c,s)
+      use mod_system, only : Rkind
       double complex ca,cb,s
       double precision c
       double precision norm,scale
       double complex alpha
-      if (cdabs(ca) .ne. 0.0d0) go to 10
+      if (abs(ca) .ne. 0.0d0) go to 10
          c = 0.0d0
          s = (1.0d0,0.0d0)
          ca = cb
          go to 20
    10 continue
-         scale = cdabs(ca) + cdabs(cb)
-         norm = scale*dsqrt((cdabs(ca/dcmplx(scale,0.0d0)))**2 +
-     *                      (cdabs(cb/dcmplx(scale,0.0d0)))**2)
-         alpha = ca /cdabs(ca)
-         c = cdabs(ca) / norm
-         s = alpha * dconjg(cb) / norm
+         scale = abs(ca) + abs(cb)
+         norm  = scale*sqrt((abs(ca/cmplx(scale,0.0d0,kind=Rkind)))**2 +
+     *                      (abs(cb/cmplx(scale,0.0d0,kind=Rkind)))**2)
+         alpha = ca /abs(ca)
+         c = abs(ca) / norm
+         s = alpha * conjg(cb) / norm
          ca = alpha * norm
    20 continue
       return
@@ -1798,6 +1805,8 @@ C
 C**********************************************************************
 C     
       SUBROUTINE ZSQMX (NDIM,NLEN,NLIM,VECS,TOL,INFO)
+      use mod_system, only : Rkind
+
 C     
 C     Purpose:
 C     This subroutine uses  the QMR algorithm to solve  linear systems.
@@ -1848,8 +1857,8 @@ C     May 25, 1993
 C     
 C**********************************************************************
 C     
-      INTRINSIC CDABS, DABS, DBLE, DCMPLX, DCONJG, DMAX1, DSQRT, MAX0
-      INTRINSIC MOD
+      !INTRINSIC CDABS, DABS, DBLE, DCMPLX, DCONJG, DMAX1, DSQRT, MAX0
+      !INTRINSIC MOD
       EXTERNAL DLAMCH, DZNRM2, ZAXPBY, ZDOTU, ZRANDN, ZROTG, ZSQMXO
       DOUBLE COMPLEX ZDOTU
       DOUBLE PRECISION DLAMCH, DZNRM2, ZSQMXO
@@ -1977,13 +1986,13 @@ C     SYM  SCWNP1 = DZNRM2(NLEN,VECS(1,IWN),1)
       DNP1 = ZDOTU(NLEN,VECS(1,IWN),1,VECS(1,IVN),1) / ( SCVNP1 * SCWNP1
      $   )
       IF ((SCVNP1.GE.TMAX).OR.(SCVNP1.LE.TMIN)) THEN
-         ZTMP = DCMPLX(DONE / SCVNP1,DZERO)
+         ZTMP = cmplx(DONE / SCVNP1,DZERO,kind=Rkind)
          CALL ZAXPBY (NLEN,VECS(1,IVN),ZTMP,VECS(1,IVN),ZZERO,VECS(1,IVN
      $      ))
          SCVNP1 = DONE
       END IF
       IF ((SCWNP1.GE.TMAX).OR.(SCWNP1.LE.TMIN)) THEN
-         ZTMP = DCMPLX(DONE / SCWNP1,DZERO)
+         ZTMP = cmplx(DONE / SCWNP1,DZERO,kind=Rkind)
 C     SYM     CALL ZAXPBY (NLEN,VECS(1,IWN),ZTMP,VECS(1,IWN),ZZERO,VECS(1,IWN))
          SCWNP1 = DONE
       END IF
@@ -2023,7 +2032,7 @@ C     Check whether D_n is nonsingular.
 C     
       DNM1 = DN
       DN   = DNP1
-      IF (CDABS(DN).EQ.DZERO) THEN
+      IF (abs(DN).EQ.DZERO) THEN
          IERR = 8
          GO TO 80
       END IF
@@ -2087,13 +2096,13 @@ C     SYM  SCWNP1 = DZNRM2(NLEN,VECS(1,IWNP1),1)
       DNP1   = ZDOTU(NLEN,VECS(1,IWNP1),1,VECS(1,IVNP1),1) / ( SCVNP1 * 
      $   SCWNP1 )
       IF ((SCVNP1.GE.TMAX).OR.(SCVNP1.LE.TMIN)) THEN
-         ZTMP = DCMPLX(DONE / SCVNP1,DZERO)
+         ZTMP = cmplx(DONE / SCVNP1,DZERO,kind=Rkind)
          CALL ZAXPBY (NLEN,VECS(1,IVNP1),ZTMP,VECS(1,IVNP1),ZZERO,VECS(1
      $      ,IVNP1))
          SCVNP1 = DONE
       END IF
       IF ((SCWNP1.GE.TMAX).OR.(SCWNP1.LE.TMIN)) THEN
-         ZTMP = DCMPLX(DONE / SCWNP1,DZERO)
+         ZTMP = cmplx(DONE / SCWNP1,DZERO,kind=Rkind)
 C     
          SCWNP1 = DONE
       END IF
@@ -2119,7 +2128,7 @@ C
       SINNM1 = SINN
       ZTMP   = RHNM1
       RHNM1  =  COSNM1 * ZTMP + SINNM1 * RHN
-      RHN    = -DCONJG(SINNM1) * ZTMP + COSNM1 * RHN
+      RHN    = -conjg(SINNM1) * ZTMP + COSNM1 * RHN
 C     
 C     Compute the rotation for the last element (this also applies it).
 C     
@@ -2127,7 +2136,7 @@ C
 C     
 C     Apply the new rotation to the right-hand side vector.
 C     
-      RHSNP1 = -DCONJG(SINN) * RHSN
+      RHSNP1 = -conjg(SINN) * RHSN
       RHSN   =  COSN * RHSN
 C     
 C     Compute the next search direction s_n.
@@ -2148,7 +2157,7 @@ C     Compute the new QMR iterate, then scale the search direction.
 C     
       ZTMP = SCSN * RHSN
       CALL ZAXPBY (NLEN,VECS(1,1),ZONE,VECS(1,1),ZTMP,VECS(1,ISN))
-      DTMP = CDABS(SCSN)
+      DTMP = abs(SCSN)
       IF ((DTMP.GE.TMAX).OR.(DTMP.LE.TMIN)) THEN
          CALL ZAXPBY (NLEN,VECS(1,ISN),SCSN,VECS(1,ISN),ZZERO,VECS(1,ISN
      $      ))
@@ -2160,7 +2169,7 @@ C     If the scaled upper bound is within one order of magnitude of the
 C     target convergence norm, compute the true residual norm.
 C     
       RHSN = RHSNP1
-      UNRM = DSQRT(DBLE(N+1)) * MAXOMG * CDABS(RHSNP1) / R0
+      UNRM = DSQRT(DBLE(N+1)) * MAXOMG * abs(RHSNP1) / R0
       UCHK = UNRM
       IF ((TRES.EQ.0).AND.(UNRM/TOL.GT.DTEN).AND.(N.LT.NLIM)) GO TO 70
 C     
@@ -2265,6 +2274,7 @@ C
 C**********************************************************************
 C
       SUBROUTINE ZUQMX (NDIM,NLEN,NLIM,VECS,TOL,INFO)
+      use mod_system, only : Rkind
 C
 C     Purpose:
 C     This subroutine uses  the QMR algorithm to solve  linear systems.
@@ -2314,8 +2324,8 @@ C     May 25, 1993
 C
 C**********************************************************************
 C
-      INTRINSIC CDABS, DABS, DBLE, DCMPLX, DCONJG, DMAX1, DSQRT, MAX0
-      INTRINSIC MOD
+      !INTRINSIC abs, DABS, DBLE, DCMPLX, DCONJG, DMAX1, DSQRT, MAX0
+      !INTRINSIC MOD
       EXTERNAL DLAMCH, DZNRM2, ZAXPBY, ZDOTU, ZRANDN, ZROTG, ZUQMXO
       DOUBLE COMPLEX ZDOTU
       DOUBLE PRECISION DLAMCH, DZNRM2, ZUQMXO
@@ -2442,13 +2452,13 @@ C
       DNP1 = ZDOTU(NLEN,VECS(1,IWN),1,VECS(1,IVN),1) / ( SCVNP1 * SCWNP1
      $ )
       IF ((SCVNP1.GE.TMAX).OR.(SCVNP1.LE.TMIN)) THEN
-         ZTMP = DCMPLX(DONE / SCVNP1,DZERO)
+         ZTMP = cmplx(DONE / SCVNP1,DZERO,kind=Rkind)
          CALL ZAXPBY (NLEN,VECS(1,IVN),ZTMP,VECS(1,IVN),ZZERO,VECS(1,IVN
      $))
          SCVNP1 = DONE
       END IF
       IF ((SCWNP1.GE.TMAX).OR.(SCWNP1.LE.TMIN)) THEN
-         ZTMP = DCMPLX(DONE / SCWNP1,DZERO)
+         ZTMP = cmplx(DONE / SCWNP1,DZERO,kind=Rkind)
          CALL ZAXPBY (NLEN,VECS(1,IWN),ZTMP,VECS(1,IWN),ZZERO,VECS(1,IWN
      $))
          SCWNP1 = DONE
@@ -2489,7 +2499,7 @@ C     Check whether D_n is nonsingular.
 C
       DNM1 = DN
       DN   = DNP1
-      IF (CDABS(DN).EQ.DZERO) THEN
+      IF (abs(DN).EQ.DZERO) THEN
          IERR = 8
          GO TO 80
       END IF
@@ -2554,13 +2564,13 @@ C
       DNP1   = ZDOTU(NLEN,VECS(1,IWNP1),1,VECS(1,IVNP1),1) / ( SCVNP1 * 
      $SCWNP1 )
       IF ((SCVNP1.GE.TMAX).OR.(SCVNP1.LE.TMIN)) THEN
-         ZTMP = DCMPLX(DONE / SCVNP1,DZERO)
+         ZTMP = cmplx(DONE / SCVNP1,DZERO,kind=Rkind)
          CALL ZAXPBY (NLEN,VECS(1,IVNP1),ZTMP,VECS(1,IVNP1),ZZERO,VECS(1
      $,IVNP1))
          SCVNP1 = DONE
       END IF
       IF ((SCWNP1.GE.TMAX).OR.(SCWNP1.LE.TMIN)) THEN
-         ZTMP = DCMPLX(DONE / SCWNP1,DZERO)
+         ZTMP = cmplx(DONE / SCWNP1,DZERO,kind=Rkind)
          CALL ZAXPBY (NLEN,VECS(1,IWNP1),ZTMP,VECS(1,IWNP1),ZZERO,VECS(1
      $,IWNP1))
          SCWNP1 = DONE
@@ -2587,7 +2597,7 @@ C
       SINNM1 = SINN
       ZTMP   = RHNM1
       RHNM1  =  COSNM1 * ZTMP + SINNM1 * RHN
-      RHN    = -DCONJG(SINNM1) * ZTMP + COSNM1 * RHN
+      RHN    = -conjg(SINNM1) * ZTMP + COSNM1 * RHN
 C
 C     Compute the rotation for the last element (this also applies it).
 C
@@ -2595,7 +2605,7 @@ C
 C
 C     Apply the new rotation to the right-hand side vector.
 C
-      RHSNP1 = -DCONJG(SINN) * RHSN
+      RHSNP1 = -conjg(SINN) * RHSN
       RHSN   =  COSN * RHSN
 C
 C     Compute the next search direction s_n.
@@ -2616,7 +2626,7 @@ C     Compute the new QMR iterate, then scale the search direction.
 C
       ZTMP = SCSN * RHSN
       CALL ZAXPBY (NLEN,VECS(1,1),ZONE,VECS(1,1),ZTMP,VECS(1,ISN))
-      DTMP = CDABS(SCSN)
+      DTMP = abs(SCSN)
       IF ((DTMP.GE.TMAX).OR.(DTMP.LE.TMIN)) THEN
          CALL ZAXPBY (NLEN,VECS(1,ISN),SCSN,VECS(1,ISN),ZZERO,VECS(1,ISN
      $))
@@ -2628,7 +2638,7 @@ C     If the scaled upper bound is within one order of magnitude of the
 C     target convergence norm, compute the true residual norm.
 C
       RHSN = RHSNP1
-      UNRM = DSQRT(DBLE(N+1)) * MAXOMG * CDABS(RHSNP1) / R0
+      UNRM = DSQRT(DBLE(N+1)) * MAXOMG * abs(RHSNP1) / R0
       UCHK = UNRM
       IF ((TRES.EQ.0).AND.(UNRM/TOL.GT.DTEN).AND.(N.LT.NLIM)) GO TO 70
 C

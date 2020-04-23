@@ -28,7 +28,9 @@
 !===========================================================================
       PROGRAM Tana_test
       USE mod_system
+      USE mod_Constant
       USE mod_Coord_KEO
+      USE mod_Tnum
       USE mod_PrimOp
       IMPLICIT NONE
 
@@ -52,31 +54,33 @@
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Tana_test'
 
+CALL test_String_TO_Sum_OpnD()
+STOP
 !===========================================================
 !===========================================================
-      !para_mem%mem_debug = .TRUE.
-      CALL versionEVRT(.TRUE.)
-
-      !-----------------------------------------------------------------
-      !     - read the coordinate tansformations :
-      !     -   zmatrix, polysperical, bunch...
-      !     ------------------------------------------------------------
-      CALL Read_mole(mole,para_Tnum,const_phys)
-      !     ------------------------------------------------------------
-      !-----------------------------------------------------------------
-
-      !-----------------------------------------------------------------
-      !     - read coordinate values -----------------------------------
-      !     ------------------------------------------------------------
-      CALL read_RefGeom(mole,para_Tnum)
-      !     ------------------------------------------------------------
-      !-----------------------------------------------------------------
-
-      !-----------------------------------------------------------------
-      !     ---- TO finalize the coordinates (NM) and the KEO ----------
-      !     ------------------------------------------------------------
-      CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
-      !-----------------------------------------------------------------
+!      !para_mem%mem_debug = .TRUE.
+!      CALL versionEVRT(.TRUE.)
+!
+!      !-----------------------------------------------------------------
+!      !     - read the coordinate tansformations :
+!      !     -   zmatrix, polysperical, bunch...
+!      !     ------------------------------------------------------------
+!      CALL Read_mole(mole,para_Tnum,const_phys)
+!      !     ------------------------------------------------------------
+!      !-----------------------------------------------------------------
+!
+!      !-----------------------------------------------------------------
+!      !     - read coordinate values -----------------------------------
+!      !     ------------------------------------------------------------
+!      CALL read_RefGeom(mole,para_Tnum)
+!      !     ------------------------------------------------------------
+!      !-----------------------------------------------------------------
+!
+!      !-----------------------------------------------------------------
+!      !     ---- TO finalize the coordinates (NM) and the KEO ----------
+!      !     ------------------------------------------------------------
+!      CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+!      !-----------------------------------------------------------------
 !===========================================================
 !===========================================================
 
@@ -111,9 +115,9 @@ END PROGRAM Tana_test
 
 SUBROUTINE test_Opel()
   USE mod_system
-  USE mod_Tnum
-  USE mod_Tana_keo
-  USE mod_Tana_Tnum
+  USE mod_Constant
+  USE mod_Coord_KEO
+  USE mod_Tana_OpEl
   IMPLICIT NONE
 
 
@@ -153,7 +157,7 @@ END DO
 idq=-3
 write(out_unitp,*) '===================================='
 write(out_unitp,*) 'idq',idq
-CF1el = set_opel(4, idq, alfa, indexq=1, coeff=cone,err_el=err_Op)
+F1el = set_opel(4, idq, alfa, indexq=1, coeff=cone,err_el=err_Op)
 IF (err_Op == 0) CALL write_op(F1el,header=.TRUE.)
 
 idq=-7
@@ -207,9 +211,10 @@ END DO
 END SUBROUTINE test_Opel
 SUBROUTINE test_Op1D()
   USE mod_system
-  USE mod_Tnum
-  USE mod_Tana_keo
-  USE mod_Tana_Tnum
+  USE mod_Constant
+  USE mod_Coord_KEO
+  USE mod_Tana_OpEl
+  USE mod_Tana_Op1D
   IMPLICIT NONE
 
 
@@ -301,9 +306,10 @@ CALL delete_op(F21D)
 END SUBROUTINE test_Op1D
 SUBROUTINE test_Der_OF_Op1D()
   USE mod_system
-  USE mod_Tnum
-  USE mod_Tana_keo
-  USE mod_Tana_Tnum
+  USE mod_Constant
+  USE mod_Coord_KEO
+  USE mod_Tana_OpEl
+  USE mod_Tana_Op1D
   IMPLICIT NONE
 
 
@@ -347,6 +353,7 @@ DO i=1,size(tab_F1D%Sum_Op1D)
 END DO
 CALL delete_op(tab_F1D)
 
+
 write(out_unitp,*) '===================================='
 write(out_unitp,*) '========der2 of 1D Op =============='
 
@@ -365,9 +372,11 @@ END SUBROUTINE test_Der_OF_Op1D
 
 SUBROUTINE test_SumOp1D()
   USE mod_system
-  USE mod_Tnum
-  USE mod_Tana_keo
-  USE mod_Tana_Tnum
+  USE mod_Constant
+
+  USE mod_Coord_KEO
+  USE mod_Tana_OpEl
+  USE mod_Tana_Op1D
   IMPLICIT NONE
 
   TYPE(Op1D)             :: F11D,F21D
@@ -480,9 +489,11 @@ CALL write_op(Sum1_1D)
 END SUBROUTINE test_SumOp1D
 SUBROUTINE test_Expand_Op1D()
   USE mod_system
-  USE mod_Tnum
-  USE mod_Tana_keo
-  USE mod_Tana_Tnum
+  USE mod_Constant
+
+  USE mod_Coord_KEO
+  USE mod_Tana_OpEl
+  USE mod_Tana_Op1D
   IMPLICIT NONE
 
   TYPE(Op1D)             :: F11D
@@ -593,14 +604,17 @@ END DO
 END SUBROUTINE test_Expand_Op1D
 SUBROUTINE test_OpnD()
   USE mod_system
-  USE mod_Tnum
-  USE mod_Tana_keo
-  USE mod_Tana_Tnum
+  USE mod_Constant
+
+  USE mod_Coord_KEO
+  USE mod_Tana_OpEl
+  USE mod_Tana_Op1D
+  USE mod_Tana_OpnD
   IMPLICIT NONE
 
 
       TYPE(Op1D)              :: F11D,F21D,F31D
-      TYPE(Sum_OF_Op1D)       ::tab_F1D
+      TYPE(Sum_OF_Op1D)       :: tab_F1D
       TYPE(OpnD)              :: FOpnD
       TYPE(OpnD), allocatable :: SumOpnD(:)
 
@@ -655,9 +669,13 @@ CALL dealloc_NParray(SumOpnD,'SumOpnD',name_sub)
 END SUBROUTINE test_OpnD
 SUBROUTINE test_Sum_OpnD()
   USE mod_system
-  USE mod_Tnum
-  USE mod_Tana_keo
-  USE mod_Tana_Tnum
+  USE mod_Constant
+
+  USE mod_Coord_KEO
+  USE mod_Tana_OpEl
+  USE mod_Tana_Op1D
+  USE mod_Tana_OpnD
+  USE mod_Tana_Sum_OpnD
   IMPLICIT NONE
 
       TYPE(Sum_OpnD)              :: SumOpnD
@@ -759,3 +777,64 @@ CALL delete_op(F21D)
 CALL delete_op(F31D)
 
 END SUBROUTINE test_Sum_OpnD
+SUBROUTINE test_String_TO_Sum_OpnD()
+  USE mod_system
+  USE mod_Constant
+
+  USE mod_Coord_KEO
+  USE mod_Tana_OpEl
+  USE mod_Tana_Op1D
+  USE mod_Tana_OpnD
+  USE mod_Tana_Sum_OpnD
+  USE mod_Tana_write_mctdh
+  IMPLICIT NONE
+
+      TYPE(Sum_OpnD)              :: SumOpnD
+      TYPE(Sum_OpnD)              :: ExpSumOpnD
+
+      TYPE(Op1D)                  :: F1D
+
+      TYPE(OpEl)                  :: F1el
+      TYPE(OpnD)                  :: F1nD
+      TYPE(sum_opnd)              :: KEO_MCTDH
+
+      character (len = :), allocatable     :: String_OpnD
+
+      integer :: i,idq,idf,indexq
+
+      !- working parameters ------------------------------------------
+      integer :: err_mem,memory,err_Op
+      character (len=*), parameter :: name_sub='test_String_TO_Sum_OpnD'
+
+!  CALL StringMCTDH_TO_OpEl(F1el,'qs^-1',indexq=3)
+!  CALL write_op(F1el,header=.TRUE.)
+!  write(out_unitp,*) '===================================='
+!
+!  CALL StringMCTDH_TO_Op1d(F1D,'sin^-1', indexq=1)
+!  CALL write_op(F1D,header=.TRUE.)
+!
+!  CALL StringMCTDH_TO_Op1d(F1D,'q^-1*dq*q', indexq=2)
+!  CALL write_op(F1D,header=.TRUE.)
+!
+!  write(out_unitp,*) '===================================='
+!  write(out_unitp,*) '       q^-1*dq*q^2*dq*q^-1'
+!  CALL StringMCTDH_TO_Op1d(F1D,'q^-1*dq*q^2*dq*q^-1', indexq=2)
+!  CALL write_op(F1D,header=.TRUE.)
+!  write(out_unitp,*) '===================================='
+!
+!  write(out_unitp,*) '===================================='
+!  String_OpnD = '-1.4437526746680724d-005 |1   q^-1 |3   q*qs^-1 |4   q^-1 |5   dq*q*qs |6   sin*dq'
+!  write(out_unitp,*) String_OpnD
+!
+!  CALL StringMCTDH_TO_Opnd(F1nD,String_OpnD,nb_act=6)
+!  CALL write_op(F1nD,header=.TRUE.)
+!  write(out_unitp,*) '===================================='
+!
+!  CALL delete_op(F1D)
+!  CALL delete_op(F1nD)
+
+  CALL read_keo_mctdh_form(nb_act=6,keo=KEO_MCTDH,io=in_unitp)
+  CALL write_op(KEO_MCTDH,header=.TRUE.)
+
+
+END SUBROUTINE test_String_TO_Sum_OpnD

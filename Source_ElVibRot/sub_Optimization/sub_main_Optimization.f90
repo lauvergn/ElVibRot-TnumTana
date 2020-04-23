@@ -45,11 +45,11 @@
       USE mod_nDindex
       USE mod_dnSVM
       USE mod_Constant
-      USE mod_Coord_KEO, only : assignment(=),CoordType, Tnum, get_Qact0
+      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0
       USE mod_PrimOp
       USE mod_basis
       USE BasisMakeGrid
-      USE mod_psi_set_alloc
+      USE mod_psi
       USE mod_propa
       USE mod_Op
       USE mod_analysis
@@ -93,7 +93,6 @@
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa) :: para_propa
-      TYPE (param_psi)   :: WP0(1)
 
 
 !----- variables for the namelist actives ----------------------------
@@ -136,7 +135,7 @@
                         para_AllBasis,BasisnD_Save,                     &
                         para_PES,ComOp,para_AllOp,                      &
                         para_ana,para_intensity,intensity_only,         &
-                        para_propa,WP0(1))
+                        para_propa)
 
       write(out_unitp,*)
       write(out_unitp,*)
@@ -250,7 +249,7 @@
           END IF
 
         END DO
-        write(6,*) 'Norm_min',i,Norm_min
+        write(out_unitp,*) 'Norm_min',i,Norm_min
 
 !        CALL Sub_BFGS(BasisnD_Save,xOpt_min,SQ,nb_Opt,                  &
 !                                    para_Tnum,mole,ComOp,para_PES,Qact, &
@@ -358,11 +357,10 @@
 
 
       CALL dealloc_param_propa(para_propa)
-      CALL dealloc_psi(WP0(1))
 
       CALL dealloc_AllBasis(para_AllBasis)
 
-      write(6,*) 'mem_tot',para_mem%mem_tot
+      write(out_unitp,*) 'mem_tot',para_mem%mem_tot
 
       END SUBROUTINE sub_Optimization_OF_VibParam
 
@@ -371,7 +369,7 @@
       USE mod_system
       USE mod_nDindex
       USE mod_Constant
-      use mod_Coord_KEO, only: assignment(=),CoordType, tnum
+      use mod_Coord_KEO, only: CoordType, tnum
       USE mod_PrimOp
 
       USE mod_basis
@@ -610,7 +608,7 @@
       SUBROUTINE Set_ALL_para_FOR_optimization(mole,BasisnD,Qact,Set_Val)
 
       USE mod_system
-      use mod_Coord_KEO, only: assignment(=),CoordType
+      use mod_Coord_KEO, only: CoordType
       USE mod_basis
       IMPLICIT NONE
 
@@ -710,7 +708,7 @@
       Xopt = reshape(x0,shape(xOpt))
 
       deg = int(BasisnD%Norm_OF_nDindB)
-      !write(6,*) 'ndim,deg,nqc',BasisnD%ndim,deg,BasisnD%nqc
+      !write(out_unitp,*) 'ndim,deg,nqc',BasisnD%ndim,deg,BasisnD%nqc
 
       nDsize(:) = deg+1
       nDinit(:) = 1
@@ -764,7 +762,7 @@
 
       Energ = sqrt(dot_product(ER,ER)/real(nDindB%Max_nDI,kind=Rkind))
 
-      !write(6,*) 'Energ',Energ
+      !write(out_unitp,*) 'Energ',Energ
 
       CALL dealloc_NParray(M,'M',name_sub)
       CALL dealloc_NParray(W,'W',name_sub)
@@ -835,7 +833,7 @@
       Xopt(1:size(x0)) = reshape(x0,(/ size(x0) /) )
 
       deg = int(BasisnD%Norm_OF_nDindB)
-      !write(6,*) 'ndim,deg,nqc',BasisnD%ndim,deg,BasisnD%nqc
+      !write(out_unitp,*) 'ndim,deg,nqc',BasisnD%ndim,deg,BasisnD%nqc
 
       nDsize(:) = deg+1
       nDinit(:) = 1
@@ -873,7 +871,7 @@
 
       Energ = sqrt(dot_product(ER,ER)/real(nDindB%Max_nDI,kind=Rkind))
 
-      !write(6,*) 'Energ',Energ
+      !write(out_unitp,*) 'Energ',Energ
 
       CALL dealloc_NParray(M,'M',name_sub)
       CALL dealloc_NParray(R,'R',name_sub)

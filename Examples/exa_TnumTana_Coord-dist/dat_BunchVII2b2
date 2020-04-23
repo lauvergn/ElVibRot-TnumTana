@@ -14,7 +14,7 @@ $DIR_vib/Tnum90_MCTDH.exe << ** > res
 1  1  0.5                  X   X     (2 3: R1=X2->X3)
 2  1  0.0                  D   H     (4 5: R2=D4->H5)
 3  3  0.0                  F   H     (6 7: R3=F6->H7)
-   &recenterG tab_At_TO_G(1)=4,5 tab_At_recenter(1)=4,5 Gat=2 /
+   &recenterG tab_At_TO_G(1:2)=4,5 tab_At_recenter(1:2)=4,5 Gat=2 /
 
  &Coord_transfo name_transfo='poly' /
      &vector nb_vect=2 Frame=t /

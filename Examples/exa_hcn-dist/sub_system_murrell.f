@@ -86,6 +86,7 @@ c     parameter (autoeV=27.21183d0)
       T  = Q(1)
       pR = Q(2)
       gR = Q(3)
+      !write(out_unitp,*) Q
 
       mB=12._Rkind
       mC=14.003074_Rkind
@@ -98,7 +99,8 @@ c     T=cos(TT)
       R1=sqrt(r1)
       R2=gR
       R3=sqrt(pR**2+(RC*gR)**2+TWO*pR*gR*RC*T)
-c     write(out_unitp,*) r1,r2,r3
+      !write(out_unitp,*) r1,r2,r3
+      !flush(out_unitp)
       R1=R1*autoA
       R2=R2*autoA
       R3=R3*autoA

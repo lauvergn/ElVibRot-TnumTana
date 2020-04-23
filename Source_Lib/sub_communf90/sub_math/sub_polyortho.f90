@@ -31,7 +31,7 @@
          Funct_1D = poly_Hermite(x,i-first_i)
 
        CASE default ! ERROR: wrong function !
-         write(6,*) ' ERROR wrong function, ntyp',ntyp
+         write(out_unitp,*) ' ERROR wrong function, ntyp',ntyp
          STOP
        END SELECT
 
@@ -193,14 +193,14 @@
 
        IF (ii == 0) THEN
          fourier = sq2pi
-         !write(6,*) 'n1,ii: cte',n1,ii
+         !write(out_unitp,*) 'n1,ii: cte',n1,ii
        ELSE
          IF (mod(n1,2) == 0) THEN
            fourier = sin(xx) * sqpi
-           !write(6,*) 'n1,ii: sin',n1,ii
+           !write(out_unitp,*) 'n1,ii: sin',n1,ii
          ELSE
            fourier = cos(xx) * sqpi
-           !write(6,*) 'n1,ii: cos',n1,ii
+           !write(out_unitp,*) 'n1,ii: cos',n1,ii
          END IF
        END IF
 
@@ -229,8 +229,8 @@
 
 
        IF (n < 0 .OR. abs(x) > ONE) THEN
-         write(6,*) ' ERROR in  poly_cheby :'
-         write(6,*) ' n : ',n,' et x = ',x
+         write(out_unitp,*) ' ERROR in  poly_cheby :'
+         write(out_unitp,*) ' n : ',n,' et x = ',x
          STOP
        END IF
 
@@ -360,8 +360,8 @@
 
 
        IF (m < 0 .OR. l < 0 .OR. abs(x) > ONE) THEN
-         write(6,*) 'mauvais arguments dans poly_legendre :'
-         write(6,*) ' m l : ',m,l,' et x = ',x
+         write(out_unitp,*) 'mauvais arguments dans poly_legendre :'
+         write(out_unitp,*) ' m l : ',m,l,' et x = ',x
          STOP
        END IF
 
@@ -406,7 +406,7 @@
          norme2 = norme2 * real(i,kind=Rkind)
        END DO
 
-!      write(6,*) l,m,norme2
+!      write(out_unitp,*) l,m,norme2
        poly_legendre = poly/sqrt(norme2)
 
        RETURN
@@ -441,7 +441,7 @@
                    sqrt(real(2*l+2,kind=Rkind)/real(2*l-1,kind=Rkind))* &
                    poly_legendre(x,lll-1,0) )
 
-!      write(6,*) 'derive :',lll,x,d1poly_legendre,d1
+!      write(out_unitp,*) 'derive :',lll,x,d1poly_legendre,d1
 
        END IF
 
@@ -491,7 +491,7 @@
            d2 = (-d0 * real(l*(l+1),kind=Rkind) + TWO*x*d1)/(ONE-x*x)
          END IF
        END IF
-!      write(6,*) 'derive :',lll,x,d0,d1,d2
+!      write(out_unitp,*) 'derive :',lll,x,d0,d1,d2
 
        RETURN
        end subroutine d0d1d2poly_legendre
@@ -537,7 +537,7 @@
          d3 = (d1 * real(2-l*(l+1),kind=Rkind) + d2 * FOUR*x ) / (ONE-x*x)
 
        END IF
-!      write(6,*) 'derive :',lll,x,d0,d1,d2,d3
+!      write(out_unitp,*) 'derive :',lll,x,d0,d1,d2,d3
 
        RETURN
        end subroutine d0d1d2d3poly_legendre
@@ -572,7 +572,7 @@
 
 
        CALL d0d1d2d3poly_legendre(c,lll,d0,d1,d2,d3,nderiv)
-!      write(6,*) 'derive :',lll,c,d0,d1,d2,d3
+!      write(out_unitp,*) 'derive :',lll,c,d0,d1,d2,d3
 
 !      transfo des derivees en theta
 
@@ -581,7 +581,7 @@
        dc2 = -c * d1 +       s*s * d2
        dc3 =  s * d1 + THREE*s*c * d2 - s*s*s * d3
 
-!      write(6,*) 'derive :',lll,c,dc0,dc1,dc2,dc3
+!      write(out_unitp,*) 'derive :',lll,c,dc0,dc1,dc2,dc3
 
        RETURN
        end subroutine d0d1d2d3poly_legendre_theta
@@ -607,9 +607,9 @@
 
       integer i,k
 
-!     write(6,*) 'd0d1d2poly_legendre_grille : deriv',deriv
-!     write(6,*) 'd0d1d2poly_legendre_grille : num',num
-!     write(6,*) 'd0d1d2poly_legendre_grille : step',step
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : deriv',deriv
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : num',num
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : step',step
       DO k=1,nb_quadra
         DO i=1,nb_legendre
           CALL d0d1d2poly_legendre(xl(k),i,                             &
@@ -642,9 +642,9 @@
 
       integer i,k
 
-!     write(6,*) 'd0d1d2poly_legendre_grille : deriv',deriv
-!     write(6,*) 'd0d1d2poly_legendre_grille : num',num
-!     write(6,*) 'd0d1d2poly_legendre_grille : step',step
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : deriv',deriv
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : num',num
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : step',step
       DO k=1,nb_quadra
         DO i=1,nb_legendre
           CALL d0d1d2poly_legendre(xl(k),i,                             &
@@ -678,9 +678,9 @@
 
       integer i,ii,k
 
-!     write(6,*) 'd0d1d2poly_legendre_grille : deriv',deriv
-!     write(6,*) 'd0d1d2poly_legendre_grille : num',num
-!     write(6,*) 'd0d1d2poly_legendre_grille : step',step
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : deriv',deriv
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : num',num
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : step',step
       DO k=1,nb_quadra
         ii = 1
         DO i=1,nb_legendre
@@ -716,9 +716,9 @@
 
       integer i,ii,k
 
-!     write(6,*) 'd0d1d2poly_legendre_grille : deriv',deriv
-!     write(6,*) 'd0d1d2poly_legendre_grille : num',num
-!     write(6,*) 'd0d1d2poly_legendre_grille : step',step
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : deriv',deriv
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : num',num
+!     write(out_unitp,*) 'd0d1d2poly_legendre_grille : step',step
       DO k=1,nb_quadra
         ii = 2
         DO i=1,nb_legendre
@@ -749,7 +749,7 @@
 
       poly_Hermite_exp = poly_Hermite(x,l) * exp(-x*x*HALF)
 
-!      write(6,*) x,poly_Hermite_exp
+!      write(out_unitp,*) x,poly_Hermite_exp
        RETURN
        end function poly_Hermite_exp
 !===================================================
@@ -775,8 +775,8 @@
 
 
        IF ( l .LT. 0 ) THEN
-         write(6,*) 'mauvais arguments dans poly_hermite :'
-         write(6,*) ' l < 0 : ',l
+         write(out_unitp,*) 'mauvais arguments dans poly_hermite :'
+         write(out_unitp,*) ' l < 0 : ',l
          STOP
        END IF
 
@@ -803,7 +803,7 @@
        END IF
 
 
-!      write(6,*) x,poly_Hermite
+!      write(out_unitp,*) x,poly_Hermite
        RETURN
        end function poly_Hermite
 !===================================================
@@ -875,7 +875,7 @@
          d2 = ZERO
        END IF
 
-!      write(6,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
+!      write(out_unitp,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
 
 
        RETURN
@@ -939,7 +939,7 @@
          d2 = ZERO
        END IF
 
-!      write(6,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
+!      write(out_unitp,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
 
 
        RETURN
@@ -972,9 +972,9 @@
            CALL d0d1d2poly_Hermite(xh(k),i,                             &
                      d0h(k,i),d1h(k,i),d2h(k,i),deriv,num,step)
 
-!          write(6,*) i,k,d0h(k,i)
-!          write(6,*) i,k,d1h(k,i)
-!          write(6,*) i,k,d2h(k,i)
+!          write(out_unitp,*) i,k,d0h(k,i)
+!          write(out_unitp,*) i,k,d1h(k,i)
+!          write(out_unitp,*) i,k,d2h(k,i)
          END DO
        END DO
 
@@ -1004,7 +1004,7 @@
 !----- function -----------------------------------
 
 
-!      write(6,*) 'num',num
+!      write(out_unitp,*) 'num',num
 
        IF (deriv) THEN
 
@@ -1026,13 +1026,13 @@
            ELSE
              d1 = sqrt(TWO*real(l,kind=Rkind)) * poly_Hermite(x,l-1)
              d2 = TWO*(x*d1-d0*real(l,kind=Rkind))
-!            write(6,*) 'l,x,d0,d1,d2',l,x,d0,d1,d2
+!            write(out_unitp,*) 'l,x,d0,d1,d2',l,x,d0,d1,d2
            END IF
 
 
          END IF
 
-!      write(6,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
+!      write(out_unitp,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
 !        on rajoute la partie exponentielle
 !        pour d0 d1 d2
          pexp = exp(-HALF*x*x)
@@ -1046,7 +1046,7 @@
          d2 = ZERO
        END IF
 
-!      write(6,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
+!      write(out_unitp,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
 
 
        RETURN
@@ -1078,16 +1078,16 @@
 
        integer i,k,id
 
-!      write(6,*) 'num',num
+!      write(out_unitp,*) 'num',num
        DO k=1,nb_gauss_h
          id = 0
          DO i=1,nb_herm
            CALL d0d1d2poly_Hermite_exp(xh(k),id,                        &
                      d0h(k,i),d1h(k,i),d2h(k,i),deriv,num,step)
 
-!          write(6,*) i,k,d0h(k,i)
-!          write(6,*) i,k,d1h(k,i)
-!          write(6,*) i,k,d2h(k,i)
+!          write(out_unitp,*) i,k,d0h(k,i)
+!          write(out_unitp,*) i,k,d1h(k,i)
+!          write(out_unitp,*) i,k,d2h(k,i)
            id = id+1
          END DO
        END DO
@@ -1110,16 +1110,16 @@
 
        integer i,k,id
 
-!      write(6,*) 'num',num
+!      write(out_unitp,*) 'num',num
        DO k=1,nb_gauss_h
          id = 0
          DO i=1,nb_herm
            CALL d0d1d2poly_Hermite_exp(xh(k),id,                        &
                      d0h(k,i),d1h(k,i),d2h(k,i),deriv,num,step)
 
-!          write(6,*) i,k,d0h(k,i)
-!          write(6,*) i,k,d1h(k,i)
-!          write(6,*) i,k,d2h(k,i)
+!          write(out_unitp,*) i,k,d0h(k,i)
+!          write(out_unitp,*) i,k,d1h(k,i)
+!          write(out_unitp,*) i,k,d2h(k,i)
            id = id+2
          END DO
        END DO
@@ -1142,16 +1142,16 @@
 
        integer i,k,id
 
-!      write(6,*) 'num',num
+!      write(out_unitp,*) 'num',num
        DO k=1,nb_gauss_h
          id = 1
          DO i=1,nb_herm
            CALL d0d1d2poly_Hermite_exp(xh(k),id,                        &
                      d0h(k,i),d1h(k,i),d2h(k,i),deriv,num,step)
 
-!          write(6,*) i,k,d0h(k,i)
-!          write(6,*) i,k,d1h(k,i)
-!          write(6,*) i,k,d2h(k,i)
+!          write(out_unitp,*) i,k,d0h(k,i)
+!          write(out_unitp,*) i,k,d1h(k,i)
+!          write(out_unitp,*) i,k,d2h(k,i)
            id = id+2
          END DO
        END DO
@@ -1183,7 +1183,7 @@
 !----- function -----------------------------------
 
 
-!      write(6,*) 'num',num
+!      write(out_unitp,*) 'num',num
 
        IF (deriv) THEN
 
@@ -1205,13 +1205,13 @@
            ELSE
              d1 = sqrt(TWO*real(l,kind=Rkind)) * poly_Hermite(x,l-1)
              d2 = TWO*(x*d1-d0*real(l,kind=Rkind))
-!            write(6,*) 'l,x,d0,d1,d2',l,x,d0,d1,d2
+!            write(out_unitp,*) 'l,x,d0,d1,d2',l,x,d0,d1,d2
            END IF
 
 
          END IF
 
-!      write(6,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
+!      write(out_unitp,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
 !        On tient compte de exp() pour les derivees mais il n'est pas dans les fonctions
 !        pour d0 d1 d2
          d2 = (d2-TWO*x*d1+(x*x-ONE)*d0)
@@ -1224,7 +1224,7 @@
          d2 = ZERO
        END IF
 
-!      write(6,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
+!      write(out_unitp,*) 'l x d0 d1 d2 hermite :',l,x,d0,d1,d2
 
 
        RETURN
@@ -1252,16 +1252,16 @@
 
        integer i,k,id
 
-!      write(6,*) 'num',num
+!      write(out_unitp,*) 'num',num
        DO k=1,nb_gauss_h
          id = 0
          DO i=1,nb_herm
            CALL d0d1d2poly_Hermite_exp_noexp(xh(k),id,                  &
                      d0h(k,i),d1h(k,i),d2h(k,i),deriv,num,step)
 
-!          write(6,*) i,k,d0h(k,i)
-!          write(6,*) i,k,d1h(k,i)
-!          write(6,*) i,k,d2h(k,i)
+!          write(out_unitp,*) i,k,d0h(k,i)
+!          write(out_unitp,*) i,k,d1h(k,i)
+!          write(out_unitp,*) i,k,d2h(k,i)
            id = id+1
          END DO
        END DO
@@ -1328,9 +1328,9 @@ STOP 'laguerre'
       sqpi = ONE/sqrt(pi)
       sq2pi = ONE/sqrt(pi+pi)
 
-!     write(6,*) 'd0d1d2poly_fourier_grille : deriv',deriv
-!     write(6,*) 'd0d1d2poly_fourier_grille : num',num
-!     write(6,*) 'd0d1d2poly_fourier_grille : step',step
+!     write(out_unitp,*) 'd0d1d2poly_fourier_grille : deriv',deriv
+!     write(out_unitp,*) 'd0d1d2poly_fourier_grille : num',num
+!     write(out_unitp,*) 'd0d1d2poly_fourier_grille : step',step
 
 !     pour les 1/2pi   ic=1
       ic=1
@@ -1345,7 +1345,7 @@ STOP 'laguerre'
       DO ii=1,nb_fourier/2
         ic = ic + 1
         is = is + 1
-!       write(6,*) 'ii,is,ic',ii,is,ic
+!       write(out_unitp,*) 'ii,is,ic',ii,is,ic
         DO k=1,nb_quadra
 !         xiik = mod(xf(k)*ii,pi2)
           xiik = xf(k)*real(ii,kind=Rkind)
@@ -1823,8 +1823,8 @@ STOP 'laguerre'
 !      ---------------------------------------------------------------
 
        IF (ndim .NE. 2) THEN
-         write(6,*) ' ERROR in d0Ylm'
-         write(6,*) ' ndim MUST set to 2 (ndim=',ndim,')'
+         write(out_unitp,*) ' ERROR in d0Ylm'
+         write(out_unitp,*) ' ndim MUST set to 2 (ndim=',ndim,')'
          STOP
        END IF
 
@@ -1839,7 +1839,7 @@ STOP 'laguerre'
 
 
 
-       !write(6,*) 'ylm',i,lll,mmm
+       !write(out_unitp,*) 'ylm',i,lll,mmm
 
        d0 = poly_legendre(cos(th),lll,m)*fourier(phi,mmm)
 
@@ -1869,7 +1869,7 @@ STOP 'laguerre'
        real(kind=Rkind) poly_legendre
 !      ---------------------------------------------------------------
 
-!      write(6,*) i,num,step,x,d0,d1,d2
+!      write(out_unitp,*) i,num,step,x,d0,d1,d2
 
        th=x(1)
        phi=x(2)
@@ -1906,7 +1906,7 @@ STOP 'laguerre'
 
 
 
-!      write(6,*) i,l,m,d0plm,d1plm,d2plm
+!      write(out_unitp,*) i,l,m,d0plm,d1plm,d2plm
 
 
        d0      = d0plm * d0fm
@@ -1951,7 +1951,7 @@ STOP 'laguerre'
        CALL d0d1d2d3fourier(phi,d0fm,d1fm,d2fm,d3fm,mmm)
        CALL d0d1d2d3Plm(d0plm,d1plm,d2plm,d3plm,th,l,m)
 
-!      write(6,*) i,l,m,d0plm,d1plm,d2plm,d3plm
+!      write(out_unitp,*) i,l,m,d0plm,d1plm,d2plm,d3plm
 
 
        d0        = d0plm * d0fm
@@ -2005,9 +2005,9 @@ STOP 'laguerre'
        m = mmm/2
 
        IF ( m > l .OR. l < 0 .OR. th >= pi .OR. th <= ZERO) THEN
-         write(6,*) 'mauvais arguments dans Ylm :'
-         write(6,*) ' m l : ',m,l,' et th = ',th
-         write(6,*) ' mmm lll : ',mmm,lll
+         write(out_unitp,*) 'mauvais arguments dans Ylm :'
+         write(out_unitp,*) ' m l : ',m,l,' et th = ',th
+         write(out_unitp,*) ' mmm lll : ',mmm,lll
          STOP
        END IF
 
@@ -2048,7 +2048,7 @@ STOP 'laguerre'
                  real(l*l+l,kind=Rkind))*d0plm - cth/sth*d1plm
 
 
-!      write(6,*) lll,m,d0plm,d1plm,d2plm
+!      write(out_unitp,*) lll,m,d0plm,d1plm,d2plm
 
       END SUBROUTINE d0d1d2Plm
       SUBROUTINE d0d1d2d3Plm(d0plm,d1plm,d2plm,d3plm,th,l,m)
@@ -2091,6 +2091,6 @@ STOP 'laguerre'
                (Rm2/sth**2 - Rllp1) * d1plm - &
                (-ONE/sth**2) * d1plm - cth/sth * d2plm
 
-!      write(6,*) lll,m,d0plm,d1plm,d2plm
+!      write(out_unitp,*) lll,m,d0plm,d1plm,d2plm
 
        END SUBROUTINE d0d1d2d3Plm

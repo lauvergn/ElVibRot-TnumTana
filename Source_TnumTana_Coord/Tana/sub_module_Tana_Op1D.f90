@@ -27,8 +27,8 @@
 !===========================================================================
 !===========================================================================
  MODULE mod_Tana_Op1D
- use mod_system
- use mod_Tana_OpEl ! all
+ USE mod_system
+ USE mod_Tana_OpEl
  IMPLICIT NONE
  PRIVATE
 
@@ -48,12 +48,24 @@
         !                          the \f$q_k\f$ coordinate in the BF frame
         TYPE op1d
           type(opel), allocatable     :: prod_opel(:)
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(Op1D1) :: R_TO_Op1D
+          PROCEDURE, PRIVATE, PASS(Op1D1) :: C_TO_Op1D
+          PROCEDURE, PRIVATE, PASS(Op1D1) :: Op1D2_TO_Op1D1
+          PROCEDURE, PRIVATE, PASS(Op1D1) :: OpEl2_TO_Op1D1
+          GENERIC,   PUBLIC  :: assignment(=) => R_TO_Op1D,C_TO_Op1D,   &
+                                          Op1D2_TO_Op1D1,OpEl2_TO_Op1D1
         END TYPE op1d
 
         TYPE Sum_OF_op1d
           type(op1d), allocatable     :: Sum_op1D(:)
+        CONTAINS
+           PROCEDURE, PRIVATE, PASS(SumOp1D) :: C_TO_SumOp1D
+          PROCEDURE, PRIVATE, PASS(SumOp1D1) :: SumOp1D2_TO_SumOp1D1
+          PROCEDURE, PRIVATE, PASS(SumOp1D1) :: Op1D2_TO_SumOp1D1
+          GENERIC,   PUBLIC  :: assignment(=) => C_TO_SumOp1D,          &
+                                  SumOp1D2_TO_SumOp1D1,Op1D2_TO_SumOp1D1
         END TYPE Sum_OF_op1d
-
 
       INTERFACE alloc_NParray
         MODULE PROCEDURE alloc_NParray_OF_Op1Ddim1
@@ -120,19 +132,13 @@
    END INTERFACE
 
 
-   INTERFACE assignment (=)
-     MODULE PROCEDURE R_TO_Op1D,C_TO_Op1D
-     MODULE PROCEDURE Op1D2_TO_Op1D1,OpEl2_TO_Op1D1
-     MODULE PROCEDURE C_TO_SumOp1D,Sum_OF_Op1D2_TO_Sum_OF_Op1D1,Op1D2_TO_Sum_OF_Op1D1
-   END INTERFACE
-
    PUBLIC :: op1d
    PUBLIC :: Sum_OF_op1d
    PUBLIC :: alloc_NParray, dealloc_NParray, check_NParray
 
    PUBLIC :: check_allocate_op, allocate_op, init_to_opzero, delete_op, compare_op, write_op
    PUBLIC :: compare_indexq
-   PUBLIC :: copy_F1_into_F2, F1_1d_times_F2_1d, operator (*), operator (+), assignment (=)
+   PUBLIC :: copy_F1_into_F2, F1_1d_times_F2_1d, operator (*), operator (+)
    PUBLIC :: get_indexQ_OF_Op1D, get_coeff_OF_Op1D, get_idq_OF_Op1D, Der1_OF_d0Op1D
 
    PUBLIC :: check_idq_in_F_1d, get_NumVal_Op1D, get_pqJL_OF_Op1D
@@ -142,6 +148,8 @@
    PUBLIC :: Export_MCTDH_Op1d, Export_VSCF_Op1d
    PUBLIC :: present_op_zero_in_F_1d
    PUBLIC :: remove_Idop_in_F_1d, Set_coeff_OF_Op1D_TO_ONE, set_pqORJORL
+   PUBLIC :: Der2_OF_d0Op1D,Der1_OF_d0SumOp1D,simplify_Op1D,            &
+             Split_Op1D_TO_SplitOp1D,StringMCTDH_TO_Op1d  ! public, just for the Tana_test
 
   CONTAINS
       SUBROUTINE check_NParray_OF_Op1Ddim1(tab,name_var,name_sub)
@@ -543,13 +551,13 @@
 
  end subroutine copy_F1_el_into_F2_1d
 
- RECURSIVE subroutine Sum_OF_Op1D2_TO_Sum_OF_Op1D1(SumOp1D1,SumOp1D2)
+ subroutine SumOp1D2_TO_SumOp1D1(SumOp1D1,SumOp1D2)
 
-   type(Sum_OF_Op1D),    intent(in)    :: SumOp1D2
-   type(Sum_OF_Op1D),    intent(inout) :: SumOp1D1
+   type(Sum_OF_Op1D),     intent(in)    :: SumOp1D2
+   CLASS(Sum_OF_Op1D),    intent(inout) :: SumOp1D1
 
    integer                    :: i
-   character (len=*), parameter :: routine_name="Op1D2_TO_Op1D1"
+   character (len=*), parameter :: routine_name="SumOp1D2_TO_SumOp1D1"
 
    call allocate_op(SumOp1D1,size(SumOp1D2%Sum_Op1D))
 
@@ -557,26 +565,26 @@
      SumOp1D1%Sum_Op1D(i) = SumOp1D2%Sum_Op1D(i)
    end do
 
- end subroutine Sum_OF_Op1D2_TO_Sum_OF_Op1D1
+ end subroutine SumOp1D2_TO_SumOp1D1
 
- RECURSIVE subroutine Op1D2_TO_Sum_OF_Op1D1(SumOp1D1,Op1D2)
+ subroutine Op1D2_TO_SumOp1D1(SumOp1D1,Op1D2)
 
-   type(op1d),           intent(in)    :: Op1D2
-   type(Sum_OF_Op1D),    intent(inout) :: SumOp1D1
+   type(op1d),            intent(in)    :: Op1D2
+   CLASS(Sum_OF_Op1D),    intent(inout) :: SumOp1D1
 
    integer                    :: i
-   character (len=*), parameter :: routine_name="Op1D2_TO_Op1D1"
+   character (len=*), parameter :: routine_name="Op1D2_TO_SumOp1D1"
 
    call allocate_op(SumOp1D1,1)
 
    SumOp1D1%Sum_Op1D(1) = Op1D2
 
- end subroutine Op1D2_TO_Sum_OF_Op1D1
+ end subroutine Op1D2_TO_SumOp1D1
 
- RECURSIVE subroutine Op1D2_TO_Op1D1(Op1D1,Op1D2)
+ subroutine Op1D2_TO_Op1D1(Op1D1,Op1D2)
 
    type(op1d),           intent(in)    :: Op1D2
-   type(op1d),           intent(inout) :: Op1D1
+   CLASS(op1d),          intent(inout) :: Op1D1
 
    integer                    :: i
    character (len=*), parameter :: routine_name="Op1D2_TO_Op1D1"
@@ -589,10 +597,10 @@
 
  end subroutine Op1D2_TO_Op1D1
 
- RECURSIVE subroutine OpEl2_TO_Op1D1(Op1D1, OpEl2)
+ subroutine OpEl2_TO_Op1D1(Op1D1, OpEl2)
 
    type(opel),           intent(in)    :: OpEl2
-   type(op1d),           intent(inout) :: Op1D1
+   CLASS(op1d),          intent(inout) :: Op1D1
 
    character (len=*), parameter :: routine_name="OpEl2_TO_Op1D1"
 
@@ -602,9 +610,9 @@
 
  end subroutine OpEl2_TO_Op1D1
 
- RECURSIVE subroutine R_TO_Op1D(Op1D1,R)
+ subroutine R_TO_Op1D(Op1D1,R)
 
-   type(op1d),           intent(inout) :: Op1D1
+   CLASS(op1d),          intent(inout) :: Op1D1
    real(kind=Rkind),     intent(in)    :: R
 
    character (len=*), parameter :: routine_name="R_TO_Op1D"
@@ -614,9 +622,9 @@
    Op1D1%prod_opel(1) = R
 
  end subroutine R_TO_Op1D
- RECURSIVE subroutine C_TO_Op1D(Op1D1,C)
+ subroutine C_TO_Op1D(Op1D1,C)
 
-   type(op1d),           intent(inout) :: Op1D1
+   CLASS(op1d),           intent(inout) :: Op1D1
    complex(kind=Rkind),  intent(in)    :: C
 
    character (len=*), parameter :: routine_name="C_TO_Op1D"
@@ -763,7 +771,7 @@
    !! @param:  F2el     second  elementary op., with a type opel.
    !! @param:  Fres_1d  Array of elementary ops. in which
    !!                 the result is saved.
-   RECURSIVE function F1el_times_F2el(F1el, F2el) result(Fres_1d)
+   function F1el_times_F2el(F1el, F2el) result(Fres_1d)
      type(op1d)                         :: Fres_1d
      type(opel),       intent(in)       :: F1el
      type(opel),       intent(in)       :: F2el
@@ -812,7 +820,7 @@
    !! @param:  F2_1d     Array of elementary ops., with a type op1d.
    !! @param:   Fres_1d  Array of elementary ops. in which
    !!                    the result is saved.
-   RECURSIVE function F1el_times_F2_1d(F1el, F2_1d) result(Fres_1d)
+   function F1el_times_F2_1d(F1el, F2_1d) result(Fres_1d)
      type(op1d)                         :: Fres_1d
      type(opel),       intent(in)       :: F1el
      type(op1d),       intent(in)       :: F2_1d
@@ -868,7 +876,7 @@
    !! @param:   F2el     The elementary op., with a type opel.
    !! @param:   Fres_1d  Array of elementary ops. in which
    !!                    the result is saved.
-   RECURSIVE function F1_1d_times_F2el(F1_1d, F2el) result(Fres_1d)
+   function F1_1d_times_F2el(F1_1d, F2el) result(Fres_1d)
      type(op1d)                         :: Fres_1d
      type(op1d),       intent(in)       :: F1_1d
      type(opel),       intent(in)       :: F2el
@@ -919,15 +927,15 @@
 
    end function F1_1d_times_F2el
 
-  subroutine C_TO_SumOp1D(Fres,C)
-   type(Sum_Of_op1d),    intent(inout) :: Fres
-   complex(kind=Rkind),  intent(in)    :: C
+  subroutine C_TO_SumOp1D(SumOp1D,C)
+   CLASS(Sum_Of_op1d),    intent(inout) :: SumOp1D
+   complex(kind=Rkind),   intent(in)    :: C
 
    character (len=*), parameter :: routine_name="C_TO_SumOp1D"
 
-   call allocate_op(Fres,1)
+   call allocate_op(SumOp1D,1)
 
-   Fres%Sum_op1d(1) = C
+   SumOp1D%Sum_op1d(1) = C
 
  end subroutine C_TO_SumOp1D
 
@@ -978,7 +986,7 @@
      Fres = C_times_SumOp1D(cmplx(R,zero,kind=Rkind),SumOp1D)
 
    end function R_times_SumOp1D
-   RECURSIVE function F1_1d_times_F2_Sum1D(F1_1d,F2_Sum1D) result(Fres)
+   function F1_1d_times_F2_Sum1D(F1_1d,F2_Sum1D) result(Fres)
      type(Sum_Of_op1d)                   :: Fres
      type(op1d),        intent(in)       :: F1_1d
      type(Sum_Of_op1d), intent(in)       :: F2_Sum1D
@@ -996,7 +1004,7 @@
 
    end function F1_1d_times_F2_Sum1D
 
-   RECURSIVE function F1_Sum1d_times_F2_1D(F1_Sum1d,F2_1D) result(Fres)
+   function F1_Sum1d_times_F2_1D(F1_Sum1d,F2_1D) result(Fres)
      type(Sum_Of_op1d)                   :: Fres
      type(Sum_Of_op1d), intent(in)       :: F1_Sum1D
      type(op1d),        intent(in)       :: F2_1d
@@ -1014,7 +1022,7 @@
 
    end function F1_Sum1d_times_F2_1D
 
-   RECURSIVE function F1_Sum1d_times_F2_Sum1D(F1_Sum1d,F2_Sum1D) result(Fres)
+   function F1_Sum1d_times_F2_Sum1D(F1_Sum1d,F2_Sum1D) result(Fres)
      type(Sum_Of_op1d)                   :: Fres
      type(Sum_Of_op1d), intent(in)       :: F1_Sum1D,F2_Sum1D
 
@@ -1035,7 +1043,7 @@
 
    end function F1_Sum1d_times_F2_Sum1D
 
-   RECURSIVE function F1_1d_plus_F2_1d(F1_1d,F2_1d) result(Fres)
+   function F1_1d_plus_F2_1d(F1_1d,F2_1d) result(Fres)
      type(Sum_Of_op1d)                   :: Fres
      type(op1d),        intent(in)       :: F1_1d
      type(op1d),        intent(in)       :: F2_1d
@@ -1052,7 +1060,7 @@
 
 
    end function F1_1d_plus_F2_1d
-   RECURSIVE function F1_1d_plus_F2_Sum1D(F1_1d,F2_Sum1D) result(Fres)
+   function F1_1d_plus_F2_Sum1D(F1_1d,F2_Sum1D) result(Fres)
      type(Sum_Of_op1d)                   :: Fres
      type(op1d),        intent(in)       :: F1_1d
      type(Sum_Of_op1d), intent(in)       :: F2_Sum1D
@@ -1073,7 +1081,7 @@
 
    end function F1_1d_plus_F2_Sum1D
 
-   RECURSIVE function F1_Sum1d_plus_F2_1D(F1_Sum1d,F2_1D) result(Fres)
+   function F1_Sum1d_plus_F2_1D(F1_Sum1d,F2_1D) result(Fres)
      type(Sum_Of_op1d)                   :: Fres
      type(Sum_Of_op1d), intent(in)       :: F1_Sum1D
      type(op1d),        intent(in)       :: F2_1d
@@ -1113,7 +1121,7 @@
 
    end function F1_Sum1d_plus_F2_1D
 
-   RECURSIVE function F1_Sum1d_plus_F2_Sum1D(F1_Sum1d,F2_Sum1D) result(Fres)
+   function F1_Sum1d_plus_F2_Sum1D(F1_Sum1d,F2_Sum1D) result(Fres)
      type(Sum_Of_op1d)                   :: Fres
      type(Sum_Of_op1d), intent(in)       :: F1_Sum1D,F2_Sum1D
 
@@ -1151,7 +1159,7 @@
      IF (debug) THEN
        write(out_unitp,*) 'Fres'
        CALL write_op(Fres)
-       write(6,*) 'END ',routine_name
+       write(out_unitp,*) 'END ',routine_name
        CALL flush_perso(out_unitp)
      END IF
 
@@ -1211,7 +1219,7 @@
 
 END SUBROUTINE Change_PQ_OF_Op1D_TO_Id_OF_Op1D
 
- recursive function Der1_OF_d0Op1D(d0Op1D) result(d1Op1D)
+function Der1_OF_d0Op1D(d0Op1D) result(d1Op1D)
 
    type(Sum_OF_op1d)                      :: d1Op1D ! it will contain a sum of Op1D
    type(op1d),           intent(in)       :: d0Op1D ! Product of OpEl (without P)
@@ -1329,7 +1337,7 @@ END SUBROUTINE Change_PQ_OF_Op1D_TO_Id_OF_Op1D
 
  end function Der1_OF_d0SumOp1D
 
- recursive function Der2_OF_d0Op1D(d0Op1D) result(d2Op1D)
+ function Der2_OF_d0Op1D(d0Op1D) result(d2Op1D)
 
    type(Sum_OF_op1d)                      :: d2Op1D ! it will contain a sum of Op1D
    type(op1d),           intent(in)       :: d0Op1D     ! Product of OpEl (without P)
@@ -1426,7 +1434,7 @@ END SUBROUTINE Change_PQ_OF_Op1D_TO_Id_OF_Op1D
 
    END DO
 
-   !write(6,*) 'iSum',iSum ; flush(6)
+   !write(out_unitp,*) 'iSum',iSum ; flush(out_unitp)
 
 
    DO i=1,ndim0
@@ -1448,7 +1456,7 @@ END SUBROUTINE Change_PQ_OF_Op1D_TO_Id_OF_Op1D
        ndim1j = size(Op1D_OF_d1OpElj%Sum_op1D(1)%prod_opel)
 
        ndim_term = ndim0 + ndim1i + ndim1j
-       !write(6,*) 'ndim0,ndim1i,ndim1j,ndim_term',ndim0,ndim1i,ndim1j,ndim_term
+       !write(out_unitp,*) 'ndim0,ndim1i,ndim1j,ndim_term',ndim0,ndim1i,ndim1j,ndim_term
 
        iSum = iSum + 1
        CALL allocate_op(d2Op1D%Sum_op1D(ISum),ndim_term)
@@ -1459,12 +1467,12 @@ END SUBROUTINE Change_PQ_OF_Op1D_TO_Id_OF_Op1D
 
        i1 = ndim0+1
        i2 = i1-1+ndim1i
-       write(6,*) 'i,j,i1,i2',i,j,i1,i2 ; flush(6)
+       write(out_unitp,*) 'i,j,i1,i2',i,j,i1,i2 ; flush(out_unitp)
        d2Op1D%Sum_op1D(ISum)%prod_opel(i1:i2)       = Op1D_OF_d1OpEli%Sum_op1D(1)%prod_opel(:)
 
        i1 = i2+1
        i2 = i1-1+ndim1j
-       write(6,*) 'i,j,i1,i2',i,j,i1,i2 ; flush(6)
+       write(out_unitp,*) 'i,j,i1,i2',i,j,i1,i2 ; flush(out_unitp)
        d2Op1D%Sum_op1D(ISum)%prod_opel(i1:i2)       = Op1D_OF_d1OpElj%Sum_op1D(1)%prod_opel(:)
 
        CALL Simplify_Op1D(d2Op1D%Sum_op1D(ISum))
@@ -1477,7 +1485,7 @@ END SUBROUTINE Change_PQ_OF_Op1D_TO_Id_OF_Op1D
    CALL Simplify_Sum_OF_Op1D(d2Op1D)
 
 
-   !write(6,*) 'iSum',iSum ; flush(6)
+   !write(out_unitp,*) 'iSum',iSum ; flush(out_unitp)
 
    CALL delete_op(Op1D_OF_d0OpEli)
    CALL delete_op(Op1D_OF_d1OpEli)
@@ -1575,7 +1583,7 @@ subroutine Expand_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
      END IF
 
    END DO
-   !write(6,*) 'tab_ndim',tab_ndim ; flush(6)
+   !write(out_unitp,*) 'tab_ndim',tab_ndim ; flush(out_unitp)
 
    ! Then allocation of the FS_Op1D(:)%prod_opel with tab_ndim
    DO index_split=1,size(FS_Op1D)
@@ -1710,7 +1718,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    type(Sum_OF_op1d)          :: SumOp1D_i ! it will contain a sum of Op1D
    type(Sum_OF_op1d)          :: SumOp1D_ExpandSin ! it will contain a sum of Op1D
 
-   TYPE(FracInteger)             :: alfa,r_sin
+   TYPE(Frac_t)               :: alfa,r_sin
 
    integer           :: idf_sin,idf_cos
    real (kind=Rkind) :: binomial
@@ -1754,8 +1762,8 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
        !alfa and r_sin are such : el%alfa = (2*alfa+r) with r < 2. alfa MUST be an integer
        alfa    = SplitOp1D%prod_opel(i)%alfa%num/(2*SplitOp1D%prod_opel(i)%alfa%den)
        r_sin   = SplitOp1D%prod_opel(i)%alfa - (alfa+alfa)
-       !write(6,*) 'Fel%alfa: ',frac_to_string(SplitOp1D%prod_opel(i)%alfa)
-       !write(6,*) 'alfa,r_sin: ',frac_to_string(alfa),' ',frac_to_string(r_sin)
+       !write(out_unitp,*) 'Fel%alfa: ',frac_to_string(SplitOp1D%prod_opel(i)%alfa)
+       !write(out_unitp,*) 'alfa,r_sin: ',frac_to_string(alfa),' ',frac_to_string(r_sin)
 
        idf_sin = SplitOp1D%prod_opel(i)%idf
        IF (idf_sin == 3) THEN
@@ -1943,7 +1951,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
      CALL Sort_TabOpEl(F_1d%prod_opel(ii:size(F_1d%prod_opel)))
 
 
-     !write(6,*) ' after sort'
+     !write(out_unitp,*) ' after sort'
      !CALL write_op(F_1d)
 
 
@@ -1951,13 +1959,13 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
      !  Q * Q => Q^2    , P * P => P^2 ....
      CALL Merge_TabOpEl(F_1d%prod_opel)
 
-     !write(6,*) ' after merge'
+     !write(out_unitp,*) ' after merge'
      !CALL write_op(F_1d)
 
      ! 3) remove Id operator
      CALL remove_Idop_in_F_1d(F_1d)
 
-     !write(6,*) ' after remove Id'
+     !write(out_unitp,*) ' after remove Id'
      !CALL write_op(F_1d)
 
    END IF
@@ -2041,15 +2049,13 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
 
  end subroutine Simplify_Sum_OF_Op1D
  subroutine Export_Latex_Op1d(F1d,qname,F1dName)
-   type(op1d),          intent(in)       :: F1d
+   type(op1d),                       intent(in)       :: F1d
+   character (len =*),               intent(in)       :: Qname
+   character (len = :), allocatable, intent(inout)    :: F1dName
 
-   character (len =*), intent(in)       :: qname
-
-   character (len = :), allocatable     :: F1dName
-
-
+   !local variables
+   character (len = :), allocatable      :: FelName,F1dName_loc
    character (len = Name_len)     ::       cindexq
-   character (len = :), allocatable     :: FelName
    integer :: k
    character (len = *), parameter :: mult = ' '
 
@@ -2063,28 +2069,32 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
 
 
    IF (size(F1d%prod_opel) > 0) THEN
-     CALL Export_Latex_OpEl(F1d%prod_opel(1),qname,F1dName)
+     CALL Export_Latex_OpEl(F1d%prod_opel(1),qname,F1dName_loc)
 
      DO k=2,size(F1d%prod_opel)
        CALL Export_Latex_OpEl(F1d%prod_opel(k),qname,Felname)
-       F1dName = String_TO_String( F1dName // mult // Felname)
+       F1dName_loc = String_TO_String( F1dName_loc // mult // Felname)
      END DO
      IF (allocated(FelName)) deallocate(FelName)
 
    ELSE
-     F1dName = String_TO_String('')
+     F1dName_loc = String_TO_String('')
    END IF
+
+   F1dName = F1dName_loc
+
+   IF (allocated(F1dName_loc)) deallocate(F1dName_loc)
+
 
  end subroutine Export_Latex_Op1d
 
  subroutine Export_Midas_Op1d(F1d, Qname, F1dName)
-   type(op1d),          intent(in)       :: F1d
+   type(op1d),                       intent(in)       :: F1d
+   character (len =*),               intent(in)       :: Qname
+   character (len = :), allocatable, intent(inout)    :: F1dName
 
-   character (len =*),  intent(in)       :: Qname
-
-   character (len = :), allocatable      :: F1dName
-
-   character (len = :), allocatable      :: FelName
+   !local variables
+   character (len = :), allocatable      :: FelName,F1dName_loc
    integer :: k
    character (len = *), parameter        :: mult = '*'
 
@@ -2093,26 +2103,80 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    !CALL write_op(F1d)
 
    IF (size(F1d%prod_opel) > 0) THEN
-     CALL Export_Midas_OpEl(F1d%prod_opel(1), Qname, F1dName)
+     CALL Export_Midas_OpEl(F1d%prod_opel(1), Qname, F1dName_loc)
 
      DO k = 2, size(F1d%prod_opel)
        CALL Export_Midas_OpEl(F1d%prod_opel(k), Qname, Felname)
-       F1dName = String_TO_String( F1dName // mult // Felname)
+       F1dName_loc = String_TO_String( F1dName_loc // mult // Felname)
      END DO
      IF (allocated(FelName)) deallocate(FelName)
 
    ELSE
-     F1dName = String_TO_String('')
+     F1dName_loc = String_TO_String('')
    END IF
+
+   F1dName = F1dName_loc
+
+   IF (allocated(F1dName_loc)) deallocate(F1dName_loc)
 
  end subroutine Export_Midas_Op1d
 
+ subroutine StringMCTDH_TO_Op1d(F1d,String,indexq)
+   type(op1d),         intent(inout)   :: F1d
+   character (len =*), intent(in)      :: String
+   integer,            intent(in)      :: indexq
+
+
+
+   ! local variables
+   integer :: i_mult
+   character (len = *), parameter :: mult = '*'
+   character (len=:), allocatable :: String_loc,String_El
+   type(opel)                     :: Fel
+
+   logical, parameter :: debug = .FALSE.
+   !logical, parameter :: debug = .TRUE.
+   character (len = *), parameter :: routine_name = 'StringMCTDH_TO_Op1d'
+
+   CALL delete_op(F1d)
+   F1d = cone ! initialization
+
+   String_loc = trim(adjustl(String))
+   CALL string_uppercase_TO_lowercase(String_loc)
+   IF (debug) write(out_unitp,*) 'String_loc: ',String_loc ; flush(out_unitp)
+
+   DO
+     IF (len(String_loc) == 0) EXIT
+     i_mult = index(String_loc,mult)
+     IF (i_mult > 0) THEN
+       String_El  = String_loc(1:i_mult-1)
+       String_loc = String_loc(i_mult+1:len(String_loc))
+     ELSE ! => the last (or the unique) OpEl
+       String_El  = String_loc
+       String_loc = ""
+     END IF
+     IF (debug) write(out_unitp,*) 'String_loc: ',String_loc ; flush(out_unitp)
+     IF (debug) write(out_unitp,*) 'String_El: ',String_El ; flush(out_unitp)
+
+     CALL StringMCTDH_TO_opel(Fel,String_El,indexq)
+
+     F1d = F1d * Fel
+
+   END DO
+
+   IF (debug) CALL write_op(F1d,header=.TRUE.)
+
+   deallocate(String_el)
+   deallocate(String_loc)
+
+ end subroutine StringMCTDH_TO_Op1d
  subroutine Export_MCTDH_Op1d(F1d,F1dName)
-   type(op1d),          intent(inout)   :: F1d
-   character (len = :), allocatable     :: F1dName
+   type(op1d),                       intent(inout)   :: F1d
+   character (len = :), allocatable, intent(inout)   :: F1dName
 
 
-   character (len = :), allocatable     :: FelName
+   ! local variables
+   character (len = :), allocatable     :: FelName,F1dName_loc
    integer :: k
    character (len = *), parameter :: mult = '*'
 
@@ -2123,29 +2187,33 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
 
 
    IF (size(F1d%prod_opel) > 0) THEN
-     CALL Export_MCTDH_OpEl(F1d%prod_opel(1),F1dName)
+     CALL Export_MCTDH_OpEl(F1d%prod_opel(1),F1dName_loc)
 
      DO k=2,size(F1d%prod_opel)
        CALL Export_MCTDH_OpEl(F1d%prod_opel(k),Felname)
-       F1dName = String_TO_String( F1dName // mult // Felname)
+       F1dName_loc = String_TO_String( F1dName_loc // mult // Felname)
      END DO
      IF (allocated(FelName)) deallocate(FelName)
 
    ELSE
-     F1dName = String_TO_String('')
+     F1dName_loc = String_TO_String('')
    END IF
+
+   F1dName = F1dName_loc
+
+   IF (allocated(F1dName_loc)) deallocate(F1dName_loc)
+
 
  end subroutine Export_MCTDH_Op1d
 
  subroutine Export_VSCF_Op1d(F1d,qname,F1dName)
-   type(op1d),          intent(in)       :: F1d
-
-   character (len =*), intent(in)       :: qname
-
-   character (len = :), allocatable     :: F1dName
+   type(op1d),                       intent(in)     :: F1d
+   character (len =*),               intent(in)     :: qname
+   character (len = :), allocatable, intent(inout)  :: F1dName
 
 
-   character (len = :), allocatable     :: FelName
+   !local variable
+   character (len = :), allocatable     :: FelName,F1dName_loc
    integer :: k
    character (len = *), parameter :: mult = ' '
 
@@ -2156,17 +2224,22 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
 
 
    IF (size(F1d%prod_opel) > 0) THEN
-     CALL Export_VSCF_OpEl(F1d%prod_opel(1),qname,F1dName)
+     CALL Export_VSCF_OpEl(F1d%prod_opel(1),qname,F1dName_loc)
 
      DO k=2,size(F1d%prod_opel)
        CALL Export_VSCF_OpEl(F1d%prod_opel(k),qname,Felname)
-       F1dName = String_TO_String( F1dName // mult // Felname)
+       F1dName_loc = String_TO_String( F1dName_loc // mult // Felname)
      END DO
      IF (allocated(FelName)) deallocate(FelName)
 
    ELSE
-     F1dName = String_TO_String('')
+     F1dName_loc = String_TO_String('')
    END IF
+
+   F1dName = F1dName_loc
+
+   IF (allocated(F1dName_loc)) deallocate(F1dName_loc)
+
 
  end subroutine Export_VSCF_Op1d
 
@@ -2206,6 +2279,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
      do i = 1, size(F_1d%prod_opel)
        call write_op(F_1d%prod_opel(i), i_open)
      end do
+     CALL flush_perso(i_open)
    END SUBROUTINE write_op1d
 
    SUBROUTINE write_Sum_OF_op1d(F_1d, i_file, header, append, close_file)

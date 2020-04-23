@@ -1,0 +1,17 @@
+
+here=`pwd`
+cd ../..
+  make Tnum_cDriver
+  make Tnum_FDriver
+cd $here
+
+#test c_driver: it needs to read/write from/to the standard input/output.
+
+../../Main_TnumTana_cDriver.exe < dat_driver > res_cdriver
+
+
+
+#test F_driver: it reads the dat_driver file and the output is in res_driver
+# The main program (Main_TnumTana_FDriver.f90) writes to the standard output.
+
+../../Main_TnumTana_FDriver.exe > res_Fdriver

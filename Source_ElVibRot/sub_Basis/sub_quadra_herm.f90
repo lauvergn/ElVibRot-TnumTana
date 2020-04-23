@@ -148,7 +148,9 @@
           STOP 'not yet nested2'
         CASE Default
 
-          IF (base%check_nq_OF_basis .AND. nq < nb_nosym) nq = nb_nosym + 1
+          IF (base%check_nq_OF_basis) THEN
+            IF (nq < nb_nosym) nq = nb_nosym + 1
+          END IF
           CALL Set_nq_OF_basis(base,nq)
           IF (Print_basis) write(out_unitp,*) '      new nb_quadra',nq
           CALL flush_perso(out_unitp)
@@ -792,7 +794,7 @@
         IF (base%print_info_OF_basisDP .AND. print_level > -1) THEN
           write(out_unitp,*) 'cubature',nq
           DO iQ=1,nq
-            write(6,*) iQ,base%x(:,iQ),base%w(iQ)
+            write(out_unitp,*) iQ,base%x(:,iQ),base%w(iQ)
           END DO
         END IF
 

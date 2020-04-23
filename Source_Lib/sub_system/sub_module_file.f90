@@ -54,14 +54,12 @@ MODULE mod_file
         integer                               :: nb_thread      = 0
         character (len=Line_len), allocatable :: tab_name_th(:)
         integer, allocatable                  :: tab_unit(:)
-
+      CONTAINS
+        PROCEDURE, PRIVATE, PASS(file1) :: file2TOfile1
+        GENERIC,   PUBLIC  :: assignment(=) => file2TOfile1
       END TYPE param_file
 
-      INTERFACE assignment (=)
-          MODULE PROCEDURE file2TOfile1
-      END INTERFACE
-
-      PUBLIC :: param_file, assignment (=),file_GetUnit, file_open, file_open2
+      PUBLIC :: param_file,file_GetUnit, file_open, file_open2
       PUBLIC :: file_close, file_delete, file_dealloc, file_write, make_FileName
       PUBLIC :: err_file_name,check_file_exist_WITH_file_name
       PUBLIC :: flush_perso,join_path
@@ -69,25 +67,26 @@ MODULE mod_file
       CONTAINS
 
       SUBROUTINE file2TOfile1(file1,file2)
-
-      TYPE(param_file), intent(inout)  :: file1
-      TYPE(param_file), intent(in)     :: file2
-
+      CLASS(param_file), intent(inout)  :: file1
+      TYPE(param_file),  intent(in)     :: file2
 
       integer :: err_mem,memory
       !write(out_unitp,*) 'BEGINNING file_GetUnit'
 
+        ! to store/use data of several files using threads
+        integer                               :: nb_thread      = 0
+        character (len=Line_len), allocatable :: tab_name_th(:)
+        integer, allocatable                  :: tab_unit(:)
       !IF (.NOT. file2%init) RETURN
 
       file1%name      = file2%name
       file1%unit      = file2%unit
       file1%formatted = file2%formatted
+      file1%append    = file2%append
       file1%old       = file2%old
       file1%seq       = file2%seq
       file1%frecl     = file2%frecl
       file1%init      = file2%init
-
-      file1%nb_thread = file2%nb_thread
 
       IF (allocated(file2%tab_unit) .AND. allocated(file2%tab_name_th)) THEN
         memory = file1%nb_thread
@@ -339,7 +338,7 @@ MODULE mod_file
       IF (.NOT. present(err_file) .AND. err_file_loc /= 0) STOP ' ERROR, the file name is empty!'
       IF (present(err_file)) err_file = err_file_loc
 
-      !write(6,*) 'ffile%name,iunit ',ffile%name,iunit ; flush(6)
+      !write(out_unitp,*) 'ffile%name,iunit ',ffile%name,iunit ; flush(out_unitp)
 
 
       !- check if the file is already open ------------------
@@ -508,7 +507,7 @@ MODULE mod_file
       IF (present(err_file)) err_file = err_file_loc
 
 !     - check if the file is already open ------------------
-      !write(6,*) 'name_file,iunit ',name_file,iunit ; flush(6)
+      !write(out_unitp,*) 'name_file,iunit ',name_file,iunit ; flush(out_unitp)
 
       inquire(FILE=name_file,NUMBER=iunit,OPENED=unit_opened)
 !     write(out_unitp,*) 'name,unit,unit_opened ',name_file,unit,unit_opened
@@ -645,7 +644,7 @@ MODULE mod_file
             make_FileName = trim(adjustl(File_path)) // '/' // trim(adjustl(FileName))
           END IF
         END IF
-!write(666,*) 'make_FileName: ',make_FileName
+!write(out_unitp66,*) 'make_FileName: ',make_FileName
 !stop
       END FUNCTION make_FileName
 

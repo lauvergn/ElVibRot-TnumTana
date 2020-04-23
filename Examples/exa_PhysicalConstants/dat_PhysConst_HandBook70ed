@@ -1,12 +1,3 @@
-here=`pwd`
-DIR_vib=$here/../..
-
-cd $DIR_vib
-#make clean
- make PhysConst
-cd $here
-
-nice $DIR_vib/PhysConst.exe << ** >res_PhysConst_HandBook70ed
  &constantes mass_version='HandBook70ed' version='HandBook70ed' /
  2000.   ! mass of 2000. au
  20.0.   ! Wrong real => ERROR
@@ -19,4 +10,3 @@ nice $DIR_vib/PhysConst.exe << ** >res_PhysConst_HandBook70ed
 13C      ! give C mass of the isotop with A=13
  6_14    ! give the C mass of the isotop with A=14
  XX      ! Unknown atom => ERROR
-**

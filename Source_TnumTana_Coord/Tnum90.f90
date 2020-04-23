@@ -32,7 +32,7 @@
       use mod_Constant
       ! in the use mod_Coord_KEO, we have to use "only", because "calc_freq" is
       !   a subroutine in mod_Coord_KEO and also a variable in the namelist.
-      use mod_Coord_KEO,  ONLY: assignment(=),CoordType,Tnum,Read_CoordType,&
+      use mod_Coord_KEO,  ONLY: CoordType,Tnum,Read_CoordType,              &
                                 read_RefGeom,get_Qact0,sub_QactTOdnx,       &
                                 Write_Cartg98,Write_dnx,calc3_f2_f1Q_num,   &
                                 get_dng_dnGG,sub_QplusDQ_TO_Cart,           &
@@ -349,7 +349,7 @@
 
         DO i=1,mole%nb_act,3
           i2 = min(i+2,mole%nb_act)
-          write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
+          write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                          i,i2,freq(i:i2)* get_Conv_au_TO_unit('E','cm-1')
         END DO
 
@@ -458,7 +458,7 @@
 
           DO i=1,mole%nb_act,3
             i2 = min(i+2,mole%nb_act)
-            write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
+            write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                          i,i2,freq(i:i2)* get_Conv_au_TO_unit('E','cm-1')
           END DO
 

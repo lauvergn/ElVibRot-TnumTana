@@ -51,7 +51,7 @@ CONTAINS
       USE mod_system
       USE mod_Constant
       USE mod_SetOp
-      USE mod_MPI   
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -215,8 +215,7 @@ CONTAINS
       SUBROUTINE sub_build_MatOp(WP,nb_WP,para_Op,hermitic,print_mat)
       USE mod_system
       USE mod_Constant
-      USE mod_psi_set_alloc
-      USE mod_psi_Op
+      USE mod_psi, ONLY : param_psi, alloc_NParray, dealloc_NParray, copy_psi2TOpsi1, Overlap_psi1_psi2
       USE mod_SetOp
       USE mod_OpPsi
       IMPLICIT NONE
@@ -359,9 +358,6 @@ CONTAINS
       END IF
 
 !     - free memories -------
-      DO i=1,nb_WP
-        CALL dealloc_psi(OpWP(i))
-      END DO
       CALL dealloc_NParray(OpWP,"OpWP",name_sub)
 
       IF (allocated(CMatOp)) THEN
@@ -1216,8 +1212,8 @@ CONTAINS
             END DO
             MatRV%ReVal(:,ib1,iterm_Op) = matmul(td0b(:,1:nplus),VecQ(1:nplus))
           END DO
-          !write(6,*) '===================================================='
-          !write(6,*) 'MatRV%ReVal',iterm_Op,MatRV%derive_termQact(:,iterm_Op)
+          !write(out_unitp,*) '===================================================='
+          !write(out_unitp,*) 'MatRV%ReVal',iterm_Op,MatRV%derive_termQact(:,iterm_Op)
           !CALL Write_Mat(MatRV%ReVal(:,:,iterm_Op),out_unitp,5)
 
 
@@ -1225,7 +1221,7 @@ CONTAINS
           J1       = MatRV%derive_termQact(1,iterm_Op)
           J2       = MatRV%derive_termQact(2,iterm_Op)
           iterm_BasisRot = para_Op%BasisnD%RotBasis%tab_der_TO_iterm(J1,J2)
-          !write(6,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
+          !write(out_unitp,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
 
           DO ibRot=1,para_Op%nb_bRot
           DO jbRot=1,para_Op%nb_bRot
@@ -1238,9 +1234,9 @@ CONTAINS
             f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
-              write(6,*) 'J1,J2',J1,J2
-              write(6,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
-              write(6,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
+              write(out_unitp,*) 'J1,J2',J1,J2
+              write(out_unitp,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
+              write(out_unitp,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
             END IF
 
             IF (para_Op%cplx) THEN
@@ -1674,7 +1670,7 @@ CONTAINS
         DO J2=-3,-1
           iterm_Op       = MatRV%derive_term_TO_iterm(J1,J2)
           iterm_BasisRot = para_Op%BasisnD%RotBasis%tab_der_TO_iterm(J1,J2)
-          !write(6,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
+          !write(out_unitp,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
 
           DO ibRot=1,para_Op%nb_bRot
           DO jbRot=1,para_Op%nb_bRot
@@ -1687,9 +1683,9 @@ CONTAINS
             f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
-              write(6,*) 'J1,J2',J1,J2
-              write(6,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
-              write(6,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
+              write(out_unitp,*) 'J1,J2',J1,J2
+              write(out_unitp,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
+              write(out_unitp,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
             END IF
 
             IF (para_Op%cplx) THEN
@@ -1725,9 +1721,9 @@ CONTAINS
             f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
-              write(6,*) 'J1',J1
-              write(6,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
-              write(6,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
+              write(out_unitp,*) 'J1',J1
+              write(out_unitp,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
+              write(out_unitp,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
             END IF
 
             IF (para_Op%cplx) THEN
@@ -2136,7 +2132,7 @@ CONTAINS
           J1       = para_Op%BasisnD%RotBasis%tab_iterm_TO_der(1,iterm_BasisRot)
           J2       = para_Op%BasisnD%RotBasis%tab_iterm_TO_der(2,iterm_BasisRot)
           iterm_Op = MatRV%derive_term_TO_iterm(J1,J2)
-          !write(6,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
+          !write(out_unitp,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
 
           DO ibRot=1,para_Op%nb_bRot
           DO jbRot=1,para_Op%nb_bRot
@@ -2149,9 +2145,9 @@ CONTAINS
             f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
-              write(6,*) 'J1,J2',J1,J2
-              write(6,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
-              write(6,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
+              write(out_unitp,*) 'J1,J2',J1,J2
+              write(out_unitp,*) 'i1_h,ibRot,i1+1:i1+f1',i1_h,ibRot,i1+1,i1+f1
+              write(out_unitp,*) 'i2_h,jbRot,i2+1:i2+f2',i2_h,jbRot,i2+1,i2+f2
             END IF
 
             IF (para_Op%cplx) THEN
@@ -2458,11 +2454,9 @@ CONTAINS
       
       SUBROUTINE sub_MatOp_direct1(para_Op)
       USE mod_system
+      USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,alloc_NParray,dealloc_NParray
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_MPI
       IMPLICIT NONE
 
@@ -2600,10 +2594,6 @@ CONTAINS
 
 !---- deallocation -------------------------------------
       IF(MPI_id==0) THEN
-        DO i=1,n
-          CALL dealloc_psi(Hpsi(i))
-          CALL dealloc_psi(psi(i))
-        END DO
         CALL dealloc_NParray(psi ,"psi", name_sub)
         CALL dealloc_NParray(Hpsi,"Hpsi",name_sub)
       ENDIF
@@ -2622,11 +2612,11 @@ CONTAINS
       USE mod_system
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
 
+      USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,       &
+                              alloc_array,dealloc_array
+
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_MPI
       IMPLICIT NONE
 
@@ -2739,10 +2729,6 @@ CONTAINS
       END IF
 
 !---- deallocation -------------------------------------
-      DO ith=1,nb_thread
-        CALL dealloc_psi(Hpsi(ith))
-        CALL dealloc_psi(psi(ith))
-      END DO
       CALL dealloc_array(psi ,"psi", name_sub)
       CALL dealloc_array(Hpsi,"Hpsi",name_sub)
 !     ----------------------------------------------------------
@@ -2760,12 +2746,11 @@ CONTAINS
 
       SUBROUTINE sub_MatOp_direct1_Overlap(para_Op)
       USE mod_system
+      USE mod_psi,     ONLY : param_psi,dealloc_psi,                    &
+                              Set_symab_OF_psiBasisRep,                 &
+                              sub_PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2823,13 +2808,13 @@ CONTAINS
             psi%RvecB(i) = ONE
 
             CALL Set_symab_OF_psiBasisRep(psi)
-            !write(6,*) 'i',i,psi%RvecB ; flush(6)
+            !write(out_unitp,*) 'i',i,psi%RvecB ; flush(out_unitp)
 
             Hpsi = psi
             CALL sub_PsiBasisRep_TO_GridRep(Hpsi)
-            !write(6,*) 'i',i,Hpsi%RvecG ; flush(6)
+            !write(out_unitp,*) 'i',i,Hpsi%RvecG ; flush(out_unitp)
             CALL sub_PsiGridRep_TO_BasisRep(Hpsi)
-            !write(6,*) 'i',i,Hpsi%RvecB ; flush(6)
+            !write(out_unitp,*) 'i',i,Hpsi%RvecB ; flush(out_unitp)
 
             para_Op%Rmat(:,i)  = Hpsi%RvecB(:)
           END IF
@@ -2878,11 +2863,9 @@ CONTAINS
       END SUBROUTINE sub_MatOp_direct1_Overlap
       SUBROUTINE sub_MatOp_Grid(para_Op)
       USE mod_system
+      USE mod_psi,     ONLY : param_psi,dealloc_psi
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       IMPLICIT NONE
 
 
@@ -2989,13 +2972,10 @@ CONTAINS
       END SUBROUTINE sub_MatOp_Grid
       SUBROUTINE sub_MatOp_Overlap_SG4(para_Op)
       USE mod_system
+      USE mod_basis_BtoG_GtoB_SGType4
+      USE mod_psi,     ONLY : param_psi,alloc_psi,dealloc_psi
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
-      USE mod_basis_BtoG_GtoB_SGType4
       IMPLICIT NONE
 
 
@@ -3135,13 +3115,10 @@ CONTAINS
       END SUBROUTINE sub_MatOp_Overlap_SG4
       SUBROUTINE sub_MatOp_V_SG4(para_Op)
       USE mod_system
+      USE mod_basis_BtoG_GtoB_SGType4
+      USE mod_psi,     ONLY : param_psi,alloc_psi,dealloc_psi
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
-      USE mod_basis_BtoG_GtoB_SGType4
       IMPLICIT NONE
 
 
@@ -3286,13 +3263,11 @@ CONTAINS
       END SUBROUTINE sub_MatOp_V_SG4
       SUBROUTINE sub_MatOp_OpExact_SG4(para_Op)
       USE mod_system
+      USE mod_basis_BtoG_GtoB_SGType4
+      !USE mod_psi,     ONLY : param_psi,alloc_psi,dealloc_psi
+
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
-      USE mod_basis_BtoG_GtoB_SGType4
       IMPLICIT NONE
 
 
@@ -3304,7 +3279,7 @@ CONTAINS
 
  ! local variables
  TYPE (CoordType), pointer :: mole
- TYPE (basis),   pointer :: BasisnD
+ TYPE (basis),     pointer :: BasisnD
 
 
  integer                :: ib,jb,ipb,jpb,i,iG,ith,nb,iBSRep
@@ -3344,11 +3319,11 @@ CONTAINS
    tab_l(:) = BasisnD%para_SGType2%nDval_init(:,ith+1)
    !--------------------------------------------------------------
 
-   !write(6,*) 'ith,tab_l(:)',ith,':',tab_l
+   !write(out_unitp,*) 'ith,tab_l(:)',ith,':',tab_l
 
    ! we are not using the parallel do, to be able to use the correct initialized tab_l with nDval_init
    DO iG=BasisnD%para_SGType2%iG_th(ith+1),BasisnD%para_SGType2%fG_th(ith+1)
-     !write(6,*) 'iG',iG ; flush(6)
+     !write(out_unitp,*) 'iG',iG ; flush(out_unitp)
 
      CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
 
@@ -3360,25 +3335,25 @@ CONTAINS
        iBSRep = BasisnD%para_SGType2%tab_Sum_nb_OF_SRep(iG-1)
      END IF
 
-     !write(6,*) 'iG,iBSRep,nb,WeightSG',iG,iBSRep,nb,BasisnD%WeightSG(iG)
+     !write(out_unitp,*) 'iG,iBSRep,nb,WeightSG',iG,iBSRep,nb,BasisnD%WeightSG(iG)
 
      DO ib=1,nb
        ipb = BasisnD%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep+ib)
        IF (ipb == 0) CYCLE
-       !write(6,*) 'ib,ipb',ib,ipb
+       !write(out_unitp,*) 'ib,ipb',ib,ipb
 
        DO jb=1,nb
          jpb = BasisnD%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep+jb)
          IF (jpb == 0) CYCLE
 
-         !write(6,*) 'jb,jpb',jb,jpb
+         !write(out_unitp,*) 'jb,jpb',jb,jpb
 
          para_Op%Rmat(ipb,jpb) = para_Op%Rmat(ipb,jpb) + BasisnD%WeightSG(iG)
 
        END DO
      END DO
 
-     !write(6,*) 'iG done:',iG ; flush(6)
+     !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
    END DO
    CALL dealloc_NParray(tab_l,'tabl_l',name_sub)
 
@@ -3389,7 +3364,7 @@ CONTAINS
 
    CALL Write_Mat(para_Op%Rmat,out_unitp,5)
 
-   write(6,*) 'for MatOp**2'
+   write(out_unitp,*) 'for MatOp**2'
    para_Op%Rmat = matmul(para_Op%Rmat,para_Op%Rmat)
 
    write(out_unitp,*) '# 1',count(para_Op%Rmat == 1)
@@ -3412,11 +3387,9 @@ CONTAINS
 !===============================================================================     
       SUBROUTINE sub_OpBasisFi(para_Op,i)
       USE mod_system
+      USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,dealloc_psi
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_MPI
       IMPLICIT NONE
 

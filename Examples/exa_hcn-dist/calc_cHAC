@@ -1,7 +1,7 @@
 rm cpu_all
 
 
- for name in dat_publi        dat_publi-Murrell    dat_publi2        dat_publiTaylor dat_cHAC_Davidson-dir0            dat_cHAC_Davidson-dir1            dat_cHAC_Davidson-dir2-Make_MatOp dat_cHAC_Davidson-dir0-readGrid        dat_cHAC_Davidson-dir2            dat_cHAC_Davidson-dir3
+ for name in dat_publi* dat_cHAC* dat_cart dat_intensity
 do
 ./$name
 echo "=======================================" >> cpu_all

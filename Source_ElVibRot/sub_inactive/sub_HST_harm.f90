@@ -45,7 +45,7 @@
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : assignment(=),CoordType, Tnum, get_Qact, qact_to_qdyn_from_activetransfo
+      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact, qact_to_qdyn_from_activetransfo
       USE mod_basis
       USE mod_Op
       USE mod_PrimOp
@@ -416,7 +416,7 @@
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
-      USE mod_Coord_KEO, only : assignment(=),CoordType, Tnum, Qinact2n_TO_Qact_FROM_ActiveTransfo
+      USE mod_Coord_KEO, only : CoordType, Tnum, Qinact2n_TO_Qact_FROM_ActiveTransfo
       USE mod_basis
       USE mod_Op
       USE mod_PrimOp
@@ -574,7 +574,7 @@
 !-----------------------------------------------------------------
 !-----------------------------------------------------------------
 !     -- Matrix initialisation -----------------------------------
-      !write(6,*) 'nb_Op',nb_Op
+      !write(out_unitp,*) 'nb_Op',nb_Op
       DO iOp=1,nb_Op
         d0MatHADAOp(iOp)%ReVal(:,:,:) = ZERO
         IF (d0MatHADAOp(iOp)%cplx) d0MatHADAOp(iOp)%ImVal(:,:) = ZERO
@@ -631,11 +631,14 @@
       d0Qeq      = dnQeq%d0
       d0ehess    = dnEHess%d0
 
-      IF (print_level > 0) write(out_unitp,12) Qact(1:nb_act1),dnQeq%d0
- 12   format('Qeq',20(' ',f10.6))
-      IF (print_level > 0) write(out_unitp,11) Qact(1:nb_act1),pot0_corgrad
- 11   format('pot0_corgrad',10(' ',f10.6))
-      CALL flush_perso(out_unitp)
+      IF (print_level > 0) THEN
+        !IF (freq_only) write(out_unitp,*) ' freq_only'
+        write(out_unitp,12) Qact(1:nb_act1),dnQeq%d0
+ 12     format('Qeq',20(' ',f10.6))
+        write(out_unitp,11) Qact(1:nb_act1),pot0_corgrad
+ 11     format('pot0_corgrad',10(' ',f10.6))
+        CALL flush_perso(out_unitp)
+      END IF
 
 !-----------------------------------------------------------------
 !-----------------------------------------------------------------
@@ -860,7 +863,7 @@
       CALL dealloc_NParray(d0f_bhe,"d0f_bhe",name_sub)
 
 
-      END IF
+      END IF ! end .NOT. freq_only
 
 !     ------ free memory -----------------------------------------
 

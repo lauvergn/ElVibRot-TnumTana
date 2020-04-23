@@ -104,7 +104,7 @@ sym  cos(a)      R     r    x    pi   dh
  &inactives
            max_excit=4
            tab_nq(1:2)=8,8
-           tab_nb(1:2)=4,4
+           tab_nb(1:2)=5,5
            max_ene_h=60000. "cm-1"
 /
  &actives test=f direct=2 /
@@ -112,7 +112,7 @@ sym  cos(a)      R     r    x    pi   dh
  &propa
         WPTmax=20000.d0 WPdeltaT=100.d0 nb_micro=100 restart=t
         n_WPecri=1 WPpsi2=t WPpsi=t Write_WPAdia=t
-        name_WPpropa='cheby' max_poly=5000 npoly=300 poly_tol=1.d-12
+        name_WPpropa='cheby' max_poly=5000 npoly=300 poly_tol=1.d-20
         DHmax=0.0d0 auto_Hmax=t
         WP0n_h=1 lect_WP0FBR=f
 

@@ -28,7 +28,7 @@
 !===========================================================================
 MODULE mod_freq
       use mod_system
-      USE mod_Constant, ONLY: assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, ONLY: get_Conv_au_TO_unit
       IMPLICIT NONE
 
       PRIVATE
@@ -528,7 +528,7 @@ MODULE mod_freq
 
         DO i=1,nb_var,3
           i2 = min(i+2,nb_var)
-          write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
+          write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                             i,i2,d0eh(i:i2)*get_Conv_au_TO_unit('E','cm-1')
         END DO
 
@@ -1204,7 +1204,7 @@ MODULE mod_freq
             tab_Sji(i) = tab_Sji(i) - ONE
 
             IF (debug) &
-              write(out_unitp,'(a,i0,50(xf5.2))') 'Sji and Error on Sji: ',i,tab_Sji(i)+ONE,maxval(abs(tab_Sji))
+              write(out_unitp,'(a,i0,50(1x,f5.2))') 'Sji and Error on Sji: ',i,tab_Sji(i)+ONE,maxval(abs(tab_Sji))
 
           END DO
         END IF

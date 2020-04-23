@@ -111,15 +111,15 @@
           ELSE
 
             nb_mult_GTOB = nb_mult_GTOB + int(nb,kind=ILkind)*size(RVecG,kind=ILkind)
-          !write(6,*) 'nb_mult_GTOB,nb,size(RVecG)',nb_mult_BTOG,nb,size(RVecG)
+          !write(out_unitp,*) 'nb_mult_GTOB,nb,size(RVecG)',nb_mult_BTOG,nb,size(RVecG)
 
-!          write(6,*) 'nq,nb',nq,nb
+!          write(out_unitp,*) 'nq,nb',nq,nb
 !
-!          write(6,*) 'asso d0b',associated(basis_set%dnRBGwrho%d0)
-!          write(6,*) 'shape d0b',shape(basis_set%dnRBGwrho%d0)
-!          write(6,*) 'shape RVecG',shape(RVecG)
-!          write(6,*) 'shape RVecB',shape(RVecB)
-!          flush(6)
+!          write(out_unitp,*) 'asso d0b',associated(basis_set%dnRBGwrho%d0)
+!          write(out_unitp,*) 'shape d0b',shape(basis_set%dnRBGwrho%d0)
+!          write(out_unitp,*) 'shape RVecG',shape(RVecG)
+!          write(out_unitp,*) 'shape RVecB',shape(RVecB)
+!          flush(out_unitp)
 
 
              RvecB(:) = matmul( basis_set%dnRBGwrho%d0,RVecG)
@@ -178,7 +178,7 @@
                                                   RTempG(iq,:,ib))
 
                     nb_mult_GTOB = nb_mult_GTOB + int(newnb2,kind=ILkind)*size(RTempG(iq,:,ib),kind=ILkind)
-                    !write(6,*) 'nb_mult_GTOB,nb,size(RVecG)',nb_mult_GTOB,newnb2,size(RG)
+                    !write(out_unitp,*) 'nb_mult_GTOB,nb,size(RVecG)',nb_mult_GTOB,newnb2,size(RG)
                   END DO
 
                   ibb1 = ibb1 + newnb2
@@ -364,7 +364,6 @@
 
           SELECT CASE (basis_set%SparseGrid_type)
           CASE (0) ! Direct product
-            !write(6,*) 'nq,nb',nq,nb ; flush(6)
             nnq  = nq
             nnb  = 1
             nb2  = 1
@@ -372,7 +371,6 @@
             nq2  = 1
 
             CALL alloc_NParray(CTempB,(/ nnq,nbb /),"CTempB",name_sub)
-            !write(6,*) 'coucou reshape 0' ; flush(6)
             CTempB(:,:) = reshape(CVecG,shape=(/ nnq,nbb /))
 
             DO ibasis=1,basis_set%nb_basis
@@ -382,8 +380,6 @@
               nnq = nnq / nq2
 
               CALL alloc_NParray(CTempG,(/ nnq,nq2,nnb /),"CTempG",name_sub)
-              !write(6,*) 'shape ibasis',ibasis ; flush(6)
-              !write(6,*) 'coucou CTempG ',shape(CTempG) ; flush(6)
 
               CTempG(:,:,:) = reshape(CTempB,shape=(/ nnq,nq2,nnb /))
 
@@ -480,8 +476,6 @@
 
               nnb = nbb
             END DO
-            !write(6,*) 'shape CTempB',shape(CTempB) ; flush(6)
-            !write(6,*) 'coucou reshape f' ; flush(6)
 
             CVecB(:) = reshape(CTempB, shape=(/ nnq*nnb /) )
             CALL dealloc_NParray(CTempB,"CTempB",name_sub)
@@ -535,11 +529,7 @@
             !STOP 'SparseGrid_type=2'
 
           CASE (4) ! Sparse basis (Smolyak 4th implementation)
-write(6,*) 'coucou SG4', name_sub
             CALL alloc_NParray(RVecB,shape(CVecB),'RVecB',name_sub)
-            !CALL alloc_NParray(RVecG,shape(CVecG),'RVecG',name_sub)
-
-            !RVecG(:) = real(CVecG,kind=Rkind)
 
             !!  RVecG TO SRep
             CALL alloc2_SmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep,&

@@ -42,7 +42,7 @@
 !===========================================================================
 MODULE mod_param_SGType2
 USE mod_system
-use mod_nDindex, only: assignment (=),type_ndindex, dealloc_ndindex,    &
+use mod_nDindex, only: type_ndindex, dealloc_ndindex,                   &
                        alloc_nparray, init_ndval_of_ndindex,            &
                        add_one_to_ndindex, calc_ndi, calc_ndindex,      &
                        dealloc_nparray
@@ -97,7 +97,9 @@ IMPLICIT NONE
     Integer                                    :: V_allcount2
     Logical                                    :: once_action=.TRUE.
 #endif    
-
+  CONTAINS
+    PROCEDURE, PRIVATE, PASS(SGType2_1) :: SGType2_2TOSGType2_1
+    GENERIC,   PUBLIC  :: assignment(=) => SGType2_2TOSGType2_1
   END TYPE param_SGType2
 
   TYPE OldParam
@@ -112,14 +114,10 @@ IMPLICIT NONE
     integer, allocatable         :: tab_l_AT_SG(:) ! associated to i_SG
   END TYPE OldParam
 
-INTERFACE assignment (=)
-  MODULE PROCEDURE SGType2_2TOSGType2_1
-END INTERFACE
-
- PUBLIC :: param_SGType2, assignment (=), dealloc_SGType2, Set_nDval_init_FOR_SG4
+ PUBLIC :: param_SGType2, dealloc_SGType2, Set_nDval_init_FOR_SG4
  PUBLIC :: OldParam, Write_OldParam
  PUBLIC :: get_iqSG_iSG_FROM_iq, get_Tabiq_Tabil_FROM_iq, get_Tabiq_Tabil_FROM_iq_old
- PUBLIC :: calc_Weight_OF_SRep
+ PUBLIC :: calc_Weight_OF_SRep,dealloc_OldParam
 
 CONTAINS
 SUBROUTINE Write_OldParam(OldPara)
@@ -140,6 +138,23 @@ character (len=*), parameter :: name_sub='Write_OldParam'
   CALL flush_perso(out_unitp)
 
 END SUBROUTINE Write_OldParam
+SUBROUTINE dealloc_OldParam(OldPara)
+
+TYPE (OldParam), intent(inout) :: OldPara
+
+character (len=*), parameter :: name_sub='dealloc_OldParam'
+
+    OldPara%i_SG = 0
+
+    OldPara%iq    = 0
+    OldPara%iq_SG = 0
+
+    OldPara%ib    = 0
+    OldPara%ib_SG = 0
+
+    IF (allocated(OldPara%tab_l_AT_SG)) deallocate(OldPara%tab_l_AT_SG)
+
+END SUBROUTINE dealloc_OldParam
 
 
 SUBROUTINE dealloc_SGType2(SGType2)
@@ -207,8 +222,8 @@ END SUBROUTINE dealloc_SGType2
 
 SUBROUTINE SGType2_2TOSGType2_1(SGType2_1,SGType2_2)
 
-TYPE (param_SGType2), intent(inout) :: SGType2_1
-TYPE (param_SGType2), intent(in)    :: SGType2_2
+CLASS (param_SGType2), intent(inout) :: SGType2_1
+TYPE (param_SGType2),  intent(in)    :: SGType2_2
 
 integer :: i
 
@@ -813,13 +828,13 @@ IF (debug) THEN
 END IF
 
 IF (present(OldPara)) THEN
-  !write(6,*) 'OldPara ',name_sub,OldPara
+  !write(out_unitp,*) 'OldPara ',name_sub,OldPara
   iSG = OldPara%i_SG
 END IF
 
 
-!write(6,*) 'alloc tab_Sum_nq_OF_SRep',allocated(SGType2%tab_Sum_nq_OF_SRep)
-!flush(6)
+!write(out_unitp,*) 'alloc tab_Sum_nq_OF_SRep',allocated(SGType2%tab_Sum_nq_OF_SRep)
+!flush(out_unitp)
 IF (iSG > 1 .AND. iSG <= size(SGType2%tab_Sum_nq_OF_SRep)) THEN
   iqSG = iq - SGType2%tab_Sum_nq_OF_SRep(iSG-1)
 
@@ -896,7 +911,7 @@ END IF
 
 !first calculation of i_SG and iq_SG from iq and OldPara (if available)
 IF (present(OldPara)) THEN
-  !write(6,*) 'OldPara ',name_sub,OldPara
+  !write(out_unitp,*) 'OldPara ',name_sub,OldPara
   i_SG = OldPara%i_SG
 END IF
 

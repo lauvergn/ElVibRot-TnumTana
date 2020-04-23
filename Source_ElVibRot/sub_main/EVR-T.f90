@@ -41,6 +41,7 @@
 !===========================================================================
 !===========================================================================
     PROGRAM ElVibRot
+      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : INPUT_UNIT
       USE mod_system
 !$    USE omp_lib, only : omp_get_max_threads
       USE mod_nDGridFit
@@ -426,7 +427,7 @@ SUBROUTINE read_arg(input_filename)
     input_filename = 'namelist'
   END IF
 
-  write(6,*) '=================================='
-  write(6,*) '=================================='
+  write(out_unitp,*) '=================================='
+  write(out_unitp,*) '=================================='
 
 END SUBROUTINE read_arg

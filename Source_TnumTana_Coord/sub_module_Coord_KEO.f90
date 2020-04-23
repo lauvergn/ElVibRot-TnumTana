@@ -66,9 +66,9 @@ MODULE mod_Coord_KEO
   USE mod_f2f2Vep,         ONLY : calc3_f2_f1q_num,calc3_f2_f1q_numtay0qinact2n
 
   USE mod_Tana_keo,        ONLY : compute_analytical_keo
-  USE mod_Tana_Tnum,       ONLY : comparison_g_from_tnum_tana
-  USE mod_Tana_Sum_OpnD,   ONLY : assignment(=),sum_opnd,write_op,      &
-                                  delete_op,Expand_Sum_OpnD_TO_Sum_OpnD
+  USE mod_Tana_Tnum
+  USE mod_Tana_Sum_OpnD,   ONLY : sum_opnd,write_op,delete_op,          &
+                                  Expand_Sum_OpnD_TO_Sum_OpnD
   IMPLICIT NONE
 
 END MODULE mod_Coord_KEO

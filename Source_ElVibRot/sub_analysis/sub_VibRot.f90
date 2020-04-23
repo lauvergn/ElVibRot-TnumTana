@@ -47,11 +47,10 @@
       SUBROUTINE sub_VibRot(Tab_Psi,nb_psi,para_H,para_ana)
 
       USE mod_system
-      use mod_Coord_KEO, only: assignment(=),CoordType, tnum
-      use mod_PrimOp,    only: assignment(=),param_d0matop, init_d0matop, write_d0matop, dealloc_d0matop
+      use mod_Coord_KEO, only: CoordType, tnum
+      use mod_PrimOp,    only: param_d0matop, init_d0matop, write_d0matop, dealloc_d0matop
       USE mod_basis
-      USE mod_psi_set_alloc
-      USE mod_psi_Op
+      USE mod_psi,       ONLY : param_psi,Overlap_psi1_psi2
       USE mod_Op
       USE mod_analysis
       IMPLICIT NONE
@@ -137,10 +136,9 @@
           END IF
 
           CALL sub_OpPsi(Tab_Psi(iv),OpPsi,para_H,MatRV%derive_termQact(:,iterm_Op))
-!write(6,*) 'coucou oppsi' ; flush(6)
           DO jv=1,nb_psi
             CALL Overlap_psi1_psi2(C_over,Tab_Psi(jv),OpPsi)
-            !write(6,*) 'jv,iv,C_over',jv,iv,C_over
+            !write(out_unitp,*) 'jv,iv,C_over',jv,iv,C_over
             MatRV%ReVal(jv,iv,iterm_Op) = real(C_over,kind=Rkind)
             IF (MatRV%cplx) MatRV%ImVal(jv,iv) = aimag(C_over)
           END DO
@@ -173,7 +171,7 @@
           J1       = MatRV%derive_termQact(1,iterm_Op)
           J2       = MatRV%derive_termQact(2,iterm_Op)
           iterm_BasisRot = para_H%BasisnD%RotBasis%tab_der_TO_iterm(J1,J2)
-          !write(6,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
+          !write(out_unitp,*) 'J1,J2',J1,J2,'iterm_Op,iterm_BasisRot',iterm_Op,iterm_BasisRot
 
           DO ibRot=1,nb_bRot
           DO jbRot=1,nb_bRot

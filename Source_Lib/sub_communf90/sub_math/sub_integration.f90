@@ -23,7 +23,7 @@
          val = val + w(i)*poly_g(n1,i)*poly_g(n2,i)*pot_g(i)
        END DO
 
-!      write(6,*) val,n1,n2
+!      write(out_unitp,*) val,n1,n2
        integration_pot =  val
 
        end function integration_pot
@@ -50,12 +50,12 @@
 
        val = ZERO
        DO i=1,nb_gauss
-!        write(6,*) ' integration_T_g1 :',i,x(i),
+!        write(out_unitp,*) ' integration_T_g1 :',i,x(i),
 !    *                 d1poly_legendre(x(i),n2),T_g1(i)
          val = val + w(i)*poly_g(n1,i)*d1poly_legendre(x(i),n2)*T_g1(i)
        END DO
 
-!      write(6,*) val,n1,n2
+!      write(out_unitp,*) val,n1,n2
        integration_T_g1 =  val
 
        end function integration_T_g1
@@ -88,7 +88,7 @@
          w(i)   = wi
          x(i)   = x0
 
-!        write(6,*) i,nn+i,nn+1-i,wi,x0
+!        write(out_unitp,*) i,nn+i,nn+1-i,wi,x0
 
        END DO
 
@@ -122,7 +122,7 @@
          w(i)   = wi
          x(i)   = x0
 
-!        write(6,*) i,nn+i,nn+1-i,wi,x0
+!        write(out_unitp,*) i,nn+i,nn+1-i,wi,x0
 
        END DO
 
@@ -158,7 +158,7 @@
 
          x(i)   = x0
 
-!        write(6,*) i,wi,x0
+!        write(out_unitp,*) i,wi,x0
 
        END DO
 
@@ -266,7 +266,7 @@
        END DO
 
 !      DO i=1,n
-!       write(6,*) x(i),w(i)
+!       write(out_unitp,*) x(i),w(i)
 !      END DO
 !
        RETURN
@@ -1109,7 +1109,7 @@
          real(kind=Rkind) a
          integer i,n
          IF (n .LT. 0) THEN
-           write(6,*) 'ERROR: gamma( n<=0)',n
+           write(out_unitp,*) 'ERROR: gamma( n<=0)',n
            STOP
          END IF
          a = ONE
@@ -1125,7 +1125,7 @@
          real(kind=Rkind) a
          integer i,n
          IF (n .LT. 0) THEN
-           write(6,*) 'ERROR: factor( n<=0)',n
+           write(out_unitp,*) 'ERROR: factor( n<=0)',n
            STOP
          END IF
          a = ONE
@@ -1141,7 +1141,7 @@
          real(kind=Rkind) a
          integer i,k,n
          IF (n .LT. 0 .OR. i .GT. n .OR. i .LT. 0) THEN
-           write(6,*) 'ERROR: binomial( n<=0 i<0 i>n)',n,i
+           write(out_unitp,*) 'ERROR: binomial( n<=0 i<0 i>n)',n,i
            STOP
          END IF
          a = ONE
@@ -1156,7 +1156,7 @@
          END DO
          binomial = a
 
-!        write(6,*) 'binomial',n,i,a
+!        write(out_unitp,*) 'binomial',n,i,a
       end function binomial
       FUNCTION combi(n,i)
       USE mod_system
@@ -1165,7 +1165,7 @@
       real(kind=Rkind) :: combi(n,i)
       real(kind=Rkind) a
          IF (n .LT. 0 .OR. i .GT. n .OR. i .LT. 0) THEN
-           write(6,*) 'ERROR: combi( n<0 i<0 i>n)',n,i
+           write(out_unitp,*) 'ERROR: combi( n<0 i<0 i>n)',n,i
            STOP
          END IF
          a = ONE
@@ -1180,7 +1180,7 @@
          END DO
          combi = a
 
-!        write(6,*) 'combi',n,i,a
+!        write(out_unitp,*) 'combi',n,i,a
       end function combi
       FUNCTION icombi(n,i)
       USE mod_system
@@ -1190,7 +1190,7 @@
          integer :: i,n
          integer :: f1,f2,k
          IF (n .LE. 0 .OR. i .GT. n .OR. i .LT. 0) THEN
-           write(6,*) 'ERROR: icombi( n<=0 i<0 i>n)',n,i
+           write(out_unitp,*) 'ERROR: icombi( n<=0 i<0 i>n)',n,i
            STOP
          END IF
 
@@ -1210,7 +1210,7 @@
          END DO
          icombi = a
 
-!        write(6,*) 'combi',n,i,a
+!        write(out_unitp,*) 'combi',n,i,a
 !        STOP
       end function icombi
 

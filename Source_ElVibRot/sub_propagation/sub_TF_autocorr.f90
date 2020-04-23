@@ -42,7 +42,7 @@
 !===========================================================================
  SUBROUTINE TF_autocorr(para_propa)
    USE mod_system
-   USE mod_Constant, ONLY: assignment(=),get_Conv_au_TO_unit
+   USE mod_Constant, ONLY: get_Conv_au_TO_unit
    USE mod_propa
    IMPLICIT NONE
 

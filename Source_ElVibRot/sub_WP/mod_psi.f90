@@ -40,24 +40,18 @@
 !
 !===========================================================================
 !===========================================================================
+MODULE mod_psi
+  USE mod_param_WP0
+  USE mod_type_ana_psi
+  USE mod_psi_set_alloc
+  USE mod_ana_psi
+  USE mod_psi_io
+  USE mod_psi_B_TO_G
+  USE mod_psi_Op
+  IMPLICIT NONE
 
-!==============================================================
-!     Wave packet initialisation
-!
-!     reading WP0:
-!       lect_WP0GridRep = .TRUE.
-!   or  lect_WP0BasisRep = .TRUE.
-!
-!     calculating WP0 on the grid (GridRep)
-!          WP0(qi) =  exp[-((Q-Qeq)/sigma)^2]*exp[i*imp_k*(Q-Qeq)]
-!
-!
-!     If WP0BasisRep=.TRUE. => WP0 is BasisRep and nWP0=dim(WP0BasisRep)
-!               .FALSE.=> WP0 is GridRep and nWP0=dim(WP0GridRep)
-!
-!     If WP0_DIP=1,2,3     => WP0 = WP0*dip(i) [i=1,2,3 => x,y,z]
-!             =0 (default) => WP0 = WP0
-!==============================================================
+  PRIVATE :: psi0_gaussGridRep
+CONTAINS
       SUBROUTINE psi0(WP0,para_WP0,mole)
       USE mod_system
       USE mod_Coord_KEO
@@ -73,11 +67,11 @@
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_WP0) :: para_WP0
+      TYPE (param_WP0), intent(inout) :: para_WP0
       TYPE (param_psi), intent(inout) :: WP0(1)
 
 !----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole
+      TYPE (CoordType), intent(in)    :: mole
 
 !------ working variables ---------------------------------
       integer  :: nio,nb_WPdum
@@ -114,7 +108,7 @@
 
         ! alloc the WP0 ----------------------------------------------------------------
         ! only allocated for MPI_id=0 inside the subroutine
-        ! for psi%CvecB,psi%RvecB,psi%CvecG,psi%RvecG      
+        ! for psi%CvecB,psi%RvecB,psi%CvecG,psi%RvecG
         CALL alloc_psi(WP0(1))
 
         IF (.NOT. para_WP0%lect_WP0BasisRep .AND.                         &
@@ -243,19 +237,22 @@
       SUBROUTINE psi0_gaussGridRep(WP0,para_WP0,mole)
       USE mod_system
       USE mod_Coord_KEO
+      USE mod_basis
       USE mod_psi_set_alloc
       USE mod_param_WP0
       IMPLICIT NONE
 
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_WP0) :: para_WP0
-      TYPE (param_psi)   :: WP0
-      integer            :: WP0nb_elec,WP0n_h
+      TYPE (param_WP0), intent(in)      :: para_WP0
+      TYPE (param_psi), intent(inout)   :: WP0
+
 
 !----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole
+      TYPE (CoordType), intent(in)      :: mole
 
+      ! local variable
+      integer            :: WP0nb_elec,WP0n_h
 
       real (kind=Rkind)      :: Qact(WP0%nb_act1)
 
@@ -265,7 +262,7 @@
       real (kind=Rkind)      :: czk,szk
       integer                :: i_act
       integer                :: i_qa,i_qaie
-
+      TYPE (OldParam)        :: OldPara
 !------ dipole moment ----------------------------------------------------
       real (kind=Rkind)      :: rhonD
 
@@ -304,9 +301,9 @@
       DO i_qa=1,WP0%nb_qa
 
 !       - calculation of Qact -------------------------------
-        CALL Rec_Qact(Qact,WP0%BasisnD,i_qa,mole)
+        CALL Rec_Qact(Qact,WP0%BasisnD,i_qa,mole,OldPara)
 !       - calculation of WrhonD ------------------------------
-        rhonD = Rec_rhonD(WP0%BasisnD,i_qa)
+        rhonD = Rec_rhonD(WP0%BasisnD,i_qa,OldPara)
 
 !       ------------------------------------------------
         ze = ZERO
@@ -348,3 +345,5 @@
 
 
       END SUBROUTINE psi0_gaussGridRep
+END MODULE mod_psi
+

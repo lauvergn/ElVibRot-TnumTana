@@ -147,7 +147,7 @@
           v=v34(x,ndim,kl,n)
 
         CASE default ! ERROR: wrong function !
-          write(6,*) ' ERROR wrong function, ntyp',ntyp
+          write(out_unitp,*) ' ERROR wrong function, ntyp',ntyp
           STOP
         END SELECT
 
@@ -181,7 +181,7 @@
        mmm = i-l*l
 
 
-!      write(6,*) 'ylm',i,lll,mmm
+!      write(out_unitp,*) 'ylm',i,lll,mmm
 
        v1 = Ylm(th,phi,lll,mmm)
 
@@ -203,7 +203,7 @@
        integer n(0:ndim)
 
        integer i,ii,l,m,lll,mmm
-       real (kind=Rkind) :: xi,xl,th(1),phi(1)
+       real (kind=Rkind) :: xi,xl,th,phi(1)
 
 !      ---------------------------------------------------------------
        real (kind=Rkind) :: Ylm,poly_legendre,v27
@@ -226,8 +226,8 @@
        m = mmm-1
 
 
-!      write(6,*) 'ylm i,lll,mmm',i,lll,mmm
-!      write(6,*) 'ylm i,l,m',i,l,m
+!      write(out_unitp,*) 'ylm i,lll,mmm',i,lll,mmm
+!      write(out_unitp,*) 'ylm i,l,m',i,l,m
 
        v2 = poly_legendre(cos(th),lll,m)*v27(phi,1,mmm,n)
 
@@ -266,7 +266,7 @@
          beta=ONE
          beta2=ONE
          read(5,molec)
-         write(6,molec)
+         write(out_unitp,molec)
          begin=.FALSE.
        END IF
 ! fin     initialisation la premiere fois
@@ -295,7 +295,7 @@
 
        v2_old = poly_legendre(c,ii,0) * x(2)**jj * th
 
-!      write(6,*) ij,ii,jj,x,v2
+!      write(out_unitp,*) ij,ii,jj,x,v2
 
        RETURN
        end function v2_old
@@ -330,7 +330,7 @@
          beta=ONE
          beta2=ONE
          read(5,molec)
-         write(6,molec)
+         write(out_unitp,molec)
          begin=.FALSE.
        END IF
 ! fin     initialisation la premiere fois
@@ -348,13 +348,13 @@
 
        c=cos(x(1))
 
-       ep = exp(beta*(x(2)-Req))
-       em = exp(-beta*(x(2)-Req))
+!       ep = exp(beta*(x(2)-Req))
+!       em = exp(-beta*(x(2)-Req))
 !      th = ( (ep-em)/(ep+em) + ONE)*HALF * exp(-beta2*x(2))
        th = exp(-beta2*x(2))
 
        v3 = poly_legendre(c,ii,0) * x(2)**jj * th
-!      write(6,*) ij,ii,jj,x(1),x(2),v3
+!      write(out_unitp,*) ij,ii,jj,x(1),x(2),v3
 
 
        RETURN
@@ -396,7 +396,7 @@
 !        STOP
          type_v = (/ 15,15,15,15,15,15 /)
          read(5,dirprod_typ)
-         write(6,dirprod_typ)
+         write(out_unitp,dirprod_typ)
 
 !        determine un tableau ijk(i,i_func)
 !        qui donne un indice pour la dimension i en fonction de l'ordre de la fonction i_func
@@ -410,12 +410,12 @@
            IF (max_p .LT. n(i)) max_p = n(i)
          END DO
          ind_n(ndim)=-1
-         write(6,*) 'nn,max_p',n(0),max_p
+         write(out_unitp,*) 'nn,max_p',n(0),max_p
 
 
          kk=0
 
-         write(6,*) 'max_p',max_p
+         write(out_unitp,*) 'max_p',max_p
          DO i_func=1,n(0)
 
 !          determine les indices (ind_n) en fonction de i_func
@@ -434,7 +434,7 @@
                ijk(i,kk)=ind_n(i)
              END DO
 
-             write(6,11) kk,(ijk(i,kk),i=1,ndim)
+             write(out_unitp,11) kk,(ijk(i,kk),i=1,ndim)
  11          format(10i3)
 
            END IF
@@ -443,7 +443,7 @@
          n(0) = kk
 
          IF (n(0) .GT. max_fit) THEN
-           write(6,*) ' ERROR : n(0) > max_fit',n(0),max_fit
+           write(out_unitp,*) ' ERROR : n(0) > max_fit',n(0),max_fit
            STOP
          END IF
 
@@ -451,9 +451,9 @@
        END IF
 
        IF (ii .GT. n(0)) THEN
-         write(6,*) ' ERROR in v_poly or v5'
-         write(6,*) ' number of function :',n(0)
-         write(6,*) ' You want the function :',ii
+         write(out_unitp,*) ' ERROR in v_poly or v5'
+         write(out_unitp,*) ' number of function :',n(0)
+         write(out_unitp,*) ' You want the function :',ii
          STOP
        END IF
 
@@ -505,7 +505,7 @@
        IF (begin) THEN
          IF (n(0) == 0 ) n(0) = n(1)*n(2)
          all = .FALSE.
-         write(6,*) 'n',n
+         write(out_unitp,*) 'n',n
          k = 0
          i1 = 0
 
@@ -513,7 +513,7 @@
          DO
            IF (k == n(0) ) EXIT
 
-!          write(6,*) 'i1,mod(i1,12)',i1,mod(i1,12)
+!          write(out_unitp,*) 'i1,mod(i1,12)',i1,mod(i1,12)
            IF (mod(i1,12) == 0 ) THEN
 !            cos(n*3 ) * PLeg(paire)
              name='cos'
@@ -521,7 +521,7 @@
                k = k + 1
                ijk(1,k)=i1+1
                ijk(2,k)=i2+1
-               write(6,*) k,name,(i1+1)/2,' * PLeg',i2
+               write(out_unitp,*) k,name,(i1+1)/2,' * PLeg',i2
                IF (k == n(0) ) EXIT
              END DO
            ELSE IF (mod(i1,12) == 6) THEN
@@ -531,7 +531,7 @@
                k = k + 1
                ijk(1,k)=i1+1
                ijk(2,k)=i2+1
-               write(6,*) k,name,(i1+1)/2,' * PLeg',i2
+               write(out_unitp,*) k,name,(i1+1)/2,' * PLeg',i2
                IF (k == n(0) ) EXIT
              END DO
 
@@ -551,7 +551,7 @@
            IF (mod(ii1,2) == 0) name='cos'
            ijk(1,k)=ii1+1
            ijk(2,k)=i2+1
-           write(6,*) k,name,(ii1+1)/2,' * Leg',i2
+           write(out_unitp,*) k,name,(ii1+1)/2,' * Leg',i2
 
          END DO
          END IF
@@ -617,12 +617,12 @@
            IF (max_p .LT. n(i)) max_p = n(i)
          END DO
          ind_n(ndim)=-1
-         write(6,*) 'nn,max_p',n(0),max_p
+         write(out_unitp,*) 'nn,max_p',n(0),max_p
 
 
          kk=0
 
-         write(6,*) 'max_p',max_p
+         write(out_unitp,*) 'max_p',max_p
          DO i_func=1,n(0)
 
 !          determine les indices (ind_n) en fonction de i_func
@@ -641,7 +641,7 @@
                ijk(i,kk)=ind_n(i)
              END DO
 
-             write(6,11) kk,(ijk(i,kk),i=1,ndim)
+             write(out_unitp,11) kk,(ijk(i,kk),i=1,ndim)
  11          format(10i3)
 
            END IF
@@ -650,7 +650,7 @@
          n(0) = kk
 
          IF (n(0) .GT. max_fit) THEN
-           write(6,*) ' ERROR : n(0) > max_fit',n(0),max_fit
+           write(out_unitp,*) ' ERROR : n(0) > max_fit',n(0),max_fit
            STOP
          END IF
 
@@ -658,9 +658,9 @@
        END IF
 
        IF (ii .GT. n(0)) THEN
-         write(6,*) ' ERROR in v_poly or v5'
-         write(6,*) ' number of function :',n(0)
-         write(6,*) ' You want the function :',ii
+         write(out_unitp,*) ' ERROR in v_poly or v5'
+         write(out_unitp,*) ' number of function :',n(0)
+         write(out_unitp,*) ' You want the function :',ii
          STOP
        END IF
 
@@ -702,7 +702,7 @@
          Req=1.40104_Rkind
          beta=ONE
          read(5,molec)
-         write(6,molec)
+         write(out_unitp,molec)
          begin=.FALSE.
        END IF
 ! fin     initialisation la premiere fois
@@ -739,7 +739,7 @@
          beta=ONE
          beta2=ZERO
          read(5,molec)
-         write(6,molec)
+         write(out_unitp,molec)
          begin=.FALSE.
        END IF
 ! fin     initialisation la premiere fois
@@ -748,11 +748,11 @@
 !      m = exp(-beta*(x(1)-Req)-beta2/(x(1)-Req))
        m = exp(-beta*(x(1)-Req))
 
-!      write(6,*) 'x(1),Req,beta,m',x(1),Req,beta,m
+!      write(out_unitp,*) 'x(1),Req,beta,m',x(1),Req,beta,m
 
        v7= m**(i-1)
 
-!      write(6,*) i,x(1),m,v7
+!      write(out_unitp,*) i,x(1),m,v7
 
 
        RETURN
@@ -786,7 +786,7 @@
          C(1)=ZERO
          C(2)=ONE
          read(5,molec)
-         write(6,molec)
+         write(out_unitp,molec)
          begin=.FALSE.
        END IF
 ! fin     initialisation la premiere fois
@@ -820,7 +820,7 @@
 
        IF (begin) THEN
          read(5,molec)
-         write(6,molec)
+         write(out_unitp,molec)
          begin=.FALSE.
        END IF
 ! fin     initialisation la premiere fois
@@ -852,14 +852,14 @@
 
        IF (begin) THEN
          read(5,molec)
-         write(6,molec)
+         write(out_unitp,molec)
          begin=.FALSE.
        END IF
 ! fin     initialisation la premiere fois
 
        v10 = 1/x(1)**((i-1)*k)
 
-!      write(6,*) 'v10=',v10
+!      write(out_unitp,*) 'v10=',v10
 
 
        RETURN
@@ -889,7 +889,7 @@
          Req=1.40104_Rkind
          beta=ONE
          read(5,molec)
-         write(6,molec)
+         write(out_unitp,molec)
          begin=.FALSE.
        END IF
 ! fin     initialisation la premiere fois
@@ -904,7 +904,7 @@
        m = exp(-beta*(x(1)-Req))
        v11= x(1)**(i-1) * m
 
-!      write(6,*) i,x(1),m,v7
+!      write(out_unitp,*) i,x(1),m,v7
 
 
        RETURN
@@ -955,7 +955,7 @@
        l = n1+n1-1
        m=0
 
-!      write(6,*) xx,l,m
+!      write(out_unitp,*) xx,l,m
 
        v13 = poly_legendre(xx,l,m)
 
@@ -1004,7 +1004,7 @@
 
        v15 = xx**i
 
-!      write(6,*) 'v15:',xx,i
+!      write(out_unitp,*) 'v15:',xx,i
 
        end function v15
 !      ---------------------------------------------------------
@@ -1122,7 +1122,7 @@
        l = n1+n1-1
        m=0
 
-!      write(6,*) xx,l,m
+!      write(out_unitp,*) xx,l,m
 
        v23 = poly_legendre(xx,l,m)
 
@@ -1616,18 +1616,18 @@
        real (kind=Rkind) :: v_typ
 !      ---------------------------------------------------------
 
-!      write(6,*) 'BEGINING vgene_inter',ndim,nn,n
+!      write(out_unitp,*) 'BEGINING vgene_inter',ndim,nn,n
 
 
        z=ZERO
        DO kl=1,nn
          z = z + F(kl) * v_typ(x,ndim,kl,n)
-!        write(6,*) z,F(kl),ndim,nn,n
+!        write(out_unitp,*) z,F(kl),ndim,nn,n
        END DO
 
        vgene_inter = z
 
-!      write(6,*) 'END vgene_inter',x,z,ndim,nn,n
+!      write(out_unitp,*) 'END vgene_inter',x,z,ndim,nn,n
 
        end function vgene_inter
 !================================================================
@@ -1651,21 +1651,21 @@
        real (kind=Rkind) :: v
 !      ---------------------------------------------------------
 
-!      write(6,*) 'BEGINING vgene_inter2',ndim,nn,n
-!      write(6,*) 'F(:)',F
-!      write(6,*) 'x',x
+!      write(out_unitp,*) 'BEGINING vgene_inter2',ndim,nn,n
+!      write(out_unitp,*) 'F(:)',F
+!      write(out_unitp,*) 'x',x
 
 
        z=ZERO
        DO kl=1,nn
          z = z + F(kl) * v(x,ndim,kl,n,ntyp)
-         !write(6,*) z,F(kl),ndim,nn,n
+         !write(out_unitp,*) z,F(kl),ndim,nn,n
          !CALL flush_perso(6)
        END DO
 
        vgene_inter2 = z
 
-!      write(6,*) 'END vgene_inter2',x,z,ndim,nn,n
+!      write(out_unitp,*) 'END vgene_inter2',x,z,ndim,nn,n
 
        end function vgene_inter2
 !

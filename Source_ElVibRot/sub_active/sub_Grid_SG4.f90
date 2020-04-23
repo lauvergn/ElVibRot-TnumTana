@@ -192,7 +192,7 @@
       CALL flush_perso(out_unitp)
     END IF
 
-    !write(6,*) 'iG done:',iG ; flush(6)
+    !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
   END DO
   CALL dealloc_NParray(tab_l,'tab_l',name_sub)
 

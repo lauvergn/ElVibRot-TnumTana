@@ -41,9 +41,8 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_SetOp
-
       USE mod_system
-      use mod_PrimOp, only: assignment(=),param_typeop, param_pes, dealloc_typeop,    &
+      use mod_PrimOp, only: param_typeop, param_pes, dealloc_typeop,    &
                             write_typeop, param_d0matop, init_d0matop,  &
                             dealloc_d0matop
 
@@ -57,8 +56,8 @@ MODULE mod_SetOp
         ! type param_Op
         TYPE, EXTENDS(param_TypeOp) :: param_Op
 
-          logical                        :: init_var   = .FALSE.
-          logical                        :: alloc      = .FALSE.
+          logical                        :: init_var      = .FALSE.
+          logical                        :: alloc         = .FALSE.
 
           logical                        :: alloc_Mat     = .FALSE.
           logical                        :: Mat_done      = .FALSE.
@@ -66,19 +65,17 @@ MODULE mod_SetOp
           logical                        :: Read_Mat      = .FALSE. ! if t=> the matrix is read
           logical                        :: sym_Hamil     = .TRUE.  ! if t => the Hamiltonian is symmetrized
 
-
           logical                        :: print_done = .FALSE. ! T if already print
           logical                        :: read_Op    = .FALSE. ! (def=f) if t=> the matrix operator will be read
 
-
           !-- for the basis set ----------------------------------------------
           TYPE (param_AllBasis), pointer :: para_AllBasis   => null() ! true POINTER
-          TYPE (Basis), pointer          :: BasisnD,Basis2n => null() ! true POINTER
+          TYPE (Basis),          pointer :: BasisnD,Basis2n => null() ! true POINTER
           integer                        :: symab           =  -1
 
           !-- for Tnum and mole ----------------------------------------------
-          TYPE (CoordType), pointer      :: mole            => null() ! true POINTER
-          TYPE (Tnum)   , pointer        :: para_Tnum       => null() ! true POINTER
+          TYPE (CoordType),      pointer :: mole            => null() ! true POINTER
+          TYPE (Tnum),           pointer :: para_Tnum       => null() ! true POINTER
 
           !-- for param_PES --------------------------------------------------
           TYPE (param_PES), pointer      :: para_PES        => null() ! true POINTER
@@ -1045,7 +1042,7 @@ MODULE mod_SetOp
       ELSE
         write(out_unitp,*) ' ERROR in param_Op1TOparam_Op2'
         write(out_unitp,*) '  CANNOT be associated'
-        write(out_unitp,*) ' asso para_Op1%',associated(para_Op1%para_AllBasis)
+        write(out_unitp,*) ' asso para_Op1%para_AllBasis',associated(para_Op1%para_AllBasis)
         write(out_unitp,*) ' CHECK the source'
         STOP
       END IF
@@ -1368,10 +1365,12 @@ MODULE mod_SetOp
       !!@param: TODO
       SUBROUTINE Analysis_OpGrid_OF_Op(para_Op)
       USE mod_MPI
+      USE mod_param_SGType2
       TYPE (param_Op), intent(inout) :: para_Op
 
-      integer       :: k_term,iq,iterm00
+      integer          :: k_term,iq,iterm00
       real(kind=Rkind) :: Qact(para_Op%mole%nb_var)
+      TYPE(OldParam)   :: OldPara
 
       character (len=*), parameter :: name_sub='Analysis_OpGrid_OF_Op'
 
@@ -1379,11 +1378,12 @@ MODULE mod_SetOp
          IF (print_level>-1 .AND. MPI_id==0) THEN
            write(out_unitp,*)'--------------------------------------------------------------'
            write(out_unitp,*)'n_Op,k_term,derive_term,cte,zero,    minval,    maxval,dealloc'
-           write(out_unitp,'(i5,x,a)') para_Op%n_Op,'This Operator is not allocated'
+           write(out_unitp,'(i5,1x,a)') para_Op%n_Op,'This Operator is not allocated'
            write(out_unitp,*)'--------------------------------------------------------------'
          END IF
          RETURN
        END IF
+
 
        CALL Analysis_OpGrid(para_Op%OpGrid,para_Op%n_Op)
 
@@ -1391,12 +1391,12 @@ MODULE mod_SetOp
          iterm00 = para_Op%derive_term_TO_iterm(0,0)
          iq = para_Op%OpGrid(iterm00)%iq_min
          IF (iq > 0) THEN
-           CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
+           CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole,OldPara)
            IF(MPI_id==0) write(out_unitp,*) 'iq_min,Op_min,Qact',iq,para_Op%OpGrid(iterm00)%Op_min,Qact(1:para_Op%mole%nb_act1)
          END IF
          iq = para_Op%OpGrid(iterm00)%iq_max
          IF (iq > 0) THEN
-           CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
+           CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole,OldPara)
            IF(MPI_id==0) write(out_unitp,*) 'iq_max,Op_max,Qact',iq,para_Op%OpGrid(iterm00)%Op_max,Qact(1:para_Op%mole%nb_act1)
          END IF
        END IF
@@ -1406,26 +1406,26 @@ MODULE mod_SetOp
          CALL Analysis_OpGrid(para_Op%imOpGrid,para_Op%n_Op)
        END IF
 
-      END SUBROUTINE Analysis_OpGrid_OF_Op
+       CALL dealloc_OldParam(OldPara)
+    END SUBROUTINE Analysis_OpGrid_OF_Op
 
 !=======================================================================================
 !     initialization of psi
 !=======================================================================================
       SUBROUTINE init_psi(psi,para_H,cplx)
       USE mod_system
-      USE mod_psi_set_alloc
-      !USE mod_psi
+      USE mod_psi, ONLY : param_psi,ecri_init_psi
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi)   :: psi
-      logical            :: cplx
+      TYPE (param_psi), intent(inout)   :: psi
+      logical,          intent(in)      :: cplx
 
-!----- variables for the construction of H ---------------------------
-      TYPE (param_Op) :: para_H
+!----- Operator to link BasisnD, Basis2n, ComOp ---------------------
+      TYPE (param_Op),  intent(in)      :: para_H
 
 !----- for debuging --------------------------------------------------
-      !logical, parameter :: debug = .TRUE.
+       !logical, parameter :: debug = .TRUE.
        logical, parameter :: debug = .FALSE.
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -1452,6 +1452,7 @@ MODULE mod_SetOp
        STOP
      END IF
 !-----------------------------------------------------------
+
 
 !----- link ComOp -----------------------------------------
       IF (associated(para_H%ComOp)) THEN

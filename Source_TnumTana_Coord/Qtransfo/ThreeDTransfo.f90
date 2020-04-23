@@ -232,12 +232,12 @@
 
           ! Z2 = R2 - X2 - Y2
           CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnR2,ONE,dnX2,-ONE,dnZ2,nderiv)
-          CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnZ2,ONE,dnY2,-ONE,dnZ2,nderiv)
+          CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnY2,-ONE,dnZ2,ONE,nderiv)
 
           CALL sub_dnS1_TO_dntR2(dnZ2,dnZ,91,nderiv) ! dnZ=sqrt(dnZ2)
 
           ! Change the sign of dnY as function of the sign of dnR%d0
-          IF (dnR%d0 < 0) CALL sub_dnS1_PROD_w_TO_dnS2(dnZ,-ONE,dnZ,nderiv)
+          IF (dnR%d0 < 0) CALL sub_Weight_dnS(dnZ,-ONE,nderiv)
 
           ! transfert dnY in dnQout
           CALL sub_dnS_TO_dnVec(dnZ,dnQout,i3,nderiv)

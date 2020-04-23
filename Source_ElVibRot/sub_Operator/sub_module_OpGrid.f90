@@ -77,6 +77,9 @@
            integer                  :: First_GridPoint = 0         ! if =0 calculation for all active grid points
            integer                  :: Last_GridPoint  = 0         ! if =0 calculation for all active grid points
 
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(para_FileGrid1) :: para_FileGrid2TOpara_FileGrid1
+          GENERIC,   PUBLIC  :: assignment(=) => para_FileGrid2TOpara_FileGrid1
         END TYPE param_FileGrid
 
         TYPE param_OpGrid
@@ -106,9 +109,6 @@
 
         END TYPE param_OpGrid
 
-      INTERFACE assignment (=)
-        MODULE PROCEDURE para_FileGrid2TOpara_FileGrid1
-      END INTERFACE
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_OpGriddim1
@@ -122,8 +122,8 @@
 
       SUBROUTINE para_FileGrid2TOpara_FileGrid1(para_FileGrid1,para_FileGrid2)
 
-      TYPE (param_FileGrid), intent(inout) :: para_FileGrid1
-      TYPE (param_FileGrid), intent(in)    :: para_FileGrid2
+      CLASS (param_FileGrid), intent(inout) :: para_FileGrid1
+      TYPE (param_FileGrid),  intent(in)    :: para_FileGrid2
 
       para_FileGrid1%Read_FileGrid      = para_FileGrid2%Read_FileGrid
 
@@ -524,7 +524,7 @@
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Set_file_OF_OpGrid'
 
-      !write(6,*) ' in ',name_sub,' asso OpGrid ',associated(OpGrid), 'name_Op: ',name_Op
+      !write(out_unitp,*) ' in ',name_sub,' asso OpGrid ',associated(OpGrid), 'name_Op: ',name_Op
       IF (.NOT. associated(OpGrid)) RETURN
       IF (size(OpGrid) < 1) RETURN
 
@@ -807,7 +807,7 @@
           END IF
 
           IF (print_level>-1 .AND. MPI_id==0) THEN
-            write(out_unitp,'(i5,x,i6,2x,2i5,l3,x,l4,x,2e11.2,x,l3)')   &
+            write(out_unitp,'(i5,1x,i6,2x,2i5,l3,1x,l4,1x,2e11.2,1x,l3)')   &
                    n_Op,k_term,OpGrid(k_term)%derive_termQact(:),       &
                    OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
                    OpGrid(k_term)%Op_min,OpGrid(k_term)%Op_max,         &
@@ -820,7 +820,7 @@
                  (sum(abs(OpGrid(k_term)%Mat_cte(:,:))) < ONETENTH**12)
 
           IF (print_level>-1 .AND. MPI_id==0) THEN
-            write(out_unitp,'(i5,x,i6,2x,2i5,l3,x,l4,24x,l3)') n_Op,k_term,    &
+            write(out_unitp,'(i5,1x,i6,2x,2i5,l3,1x,l4,24x,l3)') n_Op,k_term,    &
                    OpGrid(k_term)%derive_termQact(:),                   &
                    OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
                    (.NOT. associated(OpGrid(k_term)%Grid))

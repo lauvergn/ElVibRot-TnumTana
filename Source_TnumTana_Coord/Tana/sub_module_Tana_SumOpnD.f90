@@ -47,6 +47,17 @@ module mod_Tana_Sum_OpnD
       TYPE sum_opnd
         type(opnd), allocatable            :: sum_prod_op1d(:)
         complex(kind = Rkind), allocatable :: Cn(:)
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(SumOpnD1) :: R_TO_SumOpnD1
+          PROCEDURE, PRIVATE, PASS(SumOpnD1) :: C_TO_SumOpnD1
+          PROCEDURE, PRIVATE, PASS(SumOpnD1) :: OpEl2_TO_SumOpnD1
+          PROCEDURE, PRIVATE, PASS(SumOpnD1) :: Op1D2_TO_SumOpnD1
+          PROCEDURE, PRIVATE, PASS(SumOpnD1) :: OpnD2_TO_SumOpnD1
+          PROCEDURE, PRIVATE, PASS(SumOpnD1) :: SumOpnD2_TO_SumOpnD1
+          GENERIC,   PUBLIC  :: assignment(=) => SumOpnD2_TO_SumOpnD1,  &
+                                          R_TO_SumOpnD1,C_TO_SumOpnD1,  &
+                                    OpnD2_TO_SumOpnD1,Op1D2_TO_SumOpnD1,&
+                                    OpEl2_TO_SumOpnD1
       END TYPE sum_opnd
 
       INTERFACE alloc_array
@@ -111,21 +122,16 @@ module mod_Tana_Sum_OpnD
       MODULE PROCEDURE F1_sum_nd_times_F2_sum_nd_to_Fres_sum_nd
    END INTERFACE
 
-
-   INTERFACE assignment (=)
-     MODULE PROCEDURE SumOpnD2_TO_SumOpnD1,OpnD2_TO_SumOpnD1,Op1D2_TO_SumOpnD1,OpEl2_TO_SumOpnD1
-     MODULE PROCEDURE R_TO_SumOpnD1,C_TO_SumOpnD1
-   END INTERFACE
-
    PUBLIC :: sum_opnd, allocate_op, delete_op, check_allocate_op, write_op, init_to_opzero
    PUBLIC :: Simplify_Sum_OpnD, Transpose_Mat_OF_sum_opnd
 
    PUBLIC :: alloc_array, dealloc_array, alloc_NParray, dealloc_NParray
    PUBLIC :: copy_F1_into_F2, get_F1_plus_F2_to_F_sum_nd, get_F1_times_F2_to_F_nd
-   PUBLIC :: operator (*), assignment (=)
+   PUBLIC :: operator (*)
    PUBLIC :: Der1_OF_OpnD_TO_Sum_OpnD, Der1_OF_Sum_OpnD_TO_Sum_OpnD
    PUBLIC :: Expand_Sum_OpnD_TO_Sum_OpnD, F1_sum_nd_PLUS_TO_Fres_sum_nd
    PUBLIC :: F1_nd_MINUS_TO_Fres_sum_nd, F1_sum_nd_MINUS_TO_Fres_sum_nd
+   PUBLIC :: F1_nd_PLUS_TO_Fres_sum_nd
    PUBLIC :: C_TO_Mat_OF_sum_opnd, remove_opzero_in_F_sum_nd
 
 
@@ -496,27 +502,32 @@ module mod_Tana_Sum_OpnD
        write(i_open, '(40x, A)') '========== writing a sum of nd operators ======== '
        write(i_open, *)
      end if
-     do i = 1, size(F_sum_nd%sum_prod_op1d)
-       CALL get_pqJL_OF_OpnD(pq,J,L,F_sum_nd%sum_prod_op1d(i))
-       nb_PJ = count(pq > 0)+count(J>0)
 
-       IF (real(F_sum_nd%Cn(i),kind=Rkind) /= ZERO .AND. aimag(F_sum_nd%Cn(i)) /=ZERO) THEN
-         type_coef = 'C'
-         write(i_open, *) ' WARNING this term is complex!!'
-       ELSE IF (real(F_sum_nd%Cn(i),kind=Rkind) == ZERO) THEN
-         type_coef = 'I'
-         IF (nb_PJ /= 1) write(i_open, *) ' WARNING this term MUST be real!!'
-       ELSE
-         type_coef = 'R'
-         IF (nb_PJ == 1) write(i_open, *) ' WARNING this term MUST be imaginary!!'
+     IF (allocated(F_sum_nd%sum_prod_op1d)) THEN
+       do i = 1, size(F_sum_nd%sum_prod_op1d)
+         CALL get_pqJL_OF_OpnD(pq,J,L,F_sum_nd%sum_prod_op1d(i))
+         nb_PJ = count(pq > 0)+count(J>0)
 
-       END IF
-       write(i_open, "(A, 3x, I4, 3x, A, 1x, (E13.4,' Ix ',E13.4))") 'term', i, ', C_I=', F_sum_nd%Cn(i)
-       write(i_open, *) 'term', i, ', C_I= ',type_coef, F_sum_nd%Cn(i),' nb_P+J',nb_PJ
-       write(i_open, *)
-       call write_op(F_sum_nd%sum_prod_op1d(i), i_open)
-       write(i_open, *)
-     end do
+         IF (real(F_sum_nd%Cn(i),kind=Rkind) /= ZERO .AND. aimag(F_sum_nd%Cn(i)) /=ZERO) THEN
+           type_coef = 'C'
+           write(i_open, *) ' WARNING this term is complex!!'
+         ELSE IF (real(F_sum_nd%Cn(i),kind=Rkind) == ZERO) THEN
+           type_coef = 'I'
+           IF (nb_PJ /= 1) write(i_open, *) ' WARNING this term MUST be real!!'
+         ELSE
+           type_coef = 'R'
+           IF (nb_PJ == 1) write(i_open, *) ' WARNING this term MUST be imaginary!!'
+
+         END IF
+         write(i_open, "(A, 3x, I4, 3x, A, 1x, (E13.4,' Ix ',E13.4))") 'term', i, ', C_I=', F_sum_nd%Cn(i)
+         !write(i_open, *) 'term', i, ', C_I= ',type_coef, F_sum_nd%Cn(i),' nb_P+J',nb_PJ
+         write(i_open, *)
+         call write_op(F_sum_nd%sum_prod_op1d(i), i_open)
+         write(i_open, *)
+       end do
+     ELSE
+       write(i_open, *) ' The operator empty (is not allocated)'
+     END IF
      CALL flush_perso(i_open)
 
    END SUBROUTINE write_sum_opnd
@@ -682,26 +693,30 @@ module mod_Tana_Sum_OpnD
  subroutine SumOpnD2_TO_SumOpnD1(SumOpnD1,SumOpnD2)
 
    type(sum_opnd),       intent(in)    :: SumOpnD2
-   type(sum_opnd),       intent(inout) :: SumOpnD1
+   CLASS(sum_opnd),      intent(inout) :: SumOpnD1
 
    integer                    :: i
 
    character (len=*), parameter :: routine_name="SumOpnD2_TO_SumOpnD1"
 
-   call allocate_op(SumOpnD1,size(SumOpnD2%sum_prod_op1d))
+   IF (allocated(SumOpnD2%sum_prod_op1d) ) THEN
+     call allocate_op(SumOpnD1,size(SumOpnD2%sum_prod_op1d))
 
-   do i = 1,size(SumOpnD2%sum_prod_op1d)
-     SumOpnD1%sum_prod_op1d(i) = SumOpnD2%sum_prod_op1d(i)
-     SumOpnD1%Cn(i)            = SumOpnD2%Cn(i)
-   end do
+     do i = 1,size(SumOpnD2%sum_prod_op1d)
+       SumOpnD1%sum_prod_op1d(i) = SumOpnD2%sum_prod_op1d(i)
+       SumOpnD1%Cn(i)            = SumOpnD2%Cn(i)
+     end do
 
-   CALL simplify_sum_opnd(SumOpnD1)
+     CALL simplify_sum_opnd(SumOpnD1)
+   ELSE
+     call delete_op(SumOpnD1)
+   END IF
 
  end subroutine SumOpnD2_TO_SumOpnD1
  subroutine OpnD2_TO_SumOpnD1(SumOpnD1,OpnD2)
 
    type(opnd),           intent(in)    :: OpnD2
-   type(sum_opnd),       intent(inout) :: SumOpnD1
+   CLASS(sum_opnd),      intent(inout) :: SumOpnD1
 
    integer                    :: i, j
 
@@ -718,7 +733,7 @@ module mod_Tana_Sum_OpnD
  subroutine Op1D2_TO_SumOpnD1(SumOpnD1,Op1D2)
 
    type(op1d),           intent(in)    :: Op1D2
-   type(sum_opnd),       intent(inout) :: SumOpnD1
+   CLASS(sum_opnd),      intent(inout) :: SumOpnD1
 
    integer                    :: i, j
 
@@ -735,7 +750,7 @@ module mod_Tana_Sum_OpnD
  subroutine OpEl2_TO_SumOpnD1(SumOpnD1,OpEl2)
 
    type(opel),           intent(in)    :: OpEl2
-   type(sum_opnd),       intent(inout) :: SumOpnD1
+   CLASS(sum_opnd),      intent(inout) :: SumOpnD1
 
    integer                    :: i, j
 
@@ -752,7 +767,7 @@ module mod_Tana_Sum_OpnD
  subroutine R_TO_SumOpnD1(SumOpnD1,R)
 
    real (kind=Rkind),    intent(in)    :: R
-   type(sum_opnd),       intent(inout) :: SumOpnD1
+   CLASS(sum_opnd),      intent(inout) :: SumOpnD1
 
    character (len=*), parameter :: routine_name="R_TO_SumOpnD1"
 
@@ -767,7 +782,7 @@ module mod_Tana_Sum_OpnD
  subroutine C_TO_SumOpnD1(SumOpnD1,C)
 
    complex (kind=Rkind), intent(in)    :: C
-   type(sum_opnd),       intent(inout) :: SumOpnD1
+   CLASS(sum_opnd),      intent(inout) :: SumOpnD1
 
    character (len=*), parameter :: routine_name="C_TO_SumOpnD1"
 
@@ -1516,15 +1531,15 @@ subroutine Expand_Sum_OpnD_TO_Sum_OpnD(F_Sum_nD,ExpandF_Sum_nD,With_Vep)
 
    ndim = 0
    DO i=1,size(F_sum_nd%sum_prod_op1d)
-     !write(6,*)
-     !write(6,*) 'i (sum)',i
+     !write(out_unitp,*)
+     !write(out_unitp,*) 'i (sum)',i
      !CALL write_op(F_sum_nd%sum_prod_op1d(i))
      CALL Expand_OpnD_TO_SumOpnD(F_sum_nd%sum_prod_op1d(i),             &
                                  Temp_ExpandF_Sum_nD(i)%sum_prod_op1d)
      ndimi = size(Temp_ExpandF_Sum_nD(i)%sum_prod_op1d)
      CALL alloc_NParray(Temp_ExpandF_Sum_nD(i)%Cn,(/ ndimi /),'Cn',routine_name)
      Temp_ExpandF_Sum_nD(i)%Cn = CONE
-     !write(6,*) 'Expansion',i
+     !write(out_unitp,*) 'Expansion',i
      !CALL write_op(Temp_ExpandF_Sum_nD(i))
 
      ndim = ndim + ndimi

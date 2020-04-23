@@ -96,18 +96,13 @@
    MODULE PROCEDURE dealloc_array_OF_Constantdim0
  END INTERFACE
 
- PUBLIC  table_atom,get_mass_Tnum,dealloc_table_at
+ PUBLIC  :: table_atom,get_mass_Tnum,dealloc_table_at
 
- PUBLIC  constant,sub_constantes
+ PUBLIC  :: constant,sub_constantes
 
- PUBLIC  REAL_WU, Type_TabConvRWU, assignment (=)
- PUBLIC  dealloc_TabConvRWU, dealloc_TabConvRWU_dim1, Write_TabConvRWU, Write_TabConvRWU_dim1
- PUBLIC  ADD_RWU_TO_TabConvRWU, ADD_RWU_TO_Tab_conv_FOR_quantity
- PUBLIC  convRWU_TO_R,convRWU_WorkingUnit_TO_R,convRWU_WritingUnit_TO_R,convRWU_TO_RWU
- PUBLIC  RWU_Write,RWU_WriteUnit
- PUBLIC  get_Conv_au_TO_WriteUnit,get_Conv_au_TO_Unit,get_val_FROM_RWU
- PUBLIC  Test_RWU
-
+ PUBLIC :: REAL_WU, RWU_Write, RWU_WriteUnit
+ PUBLIC :: convRWU_TO_R_WITH_WorkingUnit,convRWU_TO_R_WITH_WritingUnit
+ PUBLIC :: get_Conv_au_TO_WriteUnit,get_Conv_au_TO_Unit
 
  CONTAINS
 
@@ -506,7 +501,8 @@
 
 !-- Write some constantes ------------------------------------
   IF(MPI_id==0) THEN
-                         write(out_unitp,*)  ' energy unit     : ',const_phys%ene_unit
+                         write(out_unitp,*)  ' Writing energy unit : ',RWU_WriteUnit('E',WorkingUnit=.FALSE.)
+                         write(out_unitp,*)  ' Working energy unit : ',RWU_WriteUnit('E',WorkingUnit=.TRUE.)
                          write(out_unitp,21) ' auTOenergy      = ',const_phys%auTOenergy
                          write(out_unitp,21) ' auTOcm_inv      = ',const_phys%auTOcm_inv
                          write(out_unitp,21) ' auTOeV          = ',const_phys%auTOeV

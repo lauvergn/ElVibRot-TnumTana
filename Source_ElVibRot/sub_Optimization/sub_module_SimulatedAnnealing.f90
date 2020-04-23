@@ -329,7 +329,7 @@
           CALL Sub_Energ_OF_ParamBasis(NormB,xOpt,nb_Opt,BasisnD,       &
                                        para_Tnum,mole,ComOp,para_PES,Qact)
 
-          !write(6,*) 'NormB',imc,NormB
+          !write(out_unitp,*) 'NormB',imc,NormB
           NormA = NormA + NormB
           IF (NormB > Norm_max) Norm_max = NormB
 
@@ -402,13 +402,13 @@
         imc = imc + 1
         SELECT CASE (para_SimulatedAnnealing%TempScheduling_type)
         CASE (1)
-          !write(6,*) 'LinCoolParam'
+          !write(out_unitp,*) 'LinCoolParam'
           Temp = Temp - DTemp
         CASE (2)
-          !write(6,*) 'ExpCoolParam'
+          !write(out_unitp,*) 'ExpCoolParam'
           Temp = para_SimulatedAnnealing%ExpCoolParam * Temp
         CASE DEFAULT
-          !write(6,*) 'ExpCoolParam'
+          !write(out_unitp,*) 'ExpCoolParam'
           Temp = para_SimulatedAnnealing%ExpCoolParam * Temp
         END SELECT
 
@@ -590,7 +590,7 @@
         CALL Sub_Energ_OF_ParamBasis(NormB,xOpt,nb_Opt,BasisnD,         &
                                      para_Tnum,mole,ComOp,para_PES,Qact)
 
-        !write(6,*) 'NormB',imc,NormB
+        !write(out_unitp,*) 'NormB',imc,NormB
         NormA = NormA + NormB
         IF (NormB > Norm_max) Norm_max = NormB
 
@@ -625,7 +625,7 @@
       nb_block_WithoutMin  = 0
       imc_block            = 0
       !SQ(:) = SQ(:)/TEN
-      write(6,*) 'NormB,SQ(1)',NormB,SQ(1)
+      write(out_unitp,*) 'NormB,SQ(1)',NormB,SQ(1)
       DO
         imc       = imc       + 1
         imc_block = imc_block + 1
@@ -643,7 +643,7 @@
         CALL Sub_Energ_OF_ParamBasis(NormA,xOpt,nb_Opt,BasisnD,         &
                                      para_Tnum,mole,ComOp,para_PES,Qact)
 
-        !write(6,*) 'imc,Xopt,NormA,SQ',imc,xOpt,NormA,SQ(1)
+        !write(out_unitp,*) 'imc,Xopt,NormA,SQ',imc,xOpt,NormA,SQ(1)
 
         DNorm = NormA - NormB
         !write(out_unitp,*) 'Norm',imc,xOpt,NormA
@@ -679,13 +679,13 @@
         IF (imc_block > para_SimulatedAnnealing%nb_mc_partial) THEN
         SELECT CASE (para_SimulatedAnnealing%TempScheduling_type)
         CASE (1)
-          !write(6,*) 'LinCoolParam'
+          !write(out_unitp,*) 'LinCoolParam'
           Temp = Temp - DTemp
         CASE (2)
-          !write(6,*) 'ExpCoolParam'
+          !write(out_unitp,*) 'ExpCoolParam'
           Temp = para_SimulatedAnnealing%ExpCoolParam * Temp
         CASE DEFAULT
-          !write(6,*) 'ExpCoolParam'
+          !write(out_unitp,*) 'ExpCoolParam'
           Temp = para_SimulatedAnnealing%ExpCoolParam * Temp
         END SELECT
         END IF

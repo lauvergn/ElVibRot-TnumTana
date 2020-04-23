@@ -52,13 +52,14 @@ CONTAINS
                              para_intensity,para_AllOp,const_phys)
       USE mod_system
       USE mod_Coord_KEO
+
       USE mod_basis
       USE mod_param_RD
-      USE mod_ana_psi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_psi_io
-      USE mod_type_ana_psi
+
+      USE mod_psi,    ONLY : param_psi,Write_Psi_nDBasis,               &
+                             sub_PsiGridRep_TO_BasisRep,sub_analyze_psi,&
+                             Write_header_saveFile_psi
+
       USE mod_Op
       USE mod_analysis
       IMPLICIT NONE
@@ -156,27 +157,7 @@ CONTAINS
       END IF
 
        write(out_unitp,*)
-       Q =  part_func(ene,nb_psi_in,para_ana%Temp,const_phys)
-
-      ! initialization for RD analysis
-      IF (para_H%BasisnD%nb_basis > 1) THEN
-        IF (allocated(para_H%BasisnD%para_RD)) THEN
-          deallocate(para_H%BasisnD%para_RD)
-        END IF
-        allocate(para_H%BasisnD%para_RD(para_H%BasisnD%nb_basis))
-        para_H%BasisnD%para_RD(:)%RD_analysis = .FALSE.
-        DO ib=1,para_H%BasisnD%nb_basis
-          para_H%BasisnD%para_RD(ib)%RD_analysis = para_H%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_analysis
-
-          para_H%BasisnD%para_RD(ib)%basis_index = ib
-          IF (allocated(para_H%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)) THEN
-            CALL init_RD(para_H%BasisnD%para_RD(ib),para_H%BasisnD%nDindB,para_H%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)
-          ELSE
-            CALL init_RD(para_H%BasisnD%para_RD(ib),para_H%BasisnD%nDindB)
-          END IF
-
-        END DO
-      END IF
+       Q =  part_func(ene,nb_psi_in,para_ana%Temp)
 
       file_WPspectral%name = make_FileName(para_ana%name_file_spectralWP)
       CALL file_open(file_WPspectral,nioWP,lformatted=para_ana%formatted_file_WP)
@@ -195,8 +176,8 @@ CONTAINS
 
         RWU_E  = REAL_WU(ene(i),'au','E')
         RWU_DE = REAL_WU(ene(i)-para_H%ComOp%ZPE,'au','E')
-        E  = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
-        DE = convRWU_TO_R(RWU_DE,WorkingUnit=.FALSE.)
+        E  = convRWU_TO_R_WITH_WritingUnit(RWU_E)
+        DE = convRWU_TO_R_WITH_WritingUnit(RWU_DE)
 
 
         IF (i < 10000) THEN
@@ -217,7 +198,7 @@ CONTAINS
       para_ana%ana_psi%Temp       = para_ana%Temp
 
       write(out_unitp,*) 'population at T, Q',para_ana%Temp,Q
-      write(out_unitp,*) 'Energy level (',const_phys%ene_unit,') pop and means :'
+      write(out_unitp,*) 'Energy level (',const_phys%ene_unit,') pop and averages :'
       CALL flush_perso(out_unitp)
 
       DO i=1,nb_psi_in
@@ -339,8 +320,8 @@ CONTAINS
       SUBROUTINE sub_moyABC(Psi,iPsi,info,ABC,para_AllOp)
 
       USE mod_system
+      USE mod_psi,      ONLY : param_psi,dealloc_psi
       USE mod_Op
-      USE mod_psi_set_alloc
       IMPLICIT NONE
 
       TYPE (param_psi)               :: Psi
@@ -352,9 +333,9 @@ CONTAINS
 
 
 !----- for the CoordType and Tnum --------------------------------------
-       TYPE (param_psi)          :: OpPsi
-      TYPE (CoordType),pointer     :: mole      ! true pointer
-      TYPE (Tnum),pointer        :: para_Tnum ! true pointer
+      TYPE (param_psi)            :: OpPsi
+      TYPE (CoordType),pointer    :: mole      ! true pointer
+      TYPE (Tnum),pointer         :: para_Tnum ! true pointer
 
       real (kind=Rkind) :: avMhu(3,3),TensorI(3,3),mat(3,3)
       real (kind=Rkind) :: trav1(3),mat1(3,3),dummy
@@ -440,8 +421,8 @@ CONTAINS
        SUBROUTINE sub_moyScalOp(Psi,iPsi,info,para_AllOp)
 
       USE mod_system
+      USE mod_psi,      ONLY : param_psi,dealloc_psi
       USE mod_Op
-      USE mod_psi_set_alloc
       IMPLICIT NONE
 
       TYPE (param_psi)               :: Psi
@@ -491,11 +472,11 @@ CONTAINS
 
        !for H
        IF (para_AllOp%tab_Op(1)%name_Op /= 'H') STOP 'wrong Operator !!'
-       write(6,*) 'nb_Term',para_AllOp%tab_Op(1)%nb_Term ; flush(6)
+       write(out_unitp,*) 'nb_Term',para_AllOp%tab_Op(1)%nb_Term ; flush(out_unitp)
        DO iOp=1,para_AllOp%tab_Op(1)%nb_Term
 
          CALL sub_PsiOpPsi(avOp,Psi,OpPsi,para_AllOp%tab_Op(1),iOp)
-         write(out_unitp,"(i0,a,i0,a,2(i0,x),2a,f15.9,1x,f15.9)") iPsi,  &
+         write(out_unitp,"(i0,a,i0,a,2(i0,1x),2a,f15.9,1x,f15.9)") iPsi,  &
           ' H(',iOp,') der[',para_AllOp%tab_Op(1)%derive_termQact(:,iOp),&
           ']: ',info,avOp
 
@@ -675,9 +656,8 @@ CONTAINS
       SUBROUTINE write_psi2_new(Tab_Psi)
 
       USE mod_system
-      USE mod_ana_psi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
+      USE mod_basis
+      USE mod_psi,      ONLY : param_psi,sub_PsiBasisRep_TO_GridRep
       IMPLICIT NONE
 
 
@@ -767,9 +747,7 @@ CONTAINS
       SUBROUTINE write_cube(Tab_Psi)
 
       USE mod_system
-      USE mod_ana_psi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
+      USE mod_psi,      ONLY : param_psi,sub_PsiBasisRep_TO_GridRep
       IMPLICIT NONE
 
 

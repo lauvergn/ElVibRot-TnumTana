@@ -43,6 +43,7 @@
 MODULE mod_Filter
 USE mod_system
 USE mod_Constant
+USE mod_psi, ONLY : param_psi,alloc_psi,dealloc_psi
 IMPLICIT NONE
 TYPE param_filter
 
@@ -69,10 +70,11 @@ CONTAINS
       SUBROUTINE sub_GaussianFilterDiagonalization(psi,Ene,nb_diago,max_diago, &
                                                    para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi
+
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -350,9 +352,9 @@ nb = size(P0_cheby)
 
     IF (debug) write(out_unitp,*) 'l,end err of f',l,sum(abs(f(nb-10:nb,l)))/TEN
     CALL flush_perso(out_unitp)
-    !write(6,*) '========================================='
-    !write(6,*) 'f(:,l)',l
-    !write(6,'(10f10.6)') ,f(:,l)
+    !write(out_unitp,*) '========================================='
+    !write(out_unitp,*) 'f(:,l)',l
+    !write(out_unitp,'(10f10.6)') ,f(:,l)
 
   END DO
   CALL dealloc_NParray(x_cheby,'x_cheby',name_sub)
@@ -372,17 +374,7 @@ nb = size(P0_cheby)
   CALL init_psi(g,para_H,para_H%cplx)
 
   CALL alloc_psi(q1)
-  IF (q1%cplx) THEN
-    DO i=1,q1%nb_tot
-      CALL random_number(a)
-      q1%CvecB(i) = cmplx(a,ZERO,kind=Rkind)
-    END DO
-  ELSE
-    DO i=1,q1%nb_tot
-      CALL random_number(a)
-      q1%RvecB(i) = a
-    END DO
-  END IF
+  CALL Set_Random_psi(q1)
   CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
   CALL renorm_psi(q1,BasisRep=.TRUE.)
 !- vector initialization:  q1 -----------
@@ -577,10 +569,10 @@ STOP
       SUBROUTINE sub_BlockFilterDiagonalization(psi,Ene,nb_diago,max_diago, &
                                                    para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -734,14 +726,14 @@ STOP
 
     IF (debug) write(out_unitp,*) 'l,end err of f',l,sum(abs(f(nb-10:nb,l)))/TEN
     CALL flush_perso(out_unitp)
-    !write(6,*) '========================================='
-    !write(6,*) 'f(:,l)',l
-    !write(6,'(10f10.6)') ,f(:,l)
+    !write(out_unitp,*) '========================================='
+    !write(out_unitp,*) 'f(:,l)',l
+    !write(out_unitp,'(10f10.6)') ,f(:,l)
 
     !DO k=1,nq
     !  ff_filter = dot_product(f(:,l),d0P_cheby(k,:))
     !  wfl(k) = f_filter_gauss(x_cheby(k),El,sigma)
-    !  write(66,*) x_cheby(k),wfl(k),ff_filter,log10(abs(ff_filter-wfl(k)))
+    !  write(out_unitp6,*) x_cheby(k),wfl(k),ff_filter,log10(abs(ff_filter-wfl(k)))
     !END DO
 
   END DO
@@ -754,17 +746,7 @@ STOP
   CALL init_psi(g,para_H,para_H%cplx)
 
   CALL alloc_psi(q1)
-  IF (q1%cplx) THEN
-    DO i=1,q1%nb_tot
-      CALL random_number(a)
-      q1%CvecB(i) = cmplx(a,ZERO,kind=Rkind)
-    END DO
-  ELSE
-    DO i=1,q1%nb_tot
-      CALL random_number(a)
-      q1%RvecB(i) = a
-    END DO
-  END IF
+  CALL Set_Random_psi(q1)
   CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
   CALL renorm_psi(q1,BasisRep=.TRUE.)
 !- vector initialization:  q1 -----------
@@ -961,10 +943,10 @@ STOP
       SUBROUTINE sub_GaussianFilterDiagonalization_v0(psi,Ene,nb_diago,max_diago, &
                                                    para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -1056,17 +1038,7 @@ STOP
       CALL init_psi(g,para_H,para_H%cplx)
 
       CALL alloc_psi(q1)
-      IF (q1%cplx) THEN
-        DO i=1,q1%nb_tot
-          CALL random_number(a)
-          q1%CvecB(i) = cmplx(a,ZERO,kind=Rkind)
-        END DO
-      ELSE
-        DO i=1,q1%nb_tot
-          CALL random_number(a)
-          q1%RvecB(i) = a
-        END DO
-      END IF
+      CALL Set_Random_psi(q1)
       CALL Set_symab_OF_psiBasisRep(q1,para_propa%para_Davidson%symab)
       CALL renorm_psi(q1,BasisRep=.TRUE.)
       !- vector initialization:  q1 + others -----------
@@ -1118,7 +1090,7 @@ STOP
 
            acDeltaj = pi/real(JJ,kind=Rkind)
            acEj = -HALF*acDeltaj
-           !write(6,*) 'acDeltaj,acEj',acDeltaj,acEj
+           !write(out_unitp,*) 'acDeltaj,acEj',acDeltaj,acEj
            DO j=1,JJ
              acEj = acEj + acDeltaj
 
@@ -1132,9 +1104,9 @@ STOP
          END DO
          IF (debug) write(out_unitp,*) 'l,end err of f',l,sum(abs(f(mf-10:mf,l)))/TEN
          CALL flush_perso(out_unitp)
-         !write(6,*) '========================================='
-         !write(6,*) 'f(:,l)',l
-         !write(6,'(10f10.6)') ,f(:,l)
+         !write(out_unitp,*) '========================================='
+         !write(out_unitp,*) 'f(:,l)',l
+         !write(out_unitp,'(10f10.6)') ,f(:,l)
 
          acDeltaj = pi/real(JJ,kind=Rkind)
          acEj = -HALF*acDeltaj
@@ -1337,10 +1309,10 @@ STOP
       SUBROUTINE sub_FilterDiagonalization(psi,Ene,nb_diago,max_diago, &
                                            para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -1647,10 +1619,11 @@ STOP
       SUBROUTINE sub_FilterDiagonalization_v1(psi,Ene,nb_diago,max_diago, &
                                            para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi,  &
+                             sub_Lowdin
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -1868,7 +1841,7 @@ STOP
                                                non_hermitic)
 
       CALL Set_ZPE_OF_ComOp(para_H%ComOp,ZPE=para_propa%Hmin,forced=.TRUE.)
-      write(6,*) 'ZPE',para_H%ComOp%ZPE
+      write(out_unitp,*) 'ZPE',para_H%ComOp%ZPE
 
         IF (para_H%sym_Hamil) THEN
           CALL diagonalization(H,Ene(1:nb_diago),Vec,nb_diago,3,1,.FALSE.)
@@ -1941,10 +1914,10 @@ STOP
       SUBROUTINE sub_FilterDiagonalization_v0(psi,Ene,nb_diago,max_diago, &
                                            para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,Set_Random_psi,        &
+                             Set_symab_OF_psiBasisRep,renorm_psi,       &
+                             Overlap_psi1_psi2,norm2_psi,dealloc_psi
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
@@ -2066,7 +2039,7 @@ STOP
                                  HALF*para_propa%para_Davidson%W_filter
      IF (Lambda < para_propa%Hmin) Lambda = para_propa%Hmin
      DO j=1,para_propa%para_Davidson%L_filter
-       write(6,*) 'j,Lambda (cm-1)',j,Lambda * auTOcm_inv
+       write(out_unitp,*) 'j,Lambda (cm-1)',j,Lambda * auTOcm_inv
        phi_j(j) = acos((Lambda-para_H%E0)/para_H%Esc)
        Lambda = Lambda + Delta_Lambda
      END DO
@@ -2109,13 +2082,13 @@ STOP
       jorth = 0
       DO j=1,para_propa%para_Davidson%L_filter
         CALL renorm_psi(z(j))
-        write(6,*) 'j,norm',j,z(j)%norm2
+        write(out_unitp,*) 'j,norm',j,z(j)%norm2
 
         DO i=1,jorth
           CALL norm2_psi(z(i))
-          !write(6,*) '    i,norm',i,z(i)%norm2
+          !write(out_unitp,*) '    i,norm',i,z(i)%norm2
           CALL Overlap_psi1_psi2(Overlap,z(j),z(i))
-          !write(6,*) '    j,i,S(j,i)',j,i,real(Overlap,kind=Rkind)
+          !write(out_unitp,*) '    j,i,S(j,i)',j,i,real(Overlap,kind=Rkind)
 
           z(j) = z(j) - z(i) * real(Overlap,kind=Rkind)
         END DO
@@ -2125,7 +2098,7 @@ STOP
           z(j) = z(j) - z(i) * RS
         END DO
         CALL norm2_psi(z(j))
-        !write(6,*) 'j,norm',j,z(j)%norm2
+        !write(out_unitp,*) 'j,norm',j,z(j)%norm2
         IF (z(j)%norm2 > ONETENTH**6) THEN
           jorth = jorth + 1
           z(j) = z(j) * (ONE/sqrt(z(j)%norm2))
@@ -2133,8 +2106,8 @@ STOP
         ELSE
           z(j) = ZERO
         END IF
-        write(6,*) 'jorth',jorth
-        write(6,*)
+        write(out_unitp,*) 'jorth',jorth
+        write(out_unitp,*)
 
       END DO
       nb_diago = jorth
@@ -2247,13 +2220,12 @@ STOP
 
      SUBROUTINE sub_chebychev_recursion(Tnq1,q1,m0,mf,para_Op)
       USE mod_system
+      USE mod_psi,     ONLY : param_psi,dealloc_psi
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
       ! Operator (Hamiltonian)
-      TYPE (param_Op), intent(in)   :: para_Op
+      TYPE (param_Op)   :: para_Op
 
       !-----vector ----------------------------
       TYPE (param_psi), intent(inout)    :: Tnq1(0:)   ! vector for the chebychev recursion
@@ -2327,16 +2299,14 @@ STOP
 
      SUBROUTINE sub_Z_vectors(z,Tnq1,m0,mf,para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,sub_Lowdin,sub_Schmidt
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
 
       ! Operator (Hamiltonian)
-      TYPE (param_Op), intent(in)   :: para_H
+      TYPE (param_Op)              :: para_H
       TYPE (param_propa)           :: para_propa
 
       !-----vector ----------------------------
@@ -2406,16 +2376,14 @@ STOP
 
      SUBROUTINE sub_Z_vectors_withf(z,Tnq1,mf,para_H,para_propa,f)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,sub_Lowdin,sub_Schmidt
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
 
       ! Operator (Hamiltonian)
-      TYPE (param_Op), intent(in)  :: para_H
+      TYPE (param_Op)              :: para_H
       TYPE (param_propa)           :: para_propa
 
       !-----vector ----------------------------
@@ -2472,15 +2440,13 @@ STOP
 
      SUBROUTINE sub_newZ_vectors_withf(z,Tnq1,nb,para_H,para_propa,f)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,sub_Lowdin,sub_Schmidt
       USE mod_Op
-      USE mod_ana_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
       USE mod_propa
       IMPLICIT NONE
 
       ! Operator (Hamiltonian)
-      TYPE (param_Op), intent(in)  :: para_H
+      TYPE (param_Op)              :: para_H
       TYPE (param_propa)           :: para_propa
 
       !-----vector ----------------------------

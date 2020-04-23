@@ -73,7 +73,8 @@ CONTAINS
       USE mod_system
       USE mod_Op
       USE mod_propa
-      USE mod_psi_set_alloc
+      USE mod_psi,    ONLY : param_psi,ecri_psi,alloc_array,            &
+                             dealloc_array,dealloc_psi,Write_ana_psi
       USE mod_field
       IMPLICIT NONE
 
@@ -120,10 +121,11 @@ CONTAINS
         CALL ecri_psi(psi=WP0(1))
         write(out_unitp,*)
         CALL write_param_Op(para_H)
+        write(out_unitp,*)
+        CALL Write_ana_psi(para_propa%ana_psi)
       END IF
 !-----------------------------------------------------------
       para_propa%ana_psi%propa     = .TRUE.
-
 #if(run_MPI)
       !para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
       !para_propa%para_poly%Hmin = para_propa%Hmin
@@ -158,7 +160,9 @@ CONTAINS
         WP(1) = WP0(1)
       END IF
 
-      IF (para_propa%n_WPecri < 1) para_propa%n_WPecri = 2 * int(para_propa%WPTmax/para_propa%WPdeltaT) !nothing written
+      IF (para_propa%n_WPecri < 1) THEN !nothing written
+        para_propa%n_WPecri = 2 * int(para_propa%WPTmax/para_propa%WPdeltaT)
+      END IF
 
       SELECT CASE (para_propa%type_WPpropa)
 
@@ -175,7 +179,7 @@ CONTAINS
 
       CASE (-3,3)
 
-        CALL sub_propagation3(Et,WP0(1),WP(1),para_H,para_propa)
+        CALL sub_propagation3(Et,WP0,WP,para_H,para_propa)
 
       CASE (34)
 
@@ -273,22 +277,21 @@ CONTAINS
 !=======================================================================================
       SUBROUTINE sub_propagation3(E0,psi0,psi,para_H,para_propa)
       USE mod_system
-      USE mod_psi_B_TO_G
+      USE mod_psi,     ONLY : param_psi,ecri_psi,dealloc_psi,           &
+                              renorm_psi,Write_Psi_nDBasis,             &
+                              param_ana_psi,Write_ana_psi
       USE mod_Op
       USE mod_propa
       USE mod_march
-      USE mod_psi_set_alloc
-      USE mod_psi_io
-      USE mod_ana_psi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
       TYPE (param_Op)   :: para_H
-      TYPE (param_psi), intent(in)   :: psi0
+      TYPE (param_psi), intent(in)   :: psi0(1)
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa)   :: para_propa
-      TYPE (param_psi)     :: psi,w1,w2
+      TYPE (param_psi)     :: psi(1),w1,w2
       TYPE (param_ana_psi) :: ana_psi
 
 !------ working parameters --------------------------------
@@ -318,26 +321,26 @@ CONTAINS
         write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
                                 para_propa%para_poly%Hmax
         write(out_unitp,*)
-        write(out_unitp,*) 'nb_ba,nb_qa',psi%nb_ba,psi%nb_qa
-        write(out_unitp,*) 'nb_bi',psi%nb_bi
+        write(out_unitp,*) 'nb_ba,nb_qa',psi(1)%nb_ba,psi(1)%nb_qa
+        write(out_unitp,*) 'nb_bi',psi(1)%nb_bi
         write(out_unitp,*)
 
         write(out_unitp,*) 'psiBasisRep'
-        CALL ecri_psi(psi=psi,ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
+        CALL ecri_psi(psi=psi0(1),ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
         write(out_unitp,*) 'psiGridRep'
-        CALL ecri_psi(psi=psi,ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
+        CALL ecri_psi(psi=psi0(1),ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
 
        END IF
 !-----------------------------------------------------------
 
-      BasisRep = psi0%BasisRep
-      GridRep  = psi0%GridRep
+      BasisRep = psi0(1)%BasisRep
+      GridRep  = psi0(1)%GridRep
 
 !-----------------------------------------------------------
 !     copy psi0 in psi
-      w1  = psi0
-      w2  = psi0
-      psi = psi0
+      w1     = psi0(1)
+      w2     = psi0(1)
+      psi(1) = psi0(1)
 !-----------------------------------------------------------
 
 !-----------------------------------------------------------
@@ -361,7 +364,7 @@ CONTAINS
       it   = 0
 
       E1 = ZERO
-      CALL sub_PsiOpPsi(E0,psi,w1,para_H)
+      CALL sub_PsiOpPsi(E0,psi(1),w1,para_H)
       E1 = E0
       DeltaE = abs(para_H%Hmax - para_H%Hmin)
       FOD = .NOT. (para_propa%type_WPpropa == -3) .AND. .NOT. para_H%cplx
@@ -380,24 +383,24 @@ CONTAINS
           IF (para_propa%write_iter .OR. debug) write(out_unitp,*) 'march FOD'
           para_H%E0     = ZERO
           E1 = E0
-          CALL march_FOD_Opti_im(psi,RE0,T,it,para_H,para_propa)
+          CALL march_FOD_Opti_im(psi(1),RE0,T,it,para_H,para_propa)
 !         E0 = RE0
 !  normalement, RE0 doit etre l'energie....
 
-          CALL renorm_psi(psi)
+          CALL renorm_psi(psi(1))
           E1 = E0
-          CALL sub_PsiOpPsi(E0,psi,w1,para_H)
+          CALL sub_PsiOpPsi(E0,psi(1),w1,para_H)
           DeltaE = abs(E1-E0)
           !FOD = (DeltaE > ONETENTH**6)  ! about 3 cm-1
         ELSE
           IF (para_propa%write_iter .OR. debug) write(out_unitp,*) 'march nOD'
           para_H%E0     = para_propa%para_poly%E0
           IF (para_propa%type_WPpropa == 3) para_H%E0     = ZERO
-          CALL march_nOD_im(T,no,psi,psi0,w1,w2,para_H,para_propa)
+          CALL march_nOD_im(T,no,psi(1),psi0(1),w1,w2,para_H,para_propa)
 
-          CALL renorm_psi(psi)
+          CALL renorm_psi(psi(1))
           E1 = E0
-          CALL sub_PsiOpPsi(E0,psi,w1,para_H)
+          CALL sub_PsiOpPsi(E0,psi(1),w1,para_H)
           DeltaE = E0-E1
           IF (DeltaE*real(para_propa%type_WPpropa,kind=Rkind) > ZERO) THEN
             para_propa%WPdeltaT = para_propa%WPdeltaT/TWO
@@ -427,21 +430,20 @@ CONTAINS
       para_propa%ana_psi%Write_psi_Grid  = .TRUE.
       para_propa%ana_psi%Write_psi_Basis = .TRUE.
 
-      !CALL Write_ana_psi(para_propa%ana_psi)
-      CALL sub_analyze_WP_OpWP(T,(/ psi /),1,para_H,para_propa,adia=.FALSE.)
+      CALL sub_analyze_WP_OpWP(T,psi,size(psi),para_H,para_propa,adia=.FALSE.)
 
       IF(MPI_id==0) THEN
         CALL file_open(para_propa%file_WP,nioWP)
-        CALL Write_Psi_nDBasis(psi,nioWP,iPsi=1,epsi=ZERO,lformated=para_propa%file_WP%formatted,version=0)
+        CALL Write_Psi_nDBasis(psi(1),nioWP,iPsi=1,epsi=ZERO,lformated=para_propa%file_WP%formatted,version=0)
         close(nioWP)
       
         write(out_unitp,*) 'WP (BasisRep) at T=',T
-        CALL Write_Psi_nDBasis(psi,6,iPsi=1,epsi=ONETENTH,lformated=.TRUE.,version=0)
+        CALL Write_Psi_nDBasis(psi(1),6,iPsi=1,epsi=ONETENTH,lformated=.TRUE.,version=0)
       ENDIF
 
-      IF (debug .OR. psi%nb_tot < 1000) THEN
+      IF (debug .OR. psi(1)%nb_tot < 1000) THEN
         write(out_unitp,*) 'WP (BasisRep) at T=',T
-        CALL ecri_psi(T=T,psi=psi,ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
+        CALL ecri_psi(T=T,psi=psi(1),ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
       END IF
 
 !----------------------------------------------------------
@@ -472,13 +474,12 @@ CONTAINS
 
       SUBROUTINE sub_propagation34(psi,Ene0,nb_diago,para_H,para_propa)
       USE mod_system
+      USE mod_psi,  ONLY : param_psi,alloc_psi,dealloc_psi,ecri_psi,     &
+                           Write_Psi_nDBasis,Set_psi_With_index,trie_psi,&
+                           norm2_psi,renorm_psi,renorm_psi_WITH_norm2,   &
+                           sub_PsiGridRep_TO_BasisRep,Overlap_psi1_psi2
+
       USE mod_Op
-      !USE mod_psi
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_psi_SimpleOp
-      USE mod_ana_psi
-      USE mod_psi_Op
       USE mod_propa
       USE mod_march
       IMPLICIT NONE
@@ -590,22 +591,7 @@ CONTAINS
         DO i=1,nb_diago
           CALL init_psi(psi(i),para_H,cplx)
           CALL alloc_psi(psi(i))
-          IF (psi(i)%cplx) THEN
-            psi(i)%CvecB(:) = ZERO
-            psi(i)%CvecB(i) = ONE
-!           DO j=1,psi(i)%nb_baie
-!             CALL random_number(a)
-!             psi(i)%CvecB(j) = cmplx(a-HALF,ZERO,kind=Rkind)
-!           END DO
-          ELSE
-            psi(i)%RvecB(:) = ZERO
-            psi(i)%RvecB(i) = ONE
-!           DO j=1,psi(i)%nb_baie
-!             CALL random_number(a)
-!             psi(i)%RvecB(j) = a-HALF
-!           END DO
-          END IF
-
+          CALL Set_psi_With_index(psi(i),ONE,ind_aie=i)
         END DO
 
       END IF
@@ -799,9 +785,7 @@ CONTAINS
       SUBROUTINE sub_propagation11(psi0,psi,nb_WP,para_H,para_propa)
       USE mod_system
       USE mod_Op
-      USE mod_psi_set_alloc
-      USE mod_psi_B_TO_G
-      USE mod_ana_psi
+      USE mod_psi,    ONLY : param_psi,ecri_psi
       USE mod_propa
       USE mod_march
       USE mod_MPI
@@ -909,7 +893,7 @@ CONTAINS
            ENDIF 
            CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
          ELSE
-           CALL sub_analyze_mini_WP_OpWP(T,psi,1,para_H,para_propa)
+           CALL sub_analyze_mini_WP_OpWP(T,psi,1,para_H)
          END IF
 
          ! propgation for given fixed t
@@ -953,13 +937,10 @@ CONTAINS
                                    para_field_new,make_field,           &
                                    para_H,para_Dip,para_propa)
       USE mod_system
-      USE mod_psi_B_TO_G
+      USE mod_psi,    ONLY : param_psi,ecri_psi,renorm_psi
       USE mod_Op
       USE mod_propa
       USE mod_march
-      !USE mod_psi
-      USE mod_psi_set_alloc
-      USE mod_ana_psi
       USE mod_field
       IMPLICIT NONE
 
@@ -1064,7 +1045,6 @@ CONTAINS
       END IF
 !-----------------------------------------------------------
 
-
 !------- propagation loop ---------------------------------
       DO WHILE (it <= it_max)
 
@@ -1131,14 +1111,12 @@ CONTAINS
                                    para_field_new,make_field,           &
                                    para_AllOp,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,dealloc_psi,ecri_psi,  &
+                             sub_PsiBasisRep_TO_GridRep,sub_save_psi,   &
+                             sub_PsiGridRep_TO_BasisRep,overlap_psi1_psi2
       USE mod_Op
       USE mod_propa
       USE mod_march
-      !USE mod_psi
-      USE mod_psi_set_alloc
-      USE mod_psi_Op
-      USE mod_psi_io
-      USE mod_ana_psi
       USE mod_field
       IMPLICIT NONE
 

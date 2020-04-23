@@ -45,14 +45,14 @@
               ReadWrite_nDFitW,Analysis_nDFit,ndfit1_to_tndfit2,        &
               analysis_ndfitw,read_ndfit,sub_ndfunc_from_ndfit,Read_Analysis
      USE mod_PrimOp_def, ONLY : param_PES
-     USE mod_OTF_def,    ONLY : param_otf,assignment (=)
+     USE mod_OTF_def,    ONLY : param_otf
      USE mod_OTF,        ONLY : read_dndipcc_gauss,read_hess_fchk,      &
                       read_dnpolarizabilitycc_gauss,read_gradhess_molpro
-     USE mod_SimpleOp,  ONLY : assignment(=),param_typeop,dealloc_typeop,&
-                               write_typeop, init_typeop,                &
-                               derive_termqact_to_derive_termqdyn,       &
-                           param_d0matop, init_d0matop,dealloc_d0matop,  &
-                            dealloc_tab_of_d0matop,Write_d0MatOp,        &
+     USE mod_SimpleOp,  ONLY : param_typeop,dealloc_typeop,             &
+                               write_typeop, init_typeop,               &
+                               derive_termqact_to_derive_termqdyn,      &
+                           param_d0matop, init_d0matop,dealloc_d0matop, &
+                            dealloc_tab_of_d0matop,Write_d0MatOp,       &
                                get_iop_from_n_op, &
                                 param_dnMatOp,Init_Tab_OF_dnMatOp,      &
                   Get_Scal_FROM_Tab_OF_dnMatOp,dealloc_tab_of_dnmatop,  &
@@ -85,7 +85,6 @@
              pot2,sub_freq2_rph,sub_dnfreq_4p,set_rphpara_at_qact1
 
    ! Public things from other modules
-   PUBLIC :: assignment (=)
    PUBLIC :: param_nDFit,nDFunct_WITH_Q,                                &
              ReadWrite_nDFitW,Analysis_nDFit,ndfit1_to_tndfit2,         &
              analysis_ndfitw,read_ndfit,sub_ndfunc_from_ndfit,Read_Analysis
@@ -111,9 +110,9 @@
 !===============================================================================
       SUBROUTINE Sub_init_dnOp(mole,para_Tnum,para_PES)
       USE mod_system
-      USE mod_SimpleOp,   only : assignment(=),param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
+      USE mod_SimpleOp,   only : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
       USE mod_PrimOp_def, only : param_PES
-      USE mod_Coord_KEO,  only : assignment(=),CoordType,Tnum
+      USE mod_Coord_KEO,  only : CoordType,Tnum
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------
@@ -209,9 +208,9 @@
 
       SUBROUTINE Sub_init_dnOp_old(mole,para_Tnum,para_PES)
       USE mod_system
-      USE mod_SimpleOp,   only : assignment(=),param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
+      USE mod_SimpleOp,   only : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
       USE mod_PrimOp_def, only : param_PES
-      USE mod_Coord_KEO,  only : assignment(=),CoordType,Tnum
+      USE mod_Coord_KEO,  only : CoordType,Tnum
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------
@@ -420,8 +419,8 @@
       !----------------------------------------------------------------
       IF (.NOT. para_PES%Read_OnTheFly_only) THEN
         CALL sub_QactTOQit(Qact,Qit,para_PES%pot_itQtransfo,mole,.FALSE.)
-        !write(6,*) 'Qact',Qact
-        !write(6,*) 'Qit',Qit
+        !write(out_unitp,*) 'Qact',Qact
+        !write(out_unitp,*) 'Qit',Qit
       ELSE
         ! why this allocation ????
         IF (allocated(Qit)) CALL dealloc_NParray(Qit,'Qit',name_sub)
@@ -582,7 +581,7 @@
           IF (para_PES%HarD .AND. associated(mole%RPHTransfo) .AND. para_PES%nb_elec == 1) THEN
             !here it should be Qin of RPH (therefore Qdyn ?????)
             CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
-            !write(6,*) 'test HARD without HAC'
+            !write(out_unitp,*) 'test HARD without HAC'
 
             ! transfert the dnQin coordinates: type21 in dnVecQin and ....
             !   the other (active, rigid ..) in dnQout
@@ -604,8 +603,8 @@
                 Qact1(iQact1) = Qdyn(iQ)
               END IF
             END DO
-            !write(6,*) 'Qact1',Qact1
-            !write(6,*) 'Qinact21',Qinact21
+            !write(out_unitp,*) 'Qact1',Qact1
+            !write(out_unitp,*) 'Qinact21',Qinact21
 
             ! find the iQa from tab_RPHpara_AT_Qact1
             DO iQa=1,mole%RPHTransfo%nb_Qa
@@ -626,10 +625,10 @@
              Vinact = HALF*sum(mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)*Qinact21(:)**2)
            END IF
 
-            !write(6,*) 'iQa',iQa
-            !write(6,*) 'Qinact21',Qinact21(:)
-            !write(6,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
-            !write(6,*) 'Vinact',Vinact
+            !write(out_unitp,*) 'iQa',iQa
+            !write(out_unitp,*) 'Qinact21',Qinact21(:)
+            !write(out_unitp,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
+            !write(out_unitp,*) 'Vinact',Vinact
 
             DO ie=1,para_PES%nb_elec
               d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                       &
@@ -824,8 +823,8 @@
       !----------------------------------------------------------------
       IF (.NOT. para_PES%Read_OnTheFly_only) THEN
         CALL sub_QactTOQit(Qact,Qit,para_PES%pot_itQtransfo,mole,.FALSE.)
-        !write(6,*) 'Qact',Qact
-        !write(6,*) 'Qit',Qit
+        !write(out_unitp,*) 'Qact',Qact
+        !write(out_unitp,*) 'Qit',Qit
       ELSE
         ! why this allocation ????
         IF (allocated(Qit)) CALL dealloc_NParray(Qit,'Qit',name_sub)
@@ -969,7 +968,7 @@
           IF (para_PES%HarD .AND. associated(mole%RPHTransfo) .AND. para_PES%nb_elec == 1) THEN
             !here it should be Qin of RPH (therefore Qdyn ?????)
             CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
-            !write(6,*) 'test HARD without HAC'
+            !write(out_unitp,*) 'test HARD without HAC'
 
             ! transfert the dnQin coordinates: type21 in dnVecQin and ....
             !   the other (active, rigid ..) in dnQout
@@ -991,8 +990,8 @@
                 Qact1(iQact1) = Qdyn(iQ)
               END IF
             END DO
-            !write(6,*) 'Qact1',Qact1
-            !write(6,*) 'Qinact21',Qinact21
+            !write(out_unitp,*) 'Qact1',Qact1
+            !write(out_unitp,*) 'Qinact21',Qinact21
 
             ! find the iQa from tab_RPHpara_AT_Qact1
             DO iQa=1,mole%RPHTransfo%nb_Qa
@@ -1015,10 +1014,10 @@
 
 
 
-            !write(6,*) 'iQa',iQa
-            !write(6,*) 'Qinact21',Qinact21(:)
-            !write(6,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
-            !write(6,*) 'Vinact',Vinact
+            !write(out_unitp,*) 'iQa',iQa
+            !write(out_unitp,*) 'Qinact21',Qinact21(:)
+            !write(out_unitp,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
+            !write(out_unitp,*) 'Vinact',Vinact
 
 
             DO ie=1,para_PES%nb_elec
@@ -1268,7 +1267,7 @@
 !----- d/Qqi et d2/dQi2 of pot0 ----------------------------------
 !-----------------------------------------------------------------
       DO i=1,mole%nb_act
-        !write(6,*) 'diag,i:',i ; flush(6)
+        !write(out_unitp,*) 'diag,i:',i ; flush(out_unitp)
 
         ith = 1
         !$ ith = omp_get_thread_num()+1
@@ -1327,7 +1326,7 @@
 !      d2/dQidQj = ( v(Qi+,Qj+)+v(Qi-,Qj-)-v(Qi-,Qj+)-v(Qi+,Qj-) )/(4*s*s)
 !-----------------------------------------------------------------
       DO i=1,mole%nb_act
-      !write(6,*) 'non-diag,i:',i ; flush(6)
+      !write(out_unitp,*) 'non-diag,i:',i ; flush(out_unitp)
       DO j=i+1,mole%nb_act
 
         ith = 1
@@ -1410,7 +1409,7 @@
       SUBROUTINE TnumKEO_TO_tab_dnH(Qact,Tab_dnH,mole,para_Tnum)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : assignment(=),CoordType,Tnum,get_dng_dnGG,&
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG,&
                                 sub3_dnrho_ana,calc3_f2_f1Q_num, sub3_dndetGG
       USE mod_SimpleOp
       IMPLICIT NONE
@@ -1523,7 +1522,7 @@
       SUBROUTINE TnumKEO_TO_tab_d0H_zmatrix(Qact,d0MatH,mole,para_Tnum)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : assignment(=),zmatrix,Tnum
+      USE mod_Coord_KEO, only : zmatrix,Tnum
       USE mod_SimpleOp
       IMPLICIT NONE
 
@@ -1544,7 +1543,7 @@
       SUBROUTINE TnumKEO_TO_tab_d0H_CoordType(Qact,d0MatH,mole,para_Tnum)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : assignment(=),CoordType,Tnum,get_dng_dnGG, &
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG,            &
                                 sub3_dnrho_ana,calc3_f2_f1Q_num, sub3_dndetGG
       USE mod_SimpleOp
       IMPLICIT NONE
@@ -1598,8 +1597,8 @@
 
       END IF
 
-      !write(6,*) 'nrho,Qact,vep',para_Tnum%nrho,Qact(1:mole%nb_act),vep
-      !IF (d0MatH%ReVal(1,1,1) < -0.01_Rkind) write(6,*) 'V',d0MatH%ReVal(1,1,1)
+      !write(out_unitp,*) 'nrho,Qact,vep',para_Tnum%nrho,Qact(1:mole%nb_act),vep
+      !IF (d0MatH%ReVal(1,1,1) < -0.01_Rkind) write(out_unitp,*) 'V',d0MatH%ReVal(1,1,1)
 
       DO ie=1,d0MatH%nb_bie
         ! T2
@@ -1712,7 +1711,7 @@
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant
-      USE mod_Coord_KEO, only : assignment(=),CoordType,Tnum,get_dng_dnGG,calc_freq
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG,calc_freq
       USE mod_SimpleOp
       USE mod_PrimOp_def
       IMPLICIT NONE
@@ -1828,7 +1827,7 @@
 
         DO i=1,size(freq),3
           i2 = min(i+2,mole%nb_act)
-          write(out_unitp,'(a,i0,"-",i0,3(x,f0.4))') 'frequencies (cm-1): ',  &
+          write(out_unitp,'(a,i0,"-",i0,3(1x,f0.4))') 'frequencies (cm-1): ',  &
                                  i,i2,freq(i:i2) * get_Conv_au_TO_unit('E','cm-1')
         END DO
 
@@ -1846,7 +1845,7 @@
       SUBROUTINE calc3_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -2311,7 +2310,7 @@
       SUBROUTINE calc4_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -2529,7 +2528,7 @@
 
         DO i=1,mole_1%nb_act,3
           i2 = min(i+2,mole_1%nb_act)
-          write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
+          write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                           i,i2,d0eh(i:i2)*auTOcm_inv
         END DO
         CALL flush_perso(out_unitp)
@@ -2566,8 +2565,8 @@
               abs(mole_1%ActiveTransfo%list_act_OF_Qdyn(i)) /= 1) CYCLE
             iQ = iQ + 1
             ScalePara_NM(i) = sqrt(d0k_save(iQ,iQ))
-            !write(6,*) 'i,iQ,d0h,d0k',i,iQ,d0h(iQ,iQ),d0k(iQ,iQ)
-            !write(6,*) 'i,iQ,ScalePara_NM(i)',i,iQ,ScalePara_NM(i)
+            !write(out_unitp,*) 'i,iQ,d0h,d0k',i,iQ,d0h(iQ,iQ),d0k(iQ,iQ)
+            !write(out_unitp,*) 'i,iQ,ScalePara_NM(i)',i,iQ,ScalePara_NM(i)
           END DO
         END IF
 
@@ -2619,7 +2618,7 @@
 
       DO i=1,mole%nb_act,3
         i2 = min(i+2,mole%nb_act)
-        write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
+        write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                           i,i2,d0eh_all(i:i2)*auTOcm_inv
       END DO
       CALL alloc_array(mole%NMTransfo%d0eh,(/ nb_NM /),                 &
@@ -2777,7 +2776,7 @@
       SUBROUTINE calc5_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_Coord_KEO
       USE mod_SimpleOp
@@ -3000,7 +2999,7 @@
 
           DO i=1,mole_1%nb_act,3
             i2 = min(i+2,mole_1%nb_act)
-            write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
+            write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                             i,i2,d0eh(i:i2)*auTOcm_inv
           END DO
 
@@ -3035,8 +3034,8 @@
                 abs(mole_1%ActiveTransfo%list_act_OF_Qdyn(i)) /= 1) CYCLE
               iQ = iQ + 1
               ScalePara_NM(i) = sqrt(d0k_save(iQ,iQ))
-              !write(6,*) 'i,iQ,d0h,d0k',i,iQ,d0h(iQ,iQ),d0k(iQ,iQ)
-              !write(6,*) 'i,iQ,ScalePara_NM(i)',i,iQ,ScalePara_NM(i)
+              !write(out_unitp,*) 'i,iQ,d0h,d0k',i,iQ,d0h(iQ,iQ),d0k(iQ,iQ)
+              !write(out_unitp,*) 'i,iQ,ScalePara_NM(i)',i,iQ,ScalePara_NM(i)
             END DO
           END IF
 
@@ -3088,7 +3087,7 @@
 
       DO i=1,mole%nb_act,3
         i2 = min(i+2,mole%nb_act)
-        write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(x,f0.4))') &
+        write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                           i,i2,d0eh_all(i:i2)*auTOcm_inv
       END DO
       CALL alloc_array(mole%NMTransfo%d0eh,(/ nb_NM /),                 &
@@ -3241,7 +3240,7 @@
                             para_PES,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : assignment(=),CoordType,Tnum,get_dng_dnGG, sub_dnFCC_TO_dnFcurvi
+      USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG, sub_dnFCC_TO_dnFcurvi
 
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -3423,7 +3422,7 @@
         IF (para_Tnum%WriteT .OR. debug .OR. print_level > 0) THEN
           write(out_unitp,*) 'gradient:'
           DO i=1,nb_NM
-            write(out_unitp,'(a,x,i0,x,f12.6)') 'Q',i,d0grad(i)
+            write(out_unitp,'(a,1x,i0,1x,f12.6)') 'Q',i,d0grad(i)
           END DO
           CALL flush_perso(out_unitp)
         END IF
@@ -3606,7 +3605,7 @@
      END IF
 
 
-     CALL Det_OF_m1(RPHpara_AT_Qact1%dnC_inv%d0,det,RPHTransfo%nb_inact21,0)
+     CALL Det_OF_m1(RPHpara_AT_Qact1%dnC_inv%d0,det,RPHTransfo%nb_inact21)
      IF (debug) write(out_unitp,*) 'det of dnC_inv',det
 
 
@@ -3642,7 +3641,7 @@
                                            Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -3719,7 +3718,7 @@
       CALL alloc_array(dnSwitch,(/nb_ref/),"dnSwitch",name_sub)
       CALL alloc_VecOFdnS(dnSwitch,nb_act1,nderiv)
       CALL Switch_RPH(dnSwitch,dnQact,QrefQact,sc,nderiv)
-      !write(6,*) 'dnSwitch(:)',dnSwitch(:)%d0
+      !write(out_unitp,*) 'dnSwitch(:)',dnSwitch(:)%d0
 
       CALL alloc_dnSVM(dnW1,  nb_act1,           nderiv)
 
@@ -3730,9 +3729,9 @@
         CALL sub_ZERO_TO_dnS(dnW1)
         DO iref=1,nb_ref
           !dnW1 = dnW1 + dnSwitch(iref)*RPHTransfo%RPHpara2%QoutRef(nb_act1+iQinact21,iref)
-          CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW1,ONE,                    &
-             dnSwitch(iref),RPHTransfo%RPHpara2%QoutRef(nb_act1+iQinact21,iref),&
-                                           dnW1)
+          CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnSwitch(iref),              &
+                    RPHTransfo%RPHpara2%QoutRef(nb_act1+iQinact21,iref),&
+                                           dnW1,ONE)
         END DO
         CALL sub_dnS_TO_dnVec(dnW1,RPHpara_AT_Qact1%dnQopt,iQinact21)
       END DO
@@ -3754,9 +3753,9 @@
 
           CALL sub_ZERO_TO_dnS(dnW1)
           DO iref=1,nb_ref
-            CALL sub_dnS1_wPLUS_dnS2_TO_dnS3(dnW1,ONE,                  &
-                dnSwitch(iref),RPHTransfo%RPHpara2%CinvRef(iq,nb_act1+jQinact21,iref), &
-                                             dnW1)
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnSwitch(iref),            &
+                RPHTransfo%RPHpara2%CinvRef(iq,nb_act1+jQinact21,iref), &
+                                             dnW1,ONE)
           END DO
           CALL sub_dnS_TO_dnMat(dnW1,RPHpara_AT_Qact1%dnC_inv,iQinact21,jQinact21)
 
@@ -3790,7 +3789,7 @@
                                       Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -3964,7 +3963,7 @@
                                para_Tnum,mole,RPHTransfo,nderiv,test)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -4322,7 +4321,7 @@
                                para_Tnum,mole,RPHTransfo,nderiv,test)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -4637,7 +4636,7 @@
                                Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       IMPLICIT NONE
 
@@ -4876,7 +4875,7 @@
       SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_zmatrix(para_Tnum,mole,para_PES,Tana)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=), get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -4895,12 +4894,11 @@
         CALL Finalyze_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole%CoordType,para_PES)
       END IF
 
-
       END SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_zmatrix
       SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole,para_PES,Tana)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : assignment(=),get_Conv_au_TO_unit
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
@@ -5019,7 +5017,7 @@
 !                                 mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1: &
 !                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) - &
 !                                       mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt%d0
-!          write(6,*) 'delta, mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(6)
+!          write(out_unitp,*) 'delta, mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(out_unitp)
 !          !Qdyn0 = matmul(Delta_Qdyn0, ...dnC%d0)
 !          mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
 !                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
@@ -5027,7 +5025,7 @@
 !                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21),  &
 !                               mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC%d0)
 !
-!          write(6,*) 'mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(6)
+!          write(out_unitp,*) 'mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(out_unitp)
 
           CALL Qdyn_TO_Qact_FROM_ActiveTransfo(mole%ActiveTransfo%Qdyn0,  &
                                                mole%ActiveTransfo%Qact0,  &
@@ -5107,7 +5105,12 @@
         CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
         IF (debug) CALL write_op(para_Tnum%TWOxKEO,header=.TRUE.)
 
+        write(out_unitp,*) '--- First comparison with internal analytical KEO'
         CALL comparison_G_FROM_Tnum_Tana(para_Tnum%ExpandTWOxKEO,mole,para_Tnum,Qact)
+
+        ! second comparison with the reading of the KEO in MCTDH format
+        write(out_unitp,*) '--- Second comparison with MCTDH read KEO'
+        CALL comparison_G_FROM_Tnum_ReadKEO(mole,para_Tnum,Qact)
 
         write(out_unitp,*)
         CALL time_perso('Tana')

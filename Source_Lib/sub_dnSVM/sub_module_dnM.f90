@@ -24,7 +24,7 @@
       use mod_system
       use mod_dnS, only: alloc_array, dealloc_array, type_dns,   &
                          check_alloc_dns, alloc_dns, write_dns
-      use mod_dnV, only: assignment(=), alloc_array, dealloc_array, type_dnvec, &
+      use mod_dnV, only: alloc_array, dealloc_array, type_dnvec, &
                          check_alloc_dnvec, alloc_dnvec
       IMPLICIT NONE
 
@@ -42,7 +42,9 @@
           real (kind=Rkind), pointer  :: d1(:,:,:)    => null()
           real (kind=Rkind), pointer  :: d2(:,:,:,:)  => null()
           real (kind=Rkind), pointer  :: d3(:,:,:,:,:)=> null()
-
+     CONTAINS
+        PROCEDURE, PRIVATE, PASS(dnMat1) :: sub_dnMat2_TO_dnMat1
+        GENERIC,   PUBLIC  :: assignment(=) => sub_dnMat2_TO_dnMat1
       END TYPE Type_dnMat
 
       TYPE Type_dnCplxMat
@@ -57,12 +59,10 @@
           complex (kind=Rkind), pointer  :: d1(:,:,:)    => null()
           complex (kind=Rkind), pointer  :: d2(:,:,:,:)  => null()
           complex (kind=Rkind), pointer  :: d3(:,:,:,:,:)=> null()
-
+     CONTAINS
+        PROCEDURE, PRIVATE, PASS(dnMat1) :: sub_dnCplxMat2_TO_dnCplxMat1
+        GENERIC,   PUBLIC  :: assignment(=) => sub_dnCplxMat2_TO_dnCplxMat1
       END TYPE Type_dnCplxMat
-
-        INTERFACE assignment (=)
-          MODULE PROCEDURE sub_dnMat2_TO_dnMat1,sub_dnCplxMat2_TO_dnCplxMat1
-        END INTERFACE
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_dnMatdim1
@@ -76,7 +76,7 @@
       PUBLIC :: Type_dnMat,     alloc_dnMat,     dealloc_dnMat,     check_alloc_dnMat,     Write_dnMat
       PUBLIC :: Type_dnCplxMat, alloc_dnCplxMat, dealloc_dnCplxMat, check_alloc_dnCplxMat, Write_dnCplxMat
 
-      PUBLIC :: assignment (=), alloc_array, dealloc_array
+      PUBLIC :: alloc_array, dealloc_array
       PUBLIC :: sub_dnMat1_TO_dnMat2, sub_dnMat1_TO_LargerdnMat2, sub_dnMat1_TO_dnMat2_partial
       PUBLIC :: dnVec_TO_dnMat, sub_dnMat_TO_dnS, sub_dnS_TO_dnMat
       PUBLIC :: sub_ZERO_TO_dnMat, sub_ZERO_TO_dnCplxMat
@@ -561,8 +561,8 @@
 !        transfer Vec(iVec) => R or R => Vec(iVec)
 !================================================================
       SUBROUTINE sub_dnCplxMat2_TO_dnCplxMat1(dnMat1,dnMat2)
-        TYPE (Type_dnCplxMat), intent(inout) :: dnMat1
-        TYPE (Type_dnCplxMat), intent(in)    :: dnMat2
+        CLASS (Type_dnCplxMat), intent(inout) :: dnMat1
+        TYPE (Type_dnCplxMat), intent(in)     :: dnMat2
 
         integer :: nderiv_loc
         character (len=*), parameter :: name_sub='sub_dnCplxMat2_TO_dnCplxMat1'
@@ -617,8 +617,8 @@
         END IF
       END SUBROUTINE sub_dnCplxMat2_TO_dnCplxMat1
       SUBROUTINE sub_dnMat2_TO_dnMat1(dnMat1,dnMat2)
-        TYPE (Type_dnMat), intent(inout) :: dnMat1
-        TYPE (Type_dnMat), intent(in)    :: dnMat2
+        CLASS (Type_dnMat), intent(inout) :: dnMat1
+        TYPE (Type_dnMat),  intent(in)    :: dnMat2
 
         integer :: nderiv_loc
         character (len=*), parameter :: name_sub='sub_dnMat2_TO_dnMat1'

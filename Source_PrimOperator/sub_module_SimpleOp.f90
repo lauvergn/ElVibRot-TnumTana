@@ -42,7 +42,7 @@
 !===========================================================================
   MODULE mod_SimpleOp
    use mod_system
-   use mod_dnSVM, only: assignment(=),type_dns, alloc_array, alloc_dns, dealloc_array,   &
+   use mod_dnSVM, only: type_dns, alloc_array, alloc_dns, dealloc_array,   &
                         write_matofdns, sub_weightder_dns
    IMPLICIT NONE
 
@@ -50,32 +50,34 @@
 
         TYPE param_TypeOp
 
-          integer :: type_Op     = -1 ! -1: Not initialized
-                                      ! 0 : Scalar
-                                      ! 1 : H: F2.d^2 + F1.d^1 + V + (Cor+Rot)
-                                      ! 10: H: d^1 G d^1 +V
+          integer                  :: type_Op = -1 ! -1: Not initialized
+                                                   ! 0 : Scalar
+                                                   ! 1 : H: F2.d^2 + F1.d^1 + V + (Cor+Rot)
+                                                   ! 10: H: d^1 G d^1 +V
 
-          integer :: n_Op        = 0             ! type of Operator :
+          integer                  :: n_Op  = 0  ! type of Operator :
                                                  ! 0 => H
                                                  ! -1 => S
                                                  ! 1,2,3 => Dipole moment (x,y,z)
           character (len=Name_len) :: name_Op = 'H'
 
-          logical :: direct_KEO    = .FALSE. ! to be used with type_Op=10
-          logical :: direct_ScalOp = .FALSE. ! scalar Operotor and potential
+          logical                  :: direct_KEO    = .FALSE. ! to be used with type_Op=10
+          logical                  :: direct_ScalOp = .FALSE. ! scalar Operotor and potential
 
 
-          integer :: nb_term     = 0
-          integer :: nb_Term_Vib = 0
-          integer :: nb_Term_Rot = 0
-          integer :: nb_Qact     = 0
-          integer :: Jrot        = 0
+          integer              :: nb_term     = 0
+          integer              :: nb_Term_Vib = 0
+          integer              :: nb_Term_Rot = 0
+          integer              :: nb_Qact     = 0
+          integer              :: Jrot        = 0
 
           integer, allocatable :: derive_termQact(:,:)      ! derive_termQact(2,nb_term)
           integer, allocatable :: derive_term_TO_iterm(:,:) ! ...(-3:nb_Qact,-3:nb_Qact)
 
-          logical           :: cplx      = .FALSE.
-
+          logical              :: cplx      = .FALSE.
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(para_TypeOp1) :: TypeOp2_TO_TypeOp1
+          GENERIC,   PUBLIC  :: assignment(=) => TypeOp2_TO_TypeOp1
         END TYPE param_TypeOp
 
         TYPE, EXTENDS (param_TypeOp) :: param_d0MatOp
@@ -102,15 +104,12 @@
 
        END TYPE param_dnMatOp
 
-       INTERFACE assignment (=)
-          MODULE PROCEDURE TypeOp2_TO_TypeOp1
-       END INTERFACE
 
        INTERFACE Init_d0MatOp
           MODULE PROCEDURE Init_d0MatOp_with_var,Init_d0MatOp_with_param_TypeOp
        END INTERFACE
 
-   PUBLIC :: param_TypeOp, param_d0MatOp, param_dnMatOp, assignment (=)
+   PUBLIC :: param_TypeOp, param_d0MatOp, param_dnMatOp
    PUBLIC :: dealloc_TypeOp, dealloc_d0MatOp, dealloc_Tab_OF_d0MatOp, dealloc_Tab_OF_dnMatOp
    PUBLIC :: Init_TypeOp, Init_d0MatOp, Init_Tab_OF_d0MatOp, Init_Tab_OF_dnMatOp, Get_iOp_FROM_n_Op
    PUBLIC :: Write_TypeOp,Write_d0MatOp,Write_dnMatOp
@@ -137,8 +136,6 @@
     logical, parameter :: debug = .FALSE.
     character (len=*), parameter :: name_sub='Init_TypeOp'
 
-
-    !write(6,*) 'coucou Init_TypeOp',type_Op
     IF (debug) THEN
       write(out_unitp,*) ' BEGINNING: ',name_sub
       write(out_unitp,*) ' nb_Qact: ',nb_Qact
@@ -441,8 +438,8 @@
    END SUBROUTINE Write_TypeOp
 
    SUBROUTINE TypeOp2_TO_TypeOp1(para_TypeOp1,para_TypeOp2)
-      TYPE (param_TypeOp), intent(inout) :: para_TypeOp1
-      TYPE (param_TypeOp), intent(in)    :: para_TypeOp2
+      CLASS (param_TypeOp), intent(inout) :: para_TypeOp1
+      TYPE (param_TypeOp),  intent(in)    :: para_TypeOp2
 
 
       !logical, parameter :: debug = .TRUE.

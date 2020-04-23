@@ -44,8 +44,16 @@
       !!               computation of the KEO
       !! @param: prod_op1d        Array of 1d operators
       TYPE opnd
-          type(op1d), allocatable     :: prod_op1d(:)
-      END TYPE opnd
+        type(op1d), allocatable     :: prod_op1d(:)
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(OpnD1) :: OpnD2_TO_OpnD1
+          PROCEDURE, PRIVATE, PASS(OpnD1) :: Op1D2_TO_OpnD1
+          PROCEDURE, PRIVATE, PASS(OpnD1) :: OpEl2_TO_OpnD1
+          PROCEDURE, PRIVATE, PASS(OpnD1) :: R_TO_OpnD1
+          PROCEDURE, PRIVATE, PASS(OpnD1) :: C_TO_OpnD1
+          GENERIC,   PUBLIC  :: assignment(=) => OpnD2_TO_OpnD1,        &
+                     Op1D2_TO_OpnD1,OpEl2_TO_OpnD1,R_TO_OpnD1,C_TO_OpnD1
+       END TYPE opnd
 
       INTERFACE alloc_NParray
         MODULE PROCEDURE alloc_NParray_OF_OpnDdim1
@@ -93,10 +101,6 @@
                       copy_F1_el_into_F2_nd, copy_F1_1d_into_F2_nd
   end interface
 
-  INTERFACE assignment (=)
-     MODULE PROCEDURE OpnD2_TO_OpnD1,Op1D2_TO_OpnD1,OpEl2_TO_OpnD1,R_TO_OpnD1,C_TO_OpnD1
-  END INTERFACE
-
    INTERFACE get_F1_times_F2_to_F_nd
      module procedure get_F1_1d_times_F2_1d_to_Fres_nd, get_F1_1d_times_F2_nd_to_Fres_nd, &
                       get_F1_nd_times_F2_1d_to_Fres_nd, get_F1_nd_times_F2_nd_to_Fres_nd
@@ -109,7 +113,7 @@
    PUBLIC  :: opnd, allocate_op, delete_op, check_allocate_op, write_op, compare_op
    PUBLIC  :: init_to_opzero, present_op_zero_in_F_nd, Set_coeff_OF_OpnD_TO_ONE, Simplify_OpnD
    PUBLIC  :: alloc_NParray, dealloc_NParray, check_NParray
-   PUBLIC  :: get_F1_times_F2_to_F_nd, copy_F1_into_F2, assignment (=), operator (*)
+   PUBLIC  :: get_F1_times_F2_to_F_nd, copy_F1_into_F2, operator (*)
 
    PUBLIC  :: get_coeff_OF_OpnD, get_sin, get_cos, get_Pq, get_Pq_dag, get_Id
    PUBLIC  :: get_Jac_OF_Q, get_rho_OF_Q, get_Q, get_Jx, get_Jy, get_Jz
@@ -119,6 +123,7 @@
    PUBLIC  :: Export_Latex_Opnd, Export_Midas_Opnd
    PUBLIC  :: Export_MCTDH_Opnd, Export_VSCF_Opnd
    PUBLIC  :: get_NumVal_OpnD, get_pq_OF_OpnD, get_pqJL_OF_OpnD, set_indexQ_OF_OpnD
+   PUBLIC  :: StringMCTDH_TO_Opnd
 
 
 
@@ -512,11 +517,11 @@ subroutine check_allocate_opnd(F_nd)
  END FUNCTION get_sin
 
  function get_rho_OF_Q(Q,alfa) RESULT(rho)
- type(opel), intent(in)                   :: Q
- type(OpnD)                               :: rho
- TYPE(FracInteger), optional, intent(in)  :: alfa
+ type(opel), intent(in)              :: Q
+ type(OpnD)                          :: rho
+ TYPE(Frac_t), optional, intent(in)  :: alfa
 
- TYPE(FracInteger)               :: alfa_loc
+ TYPE(Frac_t)               :: alfa_loc
  integer :: idf
  character (len = *), parameter :: routine_name = 'get_rho_OF_Q'
 
@@ -559,11 +564,11 @@ subroutine check_allocate_opnd(F_nd)
 
  end function get_rho_OF_Q
  function get_Jac_OF_Q(Q,alfa) RESULT(jac)
- type(opel), intent(in)                   :: Q
- type(OpnD)                               :: Jac
- TYPE(FracInteger), optional, intent(in)  :: alfa
+ type(opel), intent(in)              :: Q
+ type(OpnD)                          :: Jac
+ TYPE(Frac_t), optional, intent(in)  :: alfa
 
- TYPE(FracInteger)               :: alfa_loc
+ TYPE(Frac_t)               :: alfa_loc
 
  integer :: idf
  character (len = *), parameter :: routine_name = 'get_Jac_OF_Q'
@@ -609,11 +614,12 @@ subroutine check_allocate_opnd(F_nd)
  end function get_Jac_OF_Q
 
  subroutine Export_Latex_Opnd(Fnd,tab_Qname,FndName)
-   type(opnd),          intent(in)      :: Fnd
-   character (len = :), allocatable     :: FndName
-   character(len=*),   intent(in)       :: tab_Qname(:)
+   type(opnd),                       intent(in)      :: Fnd
+   character (len = :), allocatable, intent(inout)     :: FndName
+   character(len=*),                 intent(in)       :: tab_Qname(:)
 
-   character (len = :), allocatable     :: qname
+   ! local variables
+   character (len = :), allocatable     :: qname,FndName_loc
    character (len = :), allocatable     :: F1dName
    integer :: j,m
    character (len = *), parameter       :: mult = ' '
@@ -622,7 +628,7 @@ subroutine check_allocate_opnd(F_nd)
 
 
    !CALL write_op(Fnd)
-   FndName = String_TO_String('')
+   FndName_loc = String_TO_String('')
 
    IF (size(Fnd%prod_op1d) > 0) THEN
      DO j=1,size(Fnd%prod_op1d)
@@ -634,25 +640,29 @@ subroutine check_allocate_opnd(F_nd)
        end if
 
        CALL Export_Latex_Op1D(Fnd%prod_op1d(j),qname,F1dName)
-       FndName = String_TO_String( FndName // mult // F1dName)
+       FndName_loc = String_TO_String( FndName_loc // mult // F1dName)
      END DO
      IF (allocated(F1dName)) deallocate(F1dName)
 
    ELSE
-     FndName = String_TO_String('')
+     FndName_loc = String_TO_String('')
    END IF
 
-   IF (allocated(qname))   deallocate(qname)
+   FndName = FndName_loc
+
+   IF (allocated(FndName_loc))   deallocate(FndName_loc)
+   IF (allocated(qname))         deallocate(qname)
 
  end subroutine Export_Latex_Opnd
 
  subroutine Export_Midas_Opnd(Fnd, tab_Qname, FndName)
-   type(opnd),          intent(in)      :: Fnd
-   character (len = :), allocatable     :: FndName
-   character(len=*),    intent(in)      :: tab_Qname(:)
+   type(opnd),                       intent(in)      :: Fnd
+   character (len = :), allocatable, intent(inout)   :: FndName
+   character(len=*),                 intent(in)      :: tab_Qname(:)
 
+   ! local variables
    character (len = :), allocatable     :: qname, Qdispname !Emil new
-   character (len = :), allocatable     :: F1dName
+   character (len = :), allocatable     :: F1dName,FndName_loc
    integer :: j,m
    character (len = *), parameter       :: mult = ' '
    character (len = Name_len)           :: cindexq
@@ -660,7 +670,7 @@ subroutine check_allocate_opnd(F_nd)
    character (len = *), parameter       :: routine_name = 'Export_Midas_Opnd'
 
    !CALL write_op(Fnd)
-   FndName = String_TO_String('')
+   FndName_loc = String_TO_String('')
 
    IF (size(Fnd%prod_op1d) > 0) THEN
      DO j = 1, size(Fnd%prod_op1d)
@@ -671,26 +681,151 @@ subroutine check_allocate_opnd(F_nd)
 
        CALL Export_Midas_Op1D(Fnd%prod_op1d(j), Qdispname, F1dName) !Emil change
        !CALL Export_Midas_Op1D(Fnd%prod_op1d(j), 'Q', F1dName) ! old one DML
-       FndName = String_TO_String( FndName // mult // F1dName // Qname)
+       FndName_loc = String_TO_String( FndName_loc // mult // F1dName // Qname)
      END DO
      IF (allocated(F1dName)) deallocate(F1dName)
      IF (allocated(Qdispname)) deallocate(Qdispname) !Emil new
 
    ELSE
-     FndName = String_TO_String('')
+     FndName_loc = String_TO_String('')
    END IF
 
-   IF (allocated(qname)) deallocate(qname)
+   FndName = FndName_loc
+
+   IF (allocated(FndName_loc))   deallocate(FndName_loc)
+   IF (allocated(qname))         deallocate(qname)
 
  end subroutine Export_Midas_Opnd
 
+ subroutine StringMCTDH_TO_Opnd(Fnd,string,nb_act)
+   type(opnd),                       intent(inout)   :: Fnd
+   integer,                          intent(in)      :: nb_act
+   character (len =*),               intent(in)      :: string
+
+
+   ! local variables
+   character (len = :), allocatable     :: String_loc,string_1D
+   type(Op1D)                           :: F1D
+
+   integer :: i_pipe,i_space,indexq,err_io
+   real (kind=Rkind) :: coef
+
+   logical, parameter :: debug = .FALSE.
+   !logical, parameter :: debug = .TRUE.
+   character (len = *), parameter :: routine_name = 'StringMCTDH_TO_Opnd'
+
+   CALL delete_op(FnD)
+
+
+
+   String_loc = trim(adjustl(String))
+   CALL string_uppercase_TO_lowercase(String_loc)
+   IF (debug) write(out_unitp,*) 'String_loc: ',String_loc ; flush(out_unitp)
+   ! first read the coef
+   i_pipe  = index(String_loc,'|') !find the pipe
+   IF (i_pipe < 1) THEN
+     write(out_unitp,*) 'ERROR in ',routine_name
+     write(out_unitp,*) ' The | character cannot be found in String_loc'
+     write(out_unitp,*) 'String_loc: ',String_loc
+     STOP 'ERROR in StringMCTDH_TO_Opnd: no | character'
+   END IF
+   IF (i_pipe == 1)THEN
+     write(out_unitp,*) 'ERROR in ',routine_name
+     write(out_unitp,*) ' No coefficient before the | character.'
+     write(out_unitp,*) 'String_loc: ',String_loc
+     STOP 'ERROR in StringMCTDH_TO_Opnd: No coefficient.'
+   END IF
+   read(String_loc(1:i_pipe-1),*,iostat=err_io) coef
+   IF (err_io /= 0)THEN
+     write(out_unitp,*) 'ERROR in ',routine_name
+     write(out_unitp,*) ' The coefficient cannot be read.'
+     write(out_unitp,*) 'String_loc: ',String_loc
+     STOP 'ERROR in StringMCTDH_TO_Opnd: coefficient cannot be read.'
+   END IF
+   Fnd = coef ! initialization
+   String_loc = String_loc(i_pipe:len(String_loc))
+
+   IF (debug) THEN
+     CALL write_op(Fnd,header=.TRUE.)
+     write(out_unitp,*) 'coef: ',coef
+     write(out_unitp,*) 'String_loc: ',String_loc
+     flush(out_unitp)
+   END IF
+
+   DO
+     IF (len(String_loc) == 0) EXIT
+
+     i_pipe  = index(String_loc,'|') !find the pipe
+     i_space = index(String_loc,' ') !find the 1st space character
+     IF (i_pipe < 1) THEN
+       write(out_unitp,*) 'ERROR in ',routine_name
+       write(out_unitp,*) ' The | character cannot be found in String_loc'
+       write(out_unitp,*) 'String_loc: ',String_loc
+       STOP 'ERROR in StringMCTDH_TO_Opnd: no | character'
+     END IF
+     IF (i_space < i_pipe+2) THEN
+       write(out_unitp,*) 'ERROR in ',routine_name
+       write(out_unitp,*) ' The coordinate index cannot be read after the | character.'
+       write(out_unitp,*) 'String_loc: ',String_loc
+      STOP 'ERRORin StringMCTDH_TO_Opnd: wrong space character position'
+     END IF
+     ! => now we can read indexq
+     read(String_loc(i_pipe+1:i_space),*,iostat=err_io) indexq
+     IF (err_io /= 0)THEN
+       write(out_unitp,*) 'ERROR in ',routine_name
+       write(out_unitp,*) ' The coordinate index cannot be read.'
+       write(out_unitp,*) 'String_loc: ',String_loc
+       STOP 'ERROR in StringMCTDH_TO_Opnd: the coordinate index cannot be read.'
+     END IF
+
+     String_loc = String_loc(i_space+1:len(String_loc))
+
+     IF (debug) THEN
+       write(out_unitp,*) 'indexq: ',indexq
+       write(out_unitp,*) 'String_loc: ',String_loc
+       flush(out_unitp)
+     END IF
+
+
+     i_pipe  = index(String_loc,'|') !find the pipe
+     IF (i_pipe > 0) THEN
+       string_1D = String_loc(1:i_pipe-1)
+       String_loc = String_loc(i_pipe:len(String_loc))
+     ELSE ! last Op1D
+       string_1D = String_loc
+       String_loc = ""
+     END IF
+     IF (debug) THEN
+       write(out_unitp,*) 'String_loc: ',String_loc
+       write(out_unitp,*) 'string_1D: ',string_1D
+       flush(out_unitp)
+     END IF
+
+     CALL StringMCTDH_TO_Op1D(F1d,String_1D,indexq)
+
+     IF (debug) CALL write_op(F1d,header=.TRUE.)
+
+     Fnd = Fnd * F1D
+
+   END DO
+
+   IF (debug) CALL write_op(Fnd,header=.TRUE.)
+
+   deallocate(String_loc)
+   deallocate(String_1D)
+   CALL delete_op(F1D)
+
+
+ end subroutine StringMCTDH_TO_Opnd
+
  subroutine Export_MCTDH_Opnd(Fnd,FndName,nb_act)
-   type(opnd),          intent(inout)   :: Fnd
-   integer,             intent(in)      :: nb_act
-   character (len = :), allocatable     :: FndName
+   type(opnd),                       intent(inout)   :: Fnd
+   integer,                          intent(in)      :: nb_act
+   character (len = :), allocatable, intent(inout)   :: FndName
 
 
-   character (len = :), allocatable     :: F1dName
+   ! local variables
+   character (len = :), allocatable     :: F1dName,FndName_loc
    character (len = :), allocatable     :: SepCoord
 
    integer :: j,m,idq
@@ -700,7 +835,7 @@ subroutine check_allocate_opnd(F_nd)
 
 
    !CALL write_op(Fnd)
-   FndName = String_TO_String('')
+   FndName_loc = String_TO_String('')
 
    First_idq5 = .TRUE.
    IF (size(Fnd%prod_op1d) > 0) THEN
@@ -720,22 +855,27 @@ subroutine check_allocate_opnd(F_nd)
        END IF
 
        CALL Export_MCTDH_Op1D(Fnd%prod_op1d(j),F1dName)
-       FndName = String_TO_String( FndName // SepCoord // F1dName)
+       FndName_loc = String_TO_String( FndName_loc // SepCoord // F1dName)
      END DO
      IF (allocated(F1dName))    deallocate(F1dName)
      IF (allocated(SepCoord))   deallocate(SepCoord)
 
    END IF
 
+   FndName = FndName_loc
+
+   IF (allocated(FndName_loc))   deallocate(FndName_loc)
+
  end subroutine Export_MCTDH_Opnd
 
  subroutine Export_VSCF_Opnd(Fnd,tab_Qname,FndName)
-   type(opnd),          intent(in)      :: Fnd
-   character (len = :), allocatable     :: FndName
-   character(len=*),   intent(in)       :: tab_Qname(:)
+   type(opnd),                       intent(in)      :: Fnd
+   character (len = :), allocatable, intent(inout)   :: FndName
+   character(len=*),                 intent(in)      :: tab_Qname(:)
 
 
-   character (len = :), allocatable     :: qname
+   !local variables
+   character (len = :), allocatable     :: qname,FndName_loc
    character (len = :), allocatable     :: F1dName
    integer :: j,m
    character (len = *), parameter       :: mult = ' '
@@ -744,7 +884,7 @@ subroutine check_allocate_opnd(F_nd)
 
 
    !CALL write_op(Fnd)
-   FndName = String_TO_String('')
+   FndName_loc = String_TO_String('')
 
    IF (size(Fnd%prod_op1d) > 0) THEN
      DO j=1,size(Fnd%prod_op1d)
@@ -752,15 +892,18 @@ subroutine check_allocate_opnd(F_nd)
        qname = String_TO_String('Q' // int_TO_char(m) )
 
        CALL Export_VSCF_Op1D(Fnd%prod_op1d(j),qname,F1dName)
-       FndName = String_TO_String( FndName // mult // F1dName)
+       FndName_loc = String_TO_String( FndName_loc // mult // F1dName)
      END DO
      IF (allocated(F1dName)) deallocate(F1dName)
 
    ELSE
-     FndName = String_TO_String('')
+     FndName_loc = String_TO_String('')
    END IF
 
-   IF (allocated(qname))   deallocate(qname)
+   FndName = FndName_loc
+
+   IF (allocated(FndName_loc))   deallocate(FndName_loc)
+   IF (allocated(qname))         deallocate(qname)
 
 
  end subroutine Export_VSCF_Opnd
@@ -801,13 +944,11 @@ subroutine check_allocate_opnd(F_nd)
        write(i_open, '(A)')  "   idf          iqd        alfa       indexq          op_name                 coeff"
      end if
 
-     CALL get_pqJL_OF_OpnD(pq,J,L,F_nd)
-     IF (pq(1) == 7 .AND. pq(2) == 8 .OR. pq(1) == 8 .AND. pq(2) == 7 .OR. &
-         pq(1) == 0 .AND. pq(2) == 8 .OR. pq(1) == 8 .AND. pq(2) == 0) THEN
      do i = 1, size(F_nd%prod_op1d)
        call write_op(F_nd%prod_op1d(i), i_open)
      end do
-     END IF
+     CALL flush_perso(i_open)
+
    END SUBROUTINE write_opnd
 
  !! @description: Copy a opnd operator F1_nd to 
@@ -834,7 +975,7 @@ subroutine check_allocate_opnd(F_nd)
  subroutine OpnD2_TO_OpnD1(OpnD1,OpnD2)
 
    type(opnd),           intent(in)    :: OpnD2
-   type(opnd),           intent(inout) :: OpnD1
+   CLASS(opnd),           intent(inout) :: OpnD1
 
    integer                    :: i
    character (len=*), parameter :: routine_name="OpnD2_TO_OpnD1"
@@ -865,7 +1006,7 @@ subroutine check_allocate_opnd(F_nd)
  subroutine Op1D2_TO_OpnD1(OpnD1,Op1D2)
 
    type(op1d),           intent(in)    :: Op1D2
-   type(opnd),           intent(inout) :: OpnD1
+   CLASS(opnd),          intent(inout) :: OpnD1
 
    character (len=*), parameter :: routine_name="Op1D2_TO_OpnD1"
 
@@ -893,8 +1034,8 @@ subroutine check_allocate_opnd(F_nd)
 
  subroutine OpEl2_TO_OpnD1(OpnD1,OpEl2)
 
-   type(opEl),           intent(in)    :: OpEl2
-   type(opnd),           intent(inout) :: OpnD1
+   type(opEl),          intent(in)    :: OpEl2
+   CLASS(opnd),         intent(inout) :: OpnD1
 
    character (len=*), parameter :: routine_name="OpEl2_TO_OpnD1"
 
@@ -907,7 +1048,7 @@ subroutine check_allocate_opnd(F_nd)
  subroutine R_TO_OpnD1(OpnD1,R)
 
    real (kind=Rkind),    intent(in)    :: R
-   type(opnd),           intent(inout) :: OpnD1
+   CLASS(opnd),          intent(inout) :: OpnD1
 
    character (len=*), parameter :: routine_name="R_TO_OpnD1"
 
@@ -918,8 +1059,8 @@ subroutine check_allocate_opnd(F_nd)
  end subroutine R_TO_OpnD1
  subroutine C_TO_OpnD1(OpnD1,C)
 
-   complex (kind=Rkind),    intent(in) :: C
-   type(opnd),           intent(inout) :: OpnD1
+   complex (kind=Rkind),    intent(in)    :: C
+   CLASS(opnd),             intent(inout) :: OpnD1
 
    character (len=*), parameter :: routine_name="C_TO_OpnD1"
 
@@ -1560,7 +1701,7 @@ subroutine check_allocate_opnd(F_nd)
    ELSE
      nb_J = 0
    END IF
-   !write(6,*) 'n,nb_J',n,nb_J
+   !write(out_unitp,*) 'n,nb_J',n,nb_J
    IF (nb_J > 0) THEN
      temp_OpnD = FOpnD
 
@@ -1569,8 +1710,8 @@ subroutine check_allocate_opnd(F_nd)
      DO i=n,1,-1
        idqi = get_idq_OF_Op1D(temp_OpnD%prod_op1D(i))
         Li = (idqi == 5) ! Jx,Jy,Jz
-        !write(6,*) 'idqi,Li',idqi,Li ; flush(6)
-        !write(6,*) 'i,ii,i_JJ',i,ii,i_JJ ; flush(6)
+        !write(out_unitp,*) 'idqi,Li',idqi,Li ; flush(out_unitp)
+        !write(out_unitp,*) 'i,ii,i_JJ',i,ii,i_JJ ; flush(out_unitp)
         IF (Li) THEN
           FOpnD%prod_op1D(i_JJ) = temp_OpnD%prod_op1D(i)
           i_JJ = i_JJ-1

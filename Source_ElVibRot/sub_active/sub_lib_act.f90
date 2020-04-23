@@ -271,7 +271,7 @@
 
             name_Op = '-' // trim(para_AllOp%tab_Op(iOp)%name_Op) // '-----'
 
-            !write(6,*) 'para_AllOp%tab_Op(iOp)%nb_term',iOp,para_AllOp%tab_Op(iOp)%nb_term
+            !write(out_unitp,*) 'para_AllOp%tab_Op(iOp)%nb_term',iOp,para_AllOp%tab_Op(iOp)%nb_term
             DO k_term=1,para_AllOp%tab_Op(iOp)%nb_term
               para_AllOp%tab_Op(iOp)%OpGrid(k_term)%para_FileGrid%Save_FileGrid_done = .TRUE.
 
@@ -495,7 +495,7 @@
 
       SUBROUTINE sub_reading_Op(iq,nb_qa,d0MatOp,n_Op,Qdyn,nb_var,Qact,w,ComOp)
       USE mod_system
-      USE mod_PrimOp, only: assignment(=),Write_d0MatOp
+      USE mod_PrimOp, only: Write_d0MatOp
       USE mod_Op
       IMPLICIT NONE
 
@@ -638,7 +638,6 @@
           read(nio,*) name1,name2
         END IF
 
-
         IF (trim(name2) /= 'Beginning') THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' The beginning of the record is not correct'
@@ -646,7 +645,6 @@
           write(out_unitp,*) ' Probably, you should restart with Read_Grid=f'
           STOP
         END IF
-
 
         read(nio,*) name1,iqr
         !write(out_unitp,*) 'name1,iqr',name1,iqr

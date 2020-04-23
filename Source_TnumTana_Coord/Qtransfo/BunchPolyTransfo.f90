@@ -29,7 +29,7 @@
       MODULE mod_BunchPolyTransfo
       use mod_system
       use mod_dnSVM ! only all
-      use mod_Constant,     only: assignment(=),table_atom, get_mass_tnum
+      use mod_Constant,     only: table_atom, get_mass_tnum
       use mod_Lib_QTransfo, only: write_dnx, sub3_dnvec_toxf, func_ic
       USE mod_Tana_OpEl
       USE mod_Tana_Op1D
@@ -1529,7 +1529,7 @@
 
 
       IF (BFTransfo%Frame) THEN
-        !write(6,*) 'BFTransfo%euler : ',BFTransfo%euler(:)
+        !write(out_unitp,*) 'BFTransfo%euler : ',BFTransfo%euler(:)
         !==========================================
         ! 1st vector
         !write(out_unitp,*) 'd0,iv_in,name_frame',iv_in,BFTransfo%name_Frame
@@ -1591,16 +1591,16 @@
             !write(out_unitp,*) 'Rot gamma / Z ',iv
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfx,1) ! x
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfy,2) ! y
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnSa,dnf3,nderiv) ! temp=sin*y
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnSa,dnf3,nderiv) ! temp=sin*y
 
-            CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf1,dnf3,dnf1,nderiv)
+            !CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf1,dnf3,dnf1,nderiv)
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf3,-ONE,dnf1,ONE,nderiv)
 
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf3,nderiv) ! temp= sin*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnCa,dnf2,nderiv) ! Ry=cos*y
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf3,nderiv) ! temp= sin*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnCa,dnf2,nderiv) ! Ry=cos*y
 
-            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(dnf2,dnf3,dnf2,nderiv)! Ry = Ry+temp
-
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf3,ONE,dnf2,ONE,nderiv)! Ry = Ry+temp
 
             CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(iv),1,nderiv) !x
             CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(iv),2,nderiv) !y
@@ -1631,16 +1631,17 @@
             !write(out_unitp,*) 'Rot beta / Y ',iv
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfx,1) ! x
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfz,3) ! z
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfz,dnSa,dnf2,nderiv) ! temp=sin*z
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfz,dnSa,dnf2,nderiv) ! temp=sin*z
 
-            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(dnf1,dnf2,dnf1,nderiv)!  Rx = Rx+temp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf2,ONE,dnf1,ONE,nderiv)!  Rx = Rx+temp
 
 
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf2,nderiv) ! temp = sin*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfz,dnCa,dnf3,nderiv) ! Rz=cos*z
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf2,nderiv) ! temp = sin*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfz,dnCa,dnf3,nderiv) ! Rz=cos*z
 
-            CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf3,dnf2,dnf3,nderiv)! Rz = Rz-temp
+            !CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf3,dnf2,dnf3,nderiv)! Rz = Rz-temp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf2,-ONE,dnf3,ONE,nderiv)
 
             CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(iv),1,nderiv) !x
             CALL sub_dnS_TO_dnVec(dnf3,tab_dnXVect(iv),3,nderiv) !z
@@ -1661,16 +1662,17 @@
             !write(out_unitp,*) 'Rot alpha / Z ',iv
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfx,1) ! x
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfy,2) ! y
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnSa,dnf3,nderiv) ! temp=sin*y
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnSa,dnf3,nderiv) ! temp=sin*y
 
-            CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf1,dnf3,dnf1,nderiv)! Rx = Rx-temp
+            !CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf1,dnf3,dnf1,nderiv)! Rx = Rx-temp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf3,-ONE,dnf1,ONE,nderiv)
 
 
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf3,nderiv) ! temp= sin*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnCa,dnf2,nderiv) ! Ry=cos*y
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf3,nderiv) ! temp= sin*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnCa,dnf2,nderiv) ! Ry=cos*y
 
-            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(dnf2,dnf3,dnf2,nderiv)! Ry = Rx+temp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf3,ONE,dnf2,ONE,nderiv)! Ry = Rx+temp
 
             CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(iv),1,nderiv) !x
             CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(iv),2,nderiv) !y
@@ -1716,12 +1718,12 @@
 
           !for x coordinates
           ! d0w = d0d * d0sin(Qval)
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnSval,dnf1,nderiv)
+          CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnSval,dnf1,nderiv)
           CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(1),1,nderiv)
 
           !for z coordinates
           ! d0w = d0d * d0cos(Qval)
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnCval,dnf2,nderiv)
+          CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnCval,dnf2,nderiv)
           CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(1),3,nderiv)
 
         ELSE IF (iv_in > 1) THEN
@@ -1764,18 +1766,18 @@
 
             !-----------------------------------------------------------
             !d0f3 = d0d * d0sval (tempory)
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnSval,dnf3,nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnSval,dnf3,nderiv)
 
             !d0f1 = d0f3 * d0cdih  = (d0d * d0sval) * d0cdih
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnf3,dnCdih,dnf1,nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnf3,dnCdih,dnf1,nderiv)
 
             !d0f2 = d0f3 * d0sdih  = (d0d * d0sval) * d0sdih
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnf3,dnSdih,dnf2,nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnf3,dnSdih,dnf2,nderiv)
             !-----------------------------------------------------------
 
             !-----------------------------------------------------------
             ! d0f3 = d0d * d0cval
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnCval,dnf3,nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnCval,dnf3,nderiv)
 
             !-----------------------------------------------------------
           END IF
@@ -1965,7 +1967,7 @@
 
 
       IF (BFTransfo%Frame) THEN
-        write(6,*) 'BFTransfo%euler : ',BFTransfo%euler(:)
+        write(out_unitp,*) 'BFTransfo%euler : ',BFTransfo%euler(:)
         !==========================================
         ! 1st vector
         write(out_unitp,*) 'd0,iv_in,name_frame',iv_in,BFTransfo%name_Frame
@@ -2027,15 +2029,16 @@
             !write(out_unitp,*) 'Rot gamma / Z ',iv
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfx,1) ! x
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfy,2) ! y
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnSa,dnf3,nderiv) ! temp=sin*y
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnSa,dnf3,nderiv) ! temp=sin*y
 
-            CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf1,dnf3,dnf1,nderiv)
+            !CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf1,dnf3,dnf1,nderiv)
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf3,-ONE,dnf1,ONE,nderiv)
 
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf3,nderiv) ! temp= sin*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnCa,dnf2,nderiv) ! Ry=cos*y
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf3,nderiv) ! temp= sin*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnCa,dnf2,nderiv) ! Ry=cos*y
 
-            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(dnf2,dnf3,dnf2,nderiv)! Ry = Ry+temp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf3,ONE,dnf2,ONE,nderiv)! Ry = Ry+temp
 
 
             CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(iv),1,nderiv) !x
@@ -2067,16 +2070,17 @@
             !write(out_unitp,*) 'Rot beta / Y ',iv
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfx,1) ! x
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfz,3) ! z
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfz,dnSa,dnf2,nderiv) ! temp=sin*z
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfz,dnSa,dnf2,nderiv) ! temp=sin*z
 
-            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(dnf1,dnf2,dnf1,nderiv)!  Rx = Rx+temp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf2,ONE,dnf1,ONE,nderiv)!  Rx = Rx+temp
 
 
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf2,nderiv) ! temp = sin*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfz,dnCa,dnf3,nderiv) ! Rz=cos*z
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf2,nderiv) ! temp = sin*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfz,dnCa,dnf3,nderiv) ! Rz=cos*z
 
-            CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf3,dnf2,dnf3,nderiv)! Rz = Rz-temp
+            !CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf3,dnf2,dnf3,nderiv)! Rz = Rz-temp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf2,-ONE,dnf3,ONE,nderiv)
 
             CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(iv),1,nderiv) !x
             CALL sub_dnS_TO_dnVec(dnf3,tab_dnXVect(iv),3,nderiv) !z
@@ -2097,16 +2101,17 @@
             !write(out_unitp,*) 'Rot alpha / Z ',iv
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfx,1) ! x
             CALL sub_dnVec_TO_dnS(tab_dnXVect(iv),dnfy,2) ! y
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnSa,dnf3,nderiv) ! temp=sin*y
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnCa,dnf1,nderiv) ! Rx = cos*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnSa,dnf3,nderiv) ! temp=sin*y
 
-            CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf1,dnf3,dnf1,nderiv)! Rx = Rx-temp
+            !CALL sub_dnS1_MINUS_dnS2_TO_dnS3(dnf1,dnf3,dnf1,nderiv)! Rx = Rx-temp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf3,-ONE,dnf1,ONE,nderiv)
 
 
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf3,nderiv) ! temp= sin*x
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnCa,dnf2,nderiv) ! Ry=cos*y
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfx,dnSa,dnf3,nderiv) ! temp= sin*x
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnfy,dnCa,dnf2,nderiv) ! Ry=cos*y
 
-            CALL sub_dnS1_PLUS_dnS2_TO_dnS3(dnf2,dnf3,dnf2,nderiv)! Ry = Rx+temp
+            CALL sub_dnS1_wPLUS_dnS2_TO_dnS2(dnf3,ONE,dnf2,ONE,nderiv)! Ry = Rx+temp
 
             CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(iv),1,nderiv) !x
             CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(iv),2,nderiv) !y
@@ -2152,12 +2157,12 @@
 
           !for x coordinates
           ! d0w = d0d * d0sin(Qval)
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnSval,dnf1,nderiv)
+          CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnSval,dnf1,nderiv)
           CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(1),1,nderiv)
 
           !for z coordinates
           ! d0w = d0d * d0cos(Qval)
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnCval,dnf2,nderiv)
+          CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnCval,dnf2,nderiv)
           CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(1),3,nderiv)
 
         ELSE IF (iv_in > 1) THEN
@@ -2200,18 +2205,18 @@
 
             !-----------------------------------------------------------
             !d0f3 = d0d * d0sval (tempory)
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnSval,dnf3,nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnSval,dnf3,nderiv)
 
             !d0f1 = d0f3 * d0cdih  = (d0d * d0sval) * d0cdih
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnf3,dnCdih,dnf1,nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnf3,dnCdih,dnf1,nderiv)
 
             !d0f2 = d0f3 * d0sdih  = (d0d * d0sval) * d0sdih
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnf3,dnSdih,dnf2,nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnf3,dnSdih,dnf2,nderiv)
             !-----------------------------------------------------------
 
             !-----------------------------------------------------------
             ! d0f3 = d0d * d0cval
-   CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnCval,dnf3,nderiv)
+            CALL sub_dnS1_PROD_dnS2_TO_dnS3(dnd,dnCval,dnf3,nderiv)
 
             !-----------------------------------------------------------
           END IF
@@ -3737,10 +3742,10 @@
       write(out_unitp,*) 'nb_vect',BunchTransfo%nb_vect
 
 
-     write(6,*) 'A(iv,iat): Xat=>Vect'
+     write(out_unitp,*) 'A(iv,iat): Xat=>Vect'
      CALL Write_Mat(BunchTransfo%A,out_unitp,5)
 
-     write(6,*) 'A_inv(iat,iv): Vect=>Xat'
+     write(out_unitp,*) 'A_inv(iat,iv): Vect=>Xat'
      CALL Write_Mat(BunchTransfo%A_inv,out_unitp,5)
 
 

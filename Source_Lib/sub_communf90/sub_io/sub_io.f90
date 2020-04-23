@@ -22,29 +22,29 @@
 
            DO 40 nb=0,nbblocs-1
              DO 50 j=1,nboa
-               write(6,51) j,(f(j,i+nb*nbcol),i=1,nbcol)
+               write(out_unitp,51) j,(f(j,i+nb*nbcol),i=1,nbcol)
  51            format(i5,1x,10(f18.10,1x))
 !51            format(i5,1x,10(e15.8,1x))
  50          CONTINUE
-             write(6,*)
+             write(out_unitp,*)
  40        CONTINUE
            DO 60 j=1,nboa
              nfin=nbom-nbcol*nbblocs
-             write(6,51) j,(f(j,i+nbcol*nbblocs),i=1,nfin)
+             write(out_unitp,51) j,(f(j,i+nbcol*nbblocs),i=1,nfin)
  60        CONTINUE
          ELSE
 
            DO 10 nb=0,nbblocs-1
              DO 20 j=1,nboa
-               write(6,21) (f(j,i+nb*nbcol),i=1,nbcol)
+               write(out_unitp,21) (f(j,i+nb*nbcol),i=1,nbcol)
  21            format(5x,10(f18.10,1x))
 !21            format(5x,10(e15.8,1x))
  20          CONTINUE
-             write(6,*)
+             write(out_unitp,*)
  10        CONTINUE
            DO 30 j=1,nboa
              nfin=nbom-nbcol*nbblocs
-             write(6,21) (f(j,i+nbcol*nbblocs),i=1,nfin)
+             write(out_unitp,21) (f(j,i+nbcol*nbblocs),i=1,nfin)
  30         CONTINUE
 
          END IF
@@ -74,29 +74,29 @@
 
            DO 40 nb=0,nbblocs-1
              DO 50 j=1,nboa
-               write(6,51) j,(f(j,i+nb*nbcol),i=1,nbcol)
+               write(out_unitp,51) j,(f(j,i+nb*nbcol),i=1,nbcol)
  51            format(i3,2x,10('(',f15.7,' +i',f15.7,')'))
 !51            format(i3,2x,10(e15.8,3x))
  50          CONTINUE
-             write(6,*)
+             write(out_unitp,*)
  40        CONTINUE
            DO 60 j=1,nboa
              nfin=nbom-nbcol*nbblocs
-             write(6,51) j,(f(j,i+nbcol*nbblocs),i=1,nfin)
+             write(out_unitp,51) j,(f(j,i+nbcol*nbblocs),i=1,nfin)
  60        CONTINUE
          ELSE
 
            DO 10 nb=0,nbblocs-1
              DO 20 j=1,nboa
-               write(6,21) (f(j,i+nb*nbcol),i=1,nbcol)
+               write(out_unitp,21) (f(j,i+nb*nbcol),i=1,nbcol)
  21            format(5x,10('(',f15.7,' +i',f15.7,')'))
 !21            format(5x,10(e15.8,3x))
  20          CONTINUE
-             write(6,*)
+             write(out_unitp,*)
  10        CONTINUE
            DO 30 j=1,nboa
              nfin=nbom-nbcol*nbblocs
-             write(6,21) (f(j,i+nbcol*nbblocs),i=1,nfin)
+             write(out_unitp,21) (f(j,i+nbcol*nbblocs),i=1,nfin)
  30         CONTINUE
 
          END IF
@@ -182,7 +182,7 @@
          character*132 ligne
 
 
-!        write(6,*) ' lecture',nbom,nboa,tnb
+!        write(out_unitp,*) ' lecture',nbom,nboa,tnb
 
          nbblocs=int(nbom/nbcol)
          IF (nbblocs*nbcol .EQ. nbom) nbblocs=nbblocs-1
@@ -192,17 +192,17 @@
           DO 10 nb=0,nbblocs-1
            DO 20 j=1,nboa
 !              read(5,'(132a)') ligne
-!              write(6,*) ligne
+!              write(out_unitp,*) ligne
 !              read(ligne,*) ifa,(v(j,i+nb*nbcol),i=1,nbcol)
                read(5,*) ifa,(v(j,i+nb*nbcol),i=1,nbcol)
-!              write(6,*) 'a',(v(j,i+nb*nbcol),i=1,nbcol)
+!              write(out_unitp,*) 'a',(v(j,i+nb*nbcol),i=1,nbcol)
  20        CONTINUE
            read(5,*)
  10       CONTINUE
           nfin=nbom-nbcol*nbblocs
             DO 30 j=1,nboa
                read(5,*) ifa,(v(j,i+nbcol*nbblocs),i=1,nfin)
-!              write(6,*) 'a',(v(j,i+nbcol*nbblocs),i=1,nfin)
+!              write(out_unitp,*) 'a',(v(j,i+nbcol*nbblocs),i=1,nfin)
  30          CONTINUE
          ELSE
           DO 40 nb=0,nbblocs-1
@@ -235,7 +235,7 @@
          integer nbcol2,nio
 
 
-!       write(6,*) ' lecture_tri',nbligne,nbcol,nio
+!       write(out_unitp,*) ' lecture_tri',nbligne,nbcol,nio
 
         nbblocs=int(nbligne/nbcol)+1
         IF (nbblocs*nbcol .EQ. nbligne) nbblocs=nbblocs-1
@@ -245,10 +245,10 @@
              nbcol2 = min(j-nb*nbcol,nbcol)
              read(nio,11) (v(i+nb*nbcol,j),i=1,nbcol2)
  11          format(21x,5f10.5)
-!            write(6,11) (v(i+nb*nbcol,j),i=1,nbcol2)
+!            write(out_unitp,11) (v(i+nb*nbcol,j),i=1,nbcol2)
          END DO
          IF (nb .NE. nbblocs-1) read(nio,*)
-!        write(6,*) 'a',nb
+!        write(out_unitp,*) 'a',nb
         END DO
 
         DO i=1,nbligne
@@ -272,7 +272,7 @@
          integer nbcol2,nio
 
 
-!       write(6,*) ' lecture_tri',nbligne,nbcol,nio
+!       write(out_unitp,*) ' lecture_tri',nbligne,nbcol,nio
 
         nbblocs=int(nbligne/nbcol)+1
         IF (nbblocs*nbcol .EQ. nbligne) nbblocs=nbblocs-1
@@ -282,10 +282,10 @@
              nbcol2 = min(j-nb*nbcol,nbcol)
              read(nio,11) (v(i+nb*nbcol,j),i=1,nbcol2)
  11          format(4x,5D14.6)
-!            write(6,11) (v(i+nb*nbcol,j),i=1,nbcol2)
+!            write(out_unitp,11) (v(i+nb*nbcol,j),i=1,nbcol2)
          END DO
          IF (nb .NE. nbblocs-1) read(nio,*)
-!        write(6,*) 'a',nb
+!        write(out_unitp,*) 'a',nb
         END DO
 
         DO i=1,nbligne
@@ -313,7 +313,7 @@
          character(len=:), allocatable     :: wformat
 
 
-         !write(6,*) 'nl,nc,nbcol',nl,nc,nbcol
+         !write(out_unitp,*) 'nl,nc,nbcol',nl,nc,nbcol
          nbcol = nbcol1
          IF (nbcol .GT. 10) nbcol=10
          nbblocs=int(nc/nbcol)
@@ -355,7 +355,7 @@
          character (len=Name_longlen) :: wformat
 
 
-!        write(6,*) 'nl,nc,nbcol',nl,nc,nbcol
+!        write(out_unitp,*) 'nl,nc,nbcol',nl,nc,nbcol
          nbcol = nbcol1
          IF (nbcol .GT. 10) nbcol=10
          nbblocs=int(nc/nbcol)
@@ -391,7 +391,7 @@
          character (len=Name_longlen) :: wformat
 
 
-!        write(6,*) 'nl,nc,nbcol',nl,nc,nbcol
+!        write(out_unitp,*) 'nl,nc,nbcol',nl,nc,nbcol
          nbcol = nbcol1
          IF (nbcol .GT. 20) nbcol=20
          nbblocs=int(nc/nbcol)
@@ -425,7 +425,7 @@
 
          integer i,j,jj,nb,nbblocs,nfin,nio
 
-!        write(6,*) 'nl,nc,nbcol',nl,nc,nbcol
+!        write(out_unitp,*) 'nl,nc,nbcol',nl,nc,nbcol
 
 
          nbblocs=int(nc/nbcol)
@@ -453,7 +453,7 @@
 
          integer :: i,j,jj,nb,nbblocs,nfin,nio
 
-!        write(6,*) 'nl,nc,nbcol',nl,nc,nbcol
+!        write(out_unitp,*) 'nl,nc,nbcol',nl,nc,nbcol
 
 
          nbblocs=int(nc/nbcol)
@@ -736,7 +736,7 @@
            DO 40 nb=0,nbblocs-1
              DO 50 j=1,n
                read(nio,*) jdum,(f(j,i+nb*nbcol),i=1,nbcol)
-!              write(6,*) jdum,(f(j,i+nb*nbcol),i=1,nbcol)
+!              write(out_unitp,*) jdum,(f(j,i+nb*nbcol),i=1,nbcol)
  50          CONTINUE
              read(nio,*)
  40        CONTINUE

@@ -55,9 +55,9 @@
       SUBROUTINE sub2_ind_harm(Basis2n,para_PES,para_Tnum,mole)
       use mod_system
       USE mod_nDindex
-      use mod_Constant,  only: assignment(=),get_conv_au_to_unit
-      USE mod_Coord_KEO, only: assignment(=),CoordType, Tnum, gaussian_width, get_Qact0
-      use mod_PrimOp,    only: assignment(=),param_pes, sub_freq2_rph
+      use mod_Constant,  only: get_conv_au_to_unit
+      USE mod_Coord_KEO, only: CoordType, Tnum, gaussian_width, get_Qact0
+      use mod_PrimOp,    only: param_pes, sub_freq2_rph
       USE mod_basis
       IMPLICIT NONE
 

@@ -47,10 +47,7 @@
       USE mod_PrimOp
       USE mod_basis
 
-      USE mod_psi_set_alloc
-      USE mod_psi_Op
-      USE mod_ana_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi
 
       USE mod_propa
       USE mod_FullPropa
@@ -64,7 +61,7 @@
       USE mod_fullanalysis
       USE mod_Auto_Basis
       USE mod_MPI
-      USE mod_MPI_Aid     
+      USE mod_MPI_Aid
       IMPLICIT NONE
 
 !---------------------------------------------------------------------------------------
@@ -74,7 +71,7 @@
       logical  :: intensity_only
       integer  :: nio_res_int
 
-      integer   max_mem
+      integer (kind=ILkind)  :: max_mem
       logical   test_mem
 
 !----- physical and mathematical constants ---------------------------------------------
@@ -163,7 +160,7 @@
                         para_AllBasis,BasisnD_Save,                     &
                         para_PES,ComOp,para_AllOp,                      &
                         para_ana,para_intensity,intensity_only,         &
-                        para_propa,WP0(1))
+                        para_propa)
 
 !#if(run_MPI)
       !if_propa=para_ana%propa !< add to some type  later
@@ -334,7 +331,7 @@
             END IF ! for para_propa%para_WP0%WP0_nb_CleanChannel > 0
 
             IF(MPI_id==0) CALL norm2_psi(WP0(1))
-            write(out_unitp,*) ' Norm of |WP0>',WP0(1)%norm2
+            write(out_unitp,*) ' Norm^2 of |WP0>',WP0(1)%norm2
             IF(MPI_id==0) CALL renorm_psi_With_norm2(WP0(1))
             write(out_unitp,*) ' Analysis of |WP0> or Mu|WP0>'
             write(out_unitp,*)
@@ -470,7 +467,7 @@
         ELSE
           IF(MPI_id==0) write(out_unitp,*) ' Calculation of Hmax is skiped'
         ENDIF
-        
+
         IF(MPI_id==0) THEN
           write(out_unitp,*)
           CALL time_perso('sub_Hmax end')
@@ -577,10 +574,6 @@
 
           CALL sub_MatOp(para_H,para_ana%print)
 
-          ! temp
-          !CALL sub_MatOp(para_AllOp%tab_Op(3),para_ana%print)
-          !stop 'coucou'
-        
           IF(MPI_id==0) THEN
             write(out_unitp,*)
             write(out_unitp,*)
@@ -1087,12 +1080,10 @@
       USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
+      USE mod_psi
       USE mod_Op
       USE mod_analysis
       USE mod_propa
-      USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
-      USE mod_psi_B_TO_G
       IMPLICIT NONE
 
 !
@@ -1107,7 +1098,7 @@
       logical  :: intensity_only
       integer  :: nio_res_int
 
-      integer   max_mem
+      integer (kind=ILkind)  :: max_mem
       logical   test_mem
 
 
@@ -1167,7 +1158,7 @@
                         para_AllBasis,BasisnD_Save,                     &
                         para_PES,ComOp,para_AllOp,                      &
                         para_ana,para_intensity,intensity_only,         &
-                        para_propa,WP0)
+                        para_propa)
 
       write(out_unitp,*)
       write(out_unitp,*)
@@ -1230,7 +1221,7 @@ para_mem%mem_debug = .FALSE.
       write(out_unitp,*)
 
       WP3 = WP1-WP0
-      write(6,*) 'max diff',maxval(abs(WP3%RvecB))
+      write(out_unitp,*) 'max diff',maxval(abs(WP3%RvecB))
 !END DO
       write(out_unitp,*) '================================================'
       write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!'
@@ -1247,10 +1238,7 @@ para_mem%mem_debug = .FALSE.
       USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
-      USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
-      USE mod_psi_io
+      USE mod_psi
 
       USE mod_propa
       USE mod_FullPropa
@@ -1276,7 +1264,7 @@ para_mem%mem_debug = .FALSE.
       logical  :: intensity_only
       integer  :: nio_res_int
 
-      integer   max_mem
+      integer (kind=ILkind)  :: max_mem
       logical   test_mem
 
 
@@ -1369,7 +1357,7 @@ para_mem%mem_debug = .FALSE.
                         para_AllBasis,BasisnD_Save,                     &
                         para_PES,ComOp,para_AllOp,                      &
                         para_ana,para_intensity,intensity_only,         &
-                        para_propa,WP0)
+                        para_propa)
 
       para_H => para_AllOp%tab_Op(1)
       CALL dealloc_Basis(BasisnD_Save)
@@ -1511,13 +1499,7 @@ para_mem%mem_debug = .FALSE.
         Tab_Psi(i)   = ZERO
         Tab_OpPsi(i) = Tab_Psi(i)
 
-        IF (cplx) THEN
-          CALL Set_psi_With_index_R(Tab_Psi(i),ONE,ind_aie=i)
-        ELSE
-          CALL Set_psi_With_index_C(Tab_Psi(i),CONE,ind_aie=i)
-        END IF
-
-        !CALL Set_Random_psi(Tab_Psi(i))
+        CALL Set_psi_With_index(Tab_Psi(i),ONE,ind_aie=i)
 
       END DO
 
@@ -1612,10 +1594,7 @@ END SUBROUTINE Sub_OpPsi_test
 
 SUBROUTINE Tune_SG4threads_HPsi(cplx,nb_psi,para_H)
 USE mod_system
-USE mod_psi_set_alloc
-USE mod_psi_SimpleOp
-USE mod_psi_Op
-
+USE mod_psi,     ONLY : param_psi,alloc_psi,dealloc_NParray,Set_Random_psi
 USE mod_Op
 IMPLICIT NONE
 
@@ -1666,15 +1645,7 @@ DO i=1,nb_psi_loc
   CALL alloc_psi(Tab_Psi(i),BasisRep=.TRUE.,GridRep=.FALSE.)
   Tab_Psi(i)   = ZERO
   Tab_OpPsi(i) = Tab_Psi(i)
-  IF (cplx) THEN
-    DO ib=1,size(Tab_Psi(i)%CvecB)
-      CALL random_number(a)
-      CALL random_number(b)
-      Tab_Psi(i)%CvecB(ib) = cmplx(a,b,kind=Rkind)
-    END DO
-  ELSE
-    CALL random_number(Tab_Psi(i)%RvecB)
-  END IF
+  CALL Set_Random_psi(Tab_Psi(i))
 END DO
 
 
@@ -1715,10 +1686,6 @@ SG4_maxth = opt_PSG4_maxth
 write(out_unitp,*) 'Optimal threads: ',SG4_maxth,' Delta Real Time',RealTime(SG4_maxth)
 
 
-DO i=1,size(Tab_Psi)
-  CALL dealloc_psi(Tab_Psi(i),  delete_all=.TRUE.)
-  CALL dealloc_psi(Tab_OpPsi(i),delete_all=.TRUE.)
-END DO
 CALL dealloc_NParray(Tab_OpPsi,'Tab_OpPsi',name_sub)
 CALL dealloc_NParray(Tab_Psi,  'Tab_Psi',  name_sub)
 
@@ -1729,14 +1696,12 @@ END SUBROUTINE Tune_SG4threads_HPsi
       USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
+      USE mod_psi
+
       USE mod_Op
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_propa
-      USE mod_ana_psi
-      USE mod_psi_set_alloc
-      USE mod_param_WP0
-      USE mod_psi_io
       USE mod_Auto_Basis
 
       IMPLICIT NONE
@@ -1753,7 +1718,7 @@ END SUBROUTINE Tune_SG4threads_HPsi
       logical  :: intensity_only
       integer  :: nio_res_int
 
-      integer   max_mem
+      integer (kind=ILkind)  :: max_mem
       logical   test_mem
 
 
@@ -1766,7 +1731,7 @@ END SUBROUTINE Tune_SG4threads_HPsi
 
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum)      :: para_Tnum
 
 !----- variables for the construction of H ----------------------------
       TYPE (param_ComOp)  :: ComOp
@@ -1818,7 +1783,7 @@ END SUBROUTINE Tune_SG4threads_HPsi
                         para_AllBasis,BasisnD_Save,                     &
                         para_PES,ComOp,para_AllOp,                      &
                         para_ana,para_intensity,intensity_only,         &
-                        para_propa,WP0)
+                        para_propa)
 
       para_H => para_AllOp%tab_Op(1)
       CALL init_psi(WP0,para_H,para_propa%para_WP0%WP0cplx)
@@ -1860,15 +1825,11 @@ END SUBROUTINE Tune_SG4threads_HPsi
                   Get_nbPERsym_FROM_SymAbelianOFAllBasis(para_AllBasis, &
                                         para_propa%para_Davidson%symab))
         END IF
-        write(6,*) 'max_diago',max_diago
 
         para_WP0%nb_WP0              = 0
         para_WP0%read_file           = .TRUE.
         para_propa%file_WP%formatted = para_propa%para_Davidson%formatted_file_readWP
         para_WP0%file_WP0            = para_propa%file_WP
-        write(6,*) 'name WP0',para_WP0%file_WP0%name
-!        para_WP0%file_WP0            = 'file_WP'
-
         para_WP0%read_listWP0        = para_propa%para_Davidson%read_listWP
         para_WP0%WP0cplx             = para_H%cplx
         para_propa%file_WP%name      = para_propa%para_Davidson%name_file_saveWP
@@ -1883,8 +1844,9 @@ END SUBROUTINE Tune_SG4threads_HPsi
       ! allocation
       CALL alloc_NParray(Tab_WP,(/max_diago/),"Tab_WP","sub_Analysis_Only")
       DO i=1,size(Tab_WP)
-        CALL init_psi(Tab_WP(i),para_H,para_propa%para_WP0%WP0cplx)
+        CALL init_psi(Tab_WP(i),para_H,para_WP0%WP0cplx)
       END DO
+
 
       ! read the WPs
       CALL sub_read_psi0(tab_WP,para_WP0,max_diago)

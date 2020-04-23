@@ -28,7 +28,7 @@
 !===========================================================================
 MODULE mod_dnGG_dng
   use mod_system
-  use mod_dnSVM,   only: assignment(=),type_dnmat,type_dns,alloc_dnsvm,dealloc_dnsvm, &
+  use mod_dnSVM,   only: type_dnmat,type_dns,alloc_dnsvm,dealloc_dnsvm, &
                          write_dnsvm, sub_zero_to_dnmat, inv_dnmat1_to_dnmat2, &
                          type_dnvec, alloc_array, dealloc_array
   use mod_paramQ,  only: sub_QactTOdnMWx, Write_dnx, analyze_dnx
@@ -127,7 +127,7 @@ MODULE mod_dnGG_dng
 
       CALL sub3_dnDetGG(dnJac,dnGG,nderiv_loc,                          &
                                  mole%masses,mole%Mtot_inv,mole%ncart)
-      !write(6,*) 'dnJac'
+      !write(out_unitp,*) 'dnJac'
       !CALL write_dnS(dnJac)
       !----------------------------------------------------
       !-- f0,fi,Fij calculation
@@ -137,7 +137,7 @@ MODULE mod_dnGG_dng
                       para_Tnum%nrho)
       rho = dnrho%d0
       !write(out_unitp,*) 'rho :',rho
-      !write(6,*) 'dnrho'
+      !write(out_unitp,*) 'dnrho'
       !CALL write_dnS(dnrho)
       !----------------------------------------------------
       !-- vep calculation

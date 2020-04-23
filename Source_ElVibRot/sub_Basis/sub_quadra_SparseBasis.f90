@@ -357,8 +357,6 @@
 
         CALL basis2TObasis1(basis_SG%tab_PbasisSG(i_SG)%Pbasis,basis_DPsave)
         ! here tab_Pbasis(ib)%Pbasis is also copied. It has to be removed !!
-        !write(6,*) 'coucou asso basis_SG%tab_PbasisSG(i_SG)%Pbasis%tab_Pbasis', &
-        !  associated(basis_SG%tab_PbasisSG(i_SG)%Pbasis%tab_Pbasis)
         IF (associated(basis_SG%tab_PbasisSG(i_SG)%Pbasis%tab_Pbasis)) THEN
           DO ib=1,basis_SG%tab_PbasisSG(i_SG)%Pbasis%nb_basis
             CALL dealloc_basis(basis_SG%tab_PbasisSG(i_SG)%Pbasis%tab_Pbasis(ib)%Pbasis)
@@ -394,9 +392,9 @@
 
         IF (i_SG == 1) THEN
           !-- copy tab_PbasisSG(i_SG)%Pbasis%nDindB in basis_SG%nDindB --------- !! utile ???
-          CALL nDindex2TOnDindex1(basis_SG%nDindB,basis_SG%tab_PbasisSG(1)%Pbasis%nDindB)
-!          write(out_unitp,*) 'nDindB'
-!          CALL Write_nDindex(basis_SG%nDindB)
+          basis_SG%nDindB = basis_SG%tab_PbasisSG(1)%Pbasis%nDindB
+          !write(out_unitp,*) 'nDindB'
+          !CALL Write_nDindex(basis_SG%nDindB)
           basis_SG%nb = basis_SG%nDindB%Max_nDI
 
           ! transfert of tab_symab ---------------------------------------
@@ -689,7 +687,7 @@
           IF (basis_SG%tab_basisPrimSG(L,ib)%nb_basis < 1) THEN
             LG_L = L ! old
             LB_L = LB !old
-            !write(6,*) 'primitive basis'
+            !write(out_unitp,*) 'primitive basis'
           ELSE
             basis_SG%tab_basisPrimSG(L,ib)%L_TO_nq%A = 0
             CALL init_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nq,Lmax=L)
@@ -702,9 +700,9 @@
             CALL init_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nb,Lmax=LB)
             LB_L = get_n_FROM_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nb,LB)
             !CALL Write_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nb)
-            !write(6,*) 'L ,LG_L',L,LG_L
-            !write(6,*) 'LB,LB_L',LB,min(LG_L,LB_L)
-            !write(6,*) 'not primitive basis'
+            !write(out_unitp,*) 'L ,LG_L',L,LG_L
+            !write(out_unitp,*) 'LB,LB_L',LB,min(LG_L,LB_L)
+            !write(out_unitp,*) 'not primitive basis'
           END IF
 
           basis_SG%tab_basisPrimSG(L,ib)%L_SparseGrid    = LG_L
@@ -730,7 +728,7 @@
           CALL sort_basis(basis_SG%tab_basisPrimSG(L,ib))
 
           nDsize(ib) = basis_SG%tab_basisPrimSG(L,ib)%nb
-          IF (debug) write(6,*) 'L,ib',L,ib,'nb:',                      &
+          IF (debug) write(out_unitp,*) 'L,ib',L,ib,'nb:',                      &
                                        basis_SG%tab_basisPrimSG(L,ib)%nb
 
           IF (debug) write(out_unitp,*) 'primtive basis sets of SG,L,ib',L,ib,' done'
@@ -820,7 +818,7 @@
                           'nDval',name_sub)
         DO i_SG=1,basis_SG%nb_SG
           CALL calc_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep,i_SG,nDval)
-          write(6,*) 'i_SG,nDval,coef',i_SG,nDval(:),basis_SG%WeightSG(i_SG)
+          write(out_unitp,*) 'i_SG,nDval,coef',i_SG,nDval(:),basis_SG%WeightSG(i_SG)
         END DO
         CALL dealloc_NParray(nDval,'nDval',name_sub)
       END IF

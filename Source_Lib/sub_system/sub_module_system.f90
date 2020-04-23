@@ -25,7 +25,7 @@ MODULE mod_system
       USE mod_string
       USE mod_file
       USE mod_RW_MatVec
-      USE mod_FracInteger
+      USE mod_Frac
       USE mod_memory
       USE mod_memory_Pointer
       USE mod_memory_NotPointer
@@ -78,6 +78,11 @@ MODULE mod_system
       character (len=Line_len) :: compile_host = __COMPILE_HOST
 #else
       character (len=Line_len) :: compile_host = "unknown: -D__COMPILE_HOST=?"
+#endif
+#if defined(__COMPILER)
+      character (len=Line_len) :: compiler = __COMPILER
+#else
+      character (len=Line_len) :: compiler = "unknown: -D__COMPILER=?"
 #endif
 #if defined(__COMPILER_VER)
       character (len=Line_len) :: compiler_ver = __COMPILER_VER

@@ -43,7 +43,7 @@
 MODULE mod_OTF
    USE mod_system
    USE mod_dnSVM
-   use mod_OTF_def,    only: assignment(=),param_otf
+   use mod_OTF_def,    only: param_otf
    use mod_PrimOp_def, only: param_pes, write_param_pes
    USE mod_Constant
    IMPLICIT NONE
@@ -66,7 +66,7 @@ MODULE mod_OTF
       SUBROUTINE dnOp_grid_OnTheFly(Qxyz,MatdnECC,nderivE,              &
                                     MatdnMuCC,nderivMu,                 &
                                     mole,para_PES)
-      use mod_Coord_KEO,  only: assignment(=),CoordType
+      use mod_Coord_KEO,  only: CoordType
 
       IMPLICIT NONE
 
@@ -93,7 +93,7 @@ MODULE mod_OTF
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'Qxyz'
-        write(out_unitp,'(3(x,f16.6))') Qxyz
+        write(out_unitp,'(3(1x,f16.6))') Qxyz
         write(out_unitp,*) 'nderivE,nderivMu',nderivE,nderivMu
         write(out_unitp,*)
       END IF
@@ -165,7 +165,7 @@ END IF
       END SUBROUTINE dnOp_grid_OnTheFly
       SUBROUTINE pot_mu_onthefly_gauss(Qxyz,dnECC,nderivE,dnMuCC,nderivMu,&
                                         mole,para_PES,err_calc)
-      use mod_Coord_KEO,  only: assignment(=),CoordType
+      use mod_Coord_KEO,  only: CoordType
 
       USE mod_system
       USE mod_dnSVM
@@ -256,7 +256,7 @@ END IF
                                         mole,para_PES,para_OTF,err_calc)
 
       USE mod_system
-      use mod_Coord_KEO,  only: assignment(=),CoordType
+      use mod_Coord_KEO,  only: CoordType
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -378,7 +378,9 @@ END IF
       !- gaussian execution -------------------------------------------
       CALL file_delete(para_OTF%file_log)
 
-      CALL system(para_OTF%commande_unix)
+      !CALL system(para_OTF%commande_unix)
+      CALL EXECUTE_COMMAND_LINE(para_OTF%commande_unix)
+
 
       located = .FALSE.
       CALL file_open(para_OTF%file_log,nio,append=.TRUE.)
@@ -778,7 +780,7 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO,  only: assignment(=),CoordType
+      USE mod_Coord_KEO,  only: CoordType
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -853,7 +855,7 @@ END IF
                                         mole,para_PES,para_OTF)
 
       USE mod_system
-      USE mod_Coord_KEO,  only: assignment(=),CoordType
+      USE mod_Coord_KEO,  only: CoordType
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -946,7 +948,8 @@ END IF
 !       - gamess execution -------------------------------------------
         CALL file_delete(para_OTF%file_log)
 
-        CALL system(para_OTF%commande_unix)
+        !CALL system(para_OTF%commande_unix)
+        CALL EXECUTE_COMMAND_LINE(para_OTF%commande_unix)
 
 
         located = .FALSE.
@@ -1371,7 +1374,7 @@ END IF
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO,  only: assignment(=),CoordType
+      USE mod_Coord_KEO,  only: CoordType
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -1456,7 +1459,7 @@ END IF
                                           mole,para_PES,para_OTF)
 
       USE mod_system
-      USE mod_Coord_KEO,  only: assignment(=),CoordType
+      USE mod_Coord_KEO,  only: CoordType
       USE mod_PrimOp_def
       IMPLICIT NONE
 
@@ -1523,7 +1526,8 @@ END IF
 
       !----------------------------------------------------------------
       !- system call => ab initio calulation --------------------------
-      CALL system(para_PES%para_OTF%commande_unix // " " // int_TO_char(para_PES%nb_elec) )
+      !CALL system(para_PES%para_OTF%commande_unix // " " // int_TO_char(para_PES%nb_elec) )
+      CALL EXECUTE_COMMAND_LINE(para_PES%para_OTF%commande_unix // " " // int_TO_char(para_PES%nb_elec) )
 
       located = .FALSE.
       CALL file_open(para_PES%para_OTF%file_log,nio,append=.TRUE.)
@@ -1951,7 +1955,7 @@ END IF
       located = .FALSE.
       format_label='(A' // int_TO_char(len(label)) // ')'
 
-      !write(6,*) 'format_label',format_label
+      !write(out_unitp,*) 'format_label',format_label
 !     write(out_unitp,*) 'label to find:',label,located
       DO
         i_line = i_line + 1
@@ -1973,7 +1977,7 @@ END IF
  999  CONTINUE
       i_line = 0
 
-      !write(6,*) 'Find_Label: ',label,located
+      !write(out_unitp,*) 'Find_Label: ',label,located
       END SUBROUTINE Find_Label
 
       SUBROUTINE NFind_Label(nio,label,located,iformat)

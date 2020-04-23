@@ -130,8 +130,8 @@
 
       para_PES%nb_elec                     = nb_elec_save
       para_Tnum%JJ                         = JJ_save
-      !write(6,*) 'nb_bi ?',get_nb_bi_FROM_AllBasis(para_AllBasis)
-      !write(6,*) 'nb_bi ?',nb_bi_save ; STOP
+      !write(out_unitp,*) 'nb_bi ?',get_nb_bi_FROM_AllBasis(para_AllBasis)
+      !write(out_unitp,*) 'nb_bi ?',nb_bi_save ; STOP
 
       CALL All2_param_TO_ComOp(ComOp,para_AllBasis,mole,nb_bi_save,     &
                                para_PES%nb_elec,                        &
@@ -156,13 +156,16 @@
         write(out_unitp,*) ' nb_qa',nqa
         STOP
       END IF
-      IF(MPI_id==0) write(out_unitp,*) 'nDindB%nDsize',para_AllBasis%BasisnD%nDindB%nDsize
-      !CALL Write_nDindex(para_AllBasis%BasisnD%nDindB,"BasisnD%nDinB ")
+      IF(MPI_id==0) THEN
+        IF (allocated(para_AllBasis%BasisnD%nDindB%nDsize))             &
+          write(out_unitp,*) 'nDindB%nDsize',para_AllBasis%BasisnD%nDindB%nDsize
+        !CALL Write_nDindex(para_AllBasis%BasisnD%nDindB,"BasisnD%nDinB ")
 
-      IF(MPI_id==0) write(out_unitp,*) 'nDindG%nDsize',para_AllBasis%BasisnD%nDindG%nDsize
-      !CALL Write_nDindex(para_AllBasis%BasisnD%nDindG,"BasisnD%nDinG ")
-
-      !CALL write_param_ComOp(ComOp)
+         IF (allocated(para_AllBasis%BasisnD%nDindG%nDsize))             &
+           write(out_unitp,*) 'nDindG%nDsize',para_AllBasis%BasisnD%nDindG%nDsize
+         !CALL Write_nDindex(para_AllBasis%BasisnD%nDindG,"BasisnD%nDinG ")
+         !CALL write_param_ComOp(ComOp)
+      END IF
 
       IF (debug) THEN
         write(out_unitp,*) '==== NEW BASIS ======================================='
@@ -358,6 +361,7 @@
         END IF
 
         IF (Print_basis) write(out_unitp,*) 'Primitive basis done. Layer:      ',rec
+        CALL flush_perso(out_unitp)
 
       END IF
       CALL flush_perso(out_unitp)
@@ -900,7 +904,7 @@
       CALL construct_primitive_basis(basis_temp)
 
 
-      !write(6,*) 'In ',name_sub,' basis_temp%type',basis_temp%type,HObasis
+      !write(out_unitp,*) 'In ',name_sub,' basis_temp%type',basis_temp%type,HObasis
       HObasis = (basis_temp%type == 20 .OR. basis_temp%type == 21 .OR.     &
                  basis_temp%type == 200 .OR. basis_temp%type == 201)
 
@@ -1155,9 +1159,9 @@
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
 
-      !write(6,*) 'type_Qin',mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(:)
-      !write(6,*) 'iQdyn',basis_temp%iQdyn(1)
-      !write(6,*) 'type_Qin',mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(basis_temp%iQdyn(1))
+      !write(out_unitp,*) 'type_Qin',mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(:)
+      !write(out_unitp,*) 'iQdyn',basis_temp%iQdyn(1)
+      !write(out_unitp,*) 'type_Qin',mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(basis_temp%iQdyn(1))
       type_Q = mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qin(basis_temp%iQdyn(1))
 
 
@@ -2089,7 +2093,7 @@
       USE mod_system
       USE mod_nDindex
       USE mod_Op
-      USE mod_psi_set_alloc
+      USE mod_psi,          ONLY : param_psi,alloc_psi,alloc_NParray,dealloc_NParray
       USE mod_propa
       USE mod_analysis
       USE mod_fullanalysis
@@ -2350,9 +2354,6 @@
         CALL sub_analyse(Tab_Psi,nb_ba,para_H_HADA,                     &
                            para_ana,para_intensity,para_AllOp,const_phys)
 
-      END DO
-      DO i=1,nb_ba
-        CALL dealloc_psi(Tab_Psi(i))
       END DO
       CALL dealloc_NParray(Tab_Psi,'Tab_Psi',name_sub)
 

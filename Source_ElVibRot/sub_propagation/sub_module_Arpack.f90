@@ -53,14 +53,9 @@ CONTAINS
       SUBROUTINE sub_propagation_Arpack(psi,Ene,nb_diago,max_diago,     &
                                         para_H,para_propa)
       USE mod_system
+      USE mod_psi,    ONLY : param_psi,alloc_psi,trie_psi,dealloc_psi,  &
+                             param_WP0
       USE mod_Op
-
-      USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
-      USE mod_ana_psi
-      USE mod_psi_B_TO_G
-      USE mod_psi_Op
-      USE mod_param_WP0
       USE mod_propa
       USE mod_MPI
       IMPLICIT NONE
@@ -172,7 +167,7 @@ CONTAINS
 #if(run_MPI)
       CALL MPI_Bcast(n,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
 #endif
-      
+
       IF (nb_diago == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' nb_diago=0 is not possible with ARPACK'
@@ -288,7 +283,7 @@ CONTAINS
         write(out_unitp,*) 'Use Arpack=f and Davidson=t'
         STOP 'ARPACK has been removed'
 #endif
-        !write(6,*) 'it,ido',it,ido
+        !write(out_unitp,*) 'it,ido',it,ido
 
         IF (abs(ido) /= 1) EXIT
 
@@ -433,10 +428,17 @@ CONTAINS
 
               CALL sub_OpV1_TO_V2_Arpack(v(:,j),ax,psi(j),Hpsi_loc,                    &
                                          para_H,cplxE,para_propa,int(n,4))
-
+#if __ARPACK == 1
               call daxpy(n, -d(j,1), v(1,j), 1, ax, 1)
               d(j,3) = dnrm2(n, ax, 1)
               d(j,3) = d(j,3) / abs(d(j,1))
+#else
+              write(out_unitp,*) 'ERROR in ',name_sub
+              write(out_unitp,*) ' The ARPACK library is not present!'
+              write(out_unitp,*) 'Use Arpack=f and Davidson=t'
+              STOP 'ARPACK has been removed'
+#endif
+
 
               Ene(j)          = d(j,1)
               psi(j)%CAvOp    = cmplx(d(j,1),ZERO,kind=Rkind)
@@ -458,6 +460,7 @@ CONTAINS
 #if __ARPACK == 1
               call daxpy(n, -d(j,1), v(1,j), 1, ax, 1)
               call daxpy(n, d(j,2), v(1,j+1), 1, ax, 1)
+              d(j,3) = dnrm2(n, ax, 1)
 #else
               write(out_unitp,*) 'ERROR in ',name_sub
               write(out_unitp,*) ' The ARPACK library is not present!'
@@ -465,7 +468,6 @@ CONTAINS
               STOP 'ARPACK has been removed'
 #endif
 
-              d(j,3) = dnrm2(n, ax, 1)
 
               Ene(j)          = d(j,1)
               psi(j)%CAvOp    = cmplx(d(j,1),d(j,2),kind=Rkind)
@@ -485,16 +487,16 @@ CONTAINS
 #if __ARPACK == 1
               call daxpy(n, -d(j,2), v(1,j), 1, ax, 1)
               call daxpy(n, -d(j,1), v(1,j+1), 1, ax, 1)
+              d(j,3) = dlapy2( d(j,3), dnrm2(n, ax, 1) )
+              d(j,3) = d(j,3) / dlapy2(d(j,1),d(j,2))
+              d(j+1,3) = d(j,3)
+              first = .false.
 #else
               write(out_unitp,*) 'ERROR in ',name_sub
               write(out_unitp,*) ' The ARPACK library is not present!'
               write(out_unitp,*) 'Use Arpack=f and Davidson=t'
               STOP 'ARPACK has been removed'
 #endif
-              d(j,3) = dlapy2( d(j,3), dnrm2(n, ax, 1) )
-              d(j,3) = d(j,3) / dlapy2(d(j,1),d(j,2))
-              d(j+1,3) = d(j,3)
-              first = .false.
             else
               first = .true.
             end if
@@ -566,7 +568,6 @@ CONTAINS
 !     | Done with program dndrv1. |
 !     %---------------------------%
 
-
       CALL dealloc_psi(Hpsi_loc,delete_all=.TRUE.)
       CALL dealloc_psi(psi_loc,delete_all=.TRUE.)
 
@@ -586,19 +587,13 @@ CONTAINS
 !----------------------------------------------------------
       END SUBROUTINE sub_propagation_Arpack
 !=======================================================================================
-
+!
 !=======================================================================================
       SUBROUTINE sub_OpV1_TO_V2_Arpack(V1,V2,psi1,psi2,                 &
                                        para_H,cplxE,para_propa,n)
       USE mod_system
       USE mod_Op
-
-      USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
-      USE mod_ana_psi
-      USE mod_psi_B_TO_G
-      USE mod_psi_Op,         ONLY : Overlap_psi1_psi2,Set_symab_OF_psiBasisRep
-      USE mod_param_WP0
+      USE mod_psi,    ONLY : param_psi,Overlap_psi1_psi2,Set_symab_OF_psiBasisRep
       USE mod_propa
       USE mod_MPI
       IMPLICIT NONE
@@ -673,14 +668,9 @@ CONTAINS
       SUBROUTINE sub_propagation_Arpack_Sym(psi,Ene,nb_diago,max_diago, &
                                           para_H,para_propa)
       USE mod_system
-      USE mod_Op
+      USE mod_psi,    ONLY : param_psi,alloc_psi,dealloc_psi,param_WP0
 
-      USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op
-      USE mod_ana_psi
-      USE mod_psi_B_TO_G
-      USE mod_param_WP0
+      USE mod_Op
       USE mod_propa
       USE mod_MPI
       IMPLICIT NONE
@@ -1034,12 +1024,13 @@ CONTAINS
             !IF(MPI_id==0) ax(:) = Hpsi_loc%RvecB(:)
 
 #if __ARPACK == 1
-            IF(MPI_id==0) call daxpy(n, -d(j,1), v(:,j), 1, ax, 1)
-#endif
             IF(MPI_id==0) THEN
+              call daxpy(n, -d(j,1), v(:,j), 1, ax, 1)
               d(j,2) = dnrm2(n, ax, 1)
               d(j,2) = d(j,2) / abs(d(j,1))
-
+            END IF
+#endif
+            IF(MPI_id==0) THEN
               IF (debug) write(out_unitp,*) 'j,ene ?',j,              &
                              d(j,1) * get_Conv_au_TO_unit('E','cm-1')
 
@@ -1126,15 +1117,12 @@ CONTAINS
 
  SUBROUTINE ReadWP0_Arpack(psi,nb_diago,max_diago,para_Davidson,cplx)
  USE mod_system
+ USE mod_psi,    ONLY : param_psi,norm2_psi,renorm_psi,dealloc_psi,     &
+                        Set_symab_OF_psiBasisRep,copy_psi2TOpsi1,       &
+                        sub_PsiBasisRep_TO_GridRep,alloc_psi,           &
+                        param_WP0,sub_read_psi0,set_random_psi, ecri_init_psi
 
- USE mod_psi_set_alloc
- USE mod_psi_SimpleOp
- USE mod_psi_B_TO_G,     ONLY : sub_PsiBasisRep_TO_GridRep
- USE mod_ana_psi,        ONLY : norm2_psi,renorm_psi
- USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep
- USE mod_psi_io,         ONLY : sub_read_psi0
- USE mod_param_WP0,      ONLY : param_WP0
- USE mod_propa,          ONLY : param_Davidson
+ USE mod_propa,  ONLY : param_Davidson
  IMPLICIT NONE
 
 

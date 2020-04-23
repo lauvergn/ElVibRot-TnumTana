@@ -43,8 +43,9 @@
 
       MODULE mod_analysis
       USE mod_system
-      use mod_Constant, only: assignment(=),real_wu, convrwu_to_r, rwu_write, get_conv_au_to_unit, get_val_FROM_RWU
-      USE mod_type_ana_psi
+      use mod_Constant, only : real_wu, convRWU_TO_R_WITH_WorkingUnit,  &
+                               rwu_write, get_conv_au_to_unit
+      USE mod_psi,      ONLY : param_ana_psi
       USE mod_CRP
       IMPLICIT NONE
         TYPE param_ana
@@ -123,7 +124,12 @@
 !===============================================================================
       SUBROUTINE read_analyse(para_ana,Qana)
       USE mod_system
+<<<<<<< HEAD
       USE mod_type_ana_psi
+=======
+      USE mod_psi,      ONLY : param_ana_psi,init_ana_psi,Write_ana_psi
+      USE mod_MPI
+>>>>>>> 84709f9c30db94ab3b9c00b37f32fd4fa1fafdb5
       IMPLICIT NONE
 
 !----- variables pour la namelist analyse ----------------------------
@@ -298,12 +304,8 @@
         STOP 'ERROR: Empty file name.'
       END IF
 
-
-      IF (get_val_FROM_RWU(max_ene) <= ZERO) THEN
-        para_ana%max_ene         = huge(ONE)
-      ELSE
-        para_ana%max_ene         = convRWU_TO_R(max_ene)
-      END IF
+      para_ana%max_ene         = convRWU_TO_R_WITH_WorkingUnit(max_ene)
+      IF (para_ana%max_ene <= ZERO) para_ana%max_ene = huge(ONE)
       para_ana%max_ana         = max_ana
 
       para_ana%ana             = ana
@@ -316,7 +318,7 @@
 
       para_ana%CRP             = CRP
 
-      para_ana%Ezpe            = convRWU_TO_R(Ezpe)
+      para_ana%Ezpe            = convRWU_TO_R_WITH_WorkingUnit(Ezpe)
       para_ana%Temp            = Temp
 
       para_ana%VibRot          = VibRot
@@ -341,15 +343,20 @@
                           Weight_Rho=Weight_Rho,Qana_Weight=Qana_Weight,&
                           psi1D_Q0=psi1D_Q0,psi2D_Q0=psi2D_Q0,Qana=Qana_cut)
       ELSE
+!                          Write_psi2_Grid=(print_psi > 0 .AND. psi2),   &
+!                          Write_psi2_Basis=(print_psi > 0 .AND. psi2),  &
+!                        Write_psi_Grid=(print_psi > 0 .AND. .NOT. psi2),&
+!                       Write_psi_Basis=(print_psi > 0 .AND. .NOT. psi2),&
+
         CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
                           propa=propa,T=ZERO,                           &
                           Boltzmann_pop=.TRUE.,Temp=Temp,               &
                           adia=psi_adia,                                &
                           AvScalOp=AvScalOp,AvHiterm=AvHiterm,          &
-                          Write_psi2_Grid=(print_psi > 0 .AND. psi2),   &
-                          Write_psi2_Basis=(print_psi > 0 .AND. psi2),  &
-                        Write_psi_Grid=(print_psi > 0 .AND. .NOT. psi2),&
-                       Write_psi_Basis=(print_psi > 0 .AND. .NOT. psi2),&
+                          Write_psi2_Grid=.FALSE.,                      &
+                          Write_psi2_Basis=.FALSE.,                     &
+                          Write_psi_Grid=.FALSE.,                       &
+                          Write_psi_Basis=.FALSE.,                      &
                           rho1D=rho1D,rho2D=rho2D,Rho_type=Rho_type,    &
                           Weight_Rho=Weight_Rho,Qana_Weight=Qana_Weight,&
                           psi1D_Q0=psi1D_Q0,psi2D_Q0=psi2D_Q0,Qana=Qana_cut)
@@ -377,8 +384,8 @@
 !===============================================================================
 
       SUBROUTINE dealloc_para_ana(para_ana)
-      USE mod_type_ana_psi
       USE mod_system
+      USE mod_psi,      ONLY : param_ana_psi,dealloc_ana_psi
       IMPLICIT NONE
 
 !----- variables pour la namelist analyse ----------------------------
@@ -489,9 +496,9 @@
         para_intensity%dip_Qact  = dip_Qact
 
         para_intensity%l_lorentz   = l_lorentz
-        para_intensity%Emin        = convRWU_TO_R(Emin)
-        para_intensity%Emax        = convRWU_TO_R(Emax)
-        para_intensity%Ewidth      = convRWU_TO_R(Ewidth)
+        para_intensity%Emin        = convRWU_TO_R_WITH_WorkingUnit(Emin)
+        para_intensity%Emax        = convRWU_TO_R_WITH_WorkingUnit(Emax)
+        para_intensity%Ewidth      = convRWU_TO_R_WITH_WorkingUnit(Ewidth)
         para_intensity%nEstep      = nEstep
 
 

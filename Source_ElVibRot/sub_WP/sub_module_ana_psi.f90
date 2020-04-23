@@ -44,6 +44,8 @@ MODULE mod_ana_psi
   USE mod_system
   USE mod_nDindex
   USE mod_Constant
+  USE mod_type_ana_psi
+  USE mod_basis
   IMPLICIT NONE
 
   PRIVATE
@@ -129,6 +131,8 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   integer                           :: nioPsi
   character (len=Line_len)          :: name_filePsi      = " "     ! name of the file
 
+  logical :: Grid,Basis
+
   !----- dynamic allocation memory ------------------------------------
   real (kind=Rkind), allocatable :: moy_Qba(:)
   real (kind=Rkind), allocatable :: Mij(:,:,:)
@@ -144,18 +148,19 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
     CALL flush_perso(out_unitp)
   END IF
 
+  ! save the GridRep and BasisRep values to be able to deallocate the unused representation
+  Grid  = psi%GridRep
+  Basis = psi%BasisRep
+
   IF (psi%ComOp%contrac_ba_ON_HAC) THEN
     ana_psi%AvQ = .FALSE.
   END IF
 
   !----------------------------------------------------------------------
   ! Boltzmann population
-  IF (ana_psi%Boltzmann_pop) THEN
-
+  IF (ana_psi%Boltzmann_pop .AND. ana_psi%Temp > ZERO .AND. ana_psi%Part_func > ZERO) THEN
     RWU_Temp = REAL_WU(ana_psi%Temp,'°K','E')
-    !Etemp   = RWU_Temp  ! Temperature convertion in Hartree
-    Etemp    = convRWU_TO_R(RWU_Temp ,WorkingUnit=.TRUE.)
-
+    Etemp    = convRWU_TO_R_WITH_WorkingUnit(RWU_Temp)
     pop = exp(-(ana_psi%Ene-ana_psi%ZPE)/Etemp) / ana_psi%Part_func
   END IF
 
@@ -165,7 +170,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   IF (ana_psi%propa) THEN
 
     RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
-    E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
+    E      = convRWU_TO_R_WITH_WritingUnit(RWU_E)
 
     IF (adia) THEN
       CALL Channel_weight(tab_WeightChannels,psi,                       &
@@ -229,8 +234,8 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
     RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
     RWU_DE = REAL_WU(ana_psi%Ene-ana_psi%ZPE,'au','E')
-    E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
-    DE     = convRWU_TO_R(RWU_DE,WorkingUnit=.FALSE.)
+    E      = convRWU_TO_R_WITH_WritingUnit(RWU_E)
+    DE     = convRWU_TO_R_WITH_WritingUnit(RWU_DE)
 
     IF (ana_psi%AvQ) THEN
       CALL alloc_NParray(moy_Qba,(/2*Psi%BasisnD%ndim/),"moy_Qba",name_sub)
@@ -290,6 +295,13 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
   !---------------------------------------------------------------------------
   IF (ana_psi%Write_psi) THEN
+
+    IF (string_IS_empty(ana_psi%file_Psi%name)) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' The file name in "file_Psi%name" is empty !'
+      STOP
+    END IF
+
     ! write one the grid
     IF (ana_psi%Write_psi2_Grid) THEN
       name_filePsi = ana_psi%file_Psi%name
@@ -353,7 +365,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
                       ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
                       ecri_psi2=.FALSE.)
       END IF
-
+      close(nioPsi)
     END IF
 
     IF (.NOT. adia .AND. ana_psi%Write_psi_Basis) THEN
@@ -379,6 +391,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
                       ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
                       ecri_psi2=.FALSE.)
       END IF
+      close(nioPsi)
 
     END IF
   END IF
@@ -397,6 +410,9 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   IF (allocated(psi_line)) deallocate(psi_line)
   IF (allocated(lformat))  deallocate(lformat)
   IF (allocated(moy_Qba))  deallocate(moy_Qba)
+
+  ! enable to deallocate the unsed representation.
+  CALL alloc_psi(psi,BasisRep=Basis,GridRep=Grid)
 
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
@@ -591,32 +607,30 @@ END SUBROUTINE sub_analyze_psi
 !================================================================
       SUBROUTINE psi_Qba_ie_psi(T,psi,ana_psi,tab_WeightChannels,info)
       USE mod_system
+      USE mod_param_SGType2
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
       IMPLICIT NONE
 
 !----- variables for the WP ----------------------------------------
-      TYPE (param_psi),     intent(inout) :: psi
-      TYPE (param_ana_psi), intent(in)    :: ana_psi
-
-      character (len=*) :: info
-
-      real (kind=Rkind) :: T
-     real (kind=Rkind), allocatable    :: tab_WeightChannels(:,:)
+      TYPE (param_psi),     intent(inout)           :: psi
+      TYPE (param_ana_psi), intent(in)              :: ana_psi
+      character (len=*),    intent(in)              :: info
+      real (kind=Rkind),    intent(in)              :: T
+      real (kind=Rkind),    intent(in), allocatable :: tab_WeightChannels(:,:)
 
 
+!------ working variables ---------------------------------
+      TYPE(OldParam)    :: OldPara
       real (kind=Rkind) :: Qmean(psi%nb_act1)
       real (kind=Rkind) :: Qmean_ie(psi%nb_act1,psi%nb_bi,psi%nb_be)
       real (kind=Rkind) :: x(Psi%BasisnD%ndim)
-
-!------ working variables ---------------------------------
-      integer       :: i_qa,i_qaie
-      integer       :: i_be,i_bi,i_ba,i_baie
-      integer       :: ii_baie,if_baie
-      integer       :: i
+      integer           :: i_qa,i_qaie
+      integer           :: i_be,i_bi,i_ba,i_baie
+      integer           :: ii_baie,if_baie
+      integer           :: i
       real (kind=Rkind) :: WrhonD,temp
-
-      logical       :: psiN,norm2GridRep,norm2BasisRep
+      logical           :: psiN,norm2GridRep,norm2BasisRep
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub = 'psi_Qba_ie_psi'
@@ -649,10 +663,10 @@ END SUBROUTINE sub_analyze_psi
       DO i_qa=1,psi%nb_qa
 
         !- calculation of WrhonD ------------------------------
-        WrhonD = Rec_WrhonD(psi%BasisnD,i_qa)
+        WrhonD = Rec_WrhonD(psi%BasisnD,i_qa,OldPara)
 
         !- calculation of x -------------------------------
-        CALL Rec_x(x,psi%BasisnD,i_qa)
+        CALL Rec_x(x,psi%BasisnD,i_qa,OldPara)
 
         DO i_be=1,psi%nb_be
         DO i_bi=1,psi%nb_bi
@@ -693,6 +707,8 @@ END SUBROUTINE sub_analyze_psi
       END DO
  11   format(2a,' ',f12.4,' ',i4,' ',100(' ',f6.3))
       CALL flush_perso(out_unitp)
+
+      CALL dealloc_OldParam(OldPara)
 
 !----------------------------------------------------------
       IF (debug) THEN
@@ -743,7 +759,6 @@ END SUBROUTINE sub_analyze_psi
 !------ working variables ---------------------------------
       TYPE (param_file)              :: file_psi
       integer                        :: nio,nqi,nqj
-
       character (len=:), allocatable  :: state_name
 
 !----- for debuging --------------------------------------------------
@@ -767,7 +782,6 @@ END SUBROUTINE sub_analyze_psi
         write(out_unitp,*) 'nb_act1 /= BasisnD%nb_basis',psi%nb_act1,psi%BasisnD%nb_basis
         RETURN
       END IF
-
 
       IF (.NOT. ana_psi%GridDone) CALL sub_PsiBasisRep_TO_GridRep(psi)
 
@@ -800,7 +814,7 @@ END SUBROUTINE sub_analyze_psi
         END DO
 
       END DO
-      !write(6,*) 'nDval0,Qana',nDval0,ana_psi%Qana
+      !write(out_unitp,*) 'nDval0,Qana',nDval0,ana_psi%Qana
 
       i_bie = 1
 
@@ -894,29 +908,37 @@ END SUBROUTINE sub_analyze_psi
 
         DO ib=1,psi%BasisnD%nb_basis
 
-          state_name = make_FileName('psi1D_')
-          !state_name = 'psi1D_'
-          IF (ana_psi%adia) state_name = 'psiAdia1D_'
-          file_psi%name = state_name // int_TO_char(ana_psi%num_psi) // '-' // int_TO_char(ib)
+          IF (ana_psi%adia) THEN
+            state_name = make_FileName('psiAdia1D_')
+          ELSE
+            state_name = make_FileName('psi1D_')
+          END IF
+          file_psi%name = state_name // int_TO_char(ana_psi%num_psi) // &
+                                                  '-' // int_TO_char(ib)
 
           IF (ana_psi%propa .AND. ana_psi%T > ZERO) THEN
             CALL file_open(file_psi,nio,append=.TRUE.)
+          ELSE
+            CALL file_open(file_psi,nio)
+          END IF
+
+          IF (ana_psi%propa) THEN
+
             DO iq=1,Tab1D_Qact(ib)%nb_var_vec
               write(nio,*) ana_psi%T,iq,Tab1D_Qact(ib)%d0(iq),Tab1D_Rpsi(ib)%d0(iq),  &
                              Tab1D_Cpsi(ib)%d0(iq),Tab1D_psi2(ib)%d0(iq)
             END DO
             write(nio,*)
-            close(nio)
 
           ELSE
-            CALL file_open(file_psi,nio)
+
             DO iq=1,Tab1D_Qact(ib)%nb_var_vec
               write(nio,*) iq,Tab1D_Qact(ib)%d0(iq),Tab1D_Rpsi(ib)%d0(iq),  &
                              Tab1D_Cpsi(ib)%d0(iq),Tab1D_psi2(ib)%d0(iq)
             END DO
-            close(nio)
           END IF
 
+          close(nio)
 
         END DO
       END IF
@@ -925,13 +947,23 @@ END SUBROUTINE sub_analyze_psi
 
         DO ib=1,psi%BasisnD%nb_basis
         DO jb=ib+1,psi%BasisnD%nb_basis
-          state_name = 'psi2D_'
-          IF (ana_psi%adia) state_name = 'psiAdia2D_'
-          file_psi%name = state_name // int_TO_char(ana_psi%num_psi) //     &
-                  '-' // int_TO_char(ib)  // '-' // int_TO_char(jb)
+
+          IF (ana_psi%adia) THEN
+            state_name = make_FileName('psiAdia2D_')
+          ELSE
+            state_name = make_FileName('psi2D_')
+          END IF
+          file_psi%name = state_name // int_TO_char(ana_psi%num_psi) // &
+                       '-' // int_TO_char(ib)  // '-' // int_TO_char(jb)
+
+          IF (ana_psi%propa .AND. ana_psi%T > ZERO) THEN
+            CALL file_open(file_psi,nio,append=.TRUE.)
+          ELSE
+            CALL file_open(file_psi,nio)
+          END IF
 
           IF (ana_psi%propa) THEN
-            CALL file_open(file_psi,nio,append=.TRUE.)
+
             DO iq=1,Tab1D_Qact(ib)%nb_var_vec
             DO jq=1,Tab1D_Qact(jb)%nb_var_vec
 
@@ -942,10 +974,9 @@ END SUBROUTINE sub_analyze_psi
             write(nio,*)
             END DO
             write(nio,*)
-            close(nio)
 
           ELSE
-            CALL file_open(file_psi,nio)
+
             DO iq=1,Tab1D_Qact(ib)%nb_var_vec
             DO jq=1,Tab1D_Qact(jb)%nb_var_vec
 
@@ -955,8 +986,9 @@ END SUBROUTINE sub_analyze_psi
             END DO
             write(nio,*)
             END DO
-            close(nio)
           END IF
+
+          close(nio)
 
         END DO
         END DO
@@ -1031,9 +1063,11 @@ END SUBROUTINE sub_analyze_psi
           !- loop on coordinates ----------------------------------
           DO i_basis_act1=1,psi%BasisnD%nb_basis
 
-            state_name = make_FileName('Rho1D_')
-            !state_name = 'Rho1D_'
-            IF (ana_psi%adia) state_name = 'RhoAdia1D_'
+            IF (ana_psi%adia) THEN
+              state_name = make_FileName('RhoAdia1D_')
+            ELSE
+              state_name = make_FileName('Rho1D_')
+            END IF
             file_Rho%name = state_name // int_TO_char(ana_psi%num_psi) // &
                                     '-' // int_TO_char(i_basis_act1)
 
@@ -1110,18 +1144,16 @@ END SUBROUTINE sub_analyze_psi
             write(out_unitp,*) 'rho1D of ',ana_psi%num_psi,i_basis_act1
             IF (ana_psi%propa) THEN
               DO i=1,psi%BasisnD%nDindG%nDsize(i_basis_act1)
-                write(nioRho,*) ana_psi%T,ana_psi%num_psi,i,                &
+                write(nioRho,*) ana_psi%T,i,                            &
                   psi%BasisnD%tab_Pbasis(i_basis_act1)%Pbasis%x(:,i),rho1D(i,:,:)
               END DO
               write(nioRho,*)
             ELSE
               DO i=1,psi%BasisnD%nDindG%nDsize(i_basis_act1)
-                write(nioRho,*) ana_psi%num_psi,i,                          &
+                write(nioRho,*) i,                                      &
                   psi%BasisnD%tab_Pbasis(i_basis_act1)%Pbasis%x(:,i),rho1D(i,:,:)
               END DO
             END IF
-
-
 
             CALL dealloc_NParray(rho1D,'rho1D',name_sub)
             close(nioRho)
@@ -1134,12 +1166,15 @@ END SUBROUTINE sub_analyze_psi
           DO i_basis_act1=1,psi%BasisnD%nb_basis
           DO j_basis_act1=i_basis_act1+1,psi%BasisnD%nb_basis
 
-            state_name = 'Rho2D_'
-            IF (ana_psi%adia) state_name = 'RhoAdia2D_'
+            IF (ana_psi%adia) THEN
+              state_name = make_FileName('RhoAdia2D_')
+            ELSE
+              state_name = make_FileName('Rho2D_')
+            END IF
             file_Rho%name = state_name // int_TO_char(ana_psi%num_psi) // &
                '-' // int_TO_char(i_basis_act1) // '-' // int_TO_char(j_basis_act1)
 
-            IF (ana_psi%propa) THEN
+            IF (ana_psi%propa .AND. ana_psi%T > ZERO) THEN
               CALL file_open(file_Rho,nioRho,append=.TRUE.)
             ELSE
               CALL file_open(file_Rho,nioRho)
@@ -1215,7 +1250,7 @@ END SUBROUTINE sub_analyze_psi
             IF (ana_psi%propa) THEN
               DO i=1,psi%BasisnD%nDindG%nDsize(i_basis_act1)
               DO j=1,psi%BasisnD%nDindG%nDsize(j_basis_act1)
-                write(nioRho,*) ana_psi%T,ana_psi%num_psi,i,j,              &
+                write(nioRho,*) ana_psi%T,i,j,                          &
                  psi%BasisnD%tab_Pbasis(i_basis_act1)%Pbasis%x(:,i),    &
                  psi%BasisnD%tab_Pbasis(j_basis_act1)%Pbasis%x(:,j),    &
                  rho2D(i,j,:,:)
@@ -1226,7 +1261,7 @@ END SUBROUTINE sub_analyze_psi
             ELSE
               DO i=1,psi%BasisnD%nDindG%nDsize(i_basis_act1)
               DO j=1,psi%BasisnD%nDindG%nDsize(j_basis_act1)
-                write(nioRho,*) ana_psi%num_psi,i,j,                        &
+                write(nioRho,*) i,j,                                    &
                  psi%BasisnD%tab_Pbasis(i_basis_act1)%Pbasis%x(:,i),    &
                  psi%BasisnD%tab_Pbasis(j_basis_act1)%Pbasis%x(:,j),    &
                  rho2D(i,j,:,:)
@@ -1509,7 +1544,7 @@ END SUBROUTINE sub_analyze_psi
           i_e_maxC2 = i_e
           i_R_maxC2 = i_R
         END IF
-        !write(6,*) i_bhe,C,'i_b_maxC1,i_b_maxC2',i_b_maxC1,i_b_maxC2
+        !write(out_unitp,*) i_bhe,C,'i_b_maxC1,i_b_maxC2',i_b_maxC1,i_b_maxC2
       END DO
       END DO
       END DO
@@ -1569,59 +1604,81 @@ END SUBROUTINE sub_analyze_psi
 
       end subroutine calc_MaxCoef_psi
 
-      SUBROUTINE calc_1Dweight_act1(psi,ana_psi,max_1D,T,info,print_w)
-      USE mod_system
-      USE mod_nDindex
-      USE mod_psi_set_alloc
-      USE mod_type_ana_psi
-      USE mod_param_RD
-      USE mod_MPI
-      IMPLICIT NONE
+  SUBROUTINE calc_1Dweight_act1(psi,ana_psi,max_1D,T,info,print_w)
+    USE mod_system
+    USE mod_nDindex
+    USE mod_psi_set_alloc
+    USE mod_type_ana_psi
+    USE mod_param_RD
+    USE mod_MPI
+    IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi)     :: psi
-      TYPE (param_ana_psi) :: ana_psi
+    TYPE (param_psi)     :: psi
+    TYPE (param_ana_psi) :: ana_psi
 
-      real (kind=Rkind), allocatable :: weight1Dact(:,:)
-      real (kind=Rkind)    :: a
+    real (kind=Rkind), allocatable :: weight1Dact(:,:)
+    real (kind=Rkind)    :: a
 
-      real (kind=Rkind)    :: T ! time
-      character (len=*)    :: info
-      logical          :: print_w
+    real (kind=Rkind)    :: T ! time
+    character (len=*)    :: info
+    logical          :: print_w
 
-      integer          :: i,ie,ii,ib,ibie,iq,ibiq,n
-      integer          :: max_dim,max_1D
-      integer          :: max_indGr(psi%BasisnD%nDindB%ndim)
-      integer          :: ndim_AT_ib(psi%BasisnD%nDindB%ndim)
-      integer          :: nDval(psi%BasisnD%nDindB%ndim)
+    integer          :: i,ie,ii,ib,ibie,iq,ibiq,n
+    integer          :: max_dim,max_1D
+    integer          :: max_indGr(psi%BasisnD%nDindB%ndim)
+    integer          :: ndim_AT_ib(psi%BasisnD%nDindB%ndim)
+    integer          :: nDval(psi%BasisnD%nDindB%ndim)
 
-      character (len=:), allocatable :: state_name
+    character (len=:), allocatable :: state_name
 
-      real (kind=Rkind)              :: r2
-      real (kind=Rkind), allocatable :: DiagRDcontrac(:) ! diagonal reduced density matrix with the contracted basis set (nbc,nbc)
+    real (kind=Rkind)              :: r2
+    real (kind=Rkind), allocatable :: DiagRDcontrac(:) ! diagonal reduced density matrix with the contracted basis set (nbc,nbc)
+    TYPE (param_RD),   allocatable :: para_RD(:) ! it is allocated only for BasisnD. The size is nb_basis
 
 !----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub='calc_1Dweight_act1'
-      logical, parameter :: debug =.FALSE.
-!     logical, parameter :: debug =.TRUE.
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) 'nb_inact2n',psi%Basis2n%nb_basis
-        write(out_unitp,*) 'nb_bi,nb_be',psi%nb_bi,psi%nb_be
-      END IF
-!-----------------------------------------------------------
-      CALL flush_perso(out_unitp)
-      IF (psi%nb_baie /= psi%nb_tot) RETURN
-      IF (ana_psi%adia) RETURN
+    character (len=*), parameter :: name_sub='calc_1Dweight_act1'
+    logical, parameter :: debug =.FALSE.
+!   logical, parameter :: debug =.TRUE.
+!---------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) 'nb_inact2n',psi%Basis2n%nb_basis
+      write(out_unitp,*) 'nb_bi,nb_be',psi%nb_bi,psi%nb_be
+    END IF
+!---------------------------------------------------------
+    CALL flush_perso(out_unitp)
+    IF (psi%nb_baie /= psi%nb_tot) RETURN
+    IF (ana_psi%adia) RETURN
 
-      IF (allocated(Psi%BasisnD%nDindB%Tab_nDval)) THEN
-        max_dim = maxval(Psi%BasisnD%nDindB%Tab_nDval)
-      ELSE
-        max_dim = maxval(psi%BasisnD%nDindB%nDsize(1:psi%BasisnD%nDindB%ndim))
-      END IF
-      CALL alloc_NParray(weight1Dact,(/psi%BasisnD%nDindB%ndim,max_dim/), &
-                        "weight1Dact",name_sub)
+    IF (allocated(Psi%BasisnD%nDindB%Tab_nDval)) THEN
+      max_dim = maxval(Psi%BasisnD%nDindB%Tab_nDval)
+    ELSE
+      max_dim = maxval(psi%BasisnD%nDindB%nDsize(1:psi%BasisnD%nDindB%ndim))
+    END IF
+    CALL alloc_NParray(weight1Dact,(/psi%BasisnD%nDindB%ndim,max_dim/), &
+                      "weight1Dact",name_sub)
+
+    !---- RD analysis (for contrac_analysis=t) -------------------------
+    ! initialization for RD analysis
+    IF (psi%BasisnD%nb_basis > 1) THEN
+      allocate(para_RD(psi%BasisnD%nb_basis))
+
+      para_RD(:)%RD_analysis = .FALSE.
+      DO ib=1,size(para_RD)
+        para_RD(ib)%RD_analysis =                                       &
+                      psi%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_analysis
+
+        para_RD(ib)%basis_index = ib
+        IF (allocated(psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)) THEN
+          CALL init_RD(para_RD(ib),psi%BasisnD%nDindB,            &
+                       psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)
+        ELSE
+          CALL init_RD(para_RD(ib),psi%BasisnD%nDindB)
+        END IF
+
+      END DO
+    END IF
 
     ibie = 0
     DO ie=1,psi%nb_be
@@ -1666,31 +1723,58 @@ END SUBROUTINE sub_analyze_psi
         END DO
       END IF
 
-      !write(6,*) 'ndim_AT_ib',ndim_AT_ib(:)
+      !write(out_unitp,*) 'ndim_AT_ib',ndim_AT_ib(:)
       IF (print_w .OR. debug) THEN
         DO iq=1,psi%BasisnD%nDindB%ndim
-          IF (sum(weight1Dact(iq,1:ndim_AT_ib(iq)))-ONE > ONETENTH**7)  &
-                write(out_unitp,21) state_name // ' Sum(RD)/=1',trim(info),&
-                             iq,T,sum(weight1Dact(iq,1:ndim_AT_ib(iq)))
-          IF(MPI_id==0) write(out_unitp,21) state_name // ' ',trim(info),iq,T,           &
-                           weight1Dact(iq,1:min(max_1D,ndim_AT_ib(iq)))
+          IF (sum(weight1Dact(iq,1:ndim_AT_ib(iq)))-ONE > ONETENTH**7) THEN
+            write(out_unitp,21) state_name // ' Sum(RD)/=1',trim(info), &
+                              iq,T,sum(weight1Dact(iq,1:ndim_AT_ib(iq)))
+          END IF
+          write(out_unitp,21) state_name // ' ',trim(info),iq,T,        &
+                            weight1Dact(iq,1:min(max_1D,ndim_AT_ib(iq)))
  21       format(a,a,i3,1x,f17.4,300(1x,e10.3))
           CALL flush_perso(out_unitp)
 
-          IF (allocated(psi%BasisnD%para_RD)) THEN
-          IF (psi%BasisnD%para_RD(iq)%RD_analysis) THEN
-            CALL calc_RD(psi%BasisnD%para_RD(iq),psi%RvecB,DiagRDcontrac=DiagRDcontrac)
+          !---- RD analysis --------------------------------------------
+          ! initialization for RD analysis
+!          IF (psi%BasisnD%nb_basis > 1) THEN
+!            allocate(para_RD(psi%BasisnD%nb_basis))
+!
+!            para_RD(:)%RD_analysis = .FALSE.
+!            DO ib=1,size(para_RD)
+!              para_RD(ib)%RD_analysis =                                 &
+!                      psi%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_analysis
+!
+!              para_RD(ib)%basis_index = ib
+!              IF (allocated(psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)) THEN
+!                CALL init_RD(para_RD(ib),psi%BasisnD%nDindB,            &
+!                             psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)
+!              ELSE
+!                CALL init_RD(para_RD(ib),psi%BasisnD%nDindB)
+!              END IF
+!
+!            END DO
+!          END IF
+
+          !---- RD analysis --------------------------------------------
+          ! RD analysis
+          IF (allocated(para_RD)) THEN
+          IF (para_RD(iq)%RD_analysis) THEN
+
+            CALL calc_RD(para_RD(iq),psi%RvecB,DiagRDcontrac=DiagRDcontrac)
             n = min(ndim_AT_ib(iq),size(DiagRDcontrac))
             weight1Dact(iq,1:n) = DiagRDcontrac(1:n)
-            write(out_unitp,21) state_name // 'c',trim(info),iq,T,           &
+            write(out_unitp,21) state_name // 'c',trim(info),iq,T,      &
                            weight1Dact(iq,1:min(max_1D,n))
             CALL flush_perso(out_unitp)
 
             !write(out_unitp,*) 'Diag RD contracted',iq,DiagRDcontrac
-            IF (allocated(DiagRDcontrac)) CALL dealloc_NParray(DiagRDcontrac,'DiagRDcontrac',name_sub)
+            IF (allocated(DiagRDcontrac)) THEN
+              CALL dealloc_NParray(DiagRDcontrac,'DiagRDcontrac',name_sub)
+            END IF
           END IF
           END IF
-
+          !---- END RD analysis ----------------------------------------
 
           max_indGr(iq) = sum(maxloc(weight1Dact(iq,1:ndim_AT_ib(iq))))
         END DO
@@ -1698,14 +1782,14 @@ END SUBROUTINE sub_analyze_psi
         !write(out_unitp,'(a,a,20i4)') 'max_indGr at ',trim(info),max_indGr(:)
         write(out_unitp,'(a,a)',advance='no') 'max_ind ' // state_name // ' at ',trim(info)
         DO i=1,size(max_indGr)-1
-          write(out_unitp,'(X,i0)',advance='no') max_indGr(i)
+          write(out_unitp,'(1X,i0)',advance='no') max_indGr(i)
         END DO
-        write(out_unitp,'(X,i0)') max_indGr(size(max_indGr))
+        write(out_unitp,'(1X,i0)') max_indGr(size(max_indGr))
 
         CALL flush_perso(out_unitp)
       END IF
 
-      !write(6,*) 'max_RedDensity
+      !write(out_unitp,*) 'max_RedDensity
       IF (.NOT. allocated(ana_psi%max_RedDensity)) THEN
         CALL alloc_NParray(ana_psi%max_RedDensity,(/psi%BasisnD%nDindB%ndim/), &
                           "ana_psi%max_RedDensity",name_sub)
@@ -1723,14 +1807,17 @@ END SUBROUTINE sub_analyze_psi
 
     END DO
     END DO
+
     CALL dealloc_NParray(weight1Dact,"weight1Dact",name_sub)
+    CALL dealloc_tab_RD(para_RD)
+
 !-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'END ',name_sub
-      END IF
+    IF (debug) THEN
+      write(out_unitp,*) 'END ',name_sub
+    END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE calc_1Dweight_act1
+    END SUBROUTINE calc_1Dweight_act1
 
 
 !=======================================================================================      
@@ -2299,12 +2386,12 @@ ENDSUBROUTINE norm2_psi_SR_MPI
       DO i_qa=1,psi%nb_qa
 
         !- calculation of WrhonD ------------------------------
-        WrhonD = Rec_WrhonD(psi%BasisnD,i_qa)
+        WrhonD = Rec_WrhonD(psi%BasisnD,i_qa,OldPara)
 
 !        IF (SG4) THEN
 !          CALL get_iqSG_iSG_FROM_iq(iSG,iqSG,i_qa,psi%BasisnD%para_SGType2,OldPara,err_sub)
 !          WrhonD = WrhonD * psi%BasisnD%WeightSG(iSG)
-!          !write(6,*) 'i_qa,iSG',i_qa,iSG,psi%BasisnD%WeightSG(iSG)
+!          !write(out_unitp,*) 'i_qa,iSG',i_qa,iSG,psi%BasisnD%WeightSG(iSG)
 !        END IF
 
         DO i_be=1,nb_be
@@ -2569,7 +2656,8 @@ END SUBROUTINE Channel_weight_MPI
   nb_bi = get_nb_bi_FROM_psi(psi)
 
   IF (psi%cplx) THEN
-    CALL CplxPsi_TO_RCpsi(RCPsi,Psi)
+    RCPsi = Psi
+    !CALL CplxPsi_TO_RCpsi(RCPsi,Psi)
 
     !For the real part
 
@@ -2601,7 +2689,7 @@ END SUBROUTINE Channel_weight_MPI
     Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
   END IF
 
-  write(6,*) 'Norm2_SG4',Norm2
+  write(out_unitp,*) 'Norm2_SG4',Norm2
 
 !------------------------------------------------------
   IF (debug) THEN

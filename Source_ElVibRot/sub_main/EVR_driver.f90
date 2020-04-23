@@ -333,7 +333,7 @@ SUBROUTINE init_EVR_new()
                         tab_EVRT(ith)%para_PES,tab_EVRT(ith)%ComOp,                &
                         tab_EVRT(ith)%para_AllOp,tab_EVRT(ith)%para_ana,           &
                         tab_EVRT(ith)%para_intensity,intensity_only, &
-                        tab_EVRT(ith)%para_propa,tab_EVRT(ith)%WP0)
+                        tab_EVRT(ith)%para_propa)
 
         !CALL system_mem_usage(memory_RSS,'after ini_data')
         CALL dealloc_Basis(BasisnD_Save)
@@ -475,7 +475,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_Auto_Basis
-      USE mod_psi_B_TO_G
+      USE mod_psi
       USE mod_MPI_Aid
       IMPLICIT NONE
 
@@ -519,7 +519,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
 
   ith=1
   !$ ith=OMP_GET_THREAD_NUM()+1
-  write(6,*) 'ith',ith ; flush(6)
+  write(out_unitp,*) 'ith',ith ; flush(out_unitp)
 
       para_H => tab_EVRT(ith)%para_AllOp%tab_Op(1)
 
@@ -647,10 +647,6 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           END IF ! for para_AllOp%tab_Op(2)%para_ReadOp%comput_S
 
           CALL sub_MatOp(para_H,tab_EVRT(ith)%para_ana%print)
-
-          ! temp
-          !CALL sub_MatOp(para_AllOp%tab_Op(3),para_ana%print)
-          !stop 'coucou'
 
           IF(MPI_id==0 .AND. print_level > -1) THEN
             write(out_unitp,*)
@@ -1421,7 +1417,7 @@ SUBROUTINE init_EVR()
                         para_EVRT%para_PES,para_EVRT%ComOp,                &
                         para_EVRT%para_AllOp,para_EVRT%para_ana,           &
                         para_EVRT%para_intensity,para_EVRT%intensity_only, &
-                        para_EVRT%para_propa,para_EVRT%WP0)
+                        para_EVRT%para_propa)
 
         !CALL system_mem_usage(memory_RSS,'after ini_data')
         CALL dealloc_Basis(BasisnD_Save)
@@ -1531,7 +1527,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
       USE mod_analysis
       USE mod_fullanalysis
       USE mod_Auto_Basis
-      USE mod_psi_B_TO_G
+      USE mod_psi
       USE mod_MPI_Aid
       IMPLICIT NONE
 
@@ -2018,7 +2014,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
 !=====================================================================
 !=====================================================================
 !RETURN
-write(6,*) 'intensity',para_EVRT%para_ana%intensity ; flush(6)
+write(out_unitp,*) 'intensity',para_EVRT%para_ana%intensity ; flush(out_unitp)
 
       IF (.NOT. para_H%cplx .AND. para_EVRT%para_ana%intensity) THEN
         IF(MPI_id==0 .AND. print_level > -1) THEN

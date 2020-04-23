@@ -14,7 +14,7 @@ cd $here
  x2=0.461483933
 
 
-nice $DIR_vib/vib << ** >res
+nice $DIR_vib/vib << ** >res_partial
  &system PGrid_omp=0 /
  &constantes ene_unit='eV' /
  &variables 
@@ -70,9 +70,9 @@ sym  cos(a)      R     r    x    pi   dh
 **
 
 #now the restart for the grid
-nice $DIR_vib/vib << ** >>res
+nice $DIR_vib/vib << ** >res
  &system PGrid_omp=0 /
- &constantes /
+ &constantes ene_unit='eV' /
  &variables 
          zmat=T
          nat=4
@@ -111,8 +111,8 @@ sym  cos(a)      R     r    x    pi   dh
  &actives test=f comput_S=t Restart_Grid=t direct=1 /
  &analyse max_ana=20 ana=f print=f propa=t /
  &propa
-        WPTmax=1000.d0 WPdeltaT=1.d-01
-        n_WPecri = 1 WPpsi2 =f WPpsi=t
+        WPTmax=100.d0 WPdeltaT=1.d-01
+        n_WPecri=100 WPpsi2 =f WPpsi=t
         type_WPpropa=50
         DHmax=0.0d0 auto_Hmax=f
         WP0n_h=1 lect_WP0FBR=f

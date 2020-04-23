@@ -42,12 +42,11 @@
 !===========================================================================
       MODULE mod_propa
       USE mod_system
-      USE mod_Constant,      ONLY : assignment(=),get_conv_au_to_unit,  &
-                          real_wu, convrwu_to_r,convRWU_WorkingUnit_TO_R
-      USE mod_field,         ONLY : param_field
-      USE mod_psi_set_alloc, ONLY : param_psi
-      USE mod_param_WP0,     ONLY : param_WP0
-      USE mod_type_ana_psi
+      USE mod_Constant,  ONLY : get_conv_au_to_unit,real_wu,            &
+                                convRWU_TO_R_WITH_WorkingUnit,          &
+                                convRWU_TO_R_WITH_WritingUnit,RWU_WriteUnit
+      USE mod_psi,       ONLY : param_WP0,param_ana_psi
+      USE mod_field,     ONLY : param_field
       IMPLICIT NONE
 
 PRIVATE
@@ -66,16 +65,19 @@ PUBLIC :: MPI_Bcast_param_Davidson
       !!@param: TODO
         TYPE param_poly
 
-        logical           :: init_done = .FALSE.
-
-        real (kind=Rkind) :: DHmax,Hmax,Hmin        ! parameters
-        real (kind=Rkind) :: deltaE,Esc,E0          ! parameters
-        real (kind=Rkind) :: alpha                  ! parameters
-        real (kind=Rkind) :: poly_tol
-        integer           :: max_poly               ! max number of polynomials
-        real (kind=Rkind), pointer :: coef_poly(:) => null()  !
-        integer           :: npoly                  ! number polynomials
-        integer           :: npoly_Opt              ! optimal number polynomials
+        logical                    :: init_done       = .FALSE.
+        real (kind=Rkind)          :: DHmax           = -TEN
+        real (kind=Rkind)          :: Hmax            = ZERO
+        real (kind=Rkind)          :: Hmin            = ZERO
+        real (kind=Rkind)          :: deltaE          = ZERO
+        real (kind=Rkind)          :: Esc             = ONE
+        real (kind=Rkind)          :: E0              = ZERO
+        real (kind=Rkind)          :: alpha           = ZERO
+        real (kind=Rkind)          :: poly_tol        = ZERO
+        integer                    :: max_poly        = 500 ! max number of polynomials
+        real (kind=Rkind), pointer :: coef_poly(:)    => null()  !
+        integer                    :: npoly           = 0 ! number polynomials
+        integer                    :: npoly_Opt       = 0 ! optimal number polynomials
 
         END TYPE param_poly
         TYPE param_control
@@ -111,37 +113,62 @@ PUBLIC :: MPI_Bcast_param_Davidson
         complex (kind=Rkind), pointer :: Mgatet(:,:) => null()  ! gate Matrix (fort WPt)
 
         END TYPE param_control
+
         TYPE param_Davidson
-         integer :: num_resetH,num_checkS
-         logical :: one_by_one
-         integer :: residual_max_nb
-         integer :: max_it,nb_WP,max_WP,num_LowestWP,nb_WP0
 
-         logical :: read_WP,read_listWP,precond,formatted_file_readWP
-         integer :: nb_readWP,nb_readWP_OF_List
-         character (len=Line_len) :: name_file_readWP
-         real (kind=Rkind) :: precond_tol
+         integer :: num_resetH =-1 ! -1 no reset
+         integer :: num_checkS = 10
+         integer :: max_it     = 100
 
-         logical :: save_all
-         integer :: save_interal
-         real (kind=Rkind) :: save_max_ene,scaled_max_ene
-         integer :: save_max_nb
-         character (len=Line_len) :: name_file_saveWP
-         logical :: formatted_file_WP
+         integer :: nb_WP        = 0
+         integer :: max_WP       = 0
+         integer :: num_LowestWP = -1        ! With this number, the WP with lower energy are excluded
+         integer :: nb_WP0       = 0
 
-         logical :: all_lower_states,lower_states,project_WP0,Op_Transfo
-         logical :: Hmin_propa,Hmax_propa
+
+         logical :: read_WP                            = .FALSE. ! T => read the the WP in file_WP
+         logical :: read_listWP                        = .FALSE. ! T => read a list of WP (nb_readWP)
+         logical :: formatted_file_readWP              = .TRUE.
+         integer :: nb_readWP                          = -1      ! if -1 => nb_diago, ortherwise more WP
+         integer :: nb_readWP_OF_List                  = 0     ! 0 => all
+         character (len=Line_len) :: name_file_readWP  = 'file_WP'
+
+         logical :: precond                            = .FALSE. ! precondition (not used)
+         real (kind=Rkind) :: precond_tol              = ONETENTH
+
+         logical :: save_all                           = .FALSE.
+         integer :: save_interal                       = 1 ! for MPI ???
+         real (kind=Rkind) :: save_max_ene             = -huge(ONE)
+         real (kind=Rkind) :: scaled_max_ene           = 1.1_Rkind ! save_max_ene = scaled_max_ene * max_ene
+         integer :: save_max_nb                        = -1 ! If -1, we did not use this number (default)
+         character (len=Line_len) :: name_file_saveWP  = 'file_WP'
+         logical :: formatted_file_WP                  = .TRUE.
+
+         logical :: all_lower_states  = .FALSE. ! T => converge all the lower states (E<Max_ene)
+         logical :: lower_states      = .FALSE. ! T => converge on the lower states
+         logical :: project_WP0       = .FALSE. ! T => project on WP0 (revelant if lower_states=f)
+         logical :: one_by_one        = .FALSE. ! T => converge vector one by one
+         integer :: residual_max_nb   = huge(1) ! the number maximal of residual
+
+         logical :: Op_Transfo        = .FALSE.
+
+
+         logical :: Hmin_propa = .FALSE.  ! with Davidson
+         logical :: Hmax_propa = .FALSE.  ! with Davidson
          real (kind=Rkind) :: thresh_project = 0.8_Rkind
 
-         real (kind=Rkind) :: Max_ene
-         integer           :: symab
+         real (kind=Rkind) :: Max_ene = -HUGE(ONE)
+         integer           :: symab = -1 ! -1 nosym
 
 
-         real (kind=Rkind) :: RMS_ene,conv_ene
-         real (kind=Rkind) :: RMS_resi,conv_resi
-         integer :: conv_hermitian
-         integer :: NewVec_type = 2
-         logical :: With_Grid   = .FALSE.
+         real (kind=Rkind) :: RMS_ene   = ZERO ! not used
+         real (kind=Rkind) :: conv_ene  = ONETENTH**7
+         real (kind=Rkind) :: RMS_resi  = ZERO ! not used
+         real (kind=Rkind) :: conv_resi = FIVE*ONETENTH**5
+
+         integer :: conv_hermitian    = 0 ! convergence if max_ene < 10**conv_hermitian * "non_hermitic"
+         integer :: NewVec_type       = 2
+         logical :: With_Grid         = .FALSE.
 
          ! parameters specific to the filter diagonalization
          real (kind=Rkind) :: E0_filter     = ZERO   ! the center of the windowin ua (but read in cm-1)
@@ -162,23 +189,26 @@ PUBLIC :: MPI_Bcast_param_Davidson
       !!@param: TODO
         TYPE param_propa
 
-
-        real (kind=Rkind)   ::  Hmax,Hmin     !
-        logical             ::  once_Hmin=.TRUE.!< control the calculation of 
-                                                !< Hmin once at the first action
-        logical             ::  auto_Hmax     !  .TRUE. => Hmax is obtained with a propagation
+        real (kind=Rkind)   ::  Hmax              = ZERO
+        real (kind=Rkind)   ::  Hmin              = ZERO
+        logical             ::  once_Hmin         =.TRUE.!< control the calculation of 
+                                                         !< Hmin once at the first action
+        logical             ::  auto_Hmax         = .FALSE.    !  .TRUE. => Hmax is obtained with a propagation
                                               !            with imaginary time (type_WPpropa=-3)
                                               !            (default .FALSE.)
-        real (kind=Rkind)   ::  WPTmax        ! propagation time in au
+        real (kind=Rkind)   ::  WPTmax       = HUNDRED ! propagation time in au
         real (kind=Rkind)   ::  WPT0          ! initial time in au
-        logical             ::  restart       ! restart the propagation
+        logical             ::  restart      = .FALSE. ! restart the propagation
 
-        real (kind=Rkind)   ::  WPdeltaT      ! time step in au
-        integer             ::  nb_micro      ! nb of microiterations
+        real (kind=Rkind)   ::  WPdeltaT      = TEN ! time step in au
+        integer             ::  nb_micro      = 1 ! nb of microiterations
+        logical             ::  One_Iteration = .FALSE. ! Propagation stops after one time step.
 
-        integer             ::  max_ana       ! nb of wavefunctions calculated with imaginary propagation
 
-        integer             ::  type_WPpropa  ! propagation type :
+
+        integer             ::  max_ana      = 0 ! nb of wavefunctions calculated with imaginary propagation
+
+        integer             ::  type_WPpropa = 0 ! propagation type :
                                               !  1 Chebychev (default)
                                               !  2 nOD (Taylor)
                                               !  5 RK4
@@ -198,41 +228,38 @@ PUBLIC :: MPI_Bcast_param_Davidson
 
 
         logical                  :: With_field = .FALSE.   ! propagation with a field
-        character (len=Name_len) :: name_WPpropa  !  spectral (not working)
+        character (len=Name_len) :: name_WPpropa = ' ' !  spectral (not working)
                                               !  cheby (default)
                                               !  nOD
                                               !  Hmin,Hmax (imaginary propagation: nOD)
                                               !  TDnOD
 
-        logical         ::       spectral     ! Def (f). If T => spectral propagatio
+        logical         ::       spectral    = .FALSE. ! Def (f). If T => spectral propagatio
 
 
-        integer         ::       type_corr    !  kind of correlation function
-                                              !  default 0 => <psi0(T)|psi(T)>
-                                              !  1 =>  psi(T,i_qa_corr,...) (for a grid point)
-        integer         ::       i_qa_corr    !  grid point for type_corr = 1
-        integer         ::       channel_ie_corr !   Channel for type_corr = 1
-        integer         ::       Op_corr      !  defined the Operator when type_corr=2
+        integer         ::       type_corr       = 0 !  kind of correlation function
+                                                     !  default 0 => <psi0(T)|psi(T)>
+                                                     !  1 =>  psi(T,i_qa_corr,...) (for a grid point)
+        integer         ::       i_qa_corr       = 0 !  grid point for type_corr = 1
+        integer         ::       channel_ie_corr = 0 !   Channel for type_corr = 1
+        integer         ::       Op_corr         = 0 !  defined the Operator when type_corr=2
 
-
-
-        integer         ::       n_WPecri        !  write WP every n_WPecri time steps
-        logical         ::       WPpsi           !  write WP
-        logical         ::       WPpsi2          !  write WP2
-        logical         ::       write_iter      !  write iteration
-        logical         ::       write_GridRep   !  write WP of the grid
-        logical         ::       write_BasisRep  !  write WP of the basis
-        logical         ::       write_WPAdia    !  if T, write WP on the adiabatic PES (otherwise on the diabatic ones)
+        integer         ::       n_WPecri        = 1 !  write WP every n_WPecri time steps
+        logical         ::       WPpsi           = .FALSE. !  write WP
+        logical         ::       WPpsi2          = .FALSE. !  write WP2
+        logical         ::       write_iter      = .TRUE. !  write iteration
+        logical         ::       write_GridRep   = .TRUE. !  write WP of the grid
+        logical         ::       write_BasisRep  = .FALSE.!  write WP of the basis
+        logical         ::       write_WPAdia    = .FALSE. !  if T, write WP on the adiabatic PES (otherwise on the diabatic ones)
 
         TYPE (param_ana_psi)  :: ana_psi         ! to control the WP analysis
 
 
-        logical           ::       control         !  use control (need type_WPpropa 24)
-        logical           ::       test_max_norm   ! IF .TRUE., Error in the propagation (norm too large)
+        logical           ::       control       = .FALSE.  !  use control (need type_WPpropa 24)
+        logical           ::       test_max_norm = .FALSE.  ! IF .TRUE., Error in the propagation (norm too large)
         real (kind=Rkind) ::       max_norm2 = 1.3_Rkind ! ! if wp%norm^2 > max_norm^2 => stop
-        logical           ::       march_error     ! IF .TRUE., Error in the propagation
+        logical           ::       march_error = .FALSE.    ! IF .TRUE., Error in the propagation
         integer           ::       num_Op = 0      !  Operator used for the propagation (H)
-        logical           ::       One_Iteration = .FALSE. ! Propagation stops after one time step.
 
 !----- variables for the WP propagation ----------------------------
 
@@ -245,8 +272,9 @@ PUBLIC :: MPI_Bcast_param_Davidson
         TYPE(param_poly)     :: para_poly
         TYPE(param_field)    :: para_field
 
-        integer           :: TFnexp2
-        real (kind=Rkind) :: TFmaxE,TFminE
+        integer           :: TFnexp2 = 15
+        real (kind=Rkind) :: TFmaxE  = HUGE(ONE)
+        real (kind=Rkind) :: TFminE  = ZERO
 
         END TYPE param_propa
 
@@ -330,11 +358,11 @@ PUBLIC :: MPI_Bcast_param_Davidson
 !================================================================
       SUBROUTINE dealloc_param_propa(para_propa)
       USE mod_system
-      USE mod_field,         ONLY : dealloc_param_field
-      USE mod_param_WP0,     ONLY : dealloc_param_WP0
-      USE mod_psi_set_alloc, ONLY : dealloc_psi,dealloc_array
-      USE mod_type_ana_psi
+      USE mod_field, ONLY : dealloc_param_field
+      USE mod_psi,   ONLY : param_WP0,dealloc_param_WP0,dealloc_ana_psi,&
+                            dealloc_psi,dealloc_array
       IMPLICIT NONE
+
       TYPE (param_propa), intent(inout) :: para_propa
 
       integer :: i
@@ -350,7 +378,7 @@ PUBLIC :: MPI_Bcast_param_Davidson
 
       SUBROUTINE SaveWP_restart(T,WP,file_restart)
       USE mod_system
-      USE mod_psi_set_alloc
+      USE mod_psi,    ONLY : param_psi
       IMPLICIT NONE
 
 
@@ -397,7 +425,7 @@ PUBLIC :: MPI_Bcast_param_Davidson
       END SUBROUTINE SaveWP_restart
       SUBROUTINE ReadWP_restart(T,WP,file_restart)
       USE mod_system
-      USE mod_psi_set_alloc
+      USE mod_psi,    ONLY : param_psi
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -457,9 +485,9 @@ PUBLIC :: MPI_Bcast_param_Davidson
 
       FUNCTION Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC)
       USE mod_system
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+      USE mod_psi,    ONLY : param_psi,ecri_psi,Overlap_psi1_psi2,      &
+                             sub_PsiBasisRep_TO_GridRep
+      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -587,11 +615,9 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_field,           ONLY : param_field,sub_dnE
   USE mod_ExactFact
 
-  USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
-  USE mod_ana_psi,         ONLY : sub_analyze_psi,norm2_psi
-  USE mod_type_ana_psi
-  USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
-  USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+  USE mod_psi, ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,         &
+                      sub_analyze_psi,norm2_psi,alloc_psi,modif_ana_psi,&
+                      sub_PsiBasisRep_TO_GridRep,Write_ana_psi
   USE mod_MPI
   IMPLICIT NONE
 
@@ -608,8 +634,8 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   integer            :: nb_WP
   TYPE (param_psi)   :: WP(:)
 
-  logical            :: ana_mini = .TRUE.
-  !logical            :: ana_mini = .FALSE.
+  !logical            :: ana_mini = .TRUE.
+  logical            :: ana_mini = .FALSE.
   logical            :: G,G2,B,B2,With_field
 
 !-- working parameters --------------------------------
@@ -632,11 +658,11 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 !-------------------------------------------------------
   IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
-   write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
    write(out_unitp,*)
    write(out_unitp,*) 'nb_ba,nb_qa',WP(1)%nb_ba,WP(1)%nb_qa
    write(out_unitp,*) 'nb_bi',WP(1)%nb_bi
    write(out_unitp,*)
+   CALL Write_ana_psi(para_propa%ana_psi)
 
    DO i=1,nb_WP
      CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
@@ -655,15 +681,15 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   IF (ana_mini) THEN
     IF (present(adia)) THEN
       IF (present(para_field)) THEN
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia=adia,para_field=para_field)
       ELSE
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia=adia)
       END IF
     ELSE
       IF (present(para_field)) THEN
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,para_field=para_field)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_field=para_field)
       ELSE
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H)
       END IF
     END IF
     RETURN
@@ -743,10 +769,10 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
         write(out_unitp,*) i,'Exact Factorization analysis at ',T, ' ua'
         IF (present(para_field)) THEN
           CALL sub_ExactFact_analysis(T,w1,para_propa%ana_psi,para_H,   &
-                         para_propa%WPTmax,para_propa%WPdeltaT,para_field)
+                       para_propa%WPTmax,para_propa%WPdeltaT,para_field)
         ELSE
           CALL sub_ExactFact_analysis(T,w1,para_propa%ana_psi,para_H,  &
-                                    para_propa%WPTmax,para_propa%WPdeltaT)
+                                 para_propa%WPTmax,para_propa%WPdeltaT)
         END IF
       END IF
 
@@ -781,15 +807,14 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 END SUBROUTINE sub_analyze_WP_OpWP
 !=======================================================================================
 
-SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
+SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
   USE mod_system
-  USE mod_Op,              ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
-  USE mod_field,           ONLY : param_field,sub_dnE
+  USE mod_Op,    ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
+  USE mod_field, ONLY : param_field,sub_dnE
 
-  USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi
-  USE mod_ana_psi,         ONLY : norm2_psi,Channel_weight
-  USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
-  USE mod_psi_SimpleOp,    ONLY : operator (*),operator (+),operator (-),assignment (=)
+  USE mod_psi,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,       &
+                      sub_analyze_psi,norm2_psi,alloc_psi,modif_ana_psi,&
+                      Channel_weight,sub_PsiBasisRep_TO_GridRep
   USE mod_MPI
   IMPLICIT NONE
 
@@ -799,7 +824,6 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   TYPE (param_Op)   :: para_H
 
 !- variables for the WP propagation ----------------------------
-  TYPE (param_propa) :: para_propa
   TYPE (param_field), optional :: para_field
   logical,            optional :: adia
 
@@ -807,7 +831,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   TYPE (param_psi)   :: WP(:)
 
 !-- working parameters --------------------------------
-  TYPE (param_psi)   :: w2
+  TYPE (param_psi)   :: w1,w2
 
   integer       :: i,i_bi,i_be
 
@@ -819,6 +843,9 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
 
   real (kind=Rkind), allocatable    :: tab_WeightChannels(:,:)
   real (kind=Rkind)                 :: Psi_norm2
+  logical                           :: With_ENE = .TRUE.
+  !logical                           :: With_ENE = .FALSE.
+
 !- for the field --------------------------------------------------
   real (kind=Rkind)    :: dnE(3)
 !- for the field --------------------------------------------------
@@ -828,9 +855,10 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   logical, parameter :: debug=.FALSE.
 ! logical, parameter :: debug=.TRUE.
 !-------------------------------------------------------
+  IF (MPI_id /=0 ) RETURN
+
   IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
-   write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
    write(out_unitp,*)
    write(out_unitp,*) 'nb_ba,nb_qa',WP(1)%nb_ba,WP(1)%nb_qa
    write(out_unitp,*) 'nb_bi',WP(1)%nb_bi
@@ -850,55 +878,60 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field
   END IF
 !-----------------------------------------------------------
 
-
   !-----------------------------------------------------------
-  IF(MPI_id==0) w2 = WP(1) ! just for the initialization
-  IF(MPI_id==0) CALL alloc_psi(w2)
+  w2 = WP(1) ! just for the initialization
+  CALL alloc_psi(w2)
 
   DO i=1,nb_WP
+
+    w1 = WP(i)
     !-----------------------------------------------------------
     ! => Analysis for diabatic potential (always done)
 
-    ! =>first the energy
-    IF(MPI_id==0) CALL norm2_psi(WP(i))
-    CALL sub_PsiOpPsi(ET,WP(i),w2,para_H)
-    
-    IF(MPI_id==0) THEN
-      WP(i)%CAvOp = ET/WP(i)%norm2
+    CALL Channel_weight(tab_WeightChannels,w1,GridRep=.FALSE.,BasisRep=.TRUE.)
+    Psi_norm2 = sum(tab_WeightChannels)
 
-      RWU_E  = REAL_WU(real(WP(i)%CAvOp,kind=Rkind),'au','E')
-      E      = convRWU_TO_R(RWU_E ,WorkingUnit=.FALSE.)
+    ! add the psi number + the time
+    psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat='f12.2')
 
-      CALL Channel_weight(tab_WeightChannels,WP(i),GridRep=.FALSE.,BasisRep=.TRUE.)
-      Psi_norm2 = sum(tab_WeightChannels)
+    IF (With_ENE) THEN
+      ! =>first the energy
+      CALL sub_PsiOpPsi(ET,w1,w2,para_H)
+      w1%CAvOp = ET/Psi_norm2
 
-      ! add the psi number + the time
-      psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat='f12.2')
+      RWU_E  = REAL_WU(real(w1%CAvOp,kind=Rkind),'au','E')
+      E      = convRWU_TO_R_WITH_WritingUnit(RWU_E)
 
       ! add the energy
       psi_line = psi_line // ' ' // real_TO_char(E,Rformat='f8.5')
 
-      ! add the field (if necessary)
-      IF (present(para_field)) THEN
-        CALL sub_dnE(dnE,0,T,para_field)
-        psi_line = psi_line // ' ' // real_TO_char(dnE(1),Rformat='f8.5')
-        psi_line = psi_line // ' ' // real_TO_char(dnE(2),Rformat='f8.5')
-        psi_line = psi_line // ' ' // real_TO_char(dnE(3),Rformat='f8.5')
-      END IF
+    ELSE
+      ! add the energy
+      psi_line = psi_line // ' ' // 'xxxxxxxx'
+    END IF
 
-      psi_line = psi_line // ' ' // real_TO_char(Psi_norm2,Rformat='f10.7')
-      DO i_be=1,WP(i)%nb_be
-      DO i_bi=1,WP(i)%nb_bi
-        psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
-      END DO
-      END DO
+    ! add the field (if necessary)
+    IF (present(para_field)) THEN
+      CALL sub_dnE(dnE,0,T,para_field)
+      psi_line = psi_line // ' ' // real_TO_char(dnE(1),Rformat='f8.5')
+      psi_line = psi_line // ' ' // real_TO_char(dnE(2),Rformat='f8.5')
+      psi_line = psi_line // ' ' // real_TO_char(dnE(3),Rformat='f8.5')
+    END IF
 
-      write(out_unitp,*) psi_line
-    ENDIF ! for MPI_id==0
+    psi_line = psi_line // ' ' // real_TO_char(Psi_norm2,Rformat='f10.7')
+    DO i_be=1,WP(i)%nb_be
+    DO i_bi=1,WP(i)%nb_bi
+      psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
+    END DO
+    END DO
+
+    write(out_unitp,*) psi_line
+
 
   END DO
 
   CALL dealloc_psi(w2,delete_all=.TRUE.)
+  CALL dealloc_psi(w1,delete_all=.TRUE.)
 
   IF (allocated(tab_WeightChannels)) deallocate(tab_WeightChannels)
   IF (allocated(psi_line))           deallocate(psi_line)
@@ -932,8 +965,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 !================================================================
       SUBROUTINE read_propagation(para_propa,nb_act1,nb_vp_spec_out)
       USE mod_system
-      USE mod_psi_set_alloc, ONLY : alloc_array
-      USE mod_param_WP0,     ONLY : alloc_param_WP0
+      USE mod_psi,     ONLY : alloc_param_WP0
       USE mod_MPI
       IMPLICIT NONE
 
@@ -1111,8 +1143,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         IF (print_level > 0) write(out_unitp,propa)
 
 
-        para_propa%WPTmax                 = convRWU_WorkingUnit_TO_R(WPTmax)
-        para_propa%WPdeltaT               = convRWU_WorkingUnit_TO_R(WPdeltaT)
+        para_propa%WPTmax                 = convRWU_TO_R_WITH_WorkingUnit(WPTmax)
+        para_propa%WPdeltaT               = convRWU_TO_R_WITH_WorkingUnit(WPdeltaT)
         para_propa%nb_micro               = nb_micro
         para_propa%One_Iteration          = One_Iteration
         para_propa%para_poly%max_poly     = max_poly
@@ -1373,8 +1405,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         para_propa%TFnexp2        = TFnexp2
 
 
-        para_propa%TFmaxE       = convRWU_WorkingUnit_TO_R(TFmaxE)
-        para_propa%TFminE       = convRWU_WorkingUnit_TO_R(TFminE)
+        para_propa%TFmaxE       = convRWU_TO_R_WITH_WorkingUnit(TFmaxE)
+        para_propa%TFminE       = convRWU_TO_R_WITH_WorkingUnit(TFminE)
 
         IF (para_propa%control) THEN
           para_propa%with_field    = .TRUE.
@@ -1395,7 +1427,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
           cplx_gate    = .FALSE.
           read(in_unitp,control)
 
-          IF (Tenvelopp == ZERO) Tenvelopp = convRWU_TO_R(WPTmax)
+          IF (Tenvelopp == ZERO) Tenvelopp = convRWU_TO_R_WITH_WorkingUnit(WPTmax)
           IF (print_level > 0) write(out_unitp,control)
 
           IF (nb_WP < 1) THEN
@@ -1688,8 +1720,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
       ! for the filter diagonalization
       IF (DeltaM_filter == 0) DeltaM_filter = L_filter
-      para_Davidson%E0_filter     = convRWU_TO_R(E0_filter)
-      para_Davidson%W_filter      = convRWU_TO_R(W_filter)
+      para_Davidson%E0_filter     = convRWU_TO_R_WITH_WorkingUnit(E0_filter)
+      para_Davidson%W_filter      = convRWU_TO_R_WITH_WorkingUnit(W_filter)
 
       para_Davidson%L_filter      = L_filter
       para_Davidson%M_filter      = M_filter
@@ -1758,7 +1790,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
       para_Davidson%lower_states          = lower_states
       para_Davidson%all_lower_states      = all_lower_states
-      para_Davidson%Max_ene               = convRWU_TO_R(Max_ene)
+      para_Davidson%Max_ene               = convRWU_TO_R_WITH_WorkingUnit(Max_ene)
 
       para_Davidson%project_WP0           = project_WP0
       para_Davidson%residual_max_nb       = residual_max_nb
@@ -1768,8 +1800,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
 
       para_Davidson%symab             = symab
-      para_Davidson%conv_ene          = convRWU_TO_R(conv_ene)
-      para_Davidson%conv_resi         = convRWU_TO_R(conv_resi)
+      para_Davidson%conv_ene          = convRWU_TO_R_WITH_WorkingUnit(conv_ene)
+      para_Davidson%conv_resi         = convRWU_TO_R_WITH_WorkingUnit(conv_resi)
 
       para_Davidson%max_it            = max_it
 

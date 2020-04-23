@@ -41,14 +41,12 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_ReadOp
-
       USE mod_system
       USE mod_OpGrid
       IMPLICIT NONE
 
-!       ====================================================================
-!
-!       ====================================================================
+      PRIVATE
+
         TYPE param_ReadOp ! used for transfert info from read_active to para_H
 
            logical               :: OpPsi_WithGrid = .FALSE.
@@ -75,13 +73,12 @@
            real (kind=Rkind), allocatable :: Poly_Transfo(:) ! Poly_transfo(0:degree_Transfo)
                                                ! Transfo(Op) = Sum_k Poly_transfo(k) * ScaledOp^k
 
-
-
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(para_ReadOp1) :: ReadOp2_TO_ReadOp1
+          GENERIC,   PUBLIC  :: assignment(=) => ReadOp2_TO_ReadOp1
         END TYPE param_ReadOp
 
-      INTERFACE assignment (=)
-        MODULE PROCEDURE ReadOp2_TO_ReadOp1
-      END INTERFACE
+        PUBLIC :: param_ReadOp, init_ReadOp
 
       CONTAINS
 
@@ -111,8 +108,8 @@
       END SUBROUTINE init_ReadOp
 
       SUBROUTINE ReadOp2_TO_ReadOp1(para_ReadOp1,para_ReadOp2)
-      TYPE (param_ReadOp), intent(inout) :: para_ReadOp1
-      TYPE (param_ReadOp), intent(in)    :: para_ReadOp2
+      CLASS (param_ReadOp), intent(inout) :: para_ReadOp1
+      TYPE (param_ReadOp),  intent(in)    :: para_ReadOp2
 
 
       para_ReadOp1%OpPsi_WithGrid  = para_ReadOp2%OpPsi_WithGrid

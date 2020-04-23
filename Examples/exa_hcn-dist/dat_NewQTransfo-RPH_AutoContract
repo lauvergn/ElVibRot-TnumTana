@@ -52,8 +52,8 @@ sym  cos(a)      R     r    x    pi   dh
 0.0
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 min_nbc=20 auto_contrac=t max_ene_contrac=30000. /
- &basis_nD iQdyn(1)=2 name="Hm" nb=10 nq=15 /
- &basis_nD iQdyn(1)=3 name="Hm" nb=10 nq=15 /
+ &basis_nD iQdyn(1)=2 name="Hm" nb=6 nq=10 /
+ &basis_nD iQdyn(1)=3 name="Hm" nb=6 nq=10 /
 
 
  &inactives step=1.d-5 /

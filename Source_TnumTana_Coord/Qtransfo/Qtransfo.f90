@@ -29,7 +29,7 @@
       MODULE mod_Qtransfo
       use mod_system
       USE mod_dnSVM
-      use mod_Constant, only: assignment(=),table_atom
+      use mod_Constant, only: table_atom
 
       USE mod_CartesianTransfo
       USE mod_QTOXanaTransfo
@@ -186,6 +186,7 @@
         check_LinearTransfo = .TRUE.
 
         read(in_unitp,Coord_transfo,IOSTAT=err_io)
+        err_io = 0
         IF (err_io < 0) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) '  while reading the namelist "Coord_transfo"'
@@ -213,12 +214,12 @@
         Qtransfo%opt_transfo  = opt_transfo
         Qtransfo%skip_transfo = skip_transfo
         IF(MPI_id==0) THEN
-          write(out_unitp,'(a,a)' ) ' transfo:               ',Qtransfo%name_transfo
-          write(out_unitp,'(a,i0)') ' Option of the transfo: ',Qtransfo%opt_transfo
-          write(out_unitp,'(a,l)' ) ' Skip the transfo:      ',Qtransfo%skip_transfo
-          write(out_unitp,'(a,i0)') ' num_transfo:           ',Qtransfo%num_transfo
-          write(out_unitp,'(a,l)' ) ' inTOout:               ',Qtransfo%inTOout
-          write(out_unitp,'(a)'   ) '------------------------------------------'
+          write(out_unitp,'(a,a)' )  ' transfo:               ',Qtransfo%name_transfo
+          write(out_unitp,'(a,i0)')  ' Option of the transfo: ',Qtransfo%opt_transfo
+          write(out_unitp,'(a,l1)' ) ' Skip the transfo:      ',Qtransfo%skip_transfo
+          write(out_unitp,'(a,i0)')  ' num_transfo:           ',Qtransfo%num_transfo
+          write(out_unitp,'(a,l1)' ) ' inTOout:               ',Qtransfo%inTOout
+          write(out_unitp,'(a)'   )  '------------------------------------------'
         ENDIF
         CALL flush_perso(out_unitp)
 

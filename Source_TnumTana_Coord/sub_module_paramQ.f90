@@ -33,7 +33,7 @@ MODULE mod_paramQ
                                   write_dnx, sub3_dnx_at1
   use mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
   use mod_CartesianTransfo, only: alloc_cartesiantransfo,               &
-           Set_P_Axis_CartesianTransfo, Set_Ecart_CartesianTransfo,     &
+           Set_P_Axis_CartesianTransfo, Set_Eckart_CartesianTransfo,    &
                                centre_masse, write_cartesiantransfo,    &
                              sub_dnxmassweight, sub3_dncentre_masse,    &
                      calc_cartesiantransfo_new, sub_dnxnomassweight,    &
@@ -42,8 +42,8 @@ MODULE mod_paramQ
   use mod_Tnum,             only: tnum, zmatrix, write_mole,            &
                                   CoordType, Write_CoordType
 
-  USE mod_Constant,         ONLY: assignment(=),get_conv_au_to_unit,    &
-                                  real_wu, rwu_write, convrwu_to_r
+  USE mod_Constant,         ONLY: real_wu,get_conv_au_to_unit,          &
+                                  rwu_write,convRWU_TO_R_WITH_WorkingUnit
   IMPLICIT NONE
 
   INTERFACE sub_QactTOdnx
@@ -147,9 +147,6 @@ CONTAINS
       !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='read_RefGeom'
       !-----------------------------------------------------------------
-  write(6,*) 'coucou ',name_sub
-  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
-  flush(6)
 
 
       IF(MPI_id==0) write(out_unitp,*) 'BEGINNING ',name_sub
@@ -473,9 +470,6 @@ CONTAINS
 
       END IF
       ! ----------------------------------------------
-  write(6,*) 'coucou2 ',name_sub
-  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
-  flush(6)
 
       CALL sub_QinRead_TO_Qact(Qread,Qact,mole,read_itQtransfo_OF_Qin0)
       CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
@@ -596,7 +590,7 @@ CONTAINS
         ELSE
           IF (mole%tab_Cart_transfo(1)%CartesianTransfo%Eckart .OR.        &
              mole%tab_Cart_transfo(1)%CartesianTransfo%MultiRefEckart) THEN
-            CALL Set_Ecart_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
+            CALL Set_Eckart_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
           END IF
         END IF
 
@@ -824,11 +818,6 @@ CONTAINS
       ! since it is going from out to in, it is better to use it_QoutRead (= it_QinRead+1)
       it_QoutRead = it_QinRead + 1
 
-  write(6,*) 'coucou ',name_sub
-  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
-  flush(6)
-
-
       IF (it_QoutRead == mole%nb_Qtransfo+1) THEN ! read_Qact0
         Qact(:) = Qread(:)
       ELSE
@@ -840,9 +829,7 @@ CONTAINS
         dnQout%d0(1:size(Qread)) = Qread(:)
 
         DO it=it_QoutRead,mole%nb_Qtransfo
-  write(6,*) 'coucou0 ',it,name_sub
-  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
-  flush(6)
+
           CALL alloc_dnSVM(dnQin,mole%tab_Qtransfo(it)%nb_Qin,nb_act,0)
 
           IF (debug) THEN
@@ -863,9 +850,7 @@ CONTAINS
 
           CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv=0)
           CALL dealloc_dnSVM(dnQin)
-  write(6,*) 'coucou2 ',it,name_sub
-  write(6,*) 'coucou asso ',associated(mole%RPHTransfo)
-  flush(6)
+
         END DO
 
         Qact(:) = dnQout%d0(1:size(Qact))
@@ -1761,10 +1746,7 @@ CONTAINS
         !=================================================
         IF (Cart_Transfo_loc) THEN
 
-          ! write(6,*) 'coucou Cart_Transfo_loc',Cart_Transfo_loc
           IF (debug) write(out_unitp,*) ' calc_CartesianTransfo_new?',Cart_Transfo_loc
-
-
 
           CALL calc_CartesianTransfo_new(dnx,dnx,                      &
                             mole%tab_Cart_transfo(1)%CartesianTransfo, &
@@ -1785,7 +1767,6 @@ CONTAINS
         !=================================================
         IF (Gcenter .AND. mole%Centered_ON_CoM) THEN
           icG = mole%ncart-2
-
           CALL sub3_dncentre_masse(mole%ncart_act,mole%nb_act,mole%ncart, &
                                      dnx,mole%masses,mole%Mtot_inv,icG,nderiv)
         END IF
@@ -2005,7 +1986,7 @@ CONTAINS
         write(out_unitp,*) '-----------------------------------------'
         DO i=1,size(d0Q),iblock
           iend = min(size(d0Q),i+iblock-1)
-          write(out_unitp,'(a,a,i0,x,6(x,f0.4))') name_info,',it_Qtransfo: ',it,d0Q(i:iend)
+          write(out_unitp,'(a,a,i0,1x,6(1x,f0.4))') name_info,',it_Qtransfo: ',it,d0Q(i:iend)
         END DO
         write(out_unitp,*) '-----------------------------------------'
         CALL flush_perso(out_unitp)
@@ -2126,7 +2107,7 @@ CONTAINS
         DO i=1,size(Q)/3
 
           read(in_unitp,*,IOSTAT=err_io) name_Q(3*i-2),Q(3*i-2:3*i)
-          !write(6,*) name_Q(3*i-2),Q(3*i-2:3*i)*.52d0
+          !write(out_unitp,*) name_Q(3*i-2),Q(3*i-2:3*i)*.52d0
 
           IF (err_io /= 0) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
@@ -2153,9 +2134,9 @@ CONTAINS
             CASE default
               QWU = REAL_WU(Q(i),'',     'no_dim')
             END SELECT
-            Q(i) = convRWU_TO_R(QWU)
+            Q(i) = convRWU_TO_R_WITH_WorkingUnit(QWU)
 
-            !write(6,*) 'i,QWU, conv',i,QWU,Q(i)
+            !write(out_unitp,*) 'i,QWU, conv',i,QWU,Q(i)
 
 
           END DO
@@ -2191,8 +2172,8 @@ CONTAINS
            END IF
 
            IF(MPI_id==0) THEN
-             write(6,*) i,name_Q(i),':',Q(i),':',trim(adjustl(Read_name))
-             write(6,*) i,'type_Q(i) :',type_Q(i)
+             write(out_unitp,*) i,name_Q(i),':',Q(i),':',trim(adjustl(Read_name))
+             write(out_unitp,*) i,'type_Q(i) :',type_Q(i)
            ENDIF
 
            IF (len_trim(Read_name) > 0) THEN
@@ -2227,8 +2208,8 @@ CONTAINS
 
           END IF
 
-          Q(i) = convRWU_TO_R(QWU,WorkingUnit=.TRUE.)
-          IF(MPI_id==0) write(6,*) i,QWU,'working value Q(i)',Q(i)
+          Q(i) = convRWU_TO_R_WITH_WorkingUnit(QWU)
+          IF(MPI_id==0) write(out_unitp,*) i,QWU,'working value Q(i)',Q(i)
 
         END DO
       END IF
@@ -2256,7 +2237,7 @@ CONTAINS
       IMPLICIT NONE
 
       TYPE (zmatrix),    intent(in) :: mole
-      real (kind=Rkind), intent(in) :: d0x(mole%ncart)
+      real (kind=Rkind), intent(in) :: d0x(:)
 
         CALL Write_Cartg98_CoordType(d0x,mole%CoordType)
 
@@ -2267,12 +2248,14 @@ CONTAINS
       IMPLICIT NONE
 
       TYPE (CoordType),  intent(in) :: mole
-      real (kind=Rkind), intent(in) :: d0x(mole%ncart)
+      real (kind=Rkind), intent(in) :: d0x(:)
 
       real (kind=Rkind) :: a0
       integer           :: Z_act(mole%nat)
 
-      integer       :: i,iZ
+      integer       :: i,iZ,ncart
+
+      ncart = size(d0x)
 
 
       Z_act(:) = -1
@@ -2289,7 +2272,7 @@ CONTAINS
       iZ = 0
       write(out_unitp,*) '=============================================='
       write(out_unitp,*) '= Gaussian CC ================================'
-      DO i=1,mole%ncart,3
+      DO i=1,ncart,3
         iZ = iZ + 1
         write(out_unitp,111) Z_act(iZ),0,d0x(i+0:i+2)*a0
  111    format(1x,2(1x,i5),3(2x,f20.9))
@@ -2300,11 +2283,11 @@ CONTAINS
 
       write(out_unitp,*) '=============================================='
       write(out_unitp,*) '= XYZ format ================================='
-      write(out_unitp,*) mole%nat_act
+      write(out_unitp,*) ncart/3
       write(out_unitp,*)
 
       iZ = 0
-      DO i=1,mole%ncart_act,3
+      DO i=1,ncart,3
         iZ = iZ + 1
         write(out_unitp,112) Z_act(iZ),d0x(i+0)*a0,d0x(i+1)*a0,d0x(i+2)*a0
  112    format(2x,i5,3(2x,f20.9))

@@ -4,136 +4,222 @@
 !   le vecteur i est V(.,i)
 !
 !=======================================================================================
-      SUBROUTINE diagonalization(Mat,Eig,Vec,n,type_diag,sort,phase)
+      SUBROUTINE diagonalization(Mat,REig,Vec,n,type_diag,sort,phase)
+      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64,int32
       USE mod_system
       USE mod_MPI
       IMPLICIT NONE
 
-      integer          :: n
-      real(kind=Rkind) :: Mat(n,n),Eig(n),Vec(n,n)
-      real(kind=Rkind) :: trav(n),IEig(n)
 
-      integer          :: type_diag,sort
-      logical          :: phase
+    integer,          intent(in)              :: n
+    real(kind=Rkind), intent(in)              :: Mat(n,n)
+    real(kind=Rkind), intent(inout)           :: REig(n),Vec(n,n)
 
-      integer          :: type_diag_loc
-
-
-      integer          :: ierr
-      integer          :: i,lwork,ldvr,lda
-      real(kind=Rkind), allocatable :: work(:),saveMat(:,:)
-      real(kind=Rkind) :: dummy(1,1)
-
-      integer(kind=4)  :: n4,lwork4,lda4,ldvr4,ierr4
+    integer,          intent(in)     :: type_diag,sort
+    logical,          intent(in)     :: phase
 
 
-!----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub='diagonalization'
-      logical, parameter :: debug = .FALSE.
-!      logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
+    !local variables
+    integer  :: type_diag_loc
+    real(kind=Rkind), allocatable :: trav(:),Mat_save(:,:)
+    integer              :: type_diag_default = 2 ! tred+tql
 
-      !when lapack is used and Rkind/= 8 (not a double), it switch to type_diag=2
-      type_diag_loc = type_diag
-      IF (Rkind /= 8 .AND. (type_diag_loc == 3 .OR. type_diag_loc == 4)) type_diag_loc = 2
+    !for lapack
+    integer              :: i
+    integer              ::    lwork ,lda ,ldvr ,ierr
+    integer(kind=int32)  :: n4,lwork4,lda4,ldvr4,ierr4
+    real(kind=Rkind), allocatable :: work(:)
+    real(kind=Rkind), allocatable :: IEig_loc(:)
 
-      SELECT CASE (type_diag_loc)
-      CASE(1)
-        CALL jacobi2(Mat,n,Eig,Vec)
-      CASE(2)
-        CALL tred2(n,n,Mat,Eig,trav,Vec)
-        CALL tql2(n,n,Eig,trav,Vec,ierr)
-      CASE(3) ! lapack77
+    real(kind=Rkind) :: dummy(1,1)
 
-#if __LAPACK == 1
-        lwork = 3*n-1
-        ! lapack subroutines need integer (kind=4), therefore, we add a conversion, otherwise
-        ! it fails when integers (kind=8) are used (at the complation).
-        n4 = int(n,kind=4)
-        lwork4 = int(lwork,kind=4)
-        CALL alloc_NParray(work,(/ lwork /),'work',name_sub)
-        Vec(:,:) = Mat(:,:)
-        CALL DSYEV('V','U',n4,Vec,n4,Eig,work,lwork,ierr4)
-        IF (debug) write(out_unitp,*)'ierr=',ierr4
-        IF (ierr4 /= 0) THEN
-           write(out_unitp,*) ' ERROR in ',name_sub,' from ', MPI_id
-           write(out_unitp,*) ' DSYEV lapack subroutine has FAILED!'
-           STOP
-        END IF
-        CALL dealloc_NParray(work,'work',name_sub)
 
-        ! lapack95
-        !CALL LA_SYEVD(Vec,E)
+    !                                    Jacobi tred+tql DSYEV  DGEEV
+    integer, parameter :: list_type(7) = [1,    2,202,   3,377, 4,477]
 
-#else
-        CALL tred2(n,n,Mat,Eig,trav,Vec)
-        CALL tql2(n,n,Eig,trav,Vec,ierr)
+
+    !----- for debuging --------------------------------------------------
+    character (len=*), parameter :: name_sub='diagonalization'
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+    !-----------------------------------------------------------
+
+    type_diag_loc = type_diag
+
+    !when lapack is used and Rkind /= real64 (not a double)
+    IF (Rkind /= real64 .AND. type_diag_loc == 3) type_diag_loc = type_diag_default
+
+#if __LAPACK != 1
+    IF (count([3,377,395] == type_diag_loc) == 1) type_diag_loc = type_diag_default
+    IF (count([4,477] == type_diag_loc) == 1) THEN
+      !type_diag_loc = 0
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' The diagonalization of non-symmetric needs LAPACK.'
+      write(out_unitp,*) '  Try to link LAPACK with the code (use LAPACK=1 in the makfile).'
+      write(out_unitp,*) '   type_diag:      ',type_diag_loc
+      write(out_unitp,*) '  => CHECK the fortran!!'
+      STOP 'ERROR in diagonalization: Problem with non-symmetric matrix.'
+    END IF
+
 #endif
 
-      CASE(4) ! lapack77 (non-symmetric)
+    IF (count(list_type == type_diag_loc) == 0) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' type_diag is out-of-range.'
+      write(out_unitp,*) '   type_diag:      ',type_diag_loc
+      write(out_unitp,*) '   Possible values:',list_type(:)
+      write(out_unitp,*) '  => CHECK the fortran!!'
+      STOP 'ERROR in diagonalization: type_diag is out-of-range.'
+    END IF
+
+
+    SELECT CASE (type_diag_loc)
+    CASE(1) ! jacobi
+      IF (debug) write(out_unitp,*) 'Jacobi (symmetric)'
+      allocate(Mat_save(n,n))
+      Mat_save = Mat ! save mat
+
+      CALL jacobi2(Mat_save,n,REig,Vec)
+
+      deallocate(Mat_save)
+    CASE (2) ! tred+tql
+      IF (debug) write(out_unitp,*) 'tred+tql, new version (symmetric)'
+      allocate(trav(n))
+
+      Vec = Mat
+      CALL TRED2_EISPACK(Vec,n,n,REig,trav)
+      CALL TQLI_EISPACK(REig,trav,n,n,Vec)
+
+      deallocate(trav)
+    CASE(202) ! do not use anymore (old tred+tql)
+      IF (debug) write(out_unitp,*) 'tred+tql, old version (symmetric)'
+
+      allocate(Mat_save(n,n))
+      Mat_save = Mat ! save mat
+      allocate(trav(n))
+
+      CALL tred2(n,n,Mat_save,REig,trav,Vec)
+      CALL tql2(n,n,REig,trav,Vec,ierr)
+
+
+
+      deallocate(Mat_save)
+      deallocate(trav)
+    CASE(3,377) ! lapack77
+      IF (debug) write(out_unitp,*) 'lapack77: DSYEV (symmetric)'
 
 #if __LAPACK == 1
-        lwork = (2+64)*n
-        ldvr  = n
-        lda   = n
+      lwork = 3*n-1
+      allocate(work(lwork))
+      Vec(:,:) = Mat(:,:)
 
-        n4     = int(n,kind=4)
-        lwork4 = int(lwork,kind=4)
-        lda4   = int(lda,kind=4)
-        ldvr4  = int(ldvr,kind=4)
+      ! lapack subroutines need integer (kind=4 or int32), therefore, we add a conversion, otherwise
+      ! it fails when integers (kind=8 or int64) are used (at the compilation).
+      n4     = int(n,kind=int32)
+      lwork4 = int(lwork,kind=int32)
+      CALL DSYEV('V','U',n4,Vec,n4,REig,work,lwork4,ierr4)
 
-        CALL alloc_NParray(work,(/ lwork /),'work',name_sub)
-        CALL alloc_NParray(saveMat,(/ n,n /),'saveMat',name_sub)
-        saveMat(:,:) = Mat(:,:)
+      IF (debug) write(out_unitp,*) 'ierr=',ierr4
+      flush(out_unitp)
 
-        CALL DGEEV('N','V',n4,saveMat,lda4,Eig,IEig,dummy,int(1,kind=4),Vec,ldvr4,work,lwork4,ierr4)
+      IF (ierr4 /= 0_int32) THEN
+         write(out_unitp,*) ' ERROR in ',name_sub
+         write(out_unitp,*) ' DSYEV lapack subroutine has FAILED!'
+         STOP
+      END IF
+
+
+      deallocate(work)
+#else
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makfile).'
+      write(out_unitp,*) '  The program should not reach the LAPACK case.'
+      write(out_unitp,*) '  => Probabely, wrong type_diag_default.'
+      write(out_unitp,*) '  => CHECK the fortran!!'
+      STOP 'ERROR in diagonalization: LAPACK case impossible'
+#endif
+!      CASE(395) ! lapack95
+!        IF (debug) write(out_unitp,*) 'lapack95: LA_SYEVD'
+!        flush(out_unitp)
+!        Vec(:,:) = Mat
+!        CALL LA_SYEVD(Vec,Eig)
+
+    CASE(4,477) ! lapack77 (non-symmetric)
+#if __LAPACK == 1
+      IF (debug) write(out_unitp,*) 'lapack77: DGEEV (non-symmetric)'
+      flush(out_unitp)
+
+      allocate(Mat_save(n,n))
+      Mat_save = Mat ! save mat
+
+
+      lwork = (2+64)*n
+      ldvr  = n
+      lda   = n
+      allocate(work(lwork))
+
+
+      n4     = int(n,kind=int32)
+      lwork4 = int(lwork,kind=int32)
+      lda4   = int(lda,kind=int32)
+      ldvr4  = int(ldvr,kind=int32)
+
+        allocate(IEig_loc(n))
+
+        CALL DGEEV('N','V',n4,Mat_save,lda4,REig,IEig_loc,dummy,        &
+                   int(1,kind=int32),Vec,ldvr4,work,lwork4,ierr4)
         IF (debug) write(out_unitp,*)'ierr=',ierr4
-        IF (ierr4 /= 0) THEN
-           write(out_unitp,*) ' ERROR in ',name_sub,' from ', MPI_id
+        IF (ierr4 /= 0_int32) THEN
+           write(out_unitp,*) ' ERROR in ',name_sub
            write(out_unitp,*) ' DGEEV lapack subroutine has FAILED!'
            STOP
         END IF
 
-        !IF (debug) THEN
-          DO i=1,n
-            write(out_unitp,*) 'Eigenvalue(', i, ') = ', Eig(i),'+I ',IEig(i)
-          END DO
-        !END IF
+        DO i=1,n
+          write(out_unitp,*) 'Eigenvalue(', i, ') = ', REig(i),'+I ',IEig_loc(i)
+        END DO
 
-        CALL dealloc_NParray(work,'work',name_sub)
-        CALL dealloc_NParray(saveMat,'saveMat',name_sub)
+        deallocate(IEig_loc)
+
+      deallocate(work)
+      deallocate(Mat_save)
 #else
-        CALL tred2(n,n,Mat,Eig,trav,Vec)
-        CALL tql2(n,n,Eig,trav,Vec,ierr)
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makfile).'
+      write(out_unitp,*) '  The program should not reach the LAPACK case.'
+      write(out_unitp,*) '  => Probabely, wrong type_diag_default.'
+      write(out_unitp,*) '  => CHECK the fortran!!'
+      STOP 'ERROR in diagonalization: LAPACK case impossible'
 #endif
 
+    CASE DEFAULT
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) ' The default CASE is not defined.'
+      write(out_unitp,*) '  => CHECK the fortran!!'
+      STOP 'ERROR in diagonalization: default case impossible'
+    END SELECT
 
-      CASE DEFAULT
-        CALL jacobi2(Mat,n,Eig,Vec)
-      END SELECT
+        SELECT CASE (sort)
+        CASE(1)
+          CALL trie(n,REig,Vec,n)
+          !CALL rota_denerated(REig,Vec,n)
+        CASE(-1)
+          REig = -REig
+          CALL trie(n,REig,Vec,n)
+          REig = -REig
+          !CALL rota_denerated(REig,Vec,n)
+        CASE(2)
+          CALL trie_abs(n,REig,Vec,n)
+        CASE DEFAULT ! no sort
+          CONTINUE
+        END SELECT
 
+        IF (phase) CALL Unique_phase(n,Vec,n)
 
-      SELECT CASE (sort)
-      CASE(1)
-        CALL trie(n,Eig,Vec,n)
-      CASE(-1)
-        Eig = -Eig
-        CALL trie(n,Eig,Vec,n)
-        Eig = -Eig
-      CASE(2)
-        CALL trie_abs(n,Eig,Vec,n)
-      CASE DEFAULT ! no sort
-        CONTINUE
-      END SELECT
+  END SUBROUTINE diagonalization
 
-      DO i=1,n
-        Vec(:,i) = Vec(:,i)/sqrt(dot_product(Vec(:,i),Vec(:,i)))
-      END DO
-
-      IF (phase) CALL Unique_phase(n,Vec,n)
-
-      END SUBROUTINE diagonalization
       SUBROUTINE diagonalization_HerCplx(Mat,Eig,Vec,n,type_diag,sort,phase)
+      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64,int32
       USE mod_system
       USE mod_MPI
       IMPLICIT NONE
@@ -153,7 +239,7 @@
       complex(kind=Rkind), allocatable :: work(:),saveMat(:,:)
       real(kind=Rkind),    allocatable :: rwork(:)
 
-      integer(kind=4)  :: n4,lwork4,ierr4
+      integer(kind=int32)  :: n4,lwork4,ierr4
 
 
 !----- for debuging --------------------------------------------------
@@ -180,14 +266,14 @@
 
         Vec(:,:) = Mat(:,:)
 
-        ! lapack subroutines need integer (kind=4), therefore, we add a conversion, otherwise
-        ! it fails when integers (kind=8) are used (at the compilation).
-        n4     = int(n,kind=4)
-        lwork4 = int(lwork,kind=4)
+        ! lapack subroutines need integer (kind=int32 or 4), therefore, we add a conversion, otherwise
+        ! it fails when integers (kind=int64 or 8) are used (at the compilation).
+        n4     = int(n,kind=int32)
+        lwork4 = int(lwork,kind=int32)
         CALL ZHEEV('V','U',n4,Vec,n4,Eig, work,lwork4, rwork, ierr4)
 
         IF (debug) write(out_unitp,*)'ierr=',ierr4
-        IF (ierr4 /= 0) THEN
+        IF (ierr4 /= 0_int32) THEN
            write(out_unitp,*) ' ERROR in ',name_sub,' from ', MPI_id
            write(out_unitp,*) ' ZHEEV lapack subroutine has FAILED!'
            STOP
@@ -328,7 +414,7 @@
           Z(IP)=ZERO
 23      CONTINUE
 24    CONTINUE
-      write(6,*) max_it,' iterations should never happen'
+      write(out_unitp,*) max_it,' iterations should never happen'
       STOP
 
       end subroutine JACOBI
@@ -444,7 +530,7 @@
 
       END DO ! end main loop
 
-      write(6,*) max_it,' iterations should never happen'
+      write(out_unitp,*) max_it,' iterations should never happen'
       STOP
 
       end subroutine JACOBI2
@@ -570,7 +656,7 @@
 !     real(kind=Rkind) ZERO,ONE,TWO
 !     DATA ZERO/0./,ONE/1./,TWO/2./
 
-      real(kind=Rkind)  g,pp,h,r,c,s,f,b
+      real(kind=Rkind)  g,pp,h,r,c,s,f,b,rbis
       integer l1,j,m,mml,ii,k,l,ierr,i
 !
 !RAY  1
@@ -579,7 +665,7 @@
 !     MACHEP=16.**(-13)
 !      MACHEP=epsilon(ONE)
       MACHEP=tiny(ONE)
-      !write(6,*) 'MACHEP',epsilon(ONE),tiny(ONE),MACHEP
+      !write(out_unitp,*) 'MACHEP',epsilon(ONE),tiny(ONE),MACHEP
 !IBM  simple precision
 !     MACHEP=16.**(-5)
       IERR=0
@@ -605,8 +691,15 @@
       L1=L+1
       G=D(L)
       PP=(D(L1)-G)/(TWO*E(L))
-      R=SQRT(PP*PP+ONE)
-      D(L)=E(L)/(PP+SIGN(R,PP))
+      ! dml 31/03/2020, overflow for pp*pp+ONE when pp is too large.
+      !write(out_unitp,*) 'PP*PP+ONE',PP*PP+ONE ; flush(out_unitp)
+      !write(out_unitp,*) 'sqrt(PP*PP+ONE)',sqrt(PP*PP+ONE) ; flush(out_unitp)
+      IF (PP > TEN**10) THEN
+        D(L)=E(L)/(PP+PP)
+      ELSE
+        R=SQRT(PP*PP+ONE)
+        D(L)=E(L)/(PP+SIGN(R,PP))
+      END IF
       H=G-D(L)
       DO 140 I=L1,N
   140 D(I)=D(I)-H
@@ -674,6 +767,165 @@
       end subroutine TQL2
 
 
+
+      SUBROUTINE TRED2_EISPACK(A,N,NP,D,E)
+      USE mod_NumParameters
+      IMPLICIT NONE
+
+      integer          :: N,NP
+      real(kind=Rkind) :: A(NP,NP),D(NP),E(NP)
+
+      !local variables
+      integer          :: I,J,K,L
+      real(kind=Rkind) :: F,G,H,HH,SCALE
+
+      IF(N.GT.1)THEN
+        DO 18 I=N,2,-1
+          L=I-1
+          H=0.
+          SCALE=0.
+          IF(L.GT.1)THEN
+            DO 11 K=1,L
+              SCALE=SCALE+ABS(A(I,K))
+11          CONTINUE
+            IF(SCALE.EQ.0.)THEN
+              E(I)=A(I,L)
+            ELSE
+              DO 12 K=1,L
+                A(I,K)=A(I,K)/SCALE
+                H=H+A(I,K)**2
+12            CONTINUE
+              F=A(I,L)
+              G=-SIGN(SQRT(H),F)
+              E(I)=SCALE*G
+              H=H-F*G
+              A(I,L)=F-G
+              F=0.
+              DO 15 J=1,L
+                A(J,I)=A(I,J)/H
+                G=0.
+                DO 13 K=1,J
+                  G=G+A(J,K)*A(I,K)
+13              CONTINUE
+                IF(L.GT.J)THEN
+                  DO 14 K=J+1,L
+                    G=G+A(K,J)*A(I,K)
+14                CONTINUE
+                ENDIF
+                E(J)=G/H
+                F=F+E(J)*A(I,J)
+15            CONTINUE
+              HH=F/(H+H)
+              DO 17 J=1,L
+                F=A(I,J)
+                G=E(J)-HH*F
+                E(J)=G
+                DO 16 K=1,J
+                  A(J,K)=A(J,K)-F*E(K)-G*A(I,K)
+16              CONTINUE
+17            CONTINUE
+            ENDIF
+          ELSE
+            E(I)=A(I,L)
+          ENDIF
+          D(I)=H
+18      CONTINUE
+      ENDIF
+      D(1)=0.
+      E(1)=0.
+      DO 23 I=1,N
+        L=I-1
+        IF(D(I).NE.0.)THEN
+          DO 21 J=1,L
+            G=0.
+            DO 19 K=1,L
+              G=G+A(I,K)*A(K,J)
+19          CONTINUE
+            DO 20 K=1,L
+              A(K,J)=A(K,J)-G*A(K,I)
+20          CONTINUE
+21        CONTINUE
+        ENDIF
+        D(I)=A(I,I)
+        A(I,I)=1.
+        IF(L.GE.1)THEN
+          DO 22 J=1,L
+            A(I,J)=0.
+            A(J,I)=0.
+22        CONTINUE
+        ENDIF
+23    CONTINUE
+      RETURN
+      END SUBROUTINE TRED2_EISPACK
+
+      SUBROUTINE TQLI_EISPACK(D,E,N,NP,Z)
+      USE mod_NumParameters
+      IMPLICIT NONE
+
+      integer          :: N,NP
+      real(kind=Rkind) :: D(NP),E(NP),Z(NP,NP)
+
+      !local variables
+      integer          :: I,K,L,M,ITER
+      real(kind=Rkind) :: G,R,S,C,P,F,B,DD
+
+      IF (N.GT.1) THEN
+        DO 11 I=2,N
+          E(I-1)=E(I)
+11      CONTINUE
+        E(N)=0.
+        DO 15 L=1,N
+          ITER=0
+1         DO 12 M=L,N-1
+            DD=ABS(D(M))+ABS(D(M+1))
+            IF (ABS(E(M))+DD.EQ.DD) GO TO 2
+12        CONTINUE
+          M=N
+2         IF(M.NE.L)THEN
+            IF(ITER.EQ.30) STOP 'too many iterations'
+            ITER=ITER+1
+            G=(D(L+1)-D(L))/(2.*E(L))
+            R=SQRT(G**2+1.)
+            G=D(M)-D(L)+E(L)/(G+SIGN(R,G))
+            S=1.
+            C=1.
+            P=0.
+            DO 14 I=M-1,L,-1
+              F=S*E(I)
+              B=C*E(I)
+              IF(ABS(F).GE.ABS(G))THEN
+                C=G/F
+                R=SQRT(C**2+1.)
+                E(I+1)=F*R
+                S=1./R
+                C=C*S
+              ELSE
+                S=F/G
+                R=SQRT(S**2+1.)
+                E(I+1)=G*R
+                C=1./R
+                S=S*C
+              ENDIF
+              G=D(I+1)-P
+              R=(D(I)-G)*S+2.*C*B
+              P=S*R
+              D(I+1)=G+P
+              G=C*R-B
+              DO 13 K=1,N
+                F=Z(K,I+1)
+                Z(K,I+1)=S*Z(K,I)+C*F
+                Z(K,I)=C*Z(K,I)-S*F
+13            CONTINUE
+14          CONTINUE
+            D(L)=D(L)-P
+            E(L)=G
+            E(M)=0.
+            GO TO 1
+          ENDIF
+15      CONTINUE
+      ENDIF
+      RETURN
+      END SUBROUTINE TQLI_EISPACK
 
 !
 !============================================================
@@ -1138,4 +1390,3 @@
   500 CONTINUE
       RETURN
       end subroutine cTred2
-

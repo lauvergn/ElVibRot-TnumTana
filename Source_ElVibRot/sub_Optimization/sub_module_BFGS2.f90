@@ -453,9 +453,9 @@ SUBROUTINE dfpmin_new(Qact,MatdnE,mole,para_PES,para_Tnum,para_BFGS,    &
  call proescvec(p,p,sum,n)
  sum=sqrt(sum)
 !
-! write(6,*) 'sum=', sum, 'stpmax=', stpmax
+! write(out_unitp,*) 'sum=', sum, 'stpmax=', stpmax
 !
- call flush(6)
+ call flush(out_unitp)
  if(sum.gt.stpmax)then
   do i=1,n
    p(i)=p(i)*(stpmax/sum)
@@ -536,14 +536,14 @@ SUBROUTINE dfpmin_new(Qact,MatdnE,mole,para_PES,para_Tnum,para_BFGS,    &
 
  real(kind=Rkind),intent(inout) :: df(mole%nb_act), f
 !
-! write(6,*) 'dfunc subroutine',mole%nb_act,nderiv_dnE
-! write(6,*) 'xt = ', xt
+! write(out_unitp,*) 'dfunc subroutine',mole%nb_act,nderiv_dnE
+! write(out_unitp,*) 'xt = ', xt
 
  Qact(:) = ZERO
  Qact(1:mole%nb_act)=xt
 
-! write(6,*) 'Qact = ',Qact
-! flush(6)
+! write(out_unitp,*) 'Qact = ',Qact
+! flush(out_unitp)
 !
 ! The subroutine below enables to calculate the energy, the gradient and/or the hessian
 ! nderiv_dnE = 0 : => energy only
@@ -569,16 +569,16 @@ SUBROUTINE dfpmin_new(Qact,MatdnE,mole,para_PES,para_Tnum,para_BFGS,    &
 !     With nderiv_alloc=2 and nderiv_dnE=1, you can calculate the energy and the gradient
 !     and update the hessian in MatdnE(1,1)%d2(:,:), if you want.
  
-!  write(6,*) ' MatdnE(1,1)%d0 = ', MatdnE(1,1)%d0
-!  write(6,*) ' MatdnE(1,1)%d1 = ', MatdnE(1,1)%d1
+!  write(out_unitp,*) ' MatdnE(1,1)%d0 = ', MatdnE(1,1)%d0
+!  write(out_unitp,*) ' MatdnE(1,1)%d1 = ', MatdnE(1,1)%d1
 !
   f=MatdnE(1,1)%d0
   if (nderiv_dnE >= 1) df=MatdnE(1,1)%d1(1:mole%nb_act)
 
-!  write(6,*) ' Energy = ',f
-!  write(6,*) ' Active modes gradient = ', df
-!  write(6,*) 'end dfunc subroutine'
-!  flush(6)
+!  write(out_unitp,*) ' Energy = ',f
+!  write(out_unitp,*) ' Active modes gradient = ', df
+!  write(out_unitp,*) 'end dfunc subroutine'
+!  flush(out_unitp)
 
  END SUBROUTINE dfunc
 ! ------------------------------------------------------------------------

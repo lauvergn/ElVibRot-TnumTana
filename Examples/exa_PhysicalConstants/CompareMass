@@ -34,6 +34,6 @@ done
 
 #echo For \"$file\", the largest difference between masses: $d
 echo The largest difference between masses: $d
-echo $d | LANG=C awk '{epsi=0.00001 ; if ($1 > epsi) {print "    ERROR, diff > " epsi} else {print "    No ERROR, diff <= " epsi}}'
+echo $d | LANG=C awk '{epsi=0.00001 ; if ($1 > epsi) {print "    ERROR, diff > " epsi} else {print "    No PROBLEM, diff <= " epsi}}'
 
 rm $fNew $fOld

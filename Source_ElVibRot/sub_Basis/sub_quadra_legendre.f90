@@ -60,13 +60,13 @@
 !---------- variables passees en argument ----------------------------
       TYPE (basis)  :: base
       integer       :: paire
-      logical       :: num
-      real (kind=Rkind) :: step
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 
-      logical       :: deriv
-      integer       :: i,j,k,nq
+      logical           :: num
+      real (kind=Rkind) :: step
+      logical           :: deriv
+      integer           :: i,j,k,nq
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
@@ -77,7 +77,6 @@
          write(out_unitp,*) 'nb,nq',base%nb,nq
          write(out_unitp,*) 'ndim',base%ndim
          write(out_unitp,*) 'paire',paire
-         write(out_unitp,*) 'num,step',num,step
        END IF
 !-----------------------------------------------------------
        deriv = .TRUE.
@@ -150,7 +149,6 @@
         write(out_unitp,*) 'END sub_quadra_legendre'
       END IF
 !-----------------------------------------------------------
-
       END SUBROUTINE sub_quadra_legendre
 !=============================================================
 !

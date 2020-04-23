@@ -50,14 +50,13 @@
           integer :: LGrid_max = -1
           integer :: nq        =  0
           integer :: nq_init   =  0
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(Basis_Grid_Para1) :: Basis_Grid_Param2TOBasis_Grid_Param1
+          GENERIC,   PUBLIC  :: assignment(=) => Basis_Grid_Param2TOBasis_Grid_Param1
         END TYPE Basis_Grid_Param
 
-        INTERFACE assignment (=)
-          MODULE PROCEDURE Basis_Grid_Param2TOBasis_Grid_Param1
-        END INTERFACE
-
-        PUBLIC Basis_Grid_Param, assignment (=), Write_Basis_Grid_Param, &
-               Basis_Grid_ParamTOBasis_Grid_Param_init,                  &
+        PUBLIC Basis_Grid_Param, Write_Basis_Grid_Param,                &
+               Basis_Grid_ParamTOBasis_Grid_Param_init,                 &
                Basis_Grid_Param_initTOBasis_Grid_Param
 
       CONTAINS
@@ -106,8 +105,8 @@
                                                       Basis_Grid_Para2)
 
 
-      TYPE (Basis_Grid_Param), intent(inout) :: Basis_Grid_Para1
-      TYPE (Basis_Grid_Param), intent(in) :: Basis_Grid_Para2
+      CLASS (Basis_Grid_Param), intent(inout) :: Basis_Grid_Para1
+      TYPE (Basis_Grid_Param),  intent(in) :: Basis_Grid_Para2
 
 
 !---------------------------------------------------------------------

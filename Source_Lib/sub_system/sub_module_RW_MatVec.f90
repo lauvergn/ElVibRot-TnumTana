@@ -63,15 +63,16 @@ MODULE mod_RW_MatVec
        character (len=*), optional,    intent(in)     :: name_info
 
 
-       character (len=:), allocatable :: NMatformat
+       ! local variables
+       character (len=:), allocatable :: NMatformat,wformat_loc
        integer                        :: ilen
 
        IF (allocated(wformat)) deallocate(wformat)
 
        IF (present(name_info)) THEN
-         wformat = String_TO_String('(2x,"' // trim(adjustl(name_info)) // ' ",')
+         wformat_loc = String_TO_String('(2x,"' // trim(adjustl(name_info)) // ' ",')
        ELSE
-         wformat = String_TO_String('(')
+         wformat_loc = String_TO_String('(')
        END IF
 
        IF (present(Rformat)) THEN
@@ -103,7 +104,7 @@ MODULE mod_RW_MatVec
 #if(run_MPI)
            write(*,*) 'max_col check:',max_col,ilen, ' from ',MPI_id
 #endif
-           wformat = String_TO_String(wformat // '1x,i' //              &
+           wformat_loc = String_TO_String(wformat_loc // '1x,i' //      &
                        int_TO_char(ilen) // ',2x,' //                   &
                        int_TO_char(max_col) // '(' //                   &
                        trim(adjustl(NMatformat)) // ',1x))')
@@ -111,17 +112,20 @@ MODULE mod_RW_MatVec
 
        ELSE
 
-           wformat = String_TO_String(wformat //                         &
+           wformat_loc = String_TO_String(wformat_loc //                 &
                        int_TO_char(max_col)   // '(' //                  &
                        trim(adjustl(NMatformat)) // ',1x))')
 
 
        END IF
-       !write(6,*) 'NMatformat: ',NMatformat
-       !write(6,*) 'wformat: ',wformat
-       !flush(6)
+       !write(out_unitp,*) 'NMatformat: ',NMatformat
+       !write(out_unitp,*) 'wformat: ',wformat
+       !flush(out_unitp)
+
+       wformat = wformat_loc
 
        deallocate(NMatformat)
+       deallocate(wformat_loc)
 
        !write(out_unitp,*) 'format?: ',trim(wformat)
       END SUBROUTINE sub_Format_OF_Line
@@ -332,9 +336,8 @@ MODULE mod_RW_MatVec
 
       SUBROUTINE Read_RMat(f,nio,nbcol,err)
 
-         integer, intent(in)             :: nio,nbcol
-         integer, intent(inout)          :: err
-
+         integer,          intent(in)    :: nio,nbcol
+         integer,          intent(inout) :: err
          real(kind=Rkind), intent(inout) :: f(:,:)
 
          integer i,j,jj,nb,nbblocs,nfin,nl,nc
@@ -348,6 +351,9 @@ MODULE mod_RW_MatVec
 
          IF (nbblocs*nbcol == nc) nbblocs=nbblocs-1
          err = 0
+
+         !write(out_unitp,*) 'nl,nc,nbcol,nbblocs',nl,nc,nbcol,nbblocs
+
 
          DO nb=0,nbblocs-1
 
@@ -363,10 +369,11 @@ MODULE mod_RW_MatVec
 
          END DO
 
+         nfin=nc-nbcol*nbblocs
          IF (err == 0) THEN
            DO j=1,nl
-             nfin=nc-nbcol*nbblocs
              read(nio,*,IOSTAT=err) jj,(f(j,i+nbcol*nbblocs),i=1,nfin)
+             !write(out_unitp,*) err,jj,(f(j,i+nbcol*nbblocs),i=1,nfin)
              IF (err /= 0) EXIT
            END DO
          END IF
@@ -377,6 +384,7 @@ MODULE mod_RW_MatVec
            write(out_unitp,*) '  while reading a matrix'
            write(out_unitp,*) '  end of file or end of record'
            write(out_unitp,*) '  The matrix paramters: nl,nc,nbcol',nl,nc,nbcol
+           write(out_unitp,*) '  Internal paramters: nbblocs,nfin',nbblocs,nfin
            write(out_unitp,*) ' Check your data !!'
          END IF
 

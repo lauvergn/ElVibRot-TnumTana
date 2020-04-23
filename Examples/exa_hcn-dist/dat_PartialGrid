@@ -14,8 +14,8 @@ cd $here
  x2=0.461483933
 
 
-nice $DIR_vib/vib << ** >res
- &system PGrid_omp=0 /
+nice $DIR_vib/vib << ** >res_partial
+ &system printlevel=2 PGrid_omp=0 /
  &constantes /
  &variables 
          zmat=T
@@ -58,8 +58,8 @@ sym  cos(a)      R     r    x    pi   dh
 **
 
 
-nice $DIR_vib/vib << ** >>res
- &system PGrid_omp=0 /
+nice $DIR_vib/vib << ** >res
+ &system printlevel=2 PGrid_omp=0 /
  &constantes /
  &variables
          zmat=T

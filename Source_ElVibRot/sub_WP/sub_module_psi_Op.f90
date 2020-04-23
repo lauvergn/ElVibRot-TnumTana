@@ -41,9 +41,10 @@
 !===========================================================================
 !===========================================================================
  MODULE mod_psi_Op
-   IMPLICIT NONE
+  USE mod_basis
+  IMPLICIT NONE
 
-   CONTAINS
+  CONTAINS
 
 
 !=======================================================================================
@@ -2368,7 +2369,6 @@ END SUBROUTINE Overlap_psipsi_MPI3
       SUBROUTINE sub_LCpsi_TO_psi(psi,Vec,ndim,nb_save)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 
@@ -2482,7 +2482,6 @@ END SUBROUTINE Overlap_psipsi_MPI3
       SUBROUTINE sub_Schmidt(psi,nb_psi)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi
       IMPLICIT NONE
 
@@ -2539,7 +2538,6 @@ END SUBROUTINE Overlap_psipsi_MPI3
       SUBROUTINE sub_Lowdin(psi,nb_psi)
       USE mod_system
       USE mod_psi_set_alloc
-      USE mod_psi_SimpleOp
       USE mod_ana_psi
       IMPLICIT NONE
 

@@ -42,13 +42,14 @@
 !===========================================================================
  MODULE mod_march
  USE mod_system
- USE mod_field,         ONLY : param_field
- USE mod_psi_set_alloc, ONLY : param_psi
+ use mod_Constant,      ONLY : get_conv_au_to_unit
+ USE mod_psi,           ONLY : param_psi,alloc_NParray,dealloc_NParray,dealloc_psi
  USE mod_propa,         ONLY : param_propa,param_poly,Calc_AutoCorr,    &
                                Write_AutoCorr,SaveWP_restart,           &
                                sub_analyze_mini_WP_OpWP
+ USE mod_field,         ONLY : param_field
+
  USE mod_march_SG4
- use mod_Constant,      only: assignment(=),get_conv_au_to_unit
  IMPLICIT NONE
 
  PRIVATE
@@ -61,9 +62,8 @@
       SUBROUTINE march_gene(T,WP,WP0,nb_WP,print_Op,                    &
                             para_H,para_propa,tab_Op,para_field)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -123,7 +123,7 @@
       IF (para_propa%One_Iteration) THEN
         IF(MPI_id==0) THEN
           write(out_unitp,*) '================================================='
-          write(out_unitp,*) ' VIB: BEGINNING march_gene'
+          write(out_unitp,*) ' VIB: BEGINNING ',name_sub
           CALL time_perso('march_gene')
           write(out_unitp,*)
         ENDIF
@@ -215,7 +215,7 @@
       CALL SaveWP_restart(T+para_propa%WPdeltaT,WP,para_propa%file_WP_restart)
 
       IF (para_propa%One_Iteration) THEN
-        CALL sub_analyze_mini_WP_OpWP(T+para_propa%WPdeltaT,WP,1,para_H,para_propa)
+        CALL sub_analyze_mini_WP_OpWP(T+para_propa%WPdeltaT,WP,1,para_H)
 
         IF(MPI_id==0) THEN
           write(out_unitp,*)
@@ -224,6 +224,8 @@
           write(out_unitp,*) ' VIB: END march_gene'
           write(out_unitp,*) '================================================='
           write(out_unitp,*) 'Propagation stops after one time step.'
+          write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!'
+          write(out_unitp,*) '================================================'
         ENDIF
         STOP 'Propagation stops after one time step.'
       END IF
@@ -256,10 +258,8 @@
       SUBROUTINE march_RK2_field(T,WP,nb_WP,print_Op,                   &
                                  para_H,para_Dip,para_field,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -385,10 +385,8 @@
       SUBROUTINE march_RK4_field(T,WP,nb_WP,print_Op,                   &
                                  para_H,para_Dip,para_field,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -538,10 +536,8 @@
       END SUBROUTINE march_RK4_field
       SUBROUTINE march_RK4(T,no,WP,WP0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -678,10 +674,8 @@
       END SUBROUTINE march_RK4
       SUBROUTINE march_BS(T,no,WP,WP0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,dealloc_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -775,7 +769,7 @@
 
     !extrapolation
     DO i=1,j
-      x = real(2*j+2,kind=8)/real(2*(j-i)+2,kind=8)
+      x = real(2*j+2,kind=Rkind)/real(2*(j-i)+2,kind=Rkind)
       x = ONE/(x**2-ONE)
       yerr = yt1(i-1)-yt0(i-1)
       yt1(i) = yt1(i-1) + yerr*x
@@ -795,14 +789,14 @@
       CALL dealloc_psi(yt1(i),delete_all=.TRUE.)
     END DO
     deallocate(yt1)
-    !write(6,*) 'march_bs',j,err1
+    !write(out_unitp,*) 'march_bs',j,err1
 
     !IF (err1 < 1.d-6 .OR. err1 > err0) EXIT
     IF (err1 < 1.d-10) EXIT
 
     err0 = err1
   END DO
-  write(6,*) 'end march_bs',min(j,order),err1
+  write(out_unitp,*) 'end march_bs',min(j,order),err1
 
   WP = yt0(min(j,order))
   DO i=lbound(yt0,dim=1),ubound(yt0,dim=1)
@@ -841,10 +835,8 @@
       END SUBROUTINE march_BS
       SUBROUTINE march_ModMidPoint(T,no,WP,WP0,para_H,para_propa,order)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,dealloc_psi
+      USE mod_Op,    ONLY : param_Op
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -923,7 +915,7 @@
           write(out_unitp,*) ' order: ',order
         STOP
       END IF
-!write(6,*) 'order_loc',order_loc
+!write(out_unitp,*) 'order_loc',order_loc
       DTT        = para_propa%WPdeltaT / real(order_loc,kind=Rkind)
 
       zkm = WP
@@ -998,13 +990,9 @@
       SUBROUTINE fcn_field(T,WP,dWP,para_H,para_Dip,                    &
                            para_field,w1)
       USE mod_system
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
-
-      USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op,sub_OpPsi,sub_scaledOpPsi
+      USE mod_field, ONLY : param_field,sub_dnE
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1084,10 +1072,8 @@
       SUBROUTINE fcn(WP,dWP,para_H)
       USE mod_system
 
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1153,13 +1139,9 @@
                                  para_H,para_Dip,                       &
                                  para_field,para_propa)
       USE mod_system
-
-      USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op,sub_OpPsi,sub_scaledOpPsi
+      USE mod_field, ONLY : param_field,sub_dnE
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1264,18 +1246,20 @@
                         'work_WP',name_sub,[0])
       DO j=1,nb_WP
         work_WP(0) = WP(j)
+
         DO i=0,para_propa%para_poly%npoly-1
 
           CALL sub_OpPsi(work_WP(i),w2,para_H)
           CALL sub_scaledOpPsi(work_WP(i),w2,para_H%E0,ONE)
 
-          work_WP(i+1) = w2  ! H.psi(i)
+          !work_WP(i+1) = w2  ! H.psi(i)
 
 
           fac_k = cmplx(ZERO,-para_propa%WPdeltaT /                     &
                            real(i+1,kind=Rkind),kind=Rkind)
 
-          work_WP(i+1) = work_WP(i+1) * fac_k
+
+          work_WP(i+1) = w2 * fac_k
 
           DO ip=1,3
             IF (.NOT. para_field%pola_xyz(ip)) CYCLE
@@ -1295,11 +1279,12 @@
             CALL sub_OpPsi(w1,w2,para_Dip(ip))
 
             work_WP(i+1) = work_WP(i+1) + w2
+
           END DO
           WP(j) = WP(j) + work_WP(i+1)
 
           CALL norm2_psi(work_WP(i+1))
-!         write(out_unitp,*) 'norm2 psi i+1',i+1,work_WP(i+1)%norm2
+          !write(out_unitp,*) 'norm2 psi i+1',i+1,work_WP(i+1)%norm2
           IF (work_WP(i+1)%norm2 < para_propa%para_poly%poly_tol) EXIT
           IF (work_WP(i+1)%norm2 > TEN**15) THEN
              write(out_unitp,*) ' ERROR in ',name_sub
@@ -1363,11 +1348,8 @@
       !!@param: TODO
       SUBROUTINE march_noD(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op,sub_PsiOpPsi,sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1415,22 +1397,22 @@
 
  21 format(a,100(x,e12.5))
 
-      !write(6,21) 'Rw1',Real(w1%CvecB,kind=Rkind)
-      !write(6,21) 'Iw1',AImag(w1%CvecB)
+      !write(out_unitp,21) 'Rw1',Real(w1%CvecB,kind=Rkind)
+      !write(out_unitp,21) 'Iw1',AImag(w1%CvecB)
 
       DO j=1,para_propa%para_poly%npoly
 
-        !write(6,21) 'Rw1',Real(w1%CvecB,kind=Rkind)
-        !write(6,21) 'Iw1',AImag(w1%CvecB)
+        !write(out_unitp,21) 'Rw1',Real(w1%CvecB,kind=Rkind)
+        !write(out_unitp,21) 'Iw1',AImag(w1%CvecB)
 
         IF (j > 1) CALL sub_OpPsi(w1,w2,para_H) ! already done in PsiHPsi
-        !write(6,21) 'Rw2',Real(w2%CvecB,kind=Rkind)
-        !write(6,21) 'Iw2',AImag(w2%CvecB)
+        !write(out_unitp,21) 'Rw2',Real(w2%CvecB,kind=Rkind)
+        !write(out_unitp,21) 'Iw2',AImag(w2%CvecB)
 
         CALL sub_scaledOpPsi(w1,w2,para_H%E0,ONE)
 
-        !write(6,21) 'Rw2',Real(w2%CvecB,kind=Rkind)
-        !write(6,21) 'Iw2',AImag(w2%CvecB)
+        !write(out_unitp,21) 'Rw2',Real(w2%CvecB,kind=Rkind)
+        !write(out_unitp,21) 'Iw2',AImag(w2%CvecB)
 
         w1 = w2
 
@@ -1442,13 +1424,13 @@
           cmplx(ZERO,-para_propa%WPdeltaT/real(j,kind=Rkind),kind=Rkind)
         w2 = w1 * rtj
 
-        !write(6,21) 'Rw2*rtj',Real(w2%CvecB,kind=Rkind)
-        !write(6,21) 'Iw2*rtj',AImag(w2%CvecB)
+        !write(out_unitp,21) 'Rw2*rtj',Real(w2%CvecB,kind=Rkind)
+        !write(out_unitp,21) 'Iw2*rtj',AImag(w2%CvecB)
 
         psi = psi + w2
 
-        !write(6,21) 'Rpsi',Real(psi%CvecB,kind=Rkind)
-        !write(6,21) 'Ipsi',AImag(psi%CvecB)
+        !write(out_unitp,21) 'Rpsi',Real(psi%CvecB,kind=Rkind)
+        !write(out_unitp,21) 'Ipsi',AImag(psi%CvecB)
 
         CALL norm2_psi(w2)
 
@@ -1549,17 +1531,12 @@
       !!@param: TODO
   SUBROUTINE march_SIP(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,Overlap_psi1_psi2
+      USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),       intent(in)     :: para_H
+      TYPE (param_Op)                      :: para_H
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa),    intent(inout)  :: para_propa
@@ -1612,6 +1589,7 @@
       H(:,:) = CZERO
       ! loop for H|psi>, H^2|psi>, H^3|psi>...
       DO j=2,para_propa%para_poly%npoly+1
+        IF (debug) write(out_unitp,*) 'in ',name_sub,' it:',j-1
         CALL sub_OpPsi(Psi  =tab_KrylovSpace(j-1),                      &
                        OpPsi=tab_KrylovSpace(j),para_Op=para_H)
         IF (j == 2) THEN
@@ -1639,7 +1617,7 @@
         ! n=j-1
         CALL UPsi_spec(UPsiOnKrylov,H(1:j-1,1:j-1),Vec,Eig,             &
                               para_propa%WPdeltaT,j-1,With_diago=.TRUE.)
-        !write(6,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
+        !write(out_unitp,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
         IF (abs(UPsiOnKrylov(j-1)) < para_propa%para_poly%poly_tol .OR. &
             j == para_propa%para_poly%npoly+1) THEN
           n = j-1
@@ -1675,7 +1653,10 @@
         STOP
       END IF
 
-      IF (debug) write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n))
+      IF (debug) THEN
+        write(out_unitp,*) 'Eig',Eig(1:n)
+        write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n))
+      END IF
 
       Psi = ZERO
       DO i=1,n
@@ -1742,17 +1723,14 @@
   END SUBROUTINE march_SIP
   SUBROUTINE march_SIL(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi,renorm_psi_With_norm2
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
+      USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,    &
+                            renorm_psi_With_norm2,Overlap_psi1_psi2
 
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),       intent(in)     :: para_H
+      TYPE (param_Op)     :: para_H
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa),    intent(inout)  :: para_propa
@@ -1806,6 +1784,7 @@
       E0 = para_H%E0
       H(:,:) = CZERO
       DO k=1,para_propa%para_poly%npoly
+        IF (debug) write(out_unitp,*) 'in ',name_sub,' it:',k
 
         IF (para_propa%nb_micro > 1) THEN
           psi0_psiKrylovSpace(k) = Calc_AutoCorr(psi0,tab_KrylovSpace(k),&
@@ -1841,7 +1820,7 @@
         !  (i) k reaches npoly (ii) the scheme converges
         CALL UPsi_spec(UPsiOnKrylov,H(1:k,1:k),Vec,Eig,                 &
                                 para_propa%WPdeltaT,k,With_diago=.TRUE.)
-        !write(6,*) k,'abs(UPsiOnKrylov(k)',abs(UPsiOnKrylov(k))
+        !write(out_unitp,*) k,'abs(UPsiOnKrylov(k)',abs(UPsiOnKrylov(k))
         IF (abs(UPsiOnKrylov(k)) < para_propa%para_poly%poly_tol .OR. &
             k == para_propa%para_poly%npoly) THEN
           n = k
@@ -1936,12 +1915,12 @@
 
 
 !----- variables for the WP propagation ----------------------------
+      integer,                           intent(in)     :: n
       complex (kind=Rkind),              intent(in)     :: H(n,n)
       complex (kind=Rkind), allocatable, intent(inout)  :: Vec(:,:)
       real (kind=Rkind),    allocatable, intent(inout)  :: Eig(:)
       complex (kind=Rkind), allocatable, intent(inout)  :: UPsiOnKrylov(:)
       real (kind=Rkind),                 intent(in)     :: deltaT
-      integer,                           intent(in)     :: n
       logical,                           intent(in)     :: With_diago
 
 !------ working variables ---------------------------------
@@ -2007,10 +1986,10 @@
 
 
 !----- variables for the WP propagation ----------------------------
+      integer,               intent(in)     :: n
       complex (kind=Rkind),  intent(in)     :: H(n,n)
       complex (kind=Rkind),  intent(inout)  :: UPsiOnKrylov(n)
       real (kind=Rkind),     intent(in)     :: deltaT
-      integer,               intent(in)     :: n
 
 !------ working variables ---------------------------------
       complex (kind=Rkind) :: Vec(n,n)
@@ -2053,17 +2032,12 @@
   END SUBROUTINE UPsi_spec_v1
   SUBROUTINE march_SIP_v1(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,Overlap_psi1_psi2
+      USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),       intent(in)     :: para_H
+      TYPE (param_Op)    :: para_H
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa),    intent(inout)  :: para_propa
@@ -2129,11 +2103,11 @@
         END DO
 
         CALL UPsi_spec_v1(UPsiOnKrylov(1:j-1),H(1:j-1,1:j-1),para_propa%WPdeltaT,j-1)
-        !write(6,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
+        !write(out_unitp,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
         IF (abs(UPsiOnKrylov(j-1)) < para_propa%para_poly%poly_tol .OR. &
             j == para_propa%para_poly%npoly+1) THEN
           n = j-1
-          write(6,*) n,'abs(UPsiOnKrylov(n)',abs(UPsiOnKrylov(n))
+          write(out_unitp,*) n,'abs(UPsiOnKrylov(n)',abs(UPsiOnKrylov(n))
           EXIT
         END IF
 
@@ -2250,17 +2224,12 @@
   END SUBROUTINE march_SIP_v1
   SUBROUTINE march_SIP_v0(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,Overlap_psi1_psi2
+      USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),       intent(in)     :: para_H
+      TYPE (param_Op)     :: para_H
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa),    intent(in)     :: para_propa
@@ -2381,7 +2350,7 @@
         write(out_unitp,*) 'H'
         CALL Write_Mat(H,out_unitp,6)
 
-        write(6,*) 'Eig1',dot_product(Vec(:,1),matmul(H,Vec(:,1)))
+        write(out_unitp,*) 'Eig1',dot_product(Vec(:,1),matmul(H,Vec(:,1)))
 
         H = CZERO
         DO i=1,para_propa%para_poly%npoly
@@ -2460,17 +2429,12 @@
       !!@param: TODO
   SUBROUTINE march_Spectral(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi,renorm_psi
-      USE mod_psi_SimpleOp
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,Overlap_psi1_psi2
+      USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_Op),       intent(in)     :: para_H
+      TYPE (param_Op)     :: para_H
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa),    intent(in)     :: para_propa
@@ -3028,11 +2992,8 @@
       !!@param: TODO
       SUBROUTINE march_cheby(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       USE mod_propa
       USE mod_MPI
       IMPLICIT NONE
@@ -3301,11 +3262,8 @@
 
       SUBROUTINE march_cheby_old(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3494,11 +3452,8 @@
       !!@param: TODO
       SUBROUTINE march_nOD_im(T,no,psi,psi0,w1,w2,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3574,12 +3529,8 @@
       !!@param: TODO
       SUBROUTINE march_FOD_Opti_im(psi,Ene0,T,it,para_H,para_propa)
       USE mod_system
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi,dealloc_psi
-      USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-      USE mod_ana_psi,         ONLY : norm2_psi
-
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,dealloc_psi,Overlap_psi1_psi2,norm2_psi
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3756,13 +3707,9 @@
                                       para_H,para_Dip,                  &
                                       para_field,para_propa)
       USE mod_system
-
-      USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,          ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_field, ONLY : param_field,sub_dnE
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -3972,13 +3919,9 @@
       SUBROUTINE march_new_noD_field(T,WP,nb_WP,print_Op,               &
                                      para_H,para_Dip,para_field,para_propa)
       USE mod_system
-
-      USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
-
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_field, ONLY : param_field,sub_dnE
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -4215,14 +4158,12 @@
                                  para_H,para_Dip,                       &
                                  para_field,para_propa)
       USE mod_system
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,               &
+                            sub_PsiBasisRep_TO_GridRep,                 &
+                            sub_PsiGridRep_TO_BasisRep
+      USE mod_field, ONLY : param_field,sub_dnE
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_OpiPsi,sub_scaledOpPsi
 
-      USE mod_field,           ONLY : param_field,sub_dnE
-      USE mod_Op,              ONLY : param_Op, sub_OpPsi,sub_OpiPsi,sub_scaledOpPsi
-
-      USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep,sub_PsiGridRep_TO_BasisRep
-      USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
-      USE mod_ana_psi,         ONLY : norm2_psi
-      USE mod_psi_SimpleOp
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -4580,12 +4521,12 @@
       r1 = r
       CALL mmbsjn(r1,ncheb,cf,ier)
 
-      !write(6,*) 'Chebychev coefficients'
-      !write(6,*) '  with r=',r1
+      !write(out_unitp,*) 'Chebychev coefficients'
+      !write(out_unitp,*) '  with r=',r1
 
       DO i=2,ncheb
         cf(i) = cf(i) + cf(i)
-        !write(6,*) 'i,cf',i,cf(i)
+        !write(out_unitp,*) 'i,cf',i,cf(i)
       END DO
 !stop
       END SUBROUTINE cof
@@ -4603,14 +4544,14 @@
       USE mod_system
       IMPLICIT NONE
 
-      integer       :: nOD,Max_nOD
+      integer           :: nOD,Max_nOD
       real (kind=Rkind) :: alpha,DeltaT,epsi
       real (kind=Rkind) :: coef(:)
 
 
 
       real (kind=Rkind) :: reste,xi
-      integer       :: i
+      integer           :: i
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug =.FALSE.

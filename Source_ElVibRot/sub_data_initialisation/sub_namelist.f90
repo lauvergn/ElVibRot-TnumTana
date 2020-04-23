@@ -56,8 +56,8 @@
       SUBROUTINE read_inactive(Basis2n,ComOp,mole)
       USE mod_system
       USE mod_nDindex
-      USE mod_Constant,  only: assignment(=),REAL_WU, convRWU_TO_R
-      use mod_Coord_KEO, only: assignment(=),CoordType, alloc_array, dealloc_array, &
+      USE mod_Constant,  only: REAL_WU, convRWU_TO_R_WITH_WorkingUnit
+      use mod_Coord_KEO, only: CoordType, alloc_array, dealloc_array,   &
                                set_rphtransfo, tnum
       USE mod_basis
       USE mod_Op
@@ -121,7 +121,10 @@
         nb_inact21 = mole%nb_inact2n
       END IF
 
-      IF (nb_inact21 <= 0) RETURN
+      IF (nb_inact21 <= 0) THEN
+        read(in_unitp,inactives) ! for nagfor we must read the inactive namelist
+        RETURN
+      END IF
       IF (nb_inact21 > max_inact2n) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) 'max_inact2n is too small',max_inact2n
@@ -178,16 +181,16 @@
           max_excit = sum(tab_nb(1:nb_inact21))-nb_inact21
         END IF
 
-        write(6,*) 'max_excit',max_excit
-        write(6,*) 'tab_nb(:)',tab_nb(1:nb_inact21)
+        write(out_unitp,*) 'max_excit',max_excit
+        write(out_unitp,*) 'tab_nb(:)',tab_nb(1:nb_inact21)
 
         nDinit(:) = 0
         CALL alloc_array(Basis2n%nDindB,'Basis2n%nDindB',name_sub)
         IF (isort == 1) THEN ! sort with energy
           CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
               tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
-                      MaxNorm=convRWU_TO_R(max_ene_h),type_OF_nDindex=0, &
-                                   With_nDindex=.FALSE.)
+                      MaxNorm=convRWU_TO_R_WITH_WorkingUnit(max_ene_h),  &
+                      type_OF_nDindex=0,With_nDindex=.FALSE.)
         ELSE IF (isort == 2) THEN ! sort with excitation
           CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
               tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
@@ -208,7 +211,7 @@
         ComOp%ADA               = ADA
         ComOp%contrac_ba_ON_HAC = contrac_ba_ON_HAC
         ComOp%max_nb_ba_ON_HAC  = max_nb_ba_ON_HAC
-        ComOp%max_ene_ON_HAC    = convRWU_TO_R(max_ene_h)
+        ComOp%max_ene_ON_HAC    = convRWU_TO_R_WITH_WorkingUnit(max_ene_h)
 
 
         Basis2n%nb_basis            = nb_inact21
@@ -287,7 +290,7 @@
 
       USE mod_system
       USE mod_nDindex
-      USE mod_Constant, only : assignment(=),REAL_WU,convRWU_TO_R
+      USE mod_Constant, only : REAL_WU,convRWU_TO_R_WITH_WorkingUnit
       USE mod_PrimOp
       USE mod_Op
       USE mod_basis
@@ -549,7 +552,7 @@
       IF (Op_Transfo) THEN
         !write(out_unitp,*) 'E0_Transfo',E0_Transfo
 
-        para_ReadOp%E0_Transfo      = convRWU_TO_R(E0_Transfo)
+        para_ReadOp%E0_Transfo      = convRWU_TO_R_WITH_WorkingUnit(E0_Transfo)
         para_ReadOp%degree_Transfo  = 2
         CALL alloc_NParray(para_ReadOp%Poly_Transfo,(/ 2 /),            &
                           'para_ReadOp%Poly_Transfo','read_active',(/ 0 /))

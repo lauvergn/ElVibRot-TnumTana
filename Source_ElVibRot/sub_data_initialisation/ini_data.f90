@@ -44,7 +44,7 @@
 
 !=======================================================================================
 !     INITIALIZATION of most of parameters :
-!        mole, WP0, Operators....
+!        mole, Operators....
 !
 ! >const_phys: type constant contains all the physical constants
 !              *Note: may not safe with this name
@@ -65,13 +65,13 @@
                           para_AllBasis,BasisnD_Save,                   &
                           para_PES,ComOp,para_AllOp,                    &
                           para_ana,para_intensity,intensity_only,       &
-                          para_propa,WP0)
+                          para_propa)
 
       use mod_system
-      USE mod_dnSVM,     only : assignment(=),Type_dnMat
-      USE mod_Constant,  only : assignment(=),constant, sub_constantes, REAL_WU
-      USE mod_Coord_KEO, only : assignment(=),CoordType, Tnum, get_Qact0, read_RefGeom
-      use mod_PrimOp,    only : assignment(=),param_otf, param_pes, write_typeop, param_typeop,&
+      USE mod_dnSVM,     only : Type_dnMat
+      USE mod_Constant,  only : constant, sub_constantes, REAL_WU
+      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0, read_RefGeom
+      use mod_PrimOp,    only : param_otf, param_pes, write_typeop, param_typeop,&
                                 finalyze_tnumtana_coord_primop, init_typeop,     &
                                 derive_termqact_to_derive_termqdyn
       USE mod_basis
@@ -79,7 +79,6 @@
       USE mod_Op
       USE mod_analysis
       USE mod_propa
-      USE mod_psi_set_alloc
       USE mod_Auto_Basis
       USE mod_MPI
       IMPLICIT NONE
@@ -104,7 +103,6 @@
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_propa)     :: para_propa
-      TYPE (param_psi)       :: WP0
       integer                :: nb_vp_specWP
 
 !----- variables pour la namelist minimum ----------------------------
@@ -356,7 +354,13 @@
         para_propa%para_Davidson%formatted_file_readWP = para_ana%formatted_file_WP ! to set the same default as in para_ana%formatted_file_WP
         para_propa%para_Davidson%formatted_file_WP     = para_ana%formatted_file_WP ! idem
 
+
+
         CALL read_Davidson(para_propa%para_Davidson,para_propa)
+
+       para_propa%file_WP%name    = para_propa%para_Davidson%name_file_saveWP
+
+       para_ana%ana_psi%file_Psi  = para_propa%file_WP
 
       END IF
 
@@ -605,6 +609,10 @@ integer :: MappingSG4Meme,PotMem,KEO_type1_Mem,KEO_type10_Mem,psi_Mem
 integer :: Mem,nb_psi_loc
 character (len=2) :: MemUnit
 
+
+nb_psi_loc = max(nb_psi,1)
+
+
 GridMem  = nq*Rkind
 BasisMem = nb*Rkind
 
@@ -625,19 +633,19 @@ ENDIF
 IF(MPI_id==0) write(out_unitp,*) "------------------------------------------------------------"
 Mem = psi_Mem
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "One psi: ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "One psi: ",Mem,MemUnit
 Mem = psi_Mem * 4
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "One psi's with Davidson (num_resetH=1): ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "One psi's with Davidson (num_resetH=1): ",Mem,MemUnit
 IF(MPI_id==0) write(out_unitp,*) "------------------------------------------------------------"
 
-IF (nb_psi > 0) THEN
-  Mem = psi_Mem * nb_psi
+IF (nb_psi_loc > 0) THEN
+  Mem = psi_Mem * nb_psi_loc
   CALL convertMem(Mem,MemUnit)
-  IF(MPI_id==0) write(out_unitp,'(i0,a,i0,x,a)') nb_psi," psi's: ",Mem,MemUnit
-  Mem = psi_Mem * nb_psi * 4
+  IF(MPI_id==0) write(out_unitp,'(i0,a,i0,1x,a)') nb_psi_loc," psi's: ",Mem,MemUnit
+  Mem = psi_Mem * nb_psi_loc * 4
   CALL convertMem(Mem,MemUnit)
-  IF(MPI_id==0) write(out_unitp,'(i0,a,i0,x,a)') nb_psi," psi's with Davidson (num_resetH=1): ",Mem,MemUnit
+  IF(MPI_id==0) write(out_unitp,'(i0,a,i0,1x,a)') nb_psi_loc," psi's with Davidson (num_resetH=1): ",Mem,MemUnit
   IF(MPI_id==0) write(out_unitp,*) "------------------------------------------------------------"
 END IF
 
@@ -645,29 +653,29 @@ IF(MPI_id==0) write(out_unitp,*) "====== Memory for Type 1 (F2+F1+Vep+V) =======
 IF(MPI_id==0) write(out_unitp,*) "-SG4 Full direct --"
 Mem = MappingSG4Meme
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping):       ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping):       ",Mem,MemUnit
 IF(MPI_id==0) write(out_unitp,*) "-SG4 KEO direct --"
 Mem = MappingSG4Meme+PotMem
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V):     ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping+V):     ",Mem,MemUnit
 IF(MPI_id==0) write(out_unitp,*) "-SG4 --"
 Mem = MappingSG4Meme+KEO_type1_Mem ! PotMem is not here because is already counted in KEO_type1_Mem
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
 
 IF(MPI_id==0) write(out_unitp,*) "====== Memory for Type 10 (G+V) ============================"
 IF(MPI_id==0) write(out_unitp,*) "-SG4 Full direct --"
 Mem = MappingSG4Meme
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping):       ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping):       ",Mem,MemUnit
 IF(MPI_id==0) write(out_unitp,*) "-SG4 KEO direct --"
 Mem = MappingSG4Meme+PotMem
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V):     ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping+V):     ",Mem,MemUnit
 IF(MPI_id==0) write(out_unitp,*) "-SG4 --"
 Mem = MappingSG4Meme+PotMem+KEO_type10_Mem
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
 
 IF(MPI_id==0) THEN
   write(out_unitp,*) "============================================================"
