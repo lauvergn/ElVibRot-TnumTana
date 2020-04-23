@@ -62,6 +62,8 @@
                                                          ! otherwise psi is real (use of Rvec)
         logical       :: BasisRep   = .TRUE.             ! (T) BasisRep
         logical       :: GridRep    = .FALSE.            ! (F) GridRep psi
+        
+        Logical       :: SR_MPI     = .FALSE.            ! (F) Smolyak rep. with MPI
 
         integer       :: nb_ba      =0
         integer       :: nb_bi      =0
@@ -86,6 +88,11 @@
 
         real (kind=Rkind),    allocatable :: RvecG(:) ! RvecG(nb_qaie)
         complex (kind=Rkind), allocatable :: CvecG(:) ! CvecG(nb_qaie)
+        
+        Real(kind=Rkind),allocatable      :: SR_B(:)   ! Smolyak rep. on basis
+        Real(kind=Rkind),allocatable      :: SR_G(:,:) ! Smolyak rep. on grid
+        Integer,allocatable               :: SR_G_index(:)    !< index for iG in SR_G
+        Integer,allocatable               :: SR_G_index0(:,:) !< index for all iG in SR_G
 
         complex (kind=Rkind) :: CAvOp    = (ZERO,ZERO) ! average value for an operator (usualy H)
         integer              :: IndAvOp  = -1          ! operator type  (usualy H, IndAvOp=0)
@@ -374,6 +381,14 @@
           CALL flush_perso(out_unitp)
         END IF
       END IF
+      
+      IF(allocated(psi%SR_G)) THEN
+        CALL dealloc_NParray(psi%SR_G,'psi%RvecG',name_sub)
+        IF (debug) THEN
+          write(out_unitp,*) 'dealloc: SR_G'
+          CALL flush_perso(out_unitp)
+        END IF
+      ENDIF
 
 
       psi%symab = -1

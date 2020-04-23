@@ -45,7 +45,6 @@
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
       USE mod_nDindex
       USE mod_Op
-      USE mod_MPI
       IMPLICIT NONE
 
 !=====================================================================

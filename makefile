@@ -9,10 +9,9 @@
 ## MPI compiled with: gfortran or ifort
 MPICORE = gfortran
 
-## debug_make=0 to enable parallel make
-## debug_make=1 for fast debug make, no parallel
-## NOTE: it seems there are some issues for parallel sometime
-debug_make=1
+## parallel_make=1 to enable parallel make
+## parallel_make=0 for fast debug make, no parallel
+parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 1
@@ -1281,7 +1280,7 @@ $(HTML) : $(REFPATH)/%.html : sub_module/%.f90
 #=======================================================================================
 #add dependence for parallelization
 
-ifeq ($(debug_make),0)
+ifeq ($(parallel_make),1)
 
 #mod_MPI
 lib_dep_mod_MPI=$(OBJ)/sub_module_string.o $(OBJ)/sub_module_memory_NotPointer.o
@@ -1724,6 +1723,10 @@ $(lib_dep_mod_analysis):$(OBJ)/sub_module_analysis.o
 #mod_fullanalysis
 lib_dep_mod_fullanalysis=$(OBJ)/sub_Auto_Basis.o
 $(lib_dep_mod_fullanalysis):$(OBJ)/sub_analyse.o
+
+#mod_dnS
+lib_dep_mod_dnS=$(OBJ)/sub_module_VecOFdnS.o
+$(lib_dep_mod_dnS):$(OBJ)/sub_module_dnS.o
 
 endif
 #=======================================================================================

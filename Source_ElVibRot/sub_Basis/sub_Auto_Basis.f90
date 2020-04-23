@@ -189,7 +189,6 @@
       USE mod_basis
       USE BasisMakeGrid
       USE mod_Op
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------
@@ -481,7 +480,6 @@
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------
@@ -639,7 +637,6 @@
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------

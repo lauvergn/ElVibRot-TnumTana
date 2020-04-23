@@ -43,7 +43,6 @@
       SUBROUTINE sub_qa_bhe(para_AllOp)
       USE mod_system
       USE mod_Op
-      USE mod_MPI
       IMPLICIT NONE
 
 !=====================================================================

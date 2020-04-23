@@ -84,17 +84,18 @@ IMPLICIT NONE
     integer, allocatable          :: iG_th(:),fG_th(:) ! iG indexes associated to the OpenMP threads
 
 #if(run_MPI)    
-    TYPE (multi_array4),allocatable :: nDI_index_master(:) !< for MPI in action, type 1 
-    integer(kind=MPI_INTEGER_KIND),allocatable :: reduce_Vlength_master(:) 
-    integer(kind=MPI_INTEGER_KIND),allocatable :: size_PsiR_V(:) 
-    integer(kind=MPI_INTEGER_KIND)             :: Psi_size_MPI0 !< length of Psi on master
-    integer(kind=MPI_INTEGER_KIND)             :: reduce_Vlength !< reduced size of V 
-    integer                                    :: Max_nDI_ib0
-    integer*4,allocatable                      :: nDI_index(:)
-    integer*4,allocatable                      :: nDI_index_list(:) 
-    integer                                    :: num_nDI_index
-    integer                                    :: V_allcount
-    integer                                    :: V_allcount2
+    TYPE (multi_array4),allocatable :: nDI_index_master(:) !< for MPI in action, scheme1 
+    Integer(kind=MPI_INTEGER_KIND),allocatable :: reduce_Vlength_master(:) 
+    Integer(kind=MPI_INTEGER_KIND),allocatable :: size_PsiR_V(:) 
+    Integer(kind=MPI_INTEGER_KIND)             :: Psi_size_MPI0  !< length of Psi on master
+    Integer(kind=MPI_INTEGER_KIND)             :: reduce_Vlength !< reduced size of V 
+    Integer                                    :: Max_nDI_ib0
+    Integer*4,allocatable                      :: nDI_index(:)
+    Integer*4,allocatable                      :: nDI_index_list(:) 
+    Integer                                    :: num_nDI_index
+    Integer                                    :: V_allcount
+    Integer                                    :: V_allcount2
+    Logical                                    :: once_action=.TRUE.
 #endif    
 
   END TYPE param_SGType2

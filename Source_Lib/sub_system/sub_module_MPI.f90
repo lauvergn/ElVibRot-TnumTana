@@ -38,6 +38,7 @@ MODULE mod_MPI
   TYPE(MPI_Datatype)             :: MPI_int           !< integer type of default MPI
   TYPE(MPI_Datatype)             :: MPI_int_fortran   !< integer type of default fortran
   TYPE(MPI_Datatype)             :: MPI_real_fortran  !< real type for fortran (Rkind)
+  TYPE(MPI_Datatype)             :: MPI_clpx_fortran  !< complex type for fortran (Rkind)
   Integer(kind=MPI_INTEGER_KIND) :: MPI_rec_source    !< for MPI_RECV, not used
   Integer(kind=MPI_INTEGER_KIND) :: MPI_tag1     !< tag for MPI send and receive
   Integer(kind=MPI_INTEGER_KIND) :: MPI_tag2     !< tag for MPI send and receive
@@ -52,6 +53,11 @@ MODULE mod_MPI
   Integer                        :: iG2_MPI      !< dn boundary of iGs in action 
   Integer                        :: nb_per_MPI   !< number of distribed works per thread
   Integer                        :: nb_rem_MPI   !< remainder of distribed works
+  Integer,allocatable            :: iGs_MPI(:,:) !< iG boundary of each theard in action
+  
+  Logical                        :: Srep_MPI=.FALSE. !< MPI working on full Smolyak Rep. 
+  Integer                        :: action_MPI=2     !< MPI working on SR scheme #. 
+
 
   !Common /group_MPI_world/     MPI_err, MPI_id, MPI_np, MPI_status
   !Common /group_MPI_tag/       MPI_tag0,MPI_tag1,MPI_tag2,MPI_tag3
@@ -72,14 +78,12 @@ MODULE mod_MPI
   Integer                        :: time_temp1
   Integer                        :: time_temp2
   Integer                        :: time_rate       !< for function system_clock()
-  Integer                        :: time_max       !< for function system_clock()
+  Integer                        :: time_max        !< for function system_clock()
   ! time_rate in kind=4: COUNT in system_clock represents milliseconds
   ! time_rate in kind>4: COUNT in system_clock represents micro- or nanoseconds
   
   !-------------------------------------------------------------------------------------
   ! varilables for process control, add to certain type later
-  Logical                        :: once_control
-  !Logical                       :: once_control_Hmin
   Logical                        :: if_propa
   Logical                        :: Grid_allco
   
@@ -100,7 +104,6 @@ MODULE mod_MPI
     
     time_MPI_action=0
     time_comm=0
-    once_control=.TRUE.
     Grid_allco=.True.
     
     !> get Fortran default bit
@@ -115,8 +118,10 @@ MODULE mod_MPI
     !> define Fortran Real type according to Rkind
     IF(Rkind==8) THEN
       MPI_real_fortran=MPI_Real8
+      MPI_clpx_fortran=MPI_Complex8
     ELSEIF(Rkind==16) THEN
       MPI_real_fortran=MPI_Real16
+      MPI_clpx_fortran=MPI_Complex16
     ELSE
       STOP 'Rkind neither 64 or 128 bit, define MPI_real_fortran in sub_module_MPI.f90'
     ENDIF

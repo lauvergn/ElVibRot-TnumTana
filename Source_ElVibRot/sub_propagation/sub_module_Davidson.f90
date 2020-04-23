@@ -518,7 +518,7 @@ CONTAINS
 
           !----------------------------------------------------------
           !- save psi(:) on file
-          save_WP=.FALSE.
+          !save_WP=.FALSE.
           IF (save_WP) THEN
             IF(MPI_id==0) THEN
             CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,        &
@@ -547,7 +547,6 @@ CONTAINS
             CALL sub_LCpsi_TO_psi(psi,Vec,ndim0,nb_diago)
             write(out_unitp,*) '  sub_LCpsi_TO_psi: psi done',ndim0,nb_diago
             CALL flush_perso(out_unitp)
-            ENDIF ! for MPI_id==0
 
             ! move the new vectors (nb_added_states), after the nb_diago ones
             DO i=1,nb_added_states
@@ -555,6 +554,7 @@ CONTAINS
             END DO
             write(out_unitp,*) '  move psi done'
             CALL flush_perso(out_unitp)
+            ENDIF ! for MPI_id==0
 
             ! deallocation
             DO i=nb_diago+nb_added_states+1,ndim
@@ -565,11 +565,10 @@ CONTAINS
             CALL flush_perso(out_unitp)
 
             ! save the nb_diago wp
-            If(MPI_id==0) THEN
+            IF(MPI_id==0) THEN
               CALL sub_save_psi(psi,nb_diago,para_propa%file_WP)
               write(out_unitp,*) '  sub_save_psi: psi done'
               CALL flush_perso(out_unitp)
-            ENDIF
 
             CALL sub_LCpsi_TO_psi(Hpsi,Vec,ndim0,nb_diago)
             write(out_unitp,*) '  sub_LCpsi_TO_psi: Hpsi done',ndim0,nb_diago
@@ -579,6 +578,7 @@ CONTAINS
               !write(out_unitp,*) 'dealloc psi(i), Hpsi(i)',i
               CALL dealloc_psi(Hpsi(i))
             END DO
+            ENDIF ! for MPI_id==0
             write(out_unitp,*) '  deallocation Hpsi done'
             CALL flush_perso(out_unitp)
 
@@ -977,8 +977,8 @@ CONTAINS
 #if(run_MPI)
   !> calculate matrix H_overlap(i,j) for <psi(i)|Hpsi(j)>  (ndim0<=i,j<=ndim)
   !> shared by all threads
-  IF((.NOT. allocated(H_overlap)) .OR. ndim0<ndim .OR. (save_WP .eqv. .TRUE.)) THEN
-    IF(it==0 .OR. (save_WP .eqv. .TRUE.)) THEN
+  IF((.NOT. allocated(H_overlap)) .OR. ndim0<ndim .OR. (save_WP)) THEN
+    IF(it==0 .OR. (save_WP)) THEN
       CALL Overlap_HS_matrix_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
     ELSE
       ! S_overlap is calculated in sub_NewVec_Davidson
@@ -1318,8 +1318,8 @@ END SUBROUTINE MakeResidual_Davidson
 ! V3
 !=======================================================================================
 SUBROUTINE MakeResidual_Davidson_MPI3(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,           &
-                                     VecToBeIncluded,tab_norm2g,norm2g,convergeResi,   &
-                                     convergeEne,fresidu,iresidu,nb_diago,epsi)
+                                      VecToBeIncluded,tab_norm2g,norm2g,convergeResi,  &
+                                      convergeEne,fresidu,iresidu,nb_diago,epsi)
   USE mod_system
   USE mod_psi_set_alloc
   USE mod_psi_Op,         ONLY : Set_symab_OF_psiBasisRep

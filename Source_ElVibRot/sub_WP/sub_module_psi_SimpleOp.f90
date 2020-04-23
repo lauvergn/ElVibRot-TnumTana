@@ -45,7 +45,7 @@
       USE mod_psi_set_alloc
       IMPLICIT NONE
 
-        !!@description: TODO
+        !> @todo operator reload for psi operation 
         INTERFACE Set_psi_With_index
           MODULE PROCEDURE Set_psi_With_index_R
           MODULE PROCEDURE Set_psi_With_index_C
@@ -429,6 +429,7 @@
                 psi1_plus_psi2%CvecB = psi1%CvecB + psi2%CvecB
               ELSE IF (.NOT. psi1%cplx .AND. .NOT. psi2%cplx) THEN
                 psi1_plus_psi2%RvecB = psi1%RvecB + psi2%RvecB
+                IF(Srep_MPI) psi1_plus_psi2%RS_G=psi1%RS_G+psi2%RS_G
               ELSE
                 write(out_unitp,*) ' ERROR : I CANNOT mix real and complex psi !!'
                 write(out_unitp,*) ' psi1%cplx,psi2%cplx',psi1%cplx,psi2%cplx
@@ -667,6 +668,7 @@
                 psi1_minus_psi2%CvecB = psi1%CvecB - psi2%CvecB
               ELSE IF (.NOT. psi1%cplx .AND. .NOT. psi2%cplx) THEN
                 psi1_minus_psi2%RvecB = psi1%RvecB - psi2%RvecB
+                IF(Srep_MPI) psi1_plus_psi2%RS_G=psi1%RS_G-psi2%RS_G
               ELSE
                 write(out_unitp,*) ' ERROR : I CANNOT mix real and complex psi !!'
                 write(out_unitp,*) ' psi1%cplx,psi2%cplx',psi1%cplx,psi2%cplx

@@ -164,8 +164,8 @@ PUBLIC :: MPI_Bcast_param_Davidson
 
 
         real (kind=Rkind)   ::  Hmax,Hmin     !
-        logical             ::  once_control_Hmin=.TRUE.!< control the calculation of 
-                                                        !! Hmin once at the first action
+        logical             ::  once_Hmin=.TRUE.!< control the calculation of 
+                                                !< Hmin once at the first action
         logical             ::  auto_Hmax     !  .TRUE. => Hmax is obtained with a propagation
                                               !            with imaginary time (type_WPpropa=-3)
                                               !            (default .FALSE.)
@@ -460,7 +460,6 @@ PUBLIC :: MPI_Bcast_param_Davidson
       USE mod_psi_set_alloc,   ONLY : param_psi,ecri_psi
       USE mod_psi_B_TO_G,      ONLY : sub_PsiBasisRep_TO_GridRep
       USE mod_psi_Op,          ONLY : Overlap_psi1_psi2
-      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -504,6 +503,43 @@ PUBLIC :: MPI_Bcast_param_Davidson
       Calc_AutoCorr = cdot
 
       END FUNCTION Calc_AutoCorr
+
+!=======================================================================================
+!< calculate auto-correcetion function on Smolyak rep. 
+!=======================================================================================
+      FUNCTION Calc_AutoCorr_SR_MPI(psi0,psi,para_propa,TT,Write_AC)
+        USE mod_system
+        USE mod_psi_set_alloc,   ONLY:param_psi
+        USE mod_psi_Op,          ONLY:Overlap_psi1_psi2_SR_MPI
+        IMPLICIT NONE
+
+        Complex(kind=Rkind)                           :: Calc_AutoCorr
+        TYPE(param_psi),                intent(in)    :: psi0
+        TYPE(param_psi),                intent(in)    :: psi
+        TYPE(param_propa),              intent(in)    :: para_propa
+        Real (kind=Rkind)               intent(in)    :: TT
+        Logical,optional                intent(in)    :: Write_AC
+        TYPE(param_Op),                 intent(in)    :: para_Op
+
+        Complex(kind=Rkind)                           :: cdot
+        Logical                                       :: Write_AC_loc
+
+
+        IF(present(Write_AC)) THEN
+          Write_AC_loc=Write_AC
+        ELSE
+          Write_AC_loc=.FALSE.
+        END IF
+
+        CALL Overlap_psi1_psi2_SR_MPI(cdot,psi0,psi)
+
+        IF (Write_AC_loc) THEN
+          CALL Write_AutoCorr(para_propa%file_autocorr%unit,TT,cdot)
+        END IF
+
+        Calc_AutoCorr=cdot
+      ENDFUNCTION Calc_AutoCorr_SR_MPI
+!=======================================================================================
 
 !==============================================================
 !

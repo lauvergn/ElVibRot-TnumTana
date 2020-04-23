@@ -388,6 +388,31 @@ END SUBROUTINE Set_symab_OF_psiBasisRep_MPI
       END SUBROUTINE Overlap_psi1_psi2
 
 !=======================================================================================
+!< calculate overlap: <psi1|psi2> on Smolyak rep.
+!=======================================================================================
+      SUBROUTINE Overlap_psi1_psi2_SR_MPI(Overlap,psi1,psi2)
+        USE mod_system
+        USE mod_psi_set_alloc
+        IMPLICIT NONE
+
+        TYPE(param_psi),                intent(in)    :: psi1
+        TYPE(param_psi),                intent(in)    :: psi2
+        Complex(kind=Rkind)             intent(inout) :: Overlap
+        Real(kind=Rkind),               intent(in)    :: Weight_SG(:)
+
+        Integer                                       :: iG
+
+        Overlap=0
+        DO iG=iGs(1,MPI_id),iGs(2,MPI_id)
+          Overlap=Overlap+psi1%BasisnD%WeightSG(iG)                                    &
+                  *dot_product(psi1%SR_G(psi1%SR_G_index(iG):psi1%SR_G_index(iG+1)-1), &
+                               psi2%SR_G(psi2%SR_G_index(iG):psi2%SR_G_index(iG+1)-1)）   
+        ENDDO
+
+      END SUBROUTINE Overlap_psi1_psi2_SR_MPI
+!=======================================================================================
+
+!=======================================================================================
 ! subroutine for calculation of matrix H_overlap(i,j) for <psi(i)|Hpsi(j)> 
 ! MPI version, takes too much memory
 !=======================================================================================
@@ -614,7 +639,7 @@ SUBROUTINE Overlap_HS_matrix_MPI3(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_G
 
   !-------------------------------------------------------------------------------------
   ! calculate with MPI
-  CALL Overlap_psi1_psi2_MPI5(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_Grid)
+  CALL Overlap_psi1_psi2_MPI5(H_overlap,S_overlap,psi,Hpsi,0,ndim,With_Grid)
   
 !  write(*,*) 'overlapp check',MAXVAL(ABS(H_overlapp-H_overlap)),                       &
 !                              MAXVAL(ABS(S_overlapp-S_overlap)),                       &
@@ -1346,6 +1371,10 @@ SUBROUTINE Overlap_psi1_psi2_MPI5(H_overlap,S_overlap,psi,Hpsi,ndim0,ndim,With_G
 
   CALL calculate_overlap_MPI(psi,ndim0+1,ndim,With_Grid,Hpsi=Hpsi,                     &
                              S_overlap=S_overlap,H_overlap=H_overlap)
+
+  ! note <psi|Hpsi> should be completely renew 
+!  CALL calculate_overlap_MPI(psi,ndim0+1,ndim,With_Grid,S_overlap=S_overlap)
+!  CALL calculate_overlap_MPI(psi,ndim0+1,ndim,With_Grid,Hpsi=Hpsi,H_overlap=H_overlap)
   
 END SUBROUTINE Overlap_psi1_psi2_MPI5
 #endif

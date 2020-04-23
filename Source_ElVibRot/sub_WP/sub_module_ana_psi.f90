@@ -1972,6 +1972,36 @@ END SUBROUTINE norm_psi_MPI
 !=======================================================================================
 #endif
 
+#if(run_MPI)
+!=======================================================================================
+!> normalize psi in Smolyak rep. 
+!> scheme=1: calculate the normalization constant and normalize 
+!> scheme=2: just calculate the normalization constant 
+!> scheme=3: normalize with existing normalization constant
+!=======================================================================================
+SUBROUTINE norm2_psi_SR_MPI(psi,scheme)
+  USE mod_system
+  USE mod_psi_set_alloc
+  IMPLICIT NONE
+  
+  TYPE(param_psi),                intent(inout) :: psi
+  Integer,                        intent(in)    :: scheme
+  
+  
+  !> calcualte the normalization constant 
+  IF(scheme==1 .OR. scheme==2) THEN
+    CALL Overlap_psi1_psi2_SR_MPI(Overlap,psi,psi)
+    psi%norm2=Real(Overlap)
+  ENDIF
+  
+  IF(scheme==1 .OR. scheme==3) THEN
+    psi%SR_G=psi%SR_G/sqrt(psi%norm2)
+  ENDIF
+
+ENDSUBROUTINE norm2_psi_SR_MPI
+!=======================================================================================
+#endif
+
 !=======================================================================================
       SUBROUTINE renorm_psi(psi,GridRep,BasisRep)
       USE mod_system

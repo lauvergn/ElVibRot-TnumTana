@@ -5,14 +5,18 @@
 ----------------------------------------------------------------------------------------
 @ log
 
+> MPI_Vm1.9
+  - bug in Davidson fix
+  
+  - modify the the way distrubite iG
+
+
 > MPI_Vm1.8
   - bug in makefile fixed
 
   - bug in action time fixed
 
   - action with MPI modified
-  
-  
 
 > MPI_Vm1.7 (merged with master 03/27/2020)
   - bug in time count fixed

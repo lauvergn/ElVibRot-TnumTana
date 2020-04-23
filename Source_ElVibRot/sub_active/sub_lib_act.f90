@@ -1030,7 +1030,6 @@
       SUBROUTINE check_HADA(iqf,ComOp)
       USE mod_system
       USE mod_Op
-      USE mod_MPI
       IMPLICIT NONE
 
       TYPE (param_ComOp)   :: ComOp

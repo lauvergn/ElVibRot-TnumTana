@@ -44,7 +44,6 @@
       USE mod_system
 !$    USE omp_lib, only : omp_get_max_threads
       USE mod_nDGridFit
-      USE mod_MPI
       IMPLICIT NONE
 
       INTERFACE
@@ -87,7 +86,7 @@
                           optimization,nDfit,nDGrid,                    &
                           main_test,                                    &
 
-                          EVRT_path,File_path,base_FileName
+                          EVRT_path,File_path,base_FileName,Srep_MPI
 
 
         !> initialize MPI

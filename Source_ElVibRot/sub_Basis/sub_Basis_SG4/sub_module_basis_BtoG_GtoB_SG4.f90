@@ -49,7 +49,6 @@ USE mod_param_SGType2
 USE mod_basis_RCVec_SGType4, only: typervec, typecvec, &
                                    alloc_typervec, alloc_typecvec, &
                                    dealloc_typervec, dealloc_typecvec
-USE mod_MPI
 IMPLICIT NONE
 
 PRIVATE
@@ -614,7 +613,6 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   USE mod_basis_set_alloc
   USE mod_param_SGType2
   USE mod_nDindex
-  USE mod_MPI
   USE mod_MPI_Aid
   IMPLICIT NONE
 
@@ -868,7 +866,6 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
 #if(run_MPI)
         IF(MPI_id/=0) THEN
           IF(iG>=iG1_MPI .AND. iG<=iG2_MPI) THEN
-            write(*,*) 'checkcheckcheck2:',iBSRep,iG
             basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)=nDI
           ENDIF
         ENDIF ! for MPI_id/=0
@@ -1188,7 +1185,6 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
   USE mod_basis_set_alloc
   USE mod_param_SGType2
   USE mod_nDindex
-  USE mod_MPI
   USE mod_MPI_Aid
   IMPLICIT NONE
 
@@ -1211,11 +1207,11 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
   
   temp_int=SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0
   DO itab=1,Psi_size_MPI0
-    CALL allocate_array(PsiR(itab)%V,temp_int)
+    CALL allocate_array(PsiR(itab)%V,1,temp_int)
     !IF(allocated(PsiR(itab)%V)) deallocate(PsiR(itab)%V)
     !allocate(PsiR(itab)%V(temp_int))
   ENDDO
-  CALL allocate_array(temp_list,temp_int)
+  CALL allocate_array(temp_list,1,temp_int)
   once1=.TRUE.
   
   DO itab=1,Psi_size_MPI0
@@ -1318,7 +1314,7 @@ SUBROUTINE PackedBasis_TO_tabR_index_MPI(iG,SGType2,reduce_index_mpi,nDI_index, 
             SGType2%num_nDI_index=SGType2%num_nDI_index+Max(SGType2%num_nDI_index/5,500) 
             !> nDI_index_temp -> nDI_index
             ! nDI_index_temp is deallocated automatically
-            CALL allocate_array(nDI_index_temp,SGType2%num_nDI_index)
+            CALL allocate_array(nDI_index_temp,1,SGType2%num_nDI_index)
             nDI_index_temp(1:reduce_index_mpi)=nDI_index
             CALL move_alloc(nDI_index_temp,nDI_index) 
           ENDIF ! for reduce_index_mpi==SGType2%num_nDI_index---------------------------
@@ -1432,7 +1428,7 @@ SUBROUTINE tabR_TO_tabPackedBasis_MPI(all_RvecB_temp2,PsiR,iG,SGType2,WeightiG, 
   IF(size(PsiR) == 0) STOP 'ERROR in tabR_TO_tabPackedBasis_MPI'
   
   temp_int=SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0
-  CALL allocate_array(temp_list,temp_int)
+  CALL allocate_array(temp_list,1,temp_int)
   once1=.TRUE.
   
   DO itab=1,Psi_size_MPI0
