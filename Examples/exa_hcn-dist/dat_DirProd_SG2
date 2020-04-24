@@ -16,7 +16,7 @@ cd $here
 #export OMP_NUM_THREADS=2
 
 nice $DIR_vib/vib << ** >res
- &system POpPsi_omp=1 /
+ &system printlevel=1 /
  &constantes /
  &variables 
          zmat=T

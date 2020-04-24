@@ -106,7 +106,30 @@
 !                          basis_DP%tab_PbasisSG(1)%Pbasis%P_SymAbelian)
 !        CALL Set_nbPERsym_FROM_SymAbelian(basis_DP%P_SymAbelian)
 
-      CASE (2,4) ! Sparse basis (Smolyak 2d or 4th implementation)
+      CASE (2) ! Sparse basis (Smolyak 2d or 4th implementation)
+
+        LG = basis_DP%L_SparseGrid
+
+        DO ib=1,basis_DP%nb
+          CALL calc_nDindex(basis_DP%nDindB,ib,nDval)
+
+          symab = 0
+          DO ibasis=1,basis_DP%nb_basis
+            ibi = nDval(ibasis)
+            symab_ibasis = Get_symabOFSymAbelian_AT_ib(                 &
+                   basis_DP%tab_basisPrimSG(LG,ibasis)%P_SymAbelian,ibi)
+            symab = Calc_symab1_EOR_symab2(symab,symab_ibasis)
+            IF (symab == -1) EXIT
+          END DO
+          CALL Set_symabOFSymAbelian_AT_ib(basis_DP%P_SymAbelian,ib,symab)
+
+          IF (debug) write(out_unitp,*) 'ib,nDval',ib,nDval, &
+                                        'symab',WriteTOstring_symab(symab)
+        END DO
+        CALL Set_nbPERsym_FROM_SymAbelian(basis_DP%P_SymAbelian)
+
+
+      CASE (4) ! Sparse basis (Smolyak 2d or 4th implementation)
 
         LG = basis_DP%L_SparseGrid
 

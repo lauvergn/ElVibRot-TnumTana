@@ -578,7 +578,27 @@
             END DO
           END DO
 
-        CASE (2,4) ! Sparse basis (Smolyak 2d or 4th implementation)
+        CASE (2) ! Sparse basis (Smolyak 2d implementation)
+
+          L = BasisnD%L_SparseBasis
+          DO i=1,BasisnD%nb_basis
+            CALL RecSet_EneH0(para_Tnum,mole,                             &
+                              BasisnD%tab_basisPrimSG(L,i),             &
+                                           para_PES,para_ReadOp,ComOp_loc)
+          END DO
+
+          DO ib=1,BasisnD%nb
+            CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
+
+            BasisnD%EneH0(ib) = ZERO
+            DO i=1,BasisnD%nb_basis
+              BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
+                            BasisnD%tab_basisPrimSG(L,i)%EneH0(nDval(i))
+            END DO
+          END DO
+
+
+        CASE (4) ! Sparse basis (Smolyak 4th implementation)
 
           L = BasisnD%L_SparseBasis
           DO i=1,BasisnD%nb_basis

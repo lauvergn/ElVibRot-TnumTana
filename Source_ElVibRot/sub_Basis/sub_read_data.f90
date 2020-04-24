@@ -645,24 +645,6 @@
       END IF
       SparseGrid = (SparseGrid_type > 0)
 
-      IF (SparseGrid_type > 0) THEN
-
-        IF (L_SparseGrid < 0) THEN
-          write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) '  You cannot set-up a sparse grid with L_SparseGrid < 0'
-          write(out_unitp,*) '  SparseGrid_type,L_SparseGrid',SparseGrid_type,L_SparseGrid
-          STOP
-        END IF
-
-        IF (L_SparseBasis > L_SparseGrid) THEN
-          write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) '  L_SparseBasis > L_SparseGrid : it is impossible'
-          write(out_unitp,*) '  L_SparseBasis,L_SparseGrid',L_SparseBasis,L_SparseGrid
-          STOP
-        END IF
-
-      END IF
-
       basis_temp%SparseGrid_type             = SparseGrid_type
       basis_temp%L_SparseGrid                = L_SparseGrid
       basis_temp%L_SparseBasis               = L_SparseBasis
