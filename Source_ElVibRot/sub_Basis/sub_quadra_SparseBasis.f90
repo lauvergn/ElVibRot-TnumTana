@@ -1148,7 +1148,8 @@
       L2maxB = basis_SG%para_SGType2%L2_SparseBasis
       L1maxG = basis_SG%para_SGType2%L1_SparseGrid
       L2maxG = basis_SG%para_SGType2%L2_SparseGrid
-      CALL dealloc_SGType2(basis_SG%para_SGType2)
+      CALL dealloc_SGType2(basis_SG%para_SGType2) !! why ???
+      basis_SG%para_SGType2%nb0 = 1
 
 
       ! for nDind_SmolyakRep%nDNum_OF_Lmax and nDindB%nDNum_OF_Lmax

@@ -133,21 +133,21 @@
                                            nb_OF_MinNorm,Div_nb_TO_Norm,&
                                    Lmin,Lmax,L1max,L2max,nDNum_OF_Lmax, &
                                             tab_i_TO_l,                 &
-                                            With_init,With_nDindex,err_sub)
+                                          With_init,With_nDindex,err_sub)
 
-        TYPE (Type_nDindex)        :: nDindex
-        integer, intent(in)        :: ndim
-        integer                    :: nDsize(:)
+        TYPE (Type_nDindex)                         :: nDindex
+        integer,             intent(in)             :: ndim
+        integer                                     :: nDsize(:)
 
-        integer,              intent(inout), optional     :: err_sub
-        integer, optional          :: type_OF_nDindex,MaxCoupling,MinCoupling
-        integer, optional          :: nDinit(:),nDNum_OF_Lmax(:)
-        real(kind=Rkind), optional :: nDweight(:)
-        real(kind=Rkind), optional :: MaxNorm,MinNorm
-        integer, optional          :: nb_OF_MinNorm,Div_nb_TO_Norm
-        TYPE (Type_IntVec), allocatable, optional :: tab_i_TO_l(:)
-        integer, optional          :: Lmin,Lmax,L1max,L2max
-        logical, optional          :: With_init,With_nDindex
+        integer,             intent(inout), optional :: err_sub
+        integer,                            optional :: type_OF_nDindex,MaxCoupling,MinCoupling
+        integer,                            optional :: nDinit(:),nDNum_OF_Lmax(:)
+        real(kind=Rkind),                   optional :: nDweight(:)
+        real(kind=Rkind),                   optional :: MaxNorm,MinNorm
+        integer,                            optional :: nb_OF_MinNorm,Div_nb_TO_Norm
+        TYPE (Type_IntVec),    allocatable, optional :: tab_i_TO_l(:)
+        integer,                            optional :: Lmin,Lmax,L1max,L2max
+        logical,                            optional :: With_init,With_nDindex
 
         integer :: i,err_sub_loc
         logical :: With_init_loc,With_nDindex_loc
@@ -175,7 +175,7 @@
         With_nDindex_loc = .TRUE.
       END IF
 
-
+      ! with the initialization of the ndim size tables.
       IF (With_init_loc) THEN
         IF (nDindex%init) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
@@ -276,7 +276,7 @@
         END IF
         nDindex%nDend(:) = nDindex%nDsize(:) + nDindex%nDinit(:) - 1
 
-         IF (nDindex%With_L) THEN
+        IF (nDindex%With_L) THEN
              nDindex%Lmax    = Lmax
              nDindex%MaxNorm = real(Lmax,kind=rkind)
            IF (present(Lmin)) THEN
@@ -299,7 +299,7 @@
              nDindex%L2max    = Lmax
            END IF
 
-         ELSE
+        ELSE
            IF (present(MinNorm)) THEN
              nDindex%MinNorm = MinNorm
            ELSE
@@ -313,10 +313,11 @@
                nDindex%MaxNorm = calc_Norm_OF_nDval(nDindex%nDend,nDindex)
              END If
            END IF
-         END IF
+        END IF
 
       END IF
 
+      ! with the full initialization.
        IF (nDindex%init .AND. With_nDindex_loc) THEN
 
          SELECT CASE (nDindex%type_OF_nDindex)
@@ -1803,8 +1804,8 @@
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='sort_nDindex'
-!      logical,parameter :: debug=.FALSE.
-      logical,parameter :: debug=.TRUE.
+      logical,parameter :: debug=.FALSE.
+      !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
 
 !-----------------------------------------------------------
@@ -3465,7 +3466,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
 
 
         IF (present(name_info)) THEN
-          name_info_loc = trim(adjustl(name_info))
+          name_info_loc = trim(adjustl(name_info)) // ': '
         ELSE
           name_info_loc = ''
         END IF

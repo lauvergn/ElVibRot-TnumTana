@@ -276,8 +276,17 @@
       integer                   :: i,k,iv_act1,iv_inact21,iv_rest
 
 
+!---------------------------------------------------------------------
       integer :: err_mem,memory,err_read
       character (len=*), parameter :: name_sub='Set_RPHTransfo'
+      !logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) ' BEGINNING ',name_sub
+      END IF
+!---------------------------------------------------------------------
+
 
       IF (present(list_act_OF_Qdyn)) THEN
         nb_act1    = count(list_act_OF_Qdyn(:) == 1)
@@ -461,9 +470,13 @@
                      "RPHTransfo%C_ini",name_sub)
       RPHTransfo%C_ini(:,:)  = ZERO
 
-      write(out_unitp,*) 'Set_RPHTransfo'
-      CALL Write_RPHTransfo(RPHTransfo)
-
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'Set_RPHTransfo'
+        CALL Write_RPHTransfo(RPHTransfo)
+        write(out_unitp,*) ' END ',name_sub
+      END IF
+!---------------------------------------------------------------------
 
       END SUBROUTINE Set_RPHTransfo
 

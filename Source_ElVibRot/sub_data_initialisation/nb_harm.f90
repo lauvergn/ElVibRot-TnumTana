@@ -92,7 +92,7 @@
       integer       :: i,k,nderiv
       integer       :: min_i(mole%nb_inact2n)
 
-      integer :: nb_somme_herm,i_point,nb_coupling
+      integer :: nb_somme_herm,i_point,nb_coupling,n_h
       real (kind=Rkind) :: ene_freq,ZPE,ene,auTOcm_inv
 
 !---------------------------------------------------------------------
@@ -101,8 +101,8 @@
 
 !---------------------------------------------------------------------
       character (len=*), parameter :: name_sub='sub2_ind_harm'
-      logical, parameter :: debug=.TRUE.
-!     logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) ' BEGINNING ',name_sub
@@ -133,14 +133,18 @@
       CALL Write_Mat(d0c,out_unitp,5)
       write(out_unitp,*)
 !-----------------------------------------------------------------
+      n_h = Basis2n%nDindB%Max_nDI
 
       CALL gaussian_width(mole%nb_inact2n,A,d0c)
 
       IF (.NOT. Basis2n%nDindB%With_L) THEN
         Basis2n%nDindB%nDweight = d0ehess ! change the weight with the frequnecies
       END IF
+      n_h = Basis2n%nDindB%Max_nDI
       CALL init_nDindexPrim(Basis2n%nDindB,mole%nb_inact2n,min_i,With_init=.FALSE.)
       CALL sort_nDindex(Basis2n%nDindB)
+      IF (n_h > 0) Basis2n%nDindB%Max_nDI = min(n_h,Basis2n%nDindB%Max_nDI)
+      !CALL write_nDindex(Basis2n%nDindB)
 !-----------------------------------------------------------------
 
 
@@ -167,11 +171,11 @@
 
 !---------------------------------------------------------------------
       IF (debug) THEN
+        CALL write_nDindex(Basis2n%nDindB,'Basis2n%nDindB')
         write(out_unitp,*) ' number of nD inactive harmonic functions, nb_bi: ', &
                     Basis2n%nDindB%max_nDI
         write(out_unitp,*) ' END ',name_sub
       END IF
 !---------------------------------------------------------------------
-
 
       END SUBROUTINE sub2_ind_harm

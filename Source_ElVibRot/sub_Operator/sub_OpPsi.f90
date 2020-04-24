@@ -384,9 +384,8 @@ CONTAINS
         END IF
       ELSE
 
-        !--- For the allocation of OpPsi ---------------------------------
         IF(MPI_id==0) THEN
-          OpPsi = Psi
+          OpPsi = Psi    ! For the allocation of OpPsi
 
           IF (para_Op%mat_done) THEN
             CALL sub_OpPsi_WITH_MatOp(Psi,OpPsi,para_Op)
@@ -735,8 +734,6 @@ CONTAINS
         RETURN
       END IF
 
-!SGtype4=.FALSE.
-
       IF (debug) write(out_unitp,*) 'SGtype4,direct_KEO',SGtype4,direct_KEO
       CALL flush_perso(out_unitp)
 
@@ -980,7 +977,7 @@ CONTAINS
         ELSE
           nb_thread = OpPsi_maxth
         END IF
-        !write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
+        IF (debug) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
 
         !-----------------------------------------------------------------
         IF (nb_thread == 1) THEN
@@ -1156,7 +1153,7 @@ CONTAINS
       SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
       USE mod_basis_BtoG_GtoB, ONLY : DerivOp_TO_CVecG,DerivOp_TO_RVecG
-      USE mod_psi,             ONLY : param_psi,ecri_psi,sub_PsiBasisRep_TO_GridRep
+      USE mod_psi,             ONLY : param_psi,ecri_psi,ecri_init_psi,sub_PsiBasisRep_TO_GridRep
       USE mod_SetOp,           ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
@@ -1202,7 +1199,7 @@ CONTAINS
         !CALL write_param_Op(para_Op)
         write(out_unitp,*)
         write(out_unitp,*) 'PsiBasisRep'
-        CALL ecri_psi(Psi=Psi)
+        CALL ecri_init_psi(Psi=Psi)
         CALL flush_perso(out_unitp)
       END IF
       !-----------------------------------------------------------------
@@ -1216,7 +1213,7 @@ CONTAINS
           IF (debug) THEN
             write(out_unitp,*) 'PsiGridRep done'
             write(out_unitp,*) 'PsiBasisRep'
-            CALL ecri_psi(Psi=Psi)
+            CALL ecri_init_psi(Psi=Psi)
             CALL flush_perso(out_unitp)
           END IF
         END IF
@@ -1355,7 +1352,7 @@ CONTAINS
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'OpPsiGridRep'
-        CALL ecri_psi(Psi=OpPsi)
+        CALL ecri_init_psi(Psi=OpPsi)
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
       END IF

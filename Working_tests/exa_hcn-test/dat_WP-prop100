@@ -5,7 +5,7 @@
  SYSTEM=sub_system_cos_hcn.f
 
 ici=`pwd`
-DIR_vib=$ici/..
+DIR_vib=$ici/../..
 DIR_pot=$DIR_vib/sub_pot
 
  cp $SYSTEM $DIR_pot/sub_system.f
@@ -56,8 +56,8 @@ dh 0.0
 
 
  &basis_nD iQdyn(1)=1 name="Pl0" nb=51 nq=80 contrac=t nbc=20 name_contrac_file="ONE_MODE/cc1_51_80" /
-   &basis_nD iQdyn(1)=2 name="Hm" nb=10 nq=15 Q0=3.2 scaleQ=5.1 /
-   &basis_nD iQdyn(1)=3 name="Hm" nb=10 nq=15 Q0=2.2 scaleQ=11.0 /
+ &basis_nD iQdyn(1)=2 name="Hm" nb=5 nq=7 Q0=3.2 scaleQ=5.1 /
+ &basis_nD iQdyn(1)=3 name="Hm" nb=5 nq=7 Q0=2.2 scaleQ=11.0 /
  &inactives /
 
  &actives test=f comput_S=f direct=2 /

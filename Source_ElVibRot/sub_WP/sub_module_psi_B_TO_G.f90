@@ -94,8 +94,7 @@ CONTAINS
       END IF
 
 !------ initisalisation ----------------------------------
-      psi%GridRep = .TRUE.
-      CALL alloc_psi(psi)
+      CALL alloc_psi(psi,GridRep=.TRUE.)
 !------ end initisalisation -------------------------------
 
       IF (psi%cplx) THEN

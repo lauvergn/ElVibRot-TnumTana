@@ -44,6 +44,7 @@
       USE mod_system
       USE mod_basis_set_alloc
       USE mod_basis_BtoG_GtoB_SGType2
+      USE mod_param_SGType2
       IMPLICIT NONE
 
       CONTAINS
@@ -637,6 +638,8 @@
 
         IF (debug) THEN
           write(out_unitp,*) 'BEGINNING ',name_sub
+          write(out_unitp,*) 'size RVecG',size(RVecG)
+          write(out_unitp,*) 'size RVecB',size(RVecB)
           write(out_unitp,*) 'RvecB(:)',RvecB(:)
           !CALL RecWrite_basis(basis_set)
           CALL flush_perso(out_unitp)
@@ -824,7 +827,9 @@
 
           CASE (4) ! Sparse basis (Smolyak 4th implementation)
 
-            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
+            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,          &
+                             basis_set%tab_basisPrimSG,basis_set%nDindB,&
+                             basis_set%para_SGType2)
 
             IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
               CALL BSmolyakRep_TO_GSmolyakRep(SRep,                         &

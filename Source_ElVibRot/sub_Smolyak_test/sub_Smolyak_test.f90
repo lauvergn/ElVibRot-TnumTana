@@ -89,9 +89,9 @@ logical, parameter :: debug = .FALSE.
 
 
 
-read(5,*) AllPara%D
+read(in_unitp,*) AllPara%D
 
-read(5,*) AllPara%LB,AllPara%LG
+read(in_unitp,*) AllPara%LB,AllPara%LG
 
 
 !-- the 1D-basis ---------------------------
@@ -294,9 +294,9 @@ logical, parameter :: debug = .TRUE.
 
 
 
-read(5,*) AllPara%D
+read(in_unitp,*) AllPara%D
 
-read(5,*) AllPara%LB,AllPara%LG
+read(in_unitp,*) AllPara%LB,AllPara%LG
 
 
 write(out_unitp,*) 'nb of threads',BasisTOGrid_maxth
@@ -415,10 +415,10 @@ integer :: ibb,ibbb,nb_mult_id,nb_BG,nb_not_zero,LGmin
 
 
 
-read(5,*) AllPara%D
+read(in_unitp,*) AllPara%D
 allocate(tablb0(AllPara%D))
 
-read(5,*) AllPara%LB,AllPara%LG
+read(in_unitp,*) AllPara%LB,AllPara%LG
 
 
 !-------------------------------------------
@@ -524,11 +524,11 @@ LG=5
 LB=3
 nb_mult = 0
 
-read(5,*) D
+read(in_unitp,*) D
 allocate(tablb0(D))
 
-read(5,*) LB,LG
-!read(5,*) tablb0(:)
+read(in_unitp,*) LB,LG
+!read(in_unitp,*) tablb0(:)
 
 
 !-------------------------------------------
@@ -743,9 +743,9 @@ D=4 !! dimension
 LG=3
 LB=3
 
-read(5,*) D
+read(in_unitp,*) D
 
-read(5,*) LB,LG
+read(in_unitp,*) LB,LG
 
 
 !-------------------------------------------
@@ -1032,9 +1032,9 @@ D=4 !! dimension
 LG=3
 LB=3
 
-read(5,*) D
+read(in_unitp,*) D
 
-read(5,*) LB,LG
+read(in_unitp,*) LB,LG
 
 
 !-------------------------------------------

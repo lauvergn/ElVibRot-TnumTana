@@ -16,7 +16,7 @@ DIR_vib=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v110.16-Tnum32.1-Tana8.8
 DIR_vib=$ici/../..
 
 cd $DIR_vib
-#make
+ make
 cd $ici
 
  export OMP_NUM_THREADS=$4

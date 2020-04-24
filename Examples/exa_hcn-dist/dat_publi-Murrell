@@ -60,7 +60,7 @@ sym  cos(a)      R     r    x    pi   dh
            max_excit=10
            tab_nq(1:2)=16,16
            max_ene_h=60000. "cm-1"
-           contrac_ba_ON_HAC=t max_nb_ba_ON_HAC=30
+           contrac_ba_ON_HAC=t max_nb_ba_ON_HAC=20
 /
  &actives test=f comput_S=f /
  &analyse max_ana=40 max_ene=8000. "cm-1" print_psi=10 print=f /

@@ -52,7 +52,7 @@ sym  cos(a)      R     r    x    pi   dh
            tab_nq(1:2)=8,8
            tab_nb(1:2)=5,5
            isort=2
-           max_ene_h=60000. "cm-1"
+           max_ene_h=60000. "cm-1" n_h=15
 /
  &actives test=f direct=0 /
  &analyse max_ana=40 print=f intensity=t davidson=t /

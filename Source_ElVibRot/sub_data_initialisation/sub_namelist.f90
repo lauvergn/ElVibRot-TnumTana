@@ -73,7 +73,7 @@
 !----- working variables -----------------------------------
 
       integer           :: nb_quadrature,max_excit,max_coupling,n_h
-      real (kind=Rkind) :: step
+      real (kind=Rkind) :: step,max_ene_h_val
       logical           :: num,ADA
       TYPE (REAL_WU)    :: max_ene_h
 
@@ -105,7 +105,7 @@
 
 
 !------- read the inactive namelist ----------------------------
-!      logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
       logical, parameter :: debug=.FALSE.
       character (len=*), parameter :: name_sub='read_inactive'
 !      -----------------------------------------------------------------
@@ -145,16 +145,15 @@
       num              = .TRUE. ! not used anymore
       ADA              = .FALSE.
 
-      max_ene_h        = REAL_WU(huge(ONE),   'au','E') ! huge (ua)
+      max_ene_h        = REAL_WU(huge(ONE),   'cm-1','E') ! huge (cm-1)
       nb_quadrature    = 10
       max_excit        = -1
       max_coupling     = mole%nb_inact2n
       n_h              = -1 ! all channels
       SparseGrid       = .FALSE.
       L_SparseGrid     = -1
-      isort            = 1 ! 1: sort the HADA basis (energy)
-                           ! 2: sort the HADA basis in term of excitation
-
+      isort            = -1 ! 1: sort the HADA basis (energy)
+                            ! 2: sort the HADA basis in term of excitation
 
       contrac_ba_ON_HAC = .FALSE.
       max_nb_ba_ON_HAC  = huge(1)
@@ -168,7 +167,15 @@
         STOP
       END IF
 
+
       IF (.NOT. associated(mole%RPHTransfo)) THEN
+
+        max_ene_h_val = convRWU_TO_R_WITH_WorkingUnit(max_ene_h)
+
+        IF (max_ene_h_val == huge(ONE) .AND. max_excit  > -1) isort = 2
+        IF (max_ene_h_val /= huge(ONE) .AND. max_excit == -1) isort = 1
+        IF (isort == -1) isort = 1
+
 
         IF (product(tab_nq(1:nb_inact21)) == 0)  tab_nq(:) = nb_quadrature
 
@@ -202,11 +209,12 @@
           write(out_unitp,*) '   check your data!!'
           STOP
         END IF
+        Basis2n%nDindB%Max_nDI = n_h
         !CALL Write_nDindex(Basis2n%nDindB)
 
         CALL init_nDindexPrim(Basis2n%nDindG,nb_inact21,                 &
               tab_nq(1:nb_inact21),type_OF_nDindex=0,With_nDindex=.FALSE.)
-        CALL Write_nDindex(Basis2n%nDindG)
+        !CALL Write_nDindex(Basis2n%nDindG)
 
         ComOp%ADA               = ADA
         ComOp%contrac_ba_ON_HAC = contrac_ba_ON_HAC
@@ -271,6 +279,8 @@
 
 
       IF (debug) THEN
+        CALL Write_nDindex(Basis2n%nDindB,'Basis2n%nDindB')
+        CALL Write_nDindex(Basis2n%nDindG,'Basis2n%nDindG')
         write(out_unitp,*) 'END ',name_sub
       END IF
 

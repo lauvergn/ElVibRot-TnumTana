@@ -94,6 +94,9 @@
         real (kind=Rkind)    :: norm2    = -ONE       ! norm^2 of psi
 
         CONTAINS
+          PROCEDURE, PRIVATE, PASS(psi1)  :: psi1_pluseq_psi2
+          GENERIC,   PUBLIC  :: pluseq => psi1_pluseq_psi2
+
           PROCEDURE, PRIVATE, PASS(psi)  :: CplxPsi_TO_RCpsi
           PROCEDURE, PRIVATE, PASS(psi)  :: RCPsi_TO_CplxPsi
           PROCEDURE, PRIVATE, PASS(psi1) :: psi2TOpsi1
@@ -721,7 +724,7 @@
 
       integer  :: i,n1
 
-!     write(out_unitp,*) 'BEGINNING psi2TOpsi1'
+      !write(out_unitp,*) 'BEGINNING psi2TOpsi1'
 
       CALL dealloc_psi(psi1)
 
@@ -1325,12 +1328,16 @@
 
             integer           :: err,i
 
-!           write(out_unitp,*) 'BEGINNING psi1_plus_psi2'
+            !write(out_unitp,*) 'BEGINNING psi1_plus_psi2'
 
 
-!           - define and allocate psi1_plus_psi2 ----
-            CALL copy_psi2TOpsi1(psi1_plus_psi2,psi1)
-!           -----------------------------------------
+            !- define and allocate psi1_plus_psi2 ----
+            IF (.NOT. psi1_plus_psi2%init) THEN
+              !write(out_unitp,*) 'psi1_plus_psi2 is not initialized yet'
+              CALL copy_psi2TOpsi1(psi1_plus_psi2,psi1)
+            ELSE
+              !write(out_unitp,*) 'psi1_plus_psi2 is initialized already'
+            END IF
 
 
             IF (psi1%GridRep .AND. psi2%GridRep) THEN
@@ -1367,10 +1374,64 @@
               psi1_plus_psi2%symab = -1
             END IF
 
-!           write(out_unitp,*) 'END psi1_plus_psi2'
+            !write(out_unitp,*) 'END psi1_plus_psi2'
 
           END FUNCTION psi1_plus_psi2
+          SUBROUTINE psi1_pluseq_psi2(psi1,psi2)
+            CLASS (param_psi), intent(inout)   :: psi1
+            TYPE  (param_psi), intent(in)      :: psi2
 
+            integer           :: err,i
+
+            !write(out_unitp,*) 'BEGINNING psi1_pluseq_psi2'
+
+
+            !- define and allocate psi1_plus_psi2 ----
+            IF (.NOT. psi1%init) THEN
+              write(out_unitp,*) 'psi1 is not initialized'
+              STOP 'ERROR in psi1_pluseq_psi2, psi1 is not initalized'
+            ELSE
+              write(out_unitp,*) 'psi1 is initialized'
+            END IF
+
+
+            IF (psi1%GridRep .AND. psi2%GridRep) THEN
+              IF (psi1%cplx .AND. psi2%cplx) THEN
+                psi1%CvecG = psi1%CvecG + psi2%CvecG
+              ELSE IF (.NOT. psi1%cplx .AND. .NOT. psi2%cplx) THEN
+                psi1%RvecG = psi1%RvecG + psi2%RvecG
+              ELSE
+                write(out_unitp,*) ' ERROR : I CANNOT mix real and complex psi !!'
+                write(out_unitp,*) ' psi1%cplx,psi2%cplx',psi1%cplx,psi2%cplx
+                STOP
+              END IF
+            END IF
+
+            IF (psi1%BasisRep .AND. psi2%BasisRep) THEN
+              IF (psi1%cplx .AND. psi2%cplx) THEN
+                psi1%CvecB = psi1%CvecB + psi2%CvecB
+              ELSE IF (.NOT. psi1%cplx .AND. .NOT. psi2%cplx) THEN
+                psi1%RvecB = psi1%RvecB + psi2%RvecB
+              ELSE
+                write(out_unitp,*) ' ERROR : I CANNOT mix real and complex psi !!'
+                write(out_unitp,*) ' psi1%cplx,psi2%cplx',psi1%cplx,psi2%cplx
+                STOP
+              END IF
+            END IF
+
+            IF (psi1%symab == psi2%symab) THEN
+               CONTINUE ! nothing
+            ELSE IF (psi1%symab == -2) THEN
+               psi1%symab = psi2%symab
+            ELSE IF (psi2%symab == -2) THEN
+               CONTINUE ! nothing
+            ELSE
+              psi1%symab = -1
+            END IF
+
+            !write(out_unitp,*) 'END psi1_pluseq_psi2'
+
+          END SUBROUTINE psi1_pluseq_psi2
 
       !!@description: TODO
       !!@param: TODO

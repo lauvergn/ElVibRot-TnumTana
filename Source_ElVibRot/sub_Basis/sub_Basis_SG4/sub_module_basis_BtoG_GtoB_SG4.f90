@@ -958,7 +958,7 @@ integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0
 flush(out_unitp)
 
 IF (size(tabR) == 0) STOP ' ERROR in SmolyakRepBasis_TO_tabPackedBasis. size(tabR)=0'
-write(out_unitp,*) 'nb_size',Size_SmolyakRep(SRep) ; flush(out_unitp)
+!write(out_unitp,*) 'nb_size',Size_SmolyakRep(SRep) ; flush(out_unitp)
 
 tabR(:) = ZERO
 
@@ -2603,7 +2603,10 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
   !-----------------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
-    write(out_unitp,*) 'tab_l(:)',tab_l(:)
+    write(out_unitp,*) 'tab_l(:) ',tab_l(:)
+    write(out_unitp,*) 'tab_nb(:)',tab_nb(:)
+    write(out_unitp,*) 'tab_nq(:)',tab_nq(:)
+
     IF (present(nb0)) write(out_unitp,*) 'nb0',nb0
     write(out_unitp,*) 'size(R)',size(R)
     CALL flush_perso(out_unitp)

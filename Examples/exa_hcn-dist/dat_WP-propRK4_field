@@ -50,7 +50,7 @@ sym  cos(a)      R     r    x    pi   dh
            max_excit=4
            tab_nq(1:2)=8,8
            tab_nb(1:2)=5,5
-           max_ene_h=60000. "cm-1"
+           max_ene_h=60000. "cm-1" n_h=15
 /
 
  &actives test=f num_grid_i=1 num_grid_f=10 direct=1 /

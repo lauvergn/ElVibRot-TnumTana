@@ -42,9 +42,9 @@
 !===========================================================================
 MODULE mod_param_SGType2
 USE mod_system
-use mod_nDindex, only: type_ndindex, dealloc_ndindex,                   &
-                       alloc_nparray, init_ndval_of_ndindex,            &
-                       add_one_to_ndindex, calc_ndi, calc_ndindex,      &
+use mod_nDindex, only: type_nDindex, dealloc_nDindex,Write_nDindex,     &
+                       alloc_nparray, init_ndval_of_nDindex,            &
+                       add_one_to_nDindex, calc_ndi, calc_nDindex,      &
                        dealloc_nparray
 USE mod_MPI
 USE mod_MPI_Aid
@@ -113,7 +113,7 @@ IMPLICIT NONE
     integer, allocatable         :: tab_l_AT_SG(:) ! associated to i_SG
   END TYPE OldParam
 
- PUBLIC :: param_SGType2, dealloc_SGType2, Set_nDval_init_FOR_SG4
+ PUBLIC :: param_SGType2, dealloc_SGType2, Set_nDval_init_FOR_SG4, Write_SGType2
  PUBLIC :: OldParam, Write_OldParam
  PUBLIC :: get_iqSG_iSG_FROM_iq, get_Tabiq_Tabil_FROM_iq, get_Tabiq_Tabil_FROM_iq_old
  PUBLIC :: calc_Weight_OF_SRep,dealloc_OldParam
@@ -155,6 +155,48 @@ character (len=*), parameter :: name_sub='dealloc_OldParam'
 
 END SUBROUTINE dealloc_OldParam
 
+SUBROUTINE Write_SGType2(SGType2)
+  TYPE (param_SGType2), intent(in) :: SGType2
+
+character (len=*), parameter :: name_sub='Write_SGType2'
+
+  write(out_unitp,*) 'BEGINNING ',name_sub
+
+  write(out_unitp,*) 'L1_SparseGrid ',SGType2%L1_SparseGrid
+  write(out_unitp,*) 'L2_SparseGrid ',SGType2%L2_SparseGrid
+  write(out_unitp,*) 'L1_SparseBasis ',SGType2%L1_SparseBasis
+  write(out_unitp,*) 'L2_SparseBasis ',SGType2%L2_SparseBasis
+  write(out_unitp,*) 'Num_OF_Lmax ',SGType2%Num_OF_Lmax
+  write(out_unitp,*)
+
+  write(out_unitp,*) 'nb0 ',SGType2%nb0
+  write(out_unitp,*) 'nb_SG ',SGType2%nb_SG
+  write(out_unitp,*)
+
+  CALL Write_nDindex(SGType2%nDind_SmolyakRep,'nDind_SmolyakRep')
+  write(out_unitp,*) 'alloc nDind_DPG',allocated(SGType2%nDind_DPG)
+  write(out_unitp,*) 'alloc nDind_DPB',allocated(SGType2%nDind_DPB)
+  write(out_unitp,*)
+
+  write(out_unitp,*) '  FOR SG4:'
+  write(out_unitp,*) 'alloc tab_iB_OF_SRep_TO_iB',allocated(SGType2%tab_iB_OF_SRep_TO_iB)
+  write(out_unitp,*) 'alloc tab_Sum_nq_OF_SRep',allocated(SGType2%tab_Sum_nq_OF_SRep)
+  write(out_unitp,*) 'alloc tab_nq_OF_SRep',allocated(SGType2%tab_nq_OF_SRep)
+  write(out_unitp,*) 'alloc tab_Sum_nb_OF_SRep',allocated(SGType2%tab_Sum_nb_OF_SRep)
+  write(out_unitp,*) 'alloc tab_nb_OF_SRep',allocated(SGType2%tab_nb_OF_SRep)
+  write(out_unitp,*)
+
+  write(out_unitp,*) 'nb_threads ',SGType2%nb_threads
+  write(out_unitp,*) 'nb_tasks ',SGType2%nb_tasks
+  write(out_unitp,*) 'alloc nDval_init',allocated(SGType2%nDval_init)
+  write(out_unitp,*) 'alloc iG_th',allocated(SGType2%iG_th)
+  write(out_unitp,*) 'alloc fG_th',allocated(SGType2%fG_th)
+  write(out_unitp,*)
+
+  write(out_unitp,*) 'END ',name_sub
+  CALL flush_perso(out_unitp)
+
+END SUBROUTINE Write_SGType2
 
 SUBROUTINE dealloc_SGType2(SGType2)
 
@@ -912,6 +954,8 @@ END IF
 IF (present(OldPara)) THEN
   !write(out_unitp,*) 'OldPara ',name_sub,OldPara
   i_SG = OldPara%i_SG
+ELSE
+  i_SG = 0
 END IF
 
 IF (i_SG > 1 .AND. i_SG <= size(SGType2%tab_Sum_nq_OF_SRep)) THEN
