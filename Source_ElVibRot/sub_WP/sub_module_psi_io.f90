@@ -52,8 +52,6 @@
       PUBLIC :: lect_psiBasisRep,lect_psiBasisRepnotall,lect_psiBasisRepnotall_nD
 
       CONTAINS
-
-!=======================================================================================
       SUBROUTINE sub_read_psi0(psi0,para_WP0,max_WP,symab,ortho)
       USE mod_system
       USE mod_psi_set_alloc
@@ -161,7 +159,7 @@
         ELSE
           list_readWP(:) = (/ (i,i=1,para_WP0%nb_WP0) /)
         END IF
-        
+
         IF (debug) write(out_unitp,*) 'list_readWP:',list_readWP(1:para_WP0%nb_WP0)
         CALL flush_perso(out_unitp)
 
@@ -247,7 +245,7 @@
         para_WP0%nb_WP0 = nb_WP0
 
       END IF
-
+      write(out_unitp,*) 'Number of read vector(s) after the symmetry analysis:',para_WP0%nb_WP0
       ! orthogonalisation
       IF (ortho_loc) CALL sub_Schmidt(psi0,para_WP0%nb_WP0)
 
@@ -264,6 +262,8 @@
         write(out_unitp,*) 'END ',name_sub
       END IF
       END SUBROUTINE sub_read_psi0
+!=======================================================================================
+
 !=======================================================================================
 
       SUBROUTINE sub_save_LCpsi(psi,Vec,ndim,nb_save,file_WP)
@@ -1142,7 +1142,8 @@ END SELECT
       END SUBROUTINE Read_psi_nDBasis
 
       SUBROUTINE Read_list_nDindBasis1_TO_nDindBasis2(Psi,              &
-                 list_nDindBasis1_TO_nDindBasis2,nb_tot,nioPsi,lformated,version)
+               list_nDindBasis1_TO_nDindBasis2,nb_tot,nioPsi,lformated, &
+               version)
       USE mod_system
       USE mod_psi_set_alloc
       IMPLICIT NONE
@@ -1196,9 +1197,20 @@ CASE(0)
       i_bhe_read = i_bhe_read + 1
 
       IF (lformated_loc) THEN  ! formated file
-        read(nioPsi,*,iostat=Rerr) (ind_ndim(i),i=1,ndim+2)
+        IF (psi%cplx) THEN
+           ! for ifort, it is important to read the coefficients (a,b), &
+           !  otherwise if a and b are in a second line, it can be interpreted
+           !  as an integer of the next line (ndim=3).
+          read(nioPsi,*,iostat=Rerr) (ind_ndim(i),i=1,ndim+2),a,b
+        ELSE
+          read(nioPsi,*,iostat=Rerr) (ind_ndim(i),i=1,ndim+2),a
+        END IF
       ELSE
-        read(nioPsi,iostat=Rerr) (ind_ndim(i),i=1,ndim+2)
+        IF (psi%cplx) THEN
+          read(nioPsi,iostat=Rerr) (ind_ndim(i),i=1,ndim+2),a,b
+        ELSE
+          read(nioPsi,iostat=Rerr) (ind_ndim(i),i=1,ndim+2),a
+        END IF
       END IF
 
       IF (Rerr /= 0) EXIT

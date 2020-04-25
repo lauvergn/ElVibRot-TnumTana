@@ -33,9 +33,10 @@ MODULE mod_Coord_KEO
   USE mod_freq,            ONLY : gaussian_width,calc_freq,             &
                                   calc_freq_block,calc_freq_with_d0c,   &
                                   h0_symmetrization,sort_with_tab
-  USE mod_ActiveTransfo,   ONLY : get_Qact,get_Qact0,Set_AllActive,     &
-                                  Qact_TO_Qdyn_FROM_ActiveTransfo,      &
-                                  Qdyn_TO_Qact_FROM_ActiveTransfo,      &
+  USE mod_ActiveTransfo,   ONLY : get_Qact0,Adding_InactiveCoord_TO_Qact,&
+                                  get_Qact,Set_AllActive,                &
+                                  Qact_TO_Qdyn_FROM_ActiveTransfo,       &
+                                  Qdyn_TO_Qact_FROM_ActiveTransfo,       &
                                   Qinact2n_TO_Qact_FROM_ActiveTransfo
   USE mod_RPHTransfo,      ONLY : Type_RPHpara_AT_Qact1,Type_RPHTransfo,&
                                   alloc_array,dealloc_array,            &

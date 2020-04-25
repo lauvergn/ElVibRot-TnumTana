@@ -236,7 +236,7 @@ MODULE mod_dnGG_dng
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
-      character (len=*), parameter :: name_sub = 'get_dng_dnGG'
+      character (len=*), parameter :: name_sub = 'get_dng_dnGG_CoordType_old'
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -442,7 +442,7 @@ MODULE mod_dnGG_dng
     !----- for debuging --------------------------------------------------
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
-    character (len=*), parameter :: name_sub = 'get_dng_dnGG'
+    character (len=*), parameter :: name_sub = 'get_dng_dnGG_CoordType'
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
@@ -555,7 +555,7 @@ MODULE mod_dnGG_dng
     END IF
 
     !-----------------------------------------------------------------
-    ! To remaove off-diagonal components
+    ! To remove off-diagonal components
     IF (para_Tnum%Gdiago) THEN
       DO i=1,mole%nb_act
       DO j=1,mole%nb_act

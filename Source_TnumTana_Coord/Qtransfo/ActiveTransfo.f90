@@ -73,7 +73,7 @@ MODULE mod_ActiveTransfo
       PUBLIC :: alloc_array, dealloc_array
       PUBLIC :: Read_ActiveTransfo, Read2_ActiveTransfo, Write_ActiveTransfo
       PUBLIC :: calc_ActiveTransfo
-      PUBLIC :: get_Qact, get_Qact0, Set_AllActive
+      PUBLIC :: get_Qact, get_Qact0, Adding_InactiveCoord_TO_Qact, Set_AllActive
       PUBLIC :: Qact_TO_Qdyn_FROM_ActiveTransfo, Qdyn_TO_Qact_FROM_ActiveTransfo, Qinact2n_TO_Qact_FROM_ActiveTransfo
 
       CONTAINS
@@ -484,17 +484,22 @@ MODULE mod_ActiveTransfo
 
       END SUBROUTINE calc_ActiveTransfo
 
-      SUBROUTINE get_Qact(Qact,ActiveTransfo,With_All)
+      ! when With_act=t, all Qact(:) values are sets to the reference geometry ones,
+      !   including the 1:nb_act active (Qact1, Qact21 ...) coordinates
+      ! when With_act=t, only the true inactives (rigid, flexible) coordinates are set.
+      !   - for rigid values: the reference geometry ones
+      !   - for flexible values: the values associated to the active ones (1:nb_act1)
+      SUBROUTINE get_Qact(Qact,ActiveTransfo,With_act)
       IMPLICIT NONE
 
-        real (kind=Rkind), intent(inout) :: Qact(:)
-        TYPE (Type_ActiveTransfo), intent(in)   :: ActiveTransfo
-        logical, intent(in), optional :: With_All
+        real (kind=Rkind),         intent(inout)        :: Qact(:)
+        TYPE (Type_ActiveTransfo), intent(in)           :: ActiveTransfo
+        logical,                   intent(in), optional :: With_act
 
 
         TYPE (Type_dnS)    :: dnQ
-        integer :: typ_var_act,i_Qdyn,i_Qact,nb_act1
-        logical :: With_All_loc
+        integer            :: typ_var_act,i_Qdyn,i_Qact,nb_act1
+        logical            :: With_act_loc
 
 
 !      -----------------------------------------------------------------
@@ -516,10 +521,10 @@ MODULE mod_ActiveTransfo
        dnQ%nderiv       = 0
        nb_act1          = ActiveTransfo%nb_act1
 
-       IF (present(With_All)) THEN
-         With_All_loc = With_All
+       IF (present(With_act)) THEN
+         With_act_loc = With_act
        ELSE
-         With_All_loc = .TRUE.
+         With_act_loc = .TRUE.
        END IF
 
        CALL alloc_dnSVM(dnQ)
@@ -535,7 +540,7 @@ MODULE mod_ActiveTransfo
          CASE (1,-1,21,22,31)
            ! active coordinate, nothing here, because it the Qact coord
            ! except if With_All_loc=.TRUE.
-           IF (With_All_loc) Qact(i_Qact) = ActiveTransfo%Qact0(i_Qact)
+           IF (With_act_loc) Qact(i_Qact) = ActiveTransfo%Qact0(i_Qact)
 
          CASE (20)
            ! inactive coordinate : flexible constraints
@@ -569,6 +574,20 @@ MODULE mod_ActiveTransfo
 !     -----------------------------------------------------------------
 
       END SUBROUTINE get_Qact
+  SUBROUTINE Adding_InactiveCoord_TO_Qact(Qact,ActiveTransfo)
+      IMPLICIT NONE
+
+        real (kind=Rkind),         intent(inout) :: Qact(:)
+        TYPE (Type_ActiveTransfo), intent(in)    :: ActiveTransfo
+
+       !-----------------------------------------------------------------
+       !logical, parameter :: debug=.TRUE.
+       logical, parameter :: debug=.FALSE.
+       character (len=*), parameter :: name_sub='Adding_InactiveCoord_TO_Qact'
+
+       CALL get_Qact(Qact,ActiveTransfo,With_act=.FALSE.)
+
+  END SUBROUTINE Adding_InactiveCoord_TO_Qact
 
       SUBROUTINE get_Qact0(Qact0,ActiveTransfo)
       IMPLICIT NONE

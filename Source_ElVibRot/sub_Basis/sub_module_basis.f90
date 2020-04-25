@@ -3315,15 +3315,13 @@ END SUBROUTINE pack_basis
 
 
   !- variables for the Basis and quadrature points -----------------
-  TYPE (Basis) :: BasisnD
-  integer      :: iq
-  TYPE (OldParam), intent(inout), optional :: OldPara
-
+  TYPE (Basis),      intent(in)              :: BasisnD
+  integer,           intent(in)              :: iq
+  TYPE (OldParam),   intent(inout), optional :: OldPara
 
   !- for the CoordType  --------------------------------------
-  TYPE (CoordType) :: mole
-
-  real (kind=Rkind) :: Qact(BasisnD%ndim)
+  TYPE (CoordType),  intent(in)              :: mole
+  real (kind=Rkind), intent(inout)           :: Qact(BasisnD%ndim)
 
   !-- working variables ---------------------------------
   integer           :: j_act,j
@@ -3355,6 +3353,19 @@ END SUBROUTINE pack_basis
     Qact(j_act) = x(j)
   END DO
 
+  ! Adding the inactive coordinates must be done after seting up Qact
+  IF (size(Qact) > BasisnD%ndim .AND. size(Qact) == mole%nb_var) THEN
+    CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo)
+  ELSE IF (size(Qact) > BasisnD%ndim .AND. size(Qact) /= mole%nb_var) THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) 'size(Qact)   ',size(Qact)
+    write(out_unitp,*) 'BasisnD%ndim ',BasisnD%ndim
+    write(out_unitp,*) 'mole%nb_var  ',mole%nb_var
+    write(out_unitp,*) ' Qact size MUST be equal to BasisnD%ndim or mole%nb_var'
+    write(out_unitp,*) '   Check the fortran!'
+    STOP ' ERROR in Rec_Qact: wrong Qact size'
+  END IF
+
   ! -------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*)
@@ -3378,7 +3389,7 @@ END SUBROUTINE pack_basis
   integer,                         intent(in)             :: tab_l(:)
   TYPE (Type_nDindex),             intent(in)             :: nDind_DPG    ! multidimensional DP index
   integer,                         intent(in)             :: iq
-  TYPE (CoordType),                  intent(in)             :: mole
+  TYPE (CoordType),                intent(in)             :: mole
   integer,                         intent(inout)          :: err_sub
 
 !------ working variables ---------------------------------
@@ -3447,7 +3458,7 @@ END SUBROUTINE pack_basis
   TYPE(basis),                     intent(in)             :: tab_ba(0:,:) ! tab_ba(0:L,D)
   integer,                         intent(in)             :: tab_l(:)
   integer,                         intent(in)             :: tab_iq(:)
-  TYPE (CoordType),                  intent(in)             :: mole
+  TYPE (CoordType),                intent(in)             :: mole
   integer,                         intent(inout)          :: err_sub
 
 !------ working variables ---------------------------------
