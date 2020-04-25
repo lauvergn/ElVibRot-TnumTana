@@ -1,6 +1,6 @@
 #=================================================================================
 #=================================================================================
-## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
+## Compiler? Possible values: ifort; gfortran; nagfor; pgf90 (v17) ;mpifort
 # F90 = mpifort
  F90 = gfortran
 #F90 = nagfor
@@ -85,7 +85,7 @@ endif
 QMLibDIR := /Users/lauvergn/git/QuantumModelLib
 ifneq "$(wildcard $(QMLibDIR) )" ""
   # QMLibDIR exists:
-  $(info QMLibDIR exists)
+  $(info QMLibDIR variable exists)
 else
   # QMLibDIR does not exist:
   $(info QMLibDIR does not exist)
