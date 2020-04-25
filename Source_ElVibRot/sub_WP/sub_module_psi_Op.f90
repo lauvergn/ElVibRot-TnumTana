@@ -2490,13 +2490,14 @@ END SUBROUTINE Overlap_psipsi_MPI3
 !         write(out_unitp,*) 'j,i,S',j,i,Overlap
 !         CALL flush_perso(out_unitp)
         END DO
-        CALL Set_symab_OF_psiBasisRep(psi(i),sym)
+        IF (i > 1) THEN
+          CALL Set_symab_OF_psiBasisRep(psi(i),sym)
 
-!       CALL norm2_psi(psi(i))
-!       write(out_unitp,*) ' Ortho: norm2',i,psi(i)%norm2
-        CALL renorm_psi(psi(i))
-        !write(out_unitp,*) 'symab, bits(symab)',WriteTOstring_symab(psi(i)%symab)
-
+          !CALL norm2_psi(psi(i))
+          !write(out_unitp,*) ' Ortho: norm2',i,psi(i)%norm2
+          CALL renorm_psi(psi(i))
+          !write(out_unitp,*) 'symab, bits(symab)',WriteTOstring_symab(psi(i)%symab)
+        END IF
       END DO
 
 !-----------------------------------------------------------
