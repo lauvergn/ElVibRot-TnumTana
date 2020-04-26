@@ -536,18 +536,18 @@ PUBLIC :: MPI_Bcast_param_Davidson
 !< calculate auto-correcetion function on Smolyak rep. 
 !=======================================================================================
       FUNCTION Calc_AutoCorr_SR_MPI(psi0,psi,para_propa,TT,Write_AC)
+        USE mod_Op,              ONLY:param_Op
         USE mod_system
         USE mod_psi_set_alloc,   ONLY:param_psi
         USE mod_psi_Op,          ONLY:Overlap_psi1_psi2_SR_MPI
         IMPLICIT NONE
 
-        Complex(kind=Rkind)                           :: Calc_AutoCorr
+        Complex(kind=Rkind)                           :: Calc_AutoCorr_SR_MPI
         TYPE(param_psi),                intent(in)    :: psi0
         TYPE(param_psi),                intent(in)    :: psi
         TYPE(param_propa),              intent(in)    :: para_propa
-        Real (kind=Rkind)               intent(in)    :: TT
-        Logical,optional                intent(in)    :: Write_AC
-        TYPE(param_Op),                 intent(in)    :: para_Op
+        Real(kind=Rkind),               intent(in)    :: TT
+        Logical,optional,               intent(in)    :: Write_AC
 
         Complex(kind=Rkind)                           :: cdot
         Logical                                       :: Write_AC_loc
@@ -565,7 +565,7 @@ PUBLIC :: MPI_Bcast_param_Davidson
           CALL Write_AutoCorr(para_propa%file_autocorr%unit,TT,cdot)
         END IF
 
-        Calc_AutoCorr=cdot
+        Calc_AutoCorr_SR_MPI=cdot
       ENDFUNCTION Calc_AutoCorr_SR_MPI
 !=======================================================================================
 

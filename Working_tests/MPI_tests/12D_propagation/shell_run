@@ -158,8 +158,8 @@ X 1 2
 &analyse max_ene=50. 'au' print=f print_psi=0 propa=t /
 
 &propa
-WPTmax=20. 'fs' 
-WPdeltaT=10. 'fs' 
+WPTmax=6. 'fs' 
+WPdeltaT=2. 'fs' 
 nb_micro=100
 n_WPecri=1 
 WPpsi2 =f 

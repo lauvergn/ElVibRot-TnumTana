@@ -124,12 +124,7 @@
 !===============================================================================
       SUBROUTINE read_analyse(para_ana,Qana)
       USE mod_system
-<<<<<<< HEAD
-      USE mod_type_ana_psi
-=======
       USE mod_psi,      ONLY : param_ana_psi,init_ana_psi,Write_ana_psi
-      USE mod_MPI
->>>>>>> 84709f9c30db94ab3b9c00b37f32fd4fa1fafdb5
       IMPLICIT NONE
 
 !----- variables pour la namelist analyse ----------------------------

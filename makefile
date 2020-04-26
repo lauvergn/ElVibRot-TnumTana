@@ -1386,7 +1386,8 @@ $(HTML) : $(REFPATH)/%.html : sub_module/%.f90
 ifeq ($(parallel_make),1)
 
 #mod_MPI
-lib_dep_mod_MPI=$(OBJ)/sub_module_string.o $(OBJ)/sub_module_memory_NotPointer.o
+lib_dep_mod_MPI=$(OBJ)/sub_module_string.o $(OBJ)/sub_module_memory_NotPointer.o       \
+                $(OBJ)/sub_module_MPI_Aid.o
 $(lib_dep_mod_MPI):$(OBJ)/sub_module_MPI.o
 
 #mod_memory
@@ -1616,17 +1617,18 @@ $(lib_dep_mod_basis_BtoG_GtoB_SGType4):$(OBJ)/sub_module_basis_BtoG_GtoB_SG4.o
 lib_dep_BasisMakeGrid=$(OBJ)/sub_quadra_herm.o
 $(lib_dep_BasisMakeGrid):$(OBJ)/sub_module_BasisMakeGrid.o
 
-#mod_psi_set_alloc  
+#mod_psi_set_alloc
 lib_dep_mod_psi_set_alloc=$(OBJ)/sub_module_psi_B_TO_G.o $(OBJ)/sub_module_ana_psi.o   \
-                          $(OBJ)/sub_module_SetOp.o
+                          $(OBJ)/sub_module_SetOp.o $(OBJ)/mod_psi.o
 $(lib_dep_mod_psi_set_alloc):$(OBJ)/sub_module_psi_set_alloc.o
 
 #mod_ana_psi
-lib_dep_mod_ana_psi=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_module_psi_Op.o
+lib_dep_mod_ana_psi=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_module_psi_Op.o              \
+                    $(OBJ)/mod_psi.o
 $(lib_dep_mod_ana_psi):$(OBJ)/sub_module_ana_psi.o
 
 #mod_psi_Op
-lib_dep_mod_psi_Op=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_OpPsi_SG4.o \
+lib_dep_mod_psi_Op=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_OpPsi_SG4.o                   \
                    $(OBJ)/EVR_Module.o
 $(lib_dep_mod_psi_Op):$(OBJ)/sub_module_psi_Op.o
 
@@ -1657,7 +1659,7 @@ lib_dep_mod_Op=$(OBJ)/sub_HST_harm.o $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_ha
 $(lib_dep_mod_Op):$(OBJ)/sub_module_Op.o
 
 #mod_psi_io 
-lib_dep_mod_psi_io=$(OBJ)/sub_analyse.o
+lib_dep_mod_psi_io=$(OBJ)/sub_analyse.o $(OBJ)/mod_psi.o
 $(lib_dep_mod_psi_io):$(OBJ)/sub_module_psi_io.o
 
 #mod_MatOp
@@ -1830,6 +1832,18 @@ $(lib_dep_mod_fullanalysis):$(OBJ)/sub_analyse.o
 #mod_dnS
 lib_dep_mod_dnS=$(OBJ)/sub_module_VecOFdnS.o
 $(lib_dep_mod_dnS):$(OBJ)/sub_module_dnS.o
+
+#mod_param_WP0
+lib_dep_mod_param_WP0=$(OBJ)/mod_psi.o
+$(lib_dep_mod_param_WP0):$(OBJ)/sub_module_param_WP0.o
+
+#mod_MatOFdnS
+lib_dep_mod_MatOFdnS=$(OBJ)/sub_module_dnSVM.o
+$(lib_dep_mod_MatOFdnS):$(OBJ)/sub_module_MatOFdnS.o
+
+#mod_psi
+lib_dep_mod_psi=$(OBJ)/sub_module_SetOp.o
+$(lib_dep_mod_psi):$(OBJ)/mod_psi.o
 
 endif
 #=======================================================================================

@@ -426,10 +426,10 @@ CONTAINS
           write(out_unitp,42) 'it convergenceEne(:):  ',it,               &
                                                     convergeEne(1:nb_diago)
           CALL flush_perso(out_unitp)
-
-          write(iunit,21) it,ndim,norm2g/epsi,iresidu,Ene(1:ndim)*auTOene
-          CALL flush_perso(iunit)
-
+          IF(MPI_id==0) THEN
+            write(iunit,21) it,ndim,norm2g/epsi,iresidu,Ene(1:ndim)*auTOene
+            CALL flush_perso(iunit)
+          ENDIF
           !----------------------------------------------------------
           !- residual vector ---------------------------
           !-  and convergence --------------------------
@@ -991,9 +991,11 @@ CONTAINS
    
    IF (debug) write(out_unitp,*) 'Davidson Hpsi done',i,                &
                     Ene(i)*auTOene,(Ene(i)-Ene(1))*auTOene
-   write(iunit,*) 'Davidson Hpsi done',i,                               &
-                    Ene(i)*auTOene,(Ene(i)-Ene(1))*auTOene
-   CALL flush_perso(iunit)
+   IF(MPI_id==0) THEN
+     write(iunit,*) 'Davidson Hpsi done',i,                               &
+                      Ene(i)*auTOene,(Ene(i)-Ene(1))*auTOene
+     CALL flush_perso(iunit)
+   ENDIF
  END DO
 
  ! combined with previous lines
@@ -1311,8 +1313,7 @@ SUBROUTINE MakeResidual_Davidson_MPI3(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,    
                                       convergeEne,fresidu,iresidu,nb_diago,epsi)
   USE mod_system
   USE mod_psi,     ONLY : param_psi,norm2_psi,Set_symab_OF_psiBasisRep
-  USE mod_propa,   ONLY : param_Davidson
-  USE mod_MPI
+  USE mod_MPI_Aid
   IMPLICIT NONE
 
   TYPE(param_psi), intent(inout)              :: g
@@ -1333,30 +1334,26 @@ SUBROUTINE MakeResidual_Davidson_MPI3(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,    
   Logical,         intent(inout)              :: converge(:)
   Logical,         intent(inout)              :: conv
 
-
-  Real(kind=Rkind),   allocatable             :: Rvec(:)
-  Complex(kind=Rkind),allocatable             :: Cvec(:)
   Integer                                     :: case_vec
   Integer                                     :: size_vec
   Integer                                     :: isym
+  Integer                                     :: d1
+  Integer                                     :: d2
   Integer                                     :: ii
   Integer                                     :: jj
+  
 
   IF(MPI_id==0) THEN
     IF(allocated(g%RvecB)) THEN   
-      g%RvecB=ZERO
       case_vec=1 
       size_vec=size(g%RvecB)
     ELSEIF(allocated(g%CvecB)) THEN
-      g%CvecB=ZERO
       case_vec=2
       size_vec=size(g%CvecB)
     ELSEIF(allocated(g%RvecG)) THEN
-      g%RvecG=ZERO
       case_vec=3
       size_vec=size(g%RvecG)
     ELSEIF(allocated(g%CvecG)) THEN
-      g%CvecG=ZERO
       case_vec=4
       size_vec=size(g%CvecG)
     ELSE                       
@@ -1367,63 +1364,47 @@ SUBROUTINE MakeResidual_Davidson_MPI3(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,    
   CALL MPI_BCAST(case_vec,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
   CALL MPI_BCAST(size_vec,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
 
+  IF(.NOT. allocated(bounds_MPI)) allocate(bounds_MPI(1:2,0:MPI_np-1))
   nb_per_MPI=size_vec/MPI_np
   nb_rem_MPI=mod(size_vec,MPI_np) 
+  DO i_MPI=0,MPI_np-1
+    bounds_MPI(1,i_MPI)=i_MPI*nb_per_MPI+1+MIN(i_MPI,nb_rem_MPI)
+    bounds_MPI(2,i_MPI)=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)                     &
+                                            +merge(1,0,nb_rem_MPI>i_MPI)
+  ENDDO
+  
+  d1=bounds_MPI(1,MPI_id)
+  d2=bounds_MPI(2,MPI_id)
 
-  bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
-  bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
-
-  SELECT CASE (case_vec)
-  CASE(1,3)
-    allocate(Rvec(size_vec))
-  CASE(2,4)
-    allocate(Cvec(size_vec))
-  END SELECT
+!  SELECT CASE (case_vec)
+!  CASE(1,3)
+!    IF(MPI_id==0) allocate(Rvec(size_vec))
+!    IF(MPI_id/=0) allocate(Rvec(bounds_MPI(1,MPI_id):bounds_MPI(2,MPI_id)))
+!  CASE(2,4)
+!    IF(MPI_id==0) allocate(Cvec(size_vec))
+!    IF(MPI_id/=0) allocate(Cvec(bounds_MPI(1,MPI_id):bounds_MPI(2,MPI_id)))
+!  END SELECT
+  
+  IF(MPI_id/=0) THEN
+    SELECT CASE (case_vec)
+    CASE(1)
+      allocate(g%RvecB(d1:d2))
+    CASE(2)
+      allocate(g%CvecB(d1:d2))
+    CASE(3)
+      allocate(g%RvecG(d1:d2))
+    CASE(4)
+      allocate(g%CvecG(d1:d2))
+    END SELECT
+  ENDIF
 
   ! converge,VecToBeIncluded,fresidu,norm2g,epsi,convergeEne synchronized 
   !CALL MPI_BCAST(converge,ndim,MPI_LOGICAL,root_MPI,MPI_COMM_WORLD,MPI_err)
   DO jj=1,ndim
     IF (.NOT. converge(jj) .AND. VecToBeIncluded(jj)) THEN
       isym = maxloc(abs(Vec(:,jj)),dim=1) ! to find the rigth symmetry
-
-      SELECT CASE (case_vec) 
-      CASE(1)
-        Rvec=ZERO
-        DO ii=1,ndim
-          Rvec(bound1_MPI:bound2_MPI)=Rvec(bound1_MPI:bound2_MPI)                      &
-                                     +Hpsi(ii)%RvecB(bound1_MPI:bound2_MPI)*Vec(ii,jj) &
-                             -psi(ii)%RvecB(bound1_MPI:bound2_MPI)*(Ene(jj)*Vec(ii,jj))
-        ENDDO
-        CALL MPI_Reduce(Rvec,g%RvecB,size_vec,MPI_Real8,MPI_SUM,root_MPI,              &
-                        MPI_COMM_WORLD,MPI_err)
-      CASE(2)
-        Cvec=ZERO
-        DO ii=1,ndim
-          Cvec(bound1_MPI:bound2_MPI)=Cvec(bound1_MPI:bound2_MPI)                      &
-                                     +Hpsi(ii)%CvecB(bound1_MPI:bound2_MPI)*Vec(ii,jj) &
-                             -psi(ii)%CvecB(bound1_MPI:bound2_MPI)*(Ene(jj)*Vec(ii,jj))
-        ENDDO
-        CALL MPI_Reduce(Cvec,g%CvecB,size_vec,MPI_Complex8,MPI_SUM,root_MPI,           &
-                        MPI_COMM_WORLD,MPI_err)
-      CASE(3)
-        Rvec=ZERO
-        DO ii=1,ndim
-          Rvec(bound1_MPI:bound2_MPI)=Rvec(bound1_MPI:bound2_MPI)                      &
-                                     +Hpsi(ii)%RvecG(bound1_MPI:bound2_MPI)*Vec(ii,jj) &
-                             -psi(ii)%RvecG(bound1_MPI:bound2_MPI)*(Ene(jj)*Vec(ii,jj))
-        ENDDO
-        CALL MPI_Reduce(Rvec,g%RvecG,size_vec,MPI_Real8,MPI_SUM,root_MPI,              &
-                        MPI_COMM_WORLD,MPI_err)
-      CASE(4)
-        Cvec=ZERO
-        DO ii=1,ndim
-          Cvec(bound1_MPI:bound2_MPI)=Cvec(bound1_MPI:bound2_MPI)                      &
-                                     +Hpsi(ii)%CvecG(bound1_MPI:bound2_MPI)*Vec(ii,jj) &
-                             -psi(ii)%CvecG(bound1_MPI:bound2_MPI)*(Ene(jj)*Vec(ii,jj))
-        ENDDO
-        CALL MPI_Reduce(Cvec,g%CvecG,size_vec,MPI_Complex8,MPI_SUM,root_MPI,           &
-                        MPI_COMM_WORLD,MPI_err)
-      END SELECT
+      
+      CALL Residual_Davidson_sum_MPI(g,Hpsi,psi,Vec,Ene,ndim,case_vec,jj)
 
       IF(MPI_id==0) THEN
         CALL Set_symab_OF_psiBasisRep(g,symab=psi(isym)%symab)
@@ -1449,13 +1430,18 @@ SUBROUTINE MakeResidual_Davidson_MPI3(ndim,g,psi,Hpsi,Ene,Vec,conv,converge,    
   ENDDO ! for jj=1,ndim
   conv = all(converge(1:nb_diago))
 
-  SELECT CASE (case_vec)
-  CASE(1,3)
-    deallocate(Rvec)
-  CASE(2,4)
-    deallocate(Cvec)
-  END SELECT
-
+  IF(MPI_id/=0) THEN
+    SELECT CASE (case_vec)
+    CASE(1)
+      deallocate(g%RvecB)
+    CASE(2)
+      deallocate(g%CvecB)
+    CASE(3)
+      deallocate(g%RvecG)
+    CASE(4)
+      deallocate(g%CvecG)
+    END SELECT
+  ENDIF
 END SUBROUTINE MakeResidual_Davidson_MPI3
 !=======================================================================================
 #endif
@@ -1467,8 +1453,6 @@ END SUBROUTINE MakeResidual_Davidson_MPI3
 SUBROUTINE MakeResidual_Davidson_j_MPI3(jj,g,psi,Hpsi,Ene,Vec)
   USE mod_system
   USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep
-  USE mod_propa,   ONLY : param_Davidson
-  USE mod_MPI
   IMPLICIT NONE
   
   TYPE(param_psi), intent(inout)              :: g
@@ -1478,29 +1462,25 @@ SUBROUTINE MakeResidual_Davidson_j_MPI3(jj,g,psi,Hpsi,Ene,Vec)
   Real(kind=Rkind),intent(in)                 :: Vec(:,:)
   Integer         ,intent(in)                 :: jj
 
-  Real(kind=Rkind),allocatable                :: Rvec(:)
-  Complex(kind=Rkind),allocatable             :: Cvec(:)
   Integer                                     :: case_vec
   Integer                                     :: size_vec
   Integer                                     :: isym
   Integer                                     :: ndim
+  Integer                                     :: d1
+  Integer                                     :: d2
   Integer                                     :: ii
   
   IF(MPI_id==0) THEN
     IF(allocated(g%RvecB)) THEN   
-      g%RvecB=ZERO
       case_vec=1 
       size_vec=size(g%RvecB)
     ELSEIF(allocated(g%CvecB)) THEN
-      g%CvecB=ZERO
       case_vec=2
       size_vec=size(g%CvecB)
     ELSEIF(allocated(g%RvecG)) THEN
-      g%RvecG=ZERO
       case_vec=3
       size_vec=size(g%RvecG)
     ELSEIF(allocated(g%CvecG)) THEN
-      g%CvecG=ZERO
       case_vec=4
       size_vec=size(g%CvecG)
     ELSE                       
@@ -1512,71 +1492,43 @@ SUBROUTINE MakeResidual_Davidson_j_MPI3(jj,g,psi,Hpsi,Ene,Vec)
   CALL MPI_BCAST(size_vec,size1_MPI,MPI_Int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
   
   ndim=size(Vec,dim=1)
-
-  !-------------------------------------------------------------------------------------
-  nb_per_MPI=size_vec/MPI_np
-  nb_rem_MPI=mod(size_vec,MPI_np) 
   
-  bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
-  bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
-    
-  SELECT CASE (case_vec)
-  CASE(1,3)
-    allocate(Rvec(size_vec))
-  CASE(2,4)
-    allocate(Cvec(size_vec))
-  END SELECT
+  d1=bounds_MPI(1,MPI_id)
+  d2=bounds_MPI(2,MPI_id)
+
+  !> @todo allocate g%RvecB for slave threads 
+  IF(MPI_id/=0) THEN
+    SELECT CASE (case_vec)
+    CASE(1)
+      allocate(g%RvecB(d1:d2))
+    CASE(2)
+      allocate(g%CvecB(d1:d2))
+    CASE(3)
+      allocate(g%RvecG(d1:d2))
+    CASE(4)
+      allocate(g%CvecG(d1:d2))
+    END SELECT
+  ENDIF
 
   isym = maxloc(abs(Vec(:,jj)),dim=1) ! to find the rigth symmetry
 
-  SELECT CASE (case_vec) 
-  CASE(1)
-    ! memory can be further reduced here for Rvec later
-    Rvec=ZERO
-    DO ii=1,ndim
-      Rvec(bound1_MPI:bound2_MPI)=Rvec(bound1_MPI:bound2_MPI)                          &
-                       +Hpsi(ii)%RvecB(bound1_MPI:bound2_MPI)*Vec(ii,jj)               &
-                        -psi(ii)%RvecB(bound1_MPI:bound2_MPI)*(Ene(jj)*Vec(ii,jj))
-    ENDDO
-    CALL MPI_Reduce(Rvec,g%RvecB,size_vec,MPI_Real8,MPI_SUM,root_MPI,                  &
-                    MPI_COMM_WORLD,MPI_err)
-  CASE(2)
-    Cvec=ZERO
-    DO ii=1,ndim
-      Cvec(bound1_MPI:bound2_MPI)=Cvec(bound1_MPI:bound2_MPI)                          &
-                       +Hpsi(ii)%CvecB(bound1_MPI:bound2_MPI)*Vec(ii,jj)               &
-                        -psi(ii)%CvecB(bound1_MPI:bound2_MPI)*(Ene(jj)*Vec(ii,jj))
-    ENDDO
-    CALL MPI_Reduce(Cvec,g%CvecB,size_vec,MPI_Complex8,MPI_SUM,root_MPI,               &
-                    MPI_COMM_WORLD,MPI_err)
-  CASE(3)
-    Rvec=ZERO
-    DO ii=1,ndim
-      Rvec(bound1_MPI:bound2_MPI)=Rvec(bound1_MPI:bound2_MPI)                          &
-                    +Hpsi(ii)%RvecG(bound1_MPI:bound2_MPI)*Vec(ii,jj)                  &
-                     -psi(ii)%RvecG(bound1_MPI:bound2_MPI)*(Ene(jj)*Vec(ii,jj))
-    ENDDO
-    CALL MPI_Reduce(Rvec,g%RvecG,size_vec,MPI_Real8,MPI_SUM,root_MPI,                  &
-                    MPI_COMM_WORLD,MPI_err)
-  CASE(4)
-    Cvec=ZERO
-    DO ii=1,ndim
-      Cvec(bound1_MPI:bound2_MPI)=Cvec(bound1_MPI:bound2_MPI)                          &
-                       +Hpsi(ii)%CvecG(bound1_MPI:bound2_MPI)*Vec(ii,jj)               &
-                        -psi(ii)%CvecG(bound1_MPI:bound2_MPI)*(Ene(jj)*Vec(ii,jj))
-    ENDDO
-    CALL MPI_Reduce(Cvec,g%CvecG,size_vec,MPI_Complex8,MPI_SUM,root_MPI,               &
-                    MPI_COMM_WORLD,MPI_err)
-  END SELECT
+  CALL Residual_Davidson_sum_MPI(g,Hpsi,psi,Vec,Ene,ndim,case_vec,jj)
   
   IF(MPI_id==0) CALL Set_symab_OF_psiBasisRep(g,symab=psi(isym)%symab)
 
-  SELECT CASE (case_vec)
-  CASE(1,3)
-    deallocate(Rvec)
-  CASE(2,4)
-    deallocate(Cvec)
-  END SELECT
+  !> @todo deallocate g%RvecB
+  IF(MPI_id/=0) THEN
+    SELECT CASE (case_vec)
+    CASE(1)
+      deallocate(g%RvecB)
+    CASE(2)
+      deallocate(g%CvecB)
+    CASE(3)
+      deallocate(g%RvecG)
+    CASE(4)
+      deallocate(g%CvecG)
+    END SELECT
+  ENDIF
   !-------------------------------------------------------------------------------------
   
   ! call MakeResidual_Davidson_core instead, but with repecct allcoation of Rvec
@@ -1593,8 +1545,6 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI3
 SUBROUTINE MakeResidual_Davidson_core(jj,g,psi,Hpsi,Ene,Vec,case_vec,size_vec,ndim)
   USE mod_system
   USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep
-  USE mod_propa,   ONLY : param_Davidson
-  USE mod_MPI
   IMPLICIT NONE
   
   TYPE(param_psi), intent(inout)              :: g
@@ -1675,7 +1625,72 @@ SUBROUTINE MakeResidual_Davidson_core(jj,g,psi,Hpsi,Ene,Vec,case_vec,size_vec,nd
     deallocate(Cvec)
   END SELECT
   
-END SUBROUTINE MakeResidual_Davidson_core
+ENDSUBROUTINE MakeResidual_Davidson_core
+!=======================================================================================
+#endif
+
+#if(run_MPI)
+!=======================================================================================
+!> @brief: sumaary part for MakeResidual_Davidson_MPI
+!=======================================================================================
+SUBROUTINE Residual_Davidson_sum_MPI(g,Hpsi,psi,Vec,Ene,ndim,case_vec,jj)
+  USE mod_system
+  USE mod_psi,ONLY:param_psi
+  USE mod_MPI_Aid
+  IMPLICIT NONE
+  
+  TYPE(param_psi),              intent(inout) :: g
+  TYPE(param_psi),              intent(in)    :: psi(:)
+  TYPE(param_psi),              intent(in)    :: Hpsi(:)
+  Real(kind=Rkind),             intent(in)    :: Ene(:)
+  Real(kind=Rkind),             intent(in)    :: Vec(:,:)
+  Integer,                      intent(in)    :: ndim
+  Integer,                      intent(in)    :: case_vec
+  Integer,                      intent(in)    :: jj
+
+  Integer                                     :: d1
+  Integer                                     :: d2
+  Integer                                     :: ii
+
+
+  d1=bounds_MPI(1,MPI_id)
+  d2=bounds_MPI(2,MPI_id)
+  
+  SELECT CASE (case_vec) 
+  CASE(1)
+    g%RvecB=ZERO
+    DO ii=1,ndim
+      g%RvecB(d1:d2)=g%RvecB(d1:d2)+Hpsi(ii)%RvecB(d1:d2)*Vec(ii,jj)                   &
+                                    -psi(ii)%RvecB(d1:d2)*(Ene(jj)*Vec(ii,jj))
+    ENDDO
+    ! MPI_Gatherv or MPI_Reduce alternate, avoid creaction of extra memory
+    CALL MPI_combine_array(g%RvecB)
+!        CALL MPI_Reduce(Rvec,g%RvecB,size_vec,MPI_Real8,MPI_SUM,root_MPI,             &
+!                        MPI_COMM_WORLD,MPI_err)
+  CASE(2)
+    g%CvecB=ZERO
+    DO ii=1,ndim
+      g%CvecB(d1:d2)=g%CvecB(d1:d2)+Hpsi(ii)%CvecB(d1:d2)*Vec(ii,jj)                   &
+                                    -psi(ii)%CvecB(d1:d2)*(Ene(jj)*Vec(ii,jj))
+    ENDDO
+    CALL MPI_combine_array(g%CvecB)
+  CASE(3)
+    g%RvecG=ZERO
+    DO ii=1,ndim
+      g%RvecG(d1:d2)=g%RvecG(d1:d2)+Hpsi(ii)%RvecG(d1:d2)*Vec(ii,jj)                   &
+                                    -psi(ii)%RvecG(d1:d2)*(Ene(jj)*Vec(ii,jj))
+    ENDDO
+    CALL MPI_combine_array(g%RvecG)
+  CASE(4)
+    g%CvecG=ZERO
+    DO ii=1,ndim
+      g%CvecG(d1:d2)=g%CvecG(d1:d2)+Hpsi(ii)%CvecG(d1:d2)*Vec(ii,jj)                   &
+                                    -psi(ii)%CvecG(d1:d2)*(Ene(jj)*Vec(ii,jj))
+    ENDDO
+    CALL MPI_combine_array(g%CvecG)
+  END SELECT  
+  
+ENDSUBROUTINE Residual_Davidson_sum_MPI
 !=======================================================================================
 #endif
 

@@ -394,24 +394,66 @@ END SUBROUTINE Set_symab_OF_psiBasisRep_MPI
       SUBROUTINE Overlap_psi1_psi2_SR_MPI(Overlap,psi1,psi2)
         USE mod_system
         USE mod_psi_set_alloc
+        USE mod_MPI_Aid
         IMPLICIT NONE
 
         TYPE(param_psi),                intent(in)    :: psi1
         TYPE(param_psi),                intent(in)    :: psi2
-        Complex(kind=Rkind)             intent(inout) :: Overlap
-        Real(kind=Rkind),               intent(in)    :: Weight_SG(:)
+        Complex(kind=Rkind),            intent(inout) :: Overlap
 
         Integer                                       :: iG
 
-        Overlap=0
-        DO iG=iGs(1,MPI_id),iGs(2,MPI_id)
-          Overlap=Overlap+psi1%BasisnD%WeightSG(iG)                                    &
-                  *dot_product(psi1%SR_G(psi1%SR_G_index(iG):psi1%SR_G_index(iG+1)-1), &
-                               psi2%SR_G(psi2%SR_G_index(iG):psi2%SR_G_index(iG+1)-1)）   
+        Overlap=ZERO
+        DO iG=iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)
+          temp_int1=psi1%SR_G_index(iG)
+          temp_int2=psi1%SR_G_index(iG+1)-1
+          IF(psi1%cplx) THEN
+            Overlap=Overlap+psi1%BasisnD%WeightSG(iG)                                  &
+                  *dot_product( CMPLX(psi1%SR_G(temp_int1:temp_int2,1),                &
+                                      psi1%SR_G(temp_int1:temp_int2,2)),               &
+                                CMPLX(psi2%SR_G(temp_int1:temp_int2,1),                &
+                                      psi2%SR_G(temp_int1:temp_int2,2)) )
+          ELSE
+            Overlap=Overlap+psi1%BasisnD%WeightSG(iG)                                  &
+                           *dot_product(psi1%SR_G(temp_int1:temp_int2,1),              &
+                                        psi2%SR_G(temp_int1:temp_int2,1))
+          ENDIF
         ENDDO
 
-      END SUBROUTINE Overlap_psi1_psi2_SR_MPI
+      ENDSUBROUTINE Overlap_psi1_psi2_SR_MPI
 !=======================================================================================
+
+#if(run_MPI)
+!=======================================================================================
+!> normalize psi in Smolyak rep. 
+!> scheme=1: calculate the normalization constant and normalize 
+!> scheme=2: just calculate the normalization constant 
+!> scheme=3: normalize with existing normalization constant
+!=======================================================================================
+SUBROUTINE norm2_psi_SR_MPI(psi,scheme)
+  USE mod_system
+  USE mod_psi_set_alloc
+  IMPLICIT NONE
+  
+  TYPE(param_psi),                intent(inout) :: psi
+  Integer,                        intent(in)    :: scheme
+  
+  Complex(kind=Rkind)                           :: Overlap
+
+  
+  !> calcualte the normalization constant 
+  IF(scheme==1 .OR. scheme==2) THEN
+    CALL Overlap_psi1_psi2_SR_MPI(Overlap,psi,psi)
+    psi%norm2=Real(Overlap,kind=Rkind)
+  ENDIF
+  
+  IF(scheme==1 .OR. scheme==3) THEN
+    psi%SR_G=psi%SR_G/sqrt(psi%norm2)
+  ENDIF
+
+ENDSUBROUTINE norm2_psi_SR_MPI
+!=======================================================================================
+#endif
 
 !=======================================================================================
 ! subroutine for calculation of matrix H_overlap(i,j) for <psi(i)|Hpsi(j)> 

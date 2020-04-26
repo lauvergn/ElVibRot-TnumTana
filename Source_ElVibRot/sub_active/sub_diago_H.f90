@@ -42,12 +42,7 @@
 !===========================================================================
       SUBROUTINE sub_diago_H(H,E,Vec,n,sym)
       USE mod_system
-<<<<<<< HEAD
-      USE mod_Constant, ONLY: assignment(=),get_Conv_au_TO_unit
-=======
       USE mod_Constant, ONLY: get_Conv_au_TO_unit
-      USE mod_MPI
->>>>>>> 84709f9c30db94ab3b9c00b37f32fd4fa1fafdb5
       IMPLICIT NONE
 
 !------ active Matrix H Vec E ------------------------------------
@@ -153,12 +148,7 @@ END SUBROUTINE sub_diago_H
 !=====================================================================
       SUBROUTINE sub_diago_CH(CH,CE,CVec,n)
       USE mod_system
-<<<<<<< HEAD
-      USE mod_Constant, ONLY: assignment(=), get_Conv_au_TO_unit
-=======
       USE mod_Constant, ONLY: get_Conv_au_TO_unit
-      USE mod_MPI
->>>>>>> 84709f9c30db94ab3b9c00b37f32fd4fa1fafdb5
       IMPLICIT NONE
       !
       !------ active Matrix H Vec E ------------------------------------

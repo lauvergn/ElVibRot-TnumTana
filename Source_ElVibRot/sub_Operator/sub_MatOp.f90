@@ -2457,7 +2457,6 @@ CONTAINS
       USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,alloc_NParray,dealloc_NParray
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -2494,25 +2493,23 @@ CONTAINS
 
 !---- initialization -------------------------------------
       n = min(100,para_Op%nb_tot)
-      IF(MPI_id==0) THEN
 
-        CALL alloc_NParray(psi, (/n/),"psi", name_sub)
-        CALL alloc_NParray(Hpsi,(/n/),"Hpsi",name_sub)
-
-        DO i=1,n
-          CALL init_psi(psi(i),para_Op,para_Op%cplx)
-          CALL init_psi(Hpsi(i),para_Op,para_Op%cplx)
-          psi(i) = ZERO
-        END DO
+      CALL alloc_NParray(psi, (/n/),"psi", name_sub)
+      CALL alloc_NParray(Hpsi,(/n/),"Hpsi",name_sub)
+      
+      DO i=1,n
+        CALL init_psi(psi(i),para_Op,para_Op%cplx)
+        CALL init_psi(Hpsi(i),para_Op,para_Op%cplx)
+        psi(i) = ZERO
+      END DO
 
 !     ----------------------------------------------------------
 !       - build H and H0
-        IF (print_level > -1) THEN
-          write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
-          write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
-          CALL flush_perso(out_unitp)
-        END IF
-      ENDIF ! for MPI=0
+      IF (print_level > -1) THEN
+        write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
+        write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
+        CALL flush_perso(out_unitp)
+      END IF
 
       ib = 0
       DO

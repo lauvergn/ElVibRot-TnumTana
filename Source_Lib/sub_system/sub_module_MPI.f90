@@ -38,7 +38,7 @@ MODULE mod_MPI
   TYPE(MPI_Datatype)             :: MPI_int           !< integer type of default MPI
   TYPE(MPI_Datatype)             :: MPI_int_fortran   !< integer type of default fortran
   TYPE(MPI_Datatype)             :: MPI_real_fortran  !< real type for fortran (Rkind)
-  TYPE(MPI_Datatype)             :: MPI_clpx_fortran  !< complex type for fortran (Rkind)
+  TYPE(MPI_Datatype)             :: MPI_cplx_fortran  !< complex type for fortran (Rkind)
   Integer(kind=MPI_INTEGER_KIND) :: MPI_rec_source    !< for MPI_RECV, not used
   Integer(kind=MPI_INTEGER_KIND) :: MPI_tag1     !< tag for MPI send and receive
   Integer(kind=MPI_INTEGER_KIND) :: MPI_tag2     !< tag for MPI send and receive
@@ -54,6 +54,7 @@ MODULE mod_MPI
   Integer                        :: nb_per_MPI   !< number of distribed works per thread
   Integer                        :: nb_rem_MPI   !< remainder of distribed works
   Integer,allocatable            :: iGs_MPI(:,:) !< iG boundary of each theard in action
+  Integer,allocatable            :: bounds_MPI(:,:) !< boundary of each theards
   
   Logical                        :: Srep_MPI=.FALSE. !< MPI working on full Smolyak Rep. 
   Integer                        :: action_MPI=2     !< MPI working on SR scheme #. 
@@ -118,10 +119,10 @@ MODULE mod_MPI
     !> define Fortran Real type according to Rkind
     IF(Rkind==8) THEN
       MPI_real_fortran=MPI_Real8
-      MPI_clpx_fortran=MPI_Complex8
+      MPI_cplx_fortran=MPI_Complex8
     ELSEIF(Rkind==16) THEN
       MPI_real_fortran=MPI_Real16
-      MPI_clpx_fortran=MPI_Complex16
+      MPI_cplx_fortran=MPI_Complex16
     ELSE
       STOP 'Rkind neither 64 or 128 bit, define MPI_real_fortran in sub_module_MPI.f90'
     ENDIF

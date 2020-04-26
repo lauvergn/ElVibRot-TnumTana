@@ -276,11 +276,11 @@
         END IF
       ELSE ! deallocate psi%GridRep
         IF ( allocated(psi%RvecG) ) THEN
-          CALL dealloc_NParray(psi%RvecG,'psi%RvecG','alloc_psi')
+          IF(MPI_id==0) CALL dealloc_NParray(psi%RvecG,'psi%RvecG','alloc_psi')
           IF (debug) write(out_unitp,*) 'dealloc: RvecG'
         END IF
         IF ( allocated(psi%CvecG) ) THEN
-          CALL dealloc_NParray(psi%CvecG,'psi%CvecG','alloc_psi')
+          IF(MPI_id==0) CALL dealloc_NParray(psi%CvecG,'psi%CvecG','alloc_psi')
           IF (debug) write(out_unitp,*) 'dealloc: CvecG'
         END IF
       END IF
