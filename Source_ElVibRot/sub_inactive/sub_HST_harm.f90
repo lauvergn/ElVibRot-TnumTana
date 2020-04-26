@@ -45,7 +45,7 @@
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact, qact_to_qdyn_from_activetransfo
+      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0, qact_to_qdyn_from_activetransfo
       USE mod_basis
       USE mod_Op
       USE mod_PrimOp
@@ -131,16 +131,13 @@
       !-----------------------------------------------------------
       CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
 
-
-      CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
-
       IF (iq > 0 .OR. .NOT. test) THEN
-        !-----------------------------------------------------
-        !calculation of Qact
-
+        !calculation of Qact with the inactive coordinates
         CALL Rec_Qact(Qact,                                             &
                       para_AllOp%tab_Op(1)%para_AllBasis%BasisnD,iq,    &
                       mole,OldPara)
+      ELSE
+        CALL get_Qact0(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
       END IF
       !-----------------------------------------------------------
       !-----------------------------------------------------------

@@ -234,10 +234,10 @@ END IF
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
 
- USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+ USE mod_Coord_KEO,               ONLY : CoordType
 
  USE mod_basis_set_alloc,         ONLY : basis
- USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
+ !USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
  USE mod_basis_RCVec_SGType4,     ONLY : TypeRVec
  USE mod_basis_BtoG_GtoB_SGType4, ONLY : BDP_TO_GDP_OF_SmolyakRep,    &
                                             GDP_TO_BDP_OF_SmolyakRep, &
@@ -438,7 +438,7 @@ END IF
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4
@@ -548,9 +548,7 @@ END IF
    CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
    !$OMP   DO SCHEDULE(STATIC)
    DO iq=1,nq
-     CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
      CALL Rec_Qact_SG4(Qact,BasisnD%tab_basisPrimSG,tab_l,nDind_DPG,iq,mole,err_sub)
-
      CALL get_d0GG(Qact,para_Op%para_Tnum,mole,d0GG=GGiq(iq,:,:),        &
                                          def=.TRUE.,Jac=Jac(iq),Rho=Rho)
      sqRhoOVERJac(iq) = sqrt(Rho/Jac(iq))
@@ -1123,10 +1121,10 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType
 
   USE mod_basis_set_alloc,         ONLY : basis
-  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
+!  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
   USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
                      BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
                   DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
@@ -1403,10 +1401,10 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType
 
   USE mod_basis_set_alloc,         ONLY : basis
-  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
+  !USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
   USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
                      BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
                   DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
@@ -1720,7 +1718,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                                                    V,GG,sqRhoOVERJac,Jac)
   USE mod_system
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
+  USE mod_Coord_KEO,               ONLY : CoordType
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
@@ -1884,7 +1882,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4
@@ -1993,9 +1991,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
    CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
  !$OMP   DO SCHEDULE(STATIC)
    DO iq=1,nq
-     CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
      CALL Rec_Qact_SG4(Qact,BasisnD%tab_basisPrimSG,tab_l,nDind_DPG,iq,mole,err_sub)
-
      CALL get_d0GG(Qact,para_Op%para_Tnum,mole,d0GG=GGiq(iq,:,:),        &
                                          def=.TRUE.,Jac=Jac(iq),Rho=Rho)
      sqRhoOVERJac(iq) = sqrt(Rho/Jac(iq))
@@ -2103,7 +2099,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY: CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY: CoordType, get_d0GG
   use mod_PrimOp,                  only: param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,   &
                                          param_typeop, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
@@ -2281,7 +2277,6 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
      CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
 
-     CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
      CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
      IF (KEO) THEN
@@ -2384,7 +2379,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
+  USE mod_Coord_KEO,               ONLY : CoordType
   use mod_PrimOp,                  only: param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
                                          param_typeop, TnumKEO_TO_tab_d0H, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
@@ -2523,7 +2518,6 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
        CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
 
-       CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
        CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
@@ -2615,7 +2609,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
+  USE mod_Coord_KEO,               ONLY : CoordType
   use mod_PrimOp,                  ONLY : param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
                                           param_typeop, TnumKEO_TO_tab_d0H, get_d0MatOp_AT_Qact, &
                                           dealloc_tab_of_d0matop
@@ -2766,7 +2760,6 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
        CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
 
-       CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
        CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
@@ -2995,7 +2988,6 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
        CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
 
-       CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
        CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
 !       IF (KEO) THEN
@@ -3040,7 +3032,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY: CoordType, get_Qact
+  USE mod_Coord_KEO,               ONLY: CoordType
   use mod_PrimOp,                  only: param_d0matop, init_d0matop,   &
                                          param_typeop, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
@@ -3197,7 +3189,6 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
      CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
 
-     CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
      CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
      IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done  .AND. &

@@ -115,7 +115,7 @@ CONTAINS
         CALL alloc_array(mole%RPHTransfo%RPHpara_AT_Qref,(/ 1 /),       &
                         'mole%RPHTransfo%RPHpara_AT_Qref',name_sub)
 
-        CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
+        CALL get_Qact0(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
 
         CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%RPHpara_AT_Qref(1),   &
                                   Qact,para_Tnum,mole,mole%RPHTransfo)
@@ -358,8 +358,8 @@ CONTAINS
       !---- Multidimensional loop -------------------------------------
         DO iq_list=1,size(List_Qact1,dim=2)
 
-          CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible???? coordinates
           Qact(1:nb_act1_RPH) = List_Qact1(:,iq_list)
+          CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo) ! add rigid, flexible coordinates
 
           write(out_unitp,*) 'new RPH point',iq_list
           CALL flush_perso(out_unitp)
@@ -533,8 +533,8 @@ CONTAINS
       !---- Multidimensional loop -------------------------------------
         DO iq_list=1,size(List_Qact1,dim=2)
 
-          CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible???? coordinates
           Qact(1:nb_act1_RPH) = List_Qact1(:,iq_list)
+          CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo) ! add rigid, flexible coordinates
 
           write(out_unitp,*) 'new RPH point',iq_list
           CALL flush_perso(out_unitp)

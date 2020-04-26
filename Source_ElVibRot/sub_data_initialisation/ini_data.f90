@@ -401,7 +401,7 @@
 
       IF (para_Tnum%Tana) THEN
         CALL alloc_NParray(Qact,(/ mole%nb_var /),"Qact",name_sub)
-        CALL get_Qact(Qact,mole%ActiveTransfo)
+        CALL get_Qact0(Qact,mole%ActiveTransfo)
         CALL nrho_Basis_TO_nhro_Tnum(para_AllBasis,mole)
         CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
         CALL comparison_G_FROM_Tnum_Tana(para_Tnum%ExpandTWOxKEO,mole,para_Tnum,Qact)

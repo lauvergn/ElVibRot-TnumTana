@@ -3315,15 +3315,13 @@ END SUBROUTINE pack_basis
 
 
   !- variables for the Basis and quadrature points -----------------
-  TYPE (Basis) :: BasisnD
-  integer      :: iq
-  TYPE (OldParam), intent(inout), optional :: OldPara
-
+  TYPE (Basis),      intent(in)              :: BasisnD
+  integer,           intent(in)              :: iq
+  TYPE (OldParam),   intent(inout), optional :: OldPara
 
   !- for the CoordType  --------------------------------------
-  TYPE (CoordType) :: mole
-
-  real (kind=Rkind) :: Qact(BasisnD%ndim)
+  TYPE (CoordType),  intent(in)              :: mole
+  real (kind=Rkind), intent(inout)           :: Qact(:)
 
   !-- working variables ---------------------------------
   integer           :: j_act,j
@@ -3355,6 +3353,19 @@ END SUBROUTINE pack_basis
     Qact(j_act) = x(j)
   END DO
 
+  ! Adding the inactive coordinates must be done after setting Qact
+  IF (size(Qact) > BasisnD%ndim .AND. size(Qact) == mole%nb_var) THEN
+    CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo)
+  ELSE IF (size(Qact) > BasisnD%ndim .AND. size(Qact) /= mole%nb_var) THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) 'size(Qact)   ',size(Qact)
+    write(out_unitp,*) 'BasisnD%ndim ',BasisnD%ndim
+    write(out_unitp,*) 'mole%nb_var  ',mole%nb_var
+    write(out_unitp,*) ' Qact size MUST be equal to BasisnD%ndim or mole%nb_var'
+    write(out_unitp,*) '   Check the fortran!'
+    STOP ' ERROR in Rec_Qact: wrong Qact size'
+  END IF
+
   ! -------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*)
@@ -3378,7 +3389,7 @@ END SUBROUTINE pack_basis
   integer,                         intent(in)             :: tab_l(:)
   TYPE (Type_nDindex),             intent(in)             :: nDind_DPG    ! multidimensional DP index
   integer,                         intent(in)             :: iq
-  TYPE (CoordType),                  intent(in)             :: mole
+  TYPE (CoordType),                intent(in)             :: mole
   integer,                         intent(inout)          :: err_sub
 
 !------ working variables ---------------------------------
@@ -3425,6 +3436,18 @@ END SUBROUTINE pack_basis
 
        CALL dealloc_NParray(x,'x',name_sub)
 
+  ! Adding the inactive coordinates must be done after setting Qact
+  IF (size(Qact) > ndim .AND. size(Qact) == mole%nb_var) THEN
+    CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo)
+  ELSE IF (size(Qact) > ndim .AND. size(Qact) /= mole%nb_var) THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) 'size(Qact)   ',size(Qact)
+    write(out_unitp,*) 'ndim (basis) ',ndim
+    write(out_unitp,*) 'mole%nb_var  ',mole%nb_var
+    write(out_unitp,*) ' Qact size MUST be equal to ndim or mole%nb_var'
+    write(out_unitp,*) '   Check the fortran!'
+    STOP ' ERROR in Rec_Qact: wrong Qact size'
+  END IF
 
 !     -------------------------------------------------------
       IF (debug) THEN
@@ -3436,7 +3459,7 @@ END SUBROUTINE pack_basis
       END IF
 !     -------------------------------------------------------
 
-      END SUBROUTINE Rec_Qact_SG4
+  END SUBROUTINE Rec_Qact_SG4
 
   SUBROUTINE Rec_Qact_SG4_with_Tab_iq(Qact,tab_ba,tab_l,tab_iq,mole,err_sub)
   USE mod_system
@@ -3447,11 +3470,11 @@ END SUBROUTINE pack_basis
   TYPE(basis),                     intent(in)             :: tab_ba(0:,:) ! tab_ba(0:L,D)
   integer,                         intent(in)             :: tab_l(:)
   integer,                         intent(in)             :: tab_iq(:)
-  TYPE (CoordType),                  intent(in)             :: mole
+  TYPE (CoordType),                intent(in)             :: mole
   integer,                         intent(inout)          :: err_sub
 
 !------ working variables ---------------------------------
-  integer                        :: ndim,i,i_act,ib
+  integer                        :: ndim,i,i_act,ib,ndim_tot
   real (kind=Rkind), allocatable :: x(:)
 
 !----- for debuging --------------------------------------------------
@@ -3468,8 +3491,10 @@ END SUBROUTINE pack_basis
   END IF
 !-----------------------------------------------------------
 
+  ndim_tot = 0
   DO ib=1,size(tab_l)
     ndim = tab_ba(tab_l(ib),ib)%ndim
+    ndim_tot = ndim_tot + ndim
     CALL alloc_NParray(x,(/ndim/),'x',name_sub)
 
     CALL Rec_x(x,tab_ba(tab_l(ib),ib),tab_iq(ib))
@@ -3483,6 +3508,18 @@ END SUBROUTINE pack_basis
 
   END DO
 
+  ! Adding the inactive coordinates must be done after setting Qact
+  IF (size(Qact) > ndim_tot .AND. size(Qact) == mole%nb_var) THEN
+    CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo)
+  ELSE IF (size(Qact) > ndim .AND. size(Qact) /= mole%nb_var) THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) 'size(Qact)       ',size(Qact)
+    write(out_unitp,*) 'ndim_tot (basis) ',ndim_tot
+    write(out_unitp,*) 'mole%nb_var      ',mole%nb_var
+    write(out_unitp,*) ' Qact size MUST be equal to ndim_tot or mole%nb_var'
+    write(out_unitp,*) '   Check the fortran!'
+    STOP ' ERROR in Rec_Qact: wrong Qact size'
+  END IF
 
 ! -------------------------------------------------------
   IF (debug) THEN

@@ -1363,7 +1363,7 @@ CONTAINS
 
       SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
-      USE mod_Coord_KEO,       ONLY : get_Qact, get_d0GG
+      USE mod_Coord_KEO,       ONLY : get_d0GG
       USE mod_basis,           ONLY : rec_Qact
       USE mod_basis_BtoG_GtoB, ONLY : DerivOp_TO_RVecG
 
@@ -1505,7 +1505,6 @@ STOP 'cplx'
           CALL alloc_NParray(Qact,(/para_Op%mole%nb_var/),'Qact',name_sub)
           !$OMP  do
           DO iq=iq1,iq2
-            CALL get_Qact(Qact,para_Op%mole%ActiveTransfo) ! rigid, flexible coordinates
             CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
             CALL get_d0GG(Qact,para_Op%para_Tnum,para_Op%mole,d0GG=GGiq(iq-iq1+1,:,:),def=.TRUE.)
           END DO
@@ -1627,7 +1626,7 @@ STOP 'cplx'
  !SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
  SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid)
  USE mod_system
- USE mod_Coord_KEO,               ONLY : get_Qact, get_d0GG
+ USE mod_Coord_KEO,               ONLY : get_d0GG
 
  USE mod_basis,                   ONLY : rec_Qact
  USE mod_basis_BtoG_GtoB,         ONLY : DerivOp_TO_RVecG
@@ -1825,7 +1824,6 @@ STOP 'cplx'
       CALL alloc_NParray(Qact,(/para_Op%mole%nb_var/),'Qact',name_sub)
       !$OMP  do
       DO iq=iq1,iq2
-        CALL get_Qact(Qact,para_Op%mole%ActiveTransfo) ! rigid, flexible coordinates
         CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
         CALL get_d0GG(Qact,para_Op%para_Tnum,para_Op%mole,d0GG=GGiq(iq-iq1+1,:,:),def=.TRUE.)
         !write(out_unitp,*) 'iq,Gij',iq,GGiq(iq-iq1+1,:,:)
