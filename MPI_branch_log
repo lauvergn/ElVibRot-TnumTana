@@ -9,7 +9,17 @@
   - bug in Davidson fix
   
   - modify the the way distrubite iG
-
+  
+  - bug fix with new local merge at 23/03/2020
+  
+  - improvement for Davidson on g residual
+    Residual_Davidson_sum_MPI
+    MakeResidual_Davidson_j_MPI3
+    MakeResidual_Davidson_MPI3
+    MPI_combine_array
+    
+  - updat 
+    allocate_array
 
 > MPI_Vm1.8
   - bug in makefile fixed

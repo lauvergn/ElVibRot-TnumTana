@@ -10,7 +10,6 @@
 !=======================================================================================
 MODULE mod_MPI_Aid
 #if(run_MPI)
-  USE mod_MPI
   USE mod_system
   IMPLICIT NONE
   
@@ -52,13 +51,14 @@ MODULE mod_MPI_Aid
     Integer*4,allocatable :: array(:)
   END TYPE multi_array4  
   
-  !> subroutine for increase matrix size. the origin value is kept. 
-  !> the increase way is decided by the variables presented
+  !> @todo increase matrix size. the origin value is kept. 
+  !! the increase way is decided by the variables presented
   INTERFACE increase_martix
     module procedure increase_martix_int
     module procedure increase_martix_real
   END INTERFACE
   
+  !> @todo allocate and initial array 
   INTERFACE allocate_array  
     module procedure allocate_array_int4_length4
     module procedure allocate_array_int4_length8 
@@ -111,6 +111,7 @@ MODULE mod_MPI_Aid
   
   INTERFACE MPI_combine_array 
     module procedure MPI_combine_array_real
+    module procedure MPI_combine_array_int
     module procedure MPI_combine_array_cplx
   END INTERFACE
 
@@ -1049,6 +1050,32 @@ MODULE mod_MPI_Aid
         ENDDO
       ENDIF
     ENDSUBROUTINE MPI_combine_array_real
+
+    !-----------------------------------------------------------------------------------
+    SUBROUTINE MPI_combine_array_int(array)
+      IMPLICIT NONE
+      
+      Integer,allocatable,intent(inout)             :: array(:)
+
+      Integer                                       :: d1
+      Integer                                       :: d2
+
+      IF(MPI_id/=0) THEN
+        d1=bounds_MPI(1,MPI_id)
+        d2=bounds_MPI(2,MPI_id)
+        CALL MPI_Send(array(d1:d2),d2-d1+1,MPI_int_fortran,root_MPI,MPI_id,            &
+                     MPI_COMM_WORLD,MPI_err)
+      ENDIF
+
+      IF(MPI_id==0) THEN
+        DO i_MPI=1,MPI_np-1
+          d1=bounds_MPI(1,i_MPI)
+          d2=bounds_MPI(2,i_MPI)
+          CALL MPI_Recv(array(d1:d2),d2-d1+1,MPI_int_fortran,i_MPI,                    &
+                        i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        ENDDO
+      ENDIF
+    ENDSUBROUTINE MPI_combine_array_int
     
     !-----------------------------------------------------------------------------------
     SUBROUTINE MPI_combine_array_cplx(array)
