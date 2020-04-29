@@ -273,6 +273,7 @@
      integer                        :: error
      integer                        :: i_open
      integer                        :: i, j
+     logical                        :: header_loc
 
    character (len=*), parameter :: routine_name='write_vec_sum_opnd'
 
@@ -281,7 +282,14 @@
      else
        i_open = out_unitp
      end if
-     if (present(header) .and. (header)) then
+
+     if (present(header)) then
+       header_loc = header
+     else
+       header_loc = .FALSE.
+     end if
+
+     if (header_loc) then
        write(i_open, '(A)')  "   idf          iqd        alfa       &
             &indexq          op_name                 qval               coeff&
             &           opval"

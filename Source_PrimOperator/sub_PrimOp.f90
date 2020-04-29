@@ -3524,7 +3524,7 @@
 
       END FUNCTION pot2
 
-      SUBROUTINE Set_RPHpara_AT_Qact1(RPHpara_AT_Qact1,             &
+      SUBROUTINE Set_RPHpara_AT_Qact1(RPHpara_AT_Qact1,                 &
                                       Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_Coord_KEO
@@ -3689,7 +3689,7 @@
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
       nderiv     = 3
-      IF (para_Tnum%nrho == 0 .OR. para_Tnum%nrho == 10 .OR. para_Tnum%nrho == 20) nderiv = 2
+      IF (para_Tnum%vep_type == 0) nderiv = 2
 
       nb_act1    = RPHTransfo%nb_act1
       nb_inact21 = RPHTransfo%nb_inact21
@@ -3786,7 +3786,7 @@
      END SUBROUTINE Set_RPHpara_AT_Qact1_opt2
 
       SUBROUTINE Set_RPHpara_AT_Qact1_opt01(RPHpara_AT_Qact1,           &
-                                      Qact,para_Tnum,mole,RPHTransfo)
+                                         Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
@@ -3832,7 +3832,7 @@
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
       nderiv     = 3
-      IF (para_Tnum%nrho == 0 .OR. para_Tnum%nrho == 10 .OR. para_Tnum%nrho == 20) nderiv = 2
+      IF (para_Tnum%vep_type == 0) nderiv = 2
 
       step_loc = RPHTransfo%step
       stepp    = ONE/(step_loc+step_loc)
@@ -5050,7 +5050,6 @@
         END IF
       END IF
 
-
   !----- Gcte if needed --------------------------------------------
   Gref = .TRUE.
   IF (associated(mole%RPHTransfo)) THEN
@@ -5136,7 +5135,6 @@
         CALL dealloc_dnSVM(dnx)
         IF(MPI_id==0) write(out_unitp,*) '================================================='
       END IF
-
 
 !-----------------------------------------------------------
       !IF (debug) THEN

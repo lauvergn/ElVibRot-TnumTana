@@ -63,9 +63,9 @@ CONTAINS
 !=====================================================================
 
 !----- variables for the construction of H ---------------------------
-      TYPE (basis)   :: BasisnD
-      TYPE (CoordType) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (basis),     intent(in)    :: BasisnD
+      TYPE (CoordType), intent(inout) :: mole
+      TYPE (Tnum),      intent(in)    :: para_Tnum
 
 
 !------ working variables ---------------------------------
@@ -137,7 +137,8 @@ CONTAINS
       ! Check if the nb_act1_RPH coordinates belong to one basis set (primitive ?)
       ! 1) RPHTransfo MUST be the 2d transformation after the active one.
       !write(out_unitp,*) 'asso RPH, itRPH,nb_Qtransfo',associated(mole%RPHTransfo),mole%itRPH,mole%nb_Qtransfo
-      RPHCoord_IN_OneBasis = associated(mole%RPHTransfo) .AND. (mole%itRPH == mole%nb_Qtransfo-1)
+      RPHCoord_IN_OneBasis = associated(mole%RPHTransfo) .AND.          &
+                                      (mole%itRPH == mole%nb_Qtransfo-1)
 
       RPHCoord_IN_OneBasis = RPHCoord_IN_OneBasis .AND.                 &
         (count(mole%RPHTransfo%list_act_OF_Qdyn(1:nb_act1_RPH) == 1) == nb_act1_RPH)
@@ -261,8 +262,6 @@ CONTAINS
       END SELECT
       write(out_unitp,*) 'L,ib,nq',L,ib,nq ; flush(out_unitp)
 
-
-
       DO
 
         SELECT CASE (BasisnD%SparseGrid_type)
@@ -358,9 +357,10 @@ CONTAINS
       !---- Multidimensional loop -------------------------------------
         DO iq_list=1,size(List_Qact1,dim=2)
 
+          Qact(:) = ZERO ! initialization to zero, otherwise some values are not initialized (latter they will)
           Qact(1:nb_act1_RPH) = List_Qact1(:,iq_list)
-          CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo) ! add rigid, flexible coordinates
 
+          CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo) ! add rigid, flexible coordinates
           write(out_unitp,*) 'new RPH point',iq_list
           CALL flush_perso(out_unitp)
 
@@ -392,7 +392,6 @@ CONTAINS
       USE mod_basis
       IMPLICIT NONE
 
-!
 !=====================================================================
 !
 !     variables
@@ -400,9 +399,9 @@ CONTAINS
 !=====================================================================
 
 !----- variables for the construction of H ---------------------------
-      TYPE (basis)   :: BasisnD
+      TYPE (basis)     :: BasisnD
       TYPE (CoordType) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum)      :: para_Tnum
 
 
 !------ working variables ---------------------------------
@@ -454,11 +453,9 @@ CONTAINS
       nq_part = get_nq_FROM_basis(BasisnD)/100
       DO iq=1,get_nq_FROM_basis(BasisnD)
 
-        IF (debug) THEN
-        IF (mod(iq,nq_part)==0) THEN
+        IF (debug .AND. (mod(iq,nq_part)==0)) THEN
           write(out_unitp,*) 'iq,nq',iq,get_nq_FROM_basis(BasisnD)
           CALL flush_perso(out_unitp)
-        END IF
         END IF
 
         Qact(:) = ZERO
@@ -533,6 +530,7 @@ CONTAINS
       !---- Multidimensional loop -------------------------------------
         DO iq_list=1,size(List_Qact1,dim=2)
 
+          Qact(:)             = ZERO
           Qact(1:nb_act1_RPH) = List_Qact1(:,iq_list)
           CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo) ! add rigid, flexible coordinates
 

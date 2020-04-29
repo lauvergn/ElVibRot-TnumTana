@@ -311,7 +311,7 @@
 
         DO i=1,n_eval
           para_Tnum%WriteT    = (i == 1) ! write only when i=1
-          CALL get_dng_dnGG(Qact,para_Tnum,mole,dng,dnGG,nderivGg)
+          CALL get_dng_dnGG(Qact,para_Tnum,mole,dng,dnGG,nderiv=nderivGg)
         END DO
         write(out_unitp,*) ' dng'
         CALL Write_dnSVM(dng,0)

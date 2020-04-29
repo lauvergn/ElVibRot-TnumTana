@@ -504,15 +504,23 @@ MODULE mod_ActiveTransfo
 
 
 !      -----------------------------------------------------------------
-!       logical, parameter :: debug=.TRUE.
+       !logical, parameter :: debug=.TRUE.
        logical, parameter :: debug=.FALSE.
        character (len=*), parameter :: name_sub='get_Qact'
 !      -----------------------------------------------------------------
+
+       IF (present(With_act)) THEN
+         With_act_loc = With_act
+       ELSE
+         With_act_loc = .TRUE.
+       END IF
+
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
          write(out_unitp,*) 'nb_act',ActiveTransfo%nb_act
          write(out_unitp,*) 'asso Qact0 ?',associated(ActiveTransfo%Qact0)
-         write(out_unitp,*) 'Qact',Qact(:)
+         write(out_unitp,*) 'size Qact',size(Qact)
+         IF (.NOT. With_act_loc) write(out_unitp,*) 'Qact (only act)',Qact(1:ActiveTransfo%nb_act)
          write(out_unitp,*)
          CALL flush_perso(out_unitp)
        END IF
@@ -522,20 +530,21 @@ MODULE mod_ActiveTransfo
        dnQ%nderiv       = 0
        nb_act1          = ActiveTransfo%nb_act1
 
-       IF (present(With_act)) THEN
-         With_act_loc = With_act
-       ELSE
-         With_act_loc = .TRUE.
-       END IF
+
 
        CALL alloc_dnSVM(dnQ)
 
        DO i_Qact=1,ActiveTransfo%nb_var
-
          CALL Set_ZERO_TO_dnSVM(dnQ,nderiv=0)
 
          i_Qdyn      = ActiveTransfo%list_QactTOQdyn(i_Qact)
          typ_var_act = ActiveTransfo%list_act_OF_Qdyn(i_Qdyn)
+
+         IF (debug) THEN
+           write(out_unitp,*) 'i_Qact,i_Qdyn,typ_var_act',i_Qact,i_Qdyn,typ_var_act
+           CALL flush_perso(out_unitp)
+         END IF
+
 
          SELECT CASE (typ_var_act)
          CASE (1,-1,21,22,31)
@@ -569,8 +578,9 @@ MODULE mod_ActiveTransfo
 
 !     -----------------------------------------------------------------
       IF (debug) THEN
-         write(out_unitp,*) 'Qact',Qact(:)
+        write(out_unitp,*) 'Qact (all)',Qact(:)
         write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
       END IF
 !     -----------------------------------------------------------------
 

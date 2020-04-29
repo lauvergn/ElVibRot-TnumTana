@@ -80,26 +80,23 @@ MODULE mod_dnRho
        END IF
 !-----------------------------------------------------------
 
-       IF (nrho .EQ. 0) THEN
-!      euclidien
+       IF (nrho  == 0) THEN
+         ! Euclidean
 
          CALL sub_dnS1_TO_dnS2(dnJac,dnrho,nderiv)
 
-       ELSE IF (nrho .EQ. 1 .OR. nrho .EQ. 10) THEN
-!      wilson
+       ELSE IF (nrho == 1) THEN
+         ! Wilson
 
          CALL Set_ZERO_TO_dnSVM(dnrho)
          dnrho%d0 = ONE
 
-       ELSE IF (nrho .EQ. 3) THEN
-!      numerical
-         CALL    sub3_dnrho_num(dnrho,Qact,mole,nderiv,step)
-       ELSE IF (nrho .EQ. 2) THEN
-!      analitical
-         CALL    sub3_dnrho_ana(dnrho,Qact,mole,2)
-       ELSE IF (nrho .EQ. 20) THEN
-!      analitical (Without vep)
-         CALL    sub3_dnrho_ana(dnrho,Qact,mole,1)
+       ELSE IF (nrho == 3) THEN
+         ! Numerical (with nrho=2 ???)
+         CALL sub3_dnrho_num(dnrho,Qact,mole,nderiv,step)
+       ELSE IF (nrho == 2) THEN
+         ! analitical (with or without vep)
+         CALL sub3_dnrho_ana(dnrho,Qact,mole,nderiv)
        ELSE
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' nrho =',nrho,' is not defined'

@@ -203,6 +203,12 @@ MODULE mod_Tnum
           real (kind=Rkind), pointer :: Gref(:,:) => null() ! reference value if Gcte=.true.
 
           integer                    :: nrho              = 2
+          integer                    :: vep_type          = -1 ! The default depends on the GG metric
+                                                               ! 0   : without vep
+                                                               ! 1   : normal vep
+                                                               ! 100 : normal vep for the full metric tensor
+                                                               !         (not the reduced one), for coord type=100
+                                                               ! -100: vep type100 with a bug on dng (do not use)
           integer                    :: JJ                = 0
           logical                    :: WriteT            = .FALSE.
           logical                    :: With_Cart_Transfo = .TRUE.
@@ -697,7 +703,7 @@ MODULE mod_Tnum
 
 
 !     - for Tnum or Tana ----------------------------------------------
-      integer           :: nrho,NonGcteRange(2)
+      integer           :: nrho,vep_type,NonGcteRange(2)
       logical           :: num_GG,num_g,num_x,Gdiago,Gcte,With_VecCOM
       logical           :: Tana,MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,f2f1_ana
       real (kind=Rkind) :: stepT,stepOp
@@ -716,7 +722,7 @@ MODULE mod_Tnum
                      Rot_Dip_with_EC,sym,check_sym,                     &
                      NM,NM_TO_sym,hessian_old,purify_hess,k_Half,       &
                      hessian_cart,hessian_onthefly,file_hessian,stepOp, &
-                     stepT,num_GG,num_g,num_x,nrho,Tana,                &
+                     stepT,num_GG,num_g,num_x,nrho,Tana,vep_type,       &
                      Gdiago,Gcte,NonGcteRange,                          &
                      MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,         &
                      KEO_TalyorOFQinact2n,f2f1_ana,                     &
@@ -766,6 +772,7 @@ MODULE mod_Tnum
       VSCFForm             = .FALSE.
 
       nrho                 = 1
+      vep_type             = -1
       KEO_TalyorOFQinact2n = -1
       f2f1_ana             = .FALSE.
 
@@ -850,10 +857,55 @@ MODULE mod_Tnum
       para_Tnum%num_GG               = num_GG
       para_Tnum%num_g                = num_g
 
-      para_Tnum%nrho                 = nrho
       para_Tnum%WriteT               = WriteT
       para_Tnum%Gdiago               = Gdiago
       para_Tnum%Gcte                 = Gcte
+
+      IF ((nrho == 20 .OR. nrho == 10) .AND. vep_type /= -1 .AND. vep_type /= 0) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' nrho    ',nrho
+        write(out_unitp,*) ' vep_type',vep_type
+        write(out_unitp,*) ' nrho = 20 or 10                       => old way to force the vep to zero.'
+        write(out_unitp,*) ' vep_type is defined (/= -1) and /= 0  => vep is not forced to zero'
+        write(out_unitp,*) ' You have two possibilities:'
+        write(out_unitp,*) '   keep the nrho values (20 or 10)  and change vep_type to 0 or -1'
+        write(out_unitp,*) '   keep the vep_type values         and change nrho to 1 or 2'
+        write(out_unitp,*) ' check your data!'
+        write(out_unitp,variables)
+        write(out_unitp,*) ' ERROR in ',name_sub
+        STOP ' ERROR in Read_CoordType: inconsistent nrho and vep_types values.'
+      END IF
+      IF (nrho == 0)                  vep_type = 0 ! no vep for euclidean normalization
+      IF (nrho == 10 .OR. nrho == 20) vep_type = 0 ! old way to force the vep to zero
+      IF (Gcte .AND. vep_type == -1)  vep_type = 0 ! it is not always the case [dTau=sin(th)dth ]
+      IF (vep_type == -1)             vep_type = 1
+      para_Tnum%vep_type            = vep_type
+      IF (nrho == 10)                 nrho = 1
+      IF (nrho == 20)                 nrho = 2
+      para_Tnum%nrho                = nrho
+
+      IF (para_Tnum%vep_type == -100) THEN
+        write(out_unitp,*) '======================================================'
+        write(out_unitp,*) '======================================================'
+        write(out_unitp,*) '======================================================'
+        write(out_unitp,*) '======================================================'
+        write(out_unitp,*) '======================================================'
+        write(out_unitp,*) '======================================================'
+        write(out_unitp,*) ' WARNING in ',name_sub
+        write(out_unitp,*) ' vep_type',para_Tnum%vep_type
+        write(out_unitp,*)
+        write(out_unitp,*) '  You are using vep_type to recover the vep values with a bug.'
+        write(out_unitp,*) '  Relevent, only when the coordinate types are 100.'
+        write(out_unitp,*)
+        write(out_unitp,*) '  DO NOT USE IT!!'
+        write(out_unitp,*) ' WARNING in ',name_sub
+        write(out_unitp,*) '======================================================'
+        write(out_unitp,*) '======================================================'
+        write(out_unitp,*) '======================================================'
+        write(out_unitp,*) '======================================================'
+        write(out_unitp,*) '======================================================'
+        write(out_unitp,*) '======================================================'
+      END IF
 
       para_Tnum%Tana                 = Tana
 
@@ -986,6 +1038,7 @@ MODULE mod_Tnum
         END DO
         write(out_unitp,*) 'Parameter(s) to be optimized?: ',mole%opt_param
 
+        !=======================================================================
         ! analyzis of the transformations:
         name_transfo = mole%tab_Qtransfo(1)%name_transfo
         CALL string_uppercase_TO_lowercase(name_transfo)
@@ -998,6 +1051,9 @@ MODULE mod_Tnum
            write(out_unitp,*) 'name_transfo: ',mole%tab_Qtransfo(1)%name_transfo
            STOP
         END IF
+        !=======================================================================
+
+        !=======================================================================
         name_transfo = mole%tab_Qtransfo(nb_Qtransfo)%name_transfo
         CALL string_uppercase_TO_lowercase(name_transfo)
         IF (name_transfo /= 'active') THEN
@@ -1006,6 +1062,11 @@ MODULE mod_Tnum
            write(out_unitp,*) 'name_transfo: ',mole%tab_Qtransfo(nb_Qtransfo)%name_transfo
            STOP
         END IF
+        !=======================================================================
+
+
+
+
 
         mole%liste_QactTOQsym => mole%ActiveTransfo%list_QactTOQdyn
         mole%liste_QactTOQdyn => mole%ActiveTransfo%list_QactTOQdyn
@@ -1027,9 +1088,17 @@ MODULE mod_Tnum
           STOP
         END IF
 
-        !CALL Sub_CoordType_TO_paraRPH_new(mole) ! transfert nb_inact21 to nb_act1 and change list_act_OF_Qdyn
-
         CALL type_var_analysis_OF_CoordType(mole)
+
+        !=======================================================================
+        !RPH transformation and type 21 or 22 coordinates are not compatible anymore.
+        IF (associated(mole%RPHTransfo) .AND. mole%nb_inact2n > 0) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' asso mole%RPHTransfo ',associated(mole%RPHTransfo)
+          write(out_unitp,*) ' mole%nb_inact2n      ',mole%nb_inact2n
+          write(out_unitp,*) ' RPHTransfo and type 21 or 22 coordinates are not compatible anymore'
+          STOP
+        END IF
 
         mole%name_Qact => mole%tab_Qtransfo(nb_Qtransfo)%name_Qin
 
@@ -1763,23 +1832,23 @@ MODULE mod_Tnum
                                      mole%ActiveTransfo%list_act_OF_Qdyn
       END IF
 
-      ! first transfert list_act_OF_Qdyn to RPHtransfo
-      IF (associated(mole%RPHTransfo)) THEN
-      IF (mole%RPHTransfo%option == 0) THEN
-
-        ! This transformation is done only if option==0.
-        !    For option=1, everything is already done
-
-        IF (.NOT. (mole%RPHTransfo%init_Qref .OR. mole%RPHTransfo%init)) THEN
-          CALL Set_RPHTransfo(mole%RPHTransfo,mole%ActiveTransfo%list_act_OF_Qdyn)
-        END IF
-
-        DO i=1,mole%nb_var
-          IF (mole%ActiveTransfo%list_act_OF_Qdyn(i) == 21)             &
-                              mole%ActiveTransfo%list_act_OF_Qdyn(i) = 1
-        END DO
-      END IF
-      END IF
+!      ! first transfert list_act_OF_Qdyn to RPHtransfo
+!      IF (associated(mole%RPHTransfo)) THEN
+!      IF (mole%RPHTransfo%option == 0) THEN
+!
+!        ! This transformation is done only if option==0.
+!        !    For option=1, everything is already done
+!
+!        IF (.NOT. (mole%RPHTransfo%init_Qref .OR. mole%RPHTransfo%init)) THEN
+!          CALL Set_RPHTransfo(mole%RPHTransfo,mole%ActiveTransfo%list_act_OF_Qdyn)
+!        END IF
+!
+!        DO i=1,mole%nb_var
+!          IF (mole%ActiveTransfo%list_act_OF_Qdyn(i) == 21)             &
+!                              mole%ActiveTransfo%list_act_OF_Qdyn(i) = 1
+!        END DO
+!      END IF
+!      END IF
 
       mole%nb_act1    =                                                 &
        count(abs(mole%ActiveTransfo%list_act_OF_Qdyn(1:mole%nb_var))==1)

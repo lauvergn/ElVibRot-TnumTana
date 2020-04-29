@@ -360,9 +360,7 @@
         CASE ('rph')
           Qtransfo%nb_Qin  = nb_Qin
           CALL alloc_array(Qtransfo%RPHTransfo,'Qtransfo%RPHTransfo',name_sub)
-          IF (Qtransfo%opt_transfo /= 0) THEN
-             CALL Read_RPHTransfo(Qtransfo%RPHTransfo,nb_Qin,Qtransfo%opt_transfo)
-          END IF
+          CALL Read_RPHTransfo(Qtransfo%RPHTransfo,nb_Qin,Qtransfo%opt_transfo)
 
           CALL sub_Type_Name_OF_Qin(Qtransfo,"QRPH")
           Qtransfo%type_Qin(:) = 0
