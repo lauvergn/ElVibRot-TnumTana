@@ -1,0 +1,37 @@
+#!/bin/bash
+
+ SYSTEM=sub_system_HNO3_ccsdt_old.f
+
+
+ cp HESS-fit/inter_0-vtz HESS-fit/inter_0
+
+here=`pwd`
+
+DIR_vib=../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make &> $here/comp.log
+cd $here
+
+./DAT_files/dat_HNO3_ccsdt-1D_rigid0
+./CompareLevel res_HNO3_rigid0 Table3_PCCP2010-1D.txt 3
+
+
+./DAT_files/dat_HNO3_ccsdt-1D_rigid100Publi
+./CompareLevel res_HNO3_rigid100publi Table3_PCCP2010-1D.txt 4
+
+./DAT_files/dat_HNO3_ccsdt-1D_flex20
+./CompareLevel res_HNO3_flex20 Table3_PCCP2010-1D.txt 5
+
+./DAT_files/dat_HNO3_ccsdt-1D_flex200Publi
+./CompareLevel res_HNO3_flex200Publi Table3_PCCP2010-1D.txt 6
+
+./DAT_files/dat_HNO3_ccsdt-1D_rigid100
+./CompareLevel res_HNO3_rigid100 1D_100_200.txt 3
+
+./DAT_files/dat_HNO3_ccsdt-1D_flex200
+./CompareLevel res_HNO3_flex200 1D_100_200.txt 4
+

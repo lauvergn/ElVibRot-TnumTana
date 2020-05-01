@@ -2189,7 +2189,7 @@ RETURN
    END SUBROUTINE levels_EVR
 
 
-SUBROUTINE finalyze_EVR()
+SUBROUTINE Finalize_EVR()
   USE mod_EVR
   IMPLICIT NONE
 
@@ -2222,5 +2222,5 @@ SUBROUTINE finalyze_EVR()
         CALL MPI_Finalize(MPI_err)
         close(in_unitp)
 #endif
-END SUBROUTINE finalyze_EVR
+END SUBROUTINE Finalize_EVR
 

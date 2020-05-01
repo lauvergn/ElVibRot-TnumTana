@@ -2296,6 +2296,7 @@ END SUBROUTINE norm_psi_MPI
     write(out_unitp,*) 'BEGINNING Channel_weight'
     write(out_unitp,*) 'GridRep',GridRep
     write(out_unitp,*) 'BasisRep',BasisRep
+    write(out_unitp,*) 'alloc tab_WeightChannels',allocated(tab_WeightChannels)
     !write(out_unitp,*) 'psi'
     !CALL ecri_psi(psi=psi)
     CALL flush_perso(out_unitp)
@@ -2317,10 +2318,14 @@ END SUBROUTINE norm_psi_MPI
     tab_WeightChannels(:,:) = ZERO
   END IF
 
+  IF (debug) THEN
+    write(out_unitp,*) 'nb_bi,nb_be',nb_bi,nb_be
+    write(out_unitp,*) 'shape tab_WeightChannels',shape(tab_WeightChannels)
+  END IF
+
 
   !IF (SGtype == 4) THEN
-  !  CALL Channel_weight_SG4(tab_WeightChannels,psi,                 &
-  !                          GridRep,BasisRep)
+  !  CALL Channel_weight_SG4(tab_WeightChannels,psi,GridRep,BasisRep)
   !END IF
 
   IF (psi%ComOp%contrac_ba_ON_HAC) THEN
@@ -2337,13 +2342,13 @@ END SUBROUTINE norm_psi_MPI
         if_baie = ii_baie -1 + psi%nb_ba
 
         IF (psi%cplx) THEN
-          tab_WeightChannels(i_bi,i_be) =                             &
-             real(dot_product(psi%CvecB(ii_baie:if_baie),             &
+          tab_WeightChannels(i_bi,i_be) =                               &
+             real(dot_product(psi%CvecB(ii_baie:if_baie),               &
                               psi%CvecB(ii_baie:if_baie)) ,kind=Rkind)
         ELSE
           tab_WeightChannels(i_bi,i_be) =                               &
-             dot_product(psi%RvecB(ii_baie:if_baie),                    &
-                         psi%RvecB(ii_baie:if_baie))
+                              dot_product(psi%RvecB(ii_baie:if_baie),   &
+                                          psi%RvecB(ii_baie:if_baie))
         END IF
       END DO
       END DO

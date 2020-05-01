@@ -127,6 +127,9 @@
                          pot0_corgrad,                                  &
                          Qact,para_Tnum,mole,mole%RPHTransfo_inact2n)
 
+      write(out_unitp,*) '------------------------------------------'
+      write(out_unitp,*) '------------------------------------------'
+      write(out_unitp,*) ' Parameters for the Basis2n (HADA or cHAC'
       write(out_unitp,*) 'freq',d0ehess(:)*auTOcm_inv
       write(out_unitp,*) 'd0Qeq',d0Qeq
       write(out_unitp,*) 'd0c'
@@ -150,9 +153,12 @@
 
 !     -----------------------------------------------------
 !     write label of the anharmonic basis functions
+      CALL alloc_NParray(Basis2n%EneH0,[Basis2n%nDindB%max_nDI],        &
+                        'Basis2n%nDindB%max_nDI',name_sub)
       ZPE = HALF*sum(d0ehess)
       DO i=1,Basis2n%nDindB%max_nDI
         Ene = ZPE + sum(real(Basis2n%nDindB%Tab_nDval(:,i),kind=Rkind)*d0ehess(:))
+        Basis2n%EneH0(i) = Ene ! this enables the NewVec_type=4 in Davidson
         write(out_unitp,'(i4,2(1x,f16.4))',advance='no') i,             &
                                      Ene*auTOcm_inv,(Ene-ZPE)*auTOcm_inv
         DO k=1,mole%nb_inact2n
@@ -161,19 +167,19 @@
         write(out_unitp,*)
       END DO
 !     -----------------------------------------------------
-
-
+      write(out_unitp,*) ' number of nD inactive harmonic functions, nb_bi: ', &
+                    Basis2n%nDindB%max_nDI
       IF (Basis2n%nDindB%max_nDI < 1) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' nb_bi < 1 !!',Basis2n%nDindB%max_nDI
         STOP
       END IF
 
+      write(out_unitp,*) '------------------------------------------'
+      write(out_unitp,*) '------------------------------------------'
 !---------------------------------------------------------------------
       IF (debug) THEN
         CALL write_nDindex(Basis2n%nDindB,'Basis2n%nDindB')
-        write(out_unitp,*) ' number of nD inactive harmonic functions, nb_bi: ', &
-                    Basis2n%nDindB%max_nDI
         write(out_unitp,*) ' END ',name_sub
       END IF
 !---------------------------------------------------------------------

@@ -197,7 +197,7 @@ MODULE mod_nDGridFit
       !-----------------------------------------------------------------
       !     ---- TO finalize the coordinates (NM) and the KEO ----------
       !     ------------------------------------------------------------
-      CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
       !-----------------------------------------------------------------
 
       write(out_unitp,*) "============================================================"

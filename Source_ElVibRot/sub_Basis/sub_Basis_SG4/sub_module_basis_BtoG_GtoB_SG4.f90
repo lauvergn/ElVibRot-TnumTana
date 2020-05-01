@@ -1971,6 +1971,7 @@ integer               :: iG
 
 CALL dealloc_SmolyakRep(SRep1)
 
+IF (allocated(SRep2%SmolyakRep)) THEN
 IF (size(SRep2%SmolyakRep) > 0) THEN
   SRep1%Grid  = SRep2%Grid
   SRep1%Delta = SRep2%Delta
@@ -1982,6 +1983,7 @@ IF (size(SRep2%SmolyakRep) > 0) THEN
     SRep1%SmolyakRep(iG) = SRep2%SmolyakRep(iG)
   END DO
 
+END IF
 END IF
 
 END SUBROUTINE SmolyakRep2_TO_SmolyakRep1

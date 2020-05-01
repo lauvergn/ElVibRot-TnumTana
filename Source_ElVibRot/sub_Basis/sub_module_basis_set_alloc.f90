@@ -255,7 +255,8 @@
       PUBLIC  get_nb_be_FROM_basis
 
       PUBLIC  P_basis, alloc_tab_Pbasis_OF_basis
-      PUBLIC  param_AllBasis, alloc_AllBasis, dealloc_AllBasis
+      PUBLIC  param_AllBasis, alloc_AllBasis, dealloc_AllBasis,         &
+              get_Ene0_AT_ib_FROM_Basis
 
       PUBLIC alloc_array, dealloc_array
 
@@ -2548,6 +2549,41 @@
 
 
       END SUBROUTINE alloc_AllBasis
+
+      FUNCTION get_Ene0_AT_ib_FROM_Basis(ib,BasisnD,Basis2n) RESULT(Ene0)
+
+         real (kind=Rkind)              :: Ene0
+         TYPE (Basis),       intent(in) :: BasisnD,Basis2n
+         !TYPE (param_ComOp), intent(in) :: ComOp
+         integer,            intent(in) :: ib
+
+         integer      :: i_ba,i_bi,nb_bi,nb_ba
+
+         !IF (ComOp%contrac_ba_ON_HAC) THEN
+         !   STOP 'not yet'
+         !ELSE
+            nb_ba = get_nb_FROM_basis(BasisnD)
+            nb_bi = get_nb_FROM_basis(Basis2n)
+            i_bi = ib / nb_ba
+            i_ba = mod(ib,nb_ba)
+            IF (ib /= (1+(i_bi-1)*nb_ba) ) THEN
+               STOP 'ERROR in get_Ene0_AT_ib_FROM_Basis: inconsistent ib values'
+            END IF
+
+            IF (nb_bi > 1) THEN
+              IF (.NOT. allocated(Basis2n%EneH0)) THEN
+               STOP 'ERROR in get_Ene0_AT_ib_FROM_Basis: Basis2n%EneH0 is not allocated'
+              END IF
+              Ene0 = Basis2n%EneH0(i_bi)
+            END IF
+
+            IF (.NOT. allocated(BasisnD%EneH0)) THEN
+              STOP 'ERROR in get_Ene0_AT_ib_FROM_Basis: BasisnD%EneH0 is not allocated'
+             END IF
+             Ene0 = Ene0 + BasisnD%EneH0(i_ba)
+         !END IF
+
+      END FUNCTION get_Ene0_AT_ib_FROM_Basis
 
       !!@description: TODO
       !!@param: TODO

@@ -120,7 +120,7 @@
       integer :: Get_nbPERsym_FROM_SymAbelianOFAllBasis ! function
       
 !----- variables divers ----------------------------------------------------------------
-      integer           :: i,ip,i_baie,f_baie,id,nb_ScalOp
+      integer           :: i,ip,i_baie,f_baie,id,nb_ScalOp,nb_baie_sym
       real (kind=Rkind) :: T,DE,Ep,Em,Q,fac,zpe,pop
       logical           :: print_mat
       integer           :: err
@@ -654,19 +654,22 @@
             write(out_unitp,*)
           ENDIF
 
+
           IF (para_propa%para_Davidson%max_WP == 0) THEN
             max_diago = max(1000,para_propa%para_Davidson%nb_WP,          &
                             para_H%nb_tot/10)
           ELSE
             max_diago = para_propa%para_Davidson%max_WP
           END IF
+
           IF (Get_nbPERsym_FROM_SymAbelianOFAllBasis(para_AllBasis,       &
-                               para_propa%para_Davidson%symab) == 0) THEN
+                               para_propa%para_Davidson%symab) == 0) THEN ! (test on -1 ???)
             max_diago = min(max_diago,para_H%nb_tot)
           ELSE
-            max_diago = min(max_diago,para_H%nb_tot,                      &
-                  Get_nbPERsym_FROM_SymAbelianOFAllBasis(para_AllBasis, &
-                                        para_propa%para_Davidson%symab))
+            nb_baie_sym = Get_nbPERsym_FROM_SymAbelianOFAllBasis(       &
+                           para_AllBasis,para_propa%para_Davidson%symab)
+            nb_baie_sym = nb_baie_sym * ComOp%nb_bie
+            max_diago = min(max_diago,para_H%nb_tot,nb_baie_sym)
           END IF
           para_propa%para_Davidson%max_WP = max_diago
 

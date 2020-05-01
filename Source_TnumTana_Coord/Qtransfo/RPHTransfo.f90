@@ -124,10 +124,14 @@
         MODULE PROCEDURE dealloc_array_OF_RPHTransfodim0
       END INTERFACE
 
+      INTERFACE calc_RPHTransfo
+        MODULE PROCEDURE calc_RPHTransfo_new
+        !MODULE PROCEDURE calc_RPHTransfo_old
+      END INTERFACE
+
       PUBLIC :: Type_RPHpara_AT_Qact1, alloc_RPHpara_AT_Qact1, dealloc_RPHpara_AT_Qact1, &
                 Write_RPHpara_AT_Qact1, RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1
 
-      !PUBLIC :: Type_RPHpara2, dealloc_RPHpara2, Read_RPHpara2, Write_RPHpara2, RPHpara2_1TORPHpara2_2
 
       PUBLIC :: Type_RPHTransfo, Read_RPHTransfo, Write_RPHTransfo, Set_RPHTransfo, &
                 dealloc_RPHTransfo, calc_RPHTransfo, RPHTransfo1TORPHTransfo2
@@ -964,7 +968,7 @@
       !    - Qact1(:) are the first coordinates
       !    - Qina21(:) are just after Qact1
       !  If not the case, you have to use "order" transformation
-      SUBROUTINE calc_RPHTransfo(dnQin,dnQout,RPHTransfo,nderiv,inTOout)
+      SUBROUTINE calc_RPHTransfo_new(dnQin,dnQout,RPHTransfo,nderiv,inTOout)
       IMPLICIT NONE
 
         TYPE (Type_dnVec), intent(inout)        :: dnQin,dnQout
@@ -989,7 +993,7 @@
 
 
 !----- for debuging ----------------------------------
-       character (len=*),parameter :: name_sub='calc_RPHTransfo'
+       character (len=*),parameter :: name_sub='calc_RPHTransfo_new'
        integer :: nderiv_debug=1
        logical, parameter :: debug=.FALSE.
        !logical, parameter :: debug=.TRUE.
@@ -1226,7 +1230,7 @@
       END IF
 !---------------------------------------------------------------------
 
-      END SUBROUTINE calc_RPHTransfo
+      END SUBROUTINE calc_RPHTransfo_new
 
       SUBROUTINE calc_RPHTransfo_old(dnQin,dnQout,RPHTransfo,nderiv,inTOout)
       IMPLICIT NONE
@@ -1251,8 +1255,8 @@
 
 !----- for debuging ----------------------------------
        character (len=*),parameter :: name_sub='calc_RPHTransfo_old'
-       !logical, parameter :: debug=.FALSE.
-       logical, parameter :: debug=.TRUE.
+       logical, parameter :: debug=.FALSE.
+       !logical, parameter :: debug=.TRUE.
 !----- for debuging ----------------------------------
 
 !---------------------------------------------------------------------
@@ -1370,8 +1374,6 @@
                                             dnVecQin,1,ONE,             &
                                      RPHpara_AT_Qact1(1)%dnQopt,1,ONE,  &
                                            RPHTransfo%nb_inact21,nderiv)
-
-
 
          ! dnVecQout => dnQout
          iQinact = 0

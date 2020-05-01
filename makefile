@@ -16,10 +16,10 @@ MPICORE = gfortran
 debug_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
 ifeq ($(F90),mpifort)
   OMP = 0
 endif
@@ -785,7 +785,7 @@ PhysConst: obj $(PhysConstEXE)
 #============================================================================
 # Unitary tests
 .PHONY: ut UT UnitTests
-ut UT UnitTests: UT_Frac UT_PhysConst
+ut UT UnitTests: UT_Frac UT_PhysConst UT_HNO3
 #
 .PHONY: UT_Frac ut_frac
 UT_Frac ut_frac : UnitTests_Frac.exe
@@ -803,6 +803,12 @@ UT_PhysConst ut_physconst: PhysConst
 	@echo "---------------------------------------"
 	@echo "Unitary tests for the PhysConst module"
 	@cd Examples/exa_PhysicalConstants ; ./run_tests > $(DIRUT)/res_UT_PhysConst ; $(DIRUT)/PhysConst.sh $(DIRUT)/res_UT_PhysConst
+	@echo "---------------------------------------"
+.PHONY: UT_HNO3 ut_hno3
+UT_HNO3 ut_hno3: EVR
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the HNO3 ElVibRot calculations"
+	@cd UnitTests/HNO3_UT ; ./run_tests small
 	@echo "---------------------------------------"
 #===============================================
 #===============================================
@@ -840,6 +846,7 @@ clean:
 	@cd Examples/exa_direct-dist ; ./clean
 	@cd Examples/exa_TnumTana_Coord-dist ; ./clean
 	@cd Examples/exa_PhysicalConstants ; ./clean
+	@cd UnitTests ; ./clean
 	@cd Examples/exa_TanaCheck ; ./clean
 	@cd Working_tests/exa_TnumTana-dist ; ./clean
 	@cd Working_tests/exa_TnumPoly-dist ; ./clean

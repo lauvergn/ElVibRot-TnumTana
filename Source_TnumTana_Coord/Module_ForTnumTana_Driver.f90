@@ -31,7 +31,7 @@ MODULE Module_ForTnumTana_Driver
   USE mod_Constant
   USE mod_Coord_KEO,             ONLY: CoordType,Tnum,Read_CoordType,  &
                                        read_RefGeom,sub_QactTOd0x,sub_d0xTOQact
-  USE mod_PrimOp,                ONLY: param_PES,Finalyze_TnumTana_Coord_PrimOp
+  USE mod_PrimOp,                ONLY: param_PES,Finalize_TnumTana_Coord_PrimOp
   IMPLICIT NONE
 
   TYPE (constant)  :: const_phys

@@ -63,9 +63,9 @@
 
    PRIVATE
 
-  INTERFACE Finalyze_TnumTana_Coord_PrimOp
-    MODULE PROCEDURE Finalyze_TnumTana_Coord_PrimOp_zmatrix,            &
-                     Finalyze_TnumTana_Coord_PrimOp_CoordType
+  INTERFACE Finalize_TnumTana_Coord_PrimOp
+    MODULE PROCEDURE Finalize_TnumTana_Coord_PrimOp_zmatrix,            &
+                     Finalize_TnumTana_Coord_PrimOp_CoordType
   END INTERFACE
   INTERFACE get_dnMatOp_AT_Qact
     MODULE PROCEDURE get_dnMatOp_AT_Qact_zmatrix,            &
@@ -80,7 +80,7 @@
                      TnumKEO_TO_tab_d0H_CoordType
   END INTERFACE
 
-   PUBLIC :: Finalyze_TnumTana_Coord_PrimOp, get_dnMatOp_AT_Qact,       &
+   PUBLIC :: Finalize_TnumTana_Coord_PrimOp, get_dnMatOp_AT_Qact,       &
              get_d0MatOp_AT_Qact,TnumKEO_TO_tab_d0H,sub_freq_AT_Qact,   &
              pot2,sub_freq2_rph,sub_dnfreq_4p,set_rphpara_at_qact1
 
@@ -4872,7 +4872,7 @@
       END SUBROUTINE sub_freq2_RPH
 
 
-      SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_zmatrix(para_Tnum,mole,para_PES,Tana)
+      SUBROUTINE Finalize_TnumTana_Coord_PrimOp_zmatrix(para_Tnum,mole,para_PES,Tana)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
@@ -4889,13 +4889,13 @@
       logical, optional  :: Tana
 
       IF (present(Tana)) THEN
-        CALL Finalyze_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole%CoordType,para_PES,Tana)
+        CALL Finalize_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole%CoordType,para_PES,Tana)
       ELSE
-        CALL Finalyze_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole%CoordType,para_PES)
+        CALL Finalize_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole%CoordType,para_PES)
       END IF
 
-      END SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_zmatrix
-      SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole,para_PES,Tana)
+      END SUBROUTINE Finalize_TnumTana_Coord_PrimOp_zmatrix
+      SUBROUTINE Finalize_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole,para_PES,Tana)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
@@ -4925,7 +4925,7 @@
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
-      character (len=*), parameter :: name_sub = 'Finalyze_TnumTana_Coord_PrimOp'
+      character (len=*), parameter :: name_sub = 'Finalize_TnumTana_Coord_PrimOp'
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
@@ -4955,7 +4955,6 @@
       ! initialization of the scalar operators
       CALL Sub_init_dnOp(mole,para_Tnum,para_PES)
       !-----------------------------------------------------------------
-
       !----- calc and transfert NM to LinearTransfo%mat if needed ---------------
       IF (associated(mole%NMTransfo)) THEN
         IF (.NOT. mole%tab_Qtransfo(mole%itNM)%skip_transfo) THEN
@@ -5126,6 +5125,7 @@
         IF(MPI_id==0) THEN
           write(out_unitp,*) '================================================='
           write(out_unitp,*) '=== Reference geometry (not recenter) ==========='
+          CALL flush_perso(out_unitp)
         ENDIF
         CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
 
@@ -5145,7 +5145,7 @@
       !END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE Finalyze_TnumTana_Coord_PrimOp_CoordType
+      END SUBROUTINE Finalize_TnumTana_Coord_PrimOp_CoordType
 
    END MODULE mod_PrimOp
 

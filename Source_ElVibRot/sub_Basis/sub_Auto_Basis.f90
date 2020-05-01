@@ -476,8 +476,8 @@
 !=======================================================================================
 
 !=======================================================================================
-      RECURSIVE SUBROUTINE RecSet_EneH0(para_Tnum,mole,BasisnD,        &
-                                         para_PES,para_ReadOp,ComOp_loc)
+      RECURSIVE SUBROUTINE RecSet_EneH0(para_Tnum,mole,BasisnD,         &
+                                             para_PES,para_ReadOp,ComOp)
 
       USE mod_system
       USE mod_nDindex
@@ -489,23 +489,24 @@
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole,mole_loc
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (CoordType),    intent(in)    :: mole
+      TYPE (Tnum)                        :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
-      TYPE (basis) :: basisnD
+      TYPE (basis),        intent(inout) :: basisnD
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
+      TYPE (param_PES)                   :: para_PES
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)  :: ComOp_loc
-      TYPE (param_ReadOp) :: para_ReadOp
+      TYPE (param_ComOp),  intent(in)    :: ComOp
+      TYPE (param_ReadOp), intent(in)    :: para_ReadOp
 
 !----- local variables
-      integer :: i,ib,L
-      integer :: nDval(basisnD%nb_basis)
-      TYPE(REAL_WU) :: RWU_E
+      integer             :: i,ib,L
+      integer             :: nDval(basisnD%nb_basis)
+      TYPE(REAL_WU)       :: RWU_E
+      TYPE (param_ComOp)  :: ComOp_loc
 
       integer, save :: rec = 0
 !-------------------------------------------------------------------------
@@ -532,6 +533,8 @@
         write(out_unitp,*) 'nb_basis:                      ',BasisnD%nb_basis
         CALL flush_perso(out_unitp)
       END IF
+
+      ComOp_loc = ComOp
 
       IF (allocated(BasisnD%EneH0))    THEN
         CALL dealloc_NParray(BasisnD%EneH0,"BasisnD%EneH0",name_sub)
@@ -650,6 +653,8 @@
         CALL flush_perso(out_unitp)
       END IF
       rec = rec - 1
+
+      CALL dealloc_ComOp(ComOp_loc)
 
       END SUBROUTINE RecSet_EneH0
 !=======================================================================================

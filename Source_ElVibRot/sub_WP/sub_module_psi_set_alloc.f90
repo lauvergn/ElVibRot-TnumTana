@@ -685,6 +685,8 @@
       integer                      :: get_nb_bi_FROM_psi
       TYPE (param_psi), intent(in) :: psi
 
+      integer                      :: nb_bi
+
 !----- for debuging --------------------------------------------------
       !logical, parameter :: debug = .TRUE.
        logical, parameter :: debug = .FALSE.
@@ -693,11 +695,21 @@
         write(out_unitp,*) 'BEGINNING get_nb_bi_FROM_psi'
       END IF
 
+     nb_bi = get_nb_FROM_basis(psi%Basis2n)
      IF (associated(psi%ComOp)) THEN
        get_nb_bi_FROM_psi = psi%ComOp%nb_bi
      ELSE
        write(out_unitp,*) ' ERROR in get_nb_bi_FROM_psi'
        write(out_unitp,*) ' psi%ComOp in not associated'
+       write(out_unitp,*) ' CHECK the source'
+       STOP
+     END IF
+
+     IF (nb_bi /= psi%ComOp%nb_bi) THEN
+       write(out_unitp,*) ' ERROR in get_nb_bi_FROM_psi'
+       write(out_unitp,*) ' inconsistent value in psi%ComOp and psi%Basis2n'
+       write(out_unitp,*) ' nb_bi in psi%ComOp  ',psi%ComOp%nb_bi
+       write(out_unitp,*) ' nb_bi in psi%Basis2n',nb_bi
        write(out_unitp,*) ' CHECK the source'
        STOP
      END IF

@@ -72,7 +72,7 @@
       USE mod_Constant,  only : constant, sub_constantes, REAL_WU
       USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0, read_RefGeom
       use mod_PrimOp,    only : param_otf, param_pes, write_typeop, param_typeop,&
-                                finalyze_tnumtana_coord_primop, init_typeop,     &
+                                Finalize_tnumtana_coord_primop, init_typeop,     &
                                 derive_termqact_to_derive_termqdyn
       USE mod_basis
       USE mod_Set_paraRPH
@@ -165,7 +165,7 @@
 !-----------------------------------------------------------------------
 !--------------------- TO finalize the coordinates (NM) and the KEO ----
 !     If needed, Tana mùust be done after auto_basis, otherwise nrho(:) could bec wrong
-      CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES,Tana=.FALSE.)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES,Tana=.FALSE.)
 !-----------------------------------------------------------------------
 
       IF(MPI_id==0) THEN
@@ -490,6 +490,7 @@
                                para_AllBasis,                           &
                                ComOp,para_PES,para_ReadOp,              &
                                para_AllOp%tab_Op(iOp))
+
       IF (spectral_H) THEN
         para_AllOp%tab_Op(iOp)%spectral    = .TRUE.
         para_AllOp%tab_Op(iOp)%spectral_Op = para_AllOp%tab_Op(iOp)%n_Op
@@ -558,7 +559,7 @@
 
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
-        write(out_unitp,*) "====== Finalyze RPH transfo (Tnum) and ... ================="
+        write(out_unitp,*) "====== Finalize RPH transfo (Tnum) and ... ================="
         write(out_unitp,*) "====== ... EneH0 of the basis sets ========================="
         write(out_unitp,*)
       ENDIF
@@ -572,12 +573,13 @@
                           para_PES,para_ReadOp,ComOp)
       END IF
 
-
       IF(MPI_id==0) THEN
         write(out_unitp,*)
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
       ENDIF
+
+
 !=====================================================================
 !---------------------------------------------------------------------
       IF (debug) THEN

@@ -47,7 +47,9 @@
 
       IMPLICIT NONE
 
-        TYPE param_ComOp
+      PRIVATE
+
+      TYPE param_ComOp
 
           integer                       :: nb_act1              = 0
           integer                       :: nb_ba                = 0
@@ -89,9 +91,14 @@
 
           real (kind=Rkind)             :: ZPE              = huge(ONE)
           logical                       :: Set_ZPE          = .FALSE.
+      CONTAINS
+          PROCEDURE, PRIVATE, PASS(ComOp1) :: ComOp2_TO_ComOp1
+          GENERIC,   PUBLIC  :: assignment(=) => ComOp2_TO_ComOp1
+      END TYPE param_ComOp
+      !====================================================================
 
-        END TYPE param_ComOp
-        !====================================================================
+      PUBLIC :: param_ComOp,dealloc_ComOp,write_param_ComOp
+      PUBLIC :: Set_ZPE_OF_ComOp,Get_ZPE
 
       CONTAINS
 
@@ -180,6 +187,104 @@
 
       END SUBROUTINE dealloc_ComOp
 
+      SUBROUTINE ComOp2_TO_ComOp1(ComOp1,ComOp2)
+
+      TYPE (param_ComOp),           intent(in)    :: ComOp2
+      CLASS (param_ComOp),          intent(inout) :: ComOp1
+
+
+
+      character (len=*), parameter :: name_sub='ComOp2_TO_ComOp1'
+
+
+          real (kind=Rkind), pointer    :: d0Cba_ON_HAC(:,:,:) => null() ! d0Cba_ON_HAC(nb_ba,nb_ba,nb_bie)
+          real (kind=Rkind), pointer    :: Eneba_ON_HAC(:,:)   => null() ! Eneba_ON_HAC(nb_ba,nb_bie)
+          integer, pointer              :: nb_ba_ON_HAC(:)     => null() ! dimension of nb_ba_ON_HAC for a given i_h (nb_ba_ON_HAC(nb_bie))
+          real (kind=Rkind), pointer    :: d0C_bhe_ini(:,:)    => null() ! d0C_bhe_ini(nb_bie,nb_bie) for ADA method
+
+
+      ComOp1%nb_act1     = ComOp2%nb_act1
+      ComOp1%nb_ba       = ComOp2%nb_ba
+      ComOp1%nb_bi       = ComOp2%nb_bi
+      ComOp1%nb_be       = ComOp2%nb_be
+      ComOp1%nb_bie      = ComOp2%nb_bie
+
+      ComOp1%ZPE         = ComOp2%ZPE
+      ComOp1%Set_ZPE     = ComOp2%Set_ZPE
+
+
+      IF (associated(ComOp2%NormIndexBasisRep))  THEN
+        CALL alloc_array(ComOp1%NormIndexBasisRep,                      &
+                                       shape(ComOp2%NormIndexBasisRep), &
+                        "ComOp1%NormIndexBasisRep",name_sub)
+        ComOp1%NormIndexBasisRep(:) = ComOp2%NormIndexBasisRep
+      END IF
+      ComOp1%MaxNormIndexBasisRep      = ComOp2%MaxNormIndexBasisRep
+
+
+      ComOp1%ADA                       = ComOp2%ADA
+      ComOp1%contrac_ba_ON_HAC         = ComOp2%contrac_ba_ON_HAC
+      ComOp1%max_ene_ON_HAC            = ComOp2%max_ene_ON_HAC
+      ComOp1%max_nb_ba_ON_HAC          = ComOp2%max_nb_ba_ON_HAC
+
+      IF (associated(ComOp2%d0Cba_ON_HAC))  THEN
+        CALL alloc_array(ComOp1%d0Cba_ON_HAC,                           &
+                                            shape(ComOp2%d0Cba_ON_HAC), &
+                        "ComOp1%d0Cba_ON_HAC",name_sub)
+        ComOp1%d0Cba_ON_HAC(:,:,:) = ComOp2%d0Cba_ON_HAC
+      END IF
+      IF (associated(ComOp2%Eneba_ON_HAC))  THEN
+        CALL alloc_array(ComOp1%Eneba_ON_HAC,                           &
+                                            shape(ComOp2%Eneba_ON_HAC), &
+                        "ComOp1%Eneba_ON_HAC",name_sub)
+        ComOp1%Eneba_ON_HAC(:,:) = ComOp2%Eneba_ON_HAC
+      END IF
+      IF (associated(ComOp2%nb_ba_ON_HAC))  THEN
+        CALL alloc_array(ComOp1%nb_ba_ON_HAC,                           &
+                                            shape(ComOp2%nb_ba_ON_HAC), &
+                        "ComOp1%nb_ba_ON_HAC",name_sub)
+        ComOp1%nb_ba_ON_HAC(:) = ComOp2%nb_ba_ON_HAC
+      END IF
+      IF (associated(ComOp2%d0C_bhe_ini))  THEN
+        CALL alloc_array(ComOp1%d0C_bhe_ini,                           &
+                                            shape(ComOp2%d0C_bhe_ini), &
+                        "ComOp1%d0C_bhe_ini",name_sub)
+        ComOp1%d0C_bhe_ini(:,:) = ComOp2%d0C_bhe_ini
+      END IF
+
+
+        ComOp1%file_HADA       = ComOp2%file_HADA
+        ComOp1%calc_grid_HADA  = ComOp2%calc_grid_HADA
+        ComOp1%save_file_HADA  = ComOp2%save_file_HADA
+
+
+      IF (associated(ComOp2%Rvp_spec)) ComOp1%Rvp_spec => ComOp2%Rvp_spec
+      IF (associated(ComOp2%Cvp_spec)) ComOp1%Cvp_spec => ComOp2%Cvp_spec
+
+      IF (associated(ComOp2%liste_spec))  THEN
+        CALL alloc_array(ComOp1%liste_spec,shape(ComOp2%liste_spec),    &
+                        "ComOp1%liste_spec",name_sub)
+        ComOp1%liste_spec(:) = ComOp2%liste_spec
+      END IF
+      ComOp1%nb_vp_spec = ComOp2%nb_vp_spec
+
+
+      IF (allocated(ComOp2%sqRhoOVERJac)) THEN
+        CALL alloc_NParray(ComOp1%sqRhoOVERJac,shape(ComOp2%sqRhoOVERJac),&
+                          "ComOp1%sqRhoOVERJac",name_sub)
+        ComOp1%sqRhoOVERJac(:) = ComOp2%sqRhoOVERJac
+      END IF
+      IF (allocated(ComOp2%Jac)) THEN
+        CALL alloc_NParray(ComOp1%Jac,shape(ComOp2%Jac),                &
+                          "ComOp1%Jac",name_sub)
+        ComOp1%Jac(:) = ComOp2%Jac
+      END IF
+
+      ComOp1%SRep_sqRhoOVERJac = ComOp2%SRep_sqRhoOVERJac
+      ComOp1%SRep_Jac          = ComOp2%SRep_Jac
+
+      END SUBROUTINE ComOp2_TO_ComOp1
+
 !================================================================
 ! ++    write the type param_ComOp
 !================================================================
@@ -260,11 +365,10 @@
       USE mod_system
       IMPLICIT NONE
 
-      TYPE (param_ComOp), intent(inout) :: ComOp
-
-      real (kind=Rkind), intent(in), optional :: ZPE,Ene_min
-      real (kind=Rkind), intent(in), optional :: Ene(:)
-      logical, intent(in), optional :: forced
+      TYPE (param_ComOp), intent(inout)        :: ComOp
+      real (kind=Rkind),  intent(in), optional :: ZPE,Ene_min
+      real (kind=Rkind),  intent(in), optional :: Ene(:)
+      logical,            intent(in), optional :: forced
 
 
       logical :: forced_loc

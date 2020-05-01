@@ -85,7 +85,7 @@
       !     ---- TO finalize the coordinates (NM) and the KEO ----------
       !     ------------------------------------------------------------
       para_Tnum%Tana =.FALSE.
-      CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
       !-----------------------------------------------------------------
 !===========================================================
 !===========================================================

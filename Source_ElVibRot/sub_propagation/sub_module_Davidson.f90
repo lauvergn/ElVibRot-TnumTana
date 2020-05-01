@@ -313,7 +313,7 @@ CONTAINS
         CALL sub_MakeH_Davidson(it,psi(1:ndim),Hpsi(1:ndim),H,para_Davidson)
 #endif
         ndim0 = ndim
-        CALL time_perso('MakeH done')
+        !CALL time_perso('MakeH done')
 
         ! if symmetric
         CALL sub_hermitic_H(H,ndim,non_hermitic,para_H%sym_Hamil)
@@ -1947,6 +1947,7 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
                                 para_Davidson,fresidu,ndim,        &
                                 Op_Transfo,E0_Transfo,S_overlap)
  USE mod_system
+ USE mod_basis
 #if(run_MPI)
  USE mod_psi,      ONLY : param_psi,dealloc_psi,norm2_psi,renorm_psi,   &
                           norm_psi_MPI,Set_symab_OF_psiBasisRep_MPI,    &
@@ -1988,7 +1989,7 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
  !------ working parameters --------------------------------
  integer              :: i,j,j_ini,j_end,nb_added_states,ib,ndim0,iresidual
  complex (kind=Rkind) :: Overlap
- real (kind=Rkind)    :: a,Di,RS
+ real (kind=Rkind)    :: a,Di,RS,Ene0_At_ib
  TYPE (param_psi)     :: psiTemp
 
  !----- for debuging --------------------------------------------------
@@ -2037,7 +2038,7 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
      IF(MPI_id==0) psi(ndim+1) = ZERO
 
      SELECT CASE (para_Davidson%NewVec_type)
-     CASE (1) ! just the residual
+     CASE (1) ! just the residual: equivament to Lanczos
 #if(run_MPI)
        CALL MakeResidual_Davidson_j_MPI3(j,psi(ndim+1),psi,Hpsi,Ene,Vec)
 #else
@@ -2093,10 +2094,12 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
 
        ! then the scaling with respect to 1/(H0-Ene(j))
        DO ib=1,psiTemp%nb_tot
+         Ene0_At_ib = get_Ene0_AT_ib_FROM_Basis(ib,psi(ndim+1)%BasisnD, &
+                                                   psi(ndim+1)%Basis2n)
          IF (Op_transfo) THEN
-           Di = Ene(j) - ( psi(ndim+1)%BasisnD%EneH0(ib)-E0_Transfo )**2
+           Di = Ene(j) - (Ene0_At_ib-E0_Transfo)**2
          ELSE
-           Di = Ene(j) -   psi(ndim+1)%BasisnD%EneH0(ib)
+           Di = Ene(j) -  Ene0_At_ib
          END IF
          IF (abs(Di) > para_Davidson%conv_resi) THEN
            a = ONE / Di

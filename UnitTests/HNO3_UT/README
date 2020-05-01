@@ -1,0 +1,19 @@
+A) the rigid100 energy levels are different:
+- probably the calculation of the vep are different:
+   1) old one: ZPE=236.84 cm-1 459.44 cm-1
+      from the full G matrix (not sure)
+      The vep is wrong because g is wrong (G is correct).
+      version (as in the publi): ElVibRot25.70-Tnum8.30
+   1) new one: ZPE=236.48 cm-1 459.51 cm-1
+      All vep versions give the same results, because the vep is always zero (from the full or reduced G metric tensors)
+      Version >= ElVibRot47.4-Tnum22.0-Tana2.12
+
+      use vep_type=-100 to recover the error !!
+
+B) To reproduce flex200, we need to remove the vep (vep_type=0 or nrho=10)
+=> bug in the ElVibRot version (ElVibRot25.70-Tnum8.30) used for the publication (?) and also with ElVibRot47.4-Tnum22.0-Tana2.12 (?)
+Bug: when the G mectric tensor is calculated numerically, the Jacabian is not calculated. Therefore, the vep was not calculated correctly (here vep=0).
+
+
+C) The cHAC levels must be computed without openmp.
+Otherwise, the normal mode coefficients can flip from point to point.

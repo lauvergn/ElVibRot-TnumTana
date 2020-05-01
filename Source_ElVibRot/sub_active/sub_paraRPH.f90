@@ -102,6 +102,7 @@ CONTAINS
 
         CALL Write_RPHTransfo(mole%RPHTransfo)
 
+        CALL flush_perso(out_unitp)
       END IF
 
       DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
@@ -116,7 +117,6 @@ CONTAINS
                         'mole%RPHTransfo%RPHpara_AT_Qref',name_sub)
 
         CALL get_Qact0(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
-
         CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%RPHpara_AT_Qref(1),   &
                                   Qact,para_Tnum,mole,mole%RPHTransfo)
         mole%RPHTransfo%init_Qref = .TRUE.
@@ -161,6 +161,9 @@ CONTAINS
         RPHCoord_IN_OneBasis = RPHCoord_IN_OneBasis .AND. (ib <= BasisnD%nb_basis)
       END IF
 
+      write(out_unitp,*) 'RPHCoord_IN_OneBasis',RPHCoord_IN_OneBasis
+      CALL flush_perso(out_unitp)
+
       IF (RPHCoord_IN_OneBasis) THEN
         CALL Set_paraPRH_ONEBasis(mole,para_Tnum,BasisnD,ib)
       ELSE
@@ -173,8 +176,6 @@ CONTAINS
       DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
         mole%tab_Qtransfo(it)%skip_transfo = tab_skip_transfo(it)
       END DO
-
-
 !     -------------------------------------------------------
       IF (debug) THEN
         CALL Write_RPHTransfo(mole%RPHTransfo)

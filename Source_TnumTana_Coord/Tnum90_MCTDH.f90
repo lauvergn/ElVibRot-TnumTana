@@ -84,7 +84,7 @@
       !     ---- TO finalize the coordinates (NM) and the KEO ----------
       !     ------------------------------------------------------------
       CALL time_perso('Tnum90_MCTDH')
-      CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
       CALL time_perso('Tnum90_MCTDH')
 
       !-----------------------------------------------------------------

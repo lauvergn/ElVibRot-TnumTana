@@ -517,7 +517,7 @@
       character (len=Name_len) :: name1,name2
 
       integer       :: i,i_term
-      integer       :: n1,n2,n3,iqr
+      integer       :: n1,n2,n3,iqr,nb_bie
 
       logical       :: pot_cplx,calc_scalar_Op,cplx
       integer       :: JJ
@@ -541,11 +541,6 @@
          write(out_unitp,*)
        END IF
 !-----------------------------------------------------------
-
-      CALL alloc_NParray(work_bhe,(/d0MatOp%nb_bie,d0MatOp%nb_bie/),    &
-                        'work_bhe',name_sub)
-
-      work_bhe(:,:) = ZERO
 
       IF (iq == 1) THEN
         !write(out_unitp,*) 'read SH_HADA file: ',ComOp%file_HADA%name
@@ -658,14 +653,23 @@
         END IF
         read(nio,*) name1,n3
 !       write(out_unitp,*) name1,n3
-        IF (n3 /= d0MatOp%nb_bie) THEN
+        IF (n3 < d0MatOp%nb_bie) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' iq=',iq
-          write(out_unitp,*) ' nb_bie(file) /= nb_bie(data)',n3,d0MatOp%nb_bie
+          write(out_unitp,*) ' nb_bie(file) < nb_bie(data)',n3,d0MatOp%nb_bie
           write(out_unitp,*) ' Restart the calculation with Read_Grid=f'
           STOP
         END IF
+        IF (n3 > d0MatOp%nb_bie) THEN
+          write(out_unitp,*) ' WARNING in ',name_sub
+          write(out_unitp,*) ' iq=',iq
+          write(out_unitp,*) ' nb_bie(file) > nb_bie(data)',n3,d0MatOp%nb_bie
+          write(out_unitp,*) ' Restart the calculation with Read_Grid=f ?'
+        END IF
+        nb_bie = d0MatOp%nb_bie
 
+        CALL alloc_NParray(work_bhe,(/n3,n3/),'work_bhe',name_sub)
+        work_bhe(:,:) = ZERO
 
         read(nio,*) name1,w
 !       write(out_unitp,*) name1,w
@@ -731,10 +735,10 @@
 
           IF (n_OP_lect == n_OP) THEN
             IF (cplx) THEN
-              d0MatOp%Imval(:,:) = work_bhe(:,:)
+              d0MatOp%Imval(:,:) = work_bhe(1:nb_bie,1:nb_bie)
             ELSE
               i_term = d0MatOp%derive_term_TO_iterm(id1,id2)
-              d0MatOp%ReVal(:,:,i_term) = work_bhe(:,:)
+              d0MatOp%ReVal(:,:,i_term) = work_bhe(1:nb_bie,1:nb_bie)
             END IF
           END IF
 !         write(out_unitp,*) name_sub,', i_term',i_term
@@ -787,13 +791,23 @@
         END IF
         read(nio) n3
 !       write(out_unitp,*) n3,nb_bie
-        IF (n3 /= d0MatOp%nb_bie) THEN
-          write(out_unitp,*) ' ERROR in sub_reading_Mat'
+        IF (n3 < d0MatOp%nb_bie) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' iq=',iq
-          write(out_unitp,*) ' nb_bie(file) .NE. nb_bie(data)',n3,d0MatOp%nb_bie
+          write(out_unitp,*) ' nb_bie(file) < nb_bie(data)',n3,d0MatOp%nb_bie
           write(out_unitp,*) ' Restart the calculation with Read_Grid=f'
           STOP
         END IF
+        IF (n3 > d0MatOp%nb_bie) THEN
+          write(out_unitp,*) ' WARNING in ',name_sub
+          write(out_unitp,*) ' iq=',iq
+          write(out_unitp,*) ' nb_bie(file) > nb_bie(data)',n3,d0MatOp%nb_bie
+          write(out_unitp,*) ' Restart the calculation with Read_Grid=f ?'
+        END IF
+        nb_bie = d0MatOp%nb_bie
+
+        CALL alloc_NParray(work_bhe,(/n3,n3/),'work_bhe',name_sub)
+        work_bhe(:,:) = ZERO
 
         read(nio) w
 !       write(out_unitp,*) w
@@ -841,10 +855,10 @@
 
           IF (n_OP_lect == n_OP) THEN
             IF (cplx) THEN
-              d0MatOp%ImVal(:,:) = work_bhe(:,:)
+              d0MatOp%ImVal(:,:) = work_bhe(1:nb_bie,1:nb_bie)
             ELSE
               i_term = d0MatOp%derive_term_TO_iterm(id1,id2)
-              d0MatOp%ReVal(:,:,i_term) = work_bhe(:,:)
+              d0MatOp%ReVal(:,:,i_term) = work_bhe(1:nb_bie,1:nb_bie)
             END IF
           END IF
 

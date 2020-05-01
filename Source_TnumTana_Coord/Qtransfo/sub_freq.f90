@@ -235,7 +235,8 @@ MODULE mod_freq
 
 
 !     on reordonne d0c, d0c_inv et d0eh
-      CALL order_ini4(d0c,d0c_inv,d0eh,d0c_ini,nb_var,diab_freq)
+      !CALL order_ini4(d0c,d0c_inv,d0eh,d0c_ini,nb_var,diab_freq)
+      CALL order_ini5(d0c,d0c_inv,d0eh,d0c_ini,nb_var,diab_freq)
 
 
 ! ca marche si d0k n est pas diagonale
@@ -1174,10 +1175,10 @@ MODULE mod_freq
         DO i=1,n
           ! calculation of Sii
           Sii = dot_product(c_ini(:,i) , c(:,i))
+          IF (debug) write(out_unitp,*) 'Sii',i,Sii
 
           ! if Sii<0 => c(.,i)=-c(.,i) and c_inv(i,.) = -c_inv(i,.)
           IF (Sii < ZERO ) THEN
-            IF (debug) write(out_unitp,*) 'Sii',Sii
             c(:,i)     = -c(:,i)
             c_inv(i,:) = -c_inv(i,:)
           END IF
@@ -1230,6 +1231,142 @@ MODULE mod_freq
       !---------------------------------------------------------------------
 
       END SUBROUTINE order_ini4
+      SUBROUTINE order_ini5(c,c_inv,e,c_ini,n,dia_freq)
+      IMPLICIT NONE
+
+      logical       :: dia_freq
+      integer       :: n
+      real (kind=Rkind) :: c(n,n),c_ini(n,n),c_inv(n,n)
+      real (kind=Rkind) :: e(n)
+
+      integer       :: i,j,k,ind_maxi
+      real (kind=Rkind) :: Nini,Ni,de,a,Sii,Sjj,Sij,max_Si,tab_Sji(n)
+
+      !---------------------------------------------------------------------
+      character (len=*), parameter :: name_sub='order_ini5'
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      !---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) '  dia_freq',dia_freq
+        write(out_unitp,*) '  e',e
+       write(out_unitp,*) '  c'
+       CALL Write_Mat(c,out_unitp,5)
+       write(out_unitp,*) '  c_inv'
+       CALL Write_Mat(c_inv,out_unitp,5)
+        write(out_unitp,*) '  c_ini'
+        CALL Write_Mat(c_ini,out_unitp,5)
+      END IF
+!---------------------------------------------------------------------
+
+      IF ( sum(abs(c_ini)) /= ZERO ) THEN
+
+        IF (dia_freq) THEN
+
+          DO i=1,n
+
+            max_Si = ZERO
+            DO j=i,n
+              !  calculation of Sij
+              Sij = dot_product(c_ini(:,i) , c(:,j))
+              Sii = dot_product(c_ini(:,i) , c_ini(:,i))
+              Sjj = dot_product(c(:,j)     , c(:,j))
+
+              Sij = Sij/sqrt(Sii*Sjj)
+              IF ( abs(Sij) > max_Si ) THEN
+                max_Si = abs(Sij)
+                ind_maxi = j
+                de = abs(  sqrt(abs(e(i))) -sqrt(abs(e(j))) )
+              END IF
+            END DO
+            !write(out_unitp,*) 'max_Si',i,ind_maxi,max_Si
+
+            !IF (ind_maxi /= i .AND. de < TWO*ONETENTH**4) THEN
+            IF (ind_maxi /= i) THEN
+              IF (debug) write(out_unitp,*) 'permutation: max_Si',i,ind_maxi,max_Si
+
+              ! permutation of the vectors c(.,i)     and c(.,ind_maxi)
+              ! permutation of the vectors c_inv(i,.) and c_inv(ind_maxi,.)
+              ! and e(i) and e(ind_maxi)
+              a           = e(i)
+              e(i)        = e(ind_maxi)
+              e(ind_maxi) = a
+              DO k=1,n
+                a             = c(k,i)
+                c(k,i)        = c(k,ind_maxi)
+                c(k,ind_maxi) = a
+
+                a                 = c_inv(i,k)
+                c_inv(i,k)        = c_inv(ind_maxi,k)
+                c_inv(ind_maxi,k) = a
+              END DO
+            END IF
+          END DO
+        END IF
+
+        !-- phase changement -------------------------
+        DO i=1,n
+          ! calculation of Sii
+          Nini = sqrt(dot_product(c_ini(:,i) , c_ini(:,i)))
+          Ni = sqrt(dot_product(c(:,i) , c(:,i)))
+          Sii = dot_product(c_ini(:,i) , c(:,i))/(Nini*Ni)
+          IF (debug) write(out_unitp,*) 'Sii',i,Sii
+
+          ! if Sii<0 => c(.,i)=-c(.,i) and c_inv(i,.) = -c_inv(i,.)
+          IF (Sii < ZERO ) THEN
+            c(:,i)     = -c(:,i)
+            c_inv(i,:) = -c_inv(i,:)
+          END IF
+        END DO
+
+        ! check the overlap with c_ini
+        IF (dia_freq) THEN
+
+          IF (debug) write(out_unitp,*) ' Overlapp between c(:,i) and c_ini(:,i)'
+          DO i=1,n
+
+
+            max_Si = ZERO
+            DO j=1,n
+              !  calculation of Sij
+              Sij = dot_product(c_ini(:,i) , c(:,j))
+              Sii = dot_product(c_ini(:,i) , c_ini(:,i))  ! should be one
+              Sjj = dot_product(c(:,j)     , c(:,j))      ! should be one
+
+              tab_Sji(j) = Sij/sqrt(Sii*Sjj)
+
+            END DO
+            !write(out_unitp,'(a,i0,50(xf5.2))') 'Error on Sji: ',i,tab_Sji
+            tab_Sji(i) = tab_Sji(i) - ONE
+
+            IF (debug) &
+              write(out_unitp,'(a,i0,50(1x,f5.2))') 'Sji and Error on Sji: ',i,tab_Sji(i)+ONE,maxval(abs(tab_Sji))
+
+          END DO
+        END IF
+
+
+
+        !IF (Grid_maxth == 1) c_ini(:,:) = c(:,:)   ! omp_get_max_threads
+        c_ini(:,:) = c(:,:)
+      ELSE
+        IF (debug) write(out_unitp,*) 'Initialization of C_ini in ',name_sub
+        c_ini(:,:) = c(:,:)
+      END IF
+
+      !---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) '  e',e
+        write(out_unitp,*) '  new c'
+        CALL Write_Mat(c,out_unitp,5)
+        write(out_unitp,*) '  new c_inv'
+        CALL Write_Mat(c_inv,out_unitp,5)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+      !---------------------------------------------------------------------
+
+      END SUBROUTINE order_ini5
 !=====================================================================
 !
 ! ++   order the vectors cf(.,i) such that cf(.,i) is "closed" to ci(.,i)

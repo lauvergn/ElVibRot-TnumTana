@@ -1,0 +1,49 @@
+#!/bin/bash
+
+file=$1
+Oldfile=$2
+col=$3
+
+fNew=TempNew
+fOld=TempOld
+
+#echo $fNew $fOld
+
+awk '/lev:/ {if ($3 == 1) print $0}' $file | awk '{if (NR % 2 == 1 && NR == 1) print $5 ; if (NR % 2 == 1 && NR > 1) print $6}' > $fNew
+#awk '/lev:/ {if ($3 == 1) print $0}' $file | awk '{if (NR % 2 == 1) {if (NR == 1) print $5} else {print $6}}'
+
+#grep "lev0:    1"  $file           | awk '{print $5}' >   $fNew
+#grep "lev0:    3"  $file           | awk '{print $6}' >>  $fNew
+#grep "lev0:    5"  $file           | awk '{print $6}' >>  $fNew
+#grep "lev0:    7"  $file           | awk '{print $6}' >>  $fNew
+#grep "lev0:    9"  $file           | awk '{print $6}' >>  $fNew
+tail -5 $Oldfile | awk -v col=$col '{print $col}' >  $fOld
+
+
+nb_li=`wc $fNew | awk '{print $1}'`
+
+#echo $nb_li
+
+
+CompFile()
+{
+n1=`head -$1 $fNew | tail -1`
+n2=`head -$1 $fOld | tail -1`
+d=$2
+#echo $n1 $n2 $d >> tempCompFile
+echo $n1 $n2 $d | LANG=C awk '{x=sqrt(($1-$2)^2) ; if (x > $3) {print x} else {print $3}}'
+}
+
+d=0.0
+for li in $(seq 1 1 $nb_li)
+do
+ d=`CompFile $li $d`
+ #echo $li $d
+done
+
+#echo For \"$file\", the largest relative difference between constants: $d
+echo The largest relative difference between levels of $file is : $d
+echo $d | LANG=C awk '{epsi=0.01 ; if ($1 > epsi) {print "    ERROR, relative diff > " epsi} else {print "    No PROBLEM, relative diff <= " epsi}}'
+
+
+ rm $fNew $fOld

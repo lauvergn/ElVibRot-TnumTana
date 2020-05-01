@@ -397,7 +397,7 @@
       integer       :: i
 
       NAMELIST /basis_nD/iQact,iQsym,iQdyn,name,                        &
-                         nb,nq,nbc,nqc,contrac,contrac_analysis,cte,cplx,   &
+                        nb,nq,nbc,nqc,contrac,contrac_analysis,cte,cplx,&
                  auto_basis,A,B,Q0,scaleQ,opt_A,opt_B,opt_Q0,opt_scaleQ,&
                          symab,index_symab,                             &
                          L_TO_n_type,                                   &
@@ -408,12 +408,12 @@
                          L1_SparseBasis,L2_SparseBasis,                 &
                          SparseGrid,SparseGrid_type,With_L,             &
                          SparseGrid_With_Cuba,SparseGrid_With_Smolyak,  &
-                         SparseGrid_With_DP, &
+                         SparseGrid_With_DP,                            &
                          Nested,nq_max_Nested,                          &
                          Type_OF_nDindB,Norm_OF_nDindB,weight_OF_nDindB,&
-                         nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB,&
+                       nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB,&
                          MaxCoupling_OF_nDindB,nDinit_OF_nDindB,contrac_WITH_nDindB,   &
-                         packed,dnBBRep,                             &
+                         packed,dnBBRep,                                &
                          name_contrac_file,auto_contrac,                &
                          make_cubature,restart_make_cubature,           &
                          POGridRep_polyortho,POGridRep,nb_basis,        &
