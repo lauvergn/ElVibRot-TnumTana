@@ -359,9 +359,8 @@ MODULE mod_f2f2Vep
 
 !     - for memory ---------------------------------------------
       TYPE(Type_dnS)    :: dnJac,dnrho
-
-      TYPE(Type_dnMat) :: dng,dnGG
-      integer          :: calc_g,calc_GG
+      TYPE(Type_dnMat)  :: dng,dnGG
+      integer           :: calc_g,calc_GG
 !     ----------------------------------------------------------
 
       integer :: nderiv
@@ -464,7 +463,6 @@ MODULE mod_f2f2Vep
 !     ------------------------------------------------------------
 !     -- 2d derivative terms -------------------------------------
       CALL sub_H2def(Tdef2,dnGG%d0,mole%ndimG,mole%nb_act)
-
 !     ------------------------------------------------------------
 
 !     ------------------------------------------------------------
@@ -473,21 +471,14 @@ MODULE mod_f2f2Vep
 !     ------------------------------------------------------------
 
 !     ------------------------------------------------------------
-!     -- extra potential term ------------------------------------
-      IF ( (para_Tnum%nrho == 1 .OR. para_Tnum%nrho == 2) .AND.         &
-                                     .NOT. para_Tnum%num_GG) THEN
-        CALL sub_vep_new(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,         &
-                     dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
-      ELSE
-        vep = ZERO
-      END IF
+!     -- extra potential term (is always zero for the taylor expansion)-
+      vep = ZERO
 !     ------------------------------------------------------------
 
       IF (.NOT. mole%Without_Rot) THEN
         CALL sub_Tcor2(Tcor2,dnGG%d0,mole%ndimG,mole%nb_act)
         CALL sub_Trot(Trot,dnGG%d0,mole%ndimG,mole%nb_act)
-        CALL sub_Tcor1(Tcor1,dnGG%d0,dnGG%d1,dnrho%d1,                  &
-                       mole%ndimG,mole%nb_act)
+        CALL sub_Tcor1(Tcor1,dnGG%d0,dnGG%d1,dnrho%d1,mole%ndimG,mole%nb_act)
       END IF
 
       CALL dealloc_dnSVM(dnJac)

@@ -380,16 +380,17 @@ CONTAINS
         IF (debug) write(out_unitp,*) 'selec',it,ndim,ndim0
         IF (debug) CALL flush_perso(out_unitp)
     
-        CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,min_Ene,para_H%para_PES%min_pot,  &
-                                   psi,psi0,Vec,Vec0,para_Davidson,it,.TRUE.)
+        CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,min_Ene,  &
+                                 para_H%para_ReadOp%min_pot,            &
+                                 psi,psi0,Vec,Vec0,para_Davidson,it,.TRUE.)
           !CALL time_perso('projec done')
 
           IF (para_H%para_ReadOp%Op_Transfo) THEN
-            CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
+            CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
           ELSE
-            CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
+            CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
           END IF
-          ZPE = para_H%ComOp%ZPE
+          ZPE = para_H%ZPE
 
           IF (debug) write(out_unitp,*) 'selec',it,ndim,ndim0
           IF (debug) CALL flush_perso(out_unitp)
@@ -520,15 +521,15 @@ CONTAINS
           IF (save_WP) THEN
             IF(MPI_id==0) THEN
             CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,        &
-                                     min_Ene,para_H%para_PES%min_pot,     &
+                                     min_Ene,para_H%para_ReadOp%min_pot,  &
                                      psi,psi0,Vec,Vec0,para_Davidson,it,.TRUE.)
 
             IF (para_H%para_ReadOp%Op_Transfo) THEN
-              CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
+              CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
             ELSE
-              CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
+              CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
             END IF
-            ZPE = para_H%ComOp%ZPE
+            ZPE = para_H%ZPE
             !CALL time_perso('projec done')
 
             write(out_unitp,*) 'save psi(:)',it,ndim,ndim0
@@ -597,11 +598,11 @@ CONTAINS
             END IF
           ELSE
   !          IF (para_H%para_ReadOp%Op_Transfo) THEN
-  !            CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
+  !            CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
   !          ELSE
-  !            CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
+  !            CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
   !          END IF
-  !          ZPE = para_H%ComOp%ZPE
+  !          ZPE = para_H%ZPE
   !
   !          CALL sub_save_LCpsi(psi,Vec,ndim0,nb_diago,para_propa%file_WP)
   !          CALL time_perso('save_LCpsi done')
@@ -667,9 +668,9 @@ CONTAINS
       CALL file_close(Log_file)
 
       IF (.NOT. Hmin_OR_Hmax) THEN
-        CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:nb_diago),             &
-                              Ene_min=min_Ene,forced=.TRUE.)
-        ZPE = para_H%ComOp%ZPE
+        CALL Set_ZPE_OF_Op(para_H,Ene(1:nb_diago),                      &
+                                          Ene_min=min_Ene,forced=.TRUE.)
+        ZPE = para_H%ZPE
       END IF
 
       DO j=1,nb_diago

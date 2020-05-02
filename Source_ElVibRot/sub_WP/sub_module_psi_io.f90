@@ -611,7 +611,7 @@
 !-----------------------------------------------------------
       i_bguess = 1
       IF (lformated_loc) THEN
-        IF (WP0%ComOp%contrac_ba_ON_HAC) THEN
+        IF (WP0%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
           DO
             read(nioWP,'(a)',iostat=Rerr) name_end
             IF (index(name_end,"end") > 0) EXIT
@@ -649,7 +649,7 @@
             i_b = ind_contractcHAC(1)
 
 
-            basis_is_OK = i_b <= WP0%ComOp%nb_ba_ON_HAC(i_h)
+            basis_is_OK = i_b <= WP0%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i_h)
             IF (debug) write(out_unitp,*) 'i_b,i_h,i_e',i_b,i_h,i_e
 
             IF (.NOT. basis_is_OK) THEN
@@ -659,7 +659,7 @@
             END IF
             IF (.NOT. basis_is_OK) CYCLE
 
-            i_bhe = sum(WP0%ComOp%nb_ba_ON_HAC(1:i_h-1)) + i_b
+            i_bhe = sum(WP0%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i_h-1)) + i_b
             IF (i_bhe > WP0%nb_tot) STOP 'ERROR i_bhe>nb_tot'
 
             IF (debug) write(out_unitp,*) 'i_bhe,i_b,i_h,i_e,a,b',i_bhe,ind_contractcHAC(:),a,b
@@ -868,12 +868,12 @@
         END IF
  !-----------------------------------------------------------
  !-----------------------------------------------------------
- ELSE IF (WP0%ComOp%contrac_ba_ON_HAC) THEN
+ ELSE IF (WP0%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
    IF (lformated_loc) THEN
         DO i_e=1,WP0%nb_be
         DO i_h=1,WP0%nb_bi
-           i_bhe = sum(WP0%ComOp%nb_ba_ON_HAC(1:i_h-1))
-           DO i_b=1,WP0%ComOp%nb_ba_ON_HAC(i_h)
+           i_bhe = sum(WP0%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i_h-1))
+           DO i_b=1,WP0%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i_h)
              i_bhe = i_bhe + 1
              IF (WP0%cplx) THEN
                a = real(WP0%CvecB(i_bhe),kind=Rkind)
@@ -891,8 +891,8 @@
     ELSE
         DO i_e=1,WP0%nb_be
         DO i_h=1,WP0%nb_bi
-           i_bhe = sum(WP0%ComOp%nb_ba_ON_HAC(1:i_h-1))
-           DO i_b=1,WP0%ComOp%nb_ba_ON_HAC(i_h)
+           i_bhe = sum(WP0%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i_h-1))
+           DO i_b=1,WP0%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i_h)
              i_bhe = i_bhe + 1
              IF (WP0%cplx) THEN
                a = real(WP0%CvecB(i_bhe),kind=Rkind)
@@ -974,7 +974,7 @@ IF (nioPsi == 5 .OR. nioPsi == in_unitp) lformated_loc = .TRUE.
 SELECT CASE (version)
 CASE(0)
   IF (lformated_loc) THEN
-    IF (Psi%ComOp%contrac_ba_ON_HAC) THEN
+    IF (Psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
       DO
         read(nioPsi,'(a)',iostat=Rerr) name_end
         IF (index(name_end,"end") > 0) EXIT
@@ -1012,7 +1012,7 @@ CASE(0)
         i_b = ind_contractcHAC(1)
 
 
-        basis_is_OK = i_b <= Psi%ComOp%nb_ba_ON_HAC(i_h)
+        basis_is_OK = i_b <= Psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i_h)
         IF (debug) write(out_unitp,*) 'i_b,i_h,i_e',i_b,i_h,i_e
 
         IF (.NOT. basis_is_OK) THEN
@@ -1022,7 +1022,7 @@ CASE(0)
         END IF
         IF (.NOT. basis_is_OK) CYCLE
 
-        i_bhe = sum(Psi%ComOp%nb_ba_ON_HAC(1:i_h-1)) + i_b
+        i_bhe = sum(Psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i_h-1)) + i_b
         IF (i_bhe > Psi%nb_tot) STOP 'ERROR i_bhe>nb_tot'
 
         IF (debug) write(out_unitp,*) 'i_bhe,i_b,i_h,i_e,a,b',i_bhe,ind_contractcHAC(:),a,b
@@ -1567,12 +1567,12 @@ CASE(1)
       END DO
    END IF
 
-  ELSE IF (Psi%ComOp%contrac_ba_ON_HAC) THEN
+  ELSE IF (Psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
     IF (lformated_loc) THEN
         DO i_e=1,Psi%nb_be
         DO i_h=1,Psi%nb_bi
-           i_bhe = sum(Psi%ComOp%nb_ba_ON_HAC(1:i_h-1))
-           DO i_b=1,Psi%ComOp%nb_ba_ON_HAC(i_h)
+           i_bhe = sum(Psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i_h-1))
+           DO i_b=1,Psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i_h)
              i_bhe = i_bhe + 1
              write(nioPsi,*) i_b,i_h,i_e
            END DO
@@ -1581,8 +1581,8 @@ CASE(1)
     ELSE
         DO i_e=1,Psi%nb_be
         DO i_h=1,Psi%nb_bi
-           i_bhe = sum(Psi%ComOp%nb_ba_ON_HAC(1:i_h-1))
-           DO i_b=1,Psi%ComOp%nb_ba_ON_HAC(i_h)
+           i_bhe = sum(Psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i_h-1))
+           DO i_b=1,Psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i_h)
              i_bhe = i_bhe + 1
              write(nioPsi) i_b,i_h,i_e
            END DO
@@ -1700,12 +1700,12 @@ CASE(0)
       !write(nioPsi) 'end wp ',ipsi
    END IF
 
-  ELSE IF (Psi%ComOp%contrac_ba_ON_HAC) THEN
+  ELSE IF (Psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
     IF (lformated_loc) THEN
         DO i_e=1,Psi%nb_be
         DO i_h=1,Psi%nb_bi
-           i_bhe = sum(Psi%ComOp%nb_ba_ON_HAC(1:i_h-1))
-           DO i_b=1,Psi%ComOp%nb_ba_ON_HAC(i_h)
+           i_bhe = sum(Psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i_h-1))
+           DO i_b=1,Psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i_h)
              i_bhe = i_bhe + 1
              IF (Psi%cplx) THEN
                a = real(Psi%CvecB(i_bhe),kind=Rkind)
@@ -1723,8 +1723,8 @@ CASE(0)
     ELSE
         DO i_e=1,Psi%nb_be
         DO i_h=1,Psi%nb_bi
-           i_bhe = sum(Psi%ComOp%nb_ba_ON_HAC(1:i_h-1))
-           DO i_b=1,Psi%ComOp%nb_ba_ON_HAC(i_h)
+           i_bhe = sum(Psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i_h-1))
+           DO i_b=1,Psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i_h)
              i_bhe = i_bhe + 1
              IF (Psi%cplx) THEN
                a = real(Psi%CvecB(i_bhe),kind=Rkind)

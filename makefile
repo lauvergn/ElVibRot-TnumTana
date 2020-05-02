@@ -16,7 +16,7 @@ MPICORE = gfortran
 debug_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -33,7 +33,7 @@ ARPACK = 0
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
-LAPACK = 0
+LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
 QML = 0
 #
@@ -647,7 +647,6 @@ Obj_module =  \
  $(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o $(OBJ)/sub_module_basis_BtoG_GtoB.o \
  $(OBJ)/sub_module_basis.o \
 $(OBJ)/sub_module_BasisMakeGrid.o \
- $(OBJ)/sub_module_ComOp.o \
  $(OBJ)/sub_module_poly.o $(OBJ)/sub_module_GWP.o \
  $(OBJ)/sub_module_cart.o
 
@@ -1222,8 +1221,6 @@ $(OBJ)/QMRPACK_lib.o:$(DIRCRP)/QMRPACK_lib.f
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/QMRPACK_lib.f
 #===================================================================================
 #Operator ....
-$(OBJ)/sub_module_ComOp.o:$(DIROp)/sub_module_ComOp.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_ComOp.f90
 $(OBJ)/sub_module_OpGrid.o:$(DIROp)/sub_module_OpGrid.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIROp)/sub_module_OpGrid.f90
 $(OBJ)/sub_module_ReadOp.o:$(DIROp)/sub_module_ReadOp.f90

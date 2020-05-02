@@ -322,8 +322,8 @@ END SUBROUTINE Set_symab_OF_psiBasisRep_MPI
         IF (.NOT. With_Grid_loc) THEN
           i_baie=1
           f_baie=psi1%nb_tot
-          IF (psi1%nb_tot == psi1%nb_baie .AND.  locChannel_ie > 0 .AND.  &
-                                  locChannel_ie <= psi1%ComOp%nb_bie) THEN
+          IF (psi1%nb_tot == psi1%nb_baie .AND.  locChannel_ie > 0 .AND.&
+                            locChannel_ie <= psi1%nb_bi*psi1%nb_be) THEN
             i_baie = 1 + (locChannel_ie-1)*psi1%nb_ba
             f_baie = i_baie-1 + psi1%nb_ba
           END IF
@@ -2039,8 +2039,8 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
   IF(.NOT. With_Grid_loc) THEN
     i_baie=1
     f_baie=psi1%nb_tot
-    IF(psi1%nb_tot==psi1%nb_baie .AND.  locChannel_ie>0 .AND.                          &
-       locChannel_ie <= psi1%ComOp%nb_bie) THEN
+    IF(psi1%nb_tot==psi1%nb_baie .AND.  locChannel_ie>0 .AND.           &
+       locChannel_ie <= psi1%nb_bi*psi1%nb_be) THEN
       i_baie = 1 + (locChannel_ie-1)*psi1%nb_ba
       f_baie = i_baie-1 + psi1%nb_ba
     END IF
@@ -2223,7 +2223,7 @@ END SUBROUTINE Overlap_psipsi_MPI3
         i_baie=1
         f_baie=psi1%nb_tot
         IF (psi1%nb_tot == psi1%nb_baie .AND.  locChannel_ie > 0 .AND.  &
-                                locChannel_ie <= psi1%ComOp%nb_bie) THEN
+                                locChannel_ie <= psi1%nb_bi*psi1%nb_be) THEN
           i_baie = 1 + (locChannel_ie-1)*psi1%nb_ba
           f_baie = i_baie-1 + psi1%nb_ba
         END IF

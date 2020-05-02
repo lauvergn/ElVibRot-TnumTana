@@ -36,7 +36,7 @@
       TYPE (constant)  :: const_phys
       TYPE (zmatrix)   :: mole
       TYPE (Tnum)      :: para_Tnum
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
 
       real (kind=Rkind) :: vep,rho
       real (kind=Rkind), pointer :: Tdef2(:,:)=>null()
@@ -114,7 +114,7 @@
       !-----------------------------------------------------------------
       !     ---- TO finalize the coordinates (NM) and the KEO ----------
       !     ------------------------------------------------------------
-      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
       !-----------------------------------------------------------------
 !=======================================================================
 !=======================================================================
@@ -166,7 +166,7 @@
 
 
 
-      para_PES%calc_scalar_Op = .FALSE.
+      PrimOp%calc_scalar_Op = .FALSE.
       allocate(Tab_dnMatOp(1))
       CALL Init_Tab_OF_dnMatOp(Tab_dnMatOp,nb_Qact=mole%nb_act,nb_ie=1,nderiv=2)
       CALL alloc_NParray(hess,(/ mole%nb_act,mole%nb_act /),'hess',name_sub)
@@ -180,7 +180,7 @@
         CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=0)
         k(:,:) = k(:,:) + dnGG%d0(1:mole%nb_act,1:mole%nb_act)
 
-        CALL get_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv=2)
+        CALL get_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,PrimOp,nderiv=2)
         hess(:,:) = hess(:,:) + Tab_dnMatOp(1)%tab_dnMatOp(1,1,1)%d2(:,:)
 
       END DO
@@ -223,7 +223,7 @@
         CALL alloc_array(freq,(/ mole%nb_act /),"freq",name_sub)
 
 
-        CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES)
+        CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,PrimOp)
 
         auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
         auTOeV     = get_Conv_au_TO_unit('E','eV')

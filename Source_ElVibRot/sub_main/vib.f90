@@ -75,10 +75,7 @@
       logical   test_mem
 
 !----- physical and mathematical constants ---------------------------------------------
-      TYPE (constant) :: const_phys
-
-!----- On the fly parameters (at this time for gaussian) -------------------------------
-      TYPE (param_OTF) :: para_OTF
+      TYPE (constant)  :: const_phys
 
 !----- for the CoordType and Tnum --------------------------------------------------------
       TYPE (CoordType) :: mole
@@ -89,7 +86,6 @@
       TYPE (param_Op),    pointer :: para_H      => null()
       TYPE (param_Op),    pointer :: para_S      => null()
       TYPE (param_Op),    pointer :: para_Dip(:) => null()
-      TYPE (param_ComOp)          :: ComOp
       integer                     :: iOp
       real (kind=Rkind)           :: max_Sii,max_Sij
 
@@ -104,23 +100,20 @@
       complex (kind=Rkind)        :: s,c
 
 !----- for Davidson diagonalization ----------------------------------------------------
-      integer                     :: nb_diago
-      integer                     :: max_diago
-      TYPE (param_psi),pointer    :: Tab_Psi(:) => null()
+      integer                        :: nb_diago
+      integer                        :: max_diago
+      TYPE (param_psi), pointer      :: Tab_Psi(:) => null()
       real (kind=Rkind),allocatable  :: Ene0(:)
-
-!----- variables pour la namelist minimum ----------------------------------------------
-      TYPE (param_PES) :: para_PES
 
 !----- variables for the namelist actives ----------------------------------------------
 !----- for the basis set ---------------------------------------------------------------
       TYPE (param_AllBasis) :: para_AllBasis
-      TYPE (basis) :: BasisnD_Save
 
       integer :: Get_nbPERsym_FROM_SymAbelianOFAllBasis ! function
       
 !----- variables divers ----------------------------------------------------------------
-      integer           :: i,ip,i_baie,f_baie,id,nb_ScalOp,nb_baie_sym
+      integer           :: i,ip,i_baie,f_baie,id,nb_ScalOp
+      integer           :: nb_baie_sym,nb_bi,nb_be,nb_ba,nb_bie
       real (kind=Rkind) :: T,DE,Ep,Em,Q,fac,zpe,pop
       logical           :: print_mat
       integer           :: err
@@ -155,10 +148,8 @@
   
       !CALL system_mem_usage(memory_RSS,'before ini_data')
 
-      CALL     ini_data(const_phys,para_OTF,                            &
-                        para_Tnum,mole,                                 &
-                        para_AllBasis,BasisnD_Save,                     &
-                        para_PES,ComOp,para_AllOp,                      &
+      CALL     ini_data(const_phys,para_Tnum,mole,                      &
+                        para_AllBasis,para_AllOp,                       &
                         para_ana,para_intensity,intensity_only,         &
                         para_propa)
 
@@ -167,7 +158,6 @@
 !#endif
       !CALL system_mem_usage(memory_RSS,'after ini_data')
       para_H => para_AllOp%tab_Op(1)
-      CALL dealloc_Basis(BasisnD_Save)
 
       IF(MPI_id==0) THEN
         write(out_unitp,*)
@@ -236,7 +226,7 @@
 !---------------------------------------------------------------------------------------
 !      contraction of the active basis set with HADA basis 
 !---------------------------------------------------------------------------------------
-      IF (para_H%ComOp%contrac_ba_ON_HAC .AND. para_H%nb_bi>1) THEN
+      IF (para_H%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC .AND. para_H%nb_bi>1) THEN
         IF(MPI_id==0) THEN
           write(out_unitp,*)
           write(out_unitp,*) '================================================='
@@ -259,8 +249,8 @@
           write(out_unitp,*)
         ENDIF
 
-        para_AllOp%tab_Op(:)%nb_tot     =                               &
-                   sum(para_H%ComOp%nb_ba_ON_HAC(:)) * para_PES%nb_elec
+        para_AllOp%tab_Op(:)%nb_tot = para_H%para_ReadOp%nb_elec *      &
+                   sum(para_H%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(:))
         para_AllOp%tab_Op(:)%nb_tot_ini = para_AllOp%tab_Op(:)%nb_tot
       END IF
 
@@ -668,7 +658,9 @@
           ELSE
             nb_baie_sym = Get_nbPERsym_FROM_SymAbelianOFAllBasis(       &
                            para_AllBasis,para_propa%para_Davidson%symab)
-            nb_baie_sym = nb_baie_sym * ComOp%nb_bie
+            nb_be = para_H%para_ReadOp%nb_elec
+            nb_bi = get_nb_FROM_basis(para_AllBasis%Basis2n)
+            nb_baie_sym = nb_baie_sym * nb_bi*nb_be
             max_diago = min(max_diago,para_H%nb_tot,nb_baie_sym)
           END IF
           para_propa%para_Davidson%max_WP = max_diago
@@ -757,7 +749,7 @@
                 Tab_psi(i)%IndAvOp     = para_H%n_Op  ! it should be 0
                 Tab_psi(i)%convAvOp    = .TRUE.
               END DO
-              para_H%ComOp%Cvp_spec    => para_H%Cvp
+              para_H%para_AllBasis%basis_ext%Cvp_spec    => para_H%Cvp
             ENDIF
           ELSE
             IF(MPI_id==0) THEN
@@ -780,13 +772,14 @@
                 Tab_psi(i)%convAvOp    = .TRUE.
                 CALL Set_symab_OF_psiBasisRep(Tab_psi(i))
               END DO
-              para_H%ComOp%Rvp_spec    => para_H%Rvp
+              para_H%para_AllBasis%basis_ext%Rvp_spec    => para_H%Rvp
             ENDIF ! for MPI_id=0
           END IF ! for para_H%cplx
-          para_H%ComOp%nb_vp_spec  = nb_diago
+          para_H%para_AllBasis%basis_ext%nb_vp_spec  = nb_diago
 
-          CALL alloc_array(ComOp%liste_spec,(/nb_diago/),"ComOp%liste_spec","vib")
-          ComOp%liste_spec(:) = (/ (i,i=1,nb_diago) /)
+          CALL alloc_NParray(para_AllBasis%basis_ext%liste_spec,        &
+                 [nb_diago],"para_AllBasis%basis_ext%liste_spec","vib")
+          para_AllBasis%basis_ext%liste_spec(:) = [ (i,i=1,nb_diago) ]
 
           !CALL sub_analyse(Tab_Psi,nb_diago,para_H,para_ana,             &
           !                 para_intensity,para_AllOp,const_phys)
@@ -984,11 +977,11 @@
           write(out_unitp,*) ' VIB: BEGINNING sub_AnalysePsy_ScalOp',para_H%nb_tot,para_ana%max_ana
           CALL time_perso('sub_AnalysePsy_ScalOp')
           write(out_unitp,*)
-          write(out_unitp,*) 'para_PES%nb_scalar_Op',para_PES%nb_scalar_Op
+          write(out_unitp,*) 'nb_scalar_Op',para_H%para_ReadOp%nb_scalar_Op
         ENDIF
         
         iOp = 2
-        nb_ScalOp = para_PES%nb_scalar_Op
+        nb_ScalOp = para_H%para_ReadOp%nb_scalar_Op
         para_Dip => para_AllOp%tab_Op(iOp+1:iOp+nb_ScalOp)
         CALL sub_AnalysePsy_ScalOp(para_Dip,nb_ScalOp,para_H,para_ana%max_ana)
 
@@ -1039,7 +1032,6 @@
 !=====================================================================
 
       CALL dealloc_table_at(const_phys%mendeleev)
-      !CALL dealloc_param_OTF(para_OTF)
 
       CALL dealloc_CoordType(mole)
       IF (associated(para_Tnum%Gref)) THEN
@@ -1047,7 +1039,6 @@
       END IF
       !CALL dealloc_Tnum(para_Tnum)
 
-      CALL dealloc_ComOp(ComOp)
       CALL dealloc_para_AllOp(para_AllOp)
       CALL dealloc_para_ana(para_ana)
       CALL dealloc_param_propa(para_propa)
@@ -1109,15 +1100,11 @@
 !----- physical and mathematical constants ---------------------------
       TYPE (constant) :: const_phys
 
-!----- On the fly parameters (at this time for gaussian) -------------
-      TYPE (param_OTF) :: para_OTF
-
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum)      :: para_Tnum
 
 !----- variables for the construction of H ----------------------------
-      TYPE (param_ComOp)  :: ComOp
       TYPE (param_AllOp), target  :: para_AllOp
 
 
@@ -1129,14 +1116,9 @@
       TYPE (param_propa) :: para_propa
       TYPE (param_psi)   :: WP0,WP1,WP3
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
-
-
 !----- variables for the namelist actives ----------------------------
 !----- for the basis set ----------------------------------------------
       TYPE (param_AllBasis), target :: para_AllBasis
-      TYPE (basis) :: BasisnD_Save
 
 !----- variables divers ----------------------------------------------
        integer           :: i,ibb,nb_it = 1
@@ -1156,10 +1138,8 @@
       CALL time_perso('ini_data')
       write(out_unitp,*)
       write(out_unitp,*)
-      CALL     ini_data(const_phys,para_OTF,                            &
-                        para_Tnum,mole,                                 &
-                        para_AllBasis,BasisnD_Save,                     &
-                        para_PES,ComOp,para_AllOp,                      &
+      CALL     ini_data(const_phys,para_Tnum,mole,                      &
+                        para_AllBasis,para_AllOp,                       &
                         para_ana,para_intensity,intensity_only,         &
                         para_propa)
 
@@ -1275,9 +1255,6 @@ para_mem%mem_debug = .FALSE.
 !----- physical and mathematical constants ---------------------------
       TYPE (constant) :: const_phys
 
-!----- On the fly parameters (at this time for gaussian) -------------
-      TYPE (param_OTF) :: para_OTF
-
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
@@ -1288,7 +1265,6 @@ para_mem%mem_debug = .FALSE.
       TYPE (param_Op), pointer    :: para_H      => null()
       TYPE (param_Op), pointer    :: para_S      => null()
       TYPE (param_Op), pointer    :: para_Dip(:) => null()
-      TYPE (param_ComOp)          :: ComOp
       integer                     :: iOp
       real (kind=Rkind)           :: max_Sii,max_Sij
 
@@ -1306,14 +1282,9 @@ para_mem%mem_debug = .FALSE.
       TYPE (param_psi),pointer   :: Tab_OpPsi(:) => null()
       real (kind=Rkind),allocatable  :: Ene0(:)
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
-
-
 !----- variables for the namelist actives ----------------------------
 !----- for the basis set ----------------------------------------------
       TYPE (param_AllBasis) :: para_AllBasis
-      TYPE (basis) :: BasisnD_Save
 
       integer :: Get_nbPERsym_FROM_SymAbelianOFAllBasis ! function
 !----- variables divers ----------------------------------------------
@@ -1355,15 +1326,12 @@ para_mem%mem_debug = .FALSE.
         write(out_unitp,*)
         write(out_unitp,*)
       ENDIF
-      CALL     ini_data(const_phys,para_OTF,                            &
-                        para_Tnum,mole,                                 &
-                        para_AllBasis,BasisnD_Save,                     &
-                        para_PES,ComOp,para_AllOp,                      &
+      CALL     ini_data(const_phys,para_Tnum,mole,                      &
+                        para_AllBasis,para_AllOp,                       &
                         para_ana,para_intensity,intensity_only,         &
                         para_propa)
 
       para_H => para_AllOp%tab_Op(1)
-      CALL dealloc_Basis(BasisnD_Save)
 
       IF(MPI_id==0) THEN
         write(out_unitp,*)
@@ -1424,7 +1392,7 @@ para_mem%mem_debug = .FALSE.
 !===== contraction of the active basis set with HADA basis ===========
 !=====================================================================
 
-      IF (para_H%ComOp%contrac_ba_ON_HAC .AND. para_H%nb_bi>1) THEN
+      IF (para_H%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC .AND. para_H%nb_bi>1) THEN
 
         write(out_unitp,*)
         write(out_unitp,*) '================================================='
@@ -1445,7 +1413,8 @@ para_mem%mem_debug = .FALSE.
         write(out_unitp,*)
 
         para_AllOp%tab_Op(:)%nb_tot     =                               &
-                   sum(para_H%ComOp%nb_ba_ON_HAC(:)) * para_PES%nb_elec
+                sum(para_H%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(:)) * &
+                para_H%para_ReadOp%nb_elec
         para_AllOp%tab_Op(:)%nb_tot_ini = para_AllOp%tab_Op(:)%nb_tot
       END IF
 
@@ -1552,7 +1521,6 @@ para_mem%mem_debug = .FALSE.
 
 
       CALL dealloc_table_at(const_phys%mendeleev)
-      !CALL dealloc_param_OTF(para_OTF)
 
       CALL dealloc_CoordType(mole)
       IF (associated(para_Tnum%Gref)) THEN
@@ -1560,7 +1528,6 @@ para_mem%mem_debug = .FALSE.
       END IF
       !CALL dealloc_Tnum(para_Tnum)
 
-      CALL dealloc_ComOp(ComOp)
       CALL dealloc_para_AllOp(para_AllOp)
 
       CALL dealloc_para_ana(para_ana)
@@ -1729,17 +1696,13 @@ END SUBROUTINE Tune_SG4threads_HPsi
 !----- physical and mathematical constants ---------------------------
       TYPE (constant) :: const_phys
 
-!----- On the fly parameters (at this time for gaussian) -------------
-      TYPE (param_OTF) :: para_OTF
-
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType) :: mole
       TYPE (Tnum)      :: para_Tnum
 
 !----- variables for the construction of H ----------------------------
-      TYPE (param_ComOp)  :: ComOp
       TYPE (param_AllOp), target  :: para_AllOp
-      TYPE (param_Op), pointer    :: para_H      => null()
+      TYPE (param_Op),    pointer :: para_H      => null()
 
 
 
@@ -1754,14 +1717,9 @@ END SUBROUTINE Tune_SG4threads_HPsi
       TYPE (param_psi)              :: WP0
       integer                       :: nioWP
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
-
-
 !----- variables for the namelist actives ----------------------------
 !----- for the basis set ----------------------------------------------
       TYPE (param_AllBasis) :: para_AllBasis
-      TYPE (basis) :: BasisnD_Save
       integer :: Get_nbPERsym_FROM_SymAbelianOFAllBasis ! function
 
 !----- variables divers ----------------------------------------------
@@ -1781,10 +1739,8 @@ END SUBROUTINE Tune_SG4threads_HPsi
       CALL time_perso('ini_data')
       write(out_unitp,*)
       write(out_unitp,*)
-      CALL     ini_data(const_phys,para_OTF,                            &
-                        para_Tnum,mole,                                 &
-                        para_AllBasis,BasisnD_Save,                     &
-                        para_PES,ComOp,para_AllOp,                      &
+      CALL     ini_data(const_phys,para_Tnum,mole,                      &
+                        para_AllBasis,para_AllOp,                       &
                         para_ana,para_intensity,intensity_only,         &
                         para_propa)
 
@@ -1792,7 +1748,7 @@ END SUBROUTINE Tune_SG4threads_HPsi
       CALL init_psi(WP0,para_H,para_propa%para_WP0%WP0cplx)
 
       para_ana%intensity    = .FALSE.
-      para_PES%nb_scalar_Op = 0
+      para_H%para_ReadOp%nb_scalar_Op   = 0
       write(out_unitp,*)
       write(out_unitp,*)
       CALL time_perso('ini_data')

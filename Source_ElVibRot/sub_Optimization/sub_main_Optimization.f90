@@ -78,13 +78,9 @@
       TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
 
-!----- variables for the active and inactive namelists ----------------
-      TYPE (param_OTF)   :: para_OTF
-
 !----- variables for the construction of H ----------------------------
-      TYPE (param_AllOp)  :: para_AllOp
-      TYPE (param_ComOp)  :: ComOp
-      TYPE (param_PES)    :: para_PES
+      TYPE (param_AllOp), target  :: para_AllOp
+      TYPE (param_Op),    pointer :: para_H      => null()
 
 
 !----- variables pour la namelist analyse ----------------------------
@@ -95,7 +91,6 @@
       TYPE (param_propa) :: para_propa
 
 
-!----- variables for the namelist actives ----------------------------
 !----- for the basis set ----------------------------------------------
       TYPE (param_AllBasis) :: para_AllBasis
       TYPE (basis)          :: BasisnD_Save
@@ -130,12 +125,13 @@
       CALL time_perso('ini_data')
       write(out_unitp,*)
       write(out_unitp,*)
-      CALL     ini_data(const_phys,para_OTF,                            &
-                        para_Tnum,mole,                                 &
-                        para_AllBasis,BasisnD_Save,                     &
-                        para_PES,ComOp,para_AllOp,                      &
+      CALL     ini_data(const_phys,para_Tnum,mole,                      &
+                        para_AllBasis,para_AllOp,                       &
                         para_ana,para_intensity,intensity_only,         &
                         para_propa)
+
+      para_H => para_AllOp%tab_Op(1)
+      CALL basis2TObasis1(BasisnD_Save,para_AllBasis%BasisnD) ! basis saved here
 
       write(out_unitp,*)
       write(out_unitp,*)
@@ -235,15 +231,16 @@
           !write(out_unitp,*) 'SQ(1:10)',SQ(1:min(10,size(SQ)))
 
           IF (para_FOR_optimization%Optimization_param == 'cubature') THEN
-            CALL Sub_SimulatedAnnealing_cuba(BasisnD_Save,xOpt_min,Norm_min,&
-                                                      SQ,QA,QB,nb_Opt,  &
-                                    para_Tnum,mole,ComOp,para_PES,Qact, &
+            CALL Sub_SimulatedAnnealing_cuba(BasisnD_Save,xOpt_min,     &
+                                             Norm_min,SQ,QA,QB,nb_Opt,  &
+                                             para_Tnum,mole,            &
+                                      para_H%para_ReadOp%PrimOp_t,Qact, &
                               para_Optimization%para_SimulatedAnnealing)
             SQini(:) = Norm_min*TEN**1
           ELSE
             CALL Sub_SimulatedAnnealing(BasisnD_Save,xOpt_min,Norm_min, &
-                                                       SQ,nb_Opt,       &
-                                    para_Tnum,mole,ComOp,para_PES,Qact, &
+                                        SQ,nb_Opt,para_Tnum,mole,       &
+                                       para_H%para_ReadOp%PrimOp_t,Qact,&
                               para_Optimization%para_SimulatedAnnealing)
             SQini(:) = SQini(:) * para_Optimization%para_SimulatedAnnealing%RangeScal
           END IF
@@ -251,15 +248,15 @@
         END DO
         write(out_unitp,*) 'Norm_min',i,Norm_min
 
-!        CALL Sub_BFGS(BasisnD_Save,xOpt_min,SQ,nb_Opt,                  &
-!                                    para_Tnum,mole,ComOp,para_PES,Qact, &
+!        CALL Sub_BFGS(BasisnD_Save,xOpt_min,SQ,nb_Opt,para_Tnum,mole,   &
+!                                    para_H%para_ReadOp%PrimOp_t,Qact,   &
 !                                        para_Optimization%para_BFGS)
 
       CASE ('bfgs') ! BFGS
 
-        CALL Sub_BFGS(BasisnD_Save,xOpt_min,SQ,nb_Opt,                  &
-                                    para_Tnum,mole,ComOp,para_PES,Qact, &
-                                        para_Optimization%para_BFGS)
+        CALL Sub_BFGS(BasisnD_Save,xOpt_min,SQ,nb_Opt,para_Tnum,mole,   &
+                      para_H%para_ReadOp%PrimOp_t,Qact,                 &
+                                             para_Optimization%para_BFGS)
       CASE DEFAULT
         write(out_unitp,*) 'ERROR in sub_Optimization_OF_VibParam'
         write(out_unitp,*) 'Wrong Optimization_method: ',                 &
@@ -273,15 +270,17 @@
       IF (para_Optimization%FinalEnergy) THEN
         write(out_unitp,*) '============ ENERGY:'
         print_level = 0
-        CALL Sub_Energ_OF_ParamBasis(Energ,xOpt_min,nb_Opt,             &
-                       BasisnD_Save,para_Tnum,mole,ComOp,para_PES,Qact)
+        CALL Sub_Energ_OF_ParamBasis(Energ,xOpt_min,nb_Opt,BasisnD_Save,&
+                                     para_Tnum,mole,                    &
+                                     para_H%para_ReadOp%PrimOp_t,Qact)
         write(out_unitp,*) 'Optimal param',xOpt_min,' Energy',Energ
 
       END IF
       IF (para_Optimization%Freq) THEN
         write(out_unitp,*) '============ Freq:'
         CALL alloc_NParray(freq,(/ nb_Opt /),'freq',name_sub)
-        CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES,print_freq=.TRUE.)
+        CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,                 &
+                           para_H%para_ReadOp%PrimOp_t,print_freq=.TRUE.)
         CALL dealloc_NParray(freq,'freq',name_sub)
       END IF
 
@@ -289,9 +288,11 @@
         write(out_unitp,*) '============ GRAD:'
         CALL alloc_NParray(Grad,(/ nb_Opt /),'Grad',name_sub)
 
-        CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,para_PES%nb_elec,nderiv=1)
+        CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,                   &
+                           para_H%para_ReadOp%PrimOp_t%nb_elec,nderiv=1)
 
-        CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+        CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,           &
+                                 para_H%para_ReadOp%PrimOp_t)
 
         CALL Get_Grad_FROM_Tab_OF_dnMatOp(Grad,dnMatOp) ! for the first electronic state
         write(out_unitp,*) 'Grad: size, RMS',size(grad),sqrt(sum(grad**2)/size(grad))
@@ -344,7 +345,6 @@
 
 !=====================================================================
       CALL dealloc_table_at(const_phys%mendeleev)
-      !CALL dealloc_param_OTF(para_OTF)
 
       CALL dealloc_CoordType(mole)
       IF (associated(para_Tnum%Gref)) THEN
@@ -352,7 +352,6 @@
       END IF
       !CALL dealloc_Tnum(para_Tnum)
 
-      CALL dealloc_ComOp(ComOp)
       CALL dealloc_para_AllOp(para_AllOp)
 
 
@@ -365,7 +364,7 @@
       END SUBROUTINE sub_Optimization_OF_VibParam
 
       SUBROUTINE Sub_Energ_OF_ParamBasis(Energ,xOpt,nb_Opt,BasisnD,     &
-                                    para_Tnum,mole,ComOp,para_PES,Qact)
+                                         para_Tnum,mole,PrimOp,Qact)
       USE mod_system
       USE mod_nDindex
       USE mod_Constant
@@ -393,12 +392,11 @@
       TYPE (basis), intent(inout) :: BasisnD
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
       integer          :: nb_scalar_Op
       logical          :: calc_scalar_Op
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)          :: ComOp
       TYPE (param_ReadOp)         :: para_ReadOp
       logical                     :: Save_FileGrid,Save_MemGrid
 
@@ -449,15 +447,15 @@
 
       CALL basis2TObasis1(basis_temp,BasisnD)
 
-      ! save some parameters of para_PES, para_ReadOp, Tnum, mole
-      nb_scalar_Op                = para_PES%nb_scalar_Op
-      para_PES%nb_scalar_Op       = 0
+      ! save some parameters of PrimOp, Tnum, mole
+      nb_scalar_Op              = PrimOp%nb_scalar_Op
+      PrimOp%nb_scalar_Op       = 0
 
-      calc_scalar_Op              = para_PES%calc_scalar_Op
-      para_PES%calc_scalar_Op     = .FALSE.
+      calc_scalar_Op            = PrimOp%calc_scalar_Op
+      PrimOp%calc_scalar_Op     = .FALSE.
 
-      Cart_Transfo_save           = mole%Cart_transfo
-      mole%Cart_transfo           = .FALSE.
+      Cart_Transfo_save         = mole%Cart_transfo
+      mole%Cart_transfo         = .FALSE.
 
       ! init0 of para_H
       para_AllOp_loc%nb_Op = 2 ! just H and S
@@ -482,23 +480,14 @@
       para_ReadOp%para_FileGrid%Test_Grid       = .FALSE.
 
 
-      !---------------------------------------------------------------
-      ! modified ComOp from para_AllBasis_loc
-      CALL All2_param_TO_ComOp(ComOp,para_AllBasis_loc,mole,1,          &
-                               para_PES%nb_elec,                        &
-                               ComOp%file_HADA%name,                    &
-                               ComOp%file_HADA%formatted)
-
-      CALL Auto_basis(para_Tnum,mole,para_AllBasis_loc,ComOp,para_PES,para_ReadOp)
+      CALL Auto_basis(para_Tnum,mole,para_AllBasis_loc,para_ReadOp)
 
 
       !---------------------------------------------------------------
       ! make Operators: H and S
       !i=1 => for H
-      CALL All_param_TO_para_H(para_Tnum,mole,                          &
-                               para_AllBasis_loc,                       &
-                               ComOp,para_PES,para_ReadOp,              &
-                               para_AllOp_loc%tab_Op(1))
+      CALL All_param_TO_para_H(para_Tnum,mole,para_AllBasis_loc,        &
+                               para_ReadOp,para_AllOp_loc%tab_Op(1))
 
       !i=2 => for S
       CALL param_Op1TOparam_Op2(para_AllOp_loc%tab_Op(1),               &
@@ -572,10 +561,10 @@
       CALL dealloc_para_AllOp(para_AllOp_loc)
 
 
-      ! restor some parameters of para_PES, para_ReadOp, Tnum, mole
-      para_PES%nb_scalar_Op                   = nb_scalar_Op
-      para_PES%calc_scalar_Op                 = calc_scalar_Op
-      mole%Cart_transfo                       = Cart_Transfo_save
+      ! restor some parameters of PrimOp, Tnum, mole
+      PrimOp%nb_scalar_Op                   = nb_scalar_Op
+      PrimOp%calc_scalar_Op                 = calc_scalar_Op
+      mole%Cart_transfo                     = Cart_Transfo_save
 
     CASE ('geometry') ! potential (find a minimum)
 
@@ -583,9 +572,9 @@
       IF (debug) write(out_unitp,*) 'Qact',Qact
 
 
-      CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,para_PES%nb_elec,nderiv=0)
+      CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,PrimOp%nb_elec,nderiv=0)
 
-      CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+      CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp)
 
       Energ = Get_Scal_FROM_Tab_OF_dnMatOp(dnMatOp) ! for the first electronic state
 

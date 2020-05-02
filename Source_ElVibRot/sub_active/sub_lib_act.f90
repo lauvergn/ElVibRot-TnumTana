@@ -216,31 +216,31 @@
 !$OMP   CRITICAL (sub_Save_GridFile_AllOp_CRIT3)
         ithread      = 0
 !$      ithread      = OMP_GET_THREAD_NUM()
-        IF (para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread > 1 .AND. iq == 1) THEN
-          CALL file_open(para_AllOp%tab_Op(1)%ComOp%file_HADA,nio,      &
-             lformatted=para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted)
-         nio = para_AllOp%tab_Op(1)%ComOp%file_HADA%unit
-         IF (para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted) THEN
+        IF (para_AllOp%tab_Op(1)%file_grid%nb_thread > 1 .AND. iq == 1) THEN
+          CALL file_open(para_AllOp%tab_Op(1)%file_grid,nio,      &
+             lformatted=para_AllOp%tab_Op(1)%file_grid%formatted)
+         nio = para_AllOp%tab_Op(1)%file_grid%unit
+         IF (para_AllOp%tab_Op(1)%file_grid%formatted) THEN
 
            write(nio,*) '- Beginning_th ',                              &
-                        para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread, &
+                        para_AllOp%tab_Op(1)%file_grid%nb_thread, &
                        '-------------------'
          ELSE
             !write(nio) 'Beginning_th'
-            write(nio) para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread
+            write(nio) para_AllOp%tab_Op(1)%file_grid%nb_thread
          END IF
-         CALL file_close(para_AllOp%tab_Op(1)%ComOp%file_HADA)
+         CALL file_close(para_AllOp%tab_Op(1)%file_grid)
        END IF
 
-       IF (para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread > 1) THEN
+       IF (para_AllOp%tab_Op(1)%file_grid%nb_thread > 1) THEN
          CALL file_open2(                                               &
-          para_AllOp%tab_Op(1)%ComOp%file_HADA%tab_name_th(ithread),nio,&
-              lformatted=para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted,&
+          para_AllOp%tab_Op(1)%file_grid%tab_name_th(ithread),nio,&
+              lformatted=para_AllOp%tab_Op(1)%file_grid%formatted,&
                      append=.TRUE.)
        ELSE
          CALL file_open2(                                               &
-            para_AllOp%tab_Op(1)%ComOp%file_HADA%name,nio,              &
-              lformatted=para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted,&
+            para_AllOp%tab_Op(1)%file_grid%name,nio,              &
+              lformatted=para_AllOp%tab_Op(1)%file_grid%formatted,&
                      append=.TRUE.)
        END IF
        !---------------------------------------------------------
@@ -248,7 +248,7 @@
        nb_act1 = para_AllOp%tab_Op(1)%mole%nb_act1
        nb_bie  = para_AllOp%tab_Op(1)%nb_bie
 
-       IF (para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted) THEN
+       IF (para_AllOp%tab_Op(1)%file_grid%formatted) THEN
 
           !- write parameters at iq --------------------------------
           write(nio,*) '- Beginning ---------------------------------'
@@ -261,7 +261,7 @@
           CALL Write_Vec(Qact(1:nb_act1),nio,5,Rformat='e30.23')
           write(nio,*) 'JJ: ',para_AllOp%tab_Op(1)%para_Tnum%JJ
           write(nio,*) 'pot_cplx: ',para_AllOp%tab_Op(1)%cplx
-          write(nio,*) 'calc_scalar_Op: ',para_AllOp%tab_Op(1)%para_PES%calc_scalar_Op
+          write(nio,*) 'calc_scalar_Op: ',para_AllOp%tab_Op(1)%para_ReadOp%calc_scalar_Op
           write(nio,*) 'nb_allterms: ',nb_allterms
 
           DO iOp=1,para_AllOp%nb_Op
@@ -295,14 +295,14 @@
           END DO
 
           write(nio,*) '- End ',ithread,                                &
-                      para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread,   &
+                      para_AllOp%tab_Op(1)%file_grid%nb_thread,   &
                       '----------------------'
 
        ELSE
 
 
           !- write parameters at iq --------------------------------
-          write(nio) para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread
+          write(nio) para_AllOp%tab_Op(1)%file_grid%nb_thread
           write(nio) iq
           write(nio) nb_bie
           write(nio) w
@@ -312,7 +312,7 @@
           write(nio) Qact(1:nb_act1)
           write(nio) para_AllOp%tab_Op(1)%para_Tnum%JJ
           write(nio) para_AllOp%tab_Op(1)%cplx
-          write(nio) para_AllOp%tab_Op(1)%para_PES%calc_scalar_Op
+          write(nio) para_AllOp%tab_Op(1)%para_ReadOp%calc_scalar_Op
           write(nio) nb_allterms
 
           DO iOp=1,para_AllOp%nb_Op
@@ -339,7 +339,7 @@
             END IF
           END DO
 
-          write(nio) para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread
+          write(nio) para_AllOp%tab_Op(1)%file_grid%nb_thread
 
        END IF
 
@@ -493,7 +493,8 @@
 !
 !=====================================================================
 
-      SUBROUTINE sub_reading_Op(iq,nb_qa,d0MatOp,n_Op,Qdyn,nb_var,Qact,w,ComOp)
+      SUBROUTINE sub_reading_Op(iq,nb_qa,d0MatOp,n_Op,Qdyn,nb_var,      &
+                                nb_act1,Qact,w,file_HADA)
       USE mod_system
       USE mod_PrimOp, only: Write_d0MatOp
       USE mod_Op
@@ -501,10 +502,10 @@
 
       TYPE (param_d0MatOp)     :: d0MatOp
 
-      integer, intent(in)                     :: iq,nb_qa,nb_var,n_Op
-      TYPE (param_ComOp), intent(inout)       :: ComOp
+      integer, intent(in)                     :: iq,nb_qa,nb_var,n_Op,nb_act1
+      TYPE (param_file), intent(inout)        :: file_HADA
 
-      real (kind=Rkind), intent(inout)        :: Qdyn(nb_var),Qact(ComOp%nb_act1)
+      real (kind=Rkind), intent(inout)        :: Qdyn(nb_var),Qact(nb_act1)
       real (kind=Rkind), intent(inout)        :: w
 
 
@@ -522,7 +523,7 @@
       logical       :: pot_cplx,calc_scalar_Op,cplx
       integer       :: JJ
 
-      logical, save                  :: file_is_para = .FALSE.
+      logical, save                  :: file_is_para   = .FALSE.
       integer, save                  :: nb_thread_file = 0
       integer                        :: iocond,err
       integer, save                  :: nio,ithread
@@ -534,59 +535,58 @@
 !---------------------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
-         write(out_unitp,*) 'iq',iq
-         write(out_unitp,*) 'nb_bi',ComOp%nb_bi
-         write(out_unitp,*) 'nb_var,nb_act1,nb_bie',nb_var,ComOp%nb_act1,d0MatOp%nb_bie
-         write(out_unitp,*) 'formatted_HADA',ComOp%file_HADA%formatted
+         write(out_unitp,*) 'iq     ',iq
+        !write(out_unitp,*) 'nb_bi  ',d0MatOp%nb_bi
+         write(out_unitp,*) 'nb_var ',nb_var
+         write(out_unitp,*) 'nb_act1',nb_act1
+         write(out_unitp,*) 'nb_bie ',d0MatOp%nb_bie
+         write(out_unitp,*) 'formatted_HADA',file_HADA%formatted
          write(out_unitp,*)
        END IF
 !-----------------------------------------------------------
 
       IF (iq == 1) THEN
-        !write(out_unitp,*) 'read SH_HADA file: ',ComOp%file_HADA%name
-        ComOp%file_HADA%nb_thread = 0
-        CALL file_open(ComOp%file_HADA,nio,                             &
-                       lformatted=ComOp%file_HADA%formatted)
+        !write(out_unitp,*) 'read SH_HADA file: ',file_HADA%name
+        file_HADA%nb_thread = 0
+        CALL file_open(file_HADA,nio,lformatted=file_HADA%formatted)
 
-        IF (ComOp%file_HADA%formatted) THEN
+        IF (file_HADA%formatted) THEN
           read(nio,*) name1,name2
 
           IF (debug) write(out_unitp,*) 'init,name2: ',name2
 
-          CALL file_close(ComOp%file_HADA)
+          CALL file_close(file_HADA)
 
           ! for parallel calculation of SH_HADA file (the file is split in SH_HADA.0, SH_HADA.1 ...)
           IF (trim(name2) == 'Beginning_th') THEN
             !write(out_unitp,*) ' OMP calc of HADA file'
             ithread      = 0
             file_is_para = .TRUE.
-            CALL file_open(ComOp%file_HADA,nio,                         &
-                                   lformatted=ComOp%file_HADA%formatted)
+            CALL file_open(file_HADA,nio,lformatted=file_HADA%formatted)
             read(nio,*) name1,name2,nb_thread_file
-            CALL file_close(ComOp%file_HADA)
+            CALL file_close(file_HADA)
 
             IF (debug) write(out_unitp,*) 'file_is_para,nb_thread_file',file_is_para,nb_thread_file
 
-            ComOp%file_HADA%nb_thread = nb_thread_file
+            file_HADA%nb_thread = nb_thread_file
           ELSE
             file_is_para = .FALSE.
           END IF
 
-          CALL file_open(ComOp%file_HADA,nio,                           &
-                                   lformatted=ComOp%file_HADA%formatted)
+          CALL file_open(file_HADA,nio,lformatted=file_HADA%formatted)
 
           IF (file_is_para) THEN
             ithread = 0
-            nio = ComOp%file_HADA%tab_unit(ithread)
+            nio = file_HADA%tab_unit(ithread)
           ELSE
-            nio = ComOp%file_HADA%unit
+            nio = file_HADA%unit
           END IF
 
         ELSE  ! unformatted file
           read(nio) nb_thread_file
           IF (debug) write(out_unitp,*) 'init,nb_thread_file: ',nb_thread_file
 
-          CALL file_close(ComOp%file_HADA)
+          CALL file_close(file_HADA)
 
           ! for parallel calculation of SH_HADA file (the file is split in SH_HADA.0, SH_HADA.1 ...)
           IF (nb_thread_file > 1) THEN
@@ -595,20 +595,19 @@
             file_is_para = .TRUE.
 
             IF (debug) write(out_unitp,*) 'file_is_para,nb_thread_file',file_is_para,nb_thread_file
-            ComOp%file_HADA%nb_thread = nb_thread_file
+            file_HADA%nb_thread = nb_thread_file
           ELSE
-            ComOp%file_HADA%nb_thread = 0
+            file_HADA%nb_thread = 0
             file_is_para = .FALSE.
           END IF
 
-          CALL file_open(ComOp%file_HADA,nio,                           &
-                         lformatted=ComOp%file_HADA%formatted)
+          CALL file_open(file_HADA,nio,lformatted=file_HADA%formatted)
 
           IF (file_is_para) THEN
             ithread = 0
-            nio = ComOp%file_HADA%tab_unit(ithread)
+            nio = file_HADA%tab_unit(ithread)
           ELSE
-            nio = ComOp%file_HADA%unit
+            nio = file_HADA%unit
           END IF
 
         END IF
@@ -616,7 +615,7 @@
 
 
 
-      IF (ComOp%file_HADA%formatted) THEN
+      IF (file_HADA%formatted) THEN
 
 !       - read parameters at iq --------------------------------
         read(nio,*,iostat=iocond) name1,name2
@@ -629,7 +628,7 @@
           STOP
         ELSE IF (iocond < 0 .AND. file_is_para) THEN
           ithread = ithread + 1
-          nio = ComOp%file_HADA%tab_unit(ithread)
+          nio = file_HADA%tab_unit(ithread)
           read(nio,*) name1,name2
         END IF
 
@@ -692,10 +691,10 @@
         END IF
 
         read(nio,*) name1,n2
-        IF (n2 /= ComOp%nb_act1) THEN
+        IF (n2 /= nb_act1) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' nb_act1 of HADA file .NE. nb_act1 of data',      &
-                       n2,ComOp%nb_act1
+                       n2,nb_act1
           write(out_unitp,*) ' Check the HADA file'
           STOP
         END IF
@@ -764,9 +763,9 @@
         read(nio,iostat=iocond) n3
 !        write(out_unitp,*) 'iq,iocond,nb_thread',iq,iocond,n3
 !        IF (n3 > 1) THEN
-!          write(out_unitp,*) 'name_SHADA',ComOp%file_HADA%tab_name_th(ithread)
+!          write(out_unitp,*) 'name_SHADA',file_HADA%tab_name_th(ithread)
 !        ELSE
-!          write(out_unitp,*) 'name_SHADA',ComOp%file_HADA%name
+!          write(out_unitp,*) 'name_SHADA',file_HADA%name
 !        END IF
 !        CALL flush_perso(out_unitp)
         IF (iocond > 0 .OR. iocond < 0 .AND. .NOT. file_is_para) THEN
@@ -775,7 +774,7 @@
           STOP
         ELSE IF (iocond < 0 .AND. file_is_para) THEN
           ithread = ithread + 1
-          nio = ComOp%file_HADA%tab_unit(ithread)
+          nio = file_HADA%tab_unit(ithread)
           read(nio,iostat=iocond) n3
         END IF
 
@@ -816,8 +815,7 @@
 !       write(out_unitp,*) n1,nb_var
         IF (n1 /= nb_var) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' nb_var of HADA file .NE. nb_var of data',        &
-                      n1,nb_var
+          write(out_unitp,*) ' nb_var of HADA file .NE. nb_var of data',n1,nb_var
           write(out_unitp,*) ' Check the HADA file'
           STOP
         END IF
@@ -825,10 +823,9 @@
 !       write(out_unitp,*) Qdyn
         read(nio) n2
 !       write(out_unitp,*) n2,nb_act1
-        IF (n2 /= ComOp%nb_act1) THEN
+        IF (n2 /= nb_act1) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' nb_act1 of HADA file .NE. nb_act1 of data',      &
-                       n2,ComOp%nb_act1
+          write(out_unitp,*) ' nb_act1 of HADA file .NE. nb_act1 of data',n2,nb_act1
           write(out_unitp,*) ' Check the HADA file'
           STOP
         END IF
@@ -868,7 +865,7 @@
       END IF
 
 
-      IF (iq == nb_qa) CALL file_close(ComOp%file_HADA)
+      IF (iq == nb_qa) CALL file_close(file_HADA)
 
       CALL dealloc_NParray(work_bhe,'work_bhe',name_sub)
 
@@ -1039,13 +1036,13 @@
 !  check : read the HADA file and determine the last grid point (iqf)
 !
 !=====================================================================
-      SUBROUTINE check_HADA(iqf,ComOp)
+      SUBROUTINE check_HADA(iqf,file_HADA)
       USE mod_system
       USE mod_Op
       USE mod_MPI
       IMPLICIT NONE
 
-      TYPE (param_ComOp)   :: ComOp
+      TYPE (param_file)  :: file_HADA
 
 
       integer :: i,iq,iqf
@@ -1057,12 +1054,11 @@
       character (len=Name_len)  :: nameA20
 
 
-      CALL file_open(ComOp%file_HADA,nio,                               &
-                     lformatted=ComOp%file_HADA%formatted)
+      CALL file_open(file_HADA,nio,lformatted=file_HADA%formatted)
 
       iqf = 0
 
-      IF (ComOp%file_HADA%formatted) THEN
+      IF (file_HADA%formatted) THEN
 
  10     CONTINUE
 
@@ -1097,7 +1093,7 @@
 
       END IF
 
-      close(ComOp%file_HADA%unit)
+      close(file_HADA%unit)
 
       IF(MPI_id==0) write(out_unitp,*) 'check_HADA: last grid point, iqf=',iqf
 

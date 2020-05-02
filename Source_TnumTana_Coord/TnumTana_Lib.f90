@@ -65,7 +65,7 @@ SUBROUTINE Qact_TO_cart(Qact,nb_act,Qcart,nb_cart)
     !     ---- TO finalize the coordinates (NM) and the KEO ----------
     !     ------------------------------------------------------------
     para_Tnum%Tana=.FALSE.
-    CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+    CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
 
     IF (nb_act /= mole%nb_act .OR. nb_cart /= mole%ncart_act) THEN
        write(out_unitp,*) ' ERROR in ', name_sub
@@ -149,7 +149,7 @@ SUBROUTINE Init_TnumTana_FOR_Driver(nb_act,nb_cart,init_sub)
     !-----------------------------------------------------------------
     !     ---- TO finalize the coordinates (NM) and the KEO ----------
     !     ------------------------------------------------------------
-    CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+    CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
 
   END IF
 

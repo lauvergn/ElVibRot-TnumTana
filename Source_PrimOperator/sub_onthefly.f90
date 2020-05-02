@@ -44,7 +44,7 @@ MODULE mod_OTF
    USE mod_system
    USE mod_dnSVM
    use mod_OTF_def,    only: param_otf
-   use mod_PrimOp_def, only: param_pes, write_param_pes
+   use mod_PrimOp_def, only: PrimOp_t, write_PrimOp
    USE mod_Constant
    IMPLICIT NONE
 
@@ -65,7 +65,7 @@ MODULE mod_OTF
 !================================================================
       SUBROUTINE dnOp_grid_OnTheFly(Qxyz,MatdnECC,nderivE,              &
                                     MatdnMuCC,nderivMu,                 &
-                                    mole,para_PES)
+                                    mole,PrimOp)
       use mod_Coord_KEO,  only: CoordType
 
       IMPLICIT NONE
@@ -75,12 +75,12 @@ MODULE mod_OTF
 
 !----- for Qdyn Qact ... ---------------------------------------------
       real (kind=Rkind)   :: Qxyz(mole%ncart_act)
-      TYPE (param_PES)    :: para_PES
+      TYPE (PrimOp_t)    :: PrimOp
 
 !----- input output variables ----------------------------------------
       integer        :: nderivE,nderivMu
-      TYPE(Type_dnS) :: MatdnECC(para_PES%nb_elec,para_PES%nb_elec)
-      TYPE(Type_dnS) :: MatdnMuCC(para_PES%nb_elec,para_PES%nb_elec,3)
+      TYPE(Type_dnS) :: MatdnECC(PrimOp%nb_elec,PrimOp%nb_elec)
+      TYPE(Type_dnS) :: MatdnMuCC(PrimOp%nb_elec,PrimOp%nb_elec,3)
 
       integer        :: err_calc
 
@@ -100,7 +100,7 @@ MODULE mod_OTF
 !-----------------------------------------------------------
 
       !----------------------------------------------------------------
-      IF (.NOT. para_PES%OnTheFly) THEN
+      IF (.NOT. PrimOp%OnTheFly) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) ' This subroutine works only with on-the-fly calculation'
         write(out_unitp,*) ' It should never append!!'
@@ -110,40 +110,40 @@ MODULE mod_OTF
       !----------------------------------------------------------------
 
       !----------------------------------------------------------------
-      SELECT CASE (para_PES%para_OTF%ab_initio_prog)
+      SELECT CASE (PrimOp%para_OTF%ab_initio_prog)
       CASE ('g03','g09')
-          IF (para_PES%nb_elec /= 1) STOP 'Yet we connot use gaussian whit nb_elec>1'
+          IF (PrimOp%nb_elec /= 1) STOP 'Yet we connot use gaussian whit nb_elec>1'
           IF (debug) write(out_unitp,*) 'With pot_mu_onthefly_gauss'
           CALL pot_mu_onthefly_gauss(Qxyz,MatdnECC(1,1),nderivE,        &
                                      MatdnMuCC(1,1,:),nderivMu,         &
-                                     mole,para_PES,err_calc)
-          IF (err_calc /= 0) MatdnECC(1,1)%d0 = para_PES%pot0 + ONE
+                                     mole,PrimOp,err_calc)
+          IF (err_calc /= 0) MatdnECC(1,1)%d0 = PrimOp%pot0 + ONE
       CASE ('gamess','gamess2014')
-          IF (para_PES%nb_elec /= 1) STOP 'Yet we connot use gamess whit nb_elec>1'
+          IF (PrimOp%nb_elec /= 1) STOP 'Yet we connot use gamess whit nb_elec>1'
           IF (debug) write(out_unitp,*) 'With pot_mu_onthefly_gamess'
           CALL pot_mu_onthefly_gamess(Qxyz,MatdnECC(1,1),nderivE,       &
                                       MatdnMuCC(1,1,:),nderivMu,        &
-                                      mole,para_PES)
+                                      mole,PrimOp)
       CASE ('generic')
           IF (debug) write(out_unitp,*) 'With pot_mu_onthefly_generic'
           CALL onthefly_generic(Qxyz,MatdnECC,nderivE,                  &
                                 MatdnMuCC,nderivMu,                     &
-                                mole,para_PES)
+                                mole,PrimOp)
       CASE default ! ERROR: wrong program !
-          CALL write_param_PES(para_PES)
+          CALL write_PrimOp(PrimOp)
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' The ab initio program is UNKNOWN ',      &
-                      trim(para_PES%para_OTF%ab_initio_prog)
+                      trim(PrimOp%para_OTF%ab_initio_prog)
         STOP
       END SELECT
       !----------------------------------------------------------------
 
-IF (.NOT. para_PES%Read_OnTheFly_only) THEN
+IF (.NOT. PrimOp%Read_OnTheFly_only) THEN
   ! remove the ab-initio files
-  CALL file_delete(para_PES%para_OTF%file_data)
-  CALL file_delete(para_PES%para_OTF%file_log)
-  CALL file_delete(para_PES%para_OTF%file_FChk)
-  CALL file_delete(para_PES%para_OTF%file_pun)
+  CALL file_delete(PrimOp%para_OTF%file_data)
+  CALL file_delete(PrimOp%para_OTF%file_log)
+  CALL file_delete(PrimOp%para_OTF%file_FChk)
+  CALL file_delete(PrimOp%para_OTF%file_pun)
 END IF
 
 !-----------------------------------------------------------
@@ -164,7 +164,7 @@ END IF
 
       END SUBROUTINE dnOp_grid_OnTheFly
       SUBROUTINE pot_mu_onthefly_gauss(Qxyz,dnECC,nderivE,dnMuCC,nderivMu,&
-                                        mole,para_PES,err_calc)
+                                        mole,PrimOp,err_calc)
       use mod_Coord_KEO,  only: CoordType
 
       USE mod_system
@@ -177,7 +177,7 @@ END IF
 
 !----- for Qdyn Qact ... ---------------------------------------------
       real (kind=Rkind) :: Qxyz(mole%ncart_act)
-      TYPE (param_PES)  :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
       integer, optional :: err_calc
 
 
@@ -202,32 +202,32 @@ END IF
         write(out_unitp,*) 'BEGINNING',name_sub
         write(out_unitp,*) 'Qxyz',Qxyz(:)
         write(out_unitp,*) 'nderivE,nderivMu',nderivE,nderivMu
-        write(out_unitp,*) 'Read_OnTheFly_only',para_PES%Read_OnTheFly_only
+        write(out_unitp,*) 'Read_OnTheFly_only',PrimOp%Read_OnTheFly_only
         write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
 
       !-----------------------------------------------------------------
-      IF (.NOT. para_PES%Read_OnTheFly_only) THEN
+      IF (.NOT. PrimOp%Read_OnTheFly_only) THEN
         IF (present(err_calc)) THEN
          CALL Calc_EneDip_WITH_gauss(Qxyz,nderivE,nderivMu,            &
-                                        mole,para_PES,para_PES%para_OTF,err_calc)
+                                        mole,PrimOp,PrimOp%para_OTF,err_calc)
         ELSE
           CALL Calc_EneDip_WITH_gauss(Qxyz,nderivE,nderivMu,            &
-                                        mole,para_PES,para_PES%para_OTF)
+                                        mole,PrimOp,PrimOp%para_OTF)
         END IF
       END IF
       !-----------------------------------------------------------------
 
       !-----------------------------------------------------------------
       !- read the energy from the file energy, gradient, hessian
-      CALL Read_dnECC_Gauss(dnECC,para_PES%para_OTF%file_FChk%name,     &
+      CALL Read_dnECC_Gauss(dnECC,PrimOp%para_OTF%file_FChk%name,     &
                                                  nderivE,mole%ncart_act)
 
       !-----------------------------------------------------------------
       !- read the Dipole Moment from the file Test.FChk
       IF (nderivMu > -1) THEN
-        CALL Read_dnDipCC_Gauss(dnMuCC,para_PES%para_OTF%file_FChk%name,&
+        CALL Read_dnDipCC_Gauss(dnMuCC,PrimOp%para_OTF%file_FChk%name,&
                                 nderivMu,mole%ncart_act)
       END IF
       !-----------------------------------------------------------------
@@ -253,7 +253,7 @@ END IF
       END SUBROUTINE pot_mu_onthefly_gauss
 
       SUBROUTINE Calc_EneDip_WITH_gauss(Qxyz,nderivE,nderivDip,&
-                                        mole,para_PES,para_OTF,err_calc)
+                                        mole,PrimOp,para_OTF,err_calc)
 
       USE mod_system
       use mod_Coord_KEO,  only: CoordType
@@ -265,7 +265,7 @@ END IF
 
 !----- for Qdyn Qact ... ---------------------------------------------
       real (kind=Rkind) :: Qxyz(mole%ncart_act)
-      TYPE (param_PES)  :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
       TYPE (param_OTF)  :: para_OTF
       integer, optional :: err_calc
 
@@ -776,7 +776,7 @@ END IF
       END SUBROUTINE Read_dnPolarizabilityCC_Gauss
 
       SUBROUTINE pot_mu_onthefly_gamess(Qxyz,dnECC,nderivE,dnMuCC,nderivMu, &
-                                         mole,para_PES)
+                                         mole,PrimOp)
 
       USE mod_system
       USE mod_dnSVM
@@ -789,7 +789,7 @@ END IF
 
 !----- for Qdyn Qact ... ---------------------------------------------
       real (kind=Rkind) :: Qxyz(mole%ncart_act)
-      TYPE (param_PES)  :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
 
 !----- input output variables ----------------------------------------
       integer        :: nderivE,nderivMu
@@ -809,10 +809,10 @@ END IF
       END IF
 !-----------------------------------------------------------
 
-      IF (.NOT. para_PES%Read_OnTheFly_only) THEN
+      IF (.NOT. PrimOp%Read_OnTheFly_only) THEN
 
         CALL Calc_EneDip_WITH_gamess(Qxyz,nderivE,nderivMu,             &
-                                        mole,para_PES,para_PES%para_OTF)
+                                        mole,PrimOp,PrimOp%para_OTF)
 
       END IF
 
@@ -820,13 +820,13 @@ END IF
 
       !-----------------------------------------------------------------
       !- read the energy from the file energy, gradient, hessian
-      CALL Read_dnECC_Gamess(dnECC,para_PES%para_OTF%file_log%name,     &
-                 para_PES%para_OTF%file_pun%name,nderivE,mole%ncart_act)
+      CALL Read_dnECC_Gamess(dnECC,PrimOp%para_OTF%file_log%name,     &
+                 PrimOp%para_OTF%file_pun%name,nderivE,mole%ncart_act)
 
       !-----------------------------------------------------------------
       !- read the Dipole Moment from the file xx.pun
       IF (nderivMu > -1) THEN
-        CALL Read_dnDipCC_Gamess(dnMuCC,para_PES%para_OTF%file_pun%name,&
+        CALL Read_dnDipCC_Gamess(dnMuCC,PrimOp%para_OTF%file_pun%name,&
                                  nderivMu,mole%ncart_act)
 
       END IF
@@ -852,7 +852,7 @@ END IF
 
       END SUBROUTINE pot_mu_onthefly_gamess
       SUBROUTINE Calc_EneDip_WITH_gamess(Qxyz,nderivE,nderivDip,&
-                                        mole,para_PES,para_OTF)
+                                        mole,PrimOp,para_OTF)
 
       USE mod_system
       USE mod_Coord_KEO,  only: CoordType
@@ -864,7 +864,7 @@ END IF
 
 !----- for Qdyn Qact ... ---------------------------------------------
       real (kind=Rkind) :: Qxyz(mole%ncart_act)
-      TYPE (param_PES)  :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
       TYPE (param_OTF)  :: para_OTF
 
 !----- for the files -------------------------------------------------
@@ -1370,7 +1370,7 @@ END IF
 
       END SUBROUTINE Read_GradHess_Molpro
       SUBROUTINE onthefly_generic(Qxyz,MatdnECC,nderivE,MatdnMuCC,nderivMu, &
-                                  mole,para_PES)
+                                  mole,PrimOp)
 
       USE mod_system
       USE mod_dnSVM
@@ -1383,13 +1383,13 @@ END IF
 
 !----- for Qdyn Qact ... ---------------------------------------------
       real (kind=Rkind) :: Qxyz(mole%ncart_act)
-      TYPE (param_PES)  :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
 
 
 !----- input output variables ----------------------------------------
       integer        :: nderivE,nderivMu
-      TYPE(Type_dnS) :: MatdnECC(para_PES%nb_elec,para_PES%nb_elec)
-      TYPE(Type_dnS) :: MatdnMuCC(para_PES%nb_elec,para_PES%nb_elec,3)
+      TYPE(Type_dnS) :: MatdnECC(PrimOp%nb_elec,PrimOp%nb_elec)
+      TYPE(Type_dnS) :: MatdnMuCC(PrimOp%nb_elec,PrimOp%nb_elec,3)
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='onthefly_generic'
@@ -1400,7 +1400,7 @@ END IF
         write(out_unitp,*) 'BEGINNING',name_sub
         write(out_unitp,*) 'Qxyz',Qxyz
         write(out_unitp,*) 'nderivE,nderivMu',nderivE,nderivMu
-        write(out_unitp,*) 'Read_OnTheFly_only',para_PES%Read_OnTheFly_only
+        write(out_unitp,*) 'Read_OnTheFly_only',PrimOp%Read_OnTheFly_only
         write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
@@ -1412,25 +1412,25 @@ END IF
       END IF
 
       !-----------------------------------------------------------------
-      IF (.NOT. para_PES%Read_OnTheFly_only) THEN
+      IF (.NOT. PrimOp%Read_OnTheFly_only) THEN
 
         CALL Calc_EneDip_WITH_generic(Qxyz,nderivE,nderivMu,            &
-                                        mole,para_PES,para_PES%para_OTF)
+                                        mole,PrimOp,PrimOp%para_OTF)
       END IF
       !-----------------------------------------------------------------
 
       !-----------------------------------------------------------------
       !- read the energy from the file energy, gradient, hessian
-      CALL Read_dnECC_generic(MatdnECC,para_PES%para_OTF%file_log%name, &
-                                nderivE,para_PES%nb_elec,mole%ncart_act)
+      CALL Read_dnECC_generic(MatdnECC,PrimOp%para_OTF%file_log%name, &
+                                nderivE,PrimOp%nb_elec,mole%ncart_act)
       !-----------------------------------------------------------------
 
       !-----------------------------------------------------------------
       !- read the Dipole Moment from the file Test.FChk
       IF (nderivMu > -1) THEN
 
-        CALL Read_dnDipCC_generic(MatdnMuCC,para_PES%para_OTF%file_log%name,&
-                               nderivMu,para_PES%nb_elec,mole%ncart_act)
+        CALL Read_dnDipCC_generic(MatdnMuCC,PrimOp%para_OTF%file_log%name,&
+                               nderivMu,PrimOp%nb_elec,mole%ncart_act)
 
       END IF
       !-----------------------------------------------------------------
@@ -1456,7 +1456,7 @@ END IF
       END SUBROUTINE onthefly_generic
 
       SUBROUTINE Calc_EneDip_WITH_generic(Qxyz,nderivE,nderivDip,       &
-                                          mole,para_PES,para_OTF)
+                                          mole,PrimOp,para_OTF)
 
       USE mod_system
       USE mod_Coord_KEO,  only: CoordType
@@ -1468,7 +1468,7 @@ END IF
 
 !----- for Qdyn Qact ... ---------------------------------------------
       real (kind=Rkind) :: Qxyz(mole%ncart_act)
-      TYPE (param_PES)  :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
       TYPE (param_OTF)  :: para_OTF
 
 !----- for the files -------------------------------------------------
@@ -1503,7 +1503,7 @@ END IF
       !----------------------------------------------------------------
 
       !----------------------------------------------------------------
-      CALL file_open(para_PES%para_OTF%file_data,nio)
+      CALL file_open(PrimOp%para_OTF%file_data,nio)
       write(nio,*) 'geom'
 
       iq=0
@@ -1526,11 +1526,11 @@ END IF
 
       !----------------------------------------------------------------
       !- system call => ab initio calulation --------------------------
-      !CALL system(para_PES%para_OTF%commande_unix // " " // int_TO_char(para_PES%nb_elec) )
-      CALL EXECUTE_COMMAND_LINE(para_PES%para_OTF%commande_unix // " " // int_TO_char(para_PES%nb_elec) )
+      !CALL system(PrimOp%para_OTF%commande_unix // " " // int_TO_char(PrimOp%nb_elec) )
+      CALL EXECUTE_COMMAND_LINE(PrimOp%para_OTF%commande_unix // " " // int_TO_char(PrimOp%nb_elec) )
 
       located = .FALSE.
-      CALL file_open(para_PES%para_OTF%file_log,nio,append=.TRUE.)
+      CALL file_open(PrimOp%para_OTF%file_log,nio,append=.TRUE.)
       backspace(nio,err=999)
       read(nio,'(a32)',err=999) labelR
       located = verify(labelR,'calculation done') == 0
@@ -1540,7 +1540,7 @@ END IF
         write(out_unitp,*) 'ERROR in the generic execution'
         write(out_unitp,*) 'no line: "calculation done"'
         write(out_unitp,*) 'last line: ',labelR
-        write(out_unitp,*) 'unix command:',para_PES%para_OTF%commande_unix
+        write(out_unitp,*) 'unix command:',PrimOp%para_OTF%commande_unix
         STOP
       END IF
 
@@ -1786,12 +1786,12 @@ END IF
 
       END SUBROUTINE Read_dnDipCC_generic
 
-     SUBROUTINE Read_OnTheFly_OF_PES(para_PES)
+     SUBROUTINE Read_OnTheFly_OF_PES(PrimOp)
       USE mod_system
       USE mod_PrimOp_def
       IMPLICIT NONE
 
-      TYPE (param_PES)    :: para_PES
+      TYPE (PrimOp_t)    :: PrimOp
 
 !     - for the molecule -------------------------------
       integer :: charge,multiplicity
@@ -1855,59 +1855,59 @@ END IF
       END IF
       IF (debug) write(out_unitp,OnTheFly)
 
-      para_PES%para_OTF%charge       = charge
-      para_PES%para_OTF%multiplicity = multiplicity
+      PrimOp%para_OTF%charge       = charge
+      PrimOp%para_OTF%multiplicity = multiplicity
 
         SELECT CASE (ab_initio_prog)
         CASE ('g03','g98','G98','G03','gaussian')
-          para_PES%para_OTF%file_data%name=trim(file_name_OTF)   // '.com'
-          para_PES%para_OTF%file_log%name=trim(file_name_OTF)    // '.log'
-          para_PES%para_OTF%file_header%name=trim(file_name_OTF) //'.header'
-          para_PES%para_OTF%file_footer%name=trim(file_name_OTF)   //'.footer'
-          para_PES%para_OTF%file_FChk%name='Test.FChk'
+          PrimOp%para_OTF%file_data%name=trim(file_name_OTF)   // '.com'
+          PrimOp%para_OTF%file_log%name=trim(file_name_OTF)    // '.log'
+          PrimOp%para_OTF%file_header%name=trim(file_name_OTF) //'.header'
+          PrimOp%para_OTF%file_footer%name=trim(file_name_OTF)   //'.footer'
+          PrimOp%para_OTF%file_FChk%name='Test.FChk'
         CASE ('gamess')
-          para_PES%para_OTF%file_data%name=trim(file_name_OTF) // '.inpg'
-          para_PES%para_OTF%file_log%name=trim(file_name_OTF) // '.outg'
-          para_PES%para_OTF%file_header%name=trim(file_name_OTF)//'.header'
-          para_PES%para_OTF%file_footer%name=trim(file_name_OTF)//'.footer'
-          para_PES%para_OTF%file_pun%name=trim(file_name_OTF) // '.dat'
+          PrimOp%para_OTF%file_data%name=trim(file_name_OTF) // '.inpg'
+          PrimOp%para_OTF%file_log%name=trim(file_name_OTF) // '.outg'
+          PrimOp%para_OTF%file_header%name=trim(file_name_OTF)//'.header'
+          PrimOp%para_OTF%file_footer%name=trim(file_name_OTF)//'.footer'
+          PrimOp%para_OTF%file_pun%name=trim(file_name_OTF) // '.dat'
         CASE ('gamess2014')
-          para_PES%para_OTF%file_data%name=trim(file_name_OTF) // '.inp'
-          para_PES%para_OTF%file_log%name=trim(file_name_OTF) // '.log'
-          para_PES%para_OTF%file_header%name=trim(file_name_OTF)//'.header'
-          para_PES%para_OTF%file_footer%name=trim(file_name_OTF)//'.footer'
-          para_PES%para_OTF%file_pun%name=trim(file_name_OTF) // '.dat'
+          PrimOp%para_OTF%file_data%name=trim(file_name_OTF) // '.inp'
+          PrimOp%para_OTF%file_log%name=trim(file_name_OTF) // '.log'
+          PrimOp%para_OTF%file_header%name=trim(file_name_OTF)//'.header'
+          PrimOp%para_OTF%file_footer%name=trim(file_name_OTF)//'.footer'
+          PrimOp%para_OTF%file_pun%name=trim(file_name_OTF) // '.dat'
         CASE ('generic')
-          para_PES%para_OTF%file_data%name=trim(file_name_OTF) // '.evrti'
-          para_PES%para_OTF%file_log%name=trim(file_name_OTF) // '.evrto'
-          para_PES%para_OTF%file_header%name=trim(file_name_OTF)//'.header'
-          para_PES%para_OTF%file_footer%name=trim(file_name_OTF)//'.footer'
-          para_PES%para_OTF%file_pun%name=trim(file_name_OTF) // '.dat'
+          PrimOp%para_OTF%file_data%name=trim(file_name_OTF) // '.evrti'
+          PrimOp%para_OTF%file_log%name=trim(file_name_OTF) // '.evrto'
+          PrimOp%para_OTF%file_header%name=trim(file_name_OTF)//'.header'
+          PrimOp%para_OTF%file_footer%name=trim(file_name_OTF)//'.footer'
+          PrimOp%para_OTF%file_pun%name=trim(file_name_OTF) // '.dat'
         CASE ('g09','G09') ! particular case because the keyword formchk is obsolet
-          para_PES%para_OTF%file_data%name=trim(file_name_OTF)   // '.com'
-          para_PES%para_OTF%file_log%name=trim(file_name_OTF)    // '.log'
-          para_PES%para_OTF%file_header%name=trim(file_name_OTF) //'.header'
-          para_PES%para_OTF%file_footer%name=trim(file_name_OTF)   //'.footer'
-          para_PES%para_OTF%file_FChk%name=trim(file_name_OTF)   //'.fchk'
+          PrimOp%para_OTF%file_data%name=trim(file_name_OTF)   // '.com'
+          PrimOp%para_OTF%file_log%name=trim(file_name_OTF)    // '.log'
+          PrimOp%para_OTF%file_header%name=trim(file_name_OTF) //'.header'
+          PrimOp%para_OTF%file_footer%name=trim(file_name_OTF)   //'.footer'
+          PrimOp%para_OTF%file_FChk%name=trim(file_name_OTF)   //'.fchk'
         CASE default ! ERROR: wrong program !
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' The ab initio program is UNKNOWN ',ab_initio_prog
           STOP
         END SELECT
         write(out_unitp,*) ' Files for the OTF'
-        write(out_unitp,*) trim(para_PES%para_OTF%file_data%name)
-        write(out_unitp,*) trim(para_PES%para_OTF%file_log%name)
-        write(out_unitp,*) trim(para_PES%para_OTF%file_Fchk%name)
-        write(out_unitp,*) trim(para_PES%para_OTF%file_pun%name)
+        write(out_unitp,*) trim(PrimOp%para_OTF%file_data%name)
+        write(out_unitp,*) trim(PrimOp%para_OTF%file_log%name)
+        write(out_unitp,*) trim(PrimOp%para_OTF%file_Fchk%name)
+        write(out_unitp,*) trim(PrimOp%para_OTF%file_pun%name)
         write(out_unitp,*) ' Program for the OTF ',ab_initio_prog
         write(out_unitp,*) ' Unix script for the OTF ',commande_unix
-        para_PES%para_OTF%header          = header
-        para_PES%para_OTF%footer            = footer
-        para_PES%para_OTF%file_name       = file_name_OTF
-        para_PES%para_OTF%ab_initio_prog  = ab_initio_prog
-        para_PES%para_OTF%commande_unix   = commande_unix
+        PrimOp%para_OTF%header          = header
+        PrimOp%para_OTF%footer            = footer
+        PrimOp%para_OTF%file_name       = file_name_OTF
+        PrimOp%para_OTF%ab_initio_prog  = ab_initio_prog
+        PrimOp%para_OTF%commande_unix   = commande_unix
 
-        para_PES%para_OTF_DIP = para_PES%para_OTF
+        PrimOp%para_OTF_DIP = PrimOp%para_OTF
 
 
         IF (len_trim(ab_initio_methEne) == 0) THEN
@@ -1923,12 +1923,12 @@ END IF
         IF (len_trim(ab_initio_basisDip) == 0) THEN
           ab_initio_basisDip = ab_initio_basis
         END IF
-        para_PES%para_OTF%ab_initio_meth      = ab_initio_methEne
-        para_PES%para_OTF%ab_initio_basis     = ab_initio_basisEne
-        para_PES%para_OTF_Dip%ab_initio_meth  = ab_initio_methDip
-        para_PES%para_OTF_Dip%ab_initio_basis = ab_initio_basisDip
+        PrimOp%para_OTF%ab_initio_meth      = ab_initio_methEne
+        PrimOp%para_OTF%ab_initio_basis     = ab_initio_basisEne
+        PrimOp%para_OTF_Dip%ab_initio_meth  = ab_initio_methDip
+        PrimOp%para_OTF_Dip%ab_initio_basis = ab_initio_basisDip
 
-        para_PES%levelEne_EQ_levelDip    =                              &
+        PrimOp%levelEne_EQ_levelDip    =                              &
                         (ab_initio_methEne .EQ. ab_initio_methDip) .AND.&
                         (ab_initio_basisEne .EQ. ab_initio_basisDip)
 

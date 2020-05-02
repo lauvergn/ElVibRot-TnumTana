@@ -69,8 +69,6 @@ MODULE mod_Tnum
 
           logical           :: opt                  = .FALSE. ! If we minimize the PES (not used yet)
           logical           :: pot_cplx             = .FALSE. ! complex PES
-          logical           :: pot_act              = .TRUE.  ! active variables for the PES
-          logical           :: pot_cart             = .FALSE. ! the potential is in cartesian coordinates
           logical           :: HarD                 = .TRUE.  ! Harmonic Domain for the PES
           integer           :: pot_itQtransfo       = -1      ! for new Qtransfo (default nb_QTransfo, dyn. coordinates)
           integer           :: nb_scalar_Op         = 0       ! nb of Operator
@@ -100,10 +98,12 @@ MODULE mod_Tnum
           logical                       :: QMLib = .FALSE.
 
           ! parameters for the PES obtained from internal fit program
-          logical                       :: nDfit_Op = .FALSE.
-          character (len=Line_len)      :: BaseName_nDfit_file
-          TYPE (param_nDFit)            :: para_nDFit_V
-          TYPE (param_nDFit), pointer   :: para_nDFit_Scalar_Op(:) => null()
+          logical                               :: nDfit_Op            = .FALSE.
+          character (len=Line_len)              :: BaseName_nDfit_file = ' '
+          character (len=Line_len)              :: nDFit_V_name_Fit    = ' '
+          character (len=Line_len) ,allocatable :: nDFit_Scalar_Op_name_Fit(:)
+          !TYPE (param_nDFit)              :: para_nDFit_V
+          !TYPE (param_nDFit), allocatable :: para_nDFit_Scalar_Op(:)
 
         END TYPE param_PES_FromTnum
 !-------------------------------------------------------------------------------
@@ -119,28 +119,31 @@ MODULE mod_Tnum
           integer :: nat0=0,nat=0,nat_act=0
 
           ! for the ab initio calculation
-          integer                          :: charge=0,multiplicity=-1,nb_elec=-1
-          integer, pointer                 :: Z(:) => null()         ! true pointer
+          integer                          :: charge       = 0
+          integer                          :: multiplicity = -1
+          integer                          :: nb_elec      = -1      ! here it is the number of electrons
+
+          integer,                 pointer :: Z(:)         => null() ! true pointer
           character (len=Name_len),pointer :: name_Qdyn(:) => null() ! true pointer
           character (len=Name_len),pointer :: name_Qact(:) => null() ! true pointer
-          character (len=Name_len),pointer :: symbole(:) => null()   ! true pointer
+          character (len=Name_len),pointer :: symbole(:)   => null() ! true pointer
 
-          logical                          :: cos_th           = .FALSE.  ! T => coordinate (valence angle) => cos(th)
-                                                      ! F => coordinate (valence angle) => th
+          logical                          :: cos_th       = .FALSE.  ! T => coordinate (valence angle) => cos(th)
+                                                                      ! F => coordinate (valence angle) => th
 
-          logical                       :: Without_Rot         = .FALSE.
-          logical                       :: Centered_ON_CoM     = .TRUE.
-          logical                       :: With_VecCOM         = .FALSE.
+          logical                          :: Without_Rot         = .FALSE.
+          logical                          :: Centered_ON_CoM     = .TRUE.
+          logical                          :: With_VecCOM         = .FALSE.
 
-          logical                       :: Old_Qtransfo        = .FALSE.
-          logical                       :: Cart_transfo        = .FALSE.
-          logical                       :: Rot_Dip_with_EC     = .FALSE.
+          logical                          :: Old_Qtransfo        = .FALSE.
+          logical                          :: Cart_transfo        = .FALSE.
+          logical                          :: Rot_Dip_with_EC     = .FALSE.
 
 
 
-          integer                       :: nb_Qtransfo         = -1
-          integer                       :: opt_param           =  0
-          integer, allocatable          :: opt_Qdyn(:)
+          integer                          :: nb_Qtransfo         = -1
+          integer                          :: opt_param           =  0
+          integer, allocatable             :: opt_Qdyn(:)
 
           integer                            :: itPrim               = -1
           integer                            :: itNM                 = -1
@@ -170,12 +173,14 @@ MODULE mod_Tnum
 
 
           real (kind=Rkind), pointer :: masses(:) => null()        ! true pointer
-          integer, pointer           :: active_masses(:) => null() ! for partial hessian (PVSCF)
+          integer,           pointer :: active_masses(:) => null() ! for partial hessian (PVSCF)
 
           real (kind=Rkind), pointer :: d0sm(:) => null()
           real (kind=Rkind)          :: Mtot = ZERO
           real (kind=Rkind)          :: Mtot_inv = ZERO
-
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(mole1) :: CoordType2_TO_CoordType1
+          GENERIC,   PUBLIC  :: assignment(=) => CoordType2_TO_CoordType1
         END TYPE CoordType
 !-------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------
@@ -226,11 +231,14 @@ MODULE mod_Tnum
           TYPE (param_PES_FromTnum)  :: para_PES_FromTnum
 
           TYPE (sum_opnd)            :: TWOxKEO,ExpandTWOxKEO
-
+        CONTAINS
+          PROCEDURE, PRIVATE, PASS(Tnum1) :: Tnum2_TO_Tnum1
+          GENERIC,   PUBLIC  :: assignment(=) => Tnum2_TO_Tnum1
         END TYPE Tnum
 !-------------------------------------------------------------------------------
 
-      PUBLIC :: param_PES_FromTnum, Tnum
+      PUBLIC :: param_PES_FromTnum, Tnum, dealloc_Tnum
+
       PUBLIC :: Write_f2f1vep, Write_TcorTrot
 
       PUBLIC :: zmatrix
@@ -1578,15 +1586,6 @@ MODULE mod_Tnum
 !================================================================
 !       Copy two zmatrix type variables or two CoordType variables
 !================================================================
-  SUBROUTINE mole1TOmole2(mole1,mole2)
-  TYPE (zmatrix), intent(in)    :: mole1
-  TYPE (zmatrix), intent(inout) :: mole2
-
-    CALL CoordType1TOCoordType2(mole1%CoordType,mole2%CoordType)
-
-  END SUBROUTINE mole1TOmole2
-  !!@description: Copy two CoordType variables
-  !!@param: TODO
   SUBROUTINE CoordType1TOCoordType2(mole1,mole2)
 
   ! for the CoordType and Tnum --------------------------------------
@@ -1598,7 +1597,7 @@ MODULE mod_Tnum
 
       !logical, parameter :: debug = .TRUE.
       logical, parameter :: debug = .FALSE.
-      character (len=*), parameter :: name_sub='mole1TOmole2'
+      character (len=*), parameter :: name_sub='CoordType1TOCoordType2'
 
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -1770,9 +1769,282 @@ MODULE mod_Tnum
         CALL flush_perso(out_unitp)
       END IF
 
-     END SUBROUTINE CoordType1TOCoordType2
+  END SUBROUTINE CoordType1TOCoordType2
+  SUBROUTINE mole1TOmole2(mole1,mole2)
+  TYPE (zmatrix), intent(in)    :: mole1
+  TYPE (zmatrix), intent(inout) :: mole2
+
+    CALL CoordType1TOCoordType2(mole1%CoordType,mole2%CoordType)
+
+  END SUBROUTINE mole1TOmole2
+  !!@description: Copy two CoordType variables
+  !!@param: TODO
+  SUBROUTINE CoordType2_TO_CoordType1(mole1,mole2)
+
+  ! for the CoordType and Tnum --------------------------------------
+  CLASS (CoordType), intent(inout) :: mole1
+  TYPE (CoordType),  intent(in)    :: mole2
+
+      integer :: it
+      character (len=Name_len) :: name_transfo
+
+      !logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      character (len=*), parameter :: name_sub='CoordType2_TO_CoordType1'
+
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
 
 
+      CALL dealloc_CoordType(mole1)
+
+      IF (mole2%nat < 3 .OR. mole2%nb_var < 1 .OR.                      &
+          mole2%nb_act < 1 .OR. mole2%ncart < 9) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' mole2 is probably not allocated !!'
+        write(out_unitp,*) 'nat',mole2%nat
+        write(out_unitp,*) 'nb_var',mole2%nb_var
+        write(out_unitp,*) 'nb_act',mole2%nb_act
+        write(out_unitp,*) 'ncart',mole2%ncart
+        write(out_unitp,*) ' Check the Fortran source !!!'
+        STOP
+      END IF
+
+      mole1%stepQ        = mole2%stepQ
+      mole1%num_x        = mole2%num_x
+
+
+      mole1%nb_act       = mole2%nb_act
+      mole1%nb_var       = mole2%nb_var
+      mole1%ndimG        = mole2%ndimG
+      mole1%ncart        = mole2%ncart
+      mole1%ncart_act    = mole2%ncart_act
+      mole1%nat          = mole2%nat
+      mole1%nat0         = mole2%nat0
+      mole1%nat_act      = mole2%nat_act
+
+      ! for the ab initio calculation
+      mole1%charge       = mole2%charge
+      mole1%multiplicity = mole2%multiplicity
+      mole1%nb_elec      = mole2%nb_elec
+
+      mole1%WriteCC      = mole2%WriteCC
+
+      mole1%With_VecCOM     = mole2%With_VecCOM
+      mole1%Without_Rot     = mole2%Without_Rot
+      mole1%Centered_ON_CoM = mole2%Centered_ON_CoM
+      mole1%cos_th          = mole2%cos_th
+
+
+      mole1%Old_Qtransfo     = mole2%Old_Qtransfo
+      mole1%Cart_transfo     = mole2%Cart_transfo
+      mole1%nb_Qtransfo      = mole2%nb_Qtransfo
+      mole1%itNM             = mole2%itNM
+      mole1%itRPH            = mole2%itRPH
+      mole1%itPrim           = mole2%itPrim
+      mole1%opt_param        = mole2%opt_param
+
+      IF (allocated(mole2%opt_Qdyn)) THEN
+        CALL alloc_NParray(mole1%opt_Qdyn,shape(mole2%opt_Qdyn),        &
+                          "mole1%opt_Qdyn",name_sub)
+        mole1%opt_Qdyn(:) = mole2%opt_Qdyn(:)
+      END IF
+
+
+      CALL alloc_array(mole1%tab_Qtransfo,(/mole1%nb_Qtransfo/),        &
+                      "mole1%tab_Qtransfo",name_sub)
+      DO it=1,mole1%nb_Qtransfo
+        !write(out_unitp,*) 'it',it ; flush(out_unitp)
+        CALL Qtransfo1TOQtransfo2(mole2%tab_Qtransfo(it),               &
+                                  mole1%tab_Qtransfo(it))
+
+        name_transfo = mole1%tab_Qtransfo(it)%name_transfo
+        CALL string_uppercase_TO_lowercase(name_transfo)
+        SELECT CASE (name_transfo)
+        CASE ("nm")
+          mole1%NMTransfo => mole1%tab_Qtransfo(it)%NMTransfo
+        CASE ("rph")
+          mole1%RPHTransfo => mole1%tab_Qtransfo(it)%RPHTransfo
+        CASE ('active')
+          mole1%ActiveTransfo => mole1%tab_Qtransfo(it)%ActiveTransfo
+        CASE ('zmat') ! it can be one of the last one
+          mole1%Z       => mole1%tab_Qtransfo(it)%ZmatTransfo%Z
+          mole1%symbole => mole1%tab_Qtransfo(it)%ZmatTransfo%symbole
+          mole1%masses  => mole1%tab_Qtransfo(it)%ZmatTransfo%masses
+        CASE ('bunch','bunch_poly') ! it has to be one of the last one
+          mole1%Z       => mole1%tab_Qtransfo(it)%BunchTransfo%Z
+          mole1%symbole => mole1%tab_Qtransfo(it)%BunchTransfo%symbole
+          mole1%masses  => mole1%tab_Qtransfo(it)%BunchTransfo%masses
+        CASE ('qtox_ana') ! it has to be one of the last one
+          mole1%Z       => mole1%tab_Qtransfo(it)%QTOXanaTransfo%Z
+          mole1%symbole => mole1%tab_Qtransfo(it)%QTOXanaTransfo%symbole
+          mole1%masses  => mole1%tab_Qtransfo(it)%QTOXanaTransfo%masses
+        CASE default
+          CONTINUE
+        END SELECT
+
+        IF (it > 1) THEN
+          mole1%tab_Qtransfo(it)%type_Qout => mole1%tab_Qtransfo(it-1)%type_Qin
+          mole1%tab_Qtransfo(it)%name_Qout => mole1%tab_Qtransfo(it-1)%name_Qin
+        END IF
+
+      END DO
+
+
+
+      IF (associated(mole2%RPHTransfo_inact2n)) THEN
+        CALL alloc_array(mole1%RPHTransfo_inact2n,                      &
+                        'mole1%RPHTransfo_inact2n',name_sub)
+        CALL RPHTransfo1TORPHTransfo2(mole2%RPHTransfo_inact2n,         &
+                                      mole1%RPHTransfo_inact2n)
+      END IF
+
+      CALL CurviRPH1_TO_CurviRPH2(mole2%CurviRPH,mole1%CurviRPH)
+
+      !IF (mole2%Cart_transfo .AND. associated(mole2%tab_Cart_transfo)) THEN
+      IF (associated(mole2%tab_Cart_transfo)) THEN
+
+        CALL alloc_array(mole1%tab_Cart_transfo,                        &
+                                         shape(mole2%tab_Cart_transfo), &
+                        "mole1%tab_Cart_transfo",name_sub)
+
+        DO it=1,size(mole2%tab_Cart_transfo)
+          !write(out_unitp,*) 'it',it ; flush(out_unitp)
+          CALL Qtransfo1TOQtransfo2(mole2%tab_Cart_transfo(it),         &
+                                    mole1%tab_Cart_transfo(it))
+        END DO
+      END IF
+
+
+      ! the 6 tables are true pointers
+      mole1%liste_QactTOQsym => mole1%ActiveTransfo%list_QactTOQdyn
+      mole1%liste_QactTOQdyn => mole1%ActiveTransfo%list_QactTOQdyn
+      mole1%liste_QsymTOQact => mole1%ActiveTransfo%list_QdynTOQact
+      mole1%liste_QdynTOQact => mole1%ActiveTransfo%list_QdynTOQact
+
+      mole1%name_Qact        => mole1%tab_Qtransfo(mole1%nb_Qtransfo)%name_Qin
+      mole1%name_Qdyn        => mole1%tab_Qtransfo(mole1%nb_Qtransfo)%name_Qout
+
+      CALL alloc_array(mole1%nrho_OF_Qact,(/mole1%nb_var/),             &
+                      "mole1%nrho_OF_Qact",name_sub)
+      mole1%nrho_OF_Qact(:)  = mole2%nrho_OF_Qact(:)
+
+      CALL alloc_array(mole1%nrho_OF_Qdyn,(/mole1%nb_var/),             &
+                      "mole1%nrho_OF_Qdyn",name_sub)
+      mole1%nrho_OF_Qdyn(:)  = mole2%nrho_OF_Qdyn(:)
+
+      mole1%nb_act1          = mole2%nb_act1
+      mole1%nb_inact2n       = mole2%nb_inact2n
+      mole1%nb_inact21       = mole2%nb_inact21
+      mole1%nb_inact22       = mole2%nb_inact22
+      mole1%nb_inact20       = mole2%nb_inact20
+      mole1%nb_inact         = mole2%nb_inact
+      mole1%nb_inact31       = mole2%nb_inact31
+      mole1%nb_rigid0        = mole2%nb_rigid0
+      mole1%nb_rigid100      = mole2%nb_rigid100
+      mole1%nb_rigid         = mole2%nb_rigid
+
+      CALL alloc_array(mole1%active_masses,(/mole1%ncart/),             &
+                      "mole1%active_masses",name_sub)
+      mole1%active_masses    = mole2%active_masses
+
+      CALL alloc_array(mole1%d0sm,(/mole1%ncart/),                      &
+                      "mole1%d0sm",name_sub)
+      mole1%d0sm             = mole2%d0sm
+      mole1%Mtot             = mole2%Mtot
+      mole1%Mtot_inv         = mole2%Mtot_inv
+
+
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+
+     END SUBROUTINE CoordType2_TO_CoordType1
+
+  SUBROUTINE Tnum2_TO_Tnum1(Tnum1,Tnum2)
+
+  CLASS (Tnum), intent(inout) :: Tnum1
+  TYPE (Tnum),  intent(in)    :: Tnum2
+
+  Tnum1%stepT                = Tnum2%stepT
+  Tnum1%num_GG               = Tnum2%num_GG
+  Tnum1%num_g                = Tnum2%num_g
+  Tnum1%num_x                = Tnum2%num_x
+  Tnum1%Gdiago               = Tnum2%Gdiago
+  Tnum1%Gcte                 = Tnum2%Gcte
+  Tnum1%NonGcteRange         = Tnum2%NonGcteRange
+  Tnum1%Inertia              = Tnum2%Inertia
+  Tnum1%nrho                 = Tnum2%nrho
+  Tnum1%vep_type             = Tnum2%vep_type
+  Tnum1%JJ                   = Tnum2%JJ
+  Tnum1%WriteT               = Tnum2%WriteT
+  Tnum1%With_Cart_Transfo    = Tnum2%With_Cart_Transfo
+
+  Tnum1%Tana                 = Tnum2%Tana
+  Tnum1%MidasCppForm         = Tnum2%MidasCppForm
+  Tnum1%MCTDHForm            = Tnum2%MCTDHForm
+  Tnum1%LaTeXForm            = Tnum2%LaTeXForm
+  Tnum1%VSCFForm             = Tnum2%VSCFForm
+  Tnum1%f2f1_ana             = Tnum2%f2f1_ana
+  Tnum1%KEO_TalyorOFQinact2n = Tnum2%KEO_TalyorOFQinact2n
+
+  Tnum1%para_PES_FromTnum    = Tnum2%para_PES_FromTnum ! OK no pointers
+
+  Tnum1%TWOxKEO              = Tnum2%TWOxKEO
+  Tnum1%ExpandTWOxKEO        = Tnum2%ExpandTWOxKEO
+
+  IF (associated(Tnum2%Gref)) THEN
+    CALL alloc_array(Tnum1%Gref,shape(Tnum2%Gref),'Tnum1%Gref','Tnum2_TO_Tnum1')
+    Tnum1%Gref(:,:) = Tnum2%Gref
+  END IF
+
+  END SUBROUTINE Tnum2_TO_Tnum1
+  SUBROUTINE dealloc_Tnum(para_Tnum)
+
+  CLASS (Tnum), intent(inout) :: para_Tnum
+
+  para_Tnum%stepT   = ONETENTH**4
+  para_Tnum%num_GG  = .FALSE.
+  para_Tnum%num_g   = .FALSE.
+  para_Tnum%num_x   = .FALSE.
+
+  para_Tnum%Gdiago  = .FALSE.
+  para_Tnum%Gcte    = .FALSE.
+  para_Tnum%NonGcteRange(2) = 0
+  para_Tnum%Inertia = .TRUE.
+
+  para_Tnum%nrho              = 2
+  para_Tnum%vep_type          = -1
+  para_Tnum%JJ                = 0
+  para_Tnum%WriteT            = .FALSE.
+  para_Tnum%With_Cart_Transfo = .TRUE.
+
+  para_Tnum%Tana              = .FALSE.
+  para_Tnum%MidasCppForm      = .FALSE.
+  para_Tnum%MCTDHForm         = .FALSE.
+  para_Tnum%LaTeXForm         = .FALSE.
+  para_Tnum%VSCFForm          = .FALSE.
+
+  para_Tnum%f2f1_ana          = .FALSE.
+
+  para_Tnum%KEO_TalyorOFQinact2n = -1
+
+  !CALL dealloc_PES_Frompara_Tnum(para_Tnum%para_PES_FromTnum)
+  IF (allocated(para_Tnum%para_PES_FromTnum%nDFit_Scalar_Op_name_Fit)) THEN
+    deallocate(para_Tnum%para_PES_FromTnum%nDFit_Scalar_Op_name_Fit)
+  END IF
+
+  CALL delete_op(para_Tnum%TWOxKEO)
+  CALL delete_op(para_Tnum%ExpandTWOxKEO)
+
+  IF (associated(para_Tnum%Gref)) THEN
+    CALL dealloc_array(para_Tnum%Gref,'para_Tnum%Gref','dealloc_Tnum')
+  END IF
+
+  END SUBROUTINE dealloc_Tnum
 !================================================================
 !      check charge multiplicity
 !================================================================

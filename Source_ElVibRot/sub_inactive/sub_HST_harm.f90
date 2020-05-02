@@ -66,7 +66,7 @@
 
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType), pointer     :: mole      ! true pointer
-      TYPE (Tnum),    pointer     :: para_Tnum ! true pointer
+      TYPE (Tnum),      pointer     :: para_Tnum ! true pointer
 
 !----- working variables ----------------------------------------
       logical                           :: pot,keo,KEO_bis
@@ -157,17 +157,17 @@
           mole%WriteCC     = .TRUE.
         END IF
 
-        allocate(d0MatOp(para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op+2))
+        allocate(d0MatOp(para_AllOp%tab_Op(1)%para_ReadOp%nb_scalar_Op+2))
         DO iOp=1,size(d0MatOp)
           CALL Init_d0MatOp(d0MatOp(iOp),para_AllOp%tab_Op(iOp)%param_TypeOp,&
-                            para_AllOp%tab_Op(iOp)%para_PES%nb_elec)
+                            para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec)
         END DO
 
 #if(run_MPI)
         IF(Grid_allco)  THEN
 #endif
-          CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                   &
-                                 para_Tnum,para_AllOp%tab_Op(1)%para_PES)
+          CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,         &
+                                   para_AllOp%tab_Op(1)%para_ReadOp%PrimOp_t)
 #if(run_MPI)
         ENDIF
 #endif
@@ -196,41 +196,41 @@
 
         IF (sqRhoOVERJacSave) THEN
             !$OMP  CRITICAL (sub_HSOp_inact1_CRIT)
-            IF (allocated(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac)) THEN
-              IF (size(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac) /= para_AllOp%tab_Op(1)%nb_qa) THEN
-                CALL dealloc_NParray(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac, &
-                                    'para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac',name_sub)
+            IF (allocated(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac)) THEN
+              IF (size(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac) /= para_AllOp%tab_Op(1)%nb_qa) THEN
+                CALL dealloc_NParray(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac, &
+                                    'para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac',name_sub)
               END IF
             END IF
 
-            IF (.NOT. allocated(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac)) THEN
-                CALL alloc_NParray(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac, &
+            IF (.NOT. allocated(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac)) THEN
+                CALL alloc_NParray(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac, &
                                         (/ para_AllOp%tab_Op(1)%nb_qa /),   &
-                                  'para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac',name_sub)
+                                  'para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac',name_sub)
             END IF
             !$OMP  END CRITICAL (sub_HSOp_inact1_CRIT)
 
-             para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac(iq) =              &
+             para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac(iq) =              &
                                      sqrt(d0MatOp(1)%rho/d0MatOp(1)%Jac)
         END IF
 
         IF (JacSave) THEN
             !$OMP  CRITICAL (sub_HSOp_inact2_CRIT)
-            IF (allocated(para_AllOp%tab_Op(1)%ComOp%Jac)) THEN
-              IF (size(para_AllOp%tab_Op(1)%ComOp%Jac) /= para_AllOp%tab_Op(1)%nb_qa) THEN
-                CALL dealloc_NParray(para_AllOp%tab_Op(1)%ComOp%Jac, &
-                                    'para_AllOp%tab_Op(1)%ComOp%Jac',name_sub)
+            IF (allocated(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac)) THEN
+              IF (size(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac) /= para_AllOp%tab_Op(1)%nb_qa) THEN
+                CALL dealloc_NParray(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac, &
+                                    'para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac',name_sub)
               END IF
             END IF
 
-            IF (.NOT. allocated(para_AllOp%tab_Op(1)%ComOp%Jac)) THEN
-                CALL alloc_NParray(para_AllOp%tab_Op(1)%ComOp%Jac, &
+            IF (.NOT. allocated(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac)) THEN
+                CALL alloc_NParray(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac, &
                                         (/ para_AllOp%tab_Op(1)%nb_qa /),   &
-                                  'para_AllOp%tab_Op(1)%ComOp%Jac',name_sub)
+                                  'para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac',name_sub)
             END IF
             !$OMP  END CRITICAL (sub_HSOp_inact2_CRIT)
 
-            para_AllOp%tab_Op(1)%ComOp%Jac(iq) = d0MatOp(1)%Jac
+            para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac(iq) = d0MatOp(1)%Jac
         END IF
 
         IF (iq > 0 .OR. .NOT. test) THEN
@@ -251,19 +251,19 @@
           WrhonD = Rec_WrhonD(para_AllOp%tab_Op(1)%para_AllBasis%BasisnD,iq,OldPara)
         END IF
 
-        IF (para_AllOp%tab_Op(1)%para_PES%Type_HamilOp /= 1) THEN
+        IF (para_AllOp%tab_Op(1)%para_ReadOp%Type_HamilOp /= 1) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) '    Type_HamilOp',para_AllOp%tab_Op(1)%para_PES%Type_HamilOp
+          write(out_unitp,*) '    Type_HamilOp',para_AllOp%tab_Op(1)%para_ReadOp%Type_HamilOp
           write(out_unitp,*) '    Type_HamilOp MUST be equal to 1 for HADA or cHAC'
           write(out_unitp,*) '    CHECK your data!!'
           STOP
         END IF
 
-        allocate(d0MatOp(para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op+2))
+        allocate(d0MatOp(para_AllOp%tab_Op(1)%para_ReadOp%nb_scalar_Op+2))
 
         DO iOp=1,size(d0MatOp)
           CALL Init_d0MatOp(d0MatOp(iOp),para_AllOp%tab_Op(iOp)%param_TypeOp,&
-                        para_AllOp%tab_Op(1)%nb_bi*para_AllOp%tab_Op(1)%para_PES%nb_elec)
+                        para_AllOp%tab_Op(1)%nb_bi*para_AllOp%tab_Op(1)%para_ReadOp%nb_elec)
         END DO
 
 
@@ -466,7 +466,7 @@
 !----- working variables ----------------------------------------
       integer :: iOp
       integer :: i_point,i_modif,i,j,k,l,ib,iq
-      real (kind=Rkind) :: ScalOp(para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op)
+      real (kind=Rkind) :: ScalOp(para_AllOp%tab_Op(1)%para_ReadOp%nb_scalar_Op)
       real (kind=Rkind) :: vep,rho,wnDh
       real (kind=Rkind) :: pot0_corgrad
       logical :: pot,KEO
@@ -581,7 +581,7 @@
 !     ------ this memory is free at the subroutine end -----------
       DO iOp=1,size(d0MatOp)
         CALL Init_d0MatOp(d0MatOp(iOp),d0MatHADAOp(iOp)%param_TypeOp,   &
-                                para_AllOp%tab_Op(iOp)%para_PES%nb_elec)
+                                para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec)
       END DO
 
       CALL alloc_NParray(f1Q,    (/nb_act/),                    "f1Q",   name_sub)
@@ -725,8 +725,8 @@
 #if(run_MPI)
         IF(Grid_allco) THEN
 #endif
-        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
-                                 para_Tnum,para_AllOp%tab_Op(1)%para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,           &
+                                 para_AllOp%tab_Op(1)%para_ReadOp%PrimOp_t)
 #if(run_MPI)
         ENDIF
 #endif
@@ -776,7 +776,7 @@
          Vinact = vep
          IF (pot) THEN
            Vinact = Vinact + d0MatOp(1)%ReVal(1,1,1)
-           IF (para_AllOp%tab_Op(1)%para_PES%HarD) THEN
+           IF (para_AllOp%tab_Op(1)%para_ReadOp%HarD) THEN
              Vinact = Vinact + pot2(dnHess%d0,deltaQ,nb_inact2n)
              Vinact = Vinact + pot_rest(Qact,deltaQ,nb_inact2n)
            END IF
@@ -795,7 +795,7 @@
         !write(out_unitp,*) 'Qact,V',Qact(1:nb_act1),Vinact
 
 
-         CALL sub_mat6_HST(para_AllOp%tab_Op(1)%para_PES,               &
+         CALL sub_mat6_HST(para_AllOp%tab_Op(1)%para_ReadOp%PrimOp_t,   &
                            d0MatHADAOp,nb_Op,nb_bie,                    &
                            d0f_bhe,                                     &
                            rho,                                         &

@@ -43,6 +43,7 @@
       SUBROUTINE sub_qa_bhe(para_AllOp)
       USE mod_system
       USE mod_Op
+      USE mod_PrimOp
       USE mod_MPI
       IMPLICIT NONE
 
@@ -85,10 +86,9 @@
 
         CALL RecWrite_basis(para_AllOp%tab_Op(1)%para_AllBasis%BasisnD)
 
-        write(out_unitp,*) 'pot_act,HarD,pot_cplx',                     &
-                 para_AllOp%tab_Op(1)%para_PES%pot_act,                 &
-                 para_AllOp%tab_Op(1)%para_PES%HarD,                    &
-                 para_AllOp%tab_Op(1)%para_PES%pot_cplx
+        write(out_unitp,*) 'HarD,pot_cplx',                             &
+                 para_AllOp%tab_Op(1)%para_ReadOp%HarD,                 &
+                 para_AllOp%tab_Op(1)%para_ReadOp%pot_cplx
 
         write(out_unitp,*) 'nb_act1',nb_act1
         write(out_unitp,*) 'nb_inact2n',nb_inact2n
@@ -96,14 +96,15 @@
       END IF
 !-----------------------------------------------------------
 
+
       !----- built tables ----------------------------------------------
       !Define the volume element (nrho of Basis => nrho of Tnum
       CALL nrho_Basis_TO_nhro_Tnum(para_AllOp%tab_Op(1)%para_AllBasis,  &
                                    para_AllOp%tab_Op(1)%mole)
 
       !----- zero of max... ------------------------------------------------
-      para_AllOp%tab_Op(1)%para_PES%min_pot =  huge(ONE)
-      para_AllOp%tab_Op(1)%para_PES%max_pot = -huge(ONE)
+      para_AllOp%tab_Op(1)%para_ReadOp%min_pot =  huge(ONE)
+      para_AllOp%tab_Op(1)%para_ReadOp%max_pot = -huge(ONE)
 
       DO iOp=1,para_AllOp%nb_Op
         IF (para_AllOp%tab_Op(iOp)%n_op == -1 .AND.                     &
@@ -178,12 +179,12 @@
               id2 = para_AllOp%tab_Op(iOp)%derive_termQact(2,iterm)
               IF (id1 /= 0 .AND. id2 /= 0) THEN ! f2 for G
                 IF (id1 == id2) THEN
-                  DO i_e=1,para_AllOp%tab_Op(iOp)%para_PES%nb_elec
+                  DO i_e=1,para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec
                     para_AllOp%tab_Op(iOp)%OpGrid(iterm)%Mat_cte(i_e,i_e) = &
                       -HALF* para_AllOp%tab_Op(iOp)%para_Tnum%Gref(id1,id2)
                   END DO
                 ELSE
-                 DO i_e=1,para_AllOp%tab_Op(iOp)%para_PES%nb_elec
+                 DO i_e=1,para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec
                     para_AllOp%tab_Op(iOp)%OpGrid(iterm)%Mat_cte(i_e,i_e) = &
                       - para_AllOp%tab_Op(iOp)%para_Tnum%Gref(id1,id2)
                   END DO
@@ -210,6 +211,8 @@
       END IF
 
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid /= 0) THEN
+        CALL Set_File_OF_tab_Op(para_AllOp%tab_Op)
+      ELSE
         CALL Set_File_OF_tab_Op(para_AllOp%tab_Op)
       END IF
 
@@ -255,18 +258,18 @@
           IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Restart_Grid) THEN
             write(out_unitp,*) '----------------------------------------'
             write(out_unitp,*) 'Restart_Grid=t'
-            CALL check_HADA(iqf,para_AllOp%tab_Op(1)%ComOp)
+            CALL check_HADA(iqf,para_AllOp%tab_Op(1)%file_grid)
             IF (iqf > para_AllOp%tab_Op(1)%nb_qa) iqf = 0
             iqf = max(para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint,iqf+1)
             write(out_unitp,*) 'First new grid point:',iqf
             write(out_unitp,*) '----------------------------------------'
           ELSE
             iqf = para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint
-            lformatted = para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted
+            lformatted = para_AllOp%tab_Op(1)%file_grid%formatted
             IF (print_level > 1) write(out_unitp,*) 'file_HADA%formatted',lformatted
-            para_AllOp%tab_Op(1)%ComOp%file_HADA%nb_thread = Grid_maxth
-            CALL file_delete(para_AllOp%tab_Op(1)%ComOp%file_HADA)
-            para_AllOp%tab_Op(1)%ComOp%file_HADA%formatted = lformatted
+            para_AllOp%tab_Op(1)%file_grid%nb_thread = Grid_maxth
+            CALL file_delete(para_AllOp%tab_Op(1)%file_grid)
+            para_AllOp%tab_Op(1)%file_grid%formatted = lformatted
           END IF
         ELSE
           CALL Open_File_OF_tab_Op(para_AllOp%tab_Op)

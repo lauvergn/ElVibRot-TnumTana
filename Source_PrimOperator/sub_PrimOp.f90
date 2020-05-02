@@ -41,31 +41,17 @@
 !===========================================================================
 !===========================================================================
    MODULE mod_PrimOp
-     USE mod_nDFit,      ONLY : param_nDFit,nDFunct_WITH_Q,             &
-              ReadWrite_nDFitW,Analysis_nDFit,ndfit1_to_tndfit2,        &
-              analysis_ndfitw,read_ndfit,sub_ndfunc_from_ndfit,Read_Analysis
-     USE mod_PrimOp_def, ONLY : param_PES
-     USE mod_OTF_def,    ONLY : param_otf
-     USE mod_OTF,        ONLY : read_dndipcc_gauss,read_hess_fchk,      &
-                      read_dnpolarizabilitycc_gauss,read_gradhess_molpro
-     USE mod_SimpleOp,  ONLY : param_typeop,dealloc_typeop,             &
-                               write_typeop, init_typeop,               &
-                               derive_termqact_to_derive_termqdyn,      &
-                           param_d0matop, init_d0matop,dealloc_d0matop, &
-                            dealloc_tab_of_d0matop,Write_d0MatOp,       &
-                               get_iop_from_n_op, &
-                                param_dnMatOp,Init_Tab_OF_dnMatOp,      &
-                  Get_Scal_FROM_Tab_OF_dnMatOp,dealloc_tab_of_dnmatop,  &
-              get_grad_from_tab_of_dnmatop,get_hess_from_tab_of_dnmatop,&
-               set_zero_to_tab_of_dnmatop
-
+   USE mod_nDFit
+   USE mod_PrimOp_def
+   USE mod_OTF_def
+   USE mod_OTF
+   USE mod_SimpleOp
    IMPLICIT NONE
 
    PRIVATE
 
   INTERFACE Finalize_TnumTana_Coord_PrimOp
-    MODULE PROCEDURE Finalize_TnumTana_Coord_PrimOp_zmatrix,            &
-                     Finalize_TnumTana_Coord_PrimOp_CoordType
+    MODULE PROCEDURE Finalize_TnumTana_Coord_PrimOp_CoordType
   END INTERFACE
   INTERFACE get_dnMatOp_AT_Qact
     MODULE PROCEDURE get_dnMatOp_AT_Qact_zmatrix,            &
@@ -85,33 +71,34 @@
              pot2,sub_freq2_rph,sub_dnfreq_4p,set_rphpara_at_qact1
 
    ! Public things from other modules
-   PUBLIC :: param_nDFit,nDFunct_WITH_Q,                                &
-             ReadWrite_nDFitW,Analysis_nDFit,ndfit1_to_tndfit2,         &
+   PUBLIC :: param_nDFit,nDFunct_WITH_Q, dealloc_nDFit,                 &
+             ReadWrite_nDFitW,Analysis_nDFit,Read_FOR_nDFit1_TO_TnDFit2,&
              analysis_ndfitw,read_ndfit,sub_ndfunc_from_ndfit,Read_Analysis
-   PUBLIC :: param_PES
-   PUBLIC :: param_otf
+   PUBLIC :: PrimOp_t, write_PrimOp, dealloc_PrimOp
+   PUBLIC :: param_OTF,dealloc_OTF
    PUBLIC :: read_dndipcc_gauss,read_hess_fchk,                         &
-                      read_dnpolarizabilitycc_gauss,read_gradhess_molpro
-   PUBLIC :: param_typeop,dealloc_typeop,write_typeop,init_typeop,      &
-                               derive_termqact_to_derive_termqdyn,      &
-                           param_d0matop, init_d0matop,dealloc_d0matop, &
-                            dealloc_tab_of_d0matop,Write_d0MatOp,       &
-                           get_iop_from_n_op, &
-                                param_dnMatOp,Init_Tab_OF_dnMatOp,      &
-                  Get_Scal_FROM_Tab_OF_dnMatOp,dealloc_tab_of_dnmatop,  &
-              get_grad_from_tab_of_dnmatop,get_hess_from_tab_of_dnmatop,&
-               set_zero_to_tab_of_dnmatop
+             read_dnpolarizabilitycc_gauss,read_gradhess_molpro
 
+   PUBLIC :: param_typeop,dealloc_typeop,write_typeop,init_typeop,      &
+             derive_termqact_to_derive_termqdyn,get_iop_from_n_op
+
+   PUBLIC :: param_d0matop, init_d0matop,dealloc_d0matop,               &
+             dealloc_tab_of_d0matop,Write_d0MatOp
+
+   PUBLIC ::  param_dnMatOp,Init_Tab_OF_dnMatOp,                        &
+              Get_Scal_FROM_Tab_OF_dnMatOp,dealloc_tab_of_dnmatop,      &
+              get_grad_from_tab_of_dnmatop,get_hess_from_tab_of_dnmatop,&
+              set_zero_to_tab_of_dnmatop
    CONTAINS
 
 !===============================================================================
 ! Sub_init_dnOp: 
 ! Init_d0MatOp, get_d0MatOp_AT_Qact
 !===============================================================================
-      SUBROUTINE Sub_init_dnOp(mole,para_Tnum,para_PES)
+      SUBROUTINE Sub_init_dnOp(mole,para_Tnum,PrimOp)
       USE mod_system
       USE mod_SimpleOp,   only : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
-      USE mod_PrimOp_def, only : param_PES
+      USE mod_PrimOp_def, only : PrimOp_t
       USE mod_Coord_KEO,  only : CoordType,Tnum
       IMPLICIT NONE
 
@@ -119,7 +106,7 @@
       TYPE (CoordType) :: mole
       TYPE (Tnum)      :: para_Tnum
 
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t) :: PrimOp
 
 !-------------------------------------------------------------------------
 !-------------------------------------------------------------------------
@@ -138,20 +125,20 @@
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
-         write(out_unitp,*) 'para_PES%nb_scalar_Op ',para_PES%nb_scalar_Op
+         write(out_unitp,*) 'PrimOp%nb_scalar_Op ',PrimOp%nb_scalar_Op
          CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
-!     allocate(d0MatOp(para_PES%nb_scalar_Op+2))
+!     allocate(d0MatOp(PrimOp%nb_scalar_Op+2))
 !
 !      nb_Op = size(d0MatOp)
 !
-!      CALL Init_d0MatOp(d0MatOp(1),para_PES%Type_HamilOp,mole%nb_act,   &
-!                        para_PES%nb_elec,JRot=para_Tnum%JJ,             &
-!                        cplx=para_PES%pot_cplx,direct_KEO=para_PES%direct_KEO) ! H
+!      CALL Init_d0MatOp(d0MatOp(1),PrimOp%Type_HamilOp,mole%nb_act,   &
+!                        PrimOp%nb_elec,JRot=para_Tnum%JJ,             &
+!                        cplx=PrimOp%pot_cplx,direct_KEO=PrimOp%direct_KEO) ! H
 !
 !      DO k=2,nb_Op
-!        CALL Init_d0MatOp(d0MatOp(k),0,mole%nb_act,para_PES%nb_elec,    &
+!        CALL Init_d0MatOp(d0MatOp(k),0,mole%nb_act,PrimOp%nb_elec,    &
 !                          JRot=para_Tnum%JJ,cplx=.FALSE.,direct_KEO=.FALSE.) ! Scalar Operator
 !      END DO
 !
@@ -159,11 +146,11 @@
 !
 !      Qact(:) = mole%ActiveTransfo%Qact0(:)
 
-      IF (para_PES%QMLib) THEN
+      IF (PrimOp%QMLib) THEN
         IF (debug) write(out_unitp,*) 'Initialization with Quantum Model Lib'
 
 #if __QML == 1
-        CALL sub_Init_Qmodel(mole%nb_act,para_PES%nb_elec,'read_model',.FALSE.,0)
+        CALL sub_Init_Qmodel(mole%nb_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
         IF (print_level > 0 .OR. debug) CALL sub_Write_Qmodel(out_unitp)
 #else
         write(out_unitp,*) 'ERROR in ',name_sub
@@ -173,14 +160,14 @@
         STOP 'QML is not present'
 #endif
 
-        IF (allocated(para_PES%Qit_TO_QQMLib)) THEN
-          CALL dealloc_NParray(para_PES%Qit_TO_QQMLib,'Qit_TO_QQMLib',name_sub)
+        IF (allocated(PrimOp%Qit_TO_QQMLib)) THEN
+          CALL dealloc_NParray(PrimOp%Qit_TO_QQMLib,'Qit_TO_QQMLib',name_sub)
         END IF
-        CALL alloc_NParray(para_PES%Qit_TO_QQMLib,(/ mole%nb_act /),'Qit_TO_QQMLib',name_sub)
-        para_PES%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%nb_act) /)
+        CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,(/ mole%nb_act /),'Qit_TO_QQMLib',name_sub)
+        PrimOp%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%nb_act) /)
 
-        IF (para_PES%pot_itQtransfo == mole%nb_Qtransfo-1) THEN ! Qdyn Coord
-          read(in_unitp,*,IOSTAT=err_io) name_dum,para_PES%Qit_TO_QQMLib
+        IF (PrimOp%pot_itQtransfo == mole%nb_Qtransfo-1) THEN ! Qdyn Coord
+          read(in_unitp,*,IOSTAT=err_io) name_dum,PrimOp%Qit_TO_QQMLib
           IF (err_io /= 0) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) '  while reading "Qit_TO_QQMLib"'
@@ -191,7 +178,7 @@
           END IF
         END IF
 !      ELSE
-!        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,para_PES)
+!        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,PrimOp)
       END IF
 
 !      DO k=1,nb_Op
@@ -206,10 +193,10 @@
       END SUBROUTINE Sub_init_dnOp
 !===============================================================================
 
-      SUBROUTINE Sub_init_dnOp_old(mole,para_Tnum,para_PES)
+      SUBROUTINE Sub_init_dnOp_old(mole,para_Tnum,PrimOp)
       USE mod_system
       USE mod_SimpleOp,   only : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
-      USE mod_PrimOp_def, only : param_PES
+      USE mod_PrimOp_def, only : PrimOp_t
       USE mod_Coord_KEO,  only : CoordType,Tnum
       IMPLICIT NONE
 
@@ -218,7 +205,7 @@
       TYPE (Tnum)      :: para_Tnum
 
 
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t) :: PrimOp
 
 !-------------------------------------------------------------------------
 !-------------------------------------------------------------------------
@@ -237,20 +224,20 @@
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
-         write(out_unitp,*) 'para_PES%nb_scalar_Op ',para_PES%nb_scalar_Op
+         write(out_unitp,*) 'PrimOp%nb_scalar_Op ',PrimOp%nb_scalar_Op
          CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
-     allocate(d0MatOp(para_PES%nb_scalar_Op+2))
+     allocate(d0MatOp(PrimOp%nb_scalar_Op+2))
 
       nb_Op = size(d0MatOp)
 
-      CALL Init_d0MatOp(d0MatOp(1),para_PES%Type_HamilOp,mole%nb_act,   &
-                        para_PES%nb_elec,JRot=para_Tnum%JJ,             &
-                        cplx=para_PES%pot_cplx,direct_KEO=para_PES%direct_KEO) ! H
+      CALL Init_d0MatOp(d0MatOp(1),PrimOp%Type_HamilOp,mole%nb_act,   &
+                        PrimOp%nb_elec,JRot=para_Tnum%JJ,             &
+                        cplx=PrimOp%pot_cplx,direct_KEO=PrimOp%direct_KEO) ! H
 
       DO k=2,nb_Op
-        CALL Init_d0MatOp(d0MatOp(k),0,mole%nb_act,para_PES%nb_elec,    &
+        CALL Init_d0MatOp(d0MatOp(k),0,mole%nb_act,PrimOp%nb_elec,    &
                           JRot=para_Tnum%JJ,cplx=.FALSE.,direct_KEO=.FALSE.) ! Scalar Operator
       END DO
 
@@ -258,11 +245,11 @@
 
       Qact(:) = mole%ActiveTransfo%Qact0(:)
 
-      IF (para_PES%QMLib) THEN
+      IF (PrimOp%QMLib) THEN
         IF (debug) write(out_unitp,*) 'Initialization with Quantum Model Lib'
 
 #if __QML == 1
-        CALL sub_Init_Qmodel(mole%nb_act,para_PES%nb_elec,'read_model',.FALSE.,0)
+        CALL sub_Init_Qmodel(mole%nb_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
 #else
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
@@ -271,14 +258,14 @@
         STOP 'QML is not present'
 #endif
 
-        IF (allocated(para_PES%Qit_TO_QQMLib)) THEN
-          CALL dealloc_NParray(para_PES%Qit_TO_QQMLib,'Qit_TO_QQMLib',name_sub)
+        IF (allocated(PrimOp%Qit_TO_QQMLib)) THEN
+          CALL dealloc_NParray(PrimOp%Qit_TO_QQMLib,'Qit_TO_QQMLib',name_sub)
         END IF
-        CALL alloc_NParray(para_PES%Qit_TO_QQMLib,(/ mole%nb_act /),'Qit_TO_QQMLib',name_sub)
-        para_PES%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%nb_act) /)
+        CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,(/ mole%nb_act /),'Qit_TO_QQMLib',name_sub)
+        PrimOp%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%nb_act) /)
 
-        IF (para_PES%pot_itQtransfo == mole%nb_Qtransfo-1) THEN ! Qdyn Coord
-          read(in_unitp,*,IOSTAT=err_io) name_dum,para_PES%Qit_TO_QQMLib
+        IF (PrimOp%pot_itQtransfo == mole%nb_Qtransfo-1) THEN ! Qdyn Coord
+          read(in_unitp,*,IOSTAT=err_io) name_dum,PrimOp%Qit_TO_QQMLib
           IF (err_io /= 0) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) '  while reading "Qit_TO_QQMLib"'
@@ -289,7 +276,7 @@
           END IF
         END IF
       ELSE
-        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,PrimOp)
       END IF
 
       DO k=1,nb_Op
@@ -315,7 +302,7 @@
 !
 !    output : dnE%d..  dnMu(:)%d...
 !================================================================
-      SUBROUTINE get_d0MatOp_AT_Qact_zmatrix(Qact,d0MatOp,mole,para_Tnum,para_PES)
+      SUBROUTINE get_d0MatOp_AT_Qact_zmatrix(Qact,d0MatOp,mole,para_Tnum,PrimOp)
       USE mod_system
       USE mod_dnSVM
       USE mod_Coord_KEO
@@ -330,17 +317,16 @@
 
 !----- for Qact ... ---------------------------------------------
       real (kind=Rkind), intent(inout) :: Qact(:)
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t) :: PrimOp
 
 !----- input output variables ----------------------------------------
       TYPE (param_d0MatOp), intent(inout) :: d0MatOp(:)
 
-
-      CALL get_d0MatOp_AT_Qact_CoordType(Qact,d0MatOp,mole%CoordType,para_Tnum,para_PES)
+      CALL get_d0MatOp_AT_Qact_CoordType(Qact,d0MatOp,mole%CoordType,para_Tnum,PrimOp)
 
       END SUBROUTINE get_d0MatOp_AT_Qact_zmatrix
 
-      SUBROUTINE get_d0MatOp_AT_Qact_CoordType(Qact,d0MatOp,mole,para_Tnum,para_PES)
+      SUBROUTINE get_d0MatOp_AT_Qact_CoordType(Qact,d0MatOp,mole,para_Tnum,PrimOp)
       USE mod_system
       USE mod_dnSVM
       use mod_nDFit, only: sub_ndfunc_from_ndfit
@@ -356,7 +342,7 @@
 
 !----- for Qact ... ---------------------------------------------
       real (kind=Rkind), intent(inout) :: Qact(:)
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t) :: PrimOp
 
 !----- input output variables ----------------------------------------
       integer           :: nb_Op
@@ -372,8 +358,8 @@
 
       real (kind=Rkind)   :: Qxyz(mole%ncart_act)
       TYPE(Type_dnVec)    :: dnXin
-      real (kind=Rkind)   :: d0Scal_loc1(para_PES%nb_elec,para_PES%nb_elec,para_PES%nb_scalar_Op)
-      real (kind=Rkind)   :: d0Scal_loc2(para_PES%nb_elec,para_PES%nb_elec,para_PES%nb_scalar_Op)
+      real (kind=Rkind)   :: d0Scal_loc1(PrimOp%nb_elec,PrimOp%nb_elec,PrimOp%nb_scalar_Op)
+      real (kind=Rkind)   :: d0Scal_loc2(PrimOp%nb_elec,PrimOp%nb_elec,PrimOp%nb_scalar_Op)
       real (kind=Rkind)   :: d0T(3,3) ! for the Eckart rotation matrix
 
       logical             :: Gcenter,Cart_transfo
@@ -384,9 +370,9 @@
       TYPE(Type_dnS), allocatable :: MatdnECC(:,:)
       TYPE(Type_dnS), allocatable :: MatdnScalCC(:,:,:)
 
-      real (kind=Rkind) :: mat_V(para_PES%nb_elec,para_PES%nb_elec)
-      real (kind=Rkind) :: mat_imV(para_PES%nb_elec,para_PES%nb_elec)
-      real (kind=Rkind) :: mat_ScalOp(para_PES%nb_elec,para_PES%nb_elec,para_PES%nb_scalar_Op)
+      real (kind=Rkind) :: mat_V(PrimOp%nb_elec,PrimOp%nb_elec)
+      real (kind=Rkind) :: mat_imV(PrimOp%nb_elec,PrimOp%nb_elec)
+      real (kind=Rkind) :: mat_ScalOp(PrimOp%nb_elec,PrimOp%nb_elec,PrimOp%nb_scalar_Op)
 
       ! for HarD
       real (kind=Rkind) :: Vinact
@@ -408,17 +394,17 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'Qact',Qact
         write(out_unitp,*) 'nb_Op',nb_Op
-        write(out_unitp,*) 'nb_scalar_Op',para_PES%nb_scalar_Op
-        write(out_unitp,*) 'calc_scalar_Op',para_PES%calc_scalar_Op
-        write(out_unitp,*) 'pot_cplx',para_PES%pot_cplx
-        write(out_unitp,*) 'pot_itQtransfo',para_PES%pot_itQtransfo
+        write(out_unitp,*) 'nb_scalar_Op',PrimOp%nb_scalar_Op
+        write(out_unitp,*) 'calc_scalar_Op',PrimOp%calc_scalar_Op
+        write(out_unitp,*) 'pot_cplx',PrimOp%pot_cplx
+        write(out_unitp,*) 'pot_itQtransfo',PrimOp%pot_itQtransfo
         CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
 
       !----------------------------------------------------------------
-      IF (.NOT. para_PES%Read_OnTheFly_only) THEN
-        CALL sub_QactTOQit(Qact,Qit,para_PES%pot_itQtransfo,mole,.FALSE.)
+      IF (.NOT. PrimOp%Read_OnTheFly_only) THEN
+        CALL sub_QactTOQit(Qact,Qit,PrimOp%pot_itQtransfo,mole,.FALSE.)
         !write(out_unitp,*) 'Qact',Qact
         !write(out_unitp,*) 'Qit',Qit
       ELSE
@@ -442,7 +428,7 @@
         iOpScal = iOpS
         itermS  = d0MatOp(iOpS)%derive_term_TO_iterm(0,0)
         nderivS = 0
-        DO ie=1,para_PES%nb_elec
+        DO ie=1,PrimOp%nb_elec
           d0MatOp(iOpS)%ReVal(ie,ie,itermS) = ONE
         END DO
       END IF
@@ -456,32 +442,32 @@
         nderivScal = -1
       END IF
 
-      IF (para_PES%OnTheFly) THEN
+      IF (PrimOp%OnTheFly) THEN
 
-        IF (nderivScal > -1 .AND. para_PES%nb_scalar_Op < 3) THEN
+        IF (nderivScal > -1 .AND. PrimOp%nb_scalar_Op < 3) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) 'nderivScal > -1 and nb_scalar_Op < 3'
           write(out_unitp,*) 'nderivScal (mu)',nderivScal
-          write(out_unitp,*) 'nb_scalar_Op',para_PES%nb_scalar_Op
+          write(out_unitp,*) 'nb_scalar_Op',PrimOp%nb_scalar_Op
           write(out_unitp,*) 'With on-the-fly calculation,'
           write(out_unitp,*) ' nb_scalar_Op MUST be >= 2 !'
           STOP
         END IF
 
-        allocate(MatdnECC(para_PES%nb_elec,para_PES%nb_elec))
-        allocate(MatdnScalCC(para_PES%nb_elec,para_PES%nb_elec,para_PES%nb_scalar_Op))
+        allocate(MatdnECC(PrimOp%nb_elec,PrimOp%nb_elec))
+        allocate(MatdnScalCC(PrimOp%nb_elec,PrimOp%nb_elec,PrimOp%nb_scalar_Op))
 
         CALL dnOp_grid_OnTheFly(Qit,MatdnECC,nderivE,                   &
                                 MatdnScalCC,nderivScal,                 &
-                                mole,para_PES)
+                                mole,PrimOp)
 
 
         !write(77,*) Qact(1:mole%nb_act),MatdnECC%d0,MatdnScalCC%d0
 
         !----------------------------------------------------------------
         !- then conversion: CC=>Q
-        DO ie=1,para_PES%nb_elec
-        DO je=1,para_PES%nb_elec
+        DO ie=1,PrimOp%nb_elec
+        DO je=1,PrimOp%nb_elec
           d0MatOp(iOpE)%ReVal(:,:,itermE) = MatdnECC(:,:)%d0
         END DO
         END DO
@@ -491,11 +477,11 @@
 
         !- then conversion: CC=>Q
         IF (nderivScal > -1) THEN
-          DO i=1,para_PES%nb_scalar_Op
+          DO i=1,PrimOp%nb_scalar_Op
             iterm = d0MatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
             d0MatOp(iOpScal-1+i)%ReVal(:,:,iterm) = MatdnScalCC(:,:,i)%d0
           END DO
-          DO i=1,para_PES%nb_scalar_Op
+          DO i=1,PrimOp%nb_scalar_Op
             CALL dealloc_MatOFdnS(MatdnScalCC(:,:,i))
           END DO
         END IF
@@ -503,21 +489,21 @@
         !----------------------------------------------------------------
 
         !----------------------------------------------------------------
-        DO ie=1,para_PES%nb_elec
+        DO ie=1,PrimOp%nb_elec
           d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                           &
-                       d0MatOp(iOpE)%ReVal(ie,ie,itermE) - para_PES%pot0
+                       d0MatOp(iOpE)%ReVal(ie,ie,itermE) - PrimOp%pot0
         END DO
         !----------------------------------------------------------------
 
       ELSE
 
-          IF (para_PES%QMLib) THEN
+          IF (PrimOp%QMLib) THEN
             IF (debug) THEN
                write(out_unitp,*) 'With Quantum Model Lib'
-               write(out_unitp,*) 'QQMLib',Qit(para_PES%Qit_TO_QQMLib)
+               write(out_unitp,*) 'QQMLib',Qit(PrimOp%Qit_TO_QQMLib)
             END IF
 #if __QML == 1
-            CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(1,1,itermE),Qit(para_PES%Qit_TO_QQMLib))
+            CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(1,1,itermE),Qit(PrimOp%Qit_TO_QQMLib))
 #else
             write(out_unitp,*) 'ERROR in ',name_sub
             write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
@@ -526,27 +512,27 @@
 #endif
 
             !----------------------------------------------------------------
-            DO ie=1,para_PES%nb_elec
+            DO ie=1,PrimOp%nb_elec
              d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                        &
-                       d0MatOp(iOpE)%ReVal(ie,ie,itermE) - para_PES%pot0
+                       d0MatOp(iOpE)%ReVal(ie,ie,itermE) - PrimOp%pot0
             END DO
             !----------------------------------------------------------------
 
-          ELSE IF (para_PES%nDfit_Op) THEN
+          ELSE IF (PrimOp%nDfit_Op) THEN
             IF (debug) write(out_unitp,*) 'With nDFit'
-            IF (para_PES%nb_elec > 1) STOP 'ERROR nb_elec > 1 with nDFit'
+            IF (PrimOp%nb_elec > 1) STOP 'ERROR nb_elec > 1 with nDFit'
 
             ! potential
             CALL sub_nDFunc_FROM_nDFit(d0MatOp(iOpE)%ReVal(1,1,itermE), &
-                                       Qit,para_PES%para_nDFit_V)
+                                       Qit,PrimOp%para_nDFit_V)
 
             ! Scalar Op
-            IF (para_PES%calc_scalar_Op) THEN
-              DO i=1,para_PES%nb_scalar_Op
+            IF (PrimOp%calc_scalar_Op) THEN
+              DO i=1,PrimOp%nb_scalar_Op
                 iterm = d0MatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
                 CALL sub_nDFunc_FROM_nDFit(                             &
                                  d0MatOp(iOpScal-1+i)%ReVal(1,1,iterm), &
-                             Qit,para_PES%para_nDFit_Scalar_Op(i))
+                             Qit,PrimOp%para_nDFit_Scalar_Op(i))
               END DO
             END IF
           ELSE
@@ -554,31 +540,30 @@
               write(out_unitp,*) 'With calcN_op'
               CALL flush_perso(out_unitp)
             END IF
-
             CALL calcN_op(d0MatOp(iOpE)%ReVal(:,:,itermE),              &
                           mat_imV,mat_ScalOp,                           &
-                          para_PES%nb_elec,para_PES%nb_scalar_Op,       &
+                          PrimOp%nb_elec,PrimOp%nb_scalar_Op,           &
                           Qit,size(Qit),                                &
-                          mole,para_PES%calc_scalar_Op,para_PES%pot_cplx)
+                          mole,PrimOp%calc_scalar_Op,PrimOp%pot_cplx)
 
             IF (d0MatOp(iOpE)%cplx) THEN
               d0MatOp(iOpE)%ImVal(:,:) = mat_imV(:,:)
             END IF
 
-            DO i=1,para_PES%nb_scalar_Op
+            DO i=1,PrimOp%nb_scalar_Op
               iterm = d0MatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
               d0MatOp(iOpScal-1+i)%ReVal(:,:,iterm) = mat_ScalOp(:,:,i)
             END DO
 
             !----------------------------------------------------------------
-            DO ie=1,para_PES%nb_elec
+            DO ie=1,PrimOp%nb_elec
              d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                        &
-                       d0MatOp(iOpE)%ReVal(ie,ie,itermE) - para_PES%pot0
+                       d0MatOp(iOpE)%ReVal(ie,ie,itermE) - PrimOp%pot0
             END DO
             !----------------------------------------------------------------
           END IF
 
-          IF (para_PES%HarD .AND. associated(mole%RPHTransfo) .AND. para_PES%nb_elec == 1) THEN
+          IF (PrimOp%HarD .AND. associated(mole%RPHTransfo) .AND. PrimOp%nb_elec == 1) THEN
             !here it should be Qin of RPH (therefore Qdyn ?????)
             CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
             !write(out_unitp,*) 'test HARD without HAC'
@@ -630,7 +615,7 @@
             !write(out_unitp,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
             !write(out_unitp,*) 'Vinact',Vinact
 
-            DO ie=1,para_PES%nb_elec
+            DO ie=1,PrimOp%nb_elec
               d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                       &
                               d0MatOp(iOpE)%ReVal(ie,ie,itermE) + Vinact
             END DO
@@ -642,14 +627,14 @@
 
       END IF
 
-      DO ie=1,para_PES%nb_elec
-        para_PES%min_pot = min(para_PES%min_pot,d0MatOp(iOpE)%ReVal(ie,ie,itermE))
-        para_PES%max_pot = max(para_PES%max_pot,d0MatOp(iOpE)%ReVal(ie,ie,itermE))
+      DO ie=1,PrimOp%nb_elec
+        PrimOp%min_pot = min(PrimOp%min_pot,d0MatOp(iOpE)%ReVal(ie,ie,itermE))
+        PrimOp%max_pot = max(PrimOp%max_pot,d0MatOp(iOpE)%ReVal(ie,ie,itermE))
       END DO
 
       !----------------------------------------------------------------
       IF (mole%Rot_Dip_with_EC .AND. nderivScal > -1 .AND.              &
-                                         para_PES%nb_scalar_Op > 2) THEN
+                                         PrimOp%nb_scalar_Op > 2) THEN
         CALL alloc_dnSVM(dnXin,mole%ncart,mole%nb_act,nderiv=nderivScal)
 
         CALL sub_QactTOdnx(Qact,dnXin,mole,nderiv=nderivScal,           &
@@ -660,12 +645,12 @@
         ! initial rotation of the dipole moment
         d0T(:,:) = mole%tab_Cart_transfo(1)%CartesianTransfo%Rot_initial
 
-        DO i=1,para_PES%nb_scalar_Op
+        DO i=1,PrimOp%nb_scalar_Op
           iterm = d0MatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
           d0Scal_loc1(:,:,i) = d0MatOp(iOpScal-1+i)%ReVal(:,:,iterm)
         END DO
-        DO ie=1,para_PES%nb_elec
-        DO je=1,para_PES%nb_elec
+        DO ie=1,PrimOp%nb_elec
+        DO je=1,PrimOp%nb_elec
           d0Scal_loc2(ie,je,:) = matmul(d0T,d0Scal_loc1(ie,je,:))
         END DO
         END DO
@@ -676,13 +661,13 @@
                  mole%tab_Cart_transfo(1)%CartesianTransfo,Qact)
 
         ! rotation of the dipole moment
-        DO ie=1,para_PES%nb_elec
-        DO je=1,para_PES%nb_elec
+        DO ie=1,PrimOp%nb_elec
+        DO je=1,PrimOp%nb_elec
           d0Scal_loc1(ie,je,:) = matmul(d0T,d0Scal_loc2(ie,je,:))
         END DO
         END DO
 
-        DO i=1,para_PES%nb_scalar_Op
+        DO i=1,PrimOp%nb_scalar_Op
           iterm = d0MatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
           d0MatOp(iOpScal-1+i)%ReVal(:,:,iterm) = d0Scal_loc1(:,:,i)
         END DO
@@ -705,7 +690,7 @@
 !-----------------------------------------------------------
 
      END SUBROUTINE get_d0MatOp_AT_Qact_CoordType
-     SUBROUTINE get_dnMatOp_AT_Qact_zmatrix(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv)
+     SUBROUTINE get_dnMatOp_AT_Qact_zmatrix(Qact,Tab_dnMatOp,mole,para_Tnum,PrimOp,nderiv)
       USE mod_system
       USE mod_dnSVM
       USE mod_Coord_KEO
@@ -720,7 +705,7 @@
 
 !----- for Qact ... ---------------------------------------------
       real (kind=Rkind), intent(inout) :: Qact(:)
-      TYPE (param_PES)                 :: para_PES
+      TYPE (PrimOp_t)                 :: PrimOp
 
 !----- input output variables ----------------------------------------
       TYPE (param_dnMatOp), intent(inout) :: Tab_dnMatOp(:)
@@ -728,14 +713,14 @@
 
       IF (present(nderiv)) THEN
         CALL get_dnMatOp_AT_Qact_CoordType(Qact,Tab_dnMatOp,mole%CoordType,&
-                                           para_Tnum,para_PES,nderiv)
+                                           para_Tnum,PrimOp,nderiv)
       ELSE
         CALL get_dnMatOp_AT_Qact_CoordType(Qact,Tab_dnMatOp,mole%CoordType,&
-                                           para_Tnum,para_PES)
+                                           para_Tnum,PrimOp)
       END IF
 
      END  SUBROUTINE get_dnMatOp_AT_Qact_zmatrix
-     SUBROUTINE get_dnMatOp_AT_Qact_CoordType(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv)
+     SUBROUTINE get_dnMatOp_AT_Qact_CoordType(Qact,Tab_dnMatOp,mole,para_Tnum,PrimOp,nderiv)
       USE mod_system
       USE mod_dnSVM
       use mod_nDFit, only: sub_ndfunc_from_ndfit
@@ -751,7 +736,7 @@
 
 !----- for Qact ... ---------------------------------------------
       real (kind=Rkind), intent(inout) :: Qact(:)
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t) :: PrimOp
 
 !----- input output variables ----------------------------------------
       TYPE (param_dnMatOp), intent(inout) :: Tab_dnMatOp(:)
@@ -769,8 +754,8 @@
 
       real (kind=Rkind)   :: Qxyz(mole%ncart_act)
       TYPE(Type_dnVec)    :: dnXin,dnXout
-      TYPE(Type_dnS)      :: dnScal_loc1(para_PES%nb_scalar_Op)
-      TYPE(Type_dnS)      :: dnScal_loc2(para_PES%nb_scalar_Op)
+      TYPE(Type_dnS)      :: dnScal_loc1(PrimOp%nb_scalar_Op)
+      TYPE(Type_dnS)      :: dnScal_loc2(PrimOp%nb_scalar_Op)
       TYPE(Type_dnS)      :: dnT(3,3) ! for the Eckart rotation matrix
       TYPE(Type_dnS)      :: dnXref(3,mole%nat_act)
 
@@ -779,12 +764,12 @@
       integer             :: i,i1,i2,ie,je,io,iOpE,itermE,iOpS,iOpScal,itermS,iOp,iterm
 
 !     - for the conversion gCC -> gzmt=d1pot -----------
-      TYPE(Type_dnS) :: MatdnECC(para_PES%nb_elec,para_PES%nb_elec)
-      TYPE(Type_dnS) :: MatdnScalCC(para_PES%nb_elec,para_PES%nb_elec,para_PES%nb_scalar_Op)
+      TYPE(Type_dnS) :: MatdnECC(PrimOp%nb_elec,PrimOp%nb_elec)
+      TYPE(Type_dnS) :: MatdnScalCC(PrimOp%nb_elec,PrimOp%nb_elec,PrimOp%nb_scalar_Op)
 
-      real (kind=Rkind) :: mat_V(para_PES%nb_elec,para_PES%nb_elec)
-      real (kind=Rkind) :: mat_imV(para_PES%nb_elec,para_PES%nb_elec)
-      real (kind=Rkind) :: mat_ScalOp(para_PES%nb_elec,para_PES%nb_elec,para_PES%nb_scalar_Op)
+      real (kind=Rkind) :: mat_V(PrimOp%nb_elec,PrimOp%nb_elec)
+      real (kind=Rkind) :: mat_imV(PrimOp%nb_elec,PrimOp%nb_elec)
+      real (kind=Rkind) :: mat_ScalOp(PrimOp%nb_elec,PrimOp%nb_elec,PrimOp%nb_scalar_Op)
 
       ! for HarD
       real (kind=Rkind) :: Vinact
@@ -807,10 +792,10 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'Qact',Qact
         write(out_unitp,*) 'nb_Op',nb_Op
-        write(out_unitp,*) 'nb_scalar_Op',para_PES%nb_scalar_Op
-        write(out_unitp,*) 'calc_scalar_Op',para_PES%calc_scalar_Op
-        write(out_unitp,*) 'pot_cplx',para_PES%pot_cplx
-        write(out_unitp,*) 'pot_itQtransfo',para_PES%pot_itQtransfo
+        write(out_unitp,*) 'nb_scalar_Op',PrimOp%nb_scalar_Op
+        write(out_unitp,*) 'calc_scalar_Op',PrimOp%calc_scalar_Op
+        write(out_unitp,*) 'pot_cplx',PrimOp%pot_cplx
+        write(out_unitp,*) 'pot_itQtransfo',PrimOp%pot_itQtransfo
       END IF
 !-----------------------------------------------------------
 
@@ -821,8 +806,8 @@
       END IF
 
       !----------------------------------------------------------------
-      IF (.NOT. para_PES%Read_OnTheFly_only) THEN
-        CALL sub_QactTOQit(Qact,Qit,para_PES%pot_itQtransfo,mole,.FALSE.)
+      IF (.NOT. PrimOp%Read_OnTheFly_only) THEN
+        CALL sub_QactTOQit(Qact,Qit,PrimOp%pot_itQtransfo,mole,.FALSE.)
         !write(out_unitp,*) 'Qact',Qact
         !write(out_unitp,*) 'Qit',Qit
       ELSE
@@ -847,7 +832,7 @@
         iOpScal = iOpS
         itermS  = Tab_dnMatOp(iOpS)%derive_term_TO_iterm(0,0)
         nderivS = min(nderiv_loc,Tab_dnMatOp(iOpS)%nderiv)
-        DO ie=1,para_PES%nb_elec
+        DO ie=1,PrimOp%nb_elec
           Tab_dnMatOp(iOpS)%tab_dnMatOp(ie,ie,itermE)%d0 = ONE
         END DO
       END IF
@@ -861,29 +846,29 @@
         nderivScal =  -1
       END IF
 
-      IF (para_PES%Read_OnTheFly_only .OR. (para_PES%OnTheFly .AND.     &
-          (nderivE == 0 .OR. .NOT. para_PES%deriv_WITH_FiniteDiff))) THEN
+      IF (PrimOp%Read_OnTheFly_only .OR. (PrimOp%OnTheFly .AND.     &
+          (nderivE == 0 .OR. .NOT. PrimOp%deriv_WITH_FiniteDiff))) THEN
 
-        IF (nderivScal > -1 .AND. para_PES%nb_scalar_Op < 3) THEN
+        IF (nderivScal > -1 .AND. PrimOp%nb_scalar_Op < 3) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) 'nderivScal > -1 and nb_scalar_Op < 3'
           write(out_unitp,*) 'nderivScal (mu)',nderivScal
-          write(out_unitp,*) 'nb_scalar_Op',para_PES%nb_scalar_Op
+          write(out_unitp,*) 'nb_scalar_Op',PrimOp%nb_scalar_Op
           write(out_unitp,*) 'With on-the-fly calculation,'
           write(out_unitp,*) ' nb_scalar_Op MUST be >= 2 !'
           STOP
         END IF
         CALL dnOp_grid_OnTheFly(Qit,MatdnECC,nderivE,                   &
                                 MatdnScalCC,nderivScal,                 &
-                                mole,para_PES)
+                                mole,PrimOp)
 
 
         !write(77,*) Qact(1:mole%nb_act),MatdnECC%d0,MatdnScalCC%d0
 
         !----------------------------------------------------------------
         !- then conversion: CC=>Q
-        DO ie=1,para_PES%nb_elec
-        DO je=1,para_PES%nb_elec
+        DO ie=1,PrimOp%nb_elec
+        DO je=1,PrimOp%nb_elec
          CALL sub_dnFCC_TO_dnFcurvi(Qact,MatdnECC(ie,je),             &
                        Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,je,itermE),mole)
         END DO
@@ -892,10 +877,10 @@
 
         !- then conversion: CC=>Q
         IF (nderivScal > -1) THEN
-          DO i=1,para_PES%nb_scalar_Op
+          DO i=1,PrimOp%nb_scalar_Op
             iterm = Tab_dnMatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
-            DO ie=1,para_PES%nb_elec
-            DO je=1,para_PES%nb_elec
+            DO ie=1,PrimOp%nb_elec
+            DO je=1,PrimOp%nb_elec
               CALL sub_dnFCC_TO_dnFcurvi(Qact,MatdnScalCC(ie,je,i),   &
                       Tab_dnMatOp(iOpScal-1+i)%tab_dnMatOp(ie,je,iterm),mole)
 
@@ -909,32 +894,32 @@
         !----------------------------------------------------------------
 
         !----------------------------------------------------------------
-        DO ie=1,para_PES%nb_elec
+        DO ie=1,PrimOp%nb_elec
           Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 =              &
                        Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 - &
-                                                          para_PES%pot0
+                                                          PrimOp%pot0
         END DO
         !----------------------------------------------------------------
 
       ELSE
 
         IF (nderivE == 0 ) THEN
-          IF (para_PES%nDfit_Op) THEN
+          IF (PrimOp%nDfit_Op) THEN
             IF (debug) write(out_unitp,*) 'With nDFit'
-            IF (para_PES%nb_elec > 1) STOP 'ERROR nb_elec > 1 with nDFit'
+            IF (PrimOp%nb_elec > 1) STOP 'ERROR nb_elec > 1 with nDFit'
 
             ! potential
             CALL sub_nDFunc_FROM_nDFit(                                 &
                           Tab_dnMatOp(iOpE)%tab_dnMatOp(1,1,itermE)%d0, &
-                                       Qit,para_PES%para_nDFit_V)
+                                       Qit,PrimOp%para_nDFit_V)
 
             ! Scalar Op
-            IF (para_PES%calc_scalar_Op .AND. nb_Op >=3) THEN
-              DO i=1,para_PES%nb_scalar_Op
+            IF (PrimOp%calc_scalar_Op .AND. nb_Op >=3) THEN
+              DO i=1,PrimOp%nb_scalar_Op
                 iterm = Tab_dnMatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
                 CALL sub_nDFunc_FROM_nDFit(                             &
                         Tab_dnMatOp(iOpScal-1+i)%tab_dnMatOp(1,1,iterm)%d0, &
-                             Qit,para_PES%para_nDFit_Scalar_Op(i))
+                             Qit,PrimOp%para_nDFit_Scalar_Op(i))
               END DO
             END IF
           ELSE
@@ -942,30 +927,30 @@
 
             CALL calcN_op(Tab_dnMatOp(iOpE)%tab_dnMatOp(:,:,itermE)%d0, &
                           mat_imV,mat_ScalOp,                           &
-                          para_PES%nb_elec,para_PES%nb_scalar_Op,       &
+                          PrimOp%nb_elec,PrimOp%nb_scalar_Op,       &
                           Qit,size(Qit),                     &
-                          mole,para_PES%calc_scalar_Op,para_PES%pot_cplx)
+                          mole,PrimOp%calc_scalar_Op,PrimOp%pot_cplx)
 
             IF (Tab_dnMatOp(iOpE)%cplx) THEN
               Tab_dnMatOp(iOpE)%Im_dnMatOp(:,:)%d0 = mat_imV(:,:)
             END IF
 
             IF (nb_Op >=3) THEN
-              DO i=1,para_PES%nb_scalar_Op
+              DO i=1,PrimOp%nb_scalar_Op
                 iterm = Tab_dnMatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
                 Tab_dnMatOp(iOpScal-1+i)%tab_dnMatOp(:,:,iterm)%d0 = mat_ScalOp(:,:,i)
               END DO
             END IF
 
             !----------------------------------------------------------------
-            DO ie=1,para_PES%nb_elec
+            DO ie=1,PrimOp%nb_elec
               Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 =          &
                        Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 - &
-                                           para_PES%pot0
+                                           PrimOp%pot0
             END DO
             !----------------------------------------------------------------
           END IF
-          IF (para_PES%HarD .AND. associated(mole%RPHTransfo) .AND. para_PES%nb_elec == 1) THEN
+          IF (PrimOp%HarD .AND. associated(mole%RPHTransfo) .AND. PrimOp%nb_elec == 1) THEN
             !here it should be Qin of RPH (therefore Qdyn ?????)
             CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
             !write(out_unitp,*) 'test HARD without HAC'
@@ -1020,7 +1005,7 @@
             !write(out_unitp,*) 'Vinact',Vinact
 
 
-            DO ie=1,para_PES%nb_elec
+            DO ie=1,PrimOp%nb_elec
               Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 =          &
                        Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 + Vinact
             END DO
@@ -1034,19 +1019,19 @@
         ELSE ! with finite difference (even for on-the-fly calculation)
           IF (debug) write(out_unitp,*) 'With numerical derivatives'
 
-            CALL dnOp_num_grid_v2(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES,nderiv_loc)
+            CALL dnOp_num_grid_v2(Qact,Tab_dnMatOp,mole,para_Tnum,PrimOp,nderiv_loc)
 
         END IF
       END IF
 
-      DO ie=1,para_PES%nb_elec
-        para_PES%min_pot = min(para_PES%min_pot,Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0)
-        para_PES%max_pot = max(para_PES%max_pot,Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0)
+      DO ie=1,PrimOp%nb_elec
+        PrimOp%min_pot = min(PrimOp%min_pot,Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0)
+        PrimOp%max_pot = max(PrimOp%max_pot,Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0)
       END DO
 
       !----------------------------------------------------------------
       IF (mole%Rot_Dip_with_EC .AND. nderivScal > -1 .AND.              &
-                                         para_PES%nb_scalar_Op > 2) THEN
+                                         PrimOp%nb_scalar_Op > 2) THEN
         CALL alloc_dnSVM(dnXin,mole%ncart,mole%nb_act,nderiv=nderivScal)
 
         CALL sub_QactTOdnx(Qact,dnXin,mole,nderiv=nderivScal,           &
@@ -1062,9 +1047,9 @@
         CALL alloc_VecOFdnS(dnScal_loc1,dnXin%nb_var_deriv,nderivScal)
         CALL alloc_VecOFdnS(dnScal_loc2,dnXin%nb_var_deriv,nderivScal)
 
-        DO ie=1,para_PES%nb_elec
-        DO je=1,para_PES%nb_elec
-          DO i=1,para_PES%nb_scalar_Op
+        DO ie=1,PrimOp%nb_elec
+        DO je=1,PrimOp%nb_elec
+          DO i=1,PrimOp%nb_scalar_Op
             iterm = Tab_dnMatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
             CALL sub_dnS1_TO_dnS2(                                      &
                           Tab_dnMatOp(iOpScal-1+i)%tab_dnMatOp(ie,je,iterm), &
@@ -1074,7 +1059,7 @@
           CALL Mat1OFdnS_MUL_Vec2OFdnS_TO_Vec3OFdnS(dnT,dnScal_loc1,    &
                                                 dnScal_loc2,nderivScal)
 
-          DO i=1,para_PES%nb_scalar_Op
+          DO i=1,PrimOp%nb_scalar_Op
             iterm = Tab_dnMatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
              CALL sub_dnS1_TO_dnS2(dnScal_loc2(i),                      &
                  Tab_dnMatOp(iOpScal-1+i)%tab_dnMatOp(ie,je,iterm),nderivScal)
@@ -1106,9 +1091,9 @@
         CALL dealloc_MatOFdnS(dnXref)
 
         ! 4th: rotation of the dipole moment
-        DO ie=1,para_PES%nb_elec
-        DO je=1,para_PES%nb_elec
-          DO i=1,para_PES%nb_scalar_Op
+        DO ie=1,PrimOp%nb_elec
+        DO je=1,PrimOp%nb_elec
+          DO i=1,PrimOp%nb_scalar_Op
             iterm = Tab_dnMatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
             CALL sub_dnS1_TO_dnS2(                                      &
                           Tab_dnMatOp(iOpScal-1+i)%tab_dnMatOp(ie,je,iterm), &
@@ -1119,7 +1104,7 @@
           CALL Mat1OFdnS_MUL_Vec2OFdnS_TO_Vec3OFdnS(dnT,dnScal_loc1,    &
                                                  dnScal_loc2,nderivScal)
 
-          DO i=1,para_PES%nb_scalar_Op
+          DO i=1,PrimOp%nb_scalar_Op
             iterm = Tab_dnMatOp(iOpScal-1+i)%derive_term_TO_iterm(0,0)
              CALL sub_dnS1_TO_dnS2(dnScal_loc2(i),                      &
                  Tab_dnMatOp(iOpScal-1+i)%tab_dnMatOp(ie,je,iterm),nderivScal)
@@ -1153,7 +1138,7 @@
 
 
       SUBROUTINE dnOp_num_grid_v2(Qact,Tab_dnMatOp,                     &
-                                  mole,para_Tnum,para_PES,nderiv)
+                                  mole,para_Tnum,PrimOp,nderiv)
       USE mod_system
       !$ USE omp_lib, only : OMP_GET_THREAD_NUM
       USE mod_dnSVM
@@ -1168,7 +1153,7 @@
       TYPE (Tnum)      :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(:)
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t) :: PrimOp
 
       TYPE (param_dnMatOp), intent(inout) :: Tab_dnMatOp(:)
       integer, intent(in)                 :: nderiv
@@ -1200,22 +1185,22 @@
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
          write(out_unitp,*) 'Qact',Qact
-         write(out_unitp,*) 'stepOp',para_PES%stepOp
-         write(out_unitp,*) 'nb_elec',para_PES%nb_elec
+         write(out_unitp,*) 'stepOp',PrimOp%stepOp
+         write(out_unitp,*) 'nb_elec',PrimOp%nb_elec
 
          CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
       nderiv_loc = min(nderiv,Tab_dnMatOp(1)%tab_dnMatOp(1,1,1)%nderiv) ! We assume that all nderiv are identical!!
 
-      IF (para_PES%stepOp <= ZERO) THEN
+      IF (PrimOp%stepOp <= ZERO) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' stepOp is <= 0',para_PES%stepOp
+        write(out_unitp,*) ' stepOp is <= 0',PrimOp%stepOp
         STOP
       END IF
-      step2 = ONE/(para_PES%stepOp*para_PES%stepOp)
+      step2 = ONE/(PrimOp%stepOp*PrimOp%stepOp)
       step24 = step2*HALF*HALF
-      stepp = ONE/(para_PES%stepOp+para_PES%stepOp)
+      stepp = ONE/(PrimOp%stepOp+PrimOp%stepOp)
 
       IF (Grid_omp == 0) THEN
         nb_thread = 1
@@ -1231,13 +1216,13 @@
 
       allocate(d0MatOp_th(nb_Op,nb_thread))
       DO ith=1,nb_thread
-        CALL Init_Tab_OF_d0MatOp(d0MatOp_th(:,ith),mole%nb_act,para_PES%nb_elec, &
-                                 para_PES%Type_HamilOp,JRot=para_Tnum%JJ, &
-                                 cplx=para_PES%pot_cplx,direct_KEO=para_PES%direct_KEO) ! H
+        CALL Init_Tab_OF_d0MatOp(d0MatOp_th(:,ith),mole%nb_act,PrimOp%nb_elec, &
+                                 PrimOp%Type_HamilOp,JRot=para_Tnum%JJ, &
+                                 cplx=PrimOp%pot_cplx,direct_KEO=PrimOp%direct_KEO) ! H
       END DO
 
       !-- pot0 Qact(i) ------------------
-      CALL get_d0MatOp_AT_Qact(Qact,d0MatOp_th(:,1),mole,para_Tnum,para_PES)
+      CALL get_d0MatOp_AT_Qact(Qact,d0MatOp_th(:,1),mole,para_Tnum,PrimOp)
 
       DO k=1,nb_Op
         CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,1),Tab_dnMatOp(k),(/0,0/))
@@ -1257,7 +1242,7 @@
 
 !$OMP   PARALLEL &
 !$OMP   DEFAULT(NONE) &
-!$OMP   SHARED(mole,para_Tnum,para_PES,stepp,step2) &
+!$OMP   SHARED(mole,para_Tnum,PrimOp,stepp,step2) &
 !$OMP   SHARED(tab_dnMatOp,nderiv_loc,Qact,Qact_th,d0MatOp_th,nb_Op) &
 !$OMP   PRIVATE(i,ie,je,ith) &
 !$OMP   NUM_THREADS(nb_thread)
@@ -1273,9 +1258,9 @@
         !$ ith = omp_get_thread_num()+1
 
         !-- pot0 Qact(i)+step -------------
-        Qact_th(i,ith) = Qact(i) + para_PES%stepOp
+        Qact_th(i,ith) = Qact(i) + PrimOp%stepOp
 
-        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,PrimOp)
 
 
         DO k=1,size(Tab_dnMatOp)
@@ -1288,9 +1273,9 @@
         END DO
 
         !-- pot0 Qact(i)-step -------------
-        Qact_th(i,ith) = Qact(i) - para_PES%stepOp
+        Qact_th(i,ith) = Qact(i) - PrimOp%stepOp
 
-        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,PrimOp)
 
         DO k=1,size(Tab_dnMatOp)
           IF (nderiv_loc > 0) THEN ! gradient
@@ -1315,7 +1300,7 @@
       IF (nderiv_loc > 1) THEN ! hessian (off diagonal)
 !$OMP   PARALLEL &
 !$OMP   DEFAULT(NONE) &
-!$OMP   SHARED(mole,para_Tnum,para_PES,stepp,step2,step24) &
+!$OMP   SHARED(mole,para_Tnum,PrimOp,stepp,step2,step24) &
 !$OMP   SHARED(tab_dnMatOp,nderiv_loc,Qact,Qact_th,d0MatOp_th,nb_Op) &
 !$OMP   PRIVATE(i,j,ie,je,ith) &
 !$OMP   NUM_THREADS(nb_thread)
@@ -1333,20 +1318,20 @@
         !$ ith = omp_get_thread_num()+1
 
         !-- pot0 at Qact(i)+step Qact(j)+step
-        Qact_th(i,ith) = Qact(i) + para_PES%stepOp
-        Qact_th(j,ith) = Qact(j) + para_PES%stepOp
+        Qact_th(i,ith) = Qact(i) + PrimOp%stepOp
+        Qact_th(j,ith) = Qact(j) + PrimOp%stepOp
 
-        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,PrimOp)
 
         DO k=1,size(Tab_dnMatOp)
           CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/))
         END DO
 
         !-- pot0 at Qact(i)-step Qact(j)-step
-        Qact_th(i,ith) = Qact(i) - para_PES%stepOp
-        Qact_th(j,ith) = Qact(j) - para_PES%stepOp
+        Qact_th(i,ith) = Qact(i) - PrimOp%stepOp
+        Qact_th(j,ith) = Qact(j) - PrimOp%stepOp
 
-        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,PrimOp)
 
         DO k=1,size(Tab_dnMatOp)
           CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/),ONE)
@@ -1354,10 +1339,10 @@
 
 
         !-- pot0 at Qact(i)-step Qact(j)+step
-        Qact_th(i,ith) = Qact(i) - para_PES%stepOp
-        Qact_th(j,ith) = Qact(j) + para_PES%stepOp
+        Qact_th(i,ith) = Qact(i) - PrimOp%stepOp
+        Qact_th(j,ith) = Qact(j) + PrimOp%stepOp
 
-        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,PrimOp)
 
         DO k=1,size(Tab_dnMatOp)
           CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/),-ONE)
@@ -1365,10 +1350,10 @@
 
 
         !-- pot0 at Qact(i)+step Qact(j)-step
-        Qact_th(i,ith) = Qact(i) + para_PES%stepOp
-        Qact_th(j,ith) = Qact(j) - para_PES%stepOp
+        Qact_th(i,ith) = Qact(i) + PrimOp%stepOp
+        Qact_th(j,ith) = Qact(j) - PrimOp%stepOp
 
-        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,PrimOp)
 
         DO k=1,size(Tab_dnMatOp)
           CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/),-ONE)
@@ -1707,7 +1692,7 @@
 !     frequency calculations at Qact
 !
 !=============================================================
-      SUBROUTINE sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES,print_freq,d0h_opt)
+      SUBROUTINE sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,PrimOp,print_freq,d0h_opt)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant
@@ -1719,7 +1704,7 @@
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (Tnum)        :: para_Tnum
       TYPE (CoordType)   :: mole
-      TYPE (param_PES)   :: para_PES
+      TYPE (PrimOp_t)   :: PrimOp
       real (kind=Rkind), intent(inout) :: Qact(:)
       logical, intent(in), optional :: print_freq
       real (kind=Rkind), optional :: d0h_opt(:,:)
@@ -1773,7 +1758,7 @@
       ELSE
         CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,1,nderiv=2)
 
-        CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+        CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp)
 
         CALL Get_Hess_FROM_Tab_OF_dnMatOp(d0h,dnMatOp)
         CALL Get_Grad_FROM_Tab_OF_dnMatOp(d0grad,dnMatOp)
@@ -1842,7 +1827,7 @@
 ! ++   calculation gaussian_width and freq with curvilinear coordinates
 !
 !=====================================================================
-      SUBROUTINE calc3_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
+      SUBROUTINE calc3_NM_TO_sym(Qact,mole,para_Tnum,PrimOp,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
@@ -1855,7 +1840,7 @@
       TYPE (Tnum)      :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(:)
-      TYPE (param_PES)   :: para_PES
+      TYPE (PrimOp_t)   :: PrimOp
       real (kind=Rkind)  :: hCC(mole%ncart_act,mole%ncart_act)
       logical            :: l_hCC  ! if .TRUE. hCC is already calculated (for PVSCF)
 
@@ -1872,7 +1857,7 @@
       real (kind=Rkind), allocatable :: d0c(:,:),d0eh(:),ScalePara(:),tab_sort(:)
       real (kind=Rkind), allocatable :: mat_inv(:,:),mat(:,:)
 
-      real (kind=Rkind) :: max_freq,norme,step = ONETENTH**3
+      real (kind=Rkind) :: max_freq,norme
 
       real (kind=Rkind) :: auTOcm_inv
 
@@ -1932,7 +1917,7 @@
 
       ELSE ! both are false
         !- create mole_1 (type=-1 => type=1)
-        CALL CoordType1TOCoordType2(mole,mole_1)
+        mole_1 = mole
         DO i=1,mole_1%nb_var
           IF (mole_1%ActiveTransfo%list_act_OF_Qdyn(i) == -1)           &
                             mole_1%ActiveTransfo%list_act_OF_Qdyn(i) = 1
@@ -1968,30 +1953,30 @@
 
             mole%NMTransfo%hessian_cart = .TRUE.
             ! save on-the-fly parameters
-            name_FChk          = para_PES%para_OTF%file_FChk%name
-            Read_OnTheFly_only = para_PES%Read_OnTheFly_only
-            OnTheFly           = para_PES%OnTheFly
+            name_FChk          = PrimOp%para_OTF%file_FChk%name
+            Read_OnTheFly_only = PrimOp%Read_OnTheFly_only
+            OnTheFly           = PrimOp%OnTheFly
 
             ! set-up on-the-fly parameters to read the hessian
-            para_PES%OnTheFly                = .TRUE.
-            para_PES%Read_OnTheFly_only      = .TRUE.
-            para_PES%para_OTF%file_FChk%name = mole%NMTransfo%file_hessian%name
+            PrimOp%OnTheFly                = .TRUE.
+            PrimOp%Read_OnTheFly_only      = .TRUE.
+            PrimOp%para_OTF%file_FChk%name = mole%NMTransfo%file_hessian%name
 
             write(out_unitp,*) 'Read ab initio hessian from file: ',    &
-                                  trim(para_PES%para_OTF%file_FChk%name)
+                                  trim(PrimOp%para_OTF%file_FChk%name)
 
-            !CALL  dnOp_grid(Qact,dnE,2,mole_1,para_Tnum,para_PES)
+            !CALL  dnOp_grid(Qact,dnE,2,mole_1,para_Tnum,PrimOp)
             CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_NM,1,nderiv=2)
-            CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole_1,para_Tnum,para_PES)
+            CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole_1,para_Tnum,PrimOp)
             CALL Get_Hess_FROM_Tab_OF_dnMatOp(d0h,dnMatOp)
             CALL Get_Grad_FROM_Tab_OF_dnMatOp(d0grad,dnMatOp)
             CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
 
 
             ! restore the on-the-fly parameters
-            para_PES%para_OTF%file_FChk%name = name_FChk
-            para_PES%Read_OnTheFly_only      = Read_OnTheFly_only
-            para_PES%OnTheFly                = OnTheFly
+            PrimOp%para_OTF%file_FChk%name = name_FChk
+            PrimOp%Read_OnTheFly_only      = Read_OnTheFly_only
+            PrimOp%OnTheFly                = OnTheFly
           ELSE
             IF (mole%NMTransfo%hessian_cart) THEN
               write(out_unitp,*) 'Old hessian : mole_1%ncart_act',mole_1%ncart_act
@@ -2011,8 +1996,8 @@
           END IF
         ELSE
 
-          !CALL  dnOp_grid(Qact,dnE,2,mole_1,para_Tnum,para_PES)
-          CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole_1,para_Tnum,para_PES)
+          !CALL  dnOp_grid(Qact,dnE,2,mole_1,para_Tnum,PrimOp)
+          CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole_1,para_Tnum,PrimOp)
           CALL Get_Hess_FROM_Tab_OF_dnMatOp(d0h,dnMatOp)
           CALL Get_Grad_FROM_Tab_OF_dnMatOp(d0grad,dnMatOp)
           CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
@@ -2307,7 +2292,7 @@
 !     -----------------------------------------------------------------
 
       END SUBROUTINE calc3_NM_TO_sym
-      SUBROUTINE calc4_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
+      SUBROUTINE calc4_NM_TO_sym(Qact,mole,para_Tnum,PrimOp,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
@@ -2320,7 +2305,7 @@
       TYPE (Tnum)      :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(:)
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t) :: PrimOp
       real (kind=Rkind), optional :: hCC(mole%ncart_act,mole%ncart_act)
       logical, optional           :: l_hCC  ! if .TRUE. hCC is already calculated (for PVSCF)
 
@@ -2471,7 +2456,7 @@
         CALL flush_perso(out_unitp)
 
         !- create mole_1 (type=-1 => type=1)
-        CALL CoordType1TOCoordType2(mole,mole_1)
+        mole_1 = mole
         ! a changer (utilisation de Qread_TO_Qact !!!
         DO i=1,mole_1%nb_var
           IF (Ind_Coord_PerBlock(i) == Ind_Coord_AtBlock(i_Block)) THEN
@@ -2510,7 +2495,7 @@
 
         CALL get_hess_k(d0k,d0h,nb_NM,Qact,mole_1,para_Tnum,          &
                         Ind_Coord_AtBlock(i_Block),Ind_Coord_PerBlock,  &
-                        para_PES,hCC_loc,l_hCC_loc)
+                        PrimOp,hCC_loc,l_hCC_loc)
 
         ! scaleQ for the uncoupled HO
         iQ = 0
@@ -2773,7 +2758,7 @@
 !     -----------------------------------------------------------------
 
       END SUBROUTINE calc4_NM_TO_sym
-      SUBROUTINE calc5_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,l_hCC)
+      SUBROUTINE calc5_NM_TO_sym(Qact,mole,para_Tnum,PrimOp,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
@@ -2787,7 +2772,7 @@
       TYPE (Tnum)      :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(:)
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t) :: PrimOp
       real (kind=Rkind), optional :: hCC(mole%ncart_act,mole%ncart_act)
       logical, optional           :: l_hCC  ! if .TRUE. hCC is already calculated (for PVSCF)
 
@@ -2943,7 +2928,7 @@
 
         ELSE
           !- create mole_1 (type=-1 => type=1)
-          CALL CoordType1TOCoordType2(mole,mole_1)
+          mole_1 = mole
           ! a changer (utilisation de Qread_TO_Qact !!!
           DO i=1,mole_1%nb_var
             IF (Ind_Coord_PerBlock(i) == Ind_Coord_AtBlock(i_Block)) THEN
@@ -2981,7 +2966,7 @@
 
           CALL get_hess_k(d0k,d0h,nb_NM,Qact,mole_1,para_Tnum,          &
                           Ind_Coord_AtBlock(i_Block),Ind_Coord_PerBlock,  &
-                          para_PES,hCC_loc,l_hCC_loc)
+                          PrimOp,hCC_loc,l_hCC_loc)
 
           ! scaleQ for the uncoupled HO
           iQ = 0
@@ -3237,7 +3222,7 @@
       END SUBROUTINE calc5_NM_TO_sym
       SUBROUTINE get_hess_k(d0k,d0h,nb_NM,Qact,mole,para_Tnum,          &
                             Ind_Coord_AtBlock,Ind_Coord_PerBlock,       &
-                            para_PES,hCC,l_hCC)
+                            PrimOp,hCC,l_hCC)
       USE mod_system
       USE mod_dnSVM
       USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG, sub_dnFCC_TO_dnFcurvi
@@ -3254,7 +3239,7 @@
       TYPE (Tnum)          :: para_Tnum
 
       real (kind=Rkind), intent(inout) :: Qact(:)
-      TYPE (param_PES)   :: para_PES
+      TYPE (PrimOp_t)   :: PrimOp
       real (kind=Rkind)  :: hCC(mole%ncart_act,mole%ncart_act)
       logical,           intent(in)    :: l_hCC  ! if .TRUE. hCC is already calculated (for PVSCF)
       integer :: Ind_Coord_AtBlock,Ind_Coord_PerBlock(mole%nb_var)
@@ -3347,28 +3332,28 @@
           IF (mole%NMTransfo%hessian_onthefly) THEN
             mole%NMTransfo%hessian_cart = .TRUE.
             ! save on-the-fly parameters
-            name_FChk          = para_PES%para_OTF%file_FChk%name
-            Read_OnTheFly_only = para_PES%Read_OnTheFly_only
-            OnTheFly           = para_PES%OnTheFly
+            name_FChk          = PrimOp%para_OTF%file_FChk%name
+            Read_OnTheFly_only = PrimOp%Read_OnTheFly_only
+            OnTheFly           = PrimOp%OnTheFly
 
             ! set-up on-the-fly parameters to read the hessian
-            para_PES%OnTheFly                = .TRUE.
-            para_PES%Read_OnTheFly_only      = .TRUE.
-            para_PES%para_OTF%file_FChk%name = mole%NMTransfo%file_hessian%name
+            PrimOp%OnTheFly                = .TRUE.
+            PrimOp%Read_OnTheFly_only      = .TRUE.
+            PrimOp%para_OTF%file_FChk%name = mole%NMTransfo%file_hessian%name
 
             write(out_unitp,*) 'Read ab initio hessian from file: ',    &
-                                  trim(para_PES%para_OTF%file_FChk%name)
+                                  trim(PrimOp%para_OTF%file_FChk%name)
 
             CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_NM,1,nderiv=2)
-            CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+            CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp)
             CALL Get_Hess_FROM_Tab_OF_dnMatOp(d0h,dnMatOp)
             CALL Get_Grad_FROM_Tab_OF_dnMatOp(d0grad,dnMatOp)
             CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
 
             ! restore the on-the-fly parameters
-            para_PES%para_OTF%file_FChk%name = name_FChk
-            para_PES%Read_OnTheFly_only      = Read_OnTheFly_only
-            para_PES%OnTheFly                = OnTheFly
+            PrimOp%para_OTF%file_FChk%name = name_FChk
+            PrimOp%Read_OnTheFly_only      = Read_OnTheFly_only
+            PrimOp%OnTheFly                = OnTheFly
           ELSE
             IF (mole%NMTransfo%hessian_cart) THEN
               CALL alloc_MatOFdnS(dnE,nb_NM,2)
@@ -3395,20 +3380,20 @@
           END IF
         ELSE
 
-          nb_scalar_Op            = para_PES%nb_scalar_Op
-          para_PES%nb_scalar_Op   = 0
-          calc_scalar_Op          = para_PES%calc_scalar_Op
-          para_PES%calc_scalar_Op = .FALSE.
+          nb_scalar_Op            = PrimOp%nb_scalar_Op
+          PrimOp%nb_scalar_Op   = 0
+          calc_scalar_Op          = PrimOp%calc_scalar_Op
+          PrimOp%calc_scalar_Op = .FALSE.
 
           CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_NM,1,nderiv=2)
-          CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+          CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp)
 
           CALL Get_Hess_FROM_Tab_OF_dnMatOp(d0h,dnMatOp)
           CALL Get_Grad_FROM_Tab_OF_dnMatOp(d0grad,dnMatOp)
           CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
 
-          para_PES%nb_scalar_Op   = nb_scalar_Op
-          para_PES%calc_scalar_Op = calc_scalar_Op
+          PrimOp%nb_scalar_Op   = nb_scalar_Op
+          PrimOp%calc_scalar_Op = calc_scalar_Op
 
 
         END IF
@@ -4601,15 +4586,16 @@
       END DO
 
 !-----------------------------------------------------------
-       IF (print_level == 1) write(out_unitp,11)                        &
-                                            Qact(1:RPHTransfo%nb_act1), &
-                                            dnEHess%d0(:)*auTOcm_inv
- 11    format(' frequencies : ',30f10.4)
-
-       IF (print_level > 1) write(out_unitp,*) ' frequencies : ',       &
-                                            Qact(1:RPHTransfo%nb_act1), &
-                                            dnEHess%d0(:)*auTOcm_inv
-
+      IF (print_level >= 1) THEN
+        IF (maxval(abs(dnEHess%d0)) > 9000._Rkind) THEN
+          write(out_unitp,*) ' frequencies : ',Qact(1:RPHTransfo%nb_act1), &
+                                                dnEHess%d0(:)*auTOcm_inv
+        ELSE
+          write(out_unitp,11) Qact(1:RPHTransfo%nb_act1),               &
+                                                dnEHess%d0(:)*auTOcm_inv
+ 11       format(' frequencies : ',30f10.4)
+        END IF
+      END IF
        IF (debug .OR. test) THEN
          write(out_unitp,*) 'dnQeq'
          CALL Write_dnVec(dnQeq)
@@ -4871,31 +4857,7 @@
 !-----------------------------------------------------------
       END SUBROUTINE sub_freq2_RPH
 
-
-      SUBROUTINE Finalize_TnumTana_Coord_PrimOp_zmatrix(para_Tnum,mole,para_PES,Tana)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Constant, only : get_Conv_au_TO_unit
-      USE mod_Coord_KEO
-      USE mod_SimpleOp
-      USE mod_PrimOp_def
-      USE mod_MPI
-      IMPLICIT NONE
-
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (Tnum)        :: para_Tnum
-      TYPE (zmatrix)     :: mole
-      TYPE (param_PES)   :: para_PES
-      logical, optional  :: Tana
-
-      IF (present(Tana)) THEN
-        CALL Finalize_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole%CoordType,para_PES,Tana)
-      ELSE
-        CALL Finalize_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole%CoordType,para_PES)
-      END IF
-
-      END SUBROUTINE Finalize_TnumTana_Coord_PrimOp_zmatrix
-      SUBROUTINE Finalize_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole,para_PES,Tana)
+      SUBROUTINE Finalize_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole,PrimOp,Tana)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
@@ -4908,7 +4870,7 @@
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (Tnum)        :: para_Tnum
       TYPE (CoordType)   :: mole
-      TYPE (param_PES)   :: para_PES
+      TYPE (PrimOp_t)    :: PrimOp
       logical, optional  :: Tana
 
 
@@ -4948,12 +4910,12 @@
 !-----------------------------------------------------------------------
 !--------------------- TO finalize the coordinates (NM) and the KEO ----
 
-      CALL Sub_PES_FromTnum_TO_PES(para_PES,para_Tnum%para_PES_FromTnum)
-      IF (para_PES%nb_scalar_Op > 0) para_PES%calc_scalar_Op = .TRUE.
+      CALL Sub_PES_FromTnum_TO_PrimOp(PrimOp,para_Tnum%para_PES_FromTnum)
+      IF (PrimOp%nb_scalar_Op > 0) PrimOp%calc_scalar_Op = .TRUE.
 
       !-----------------------------------------------------------------
       ! initialization of the scalar operators
-      CALL Sub_init_dnOp(mole,para_Tnum,para_PES)
+      CALL Sub_init_dnOp(mole,para_Tnum,PrimOp)
       !-----------------------------------------------------------------
       !----- calc and transfert NM to LinearTransfo%mat if needed ---------------
       IF (associated(mole%NMTransfo)) THEN
@@ -4964,11 +4926,11 @@
           IF (NM_TO_sym_ver == 3) THEN
 
             CALL alloc_NParray(hCC,(/ mole%ncart_act,mole%ncart_act /),"hCC",name_sub)
-            CALL calc3_NM_TO_sym(Qact,mole,para_Tnum,para_PES,hCC,.FALSE.)
+            CALL calc3_NM_TO_sym(Qact,mole,para_Tnum,PrimOp,hCC,.FALSE.)
             CALL dealloc_NParray(hCC,"hCC",name_sub)
 
           ELSE
-            CALL calc4_NM_TO_sym(Qact,mole,para_Tnum,para_PES)
+            CALL calc4_NM_TO_sym(Qact,mole,para_Tnum,PrimOp)
           END IF
           IF (print_level > 1) CALL sub_QplusDQ_TO_Cart(Qact,mole)
 
@@ -5060,7 +5022,7 @@
     CALL alloc_NPArray(GGdef,(/ mole%nb_act,mole%nb_act /),'GGdef',name_sub)
     IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
 
-    IF (para_PES%QMLib) THEN
+    IF (PrimOp%QMLib) THEN
 
 #if __QML == 1
       CALL get_Qmodel_GGdef(GGdef)

@@ -234,6 +234,34 @@
       END IF
 
       END SUBROUTINE init_FileGrid
+  SUBROUTINE dealloc_FileGrid(para_FileGrid)
+
+      CLASS (param_FileGrid), intent(inout) :: para_FileGrid
+
+      para_FileGrid%Read_FileGrid      = .FALSE.   ! Read the grid from a file
+
+      para_FileGrid%Save_FileGrid      = .TRUE.   ! Save the grid in a file
+      para_FileGrid%Save_FileGrid_done = .FALSE.  ! T, if the grid is save in a file
+      para_FileGrid%Formatted_FileGrid = .TRUE.   ! format of the file
+
+      para_FileGrid%Type_FileGrid      = 0        ! 0 in normal SH_HADA file
+                                                  ! 1 unformatted sequential acces
+                                                  ! 2 unformatted direct acces
+                                                  ! 4 unformatted sequential acces (for SG4)
+
+      para_FileGrid%Keep_FileGrid      = .TRUE.   ! Keep the file
+
+      para_FileGrid%Save_MemGrid       = .FALSE.  ! Save the grid in memory
+      para_FileGrid%Save_MemGrid_done  = .FALSE.  ! T, if the grid is save in memory
+
+      para_FileGrid%Base_FileName_Grid = "SH_HADA" ! base name of grid file
+
+      para_FileGrid%Test_Grid       = .TRUE.    ! test calculation on one active grid point (Qdyn0)
+      para_FileGrid%Restart_Grid    = .FALSE.   ! if t => restarting the coupled adiabatic calculations
+      para_FileGrid%First_GridPoint = 0         ! if =0 calculation for all active grid points
+      para_FileGrid%Last_GridPoint  = 0         ! if =0 calculation for all active grid points
+
+  END SUBROUTINE dealloc_FileGrid
       SUBROUTINE Write_FileGrid(para_FileGrid)
 
       TYPE (param_FileGrid), intent(in) :: para_FileGrid
@@ -593,6 +621,172 @@
 
       END SUBROUTINE Set_file_OF_OpGrid
 
+      SUBROUTINE Set_file_Grid(file_Grid,para_fileGrid,cplx,iterm,name_Op,nb_bie)
+
+      TYPE (param_file),            intent(inout)   :: file_Grid     ! file of the grid
+      TYPE (param_FileGrid),        intent(in)      :: para_FileGrid ! parameters to tranfer to OpGrid%...
+      integer,                      intent(in)      :: nb_bie,iterm
+      logical,                      intent(in)      :: cplx
+      character (len=*),            intent(in)      :: name_Op
+
+
+      integer :: frecl
+      real (kind=Rkind) :: Mat(nb_bie,nb_bie) ! for the direct acces file
+
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='Set_file_Grid'
+
+      !write(out_unitp,*) ' in ',name_sub
+
+        IF (Grid_omp == 0) THEN
+          file_Grid%nb_thread = 1
+        ELSE
+          file_Grid%nb_thread = Grid_maxth
+        END IF
+
+        SELECT CASE (para_fileGrid%Type_FileGrid)
+        CASE (0) ! normal SH_HADA file
+          file_Grid%formatted = para_fileGrid%Formatted_FileGrid
+          file_Grid%seq       = .TRUE.
+          file_Grid%init      = .TRUE.
+          file_Grid%name = trim(adjustl(para_fileGrid%Base_FileName_Grid))
+
+        CASE (1) ! sequential
+          file_Grid%seq       = .TRUE.
+          file_Grid%formatted = .FALSE.
+          file_Grid%init      = .TRUE.
+
+          IF (cplx) THEN
+            file_Grid%name = trim(adjustl(para_fileGrid%Base_FileName_Grid)) // &
+                                         "_im" // trim(adjustl(name_Op))
+          ELSE
+            file_Grid%name = trim(adjustl(para_fileGrid%Base_FileName_Grid)) // &
+                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+          END IF
+
+        CASE (2) ! direct
+          file_Grid%seq       = .FALSE.
+          file_Grid%formatted = .FALSE.
+          file_Grid%init      = .TRUE.
+          file_Grid%nb_thread = 0 ! its means only one file, but it can be used with several threads
+
+          INQUIRE(iolength=frecl) Mat(:,:)
+          file_Grid%frecl = frecl
+
+          IF (cplx) THEN
+            file_Grid%name = trim(adjustl(para_fileGrid%Base_FileName_Grid)) // &
+                                          "_im" // trim(adjustl(name_Op))
+          ELSE
+            file_Grid%name = trim(adjustl(para_fileGrid%Base_FileName_Grid)) //&
+                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+          END IF
+
+        CASE (4) ! sequential for SG4 (here it just the base name for each Smolyak term)
+          file_Grid%seq       = .TRUE.
+          file_Grid%formatted = .FALSE.
+          file_Grid%init      = .TRUE.
+
+          IF (cplx) THEN
+            file_Grid%name = trim(adjustl(para_fileGrid%Base_FileName_Grid)) // &
+                                          "_im" // trim(adjustl(name_Op))
+          ELSE
+            file_Grid%name = trim(adjustl(para_fileGrid%Base_FileName_Grid)) // &
+                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+          END IF
+
+        CASE default ! normal SH_HADA file
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  Wrong Type_FileGrid value: ',para_fileGrid%Type_FileGrid
+          write(out_unitp,*) '  The possible values are [0,1,2,4]'
+          STOP 'ERROR in Set_file_Grid: no default'
+        END SELECT
+
+
+      END SUBROUTINE Set_file_Grid
+      SUBROUTINE Set_file_Grid_old(file_Grid,Type_FileGrid,cplx,iterm,      &
+                               Formatted_FileGrid,Base_FileName_Grid,   &
+                               name_Op,nb_bie)
+
+      TYPE (param_file),            intent(inout)   :: file_Grid  ! file of the grid
+      integer,                      intent(in)      :: nb_bie,Type_FileGrid,iterm
+      logical,                      intent(in)      :: cplx,Formatted_FileGrid
+      character (len=*),            intent(in)      :: name_Op
+      character (len=Line_len),     intent(in)      :: Base_FileName_Grid
+
+
+      integer :: frecl
+      real (kind=Rkind) :: Mat(nb_bie,nb_bie) ! for the direct acces file
+
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='Set_file_Grid_old'
+
+      !write(out_unitp,*) ' in ',name_sub
+
+        IF (Grid_omp == 0) THEN
+          file_Grid%nb_thread = 1
+        ELSE
+          file_Grid%nb_thread = Grid_maxth
+        END IF
+
+        SELECT CASE (Type_FileGrid)
+        CASE (0) ! normal SH_HADA file
+          file_Grid%formatted = Formatted_FileGrid
+          file_Grid%seq       = .TRUE.
+          file_Grid%init      = .TRUE.
+          file_Grid%name = trim(adjustl(Base_FileName_Grid))
+
+        CASE (1) ! sequential
+          file_Grid%seq       = .TRUE.
+          file_Grid%formatted = .FALSE.
+          file_Grid%init      = .TRUE.
+
+          IF (cplx) THEN
+            file_Grid%name = trim(adjustl(Base_FileName_Grid)) //       &
+                                         "_im" // trim(adjustl(name_Op))
+          ELSE
+            file_Grid%name = trim(adjustl(Base_FileName_Grid)) //       &
+                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+          END IF
+
+        CASE (2) ! direct
+          file_Grid%seq       = .FALSE.
+          file_Grid%formatted = .FALSE.
+          file_Grid%init      = .TRUE.
+          file_Grid%nb_thread = 0 ! its means only one file, but it can be used with several threads
+
+          INQUIRE(iolength=frecl) Mat(:,:)
+          file_Grid%frecl = frecl
+
+          IF (cplx) THEN
+            file_Grid%name = trim(adjustl(Base_FileName_Grid)) //       &
+                                          "_im" // trim(adjustl(name_Op))
+          ELSE
+            file_Grid%name = trim(adjustl(Base_FileName_Grid)) //       &
+                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+          END IF
+
+        CASE (4) ! sequential for SG4 (here it just the base name for each Smolyak term)
+          file_Grid%seq       = .TRUE.
+          file_Grid%formatted = .FALSE.
+          file_Grid%init      = .TRUE.
+
+          IF (cplx) THEN
+            file_Grid%name = trim(adjustl(Base_FileName_Grid)) //       &
+                                          "_im" // trim(adjustl(name_Op))
+          ELSE
+            file_Grid%name = trim(adjustl(Base_FileName_Grid)) //       &
+                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+          END IF
+
+        CASE default ! normal SH_HADA file
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  Wrong Type_FileGrid value: ',Type_FileGrid
+          write(out_unitp,*) '  The possible values are [0,1,2,4]'
+          STOP 'ERROR in Set_file_Grid_old: no default'
+        END SELECT
+
+
+      END SUBROUTINE Set_file_Grid_old
       SUBROUTINE Open_file_OF_OpGrid(OpGrid,nio)
 
       TYPE (param_OpGrid), pointer, intent(inout) :: OpGrid(:)

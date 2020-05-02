@@ -52,12 +52,12 @@
 !      The nD-functions are sorted (or not) relatively to the harmonic energy.
 !
 !=====================================================================
-      SUBROUTINE sub2_ind_harm(Basis2n,para_PES,para_Tnum,mole)
+      SUBROUTINE sub2_ind_harm(Basis2n,PrimOp,para_Tnum,mole)
       use mod_system
       USE mod_nDindex
       use mod_Constant,  only: get_conv_au_to_unit
       USE mod_Coord_KEO, only: CoordType, Tnum, gaussian_width, get_Qact0
-      use mod_PrimOp,    only: param_pes, sub_freq2_rph
+      use mod_PrimOp,    only: PrimOp_t, sub_freq2_rph
       USE mod_basis
       IMPLICIT NONE
 
@@ -69,7 +69,7 @@
       TYPE (Tnum)    :: para_Tnum
 
 !----- for the PES ---------------------------------------------------
-      TYPE (param_PES)   :: para_PES
+      TYPE (PrimOp_t)   :: PrimOp
 
 !------ working variables -------------------------------------------
 
@@ -113,7 +113,7 @@
 !---------------------------------------------------------------------
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
-      IF (mole%nb_inact2n == 0 .AND. para_PES%nb_elec == 1) THEN
+      IF (mole%nb_inact2n == 0 .AND. PrimOp%nb_elec == 1) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' nb_inact2n (nb_inact21+nb_inact22)= 0'
         write(out_unitp,*) ' no harmonic inactive variables !!'

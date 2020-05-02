@@ -55,8 +55,7 @@
 !        Automatic calculation of a contracted basis set (in nD)
 !
 !=======================================================================================
-      SUBROUTINE Auto_basis(para_Tnum,mole,para_AllBasis,               &
-                            ComOp,para_PES,para_ReadOp)
+      SUBROUTINE Auto_basis(para_Tnum,mole,para_AllBasis,para_ReadOp)
       use mod_Coord_KEO
       use mod_PrimOp
       use mod_basis, only: param_allbasis, sgtype, get_nq_from_basis,  &
@@ -66,7 +65,7 @@
                            sub_dngb_to_dngg, construct_primitive_basis,&
                            sub_contraction_basis, check_ortho_basis,   &
                            dealloc_allbasis, alloc_allbasis,           &
-                           basis2tobasis1
+                           basis2tobasis1,dealloc_basis_ext2n
       USE mod_Op
       USE mod_MPI
       IMPLICIT NONE
@@ -78,11 +77,7 @@
 !----- for the basis set ----------------------------------------------
       TYPE (param_AllBasis), target :: para_AllBasis
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES), target :: para_PES
-
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp), target  :: ComOp,ComOp_loc
       TYPE (param_ReadOp) :: para_ReadOp
 
 
@@ -110,43 +105,35 @@
       IF (debug) write(out_unitp,*) 'SGtype,With_BGG',SGtype,With_BGG
       CALL Set_dnGGRep(para_AllBasis%BasisnD,With_BGG)
 
-      CALL CoordType1TOCoordType2(mole,mole_loc)
+      mole_loc = mole
 
-      ComOp_loc%file_HADA%name      = make_FileName('SH_HADA_not_used')
-      ComOp_loc%file_HADA%formatted = .TRUE.
-      max_nb_ba_ON_HAC_save         = ComOp%max_nb_ba_ON_HAC
+      max_nb_ba_ON_HAC_save            = para_AllBasis%basis_ext2n%max_nb_ba_ON_HAC
 
-      nb_elec_save                     = para_PES%nb_elec
-      para_PES%nb_elec                 = 1
-      nb_bi_save                       = ComOp%nb_bi
+      nb_elec_save                     = para_ReadOp%nb_elec
+      para_ReadOp%nb_elec              = 1
+      nb_bi_save                       = get_nb_FROM_basis(para_AllBasis%Basis2n)
       JJ_save                          = para_Tnum%JJ
       para_Tnum%JJ                     = 0
 
       !> primary memory here
-      CALL RecAuto_basis(para_Tnum,mole_loc,para_AllBasis%BasisnD,      &
-                         para_PES,para_ReadOp,ComOp_loc)
+      CALL RecAuto_basis(para_Tnum,mole_loc,para_AllBasis%BasisnD,para_ReadOp)
       CALL dealloc_CoordType(mole_loc)
       !CALL Write_SymAbelian(para_AllBasis%BasisnD%P_SymAbelian)
 
-      para_PES%nb_elec                     = nb_elec_save
+      para_ReadOp%nb_elec                  = nb_elec_save
       para_Tnum%JJ                         = JJ_save
       !write(out_unitp,*) 'nb_bi ?',get_nb_bi_FROM_AllBasis(para_AllBasis)
       !write(out_unitp,*) 'nb_bi ?',nb_bi_save ; STOP
-
-      CALL All2_param_TO_ComOp(ComOp,para_AllBasis,mole,nb_bi_save,     &
-                               para_PES%nb_elec,                        &
-                               ComOp%file_HADA%name,                    &
-                               ComOp%file_HADA%formatted)
 
       nqa = get_nqa_FROM_basis(para_AllBasis%BasisnD)
 
       IF (print_level > -1 .AND. MPI_id==0) THEN
         write(out_unitp,*) '==================================================='
-        write(out_unitp,*) '=== NEW BASIS + ComOp ============================='
+        write(out_unitp,*) '=== NEW BASIS ====================================='
         write(out_unitp,*) 'packed',para_AllBasis%BasisnD%packed
         write(out_unitp,*) 'nb_ba,nb_qa',para_AllBasis%BasisnD%nb,nqa
         write(out_unitp,*) 'nb_bi',get_nb_bi_FROM_AllBasis(para_AllBasis)
-        write(out_unitp,*) 'nb_elec',para_PES%nb_elec
+        write(out_unitp,*) 'nb_elec',para_ReadOp%nb_elec
         write(out_unitp,*) 'nb_inact2n',mole%nb_inact2n
         CALL flush_perso(out_unitp)
       END IF
@@ -164,19 +151,16 @@
          IF (allocated(para_AllBasis%BasisnD%nDindG%nDsize))             &
            write(out_unitp,*) 'nDindG%nDsize',para_AllBasis%BasisnD%nDindG%nDsize
          !CALL Write_nDindex(para_AllBasis%BasisnD%nDindG,"BasisnD%nDinG ")
-         !CALL write_param_ComOp(ComOp)
       END IF
 
       IF (debug) THEN
         write(out_unitp,*) '==== NEW BASIS ======================================='
         CALL RecWrite_basis(para_AllBasis%BasisnD,write_all=.TRUE.)
         write(out_unitp,*) '==== END NEW BASIS ==================================='
-        CALL write_param_ComOp(ComOp)
         write(out_unitp,*) 'END ',name_sub
       END IF
       IF (print_level > 1 ) write(out_unitp,*) 'nrho in ',name_sub,para_AllBasis%BasisnD%nrho(:)
       IF (print_level > -1) write(out_unitp,*) '==================================================='
-      CALL dealloc_ComOp(ComOp_loc)
 
       END SUBROUTINE Auto_basis
 !=======================================================================================
@@ -185,8 +169,7 @@
 !=======================================================================================
 ! Auto contraction
 !=======================================================================================
-      RECURSIVE SUBROUTINE RecAuto_basis(para_Tnum,mole,BasisnD,        &
-                                         para_PES,para_ReadOp,ComOp_loc)
+      RECURSIVE SUBROUTINE RecAuto_basis(para_Tnum,mole,BasisnD,para_ReadOp)
       USE mod_system
       USE mod_PrimOp
       USE mod_basis
@@ -196,17 +179,13 @@
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType), target :: mole,mole_loc
-      TYPE (Tnum),    target :: para_Tnum
+      TYPE (CoordType), target :: mole
+      TYPE (Tnum),      target :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
       TYPE (basis) :: basisnD
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES), target :: para_PES
-
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp), target  :: ComOp_loc
       TYPE (param_ReadOp) :: para_ReadOp
 
 
@@ -252,8 +231,7 @@
 
         IF (BasisnD%SparseGrid_type == 1) THEN
           ! For Sparse Grid
-          CALL RecSparseGrid_ForDP_type1(BasisnD,para_Tnum,mole,        &
-                                         para_PES,para_ReadOp,ComOp_loc)
+          CALL RecSparseGrid_ForDP_type1(BasisnD,para_Tnum,mole,para_ReadOp)
 
           !- d1b => d1BasisRep and  d2b => d2BasisRep ------------
           CALL sub_dnGB_TO_dnBB(BasisnD)
@@ -263,8 +241,7 @@
           IF (Print_basis) write(out_unitp,*) 'Sparse Grid type1 done. Layer: ',rec
 
         ELSE IF (BasisnD%SparseGrid_type == 2) THEN
-          CALL RecSparseGrid_ForDP_type2(BasisnD,para_Tnum,mole,        &
-                                         para_PES,para_ReadOp,ComOp_loc)
+          CALL RecSparseGrid_ForDP_type2(BasisnD,para_Tnum,mole,para_ReadOp)
           !- d1b => dnBGG%d1 and  d2b => dnBGG%d2 ------------
           CALL sub_dnGB_TO_dnGG(BasisnD)
 
@@ -275,8 +252,7 @@
 
         ELSE IF (BasisnD%SparseGrid_type == 4) THEN
 
-          CALL RecSparseGrid_ForDP_type4(BasisnD,para_Tnum,mole,        &
-                                         para_PES,para_ReadOp,ComOp_loc)
+          CALL RecSparseGrid_ForDP_type4(BasisnD,para_Tnum,mole,para_ReadOp)
 
           !- d1b => dnBGG%d1 and  d2b => dnBGG%d2 ------------
           CALL sub_dnGB_TO_dnGG(BasisnD)
@@ -323,7 +299,7 @@
 
               CALL RecAuto_basis(para_Tnum,mole,                        &
                                  BasisnD%tab_Pbasis(ibasis)%Pbasis,     &
-                                 para_PES,para_ReadOp,ComOp_loc)
+                                 para_ReadOp)
 
               IF (Print_basis) write(out_unitp,*)                       &
                     'direct_product%tab_Pbasis(i): ',ibasis,' done. Layer: ',rec
@@ -357,7 +333,7 @@
         CALL construct_primitive_basis(BasisnD)
 
         IF (BasisnD%auto_basis) THEN
-          CALL AutoParam_basis(BasisnD,para_Tnum,mole,ComOp_loc,para_PES,para_ReadOp)
+          CALL AutoParam_basis(BasisnD,para_Tnum,mole,para_ReadOp)
           CALL construct_primitive_basis(BasisnD)
         END IF
 
@@ -380,26 +356,20 @@
       ! Now the contraction .....
       IF (BasisnD%contrac) THEN
         IF (BasisnD%auto_contrac) THEN
-          !---------------------------------------------------------------
-          ! modification of mole => mole_loc
-          CALL CoordType1TOCoordType2(mole,mole_loc)
-
-          IF (Print_basis) write(out_unitp,*) 'CoordType1TOCoordType2 done. Layer:      ',rec
 
           !POGridRep
           IF (BasisnD%ndim == 1 .AND. BasisnD%POGridRep) THEN
-            nb0  = BasisnD%nb   ! save the value before the contraction
+            nb0  = BasisnD%nb  ! save the value before the contraction
             nbc0 = BasisnD%nbc ! save the value before the contraction
 
-            CALL Autocontract_basis(BasisnD,para_Tnum,mole_loc,         &
-                                    ComOp_loc,para_PES,para_ReadOp)
+            CALL Autocontract_basis(BasisnD,para_Tnum,mole,para_ReadOp)
 
             IF (Print_basis) write(out_unitp,*) 'Autocontract_basis (POGridRep_poly) done. Layer: ',rec
             CALL flush_perso(out_unitp)
 
             BasisnD%nqc =  BasisnD%nbc
-            !CALL POGridRep2_basis(BasisnD,nb0,mole_loc)
-            CALL POGridRep_basis(BasisnD,nb0,mole_loc)
+            !CALL POGridRep2_basis(BasisnD,nb0)
+            CALL POGridRep_basis(BasisnD,nb0)
 
             IF (Print_basis) write(out_unitp,*) 'POGridRep_basis done. Layer:   ',rec
             CALL flush_perso(out_unitp)
@@ -417,23 +387,18 @@
 
           IF (BasisnD%contrac_analysis) THEN
             CALL basis2TObasis1(BasisnD_contrac,BasisnD)
-            CALL Autocontract_basis(BasisnD_contrac,para_Tnum,mole_loc, &
-                                    ComOp_loc,para_PES,para_ReadOp)
+            CALL Autocontract_basis(BasisnD_contrac,para_Tnum,mole,para_ReadOp)
             CALL alloc_NParray(BasisnD%Rvec,shape(BasisnD_contrac%Rvec),&
                               'BasisnD%Rvec',name_sub)
             BasisnD%Rvec(:,:) = BasisnD_contrac%Rvec
             CALL dealloc_basis(BasisnD_contrac)
           ELSE
-            CALL Autocontract_basis(BasisnD,para_Tnum,mole_loc,         &
-                                    ComOp_loc,para_PES,para_ReadOp)
+            CALL Autocontract_basis(BasisnD,para_Tnum,mole,para_ReadOp)
           END IF
 
           IF (Print_basis) write(out_unitp,*) 'Autocontract_basis done. Layer:',rec
-
-          !---------------------------------------------------------------
-          ! dealloc local variables
-          CALL dealloc_CoordType(mole_loc)
           CALL flush_perso(out_unitp)
+
         ELSE ! just contraction (not the automatic procedure)
 
           IF (BasisnD%contrac_analysis) THEN
@@ -476,8 +441,7 @@
 !=======================================================================================
 
 !=======================================================================================
-      RECURSIVE SUBROUTINE RecSet_EneH0(para_Tnum,mole,BasisnD,         &
-                                             para_PES,para_ReadOp,ComOp)
+      RECURSIVE SUBROUTINE RecSet_EneH0(para_Tnum,mole,BasisnD,para_ReadOp)
 
       USE mod_system
       USE mod_nDindex
@@ -495,18 +459,14 @@
 !----- for the basis set ----------------------------------------------
       TYPE (basis),        intent(inout) :: basisnD
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES)                   :: para_PES
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp),  intent(in)    :: ComOp
       TYPE (param_ReadOp), intent(in)    :: para_ReadOp
 
 !----- local variables
       integer             :: i,ib,L
       integer             :: nDval(basisnD%nb_basis)
       TYPE(REAL_WU)       :: RWU_E
-      TYPE (param_ComOp)  :: ComOp_loc
 
       integer, save :: rec = 0
 !-------------------------------------------------------------------------
@@ -534,8 +494,6 @@
         CALL flush_perso(out_unitp)
       END IF
 
-      ComOp_loc = ComOp
-
       IF (allocated(BasisnD%EneH0))    THEN
         CALL dealloc_NParray(BasisnD%EneH0,"BasisnD%EneH0",name_sub)
       END IF
@@ -547,9 +505,8 @@
         CASE (0) ! Direct product
 
           DO i=1,BasisnD%nb_basis
-            CALL RecSet_EneH0(para_Tnum,mole,                             &
-                              BasisnD%tab_Pbasis(i)%Pbasis,               &
-                                           para_PES,para_ReadOp,ComOp_loc)
+            CALL RecSet_EneH0(para_Tnum,mole,                           &
+                              BasisnD%tab_Pbasis(i)%Pbasis,para_ReadOp)
           END DO
 
           DO ib=1,BasisnD%nb
@@ -566,9 +523,8 @@
           L = BasisnD%L_SparseBasis
 
           DO i=1,BasisnD%nb_basis
-            CALL RecSet_EneH0(para_Tnum,mole,                             &
-                              BasisnD%tab_basisPrimSG(i,L),             &
-                                           para_PES,para_ReadOp,ComOp_loc)
+            CALL RecSet_EneH0(para_Tnum,mole,                           &
+                              BasisnD%tab_basisPrimSG(i,L),para_ReadOp)
           END DO
 
           DO ib=1,BasisnD%nb
@@ -585,9 +541,8 @@
 
           L = BasisnD%L_SparseBasis
           DO i=1,BasisnD%nb_basis
-            CALL RecSet_EneH0(para_Tnum,mole,                             &
-                              BasisnD%tab_basisPrimSG(L,i),             &
-                                           para_PES,para_ReadOp,ComOp_loc)
+            CALL RecSet_EneH0(para_Tnum,mole,                           &
+                              BasisnD%tab_basisPrimSG(L,i),para_ReadOp)
           END DO
 
           DO ib=1,BasisnD%nb
@@ -605,9 +560,8 @@
 
           L = BasisnD%L_SparseBasis
           DO i=1,BasisnD%nb_basis
-            CALL RecSet_EneH0(para_Tnum,mole,                             &
-                              BasisnD%tab_basisPrimSG(L,i),             &
-                                           para_PES,para_ReadOp,ComOp_loc)
+            CALL RecSet_EneH0(para_Tnum,mole,                           &
+                              BasisnD%tab_basisPrimSG(L,i),para_ReadOp)
           END DO
 
           CALL init_nDval_OF_nDindex(BasisnD%nDindB,nDval)
@@ -641,8 +595,7 @@
       ELSE ! packed basis
 
         IF (.NOT. BasisnD%auto_contrac) THEN ! Because, it is done with an auto_contracted basis
-          CALL Set_EneH0_OF_PackedBasis(BasisnD,para_Tnum,mole,     &
-                                        ComOp_loc,para_PES,para_ReadOp)
+          CALL Set_EneH0_OF_PackedBasis(BasisnD,para_Tnum,mole,para_ReadOp)
         END IF
       END IF ! for BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done
 
@@ -654,56 +607,45 @@
       END IF
       rec = rec - 1
 
-      CALL dealloc_ComOp(ComOp_loc)
-
       END SUBROUTINE RecSet_EneH0
 !=======================================================================================
 
 !=======================================================================================
-      SUBROUTINE Set_EneH0_OF_PackedBasis(basis_Set,para_Tnum,mole,     &
-                                          ComOp,para_PES,para_ReadOp)
+      SUBROUTINE Set_EneH0_OF_PackedBasis(basis_Set,para_Tnum,mole,para_ReadOp)
 
       USE mod_system
       USE mod_Constant
+      USE mod_Coord_KEO
       USE mod_PrimOp
       USE mod_basis
       USE mod_Op
       USE mod_MPI
       IMPLICIT NONE
 
-!----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType), intent(in) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      !----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType),    intent(in)    :: mole
+      TYPE (Tnum),         intent(in)    :: para_Tnum
 
-!----- for the basis set ----------------------------------------------
-      TYPE (basis)          :: basis_Set
+      !----- for the basis set ----------------------------------------------
+      TYPE (basis),        intent(inout) :: basis_Set
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
-      integer :: nb_scalar_Op,type_HamilOp
-      logical :: calc_scalar_Op,direct_KEO
-
-!----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)          :: ComOp
-      TYPE (param_ReadOp)         :: para_ReadOp
+      !----- variables for the construction of H ---------------------------
+      TYPE (param_ReadOp), intent(in)    :: para_ReadOp
 
 
-!----- local variables -----------------------------------------------
-!----- variables for the para_ReadOp parameters ----------------
-      TYPE (param_ReadOp)        :: para_ReadOp_loc
-
-!----- variables for the construction of H ---------------------------
-      TYPE (param_AllOp)          :: para_AllOp_loc
-!----- for the basis set ----------------------------------------------
+      !----- local variables -----------------------------------------------
+      !----- Operators and para_ReadOp ---------------------------
+      TYPE (param_AllOp)    :: para_AllOp_loc
+      TYPE (param_ReadOp)   :: para_ReadOp_loc
+      !----- for the basis set ----------------------------------------------
       TYPE (param_AllBasis) :: para_AllBasis_loc
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType)      :: mole_loc
+      TYPE (Tnum)           :: para_Tnum_loc
 
-      integer       :: i,iact,isym,JJ
-      integer       :: NonGcteRange(2)
-
+      integer       :: i,iact,isym
       TYPE(REAL_WU) :: RWU_E
 
-!----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole_loc
 
 !-------------------------------------------------------------------------
 
@@ -720,38 +662,26 @@
         !CALL RecWrite_basis(basis_Set,write_all=.TRUE.)
       END IF
 !---------------------------------------------------------------------
-      ! modification of mole => mole_loc (we need that for RPH transfo)
-      CALL CoordType1TOCoordType2(mole,mole_loc)
-      mole_loc%Cart_transfo                       = .FALSE.
+      ! modification of mole => mole_loc and para_Tnum => para_Tnum_loc
+      para_Tnum_loc                  = para_Tnum
+      para_Tnum_loc%JJ               = 0
+      para_Tnum_loc%NonGcteRange(:)  = 0
 
-      ! save some parameters of para_PES, para_ReadOp, Tnum
-      nb_scalar_Op                = para_PES%nb_scalar_Op
-      para_PES%nb_scalar_Op       = 0
+      mole_loc                       = mole
+      mole_loc%Cart_transfo          = .FALSE.
 
-      calc_scalar_Op              = para_PES%calc_scalar_Op
-      para_PES%calc_scalar_Op     = .FALSE.
-
-      JJ                          = para_Tnum%JJ
-      para_Tnum%JJ                = 0
-
-      type_HamilOp                = para_PES%type_HamilOp
-      para_PES%type_HamilOp       = 1
-      direct_KEO                  = para_PES%direct_KEO
-      para_PES%direct_KEO         = .FALSE.
-
-      NonGcteRange(:)             = para_Tnum%NonGcteRange(:)
-      para_Tnum%NonGcteRange(:)   = 0
-
-      ! allocation of tab_Op
-      para_AllOp_loc%nb_Op = 2 ! just H and S
-      CALL alloc_array(para_AllOp_loc%tab_Op,(/ para_AllOp_loc%nb_Op /),&
-                      'para_AllOp_loc%tab_Op',name_sub)
 
       CALL basis_TO_Allbasis(basis_Set,para_AllBasis_loc,mole_loc)
 
-      para_ReadOp_loc             = para_ReadOp
-      para_ReadOp_loc%nb_bRot     = 1
-      para_ReadOp_loc%comput_S    = .FALSE.
+      ! Read_Op parameters
+      para_ReadOp_loc                 = para_ReadOp
+
+      para_ReadOp_loc%nb_scalar_Op    = 0
+      para_ReadOp_loc%calc_scalar_Op  = .FALSE.
+      para_ReadOp_loc%type_HamilOp    = 1
+      para_ReadOp_loc%direct_KEO      = .FALSE.
+      para_ReadOp_loc%nb_bRot         = 1
+      para_ReadOp_loc%comput_S        = .FALSE.
       para_ReadOp_loc%para_FileGrid%Save_FileGrid   = .FALSE.
       para_ReadOp_loc%para_FileGrid%First_GridPoint = 1
       para_ReadOp_loc%para_FileGrid%Last_GridPoint  = get_nq_FROM_basis(para_AllBasis_loc%BasisnD)
@@ -760,23 +690,20 @@
       para_ReadOp_loc%para_FileGrid%Read_FileGrid   = .FALSE.
       para_ReadOp_loc%para_FileGrid%Type_FileGrid   = 0
 
-      !---------------------------------------------------------------
-      ! modified ComOp from para_AllBasis_loc
-      CALL All2_param_TO_ComOp(ComOp,para_AllBasis_loc,mole_loc,1,      &
-                               para_PES%nb_elec,                        &
-                               ComOp%file_HADA%name,                    &
-                               ComOp%file_HADA%formatted)
 
       !---------------------------------------------------------------
       ! make Operators: H and S
+      ! allocation of tab_Op
+      para_AllOp_loc%nb_Op = 2 ! just H and S
+      CALL alloc_array(para_AllOp_loc%tab_Op,(/ para_AllOp_loc%nb_Op /),&
+                      'para_AllOp_loc%tab_Op',name_sub)
+
       !i=1 => for H
-      CALL All_param_TO_para_H(para_Tnum,mole_loc,                      &
-                               para_AllBasis_loc,                       &
-                               ComOp,para_PES,para_ReadOp_loc,          &
-                               para_AllOp_loc%tab_Op(1))
+      CALL All_param_TO_para_H(para_Tnum_loc,mole_loc,para_AllBasis_loc,&
+                               para_ReadOp_loc,para_AllOp_loc%tab_Op(1))
 
       ! old direct=2 with a matrix
-      para_AllOp_loc%tab_Op(1)%make_Mat                    = .TRUE.
+      para_AllOp_loc%tab_Op(1)%make_Mat                                = .TRUE.
       para_AllOp_loc%tab_Op(1)%para_ReadOp%para_FileGrid%Save_MemGrid  = .TRUE.
       para_AllOp_loc%tab_Op(1)%para_ReadOp%para_FileGrid%Save_FileGrid = .FALSE.
 
@@ -789,7 +716,8 @@
 
       CALL Init_TypeOp(para_AllOp_loc%tab_Op(i)%param_TypeOp,           &
                        type_Op=0,nb_Qact=mole_loc%nb_act1,cplx=.FALSE., &
-                       JRot=Para_Tnum%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
+                       JRot=para_Tnum_loc%JJ,direct_KEO=.FALSE.,        &
+                       direct_ScalOp=.FALSE.)
 
       CALL derive_termQact_TO_derive_termQdyn(                          &
                             para_AllOp_loc%tab_Op(i)%derive_termQdyn,   &
@@ -839,21 +767,8 @@
       CALL dealloc_AllBasis(para_AllBasis_loc)
       CALL dealloc_para_AllOp(para_AllOp_loc)
       CALL dealloc_CoordType(mole_loc)
-      IF (allocated(ComOp%sqRhoOVERJac)) THEN
-        CALL dealloc_NParray(ComOp%sqRhoOVERJac,"ComOp%sqRhoOVERJac",name_sub)
-      END IF
-      IF (allocated(ComOp%Jac)) THEN
-        CALL dealloc_NParray(ComOp%Jac,"ComOp%Jac",name_sub)
-      END IF
-
-      ! restore some parameters of para_PES, para_ReadOp, Tnum
-      para_PES%nb_scalar_Op                   = nb_scalar_Op
-      para_PES%calc_scalar_Op                 = calc_scalar_Op
-      para_Tnum%JJ                            = JJ
-      para_Tnum%NonGcteRange(:)               = NonGcteRange(:)
-
-      para_PES%type_HamilOp                   = type_HamilOp
-      para_PES%direct_KEO                     = direct_KEO
+      CALL dealloc_Tnum(para_Tnum_loc)
+      CALL dealloc_ReadOp(para_ReadOp_loc)
 
       !-----------------------------------------------------------------
       IF (debug) THEN
@@ -868,7 +783,7 @@
 !=======================================================================================
 
       ! basis parameters: for HO basis set (scaleQ)
-      SUBROUTINE AutoParam_basis(basis_Set,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+      SUBROUTINE AutoParam_basis(basis_Set,para_Tnum,mole,para_ReadOp)
 
       USE mod_system
       USE mod_Constant
@@ -884,11 +799,7 @@
 !----- for the basis set ----------------------------------------------
       TYPE (basis)          :: basis_Set
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
-
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)          :: ComOp
       TYPE (param_ReadOp)         :: para_ReadOp
 
 
@@ -938,9 +849,9 @@
 
       IF (HObasis .AND. basis_temp%auto_basis) THEN
         write(out_unitp,*) 'Initial Q0 and scaleQ',basis_Set%Q0(1),basis_Set%scaleQ(1)
-        CALL AutoParam_basis_scaleQ(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
-        CALL AutoParam_basis_Q0(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
-        CALL AutoParam_basis_scaleQ(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        CALL AutoParam_basis_scaleQ(basis_temp,para_Tnum,mole,para_ReadOp)
+        CALL AutoParam_basis_Q0(basis_temp,para_Tnum,mole,para_ReadOp)
+        CALL AutoParam_basis_scaleQ(basis_temp,para_Tnum,mole,para_ReadOp)
 
         basis_Set%Q0(1)      = basis_temp%Q0(1)
         basis_Set%scaleQ(1)  = basis_temp%scaleQ(1)
@@ -961,7 +872,7 @@
 
       END SUBROUTINE AutoParam_basis
       ! basis parameters: for HO basis set (scaleQ)
-      SUBROUTINE AutoParam_basis_scaleQ(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+      SUBROUTINE AutoParam_basis_scaleQ(basis_temp,para_Tnum,mole,para_ReadOp)
 
       USE mod_system
       USE mod_Constant
@@ -978,12 +889,10 @@
       TYPE (basis)          :: basis_temp
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
       integer :: nb_scalar_Op,type_HamilOp
       logical :: calc_scalar_Op,direct_KEO
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)          :: ComOp
       TYPE (param_ReadOp)         :: para_ReadOp
 
 
@@ -1030,7 +939,7 @@
 
         CALL construct_primitive_basis(basis_temp)
 
-        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,para_ReadOp)
         IF (debug) write(out_unitp,*) 'SQ,E',basis_temp%scaleQ(1),E*auTOcm_inv
         flush(out_unitp)
 
@@ -1058,7 +967,7 @@
         CALL dealloc_xw_OF_basis(basis_temp)
         CALL construct_primitive_basis(basis_temp)
 
-        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,para_ReadOp)
         IF (debug) write(out_unitp,*) 'SQ,E',basis_temp%scaleQ(1),E*auTOcm_inv
 
         IF (E < Emin) THEN
@@ -1080,7 +989,7 @@
         CALL dealloc_xw_OF_basis(basis_temp)
         CALL construct_primitive_basis(basis_temp)
 
-        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,para_ReadOp)
         IF (debug) write(out_unitp,*) 'SQ,E',basis_temp%scaleQ(1),E*auTOcm_inv
 
         IF (E < Emin) THEN
@@ -1105,7 +1014,7 @@
           CALL dealloc_xw_OF_basis(basis_temp)
           CALL construct_primitive_basis(basis_temp)
 
-          E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+          E = Ene_FROM_basis(basis_temp,para_Tnum,mole,para_ReadOp)
           IF (debug) write(out_unitp,*) 'SQ,E',basis_temp%scaleQ(1),E*auTOcm_inv
 
           IF (E < Emin) THEN
@@ -1135,7 +1044,7 @@
       CALL flush_perso(out_unitp)
 
       END SUBROUTINE AutoParam_basis_scaleQ
-      SUBROUTINE AutoParam_basis_Q0(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+      SUBROUTINE AutoParam_basis_Q0(basis_temp,para_Tnum,mole,para_ReadOp)
 
       USE mod_system
       USE mod_Constant
@@ -1152,12 +1061,10 @@
       TYPE (basis)          :: basis_temp
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
       integer :: nb_scalar_Op,type_HamilOp
       logical :: calc_scalar_Op,direct_KEO
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)          :: ComOp
       TYPE (param_ReadOp)         :: para_ReadOp
 
 
@@ -1201,7 +1108,7 @@
       CALL construct_primitive_basis(basis_temp)
 
       Q0Min = Q0ini
-      Emin  = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+      Emin  = Ene_FROM_basis(basis_temp,para_Tnum,mole,para_ReadOp)
 
       !write(out_unitp,*) 'Initial Q0,E',Q0ini,Emin*auTOcm_inv
 
@@ -1219,7 +1126,7 @@
 
         CALL construct_primitive_basis(basis_temp)
 
-        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,para_ReadOp)
         IF (debug) write(out_unitp,*) 'Q0,E',basis_temp%Q0(1),E*auTOcm_inv
         flush(out_unitp)
 
@@ -1250,7 +1157,7 @@
 
         CALL construct_primitive_basis(basis_temp)
 
-        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,para_ReadOp)
         IF (debug) write(out_unitp,*) 'Q0,E',basis_temp%Q0(1),E*auTOcm_inv
         flush(out_unitp)
 
@@ -1281,7 +1188,7 @@
 
         CALL construct_primitive_basis(basis_temp)
 
-        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+        E = Ene_FROM_basis(basis_temp,para_Tnum,mole,para_ReadOp)
         IF (debug) write(out_unitp,*) 'Q0,E',basis_temp%Q0(1),E*auTOcm_inv
         flush(out_unitp)
 
@@ -1346,7 +1253,7 @@
       IF ( type_Q == 2 .AND. Q <= ZERO) Q = HALF
 
       END SUBROUTINE Set_InitRange
-      FUNCTION Ene_FROM_basis(basis_Set,para_Tnum,mole,ComOp,para_PES,para_ReadOp)
+      FUNCTION Ene_FROM_basis(basis_Set,para_Tnum,mole,para_ReadOp)
 
       USE mod_system
       USE mod_Constant
@@ -1358,38 +1265,30 @@
       real(kind=Rkind) :: Ene_FROM_basis
 
 !----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType), intent(in) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (CoordType),    intent(in)  :: mole
+      TYPE (Tnum),         intent(in)  :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
-      TYPE (basis), intent(in)          :: basis_Set
-
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
-      integer :: nb_scalar_Op,type_HamilOp
-      logical :: calc_scalar_Op,direct_KEO
+      TYPE (basis),        intent(in)  :: basis_Set
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)          :: ComOp
-      TYPE (param_ReadOp)         :: para_ReadOp
+      TYPE (param_ReadOp), intent(in)  :: para_ReadOp
 
 
 !----- local variables -----------------------------------------------
-!----- variables for the para_ReadOp parameters ----------------
-      TYPE (param_ReadOp)        :: para_ReadOp_loc
-
-!----- variables for the construction of H ---------------------------
+!----- Operators and para_ReadOp ----------------
+      TYPE (param_ReadOp)         :: para_ReadOp_loc
       TYPE (param_AllOp)          :: para_AllOp_loc
 !----- for the basis set ----------------------------------------------
-      TYPE (param_AllBasis) :: para_AllBasis_loc
+      TYPE (param_AllBasis)       :: para_AllBasis_loc
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType)            :: mole_loc
+      TYPE (Tnum)                 :: para_Tnum_loc
 
-      integer       :: i,iact,isym,JJ
-      integer       :: NonGcteRange(2)
-
+      integer       :: i,iact,isym
       TYPE(REAL_WU) :: RWU_E
 
-!----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole_loc
+
 
 !-------------------------------------------------------------------------
 
@@ -1407,40 +1306,26 @@
       END IF
 !---------------------------------------------------------------------
 
-      ! modification of mole => mole_loc (we need that for RPH transfo)
-      CALL CoordType1TOCoordType2(mole,mole_loc)
-      mole_loc%Cart_transfo                       = .FALSE.
+      ! modification of mole => mole_loc and Tnum => Tnum_loc
+      para_Tnum_loc                   = para_Tnum
+      para_Tnum_loc%JJ                = 0
+      para_Tnum_loc%NonGcteRange(:)   = 0
 
-      ! save some parameters of para_PES, para_ReadOp, Tnum
-      nb_scalar_Op                = para_PES%nb_scalar_Op
-      para_PES%nb_scalar_Op       = 0
+      mole_loc                        = mole
+      mole_loc%Cart_transfo           = .FALSE.
 
-      calc_scalar_Op              = para_PES%calc_scalar_Op
-      para_PES%calc_scalar_Op     = .FALSE.
-
-      JJ                          = para_Tnum%JJ
-      para_Tnum%JJ                = 0
-
-      type_HamilOp                = para_PES%type_HamilOp
-      para_PES%type_HamilOp       = 1
-      direct_KEO                  = para_PES%direct_KEO
-      para_PES%direct_KEO         = .FALSE.
-
-      NonGcteRange(:)             = para_Tnum%NonGcteRange(:)
-      para_Tnum%NonGcteRange(:)   = 0
-
-      ! allocation of tab_Op
-      para_AllOp_loc%nb_Op = 2 ! just H and S
-      CALL alloc_array(para_AllOp_loc%tab_Op,(/ para_AllOp_loc%nb_Op /),&
-                      'para_AllOp_loc%tab_Op',name_sub)
 
       CALL basis_TO_Allbasis(basis_Set,para_AllBasis_loc,mole_loc)
-
       !CALL RecWrite_basis(para_AllBasis_loc%BasisnD,write_all=.FALSE.)
 
-      para_ReadOp_loc             = para_ReadOp
-      para_ReadOp_loc%nb_bRot     = 1
-      para_ReadOp_loc%comput_S    = .FALSE.
+      para_ReadOp_loc                 = para_ReadOp
+      para_ReadOp_loc%nb_scalar_Op    = 0
+      para_ReadOp_loc%calc_scalar_Op  = .FALSE.
+      para_ReadOp_loc%type_HamilOp    = 1
+      para_ReadOp_loc%direct_KEO      = .FALSE.
+      para_ReadOp_loc%nb_bRot         = 1
+      para_ReadOp_loc%comput_S        = .FALSE.
+
       para_ReadOp_loc%para_FileGrid%Save_FileGrid   = .FALSE.
       para_ReadOp_loc%para_FileGrid%First_GridPoint = 1
       para_ReadOp_loc%para_FileGrid%Last_GridPoint  = get_nq_FROM_basis(para_AllBasis_loc%BasisnD)
@@ -1450,19 +1335,14 @@
       para_ReadOp_loc%para_FileGrid%Type_FileGrid   = 0
 
       !---------------------------------------------------------------
-      ! modified ComOp from para_AllBasis_loc
-      CALL All2_param_TO_ComOp(ComOp,para_AllBasis_loc,mole_loc,1,      &
-                               para_PES%nb_elec,                        &
-                               ComOp%file_HADA%name,                    &
-                               ComOp%file_HADA%formatted)
-
-      !---------------------------------------------------------------
       ! make Operators: H and S
+      ! allocation of tab_Op
+      para_AllOp_loc%nb_Op = 2 ! just H and S
+      CALL alloc_array(para_AllOp_loc%tab_Op,(/ para_AllOp_loc%nb_Op /),&
+                      'para_AllOp_loc%tab_Op',name_sub)
       !i=1 => for H
-      CALL All_param_TO_para_H(para_Tnum,mole_loc,                      &
-                               para_AllBasis_loc,                       &
-                               ComOp,para_PES,para_ReadOp_loc,          &
-                               para_AllOp_loc%tab_Op(1))
+      CALL All_param_TO_para_H(para_Tnum_loc,mole_loc,para_AllBasis_loc,&
+                               para_ReadOp_loc,para_AllOp_loc%tab_Op(1))
 
 
       ! old direct=2 with a matrix
@@ -1479,7 +1359,7 @@
 
       CALL Init_TypeOp(para_AllOp_loc%tab_Op(i)%param_TypeOp,           &
                        type_Op=0,nb_Qact=mole_loc%nb_act1,cplx=.FALSE., &
-                       JRot=Para_Tnum%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
+                       JRot=para_Tnum_loc%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
       CALL derive_termQact_TO_derive_termQdyn(                          &
                             para_AllOp_loc%tab_Op(i)%derive_termQdyn,   &
                             para_AllOp_loc%tab_Op(i)%derive_termQact,   &
@@ -1508,21 +1388,9 @@
       CALL dealloc_AllBasis(para_AllBasis_loc)
       CALL dealloc_para_AllOp(para_AllOp_loc)
       CALL dealloc_CoordType(mole_loc)
-      IF (allocated(ComOp%sqRhoOVERJac)) THEN
-        CALL dealloc_NParray(ComOp%sqRhoOVERJac,"ComOp%sqRhoOVERJac",name_sub)
-      END IF
-      IF (allocated(ComOp%Jac)) THEN
-        CALL dealloc_NParray(ComOp%Jac,"ComOp%Jac",name_sub)
-      END IF
+      CALL dealloc_Tnum(para_Tnum_loc)
+      CALL dealloc_ReadOp(para_ReadOp_loc)
 
-      ! restore some parameters of para_PES, para_ReadOp, Tnum
-      para_PES%nb_scalar_Op                   = nb_scalar_Op
-      para_PES%calc_scalar_Op                 = calc_scalar_Op
-      para_Tnum%JJ                            = JJ
-      para_Tnum%NonGcteRange(:)               = NonGcteRange(:)
-
-      para_PES%type_HamilOp                   = type_HamilOp
-      para_PES%direct_KEO                     = direct_KEO
 
       !-----------------------------------------------------------------
       IF (debug) THEN
@@ -1535,10 +1403,9 @@
 
       END FUNCTION Ene_FROM_basis
 
-      ! In this subroutine the variable (derived type) can be modified :
-      ! mole, ComOp
-      SUBROUTINE Autocontract_basis(basis_AutoContract,para_Tnum,mole_loc,  &
-                                    ComOp,para_PES,para_ReadOp)
+      ! In this subroutine the variable (derived type) can be modified : mole
+      SUBROUTINE Autocontract_basis(basis_AutoContract,para_Tnum,mole,  &
+                                    para_ReadOp)
 
       USE mod_system
       USE mod_Constant
@@ -1548,35 +1415,29 @@
       USE mod_Op
       IMPLICIT NONE
 
-!----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType) :: mole_loc
-      TYPE (Tnum)    :: para_Tnum
-
 !----- for the basis set ----------------------------------------------
-      TYPE (basis)          :: basis_AutoContract
+      TYPE (basis),        intent(inout) :: basis_AutoContract
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
-      integer :: nb_scalar_Op
-      logical :: calc_scalar_Op
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType),    intent(in)    :: mole
+      TYPE (Tnum),         intent(in)    :: para_Tnum
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)          :: ComOp
-      TYPE (param_ReadOp)         :: para_ReadOp
+      TYPE (param_ReadOp), intent(in)    :: para_ReadOp
 
 
 !----- local variables -----------------------------------------------
 !----- variables for the construction of H ---------------------------
       TYPE (param_AllOp)          :: para_AllOp_loc
       TYPE (param_ReadOp)         :: para_ReadOp_loc
+      TYPE (CoordType)            :: mole_loc
+      TYPE (Tnum)                 :: para_Tnum_loc
 
 !----- for the basis set ----------------------------------------------
-      TYPE (param_AllBasis) :: para_AllBasis_loc
+      TYPE (param_AllBasis)       :: para_AllBasis_loc
 
-      integer          :: i,iact,isym,JJ,type_HamilOp
-      integer          :: NonGcteRange(2)
-
-      logical          :: nosym,direct_KEO
+      integer          :: i
+      logical          :: nosym
       integer          :: nbc
       real(kind=Rkind) :: ene0,auTOcm_inv
       TYPE(REAL_WU)    :: RWU_E,RWU_DE
@@ -1610,38 +1471,27 @@
                                     basis_AutoContract%max_ene_contrac
       END IF
 
-      ! save some parameters of para_PES, para_ReadOp, Tnum
-      nb_scalar_Op                = para_PES%nb_scalar_Op
-      para_PES%nb_scalar_Op       = 0
-      calc_scalar_Op              = para_PES%calc_scalar_Op
-      para_PES%calc_scalar_Op     = .FALSE.
+      ! modification of mole => mole_loc and Tnum => Tnum_loc
+      para_Tnum_loc                   = para_Tnum
+      para_Tnum_loc%JJ                = 0
+      para_Tnum_loc%NonGcteRange(:)   = 0
 
-      type_HamilOp                = para_PES%type_HamilOp
-      para_PES%type_HamilOp       = 1
-      direct_KEO                  = para_PES%direct_KEO
-      para_PES%direct_KEO         = .FALSE.
-
-      NonGcteRange(:)             = para_Tnum%NonGcteRange(:)
-      para_Tnum%NonGcteRange(:)   = 0
-
-      JJ                          = para_Tnum%JJ
-      para_Tnum%JJ                = 0
-
+      mole_loc                        = mole
+      mole_loc%Cart_transfo           = .FALSE.
       ! If needed, change RPH transfo in flexible transfo
       CALL CoordTypeRPH_TO_CoordTypeFlex(mole_loc)
-      mole_loc%Cart_transfo                       = .FALSE.
 
-
-      ! allocation of tab_Op
-      para_AllOp_loc%nb_Op = 2 ! just H and S
-      CALL alloc_array(para_AllOp_loc%tab_Op,(/ para_AllOp_loc%nb_Op /),&
-                      'para_AllOp_loc%tab_Op',name_sub)
 
       CALL basis_TO_Allbasis(basis_AutoContract,para_AllBasis_loc,mole_loc)
 
-      para_ReadOp_loc             = para_ReadOp
-      para_ReadOp_loc%nb_bRot     = 1
-      para_ReadOp_loc%comput_S    = .FALSE.
+      para_ReadOp_loc                 = para_ReadOp
+      para_ReadOp_loc%nb_scalar_Op    = 0
+      para_ReadOp_loc%calc_scalar_Op  = .FALSE.
+      para_ReadOp_loc%type_HamilOp    = 1
+      para_ReadOp_loc%direct_KEO      = .FALSE.
+      para_ReadOp_loc%nb_bRot         = 1
+      para_ReadOp_loc%comput_S        = .FALSE.
+
       para_ReadOp_loc%para_FileGrid%Save_FileGrid   = .FALSE.
       para_ReadOp_loc%para_FileGrid%First_GridPoint = 1
       para_ReadOp_loc%para_FileGrid%Last_GridPoint  = get_nq_FROM_basis(para_AllBasis_loc%BasisnD)
@@ -1650,19 +1500,14 @@
       para_ReadOp_loc%para_FileGrid%Read_FileGrid   = .FALSE.
 
       !---------------------------------------------------------------
-      ! modified ComOp from para_AllBasis_loc
-      CALL All2_param_TO_ComOp(ComOp,para_AllBasis_loc,mole_loc,1,      &
-                               para_PES%nb_elec,                        &
-                               ComOp%file_HADA%name,                    &
-                               ComOp%file_HADA%formatted)
-
-      !---------------------------------------------------------------
       ! make Operators: H and S
+      ! allocation of tab_Op
+      para_AllOp_loc%nb_Op = 2 ! just H and S
+      CALL alloc_array(para_AllOp_loc%tab_Op,(/ para_AllOp_loc%nb_Op /),&
+                      'para_AllOp_loc%tab_Op',name_sub)
       !i=1 => for H
-      CALL All_param_TO_para_H(para_Tnum,mole_loc,                      &
-                               para_AllBasis_loc,                       &
-                               ComOp,para_PES,para_ReadOp_loc,          &
-                               para_AllOp_loc%tab_Op(1))
+      CALL All_param_TO_para_H(para_Tnum,mole_loc,para_AllBasis_loc,    &
+                               para_ReadOp_loc,para_AllOp_loc%tab_Op(1))
       ! old direct=2 with a matrix
       para_AllOp_loc%tab_Op(1)%make_Mat                                = .TRUE.
       para_AllOp_loc%tab_Op(1)%para_ReadOp%para_FileGrid%Save_MemGrid  = .TRUE.
@@ -1794,21 +1639,9 @@
       ! deallocation ....
       CALL dealloc_AllBasis(para_AllBasis_loc)
       CALL dealloc_para_AllOp(para_AllOp_loc)
-      IF (allocated(ComOp%sqRhoOVERJac)) THEN
-        CALL dealloc_NParray(ComOp%sqRhoOVERJac,"ComOp%sqRhoOVERJac",name_sub)
-      END IF
-      IF (allocated(ComOp%Jac)) THEN
-        CALL dealloc_NParray(ComOp%Jac,"ComOp%Jac",name_sub)
-      END IF
-      ! restore some parameters of para_PES, para_ReadOp, Tnum
-      para_PES%nb_scalar_Op                   = nb_scalar_Op
-      para_PES%calc_scalar_Op                 = calc_scalar_Op
-      para_Tnum%JJ                            = JJ
-
-      para_Tnum%NonGcteRange(:)               = NonGcteRange(:)
-
-      para_PES%type_HamilOp                   = type_HamilOp
-      para_PES%direct_KEO                     = direct_KEO
+      CALL dealloc_CoordType(mole_loc)
+      CALL dealloc_ReadOp(para_ReadOp_loc)
+      CALL dealloc_Tnum(para_Tnum_loc)
 
       !-----------------------------------------------------------------
       IF (debug) THEN
@@ -1900,94 +1733,8 @@
 
       END SUBROUTINE basis_TO_AllBasis
 
-!=======================================================================================
-      SUBROUTINE All2_param_TO_ComOp(ComOp,para_AllBasis,mole,nb_bi,    &
-                                     nb_elec,name_HADA,formatted_HADA)
-
-      USE mod_system
-      USE mod_basis
-      USE mod_Op
-      IMPLICIT NONE
-
-!----- for the basis set ----------------------------------------------
-      TYPE (param_AllBasis) :: para_AllBasis
-
-!----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)            :: ComOp
-
-!----- for coordinates ----------------------------------------------
-      TYPE (CoordType)                :: mole
-
-      integer, intent(in)       :: nb_bi,nb_elec
-!-------variables for the file names -------------------------------------
-       character (len=Line_len) :: name_HADA
-       logical                  :: formatted_HADA
-
-!----- working variables ---------------------------------------------
-      integer       :: err_mem,memory
-      integer       :: ib,ind_b(mole%nb_act1+1)
-      integer       :: i,j,k,i_term,val_HAC
-      character (len=*), parameter :: name_sub = 'All2_param_TO_ComOp'
-
-      !write(out_unitp,*) ' BEGINNING ',name_sub
-
-
-      IF (mole%nb_inact2n == 0) THEN
-        ComOp%nb_bi   = 1
-      ELSE
-        ComOp%nb_bi   = nb_bi
-      END IF
-
-      ComOp%nb_act1 = mole%nb_act1
-      ComOp%nb_ba   = get_nb_FROM_basis(para_AllBasis%BasisnD)
-      ComOp%nb_be   = nb_elec
-      ComOp%nb_bie  = ComOp%nb_bi * nb_elec
-
-      IF (.NOT. associated(ComOp%nb_ba_ON_HAC)) THEN
-        CALL alloc_array(ComOp%nb_ba_ON_HAC,(/ ComOp%nb_bie /),         &
-                                                 'nb_ba_ON_HAC',name_sub)
-      END IF
-      ComOp%nb_ba_ON_HAC(:)   = ComOp%nb_ba
-
-
-!     -- for the adiabatic contraction ----
-      IF (ComOp%nb_ba > 0) THEN
-      IF (ComOp%contrac_ba_ON_HAC .AND. mole%nb_inact2n > 0) THEN
-
-        ComOp%max_nb_ba_ON_HAC = min(ComOp%max_nb_ba_ON_HAC,ComOp%nb_ba)
-
-        CALL alloc_array(ComOp%d0Cba_ON_HAC,                            &
-                           (/ ComOp%nb_ba,ComOp%nb_ba,ComOp%nb_bie /),  &
-                                                 'd0Cba_ON_HAC',name_sub)
-        CALL alloc_array(ComOp%Eneba_ON_HAC,(/ComOp%nb_ba,ComOp%nb_bie/),&
-                                                 'Eneba_ON_HAC',name_sub)
-
-        DO i=1,ComOp%nb_bie
-          CALL mat_id(ComOp%d0Cba_ON_HAC(:,:,i),ComOp%nb_ba,ComOp%nb_ba)
-        END DO
-        ComOp%Eneba_ON_HAC(:,:) = ZERO
-      ELSE
-        ComOp%contrac_ba_ON_HAC       = .FALSE.
-        nullify(ComOp%d0Cba_ON_HAC)
-        nullify(ComOp%Eneba_ON_HAC)
-      END IF
-      END IF
-
-      IF (allocated(ComOp%sqRhoOVERJac)) THEN
-        CALL dealloc_NParray(ComOp%sqRhoOVERJac,"ComOp%sqRhoOVERJac",name_sub)
-      END IF
-      IF (allocated(ComOp%Jac)) THEN
-        CALL dealloc_NParray(ComOp%Jac,"ComOp%Jac",name_sub)
-      END IF
-      ComOp%file_HADA%name      = make_FileName(name_HADA)
-      ComOp%file_HADA%formatted = formatted_HADA
-      !write(out_unitp,*) ' END ',name_sub
-
-      END SUBROUTINE All2_param_TO_ComOp
-!=======================================================================================
-
       SUBROUTINE All_param_TO_para_H(para_Tnum,mole,para_AllBasis,      &
-                                     ComOp,para_PES,para_ReadOp,para_H)
+                                     para_ReadOp,para_H)
 
       USE mod_system
       USE mod_PrimOp
@@ -1999,16 +1746,12 @@
 
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType),target :: mole
-      TYPE (Tnum),target    :: para_Tnum
+      TYPE (Tnum),     target :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
       TYPE (param_AllBasis),target :: para_AllBasis
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES),target :: para_PES
-
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp),target :: ComOp
       TYPE (param_Op)     :: para_H
       TYPE (param_ReadOp) :: para_ReadOp
 
@@ -2032,26 +1775,20 @@
       para_H%init_var      = .TRUE.
 
 !     ------------------------------
-      para_H%ComOp        => ComOp
-!     ------------------------------
-
-!     ------------------------------
       para_H%mole      => mole
       para_H%para_Tnum => para_Tnum
 !     ------------------------------
 
 !     ------------------------------
       para_H%para_AllBasis => para_AllBasis
-      para_H%BasisnD       => para_AllBasis%BasisnD
-      para_H%Basis2n       => para_AllBasis%Basis2n
+      para_H%BasisnD       => para_H%para_AllBasis%BasisnD
+      para_H%Basis2n       => para_H%para_AllBasis%Basis2n
 !     ------------------------------
 
-!     ------------------------------
-      para_H%para_PES   => para_PES
-!     ------------------------------
+      para_H%para_ReadOp   = para_ReadOp
 
-      para_H%n_Op            = 0
-      para_H%name_Op         = 'H'
+      para_H%n_Op          = 0
+      para_H%name_Op       = 'H'
 
 
       para_H%nb_OpPsi      = 0
@@ -2059,8 +1796,12 @@
       para_H%nb_ba         = para_AllBasis%BasisnD%nDindB%max_nDI
       para_H%nb_qa         = get_nqa_FROM_basis(para_AllBasis%BasisnD)
 
-      para_H%nb_bi         = ComOp%nb_bi
-      para_H%nb_be         = ComOp%nb_be !para_PES%nb_elec
+      IF (mole%nb_inact2n == 0) THEN
+        para_H%nb_bi       = 1
+      ELSE
+        para_H%nb_bi       = get_nb_bi_FROM_AllBasis(para_AllBasis)
+      END IF
+      para_H%nb_be         = para_ReadOp%nb_elec
       para_H%nb_bie        = para_H%nb_bi * para_H%nb_be
 
       para_H%nb_bai        = para_H%nb_ba * para_H%nb_bi
@@ -2088,10 +1829,11 @@
       para_H%nb_act1       = mole%nb_act1
 
       CALL Init_TypeOp(para_H%param_TypeOp,                             &
-                    type_Op=para_PES%type_HamilOp,nb_Qact=mole%nb_act1, &
-                       cplx=para_PES%pot_cplx,JRot=para_H%Para_Tnum%JJ, &
-                       direct_KEO=para_PES%direct_KEO,                  &
-                       direct_ScalOp=para_PES%direct_ScalOp)
+                       type_Op=para_ReadOp%type_HamilOp,                &
+                       nb_Qact=mole%nb_act1,cplx=para_ReadOp%pot_cplx,  &
+                       JRot=para_H%Para_Tnum%JJ,                        &
+                       direct_KEO=para_ReadOp%direct_KEO,               &
+                       direct_ScalOp=para_ReadOp%direct_ScalOp)
 
       CALL derive_termQact_TO_derive_termQdyn(para_H%derive_termQdyn,   &
               para_H%derive_termQact,mole%ActiveTransfo%list_QactTOQdyn)
@@ -2103,7 +1845,7 @@
       para_H%Esc             = ONE
       para_H%Hmin            = huge(ONE)
       para_H%Hmax            = -huge(ONE)
-      para_H%pot0            = para_PES%pot0
+      para_H%pot0            = para_ReadOp%pot0
       para_H%pot_only        = para_ReadOp%pot_only
       para_H%T_only          = para_ReadOp%T_only
 
@@ -2131,8 +1873,6 @@
       TYPE (param_AllOp)          :: para_AllOp
       TYPE (param_Op)             :: para_H
 
-      TYPE (param_Op)             :: para_H_HADA
-      TYPE (param_ComOp), target  :: ComOp_HADA
 
 !----- physical and mathematical constants ---------------------------
       TYPE (constant)            :: const_phys
@@ -2140,18 +1880,20 @@
 !----- variables pour la namelist analyse ----------------------------
       TYPE (param_ana)       :: para_ana
       TYPE (param_intensity) :: para_intensity
-      integer :: max_ana_save
 
-      TYPE (param_psi), allocatable   :: Tab_Psi(:)
+
+      ! local variables
+      TYPE (param_AllBasis), target        :: para_AllBasis_loc
+      TYPE (param_psi),      allocatable   :: Tab_Psi(:)
+      TYPE (param_Op)                      :: para_H_HADA
+      integer :: max_ana_save
 
 !------ quadrature points and weight -----------------------------
 
       real (kind=Rkind) :: WnD
 
-!------ for the H matrix analysis -------------------------
 
 !----- for the gestion of the memory ---------------------------------
-
       integer   :: nreste,nplus
 
 
@@ -2168,7 +1910,7 @@
 
 !----- divers ----------------------------------------------------
       integer  :: nb_ba,nb_bie,print_psi_save
-
+      real (kind=Rkind) :: ZPE
 
       integer  :: i,k,nb_blocks
 
@@ -2178,8 +1920,8 @@
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
-      !logical,parameter :: debug=.FALSE.
-      logical,parameter :: debug=.TRUE.
+      logical,parameter :: debug=.FALSE.
+      !logical,parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub='sub_MatOp_HADA'
 !-----------------------------------------------------------
 
@@ -2188,9 +1930,9 @@
         write(out_unitp,*) 'nb_act1,nb_var',para_H%mole%nb_act1,               &
                                    para_H%mole%nb_var
         write(out_unitp,*) 'nb_ba,nb_bie',para_H%nb_ba,para_H%nb_bie
-        write(out_unitp,*) 'max_nb_ba_ON_HAC',para_H%ComOp%max_nb_ba_ON_HAC
-        write(out_unitp,*) 'max_ene_ON_HAC  ',para_H%ComOp%max_ene_ON_HAC
-        !CALL write_param_Op(para_H)
+        write(out_unitp,*) 'max_nb_ba_ON_HAC',para_H%para_AllBasis%basis_ext2n%max_nb_ba_ON_HAC
+        write(out_unitp,*) 'max_ene_ON_HAC  ',para_H%para_AllBasis%basis_ext2n%max_ene_ON_HAC
+        CALL write_param_Op(para_H)
       END IF
 !-----------------------------------------------------------
 
@@ -2199,7 +1941,7 @@
       IF (para_H%nb_bi <= 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' nb_bi MUST be >0'
-        write(out_unitp,*) 'nb_bi',para_H%nb_bi
+        write(out_unitp,*) ' nb_bi',para_H%nb_bi
         write(out_unitp,*)
         CALL write_param_Op(para_H)
         STOP
@@ -2211,7 +1953,7 @@
 !-------------------------------------------------------------
       nb_ba   = para_H%nb_ba
       nb_bie  = para_H%nb_bie
-      type_Op = para_H%para_PES%Type_HamilOp ! H
+      type_Op = para_H%para_ReadOp%Type_HamilOp ! H
       IF (type_Op /= 1) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) '    Type_HamilOp',type_Op
@@ -2268,14 +2010,16 @@
       DO k=1,nplus
 
         nDGridI = nDGridI + 1
-        IF (mod(nDGridI,max(1,int(para_H%nb_qa/10))) == 0 .AND. print_level>-1) THEN
-           write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                        &
-              int(real(nDGridI,kind=Rkind)*HUNDRED/para_H%nb_qa)
+        IF (mod(nDGridI,max(1,int(para_H%nb_qa/10))) == 0 .AND.         &
+            print_level>-1) THEN
+           write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                 &
+                      int(real(nDGridI,kind=Rkind)*HUNDRED/para_H%nb_qa)
            CALL flush_perso(out_unitp)
         END IF
 
         CALL sub_reading_Op(nDGridI,para_H%nb_qa,d0MatOp,para_H%n_Op,   &
-                                Qdyn,para_H%mole%nb_var,Qact,WnD,para_H%ComOp)
+                           Qdyn,para_H%mole%nb_var,para_H%mole%nb_act1, &
+                                Qact,WnD,para_H%file_grid)
 
         iterm_Op = d0MatOp%derive_term_TO_iterm(0,0)
         DO i1_h=1,para_H%nb_bie
@@ -2327,33 +2071,45 @@
       CALL dealloc_d0MatOp(d0MatOp)
 
 
+!     --------------------------------------------------------
+!     Diagonalization of HADA channels
+      DO i1_h=1,nb_bie
+        CALL sub_diago_H(H_HADA(:,:,i1_h),                              &
+                para_H%para_AllBasis%basis_ext2n%Eneba_ON_HAC(:,i1_h),  &
+                para_H%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i1_h),&
+                nb_ba,para_H%sym_Hamil)
+      END DO
+
+
       max_ana_save       = para_ana%max_ana
       print_psi_save     = para_ana%print_psi
       para_ana%print_psi = 0
 
-      para_H_HADA%ComOp => ComOp_HADA
+
+
+      ! now, we are working on part of para_H : para_H_HADA. We need to set a local para_AllBasis
+      para_AllBasis_loc%alloc   = .TRUE.
+      para_AllBasis_loc%nb_be   = 1
+      para_AllBasis_loc%nb_bi   = 1
+      para_AllBasis_loc%BasisnD => para_H%para_AllBasis%BasisnD ! we don't need to copy
+      para_AllBasis_loc%Basis2n => para_H%para_AllBasis%Basis2n ! we don't need to copy
+
+      nb_ba  = get_nb_FROM_Basis(para_H%para_AllBasis%BasisnD)
+      para_AllBasis_loc%basis_ext2n%contrac_ba_ON_HAC = .TRUE.
+      para_AllBasis_loc%basis_ext2n%max_nb_ba_ON_HAC  =                 &
+                        para_H%para_AllBasis%basis_ext2n%max_nb_ba_ON_HAC
+      CALL alloc_basis_ext2n(para_AllBasis_loc%basis_ext2n,nb_ba,nb_bie=1)
+
+      para_H_HADA%para_AllBasis => para_AllBasis_loc
+
       CALL param_HTOparam_H_HADA(1,para_H,para_H_HADA)
 
 
 !     --------------------------------------------------------
-!     Diagonalization of HADA channels
-      DO i1_h=1,nb_bie
-        CALL sub_diago_H(H_HADA(:,:,i1_h),                                  &
-                         para_H%ComOp%Eneba_ON_HAC(:,i1_h),                 &
-                         para_H%ComOp%d0Cba_ON_HAC(:,:,i1_h),nb_ba,         &
-                         para_H%sym_Hamil)
-
-      END DO
-
-!     --------------------------------------------------------
 !     Analysis of HADA channels
       ! but first the ZPE from all the channels
-      i1_h = 1 ! first channel
-      CALL Set_ZPE_OF_ComOp(ComOp_HADA,para_H%ComOp%Eneba_ON_HAC(:,i1_h),forced=.TRUE.)
-      DO i1_h=2,nb_bie
-        CALL Set_ZPE_OF_ComOp(ComOp_HADA,para_H%ComOp%Eneba_ON_HAC(:,i1_h))
-      END DO
-
+      ZPE = minval(para_H%para_AllBasis%basis_ext2n%Eneba_ON_HAC)
+      CALL Set_ZPE_OF_Op(para_H_HADA,ZPE=ZPE,forced=.TRUE.)
 
       ! Analysis of the HADA channels
       CALL alloc_NParray(Tab_Psi,(/ nb_ba /),'Tab_Psi',name_sub)
@@ -2362,22 +2118,24 @@
         CALL alloc_psi(Tab_Psi(i))
       END DO
 
+
       DO i1_h=1,nb_bie
 
         DO i=1,nb_ba
-            Tab_Psi(i)%RvecB(:)   = para_H%ComOp%d0Cba_ON_HAC(:,i,i1_h)
-            Tab_psi(i)%CAvOp      = para_H%ComOp%Eneba_ON_HAC(i,i1_h)
+            Tab_Psi(i)%RvecB(:)   = para_H%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,i,i1_h)
+            Tab_psi(i)%CAvOp      = para_H%para_AllBasis%basis_ext2n%Eneba_ON_HAC(i,i1_h)
             Tab_psi(i)%IndAvOp    = para_H%n_Op  ! it should be 0
         END DO
 
 
-        para_ana%max_ana = count((para_H%ComOp%Eneba_ON_HAC(:,i1_h) -   &
-                           ComOp_HADA%ZPE) < para_H%ComOp%max_ene_ON_HAC)
-        para_H%ComOp%nb_ba_ON_HAC(i1_h) =                               &
-                     min(para_ana%max_ana,para_H%ComOp%max_nb_ba_ON_HAC)
+        para_ana%max_ana = count(                                       &
+           (para_H%para_AllBasis%basis_ext2n%Eneba_ON_HAC(:,i1_h) -     &
+            para_H_HADA%ZPE) < para_H%para_AllBasis%basis_ext2n%max_ene_ON_HAC)
+        para_H%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i1_h) =           &
+            min(para_ana%max_ana,para_H%para_AllBasis%basis_ext2n%max_nb_ba_ON_HAC)
 
         write(out_unitp,*) 'Number of level(s) on the HAC channel: ',   &
-                                    i1_h,para_H%ComOp%nb_ba_ON_HAC(i1_h)
+                i1_h,para_H%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i1_h)
 
         CALL sub_analyse(Tab_Psi,nb_ba,para_H_HADA,                     &
                            para_ana,para_intensity,para_AllOp,const_phys)
@@ -2387,18 +2145,26 @@
 
 
 !---------------------------------------------------------------
-      IF (sum(para_H%ComOp%nb_ba_ON_HAC) == 0) THEN
+      IF (sum(para_H%para_AllBasis%basis_ext2n%nb_ba_ON_HAC) == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' Sum of nb_ba_ON_HAC(:) == 0 !!'
         STOP
       END IF
-      write(out_unitp,*) ' Sum of levels on HAC channels: ',sum(para_H%ComOp%nb_ba_ON_HAC)
+      write(out_unitp,*) ' Sum of levels on HAC channels: ',            &
+                     sum(para_H%para_AllBasis%basis_ext2n%nb_ba_ON_HAC)
 
       para_ana%print_psi = print_psi_save
       para_ana%max_ana   = max_ana_save
-      CALL dealloc_ComOp(ComOp_HADA)
+
       CALL dealloc_para_Op(para_H_HADA)
       CALL dealloc_NParray(H_HADA,'H_HADA',name_sub)
+
+      ! para_AllBasis_loc cannot be deallocated by dealloc_AllBasis ....
+      ! otherwise, BasisnD qnd Basis2n will be deallocated.
+      nullify(para_AllBasis_loc%BasisnD)
+      nullify(para_AllBasis_loc%Basis2n)
+      CALL dealloc_basis_ext2n(para_AllBasis_loc%basis_ext2n)
+
 
 !---------------------------------------------------------------
 

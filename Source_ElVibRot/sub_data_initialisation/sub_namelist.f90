@@ -53,20 +53,19 @@
 !
 !================================================================
 !
-      SUBROUTINE read_inactive(Basis2n,ComOp,mole)
+      SUBROUTINE read_inactive(para_AllBasis,mole)
       USE mod_system
       USE mod_nDindex
       USE mod_Constant,  only: REAL_WU, convRWU_TO_R_WITH_WorkingUnit
       use mod_Coord_KEO, only: CoordType, alloc_array, dealloc_array,   &
-                               set_rphtransfo, tnum
+                               set_rphtransfo, Tnum
       USE mod_basis
       USE mod_Op
       IMPLICIT NONE
 
 !----- for the basis set ----------------------------------------------
-      TYPE (basis)          :: Basis2n
-      TYPE (param_ComOp)    :: ComOp
-      TYPE (CoordType), intent(inout) :: mole
+      TYPE (param_AllBasis), intent(inout) :: para_AllBasis
+      TYPE (CoordType),      intent(inout) :: mole
 
 !-----------------------------------------------------------
 
@@ -192,14 +191,15 @@
         write(out_unitp,*) 'tab_nb(:)',tab_nb(1:nb_inact21)
 
         nDinit(:) = 0
-        CALL alloc_array(Basis2n%nDindB,'Basis2n%nDindB',name_sub)
+        CALL alloc_array(para_AllBasis%Basis2n%nDindB,                   &
+                        'para_AllBasis%Basis2n%nDindB',name_sub)
         IF (isort == 1) THEN ! sort with energy
-          CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
+          CALL init_nDindexPrim(para_AllBasis%Basis2n%nDindB,nb_inact21, &
               tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
                       MaxNorm=convRWU_TO_R_WITH_WorkingUnit(max_ene_h),  &
                       type_OF_nDindex=0,With_nDindex=.FALSE.)
         ELSE IF (isort == 2) THEN ! sort with excitation
-          CALL init_nDindexPrim(Basis2n%nDindB,nb_inact21,               &
+          CALL init_nDindexPrim(para_AllBasis%Basis2n%nDindB,nb_inact21, &
               tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
                                        Lmax=max_excit,type_OF_nDindex=0, &
                                        With_nDindex=.FALSE.)
@@ -209,28 +209,28 @@
           write(out_unitp,*) '   check your data!!'
           STOP
         END IF
-        Basis2n%nDindB%Max_nDI = n_h
-        !CALL Write_nDindex(Basis2n%nDindB)
+        para_AllBasis%Basis2n%nDindB%Max_nDI = n_h
+        !CALL Write_nDindex(para_AllBasis%Basis2n%nDindB)
 
-        CALL init_nDindexPrim(Basis2n%nDindG,nb_inact21,                 &
-              tab_nq(1:nb_inact21),type_OF_nDindex=0,With_nDindex=.FALSE.)
-        !CALL Write_nDindex(Basis2n%nDindG)
+        CALL init_nDindexPrim(para_AllBasis%Basis2n%nDindG,nb_inact21,  &
+             tab_nq(1:nb_inact21),type_OF_nDindex=0,With_nDindex=.FALSE.)
+        !CALL Write_nDindex(para_AllBasis%Basis2n%nDindG)
 
-        ComOp%ADA               = ADA
-        ComOp%contrac_ba_ON_HAC = contrac_ba_ON_HAC
-        ComOp%max_nb_ba_ON_HAC  = max_nb_ba_ON_HAC
-        ComOp%max_ene_ON_HAC    = convRWU_TO_R_WITH_WorkingUnit(max_ene_h)
+        para_AllBasis%basis_ext2n%ADA               = ADA
+        para_AllBasis%basis_ext2n%contrac_ba_ON_HAC = contrac_ba_ON_HAC
+        para_AllBasis%basis_ext2n%max_nb_ba_ON_HAC  = max_nb_ba_ON_HAC
+        para_AllBasis%basis_ext2n%max_ene_ON_HAC    = convRWU_TO_R_WITH_WorkingUnit(max_ene_h)
 
 
-        Basis2n%nb_basis            = nb_inact21
+        para_AllBasis%Basis2n%nb_basis            = nb_inact21
         IF (SparseGrid) THEN
-          Basis2n%SparseGrid_type   = 3
+          para_AllBasis%Basis2n%SparseGrid_type   = 3
         ELSE
-          Basis2n%SparseGrid_type   = 0
+          para_AllBasis%Basis2n%SparseGrid_type   = 0
         END IF
-        Basis2n%L_SparseGrid        = L_SparseGrid
+        para_AllBasis%Basis2n%L_SparseGrid        = L_SparseGrid
 
-        CALL alloc_tab_Pbasis_OF_basis(Basis2n)
+        CALL alloc_tab_Pbasis_OF_basis(para_AllBasis%Basis2n)
 
         IF (SparseGrid .AND. isort /= 2) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
@@ -240,7 +240,8 @@
           STOP
         END IF
 
-        IF (Basis2n%SparseGrid_type == 3 .AND. Basis2n%L_SparseGrid < 1) THEN
+        IF (para_AllBasis%Basis2n%SparseGrid_type == 3 .AND.            &
+            para_AllBasis%Basis2n%L_SparseGrid < 1) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' SparseGrid_type /= 3 and L_SparseGrid < 1'
           write(out_unitp,*) ' You should increase L_SparseGrid!'
@@ -266,7 +267,7 @@
 
       ELSE IF (nb_inact21 > 0 .AND. associated(mole%RPHTransfo)) THEN
         IF (mole%RPHTransfo%option == 0) THEN
-          ! here we set up not list_act_OF_Qdyn because it is already
+          ! here we do not set up the list_act_OF_Qdyn because it is already
           !     done in type_var_analysis
 
           CALL Set_RPHTransfo(mole%RPHTransfo,                          &
@@ -279,8 +280,8 @@
 
 
       IF (debug) THEN
-        CALL Write_nDindex(Basis2n%nDindB,'Basis2n%nDindB')
-        CALL Write_nDindex(Basis2n%nDindG,'Basis2n%nDindG')
+        CALL Write_nDindex(para_AllBasis%Basis2n%nDindB,'para_AllBasis%Basis2n%nDindB')
+        CALL Write_nDindex(para_AllBasis%Basis2n%nDindG,'para_AllBasis%Basis2n%nDindG')
         write(out_unitp,*) 'END ',name_sub
       END IF
 
@@ -295,30 +296,22 @@
 !
 !================================================================
 !
-      SUBROUTINE read_active(para_Tnum,mole,para_AllBasis,              &
-                             ComOp,para_ReadOp,para_PES)
+      SUBROUTINE read_active(para_Tnum,mole,para_ReadOp)
 
       USE mod_system
       USE mod_nDindex
       USE mod_Constant, only : REAL_WU,convRWU_TO_R_WITH_WorkingUnit
       USE mod_PrimOp
       USE mod_Op
-      USE mod_basis
-      USE mod_Auto_Basis
       USE mod_MPI
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum)      :: para_Tnum
       TYPE (CoordType) :: mole
 
-!----- for the basis set ----------------------------------------------
-      TYPE (param_AllBasis) :: para_AllBasis
-
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)  :: ComOp
       TYPE (param_ReadOp) :: para_ReadOp
-      TYPE (param_PES)    :: para_PES
 
 
       logical       :: test
@@ -343,8 +336,8 @@
 
 
 !     - working variables -----
-      integer       :: ib,ind_b(mole%nb_act1+1)
-      integer       :: i,j,k,i_term,nb_bi
+      integer       :: ib
+      integer       :: i,j,k,i_term
 
 !-------variables for the file names -------------------------------------
        character (len=Line_len) :: name_HADA
@@ -441,21 +434,15 @@
         para_Tnum%With_Cart_Transfo = (JJ>0) .AND. mole%Cart_transfo
       END IF
 
-!     - for ComOp ----------------------------
-      nb_bi = get_nb_bi_FROM_AllBasis(para_AllBasis)
-      CALL All2_param_TO_ComOp(ComOp,para_AllBasis,mole,nb_bi,          &
-                               para_PES%nb_elec,name_Grid,formatted_Grid)
-
-      para_PES%Type_HamilOp  = Type_HamilOp
-      para_PES%direct_KEO    = direct_KEO
-      para_PES%direct_ScalOp = direct_ScalOp
+      para_ReadOp%Type_HamilOp  = Type_HamilOp
+      para_ReadOp%direct_KEO    = direct_KEO
+      para_ReadOp%direct_ScalOp = direct_ScalOp
 
 
 
       IF (print_level > 0) write(out_unitp,*) ' END read_active'
 
-!     - Copy parameters in para_ReadOp --------
-
+      !- Copy parameters in para_ReadOp --------
       SELECT CASE (direct)
       !         direct=0    => Make_Mat=T, SaveFile_Grid=T, SaveMem_Grid=F
       !         direct=1    => Make_Mat=F, SaveFile_Grid=T, SaveMem_Grid=T

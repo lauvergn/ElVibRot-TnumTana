@@ -33,8 +33,9 @@
 
 
 !     - parameters for para_Tnum -----------------------
-      TYPE (zmatrix) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (zmatrix)   :: mole
+      TYPE (Tnum)      :: para_Tnum
+      TYPE (PrimOp_t)  :: PrimOp
 
       TYPE(Type_dnMat) :: dng,dnGG
       TYPE(Type_dnS), pointer :: GOFdnS(:,:),EigenVecOFdnS(:,:)
@@ -73,7 +74,7 @@
       !-----------------------------------------------------------------
       !     ---- TO finalize the coordinates (NM) and the KEO ----------
       !     ------------------------------------------------------------
-      CALL Finalize_TnumTana_Coord_PrimOp(para_Q%Qact,para_Tnum,mole,para_PES)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Q%Qact,para_Tnum,mole,PrimOp)
       !-----------------------------------------------------------------
 !=======================================================================
 !=======================================================================

@@ -31,7 +31,7 @@ MODULE mod_dnGG_dng
   use mod_dnSVM
   use mod_paramQ,  only: sub_QactTOdnMWx, Write_dnx, analyze_dnx
   use mod_Tnum,    only: zmatrix, tnum, write_mole, mole1tomole2, dealloc_zmat,&
-                         CoordType,Write_CoordType,CoordType1TOCoordType2,dealloc_CoordType
+                         CoordType,Write_CoordType,dealloc_CoordType
   USE mod_dnRho ! all
 
   IMPLICIT NONE
@@ -455,7 +455,7 @@ MODULE mod_dnGG_dng
 
     ! we have to transfert mole to mole_zmatrix, ...
     !  ... because calc_f2_f1Q_ana works only with zmatrix type
-    !CALL CoordType1TOCoordType2(mole,mole_zmatrix%CoordType)
+    !mole_zmatrix%CoordType = mole
     !CALL calc_f2_f1Q_ana(Qdyn,                                      &
     !                     Tdef2,Tdef1,vep_loc,rho,                   &
     !                     Tcor2,Tcor1,Trot,                          &
@@ -533,7 +533,7 @@ MODULE mod_dnGG_dng
       !-----------------------------------------------------------------
       IF (present(dnGG) .OR. present(dng)) THEN ! with type100 we need to calculate dnGG100 first
                                                 ! then we can calculate dng form the inversion of dnGG
-        CALL CoordType1TOCoordType2(mole,mole100)
+        mole100 = mole
 
         DO i=1,mole100%nb_var
           IF (mole100%ActiveTransfo%list_act_OF_Qdyn(i) == 100)         &
@@ -594,7 +594,6 @@ MODULE mod_dnGG_dng
       CALL dealloc_dnSVM(dnGG100)
       CALL dealloc_CoordType(mole100)
 
-
     END IF
 
     !-----------------------------------------------------------
@@ -647,8 +646,7 @@ MODULE mod_dnGG_dng
       !-----------------------------------------------------------------
       IF (present(dnGG) .OR. present(dng)) THEN ! with type100 we need to calculate dnGG100 first
                                                 ! then we can calculate dng form the inversion of dnGG
-        CALL CoordType1TOCoordType2(mole,mole100)
-
+        mole100 = mole
         DO i=1,mole100%nb_var
           IF (mole100%ActiveTransfo%list_act_OF_Qdyn(i) == 100)         &
                            mole100%ActiveTransfo%list_act_OF_Qdyn(i) = 1

@@ -61,21 +61,14 @@ MODULE mod_EVR
    !----- physical and mathematical constants ---------------------------
    TYPE (constant) :: const_phys
 
-   !----- On the fly parameters (at this time for gaussian) -------------
-   TYPE (param_OTF) :: para_OTF
-
    !----- for the CoordType and Tnum --------------------------------------
    TYPE (CoordType) :: mole
-   TYPE (Tnum)    :: para_Tnum
+   TYPE (Tnum)      :: para_Tnum
 
    !----- for the basis set ----------------------------------------------
    TYPE (param_AllBasis) :: para_AllBasis
 
-   !----- variables pour la namelist minimum ----------------------------
-   TYPE (param_PES) :: para_PES
-
    !----- variables for the construction of H ----------------------------
-   TYPE (param_ComOp)  :: ComOp
    TYPE (param_AllOp)  :: para_AllOp
 
 

@@ -86,10 +86,11 @@ CONTAINS
       END IF
 !-----------------------------------------------------------
 
-      IF (psi%ComOp%contrac_ba_ON_HAC) THEN
+      IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' HADA contraction (',psi%ComOp%contrac_ba_ON_HAC,') and '
-        write(out_unitp,*) '  sub_PsiBasisRep_TO_GridRep is not possible'
+        write(out_unitp,*) ' HADA contraction: ',                       &
+                         psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC
+        write(out_unitp,*) ' and ',name_sub,' is not possible'
         STOP
       END IF
 
@@ -205,10 +206,10 @@ CONTAINS
       END IF
 !-----------------------------------------------------------
 
-      IF (psi%ComOp%contrac_ba_ON_HAC) THEN
+      IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' HADA contraction (',psi%ComOp%contrac_ba_ON_HAC,') and '
-        write(out_unitp,*) name_sub,' is not possible'
+        write(out_unitp,*) ' HADA contraction:',psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC
+        write(out_unitp,*) ' and ',name_sub,' is not possible'
         STOP
       END IF
 
@@ -324,10 +325,11 @@ CONTAINS
       END IF
 !-----------------------------------------------------------
 
-      IF (psi%ComOp%contrac_ba_ON_HAC) THEN
+      IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' HADA contraction (',psi%ComOp%contrac_ba_ON_HAC,') and '
-        write(out_unitp,*) '  sub_PsiBasisRep_TO_GridRep is not possible'
+        write(out_unitp,*) ' HADA contraction: ',                       &
+                         psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC
+        write(out_unitp,*) '  and ',name_sub,' is not possible'
         STOP
       END IF
 

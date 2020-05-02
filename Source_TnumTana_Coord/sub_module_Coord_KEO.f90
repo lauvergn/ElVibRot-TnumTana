@@ -46,17 +46,17 @@ MODULE mod_Coord_KEO
   USE mod_CartesianTransfo, ONLY: calc_dnteckart,calc_dntxdnxin_to_dnxout,&
                                   calc_eckartrot,dnmwx_multiref
   USE mod_export_KEO,      ONLY : export3_MCTDH_T
-  USE mod_Tnum,            ONLY : Tnum,CoordType,zmatrix,param_PES_FromTnum,&
-                                  Read_CoordType,write_coordtype,           &
-                                  coordtype1tocoordtype2,dealloc_coordtype, &
-                                  sub_coordtype_to_pararph,                 &
-                                  sub_pararph_to_coordtype,                 &
-                                  type_var_analysis_of_coordtype,           &
-                                  CoordTypeRPH_TO_CoordTypeFlex,            &
+  USE mod_Tnum,            ONLY : Tnum,param_PES_FromTnum,dealloc_Tnum, &
+                                  CoordType,zmatrix,dealloc_coordtype,  &
+                                  Read_CoordType,write_coordtype,       &
+                                  sub_coordtype_to_pararph,             &
+                                  sub_pararph_to_coordtype,             &
+                                  type_var_analysis_of_coordtype,       &
+                                  CoordTypeRPH_TO_CoordTypeFlex,        &
                                   Set_OptimizationPara_FROM_CoordType
 
   USE mod_paramQ,          ONLY : sub_dnFCC_TO_dnFcurvi,sub_QactTOdnx,  &
-                                  sub_qacttoqit,sub_qplusdq_to_cart,    &
+                                  sub_QactTOQit,sub_QplusdQ_TO_cart,    &
                                read_RefGeom,sub_QactTOd0x,sub_d0xTOQact,&
                                   Set_paramQ_FOR_optimization,          &
                                   Write_Cartg98, Write_XYZ

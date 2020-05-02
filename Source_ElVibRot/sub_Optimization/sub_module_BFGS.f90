@@ -137,7 +137,7 @@
       END SUBROUTINE Write_param_BFGS
 
       SUBROUTINE Sub_BFGS(BasisnD,xOpt_min,SQ,nb_Opt,                   &
-                          para_Tnum,mole,ComOp,para_PES,Qact,para_BFGS)
+                          para_Tnum,mole,PrimOp,Qact,para_BFGS)
 
       USE mod_system
       USE mod_dnSVM
@@ -159,12 +159,11 @@
       TYPE (basis)          :: BasisnD
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
       integer          :: nb_scalar_Op
       logical          :: calc_scalar_Op
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)          :: ComOp
       TYPE (param_ReadOp)         :: para_ReadOp
       logical                     :: Save_FileGrid,Save_MemGrid
 
@@ -213,7 +212,7 @@
         IF (para_BFGS%calc_hessian) THEN
           write(out_unitp,*) ' The initial hessian is calculated'
           !-------- allocation -----------------------------------------------
-          CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_Opt,para_PES%nb_elec,nderiv=2)
+          CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_Opt,PrimOp%nb_elec,nderiv=2)
           CALL alloc_array(para_BFGS%hessian_inv_init,(/ nb_Opt,nb_Opt /),  &
                           'para_BFGS%hessian_inv_init',name_sub)
           IF (allocated(hessian)) THEN
@@ -223,7 +222,7 @@
           !-------- end allocation --------------------------------------------
 
           !----- Hessian ------------------------------------
-          CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES)
+          CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp)
 
           CALL Get_Hess_FROM_Tab_OF_dnMatOp(hessian,dnMatOp) ! for the ground state
           !----- End Hessian ------------------------------------
@@ -289,10 +288,10 @@
         END IF
 
         !-------- allocation -----------------------------------------------
-        CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_Opt,para_PES%nb_elec,nderiv=1)
+        CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_Opt,PrimOp%nb_elec,nderiv=1)
         !-------- end allocation --------------------------------------------
 
-        CALL dfpmin_new(Qact,dnMatOp, mole,para_PES,para_Tnum,para_BFGS,&
+        CALL dfpmin_new(Qact,dnMatOp, mole,PrimOp,para_Tnum,para_BFGS,&
           para_BFGS%RMS_grad,para_BFGS%RMS_step,para_BFGS%max_iteration)
 
         xopt_min(:) = Qact(1:nb_Opt)
@@ -327,7 +326,7 @@
 !!!!!!!!!!!!!!!!!!!JML!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !---------------------------------------------------------------------------
-SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
+SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,PrimOp,para_Tnum,para_BFGS,    &
                       gtol,tolx,itmax)
 !---------------------------------------------------------------------------
 !
@@ -365,8 +364,8 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 
  real (kind=Rkind), target :: Qact(:)
  TYPE (param_dnMatOp)      :: dnMatOp(1)
- TYPE (CoordType)            :: mole
- TYPE (param_PES)          :: para_PES
+ TYPE (CoordType)          :: mole
+ TYPE (PrimOp_t)           :: PrimOp
  TYPE (Tnum)               :: para_Tnum
  TYPE (param_BFGS)         :: para_BFGS
 
@@ -377,7 +376,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
  !write(out_unitp,*) 'gtol,tolx,itmax',gtol,tolx,itmax
  allocate (g(n),hdg(n),pnew(n),dg(n),xi(n),hessin(n,n))
 
- call dfunc(p,g,fp,dnMatOp,mole,para_PES,para_Tnum,1) ! Calculate starting function value and gradient.
+ call dfunc(p,g,fp,dnMatOp,mole,PrimOp,para_Tnum,1) ! Calculate starting function value and gradient.
  write(out_unitp,*)
  write(out_unitp,*) 'Iteration=    0 '
  write(out_unitp,*) ' Geometry:'
@@ -412,7 +411,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
  call proescvec(p,p,sum,n)
  stpmax=STPMX*max(sqrt(sum),real(n,kind=Rkind))
  do its=1,ITMAX                 ! Main loop over the iterations.
-  call lnsrch(n,p,fp,g,xi,pnew,fret,stpmax,check,dnMatOp,mole,para_PES,para_Tnum)
+  call lnsrch(n,p,fp,g,xi,pnew,fret,stpmax,check,dnMatOp,mole,PrimOp,para_Tnum)
   ! The new function evaluation occurs in lnsrch; save the value in fp for the
   ! next line search. It is usually safe to ignore the value of check.
   fp   = fret
@@ -425,7 +424,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
    if (temp > test) test=temp
   end do
   dg=g                  ! Save the old gradient
-  call dfunc(p,g,fret,dnMatOp,mole,para_PES,para_Tnum,1)  ! and get a new gradient
+  call dfunc(p,g,fret,dnMatOp,mole,PrimOp,para_Tnum,1)  ! and get a new gradient
 
   test=ZERO            ! Test of convergence on zero gradient
   den=max(fret,ONE)
@@ -495,7 +494,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
  end subroutine dfpmin_new
 
 !----------------------------------------------------------------------
-  subroutine lnsrch(n,xold,fold,g,p,x,f,stpmax,check,dnMatOp,mole,para_PES,para_Tnum)
+  subroutine lnsrch(n,xold,fold,g,p,x,f,stpmax,check,dnMatOp,mole,PrimOp,para_Tnum)
 !---------------------------------------------------------------------
 !
  USE mod_system 
@@ -514,8 +513,8 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
  real (kind=Rkind) :: rhs1, rhs2, a, b, alam2, disc, f2
 !
  TYPE (param_dnMatOp) :: dnMatOp(1)
- TYPE (CoordType)       :: mole
- TYPE (param_PES)     :: para_PES
+ TYPE (CoordType)     :: mole
+ TYPE (PrimOp_t)      :: PrimOp
  TYPE (Tnum)          :: para_Tnum
 !
  check=.false.
@@ -542,7 +541,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
  do  i=1,n
   x(i)=xold(i)+alam*p(i)
  end do
- call dfunc(x,g,f,dnMatOp,mole,para_PES,para_Tnum,0)
+ call dfunc(x,g,f,dnMatOp,mole,PrimOp,para_Tnum,0)
  if(alam < alamin)then
   x=xold
   check=.true.
@@ -580,7 +579,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 !  (C) Copr. 1986-92 Numerical Recipes Software Bc21D#,#5,15!".
 !
 !---------------------------------------------------------------------------
-  SUBROUTINE dfunc(xt,df,f,dnMatOp,mole,para_PES,para_Tnum,nderiv_dnE)
+  SUBROUTINE dfunc(xt,df,f,dnMatOp,mole,PrimOp,para_Tnum,nderiv_dnE)
 !---------------------------------------------------------------------------
  USE mod_system
  USE mod_dnSVM
@@ -595,8 +594,8 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
  IMPLICIT none
  integer, intent(in)  :: nderiv_dnE
  TYPE (param_dnMatOp) :: dnMatOp(1)
- TYPE (CoordType)       :: mole
- TYPE (param_PES)     :: para_PES
+ TYPE (CoordType)     :: mole
+ TYPE (PrimOp_t)      :: PrimOp
  TYPE (Tnum)          :: para_Tnum
 
  real(kind=Rkind), intent(in)    :: xt(mole%nb_act)
@@ -634,7 +633,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,para_PES,para_Tnum,para_BFGS,    &
 
  CALL Set_ZERO_TO_Tab_OF_dnMatOp(dnMatOp)
 
- CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES,nderiv_dnE)
+ CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp,nderiv_dnE)
 
 ! the results are in the matrix of derived type MatdnE(:,:)
 !   Remark: we have a matrix because ElVibRot can deal with several diabatic electronic states

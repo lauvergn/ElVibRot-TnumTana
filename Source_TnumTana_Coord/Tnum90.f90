@@ -45,7 +45,7 @@
       TYPE (constant)  :: const_phys
       TYPE (CoordType) :: mole
       TYPE (Tnum)      :: para_Tnum
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
 
       real (kind=Rkind) :: vep,rho
       real (kind=Rkind), pointer :: Tdef2(:,:)=>null()
@@ -125,7 +125,7 @@
       !-----------------------------------------------------------------
       !     ---- TO finalize the coordinates (NM) and the KEO ----------
       !     ------------------------------------------------------------
-      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
       !-----------------------------------------------------------------
 !=======================================================================
 !=======================================================================
@@ -173,13 +173,13 @@
 
         nderiv = 2
 
-        allocate(Tab_dnMatOp(para_PES%nb_scalar_Op+2))
-        CALL Init_Tab_OF_dnMatOp(Tab_dnMatOp,mole%nb_act,para_PES%nb_elec, &
-                                 nderiv,cplx=para_PES%pot_cplx,JRot=para_Tnum%JJ) ! H
+        allocate(Tab_dnMatOp(PrimOp%nb_scalar_Op+2))
+        CALL Init_Tab_OF_dnMatOp(Tab_dnMatOp,mole%nb_act,PrimOp%nb_elec, &
+                                 nderiv,cplx=PrimOp%pot_cplx,JRot=para_Tnum%JJ) ! H
 
 
 
-        CALL get_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,para_PES)
+        CALL get_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,PrimOp)
 
         write(out_unitp,*) "Energy: ",Get_Scal_FROM_Tab_OF_dnMatOp(Tab_dnMatOp,1)
         write(out_unitp,*) "Dipole Moments: ",Get_Scal_FROM_Tab_OF_dnMatOp(Tab_dnMatOp,3),&
@@ -341,7 +341,7 @@
         CALL alloc_array(freq,(/ mole%nb_act /),"freq",name_sub)
 
 
-        CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES,print_freq=.TRUE.)
+        CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,PrimOp,print_freq=.TRUE.)
 
         write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(freq(:))*get_Conv_au_TO_unit('E','cm-1')
         write(out_unitp,*) 'ZPE   (eV): ',HALF*sum(freq(:))*get_Conv_au_TO_unit('E','eV')
@@ -450,7 +450,7 @@
         IF (calc_freq) THEN
           CALL alloc_array(freq,(/ mole%nb_act /),"freq",name_sub)
 
-          CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,para_PES,d0h_opt=dnFcurvi%d2)
+          CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,PrimOp,d0h_opt=dnFcurvi%d2)
 
           write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(freq(:))*get_Conv_au_TO_unit('E','cm-1')
           write(out_unitp,*) 'ZPE   (eV): ',HALF*sum(freq(:))*get_Conv_au_TO_unit('E','eV')

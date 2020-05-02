@@ -1541,7 +1541,7 @@ STOP 'cplx'
      DO j=1,para_Op%nb_Qact
 
        ! multiply by Jac
-       derRGj(:,j) = derRGj(:,j) * para_Op%ComOp%Jac
+       derRGj(:,j) = derRGj(:,j) * para_Op%para_AllBasis%basis_ext%Jac
 
        ! derivative with respect to Qact_j
        derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(j),0 /)
@@ -1553,7 +1553,7 @@ STOP 'cplx'
      END DO
      CALL dealloc_NParray(derRGj,"derRGj",name_sub)
 
-     OpPsi%RvecG(iqi1:fqi1) = -HALF * OpPsi%RvecG(iqi1:fqi1) / para_Op%ComOp%Jac
+     OpPsi%RvecG(iqi1:fqi1) = -HALF * OpPsi%RvecG(iqi1:fqi1) / para_Op%para_AllBasis%basis_ext%Jac
 
      ! add the potential
      iterm = para_Op%derive_term_TO_iterm(0,0)
@@ -1741,10 +1741,10 @@ STOP 'cplx'
 
  END DO
 
- IF (.NOT. allocated(para_Op%ComOp%Jac)) THEN
+ IF (.NOT. allocated(para_Op%para_AllBasis%basis_ext%Jac)) THEN
    write(out_unitp,*) ' ERROR in ',name_sub
-   write(out_unitp,*) ' para_Op%ComOp%Jac(:) is not allocated '
-   write(out_unitp,*) ' Set JacSave = .TRUE., around line 169 of sub_HSH_harm.f90.'
+   write(out_unitp,*) ' ....%basis_ext%Jac(:) is not allocated '
+   write(out_unitp,*) ' Set JacSave = .TRUE., around line 186 of sub_HSH_harm.f90.'
    STOP
  END IF
 
@@ -1755,12 +1755,12 @@ STOP 'cplx'
 
    IF (para_Op%OpGrid(iterm)%grid_cte) THEN
      DO itab=1,size(Psi)
-       OpPsi(itab)%RvecG(:) = -TWO*para_Op%ComOp%Jac *              &
+       OpPsi(itab)%RvecG(:) = -TWO*para_Op%para_AllBasis%basis_ext%Jac * &
              para_Op%OpGrid(iterm)%Mat_cte(1,1) * Psi(itab)%RvecG(:)
      END DO
    ELSE
      DO itab=1,size(Psi)
-       OpPsi(itab)%RvecG(:) = -TWO*para_Op%ComOp%Jac *              &
+       OpPsi(itab)%RvecG(:) = -TWO*para_Op%para_AllBasis%basis_ext%Jac * &
               para_Op%OpGrid(iterm)%Grid(:,1,1) * Psi(itab)%RvecG(:)
      END DO
    END IF
@@ -1768,8 +1768,8 @@ STOP 'cplx'
    OpPsi(itab)%RvecG(:) = ZERO
  END IF
 
- !write(out_unitp,*) 'sqRhoOVERJac',para_Op%ComOp%sqRhoOVERJac(:)
- !write(out_unitp,*) 'Jac',para_Op%ComOp%Jac(:)
+ !write(out_unitp,*) 'sqRhoOVERJac',para_Op%para_AllBasis%basis_ext%sqRhoOVERJac(:)
+ !write(out_unitp,*) 'Jac',para_Op%para_AllBasis%basis_ext%Jac(:)
  !write(out_unitp,*) 'V',para_Op%OpGrid(iterm)%Grid(:,1,1)
 
  !Transfert sqRhoOVERJac, Jac and the potential in Smolyak rep (Grid)
@@ -1853,7 +1853,7 @@ STOP 'cplx'
    DO j=1,para_Op%nb_Qact
 
      ! multiply by Jac
-     derRGj(:,j,itab) = derRGj(:,j,itab) * para_Op%ComOp%Jac
+     derRGj(:,j,itab) = derRGj(:,j,itab) * para_Op%para_AllBasis%basis_ext%Jac
 
      ! derivative with respect to Qact_j
      derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(j),0 /)
@@ -1874,7 +1874,7 @@ STOP 'cplx'
 
 
  DO itab=1,size(Psi)
-   OpPsi(itab)%RvecG(:) = -HALF * OpPsi(itab)%RvecG(:) / para_Op%ComOp%Jac
+   OpPsi(itab)%RvecG(:) = -HALF * OpPsi(itab)%RvecG(:) / para_Op%para_AllBasis%basis_ext%Jac
    CALL sub_sqRhoOVERJac_Psi(OpPsi(itab),para_Op,inv=.TRUE.)
 
    IF (debug) THEN
@@ -2462,7 +2462,7 @@ STOP 'cplx'
 
 
         IF (para_Op%name_Op == 'H') THEN
-          type_Op = para_Op%para_PES%Type_HamilOp ! H
+          type_Op = para_Op%para_ReadOp%Type_HamilOp ! H
           IF (type_Op /= 1) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) '    Type_HamilOp MUST be equal to 1 for HADA or cHAC'
@@ -2477,8 +2477,9 @@ STOP 'cplx'
 
         DO i_qa=1,para_Op%nb_qa
 
-          CALL sub_reading_Op(i_qa,para_Op%nb_qa,d0MatOp,para_Op%n_Op,&
-                                  Qdyn,para_Op%mole%nb_var,Qact,WnD,para_Op%ComOp)
+          CALL sub_reading_Op(i_qa,para_Op%nb_qa,d0MatOp,para_Op%n_Op,  &
+                          Qdyn,para_Op%mole%nb_var,para_Op%mole%nb_act1, &
+                          Qact,WnD,para_Op%file_grid)
 
           DO i1_bi=1,para_Op%nb_bie
           DO i2_bi=1,para_Op%nb_bie
@@ -2934,7 +2935,7 @@ STOP 'cplx'
       END IF
       !-----------------------------------------------------------------
 
-      IF (.NOT. allocated(para_Op%ComOp%sqRhoOVERJac)) THEN
+      IF (.NOT. allocated(para_Op%para_AllBasis%basis_ext%sqRhoOVERJac)) THEN
          write(out_unitp,*) ' ERROR in ',name_sub
          write(out_unitp,*) ' sqRhoOVERJac MUST be on allocated!!!'
          write(out_unitp,*) ' ... You have to force it in "sub_HSOp_inact"!!'
@@ -2955,7 +2956,7 @@ STOP 'cplx'
             iqi2 = 1         + (i2_bi-1) * Psi%nb_qa
             fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
 
-            Psi%CvecG(iqi2:fqi2) = Psi%CvecG(iqi2:fqi2) / para_Op%ComOp%sqRhoOVERJac(:)
+            Psi%CvecG(iqi2:fqi2) = Psi%CvecG(iqi2:fqi2) / para_Op%para_AllBasis%basis_ext%sqRhoOVERJac(:)
 
           END DO
         ELSE
@@ -2963,7 +2964,7 @@ STOP 'cplx'
             iqi2 = 1         + (i2_bi-1) * Psi%nb_qa
             fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
 
-            Psi%CvecG(iqi2:fqi2) = Psi%CvecG(iqi2:fqi2) * para_Op%ComOp%sqRhoOVERJac(:)
+            Psi%CvecG(iqi2:fqi2) = Psi%CvecG(iqi2:fqi2) * para_Op%para_AllBasis%basis_ext%sqRhoOVERJac(:)
 
           END DO
         END IF
@@ -2983,7 +2984,7 @@ STOP 'cplx'
             iqi2 = 1         + (i2_bi-1) * Psi%nb_qa
             fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
 
-            Psi%RvecG(iqi2:fqi2) = Psi%RvecG(iqi2:fqi2) / para_Op%ComOp%sqRhoOVERJac(:)
+            Psi%RvecG(iqi2:fqi2) = Psi%RvecG(iqi2:fqi2) / para_Op%para_AllBasis%basis_ext%sqRhoOVERJac(:)
 
           END DO
         ELSE
@@ -2992,7 +2993,7 @@ STOP 'cplx'
             iqi2 = 1         + (i2_bi-1) * Psi%nb_qa
             fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
 
-            Psi%RvecG(iqi2:fqi2) = Psi%RvecG(iqi2:fqi2) * para_Op%ComOp%sqRhoOVERJac(:)
+            Psi%RvecG(iqi2:fqi2) = Psi%RvecG(iqi2:fqi2) * para_Op%para_AllBasis%basis_ext%sqRhoOVERJac(:)
 
           END DO
 

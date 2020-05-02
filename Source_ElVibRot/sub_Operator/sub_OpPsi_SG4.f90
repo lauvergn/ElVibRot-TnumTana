@@ -2258,13 +2258,13 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
      CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
-     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
      DO i=1,size(d0MatOp) 
-       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
      END DO
      !was
 !     DO iOp=1,size(d0MatOp) ! iOp value is change here
-!       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+!       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
 !     END DO
    END IF
 
@@ -2291,7 +2291,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
          .NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Read_FileGrid) THEN
 
         CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
-                                 para_Op%para_Tnum,para_Op%para_PES)
+                                 para_Op%para_Tnum,para_Op%para_ReadOp%PrimOp_t)
 
         DO i=1,nb0
         DO j=1,nb0
@@ -2507,9 +2507,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       END IF
 
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
-     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
      DO i=1,size(d0MatOp)
-       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
      END DO
 
      tab_iq(:) = 1 ; tab_iq(1) = 0
@@ -2520,8 +2520,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
        CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
-       CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
-                                   para_Op%para_Tnum,para_Op%para_PES)
+       CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Op%para_Tnum,    &
+                                para_Op%para_ReadOp%PrimOp_t)
 
        IF (para_Op%n_Op == 0) THEN ! H
          CALL TnumKEO_TO_tab_d0H(Qact,d0MatOp(iOp),mole,para_Op%para_Tnum) ! here the vep is added to the potential
@@ -2749,9 +2749,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       END IF
 
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
-     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
      DO i=1,size(d0MatOp)
-       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
      END DO
 
      tab_iq(:) = 1 ; tab_iq(1) = 0
@@ -2762,8 +2762,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
        CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
-       CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
-                                   para_Op%para_Tnum,para_Op%para_PES)
+       CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Op%para_Tnum,    &
+                                para_Op%para_ReadOp%PrimOp_t)
 
        IF (para_Op%n_Op == 0 .AND. .NOT. KEO_done) THEN ! H
          CALL TnumKEO_TO_tab_d0H(Qact,d0MatOp(iOp),mole,para_Op%para_Tnum) ! here the vep is added to the potential
@@ -2977,9 +2977,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
      tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
 
-     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
      DO iOp=1,size(d0MatOp)
-       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
      END DO
 
      tab_iq(:) = 1 ; tab_iq(1) = 0
@@ -2995,8 +2995,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 !                                        def=.TRUE.,Jac=Jac(iq),Rho=Rho)
 !       END IF
 
-          CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                   &
-                                   para_Op%para_Tnum,para_Op%para_PES)
+          CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Op%para_Tnum, &
+                                   para_Op%para_ReadOp%PrimOp_t)
           GridOp(iq,:,:,iterm00) = d0MatOp(iterm00)%ReVal(:,:,1)
 
      END DO
@@ -3177,9 +3177,9 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
      CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
-     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
      DO iOp=1,size(d0MatOp)
-       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
      END DO
    END IF
 
@@ -3195,8 +3195,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
          .NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid_done .AND. &
          .NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Read_FileGrid) THEN
 
-        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
-                                 para_Op%para_Tnum,para_Op%para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Op%para_Tnum,   &
+                                 para_Op%para_ReadOp%PrimOp_t)
         V(iq,:,:) = d0MatOp(iterm00)%ReVal(:,:,1)
 
         IF (iG == 1 .AND. debug) THEN

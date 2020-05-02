@@ -152,7 +152,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   Grid  = psi%GridRep
   Basis = psi%BasisRep
 
-  IF (psi%ComOp%contrac_ba_ON_HAC) THEN
+  IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
     ana_psi%AvQ = .FALSE.
   END IF
 
@@ -1490,7 +1490,7 @@ END SUBROUTINE sub_analyze_psi
       END IF
 !-----------------------------------------------------------
       IF (psi%nb_baie*psi%nb_bRot /= psi%nb_tot .AND.                   &
-          .NOT. psi%ComOp%contrac_ba_ON_HAC) RETURN   ! should be spectral WP
+          .NOT. psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) RETURN   ! should be spectral WP
 
       maxC1 = ZERO
       maxC2 = ZERO
@@ -1509,7 +1509,7 @@ END SUBROUTINE sub_analyze_psi
       DO i_R=1,psi%nb_bRot
       DO i_e=1,psi%nb_be
       DO i_h=1,psi%nb_bi
-      DO i_b=1,psi%ComOp%nb_ba_ON_HAC(i_h)
+      DO i_b=1,psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i_h)
       !DO i_b=1,psi%nb_ba
 
         i_bhe = i_bhe + 1
@@ -1550,7 +1550,7 @@ END SUBROUTINE sub_analyze_psi
       END DO
       END DO
 
-      IF (psi%ComOp%contrac_ba_ON_HAC) THEN
+      IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
 
         IF (psi%cplx) THEN
           write(out_unitp,*) 'max1 psi%vecBasisRep ',T,trim(info),      &
@@ -2328,7 +2328,7 @@ END SUBROUTINE norm_psi_MPI
   !  CALL Channel_weight_SG4(tab_WeightChannels,psi,GridRep,BasisRep)
   !END IF
 
-  IF (psi%ComOp%contrac_ba_ON_HAC) THEN
+  IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
 
     CALL Channel_weight_contracHADA(tab_WeightChannels(:,1),psi)
 
@@ -2478,7 +2478,7 @@ END SUBROUTINE norm_psi_MPI
     tab_WeightChannels(:,:) = ZERO
   END IF
 
-  IF(psi%ComOp%contrac_ba_ON_HAC) THEN
+  IF(psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
     IF(MPI_id==0) CALL Channel_weight_contracHADA(tab_WeightChannels(:,1),psi)
   ELSE IF (psi%nb_baie==psi%nb_tot) THEN
     IF(BasisRep .AND. (allocated(psi%CvecB) .OR. allocated(psi%RvecB)) ) THEN
@@ -2697,9 +2697,9 @@ END SUBROUTINE Channel_weight_MPI
 
 !        weight on the harmonic states
          DO ih=1,psi%nb_bi
-           ihk = sum(psi%ComOp%nb_ba_ON_HAC(1:ih-1))
+           ihk = sum(psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:ih-1))
            w_harm(ih) = ZERO
-           DO k=1,psi%ComOp%nb_ba_ON_HAC(ih)
+           DO k=1,psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(ih)
              ihk = ihk + 1
              IF (psi%cplx) THEN
                w_harm(ih) = w_harm(ih) + abs(psi%CvecB(ihk))**2
@@ -2736,9 +2736,9 @@ END SUBROUTINE Channel_weight_MPI
 !
 !  ! weight on the harmonic states
 !  DO ih=1,psi%nb_bi
-!    ihk=sum(psi%ComOp%nb_ba_ON_HAC(1:ih-1))
+!    ihk=sum(psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:ih-1))
 !    w_harm(ih)=ZERO
-!    DO k=1,psi%ComOp%nb_ba_ON_HAC(ih)
+!    DO k=1,psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(ih)
 !      ihk=ihk+1
 !      write(*,*) 'ih,ihk check',ih,ihk
 !      IF(psi%cplx) THEN

@@ -39,7 +39,7 @@
       TYPE (constant)  :: const_phys
       TYPE (zmatrix)   :: mole
       TYPE (Tnum)      :: para_Tnum
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
 
       TYPE(sum_opnd)             :: TWOxKEO
 
@@ -79,7 +79,7 @@ STOP
 !      !-----------------------------------------------------------------
 !      !     ---- TO finalize the coordinates (NM) and the KEO ----------
 !      !     ------------------------------------------------------------
-!      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+!      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
 !      !-----------------------------------------------------------------
 !===========================================================
 !===========================================================

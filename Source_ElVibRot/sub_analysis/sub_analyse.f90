@@ -137,11 +137,11 @@ CONTAINS
       CALL alloc_NParray(ene,shape(Tab_psi),'ene',name_sub)
 
       ene(:) = real(Tab_psi(:)%CAvOp,kind=Rkind)
-      CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene=ene)
+      CALL Set_ZPE_OF_Op(para_H,Ene=ene)
 
-      IF (count(ene(:)-para_H%ComOp%ZPE <= para_ana%max_ene) == 0) RETURN
+      IF (count(ene(:)-para_H%ZPE <= para_ana%max_ene) == 0) RETURN
 
-      RWU_ZPE = REAL_WU(para_H%ComOp%ZPE,'au','E')
+      RWU_ZPE = REAL_WU(para_H%ZPE,'au','E')
       RWU_E   = REAL_WU(sum(ene) / real(nb_psi_in,kind=Rkind),'au','E')
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*)
@@ -164,7 +164,7 @@ CONTAINS
       CALL file_open(file_WPspectral,nioWP,lformatted=para_ana%formatted_file_WP)
 
       ! For the header of the file
-      nb_psi        = count((ene(:)-para_H%ComOp%ZPE) <= para_ana%max_ene)
+      nb_psi        = count((ene(:)-para_H%ZPE) <= para_ana%max_ene)
       CALL Write_header_saveFile_psi(tab_Psi,nb_psi,file_WPspectral)
 
       ! write the energy level + save the psi
@@ -173,10 +173,10 @@ CONTAINS
       CALL flush_perso(out_unitp)
       DO i=1,nb_psi_in
 
-        IF (ene(i)-para_H%ComOp%ZPE > para_ana%max_ene) CYCLE
+        IF (ene(i)-para_H%ZPE > para_ana%max_ene) CYCLE
 
         RWU_E  = REAL_WU(ene(i),'au','E')
-        RWU_DE = REAL_WU(ene(i)-para_H%ComOp%ZPE,'au','E')
+        RWU_DE = REAL_WU(ene(i)-para_H%ZPE,'au','E')
         E  = convRWU_TO_R_WITH_WritingUnit(RWU_E)
         DE = convRWU_TO_R_WITH_WritingUnit(RWU_DE)
 
@@ -194,7 +194,7 @@ CONTAINS
       END DO
       close(nioWP)
 
-      para_ana%ana_psi%ZPE        = para_H%ComOp%ZPE
+      para_ana%ana_psi%ZPE        = para_H%ZPE
       para_ana%ana_psi%Part_Func  = Q
       para_ana%ana_psi%Temp       = para_ana%Temp
 
@@ -204,7 +204,7 @@ CONTAINS
 
       DO i=1,nb_psi_in
 
-        IF (ene(i)-para_H%ComOp%ZPE > para_ana%max_ene) CYCLE
+        IF (ene(i)-para_H%ZPE > para_ana%max_ene) CYCLE
 
         IF (.NOT. tab_Psi(i)%BasisRep) THEN
           CALL sub_PsiGridRep_TO_BasisRep(tab_Psi(i))
@@ -231,7 +231,8 @@ CONTAINS
 
         IF (para_ana%intensity .AND. para_intensity%l_IntVR) THEN
           CALL sub_moyABC(tab_Psi(i),i,info,para_intensity%ABC(:,i),para_AllOp)
-        ELSE IF (para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op > 0 .AND. para_ana%ana_psi%AvScalOp) THEN
+        ELSE IF (para_AllOp%tab_Op(1)%para_ReadOp%nb_scalar_Op > 0 .AND. &
+                 para_ana%ana_psi%AvScalOp) THEN
           CALL sub_moyScalOp(tab_Psi(i),i,info,para_AllOp)
         END IF
 
@@ -275,12 +276,14 @@ CONTAINS
         DO i=1,para_ana%print_psi
           Mat_psi(:,i) = tab_Psi(i)%RvecB(:)
         END DO
-        IF (.NOT. para_H%ComOp%contrac_ba_ON_HAC .AND. mole%nb_act1 < 3) THEN
+        IF (.NOT. para_H%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC    &
+                                            .AND. mole%nb_act1 < 3) THEN
           CALL write_psi(Mat_psi,para_ana%psi2,para_ana%print_psi,      &
                           tab_Psi(1)%nb_tot,                            &
-                          para_H%nb_ba,para_H%nb_qa,para_H%nb_bie,       &
+                          para_H%nb_ba,para_H%nb_qa,para_H%nb_bie,      &
                           para_Tnum,mole,BasisnD,para_H)
-        !ELSE IF (para_H%ComOp%contrac_ba_ON_HAC .AND. mole%nb_act1 < 3) THEN
+        !ELSE IF (para_H%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC    &
+        !                                   .AND. mole%nb_act1 < 3) THEN
         !  CALL write_psi2_new(tab_Psi)
         END IF
         CALL flush_perso(out_unitp)
@@ -438,14 +441,14 @@ CONTAINS
       TYPE (param_Op), pointer   :: ScalOp(:) => null() ! true pointer
 
 
-      real (kind=Rkind)   :: avScalOp(para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op)
+      real (kind=Rkind)   :: avScalOp(para_AllOp%tab_Op(1)%para_ReadOp%nb_scalar_Op)
       complex(kind=Rkind) :: avOp
       integer             :: iOp,nb_scalar_Op
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
-       nb_scalar_Op = para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op
+       nb_scalar_Op = para_AllOp%tab_Op(1)%para_ReadOp%nb_scalar_Op
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING sub_moyScalOp'
          write(out_unitp,*) 'ipsi,info',iPsi,info

@@ -39,7 +39,7 @@
       TYPE (constant)  :: const_phys
       TYPE (CoordType) :: mole
       TYPE (Tnum)      :: para_Tnum
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
 
       TYPE(Type_dnMat) :: dnGG
 
@@ -85,7 +85,7 @@
       !     ---- TO finalize the coordinates (NM) and the KEO ----------
       !     ------------------------------------------------------------
       para_Tnum%Tana =.FALSE.
-      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
       !-----------------------------------------------------------------
 !===========================================================
 !===========================================================

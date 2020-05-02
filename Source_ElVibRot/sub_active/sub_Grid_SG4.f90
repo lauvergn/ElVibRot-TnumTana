@@ -126,12 +126,12 @@
           id2 = para_AllOp%tab_Op(iOp)%derive_termQact(2,iterm)
           IF (id1 /= 0 .AND. id2 /= 0) THEN ! f2 for G
             IF (id1 == id2) THEN
-              DO i_e=1,para_AllOp%tab_Op(iOp)%para_PES%nb_elec
+              DO i_e=1,para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec
                 para_AllOp%tab_Op(iOp)%OpGrid(iterm)%Mat_cte(i_e,i_e) = &
                   -HALF* para_AllOp%tab_Op(iOp)%para_Tnum%Gref(id1,id2)
               END DO
             ELSE
-             DO i_e=1,para_AllOp%tab_Op(iOp)%para_PES%nb_elec
+             DO i_e=1,para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec
                 para_AllOp%tab_Op(iOp)%OpGrid(iterm)%Mat_cte(i_e,i_e) = &
                   - para_AllOp%tab_Op(iOp)%para_Tnum%Gref(id1,id2)
               END DO
