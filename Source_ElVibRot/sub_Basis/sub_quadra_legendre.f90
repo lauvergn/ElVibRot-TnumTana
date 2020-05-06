@@ -112,7 +112,8 @@
         CALL Set_nq_OF_basis(base,nq)
 
         CALL alloc_xw_OF_basis(base)
-        CALL gauleg(-ONE,ONE,base%x(1,:),base%w,nq)
+        !CALL gauleg(-ONE,ONE,base%x(1,:),base%w,nq)
+        CALL gauleg128(-ONE,ONE,base%x(1,:),base%w,nq)
         base%wrho(:) = base%w(:)
       END IF
       base%rho(:)  = ONE
