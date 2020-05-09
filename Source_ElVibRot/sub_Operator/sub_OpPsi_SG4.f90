@@ -105,7 +105,7 @@ CONTAINS
   mole    => para_Op%mole
   BasisnD => para_Op%BasisnD
 
-  IF (Psi%cplx) STOP 'cplx'
+  IF (Psi%cplx) STOP 'cplx in sub_OpPsi_FOR_SGtype4'
   IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1 in sub_OpPsi_FOR_SGtype4'
 
   IF (SG4_omp == 0) THEN
@@ -748,7 +748,18 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   BasisnD => para_Op%BasisnD
 
   IF(MPI_id==0) THEN
-    IF (Psi(1)%cplx) STOP 'cplx'
+    IF (size(Psi) == 0) THEN
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) '  The size of Psi(:) is zero!!'
+      write(out_unitp,*) '  => Check the fortran.'
+      STOP ' ERROR in sub_TabOpPsi_FOR_SGtype4: size(Psi) = 0'
+    END IF
+    IF (Psi(1)%cplx) THEN
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) '  Psi(1) is complex !!'
+      write(out_unitp,*) '  => Check the fortran.'
+      STOP ' ERROR in sub_TabOpPsi_FOR_SGtype4: Psi(1) is complex'
+    END IF
   ENDIF
   !IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1 in sub_TabOpPsi_FOR_SGtype4'
 

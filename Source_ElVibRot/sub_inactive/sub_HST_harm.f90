@@ -620,10 +620,10 @@
       CALL alloc_dnSVM(dnGrad, nb_inact2n,           nb_act1,nderiv)
       CALL alloc_dnSVM(dnLnN,                        nb_act1,nderiv)
 
-
-      CALL sub_dnfreq_4p(dnQeq,dnC,dnLnN,dnEHess,dnHess,dnGrad,dnC_inv, &
-                         pot0_corgrad,Qact,para_Tnum,mole,              &
-                         mole%RPHTransfo_inact2n,nderiv,test)
+      CALL sub_dnfreq_4p_cHAC(dnQeq,dnC,dnLnN,dnEHess,                  &
+                              dnHess,dnGrad,dnC_inv,                    &
+                              pot0_corgrad,Qact,para_Tnum,mole,         &
+                              mole%RPHTransfo_inact2n,nderiv,test)
 
       d0Qeq      = dnQeq%d0
       d0ehess    = dnEHess%d0

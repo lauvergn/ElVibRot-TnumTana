@@ -669,7 +669,8 @@
 
       mole_loc                       = mole
       mole_loc%Cart_transfo          = .FALSE.
-
+      ! If needed, change RPH transfo in flexible transfo
+      CALL CoordTypeRPH_TO_CoordTypeFlex(mole_loc)
 
       CALL basis_TO_Allbasis(basis_Set,para_AllBasis_loc,mole_loc)
 
@@ -1313,7 +1314,8 @@
 
       mole_loc                        = mole
       mole_loc%Cart_transfo           = .FALSE.
-
+      ! If needed, change RPH transfo in flexible transfo
+      CALL CoordTypeRPH_TO_CoordTypeFlex(mole_loc)
 
       CALL basis_TO_Allbasis(basis_Set,para_AllBasis_loc,mole_loc)
       !CALL RecWrite_basis(para_AllBasis_loc%BasisnD,write_all=.FALSE.)
@@ -1506,7 +1508,7 @@
       CALL alloc_array(para_AllOp_loc%tab_Op,(/ para_AllOp_loc%nb_Op /),&
                       'para_AllOp_loc%tab_Op',name_sub)
       !i=1 => for H
-      CALL All_param_TO_para_H(para_Tnum,mole_loc,para_AllBasis_loc,    &
+      CALL All_param_TO_para_H(para_Tnum_loc,mole_loc,para_AllBasis_loc,&
                                para_ReadOp_loc,para_AllOp_loc%tab_Op(1))
       ! old direct=2 with a matrix
       para_AllOp_loc%tab_Op(1)%make_Mat                                = .TRUE.
@@ -1522,7 +1524,8 @@
 
       CALL Init_TypeOp(para_AllOp_loc%tab_Op(i)%param_TypeOp,           &
                        type_Op=0,nb_Qact=mole_loc%nb_act1,cplx=.FALSE., &
-                       JRot=Para_Tnum%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
+                       JRot=para_Tnum_loc%JJ,direct_KEO=.FALSE.,        &
+                       direct_ScalOp=.FALSE.)
       CALL derive_termQact_TO_derive_termQdyn(                          &
                             para_AllOp_loc%tab_Op(i)%derive_termQdyn,   &
                             para_AllOp_loc%tab_Op(i)%derive_termQact,   &

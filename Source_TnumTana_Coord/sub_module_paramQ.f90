@@ -334,7 +334,7 @@ CONTAINS
         END IF
 
         IF (QMLib .AND. para_Tnum%para_PES_FromTnum%pot_itQtransfo /= mole%nb_Qtransfo-1) THEN
-          write(out_unitp,*)  ' WARNING QMLib=.TRUE. and its coordiantes are not Qdyn!!'
+          write(out_unitp,*)  ' WARNING QMLib=.TRUE. and its coordinates are not Qdyn!!'
         END IF
 
         write(out_unitp,*)  '------------------------------------------------------'

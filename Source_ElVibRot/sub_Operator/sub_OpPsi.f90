@@ -1461,7 +1461,7 @@ CONTAINS
         CALL sub_sqRhoOVERJac_Psi(Psi,para_Op,inv=.FALSE.)
 
         IF (Psi%cplx) THEN
-          STOP 'cplx'
+          STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
           CALL alloc_NParray(CG1,(/ Psi%nb_qa /),"CG1",name_sub)
           OpPsi%CvecG = CZERO
         ELSE
@@ -1470,7 +1470,7 @@ CONTAINS
           OpPsi%RvecG = ZERO
         END IF
 
-        IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1'
+        IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1 in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
 
         DO i1_bi=1,para_Op%nb_bie
         DO i2_bi=1,para_Op%nb_bie
@@ -1480,7 +1480,7 @@ CONTAINS
           fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
 
   IF (Psi%cplx) THEN
-STOP 'cplx'
+STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
   ELSE
 
      ! first derivatives of sqrt(J/rho)*psi,  in derRGi(:,i)
@@ -1695,8 +1695,8 @@ STOP 'cplx'
    CALL flush_perso(out_unitp)
  END IF
  !-----------------------------------------------------------------
- IF (Psi(1)%cplx) STOP 'cplx'
- IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1'
+ IF (Psi(1)%cplx) STOP 'cplx in sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10'
+ IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1 in sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10'
 
  IF (BasisTOGrid_omp == 0) THEN
    nb_thread = 1

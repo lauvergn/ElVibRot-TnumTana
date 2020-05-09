@@ -499,6 +499,10 @@ CONTAINS
                                    para_H%para_ReadOp%E0_Transfo,S_overlap)
 
           nb_added_states = ndim-ndim0
+          IF (nb_added_states == 0) THEN
+            conv = .TRUE.
+            write(out_unitp,*) ' WARNING: The conv is forced to true, because nb_added_states=0.'
+          END IF
           save_WP = (ndim == max_diago) .OR. conv .OR.                  &
                      it == para_Davidson%max_it .OR.                    &
                      (it > 0 .AND. mod(it,para_Davidson%num_resetH) == 0)

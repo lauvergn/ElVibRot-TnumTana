@@ -223,54 +223,54 @@
 !      Numerical Recipes pp125 (1er ed?)
 !
 !=============================================================
-      SUBROUTINE gauleg128(x1,x2,x,w,n)
-      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real128
-      USE mod_system
-      IMPLICIT NONE
-
-       integer            :: n
-       real(kind=Rkind)   :: x1,x2,x(n),w(n)
-
-       integer :: m,i,j,it
-       integer, parameter :: max_it = 100
-       real (kind=real128) :: xm,xl,z,z1,p1,p2,p3,pp
-       real (kind=real128), parameter ::                                   &
-         pi128 = 3.14159265358979323846264338327950288419716939937511_real128
-
-       m = (n+1)/2
-
-       xm = 0.5_real128*(x2+x1)
-       xl = 0.5_real128*(x2-x1)
-
-       DO i=1,m
-         z = cos(pi128*(real(i,kind=real128)-0.25_real128)/(0.5_real128+real(n,kind=real128)))
-
-         DO it=1,max_it
-           p1 = 1.0_real128
-           p2 = 0.0_real128
-
-           DO j=1,n
-             p3 = p2
-             p2 = p1
-             p1 = (real(2*j-1,kind=real128)*z*p2 - real(j-1,kind=real128)*p3)/real(j,kind=real128)
-           END DO
-
-           pp = real(n,kind=real128)*(z*p1-p2)/(z*z-1.0_real128)
-           z1 = z
-           z  = z1-p1/pp
-
-           IF (abs(z-z1) <= spacing(z)) EXIT
-         END DO
-
-         x(i)     = xm-xl*z
-         x(n+1-i) = xm+xl*z
-         w(i)     = 2.0_real128*xl/((1.0_real128-z*z)*pp*pp)
-         w(n+1-i) = w(i)
-
-       END DO
-
-       RETURN
-       end subroutine gauleg128
+!      SUBROUTINE gauleg128(x1,x2,x,w,n)
+!      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real128
+!      USE mod_system
+!      IMPLICIT NONE
+!
+!       integer            :: n
+!       real(kind=Rkind)   :: x1,x2,x(n),w(n)
+!
+!       integer :: m,i,j,it
+!       integer, parameter :: max_it = 100
+!       real (kind=real128) :: xm,xl,z,z1,p1,p2,p3,pp
+!       real (kind=real128), parameter ::                                   &
+!         pi128 = 3.14159265358979323846264338327950288419716939937511_real128
+!
+!       m = (n+1)/2
+!
+!       xm = 0.5_real128*(x2+x1)
+!       xl = 0.5_real128*(x2-x1)
+!
+!       DO i=1,m
+!         z = cos(pi128*(real(i,kind=real128)-0.25_real128)/(0.5_real128+real(n,kind=real128)))
+!
+!         DO it=1,max_it
+!           p1 = 1.0_real128
+!           p2 = 0.0_real128
+!
+!           DO j=1,n
+!             p3 = p2
+!             p2 = p1
+!             p1 = (real(2*j-1,kind=real128)*z*p2 - real(j-1,kind=real128)*p3)/real(j,kind=real128)
+!           END DO
+!
+!           pp = real(n,kind=real128)*(z*p1-p2)/(z*z-1.0_real128)
+!           z1 = z
+!           z  = z1-p1/pp
+!
+!           IF (abs(z-z1) <= spacing(z)) EXIT
+!         END DO
+!
+!         x(i)     = xm-xl*z
+!         x(n+1-i) = xm+xl*z
+!         w(i)     = 2.0_real128*xl/((1.0_real128-z*z)*pp*pp)
+!         w(n+1-i) = w(i)
+!
+!       END DO
+!
+!       RETURN
+!       end subroutine gauleg128
       SUBROUTINE gauleg(x1,x2,x,w,n)
       USE mod_system
       IMPLICIT NONE

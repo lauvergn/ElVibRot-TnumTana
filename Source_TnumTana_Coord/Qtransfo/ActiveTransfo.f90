@@ -308,7 +308,7 @@ MODULE mod_ActiveTransfo
 
       IF (count(ActiveTransfo%list_act_OF_Qdyn(:) == 1) == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' There is no active coordiantes!'
+        write(out_unitp,*) ' There is no active coordinates!'
         write(out_unitp,*) 'list_act_OF_Qdyn(:)',ActiveTransfo%list_act_OF_Qdyn
         write(out_unitp,*) 'Check your data!'
         STOP

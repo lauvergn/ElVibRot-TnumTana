@@ -483,7 +483,7 @@ MODULE mod_dnS
           ELSE
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) ' nderiv_loc > 4 is NOT possible',nderiv_loc
-            write(out_unitp,*) 'It souhld never append! Check the source'
+            write(out_unitp,*) 'It should never append! Check the source'
             STOP
           END IF
         ELSE ! dnS1%nb_var_deriv < dnS2%nb_var_deriv

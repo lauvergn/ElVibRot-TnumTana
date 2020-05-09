@@ -67,12 +67,14 @@ MODULE mod_RW_MatVec
        character (len=:), allocatable :: NMatformat,wformat_loc
        integer                        :: ilen
 
+!$OMP  CRITICAL (sub_Format_OF_Line_CRIT)
+
        IF (allocated(wformat)) deallocate(wformat)
 
        IF (present(name_info)) THEN
-         wformat_loc = String_TO_String('(2x,"' // trim(adjustl(name_info)) // ' ",')
+         wformat_loc = '(2x,"' // trim(adjustl(name_info)) // ' ",'
        ELSE
-         wformat_loc = String_TO_String('(')
+         wformat_loc = '('
        END IF
 
        IF (present(Rformat)) THEN
@@ -83,16 +85,16 @@ MODULE mod_RW_MatVec
            STOP
          END IF
            IF (cplx) THEN
-             NMatformat = String_TO_String("'('," // trim(adjustl(Rformat)) // &
-                          ",' +i'," // trim(adjustl(Rformat)) // ",')'")
+             NMatformat = "'('," // trim(adjustl(Rformat)) //           &
+                          ",' +i'," // trim(adjustl(Rformat)) // ",')'"
            ELSE
-             NMatformat = String_TO_String(trim(adjustl(Rformat)))
+             NMatformat = trim(adjustl(Rformat))
            END IF
        ELSE
            IF (cplx) THEN
-             NMatformat = String_TO_String(trim(adjustl(CMatIO_format)))
+             NMatformat = trim(adjustl(CMatIO_format))
            ELSE
-             NMatformat = String_TO_String(trim(adjustl(RMatIO_format)))
+             NMatformat = trim(adjustl(RMatIO_format))
            END IF
        END IF
 
@@ -104,17 +106,16 @@ MODULE mod_RW_MatVec
 #if(run_MPI)
            write(*,*) 'max_col check:',max_col,ilen, ' from ',MPI_id
 #endif
-           wformat_loc = String_TO_String(wformat_loc // '1x,i' //      &
+           wformat_loc = wformat_loc // '1x,i' //                       &
                        int_TO_char(ilen) // ',2x,' //                   &
                        int_TO_char(max_col) // '(' //                   &
-                       trim(adjustl(NMatformat)) // ',1x))')
+                       trim(adjustl(NMatformat)) // ',1x))'
 
 
        ELSE
 
-           wformat_loc = String_TO_String(wformat_loc //                 &
-                       int_TO_char(max_col)   // '(' //                  &
-                       trim(adjustl(NMatformat)) // ',1x))')
+           wformat_loc = wformat_loc // int_TO_char(max_col) // '(' //  &
+                         trim(adjustl(NMatformat)) // ',1x))'
 
 
        END IF
@@ -126,6 +127,7 @@ MODULE mod_RW_MatVec
 
        deallocate(NMatformat)
        deallocate(wformat_loc)
+!$OMP  END CRITICAL (sub_Format_OF_Line_CRIT)
 
        !write(out_unitp,*) 'format?: ',trim(wformat)
       END SUBROUTINE sub_Format_OF_Line

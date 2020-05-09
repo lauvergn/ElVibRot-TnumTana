@@ -23,7 +23,7 @@ then
 fi
 
 
- SYSTEM=sub_system_HNO3_ccsdt.f
+ SYSTEM=sub_system_HNO3_ccsdt_RPH.f
 
 
  cp HESS-fit/inter_0-vtz HESS-fit/inter_0
@@ -63,6 +63,6 @@ then
  ./CompareLevel res_HNO3_RPH_LB3-L5 Table4_PCCP2010-1+8D.txt 4
 
  ./DAT_files/dat_HNO3_ccsdt-RPH 6 7 t
- ./CompareLevel res_HNO3_RPH_LB6-L7 Table4_PCCP2010-1+8D.txt 4
+ ./CompareLevel res_HNO3_RPH_LB6-L7 Table4_PCCP2010-1+8D.txt 5
 fi
 

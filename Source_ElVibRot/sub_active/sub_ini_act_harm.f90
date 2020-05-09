@@ -382,7 +382,7 @@
       ! test the number of elements for the RPH transfo
       IF (associated(para_AllOp%tab_Op(1)%mole%RPHTransfo) .AND. MPI_id==0) THEN
         write(out_unitp,*) '------------------------------'
-        write(out_unitp,*) 'Number of RPH points (active coordiantes)', &
+        write(out_unitp,*) 'Number of RPH points (active coordinates)', &
           size(para_AllOp%tab_Op(1)%mole%RPHTransfo%tab_RPHpara_AT_Qact1)
         write(out_unitp,*) '------------------------------'
       END IF

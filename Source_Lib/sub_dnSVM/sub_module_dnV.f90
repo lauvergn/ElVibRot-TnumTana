@@ -401,9 +401,9 @@ MODULE mod_dnV
 !
 !        CALL check_alloc_dnVec(dnVec,'dnVec',name_sub)
 !
-!        IF (iVec < 0 .OR. iVec > dnVec%nb_var_Vec) THEN
+!        IF (iVec < 1 .OR. iVec > dnVec%nb_var_Vec) THEN
 !          write(out_unitp,*) ' ERROR in ',name_sub
-!          write(out_unitp,*) ' iVec < 0 or iVec > dnVec%nb_var_Vec',            &
+!          write(out_unitp,*) ' iVec < 1 or iVec > dnVec%nb_var_Vec',            &
 !                    dnVec%nb_var_vec,iVec
 !          STOP
 !        END IF
@@ -452,9 +452,9 @@ MODULE mod_dnV
 !        END IF
 !        END IF
 !
-!        IF (iVec < 0 .OR. iVec > dnVec%nb_var_Vec) THEN
+!        IF (iVec < 1 .OR. iVec > dnVec%nb_var_Vec) THEN
 !          write(out_unitp,*) ' ERROR in ',name_sub
-!          write(out_unitp,*) ' iVec < 0 or iVec > dnVec%nb_var_Vec',            &
+!          write(out_unitp,*) ' iVec < 1 or iVec > dnVec%nb_var_Vec',            &
 !                    dnVec%nb_var_vec,iVec
 !          STOP
 !        END IF
@@ -503,9 +503,9 @@ MODULE mod_dnV
                     dnVec%nb_var_deriv,dnS%nb_var_deriv
           STOP
         END IF
-        IF (iVec < 0 .OR. iVec > dnVec%nb_var_Vec) THEN
+        IF (iVec < 1 .OR. iVec > dnVec%nb_var_Vec) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' iVec < 0 or iVec > dnVec%nb_var_Vec',            &
+          write(out_unitp,*) ' iVec < 1 or iVec > dnVec%nb_var_Vec',            &
                     dnVec%nb_var_vec,iVec
           STOP
         END IF
@@ -556,9 +556,9 @@ MODULE mod_dnV
                     dnVec%nb_var_deriv,dnS%nb_var_deriv
           STOP
         END IF
-        IF (iVec < 0 .OR. iVec > dnVec%nb_var_Vec) THEN
+        IF (iVec < 1 .OR. iVec > dnVec%nb_var_Vec) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' iVec < 0 or iVec > dnVec%nb_var_Vec',            &
+          write(out_unitp,*) ' iVec < 1 or iVec > dnVec%nb_var_Vec',            &
                     dnVec%nb_var_vec,iVec
           STOP
         END IF
@@ -1220,7 +1220,7 @@ MODULE mod_dnV
         real (kind=Rkind) :: w1
         integer, optional :: nderiv
 
-        integer :: nderiv_loc,iVec_loc
+        integer :: nderiv_loc
         character (len=*), parameter :: name_sub='sub_dnVec1_wTO_dnVec2'
 
         CALL check_alloc_dnVec(dnVec1,'dnVec1',name_sub)
@@ -1298,17 +1298,17 @@ MODULE mod_dnV
           STOP
         END IF
 
-        IF (iVec1 < 0 .OR.  iVec1+ndim-1 > dnVec1%nb_var_Vec) THEN
+        IF (iVec1 < 1 .OR.  iVec1+ndim-1 > dnVec1%nb_var_Vec) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' iVec1 <0 .OR. iVec1+ndim-1 > nb_var_Vec', &
+          write(out_unitp,*) ' iVec1 < 1 .OR. iVec1+ndim-1 > nb_var_Vec', &
                     iVec1,ndim,dnVec1%nb_var_Vec
           write(out_unitp,*) ' CHECK the fortran source!!'
           STOP
         END IF
 
-        IF (iVec2 < 0 .OR.  iVec2+ndim-1 > dnVec2%nb_var_Vec) THEN
+        IF (iVec2 < 1 .OR.  iVec2+ndim-1 > dnVec2%nb_var_Vec) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' iVec2 <0 .OR. iVec2+ndim-1 > nb_var_Vec', &
+          write(out_unitp,*) ' iVec2 < 1 .OR. iVec2+ndim-1 > nb_var_Vec', &
                     iVec2,ndim,dnVec2%nb_var_Vec
           write(out_unitp,*) ' CHECK the fortran source!!'
           STOP
@@ -1375,25 +1375,25 @@ MODULE mod_dnV
           STOP
         END IF
 
-        IF (iVec1 < 0 .OR.  iVec1+ndim-1 > dnVec1%nb_var_Vec) THEN
+        IF (iVec1 < 1 .OR.  iVec1+ndim-1 > dnVec1%nb_var_Vec) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' iVec1 <0 .OR. iVec1+ndim-1 > nb_var_Vec', &
+          write(out_unitp,*) ' iVec1 < 1 .OR. iVec1+ndim-1 > nb_var_Vec', &
                     iVec1,ndim,dnVec1%nb_var_Vec
           write(out_unitp,*) ' CHECK the fortran source!!'
           STOP
         END IF
 
-        IF (iVec2 < 0 .OR.  iVec2+ndim-1 > dnVec2%nb_var_Vec) THEN
+        IF (iVec2 < 1 .OR.  iVec2+ndim-1 > dnVec2%nb_var_Vec) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' iVec2 <0 .OR. iVec2+ndim-1 > nb_var_Vec', &
+          write(out_unitp,*) ' iVec2 < 1 .OR. iVec2+ndim-1 > nb_var_Vec', &
                     iVec2,ndim,dnVec2%nb_var_Vec
           write(out_unitp,*) ' CHECK the fortran source!!'
           STOP
         END IF
 
-        IF (iVec3 < 0 .OR.  iVec3+ndim-1 > dnVec3%nb_var_Vec) THEN
+        IF (iVec3 < 1 .OR.  iVec3+ndim-1 > dnVec3%nb_var_Vec) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' iVec3 <0 .OR. iVec3+ndim-1 > nb_var_Vec', &
+          write(out_unitp,*) ' iVec3 < 1 .OR. iVec3+ndim-1 > nb_var_Vec', &
                     iVec3,ndim,dnVec3%nb_var_Vec
           write(out_unitp,*) ' CHECK the fortran source!!'
           STOP

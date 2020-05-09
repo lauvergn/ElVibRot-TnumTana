@@ -1,6 +1,6 @@
 #!/bin/bash
 
- SYSTEM=sub_system_HNO3_ccsdt_old.f
+ SYSTEM=sub_system_HNO3_ccsdt.f
 
 
  cp HESS-fit/inter_0-vtz HESS-fit/inter_0

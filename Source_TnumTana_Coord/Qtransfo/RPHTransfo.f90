@@ -113,28 +113,35 @@
 
       INTERFACE alloc_array
         ! for tab_RPHpara_AT_Qact1()
-        MODULE PROCEDURE alloc_array_OF_RPHpara_AT_Qact1dim0,alloc_array_OF_RPHpara_AT_Qact1dim1
+        MODULE PROCEDURE alloc_array_OF_RPHpara_AT_Qact1dim0,           &
+                         alloc_array_OF_RPHpara_AT_Qact1dim1
         ! for RPHTransfo
         MODULE PROCEDURE alloc_array_OF_RPHTransfodim0
       END INTERFACE
       INTERFACE dealloc_array
         ! for tab_RPHpara_AT_Qact1()
-        MODULE PROCEDURE dealloc_array_OF_RPHpara_AT_Qact1dim0,dealloc_array_OF_RPHpara_AT_Qact1dim1
+        MODULE PROCEDURE dealloc_array_OF_RPHpara_AT_Qact1dim0,         &
+                         dealloc_array_OF_RPHpara_AT_Qact1dim1
         ! for RPHTransfo
         MODULE PROCEDURE dealloc_array_OF_RPHTransfodim0
       END INTERFACE
 
       INTERFACE calc_RPHTransfo
-        MODULE PROCEDURE calc_RPHTransfo_new
-        !MODULE PROCEDURE calc_RPHTransfo_old
+        MODULE PROCEDURE calc_RPHTransfo_gene
+      END INTERFACE
+      INTERFACE calc_RPHTransfo_BeforeActive
+        !MODULE PROCEDURE calc_RPHTransfo_BeforeActive_v1
+        MODULE PROCEDURE calc_RPHTransfo_BeforeActive_v2
       END INTERFACE
 
-      PUBLIC :: Type_RPHpara_AT_Qact1, alloc_RPHpara_AT_Qact1, dealloc_RPHpara_AT_Qact1, &
-                Write_RPHpara_AT_Qact1, RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1
+      PUBLIC :: Type_RPHpara_AT_Qact1, alloc_RPHpara_AT_Qact1,          &
+                dealloc_RPHpara_AT_Qact1, Write_RPHpara_AT_Qact1,       &
+                RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1
 
-
-      PUBLIC :: Type_RPHTransfo, Read_RPHTransfo, Write_RPHTransfo, Set_RPHTransfo, &
-                dealloc_RPHTransfo, calc_RPHTransfo, RPHTransfo1TORPHTransfo2
+      PUBLIC :: Type_RPHTransfo, Read_RPHTransfo, Write_RPHTransfo,     &
+                Set_RPHTransfo, dealloc_RPHTransfo, calc_RPHTransfo,    &
+                calc_RPHTransfo_gene, calc_RPHTransfo_BeforeActive,     &
+                RPHTransfo1TORPHTransfo2
 
       PUBLIC :: alloc_array, dealloc_array, Switch_RPH
 
@@ -968,7 +975,7 @@
       !    - Qact1(:) are the first coordinates
       !    - Qina21(:) are just after Qact1
       !  If not the case, you have to use "order" transformation
-      SUBROUTINE calc_RPHTransfo_new(dnQin,dnQout,RPHTransfo,nderiv,inTOout)
+      SUBROUTINE calc_RPHTransfo_gene(dnQin,dnQout,RPHTransfo,nderiv,inTOout)
       IMPLICIT NONE
 
         TYPE (Type_dnVec), intent(inout)        :: dnQin,dnQout
@@ -993,7 +1000,7 @@
 
 
 !----- for debuging ----------------------------------
-       character (len=*),parameter :: name_sub='calc_RPHTransfo_new'
+       character (len=*),parameter :: name_sub='calc_RPHTransfo_gene'
        integer :: nderiv_debug=1
        logical, parameter :: debug=.FALSE.
        !logical, parameter :: debug=.TRUE.
@@ -1230,9 +1237,9 @@
       END IF
 !---------------------------------------------------------------------
 
-      END SUBROUTINE calc_RPHTransfo_new
+      END SUBROUTINE calc_RPHTransfo_gene
 
-      SUBROUTINE calc_RPHTransfo_old(dnQin,dnQout,RPHTransfo,nderiv,inTOout)
+      SUBROUTINE calc_RPHTransfo_BeforeActive_v1(dnQin,dnQout,RPHTransfo,nderiv,inTOout)
       IMPLICIT NONE
 
         TYPE (Type_dnVec), intent(inout)        :: dnQin,dnQout
@@ -1254,7 +1261,7 @@
 
 
 !----- for debuging ----------------------------------
-       character (len=*),parameter :: name_sub='calc_RPHTransfo_old'
+       character (len=*),parameter :: name_sub='calc_RPHTransfo_BeforeActive_v1'
        logical, parameter :: debug=.FALSE.
        !logical, parameter :: debug=.TRUE.
 !----- for debuging ----------------------------------
@@ -1448,9 +1455,257 @@
         CALL flush_perso(out_unitp)
       END IF
 !---------------------------------------------------------------------
+      END SUBROUTINE calc_RPHTransfo_BeforeActive_v1
+      SUBROUTINE calc_RPHTransfo_BeforeActive_v2(dnQin,dnQout,          &
+                                              RPHTransfo,nderiv,inTOout)
+      IMPLICIT NONE
 
-      END SUBROUTINE calc_RPHTransfo_old
+        TYPE (Type_dnVec),      intent(inout)   :: dnQin,dnQout
+        TYPE (Type_RPHTransfo), intent(in)      :: RPHTransfo
+        integer,                intent(in)      :: nderiv
+        logical                                 :: inTOout
 
+
+        TYPE (Type_dnS)   :: dnQ,dnQallder
+        TYPE (Type_dnVec) :: dnVecQin,dnVecQout,dnVecQopt
+
+        integer          :: iQin,iQout,iQact,iQinact,iQin21,iQout21,iQa,idyn
+        integer          :: ider,jder,kder
+        real(kind=rkind) :: Qact1(RPHTransfo%nb_act1)
+        integer          :: iderQ1(RPHTransfo%nb_act1)
+        integer          :: iderQ21(RPHTransfo%nb_inact21)
+
+        TYPE (Type_RPHpara_AT_Qact1), pointer :: RPHpara_AT_Qact1(:)
+
+
+!----- for debuging ----------------------------------
+       character (len=*),parameter :: name_sub='calc_RPHTransfo_BeforeActive_v2'
+       logical, parameter :: debug=.FALSE.
+       !logical, parameter :: debug=.TRUE.
+!----- for debuging ----------------------------------
+
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        !CALL Write_RPHTransfo(RPHTransfo)
+        write(out_unitp,*) 'nderiv',nderiv
+        write(out_unitp,*) 'list_act_OF_Qdyn',RPHTransfo%list_act_OF_Qdyn(:)
+        write(out_unitp,*) 'list_QactTOQdyn ',RPHTransfo%list_QactTOQdyn(:)
+
+        write(out_unitp,*) 'dnQin'
+        CALL Write_dnVec(dnQin)
+        CALL flush_perso(out_unitp)
+      END IF
+!---------------------------------------------------------------------
+
+       CALL check_alloc_dnVec(dnQin,'dnQin',name_sub)
+       CALL check_alloc_dnVec(dnQout,'dnQout',name_sub)
+
+       ! check if the initialization is done
+       ! If it is not the case, dnQin<=>dnQout (done in Qtransfo)
+       IF (.NOT. RPHTransfo%init .AND. .NOT. associated(RPHTransfo%RPHpara_AT_Qref) ) THEN
+          IF (inTOout) THEN
+            CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv)
+          ELSE
+            CALL sub_dnVec1_TO_dnVec2(dnQout,dnQin,nderiv)
+          END IF
+
+         !write(out_unitp,*) 'ERROR in ',name_sub
+         !write(out_unitp,*) ' the "RPHTransfo" derived type is not initialized'
+         !write(out_unitp,*) ' It should not append!'
+         !write(out_unitp,*) ' CHECK the fortran source!!'
+         !STOP
+       END IF
+
+       IF (inTOout) THEN
+
+         !-----------------------------------------------
+         ! 1): find RPHpara_AT_Qact1 in the tables
+         ! 1a) Qact1
+         iQact = 0
+         DO iQin=1,dnQin%nb_var_vec
+           IF (RPHTransfo%list_act_OF_Qdyn(iQin) == 1) THEN
+             iQact = iQact + 1
+             !write(out_unitp,*) 'save act iQ var in dnQout',iQ
+             Qact1(iQact) = dnQin%d0(iQin)
+           END IF
+         END DO
+
+         ! 1b) RPHpara_AT_Qact1
+         ! find the iQa from tab_RPHpara_AT_Qact1
+         DO iQa=1,RPHTransfo%nb_Qa
+           IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1)) < ONETENTH**5) EXIT
+         END DO
+
+         IF (iQa > RPHTransfo%nb_Qa) THEN
+           IF (sum(abs(Qact1-RPHTransfo%RPHpara_AT_Qref(1)%Qact1)) < ONETENTH**5) THEN
+             IF (debug) write(out_unitp,*) 'RPHpara_AT_Qref point'
+             RPHpara_AT_Qact1 => RPHTransfo%RPHpara_AT_Qref(1:1)
+           ELSE
+             CALL Write_RPHTransfo(RPHTransfo)
+             write(out_unitp,*) ' Qact1',Qact1(:)
+             write(out_unitp,*) 'ERROR in ',name_sub
+             write(out_unitp,*) ' I cannot find Qact1(:) in tab_RPHpara_AT_Qact1'
+             write(out_unitp,*) '  or  in tab_RPHpara_AT_Qref(1)'
+             STOP
+           END IF
+         ELSE
+           IF (debug) write(out_unitp,*) 'tab_RPHpara_AT_Qact1 point',iQa
+
+           RPHpara_AT_Qact1 => RPHTransfo%tab_RPHpara_AT_Qact1(iQa:iQa)
+         END IF
+         !-----------------------------------------------
+         !-----------------------------------------------
+
+         !-----------------------------------------------
+         ! 2): dnQout, just for act1 derivatives
+         ! we assume the order of the coordinates are the same:
+         ! type 0, 1, 21 are in the same position in dnQin and dnQout.
+         ! 2a) iderQ1, iderQ21
+         ! iderQ1: to transfert the derivatives with respect to all coordinates to some coord.
+         iQact   = 0
+         iQinact = 0
+         DO iQout=1,dnQout%nb_var_vec
+           SELECT CASE (RPHTransfo%list_act_OF_Qdyn(iQout))
+           CASE(1)
+             iQact         = iQact + 1
+             iderQ1(iQact) = iQout
+           CASE(21)
+             iQinact          = iQinact + 1
+             iderQ21(iQinact) = iQout
+           END SELECT
+         END DO
+         ! here the values of iderQ1 and iderQ21 are i Qdyn order, but we need then in Qact order
+         DO ider=1,size(iderQ1)
+           idyn = iderQ1(ider)
+           iderQ1(ider) = RPHTransfo%list_QdynTOQact(idyn)
+         END DO
+         DO ider=1,size(iderQ21)
+           idyn = iderQ21(ider)
+           iderQ21(ider) = RPHTransfo%list_QdynTOQact(idyn)
+         END DO
+
+         ! 2b) dnVecQin and dnVecQout
+         ! alloc dnVecQin and dnVecQout for the nb_inact21 coordinates
+         CALL alloc_dnVec(dnVecQin,RPHTransfo%nb_inact21,               &
+                                              RPHTransfo%nb_act1,nderiv)
+
+         CALL alloc_dnVec(dnVecQout,RPHTransfo%nb_inact21,              &
+                                              RPHTransfo%nb_act1,nderiv)
+
+         CALL alloc_dnS(dnQ,RPHTransfo%nb_act1,nderiv)
+         CALL alloc_dnS(dnQallder,dnQin%nb_var_deriv,nderiv)
+
+         ! 2b) dnVecQin
+         iQin21 = 0
+         DO iQin=1,dnQin%nb_var_vec
+           IF (RPHTransfo%list_act_OF_Qdyn(iQin) == 21) THEN
+              iQin21 = iQin21 + 1
+             CALL sub_dnVec_TO_dnS(dnQin,dnQallder,iQin,nderiv)
+             CALL sub_dnS1_TO_dnS2_partial_new(dnQallder,dnQ,iderQ1,nderiv)
+             CALL sub_dnS_TO_dnVec(dnQ,dnVecQin,iQin21,nderiv)
+           END IF
+         END DO
+         IF (debug) THEN
+           write(out_unitp,*) 'dnVecQin'
+           CALL Write_dnVec(dnVecQin)
+           write(out_unitp,*) 'dnQopt at iQa',iQa
+           CALL Write_dnVec(RPHpara_AT_Qact1(1)%dnQopt)
+           write(out_unitp,*) 'dnC_inv at iQa',iQa
+           CALL Write_dnMat(RPHpara_AT_Qact1(1)%dnC_inv)
+         END IF
+
+         ! 2c) dnVecQout
+         ! dnVecQin*dnMatC_inv => dnVecQout
+         CALL dnVec1_MUL_dnMat2_TO_dnVec3(dnVecQin,                     &
+                                          RPHpara_AT_Qact1(1)%dnC_inv,  &
+                                                       dnVecQout,nderiv)
+         IF (debug) THEN
+           write(out_unitp,*) 'dnVecQout'
+           CALL Write_dnVec(dnVecQout)
+         END IF
+         ! add dnQopt to dnVecQout
+         CALL sub_dnVec1_wADDTO_dnVec2(RPHpara_AT_Qact1(1)%dnQopt,1,ONE,&
+                                                        dnVecQout,1,ONE,&
+                                           RPHTransfo%nb_inact21,nderiv)
+         IF (debug) THEN
+           write(out_unitp,*) 'dnVecQout with dnQopt'
+           CALL Write_dnVec(dnVecQout)
+         END IF
+
+         ! 2d) transfert dnVecQout => dnQout for type 21
+         iQout21 = 0
+         DO iQout=1,dnQout%nb_var_vec
+           IF (RPHTransfo%list_act_OF_Qdyn(iQout) /= 21) CYCLE
+
+           iQout21 = iQout21 + 1
+           CALL sub_dnVec_TO_dnS(dnVecQout,dnQ,iQout21,nderiv)
+           ! transfert dnQ with Qact1 derivative only to dnQallder
+           CALL sub_dnS1_TO_dnS2_partial_new(dnQ,dnQallder,iderQ1,nderiv)
+
+           ! add derivatives with respect to (inact21), (act1,inact21) and (act1^2,inact21)
+           IF (nderiv > 0) THEN ! first derivative: (inact21)
+             DO kder=1,RPHTransfo%nb_inact21
+               dnQallder%d1(iderQ21(kder)) = RPHpara_AT_Qact1(1)%dnC_inv%d0(kder,iQout21)
+             END DO
+           END IF
+           IF (nderiv > 1) THEN ! 2d derivative (act1,inact21)
+             DO ider=1,RPHTransfo%nb_act1
+             DO kder=1,RPHTransfo%nb_inact21
+               dnQallder%d2(iderQ1(ider),iderQ21(kder)) =               &
+                        RPHpara_AT_Qact1(1)%dnC_inv%d1(kder,iQout21,ider)
+               dnQallder%d2(iderQ21(kder),iderQ1(ider)) =               &
+                        RPHpara_AT_Qact1(1)%dnC_inv%d1(kder,iQout21,ider)
+             END DO
+             END DO
+           END IF
+           IF (nderiv > 2) THEN ! 3d derivative (act1^2,inact21)
+             DO ider=1,RPHTransfo%nb_act1
+             DO jder=1,RPHTransfo%nb_act1
+             DO kder=1,RPHTransfo%nb_inact21
+               dnQallder%d3(iderQ1(ider),iderQ1(jder),iderQ21(kder)) =  &
+                   RPHpara_AT_Qact1(1)%dnC_inv%d2(kder,iQout21,jder,ider)
+               dnQallder%d3(iderQ1(ider),iderQ21(kder),iderQ1(jder)) =  &
+                   RPHpara_AT_Qact1(1)%dnC_inv%d2(kder,iQout21,jder,ider)
+               dnQallder%d3(iderQ21(kder),iderQ1(ider),iderQ1(jder)) =  &
+                   RPHpara_AT_Qact1(1)%dnC_inv%d2(kder,iQout21,jder,ider)
+             END DO
+             END DO
+             END DO
+           END IF
+
+           CALL sub_dnS_TO_dnVec(dnQallder,dnQout,iQout,nderiv)
+         END DO
+
+         ! 2e) transfert dnQin => dnQout for type 0 and 1 (not 21)
+         DO iQout=1,dnQout%nb_var_vec
+           IF (RPHTransfo%list_act_OF_Qdyn(iQout) /= 21) THEN
+             CALL sub_dnVec1_TO_dnVec2_WithIvec(dnQin,dnQout,iQout,nderiv)
+           END IF
+         END DO
+
+         CALL dealloc_dnS(dnQ)
+         CALL dealloc_dnS(dnQallder)
+         CALL dealloc_dnVec(dnVecQin)
+         CALL dealloc_dnVec(dnVecQout)
+
+         nullify(RPHpara_AT_Qact1)
+
+       ELSE
+         CALL sub_dnVec1_TO_dnVec2(dnQout,dnQin,nderiv)
+         !STOP 'not yet RPH'
+       END IF
+
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'dnQout'
+        CALL Write_dnVec(dnQout)
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+!---------------------------------------------------------------------
+
+      END SUBROUTINE calc_RPHTransfo_BeforeActive_v2
       SUBROUTINE alloc_RPHpara_AT_Qact1(RPHpara_AT_Qact1,nb_act1,nb_inact21,nderiv)
       IMPLICIT NONE
 

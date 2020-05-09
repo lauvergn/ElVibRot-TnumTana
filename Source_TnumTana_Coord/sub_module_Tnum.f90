@@ -976,6 +976,7 @@ MODULE mod_Tnum
           IF (debug) write(out_unitp,*) 'read Qtransfo',it
 
           CALL read_Qtransfo(mole%tab_Qtransfo(it),nb_Qin,const_phys%mendeleev)
+          mole%tab_Qtransfo(it)%BeforeActive = (it == nb_Qtransfo-1)
 
           mole%opt_param = mole%opt_param + mole%tab_Qtransfo(it)%opt_param
 

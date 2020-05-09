@@ -27,8 +27,8 @@ c----- for the zmatrix and Tnum --------------------------------------
 
       IF (nb_be == 1 ) THEN
         !write(6,*) 'Qsym for pot',Qsym(:)
-         mat_V(1,1) = pot0(Qsym)
-        !mat_V(1,1) = pot0_9DQflex(Qsym,mole)
+        !mat_V(1,1) = pot0(Qsym)
+         mat_V(1,1) = pot0_9DQflex(Qsym,mole)
         IF (pot_cplx) mat_imV(1,1) = im_pot0(Qsym)
         IF (calc_ScalOp) THEN
           CALL sub_dipole(dip,Qsym)
@@ -360,7 +360,6 @@ c---------------------------------------------------------------------
       DO i2=1,mole%nb_inact21
         i_qsym1 = mole%liste_QactTOQsym(i1 + mole%nb_act1)-mole%nb_act1
         i_qsym2 = mole%liste_QactTOQsym(i2 + mole%nb_act1)-mole%nb_act1
-        flush(6)
         d0h(i1,i2) = d0hfull(i_qsym1,i_qsym2)
       END DO
       END DO
@@ -531,9 +530,78 @@ C    The tri component of the dipole moment.
 C================================================================
        SUBROUTINE sub_dipole(dip,Q)
 
-       real (kind=8) Q(9)
+       real (kind=8) Q(21)
        real (kind=8) dip(3)
 
+c     ----------------------------------------------------------------
+      real (kind=8) pi,pi2
+      parameter (pi = 3.141592653589793238462643383279
+     *                          50288419716939937511d0)
+      parameter (pi2 =pi+pi)
+
+      real (kind=8) sq2pi,sqpi
+c     ----------------------------------------------------------------
+
+       real (kind=8) x,z
+       integer kl
+
+
+       character*14 nom
+       logical exist
+
+       integer max_points,nn
+       parameter (max_points=30)
+       real (kind=8) Fx(max_points)
+       real (kind=8) Fy(max_points)
+       real (kind=8) Fz(max_points)
+
+       logical begin
+       data begin/.true./
+       SAVE begin,Fx,Fy,Fz,nn
+
        dip(:) = 0.d0
+       RETURN
+c---------------------------------------------------------------
+c      initialisation la premiere fois
+       IF (begin) THEN
+         nom='inter27-mux'
+         CALL read_para0d(Fx,nn,max_points,nom,exist)
+         IF ( .NOT. exist) STOP
+         nom='inter28-muy'
+         CALL read_para0d(Fy,nn,max_points,nom,exist)
+         IF ( .NOT. exist) STOP
+         nom='inter27-muz'
+         CALL read_para0d(Fz,nn,max_points,nom,exist)
+         IF ( .NOT. exist) STOP
+
+         begin=.FALSE.
+       END IF
+c fin     initialisation la premiere fois
+c---------------------------------------------------------------
+       sqpi = 1.d0/sqrt(pi)
+       sq2pi = 1.d0/sqrt(pi+pi)
+       x = Q(1)
+
+
+       dip(1) = Fx(1)*sq2pi
+       DO kl=2,nn
+         dip(1) = dip(1) + Fx(kl) * dcos((kl-1)*x)*sqpi
+       END DO
+
+       dip(2) = 0.d0
+       DO kl=1,nn
+         dip(2) = dip(2) + Fy(kl) * dsin((kl)*x)*sqpi
+       END DO
+
+       dip(3) = Fz(1)*sq2pi
+       DO kl=2,nn
+         dip(3) = dip(3) + Fz(kl) * dcos((kl-1)*x)*sqpi
+       END DO
+
+
+c      dip(1) = 0.d0
+c      dip(2) = 0.d0
+c      dip(3) = 0.d0
+
 
        END

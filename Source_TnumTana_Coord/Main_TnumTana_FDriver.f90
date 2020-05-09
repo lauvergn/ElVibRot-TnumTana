@@ -48,7 +48,10 @@
 
 
   Qact(:) = 0.5d0
+  write(6,*) 'Qact (initial values)',Qact
   CALL Qact_TO_cart(Qact,size(Qact),Qcart,size(Qcart))
+  CALL cart_TO_Qact(Qact,size(Qact),Qcart,size(Qcart))
+  write(6,*) 'Qact (from cart_TO_Qact)',Qact
 
   write(6,*) 'Beginning loop:',nt
  !$OMP   PARALLEL &
@@ -69,5 +72,7 @@
   DO i=1,3*nat,3
     write(6,*) (i-1)/3+1,Qcart(i:i+2)
   END DO
+
+
 
  END PROGRAM Main_TnumTana_FDriver
