@@ -534,7 +534,7 @@ Obj_Primlib  = \
   $(OBJ)/sub_module_MPI_Aid.o 
 
 Obj_math =\
-   $(OBJ)/sub_diago.o $(OBJ)/sub_trans_mat.o $(OBJ)/sub_integration.o \
+   $(OBJ)/sub_diago.o $(OBJ)/sub_trans_mat.o $(OBJ)/sub_math_util.o $(OBJ)/sub_integration.o \
    $(OBJ)/sub_polyortho.o $(OBJ)/sub_function.o $(OBJ)/sub_derive.o $(OBJ)/sub_pert.o \
    $(OBJ)/sub_fft.o \
    $(OBJ)/Wigner3j.o
@@ -875,7 +875,9 @@ $(KEOTESTEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(KEOTEST).o
 $(Main_TnumTana_FDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_FDriver.o
 	$(LYNK90)   -o $(Main_TnumTana_FDriverEXE) $(OBJ)/Main_TnumTana_FDriver.o $(OBJ)/libTnum.a $(LYNKFLAGS)
 $(Main_TnumTana_cDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_cDriver.o
-	$(CompC) -o $(Main_TnumTana_cDriverEXE) $(CFLAGS) $(OBJ)/Main_TnumTana_cDriver.o $(OBJ)/libTnum.a $(LYNKFLAGS) -lgfortran -lm
+	cp $(OBJ)/libTnum.a $(OBJ)/libTnumForcDriver.a
+	ar d $(OBJ)/libTnumForcDriver.a sub_integration.o
+	$(CompC) -o $(Main_TnumTana_cDriverEXE) $(CFLAGS) $(OBJ)/Main_TnumTana_cDriver.o $(OBJ)/libTnumForcDriver.a $(LYNKFLAGS) -lgfortran -lm
 #
 $(TNUMEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMAIN).o
 	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS)
@@ -1349,6 +1351,8 @@ $(OBJ)/sub_diago.o:$(DirMath)/sub_diago.f90
 	cd $(OBJ) ; $(F90_FLAGS)  $(CPPpre) $(CPPSHELL_DIAGO)  -c $(DirMath)/sub_diago.f90
 $(OBJ)/sub_trans_mat.o:$(DirMath)/sub_trans_mat.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMath)/sub_trans_mat.f90
+$(OBJ)/sub_math_util.o:$(DirMath)/sub_math_util.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMath)/sub_math_util.f90
 $(OBJ)/sub_integration.o:$(DirMath)/sub_integration.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMath)/sub_integration.f90
 $(OBJ)/sub_SparseBG.o:$(DirMath)/sub_SparseBG.f90

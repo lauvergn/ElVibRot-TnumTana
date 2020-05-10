@@ -217,60 +217,60 @@
 
        end subroutine gauss_chebyWeight
 !=============================================================
-!
+
 ! ++   generation des poids (w) et des abscisses (x) pour la quadrature
 !      de gauss-legendre
 !      Numerical Recipes pp125 (1er ed?)
 !
 !=============================================================
-!      SUBROUTINE gauleg128(x1,x2,x,w,n)
-!      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real128
-!      USE mod_system
-!      IMPLICIT NONE
-!
-!       integer            :: n
-!       real(kind=Rkind)   :: x1,x2,x(n),w(n)
-!
-!       integer :: m,i,j,it
-!       integer, parameter :: max_it = 100
-!       real (kind=real128) :: xm,xl,z,z1,p1,p2,p3,pp
-!       real (kind=real128), parameter ::                                   &
-!         pi128 = 3.14159265358979323846264338327950288419716939937511_real128
-!
-!       m = (n+1)/2
-!
-!       xm = 0.5_real128*(x2+x1)
-!       xl = 0.5_real128*(x2-x1)
-!
-!       DO i=1,m
-!         z = cos(pi128*(real(i,kind=real128)-0.25_real128)/(0.5_real128+real(n,kind=real128)))
-!
-!         DO it=1,max_it
-!           p1 = 1.0_real128
-!           p2 = 0.0_real128
-!
-!           DO j=1,n
-!             p3 = p2
-!             p2 = p1
-!             p1 = (real(2*j-1,kind=real128)*z*p2 - real(j-1,kind=real128)*p3)/real(j,kind=real128)
-!           END DO
-!
-!           pp = real(n,kind=real128)*(z*p1-p2)/(z*z-1.0_real128)
-!           z1 = z
-!           z  = z1-p1/pp
-!
-!           IF (abs(z-z1) <= spacing(z)) EXIT
-!         END DO
-!
-!         x(i)     = xm-xl*z
-!         x(n+1-i) = xm+xl*z
-!         w(i)     = 2.0_real128*xl/((1.0_real128-z*z)*pp*pp)
-!         w(n+1-i) = w(i)
-!
-!       END DO
-!
-!       RETURN
-!       end subroutine gauleg128
+      SUBROUTINE gauleg128(x1,x2,x,w,n)
+      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real128
+      USE mod_system
+      IMPLICIT NONE
+
+       integer            :: n
+       real(kind=Rkind)   :: x1,x2,x(n),w(n)
+
+       integer :: m,i,j,it
+       integer, parameter :: max_it = 100
+       real (kind=real128) :: xm,xl,z,z1,p1,p2,p3,pp
+       real (kind=real128), parameter ::                                   &
+         pi128 = 3.14159265358979323846264338327950288419716939937511_real128
+
+       m = (n+1)/2
+
+       xm = 0.5_real128*(x2+x1)
+       xl = 0.5_real128*(x2-x1)
+
+       DO i=1,m
+         z = cos(pi128*(real(i,kind=real128)-0.25_real128)/(0.5_real128+real(n,kind=real128)))
+
+         DO it=1,max_it
+           p1 = 1.0_real128
+           p2 = 0.0_real128
+
+           DO j=1,n
+             p3 = p2
+             p2 = p1
+             p1 = (real(2*j-1,kind=real128)*z*p2 - real(j-1,kind=real128)*p3)/real(j,kind=real128)
+           END DO
+
+           pp = real(n,kind=real128)*(z*p1-p2)/(z*z-1.0_real128)
+           z1 = z
+           z  = z1-p1/pp
+
+           IF (abs(z-z1) <= spacing(z)) EXIT
+         END DO
+
+         x(i)     = xm-xl*z
+         x(n+1-i) = xm+xl*z
+         w(i)     = 2.0_real128*xl/((1.0_real128-z*z)*pp*pp)
+         w(n+1-i) = w(i)
+
+       END DO
+
+       RETURN
+       end subroutine gauleg128
       SUBROUTINE gauleg(x1,x2,x,w,n)
       USE mod_system
       IMPLICIT NONE
@@ -1156,118 +1156,6 @@
 
       return
       end subroutine herset
-      FUNCTION gamma_perso(n)
-      USE mod_system
-      IMPLICIT NONE
-      real(kind=Rkind) :: gamma_perso
-
-         real(kind=Rkind) a
-         integer i,n
-         IF (n .LT. 0) THEN
-           write(out_unitp,*) 'ERROR: gamma( n<=0)',n
-           STOP
-         END IF
-         a = ONE
-         DO i=1,n-1
-           a = a * real(i,kind=Rkind)
-         END DO
-         gamma_perso = a
-      end function gamma_perso
-      FUNCTION factor(n)
-      USE mod_system
-      IMPLICIT NONE
-      real(kind=Rkind) :: factor
-         real(kind=Rkind) a
-         integer i,n
-         IF (n .LT. 0) THEN
-           write(out_unitp,*) 'ERROR: factor( n<=0)',n
-           STOP
-         END IF
-         a = ONE
-         DO i=1,n
-           a = a * real(i,kind=Rkind)
-         END DO
-         factor = a
-      end function factor
-      FUNCTION binomial(n,i)
-      USE mod_system
-      IMPLICIT NONE
-      real(kind=Rkind) :: binomial
-         real(kind=Rkind) a
-         integer i,k,n
-         IF (n .LT. 0 .OR. i .GT. n .OR. i .LT. 0) THEN
-           write(out_unitp,*) 'ERROR: binomial( n<=0 i<0 i>n)',n,i
-           STOP
-         END IF
-         a = ONE
-         DO k=1,n
-           a = a * real(k,kind=Rkind)
-         END DO
-         DO k=1,n-i
-           a = a / real(k,kind=Rkind)
-         END DO
-         DO k=1,i
-           a = a / real(k,kind=Rkind)
-         END DO
-         binomial = a
-
-!        write(out_unitp,*) 'binomial',n,i,a
-      end function binomial
-      FUNCTION combi(n,i)
-      USE mod_system
-      IMPLICIT NONE
-      integer i,k,n
-      real(kind=Rkind) :: combi(n,i)
-      real(kind=Rkind) a
-         IF (n .LT. 0 .OR. i .GT. n .OR. i .LT. 0) THEN
-           write(out_unitp,*) 'ERROR: combi( n<0 i<0 i>n)',n,i
-           STOP
-         END IF
-         a = ONE
-         DO k=1,n
-           a = a * real(k,kind=Rkind)
-         END DO
-         DO k=1,n-i
-           a = a / real(k,kind=Rkind)
-         END DO
-         DO k=1,i
-           a = a / real(k,kind=Rkind)
-         END DO
-         combi = a
-
-!        write(out_unitp,*) 'combi',n,i,a
-      end function combi
-      FUNCTION icombi(n,i)
-      USE mod_system
-      IMPLICIT NONE
-         integer :: icombi
-         integer :: a
-         integer :: i,n
-         integer :: f1,f2,k
-         IF (n .LE. 0 .OR. i .GT. n .OR. i .LT. 0) THEN
-           write(out_unitp,*) 'ERROR: icombi( n<=0 i<0 i>n)',n,i
-           STOP
-         END IF
-
-         IF (i > n-i) THEN
-           f1 = i
-           f2 = n-i
-         ELSE
-           f2 = i
-           f1 = n-i
-         END IF
-         a = 1
-         DO k=f1+1,n
-           a = a * k
-         END DO
-         DO k=1,f2
-           a = a / k
-         END DO
-         icombi = a
-
-!        write(out_unitp,*) 'combi',n,i,a
-!        STOP
-      end function icombi
 
 ! cubature from Burkardt
 subroutine en_r2_01_1 ( n, o, x, w )
