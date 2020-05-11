@@ -487,6 +487,7 @@ MODULE mod_dnS
             STOP
           END IF
         ELSE ! dnS1%nb_var_deriv < dnS2%nb_var_deriv
+          CALL sub_ZERO_TO_dnS(dnS2,nderiv_loc)
           IF (nderiv_loc == 0) THEN
             dnS2%d0 = dnS1%d0
           ELSE IF (nderiv_loc == 1) THEN

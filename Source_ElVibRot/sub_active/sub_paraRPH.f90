@@ -358,7 +358,7 @@ CONTAINS
       !---- Multidimensional loop -------------------------------------
         DO iq_list=1,size(List_Qact1,dim=2)
 
-          Qact(:) = ZERO ! initialization to zero, otherwise some values are not initialized (latter they will)
+          Qact(:) = ZERO ! initialization to zero, otherwise some values are not initialized (later they will)
           Qact(1:nb_act1_RPH) = List_Qact1(:,iq_list)
 
           CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo) ! add rigid, flexible coordinates

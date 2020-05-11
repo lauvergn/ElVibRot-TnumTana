@@ -34,17 +34,22 @@
       PRIVATE
 
       TYPE Type_RPHpara_AT_Qact1
+
+        integer               :: init_done     = 0        ! 0: no initialization yet
+                                                          ! 1: dnQopt initialization done
+                                                          ! 2: full initialization done
+
         integer               :: nb_inact21    = 0        ! it should come from ActiveTransfo
         integer               :: nb_act1       = 0        ! it should come from ActiveTransfo
 
         real(kind=Rkind), pointer :: Qact1(:)   => null() ! Calculation dnC... at Qact1
-        integer                   :: Ind_Qact1  = 0       ! numbering of Qact1
         integer                   :: nderiv     = 0       ! derivative order
 
         TYPE (Type_dnMat)     :: dnC,dnC_inv      ! derivative with respect to Qact1
         TYPE (Type_dnVec)     :: dnQopt           ! derivative with respect to Qact1
-        TYPE (Type_dnVec)     :: dnehess          ! derivative with respect to Qact1
-        TYPE (Type_dnMat)     :: dnhess           ! derivative with respect to Qact1
+        TYPE (Type_dnVec)     :: dneHess          ! derivative with respect to Qact1
+        TYPE (Type_dnMat)     :: dnHess           ! derivative with respect to Qact1
+        TYPE (Type_dnVec)     :: dnGrad           ! derivative with respect to Qact1
         TYPE (Type_dnS)       :: dnLnN            ! derivative with respect to Qact1
 
       END TYPE Type_RPHpara_AT_Qact1
@@ -1111,6 +1116,20 @@
 
            RPHpara_AT_Qact1 => RPHTransfo%tab_RPHpara_AT_Qact1(iQa:iQa)
          END IF
+         ! 1c) check if the initialization has been done
+         IF (RPHpara_AT_Qact1(1)%init_done == 0) THEN
+           CALL Write_RPHTransfo(RPHTransfo)
+           write(out_unitp,*) 'ERROR in ',name_sub
+           write(out_unitp,*) ' The initialization of tab_RPHpara_AT_Qact1 is not done.'
+           STOP
+         END IF
+         IF (RPHpara_AT_Qact1(1)%init_done == 1) THEN
+           CALL Write_RPHTransfo(RPHTransfo)
+           write(out_unitp,*) 'WARNING in ',name_sub
+           write(out_unitp,*) ' Partial initialization of tab_RPHpara_AT_Qact1.'
+           write(out_unitp,*) ' => it will be used to calculate the frequencies.'
+         END IF
+
 
          IF (debug) THEN
            write(out_unitp,*) 'dnC_inv at iQa',iQa
@@ -1356,6 +1375,20 @@
 
            RPHpara_AT_Qact1 => RPHTransfo%tab_RPHpara_AT_Qact1(iQa:iQa)
          END IF
+         ! 1c) check if the initialization has been done
+         IF (RPHpara_AT_Qact1(1)%init_done == 0) THEN
+           CALL Write_RPHTransfo(RPHTransfo)
+           write(out_unitp,*) 'ERROR in ',name_sub
+           write(out_unitp,*) ' The initialization of tab_RPHpara_AT_Qact1 is not done.'
+           STOP
+         END IF
+         IF (RPHpara_AT_Qact1(1)%init_done == 1) THEN
+           CALL Write_RPHTransfo(RPHTransfo)
+           write(out_unitp,*) 'WARNING in ',name_sub
+           write(out_unitp,*) ' Partial initialization of tab_RPHpara_AT_Qact1.'
+           write(out_unitp,*) ' => it will be used to calculate the frequencies.'
+         END IF
+
 
          IF (debug) THEN
            write(out_unitp,*) 'dnVecQin'
@@ -1489,8 +1522,8 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
         !CALL Write_RPHTransfo(RPHTransfo)
         write(out_unitp,*) 'nderiv',nderiv
-        write(out_unitp,*) 'list_act_OF_Qdyn',RPHTransfo%list_act_OF_Qdyn(:)
-        write(out_unitp,*) 'list_QactTOQdyn ',RPHTransfo%list_QactTOQdyn(:)
+        write(out_unitp,*) 'RPH list_act_OF_Qdyn',RPHTransfo%list_act_OF_Qdyn(:)
+        write(out_unitp,*) 'RPH list_QactTOQdyn ',RPHTransfo%list_QactTOQdyn(:)
 
         write(out_unitp,*) 'dnQin'
         CALL Write_dnVec(dnQin)
@@ -1518,7 +1551,6 @@
        END IF
 
        IF (inTOout) THEN
-
          !-----------------------------------------------
          ! 1): find RPHpara_AT_Qact1 in the tables
          ! 1a) Qact1
@@ -1554,6 +1586,20 @@
 
            RPHpara_AT_Qact1 => RPHTransfo%tab_RPHpara_AT_Qact1(iQa:iQa)
          END IF
+
+         ! 1c) check if the initialization has been done
+         IF (RPHpara_AT_Qact1(1)%init_done == 0) THEN
+           CALL Write_RPHTransfo(RPHTransfo)
+           write(out_unitp,*) 'ERROR in ',name_sub
+           write(out_unitp,*) ' The initialization of tab_RPHpara_AT_Qact1 is not done.'
+           STOP
+         END IF
+!         IF (RPHpara_AT_Qact1(1)%init_done == 1) THEN
+!           !CALL Write_RPHTransfo(RPHTransfo)
+!           write(out_unitp,*) 'WARNING in ',name_sub
+!           write(out_unitp,*) ' Partial initialization of tab_RPHpara_AT_Qact1.'
+!           write(out_unitp,*) ' => it will be used to calculate the frequencies.'
+!         END IF
          !-----------------------------------------------
          !-----------------------------------------------
 
@@ -1584,46 +1630,54 @@
            idyn = iderQ21(ider)
            iderQ21(ider) = RPHTransfo%list_QdynTOQact(idyn)
          END DO
+         IF (debug) write(out_unitp,*) 'iderQ1 ',iderQ1
+         IF (debug) write(out_unitp,*) 'iderQ21',iderQ21
 
          ! 2b) dnVecQin and dnVecQout
          ! alloc dnVecQin and dnVecQout for the nb_inact21 coordinates
-         CALL alloc_dnVec(dnVecQin,RPHTransfo%nb_inact21,               &
-                                              RPHTransfo%nb_act1,nderiv)
-
-         CALL alloc_dnVec(dnVecQout,RPHTransfo%nb_inact21,              &
-                                              RPHTransfo%nb_act1,nderiv)
 
          CALL alloc_dnS(dnQ,RPHTransfo%nb_act1,nderiv)
          CALL alloc_dnS(dnQallder,dnQin%nb_var_deriv,nderiv)
 
-         ! 2b) dnVecQin
-         iQin21 = 0
-         DO iQin=1,dnQin%nb_var_vec
-           IF (RPHTransfo%list_act_OF_Qdyn(iQin) == 21) THEN
-              iQin21 = iQin21 + 1
-             CALL sub_dnVec_TO_dnS(dnQin,dnQallder,iQin,nderiv)
-             CALL sub_dnS1_TO_dnS2_partial_new(dnQallder,dnQ,iderQ1,nderiv)
-             CALL sub_dnS_TO_dnVec(dnQ,dnVecQin,iQin21,nderiv)
-           END IF
-         END DO
-         IF (debug) THEN
-           write(out_unitp,*) 'dnVecQin'
-           CALL Write_dnVec(dnVecQin)
-           write(out_unitp,*) 'dnQopt at iQa',iQa
-           CALL Write_dnVec(RPHpara_AT_Qact1(1)%dnQopt)
-           write(out_unitp,*) 'dnC_inv at iQa',iQa
-           CALL Write_dnMat(RPHpara_AT_Qact1(1)%dnC_inv)
-         END IF
+         CALL alloc_dnVec(dnVecQout,RPHTransfo%nb_inact21,              &
+                                              RPHTransfo%nb_act1,nderiv)
 
-         ! 2c) dnVecQout
-         ! dnVecQin*dnMatC_inv => dnVecQout
-         CALL dnVec1_MUL_dnMat2_TO_dnVec3(dnVecQin,                     &
+         IF (RPHpara_AT_Qact1(1)%init_done == 2) THEN
+           CALL alloc_dnVec(dnVecQin,RPHTransfo%nb_inact21,             &
+                                              RPHTransfo%nb_act1,nderiv)
+
+           ! 2b) dnVecQin
+           iQin21 = 0
+           DO iQin=1,dnQin%nb_var_vec
+             IF (RPHTransfo%list_act_OF_Qdyn(iQin) == 21) THEN
+               iQin21 = iQin21 + 1
+               CALL sub_dnVec_TO_dnS(dnQin,dnQallder,iQin,nderiv)
+               CALL sub_dnS1_TO_dnS2_partial_new(dnQallder,dnQ,iderQ1,nderiv)
+               CALL sub_dnS_TO_dnVec(dnQ,dnVecQin,iQin21,nderiv)
+             END IF
+           END DO
+           IF (debug) THEN
+             write(out_unitp,*) 'dnVecQin'
+             CALL Write_dnVec(dnVecQin)
+             write(out_unitp,*) 'dnQopt at iQa',iQa
+             CALL Write_dnVec(RPHpara_AT_Qact1(1)%dnQopt)
+             write(out_unitp,*) 'dnC_inv at iQa',iQa
+             CALL Write_dnMat(RPHpara_AT_Qact1(1)%dnC_inv)
+           END IF
+
+           ! 2c) dnVecQout
+           ! dnVecQin*dnMatC_inv => dnVecQout
+           CALL dnVec1_MUL_dnMat2_TO_dnVec3(dnVecQin,                   &
                                           RPHpara_AT_Qact1(1)%dnC_inv,  &
                                                        dnVecQout,nderiv)
-         IF (debug) THEN
-           write(out_unitp,*) 'dnVecQout'
-           CALL Write_dnVec(dnVecQout)
+           IF (debug) THEN
+             write(out_unitp,*) 'dnVecQout'
+             CALL Write_dnVec(dnVecQout)
+           END IF
+         ELSE
+           CALL sub_ZERO_TO_dnVec(dnVecQout,nderiv)
          END IF
+
          ! add dnQopt to dnVecQout
          CALL sub_dnVec1_wADDTO_dnVec2(RPHpara_AT_Qact1(1)%dnQopt,1,ONE,&
                                                         dnVecQout,1,ONE,&
@@ -1643,35 +1697,44 @@
            ! transfert dnQ with Qact1 derivative only to dnQallder
            CALL sub_dnS1_TO_dnS2_partial_new(dnQ,dnQallder,iderQ1,nderiv)
 
-           ! add derivatives with respect to (inact21), (act1,inact21) and (act1^2,inact21)
-           IF (nderiv > 0) THEN ! first derivative: (inact21)
-             DO kder=1,RPHTransfo%nb_inact21
-               dnQallder%d1(iderQ21(kder)) = RPHpara_AT_Qact1(1)%dnC_inv%d0(kder,iQout21)
-             END DO
-           END IF
-           IF (nderiv > 1) THEN ! 2d derivative (act1,inact21)
-             DO ider=1,RPHTransfo%nb_act1
-             DO kder=1,RPHTransfo%nb_inact21
-               dnQallder%d2(iderQ1(ider),iderQ21(kder)) =               &
+           IF (RPHpara_AT_Qact1(1)%init_done == 2) THEN
+             ! add derivatives with respect to (inact21), (act1,inact21) and (act1^2,inact21)
+             IF (nderiv > 0) THEN ! first derivative: (inact21)
+               DO kder=1,RPHTransfo%nb_inact21
+                 dnQallder%d1(iderQ21(kder)) = RPHpara_AT_Qact1(1)%dnC_inv%d0(kder,iQout21)
+               END DO
+             END IF
+             IF (nderiv > 1) THEN ! 2d derivative (act1,inact21) [no (inact21^2)]
+               DO ider=1,RPHTransfo%nb_act1
+               DO kder=1,RPHTransfo%nb_inact21
+                 dnQallder%d2(iderQ1(ider),iderQ21(kder)) =               &
                         RPHpara_AT_Qact1(1)%dnC_inv%d1(kder,iQout21,ider)
-               dnQallder%d2(iderQ21(kder),iderQ1(ider)) =               &
+                 dnQallder%d2(iderQ21(kder),iderQ1(ider)) =               &
                         RPHpara_AT_Qact1(1)%dnC_inv%d1(kder,iQout21,ider)
-             END DO
-             END DO
-           END IF
-           IF (nderiv > 2) THEN ! 3d derivative (act1^2,inact21)
-             DO ider=1,RPHTransfo%nb_act1
-             DO jder=1,RPHTransfo%nb_act1
-             DO kder=1,RPHTransfo%nb_inact21
-               dnQallder%d3(iderQ1(ider),iderQ1(jder),iderQ21(kder)) =  &
+               END DO
+               END DO
+             END IF
+             IF (nderiv > 2) THEN ! 3d derivative (act1^2,inact21) [no (act1,inact21^2) ...]
+               DO ider=1,RPHTransfo%nb_act1
+               DO jder=1,RPHTransfo%nb_act1
+               DO kder=1,RPHTransfo%nb_inact21
+                 dnQallder%d3(iderQ1(ider),iderQ1(jder),iderQ21(kder)) =  &
                    RPHpara_AT_Qact1(1)%dnC_inv%d2(kder,iQout21,jder,ider)
-               dnQallder%d3(iderQ1(ider),iderQ21(kder),iderQ1(jder)) =  &
+                 dnQallder%d3(iderQ1(ider),iderQ21(kder),iderQ1(jder)) =  &
                    RPHpara_AT_Qact1(1)%dnC_inv%d2(kder,iQout21,jder,ider)
-               dnQallder%d3(iderQ21(kder),iderQ1(ider),iderQ1(jder)) =  &
+                 dnQallder%d3(iderQ21(kder),iderQ1(ider),iderQ1(jder)) =  &
                    RPHpara_AT_Qact1(1)%dnC_inv%d2(kder,iQout21,jder,ider)
-             END DO
-             END DO
-             END DO
+               END DO
+               END DO
+               END DO
+             END IF
+           ELSE
+             ! when the C_inv is not set up (init_done=1),
+             !   we need to add the first derivative with respect to iQout21 coordinates
+             ! it's equivalent to have C_inv = the identity matrix
+             IF (nderiv > 0) THEN ! first derivative: (inact21)
+               dnQallder%d1(iderQ21(iQout21)) = ONE
+             END IF
            END IF
 
            CALL sub_dnS_TO_dnVec(dnQallder,dnQout,iQout,nderiv)
@@ -1689,7 +1752,7 @@
          CALL dealloc_dnVec(dnVecQin)
          CALL dealloc_dnVec(dnVecQout)
 
-         nullify(RPHpara_AT_Qact1)
+         nullify(RPHpara_AT_Qact1) ! because it a true pointer
 
        ELSE
          CALL sub_dnVec1_TO_dnVec2(dnQout,dnQin,nderiv)
@@ -1717,7 +1780,6 @@
 
       CALL dealloc_RPHpara_AT_Qact1(RPHpara_AT_Qact1)
 
-
       IF (nb_act1 < 1 .OR. nb_inact21 < 1) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) 'nb_act1 or nb_inact21 < 1',nb_act1,nb_inact21
@@ -1726,7 +1788,6 @@
       RPHpara_AT_Qact1%nb_act1     = nb_act1
       RPHpara_AT_Qact1%nb_inact21  = nb_inact21
       RPHpara_AT_Qact1%nderiv      = nderiv
-      RPHpara_AT_Qact1%Ind_Qact1   = 0
 
       CALL alloc_array(RPHpara_AT_Qact1%Qact1,(/ nb_act1 /),            &
                       'RPHpara_AT_Qact1%Qact1',name_sub)
@@ -1747,6 +1808,9 @@
       CALL alloc_dnSVM(RPHpara_AT_Qact1%dnhess,nb_inact21,nb_inact21,nb_act1,nderiv)
       CALL sub_ZERO_TO_dnMat(RPHpara_AT_Qact1%dnhess,nderiv)
 
+      CALL alloc_dnSVM(RPHpara_AT_Qact1%dnGrad,nb_inact21,nb_act1,nderiv)
+      CALL sub_ZERO_TO_dnVec(RPHpara_AT_Qact1%dnGrad,nderiv)
+
       CALL alloc_dnSVM(RPHpara_AT_Qact1%dnLnN,nb_act1,nderiv)
       CALL sub_ZERO_TO_dnS(RPHpara_AT_Qact1%dnLnN,nderiv)
 
@@ -1760,10 +1824,10 @@
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='dealloc_RPHpara_AT_Qact1'
 
+      RPHpara_AT_Qact1%init_done   = 0
       RPHpara_AT_Qact1%nb_act1     = 0
       RPHpara_AT_Qact1%nb_inact21  = 0
       RPHpara_AT_Qact1%nderiv      = 0
-      RPHpara_AT_Qact1%Ind_Qact1   = 0
 
       IF (associated(RPHpara_AT_Qact1%Qact1))  THEN
         CALL dealloc_array(RPHpara_AT_Qact1%Qact1,                      &
@@ -1776,6 +1840,7 @@
       CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnQopt)
       CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnehess)
       CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnhess)
+      CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnGrad)
       CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnLnN)
 
       END SUBROUTINE dealloc_RPHpara_AT_Qact1
@@ -1798,10 +1863,11 @@
         nderiv_loc = 4
       END IF
 
+      write(out_unitp,*) 'init_done',RPHpara_AT_Qact1%init_done
+
       write(out_unitp,*) 'nb_act1,nb_inact21',                        &
                   RPHpara_AT_Qact1%nb_act1,RPHpara_AT_Qact1%nb_inact21
       write(out_unitp,*) 'nderiv',RPHpara_AT_Qact1%nderiv
-      write(out_unitp,*) 'Ind_Qact1',RPHpara_AT_Qact1%Ind_Qact1
 
       IF (associated(RPHpara_AT_Qact1%Qact1)) THEN
         write(out_unitp,*) 'Qact1',RPHpara_AT_Qact1%Qact1(:)
@@ -1856,27 +1922,29 @@
 
       CALL dealloc_RPHpara_AT_Qact1(RPHpara2_AT_Qact1)
 
-      CALL alloc_RPHpara_AT_Qact1(RPHpara2_AT_Qact1,                    &
+      IF (RPHpara1_AT_Qact1%nb_act1 > 0 .AND. RPHpara1_AT_Qact1%nb_inact21 > 0) THEN
+        CALL alloc_RPHpara_AT_Qact1(RPHpara2_AT_Qact1,                  &
                RPHpara1_AT_Qact1%nb_act1,RPHpara1_AT_Qact1%nb_inact21,  &
                                                RPHpara1_AT_Qact1%nderiv)
 
+        RPHpara2_AT_Qact1%Qact1(:)    = RPHpara1_AT_Qact1%Qact1(:)
+
+        CALL sub_dnMat1_TO_dnMat2(RPHpara1_AT_Qact1%dnC,RPHpara2_AT_Qact1%dnC)
+
+        CALL sub_dnMat1_TO_dnMat2(RPHpara1_AT_Qact1%dnC_inv,RPHpara2_AT_Qact1%dnC_inv)
+        CALL sub_dnVec1_TO_dnVec2(RPHpara1_AT_Qact1%dnehess,RPHpara2_AT_Qact1%dnehess)
+        CALL sub_dnVec1_TO_dnVec2(RPHpara1_AT_Qact1%dnQopt,RPHpara2_AT_Qact1%dnQopt)
+        CALL sub_dnMat1_TO_dnMat2(RPHpara1_AT_Qact1%dnhess,RPHpara2_AT_Qact1%dnhess)
+        CALL sub_dnS1_TO_dnS2(RPHpara1_AT_Qact1%dnLnN,RPHpara2_AT_Qact1%dnLnN)
+
+      END IF
+
+      RPHpara2_AT_Qact1%init_done   = RPHpara1_AT_Qact1%init_done
 
       RPHpara2_AT_Qact1%nb_act1     = RPHpara1_AT_Qact1%nb_act1
       RPHpara2_AT_Qact1%nb_inact21  = RPHpara1_AT_Qact1%nb_inact21
       RPHpara2_AT_Qact1%nderiv      = RPHpara1_AT_Qact1%nderiv
 
-
-      RPHpara2_AT_Qact1%Ind_Qact1   = RPHpara1_AT_Qact1%Ind_Qact1
-      RPHpara2_AT_Qact1%Qact1(:)    = RPHpara1_AT_Qact1%Qact1(:)
-
-
-      CALL sub_dnMat1_TO_dnMat2(RPHpara1_AT_Qact1%dnC,RPHpara2_AT_Qact1%dnC)
-
-      CALL sub_dnMat1_TO_dnMat2(RPHpara1_AT_Qact1%dnC_inv,RPHpara2_AT_Qact1%dnC_inv)
-      CALL sub_dnVec1_TO_dnVec2(RPHpara1_AT_Qact1%dnehess,RPHpara2_AT_Qact1%dnehess)
-      CALL sub_dnVec1_TO_dnVec2(RPHpara1_AT_Qact1%dnQopt,RPHpara2_AT_Qact1%dnQopt)
-      CALL sub_dnMat1_TO_dnMat2(RPHpara1_AT_Qact1%dnhess,RPHpara2_AT_Qact1%dnhess)
-      CALL sub_dnS1_TO_dnS2(RPHpara1_AT_Qact1%dnLnN,RPHpara2_AT_Qact1%dnLnN)
 
       END SUBROUTINE RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1
 
@@ -1886,7 +1954,7 @@
       TYPE (Type_RPHpara2), intent(inout) :: RPHpara2
 
       integer :: err_mem,memory
-      character (len=*), parameter :: name_sub='dealloc_RPHpara_AT_Qact1'
+      character (len=*), parameter :: name_sub='dealloc_RPHpara2'
 
       RPHpara2%Switch_Type = 0
       RPHpara2%nb_ref      = 0

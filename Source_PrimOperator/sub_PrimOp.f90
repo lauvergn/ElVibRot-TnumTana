@@ -3551,43 +3551,8 @@
                                         Qact,para_Tnum,mole,RPHTransfo)
 
       ELSE ! option 0 ou 1
-
-!        IF (RPHTransfo%nb_act1 == 1 .AND. abs(Qact(1)) < ONETENTH**5) THEN
-!
-!          ndim = RPHTransfo%nb_inact21
-!          !CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(RPHpara_AT_Qact1,RPHpara_AT_0PlusStep)
-!          !CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(RPHpara_AT_Qact1,RPHpara_AT_0MinusStep)
-!
-!          Qact(1) = ONETENTH**2
-!          CALL Set_RPHpara_AT_Qact1_opt01(RPHpara_AT_0PlusStep,         &
-!                                          Qact,para_Tnum,mole,RPHTransfo)
-!          Qact(1) = -ONETENTH**2
-!          CALL Set_RPHpara_AT_Qact1_opt01(RPHpara_AT_0MinusStep,         &
-!                                          Qact,para_Tnum,mole,RPHTransfo)
-!
-!          ! copy for the allocation ...
-!          CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(RPHpara_AT_0PlusStep,RPHpara_AT_Qact1)
-!          RPHpara_AT_Qact1%Qact1(:) = ZERO
-!
-!          ! average of Qopt
-!          CALL dnVec2_wPLUS_dnVec3_TO_dnVec1(RPHpara_AT_Qact1%dnQopt,1,  &
-!                                         RPHpara_AT_0PlusStep%dnQopt,1,HALF,&
-!                                        RPHpara_AT_0MinusStep%dnQopt,1,HALF,&
-!                                               ndim)
-!          ! average of dnC_inv
-!          CALL dnMat1_PLUS_dnMat2_TO_dnMat3(RPHpara_AT_0PlusStep%dnC_inv,&
-!                                            RPHpara_AT_0MinusStep%dnC_inv,&
-!                                            RPHpara_AT_Qact1%dnC_inv,     &
-!                                            w1=HALF,w2=HALF)
-!
-!          CALL dealloc_RPHpara_AT_Qact1(RPHpara_AT_0PlusStep)
-!          CALL dealloc_RPHpara_AT_Qact1(RPHpara_AT_0MinusStep)
-!
-!          !STOP 'Qact(1) = ZERO'
-!        ELSE
-          CALL Set_RPHpara_AT_Qact1_opt01(RPHpara_AT_Qact1,               &
+        CALL Set_RPHpara_AT_Qact1_opt01_v2(RPHpara_AT_Qact1,            &
                                           Qact,para_Tnum,mole,RPHTransfo)
-!        END IF
      END IF
 
 
@@ -3763,6 +3728,10 @@
       CALL inv_m1_TO_m2(RPHpara_AT_Qact1%dnC_inv%d0,RPHpara_AT_Qact1%dnC%d0, &
                         nb_inact21,0,ZERO)
 
+
+     RPHpara_AT_Qact1%init_done = 2
+
+
      IF (debug) THEN
         CALL Write_RPHpara_AT_Qact1(RPHpara_AT_Qact1)
         write(out_unitp,*) 'END ',name_sub
@@ -3771,7 +3740,83 @@
 
      END SUBROUTINE Set_RPHpara_AT_Qact1_opt2
 
-      SUBROUTINE Set_RPHpara_AT_Qact1_opt01(RPHpara_AT_Qact1,           &
+      SUBROUTINE Set_RPHpara_AT_Qact1_opt01_v2(RPHpara_AT_Qact1,        &
+                                         Qact,para_Tnum,mole,RPHTransfo)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
+      USE mod_Coord_KEO
+      IMPLICIT NONE
+
+
+      !----- for the CoordType and Tnum --------------------------------------
+      TYPE (Type_RPHpara_AT_Qact1), intent(inout) :: RPHpara_AT_Qact1
+      integer :: nb_act1,nb_inact21
+
+      TYPE (Tnum)             :: para_Tnum
+      TYPE (CoordType)        :: mole
+      TYPE (Type_RPHTransfo)  :: RPHTransfo
+
+      real (kind=Rkind), intent(inout) :: Qact(:)
+
+      !------ for the frequencies -------------------------------
+      TYPE (Type_dnMat)     :: dnC,dnC_inv      ! derivative with respect to Qact1
+      TYPE (Type_dnVec)     :: dnQeq            ! derivative with respect to Qact1
+      TYPE (Type_dnVec)     :: dnEHess          ! derivative with respect to Qact1
+      TYPE (Type_dnVec)     :: dnGrad           ! derivative with respect to Qact1
+      TYPE (Type_dnMat)     :: dnHess           ! derivative with respect to Qact1
+      TYPE (Type_dnS)       :: dnLnN            ! derivative with respect to Qact1
+      integer               :: nderiv
+      real (kind=Rkind)     :: pot0_corgrad,stepp,step_loc,vi,auTOcm_inv
+      integer               :: i,iact,idyn,RPHoption
+      real (kind=Rkind)     :: Qdyn(mole%nb_var)
+
+      !-----------------------------------------------------------
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='Set_RPHpara_AT_Qact1_opt01_v2'
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
+      !-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        !CALL Write_RPHTransfo(RPHTransfo)
+        CALL flush_perso(out_unitp)
+      END IF
+      !-----------------------------------------------------------
+      auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
+
+      nderiv     = 3
+      IF (para_Tnum%vep_type == 0) nderiv = 2
+
+      nb_act1    = RPHTransfo%nb_act1
+      nb_inact21 = RPHTransfo%nb_inact21
+
+      CALL alloc_RPHpara_AT_Qact1(RPHpara_AT_Qact1,nb_act1,nb_inact21,nderiv)
+
+
+      !here it should be Qin of RPH (therefore Qdyn ?????)
+      CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
+
+      RPHpara_AT_Qact1%Qact1(:) = Qdyn(RPHTransfo%list_QactTOQdyn(1:nb_act1))
+
+      CALL sub_dnfreq_8p_v2(RPHpara_AT_Qact1,pot0_corgrad,              &
+                            para_Tnum,mole,RPHTransfo,nderiv,.FALSE.)
+
+
+     write(out_unitp,11) RPHpara_AT_Qact1%Qact1(:),                     &
+                         RPHpara_AT_Qact1%dnEHess%d0(:)*auTOcm_inv
+ 11  format(' frequencies : ',30f10.4)
+
+     RPHpara_AT_Qact1%init_done = 2
+
+     IF (debug) THEN
+        CALL Write_RPHpara_AT_Qact1(RPHpara_AT_Qact1)
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+     END IF
+
+     END SUBROUTINE Set_RPHpara_AT_Qact1_opt01_v2
+     SUBROUTINE Set_RPHpara_AT_Qact1_opt01_v1(RPHpara_AT_Qact1,           &
                                          Qact,para_Tnum,mole,RPHTransfo)
       USE mod_system
       USE mod_dnSVM
@@ -3806,7 +3851,7 @@
 
       !-----------------------------------------------------------
       integer :: err_mem,memory
-      character (len=*), parameter :: name_sub='Set_RPHpara_AT_Qact1_opt01'
+      character (len=*), parameter :: name_sub='Set_RPHpara_AT_Qact1_opt01_v1'
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
       !-----------------------------------------------------------
@@ -3930,13 +3975,15 @@
      CALL Sub_CoordType_TO_paraRPH(mole)
      RPHTransfo%option = RPHoption
 
+     RPHpara_AT_Qact1%init_done = 2
+
      IF (debug) THEN
         CALL Write_RPHpara_AT_Qact1(RPHpara_AT_Qact1)
         write(out_unitp,*) 'END ',name_sub
         CALL flush_perso(out_unitp)
      END IF
 
-     END SUBROUTINE Set_RPHpara_AT_Qact1_opt01
+     END SUBROUTINE Set_RPHpara_AT_Qact1_opt01_v1
 !
 !=============================================================
 !
@@ -4081,7 +4128,7 @@
                          Qact,para_Tnum,mole,RPHTransfo)
 
 !-----------------------------------------------------------------
-!----- end frequencies calculation at Qact ----------------------
+!----- end frequencies calculation at Qact -----------------------
 !-----------------------------------------------------------------
 
 !-----------------------------------------------------------------
@@ -4302,6 +4349,332 @@
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_dnfreq_8p
+      SUBROUTINE sub_dnfreq_8p_v2(RPHpara_AT_Qact1,pot0_corgrad,        &
+                                  para_Tnum,mole,RPHTransfo,nderiv,test)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
+      USE mod_Coord_KEO
+      IMPLICIT NONE
+
+
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (Type_RPHpara_AT_Qact1), intent(inout) :: RPHpara_AT_Qact1
+      TYPE (Tnum)      :: para_Tnum
+      TYPE (CoordType) :: mole
+
+!----- variables for the active and inactive namelists ----------------
+      TYPE (Type_RPHTransfo), intent(inout)  :: RPHTransfo
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+      integer, intent(in) :: nderiv
+!----- for testing ---------------------------------------------------
+      logical, intent(in) :: test
+
+
+!------ for the frequencies -------------------------------
+        TYPE (Type_dnMat)     :: dnC,dnC_inv      ! derivative with respect to Qact1
+        TYPE (Type_dnVec)     :: dnQeq            ! derivative with respect to Qact1
+        TYPE (Type_dnVec)     :: dnEHess          ! derivative with respect to Qact1
+        TYPE (Type_dnVec)     :: dnGrad           ! derivative with respect to Qact1
+        TYPE (Type_dnMat)     :: dnHess           ! derivative with respect to Qact1
+        TYPE (Type_dnS)       :: dnLnN            ! derivative with respect to Qact1
+
+      real (kind=Rkind) :: pot0_corgrad,pot0_corgrad2
+      TYPE (Type_RPHpara_AT_Qact1)  :: RPHpara_AT_Qact1_save
+
+
+!----- pour les derivees ---------------------------------------------
+      real (kind=Rkind) ::    step,step2,stepp,step24
+      real (kind=Rkind) ::    d1
+
+!----- working variables ---------------------------------------------
+      integer           :: i,j,k,nb_inact21,nb_act1
+      real (kind=Rkind) :: vi,vj
+
+      real (kind=Rkind) ::  mat0(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  mat1(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  mat2(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  vec1(RPHTransfo%nb_inact21),vec0(RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  vec2(RPHTransfo%nb_inact21)
+
+      real (kind=Rkind) ::  mat2p(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  mat2m(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  mat22p(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  mat22m(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
+
+      real (kind=Rkind) ::  mat2_s(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  mat2_s2(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
+
+
+
+      real (kind=Rkind) ::  vec0p(RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  vec0m(RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  vec02p(RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  vec02m(RPHTransfo%nb_inact21)
+
+      real (kind=Rkind) ::  vec0_s(RPHTransfo%nb_inact21)
+      real (kind=Rkind) ::  vec0_s2(RPHTransfo%nb_inact21)
+
+      real (kind=Rkind) ::  auTOcm_inv
+
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='sub_dnfreq_8p_v2'
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'purify_hess,eq_hess',                       &
+                              RPHTransfo%purify_hess,RPHTransfo%eq_hess
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+      auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
+
+      step       = RPHTransfo%step
+      step2      = step * HALF
+
+      nb_inact21 = RPHTransfo%nb_inact21
+      nb_act1    = RPHTransfo%nb_act1
+
+      IF (RPHTransfo%step <= ZERO) THEN
+        write(out_unitp,*) ' ERROR : RPHTransfo%step is < zero'
+        STOP
+      END IF
+
+
+      IF (nderiv == 0) THEN
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        IF (debug) THEN
+          write(out_unitp,*) 'dnQeq%d0',dnQeq%d0(:)
+          write(out_unitp,*) 'freq',dnEHess%d0(:)*auTOcm_inv
+          write(out_unitp,*) 'dnC'
+          CALL Write_dnMat(dnC)
+          write(out_unitp,*) 'dnHess'
+          CALL Write_dnMat(dnHess)
+          write(out_unitp,*) 'END ',name_sub
+        END IF
+        RETURN
+      END IF
+
+
+!-----------------------------------------------------------------
+!----- frequencies calculation at Qact ---------------------------
+!-----------------------------------------------------------------
+      CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,              &
+                            para_Tnum,mole,RPHTransfo)
+
+      ! save RPHpara_AT_Qact1 => RPHpara_AT_Qact1_save (for the numerical derivatives)
+      CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(RPHpara_AT_Qact1,     &
+                                                  RPHpara_AT_Qact1_save)
+
+!-----------------------------------------------------------------
+!----- end frequencies calculation at Qact -----------------------
+!-----------------------------------------------------------------
+
+!-----------------------------------------------------------------
+!----- d/Qqi et d2/dQi2 of frequencies ---------------------------
+!-----------------------------------------------------------------
+      DO i=1,RPHTransfo%nb_act1
+
+        vi = RPHpara_AT_Qact1%Qact1(i)
+
+        !-- frequencies calculation at Qact(i)+step -------------
+        RPHpara_AT_Qact1%Qact1(i) = vi + step
+
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat2p = RPHpara_AT_Qact1%dnC_inv%d0 - RPHpara_AT_Qact1_save%dnC_inv%d0
+        vec0p = RPHpara_AT_Qact1%dnQopt%d0  - RPHpara_AT_Qact1_save%dnQopt%d0
+
+
+        !-- frequencies calculation at Qact(i)-step -------------
+        RPHpara_AT_Qact1%Qact1(i) = vi - step
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat2m = RPHpara_AT_Qact1%dnC_inv%d0 - RPHpara_AT_Qact1_save%dnC_inv%d0
+        vec0m = RPHpara_AT_Qact1%dnQopt%d0  - RPHpara_AT_Qact1_save%dnQopt%d0
+
+
+        !-- frequencies calculation at Qact(i)+step -------------
+        RPHpara_AT_Qact1%Qact1(i) = vi + step2
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat22p = RPHpara_AT_Qact1%dnC_inv%d0 - RPHpara_AT_Qact1_save%dnC_inv%d0
+        vec02p = RPHpara_AT_Qact1%dnQopt%d0  - RPHpara_AT_Qact1_save%dnQopt%d0
+
+        !-- frequencies calculation at Qact(i)-step -------------
+        RPHpara_AT_Qact1%Qact1(i) = vi - step2
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat22m = RPHpara_AT_Qact1%dnC_inv%d0 - RPHpara_AT_Qact1_save%dnC_inv%d0
+        vec02m = RPHpara_AT_Qact1%dnQopt%d0  - RPHpara_AT_Qact1_save%dnQopt%d0
+
+
+        RPHpara_AT_Qact1_save%dnC_inv%d1(:,:,i)   = (EIGHT*(mat22p-mat22m)-(mat2p-mat2m))/(SIX*step)
+        RPHpara_AT_Qact1_save%dnC_inv%d2(:,:,i,i) = (16._Rkind*(mat22p+mat22m)-(mat2p+mat2m)) / (THREE*step*step)
+
+        RPHpara_AT_Qact1_save%dnQopt%d1(:,i)     = (EIGHT*(vec02p-vec02m)-(vec0p-vec0m))/(SIX*step)
+        RPHpara_AT_Qact1_save%dnQopt%d2(:,i,i)   = (16._Rkind*(vec02p+vec02m)-(vec0p+vec0m)) / (THREE*step*step)
+
+        RPHpara_AT_Qact1%Qact1(i) = vi
+      END DO
+!-----------------------------------------------------------------
+!----- end d/Qqi and d2/dQi2 of frequencies ----------------------
+!-----------------------------------------------------------------
+
+!-----------------------------------------------------------------
+!----- d2/dQidQj of frequencies (4 points) -----------------------
+!      d2/dQidQj = ( v(Qi+,Qj+)+v(Qi-,Qj-)-v(Qi-,Qj+)-v(Qi+,Qj-) )/(4*s*s)
+!-----------------------------------------------------------------
+      DO i=1,RPHTransfo%nb_act1
+      DO j=i+1,RPHTransfo%nb_act1
+
+
+        vi = RPHpara_AT_Qact1%Qact1(i)
+        vj = RPHpara_AT_Qact1%Qact1(j)
+
+        !-- frequencies calculation at Qact(i)+step Qact(j)+step
+        RPHpara_AT_Qact1%Qact1(i) = vi + step
+        RPHpara_AT_Qact1%Qact1(j) = vj + step
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat2_s = RPHpara_AT_Qact1%dnC_inv%d0
+        vec0_s = RPHpara_AT_Qact1%dnQopt%d0
+
+
+        !-- frequencies calculation at Qact(i)-step Qact(j)-step
+        RPHpara_AT_Qact1%Qact1(i) = vi - step
+        RPHpara_AT_Qact1%Qact1(j) = vj - step
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat2_s   = mat2_s + RPHpara_AT_Qact1%dnC_inv%d0
+        vec0_s   = vec0_s + RPHpara_AT_Qact1%dnQopt%d0
+
+
+        !-- frequencies calculation at Qact(i)-step Qact(j)+step
+        RPHpara_AT_Qact1%Qact1(i) = vi - step
+        RPHpara_AT_Qact1%Qact1(j) = vj + step
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat2_s   = mat2_s - RPHpara_AT_Qact1%dnC_inv%d0
+        vec0_s   = vec0_s - RPHpara_AT_Qact1%dnQopt%d0
+
+        !-- frequencies calculation at Qact(i)+step Qact(j)-step
+        RPHpara_AT_Qact1%Qact1(i) = vi + step
+        RPHpara_AT_Qact1%Qact1(j) = vj - step
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat2_s   = mat2_s - RPHpara_AT_Qact1%dnC_inv%d0
+        vec0_s   = vec0_s - RPHpara_AT_Qact1%dnQopt%d0
+
+        !-- frequencies calculation at Qact(i)+step Qact(j)+step
+        RPHpara_AT_Qact1%Qact1(i) = vi + step2
+        RPHpara_AT_Qact1%Qact1(j) = vj + step2
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat2_s2 = RPHpara_AT_Qact1%dnC_inv%d0
+        vec0_s2 = RPHpara_AT_Qact1%dnQopt%d0
+
+        !-- frequencies calculation at Qact(i)-step Qact(j)-step
+        RPHpara_AT_Qact1%Qact1(i) = vi - step2
+        RPHpara_AT_Qact1%Qact1(j) = vj - step2
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat2_s2   = mat2_s2 + RPHpara_AT_Qact1%dnC_inv%d0
+        vec0_s2   = vec0_s2 + RPHpara_AT_Qact1%dnQopt%d0
+
+
+        !-- frequencies calculation at Qact(i)-step Qact(j)+step
+        RPHpara_AT_Qact1%Qact1(i) = vi - step2
+        RPHpara_AT_Qact1%Qact1(j) = vj + step2
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat2_s2   = mat2_s2 - RPHpara_AT_Qact1%dnC_inv%d0
+        vec0_s2   = vec0_s2 - RPHpara_AT_Qact1%dnQopt%d0
+
+        !-- frequencies calculation at Qact(i)+step Qact(j)-step
+        RPHpara_AT_Qact1%Qact1(i) = vi + step2
+        RPHpara_AT_Qact1%Qact1(j) = vj - step2
+
+        CALL sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,            &
+                              para_Tnum,mole,RPHTransfo)
+
+        mat2_s2   = mat2_s2 - RPHpara_AT_Qact1%dnC_inv%d0
+        vec0_s2   = vec0_s2 - RPHpara_AT_Qact1%dnQopt%d0
+
+
+!       -- d2/dQi/dQj -----------------------------------------
+
+        RPHpara_AT_Qact1_save%dnC_inv%d2(:,:,i,j) = (16._Rkind*mat2_s2 - mat2_s)/(step*step*TWELVE)
+        RPHpara_AT_Qact1_save%dnQopt%d2(:,i,j)     = (16._Rkind*vec0_s2 - vec0_s)/(step*step*TWELVE)
+
+        RPHpara_AT_Qact1_save%dnC_inv%d2(:,:,j,i) = dnC_inv%d2(:,:,i,j)
+        RPHpara_AT_Qact1_save%dnQopt%d2(:,j,i)     = dnQeq%d2(:,i,j)
+
+
+        RPHpara_AT_Qact1%Qact1(i) = vi
+        RPHpara_AT_Qact1%Qact1(j) = vj
+      END DO
+      END DO
+!-----------------------------------------------------------------
+!----- end d2/dQidQj of frequencies ------------------------------
+!-----------------------------------------------------------------
+
+
+
+
+
+      ! transfert RPHpara_AT_Qact1_save to save RPHpara_AT_Qact1
+      CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(RPHpara_AT_Qact1_save,&
+                                                  RPHpara_AT_Qact1)
+      CALL dealloc_RPHpara_AT_Qact1(RPHpara_AT_Qact1_save)
+
+       IF (debug .OR. test) THEN
+         write(out_unitp,11) RPHpara_AT_Qact1%Qact1(:),                 &
+                             RPHpara_AT_Qact1%dnEHess%d0(:)*auTOcm_inv
+ 11      format(' frequencies : ',30f10.4)
+         write(out_unitp,*) 'dnQopt'
+         CALL Write_dnVec(RPHpara_AT_Qact1%dnQopt)
+         write(out_unitp,*) 'dnC_inv'
+         CALL Write_dnMat(RPHpara_AT_Qact1%dnC_inv)
+       END IF
+
+       IF (debug) THEN
+         write(out_unitp,*) 'END ',name_sub
+       END IF
+      CALL flush_perso(out_unitp)
+!-----------------------------------------------------------
+!STOP 'coucou sub_dnfreq_8p_v2'
+
+      END SUBROUTINE sub_dnfreq_8p_v2
       SUBROUTINE sub_dnfreq_4p(dnQeq,dnC,dnLnN,dnEHess,dnHess,dnGrad,dnC_inv,&
                                pot0_corgrad,Qact,                       &
                                para_Tnum,mole,RPHTransfo,nderiv,test)
@@ -4851,7 +5224,7 @@
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'norm: ',norme
-        write(out_unitp,*) 'freq : ',d0ehess(:)*auTOcm_inv
+        write(out_unitp,*) 'freq: ',d0ehess(:)*auTOcm_inv
         write(out_unitp,*) 'd0c : '
         CALL Write_Mat(d0c,out_unitp,4)
         write(out_unitp,*) 'END ',name_sub
@@ -4859,6 +5232,286 @@
       END IF
 !-----------------------------------------------------------
       END SUBROUTINE sub_freq2_RPH
+      SUBROUTINE sub_freq2_RPH_v2(RPHpara_AT_Qact1,pot0_corgrad,        &
+                                  para_Tnum,mole,RPHTransfo)
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Constant, only : get_Conv_au_TO_unit
+      USE mod_Coord_KEO
+      IMPLICIT NONE
+
+      !----- for the CoordType and Tnum --------------------------------------
+      TYPE (Type_RPHpara_AT_Qact1), intent(inout) :: RPHpara_AT_Qact1
+      TYPE (Type_RPHTransfo),       intent(inout) :: RPHTransfo
+
+      TYPE (Tnum)        :: para_Tnum
+      TYPE (CoordType)   :: mole
+       real (kind=Rkind) :: pot0_corgrad
+
+
+
+!----- working variables ---------------------------------------------
+      TYPE (CoordType)   :: mole_loc
+      TYPE(Type_dnMat)   :: dnGG
+
+       real (kind=Rkind) :: d0hess(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
+
+      logical       :: deriv,num
+      integer       :: i,j,i_Qdyn,i_Qact,i_Q1,i_Q21,j_Q21,nderiv
+
+      integer           :: nb_act1,nb_inact21
+      real (kind=Rkind) :: Qdyn(mole%nb_var)
+      real (kind=Rkind) :: Qact(mole%nb_var)
+
+      real (kind=Rkind) :: d0g(RPHTransfo%nb_inact21)
+
+
+      real (kind=Rkind) :: a,d0req
+      real (kind=Rkind) :: auTOcm_inv
+
+      real (kind=Rkind), allocatable ::                                 &
+        d1req(:),d2req(:,:),d3req(:,:,:),                               &
+        d1g(:,:),d2g(:,:,:),                                            &
+        d0h(:,:),d1hess(:,:,:),d2hess(:,:,:,:),                         &
+        d0k(:,:),                                                       &
+        d0hess_inv(:,:),trav1(:)
+
+
+!----- for debuging --------------------------------------------------
+       integer :: err_mem,memory
+       character (len=*), parameter :: name_sub = 'sub_freq2_RPH_v2'
+       logical, parameter :: debug = .FALSE.
+       !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'BEGINNING ',name_sub
+         CALL flush_perso(out_unitp)
+       END IF
+!-----------------------------------------------------------
+      auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
+
+      nb_act1    = RPHTransfo%nb_act1
+      nb_inact21 = RPHTransfo%nb_inact21
+      IF (debug) write(out_unitp,*) 'nb_act1,nb_inact21',nb_act1,nb_inact21
+
+      IF (.NOT. associated(RPHTransfo%C_ini)) THEN
+        CALL alloc_array(RPHTransfo%C_ini,(/nb_inact21,nb_inact21/),    &
+                          "RPHTransfo%C_ini",name_sub)
+        RPHTransfo%C_ini(:,:) = ZERO
+      END IF
+      IF (debug) THEN
+        write(out_unitp,*) 'RPHTransfo%C_ini'
+        CALL Write_Mat(RPHTransfo%C_ini,out_unitp,4)
+        CALL flush_perso(out_unitp)
+      END IF
+
+
+
+!-----------------------------------------------------------------
+!--------- First Qact from RPHpara_AT_Qact1 ----------------------
+      Qact(:) = ZERO
+      i_Q1 = 0
+      DO i_Qact=1,RPHTransfo%nb_var
+        IF (RPHTransfo%list_act_OF_Qdyn(i_Qact) /= 1) CYCLE
+        i_Q1 = i_Q1 + 1
+        Qact(i_Qact) = RPHpara_AT_Qact1%Qact1(i_Q1)
+      END DO
+      IF (debug) write(out_unitp,*) 'Qact',Qact
+
+!-----------------------------------------------------------------
+
+!-----------------------------------------------------------------
+!--------- Qact => Qdyn ------------------------------------------
+! we need Qdyn because, we calculate, the hessian, grandient with Qdyn coord
+!-----------------------------------------------------------------
+       CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
+       IF (debug) write(out_unitp,*) 'Qdyn',Qdyn
+
+!-----------------------------------------------------------------
+
+
+!-----------------------------------------------------------------
+!-----------------------------------------------------------------
+!----- d0Qeq, d0g and d0h at Qdyn --------------------------------
+!      Qdyn and Qact are also modified
+!-----------------------------------------------------------------
+      !here mole is not correct to get d0req ... from d0d1d2d3_Qeq (wrong nb_act1)
+      mole_loc            = mole
+      mole_loc%nb_act1    = nb_act1    ! from RPH
+      mole_loc%nb_inact21 = nb_inact21 ! from RPH
+      mole_loc%nb_inact2n = nb_inact21 ! from RPH
+      mole_loc%ActiveTransfo%list_act_OF_Qdyn(:) = RPHTransfo%list_act_OF_Qdyn ! from RPH
+      mole_loc%ActiveTransfo%list_QactTOQdyn(:)  = RPHTransfo%list_QactTOQdyn  ! from RPH
+      mole_loc%ActiveTransfo%list_QdynTOQact(:)  = RPHTransfo%list_QdynTOQact  ! from RPH
+
+      nderiv = 0
+      deriv  = .FALSE.
+
+      CALL alloc_NParray(d1req,(/ nb_act1 /),"d1req",name_sub)
+      CALL alloc_NParray(d2req,(/ nb_act1,nb_act1 /),"d2req",name_sub)
+      CALL alloc_NParray(d3req,(/ nb_act1,nb_act1,nb_act1 /),"d3req",name_sub)
+
+      i_Q21 = 0
+      DO i_Qdyn=1,RPHTransfo%nb_var
+        IF (RPHTransfo%list_act_OF_Qdyn(i_Qdyn) /= 21) CYCLE
+
+        CALL d0d1d2d3_Qeq(i_Qdyn,d0req,d1req,d2req,d3req,Qdyn,mole_loc,nderiv)
+
+        IF (debug) write(out_unitp,*) 'i_Qdyn,i,d0req',i_Qdyn,i,d0req
+        CALL flush_perso(out_unitp)
+        i_Q21 = i_Q21 + 1
+        i_Qact = RPHTransfo%list_QdynTOQact(i_Qdyn)
+
+        RPHpara_AT_Qact1%dnQopt%d0(i_Q21) = d0req
+        Qdyn(i_Qdyn)                      = d0req
+        Qact(i_Qact)                      = d0req
+
+      END DO
+      RPHpara_AT_Qact1%init_done = 1 ! all dnQopt are done
+
+      CALL dealloc_NParray(d1req,"d1req",name_sub)
+      CALL dealloc_NParray(d2req,"d2req",name_sub)
+      CALL dealloc_NParray(d3req,"d3req",name_sub)
+
+      !------ The gradient ----------------------------------
+      CALL alloc_NParray(d1g,(/ nb_inact21,nb_act1 /),"d1g",name_sub)
+      CALL alloc_NParray(d2g,(/ nb_inact21,nb_act1,nb_act1 /),"d2g",name_sub)
+
+      CALL d0d1d2_g(d0g,d1g,d2g,Qdyn,mole_loc,.FALSE.,.FALSE.,RPHTransfo%step)
+      !IF (debug) CALL Write_Vec(d0g,out_unitp,4)
+      RPHpara_AT_Qact1%dnGrad%d0(:) = d0g
+
+      CALL dealloc_NParray(d1g,"d1g",name_sub)
+      CALL dealloc_NParray(d2g,"d2g",name_sub)
+
+      !------ The hessian ----------------------------------
+      CALL alloc_NParray(d1hess,(/ nb_inact21,nb_inact21,nb_act1 /),    &
+                        "d1hess",name_sub)
+      CALL alloc_NParray(d2hess,(/nb_inact21,nb_inact21,nb_act1,nb_act1/),&
+                        "d2hess",name_sub)
+
+      CALL d0d1d2_h(d0hess,d1hess,d2hess,Qdyn,mole_loc,.FALSE.,.FALSE.,RPHTransfo%step)
+      !IF (debug) CALL Write_Mat(d0hess,out_unitp,4)
+
+      RPHpara_AT_Qact1%dnHess%d0(:,:) = d0hess
+
+      CALL dealloc_NParray(d1hess,"d1hess",name_sub)
+      CALL dealloc_NParray(d2hess,"d2hess",name_sub)
+
+      !-----------------------------------------------------------------
+      !- the gardient is taken into account for d0Qeq -------------
+      CALL alloc_NParray(d0h,(/nb_inact21,nb_inact21/),"d0h",name_sub)
+      d0h(:,:) = d0hess(:,:)
+
+      IF (RPHTransfo%gradTOpot0) THEN
+        CALL alloc_NParray(d0hess_inv,(/nb_inact21,nb_inact21/),"d0hess_inv",name_sub)
+        CALL alloc_NParray(trav1,(/nb_inact21/),"trav1",name_sub)
+
+        CALL inv_m1_TO_m2(d0h,d0hess_inv,nb_inact21,0,ZERO) ! not SVD
+        trav1(:)     = matmul(d0hess_inv,d0g)
+        pot0_corgrad = -HALF*dot_product(d0g,trav1)
+        d0g(:)       = ZERO
+
+        RPHpara_AT_Qact1%dnQopt%d0(:) = RPHpara_AT_Qact1%dnQopt%d0(:) - trav1(:)
+        RPHpara_AT_Qact1%dnGrad%d0(:) = ZERO
+
+
+        CALL dealloc_NParray(d0hess_inv,"d0hess_inv",name_sub)
+        CALL dealloc_NParray(trav1,"trav1",name_sub)
+      ELSE
+        pot0_corgrad = ZERO
+      END IF
+
+      CALL dealloc_CoordType(mole_loc)
+
+      !-----------------------------------------------------------------
+      !------ The kinetic part -------------------------------
+      CALL alloc_NParray(d0k,(/nb_inact21,nb_inact21/),"d0k",name_sub)
+
+      CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,0)
+
+      CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=0)
+      !IF (debug) CALL Write_Mat(dnGG%d0,out_unitp,4)
+
+      i_Q21 = 0
+      DO i=1,RPHTransfo%nb_var
+        IF (RPHTransfo%list_act_OF_Qdyn(i) /= 21) CYCLE
+        i_Q21 = i_Q21 + 1
+        j_Q21 = 0
+        DO j=1,RPHTransfo%nb_var
+          IF (RPHTransfo%list_act_OF_Qdyn(j) /= 21) CYCLE
+          j_Q21 = j_Q21 + 1
+          d0k(i_Q21,j_Q21) = dnGG%d0(i,j)
+        END DO
+      END DO
+      IF (debug) CALL Write_Mat(d0k,out_unitp,4)
+
+      CALL dealloc_dnSVM(dnGG)
+
+      mole_loc%nb_inact21 = nb_inact21 ! from RPH
+
+!-----------------------------------------------------------------
+!     --- frequencies and normal modes calculation ....
+      IF (debug) THEN
+        write(out_unitp,*) 'd0hess,d0k'
+        CALL Write_Mat(d0hess,out_unitp,4)
+        CALL Write_Mat(d0k,out_unitp,4)
+        CALL flush_perso(out_unitp)
+      END IF
+
+      d0h(:,:) = d0hess(:,:)
+
+      IF (RPHTransfo%purify_hess .OR. RPHTransfo%eq_hess) THEN
+        CALL H0_symmetrization(d0h,nb_inact21,                        &
+                               RPHTransfo%Qinact2n_sym,               &
+                               RPHTransfo%dim_equi,RPHTransfo%tab_equi)
+        CALL H0_symmetrization(d0k,nb_inact21,                        &
+                               RPHTransfo%Qinact2n_sym,               &
+                               RPHTransfo%dim_equi,RPHTransfo%tab_equi)
+        IF (debug) THEN
+          write(out_unitp,*) 'sym : d0hess,d0k'
+          CALL Write_Mat(d0h,out_unitp,4)
+          CALL Write_Mat(d0k,out_unitp,4)
+        END IF
+
+        CALL calc_freq_block(nb_inact21,d0h,d0k,                        &
+                             RPHpara_AT_Qact1%dneHess%d0,               &
+                             RPHpara_AT_Qact1%dnC%d0,                   &
+                             RPHpara_AT_Qact1%dnC_inv%d0,               &
+                             RPHpara_AT_Qact1%dnLnN%d0,                 &
+                             RPHTransfo%C_ini,                          &
+                             RPHTransfo%diabatic_freq,RPHTransfo%Qinact2n_sym)
+
+        !CALL calc_freq(nb_inact21,d0h,d0k,d0ehess,d0c,d0c_inv,norme,    &
+        !               RPHTransfo%C_ini,RPHTransfo%diabatic_freq)
+
+      ELSE
+        CALL calc_freq(nb_inact21,d0h,d0k,                        &
+                       RPHpara_AT_Qact1%dneHess%d0,               &
+                       RPHpara_AT_Qact1%dnC%d0,                   &
+                       RPHpara_AT_Qact1%dnC_inv%d0,               &
+                       RPHpara_AT_Qact1%dnLnN%d0,                 &
+                       RPHTransfo%C_ini,                          &
+                       RPHTransfo%diabatic_freq)
+
+      END IF
+
+      CALL dealloc_NParray(d0h,"d0h",name_sub)
+      CALL dealloc_NParray(d0k,"d0k",name_sub)
+
+!-----------------------------------------------------------------
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'dnLnN%d0 : ',RPHpara_AT_Qact1%dnLnN%d0
+        write(out_unitp,*) 'freq :     ',RPHpara_AT_Qact1%dneHess%d0(:)*auTOcm_inv
+        write(out_unitp,*) 'dnC%d0 :'
+        CALL Write_Mat(RPHpara_AT_Qact1%dnC%d0,out_unitp,4)
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+      END SUBROUTINE sub_freq2_RPH_v2
       SUBROUTINE sub_dnfreq_4p_cHAC(dnQeq,dnC,dnLnN,dnEHess,dnHess,     &
                                     dnGrad,dnC_inv,pot0_corgrad,Qact,   &
                                para_Tnum,mole,RPHTransfo,nderiv,test)
@@ -5227,7 +5880,7 @@
         d1g(:,:),d2g(:,:,:),                                            &
         d0h(:,:),d1hess(:,:,:),d2hess(:,:,:,:),                         &
         d0k(:,:),                                                       &
-        d0hess_inv(:,:),trav1(:),NonDiag_Scaling(:)
+        d0hess_inv(:,:),trav1(:)
 
       TYPE(Type_dnMat) :: dnGG
 

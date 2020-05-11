@@ -1074,9 +1074,6 @@ MODULE mod_Tnum
         !=======================================================================
 
 
-
-
-
         mole%liste_QactTOQsym => mole%ActiveTransfo%list_QactTOQdyn
         mole%liste_QactTOQdyn => mole%ActiveTransfo%list_QactTOQdyn
         mole%liste_QsymTOQact => mole%ActiveTransfo%list_QdynTOQact

@@ -42,7 +42,9 @@ MODULE mod_Coord_KEO
                                   alloc_array,dealloc_array,            &
                                   alloc_rphpara_at_qact1,switch_rph,    &
                                   write_rphtransfo,set_rphtransfo,      &
-                                  write_rphpara_at_qact1
+                                  write_rphpara_at_qact1,               &
+                                  dealloc_RPHpara_AT_Qact1,             &
+                                  RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1
   USE mod_CartesianTransfo, ONLY: calc_dnteckart,calc_dntxdnxin_to_dnxout,&
                                   calc_eckartrot,dnmwx_multiref
   USE mod_export_KEO,      ONLY : export3_MCTDH_T
