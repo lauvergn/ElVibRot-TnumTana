@@ -46,6 +46,7 @@ PRIVATE
 PUBLIC :: sub_OpPsi_FOR_SGtype4,sub_TabOpPsi_FOR_SGtype4
 PUBLIC :: sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
 PUBLIC :: sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
+PUBLIC :: sub_OpPsi_OF_ONEDP_FOR_SGtype4
 
 CONTAINS
 

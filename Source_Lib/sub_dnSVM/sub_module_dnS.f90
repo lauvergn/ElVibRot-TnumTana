@@ -50,6 +50,9 @@ MODULE mod_dnS
       END INTERFACE
 
       PUBLIC :: Type_dnS, alloc_dnS, dealloc_dnS, check_alloc_dnS, Write_dnS
+
+      PUBLIC :: get_nderiv_FROM_dnS,get_nb_var_deriv_FROM_dnS
+
       PUBLIC :: sub_dnS1_TO_dnS2, sub_dnS1_TO_dnS2_partial,sub_dnS1_TO_dnS2_partial_new
       PUBLIC :: sub_dnS1_PLUS_dnS2_TO_dnS2,sub_ABSdnS1_PLUS_dnS2_TO_dnS2
       PUBLIC :: sub_dnS1_wPLUS_dnS2_TO_dnS3, sub_dnS1_wPLUS_dnS2_TO_dnS2
@@ -57,6 +60,7 @@ MODULE mod_dnS
       PUBLIC :: sub_dnS1_TO_dntR2,sub_dntf,sub_dnf2_O_dnf3_TO_dnf1, sub_dntf_WITH_INV
       PUBLIC :: sub_ZERO_TO_dnS,sub_Weight_dnS,sub_WeightDer_dnS
       PUBLIC :: alloc_array, dealloc_array
+      PUBLIC :: R_wADDTO_dnS2_ider
 
                  ! with the new dnS_t (QML)
       !PUBLIC :: sub_dnSt1_TO_dnS2,sub_dnS1_TO_dnSt2
@@ -251,6 +255,53 @@ MODULE mod_dnS
           STOP
         END IF
       END SUBROUTINE check_alloc_dnS
+
+  FUNCTION get_nderiv_FROM_dnS(dnS) RESULT(nderiv)
+
+    integer                          :: nderiv
+    TYPE (Type_dnS), intent(in)    :: dnS
+
+    nderiv = dnS%nderiv
+
+    IF (.NOT. associated(dnS%d1)) THEN
+      nderiv = 0
+    ELSE IF (.NOT. associated(dnS%d2)) THEN
+      nderiv = 1
+    ELSE IF (.NOT. associated(dnS%d3)) THEN
+      nderiv = 2
+    ELSE
+      nderiv = 3
+    END IF
+
+    IF (dnS%nderiv /= nderiv) THEN
+      write(out_unitp,*) ' ERROR in get_nderiv_FROM_dnS'
+      write(out_unitp,*) '  Problem with nderiv in dnS'
+      CALL Write_dnS(dnS)
+      STOP 'ERROR in get_nderiv_FROM_dnS'
+    END IF
+
+  END FUNCTION get_nderiv_FROM_dnS
+  FUNCTION get_nb_var_deriv_FROM_dnS(dnS) RESULT(nb_var_deriv)
+
+    integer                        :: nb_var_deriv
+    TYPE (Type_dnS), intent(in)    :: dnS
+
+    nb_var_deriv = dnS%nb_var_deriv
+
+    IF (.NOT. associated(dnS%d1)) THEN
+      nb_var_deriv = 0
+    ELSE
+      nb_var_deriv = size(dnS%d1,dim=1)
+    END IF
+
+    IF (dnS%nb_var_deriv /= nb_var_deriv) THEN
+      write(out_unitp,*) ' ERROR in get_nb_var_deriv_FROM_dnS'
+      write(out_unitp,*) '  Problem with nb_var_deriv in dnS'
+      CALL Write_dnS(dnS)
+      STOP 'ERROR in get_nb_var_deriv_FROM_dnS'
+    END IF
+
+    END FUNCTION get_nb_var_deriv_FROM_dnS
 
 !================================================================
 !        write the derived type
@@ -641,6 +692,66 @@ MODULE mod_dnS
       END IF
 !      -----------------------------------------------------------------
       END SUBROUTINE sub_ABSdnS1_PLUS_dnS2_TO_dnS2
+
+      SUBROUTINE R_wADDTO_dnS2_ider(R,w,dnS2,ider,nderiv)
+        real (kind=Rkind),  intent(in)            :: R
+        TYPE (Type_dnS),    intent(inout)         :: dnS2
+        integer,            intent(in),  optional :: ider(:)
+        integer,            intent(in),  optional :: nderiv
+        real (kind=Rkind),  intent(in)            :: w
+
+        integer :: nderiv_loc
+        character (len=*), parameter :: name_sub='R1_wADDTO_dnS2_ider'
+
+        CALL check_alloc_dnS(dnS2,'dnS2',name_sub)
+
+        nderiv_loc = dnS2%nderiv
+        IF (present(nderiv)) nderiv_loc = min(nderiv_loc,nderiv)
+
+
+        IF (present(ider)) THEN
+          IF (size(ider) > nderiv_loc) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' size(ider) cannot be > and nderiv_loc.'
+            write(out_unitp,*) ' size(ider)',size(ider)
+            write(out_unitp,*) ' dnS2%nderiv',dnS2%nderiv
+            IF (present(nderiv)) write(out_unitp,*) ' nderiv',nderiv
+            write(out_unitp,*) ' CHECK the fortran source!!'
+            STOP
+          END IF
+          IF (any(ider < 1) .OR. any(ider > dnS2%nb_var_deriv)) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' Some ider(:) values are out-of-range.'
+            write(out_unitp,*) ' ider(:)',ider
+            write(out_unitp,*) ' derivative range [1:',dnS2%nderiv,']'
+            write(out_unitp,*) ' CHECK the fortran source!!'
+            STOP
+          END IF
+        END IF
+
+
+        IF (present(ider)) THEN
+          SELECT CASE (size(ider))
+          CASE (3)
+            dnS2%d3(ider(1),ider(2),ider(3)) = w*R +                    &
+                                        dnS2%d3(ider(1),ider(2),ider(3))
+          CASE (2)
+            dnS2%d2(ider(1),ider(2)) = w*R + dnS2%d2(ider(1),ider(2))
+          CASE (1)
+            dnS2%d1(ider(1)) = w*R + dnS2%d1(ider(1))
+          CASE (0)
+            dnS2%d0 = w*R + dnS2%d0
+          CASE Default
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' nderiv_loc > 3 is NOT possible',nderiv_loc
+            write(out_unitp,*) 'It should never append! Check the source'
+            STOP
+          END SELECT
+        ELSE
+            dnS2%d0 = w*R + dnS2%d0
+        END IF
+
+      END SUBROUTINE R_wADDTO_dnS2_ider
 
       SUBROUTINE sub_dnS1_wPLUS_dnS2_TO_dnS3(dnS1,w1,dnS2,w2,dnS3,nderiv)
       !USE mod_system

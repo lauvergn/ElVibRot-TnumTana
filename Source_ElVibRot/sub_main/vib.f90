@@ -284,7 +284,7 @@
             !WP0(1)%CvecB(:) = CZERO
             !WP0(1)%CvecB(WP0(1)%nb_ba+1) = CONE
 
-            CALL psi0(WP0,para_propa%para_WP0,mole)
+            CALL init_psi0(WP0,para_propa%para_WP0,mole)
 
             ip = para_propa%para_WP0%WP0_dip
             IF (ip > 0 .AND. ip <4) THEN

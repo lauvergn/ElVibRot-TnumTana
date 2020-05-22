@@ -56,12 +56,15 @@ MODULE mod_dnV
       PUBLIC :: Type_dnVec, alloc_array, dealloc_array
       PUBLIC :: alloc_dnVec, dealloc_dnVec, check_alloc_dnVec, Write_dnVec, sub_Normalize_dnVec
 
+      PUBLIC :: get_nderiv_FROM_dnVec,get_nb_var_deriv_FROM_dnVec
+
+
       PUBLIC :: sub_dnVec_TO_dnS, sub_dnS_TO_dnVec, sub_dnVec1_TO_dnVec2
       PUBLIC :: sub_PartdnVec1_TO_PartdnVec2, sub_dnVec1_TO_dnVec2_WithIvec, sub_dnVec1_TO_dnVec2_partial
       PUBLIC :: sub_dnVec1_wTO_dnVec2
 
       PUBLIC :: sub_dnVec1_wADDTO_dnVec2, sub_dnVec1_PLUS_dnVec2_TO_dnVec3, dnVec2_wPLUS_dnVec3_TO_dnVec1
-      PUBLIC :: sub_ZERO_TO_dnVec, test_ZERO_OF_dnVec
+      PUBLIC :: sub_ZERO_TO_dnVec, test_ZERO_OF_dnVec, Vec_wADDTO_dnVec2_ider
 
       PUBLIC :: sub_dot_product_dnVec1_dnVec2_TO_dnS, Sub_crossproduct_dnVec1_dnVec2_TO_dnVec3
       PUBLIC :: dnVec2_O_dnVec1_TO_dnVec3
@@ -327,6 +330,54 @@ MODULE mod_dnV
         END IF
       END SUBROUTINE check_alloc_dnVec
 
+  FUNCTION get_nderiv_FROM_dnVec(Vec) RESULT(nderiv)
+
+    integer                          :: nderiv
+    TYPE (Type_dnVec), intent(in)    :: Vec
+
+    nderiv = Vec%nderiv
+
+    IF (.NOT. associated(Vec%d0)) THEN
+      nderiv = -1
+    ELSE IF (.NOT. associated(Vec%d1)) THEN
+      nderiv = 0
+    ELSE IF (.NOT. associated(Vec%d2)) THEN
+      nderiv = 1
+    ELSE IF (.NOT. associated(Vec%d3)) THEN
+      nderiv = 2
+    ELSE
+      nderiv = 3
+    END IF
+
+    IF (Vec%nderiv /= nderiv) THEN
+      write(out_unitp,*) ' ERROR in get_nderiv_FROM_dnVec'
+      write(out_unitp,*) '  Problem with nderiv in Vec'
+      CALL Write_dnVec(Vec)
+      STOP 'ERROR in get_nderiv_FROM_dnVec'
+    END IF
+
+    END FUNCTION get_nderiv_FROM_dnVec
+  FUNCTION get_nb_var_deriv_FROM_dnVec(Vec) RESULT(nb_var_deriv)
+
+    integer                          :: nb_var_deriv
+    TYPE (Type_dnVec), intent(in)    :: Vec
+
+    nb_var_deriv = Vec%nb_var_deriv
+
+    IF (.NOT. associated(Vec%d1)) THEN
+      nb_var_deriv = 0
+    ELSE
+      nb_var_deriv = size(Vec%d1,dim=2)
+    END IF
+
+    IF (Vec%nb_var_deriv /= nb_var_deriv) THEN
+      write(out_unitp,*) ' ERROR in get_nb_var_deriv_FROM_dnVec'
+      write(out_unitp,*) '  Problem with nb_var_deriv in Vec'
+      CALL Write_dnVec(Vec)
+      STOP 'ERROR in get_nb_var_deriv_FROM_dnVec'
+    END IF
+
+    END FUNCTION get_nb_var_deriv_FROM_dnVec
 !================================================================
 !        write the derived type
 !================================================================
@@ -384,6 +435,71 @@ MODULE mod_dnV
 
 
       END SUBROUTINE Write_dnVec
+      SUBROUTINE Vec_wADDTO_dnVec2_ider(Vec,w,dnVec2,ider,nderiv)
+        real (kind=Rkind),  intent(in)            :: Vec(:)
+        TYPE (Type_dnVec),  intent(inout)         :: dnVec2
+        integer,            intent(in),  optional :: ider(:)
+        integer,            intent(in),  optional :: nderiv
+        real (kind=Rkind),  intent(in)            :: w
+
+        integer :: nderiv_loc
+        character (len=*), parameter :: name_sub='Vec_wADDTO_dnVec2_ider'
+
+        CALL check_alloc_dnVec(dnVec2,'dnVec2',name_sub)
+
+        nderiv_loc = dnVec2%nderiv
+        IF (present(nderiv)) nderiv_loc = min(nderiv_loc,nderiv)
+
+        IF (size(Vec) /= dnVec2%nb_var_Vec) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' size(Vec) and nb_var_Vec must be equal',&
+                                           size(Vec),dnVec2%nb_var_Vec
+          write(out_unitp,*) ' CHECK the fortran source!!'
+          STOP
+        END IF
+        IF (present(ider)) THEN
+          IF (size(ider) > nderiv_loc) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' size(ider) cannot be > and nderiv_loc.'
+            write(out_unitp,*) ' size(ider)',size(ider)
+            write(out_unitp,*) ' dnVec2%nderiv',dnVec2%nderiv
+            IF (present(nderiv)) write(out_unitp,*) ' nderiv',nderiv
+            write(out_unitp,*) ' CHECK the fortran source!!'
+            STOP
+          END IF
+          IF (any(ider < 1) .OR. any(ider > dnVec2%nb_var_deriv)) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' Some ider(:) values are out-of-range.'
+            write(out_unitp,*) ' ider(:)',ider
+            write(out_unitp,*) ' derivative range [1:',dnVec2%nderiv,']'
+            write(out_unitp,*) ' CHECK the fortran source!!'
+            STOP
+          END IF
+        END IF
+
+
+        IF (present(ider)) THEN
+          SELECT CASE (size(ider))
+          CASE (3)
+            dnVec2%d3(:,ider(1),ider(2),ider(3)) = w*Vec +              &
+                                    dnVec2%d3(:,ider(1),ider(2),ider(3))
+          CASE (2)
+            dnVec2%d2(:,ider(1),ider(2)) = w*Vec + dnVec2%d2(:,ider(1),ider(2))
+          CASE (1)
+            dnVec2%d1(:,ider(1)) = w*Vec + dnVec2%d1(:,ider(1))
+          CASE (0)
+            dnVec2%d0(:) = w*Vec + dnVec2%d0
+          CASE Default
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' nderiv_loc > 3 is NOT possible',nderiv_loc
+            write(out_unitp,*) 'It should never append! Check the source'
+            STOP
+          END SELECT
+        ELSE
+            dnVec2%d0(:) = w*Vec + dnVec2%d0
+        END IF
+
+      END SUBROUTINE Vec_wADDTO_dnVec2_ider
 !================================================================
 !        dnS2 = dnS1 , dnVec2 = dnVec1 ...
 !        transfer Vec(iVec) => R or R => Vec(iVec)

@@ -76,10 +76,13 @@
       PUBLIC :: Type_dnMat,     alloc_dnMat,     dealloc_dnMat,     check_alloc_dnMat,     Write_dnMat
       PUBLIC :: Type_dnCplxMat, alloc_dnCplxMat, dealloc_dnCplxMat, check_alloc_dnCplxMat, Write_dnCplxMat
 
+      PUBLIC :: get_nderiv_FROM_dnMat,get_nb_var_deriv_FROM_dnMat
+
       PUBLIC :: alloc_array, dealloc_array
       PUBLIC :: sub_dnMat1_TO_dnMat2, sub_dnMat1_TO_LargerdnMat2, sub_dnMat1_TO_dnMat2_partial
       PUBLIC :: dnVec_TO_dnMat, sub_dnMat_TO_dnS, sub_dnS_TO_dnMat
       PUBLIC :: sub_ZERO_TO_dnMat, sub_ZERO_TO_dnCplxMat
+      PUBLIC :: Mat_wADDTO_dnMat2_ider
       PUBLIC :: dnVec1_wPLUS_dnMat2_TO_dnMat3,dnMat1_PLUS_dnMat2_TO_dnMat3
       PUBLIC :: dnMat1_MUL_dnMat2_TO_dnMat3, dnVec1_MUL_dnMat2_TO_dnVec3,dnMat1_MUL_dnVec2_TO_dnVec3
       PUBLIC :: TRANS_dnMat1_TO_dnMat2,INV_dnMat1_TO_dnMat2, Det_OF_dnMat_TO_dnS
@@ -434,6 +437,55 @@
         END IF
       END SUBROUTINE check_alloc_dnCplxMat
 
+  FUNCTION get_nderiv_FROM_dnMat(Mat) RESULT(nderiv)
+
+    integer                       :: nderiv
+    TYPE (Type_dnMat), intent(in)    :: Mat
+
+    nderiv = Mat%nderiv
+
+    IF (.NOT. associated(Mat%d0)) THEN
+      nderiv = -1
+    ELSE IF (.NOT. associated(Mat%d1)) THEN
+      nderiv = 0
+    ELSE IF (.NOT. associated(Mat%d2)) THEN
+      nderiv = 1
+    ELSE IF (.NOT. associated(Mat%d3)) THEN
+      nderiv = 2
+    ELSE
+      nderiv = 3
+    END IF
+
+    IF (Mat%nderiv /= nderiv) THEN
+      write(out_unitp,*) ' ERROR in get_nderiv_FROM_dnMat'
+      write(out_unitp,*) '  Problem with nderiv in Mat'
+      CALL Write_dnMat(Mat)
+      STOP 'ERROR in get_nderiv_FROM_dnMat'
+    END IF
+
+    END FUNCTION get_nderiv_FROM_dnMat
+  FUNCTION get_nb_var_deriv_FROM_dnMat(Mat) RESULT(nb_var_deriv)
+
+    integer                          :: nb_var_deriv
+    TYPE (Type_dnMat), intent(in)    :: Mat
+
+    nb_var_deriv = Mat%nb_var_deriv
+
+    IF (.NOT. associated(Mat%d1)) THEN
+      nb_var_deriv = 0
+    ELSE
+      nb_var_deriv = size(Mat%d1,dim=3)
+    END IF
+
+    IF (Mat%nb_var_deriv /= nb_var_deriv) THEN
+      write(out_unitp,*) ' ERROR in get_nb_var_deriv_FROM_dnMat'
+      write(out_unitp,*) '  Problem with nb_var_deriv in Mat'
+      CALL Write_dnMat(Mat)
+      STOP 'ERROR in get_nb_var_deriv_FROM_dnMat'
+    END IF
+
+    END FUNCTION get_nb_var_deriv_FROM_dnMat
+
 !================================================================
 !        write the derived type
 !================================================================
@@ -555,7 +607,73 @@
 
 
       END SUBROUTINE Write_dnCplxMat
+      SUBROUTINE Mat_wADDTO_dnMat2_ider(Mat,w,dnMat2,ider,nderiv)
+        real (kind=Rkind),  intent(in)            :: Mat(:,:)
+        TYPE (Type_dnMat),  intent(inout)         :: dnMat2
+        integer,            intent(in),  optional :: ider(:)
+        integer,            intent(in),  optional :: nderiv
+        real (kind=Rkind),  intent(in)            :: w
 
+        integer :: nderiv_loc
+        character (len=*), parameter :: name_sub='Mat_wADDTO_dnMat2_ider'
+
+        CALL check_alloc_dnMat(dnMat2,'dnMat2',name_sub)
+
+        nderiv_loc = dnMat2%nderiv
+        IF (present(nderiv)) nderiv_loc = min(nderiv_loc,nderiv)
+
+        IF (.NOT. all(shape(Mat) == shape(dnMat2%d0))) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) '  The shape of Mat dnMat2%d0 must be equal.'
+          write(out_unitp,*) '  shape(Mat):      ',shape(Mat)
+          write(out_unitp,*) '  shape(dnMat2%d0): ',shape(dnMat2%d0)
+          write(out_unitp,*) ' CHECK the fortran source!!'
+          STOP
+        END IF
+        IF (present(ider)) THEN
+          IF (size(ider) > nderiv_loc) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' size(ider) cannot be > and nderiv_loc.'
+            write(out_unitp,*) ' size(ider)',size(ider)
+            write(out_unitp,*) ' dnMat2%nderiv',dnMat2%nderiv
+            IF (present(nderiv)) write(out_unitp,*) ' nderiv',nderiv
+            write(out_unitp,*) ' CHECK the fortran source!!'
+            STOP
+          END IF
+          IF (any(ider < 1) .OR. any(ider > dnMat2%nb_var_deriv)) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' Some ider(:) values are out-of-range.'
+            write(out_unitp,*) ' ider(:)',ider
+            write(out_unitp,*) ' derivative range [1:',dnMat2%nderiv,']'
+            write(out_unitp,*) ' CHECK the fortran source!!'
+            STOP
+          END IF
+        END IF
+
+
+        IF (present(ider)) THEN
+          SELECT CASE (size(ider))
+          CASE (3)
+            dnMat2%d3(:,:,ider(1),ider(2),ider(3)) = w*Mat +            &
+                                   dnMat2%d3(:,:,ider(1),ider(2),ider(3))
+          CASE (2)
+            dnMat2%d2(:,:,ider(1),ider(2)) = w*Mat +                    &
+                                          dnMat2%d2(:,:,ider(1),ider(2))
+          CASE (1)
+            dnMat2%d1(:,:,ider(1)) = w*Mat + dnMat2%d1(:,:,ider(1))
+          CASE (0)
+            dnMat2%d0(:,:) = w*Mat + dnMat2%d0
+          CASE Default
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' nderiv_loc > 3 is NOT possible',nderiv_loc
+            write(out_unitp,*) 'It should never append! Check the source'
+            STOP
+          END SELECT
+        ELSE
+          dnMat2%d0(:,:) = w*Mat + dnMat2%d0
+        END IF
+
+      END SUBROUTINE Mat_wADDTO_dnMat2_ider
 !================================================================
 !        dnS2 = dnS1 , dnVec2 = dnVec1 ...
 !        transfer Vec(iVec) => R or R => Vec(iVec)

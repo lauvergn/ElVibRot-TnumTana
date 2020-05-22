@@ -35,22 +35,22 @@
 
       TYPE Type_RPHpara_AT_Qact1
 
-        integer               :: init_done     = 0        ! 0: no initialization yet
-                                                          ! 1: dnQopt initialization done
-                                                          ! 2: full initialization done
+        integer                       :: init_done  = 0  ! 0: no initialization yet
+                                                         ! 1: dnQopt initialization done
+                                                         ! 2: full initialization done
 
-        integer               :: nb_inact21    = 0        ! it should come from ActiveTransfo
-        integer               :: nb_act1       = 0        ! it should come from ActiveTransfo
+        integer                       :: nb_inact21 = 0  ! it should come from ActiveTransfo
+        integer                       :: nb_act1    = 0  ! it should come from ActiveTransfo
 
-        real(kind=Rkind), pointer :: Qact1(:)   => null() ! Calculation dnC... at Qact1
-        integer                   :: nderiv     = 0       ! derivative order
+        real(kind=Rkind), allocatable :: RPHQact1(:)     ! Calculation dnC... at RPHQact1 (it is not Qact of mole)
+        integer                       :: nderiv     = 0  ! derivative order
 
-        TYPE (Type_dnMat)     :: dnC,dnC_inv      ! derivative with respect to Qact1
-        TYPE (Type_dnVec)     :: dnQopt           ! derivative with respect to Qact1
-        TYPE (Type_dnVec)     :: dneHess          ! derivative with respect to Qact1
-        TYPE (Type_dnMat)     :: dnHess           ! derivative with respect to Qact1
-        TYPE (Type_dnVec)     :: dnGrad           ! derivative with respect to Qact1
-        TYPE (Type_dnS)       :: dnLnN            ! derivative with respect to Qact1
+        TYPE (Type_dnMat)             :: dnC,dnC_inv     ! derivative with respect to Qact1
+        TYPE (Type_dnVec)             :: dnQopt          ! derivative with respect to Qact1
+        TYPE (Type_dnVec)             :: dneHess         ! derivative with respect to Qact1
+        TYPE (Type_dnMat)             :: dnHess          ! derivative with respect to Qact1
+        TYPE (Type_dnVec)             :: dnGrad          ! derivative with respect to Qact1
+        TYPE (Type_dnS)               :: dnLnN           ! derivative with respect to Qact1
 
       END TYPE Type_RPHpara_AT_Qact1
 
@@ -1090,11 +1090,11 @@
          !write(out_unitp,*) 'Qact1',Qact1(:)
          DO iQa=1,RPHTransfo%nb_Qa
            !write(out_unitp,*) 'iQa,Qact1 from RPH',iQa,RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1
-           IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1)) < ONETENTH**5) EXIT
+           IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1)) < ONETENTH**5) EXIT
          END DO
 
          IF (iQa > RPHTransfo%nb_Qa) THEN
-           IF (sum(abs(Qact1-RPHTransfo%RPHpara_AT_Qref(1)%Qact1)) < ONETENTH**5) THEN
+           IF (sum(abs(Qact1-RPHTransfo%RPHpara_AT_Qref(1)%RPHQact1)) < ONETENTH**5) THEN
              IF (debug) write(out_unitp,*) 'RPHpara_AT_Qref point'
              RPHpara_AT_Qact1 => RPHTransfo%RPHpara_AT_Qref(1:1)
            ELSE
@@ -1355,11 +1355,11 @@
 
          ! find the iQa from tab_RPHpara_AT_Qact1
          DO iQa=1,RPHTransfo%nb_Qa
-           IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1)) < ONETENTH**5) EXIT
+           IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1)) < ONETENTH**5) EXIT
          END DO
 
          IF (iQa > RPHTransfo%nb_Qa) THEN
-           IF (sum(abs(Qact1-RPHTransfo%RPHpara_AT_Qref(1)%Qact1)) < ONETENTH**5) THEN
+           IF (sum(abs(Qact1-RPHTransfo%RPHpara_AT_Qref(1)%RPHQact1)) < ONETENTH**5) THEN
              IF (debug) write(out_unitp,*) 'RPHpara_AT_Qref point'
              RPHpara_AT_Qact1 => RPHTransfo%RPHpara_AT_Qref(1:1)
            ELSE
@@ -1566,11 +1566,11 @@
          ! 1b) RPHpara_AT_Qact1
          ! find the iQa from tab_RPHpara_AT_Qact1
          DO iQa=1,RPHTransfo%nb_Qa
-           IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1)) < ONETENTH**5) EXIT
+           IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1)) < ONETENTH**5) EXIT
          END DO
 
          IF (iQa > RPHTransfo%nb_Qa) THEN
-           IF (sum(abs(Qact1-RPHTransfo%RPHpara_AT_Qref(1)%Qact1)) < ONETENTH**5) THEN
+           IF (sum(abs(Qact1-RPHTransfo%RPHpara_AT_Qref(1)%RPHQact1)) < ONETENTH**5) THEN
              IF (debug) write(out_unitp,*) 'RPHpara_AT_Qref point'
              RPHpara_AT_Qact1 => RPHTransfo%RPHpara_AT_Qref(1:1)
            ELSE
@@ -1789,9 +1789,9 @@
       RPHpara_AT_Qact1%nb_inact21  = nb_inact21
       RPHpara_AT_Qact1%nderiv      = nderiv
 
-      CALL alloc_array(RPHpara_AT_Qact1%Qact1,(/ nb_act1 /),            &
-                      'RPHpara_AT_Qact1%Qact1',name_sub)
-      RPHpara_AT_Qact1%Qact1(:) = ZERO
+      CALL alloc_NParray(RPHpara_AT_Qact1%RPHQact1,(/ nb_act1 /),       &
+                        'RPHpara_AT_Qact1%RPHQact1',name_sub)
+      RPHpara_AT_Qact1%RPHQact1(:) = ZERO
 
       CALL alloc_dnSVM(RPHpara_AT_Qact1%dnC,nb_inact21,nb_inact21,nb_act1,nderiv)
       CALL sub_ZERO_TO_dnMat(RPHpara_AT_Qact1%dnC,nderiv)
@@ -1829,9 +1829,9 @@
       RPHpara_AT_Qact1%nb_inact21  = 0
       RPHpara_AT_Qact1%nderiv      = 0
 
-      IF (associated(RPHpara_AT_Qact1%Qact1))  THEN
-        CALL dealloc_array(RPHpara_AT_Qact1%Qact1,                      &
-                          'RPHpara_AT_Qact1%Qact1',name_sub)
+      IF (allocated(RPHpara_AT_Qact1%RPHQact1))  THEN
+        CALL dealloc_NParray(RPHpara_AT_Qact1%RPHQact1,                 &
+                            'RPHpara_AT_Qact1%RPHQact1',name_sub)
       END IF
 
 
@@ -1869,8 +1869,8 @@
                   RPHpara_AT_Qact1%nb_act1,RPHpara_AT_Qact1%nb_inact21
       write(out_unitp,*) 'nderiv',RPHpara_AT_Qact1%nderiv
 
-      IF (associated(RPHpara_AT_Qact1%Qact1)) THEN
-        write(out_unitp,*) 'Qact1',RPHpara_AT_Qact1%Qact1(:)
+      IF (allocated(RPHpara_AT_Qact1%RPHQact1)) THEN
+        write(out_unitp,*) 'Qact1',RPHpara_AT_Qact1%RPHQact1(:)
       END IF
 
       IF (RPHpara_AT_Qact1%dnC%alloc) THEN
@@ -1927,7 +1927,7 @@
                RPHpara1_AT_Qact1%nb_act1,RPHpara1_AT_Qact1%nb_inact21,  &
                                                RPHpara1_AT_Qact1%nderiv)
 
-        RPHpara2_AT_Qact1%Qact1(:)    = RPHpara1_AT_Qact1%Qact1(:)
+        RPHpara2_AT_Qact1%RPHQact1(:)    = RPHpara1_AT_Qact1%RPHQact1(:)
 
         CALL sub_dnMat1_TO_dnMat2(RPHpara1_AT_Qact1%dnC,RPHpara2_AT_Qact1%dnC)
 
@@ -2424,6 +2424,7 @@ implicit NONE
 
   TYPE CurviRPH_type
 
+    logical :: init     = .FALSE.
     integer :: nb_Q21   = 0
     integer :: nb_Qpath = 0
 
@@ -2449,7 +2450,7 @@ implicit NONE
   END TYPE CurviRPH_type
 
   PUBLIC :: CurviRPH_type, alloc_CurviRPH, dealloc_CurviRPH, Init_CurviRPH, &
-            get_CurviRPH, CurviRPH1_TO_CurviRPH2
+            get_CurviRPH, CurviRPH1_TO_CurviRPH2,write_CurviRPH
 
   CONTAINS
 
@@ -2485,6 +2486,8 @@ implicit NONE
   TYPE (CurviRPH_type), intent(inout) :: CurviRPH
 
   character (len=*),parameter :: name_sub='dealloc_CurviRPH'
+
+    CurviRPH%init             = .FALSE.
 
     CurviRPH%nb_pts_ForQref   = 0
     CurviRPH%nb_dev_ForQref   = 0
@@ -2528,6 +2531,7 @@ implicit NONE
 
     write(out_unitp,*) '-----------------------------------------------'
     write(out_unitp,*) 'Write_CurviRPH'
+    write(out_unitp,*) 'init       : ',CurviRPH%init
     write(out_unitp,*) 'nb_Qpath   : ',CurviRPH%nb_Qpath
     write(out_unitp,*) 'nb_Q21     : ',CurviRPH%nb_Q21
 
@@ -2591,6 +2595,7 @@ implicit NONE
         write(out_unitp,*) 'CoefHess: not allocated'
       END IF
     END IF
+    write(out_unitp,*) 'END Write_CurviRPH'
     write(out_unitp,*) '-----------------------------------------------'
     CALL flush_perso(out_unitp)
 
@@ -2603,6 +2608,8 @@ implicit NONE
 
 
     CALL dealloc_CurviRPH(CurviRPH2)
+
+    CurviRPH2%init     = CurviRPH1%init
 
     CurviRPH2%nb_Q21   = CurviRPH1%nb_Q21
     CurviRPH2%nb_Qpath = CurviRPH1%nb_Qpath
@@ -2689,8 +2696,8 @@ implicit NONE
 
 !----- for debuging ----------------------------------
   character (len=*),parameter :: name_sub='Init_CurviRPH'
-  !logical, parameter :: debug=.FALSE.
-  logical, parameter :: debug=.TRUE.
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
 !----- for debuging ----------------------------------
 
   !IF (debug) THEN
@@ -2813,6 +2820,8 @@ implicit NONE
     CALL CalcCoef_CurviRPH(CurviRPH2)
 
     CALL check_CurviRPH(CurviRPH2)
+
+    CurviRPH2%init     = .TRUE.
 
     IF (debug)     CALL Write_CurviRPH(CurviRPH2)
   !IF (debug) THEN
@@ -2967,7 +2976,6 @@ implicit NONE
   ! local variables
   real(kind=Rkind), allocatable                 :: fQpath(:)
   integer :: j,iq,jq,nb_Q21,nb_dev
-  logical, save :: begin=.TRUE.
 
 !----- for debuging ----------------------------------
   character (len=*),parameter :: name_sub='get_CurviRPH'
@@ -2978,14 +2986,14 @@ implicit NONE
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'Qpath ',Qpath
+    CALL Write_CurviRPH(CurviRPH)
     CALL flush_perso(out_unitp)
   END IF
 
 
   !$OMP CRITICAL (get_CurviRPH_CRIT)
-  IF (begin) THEN
+  IF (.NOT. CurviRPH%init) THEN
     !$  write(out_unitp,*) "F def thread",omp_get_thread_num()
-    begin = .FALSE.
 
     IF (present(Q21)) THEN
       nb_Q21=size(Q21)
@@ -2994,6 +3002,8 @@ implicit NONE
     ELSE IF (present(Hess)) THEN
       nb_Q21=size(Hess(:,1))
     ELSE
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) ' Q21 or Grad or Hess must be present.'
       STOP ' ERROR get_CurviRPH: Q21 or Grad or Hess must be present'
     END IF
 
@@ -3003,7 +3013,15 @@ implicit NONE
 
   !remark: nb_Qpath MUST be equal to 1 !!!!
   IF (present(Q21)) THEN
-    nb_dev = size(CurviRPH%CoefQref,dim=1)
+    nb_dev = CurviRPH%nb_dev_ForQref
+
+    IF (nb_dev == 0) THEN
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) 'nb_dev=0 ',nb_dev
+      write(out_unitp,*) ' The initialization has not been done! '
+      STOP ' ERROR get_CurviRPH: nb_dev=0'
+    END IF
+
     CALL alloc_NParray(fQpath,(/ nb_dev /),'fQpath',name_sub)
     DO j=1,nb_dev
       fQpath(j) = funcQpath(Qpath(1),j)
@@ -3022,7 +3040,15 @@ implicit NONE
   END IF
 
   IF (present(Grad)) THEN
-    nb_dev = size(CurviRPH%CoefGrad,dim=1)
+    nb_dev = CurviRPH%nb_dev_ForGrad
+
+    IF (nb_dev == 0) THEN
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) 'nb_dev=0 '
+      write(out_unitp,*) ' The initialization has not been done! '
+      STOP ' ERROR get_CurviRPH: nb_dev=0'
+    END IF
+
     CALL alloc_NParray(fQpath,(/ nb_dev /),'fQpath',name_sub)
     DO j=1,nb_dev
       fQpath(j) = funcQpath(Qpath(1),j)
@@ -3041,7 +3067,15 @@ implicit NONE
   END IF
 
   IF (present(Hess)) THEN
-    nb_dev = size(CurviRPH%CoefHess,dim=1)
+    nb_dev = CurviRPH%nb_dev_ForHess
+
+    IF (nb_dev == 0) THEN
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) 'nb_dev=0 '
+      write(out_unitp,*) ' The initialization has not been done! '
+      STOP ' ERROR get_CurviRPH: nb_dev=0'
+    END IF
+
     CALL alloc_NParray(fQpath,(/ nb_dev /),'fQpath',name_sub)
     DO j=1,nb_dev
       fQpath(j) = funcQpath(Qpath(1),j)

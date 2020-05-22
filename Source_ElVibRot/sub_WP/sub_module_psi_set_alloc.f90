@@ -999,6 +999,8 @@
          RCPsi(2)%RvecG(:) = aimag(psi%CvecG(:))
       END IF
 
+
+
 !     write(out_unitp,*) 'END CplxPsi_TO_RCpsi'
 
       END SUBROUTINE CplxPsi_TO_RCpsi

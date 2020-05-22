@@ -938,7 +938,7 @@ CONTAINS
       !- determination of Hmax --------------------------------
       IF (para_Op%cplx) THEN
         DO i=1,para_Op%nb_tot
-          para_Op%Hmax = max(para_Op%Hmax,real(para_Op%Cmat(i,i)))
+          para_Op%Hmax = max(para_Op%Hmax,real(para_Op%Cmat(i,i),kind=Rkind))
         END DO
        ELSE
         DO i=1,para_Op%nb_tot
@@ -1271,7 +1271,7 @@ CONTAINS
       !- determination of Hmax --------------------------------
       DO i=1,para_Op%nb_tot
         IF (para_Op%cplx) THEN
-          Hinter = real(para_Op%Cmat(i,i))
+          Hinter = real(para_Op%Cmat(i,i),kind=Rkind)
         ELSE
           Hinter = para_Op%Rmat(i,i)
         END IF
@@ -1761,7 +1761,7 @@ CONTAINS
       !- determination of Hmax --------------------------------
       DO i=1,para_Op%nb_tot
         IF (para_Op%cplx) THEN
-          Hinter = real(para_Op%Cmat(i,i))
+          Hinter = real(para_Op%Cmat(i,i),kind=Rkind)
         ELSE
           Hinter = para_Op%Rmat(i,i)
         END IF
@@ -2185,7 +2185,7 @@ CONTAINS
       !- determination of Hmax --------------------------------
       DO i=1,para_Op%nb_tot
         IF (para_Op%cplx) THEN
-          Hinter = real(para_Op%Cmat(i,i))
+          Hinter = real(para_Op%Cmat(i,i),kind=Rkind)
         ELSE
           Hinter = para_Op%Rmat(i,i)
         END IF

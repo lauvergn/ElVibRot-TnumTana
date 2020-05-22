@@ -549,6 +549,8 @@ Obj_dnSVM = \
   $(OBJ)/sub_module_dnV.o $(OBJ)/sub_module_dnM.o $(OBJ)/sub_module_IntVM.o \
   $(OBJ)/sub_module_dnSVM.o
 
+Obj_FiniteDiff = $(OBJ)/mod_FiniteDiff.o
+
 # nDindex, Minimize Only list: OK
 # USE mod_mod_nDindex and mod_module_DInd
 Obj_nDindex  = $(OBJ)/sub_module_DInd.o $(OBJ)/sub_module_nDindex.o
@@ -556,7 +558,10 @@ Obj_nDindex  = $(OBJ)/sub_module_DInd.o $(OBJ)/sub_module_nDindex.o
 # nDfit, Minimize Only list: OK
 Obj_nDfit    = $(OBJ)/sub_module_nDfit.o
 
-Obj_lib  = $(Obj_Primlib) $(Obj_math) $(Obj_io) $(Obj_dnSVM) $(Obj_nDindex) $(Obj_nDfit)
+Obj_lib  = $(Obj_Primlib) $(Obj_math) $(Obj_io) $(Obj_dnSVM) \
+           $(Obj_FiniteDiff) $(Obj_nDindex) $(Obj_nDfit)
+
+
 #============================================================================
 
 #============================================================================
@@ -582,9 +587,7 @@ Obj_TanaPrim = $(OBJ)/sub_module_Tana_OpEl.o \
   $(OBJ)/sub_module_Tana_SumOpnD.o $(OBJ)/sub_module_Tana_VecSumOpnD.o \
   $(OBJ)/sub_module_Tana_PiEulerRot.o
 
-#Qtransfo obj, Minimize Only list: Lib_QTransfo, Active, BunchPoly, Cartesian, Flexible, Gene
-#                                  HyperSphe, OneD, ThreeD, Rot2Coord, LinearNM, RectilinearNM
-#                                  RPH, Qtransfo
+
 Obj_Coord = \
   $(OBJ)/Lib_QTransfo.o \
   $(OBJ)/BunchPolyTransfo.o $(OBJ)/ZmatTransfo.o $(OBJ)/QTOXanaTransfo.o $(OBJ)/CartesianTransfo.o \
@@ -617,7 +620,7 @@ Obj_Coord_KEO = $(Obj_TanaPrim) $(Obj_Coord) $(Obj_Tnum) $(Obj_Tana) $(Obj_TnumT
 #Primitive Operators, Minimize Only list: OK
 Obj_PrimOperator = \
    $(OBJ)/sub_module_SimpleOp.o $(OBJ)/sub_module_OnTheFly_def.o $(OBJ)/sub_PrimOp_def.o \
-   $(OBJ)/sub_onthefly.o $(OBJ)/sub_PrimOp.o \
+   $(OBJ)/sub_onthefly.o $(OBJ)/sub_PrimOp_RPH.o $(OBJ)/sub_PrimOp.o \
    $(OBJ)/sub_system.o $(OBJ)/read_para.o
 #============================================================================
 
@@ -626,6 +629,7 @@ Obj_PrimOperator = \
 Obj_KEO_PrimOp= \
   $(Obj_lib) $(Obj_PhyCte) $(OBJ)/versionEVR-T.o \
   $(Obj_Coord_KEO) $(Obj_PrimOperator) $(OBJ)/Module_ForTnumTana_Driver.o $(OBJ)/TnumTana_Lib.o
+
 #============================================================
 
 
@@ -948,6 +952,9 @@ $(OBJ)/sub_module_IntVM.o:$(DirdnSVM)/sub_module_IntVM.f90
 $(OBJ)/sub_module_dnSVM.o:$(DirdnSVM)/sub_module_dnSVM.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnSVM.f90
 #
+$(OBJ)/mod_FiniteDiff.o:$(DirSys)/mod_FiniteDiff.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/mod_FiniteDiff.f90
+#
 $(OBJ)/sub_module_nDfit.o:$(DirMod)/sub_module_nDfit.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMod)/sub_module_nDfit.f90
 #
@@ -1068,6 +1075,8 @@ $(OBJ)/sub_PrimOp_def.o:$(DIRPrimOp)/sub_PrimOp_def.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_PrimOp_def.f90
 $(OBJ)/sub_module_OnTheFly_def.o:$(DIRPrimOp)/sub_module_OnTheFly_def.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_module_OnTheFly_def.f90
+$(OBJ)/sub_PrimOp_RPH.o:$(DIRPrimOp)/sub_PrimOp_RPH.f90
+	cd $(OBJ) ; $(F90_FLAGS)  -c $(DIRPrimOp)/sub_PrimOp_RPH.f90
 $(OBJ)/sub_PrimOp.o:$(DIRPrimOp)/sub_PrimOp.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_QML)  -c $(DIRPrimOp)/sub_PrimOp.f90
 $(OBJ)/sub_onthefly.o:$(DIRPrimOp)/sub_onthefly.f90

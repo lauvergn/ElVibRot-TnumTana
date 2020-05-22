@@ -172,7 +172,15 @@
         CALL march_SIL(T,no,WP(1),WP0(1),para_H,para_propa)
 
       CASE (9) ! Short Iterative Propagation (Lanczos with complete orthogonalisation)
-        CALL march_SIP(T,no,WP(1),WP0(1),para_H,para_propa)
+        !CALL march_SIP(T,no,WP(1),WP0(1),para_H,para_propa)
+        !CALL march_SIP2(T,no,WP(1),WP0(1),para_H,para_propa)
+        IF (SGtype4) THEN
+          !CALL march_SIP2_Srep(T,no,WP(1),WP0(1),para_H,para_propa)
+          CALL march_SIP2_Srep2(T,no,WP(1),WP0(1),para_H,para_propa)
+        ELSE
+          CALL march_SIP(T,no,WP(1),WP0(1),para_H,para_propa)
+          !CALL march_SIP2(T,no,WP(1),WP0(1),para_H,para_propa)
+        END IF
 
       CASE (10) ! Spectral (bug???)
         CALL march_Spectral(T,no,WP(1),WP0(1),para_H,para_propa)
@@ -1714,6 +1722,665 @@
 !-----------------------------------------------------------
 
   END SUBROUTINE march_SIP
+  SUBROUTINE march_SIP2(T,no,psi,psi0,para_H,para_propa)
+      USE mod_system
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,Overlap_psi1_psi2
+      USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)                      :: para_H
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_propa),    intent(inout)  :: para_propa
+      TYPE (param_psi),      intent(in)     :: psi0
+      TYPE (param_psi),      intent(inout)  :: psi
+      integer,               intent(in)     :: no
+      real (kind=Rkind),     intent(in)     :: T
+
+!------ working variables ---------------------------------
+      complex (kind=Rkind)      :: cdot
+      real (kind=Rkind)         :: E0,microT,microdeltaT,phase,microphase
+      complex (kind=Rkind)      :: psi0_psiKrylovSpace(para_propa%para_poly%npoly)
+
+      integer                            :: n
+      complex (kind=Rkind)               :: H(para_propa%para_poly%npoly,para_propa%para_poly%npoly)
+      complex (kind=Rkind)               :: S(para_propa%para_poly%npoly+1,para_propa%para_poly%npoly+1)
+      complex (kind=Rkind), allocatable  :: UPsiOnKrylov(:)
+      complex (kind=Rkind), allocatable  :: Vec(:,:)
+      real (kind=Rkind),    allocatable  :: Eig(:)
+
+      TYPE (param_psi),     allocatable  :: tab_KrylovSpace(:)
+      complex (kind=Rkind)               :: Overlap,UPspectral_n
+
+
+      integer              :: it,i,j
+
+!----- for debuging --------------------------------------------------
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='march_SIP2'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'deltaT',para_propa%WPdeltaT
+        write(out_unitp,*) 'E0,Esc',para_H%E0,para_H%Esc
+        write(out_unitp,*) 'order',para_propa%para_poly%npoly
+        write(out_unitp,*) 'tol',para_propa%para_poly%poly_tol
+      END IF
+!-----------------------------------------------------------
+
+      allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1))
+
+      tab_KrylovSpace(1) = psi
+
+      E0 = para_H%E0
+      H(:,:) = CZERO
+      S(:,:) = CZERO
+      S(1,1) = CONE
+      ! loop for H|psi>, H^2|psi>, H^3|psi>...
+      DO j=2,para_propa%para_poly%npoly+1
+        IF (debug) write(out_unitp,*) 'in ',name_sub,' it:',j-1
+        CALL sub_OpPsi(Psi  =tab_KrylovSpace(j-1),                      &
+                       OpPsi=tab_KrylovSpace(j),para_Op=para_H)
+!        IF (j == 2) THEN
+!          ! Energy shift, E0, calculation for the first iteration.
+!          ! since E0=<psi |H| psi> = <tab_KrylovSpace(1) |H|tab_KrylovSpace(1)> =
+!          ! ..  <tab_KrylovSpace(1) | tab_KrylovSpace(2)>
+!          ! This shift is important to improve the stability.
+!          ! => But the phase need to be taking into account at the end of the iterations.
+!          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(1),tab_KrylovSpace(2))
+!          E0 = real(Overlap,kind=Rkind)
+!        END IF
+        CALL sub_scaledOpPsi(Psi  =tab_KrylovSpace(j-1),                &
+                             OpPsi=tab_KrylovSpace(j),E0=E0,Esc=ONE)
+
+        !make part of the S matrix (related to the vector j)
+        ! and then H (part of S)
+        DO i=1,j
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(i),tab_KrylovSpace(j))
+          S(i,j) = Overlap
+          S(j,i) = conjg(Overlap)
+        END DO
+        H(1:j-1,1:j-1) = S(1:j-1,2:j)
+
+        write(out_unitp,*)
+        write(out_unitp,*) 'Real(S)'
+        CALL Write_Mat(real(S(1:j,1:j),kind=Rkind),out_unitp,6,Rformat='(f18.14)')
+        write(out_unitp,*) 'im(S)'
+        CALL Write_Mat(aimag(S(1:j,1:j)),out_unitp,6,Rformat='(f18.14)')
+
+
+        ! psi(t+dt)=sum_{i}^{n} <Vec|psi_0>exp(-i*Ei*dt) |Vec>
+        ! n=j-1
+        CALL UGPsi_spec(UPsiOnKrylov,UPspectral_n,H(1:j-1,1:j-1),       &
+                        S(1:j-1,1:j-1),Vec,Eig,para_propa%WPdeltaT,     &
+                        j-1,With_diago=.TRUE.)
+        !IF (debug) write(out_unitp,*) j-1,'abs(UPspectral_n)',abs(UPspectral_n)
+        IF (abs(UPspectral_n) < para_propa%para_poly%poly_tol .OR. &
+            j == para_propa%para_poly%npoly+1) THEN
+          n = j-1
+          write(out_unitp,*) n,'abs(UPspectral_n)',abs(UPspectral_n)
+          EXIT
+        END IF
+
+      END DO
+
+      IF (abs(UPspectral_n) > para_propa%para_poly%poly_tol) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' The last vector, UPsiOnKrylov(n), coeficient is TOO large'
+        write(out_unitp,*) '    abs(UPspectral_n)',abs(UPspectral_n)
+        write(out_unitp,*) '    poly_tol: ',para_propa%para_poly%poly_tol
+        write(out_unitp,*) ' => npoly is TOO small',para_propa%para_poly%npoly
+        write(out_unitp,*) ' or'
+        write(out_unitp,*) ' => Reduce the time step !!'
+        STOP
+      END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'Eig',Eig(1:n)
+        write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n))
+      END IF
+
+      Psi = ZERO
+      DO i=1,n
+        Psi = Psi + UPsiOnKrylov(i)*tab_KrylovSpace(i)
+      END DO
+
+      !- check norm ------------------
+      CALL norm2_psi(psi)
+      IF ( psi%norm2 > para_propa%max_norm2) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norm2
+        para_propa%march_error   = .TRUE.
+        para_propa%test_max_norm = .TRUE.
+        STOP
+      END IF
+
+      !- Phase Shift -----------------
+      phase = E0*para_propa%WPdeltaT
+      psi   = psi * exp(-EYE*phase)
+      cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+      CALL flush_perso(no)
+
+
+      ! deallocation
+      DO i=1,size(tab_KrylovSpace)
+         CALL dealloc_psi(tab_KrylovSpace(i))
+      END DO
+      deallocate(tab_KrylovSpace)
+      IF (allocated(Vec))          CALL dealloc_NParray(Vec,'Vec',name_sub)
+      IF (allocated(Eig))          CALL dealloc_NParray(Eig,'Eig',name_sub)
+      IF (allocated(UPsiOnKrylov)) CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        CALL norm2_psi(psi)
+        write(out_unitp,*) 'norm psi',psi%norm2
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+  END SUBROUTINE march_SIP2
+  SUBROUTINE march_SIP2_SRep(T,no,psi,psi0,para_H,para_propa)
+      USE mod_system
+      USE mod_psi
+      USE mod_Op
+      USE mod_OpPsi_SG4
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)                      :: para_H
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_propa),    intent(inout)  :: para_propa
+      TYPE (param_psi),      intent(in)     :: psi0
+      TYPE (param_psi),      intent(inout)  :: psi
+      integer,               intent(in)     :: no
+      real (kind=Rkind),     intent(in)     :: T
+
+!------ working variables ---------------------------------
+      complex (kind=Rkind)      :: cdot
+      real (kind=Rkind)         :: E0,phase
+
+      integer                             :: n
+      complex (kind=Rkind)                :: H(para_propa%para_poly%npoly,para_propa%para_poly%npoly)
+      complex (kind=Rkind)                :: S(para_propa%para_poly%npoly+1,para_propa%para_poly%npoly+1)
+      complex (kind=Rkind), allocatable   :: UPsiOnKrylov(:)
+      complex (kind=Rkind)                :: UPspectral_n
+
+      complex (kind=Rkind), allocatable   :: Vec(:,:)
+      real (kind=Rkind),    allocatable   :: Eig(:)
+
+      real (kind=Rkind),    allocatable   :: S11,S12,S21,S22
+      integer                             :: iG,tab_l(psi%BasisnD%nb_basis)
+
+      TYPE (param_psi)                    :: RCPsi(2),RCpsi0(2)
+      TYPE (Type_SmolyakRep)              :: PsiSRep(2),Psi0SRep(2)
+      TYPE (Type_SmolyakRep), allocatable :: tab_KrylovSpace(:,:)
+
+      TYPE (Basis),  pointer    :: BasisnD       => null()   ! .TRUE. pointer
+
+      integer              :: it,i,j
+
+!----- for debuging --------------------------------------------------
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='march_SIP2_SRep'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'deltaT',para_propa%WPdeltaT
+        write(out_unitp,*) 'E0,Esc',para_H%E0,para_H%Esc
+        write(out_unitp,*) 'order',para_propa%para_poly%npoly
+      END IF
+!-----------------------------------------------------------
+     BasisnD => psi%BasisnD
+
+
+      RCPsi  = psi
+      !RCPsi0 = psi0
+
+      CALL tabPackedBasis_TO_SmolyakRepBasis(PsiSRep(1),RCPsi(1)%RVecB, &
+                                BasisnD%tab_basisPrimSG,BasisnD%nDindB, &
+                                BasisnD%para_SGType2)
+      CALL tabPackedBasis_TO_SmolyakRepBasis(PsiSRep(2),RCPsi(2)%RVecB, &
+                                BasisnD%tab_basisPrimSG,BasisnD%nDindB, &
+                                BasisnD%para_SGType2)
+
+      allocate(tab_KrylovSpace(2,para_propa%para_poly%npoly+1)) ! the 2 for the Real and imaginary part.
+
+      tab_KrylovSpace(1,1) = PsiSRep(1)
+      tab_KrylovSpace(2,1) = PsiSRep(2)
+
+
+      E0 = para_H%E0
+      H(:,:) = CZERO
+      S(:,:) = CZERO
+      S(1,1) = CONE
+
+      ! loop for H|psi>, H^2|psi>, H^3|psi>...
+      DO j=2,para_propa%para_poly%npoly+1
+        IF (debug) write(out_unitp,*) 'in ',name_sub,' it:',j-1
+
+        ! loop on the Smolyak terms
+        tab_l(:) = BasisnD%para_SGType2%nDval_init(:,1)
+        DO iG=1,BasisnD%para_SGType2%nb_SG
+          CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
+
+          ! H psi (we must copy because sub_OpPsi_OF_ONEDP_FOR_SGtype4 works on the one vector: psi=Hpsi)
+          tab_KrylovSpace(1,j) = tab_KrylovSpace(1,j-1)
+          tab_KrylovSpace(2,j) = tab_KrylovSpace(2,j-1)
+
+          CALL sub_OpPsi_OF_ONEDP_FOR_SGtype4(tab_KrylovSpace(1,j)%SmolyakRep(iG),  &
+                                              iG,tab_l,para_H)
+          CALL sub_OpPsi_OF_ONEDP_FOR_SGtype4(tab_KrylovSpace(2,j)%SmolyakRep(iG),  &
+                                              iG,tab_l,para_H)
+
+          !shifting HPsi (E0 is real)
+          tab_KrylovSpace(1,j)%SmolyakRep(iG)%V = tab_KrylovSpace(1,j  )%SmolyakRep(iG)%V - &
+                                               E0*tab_KrylovSpace(1,j-1)%SmolyakRep(iG)%V
+          tab_KrylovSpace(2,j)%SmolyakRep(iG)%V = tab_KrylovSpace(2,j  )%SmolyakRep(iG)%V - &
+                                               E0*tab_KrylovSpace(2,j-1)%SmolyakRep(iG)%V
+
+          ! update the S matrix (related to the vector j)
+          DO i=1,j
+            !CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(i),tab_KrylovSpace(j))
+            !Overlap=< V(1,i)-i*V(2,i) | V(1,j)+i*V(2,j)> = (S11+S22)+i*(S12-S21)
+            S11 = dot_product(tab_KrylovSpace(1,i)%SmolyakRep(iG)%V,tab_KrylovSpace(1,j)%SmolyakRep(iG)%V)
+            S22 = dot_product(tab_KrylovSpace(2,i)%SmolyakRep(iG)%V,tab_KrylovSpace(2,j)%SmolyakRep(iG)%V)
+            S12 = dot_product(tab_KrylovSpace(1,i)%SmolyakRep(iG)%V,tab_KrylovSpace(2,j)%SmolyakRep(iG)%V)
+            S21 = dot_product(tab_KrylovSpace(2,i)%SmolyakRep(iG)%V,tab_KrylovSpace(1,j)%SmolyakRep(iG)%V)
+
+            S(i,j) = S(i,j) + BasisnD%WeightSG(iG)*cmplx(S11+S22, S12-S21,kind=Rkind)
+
+            S(j,i) = conjg(S(i,j))
+            !S11 = dot_product(tab_KrylovSpace(1,j)%SmolyakRep(iG)%V,tab_KrylovSpace(1,i)%SmolyakRep(iG)%V)
+            !S22 = dot_product(tab_KrylovSpace(2,j)%SmolyakRep(iG)%V,tab_KrylovSpace(2,i)%SmolyakRep(iG)%V)
+            !S12 = dot_product(tab_KrylovSpace(1,j)%SmolyakRep(iG)%V,tab_KrylovSpace(2,i)%SmolyakRep(iG)%V)
+            !S21 = dot_product(tab_KrylovSpace(2,j)%SmolyakRep(iG)%V,tab_KrylovSpace(1,i)%SmolyakRep(iG)%V)
+            !S(j,i) = S(j,i) + BasisnD%WeightSG(iG)*cmplx(S11+S22, S12-S21,kind=Rkind)
+
+          END DO
+
+        END DO
+        ! End of the Smolyak term loop
+
+        write(out_unitp,*)
+        write(out_unitp,*) 'Real(S)'
+        CALL Write_Mat(real(S(1:j,1:j),kind=Rkind),out_unitp,6,Rformat='(f18.14)')
+        write(out_unitp,*) 'im(S)'
+        CALL Write_Mat(aimag(S(1:j,1:j)),out_unitp,6,Rformat='(f18.14)')
+
+        ! The matrix H is a part of S
+        H(1:j-1,1:j-1) = S(1:j-1,2:j)
+        !H(1:j-1,1:j-1) = HALF*(H(1:j-1,1:j-1) + conjg(transpose(H(1:j-1,1:j-1))))
+
+        ! psi(t+dt)=sum_{i}^{n} <Vec|psi_0>exp(-i*Ei*dt) |Vec>
+        ! n=j-1
+        CALL UGPsi_spec(UPsiOnKrylov,UPspectral_n,H(1:j-1,1:j-1),       &
+                        S(1:j-1,1:j-1),Vec,Eig,para_propa%WPdeltaT,     &
+                        j-1,With_diago=.TRUE.)
+        !IF (debug) write(out_unitp,*) j-1,'abs(UPspectral_n)',abs(UPspectral_n)
+        IF (abs(UPspectral_n) < para_propa%para_poly%poly_tol .OR. &
+            j == para_propa%para_poly%npoly+1) THEN
+          n = j-1
+          write(out_unitp,*) n,'abs(UPspectral_n)',abs(UPspectral_n)
+          EXIT
+        END IF
+
+      END DO
+
+      IF (abs(UPspectral_n) > para_propa%para_poly%poly_tol) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' The last vector, UPsiOnKrylov(n), coeficient is TOO large'
+        write(out_unitp,*) '    abs(UPspectral_n)',abs(UPspectral_n)
+        write(out_unitp,*) '    poly_tol: ',para_propa%para_poly%poly_tol
+        write(out_unitp,*) ' => npoly is TOO small',para_propa%para_poly%npoly
+        write(out_unitp,*) ' or'
+        write(out_unitp,*) ' => Reduce the time step !!'
+        STOP
+      END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'Eig',Eig(1:n)
+        write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n))
+      END IF
+
+      !Psi = ZERO
+      PsiSRep(1) = ZERO
+      PsiSRep(2) = ZERO
+      DO i=1,n
+        !Psi = Psi + UPsiOnKrylov(i)*tab_KrylovSpace(i)
+        PsiSRep(1) = PsiSRep(1) +                                       &
+                real(UPsiOnKrylov(i),kind=Rkind)*tab_KrylovSpace(1,i) - &
+                aimag(UPsiOnKrylov(i))*tab_KrylovSpace(2,i)
+
+        PsiSRep(2) = PsiSRep(2) +                                       &
+                real(UPsiOnKrylov(i),kind=Rkind)*tab_KrylovSpace(2,i) + &
+                aimag(UPsiOnKrylov(i))*tab_KrylovSpace(1,i)
+
+      END DO
+
+      CALL SmolyakRepBasis_TO_tabPackedBasis(PsiSRep(1),RCPsi(1)%RVecB, &
+                                BasisnD%tab_basisPrimSG,BasisnD%nDindB, &
+                                BasisnD%para_SGType2,BasisnD%WeightSG)
+      CALL SmolyakRepBasis_TO_tabPackedBasis(PsiSRep(2),RCPsi(2)%RVecB, &
+                                BasisnD%tab_basisPrimSG,BasisnD%nDindB, &
+                                BasisnD%para_SGType2,BasisnD%WeightSG)
+
+      psi = RCPsi
+
+
+      !- check norm ------------------
+      CALL norm2_psi(psi)
+      IF ( psi%norm2 > para_propa%max_norm2) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norm2
+        para_propa%march_error   = .TRUE.
+        para_propa%test_max_norm = .TRUE.
+        STOP
+      END IF
+
+      !- Phase Shift -----------------
+      phase = E0*para_propa%WPdeltaT
+      psi   = psi * exp(-EYE*phase)
+      cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+      CALL flush_perso(no)
+
+
+      ! deallocation
+      DO i=1,size(tab_KrylovSpace(1,:))
+         CALL dealloc_SmolyakRep(tab_KrylovSpace(1,i))
+         CALL dealloc_SmolyakRep(tab_KrylovSpace(2,i))
+      END DO
+      deallocate(tab_KrylovSpace)
+       CALL dealloc_psi(RCPsi(1))
+       CALL dealloc_psi(RCPsi(2))
+
+      IF (allocated(Vec))          CALL dealloc_NParray(Vec,'Vec',name_sub)
+      IF (allocated(Eig))          CALL dealloc_NParray(Eig,'Eig',name_sub)
+      IF (allocated(UPsiOnKrylov)) CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        CALL norm2_psi(psi)
+        write(out_unitp,*) 'norm psi',psi%norm2
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+  END SUBROUTINE march_SIP2_SRep
+  SUBROUTINE march_SIP2_SRep2(T,no,psi,psi0,para_H,para_propa)
+      USE mod_system
+      USE mod_psi
+      USE mod_Op
+      USE mod_OpPsi_SG4
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)                      :: para_H
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_propa),    intent(inout)  :: para_propa
+      TYPE (param_psi),      intent(in)     :: psi0
+      TYPE (param_psi),      intent(inout)  :: psi
+      integer,               intent(in)     :: no
+      real (kind=Rkind),     intent(in)     :: T
+
+!------ working variables ---------------------------------
+      complex (kind=Rkind)      :: cdot
+      real (kind=Rkind)         :: E0,phase
+
+      integer                             :: n
+      complex (kind=Rkind)                :: H(para_propa%para_poly%npoly,para_propa%para_poly%npoly)
+      complex (kind=Rkind)                :: S(para_propa%para_poly%npoly+1,para_propa%para_poly%npoly+1)
+      complex (kind=Rkind), allocatable   :: UPsiOnKrylov(:)
+      complex (kind=Rkind)                :: UPspectral_n
+
+      complex (kind=Rkind), allocatable   :: Vec(:,:)
+      real (kind=Rkind),    allocatable   :: Eig(:)
+
+      real (kind=Rkind),    allocatable   :: S11,S12,S21,S22
+      integer                             :: iG,tab_l(psi%BasisnD%nb_basis)
+
+      TYPE (param_psi)                    :: RCPsi(2),RCpsi0(2)
+      TYPE (Type_SmolyakRep)              :: PsiSRep(2),Psi0SRep(2)
+      TYPE (Type_SmolyakRep), allocatable :: tab_KrylovSpace(:,:)
+      TYPE (Type_SmolyakRep)              :: HPsiSRep(2)
+
+      TYPE (Basis),  pointer    :: BasisnD       => null()   ! .TRUE. pointer
+
+      integer              :: it,i,j
+
+!----- for debuging --------------------------------------------------
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='march_SIP2_SRep2'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'deltaT',para_propa%WPdeltaT
+        write(out_unitp,*) 'E0,Esc',para_H%E0,para_H%Esc
+        write(out_unitp,*) 'order',para_propa%para_poly%npoly
+      END IF
+!-----------------------------------------------------------
+     BasisnD => psi%BasisnD
+
+
+      RCPsi  = psi
+      !RCPsi0 = psi0
+
+      CALL tabPackedBasis_TO_SmolyakRepBasis(PsiSRep(1),RCPsi(1)%RVecB, &
+                                BasisnD%tab_basisPrimSG,BasisnD%nDindB, &
+                                BasisnD%para_SGType2)
+      CALL tabPackedBasis_TO_SmolyakRepBasis(PsiSRep(2),RCPsi(2)%RVecB, &
+                                BasisnD%tab_basisPrimSG,BasisnD%nDindB, &
+                                BasisnD%para_SGType2)
+
+      allocate(tab_KrylovSpace(2,para_propa%para_poly%npoly+1)) ! the 2 for the Real and imaginary part.
+
+      tab_KrylovSpace(1,1) = PsiSRep(1)
+      tab_KrylovSpace(2,1) = PsiSRep(2)
+
+
+      E0 = para_H%E0
+      H(:,:) = CZERO
+      S(:,:) = CZERO
+      S(1,1) = CONE
+
+      ! loop for H|psi>, H^2|psi>, H^3|psi>...
+      DO j=2,para_propa%para_poly%npoly+1
+        IF (debug) write(out_unitp,*) 'in ',name_sub,' it:',j-1
+
+        ! loop on the Smolyak terms
+        tab_l(:) = BasisnD%para_SGType2%nDval_init(:,1)
+        DO iG=1,BasisnD%para_SGType2%nb_SG
+          CALL ADD_ONE_TO_nDindex(BasisnD%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
+
+          ! H psi (we must copy because sub_OpPsi_OF_ONEDP_FOR_SGtype4 works on the one vector: psi=Hpsi)
+          tab_KrylovSpace(1,j) = tab_KrylovSpace(1,j-1)
+          tab_KrylovSpace(2,j) = tab_KrylovSpace(2,j-1)
+
+          CALL sub_OpPsi_OF_ONEDP_FOR_SGtype4(tab_KrylovSpace(1,j)%SmolyakRep(iG),  &
+                                              iG,tab_l,para_H)
+          CALL sub_OpPsi_OF_ONEDP_FOR_SGtype4(tab_KrylovSpace(2,j)%SmolyakRep(iG),  &
+                                              iG,tab_l,para_H)
+
+          !shifting HPsi (E0 is real)
+          tab_KrylovSpace(1,j)%SmolyakRep(iG)%V = tab_KrylovSpace(1,j  )%SmolyakRep(iG)%V - &
+                                               E0*tab_KrylovSpace(1,j-1)%SmolyakRep(iG)%V
+          tab_KrylovSpace(2,j)%SmolyakRep(iG)%V = tab_KrylovSpace(2,j  )%SmolyakRep(iG)%V - &
+                                               E0*tab_KrylovSpace(2,j-1)%SmolyakRep(iG)%V
+
+          ! update the S matrix (related to the vector j)
+          DO i=1,j
+            !CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(i),tab_KrylovSpace(j))
+            !Overlap=< V(1,i)-i*V(2,i) | V(1,j)+i*V(2,j)> = (S11+S22)+i*(S12-S21)
+            S11 = dot_product(tab_KrylovSpace(1,i)%SmolyakRep(iG)%V,tab_KrylovSpace(1,j)%SmolyakRep(iG)%V)
+            S22 = dot_product(tab_KrylovSpace(2,i)%SmolyakRep(iG)%V,tab_KrylovSpace(2,j)%SmolyakRep(iG)%V)
+            S12 = dot_product(tab_KrylovSpace(1,i)%SmolyakRep(iG)%V,tab_KrylovSpace(2,j)%SmolyakRep(iG)%V)
+            S21 = dot_product(tab_KrylovSpace(2,i)%SmolyakRep(iG)%V,tab_KrylovSpace(1,j)%SmolyakRep(iG)%V)
+
+            S(i,j) = S(i,j) + BasisnD%WeightSG(iG)*cmplx(S11+S22, S12-S21,kind=Rkind)
+
+            IF (j /= i) S(j,i) = conjg(S(i,j))
+            !S11 = dot_product(tab_KrylovSpace(1,j)%SmolyakRep(iG)%V,tab_KrylovSpace(1,i)%SmolyakRep(iG)%V)
+            !S22 = dot_product(tab_KrylovSpace(2,j)%SmolyakRep(iG)%V,tab_KrylovSpace(2,i)%SmolyakRep(iG)%V)
+            !S12 = dot_product(tab_KrylovSpace(1,j)%SmolyakRep(iG)%V,tab_KrylovSpace(2,i)%SmolyakRep(iG)%V)
+            !S21 = dot_product(tab_KrylovSpace(2,j)%SmolyakRep(iG)%V,tab_KrylovSpace(1,i)%SmolyakRep(iG)%V)
+            !S(j,i) = S(j,i) + BasisnD%WeightSG(iG)*cmplx(S11+S22, S12-S21,kind=Rkind)
+
+          END DO
+
+
+          ! H psi (we must copy because sub_OpPsi_OF_ONEDP_FOR_SGtype4 works on the one vector: psi=Hpsi)
+          ! => for j-1
+          HPsiSRep(1) = tab_KrylovSpace(1,j-1)
+          HPsiSRep(2) = tab_KrylovSpace(2,j-1)
+
+          CALL sub_OpPsi_OF_ONEDP_FOR_SGtype4(HPsiSRep(1)%SmolyakRep(iG),iG,tab_l,para_H)
+          CALL sub_OpPsi_OF_ONEDP_FOR_SGtype4( HPsiSRep(2)%SmolyakRep(iG),iG,tab_l,para_H)
+
+          !shifting HPsi (E0 is real)
+          HPsiSRep(1)%SmolyakRep(iG)%V = HPsiSRep(1)%SmolyakRep(iG)%V - &
+                           E0*tab_KrylovSpace(1,j-1)%SmolyakRep(iG)%V
+          HPsiSRep(2)%SmolyakRep(iG)%V = HPsiSRep(2)%SmolyakRep(iG)%V - &
+                           E0*tab_KrylovSpace(2,j-1)%SmolyakRep(iG)%V
+
+          DO i=1,j-1
+            !CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(i),tab_KrylovSpace(j))
+            !Overlap=< V(1,i)-i*V(2,i) | V(1,j)+i*V(2,j)> = (S11+S22)+i*(S12-S21)
+            S11 = dot_product(tab_KrylovSpace(1,i)%SmolyakRep(iG)%V,HPsiSRep(1)%SmolyakRep(iG)%V)
+            S22 = dot_product(tab_KrylovSpace(2,i)%SmolyakRep(iG)%V,HPsiSRep(2)%SmolyakRep(iG)%V)
+            S12 = dot_product(tab_KrylovSpace(1,i)%SmolyakRep(iG)%V,HPsiSRep(2)%SmolyakRep(iG)%V)
+            S21 = dot_product(tab_KrylovSpace(2,i)%SmolyakRep(iG)%V,HPsiSRep(1)%SmolyakRep(iG)%V)
+
+            H(i,j-1) = H(i,j-1) + BasisnD%WeightSG(iG)*cmplx(S11+S22, S12-S21,kind=Rkind)
+
+            IF (i /= (j-1) ) H(j-1,i) = conjg(H(i,j-1)) !!????
+
+          END DO
+
+        END DO
+        ! End of the Smolyak term loop
+
+        write(out_unitp,*)
+        write(out_unitp,*) 'Real(S)'
+        CALL Write_Mat(real(S(1:j,1:j),kind=Rkind),out_unitp,6,Rformat='(f18.14)')
+        write(out_unitp,*) 'im(S)'
+        CALL Write_Mat(aimag(S(1:j,1:j)),out_unitp,6,Rformat='(f18.14)')
+
+        ! The matrix H is a part of S
+        !H(1:j-1,1:j-1) = S(1:j-1,2:j)
+        !H(1:j-1,1:j-1) = HALF*(H(1:j-1,1:j-1) + conjg(transpose(H(1:j-1,1:j-1))))
+
+         !DO i=1,j-1
+         !  H(i,i) = real(H(i,i),kind=Rkind)
+         !END DO
+
+        ! psi(t+dt)=sum_{i}^{n} <Vec|psi_0>exp(-i*Ei*dt) |Vec>
+        ! n=j-1
+        CALL UGPsi_spec(UPsiOnKrylov,UPspectral_n,H(1:j-1,1:j-1),     &
+                        S(1:j-1,1:j-1),Vec,Eig,para_propa%WPdeltaT,     &
+                        j-1,With_diago=.TRUE.)
+        !IF (debug) write(out_unitp,*) j-1,'abs(UPspectral_n)',abs(UPspectral_n)
+        IF (abs(UPspectral_n) < para_propa%para_poly%poly_tol .OR. &
+            j == para_propa%para_poly%npoly+1) THEN
+          n = j-1
+          write(out_unitp,*) n,'abs(UPspectral_n)',abs(UPspectral_n)
+          EXIT
+        END IF
+
+      END DO
+
+      IF (abs(UPspectral_n) > para_propa%para_poly%poly_tol) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' The last vector, UPsiOnKrylov(n), coeficient is TOO large'
+        write(out_unitp,*) '    abs(UPspectral_n)',abs(UPspectral_n)
+        write(out_unitp,*) '    poly_tol: ',para_propa%para_poly%poly_tol
+        write(out_unitp,*) ' => npoly is TOO small',para_propa%para_poly%npoly
+        write(out_unitp,*) ' or'
+        write(out_unitp,*) ' => Reduce the time step !!'
+        !STOP
+      END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'Eig',Eig(1:n)
+        write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n))
+      END IF
+
+      !Psi = ZERO
+      PsiSRep(1) = ZERO
+      PsiSRep(2) = ZERO
+      DO i=1,n
+        !Psi = Psi + UPsiOnKrylov(i)*tab_KrylovSpace(i)
+        PsiSRep(1) = PsiSRep(1) +                                       &
+                real(UPsiOnKrylov(i),kind=Rkind)*tab_KrylovSpace(1,i) - &
+                aimag(UPsiOnKrylov(i))*tab_KrylovSpace(2,i)
+
+        PsiSRep(2) = PsiSRep(2) +                                       &
+                real(UPsiOnKrylov(i),kind=Rkind)*tab_KrylovSpace(2,i) + &
+                aimag(UPsiOnKrylov(i))*tab_KrylovSpace(1,i)
+
+      END DO
+
+      CALL SmolyakRepBasis_TO_tabPackedBasis(PsiSRep(1),RCPsi(1)%RVecB, &
+                                BasisnD%tab_basisPrimSG,BasisnD%nDindB, &
+                                BasisnD%para_SGType2,BasisnD%WeightSG)
+      CALL SmolyakRepBasis_TO_tabPackedBasis(PsiSRep(2),RCPsi(2)%RVecB, &
+                                BasisnD%tab_basisPrimSG,BasisnD%nDindB, &
+                                BasisnD%para_SGType2,BasisnD%WeightSG)
+
+      psi = RCPsi
+
+
+      !- check norm ------------------
+      CALL norm2_psi(psi)
+      IF ( psi%norm2 > para_propa%max_norm2) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norm2
+        para_propa%march_error   = .TRUE.
+        para_propa%test_max_norm = .TRUE.
+        STOP
+      END IF
+
+      !- Phase Shift -----------------
+      phase = E0*para_propa%WPdeltaT
+      psi   = psi * exp(-EYE*phase)
+      cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+      CALL flush_perso(no)
+
+
+      ! deallocation
+      DO i=1,size(tab_KrylovSpace(1,:))
+         CALL dealloc_SmolyakRep(tab_KrylovSpace(1,i))
+         CALL dealloc_SmolyakRep(tab_KrylovSpace(2,i))
+      END DO
+      deallocate(tab_KrylovSpace)
+
+      CALL dealloc_SmolyakRep(HPsiSRep(1))
+      CALL dealloc_SmolyakRep(HPsiSRep(2))
+
+       CALL dealloc_psi(RCPsi(1))
+       CALL dealloc_psi(RCPsi(2))
+
+      IF (allocated(Vec))          CALL dealloc_NParray(Vec,'Vec',name_sub)
+      IF (allocated(Eig))          CALL dealloc_NParray(Eig,'Eig',name_sub)
+      IF (allocated(UPsiOnKrylov)) CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        CALL norm2_psi(psi)
+        write(out_unitp,*) 'norm psi',psi%norm2
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+  END SUBROUTINE march_SIP2_SRep2
   SUBROUTINE march_SIL(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
       USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
@@ -1972,6 +2639,395 @@
 
 
   END SUBROUTINE UPsi_spec
+  SUBROUTINE UGPsi_spec(UPsiOnKrylov,UPspectral_n,H,S,Vec,Eig,deltaT,n,With_diago)
+      USE mod_system
+      IMPLICIT NONE
+
+
+
+!----- variables for the WP propagation ----------------------------
+      integer,                           intent(in)     :: n
+      complex (kind=Rkind),              intent(in)     :: H(:,:)
+      complex (kind=Rkind),              intent(in)     :: S(:,:)
+      complex (kind=Rkind), allocatable, intent(inout)  :: Vec(:,:)
+      real (kind=Rkind),    allocatable, intent(inout)  :: Eig(:)
+      complex (kind=Rkind), allocatable, intent(inout)  :: UPsiOnKrylov(:)
+      real (kind=Rkind),                 intent(in)     :: deltaT
+      logical,                           intent(in)     :: With_diago
+      complex (kind=Rkind),              intent(inout)  :: UPspectral_n
+!------ working variables ---------------------------------
+      complex (kind=Rkind) :: coef_i
+      integer              :: i,j
+
+      complex (kind=Rkind)     :: Ho(n,n)
+      complex (kind=Rkind)     :: So(n,n),SoDiag(n)
+      complex (kind=Rkind)     :: C1(n,n)
+      complex (kind=Rkind)     :: Sii,Sij
+      real (kind=Rkind)        :: max_diff
+
+      real (kind=Rkind)        :: tol_ortho = ONETENTH**10
+
+!----- for debuging --------------------------------------------------
+      integer, parameter :: nmax = 12
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='UGPsi_spec'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'deltaT',deltaT
+        write(out_unitp,*) 'n',n
+        write(out_unitp,*) 'With_diago',With_diago
+        IF (With_diago .AND. n <= nmax) THEN
+          write(out_unitp,*)
+          write(out_unitp,*) 'H'
+          write(out_unitp,*) 'Real(H)'
+          CALL Write_Mat(real(H,kind=Rkind),out_unitp,6)
+          write(out_unitp,*) 'im(H)'
+          CALL Write_Mat(aimag(H),out_unitp,6)
+          write(out_unitp,*)
+          write(out_unitp,*) 'Real(S)'
+          CALL Write_Mat(real(S,kind=Rkind),out_unitp,6)
+          write(out_unitp,*) 'im(S)'
+          CALL Write_Mat(aimag(S),out_unitp,6)
+        END IF
+      END IF
+!-----------------------------------------------------------
+
+      IF (With_diago) THEN
+        IF (allocated(Vec)) CALL dealloc_NParray(Vec,'Vec',name_sub)
+        CALL alloc_NParray(Vec,[n,n],'Vec',name_sub)
+
+        IF (allocated(Eig)) CALL dealloc_NParray(Eig,'Eig',name_sub)
+        CALL alloc_NParray(Eig,[n],  'Eig',name_sub)
+
+        CALL diagonalization_HerCplx(S,Eig,Vec,n,3,1,.TRUE.)
+        IF (debug) write(out_unitp,*) 'Eig of S',Eig
+        IF (debug) write(out_unitp,*) 'min(abs(Eig)) of S',minval(abs(Eig))
+
+        !first transfo S -> I (ortho Smidt)
+        So = S
+        C1 = CZERO
+        DO i=1,n
+          Sii = S(i,i)
+          IF (abs(Sii) <tol_ortho) THEN
+            write(out_unitp,*) 'ERROR in ',name_sub
+            write(out_unitp,*) 'S(i,i) is too small',abs(Sii)
+            STOP 'ERROR in UGPsi_spec: S(i,i) is too small'
+          END IF
+          C1(i,i) = ONE / sqrt(abs(Sii))
+        END DO
+
+        DO i=1,n
+          Sii = dot_product(C1(:,i),matmul(S,C1(:,i)))
+          IF (abs(Sii) < tol_ortho) THEN
+            write(out_unitp,*) 'ERROR in ',name_sub
+            write(out_unitp,*) ' S(i,i) is too small',abs(Sii)
+            STOP 'ERROR in UGPsi_spec: S(i,i) is too small'
+          END IF
+          C1(:,i) = C1(:,i) / sqrt(abs(Sii))
+          Sii = dot_product(C1(:,i),matmul(S,C1(:,i)))
+          DO j=i+1,n
+            Sij = dot_product(C1(:,i),matmul(S,C1(:,j)))
+            C1(:,j) = C1(:,j) - (Sij/Sii)*C1(:,i)
+          END DO
+        END DO
+        Ho = matmul(transpose(conjg(C1)),matmul(H,C1))
+        So = matmul(transpose(conjg(C1)),matmul(S,C1))
+
+        IF (debug)  write(out_unitp,*) ' Max non-Hermitian Ho :',maxval(abs(Ho-conjg(transpose(Ho))))
+
+        IF (debug .AND. n <= nmax) THEN
+
+          write(out_unitp,*)
+          write(out_unitp,*) 'Ho'
+          write(out_unitp,*) 'Real(Ho)'
+          CALL Write_Mat(real(Ho,kind=Rkind),out_unitp,6)
+          write(out_unitp,*) 'im(Ho)'
+          CALL Write_Mat(aimag(Ho),out_unitp,6)
+
+          write(out_unitp,*)
+          write(out_unitp,*) 'So: Identity matrix'
+          write(out_unitp,*) 'Real(So)'
+          CALL Write_Mat(real(So,kind=Rkind),out_unitp,6)
+          write(out_unitp,*) 'im(So)'
+          CALL Write_Mat(aimag(So),out_unitp,6)
+          write(out_unitp,*)
+        END IF
+
+
+        DO i=1,n
+          SoDiag(i) = So(i,i)
+          So(i,i)   = abs(So(i,i)) - CONE
+        END DO
+        max_diff = maxval(abs(So))
+        IF (debug)  write(out_unitp,*) ' Max_diff on (So-Idmatrix) :',max_diff
+
+        IF (max_diff > ONETENTH**6) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' So is not the identity matrix. max_diff:',max_diff
+          write(out_unitp,*)
+          write(out_unitp,*) 'Real(So)'
+          CALL Write_Mat(real(So,kind=Rkind),out_unitp,6)
+          write(out_unitp,*) 'im(So)'
+          CALL Write_Mat(aimag(So),out_unitp,6)
+          write(out_unitp,*)
+          STOP 'ERROR in UGPsi_spec: So is not the identity matrix.'
+        END IF
+
+        IF (allocated(Vec)) CALL dealloc_NParray(Vec,'Vec',name_sub)
+        CALL alloc_NParray(Vec,[n,n],'Vec',name_sub)
+
+        IF (allocated(Eig)) CALL dealloc_NParray(Eig,'Eig',name_sub)
+        CALL alloc_NParray(Eig,[n],  'Eig',name_sub)
+
+        IF (allocated(UPsiOnKrylov))                                    &
+              CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
+        CALL alloc_NParray(UPsiOnKrylov,[n],'UPsiOnKrylov',name_sub)
+
+        CALL diagonalization_HerCplx(Ho,Eig,Vec,n,3,1,.TRUE.)
+        IF (debug) THEN
+          write(out_unitp,*) 'Eig',Eig
+
+          write(out_unitp,*)
+          write(out_unitp,*) 'Real(Vec)'
+          CALL Write_Mat(real(Vec,kind=Rkind),out_unitp,6)
+          write(out_unitp,*) 'im(Vec)'
+          CALL Write_Mat(aimag(Vec),out_unitp,6)
+          write(out_unitp,*)
+        END IF
+
+      END IF
+
+      ! loop on the eigenvectors
+      UPsiOnKrylov = CZERO
+
+      DO i=1,n
+        IF (debug) write(out_unitp,*) 'norm2 Vec(:,i)',i,dot_product(Vec(:,i),Vec(:,i))
+
+        coef_i = Vec(1,i) ! just (1,i) because psi on the Krylov subspace is [1,0,0,...0]
+                          ! that why we use Schmidt orthogonalisation
+                          ! We have to multiply by So(i,i)=SoDiag(i), the values can be -1.
+        coef_i = coef_i * exp(-EYE*Eig(i)*SoDiag(i)*deltaT) ! spectral propa
+
+        UPsiOnKrylov(:) = UPsiOnKrylov(:) + conjg(Vec(:,i))*coef_i ! update U.psi on the Krylov space
+      END DO
+      IF (debug) write(out_unitp,*) 'norm2 UPsiOnKrylov',dot_product(UPsiOnKrylov,UPsiOnKrylov)
+
+      UPspectral_n = UPsiOnKrylov(n)
+
+      UPsiOnKrylov(:) = matmul(C1,UPsiOnKrylov)
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'abs(UPspectral_n)',abs(UPspectral_n)
+        write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+
+  END SUBROUTINE UGPsi_spec
+  SUBROUTINE UGPsi_taylor(UPsiOnKrylov,UPspectral_n,H,S,Vec,Eig,deltaT,n,With_diago)
+      USE mod_system
+      IMPLICIT NONE
+
+
+
+!----- variables for the WP propagation ----------------------------
+      integer,                           intent(in)     :: n
+      complex (kind=Rkind),              intent(in)     :: H(:,:)
+      complex (kind=Rkind),              intent(in)     :: S(:,:)
+      complex (kind=Rkind), allocatable, intent(inout)  :: Vec(:,:)
+      real (kind=Rkind),    allocatable, intent(inout)  :: Eig(:)
+      complex (kind=Rkind), allocatable, intent(inout)  :: UPsiOnKrylov(:)
+      real (kind=Rkind),                 intent(in)     :: deltaT
+      logical,                           intent(in)     :: With_diago
+      complex (kind=Rkind),              intent(inout)  :: UPspectral_n
+!------ working variables ---------------------------------
+      complex (kind=Rkind) :: coef_i
+      integer              :: i,j
+
+      complex (kind=Rkind)     :: Ho(n,n)
+      real (kind=Rkind)        :: E0
+      complex (kind=Rkind)     :: So(n,n),SoDiag(n)
+      complex (kind=Rkind)     :: C1(n,n)
+      complex (kind=Rkind)     :: Sii,Sij
+      real (kind=Rkind)        :: max_diff
+      complex (kind=Rkind)     :: Vtemp(n)
+
+
+      real (kind=Rkind)        :: tol_ortho = ONETENTH**10
+      integer                  :: max_it_taylor = 1000
+      real (kind=Rkind)        :: tol_taylor = ONETENTH**20
+      real (kind=Rkind)        :: max_norm_UPsiOnKrylov
+!----- for debuging --------------------------------------------------
+      integer, parameter :: nmax = 12
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='UGPsi_taylor'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'deltaT',deltaT
+        write(out_unitp,*) 'n',n
+        write(out_unitp,*) 'With_diago',With_diago
+        IF (With_diago .AND. n <= nmax) THEN
+          write(out_unitp,*)
+          write(out_unitp,*) 'H'
+          write(out_unitp,*) 'Real(H)'
+          CALL Write_Mat(real(H,kind=Rkind),out_unitp,6)
+          write(out_unitp,*) 'im(H)'
+          CALL Write_Mat(aimag(H),out_unitp,6)
+          write(out_unitp,*)
+          write(out_unitp,*) 'Real(S)'
+          CALL Write_Mat(real(S,kind=Rkind),out_unitp,6)
+          write(out_unitp,*) 'im(S)'
+          CALL Write_Mat(aimag(S),out_unitp,6)
+        END IF
+      END IF
+!-----------------------------------------------------------
+
+      IF (With_diago) THEN
+        IF (allocated(Vec)) CALL dealloc_NParray(Vec,'Vec',name_sub)
+        CALL alloc_NParray(Vec,[n,n],'Vec',name_sub)
+
+        IF (allocated(Eig)) CALL dealloc_NParray(Eig,'Eig',name_sub)
+        CALL alloc_NParray(Eig,[n],  'Eig',name_sub)
+
+        CALL diagonalization_HerCplx(S,Eig,Vec,n,3,1,.TRUE.)
+        IF (debug) write(out_unitp,*) 'Eig of S',Eig
+        IF (debug) write(out_unitp,*) 'min(abs(Eig)) of S',minval(abs(Eig))
+
+        !first transfo S -> I (ortho Smidt)
+        So = S
+        C1 = CZERO
+        DO i=1,n
+          Sii = S(i,i)
+          IF (abs(Sii) <tol_ortho) THEN
+            write(out_unitp,*) 'ERROR in ',name_sub
+            write(out_unitp,*) 'S(i,i) is too small',abs(Sii)
+            STOP 'ERROR in UGPsi_spec: S(i,i) is too small'
+          END IF
+          C1(i,i) = ONE / sqrt(abs(Sii))
+        END DO
+
+        DO i=1,n
+          Sii = dot_product(C1(:,i),matmul(S,C1(:,i)))
+          IF (abs(Sii) < tol_ortho) THEN
+            write(out_unitp,*) 'ERROR in ',name_sub
+            write(out_unitp,*) ' S(i,i) is too small',abs(Sii)
+            STOP 'ERROR in UGPsi_spec: S(i,i) is too small'
+          END IF
+          C1(:,i) = C1(:,i) / sqrt(abs(Sii))
+          Sii = dot_product(C1(:,i),matmul(S,C1(:,i)))
+          DO j=i+1,n
+            Sij = dot_product(C1(:,i),matmul(S,C1(:,j)))
+            C1(:,j) = C1(:,j) - (Sij/Sii)*C1(:,i)
+          END DO
+        END DO
+        Ho = matmul(transpose(conjg(C1)),matmul(H,C1))
+        So = matmul(transpose(conjg(C1)),matmul(S,C1))
+
+        IF (debug .AND. n <= nmax) THEN
+
+          write(out_unitp,*)
+          write(out_unitp,*) 'Ho'
+          write(out_unitp,*) 'Real(Ho)'
+          CALL Write_Mat(real(Ho,kind=Rkind),out_unitp,6)
+          write(out_unitp,*) 'im(Ho)'
+          CALL Write_Mat(aimag(Ho),out_unitp,6)
+
+          write(out_unitp,*)
+          write(out_unitp,*) 'So: Identity matrix'
+          write(out_unitp,*) 'Real(So)'
+          CALL Write_Mat(real(So,kind=Rkind),out_unitp,6)
+          write(out_unitp,*) 'im(So)'
+          CALL Write_Mat(aimag(So),out_unitp,6)
+          write(out_unitp,*)
+        END IF
+
+
+        DO i=1,n
+          SoDiag(i) = So(i,i)
+          So(i,i)   = abs(So(i,i)) - CONE
+        END DO
+        max_diff = maxval(abs(So))
+        IF (debug)  write(out_unitp,*) ' Max_diff on (So-Idmatrix) :',max_diff
+
+        IF (max_diff > ONETENTH**6) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' So is not the identity matrix. max_diff:',max_diff
+          write(out_unitp,*)
+          write(out_unitp,*) 'Real(So)'
+          CALL Write_Mat(real(So,kind=Rkind),out_unitp,6)
+          write(out_unitp,*) 'im(So)'
+          CALL Write_Mat(aimag(So),out_unitp,6)
+          write(out_unitp,*)
+          STOP 'ERROR in UGPsi_spec: So is not the identity matrix.'
+        END IF
+
+        !change Ho to take into account the sign of the diagonal of So (we assume, So is diagonal matrix)
+        !  -> Ho = So^-1 Ho
+        DO i=1,n
+          Ho(i,:) = Ho(i,:)/SoDiag(i)
+        END DO
+        E0 = real(H(1,1),kind=Rkind)
+        Ho = -EYE*deltaT*(Ho-E0)
+
+        IF (allocated(UPsiOnKrylov))                                    &
+              CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
+        CALL alloc_NParray(UPsiOnKrylov,[n],'UPsiOnKrylov',name_sub)
+
+      END IF
+
+      ! loop on the eigenvectors
+      UPsiOnKrylov    = CZERO
+      UPsiOnKrylov(1) = CONE
+      Vtemp           = UPsiOnKrylov ! here we have the 0 order term.
+      !write(out_unitp,*) '0 abs(UPsiOnKrylov)',abs(UPsiOnKrylov)
+      !write(out_unitp,*) '0 Vtemp',abs(Vtemp)
+      max_norm_UPsiOnKrylov = ONE
+
+      DO i=1,max_it_taylor
+        Vtemp = matmul(Ho,Vtemp) / cmplx(i,kind=Rkind)
+        !write(out_unitp,*) i,' Vtemp',abs(Vtemp)
+        UPsiOnKrylov = UPsiOnKrylov + Vtemp
+        !write(out_unitp,*) i,'abs(UPsiOnKrylov)',abs(UPsiOnKrylov)
+
+        IF (sqrt(abs(dot_product(UPsiOnKrylov,UPsiOnKrylov))) > max_norm_UPsiOnKrylov) &
+           max_norm_UPsiOnKrylov = sqrt(abs(dot_product(UPsiOnKrylov,UPsiOnKrylov)))
+        IF (max_norm_UPsiOnKrylov > TEN**10) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' UPsiOnKrylov is too large at the Taylor iteration:',i
+          write(out_unitp,*) ' max_norm_UPsiOnKrylov',max_norm_UPsiOnKrylov
+          write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov)
+          write(out_unitp,*)
+          STOP ' ERROR in Taylor: UPsiOnKrylov too large'
+        END IF
+
+        IF (sqrt(abs(dot_product(Vtemp,Vtemp))) < tol_taylor) EXIT
+
+      END DO
+      IF (debug) write(out_unitp,*) 'Taylor order',i,sqrt(abs(dot_product(Vtemp,Vtemp)))
+      IF (debug) write(out_unitp,*) 'max_norm_UPsiOnKrylov',max_norm_UPsiOnKrylov
+
+      IF (debug) write(out_unitp,*) 'norm2 UPsiOnKrylov',dot_product(UPsiOnKrylov,UPsiOnKrylov)
+
+      UPspectral_n = UPsiOnKrylov(n)*exp(EYE*deltaT*E0)
+
+      UPsiOnKrylov(:) = matmul(C1,conjg(UPsiOnKrylov)) ! need the conjg ???
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'abs(UPspectral_n)',abs(UPspectral_n)
+        write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+
+  END SUBROUTINE UGPsi_taylor
   SUBROUTINE UPsi_spec_v1(UPsiOnKrylov,H,deltaT,n)
       USE mod_system
       IMPLICIT NONE
@@ -2277,7 +3333,7 @@
                        OpPsi=tab_KrylovSpace(j),para_Op=para_H)
         IF (j == 2) THEN
           CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(1),tab_KrylovSpace(2))
-          E0 = real(Overlap)
+          E0 = real(Overlap,kind=Rkind)
         END IF
         CALL sub_scaledOpPsi(Psi  =tab_KrylovSpace(j-1),                &
                              OpPsi=tab_KrylovSpace(j),E0=E0,Esc=ONE)

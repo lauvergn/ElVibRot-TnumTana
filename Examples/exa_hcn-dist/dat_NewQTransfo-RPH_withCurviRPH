@@ -15,7 +15,7 @@ cd $here
  x1=0.538516066
  x2=0.461483933
 
-#export OMP_NUM_THREADS=1
+ export OMP_NUM_THREADS=1
 
 nice $DIR_vib/vib << ** > res
  &system /

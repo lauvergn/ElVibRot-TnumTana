@@ -473,12 +473,8 @@
 
 !------ for the frequencies -------------------------------
         integer :: nderiv
-        TYPE (Type_dnMat)     :: dnC,dnC_inv      ! derivative with respect to Qact1
-        TYPE (Type_dnVec)     :: dnQeq            ! derivative with respect to Qact1
-        TYPE (Type_dnVec)     :: dnEHess          ! derivative with respect to Qact1
-        TYPE (Type_dnVec)     :: dnGrad           ! derivative with respect to Qact1
-        TYPE (Type_dnMat)     :: dnHess           ! derivative with respect to Qact1
-        TYPE (Type_dnS)       :: dnLnN            ! derivative with respect to Qact1
+        TYPE (Type_RPHpara_AT_Qact1) :: RPHpara_AT_Qact1
+
 
       real (kind=Rkind) , allocatable ::                                &
        f1Q(:),f2Q(:,:),Tcor2(:,:),                                      &
@@ -612,25 +608,29 @@
 !     equilibrium inactive variables and hessian matrix
 
       nderiv = 2
-      CALL alloc_dnSVM(dnC,    nb_inact2n,nb_inact2n,nb_act1,nderiv)
-      CALL alloc_dnSVM(dnC_inv,nb_inact2n,nb_inact2n,nb_act1,nderiv)
-      CALL alloc_dnSVM(dnQeq,  nb_inact2n,           nb_act1,nderiv)
-      CALL alloc_dnSVM(dnEHess,nb_inact2n,           nb_act1,nderiv)
-      CALL alloc_dnSVM(dnHess, nb_inact2n,nb_inact2n,nb_act1,nderiv)
-      CALL alloc_dnSVM(dnGrad, nb_inact2n,           nb_act1,nderiv)
-      CALL alloc_dnSVM(dnLnN,                        nb_act1,nderiv)
+      CALL alloc_RPHpara_AT_Qact1(RPHpara_AT_Qact1,nb_act1,nb_inact2n,nderiv)
 
-      CALL sub_dnfreq_4p_cHAC(dnQeq,dnC,dnLnN,dnEHess,                  &
-                              dnHess,dnGrad,dnC_inv,                    &
-                              pot0_corgrad,Qact,para_Tnum,mole,         &
-                              mole%RPHTransfo_inact2n,nderiv,test)
+      RPHpara_AT_Qact1%RPHQact1(:) = Qact(1:mole%nb_act1)
+      CALL sub_dnfreq_v3(RPHpara_AT_Qact1,pot0_corgrad,          &
+                         para_Tnum,mole,mole%RPHTransfo_inact2n, &
+                         nderiv,test,cHAC=.TRUE.)
 
-      d0Qeq      = dnQeq%d0
-      d0ehess    = dnEHess%d0
+!      CALL sub_dnfreq_4p_cHAC(RPHpara_AT_Qact1%dnQopt,                  &
+!                              RPHpara_AT_Qact1%dnC,                     &
+!                              RPHpara_AT_Qact1%dnLnN,                   &
+!                              RPHpara_AT_Qact1%dnEHess,                 &
+!                              RPHpara_AT_Qact1%dnHess,                  &
+!                              RPHpara_AT_Qact1%dnGrad,                  &
+!                              RPHpara_AT_Qact1%dnC_inv,                 &
+!                              pot0_corgrad,Qact,para_Tnum,mole,         &
+!                              mole%RPHTransfo_inact2n,nderiv,test)
+
+      d0Qeq      = RPHpara_AT_Qact1%dnQopt%d0
+      d0ehess    = RPHpara_AT_Qact1%dnEHess%d0
 
       IF (print_level > 0) THEN
         !IF (freq_only) write(out_unitp,*) ' freq_only'
-        write(out_unitp,12) Qact(1:nb_act1),dnQeq%d0
+        write(out_unitp,12) Qact(1:nb_act1),RPHpara_AT_Qact1%dnQopt%d0
  12     format('Qeq',20(' ',f10.6))
         write(out_unitp,11) Qact(1:nb_act1),pot0_corgrad
  11     format('pot0_corgrad',10(' ',f10.6))
@@ -657,7 +657,7 @@
 
       CALL alloc_NParray(d0f_bhe,(/nb_bie/),"d0f_bhe",name_sub)
 
-      CALL calc_d0cd0c(d0cd0c,dnC%d0,nb_inact2n)
+      CALL calc_d0cd0c(d0cd0c,RPHpara_AT_Qact1%dnC%d0,nb_inact2n)
 
 
       nq = get_nq_FROM_basis(Basis2n)
@@ -710,12 +710,17 @@
 
 !       -----------------------------------------------------
 !       determine Qinact et deltaQ en fonction de d0Qeq d0x
-        CALL calc_d0xTOQ(Qinact,dnQeq%d0,deltaQ,d0x,dnC_inv%d0,nb_inact2n)
+        CALL calc_d0xTOQ(Qinact,RPHpara_AT_Qact1%dnQopt%d0,deltaQ,d0x,  &
+                                 RPHpara_AT_Qact1%dnC_inv%d0,nb_inact2n)
 
 !       -----------------------------------------------------
 !       determine les d1x d2x en fonction de i_point
-        CALL calc_d1d2x(d1x,d2x,nb_inact2n,                             &
-                        deltaQ,dnC%d0,dnQeq%d1,dnC%d1,dnQeq%d2,dnC%d2,nb_act1)
+        CALL calc_d1d2x(d1x,d2x,nb_inact2n,deltaQ,                      &
+                        RPHpara_AT_Qact1%dnC%d0,                        &
+                        RPHpara_AT_Qact1%dnQopt%d1,                     &
+                        RPHpara_AT_Qact1%dnC%d1,                        &
+                        RPHpara_AT_Qact1%dnQopt%d2,                     &
+                        RPHpara_AT_Qact1%dnC%d2,nb_act1)
 !       -----------------------------------------------------
 
 !       -- merge Qact(nb_var) (active and rigid) and Qinact(nb_inact2n)
@@ -742,8 +747,8 @@
                                   f2Q,f1Q,vep,rho,Tcor2,tcor1a,trota,   &
                                   para_Tnum,mole)
           ELSE
-            CALL calc3_f2_f1Q_numTay0Qinact2n(Qact,dnQeq,               &
-                                    f2Q,f1Q,vep,rho,Tcor2,tcor1a,trota, &
+            CALL calc3_f2_f1Q_numTay0Qinact2n(Qact,RPHpara_AT_Qact1%dnQopt,&
+                                    f2Q,f1Q,vep,rho,Tcor2,tcor1a,trota,    &
                                     para_Tnum,mole)
           END IF
         ELSE
@@ -777,7 +782,7 @@
          IF (pot) THEN
            Vinact = Vinact + d0MatOp(1)%ReVal(1,1,1)
            IF (para_AllOp%tab_Op(1)%para_ReadOp%HarD) THEN
-             Vinact = Vinact + pot2(dnHess%d0,deltaQ,nb_inact2n)
+             Vinact = Vinact + pot2(RPHpara_AT_Qact1%dnHess%d0,deltaQ,nb_inact2n)
              Vinact = Vinact + pot_rest(Qact,deltaQ,nb_inact2n)
            END IF
 
@@ -801,9 +806,12 @@
                            rho,                                         &
                            nb_inact2n,ind_quadra,                       &
                            d1x,d2x,                                     &
-                           dnC%d0,dnC%d1,dnC%d2,                        &
+                           RPHpara_AT_Qact1%dnC%d0,                     &
+                           RPHpara_AT_Qact1%dnC%d1,                     &
+                           RPHpara_AT_Qact1%dnC%d2,                     &
                            d0cd0c,                                      &
-                           dnLnN%d1,dnLnN%d2,                           &
+                           RPHpara_AT_Qact1%dnLnN%d1,                   &
+                           RPHpara_AT_Qact1%dnLnN%d2,                   &
                            f2Qaa,f2Qii,f2Qai,                           &
                            f1Qa,f1Qi,nb_act1,                           &
                            para_AllOp%tab_Op(1)%para_Tnum%JJ,           &
@@ -868,13 +876,7 @@
         CALL dealloc_d0MatOp(d0MatOp(iOp)) ! Scalar Operator
       END DO
 
-      CALL dealloc_dnSVM(dnC)
-      CALL dealloc_dnSVM(dnC_inv)
-      CALL dealloc_dnSVM(dnQeq)
-      CALL dealloc_dnSVM(dnEHess)
-      CALL dealloc_dnSVM(dnHess)
-      CALL dealloc_dnSVM(dnGrad)
-      CALL dealloc_dnSVM(dnLnN)
+      CALL dealloc_RPHpara_AT_Qact1(RPHpara_AT_Qact1)
 
       CALL dealloc_NParray(f1Q,  "f1Q",   name_sub)
       CALL dealloc_NParray(f2Q,  "f2Q",   name_sub)

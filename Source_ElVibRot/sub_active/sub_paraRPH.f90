@@ -118,7 +118,7 @@ CONTAINS
 
         CALL get_Qact0(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
         CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%RPHpara_AT_Qref(1),   &
-                                  Qact,para_Tnum,mole,mole%RPHTransfo)
+                                  Qact,para_Tnum,mole)
         mole%RPHTransfo%init_Qref = .TRUE.
 
         write(out_unitp,*) ' Frequencies, normal modes at the reference geometry'
@@ -367,7 +367,7 @@ CONTAINS
 
           CALL Set_RPHpara_AT_Qact1(                                    &
                           mole%RPHTransfo%tab_RPHpara_AT_Qact1(iq_list),&
-                           Qact,para_Tnum,mole,mole%RPHTransfo)
+                                                    Qact,para_Tnum,mole)
 
         END DO
 
@@ -540,7 +540,7 @@ CONTAINS
 
           CALL Set_RPHpara_AT_Qact1(                                    &
                           mole%RPHTransfo%tab_RPHpara_AT_Qact1(iq_list),&
-                          Qact,para_Tnum,mole,mole%RPHTransfo)
+                                                    Qact,para_Tnum,mole)
 
         END DO
 

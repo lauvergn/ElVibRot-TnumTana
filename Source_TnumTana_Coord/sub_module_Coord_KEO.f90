@@ -59,6 +59,7 @@ MODULE mod_Coord_KEO
 
   USE mod_paramQ,          ONLY : sub_dnFCC_TO_dnFcurvi,sub_QactTOdnx,  &
                                   sub_QactTOQit,sub_QplusdQ_TO_cart,    &
+                                  sub_QinRead_TO_Qact,                  &
                                read_RefGeom,sub_QactTOd0x,sub_d0xTOQact,&
                                   Set_paramQ_FOR_optimization,          &
                                   Write_Cartg98, Write_XYZ

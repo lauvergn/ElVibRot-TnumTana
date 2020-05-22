@@ -30,6 +30,7 @@ MODULE mod_dnSVM
 
       IMPLICIT NONE
 
+
       INTERFACE Write_dnSVM
         MODULE PROCEDURE Write_dnS,Write_dnVec,Write_dnMat,Write_IntVec,Write_dnCplxMat
       END INTERFACE
