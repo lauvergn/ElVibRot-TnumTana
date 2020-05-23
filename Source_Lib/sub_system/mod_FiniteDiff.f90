@@ -139,9 +139,9 @@ MODULE mod_FiniteDiff
     !--------------------------------------------------------------------------
 
 PUBLIC :: Get_nb_pts,Get_indDQ,Set_QplusDQ
-PUBLIC :: FinitDiff_AddMat_TO_dnMat,FinitDiff3_SymPerm_OF_dnMat,FinitDiff_Finalize_dnMat
-PUBLIC :: FinitDiff_AddVec_TO_dnVec,FinitDiff3_SymPerm_OF_dnVec,FinitDiff_Finalize_dnVec
-PUBLIC :: FinitDiff_AddR_TO_dnS,FinitDiff3_SymPerm_OF_dnS,FinitDiff_Finalize_dnS
+PUBLIC :: FiniteDiff_AddMat_TO_dnMat,FiniteDiff3_SymPerm_OF_dnMat,FiniteDiff_Finalize_dnMat
+PUBLIC :: FiniteDiff_AddVec_TO_dnVec,FiniteDiff3_SymPerm_OF_dnVec,FiniteDiff_Finalize_dnVec
+PUBLIC :: FiniteDiff_AddR_TO_dnS,FiniteDiff3_SymPerm_OF_dnS,FiniteDiff_Finalize_dnS
 
 CONTAINS
   FUNCTION Get_nb_pts(ndim) RESULT(nb_pts)
@@ -213,7 +213,7 @@ CONTAINS
 
 
 
-  SUBROUTINE FinitDiff_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ,option)
+  SUBROUTINE FiniteDiff_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ,option)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -232,49 +232,49 @@ CONTAINS
     END IF
 
     IF (option_loc == 4) THEN
-      STOP 'STOP FinitDiff_AddMat_TO_dnMat: option=4, not yet'
+      STOP 'STOP FiniteDiff_AddMat_TO_dnMat: option=4, not yet'
       IF (present(indQ) .AND. present(indDQ)) THEN
 
-        !CALL FinitDiff4_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
+        !CALL FiniteDiff4_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
 
       ELSE IF (.NOT. present(indQ) .AND. .NOT. present(indDQ)) THEN
 
-        !CALL FinitDiff4_AddMat_TO_dnMat(dnMat,Mat)
+        !CALL FiniteDiff4_AddMat_TO_dnMat(dnMat,Mat)
 
       ELSE
-        write(out_unitp,*) ' ERROR in FinitDiff_AddMat_TO_dnMat'
+        write(out_unitp,*) ' ERROR in FiniteDiff_AddMat_TO_dnMat'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' Both indQ and indDQ MUST be present'
         write(out_unitp,*) '     or '
         write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
         write(out_unitp,*) ' present(indQ) ',present(indQ)
         write(out_unitp,*) ' present(indDQ)',present(indDQ)
-        STOP 'STOP in FinitDiff_AddMat_TO_dnMat: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff_AddMat_TO_dnMat: Inconsitent parameters.'
       END IF
     ELSE ! option_loc == 3
       IF (present(indQ) .AND. present(indDQ)) THEN
 
-        CALL FinitDiff3_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
+        CALL FiniteDiff3_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
 
       ELSE IF (.NOT. present(indQ) .AND. .NOT. present(indDQ)) THEN
 
-        CALL FinitDiff3_AddMat_TO_dnMat(dnMat,Mat)
+        CALL FiniteDiff3_AddMat_TO_dnMat(dnMat,Mat)
 
       ELSE
-        write(out_unitp,*) ' ERROR in FinitDiff_AddMat_TO_dnMat'
+        write(out_unitp,*) ' ERROR in FiniteDiff_AddMat_TO_dnMat'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' Both indQ and indDQ MUST be present'
         write(out_unitp,*) '     or '
         write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
         write(out_unitp,*) ' present(indQ) ',present(indQ)
         write(out_unitp,*) ' present(indDQ)',present(indDQ)
-        STOP 'STOP in FinitDiff_AddMat_TO_dnMat: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff_AddMat_TO_dnMat: Inconsitent parameters.'
       END IF
     END IF
 
-  END SUBROUTINE FinitDiff_AddMat_TO_dnMat
+  END SUBROUTINE FiniteDiff_AddMat_TO_dnMat
 
-  SUBROUTINE FinitDiff4_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
+  SUBROUTINE FiniteDiff4_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -291,41 +291,41 @@ CONTAINS
     ndim   = get_nb_var_deriv_FROM_dnMat(dnMat)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff4_AddMat_TO_dnMat'
+      write(out_unitp,*) ' ERROR in FiniteDiff4_AddMat_TO_dnMat'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nderiv < 0',nderiv
       write(out_unitp,*) '  => dnMat is not allocated'
-      STOP 'STOP in FinitDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
     IF (.NOT. all(shape(Mat) == shape(dnMat%d0))) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff4_AddMat_TO_dnMat'
+      write(out_unitp,*) ' ERROR in FiniteDiff4_AddMat_TO_dnMat'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' shape(Mat),shape(dnMat%d0)',shape(Mat),shape(dnMat%d0)
-      STOP 'STOP in FinitDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
     IF (present(indQ) .AND. present(indDQ)) THEN
       IF (size(indQ) /= size(indDQ) .OR. minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
-        write(out_unitp,*) ' ERROR in FinitDiff4_AddMat_TO_dnMat'
+        write(out_unitp,*) ' ERROR in FiniteDiff4_AddMat_TO_dnMat'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' size(indQ),size(indDQ)',size(indQ),size(indDQ)
         write(out_unitp,*) ' nb_var_deriv or ndim',ndim
         write(out_unitp,*) ' indQ(:)',indQ
         write(out_unitp,*) ' indDQ(:)',indDQ
-        STOP 'STOP in FinitDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
       END IF
 
     ELSE IF ( (.NOT. present(indQ) .AND.       present(indDQ)) .OR.     &
               (      present(indQ) .AND. .NOT. present(indDQ)) ) THEN
-        write(out_unitp,*) ' ERROR in FinitDiff4_AddMat_TO_dnMat'
+        write(out_unitp,*) ' ERROR in FiniteDiff4_AddMat_TO_dnMat'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' Both indQ and indDQ MUST be present'
         write(out_unitp,*) '     or '
         write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
         write(out_unitp,*) ' present(indQ) ',present(indQ)
         write(out_unitp,*) ' present(indDQ)',present(indDQ)
-        STOP 'STOP in FinitDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff4_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
     IF (present(indQ)) THEN
@@ -434,8 +434,8 @@ CONTAINS
     CASE Default
     END SELECT
 
-  END SUBROUTINE FinitDiff4_AddMat_TO_dnMat
-  SUBROUTINE FinitDiff3_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
+  END SUBROUTINE FiniteDiff4_AddMat_TO_dnMat
+  SUBROUTINE FiniteDiff3_AddMat_TO_dnMat(dnMat,Mat,indQ,indDQ)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -452,41 +452,41 @@ CONTAINS
     ndim   = get_nb_var_deriv_FROM_dnMat(dnMat)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff3_AddMat_TO_dnMat'
+      write(out_unitp,*) ' ERROR in FiniteDiff3_AddMat_TO_dnMat'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nderiv < 0',nderiv
       write(out_unitp,*) '  => dnMat is not allocated'
-      STOP 'STOP in FinitDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
     IF (.NOT. all(shape(Mat) == shape(dnMat%d0))) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff3_AddMat_TO_dnMat'
+      write(out_unitp,*) ' ERROR in FiniteDiff3_AddMat_TO_dnMat'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' shape(Mat),shape(dnMat%d0)',shape(Mat),shape(dnMat%d0)
-      STOP 'STOP in FinitDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
     IF (present(indQ) .AND. present(indDQ)) THEN
       IF (size(indQ) /= size(indDQ) .OR. minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
-        write(out_unitp,*) ' ERROR in FinitDiff3_AddMat_TO_dnMat'
+        write(out_unitp,*) ' ERROR in FiniteDiff3_AddMat_TO_dnMat'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' size(indQ),size(indDQ)',size(indQ),size(indDQ)
         write(out_unitp,*) ' nb_var_deriv or ndim',ndim
         write(out_unitp,*) ' indQ(:)',indQ
         write(out_unitp,*) ' indDQ(:)',indDQ
-        STOP 'STOP in FinitDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
       END IF
 
     ELSE IF ( (.NOT. present(indQ) .AND.       present(indDQ)) .OR.     &
               (      present(indQ) .AND. .NOT. present(indDQ)) ) THEN
-        write(out_unitp,*) ' ERROR in FinitDiff3_AddMat_TO_dnMat'
+        write(out_unitp,*) ' ERROR in FiniteDiff3_AddMat_TO_dnMat'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' Both indQ and indDQ MUST be present'
         write(out_unitp,*) '     or '
         write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
         write(out_unitp,*) ' present(indQ) ',present(indQ)
         write(out_unitp,*) ' present(indDQ)',present(indDQ)
-        STOP 'STOP in FinitDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff3_AddMat_TO_dnMat: Inconsitent parameters.'
     END IF
 
     IF (present(indQ)) THEN
@@ -609,8 +609,8 @@ CONTAINS
     CASE Default
     END SELECT
 
-  END SUBROUTINE FinitDiff3_AddMat_TO_dnMat
-  SUBROUTINE FinitDiff3_SymPerm_OF_dnMat(dnMat,indQ)
+  END SUBROUTINE FiniteDiff3_AddMat_TO_dnMat
+  SUBROUTINE FiniteDiff3_SymPerm_OF_dnMat(dnMat,indQ)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -625,19 +625,19 @@ CONTAINS
     ndim   = get_nb_var_deriv_FROM_dnMat(dnMat)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff3_SymPerm_OF_dnMat'
+      write(out_unitp,*) ' ERROR in FiniteDiff3_SymPerm_OF_dnMat'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nderiv < 0',nderiv
       write(out_unitp,*) '  => dnMat is not allocated'
-      STOP 'STOP in FinitDiff3_SymPerm_OF_dnMat: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff3_SymPerm_OF_dnMat: Inconsitent parameters.'
     END IF
 
     IF (minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff3_SymPerm_OF_dnMat'
+      write(out_unitp,*) ' ERROR in FiniteDiff3_SymPerm_OF_dnMat'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nb_var_deriv or ndim',ndim
       write(out_unitp,*) ' indQ(:)',indQ
-      STOP 'STOP in FinitDiff3_SymPerm_OF_dnMat: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff3_SymPerm_OF_dnMat: Inconsitent parameters.'
     END IF
 
     SELECT CASE (size(indQ))
@@ -669,8 +669,8 @@ CONTAINS
 
     END SELECT
 
-  END SUBROUTINE FinitDiff3_SymPerm_OF_dnMat
-  SUBROUTINE FinitDiff_Finalize_dnMat(dnMat,step)
+  END SUBROUTINE FiniteDiff3_SymPerm_OF_dnMat
+  SUBROUTINE FiniteDiff_Finalize_dnMat(dnMat,step)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -682,19 +682,19 @@ CONTAINS
     nderiv = get_nderiv_FROM_dnMat(dnMat)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff_Finalize_dnMat'
+      write(out_unitp,*) ' ERROR in FiniteDiff_Finalize_dnMat'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nderiv < 0',nderiv
       write(out_unitp,*) '  => dnMat is not allocated'
-      STOP 'STOP in FinitDiff_Finalize_dnMat: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff_Finalize_dnMat: Inconsitent parameters.'
     END IF
 
     IF (nderiv >= 1) dnMat%d1 = dnMat%d1/step
     IF (nderiv >= 2) dnMat%d2 = dnMat%d2/step**2
     IF (nderiv >= 3) dnMat%d3 = dnMat%d3/step**3
 
-  END SUBROUTINE FinitDiff_Finalize_dnMat
-  SUBROUTINE FinitDiff_AddVec_TO_dnVec(dnVec,Vec,indQ,indDQ,option)
+  END SUBROUTINE FiniteDiff_Finalize_dnMat
+  SUBROUTINE FiniteDiff_AddVec_TO_dnVec(dnVec,Vec,indQ,indDQ,option)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -713,30 +713,30 @@ CONTAINS
     END IF
 
     IF (option_loc == 4) THEN
-      STOP 'STOP FinitDiff_AddVec_TO_dnVec: option=4, not yet'
+      STOP 'STOP FiniteDiff_AddVec_TO_dnVec: option=4, not yet'
     ELSE ! option_loc == 3
       IF (present(indQ) .AND. present(indDQ)) THEN
 
-        CALL FinitDiff3_AddVec_TO_dnVec(dnVec,Vec,indQ,indDQ)
+        CALL FiniteDiff3_AddVec_TO_dnVec(dnVec,Vec,indQ,indDQ)
 
       ELSE IF (.NOT. present(indQ) .AND. .NOT. present(indDQ)) THEN
 
-        CALL FinitDiff3_AddVec_TO_dnVec(dnVec,Vec)
+        CALL FiniteDiff3_AddVec_TO_dnVec(dnVec,Vec)
 
       ELSE
-        write(out_unitp,*) ' ERROR in FinitDiff_AddVec_TO_dnVec'
+        write(out_unitp,*) ' ERROR in FiniteDiff_AddVec_TO_dnVec'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' Both indQ and indDQ MUST be present'
         write(out_unitp,*) '     or '
         write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
         write(out_unitp,*) ' present(indQ) ',present(indQ)
         write(out_unitp,*) ' present(indDQ)',present(indDQ)
-        STOP 'STOP in FinitDiff_AddVec_TO_dnVec: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff_AddVec_TO_dnVec: Inconsitent parameters.'
       END IF
     END IF
 
-  END SUBROUTINE FinitDiff_AddVec_TO_dnVec
-  SUBROUTINE FinitDiff3_AddVec_TO_dnVec(dnVec,Vec,indQ,indDQ)
+  END SUBROUTINE FiniteDiff_AddVec_TO_dnVec
+  SUBROUTINE FiniteDiff3_AddVec_TO_dnVec(dnVec,Vec,indQ,indDQ)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -754,41 +754,41 @@ CONTAINS
 
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff3_AddVec_TO_dnVec'
+      write(out_unitp,*) ' ERROR in FiniteDiff3_AddVec_TO_dnVec'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nderiv < 0',nderiv
       write(out_unitp,*) '  => dnVec is not allocated'
-      STOP 'STOP in FinitDiff3_AddVec_TO_dnVec: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff3_AddVec_TO_dnVec: Inconsitent parameters.'
     END IF
 
     IF (.NOT. all(shape(Vec) == shape(dnVec%d0))) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff3_AddVec_TO_dnVec'
+      write(out_unitp,*) ' ERROR in FiniteDiff3_AddVec_TO_dnVec'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' shape(Vec),shape(dnVec%d0)',shape(Vec),shape(dnVec%d0)
-      STOP 'STOP in FinitDiff3_AddVec_TO_dnVec: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff3_AddVec_TO_dnVec: Inconsitent parameters.'
     END IF
 
     IF (present(indQ) .AND. present(indDQ)) THEN
       IF (size(indQ) /= size(indDQ) .OR. minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
-        write(out_unitp,*) ' ERROR in FinitDiff3_AddVec_TO_dnVec'
+        write(out_unitp,*) ' ERROR in FiniteDiff3_AddVec_TO_dnVec'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' size(indQ),size(indDQ)',size(indQ),size(indDQ)
         write(out_unitp,*) ' nb_var_deriv or ndim',ndim
         write(out_unitp,*) ' indQ(:)',indQ
         write(out_unitp,*) ' indDQ(:)',indDQ
-        STOP 'STOP in FinitDiff3_AddVec_TO_dnVec: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff3_AddVec_TO_dnVec: Inconsitent parameters.'
       END IF
 
     ELSE IF ( (.NOT. present(indQ) .AND.       present(indDQ)) .OR.     &
               (      present(indQ) .AND. .NOT. present(indDQ)) ) THEN
-        write(out_unitp,*) ' ERROR in FinitDiff3_AddVec_TO_dnVec'
+        write(out_unitp,*) ' ERROR in FiniteDiff3_AddVec_TO_dnVec'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' Both indQ and indDQ MUST be present'
         write(out_unitp,*) '     or '
         write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
         write(out_unitp,*) ' present(indQ) ',present(indQ)
         write(out_unitp,*) ' present(indDQ)',present(indDQ)
-        STOP 'STOP in FinitDiff3_AddVec_TO_dnVec: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff3_AddVec_TO_dnVec: Inconsitent parameters.'
     END IF
 
     IF (present(indQ)) THEN
@@ -911,9 +911,9 @@ CONTAINS
     CASE Default
     END SELECT
 
-  END SUBROUTINE FinitDiff3_AddVec_TO_dnVec
+  END SUBROUTINE FiniteDiff3_AddVec_TO_dnVec
 
-  SUBROUTINE FinitDiff3_SymPerm_OF_dnVec(dnVec,indQ)
+  SUBROUTINE FiniteDiff3_SymPerm_OF_dnVec(dnVec,indQ)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -928,19 +928,19 @@ CONTAINS
     ndim   = get_nb_var_deriv_FROM_dnVec(dnVec)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff3_SymPerm_OF_dnVec'
+      write(out_unitp,*) ' ERROR in FiniteDiff3_SymPerm_OF_dnVec'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nderiv < 0',nderiv
       write(out_unitp,*) '  => dnVec is not allocated'
-      STOP 'STOP in FinitDiff3_SymPerm_OF_dnVec: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff3_SymPerm_OF_dnVec: Inconsitent parameters.'
     END IF
 
     IF (minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff3_SymPerm_OF_dnVec'
+      write(out_unitp,*) ' ERROR in FiniteDiff3_SymPerm_OF_dnVec'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nb_var_deriv or ndim',ndim
       write(out_unitp,*) ' indQ(:)',indQ
-      STOP 'STOP in FinitDiff3_SymPerm_OF_dnVec: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff3_SymPerm_OF_dnVec: Inconsitent parameters.'
     END IF
 
     SELECT CASE (size(indQ))
@@ -972,8 +972,8 @@ CONTAINS
 
     END SELECT
 
-  END SUBROUTINE FinitDiff3_SymPerm_OF_dnVec
-  SUBROUTINE FinitDiff_Finalize_dnVec(dnVec,step)
+  END SUBROUTINE FiniteDiff3_SymPerm_OF_dnVec
+  SUBROUTINE FiniteDiff_Finalize_dnVec(dnVec,step)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -985,24 +985,24 @@ CONTAINS
     nderiv = get_nderiv_FROM_dnVec(dnVec)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff_Finalize_dnVec'
+      write(out_unitp,*) ' ERROR in FiniteDiff_Finalize_dnVec'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nderiv < 0',nderiv
       write(out_unitp,*) '  => dnVec is not allocated'
-      STOP 'STOP in FinitDiff_Finalize_dnVec: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff_Finalize_dnVec: Inconsitent parameters.'
     END IF
 
     IF (nderiv >= 1) dnVec%d1 = dnVec%d1/step
     IF (nderiv >= 2) dnVec%d2 = dnVec%d2/step**2
     IF (nderiv >= 3) dnVec%d3 = dnVec%d3/step**3
 
-  END SUBROUTINE FinitDiff_Finalize_dnVec
+  END SUBROUTINE FiniteDiff_Finalize_dnVec
 
 
 
 
 
-  SUBROUTINE FinitDiff_AddR_TO_dnS(dnS,R,indQ,indDQ,option)
+  SUBROUTINE FiniteDiff_AddR_TO_dnS(dnS,R,indQ,indDQ,option)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -1021,30 +1021,30 @@ CONTAINS
     END IF
 
     IF (option_loc == 4) THEN
-      STOP 'STOP FinitDiff_AddR_TO_dnS: option=4, not yet'
+      STOP 'STOP FiniteDiff_AddR_TO_dnS: option=4, not yet'
     ELSE ! option_loc == 3
       IF (present(indQ) .AND. present(indDQ)) THEN
 
-        CALL FinitDiff3_AddR_TO_dnS(dnS,R,indQ,indDQ)
+        CALL FiniteDiff3_AddR_TO_dnS(dnS,R,indQ,indDQ)
 
       ELSE IF (.NOT. present(indQ) .AND. .NOT. present(indDQ)) THEN
 
-        CALL FinitDiff3_AddR_TO_dnS(dnS,R)
+        CALL FiniteDiff3_AddR_TO_dnS(dnS,R)
 
       ELSE
-        write(out_unitp,*) ' ERROR in FinitDiff_AddR_TO_dnS'
+        write(out_unitp,*) ' ERROR in FiniteDiff_AddR_TO_dnS'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' Both indQ and indDQ MUST be present'
         write(out_unitp,*) '     or '
         write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
         write(out_unitp,*) ' present(indQ) ',present(indQ)
         write(out_unitp,*) ' present(indDQ)',present(indDQ)
-        STOP 'STOP in FinitDiff_AddR_TO_dnS: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff_AddR_TO_dnS: Inconsitent parameters.'
       END IF
     END IF
 
-  END SUBROUTINE FinitDiff_AddR_TO_dnS
-  SUBROUTINE FinitDiff3_AddR_TO_dnS(dnS,R,indQ,indDQ)
+  END SUBROUTINE FiniteDiff_AddR_TO_dnS
+  SUBROUTINE FiniteDiff3_AddR_TO_dnS(dnS,R,indQ,indDQ)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -1062,35 +1062,35 @@ CONTAINS
 
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff3_AddR_TO_dnS'
+      write(out_unitp,*) ' ERROR in FiniteDiff3_AddR_TO_dnS'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nderiv < 0',nderiv
       write(out_unitp,*) '  => dnS is not allocated'
-      STOP 'STOP in FinitDiff3_AddR_TO_dnS: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff3_AddR_TO_dnS: Inconsitent parameters.'
     END IF
 
 
     IF (present(indQ) .AND. present(indDQ)) THEN
       IF (size(indQ) /= size(indDQ) .OR. minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
-        write(out_unitp,*) ' ERROR in FinitDiff3_AddR_TO_dnS'
+        write(out_unitp,*) ' ERROR in FiniteDiff3_AddR_TO_dnS'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' size(indQ),size(indDQ)',size(indQ),size(indDQ)
         write(out_unitp,*) ' nb_var_deriv or ndim',ndim
         write(out_unitp,*) ' indQ(:)',indQ
         write(out_unitp,*) ' indDQ(:)',indDQ
-        STOP 'STOP in FinitDiff3_AddR_TO_dnS: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff3_AddR_TO_dnS: Inconsitent parameters.'
       END IF
 
     ELSE IF ( (.NOT. present(indQ) .AND.       present(indDQ)) .OR.     &
               (      present(indQ) .AND. .NOT. present(indDQ)) ) THEN
-        write(out_unitp,*) ' ERROR in FinitDiff3_AddR_TO_dnS'
+        write(out_unitp,*) ' ERROR in FiniteDiff3_AddR_TO_dnS'
         write(out_unitp,*) ' Inconsitent parameters.'
         write(out_unitp,*) ' Both indQ and indDQ MUST be present'
         write(out_unitp,*) '     or '
         write(out_unitp,*) ' Both indQ and indDQ MUST be absent'
         write(out_unitp,*) ' present(indQ) ',present(indQ)
         write(out_unitp,*) ' present(indDQ)',present(indDQ)
-        STOP 'STOP in FinitDiff3_AddR_TO_dnS: Inconsitent parameters.'
+        STOP 'STOP in FiniteDiff3_AddR_TO_dnS: Inconsitent parameters.'
     END IF
 
     IF (present(indQ)) THEN
@@ -1213,9 +1213,9 @@ CONTAINS
     CASE Default
     END SELECT
 
-  END SUBROUTINE FinitDiff3_AddR_TO_dnS
+  END SUBROUTINE FiniteDiff3_AddR_TO_dnS
 
-  SUBROUTINE FinitDiff3_SymPerm_OF_dnS(dnS,indQ)
+  SUBROUTINE FiniteDiff3_SymPerm_OF_dnS(dnS,indQ)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -1230,19 +1230,19 @@ CONTAINS
     ndim   = get_nb_var_deriv_FROM_dnS(dnS)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff3_SymPerm_OF_dnS'
+      write(out_unitp,*) ' ERROR in FiniteDiff3_SymPerm_OF_dnS'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nderiv < 0',nderiv
       write(out_unitp,*) '  => dnS is not allocated'
-      STOP 'STOP in FinitDiff3_SymPerm_OF_dnS: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff3_SymPerm_OF_dnS: Inconsitent parameters.'
     END IF
 
     IF (minval(indQ) < 1 .OR. maxval(indQ) > ndim) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff3_SymPerm_OF_dnS'
+      write(out_unitp,*) ' ERROR in FiniteDiff3_SymPerm_OF_dnS'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nb_var_deriv or ndim',ndim
       write(out_unitp,*) ' indQ(:)',indQ
-      STOP 'STOP in FinitDiff3_SymPerm_OF_dnS: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff3_SymPerm_OF_dnS: Inconsitent parameters.'
     END IF
 
     SELECT CASE (size(indQ))
@@ -1274,8 +1274,8 @@ CONTAINS
 
     END SELECT
 
-  END SUBROUTINE FinitDiff3_SymPerm_OF_dnS
-  SUBROUTINE FinitDiff_Finalize_dnS(dnS,step)
+  END SUBROUTINE FiniteDiff3_SymPerm_OF_dnS
+  SUBROUTINE FiniteDiff_Finalize_dnS(dnS,step)
   USE mod_dnSVM
   IMPLICIT NONE
 
@@ -1287,17 +1287,17 @@ CONTAINS
     nderiv = get_nderiv_FROM_dnS(dnS)
 
     IF (nderiv < 0) THEN
-      write(out_unitp,*) ' ERROR in FinitDiff_Finalize_dnS'
+      write(out_unitp,*) ' ERROR in FiniteDiff_Finalize_dnS'
       write(out_unitp,*) ' Inconsitent parameters.'
       write(out_unitp,*) ' nderiv < 0',nderiv
       write(out_unitp,*) '  => dnS is not allocated'
-      STOP 'STOP in FinitDiff_Finalize_dnS: Inconsitent parameters.'
+      STOP 'STOP in FiniteDiff_Finalize_dnS: Inconsitent parameters.'
     END IF
 
     IF (nderiv >= 1) dnS%d1 = dnS%d1/step
     IF (nderiv >= 2) dnS%d2 = dnS%d2/step**2
     IF (nderiv >= 3) dnS%d3 = dnS%d3/step**3
 
-  END SUBROUTINE FinitDiff_Finalize_dnS
+  END SUBROUTINE FiniteDiff_Finalize_dnS
 
   END MODULE mod_FiniteDiff

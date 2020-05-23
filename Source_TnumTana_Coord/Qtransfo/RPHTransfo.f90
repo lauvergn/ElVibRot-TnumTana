@@ -1007,8 +1007,8 @@
 !----- for debuging ----------------------------------
        character (len=*),parameter :: name_sub='calc_RPHTransfo_gene'
        integer :: nderiv_debug=1
-       logical, parameter :: debug=.FALSE.
-       !logical, parameter :: debug=.TRUE.
+       !logical, parameter :: debug=.FALSE.
+       logical, parameter :: debug=.TRUE.
 !----- for debuging ----------------------------------
 
 !---------------------------------------------------------------------
@@ -1621,7 +1621,7 @@
              iderQ21(iQinact) = iQout
            END SELECT
          END DO
-         ! here the values of iderQ1 and iderQ21 are i Qdyn order, but we need then in Qact order
+         ! here the values of iderQ1 and iderQ21 are in Qdyn order, but we need then in Qact order
          DO ider=1,size(iderQ1)
            idyn = iderQ1(ider)
            iderQ1(ider) = RPHTransfo%list_QdynTOQact(idyn)

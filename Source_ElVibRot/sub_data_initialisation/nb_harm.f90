@@ -57,47 +57,29 @@
       USE mod_nDindex
       use mod_Constant,  only: get_conv_au_to_unit
       USE mod_Coord_KEO, only: CoordType, Tnum, gaussian_width, get_Qact0
-      use mod_PrimOp,    only: PrimOp_t, sub_freq2_rph
+      use mod_PrimOp,    only: PrimOp_t, sub_dnfreq
       USE mod_basis
       IMPLICIT NONE
 
-!----- for the Basis2n -----------------------------------------------
+!----- for the Basis2n -------------------------------------------------
       TYPE (basis)   :: Basis2n
 
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum)      :: para_Tnum
 
-!----- for the PES ---------------------------------------------------
+!----- for the primitive operators: PES --------------------------------
       TYPE (PrimOp_t)   :: PrimOp
 
-!------ working variables -------------------------------------------
+!------ working variables ----------------------------------------------
+      TYPE (Type_RPHpara_AT_Qact1) :: RPHpara_AT_Qact1
+      real (kind=Rkind)            :: pot0_corgrad
+      real (kind=Rkind)            :: Qact(mole%nb_var)
 
-      real (kind=Rkind) :: norm2
+      real (kind=Rkind)            :: A(mole%nb_inact2n,mole%nb_inact2n)
+      integer                      :: i,k,n_h, min_i(mole%nb_inact2n)
 
-      real (kind=Rkind) :: d0ehess(mole%nb_inact2n)
-      real (kind=Rkind) :: d0Qeq(mole%nb_inact2n)
-      real (kind=Rkind) :: fe(mole%nb_inact2n+1)
-      real (kind=Rkind) :: d0hess(mole%nb_inact2n,mole%nb_inact2n)
-      real (kind=Rkind) :: d0g(mole%nb_inact2n),pot0_corgrad
-
-      real (kind=Rkind) :: d0c(mole%nb_inact2n,mole%nb_inact2n),        &
-                           d0c_inv(mole%nb_inact2n,mole%nb_inact2n),    &
-                           A(mole%nb_inact2n,mole%nb_inact2n)
-
-      real (kind=Rkind) :: Qact(mole%nb_var)
-
-
-      logical       :: deriv,num
-      integer       :: i,k,nderiv
-      integer       :: min_i(mole%nb_inact2n)
-
-      integer :: nb_somme_herm,i_point,nb_coupling,n_h
-      real (kind=Rkind) :: ene_freq,ZPE,ene,auTOcm_inv
-
-!---------------------------------------------------------------------
-!---------------------------------------------------------------------
-
+      real (kind=Rkind)            :: ene_freq,ZPE,ene,auTOcm_inv
 
 !---------------------------------------------------------------------
       character (len=*), parameter :: name_sub='sub2_ind_harm'
@@ -123,25 +105,31 @@
 
       CALL get_Qact0(Qact,mole%ActiveTransfo)
 
-      CALL sub_freq2_RPH(d0ehess,d0c,d0c_inv,norm2,d0hess,d0Qeq,d0g,    &
-                         pot0_corgrad,                                  &
-                         Qact,para_Tnum,mole,mole%RPHTransfo_inact2n)
+      CALL alloc_RPHpara_AT_Qact1(RPHpara_AT_Qact1,mole%nb_act1,        &
+                                               mole%nb_inact2n,nderiv=0)
+      RPHpara_AT_Qact1%RPHQact1(:) = Qact(1:mole%nb_act1)
+      ! frequencies at RPHpara_AT_Qact1%Qact1
+
+      CALL sub_dnfreq(RPHpara_AT_Qact1,pot0_corgrad,                    &
+                      para_Tnum,mole,mole%RPHTransfo_inact2n,nderiv=0,  &
+                      test=.FALSE.,cHAC=.TRUE.)
 
       write(out_unitp,*) '------------------------------------------'
       write(out_unitp,*) '------------------------------------------'
-      write(out_unitp,*) ' Parameters for the Basis2n (HADA or cHAC'
-      write(out_unitp,*) 'freq',d0ehess(:)*auTOcm_inv
-      write(out_unitp,*) 'd0Qeq',d0Qeq
+      write(out_unitp,*) ' Parameters for the Basis2n (HADA or cHAC)'
+      write(out_unitp,*) 'freq',RPHpara_AT_Qact1%dneHess%d0(:)*auTOcm_inv
+
+      write(out_unitp,*) 'd0Qeq',RPHpara_AT_Qact1%dnQopt%d0
       write(out_unitp,*) 'd0c'
-      CALL Write_Mat(d0c,out_unitp,5)
+      CALL Write_Mat(RPHpara_AT_Qact1%dnC%d0,out_unitp,5)
       write(out_unitp,*)
 !-----------------------------------------------------------------
       n_h = Basis2n%nDindB%Max_nDI
 
-      CALL gaussian_width(mole%nb_inact2n,A,d0c)
+      CALL gaussian_width(mole%nb_inact2n,A,RPHpara_AT_Qact1%dnC%d0)
 
       IF (.NOT. Basis2n%nDindB%With_L) THEN
-        Basis2n%nDindB%nDweight = d0ehess ! change the weight with the frequnecies
+        Basis2n%nDindB%nDweight = RPHpara_AT_Qact1%dneHess%d0 ! change the weight with the frequnecies
       END IF
       n_h = Basis2n%nDindB%Max_nDI
       CALL init_nDindexPrim(Basis2n%nDindB,mole%nb_inact2n,min_i,With_init=.FALSE.)
@@ -155,9 +143,10 @@
 !     write label of the anharmonic basis functions
       CALL alloc_NParray(Basis2n%EneH0,[Basis2n%nDindB%max_nDI],        &
                         'Basis2n%nDindB%max_nDI',name_sub)
-      ZPE = HALF*sum(d0ehess)
+      ZPE = HALF*sum(RPHpara_AT_Qact1%dneHess%d0)
       DO i=1,Basis2n%nDindB%max_nDI
-        Ene = ZPE + sum(real(Basis2n%nDindB%Tab_nDval(:,i),kind=Rkind)*d0ehess(:))
+        Ene = ZPE + sum(real(Basis2n%nDindB%Tab_nDval(:,i),kind=Rkind) *&
+                                          RPHpara_AT_Qact1%dneHess%d0(:))
         Basis2n%EneH0(i) = Ene ! this enables the NewVec_type=4 in Davidson
         write(out_unitp,'(i4,2(1x,f16.4))',advance='no') i,             &
                                      Ene*auTOcm_inv,(Ene-ZPE)*auTOcm_inv
@@ -177,6 +166,10 @@
 
       write(out_unitp,*) '------------------------------------------'
       write(out_unitp,*) '------------------------------------------'
+
+      CALL dealloc_RPHpara_AT_Qact1(RPHpara_AT_Qact1)
+
+
 !---------------------------------------------------------------------
       IF (debug) THEN
         CALL write_nDindex(Basis2n%nDindB,'Basis2n%nDindB')

@@ -611,19 +611,9 @@
       CALL alloc_RPHpara_AT_Qact1(RPHpara_AT_Qact1,nb_act1,nb_inact2n,nderiv)
 
       RPHpara_AT_Qact1%RPHQact1(:) = Qact(1:mole%nb_act1)
-      CALL sub_dnfreq_v3(RPHpara_AT_Qact1,pot0_corgrad,          &
-                         para_Tnum,mole,mole%RPHTransfo_inact2n, &
-                         nderiv,test,cHAC=.TRUE.)
 
-!      CALL sub_dnfreq_4p_cHAC(RPHpara_AT_Qact1%dnQopt,                  &
-!                              RPHpara_AT_Qact1%dnC,                     &
-!                              RPHpara_AT_Qact1%dnLnN,                   &
-!                              RPHpara_AT_Qact1%dnEHess,                 &
-!                              RPHpara_AT_Qact1%dnHess,                  &
-!                              RPHpara_AT_Qact1%dnGrad,                  &
-!                              RPHpara_AT_Qact1%dnC_inv,                 &
-!                              pot0_corgrad,Qact,para_Tnum,mole,         &
-!                              mole%RPHTransfo_inact2n,nderiv,test)
+      CALL sub_dnfreq(RPHpara_AT_Qact1,pot0_corgrad,para_Tnum,mole,     &
+                      mole%RPHTransfo_inact2n,nderiv,test,cHAC=.TRUE.)
 
       d0Qeq      = RPHpara_AT_Qact1%dnQopt%d0
       d0ehess    = RPHpara_AT_Qact1%dnEHess%d0

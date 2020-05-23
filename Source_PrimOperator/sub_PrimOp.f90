@@ -72,7 +72,7 @@
              pot2
 
    ! Public things from other modules
-   PUBLIC :: Set_RPHpara_AT_Qact1,sub_dnfreq_4p_cHAC,sub_freq2_RPH,sub_dnfreq_v3
+   PUBLIC :: Set_RPHpara_AT_Qact1,sub_dnfreq
 
    PUBLIC :: param_nDFit,nDFunct_WITH_Q, dealloc_nDFit,                 &
              ReadWrite_nDFitW,Analysis_nDFit,Read_FOR_nDFit1_TO_TnDFit2,&
@@ -144,8 +144,6 @@
 !        CALL Init_d0MatOp(d0MatOp(k),0,mole%nb_act,PrimOp%nb_elec,    &
 !                          JRot=para_Tnum%JJ,cplx=.FALSE.,direct_KEO=.FALSE.) ! Scalar Operator
 !      END DO
-!
-!
 !
 !      Qact(:) = mole%ActiveTransfo%Qact0(:)
 
