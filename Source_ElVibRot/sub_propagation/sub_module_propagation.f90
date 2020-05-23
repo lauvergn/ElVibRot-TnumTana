@@ -399,7 +399,8 @@ PUBLIC :: MPI_Bcast_param_Davidson
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) ' nb_psi',size(WP)
+        write(out_unitp,*) ' T=',T
+        write(out_unitp,*) ' nb_WP,size WP',size(WP),size(WP(1)%CvecB)
         write(out_unitp,*)
         CALL flush_perso(out_unitp)
       END IF
@@ -407,7 +408,8 @@ PUBLIC :: MPI_Bcast_param_Davidson
 
 
       CALL file_open(file_restart,no_restart)
-      write(no_restart,*) T
+
+      write(no_restart,*) T,size(WP),size(WP(1)%CvecB)
       IF(MPI_id==0) THEN
         DO i=1,size(WP)
           write(no_restart,*) WP(i)%CvecB
@@ -435,6 +437,7 @@ PUBLIC :: MPI_Bcast_param_Davidson
 
 !------ working parameters --------------------------------
       integer       :: i,no_restart,err_read
+      integer       :: nb_WP_file,size_WP_file
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter ::name_sub='ReadWP_restart'
@@ -453,7 +456,7 @@ PUBLIC :: MPI_Bcast_param_Davidson
 
       T = ZERO
       !err_read = 0
-      read(no_restart,*,IOSTAT=err_read) T
+      read(no_restart,*,IOSTAT=err_read) T,nb_WP_file,size_WP_file
       IF (err_read /= 0) THEN
         write(out_unitp,*) ' WARNING in ',name_sub
         write(out_unitp,*) ' T (time) is not present in the restart file'
@@ -462,6 +465,15 @@ PUBLIC :: MPI_Bcast_param_Davidson
         T = ZERO
       ELSE
         write(out_unitp,*) 'T0 for the restart:',T
+        write(out_unitp,*) 'ReadWP_restart: nb_WP,size WP            ',size(WP),size(WP(1)%CvecB)
+        write(out_unitp,*) 'ReadWP_restart: nb_WP,size WP (from file)',nb_WP_file,size_WP_file
+
+        IF (nb_WP_file /= size(WP) .OR. size_WP_file /= size(WP(1)%CvecB)) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' Inconsistent WP size values!'
+          STOP ' ERROR in ReadWP_restart:  Inconsistent WP size values.'
+        END IF
+
         DO i=1,size(WP)
           read(no_restart,*) WP(i)%CvecB
         END DO

@@ -370,7 +370,7 @@ MODULE mod_dnV
       nb_var_deriv = size(Vec%d1,dim=2)
     END IF
 
-    IF (Vec%nb_var_deriv /= nb_var_deriv) THEN
+    IF (Vec%nb_var_deriv /= nb_var_deriv .AND. Vec%nderiv > 0) THEN
       write(out_unitp,*) ' ERROR in get_nb_var_deriv_FROM_dnVec'
       write(out_unitp,*) '  Problem with nb_var_deriv in Vec'
       CALL Write_dnVec(Vec)
@@ -378,6 +378,8 @@ MODULE mod_dnV
     END IF
 
     END FUNCTION get_nb_var_deriv_FROM_dnVec
+
+
 !================================================================
 !        write the derived type
 !================================================================

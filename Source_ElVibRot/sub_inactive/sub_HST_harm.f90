@@ -409,8 +409,8 @@
 !=============================================================
      SUBROUTINE sub_HST7_bhe(Qact,d0Qeq,d0ehess,d0MatHADAOp,nb_Op,    &
                              rho,para_AllOp,Basis2n,freq_only,test)
-
       USE mod_system
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_dnSVM
       USE mod_nDindex
       USE mod_Coord_KEO, only : CoordType, Tnum, Qinact2n_TO_Qact_FROM_ActiveTransfo
@@ -469,7 +469,7 @@
       real (kind=Rkind) :: ScalOp(para_AllOp%tab_Op(1)%para_ReadOp%nb_scalar_Op)
       real (kind=Rkind) :: vep,rho,wnDh
       real (kind=Rkind) :: pot0_corgrad
-      logical :: pot,KEO
+      logical           :: pot,KEO
 
 !------ for the frequencies -------------------------------
         integer :: nderiv
@@ -497,6 +497,7 @@
       integer :: nq
 
       integer, parameter :: nq_write_HADA = 10000
+      real (kind=Rkind)  :: auTOcm_inv
 
 !----- FUNCTION --------------------------------------------------
       real (kind=Rkind) ::      pot_rest
@@ -510,6 +511,7 @@
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
+     auTOcm_inv    = get_Conv_au_TO_unit('E','cm-1')
 
       mole         => para_AllOp%tab_Op(1)%mole
       para_Tnum    => para_AllOp%tab_Op(1)%para_Tnum
@@ -620,10 +622,16 @@
 
       IF (print_level > 0) THEN
         !IF (freq_only) write(out_unitp,*) ' freq_only'
+
+        write(out_unitp,11) Qact(1:nb_act1),                            &
+                               RPHpara_AT_Qact1%dnEHess%d0(:)*auTOcm_inv
+ 11     format(' frequencies : ',30f10.4)
+
         write(out_unitp,12) Qact(1:nb_act1),RPHpara_AT_Qact1%dnQopt%d0
  12     format('Qeq',20(' ',f10.6))
-        write(out_unitp,11) Qact(1:nb_act1),pot0_corgrad
- 11     format('pot0_corgrad',10(' ',f10.6))
+
+        write(out_unitp,13) Qact(1:nb_act1),pot0_corgrad
+ 13     format('pot0_corgrad',10(' ',f10.6))
         CALL flush_perso(out_unitp)
       END IF
 

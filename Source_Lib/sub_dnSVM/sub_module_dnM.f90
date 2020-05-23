@@ -463,7 +463,7 @@
       STOP 'ERROR in get_nderiv_FROM_dnMat'
     END IF
 
-    END FUNCTION get_nderiv_FROM_dnMat
+  END FUNCTION get_nderiv_FROM_dnMat
   FUNCTION get_nb_var_deriv_FROM_dnMat(Mat) RESULT(nb_var_deriv)
 
     integer                          :: nb_var_deriv
@@ -477,7 +477,7 @@
       nb_var_deriv = size(Mat%d1,dim=3)
     END IF
 
-    IF (Mat%nb_var_deriv /= nb_var_deriv) THEN
+    IF (Mat%nb_var_deriv /= nb_var_deriv .AND. Mat%nderiv > 0) THEN
       write(out_unitp,*) ' ERROR in get_nb_var_deriv_FROM_dnMat'
       write(out_unitp,*) '  Problem with nb_var_deriv in Mat'
       CALL Write_dnMat(Mat)

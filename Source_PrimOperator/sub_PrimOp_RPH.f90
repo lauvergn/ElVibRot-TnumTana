@@ -663,17 +663,21 @@
       CALL FiniteDiff_Finalize_dnS(RPHpara_AT_Qact1_save%dnLnN,RPHTransfo%step)
 
       ! transformation in the ln derivatives, just for cHAC (useless for RPH)
-      DO i=1,RPHTransfo%nb_act1
-        RPHpara_AT_Qact1_save%dnLnN%d1(i) =                             &
-          RPHpara_AT_Qact1_save%dnLnN%d1(i)/RPHpara_AT_Qact1_save%dnLnN%d0
-      END DO
-      DO i=1,RPHTransfo%nb_act1
-      DO j=1,RPHTransfo%nb_act1
-        RPHpara_AT_Qact1_save%dnLnN%d2(i,j) =                           &
-           RPHpara_AT_Qact1_save%dnLnN%d2(i,j)/RPHpara_AT_Qact1_save%dnLnN%d0 - &
-           RPHpara_AT_Qact1_save%dnLnN%d1(i)*RPHpara_AT_Qact1_save%dnLnN%d1(j)
-      END DO
-      END DO
+      IF (associated(RPHpara_AT_Qact1_save%dnLnN%d1)) THEN
+        DO i=1,RPHTransfo%nb_act1
+          RPHpara_AT_Qact1_save%dnLnN%d1(i) =                           &
+            RPHpara_AT_Qact1_save%dnLnN%d1(i)/RPHpara_AT_Qact1_save%dnLnN%d0
+        END DO
+      END IF
+      IF (associated(RPHpara_AT_Qact1_save%dnLnN%d2)) THEN
+        DO i=1,RPHTransfo%nb_act1
+        DO j=1,RPHTransfo%nb_act1
+          RPHpara_AT_Qact1_save%dnLnN%d2(i,j) =                         &
+            RPHpara_AT_Qact1_save%dnLnN%d2(i,j)/RPHpara_AT_Qact1_save%dnLnN%d0 - &
+            RPHpara_AT_Qact1_save%dnLnN%d1(i)*RPHpara_AT_Qact1_save%dnLnN%d1(j)
+        END DO
+        END DO
+      END IF
 
     END IF
 

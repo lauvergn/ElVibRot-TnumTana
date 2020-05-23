@@ -294,7 +294,7 @@ MODULE mod_dnS
       nb_var_deriv = size(dnS%d1,dim=1)
     END IF
 
-    IF (dnS%nb_var_deriv /= nb_var_deriv) THEN
+    IF (dnS%nb_var_deriv /= nb_var_deriv  .AND. dnS%nderiv > 0) THEN
       write(out_unitp,*) ' ERROR in get_nb_var_deriv_FROM_dnS'
       write(out_unitp,*) '  Problem with nb_var_deriv in dnS'
       CALL Write_dnS(dnS)
