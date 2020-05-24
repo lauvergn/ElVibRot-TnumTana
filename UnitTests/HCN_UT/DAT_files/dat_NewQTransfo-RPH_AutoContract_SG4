@@ -1,0 +1,139 @@
+#!/bin/bash
+
+ SYSTEM=sub_system_murrell.f
+ test=f
+
+dav=$1
+LB=$2
+LG=$(($LB+1))
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make &> comp.log
+cd $here
+
+#LB=11
+#LG=16
+#B=1
+
+#LB=6
+#LG=7
+B=2
+
+ x1=0.538516066
+ x2=0.461483933
+
+ MH=1837.10882307318116
+ MD=3671.297316
+ MN=25525.4342723654045
+ MC=21874.1407256995735
+
+#export OMP_NUM_THREADS=1
+
+RES=res_RPH_AutoContract_Davidson_SG4
+
+nice $DIR_vib/vib << ** > $RES
+ &system printlevel=0 /
+ &constantes mass_version='HANDBOOK70ED' version='PUBLI2001' /
+ &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 /
+ &Coord_transfo name_transfo='zmat' nat=4 /
+$MC
+X     1
+$MN     2  1
+$MH     2 -1 3
+
+ &Coord_transfo name_transfo='linear' /
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ &Coord_transfo name_transfo='RPH' opt_transfo=1 /
+  &RPH /
+ 1 21 21    0 0 0
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1    0 0 0
+
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2 /
+.9d0
+0.
+0.
+0.
+3.14159265358d0
+0.0
+
+ &basis_nD nb_basis=3 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=4 /
+   &basis_nD iQact(1)=1 name="Pl0" L_TO_nq_A=10 L_TO_nq_B=10 /
+   &basis_nD iQdyn(1)=2 name="Hm" L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn(1)=3 name="Hm" L_TO_nq_A=1 L_TO_nq_B=$B /
+ &inactives /
+
+ &actives test=$test direct=2 /
+ &analyse max_ana=40 max_ene=7000. "cm-1" name_file_spectralWP='file_spectral' davidson=$dav /
+ &davidson nb_WP=0 max_it=100 max_WP=3000 num_resetH=10
+           all_lower_states=t max_Ene=8000. "cm-1" NewVec_type=2
+           read_WP=t name_file_readWP='file_spectral'
+/
+ 1 1 1    1 1   1.0
+end wp0
+ 2 1 1    1 1   1.0
+end wp0
+ 3 1 1    1 1   1.0
+end wp0
+ 4 1 1    1 1   1.0
+end wp0
+ 5 1 1    1 1   1.0
+end wp0
+ 6 1 1    1 1   1.0
+end wp0
+ 7 1 1    1 1   1.0
+end wp0
+ 8 1 1    1 1   1.0
+end wp0
+ 9 1 1    1 1   1.0
+end wp0
+10 1 1    1 1   1.0
+end wp0
+ 1 2 1    1 1   1.0
+end wp0
+ 2 2 1    1 1   1.0
+end wp0
+ 3 2 1    1 1   1.0
+end wp0
+ 4 2 1    1 1   1.0
+end wp0
+ 5 2 1    1 1   1.0
+end wp0
+ 1 1 2    1 1   1.0
+end wp0
+ 2 1 2    1 1   1.0
+end wp0
+ 3 1 2    1 1   1.0
+end wp0
+ 4 1 2    1 1   1.0
+end wp0
+ 5 1 2    1 1   1.0
+end wp0
+ 1 3 1    1 1   1.0
+end wp0
+ 2 3 1    1 1   1.0
+end wp0
+ 3 3 1    1 1   1.0
+end wp0
+ 4 3 1    1 1   1.0
+end wp0
+ 5 3 1    1 1   1.0
+end wp0
+**
+
+awk '/lev0:/ {print $5}' $RES | head -20 > lev20_$RES

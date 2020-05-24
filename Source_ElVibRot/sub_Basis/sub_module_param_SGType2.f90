@@ -757,7 +757,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
       real (kind=Rkind) :: binomial ! function
 !---------------------------------------------------------------------
 
-      integer             :: i,i_SG,i_SGm,DeltaL
+      integer             :: i,i_SG,i_SGm,DeltaL,max_print
       integer             :: tab_l(nDind_SmolyakRep%ndim)
       integer             :: tab_lm(nDind_SmolyakRep%ndim)
 
@@ -827,20 +827,25 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
     IF (debug) write(out_unitp,*) 'count zero weight: ',count(abs(WeightSG) <= ONETENTH**6)
 !-----------------------------------------------------------
-      IF (debug .OR. print_level > 1) THEN
+    IF (debug .OR. print_level > 1) THEN
+      max_print = nDind_SmolyakRep%Max_nDI
+      IF (.NOT. debug) max_print = min(100,max_print)
 
-        CALL init_nDval_OF_nDindex(nDind_SmolyakRep,tab_l)
-        DO i_SG=1,nDind_SmolyakRep%Max_nDI
-          CALL ADD_ONE_TO_nDindex(nDind_SmolyakRep,tab_l,iG=i_SG)
-          write(out_unitp,*) 'i_SG,nDval,coef',i_SG,tab_l(:),WeightSG(i_SG)
-        END DO
+      CALL init_nDval_OF_nDindex(nDind_SmolyakRep,tab_l)
+      DO i_SG=1,max_print
+        CALL ADD_ONE_TO_nDindex(nDind_SmolyakRep,tab_l,iG=i_SG)
+        write(out_unitp,*) 'i_SG,nDval,coef',i_SG,tab_l(:),WeightSG(i_SG)
+      END DO
+      IF (max_print < nDind_SmolyakRep%Max_nDI) THEN
+         write(out_unitp,*) 'i_SG,nDval,coef ....'
       END IF
+    END IF
 
-      IF (debug) THEN
-        write(out_unitp,*) 'END ',name_sub
-      END IF
+    IF (debug) THEN
+      write(out_unitp,*) 'END ',name_sub
+    END IF
 !-----------------------------------------------------------
-      END SUBROUTINE calc_Weight_OF_SRep
+  END SUBROUTINE calc_Weight_OF_SRep
 
 
 ! from an index iq (global index of the multidimentional Smolyak grid) get:

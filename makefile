@@ -16,10 +16,10 @@ MPICORE = gfortran
 debug_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
 ifeq ($(F90),mpifort)
   OMP = 0
 endif
@@ -33,7 +33,7 @@ ARPACK = 0
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
-LAPACK = 0
+LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
 QML = 0
 #
@@ -788,7 +788,7 @@ PhysConst: obj $(PhysConstEXE)
 #============================================================================
 # Unitary tests
 .PHONY: ut UT UnitTests
-ut UT UnitTests: UT_Frac UT_PhysConst UT_HNO3
+ut UT UnitTests: UT_Frac UT_PhysConst UT_HNO3 UT_HCN
 #
 .PHONY: UT_Frac ut_frac
 UT_Frac ut_frac : UnitTests_Frac.exe
@@ -807,11 +807,11 @@ UT_PhysConst ut_physconst: PhysConst
 	@echo "Unitary tests for the PhysConst module"
 	@cd Examples/exa_PhysicalConstants ; ./run_tests > $(DIRUT)/res_UT_PhysConst ; $(DIRUT)/PhysConst.sh $(DIRUT)/res_UT_PhysConst
 	@echo "---------------------------------------"
-.PHONY: UT_HNO3 ut_hno3
-UT_HNO3 ut_hno3: EVR
+.PHONY: UT_HCN ut_hcn
+UT_HCN ut_hcn: EVR
 	@echo "---------------------------------------"
-	@echo "Unitary tests for the HNO3 ElVibRot calculations"
-	@cd UnitTests/HNO3_UT ; ./run_tests small
+	@echo "Unitary tests for the HCN (diago) ElVibRot calculations"
+	@cd UnitTests/HCN_UT ; ./run_tests small
 	@echo "---------------------------------------"
 #===============================================
 #===============================================

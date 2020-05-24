@@ -2,3 +2,7 @@ rm -f res*
 cd HNO3_UT
 ./clean
 cd ..
+
+cd HCN_UT
+./clean
+cd ..
