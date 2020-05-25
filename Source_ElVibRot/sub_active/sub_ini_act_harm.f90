@@ -291,13 +291,15 @@
       !-- Multidimensional loop ----------------------------
       IF (print_level > 1) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',Grid_maxth
 
+      CALL Tune_grid(para_AllOp)
+
+
       IF (.NOT. para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid .AND.    &
          print_level > 0 .AND. para_AllOp%tab_Op(1)%nb_qa > max_nb_G_FOR_print) THEN
         write(out_unitp,'(a)') 'Grid (%): [--0-10-20-30-40-50-60-70-80-90-100]'
         write(out_unitp,'(a)',ADVANCE='no') 'Grid (%): ['
         CALL flush_perso(out_unitp)
       END IF
-
 
       max_Sii = ZERO
       max_Sij = ZERO
@@ -412,5 +414,120 @@
       END IF
       END IF
 
-      END SUBROUTINE sub_qa_bhe
+  END SUBROUTINE sub_qa_bhe
+  SUBROUTINE Tune_grid(para_AllOp)
+  USE mod_system
+  USE mod_Op
+  USE mod_PrimOp
+  USE mod_MPI
+  IMPLICIT NONE
+
+!----- variables for the construction of H ---------------------------
+  TYPE (param_AllOp), intent(inout) :: para_AllOp
+
+!------ working variables ---------------------------------
+  real (kind=Rkind)  :: max_Sii,max_Sij
+  real (kind=Rkind)  :: max_Hii,max_Hij
+  integer            :: Grid_maxth_save,opt_Grid_maxth
+  real(kind=Rkind)   :: Opt_RealTime,RealTime(Grid_maxth)
+  TYPE (param_time)  :: GridTime
+  integer            :: iq,max_nq
+  integer            :: print_level_save
+  logical            :: freq_only
+  TYPE (OldParam)    :: OldPara
+
+  !----- for debuging --------------------------------------------------
+  !integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='Tune_grid'
+  logical, parameter :: debug = .FALSE.
+  !logical, parameter :: debug = .TRUE.
+  !-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+  END IF
+  !-----------------------------------------------------------
+
+  IF (.NOT. Tune_Grid_omp) RETURN
+  IF (para_AllOp%tab_Op(1)%mole%nb_inact2n > 0) RETURN ! we don't tune for HADA or cHAC
+
+  write(out_unitp,*) '============================================'
+  write(out_unitp,*) '== Tuning the number of OMP threads ========'
+
+  write(out_unitp,*) ' Number of threads (grid):',Grid_maxth
+
+!-----------------------------------------------------
+!!! How many points do we tests ???
+!! => a multiple of Grid_maxth
+
+  print_level_save = print_level
+  print_level      = -1
+
+  max_nq           = 1
+  freq_only        = .FALSE.
+  RealTime(1)      = Delta_RealTime(GridTime)
+  DO   ! loop to increase max_nq
+
+    DO iq=1,max_nq
+       CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,     &
+        para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)
+    END DO
+    RealTime(1) = Delta_RealTime(GridTime)
+    IF (RealTime(1) > TEN) exit ! 10 seconds ???
+    IF (2*max_nq > para_AllOp%tab_Op(1)%nb_qa/Grid_maxth) EXIT
+    max_nq = max_nq * 2
+
+  END DO
+  write(out_unitp,*) '   Tuning with ',max_nq,' grid points'
+  CALL flush_perso(out_unitp)
+  !now we have an optimal max_nq (about 10 seconds of calculation)
+!-----------------------------------------------------
+
+  max_Sii = ZERO
+  max_Sij = ZERO
+
+  Grid_maxth_save = Grid_maxth
+  Opt_RealTime    = huge(ONE)
+  opt_Grid_maxth  = Grid_maxth
+  DO Grid_maxth=1,Grid_maxth_save
+
+    !$OMP   PARALLEL &
+    !$OMP   DEFAULT(NONE) &
+    !$OMP   SHARED(para_AllOp,max_Sii,max_Sij,max_nq) &
+    !$OMP   PRIVATE(iq,out_unitp,freq_only,OldPara) &
+    !$OMP   NUM_THREADS(Grid_maxth)
+    !$OMP   DO SCHEDULE(STATIC)
+    DO iq=1,max_nq
+      CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,      &
+        para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)
+    END DO
+    !$OMP   END DO
+    !$OMP   END PARALLEL
+
+    RealTime(Grid_maxth) = Delta_RealTime(GridTime)
+    write(out_unitp,*) 'With ',Grid_maxth,'threads, Delta Real Time',RealTime(Grid_maxth)
+    CALL flush_perso(out_unitp)
+    IF (RealTime(Grid_maxth) < Opt_RealTime) THEN
+      IF (RealTime(Grid_maxth) > 0) THEN
+        Opt_RealTime   = RealTime(Grid_maxth)
+        opt_Grid_maxth = Grid_maxth
+      END IF
+    ELSE
+      IF (Grid_maxth > 1) EXIT
+    END IF
+
+  END DO
+
+  print_level      = print_level_save
+
+  Grid_maxth = opt_Grid_maxth
+  write(out_unitp,*) 'Optimal threads: ',Grid_maxth,' Delta Real Time',RealTime(Grid_maxth)
+  write(out_unitp,*) '============================================'
+
+  !-------------------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'END ',name_sub
+  END IF
+  !-------------------------------------------------------------------
+
+  END SUBROUTINE Tune_grid
 

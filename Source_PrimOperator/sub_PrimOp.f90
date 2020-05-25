@@ -329,6 +329,7 @@
 
       SUBROUTINE get_d0MatOp_AT_Qact_CoordType(Qact,d0MatOp,mole,para_Tnum,PrimOp)
       USE mod_system
+!$    USE omp_lib, only : OMP_GET_THREAD_NUM
       USE mod_dnSVM
       use mod_nDFit, only: sub_ndfunc_from_ndfit
       USE mod_Coord_KEO
@@ -382,7 +383,9 @@
       real (kind=Rkind), allocatable :: Qit(:)
       real (kind=Rkind) :: Qdyn(mole%nb_var)
 
-      integer :: iQa,iQ,iQact1,iQinact21
+      integer :: ith,iQa,iQ,iQact1,iQinact21
+      integer, allocatable, save :: tab_iQa(:)
+      logical :: Find_iQa
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
@@ -565,6 +568,12 @@
           END IF
 
           IF (PrimOp%HarD .AND. associated(mole%RPHTransfo) .AND. PrimOp%nb_elec == 1) THEN
+
+            IF (.NOT. allocated(tab_iQa)) THEN
+              allocate(tab_iQa(0:Grid_maxth-1))
+              tab_iQa(:) = 1
+            END IF
+
             !here it should be Qin of RPH (therefore Qdyn ?????)
             CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
             !write(out_unitp,*) 'test HARD without HAC'
@@ -593,10 +602,26 @@
             !write(out_unitp,*) 'Qinact21',Qinact21
 
             ! find the iQa from tab_RPHpara_AT_Qact1
-            DO iQa=1,mole%RPHTransfo%nb_Qa
-              IF (sum(abs(Qact1-mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1)) < ONETENTH**5) EXIT
-            END DO
-            IF (iQa > mole%RPHTransfo%nb_Qa) THEN
+            ith = 1
+            !$ ith = omp_get_thread_num()
+            iQa = tab_iQa(ith)
+            Find_iQa = all(abs(Qact1-mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1) < ONETENTH**5)
+            !write(6,*) '1 iQa,Find_iQa',iQa,Find_iQa
+            IF (.NOT. Find_iQa) THEN
+              iQa = min(iQa+1,mole%RPHTransfo%nb_Qa)
+              tab_iQa(ith) = iQa
+              Find_iQa = all(abs(Qact1-mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1) < ONETENTH**5)
+              !write(6,*) '2 iQa,Find_iQa',iQa,Find_iQa
+            END IF
+            IF (.NOT. Find_iQa) THEN
+              DO iQa=1,mole%RPHTransfo%nb_Qa
+                tab_iQa(ith) = iQa
+                Find_iQa = all(abs(Qact1-mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1) < ONETENTH**5)
+                !write(6,*) '3 iQa,Find_iQa',iQa,Find_iQa
+                IF (Find_iQa) EXIT
+              END DO
+            END IF
+            IF (.NOT. Find_iQa) THEN
               IF (sum(abs(Qact1-mole%RPHTransfo%RPHpara_AT_Qref(1)%RPHQact1)) < ONETENTH**5) THEN
                 Vinact = HALF*sum(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnehess%d0(:)*Qinact21(:)**2)
               ELSE

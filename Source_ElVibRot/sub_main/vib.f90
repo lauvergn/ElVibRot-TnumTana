@@ -534,7 +534,7 @@
         !================================================================
         max_diago = max(10,para_propa%para_Davidson%nb_WP,para_H%nb_tot/10)
         max_diago = min(max_diago,10,para_H%nb_tot)
-        !CALL Tune_SG4threads_HPsi(para_H%cplx,max_diago,para_H)
+        CALL Tune_SG4threads_HPsi(para_H%cplx,max_diago,para_H)
 
         !================================================================
         !===== build S and/or H if necessary ============================
@@ -1590,6 +1590,7 @@ IMPLICIT NONE
  TYPE (param_time) :: HPsiTime
 
  integer           :: nb_psi_loc,i,ib,PSG4_maxth_save,opt_PSG4_maxth
+ logical           :: Make_Mat_save
  real(kind=Rkind)  :: a,b,Opt_RealTime,RealTime(SG4_maxth)
 
 !----- for debuging --------------------------------------------------
@@ -1600,10 +1601,13 @@ IMPLICIT NONE
 #if(run_MPI)
    RETURN
 #endif
+IF (.NOT. Tune_SG4_omp) RETURN
 IF (para_H%BasisnD%SparseGrid_type /= 4) RETURN
 
 para_mem%mem_debug = .FALSE.
 
+Make_Mat_save = para_H%Make_Mat
+para_H%Make_Mat = .FALSE.
 
 nb_psi_loc = nb_psi
 IF (cplx) nb_psi_loc = 1
@@ -1618,6 +1622,8 @@ DO i=1,nb_psi_loc
   CALL Set_Random_psi(Tab_Psi(i))
 END DO
 
+write(out_unitp,*) '============================================'
+write(out_unitp,*) '== Tuning the number of OMP threads ========'
 
 write(out_unitp,*)
 write(out_unitp,*) ' Number of psi:',size(Tab_Psi)
@@ -1654,7 +1660,9 @@ END DO
 
 SG4_maxth = opt_PSG4_maxth
 write(out_unitp,*) 'Optimal threads: ',SG4_maxth,' Delta Real Time',RealTime(SG4_maxth)
+write(out_unitp,*) '============================================'
 
+para_H%Make_Mat = Make_Mat_save
 
 CALL dealloc_NParray(Tab_OpPsi,'Tab_OpPsi',name_sub)
 CALL dealloc_NParray(Tab_Psi,  'Tab_Psi',  name_sub)
