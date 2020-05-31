@@ -209,6 +209,7 @@ MODULE mod_dnS
         !write(out_unitp,*) 'BEGINNING dealloc_dnS'
         !write(out_unitp,*) 'dnS%nb_var_deriv,dnS%nderiv',dnS%nb_var_deriv,dnS%nderiv
         !CALL Write_dnS(dnS)
+        !CALL flush_perso(out_unitp)
 
         dnS%d0           = ZERO
 
@@ -228,7 +229,9 @@ MODULE mod_dnS
 
         dnS%nderiv       = 0
         dnS%nb_var_deriv = 0
+
         !write(out_unitp,*) 'END dealloc_dnS'
+        !CALL flush_perso(out_unitp)
 
       END SUBROUTINE dealloc_dnS
 

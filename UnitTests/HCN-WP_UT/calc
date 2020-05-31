@@ -1,0 +1,28 @@
+ SYSTEM=sub_system_cos_hcn.f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make &> $here/comp.log
+cd $here
+
+for i in Cheby nOD RK4 ModMidPoint Bulirsch-Stoer SIL SIP Spectral
+do
+ dat_WPpropa $i
+done
+
+for i in Cheby nOD RK4 ModMidPoint Bulirsch-Stoer SIL SIP Spectral
+do
+ nr2=`grep norm^2 res_TypePropa$i | tail -1`
+ echo $nr2  $i
+done
+
+for i in Cheby nOD RK4 ModMidPoint Bulirsch-Stoer SIL SIP Spectral
+do
+ ac=`tail -1 file_auto$i`
+ echo $ac   $i
+done

@@ -110,26 +110,26 @@ CONTAINS
         mole%tab_Qtransfo(it)%skip_transfo = .TRUE.
       END DO
 
-      ! for RPHpara_AT_Qref
-      IF (.NOT. associated(mole%RPHTransfo%RPHpara_AT_Qref)) THEN
-        IF (debug) write(out_unitp,*) ' RPHpara_AT_Qref'
-        CALL alloc_array(mole%RPHTransfo%RPHpara_AT_Qref,(/ 1 /),       &
-                        'mole%RPHTransfo%RPHpara_AT_Qref',name_sub)
+      ! for tab_RPHpara_AT_Qact1
+      IF (.NOT. associated(mole%RPHTransfo%tab_RPHpara_AT_Qact1)) THEN
+        IF (debug) write(out_unitp,*) ' tab_RPHpara_AT_Qact1'
+        CALL alloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,[0],      &
+                        'mole%RPHTransfo%tab_RPHpara_AT_Qact1',name_sub,[0])
 
         CALL get_Qact0(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
-        CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%RPHpara_AT_Qref(1),   &
+        CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0), &
                                   Qact,para_Tnum,mole)
         mole%RPHTransfo%init_Qref = .TRUE.
 
         write(out_unitp,*) ' Frequencies, normal modes at the reference geometry'
 
         write(out_unitp,11) Qact(1:nb_act1_RPH), &
-               mole%RPHTransfo%RPHpara_AT_Qref(1)%dnEHess%d0(:)*get_Conv_au_TO_unit('E','cm-1')
+               mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnEHess%d0(:)*get_Conv_au_TO_unit('E','cm-1')
  11     format(' frequencies : ',30f10.4)
         write(out_unitp,*) 'dnQopt'
-        CALL Write_dnVec(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt)
+        CALL Write_dnVec(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnQopt)
         write(out_unitp,*) 'dnC_inv'
-        CALL Write_dnMat(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC_inv)
+        CALL Write_dnMat(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnC_inv)
         CALL flush_perso(out_unitp)
 
       END IF
@@ -216,6 +216,7 @@ CONTAINS
       real (kind=Rkind), allocatable :: List_Qact1(:,:),List_tmp_Qact1(:,:)
 
       logical :: Find_in_List,iqLoop_end
+      TYPE (Type_RPHpara_AT_Qact1) :: Type_RPHpara_AT_Qref
 
 
 !----- for debuging --------------------------------------------------
@@ -348,9 +349,22 @@ CONTAINS
 
       !----------------------------------------------------------------
       !---- allocation of tab_RPHpara_AT_Qact1 ------------------------
+      IF (associated(mole%RPHTransfo%tab_RPHpara_AT_Qact1)) THEN
+        CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(                    &
+                               mole%RPHTransfo%tab_RPHpara_AT_Qact1(0), &
+                               Type_RPHpara_AT_Qref)
+        CALL dealloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,        &
+                          'mole%RPHTransfo%tab_RPHpara_AT_Qact1',name_sub)
+      END IF
       mole%RPHTransfo%nb_Qa = size(List_Qact1,dim=2)
-      CALL alloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,(/ mole%RPHTransfo%nb_Qa /),&
-                      'mole%RPHTransfo%tab_RPHpara_AT_Qact1',name_sub)
+      CALL alloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,[mole%RPHTransfo%nb_Qa],&
+                      'mole%RPHTransfo%tab_RPHpara_AT_Qact1',name_sub,[0])
+      IF (Type_RPHpara_AT_Qref%init_done > 0) THEN
+        CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(Type_RPHpara_AT_Qref,&
+                               mole%RPHTransfo%tab_RPHpara_AT_Qact1(0))
+        !mole%RPHTransfo%tab_RPHpara_AT_Qact1(0) = Type_RPHpara_AT_Qref
+        CALL dealloc_RPHpara_AT_Qact1(Type_RPHpara_AT_Qref)
+      END IF
       !----------------------------------------------------------------
 
 

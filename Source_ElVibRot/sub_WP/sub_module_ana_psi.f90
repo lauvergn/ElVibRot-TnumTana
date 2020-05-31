@@ -145,8 +145,11 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'ana_psi%GridDone',ana_psi%GridDone
+    CALL ecri_psi(psi=psi)
     CALL flush_perso(out_unitp)
   END IF
+  IF (adia .AND. .NOT. ana_psi%GridDone) STOP 'adia=t and GridDone=f'
 
   ! save the GridRep and BasisRep values to be able to deallocate the unused representation
   Grid  = psi%GridRep
@@ -289,9 +292,9 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
   IF (ana_psi%propa) CALL psi_Qba_ie_psi(ana_psi%T,psi,ana_psi,tab_WeightChannels,info)
 
-  CALL Rho1D_Rho2D_psi(psi,ana_psi)
+  CALL Rho1D_Rho2D_psi(psi,ana_psi,adia)
 
-  CALL write1D2D_psi(psi,ana_psi)
+  CALL write1D2D_psi(psi,ana_psi,adia)
 
   !---------------------------------------------------------------------------
   IF (ana_psi%Write_psi) THEN
@@ -722,7 +725,7 @@ END SUBROUTINE sub_analyze_psi
 
 
       END SUBROUTINE psi_Qba_ie_psi
-      SUBROUTINE write1D2D_psi(psi,ana_psi)
+      SUBROUTINE write1D2D_psi(psi,ana_psi,adia)
       USE mod_system
       USE mod_dnSVM
       USE mod_psi_set_alloc
@@ -732,6 +735,7 @@ END SUBROUTINE sub_analyze_psi
 !----- variables for the WP ----------------------------------------
       TYPE (param_psi),     intent(inout)  :: psi
       TYPE (param_ana_psi), intent(inout)  :: ana_psi
+      logical,              intent(in)     :: adia
 
 
 
@@ -769,7 +773,7 @@ END SUBROUTINE sub_analyze_psi
 !-----------------------------------------------------------
 
       IF (.NOT.ana_psi%psi1D_Q0 .AND. .NOT.ana_psi%psi2D_Q0) RETURN
-      IF (ana_psi%adia) RETURN
+      IF (adia) RETURN
 
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -908,7 +912,7 @@ END SUBROUTINE sub_analyze_psi
 
         DO ib=1,psi%BasisnD%nb_basis
 
-          IF (ana_psi%adia) THEN
+          IF (adia) THEN
             state_name = make_FileName('psiAdia1D_')
           ELSE
             state_name = make_FileName('psi1D_')
@@ -1017,7 +1021,7 @@ END SUBROUTINE sub_analyze_psi
 
 
       END SUBROUTINE write1D2D_psi
-      SUBROUTINE Rho1D_Rho2D_psi(psi,ana_psi)
+      SUBROUTINE Rho1D_Rho2D_psi(psi,ana_psi,adia)
       USE mod_system
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
@@ -1025,6 +1029,7 @@ END SUBROUTINE sub_analyze_psi
 !----- variables for the WP ----------------------------------------
       TYPE (param_psi),     intent(inout) :: psi
       TYPE (param_ana_psi), intent(inout) :: ana_psi
+      logical,              intent(in)    :: adia
 
 
 !------ working variables ---------------------------------
@@ -1048,12 +1053,14 @@ END SUBROUTINE sub_analyze_psi
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='Rho1D_Rho2D_psi'
       logical,parameter :: debug = .FALSE.
-!     logical,parameter :: debug = .TRUE.
+      !logical,parameter :: debug = .TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'psi'
         CALL ecri_psi(psi=psi)
+        write(out_unitp,*) 'ana_psi%ana,ana_psi%Rho1D,ana_psi%Rho2D',   &
+                            ana_psi%ana,ana_psi%Rho1D,ana_psi%Rho2D
       END IF
 !-----------------------------------------------------------
       IF (ana_psi%ana .AND. (ana_psi%Rho1D .OR. ana_psi%Rho2D)) THEN
@@ -1063,7 +1070,7 @@ END SUBROUTINE sub_analyze_psi
           !- loop on coordinates ----------------------------------
           DO i_basis_act1=1,psi%BasisnD%nb_basis
 
-            IF (ana_psi%adia) THEN
+            IF (adia) THEN
               state_name = make_FileName('RhoAdia1D_')
             ELSE
               state_name = make_FileName('Rho1D_')
@@ -1166,7 +1173,7 @@ END SUBROUTINE sub_analyze_psi
           DO i_basis_act1=1,psi%BasisnD%nb_basis
           DO j_basis_act1=i_basis_act1+1,psi%BasisnD%nb_basis
 
-            IF (ana_psi%adia) THEN
+            IF (adia) THEN
               state_name = make_FileName('RhoAdia2D_')
             ELSE
               state_name = make_FileName('Rho2D_')

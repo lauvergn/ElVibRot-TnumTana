@@ -16,7 +16,7 @@ DIR_pot=$DIR_vib/sub_pot
  cp $SYSTEM $DIR_pot/sub_system.f
 
 cd $DIR_vib
- make &> comp.log
+ make &> $here/comp.log
 cd $here
 
 #MH=1837.10882307318116

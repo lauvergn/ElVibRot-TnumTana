@@ -752,7 +752,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       END IF
 
       IF (para_propa%ana_psi%AvHiterm) THEN
-        w1 = WP(i)
+        w1   = WP(i)
         info = real_TO_char(T,Rformat='f12.2')
         CALL sub_psiHitermPsi(w1,i,info,para_H)
       END IF
@@ -761,6 +761,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       IF (adia_loc) THEN
         w1 = WP(i)
         CALL sub_PsiDia_TO_PsiAdia_WITH_MemGrid(w1,para_H)
+        para_propa%ana_psi%GridDone = .TRUE.
         CALL sub_analyze_psi(w1,para_propa%ana_psi,adia=.TRUE.)
       END IF
       CALL flush_perso(out_unitp)

@@ -35,7 +35,7 @@ CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 0
+QML = 1
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -807,6 +807,14 @@ UT_PhysConst ut_physconst: PhysConst
 	@echo "Unitary tests for the PhysConst module"
 	@cd Examples/exa_PhysicalConstants ; ./run_tests > $(DIRUT)/res_UT_PhysConst ; $(DIRUT)/PhysConst.sh $(DIRUT)/res_UT_PhysConst
 	@echo "---------------------------------------"
+#
+.PHONY: UT_HNO3 ut_hno3
+UT_HNO3 ut_hno3: EVR
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the HNO3 ElVibRot calculations"
+	@cd UnitTests/HNO3_UT ; ./run_tests small
+	@echo "---------------------------------------"
+#
 .PHONY: UT_HCN ut_hcn
 UT_HCN ut_hcn: EVR
 	@echo "---------------------------------------"

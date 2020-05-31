@@ -148,8 +148,8 @@
       SELECT CASE (para_propa%type_WPpropa)
 
       CASE (1) ! Chebyshev
-        !CALL march_cheby_old(T,no,WP(1),WP0(1),para_H,para_propa)
-        CALL march_cheby(T,no,WP(1),WP0(1),para_H,para_propa)
+        CALL march_cheby_old(T,no,WP(1),WP0(1),para_H,para_propa)
+        !CALL march_cheby(T,no,WP(1),WP0(1),para_H,para_propa)
 
       CASE (2) ! n-Order Taylor expansion
         !IF (SGtype4 .AND. direct_KEO) THEN
@@ -1464,7 +1464,7 @@
  !CALL ecri_psi(psi=psi)
 !     - Phase Shift -----------------------------------
       phase = para_H%E0*para_propa%WPdeltaT
-      psi = psi * exp(-cmplx(ZERO,phase,kind=Rkind))
+      psi   = psi * exp(-cmplx(ZERO,phase,kind=Rkind))
 
  !write(out_unitp,*) ' Psi after phase shift '
  !CALL ecri_psi(psi=psi)
@@ -3535,53 +3535,31 @@
       CALL alloc_NParray(PsiOnSpectral, [para_H%nb_tot],'PsiOnSpectral', name_sub)
       CALL alloc_NParray(HPsiOnSpectral,[para_H%nb_tot],'HPsiOnSpectral',name_sub)
 
-!      ! 1st: project psi on the spectral basis
-!      IF (para_H%cplx) THEN
-!        PsiOnSpectral(:) = matmul(transpose(para_H%Cvp),Psi%CvecB)
-!      ELSE
-!        PsiOnSpectral(:) = matmul(transpose(para_H%Rvp),Psi%CvecB)
-!      END IF
-!
-!      ! 2d: propagation with spectral representation
-!      IF (para_H%cplx) THEN
-!        HPsiOnSpectral   = exp(-EYE*para_H%Cdiag*para_propa%WPdeltaT)*PsiOnSpectral
-!      ELSE
-!        HPsiOnSpectral   = exp(-EYE*para_H%Rdiag*para_propa%WPdeltaT)*PsiOnSpectral
-!      END IF
-!
-!      ! 3d: back to the initial basis
-!      IF (para_H%cplx) THEN
-!        Psi%CvecB = matmul(conjg(para_H%Cvp),HPsiOnSpectral)
-!      ELSE
-!        Psi%CvecB = matmul(para_H%Rvp,HPsiOnSpectral)
-!      END IF
-
-
-      ! 1st: project psi on the spectral basis
       IF (para_H%cplx) THEN
+        ! 1st: project psi on the spectral basis
         PsiOnSpectral(:) = matmul(transpose(para_H%Cvp),Psi%CvecB)
-      ELSE
-        DO i=1,para_H%nb_tot
-          PsiOnSpectral(i) = dot_product(para_H%Rvp(:,i),Psi%CvecB)
-        END DO
-      END IF
 
-      ! 2d: propagation with spectral representation
-      IF (para_H%cplx) THEN
+        ! 2d: propagation with spectral representation
         HPsiOnSpectral   = exp(-EYE*para_H%Cdiag*para_propa%WPdeltaT)*PsiOnSpectral
+
+        ! 3d: back to the initial basis
+        Psi%CvecB = matmul(conjg(para_H%Cvp),HPsiOnSpectral)
+
       ELSE
+        ! 1st: project psi on the spectral basis
+        PsiOnSpectral(:) = matmul(transpose(para_H%Rvp),Psi%CvecB)
+
+        ! 2d: propagation with spectral representation
         HPsiOnSpectral   = exp(-EYE*para_H%Rdiag*para_propa%WPdeltaT)*PsiOnSpectral
+
+        ! 3d: back to the initial basis
+        Psi%CvecB = matmul(para_H%Rvp,HPsiOnSpectral)
+
+        !write(6,*) 'E',sum(conjg(HPsiOnSpectral)*HPsiOnSpectral*para_H%Rdiag)
+
       END IF
 
-      ! 3d: back to the initial basis
-      IF (para_H%cplx) THEN
-        Psi%CvecB = matmul(conjg(para_H%Cvp),HPsiOnSpectral)
-      ELSE
-        Psi%CvecB = CZERO
-        DO i=1,para_H%nb_tot
-          Psi%CvecB(:) = Psi%CvecB(:) + HPsiOnSpectral(i) * para_H%Rvp(:,i)
-        END DO
-      END IF
+
 
 
       CALL dealloc_NParray(PsiOnSpectral, 'PsiOnSpectral', name_sub)
@@ -3689,7 +3667,7 @@
         ENDIF
 #endif
 
-        para_propa%march_error = .FALSE.
+        para_propa%march_error      = .FALSE.
         para_propa%para_poly%deltaE = para_propa%para_poly%Hmax -          &
                                                   para_propa%para_poly%Hmin
         para_propa%para_poly%E0     = para_propa%para_poly%Hmin +          &
@@ -3712,7 +3690,9 @@
         psi0Hkpsi0(:) = CZERO
 
         ! calculate cofficients for Chebychev in para_propa%para_poly%coef_poly
-        r = max(ONE,HALF * para_propa%para_poly%deltaE * para_propa%WPdeltaT)
+        !r = max(ONE,HALF * para_propa%para_poly%deltaE * para_propa%WPdeltaT)
+        ! When R=ONE the calculation is wrong, because deltaE should changed
+        r = HALF * para_propa%para_poly%deltaE * para_propa%WPdeltaT
         CALL cof(r,para_propa%para_poly%npoly,para_propa%para_poly%coef_poly)
 
         IF (debug) THEN
@@ -3991,12 +3971,14 @@
            write(out_unitp,*) ' => Reduce the time step !!'
            STOP
          END IF
+         psi0Hkpsi0(jt) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
+
          IF (norm_exit < para_propa%para_poly%poly_tol) EXIT
 
-         psi0Hkpsi0(jt) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
 
       END DO
       write(out_unitp,*) 'jt_exit,norms',jt_exit,abs(w2%norm2),norm_exit
+      IF (debug) write(out_unitp,*) 'psi0Hkpsi0',psi0Hkpsi0(0:jt_exit)
 
       IF (norm_exit > para_propa%para_poly%poly_tol) THEN
         write(out_unitp,*) ' ERROR in march_cheby'

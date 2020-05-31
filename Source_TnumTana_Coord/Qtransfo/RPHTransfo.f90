@@ -33,6 +33,12 @@
 
       PRIVATE
 
+      TYPE Tab_RPHpara_AT_Qact1_t
+
+        TYPE (Type_RPHpara_AT_Qact1), pointer :: tab_RPHpara_AT_Qact1(:) => null()
+
+      END TYPE Tab_RPHpara_AT_Qact1_t
+
       TYPE Type_RPHpara_AT_Qact1
 
         integer                       :: init_done  = 0  ! 0: no initialization yet
@@ -46,11 +52,12 @@
         integer                       :: nderiv     = 0  ! derivative order
 
         TYPE (Type_dnMat)             :: dnC,dnC_inv     ! derivative with respect to Qact1
-        TYPE (Type_dnVec)             :: dnQopt          ! derivative with respect to Qact1
+        TYPE (Type_dnS)               :: dnLnN           ! derivative with respect to Qact1
         TYPE (Type_dnVec)             :: dneHess         ! derivative with respect to Qact1
+
+        TYPE (Type_dnVec)             :: dnQopt          ! derivative with respect to Qact1
         TYPE (Type_dnMat)             :: dnHess          ! derivative with respect to Qact1
         TYPE (Type_dnVec)             :: dnGrad          ! derivative with respect to Qact1
-        TYPE (Type_dnS)               :: dnLnN           ! derivative with respect to Qact1
 
       END TYPE Type_RPHpara_AT_Qact1
 
@@ -86,9 +93,8 @@
         integer          :: nb_Qa       = 0 ! number of active grid points
         real(kind=Rkind), pointer :: C_ini(:,:) => null() ! Calculation dnC... at Qact1
 
-        TYPE (Type_RPHpara_AT_Qact1), pointer :: tab_RPHpara_AT_Qact1(:) => null()
-
-        TYPE (Type_RPHpara_AT_Qact1), pointer :: RPHpara_AT_Qref(:) => null() ! dimension is allways 1
+        !TYPE (Tab_RPHpara_AT_Qact1_t), allocatable :: Tab2_RPHpara_AT_Qact1(:) ! for Smolyak grids
+        TYPE (Type_RPHpara_AT_Qact1),  pointer     :: tab_RPHpara_AT_Qact1(:) => null()
 
 
         logical                    :: gradTOpot0       = .FALSE.
@@ -141,7 +147,8 @@
 
       PUBLIC :: Type_RPHpara_AT_Qact1, alloc_RPHpara_AT_Qact1,          &
                 dealloc_RPHpara_AT_Qact1, Write_RPHpara_AT_Qact1,       &
-                RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1
+                RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1,                 &
+                Find_iQa_OF_RPHpara_AT_Qact1
 
       PUBLIC :: Type_RPHTransfo, Read_RPHTransfo, Write_RPHTransfo,     &
                 Set_RPHTransfo, dealloc_RPHTransfo, calc_RPHTransfo,    &
@@ -506,36 +513,21 @@
 !----- for debuging ----------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub = 'dealloc_RPHTransfo'
-       logical, parameter :: debug=.FALSE.
-!       logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
 !----- for debuging ----------------------------------
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) 'nb_act1,nb_inact21',RPHTransfo%nb_act1,RPHTransfo%nb_inact21
-        write(out_unitp,*) 'nb_Qa',RPHTransfo%nb_Qa
         CALL flush_perso(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
 
       IF (associated(RPHTransfo%tab_RPHpara_AT_Qact1)) THEN
-        DO iQa=1,size(RPHTransfo%tab_RPHpara_AT_Qact1)
-          CALL dealloc_RPHpara_AT_Qact1(RPHTransfo%tab_RPHpara_AT_Qact1(iQa))
-        END DO
-
         CALL dealloc_array(RPHTransfo%tab_RPHpara_AT_Qact1,             &
                           'RPHTransfo%tab_RPHpara_AT_Qact1',name_sub)
       END IF
-
-      IF (associated(RPHTransfo%RPHpara_AT_Qref)) THEN
-        DO iQa=1,size(RPHTransfo%RPHpara_AT_Qref)
-          CALL dealloc_RPHpara_AT_Qact1(RPHTransfo%RPHpara_AT_Qref(iQa))
-        END DO
-        CALL dealloc_array(RPHTransfo%RPHpara_AT_Qref,                  &
-                          'RPHTransfo%RPHpara_AT_Qref',name_sub)
-      END IF
-
 
       IF (associated(RPHTransfo%list_act_OF_Qdyn))  THEN
         CALL dealloc_array(RPHTransfo%list_act_OF_Qdyn,                 &
@@ -687,6 +679,7 @@
       TYPE(Type_RPHpara_AT_Qact1), pointer, intent(inout) :: tab(:)
       character (len=*), intent(in) :: name_var,name_sub
 
+      integer :: iQa
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub_alloc = 'dealloc_array_OF_RPHpara_AT_Qact1dim1'
       integer :: err_mem,memory
@@ -697,6 +690,9 @@
        !IF (.NOT. associated(tab)) RETURN
        IF (.NOT. associated(tab))                                       &
              CALL Write_error_null(name_sub_alloc,name_var,name_sub)
+        DO iQa=lbound(tab,dim=1),ubound(tab,dim=1)
+          CALL dealloc_RPHpara_AT_Qact1(tab(iQa))
+        END DO
 
        memory = size(tab)
        deallocate(tab,stat=err_mem)
@@ -788,19 +784,13 @@
       write(out_unitp,*) 'C_ini',associated(RPHTransfo%C_ini)
       IF (associated(RPHTransfo%C_ini)) CALL Write_Mat(RPHTransfo%C_ini,out_unitp,5)
 
-      write(out_unitp,*) 'RPHpara_AT_Qref',associated(RPHTransfo%RPHpara_AT_Qref)
-      IF (associated(RPHTransfo%RPHpara_AT_Qref)) THEN
-        DO iQa=1,size(RPHTransfo%RPHpara_AT_Qref)
-          CALL Write_RPHpara_AT_Qact1(RPHTransfo%RPHpara_AT_Qref(iQa),nderiv=1)
-        END DO
-      END IF
-
 
       write(out_unitp,*) 'nb_Qa',RPHTransfo%nb_Qa
 
       IF (associated(RPHTransfo%tab_RPHpara_AT_Qact1)) THEN
         write(out_unitp,*) 'tab_RPHpara_AT_Qact1'
-        DO iQa=1,size(RPHTransfo%tab_RPHpara_AT_Qact1)
+        DO iQa=lbound(RPHTransfo%tab_RPHpara_AT_Qact1,dim=1),           &
+               ubound(RPHTransfo%tab_RPHpara_AT_Qact1,dim=1)
           CALL Write_RPHpara_AT_Qact1(RPHTransfo%tab_RPHpara_AT_Qact1(iQa),nderiv=1)
         END DO
       END IF
@@ -899,35 +889,21 @@
         RPHTransfo2%list_QdynTOQact(:) = RPHTransfo1%list_QdynTOQact(:)
       END IF
 
-
-
       IF (associated(RPHTransfo1%C_ini)) THEN
         CALL alloc_array(RPHTransfo2%C_ini,(/ nb_inact21,nb_inact21 /), &
                         'RPHTransfo2%C_ini',name_sub)
         RPHTransfo2%C_ini = RPHTransfo1%C_ini
       END IF
 
-      IF (associated(RPHTransfo1%RPHpara_AT_Qref)) THEN
-        CALL alloc_array(RPHTransfo2%RPHpara_AT_Qref,                   &
-                               (/ size(RPHTransfo1%RPHpara_AT_Qref) /), &
-                        'RPHTransfo2%RPHpara_AT_Qref',name_sub)
-
-        DO iQa=1,size(RPHTransfo1%RPHpara_AT_Qref)
-          CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(                  &
-                                      RPHTransfo1%RPHpara_AT_Qref(iQa), &
-                                      RPHTransfo2%RPHpara_AT_Qref(iQa))
-        END DO
-      END IF
-
-
       RPHTransfo2%nb_Qa       = RPHTransfo1%nb_Qa
 
       IF (associated(RPHTransfo1%tab_RPHpara_AT_Qact1)) THEN
         CALL alloc_array(RPHTransfo2%tab_RPHpara_AT_Qact1,              &
-                                               (/ RPHTransfo2%nb_Qa /), &
-                        'RPHTransfo2%tab_RPHpara_AT_Qact1',name_sub)
+                                                   [RPHTransfo2%nb_Qa], &
+                        'RPHTransfo2%tab_RPHpara_AT_Qact1',name_sub,tab_lb=[0])
 
-        DO iQa=1,RPHTransfo1%nb_Qa
+        DO iQa=lbound(RPHTransfo1%tab_RPHpara_AT_Qact1,dim=1),          &
+               ubound(RPHTransfo1%tab_RPHpara_AT_Qact1,dim=1)
           CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(                  &
                                   RPHTransfo1%tab_RPHpara_AT_Qact1(iQa),&
                                   RPHTransfo2%tab_RPHpara_AT_Qact1(iQa))
@@ -1000,6 +976,7 @@
         real(kind=rkind) :: Qact1(RPHTransfo%nb_act1)
 
         integer :: i,iQ,iQa,iQout,iQin
+        logical :: Find_iQa
 
         TYPE (Type_RPHpara_AT_Qact1), pointer :: RPHpara_AT_Qact1(:)
 
@@ -1034,7 +1011,7 @@
 
        ! check if the initialization is done
        ! If it is not the case, dnQin<=>dnQout (done in Qtransfo)
-       IF (.NOT. RPHTransfo%init .AND. .NOT. associated(RPHTransfo%RPHpara_AT_Qref) ) THEN
+       IF (.NOT. RPHTransfo%init) THEN
           IF (inTOout) THEN
             CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv)
           ELSE
@@ -1088,34 +1065,18 @@
          ! find the iQa from tab_RPHpara_AT_Qact1
          Qact1(:)        = dnQin%d0(1:RPHTransfo%nb_act1)
          !write(out_unitp,*) 'Qact1',Qact1(:)
-         DO iQa=1,RPHTransfo%nb_Qa
-           !write(out_unitp,*) 'iQa,Qact1 from RPH',iQa,RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%Qact1
-           IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1)) < ONETENTH**5) EXIT
-         END DO
 
-         IF (iQa > RPHTransfo%nb_Qa) THEN
-           IF (sum(abs(Qact1-RPHTransfo%RPHpara_AT_Qref(1)%RPHQact1)) < ONETENTH**5) THEN
-             IF (debug) write(out_unitp,*) 'RPHpara_AT_Qref point'
-             RPHpara_AT_Qact1 => RPHTransfo%RPHpara_AT_Qref(1:1)
-           ELSE
-             STOP
-             write(out_unitp,*) 'ERROR in ',name_sub
-             write(out_unitp,*) ' I cannot find Qact1(:) in tab_RPHpara_AT_Qact1'
-             write(out_unitp,*) '  or  in tab_RPHpara_AT_Qref(1)'
-             CALL Write_RPHTransfo(RPHTransfo)
-             write(out_unitp,*) 'dnQin'
-             CALL Write_dnVec(dnQin,nderiv=nderiv_debug)
-             write(out_unitp,*) ' Qact1',Qact1(:)
-             write(out_unitp,*) 'ERROR in ',name_sub
-             write(out_unitp,*) ' I cannot find Qact1(:) in tab_RPHpara_AT_Qact1'
-             write(out_unitp,*) '  or  in tab_RPHpara_AT_Qref(1)'
-             STOP
-           END IF
+         ! find the iQa from tab_RPHpara_AT_Qact1
+         Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,RPHTransfo%tab_RPHpara_AT_Qact1)
+
+         IF (.NOT. Find_iQa) THEN
+           write(out_unitp,*) 'ERROR in ',name_sub
+           STOP
          ELSE
            IF (debug) write(out_unitp,*) 'tab_RPHpara_AT_Qact1 point',iQa
-
            RPHpara_AT_Qact1 => RPHTransfo%tab_RPHpara_AT_Qact1(iQa:iQa)
          END IF
+
          ! 1c) check if the initialization has been done
          IF (RPHpara_AT_Qact1(1)%init_done == 0) THEN
            CALL Write_RPHTransfo(RPHTransfo)
@@ -1275,6 +1236,7 @@
 
         integer :: iQ,iQinact,iQact,nb_act,iQa
         integer :: i1d,i2d,i3d,j1d,j2d,j3d,i_inact21,f_inact21,nb_act1
+        logical :: Find_iQa
 
         TYPE (Type_RPHpara_AT_Qact1), pointer :: RPHpara_AT_Qact1(:)
 
@@ -1304,7 +1266,7 @@
 
        ! check if the initialization is done
        ! If it is not the case, dnQin<=>dnQout (done in Qtransfo)
-       IF (.NOT. RPHTransfo%init .AND. .NOT. associated(RPHTransfo%RPHpara_AT_Qref) ) THEN
+       IF (.NOT. RPHTransfo%init) THEN
           IF (inTOout) THEN
             CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv)
           ELSE
@@ -1354,27 +1316,16 @@
          END DO
 
          ! find the iQa from tab_RPHpara_AT_Qact1
-         DO iQa=1,RPHTransfo%nb_Qa
-           IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1)) < ONETENTH**5) EXIT
-         END DO
+         Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,RPHTransfo%tab_RPHpara_AT_Qact1)
 
-         IF (iQa > RPHTransfo%nb_Qa) THEN
-           IF (sum(abs(Qact1-RPHTransfo%RPHpara_AT_Qref(1)%RPHQact1)) < ONETENTH**5) THEN
-             IF (debug) write(out_unitp,*) 'RPHpara_AT_Qref point'
-             RPHpara_AT_Qact1 => RPHTransfo%RPHpara_AT_Qref(1:1)
-           ELSE
-             CALL Write_RPHTransfo(RPHTransfo)
-             write(out_unitp,*) ' Qact1',Qact1(:)
-             write(out_unitp,*) 'ERROR in ',name_sub
-             write(out_unitp,*) ' I cannot find Qact1(:) in tab_RPHpara_AT_Qact1'
-             write(out_unitp,*) '  or  in tab_RPHpara_AT_Qref(1)'
-             STOP
-           END IF
+         IF (.NOT. Find_iQa) THEN
+           write(out_unitp,*) 'ERROR in ',name_sub
+           STOP
          ELSE
            IF (debug) write(out_unitp,*) 'tab_RPHpara_AT_Qact1 point',iQa
-
            RPHpara_AT_Qact1 => RPHTransfo%tab_RPHpara_AT_Qact1(iQa:iQa)
          END IF
+
          ! 1c) check if the initialization has been done
          IF (RPHpara_AT_Qact1(1)%init_done == 0) THEN
            CALL Write_RPHTransfo(RPHTransfo)
@@ -1507,6 +1458,7 @@
         real(kind=rkind) :: Qact1(RPHTransfo%nb_act1)
         integer          :: iderQ1(RPHTransfo%nb_act1)
         integer          :: iderQ21(RPHTransfo%nb_inact21)
+        logical          :: Find_iQa
 
         TYPE (Type_RPHpara_AT_Qact1), pointer :: RPHpara_AT_Qact1(:)
 
@@ -1536,7 +1488,7 @@
 
        ! check if the initialization is done
        ! If it is not the case, dnQin<=>dnQout (done in Qtransfo)
-       IF (.NOT. RPHTransfo%init .AND. .NOT. associated(RPHTransfo%RPHpara_AT_Qref) ) THEN
+       IF (.NOT. RPHTransfo%init) THEN
           IF (inTOout) THEN
             CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv)
           ELSE
@@ -1565,25 +1517,13 @@
 
          ! 1b) RPHpara_AT_Qact1
          ! find the iQa from tab_RPHpara_AT_Qact1
-         DO iQa=1,RPHTransfo%nb_Qa
-           IF (sum(abs(Qact1-RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1)) < ONETENTH**5) EXIT
-         END DO
+         Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,RPHTransfo%tab_RPHpara_AT_Qact1)
 
-         IF (iQa > RPHTransfo%nb_Qa) THEN
-           IF (sum(abs(Qact1-RPHTransfo%RPHpara_AT_Qref(1)%RPHQact1)) < ONETENTH**5) THEN
-             IF (debug) write(out_unitp,*) 'RPHpara_AT_Qref point'
-             RPHpara_AT_Qact1 => RPHTransfo%RPHpara_AT_Qref(1:1)
-           ELSE
-             CALL Write_RPHTransfo(RPHTransfo)
-             write(out_unitp,*) ' Qact1',Qact1(:)
-             write(out_unitp,*) 'ERROR in ',name_sub
-             write(out_unitp,*) ' I cannot find Qact1(:) in tab_RPHpara_AT_Qact1'
-             write(out_unitp,*) '  or  in tab_RPHpara_AT_Qref(1)'
-             STOP
-           END IF
+         IF (.NOT. Find_iQa) THEN
+           write(out_unitp,*) 'ERROR in ',name_sub
+           STOP
          ELSE
            IF (debug) write(out_unitp,*) 'tab_RPHpara_AT_Qact1 point',iQa
-
            RPHpara_AT_Qact1 => RPHTransfo%tab_RPHpara_AT_Qact1(iQa:iQa)
          END IF
 
@@ -1834,14 +1774,20 @@
                             'RPHpara_AT_Qact1%RPHQact1',name_sub)
       END IF
 
-
       CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnC)
+
       CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnC_inv)
-      CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnQopt)
+
       CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnehess)
-      CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnhess)
-      CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnGrad)
+
       CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnLnN)
+
+      CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnQopt)
+
+      CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnhess)
+
+      CALL dealloc_dnSVM(RPHpara_AT_Qact1%dnGrad)
+
 
       END SUBROUTINE dealloc_RPHpara_AT_Qact1
 
@@ -1930,11 +1876,11 @@
         RPHpara2_AT_Qact1%RPHQact1(:)    = RPHpara1_AT_Qact1%RPHQact1(:)
 
         CALL sub_dnMat1_TO_dnMat2(RPHpara1_AT_Qact1%dnC,RPHpara2_AT_Qact1%dnC)
-
         CALL sub_dnMat1_TO_dnMat2(RPHpara1_AT_Qact1%dnC_inv,RPHpara2_AT_Qact1%dnC_inv)
         CALL sub_dnVec1_TO_dnVec2(RPHpara1_AT_Qact1%dnehess,RPHpara2_AT_Qact1%dnehess)
         CALL sub_dnVec1_TO_dnVec2(RPHpara1_AT_Qact1%dnQopt,RPHpara2_AT_Qact1%dnQopt)
         CALL sub_dnMat1_TO_dnMat2(RPHpara1_AT_Qact1%dnhess,RPHpara2_AT_Qact1%dnhess)
+        CALL sub_dnVec1_TO_dnVec2(RPHpara1_AT_Qact1%dnGrad,RPHpara2_AT_Qact1%dnGrad)
         CALL sub_dnS1_TO_dnS2(RPHpara1_AT_Qact1%dnLnN,RPHpara2_AT_Qact1%dnLnN)
 
       END IF
@@ -1947,6 +1893,78 @@
 
 
       END SUBROUTINE RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1
+
+  FUNCTION Find_iQa_OF_RPHpara_AT_Qact1(iqa,Qact1,tab_RPHpara_AT_Qact1) RESULT(Find_iQa)
+    IMPLICIT NONE
+
+    logical                                              :: Find_iQa
+    integer,                               intent(inout) :: iQa
+    real (kind=Rkind),                     intent(in)    :: Qact1(:)
+    TYPE (Type_RPHpara_AT_Qact1), pointer, intent(in)    :: tab_RPHpara_AT_Qact1(:)
+
+    ! local variables
+    real (kind=Rkind) :: epsi = ONETENTH**5
+    integer           :: lb,ub
+
+!----- for debuging --------------------------------------------------
+      !integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='Find_iQa_OF_RPHpara_AT_Qact1'
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+
+
+    Find_iQa = .FALSE.
+
+    IF (associated(tab_RPHpara_AT_Qact1) .AND.                          &
+                   size(Qact1) == tab_RPHpara_AT_Qact1(0)%nb_act1) THEN
+
+      lb = lbound(tab_RPHpara_AT_Qact1,dim=1)
+      ub = ubound(tab_RPHpara_AT_Qact1,dim=1)
+      IF (debug) write(out_unitp,*) 'in Find_iQa_OF_RPHpara_AT_Qact1: 0 lb,ub',lb,ub
+
+      IF (iQa >= lb .AND. iQa <= ub ) THEN
+        Find_iQa = all(abs(Qact1-tab_RPHpara_AT_Qact1(iQa)%RPHQact1) < epsi)
+      END IF
+      IF (debug) write(out_unitp,*) 'in Find_iQa_OF_RPHpara_AT_Qact1: 1 iQa,Find_iQa',iQa,Find_iQa
+
+      IF (.NOT. Find_iQa) THEN
+        iQa = iQa + 1
+        IF (iQa >= lb .AND. iQa <= ub) THEN
+          Find_iQa = all(abs(Qact1-tab_RPHpara_AT_Qact1(iQa)%RPHQact1) < epsi)
+         END IF
+         IF (debug) write(out_unitp,*) 'in Find_iQa_OF_RPHpara_AT_Qact1: 2 iQa,Find_iQa',iQa,Find_iQa
+      END IF
+
+      IF (.NOT. Find_iQa) THEN
+        DO iQa=lb,ub
+          Find_iQa = all(abs(Qact1-tab_RPHpara_AT_Qact1(iQa)%RPHQact1) < epsi)
+          IF (debug) write(out_unitp,*) 'in Find_iQa_OF_RPHpara_AT_Qact1: 3 iQa,Find_iQa',iQa,Find_iQa
+          IF (Find_iQa) EXIT
+        END DO
+      END IF
+
+    END IF
+
+    IF (.NOT. Find_iQa) THEN
+      IF (associated(tab_RPHpara_AT_Qact1)) THEN
+        write(out_unitp,*) 'tab_RPHpara_AT_Qact1'
+        DO iQa=lb,ub
+          CALL Write_RPHpara_AT_Qact1(tab_RPHpara_AT_Qact1(iQa),nderiv=1)
+        END DO
+      ELSE
+        write(out_unitp,*) 'tab_RPHpara_AT_Qact1 is not associated.'
+      END IF
+      write(out_unitp,*) ' Qact1',Qact1(:)
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) ' I cannot find Qact1(:) in tab_RPHpara_AT_Qact1'
+      write(out_unitp,*) ' or tab_RPHpara_AT_Qact1 is not associated'
+      write(out_unitp,*) ' or inconsistent Qact1 size'
+      !STOP 'ERROR in Find_iQa_OF_RPHpara_AT_Qact1: cannot find Qact1(:)'
+    END IF
+
+  END FUNCTION Find_iQa_OF_RPHpara_AT_Qact1
 
       SUBROUTINE dealloc_RPHpara2(RPHpara2)
       IMPLICIT NONE

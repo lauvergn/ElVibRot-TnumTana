@@ -178,6 +178,8 @@
             STOP
           END IF
         END IF
+        !write(out_unitp,*) '  PrimOp%pot_itQtransfo',PrimOp%pot_itQtransfo
+        write(out_unitp,*) '  Qit_TO_QQMLib        ',PrimOp%Qit_TO_QQMLib(:)
 !      ELSE
 !        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,PrimOp)
       END IF
@@ -506,15 +508,16 @@
                write(out_unitp,*) 'With Quantum Model Lib'
                write(out_unitp,*) 'QQMLib',Qit(PrimOp%Qit_TO_QQMLib)
             END IF
+
 #if __QML == 1
-            CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(1,1,itermE),Qit(PrimOp%Qit_TO_QQMLib))
+            CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(:,:,itermE),Qit(PrimOp%Qit_TO_QQMLib))
+            write(6,*) 'QML pot',Qit(PrimOp%Qit_TO_QQMLib),d0MatOp(iOpE)%ReVal(:,:,itermE)
 #else
             write(out_unitp,*) 'ERROR in ',name_sub
             write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
             write(out_unitp,*) 'Use another potential/model'
             STOP 'QML is not present'
 #endif
-
             !----------------------------------------------------------------
             DO ie=1,PrimOp%nb_elec
              d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                        &
@@ -605,36 +608,18 @@
             ith = 1
             !$ ith = omp_get_thread_num()
             iQa = tab_iQa(ith)
-            Find_iQa = all(abs(Qact1-mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1) < ONETENTH**5)
-            !write(6,*) '1 iQa,Find_iQa',iQa,Find_iQa
+
+            ! find the iQa from tab_RPHpara_AT_Qact1
+            Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,mole%RPHTransfo%tab_RPHpara_AT_Qact1)
+
             IF (.NOT. Find_iQa) THEN
-              iQa = min(iQa+1,mole%RPHTransfo%nb_Qa)
+              write(out_unitp,*) 'ERROR in ',name_sub
+              STOP
+            ELSE
+              IF (debug) write(out_unitp,*) 'tab_RPHpara_AT_Qact1 point',iQa
               tab_iQa(ith) = iQa
-              Find_iQa = all(abs(Qact1-mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1) < ONETENTH**5)
-              !write(6,*) '2 iQa,Find_iQa',iQa,Find_iQa
             END IF
-            IF (.NOT. Find_iQa) THEN
-              DO iQa=1,mole%RPHTransfo%nb_Qa
-                tab_iQa(ith) = iQa
-                Find_iQa = all(abs(Qact1-mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1) < ONETENTH**5)
-                !write(6,*) '3 iQa,Find_iQa',iQa,Find_iQa
-                IF (Find_iQa) EXIT
-              END DO
-            END IF
-            IF (.NOT. Find_iQa) THEN
-              IF (sum(abs(Qact1-mole%RPHTransfo%RPHpara_AT_Qref(1)%RPHQact1)) < ONETENTH**5) THEN
-                Vinact = HALF*sum(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnehess%d0(:)*Qinact21(:)**2)
-              ELSE
-                CALL Write_RPHTransfo(mole%RPHTransfo)
-                write(out_unitp,*) ' Qact1',Qact1(:)
-                write(out_unitp,*) 'ERROR in ',name_sub
-                write(out_unitp,*) ' I cannot find Qact1(:) in tab_RPHpara_AT_Qact1'
-                write(out_unitp,*) '  or  in tab_RPHpara_AT_Qref(1)'
-                STOP
-              END IF
-           ELSE
-             Vinact = HALF*sum(mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)*Qinact21(:)**2)
-           END IF
+            Vinact = HALF*sum(mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)*Qinact21(:)**2)
 
             !write(out_unitp,*) 'iQa',iQa
             !write(out_unitp,*) 'Qinact21',Qinact21(:)
@@ -805,6 +790,7 @@
       real (kind=Rkind) :: Qdyn(mole%nb_var)
 
       integer :: iQa,iQ,iQact1,iQinact21
+      logical :: Find_iQa
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
@@ -1005,24 +991,13 @@
             !write(out_unitp,*) 'Qinact21',Qinact21
 
             ! find the iQa from tab_RPHpara_AT_Qact1
-            DO iQa=1,mole%RPHTransfo%nb_Qa
-              IF (sum(abs(Qact1-mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%RPHQact1)) < ONETENTH**5) EXIT
-            END DO
-            IF (iQa > mole%RPHTransfo%nb_Qa) THEN
-              IF (sum(abs(Qact1-mole%RPHTransfo%RPHpara_AT_Qref(1)%RPHQact1)) < ONETENTH**5) THEN
-                Vinact = HALF*sum(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnehess%d0(:)*Qinact21(:)**2)
-              ELSE
-                CALL Write_RPHTransfo(mole%RPHTransfo)
-                write(out_unitp,*) ' Qact1',Qact1(:)
-                write(out_unitp,*) 'ERROR in ',name_sub
-                write(out_unitp,*) ' I cannot find Qact1(:) in tab_RPHpara_AT_Qact1'
-                write(out_unitp,*) '  or  in tab_RPHpara_AT_Qref(1)'
-                STOP
-              END IF
-           ELSE
-             Vinact = HALF*sum(mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)*Qinact21(:)**2)
-           END IF
+            Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,mole%RPHTransfo%tab_RPHpara_AT_Qact1)
 
+            IF (.NOT. Find_iQa) THEN
+              write(out_unitp,*) 'ERROR in ',name_sub
+              STOP
+            END IF
+            Vinact = HALF*sum(mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)*Qinact21(:)**2)
 
 
             !write(out_unitp,*) 'iQa',iQa
@@ -3624,23 +3599,21 @@
 
           CALL get_Qact0(Qact,mole%ActiveTransfo)
 
-          ! we cannot set RPHpara_AT_Qref for option=0,
-          ! because the RPHTransfo parameters will be readed in "inactive" namelist
-
           DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
               tab_skip_transfo(it) = mole%tab_Qtransfo(it)%skip_transfo
               mole%tab_Qtransfo(it)%skip_transfo = .TRUE.
           END DO
 
-          ! for RPHpara_AT_Qref
-          IF (.NOT. associated(mole%RPHTransfo%RPHpara_AT_Qref)) THEN
+          ! for tab_RPHpara_AT_Qact1(0)
+          IF (.NOT. associated(mole%RPHTransfo%tab_RPHpara_AT_Qact1)) THEN
             nb_act1_RPH    = mole%RPHTransfo%nb_act1
             nb_inact21_RPH = mole%RPHTransfo%nb_inact21
-            CALL alloc_array(mole%RPHTransfo%RPHpara_AT_Qref,(/ 1 /),       &
-                            'mole%RPHTransfo%RPHpara_AT_Qref',name_sub)
+            CALL alloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,[0],  &
+                            'mole%RPHTransfo%tab_RPHpara_AT_Qact1',     &
+                                                         name_sub,[0])
           END IF
 
-          CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%RPHpara_AT_Qref(1),     &
+          CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0),&
                                     Qact,para_Tnum,mole)
 
           mole%RPHTransfo%init_Qref = .TRUE.
@@ -3648,24 +3621,6 @@
           DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
             mole%tab_Qtransfo(it)%skip_transfo = tab_skip_transfo(it)
           END DO
-
-
-!          ! new Qact0/Qdyn0
-!          ! first Delta_Qdyn0
-!          mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
-!                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
-!                                 mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1: &
-!                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) - &
-!                                       mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt%d0
-!          write(out_unitp,*) 'delta, mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(out_unitp)
-!          !Qdyn0 = matmul(Delta_Qdyn0, ...dnC%d0)
-!          mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:                        &
-!                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21) = &
-!                      matmul(mole%ActiveTransfo%Qdyn0(mole%RPHTransfo%nb_act1+1:     &
-!                               mole%RPHTransfo%nb_act1+mole%RPHTransfo%nb_inact21),  &
-!                               mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC%d0)
-!
-!          write(out_unitp,*) 'mole%ActiveTransfo%Qdyn0',mole%ActiveTransfo%Qdyn0 ; flush(out_unitp)
 
           CALL Qdyn_TO_Qact_FROM_ActiveTransfo(mole%ActiveTransfo%Qdyn0,  &
                                                mole%ActiveTransfo%Qact0,  &
@@ -3675,14 +3630,14 @@
 
           write(out_unitp,*) ' Frequencies, normal modes at the reference geometry'
 
-          write(out_unitp,11) Qact(1:mole%RPHTransfo%RPHpara_AT_Qref(1)%nb_act1), &
-                 mole%RPHTransfo%RPHpara_AT_Qref(1)%dnEHess%d0(:)*auTOcm_inv
+          write(out_unitp,11) Qact(1:mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%nb_act1), &
+                 mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnEHess%d0(:)*auTOcm_inv
 11        format(' frequencies : ',30f10.4)
 
           write(out_unitp,*) 'dnQopt'
-          CALL Write_dnVec(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt,nderiv=0)
+          CALL Write_dnVec(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnQopt,nderiv=0)
           write(out_unitp,*) 'dnC_inv'
-          CALL Write_dnMat(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC_inv,nderiv=0)
+          CALL Write_dnMat(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnC_inv,nderiv=0)
           CALL flush_perso(out_unitp)
 
           IF (debug) CALL Write_RPHTransfo(mole%RPHTransfo)
@@ -3693,7 +3648,7 @@
   !----- Gcte if needed --------------------------------------------
   Gref = .TRUE.
   IF (associated(mole%RPHTransfo)) THEN
-    Gref = Gref .AND. associated(mole%RPHTransfo%RPHpara_AT_Qref)
+    Gref = Gref .AND. associated(mole%RPHTransfo%tab_RPHpara_AT_Qact1)
   END IF
   !Gref = .FALSE.
   IF (Gref) THEN
@@ -3724,6 +3679,7 @@
       para_Tnum%Gref(1:mole%nb_act,1:mole%nb_act) = GGdef
     END IF
 
+    CALL get_d0GG(Qact,para_Tnum,mole,GGdef,def=.TRUE.)
     IF (print_level > 1) THEN
       write(out_unitp,*) ' GGdef'
       CALL Write_Mat(GGdef,out_unitp,5)
@@ -3760,7 +3716,7 @@
 
       Qref = .TRUE.
       IF (associated(mole%RPHTransfo)) THEN
-        Qref = Qref .AND. associated(mole%RPHTransfo%RPHpara_AT_Qref)
+        Qref = Qref .AND. associated(mole%RPHTransfo%tab_RPHpara_AT_Qact1)
       END IF
       IF (Qref) THEN
         IF(MPI_id==0) THEN

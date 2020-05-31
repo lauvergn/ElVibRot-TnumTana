@@ -1030,7 +1030,6 @@
 !=====================================================================
 !       deallocated memories
 !=====================================================================
-
       CALL dealloc_table_at(const_phys%mendeleev)
 
       CALL dealloc_CoordType(mole)

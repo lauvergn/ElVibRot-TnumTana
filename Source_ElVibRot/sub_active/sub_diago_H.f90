@@ -121,7 +121,7 @@
       CALL dealloc_NParray(Hsave,'Hsave',name_sub)
       CALL dealloc_NParray(r,'r',name_sub)
     END IF
-  ENDIF !for MPI_id==0!
+  END IF !for MPI_id==0!
 
 !------------------------------------------------------
   IF (debug) THEN
