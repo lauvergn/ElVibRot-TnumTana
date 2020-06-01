@@ -1,8 +1,7 @@
 rm -f res*
-cd HNO3_UT
-./clean
-cd ..
-
-cd HCN_UT
-./clean
-cd ..
+for dir in *UT
+do
+  cd  $dir
+  ./clean
+  cd ..
+done

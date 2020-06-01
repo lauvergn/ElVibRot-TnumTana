@@ -6,7 +6,7 @@ epsi_t=0.
 epsi_e=0.00001
 epsi_p=0.000004
 
-list_propa="Cheby nOD RK4 ModMidPoint Bulirsch-Stoer SIL SIP Spectral"
+list_propa="Cheby nOD SIL SIP Spectral"
 #echo $list_propa
 
 here=`pwd`
@@ -22,7 +22,7 @@ cd $here
 for propa in $list_propa
 do
  echo $propa
- ./dat_WPpropa $propa
+ ./dat_WPpropa_micro $propa
 done
 
 for propa in $list_propa

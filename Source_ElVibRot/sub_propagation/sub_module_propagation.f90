@@ -688,14 +688,14 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
   !-----------------------------------------------------------
   ! => the WPs on the Grid
-  IF (.NOT. para_propa%ana_psi%GridDone) THEN
-    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep ini')
-    DO i=1,nb_WP
-      IF(MPI_id==0) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
-    END DO
-    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep end')
-  END IF
-  para_propa%ana_psi%GridDone = .TRUE.
+!  IF (.NOT. para_propa%ana_psi%GridDone) THEN
+!    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep ini')
+!    DO i=1,nb_WP
+!      IF(MPI_id==0) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
+!    END DO
+!    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep end')
+!  END IF
+!  para_propa%ana_psi%GridDone = .TRUE.
   !-----------------------------------------------------------
 
   !-----------------------------------------------------------
@@ -721,6 +721,19 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       CALL norm2_psi(w1,GridRep=.FALSE.,BasisRep=.TRUE.)
     ENDIF
     CALL sub_PsiOpPsi(ET,w1,w2,para_H)
+
+    IF (para_H%spectral_done) THEN
+      w2 = WP(i) ! save Spectral rep
+      ! WP is back to the initial basis to be able to make the analysis
+      IF (para_H%cplx) THEN
+        WP(i)%CvecB(:) = matmul(conjg(para_H%Cvp),WP(i)%CvecB)
+      ELSE
+        WP(i)%CvecB(:) = matmul(para_H%Rvp,WP(i)%CvecB)
+      END IF
+    END IF
+
+    IF(MPI_id==0) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
+
 
     IF(MPI_id==0) THEN
       WP(i)%CAvOp = ET/w1%norm2
@@ -768,6 +781,11 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
       CALL alloc_psi(WP(i),BasisRep=BasisRep,GridRep=GridRep)
     ENDIF ! for MPI_id==0
+
+    IF (para_H%spectral_done) THEN
+      WP(i) = w2 ! restore Spectral rep
+    END IF
+
   END DO
 
   CALL dealloc_psi(w1,delete_all=.TRUE.)

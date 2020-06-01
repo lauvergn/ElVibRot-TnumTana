@@ -3493,20 +3493,17 @@
       real (kind=Rkind),     intent(in)     :: T
 
 !------ working variables ---------------------------------
-      TYPE (param_psi), pointer :: w1,w2
+      !logical :: WithSpectralWP = .FALSE.
+      logical :: WithSpectralWP = .TRUE.
+
+      !TYPE (param_psi), pointer :: w1,w2
       complex (kind=Rkind) :: cdot
-      !real (kind=Rkind)    :: microT,microdeltaT,phase,microphase
+      real (kind=Rkind)    :: microT,microdeltaT,phase,microphase
 
 
 
       complex (kind=Rkind), allocatable :: PsiOnSpectral(:)
       complex (kind=Rkind), allocatable :: HPsiOnSpectral(:)
-
-      TYPE (param_psi), allocatable :: tab_KrylovSpace(:)
-      complex (kind=Rkind) :: Overlap,ReNor
-
-      logical, parameter :: test = .FALSE.
-      !logical, parameter :: test = .TRUE.
 
       integer              :: it,i,j
 
@@ -3532,43 +3529,65 @@
         STOP
       END IF
 
+      microdeltaT = para_propa%WPdeltaT/                                &
+                    real(para_propa%nb_micro,kind=Rkind)
+
       CALL alloc_NParray(PsiOnSpectral, [para_H%nb_tot],'PsiOnSpectral', name_sub)
       CALL alloc_NParray(HPsiOnSpectral,[para_H%nb_tot],'HPsiOnSpectral',name_sub)
+      IF (WithSpectralWP) THEN
 
-      IF (para_H%cplx) THEN
-        ! 1st: project psi on the spectral basis
-        PsiOnSpectral(:) = matmul(transpose(para_H%Cvp),Psi%CvecB)
+        microT = ZERO
+        DO it=1,para_propa%nb_micro
+          microT = microT + microdeltaT
 
-        ! 2d: propagation with spectral representation
-        HPsiOnSpectral   = exp(-EYE*para_H%Cdiag*para_propa%WPdeltaT)*PsiOnSpectral
+          IF (para_H%cplx) THEN
+            ! 2d: propagation with spectral representation
+            Psi%CvecB   = exp(-EYE*para_H%Cdiag*microdeltaT)*Psi%CvecB
+          ELSE
+            ! 2d: propagation with spectral representation
+            Psi%CvecB   = exp(-EYE*para_H%Rdiag*microdeltaT)*Psi%CvecB
+          END IF
 
-        ! 3d: back to the initial basis
-        Psi%CvecB = matmul(conjg(para_H%Cvp),HPsiOnSpectral)
+          cdot = Calc_AutoCorr(psi0,psi,para_propa,T+microT,Write_AC=.FALSE.)
+          CALL Write_AutoCorr(no,T+microT,cdot)
+          CALL flush_perso(no)
 
+        END DO
       ELSE
-        ! 1st: project psi on the spectral basis
-        PsiOnSpectral(:) = matmul(transpose(para_H%Rvp),Psi%CvecB)
 
-        ! 2d: propagation with spectral representation
-        HPsiOnSpectral   = exp(-EYE*para_H%Rdiag*para_propa%WPdeltaT)*PsiOnSpectral
+        IF (para_H%cplx) THEN
+          ! 1st: project psi on the spectral basis
+          PsiOnSpectral(:) = matmul(transpose(para_H%Cvp),Psi%CvecB)
 
-        ! 3d: back to the initial basis
-        Psi%CvecB = matmul(para_H%Rvp,HPsiOnSpectral)
+          ! 2d: propagation with spectral representation
+          HPsiOnSpectral   = exp(-EYE*para_H%Cdiag*para_propa%WPdeltaT)*PsiOnSpectral
 
-        !write(6,*) 'E',sum(conjg(HPsiOnSpectral)*HPsiOnSpectral*para_H%Rdiag)
+          ! 3d: back to the initial basis
+          Psi%CvecB = matmul(conjg(para_H%Cvp),HPsiOnSpectral)
 
+        ELSE
+          ! 1st: project psi on the spectral basis
+          PsiOnSpectral(:) = matmul(transpose(para_H%Rvp),Psi%CvecB)
+
+          ! 2d: propagation with spectral representation
+          HPsiOnSpectral   = exp(-EYE*para_H%Rdiag*para_propa%WPdeltaT)*PsiOnSpectral
+
+          ! 3d: back to the initial basis
+          Psi%CvecB = matmul(para_H%Rvp,HPsiOnSpectral)
+
+          !write(6,*) 'E',sum(conjg(HPsiOnSpectral)*HPsiOnSpectral*para_H%Rdiag)
+
+        END IF
+
+        CALL dealloc_NParray(PsiOnSpectral, 'PsiOnSpectral', name_sub)
+        CALL dealloc_NParray(HPsiOnSpectral,'HPsiOnSpectral',name_sub)
+      cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+      CALL flush_perso(no)
       END IF
 
 
 
-
-      CALL dealloc_NParray(PsiOnSpectral, 'PsiOnSpectral', name_sub)
-      CALL dealloc_NParray(HPsiOnSpectral,'HPsiOnSpectral',name_sub)
-
-
-      cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
-      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
 
 !-----------------------------------------------------------
       IF (debug) THEN

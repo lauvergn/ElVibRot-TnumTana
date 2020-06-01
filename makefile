@@ -788,7 +788,7 @@ PhysConst: obj $(PhysConstEXE)
 #============================================================================
 # Unitary tests
 .PHONY: ut UT UnitTests
-ut UT UnitTests: UT_Frac UT_PhysConst UT_HNO3 UT_HCN
+ut UT UnitTests: UT_Frac UT_PhysConst UT_HNO3 UT_HCN UT_HCN-WP
 #
 .PHONY: UT_Frac ut_frac
 UT_Frac ut_frac : UnitTests_Frac.exe
@@ -820,6 +820,13 @@ UT_HCN ut_hcn: EVR
 	@echo "---------------------------------------"
 	@echo "Unitary tests for the HCN (diago) ElVibRot calculations"
 	@cd UnitTests/HCN_UT ; ./run_tests small
+	@echo "---------------------------------------"
+#
+.PHONY: UT_HCN-WP ut_hcn-wp
+UT_HCN-WP ut_hcn-wp: EVR
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the HCN (propagation) ElVibRot calculations"
+	@cd UnitTests/HCN-WP_UT ; ./run_tests small
 	@echo "---------------------------------------"
 #===============================================
 #===============================================

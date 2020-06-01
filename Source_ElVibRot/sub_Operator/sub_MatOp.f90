@@ -653,6 +653,7 @@ CONTAINS
           CALL dealloc_array(para_Op%dim_Op,"para_Op%dim_Op",name_sub)
         END IF
       END IF
+      para_Op%spectral_done = para_Op%spectral
 !     --------------------------------------------------------
 
 

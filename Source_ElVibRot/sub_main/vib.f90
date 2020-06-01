@@ -335,11 +335,14 @@
               CALL dealloc_ana_psi(ana_WP0)
             END IF
 
+            ! spectral tranformation cannot be done here,
+            !   because the matrix representation is not done yet
+
             write(out_unitp,*)
 
           ELSE ! for optimal control
 
-            write(out_unitp,*) ' WP0 will be read after !'
+            write(out_unitp,*) ' WP0 will be read later!'
 
           END IF ! for .NOT. abs(para_propa%type_WPpropa) == 33
 
@@ -421,6 +424,19 @@
             CALL dealloc_para_Op(para_S)
             nullify(para_S)
 
+          END IF
+
+          IF (para_H%Spectral .AND. para_H%spectral_done .AND. .NOT. para_ana%control) THEN
+            write(out_unitp,*) 'WP0 spectral representation'
+            DO i=1,size(WP0)
+              IF (para_H%cplx) THEN
+                ! 1st: project psi on the spectral basis
+                WP0(i)%CvecB(:) = matmul(transpose(para_H%Cvp),WP0(i)%CvecB)
+              ELSE
+                ! 1st: project psi on the spectral basis
+                WP0(i)%CvecB(:) = matmul(transpose(para_H%Rvp),WP0(i)%CvecB)
+              END IF
+            END DO
           END IF
 
           IF(MPI_id==0) THEN
