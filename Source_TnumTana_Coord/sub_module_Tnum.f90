@@ -713,6 +713,7 @@ MODULE mod_Tnum
 !     - for Tnum or Tana ----------------------------------------------
       integer           :: nrho,vep_type,NonGcteRange(2)
       logical           :: num_GG,num_g,num_x,Gdiago,Gcte,With_VecCOM
+      logical           :: With_Tab_dnQflex
       logical           :: Tana,MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,f2f1_ana
       real (kind=Rkind) :: stepT,stepOp
       integer           :: KEO_TalyorOFQinact2n ! taylor epxansion along coordinate 2n (21) types
@@ -725,7 +726,7 @@ MODULE mod_Tnum
       NAMELIST /variables/nat,zmat,bunch,cos_th,                        &
                      Without_Rot,Centered_ON_CoM,JJ,                    &
                      New_Orient,vAt1,vAt2,vAt3,With_VecCOM,             &
-                     nb_var,nb_act,                                     &
+                     nb_var,nb_act,With_Tab_dnQflex,                    &
                      Old_Qtransfo,nb_Qtransfo,Cart_transfo,             &
                      Rot_Dip_with_EC,sym,check_sym,                     &
                      NM,NM_TO_sym,hessian_old,purify_hess,k_Half,       &
@@ -802,6 +803,8 @@ MODULE mod_Tnum
       Rot_Dip_with_EC      = .FALSE.
       Old_Qtransfo         = .TRUE.
       nb_Qtransfo          = -1
+
+      With_Tab_dnQflex     = .FALSE.
 
       NM                   = .FALSE.
       NM_TO_sym            = .FALSE.
@@ -1038,6 +1041,10 @@ MODULE mod_Tnum
             ELSE
               mole%ActiveTransfo => mole%tab_Qtransfo(it)%ActiveTransfo
             END IF
+
+            mole%ActiveTransfo%With_Tab_dnQflex = With_Tab_dnQflex
+
+
           CASE default
             CONTINUE
           END SELECT
@@ -1328,6 +1335,8 @@ MODULE mod_Tnum
                                 mole%nb_var)
 
         mole%ActiveTransfo => mole%tab_Qtransfo(it)%ActiveTransfo
+
+        mole%ActiveTransfo%With_Tab_dnQflex = With_Tab_dnQflex
 
         mole%liste_QactTOQsym => mole%ActiveTransfo%list_QactTOQdyn
         mole%liste_QactTOQdyn => mole%ActiveTransfo%list_QactTOQdyn

@@ -200,9 +200,9 @@ CONTAINS
 !=====================================================================
 
 !----- variables for the construction of H ---------------------------
-      TYPE (basis)   :: BasisnD
+      TYPE (basis)     :: BasisnD
       TYPE (CoordType) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum)      :: para_Tnum
       integer, intent(in) :: ib ! index of the basis in tab_Pbasis(:) or tab_basisPrimSG(:,:)
 
 
@@ -221,8 +221,8 @@ CONTAINS
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='Set_paraPRH_OneBasis'
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
       nb_act1_RPH    = mole%RPHTransfo%nb_act1

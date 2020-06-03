@@ -125,6 +125,7 @@
 
       END IF
       !-----------------------------------------------------------
+         ! write(6,*) 'coucou before Qact' ; flush(6)
 
       !-----------------------------------------------------------
       !----- New nD-Grid points ----------------------------------
@@ -141,6 +142,7 @@
       END IF
       !-----------------------------------------------------------
       !-----------------------------------------------------------
+          !write(6,*) 'coucou after Qact' ; flush(6)
 
       !-----------------------------------------------------------
       !------ special case if nb_inact2n=0 -----------------------
@@ -162,12 +164,16 @@
           CALL Init_d0MatOp(d0MatOp(iOp),para_AllOp%tab_Op(iOp)%param_TypeOp,&
                             para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec)
         END DO
+        !write(6,*) 'coucou after Init_d0MatOp' ; flush(6)
 
 #if(run_MPI)
         IF(Grid_allco)  THEN
 #endif
+          !write(6,*) 'coucou before get_d0MatOp_AT_Qact' ; flush(6)
           CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,         &
                                    para_AllOp%tab_Op(1)%para_ReadOp%PrimOp_t)
+          !write(6,*) 'coucou after get_d0MatOp_AT_Qact' ; flush(6)
+
 #if(run_MPI)
         ENDIF
 #endif

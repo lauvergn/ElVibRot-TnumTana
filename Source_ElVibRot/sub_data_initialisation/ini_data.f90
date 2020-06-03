@@ -613,26 +613,24 @@ USE mod_system
 USE mod_MPI_Aid
 IMPLICIT NONE
 
-integer, intent(in) :: nb,nq,nb_Q,nb_channels,nb_psi
+integer,  intent(in)  :: nb,nq,nb_Q,nb_channels,nb_psi
 
-integer :: GridMem,BasisMem
-integer :: MappingSG4Meme,PotMem,KEO_type1_Mem,KEO_type10_Mem,psi_Mem
-integer :: Mem,nb_psi_loc
-character (len=2) :: MemUnit
-
+real(kind=Rkind)   :: GridMem,BasisMem
+real(kind=Rkind)   :: MappingSG4Meme,PotMem,KEO_type1_Mem,KEO_type10_Mem,psi_Mem
+real(kind=Rkind)   :: Mem
+integer            :: nb_psi_loc
+character (len=2)  :: MemUnit
 
 nb_psi_loc = max(nb_psi,1)
+GridMem    = real(nq,kind=Rkind)*real(Rkind,kind=Rkind)
+BasisMem   = real(nb,kind=Rkind)*real(Rkind,kind=Rkind)
 
+MappingSG4Meme = real(nq,kind=ILkind)*real(sizeof(nq),kind=Rkind)
 
-GridMem  = nq*Rkind
-BasisMem = nb*Rkind
-
-MappingSG4Meme = nq*Ikind
-
-psi_Mem        = BasisMem * nb_channels
-PotMem         = GridMem  * nb_channels**2
-KEO_type1_Mem  = PotMem   * (nb_Q+1)*(nb_Q+2)/2 ! F2+F1+vep
-KEO_type10_Mem = GridMem  * (nb_Q**2 + 2) ! size of G + jac+rho
+psi_Mem        = BasisMem * real(nb_channels,         kind=Rkind)
+PotMem         = GridMem  * real(nb_channels**2,      kind=Rkind)
+KEO_type1_Mem  = PotMem   * real((nb_Q+1)*(nb_Q+2)/2, kind=Rkind) ! F2+F1+vep
+KEO_type10_Mem = GridMem  * real((nb_Q**2 + 2),       kind=Rkind) ! size of G + jac+rho
               ! We suppose, the KEO are the same on each channel !! Pb...
 
 IF(MPI_id==0) THEN
@@ -644,19 +642,19 @@ ENDIF
 IF(MPI_id==0) write(out_unitp,*) "------------------------------------------------------------"
 Mem = psi_Mem
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "One psi: ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,f10.0,1x,a)') "One psi: ",Mem,MemUnit
 Mem = psi_Mem * 4
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "One psi's with Davidson (num_resetH=1): ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,f10.0,1x,a)') "One psi's with Davidson (num_resetH=1): ",Mem,MemUnit
 IF(MPI_id==0) write(out_unitp,*) "------------------------------------------------------------"
 
 IF (nb_psi_loc > 0) THEN
-  Mem = psi_Mem * nb_psi_loc
+  Mem = psi_Mem * real(nb_psi_loc,kind=Rkind)
   CALL convertMem(Mem,MemUnit)
-  IF(MPI_id==0) write(out_unitp,'(i0,a,i0,1x,a)') nb_psi_loc," psi's: ",Mem,MemUnit
-  Mem = psi_Mem * nb_psi_loc * 4
+  IF(MPI_id==0) write(out_unitp,'(i0,a,f10.0,1x,a)') nb_psi_loc," psi's: ",Mem,MemUnit
+  Mem = psi_Mem * real(nb_psi_loc,kind=Rkind) * FOUR
   CALL convertMem(Mem,MemUnit)
-  IF(MPI_id==0) write(out_unitp,'(i0,a,i0,1x,a)') nb_psi_loc," psi's with Davidson (num_resetH=1): ",Mem,MemUnit
+  IF(MPI_id==0) write(out_unitp,'(i0,a,f10.0,1x,a)') nb_psi_loc," psi's with Davidson (num_resetH=1): ",Mem,MemUnit
   IF(MPI_id==0) write(out_unitp,*) "------------------------------------------------------------"
 END IF
 
@@ -664,29 +662,29 @@ IF(MPI_id==0) write(out_unitp,*) "====== Memory for Type 1 (F2+F1+Vep+V) =======
 IF(MPI_id==0) write(out_unitp,*) "-SG4 Full direct --"
 Mem = MappingSG4Meme
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping):       ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,f10.0,1x,a)') "H memory (mapping):       ",Mem,MemUnit
 IF(MPI_id==0) write(out_unitp,*) "-SG4 KEO direct --"
 Mem = MappingSG4Meme+PotMem
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping+V):     ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,f10.0,1x,a)') "H memory (mapping+V):     ",Mem,MemUnit
 IF(MPI_id==0) write(out_unitp,*) "-SG4 --"
 Mem = MappingSG4Meme+KEO_type1_Mem ! PotMem is not here because is already counted in KEO_type1_Mem
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,f10.0,1x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
 
 IF(MPI_id==0) write(out_unitp,*) "====== Memory for Type 10 (G+V) ============================"
 IF(MPI_id==0) write(out_unitp,*) "-SG4 Full direct --"
 Mem = MappingSG4Meme
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping):       ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,f10.0,1x,a)') "H memory (mapping):       ",Mem,MemUnit
 IF(MPI_id==0) write(out_unitp,*) "-SG4 KEO direct --"
 Mem = MappingSG4Meme+PotMem
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping+V):     ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,f10.0,1x,a)') "H memory (mapping+V):     ",Mem,MemUnit
 IF(MPI_id==0) write(out_unitp,*) "-SG4 --"
 Mem = MappingSG4Meme+PotMem+KEO_type10_Mem
 CALL convertMem(Mem,MemUnit)
-IF(MPI_id==0) write(out_unitp,'(a,i0,1x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
+IF(MPI_id==0) write(out_unitp,'(a,f10.0,1x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
 
 IF(MPI_id==0) THEN
   write(out_unitp,*) "============================================================"

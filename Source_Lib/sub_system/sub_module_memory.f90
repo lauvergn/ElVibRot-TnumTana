@@ -443,19 +443,19 @@
  END SUBROUTINE Write_mem_tot
 
  SUBROUTINE convertMem(mem,MemUnit)
- integer,           intent(inout) :: mem
- character (len=2), intent(inout) :: MemUnit
+ real(kind=Rkind),   intent(inout) :: mem
+ character (len=2),  intent(inout) :: MemUnit
 
-   IF (mem < 1024) THEN
+   IF (mem < 1024_Rkind) THEN
      MemUnit='O'
-   ELSE IF (mem < 1024**2) THEN
-     mem = mem / 1024
+   ELSE IF (mem < 1024_Rkind**2) THEN
+     mem = mem / 1024_Rkind
      MemUnit='kO'
-   ELSE IF (mem < 1024**3) THEN
-     mem = mem / 1024**2
+   ELSE IF (mem < 1024_Rkind**3) THEN
+     mem = mem / 1024_Rkind**2
      MemUnit='MO'
    ELSE
-     mem = mem / 1024**3
+     mem = mem / 1024_Rkind**3
      MemUnit='GO'
    END IF
  END SUBROUTINE convertMem

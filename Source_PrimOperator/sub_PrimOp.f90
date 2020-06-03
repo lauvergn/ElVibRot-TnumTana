@@ -605,7 +605,7 @@
             !write(out_unitp,*) 'Qinact21',Qinact21
 
             ! find the iQa from tab_RPHpara_AT_Qact1
-            ith = 1
+            ith = 0
             !$ ith = omp_get_thread_num()
             iQa = tab_iQa(ith)
 
@@ -991,6 +991,7 @@
             !write(out_unitp,*) 'Qinact21',Qinact21
 
             ! find the iQa from tab_RPHpara_AT_Qact1
+            iQa = 0
             Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,mole%RPHTransfo%tab_RPHpara_AT_Qact1)
 
             IF (.NOT. Find_iQa) THEN
@@ -3593,16 +3594,9 @@
 
       !----- set RPH transfo of Qref -----------------------------------
       IF (associated(mole%RPHTransfo)) THEN
-        IF (.NOT. mole%tab_Qtransfo(mole%itRPH)%skip_transfo .AND.          &
-                                           mole%RPHTransfo%option /= 0) THEN
-
+      IF (.NOT. mole%tab_Qtransfo(mole%itRPH)%skip_transfo) THEN
 
           CALL get_Qact0(Qact,mole%ActiveTransfo)
-
-          DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
-              tab_skip_transfo(it) = mole%tab_Qtransfo(it)%skip_transfo
-              mole%tab_Qtransfo(it)%skip_transfo = .TRUE.
-          END DO
 
           ! for tab_RPHpara_AT_Qact1(0)
           IF (.NOT. associated(mole%RPHTransfo%tab_RPHpara_AT_Qact1)) THEN
@@ -3617,10 +3611,6 @@
                                     Qact,para_Tnum,mole)
 
           mole%RPHTransfo%init_Qref = .TRUE.
-
-          DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
-            mole%tab_Qtransfo(it)%skip_transfo = tab_skip_transfo(it)
-          END DO
 
           CALL Qdyn_TO_Qact_FROM_ActiveTransfo(mole%ActiveTransfo%Qdyn0,  &
                                                mole%ActiveTransfo%Qact0,  &
@@ -3642,7 +3632,7 @@
 
           IF (debug) CALL Write_RPHTransfo(mole%RPHTransfo)
 
-        END IF
+      END IF
       END IF
 
   !----- Gcte if needed --------------------------------------------

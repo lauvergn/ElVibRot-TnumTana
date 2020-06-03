@@ -206,8 +206,6 @@
       CALL Set_RPHpara_AT_Qact1_opt2(RPHpara_AT_Qact1,Qact,para_Tnum,mole)
     ELSE ! option 0 ou 1
       CALL Set_RPHpara_AT_Qact1_opt01(RPHpara_AT_Qact1,Qact,para_Tnum,mole)
-
-
     END IF
 
     IF (debug) THEN

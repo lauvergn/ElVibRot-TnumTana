@@ -237,9 +237,9 @@
                     ",' +i'," // trim(adjustl(CMatFormat)) // ",')'"
 
 
-        openmp              = Popenmp ! openmp is in mod_system.mod
+        openmp              = (Popenmp .AND. maxth > 1) ! openmp is in mod_system.mod
         openmpi             = Popenmpi
-        
+
         IF (.NOT. openmp) THEN
            MatOp_omp          = 0
            OpPsi_omp          = 0

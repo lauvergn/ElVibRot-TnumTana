@@ -1067,6 +1067,7 @@
          !write(out_unitp,*) 'Qact1',Qact1(:)
 
          ! find the iQa from tab_RPHpara_AT_Qact1
+         iQa = 0
          Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,RPHTransfo%tab_RPHpara_AT_Qact1)
 
          IF (.NOT. Find_iQa) THEN
@@ -1316,6 +1317,7 @@
          END DO
 
          ! find the iQa from tab_RPHpara_AT_Qact1
+         iQa = 0
          Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,RPHTransfo%tab_RPHpara_AT_Qact1)
 
          IF (.NOT. Find_iQa) THEN
@@ -1517,7 +1519,10 @@
 
          ! 1b) RPHpara_AT_Qact1
          ! find the iQa from tab_RPHpara_AT_Qact1
+         iQa = 0
          Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,RPHTransfo%tab_RPHpara_AT_Qact1)
+
+         IF (debug) write(out_unitp,*) 'Find_iQa,iQa',Find_iQa,iQa
 
          IF (.NOT. Find_iQa) THEN
            write(out_unitp,*) 'ERROR in ',name_sub
@@ -1534,12 +1539,12 @@
            write(out_unitp,*) ' The initialization of tab_RPHpara_AT_Qact1 is not done.'
            STOP
          END IF
-!         IF (RPHpara_AT_Qact1(1)%init_done == 1) THEN
-!           !CALL Write_RPHTransfo(RPHTransfo)
-!           write(out_unitp,*) 'WARNING in ',name_sub
-!           write(out_unitp,*) ' Partial initialization of tab_RPHpara_AT_Qact1.'
-!           write(out_unitp,*) ' => it will be used to calculate the frequencies.'
-!         END IF
+         IF (debug .AND. RPHpara_AT_Qact1(1)%init_done == 1) THEN
+           !CALL Write_RPHTransfo(RPHTransfo)
+           write(out_unitp,*) 'WARNING in ',name_sub
+           write(out_unitp,*) ' Partial initialization of tab_RPHpara_AT_Qact1.'
+           write(out_unitp,*) ' => it will be used to calculate the frequencies.'
+         END IF
          !-----------------------------------------------
          !-----------------------------------------------
 
@@ -1904,7 +1909,7 @@
 
     ! local variables
     real (kind=Rkind) :: epsi = ONETENTH**5
-    integer           :: lb,ub
+    integer           :: lb,ub,iQa_loc
 
 !----- for debuging --------------------------------------------------
       !integer :: err_mem,memory
@@ -1917,8 +1922,8 @@
 
     Find_iQa = .FALSE.
 
-    IF (associated(tab_RPHpara_AT_Qact1) .AND.                          &
-                   size(Qact1) == tab_RPHpara_AT_Qact1(0)%nb_act1) THEN
+    IF (associated(tab_RPHpara_AT_Qact1)) THEN
+    IF (size(Qact1) == tab_RPHpara_AT_Qact1(0)%nb_act1) THEN
 
       lb = lbound(tab_RPHpara_AT_Qact1,dim=1)
       ub = ubound(tab_RPHpara_AT_Qact1,dim=1)
@@ -1938,20 +1943,21 @@
       END IF
 
       IF (.NOT. Find_iQa) THEN
-        DO iQa=lb,ub
-          Find_iQa = all(abs(Qact1-tab_RPHpara_AT_Qact1(iQa)%RPHQact1) < epsi)
-          IF (debug) write(out_unitp,*) 'in Find_iQa_OF_RPHpara_AT_Qact1: 3 iQa,Find_iQa',iQa,Find_iQa
+        DO iQa_loc=lb,ub
+          Find_iQa = all(abs(Qact1-tab_RPHpara_AT_Qact1(iQa_loc)%RPHQact1) < epsi)
+          IF (debug) write(out_unitp,*) 'in Find_iQa_OF_RPHpara_AT_Qact1: 3 iQa,Find_iQa',iQa_loc,Find_iQa
           IF (Find_iQa) EXIT
         END DO
+        IF (Find_iQa) iQa = iQa_loc
       END IF
-
+    END IF
     END IF
 
     IF (.NOT. Find_iQa) THEN
       IF (associated(tab_RPHpara_AT_Qact1)) THEN
         write(out_unitp,*) 'tab_RPHpara_AT_Qact1'
-        DO iQa=lb,ub
-          CALL Write_RPHpara_AT_Qact1(tab_RPHpara_AT_Qact1(iQa),nderiv=1)
+        DO iQa_loc=lb,ub
+          CALL Write_RPHpara_AT_Qact1(tab_RPHpara_AT_Qact1(iQa_loc),nderiv=1)
         END DO
       ELSE
         write(out_unitp,*) 'tab_RPHpara_AT_Qact1 is not associated.'

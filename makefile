@@ -35,7 +35,7 @@ CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 1
+QML = 0
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -595,7 +595,8 @@ Obj_Coord = \
   $(OBJ)/FlexibleTransfo.o $(OBJ)/GeneTransfo.o \
   $(OBJ)/HyperSpheTransfo.o $(OBJ)/LinearNMTransfo.o $(OBJ)/RectilinearNM_Transfo.o \
   $(OBJ)/RPHTransfo.o $(OBJ)/sub_freq.o \
-  $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o 
+  $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o \
+  $(OBJ)/Calc_Tab_dnQflex.o
 
 #Minimize Only list: OK
 Obj_Tnum = \
@@ -1037,8 +1038,9 @@ $(OBJ)/Qtransfo.o:$(DirTNUM)/Qtransfo/Qtransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirTNUM)/Qtransfo/Qtransfo.f90
 $(OBJ)/sub_freq.o:$(DirTNUM)/Qtransfo/sub_freq.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/sub_freq.f90
-
-#
+$(OBJ)/Calc_Tab_dnQflex.o:$(DirTNUM)/sub_operator_T/Calc_Tab_dnQflex.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_operator_T/Calc_Tab_dnQflex.f90
+# 
 $(OBJ)/sub_module_Tnum.o:$(DirTNUM)/sub_module_Tnum.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirTNUM)/sub_module_Tnum.f90
 $(OBJ)/sub_module_paramQ.o:$(DirTNUM)/sub_module_paramQ.f90

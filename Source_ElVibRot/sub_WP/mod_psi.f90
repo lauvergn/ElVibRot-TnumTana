@@ -284,9 +284,9 @@ CONTAINS
 !-----------------------------------------------------------
 
 
-      WP0n_h = para_WP0%WP0n_h
+      WP0n_h     = para_WP0%WP0n_h
       WP0nb_elec = para_WP0%WP0nb_elec
-      IF (WP0n_h <1) WP0n_h = 1
+      IF (WP0n_h <1)     WP0n_h = 1
       IF (WP0nb_elec <1) WP0nb_elec = 1
 
 

@@ -227,7 +227,9 @@
 
         CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,    &
                para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)
-        
+
+        CALL dealloc_OldParam(OldPara)
+
         write(out_unitp,*)
         write(out_unitp,*)
         CALL time_perso('sub_qa_bhe')
@@ -309,6 +311,7 @@
 !$OMP   SHARED(para_AllOp,max_Sii,max_Sij,iqf) &
 !$OMP   PRIVATE(iq,out_unitp,freq_only,OldPara) &
 !$OMP   NUM_THREADS(Grid_maxth)
+      CALL dealloc_OldParam(OldPara)
 
 !$OMP   DO SCHEDULE(STATIC)
         DO iq=1,iqf-1
@@ -318,6 +321,8 @@
 
         END DO
 !$OMP   END DO
+
+      CALL dealloc_OldParam(OldPara)
 
 
 !$OMP   DO SCHEDULE(STATIC)
@@ -330,6 +335,7 @@
 
         END DO
 !$OMP   END DO
+  CALL dealloc_OldParam(OldPara)
 
 !$OMP   END PARALLEL
 
@@ -427,8 +433,7 @@
 
 !------ working variables ---------------------------------
   real (kind=Rkind)  :: max_Sii,max_Sij
-  real (kind=Rkind)  :: max_Hii,max_Hij
-  integer            :: Grid_maxth_save,opt_Grid_maxth
+  integer            :: opt_Grid_maxth,i_maxth
   real(kind=Rkind)   :: Opt_RealTime,RealTime(Grid_maxth)
   TYPE (param_time)  :: GridTime
   integer            :: iq,max_nq
@@ -447,7 +452,7 @@
   END IF
   !-----------------------------------------------------------
 
-  IF (.NOT. Tune_Grid_omp) RETURN
+  IF (.NOT. Tune_Grid_omp .OR. Grid_maxth < 2) RETURN
   IF (para_AllOp%tab_Op(1)%mole%nb_inact2n > 0) RETURN ! we don't tune for HADA or cHAC
 
   write(out_unitp,*) '============================================'
@@ -458,61 +463,76 @@
 !-----------------------------------------------------
 !!! How many points do we tests ???
 !! => a multiple of Grid_maxth
-
   print_level_save = print_level
   print_level      = -1
 
+  max_Sii          = ZERO
+  max_Sij          = ZERO
   max_nq           = 1
   freq_only        = .FALSE.
   RealTime(1)      = Delta_RealTime(GridTime)
   DO   ! loop to increase max_nq
 
+    IF (debug) write(out_unitp,*) '  max_nq ',max_nq
+
     DO iq=1,max_nq
+
        CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,     &
         para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)
     END DO
     RealTime(1) = Delta_RealTime(GridTime)
+    IF (debug) write(out_unitp,*) '  RealTime(1) ',RealTime(1)
+
     IF (RealTime(1) > TEN) exit ! 10 seconds ???
-    IF (2*max_nq > para_AllOp%tab_Op(1)%nb_qa/Grid_maxth) EXIT
+    IF (8*max_nq > para_AllOp%tab_Op(1)%nb_qa/Grid_maxth) EXIT
     max_nq = max_nq * 2
 
   END DO
   write(out_unitp,*) '   Tuning with ',max_nq,' grid points'
   CALL flush_perso(out_unitp)
+  CALL dealloc_OldParam(OldPara)
   !now we have an optimal max_nq (about 10 seconds of calculation)
 !-----------------------------------------------------
 
-  max_Sii = ZERO
-  max_Sij = ZERO
+  max_Sii         = ZERO
+  max_Sij         = ZERO
 
-  Grid_maxth_save = Grid_maxth
   Opt_RealTime    = huge(ONE)
   opt_Grid_maxth  = Grid_maxth
-  DO Grid_maxth=1,Grid_maxth_save
+  DO i_maxth=1,Grid_maxth
 
-    !$OMP   PARALLEL &
-    !$OMP   DEFAULT(NONE) &
+    IF (debug) write(out_unitp,*) '   i_maxth ',i_maxth
+    CALL flush_perso(out_unitp)
+
+    !$OMP   PARALLEL                                  &
+    !$OMP   DEFAULT(NONE)                             &
     !$OMP   SHARED(para_AllOp,max_Sii,max_Sij,max_nq) &
-    !$OMP   PRIVATE(iq,out_unitp,freq_only,OldPara) &
-    !$OMP   NUM_THREADS(Grid_maxth)
+    !$OMP   PRIVATE(iq,out_unitp,freq_only,OldPara)   &
+    !$OMP   NUM_THREADS(i_maxth)
+
+    CALL dealloc_OldParam(OldPara)
+
     !$OMP   DO SCHEDULE(STATIC)
     DO iq=1,max_nq
       CALL sub_HSOp_inact(iq,freq_only,para_AllOp,max_Sii,max_Sij,      &
         para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid,OldPara)
     END DO
     !$OMP   END DO
+
+    CALL dealloc_OldParam(OldPara)
+
     !$OMP   END PARALLEL
 
-    RealTime(Grid_maxth) = Delta_RealTime(GridTime)
-    write(out_unitp,*) 'With ',Grid_maxth,'threads, Delta Real Time',RealTime(Grid_maxth)
+    RealTime(i_maxth) = Delta_RealTime(GridTime)
+    write(out_unitp,*) 'With ',i_maxth,'threads, Delta Real Time',RealTime(i_maxth)
     CALL flush_perso(out_unitp)
-    IF (RealTime(Grid_maxth) < Opt_RealTime) THEN
-      IF (RealTime(Grid_maxth) > 0) THEN
-        Opt_RealTime   = RealTime(Grid_maxth)
-        opt_Grid_maxth = Grid_maxth
+    IF (RealTime(i_maxth) < Opt_RealTime) THEN
+      IF (RealTime(i_maxth) > 0) THEN
+        Opt_RealTime   = RealTime(i_maxth)
+        opt_Grid_maxth = i_maxth
       END IF
     ELSE
-      IF (Grid_maxth > 1) EXIT
+      IF (i_maxth > 1) EXIT
     END IF
 
   END DO
