@@ -3068,120 +3068,63 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
 
   IF (para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done .AND. GridDone) THEN
 
-    DO iterm=1,para_H%nb_term
+    iterm = para_H%derive_term_TO_iterm(0,0)
 
-      IF (para_H%derive_termQdyn(1,iterm) == 0 ) THEN ! the PES
-        IF (para_H%OpGrid(iterm)%grid_zero) CYCLE ! wp_adia = wp_dia
+    IF (para_H%OpGrid(iterm)%grid_zero) THEN
+      CONTINUE ! wp_adia = wp_dia (nothing to be done)
+    ELSE IF (para_H%OpGrid(iterm)%grid_cte) THEN
 
-        IF (para_H%OpGrid(iterm)%grid_cte) THEN
+      CALL diagonalization(para_H%OpGrid(iterm)%Mat_cte,        &
+                     EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
 
-          CALL diagonalization(para_H%OpGrid(iterm)%Mat_cte,        &
-                         EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+      IF (Psi%cplx) THEN
 
-          IF (Psi%cplx) THEN
+        DO iq=1,Psi%nb_qa
+          Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
+          Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
+        END DO
+      ELSE
 
-            DO iq=1,Psi%nb_qa
+        DO iq=1,Psi%nb_qa
+          Rpsi_iq(:) = Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
+          Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Rpsi_iq(:)
+        END DO
 
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Cpsi_iq(i1_bi) = Psi%CvecG(iqbi)
-              END DO
-
-              Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
-
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Psi%CvecG(iqbi) = Cpsi_iq(i1_bi)
-              END DO
-
-            END DO
-          ELSE
-
-            DO iq=1,Psi%nb_qa
-
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Rpsi_iq(i1_bi) = Psi%RvecG(iqbi)
-              END DO
-
-              Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
-
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Psi%RvecG(iqbi) = Rpsi_iq(i1_bi)
-              END DO
-
-            END DO
-
-          END IF
-
-        ELSE
-
-          IF (Psi%cplx) THEN
-
-            DO iq=1,Psi%nb_qa
-
-              V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
-!write(out_unitp,*) 'V(:,:)',V(:,:)
-
-              CALL diagonalization(V,                               &
-                         EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
-!write(out_unitp,*) 'EigenVec',iq,EigenVec
-!write(out_unitp,*) 'Ortho EigenVec ?',iq,matmul(transpose(EigenVec),EigenVec)
-!write(out_unitp,*) 'Ortho EigenVec ?',iq,matmul(EigenVec,transpose(EigenVec))
-
-              Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
-!write(out_unitp,*) '<Vdia>',dot_product(Cpsi_iq,matmul(V,Cpsi_iq))
-
-                  !DO i1_bi=1,para_H%nb_bie
-                  !  iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                  !  Cpsi_iq(i1_bi) = Psi%CvecG(iqbi)
-                  !END DO
-!write(out_unitp,*) 'Cpsi_iq',iq,Cpsi_iq
-
-                  !Cpsi_iq(:) = matmul(EigenVec,Cpsi_iq)
-                  !Cpsi_iq(:) = matmul(Cpsi_iq,EigenVec)
-              Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
-
-!write(out_unitp,*) '<Vadia>',dot_product(Cpsi_iq,(EigenVal*Cpsi_iq))
-
-
-              Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
-                  !DO i1_bi=1,para_H%nb_bie
-                  !  iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                  !  Psi%CvecG(iqbi) = Cpsi_iq(i1_bi)
-                  !END DO
-!write(out_unitp,*) 'Cpsi_iq',iq,Cpsi_iq
-
-            END DO
-          ELSE
-
-            DO iq=1,Psi%nb_qa
-
-              V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
-              CALL diagonalization(V,                               &
-                         EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
-
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Rpsi_iq(i1_bi) = Psi%RvecG(iqbi)
-              END DO
-
-              Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
-
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Psi%RvecG(iqbi) = Rpsi_iq(i1_bi)
-              END DO
-
-            END DO
-
-          END IF
-
-        END IF
       END IF
 
-    END DO
+    ELSE
+
+      IF (Psi%cplx) THEN
+
+        DO iq=1,Psi%nb_qa
+
+          V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
+
+          CALL diagonalization(V,                               &
+                     EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+
+          Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
+          Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
+        END DO
+      ELSE
+
+        DO iq=1,Psi%nb_qa
+
+          V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
+          CALL diagonalization(V,                               &
+                     EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+
+          Rpsi_iq(:) = Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
+          Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Rpsi_iq(:)
+        END DO
+
+      END IF
+
+    END IF
 
   ELSE
     write(out_unitp,*) 'ERROR in ',name_sub

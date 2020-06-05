@@ -1890,20 +1890,21 @@ END IF
 
 END FUNCTION dot_product_SmolyakRep
 
-FUNCTION dot_product_SmolyakRep_Grid(SRep1,SRep2,SRep_w,WSRep) RESULT(R)
+FUNCTION dot_product_SmolyakRep_Grid(SRep1,SRep2,SRep_w,WSRep,ib0) RESULT(R)
 USE mod_system
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
-TYPE(Type_SmolyakRep),           intent(in)     :: SRep1,SRep2
-TYPE(Type_SmolyakRep),           intent(in)     :: SRep_w
-real(kind=Rkind),                intent(in)     :: WSRep(:)
+TYPE(Type_SmolyakRep),           intent(in)            :: SRep1,SRep2
+TYPE(Type_SmolyakRep),           intent(in)            :: SRep_w
+real(kind=Rkind),                intent(in)            :: WSRep(:)
+integer,                         intent(in), optional  :: ib0
 
 
-integer               :: iG,nb_BG
+integer               :: iG,nb_BG,nq_AT_iG,i1,i2
 
-   !write(out_unitp,*) 'size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),Size_SmolyakRep(SRep_w)
-   !write(out_unitp,*) 'nb DP terms',size(SRep1%SmolyakRep),size(SRep2%SmolyakRep),size(WSRep),size(WSRep)
+   write(out_unitp,*) 'dot_product_SmolyakRep_Grid: size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),Size_SmolyakRep(SRep_w)
+   write(out_unitp,*) 'nb DP terms',size(SRep1%SmolyakRep),size(SRep2%SmolyakRep),size(WSRep),size(WSRep)
 
    flush(out_unitp)
 
@@ -1912,32 +1913,41 @@ IF (nb_BG /= Size_SmolyakRep(SRep2) .OR. size(SRep1%SmolyakRep) /= size(WSRep) .
   write(out_unitp,*) 'ERROR in dot_product_SmolyakRep'
   write(out_unitp,*) 'sizes are different',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2)
   write(out_unitp,*) 'nb DP terms',size(SRep1%SmolyakRep),size(SRep2%SmolyakRep),size(WSRep)
-
   STOP
 END IF
 
 R = ZERO
 IF (nb_BG > 0) THEN
-
-  DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
-    R = R + WSRep(iG) * dot_product(SRep1%SmolyakRep(iG)%V,             &
+  IF (present(ib0)) THEN
+    DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
+      nq_AT_iG = size(SRep1%SmolyakRep(iG)%V) / SRep1%nb0
+      i1 = 1+(ib0-1)*nq_AT_iG
+      i2 = ib0*nq_AT_iG
+      R = R + WSRep(iG) * dot_product(SRep1%SmolyakRep(iG)%V(i1:i2),    &
+                  SRep_w%SmolyakRep(iG)%V*SRep2%SmolyakRep(iG)%V(i1:i2))
+    END DO
+  ELSE
+    DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
+      R = R + WSRep(iG) * dot_product(SRep1%SmolyakRep(iG)%V,           &
                          SRep_w%SmolyakRep(iG)%V*SRep2%SmolyakRep(iG)%V)
-  END DO
+    END DO
+  END IF
 
 END IF
 
 END FUNCTION dot_product_SmolyakRep_Grid
 
-FUNCTION dot_product_SmolyakRep_Basis(SRep1,SRep2,WSRep) RESULT(R)
+FUNCTION dot_product_SmolyakRep_Basis(SRep1,SRep2,WSRep,ib0) RESULT(R)
 USE mod_system
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
-TYPE(Type_SmolyakRep),           intent(in)     :: SRep1,SRep2
-real(kind=Rkind),                intent(in)     :: WSRep(:)
+TYPE(Type_SmolyakRep),           intent(in)            :: SRep1,SRep2
+real(kind=Rkind),                intent(in)            :: WSRep(:)
+integer,                         intent(in), optional  :: ib0
 
 
-integer               :: iG,nb_BG
+integer               :: iG,nb_BG,nb_AT_iG,i1,i2
 
 nb_BG = Size_SmolyakRep(SRep1)
 IF (nb_BG /= Size_SmolyakRep(SRep2) .OR. size(SRep1%SmolyakRep) /= size(WSRep) .OR. size(SRep2%SmolyakRep) /= size(WSRep)) THEN
@@ -1947,15 +1957,23 @@ IF (nb_BG /= Size_SmolyakRep(SRep2) .OR. size(SRep1%SmolyakRep) /= size(WSRep) .
   STOP
 END IF
 
-   write(out_unitp,*) 'size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),size(WSRep)
+   write(out_unitp,*) 'dot_product_SmolyakRep_Basis: size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),size(WSRep)
    flush(out_unitp)
 
 R = ZERO
 IF (nb_BG > 0) THEN
-
-  DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
-    R = R + WSRep(iG) * dot_product(SRep1%SmolyakRep(iG)%V,SRep2%SmolyakRep(iG)%V)
-  END DO
+  IF (present(ib0)) THEN
+    DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
+      nb_AT_iG = size(SRep1%SmolyakRep(iG)%V) / SRep1%nb0
+      i1 = 1+(ib0-1)*nb_AT_iG
+      i2 = ib0*nb_AT_iG
+      R = R + WSRep(iG) * dot_product(SRep1%SmolyakRep(iG)%V(i1:i2),SRep2%SmolyakRep(iG)%V(i1:i2))
+    END DO
+  ELSE
+    DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
+      R = R + WSRep(iG) * dot_product(SRep1%SmolyakRep(iG)%V,SRep2%SmolyakRep(iG)%V)
+    END DO
+  END IF
 
 END IF
 
@@ -2448,6 +2466,11 @@ real(kind=Rkind), allocatable      :: RTempG(:,:,:),RTempB(:,:,:)
 
 IF (SRep%Grid) STOP 'Grid is not possible in BSmolyakRep_TO_GSmolyakRep'
 
+!write(6,*) 'BSmolyakRep_TO_GSmolyakRep: shape(tab_ind) ',shape(tab_ind)
+!write(6,*) 'BSmolyakRep_TO_GSmolyakRep: shape(tab_ba) ',shape(tab_ba)
+!write(6,*) 'BSmolyakRep_TO_GSmolyakRep: nb0 ',nb0
+!flush(6)
+
 !D = size(tab_ba(0,:))
 !nb_mult_BTOG = 0
 
@@ -2463,6 +2486,7 @@ IF (SRep%Grid) STOP 'Grid is not possible in BSmolyakRep_TO_GSmolyakRep'
 
 DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
+  !write(6,*) iG,'tab_ind(:,iG)',tab_ind(:,iG)
   tab_nq = get_tab_nq(tab_ind(:,iG),tab_ba)
   tab_nb = get_tab_nb(tab_ind(:,iG),tab_ba)
 
@@ -2517,6 +2541,8 @@ IF (allocated(tab_nq)) deallocate(tab_nq)
 !$OMP   END PARALLEL
 
 SRep%Grid = .TRUE.
+!write(6,*) 'END BSmolyakRep_TO_GSmolyakRep'
+!flush(6)
 
 END SUBROUTINE BSmolyakRep_TO_GSmolyakRep
 
@@ -3168,6 +3194,8 @@ real(kind=Rkind), allocatable      :: RTempG(:,:,:)
 
   character (len=*), parameter :: name_sub='Set_weight_TO_SmolyakRep'
 
+
+!write(6,*) 'Set_weight_TO_SmolyakRep: shape tab_ba',shape(tab_ba) ; flush(6)
 
   CALL alloc_SmolyakRep(SRep,tab_ind,tab_ba,grid=.TRUE.)
   !CALL Write_SmolyakRep(Srep)

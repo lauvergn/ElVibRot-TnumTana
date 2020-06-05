@@ -511,7 +511,6 @@
 
 #if __QML == 1
             CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(:,:,itermE),Qit(PrimOp%Qit_TO_QQMLib))
-            write(6,*) 'QML pot',Qit(PrimOp%Qit_TO_QQMLib),d0MatOp(iOpE)%ReVal(:,:,itermE)
 #else
             write(out_unitp,*) 'ERROR in ',name_sub
             write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'

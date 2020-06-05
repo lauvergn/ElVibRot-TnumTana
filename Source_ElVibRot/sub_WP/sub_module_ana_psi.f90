@@ -2289,7 +2289,7 @@ END SUBROUTINE norm_psi_MPI
   real (kind=Rkind) :: WrhonD,temp,max_w
   integer           :: nb_be,nb_bi
   integer           :: iSG,iqSG,err_sub ! for SG4
-  !logical           :: SG4 = .TRUE.
+  logical           :: SG4 = .TRUE.
   TYPE (OldParam)   :: OldPara
   real (kind=Rkind) :: WeightSG
 
@@ -2330,11 +2330,12 @@ END SUBROUTINE norm_psi_MPI
     write(out_unitp,*) 'shape tab_WeightChannels',shape(tab_WeightChannels)
   END IF
 
+SG4 = (SGtype == 4)
+SG4 = .FALSE.
 
-  !IF (SGtype == 4) THEN
-  !  CALL Channel_weight_SG4(tab_WeightChannels,psi,GridRep,BasisRep)
-  !END IF
-
+IF (SG4) THEN
+    CALL Channel_weight_SG4(tab_WeightChannels,psi,GridRep,BasisRep)
+ELSE
   IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
 
     CALL Channel_weight_contracHADA(tab_WeightChannels(:,1),psi)
@@ -2365,6 +2366,8 @@ END SUBROUTINE norm_psi_MPI
       !- initialization ----------------------------------
       tab_WeightChannels(:,:) = ZERO
 
+      CALL dealloc_OldParam(OldPara)
+
       DO i_qa=1,psi%nb_qa
 
         !- calculation of WrhonD ------------------------------
@@ -2390,6 +2393,7 @@ END SUBROUTINE norm_psi_MPI
         END DO
         END DO
       END DO
+      CALL dealloc_OldParam(OldPara)
 
     ELSE
 
@@ -2410,6 +2414,7 @@ END SUBROUTINE norm_psi_MPI
       tab_WeightChannels(1,1) = dot_product(psi%RvecB,psi%RvecB)
     END IF
   END IF
+END IF
 
   IF (present(Dominant_Channel)) THEN
     Dominant_Channel(:) = 1
@@ -2611,7 +2616,7 @@ END SUBROUTINE Channel_weight_MPI
   TYPE(Type_SmolyakRep)     :: SRep,WSRep ! smolyak rep for SparseGrid_type=4
 
   integer           :: i_qa,i_qaie
-  integer           :: i_be,i_bi,i_ba,i_baie
+  integer           :: i_be,i_bi,i_ba,i_baie,ib0
   integer           :: ii_baie,if_baie
   real (kind=Rkind) :: WrhonD,temp,max_w
   integer           :: nb_be,nb_bi
@@ -2622,8 +2627,8 @@ END SUBROUTINE Channel_weight_MPI
 
 
 !- for debuging --------------------------------------------------
-  logical,parameter :: debug = .FALSE.
-  !logical,parameter :: debug = .TRUE.
+  !logical,parameter :: debug = .FALSE.
+  logical,parameter :: debug = .TRUE.
 !-------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING Channel_weight_SG4'
@@ -2646,7 +2651,18 @@ END SUBROUTINE Channel_weight_MPI
     CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(1)%RVecB,        &
                       psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
                       psi%BasisnD%para_SGType2)
+    ib0 = 0
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      ib0 = ib0 + 1
+      tab_WeightChannels(i_bi,i_be) =                                   &
+        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+    END DO
+    END DO
+    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+
     !Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
+    !write(6,*) 'Norm2',Norm2
 
     CALL BSmolyakRep_TO_GSmolyakRep(SRep,                               &
                   psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
@@ -2655,26 +2671,61 @@ END SUBROUTINE Channel_weight_MPI
                   psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
                   psi%BasisnD%tab_basisPrimSG)
 
-    Norm2 = dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG)
+    ib0 = 0
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      ib0 = ib0 + 1
+      tab_WeightChannels(i_bi,i_be) =                                   &
+        dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG,ib0)
+    END DO
+    END DO
+    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+
+!    Norm2 = dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG)
     !CALL Write_SmolyakRep(SRep)
+    !write(6,*) 'Norm2',Norm2
 
     !For the imaginary part
     CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(2)%RVecB,        &
-          psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,psi%BasisnD%para_SGType2)
-    Norm2 = Norm2 + dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
+                      psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
+                      psi%BasisnD%para_SGType2)
+
+    ib0 = 0
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      ib0 = ib0 + 1
+      tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) +   &
+        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+    END DO
+    END DO
+    !Norm2 = Norm2 + dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
     !CALL Write_SmolyakRep(SRep)
 
    ELSE
-    CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,Psi%RVecB,        &
-          psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,psi%BasisnD%para_SGType2)
+    CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,Psi%RVecB,              &
+                      psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,   &
+                      psi%BasisnD%para_SGType2)
+    ib0 = 0
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      ib0 = ib0 + 1
+      tab_WeightChannels(i_bi,i_be) =                                   &
+        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+    END DO
+    END DO
     !CALL Write_SmolyakRep(SRep)
-    Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
+    !Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
   END IF
 
-  write(out_unitp,*) 'Norm2_SG4',Norm2
+  !write(out_unitp,*) 'Norm2_SG4',Norm2
 
+  CALL dealloc_psi(RCPsi(1))
+  CALL dealloc_psi(RCPsi(2))
+
+  CALL dealloc_SmolyakRep(SRep)
 !------------------------------------------------------
   IF (debug) THEN
+    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
     write(out_unitp,*) 'END Channel_weight_SG4'
   END IF
 !------------------------------------------------------
