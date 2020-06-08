@@ -106,6 +106,8 @@ MODULE mod_system
       logical :: openmpi= .FALSE. 
       integer :: MatOp_omp,OpPsi_omp,BasisTOGrid_omp,Grid_omp,SG4_omp
       integer :: MatOp_maxth,OpPsi_maxth,BasisTOGrid_maxth,Grid_maxth,SG4_maxth
+      logical :: Tune_SG4_omp  = .FALSE.
+      logical :: Tune_Grid_omp = .FALSE.
 
       integer (kind=ILkind) :: nb_mult_BTOG  = 0
       integer (kind=ILkind) :: nb_mult_GTOB  = 0

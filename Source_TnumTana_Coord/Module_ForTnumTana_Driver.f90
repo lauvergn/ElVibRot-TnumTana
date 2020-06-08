@@ -31,13 +31,13 @@ MODULE Module_ForTnumTana_Driver
   USE mod_Constant
   USE mod_Coord_KEO,             ONLY: CoordType,Tnum,Read_CoordType,  &
                                        read_RefGeom,sub_QactTOd0x,sub_d0xTOQact
-  USE mod_PrimOp,                ONLY: param_PES,Finalyze_TnumTana_Coord_PrimOp
+  USE mod_PrimOp,                ONLY: PrimOp_t,Finalize_TnumTana_Coord_PrimOp
   IMPLICIT NONE
 
   TYPE (constant)  :: const_phys
   TYPE (CoordType) :: mole
   TYPE (Tnum)      :: para_Tnum
-  TYPE (param_PES) :: para_PES
+  TYPE (PrimOp_t)  :: PrimOp
 
   integer          :: Init = 0 ! Initialization is not done
 

@@ -35,7 +35,7 @@
 !     - parameters for para_Tnum -----------------------
       TYPE (zmatrix)   :: mole
       TYPE (Tnum)      :: para_Tnum
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
 
       real (kind=Rkind) :: vep,rho
       real (kind=Rkind), pointer :: Tdef2(:,:),Tdef1(:)
@@ -108,7 +108,7 @@
       !-----------------------------------------------------------------
       !     ---- TO finalize the coordinates (NM) and the KEO ----------
       !     ------------------------------------------------------------
-      CALL Finalyze_TnumTana_Coord_PrimOp(para_Q%Qact,para_Tnum,mole,para_PES)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Q%Qact,para_Tnum,mole,PrimOp)
       !-----------------------------------------------------------------
 !=======================================================================
 !=======================================================================
@@ -139,7 +139,7 @@
       !para_Q%Qread(:) = reshape(xread, (/3*mole%nat/) )
 
 
-      CALL get_Qact(Qact,mole%ActiveTransfo)
+      CALL get_Qact0(Qact,mole%ActiveTransfo)
       CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
       CALL Write_Q_WU(Qdyn,mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qout,&
               mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qout,'Coordinates, Qdyn')
@@ -292,7 +292,7 @@ stop
       CALL sub_QinRead_TO_Qact(para_Q%Qread,Qact,mole,0)
 
 
-      CALL get_Qact(Qact,mole%ActiveTransfo)
+      CALL get_Qact0(Qact,mole%ActiveTransfo)
       CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
       CALL Write_Q_WU(Qdyn,mole%tab_Qtransfo(mole%nb_Qtransfo)%name_Qout,&
               mole%tab_Qtransfo(mole%nb_Qtransfo)%type_Qout,'Coordinates, Qdyn')

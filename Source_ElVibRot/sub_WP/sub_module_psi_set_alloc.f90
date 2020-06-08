@@ -43,7 +43,6 @@
  MODULE mod_psi_set_alloc
  USE mod_system
  USE mod_basis
- USE mod_ComOp
  USE mod_type_ana_psi
  IMPLICIT NONE
 
@@ -51,11 +50,10 @@
 
         TYPE param_psi
         !-- for the basis set ----------------------------------------------
-        TYPE (Basis), pointer       :: BasisnD => null()   ! .TRUE. pointer
-        TYPE (Basis), pointer       :: Basis2n => null()   ! .TRUE. pointer
-        integer                     :: symab   = -1
-        !-- for ComOp ------------------------------------------------------
-        TYPE (param_ComOp), pointer :: ComOp => null()     ! .TRUE. pointer
+        TYPE (param_AllBasis), pointer       :: para_AllBasis => null()   ! .TRUE. pointer
+        TYPE (Basis),          pointer       :: BasisnD       => null()   ! .TRUE. pointer
+        TYPE (Basis),          pointer       :: Basis2n       => null()   ! .TRUE. pointer
+        integer                              :: symab         = -1
 
         logical       :: init       = .FALSE.            ! (F) all constantes are initialized
         logical       :: cplx       = .FALSE.            ! (T) if T => psi is complex (use of Cvec)
@@ -104,6 +102,9 @@
         real (kind=Rkind)    :: norm2    = -ONE       ! norm^2 of psi
 
         CONTAINS
+          PROCEDURE, PRIVATE, PASS(psi1)  :: psi1_pluseq_psi2
+          GENERIC,   PUBLIC  :: pluseq => psi1_pluseq_psi2
+
           PROCEDURE, PRIVATE, PASS(psi)  :: CplxPsi_TO_RCpsi
           PROCEDURE, PRIVATE, PASS(psi)  :: RCPsi_TO_CplxPsi
           PROCEDURE, PRIVATE, PASS(psi1) :: psi2TOpsi1
@@ -552,7 +553,9 @@
       IF (delete_all_loc) THEN
         IF (debug) write(out_unitp,*) 'dealloc: init param'
 
-        nullify(psi%ComOp)
+        nullify(psi%Basis2n)
+        nullify(psi%BasisnD)
+        nullify(psi%para_AllBasis)
 
         psi%init            = .FALSE.
         psi%cplx            = .FALSE.
@@ -734,6 +737,8 @@
       integer                      :: get_nb_be_FROM_psi
       TYPE (param_psi), intent(in) :: psi
 
+      integer                      :: nb_be_psi,nb_be_NewBasisEl
+
 !----- for debuging --------------------------------------------------
       !logical, parameter :: debug = .TRUE.
        logical, parameter :: debug = .FALSE.
@@ -743,21 +748,29 @@
       END IF
 
      IF (NewBasisEl) THEN
-       get_nb_be_FROM_psi = get_nb_be_FROM_basis(psi%BasisnD)
-       IF (get_nb_be_FROM_psi == -1) THEN
+       nb_be_NewBasisEl = get_nb_be_FROM_basis(psi%BasisnD)
+       IF (nb_be_NewBasisEl == -1) THEN
          write(out_unitp,*) ' ERROR in get_nb_be_FROM_psi'
          write(out_unitp,*) ' NewBasisEl = t and no El basis set!!'
          write(out_unitp,*) ' CHECK the source'
          STOP
        END IF
-     ELSE IF (associated(psi%ComOp)) THEN
-       get_nb_be_FROM_psi = psi%ComOp%nb_be
      ELSE
+       nb_be_NewBasisEl = -1
+     END IF
+
+     nb_be_psi = psi%nb_be
+
+
+     IF (NewBasisEl .AND. nb_be_psi /= nb_be_NewBasisEl ) THEN
        write(out_unitp,*) ' ERROR in get_nb_be_FROM_psi'
-       write(out_unitp,*) ' psi%ComOp in not associated'
+       write(out_unitp,*) ' inconsistent value in psi and NewBasisEl'
+       write(out_unitp,*) ' nb_be in psi        ',nb_be_psi
+       write(out_unitp,*) ' nb_be in NewBasisEl ',nb_be_NewBasisEl
        write(out_unitp,*) ' CHECK the source'
        STOP
      END IF
+     get_nb_be_FROM_psi = nb_be_psi
 
       IF (debug) THEN
         write(out_unitp,*) 'END get_nb_be_FROM_psi'
@@ -770,6 +783,8 @@
       integer                      :: get_nb_bi_FROM_psi
       TYPE (param_psi), intent(in) :: psi
 
+      integer                      :: nb_bi_Basis2n,nb_bi_psi
+
 !----- for debuging --------------------------------------------------
       !logical, parameter :: debug = .TRUE.
        logical, parameter :: debug = .FALSE.
@@ -778,14 +793,20 @@
         write(out_unitp,*) 'BEGINNING get_nb_bi_FROM_psi'
       END IF
 
-     IF (associated(psi%ComOp)) THEN
-       get_nb_bi_FROM_psi = psi%ComOp%nb_bi
-     ELSE
-       write(out_unitp,*) ' ERROR in get_nb_bi_FROM_psi'
-       write(out_unitp,*) ' psi%ComOp in not associated'
-       write(out_unitp,*) ' CHECK the source'
-       STOP
-     END IF
+     nb_bi_psi = psi%nb_bi
+
+!     nb_bi_Basis2n = get_nb_FROM_basis(psi%Basis2n)
+
+!     IF (nb_bi_psi /= nb_bi_Basis2n) THEN
+!       write(out_unitp,*) ' ERROR in get_nb_bi_FROM_psi'
+!       write(out_unitp,*) ' inconsistent value in psi and psi%Basis2n'
+!       write(out_unitp,*) ' nb_bi in psi        ',nb_bi_psi
+!       write(out_unitp,*) ' nb_bi in psi%Basis2n',nb_bi_Basis2n
+!       write(out_unitp,*) ' CHECK the source'
+!       STOP
+!     END IF
+
+     get_nb_bi_FROM_psi = nb_bi_psi
 
       IF (debug) THEN
         write(out_unitp,*) 'END get_nb_bi_FROM_psi'
@@ -809,36 +830,36 @@
 
       integer  :: i,n1
 
-!     write(out_unitp,*) 'BEGINNING psi2TOpsi1'
+      !write(out_unitp,*) 'BEGINNING psi2TOpsi1'
 
       CALL dealloc_psi(psi1)
 
-      IF (associated(psi2%BasisnD)) THEN
-         psi1%BasisnD => psi2%BasisnD
+      IF (associated(psi2%para_AllBasis)) THEN
+         psi1%para_AllBasis => psi2%para_AllBasis
       ELSE
          write(out_unitp,*) ' ERROR in psi2TOpsi1'
-         write(out_unitp,*) ' BasisnD CANNOT be associated'
-         write(out_unitp,*) ' asso psi2%BasisnD',associated(psi2%BasisnD)
+         write(out_unitp,*) ' para_AllBasis CANNOT be associated'
+         write(out_unitp,*) ' asso psi2%para_AllBasis',associated(psi2%para_AllBasis)
          write(out_unitp,*) ' CHECK the source'
          STOP
       END IF
 
-      IF (associated(psi2%Basis2n)) THEN
-         psi1%Basis2n => psi2%Basis2n
+      IF (associated(psi1%para_AllBasis%BasisnD)) THEN
+         psi1%BasisnD => psi1%para_AllBasis%BasisnD
       ELSE
          write(out_unitp,*) ' ERROR in psi2TOpsi1'
          write(out_unitp,*) ' BasisnD CANNOT be associated'
-         write(out_unitp,*) ' asso psi2%Basis2n',associated(psi2%Basis2n)
+         write(out_unitp,*) ' asso psi1%para_AllBasis%BasisnD',associated(psi1%para_AllBasis%BasisnD)
          write(out_unitp,*) ' CHECK the source'
          STOP
       END IF
 
-      IF (associated(psi2%ComOp)) THEN
-         psi1%ComOp => psi2%ComOp
+      IF (associated(psi1%para_AllBasis%Basis2n)) THEN
+         psi1%Basis2n => psi1%para_AllBasis%Basis2n
       ELSE
          write(out_unitp,*) ' ERROR in psi2TOpsi1'
-         write(out_unitp,*) ' ComOp CANNOT be associated'
-         write(out_unitp,*) ' asso psi2%ComOp',associated(psi2%ComOp)
+         write(out_unitp,*) ' BasisnD CANNOT be associated'
+         write(out_unitp,*) ' asso psi1%para_AllBasis%Basis2n',associated(psi1%para_AllBasis%Basis2n)
          write(out_unitp,*) ' CHECK the source'
          STOP
       END IF
@@ -933,35 +954,36 @@
 
       CALL dealloc_psi(psi1)
 
-     IF (associated(psi2%BasisnD)) THEN
-         psi1%BasisnD => psi2%BasisnD
+      IF (associated(psi2%para_AllBasis)) THEN
+         psi1%para_AllBasis => psi2%para_AllBasis
       ELSE
          write(out_unitp,*) ' ERROR in copy_psi2TOpsi1'
-         write(out_unitp,*) ' BasisnD CANNOT be associated'
-         write(out_unitp,*) ' asso psi2%BasisnD',associated(psi2%BasisnD)
+         write(out_unitp,*) ' para_AllBasis CANNOT be associated'
+         write(out_unitp,*) ' asso psi2%para_AllBasis',associated(psi2%para_AllBasis)
          write(out_unitp,*) ' CHECK the source'
          STOP
       END IF
 
-      IF (associated(psi2%Basis2n)) THEN
-         psi1%Basis2n => psi2%Basis2n
+      IF (associated(psi1%para_AllBasis%BasisnD)) THEN
+         psi1%BasisnD => psi1%para_AllBasis%BasisnD
       ELSE
-         write(out_unitp,*) ' ERROR in psi2TOpsi1'
+         write(out_unitp,*) ' ERROR in copy_psi2TOpsi1'
          write(out_unitp,*) ' BasisnD CANNOT be associated'
-         write(out_unitp,*) ' asso psi2%Basis2n',associated(psi2%Basis2n)
+         write(out_unitp,*) ' asso psi1%para_AllBasis%BasisnD',associated(psi1%para_AllBasis%BasisnD)
          write(out_unitp,*) ' CHECK the source'
          STOP
       END IF
 
-      IF (associated(psi2%ComOp)) THEN
-         psi1%ComOp => psi2%ComOp
+      IF (associated(psi1%para_AllBasis%Basis2n)) THEN
+         psi1%Basis2n => psi1%para_AllBasis%Basis2n
       ELSE
          write(out_unitp,*) ' ERROR in copy_psi2TOpsi1'
-         write(out_unitp,*) ' ComOp CANNOT be associated'
-         write(out_unitp,*) ' asso psi2%ComOp',associated(psi2%ComOp)
+         write(out_unitp,*) ' BasisnD CANNOT be associated'
+         write(out_unitp,*) ' asso psi1%para_AllBasis%Basis2n',associated(psi1%para_AllBasis%Basis2n)
          write(out_unitp,*) ' CHECK the source'
          STOP
       END IF
+
 
       psi1%init = psi2%init
       psi1%cplx = psi2%cplx
@@ -1087,6 +1109,8 @@
          RCPsi(1)%RvecG(:) = real(psi%CvecG(:),kind=Rkind)
          RCPsi(2)%RvecG(:) = aimag(psi%CvecG(:))
       END IF
+
+
 
 !     write(out_unitp,*) 'END CplxPsi_TO_RCpsi'
 
@@ -1457,17 +1481,21 @@
       !!@param: TODO
       !!@param: TODO
           FUNCTION psi1_plus_psi2(psi1,psi2)
-            TYPE (param_psi)             :: psi1_plus_psi2
+            TYPE (param_psi)              :: psi1_plus_psi2
             CLASS (param_psi), intent(in) :: psi1,psi2
 
             integer           :: err,i
 
-!           write(out_unitp,*) 'BEGINNING psi1_plus_psi2'
+            !write(out_unitp,*) 'BEGINNING psi1_plus_psi2'
 
 
-!           - define and allocate psi1_plus_psi2 ----
-            CALL copy_psi2TOpsi1(psi1_plus_psi2,psi1)
-!           -----------------------------------------
+            !- define and allocate psi1_plus_psi2 ----
+            IF (.NOT. psi1_plus_psi2%init) THEN
+              !write(out_unitp,*) 'psi1_plus_psi2 is not initialized yet'
+              CALL copy_psi2TOpsi1(psi1_plus_psi2,psi1)
+            ELSE
+              !write(out_unitp,*) 'psi1_plus_psi2 is initialized already'
+            END IF
 
 
             IF (psi1%GridRep .AND. psi2%GridRep) THEN
@@ -1504,10 +1532,64 @@
               psi1_plus_psi2%symab = -1
             END IF
 
-!           write(out_unitp,*) 'END psi1_plus_psi2'
+            !write(out_unitp,*) 'END psi1_plus_psi2'
 
           END FUNCTION psi1_plus_psi2
+          SUBROUTINE psi1_pluseq_psi2(psi1,psi2)
+            CLASS (param_psi), intent(inout)   :: psi1
+            TYPE  (param_psi), intent(in)      :: psi2
 
+            integer           :: err,i
+
+            !write(out_unitp,*) 'BEGINNING psi1_pluseq_psi2'
+
+
+            !- define and allocate psi1_plus_psi2 ----
+            IF (.NOT. psi1%init) THEN
+              write(out_unitp,*) 'psi1 is not initialized'
+              STOP 'ERROR in psi1_pluseq_psi2, psi1 is not initalized'
+            ELSE
+              write(out_unitp,*) 'psi1 is initialized'
+            END IF
+
+
+            IF (psi1%GridRep .AND. psi2%GridRep) THEN
+              IF (psi1%cplx .AND. psi2%cplx) THEN
+                psi1%CvecG = psi1%CvecG + psi2%CvecG
+              ELSE IF (.NOT. psi1%cplx .AND. .NOT. psi2%cplx) THEN
+                psi1%RvecG = psi1%RvecG + psi2%RvecG
+              ELSE
+                write(out_unitp,*) ' ERROR : I CANNOT mix real and complex psi !!'
+                write(out_unitp,*) ' psi1%cplx,psi2%cplx',psi1%cplx,psi2%cplx
+                STOP
+              END IF
+            END IF
+
+            IF (psi1%BasisRep .AND. psi2%BasisRep) THEN
+              IF (psi1%cplx .AND. psi2%cplx) THEN
+                psi1%CvecB = psi1%CvecB + psi2%CvecB
+              ELSE IF (.NOT. psi1%cplx .AND. .NOT. psi2%cplx) THEN
+                psi1%RvecB = psi1%RvecB + psi2%RvecB
+              ELSE
+                write(out_unitp,*) ' ERROR : I CANNOT mix real and complex psi !!'
+                write(out_unitp,*) ' psi1%cplx,psi2%cplx',psi1%cplx,psi2%cplx
+                STOP
+              END IF
+            END IF
+
+            IF (psi1%symab == psi2%symab) THEN
+               CONTINUE ! nothing
+            ELSE IF (psi1%symab == -2) THEN
+               psi1%symab = psi2%symab
+            ELSE IF (psi2%symab == -2) THEN
+               CONTINUE ! nothing
+            ELSE
+              psi1%symab = -1
+            END IF
+
+            !write(out_unitp,*) 'END psi1_pluseq_psi2'
+
+          END SUBROUTINE psi1_pluseq_psi2
 
       !!@description: TODO
       !!@param: TODO
@@ -2477,14 +2559,13 @@
 
 !----- variables for the WP propagation ----------------------------
       TYPE (param_psi)   :: psi
-      integer            :: i
 
 
       write(out_unitp,*) ' BEGINNING Write_init_psi'
 
-      write(out_unitp,*) 'BasisnD, Basis2n,ComOp are linked?',          &
-                  associated(psi%BasisnD),associated(psi%Basis2n),      &
-                  associated(psi%ComOp)
+      write(out_unitp,*) 'para_AllBasis is linked?',associated(psi%para_AllBasis)
+      write(out_unitp,*) 'BasisnD       is linked?',associated(psi%BasisnD)
+      write(out_unitp,*) 'Basis2n       is linked?',associated(psi%Basis2n)
       write(out_unitp,*) 'symab, bits(symab)',WriteTOstring_symab(psi%symab)
 
       write(out_unitp,*) 'init,cplx',psi%init,psi%cplx
@@ -2503,19 +2584,9 @@
 
 
       write(out_unitp,*) 'RvecB_alloc',allocated(psi%RvecB)
-!      IF ( allocated(psi%RvecB) .AND. psi%nb_tot > 0)                &
-!       CALL Write_Vec(psi%RvecB,out_unitp,5,Rformat='e30.23')
       write(out_unitp,*) 'CvecB_alloc',allocated(psi%CvecB)
-!      IF ( allocated(psi%CvecB) .AND. psi%nb_tot > 0)                &
-!       CALL Write_Vec(psi%CvecB,out_unitp,5,Rformat='e30.23')
-!      write(out_unitp,*)
       write(out_unitp,*) 'RvecG_alloc',allocated(psi%RvecG)
-!      IF ( allocated(psi%RvecG) .AND. psi%nb_qaie .GT. 0)            &
-!       CALL Write_Vec(psi%RvecG,out_unitp,5,Rformat='e30.23')
       write(out_unitp,*) 'CvecG_alloc',allocated(psi%CvecG)
-!      IF ( allocated(psi%CvecG) .AND. psi%nb_qaie .GT. 0)            &
-!       CALL Write_Vec(psi%CvecG,out_unitp,5,Rformat='e30.23')
-!      write(out_unitp,*)
 
       write(out_unitp,*) 'IndAvOp,CAvOp,convAvOp',psi%IndAvOp,psi%CAvOp,psi%convAvOp
 

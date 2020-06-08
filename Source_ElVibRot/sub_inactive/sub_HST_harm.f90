@@ -45,7 +45,7 @@
 
       USE mod_system
       USE mod_dnSVM
-      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact, qact_to_qdyn_from_activetransfo
+      USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0, qact_to_qdyn_from_activetransfo
       USE mod_basis
       USE mod_Op
       USE mod_PrimOp
@@ -66,7 +66,7 @@
 
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType), pointer     :: mole      ! true pointer
-      TYPE (Tnum),    pointer     :: para_Tnum ! true pointer
+      TYPE (Tnum),      pointer     :: para_Tnum ! true pointer
 
 !----- working variables ----------------------------------------
       logical                           :: pot,keo,KEO_bis
@@ -125,25 +125,24 @@
 
       END IF
       !-----------------------------------------------------------
+         ! write(6,*) 'coucou before Qact' ; flush(6)
 
       !-----------------------------------------------------------
       !----- New nD-Grid points ----------------------------------
       !-----------------------------------------------------------
       CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
 
-
-      CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
-
       IF (iq > 0 .OR. .NOT. test) THEN
-        !-----------------------------------------------------
-        !calculation of Qact
-
+        !calculation of Qact with the inactive coordinates
         CALL Rec_Qact(Qact,                                             &
                       para_AllOp%tab_Op(1)%para_AllBasis%BasisnD,iq,    &
                       mole,OldPara)
+      ELSE
+        CALL get_Qact0(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
       END IF
       !-----------------------------------------------------------
       !-----------------------------------------------------------
+          !write(6,*) 'coucou after Qact' ; flush(6)
 
       !-----------------------------------------------------------
       !------ special case if nb_inact2n=0 -----------------------
@@ -160,17 +159,21 @@
           mole%WriteCC     = .TRUE.
         END IF
 
-        allocate(d0MatOp(para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op+2))
+        allocate(d0MatOp(para_AllOp%tab_Op(1)%para_ReadOp%nb_scalar_Op+2))
         DO iOp=1,size(d0MatOp)
           CALL Init_d0MatOp(d0MatOp(iOp),para_AllOp%tab_Op(iOp)%param_TypeOp,&
-                            para_AllOp%tab_Op(iOp)%para_PES%nb_elec)
+                            para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec)
         END DO
+        !write(6,*) 'coucou after Init_d0MatOp' ; flush(6)
 
 #if(run_MPI)
         IF(Grid_allco)  THEN
 #endif
-          CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                   &
-                                 para_Tnum,para_AllOp%tab_Op(1)%para_PES)
+          !write(6,*) 'coucou before get_d0MatOp_AT_Qact' ; flush(6)
+          CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,         &
+                                   para_AllOp%tab_Op(1)%para_ReadOp%PrimOp_t)
+          !write(6,*) 'coucou after get_d0MatOp_AT_Qact' ; flush(6)
+
 #if(run_MPI)
         ENDIF
 #endif
@@ -199,41 +202,41 @@
 
         IF (sqRhoOVERJacSave) THEN
             !$OMP  CRITICAL (sub_HSOp_inact1_CRIT)
-            IF (allocated(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac)) THEN
-              IF (size(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac) /= para_AllOp%tab_Op(1)%nb_qa) THEN
-                CALL dealloc_NParray(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac, &
-                                    'para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac',name_sub)
+            IF (allocated(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac)) THEN
+              IF (size(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac) /= para_AllOp%tab_Op(1)%nb_qa) THEN
+                CALL dealloc_NParray(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac, &
+                                    'para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac',name_sub)
               END IF
             END IF
 
-            IF (.NOT. allocated(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac)) THEN
-                CALL alloc_NParray(para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac, &
+            IF (.NOT. allocated(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac)) THEN
+                CALL alloc_NParray(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac, &
                                         (/ para_AllOp%tab_Op(1)%nb_qa /),   &
-                                  'para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac',name_sub)
+                                  'para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac',name_sub)
             END IF
             !$OMP  END CRITICAL (sub_HSOp_inact1_CRIT)
 
-             para_AllOp%tab_Op(1)%ComOp%sqRhoOVERJac(iq) =              &
+             para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac(iq) =              &
                                      sqrt(d0MatOp(1)%rho/d0MatOp(1)%Jac)
         END IF
 
         IF (JacSave) THEN
             !$OMP  CRITICAL (sub_HSOp_inact2_CRIT)
-            IF (allocated(para_AllOp%tab_Op(1)%ComOp%Jac)) THEN
-              IF (size(para_AllOp%tab_Op(1)%ComOp%Jac) /= para_AllOp%tab_Op(1)%nb_qa) THEN
-                CALL dealloc_NParray(para_AllOp%tab_Op(1)%ComOp%Jac, &
-                                    'para_AllOp%tab_Op(1)%ComOp%Jac',name_sub)
+            IF (allocated(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac)) THEN
+              IF (size(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac) /= para_AllOp%tab_Op(1)%nb_qa) THEN
+                CALL dealloc_NParray(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac, &
+                                    'para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac',name_sub)
               END IF
             END IF
 
-            IF (.NOT. allocated(para_AllOp%tab_Op(1)%ComOp%Jac)) THEN
-                CALL alloc_NParray(para_AllOp%tab_Op(1)%ComOp%Jac, &
+            IF (.NOT. allocated(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac)) THEN
+                CALL alloc_NParray(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac, &
                                         (/ para_AllOp%tab_Op(1)%nb_qa /),   &
-                                  'para_AllOp%tab_Op(1)%ComOp%Jac',name_sub)
+                                  'para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac',name_sub)
             END IF
             !$OMP  END CRITICAL (sub_HSOp_inact2_CRIT)
 
-            para_AllOp%tab_Op(1)%ComOp%Jac(iq) = d0MatOp(1)%Jac
+            para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac(iq) = d0MatOp(1)%Jac
         END IF
 
         IF (iq > 0 .OR. .NOT. test) THEN
@@ -254,19 +257,19 @@
           WrhonD = Rec_WrhonD(para_AllOp%tab_Op(1)%para_AllBasis%BasisnD,iq,OldPara)
         END IF
 
-        IF (para_AllOp%tab_Op(1)%para_PES%Type_HamilOp /= 1) THEN
+        IF (para_AllOp%tab_Op(1)%para_ReadOp%Type_HamilOp /= 1) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) '    Type_HamilOp',para_AllOp%tab_Op(1)%para_PES%Type_HamilOp
+          write(out_unitp,*) '    Type_HamilOp',para_AllOp%tab_Op(1)%para_ReadOp%Type_HamilOp
           write(out_unitp,*) '    Type_HamilOp MUST be equal to 1 for HADA or cHAC'
           write(out_unitp,*) '    CHECK your data!!'
           STOP
         END IF
 
-        allocate(d0MatOp(para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op+2))
+        allocate(d0MatOp(para_AllOp%tab_Op(1)%para_ReadOp%nb_scalar_Op+2))
 
         DO iOp=1,size(d0MatOp)
           CALL Init_d0MatOp(d0MatOp(iOp),para_AllOp%tab_Op(iOp)%param_TypeOp,&
-                        para_AllOp%tab_Op(1)%nb_bi*para_AllOp%tab_Op(1)%para_PES%nb_elec)
+                        para_AllOp%tab_Op(1)%nb_bi*para_AllOp%tab_Op(1)%para_ReadOp%nb_elec)
         END DO
 
 
@@ -412,8 +415,8 @@
 !=============================================================
      SUBROUTINE sub_HST7_bhe(Qact,d0Qeq,d0ehess,d0MatHADAOp,nb_Op,    &
                              rho,para_AllOp,Basis2n,freq_only,test)
-
       USE mod_system
+      USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_dnSVM
       USE mod_nDindex
       USE mod_Coord_KEO, only : CoordType, Tnum, Qinact2n_TO_Qact_FROM_ActiveTransfo
@@ -469,19 +472,15 @@
 !----- working variables ----------------------------------------
       integer :: iOp
       integer :: i_point,i_modif,i,j,k,l,ib,iq
-      real (kind=Rkind) :: ScalOp(para_AllOp%tab_Op(1)%para_PES%nb_scalar_Op)
+      real (kind=Rkind) :: ScalOp(para_AllOp%tab_Op(1)%para_ReadOp%nb_scalar_Op)
       real (kind=Rkind) :: vep,rho,wnDh
       real (kind=Rkind) :: pot0_corgrad
-      logical :: pot,KEO
+      logical           :: pot,KEO
 
 !------ for the frequencies -------------------------------
         integer :: nderiv
-        TYPE (Type_dnMat)     :: dnC,dnC_inv      ! derivative with respect to Qact1
-        TYPE (Type_dnVec)     :: dnQeq            ! derivative with respect to Qact1
-        TYPE (Type_dnVec)     :: dnEHess          ! derivative with respect to Qact1
-        TYPE (Type_dnVec)     :: dnGrad           ! derivative with respect to Qact1
-        TYPE (Type_dnMat)     :: dnHess           ! derivative with respect to Qact1
-        TYPE (Type_dnS)       :: dnLnN            ! derivative with respect to Qact1
+        TYPE (Type_RPHpara_AT_Qact1) :: RPHpara_AT_Qact1
+
 
       real (kind=Rkind) , allocatable ::                                &
        f1Q(:),f2Q(:,:),Tcor2(:,:),                                      &
@@ -504,6 +503,7 @@
       integer :: nq
 
       integer, parameter :: nq_write_HADA = 10000
+      real (kind=Rkind)  :: auTOcm_inv
 
 !----- FUNCTION --------------------------------------------------
       real (kind=Rkind) ::      pot_rest
@@ -517,6 +517,7 @@
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
+     auTOcm_inv    = get_Conv_au_TO_unit('E','cm-1')
 
       mole         => para_AllOp%tab_Op(1)%mole
       para_Tnum    => para_AllOp%tab_Op(1)%para_Tnum
@@ -584,7 +585,7 @@
 !     ------ this memory is free at the subroutine end -----------
       DO iOp=1,size(d0MatOp)
         CALL Init_d0MatOp(d0MatOp(iOp),d0MatHADAOp(iOp)%param_TypeOp,   &
-                                para_AllOp%tab_Op(iOp)%para_PES%nb_elec)
+                                para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec)
       END DO
 
       CALL alloc_NParray(f1Q,    (/nb_act/),                    "f1Q",   name_sub)
@@ -615,28 +616,28 @@
 !     equilibrium inactive variables and hessian matrix
 
       nderiv = 2
-      CALL alloc_dnSVM(dnC,    nb_inact2n,nb_inact2n,nb_act1,nderiv)
-      CALL alloc_dnSVM(dnC_inv,nb_inact2n,nb_inact2n,nb_act1,nderiv)
-      CALL alloc_dnSVM(dnQeq,  nb_inact2n,           nb_act1,nderiv)
-      CALL alloc_dnSVM(dnEHess,nb_inact2n,           nb_act1,nderiv)
-      CALL alloc_dnSVM(dnHess, nb_inact2n,nb_inact2n,nb_act1,nderiv)
-      CALL alloc_dnSVM(dnGrad, nb_inact2n,           nb_act1,nderiv)
-      CALL alloc_dnSVM(dnLnN,                        nb_act1,nderiv)
+      CALL alloc_RPHpara_AT_Qact1(RPHpara_AT_Qact1,nb_act1,nb_inact2n,nderiv)
 
+      RPHpara_AT_Qact1%RPHQact1(:) = Qact(1:mole%nb_act1)
 
-      CALL sub_dnfreq_4p(dnQeq,dnC,dnLnN,dnEHess,dnHess,dnGrad,dnC_inv, &
-                         pot0_corgrad,Qact,para_Tnum,mole,              &
-                         mole%RPHTransfo_inact2n,nderiv,test)
+      CALL sub_dnfreq(RPHpara_AT_Qact1,pot0_corgrad,para_Tnum,mole,     &
+                      mole%RPHTransfo_inact2n,nderiv,test,cHAC=.TRUE.)
 
-      d0Qeq      = dnQeq%d0
-      d0ehess    = dnEHess%d0
+      d0Qeq      = RPHpara_AT_Qact1%dnQopt%d0
+      d0ehess    = RPHpara_AT_Qact1%dnEHess%d0
 
       IF (print_level > 0) THEN
         !IF (freq_only) write(out_unitp,*) ' freq_only'
-        write(out_unitp,12) Qact(1:nb_act1),dnQeq%d0
+
+        write(out_unitp,11) Qact(1:nb_act1),                            &
+                               RPHpara_AT_Qact1%dnEHess%d0(:)*auTOcm_inv
+ 11     format(' frequencies : ',30f10.4)
+
+        write(out_unitp,12) Qact(1:nb_act1),RPHpara_AT_Qact1%dnQopt%d0
  12     format('Qeq',20(' ',f10.6))
-        write(out_unitp,11) Qact(1:nb_act1),pot0_corgrad
- 11     format('pot0_corgrad',10(' ',f10.6))
+
+        write(out_unitp,13) Qact(1:nb_act1),pot0_corgrad
+ 13     format('pot0_corgrad',10(' ',f10.6))
         CALL flush_perso(out_unitp)
       END IF
 
@@ -660,7 +661,7 @@
 
       CALL alloc_NParray(d0f_bhe,(/nb_bie/),"d0f_bhe",name_sub)
 
-      CALL calc_d0cd0c(d0cd0c,dnC%d0,nb_inact2n)
+      CALL calc_d0cd0c(d0cd0c,RPHpara_AT_Qact1%dnC%d0,nb_inact2n)
 
 
       nq = get_nq_FROM_basis(Basis2n)
@@ -713,12 +714,17 @@
 
 !       -----------------------------------------------------
 !       determine Qinact et deltaQ en fonction de d0Qeq d0x
-        CALL calc_d0xTOQ(Qinact,dnQeq%d0,deltaQ,d0x,dnC_inv%d0,nb_inact2n)
+        CALL calc_d0xTOQ(Qinact,RPHpara_AT_Qact1%dnQopt%d0,deltaQ,d0x,  &
+                                 RPHpara_AT_Qact1%dnC_inv%d0,nb_inact2n)
 
 !       -----------------------------------------------------
 !       determine les d1x d2x en fonction de i_point
-        CALL calc_d1d2x(d1x,d2x,nb_inact2n,                             &
-                        deltaQ,dnC%d0,dnQeq%d1,dnC%d1,dnQeq%d2,dnC%d2,nb_act1)
+        CALL calc_d1d2x(d1x,d2x,nb_inact2n,deltaQ,                      &
+                        RPHpara_AT_Qact1%dnC%d0,                        &
+                        RPHpara_AT_Qact1%dnQopt%d1,                     &
+                        RPHpara_AT_Qact1%dnC%d1,                        &
+                        RPHpara_AT_Qact1%dnQopt%d2,                     &
+                        RPHpara_AT_Qact1%dnC%d2,nb_act1)
 !       -----------------------------------------------------
 
 !       -- merge Qact(nb_var) (active and rigid) and Qinact(nb_inact2n)
@@ -728,8 +734,8 @@
 #if(run_MPI)
         IF(Grid_allco) THEN
 #endif
-        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
-                                 para_Tnum,para_AllOp%tab_Op(1)%para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,           &
+                                 para_AllOp%tab_Op(1)%para_ReadOp%PrimOp_t)
 #if(run_MPI)
         ENDIF
 #endif
@@ -745,8 +751,8 @@
                                   f2Q,f1Q,vep,rho,Tcor2,tcor1a,trota,   &
                                   para_Tnum,mole)
           ELSE
-            CALL calc3_f2_f1Q_numTay0Qinact2n(Qact,dnQeq,               &
-                                    f2Q,f1Q,vep,rho,Tcor2,tcor1a,trota, &
+            CALL calc3_f2_f1Q_numTay0Qinact2n(Qact,RPHpara_AT_Qact1%dnQopt,&
+                                    f2Q,f1Q,vep,rho,Tcor2,tcor1a,trota,    &
                                     para_Tnum,mole)
           END IF
         ELSE
@@ -779,8 +785,8 @@
          Vinact = vep
          IF (pot) THEN
            Vinact = Vinact + d0MatOp(1)%ReVal(1,1,1)
-           IF (para_AllOp%tab_Op(1)%para_PES%HarD) THEN
-             Vinact = Vinact + pot2(dnHess%d0,deltaQ,nb_inact2n)
+           IF (para_AllOp%tab_Op(1)%para_ReadOp%HarD) THEN
+             Vinact = Vinact + pot2(RPHpara_AT_Qact1%dnHess%d0,deltaQ,nb_inact2n)
              Vinact = Vinact + pot_rest(Qact,deltaQ,nb_inact2n)
            END IF
 
@@ -798,15 +804,18 @@
         !write(out_unitp,*) 'Qact,V',Qact(1:nb_act1),Vinact
 
 
-         CALL sub_mat6_HST(para_AllOp%tab_Op(1)%para_PES,               &
+         CALL sub_mat6_HST(para_AllOp%tab_Op(1)%para_ReadOp%PrimOp_t,   &
                            d0MatHADAOp,nb_Op,nb_bie,                    &
                            d0f_bhe,                                     &
                            rho,                                         &
                            nb_inact2n,ind_quadra,                       &
                            d1x,d2x,                                     &
-                           dnC%d0,dnC%d1,dnC%d2,                        &
+                           RPHpara_AT_Qact1%dnC%d0,                     &
+                           RPHpara_AT_Qact1%dnC%d1,                     &
+                           RPHpara_AT_Qact1%dnC%d2,                     &
                            d0cd0c,                                      &
-                           dnLnN%d1,dnLnN%d2,                           &
+                           RPHpara_AT_Qact1%dnLnN%d1,                   &
+                           RPHpara_AT_Qact1%dnLnN%d2,                   &
                            f2Qaa,f2Qii,f2Qai,                           &
                            f1Qa,f1Qi,nb_act1,                           &
                            para_AllOp%tab_Op(1)%para_Tnum%JJ,           &
@@ -871,13 +880,7 @@
         CALL dealloc_d0MatOp(d0MatOp(iOp)) ! Scalar Operator
       END DO
 
-      CALL dealloc_dnSVM(dnC)
-      CALL dealloc_dnSVM(dnC_inv)
-      CALL dealloc_dnSVM(dnQeq)
-      CALL dealloc_dnSVM(dnEHess)
-      CALL dealloc_dnSVM(dnHess)
-      CALL dealloc_dnSVM(dnGrad)
-      CALL dealloc_dnSVM(dnLnN)
+      CALL dealloc_RPHpara_AT_Qact1(RPHpara_AT_Qact1)
 
       CALL dealloc_NParray(f1Q,  "f1Q",   name_sub)
       CALL dealloc_NParray(f2Q,  "f2Q",   name_sub)

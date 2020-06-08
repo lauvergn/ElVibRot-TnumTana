@@ -65,7 +65,7 @@ SUBROUTINE Qact_TO_cart(Qact,nb_act,Qcart,nb_cart)
     !     ---- TO finalize the coordinates (NM) and the KEO ----------
     !     ------------------------------------------------------------
     para_Tnum%Tana=.FALSE.
-    CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+    CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
 
     IF (nb_act /= mole%nb_act .OR. nb_cart /= mole%ncart_act) THEN
        write(out_unitp,*) ' ERROR in ', name_sub
@@ -85,6 +85,66 @@ SUBROUTINE Qact_TO_cart(Qact,nb_act,Qcart,nb_cart)
 
 
 END SUBROUTINE Qact_TO_cart
+SUBROUTINE cart_TO_Qact(Qact,nb_act,Qcart,nb_cart)
+  USE mod_system
+  USE Module_ForTnumTana_Driver
+  IMPLICIT NONE
+
+  integer,           intent(in)     :: nb_act,nb_cart
+
+  real (kind=Rkind), intent(in)     :: Qact(nb_act)
+  real (kind=Rkind), intent(inout)  :: Qcart(nb_cart)
+
+
+  character (len=*), parameter :: name_sub='cart_TO_Qact'
+
+!===========================================================
+!===========================================================
+  !$OMP    CRITICAL (cart_TO_Qact_CRIT)
+  IF (Init == 0) THEN
+    Init = 1
+    CALL versionEVRT(.TRUE.)
+    print_level=-1
+    !-----------------------------------------------------------------
+    !     - read the coordinate transformations :
+    !     -   zmatrix, polysperical, bunch...
+    !     ------------------------------------------------------------
+    CALL Read_CoordType(mole,para_Tnum,const_phys)
+    !     ------------------------------------------------------------
+    !-----------------------------------------------------------------
+
+    !-----------------------------------------------------------------
+    !     - read coordinate values -----------------------------------
+    !     ------------------------------------------------------------
+    CALL read_RefGeom(mole,para_Tnum)
+    !     ------------------------------------------------------------
+    !-----------------------------------------------------------------
+
+    !-----------------------------------------------------------------
+    !     ---- TO finalize the coordinates (NM) and the KEO ----------
+    !     ------------------------------------------------------------
+    para_Tnum%Tana=.FALSE.
+    CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
+
+    IF (nb_act /= mole%nb_act .OR. nb_cart /= mole%ncart_act) THEN
+       write(out_unitp,*) ' ERROR in ', name_sub
+       write(out_unitp,*) ' nb_act is different from the Tnum one ',nb_act,mole%nb_act
+       write(out_unitp,*) '    or '
+       write(out_unitp,*) ' nb_cart is different from the Tnum one ',nb_cart,mole%ncart_act
+       STOP
+    END IF
+
+  END IF
+  !$OMP   END CRITICAL (cart_TO_Qact_CRIT)
+!===========================================================
+!===========================================================
+
+
+
+  CALL sub_d0xTOQact(Qcart,Qact,mole)
+
+
+END SUBROUTINE cart_TO_Qact
 SUBROUTINE Init_InputUnit_Driver(InputUnit)
   USE mod_system
   IMPLICIT NONE
@@ -149,7 +209,7 @@ SUBROUTINE Init_TnumTana_FOR_Driver(nb_act,nb_cart,init_sub)
     !-----------------------------------------------------------------
     !     ---- TO finalize the coordinates (NM) and the KEO ----------
     !     ------------------------------------------------------------
-    CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+    CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
 
   END IF
 

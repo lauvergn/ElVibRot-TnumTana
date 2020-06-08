@@ -115,7 +115,7 @@
       JRot = para_ana%JJmax
       para_H%Mat_done = .FALSE.
 
-      type_Op = para_H%para_PES%Type_HamilOp ! H
+      type_Op = para_H%para_ReadOp%Type_HamilOp ! H
       IF (type_Op /= 1) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) '    Type_HamilOp MUST be equal to 1 here!!'
@@ -222,7 +222,7 @@
       ELSE
         CALL diagonalization(H_VR,Ene_VR,Vec_VR,nb_bVR,4,1,.TRUE.)
       END IF
-      nb_shift = count(Ene_VR(:) <= para_H%ComOp%ZPE)
+      nb_shift = count(Ene_VR(:) <= para_H%ZPE)
       IF (nb_shift > 0) THEN
         If(MPI_id==0) write(out_unitp,*) 'WARNING the vectors 1 to ',nb_shift,'have negative energies',Ene_VR(1:nb_shift)
         If(MPI_id==0)  write(out_unitp,*) '=> They will be shifted'
@@ -236,10 +236,10 @@
       END IF
 
 
-      write(out_unitp,*) 'ZPE',para_H%ComOp%ZPE*auTOcm_inv
+      write(out_unitp,*) 'ZPE',para_H%ZPE*auTOcm_inv
       nb_ana = min(nb_bVR,nb_bRot*2)
       write(out_unitp,'(A,i4,30f15.6)') 'Ene RV',JRot,                  &
-                         (Ene_VR(1:nb_bRot)-para_H%ComOp%ZPE)*auTOcm_inv
+                         (Ene_VR(1:nb_bRot)-para_H%ZPE)*auTOcm_inv
       write(out_unitp,'(A,i4,30f15.6)') 'Ene RV',JRot,                  &
           (Ene_VR(nb_bRot+1:nb_ana)-real(Tab_psi(2)%CAvOp,kind=Rkind))* &
                                                              auTOcm_inv
@@ -247,7 +247,7 @@
       write(out_unitp,*) 'Ene RV (all), J:',JRot
       DO i=1,min(nb_bVR,10*nb_bRot)
         write(out_unitp,'(A,i5,f15.6)') ' levR:',i,                     &
-                                 (Ene_VR(i)-para_H%ComOp%ZPE)*auTOcm_inv
+                                 (Ene_VR(i)-para_H%ZPE)*auTOcm_inv
         rho_V(:) = ZERO
         DO jR=1,nb_bRot
           i1 = (jR-1)*nb_psi + 1

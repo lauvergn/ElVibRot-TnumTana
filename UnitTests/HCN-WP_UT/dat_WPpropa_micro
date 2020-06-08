@@ -1,0 +1,79 @@
+ SYSTEM=sub_system_cos_hcn.f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+#make &> $here/comp.log
+cd $here
+
+
+typepropa=$1
+
+ export OMP_NUM_THREADS=1
+
+ x1=0.538516066
+ x2=0.461483933
+
+nice $DIR_vib/vib << ** >"res_TypePropa"$typepropa
+ &system /
+ &constantes ene_unit='eV' /
+ &variables 
+         zmat=T
+         nat=4
+         sym=T
+         nrho=2
+ /
+C
+X     1
+N     2  1
+H     2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 1 21 21   0 0 0
+
+ &minimum pot0=-0.499465823200 HarD=t /
+.999d0
+3.187
+2.179
+0.
+3.141592653589793238462643383279d0
+0.0
+
+ &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80  /
+ &inactives
+           max_excit=1
+           tab_nq(1:2)=4,4
+           isort=2
+/
+ &actives test=f /
+ &analyse propa=t ana=t
+          psi1D_Q0=f psi2D_Q0=f
+          Rho1D=t Rho2D=f Rho_type=1
+          AvHiterm=f
+          coherence=1 /
+ &propa
+        WPTmax=100.d0 WPdeltaT=10.d0 nb_micro=10
+        n_WPecri=1 WPpsi2=f WPpsi=f
+        name_WPpropa='$typepropa' max_poly=5000 npoly=300 poly_tol=1.d-15
+        DHmax=0.0d0 auto_Hmax=f
+
+        TFnexp2=20 TFmaxE=20000.
+
+        file_autocorr='file_auto$typepropa'
+        file_restart='file_restart$typepropa'
+        file_WP='file_WP$typepropa'
+ 
+ /
+ &defWP0 sigma=0.6,Qeq=0.9,imp_k=0.0 /
+**

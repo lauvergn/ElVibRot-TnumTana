@@ -1,165 +1,34 @@
-Jeu 23 avr 2020 15:39:11 CEST
 =======================================
-dat_WP-control-gate
-  Total real (s):            518.717
-  Total cpu (s):            368.544
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-     649    4590   77303 res
-=======================================
-dat_WP-control-gatebis
-  Total real (s):             55.592
-  Total cpu (s):             37.334
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-     623    4384   75670 res
-=======================================
-dat_WP-control-nogate
-  Total real (s):            538.408
-  Total cpu (s):            381.477
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-     646    4545   76992 res
-=======================================
-dat_WP-prop1
-  Total real (s):             67.950
-  Total cpu (s):             47.401
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-  ElVibRot-Tnum AU REVOIR!!!
-    3317   19281  192761 res
-=======================================
-dat_WP-prop1-1D2elec
-  Total real (s):              2.650
-  Total cpu (s):              2.179
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-     983    5077   51070 res
-=======================================
-dat_WP-prop1-2elec
-  Total real (s):             39.779
-  Total cpu (s):             35.918
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-     736    3327   32579 res
-=======================================
-dat_WP-prop1-2elec_SG_type4
-  Total real (s):             23.069
-  Total cpu (s):             22.792
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-     840    3861   38963 res
-=======================================
-dat_WP-prop1-BasisEl
-  Total real (s):              0.085
-  Total cpu (s):              0.085
+dat_NewQTransfo-RPH-SGtype2
 ElVibRot ERROR !!!!
-    1074   11202  155894 res
 =======================================
-dat_WP-prop1-bis
-  Total real (s):            622.724
-  Total cpu (s):            615.671
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
+dat_NewQTransfo-RPH_AutoContract
+lev: 1 1 T 3483.2327222539
+  Total real (s):             16.065
+  Total cpu (s):             22.033
+ mem_tot,max_mem_used                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-     721    3271   35402 res
+    2302   10374  122986 res
 =======================================
-dat_WP-prop2
-  Total real (s):              4.428
-  Total cpu (s):              2.735
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
+dat_NewQTransfo-RPH
+lev: 1 1 T 3483.2327222540
+  Total real (s):             22.630
+  Total cpu (s):             24.462
+ mem_tot,max_mem_used                    0                    0
+ nb_alloc,nb_dealloc           0           0
   ElVibRot-Tnum AU REVOIR!!!
-    2388   17982  177299 res
+    1114    6681   71274 res
 =======================================
-dat_WP-prop22
-  Total real (s):             23.919
-  Total cpu (s):             19.845
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-    2766   28500  293466 res
-=======================================
-dat_WP-prop2bis
-  Total real (s):            101.543
-  Total cpu (s):             16.441
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-   21691  241917 2220931 res
-=======================================
-dat_WP-prop2im
-  Total real (s):             30.226
-  Total cpu (s):             27.762
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-    3313   28759  273991 res
-=======================================
-dat_WP-propRK4
-  Total real (s):            265.827
-  Total cpu (s):            254.695
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-    8944  102379  977921 res
-=======================================
-dat_WP-propRK4_field
-  Total real (s):            152.100
-  Total cpu (s):             64.509
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-   20670  236817 2135058 res
-=======================================
-dat_WP-propSIL
-  Total real (s):              1.164
-  Total cpu (s):              1.026
+dat_NewQTransfo-RPH2
+  Total real (s):              0.000
+  Total cpu (s):              0.000
 ElVibRot ERROR !!!!
-     574    2038   23924 res
+     444    1283   19081 res
 =======================================
-dat_WP-propSIP
-  Total real (s):              1.408
-  Total cpu (s):              1.249
+dat_NewQTransfo-RPH_HarD
+  Total real (s):              0.000
+  Total cpu (s):              0.000
 ElVibRot ERROR !!!!
-     574    2056   23929 res
-=======================================
-dat_WP-propSpectral
-  Total real (s):              5.631
-  Total cpu (s):              3.493
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-    1487    5967   58871 res
-=======================================
-dat_WP-prop_bulirsch-stoer
-  Total real (s):           1211.594
-  Total cpu (s):           1201.607
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-    1968   19164  186944 res
-=======================================
-dat_WP-relax
-  Total real (s):             30.404
-  Total cpu (s):             29.210
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-    1506    7302   74115 res
-=======================================
-dat_WP-relax-Hmax
-  Total real (s):             52.075
-  Total cpu (s):             50.525
- mem_tot,max_mem_used 0 0
- nb_alloc,nb_dealloc 0 0
-  ElVibRot-Tnum AU REVOIR!!!
-    1094    5228   56923 res
+     444    1282   19081 res
 =======================================

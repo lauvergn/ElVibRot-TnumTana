@@ -170,7 +170,6 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
 
   !real (kind=Rkind)    :: Wrho(psi%nb_qa)
   real (kind=Rkind)    :: grid(psi%nb_act1)
-  real (kind=Rkind)    :: Qact(para_H%mole%nb_var)
   integer              :: iact1,idyn,nio
   complex (kind=Rkind) :: d0psi(psi%nb_qa,psi%nb_be)
   complex (kind=Rkind) :: d1psi(psi%nb_qa,psi%nb_be,psi%nb_act1)
@@ -236,8 +235,7 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
 
   ! print the informations
   DO iq=1,psi%nb_qa
-    CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
-    Grid(:) = Qact(1:psi%nb_act1)
+    CALL Rec_Qact(Grid,psi%BasisnD,iq,para_H%mole)
     write(nio,*) T,iq,Grid(:),d0psi(iq,:),dtpsi(iq,:),d1psi(iq,:,:),d1dtpsi(iq,:,:)
   END DO
   write(nio,*)
@@ -327,8 +325,7 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,para_H,Tmax,deltaT)
     iterm_pot = para_H%derive_term_TO_iterm(0,0)
     write(nio,*) '# T, iq, Wrho, grid(ia), DiabPot(je,ie)'
     DO iq=1,psi%nb_qa
-      CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
-      Grid(:) = Qact(1:psi%nb_act1)
+      CALL Rec_Qact(Grid,psi%BasisnD,iq,para_H%mole)
       Wrho = Rec_WrhonD(psi%BasisnD,iq)
       write(nio,*) ZERO,iq,Wrho,Grid(:),para_H%OpGrid(iterm_pot)%Grid(iq,:,:)
     END DO
@@ -368,7 +365,6 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
 
   !real (kind=Rkind)    :: Wrho(psi%nb_qa)
   real (kind=Rkind)    :: grid(psi%nb_act1)
-  real (kind=Rkind)    :: Qact(para_H%mole%nb_var)
 
   integer              :: iact1,idyn,nio
   complex (kind=Rkind) :: d0psi(psi%nb_qa,psi%nb_be)
@@ -432,8 +428,7 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
 
   ! print the informations
   DO iq=1,psi%nb_qa
-    CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
-    Grid(:) = Qact(1:psi%nb_act1)
+    CALL Rec_Qact(Grid,psi%BasisnD,iq,para_H%mole)
     write(nio,*) T,iq,Grid(:),d0psi(iq,:),dtpsi(iq,:),d1psi(iq,:,:),d1dtpsi(iq,:,:)
   END DO
   write(nio,*)
@@ -564,8 +559,7 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
     ! set the grid and the diabatic potential
     write(nio,*) '# T, iq, Wrho, grid(ia), DiabPot(je,ie)'
     DO iq=1,psi%nb_qa
-      CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
-      Grid(:,iQ) = Qact(1:psi%nb_act1)
+      CALL Rec_Qact(Grid(:,iQ),psi%BasisnD,iq,para_H%mole)
       Wrho(iq) = Rec_WrhonD(psi%BasisnD,iq)
       write(nio,*) T,iq,Wrho(iq),Grid(:,iq),para_H%OpGrid(iterm_pot)%Grid(iq,:,:)
     END DO
@@ -612,8 +606,7 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
 
   ! print the informations
   DO iq=1,psi%nb_qa
-    CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
-    Grid(:,iq) = Qact(1:psi%nb_act1)
+    CALL Rec_Qact(Grid(:,iq),psi%BasisnD,iq,para_H%mole)
     write(nio,*) T,iq,Grid(:,iq),d0psi(iq,:),dtpsi(iq,:),d1psi(iq,:,:),d1dtpsi(iq,:,:)
   END DO
   write(nio,*)

@@ -313,7 +313,7 @@ CONTAINS
         CALL sub_MakeH_Davidson(it,psi(1:ndim),Hpsi(1:ndim),H,para_Davidson)
 #endif
         ndim0 = ndim
-        CALL time_perso('MakeH done')
+        !CALL time_perso('MakeH done')
 
         ! if symmetric
         CALL sub_hermitic_H(H,ndim,non_hermitic,para_H%sym_Hamil)
@@ -380,16 +380,17 @@ CONTAINS
         IF (debug) write(out_unitp,*) 'selec',it,ndim,ndim0
         IF (debug) CALL flush_perso(out_unitp)
     
-        CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,min_Ene,para_H%para_PES%min_pot,  &
-                                   psi,psi0,Vec,Vec0,para_Davidson,it,.TRUE.)
+        CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,min_Ene,  &
+                                 para_H%para_ReadOp%min_pot,            &
+                                 psi,psi0,Vec,Vec0,para_Davidson,it,.TRUE.)
           !CALL time_perso('projec done')
 
           IF (para_H%para_ReadOp%Op_Transfo) THEN
-            CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
+            CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
           ELSE
-            CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
+            CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
           END IF
-          ZPE = para_H%ComOp%ZPE
+          ZPE = para_H%ZPE
 
           IF (debug) write(out_unitp,*) 'selec',it,ndim,ndim0
           IF (debug) CALL flush_perso(out_unitp)
@@ -498,6 +499,10 @@ CONTAINS
                                    para_H%para_ReadOp%E0_Transfo,S_overlap)
 
           nb_added_states = ndim-ndim0
+          IF (nb_added_states == 0) THEN
+            conv = .TRUE.
+            write(out_unitp,*) ' WARNING: The conv is forced to true, because nb_added_states=0.'
+          END IF
           save_WP = (ndim == max_diago) .OR. conv .OR.                  &
                      it == para_Davidson%max_it .OR.                    &
                      (it > 0 .AND. mod(it,para_Davidson%num_resetH) == 0)
@@ -520,15 +525,15 @@ CONTAINS
           IF (save_WP) THEN
             IF(MPI_id==0) THEN
             CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,        &
-                                     min_Ene,para_H%para_PES%min_pot,     &
+                                     min_Ene,para_H%para_ReadOp%min_pot,  &
                                      psi,psi0,Vec,Vec0,para_Davidson,it,.TRUE.)
 
             IF (para_H%para_ReadOp%Op_Transfo) THEN
-              CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
+              CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
             ELSE
-              CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
+              CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
             END IF
-            ZPE = para_H%ComOp%ZPE
+            ZPE = para_H%ZPE
             !CALL time_perso('projec done')
 
             write(out_unitp,*) 'save psi(:)',it,ndim,ndim0
@@ -597,11 +602,11 @@ CONTAINS
             END IF
           ELSE
   !          IF (para_H%para_ReadOp%Op_Transfo) THEN
-  !            CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
+  !            CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
   !          ELSE
-  !            CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
+  !            CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
   !          END IF
-  !          ZPE = para_H%ComOp%ZPE
+  !          ZPE = para_H%ZPE
   !
   !          CALL sub_save_LCpsi(psi,Vec,ndim0,nb_diago,para_propa%file_WP)
   !          CALL time_perso('save_LCpsi done')
@@ -667,9 +672,9 @@ CONTAINS
       CALL file_close(Log_file)
 
       IF (.NOT. Hmin_OR_Hmax) THEN
-        CALL Set_ZPE_OF_ComOp(para_H%ComOp,Ene(1:nb_diago),             &
-                              Ene_min=min_Ene,forced=.TRUE.)
-        ZPE = para_H%ComOp%ZPE
+        CALL Set_ZPE_OF_Op(para_H,Ene(1:nb_diago),                      &
+                                          Ene_min=min_Ene,forced=.TRUE.)
+        ZPE = para_H%ZPE
       END IF
 
       DO j=1,nb_diago
@@ -1963,6 +1968,7 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
                                 para_Davidson,fresidu,ndim,        &
                                 Op_Transfo,E0_Transfo,S_overlap)
  USE mod_system
+ USE mod_basis
 #if(run_MPI)
  USE mod_psi,      ONLY : param_psi,dealloc_psi,norm2_psi,renorm_psi,   &
                           norm_psi_MPI,Set_symab_OF_psiBasisRep_MPI,    &
@@ -2004,7 +2010,7 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
  !------ working parameters --------------------------------
  integer              :: i,j,j_ini,j_end,nb_added_states,ib,ndim0,iresidual
  complex (kind=Rkind) :: Overlap
- real (kind=Rkind)    :: a,Di,RS
+ real (kind=Rkind)    :: a,Di,RS,Ene0_At_ib
  TYPE (param_psi)     :: psiTemp
 
  !----- for debuging --------------------------------------------------
@@ -2053,7 +2059,7 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
      IF(MPI_id==0) psi(ndim+1) = ZERO
 
      SELECT CASE (para_Davidson%NewVec_type)
-     CASE (1) ! just the residual
+     CASE (1) ! just the residual: equivament to Lanczos
 #if(run_MPI)
        CALL MakeResidual_Davidson_j_MPI3(j,psi(ndim+1),psi,Hpsi,Ene,Vec)
 #else
@@ -2109,10 +2115,12 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI
 
        ! then the scaling with respect to 1/(H0-Ene(j))
        DO ib=1,psiTemp%nb_tot
+         Ene0_At_ib = get_Ene0_AT_ib_FROM_Basis(ib,psi(ndim+1)%BasisnD, &
+                                                   psi(ndim+1)%Basis2n)
          IF (Op_transfo) THEN
-           Di = Ene(j) - ( psi(ndim+1)%BasisnD%EneH0(ib)-E0_Transfo )**2
+           Di = Ene(j) - (Ene0_At_ib-E0_Transfo)**2
          ELSE
-           Di = Ene(j) -   psi(ndim+1)%BasisnD%EneH0(ib)
+           Di = Ene(j) -  Ene0_At_ib
          END IF
          IF (abs(Di) > para_Davidson%conv_resi) THEN
            a = ONE / Di

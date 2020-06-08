@@ -1,9 +1,38 @@
-rm -f run_all.log
+#!/bin/bash
 
-#for v in 2 3 4 5 6
-#for v in 2
- for v in 2 3 4
+rm -f run_all.log
+test_size=$1
+
+if [ -z $test_size ]
+then
+  test_size=small
+fi
+if [ $test_size = 'small' ]
+then
+ echo " Small tests"
+ echo " Small tests" > run_all.log
+ list="2" 
+fi
+
+if [ $test_size = 'medium' ]
+then
+ echo " Medium tests"
+ echo " Medium tests" > run_all.log
+ list="2 3 4" 
+fi
+
+if [ $test_size = 'big' ]
+then
+ echo " Big tests"
+ echo " Big tests" > run_all.log
+ list="2 3 4 5 6" 
+fi
+
+
+echo " Tests with polysherical vector number: " $list  >> run_all.log
+
+for v in $list
 do
-  run_tests $v >> run_all.log
+  ./run_tests $v >> run_all.log
 done
 

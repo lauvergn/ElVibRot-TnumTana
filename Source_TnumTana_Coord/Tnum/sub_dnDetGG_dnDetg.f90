@@ -66,7 +66,7 @@ MODULE mod_dnDetGG_dnDetg
       integer :: ider,jder
 
       integer :: err,memory
-      logical :: keep = .FALSE.
+      logical :: keep = .TRUE.
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug = .FALSE.
 !      logical, parameter :: debug = .TRUE.

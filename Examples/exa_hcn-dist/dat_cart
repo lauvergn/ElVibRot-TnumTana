@@ -20,7 +20,7 @@ N     1
 H     1 -2
 
  0  0 1
- &minimum pot0=-0.499465823200 pot_itQtransfo=0 read_xyz0=t read_Qsym0=f /
+ &minimum pot0=-0.499465823200 pot_itQtransfo=0 read_xyz0=t /
 1 0. 0. 0.
 2 0. 0. 2.179
 3 0. 2. 0.0

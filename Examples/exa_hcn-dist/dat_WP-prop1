@@ -15,6 +15,8 @@ cd $here
 
  export OMP_NUM_THREADS=1
 
+act=" 1 21 21    0 0 0"
+
 
 nice $DIR_vib/vib << ** >res
  &system File_path='/utmp/lauvergn' /
@@ -38,7 +40,7 @@ sym  cos(a)      R     r    x    pi   dh
 5      1.        0.  0.     0.   0.   0.
 6      0.        0.  0.     0.   0.   1.
 
- 1 21   0    0 0 0
+ $act
  &minimum pot0=-0.499465823200 HarD=t /
 .999d0
 3.187
@@ -52,7 +54,7 @@ sym  cos(a)      R     r    x    pi   dh
            max_excit=4
            tab_nq(1:2)=8,8
            tab_nb(1:2)=5,5
-           max_ene_h=60000. "cm-1"
+           max_ene_h=60000. "cm-1" n_h=15
 /
  &actives test=f comput_S=t /
  &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t /
@@ -68,6 +70,8 @@ sym  cos(a)      R     r    x    pi   dh
  /
  &defWP0 sigma=0.6,Qeq=0.9,imp_k=0.0 /
 **
+
+ls /utmp/lauvergn
 
 nice $DIR_vib/vib << ** >>res
  &system File_path='/utmp/lauvergn' /
@@ -91,7 +95,7 @@ sym  cos(a)      R     r    x    pi   dh
 5      1.        0.  0.     0.   0.   0.
 6      0.        0.  0.     0.   0.   1.
 
- 1 21   0    0 0 0
+ $act
  &minimum pot0=-0.499465823200 HarD=t /
 .999d0
 3.187
@@ -105,7 +109,7 @@ sym  cos(a)      R     r    x    pi   dh
            max_excit=4
            tab_nq(1:2)=8,8
            tab_nb(1:2)=5,5
-           max_ene_h=60000. "cm-1"
+           max_ene_h=60000. "cm-1" n_h=15
 /
  &actives test=f direct=2 /
  &analyse max_ana=20 max_ene=20000. "cm-1" print=f propa=t /

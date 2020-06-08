@@ -1,5 +1,5 @@
 
-nom=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v150.6-Tnum35.13-Tana10.2
+nom=/Users/lauvergn/trav/EVR-old/ElVibRot_f90-v181.3-Tnum40.9-Tana11.5
 #nom=$1
 moi=`pwd`
 
@@ -10,10 +10,10 @@ if test -s $nom
 
     echo le repertoire $nom existe !!
 
-    for i in Source*
+    for i in . Source*
     do
 
-      for f in $i/*.f90 $i/*/*.f90 $i/*/*/*.f90
+      for f in makefile $i/*.f90 $i/*/*.f90 $i/*/*/*.f90
       do
         echo ========================================================= >> rdif
         echo $f  $nom/$f >> rdif
@@ -25,7 +25,7 @@ if test -s $nom
            echo 'fichier diff',$f
            echo 'fichier diff',$f >> rdif
 #          cp $f $nom/$f
-#          cp $nom/$f $f
+           cp $nom/$f $f
         fi
         echo ========================================================= >> rdif
       done

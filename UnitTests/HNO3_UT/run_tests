@@ -1,0 +1,42 @@
+#!/bin/bash
+
+test_size=$1
+
+if [ -z $test_size ]
+then
+  test_size=small
+fi
+if [ $test_size = 'small' ]
+then
+ echo " Small tests"
+ echo " Small tests" > run_tests.log
+fi
+
+if [ $test_size = 'medium' ]
+then
+ echo " Medium tests"
+ echo " Medium tests" > run_tests.log
+fi
+
+if [ $test_size = 'big' ]
+then
+ echo " Big tests"
+ echo " Big tests" > run_tests.log
+fi
+
+./clean
+
+./calc_1D >> run_tests.log
+
+ ./calc_1+8D $test_size >> run_tests.log
+
+
+
+nb_err=`grep -c "ERROR" run_tests.log`
+if [ $nb_err -eq 0 ]
+then
+  echo "NO ERROR in HNO3-EVR UT"
+else
+  echo $nb_err " ERROR(S) in HNO3-EVR UT"
+  echo  " check the output files in UnitTests/HNO3_UT."
+fi

@@ -57,6 +57,7 @@
 
       integer  :: PMatOp_omp,POpPsi_omp,PBasisTOGrid_omp,PGrid_omp,optimization
       integer  :: maxth,PMatOp_maxth,POpPsi_maxth,PBasisTOGrid_maxth,PGrid_maxth
+      logical  :: PTune_SG4_omp,PTune_Grid_omp
       integer  :: PSG4_omp,PSG4_maxth
       integer (kind=ILkind)  :: max_mem
       integer  :: printlevel,err
@@ -79,6 +80,7 @@
                           POpPsi_omp,POpPsi_maxth,                      &
                           PBasisTOGrid_omp,PBasisTOGrid_maxth,          &
                           PGrid_omp,PGrid_maxth,                        &
+                          PTune_SG4_omp,PTune_Grid_omp,                 &
 
                           RMatFormat,CMatFormat,EneFormat,              &
 
@@ -133,6 +135,8 @@
         PBasisTOGrid_maxth = maxth
         PGrid_omp          = 1
         PGrid_maxth        = maxth
+        PTune_SG4_omp      = .FALSE.
+        PTune_Grid_omp     = .FALSE.
 
         PSG4_omp           = 1
         PSG4_maxth         = maxth
@@ -232,9 +236,9 @@
                     ",' +i'," // trim(adjustl(CMatFormat)) // ",')'"
 
 
-        openmp              = Popenmp ! openmp is in mod_system.mod
+        openmp              = (Popenmp .AND. maxth > 1) ! openmp is in mod_system.mod
         openmpi             = Popenmpi
-        
+
         IF (.NOT. openmp) THEN
            MatOp_omp          = 0
            OpPsi_omp          = 0
@@ -247,6 +251,9 @@
            BasisTOGrid_maxth  = 1
            Grid_maxth         = 1
            SG4_maxth          = 1
+
+           Tune_SG4_omp       = .FALSE.
+           Tune_Grid_omp      = .FALSE.
         ELSE
            MatOp_omp          = PMatOp_omp
            OpPsi_omp          = POpPsi_omp
@@ -274,14 +281,18 @@
 
            IF (Grid_omp > 0) THEN
              Grid_maxth         = min(PGrid_maxth,maxth)
+             Tune_Grid_omp      = PTune_Grid_omp
            ELSE
              Grid_maxth         = 1
+             Tune_Grid_omp      = .FALSE.
            END IF
 
            IF (SG4_omp > 0) THEN
              SG4_maxth         = PSG4_maxth
+             Tune_SG4_omp      = PTune_SG4_omp
            ELSE
              SG4_maxth         = 1
+             Tune_SG4_omp       = .FALSE.
            END IF
 
         END IF

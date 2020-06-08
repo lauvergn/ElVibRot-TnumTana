@@ -69,7 +69,7 @@
       logical                        :: Rho2D         = .FALSE.   ! reduced densities (2D) along coordinate
       integer,           allocatable :: Weight_Rho(:)             ! enable to use a weight (0=>constant=1, +/-1=>step ...)
       real (kind=Rkind), allocatable :: Qana_weight(:)            ! geometry (Qact order???) for the analysis (use with Weight_Rho)
-      integer                        :: Rho_type      = 2         ! Change the weight of rho along the coordiantes:
+      integer                        :: Rho_type      = 2         ! Change the weight of rho along the coordinates:
                                                                   ! Rho_type=0, without rho(Q).w(Q) => dT=dQ
                                                                   ! Rho_type=1, with    rho(Q).w(Q) => dT=rho(Q).w(Q)dQ (=>sum Rho(Q)=1)
                                                                   ! Rho_type=2, without rho(Q);     => dT=w(Q)dQ

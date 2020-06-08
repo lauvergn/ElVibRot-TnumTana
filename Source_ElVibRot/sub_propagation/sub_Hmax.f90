@@ -143,7 +143,7 @@
         para_H%Hmin = huge(ONE)
 
         IF (para_H%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
-          type_Op = para_H%para_PES%Type_HamilOp ! H
+          type_Op = para_H%para_ReadOp%Type_HamilOp ! H
           IF (type_Op /= 1) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) '    Type_HamilOp MUST be equal to 1 for the usual SHADA file'
@@ -157,7 +157,8 @@
           DO i_qa=1,para_H%nb_qa
 
             CALL sub_reading_Op(i_qa,para_H%nb_qa,d0MatOp,para_H%n_Op,  &
-                                Qdyn,para_H%mole%nb_var,Qact,WnD,para_H%ComOp)
+                           Qdyn,para_H%mole%nb_var,para_H%mole%nb_act1, &
+                                Qact,WnD,para_H%file_grid)
 
             k_term = d0MatOp%derive_term_TO_iterm(0,0)
             DO i1_h=1,para_H%nb_bie
@@ -253,10 +254,10 @@
 
       IF (para_H%spectral) THEN
         IF (para_H%cplx) THEN
-          para_H%Hmax = para_H%Cdiag(para_H%ComOp%nb_vp_spec)
+          para_H%Hmax = para_H%Cdiag(para_H%para_AllBasis%basis_ext%nb_vp_spec)
           para_H%Hmin = para_H%Cdiag(1)
         ELSE
-          para_H%Hmax = para_H%Rdiag(para_H%ComOp%nb_vp_spec)
+          para_H%Hmax = para_H%Rdiag(para_H%para_AllBasis%basis_ext%nb_vp_spec)
           para_H%Hmin = para_H%Rdiag(1)
         END IF
         para_propa%Hmax = para_H%Hmax

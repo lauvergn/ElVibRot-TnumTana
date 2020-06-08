@@ -150,8 +150,8 @@ CONTAINS
 !-----------------------------------------------------------
 
       write(out_unitp,*) ' Propagation: ',para_propa%name_WPpropa
-      CALL Set_ZPE_OF_ComOp(para_H%ComOp,ZPE=para_propa%Hmin,forced=.TRUE.)
-      write(out_unitp,*) 'ZPE (cm-1)',para_H%ComOp%ZPE * auTOcm_inv
+      CALL Set_ZPE_OF_Op(para_H,ZPE=para_propa%Hmin,forced=.TRUE.)
+      write(out_unitp,*) 'ZPE (cm-1)',para_H%ZPE * auTOcm_inv
 
       ! change Hmin and Hmax to be sure that the spectral range is between Hmin and Hmax.
       para_propa%Hmin = para_propa%Hmin - ONETENTH**2 * (para_propa%Hmax - para_propa%Hmin)
@@ -184,7 +184,7 @@ CONTAINS
      write(out_unitp,*) ' Delta_Lambda (ua)  : ',Delta_Lambda
      write(out_unitp,*) ' Delta_Lambda (cm-1): ',Delta_Lambda*auTOcm_inv
 
-     para_propa%para_Davidson%LambdaMin = max(para_H%ComOp%ZPE,         &
+     para_propa%para_Davidson%LambdaMin = max(para_H%ZPE,         &
          para_propa%para_Davidson%E0_filter - HALF*para_propa%para_Davidson%W_filter)
      para_propa%para_Davidson%LambdaMax =                               &
          para_propa%para_Davidson%LambdaMin + para_propa%para_Davidson%W_filter
@@ -449,7 +449,7 @@ nb = size(P0_cheby)
         END IF
 
          write(out_unitp,21) Ene(1:nb_diago)*auTOcm_inv
-         write(out_unitp,21) (Ene(1:nb_diago)-para_H%ComOp%ZPE)*auTOcm_inv
+         write(out_unitp,21) (Ene(1:nb_diago)-para_H%ZPE)*auTOcm_inv
  21      format(' Filter: ',50(1x,f18.4))
 
 
@@ -644,8 +644,8 @@ STOP
 !-----------------------------------------------------------
 
       write(out_unitp,*) ' Propagation: ',para_propa%name_WPpropa
-      CALL Set_ZPE_OF_ComOp(para_H%ComOp,ZPE=para_propa%Hmin,forced=.TRUE.)
-      write(out_unitp,*) 'ZPE (cm-1)',para_H%ComOp%ZPE * auTOcm_inv
+      CALL Set_ZPE_OF_Op(para_H,ZPE=para_propa%Hmin,forced=.TRUE.)
+      write(out_unitp,*) 'ZPE (cm-1)',para_H%ZPE * auTOcm_inv
 
       ! change Hmin and Hmax to be sure that the spectral range is between Hmin and Hmax.
       para_propa%Hmin = para_propa%Hmin - ONETENTH**2 * (para_propa%Hmax - para_propa%Hmin)
@@ -674,7 +674,7 @@ STOP
      write(out_unitp,*) ' Delta_Lambda (ua)  : ',Delta_Lambda
      write(out_unitp,*) ' Delta_Lambda (cm-1): ',Delta_Lambda*auTOcm_inv
 
-     para_propa%para_Davidson%LambdaMin = max(para_H%ComOp%ZPE,         &
+     para_propa%para_Davidson%LambdaMin = max(para_H%ZPE,         &
          para_propa%para_Davidson%E0_filter - HALF*para_propa%para_Davidson%W_filter)
      para_propa%para_Davidson%LambdaMax =                               &
          para_propa%para_Davidson%LambdaMin + para_propa%para_Davidson%W_filter
@@ -823,7 +823,7 @@ STOP
         END IF
 
          write(out_unitp,21) Ene(1:nb_diago)*auTOcm_inv
-         write(out_unitp,21) (Ene(1:nb_diago)-para_H%ComOp%ZPE)*auTOcm_inv
+         write(out_unitp,21) (Ene(1:nb_diago)-para_H%ZPE)*auTOcm_inv
  21      format(' Filter: ',50(1x,f18.4))
 
 
@@ -1013,8 +1013,8 @@ STOP
 !-----------------------------------------------------------
 
       write(out_unitp,*) ' Propagation: ',para_propa%name_WPpropa
-      CALL Set_ZPE_OF_ComOp(para_H%ComOp,ZPE=para_propa%Hmin,forced=.TRUE.)
-      write(out_unitp,*) 'ZPE (cm-1)',para_H%ComOp%ZPE * auTOcm_inv
+      CALL Set_ZPE_OF_Op(para_H,ZPE=para_propa%Hmin,forced=.TRUE.)
+      write(out_unitp,*) 'ZPE (cm-1)',para_H%ZPE * auTOcm_inv
 
       ! change Hmin and Hmax to be sure that the spectral range is between Hmin and Hmax.
       para_propa%Hmin = para_propa%Hmin - ONETENTH**2 * (para_propa%Hmax - para_propa%Hmin)
@@ -1053,7 +1053,7 @@ STOP
      write(out_unitp,*) ' Delta_Lambda (ua)  : ',Delta_Lambda
      write(out_unitp,*) ' Delta_Lambda (cm-1): ',Delta_Lambda*auTOcm_inv
 
-     para_propa%para_Davidson%LambdaMin = max(para_H%ComOp%ZPE,         &
+     para_propa%para_Davidson%LambdaMin = max(para_H%ZPE,         &
          para_propa%para_Davidson%E0_filter - HALF*para_propa%para_Davidson%W_filter)
      para_propa%para_Davidson%LambdaMax =                               &
          para_propa%para_Davidson%LambdaMin + para_propa%para_Davidson%W_filter
@@ -1186,7 +1186,7 @@ STOP
         END IF
 
          write(out_unitp,21) Ene(1:nb_diago)*auTOcm_inv
-         write(out_unitp,21) (Ene(1:nb_diago)-para_H%ComOp%ZPE)*auTOcm_inv
+         write(out_unitp,21) (Ene(1:nb_diago)-para_H%ZPE)*auTOcm_inv
  21      format(' Filter: ',50(1x,f18.4))
 
 
@@ -1375,8 +1375,8 @@ STOP
 !-----------------------------------------------------------
 
       write(out_unitp,*) ' Propagation: ',para_propa%name_WPpropa
-      CALL Set_ZPE_OF_ComOp(para_H%ComOp,ZPE=para_propa%Hmin,forced=.TRUE.)
-      write(out_unitp,*) 'ZPE (cm-1)',para_H%ComOp%ZPE * auTOcm_inv
+      CALL Set_ZPE_OF_Op(para_H,ZPE=para_propa%Hmin,forced=.TRUE.)
+      write(out_unitp,*) 'ZPE (cm-1)',para_H%ZPE * auTOcm_inv
 
       ! change Hmin and Hmax to be sure that the spectral range is between Hmin and Hmax.
       para_propa%Hmin = para_propa%Hmin - ONETENTH**2 * (para_propa%Hmax - para_propa%Hmin)
@@ -1425,7 +1425,7 @@ STOP
      write(out_unitp,*) ' Delta_Lambda (ua)  : ',Delta_Lambda
      write(out_unitp,*) ' Delta_Lambda (cm-1): ',Delta_Lambda*auTOcm_inv
 
-     para_propa%para_Davidson%LambdaMin = max(para_H%ComOp%ZPE,         &
+     para_propa%para_Davidson%LambdaMin = max(para_H%ZPE,         &
          para_propa%para_Davidson%E0_filter - HALF*para_propa%para_Davidson%W_filter)
      para_propa%para_Davidson%LambdaMax =                               &
          para_propa%para_Davidson%LambdaMin + para_propa%para_Davidson%W_filter
@@ -1503,7 +1503,7 @@ STOP
         END IF
 
          write(out_unitp,21) Ene(1:nb_diago)*auTOcm_inv
-         write(out_unitp,21) (Ene(1:nb_diago)-para_H%ComOp%ZPE)*auTOcm_inv
+         write(out_unitp,21) (Ene(1:nb_diago)-para_H%ZPE)*auTOcm_inv
  21      format(' Filter: ',50(1x,f18.4))
 
 
@@ -1840,8 +1840,8 @@ STOP
                    TEN**para_propa%para_Davidson%conv_hermitian *       &
                                                non_hermitic)
 
-      CALL Set_ZPE_OF_ComOp(para_H%ComOp,ZPE=para_propa%Hmin,forced=.TRUE.)
-      write(out_unitp,*) 'ZPE',para_H%ComOp%ZPE
+      CALL Set_ZPE_OF_Op(para_H,ZPE=para_propa%Hmin,forced=.TRUE.)
+      write(out_unitp,*) 'ZPE',para_H%ZPE
 
         IF (para_H%sym_Hamil) THEN
           CALL diagonalization(H,Ene(1:nb_diago),Vec,nb_diago,3,1,.FALSE.)
@@ -1851,7 +1851,7 @@ STOP
       !write(out_unitp,*) Ene(1:nb_diago)*auTOcm_inv
 
        write(out_unitp,21) Ene(1:nb_diago)*auTOcm_inv
-       write(out_unitp,21) (Ene(1:nb_diago)-para_H%ComOp%ZPE)*auTOcm_inv
+       write(out_unitp,21) (Ene(1:nb_diago)-para_H%ZPE)*auTOcm_inv
 
  21   format(' Filter: ',50(1x,f18.4))
 

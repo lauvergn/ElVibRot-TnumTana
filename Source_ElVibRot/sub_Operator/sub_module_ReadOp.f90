@@ -43,11 +43,12 @@
       MODULE mod_ReadOp
       USE mod_system
       USE mod_OpGrid
+      USE mod_PrimOp
       IMPLICIT NONE
 
       PRIVATE
 
-        TYPE param_ReadOp ! used for transfert info from read_active to para_H
+        TYPE, EXTENDS(PrimOp_t) :: param_ReadOp ! used for transfert info from read_active to para_Op
 
            logical               :: OpPsi_WithGrid = .FALSE.
 
@@ -78,7 +79,7 @@
           GENERIC,   PUBLIC  :: assignment(=) => ReadOp2_TO_ReadOp1
         END TYPE param_ReadOp
 
-        PUBLIC :: param_ReadOp, init_ReadOp
+        PUBLIC :: param_ReadOp, init_ReadOp, dealloc_ReadOp
 
       CONTAINS
 
@@ -101,8 +102,8 @@
 
       CALL init_FileGrid(para_ReadOp%para_FileGrid)
 
-      para_ReadOp%Op_Transfo = .FALSE.   ! true => we are using Transfo(Op) instead of Op
-      para_ReadOp%E0_Transfo = ZERO      ! ScaledOp = Op - E0_transfo * I
+      para_ReadOp%Op_Transfo     = .FALSE.   ! true => we are using Transfo(Op) instead of Op
+      para_ReadOp%E0_Transfo     = ZERO      ! ScaledOp = Op - E0_transfo * I
       para_ReadOp%degree_Transfo = -1     ! degree of the transformation
 
       END SUBROUTINE init_ReadOp
@@ -111,6 +112,7 @@
       CLASS (param_ReadOp), intent(inout) :: para_ReadOp1
       TYPE (param_ReadOp),  intent(in)    :: para_ReadOp2
 
+      para_ReadOp1%PrimOp_t        = para_ReadOp2%PrimOp_t
 
       para_ReadOp1%OpPsi_WithGrid  = para_ReadOp2%OpPsi_WithGrid
 
@@ -138,6 +140,35 @@
 
       END SUBROUTINE ReadOp2_TO_ReadOp1
 
+      SUBROUTINE dealloc_ReadOp(para_ReadOp)
+      CLASS (param_ReadOp), intent(inout) :: para_ReadOp
+
+
+      CALL dealloc_PrimOp(para_ReadOp%PrimOp_t)
+
+      para_ReadOp%OpPsi_WithGrid  =  .FALSE.
+
+      para_ReadOp%pack_Op         =  .FALSE.
+      para_ReadOp%tol_pack        = ONETENTH**7
+      para_ReadOp%tol_nopack      = 0.9_Rkind
+      para_ReadOp%read_Op         = .FALSE.
+      para_ReadOp%make_Mat        = .FALSE.
+      para_ReadOp%spectral        = .FALSE.
+      para_ReadOp%spectral_Op     = 0
+      para_ReadOp%nb_bRot         = 0
+
+      para_ReadOp%pot_only        = .FALSE.
+      para_ReadOp%T_only          = .FALSE.
+      para_ReadOp%comput_S        = .FALSE.
+
+      CALL dealloc_FileGrid(para_ReadOp%para_FileGrid)
+
+      para_ReadOp%Op_Transfo     = .FALSE.
+      para_ReadOp%E0_Transfo     = ZERO
+      para_ReadOp%degree_Transfo = -1
+      IF (allocated(para_ReadOp%Poly_Transfo)) deallocate(para_ReadOp%Poly_Transfo)
+
+      END SUBROUTINE dealloc_ReadOp
 
       END MODULE mod_ReadOp
 

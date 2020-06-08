@@ -1,0 +1,84 @@
+#!/bin/bash
+
+#
+# You should get values close of the E_exact results (column 5 of table II), Lauvergnat et al, JCP, v114 (2001) p6592
+#
+
+max_excit=$2
+if [ -z $max_excit ]
+then
+  max_excit=11
+fi
+dav=$1
+
+ SYSTEM=sub_system_murrell.f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make &> $here/comp.log
+cd $here
+
+ MH=1837.10882307318116
+ MD=3671.297316
+ MN=25525.4342723654045
+ MC=21874.1407256995735
+
+ x1=0.538516066
+ x2=0.461483933
+
+pi=3.14159265358979323846264338327950288419716939937511d0
+
+RES=res_cHAC_Exact
+
+nice $DIR_vib/vib << ** > $RES
+ &system PGrid_omp=0 /
+ &constantes mass_version='HANDBOOK70ED' version='PUBLI2001' /
+ &variables 
+         zmat=T
+         nat=4
+         sym=T
+         nrho=2
+ /
+$MC
+0.0     1
+$MN     2  1
+$MH     2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 1 21  21    0 0 0
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2 HarD=f /
+.999d0
+3.187
+2.179
+0.
+3.141592653589793238462643383279d0
+0.0
+
+ &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
+ &inactives
+           max_excit=$max_excit
+           tab_nq(1:2)=16,16
+           isort=2
+/
+ &actives test=f comput_S=f /
+ &analyse max_ana=40 max_ene=8000. "cm-1" name_file_spectralWP='file_spectral' davidson=$dav /
+ &davidson nb_WP=20 max_it=100 max_WP=3000 num_resetH=10
+           lower_states=t 
+           read_WP=t name_file_readWP='file_spectral'
+/
+**
+
+ egrep 'lev0:    1 |lev0:    1 |lev0:    2 |lev0:    4 |lev0:    8 '  $RES | awk '{print $6}' > lev_$RES
+ awk '/lev0:/ {print $5}' $RES | head -20 > lev20_$RES

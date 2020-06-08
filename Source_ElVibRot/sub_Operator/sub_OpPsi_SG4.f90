@@ -112,7 +112,7 @@ CONTAINS
   mole    => para_Op%mole
   BasisnD => para_Op%BasisnD
 
-  IF (Psi%cplx) STOP 'cplx'
+  IF (Psi%cplx) STOP 'cplx in sub_OpPsi_FOR_SGtype4'
   IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1 in sub_OpPsi_FOR_SGtype4'
 
   IF (SG4_omp == 0) THEN
@@ -241,10 +241,10 @@ END IF
 !$ USE omp_lib, only : OMP_GET_THREAD_NUM
  USE mod_nDindex
 
- USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+ USE mod_Coord_KEO,               ONLY : CoordType
 
  USE mod_basis_set_alloc,         ONLY : basis
- USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
+ !USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
  USE mod_basis_RCVec_SGType4,     ONLY : TypeRVec
  USE mod_basis_BtoG_GtoB_SGType4, ONLY : BDP_TO_GDP_OF_SmolyakRep,    &
                                             GDP_TO_BDP_OF_SmolyakRep, &
@@ -445,7 +445,7 @@ END IF
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4
@@ -555,9 +555,7 @@ END IF
    CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
    !$OMP   DO SCHEDULE(STATIC)
    DO iq=1,nq
-     CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
      CALL Rec_Qact_SG4(Qact,BasisnD%tab_basisPrimSG,tab_l,nDind_DPG,iq,mole,err_sub)
-
      CALL get_d0GG(Qact,para_Op%para_Tnum,mole,d0GG=GGiq(iq,:,:),        &
                                          def=.TRUE.,Jac=Jac(iq),Rho=Rho)
      sqRhoOVERJac(iq) = sqrt(Rho/Jac(iq))
@@ -744,7 +742,18 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   BasisnD => para_Op%BasisnD
 
   IF(MPI_id==0) THEN
-    IF (Psi(1)%cplx) STOP 'cplx'
+    IF (size(Psi) == 0) THEN
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) '  The size of Psi(:) is zero!!'
+      write(out_unitp,*) '  => Check the fortran.'
+      STOP ' ERROR in sub_TabOpPsi_FOR_SGtype4: size(Psi) = 0'
+    END IF
+    IF (Psi(1)%cplx) THEN
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) '  Psi(1) is complex !!'
+      write(out_unitp,*) '  => Check the fortran.'
+      STOP ' ERROR in sub_TabOpPsi_FOR_SGtype4: Psi(1) is complex'
+    END IF
   ENDIF
   !IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1 in sub_TabOpPsi_FOR_SGtype4'
 
@@ -1281,10 +1290,10 @@ ENDSUBROUTINE sub_TabOpPsi_FOR_SGtype4_SRG_MPI
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType
 
   USE mod_basis_set_alloc,         ONLY : basis
-  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
+!  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
   USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
                      BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
                   DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
@@ -1561,10 +1570,10 @@ ENDSUBROUTINE sub_TabOpPsi_FOR_SGtype4_SRG_MPI
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType
 
   USE mod_basis_set_alloc,         ONLY : basis
-  USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
+  !USE mod_basis,                   ONLY : Rec_Qact_SG4_with_Tab_iq
   USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
                      BDP_TO_GDP_OF_SmolyakRep,GDP_TO_BDP_OF_SmolyakRep, &
                   DerivOp_TO_RDP_OF_SmolaykRep,tabR2grid_TO_tabR1_AT_iG,&
@@ -2364,7 +2373,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
                                                    V,GG,sqRhoOVERJac,Jac)
   USE mod_system
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
+  USE mod_Coord_KEO,               ONLY : CoordType
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis_BtoG_GtoB_SGType4, ONLY : TypeRVec,                     &
@@ -2528,7 +2537,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY : CoordType, get_d0GG
 
   USE mod_basis_set_alloc,         ONLY : basis
   USE mod_basis,                   ONLY : Rec_Qact_SG4
@@ -2637,9 +2646,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
    CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
  !$OMP   DO SCHEDULE(STATIC)
    DO iq=1,nq
-     CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
      CALL Rec_Qact_SG4(Qact,BasisnD%tab_basisPrimSG,tab_l,nDind_DPG,iq,mole,err_sub)
-
      CALL get_d0GG(Qact,para_Op%para_Tnum,mole,d0GG=GGiq(iq,:,:),        &
                                          def=.TRUE.,Jac=Jac(iq),Rho=Rho)
      sqRhoOVERJac(iq) = sqrt(Rho/Jac(iq))
@@ -2747,7 +2754,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY: CoordType, get_Qact, get_d0GG
+  USE mod_Coord_KEO,               ONLY: CoordType, get_d0GG
   use mod_PrimOp,                  only: param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,   &
                                          param_typeop, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
@@ -2906,13 +2913,13 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
      CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
-     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
      DO i=1,size(d0MatOp) 
-       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
      END DO
      !was
 !     DO iOp=1,size(d0MatOp) ! iOp value is change here
-!       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+!       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
 !     END DO
    END IF
 
@@ -2925,7 +2932,6 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
      CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
 
-     CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
      CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
      IF (KEO) THEN
@@ -2940,7 +2946,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
          .NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Read_FileGrid) THEN
 
         CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
-                                 para_Op%para_Tnum,para_Op%para_PES)
+                                 para_Op%para_Tnum,para_Op%para_ReadOp%PrimOp_t)
 
         DO i=1,nb0
         DO j=1,nb0
@@ -3028,7 +3034,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
+  USE mod_Coord_KEO,               ONLY : CoordType
   use mod_PrimOp,                  only: param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
                                          param_typeop, TnumKEO_TO_tab_d0H, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
@@ -3156,9 +3162,9 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
       END IF
 
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
-     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
      DO i=1,size(d0MatOp)
-       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
      END DO
 
      tab_iq(:) = 1 ; tab_iq(1) = 0
@@ -3167,11 +3173,10 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
        CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
 
-       CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
        CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
-       CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
-                                   para_Op%para_Tnum,para_Op%para_PES)
+       CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Op%para_Tnum,    &
+                                para_Op%para_ReadOp%PrimOp_t)
 
        IF (para_Op%n_Op == 0) THEN ! H
          CALL TnumKEO_TO_tab_d0H(Qact,d0MatOp(iOp),mole,para_Op%para_Tnum) ! here the vep is added to the potential
@@ -3259,7 +3264,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY : CoordType, get_Qact
+  USE mod_Coord_KEO,               ONLY : CoordType
   use mod_PrimOp,                  ONLY : param_d0matop, init_d0matop, Get_iOp_FROM_n_Op,  &
                                           param_typeop, TnumKEO_TO_tab_d0H, get_d0MatOp_AT_Qact, &
                                           dealloc_tab_of_d0matop
@@ -3406,10 +3411,9 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
    ELSE IF(.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_iG(iG)) THEN
 #else
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
-#endif
-     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
      DO i=1,size(d0MatOp)
-       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+       CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
      END DO
 
      tab_iq(:) = 1 ; tab_iq(1) = 0
@@ -3418,11 +3422,10 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
        CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
 
-       CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
        CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
-       CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
-                                   para_Op%para_Tnum,para_Op%para_PES)
+       CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Op%para_Tnum,    &
+                                para_Op%para_ReadOp%PrimOp_t)
 
        IF (para_Op%n_Op == 0 .AND. .NOT. KEO_done) THEN ! H
          CALL TnumKEO_TO_tab_d0H(Qact,d0MatOp(iOp),mole,para_Op%para_Tnum) ! here the vep is added to the potential
@@ -3644,9 +3647,9 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
      tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
 
-     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
      DO iOp=1,size(d0MatOp)
-       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
      END DO
 
      tab_iq(:) = 1 ; tab_iq(1) = 0
@@ -3655,7 +3658,6 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
        CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
 
-       CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
        CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
 !       IF (KEO) THEN
@@ -3663,8 +3665,8 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 !                                        def=.TRUE.,Jac=Jac(iq),Rho=Rho)
 !       END IF
 
-          CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                   &
-                                   para_Op%para_Tnum,para_Op%para_PES)
+          CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Op%para_Tnum, &
+                                   para_Op%para_ReadOp%PrimOp_t)
           GridOp(iq,:,:,iterm00) = d0MatOp(iterm00)%ReVal(:,:,1)
 
      END DO
@@ -3700,7 +3702,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
   USE mod_system
   USE mod_nDindex
 
-  USE mod_Coord_KEO,               ONLY: CoordType, get_Qact
+  USE mod_Coord_KEO,               ONLY: CoordType
   use mod_PrimOp,                  only: param_d0matop, init_d0matop,   &
                                          param_typeop, get_d0MatOp_AT_Qact, &
                                          dealloc_tab_of_d0matop
@@ -3845,9 +3847,9 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
      CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
-     allocate(d0MatOp(para_Op%para_PES%nb_scalar_Op+2))
+     allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
      DO iOp=1,size(d0MatOp)
-       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_PES%nb_elec)
+       CALL Init_d0MatOp(d0MatOp(iOp),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
      END DO
    END IF
 
@@ -3857,15 +3859,14 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
      CALL ADD_ONE_TO_nDval_m1(tab_iq,tab_nq)
 
-     CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
      CALL Rec_Qact_SG4_with_Tab_iq(Qact,BasisnD%tab_basisPrimSG,tab_l,tab_iq,mole,err_sub)
 
      IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done  .AND. &
          .NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid_done .AND. &
          .NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Read_FileGrid) THEN
 
-        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,                     &
-                                 para_Op%para_Tnum,para_Op%para_PES)
+        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Op%para_Tnum,   &
+                                 para_Op%para_ReadOp%PrimOp_t)
         V(iq,:,:) = d0MatOp(iterm00)%ReVal(:,:,1)
 
         IF (iG == 1 .AND. debug) THEN

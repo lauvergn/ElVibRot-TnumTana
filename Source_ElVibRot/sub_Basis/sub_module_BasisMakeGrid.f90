@@ -231,7 +231,7 @@ CONTAINS
       END SUBROUTINE write_param_SimulatedAnnealing
 
 
-      SUBROUTINE POGridRep_basis(basis_POGridRep,nb0,mole)
+      SUBROUTINE POGridRep_basis(basis_POGridRep,nb0)
       USE mod_system
       USE mod_Coord_KEO
       USE mod_basis
@@ -239,10 +239,7 @@ CONTAINS
 
 !----- for the basis set ----------------------------------------------
       TYPE (basis), intent(inout)   :: basis_POGridRep
-      integer, intent(in)           :: nb0  ! basis function number before contraction
-
-!----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType), intent(in)   :: mole
+      integer,      intent(in)      :: nb0  ! basis function number before contraction
 
 !----- local variables
       TYPE (basis)                   :: basis_temp
@@ -449,7 +446,7 @@ CONTAINS
 !---------------------------------------------------------------------
 
       END SUBROUTINE POGridRep_basis
-      SUBROUTINE POGridRep2_basis(basis_POGridRep,nb0,mole)
+      SUBROUTINE POGridRep2_basis(basis_POGridRep,nb0)
       USE mod_system
       USE mod_nDindex
       USE mod_Coord_KEO
@@ -458,10 +455,7 @@ CONTAINS
 
 !----- for the basis set ----------------------------------------------
       TYPE (basis), intent(inout)   :: basis_POGridRep
-      integer, intent(in)           :: nb0  ! basis function number before contraction
-
-!----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType), intent(in)   :: mole
+      integer,      intent(in)      :: nb0  ! basis function number before contraction
 
 !----- local variables
       TYPE (basis)               :: basis_temp

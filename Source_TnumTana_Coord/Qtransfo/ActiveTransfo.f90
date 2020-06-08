@@ -31,7 +31,7 @@ MODULE mod_ActiveTransfo
       use mod_dnSVM, only: alloc_array, dealloc_array, type_dnvec,   &
                            type_dns, write_dnsvm, alloc_dnsvm,       &
                            set_zero_to_dnsvm, sub_dns_to_dnvec,      &
-                           dealloc_dnsvm
+                           dealloc_dnsvm, sub_dnS1_TO_dnS2
       IMPLICIT NONE
 
       PRIVATE
@@ -41,23 +41,26 @@ MODULE mod_ActiveTransfo
       !! @param: TODO
       !! @param: TODO
       TYPE Type_ActiveTransfo
-          integer :: nb_var      = 0
-          integer :: nb_act      = 0
-          integer :: nb_act1     = 0
-          integer :: nb_inact2n  = 0
-          integer :: nb_inact21  = 0
-          integer :: nb_inact22  = 0
-          integer :: nb_inact20  = 0
-          integer :: nb_inact    = 0
-          integer :: nb_inact31  = 0
-          integer :: nb_rigid0   = 0
-          integer :: nb_rigid100 = 0
-          integer :: nb_rigid    = 0
+          integer                     :: nb_var              = 0
+          integer                     :: nb_act              = 0
+          integer                     :: nb_act1             = 0
+          integer                     :: nb_inact2n          = 0
+          integer                     :: nb_inact21          = 0
+          integer                     :: nb_inact22          = 0
+          integer                     :: nb_inact20          = 0
+          integer                     :: nb_inact            = 0
+          integer                     :: nb_inact31          = 0
+          integer                     :: nb_rigid0           = 0
+          integer                     :: nb_rigid100         = 0
+          integer                     :: nb_rigid            = 0
+
+          logical                     :: With_Tab_dnQflex    = .FALSE.
+
           real (kind=Rkind), pointer  :: Qdyn0(:)            => null() ! value of rigid coordinates (Qdyn order)
           real (kind=Rkind), pointer  :: Qact0(:)            => null() ! value of rigid coordinates (Qact order)
-          integer, pointer            :: list_act_OF_Qdyn(:) => null()  ! "active" transfo
-          integer, pointer            :: list_QactTOQdyn(:)  => null() ! "active" transfo
-          integer, pointer            :: list_QdynTOQact(:)  => null() ! "active" transfo
+          integer,           pointer  :: list_act_OF_Qdyn(:) => null()  ! "active" transfo
+          integer,           pointer  :: list_QactTOQdyn(:)  => null() ! "active" transfo
+          integer,           pointer  :: list_QdynTOQact(:)  => null() ! "active" transfo
       END TYPE Type_ActiveTransfo
 
       INTERFACE alloc_array
@@ -73,7 +76,7 @@ MODULE mod_ActiveTransfo
       PUBLIC :: alloc_array, dealloc_array
       PUBLIC :: Read_ActiveTransfo, Read2_ActiveTransfo, Write_ActiveTransfo
       PUBLIC :: calc_ActiveTransfo
-      PUBLIC :: get_Qact, get_Qact0, Set_AllActive
+      PUBLIC :: get_Qact, get_Qact0, Adding_InactiveCoord_TO_Qact, Set_AllActive
       PUBLIC :: Qact_TO_Qdyn_FROM_ActiveTransfo, Qdyn_TO_Qact_FROM_ActiveTransfo, Qinact2n_TO_Qact_FROM_ActiveTransfo
 
       CONTAINS
@@ -253,7 +256,8 @@ MODULE mod_ActiveTransfo
       SUBROUTINE Read2_ActiveTransfo(ActiveTransfo,nb_Qin)
 
       TYPE (Type_ActiveTransfo), intent(inout) :: ActiveTransfo
-      integer, intent(in) :: nb_Qin
+      integer,                   intent(in)    :: nb_Qin
+
 
       character (len=Name_len) :: name_int
       integer :: i,nb_Qact
@@ -307,7 +311,7 @@ MODULE mod_ActiveTransfo
 
       IF (count(ActiveTransfo%list_act_OF_Qdyn(:) == 1) == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' There is no active coordiantes!'
+        write(out_unitp,*) ' There is no active coordinates!'
         write(out_unitp,*) 'list_act_OF_Qdyn(:)',ActiveTransfo%list_act_OF_Qdyn
         write(out_unitp,*) 'Check your data!'
         STOP
@@ -332,18 +336,20 @@ MODULE mod_ActiveTransfo
       IF(MPI_id==0) write(out_unitp,*) 'BEGINNING ',name_sub
       IF(MPI_id==0) write(out_unitp,*) 'asso ActiveTransfo:',associated(ActiveTransfo)
       IF (associated(ActiveTransfo) .AND. MPI_id==0) THEN
-        write(out_unitp,*) 'nb_var:        ',ActiveTransfo%nb_var
-        write(out_unitp,*) 'nb_act:        ',ActiveTransfo%nb_act
-        write(out_unitp,*) 'nb_act1:       ',ActiveTransfo%nb_act1
-        write(out_unitp,*) 'nb_inact2n:    ',ActiveTransfo%nb_inact2n
-        write(out_unitp,*) 'nb_inact21:    ',ActiveTransfo%nb_inact21
-        write(out_unitp,*) 'nb_inact22:    ',ActiveTransfo%nb_inact22
-        write(out_unitp,*) 'nb_inact20:    ',ActiveTransfo%nb_inact20
-        write(out_unitp,*) 'nb_inact:      ',ActiveTransfo%nb_inact
-        write(out_unitp,*) 'nb_inact31:    ',ActiveTransfo%nb_inact31
-        write(out_unitp,*) 'nb_rigid0:     ',ActiveTransfo%nb_rigid0
-        write(out_unitp,*) 'nb_rigid100:   ',ActiveTransfo%nb_rigid100
-        write(out_unitp,*) 'nb_rigid:      ',ActiveTransfo%nb_rigid
+        write(out_unitp,*) 'nb_var:           ',ActiveTransfo%nb_var
+        write(out_unitp,*) 'nb_act:           ',ActiveTransfo%nb_act
+        write(out_unitp,*) 'nb_act1:          ',ActiveTransfo%nb_act1
+        write(out_unitp,*) 'nb_inact2n:       ',ActiveTransfo%nb_inact2n
+        write(out_unitp,*) 'nb_inact21:       ',ActiveTransfo%nb_inact21
+        write(out_unitp,*) 'nb_inact22:       ',ActiveTransfo%nb_inact22
+        write(out_unitp,*) 'nb_inact20:       ',ActiveTransfo%nb_inact20
+        write(out_unitp,*) 'nb_inact:         ',ActiveTransfo%nb_inact
+        write(out_unitp,*) 'nb_inact31:       ',ActiveTransfo%nb_inact31
+        write(out_unitp,*) 'nb_rigid0:        ',ActiveTransfo%nb_rigid0
+        write(out_unitp,*) 'nb_rigid100:      ',ActiveTransfo%nb_rigid100
+        write(out_unitp,*) 'nb_rigid:         ',ActiveTransfo%nb_rigid
+        write(out_unitp,*) 'With_Tab_dnQflex: ',ActiveTransfo%With_Tab_dnQflex
+
 
         IF (associated(ActiveTransfo%list_act_OF_Qdyn)) THEN
           write(out_unitp,*) 'list_act_OF_Qdyn or type_var: ',ActiveTransfo%list_act_OF_Qdyn(:)
@@ -390,8 +396,9 @@ MODULE mod_ActiveTransfo
         logical,                   intent(in)    :: inTOout
 
 
-        TYPE (Type_dnS)    :: dnQ
-        integer            :: typ_var_act,i_Qdyn,i_Qact,nb_act1
+        TYPE (Type_dnS)              :: dnQ
+        TYPE (Type_dnS), allocatable :: tab_dnQflex(:)
+        integer                      :: typ_var_act,i_Qdyn,i_Qact,nb_act1
 
 
 !      -----------------------------------------------------------------
@@ -423,6 +430,16 @@ MODULE mod_ActiveTransfo
        IF (inTOout) THEN ! Qact => Qdyn (with the derivatives)
          CALL alloc_dnSVM(dnQ)
 
+         IF (ActiveTransfo%With_Tab_dnQflex .AND.                       &
+             count(ActiveTransfo%list_act_OF_Qdyn == 20) > 1) THEN
+           allocate(tab_dnQflex(ActiveTransfo%nb_var))
+           DO i_Qdyn=1,ActiveTransfo%nb_var
+             CALL alloc_dnSVM(tab_dnQflex(i_Qdyn),dnQact%nb_var_deriv,nderiv)
+           END DO
+           CALL Calc_tab_dnQflex(tab_dnQflex,ActiveTransfo%nb_var,      &
+                                 dnQact%d0(1:nb_act1),nb_act1,nderiv,-1)
+         END IF
+
          DO i_Qact=1,ActiveTransfo%nb_var
 
            CALL Set_ZERO_TO_dnSVM(dnQ,nderiv)
@@ -437,7 +454,11 @@ MODULE mod_ActiveTransfo
              IF ( nderiv >= 1 ) dnQ%d1(i_Qact) = ONE
            CASE (20)
              ! inactive coordinate : flexible constraints
-             CALL calc_dnQflex(i_Qdyn,dnQ,dnQact%d0(1:nb_act1),nb_act1,nderiv,-1)
+             IF (allocated(tab_dnQflex)) THEN
+               CALL sub_dnS1_TO_dnS2(tab_dnQflex(i_Qdyn),dnQ)
+             ELSE
+               CALL calc_dnQflex(i_Qdyn,dnQ,dnQact%d0(1:nb_act1),nb_act1,nderiv,-1)
+             END IF
            CASE (200)
              ! inactive coordinate : flexible constraints
              ! nderiv MUST be 0
@@ -458,12 +479,20 @@ MODULE mod_ActiveTransfo
          END DO
          CALL dealloc_dnSVM(dnQ)
 
+
+         IF (allocated(tab_dnQflex)) THEN
+           DO i_Qact=1,ActiveTransfo%nb_var
+             CALL dealloc_dnSVM(tab_dnQflex(i_Qact))
+           END DO
+           deallocate(tab_dnQflex)
+         END IF
+
        ELSE ! Qdyn => Qact (without the derivatives)
          IF (nderiv > 0) THEN
            write(out_unitp,*) ' ERROR in ',name_sub
            write(out_unitp,*) ' you cannot use this subroutine with inTOout=f and nderiv>0'
            write(out_unitp,*) '    Qdyn => Qact  '
-           write(out_unitp,*) ' Check your the fortran!!'
+           write(out_unitp,*) ' Check the fortran!!'
            STOP
          END IF
 
@@ -484,29 +513,42 @@ MODULE mod_ActiveTransfo
 
       END SUBROUTINE calc_ActiveTransfo
 
-      SUBROUTINE get_Qact(Qact,ActiveTransfo,With_All)
+      ! when With_act=t, all Qact(:) values are sets to the reference geometry ones,
+      !   including the 1:nb_act active (Qact1, Qact21 ...) coordinates
+      ! when With_act=t, only the true inactives (rigid, flexible) coordinates are set.
+      !   - for rigid values: the reference geometry ones
+      !   - for flexible values: the values associated to the active ones (1:nb_act1)
+      SUBROUTINE get_Qact(Qact,ActiveTransfo,With_act)
       IMPLICIT NONE
 
-        real (kind=Rkind), intent(inout) :: Qact(:)
-        TYPE (Type_ActiveTransfo), intent(in)   :: ActiveTransfo
-        logical, intent(in), optional :: With_All
+        real (kind=Rkind),         intent(inout)        :: Qact(:)
+        TYPE (Type_ActiveTransfo), intent(in)           :: ActiveTransfo
+        logical,                   intent(in), optional :: With_act
 
 
         TYPE (Type_dnS)    :: dnQ
-        integer :: typ_var_act,i_Qdyn,i_Qact,nb_act1
-        logical :: With_All_loc
+        integer            :: typ_var_act,i_Qdyn,i_Qact,nb_act1
+        logical            :: With_act_loc
 
 
 !      -----------------------------------------------------------------
-!       logical, parameter :: debug=.TRUE.
+       !logical, parameter :: debug=.TRUE.
        logical, parameter :: debug=.FALSE.
        character (len=*), parameter :: name_sub='get_Qact'
 !      -----------------------------------------------------------------
+
+       IF (present(With_act)) THEN
+         With_act_loc = With_act
+       ELSE
+         With_act_loc = .TRUE.
+       END IF
+
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
          write(out_unitp,*) 'nb_act',ActiveTransfo%nb_act
          write(out_unitp,*) 'asso Qact0 ?',associated(ActiveTransfo%Qact0)
-         write(out_unitp,*) 'Qact',Qact(:)
+         write(out_unitp,*) 'size Qact',size(Qact)
+         IF (.NOT. With_act_loc) write(out_unitp,*) 'Qact (only act)',Qact(1:ActiveTransfo%nb_act)
          write(out_unitp,*)
          CALL flush_perso(out_unitp)
        END IF
@@ -516,26 +558,27 @@ MODULE mod_ActiveTransfo
        dnQ%nderiv       = 0
        nb_act1          = ActiveTransfo%nb_act1
 
-       IF (present(With_All)) THEN
-         With_All_loc = With_All
-       ELSE
-         With_All_loc = .TRUE.
-       END IF
+
 
        CALL alloc_dnSVM(dnQ)
 
        DO i_Qact=1,ActiveTransfo%nb_var
-
          CALL Set_ZERO_TO_dnSVM(dnQ,nderiv=0)
 
          i_Qdyn      = ActiveTransfo%list_QactTOQdyn(i_Qact)
          typ_var_act = ActiveTransfo%list_act_OF_Qdyn(i_Qdyn)
 
+         IF (debug) THEN
+           write(out_unitp,*) 'i_Qact,i_Qdyn,typ_var_act',i_Qact,i_Qdyn,typ_var_act
+           CALL flush_perso(out_unitp)
+         END IF
+
+
          SELECT CASE (typ_var_act)
          CASE (1,-1,21,22,31)
            ! active coordinate, nothing here, because it the Qact coord
            ! except if With_All_loc=.TRUE.
-           IF (With_All_loc) Qact(i_Qact) = ActiveTransfo%Qact0(i_Qact)
+           IF (With_act_loc) Qact(i_Qact) = ActiveTransfo%Qact0(i_Qact)
 
          CASE (20)
            ! inactive coordinate : flexible constraints
@@ -563,12 +606,27 @@ MODULE mod_ActiveTransfo
 
 !     -----------------------------------------------------------------
       IF (debug) THEN
-         write(out_unitp,*) 'Qact',Qact(:)
+        write(out_unitp,*) 'Qact (all)',Qact(:)
         write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
       END IF
 !     -----------------------------------------------------------------
 
       END SUBROUTINE get_Qact
+  SUBROUTINE Adding_InactiveCoord_TO_Qact(Qact,ActiveTransfo)
+      IMPLICIT NONE
+
+        real (kind=Rkind),         intent(inout) :: Qact(:)
+        TYPE (Type_ActiveTransfo), intent(in)    :: ActiveTransfo
+
+       !-----------------------------------------------------------------
+       !logical, parameter :: debug=.TRUE.
+       logical, parameter :: debug=.FALSE.
+       character (len=*), parameter :: name_sub='Adding_InactiveCoord_TO_Qact'
+
+       CALL get_Qact(Qact,ActiveTransfo,With_act=.FALSE.)
+
+  END SUBROUTINE Adding_InactiveCoord_TO_Qact
 
       SUBROUTINE get_Qact0(Qact0,ActiveTransfo)
       IMPLICIT NONE
@@ -719,6 +777,9 @@ MODULE mod_ActiveTransfo
       ActiveTransfo2%nb_rigid100 = ActiveTransfo1%nb_rigid100
       ActiveTransfo2%nb_rigid    = ActiveTransfo1%nb_rigid
 
+      ActiveTransfo2%With_Tab_dnQflex = ActiveTransfo1%With_Tab_dnQflex
+
+
       CALL alloc_ActiveTransfo(ActiveTransfo2,ActiveTransfo1%nb_var)
 
       IF (associated(ActiveTransfo1%list_act_OF_Qdyn))                  &
@@ -757,6 +818,8 @@ MODULE mod_ActiveTransfo
 
       TYPE (Type_ActiveTransfo), intent(in) :: ActiveTransfo
 
+
+      integer :: iQact,iQdyn
 !---------------------------------------------------------------------
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
@@ -770,8 +833,13 @@ MODULE mod_ActiveTransfo
         flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
+      Qdyn(:) = ZERO
+      DO iQact=1,size(Qact)
+        iQdyn = ActiveTransfo%list_QactTOQdyn(iQact)
+        Qdyn(iQdyn) = Qact(iQact)
+      END DO
 
-      Qdyn(:) = Qact(ActiveTransfo%list_QdynTOQact)
+      !Qdyn(:) = Qact(ActiveTransfo%list_QdynTOQact)
 
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -800,7 +868,7 @@ MODULE mod_ActiveTransfo
       END IF
 !---------------------------------------------------------------------
 
-      Qact(:) = Qdyn(ActiveTransfo%list_QactTOQdyn)
+      Qact(:) = Qdyn(ActiveTransfo%list_QactTOQdyn(1:size(Qact)))
 
 !---------------------------------------------------------------------
       IF (debug) THEN

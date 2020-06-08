@@ -40,7 +40,7 @@
 !
 !===========================================================================
 !===========================================================================
-      SUBROUTINE sub_mat6_HST(para_PES,                                 &
+      SUBROUTINE sub_mat6_HST(PrimOp,                                   &
                               d0MatHADAOp,nb_Op,nb_harm,                &
                               d0f_harm,                                 &
                               rho,                                      &
@@ -56,12 +56,12 @@
                               wherm,Vinact,ScalOp)
       USE mod_system
       USE mod_nDindex
-      use mod_PrimOp, only: param_pes, param_d0matop
+      use mod_PrimOp, only: PrimOp_t, param_d0matop
       USE mod_basis
       IMPLICIT NONE
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_PES)   :: para_PES
+      TYPE (PrimOp_t)   :: PrimOp
 
       integer                  :: nb_Op
       TYPE (param_d0MatOp)     :: d0MatHADAOp(nb_Op)
@@ -114,7 +114,7 @@
       real (kind=Rkind) :: Veffd0fW(1,Basis2n%nb)
       real (kind=Rkind) :: T1d0fW(1,Basis2n%nb,nb_act1)
       real (kind=Rkind) :: T2d0fW(1,Basis2n%nb,nb_act1,nb_act1)
-      real (kind=Rkind) :: ScalOpd0fW(1,Basis2n%nb,para_PES%nb_scalar_Op)
+      real (kind=Rkind) :: ScalOpd0fW(1,Basis2n%nb,PrimOp%nb_scalar_Op)
       real (kind=Rkind) :: Tcor2d0fW(1,Basis2n%nb,nb_act1,3)
       real (kind=Rkind) :: Tcor1d0fW(1,Basis2n%nb,3)
       real (kind=Rkind) :: Trotd0fW(1,Basis2n%nb,3,3)
@@ -123,11 +123,11 @@
       real (kind=Rkind) :: Tinact,Vinact,Veff
 
       real (kind=Rkind) :: valS_ij,TVinact_ij,Veff_ij
-      real (kind=Rkind) :: valScalOp_ij(para_PES%nb_scalar_Op)
-      real (kind=Rkind) :: valScalOp(para_PES%nb_scalar_Op)
+      real (kind=Rkind) :: valScalOp_ij(PrimOp%nb_scalar_Op)
+      real (kind=Rkind) :: valScalOp(PrimOp%nb_scalar_Op)
       real (kind=Rkind) :: rho,T1(nb_act1),T2(nb_act1,nb_act1)
       real (kind=Rkind) :: Tcor2(nb_act1,3),Tcor1(3),Trot(3,3)
-      real (kind=Rkind) :: ScalOp(para_PES%nb_scalar_Op)
+      real (kind=Rkind) :: ScalOp(PrimOp%nb_scalar_Op)
 
       integer :: JJ
 
@@ -278,7 +278,7 @@
           Trotd0fW(1,ij,:,:)  = Trot(:,:)  * d0fW(1,ij)
         END IF
 
-        IF (para_PES%calc_scalar_Op) THEN
+        IF (PrimOp%calc_scalar_Op) THEN
           ScalOpd0fW(1,ij,:) = ScalOp(:) * d0fW(1,ij)
         END IF
 

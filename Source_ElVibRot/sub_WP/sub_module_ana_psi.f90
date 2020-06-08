@@ -145,14 +145,17 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'ana_psi%GridDone',ana_psi%GridDone
+    CALL ecri_psi(psi=psi)
     CALL flush_perso(out_unitp)
   END IF
+  IF (adia .AND. .NOT. ana_psi%GridDone) STOP 'adia=t and GridDone=f'
 
   ! save the GridRep and BasisRep values to be able to deallocate the unused representation
   Grid  = psi%GridRep
   Basis = psi%BasisRep
 
-  IF (psi%ComOp%contrac_ba_ON_HAC) THEN
+  IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
     ana_psi%AvQ = .FALSE.
   END IF
 
@@ -289,9 +292,9 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
   IF (ana_psi%propa) CALL psi_Qba_ie_psi(ana_psi%T,psi,ana_psi,tab_WeightChannels,info)
 
-  CALL Rho1D_Rho2D_psi(psi,ana_psi)
+  CALL Rho1D_Rho2D_psi(psi,ana_psi,adia)
 
-  CALL write1D2D_psi(psi,ana_psi)
+  CALL write1D2D_psi(psi,ana_psi,adia)
 
   !---------------------------------------------------------------------------
   IF (ana_psi%Write_psi) THEN
@@ -722,7 +725,7 @@ END SUBROUTINE sub_analyze_psi
 
 
       END SUBROUTINE psi_Qba_ie_psi
-      SUBROUTINE write1D2D_psi(psi,ana_psi)
+      SUBROUTINE write1D2D_psi(psi,ana_psi,adia)
       USE mod_system
       USE mod_dnSVM
       USE mod_psi_set_alloc
@@ -732,6 +735,7 @@ END SUBROUTINE sub_analyze_psi
 !----- variables for the WP ----------------------------------------
       TYPE (param_psi),     intent(inout)  :: psi
       TYPE (param_ana_psi), intent(inout)  :: ana_psi
+      logical,              intent(in)     :: adia
 
 
 
@@ -769,7 +773,7 @@ END SUBROUTINE sub_analyze_psi
 !-----------------------------------------------------------
 
       IF (.NOT.ana_psi%psi1D_Q0 .AND. .NOT.ana_psi%psi2D_Q0) RETURN
-      IF (ana_psi%adia) RETURN
+      IF (adia) RETURN
 
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -908,7 +912,7 @@ END SUBROUTINE sub_analyze_psi
 
         DO ib=1,psi%BasisnD%nb_basis
 
-          IF (ana_psi%adia) THEN
+          IF (adia) THEN
             state_name = make_FileName('psiAdia1D_')
           ELSE
             state_name = make_FileName('psi1D_')
@@ -1017,7 +1021,7 @@ END SUBROUTINE sub_analyze_psi
 
 
       END SUBROUTINE write1D2D_psi
-      SUBROUTINE Rho1D_Rho2D_psi(psi,ana_psi)
+      SUBROUTINE Rho1D_Rho2D_psi(psi,ana_psi,adia)
       USE mod_system
       USE mod_psi_set_alloc
       USE mod_psi_B_TO_G
@@ -1025,6 +1029,7 @@ END SUBROUTINE sub_analyze_psi
 !----- variables for the WP ----------------------------------------
       TYPE (param_psi),     intent(inout) :: psi
       TYPE (param_ana_psi), intent(inout) :: ana_psi
+      logical,              intent(in)    :: adia
 
 
 !------ working variables ---------------------------------
@@ -1048,12 +1053,14 @@ END SUBROUTINE sub_analyze_psi
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='Rho1D_Rho2D_psi'
       logical,parameter :: debug = .FALSE.
-!     logical,parameter :: debug = .TRUE.
+      !logical,parameter :: debug = .TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'psi'
         CALL ecri_psi(psi=psi)
+        write(out_unitp,*) 'ana_psi%ana,ana_psi%Rho1D,ana_psi%Rho2D',   &
+                            ana_psi%ana,ana_psi%Rho1D,ana_psi%Rho2D
       END IF
 !-----------------------------------------------------------
       IF (ana_psi%ana .AND. (ana_psi%Rho1D .OR. ana_psi%Rho2D)) THEN
@@ -1063,7 +1070,7 @@ END SUBROUTINE sub_analyze_psi
           !- loop on coordinates ----------------------------------
           DO i_basis_act1=1,psi%BasisnD%nb_basis
 
-            IF (ana_psi%adia) THEN
+            IF (adia) THEN
               state_name = make_FileName('RhoAdia1D_')
             ELSE
               state_name = make_FileName('Rho1D_')
@@ -1166,7 +1173,7 @@ END SUBROUTINE sub_analyze_psi
           DO i_basis_act1=1,psi%BasisnD%nb_basis
           DO j_basis_act1=i_basis_act1+1,psi%BasisnD%nb_basis
 
-            IF (ana_psi%adia) THEN
+            IF (adia) THEN
               state_name = make_FileName('RhoAdia2D_')
             ELSE
               state_name = make_FileName('Rho2D_')
@@ -1490,7 +1497,7 @@ END SUBROUTINE sub_analyze_psi
       END IF
 !-----------------------------------------------------------
       IF (psi%nb_baie*psi%nb_bRot /= psi%nb_tot .AND.                   &
-          .NOT. psi%ComOp%contrac_ba_ON_HAC) RETURN   ! should be spectral WP
+          .NOT. psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) RETURN   ! should be spectral WP
 
       maxC1 = ZERO
       maxC2 = ZERO
@@ -1509,7 +1516,7 @@ END SUBROUTINE sub_analyze_psi
       DO i_R=1,psi%nb_bRot
       DO i_e=1,psi%nb_be
       DO i_h=1,psi%nb_bi
-      DO i_b=1,psi%ComOp%nb_ba_ON_HAC(i_h)
+      DO i_b=1,psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i_h)
       !DO i_b=1,psi%nb_ba
 
         i_bhe = i_bhe + 1
@@ -1550,7 +1557,7 @@ END SUBROUTINE sub_analyze_psi
       END DO
       END DO
 
-      IF (psi%ComOp%contrac_ba_ON_HAC) THEN
+      IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
 
         IF (psi%cplx) THEN
           write(out_unitp,*) 'max1 psi%vecBasisRep ',T,trim(info),      &
@@ -2281,7 +2288,7 @@ END SUBROUTINE norm_psi_MPI
   real (kind=Rkind) :: WrhonD,temp,max_w
   integer           :: nb_be,nb_bi
   integer           :: iSG,iqSG,err_sub ! for SG4
-  !logical           :: SG4 = .TRUE.
+  logical           :: SG4 = .TRUE.
   TYPE (OldParam)   :: OldPara
   real (kind=Rkind) :: WeightSG
 
@@ -2295,6 +2302,7 @@ END SUBROUTINE norm_psi_MPI
     write(out_unitp,*) 'BEGINNING Channel_weight'
     write(out_unitp,*) 'GridRep',GridRep
     write(out_unitp,*) 'BasisRep',BasisRep
+    write(out_unitp,*) 'alloc tab_WeightChannels',allocated(tab_WeightChannels)
     !write(out_unitp,*) 'psi'
     !CALL ecri_psi(psi=psi)
     CALL flush_perso(out_unitp)
@@ -2316,13 +2324,18 @@ END SUBROUTINE norm_psi_MPI
     tab_WeightChannels(:,:) = ZERO
   END IF
 
+  IF (debug) THEN
+    write(out_unitp,*) 'nb_bi,nb_be',nb_bi,nb_be
+    write(out_unitp,*) 'shape tab_WeightChannels',shape(tab_WeightChannels)
+  END IF
 
-  !IF (SGtype == 4) THEN
-  !  CALL Channel_weight_SG4(tab_WeightChannels,psi,                 &
-  !                          GridRep,BasisRep)
-  !END IF
+SG4 = (SGtype == 4)
+SG4 = .FALSE.
 
-  IF (psi%ComOp%contrac_ba_ON_HAC) THEN
+IF (SG4) THEN
+    CALL Channel_weight_SG4(tab_WeightChannels,psi,GridRep,BasisRep)
+ELSE
+  IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
 
     CALL Channel_weight_contracHADA(tab_WeightChannels(:,1),psi)
 
@@ -2336,13 +2349,13 @@ END SUBROUTINE norm_psi_MPI
         if_baie = ii_baie -1 + psi%nb_ba
 
         IF (psi%cplx) THEN
-          tab_WeightChannels(i_bi,i_be) =                             &
-             real(dot_product(psi%CvecB(ii_baie:if_baie),             &
+          tab_WeightChannels(i_bi,i_be) =                               &
+             real(dot_product(psi%CvecB(ii_baie:if_baie),               &
                               psi%CvecB(ii_baie:if_baie)) ,kind=Rkind)
         ELSE
           tab_WeightChannels(i_bi,i_be) =                               &
-             dot_product(psi%RvecB(ii_baie:if_baie),                    &
-                         psi%RvecB(ii_baie:if_baie))
+                              dot_product(psi%RvecB(ii_baie:if_baie),   &
+                                          psi%RvecB(ii_baie:if_baie))
         END IF
       END DO
       END DO
@@ -2351,6 +2364,8 @@ END SUBROUTINE norm_psi_MPI
 
       !- initialization ----------------------------------
       tab_WeightChannels(:,:) = ZERO
+
+      CALL dealloc_OldParam(OldPara)
 
       DO i_qa=1,psi%nb_qa
 
@@ -2377,6 +2392,7 @@ END SUBROUTINE norm_psi_MPI
         END DO
         END DO
       END DO
+      CALL dealloc_OldParam(OldPara)
 
     ELSE
 
@@ -2397,6 +2413,7 @@ END SUBROUTINE norm_psi_MPI
       tab_WeightChannels(1,1) = dot_product(psi%RvecB,psi%RvecB)
     END IF
   END IF
+END IF
 
   IF (present(Dominant_Channel)) THEN
     Dominant_Channel(:) = 1
@@ -2472,7 +2489,7 @@ END SUBROUTINE norm_psi_MPI
     tab_WeightChannels(:,:) = ZERO
   END IF
 
-  IF(psi%ComOp%contrac_ba_ON_HAC) THEN
+  IF(psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
     IF(MPI_id==0) CALL Channel_weight_contracHADA(tab_WeightChannels(:,1),psi)
   ELSE IF (psi%nb_baie==psi%nb_tot) THEN
     IF(BasisRep .AND. (allocated(psi%CvecB) .OR. allocated(psi%RvecB)) ) THEN
@@ -2598,7 +2615,7 @@ END SUBROUTINE Channel_weight_MPI
   TYPE(Type_SmolyakRep)     :: SRep,WSRep ! smolyak rep for SparseGrid_type=4
 
   integer           :: i_qa,i_qaie
-  integer           :: i_be,i_bi,i_ba,i_baie
+  integer           :: i_be,i_bi,i_ba,i_baie,ib0
   integer           :: ii_baie,if_baie
   real (kind=Rkind) :: WrhonD,temp,max_w
   integer           :: nb_be,nb_bi
@@ -2609,8 +2626,8 @@ END SUBROUTINE Channel_weight_MPI
 
 
 !- for debuging --------------------------------------------------
-  logical,parameter :: debug = .FALSE.
-  !logical,parameter :: debug = .TRUE.
+  !logical,parameter :: debug = .FALSE.
+  logical,parameter :: debug = .TRUE.
 !-------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING Channel_weight_SG4'
@@ -2633,7 +2650,18 @@ END SUBROUTINE Channel_weight_MPI
     CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(1)%RVecB,        &
                       psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
                       psi%BasisnD%para_SGType2)
+    ib0 = 0
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      ib0 = ib0 + 1
+      tab_WeightChannels(i_bi,i_be) =                                   &
+        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+    END DO
+    END DO
+    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+
     !Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
+    !write(6,*) 'Norm2',Norm2
 
     CALL BSmolyakRep_TO_GSmolyakRep(SRep,                               &
                   psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
@@ -2642,26 +2670,61 @@ END SUBROUTINE Channel_weight_MPI
                   psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
                   psi%BasisnD%tab_basisPrimSG)
 
-    Norm2 = dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG)
+    ib0 = 0
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      ib0 = ib0 + 1
+      tab_WeightChannels(i_bi,i_be) =                                   &
+        dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG,ib0)
+    END DO
+    END DO
+    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+
+!    Norm2 = dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG)
     !CALL Write_SmolyakRep(SRep)
+    !write(6,*) 'Norm2',Norm2
 
     !For the imaginary part
     CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(2)%RVecB,        &
-          psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,psi%BasisnD%para_SGType2)
-    Norm2 = Norm2 + dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
+                      psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
+                      psi%BasisnD%para_SGType2)
+
+    ib0 = 0
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      ib0 = ib0 + 1
+      tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) +   &
+        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+    END DO
+    END DO
+    !Norm2 = Norm2 + dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
     !CALL Write_SmolyakRep(SRep)
 
    ELSE
-    CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,Psi%RVecB,        &
-          psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,psi%BasisnD%para_SGType2)
+    CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,Psi%RVecB,              &
+                      psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,   &
+                      psi%BasisnD%para_SGType2)
+    ib0 = 0
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      ib0 = ib0 + 1
+      tab_WeightChannels(i_bi,i_be) =                                   &
+        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+    END DO
+    END DO
     !CALL Write_SmolyakRep(SRep)
-    Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
+    !Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
   END IF
 
-  write(out_unitp,*) 'Norm2_SG4',Norm2
+  !write(out_unitp,*) 'Norm2_SG4',Norm2
 
+  CALL dealloc_psi(RCPsi(1))
+  CALL dealloc_psi(RCPsi(2))
+
+  CALL dealloc_SmolyakRep(SRep)
 !------------------------------------------------------
   IF (debug) THEN
+    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
     write(out_unitp,*) 'END Channel_weight_SG4'
   END IF
 !------------------------------------------------------
@@ -2691,9 +2754,9 @@ END SUBROUTINE Channel_weight_MPI
 
 !        weight on the harmonic states
          DO ih=1,psi%nb_bi
-           ihk = sum(psi%ComOp%nb_ba_ON_HAC(1:ih-1))
+           ihk = sum(psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:ih-1))
            w_harm(ih) = ZERO
-           DO k=1,psi%ComOp%nb_ba_ON_HAC(ih)
+           DO k=1,psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(ih)
              ihk = ihk + 1
              IF (psi%cplx) THEN
                w_harm(ih) = w_harm(ih) + abs(psi%CvecB(ihk))**2
@@ -2730,9 +2793,9 @@ END SUBROUTINE Channel_weight_MPI
 !
 !  ! weight on the harmonic states
 !  DO ih=1,psi%nb_bi
-!    ihk=sum(psi%ComOp%nb_ba_ON_HAC(1:ih-1))
+!    ihk=sum(psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:ih-1))
 !    w_harm(ih)=ZERO
-!    DO k=1,psi%ComOp%nb_ba_ON_HAC(ih)
+!    DO k=1,psi%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(ih)
 !      ihk=ihk+1
 !      write(*,*) 'ih,ihk check',ih,ihk
 !      IF(psi%cplx) THEN

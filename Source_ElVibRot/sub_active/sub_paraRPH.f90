@@ -63,9 +63,9 @@ CONTAINS
 !=====================================================================
 
 !----- variables for the construction of H ---------------------------
-      TYPE (basis)   :: BasisnD
-      TYPE (CoordType) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (basis),     intent(in)    :: BasisnD
+      TYPE (CoordType), intent(inout) :: mole
+      TYPE (Tnum),      intent(in)    :: para_Tnum
 
 
 !------ working variables ---------------------------------
@@ -102,6 +102,7 @@ CONTAINS
 
         CALL Write_RPHTransfo(mole%RPHTransfo)
 
+        CALL flush_perso(out_unitp)
       END IF
 
       DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
@@ -109,27 +110,26 @@ CONTAINS
         mole%tab_Qtransfo(it)%skip_transfo = .TRUE.
       END DO
 
-      ! for RPHpara_AT_Qref
-      IF (.NOT. associated(mole%RPHTransfo%RPHpara_AT_Qref)) THEN
-        IF (debug) write(out_unitp,*) ' RPHpara_AT_Qref'
-        CALL alloc_array(mole%RPHTransfo%RPHpara_AT_Qref,(/ 1 /),       &
-                        'mole%RPHTransfo%RPHpara_AT_Qref',name_sub)
+      ! for tab_RPHpara_AT_Qact1
+      IF (.NOT. associated(mole%RPHTransfo%tab_RPHpara_AT_Qact1)) THEN
+        IF (debug) write(out_unitp,*) ' tab_RPHpara_AT_Qact1'
+        CALL alloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,[0],      &
+                        'mole%RPHTransfo%tab_RPHpara_AT_Qact1',name_sub,[0])
 
-        CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
-
-        CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%RPHpara_AT_Qref(1),   &
-                                  Qact,para_Tnum,mole,mole%RPHTransfo)
+        CALL get_Qact0(Qact,mole%ActiveTransfo) ! rigid, flexible coordinates
+        CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0), &
+                                  Qact,para_Tnum,mole)
         mole%RPHTransfo%init_Qref = .TRUE.
 
         write(out_unitp,*) ' Frequencies, normal modes at the reference geometry'
 
         write(out_unitp,11) Qact(1:nb_act1_RPH), &
-               mole%RPHTransfo%RPHpara_AT_Qref(1)%dnEHess%d0(:)*get_Conv_au_TO_unit('E','cm-1')
+               mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnEHess%d0(:)*get_Conv_au_TO_unit('E','cm-1')
  11     format(' frequencies : ',30f10.4)
         write(out_unitp,*) 'dnQopt'
-        CALL Write_dnVec(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnQopt)
+        CALL Write_dnVec(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnQopt)
         write(out_unitp,*) 'dnC_inv'
-        CALL Write_dnMat(mole%RPHTransfo%RPHpara_AT_Qref(1)%dnC_inv)
+        CALL Write_dnMat(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnC_inv)
         CALL flush_perso(out_unitp)
 
       END IF
@@ -137,7 +137,8 @@ CONTAINS
       ! Check if the nb_act1_RPH coordinates belong to one basis set (primitive ?)
       ! 1) RPHTransfo MUST be the 2d transformation after the active one.
       !write(out_unitp,*) 'asso RPH, itRPH,nb_Qtransfo',associated(mole%RPHTransfo),mole%itRPH,mole%nb_Qtransfo
-      RPHCoord_IN_OneBasis = associated(mole%RPHTransfo) .AND. (mole%itRPH == mole%nb_Qtransfo-1)
+      RPHCoord_IN_OneBasis = associated(mole%RPHTransfo) .AND.          &
+                                      (mole%itRPH == mole%nb_Qtransfo-1)
 
       RPHCoord_IN_OneBasis = RPHCoord_IN_OneBasis .AND.                 &
         (count(mole%RPHTransfo%list_act_OF_Qdyn(1:nb_act1_RPH) == 1) == nb_act1_RPH)
@@ -160,6 +161,9 @@ CONTAINS
         RPHCoord_IN_OneBasis = RPHCoord_IN_OneBasis .AND. (ib <= BasisnD%nb_basis)
       END IF
 
+      write(out_unitp,*) 'RPHCoord_IN_OneBasis',RPHCoord_IN_OneBasis
+      CALL flush_perso(out_unitp)
+
       IF (RPHCoord_IN_OneBasis) THEN
         CALL Set_paraPRH_ONEBasis(mole,para_Tnum,BasisnD,ib)
       ELSE
@@ -172,8 +176,6 @@ CONTAINS
       DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
         mole%tab_Qtransfo(it)%skip_transfo = tab_skip_transfo(it)
       END DO
-
-
 !     -------------------------------------------------------
       IF (debug) THEN
         CALL Write_RPHTransfo(mole%RPHTransfo)
@@ -198,9 +200,9 @@ CONTAINS
 !=====================================================================
 
 !----- variables for the construction of H ---------------------------
-      TYPE (basis)   :: BasisnD
+      TYPE (basis)     :: BasisnD
       TYPE (CoordType) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum)      :: para_Tnum
       integer, intent(in) :: ib ! index of the basis in tab_Pbasis(:) or tab_basisPrimSG(:,:)
 
 
@@ -214,12 +216,13 @@ CONTAINS
       real (kind=Rkind), allocatable :: List_Qact1(:,:),List_tmp_Qact1(:,:)
 
       logical :: Find_in_List,iqLoop_end
+      TYPE (Type_RPHpara_AT_Qact1) :: Type_RPHpara_AT_Qref
 
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='Set_paraPRH_OneBasis'
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
       nb_act1_RPH    = mole%RPHTransfo%nb_act1
@@ -260,8 +263,6 @@ CONTAINS
          STOP ' no default'
       END SELECT
       write(out_unitp,*) 'L,ib,nq',L,ib,nq ; flush(out_unitp)
-
-
 
       DO
 
@@ -348,9 +349,22 @@ CONTAINS
 
       !----------------------------------------------------------------
       !---- allocation of tab_RPHpara_AT_Qact1 ------------------------
+      IF (associated(mole%RPHTransfo%tab_RPHpara_AT_Qact1)) THEN
+        CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(                    &
+                               mole%RPHTransfo%tab_RPHpara_AT_Qact1(0), &
+                               Type_RPHpara_AT_Qref)
+        CALL dealloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,        &
+                          'mole%RPHTransfo%tab_RPHpara_AT_Qact1',name_sub)
+      END IF
       mole%RPHTransfo%nb_Qa = size(List_Qact1,dim=2)
-      CALL alloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,(/ mole%RPHTransfo%nb_Qa /),&
-                      'mole%RPHTransfo%tab_RPHpara_AT_Qact1',name_sub)
+      CALL alloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,[mole%RPHTransfo%nb_Qa],&
+                      'mole%RPHTransfo%tab_RPHpara_AT_Qact1',name_sub,[0])
+      IF (Type_RPHpara_AT_Qref%init_done > 0) THEN
+        CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(Type_RPHpara_AT_Qref,&
+                               mole%RPHTransfo%tab_RPHpara_AT_Qact1(0))
+        !mole%RPHTransfo%tab_RPHpara_AT_Qact1(0) = Type_RPHpara_AT_Qref
+        CALL dealloc_RPHpara_AT_Qact1(Type_RPHpara_AT_Qref)
+      END IF
       !----------------------------------------------------------------
 
 
@@ -358,15 +372,16 @@ CONTAINS
       !---- Multidimensional loop -------------------------------------
         DO iq_list=1,size(List_Qact1,dim=2)
 
-          CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible???? coordinates
+          Qact(:) = ZERO ! initialization to zero, otherwise some values are not initialized (later they will)
           Qact(1:nb_act1_RPH) = List_Qact1(:,iq_list)
 
+          CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo) ! add rigid, flexible coordinates
           write(out_unitp,*) 'new RPH point',iq_list
           CALL flush_perso(out_unitp)
 
           CALL Set_RPHpara_AT_Qact1(                                    &
                           mole%RPHTransfo%tab_RPHpara_AT_Qact1(iq_list),&
-                           Qact,para_Tnum,mole,mole%RPHTransfo)
+                                                    Qact,para_Tnum,mole)
 
         END DO
 
@@ -392,7 +407,6 @@ CONTAINS
       USE mod_basis
       IMPLICIT NONE
 
-!
 !=====================================================================
 !
 !     variables
@@ -400,9 +414,9 @@ CONTAINS
 !=====================================================================
 
 !----- variables for the construction of H ---------------------------
-      TYPE (basis)   :: BasisnD
+      TYPE (basis)     :: BasisnD
       TYPE (CoordType) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum)      :: para_Tnum
 
 
 !------ working variables ---------------------------------
@@ -454,11 +468,9 @@ CONTAINS
       nq_part = get_nq_FROM_basis(BasisnD)/100
       DO iq=1,get_nq_FROM_basis(BasisnD)
 
-        IF (debug) THEN
-        IF (mod(iq,nq_part)==0) THEN
+        IF (debug .AND. (mod(iq,nq_part)==0)) THEN
           write(out_unitp,*) 'iq,nq',iq,get_nq_FROM_basis(BasisnD)
           CALL flush_perso(out_unitp)
-        END IF
         END IF
 
         Qact(:) = ZERO
@@ -533,15 +545,16 @@ CONTAINS
       !---- Multidimensional loop -------------------------------------
         DO iq_list=1,size(List_Qact1,dim=2)
 
-          CALL get_Qact(Qact,mole%ActiveTransfo) ! rigid, flexible???? coordinates
+          Qact(:)             = ZERO
           Qact(1:nb_act1_RPH) = List_Qact1(:,iq_list)
+          CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo) ! add rigid, flexible coordinates
 
           write(out_unitp,*) 'new RPH point',iq_list
           CALL flush_perso(out_unitp)
 
           CALL Set_RPHpara_AT_Qact1(                                    &
                           mole%RPHTransfo%tab_RPHpara_AT_Qact1(iq_list),&
-                          Qact,para_Tnum,mole,mole%RPHTransfo)
+                                                    Qact,para_Tnum,mole)
 
         END DO
 

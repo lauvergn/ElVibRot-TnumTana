@@ -56,7 +56,7 @@
 
 !     - for the coordinate values ----------------------------------
       TYPE (param_Q)    :: para_Q
-      TYPE (param_PES)  :: para_PES
+      TYPE (PrimOp_t)   :: PrimOp
 
 
 !     - working parameters ------------------------------------------
@@ -85,7 +85,7 @@
       !-----------------------------------------------------------------
       !     ---- TO finalize the coordinates (NM) and the KEO ----------
       !     ------------------------------------------------------------
-      CALL Finalyze_TnumTana_Coord_PrimOp(para_Q%Qact,para_Tnum,mole,para_PES)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Q%Qact,para_Tnum,mole,PrimOp)
       !-----------------------------------------------------------------
 !=======================================================================
 !=======================================================================
@@ -120,9 +120,9 @@
 !     - Potential : on the fly calculation -------
 !     --------------------------------------------
         nderiv = 2
-        para_PES%nb_elec = 1
-        para_PES%OnTheFly = .TRUE.
-        para_PES%Read_OnTheFly_only = .TRUE.
+        PrimOp%nb_elec = 1
+        PrimOp%OnTheFly = .TRUE.
+        PrimOp%Read_OnTheFly_only = .TRUE.
         write(out_unitp,*) 'on the fly calculation'
         CALL alloc_dnSVM(dnE,mole%nb_act,nderiv)
         CALL alloc_dnSVM(dnMu(1),mole%nb_act,nderiv-1)
@@ -158,7 +158,7 @@
         CALL error_memo_allo(err_mem,memory,"symhessG36","main")
 
         CALL NdnOp_grid(para_Q%Qact,dnE,nderiv,dnMu,nderiv-1,           &
-                        mole,para_Tnum,para_PES)
+                        mole,para_Tnum,PrimOp)
 
         dnE%d2(:,:) = (dnE%d2+transpose(dnE%d2)) * HALF ! symetrization
 

@@ -39,7 +39,7 @@
       TYPE (constant)  :: const_phys
       TYPE (CoordType) :: mole
       TYPE (Tnum)      :: para_Tnum
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
 
       real (kind=Rkind) :: vep,rho
       real (kind=Rkind), pointer :: Tdef2(:,:) => null()
@@ -84,7 +84,7 @@
       !     ---- TO finalize the coordinates (NM) and the KEO ----------
       !     ------------------------------------------------------------
       CALL time_perso('Tnum90_MCTDH')
-      CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
       CALL time_perso('Tnum90_MCTDH')
 
       !-----------------------------------------------------------------

@@ -399,7 +399,8 @@ PUBLIC :: MPI_Bcast_param_Davidson,Calc_AutoCorr_SR_MPI
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) ' nb_psi',size(WP)
+        write(out_unitp,*) ' T=',T
+        write(out_unitp,*) ' nb_WP,size WP',size(WP),size(WP(1)%CvecB)
         write(out_unitp,*)
         CALL flush_perso(out_unitp)
       END IF
@@ -407,7 +408,8 @@ PUBLIC :: MPI_Bcast_param_Davidson,Calc_AutoCorr_SR_MPI
 
 
       CALL file_open(file_restart,no_restart)
-      write(no_restart,*) T
+
+      write(no_restart,*) T,size(WP),size(WP(1)%CvecB)
       IF(MPI_id==0) THEN
         DO i=1,size(WP)
           write(no_restart,*) WP(i)%CvecB
@@ -435,6 +437,7 @@ PUBLIC :: MPI_Bcast_param_Davidson,Calc_AutoCorr_SR_MPI
 
 !------ working parameters --------------------------------
       integer       :: i,no_restart,err_read
+      integer       :: nb_WP_file,size_WP_file
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter ::name_sub='ReadWP_restart'
@@ -453,7 +456,7 @@ PUBLIC :: MPI_Bcast_param_Davidson,Calc_AutoCorr_SR_MPI
 
       T = ZERO
       !err_read = 0
-      read(no_restart,*,IOSTAT=err_read) T
+      read(no_restart,*,IOSTAT=err_read) T,nb_WP_file,size_WP_file
       IF (err_read /= 0) THEN
         write(out_unitp,*) ' WARNING in ',name_sub
         write(out_unitp,*) ' T (time) is not present in the restart file'
@@ -462,6 +465,15 @@ PUBLIC :: MPI_Bcast_param_Davidson,Calc_AutoCorr_SR_MPI
         T = ZERO
       ELSE
         write(out_unitp,*) 'T0 for the restart:',T
+        write(out_unitp,*) 'ReadWP_restart: nb_WP,size WP            ',size(WP),size(WP(1)%CvecB)
+        write(out_unitp,*) 'ReadWP_restart: nb_WP,size WP (from file)',nb_WP_file,size_WP_file
+
+        IF (nb_WP_file /= size(WP) .OR. size_WP_file /= size(WP(1)%CvecB)) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' Inconsistent WP size values!'
+          STOP ' ERROR in ReadWP_restart:  Inconsistent WP size values.'
+        END IF
+
         DO i=1,size(WP)
           read(no_restart,*) WP(i)%CvecB
         END DO
@@ -719,14 +731,14 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
   !-----------------------------------------------------------
   ! => the WPs on the Grid
-  IF (.NOT. para_propa%ana_psi%GridDone) THEN
-    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep ini')
-    DO i=1,nb_WP
-      IF(MPI_id==0) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
-    END DO
-    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep end')
-  END IF
-  para_propa%ana_psi%GridDone = .TRUE.
+!  IF (.NOT. para_propa%ana_psi%GridDone) THEN
+!    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep ini')
+!    DO i=1,nb_WP
+!      IF(MPI_id==0) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
+!    END DO
+!    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep end')
+!  END IF
+!  para_propa%ana_psi%GridDone = .TRUE.
   !-----------------------------------------------------------
 
   !-----------------------------------------------------------
@@ -752,6 +764,19 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       CALL norm2_psi(w1,GridRep=.FALSE.,BasisRep=.TRUE.)
     ENDIF
     CALL sub_PsiOpPsi(ET,w1,w2,para_H)
+
+    IF (para_H%spectral_done) THEN
+      w2 = WP(i) ! save Spectral rep
+      ! WP is back to the initial basis to be able to make the analysis
+      IF (para_H%cplx) THEN
+        WP(i)%CvecB(:) = matmul(conjg(para_H%Cvp),WP(i)%CvecB)
+      ELSE
+        WP(i)%CvecB(:) = matmul(para_H%Rvp,WP(i)%CvecB)
+      END IF
+    END IF
+
+    IF(MPI_id==0) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
+
 
     IF(MPI_id==0) THEN
       WP(i)%CAvOp = ET/w1%norm2
@@ -783,7 +808,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       END IF
 
       IF (para_propa%ana_psi%AvHiterm) THEN
-        w1 = WP(i)
+        w1   = WP(i)
         info = real_TO_char(T,Rformat='f12.2')
         CALL sub_psiHitermPsi(w1,i,info,para_H)
       END IF
@@ -792,12 +817,18 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       IF (adia_loc) THEN
         w1 = WP(i)
         CALL sub_PsiDia_TO_PsiAdia_WITH_MemGrid(w1,para_H)
+        para_propa%ana_psi%GridDone = .TRUE.
         CALL sub_analyze_psi(w1,para_propa%ana_psi,adia=.TRUE.)
       END IF
       CALL flush_perso(out_unitp)
 
       CALL alloc_psi(WP(i),BasisRep=BasisRep,GridRep=GridRep)
     ENDIF ! for MPI_id==0
+
+    IF (para_H%spectral_done) THEN
+      WP(i) = w2 ! restore Spectral rep
+    END IF
+
   END DO
 
   CALL dealloc_psi(w1,delete_all=.TRUE.)

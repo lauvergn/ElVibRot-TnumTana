@@ -1,0 +1,83 @@
+test=f
+
+DIR_vib=../..
+
+LB=$1
+LG=$2
+dav=$3
+
+
+#export OMP_NUM_THREADS=1
+
+
+nice $DIR_vib/vib << ** >"res_HNO3_RPH_LB"$LB"-LG"$LG
+ &system printlevel=2 /
+ &constantes version='HandBook70ed' mass_version='HandBook70ed' /
+ &variables Old_Qtransfo=f nb_Qtransfo=4 nrho=1 vep_type=1 /
+ &Coord_transfo name_transfo='zmat' nat=6 /
+ N
+ O    1
+ X    1 2
+ O    1 2 3
+ O    1 2 3
+ H    2 1 3
+
+ &Coord_transfo name_transfo='linear' /
+sym  rot R1 R+ A+  D2 R- A- RH AH     D2+  RX AX
+12
+ 1   0.0 1. 0. 0.  0. 0. 0. 0. 0.     0.   0.  0.
+ 2   0.0 0. 0. 0.  0. 0. 0. 0. 0.     0.   1.  0.
+ 3   0.0 0. 0. 0.  0. 0. 0. 0. 0.     0.   0.  1.
+ 4   0.0 0. 1. 0.  0. 1. 0. 0. 0.     0.   0.  0.
+ 5   0.0 0. 0. 1.  0. 0. 1. 0. 0.     0.   0.  0.
+ 6   0.0 0. 0. 0.  1. 0. 0. 0. 0.     1.   0.  0.
+ 7   0.0 0. 1. 0.  0. -1. 0. 0. 0.    0.   0.  0.
+ 8   0.0 0. 0. 1.  0. 0. -1. 0. 0.    0.   0.  0.
+ 9   0.0 0. 0. 0. -1. 0. 0. 0. 0.     1.   0.  0.
+10   0.0 0. 0. 0.  0. 0. 0. 1. 0.     0.   0.  0.
+11   0.0 0. 0. 0.  0. 0. 0. 0. 1.     0.   0.  0.
+12   1.0 0. 0. 0.  0. 0. 0. 0. 0.     0.   0.  0.
+
+ &Coord_transfo name_transfo='RPH' /
+   &RPH step=1.e-5 /
+1 21 21 21 21 21 21  21 21   0 0 0
+
+ &Coord_transfo name_transfo='active' /
+1 1 1 1 1 1  1 1 1   0 0 0
+
+ &minimum pot0=0.  pot_itQtransfo=2 read_nameQ=t unit='bohr' nb_scalar_Op=0 /
+   ROT        1.57080
+    R1        0.0
+    R+        0.0
+    A+        0.0
+    D2        0.0
+    R-        0.0
+    A-        0.0
+    RH        0.0
+    AH        0.0
+   D2+   0.
+   RX    1.
+   AX    1.570796326794897
+
+
+ &basis_nD iQdyn(1)=1 name="cos" nb=51 nq=81 /
+ &basis_nD nb_basis=8 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=4 /
+   &basis_nD iQdyn(1)=2 name="Hm" /
+   &basis_nD iQdyn(1)=3 name="Hm" /
+   &basis_nD iQdyn(1)=4 name="Hm" /
+   &basis_nD iQdyn(1)=5 name="Hm" /
+   &basis_nD iQdyn(1)=6 name="Hm" /
+   &basis_nD iQdyn(1)=7 name="Hm" /
+   &basis_nD iQdyn(1)=8 name="Hm" /
+   &basis_nD iQdyn(1)=9 name="Hm" /
+ &inactives /
+
+
+ &actives test=$test comput_S=t direct=2 /
+ &analyse max_ene=1800. 'cm-1' davidson=$dav /
+ &davidson nb_WP=0 max_it=200 max_WP=4000 num_resetH=200
+           project_wp0=t all_lower_states=f max_ene=1800. 'cm-1' NewVec_type=2
+           read_WP=t read_listWP=f name_file_readWP='file_WPspectral'
+/
+**
+

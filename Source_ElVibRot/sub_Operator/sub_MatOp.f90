@@ -541,10 +541,12 @@ CONTAINS
         IF (para_Op%cplx) THEN
           CALL sub_diago_CH(para_Op%Cmat,para_Op%Cdiag,para_Op%Cvp,     &
                           para_Op%nb_baie)
-          para_Op%ComOp%nb_vp_spec = min(para_Op%ComOp%nb_vp_spec,      &
-                                         para_Op%nb_baie)
 
-          para_Op%nb_tot = para_Op%ComOp%nb_vp_spec
+          para_Op%para_AllBasis%basis_ext%nb_vp_spec =                  &
+                   min(para_Op%para_AllBasis%basis_ext%nb_vp_spec,      &
+                                                         para_Op%nb_baie)
+
+          para_Op%nb_tot = para_Op%para_AllBasis%basis_ext%nb_vp_spec
           IF (associated(para_Op%Cmat)) THEN
             CALL dealloc_array(para_Op%Cmat,"para_Op%Cmat",name_sub)
           END IF
@@ -552,26 +554,27 @@ CONTAINS
                           "para_Op%Cmat",name_sub)
           para_Op%Cmat(:,:) = CZERO
 
-          IF (associated(para_Op%ComOp%liste_spec)) THEN
+          IF (allocated(para_Op%para_AllBasis%basis_ext%liste_spec)) THEN
             DO i=1,para_Op%nb_tot
               para_Op%Cmat(i,i) =                                       &
-                              para_Op%Cdiag(para_Op%ComOp%liste_spec(i))
+                para_Op%Cdiag(para_Op%para_AllBasis%basis_ext%liste_spec(i))
             END DO
           ELSE
             DO i=1,para_Op%nb_tot
               para_Op%Cmat(i,i) = para_Op%Cdiag(i)
             END DO
           END IF
-          para_Op%ComOp%Cvp_spec => para_Op%Cvp
+          para_Op%para_AllBasis%basis_ext%Cvp_spec => para_Op%Cvp
         ELSE
 
           CALL sub_diago_H(para_Op%Rmat,para_Op%Rdiag,para_Op%Rvp,      &
                            para_Op%nb_baie,para_Op%sym_Hamil)
 
-          para_Op%ComOp%nb_vp_spec = min( para_Op%ComOp%nb_vp_spec,     &
-                                            para_Op%nb_baie)
+          para_Op%para_AllBasis%basis_ext%nb_vp_spec =                  &
+                   min( para_Op%para_AllBasis%basis_ext%nb_vp_spec,     &
+                                                        para_Op%nb_baie)
 
-          para_Op%nb_tot = para_Op%ComOp%nb_vp_spec
+          para_Op%nb_tot = para_Op%para_AllBasis%basis_ext%nb_vp_spec
           IF (associated(para_Op%Rmat)) THEN
             CALL dealloc_array(para_Op%Rmat,"para_Op%Rmat",name_sub)
           END IF
@@ -580,17 +583,17 @@ CONTAINS
           para_Op%Rmat(:,:) = ZERO
 
 
-          IF (associated(para_Op%ComOp%liste_spec)) THEN
+          IF (allocated(para_Op%para_AllBasis%basis_ext%liste_spec)) THEN
             DO i=1,para_Op%nb_tot
               para_Op%Rmat(i,i) =                                       &
-                      para_Op%Rdiag(para_Op%ComOp%liste_spec(i))
+                 para_Op%Rdiag(para_Op%para_AllBasis%basis_ext%liste_spec(i))
             END DO
           ELSE
             DO i=1,para_Op%nb_tot
               para_Op%Rmat(i,i) = para_Op%Rdiag(i)
             END DO
           END IF
-          para_Op%ComOp%Rvp_spec => para_Op%Rvp
+          para_Op%para_AllBasis%basis_ext%Rvp_spec => para_Op%Rvp
         END IF
         IF (para_Op%pack_Op)  THEN
           CALL dealloc_array(para_Op%ind_Op,"para_Op%ind_Op",name_sub)
@@ -598,7 +601,8 @@ CONTAINS
         END IF
 
       ELSE IF ( para_Op%spectral .AND. para_Op%n_Op /= para_Op%spectral_Op ) THEN
-        write(out_unitp,*) 'para_Op%ComOp%nb_vp_spec',para_Op%ComOp%nb_vp_spec
+        write(out_unitp,*) '...basis_ext%nb_vp_spec',                   &
+                              para_Op%para_AllBasis%basis_ext%nb_vp_spec
         IF (para_Op%cplx) THEN
 
           CALL alloc_NParray(Cmat1,(/para_Op%nb_tot,para_Op%nb_tot/),     &
@@ -606,17 +610,18 @@ CONTAINS
           CALL alloc_NParray(Cmat2,(/para_Op%nb_tot,para_Op%nb_tot/),     &
                           'Cmat2','sub_Spectral_Op')
 
-          Cmat1(:,:) = matmul(para_Op%Cmat,para_Op%ComOp%Cvp_spec)
-          Cmat2(:,:) = transpose(para_Op%ComOp%Cvp_spec)
+          Cmat1(:,:) = matmul(para_Op%Cmat,para_Op%para_AllBasis%basis_ext%Cvp_spec)
+          Cmat2(:,:) = transpose(para_Op%para_AllBasis%basis_ext%Cvp_spec)
           para_Op%Cmat(:,:) = matmul(Cmat2,Cmat1)
           Cmat1(:,:) = para_Op%Cmat(:,:)
-          para_Op%nb_tot = para_Op%ComOp%nb_vp_spec
+          para_Op%nb_tot = para_Op%para_AllBasis%basis_ext%nb_vp_spec
           CALL dealloc_array(para_Op%Cmat,'para_Op%Cmat',name_sub)
           CALL alloc_array(para_Op%Cmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
                           'para_Op%Cmat',name_sub)
 
           para_Op%Cmat(:,:) =                                           &
-              Cmat1(para_Op%ComOp%liste_spec,para_Op%ComOp%liste_spec)
+                    Cmat1(para_Op%para_AllBasis%basis_ext%liste_spec,   &
+                          para_Op%para_AllBasis%basis_ext%liste_spec)
 
           CALL dealloc_NParray(Cmat1,'Cmat1',name_sub)
           CALL dealloc_NParray(Cmat2,'Cmat2',name_sub)
@@ -626,17 +631,18 @@ CONTAINS
           CALL alloc_NParray(Rmat2,(/para_Op%nb_tot,para_Op%nb_tot/),     &
                           'Rmat2',name_sub)
 
-          Rmat1(:,:) = matmul(para_Op%Rmat,para_Op%ComOp%Rvp_spec)
-          Rmat2(:,:) = transpose(para_Op%ComOp%Rvp_spec)
+          Rmat1(:,:) = matmul(para_Op%Rmat,para_Op%para_AllBasis%basis_ext%Rvp_spec)
+          Rmat2(:,:) = transpose(para_Op%para_AllBasis%basis_ext%Rvp_spec)
           para_Op%Rmat(:,:) = matmul(Rmat2,Rmat1)
           Rmat1(:,:) = para_Op%Rmat(:,:)
-          para_Op%nb_tot = para_Op%ComOp%nb_vp_spec
+          para_Op%nb_tot = para_Op%para_AllBasis%basis_ext%nb_vp_spec
           CALL dealloc_array(para_Op%Rmat,'para_Op%Rmat',name_sub)
           CALL alloc_array(para_Op%Rmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
                           'para_Op%Rmat',name_sub)
 
           para_Op%Rmat(:,:) =                                           &
-              Rmat1(para_Op%ComOp%liste_spec,para_Op%ComOp%liste_spec)
+                      Rmat1(para_Op%para_AllBasis%basis_ext%liste_spec, &
+                            para_Op%para_AllBasis%basis_ext%liste_spec)
 
           CALL dealloc_NParray(Rmat1,'Rmat1',name_sub)
           CALL dealloc_NParray(Rmat2,'Rmat2',name_sub)
@@ -647,6 +653,7 @@ CONTAINS
           CALL dealloc_array(para_Op%dim_Op,"para_Op%dim_Op",name_sub)
         END IF
       END IF
+      para_Op%spectral_done = para_Op%spectral
 !     --------------------------------------------------------
 
 
@@ -748,12 +755,12 @@ CONTAINS
       !-------------------------------------------------------------
       !-     memories allocation: td0b, Opd0bWrho mat1, mat2, mat3
       !-------------------------------------------------------------
-      nb_ba = para_Op%nb_ba
+      nb_ba  = para_Op%nb_ba
       nb_bie = para_Op%nb_bie
 
 
       IF (para_Op%name_Op == 'H') THEN
-        type_Op = para_Op%para_PES%Type_HamilOp ! H
+        type_Op = para_Op%para_ReadOp%Type_HamilOp ! H
         IF (type_Op /= 1) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) '    Type_HamilOp MUST be equal to 1 for HADA or cHAC'
@@ -769,7 +776,7 @@ CONTAINS
       END IF
 
       CALL alloc_NParray(mat1,(/nb_ba,nb_ba/),'mat1',name_sub)
-      IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
+      IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
         CALL alloc_NParray(mat2,(/nb_ba,nb_ba/),'mat2',name_sub)
         CALL alloc_NParray(mat3,(/nb_ba,nb_ba/),'mat3',name_sub)
       END IF
@@ -812,7 +819,6 @@ CONTAINS
       para_Op%Hmin = huge(ONE)
       para_Op%Hmax = -huge(ONE)
 
-
 !-------------------------------------------------------------
 !     - Real part of the Operator ---------------------------
 !-------------------------------------------------------------
@@ -831,7 +837,6 @@ CONTAINS
 
       nplus = min(kmem,nreste)
       DO k=1,nplus
-
         nDGridI = nDGridI + 1
         IF (mod(k,max(1,int(nplus/10))) == 0 .AND. print_level>-1) THEN
           write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                        &
@@ -839,10 +844,10 @@ CONTAINS
           CALL flush_perso(out_unitp)
         END IF
 
-        CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                  &
-                                d0MatOp,para_Op%n_Op,                   &
-                                Qdyn,para_Op%mole%nb_var,Qact,          &
-                                WnD,para_Op%ComOp)
+        CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                      &
+                            d0MatOp,para_Op%n_Op,Qdyn,                  &
+                            para_Op%mole%nb_var,para_Op%mole%nb_act1,   &
+                            Qact,WnD,para_Op%file_grid)
 
         ! -- WARNING: it has to be done before calc_td0b_OpRVd0bW !!
         iterm = d0MatOp%derive_term_TO_iterm(0,0)
@@ -858,7 +863,6 @@ CONTAINS
       END DO
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='yes') ' - End'
       CALL flush_perso(out_unitp)
-
       !DO iterm_Op=1,d0MatOpd0bWrho(1,1)%nb_term ! one term
       iterm_Op=1
 
@@ -868,10 +872,10 @@ CONTAINS
         DO i2_h=1,para_Op%nb_bie
         DO i1_h=1,para_Op%nb_bie
 
-          i1 = sum(para_Op%ComOp%nb_ba_ON_HAC(1:i1_h-1))
-          i2 = sum(para_Op%ComOp%nb_ba_ON_HAC(1:i2_h-1))
-          f1 = para_Op%ComOp%nb_ba_ON_HAC(i1_h)
-          f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
+          i1 = sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i1_h-1))
+          i2 = sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i2_h-1))
+          f1 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i1_h)
+          f2 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i2_h)
 
           DO ib1=1,para_Op%nb_ba
             DO k=1,nplus
@@ -881,9 +885,9 @@ CONTAINS
           END DO
           !CALL Write_Mat(mat1,out_unitp,5)
 
-          IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
-            mat2 = matmul(mat1,para_Op%ComOp%d0Cba_ON_HAC(:,:,i2_h) )
-            mat3 = transpose(para_Op%ComOp%d0Cba_ON_HAC(:,:,i1_h))
+          IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
+            mat2 = matmul(mat1,para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i2_h) )
+            mat3 = transpose(para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i1_h))
             mat1 = matmul(mat3,mat2)
           END IF
           !CALL Write_Mat(mat1,out_unitp,5)
@@ -897,9 +901,9 @@ CONTAINS
             END DO
             !CALL Write_Mat(mat1Im,out_unitp,5)
 
-            IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
-              mat2 = matmul(mat1Im,para_Op%ComOp%d0Cba_ON_HAC(:,:,i2_h) )
-              mat3 = transpose(para_Op%ComOp%d0Cba_ON_HAC(:,:,i1_h))
+            IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
+              mat2 = matmul(mat1Im,para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i2_h) )
+              mat3 = transpose(para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i1_h))
               mat1Im = matmul(mat3,mat2)
             END IF
             !CALL Write_Mat(mat1Im,out_unitp,5)
@@ -928,14 +932,14 @@ CONTAINS
       IF (nreste .GT. 0) GOTO 98
 !     - END of loop of kmem block ----------------------------
 !     --------------------------------------------------------
-      close(para_Op%ComOp%file_HADA%unit)
+      close(para_Op%file_grid%unit)
       CALL flush_perso(out_unitp)
 
 
       !- determination of Hmax --------------------------------
       IF (para_Op%cplx) THEN
         DO i=1,para_Op%nb_tot
-          para_Op%Hmax = max(para_Op%Hmax,real(para_Op%Cmat(i,i)))
+          para_Op%Hmax = max(para_Op%Hmax,real(para_Op%Cmat(i,i),kind=Rkind))
         END DO
        ELSE
         DO i=1,para_Op%nb_tot
@@ -1090,7 +1094,7 @@ CONTAINS
       nb_bie = para_Op%nb_bie
 
       IF (para_Op%name_Op == 'H') THEN
-        type_Op = para_Op%para_PES%Type_HamilOp ! H
+        type_Op = para_Op%para_ReadOp%Type_HamilOp ! H
         IF (type_Op /= 1) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) '    Type_HamilOp MUST be equal to 1 for HADA or cHAC'
@@ -1106,7 +1110,7 @@ CONTAINS
 !-------------------------------------------------------------
       CALL Init_d0MatOp(MatRV,type_Op,0,nb_ba,JRot=JRot,cplx=para_Op%cplx)
 
-      IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
+      IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
         CALL alloc_NParray(mat2,(/nb_ba,nb_ba/),'mat2',name_sub)
         CALL alloc_NParray(mat3,(/nb_ba,nb_ba/),'mat3',name_sub)
       END IF
@@ -1174,10 +1178,10 @@ CONTAINS
           CALL flush_perso(out_unitp)
         END IF
 
-        CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                  &
-                                d0MatOp,para_Op%n_Op,                   &
-                                Qdyn,para_Op%mole%nb_var,Qact,          &
-                                WnD,para_Op%ComOp)
+        CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                      &
+                            d0MatOp,para_Op%n_Op,Qdyn,                  &
+                            para_Op%mole%nb_var,para_Op%mole%nb_act1,   &
+                            Qact,WnD,para_Op%file_grid)
 
         iterm = d0MatOp%derive_term_TO_iterm(0,0)
         DO i1_h=1,para_Op%nb_bie
@@ -1228,10 +1232,10 @@ CONTAINS
             Val_BasisRot = para_Op%BasisnD%RotBasis%tab_RotOp(ibRot,jbRot,iterm_BasisRot)
             IF (abs(Val_BasisRot) < ONETENTH**9) CYCLE
 
-            i1 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%ComOp%nb_ba_ON_HAC(1:i1_h-1))
-            i2 = (jbRot-1)*para_Op%nb_baie + sum(para_Op%ComOp%nb_ba_ON_HAC(1:i2_h-1))
-            f1 = para_Op%ComOp%nb_ba_ON_HAC(i1_h)
-            f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
+            i1 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i1_h-1))
+            i2 = (jbRot-1)*para_Op%nb_baie + sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i2_h-1))
+            f1 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i1_h)
+            f2 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
               write(out_unitp,*) 'J1,J2',J1,J2
@@ -1268,7 +1272,7 @@ CONTAINS
       !- determination of Hmax --------------------------------
       DO i=1,para_Op%nb_tot
         IF (para_Op%cplx) THEN
-          Hinter = real(para_Op%Cmat(i,i))
+          Hinter = real(para_Op%Cmat(i,i),kind=Rkind)
         ELSE
           Hinter = para_Op%Rmat(i,i)
         END IF
@@ -1431,7 +1435,7 @@ CONTAINS
       nb_bie = para_Op%nb_bie
 
       IF (para_Op%name_Op == 'H') THEN
-        type_Op = para_Op%para_PES%Type_HamilOp ! H
+        type_Op = para_Op%para_ReadOp%Type_HamilOp ! H
         IF (type_Op /= 1) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) '    Type_HamilOp MUST be equal to 1 for HADA or cHAC'
@@ -1447,7 +1451,7 @@ CONTAINS
 !-------------------------------------------------------------
       CALL Init_d0MatOp(MatRV,type_Op,0,nb_ba,JRot=JRot,cplx=para_Op%cplx)
 
-      IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
+      IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
         CALL alloc_NParray(mat2,(/nb_ba,nb_ba/),'mat2',name_sub)
         CALL alloc_NParray(mat3,(/nb_ba,nb_ba/),'mat3',name_sub)
       END IF
@@ -1513,10 +1517,10 @@ CONTAINS
           CALL flush_perso(out_unitp)
         END IF
 
-        CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                  &
-                                d0MatOp,para_Op%n_Op,                   &
-                                Qdyn,para_Op%mole%nb_var,Qact,          &
-                                WnD,para_Op%ComOp)
+        CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                      &
+                            d0MatOp,para_Op%n_Op,Qdyn,                  &
+                            para_Op%mole%nb_var,para_Op%mole%nb_act1,   &
+                            Qact,WnD,para_Op%file_grid)
 
         iterm = d0MatOp%derive_term_TO_iterm(0,0)
         DO i1_h=1,para_Op%nb_bie
@@ -1571,9 +1575,9 @@ CONTAINS
           CALL dealloc_NParray(VecQ,'VecQ',name_sub)
           !$OMP end parallel
 
-          IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
-            mat2 = matmul(MatRV%ReVal(:,:,i_Op),para_Op%ComOp%d0Cba_ON_HAC(:,:,i2_h) )
-            mat3 = transpose(para_Op%ComOp%d0Cba_ON_HAC(:,:,i1_h))
+          IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
+            mat2 = matmul(MatRV%ReVal(:,:,i_Op),para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i2_h) )
+            mat3 = transpose(para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i1_h))
             MatRV%ReVal(:,:,i_Op) = matmul(mat3,mat2)
           END IF
         END DO
@@ -1602,9 +1606,9 @@ CONTAINS
           CALL dealloc_NParray(VecQ,'VecQ',name_sub)
           !$OMP end parallel
 
-          IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
-            mat2 = matmul(MatRV%ImVal(:,:),para_Op%ComOp%d0Cba_ON_HAC(:,:,i2_h) )
-            mat3 = transpose(para_Op%ComOp%d0Cba_ON_HAC(:,:,i1_h))
+          IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
+            mat2 = matmul(MatRV%ImVal(:,:),para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i2_h) )
+            mat3 = transpose(para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i1_h))
             MatRV%ImVal(:,:) = matmul(mat3,mat2)
           END IF
         END IF
@@ -1612,11 +1616,11 @@ CONTAINS
         IF (JRot > 0 .AND. para_Op%name_Op == 'H') THEN
           i_Op = MatRV%derive_term_TO_iterm(0,0)
           CALL diagonalization(MatRV%ReVal(:,:,i_Op),EneVib,VecVib,nb_ba,2,1,.TRUE.)
-          para_Op%ComOp%ZPE     = Get_ZPE(EneVib)
-          para_Op%ComOp%Set_ZPE = .TRUE.
+          para_Op%ZPE     = Get_ZPE(EneVib)
+          para_Op%Set_ZPE = .TRUE.
           auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
-          write(out_unitp,*) 'ZPE (cm-1)',para_Op%ComOp%ZPE*auTOcm_inv
-          write(out_unitp,*) 'Ene (J=0)',(EneVib(1:min(10,nb_ba))-para_Op%ComOp%ZPE)*auTOcm_inv
+          write(out_unitp,*) 'ZPE (cm-1)',para_Op%ZPE*auTOcm_inv
+          write(out_unitp,*) 'Ene (J=0)',(EneVib(1:min(10,nb_ba))-para_Op%ZPE)*auTOcm_inv
         END IF
 
         IF (spectral) THEN
@@ -1645,10 +1649,10 @@ CONTAINS
         iterm_Op       = MatRV%derive_term_TO_iterm(0,0)
         DO ibRot=1,para_Op%nb_bRot
 
-          i1 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%ComOp%nb_ba_ON_HAC(1:i1_h-1))
-          i2 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%ComOp%nb_ba_ON_HAC(1:i2_h-1))
-          f1 = para_Op%ComOp%nb_ba_ON_HAC(i1_h)
-          f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
+          i1 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i1_h-1))
+          i2 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i2_h-1))
+          f1 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i1_h)
+          f2 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i2_h)
 
           IF (para_Op%cplx) THEN
             para_Op%Cmat(i1+1:i1+f1 , i2+1:i2+f2) =                     &
@@ -1677,10 +1681,10 @@ CONTAINS
             Val_BasisRot = para_Op%BasisnD%RotBasis%tab_RotOp(ibRot,jbRot,iterm_BasisRot)
             IF (abs(Val_BasisRot) < ONETENTH**9) CYCLE
 
-            i1 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%ComOp%nb_ba_ON_HAC(1:i1_h-1))
-            i2 = (jbRot-1)*para_Op%nb_baie + sum(para_Op%ComOp%nb_ba_ON_HAC(1:i2_h-1))
-            f1 = para_Op%ComOp%nb_ba_ON_HAC(i1_h)
-            f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
+            i1 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i1_h-1))
+            i2 = (jbRot-1)*para_Op%nb_baie + sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i2_h-1))
+            f1 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i1_h)
+            f2 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
               write(out_unitp,*) 'J1,J2',J1,J2
@@ -1715,10 +1719,10 @@ CONTAINS
 
             IF (abs(Val_BasisRot) < ONETENTH**9) CYCLE
 
-            i1 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%ComOp%nb_ba_ON_HAC(1:i1_h-1))
-            i2 = (jbRot-1)*para_Op%nb_baie + sum(para_Op%ComOp%nb_ba_ON_HAC(1:i2_h-1))
-            f1 = para_Op%ComOp%nb_ba_ON_HAC(i1_h)
-            f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
+            i1 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i1_h-1))
+            i2 = (jbRot-1)*para_Op%nb_baie + sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i2_h-1))
+            f1 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i1_h)
+            f2 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
               write(out_unitp,*) 'J1',J1
@@ -1758,7 +1762,7 @@ CONTAINS
       !- determination of Hmax --------------------------------
       DO i=1,para_Op%nb_tot
         IF (para_Op%cplx) THEN
-          Hinter = real(para_Op%Cmat(i,i))
+          Hinter = real(para_Op%Cmat(i,i),kind=Rkind)
         ELSE
           Hinter = para_Op%Rmat(i,i)
         END IF
@@ -1925,7 +1929,7 @@ CONTAINS
 !-------------------------------------------------------------
       CALL Init_d0MatOp(MatRV,type_Op,0,nb_ba,JRot=JRot,cplx=para_Op%cplx)
 
-      IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
+      IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
         CALL alloc_NParray(mat2,(/nb_ba,nb_ba/),'mat2',name_sub)
         CALL alloc_NParray(mat3,(/nb_ba,nb_ba/),'mat3',name_sub)
       END IF
@@ -1991,10 +1995,10 @@ CONTAINS
           CALL flush_perso(out_unitp)
         END IF
 
-        CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                  &
-                                d0MatOp,para_Op%n_Op,                   &
-                                Qdyn,para_Op%mole%nb_var,Qact,          &
-                                WnD,para_Op%ComOp)
+        CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                      &
+                            d0MatOp,para_Op%n_Op,Qdyn,                  &
+                            para_Op%mole%nb_var,para_Op%mole%nb_act1,   &
+                            Qact,WnD,para_Op%file_grid)
 
         iterm = d0MatOp%derive_term_TO_iterm(0,0)
         DO i1_h=1,para_Op%nb_bie
@@ -2055,9 +2059,9 @@ CONTAINS
           CALL dealloc_NParray(VecQ,'VecQ',name_sub)
           !$OMP end parallel
 
-          IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
-            mat2 = matmul(MatRV%ReVal(:,:,i_Op),para_Op%ComOp%d0Cba_ON_HAC(:,:,i2_h) )
-            mat3 = transpose(para_Op%ComOp%d0Cba_ON_HAC(:,:,i1_h))
+          IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
+            mat2 = matmul(MatRV%ReVal(:,:,i_Op),para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i2_h) )
+            mat3 = transpose(para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i1_h))
             MatRV%ReVal(:,:,i_Op) = matmul(mat3,mat2)
           END IF
         END DO
@@ -2086,9 +2090,9 @@ CONTAINS
           CALL dealloc_NParray(VecQ,'VecQ',name_sub)
           !$OMP end parallel
 
-          IF (para_Op%ComOp%contrac_ba_ON_HAC) THEN
-            mat2 = matmul(MatRV%ImVal(:,:),para_Op%ComOp%d0Cba_ON_HAC(:,:,i2_h) )
-            mat3 = transpose(para_Op%ComOp%d0Cba_ON_HAC(:,:,i1_h))
+          IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
+            mat2 = matmul(MatRV%ImVal(:,:),para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i2_h) )
+            mat3 = transpose(para_Op%para_AllBasis%basis_ext2n%d0Cba_ON_HAC(:,:,i1_h))
             MatRV%ImVal(:,:) = matmul(mat3,mat2)
           END IF
         END IF
@@ -2096,11 +2100,11 @@ CONTAINS
 !        IF (JRot > 0 .AND. para_Op%name_Op == 'H') THEN
 !          i_Op = MatRV%derive_term_TO_iterm(0,0)
 !          CALL diagonalization(MatRV%ReVal(:,:,i_Op),EneVib,VecVib,nb_ba,2,1,.TRUE.)
-!          para_Op%ComOp%ZPE     = Get_ZPE(EneVib)
-!          para_Op%ComOp%Set_ZPE = .TRUE.
+!          para_Op%ZPE     = Get_ZPE(EneVib)
+!          para_Op%Set_ZPE = .TRUE.
 !          auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
-!          write(out_unitp,*) 'ZPE',para_Op%ComOp%ZPE*auTOcm_inv
-!          write(out_unitp,*) 'Ene (J=0)',(EneVib(1:min(10,nb_ba))-para_Op%ComOp%ZPE)*auTOcm_inv
+!          write(out_unitp,*) 'ZPE',para_Op%ZPE*auTOcm_inv
+!          write(out_unitp,*) 'Ene (J=0)',(EneVib(1:min(10,nb_ba))-para_Op%ZPE)*auTOcm_inv
 !        END IF
 !
 !        IF (spectral) THEN
@@ -2139,10 +2143,10 @@ CONTAINS
             Val_BasisRot = para_Op%BasisnD%RotBasis%tab_RotOp(ibRot,jbRot,iterm_BasisRot)
             IF (abs(Val_BasisRot) < ONETENTH**9) CYCLE
 
-            i1 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%ComOp%nb_ba_ON_HAC(1:i1_h-1))
-            i2 = (jbRot-1)*para_Op%nb_baie + sum(para_Op%ComOp%nb_ba_ON_HAC(1:i2_h-1))
-            f1 = para_Op%ComOp%nb_ba_ON_HAC(i1_h)
-            f2 = para_Op%ComOp%nb_ba_ON_HAC(i2_h)
+            i1 = (ibRot-1)*para_Op%nb_baie + sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i1_h-1))
+            i2 = (jbRot-1)*para_Op%nb_baie + sum(para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(1:i2_h-1))
+            f1 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i1_h)
+            f2 = para_Op%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(i2_h)
 
             IF (debug) THEN
               write(out_unitp,*) 'J1,J2',J1,J2
@@ -2182,7 +2186,7 @@ CONTAINS
       !- determination of Hmax --------------------------------
       DO i=1,para_Op%nb_tot
         IF (para_Op%cplx) THEN
-          Hinter = real(para_Op%Cmat(i,i))
+          Hinter = real(para_Op%Cmat(i,i),kind=Rkind)
         ELSE
           Hinter = para_Op%Rmat(i,i)
         END IF

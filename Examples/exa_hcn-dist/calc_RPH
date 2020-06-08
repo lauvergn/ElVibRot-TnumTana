@@ -1,6 +1,6 @@
 rm cpu_all
 
- for name in dat_NewQTransfo-RPH-SGtype2        dat_NewQTransfo-RPH_AutoContract dat_NewQTransfo-RPH            dat_NewQTransfo-RPH2            dat_NewQTransfo-RPH_HarD
+ for name in dat_NewQTransfo-RPH_AutoContract dat_NewQTransfo-RPH            dat_NewQTransfo-RPH2            dat_NewQTransfo-RPH_HarD
 do
 ./$name
 echo "=======================================" >> cpu_all

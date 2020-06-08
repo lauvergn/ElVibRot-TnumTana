@@ -28,7 +28,7 @@ CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 0
+QML = 1
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -81,7 +81,7 @@ endif
 QMLibDIR := /Users/lauvergn/git/QuantumModelLib
 ifneq "$(wildcard $(QMLibDIR) )" ""
   # QMLibDIR exists:
-  $(info QMLibDIR exists)
+  $(info QMLibDIR variable exists)
 else
   # QMLibDIR does not exist:
   $(info QMLibDIR does not exist)
@@ -545,7 +545,7 @@ Obj_Primlib  = \
   $(OBJ)/sub_module_MPI_Aid.o 
 
 Obj_math =\
-   $(OBJ)/sub_diago.o $(OBJ)/sub_trans_mat.o $(OBJ)/sub_integration.o \
+   $(OBJ)/sub_diago.o $(OBJ)/sub_trans_mat.o $(OBJ)/sub_math_util.o $(OBJ)/sub_integration.o \
    $(OBJ)/sub_polyortho.o $(OBJ)/sub_function.o $(OBJ)/sub_derive.o $(OBJ)/sub_pert.o \
    $(OBJ)/sub_fft.o \
    $(OBJ)/Wigner3j.o
@@ -560,6 +560,8 @@ Obj_dnSVM = \
   $(OBJ)/sub_module_dnV.o $(OBJ)/sub_module_dnM.o $(OBJ)/sub_module_IntVM.o \
   $(OBJ)/sub_module_dnSVM.o
 
+Obj_FiniteDiff = $(OBJ)/mod_FiniteDiff.o
+
 # nDindex, Minimize Only list: OK
 # USE mod_mod_nDindex and mod_module_DInd
 Obj_nDindex  = $(OBJ)/sub_module_DInd.o $(OBJ)/sub_module_nDindex.o
@@ -567,7 +569,10 @@ Obj_nDindex  = $(OBJ)/sub_module_DInd.o $(OBJ)/sub_module_nDindex.o
 # nDfit, Minimize Only list: OK
 Obj_nDfit    = $(OBJ)/sub_module_nDfit.o
 
-Obj_lib  = $(Obj_Primlib) $(Obj_math) $(Obj_io) $(Obj_dnSVM) $(Obj_nDindex) $(Obj_nDfit)
+Obj_lib  = $(Obj_Primlib) $(Obj_math) $(Obj_io) $(Obj_dnSVM) \
+           $(Obj_FiniteDiff) $(Obj_nDindex) $(Obj_nDfit)
+
+
 #============================================================================
 
 #============================================================================
@@ -593,9 +598,7 @@ Obj_TanaPrim = $(OBJ)/sub_module_Tana_OpEl.o \
   $(OBJ)/sub_module_Tana_SumOpnD.o $(OBJ)/sub_module_Tana_VecSumOpnD.o \
   $(OBJ)/sub_module_Tana_PiEulerRot.o
 
-#Qtransfo obj, Minimize Only list: Lib_QTransfo, Active, BunchPoly, Cartesian, Flexible, Gene
-#                                  HyperSphe, OneD, ThreeD, Rot2Coord, LinearNM, RectilinearNM
-#                                  RPH, Qtransfo
+
 Obj_Coord = \
   $(OBJ)/Lib_QTransfo.o \
   $(OBJ)/BunchPolyTransfo.o $(OBJ)/ZmatTransfo.o $(OBJ)/QTOXanaTransfo.o $(OBJ)/CartesianTransfo.o \
@@ -603,7 +606,8 @@ Obj_Coord = \
   $(OBJ)/FlexibleTransfo.o $(OBJ)/GeneTransfo.o \
   $(OBJ)/HyperSpheTransfo.o $(OBJ)/LinearNMTransfo.o $(OBJ)/RectilinearNM_Transfo.o \
   $(OBJ)/RPHTransfo.o $(OBJ)/sub_freq.o \
-  $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o 
+  $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o \
+  $(OBJ)/Calc_Tab_dnQflex.o
 
 #Minimize Only list: OK
 Obj_Tnum = \
@@ -611,7 +615,7 @@ Obj_Tnum = \
   $(OBJ)/calc_f2_f1Q.o $(OBJ)/Sub_X_TO_Q_ana.o $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_dnRho.o \
   $(OBJ)/calc_dng_dnGG.o $(OBJ)/sub_export_KEO.o
 
-#Tana objects, Minimize Only list: OK
+#Tana objects
 Obj_Tana = \
   $(OBJ)/sub_module_Tana_vec_operations.o $(OBJ)/sub_module_Tana_op.o \
   $(OBJ)/sub_module_Tana_Export_KEO.o \
@@ -628,7 +632,7 @@ Obj_Coord_KEO = $(Obj_TanaPrim) $(Obj_Coord) $(Obj_Tnum) $(Obj_Tana) $(Obj_TnumT
 #Primitive Operators, Minimize Only list: OK
 Obj_PrimOperator = \
    $(OBJ)/sub_module_SimpleOp.o $(OBJ)/sub_module_OnTheFly_def.o $(OBJ)/sub_PrimOp_def.o \
-   $(OBJ)/sub_onthefly.o $(OBJ)/sub_PrimOp.o \
+   $(OBJ)/sub_onthefly.o $(OBJ)/sub_PrimOp_RPH.o $(OBJ)/sub_PrimOp.o \
    $(OBJ)/sub_system.o $(OBJ)/read_para.o
 #============================================================================
 
@@ -637,6 +641,7 @@ Obj_PrimOperator = \
 Obj_KEO_PrimOp= \
   $(Obj_lib) $(Obj_PhyCte) $(OBJ)/versionEVR-T.o \
   $(Obj_Coord_KEO) $(Obj_PrimOperator) $(OBJ)/Module_ForTnumTana_Driver.o $(OBJ)/TnumTana_Lib.o
+
 #============================================================
 
 
@@ -658,7 +663,6 @@ Obj_module =  \
  $(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o $(OBJ)/sub_module_basis_BtoG_GtoB.o \
  $(OBJ)/sub_module_basis.o \
 $(OBJ)/sub_module_BasisMakeGrid.o \
- $(OBJ)/sub_module_ComOp.o \
  $(OBJ)/sub_module_poly.o $(OBJ)/sub_module_GWP.o \
  $(OBJ)/sub_module_cart.o
 
@@ -796,7 +800,7 @@ PhysConst: obj $(PhysConstEXE)
 #============================================================================
 # Unitary tests
 .PHONY: ut UT UnitTests
-ut UT UnitTests: UT_Frac UT_PhysConst
+ut UT UnitTests: UT_Frac UT_PhysConst UT_HNO3 UT_HCN UT_HCN-WP
 #
 .PHONY: UT_Frac ut_frac
 UT_Frac ut_frac : UnitTests_Frac.exe
@@ -814,6 +818,27 @@ UT_PhysConst ut_physconst: PhysConst
 	@echo "---------------------------------------"
 	@echo "Unitary tests for the PhysConst module"
 	@cd Examples/exa_PhysicalConstants ; ./run_tests > $(DIRUT)/res_UT_PhysConst ; $(DIRUT)/PhysConst.sh $(DIRUT)/res_UT_PhysConst
+	@echo "---------------------------------------"
+#
+.PHONY: UT_HNO3 ut_hno3
+UT_HNO3 ut_hno3: EVR
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the HNO3 ElVibRot calculations"
+	@cd UnitTests/HNO3_UT ; ./run_tests small
+	@echo "---------------------------------------"
+#
+.PHONY: UT_HCN ut_hcn
+UT_HCN ut_hcn: EVR
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the HCN (diago) ElVibRot calculations"
+	@cd UnitTests/HCN_UT ; ./run_tests small
+	@echo "---------------------------------------"
+#
+.PHONY: UT_HCN-WP ut_hcn-wp
+UT_HCN-WP ut_hcn-wp: EVR
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the HCN (propagation) ElVibRot calculations"
+	@cd UnitTests/HCN-WP_UT ; ./run_tests small
 	@echo "---------------------------------------"
 #===============================================
 #===============================================
@@ -851,6 +876,7 @@ clean:
 	@cd Examples/exa_direct-dist ; ./clean
 	@cd Examples/exa_TnumTana_Coord-dist ; ./clean
 	@cd Examples/exa_PhysicalConstants ; ./clean
+	@cd UnitTests ; ./clean
 	@cd Examples/exa_TanaCheck ; ./clean
 	@cd Working_tests/exa_TnumTana-dist ; ./clean
 	@cd Working_tests/exa_TnumPoly-dist ; ./clean
@@ -880,7 +906,9 @@ $(KEOTESTEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(KEOTEST).o
 $(Main_TnumTana_FDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_FDriver.o
 	$(LYNK90)   -o $(Main_TnumTana_FDriverEXE) $(OBJ)/Main_TnumTana_FDriver.o $(OBJ)/libTnum.a $(LYNKFLAGS)
 $(Main_TnumTana_cDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_cDriver.o
-	$(CompC) -o $(Main_TnumTana_cDriverEXE) $(CFLAGS) $(OBJ)/Main_TnumTana_cDriver.o $(OBJ)/libTnum.a $(LYNKFLAGS) -lgfortran -lm
+	cp $(OBJ)/libTnum.a $(OBJ)/libTnumForcDriver.a
+	ar d $(OBJ)/libTnumForcDriver.a sub_integration.o
+	$(CompC) -o $(Main_TnumTana_cDriverEXE) $(CFLAGS) $(OBJ)/Main_TnumTana_cDriver.o $(OBJ)/libTnumForcDriver.a $(LYNKFLAGS) -lgfortran -lm
 #
 $(TNUMEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMAIN).o
 	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS)
@@ -951,6 +979,9 @@ $(OBJ)/sub_module_IntVM.o:$(DirdnSVM)/sub_module_IntVM.f90
 $(OBJ)/sub_module_dnSVM.o:$(DirdnSVM)/sub_module_dnSVM.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnSVM.f90
 #
+$(OBJ)/mod_FiniteDiff.o:$(DirSys)/mod_FiniteDiff.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirSys)/mod_FiniteDiff.f90
+#
 $(OBJ)/sub_module_nDfit.o:$(DirMod)/sub_module_nDfit.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMod)/sub_module_nDfit.f90
 #
@@ -1018,8 +1049,9 @@ $(OBJ)/Qtransfo.o:$(DirTNUM)/Qtransfo/Qtransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirTNUM)/Qtransfo/Qtransfo.f90
 $(OBJ)/sub_freq.o:$(DirTNUM)/Qtransfo/sub_freq.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/sub_freq.f90
-
-#
+$(OBJ)/Calc_Tab_dnQflex.o:$(DirTNUM)/sub_operator_T/Calc_Tab_dnQflex.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_operator_T/Calc_Tab_dnQflex.f90
+# 
 $(OBJ)/sub_module_Tnum.o:$(DirTNUM)/sub_module_Tnum.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirTNUM)/sub_module_Tnum.f90
 $(OBJ)/sub_module_paramQ.o:$(DirTNUM)/sub_module_paramQ.f90
@@ -1071,6 +1103,8 @@ $(OBJ)/sub_PrimOp_def.o:$(DIRPrimOp)/sub_PrimOp_def.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_PrimOp_def.f90
 $(OBJ)/sub_module_OnTheFly_def.o:$(DIRPrimOp)/sub_module_OnTheFly_def.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_module_OnTheFly_def.f90
+$(OBJ)/sub_PrimOp_RPH.o:$(DIRPrimOp)/sub_PrimOp_RPH.f90
+	cd $(OBJ) ; $(F90_FLAGS)  -c $(DIRPrimOp)/sub_PrimOp_RPH.f90
 $(OBJ)/sub_PrimOp.o:$(DIRPrimOp)/sub_PrimOp.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_QML)  -c $(DIRPrimOp)/sub_PrimOp.f90
 $(OBJ)/sub_onthefly.o:$(DIRPrimOp)/sub_onthefly.f90
@@ -1226,8 +1260,6 @@ $(OBJ)/QMRPACK_lib.o:$(DIRCRP)/QMRPACK_lib.f
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/QMRPACK_lib.f
 #===================================================================================
 #Operator ....
-$(OBJ)/sub_module_ComOp.o:$(DIROp)/sub_module_ComOp.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_ComOp.f90
 $(OBJ)/sub_module_OpGrid.o:$(DIROp)/sub_module_OpGrid.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIROp)/sub_module_OpGrid.f90
 $(OBJ)/sub_module_ReadOp.o:$(DIROp)/sub_module_ReadOp.f90
@@ -1356,6 +1388,8 @@ $(OBJ)/sub_diago.o:$(DirMath)/sub_diago.f90
 	cd $(OBJ) ; $(F90_FLAGS)  $(CPPpre) $(CPPSHELL_DIAGO)  -c $(DirMath)/sub_diago.f90
 $(OBJ)/sub_trans_mat.o:$(DirMath)/sub_trans_mat.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMath)/sub_trans_mat.f90
+$(OBJ)/sub_math_util.o:$(DirMath)/sub_math_util.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMath)/sub_math_util.f90
 $(OBJ)/sub_integration.o:$(DirMath)/sub_integration.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMath)/sub_integration.f90
 $(OBJ)/sub_SparseBG.o:$(DirMath)/sub_SparseBG.f90

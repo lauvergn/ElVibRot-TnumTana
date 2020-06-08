@@ -17,7 +17,7 @@ cd $here
 #export OMP_NUM_THREADS=1
 
 nice $DIR_vib/vib << ** > res
- &system /
+ &system printlevel=2 /
  &constantes /
  &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 /
  &Coord_transfo name_transfo='zmat' nat=4 /

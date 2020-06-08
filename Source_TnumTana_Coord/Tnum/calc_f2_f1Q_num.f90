@@ -199,14 +199,6 @@ MODULE mod_f2f2Vep
       IF (mole%nb_Qtransfo == -1 .OR. para_Tnum%f2f1_ana) THEN
         CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
 
-        ! we have to transfert mole to mole_zmatrix, ...
-        !  ... because calc_f2_f1Q_ana works only with zmatrix type
-        !CALL CoordType1TOCoordType2(mole,mole_zmatrix%CoordType)
-        !CALL calc_f2_f1Q_ana(Qdyn,                                      &
-        !                     Tdef2,Tdef1,vep,rho,                       &
-        !                     Tcor2,Tcor1,Trot,                          &
-        !                     para_Tnum,mole_zmatrix)
-        !CALL dealloc_zmat(mole_zmatrix)
         CALL calc_f2_f1Q_ana(Qdyn,                                      &
                              Tdef2,Tdef1,vep,rho,                       &
                              Tcor2,Tcor1,Trot,                          &
@@ -215,8 +207,7 @@ MODULE mod_f2f2Vep
       END IF
 
 
-      IF (para_Tnum%nrho == 0 .OR. para_Tnum%nrho == 10 .OR.            &
-                                        para_Tnum%nrho == 20) THEN
+      IF (para_Tnum%vep_type == 0) THEN
         nderiv = 1
       ELSE
         nderiv = 2
@@ -225,47 +216,37 @@ MODULE mod_f2f2Vep
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,nderiv)
       CALL alloc_dnSVM(dng,mole%ndimG,mole%ndimG,mole%nb_act,nderiv)
 
-      CALL get_dng_dnGG(Qact,para_Tnum,mole,dng,dnGG,nderiv)
+      CALL get_dng_dnGG(Qact,para_Tnum,mole,dng,dnGG,vep=vep,nderiv=nderiv)
       !write(out_unitp,*) 'dng'
       !CALL write_dnSVM(dng)
       !write(out_unitp,*) 'dnGG'
       !CALL write_dnSVM(dnGG)
 
-
-      CALL alloc_dnSVM(dnJac,dng%nb_var_deriv,nderiv)
+      !----- For dnrho -------------------------------------------
+      nderiv = 1
+      ! for dnrho (because, we need dnrho%d1 in sub_H1def and sub_Tcor1
       CALL alloc_dnSVM(dnrho,dng%nb_var_deriv,nderiv)
+      CALL alloc_dnSVM(dnJac,dng%nb_var_deriv,nderiv)
 
-      IF ( (para_Tnum%nrho == 1 .OR. para_Tnum%nrho == 2 .OR.           &
-            para_Tnum%nrho == 0) .AND. .NOT. para_Tnum%Gcte) THEN
-
-        !CALL sub3_dndetA(dnJac,dng,nderiv,                              &
-        !                 mole%masses,mole%Mtot_inv,mole%ncart)
-
-
+      IF (para_Tnum%nrho == 0 .AND. .NOT. para_Tnum%Gcte) THEN
+        ! dnJac
         CALL sub3_dndetGG(dnJac,dnGG,nderiv,                            &
                           mole%masses,mole%Mtot_inv,mole%ncart)
-
         !write(out_unitp,*) 'dnJac'
         !CALL write_dnS(dnJac)
-
-      ELSE ! nrho = 20 or 10 (jac0 is not used => jac0=1)
-        CALL Set_ZERO_TO_dnSVM(dnJac)
-        dnJac%d0 = ONE
+      ELSE
+        CALL sub_ZERO_TO_dnS(dnJac)
       END IF
-!     write(out_unitp,*) 'jac0 :',dnJac%d0
-
-!-----------------------------------------------------------
-
-!-----------------------------------------------------------
-!     f0,fi,Fij calculation
-!-----------------------------------------------------------
       CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                            &
                       nderiv,para_Tnum%num_x,para_Tnum%stepT,           &
                       para_Tnum%nrho)
+      !write(out_unitp,*) 'dnrho'
+      !CALL write_dnS(dnrho)
 !-----------------------------------------------------------
+
       rho = dnrho%d0
       !write(out_unitp,*) 'rho :',rho
-      !CALL write_dnS(dnrho)
+!-----------------------------------------------------------
 
 !==================================================================
 !==================================================================
@@ -291,20 +272,6 @@ MODULE mod_f2f2Vep
 !     ------------------------------------------------------------
 
 !     ------------------------------------------------------------
-!     -- extra potential term ------------------------------------
-      IF ( (para_Tnum%nrho == 1 .OR. para_Tnum%nrho == 2) .AND.         &
-                 .NOT. para_Tnum%Gcte) THEN
-        IF (new_vep) THEN
-          CALL sub_vep_new(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,       &
-                           dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
-        ELSE !old vep
-          CALL sub_vep(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,           &
-                           dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
-        END IF
-      ELSE
-        vep = ZERO
-      END IF
-!     ------------------------------------------------------------
 
       IF ( .NOT. mole%Without_Rot) THEN
         CALL sub_Tcor2(Tcor2,dnGG%d0,mole%ndimG,mole%nb_act)
@@ -317,7 +284,6 @@ MODULE mod_f2f2Vep
       CALL dealloc_dnSVM(dnrho)
       CALL dealloc_dnSVM(dnGG)
       CALL dealloc_dnSVM(dng)
-
 
 !-----------------------------------------------------------
       IF (debug .OR. para_Tnum%WriteT) THEN
@@ -393,9 +359,8 @@ MODULE mod_f2f2Vep
 
 !     - for memory ---------------------------------------------
       TYPE(Type_dnS)    :: dnJac,dnrho
-
-      TYPE(Type_dnMat) :: dng,dnGG
-      integer          :: calc_g,calc_GG
+      TYPE(Type_dnMat)  :: dng,dnGG
+      integer           :: calc_g,calc_GG
 !     ----------------------------------------------------------
 
       integer :: nderiv
@@ -426,15 +391,13 @@ MODULE mod_f2f2Vep
        END IF
 !-----------------------------------------------------------
       IF (mole%nb_Qtransfo == -1) THEN
-         write(out_unitp,*) 'ERROR in ',name_sub
-         write(out_unitp,*) 'You cannot use Taylor expansion and "calc_f2_f1Q_ana"'
-
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) 'You cannot use Taylor expansion and "calc_f2_f1Q_ana"'
         STOP
       END IF
 
 
-      IF (para_Tnum%nrho == 0 .OR. para_Tnum%nrho == 10 .OR.            &
-                                        para_Tnum%nrho == 20) THEN
+      IF (para_Tnum%vep_type == 0) THEN
         nderiv = 1
       ELSE
         nderiv = 2
@@ -443,7 +406,7 @@ MODULE mod_f2f2Vep
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,nderiv)
       CALL alloc_dnSVM(dng,mole%ndimG,mole%ndimG,mole%nb_act,nderiv)
 
-      CALL get_dng_dnGG(Qact,para_Tnum,mole,dng,dnGG,nderiv)
+      CALL get_dng_dnGG(Qact,para_Tnum,mole,dng,dnGG,nderiv=nderiv)
 
       ! transformation of dnGG%d1
       DO i=1,mole%nb_act1 ! first the derivatives with respect to the type1 coord.
@@ -459,10 +422,9 @@ MODULE mod_f2f2Vep
       CALL alloc_dnSVM(dnJac,dng%nb_var_deriv,nderiv)
       CALL alloc_dnSVM(dnrho,dng%nb_var_deriv,nderiv)
 
-      IF ( (para_Tnum%nrho == 1 .OR. para_Tnum%nrho == 2 .OR.           &
-            para_Tnum%nrho == 0) .AND. .NOT. para_Tnum%num_GG) THEN
+      IF ( (para_Tnum%vep_type /= 0 .OR. para_Tnum%nrho == 0) .AND. .NOT. para_Tnum%num_GG) THEN
         write(out_unitp,*) ' ERROR in name_sub'
-        write(out_unitp,*) '  You have to use nrho=10 or 20 to use the taylor expansion'
+        write(out_unitp,*) '  You have to use nrho=10 or 20 or vep_type=0 to use the taylor expansion'
         write(out_unitp,*) '   => without extrapotential term (vep)'
         write(out_unitp,*) ' Check your data !'
         STOP
@@ -501,7 +463,6 @@ MODULE mod_f2f2Vep
 !     ------------------------------------------------------------
 !     -- 2d derivative terms -------------------------------------
       CALL sub_H2def(Tdef2,dnGG%d0,mole%ndimG,mole%nb_act)
-
 !     ------------------------------------------------------------
 
 !     ------------------------------------------------------------
@@ -510,21 +471,14 @@ MODULE mod_f2f2Vep
 !     ------------------------------------------------------------
 
 !     ------------------------------------------------------------
-!     -- extra potential term ------------------------------------
-      IF ( (para_Tnum%nrho == 1 .OR. para_Tnum%nrho == 2) .AND.         &
-                                     .NOT. para_Tnum%num_GG) THEN
-        CALL sub_vep_new(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,         &
-                     dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
-      ELSE
-        vep = ZERO
-      END IF
+!     -- extra potential term (is always zero for the taylor expansion)-
+      vep = ZERO
 !     ------------------------------------------------------------
 
       IF (.NOT. mole%Without_Rot) THEN
         CALL sub_Tcor2(Tcor2,dnGG%d0,mole%ndimG,mole%nb_act)
         CALL sub_Trot(Trot,dnGG%d0,mole%ndimG,mole%nb_act)
-        CALL sub_Tcor1(Tcor1,dnGG%d0,dnGG%d1,dnrho%d1,                  &
-                       mole%ndimG,mole%nb_act)
+        CALL sub_Tcor1(Tcor1,dnGG%d0,dnGG%d1,dnrho%d1,mole%ndimG,mole%nb_act)
       END IF
 
       CALL dealloc_dnSVM(dnJac)

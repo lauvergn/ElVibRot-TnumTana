@@ -41,7 +41,7 @@
 !===========================================================================
 !===========================================================================
       RECURSIVE SUBROUTINE RecSparseGrid_ForDP_type1(basis_SG,          &
-                          para_Tnum,mole,para_PES,para_ReadOp,ComOp_loc)
+                          para_Tnum,mole,para_ReadOp)
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
@@ -59,14 +59,8 @@
 !----- for the basis set ----------------------------------------------
       TYPE (basis), intent(inout) :: basis_SG
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
-
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)  :: ComOp_loc
       TYPE (param_ReadOp) :: para_ReadOp
-
-
 
 
 !---------------------------------------------------------------------
@@ -257,7 +251,7 @@
 
             CALL RecAuto_basis(para_Tnum,mole,                          &
                                basis_SG%tab_basisPrimSG(ib,L),          &
-                               para_PES,para_ReadOp,ComOp_loc)
+                               para_ReadOp)
 
             !CALL RecWriteMini_basis(basis_SG%tab_basisPrimSG(ib,L) )
           END DO
@@ -388,7 +382,7 @@
 
         CALL RecAuto_basis(para_Tnum,mole,                              &
                            basis_SG%tab_PbasisSG(i_SG)%Pbasis,          &
-                           para_PES,para_ReadOp,ComOp_loc)
+                           para_ReadOp)
 
         IF (i_SG == 1) THEN
           !-- copy tab_PbasisSG(i_SG)%Pbasis%nDindB in basis_SG%nDindB --------- !! utile ???
@@ -526,8 +520,7 @@
         basis_DPsave%print_info_OF_basisDP    = .FALSE.
         basis_DPsave%SparseGrid_type          = 0
 
-        CALL RecAuto_basis(para_Tnum,mole,basis_DPsave,               &
-                           para_PES,para_ReadOp,ComOp_loc)
+        CALL RecAuto_basis(para_Tnum,mole,basis_DPsave,para_ReadOp)
 
         CALL basis2TObasis1(basis_SG,basis_DPsave)
 
@@ -571,7 +564,7 @@
       END SUBROUTINE RecSparseGrid_ForDP_type1
 
       RECURSIVE SUBROUTINE RecSparseGrid_ForDP_type2(basis_SG,          &
-                          para_Tnum,mole,para_PES,para_ReadOp,ComOp_loc)
+                          para_Tnum,mole,para_ReadOp)
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
@@ -590,11 +583,7 @@
 !----- for the basis set ----------------------------------------------
       TYPE (basis), intent(inout) :: basis_SG
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
-
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)  :: ComOp_loc
       TYPE (param_ReadOp) :: para_ReadOp
 
 
@@ -722,8 +711,7 @@
                     basis_SG%tab_basisPrimSG(L,ib)%check_basis = .FALSE.
 
           CALL RecAuto_basis(para_Tnum,mole,                            &
-                             basis_SG%tab_basisPrimSG(L,ib),            &
-                             para_PES,para_ReadOp,ComOp_loc)
+                             basis_SG%tab_basisPrimSG(L,ib),para_ReadOp)
 
           CALL sort_basis(basis_SG%tab_basisPrimSG(L,ib))
 
@@ -936,7 +924,7 @@
 
 !=======================================================================================
       RECURSIVE SUBROUTINE RecSparseGrid_ForDP_type4(basis_SG,          &
-                          para_Tnum,mole,para_PES,para_ReadOp,ComOp_loc)
+                                             para_Tnum,mole,para_ReadOp)
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
@@ -956,11 +944,7 @@
 !----- for the basis set ----------------------------------------------
       TYPE (basis), intent(inout) :: basis_SG
 
-!----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
-
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)  :: ComOp_loc
       TYPE (param_ReadOp) :: para_ReadOp
 
       integer             :: LB,L,Lmin,Lmax,i_SG,DeltaL,nq_iSG,nq_SG,ib,nb,i
@@ -1029,7 +1013,8 @@
         !CALL RecWrite_basis(basis_SG%tab_Pbasis(ib)%Pbasis,write_all=.TRUE.)
 
         IF (basis_SG%tab_Pbasis(ib)%Pbasis%auto_basis) THEN
-          CALL AutoParam_basis(basis_SG%tab_Pbasis(ib)%Pbasis,para_Tnum,mole,ComOp_loc,para_PES,para_ReadOp)
+          CALL AutoParam_basis(basis_SG%tab_Pbasis(ib)%Pbasis,para_Tnum, &
+                               mole,para_ReadOp)
         END IF
 
       END DO
@@ -1105,10 +1090,8 @@
           IF (.NOT. basis_SG%check_basis)                               &
                       basis_SG%tab_basisPrimSG(L,ib)%check_basis = .FALSE.
 
-
           CALL RecAuto_basis(para_Tnum,mole,                            &
-                             basis_SG%tab_basisPrimSG(L,ib),            &
-                             para_PES,para_ReadOp,ComOp_loc)
+                             basis_SG%tab_basisPrimSG(L,ib),para_ReadOp)
 
           CALL sort_basis(basis_SG%tab_basisPrimSG(L,ib))
 
@@ -1148,7 +1131,8 @@
       L2maxB = basis_SG%para_SGType2%L2_SparseBasis
       L1maxG = basis_SG%para_SGType2%L1_SparseGrid
       L2maxG = basis_SG%para_SGType2%L2_SparseGrid
-      CALL dealloc_SGType2(basis_SG%para_SGType2)
+      CALL dealloc_SGType2(basis_SG%para_SGType2) !! why ???
+      basis_SG%para_SGType2%nb0 = 1
 
 
       ! for nDind_SmolyakRep%nDNum_OF_Lmax and nDindB%nDNum_OF_Lmax

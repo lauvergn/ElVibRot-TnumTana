@@ -42,12 +42,11 @@
 !===========================================================================
 MODULE mod_SetOp
       USE mod_system
-      use mod_PrimOp, only: param_typeop, param_pes, dealloc_typeop,    &
+      use mod_PrimOp, only: param_typeop, PrimOp_t, dealloc_typeop,     &
                             write_typeop, param_d0matop, init_d0matop,  &
                             dealloc_d0matop
 
       USE mod_basis
-      USE mod_ComOp
       USE mod_OpGrid
       USE mod_ReadOp
       IMPLICIT NONE
@@ -77,11 +76,6 @@ MODULE mod_SetOp
           TYPE (CoordType),      pointer :: mole            => null() ! true POINTER
           TYPE (Tnum),           pointer :: para_Tnum       => null() ! true POINTER
 
-          !-- for param_PES --------------------------------------------------
-          TYPE (param_PES), pointer      :: para_PES        => null() ! true POINTER
-
-!         !-- for ComOp ------------------------------------------------------
-          TYPE (param_ComOp), pointer    :: ComOp           => null() ! true POINTER
 
           integer :: nb_OpPsi    = 0             ! number of Operator action
 
@@ -141,6 +135,8 @@ MODULE mod_SetOp
 
           real (kind=Rkind) :: Hmin     =  huge(ONE)  !
           real (kind=Rkind) :: Hmax     = -huge(ONE)  !
+          real (kind=Rkind) :: ZPE      = huge(ONE)
+          logical           :: Set_ZPE  = .FALSE.
 
           real (kind=Rkind)              :: pot0              = ZERO    !
           logical                        :: pot_only          = .FALSE. ! comput only the PES without T (and the vep)
@@ -168,6 +164,9 @@ MODULE mod_SetOp
       INTERFACE dealloc_array
         MODULE PROCEDURE dealloc_array_OF_Opdim1
       END INTERFACE
+
+      PUBLIC :: Set_ZPE_OF_Op,Get_ZPE
+
 
       CONTAINS
 
@@ -465,10 +464,6 @@ MODULE mod_SetOp
         nullify(para_Op%mole)
         nullify(para_Op%para_Tnum)
 
-        nullify(para_Op%para_PES)
-
-        nullify(para_Op%ComOp)
-
         para_Op%n_Op        = 0
         para_Op%name_Op     = 'H'
 
@@ -546,8 +541,6 @@ MODULE mod_SetOp
 
       write(out_unitp,*) 'asso mole',associated(para_Op%mole)
       write(out_unitp,*) 'asso para_Tnum',associated(para_Op%para_Tnum)
-      write(out_unitp,*) 'asso para_PES',associated(para_Op%para_PES)
-      write(out_unitp,*) 'asso ComOp',associated(para_Op%ComOp)
 
       write(out_unitp,*)
       write(out_unitp,*) 'n_Op,name',para_Op%n_Op,para_Op%name_Op
@@ -645,11 +638,6 @@ MODULE mod_SetOp
         write(out_unitp,*) 'pot_only,T_only ',para_Op%pot_only,para_Op%T_only
       END IF
       CALL flush_perso(out_unitp)
-
-      CALL write_param_ComOp(para_Op%ComOp)
-
-          !TYPE (param_file)            :: file_Grid                    ! file of the grid
-          !TYPE (param_ReadOp)          :: para_ReadOp
 
       write(out_unitp,*) 'END WRITE param_Op'
       CALL flush_perso(out_unitp)
@@ -767,13 +755,8 @@ MODULE mod_SetOp
          write(out_unitp,*) ' CHECK the source'
          STOP
        END IF
-     ELSE IF (associated(para_Op%ComOp)) THEN
-       get_nb_be_FROM_Op = para_Op%ComOp%nb_be
      ELSE
-       write(out_unitp,*) ' ERROR in get_nb_be_FROM_Op'
-       write(out_unitp,*) ' para_Op%ComOp in not associated'
-       write(out_unitp,*) ' CHECK the source'
-       STOP
+       get_nb_be_FROM_Op = para_Op%nb_be
      END IF
 
       IF (debug) THEN
@@ -782,9 +765,8 @@ MODULE mod_SetOp
       END FUNCTION get_nb_be_FROM_Op
 !
 !================================================================
-! ++    Copy ComOp,para_H in ComOp_HADA,para_H_HADA
+! ++    Copy para_H in para_H_HADA
 !       for the HADA channel i_bi
-!
 !================================================================
 !
       !!@description: TODO
@@ -795,25 +777,21 @@ MODULE mod_SetOp
 
 !----- variables for the construction of H ---------------------------
       TYPE (param_Op)    :: para_H,para_H_HADA
+      integer            :: i_bi ! not used anymore
 
-
-      integer            :: i_bi
-      integer            :: nb_act1,nb_ba,nb_bie,nb_basis_act1
-      integer            :: na(2)
-
-      integer            :: k_term
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub = 'param_HTOparam_H_HADA'
 
       logical,parameter :: debug=.FALSE.
-!     logical,parameter :: debug=.TRUE.
+      !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'i_bi',i_bi
         CALL write_param_Op(para_H)
+        CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -821,11 +799,12 @@ MODULE mod_SetOp
       para_H_HADA%alloc    = .FALSE.
       para_H_HADA%mat_done = .FALSE.
 
-      IF (associated(para_H%para_AllBasis)) THEN
-        para_H_HADA%para_AllBasis => para_H%para_AllBasis
-      ELSE
-        nullify(para_H_HADA%para_AllBasis)
+      IF (.NOT. associated(para_H_HADA%para_AllBasis)) THEN
+         write(out_unitp,*) 'ERROR in param_HTOparam_H_HADA'
+         write(out_unitp,*) 'para_AllBasis in para_H_HADA must be associated!'
+         STOP 'ERROR in param_HTOparam_H_HADA: para_AllBasis is not associated'
       END IF
+
       IF (associated(para_H%BasisnD)) THEN
         para_H_HADA%BasisnD => para_H%BasisnD
       ELSE
@@ -851,13 +830,7 @@ MODULE mod_SetOp
       END IF
 
 
-      IF (associated(para_H%para_PES)) THEN
-        para_H_HADA%para_PES  => para_H%para_PES
-      ELSE
-        nullify(para_H_HADA%para_PES)
-      END IF
-
-!     - for param_TypeOp of para_H_HADA ------------------
+      !- for param_TypeOp of para_H_HADA ------------------
       para_H_HADA%param_TypeOp = para_H%param_TypeOp
 
       CALL alloc_NParray(para_H_HADA%derive_termQdyn,                   &
@@ -865,45 +838,9 @@ MODULE mod_SetOp
                         'para_H_HADA%derive_termQdyn',name_sub)
       para_H_HADA%derive_termQdyn(:,:) = para_H%derive_termQdyn(:,:)
 
-!     - for ComOp of para_H_HADA ------------------
-
-      nb_act1 = para_H%ComOp%nb_act1
-      nb_ba   = para_H%ComOp%nb_ba
-      nb_bie  = para_H%ComOp%nb_bie
-
-      para_H_HADA%ComOp%nb_act1 = nb_act1
-      para_H_HADA%ComOp%nb_ba   = nb_ba
-      para_H_HADA%ComOp%nb_bi   = 1
-      para_H_HADA%ComOp%nb_be   = 1
-      para_H_HADA%ComOp%nb_bie  = 1
-
-      para_H_HADA%ComOp%contrac_ba_ON_HAC       = .FALSE.
-      para_H_HADA%ComOp%max_nb_ba_ON_HAC        = nb_ba
-
-      CALL alloc_array(para_H_HADA%ComOp%nb_ba_ON_HAC,(/ 1 /),          &
-                      'para_H_HADA%ComOp%nb_ba_ON_HAC',name_sub)
-      para_H_HADA%ComOp%nb_ba_ON_HAC(1) = nb_ba
-
-      CALL alloc_array(para_H_HADA%ComOp%d0Cba_ON_HAC,(/ nb_ba,nb_ba,1 /),&
-                      'para_H_HADA%ComOp%d0Cba_ON_HAC',name_sub)
-      CALL mat_id(para_H_HADA%ComOp%d0Cba_ON_HAC(:,:,1),nb_ba,nb_ba)
-
-      CALL alloc_array(para_H_HADA%ComOp%Eneba_ON_HAC,(/ nb_ba,1 /),    &
-                      'para_H_HADA%ComOp%Eneba_ON_HAC',name_sub)
-      para_H_HADA%ComOp%Eneba_ON_HAC(:,1) = ZERO
-
-
-      para_H_HADA%ComOp%file_HADA      = para_H%ComOp%file_HADA
-      para_H_HADA%ComOp%calc_grid_HADA = para_H%ComOp%calc_grid_HADA
-
-      nullify(para_H_HADA%ComOp%Rvp_spec)
-      nullify(para_H_HADA%ComOp%Cvp_spec)
-      nullify(para_H_HADA%ComOp%liste_spec)
+      !- for para_H_HADA ------------------
       para_H_HADA%spectral         = .FALSE.
-      para_H_HADA%ComOp%nb_vp_spec =  huge(1)
       para_H_HADA%spectral_Op      =  0
-
-!     - copy parameters in para_H_HADA --------
 
       para_H_HADA%n_Op            = para_H%n_Op
       para_H_HADA%name_Op         = para_H%name_Op
@@ -958,10 +895,6 @@ MODULE mod_SetOp
       para_H_HADA%pot0            = para_H%pot0
       para_H_HADA%pot_only        = .FALSE.
       para_H_HADA%T_only          = .FALSE.
-
-
-
-
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -1061,27 +994,6 @@ MODULE mod_SetOp
       END IF
 
 
-      IF (associated(para_Op1%para_PES)) THEN
-        para_Op2%para_PES  => para_Op1%para_PES
-      ELSE
-        write(out_unitp,*) ' ERROR in param_Op1TOparam_Op2'
-        write(out_unitp,*) ' para_PES CANNOT be associated'
-        write(out_unitp,*) ' asso para_Op1%para_PES',associated(para_Op1%para_PES)
-        write(out_unitp,*) ' CHECK the source'
-        STOP
-      END IF
-
-
-      IF (associated(para_Op1%ComOp)) THEN
-        para_Op2%ComOp => para_Op1%ComOp
-      ELSE
-        write(out_unitp,*) ' ERROR in param_Op1TOparam_Op2'
-        write(out_unitp,*) ' ComOp CANNOT be associated'
-        write(out_unitp,*) ' asso para_Op1%ComOp',associated(para_Op1%ComOp)
-        write(out_unitp,*) ' CHECK the source'
-        STOP
-      END IF
-
 !     - copy parameters in para_Op2 --------
       para_Op2%spectral         =  para_Op1%spectral
       para_Op2%spectral_Op      =  para_Op1%spectral_Op
@@ -1141,7 +1053,6 @@ MODULE mod_SetOp
       nullify(para_Op2%OpGrid)
       nullify(para_Op2%imOpGrid)
 
-
       para_Op2%scaled          = .FALSE.
       para_Op2%E0              = ZERO
       para_Op2%Esc             = ONE
@@ -1167,7 +1078,7 @@ MODULE mod_SetOp
       TYPE (param_Op), pointer, intent(inout) :: tab_Op(:)
       TYPE (param_FileGrid), optional         :: para_FileGrid
 
-      integer :: iOp
+      integer :: iOp,Type_FileGrid
 
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub='Set_file_OF_AllOp'
@@ -1185,16 +1096,28 @@ MODULE mod_SetOp
         END DO
       END IF
 
+
       DO iOp=1,size(tab_Op)
-        CALL Set_file_OF_OpGrid(tab_Op(iOp)%OpGrid,                     &
+
+        Type_FileGrid      = tab_Op(iOp)%para_ReadOp%para_fileGrid%Type_FileGrid
+
+        IF (Type_FileGrid == 0) THEN ! normal SH_HADA
+          CALL Set_file_Grid(tab_Op(iOp)%file_Grid,                     &
+                             tab_Op(iOp)%para_ReadOp%para_fileGrid,     &
+                             tab_Op(iOp)%cplx,0,                        &
+                             tab_Op(iOp)%name_Op,tab_Op(iOp)%nb_bie)
+        ELSE
+
+          CALL Set_file_OF_OpGrid(tab_Op(iOp)%OpGrid,                   &
                tab_Op(iOp)%para_ReadOp%para_fileGrid%Type_FileGrid,iOp, &
                tab_Op(iOp)%para_ReadOp%para_fileGrid%Base_FileName_Grid,&
                            tab_Op(iOp)%name_Op,tab_Op(iOp)%nb_bie)
 
-        CALL Set_file_OF_OpGrid(tab_Op(iOp)%ImOpGrid,                   &
+          CALL Set_file_OF_OpGrid(tab_Op(iOp)%ImOpGrid,                 &
                tab_Op(iOp)%para_ReadOp%para_fileGrid%Type_FileGrid,iOp, &
                tab_Op(iOp)%para_ReadOp%para_fileGrid%Base_FileName_Grid,&
                            tab_Op(iOp)%name_Op,tab_Op(iOp)%nb_bie)
+        END IF
 
       END DO
 
@@ -1281,7 +1204,8 @@ MODULE mod_SetOp
         DO i_qa=1,para_Op%nb_qa
 
           CALL sub_reading_Op(i_qa,para_Op%nb_qa,d0MatOp,para_Op%n_Op,  &
-                              Qdyn,para_Op%mole%nb_var,Qact,WnD,para_Op%ComOp)
+                         Qdyn,para_Op%mole%nb_var,para_Op%mole%nb_act1, &
+                         Qact,WnD,para_Op%file_grid)
 
           DO k_term=1,para_Op%nb_term
 
@@ -1381,6 +1305,87 @@ MODULE mod_SetOp
        CALL dealloc_OldParam(OldPara)
     END SUBROUTINE Analysis_OpGrid_OF_Op
 
+      !================================================
+      ! Ene     : a table of energy (not necessary sorted)
+      ! ZPE     : the ZPE value
+      ! Ene_min : if this value is given, it means that all physical energies are larger than Ene_min
+      !            => Therefore, ZPE is larger than Ene_min (to avoid holes)
+      ! forced  : To force to set-up the ZPE even if para_Op%Set_ZPE=.TRUE.
+      !================================================
+      SUBROUTINE Set_ZPE_OF_Op(para_Op,Ene,ZPE,Ene_min,forced)
+      USE mod_system
+      IMPLICIT NONE
+
+      TYPE (param_Op),    intent(inout)        :: para_Op
+      real (kind=Rkind),  intent(in), optional :: ZPE,Ene_min
+      real (kind=Rkind),  intent(in), optional :: Ene(:)
+      logical,            intent(in), optional :: forced
+
+
+      logical :: forced_loc
+      real (kind=Rkind) :: ZPE_loc,Ene_min_loc
+      integer :: i
+
+
+      IF (present(forced)) THEN
+        forced_loc = forced
+      ELSE
+        forced_loc = .FALSE.
+      END IF
+
+      IF (present(ZPE)) THEN
+        ZPE_loc = ZPE
+      ELSE
+        ZPE_loc = huge(ONE)
+      END IF
+      IF (present(Ene_min)) THEN
+        Ene_min_loc = Ene_min
+      ELSE
+        Ene_min_loc = -huge(ONE)
+      END IF
+      ZPE_loc = max(ZPE_loc,Ene_min_loc)
+
+      IF (.NOT. para_Op%Set_ZPE .OR. forced_loc) THEN
+
+
+        IF (present(Ene)) THEN
+          DO i=1,size(Ene)
+            IF (Ene(i) >= Ene_min_loc .AND. Ene(i) < ZPE_loc) ZPE_loc = Ene(i)
+          END DO
+        END IF
+
+        para_Op%ZPE     = ZPE_loc
+        para_Op%Set_ZPE = .TRUE.
+      END IF
+
+      END SUBROUTINE Set_ZPE_OF_Op
+
+
+      FUNCTION Get_ZPE(Ene,min_Ene)
+      USE mod_system
+      IMPLICIT NONE
+
+      real (kind=Rkind) :: Get_ZPE
+
+      real (kind=Rkind), intent(in), optional :: min_Ene
+
+      real (kind=Rkind), intent(in) :: Ene(:)
+
+      real (kind=Rkind) :: ZPE
+
+      IF (present(min_Ene)) THEN
+        ZPE = min_Ene
+      ELSE
+        ZPE = Huge(ONE)
+      END IF
+
+      IF (size(Ene) > 0) ZPE = min(ZPE,minval(Ene))
+
+      Get_ZPE = ZPE
+
+
+      END FUNCTION Get_ZPE
+
 !=======================================================================================
 !     initialization of psi
 !=======================================================================================
@@ -1393,7 +1398,7 @@ MODULE mod_SetOp
       TYPE (param_psi), intent(inout)   :: psi
       logical,          intent(in)      :: cplx
 
-!----- Operator to link BasisnD, Basis2n, ComOp ---------------------
+!----- Operator to link BasisnD, Basis2n ---------------------
       TYPE (param_Op),  intent(in)      :: para_H
 
 !----- for debuging --------------------------------------------------
@@ -1405,38 +1410,36 @@ MODULE mod_SetOp
       END IF
 !-----------------------------------------------------------
 !----- link the basis set ---------------------------------
-     IF (associated(para_H%para_AllBasis%BasisnD)) THEN
-       psi%BasisnD => para_H%para_AllBasis%BasisnD
+     IF (associated(para_H%para_AllBasis)) THEN
+       psi%para_AllBasis => para_H%para_AllBasis
      ELSE
        write(out_unitp,*) ' ERROR in init_psi'
        write(out_unitp,*) ' BasisnD CANNOT be associated'
-       write(out_unitp,*) ' asso para_H%...%BasisnD',associated(para_H%para_AllBasis%BasisnD)
+       write(out_unitp,*) ' asso para_H%para_AllBasis',associated(para_H%para_AllBasis)
        write(out_unitp,*) ' CHECK the source'
        STOP
      END IF
-     IF (associated(para_H%para_AllBasis%Basis2n)) THEN
-       psi%Basis2n => para_H%para_AllBasis%Basis2n
-     ELSE
-       write(out_unitp,*) ' ERROR in init_psi'
-       write(out_unitp,*) ' Basis2n CANNOT be associated'
-       write(out_unitp,*) ' asso para_H%...%Basis2n',associated(para_H%para_AllBasis%Basis2n)
-       write(out_unitp,*) ' CHECK the source'
-       STOP
-     END IF
-!-----------------------------------------------------------
-
-
-!----- link ComOp -----------------------------------------
-      IF (associated(para_H%ComOp)) THEN
-          psi%ComOp     => para_H%ComOp
+      IF (associated(psi%para_AllBasis%BasisnD)) THEN
+         psi%BasisnD => psi%para_AllBasis%BasisnD
       ELSE
          write(out_unitp,*) ' ERROR in init_psi'
-         write(out_unitp,*) ' ComOp CANNOT be associated'
-         write(out_unitp,*) ' asso para_H%ComOp',associated(para_H%ComOp)
+         write(out_unitp,*) ' BasisnD CANNOT be associated'
+         write(out_unitp,*) ' asso psi%para_AllBasis%BasisnD',associated(psi%para_AllBasis%BasisnD)
+         write(out_unitp,*) ' CHECK the source'
+         STOP
+      END IF
+
+      IF (associated(psi%para_AllBasis%Basis2n)) THEN
+         psi%Basis2n => psi%para_AllBasis%Basis2n
+      ELSE
+         write(out_unitp,*) ' ERROR in init_psi'
+         write(out_unitp,*) ' BasisnD CANNOT be associated'
+         write(out_unitp,*) ' asso psi%para_AllBasis%Basis2n',associated(psi%para_AllBasis%Basis2n)
          write(out_unitp,*) ' CHECK the source'
          STOP
       END IF
 !-----------------------------------------------------------
+
 
       psi%init         = .TRUE.
       psi%cplx         = cplx

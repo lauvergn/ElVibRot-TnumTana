@@ -52,7 +52,7 @@ MODULE mod_psi
 
   PRIVATE :: psi0_gaussGridRep
 CONTAINS
-      SUBROUTINE psi0(WP0,para_WP0,mole)
+      SUBROUTINE init_psi0(WP0,para_WP0,mole)
       USE mod_system
       USE mod_Coord_KEO
       USE mod_basis
@@ -82,7 +82,7 @@ CONTAINS
       !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING psi0'
+        write(out_unitp,*) 'BEGINNING init_psi0'
         write(out_unitp,*) 'WP0n_h,WP0nb_elec',para_WP0%WP0n_h,para_WP0%WP0nb_elec
         write(out_unitp,*)
         CALL ecri_init_psi(WP0(1))
@@ -223,7 +223,7 @@ CONTAINS
       END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE psi0
+      END SUBROUTINE init_psi0
 !==============================================================
 !     Wave packet initialisation
 !
@@ -284,9 +284,9 @@ CONTAINS
 !-----------------------------------------------------------
 
 
-      WP0n_h = para_WP0%WP0n_h
+      WP0n_h     = para_WP0%WP0n_h
       WP0nb_elec = para_WP0%WP0nb_elec
-      IF (WP0n_h <1) WP0n_h = 1
+      IF (WP0n_h <1)     WP0n_h = 1
       IF (WP0nb_elec <1) WP0nb_elec = 1
 
 

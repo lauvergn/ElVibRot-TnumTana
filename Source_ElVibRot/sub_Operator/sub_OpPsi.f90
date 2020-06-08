@@ -396,9 +396,8 @@ CONTAINS
         END IF
       ELSE
 
-        !--- For the allocation of OpPsi ---------------------------------
         IF(MPI_id==0) THEN
-          OpPsi = Psi
+          OpPsi = Psi    ! For the allocation of OpPsi
 
           IF (para_Op%mat_done) THEN
             CALL sub_OpPsi_WITH_MatOp(Psi,OpPsi,para_Op)
@@ -747,8 +746,6 @@ CONTAINS
         RETURN
       END IF
 
-!SGtype4=.FALSE.
-
       IF (debug) write(out_unitp,*) 'SGtype4,direct_KEO',SGtype4,direct_KEO
       CALL flush_perso(out_unitp)
 
@@ -992,7 +989,7 @@ CONTAINS
         ELSE
           nb_thread = OpPsi_maxth
         END IF
-        !write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
+        IF (debug) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
 
         !-----------------------------------------------------------------
         IF (nb_thread == 1) THEN
@@ -1168,7 +1165,7 @@ CONTAINS
       SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
       USE mod_basis_BtoG_GtoB, ONLY : DerivOp_TO_CVecG,DerivOp_TO_RVecG
-      USE mod_psi,             ONLY : param_psi,ecri_psi,sub_PsiBasisRep_TO_GridRep
+      USE mod_psi,             ONLY : param_psi,ecri_psi,ecri_init_psi,sub_PsiBasisRep_TO_GridRep
       USE mod_SetOp,           ONLY : param_Op,write_param_Op
       IMPLICIT NONE
 
@@ -1214,7 +1211,7 @@ CONTAINS
         !CALL write_param_Op(para_Op)
         write(out_unitp,*)
         write(out_unitp,*) 'PsiBasisRep'
-        CALL ecri_psi(Psi=Psi)
+        CALL ecri_init_psi(Psi=Psi)
         CALL flush_perso(out_unitp)
       END IF
       !-----------------------------------------------------------------
@@ -1228,7 +1225,7 @@ CONTAINS
           IF (debug) THEN
             write(out_unitp,*) 'PsiGridRep done'
             write(out_unitp,*) 'PsiBasisRep'
-            CALL ecri_psi(Psi=Psi)
+            CALL ecri_init_psi(Psi=Psi)
             CALL flush_perso(out_unitp)
           END IF
         END IF
@@ -1367,7 +1364,7 @@ CONTAINS
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'OpPsiGridRep'
-        CALL ecri_psi(Psi=OpPsi)
+        CALL ecri_init_psi(Psi=OpPsi)
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
       END IF
@@ -1378,7 +1375,7 @@ CONTAINS
 
       SUBROUTINE sub_OpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
       USE mod_system
-      USE mod_Coord_KEO,       ONLY : get_Qact, get_d0GG
+      USE mod_Coord_KEO,       ONLY : get_d0GG
       USE mod_basis,           ONLY : rec_Qact
       USE mod_basis_BtoG_GtoB, ONLY : DerivOp_TO_RVecG
 
@@ -1476,7 +1473,7 @@ CONTAINS
         CALL sub_sqRhoOVERJac_Psi(Psi,para_Op,inv=.FALSE.)
 
         IF (Psi%cplx) THEN
-          STOP 'cplx'
+          STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
           CALL alloc_NParray(CG1,(/ Psi%nb_qa /),"CG1",name_sub)
           OpPsi%CvecG = CZERO
         ELSE
@@ -1485,7 +1482,7 @@ CONTAINS
           OpPsi%RvecG = ZERO
         END IF
 
-        IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1'
+        IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1 in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
 
         DO i1_bi=1,para_Op%nb_bie
         DO i2_bi=1,para_Op%nb_bie
@@ -1495,7 +1492,7 @@ CONTAINS
           fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
 
   IF (Psi%cplx) THEN
-STOP 'cplx'
+STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
   ELSE
 
      ! first derivatives of sqrt(J/rho)*psi,  in derRGi(:,i)
@@ -1520,7 +1517,6 @@ STOP 'cplx'
           CALL alloc_NParray(Qact,(/para_Op%mole%nb_var/),'Qact',name_sub)
           !$OMP  do
           DO iq=iq1,iq2
-            CALL get_Qact(Qact,para_Op%mole%ActiveTransfo) ! rigid, flexible coordinates
             CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
             CALL get_d0GG(Qact,para_Op%para_Tnum,para_Op%mole,d0GG=GGiq(iq-iq1+1,:,:),def=.TRUE.)
           END DO
@@ -1557,7 +1553,7 @@ STOP 'cplx'
      DO j=1,para_Op%nb_Qact
 
        ! multiply by Jac
-       derRGj(:,j) = derRGj(:,j) * para_Op%ComOp%Jac
+       derRGj(:,j) = derRGj(:,j) * para_Op%para_AllBasis%basis_ext%Jac
 
        ! derivative with respect to Qact_j
        derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(j),0 /)
@@ -1569,7 +1565,7 @@ STOP 'cplx'
      END DO
      CALL dealloc_NParray(derRGj,"derRGj",name_sub)
 
-     OpPsi%RvecG(iqi1:fqi1) = -HALF * OpPsi%RvecG(iqi1:fqi1) / para_Op%ComOp%Jac
+     OpPsi%RvecG(iqi1:fqi1) = -HALF * OpPsi%RvecG(iqi1:fqi1) / para_Op%para_AllBasis%basis_ext%Jac
 
      ! add the potential
      iterm = para_Op%derive_term_TO_iterm(0,0)
@@ -1642,7 +1638,7 @@ STOP 'cplx'
  !SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid,pot_only)
  SUBROUTINE sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10(Psi,OpPsi,para_Op,derOp,With_Grid)
  USE mod_system
- USE mod_Coord_KEO,               ONLY : get_Qact, get_d0GG
+ USE mod_Coord_KEO,               ONLY : get_d0GG
 
  USE mod_basis,                   ONLY : rec_Qact
  USE mod_basis_BtoG_GtoB,         ONLY : DerivOp_TO_RVecG
@@ -1711,8 +1707,8 @@ STOP 'cplx'
    CALL flush_perso(out_unitp)
  END IF
  !-----------------------------------------------------------------
- IF (Psi(1)%cplx) STOP 'cplx'
- IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1'
+ IF (Psi(1)%cplx) STOP 'cplx in sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10'
+ IF (para_Op%nb_bie /= 1) STOP 'nb_bie /= 1 in sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10'
 
  IF (BasisTOGrid_omp == 0) THEN
    nb_thread = 1
@@ -1757,10 +1753,10 @@ STOP 'cplx'
 
  END DO
 
- IF (.NOT. allocated(para_Op%ComOp%Jac)) THEN
+ IF (.NOT. allocated(para_Op%para_AllBasis%basis_ext%Jac)) THEN
    write(out_unitp,*) ' ERROR in ',name_sub
-   write(out_unitp,*) ' para_Op%ComOp%Jac(:) is not allocated '
-   write(out_unitp,*) ' Set JacSave = .TRUE., around line 169 of sub_HSH_harm.f90.'
+   write(out_unitp,*) ' ....%basis_ext%Jac(:) is not allocated '
+   write(out_unitp,*) ' Set JacSave = .TRUE., around line 186 of sub_HSH_harm.f90.'
    STOP
  END IF
 
@@ -1771,12 +1767,12 @@ STOP 'cplx'
 
    IF (para_Op%OpGrid(iterm)%grid_cte) THEN
      DO itab=1,size(Psi)
-       OpPsi(itab)%RvecG(:) = -TWO*para_Op%ComOp%Jac *              &
+       OpPsi(itab)%RvecG(:) = -TWO*para_Op%para_AllBasis%basis_ext%Jac * &
              para_Op%OpGrid(iterm)%Mat_cte(1,1) * Psi(itab)%RvecG(:)
      END DO
    ELSE
      DO itab=1,size(Psi)
-       OpPsi(itab)%RvecG(:) = -TWO*para_Op%ComOp%Jac *              &
+       OpPsi(itab)%RvecG(:) = -TWO*para_Op%para_AllBasis%basis_ext%Jac * &
               para_Op%OpGrid(iterm)%Grid(:,1,1) * Psi(itab)%RvecG(:)
      END DO
    END IF
@@ -1784,8 +1780,8 @@ STOP 'cplx'
    OpPsi(itab)%RvecG(:) = ZERO
  END IF
 
- !write(out_unitp,*) 'sqRhoOVERJac',para_Op%ComOp%sqRhoOVERJac(:)
- !write(out_unitp,*) 'Jac',para_Op%ComOp%Jac(:)
+ !write(out_unitp,*) 'sqRhoOVERJac',para_Op%para_AllBasis%basis_ext%sqRhoOVERJac(:)
+ !write(out_unitp,*) 'Jac',para_Op%para_AllBasis%basis_ext%Jac(:)
  !write(out_unitp,*) 'V',para_Op%OpGrid(iterm)%Grid(:,1,1)
 
  !Transfert sqRhoOVERJac, Jac and the potential in Smolyak rep (Grid)
@@ -1840,7 +1836,6 @@ STOP 'cplx'
       CALL alloc_NParray(Qact,(/para_Op%mole%nb_var/),'Qact',name_sub)
       !$OMP  do
       DO iq=iq1,iq2
-        CALL get_Qact(Qact,para_Op%mole%ActiveTransfo) ! rigid, flexible coordinates
         CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
         CALL get_d0GG(Qact,para_Op%para_Tnum,para_Op%mole,d0GG=GGiq(iq-iq1+1,:,:),def=.TRUE.)
         !write(out_unitp,*) 'iq,Gij',iq,GGiq(iq-iq1+1,:,:)
@@ -1870,7 +1865,7 @@ STOP 'cplx'
    DO j=1,para_Op%nb_Qact
 
      ! multiply by Jac
-     derRGj(:,j,itab) = derRGj(:,j,itab) * para_Op%ComOp%Jac
+     derRGj(:,j,itab) = derRGj(:,j,itab) * para_Op%para_AllBasis%basis_ext%Jac
 
      ! derivative with respect to Qact_j
      derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(j),0 /)
@@ -1891,7 +1886,7 @@ STOP 'cplx'
 
 
  DO itab=1,size(Psi)
-   OpPsi(itab)%RvecG(:) = -HALF * OpPsi(itab)%RvecG(:) / para_Op%ComOp%Jac
+   OpPsi(itab)%RvecG(:) = -HALF * OpPsi(itab)%RvecG(:) / para_Op%para_AllBasis%basis_ext%Jac
    CALL sub_sqRhoOVERJac_Psi(OpPsi(itab),para_Op,inv=.TRUE.)
 
    IF (debug) THEN
@@ -2479,7 +2474,7 @@ STOP 'cplx'
 
 
         IF (para_Op%name_Op == 'H') THEN
-          type_Op = para_Op%para_PES%Type_HamilOp ! H
+          type_Op = para_Op%para_ReadOp%Type_HamilOp ! H
           IF (type_Op /= 1) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) '    Type_HamilOp MUST be equal to 1 for HADA or cHAC'
@@ -2494,8 +2489,9 @@ STOP 'cplx'
 
         DO i_qa=1,para_Op%nb_qa
 
-          CALL sub_reading_Op(i_qa,para_Op%nb_qa,d0MatOp,para_Op%n_Op,&
-                                  Qdyn,para_Op%mole%nb_var,Qact,WnD,para_Op%ComOp)
+          CALL sub_reading_Op(i_qa,para_Op%nb_qa,d0MatOp,para_Op%n_Op,  &
+                          Qdyn,para_Op%mole%nb_var,para_Op%mole%nb_act1, &
+                          Qact,WnD,para_Op%file_grid)
 
           DO i1_bi=1,para_Op%nb_bie
           DO i2_bi=1,para_Op%nb_bie
@@ -2984,7 +2980,7 @@ STOP 'cplx'
       END IF
       !-----------------------------------------------------------------
 
-      IF (.NOT. allocated(para_Op%ComOp%sqRhoOVERJac)) THEN
+      IF (.NOT. allocated(para_Op%para_AllBasis%basis_ext%sqRhoOVERJac)) THEN
          write(out_unitp,*) ' ERROR in ',name_sub
          write(out_unitp,*) ' sqRhoOVERJac MUST be on allocated!!!'
          write(out_unitp,*) ' ... You have to force it in "sub_HSOp_inact"!!'
@@ -3005,7 +3001,7 @@ STOP 'cplx'
             iqi2 = 1         + (i2_bi-1) * Psi%nb_qa
             fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
 
-            Psi%CvecG(iqi2:fqi2) = Psi%CvecG(iqi2:fqi2) / para_Op%ComOp%sqRhoOVERJac(:)
+            Psi%CvecG(iqi2:fqi2) = Psi%CvecG(iqi2:fqi2) / para_Op%para_AllBasis%basis_ext%sqRhoOVERJac(:)
 
           END DO
         ELSE
@@ -3013,7 +3009,7 @@ STOP 'cplx'
             iqi2 = 1         + (i2_bi-1) * Psi%nb_qa
             fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
 
-            Psi%CvecG(iqi2:fqi2) = Psi%CvecG(iqi2:fqi2) * para_Op%ComOp%sqRhoOVERJac(:)
+            Psi%CvecG(iqi2:fqi2) = Psi%CvecG(iqi2:fqi2) * para_Op%para_AllBasis%basis_ext%sqRhoOVERJac(:)
 
           END DO
         END IF
@@ -3033,7 +3029,7 @@ STOP 'cplx'
             iqi2 = 1         + (i2_bi-1) * Psi%nb_qa
             fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
 
-            Psi%RvecG(iqi2:fqi2) = Psi%RvecG(iqi2:fqi2) / para_Op%ComOp%sqRhoOVERJac(:)
+            Psi%RvecG(iqi2:fqi2) = Psi%RvecG(iqi2:fqi2) / para_Op%para_AllBasis%basis_ext%sqRhoOVERJac(:)
 
           END DO
         ELSE
@@ -3042,7 +3038,7 @@ STOP 'cplx'
             iqi2 = 1         + (i2_bi-1) * Psi%nb_qa
             fqi2 = Psi%nb_qa + (i2_bi-1) * Psi%nb_qa
 
-            Psi%RvecG(iqi2:fqi2) = Psi%RvecG(iqi2:fqi2) * para_Op%ComOp%sqRhoOVERJac(:)
+            Psi%RvecG(iqi2:fqi2) = Psi%RvecG(iqi2:fqi2) * para_Op%para_AllBasis%basis_ext%sqRhoOVERJac(:)
 
           END DO
 
@@ -3117,120 +3113,63 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
 
   IF (para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done .AND. GridDone) THEN
 
-    DO iterm=1,para_H%nb_term
+    iterm = para_H%derive_term_TO_iterm(0,0)
 
-      IF (para_H%derive_termQdyn(1,iterm) == 0 ) THEN ! the PES
-        IF (para_H%OpGrid(iterm)%grid_zero) CYCLE ! wp_adia = wp_dia
+    IF (para_H%OpGrid(iterm)%grid_zero) THEN
+      CONTINUE ! wp_adia = wp_dia (nothing to be done)
+    ELSE IF (para_H%OpGrid(iterm)%grid_cte) THEN
 
-        IF (para_H%OpGrid(iterm)%grid_cte) THEN
+      CALL diagonalization(para_H%OpGrid(iterm)%Mat_cte,        &
+                     EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
 
-          CALL diagonalization(para_H%OpGrid(iterm)%Mat_cte,        &
-                         EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+      IF (Psi%cplx) THEN
 
-          IF (Psi%cplx) THEN
+        DO iq=1,Psi%nb_qa
+          Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
+          Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
+        END DO
+      ELSE
 
-            DO iq=1,Psi%nb_qa
+        DO iq=1,Psi%nb_qa
+          Rpsi_iq(:) = Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
+          Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Rpsi_iq(:)
+        END DO
 
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Cpsi_iq(i1_bi) = Psi%CvecG(iqbi)
-              END DO
-
-              Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
-
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Psi%CvecG(iqbi) = Cpsi_iq(i1_bi)
-              END DO
-
-            END DO
-          ELSE
-
-            DO iq=1,Psi%nb_qa
-
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Rpsi_iq(i1_bi) = Psi%RvecG(iqbi)
-              END DO
-
-              Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
-
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Psi%RvecG(iqbi) = Rpsi_iq(i1_bi)
-              END DO
-
-            END DO
-
-          END IF
-
-        ELSE
-
-          IF (Psi%cplx) THEN
-
-            DO iq=1,Psi%nb_qa
-
-              V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
-!write(out_unitp,*) 'V(:,:)',V(:,:)
-
-              CALL diagonalization(V,                               &
-                         EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
-!write(out_unitp,*) 'EigenVec',iq,EigenVec
-!write(out_unitp,*) 'Ortho EigenVec ?',iq,matmul(transpose(EigenVec),EigenVec)
-!write(out_unitp,*) 'Ortho EigenVec ?',iq,matmul(EigenVec,transpose(EigenVec))
-
-              Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
-!write(out_unitp,*) '<Vdia>',dot_product(Cpsi_iq,matmul(V,Cpsi_iq))
-
-                  !DO i1_bi=1,para_H%nb_bie
-                  !  iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                  !  Cpsi_iq(i1_bi) = Psi%CvecG(iqbi)
-                  !END DO
-!write(out_unitp,*) 'Cpsi_iq',iq,Cpsi_iq
-
-                  !Cpsi_iq(:) = matmul(EigenVec,Cpsi_iq)
-                  !Cpsi_iq(:) = matmul(Cpsi_iq,EigenVec)
-              Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
-
-!write(out_unitp,*) '<Vadia>',dot_product(Cpsi_iq,(EigenVal*Cpsi_iq))
-
-
-              Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
-                  !DO i1_bi=1,para_H%nb_bie
-                  !  iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                  !  Psi%CvecG(iqbi) = Cpsi_iq(i1_bi)
-                  !END DO
-!write(out_unitp,*) 'Cpsi_iq',iq,Cpsi_iq
-
-            END DO
-          ELSE
-
-            DO iq=1,Psi%nb_qa
-
-              V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
-              CALL diagonalization(V,                               &
-                         EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
-
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Rpsi_iq(i1_bi) = Psi%RvecG(iqbi)
-              END DO
-
-              Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
-
-              DO i1_bi=1,para_H%nb_bie
-                iqbi = iq + (i1_bi-1) * Psi%nb_qa
-                Psi%RvecG(iqbi) = Rpsi_iq(i1_bi)
-              END DO
-
-            END DO
-
-          END IF
-
-        END IF
       END IF
 
-    END DO
+    ELSE
+
+      IF (Psi%cplx) THEN
+
+        DO iq=1,Psi%nb_qa
+
+          V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
+
+          CALL diagonalization(V,                               &
+                     EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+
+          Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
+          Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
+        END DO
+      ELSE
+
+        DO iq=1,Psi%nb_qa
+
+          V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
+          CALL diagonalization(V,                               &
+                     EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+
+          Rpsi_iq(:) = Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
+          Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Rpsi_iq(:)
+        END DO
+
+      END IF
+
+    END IF
 
   ELSE
     write(out_unitp,*) 'ERROR in ',name_sub

@@ -131,7 +131,7 @@ MODULE mod_nDGridFit
       TYPE(Type_dnMat) :: dnGG
 
 !----- variables for the construction of H ----------------------------
-      TYPE (param_PES)    :: para_PES
+      TYPE (PrimOp_t)    :: PrimOp
 
 
 !----- variables divers ----------------------------------------------
@@ -197,7 +197,7 @@ MODULE mod_nDGridFit
       !-----------------------------------------------------------------
       !     ---- TO finalize the coordinates (NM) and the KEO ----------
       !     ------------------------------------------------------------
-      CALL Finalyze_TnumTana_Coord_PrimOp(para_Tnum,mole,para_PES)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
       !-----------------------------------------------------------------
 
       write(out_unitp,*) "============================================================"
@@ -252,26 +252,26 @@ MODULE mod_nDGridFit
         END IF
 
         IF (Grid) THEN
-          CALL sub_nDGrid(para_nDGrid,Qact,mole,para_PES)
+          CALL sub_nDGrid(para_nDGrid,Qact,mole,PrimOp)
         ELSE
-          CALL sub_nDGrid_WiTHOUT_calc(para_nDGrid,Qact,mole,para_PES)
+          CALL sub_nDGrid_WiTHOUT_calc(para_nDGrid,Qact,mole,PrimOp)
         END IF
 
         IF (Fit) THEN
-          CALL sub_nDFit(para_nDFit,para_nDGrid,Qact,mole,para_PES)
+          CALL sub_nDFit(para_nDFit,para_nDGrid,Qact,mole,PrimOp)
         END IF
 
         IF (Transfo_fit) THEN
-          CALL nDFit1_TO_TnDFit2()
+          CALL Read_FOR_nDFit1_TO_TnDFit2()
         END IF
 
         IF (Analysis) THEN
-          CALL Read_Analysis(para_nDFit%para_Analysis,Q0)
+          CALL Read_Analysis(para_nDFit%nDFitAna,Q0)
           CALL Analysis_nDFitW(para_nDFit,auTOenergy)
         END IF
 
-        IF (para_PES%nDfit_Op) THEN
-          para_PES%para_nDFit_V%Param_Fit_file%name = para_nDFit%Param_Fit_file%name
+        IF (PrimOp%nDfit_Op) THEN
+          PrimOp%para_nDFit_V%Param_Fit_file%name = para_nDFit%Param_Fit_file%name
 
           nullify(Q)
           CALL alloc_array(Q,(/ mole%nb_act /),'Q',name_sub)
@@ -279,7 +279,7 @@ MODULE mod_nDGridFit
           Q(:) = Q0(:)
           Q(1) = Q0(1) + ZERO
 
-          CALL sub_nDFunc_FROM_nDFit(val_nDfit,Q,para_PES%para_nDFit_V)
+          CALL sub_nDFunc_FROM_nDFit(val_nDfit,Q,PrimOp%para_nDFit_V)
           write(out_unitp,*) 'val_nDfit',val_nDfit
 
           CALL dealloc_array(Q,'Q',name_sub)
@@ -299,7 +299,7 @@ MODULE mod_nDGridFit
       write(out_unitp,*) 'mem_tot',para_mem%mem_tot
 
       END SUBROUTINE sub_nDGrid_nDfit
-      SUBROUTINE sub_nDGrid(para_nDGrid,Qact,mole,para_PES)
+      SUBROUTINE sub_nDGrid(para_nDGrid,Qact,mole,PrimOp)
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
@@ -317,7 +317,7 @@ MODULE mod_nDGridFit
       real (kind=Rkind)   :: Qact(:)
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_PES)    :: para_PES
+      TYPE (PrimOp_t)    :: PrimOp
 !=====================================================================
 
 
@@ -339,7 +339,7 @@ MODULE mod_nDGridFit
       TYPE (param_dnMatOp) :: dnMatOp(1)
 
 
-      TYPE (Type_nDindex),pointer :: Tab_PointGridSign(:) ! enable to change the sing of the DelatQ
+      TYPE (Type_nDindex),pointer :: Tab_PointGridSign(:) ! enable to change the sign of the DelatQ
 
       namelist /nDGrid/ MinNorm,MaxNorm,MinCoupling,MaxCoupling,        &
                         nDsize_read,nb_DeltaQ,nb_Gonly,add_Grid
@@ -367,7 +367,7 @@ MODULE mod_nDGridFit
       nullify(nDweight)
       CALL alloc_array(nDweight,(/mole%nb_act/),'nDweight',name_sub)
 
-      CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,para_PES%nb_elec,    &
+      CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,PrimOp%nb_elec,    &
                                nderiv=0,cplx=.FALSE.,JRot=0)
 
 !=====================================================================
@@ -480,7 +480,7 @@ MODULE mod_nDGridFit
             Qact(1:mole%nb_act) = para_nDGrid%Q0(:)
 
             CALL Set_ZERO_TO_Tab_OF_dnMatOp(dnMatOp)
-            CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES,nderiv=0)
+            CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp,nderiv=0)
 
             iGPtot = iGPtot +1
             isign = 0
@@ -517,7 +517,7 @@ MODULE mod_nDGridFit
                        real(nDinit(:),kind=Rkind) * para_nDGrid%stepQ(:)
 
               CALL Set_ZERO_TO_Tab_OF_dnMatOp(dnMatOp)
-              CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,para_PES,nderiv=0)
+              CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp,nderiv=0)
 
               IF (debug) THEN
                 write(out_unitp,"(a,3i7,a,10i3)") 'iGPtot,iGp,isign,Qact',&
@@ -558,7 +558,7 @@ MODULE mod_nDGridFit
       CALL dealloc_Tab_OF_dnMatOp(dnMatOp)
 
       END SUBROUTINE sub_nDGrid
-      SUBROUTINE sub_nDGrid_WiTHOUT_calc(para_nDGrid,Qact,mole,para_PES)
+      SUBROUTINE sub_nDGrid_WiTHOUT_calc(para_nDGrid,Qact,mole,PrimOp)
       USE mod_system
       USE mod_Constant,  only : get_Conv_au_TO_unit
       USE mod_Coord_KEO, only : CoordType, Tnum, get_Qact0
@@ -574,7 +574,7 @@ MODULE mod_nDGridFit
       real (kind=Rkind)   :: Qact(:)
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_PES)    :: para_PES
+      TYPE (PrimOp_t)    :: PrimOp
 !=====================================================================
 
 
@@ -636,7 +636,7 @@ MODULE mod_nDGridFit
 
 
       END SUBROUTINE sub_nDGrid_WiTHOUT_calc
-      SUBROUTINE sub_nDFit(para_nDFit,para_nDGrid,Qact,mole,para_PES)
+      SUBROUTINE sub_nDFit(para_nDFit,para_nDGrid,Qact,mole,PrimOp)
       USE mod_system
       USE mod_dnSVM
       USE mod_nDindex
@@ -650,12 +650,12 @@ MODULE mod_nDGridFit
 
 !=====================================================================
 !----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType)      :: mole
+      TYPE (CoordType)    :: mole
       TYPE (Tnum)         :: para_Tnum
       real (kind=Rkind)   :: Qact(:)
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_PES)    :: para_PES
+      TYPE (PrimOp_t)    :: PrimOp
 !=====================================================================
 
 

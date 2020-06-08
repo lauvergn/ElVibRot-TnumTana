@@ -54,6 +54,7 @@
           logical                           :: print_done      = .FALSE.
           character (len=Name_len)          :: name_transfo    = "identity"
           integer                           :: num_transfo     = 0
+          logical                           :: BeforeActive    = .FALSE. ! .TRUE. when it (or num_transfo) is nb_Qtransfo-1
           logical                           :: inTOout         = .TRUE.
           integer                           :: nb_var          = 0
           integer                           :: nb_act          = 0
@@ -75,23 +76,23 @@
           TYPE (Type_FlexibleTransfo)       :: FlexibleTransfo
           TYPE (Type_GeneTransfo)           :: GeneTransfo
 
-          TYPE (Type_oneDTransfo),pointer      :: oneDTransfo(:)      => null()
-          TYPE (Type_ThreeDTransfo),pointer    :: ThreeDTransfo       => null()
-          TYPE (Type_Rot2CoordTransfo),pointer :: Rot2CoordTransfo(:) => null()
-          TYPE (Type_HyperSpheTransfo)         :: HyperSpheTransfo
-          integer, pointer                     :: list_Qin_TO_Qout(:) => null() ! "order" transfo
+          TYPE (Type_oneDTransfo),      pointer :: oneDTransfo(:)      => null()
+          TYPE (Type_ThreeDTransfo),    pointer :: ThreeDTransfo       => null()
+          TYPE (Type_Rot2CoordTransfo), pointer :: Rot2CoordTransfo(:) => null()
+          TYPE (Type_HyperSpheTransfo)          :: HyperSpheTransfo
+          integer,                      pointer :: list_Qin_TO_Qout(:) => null() ! "order" transfo
 
-          TYPE (Type_NMTransfo), pointer    :: NMTransfo           => null()
-          TYPE (Type_RPHTransfo), pointer   :: RPHTransfo          => null()
-          TYPE (Type_ActiveTransfo), pointer:: ActiveTransfo       => null()
+          TYPE (Type_NMTransfo),        pointer :: NMTransfo           => null()
+          TYPE (Type_RPHTransfo),       pointer :: RPHTransfo          => null()
+          TYPE (Type_ActiveTransfo),    pointer :: ActiveTransfo       => null()
 
-          integer                           :: nb_Qin       = 0  ! size the input coordinates
-          integer                           :: nb_Qout      = 0 ! size the output coordinates
-          integer, pointer                  :: type_Qin(:)  => null() ! size nb_Qin
-          integer, pointer                  :: type_Qout(:) => null() ! true pointer (will point to the previous type_Qin)
+          integer                               :: nb_Qin       = 0  ! size the input coordinates
+          integer                               :: nb_Qout      = 0 ! size the output coordinates
+          integer,                      pointer :: type_Qin(:)  => null() ! size nb_Qin
+          integer,                      pointer :: type_Qout(:) => null() ! true pointer (will point to the previous type_Qin)
                                                                       ! except for the first transfo
-          character (len=Name_len), pointer :: name_Qin(:)  => null()
-          character (len=Name_len), pointer :: name_Qout(:) => null() ! true pointer (will point to the previous name_Qin)
+          character (len=Name_len),     pointer :: name_Qin(:)  => null()
+          character (len=Name_len),     pointer :: name_Qout(:) => null() ! true pointer (will point to the previous name_Qin)
                                                                       ! except for the first transfo
 
         END TYPE Type_Qtransfo
@@ -360,9 +361,7 @@
         CASE ('rph')
           Qtransfo%nb_Qin  = nb_Qin
           CALL alloc_array(Qtransfo%RPHTransfo,'Qtransfo%RPHTransfo',name_sub)
-          IF (Qtransfo%opt_transfo /= 0) THEN
-             CALL Read_RPHTransfo(Qtransfo%RPHTransfo,nb_Qin,Qtransfo%opt_transfo)
-          END IF
+          CALL Read_RPHTransfo(Qtransfo%RPHTransfo,nb_Qin,Qtransfo%opt_transfo)
 
           CALL sub_Type_Name_OF_Qin(Qtransfo,"QRPH")
           Qtransfo%type_Qin(:) = 0
@@ -720,6 +719,7 @@
         Qtransfo%print_done      = .FALSE.
         Qtransfo%name_transfo    = "identity"
         Qtransfo%num_transfo     = 0
+        Qtransfo%BeforeActive    = .FALSE.
         Qtransfo%opt_transfo     = 0
         Qtransfo%nb_var          = 0
         Qtransfo%nb_act          = 0
@@ -908,6 +908,7 @@
       Qtransfo2%nb_Qout         = Qtransfo1%nb_Qout
 
       Qtransfo2%num_transfo     = Qtransfo1%num_transfo
+      Qtransfo2%BeforeActive    = Qtransfo1%BeforeActive
 
       Qtransfo2%opt_transfo     = Qtransfo1%opt_transfo
       Qtransfo2%skip_transfo    = Qtransfo1%skip_transfo
@@ -1171,8 +1172,14 @@
 
       CASE ('rph')
         IF (associated(Qtransfo%RPHTransfo)) THEN
-            CALL calc_RPHTransfo(dnQin,dnQout,Qtransfo%RPHTransfo,      &
+            IF (Qtransfo%BeforeActive) THEN
+              CALL calc_RPHTransfo_BeforeActive(dnQin,dnQout,           &
+                                                Qtransfo%RPHTransfo,    &
                                                      nderiv,inTOout_loc)
+            ELSE
+              CALL calc_RPHTransfo_gene(dnQin,dnQout,Qtransfo%RPHTransfo,&
+                                                     nderiv,inTOout_loc)
+            END IF
         ELSE
           IF (inTOout_loc) THEN
             CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv)
@@ -1327,7 +1334,7 @@
         IF(MPI_id==0) THEN
           write(out_unitp,*) 'name_transfo,num_transfo: ',     &
                          trim(Qtransfo%name_transfo),Qtransfo%num_transfo
-
+          write(out_unitp,*) 'BeforeActive: ',Qtransfo%BeforeActive
           write(out_unitp,*) 'Primitive_Coord: ',Qtransfo%Primitive_Coord
 
           write(out_unitp,*) ' Option of the transfo: ',Qtransfo%opt_transfo

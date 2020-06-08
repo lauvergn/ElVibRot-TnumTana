@@ -322,8 +322,8 @@ END SUBROUTINE Set_symab_OF_psiBasisRep_MPI
         IF (.NOT. With_Grid_loc) THEN
           i_baie=1
           f_baie=psi1%nb_tot
-          IF (psi1%nb_tot == psi1%nb_baie .AND.  locChannel_ie > 0 .AND.  &
-                                  locChannel_ie <= psi1%ComOp%nb_bie) THEN
+          IF (psi1%nb_tot == psi1%nb_baie .AND.  locChannel_ie > 0 .AND.&
+                            locChannel_ie <= psi1%nb_bi*psi1%nb_be) THEN
             i_baie = 1 + (locChannel_ie-1)*psi1%nb_ba
             f_baie = i_baie-1 + psi1%nb_ba
           END IF
@@ -2220,8 +2220,8 @@ SUBROUTINE Overlap_psipsi_MPI3(Overlap,psi1,psi2,With_Grid,Channel_ie)
   IF(.NOT. With_Grid_loc) THEN
     i_baie=1
     f_baie=psi1%nb_tot
-    IF(psi1%nb_tot==psi1%nb_baie .AND.  locChannel_ie>0 .AND.                          &
-       locChannel_ie <= psi1%ComOp%nb_bie) THEN
+    IF(psi1%nb_tot==psi1%nb_baie .AND.  locChannel_ie>0 .AND.           &
+       locChannel_ie <= psi1%nb_bi*psi1%nb_be) THEN
       i_baie = 1 + (locChannel_ie-1)*psi1%nb_ba
       f_baie = i_baie-1 + psi1%nb_ba
     END IF
@@ -2404,7 +2404,7 @@ END SUBROUTINE Overlap_psipsi_MPI3
         i_baie=1
         f_baie=psi1%nb_tot
         IF (psi1%nb_tot == psi1%nb_baie .AND.  locChannel_ie > 0 .AND.  &
-                                locChannel_ie <= psi1%ComOp%nb_bie) THEN
+                                locChannel_ie <= psi1%nb_bi*psi1%nb_be) THEN
           i_baie = 1 + (locChannel_ie-1)*psi1%nb_ba
           f_baie = i_baie-1 + psi1%nb_ba
         END IF
@@ -2671,13 +2671,14 @@ END SUBROUTINE Overlap_psipsi_MPI3
 !         write(out_unitp,*) 'j,i,S',j,i,Overlap
 !         CALL flush_perso(out_unitp)
         END DO
-        CALL Set_symab_OF_psiBasisRep(psi(i),sym)
+        IF (i > 1) THEN
+          CALL Set_symab_OF_psiBasisRep(psi(i),sym)
 
-!       CALL norm2_psi(psi(i))
-!       write(out_unitp,*) ' Ortho: norm2',i,psi(i)%norm2
-        CALL renorm_psi(psi(i))
-        !write(out_unitp,*) 'symab, bits(symab)',WriteTOstring_symab(psi(i)%symab)
-
+          !CALL norm2_psi(psi(i))
+          !write(out_unitp,*) ' Ortho: norm2',i,psi(i)%norm2
+          CALL renorm_psi(psi(i))
+          !write(out_unitp,*) 'symab, bits(symab)',WriteTOstring_symab(psi(i)%symab)
+        END IF
       END DO
 
 !-----------------------------------------------------------

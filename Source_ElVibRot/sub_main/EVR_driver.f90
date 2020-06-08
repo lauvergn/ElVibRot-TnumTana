@@ -56,7 +56,6 @@ SUBROUTINE init_EVR_new()
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
 
-      TYPE (basis)   :: BasisnD_Save ! useless ????
       integer        :: ith
 
 
@@ -327,16 +326,14 @@ SUBROUTINE init_EVR_new()
         ENDIF
         !CALL system_mem_usage(memory_RSS,'before ini_data')
 
-        CALL   ini_data(tab_EVRT(ith)%const_phys,tab_EVRT(ith)%para_OTF,           &
-                        tab_EVRT(ith)%para_Tnum,tab_EVRT(ith)%mole,                &
-                        tab_EVRT(ith)%para_AllBasis,BasisnD_Save,              &
-                        tab_EVRT(ith)%para_PES,tab_EVRT(ith)%ComOp,                &
-                        tab_EVRT(ith)%para_AllOp,tab_EVRT(ith)%para_ana,           &
-                        tab_EVRT(ith)%para_intensity,intensity_only, &
+        CALL   ini_data(tab_EVRT(ith)%const_phys,                       &
+                        tab_EVRT(ith)%para_Tnum,tab_EVRT(ith)%mole,     &
+                        tab_EVRT(ith)%para_AllBasis,                    &
+                        tab_EVRT(ith)%para_AllOp,tab_EVRT(ith)%para_ana,&
+                        tab_EVRT(ith)%para_intensity,intensity_only,    &
                         tab_EVRT(ith)%para_propa)
 
         !CALL system_mem_usage(memory_RSS,'after ini_data')
-        CALL dealloc_Basis(BasisnD_Save)
 
         IF(MPI_id==0) THEN
           write(out_unitp,*)
@@ -578,7 +575,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
 !---------------------------------------------------------------------------------------
 !      contraction of the active basis set with HADA basis
 !---------------------------------------------------------------------------------------
-      IF (para_H%ComOp%contrac_ba_ON_HAC .AND. para_H%nb_bi>1) THEN
+      IF (para_H%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC .AND. para_H%nb_bi>1) THEN
         IF(MPI_id==0 .AND. print_level > -1) THEN
           write(out_unitp,*)
           write(out_unitp,*) '================================================='
@@ -602,8 +599,9 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           write(out_unitp,*)
         ENDIF
 
-        tab_EVRT(ith)%para_AllOp%tab_Op(:)%nb_tot     =                     &
-                   sum(para_H%ComOp%nb_ba_ON_HAC(:)) * tab_EVRT(ith)%para_PES%nb_elec
+        tab_EVRT(ith)%para_AllOp%tab_Op(:)%nb_tot     =                 &
+               sum(para_H%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(:)) *  &
+               para_H%para_ReadOp%nb_elec
         tab_EVRT(ith)%para_AllOp%tab_Op(:)%nb_tot_ini = tab_EVRT(ith)%para_AllOp%tab_Op(:)%nb_tot
       END IF
 
@@ -799,7 +797,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                 Tab_psi(i)%IndAvOp     = para_H%n_Op  ! it should be 0
                 Tab_psi(i)%convAvOp    = .TRUE.
               END DO
-              para_H%ComOp%Cvp_spec    => para_H%Cvp
+              para_H%para_AllBasis%basis_ext%Cvp_spec    => para_H%Cvp
             ENDIF
           ELSE
             IF(MPI_id==0) THEN
@@ -824,16 +822,18 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                 Tab_psi(i)%convAvOp    = .TRUE.
                 CALL Set_symab_OF_psiBasisRep(Tab_psi(i))
               END DO
-              para_H%ComOp%Rvp_spec    => para_H%Rvp
+              para_H%para_AllBasis%basis_ext%Rvp_spec    => para_H%Rvp
             ENDIF ! for MPI_id=0
           END IF ! for para_H%cplx
-          para_H%ComOp%nb_vp_spec  = nb_diago
+          para_H%para_AllBasis%basis_ext%nb_vp_spec  = nb_diago
 
-          IF (associated(tab_EVRT(ith)%ComOp%liste_spec)) THEN
-             CALL dealloc_array(tab_EVRT(ith)%ComOp%liste_spec,"ComOp%liste_spec","vib")
+          IF (associated(tab_EVRT(ith)%para_AllBasis%basis_ext%liste_spec)) THEN
+            CALL dealloc_NRarray(tab_EVRT(ith)%para_AllBasis%basis_ext%liste_spec,&
+                                                            "basis_ext%liste_spec","vib")
           END IF
-          CALL alloc_array(tab_EVRT(ith)%ComOp%liste_spec,(/nb_diago/),"ComOp%liste_spec","vib")
-          tab_EVRT(ith)%ComOp%liste_spec(:) = (/ (i,i=1,nb_diago) /)
+          CALL alloc_NRarray(tab_EVRT(ith)%para_AllBasis%basis_ext%liste_spec,&
+                                             [nb_diago],"basis_ext%liste_spec","vib")
+          tab_EVRT(ith)%para_AllBasis%basis_ext%liste_spec(:) = (/ (i,i=1,nb_diago) /)
 
           IF (associated(para_H%Rmat)) THEN
             CALL dealloc_array(para_H%Rmat,"para_H%Rmat","vib")
@@ -1049,11 +1049,11 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           write(out_unitp,*) ' VIB: BEGINNING sub_AnalysePsy_ScalOp',para_H%nb_tot,tab_EVRT(ith)%para_ana%max_ana
           CALL time_perso('sub_AnalysePsy_ScalOp')
           write(out_unitp,*)
-          write(out_unitp,*) 'para_PES%nb_scalar_Op',tab_EVRT(ith)%para_PES%nb_scalar_Op
+          write(out_unitp,*) 'nb_scalar_Op',para_H%para_ReadOp%nb_scalar_Op
         ENDIF
 
         iOp = 2
-        nb_ScalOp = tab_EVRT(ith)%para_PES%nb_scalar_Op
+        nb_ScalOp = para_H%para_ReadOp%nb_scalar_Op
         para_Dip => tab_EVRT(ith)%para_AllOp%tab_Op(iOp+1:iOp+nb_ScalOp)
         CALL sub_AnalysePsy_ScalOp(para_Dip,nb_ScalOp,para_H,tab_EVRT(ith)%para_ana%max_ana)
 
@@ -1109,7 +1109,6 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         CALL dealloc_NParray(Tab_Psi,"Tab_Psi","vib")
       END IF
 
-      CALL dealloc_ComOp(tab_EVRT(ith)%ComOp,keep_init=.TRUE.)
       IF (associated(tab_EVRT(ith)%para_AllOp%tab_Op)) THEN
         DO i=1,size(tab_EVRT(ith)%para_AllOp%tab_Op)
           CALL dealloc_para_Op(tab_EVRT(ith)%para_AllOp%tab_Op(i),keep_init=.TRUE.)
@@ -1147,7 +1146,6 @@ SUBROUTINE init_EVR()
       character (len=Name_longlen) :: CMatFormat
       character (len=Line_len)     :: base_FileName = ''
 
-      TYPE (basis)   :: BasisnD_Save ! useless ????
       integer        :: ith
 
 
@@ -1411,16 +1409,14 @@ SUBROUTINE init_EVR()
         ENDIF
         !CALL system_mem_usage(memory_RSS,'before ini_data')
 
-        CALL   ini_data(para_EVRT%const_phys,para_EVRT%para_OTF,           &
+        CALL   ini_data(para_EVRT%const_phys,                              &
                         para_EVRT%para_Tnum,para_EVRT%mole,                &
-                        para_EVRT%para_AllBasis,BasisnD_Save,              &
-                        para_EVRT%para_PES,para_EVRT%ComOp,                &
+                        para_EVRT%para_AllBasis,                           &
                         para_EVRT%para_AllOp,para_EVRT%para_ana,           &
                         para_EVRT%para_intensity,para_EVRT%intensity_only, &
                         para_EVRT%para_propa)
 
         !CALL system_mem_usage(memory_RSS,'after ini_data')
-        CALL dealloc_Basis(BasisnD_Save)
 
         IF(MPI_id==0) THEN
           write(out_unitp,*)
@@ -1544,12 +1540,10 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
       TYPE (param_Op),       pointer :: para_Dip(:)  => null()
       integer                        :: iOp
       real (kind=Rkind)              :: max_Sii,max_Sij
-      TYPE (param_ComOp),    pointer :: ComOp         => null() ! true POINTER
 
-      TYPE (CoordType),        pointer :: mole          => null() ! true POINTER
+      TYPE (CoordType),      pointer :: mole          => null() ! true POINTER
       TYPE (Tnum),           pointer :: para_Tnum     => null() ! true POINTER
       TYPE (param_AllBasis), pointer :: para_AllBasis => null() ! true POINTER
-      TYPE (param_PES),      pointer :: para_PES      => null() ! true POINTER
 
 !----- for Davidson diagonalization ----------------------------------------------------
       integer                     :: nb_diago
@@ -1573,8 +1567,6 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
 !---------------------------------------------------------------------------------------
 
       para_H        => para_EVRT%para_AllOp%tab_Op(1)
-      ComOp         => para_H%ComOp
-      para_PES      => para_H%para_PES
       mole          => para_H%mole
       para_Tnum     => para_H%para_Tnum
       para_AllBasis => para_H%para_AllBasis
@@ -1634,7 +1626,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
 !---------------------------------------------------------------------------------------
 !      contraction of the active basis set with HADA basis
 !---------------------------------------------------------------------------------------
-      IF (para_H%ComOp%contrac_ba_ON_HAC .AND. para_H%nb_bi>1) THEN
+      IF (para_H%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC .AND. para_H%nb_bi>1) THEN
         IF(MPI_id==0 .AND. print_level > -1) THEN
           write(out_unitp,*)
           write(out_unitp,*) '================================================='
@@ -1657,8 +1649,9 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           write(out_unitp,*)
         ENDIF
 
-        para_EVRT%para_AllOp%tab_Op(:)%nb_tot     =                               &
-                   sum(para_H%ComOp%nb_ba_ON_HAC(:)) * para_PES%nb_elec
+        para_EVRT%para_AllOp%tab_Op(:)%nb_tot     =                     &
+                sum(para_H%para_AllBasis%basis_ext2n%nb_ba_ON_HAC(:)) * &
+                    para_H%para_ReadOp%nb_elec
         para_EVRT%para_AllOp%tab_Op(:)%nb_tot_ini = para_EVRT%para_AllOp%tab_Op(:)%nb_tot
       END IF
 
@@ -1857,7 +1850,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                 Tab_psi(i)%IndAvOp     = para_H%n_Op  ! it should be 0
                 Tab_psi(i)%convAvOp    = .TRUE.
               END DO
-              para_H%ComOp%Cvp_spec    => para_H%Cvp
+              para_H%para_AllBasis%basis_ext%Cvp_spec    => para_H%Cvp
             ENDIF
           ELSE
             IF(MPI_id==0) THEN
@@ -1882,14 +1875,17 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                 Tab_psi(i)%convAvOp    = .TRUE.
                 CALL Set_symab_OF_psiBasisRep(Tab_psi(i))
               END DO
-              para_H%ComOp%Rvp_spec    => para_H%Rvp
+              para_H%para_AllBasis%basis_ext%Rvp_spec    => para_H%Rvp
             ENDIF ! for MPI_id=0
           END IF ! for para_H%cplx
-          para_H%ComOp%nb_vp_spec  = nb_diago
+          para_H%para_AllBasis%basis_ext%nb_vp_spec  = nb_diago
 
-          IF (associated(ComOp%liste_spec)) CALL dealloc_array(ComOp%liste_spec,"ComOp%liste_spec","vib")
-          CALL alloc_array(ComOp%liste_spec,(/nb_diago/),"ComOp%liste_spec","vib")
-          ComOp%liste_spec(:) = (/ (i,i=1,nb_diago) /)
+          IF (associated(para_AllBasis%basis_ext%liste_spec))           &
+               CALL dealloc_NRarray(para_AllBasis%basis_ext%liste_spec, &
+                                                 "basis_ext%liste_spec","vib")
+          CALL alloc_NRarray(para_AllBasis%basis_ext%liste_spec,        &
+                               [nb_diago],"basis_ext%liste_spec","vib")
+          para_AllBasis%basis_ext%liste_spec(:) = (/ (i,i=1,nb_diago) /)
 
 
           IF (associated(para_H%Rmat)) THEN
@@ -2107,11 +2103,11 @@ RETURN
           write(out_unitp,*) ' VIB: BEGINNING sub_AnalysePsy_ScalOp',para_H%nb_tot,para_EVRT%para_ana%max_ana
           CALL time_perso('sub_AnalysePsy_ScalOp')
           write(out_unitp,*)
-          write(out_unitp,*) 'para_PES%nb_scalar_Op',para_PES%nb_scalar_Op
+          write(out_unitp,*) 'nb_scalar_Op',para_H%para_ReadOp%nb_scalar_Op
         ENDIF
 
         iOp = 2
-        nb_ScalOp = para_PES%nb_scalar_Op
+        nb_ScalOp = para_H%para_ReadOp%nb_scalar_Op
         para_Dip => para_EVRT%para_AllOp%tab_Op(iOp+1:iOp+nb_ScalOp)
         CALL sub_AnalysePsy_ScalOp(para_Dip,nb_ScalOp,para_H,para_EVRT%para_ana%max_ana)
 
@@ -2167,7 +2163,6 @@ RETURN
         CALL dealloc_array(Tab_Psi,"Tab_Psi","vib")
       END IF
 
-      CALL dealloc_ComOp(ComOp,keep_init=.TRUE.)
       IF (associated(para_EVRT%para_AllOp%tab_Op)) THEN
         DO i=1,size(para_EVRT%para_AllOp%tab_Op)
           CALL dealloc_para_Op(para_EVRT%para_AllOp%tab_Op(i),keep_init=.TRUE.)
@@ -2189,12 +2184,11 @@ RETURN
    END SUBROUTINE levels_EVR
 
 
-SUBROUTINE finalyze_EVR()
+SUBROUTINE Finalize_EVR()
   USE mod_EVR
   IMPLICIT NONE
 
       CALL dealloc_table_at(para_EVRT%const_phys%mendeleev)
-      !CALL dealloc_param_OTF(para_EVRT%para_OTF)
 
       CALL dealloc_CoordType(para_EVRT%mole)
       IF (associated(para_EVRT%para_Tnum%Gref)) THEN
@@ -2202,7 +2196,6 @@ SUBROUTINE finalyze_EVR()
       END IF
       !CALL dealloc_Tnum(para_EVRT%para_Tnum)
 
-      CALL dealloc_ComOp(para_EVRT%ComOp)
       CALL dealloc_para_AllOp(para_EVRT%para_AllOp)
       CALL dealloc_para_ana(para_EVRT%para_ana)
       CALL dealloc_param_propa(para_EVRT%para_propa)
@@ -2222,5 +2215,5 @@ SUBROUTINE finalyze_EVR()
         CALL MPI_Finalize(MPI_err)
         close(in_unitp)
 #endif
-END SUBROUTINE finalyze_EVR
+END SUBROUTINE Finalize_EVR
 

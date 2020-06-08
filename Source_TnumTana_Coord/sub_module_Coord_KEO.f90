@@ -33,29 +33,34 @@ MODULE mod_Coord_KEO
   USE mod_freq,            ONLY : gaussian_width,calc_freq,             &
                                   calc_freq_block,calc_freq_with_d0c,   &
                                   h0_symmetrization,sort_with_tab
-  USE mod_ActiveTransfo,   ONLY : get_Qact,get_Qact0,Set_AllActive,     &
-                                  Qact_TO_Qdyn_FROM_ActiveTransfo,      &
-                                  Qdyn_TO_Qact_FROM_ActiveTransfo,      &
+  USE mod_ActiveTransfo,   ONLY : get_Qact0,Adding_InactiveCoord_TO_Qact,&
+                                  Set_AllActive,                         &
+                                  Qact_TO_Qdyn_FROM_ActiveTransfo,       &
+                                  Qdyn_TO_Qact_FROM_ActiveTransfo,       &
                                   Qinact2n_TO_Qact_FROM_ActiveTransfo
-  USE mod_RPHTransfo,      ONLY : Type_RPHpara_AT_Qact1,Type_RPHTransfo,&
-                                  alloc_array,dealloc_array,            &
-                                  alloc_rphpara_at_qact1,switch_rph,    &
-                                  write_rphtransfo,set_rphtransfo,      &
-                                  write_rphpara_at_qact1
+  USE mod_RPHTransfo,      ONLY : Type_RPHpara_AT_Qact1,Type_RPHTransfo, &
+                                  alloc_array,dealloc_array,             &
+                                  alloc_rphpara_at_qact1,switch_rph,     &
+                                  write_rphtransfo,set_rphtransfo,       &
+                                  write_rphpara_at_qact1,                &
+                                  dealloc_RPHpara_AT_Qact1,              &
+                                  RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1,&
+                                  Find_iQa_OF_RPHpara_AT_Qact1
   USE mod_CartesianTransfo, ONLY: calc_dnteckart,calc_dntxdnxin_to_dnxout,&
                                   calc_eckartrot,dnmwx_multiref
   USE mod_export_KEO,      ONLY : export3_MCTDH_T
-  USE mod_Tnum,            ONLY : Tnum,CoordType,zmatrix,param_PES_FromTnum,&
-                                  Read_CoordType,write_coordtype,           &
-                                  coordtype1tocoordtype2,dealloc_coordtype, &
-                                  sub_coordtype_to_pararph,                 &
-                                  sub_pararph_to_coordtype,                 &
-                                  type_var_analysis_of_coordtype,           &
-                                  CoordTypeRPH_TO_CoordTypeFlex,            &
+  USE mod_Tnum,            ONLY : Tnum,param_PES_FromTnum,dealloc_Tnum, &
+                                  CoordType,zmatrix,dealloc_coordtype,  &
+                                  Read_CoordType,write_coordtype,       &
+                                  sub_coordtype_to_pararph,             &
+                                  sub_pararph_to_coordtype,             &
+                                  type_var_analysis_of_coordtype,       &
+                                  CoordTypeRPH_TO_CoordTypeFlex,        &
                                   Set_OptimizationPara_FROM_CoordType
 
   USE mod_paramQ,          ONLY : sub_dnFCC_TO_dnFcurvi,sub_QactTOdnx,  &
-                                  sub_qacttoqit,sub_qplusdq_to_cart,    &
+                                  sub_QactTOQit,sub_QplusdQ_TO_cart,    &
+                                  sub_QinRead_TO_Qact,                  &
                                read_RefGeom,sub_QactTOd0x,sub_d0xTOQact,&
                                   Set_paramQ_FOR_optimization,          &
                                   Write_Cartg98, Write_XYZ

@@ -163,7 +163,7 @@
           logical                        :: tab_basis_done           = .FALSE. ! When it TRUE the tab_Pbasis(:) are set up
           logical                        :: tab_basis_linked         = .FALSE. ! When it TRUE the tab_Pbasis(:)%Pbasis points to other basis
 
-          TYPE (P_basis), pointer        :: tab_Pbasis(:)            => null() !  tab_Pbasis(nb_basis)
+          TYPE (P_basis),     pointer    :: tab_Pbasis(:)            => null() !  tab_Pbasis(nb_basis)
           TYPE (Type_IntVec), pointer    :: Tab_OF_Tabnb2(:)         => null() ! Tab_OF_Tabnb2(nb_basis), for SparseBasis or Pruned basis
           TYPE (Type_nDindex)            :: nDindG                             ! enable to use multidimensional index for the grid
           TYPE (Type_nDindex), pointer   :: nDindB                   => null() ! enable to use multidimensional index for the basis functions
@@ -198,8 +198,8 @@
 
           integer                     :: nb_SG                    = 0       ! number of direct-product grids (SparseGrid)
           real (kind=Rkind), allocatable :: WeightSG(:)                     ! WeightSG(nb_SG)
-          TYPE (P_basis), pointer     :: tab_PbasisSG(:)          => null() ! tab_PbasisSG(nb_SG) fort SGtype=1
-          TYPE (basis), pointer       :: tab_basisPrimSG(:,:)     => null() ! tab_basis(nb_basis,0:Lmax)
+          TYPE (P_basis),    pointer     :: tab_PbasisSG(:)          => null() ! tab_PbasisSG(nb_SG) fort SGtype=1
+          TYPE (basis),      pointer     :: tab_basisPrimSG(:,:)     => null() ! tab_basis(nb_basis,0:Lmax)
 
           TYPE (param_SGType2)        :: para_SGType2
 
@@ -212,6 +212,33 @@
           TYPE (basis), pointer :: Pbasis => null()
         END TYPE P_basis
 
+        TYPE :: basis_ext2n_t
+          logical                        :: ADA              = .FALSE. ! (t) => true adiabatic channels (not used yet)
+          logical                        :: contrac_ba_ON_HAC= .FALSE. ! (t) => the active basis are contracted on each adiabatic channel
+          integer                        :: max_nb_ba_ON_HAC = huge(1) ! largest dimension of d0Cba_ON_HAC for all adiabatic channels
+          real (kind=Rkind)              :: max_ene_ON_HAC   = huge(ONE)  ! energy maximal
+
+          real (kind=Rkind), allocatable :: d0Cba_ON_HAC(:,:,:) ! d0Cba_ON_HAC(nb_ba,nb_ba,nb_bie)
+          real (kind=Rkind), allocatable :: Eneba_ON_HAC(:,:)   ! Eneba_ON_HAC(nb_ba,nb_bie)
+          integer,           allocatable :: nb_ba_ON_HAC(:)     ! dimension of nb_ba_ON_HAC for a given i_h (nb_ba_ON_HAC(nb_bie))
+          real (kind=Rkind), allocatable :: d0C_bhe_ini(:,:)    ! d0C_bhe_ini(nb_bie,nb_bie) for ADA method
+        END TYPE basis_ext2n_t
+
+        TYPE :: basis_ext_t
+
+          real (kind=Rkind),   allocatable :: sqRhoOVERJac(:)            ! sqrt(rho/jac), nb_qa pts
+          real (kind=Rkind),   allocatable :: Jac(:)                     ! jac, nb_qa pts
+          !TYPE(Type_SmolyakRep)            :: SRep_sqRhoOVERJac          ! sqrt(rho/jac) in Smolyap Rep.
+          !TYPE(Type_SmolyakRep)            :: SRep_Jac                   ! jac in Smolyap Rep.
+
+          integer                           :: nb_vp_spec       = huge(1) ! number of eigenvectors for the spectral represention
+          integer,              allocatable :: liste_spec(:) ! liste of eigenvectors (nb_vp_spec)
+                                                             ! default : 1,2,3,..... nb_vp_spec
+          real (kind=Rkind),    pointer     :: Rvp_spec(:,:) ! eigenvectors for the spectral represention
+          complex (kind=Rkind), pointer     :: Cvp_spec(:,:) ! Both are TRUE pointer
+
+        END TYPE basis_ext_t
+
         TYPE param_AllBasis
           logical                     :: alloc      = .FALSE.
 
@@ -222,6 +249,10 @@
           TYPE (basis), pointer       :: Basis2n    => null()
           TYPE (basis), pointer       :: BasisElec  => null()
           TYPE (basis), pointer       :: BasisRot   => null()
+
+          TYPE (basis_ext2n_t)        :: basis_ext2n
+          TYPE (basis_ext_t)          :: basis_ext
+
         END TYPE param_AllBasis
 
       INTERFACE alloc_array
@@ -254,8 +285,12 @@
       PUBLIC  get_tab_nq_OF_Qact, get_nb_bi_FROM_AllBasis
       PUBLIC  get_nb_be_FROM_basis
 
+      PUBLIC basis_ext2n_t,alloc_basis_ext2n,write_basis_ext2n,dealloc_basis_ext2n
+
+
       PUBLIC  P_basis, alloc_tab_Pbasis_OF_basis
-      PUBLIC  param_AllBasis, alloc_AllBasis, dealloc_AllBasis
+      PUBLIC  param_AllBasis, alloc_AllBasis, dealloc_AllBasis,         &
+              get_Ene0_AT_ib_FROM_Basis
 
       PUBLIC alloc_array, dealloc_array
 
@@ -955,6 +990,181 @@
 
        END SUBROUTINE dealloc_basis
 
+  SUBROUTINE dealloc_basis_ext2n(basis_ext2n)
+    IMPLICIT NONE
+    TYPE (basis_ext2n_t), intent(inout) :: basis_ext2n
+
+    character (len=*), parameter :: name_sub='dealloc_basis_ext2n'
+
+    basis_ext2n%ADA               = .FALSE.
+
+    basis_ext2n%contrac_ba_ON_HAC = .FALSE.
+    basis_ext2n%max_ene_ON_HAC    = huge(ONE)  ! maximal energy
+    basis_ext2n%max_nb_ba_ON_HAC  = huge(1)
+
+    IF (allocated(basis_ext2n%d0Cba_ON_HAC))  THEN
+      CALL dealloc_NParray(basis_ext2n%d0Cba_ON_HAC,               &
+                          "basis_ext2n%d0Cba_ON_HAC",name_sub)
+    END IF
+    IF (allocated(basis_ext2n%Eneba_ON_HAC))  THEN
+      CALL dealloc_NParray(basis_ext2n%Eneba_ON_HAC,               &
+                          "basis_ext2n%Eneba_ON_HAC",name_sub)
+    END IF
+    IF (allocated(basis_ext2n%nb_ba_ON_HAC))  THEN
+      CALL dealloc_NParray(basis_ext2n%nb_ba_ON_HAC,               &
+                          "basis_ext2n%nb_ba_ON_HAC",name_sub)
+    END IF
+
+    IF (allocated(basis_ext2n%d0C_bhe_ini))  THEN
+      CALL dealloc_NParray(basis_ext2n%d0C_bhe_ini,                &
+                          "basis_ext2n%d0C_bhe_ini",name_sub)
+    END IF
+
+  END SUBROUTINE dealloc_basis_ext2n
+  SUBROUTINE alloc_basis_ext2n(basis_ext2n,nb_ba,nb_bie)
+    USE mod_system
+    IMPLICIT NONE
+
+    !----- for the basis set ----------------------------------------------
+    TYPE (basis_ext2n_t), intent(inout) :: basis_ext2n
+    integer,              intent(in)    :: nb_bie,nb_ba
+
+    !----- working variables ---------------------------------------------
+    integer       :: err_mem,memory
+    integer       :: i
+
+    character (len=*), parameter :: name_sub = 'alloc_basis_ext2n'
+
+    !write(out_unitp,*) ' BEGINNING ',name_sub
+
+    IF (nb_bie < 1) STOP 'ERROR in alloc_basis_ext2n: nb_bie < 1'
+
+    basis_ext2n%contrac_ba_ON_HAC = basis_ext2n%contrac_ba_ON_HAC .AND. &
+                                                            (nb_ba > 0 )
+
+    ! These have to be set, because they are used even non-cHAC contraction is used.
+    IF (.NOT. allocated(basis_ext2n%nb_ba_ON_HAC)) THEN
+      CALL alloc_NParray(basis_ext2n%nb_ba_ON_HAC,[nb_bie],             &
+                                    'nb_ba_ON_HAC',name_sub)
+    END IF
+    basis_ext2n%nb_ba_ON_HAC(:)   = nb_ba
+
+    IF (.NOT. basis_ext2n%contrac_ba_ON_HAC) RETURN
+
+    !-- for the adiabatic contraction ----
+    basis_ext2n%max_nb_ba_ON_HAC = min(basis_ext2n%max_nb_ba_ON_HAC,nb_ba)
+
+
+    CALL alloc_NParray(basis_ext2n%d0Cba_ON_HAC,[nb_ba,nb_ba,nb_bie],   &
+                                  'd0Cba_ON_HAC',name_sub)
+    CALL alloc_NParray(basis_ext2n%Eneba_ON_HAC,[nb_ba,nb_bie],         &
+                                  'Eneba_ON_HAC',name_sub)
+
+    DO i=1,nb_bie
+      CALL mat_id(basis_ext2n%d0Cba_ON_HAC(:,:,i),nb_ba,nb_ba)
+    END DO
+    basis_ext2n%Eneba_ON_HAC(:,:) = ZERO
+
+    !write(out_unitp,*) ' END ',name_sub
+
+  END SUBROUTINE alloc_basis_ext2n
+  SUBROUTINE write_basis_ext2n(basis_ext2n)
+      USE mod_system
+      IMPLICIT NONE
+
+      TYPE (basis_ext2n_t), intent(in) :: basis_ext2n
+
+
+!----- for debuging ----------------------------------------
+      logical, parameter :: debug = .FALSE.
+!     logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+      write(out_unitp,*) 'WRITE write_basis_ext2n'
+      write(out_unitp,*)
+
+      write(out_unitp,*)
+      write(out_unitp,*) 'ADA',basis_ext2n%ADA
+      write(out_unitp,*) 'contrac_ba_ON_HAC',basis_ext2n%contrac_ba_ON_HAC
+      write(out_unitp,*) 'max_nb_ba_ON_HAC ',basis_ext2n%max_nb_ba_ON_HAC
+      write(out_unitp,*) 'max_ene_ON_HAC   ',basis_ext2n%max_ene_ON_HAC
+      write(out_unitp,*) 'asso d0Cba_ON_HAC',allocated(basis_ext2n%d0Cba_ON_HAC)
+      IF (allocated(basis_ext2n%d0Cba_ON_HAC))                                   &
+               write(out_unitp,*) shape(basis_ext2n%d0Cba_ON_HAC)
+      write(out_unitp,*) 'asso Eneba_ON_HAC',allocated(basis_ext2n%Eneba_ON_HAC)
+      IF (allocated(basis_ext2n%Eneba_ON_HAC))                                   &
+               write(out_unitp,*) shape(basis_ext2n%Eneba_ON_HAC)
+      write(out_unitp,*) 'asso nb_ba_ON_HAC',allocated(basis_ext2n%nb_ba_ON_HAC)
+      IF (allocated(basis_ext2n%nb_ba_ON_HAC))                                   &
+               write(out_unitp,*) shape(basis_ext2n%nb_ba_ON_HAC)
+
+      write(out_unitp,*) 'END WRITE param_basis_ext2n'
+
+  END SUBROUTINE write_basis_ext2n
+  SUBROUTINE dealloc_basis_ext(basis_ext)
+    IMPLICIT NONE
+
+    TYPE (basis_ext_t), intent(inout) :: basis_ext
+
+    character (len=*), parameter :: name_sub='dealloc_basis_ext'
+
+    nullify(basis_ext%Cvp_spec)
+    nullify(basis_ext%Rvp_spec)
+
+    IF (allocated(basis_ext%liste_spec))  THEN
+      CALL dealloc_NParray(basis_ext%liste_spec,                        &
+                          "basis_ext%liste_spec",name_sub)
+    END IF
+    basis_ext%nb_vp_spec  = huge(1)
+
+
+    IF (allocated(basis_ext%sqRhoOVERJac)) THEN
+      CALL dealloc_NParray(basis_ext%sqRhoOVERJac,                      &
+                          "basis_ext%sqRhoOVERJac",name_sub)
+    END IF
+    IF (allocated(basis_ext%Jac)) THEN
+      CALL dealloc_NParray(basis_ext%Jac,"basis_ext%Jac",name_sub)
+    END IF
+    !CALL dealloc_SmolyakRep(basis_ext%SRep_sqRhoOVERJac)
+    !CALL dealloc_SmolyakRep(basis_ext%SRep_Jac)
+
+  END SUBROUTINE dealloc_basis_ext
+
+  SUBROUTINE write_basis_ext(basis_ext)
+      USE mod_system
+      IMPLICIT NONE
+
+      TYPE (basis_ext_t), intent(in) :: basis_ext
+
+
+!----- for debuging ----------------------------------------
+      logical, parameter :: debug = .FALSE.
+!     logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+      write(out_unitp,*) 'WRITE write_basis_ext'
+      write(out_unitp,*)
+
+      write(out_unitp,*) 'nb_vp_spec',basis_ext%nb_vp_spec
+      IF (associated(basis_ext%Rvp_spec))                               &
+               write(out_unitp,*) shape(basis_ext%Rvp_spec)
+      IF (associated(basis_ext%Cvp_spec))                               &
+               write(out_unitp,*) shape(basis_ext%Cvp_spec)
+      IF (allocated(basis_ext%liste_spec))                              &
+               write(out_unitp,*) shape(basis_ext%liste_spec)
+
+
+      IF (allocated(basis_ext%sqRhoOVERJac)) THEN
+        write(out_unitp,*) 'shape sqRhoOVERJac',shape(basis_ext%sqRhoOVERJac)
+      END IF
+      IF (allocated(basis_ext%Jac)) THEN
+        write(out_unitp,*) 'shape Jac ',shape(basis_ext%Jac)
+      END IF
+
+      write(out_unitp,*) 'END WRITE param_basis_ext'
+
+
+  END SUBROUTINE write_basis_ext
       SUBROUTINE alloc_array_OF_Basisdim0(tab,name_var,name_sub)
       IMPLICIT NONE
 
@@ -2549,6 +2759,40 @@
 
       END SUBROUTINE alloc_AllBasis
 
+      FUNCTION get_Ene0_AT_ib_FROM_Basis(ib,BasisnD,Basis2n) RESULT(Ene0)
+
+         real (kind=Rkind)              :: Ene0
+         TYPE (Basis),       intent(in) :: BasisnD,Basis2n
+         integer,            intent(in) :: ib
+
+         integer      :: i_ba,i_bi,nb_bi,nb_ba
+
+         !IF (contrac_ba_ON_HAC) THEN
+         !   STOP 'not yet'
+         !ELSE
+            nb_ba = get_nb_FROM_basis(BasisnD)
+            nb_bi = get_nb_FROM_basis(Basis2n)
+            i_bi = ib / nb_ba
+            i_ba = mod(ib,nb_ba)
+            IF (ib /= (1+(i_bi-1)*nb_ba) ) THEN
+               STOP 'ERROR in get_Ene0_AT_ib_FROM_Basis: inconsistent ib values'
+            END IF
+
+            IF (nb_bi > 1) THEN
+              IF (.NOT. allocated(Basis2n%EneH0)) THEN
+               STOP 'ERROR in get_Ene0_AT_ib_FROM_Basis: Basis2n%EneH0 is not allocated'
+              END IF
+              Ene0 = Basis2n%EneH0(i_bi)
+            END IF
+
+            IF (.NOT. allocated(BasisnD%EneH0)) THEN
+              STOP 'ERROR in get_Ene0_AT_ib_FROM_Basis: BasisnD%EneH0 is not allocated'
+             END IF
+             Ene0 = Ene0 + BasisnD%EneH0(i_ba)
+         !END IF
+
+      END FUNCTION get_Ene0_AT_ib_FROM_Basis
+
       !!@description: TODO
       !!@param: TODO
       !!@param: TODO
@@ -2570,6 +2814,8 @@
          CALL dealloc_basis(para_AllBasis%Basis2n)
          CALL dealloc_array(para_AllBasis%Basis2n,'para_AllBasis%Basis2n','alloc_AllBasis')
 
+         CALL dealloc_basis_ext2n(para_AllBasis%basis_ext2n)
+         CALL dealloc_basis_ext(para_AllBasis%basis_ext)
 
          nullify(para_AllBasis%BasisElec)
          nullify(para_AllBasis%BasisRot)

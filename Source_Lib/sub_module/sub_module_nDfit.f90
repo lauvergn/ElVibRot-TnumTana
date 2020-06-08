@@ -27,22 +27,20 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_nDFit
-      use mod_system
-      use mod_nDindex, only: type_ndindex, alloc_array,                 &
-                             write_ndindex, dealloc_array,              &
-                             init_ndindexprim, sort_ndindex
+      USE mod_system
+      USE mod_nDindex
       IMPLICIT NONE
 
       PRIVATE
 
-      TYPE param_Analysis !
+      TYPE nDFitAna_t
 
       ! range for the grid (1D, 2D)
-      real (kind=Rkind), pointer :: A(:)          => null()
-      real (kind=Rkind), pointer :: B(:)          => null()
-      real (kind=Rkind), pointer :: Step(:)       => null()
-      integer, pointer           :: nq(:)         => null()
-      integer, pointer           :: coord_list(:) => null()
+      real (kind=Rkind), allocatable :: A(:)
+      real (kind=Rkind), allocatable :: B(:)
+      real (kind=Rkind), allocatable :: Step(:)
+      integer,           allocatable :: nq(:)
+      integer,           allocatable :: coord_list(:)
 
       logical :: Grid1D = .TRUE.
       logical :: Grid2D = .TRUE.
@@ -50,65 +48,249 @@
       logical :: Minimum   = .FALSE.
       logical :: all_coord = .TRUE.
 
-
-      END TYPE param_Analysis
+      CONTAINS
+        PROCEDURE, PRIVATE, PASS(nDFitAna1) :: nDFitAna2_TO_nDFitAna1
+        GENERIC,   PUBLIC  :: assignment(=) => nDFitAna2_TO_nDFitAna1
+      END TYPE nDFitAna_t
 
 
       TYPE param_nDFit ! it mays change in the futur (more like "basis" type)
 
-      TYPE (Type_nDindex)        :: nDindB  ! enable to use multidimensional index for the basis
-      integer                    :: ndim  = 0             ! size of Q0, nDsize, nDweight
-      real (kind=Rkind), pointer :: Q0(:)       => null()
-      integer, pointer           :: nDsize(:)   => null()
-      real (kind=Rkind), pointer :: nDweight(:) => null()
-      integer, pointer           :: ntyp(:)     => null()
+      TYPE (Type_nDindex)            :: nDindB  ! enable to use multidimensional index for the basis
+      integer                        :: ndim  = 0             ! size of Q0, nDsize, nDweight
+      real (kind=Rkind), allocatable :: Q0(:)
+      integer,           allocatable :: nDsize(:)
+      real (kind=Rkind), allocatable :: nDweight(:)
+      integer,           allocatable :: ntyp(:)
 
-      integer                    :: nb_WB = 0
-      real (kind=Rkind), pointer :: B(:) => null()
-      integer, pointer           :: nDvalB(:,:) => null()
-      integer           :: MinCoupling    = 0
-      integer           :: MaxCoupling    = 4
-      integer           :: max_nb         = 10
-      integer           :: ind_val        = 1
-      integer           :: nb_val         = 1
-      integer           :: MR_order       = -1
+      integer                        :: nb_WB = 0
+      real (kind=Rkind), allocatable :: B(:)
+      integer,           allocatable :: nDvalB(:,:)
+      integer                        :: MinCoupling    = 0
+      integer                        :: MaxCoupling    = 4
+      integer                        :: max_nb         = 10
+      integer                        :: ind_val        = 1
+      integer                        :: nb_val         = 1
+      integer                        :: MR_order       = -1
 
-      real (kind=Rkind) :: MinNorm        = ZERO
-      real (kind=Rkind) :: MaxNorm        = FOUR
-      real (kind=Rkind) :: epsi           = ONETENTH**10
-      real (kind=Rkind) :: epsi_inter     = ONETENTH**10
-      logical           :: svd            = .TRUE.
+      real (kind=Rkind)              :: MinNorm        = ZERO
+      real (kind=Rkind)              :: MaxNorm        = FOUR
+      real (kind=Rkind)              :: epsi           = ONETENTH**10
+      real (kind=Rkind)              :: epsi_inter     = ONETENTH**10
+      logical                        :: svd            = .TRUE.
 
-      logical               :: Analysis       = .FALSE.
-      TYPE (param_Analysis) :: para_Analysis
+      logical                        :: Analysis       = .FALSE.
+      TYPE (nDFitAna_t)              :: nDFitAna
 
+      integer                        :: Col_FOR_WeightOFFit  = 0 ! it is not used
+      real (kind=Rkind)              :: Scal_FOR_WeightOFFit = 200._Rkind
 
-      integer           :: Col_FOR_WeightOFFit  = 0 ! it is not used
-      real (kind=Rkind) :: Scal_FOR_WeightOFFit = 200._Rkind
+      TYPE (param_file)              :: Param_Fit_file
+      character (len=Line_len)       :: name_Fit = ''
 
+      integer                        :: nb_fit = 0
+      TYPE (param_nDFit), pointer    :: Tab_para_nDFit(:) => null()
 
-      TYPE (param_file)        :: Param_Fit_file
-      character (len=Line_len) :: name_Fit = ''
-
-      integer                     :: nb_fit = 0
-      TYPE (param_nDFit), pointer :: Tab_para_nDFit(:) => null()
-
-
+      CONTAINS
+        PROCEDURE, PRIVATE, PASS(nDFit1) :: nDFit2_TO_nDFit1
+        GENERIC,   PUBLIC  :: assignment(=) => nDFit2_TO_nDFit1
       END TYPE param_nDFit
 
-      PUBLIC param_Analysis, Read_Analysis
-      PUBLIC param_nDFit, Read_nDFit, ReadWrite_nDFitW, Write_nDFit, &
-             Analysis_nDFit, Analysis_nDFitW, nDFit1_TO_TnDFit2, &
-             sub_nDFunc_FROM_nDFit, sub_ONLYnDFunc_FROM_nDFit,   &
-             nDFunct_WITH_Q, nDFunct_WITH_tQ
+      PUBLIC :: nDFitAna_t, Read_Analysis
+      PUBLIC :: param_nDFit, dealloc_nDFit,Read_nDFit,ReadWrite_nDFitW, &
+                Write_nDFit, Analysis_nDFit, Analysis_nDFitW,           &
+                Read_FOR_nDFit1_TO_TnDFit2, sub_nDFunc_FROM_nDFit,      &
+                sub_ONLYnDFunc_FROM_nDFit, nDFunct_WITH_Q, nDFunct_WITH_tQ
 
       CONTAINS
 
-      SUBROUTINE Read_Analysis(para_Analysis,Q0)
+      RECURSIVE SUBROUTINE nDFit2_TO_nDFit1(nDFit1,nDFit2)
       USE mod_system
       IMPLICIT NONE
 
-      TYPE (param_Analysis), intent(inout) :: para_AnaLysis
+      CLASS (param_nDFit), intent(inout) :: nDFit1
+      TYPE (param_nDFit),  intent(in)    :: nDFit2
+
+      integer :: i
+!----- for debuging --------------------------------------------------
+      integer :: err_read
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub = 'nDFit2_TO_nDFit1'
+!      logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+
+      !write(out_unitp,*) 'SUBROUTINE ',trim(name_sub)
+
+      IF (allocated(nDFit2%Q0))       nDFit1%Q0       = nDFit2%Q0
+      IF (allocated(nDFit2%nDsize))   nDFit1%nDsize   = nDFit2%nDsize
+      IF (allocated(nDFit2%nDweight)) nDFit1%nDweight = nDFit2%nDweight
+      IF (allocated(nDFit2%ntyp))     nDFit1%ntyp     = nDFit2%ntyp
+      IF (allocated(nDFit2%B))        nDFit1%B        = nDFit2%B
+      IF (allocated(nDFit2%nDvalB))   nDFit1%nDvalB   = nDFit2%nDvalB
+
+      nDFit1%nDindB               = nDFit2%nDindB
+      nDFit1%ndim                 = nDFit2%ndim
+      nDFit1%nb_WB                = nDFit2%nb_WB
+
+      nDFit1%MinCoupling          = nDFit2%MinCoupling
+      nDFit1%MaxCoupling          = nDFit2%MaxCoupling
+      nDFit1%max_nb               = nDFit2%max_nb
+      nDFit1%ind_val              = nDFit2%ind_val
+      nDFit1%nb_val               = nDFit2%nb_val
+      nDFit1%MR_order             = nDFit2%MR_order
+
+      nDFit1%MinNorm              = nDFit2%MinNorm
+      nDFit1%MaxNorm              = nDFit2%MaxNorm
+      nDFit1%epsi                 = nDFit2%epsi
+      nDFit1%epsi_inter           = nDFit2%epsi_inter
+      nDFit1%svd                  = nDFit2%svd
+
+      nDFit1%Analysis             = nDFit2%Analysis
+      nDFit1%nDFitAna             = nDFit2%nDFitAna
+
+      nDFit1%Col_FOR_WeightOFFit  = nDFit2%Col_FOR_WeightOFFit
+      nDFit1%Scal_FOR_WeightOFFit = nDFit2%Scal_FOR_WeightOFFit
+
+      nDFit1%Param_Fit_file       = nDFit2%Param_Fit_file
+      nDFit1%name_Fit             = nDFit2%name_Fit
+
+      nDFit1%nb_fit               = nDFit2%nb_fit
+
+      IF (associated(nDFit2%Tab_para_nDFit)) THEN
+        allocate(nDFit1%Tab_para_nDFit(size(nDFit2%Tab_para_nDFit)))
+        DO i=1,size(nDFit2%Tab_para_nDFit)
+          nDFit1%Tab_para_nDFit(i) = nDFit2%Tab_para_nDFit(i)
+        END DO
+      END IF
+
+      END SUBROUTINE nDFit2_TO_nDFit1
+      RECURSIVE SUBROUTINE dealloc_nDFit(nDFit)
+      USE mod_system
+      IMPLICIT NONE
+
+      CLASS (param_nDFit), intent(inout) :: nDFit
+
+      integer :: i
+!----- for debuging --------------------------------------------------
+      integer :: err_read
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub = 'dealloc_nDFit'
+!      logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+
+      !write(out_unitp,*) 'SUBROUTINE ',trim(name_sub)
+
+      IF (allocated(nDFit%Q0))       deallocate(nDFit%Q0)
+      IF (allocated(nDFit%nDsize))   deallocate(nDFit%nDsize)
+      IF (allocated(nDFit%nDweight)) deallocate(nDFit%nDweight)
+      IF (allocated(nDFit%ntyp))     deallocate(nDFit%ntyp)
+      IF (allocated(nDFit%B))        deallocate(nDFit%B)
+      IF (allocated(nDFit%nDvalB))   deallocate(nDFit%nDvalB)
+
+      CALL dealloc_nDindex(nDFit%nDindB)
+
+      nDFit%ndim                 = 0
+      nDFit%nb_WB                = 0
+
+      nDFit%MinCoupling          = 0
+      nDFit%MaxCoupling          = 4
+      nDFit%max_nb               = 10
+      nDFit%ind_val              = 1
+      nDFit%nb_val               = 1
+      nDFit%MR_order             = -1
+
+      nDFit%MinNorm              = ZERO
+      nDFit%MaxNorm              = FOUR
+      nDFit%epsi                 = ONETENTH**10
+      nDFit%epsi_inter           = ONETENTH**10
+      nDFit%svd                  = .TRUE.
+
+      nDFit%Analysis             = .FALSE.
+      CALL dealloc_nDFitAna(nDFit%nDFitAna)
+
+      nDFit%Col_FOR_WeightOFFit  = 0
+      nDFit%Scal_FOR_WeightOFFit = 200._Rkind
+
+      CALL file_dealloc(nDFit%Param_Fit_file)
+      nDFit%name_Fit             = ''
+
+      nDFit%nb_fit               = 0
+
+      IF (associated(nDFit%Tab_para_nDFit)) THEN
+        DO i=1,size(nDFit%Tab_para_nDFit)
+          CALL dealloc_nDFit(nDFit%Tab_para_nDFit(i))
+        END DO
+        deallocate(nDFit%Tab_para_nDFit)
+        nullify(nDFit%Tab_para_nDFit)
+      END IF
+
+      END SUBROUTINE dealloc_nDFit
+      SUBROUTINE nDFitAna2_TO_nDFitAna1(nDFitAna1,nDFitAna2)
+      USE mod_system
+      IMPLICIT NONE
+
+      CLASS (nDFitAna_t), intent(inout) :: nDFitAna1
+      TYPE (nDFitAna_t),  intent(in)    :: nDFitAna2
+
+!----- for debuging --------------------------------------------------
+      integer :: err_read
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub = 'nDFitAna2_TO_nDFitAna1'
+!      logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+
+      !write(out_unitp,*) 'SUBROUTINE ',trim(name_sub)
+
+      ! range for the grid (1D, 2D)
+      IF (allocated(nDFitAna2%A))          nDFitAna1%A          = nDFitAna2%A
+      IF (allocated(nDFitAna2%B))          nDFitAna1%B          = nDFitAna2%B
+      IF (allocated(nDFitAna2%Step))       nDFitAna1%Step       = nDFitAna2%Step
+      IF (allocated(nDFitAna2%nq))         nDFitAna1%nq         = nDFitAna2%nq
+      IF (allocated(nDFitAna2%coord_list)) nDFitAna1%coord_list = nDFitAna2%coord_list
+
+      nDFitAna1%Grid1D    = nDFitAna2%Grid1D
+      nDFitAna1%Grid2D    = nDFitAna2%Grid2D
+      nDFitAna1%Minimum   = nDFitAna2%Minimum
+      nDFitAna1%all_coord = nDFitAna2%all_coord
+
+      END SUBROUTINE nDFitAna2_TO_nDFitAna1
+      SUBROUTINE dealloc_nDFitAna(nDFitAna)
+      USE mod_system
+      IMPLICIT NONE
+
+      CLASS (nDFitAna_t), intent(inout) :: nDFitAna
+
+!----- for debuging --------------------------------------------------
+      integer :: err_read
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub = 'dealloc_nDFitAna'
+!      logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+
+      !write(out_unitp,*) 'SUBROUTINE ',trim(name_sub)
+
+      ! range for the grid (1D, 2D)
+      IF (allocated(nDFitAna%A))          deallocate(nDFitAna%A)
+      IF (allocated(nDFitAna%B))          deallocate(nDFitAna%B)
+      IF (allocated(nDFitAna%Step))       deallocate(nDFitAna%Step)
+      IF (allocated(nDFitAna%nq))         deallocate(nDFitAna%nq)
+      IF (allocated(nDFitAna%coord_list)) deallocate(nDFitAna%coord_list)
+
+      nDFitAna%Grid1D    = .TRUE.
+      nDFitAna%Grid2D    = .TRUE.
+      nDFitAna%Minimum   = .FALSE.
+      nDFitAna%all_coord = .TRUE.
+
+      END SUBROUTINE dealloc_nDFitAna
+      SUBROUTINE Read_Analysis(nDFitAna,Q0)
+      USE mod_system
+      IMPLICIT NONE
+
+      TYPE (nDFitAna_t), intent(inout) :: nDFitAna
       real (kind=Rkind), intent(in)        :: Q0(:)
 
       integer                    :: i,ndim
@@ -170,24 +352,24 @@
         END IF
 
 
-        para_AnaLysis%Grid1D              = Grid1D
-        para_AnaLysis%Grid2D              = Grid2D
-        para_AnaLysis%Minimum             = Minimum
-        para_AnaLysis%all_coord           = all_coord
+        nDFitAna%Grid1D              = Grid1D
+        nDFitAna%Grid2D              = Grid2D
+        nDFitAna%Minimum             = Minimum
+        nDFitAna%all_coord           = all_coord
 
 
-        CALL alloc_array(para_AnaLysis%nq,shape(Q0),'para_AnaLysis%nq',name_sub)
-        CALL alloc_array(para_AnaLysis%A,shape(Q0),'para_AnaLysis%A',name_sub)
-        CALL alloc_array(para_AnaLysis%B,shape(Q0),'para_AnaLysis%B',name_sub)
-        CALL alloc_array(para_AnaLysis%Step,shape(Q0),'para_AnaLysis%Step',name_sub)
-        CALL alloc_array(para_AnaLysis%coord_list,shape(Q0),'para_AnaLysis%coord_list',name_sub)
+        CALL alloc_NParray(nDFitAna%nq,shape(Q0),'nDFitAna%nq',name_sub)
+        CALL alloc_NParray(nDFitAna%A,shape(Q0),'nDFitAna%A',name_sub)
+        CALL alloc_NParray(nDFitAna%B,shape(Q0),'nDFitAna%B',name_sub)
+        CALL alloc_NParray(nDFitAna%Step,shape(Q0),'nDFitAna%Step',name_sub)
+        CALL alloc_NParray(nDFitAna%coord_list,shape(Q0),'nDFitAna%coord_list',name_sub)
 
-        para_AnaLysis%A(:)  = ZERO
-        para_AnaLysis%B(:)  = ZERO
-        para_AnaLysis%nq(:) = 0
+        nDFitAna%A(:)  = ZERO
+        nDFitAna%B(:)  = ZERO
+        nDFitAna%nq(:) = 0
 
         IF (.NOT. all_coord) THEN
-          para_AnaLysis%coord_list(:) = 0
+          nDFitAna%coord_list(:) = 0
 
           DO i=1,ndim
            CALL read_name_advNo(in_unitp,name_int,err_read)
@@ -195,33 +377,32 @@
            IF (len_trim(name_int) == 0) EXIT
              !write(out_unitp,*) 'i,err_io',i,err_io
              !write(out_unitp,*) 'i,name_int',i,name_int
-             read(name_int,*) para_AnaLysis%coord_list(i)
+             read(name_int,*) nDFitAna%coord_list(i)
              IF (err_read /= 0) EXIT ! end of the liste
 
           END DO
-          write(out_unitp,*) 'coord_list',para_AnaLysis%coord_list(:)
+          write(out_unitp,*) 'coord_list',nDFitAna%coord_list(:)
         ELSE
-          para_AnaLysis%coord_list(:) = (/ (i,i=1,ndim) /)
+          nDFitAna%coord_list(:) = (/ (i,i=1,ndim) /)
         END IF
 
-        read(in_unitp,*) name_dum,para_AnaLysis%nq(:)
-        read(in_unitp,*) name_dum,para_AnaLysis%A(:)
-        read(in_unitp,*) name_dum,para_AnaLysis%B(:)
+        read(in_unitp,*) name_dum,nDFitAna%nq(:)
+        read(in_unitp,*) name_dum,nDFitAna%A(:)
+        read(in_unitp,*) name_dum,nDFitAna%B(:)
 
-        para_AnaLysis%Step(:) =                                         &
-                              (para_analysis%B(:)-para_analysis%A(:)) / &
-                                 real(para_analysis%nq(:)-1,kind=Rkind)
+        nDFitAna%Step(:) = (nDFitAna%B(:)-nDFitAna%A(:)) /              &
+                                 real(nDFitAna%nq(:)-1,kind=Rkind)
 
 
         IF (DeltaRange_Read) THEN
-           para_AnaLysis%A(:) = Q0 + para_AnaLysis%A(:)
-           para_AnaLysis%B(:) = Q0 + para_AnaLysis%B(:)
+           nDFitAna%A(:) = Q0 + nDFitAna%A(:)
+           nDFitAna%B(:) = Q0 + nDFitAna%B(:)
         END IF
 
-        write(out_unitp,*) 'nq:',para_AnaLysis%nq(:)
-        CALL Write_VecMat(para_AnaLysis%A,out_unitp,5,name_info='range A:')
-        CALL Write_VecMat(para_AnaLysis%B,out_unitp,5,name_info='range B:')
-        CALL Write_VecMat(para_AnaLysis%Step,out_unitp,5,name_info='Step:')
+        write(out_unitp,*) 'nq:',nDFitAna%nq(:)
+        CALL Write_VecMat(nDFitAna%A,out_unitp,5,name_info='range A:')
+        CALL Write_VecMat(nDFitAna%B,out_unitp,5,name_info='range B:')
+        CALL Write_VecMat(nDFitAna%Step,out_unitp,5,name_info='Step:')
 
         CALL flush_perso(out_unitp)
 
@@ -334,14 +515,14 @@
         END IF
 
 
-        CALL alloc_array(para_nDFit%Q0,shape(Q0),'para_nDFit%Q0',name_sub)
+        CALL alloc_NParray(para_nDFit%Q0,shape(Q0),'para_nDFit%Q0',name_sub)
         para_nDFit%Q0(:) = Q0(:)
 
-        CALL alloc_array(para_nDFit%nDweight,shape(Q0),                 &
+        CALL alloc_NParray(para_nDFit%nDweight,shape(Q0),                 &
                         'para_nDFit%nDweight',name_sub)
-        CALL alloc_array(para_nDFit%nDsize,shape(Q0),                   &
+        CALL alloc_NParray(para_nDFit%nDsize,shape(Q0),                   &
                         'para_nDFit%nDsize',name_sub)
-        CALL alloc_array(para_nDFit%ntyp,shape(Q0),                     &
+        CALL alloc_NParray(para_nDFit%ntyp,shape(Q0),                     &
                         'para_nDFit%ntyp',name_sub)
         para_nDFit%ntyp(:) = 15 ! polynomial
 
@@ -353,9 +534,8 @@
         write(out_unitp,*) para_nDFit%nDsize(:)
         write(out_unitp,*) para_nDFit%ntyp(:)
 
-
         IF (Analysis) THEN
-          CALL Read_Analysis(para_nDFit%para_Analysis,Q0)
+          CALL Read_Analysis(para_nDFit%nDFitAna,Q0)
         END IF
 
         CALL flush_perso(out_unitp)
@@ -382,14 +562,14 @@
       write(out_unitp,*)  '  ---------------------------------------------------------'
 
       write(out_unitp,*)  'ndim',para_nDFit%ndim
-      write(out_unitp,*)  'asso Q0',associated(para_nDFit%Q0)
-      IF (associated(para_nDFit%Q0)) write(out_unitp,*)  'Q0',para_nDFit%Q0
-      write(out_unitp,*)  'asso nDsize',associated(para_nDFit%nDsize)
-      IF (associated(para_nDFit%nDsize)) write(out_unitp,*)  'nDsize',para_nDFit%nDsize
-      write(out_unitp,*)  'asso nDweight',associated(para_nDFit%nDweight)
-      IF (associated(para_nDFit%nDweight)) write(out_unitp,*)  'nDweight',para_nDFit%nDweight
-      write(out_unitp,*)  'asso ntyp',associated(para_nDFit%ntyp)
-      IF (associated(para_nDFit%ntyp)) write(out_unitp,*)  'ntyp',para_nDFit%ntyp
+      write(out_unitp,*)  'allo Q0',allocated(para_nDFit%Q0)
+      IF (allocated(para_nDFit%Q0)) write(out_unitp,*)  'Q0',para_nDFit%Q0
+      write(out_unitp,*)  'allo nDsize',allocated(para_nDFit%nDsize)
+      IF (allocated(para_nDFit%nDsize)) write(out_unitp,*)  'nDsize',para_nDFit%nDsize
+      write(out_unitp,*)  'allo nDweight',allocated(para_nDFit%nDweight)
+      IF (allocated(para_nDFit%nDweight)) write(out_unitp,*)  'nDweight',para_nDFit%nDweight
+      write(out_unitp,*)  'allo ntyp',allocated(para_nDFit%ntyp)
+      IF (allocated(para_nDFit%ntyp)) write(out_unitp,*)  'ntyp',para_nDFit%ntyp
 
       write(out_unitp,*)  'nDindB'
       CALL Write_nDindex(para_nDFit%nDindB,'para_nDFit')
@@ -397,10 +577,10 @@
 
 
       write(out_unitp,*)  'nb_WB',para_nDFit%nb_WB
-      write(out_unitp,*)  'asso B',associated(para_nDFit%B)
-      IF (associated(para_nDFit%nDvalB)) write(out_unitp,*)  'nDvalB',para_nDFit%nDvalB
-      write(out_unitp,*)  'asso nDvalB',associated(para_nDFit%nDvalB)
-      IF (associated(para_nDFit%nDvalB)) write(out_unitp,*)  'nDvalB',para_nDFit%nDvalB
+      write(out_unitp,*)  'allo B',allocated(para_nDFit%B)
+      IF (allocated(para_nDFit%nDvalB)) write(out_unitp,*)  'nDvalB',para_nDFit%nDvalB
+      write(out_unitp,*)  'allo nDvalB',allocated(para_nDFit%nDvalB)
+      IF (allocated(para_nDFit%nDvalB)) write(out_unitp,*)  'nDvalB',para_nDFit%nDvalB
       write(out_unitp,*)  '  ---------------------------------------------------------'
 
       write(out_unitp,*)  'MinCoupling,MaxCoupling',para_nDFit%MinCoupling,para_nDFit%MaxCoupling
@@ -416,7 +596,7 @@
 
 
       write(out_unitp,*)  'Analysis',para_nDFit%Analysis
-      !CALL Write_nDindex(para_nDFit%para_Analysis)
+      !CALL Write_nDindex(para_nDFit%nDFitAna)
       write(out_unitp,*)  '  ---------------------------------------------------------'
 
       write(out_unitp,*)  'Col_FOR_WeightOFFit',para_nDFit%Col_FOR_WeightOFFit
@@ -541,7 +721,7 @@
             CALL ReadWrite_nDFitW(para_nDFit%Tab_para_nDFit(i),.TRUE.)
           END DO
           para_nDFit%ndim = para_nDFit%Tab_para_nDFit(1)%ndim
-          para_nDFit%Q0 => para_nDFit%Tab_para_nDFit(1)%Q0
+          para_nDFit%Q0   = para_nDFit%Tab_para_nDFit(1)%Q0
         ELSE
           write(out_unitp,*) "  ndim (nb_act): ",ndim
           write(out_unitp,*) "  nb read functions: ",nb_WB
@@ -555,21 +735,21 @@
             STOP
           END IF
 
-          IF (.NOT. associated(para_nDFit%Q0)) THEN
-            CALL alloc_array(para_nDFit%Q0,(/ndim/),                      &
-                            'para_nDFit%Q0',name_sub)
+          IF (.NOT. allocated(para_nDFit%Q0)) THEN
+            CALL alloc_NParray(para_nDFit%Q0,(/ndim/),                  &
+                              'para_nDFit%Q0',name_sub)
           END IF
-          IF (.NOT. associated(para_nDFit%nDweight)) THEN
-            CALL alloc_array(para_nDFit%nDweight,(/ndim/),                &
-                            'para_nDFit%nDweight',name_sub)
+          IF (.NOT. allocated(para_nDFit%nDweight)) THEN
+            CALL alloc_NParray(para_nDFit%nDweight,(/ndim/),            &
+                              'para_nDFit%nDweight',name_sub)
           END IF
-          IF (.NOT. associated(para_nDFit%nDsize)) THEN
-            CALL alloc_array(para_nDFit%nDsize,(/ndim/),                  &
-                            'para_nDFit%nDsize',name_sub)
+          IF (.NOT. allocated(para_nDFit%nDsize)) THEN
+            CALL alloc_NParray(para_nDFit%nDsize,(/ndim/),              &
+                              'para_nDFit%nDsize',name_sub)
           END IF
-          IF (.NOT. associated(para_nDFit%ntyp)) THEN
-            CALL alloc_array(para_nDFit%ntyp,(/ndim/),                    &
-                            'para_nDFit%ntyp',name_sub)
+          IF (.NOT. allocated(para_nDFit%ntyp)) THEN
+            CALL alloc_NParray(para_nDFit%ntyp,(/ndim/),                &
+                              'para_nDFit%ntyp',name_sub)
           END IF
 
           read(nioFit,*) name_dum,para_nDFit%Q0 ! for Q0
@@ -601,10 +781,10 @@
 
           CALL flush_perso(out_unitp)
 
-          CALL alloc_array(para_nDFit%B,(/nb_WB/),                      &
-                          'para_nDFit%B',name_sub)
-          CALL alloc_array(para_nDFit%nDvalB,(/ndim,nb_WB/),            &
-                          'para_nDFit%nDvalB',name_sub)
+          CALL alloc_NParray(para_nDFit%B,(/nb_WB/),                    &
+                            'para_nDFit%B',name_sub)
+          CALL alloc_NParray(para_nDFit%nDvalB,(/ndim,nb_WB/),          &
+                            'para_nDFit%nDvalB',name_sub)
 
           DO iB=1,nb_WB
             read(nioFit,*) idum,para_nDFit%nDvalB(:,iB),para_nDFit%B(iB)
@@ -667,7 +847,7 @@
         epsi_inter           = para_nDFit%epsi_inter
         Col_FOR_WeightOFFit  = para_nDFit%Col_FOR_WeightOFFit
         Scal_FOR_WeightOFFit = para_nDFit%Scal_FOR_WeightOFFit
-        nb_Fit       =  0
+        nb_Fit               = 0
 
         CALL Write_int_IN_char(ind_val,name_int)
         para_nDFit%Param_Fit_file%name =                                &
@@ -733,10 +913,10 @@
         END IF
 
 
-        IF (associated(para_nDFit%B))                                   &
-               CALL dealloc_array(para_nDFit%B,'para_nDFit%B',name_sub)
-        IF (associated(para_nDFit%nDvalB))                              &
-           CALL dealloc_array(para_nDFit%nDvalB,'para_nDFit%nDvalB',name_sub)
+        IF (allocated(para_nDFit%B))                                   &
+               CALL dealloc_NParray(para_nDFit%B,'para_nDFit%B',name_sub)
+        IF (allocated(para_nDFit%nDvalB))                              &
+           CALL dealloc_NParray(para_nDFit%nDvalB,'para_nDFit%nDvalB',name_sub)
 
         CALL ReadWrite_nDFitW(para_nDFit,.TRUE.)
 
@@ -824,30 +1004,30 @@
 
 
         IF (para_nDFit%Analysis .AND.                                   &
-            (para_nDFit%para_analysis%Grid1D .OR.                       &
-             para_nDFit%para_analysis%Grid2D) ) THEN
+            (para_nDFit%nDFitAna%Grid1D .OR.                       &
+             para_nDFit%nDFitAna%Grid2D) ) THEN
           write(out_unitp,*) "======================================"
           write(out_unitp,*) "=== GRID PARAM FIT ==================="
           write(out_unitp,*) "======================================"
           Q(:) = para_nDFit%Q0(:)
           CALL sub_nDFunc_FROM_nDFit(val0,Q,para_nDFit)
           val_min_1D = val0
-          ndim_coord = count(para_nDFit%para_analysis%coord_list /= 0)
+          ndim_coord = count(para_nDFit%nDFitAna%coord_list /= 0)
 
-          IF (para_nDFit%para_analysis%Grid1D) THEN
+          IF (para_nDFit%nDFitAna%Grid1D) THEN
             Grid1D_file%name="Grid1D"
             CALL file_open(Grid1D_file,nio)
             ii = 0
 
             DO ic1=1,ndim_coord
-              i1 = para_nDFit%para_analysis%coord_list(ic1)
+              i1 = para_nDFit%nDFitAna%coord_list(ic1)
               val_min = huge(ONE)
               val_max = -huge(ONE)
               write(out_unitp,*) "====1D Grid",i1,"====================="
               Q(:) = para_nDFit%Q0(:)
               Q10  = para_nDFit%Q0(i1)
-              Q(i1) = para_nDFit%para_analysis%A(i1)
-              DO iq1=1,para_nDFit%para_analysis%nq(i1)
+              Q(i1) = para_nDFit%nDFitAna%A(i1)
+              DO iq1=1,para_nDFit%nDFitAna%nq(i1)
                 CALL sub_nDFunc_FROM_nDFit(val_nDfit,Q,para_nDFit)
                 IF (val_nDfit < val_min) THEN
                    val_min = val_nDfit
@@ -858,7 +1038,7 @@
                    Q1_max  = Q(i1)
                 END IF
                 write(nio,*) ii,i1,Q(i1),val_nDfit*conv_col
-                Q(i1) = Q(i1) + para_nDFit%para_analysis%Step(i1)
+                Q(i1) = Q(i1) + para_nDFit%nDFitAna%Step(i1)
               END DO
               write(nio,*)
               write(nio,*)
@@ -874,15 +1054,15 @@
 
             CALL file_close(Grid1D_file)
           END IF
-          IF (para_nDFit%para_analysis%Grid2D) THEN
+          IF (para_nDFit%nDFitAna%Grid2D) THEN
             Grid2D_file%name="Grid2D"
             CALL file_open(Grid2D_file,nio)
             ii = 0
 
             DO ic1=1,ndim_coord
             DO ic2=ic1+1,ndim_coord
-              i1 = para_nDFit%para_analysis%coord_list(ic1)
-              i2 = para_nDFit%para_analysis%coord_list(ic2)
+              i1 = para_nDFit%nDFitAna%coord_list(ic1)
+              i2 = para_nDFit%nDFitAna%coord_list(ic2)
 
               write(out_unitp,*) "====2D Grid",i1,i2,"================"
               val_min = huge(ONE)
@@ -891,12 +1071,12 @@
               Q10  = para_nDFit%Q0(i1)
               Q20  = para_nDFit%Q0(i2)
 
-              Q(i1) = para_nDFit%para_analysis%A(i1)
+              Q(i1) = para_nDFit%nDFitAna%A(i1)
 
-              DO iq1=1,para_nDFit%para_analysis%nq(i1)
+              DO iq1=1,para_nDFit%nDFitAna%nq(i1)
 
-                Q(i2) = para_nDFit%para_analysis%A(i2)
-                DO iq2=1,para_nDFit%para_analysis%nq(i2)
+                Q(i2) = para_nDFit%nDFitAna%A(i2)
+                DO iq2=1,para_nDFit%nDFitAna%nq(i2)
                   CALL sub_nDFunc_FROM_nDFit(val_nDfit,Q,para_nDFit)
                   write(nio,*) ii,i1,i2,Q(i1),Q(i2),val_nDfit*conv_col
 
@@ -910,9 +1090,9 @@
                      Q1_max  = Q(i1)
                      Q2_max  = Q(i2)
                   END IF
-                  Q(i2) = Q(i2) + para_nDFit%para_analysis%Step(i2)
+                  Q(i2) = Q(i2) + para_nDFit%nDFitAna%Step(i2)
                 END DO
-                Q(i1) = Q(i1) + para_nDFit%para_analysis%Step(i1)
+                Q(i1) = Q(i1) + para_nDFit%nDFitAna%Step(i1)
                 write(nio,*)
               END DO
               write(out_unitp,*) 'Q0   val0   ',i1,i2,Q10,Q20,val0*conv_col
@@ -929,15 +1109,15 @@
             CALL file_close(Grid2D_file)
           END IF
 
-          IF (para_nDFit%para_analysis%Grid2D) THEN
+          IF (para_nDFit%nDFitAna%Grid2D) THEN
             ii = 0
 
             DO ic1=1,ndim_coord
             DO ic2=ic1+1,ndim_coord
             DO ic3=ic2+1,ndim_coord
-              i1 = para_nDFit%para_analysis%coord_list(ic1)
-              i2 = para_nDFit%para_analysis%coord_list(ic2)
-              i3 = para_nDFit%para_analysis%coord_list(ic3)
+              i1 = para_nDFit%nDFitAna%coord_list(ic1)
+              i2 = para_nDFit%nDFitAna%coord_list(ic2)
+              i3 = para_nDFit%nDFitAna%coord_list(ic3)
 
               val_min = huge(ONE)
               val_max = -huge(ONE)
@@ -946,15 +1126,15 @@
               Q20  = para_nDFit%Q0(i2)
               Q30  = para_nDFit%Q0(i2)
 
-              Q(i1) = para_nDFit%para_analysis%A(i1)
+              Q(i1) = para_nDFit%nDFitAna%A(i1)
 
-              DO iq1=1,para_nDFit%para_analysis%nq(i1)
+              DO iq1=1,para_nDFit%nDFitAna%nq(i1)
 
-                Q(i2) = para_nDFit%para_analysis%A(i2)
-                DO iq2=1,para_nDFit%para_analysis%nq(i2)
+                Q(i2) = para_nDFit%nDFitAna%A(i2)
+                DO iq2=1,para_nDFit%nDFitAna%nq(i2)
 
-                  Q(i3) = para_nDFit%para_analysis%A(i3)
-                  DO iq3=1,para_nDFit%para_analysis%nq(i3)
+                  Q(i3) = para_nDFit%nDFitAna%A(i3)
+                  DO iq3=1,para_nDFit%nDFitAna%nq(i3)
 
                     CALL sub_nDFunc_FROM_nDFit(val_nDfit,Q,para_nDFit)
 
@@ -971,11 +1151,11 @@
                        Q3_max  = Q(i3)
                     END IF
 
-                    Q(i3) = Q(i3) + para_nDFit%para_analysis%Step(i3)
+                    Q(i3) = Q(i3) + para_nDFit%nDFitAna%Step(i3)
                   END DO
-                  Q(i2) = Q(i2) + para_nDFit%para_analysis%Step(i2)
+                  Q(i2) = Q(i2) + para_nDFit%nDFitAna%Step(i2)
                 END DO
-                Q(i1) = Q(i1) + para_nDFit%para_analysis%Step(i1)
+                Q(i1) = Q(i1) + para_nDFit%nDFitAna%Step(i1)
               END DO
               IF (val_min < val_min_1D) THEN
                 write(out_unitp,*) "====3D Grid",i1,i2,i3,"============="
@@ -1001,7 +1181,7 @@
       END SUBROUTINE Analysis_nDFit
 
 
-      SUBROUTINE nDFit1_TO_TnDFit2()
+      SUBROUTINE Read_FOR_nDFit1_TO_TnDFit2()
       USE mod_system
       IMPLICIT NONE
 
@@ -1013,8 +1193,8 @@
       integer                    :: nb_coupling1,nb_coupling_act,nb_coupling_inact
       character (len=Name_len)   :: name_dum,name_int
       character (len=Line_len)   :: name_Fit1,name_Fit2
-      integer, pointer           :: nDinit(:)
-      integer, pointer           :: list_Qact(:)
+      integer, allocatable       :: nDinit(:)
+      integer, allocatable       :: list_Qact(:)
 
       real (kind=Rkind)          :: Norm1
       logical                    :: keep
@@ -1112,21 +1292,20 @@
         para_nDFit2%Scal_FOR_WeightOFFit = para_nDFit1%Scal_FOR_WeightOFFit
 
 
-        CALL alloc_array(para_nDFit2%Q0,(/para_nDFit2%ndim/),           &
-                        'para_nDFit2%Q0',name_sub)
+        CALL alloc_NParray(para_nDFit2%Q0,(/para_nDFit2%ndim/),         &
+                          'para_nDFit2%Q0',name_sub)
         para_nDFit2%Q0(:) = para_nDFit1%Q0(:)
-        nullify(nDinit)
-        CALL alloc_array(nDinit,(/para_nDFit2%ndim/),'nDinit',name_sub)
+        CALL alloc_NParray(nDinit,(/para_nDFit2%ndim/),'nDinit',name_sub)
         nDinit(:) = 1
-        CALL alloc_array(list_Qact,(/para_nDFit2%ndim/),'list_Qact',name_sub)
+        CALL alloc_NParray(list_Qact,(/para_nDFit2%ndim/),'list_Qact',name_sub)
         list_Qact(:) = 0
 
-        CALL alloc_array(para_nDFit2%nDweight,(/para_nDFit2%ndim/),     &
-                        'para_nDFit2%nDweight',name_sub)
-        CALL alloc_array(para_nDFit2%nDsize,(/para_nDFit2%ndim/),       &
-                        'para_nDFit2%nDsize',name_sub)
-        CALL alloc_array(para_nDFit2%ntyp,(/para_nDFit2%ndim/),         &
-                        'para_nDFit2%ntyp',name_sub)
+        CALL alloc_NParray(para_nDFit2%nDweight,(/para_nDFit2%ndim/),   &
+                          'para_nDFit2%nDweight',name_sub)
+        CALL alloc_NParray(para_nDFit2%nDsize,(/para_nDFit2%ndim/),     &
+                          'para_nDFit2%nDsize',name_sub)
+        CALL alloc_NParray(para_nDFit2%ntyp,(/para_nDFit2%ndim/),       &
+                          'para_nDFit2%ntyp',name_sub)
         para_nDFit2%ntyp(:) = para_nDFit1%ntyp(:)
 
         read(in_unitp,*) para_nDFit2%nDweight(:)
@@ -1178,8 +1357,8 @@
             keep = para_nDFit1%nDvalB(i,iB)+1 <= para_nDFit2%nDsize(i)
             IF (.NOT. keep) EXIT
           END DO
-          nb_coupling1    = count(para_nDFit1%nDvalB(:,iB) > 0)
-          nb_coupling_act = count(para_nDFit1%nDvalB(list_Qact(1:nb_Qact),iB) > 0)
+          nb_coupling1      = count(para_nDFit1%nDvalB(:,iB) > 0)
+          nb_coupling_act   = count(para_nDFit1%nDvalB(list_Qact(1:nb_Qact),iB) > 0)
           nb_coupling_inact = nb_coupling1 - nb_coupling_act
           !write(out_unitp,*) 'iB,tab',iB,':',para_nDFit1%nDvalB(:,iB)
           !write(out_unitp,*) 'nb_coupling_act,nb_coupling_inact',nb_coupling_act,nb_coupling_inact
@@ -1228,11 +1407,10 @@
         CALL Analysis_nDFitW(para_nDFit2,conv_ene=219475._Rkind)
 
 
-        CALL dealloc_array(nDinit,'nDinit',name_sub)
-        CALL dealloc_array(list_Qact,'list_Qact',name_sub)
+        CALL dealloc_NParray(nDinit,   'nDinit',name_sub)
+        CALL dealloc_NParray(list_Qact,'list_Qact',name_sub)
 
-
-      END SUBROUTINE nDFit1_TO_TnDFit2
+      END SUBROUTINE Read_FOR_nDFit1_TO_TnDFit2
 
       SUBROUTINE sub_nDFunc_FROM_nDFit(val_nDfit,Q,para_nDFit)
       USE mod_system

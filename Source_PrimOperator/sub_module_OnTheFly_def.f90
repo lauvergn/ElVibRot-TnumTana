@@ -43,11 +43,11 @@
 !================================================================
 !     Module for "one-the-fly" (OTF) calculation of PES (pot, gradrient, hessian)
 !================================================================
-      MODULE mod_OTF_def
-      use mod_system
-      IMPLICIT NONE
+  MODULE mod_OTF_def
+  USE mod_system
+   IMPLICIT NONE
 
-        PRIVATE
+   PRIVATE
 
         TYPE param_OTF
 !         for the ab initio calculation
@@ -74,21 +74,17 @@
         END TYPE param_OTF
 
 
-      PUBLIC :: param_OTF, write_OTF, init_G03_OTF
+      PUBLIC :: param_OTF, dealloc_OTF, write_OTF, init_OTF
 
-      CONTAINS
+  CONTAINS
 
-      !!@description: TODO
-      !!@param: TODO
-      !!@param: TODO
-      !!@param: TODO
-      SUBROUTINE init_G03_OTF(para_OTF)
+      SUBROUTINE init_OTF(para_OTF)
 
       TYPE (param_OTF)    :: para_OTF
 !     - for the files -----------------------------------------------
 
 
-!     write(out_unitp,*) 'init_G03_OTF'
+!     write(out_unitp,*) 'init_OTF'
 
       para_OTF%ab_initio_meth     = 'hf '
       para_OTF%ab_initio_basis    = ' sto-3g'
@@ -123,8 +119,8 @@
       para_OTF%file_log%append    = .FALSE.
       para_OTF%file_log%old       = .TRUE.
 
-      para_OTF%file_FChk%name     ='Test.FChk'
-      para_OTF%file_FChk%unit     = 0
+      para_OTF%file_FChk%name      ='Test.FChk'
+      para_OTF%file_FChk%unit      = 0
       para_OTF%file_FChk%formatted = .TRUE.
       para_OTF%file_FChk%append    = .FALSE.
       para_OTF%file_FChk%old       = .TRUE.
@@ -136,15 +132,13 @@
       para_OTF%file_pun%append    = .FALSE.
       para_OTF%file_pun%old       = .TRUE.
 
-!     write(out_unitp,*) 'END init_G03_OTF'
+!     write(out_unitp,*) 'END init_OTF'
 
-      END SUBROUTINE init_G03_OTF
+      END SUBROUTINE init_OTF
 
       SUBROUTINE write_OTF(para_OTF)
 
       TYPE (param_OTF)    :: para_OTF
-!     - for the files -----------------------------------------------
-
 
       write(out_unitp,*) 'write_OTF'
 
@@ -206,6 +200,29 @@
        para_OTF1%file_pun        = para_OTF2%file_pun
 
       END SUBROUTINE OTF2_TO_OTF1
+      SUBROUTINE dealloc_OTF(para_OTF)
 
-      END MODULE mod_OTF_def
+      CLASS (param_OTF), intent(inout)    :: para_OTF
+
+       para_OTF%charge          = 0
+       para_OTF%multiplicity    = -1
+
+       para_OTF%ab_initio_prog  = ''
+       para_OTF%ab_initio_meth  = ''
+       para_OTF%ab_initio_basis = ''
+       para_OTF%commande_unix   = ''
+       para_OTF%header          = .FALSE.
+       para_OTF%footer          = .FALSE.
+
+       para_OTF%file_name       = ''
+
+       CALL file_dealloc(para_OTF%file_header)
+       CALL file_dealloc(para_OTF%file_footer)
+       CALL file_dealloc(para_OTF%file_data)
+       CALL file_dealloc(para_OTF%file_log)
+       CALL file_dealloc(para_OTF%file_FChk)
+       CALL file_dealloc(para_OTF%file_pun)
+
+      END SUBROUTINE dealloc_OTF
+  END MODULE mod_OTF_def
 

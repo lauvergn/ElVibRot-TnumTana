@@ -1,0 +1,64 @@
+#!/bin/bash
+
+test_size=$1
+
+if [ -z $test_size ]
+then
+  test_size=small
+fi
+
+if [ $test_size = 'small' ]
+then
+ echo " Small tests"
+fi
+
+if [ $test_size = 'medium' ]
+then
+ echo " Medium tests"
+fi
+
+if [ $test_size = 'big' ]
+then
+ echo " Big tests"
+fi
+
+
+ SYSTEM=sub_system_HNO3_ccsdt_old.f
+
+
+ cp HESS-fit/inter_0-vtz HESS-fit/inter_0
+
+here=`pwd`
+
+DIR_vib=../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make &> $here/comp.log
+cd $here
+
+
+./DAT_files/dat_HNO3_ccsdt-cHAC 0 3
+./CompareLevel res_HNO3_cHAC_Norm0-L3 Table4_PCCP2010-1+8D.txt 3
+
+if [ $test_size = 'medium' ]
+then
+ # this is too long, we use the Davidsonversion
+ #./dat_HNO3_ccsdt-cHAC 3 5
+ ./DAT_files/dat_HNO3_ccsdt-cHAC_DavRead 3 5
+ ./CompareLevel res_HNO3_cHAC_Norm3-L5 Table4_PCCP2010-1+8D.txt 4
+fi
+
+if [ $test_size = 'big' ]
+then
+ # this is too long, we use the Davidsonversion
+ #./dat_HNO3_ccsdt-cHAC 3 5
+ ./DAT_files/dat_HNO3_ccsdt-cHAC_DavRead 3 5
+ ./CompareLevel res_HNO3_cHAC_Norm3-L5 Table4_PCCP2010-1+8D.txt 4
+
+ ./DAT_files/dat_HNO3_ccsdt-cHAC_DavRead 6 7
+ ./CompareLevel res_HNO3_cHAC_Norm6-L7 Table4_PCCP2010-1+8D.txt 5
+fi
+

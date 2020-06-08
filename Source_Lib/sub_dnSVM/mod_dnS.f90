@@ -219,13 +219,13 @@ CONTAINS
 !! @date 03/08/2017
 !!
 !! @param S                  TYPE (dnS_t):           derived type which deals with the derivatives of a scalar functions.
-!! @param ndim               integer (optional):    number of variables (coordiantes) for the derivatives.
+!! @param ndim               integer (optional):    number of variables (coordinates) for the derivatives.
 !! @param nderiv             integer (optional):    it enables to chose the derivative order (from 0 to 3).
 !! @param err_dnS            integer (optional):  to handle the errors errors (0: no error).
   SUBROUTINE QML_alloc_dnS(S,ndim,nderiv,err_dnS)
     USE mod_NumParameters
     TYPE (dnS_t), intent(inout)          :: S         !< derived type, which contains, matrix potential, its derivatives
-    integer,     intent(in),  optional  :: ndim      !< number of variables (coordiantes)
+    integer,     intent(in),  optional  :: ndim      !< number of variables (coordinates)
     integer,     intent(in),  optional  :: nderiv    !< order of the derivatives [0,1,3]
     integer,     intent(out), optional  :: err_dnS !< to handle the errors
 
@@ -352,7 +352,7 @@ CONTAINS
 !!
 !! @param Sres               TYPE (dnS_t) (result):    derived type which deals with the derivatives of a scalar functions.
 !! @param R                  real:                  Value of Sres%d0.
-!! @param ndim               integer (optional):    number of variables (coordiantes) for the derivatives.
+!! @param ndim               integer (optional):    number of variables (coordinates) for the derivatives.
 !! @param nderiv             integer (optional):    it enables to chose the derivative order (from 0 to 3).
 !! @param iQ                 integer (optional):    when ndim > 1, dSres/dQ_iQ = Sres%d1(iQ)= 1, the other derivatives are zero
   FUNCTION QML_init_dnS(R,ndim,nderiv,iQ) RESULT(Sres)

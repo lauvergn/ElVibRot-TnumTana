@@ -1,0 +1,50 @@
+#!/bin/bash
+
+epsi=$4
+if [ -z $epsi ]
+then
+  epsi=0.1
+fi
+
+file=$1
+Oldfile=$2
+col=$3
+
+fNew=TempNew
+fOld=TempOld
+
+#echo $fNew $fOld
+
+#awk -v col=$col '{if (NR > 1) print $col}' $Oldfile
+
+awk -v col=$col '{if (NR > 1) print $col}' $Oldfile > $fOld
+cp $file   $fNew
+
+
+nb_li=`wc $fNew | awk '{print $1}'`
+
+#echo $nb_li
+
+
+CompFile()
+{
+n1=`head -$1 $fNew | tail -1`
+n2=`head -$1 $fOld | tail -1`
+d=$2
+#echo $n1 $n2 $d >> tempCompFile
+echo $n1 $n2 $d | LANG=C awk '{x=sqrt(($1-$2)^2) ; if (x > $3) {print x} else {print $3}}'
+}
+
+d=0.0
+for li in $(seq 1 1 $nb_li)
+do
+ d=`CompFile $li $d`
+ #echo $li $d
+done
+
+#echo For \"$file\", the largest relative difference between constants: $d
+echo The largest difference between levels of $file is : $d
+echo $d | LANG=C awk -v epsi=$epsi '{if ($1 > epsi) {print "    ERROR,  largest diff > " epsi} else {print "    No PROBLEM, largest diff <= " epsi}}'
+
+
+ rm $fNew $fOld

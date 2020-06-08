@@ -200,7 +200,7 @@
 
       SUBROUTINE Sub_SimulatedAnnealing(BasisnD,xOpt_min,Norm_min,      &
                                         SQ,nb_Opt,                      &
-                                     para_Tnum,mole,ComOp,para_PES,Qact,&
+                                        para_Tnum,mole,PrimOp,Qact,     &
                                         para_SimulatedAnnealing)
 
       USE mod_system
@@ -221,12 +221,11 @@
       TYPE (basis)          :: BasisnD
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
       integer          :: nb_scalar_Op
       logical          :: calc_scalar_Op
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)          :: ComOp
       TYPE (param_ReadOp)         :: para_ReadOp
       logical                     :: Save_FileGrid,Save_MemGrid
 
@@ -296,7 +295,7 @@
 
       print_level = 0
       CALL Sub_Energ_OF_ParamBasis(Norm_min,xOpt_min,nb_Opt,BasisnD,    &
-                                   para_Tnum,mole,ComOp,para_PES,Qact)
+                                   para_Tnum,mole,PrimOp,Qact)
       IF (size(xOpt_min) > 20) THEN
         write(out_unitp,*) ' Initial param',xOpt_min(1:10),' ... Energy',Norm_min
       ELSE
@@ -327,7 +326,7 @@
           xOpt(:) = QA(:) + x(:)*SQ(:)
 
           CALL Sub_Energ_OF_ParamBasis(NormB,xOpt,nb_Opt,BasisnD,       &
-                                       para_Tnum,mole,ComOp,para_PES,Qact)
+                                       para_Tnum,mole,PrimOp,Qact)
 
           !write(out_unitp,*) 'NormB',imc,NormB
           NormA = NormA + NormB
@@ -371,7 +370,7 @@
         END DO
 
         CALL Sub_Energ_OF_ParamBasis(NormA,xOpt,nb_Opt,BasisnD,         &
-                                     para_Tnum,mole,ComOp,para_PES,Qact)
+                                     para_Tnum,mole,PrimOp,Qact)
 
         DNorm = NormA - NormB
         !write(out_unitp,*) 'Norm',imc,xOpt,NormA
@@ -464,7 +463,7 @@
 
       SUBROUTINE Sub_SimulatedAnnealing_cuba(BasisnD,xOpt_min,Norm_min, &
                                              SQ,QA,QB,nb_Opt,           &
-                                    para_Tnum,mole,ComOp,para_PES,Qact, &
+                                            para_Tnum,mole,PrimOp,Qact, &
                                              para_SimulatedAnnealing)
 
       USE mod_system
@@ -485,12 +484,11 @@
       TYPE (basis)          :: BasisnD
 
 !----- variables pour la namelist minimum ----------------------------
-      TYPE (param_PES) :: para_PES
+      TYPE (PrimOp_t)  :: PrimOp
       integer          :: nb_scalar_Op
       logical          :: calc_scalar_Op
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ComOp)          :: ComOp
       TYPE (param_ReadOp)         :: para_ReadOp
       logical                     :: Save_FileGrid,Save_MemGrid
 
@@ -563,7 +561,7 @@
         END DO
       END DO
       CALL Sub_Energ_OF_ParamBasis(Norm_min,xOpt,nb_Opt,BasisnD,        &
-                                   para_Tnum,mole,ComOp,para_PES,Qact)
+                                   para_Tnum,mole,PrimOp,Qact)
 
       write(out_unitp,*) 'Initial param',xOpt,' Energy',Norm_min
 
@@ -588,7 +586,7 @@
         END DO
 
         CALL Sub_Energ_OF_ParamBasis(NormB,xOpt,nb_Opt,BasisnD,         &
-                                     para_Tnum,mole,ComOp,para_PES,Qact)
+                                     para_Tnum,mole,PrimOp,Qact)
 
         !write(out_unitp,*) 'NormB',imc,NormB
         NormA = NormA + NormB
@@ -605,7 +603,7 @@
       x0(:)   = xOpt_min(:)
       Xopt(:) = xOpt_min(:)
       CALL Sub_Energ_OF_ParamBasis(NormB,xOpt,nb_Opt,BasisnD,         &
-                                   para_Tnum,mole,ComOp,para_PES,Qact)
+                                   para_Tnum,mole,PrimOp,Qact)
       Norm_min = NormB
       write(out_unitp,*) ' Energy_min',xOpt_min,Norm_min
 
@@ -641,7 +639,7 @@
 
 
         CALL Sub_Energ_OF_ParamBasis(NormA,xOpt,nb_Opt,BasisnD,         &
-                                     para_Tnum,mole,ComOp,para_PES,Qact)
+                                     para_Tnum,mole,PrimOp,Qact)
 
         !write(out_unitp,*) 'imc,Xopt,NormA,SQ',imc,xOpt,NormA,SQ(1)
 

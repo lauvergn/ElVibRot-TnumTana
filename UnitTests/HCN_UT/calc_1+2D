@@ -1,0 +1,47 @@
+#!/bin/bash
+
+test_size=$1
+
+if [ -z $test_size ]
+then
+  test_size=small
+fi
+
+
+if [ $test_size = 'big' ]
+then
+ echo " Big tests"
+fi
+
+if [ $test_size = 'small' ]
+then
+ echo " Small tests"
+ ./DAT_files/dat_publi_HADA
+ ./CompareLevel lev_res_HADA_HarD Table2_JCP2001-1+2D.txt 2
+
+ ./DAT_files/dat_publi_cHAC 3
+ ./CompareLevel lev_res_cHAC_HarD Table2_JCP2001-1+2D.txt 4
+
+ ./DAT_files/dat_publi-Murrell f 5
+ ./CompareLevel lev_res_cHAC_Exact Table2_JCP2001-1+2D.txt 6 1.
+
+ ./DAT_files/dat_publi-Murrell t 11
+ ./CompareLevel lev20_res_cHAC_Exact Table_CV-1+2D.txt 5 0.1
+fi
+
+if [ $test_size = 'medium' ]
+then
+ echo " Medium tests"
+ ./DAT_files/dat_publi_HADA
+ ./CompareLevel lev_res_HADA_HarD Table2_JCP2001-1+2D.txt 2
+
+ ./DAT_files/dat_publi_cHAC 11
+ ./CompareLevel lev_res_cHAC_HarD Table2_JCP2001-1+2D.txt 4
+
+ ./DAT_files/dat_publi-Murrell f 11
+ ./CompareLevel lev_res_cHAC_Exact Table2_JCP2001-1+2D.txt 6 1.
+ ./CompareLevel lev20_res_cHAC_Exact Table_CV-1+2D.txt 5 0.1
+
+ ./DAT_files/dat_publi-Murrell t 16
+ ./CompareLevel lev20_res_cHAC_Exact Table_CV-1+2D.txt 5 0.1
+fi

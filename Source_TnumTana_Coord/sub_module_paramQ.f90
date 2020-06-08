@@ -122,7 +122,6 @@ CONTAINS
       logical                  :: nDfit_Op               = .FALSE.
       logical                  :: QMLib                  = .FALSE.
       character (len=Line_len) :: BaseName_nDfit_file
-      character (len=Name_len) :: name_int
 
       real (kind=Rkind) :: ex(3),nx,ey(3),ny,ez(3),nz
       real (kind=Rkind) :: VG(3)
@@ -265,6 +264,7 @@ CONTAINS
         write(out_unitp,*) ' Check your data !'
         STOP
       END IF
+      IF (OnTheFly) pot_itQtransfo = 0 ! cart
 
       IF(pot_itQtransfo == -1) THEN
         IF (pot_cart) THEN
@@ -283,16 +283,9 @@ CONTAINS
         STOP
       END IF
 
-      IF (OnTheFly) THEN
-        pot_itQtransfo = 0 ! cart
-        pot_act        = .FALSE.
-        pot_cart       = .TRUE.
-      END IF
       IF (nb_elec < 1) nb_elec = 1
       para_Tnum%para_PES_FromTnum%opt            = opt
       para_Tnum%para_PES_FromTnum%pot0           = pot0
-      para_Tnum%para_PES_FromTnum%pot_act        = pot_act
-      para_Tnum%para_PES_FromTnum%pot_cart       = pot_cart
       para_Tnum%para_PES_FromTnum%HarD           = HarD
       para_Tnum%para_PES_FromTnum%nb_elec        = nb_elec
       para_Tnum%para_PES_FromTnum%pot_cplx       = pot_cplx
@@ -301,6 +294,7 @@ CONTAINS
       para_Tnum%para_PES_FromTnum%nb_scalar_Op   = nb_scalar_Op
 
       para_Tnum%para_PES_FromTnum%deriv_WITH_FiniteDiff  = deriv_WITH_FiniteDiff
+
       para_Tnum%para_PES_FromTnum%nDfit_Op = nDfit_Op
       IF (nDfit_Op) THEN
        !STOP 'nDfit_Op is not possible anymore!!'
@@ -313,18 +307,13 @@ CONTAINS
          write(out_unitp,*) ' Check your data !'
          STOP
        END IF
-       para_Tnum%para_PES_FromTnum%para_nDFit_V%name_Fit =              &
+       para_Tnum%para_PES_FromTnum%nDFit_V_name_Fit =                   &
                            trim(adjustl(BaseName_nDfit_file)) // "-col1"
 
-       para_Tnum%para_PES_FromTnum%para_nDFit_V%Param_Fit_file%name =   &
-                           trim(adjustl(BaseName_nDfit_file)) // "-col1"
-
-       allocate(para_Tnum%para_PES_FromTnum%para_nDFit_Scalar_Op(nb_scalar_Op))
+       allocate(para_Tnum%para_PES_FromTnum%nDFit_Scalar_Op_name_Fit(nb_scalar_Op))
        DO i=1,nb_scalar_Op
-         CALL Write_int_IN_char(i+1,name_int)
-         para_Tnum%para_PES_FromTnum%para_nDFit_Scalar_Op(i)%Param_Fit_file%name =       &
-                      trim(adjustl(BaseName_nDfit_file)) // "-col" // &
-                                              trim(adjustl(name_int))
+         para_Tnum%para_PES_FromTnum%nDFit_Scalar_Op_name_Fit(i) =      &
+            trim(adjustl(BaseName_nDfit_file)) // "-col" // int_TO_char(i)
        END DO
       END IF
 
@@ -345,7 +334,7 @@ CONTAINS
         END IF
 
         IF (QMLib .AND. para_Tnum%para_PES_FromTnum%pot_itQtransfo /= mole%nb_Qtransfo-1) THEN
-          write(out_unitp,*)  ' WARNING QMLib=.TRUE. and its coordiantes are not Qdyn!!'
+          write(out_unitp,*)  ' WARNING QMLib=.TRUE. and its coordinates are not Qdyn!!'
         END IF
 
         write(out_unitp,*)  '------------------------------------------------------'
@@ -623,7 +612,7 @@ CONTAINS
       IMPLICIT NONE
 
 
-      TYPE (CoordType), intent(in)                    :: mole
+      TYPE (CoordType), intent(in)                  :: mole
       integer, intent(in)                           :: it_QTransfo
       real (kind=Rkind), intent(in)                 :: Qact(:)
       real (kind=Rkind), intent(inout), allocatable :: Qit(:)

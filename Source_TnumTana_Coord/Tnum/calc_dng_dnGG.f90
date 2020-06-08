@@ -28,12 +28,10 @@
 !===========================================================================
 MODULE mod_dnGG_dng
   use mod_system
-  use mod_dnSVM,   only: type_dnmat,type_dns,alloc_dnsvm,dealloc_dnsvm, &
-                         write_dnsvm, sub_zero_to_dnmat, inv_dnmat1_to_dnmat2, &
-                         type_dnvec, alloc_array, dealloc_array
+  use mod_dnSVM
   use mod_paramQ,  only: sub_QactTOdnMWx, Write_dnx, analyze_dnx
   use mod_Tnum,    only: zmatrix, tnum, write_mole, mole1tomole2, dealloc_zmat,&
-                         CoordType,Write_CoordType,CoordType1TOCoordType2,dealloc_CoordType
+                         CoordType,Write_CoordType,dealloc_CoordType
   USE mod_dnRho ! all
 
   IMPLICIT NONE
@@ -49,7 +47,7 @@ MODULE mod_dnGG_dng
     MODULE PROCEDURE get_d0GG_zmatrix,get_d0GG_CoordType
   END INTERFACE
 
-  PUBLIC :: new_vep,sub_vep_new,sub_vep
+  PUBLIC :: new_vep,sub_vep_new,sub_vep,Calc_vep_rho_from_dnGG
   PUBLIC :: get_d0g_d0GG,get_d0GG,get_dnGG_vep,get_dng_dnGG
 
   CONTAINS
@@ -77,11 +75,8 @@ MODULE mod_dnGG_dng
     TYPE (Tnum),       intent(in)               :: para_Tnum
     !-----------------------------------------------------------------
 
-
-
     !-----------------------------------------------------------------
     ! local variables
-    TYPE(Type_dnS)    :: dnJac,dnrho
     integer           :: nderiv_loc
     !-----------------------------------------------------------------
 
@@ -112,51 +107,7 @@ MODULE mod_dnGG_dng
     IF (nderiv_loc < 0) nderiv_loc = 0
     IF (nderiv_loc > 2) nderiv_loc = 2
 
-    CALL get_dng_dnGG_CoordType(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=nderiv_loc)
-
-    !------------------------------------------------------------
-    !-- extra potential term ------------------------------------
-    IF ( (para_Tnum%nrho == 1 .OR. para_Tnum%nrho == 2) .AND.         &
-                   .NOT. para_Tnum%num_GG .AND. nderiv_loc == 2 ) THEN
-
-      !----------------------------------------------------
-      !-- jac0,jaci,JACij calculation
-      !----------------------------------------------------
-      CALL alloc_dnSVM(dnJac,dnGG%nb_var_deriv,nderiv_loc)
-      CALL alloc_dnSVM(dnrho,dnGG%nb_var_deriv,nderiv_loc)
-
-      CALL sub3_dnDetGG(dnJac,dnGG,nderiv_loc,                          &
-                                 mole%masses,mole%Mtot_inv,mole%ncart)
-      !write(out_unitp,*) 'dnJac'
-      !CALL write_dnS(dnJac)
-      !----------------------------------------------------
-      !-- f0,fi,Fij calculation
-      !----------------------------------------------------
-      CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                          &
-                      nderiv_loc,para_Tnum%num_x,para_Tnum%stepT,     &
-                      para_Tnum%nrho)
-      rho = dnrho%d0
-      !write(out_unitp,*) 'rho :',rho
-      !write(out_unitp,*) 'dnrho'
-      !CALL write_dnS(dnrho)
-      !----------------------------------------------------
-      !-- vep calculation
-      !----------------------------------------------------
-      IF (new_vep) THEN !new vep
-        CALL sub_vep_new(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,       &
-                         dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
-      ELSE !old vep
-        CALL sub_vep(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,           &
-                         dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
-      END IF
-
-      CALL dealloc_dnSVM(dnJac)
-      CALL dealloc_dnSVM(dnrho)
-    ELSE
-      vep = ZERO
-    END IF
-    !------------------------------------------------------------
-    !------------------------------------------------------------
+    CALL get_dng_dnGG_CoordType(Qact,para_Tnum,mole,dnGG=dnGG,vep=vep,nderiv=nderiv_loc)
 
     !---------------------------------------------------------
     IF (debug .OR. para_Tnum%WriteT) THEN
@@ -203,230 +154,14 @@ MODULE mod_dnGG_dng
       END IF
 
   END SUBROUTINE get_dng_dnGG_zmatrix
-  SUBROUTINE get_dng_dnGG_CoordType_old(Qact,para_Tnum,mole,dng,dnGG,nderiv)
-  USE mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
-  IMPLICIT NONE
 
-      real (kind=Rkind), intent(in)               :: Qact(:)
-      TYPE(Type_dnMat),  intent(inout), optional  :: dng,dnGG
-      integer,           intent(in)               :: nderiv
-
-      !----- for the CoordType and Tnum --------------------------------
-      TYPE (CoordType),  intent(in)               :: mole
-      TYPE (Tnum),       intent(in)               :: para_Tnum
-
-      !-----------------------------------------------------------------
-      ! local variables
-      real (kind=Rkind) :: rho,vep
-      TYPE (Type_dnMat) :: dnGG100,dnGG_temp
-      TYPE (CoordType)  :: mole100
-      !TYPE (zmatrix)    :: mole_zmatrix
-
-      integer :: i,j
-
-      real (kind=Rkind) :: Gref(mole%ndimG,mole%ndimG)
-      real (kind=Rkind) :: Tdef2(mole%nb_act,mole%nb_act)
-      real (kind=Rkind) :: Tdef1(mole%nb_act)
-      real (kind=Rkind) :: Tcor2(mole%nb_act,3),Tcor1(3)
-      real (kind=Rkind) :: Trot(3,3)
-      real (kind=Rkind) :: Qdyn(mole%nb_var)
-      !-----------------------------------------------------------------
-
-
-!----- for debuging --------------------------------------------------
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
-      character (len=*), parameter :: name_sub = 'get_dng_dnGG'
-!-----------------------------------------------------------
-      IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*)
-        write(out_unitp,*) 'ndimG',mole%ndimG
-        write(out_unitp,*)
-        write(out_unitp,*) 'Qact',Qact
-        write(out_unitp,*)
-        CALL Write_CoordType(mole)
-        write(out_unitp,*)
-        write(out_unitp,*)
-        write(out_unitp,*) 'num_GG,num_g',para_Tnum%num_GG,para_Tnum%num_g
-        write(out_unitp,*) 'num_x,nrho',para_Tnum%num_x,para_Tnum%nrho
-        write(out_unitp,*) 'JJ',para_Tnum%JJ
-        write(out_unitp,*)
-        CALL flush_perso(out_unitp)
-      END IF
-
-      IF (para_Tnum%Gcte .AND. associated(para_Tnum%Gref)) THEN
-        IF (present(dnGG)) THEN
-          CALL sub_ZERO_TO_dnMat(dnGG,nderiv)
-          dnGG%d0(:,:) = para_Tnum%Gref(:,:)
-        END IF
-        IF (present(dng)) THEN
-          CALL sub_ZERO_TO_dnMat(dng,nderiv)
-          CALL inv_m1_TO_m2(para_Tnum%Gref,dng%d0,mole%ndimG,0,ZERO)
-        END IF
-        RETURN
-      END IF
-
-!-----------------------------------------------------------
-!-----------------------------------------------------------
-!-----------------------------------------------------------
-!-----------------------------------------------------------
-!     with anlytical expression of f2, f1
-!-----------------------------------------------------------
-!-----------------------------------------------------------
-!-----------------------------------------------------------
-   IF (mole%nb_Qtransfo == -1 .OR. para_Tnum%f2f1_ana) THEN
-        CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
-
-        ! we have to transfert mole to mole_zmatrix, ...
-        !  ... because calc_f2_f1Q_ana works only with zmatrix type
-        !CALL CoordType1TOCoordType2(mole,mole_zmatrix%CoordType)
-        !CALL calc_f2_f1Q_ana(Qdyn,                                      &
-        !                     Tdef2,Tdef1,vep,rho,                       &
-        !                     Tcor2,Tcor1,Trot,                          &
-        !                     para_Tnum,mole_zmatrix)
-        !CALL dealloc_zmat(mole_zmatrix)
-        CALL calc_f2_f1Q_ana(Qdyn,                                      &
-                             Tdef2,Tdef1,vep,rho,                       &
-                             Tcor2,Tcor1,Trot,                          &
-                             para_Tnum,mole)
-
-        CALL mat_id(Gref,mole%ndimG,mole%ndimG)
-        Gref(1:mole%nb_act,1:mole%nb_act) = -Tdef2
-        DO i=1,mole%nb_act
-            Gref(i,i) = TWO*Gref(i,i)
-        END DO
-        !!dnGG%alloc not present
-        IF (present(dnGG)) THEN
-          CALL sub_ZERO_TO_dnMat(dnGG,nderiv)
-          dnGG%d0(:,:) = Gref
-        END IF
-
-        IF (present(dng)) THEN
-          CALL sub_ZERO_TO_dnMat(dng,nderiv)
-          CALL inv_m1_TO_m2(Gref,dng%d0,mole%ndimG,0,ZERO)
-        END IF
-    ELSE
-      !---------------------------------------------------------------
-      IF (mole%nb_rigid100 > 0) THEN
-
-        IF (present(dnGG) .OR. present(dng)) THEN ! with type100 we need to calculate dnGG100 first
-                                                  ! then we can calculate dng form the inversion of dnGG
-          CALL CoordType1TOCoordType2(mole,mole100)
-
-          DO i=1,mole100%nb_var
-            IF (mole100%ActiveTransfo%list_act_OF_Qdyn(i) == 100)         &
-                             mole100%ActiveTransfo%list_act_OF_Qdyn(i) = 1
-          END DO
-          mole100%nb_act      = mole%nb_act  + mole%nb_rigid100
-          mole100%nb_act1     = mole%nb_act1 + mole%nb_rigid100
-          mole100%ndimG       = mole%ndimG   + mole%nb_rigid100
-          mole100%nb_rigid100 = 0
-          mole100%nb_rigid    = mole100%nb_rigid - mole%nb_rigid100
-
-          mole100%tab_Qtransfo(:)%nb_act = mole100%nb_act
-
-          IF (debug) THEN
-            write(out_unitp,*) 'mole%nb_rigid100 > 0',mole%nb_rigid100
-            write(out_unitp,*)
-            CALL Write_CoordType(mole100)
-            write(out_unitp,*)
-          END IF
-
-          CALL alloc_dnSVM(dnGG100,                                     &
-                           mole100%ndimG,mole100%ndimG,mole100%nb_act,  &
-                           dnGG%nderiv)
-
-          CALL get_dnGG(Qact,dnGG100,nderiv,para_Tnum,mole100)
-
-          IF (debug) THEN
-            write(out_unitp,*) 'dnGG100'
-            CALL Write_dnSVM(dnGG100)
-          END IF
-        END IF
-
-        IF (present(dnGG)) THEN
-          !- transfo G100 => G
-          CALL dngG100_TO_dngG(dnGG100,dnGG,mole100,mole)
-        END IF
-
-        IF (present(dng)) THEN
-          IF (present(dnGG)) THEN
-            CALL INV_dnMat1_TO_dnMat2(dnGG,dng,nderiv)
-          ELSE
-            !- transfo G100 => G
-            CALL dngG100_TO_dngG(dnGG100,dnGG_temp,mole100,mole)
-            CALL INV_dnMat1_TO_dnMat2(dnGG_temp,dng)
-            CALL dealloc_dnSVM(dnGG_temp)
-          END IF
-        END IF
-
-        CALL dealloc_dnSVM(dnGG100)
-        CALL dealloc_CoordType(mole100)
-
-      ELSE
-
-        IF (present(dng) .AND. present(dnGG)) THEN
-          IF (para_Tnum%num_GG) THEN
-            ! here we need to:
-            !   (1) calculate dnGG numerically with get_dnGG.
-            !   (2) inversion to get dng
-            !  This is important for type200
-            CALL get_dnGG(Qact,dnGG,nderiv,para_Tnum,mole)
-            CALL INV_dnMat1_TO_dnMat2(dnGG,dng,nderiv)
-          ELSE
-            CALL get_dng(Qact,dng,nderiv,para_Tnum,mole)
-            CALL INV_dnMat1_TO_dnMat2(dng,dnGG,nderiv)
-          END IF
-        ELSE IF (present(dnGG)) THEN
-          CALL get_dnGG(Qact,dnGG,nderiv,para_Tnum,mole)
-        ELSE IF (present(dng)) THEN
-          CALL get_dng(Qact,dng,nderiv,para_Tnum,mole)
-        END IF
-
-      END IF
-
-    END IF
-
-    IF (para_Tnum%Gdiago) THEN
-      DO i=1,mole%nb_act
-      DO j=1,mole%nb_act
-        IF (i == j) CYCLE
-        IF (present(dnGG)) THEN
-          dnGG%d0(i,j) = ZERO
-          IF (dnGG%nderiv > 0) dnGG%d1(i,j,:)   = ZERO
-          IF (dnGG%nderiv > 1) dnGG%d2(i,j,:,:) = ZERO
-        END IF
-        IF (present(dng)) THEN
-          dng%d0(i,j) = ZERO
-          IF (dnGG%nderiv > 0) dng%d1(i,j,:)   = ZERO
-          IF (dnGG%nderiv > 1) dng%d2(i,j,:,:) = ZERO
-        END IF
-      END DO
-      END DO
-    END IF
-
-!-----------------------------------------------------------
-      IF (debug) THEN
-        IF (present(dnGG)) THEN
-          write(out_unitp,*) 'dnGG'
-          CALL Write_dnSVM(dnGG)
-        END IF
-        IF (present(dng)) THEN
-          write(out_unitp,*) 'dng'
-          CALL Write_dnSVM(dng)
-        END IF
-        write(out_unitp,*) 'END ',name_sub
-      END IF
-!-----------------------------------------------------------
-
-  END SUBROUTINE get_dng_dnGG_CoordType_old
-  SUBROUTINE get_dng_dnGG_CoordType(Qact,para_Tnum,mole,dng,dnGG,nderiv)
+  SUBROUTINE get_dng_dnGG_CoordType(Qact,para_Tnum,mole,dng,dnGG,vep,nderiv)
   IMPLICIT NONE
 
     !-----------------------------------------------------------------
     real (kind=Rkind), intent(in)               :: Qact(:)
     TYPE(Type_dnMat),  intent(inout), optional  :: dng,dnGG
+    real (kind=Rkind), intent(inout), optional  :: vep
     integer,           intent(in)               :: nderiv
     !----- for the CoordType and Tnum --------------------------------
     TYPE (CoordType),  intent(in)               :: mole
@@ -435,14 +170,16 @@ MODULE mod_dnGG_dng
 
     !-----------------------------------------------------------------
     ! local variables
-    integer :: i,j
+    integer           :: i,j
+    real (kind=Rkind) :: vep_loc,rho
+    logical           :: vep_done
     !-----------------------------------------------------------------
 
 
     !----- for debuging --------------------------------------------------
     logical, parameter :: debug = .FALSE.
     !logical, parameter :: debug = .TRUE.
-    character (len=*), parameter :: name_sub = 'get_dng_dnGG'
+    character (len=*), parameter :: name_sub = 'get_dng_dnGG_CoordType'
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
@@ -450,14 +187,19 @@ MODULE mod_dnGG_dng
       write(out_unitp,*) 'ndimG',mole%ndimG
       write(out_unitp,*)
       write(out_unitp,*) 'Qact',Qact
-      write(out_unitp,*)
-      CALL Write_CoordType(mole)
+      !write(out_unitp,*)
+      !CALL Write_CoordType(mole)
       write(out_unitp,*)
       write(out_unitp,*)
       write(out_unitp,*) 'num_GG,num_g',para_Tnum%num_GG,para_Tnum%num_g
       write(out_unitp,*) 'num_x,nrho',para_Tnum%num_x,para_Tnum%nrho
       write(out_unitp,*) 'JJ',para_Tnum%JJ
       write(out_unitp,*)
+      write(out_unitp,*) 'present dnGG',present(dnGG)
+      write(out_unitp,*) 'present dng ',present(dng)
+      write(out_unitp,*) 'present vep ',present(vep)
+      write(out_unitp,*)
+
       CALL flush_perso(out_unitp)
     END IF
     !-----------------------------------------------------------------
@@ -471,6 +213,8 @@ MODULE mod_dnGG_dng
     END IF
     !-----------------------------------------------------------------
 
+    vep_done = .FALSE.
+    vep_loc  = ZERO
     IF (para_Tnum%Gcte .AND. associated(para_Tnum%Gref)) THEN
       !-----------------------------------------------------------------
       ! with constant metric tensor
@@ -495,42 +239,58 @@ MODULE mod_dnGG_dng
       IF (present(dnGG)) THEN
         IF (present(dng)) THEN
           CALL get_dng_dnGG_WITH_f2f1_ana(Qact,para_Tnum,mole,          &
-                                        dng=dng,dnGG=dnGG,nderiv=nderiv)
+                                          dng=dng,dnGG=dnGG,vep=vep_loc,&
+                                          nderiv=nderiv)
         ELSE
           CALL get_dng_dnGG_WITH_f2f1_ana(Qact,para_Tnum,mole,          &
-                                                dnGG=dnGG,nderiv=nderiv)
+                                    dnGG=dnGG,vep=vep_loc,nderiv=nderiv)
         END IF
       ELSE
         IF (present(dng)) THEN
           CALL get_dng_dnGG_WITH_f2f1_ana(Qact,para_Tnum,mole,          &
-                                                  dng=dng,nderiv=nderiv)
+                                      dng=dng,vep=vep_loc,nderiv=nderiv)
         ELSE
           ! nothing to do !!
         END IF
       END IF
       !-----------------------------------------------------------------
-
+      vep_done = .TRUE.
     ELSE IF (mole%nb_rigid100 > 0) THEN
       !-----------------------------------------------------------------
       ! with type100 coordinates
       IF (present(dnGG)) THEN
         IF (present(dng)) THEN
-          CALL get_dng_dnGG_WITH_type100(Qact,para_Tnum,mole,           &
-                                        dng=dng,dnGG=dnGG,nderiv=nderiv)
+          IF (para_Tnum%vep_type == -100) THEN
+            ! This version has a bug. We keep it to recover published results (HNO3)
+            CALL get_dng_dnGG_WITH_type100_bug_dng(Qact,para_Tnum,mole, &
+                                         dng=dng,dnGG=dnGG,             &
+                                         vep=vep_loc,vep_done=vep_done, &
+                                         nderiv=nderiv)
+            write(out_unitp,*) 'WARNING vep_type=-100. vep',vep_loc
+          ELSE
+            CALL get_dng_dnGG_WITH_type100(Qact,para_Tnum,mole,         &
+                                         dng=dng,dnGG=dnGG,             &
+                                         vep=vep_loc,vep_done=vep_done, &
+                                         nderiv=nderiv)
+          END IF
         ELSE
           CALL get_dng_dnGG_WITH_type100(Qact,para_Tnum,mole,           &
-                                                dnGG=dnGG,nderiv=nderiv)
+                                         dnGG=dnGG,                     &
+                                         vep=vep_loc,vep_done=vep_done, &
+                                         nderiv=nderiv)
         END IF
       ELSE
         IF (present(dng)) THEN
           CALL get_dng_dnGG_WITH_type100(Qact,para_Tnum,mole,           &
-                                                  dng=dng,nderiv=nderiv)
+                                         dng=dng,                       &
+                                         vep=vep_loc,vep_done=vep_done, &
+                                         nderiv=nderiv)
         ELSE
           ! nothing to do !!
         END IF
       END IF
-      !-----------------------------------------------------------------
 
+      !-----------------------------------------------------------------
     ELSE
       !-----------------------------------------------------------------
       ! Normal computation ...
@@ -552,10 +312,11 @@ MODULE mod_dnGG_dng
         CALL get_dng(Qact,dng,nderiv,para_Tnum,mole)
       END IF
       !-----------------------------------------------------------------
+
     END IF
 
     !-----------------------------------------------------------------
-    ! To remaove off-diagonal components
+    ! To remove off-diagonal components
     IF (para_Tnum%Gdiago) THEN
       DO i=1,mole%nb_act
       DO j=1,mole%nb_act
@@ -575,16 +336,35 @@ MODULE mod_dnGG_dng
     END IF
     !-----------------------------------------------------------------
 
+
+    IF (present(vep)) THEN
+      IF (vep_done) THEN
+        vep = vep_loc
+      ELSE
+        vep = ZERO
+        IF (present(dnGG)) THEN
+          CALL Calc_vep_rho_from_dnGG(vep,rho,Qact,dnGG,mole,para_Tnum)
+        END IF
+        !IF (present(dng) .AND. present(dnGG)) THEN
+        !  CALL Calc_vep_rho_from_dng_AND_dnGG(vep,rho,Qact,dng,dnGG,mole,para_Tnum)
+        !END IF
+        vep_done = .TRUE.
+      END IF
+    END IF
+
 !-----------------------------------------------------------
       IF (debug) THEN
         IF (present(dnGG)) THEN
           write(out_unitp,*) 'dnGG'
           CALL Write_dnSVM(dnGG)
         END IF
+
         IF (present(dng)) THEN
           write(out_unitp,*) 'dng'
           CALL Write_dnSVM(dng)
         END IF
+        IF (present(vep) .AND. vep_done) write(out_unitp,*) 'vep',vep
+
         write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
@@ -626,12 +406,13 @@ MODULE mod_dnGG_dng
       END IF
 
   END SUBROUTINE get_dng_dnGG_WITH_Gcte
-  SUBROUTINE get_dng_dnGG_WITH_f2f1_ana(Qact,para_Tnum,mole,dng,dnGG,nderiv)
+  SUBROUTINE get_dng_dnGG_WITH_f2f1_ana(Qact,para_Tnum,mole,dng,dnGG,vep,nderiv)
   USE mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
   IMPLICIT NONE
 
     real (kind=Rkind), intent(in)               :: Qact(:)
     TYPE(Type_dnMat),  intent(inout), optional  :: dng,dnGG
+    real (kind=Rkind), intent(inout), optional  :: vep
     integer,           intent(in)               :: nderiv
 
     !----- for the CoordType and Tnum --------------------------------
@@ -646,7 +427,7 @@ MODULE mod_dnGG_dng
     real (kind=Rkind) :: Tdef1(mole%nb_act)
     real (kind=Rkind) :: Tcor2(mole%nb_act,3),Tcor1(3)
     real (kind=Rkind) :: Trot(3,3)
-    real (kind=Rkind) :: rho,vep
+    real (kind=Rkind) :: rho,vep_loc
     real (kind=Rkind) :: Qdyn(mole%nb_var)
     integer           :: i
     !-----------------------------------------------------------------
@@ -674,16 +455,18 @@ MODULE mod_dnGG_dng
 
     ! we have to transfert mole to mole_zmatrix, ...
     !  ... because calc_f2_f1Q_ana works only with zmatrix type
-    !CALL CoordType1TOCoordType2(mole,mole_zmatrix%CoordType)
+    !mole_zmatrix%CoordType = mole
     !CALL calc_f2_f1Q_ana(Qdyn,                                      &
-    !                     Tdef2,Tdef1,vep,rho,                       &
+    !                     Tdef2,Tdef1,vep_loc,rho,                   &
     !                     Tcor2,Tcor1,Trot,                          &
     !                     para_Tnum,mole_zmatrix)
     !CALL dealloc_zmat(mole_zmatrix)
     CALL calc_f2_f1Q_ana(Qdyn,                                      &
-                         Tdef2,Tdef1,vep,rho,                       &
+                         Tdef2,Tdef1,vep_loc,rho,                   &
                          Tcor2,Tcor1,Trot,                          &
                          para_Tnum,mole)
+
+    IF (present(vep)) vep = vep_loc
 
     CALL mat_id(Gref,mole%ndimG,mole%ndimG)
     Gref(1:mole%nb_act,1:mole%nb_act) = -Tdef2
@@ -709,11 +492,13 @@ MODULE mod_dnGG_dng
     !-----------------------------------------------------------
 
   END SUBROUTINE get_dng_dnGG_WITH_f2f1_ana
-  SUBROUTINE get_dng_dnGG_WITH_type100(Qact,para_Tnum,mole,dng,dnGG,nderiv)
+  SUBROUTINE get_dng_dnGG_WITH_type100(Qact,para_Tnum,mole,dng,dnGG,vep,vep_done,nderiv)
   IMPLICIT NONE
 
     real (kind=Rkind), intent(in)               :: Qact(:)
     TYPE(Type_dnMat),  intent(inout), optional  :: dng,dnGG
+    real (kind=Rkind), intent(inout)            :: vep
+    logical,           intent(inout)            :: vep_done
     integer,           intent(in)               :: nderiv
 
     !----- for the CoordType and Tnum --------------------------------
@@ -724,8 +509,8 @@ MODULE mod_dnGG_dng
     ! local variables
     TYPE (Type_dnMat) :: dnGG100,dnGG_temp
     TYPE (CoordType)  :: mole100
-    integer :: i,j
-    real (kind=Rkind) :: Gref(mole%ndimG,mole%ndimG)
+    integer           :: i,j
+    real (kind=Rkind) :: rho
     !-----------------------------------------------------------------
 
 
@@ -735,9 +520,11 @@ MODULE mod_dnGG_dng
     character (len=*), parameter :: name_sub = 'get_dng_dnGG_WITH_type100'
     !-----------------------------------------------------------
     IF (debug) THEN
+      write(out_unitp,*) 'BEGINNIG ',name_sub
       CALL flush_perso(out_unitp)
     END IF
-
+    vep      = ZERO
+    vep_done = .FALSE.
     !---------------------------------------------------------------
     IF (mole%nb_rigid100 > 0) THEN
 
@@ -746,7 +533,7 @@ MODULE mod_dnGG_dng
       !-----------------------------------------------------------------
       IF (present(dnGG) .OR. present(dng)) THEN ! with type100 we need to calculate dnGG100 first
                                                 ! then we can calculate dng form the inversion of dnGG
-        CALL CoordType1TOCoordType2(mole,mole100)
+        mole100 = mole
 
         DO i=1,mole100%nb_var
           IF (mole100%ActiveTransfo%list_act_OF_Qdyn(i) == 100)         &
@@ -772,6 +559,11 @@ MODULE mod_dnGG_dng
                          dnGG%nderiv)
 
         CALL get_dnGG(Qact,dnGG100,nderiv,para_Tnum,mole100)
+
+        IF (para_Tnum%vep_type == 100 .AND. dnGG100%nderiv == 2) THEN
+          CALL Calc_vep_rho_from_dnGG(vep,rho,Qact,dnGG100,mole,para_Tnum)
+          vep_done = .TRUE.
+        END IF
 
         IF (debug) THEN
           write(out_unitp,*) 'dnGG100'
@@ -802,7 +594,6 @@ MODULE mod_dnGG_dng
       CALL dealloc_dnSVM(dnGG100)
       CALL dealloc_CoordType(mole100)
 
-
     END IF
 
     !-----------------------------------------------------------
@@ -813,6 +604,120 @@ MODULE mod_dnGG_dng
     !-----------------------------------------------------------
 
   END SUBROUTINE get_dng_dnGG_WITH_type100
+  SUBROUTINE get_dng_dnGG_WITH_type100_bug_dng(Qact,para_Tnum,mole,     &
+                                               dng,dnGG,vep,vep_done,nderiv)
+  IMPLICIT NONE
+
+    real (kind=Rkind), intent(in)               :: Qact(:)
+    TYPE(Type_dnMat),  intent(inout), optional  :: dng,dnGG
+    real (kind=Rkind), intent(inout)            :: vep
+    logical,           intent(inout)            :: vep_done
+    integer,           intent(in)               :: nderiv
+
+    !----- for the CoordType and Tnum --------------------------------
+    TYPE (CoordType),  intent(in)               :: mole
+    TYPE (Tnum),       intent(in)               :: para_Tnum
+
+    !-----------------------------------------------------------------
+    ! local variables
+    TYPE (Type_dnMat) :: dnGG100,dng100
+    TYPE (CoordType)  :: mole100
+    integer           :: i,j
+    real (kind=Rkind) :: rho
+    !-----------------------------------------------------------------
+
+
+    !----- for debuging --------------------------------------------------
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+    character (len=*), parameter :: name_sub = 'get_dng_dnGG_WITH_type100_bug_dng'
+    !-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNIG ',name_sub
+      CALL flush_perso(out_unitp)
+    END IF
+    vep      = ZERO
+    vep_done = .FALSE.
+    !---------------------------------------------------------------
+    IF (mole%nb_rigid100 > 0) THEN
+
+      !-----------------------------------------------------------------
+      ! first copy mole to mole100 and compute dnGG100
+      !-----------------------------------------------------------------
+      IF (present(dnGG) .OR. present(dng)) THEN ! with type100 we need to calculate dnGG100 first
+                                                ! then we can calculate dng form the inversion of dnGG
+        mole100 = mole
+        DO i=1,mole100%nb_var
+          IF (mole100%ActiveTransfo%list_act_OF_Qdyn(i) == 100)         &
+                           mole100%ActiveTransfo%list_act_OF_Qdyn(i) = 1
+        END DO
+        mole100%nb_act      = mole%nb_act  + mole%nb_rigid100
+        mole100%nb_act1     = mole%nb_act1 + mole%nb_rigid100
+        mole100%ndimG       = mole%ndimG   + mole%nb_rigid100
+        mole100%nb_rigid100 = 0
+        mole100%nb_rigid    = mole100%nb_rigid - mole%nb_rigid100
+
+        mole100%tab_Qtransfo(:)%nb_act = mole100%nb_act
+
+        IF (debug) THEN
+          write(out_unitp,*) 'mole%nb_rigid100 > 0',mole%nb_rigid100
+          write(out_unitp,*)
+          CALL Write_CoordType(mole100)
+          write(out_unitp,*)
+        END IF
+
+        CALL alloc_dnSVM(dnGG100,                                     &
+                         mole100%ndimG,mole100%ndimG,mole100%nb_act,  &
+                         dnGG%nderiv)
+        CALL alloc_dnSVM(dng100,                                      &
+                         mole100%ndimG,mole100%ndimG,mole100%nb_act,  &
+                         dnGG%nderiv)
+
+        CALL get_dng(Qact,dng100,nderiv,para_Tnum,mole100)
+        CALL INV_dnMat1_TO_dnMat2(dng100,dnGG100,nderiv)
+
+        ! Up to here, it is correct
+
+        IF (debug) THEN
+          write(out_unitp,*) 'dng100'
+          CALL Write_dnSVM(dng100)
+          write(out_unitp,*) 'dnGG100'
+          CALL Write_dnSVM(dnGG100)
+        END IF
+      END IF
+      !-----------------------------------------------------------------
+
+      !-----------------------------------------------------------------
+      ! transfert dnGG100 in dnGG and compute dng if they are present
+      IF (present(dnGG)) THEN
+        !- transfo G100 => G: here, it is correct as well.
+        CALL dngG100_TO_dngG(dnGG100,dnGG,mole100,mole)
+      END IF
+      IF (present(dng)) THEN ! here it is wrong. dng MUST be dnGG^-1
+        CALL dngG100_TO_dngG(dng100,dng,mole100,mole)
+      END IF
+
+      IF (present(dng) .AND. present(dnGG)) THEN ! here it is wrong. because dng is wrong
+        CALL Calc_vep_rho_from_dng_AND_dnGG(vep,rho,Qact,dng,dnGG,mole,para_Tnum)
+        vep_done = .TRUE.
+      END IF
+      !-----------------------------------------------------------------
+
+      CALL dealloc_dnSVM(dng100)
+      CALL dealloc_dnSVM(dnGG100)
+      CALL dealloc_CoordType(mole100)
+
+
+    END IF
+
+    !-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'END ',name_sub
+      CALL flush_perso(out_unitp)
+    END IF
+    !-----------------------------------------------------------
+
+  END SUBROUTINE get_dng_dnGG_WITH_type100_bug_dng
   SUBROUTINE get_d0GG_zmatrix(Qact,para_Tnum,mole,d0GG,def,Jac,Rho)
   USE mod_dnDetGG_dnDetg, only : sub3_dndetGG
   IMPLICIT NONE
@@ -1995,6 +1900,264 @@ MODULE mod_dnGG_dng
 !      END DO
        END SUBROUTINE sub_d2A
 
+  SUBROUTINE Calc_vep_rho_from_dnGG(vep,rho,Qact,dnGG,mole,para_Tnum)
+  USE mod_dnDetGG_dnDetg, only : sub3_dnDetGG
+  IMPLICIT NONE
+
+
+    !-----------------------------------------------------------------
+    real (kind=Rkind), intent(inout)            :: vep,rho
+    real (kind=Rkind), intent(in)               :: Qact(:)
+    TYPE(Type_dnMat),  intent(in)               :: dnGG
+    !----- for the CoordType and Tnum --------------------------------
+    TYPE (CoordType),  intent(in)               :: mole
+    TYPE (Tnum),       intent(in)               :: para_Tnum
+    !-----------------------------------------------------------------
+
+
+    !-----------------------------------------------------------------
+    ! local variables
+    TYPE(Type_dnS)    :: dnJac,dnrho
+    integer           :: nderiv_loc
+    !-----------------------------------------------------------------
+
+
+    !--- for debuging --------------------------------------------------
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+    character (len=*), parameter :: name_sub = 'Calc_vep_rho_from_dnGG'
+    !---------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) 'nrho       ',para_Tnum%nrho
+      write(out_unitp,*) 'vep_type   ',para_Tnum%vep_type
+      write(out_unitp,*) 'dnGG%nderiv',dnGG%nderiv
+      write(out_unitp,*) 'ndimG      ',mole%ndimG
+      write(out_unitp,*)
+      write(out_unitp,*) 'Qact',Qact
+
+      write(out_unitp,*) 'dnGG'
+      CALL write_dnMat(dnGG)
+      !write(out_unitp,*)
+      !CALL Write_CoordType(mole)
+      !write(out_unitp,*)
+      write(out_unitp,*)
+      write(out_unitp,*) 'num_GG',para_Tnum%num_GG
+      write(out_unitp,*) 'num_g ',para_Tnum%num_g
+      write(out_unitp,*) 'num_x ',para_Tnum%num_x
+      write(out_unitp,*) 'JJ',para_Tnum%JJ
+      write(out_unitp,*)
+    END IF
+    !---------------------------------------------------------
+
+    !------------------------------------------------------------
+    !-- extra potential term ------------------------------------
+    IF ( (para_Tnum%vep_type == 1 .OR. para_Tnum%vep_type == 100) .AND. &
+                                                dnGG%nderiv == 2) THEN
+
+      nderiv_loc = 2
+
+      !----------------------------------------------------
+      !-- jac0,jaci,JACij calculation
+      !----------------------------------------------------
+      CALL alloc_dnSVM(dnJac,dnGG%nb_var_deriv,nderiv=nderiv_loc)
+      CALL alloc_dnSVM(dnrho,dnGG%nb_var_deriv,nderiv=nderiv_loc)
+
+      CALL sub3_dnDetGG(dnJac,dnGG,nderiv_loc,                          &
+                                 mole%masses,mole%Mtot_inv,mole%ncart)
+      IF (debug) write(out_unitp,*) 'dnJac'
+      IF (debug) CALL write_dnS(dnJac)
+      !----------------------------------------------------
+      !-- f0,fi,Fij calculation
+      !----------------------------------------------------
+      CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                          &
+                      nderiv_loc,para_Tnum%num_x,para_Tnum%stepT,     &
+                      para_Tnum%nrho)
+      rho = dnrho%d0
+      !write(out_unitp,*) 'rho :',rho
+      IF (debug) write(out_unitp,*) 'dnrho'
+      IF (debug) CALL write_dnS(dnrho)
+      !----------------------------------------------------
+      !-- vep calculation
+      !----------------------------------------------------
+      IF (new_vep) THEN !new vep
+        CALL sub_vep_new(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,       &
+                         dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
+      ELSE !old vep
+        CALL sub_vep(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,           &
+                         dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
+      END IF
+
+      CALL dealloc_dnSVM(dnJac)
+      CALL dealloc_dnSVM(dnrho)
+    ELSE ! here, the vpe=0, but rho needs to be calculate (nderiv_loc = 0)
+      nderiv_loc = 0
+
+      !----------------------------------------------------
+      !-- jac0,jaci,JACij calculation
+      !----------------------------------------------------
+      CALL alloc_dnSVM(dnJac,dnGG%nb_var_deriv,nderiv=nderiv_loc)
+      CALL alloc_dnSVM(dnrho,dnGG%nb_var_deriv,nderiv=nderiv_loc)
+
+      CALL sub3_dnDetGG(dnJac,dnGG,nderiv_loc,                          &
+                                 mole%masses,mole%Mtot_inv,mole%ncart)
+      !write(out_unitp,*) 'dnJac'
+      !CALL write_dnS(dnJac)
+      !----------------------------------------------------
+      !-- f0,fi,Fij calculation
+      !----------------------------------------------------
+      CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                          &
+                      nderiv_loc,para_Tnum%num_x,para_Tnum%stepT,     &
+                      para_Tnum%nrho)
+      rho = dnrho%d0
+
+      vep = ZERO
+
+      CALL dealloc_dnSVM(dnJac)
+      CALL dealloc_dnSVM(dnrho)
+
+    END IF
+
+
+    !---------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'vep',vep
+      write(out_unitp,*) 'END ',name_sub
+      CALL flush_perso(out_unitp)
+    END IF
+    !-----------------------------------------------------------
+
+  END SUBROUTINE Calc_vep_rho_from_dnGG
+  SUBROUTINE Calc_vep_rho_from_dng_AND_dnGG(vep,rho,Qact,dng,dnGG,mole,para_Tnum)
+  USE mod_dnDetGG_dnDetg, only : sub3_dndetA
+  IMPLICIT NONE
+
+
+    !-----------------------------------------------------------------
+    real (kind=Rkind), intent(inout)            :: vep,rho
+    real (kind=Rkind), intent(in)               :: Qact(:)
+    TYPE(Type_dnMat),  intent(in)               :: dng,dnGG
+    !----- for the CoordType and Tnum --------------------------------
+    TYPE (CoordType),  intent(in)               :: mole
+    TYPE (Tnum),       intent(in)               :: para_Tnum
+    !-----------------------------------------------------------------
+
+
+    !-----------------------------------------------------------------
+    ! local variables
+    TYPE(Type_dnS)    :: dnJac,dnrho
+    integer           :: nderiv_loc
+    !-----------------------------------------------------------------
+
+
+    !--- for debuging --------------------------------------------------
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+    character (len=*), parameter :: name_sub = 'Calc_vep_rho_from_dng_AND_dnGG'
+    !---------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) 'nrho       ',para_Tnum%nrho
+      write(out_unitp,*) 'vep_type   ',para_Tnum%vep_type
+      write(out_unitp,*) 'dng%nderiv',dng%nderiv
+      write(out_unitp,*) 'ndimG      ',mole%ndimG
+      write(out_unitp,*)
+      write(out_unitp,*) 'Qact',Qact
+      write(out_unitp,*) 'dng'
+      CALL write_dnMat(dng)
+      !write(out_unitp,*)
+      !CALL Write_CoordType(mole)
+      !write(out_unitp,*)
+      write(out_unitp,*)
+      write(out_unitp,*) 'num_GG',para_Tnum%num_GG
+      write(out_unitp,*) 'num_g ',para_Tnum%num_g
+      write(out_unitp,*) 'num_x ',para_Tnum%num_x
+      write(out_unitp,*) 'JJ',para_Tnum%JJ
+      write(out_unitp,*)
+    END IF
+    !---------------------------------------------------------
+
+    !------------------------------------------------------------
+    !-- extra potential term ------------------------------------
+    IF ( (para_Tnum%vep_type == 1 .OR. abs(para_Tnum%vep_type) == 100) .AND. &
+                                                dng%nderiv == 2) THEN
+
+      nderiv_loc = 2
+
+      !----------------------------------------------------
+      !-- jac0,jaci,JACij calculation
+      !----------------------------------------------------
+      CALL alloc_dnSVM(dnJac,dng%nb_var_deriv,nderiv=nderiv_loc)
+      CALL alloc_dnSVM(dnrho,dng%nb_var_deriv,nderiv=nderiv_loc)
+
+      CALL sub3_dndetA(dnJac,dng,nderiv_loc,                            &
+                       mole%masses,mole%Mtot_inv,mole%ncart)
+
+      IF (debug) write(out_unitp,*) 'dnJac'
+      IF (debug) CALL write_dnS(dnJac)
+      !----------------------------------------------------
+      !-- f0,fi,Fij calculation
+      !----------------------------------------------------
+      CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                          &
+                      nderiv_loc,para_Tnum%num_x,para_Tnum%stepT,     &
+                      para_Tnum%nrho)
+      rho = dnrho%d0
+      !write(out_unitp,*) 'rho :',rho
+      IF (debug) write(out_unitp,*) 'dnrho'
+      IF (debug) CALL write_dnS(dnrho)
+      !----------------------------------------------------
+      !-- vep calculation
+      !----------------------------------------------------
+      IF (new_vep) THEN !new vep
+        CALL sub_vep_new(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,       &
+                         dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
+      ELSE !old vep
+        CALL sub_vep(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,           &
+                         dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
+      END IF
+
+      CALL dealloc_dnSVM(dnJac)
+      CALL dealloc_dnSVM(dnrho)
+    ELSE ! here, the vpe=0, but rho needs to be calculate (nderiv_loc = 0)
+      nderiv_loc = 0
+
+      !----------------------------------------------------
+      !-- jac0,jaci,JACij calculation
+      !----------------------------------------------------
+      CALL alloc_dnSVM(dnJac,dng%nb_var_deriv,nderiv=nderiv_loc)
+      CALL alloc_dnSVM(dnrho,dng%nb_var_deriv,nderiv=nderiv_loc)
+
+      CALL sub3_dndetA(dnJac,dng,nderiv_loc,                            &
+                       mole%masses,mole%Mtot_inv,mole%ncart)
+
+      !write(out_unitp,*) 'dnJac'
+      !CALL write_dnS(dnJac)
+      !----------------------------------------------------
+      !-- f0,fi,Fij calculation
+      !----------------------------------------------------
+      CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                          &
+                      nderiv_loc,para_Tnum%num_x,para_Tnum%stepT,     &
+                      para_Tnum%nrho)
+      rho = dnrho%d0
+
+      vep = ZERO
+
+      CALL dealloc_dnSVM(dnJac)
+      CALL dealloc_dnSVM(dnrho)
+
+    END IF
+
+
+    !---------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'vep',vep
+      write(out_unitp,*) 'END ',name_sub
+      CALL flush_perso(out_unitp)
+    END IF
+    !-----------------------------------------------------------
+
+  END SUBROUTINE Calc_vep_rho_from_dng_AND_dnGG
+
       SUBROUTINE sub_vep_new(vep,d0invA,d1invA,                         &
                              fi,Fij,jaci,JACij,ndimA,nb_act)
       IMPLICIT NONE
@@ -2167,6 +2330,7 @@ MODULE mod_dnGG_dng
         j100 = j
         IF (i > mole%nb_act) i100 = i + mole%nb_rigid100
         IF (j > mole%nb_act) j100 = j + mole%nb_rigid100
+        !IF (j==1) write(6,*) 'gG100TOgG',i,i100
         d0G(i,j)  = d0G100(i100,j100)
       END DO
       END DO

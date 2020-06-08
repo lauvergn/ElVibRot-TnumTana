@@ -1170,8 +1170,18 @@ CONTAINS
       CALL init_psi(w1,para_AllOp%tab_Op(1),cplx)
       CALL alloc_psi(w1)
       w1%RvecB(:) = (/ (i,i=1,w1%nb_tot) /)
-      !CALL sub_PsiBasisRep_TO_GridRep(w1)
       w2 = w1
+
+      write(6,*) 'init w1',w1%init
+      write(6,*) 'init w2',w2%init
+
+      !w1 = w1 + w2
+      !CALL w1%pluseq(w2)
+      CALL w1%pluseq(w2)
+
+
+      RETURN
+
 
       write(out_unitp,*) 'debut'
       DO i=1,1
@@ -1185,7 +1195,6 @@ CONTAINS
 
 
 
-      RETURN
 
 
 

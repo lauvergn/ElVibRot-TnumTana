@@ -1,0 +1,60 @@
+#!/bin/bash
+
+ SYSTEM=sub_system_cos_hcn.f
+
+epsi_t=0.
+epsi_e=0.00001
+epsi_p=0.000004
+
+list_propa="Cheby nOD SIL SIP Spectral"
+#echo $list_propa
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make &> $here/comp.log
+cd $here
+
+for propa in $list_propa
+do
+ echo $propa
+ ./dat_WPpropa_micro $propa
+done
+
+for propa in $list_propa
+do
+ nr2=`grep norm^2 res_TypePropa$propa | tail -1 | awk '{print $4" "$5" "$6" "$7" "$8" "$9}'`
+ echo $nr2  $propa
+
+ cp RES_ref/Norm2_Spectral_T100 Norm2_temp
+ echo $nr2  $propa >> Norm2_temp
+
+ ./compar.sh Norm2_temp $epsi_t 1 $propa
+ ./compar.sh Norm2_temp $epsi_e 2 $propa
+ ./compar.sh Norm2_temp $epsi_p 3 $propa
+ ./compar.sh Norm2_temp $epsi_p 4 $propa
+ ./compar.sh Norm2_temp $epsi_p 5 $propa
+ ./compar.sh Norm2_temp $epsi_p 6 $propa
+
+done
+
+for propa in $list_propa
+do
+ ac=`tail -1 file_auto$propa |awk '{print $2" "$3" "$4" "$5}'`
+ echo $ac   $propa
+
+ cp RES_ref/AutoCor_Spectral_T100 AC_temp
+ echo $ac  $propa >> AC_temp
+
+
+ ./compar.sh AC_temp $epsi_t 1 $propa
+ ./compar.sh AC_temp $epsi_p 2 $propa
+ ./compar.sh AC_temp $epsi_p 3 $propa
+ ./compar.sh AC_temp $epsi_p 4 $propa
+done
+
+rm -f Norm2_temp AC_temp

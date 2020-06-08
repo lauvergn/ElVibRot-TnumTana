@@ -92,6 +92,7 @@
     IF(MPI_id==0) CALL diagonalization(H,E,Vec,n,3,1,.TRUE.)
   END IF
 
+
   IF (debug) THEN
     write(out_unitp,*) 'OpMin,OpMax (ua)  : ',minval(E),maxval(E)
     write(out_unitp,*) 'OpMin,OpMax (cm-1): ',minval(E)*auTOcm_inv,maxval(E)*auTOcm_inv
@@ -119,7 +120,7 @@
       CALL dealloc_NParray(Hsave,'Hsave',name_sub)
       CALL dealloc_NParray(r,'r',name_sub)
     END IF
-  ENDIF !for MPI_id==0!
+  END IF !for MPI_id==0!
 
 !------------------------------------------------------
   IF (debug) THEN
