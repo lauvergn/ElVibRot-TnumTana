@@ -7,21 +7,15 @@
 # F90 = ifort
 # F90 = pgf90
 
-## MPI compiled with: gfortran or ifort
-MPICORE = gfortran
-
 ## parallel_make=1 to enable parallel make
 ## parallel_make=0 for fast debug make, no parallel
-parallel_make=0
+parallel_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1 
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
-ifeq ($(F90),mpifort)
-  OMP = 0
-endif
+OMP = 1
 #
 ## force the default integer (without kind) during the compillation. 
 ## default 4: , INT=8 (for kind=8)
@@ -32,7 +26,7 @@ ARPACK = 1
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
-LAPACK = 0
+LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
 QML = 0
 #
@@ -48,16 +42,19 @@ INVHYP  = 1
 OS=$(shell uname)
 #
 #=================================================================================
-## set path for 64-bit MPI when requiring long integer. 
-ifeq ($(INT),8)
-  ifeq ($(F90),mpifort)
-    ARPACK = 0 ## temp here, disable ARPACK for 64-bit case
-  endif
-endif
-
 # turn off ARPACK when using pgf90
 ifeq ($(F90),pgf90)
   ARPACK = 0
+endif
+
+# setup for mpifort 
+ifeq ($(F90),mpifort)
+  ## MPI compiled with: gfortran or ifort
+  MPICORE = $(shell ompi_info | grep 'Fort compiler:' | sed 's/Fort compiler://g' | sed 's/ //g')
+  OMP = 0
+  ifeq ($(INT),8)
+    ARPACK = 0 ## temp here, disable ARPACK for 64-bit case
+  endif
 endif
 
 ## turn off ARPACK 
@@ -358,6 +355,8 @@ ifeq ($(F90),mpifort)
    endif
 endif
 F90FLAGS := $(F90FLAGS)   $(EXTMOD)
+F90_VER = $(shell ompi_info | grep 'Open MPI:' | sed 's/ //g' )
+
 #=================================================================================
 #=================================================================================
 $(info ***********************************************************************)
@@ -365,6 +364,9 @@ $(info ***********OS:               $(OS))
 $(info ***********COMPILER:         $(F90))
 $(info ***********OPTIMIZATION:     $(OPT))
 $(info ***********COMPILER VERSION: $(F90_VER))
+ifeq ($(F90),mpifort)
+$(info ***********COMPILED with:    $(MPICORE))
+endif
 $(info ***********OpenMP:           $(OMPFLAG))
 $(info ***********Arpack:           $(ARPACK))
 $(info ***********CERFACS:          $(CERFACS))
@@ -387,10 +389,20 @@ LYNK90 = $(F90_FLAGS)
 ifeq ($(ARPACK),1)
   # Arpack management with the OS
   ifeq ($(OS),Darwin)    # OSX
-    #ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
-    ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
+    ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
+    #ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
   else                   # Linux
-    ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
+    ifeq ($(F90), mpifort)
+      ifeq ($(MPICORE), gfortran)
+        ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
+      else ifeq ($(MPICORE), ifort)
+        ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_ifort.a
+      endif
+    else ifeq ($(F90), gfortran)
+      ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
+    else ifeq ($(F90), ifort)
+      ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_ifort.a
+    endif
     #ARPACKLIB=/usr/lib64/libarpack.a
   endif
 else
@@ -1879,12 +1891,12 @@ ifeq ($(F90),mpifort)
 	@cd ./Working_tests/MPI_tests/21D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
   # Arpack test
   ifeq ($(ARPACK),1) 
-	  @echo "test for Arpack, result in ./Working_tests/MPI_tests/6D_arpack/result/"
+	  @echo "test for Arpack 6D, result in ./Working_tests/MPI_tests/6D_arpack/result/"
 	  @echo "> test for Arpack" >> MPI_test.log
 	  @cd ./Working_tests/MPI_tests/6D_arpack   ; ./run_jobs >> ../../../MPI_test.log
   endif
 	@echo "test for propagation, result in ./Working_tests/MPI_tests/12D_propagation/result/"
-	@echo "> test for propagation" >> MPI_test.log
+	@echo "> test for propagation 12D" >> MPI_test.log
 	@cd ./Working_tests/MPI_tests/12D_propagation  ; ./run_jobs >> ../../../MPI_test.log
 	@echo "test done"
 	@echo " "
@@ -1913,7 +1925,7 @@ ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
   # Arpack test
   ifeq ($(ARPACK),1) 
 	  @echo "test for Arpack, result in ./Working_tests/MPI_tests/6D_arpack"$(parall_name)"/result/"
-	  @echo "> test for Arpack" >> $(F90)$(parall_name)_test.log
+	  @echo "> test for Arpack 6D" >> $(F90)$(parall_name)_test.log
 	  @cp -rf ./Working_tests/MPI_tests/6D_arpack ./Working_tests/MPI_tests/6D_arpack$(parall_name)
 	  @cd ./Working_tests/MPI_tests/6D_arpack$(parall_name); \
 	      sed -e "s/parall=MPI/parall=${parall}/g"  shell_run  > shell_runp ; \
@@ -1922,7 +1934,7 @@ ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
   endif
   # propagation test 
 	@echo "test for propagation, result in ./Working_tests/MPI_tests/12D_propagation"$(parall_name)"/result/"
-	@echo "> test for propagation" >> $(F90)$(parall_name)_test.log
+	@echo "> test for propagation 12D" >> $(F90)$(parall_name)_test.log
 	@cp -rf ./Working_tests/MPI_tests/12D_propagation ./Working_tests/MPI_tests/12D_propagation$(parall_name)
 	@cd ./Working_tests/MPI_tests/12D_propagation$(parall_name); \
 	    sed -e "s/parall=MPI/parall=${parall}/g"  shell_run  > shell_runp ; \

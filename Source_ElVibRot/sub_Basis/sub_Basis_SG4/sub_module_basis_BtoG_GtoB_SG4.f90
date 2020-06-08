@@ -66,6 +66,11 @@ CONTAINS
   GENERIC,   PUBLIC  :: assignment(=) => SmolyakRep2_TO_SmolyakRep1,    &
                               SmolyakRep2_TO_tabR1,tabR2_TO_SmolyakRep1,&
                                R2_TO_SmolyakRep1
+
+  PROCEDURE, PRIVATE, PASS(SRep2)  :: R1_TIME_SmolyakRep2
+  PROCEDURE, PRIVATE, PASS(SRep1)  :: SmolyakRep1_TIME_R2
+  GENERIC,   PUBLIC  :: operator(*) => R1_TIME_SmolyakRep2,SmolyakRep1_TIME_R2
+
 END TYPE Type_SmolyakRep
 TYPE Type_SmolyakRepC
   integer                      :: nb0      = 0         ! to deal with several electronic PES, rot basis, or channels (HAC)
@@ -116,21 +121,13 @@ CONTAINS
 !=======================================================================================
 ! added for SmolyakRep
 !---------------------------------------------------------------------------------------
-#if(run_MPI)
-SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG1,nb_SG2,delta,grid,nb0)
-#else
 SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
-#endif
   USE mod_system
   USE mod_basis_set_alloc
   IMPLICIT NONE
 
   TYPE(Type_SmolyakRep),           intent(inout)         :: SRep
-#if(run_MPI)
-  Integer,                         intent(in)            :: nb_SG1,nb_SG2
-#else
   Integer,                         intent(in)            :: nb_SG
-#endif
   logical,                         intent(in),  optional :: delta,grid
   integer,                         intent(in),  optional :: nb0
 
@@ -162,11 +159,7 @@ SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
 
   !write(out_unitp,*) 'Alloc Smolyak Rep' ; flush(out_unitp)
 
-#if(run_MPI)
-  allocate(SRep%SmolyakRep(nb_SG1:nb_SG2))
-#else
   allocate(SRep%SmolyakRep( nb_SG ))
-#endif  
 
   !write(out_unitp,*) 'Size Smolyak Rep:',nb_B ; flush(out_unitp)
 
@@ -746,10 +739,12 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
     basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(:) = 0
 #if(run_MPI)
   ELSE
-    temp_int1=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG1_MPI)                         &
-                -basis_SG%para_SGType2%tab_nb_OF_SRep(iG1_MPI)
-    temp_int2=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG2_MPI)
-    allocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(temp_int1+1:temp_int2))
+    IF(MPI_scheme<=1) THEN
+      temp_int1=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG1_MPI)                      &
+                  -basis_SG%para_SGType2%tab_nb_OF_SRep(iG1_MPI)
+      temp_int2=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG2_MPI)
+      allocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(temp_int1+1:temp_int2))
+    ENDIF
 #endif
   ENDIF
 
@@ -868,7 +863,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
         IF(MPI_id==0) basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep) = nDI
 #if(run_MPI)
         IF(MPI_id/=0) THEN
-          IF(iG>=iG1_MPI .AND. iG<=iG2_MPI) THEN
+          IF(iG>=iG1_MPI .AND. iG<=iG2_MPI .AND. MPI_scheme<=1) THEN
             basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)=nDI
           ENDIF
         ENDIF ! for MPI_id/=0
@@ -3226,4 +3221,54 @@ IMPLICIT NONE
   END DO
 
 END FUNCTION getbis_tab_nb
+
+FUNCTION R1_TIME_SmolyakRep2(R1,SRep2) RESULT(SRep)
+USE mod_system
+IMPLICIT NONE
+
+CLASS(Type_SmolyakRep),           intent(in)     :: SRep2
+real (kind=Rkind),               intent(in)     :: R1
+TYPE(Type_SmolyakRep)                           :: SRep
+
+
+integer               :: iG,nb_BG
+
+nb_BG = Size_SmolyakRep(SRep2)
+
+SRep = SRep2 !  for the allocation
+
+IF (nb_BG > 0) THEN
+
+  DO iG=lbound(SRep2%SmolyakRep,dim=1),ubound(SRep2%SmolyakRep,dim=1)
+    SRep%SmolyakRep(iG)%V(:) = SRep2%SmolyakRep(iG)%V(:) * R1
+  END DO
+
+END IF
+
+END FUNCTION R1_TIME_SmolyakRep2
+FUNCTION SmolyakRep1_TIME_R2(SRep1,R2) RESULT(SRep)
+USE mod_system
+IMPLICIT NONE
+
+CLASS(Type_SmolyakRep),           intent(in)     :: SRep1
+real (kind=Rkind),               intent(in)     :: R2
+TYPE(Type_SmolyakRep)                           :: SRep
+
+
+integer               :: iG,nb_BG
+
+nb_BG = Size_SmolyakRep(SRep1)
+
+SRep = SRep1 !  for the allocation
+
+IF (nb_BG > 0) THEN
+
+  DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
+    SRep%SmolyakRep(iG)%V(:) = SRep1%SmolyakRep(iG)%V(:) * R2
+  END DO
+
+END IF
+
+END FUNCTION SmolyakRep1_TIME_R2
+
 END MODULE mod_basis_BtoG_GtoB_SGType4

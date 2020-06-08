@@ -141,8 +141,8 @@ SUBROUTINE init_EVR_new()
           write(out_unitp,*)
           write(out_unitp,*) 'Integer type of default Fortran Compiler:',              &
                              sizeof(integer_MPI),', MPI: ',MPI_INTEGER_KIND
-          write(out_unitp,*) 'NOTE: MPI version halfway. If get memory error, check if &
-                                    the variables are just allocated on master process.'
+          write(out_unitp,*) 'NOTE: MPI in progress. If get memory error, check if     &
+                                    the variables are just allocated on root threads.'
 #endif
         ENDIF
 
@@ -1232,8 +1232,8 @@ SUBROUTINE init_EVR()
           write(out_unitp,*)
           write(out_unitp,*) 'Integer type of default Fortran Compiler:',              &
                               sizeof(integer_MPI),', MPI: ',MPI_INTEGER_KIND
-          write(out_unitp,*) 'NOTE: MPI version halfway. If get memory error, check if &
-                                    the variables are just allocated on master process.'
+          write(out_unitp,*) 'NOTE: MPI in progress. If get memory error, check if     &
+                                    the variables are just allocated on root threads.'
 #endif
         ENDIF
 

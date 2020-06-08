@@ -1448,7 +1448,7 @@ END SUBROUTINE MakeResidual_Davidson_MPI3
 
 #if(run_MPI)
 !=======================================================================================
-! MPI for calculating residual at jth
+!> @brief MPI for calculating residual at jth
 !=======================================================================================
 SUBROUTINE MakeResidual_Davidson_j_MPI3(jj,g,psi,Hpsi,Ene,Vec)
   USE mod_system
@@ -1496,7 +1496,7 @@ SUBROUTINE MakeResidual_Davidson_j_MPI3(jj,g,psi,Hpsi,Ene,Vec)
   d1=bounds_MPI(1,MPI_id)
   d2=bounds_MPI(2,MPI_id)
 
-  !> @todo allocate g%RvecB for slave threads 
+  !> allocate g%RvecB for slave threads 
   IF(MPI_id/=0) THEN
     SELECT CASE (case_vec)
     CASE(1)
@@ -1516,7 +1516,7 @@ SUBROUTINE MakeResidual_Davidson_j_MPI3(jj,g,psi,Hpsi,Ene,Vec)
   
   IF(MPI_id==0) CALL Set_symab_OF_psiBasisRep(g,symab=psi(isym)%symab)
 
-  !> @todo deallocate g%RvecB
+  !> deallocate g%RvecB
   IF(MPI_id/=0) THEN
     SELECT CASE (case_vec)
     CASE(1)
@@ -1540,7 +1540,8 @@ END SUBROUTINE MakeResidual_Davidson_j_MPI3
 
 #if(run_MPI)
 !=======================================================================================
-! MPI for calculating residual at jth
+!> @brief MPI for calculating residual at jth
+! not used any more, delete next update
 !=======================================================================================
 SUBROUTINE MakeResidual_Davidson_core(jj,g,psi,Hpsi,Ene,Vec,case_vec,size_vec,ndim)
   USE mod_system
@@ -1631,7 +1632,7 @@ ENDSUBROUTINE MakeResidual_Davidson_core
 
 #if(run_MPI)
 !=======================================================================================
-!> @brief: sumaary part for MakeResidual_Davidson_MPI
+!> @brief: summary part for MakeResidual_Davidson_MPI
 !=======================================================================================
 SUBROUTINE Residual_Davidson_sum_MPI(g,Hpsi,psi,Vec,Ene,ndim,case_vec,jj)
   USE mod_system

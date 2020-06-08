@@ -388,10 +388,11 @@ END SUBROUTINE Set_symab_OF_psiBasisRep_MPI
 
       END SUBROUTINE Overlap_psi1_psi2
 
+#if(run_MPI)
 !=======================================================================================
-!< calculate overlap: <psi1|psi2> on Smolyak rep.
+!> calculate overlap: <psi1|psi2> on Smolyak rep on Basis.
 !=======================================================================================
-      SUBROUTINE Overlap_psi1_psi2_SR_MPI(Overlap,psi1,psi2)
+      SUBROUTINE Overlap_psi1_psi2_SRB_MPI(Overlap,psi1,psi2)
         USE mod_system
         USE mod_psi_set_alloc
         USE mod_MPI_Aid
@@ -402,26 +403,123 @@ END SUBROUTINE Set_symab_OF_psiBasisRep_MPI
         Complex(kind=Rkind),            intent(inout) :: Overlap
 
         Integer                                       :: iG
+        Integer                                       :: d1
+        Integer                                       :: d2
 
-        Overlap=ZERO
+        Overlap=CMPLX(ZERO,ZERO,kind=Rkind)
         DO iG=iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)
-          temp_int1=psi1%SR_G_index(iG)
-          temp_int2=psi1%SR_G_index(iG+1)-1
+          d1=psi1%SR_B_index(iG)
+          d2=psi1%SR_B_index(iG+1)-1
           IF(psi1%cplx) THEN
             Overlap=Overlap+psi1%BasisnD%WeightSG(iG)                                  &
-                  *dot_product( CMPLX(psi1%SR_G(temp_int1:temp_int2,1),                &
-                                      psi1%SR_G(temp_int1:temp_int2,2)),               &
-                                CMPLX(psi2%SR_G(temp_int1:temp_int2,1),                &
-                                      psi2%SR_G(temp_int1:temp_int2,2)) )
+                  *dot_product(CMPLX(psi1%SR_B(d1:d2,1),psi1%SR_B(d1:d2,2),kind=Rkind),&
+                               CMPLX(psi2%SR_B(d1:d2,1),psi2%SR_B(d1:d2,2),kind=Rkind))
           ELSE
             Overlap=Overlap+psi1%BasisnD%WeightSG(iG)                                  &
-                           *dot_product(psi1%SR_G(temp_int1:temp_int2,1),              &
-                                        psi2%SR_G(temp_int1:temp_int2,1))
+                    *dot_product(psi1%SR_B(d1:d2,1),psi2%SR_B(d1:d2,1))
           ENDIF
         ENDDO
 
-      ENDSUBROUTINE Overlap_psi1_psi2_SR_MPI
+        !> reduce sum and boardcast
+        CALL MPI_Reduce_sum_Bcast(Overlap)
+
+      ENDSUBROUTINE Overlap_psi1_psi2_SRB_MPI
 !=======================================================================================
+#endif
+
+#if(run_MPI)
+!=======================================================================================
+!> calculate overlap: <psi1|psi2> on Smolyak rep.
+!=======================================================================================
+      SUBROUTINE Overlap_psi1_psi2_SRG_MPI(Overlap,psi1,psi2)
+        USE mod_system
+        USE mod_psi_set_alloc
+        USE mod_param_SGType2
+        USE mod_MPI_Aid
+        USE mod_basis_BtoG_GtoB_SGType4,ONLY:getbis_tab_nq,getbis_tab_nb,              &
+                                             GDP_TO_BDP_OF_SmolyakRep
+        IMPLICIT NONE
+
+        TYPE(param_psi),                intent(in)    :: psi1
+        TYPE(param_psi),                intent(in)    :: psi2
+        Complex(kind=Rkind),            intent(inout) :: Overlap
+        
+        TYPE(param_SGType2),pointer                   :: SGType2
+        Real(kind=Rkind),allocatable                  :: SR_B1_R(:)
+        Real(kind=Rkind),allocatable                  :: SR_B1_C(:)
+        Real(kind=Rkind),allocatable                  :: SR_B2_R(:)
+        Real(kind=Rkind),allocatable                  :: SR_B2_C(:)
+        Integer,allocatable                           :: tab_nq(:)
+        Integer,allocatable                           :: tab_nb(:)
+        Integer                                       :: d1
+        Integer                                       :: d2
+        Integer                                       :: dim
+        Integer                                       :: iG
+
+        SGType2 => psi1%BasisnD%para_SGType2
+        Overlap=CMPLX(ZERO,ZERO,kind=Rkind)
+
+        DO iG=iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)
+          d1=psi1%SR_G_index(iG)
+          d2=psi1%SR_G_index(iG+1)-1
+          
+          dim=size(SGType2%nDind_SmolyakRep%Tab_nDval(:,iG))
+          IF(allocated(tab_nb)) deallocate(tab_nb)
+          IF(allocated(tab_nq)) deallocate(tab_nq)
+          allocate(tab_nb(dim))
+          allocate(tab_nq(dim))
+          tab_nq(:)=getbis_tab_nq(SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),            &
+                                  psi1%BasisnD%tab_basisPrimSG)
+          tab_nb(:)=getbis_tab_nb(SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),            &
+                                  psi1%BasisnD%tab_basisPrimSG)
+
+          IF(psi1%cplx) THEN
+!            Overlap=Overlap+psi1%BasisnD%WeightSG(iG)                                  &
+!                  *dot_product(CMPLX(psi1%SR_G(d1:d2,1),psi1%SR_G(d1:d2,2)),           &
+!                               CMPLX(psi2%SR_G(d1:d2,1),psi2%SR_G(d1:d2,2)))
+            CALL allocate_array(SR_B1_R,1,d2-d1+1)
+            CALL allocate_array(SR_B1_C,1,d2-d1+1)
+            CALL allocate_array(SR_B2_R,1,d2-d1+1)
+            CALL allocate_array(SR_B2_C,1,d2-d1+1)
+            SR_B1_R=psi1%SR_G(d1:d2,1)
+            SR_B1_C=psi1%SR_G(d1:d2,2)
+            SR_B2_R=psi2%SR_G(d1:d2,1)
+            SR_B2_C=psi2%SR_G(d1:d2,2)
+
+            CALL GDP_TO_BDP_OF_SmolyakRep(SR_B1_R,psi1%BasisnD%tab_basisPrimSG,        &
+                     SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),tab_nq,tab_nb,SGType2%nb0)
+            CALL GDP_TO_BDP_OF_SmolyakRep(SR_B1_C,psi1%BasisnD%tab_basisPrimSG,        &
+                     SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),tab_nq,tab_nb,SGType2%nb0)
+            CALL GDP_TO_BDP_OF_SmolyakRep(SR_B2_R,psi1%BasisnD%tab_basisPrimSG,        &
+                     SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),tab_nq,tab_nb,SGType2%nb0)
+            CALL GDP_TO_BDP_OF_SmolyakRep(SR_B2_C,psi1%BasisnD%tab_basisPrimSG,        &
+                     SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),tab_nq,tab_nb,SGType2%nb0)
+
+            Overlap=Overlap+psi1%BasisnD%WeightSG(iG)                                  &
+                     *dot_product(CMPLX(SR_B1_R,SR_B1_C),CMPLX(SR_B2_R,SR_B2_C))
+          ELSE
+!            Overlap=Overlap+psi1%BasisnD%WeightSG(iG)                                  &
+!                           *dot_product(psi1%SR_G(d1:d2,1),psi2%SR_G(d1:d2,1))
+            CALL allocate_array(SR_B1_R,1,d2-d1+1)
+            CALL allocate_array(SR_B2_R,1,d2-d1+1)
+            SR_B1_R=psi1%SR_G(d1:d2,1)
+            SR_B2_R=psi2%SR_G(d1:d2,1)
+            
+            CALL GDP_TO_BDP_OF_SmolyakRep(SR_B1_R,psi1%BasisnD%tab_basisPrimSG,        &
+                     SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),tab_nq,tab_nb,SGType2%nb0)
+            CALL GDP_TO_BDP_OF_SmolyakRep(SR_B2_R,psi1%BasisnD%tab_basisPrimSG,        &
+                     SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),tab_nq,tab_nb,SGType2%nb0)
+
+            Overlap=Overlap+psi1%BasisnD%WeightSG(iG)*dot_product(SR_B1_R,SR_B2_R)
+          ENDIF
+        ENDDO
+
+        !> reduce sum and boardcast
+        CALL MPI_Reduce_sum_Bcast(Overlap)
+      
+      ENDSUBROUTINE Overlap_psi1_psi2_SRG_MPI
+!=======================================================================================
+#endif
 
 #if(run_MPI)
 !=======================================================================================
@@ -429,6 +527,8 @@ END SUBROUTINE Set_symab_OF_psiBasisRep_MPI
 !> scheme=1: calculate the normalization constant and normalize 
 !> scheme=2: just calculate the normalization constant 
 !> scheme=3: normalize with existing normalization constant
+!
+! improve later
 !=======================================================================================
 SUBROUTINE norm2_psi_SR_MPI(psi,scheme)
   USE mod_system
@@ -437,18 +537,27 @@ SUBROUTINE norm2_psi_SR_MPI(psi,scheme)
   
   TYPE(param_psi),                intent(inout) :: psi
   Integer,                        intent(in)    :: scheme
-  
+
   Complex(kind=Rkind)                           :: Overlap
 
-  
+
   !> calcualte the normalization constant 
   IF(scheme==1 .OR. scheme==2) THEN
-    CALL Overlap_psi1_psi2_SR_MPI(Overlap,psi,psi)
+    IF(psi%SRG_MPI) THEN
+      CALL Overlap_psi1_psi2_SRG_MPI(Overlap,psi,psi)
+    ELSE IF(psi%SRB_MPI) THEN
+      CALL Overlap_psi1_psi2_SRB_MPI(Overlap,psi,psi)
+    ENDIF
     psi%norm2=Real(Overlap,kind=Rkind)
   ENDIF
-  
+
   IF(scheme==1 .OR. scheme==3) THEN
-    psi%SR_G=psi%SR_G/sqrt(psi%norm2)
+    IF(psi%SRG_MPI) THEN
+      psi%SR_G=psi%SR_G/sqrt(psi%norm2)
+    ELSE IF(psi%SRB_MPI) THEN
+      psi%SR_B=psi%SR_B/sqrt(psi%norm2)
+    ENDIF
+    psi%norm2=1.0
   ENDIF
 
 ENDSUBROUTINE norm2_psi_SR_MPI
@@ -508,10 +617,10 @@ SUBROUTINE Overlap_psi_Hpsi_matrix_MPI(H_overlap,S_overlap,psi,Hpsi,ndim,With_Gr
       ENDDO
     ENDDO
   ENDIF ! for MPI_id==0
- 
+
   CALL MPI_Bcast_matrix(H_overlap,1,ndim,1,ndim,root_MPI)
   CALL MPI_Bcast_matrix(S_overlap,1,ndim,1,ndim,root_MPI)
-  
+
 !  CALL MPI_Bcast(H_flat,ndim*ndim,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
 !  CALL MPI_Bcast(S_flat,ndim*ndim,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
 !
@@ -1276,7 +1385,7 @@ SUBROUTINE calculate_overlap_MPI(psi,ndim1,ndim2,With_Grid,Hpsi,S_overlap,H_over
     CALL MPI_Reduce_sum_matrix(H_overlap,1,ndim2,ndim1,ndim2,root_MPI)
     CALL MPI_Bcast_matrix     (H_overlap,1,ndim2,ndim1,ndim2,root_MPI)
   ENDIF 
-    
+
   !-overlap <psi|psi>-------------------------------------------------------------------
   ! calculate half of the matrix. Note the conjucate for complex case 
   IF(present(S_overlap)) THEN 
@@ -1299,14 +1408,14 @@ SUBROUTINE calculate_overlap_MPI(psi,ndim1,ndim2,With_Grid,Hpsi,S_overlap,H_over
         ENDIF
       ENDDO 
     ENDDO
-    
+
     ! collect and broadcast result 
     CALL MPI_Reduce_sum_matrix(S_overlap,ndim1,ndim2,1,ndim1-1,root_MPI)
     CALL MPI_Bcast_matrix     (S_overlap,ndim1,ndim2,1,ndim1-1,root_MPI)
     CALL MPI_Reduce_sum_matrix(S_overlap,1,ndim2,ndim1,ndim2,root_MPI)
     CALL MPI_Bcast_matrix     (S_overlap,1,ndim2,ndim1,ndim2,root_MPI)
-  ENDIF
 
+  ENDIF
 END SUBROUTINE calculate_overlap_MPI
 #endif
 !=======================================================================================
@@ -1804,6 +1913,7 @@ SUBROUTINE Overlap_psi1_psi2_MPI2(H_overlap,S_overlap,psi,Hpsi,ndim,With_Grid)
 !    CALL MPI_Bcast_matrix(H_overlap,bound1_MPI,bound2_MPI,bound1_MPI,bound2_MPI,i_MPI)
 !    CALL MPI_Bcast_matrix(S_overlap,bound1_MPI,bound2_MPI,bound1_MPI,bound2_MPI,i_MPI)
 !  ENDDO
+
   ! a bit waste of comm. time
   CALL MPI_Bcast_matrix(H_overlap,1,ndim,1,ndim,root_MPI)
   CALL MPI_Bcast_matrix(S_overlap,1,ndim,1,ndim,root_MPI)

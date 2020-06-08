@@ -87,8 +87,8 @@
                           optimization,nDfit,nDGrid,                    &
                           main_test,                                    &
 
-                          EVRT_path,File_path,base_FileName,Srep_MPI
-
+                          EVRT_path,File_path,base_FileName,            &
+                          Srep_MPI, MPI_scheme
 
         !> initialize MPI
         !> id=0 to be the master
@@ -96,10 +96,10 @@
 #if(run_MPI)
         CALL MPI_initialization(Rkind)
         Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
-        Popenmp            = .FALSE.  !< True to run openMP
+        Popenmp            = .FALSE. 
 #else 
         MPI_id=0
-        Popenmpi           = .FALSE.  !< True to run MPI, set here or in namelist system
+        Popenmpi           = .FALSE. 
 
         ! set openMP accodring to make file
 #if(run_openMP)
@@ -155,8 +155,8 @@
           write(out_unitp,*)
           write(out_unitp,*) 'Integer type of default Fortran Compiler:',              &
                              sizeof(integer_MPI),', MPI: ',MPI_INTEGER_KIND
-          write(out_unitp,*) 'NOTE: MPI version halfway. If get memory error, check if &
-                                    the variables are just allocated on master process.'
+          write(out_unitp,*) 'NOTE: MPI in progress. If get memory error, check if     &
+                                    the variables are just allocated on root threads.'
 #endif
         ENDIF
 

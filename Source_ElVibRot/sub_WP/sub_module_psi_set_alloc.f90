@@ -63,7 +63,8 @@
         logical       :: BasisRep   = .TRUE.             ! (T) BasisRep
         logical       :: GridRep    = .FALSE.            ! (F) GridRep psi
         
-        Logical       :: SR_MPI     = .FALSE.            ! (F) Smolyak rep. with MPI
+        Logical       :: SRG_MPI    = .FALSE.      ! (F) Smolyak rep. on grids with MPI
+        Logical       :: SRB_MPI    = .FALSE.      ! (F) Smolyak rep. on Basis with MPI
 
         integer       :: nb_ba      =0
         integer       :: nb_bi      =0
@@ -89,10 +90,12 @@
         real (kind=Rkind),    allocatable :: RvecG(:) ! RvecG(nb_qaie)
         complex (kind=Rkind), allocatable :: CvecG(:) ! CvecG(nb_qaie)
         
-        Real(kind=Rkind),allocatable      :: SR_B(:)   ! Smolyak rep. on basis
+        Real(kind=Rkind),allocatable      :: SR_B(:,:) ! Smolyak rep. on basis
         Real(kind=Rkind),allocatable      :: SR_G(:,:) ! Smolyak rep. on grid
+        Integer,allocatable               :: SR_B_index(:)    !< index for iG in SR_B
+        Integer,allocatable               :: SR_B_length(:)   !< length of SR_B
         Integer,allocatable               :: SR_G_index(:)    !< index for iG in SR_G
-        Integer,allocatable               :: SR_G_index0(:,:) !< index for all iG in SR_G
+        Integer,allocatable               :: SR_G_length(:)   !< length of SR_G
 
         complex (kind=Rkind) :: CAvOp    = (ZERO,ZERO) ! average value for an operator (usualy H)
         integer              :: IndAvOp  = -1          ! operator type  (usualy H, IndAvOp=0)
@@ -152,6 +155,9 @@
  PUBLIC :: get_nb_be_FROM_psi,get_nb_bi_FROM_psi
  PUBLIC :: alloc_array,dealloc_array,alloc_NParray,dealloc_NParray
  PUBLIC :: alloc_psi,dealloc_psi
+ 
+ !> subroutine for working on full Smolyak rep.  
+ PUBLIC :: psi_plus_SR_MPI,psi_minus_SR_MPI,psi_times_SR_MPI
 
       INTERFACE alloc_array
         MODULE PROCEDURE alloc_array_OF_Psidim1
@@ -174,7 +180,25 @@
         MODULE PROCEDURE Set_psi_With_index_R
         MODULE PROCEDURE Set_psi_With_index_C
       END INTERFACE
-
+      
+      !> operators for working in Smolyak rep.
+      INTERFACE psi_times_SR_MPI
+        MODULE PROCEDURE psi_times_R_SR_MPI
+        MODULE PROCEDURE psi_times_C_SR_MPI
+        MODULE PROCEDURE psi_times_psi_SR_MPI
+      END INTERFACE
+      
+      INTERFACE psi_plus_SR_MPI
+        MODULE PROCEDURE psi_plus_R_SR_MPI
+        MODULE PROCEDURE psi_plus_C_SR_MPI
+        MODULE PROCEDURE psi_plus_psi_SR_MPI
+      END INTERFACE
+      
+      INTERFACE psi_minus_SR_MPI
+        MODULE PROCEDURE psi_minus_R_SR_MPI
+        MODULE PROCEDURE psi_minus_C_SR_MPI
+        MODULE PROCEDURE psi_minus_psi_SR_MPI
+      END INTERFACE
 
  CONTAINS
 
@@ -187,7 +211,7 @@
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE alloc_psi(psi,BasisRep,GridRep)
-      USE mod_MPI
+      USE mod_MPI_Aid
 
       TYPE (param_psi), intent(inout) :: psi
       logical, optional, intent(in)   :: BasisRep,GridRep
@@ -284,6 +308,48 @@
           IF (debug) write(out_unitp,*) 'dealloc: CvecG'
         END IF
       END IF
+      
+#if(run_MPI)
+      IF(psi%SRG_MPI) THEN
+        IF(.NOT. allocated(psi%SR_G_length)) THEN 
+          CALL allocate_array(psi%SR_G_length,0,MPI_np-1)
+        ENDIF
+        
+        IF(.NOT. allocated(psi%SR_G_index)) THEN 
+          CALL allocate_array(psi%SR_G_index,iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)+1)
+        ENDIF
+
+        IF (.NOT. allocated(psi%SR_G)) THEN
+          IF(psi%cplx) THEN
+            CALL alloc_NParray(psi%SR_G,(/psi%SR_G_length(MPI_id),2/),'psi%SR_G','alloc_psi')
+            !CALL allocate_array(psi%SR_G,1,psi%SR_G_length(MPI_id),1,2)
+          ELSE
+            CALL alloc_NParray(psi%SR_G,(/psi%SR_G_length(MPI_id),1/),'psi%SR_G','alloc_psi')
+            !CALL allocate_array(psi%SR_G,1,psi%SR_G_length(MPI_id),1,1)
+          ENDIF
+        ENDIF
+        ! consider deallocate RvecB,RvecG ...
+      ENDIF
+
+      IF(psi%SRB_MPI) THEN
+        IF(.NOT. allocated(psi%SR_B_length)) THEN 
+          CALL allocate_array(psi%SR_B_length,0,MPI_np-1)
+        ENDIF
+        
+        IF(.NOT. allocated(psi%SR_B_index)) THEN 
+          CALL allocate_array(psi%SR_B_index,iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)+1)
+        ENDIF
+        
+        IF (.NOT. allocated(psi%SR_B)) THEN
+          IF(psi%cplx) THEN
+            CALL alloc_NParray(psi%SR_B,(/psi%SR_B_length(MPI_id),2/),'psi%SR_B','alloc_psi')
+          ELSE
+            CALL alloc_NParray(psi%SR_B,(/psi%SR_B_length(MPI_id),1/),'psi%SR_B','alloc_psi')
+          ENDIF
+        ENDIF
+        ! consider deallocate RvecB,RvecG ...
+      ENDIF
+#endif
 
       IF (debug) write(out_unitp,*) ' 2 test_alloc_psi'
 !-----------------------------------------------------------
@@ -463,15 +529,22 @@
           CALL flush_perso(out_unitp)
         END IF
       END IF
-      
+
       IF(allocated(psi%SR_G)) THEN
-        CALL dealloc_NParray(psi%SR_G,'psi%RvecG',name_sub)
+        CALL dealloc_NParray(psi%SR_G,'psi%SR_G',name_sub)
         IF (debug) THEN
           write(out_unitp,*) 'dealloc: SR_G'
           CALL flush_perso(out_unitp)
         END IF
       ENDIF
 
+      IF(allocated(psi%SR_B)) THEN
+        CALL dealloc_NParray(psi%SR_B,'psi%SR_B',name_sub)
+        IF (debug) THEN
+          write(out_unitp,*) 'dealloc: SR_B'
+          CALL flush_perso(out_unitp)
+        END IF
+      ENDIF
 
       psi%symab = -1
 
@@ -775,6 +848,8 @@
 
       psi1%BasisRep  = psi2%BasisRep
       psi1%GridRep   = psi2%GridRep
+      psi1%SRG_MPI   = psi2%SRG_MPI      !< if working on full smolyak rep. on grid
+      psi1%SRB_MPI   = psi2%SRB_MPI     !< if working on full smolyak rep. on Basis 
 
       psi1%symab = psi2%symab
 
@@ -816,6 +891,16 @@
         IF (allocated(psi2%CvecG)) psi1%CvecG(:) = psi2%CvecG(:)
         IF (allocated(psi2%RvecG)) psi1%RvecG(:) = psi2%RvecG(:)
       END IF
+      IF(psi1%SRG_MPI) THEN
+        IF(allocated(psi2%SR_G))        psi1%SR_G=psi2%SR_G
+        IF(allocated(psi2%SR_G_length)) psi1%SR_G_length=psi2%SR_G_length
+        IF(allocated(psi2%SR_G_index))  psi1%SR_G_index=psi2%SR_G_index
+      ENDIF
+      IF(psi1%SRB_MPI) THEN
+        IF(allocated(psi2%SR_B))        psi1%SR_B=psi2%SR_B
+        IF(allocated(psi2%SR_B_length)) psi1%SR_B_length=psi2%SR_B_length
+        IF(allocated(psi2%SR_B_index))  psi1%SR_B_index=psi2%SR_B_index
+      ENDIF
 
 
      psi1%IndAvOp         = psi2%IndAvOp
@@ -897,6 +982,8 @@
       ELSE
         psi1%GridRep  = psi2%GridRep
       END IF
+      psi1%SRG_MPI=psi2%SRG_MPI
+      psi1%SRB_MPI=psi2%SRB_MPI
 
       psi1%symab = psi2%symab
 
@@ -950,6 +1037,15 @@
           END IF
         END IF
 
+        IF(psi1%SRG_MPI) THEN
+          psi1%SR_G_length=psi2%SR_G_length
+          IF(allocated(psi2%SR_G)) psi1%SR_G=psi2%SR_G
+        ENDIF
+
+        IF(psi1%SRB_MPI) THEN
+          psi1%SR_B_length=psi2%SR_B_length
+          IF(allocated(psi2%SR_B)) psi1%SR_B=psi2%SR_B
+        ENDIF
 
         psi1%IndAvOp         = psi2%IndAvOp
         psi1%CAvOp           = psi2%CAvOp
@@ -1056,7 +1152,20 @@
           psi%CvecG(:) = cmplx(R,ZERO,kind=Rkind)
         END IF
       END IF
+      
+      IF(psi%SRG_MPI) THEN
+        IF(allocated(psi%SR_G)) THEN
+          psi%SR_G(:,1)=R
+          IF(psi%cplx) psi%SR_G(:,2)=ZERO
+        ENDIF
+      ENDIF
 
+      IF(psi%SRB_MPI) THEN
+        IF(allocated(psi%SR_B)) THEN
+          psi%SR_B(:,1)=R
+          IF(psi%cplx) psi%SR_B(:,2)=ZERO
+        ENDIF
+      ENDIF
 
       psi%norm2 = ZERO
 
@@ -1104,7 +1213,20 @@
         END IF
       END IF
 
+      IF(psi%SRG_MPI) THEN
+        IF(allocated(psi%SR_G)) THEN
+          psi%SR_G(:,1)=real(C,kind=Rkind)
+          IF(psi%cplx) psi%SR_G(:,2)=aimag(C)
+        ENDIF
+      ENDIF
 
+      IF(psi%SRB_MPI) THEN
+        IF(allocated(psi%SR_B)) THEN
+          psi%SR_B(:,1)=real(C,kind=Rkind)
+          IF(psi%cplx) psi%SR_B(:,2)=aimag(C)
+        ENDIF
+      ENDIF
+      
       psi%norm2 = ZERO
 
 
@@ -1852,6 +1974,16 @@
                 R_time_psi%RvecB = psi%RvecB * R
               END IF
             END IF
+            
+            IF(psi%SRG_MPI) THEN
+              R_time_psi%SR_G(:,1)=psi%SR_G(:,1)*R
+              IF(psi%cplx) R_time_psi%SR_G(:,2)=psi%SR_G(:,2)*R
+            ENDIF
+
+            IF(psi%SRB_MPI) THEN
+              R_time_psi%SR_B(:,1)=psi%SR_B(:,1)*R
+              IF(psi%cplx) R_time_psi%SR_B(:,2)=psi%SR_B(:,2)*R
+            ENDIF
 
             R_time_psi%symab = psi%symab
 
@@ -1889,6 +2021,16 @@
                 IF(MPI_id==0) psi_time_R%RvecB = psi%RvecB * R
               END IF
             END IF
+
+            IF(psi%SRG_MPI) THEN
+              psi_time_R%SR_G(:,1)=psi%SR_G(:,1)*R
+              IF(psi%cplx) psi_time_R%SR_G(:,2)=psi%SR_G(:,2)*R
+            ENDIF
+
+            IF(psi%SRB_MPI) THEN
+              psi_time_R%SR_B(:,1)=psi%SR_B(:,1)*R
+              IF(psi%cplx) psi_time_R%SR_B(:,2)=psi%SR_B(:,2)*R
+            ENDIF
 
             psi_time_R%symab = psi%symab
 
@@ -2065,6 +2207,259 @@
             !CALL flush_perso(out_unitp)
 
           END FUNCTION psi_over_C
+          
+      !---------------------------------------------------------------------------------
+      !> INTERFACE: times_psi_SR_MPI
+      !---------------------------------------------------------------------------------
+      SUBROUTINE psi_times_R_SR_MPI(psi,R_const)
+        USE mod_system
+        IMPLICIT NONE
+
+        TYPE(param_psi),                  intent(inout) :: psi
+        Real(kind=Rkind),                 intent(in)    :: R_const
+        
+        IF(psi%SRG_MPI) THEN
+          psi%SR_G=psi%SR_G*R_const
+        ELSE IF(psi%SRB_MPI) THEN
+          psi%SR_B=psi%SR_B*R_const
+        ELSE
+          STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
+        ENDIF
+        
+      ENDSUBROUTINE psi_times_R_SR_MPI
+
+      !---------------------------------------------------------------------------------
+      ! note: psi_new should be already well allocated here
+      SUBROUTINE psi_times_C_SR_MPI(psi,C_const,psi_new)
+        USE mod_system
+        IMPLICIT NONE
+
+        TYPE(param_psi),                  intent(inout) :: psi
+        TYPE(param_psi),optional,         intent(inout) :: psi_new
+        Complex(kind=Rkind),              intent(in)    :: C_const
+        
+        Real(kind=Rkind),allocatable                    :: SR_temp(:)
+        Real(kind=Rkind)                                :: C
+        Real(kind=Rkind)                                :: R
+
+
+        R=Real(C_const,kind=Rkind)
+        C=aimag(C_const)
+
+        IF(psi%SRG_MPI) THEN
+          IF(psi%cplx) THEN
+            IF(present(psi_new)) THEN
+              IF(.NOT. psi_new%SRG_MPI) STOP 'psi_new error in psi_times_C_SR_MPI'
+              psi_new%SR_G(:,1)=psi%SR_G(:,1)*R-psi%SR_G(:,2)*C
+              psi_new%SR_G(:,2)=psi%SR_G(:,1)*C+psi%SR_G(:,2)*R
+            ELSE
+              allocate(SR_temp(size(psi%SR_G,1)))
+              SR_temp(:)=psi%SR_G(:,1)
+              psi%SR_G(:,1)=psi%SR_G(:,1)*R-psi%SR_G(:,2)*C
+              psi%SR_G(:,2)=SR_temp      *C+psi%SR_G(:,2)*R
+              deallocate(SR_temp)
+            ENDIF
+          ELSE
+            psi%SR_G(:,1)=psi%SR_G(:,1)*R
+          ENDIF
+        ELSE IF(psi%SRB_MPI) THEN
+          IF(psi%cplx) THEN
+            IF(present(psi_new)) THEN
+              IF(.NOT. psi_new%SRB_MPI) STOP 'psi_new error in psi_times_C_SR_MPI'
+              psi_new%SR_B(:,1)=psi%SR_B(:,1)*R-psi%SR_B(:,2)*C
+              psi_new%SR_B(:,2)=psi%SR_B(:,1)*C+psi%SR_B(:,2)*R
+            ELSE
+              allocate(SR_temp(size(psi%SR_B,1)))
+              SR_temp(:)=psi%SR_B(:,1)
+              psi%SR_B(:,1)=psi%SR_B(:,1)*R-psi%SR_B(:,2)*C
+              psi%SR_B(:,2)=SR_temp      *C+psi%SR_B(:,2)*R
+              deallocate(SR_temp)
+            ENDIF
+          ELSE
+            psi%SR_B(:,1)=psi%SR_B(:,1)*R
+          ENDIF
+        ELSE
+          STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
+        ENDIF
+        
+      ENDSUBROUTINE psi_times_C_SR_MPI
+      
+      !---------------------------------------------------------------------------------
+      SUBROUTINE psi_times_psi_SR_MPI(psi,psi1)
+        USE mod_system
+        IMPLICIT NONE
+
+        TYPE(param_psi),                  intent(inout) :: psi
+        TYPE(param_psi),                  intent(in)    :: psi1
+        
+        Real(kind=Rkind),allocatable                    :: SR_temp(:)
+        
+        IF(psi%SRG_MPI) THEN
+          IF(psi%cplx) THEN
+            allocate(SR_temp(size(psi%SR_G,1)))
+            SR_temp=psi%SR_G(:,1)
+            psi%SR_G(:,1)=psi%SR_G(:,1)*psi1%SR_G(:,1)-psi%SR_G(:,2)*psi1%SR_G(:,2)
+            psi%SR_G(:,2)=SR_temp      *psi1%SR_G(:,2)+psi%SR_G(:,2)*SR_temp
+            deallocate(SR_temp)
+          ELSE
+            psi%SR_G=psi1%SR_G*psi%SR_G
+          ENDIF
+        ELSE IF(psi%SRB_MPI) THEN
+          IF(psi%cplx) THEN
+            allocate(SR_temp(size(psi%SR_B,1)))
+            SR_temp=psi%SR_B(:,1)
+            psi%SR_B(:,1)=psi%SR_B(:,1)*psi1%SR_B(:,1)-psi%SR_B(:,2)*psi1%SR_B(:,2)
+            psi%SR_B(:,2)=SR_temp      *psi1%SR_B(:,2)+psi%SR_B(:,2)*SR_temp
+            deallocate(SR_temp)
+          ELSE
+            psi%SR_B=psi1%SR_B*psi%SR_B
+          ENDIF
+        ELSE
+          STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
+        ENDIF
+
+      ENDSUBROUTINE psi_times_psi_SR_MPI
+      
+      !---------------------------------------------------------------------------------
+      !> INTERFACE: plus_psi_SR_MPI
+      !---------------------------------------------------------------------------------
+      SUBROUTINE psi_plus_R_SR_MPI(psi,R_const)
+        USE mod_system
+        IMPLICIT NONE
+        
+        TYPE(param_psi),                  intent(inout) :: psi
+        Real(kind=Rkind),                 intent(in)    :: R_const
+        
+        IF(psi%SRG_MPI) THEN
+          psi%SR_G(:,1)=psi%SR_G(:,1)+R_const
+        ELSE IF(psi%SRB_MPI) THEN
+          psi%SR_B(:,1)=psi%SR_B(:,1)+R_const
+        ELSE
+          STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
+        ENDIF
+
+        IF(R_const/=ZERO) psi%symab=-1
+
+      ENDSUBROUTINE psi_plus_R_SR_MPI
+      
+      !---------------------------------------------------------------------------------
+      SUBROUTINE psi_plus_C_SR_MPI(psi,C_const)
+        USE mod_system
+        IMPLICIT NONE
+        
+        TYPE(param_psi),                  intent(inout) :: psi
+        Complex(kind=Rkind),              intent(in)    :: C_const
+        
+        IF(psi%SRG_MPI) THEN
+          psi%SR_G(:,1)=psi%SR_G(:,1)+Real(C_const,kind=Rkind)
+          IF(psi%cplx) psi%SR_G(:,2)=psi%SR_G(:,2)+aimag(C_const)
+        ELSE IF(psi%SRB_MPI) THEN
+          psi%SR_B(:,1)=psi%SR_B(:,1)+Real(C_const,kind=Rkind)
+          IF(psi%cplx) psi%SR_B(:,2)=psi%SR_B(:,2)+aimag(C_const)
+        ELSE
+          STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
+        ENDIF
+        
+        IF(abs(C_const)/=ZERO) psi%symab=-1
+
+      ENDSUBROUTINE psi_plus_C_SR_MPI
+      
+      !---------------------------------------------------------------------------------
+      SUBROUTINE psi_plus_psi_SR_MPI(psi,psi1)
+        USE mod_system
+        IMPLICIT NONE
+        
+        TYPE(param_psi),                  intent(inout) :: psi
+        TYPE(param_psi),                  intent(in)    :: psi1
+        
+        IF(psi%SRG_MPI) THEN
+          psi%SR_G(:,:)=psi%SR_G(:,:)+psi1%SR_G(:,:)
+        ELSE IF(psi%SRB_MPI) THEN
+          psi%SR_B(:,:)=psi%SR_B(:,:)+psi1%SR_B(:,:)
+        ELSE
+          STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
+        ENDIF
+        
+        IF(psi%symab/=psi%symab) THEN
+          IF(psi%symab==-2) THEN
+            psi%symab=psi1%symab
+          ELSE
+            psi%symab=-1
+          ENDIF
+        ENDIF
+        
+      ENDSUBROUTINE psi_plus_psi_SR_MPI
+      
+      !---------------------------------------------------------------------------------
+      !> INTERFACE: minus_psi_SR_MPI
+      !---------------------------------------------------------------------------------
+      SUBROUTINE psi_minus_R_SR_MPI(psi,R_const)
+        USE mod_system
+        IMPLICIT NONE
+        
+        TYPE(param_psi),                  intent(inout) :: psi
+        Real(kind=Rkind),                 intent(in)    :: R_const
+        
+        IF(psi%SRG_MPI) THEN
+          psi%SR_G(:,1)=psi%SR_G(:,1)-R_const
+        ELSE IF(psi%SRB_MPI) THEN
+          psi%SR_B(:,1)=psi%SR_B(:,1)-R_const
+        ELSE
+          STOP 'error in R_times_psi_SR_MPI, psi%SRG*_MPI=.FALSE.'
+        ENDIF
+        
+        IF(R_const/=ZERO) psi%symab=-1
+        
+      ENDSUBROUTINE psi_minus_R_SR_MPI
+      
+      !---------------------------------------------------------------------------------
+      SUBROUTINE psi_minus_C_SR_MPI(psi,C_const)
+        USE mod_system
+        IMPLICIT NONE
+        
+        TYPE(param_psi),                  intent(inout) :: psi
+        Complex(kind=Rkind),              intent(in)    :: C_const
+        
+        IF(psi%SRG_MPI) THEN
+          psi%SR_G(:,1)=psi%SR_G(:,1)-Real(C_const,kind=Rkind)
+          IF(psi%cplx) psi%SR_G(:,2)=psi%SR_G(:,2)-aimag(C_const)
+        ELSE IF(psi%SRB_MPI) THEN
+          psi%SR_B(:,1)=psi%SR_B(:,1)-Real(C_const)
+          IF(psi%cplx) psi%SR_B(:,2)=psi%SR_B(:,2)-aimag(C_const)
+        ELSE
+          STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
+        ENDIF
+        
+        IF(abs(C_const)/=ZERO) psi%symab=-1
+        
+      ENDSUBROUTINE psi_minus_C_SR_MPI
+      
+      !---------------------------------------------------------------------------------
+      SUBROUTINE psi_minus_psi_SR_MPI(psi,psi1)
+        USE mod_system
+        IMPLICIT NONE
+        
+        TYPE(param_psi),                  intent(inout) :: psi
+        TYPE(param_psi),                  intent(in)    :: psi1
+        
+        IF(psi%SRG_MPI) THEN
+          psi%SR_G(:,:)=psi%SR_G(:,:)-psi1%SR_G(:,:)
+        ELSE IF(psi%SRB_MPI) THEN
+          psi%SR_B(:,:)=psi%SR_B(:,:)-psi1%SR_B(:,:)
+        ELSE
+          STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
+        ENDIF
+        
+        IF(psi%symab/=psi%symab) THEN
+          IF(psi%symab==-2) THEN
+            psi%symab=psi1%symab
+          ELSE
+            psi%symab=-1
+          ENDIF
+        ENDIF
+        
+      ENDSUBROUTINE psi_minus_psi_SR_MPI
+
 !=======================================================================================
 !================================================================
 !
