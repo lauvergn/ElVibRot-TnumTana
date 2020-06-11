@@ -67,10 +67,6 @@ CONTAINS
                               SmolyakRep2_TO_tabR1,tabR2_TO_SmolyakRep1,&
                                R2_TO_SmolyakRep1
 
-  PROCEDURE, PRIVATE, PASS(SRep2)  :: R1_TIME_SmolyakRep2
-  PROCEDURE, PRIVATE, PASS(SRep1)  :: SmolyakRep1_TIME_R2
-  GENERIC,   PUBLIC  :: operator(*) => R1_TIME_SmolyakRep2,SmolyakRep1_TIME_R2
-
 END TYPE Type_SmolyakRep
 TYPE Type_SmolyakRepC
   integer                      :: nb0      = 0         ! to deal with several electronic PES, rot basis, or channels (HAC)
@@ -3303,54 +3299,5 @@ IMPLICIT NONE
   END DO
 
 END FUNCTION getbis_tab_nb
-
-FUNCTION R1_TIME_SmolyakRep2(R1,SRep2) RESULT(SRep)
-USE mod_system
-IMPLICIT NONE
-
-CLASS(Type_SmolyakRep),           intent(in)     :: SRep2
-real (kind=Rkind),               intent(in)     :: R1
-TYPE(Type_SmolyakRep)                           :: SRep
-
-
-integer               :: iG,nb_BG
-
-nb_BG = Size_SmolyakRep(SRep2)
-
-SRep = SRep2 !  for the allocation
-
-IF (nb_BG > 0) THEN
-
-  DO iG=lbound(SRep2%SmolyakRep,dim=1),ubound(SRep2%SmolyakRep,dim=1)
-    SRep%SmolyakRep(iG)%V(:) = SRep2%SmolyakRep(iG)%V(:) * R1
-  END DO
-
-END IF
-
-END FUNCTION R1_TIME_SmolyakRep2
-FUNCTION SmolyakRep1_TIME_R2(SRep1,R2) RESULT(SRep)
-USE mod_system
-IMPLICIT NONE
-
-CLASS(Type_SmolyakRep),           intent(in)     :: SRep1
-real (kind=Rkind),               intent(in)     :: R2
-TYPE(Type_SmolyakRep)                           :: SRep
-
-
-integer               :: iG,nb_BG
-
-nb_BG = Size_SmolyakRep(SRep1)
-
-SRep = SRep1 !  for the allocation
-
-IF (nb_BG > 0) THEN
-
-  DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
-    SRep%SmolyakRep(iG)%V(:) = SRep1%SmolyakRep(iG)%V(:) * R2
-  END DO
-
-END IF
-
-END FUNCTION SmolyakRep1_TIME_R2
 
 END MODULE mod_basis_BtoG_GtoB_SGType4

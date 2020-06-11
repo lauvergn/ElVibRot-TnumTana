@@ -3411,6 +3411,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
    ELSE IF(.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_iG(iG)) THEN
 #else
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
+#endif
      allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
      DO i=1,size(d0MatOp)
        CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
@@ -4369,7 +4370,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     DO itab=1,Psi_size_MPI0
       CALL dealloc_TypeRVec(PsiR(itab))
     END DO
-       
+
   END SUBROUTINE Action_MPI_S3
 !======================================================================================= 
 #endif
@@ -4377,6 +4378,8 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 #if(run_MPI)
 !=======================================================================================  
 !> action with MPI: scheme 2
+!> use more than one thread to distribute smolyak terms. 
+!> require the preloading of mapping table for certain threads
 !======================================================================================= 
   SUBROUTINE Action_MPI_S2(Psi,OpPsi,BasisnD,para_Op,size_PsiR_V)
     USE mod_system
@@ -4425,15 +4428,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 !    CALL MPI_BCAST(Psi_size_MPI0,size1_MPI,MPI_int_def,root_MPI,MPI_COMM_WORLD,MPI_err)
 !    CALL MPI_BCAST(size_RvecB,   size1_MPI,MPI_int_def,root_MPI,MPI_COMM_WORLD,MPI_err)
 !
-!    IF(MPI_id==0) THEN
-!      DO i_MPI=1,MPI_np-1
-!        DO itab=1,Psi_size_MPI0
-!          CALL MPI_Send(psi(itab)%RvecB,size_RvecB,)
-!          CALL MPI_Send(reduce_Vlength,size1_MPI,MPI_int_fortran,root_MPI,MPI_id,        &
-!                        MPI_COMM_WORLD,MPI_err)
-!        ENDDO
-!      ENDDO
-!    ENDIF
+!
 !    
 !    IF(MPI_id/=0) THEN
 !    ENDIF
@@ -4548,8 +4543,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
             ! make sure there is at least 1 Smolyak term for each threads
             temp_int=MAX(1,FLOOR((ave_time-temp_time)/ave_iGtime_threads(i_MPI2)))
             iG_threads(i_MPI)=iG_threads(i_MPI)+temp_int
-            write(*,*) 'iG_threads checkcheck',temp_int,iG_threads(i_MPI)
-            
+
             ! record the current block
             current_i_MPI=i_MPI2
             ! record the rest time and iGs in current block
@@ -4725,17 +4719,16 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     Integer                                       :: ii
     Logical                                       :: returnall
 
-
     CALL MPI_collect_info(time_MPI_act_all) ! time_MPI_act_all infor on master
     CALL MPI_collect_info(time_MPI_commu)
-     
+
     returnall=.FALSE.
     IF(MPI_id==0) THEN 
       write(out_unitp,*) 'time used in action for each threads:',time_MPI_act_all
-      write(out_unitp,*) 'commu time used in action for each threads:',time_MPI_commu
+      !write(out_unitp,*) 'commu time used in action for each threads:',time_MPI_commu
       ave_time=Real(SUM(time_MPI_act_all),kind=Rkind)/Real(MPI_np,kind=Rkind)
-      IF(ALL(ABS(ave_time-time_MPI_act_all)/ave_time<0.12)) returnall=.TRUE.
-      write(out_unitp,*) 'time balance:',ABS(ave_time-time_MPI_act_all)/ave_time<0.12
+      IF(ALL(ABS(ave_time-time_MPI_act_all)/ave_time<0.1)) returnall=.TRUE.
+      write(out_unitp,*) 'time balance:',ABS(ave_time-time_MPI_act_all)/ave_time<0.1
     ENDIF
 
     CALL MPI_BCAST(returnall,size1_MPI,MPI_Logical,root_MPI,MPI_COMM_WORLD,MPI_err)

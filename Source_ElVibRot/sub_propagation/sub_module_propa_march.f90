@@ -5174,15 +5174,21 @@
       !write(out_unitp,*) 'npoly,coef_poly',para_propa%para_poly%npoly,  &
       !  para_propa%para_poly%coef_poly(1:para_propa%para_poly%npoly)
 
-      psi0Hkpsi0(0) = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+      IF(MPI_id==0) psi0Hkpsi0(0) = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+
+#if(run_MPI)
+      CALL MPI_Bcast(psi0Hkpsi0(0),size1_MPI,MPI_cplx_fortran,root_MPI,                &
+                     MPI_COMM_WORLD,MPI_err)
+#endif
 
       rt  = cmplx(ZERO,-ONE,kind=Rkind)
       rt2 = cmplx(ZERO,-TWO,kind=Rkind)
 
 !     - The first term of the expansion ------------------
-      w1  = psi
-      psi = psi * para_propa%para_poly%coef_poly(1)
-
+      IF(MPI_id==0) THEN
+        w1  = psi
+        psi = psi * para_propa%para_poly%coef_poly(1)
+      ENDIF
 
       psi0Hkpsi0(1) =  psi0Hkpsi0(0)
 
@@ -5191,11 +5197,12 @@
       CALL sub_OpPsi(w1,w2,para_H)
       CALL sub_scaledOpPsi(w1,w2,para_H%E0,para_H%Esc)
 
-      w2  = w2 * rt
-      psi = psi + w2 * para_propa%para_poly%coef_poly(2)
+      IF(MPI_id==0) THEN
+        w2  = w2 * rt
+        psi = psi + w2 * para_propa%para_poly%coef_poly(2)
 
-      psi0Hkpsi0(2) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
-
+        psi0Hkpsi0(2) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
+      ENDIF
 
 !     - The higher terms of the expansion ----------------
 
@@ -5205,6 +5212,7 @@
         CALL sub_scaledOpPsi(w2,w3,para_H%E0,para_H%Esc)
         IF (mod(jt,100) == 0) write(out_unitp,'(a)',advance='no') '.'
 
+        IF(MPI_id==0) THEN
 !        Recurrence relations of the Chebychev expansion:
          w3 = w1 + w3 * rt2
 
@@ -5228,7 +5236,11 @@
            STOP
          END IF
          psi0Hkpsi0(jt) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
-
+        ENDIF ! for MPI_id==0
+#if(run_MPI)
+        CALL MPI_Bcast(norm_exit,size1_MPI,MPI_real_fortran,root_MPI,                  &
+                       MPI_COMM_WORLD,MPI_err)
+#endif
          IF (norm_exit < para_propa%para_poly%poly_tol) EXIT
 
 

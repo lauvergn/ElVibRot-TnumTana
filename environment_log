@@ -45,7 +45,6 @@
     Davidson    : pass
     Arpack      : pass
     propagation : pass
-    *NOTE: "openmpi_403_intel18_init" is lack of linked debuger 
 
 > pgf90
 

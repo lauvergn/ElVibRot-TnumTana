@@ -9,10 +9,10 @@
 
 ## parallel_make=1 to enable parallel make
 ## parallel_make=0 for fast debug make, no parallel
-parallel_make=1
+parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1 
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -22,7 +22,7 @@ OMP = 1
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 1
+ARPACK = 0
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -337,20 +337,28 @@ ifeq ($(F90),mpifort)
    endif
    #
    # opt management
-   ifeq ($(OPT),1)
-      F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
-   else
-      #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wconversion -Wconversion-extra
-      #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wunused
-       F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
-      #F90FLAGS = -O0 -fbounds-check -Wuninitialized
+   ifeq ($(MPICORE), gfortran)
+     ifeq ($(OPT),1)
+        F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
+     else
+        #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wconversion -Wconversion-extra
+        #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wunused
+         F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
+        #F90FLAGS = -O0 -fbounds-check -Wuninitialized
+     endif
+   else 
+     ifeq ($(OPT),1)
+       F90FLAGS =  -O5 -g #-check all -fpe0 -warn -traceback -debug extended
+     else
+       F90FLAGS =  -O0 -g #-check all -fpe0 -warn -traceback -debug extended
+     endif
    endif
    # integer kind management
    ifeq ($(INT),8)
-      ifeq ($(MPICORE),ifort)
-         F90FLAGS += -i8
-      else
+      ifeq ($(MPICORE),gfortran)
          F90FLAGS += -fdefault-integer-8 
+      else
+         F90FLAGS += -i8
       endif
    endif
 endif
@@ -394,12 +402,12 @@ ifeq ($(ARPACK),1)
   else                   # Linux
     ifeq ($(F90), mpifort)
       ifeq ($(MPICORE), gfortran)
-        ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
+        ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_gfortran.a
       else ifeq ($(MPICORE), ifort)
         ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_ifort.a
       endif
     else ifeq ($(F90), gfortran)
-      ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
+      ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_gfortran.a
     else ifeq ($(F90), ifort)
       ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_ifort.a
     endif
@@ -1489,7 +1497,8 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_main_Optimization.o  $(OBJ)/sub_Smolyak_DInd.o           \
                    $(OBJ)/sub_Smolyak_ba.o $(OBJ)/sub_module_cart.o                    \
                    $(OBJ)/sub_Smolyak_RDP.o $(OBJ)/sub_Smolyak_test.o                  \
-                   $(OBJ)/$(VIBMAIN).o $(OBJ)/QMRPACK_lib.o $(OBJ)/EVR_Module.o
+                   $(OBJ)/$(VIBMAIN).o $(OBJ)/QMRPACK_lib.o $(OBJ)/EVR_Module.o        \
+                   $(OBJ)/sub_math_util.o $(OBJ)/Calc_Tab_dnQflex.o
 $(lib_dep_mod_system):$(OBJ)/sub_module_system.o
 
 #mod_EVR 
@@ -1533,7 +1542,8 @@ lib_dep_mod_dnSVM=$(OBJ)/Lib_QTransfo.o $(OBJ)/sub_module_DInd.o                
                   $(OBJ)/RectilinearNM_Transfo.o $(OBJ)/LinearNMTransfo.o              \
                   $(OBJ)/RPHTransfo.o $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o         \
                   $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_module_SimpleOp.o             \
-                  $(OBJ)/sub_module_cart.o
+                  $(OBJ)/sub_module_cart.o $(OBJ)/sub_math_util.o                      \
+                  $(OBJ)/mod_FiniteDiff.o $(OBJ)/Calc_Tab_dnQflex.o
 $(lib_dep_mod_dnSVM):$(OBJ)/sub_module_dnSVM.o
 
 #mod_dnM
@@ -1570,7 +1580,8 @@ lib_dep_mod_Lib_QTransfo=$(OBJ)/CartesianTransfo.o $(OBJ)/ZmatTransfo.o         
 $(lib_dep_mod_Lib_QTransfo):$(OBJ)/Lib_QTransfo.o
 
 #mod_nDFit 
-lib_dep_mod_nDFit=$(OBJ)/sub_module_Tnum.o $(OBJ)/sub_PrimOp_def.o
+lib_dep_mod_nDFit=$(OBJ)/sub_module_Tnum.o $(OBJ)/sub_PrimOp_def.o                     \
+                  $(OBJ)/sub_PrimOp_RPH.o
 $(lib_dep_mod_nDFit):$(OBJ)/sub_module_nDfit.o
 
 #mod_Tnum 
@@ -1609,7 +1620,7 @@ lib_dep_mod_Tana_Tnum=$(OBJ)/sub_module_Coord_KEO.o
 $(lib_dep_mod_Tana_Tnum):$(OBJ)/sub_module_Tana_Tnum.o
 
 #mod_PrimOp_def
-lib_dep_mod_PrimOp_def=$(OBJ)/sub_PrimOp.o $(OBJ)/sub_onthefly.o
+lib_dep_mod_PrimOp_def=$(OBJ)/sub_PrimOp.o $(OBJ)/sub_onthefly.o $(OBJ)/sub_PrimOp_RPH.o
 $(lib_dep_mod_PrimOp_def):$(OBJ)/sub_PrimOp_def.o
 
 #mod_OTF_def
@@ -1621,7 +1632,7 @@ lib_dep_mod_param_SGType2=$(OBJ)/sub_module_basis_set_alloc.o
 $(lib_dep_mod_param_SGType2):$(OBJ)/sub_module_param_SGType2.o
 
 #mod_OTF
-lib_dep_mod_OTF=$(OBJ)/sub_PrimOp.o
+lib_dep_mod_OTF=$(OBJ)/sub_PrimOp.o $(OBJ)/sub_PrimOp_RPH.o
 $(lib_dep_mod_OTF):$(OBJ)/sub_onthefly.o
 
 #mod_basis_set_alloc
@@ -1646,7 +1657,8 @@ lib_dep_mod_basis=$(OBJ)/sub_module_BasisMakeGrid.o $(OBJ)/sub_read_data.o      
                   $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_ft.o                       \
                   $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_DirProd.o                  \
                   $(OBJ)/sub_SymAbelian_OF_Basis.o $(OBJ)/sub_module_psi_set_alloc.o   \
-                  $(OBJ)/sub_changement_de_var.o $(OBJ)/sub_quadra_SparseBasis2n.o
+                  $(OBJ)/sub_changement_de_var.o $(OBJ)/sub_quadra_SparseBasis2n.o     \
+                  $(OBJ)/sub_inactive_harmo.o $(OBJ)/sub_paraRPH.o $(OBJ)/nb_harm.o
 $(lib_dep_mod_basis):$(OBJ)/sub_module_basis.o
  
 #mod_poly
@@ -1792,7 +1804,8 @@ $(lib_dep_mod_Tana_write_mctdh):$(OBJ)/sub_module_Tana_Export_KEO.o
 #mod_PrimOp
 lib_dep_mod_PrimOp=$(OBJ)/sub_inactive_harmo.o $(OBJ)/sub_module_SetOp.o               \
                    $(OBJ)/sub_paraRPH.o $(OBJ)/nb_harm.o $(OBJ)/sub_main_Optimization.o\
-                   $(OBJ)/sub_main_nDfit.o $(OBJ)/EVR_Module.o
+                   $(OBJ)/sub_main_nDfit.o $(OBJ)/EVR_Module.o                         \
+                   $(OBJ)/sub_module_ReadOp.o
 $(lib_dep_mod_PrimOp):$(OBJ)/sub_PrimOp.o
 
 #mod_SimulatedAnnealing
@@ -1876,7 +1889,7 @@ lib_dep_mod_fullanalysis=$(OBJ)/sub_Auto_Basis.o
 $(lib_dep_mod_fullanalysis):$(OBJ)/sub_analyse.o
 
 #mod_dnS
-lib_dep_mod_dnS=$(OBJ)/sub_module_VecOFdnS.o
+lib_dep_mod_dnS=$(OBJ)/sub_module_VecOFdnS.o $(OBJ)/sub_module_dnV.o
 $(lib_dep_mod_dnS):$(OBJ)/sub_module_dnS.o
 
 #mod_param_WP0
@@ -1890,6 +1903,10 @@ $(lib_dep_mod_MatOFdnS):$(OBJ)/sub_module_MatOFdnS.o
 #mod_psi
 lib_dep_mod_psi=$(OBJ)/sub_module_SetOp.o
 $(lib_dep_mod_psi):$(OBJ)/mod_psi.o
+
+#mod_PrimOp_RPH
+lib_dep_mod_PrimOp_RPH=$(OBJ)/sub_PrimOp.o
+$(lib_dep_mod_PrimOp_RPH):$(OBJ)/sub_PrimOp_RPH.o
 
 endif
 #=======================================================================================

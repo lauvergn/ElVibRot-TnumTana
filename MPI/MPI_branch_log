@@ -51,7 +51,8 @@ MPI Vm2.0
 
   - bug fix for new styx openMPI configuration "openmpi_403_intel18_init"
 
-
+  - bug in openmpi_403_intel18_init
+  
 > MPI_Vm1.9
   - bug in Davidson fix
   
