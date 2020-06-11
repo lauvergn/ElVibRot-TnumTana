@@ -1,28 +1,21 @@
 #=================================================================================
 #=================================================================================
-## Compiler? Possible values: ifort; gfortran; nagfor; pgf90 (v17) ;mpifort
-# F90 = mpifort
-F90 = gfortran
-#F90 = nagfor
-#F90 = ifort
-#F90 = pgf90
+## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
+ F90 = mpifort
+# F90 = gfortran
+# F90 = nagfor
+# F90 = ifort
+# F90 = pgf90
 
-## MPI compiled with: gfortran or ifort
-MPICORE = gfortran
-
-## debug_make=0 to enable parallel make
-## debug_make=1 for fast debug make, no parallel
-## NOTE: it seems there are some issues for parallel sometime
-debug_make=1
+## parallel_make=1 to enable parallel make
+## parallel_make=0 for fast debug make, no parallel
+parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
-ifeq ($(F90),mpifort)
-  OMP = 0
-endif
 #
 ## force the default integer (without kind) during the compillation. 
 ## default 4: , INT=8 (for kind=8)
@@ -49,16 +42,19 @@ INVHYP  = 1
 OS=$(shell uname)
 #
 #=================================================================================
-## set path for 64-bit MPI when requiring long integer. 
-ifeq ($(INT),8)
-  ifeq ($(F90),mpifort)
-    ARPACK = 0 ## temp here, disable ARPACK for 64-bit case
-  endif
-endif
-
 # turn off ARPACK when using pgf90
 ifeq ($(F90),pgf90)
   ARPACK = 0
+endif
+
+# setup for mpifort 
+ifeq ($(F90),mpifort)
+  ## MPI compiled with: gfortran or ifort
+  MPICORE = $(shell ompi_info | grep 'Fort compiler:' | sed 's/Fort compiler://g' | sed 's/ //g')
+  OMP = 0
+  ifeq ($(INT),8)
+    ARPACK = 0 ## temp here, disable ARPACK for 64-bit case
+  endif
 endif
 
 ## turn off ARPACK 
@@ -341,24 +337,34 @@ ifeq ($(F90),mpifort)
    endif
    #
    # opt management
-   ifeq ($(OPT),1)
-      F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
-   else
-      #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wconversion -Wconversion-extra
-      #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wunused
-       F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
-      #F90FLAGS = -O0 -fbounds-check -Wuninitialized
+   ifeq ($(MPICORE), gfortran)
+     ifeq ($(OPT),1)
+        F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
+     else
+        #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wconversion -Wconversion-extra
+        #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wunused
+         F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
+        #F90FLAGS = -O0 -fbounds-check -Wuninitialized
+     endif
+   else 
+     ifeq ($(OPT),1)
+       F90FLAGS =  -O5 -g #-check all -fpe0 -warn -traceback -debug extended
+     else
+       F90FLAGS =  -O0 -g #-check all -fpe0 -warn -traceback -debug extended
+     endif
    endif
    # integer kind management
    ifeq ($(INT),8)
-      ifeq ($(MPICORE),ifort)
-         F90FLAGS += -i8
-      else
+      ifeq ($(MPICORE),gfortran)
          F90FLAGS += -fdefault-integer-8 
+      else
+         F90FLAGS += -i8
       endif
    endif
 endif
 F90FLAGS := $(F90FLAGS)   $(EXTMOD)
+F90_VER = $(shell ompi_info | grep 'Open MPI:' | sed 's/ //g' )
+
 #=================================================================================
 #=================================================================================
 $(info ***********************************************************************)
@@ -366,6 +372,9 @@ $(info ***********OS:               $(OS))
 $(info ***********COMPILER:         $(F90))
 $(info ***********OPTIMIZATION:     $(OPT))
 $(info ***********COMPILER VERSION: $(F90_VER))
+ifeq ($(F90),mpifort)
+$(info ***********COMPILED with:    $(MPICORE))
+endif
 $(info ***********OpenMP:           $(OMPFLAG))
 $(info ***********Arpack:           $(ARPACK))
 $(info ***********CERFACS:          $(CERFACS))
@@ -388,10 +397,20 @@ LYNK90 = $(F90_FLAGS)
 ifeq ($(ARPACK),1)
   # Arpack management with the OS
   ifeq ($(OS),Darwin)    # OSX
-    #ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
-    ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
+    ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
+    #ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
   else                   # Linux
-    ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux.a
+    ifeq ($(F90), mpifort)
+      ifeq ($(MPICORE), gfortran)
+        ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_gfortran.a
+      else ifeq ($(MPICORE), ifort)
+        ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_ifort.a
+      endif
+    else ifeq ($(F90), gfortran)
+      ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_gfortran.a
+    else ifeq ($(F90), ifort)
+      ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_ifort.a
+    endif
     #ARPACKLIB=/usr/lib64/libarpack.a
   endif
 else
@@ -1418,10 +1437,11 @@ $(HTML) : $(REFPATH)/%.html : sub_module/%.f90
 #=======================================================================================
 #add dependence for parallelization
 
-ifeq ($(debug_make),0)
+ifeq ($(parallel_make),1)
 
 #mod_MPI
-lib_dep_mod_MPI=$(OBJ)/sub_module_string.o $(OBJ)/sub_module_memory_NotPointer.o
+lib_dep_mod_MPI=$(OBJ)/sub_module_string.o $(OBJ)/sub_module_memory_NotPointer.o       \
+                $(OBJ)/sub_module_MPI_Aid.o
 $(lib_dep_mod_MPI):$(OBJ)/sub_module_MPI.o
 
 #mod_memory
@@ -1477,7 +1497,8 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_main_Optimization.o  $(OBJ)/sub_Smolyak_DInd.o           \
                    $(OBJ)/sub_Smolyak_ba.o $(OBJ)/sub_module_cart.o                    \
                    $(OBJ)/sub_Smolyak_RDP.o $(OBJ)/sub_Smolyak_test.o                  \
-                   $(OBJ)/$(VIBMAIN).o $(OBJ)/QMRPACK_lib.o $(OBJ)/EVR_Module.o
+                   $(OBJ)/$(VIBMAIN).o $(OBJ)/QMRPACK_lib.o $(OBJ)/EVR_Module.o        \
+                   $(OBJ)/sub_math_util.o $(OBJ)/Calc_Tab_dnQflex.o
 $(lib_dep_mod_system):$(OBJ)/sub_module_system.o
 
 #mod_EVR 
@@ -1521,7 +1542,8 @@ lib_dep_mod_dnSVM=$(OBJ)/Lib_QTransfo.o $(OBJ)/sub_module_DInd.o                
                   $(OBJ)/RectilinearNM_Transfo.o $(OBJ)/LinearNMTransfo.o              \
                   $(OBJ)/RPHTransfo.o $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o         \
                   $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_module_SimpleOp.o             \
-                  $(OBJ)/sub_module_cart.o
+                  $(OBJ)/sub_module_cart.o $(OBJ)/sub_math_util.o                      \
+                  $(OBJ)/mod_FiniteDiff.o $(OBJ)/Calc_Tab_dnQflex.o
 $(lib_dep_mod_dnSVM):$(OBJ)/sub_module_dnSVM.o
 
 #mod_dnM
@@ -1558,7 +1580,8 @@ lib_dep_mod_Lib_QTransfo=$(OBJ)/CartesianTransfo.o $(OBJ)/ZmatTransfo.o         
 $(lib_dep_mod_Lib_QTransfo):$(OBJ)/Lib_QTransfo.o
 
 #mod_nDFit 
-lib_dep_mod_nDFit=$(OBJ)/sub_module_Tnum.o $(OBJ)/sub_PrimOp_def.o
+lib_dep_mod_nDFit=$(OBJ)/sub_module_Tnum.o $(OBJ)/sub_PrimOp_def.o                     \
+                  $(OBJ)/sub_PrimOp_RPH.o
 $(lib_dep_mod_nDFit):$(OBJ)/sub_module_nDfit.o
 
 #mod_Tnum 
@@ -1597,7 +1620,7 @@ lib_dep_mod_Tana_Tnum=$(OBJ)/sub_module_Coord_KEO.o
 $(lib_dep_mod_Tana_Tnum):$(OBJ)/sub_module_Tana_Tnum.o
 
 #mod_PrimOp_def
-lib_dep_mod_PrimOp_def=$(OBJ)/sub_PrimOp.o $(OBJ)/sub_onthefly.o
+lib_dep_mod_PrimOp_def=$(OBJ)/sub_PrimOp.o $(OBJ)/sub_onthefly.o $(OBJ)/sub_PrimOp_RPH.o
 $(lib_dep_mod_PrimOp_def):$(OBJ)/sub_PrimOp_def.o
 
 #mod_OTF_def
@@ -1609,7 +1632,7 @@ lib_dep_mod_param_SGType2=$(OBJ)/sub_module_basis_set_alloc.o
 $(lib_dep_mod_param_SGType2):$(OBJ)/sub_module_param_SGType2.o
 
 #mod_OTF
-lib_dep_mod_OTF=$(OBJ)/sub_PrimOp.o
+lib_dep_mod_OTF=$(OBJ)/sub_PrimOp.o $(OBJ)/sub_PrimOp_RPH.o
 $(lib_dep_mod_OTF):$(OBJ)/sub_onthefly.o
 
 #mod_basis_set_alloc
@@ -1634,7 +1657,8 @@ lib_dep_mod_basis=$(OBJ)/sub_module_BasisMakeGrid.o $(OBJ)/sub_read_data.o      
                   $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_ft.o                       \
                   $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_DirProd.o                  \
                   $(OBJ)/sub_SymAbelian_OF_Basis.o $(OBJ)/sub_module_psi_set_alloc.o   \
-                  $(OBJ)/sub_changement_de_var.o $(OBJ)/sub_quadra_SparseBasis2n.o
+                  $(OBJ)/sub_changement_de_var.o $(OBJ)/sub_quadra_SparseBasis2n.o     \
+                  $(OBJ)/sub_inactive_harmo.o $(OBJ)/sub_paraRPH.o $(OBJ)/nb_harm.o
 $(lib_dep_mod_basis):$(OBJ)/sub_module_basis.o
  
 #mod_poly
@@ -1651,17 +1675,18 @@ $(lib_dep_mod_basis_BtoG_GtoB_SGType4):$(OBJ)/sub_module_basis_BtoG_GtoB_SG4.o
 lib_dep_BasisMakeGrid=$(OBJ)/sub_quadra_herm.o
 $(lib_dep_BasisMakeGrid):$(OBJ)/sub_module_BasisMakeGrid.o
 
-#mod_psi_set_alloc  
+#mod_psi_set_alloc
 lib_dep_mod_psi_set_alloc=$(OBJ)/sub_module_psi_B_TO_G.o $(OBJ)/sub_module_ana_psi.o   \
-                          $(OBJ)/sub_module_SetOp.o
+                          $(OBJ)/sub_module_SetOp.o $(OBJ)/mod_psi.o
 $(lib_dep_mod_psi_set_alloc):$(OBJ)/sub_module_psi_set_alloc.o
 
 #mod_ana_psi
-lib_dep_mod_ana_psi=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_module_psi_Op.o
+lib_dep_mod_ana_psi=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_module_psi_Op.o              \
+                    $(OBJ)/mod_psi.o
 $(lib_dep_mod_ana_psi):$(OBJ)/sub_module_ana_psi.o
 
 #mod_psi_Op
-lib_dep_mod_psi_Op=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_OpPsi_SG4.o \
+lib_dep_mod_psi_Op=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_OpPsi_SG4.o                   \
                    $(OBJ)/EVR_Module.o
 $(lib_dep_mod_psi_Op):$(OBJ)/sub_module_psi_Op.o
 
@@ -1692,7 +1717,7 @@ lib_dep_mod_Op=$(OBJ)/sub_HST_harm.o $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_ha
 $(lib_dep_mod_Op):$(OBJ)/sub_module_Op.o
 
 #mod_psi_io 
-lib_dep_mod_psi_io=$(OBJ)/sub_analyse.o
+lib_dep_mod_psi_io=$(OBJ)/sub_analyse.o $(OBJ)/mod_psi.o
 $(lib_dep_mod_psi_io):$(OBJ)/sub_module_psi_io.o
 
 #mod_MatOp
@@ -1769,7 +1794,7 @@ lib_dep_mod_Tana_vec_operations=(OBJ)/sub_module_Tana_op.o $(OBJ)/sub_module_Tan
 $(lib_dep_mod_Tana_vec_operations):$(OBJ)/sub_module_Tana_vec_operations.o
 
 #mod_dnRho
-lib_dep_mod_dnRho=$(OBJ)/sub_module_Tana_NumKEO.o
+lib_dep_mod_dnRho=$(OBJ)/sub_module_Tana_NumKEO.o $(OBJ)/calc_dng_dnGG.o
 $(lib_dep_mod_dnRho):$(OBJ)/sub_dnRho.o
 
 #mod_Tana_write_mctdh
@@ -1779,7 +1804,8 @@ $(lib_dep_mod_Tana_write_mctdh):$(OBJ)/sub_module_Tana_Export_KEO.o
 #mod_PrimOp
 lib_dep_mod_PrimOp=$(OBJ)/sub_inactive_harmo.o $(OBJ)/sub_module_SetOp.o               \
                    $(OBJ)/sub_paraRPH.o $(OBJ)/nb_harm.o $(OBJ)/sub_main_Optimization.o\
-                   $(OBJ)/sub_main_nDfit.o $(OBJ)/EVR_Module.o
+                   $(OBJ)/sub_main_nDfit.o $(OBJ)/EVR_Module.o                         \
+                   $(OBJ)/sub_module_ReadOp.o
 $(lib_dep_mod_PrimOp):$(OBJ)/sub_PrimOp.o
 
 #mod_SimulatedAnnealing
@@ -1810,10 +1836,11 @@ $(lib_dep_mod_Smolyak_test):$(OBJ)/sub_Smolyak_module.o
 lib_dep_mod_nDGridFit=$(OBJ)/$(VIBMAIN).o
 $(lib_dep_mod_nDGridFit):$(OBJ)/sub_main_nDfit.o
 
-#mod_Auto_Basis    
+#mod_Auto_Basis
 lib_dep_mod_Auto_Basis=$(OBJ)/sub_quadra_SparseBasis.o                                 \
                        $(OBJ)/sub_module_SimulatedAnnealing.o                          \
-                       $(OBJ)/sub_module_BFGS.o $(OBJ)/sub_namelist.o $(OBJ)/ini_data.o
+                       $(OBJ)/sub_module_BFGS.o $(OBJ)/sub_namelist.o                  \
+                       $(OBJ)/ini_data.o $(OBJ)/vib.o $(OBJ)/EVR_driver.o
 $(lib_dep_mod_Auto_Basis):$(OBJ)/sub_Auto_Basis.o
 
 #mod_Optimization
@@ -1853,8 +1880,33 @@ lib_dep_mod_VecOFdnS=$(OBJ)/sub_module_MatOFdnS.o $(OBJ)/sub_module_dnSVM.o
 $(lib_dep_mod_VecOFdnS):$(OBJ)/sub_module_VecOFdnS.o
 
 #mod_analysis
-lib_dep_mod_analysis=$(OBJ)/sub_analyse.o $(OBJ)/sub_NLO.o
+lib_dep_mod_analysis=$(OBJ)/sub_analyse.o $(OBJ)/sub_NLO.o $(OBJ)/sub_VibRot.o         \
+                     $(OBJ)/sub_intensity.o
 $(lib_dep_mod_analysis):$(OBJ)/sub_module_analysis.o
+
+#mod_fullanalysis
+lib_dep_mod_fullanalysis=$(OBJ)/sub_Auto_Basis.o
+$(lib_dep_mod_fullanalysis):$(OBJ)/sub_analyse.o
+
+#mod_dnS
+lib_dep_mod_dnS=$(OBJ)/sub_module_VecOFdnS.o $(OBJ)/sub_module_dnV.o
+$(lib_dep_mod_dnS):$(OBJ)/sub_module_dnS.o
+
+#mod_param_WP0
+lib_dep_mod_param_WP0=$(OBJ)/mod_psi.o
+$(lib_dep_mod_param_WP0):$(OBJ)/sub_module_param_WP0.o
+
+#mod_MatOFdnS
+lib_dep_mod_MatOFdnS=$(OBJ)/sub_module_dnSVM.o
+$(lib_dep_mod_MatOFdnS):$(OBJ)/sub_module_MatOFdnS.o
+
+#mod_psi
+lib_dep_mod_psi=$(OBJ)/sub_module_SetOp.o
+$(lib_dep_mod_psi):$(OBJ)/mod_psi.o
+
+#mod_PrimOp_RPH
+lib_dep_mod_PrimOp_RPH=$(OBJ)/sub_PrimOp.o
+$(lib_dep_mod_PrimOp_RPH):$(OBJ)/sub_PrimOp_RPH.o
 
 endif
 #=======================================================================================
@@ -1890,12 +1942,12 @@ ifeq ($(F90),mpifort)
 	@cd ./Working_tests/MPI_tests/21D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
   # Arpack test
   ifeq ($(ARPACK),1) 
-	  @echo "test for Arpack, result in ./Working_tests/MPI_tests/6D_arpack/result/"
+	  @echo "test for Arpack 6D, result in ./Working_tests/MPI_tests/6D_arpack/result/"
 	  @echo "> test for Arpack" >> MPI_test.log
 	  @cd ./Working_tests/MPI_tests/6D_arpack   ; ./run_jobs >> ../../../MPI_test.log
   endif
 	@echo "test for propagation, result in ./Working_tests/MPI_tests/12D_propagation/result/"
-	@echo "> test for propagation" >> MPI_test.log
+	@echo "> test for propagation 12D" >> MPI_test.log
 	@cd ./Working_tests/MPI_tests/12D_propagation  ; ./run_jobs >> ../../../MPI_test.log
 	@echo "test done"
 	@echo " "
@@ -1924,7 +1976,7 @@ ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
   # Arpack test
   ifeq ($(ARPACK),1) 
 	  @echo "test for Arpack, result in ./Working_tests/MPI_tests/6D_arpack"$(parall_name)"/result/"
-	  @echo "> test for Arpack" >> $(F90)$(parall_name)_test.log
+	  @echo "> test for Arpack 6D" >> $(F90)$(parall_name)_test.log
 	  @cp -rf ./Working_tests/MPI_tests/6D_arpack ./Working_tests/MPI_tests/6D_arpack$(parall_name)
 	  @cd ./Working_tests/MPI_tests/6D_arpack$(parall_name); \
 	      sed -e "s/parall=MPI/parall=${parall}/g"  shell_run  > shell_runp ; \
@@ -1933,7 +1985,7 @@ ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
   endif
   # propagation test 
 	@echo "test for propagation, result in ./Working_tests/MPI_tests/12D_propagation"$(parall_name)"/result/"
-	@echo "> test for propagation" >> $(F90)$(parall_name)_test.log
+	@echo "> test for propagation 12D" >> $(F90)$(parall_name)_test.log
 	@cp -rf ./Working_tests/MPI_tests/12D_propagation ./Working_tests/MPI_tests/12D_propagation$(parall_name)
 	@cd ./Working_tests/MPI_tests/12D_propagation$(parall_name); \
 	    sed -e "s/parall=MPI/parall=${parall}/g"  shell_run  > shell_runp ; \

@@ -62,7 +62,6 @@ CONTAINS
 
       USE mod_Op
       USE mod_analysis
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables for the construction of H ----------------------------

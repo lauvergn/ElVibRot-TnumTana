@@ -1,3 +1,5 @@
+MPI Vm2.0
+
 @ log 
 @ issue
 @ arxiv
@@ -5,14 +7,75 @@
 ----------------------------------------------------------------------------------------
 @ log
 
+> MPI_Vm2.0 
+  - Full Smolyak rep. midway 
+    march_SIL_MPI
+    march_SIL_MPI_old(should be removed later)
+    SmolyakR_distribute_SRB_MPI
+    SmolyakR_distribute_SRG_MPI
+    SmolyakR_to_packedB_SRB_MPI
+    SmolyakR_to_packedB_SRG_MPI
+    sub_TabOpPsi_FOR_SGtype4_SRB_MPI
+    sub_TabOpPsi_FOR_SGtype4_SRG_MPI
+    sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRB_MPI
+    sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
+    Overlap_psi1_psi2_SRB_MPI
+    Overlap_psi1_psi2_SRG_MPI
+    sub_scaledOpPsi_SR_MPI
+    norm2_psi_SR_MPI
+    Calc_AutoCorr_SR_MPI
+    psi_times_SR_MPI
+    w1_minus_Cv_SR_MPI
+    psi_plus_SR_MPI
+    psi_minus_SR_MPI
+    psi_times_SR_MPI
+    ini_iGs_MPI
+
+  - auto iGs disrtibution added
+    new: 
+      ini_iGs_MPI
+      auto_iGs_MPI*
+      auto_iGs_MPI_old
+      auto_iGs_MPI_old2
+      time_record
+    modified: 
+      Action_MPI_S1
+      Action_MPI_S3
+      get_OpGrid_type1_OF_ONEDP_FOR_SG4_new2
+      sub_TabOpPsi_FOR_SGtype4
+      MPI_Bcast_matrix
+
+  - new subroutine in mod_MPI_Aid
+    MPI_collect_info
+
+  - bug fix in arpack, possibly still bugs somewhere 
+
+  - bug fix for new styx openMPI configuration "openmpi_403_intel18_init"
+
+  - new version MPI scheme, in prograss: Action_MPI_S2
+  
+> MPI_Vm1.9
+  - bug in Davidson fix
+  
+  - modify the the way distrubite iG
+  
+  - bug fix with new local merge at 23/03/2020
+  
+  - improvement for Davidson on g residual
+    Residual_Davidson_sum_MPI
+    MakeResidual_Davidson_j_MPI3
+    MakeResidual_Davidson_MPI3
+    MPI_combine_array
+    
+  - updat 
+    allocate_array
+
 > MPI_Vm1.8
   - bug in makefile fixed
 
   - bug in action time fixed
 
   - action with MPI modified
-  
-  
 
 > MPI_Vm1.7 (merged with master 03/27/2020)
   - bug in time count fixed

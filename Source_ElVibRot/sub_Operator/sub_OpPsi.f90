@@ -49,6 +49,10 @@ PUBLIC :: sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
 PUBLIC :: sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
 PUBLIC :: sub_psiHitermPsi
 
+#if(run_MPI)
+PUBLIC :: sub_scaledOpPsi_SR_MPI
+#endif
+
 CONTAINS
 !======================================================
 !
@@ -217,6 +221,7 @@ CONTAINS
       ELSE
         With_Grid_loc = .FALSE.
       END IF
+
       IF(MPI_id==0) THEN
         IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
       ENDIF
@@ -263,9 +268,10 @@ CONTAINS
                                      alloc_psi,dealloc_psi,             &
                                      Set_symab_OF_psiBasisRep,          &
                                      sub_PsiGridRep_TO_BasisRep
-
       USE mod_SetOp,          ONLY : param_Op,write_param_Op,read_OpGrid_OF_Op
-      USE mod_MPI
+#if(run_MPI)
+      USE mod_OpPsi_SG4,      ONLY : sub_TabOpPsi_FOR_SGtype4_SRB_MPI
+#endif
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -323,6 +329,7 @@ CONTAINS
       ELSE
         With_Grid_loc = .FALSE.
       END IF
+
       IF(MPI_id==0) THEN
         IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
       ENDIF
@@ -369,7 +376,12 @@ CONTAINS
       para_Op%nb_OpPsi = para_Op%nb_OpPsi + 1
 
       IF (SGtype4) THEN
-        IF (Psi%cplx) THEN
+        IF(Psi%SRB_MPI) THEN
+#if(run_MPI)
+          CALL sub_TabOpPsi_FOR_SGtype4_SRB_MPI((/Psi/),RROpPsi,para_Op)
+          OpPsi=RROpPsi(1)  ! find a way to avoid it
+#endif
+        ELSE IF (Psi%cplx) THEN
           IF(MPI_id==0) RCPsi = Psi
           CALL sub_TabOpPsi_FOR_SGtype4(RCPsi,RCOpPsi,para_Op)
           IF(MPI_id==0) OpPsi = RCOpPsi
@@ -682,7 +694,7 @@ CONTAINS
       !-----------------------------------------------------------------
       If(MPI_id==0) size_TabPsi=size(TabPsi) 
 #if(run_MPI)
-      CALL MPI_BCAST(size_TabPsi,size1_MPI,MPI_int,root_MPI,MPI_COMM_WORLD,MPI_err)
+      CALL MPI_BCAST(size_TabPsi,size1_MPI,MPI_int_def,root_MPI,MPI_COMM_WORLD,MPI_err)
 #endif
 
       n = para_Op%nb_tot
@@ -2645,13 +2657,14 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
       END IF
 
       END SUBROUTINE sub_itermOpPsi_GridRep
+
 !=======================================================================================
-!     OpPsi = (OpPsi - E0.Psi) / Esc
+!>     OpPsi = (OpPsi - E0.Psi) / Esc
+!>     Note the symab
 !=======================================================================================
       SUBROUTINE sub_scaledOpPsi(Psi,OpPsi,E0,Esc)
       USE mod_system
       USE mod_psi,   ONLY : param_psi,ecri_psi
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the scaling -------------------------------------------
@@ -2693,6 +2706,38 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_scaledOpPsi
+!=======================================================================================
+
+!=======================================================================================
+!> OpPsi = (OpPsi - E0*Psi) / Esc, for working on full Smolyak rep.
+!=======================================================================================
+      SUBROUTINE sub_scaledOpPsi_SR_MPI(Psi,OpPsi,E0,Esc)
+        USE mod_system
+        USE mod_psi,ONLY:param_psi,ecri_psi
+        IMPLICIT NONE
+
+        TYPE(param_psi)                          :: OpPsi
+        TYPE(param_psi)                          :: Psi
+        Real(kind=Rkind)                         :: E0
+        Real(kind=Rkind)                         :: Esc
+
+        IF(Psi%SRG_MPI .AND. OpPsi%SRG_MPI) THEN
+          OpPsi%SR_G(:,:)=(OpPsi%SR_G(:,:)-E0*Psi%SR_G(:,:))/Esc
+        ELSE IF(Psi%SRB_MPI .AND. OpPsi%SRB_MPI) THEN
+          OpPsi%SR_B(:,:)=(OpPsi%SR_B(:,:)-E0*Psi%SR_B(:,:))/Esc
+        ELSE
+          STOP 'error in sub_scaledOpPsi_SR_MPI'
+        ENDIF
+        
+        IF(OpPsi%symab/=Psi%symab) THEN
+          IF(OpPsi%symab==-2) THEN
+            OpPsi%symab=Psi%symab
+          ELSE
+            OpPsi%symab=-1
+          ENDIF
+        ENDIF
+
+      END SUBROUTINE sub_scaledOpPsi_SR_MPI
 !=======================================================================================
 
 !=======================================================================================

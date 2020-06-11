@@ -187,7 +187,7 @@ MODULE mod_SetOp
       logical, optional, intent(in) :: Grid_cte(para_Op%nb_term)
 
       logical :: SmolyakRep,lo_Mat,lo_Grid,lo_Grid_cte(para_Op%nb_term)
-      integer :: nb_tot,nb_SG,nb_SG1,nb_SG2
+      integer :: nb_tot,nb_SG
       integer :: nb_term,nb_bie
 
       integer :: err
@@ -226,21 +226,6 @@ MODULE mod_SetOp
 
       SmolyakRep = ( para_Op%BasisnD%SparseGrid_type == 4)
       nb_SG      = para_Op%BasisnD%nb_SG
-#if(run_MPI)      
-      ! nb_SG1,nb_SG2 for MPI 
-      IF(nb_SG>0) THEN
-        nb_per_MPI=para_Op%BasisnD%nb_SG/MPI_np
-        !If(mod(para_Op%BasisnD%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
-        !nb_SG1=MPI_id*nb_per_MPI+1
-        !nb_SG2=MIN((MPI_id+1)*nb_per_MPI,para_Op%BasisnD%nb_SG)
-        nb_rem_MPI=mod(para_Op%BasisnD%nb_SG,MPI_np)
-        nb_SG1=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
-        nb_SG2=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
-        nb_SG=nb_SG2-nb_SG1+1
-        write(out_unitp,*) 'nb_SG,nb_SG1,nb_SG2,total:',nb_SG,nb_SG1,nb_SG2,           &
-                            para_Op%BasisnD%nb_SG,' from ',MPI_id
-      ENDIF
-#endif
 
       IF (present(Mat)) THEN
         lo_Mat = Mat
@@ -346,19 +331,11 @@ MODULE mod_SetOp
             info = String_TO_String('  k_term( ' // int_TO_char(k_term) // &
                                       ' ) of ' // trim(para_Op%name_Op))
 
-#if(run_MPI)
-            CALL alloc_OpGrid(para_Op%OpGrid(k_term),                 &
-                              para_Op%nb_qa,nb_bie,                   &
-                              para_Op%derive_termQact(:,k_term),      &
-                              para_Op%derive_termQdyn(:,k_term),      &
-                              SmolyakRep,nb_SG1,nb_SG2,info)
-#else
             CALL alloc_OpGrid(para_Op%OpGrid(k_term),                 &
                               para_Op%nb_qa,nb_bie,                   &
                               para_Op%derive_termQact(:,k_term),      &
                               para_Op%derive_termQdyn(:,k_term),      &
                               SmolyakRep,nb_SG,info)
-#endif
 
             deallocate(info)
           END DO
@@ -377,15 +354,10 @@ MODULE mod_SetOp
 
           info = String_TO_String(' of ' // trim(para_Op%name_Op))
 
-#if(run_MPI)
-          CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
-                            para_Op%nb_qa,nb_bie,                     &
-                            (/ 0,0 /),(/ 0,0 /),SmolyakRep,nb_SG1,nb_SG2,info)
-#else
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
                             para_Op%nb_qa,nb_bie,                     &
                             (/ 0,0 /),(/ 0,0 /),SmolyakRep,nb_SG,info)
-#endif
+
           para_Op%imOpGrid(1)%cplx = .TRUE.
 
           deallocate(info)

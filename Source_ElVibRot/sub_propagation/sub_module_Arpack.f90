@@ -510,8 +510,9 @@ CONTAINS
 !         | Display computed residuals. |
 !         %-----------------------------%
 #if __ARPACK == 1
-          call dmout(6, nconv, 3, d, maxncv, -6,                     &
-                     'Ritz values (Real,Imag) and relative residuals')
+          ! bug here for some compiler, diable the output currently
+!          IF(MPI_id==0) call dmout(6, nconv, 3, d, maxncv, -6,                     &
+!                     'Ritz values (Real,Imag) and relative residuals')
 #else
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' The ARPACK library is not present!'
@@ -875,8 +876,9 @@ CONTAINS
                                   ncv, v, ldv, iparam, ipntr, workd, workl,        &
                                   lworkl, info )
 #if(run_MPI)
-        CALL MPI_Bcast(info,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-        CALL MPI_Bcast(ido,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+        CALL MPI_Bcast(info,size1_MPI, MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+        CALL MPI_Bcast(ido, size1_MPI, MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+        CALL MPI_Bcast(ipntr,INT(11,4),MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
 #endif
 
 #else
@@ -1045,8 +1047,9 @@ CONTAINS
 !         | Display computed residuals    |
 !         %-------------------------------%
 #if __ARPACK == 1
-          IF(MPI_id==0) call dmout(6, nconv, 2, d, maxncv, -6,                     &
-                        'Ritz values and relative residuals')
+          ! bug here for some compiler, diable the output currently
+!          IF(MPI_id==0) call dmout(6, nconv, 2, d, maxncv, -6,                     &
+!                        'Ritz values and relative residuals')
 #endif
         end if
 
