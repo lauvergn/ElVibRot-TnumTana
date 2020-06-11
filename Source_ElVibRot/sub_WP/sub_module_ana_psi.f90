@@ -1631,7 +1631,7 @@ END SUBROUTINE sub_analyze_psi
     character (len=*)    :: info
     logical          :: print_w
 
-    integer          :: i,ie,ii,ib,ibie,iq,ibiq,n
+    integer          :: i,ie,ii,ib,ibie,iq,ibiq,n,ii_baie,if_baie
     integer          :: max_dim,max_1D
     integer          :: max_indGr(psi%BasisnD%nDindB%ndim)
     integer          :: ndim_AT_ib(psi%BasisnD%nDindB%ndim)
@@ -1640,7 +1640,11 @@ END SUBROUTINE sub_analyze_psi
     character (len=:), allocatable :: state_name
 
     real (kind=Rkind)              :: r2
-    real (kind=Rkind), allocatable :: DiagRDcontrac(:) ! diagonal reduced density matrix with the contracted basis set (nbc,nbc)
+    real (kind=Rkind),    allocatable :: RDcontrac(:,:)   ! reduced density matrix with the contracted basis set (nbc,nbc)
+    real (kind=Rkind),    allocatable :: RD(:,:)          ! reduced density matrix (nb,nb)
+    complex (kind=Rkind), allocatable :: CRDcontrac(:,:)  ! reduced density matrix with the contracted basis set (nbc,nbc)
+    complex (kind=Rkind), allocatable :: CRD(:,:)         ! reduced density matrix (nb,nb)
+
     TYPE (param_RD),   allocatable :: para_RD(:) ! it is allocated only for BasisnD. The size is nb_basis
 
 !----- for debuging --------------------------------------------------
@@ -1671,10 +1675,11 @@ END SUBROUTINE sub_analyze_psi
     IF (psi%BasisnD%nb_basis > 1) THEN
       allocate(para_RD(psi%BasisnD%nb_basis))
 
-      para_RD(:)%RD_analysis = .FALSE.
       DO ib=1,size(para_RD)
         para_RD(ib)%RD_analysis =                                       &
                       psi%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_analysis
+
+        !para_RD(ib)%RD_analysis = .TRUE.
 
         para_RD(ib)%basis_index = ib
         IF (allocated(psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)) THEN
@@ -1743,42 +1748,54 @@ END SUBROUTINE sub_analyze_psi
           CALL flush_perso(out_unitp)
 
           !---- RD analysis --------------------------------------------
-          ! initialization for RD analysis
-!          IF (psi%BasisnD%nb_basis > 1) THEN
-!            allocate(para_RD(psi%BasisnD%nb_basis))
-!
-!            para_RD(:)%RD_analysis = .FALSE.
-!            DO ib=1,size(para_RD)
-!              para_RD(ib)%RD_analysis =                                 &
-!                      psi%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_analysis
-!
-!              para_RD(ib)%basis_index = ib
-!              IF (allocated(psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)) THEN
-!                CALL init_RD(para_RD(ib),psi%BasisnD%nDindB,            &
-!                             psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)
-!              ELSE
-!                CALL init_RD(para_RD(ib),psi%BasisnD%nDindB)
-!              END IF
-!
-!            END DO
-!          END IF
-
-          !---- RD analysis --------------------------------------------
           ! RD analysis
           IF (allocated(para_RD)) THEN
           IF (para_RD(iq)%RD_analysis) THEN
 
-            CALL calc_RD(para_RD(iq),psi%RvecB,DiagRDcontrac=DiagRDcontrac)
-            n = min(ndim_AT_ib(iq),size(DiagRDcontrac))
-            weight1Dact(iq,1:n) = DiagRDcontrac(1:n)
-            write(out_unitp,21) state_name // 'c',trim(info),iq,T,      &
-                           weight1Dact(iq,1:min(max_1D,n))
-            CALL flush_perso(out_unitp)
+            ii_baie = 1 + ( (ii-1)+ (ie-1)*psi%nb_bi ) * psi%nb_ba
+            if_baie = ii_baie -1 + psi%nb_ba
 
-            !write(out_unitp,*) 'Diag RD contracted',iq,DiagRDcontrac
-            IF (allocated(DiagRDcontrac)) THEN
-              CALL dealloc_NParray(DiagRDcontrac,'DiagRDcontrac',name_sub)
+            IF (psi%cplx) THEN
+              CALL calc_CRD(para_RD(iq),psi%CvecB(ii_baie:if_baie),     &
+                                           CRD=CRD,CRDcontrac=CRDcontrac)
+
+              IF (allocated(CRD)) THEN
+                n = min(ndim_AT_ib(iq),size(CRD,dim=1))
+                write(out_unitp,21) state_name // 'new',trim(info),iq,T,  &
+                            real([(CRD(i,i),i=1,min(max_1D,n))],kind=Rkind)
+                CALL flush_perso(out_unitp)
+                CALL dealloc_NParray(CRD,'CRD',name_sub)
+              END IF
+
+              IF (allocated(CRDcontrac)) THEN
+                n = min(ndim_AT_ib(iq),size(CRDcontrac,dim=1))
+                weight1Dact(iq,1:n) = real([(CRDcontrac(i,i),i=1,n)],kind=Rkind)
+                write(out_unitp,21) state_name // 'c',trim(info),iq,T,  &
+                           weight1Dact(iq,1:min(max_1D,n))
+                CALL flush_perso(out_unitp)
+                CALL dealloc_NParray(CRDcontrac,'CRDcontrac',name_sub)
+              END IF
+            ELSE
+              CALL calc_RD(para_RD(iq),psi%RvecB(ii_baie:if_baie),RD=RD,RDcontrac=RDcontrac)
+
+              IF (allocated(RD)) THEN
+                !n = min(ndim_AT_ib(iq),size(RD,dim=1))
+                !write(out_unitp,21) state_name // 'new',trim(info),iq,T,  &
+                !                      [(RD(i,i),i=1,min(max_1D,n))]
+                !CALL flush_perso(out_unitp)
+                CALL dealloc_NParray(RD,'RD',name_sub)
+              END IF
+
+              IF (allocated(RDcontrac)) THEN
+                n = min(ndim_AT_ib(iq),size(RDcontrac,dim=1))
+                weight1Dact(iq,1:n) = [(RDcontrac(i,i),i=1,n)]
+                write(out_unitp,21) state_name // 'c',trim(info),iq,T,  &
+                           weight1Dact(iq,1:min(max_1D,n))
+                CALL flush_perso(out_unitp)
+                CALL dealloc_NParray(RDcontrac,'RDcontrac',name_sub)
+              END IF
             END IF
+
           END IF
           END IF
           !---- END RD analysis ----------------------------------------
@@ -2289,7 +2306,7 @@ END SUBROUTINE norm_psi_MPI
   real (kind=Rkind) :: WrhonD,temp,max_w
   integer           :: nb_be,nb_bi
   integer           :: iSG,iqSG,err_sub ! for SG4
-  logical           :: SG4 = .TRUE.
+  logical           :: SG4 = .FALSE.
   TYPE (OldParam)   :: OldPara
   real (kind=Rkind) :: WeightSG
 
@@ -2599,6 +2616,7 @@ END SUBROUTINE Channel_weight_MPI
 !=======================================================================================  
 #endif
 
+
   SUBROUTINE Channel_weight_SG4(tab_WeightChannels,psi,GridRep,BasisRep)
   USE mod_system
   USE mod_psi_set_alloc
@@ -2627,8 +2645,8 @@ END SUBROUTINE Channel_weight_MPI
 
 
 !- for debuging --------------------------------------------------
-  !logical,parameter :: debug = .FALSE.
-  logical,parameter :: debug = .TRUE.
+  logical,parameter :: debug = .FALSE.
+  !logical,parameter :: debug = .TRUE.
 !-------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING Channel_weight_SG4'
@@ -2639,18 +2657,21 @@ END SUBROUTINE Channel_weight_MPI
   END IF
 !-------------------------------------------------------
 
+
+
   nb_be = get_nb_be_FROM_psi(psi)
   nb_bi = get_nb_bi_FROM_psi(psi)
 
   IF (psi%cplx) THEN
     RCPsi = Psi
-    !CALL CplxPsi_TO_RCpsi(RCPsi,Psi)
 
     !For the real part
-
     CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(1)%RVecB,        &
                       psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
                       psi%BasisnD%para_SGType2)
+    !write(out_unitp,*) 'Real Part (Basis)'
+    !CALL Write_SmolyakRep(SRep)
+
     ib0 = 0
     DO i_be=1,nb_be
     DO i_bi=1,nb_bi
@@ -2659,27 +2680,30 @@ END SUBROUTINE Channel_weight_MPI
         dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
     END DO
     END DO
-    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+    !write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
 
-    !Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
-    !write(6,*) 'Norm2',Norm2
-
-    CALL BSmolyakRep_TO_GSmolyakRep(SRep,                               &
-                  psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
-                  psi%BasisnD%tab_basisPrimSG,psi%BasisnD%para_SGType2%nb0)
-    WSRep = Set_weight_TO_SmolyakRep(                                   &
-                  psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
-                  psi%BasisnD%tab_basisPrimSG)
-
-    ib0 = 0
-    DO i_be=1,nb_be
-    DO i_bi=1,nb_bi
-      ib0 = ib0 + 1
-      tab_WeightChannels(i_bi,i_be) =                                   &
-        dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG,ib0)
-    END DO
-    END DO
-    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+!    CALL BSmolyakRep_TO_GSmolyakRep(SRep,                               &
+!                  psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
+!                  psi%BasisnD%tab_basisPrimSG,psi%BasisnD%para_SGType2%nb0)
+!    write(out_unitp,*) 'Real Part (Grid)'
+!    CALL Write_SmolyakRep(SRep)
+!
+!    WSRep = Set_weight_TO_SmolyakRep(                                   &
+!                  psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
+!                  psi%BasisnD%tab_basisPrimSG)
+!    write(out_unitp,*) 'Weight'
+!    CALL Write_SmolyakRep(WSRep)
+!
+!
+!    ib0 = 0
+!    DO i_be=1,nb_be
+!    DO i_bi=1,nb_bi
+!      ib0 = ib0 + 1
+!      tab_WeightChannels(i_bi,i_be) =                                   &
+!        dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG,ib0)
+!    END DO
+!    END DO
+!    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
 
 !    Norm2 = dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG)
     !CALL Write_SmolyakRep(SRep)
@@ -2689,6 +2713,8 @@ END SUBROUTINE Channel_weight_MPI
     CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(2)%RVecB,        &
                       psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
                       psi%BasisnD%para_SGType2)
+    !write(out_unitp,*) 'Imaginary Part (Basis)'
+    !CALL Write_SmolyakRep(SRep)
 
     ib0 = 0
     DO i_be=1,nb_be
@@ -2731,6 +2757,144 @@ END SUBROUTINE Channel_weight_MPI
 !------------------------------------------------------
 
   END SUBROUTINE Channel_weight_SG4
+  SUBROUTINE Channel_weight_SG4_v0(tab_WeightChannels,psi,GridRep,BasisRep)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_basis_BtoG_GtoB_SGType4
+  IMPLICIT NONE
+
+!- variables for the WP ----------------------------------------
+  real (kind=Rkind), intent(inout), allocatable :: tab_WeightChannels(:,:)
+  TYPE (param_psi),  intent(inout)              :: psi
+  logical,           intent(in)                 :: GridRep,BasisRep
+
+!-- working variables ---------------------------------
+
+  TYPE (param_psi)          :: RCPsi(2)
+  TYPE(Type_SmolyakRep)     :: SRep,WSRep ! smolyak rep for SparseGrid_type=4
+
+  integer           :: i_qa,i_qaie
+  integer           :: i_be,i_bi,i_ba,i_baie,ib0
+  integer           :: ii_baie,if_baie
+  real (kind=Rkind) :: WrhonD,temp,max_w
+  integer           :: nb_be,nb_bi
+  integer           :: iSG,iqSG,err_sub ! for SG4
+  TYPE (OldParam)   :: OldPara
+  real (kind=Rkind) :: WeightSG,Norm2
+
+
+
+!- for debuging --------------------------------------------------
+  logical,parameter :: debug = .FALSE.
+  !logical,parameter :: debug = .TRUE.
+!-------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING Channel_weight_SG4_v0'
+    write(out_unitp,*) 'GridRep',GridRep
+    write(out_unitp,*) 'BasisRep',BasisRep
+    !write(out_unitp,*) 'psi'
+    !CALL ecri_psi(psi=psi)
+  END IF
+!-------------------------------------------------------
+
+  nb_be = get_nb_be_FROM_psi(psi)
+  nb_bi = get_nb_bi_FROM_psi(psi)
+
+  IF (psi%cplx) THEN
+    RCPsi = Psi
+
+    !For the real part
+    CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(1)%RVecB,        &
+                      psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
+                      psi%BasisnD%para_SGType2)
+    !write(out_unitp,*) 'Real Part (Basis)'
+    !CALL Write_SmolyakRep(SRep)
+
+    ib0 = 0
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      ib0 = ib0 + 1
+      tab_WeightChannels(i_bi,i_be) =                                   &
+        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+    END DO
+    END DO
+    !write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+
+!    CALL BSmolyakRep_TO_GSmolyakRep(SRep,                               &
+!                  psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
+!                  psi%BasisnD%tab_basisPrimSG,psi%BasisnD%para_SGType2%nb0)
+!    write(out_unitp,*) 'Real Part (Grid)'
+!    CALL Write_SmolyakRep(SRep)
+!
+!    WSRep = Set_weight_TO_SmolyakRep(                                   &
+!                  psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
+!                  psi%BasisnD%tab_basisPrimSG)
+!    write(out_unitp,*) 'Weight'
+!    CALL Write_SmolyakRep(WSRep)
+!
+!
+!    ib0 = 0
+!    DO i_be=1,nb_be
+!    DO i_bi=1,nb_bi
+!      ib0 = ib0 + 1
+!      tab_WeightChannels(i_bi,i_be) =                                   &
+!        dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG,ib0)
+!    END DO
+!    END DO
+!    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+
+!    Norm2 = dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG)
+    !CALL Write_SmolyakRep(SRep)
+    !write(6,*) 'Norm2',Norm2
+
+    !For the imaginary part
+    CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(2)%RVecB,        &
+                      psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
+                      psi%BasisnD%para_SGType2)
+    !write(out_unitp,*) 'Imaginary Part (Basis)'
+    !CALL Write_SmolyakRep(SRep)
+
+    ib0 = 0
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      ib0 = ib0 + 1
+      tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) +   &
+        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+    END DO
+    END DO
+    !Norm2 = Norm2 + dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
+    !CALL Write_SmolyakRep(SRep)
+
+   ELSE
+    CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,Psi%RVecB,              &
+                      psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,   &
+                      psi%BasisnD%para_SGType2)
+    ib0 = 0
+    DO i_be=1,nb_be
+    DO i_bi=1,nb_bi
+      ib0 = ib0 + 1
+      tab_WeightChannels(i_bi,i_be) =                                   &
+        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+    END DO
+    END DO
+    !CALL Write_SmolyakRep(SRep)
+    !Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
+  END IF
+
+  !write(out_unitp,*) 'Norm2_SG4',Norm2
+
+  CALL dealloc_psi(RCPsi(1))
+  CALL dealloc_psi(RCPsi(2))
+
+  CALL dealloc_SmolyakRep(SRep)
+!------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+    write(out_unitp,*) 'END Channel_weight_SG4_v0'
+  END IF
+!------------------------------------------------------
+
+  END SUBROUTINE Channel_weight_SG4_v0
       SUBROUTINE Channel_weight_contracHADA(w_harm,psi)
       USE mod_system
       USE mod_psi_set_alloc

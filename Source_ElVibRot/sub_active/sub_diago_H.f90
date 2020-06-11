@@ -93,7 +93,6 @@
     IF(MPI_id==0) CALL diagonalization(H,E,Vec,n,3,1,.TRUE.)
   END IF
 
-
   IF (debug) THEN
     write(out_unitp,*) 'OpMin,OpMax (ua)  : ',minval(E),maxval(E)
     write(out_unitp,*) 'OpMin,OpMax (cm-1): ',minval(E)*auTOcm_inv,maxval(E)*auTOcm_inv

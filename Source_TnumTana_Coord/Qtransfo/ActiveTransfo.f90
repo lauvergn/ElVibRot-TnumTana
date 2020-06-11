@@ -61,6 +61,7 @@ MODULE mod_ActiveTransfo
           integer,           pointer  :: list_act_OF_Qdyn(:) => null()  ! "active" transfo
           integer,           pointer  :: list_QactTOQdyn(:)  => null() ! "active" transfo
           integer,           pointer  :: list_QdynTOQact(:)  => null() ! "active" transfo
+
       END TYPE Type_ActiveTransfo
 
       INTERFACE alloc_array

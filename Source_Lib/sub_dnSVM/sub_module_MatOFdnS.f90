@@ -101,11 +101,11 @@
       SUBROUTINE alloc_array_OF_dnSdim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      TYPE (Type_dnS), pointer, intent(inout) :: tab(:,:)
-      integer, intent(in) :: tab_ub(:)
-      integer, intent(in), optional :: tab_lb(:)
+      TYPE (Type_dnS), pointer, intent(inout)        :: tab(:,:)
+      integer,                  intent(in)           :: tab_ub(:)
+      integer,                  intent(in), optional :: tab_lb(:)
 
-      character (len=*), intent(in) :: name_var,name_sub
+      character (len=*),        intent(in)           :: name_var,name_sub
 
 
       integer, parameter :: ndim=2

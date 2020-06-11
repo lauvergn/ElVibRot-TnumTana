@@ -1903,8 +1903,8 @@ integer,                         intent(in), optional  :: ib0
 
 integer               :: iG,nb_BG,nq_AT_iG,i1,i2
 
-   write(out_unitp,*) 'dot_product_SmolyakRep_Grid: size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),Size_SmolyakRep(SRep_w)
-   write(out_unitp,*) 'nb DP terms',size(SRep1%SmolyakRep),size(SRep2%SmolyakRep),size(WSRep),size(WSRep)
+!write(out_unitp,*) 'dot_product_SmolyakRep_Grid: size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),Size_SmolyakRep(SRep_w)
+!write(out_unitp,*) 'nb DP terms',size(SRep1%SmolyakRep),size(SRep2%SmolyakRep),size(WSRep),size(WSRep)
 
    flush(out_unitp)
 
@@ -1957,8 +1957,8 @@ IF (nb_BG /= Size_SmolyakRep(SRep2) .OR. size(SRep1%SmolyakRep) /= size(WSRep) .
   STOP
 END IF
 
-   write(out_unitp,*) 'dot_product_SmolyakRep_Basis: size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),size(WSRep)
-   flush(out_unitp)
+!write(out_unitp,*) 'dot_product_SmolyakRep_Basis: size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),size(WSRep)
+!flush(out_unitp)
 
 R = ZERO
 IF (nb_BG > 0) THEN

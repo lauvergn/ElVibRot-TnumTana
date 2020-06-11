@@ -46,6 +46,7 @@ IMPLICIT NONE
 PRIVATE
 PUBLIC Set_paraPRH
 CONTAINS
+
       SUBROUTINE Set_paraPRH(mole,para_Tnum,BasisnD)
       USE mod_system
       USE mod_nDindex
@@ -221,8 +222,8 @@ CONTAINS
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='Set_paraPRH_OneBasis'
-      !logical, parameter :: debug = .FALSE.
-      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
       nb_act1_RPH    = mole%RPHTransfo%nb_act1
