@@ -39,6 +39,7 @@ MPI Vm2.0
       auto_iGs_MPI_old2
       time_record
     modified: 
+      Action_MPI_S1
       Action_MPI_S3
       get_OpGrid_type1_OF_ONEDP_FOR_SG4_new2
       sub_TabOpPsi_FOR_SGtype4
@@ -50,6 +51,8 @@ MPI Vm2.0
   - bug fix in arpack, possibly still bugs somewhere 
 
   - bug fix for new styx openMPI configuration "openmpi_403_intel18_init"
+
+  - new version MPI scheme, in prograss: Action_MPI_S2
   
 > MPI_Vm1.9
   - bug in Davidson fix
