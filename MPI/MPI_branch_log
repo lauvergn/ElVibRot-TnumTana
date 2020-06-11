@@ -34,7 +34,7 @@ MPI Vm2.0
   - auto iGs disrtibution added
     new: 
       ini_iGs_MPI
-      auto_iGs_MPI
+      auto_iGs_MPI*
       auto_iGs_MPI_old
       auto_iGs_MPI_old2
       time_record
@@ -50,8 +50,6 @@ MPI Vm2.0
   - bug fix in arpack, possibly still bugs somewhere 
 
   - bug fix for new styx openMPI configuration "openmpi_403_intel18_init"
-
-  - bug in openmpi_403_intel18_init
   
 > MPI_Vm1.9
   - bug in Davidson fix
