@@ -219,7 +219,7 @@
         write(out_unitp,*) '================================================='
         write(out_unitp,*)
       ENDIF
-      
+
 #if(run_MPI)
       Grid_allco=.True.
 #endif

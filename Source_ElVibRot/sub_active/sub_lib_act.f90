@@ -1039,7 +1039,6 @@
       SUBROUTINE check_HADA(iqf,file_HADA)
       USE mod_system
       USE mod_Op
-      USE mod_MPI
       IMPLICIT NONE
 
       TYPE (param_file)  :: file_HADA

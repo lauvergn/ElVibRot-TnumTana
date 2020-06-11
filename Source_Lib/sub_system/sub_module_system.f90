@@ -273,8 +273,8 @@ MODULE mod_system
 !       ============================================
 !       cpu time in the subroutine: "name"
 
-        count_work = count-count_old
-        count_work=merge(count-count_old,count-count_old+count_max,count>count_old)
+        !count_work = count-count_old
+        count_work=merge(count-count_old,count-count_old+count_max,count>=count_old)
         seconds = count_work/freq
 
         minutes = seconds/60
@@ -298,7 +298,8 @@ MODULE mod_system
 !       ============================================
 !       Total cpu time
 
-        count_work = count-count_ini
+        !count_work = count-count_ini
+        count_work=merge(count-count_ini,count-count_ini+count_max,count>=count_ini)
         seconds = count_work/freq
 
         minutes = seconds/60
@@ -361,11 +362,11 @@ MODULE mod_system
         TYPE (param_time), intent(inout) :: LocalTime
 
 
-        integer       :: count,count_work,freq
+        integer       :: count,count_work,freq,count_max
 
 
 
-        CALL system_clock(count=count,count_rate=freq)
+        CALL system_clock(count=count,count_rate=freq,count_max=count_max)
         call cpu_time(t_cpu)
 
         IF (LocalTime%begin) THEN
@@ -378,9 +379,13 @@ MODULE mod_system
 
 
         ! real time
-        count_work = count-LocalTime%count_old
+        !count_work = count-LocalTime%count_old
+        count_work=merge(count-LocalTime%count_old,count-LocalTime%count_old+count_max,&
+                         count>=LocalTime%count_old)
         dt_real    = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
-        count_work = count-LocalTime%count_ini
+        !count_work = count-LocalTime%count_ini
+        count_work=merge(count-LocalTime%count_ini,count-LocalTime%count_ini+count_max,&
+                         count>=LocalTime%count_ini)
         t_real     = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
 
         ! cpu time

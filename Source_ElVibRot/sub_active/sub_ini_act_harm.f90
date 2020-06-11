@@ -44,7 +44,6 @@
       USE mod_system
       USE mod_Op
       USE mod_PrimOp
-      USE mod_MPI
       IMPLICIT NONE
 
 !=====================================================================

@@ -49,7 +49,6 @@ USE mod_param_SGType2
 USE mod_basis_RCVec_SGType4, only: typervec, typecvec, &
                                    alloc_typervec, alloc_typecvec, &
                                    dealloc_typervec, dealloc_typecvec
-USE mod_MPI
 IMPLICIT NONE
 
 PRIVATE
@@ -67,6 +66,7 @@ CONTAINS
   GENERIC,   PUBLIC  :: assignment(=) => SmolyakRep2_TO_SmolyakRep1,    &
                               SmolyakRep2_TO_tabR1,tabR2_TO_SmolyakRep1,&
                                R2_TO_SmolyakRep1
+
 END TYPE Type_SmolyakRep
 TYPE Type_SmolyakRepC
   integer                      :: nb0      = 0         ! to deal with several electronic PES, rot basis, or channels (HAC)
@@ -118,21 +118,13 @@ CONTAINS
 !=======================================================================================
 ! added for SmolyakRep
 !---------------------------------------------------------------------------------------
-#if(run_MPI)
-SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG1,nb_SG2,delta,grid,nb0)
-#else
 SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
-#endif
   USE mod_system
   USE mod_basis_set_alloc
   IMPLICIT NONE
 
   TYPE(Type_SmolyakRep),           intent(inout)         :: SRep
-#if(run_MPI)
-  Integer,                         intent(in)            :: nb_SG1,nb_SG2
-#else
   Integer,                         intent(in)            :: nb_SG
-#endif
   logical,                         intent(in),  optional :: delta,grid
   integer,                         intent(in),  optional :: nb0
 
@@ -164,11 +156,7 @@ SUBROUTINE alloc_SmolyakRep_only(SRep,nb_SG,delta,grid,nb0)
 
   !write(out_unitp,*) 'Alloc Smolyak Rep' ; flush(out_unitp)
 
-#if(run_MPI)
-  allocate(SRep%SmolyakRep(nb_SG1:nb_SG2))
-#else
   allocate(SRep%SmolyakRep( nb_SG ))
-#endif  
 
   !write(out_unitp,*) 'Size Smolyak Rep:',nb_B ; flush(out_unitp)
 
@@ -618,7 +606,6 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   USE mod_basis_set_alloc
   USE mod_param_SGType2
   USE mod_nDindex
-  USE mod_MPI
   USE mod_MPI_Aid
   IMPLICIT NONE
 
@@ -749,10 +736,12 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
     basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(:) = 0
 #if(run_MPI)
   ELSE
-    temp_int1=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG1_MPI)                         &
-                -basis_SG%para_SGType2%tab_nb_OF_SRep(iG1_MPI)
-    temp_int2=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG2_MPI)
-    allocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(temp_int1+1:temp_int2))
+    IF(MPI_scheme<=1) THEN
+      temp_int1=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG1_MPI)                      &
+                  -basis_SG%para_SGType2%tab_nb_OF_SRep(iG1_MPI)
+      temp_int2=basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(iG2_MPI)
+      allocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(temp_int1+1:temp_int2))
+    ENDIF
 #endif
   ENDIF
 
@@ -871,8 +860,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
         IF(MPI_id==0) basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep) = nDI
 #if(run_MPI)
         IF(MPI_id/=0) THEN
-          IF(iG>=iG1_MPI .AND. iG<=iG2_MPI) THEN
-            write(*,*) 'checkcheckcheck2:',iBSRep,iG
+          IF(iG>=iG1_MPI .AND. iG<=iG2_MPI .AND. MPI_scheme<=1) THEN
             basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)=nDI
           ENDIF
         ENDIF ! for MPI_id/=0
@@ -1192,7 +1180,6 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
   USE mod_basis_set_alloc
   USE mod_param_SGType2
   USE mod_nDindex
-  USE mod_MPI
   USE mod_MPI_Aid
   IMPLICIT NONE
 
@@ -1215,11 +1202,11 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
   
   temp_int=SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0
   DO itab=1,Psi_size_MPI0
-    CALL allocate_array(PsiR(itab)%V,temp_int)
+    CALL allocate_array(PsiR(itab)%V,1,temp_int)
     !IF(allocated(PsiR(itab)%V)) deallocate(PsiR(itab)%V)
     !allocate(PsiR(itab)%V(temp_int))
   ENDDO
-  CALL allocate_array(temp_list,temp_int)
+  CALL allocate_array(temp_list,1,temp_int)
   once1=.TRUE.
   
   DO itab=1,Psi_size_MPI0
@@ -1322,7 +1309,7 @@ SUBROUTINE PackedBasis_TO_tabR_index_MPI(iG,SGType2,reduce_index_mpi,nDI_index, 
             SGType2%num_nDI_index=SGType2%num_nDI_index+Max(SGType2%num_nDI_index/5,500) 
             !> nDI_index_temp -> nDI_index
             ! nDI_index_temp is deallocated automatically
-            CALL allocate_array(nDI_index_temp,SGType2%num_nDI_index)
+            CALL allocate_array(nDI_index_temp,1,SGType2%num_nDI_index)
             nDI_index_temp(1:reduce_index_mpi)=nDI_index
             CALL move_alloc(nDI_index_temp,nDI_index) 
           ENDIF ! for reduce_index_mpi==SGType2%num_nDI_index---------------------------
@@ -1436,7 +1423,7 @@ SUBROUTINE tabR_TO_tabPackedBasis_MPI(all_RvecB_temp2,PsiR,iG,SGType2,WeightiG, 
   IF(size(PsiR) == 0) STOP 'ERROR in tabR_TO_tabPackedBasis_MPI'
   
   temp_int=SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0
-  CALL allocate_array(temp_list,temp_int)
+  CALL allocate_array(temp_list,1,temp_int)
   once1=.TRUE.
   
   DO itab=1,Psi_size_MPI0
@@ -3312,4 +3299,5 @@ IMPLICIT NONE
   END DO
 
 END FUNCTION getbis_tab_nb
+
 END MODULE mod_basis_BtoG_GtoB_SGType4

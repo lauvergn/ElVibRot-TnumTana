@@ -1,0 +1,59 @@
+# Current environment test (styx)
+
+
+> gfortran 
+  - gcc version 6.3.0 (styx: default)
+    Davidson    : pass; openMP: pass
+    Arpack      : pass; openMP: pass
+    propagation : pass; openMP: pass
+
+  - gcc version 8.3.0 (styx: gcc_830_init)
+    Davidson    : pass; openMP: pass
+    Arpack      : pass; openMP: pass (commit "dmout")
+      a wierd bug subroutine "dmout" for matrix output at line 1050
+    propagation : pass; openMP: pass
+    
+  - gcc version 9.1.0 (styx: gcc_910_init) 
+    Davidson    : pass; openMP: pass
+    Arpack      : pass; openMP: pass (commit "dmout")
+      a wierd bug subroutine "dmout" for matrix output at line 1050
+    propagation : pass; openMP: pass
+
+> ifort
+
+  - ifort version 17.0.1 (styx: intel17_init)
+    Davidson    : pass; openMP: pass
+    Arpack      : pass; openMP: pass
+    propagation : pass; openMP: pass
+    
+  - ifort version 18.0.3 (styx: intel18_init)
+    Davidson    : pass; openMP: pass
+    Arpack      : pass; openMP: pass
+    propagation : pass; openMP: pass
+
+> mpifort
+  - Open MPI: 1.4.3 (styx: openmpi_init)
+    ! note, openmpi_init is not correct in initialize the OpenMPI environment
+    ! the mpifort is note currectly load, check by "which mpifort"
+
+  - Open MPI: 2.0.2 compiled with gfortran (styx: default)
+    Davidson    : pass
+    Arpack      : pass
+    propagation : pass
+
+  - Open MPI: 4.0.3 compiled with ifort (styx: openmpi_403_intel18_init)
+    Davidson    : pass
+    Arpack      : pass
+    propagation : pass
+
+> pgf90
+
+    
+----------------------------------------------------------------------------------------
+> makefile parallelization 
+  num_cores=2: 1.8 times improvement; 
+  num_cores=3: 2.3; 
+  num_cores=4: 2.7;
+  num_cores=5: 2.8;
+  suggest to run with: make -j 3 
+

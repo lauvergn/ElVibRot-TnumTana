@@ -1984,7 +1984,6 @@ END SUBROUTINE sub_analyze_psi
 SUBROUTINE norm_psi_MPI(psi,ReNorm,GridRep,BasisRep)
   USE mod_system
   USE mod_psi_set_alloc
-  USE mod_MPI
   IMPLICIT NONE
 
   TYPE(param_psi),intent(inout)           :: psi

@@ -10,10 +10,9 @@
 !=======================================================================================
 MODULE mod_MPI_Aid
 #if(run_MPI)
-  USE mod_MPI
   USE mod_system
   IMPLICIT NONE
-  
+
   !-------------------------------------------------------------------------------------
   !> varilables for convenience, temprary here
   Integer                        :: i1_loop          !< indexs for loop
@@ -52,20 +51,32 @@ MODULE mod_MPI_Aid
     Integer*4,allocatable :: array(:)
   END TYPE multi_array4  
   
-  !> subroutine for increase matrix size. the origin value is kept. 
-  !> the increase way is decided by the variables presented
+  !> increase matrix size. the origin value is kept. 
+  !! the increase way is decided by the variables presented
   INTERFACE increase_martix
     module procedure increase_martix_int
     module procedure increase_martix_real
   END INTERFACE
   
+  !> allocate and initial array 
   INTERFACE allocate_array  
     module procedure allocate_array_int4_length4
     module procedure allocate_array_int4_length8 
     module procedure allocate_array_int8_length4
     module procedure allocate_array_int8_length8
     module procedure allocate_array_real_length4
-    module procedure allocate_array_real_length8  
+    module procedure allocate_array_real_length8
+    module procedure allocate_array_cplx_length4
+    module procedure allocate_array_cplx_length8
+    module procedure allocate_array_logic
+    module procedure allocate_matrix_int4_length4
+    module procedure allocate_matrix_int4_length8 
+    module procedure allocate_matrix_int8_length4
+    module procedure allocate_matrix_int8_length8
+    module procedure allocate_matrix_real_length4
+    module procedure allocate_matrix_real_length8
+    module procedure allocate_matrix_cplx_length4
+    module procedure allocate_matrix_cplx_length8
   END INTERFACE
   
   ! do not use for large matrix
@@ -81,6 +92,12 @@ MODULE mod_MPI_Aid
     module procedure MPI_Reduce_sum_matrix_complex 
   END INTERFACE
   
+  INTERFACE MPI_Reduce_sum_Bcast
+    module procedure MPI_Reduce_sum_Bcast_real
+    module procedure MPI_Reduce_sum_Bcast_int
+    module procedure MPI_Reduce_sum_Bcast_complex
+  END INTERFACE
+  
   INTERFACE MPI_Send_matrix  
     module procedure MPI_Send_matrix_real 
     module procedure MPI_Send_matrix_int 
@@ -91,6 +108,17 @@ MODULE mod_MPI_Aid
     module procedure MPI_Recv_matrix_real 
     module procedure MPI_Recv_matrix_int 
     module procedure MPI_Recv_matrix_complex 
+  END INTERFACE
+  
+  INTERFACE MPI_combine_array 
+    module procedure MPI_combine_array_real
+    module procedure MPI_combine_array_int
+    module procedure MPI_combine_array_cplx
+  END INTERFACE
+  
+  INTERFACE MPI_collect_info
+    module procedure MPI_collect_info_int
+    module procedure MPI_collect_info_real
   END INTERFACE
 
 !---------------------------------------------------------------------------------------
@@ -140,7 +168,6 @@ MODULE mod_MPI_Aid
 !> write for MPI outpout
 !---------------------------------------------------------------------------------------    
     SUBROUTINE MPI_write(out_channel,out_message)
-      USE mod_system
       IMPLICIT NONE
       integer :: out_channel,MPIid
       Character (len=*), intent(in) :: out_message
@@ -149,7 +176,6 @@ MODULE mod_MPI_Aid
     ENDSUBROUTINE MPI_write
     
     SUBROUTINE MPI0_write(out_channel,out_message)
-      USE mod_system
       IMPLICIT NONE
       integer :: out_channel
       Character (len=*), intent(in) :: out_message
@@ -158,7 +184,6 @@ MODULE mod_MPI_Aid
     ENDSUBROUTINE MPI0_write
     
     SUBROUTINE MPI0_write_line(out_channel)
-      USE mod_system
       IMPLICIT NONE
       integer :: out_channel,MPIid
             
@@ -166,7 +191,6 @@ MODULE mod_MPI_Aid
     ENDSUBROUTINE MPI0_write_line
     
     SUBROUTINE MPI0_write_dline(out_channel)
-      USE mod_system
       IMPLICIT NONE
       integer :: out_channel,MPIid
       
@@ -178,7 +202,6 @@ MODULE mod_MPI_Aid
 !> interface: increase_martix    
 !---------------------------------------------------------------------------------------
     SUBROUTINE increase_martix_int(matrix,name_sub,ndim0,ndim,double_size)
-      USE mod_system
       IMPLICIT NONE
       
       Integer,allocatable,intent(inout)            :: matrix(:,:)
@@ -209,10 +232,9 @@ MODULE mod_MPI_Aid
           STOP 'error in the variables for increase matrix size.'
         ENDIF
       ENDIF
-    END SUBROUTINE increase_martix_int
+    ENDSUBROUTINE increase_martix_int
     
     SUBROUTINE increase_martix_real(matrix,name_sub,ndim0,ndim,double_size)
-      USE mod_system
       IMPLICIT NONE
       
       Real(kind=Rkind),allocatable,intent(inout)   :: matrix(:,:)
@@ -244,95 +266,285 @@ MODULE mod_MPI_Aid
           STOP 'error in the variables for increase matrix size.'
         ENDIF
       ENDIF
-    END SUBROUTINE increase_martix_real
+    ENDSUBROUTINE increase_martix_real
 !---------------------------------------------------------------------------------------
 
 !---------------------------------------------------------------------------------------
 !> interface: allocate_array    
 !---------------------------------------------------------------------------------------
-    SUBROUTINE allocate_array_int4_length4(array_in,length)
-      USE mod_system
+    SUBROUTINE allocate_array_int4_length4(array_in,d1_1,d1_2)
       IMPLICIT NONE
-      Integer*4,allocatable, intent(inout) :: array_in(:)
-      Integer*4, intent(in)                :: length
+      Integer*4,allocatable,        intent(inout) :: array_in(:)
+      Integer*4,                    intent(in)    :: d1_1
+      Integer*4,                    intent(in)    :: d1_2
       
       IF(allocated(array_in)) deallocate(array_in)
-      allocate(array_in(length))
+      
+      allocate(array_in(d1_1:d1_2))
       array_in=0
-    END SUBROUTINE
+      
+    ENDSUBROUTINE allocate_array_int4_length4
     
-    SUBROUTINE allocate_array_int4_length8(array_in,length)
-      USE mod_system
+    SUBROUTINE allocate_matrix_int4_length4(array_in,d1_1,d1_2,d2_1,d2_2)
       IMPLICIT NONE
-      Integer*4,allocatable, intent(inout) :: array_in(:)
-      Integer*8, intent(in)                  :: length
+      Integer*4,allocatable,        intent(inout) :: array_in(:,:)
+      Integer*4,                    intent(in)    :: d1_1
+      Integer*4,                    intent(in)    :: d1_2
+      Integer*4,optional,           intent(in)    :: d2_1
+      Integer*4,optional,           intent(in)    :: d2_2
       
       IF(allocated(array_in)) deallocate(array_in)
-      allocate(array_in(length))
-      array_in=0
-    END SUBROUTINE
-    
-    SUBROUTINE allocate_array_int8_length4(array_in,length)
-      USE mod_system
-      IMPLICIT NONE
-      Integer*8,allocatable, intent(inout) :: array_in(:)
-      Integer*4, intent(in)                  :: length
       
-      IF(allocated(array_in)) deallocate(array_in)
-      allocate(array_in(length))
+      allocate(array_in(d1_1:d1_2,d2_1:d2_2))
       array_in=0
-    END SUBROUTINE
-    
-    SUBROUTINE allocate_array_int8_length8(array_in,length)
-      USE mod_system
-      IMPLICIT NONE
-      Integer*8,allocatable, intent(inout) :: array_in(:)
-      Integer*8, intent(in)                  :: length
       
-      IF(allocated(array_in)) deallocate(array_in)
-      allocate(array_in(length))
-      array_in=0
-    END SUBROUTINE
+    ENDSUBROUTINE allocate_matrix_int4_length4
     
-    SUBROUTINE allocate_array_real_length4(array_in,length)
-      USE mod_system
+    SUBROUTINE allocate_array_int4_length8(array_in,d1_1,d1_2)
+      IMPLICIT NONE
+      Integer*4,allocatable,        intent(inout) :: array_in(:)
+      Integer*8,                    intent(in)    :: d1_1
+      Integer*8,                    intent(in)    :: d1_2
+
+      IF(allocated(array_in)) deallocate(array_in)
+
+      allocate(array_in(d1_1:d1_2))
+      array_in=0
+
+    ENDSUBROUTINE allocate_array_int4_length8
+    
+    SUBROUTINE allocate_matrix_int4_length8(array_in,d1_1,d1_2,d2_1,d2_2)
+      IMPLICIT NONE
+      Integer*4,allocatable,        intent(inout) :: array_in(:,:)
+      Integer*8,                    intent(in)    :: d1_1
+      Integer*8,                    intent(in)    :: d1_2
+      Integer*8,optional,           intent(in)    :: d2_1
+      Integer*8,optional,           intent(in)    :: d2_2
+
+      IF(allocated(array_in)) deallocate(array_in)
+      
+      allocate(array_in(d1_1:d1_2,d2_1:d2_2))
+      array_in=0
+      
+    ENDSUBROUTINE allocate_matrix_int4_length8
+    
+    SUBROUTINE allocate_array_int8_length4(array_in,d1_1,d1_2)
+      IMPLICIT NONE
+      Integer*8,allocatable,        intent(inout) :: array_in(:)
+      Integer*4,                    intent(in)    :: d1_1
+      Integer*4,                    intent(in)    :: d1_2
+
+      IF(allocated(array_in)) deallocate(array_in)
+
+      allocate(array_in(d1_1:d1_2))
+      array_in=0
+
+    ENDSUBROUTINE allocate_array_int8_length4
+    
+    SUBROUTINE allocate_matrix_int8_length4(array_in,d1_1,d1_2,d2_1,d2_2)
+      IMPLICIT NONE
+      Integer*8,allocatable,        intent(inout) :: array_in(:,:)
+      Integer*4,                    intent(in)    :: d1_1
+      Integer*4,                    intent(in)    :: d1_2
+      Integer*4,optional,           intent(in)    :: d2_1
+      Integer*4,optional,           intent(in)    :: d2_2
+
+      IF(allocated(array_in)) deallocate(array_in)
+      
+      allocate(array_in(d1_1:d1_2,d2_1:d2_2))
+      array_in=0
+      
+    ENDSUBROUTINE allocate_matrix_int8_length4
+    
+    SUBROUTINE allocate_array_int8_length8(array_in,d1_1,d1_2)
+      IMPLICIT NONE
+      Integer*8,allocatable,        intent(inout) :: array_in(:)
+      Integer*8,                    intent(in)    :: d1_1
+      Integer*8,                    intent(in)    :: d1_2
+
+      IF(allocated(array_in)) deallocate(array_in)
+
+      allocate(array_in(d1_1:d1_2))
+      array_in=0
+      
+    ENDSUBROUTINE allocate_array_int8_length8
+    
+    SUBROUTINE allocate_matrix_int8_length8(array_in,d1_1,d1_2,d2_1,d2_2)
+      IMPLICIT NONE
+      Integer*8,allocatable,        intent(inout) :: array_in(:,:)
+      Integer*8,                    intent(in)    :: d1_1
+      Integer*8,                    intent(in)    :: d1_2
+      Integer*8,optional,           intent(in)    :: d2_1
+      Integer*8,optional,           intent(in)    :: d2_2
+
+      IF(allocated(array_in)) deallocate(array_in)
+      
+      allocate(array_in(d1_1:d1_2,d2_1:d2_2))      
+      array_in=0
+      
+    ENDSUBROUTINE allocate_matrix_int8_length8
+    
+    SUBROUTINE allocate_array_real_length4(array_in,d1_1,d1_2)
       IMPLICIT NONE
       Real(kind=Rkind),allocatable, intent(inout) :: array_in(:)
-      Integer*4, intent(in)                         :: length
+      Integer*4,                    intent(in)    :: d1_1
+      Integer*4,                    intent(in)    :: d1_2
 
       IF(allocated(array_in)) deallocate(array_in)
-      allocate(array_in(length))
+      
+      allocate(array_in(d1_1:d1_2))
       array_in=0.
-    END SUBROUTINE
+      
+    ENDSUBROUTINE allocate_array_real_length4
+    
+    SUBROUTINE allocate_matrix_real_length4(array_in,d1_1,d1_2,d2_1,d2_2)
+      IMPLICIT NONE
+      Real(kind=Rkind),allocatable, intent(inout) :: array_in(:,:)
+      Integer*4,                    intent(in)    :: d1_1
+      Integer*4,                    intent(in)    :: d1_2
+      Integer*4,optional,           intent(in)    :: d2_1
+      Integer*4,optional,           intent(in)    :: d2_2
 
-    SUBROUTINE allocate_array_real_length8(array_in,length)
-      USE mod_system
+      IF(allocated(array_in)) deallocate(array_in)
+      
+      allocate(array_in(d1_1:d1_2,d2_1:d2_2))
+      array_in=0.
+
+    ENDSUBROUTINE allocate_matrix_real_length4
+
+    SUBROUTINE allocate_array_real_length8(array_in,d1_1,d1_2)
       IMPLICIT NONE
       Real(kind=Rkind),allocatable, intent(inout) :: array_in(:)
-      Integer*8, intent(in)                       :: length
+      Integer*8,                    intent(in)    :: d1_1
+      Integer*8,                    intent(in)    :: d1_2
 
       IF(allocated(array_in)) deallocate(array_in)
-      allocate(array_in(length))
+      
+      allocate(array_in(d1_1:d1_2))
       array_in=0.
-    END SUBROUTINE
+      
+    ENDSUBROUTINE allocate_array_real_length8
     
-    !-----------------------------------------------------------------------------------
-    SUBROUTINE MPI_Bcast_matrix_real(matrix,d1_l,d1_u,d2_l,d2_u,source)
-      USE mod_system
+    SUBROUTINE allocate_matrix_real_length8(array_in,d1_1,d1_2,d2_1,d2_2)
+      IMPLICIT NONE
+      Real(kind=Rkind),allocatable, intent(inout) :: array_in(:,:)
+      Integer*8,                    intent(in)    :: d1_1
+      Integer*8,                    intent(in)    :: d1_2
+      Integer*8,optional,           intent(in)    :: d2_1
+      Integer*8,optional,           intent(in)    :: d2_2
+
+      allocate(array_in(d1_1:d1_2,d2_1:d2_2))
+      array_in=0.
+
+    ENDSUBROUTINE allocate_matrix_real_length8
+    
+    SUBROUTINE allocate_array_cplx_length4(array_in,d1_1,d1_2)
+      IMPLICIT NONE
+      Complex(kind=Rkind),allocatable,intent(inout) :: array_in(:)
+      Integer*4,                    intent(in)      :: d1_1
+      Integer*4,                    intent(in)      :: d1_2
+
+      IF(allocated(array_in)) deallocate(array_in)
+
+      allocate(array_in(d1_1:d1_2))
+      array_in=0.
+      
+    ENDSUBROUTINE allocate_array_cplx_length4
+    
+    SUBROUTINE allocate_matrix_cplx_length4(array_in,d1_1,d1_2,d2_1,d2_2)
+      IMPLICIT NONE
+      Complex(kind=Rkind),allocatable,intent(inout) :: array_in(:,:)
+      Integer*4,                    intent(in)      :: d1_1
+      Integer*4,                    intent(in)      :: d1_2
+      Integer*4,optional,           intent(in)      :: d2_1
+      Integer*4,optional,           intent(in)      :: d2_2
+
+      IF(allocated(array_in)) deallocate(array_in)
+      
+      allocate(array_in(d1_1:d1_2,d2_1:d2_2))      
+      array_in=0.
+      
+    ENDSUBROUTINE allocate_matrix_cplx_length4
+
+    SUBROUTINE allocate_array_cplx_length8(array_in,d1_1,d1_2)
+      IMPLICIT NONE
+      Complex(kind=Rkind),allocatable,intent(inout) :: array_in(:)
+      Integer*8,                    intent(in)      :: d1_1
+      Integer*8,                    intent(in)      :: d1_2
+
+      IF(allocated(array_in)) deallocate(array_in)
+      
+      allocate(array_in(d1_1:d1_2))
+      array_in=0.
+      
+    ENDSUBROUTINE allocate_array_cplx_length8
+
+    SUBROUTINE allocate_array_logic(array_in,d1_1,d1_2)
+      IMPLICIT NONE
+      Logical,allocatable,            intent(inout) :: array_in(:)
+      Integer,                           intent(in) :: d1_1
+      Integer,                           intent(in) :: d1_2
+
+      IF(allocated(array_in)) deallocate(array_in)
+      
+      allocate(array_in(d1_1:d1_2))
+      array_in=.FALSE.
+      
+    ENDSUBROUTINE allocate_array_logic
+
+    SUBROUTINE allocate_matrix_cplx_length8(array_in,d1_1,d1_2,d2_1,d2_2)
+      IMPLICIT NONE
+      Complex(kind=Rkind),allocatable,intent(inout) :: array_in(:,:)
+      Integer*8,                    intent(in)      :: d1_1
+      Integer*8,                    intent(in)      :: d1_2
+      Integer*8,optional,           intent(in)      :: d2_1
+      Integer*8,optional,           intent(in)      :: d2_2
+
+      IF(allocated(array_in)) deallocate(array_in)
+
+      allocate(array_in(d1_1:d1_2,d2_1:d2_2))
+      array_in=0.
+
+    ENDSUBROUTINE allocate_matrix_cplx_length8
+!---------------------------------------------------------------------------------------
+!< interface: MPI_Bcast_matrix
+!---------------------------------------------------------------------------------------
+    SUBROUTINE MPI_Bcast_matrix_real(matrix,d1_1,d1_2,d2_1,d2_2,source,shift1,shift2)
       IMPLICIT NONE
       
       Real(kind=Rkind),intent(inout)      :: matrix(:,:)
-      Integer,intent(in)                  :: d1_l
-      Integer,intent(in)                  :: d1_u
-      Integer,intent(in)                  :: d2_l
-      Integer,intent(in)                  :: d2_u
-      Integer,intent(in)                  :: source
+      Integer,                 intent(in) :: d1_1
+      Integer,                 intent(in) :: d1_2
+      Integer,                 intent(in) :: d2_1
+      Integer,                 intent(in) :: d2_2
+      Integer,                 intent(in) :: source
+      Integer,Optional,        intent(in) :: shift1
+      Integer,Optional,        intent(in) :: shift2
       
       Real(kind=Rkind),allocatable        :: array(:)
       Integer                             :: length
+      Integer                             :: d1_l
+      Integer                             :: d1_u
+      Integer                             :: d2_l
+      Integer                             :: d2_u
       Integer                             :: ii
       Integer                             :: jj
       Integer                             :: kk
+
+      d1_l=d1_1
+      d1_u=d1_2
+      d2_l=d2_1
+      d2_u=d2_2
+
+      IF(present(shift1)) THEN
+        d1_l=d1_l+shift1
+        d1_u=d1_u+shift1
+      ENDIF
+
+      IF(present(shift2)) THEN
+        d2_l=d2_l+shift2
+        d2_u=d2_u+shift2
+      ENDIF
 
       length=(d1_u-d1_l+1)*(d2_u-d2_l+1)
       allocate(array(length))
@@ -360,25 +572,45 @@ MODULE mod_MPI_Aid
       
       deallocate(array)
       
-    END SUBROUTINE MPI_Bcast_matrix_real
-    
-    !-----------------------------------------------------------------------------------
-    SUBROUTINE MPI_Bcast_matrix_int(matrix,d1_l,d1_u,d2_l,d2_u,source)
-      USE mod_system
+    ENDSUBROUTINE MPI_Bcast_matrix_real
+
+!---------------------------------------------------------------------------------------
+    SUBROUTINE MPI_Bcast_matrix_int(matrix,d1_1,d1_2,d2_1,d2_2,source,shift1,shift2)
       IMPLICIT NONE
       
       Integer,intent(inout)               :: matrix(:,:)
-      Integer,intent(in)                  :: d1_l
-      Integer,intent(in)                  :: d1_u
-      Integer,intent(in)                  :: d2_l
-      Integer,intent(in)                  :: d2_u
-      Integer,intent(in)                  :: source
+      Integer,                 intent(in) :: d1_1
+      Integer,                 intent(in) :: d1_2
+      Integer,                 intent(in) :: d2_1
+      Integer,                 intent(in) :: d2_2
+      Integer,                 intent(in) :: source
+      Integer,Optional,        intent(in) :: shift1
+      Integer,Optional,        intent(in) :: shift2
       
       Integer,allocatable                 :: array(:)
       Integer                             :: length
+      Integer                             :: d1_l
+      Integer                             :: d1_u
+      Integer                             :: d2_l
+      Integer                             :: d2_u
       Integer                             :: ii
       Integer                             :: jj
       Integer                             :: kk
+
+      d1_l=d1_1
+      d1_u=d1_2
+      d2_l=d2_1
+      d2_u=d2_2
+
+      IF(present(shift1)) THEN
+        d1_l=d1_l+shift1
+        d1_u=d1_u+shift1
+      ENDIF
+
+      IF(present(shift2)) THEN
+        d2_l=d2_l+shift2
+        d2_u=d2_u+shift2
+      ENDIF
 
       length=(d1_u-d1_l+1)*(d2_u-d2_l+1)
       allocate(array(length))
@@ -406,25 +638,45 @@ MODULE mod_MPI_Aid
       
       deallocate(array)
       
-    END SUBROUTINE MPI_Bcast_matrix_int
+    ENDSUBROUTINE MPI_Bcast_matrix_int
     
-    !-----------------------------------------------------------------------------------
-    SUBROUTINE MPI_Bcast_matrix_complex(matrix,d1_l,d1_u,d2_l,d2_u,source)
-      USE mod_system
+!---------------------------------------------------------------------------------------
+    SUBROUTINE MPI_Bcast_matrix_complex(matrix,d1_1,d1_2,d2_1,d2_2,source,shift1,shift2)
       IMPLICIT NONE
       
-      Complex(kind=Rkind),intent(inout)   :: matrix(:,:)
-      Integer,intent(in)                  :: d1_l
-      Integer,intent(in)                  :: d1_u
-      Integer,intent(in)                  :: d2_l
-      Integer,intent(in)                  :: d2_u
-      Integer,intent(in)                  :: source
-      
+      Complex(kind=Rkind),  intent(inout) :: matrix(:,:)
+      Integer,                 intent(in) :: d1_1
+      Integer,                 intent(in) :: d1_2
+      Integer,                 intent(in) :: d2_1
+      Integer,                 intent(in) :: d2_2
+      Integer,                 intent(in) :: source
+      Integer,Optional,        intent(in) :: shift1
+      Integer,Optional,        intent(in) :: shift2
+
       Complex(kind=Rkind),allocatable     :: array(:)
       Integer                             :: length
+      Integer                             :: d1_l
+      Integer                             :: d1_u
+      Integer                             :: d2_l
+      Integer                             :: d2_u
       Integer                             :: ii
       Integer                             :: jj
       Integer                             :: kk
+
+      d1_l=d1_1
+      d1_u=d1_2
+      d2_l=d2_1
+      d2_u=d2_2
+
+      IF(present(shift1)) THEN
+        d1_l=d1_l+shift1
+        d1_u=d1_u+shift1
+      ENDIF
+
+      IF(present(shift2)) THEN
+        d2_l=d2_l+shift2
+        d2_u=d2_u+shift2
+      ENDIF
 
       length=(d1_u-d1_l+1)*(d2_u-d2_l+1)
       allocate(array(length))
@@ -452,12 +704,13 @@ MODULE mod_MPI_Aid
       
       deallocate(array)
       
-    END SUBROUTINE MPI_Bcast_matrix_complex
-    !-----------------------------------------------------------------------------------
+    ENDSUBROUTINE MPI_Bcast_matrix_complex
+!---------------------------------------------------------------------------------------
 
-    !-----------------------------------------------------------------------------------
+!---------------------------------------------------------------------------------------
+! interface: MPI_Reduce_sum_matrix
+!---------------------------------------------------------------------------------------
     SUBROUTINE MPI_Reduce_sum_matrix_complex(matrix,d1_l,d1_u,d2_l,d2_u,destination)
-      USE mod_system
       IMPLICIT NONE
       
       Complex(kind=Rkind),intent(inout)   :: matrix(:,:)
@@ -501,12 +754,10 @@ MODULE mod_MPI_Aid
       deallocate(array)
       deallocate(array_des)
       
-    END SUBROUTINE MPI_Reduce_sum_matrix_complex
-    !-----------------------------------------------------------------------------------
+    ENDSUBROUTINE MPI_Reduce_sum_matrix_complex
     
-    !-----------------------------------------------------------------------------------
+!---------------------------------------------------------------------------------------
     SUBROUTINE MPI_Reduce_sum_matrix_real(matrix,d1_l,d1_u,d2_l,d2_u,destination)
-      USE mod_system
       IMPLICIT NONE
       
       Real(kind=Rkind),intent(inout)      :: matrix(:,:)
@@ -550,12 +801,10 @@ MODULE mod_MPI_Aid
       deallocate(array)
       deallocate(array_des)
       
-    END SUBROUTINE MPI_Reduce_sum_matrix_real
-    !-----------------------------------------------------------------------------------
+    ENDSUBROUTINE MPI_Reduce_sum_matrix_real
 
-    !-----------------------------------------------------------------------------------
+!---------------------------------------------------------------------------------------
     SUBROUTINE MPI_Reduce_sum_matrix_int(matrix,d1_l,d1_u,d2_l,d2_u,destination)
-      USE mod_system
       IMPLICIT NONE
       
       Integer,intent(inout)               :: matrix(:,:)
@@ -599,12 +848,57 @@ MODULE mod_MPI_Aid
       deallocate(array)
       deallocate(array_des)
       
-    END SUBROUTINE MPI_Reduce_sum_matrix_int
-    !-----------------------------------------------------------------------------------
+    ENDSUBROUTINE MPI_Reduce_sum_matrix_int
+!---------------------------------------------------------------------------------------
+
+!---------------------------------------------------------------------------------------
+!< interface: MPI_Reduce_sum_Bcast
+!---------------------------------------------------------------------------------------
+    SUBROUTINE MPI_Reduce_sum_Bcast_real(value)
+      IMPLICIT NONE
+      Real(kind=Rkind),     intent(inout) :: value
+      Real(kind=Rkind)                    :: value_temp
+      
+      CALL MPI_Reduce(value,value_temp,size1_MPI,MPI_real_fortran,MPI_SUM,root_MPI,    &
+                      MPI_COMM_WORLD,MPI_err)
+      IF(MPI_id==0) value=value_temp
+      CALL MPI_Bcast(value,size1_MPI,MPI_real_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
+      
+    ENDSUBROUTINE MPI_Reduce_sum_Bcast_real
     
-    !-----------------------------------------------------------------------------------
+!---------------------------------------------------------------------------------------
+
+!---------------------------------------------------------------------------------------
+    SUBROUTINE MPI_Reduce_sum_Bcast_complex(value)
+      IMPLICIT NONE
+      Complex(kind=Rkind),  intent(inout) :: value
+      Complex(kind=Rkind)                 :: value_temp
+      
+      CALL MPI_Reduce(value,value_temp,size1_MPI,MPI_cplx_fortran,MPI_SUM,root_MPI,    &
+                      MPI_COMM_WORLD,MPI_err)
+      IF(MPI_id==0) value=value_temp
+      CALL MPI_Bcast(value,size1_MPI,MPI_cplx_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
+      
+    ENDSUBROUTINE MPI_Reduce_sum_Bcast_complex
+
+!---------------------------------------------------------------------------------------
+    SUBROUTINE MPI_Reduce_sum_Bcast_int(value)
+      IMPLICIT NONE
+      Integer,              intent(inout) :: value
+      Integer                             :: value_temp
+      
+      CALL MPI_Reduce(value,value_temp,size1_MPI,MPI_int_fortran,MPI_SUM,root_MPI,     &
+                      MPI_COMM_WORLD,MPI_err)
+      IF(MPI_id==0) value=value_temp
+      CALL MPI_Bcast(value,size1_MPI,MPI_int_fortran,root_MPI,MPI_COMM_WORLD,MPI_err)
+      
+    ENDSUBROUTINE MPI_Reduce_sum_Bcast_int    
+!---------------------------------------------------------------------------------------
+
+!---------------------------------------------------------------------------------------
+!< interface: MPI_Send_matrix
+!---------------------------------------------------------------------------------------
     SUBROUTINE MPI_Send_matrix_real(matrix,d1_l,d1_u,d2_l,d2_u,destination,tag)
-      USE mod_system
       IMPLICIT NONE
       
       Real(kind=Rkind),intent(inout)      :: matrix(:,:)
@@ -635,11 +929,10 @@ MODULE mod_MPI_Aid
       
       deallocate(array)
       
-    END SUBROUTINE MPI_Send_matrix_real
+    ENDSUBROUTINE MPI_Send_matrix_real
 
     !-----------------------------------------------------------------------------------
     SUBROUTINE MPI_Send_matrix_int(matrix,d1_l,d1_u,d2_l,d2_u,destination,tag)
-      USE mod_system
       IMPLICIT NONE
       
       Integer,intent(inout)               :: matrix(:,:)
@@ -670,11 +963,10 @@ MODULE mod_MPI_Aid
       
       deallocate(array)
       
-    END SUBROUTINE MPI_Send_matrix_int  
+    ENDSUBROUTINE MPI_Send_matrix_int  
 
     !-----------------------------------------------------------------------------------
     SUBROUTINE MPI_Send_matrix_complex(matrix,d1_l,d1_u,d2_l,d2_u,destination,tag)
-      USE mod_system
       IMPLICIT NONE
       
       Complex(kind=Rkind),intent(inout)   :: matrix(:,:)
@@ -705,11 +997,10 @@ MODULE mod_MPI_Aid
       
       deallocate(array)
       
-    END SUBROUTINE MPI_Send_matrix_complex
+    ENDSUBROUTINE MPI_Send_matrix_complex
     
     !-----------------------------------------------------------------------------------
     SUBROUTINE MPI_Recv_matrix_real(matrix,d1_l,d1_u,d2_l,d2_u,source,tag)
-      USE mod_system
       IMPLICIT NONE
       
       Real(kind=Rkind),intent(inout)      :: matrix(:,:)
@@ -741,11 +1032,10 @@ MODULE mod_MPI_Aid
 
       deallocate(array)
       
-    END SUBROUTINE MPI_Recv_matrix_real
+    ENDSUBROUTINE MPI_Recv_matrix_real
     
     !-----------------------------------------------------------------------------------
     SUBROUTINE MPI_Recv_matrix_int(matrix,d1_l,d1_u,d2_l,d2_u,source,tag)
-      USE mod_system
       IMPLICIT NONE
       
       Integer,intent(inout)               :: matrix(:,:)
@@ -778,11 +1068,10 @@ MODULE mod_MPI_Aid
 
       deallocate(array)
       
-    END SUBROUTINE MPI_Recv_matrix_int
+    ENDSUBROUTINE MPI_Recv_matrix_int
     
     !-----------------------------------------------------------------------------------
     SUBROUTINE MPI_Recv_matrix_complex(matrix,d1_l,d1_u,d2_l,d2_u,source,tag)
-      USE mod_system
       IMPLICIT NONE
       
       Complex(kind=Rkind),intent(inout)   :: matrix(:,:)
@@ -814,11 +1103,137 @@ MODULE mod_MPI_Aid
 
       deallocate(array)
       
-    END SUBROUTINE MPI_Recv_matrix_complex
+    ENDSUBROUTINE MPI_Recv_matrix_complex
+
+!---------------------------------------------------------------------------------------
+!< interface: MPI_combine_array_real
+!---------------------------------------------------------------------------------------
+    SUBROUTINE MPI_combine_array_real(array)
+      IMPLICIT NONE
+      
+      Real(kind=Rkind),allocatable,   intent(inout) :: array(:)
+
+      Integer                                       :: d1
+      Integer                                       :: d2
+
+      IF(MPI_id/=0) THEN
+        d1=bounds_MPI(1,MPI_id)
+        d2=bounds_MPI(2,MPI_id)
+        CALL MPI_Send(array(d1:d2),d2-d1+1,MPI_real_fortran,root_MPI,MPI_id,           &
+                     MPI_COMM_WORLD,MPI_err)
+      ENDIF
+
+      IF(MPI_id==0) THEN
+        DO i_MPI=1,MPI_np-1
+          d1=bounds_MPI(1,i_MPI)
+          d2=bounds_MPI(2,i_MPI)
+          CALL MPI_Recv(array(d1:d2),d2-d1+1,MPI_real_fortran,i_MPI,                   &
+                        i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        ENDDO
+      ENDIF
+    ENDSUBROUTINE MPI_combine_array_real
+
+    !-----------------------------------------------------------------------------------
+    SUBROUTINE MPI_combine_array_int(array)
+      IMPLICIT NONE
+      
+      Integer,allocatable,intent(inout)             :: array(:)
+
+      Integer                                       :: d1
+      Integer                                       :: d2
+
+      IF(MPI_id/=0) THEN
+        d1=bounds_MPI(1,MPI_id)
+        d2=bounds_MPI(2,MPI_id)
+        CALL MPI_Send(array(d1:d2),d2-d1+1,MPI_int_fortran,root_MPI,MPI_id,            &
+                     MPI_COMM_WORLD,MPI_err)
+      ENDIF
+
+      IF(MPI_id==0) THEN
+        DO i_MPI=1,MPI_np-1
+          d1=bounds_MPI(1,i_MPI)
+          d2=bounds_MPI(2,i_MPI)
+          CALL MPI_Recv(array(d1:d2),d2-d1+1,MPI_int_fortran,i_MPI,                    &
+                        i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        ENDDO
+      ENDIF
+    ENDSUBROUTINE MPI_combine_array_int
     
     !-----------------------------------------------------------------------------------
-    
+    SUBROUTINE MPI_combine_array_cplx(array)
+      IMPLICIT NONE
+      
+      Complex(kind=Rkind),allocatable,intent(inout) :: array(:)
+
+      Integer                                       :: d1
+      Integer                                       :: d2
+
+      IF(MPI_id/=0) THEN
+        d1=bounds_MPI(1,MPI_id)
+        d2=bounds_MPI(2,MPI_id)
+        CALL MPI_Send(array(d1:d2),d2-d1+1,MPI_cplx_fortran,root_MPI,MPI_id,           &
+                     MPI_COMM_WORLD,MPI_err)
+      ENDIF
+
+      IF(MPI_id==0) THEN
+        DO i_MPI=1,MPI_np-1
+          d1=bounds_MPI(1,i_MPI)
+          d2=bounds_MPI(2,i_MPI)
+          CALL MPI_Recv(array(d1:d2),d2-d1+1,MPI_cplx_fortran,i_MPI,                   &
+                        i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        ENDDO
+      ENDIF
+    ENDSUBROUTINE MPI_combine_array_cplx
 !---------------------------------------------------------------------------------------
+
+!---------------------------------------------------------------------------------------
+!< interface: MPI_collect_info_int
+!---------------------------------------------------------------------------------------
+    SUBROUTINE MPI_collect_info_int(array)
+      IMPLICIT NONE
+
+      Integer,                        intent(inout) :: array(0:MPI_np-1)
+
+      IF(MPI_id/=0) THEN
+        CALL MPI_Send(array(MPI_id),size1_MPI,MPI_int_fortran,root_MPI,MPI_id,         &
+                      MPI_COMM_WORLD,MPI_err)
+      ENDIF
+
+      IF(MPI_id==0) THEN
+        DO i_MPI=1,MPI_np-1
+          CALL MPI_Recv(array(i_MPI),size1_MPI,MPI_int_fortran,i_MPI,                  &
+                        i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        ENDDO
+      ENDIF
+
+!      CALL MPI_Bcast(array(0:MPI_np-1),MPI_np,MPI_int_fortran,root_MPI,                &
+!                     MPI_COMM_WORLD,MPI_err)
+
+    ENDSUBROUTINE MPI_collect_info_int
+    
+    !-----------------------------------------------------------------------------------
+    SUBROUTINE MPI_collect_info_real(array)
+      IMPLICIT NONE
+
+      Real(kind=Rkind),               intent(inout) :: array(0:MPI_np-1)
+
+      IF(MPI_id/=0) THEN
+        CALL MPI_Send(array(MPI_id),size1_MPI,MPI_real_fortran,root_MPI,MPI_id,        &
+                      MPI_COMM_WORLD,MPI_err)
+      ENDIF
+
+      IF(MPI_id==0) THEN
+        DO i_MPI=1,MPI_np-1
+          CALL MPI_Recv(array(i_MPI),size1_MPI,MPI_real_fortran,i_MPI,                 &
+                        i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        ENDDO
+      ENDIF
+
+!      CALL MPI_Bcast(array(0:MPI_np-1),MPI_np,MPI_real_fortran,root_MPI,               &
+!                     MPI_COMM_WORLD,MPI_err)
+
+    ENDSUBROUTINE MPI_collect_info_real
+
 #endif
 
 END MODULE mod_MPI_Aid

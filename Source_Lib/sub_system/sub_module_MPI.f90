@@ -35,9 +35,10 @@ MODULE mod_MPI
   !> note the difference on MPI_stat in "USE MPI" and "USE MPI_F08"
   ! Integer(kind=MPI_INTEGER_KIND) :: MPI_stat(MPI_STATUS_SIZE) !< status of MPI process
   TYPE(MPI_Status)               :: MPI_stat          !< status of MPI process
-  TYPE(MPI_Datatype)             :: MPI_int           !< integer type of default MPI
+  TYPE(MPI_Datatype)             :: MPI_int_def       !< integer type of default MPI
   TYPE(MPI_Datatype)             :: MPI_int_fortran   !< integer type of default fortran
   TYPE(MPI_Datatype)             :: MPI_real_fortran  !< real type for fortran (Rkind)
+  TYPE(MPI_Datatype)             :: MPI_cplx_fortran  !< complex type for fortran (Rkind)
   Integer(kind=MPI_INTEGER_KIND) :: MPI_rec_source    !< for MPI_RECV, not used
   Integer(kind=MPI_INTEGER_KIND) :: MPI_tag1     !< tag for MPI send and receive
   Integer(kind=MPI_INTEGER_KIND) :: MPI_tag2     !< tag for MPI send and receive
@@ -52,6 +53,13 @@ MODULE mod_MPI
   Integer                        :: iG2_MPI      !< dn boundary of iGs in action 
   Integer                        :: nb_per_MPI   !< number of distribed works per thread
   Integer                        :: nb_rem_MPI   !< remainder of distribed works
+  Integer,allocatable            :: iGs_MPI(:,:)    !< iG boundary of theards in action
+  Integer,allocatable            :: bounds_MPI(:,:) !< boundary of each theards
+  
+  Logical                        :: Srep_MPI=.FALSE. !< MPI working on full Smolyak Rep. 
+  Integer                        :: MPI_scheme=3     !< MPI working on MPI scheme #. 
+                                                     ! 0 auto, 1 scheme #
+
 
   !Common /group_MPI_world/     MPI_err, MPI_id, MPI_np, MPI_status
   !Common /group_MPI_tag/       MPI_tag0,MPI_tag1,MPI_tag2,MPI_tag3
@@ -66,20 +74,21 @@ MODULE mod_MPI
   !Real*8                        :: time_temp1
   !Real*8                        :: time_temp2
   Integer                        :: time_MPI_action !< total time used in action 
+  Integer,allocatable            :: time_MPI_calcu(:)  !< time used in each action for claculation
+  Integer,allocatable            :: time_MPI_commu(:)  !< time used in each action for communcation and related prepration
+  Integer,allocatable            :: time_MPI_act_all(:)!< time used in each action
   Integer                        :: time_comm       !< total time used in comm. in action
   Integer                        :: time_point1     !< tags for save current time
   Integer                        :: time_point2
   Integer                        :: time_temp1
   Integer                        :: time_temp2
   Integer                        :: time_rate       !< for function system_clock()
-  Integer                        :: time_max       !< for function system_clock()
+  Integer                        :: time_max        !< for function system_clock()
   ! time_rate in kind=4: COUNT in system_clock represents milliseconds
   ! time_rate in kind>4: COUNT in system_clock represents micro- or nanoseconds
   
   !-------------------------------------------------------------------------------------
   ! varilables for process control, add to certain type later
-  Logical                        :: once_control
-  !Logical                       :: once_control_Hmin
   Logical                        :: if_propa
   Logical                        :: Grid_allco
   
@@ -97,12 +106,7 @@ MODULE mod_MPI
     CALL MPI_Init(MPI_err)
     CALL MPI_Comm_rank(MPI_COMM_WORLD, MPI_id, MPI_err)
     CALL MPI_Comm_size(MPI_COMM_WORLD, MPI_np, MPI_err)
-    
-    time_MPI_action=0
-    time_comm=0
-    once_control=.TRUE.
-    Grid_allco=.True.
-    
+
     !> get Fortran default bit
     IF(sizeof(integer_MPI)==4) THEN
       MPI_int_fortran=MPI_integer4
@@ -115,25 +119,34 @@ MODULE mod_MPI
     !> define Fortran Real type according to Rkind
     IF(Rkind==8) THEN
       MPI_real_fortran=MPI_Real8
+      MPI_cplx_fortran=MPI_Complex8
     ELSEIF(Rkind==16) THEN
       MPI_real_fortran=MPI_Real16
+      MPI_cplx_fortran=MPI_Complex16
     ELSE
       STOP 'Rkind neither 64 or 128 bit, define MPI_real_fortran in sub_module_MPI.f90'
     ENDIF
     
     !> get MPI default bit
     IF(MPI_INTEGER_KIND==4) THEN
-      MPI_int=MPI_integer4
+      MPI_int_def=MPI_integer4
     ELSEIF(MPI_INTEGER_KIND==8) THEN
-      MPI_int=MPI_integer8
+      MPI_int_def=MPI_integer8
     ELSE
       STOP 'integer neither 4 or 8 in default MPI'
     ENDIF
+    
+    time_MPI_action=0
+    time_comm=0
+    Grid_allco=.True.
+    IF(.NOT. allocated(iGs_MPI)) allocate(iGs_MPI(2,0:MPI_np-1))
     
   END SUBROUTINE MPI_initialization
   
 #else
   Integer                        :: MPI_id=0     !< fake MPI_id, for convenience
+  Integer                        :: MPI_scheme=0
+  Logical                        :: Srep_MPI=.FALSE.  
 #endif
 
 END MODULE mod_MPI

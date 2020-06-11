@@ -63,6 +63,7 @@
 
           logical                    :: Save_MemGrid       = .FALSE.  ! Save the grid in memory
           logical                    :: Save_MemGrid_done  = .FALSE.  ! T, if the grid is save in memory
+          logical,allocatable        :: Save_MemGrid_iG(:)  ! T, if the grid for iG is save in memory
 
           character (len=line_len)   :: Base_FileName_Grid = "SH_HADA" ! base name of grid file
 
@@ -291,25 +292,16 @@
       END SUBROUTINE Write_FileGrid
 
 !=======================================================================================
-#if(run_MPI)
-      SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
-                          derive_termQact,derive_termQdyn,SmolyakRep,nb_SG1,nb_SG2,info)
-#else
       SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
                           derive_termQact,derive_termQdyn,SmolyakRep,nb_SG,info)
-#endif
-
       USE mod_MPI
+
       TYPE (param_OpGrid), intent(inout) :: OpGrid
       integer,             intent(in)    :: nb_qa,nb_bie
       integer,             intent(in)    :: derive_termQact(2)
       integer,             intent(in)    :: derive_termQdyn(2)
       logical,             intent(in)    :: SmolyakRep
-#if(run_MPI)
-      integer,             intent(in)    :: nb_SG1,nb_SG2
-#else
       integer,             intent(in)    :: nb_SG
-#endif
       character (len=*),   intent(in)    :: info
 
       character (len=Name_longlen) :: info2
@@ -322,11 +314,7 @@
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-#if(run_MPI)
-        write(out_unitp,*) 'nb_qa,nb_bie',nb_qa,nb_bie,nb_SG1,nb_SG2
-#else
         write(out_unitp,*) 'nb_qa,nb_bie',nb_qa,nb_bie,nb_SG
-#endif
         write(out_unitp,*) 'derive_termQact(:)',derive_termQact(:)
         write(out_unitp,*) 'derive_termQdyn(:)',derive_termQdyn(:)
         write(out_unitp,*) 'grid_cte',OpGrid%grid_cte
@@ -371,13 +359,8 @@
          IF (SmolyakRep) THEN
            IF (print_level>-1 .AND. MPI_id==0)                                         &
                                    write(out_unitp,*) info2 // ': OpGrid%SRep allocated'
-#if(run_MPI)
-           CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG1,nb_SG2,                       &
-                                      delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
-#else
            CALL alloc_SmolyakRep_only(OpGrid%SRep,nb_SG,                               &
                                       delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
-#endif
          END IF
        END IF
        CALL flush_perso(out_unitp)
