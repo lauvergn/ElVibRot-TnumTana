@@ -1,9 +1,9 @@
-/.project
+.project
+.settings
 obj/*
-/makefile_CRP
+makefile_CRP
 vib
-/comp.log
-/vib.exe
-/PhysConst.exe
-/UnitTests_Frac.exe
-/1
+comp.log
+vib.exe
+PhysConst.exe
+UnitTests_Frac.exe
