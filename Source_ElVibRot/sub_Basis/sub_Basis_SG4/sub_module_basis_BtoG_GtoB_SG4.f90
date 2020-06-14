@@ -713,12 +713,12 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   ! It is useless when the program is compliled with kind=8 for the integer (Equivalent to ILkind=8)
   lMax_Srep = sum(int(basis_SG%para_SGType2%tab_nb_OF_SRep(:),kind=ILkind))
   Max_Srep  = sum(basis_SG%para_SGType2%tab_nb_OF_SRep(:))
-#if(run_MPI)  
+#if(run_MPI)
   nb_per_MPI=basis_SG%nb_SG/MPI_np
-  nb_rem_MPI=mod(basis_SG%nb_SG,MPI_np) !remainder jobs 
+  nb_rem_MPI=mod(basis_SG%nb_SG,MPI_np) !remainder jobs
   iG1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
   iG2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
-#endif  
+#endif
 
   IF(MPI_id==0) THEN
     write(out_unitp,*) 'nb of terms (grids)',size(basis_SG%para_SGType2%tab_nb_OF_SRep)
@@ -726,7 +726,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
     write(out_unitp,*) 'lMax_Srep',lMax_Srep
     write(out_unitp,*) 'Max_Srep',Max_Srep
   ENDIF
-  
+
   IF (lMax_Srep /= int(Max_Srep,kind=ILkind)) STOP 'ERROR Max_Srep is too large!!'
   CALL flush_perso(out_unitp)
 
@@ -894,7 +894,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
       write(out_unitp,*) ' Probably LB < LG'
     END IF
   ENDIF
-  
+
   IF (count(Tab_inD_nDindB == 0) > 0) THEN
     write(out_unitp,*) 'ERROR in ',name_sub
     write(out_unitp,*) ' Propblem with the mapping!'
@@ -1090,12 +1090,12 @@ END DO
 END SUBROUTINE tabPackedBasis_TO2_tabR_AT_iG
 
 !=======================================================================================
-!> in sub_TabOpPsi_FOR_SGtype4: 
+!> in sub_TabOpPsi_FOR_SGtype4:
 !>  CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,iG,BasisnD%para_SGType2)
-!>  PsiR(itab)%V     --> tabR_iG        
-!>  psi(itab)%RvecB  --> tabR      
-!                     
-!> tabR_iG is assigned in the subroutine according to iG using the informtation in tabR  
+!>  PsiR(itab)%V     --> tabR_iG
+!>  psi(itab)%RvecB  --> tabR
+!
+!> tabR_iG is assigned in the subroutine according to iG using the informtation in tabR
 !=======================================================================================
 SUBROUTINE tabPackedBasis_TO_tabR_AT_iG(tabR_iG,tabR,iG,SGType2)
 USE mod_system
@@ -1191,15 +1191,15 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
   integer,                       intent(in)        :: iG
   integer(kind=MPI_INTEGER_KIND),intent(in)        :: Psi_size_MPI0
   integer,                       intent(in)        :: Max_nDI_ib0
-  integer(kind=MPI_INTEGER_KIND),intent(in)        :: reduce_Vlength  
+  integer(kind=MPI_INTEGER_KIND),intent(in)        :: reduce_Vlength
 
-  integer,allocatable                             :: temp_list(:)  
-  integer                                         :: temp_length 
-  
+  integer,allocatable                             :: temp_list(:)
+  integer                                         :: temp_length
+
   integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0,iBSRep,iB,nDI
   integer :: index_find,ii,itab
   Logical :: once1
-  
+
   temp_int=SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0
   DO itab=1,Psi_size_MPI0
     CALL allocate_array(PsiR(itab)%V,1,temp_int)
@@ -1208,7 +1208,7 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
   ENDDO
   CALL allocate_array(temp_list,1,temp_int)
   once1=.TRUE.
-  
+
   DO itab=1,Psi_size_MPI0
     temp_length=0
     DO ib0=1,SGType2%nb0
@@ -1230,11 +1230,11 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
           !tabR_iG(iB) = tabR(nDI)
         END IF
       END DO
-    END DO  
+    END DO
     once1=.FALSE.
   ENDDO
   deallocate(temp_list)
-    
+
 END SUBROUTINE tabPackedBasis_TO_tabR_MPI
 #endif
 !=======================================================================================
@@ -1266,15 +1266,15 @@ SUBROUTINE PackedBasis_TO_tabR_index_MPI(iG,SGType2,reduce_index_mpi,nDI_index, 
   Integer(kind=MPI_INTEGER_KIND),intent(inout) :: reduce_index_mpi
   Integer*4,allocatable,        intent(inout)  :: nDI_index(:)
   Integer*4,allocatable,        intent(inout)  :: nDI_index_list(:)
-  
+
   Integer*4,allocatable                        :: nDI_index_temp(:)
   Integer                                      :: iBSRep,iB,nDI
-  Integer                                      :: ib0,nb_AT_iG,iB_ib0,nDI_ib0  
+  Integer                                      :: ib0,nb_AT_iG,iB_ib0,nDI_ib0
   Integer                                      :: ii
 
   !Max_nDI_ib0 = size(tabR)/SGType2%nb0
   !size_SRep=SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0
-  
+
   DO ib0=1,SGType2%nb0
     iBSRep = SGType2%tab_Sum_nb_OF_SRep(iG)-SGType2%tab_nb_OF_SRep(iG)
     DO iB_ib0=1,SGType2%tab_nb_OF_SRep(iG)
@@ -1282,11 +1282,11 @@ SUBROUTINE PackedBasis_TO_tabR_index_MPI(iG,SGType2,reduce_index_mpi,nDI_index, 
       nDI_ib0 = SGType2%tab_iB_OF_SRep_TO_iB(iBSRep)
       IF (nDI_ib0 > 0 .AND. nDI_ib0 <= Max_nDI_ib0 ) THEN
         nDI=(ib0-1)*Max_nDI_ib0               +nDI_ib0
-        iB =(ib0-1)*SGType2%tab_nb_OF_SRep(iG)+iB_ib0  
+        iB =(ib0-1)*SGType2%tab_nb_OF_SRep(iG)+iB_ib0
         !write(*,*) 'checkinging iB,nDI',iB,nDI,iG,ib0,iB_ib0
         ! counts actual number of V
         SGType2%V_allcount=SGType2%V_allcount+1
-        
+
         !> record the mapping list on non-root threads according to nDI-----------------
         IF(MPI_id/=0) THEN
           DO ii=1,MAX(reduce_index_mpi,1)
@@ -1296,31 +1296,31 @@ SUBROUTINE PackedBasis_TO_tabR_index_MPI(iG,SGType2,reduce_index_mpi,nDI_index, 
             ENDIF
           ENDDO
         ENDIF ! for MPI_id/=0-----------------------------------------------------------
-        
+
         ! if nDI is not on the current list, include the new nDI in the "nDI_index"
         IF(ii>MAX(reduce_index_mpi,1)) THEN
           reduce_index_mpi=reduce_index_mpi+1
           nDI_index(reduce_index_mpi)=nDI
           IF(MPI_id/=0) nDI_index_list(SGType2%V_allcount)=reduce_index_mpi
-          
+
           !> if exceed the size of current array----------------------------------------
           IF(reduce_index_mpi==SGType2%num_nDI_index) THEN
             !> for a banlance of new allocation and memory waste
-            SGType2%num_nDI_index=SGType2%num_nDI_index+Max(SGType2%num_nDI_index/5,500) 
+            SGType2%num_nDI_index=SGType2%num_nDI_index+Max(SGType2%num_nDI_index/5,500)
             !> nDI_index_temp -> nDI_index
             ! nDI_index_temp is deallocated automatically
             CALL allocate_array(nDI_index_temp,1,SGType2%num_nDI_index)
             nDI_index_temp(1:reduce_index_mpi)=nDI_index
-            CALL move_alloc(nDI_index_temp,nDI_index) 
+            CALL move_alloc(nDI_index_temp,nDI_index)
           ENDIF ! for reduce_index_mpi==SGType2%num_nDI_index---------------------------
-          
+
         ENDIF ! for ii>MAX(reduce_index_mpi,1)
       ENDIF ! for nDI_ib0 > 0 .AND. nDI_ib0 <= Max_nDI_ib0
     ENDDO
   ENDDO
-  
+
 END SUBROUTINE PackedBasis_TO_tabR_index_MPI
-#endif 
+#endif
 !=======================================================================================
 
 !=======================================================================================
@@ -1329,19 +1329,19 @@ END SUBROUTINE PackedBasis_TO_tabR_index_MPI
 #if(run_MPI)
 SUBROUTINE tabPackedBasis_TO_tabRpacked_MPI(all_RvecB_temp,Psi_RvecB,nDI_index,length)
   IMPLICIT NONE
-  
+
   Real(kind=Rkind), allocatable,intent(inout) :: all_RvecB_temp(:)
   Real(kind=Rkind),             intent(in)    :: Psi_RvecB(:)
   Integer,allocatable,          intent(in)    :: nDI_index(:)
   Integer,                      intent(in)    :: length
-  Integer ii  
-  
+  Integer ii
+
   Do ii=1,length
     all_RvecB_temp(ii)=Psi_RvecB(nDI_index(ii))
   ENDDO
-    
+
 END SUBROUTINE tabPackedBasis_TO_tabRpacked_MPI
-#endif 
+#endif
 !=======================================================================================
 
 !=======================================================================================
@@ -1408,24 +1408,24 @@ SUBROUTINE tabR_TO_tabPackedBasis_MPI(all_RvecB_temp2,PsiR,iG,SGType2,WeightiG, 
   integer,                       intent(in)         :: iG
   integer(kind=MPI_INTEGER_KIND),intent(in)         :: Psi_size_MPI0
   integer,                       intent(in)         :: Max_nDI_ib0
-  integer(kind=MPI_INTEGER_KIND),intent(in)         :: reduce_Vlength  
+  integer(kind=MPI_INTEGER_KIND),intent(in)         :: reduce_Vlength
   real(kind=Rkind),              intent(in)         :: WeightiG
 
-  integer,allocatable                               :: temp_list(:)  
-  integer                                           :: temp_length 
-   
+  integer,allocatable                               :: temp_list(:)
+  integer                                           :: temp_length
+
   integer :: ii,itab
   integer :: iBSRep,iB,nDI
   integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0
   Logical :: once1
 
-    
+
   IF(size(PsiR) == 0) STOP 'ERROR in tabR_TO_tabPackedBasis_MPI'
-  
+
   temp_int=SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0
   CALL allocate_array(temp_list,1,temp_int)
   once1=.TRUE.
-  
+
   DO itab=1,Psi_size_MPI0
     temp_length=0
     DO ib0=1,SGType2%nb0
@@ -1893,7 +1893,7 @@ integer               :: iG,nb_BG,nq_AT_iG,i1,i2
 !write(out_unitp,*) 'dot_product_SmolyakRep_Grid: size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),Size_SmolyakRep(SRep_w)
 !write(out_unitp,*) 'nb DP terms',size(SRep1%SmolyakRep),size(SRep2%SmolyakRep),size(WSRep),size(WSRep)
 
-   flush(out_unitp)
+!flush(out_unitp)
 
 nb_BG = Size_SmolyakRep(SRep1)
 IF (nb_BG /= Size_SmolyakRep(SRep2) .OR. size(SRep1%SmolyakRep) /= size(WSRep) .OR. size(SRep2%SmolyakRep) /= size(WSRep)) THEN
@@ -2561,10 +2561,6 @@ nb_mult_BTOG = 0
 
 !to be sure to have the correct number of threads
 nb_thread = SGType2%nb_threads
-!!$OMP   SHARED(nb_mult_BTOG,D,SRep,tab_ba,SGType2,nb_thread) &
-!!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
-!!$OMP   PRIVATE(tab_l,ith,err_sub) &
-
 
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(D,SRep,tab_ba,SGType2,nb_thread) &
@@ -2592,43 +2588,7 @@ DO iG=SGType2%iG_th(ith+1),SGType2%fG_th(ith+1)
 
   CALL BDP_TO_GDP_OF_SmolyakRep(SRep%SmolyakRep(iG)%V,tab_ba,           &
                                 tab_l,tab_nq,tab_nb,nb0=SGType2%nb0)
-!
-!  nnb = product(tab_nb)
-!  nnq = 1
-!  nb2 = 1
-!  nq2 = 1
-!
-!  RTempG = reshape(SRep%SmolyakRep(iG)%V,shape=(/ nnq,nq2,nnb /))
-!! B order : b1 * b2 * b3 * ... bD
-!! G order : g1 * g2 * g3 * ... gD
-!
-!  DO i=1,D
-!    nb2 = tab_nb(i)
-!    nq2 = tab_nq(i)
-!    nnb = nnb / nb2
-!
-!    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
-!
-!    deallocate(RTempG)
-!    allocate(RTempG(nnq,nq2,nnb))
-!
-!    DO ib=1,nnb
-!    DO iq=1,nnq
-!       RTempG(iq,:,ib) = matmul(tab_ba(tab_l(i),i)%dnRGB%d0,RTempB(iq,:,ib))
-!
-!      !$OMP ATOMIC
-!      nb_mult_BTOG = nb_mult_BTOG + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
-!
-!    END DO
-!    END DO
-!
-!    nnq = nnq * nq2
-!    deallocate(RTempB)
-!
-!  END DO
-!
-!  SRep%SmolyakRep(iG)%V = reshape(RTempG, shape=(/ nnq /) )
-!  deallocate(RTempG)
+
 END DO
 
 IF (allocated(tab_l)) deallocate(tab_l)

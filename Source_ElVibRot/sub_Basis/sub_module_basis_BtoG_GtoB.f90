@@ -884,8 +884,8 @@
         complex (kind=Rkind), allocatable   :: dncb(:,:)
 
 
-        real (kind=Rkind), allocatable :: RVecG(:)
-        real (kind=Rkind), allocatable :: RVecB(:)
+        real (kind=Rkind), allocatable      :: RVecG(:)
+        real (kind=Rkind), allocatable      :: RVecB(:)
 
         integer                             :: nbb,ibb1,ibb2
         integer                             :: nnb,nb2,ib,ib2,newnb2
@@ -917,14 +917,6 @@
           write(out_unitp,*) ' the vector is real !!'
           STOP
         END IF
-
-
-        !IF (BasisTOGrid_omp == 0) THEN
-        !  nb_thread = 1
-        !ELSE
-        !  nb_thread = BasisTOGrid_maxth
-        !END IF
-        !write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
 
         IF (basis_set%cplx .AND. basis_set%packed_done) THEN
 
@@ -1132,10 +1124,11 @@
 
           CASE (4) ! Sparse basis (Smolyak 4th implementation)
             CALL alloc_NParray(RVecB,shape(CVecB),'RVecB',name_sub)
-            !CALL alloc_NParray(RVecG,shape(CVecG),'RVecG',name_sub)
 
             RVecB(:) = real(CVecB,kind=Rkind)
-            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
+            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,                 &
+              basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
+            !write(6,*) 'real(CVecB)' ; CALL Write_SmolyakRep(SRep)
 
             IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
               CALL BSmolyakRep_TO_GSmolyakRep(SRep,                         &
@@ -1145,6 +1138,7 @@
               CALL BSmolyakRep_TO3_GSmolyakRep(SRep,basis_set%para_SGType2, &
                                                basis_set%tab_basisPrimSG)
             END IF
+            !write(6,*) 'real(CVecG)' ; CALL Write_SmolyakRep(SRep)
 
             itabR = 0
             DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
@@ -1153,10 +1147,12 @@
               itabR = itabR + nR
             END DO
             CALL dealloc_SmolyakRep(SRep)
-
+            !write(6,*) 'real(CVecG)?',CVecG
 
             RVecB(:) = aimag(CVecB)
-            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
+            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,              &
+              basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
+            !write(6,*) 'im(CVecB)' ; CALL Write_SmolyakRep(SRep)
 
             IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
               CALL BSmolyakRep_TO_GSmolyakRep(SRep,                         &
@@ -1166,6 +1162,7 @@
               CALL BSmolyakRep_TO3_GSmolyakRep(SRep,basis_set%para_SGType2, &
                                                basis_set%tab_basisPrimSG)
             END IF
+            !write(6,*) 'im(CVecG)' ; CALL Write_SmolyakRep(SRep)
 
             itabR = 0
             DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
@@ -1175,9 +1172,9 @@
               itabR = itabR + nR
             END DO
             CALL dealloc_SmolyakRep(SRep)
+            !write(6,*) 'CVecG?',CVecG
 
             CALL dealloc_NParray(RVecB,'RVecB',name_sub)
-            !CALL dealloc_NParray(RVecG,'RVecG',name_sub)
 
           CASE DEFAULT
             write(out_unitp,*) ' ERROR in ',name_sub
@@ -1186,12 +1183,6 @@
             STOP
           END SELECT
 
-
-          IF (basis_set%nb_SG > 0) THEN ! for Sparse Grid
-
-          ELSE ! for direct-product grid
-
-          END IF
         END IF
 
       END SUBROUTINE RecCVecB_TO_CVecG

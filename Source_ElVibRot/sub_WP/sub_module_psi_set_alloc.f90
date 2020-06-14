@@ -60,7 +60,7 @@
                                                          ! otherwise psi is real (use of Rvec)
         logical       :: BasisRep   = .TRUE.             ! (T) BasisRep
         logical       :: GridRep    = .FALSE.            ! (F) GridRep psi
-        
+
         Logical       :: SRG_MPI    = .FALSE.      ! (F) Smolyak rep. on grids with MPI
         Logical       :: SRB_MPI    = .FALSE.      ! (F) Smolyak rep. on Basis with MPI
 
@@ -87,7 +87,7 @@
 
         real (kind=Rkind),    allocatable :: RvecG(:) ! RvecG(nb_qaie)
         complex (kind=Rkind), allocatable :: CvecG(:) ! CvecG(nb_qaie)
-        
+
         Real(kind=Rkind),allocatable      :: SR_B(:,:) ! Smolyak rep. on basis
         Real(kind=Rkind),allocatable      :: SR_G(:,:) ! Smolyak rep. on grid
         Integer,allocatable               :: SR_B_index(:)    !< index for iG in SR_B
@@ -156,8 +156,11 @@
  PUBLIC :: get_nb_be_FROM_psi,get_nb_bi_FROM_psi
  PUBLIC :: alloc_array,dealloc_array,alloc_NParray,dealloc_NParray
  PUBLIC :: alloc_psi,dealloc_psi
- 
- !> subroutine for working on full Smolyak rep.  
+
+ PUBLIC :: get_RVec_OF_psi_AT_ind_a,get_CVec_OF_psi_AT_ind_a
+ PUBLIC :: set_RVec_OF_psi_AT_ind_a,set_CVec_OF_psi_AT_ind_a
+
+ !> subroutine for working on full Smolyak rep.
  PUBLIC :: psi_plus_SR_MPI,psi_minus_SR_MPI,psi_times_SR_MPI
 
       INTERFACE alloc_array
@@ -181,20 +184,20 @@
         MODULE PROCEDURE Set_psi_With_index_R
         MODULE PROCEDURE Set_psi_With_index_C
       END INTERFACE
-      
+
       !> operators for working in Smolyak rep.
       INTERFACE psi_times_SR_MPI
         MODULE PROCEDURE psi_times_R_SR_MPI
         MODULE PROCEDURE psi_times_C_SR_MPI
         MODULE PROCEDURE psi_times_psi_SR_MPI
       END INTERFACE
-      
+
       INTERFACE psi_plus_SR_MPI
         MODULE PROCEDURE psi_plus_R_SR_MPI
         MODULE PROCEDURE psi_plus_C_SR_MPI
         MODULE PROCEDURE psi_plus_psi_SR_MPI
       END INTERFACE
-      
+
       INTERFACE psi_minus_SR_MPI
         MODULE PROCEDURE psi_minus_R_SR_MPI
         MODULE PROCEDURE psi_minus_C_SR_MPI
@@ -309,14 +312,14 @@
           IF (debug) write(out_unitp,*) 'dealloc: CvecG'
         END IF
       END IF
-      
+
 #if(run_MPI)
       IF(psi%SRG_MPI) THEN
-        IF(.NOT. allocated(psi%SR_G_length)) THEN 
+        IF(.NOT. allocated(psi%SR_G_length)) THEN
           CALL allocate_array(psi%SR_G_length,0,MPI_np-1)
         ENDIF
-        
-        IF(.NOT. allocated(psi%SR_G_index)) THEN 
+
+        IF(.NOT. allocated(psi%SR_G_index)) THEN
           CALL allocate_array(psi%SR_G_index,iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)+1)
         ENDIF
 
@@ -333,14 +336,14 @@
       ENDIF
 
       IF(psi%SRB_MPI) THEN
-        IF(.NOT. allocated(psi%SR_B_length)) THEN 
+        IF(.NOT. allocated(psi%SR_B_length)) THEN
           CALL allocate_array(psi%SR_B_length,0,MPI_np-1)
         ENDIF
-        
-        IF(.NOT. allocated(psi%SR_B_index)) THEN 
+
+        IF(.NOT. allocated(psi%SR_B_index)) THEN
           CALL allocate_array(psi%SR_B_index,iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)+1)
         ENDIF
-        
+
         IF (.NOT. allocated(psi%SR_B)) THEN
           IF(psi%cplx) THEN
             CALL alloc_NParray(psi%SR_B,(/psi%SR_B_length(MPI_id),2/),'psi%SR_B','alloc_psi')
@@ -870,7 +873,7 @@
       psi1%BasisRep  = psi2%BasisRep
       psi1%GridRep   = psi2%GridRep
       psi1%SRG_MPI   = psi2%SRG_MPI      !< if working on full smolyak rep. on grid
-      psi1%SRB_MPI   = psi2%SRB_MPI     !< if working on full smolyak rep. on Basis 
+      psi1%SRB_MPI   = psi2%SRB_MPI     !< if working on full smolyak rep. on Basis
 
       psi1%symab = psi2%symab
 
@@ -1141,6 +1144,326 @@
 
       END SUBROUTINE RCPsi_TO_CplxPsi
 
+      SUBROUTINE get_RVec_OF_psi_AT_ind_a(RVec_AT_iq,psi,iq,ib)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi),intent(in)             :: psi
+      real(kind=Rkind),intent(inout)          :: RVec_AT_iq(:,:)
+      integer,         intent(in), optional   :: iq,ib
+
+      integer :: i_qaie,i_baie,i_bi,i_be
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='get_RVec_OF_psi_AT_ind_a'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) write(out_unitp,*) 'BEGINNING ',name_sub
+
+      IF (      present(iq) .AND.       present(ib) .OR.                       &
+          .NOT. present(iq) .AND. .NOT. present(ib))     THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' present(iq),present(ib)',present(iq),present(ib)
+        write(out_unitp,*) ' One and only one ib or iq must be present'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(iq) .AND. .NOT. allocated(psi%RvecG)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  psi%RvecG is not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(ib) .AND. .NOT. allocated(psi%RvecB)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  psi%RvecB is not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+
+      IF (any(shape(RVec_AT_iq) /= [psi%nb_bi,psi%nb_be])) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  Inconsitent shape of RVec_AT_iq'
+        write(out_unitp,*) '  shape(RVec_AT_iq) ',shape(RVec_AT_iq)
+        write(out_unitp,*) '  psi%nb_bi,psi%nb_be',psi%nb_bi,psi%nb_be
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+    RVec_AT_iq(:,:) = ZERO
+
+    IF (present(iq)) THEN
+
+      DO i_be=1,psi%nb_be
+      DO i_bi=1,psi%nb_bi
+
+        i_qaie = iq + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_qa
+
+        RVec_AT_iq(i_bi,i_be) = psi%RvecG(i_qaie)
+
+      END DO
+      END DO
+    ELSE ! ib is present
+      DO i_be=1,psi%nb_be
+      DO i_bi=1,psi%nb_bi
+
+        i_baie = ib + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_ba
+
+        RVec_AT_iq(i_bi,i_be) = psi%RvecB(i_baie)
+
+      END DO
+      END DO
+    END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'RVec_AT_iq ',RVec_AT_iq
+        write(out_unitp,*) 'END ',name_sub
+        flush(out_unitp)
+      END IF
+
+    END SUBROUTINE get_RVec_OF_psi_AT_ind_a
+    SUBROUTINE get_CVec_OF_psi_AT_ind_a(CVec_AT_iq,psi,iq,ib)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi),   intent(in)             :: psi
+      complex(kind=Rkind),intent(inout)          :: CVec_AT_iq(:,:)
+      integer,            intent(in), optional   :: iq,ib
+
+      integer :: i_qaie,i_baie,i_bi,i_be
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='get_CVec_OF_psi_AT_ind_a'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) write(out_unitp,*) 'BEGINNING ',name_sub
+
+      IF (      present(iq) .AND.       present(ib) .OR.                       &
+          .NOT. present(iq) .AND. .NOT. present(ib))     THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' present(iq),present(ib)',present(iq),present(ib)
+        write(out_unitp,*) ' One and only one ib or iq must be present'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(iq) .AND. .NOT. allocated(psi%CvecG)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  psi%CvecG is not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(ib) .AND. .NOT. allocated(psi%CvecB)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  psi%CvecB is not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+
+      IF (any(shape(CVec_AT_iq) /= [psi%nb_bi,psi%nb_be])) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  Inconsitent shape of CVec_AT_iq'
+        write(out_unitp,*) '  shape(CVec_AT_iq) ',shape(CVec_AT_iq)
+        write(out_unitp,*) '  psi%nb_bi,psi%nb_be',psi%nb_bi,psi%nb_be
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+    CVec_AT_iq(:,:) = ZERO
+
+    IF (present(iq)) THEN
+
+      DO i_be=1,psi%nb_be
+      DO i_bi=1,psi%nb_bi
+
+        i_qaie = iq + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_qa
+
+        CVec_AT_iq(i_bi,i_be) = psi%CvecG(i_qaie)
+
+      END DO
+      END DO
+    ELSE ! ib is present
+      DO i_be=1,psi%nb_be
+      DO i_bi=1,psi%nb_bi
+
+        i_baie = ib + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_ba
+
+        CVec_AT_iq(i_bi,i_be) = psi%CvecB(i_baie)
+
+      END DO
+      END DO
+    END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'CVec_AT_iq ',CVec_AT_iq
+        write(out_unitp,*) 'END ',name_sub
+        flush(out_unitp)
+      END IF
+
+    END SUBROUTINE get_CVec_OF_psi_AT_ind_a
+
+      SUBROUTINE set_RVec_OF_psi_AT_ind_a(RVec_AT_iq,psi,iq,ib)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi),intent(inout)          :: psi
+      real(kind=Rkind),intent(in)             :: RVec_AT_iq(:,:)
+      integer,         intent(in), optional   :: iq,ib
+
+      integer :: i_qaie,i_baie,i_bi,i_be
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='set_RVec_OF_psi_AT_ind_a'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) write(out_unitp,*) 'BEGINNING ',name_sub
+      IF (debug) write(out_unitp,*) 'RVec_AT_iq ',RVec_AT_iq
+
+
+      IF (      present(iq) .AND.       present(ib) .OR.                       &
+          .NOT. present(iq) .AND. .NOT. present(ib))     THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' present(iq),present(ib)',present(iq),present(ib)
+        write(out_unitp,*) ' One and only one ib or iq must be present'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(iq) .AND. .NOT. allocated(psi%RvecG)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  psi%RvecG is not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(ib) .AND. .NOT. allocated(psi%RvecB)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  psi%RvecB is not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+
+      IF (any(shape(RVec_AT_iq) /= [psi%nb_bi,psi%nb_be])) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  Inconsitent shape of RVec_AT_iq'
+        write(out_unitp,*) '  shape(RVec_AT_iq) ',shape(RVec_AT_iq)
+        write(out_unitp,*) '  psi%nb_bi,psi%nb_be',psi%nb_bi,psi%nb_be
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+    IF (present(iq)) THEN
+
+      DO i_be=1,psi%nb_be
+      DO i_bi=1,psi%nb_bi
+
+        i_qaie = iq + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_qa
+
+        psi%RvecG(i_qaie) = RVec_AT_iq(i_bi,i_be)
+
+      END DO
+      END DO
+    ELSE ! ib is present
+      DO i_be=1,psi%nb_be
+      DO i_bi=1,psi%nb_bi
+
+        i_baie = ib + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_ba
+
+        psi%RvecB(i_baie) = RVec_AT_iq(i_bi,i_be)
+
+      END DO
+      END DO
+    END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+        flush(out_unitp)
+      END IF
+
+    END SUBROUTINE set_RVec_OF_psi_AT_ind_a
+    SUBROUTINE set_CVec_OF_psi_AT_ind_a(CVec_AT_iq,psi,iq,ib)
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_psi),   intent(inout)          :: psi
+      complex(kind=Rkind),intent(in)             :: CVec_AT_iq(:,:)
+      integer,            intent(in), optional   :: iq,ib
+
+      integer :: i_qaie,i_baie,i_bi,i_be
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='set_CVec_OF_psi_AT_ind_a'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) write(out_unitp,*) 'BEGINNING ',name_sub
+      IF (debug) write(out_unitp,*) 'CVec_AT_iq ',CVec_AT_iq
+
+      IF (      present(iq) .AND.       present(ib) .OR.                       &
+          .NOT. present(iq) .AND. .NOT. present(ib))     THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) ' present(iq),present(ib)',present(iq),present(ib)
+        write(out_unitp,*) ' One and only one ib or iq must be present'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(iq) .AND. .NOT. allocated(psi%CvecG)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  psi%CvecG is not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+      IF (present(ib) .AND. .NOT. allocated(psi%CvecB)) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  psi%CvecB is not allocated !!'
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+
+      IF (any(shape(CVec_AT_iq) /= [psi%nb_bi,psi%nb_be])) THEN
+        write(out_unitp,*) ' ERROR ',name_sub
+        write(out_unitp,*) '  Inconsitent shape of CVec_AT_iq'
+        write(out_unitp,*) '  shape(CVec_AT_iq) ',shape(CVec_AT_iq)
+        write(out_unitp,*) '  psi%nb_bi,psi%nb_be',psi%nb_bi,psi%nb_be
+        write(out_unitp,*) ' CHECK the fortran !!'
+        STOP
+      END IF
+
+    IF (present(iq)) THEN
+
+      DO i_be=1,psi%nb_be
+      DO i_bi=1,psi%nb_bi
+
+        i_qaie = iq + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_qa
+
+        psi%CvecG(i_qaie) = CVec_AT_iq(i_bi,i_be)
+
+      END DO
+      END DO
+    ELSE ! ib is present
+      DO i_be=1,psi%nb_be
+      DO i_bi=1,psi%nb_bi
+
+        i_baie = ib + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_ba
+
+        psi%CvecB(i_baie) = CVec_AT_iq(i_bi,i_be)
+
+      END DO
+      END DO
+    END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+        flush(out_unitp)
+      END IF
+
+    END SUBROUTINE set_CVec_OF_psi_AT_ind_a
+
+
 !================================================================
 !
 !     psi = R
@@ -1176,7 +1499,7 @@
           psi%CvecG(:) = cmplx(R,ZERO,kind=Rkind)
         END IF
       END IF
-      
+
       IF(psi%SRG_MPI) THEN
         IF(allocated(psi%SR_G)) THEN
           psi%SR_G(:,1)=R
@@ -1250,7 +1573,7 @@
           IF(psi%cplx) psi%SR_B(:,2)=aimag(C)
         ENDIF
       ENDIF
-      
+
       psi%norm2 = ZERO
 
 
@@ -2056,7 +2379,7 @@
                 R_time_psi%RvecB = psi%RvecB * R
               END IF
             END IF
-            
+
             IF(psi%SRG_MPI) THEN
               R_time_psi%SR_G(:,1)=psi%SR_G(:,1)*R
               IF(psi%cplx) R_time_psi%SR_G(:,2)=psi%SR_G(:,2)*R
@@ -2289,7 +2612,7 @@
             !CALL flush_perso(out_unitp)
 
           END FUNCTION psi_over_C
-          
+
       !---------------------------------------------------------------------------------
       !> INTERFACE: times_psi_SR_MPI
       !---------------------------------------------------------------------------------
@@ -2299,7 +2622,7 @@
 
         TYPE(param_psi),                  intent(inout) :: psi
         Real(kind=Rkind),                 intent(in)    :: R_const
-        
+
         IF(psi%SRG_MPI) THEN
           psi%SR_G=psi%SR_G*R_const
         ELSE IF(psi%SRB_MPI) THEN
@@ -2307,7 +2630,7 @@
         ELSE
           STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
         ENDIF
-        
+
       ENDSUBROUTINE psi_times_R_SR_MPI
 
       !---------------------------------------------------------------------------------
@@ -2319,7 +2642,7 @@
         TYPE(param_psi),                  intent(inout) :: psi
         TYPE(param_psi),optional,         intent(inout) :: psi_new
         Complex(kind=Rkind),              intent(in)    :: C_const
-        
+
         Real(kind=Rkind),allocatable                    :: SR_temp(:)
         Real(kind=Rkind)                                :: C
         Real(kind=Rkind)                                :: R
@@ -2363,9 +2686,9 @@
         ELSE
           STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
         ENDIF
-        
+
       ENDSUBROUTINE psi_times_C_SR_MPI
-      
+
       !---------------------------------------------------------------------------------
       SUBROUTINE psi_times_psi_SR_MPI(psi,psi1)
         USE mod_system
@@ -2373,9 +2696,9 @@
 
         TYPE(param_psi),                  intent(inout) :: psi
         TYPE(param_psi),                  intent(in)    :: psi1
-        
+
         Real(kind=Rkind),allocatable                    :: SR_temp(:)
-        
+
         IF(psi%SRG_MPI) THEN
           IF(psi%cplx) THEN
             allocate(SR_temp(size(psi%SR_G,1)))
@@ -2401,17 +2724,17 @@
         ENDIF
 
       ENDSUBROUTINE psi_times_psi_SR_MPI
-      
+
       !---------------------------------------------------------------------------------
       !> INTERFACE: plus_psi_SR_MPI
       !---------------------------------------------------------------------------------
       SUBROUTINE psi_plus_R_SR_MPI(psi,R_const)
         USE mod_system
         IMPLICIT NONE
-        
+
         TYPE(param_psi),                  intent(inout) :: psi
         Real(kind=Rkind),                 intent(in)    :: R_const
-        
+
         IF(psi%SRG_MPI) THEN
           psi%SR_G(:,1)=psi%SR_G(:,1)+R_const
         ELSE IF(psi%SRB_MPI) THEN
@@ -2423,15 +2746,15 @@
         IF(R_const/=ZERO) psi%symab=-1
 
       ENDSUBROUTINE psi_plus_R_SR_MPI
-      
+
       !---------------------------------------------------------------------------------
       SUBROUTINE psi_plus_C_SR_MPI(psi,C_const)
         USE mod_system
         IMPLICIT NONE
-        
+
         TYPE(param_psi),                  intent(inout) :: psi
         Complex(kind=Rkind),              intent(in)    :: C_const
-        
+
         IF(psi%SRG_MPI) THEN
           psi%SR_G(:,1)=psi%SR_G(:,1)+Real(C_const,kind=Rkind)
           IF(psi%cplx) psi%SR_G(:,2)=psi%SR_G(:,2)+aimag(C_const)
@@ -2441,19 +2764,19 @@
         ELSE
           STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
         ENDIF
-        
+
         IF(abs(C_const)/=ZERO) psi%symab=-1
 
       ENDSUBROUTINE psi_plus_C_SR_MPI
-      
+
       !---------------------------------------------------------------------------------
       SUBROUTINE psi_plus_psi_SR_MPI(psi,psi1)
         USE mod_system
         IMPLICIT NONE
-        
+
         TYPE(param_psi),                  intent(inout) :: psi
         TYPE(param_psi),                  intent(in)    :: psi1
-        
+
         IF(psi%SRG_MPI) THEN
           psi%SR_G(:,:)=psi%SR_G(:,:)+psi1%SR_G(:,:)
         ELSE IF(psi%SRB_MPI) THEN
@@ -2461,7 +2784,7 @@
         ELSE
           STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
         ENDIF
-        
+
         IF(psi%symab/=psi%symab) THEN
           IF(psi%symab==-2) THEN
             psi%symab=psi1%symab
@@ -2469,19 +2792,19 @@
             psi%symab=-1
           ENDIF
         ENDIF
-        
+
       ENDSUBROUTINE psi_plus_psi_SR_MPI
-      
+
       !---------------------------------------------------------------------------------
       !> INTERFACE: minus_psi_SR_MPI
       !---------------------------------------------------------------------------------
       SUBROUTINE psi_minus_R_SR_MPI(psi,R_const)
         USE mod_system
         IMPLICIT NONE
-        
+
         TYPE(param_psi),                  intent(inout) :: psi
         Real(kind=Rkind),                 intent(in)    :: R_const
-        
+
         IF(psi%SRG_MPI) THEN
           psi%SR_G(:,1)=psi%SR_G(:,1)-R_const
         ELSE IF(psi%SRB_MPI) THEN
@@ -2489,19 +2812,19 @@
         ELSE
           STOP 'error in R_times_psi_SR_MPI, psi%SRG*_MPI=.FALSE.'
         ENDIF
-        
+
         IF(R_const/=ZERO) psi%symab=-1
-        
+
       ENDSUBROUTINE psi_minus_R_SR_MPI
-      
+
       !---------------------------------------------------------------------------------
       SUBROUTINE psi_minus_C_SR_MPI(psi,C_const)
         USE mod_system
         IMPLICIT NONE
-        
+
         TYPE(param_psi),                  intent(inout) :: psi
         Complex(kind=Rkind),              intent(in)    :: C_const
-        
+
         IF(psi%SRG_MPI) THEN
           psi%SR_G(:,1)=psi%SR_G(:,1)-Real(C_const,kind=Rkind)
           IF(psi%cplx) psi%SR_G(:,2)=psi%SR_G(:,2)-aimag(C_const)
@@ -2511,19 +2834,19 @@
         ELSE
           STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
         ENDIF
-        
+
         IF(abs(C_const)/=ZERO) psi%symab=-1
-        
+
       ENDSUBROUTINE psi_minus_C_SR_MPI
-      
+
       !---------------------------------------------------------------------------------
       SUBROUTINE psi_minus_psi_SR_MPI(psi,psi1)
         USE mod_system
         IMPLICIT NONE
-        
+
         TYPE(param_psi),                  intent(inout) :: psi
         TYPE(param_psi),                  intent(in)    :: psi1
-        
+
         IF(psi%SRG_MPI) THEN
           psi%SR_G(:,:)=psi%SR_G(:,:)-psi1%SR_G(:,:)
         ELSE IF(psi%SRB_MPI) THEN
@@ -2531,7 +2854,7 @@
         ELSE
           STOP 'error in R_times_psi_SR_MPI, psi%SR*_MPI=.FALSE.'
         ENDIF
-        
+
         IF(psi%symab/=psi%symab) THEN
           IF(psi%symab==-2) THEN
             psi%symab=psi1%symab
@@ -2539,7 +2862,7 @@
             psi%symab=-1
           ENDIF
         ENDIF
-        
+
       ENDSUBROUTINE psi_minus_psi_SR_MPI
 
 !=======================================================================================
@@ -2631,7 +2954,10 @@
       integer           :: loc_ecri_nume,loc_ecri_numi
       real (kind=Rkind) :: x(psi%BasisnD%ndim),x2
 
-      real (kind=Rkind), allocatable :: psiQchannel(:)
+      real (kind=Rkind),    allocatable :: psiQchannel(:)
+      real (kind=Rkind),    allocatable :: RVec(:,:)
+      complex (kind=Rkind), allocatable :: CVec(:,:)
+
       real (kind=Rkind) :: psi2
 
       integer       :: i_d,i_wp,nb_ei
@@ -2797,9 +3123,33 @@
             CALL alloc_NParray(psiQchannel,(/2*nb_ei/),"psiQchannel","ecri_psi")
           END IF
 
+          IF (psi%cplx) THEN
+            CALL alloc_NParray(CVec,(/psi%nb_bi,psi%nb_be/),"CVec","ecri_psi")
+          ELSE
+            CALL alloc_NParray(RVec,(/psi%nb_bi,psi%nb_be/),"RVec","ecri_psi")
+          END IF
+
           DO i_qa=1,psi%nb_qa
 
-            i_d = 0
+            ! IF (psi%cplx) THEN
+            !   CALL get_CVec_OF_psi_AT_ind_a(CVec,psi,i_qa)
+            !   IF (loc_ecri_psi2) THEN
+            !     psiQchannel(:) = reshape(abs(CVec)**2,shape=[nb_ei])
+            !   ELSE
+            !     psiQchannel(1:2*nb_ei:2) = reshape(real(CVec,kind=Rkind),shape=[nb_ei])
+            !     psiQchannel(2:2*nb_ei:2) = reshape(aimag(CVec),shape=[nb_ei])
+            !   END IF
+            ! ELSE
+            !   CALL get_RVec_OF_psi_AT_ind_a(RVec,psi,i_qa)
+            !   IF (loc_ecri_psi2) THEN
+            !     psiQchannel(:) = reshape(RVec**2,shape=[nb_ei])
+            !   ELSE
+            !     psiQchannel(:) = ZERO
+            !     psiQchannel(1:2*nb_ei:2) = reshape(RVec,shape=[nb_ei])
+            !   END IF
+            ! END IF
+
+            i_d  = 0
             i_wp = -1
 
             DO i_be=1,psi%nb_be
@@ -2824,20 +3174,22 @@
                 END IF
               END IF
 
-!             write(out_unitp,*) 'psiQchannel',i_qaie,i_wp,psiQchannel(i_wp+0),
-!    *                                          psiQchannel(i_wp+1)
-
             END DO
             END DO
 
-!           -x(psi%BasisnD%ndim) calculation -----------------------------------
+!-x(psi%BasisnD%ndim) calculation -----------------------------------
             CALL Rec_x(x,psi%BasisnD,i_qa)
 
-!           - write psi2 ----------------------------------------
+!- write psi2 ----------------------------------------
+            ! IF (i_qa == psi%nb_qa) THEN
+            !   fformat = '(' // int_TO_char(ni) // Rformat // '/)'
+            ! ELSE
+            !   fformat = '(' // int_TO_char(ni) // Rformat //  ')'
+            ! END IF
             IF (i_qa == psi%nb_qa) THEN
-              fformat = String_TO_String( '(' // int_TO_char(ni) // Rformat // '/)' )
+              fformat = '(' // int_TO_char(ni) // 'f8.3/)'
             ELSE
-              fformat = String_TO_String( '(' // int_TO_char(ni) // Rformat //  ')' )
+              fformat = '(' // int_TO_char(ni) // 'f8.3)'
             END IF
 
             IF (psi%BasisnD%ndim > 1) THEN
@@ -2855,6 +3207,8 @@
 
           END DO
           CALL dealloc_NParray(psiQchannel,"psiQchannel","ecri_psi")
+          IF (allocated(CVec)) CALL dealloc_NParray(CVec,"CVec","ecri_psi")
+          IF (allocated(RVec)) CALL dealloc_NParray(RVec,"RVec","ecri_psi")
 
         ELSE
           ni=2+psi%nb_act1

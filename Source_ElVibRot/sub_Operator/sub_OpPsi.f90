@@ -336,7 +336,7 @@ CONTAINS
 #if(run_MPI)
       CALL MPI_BCAST(With_Grid_loc,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
 #endif
-     
+
       IF (present(pot_only)) THEN
         pot_only_loc = pot_only .AND. (para_Op%n_Op ==0) ! para_Op has to be H
       ELSE
@@ -692,7 +692,7 @@ CONTAINS
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
       !-----------------------------------------------------------------
-      If(MPI_id==0) size_TabPsi=size(TabPsi) 
+      If(MPI_id==0) size_TabPsi=size(TabPsi)
 #if(run_MPI)
       CALL MPI_BCAST(size_TabPsi,size1_MPI,MPI_int_def,root_MPI,MPI_COMM_WORLD,MPI_err)
 #endif
@@ -767,7 +767,7 @@ CONTAINS
 
           !DO i=1,size(TabPsi)
           DO i=1,size_TabPsi
-          
+
             !- the projection of PsiGridRep on PsiBasisRep -------------------
             CALL sub_PsiGridRep_TO_BasisRep(TabOpPsi(i))
             nb_mult_OpPsi = nb_mult_OpPsi + nb_mult_GTOB
@@ -2728,7 +2728,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
         ELSE
           STOP 'error in sub_scaledOpPsi_SR_MPI'
         ENDIF
-        
+
         IF(OpPsi%symab/=Psi%symab) THEN
           IF(OpPsi%symab==-2) THEN
             OpPsi%symab=Psi%symab
@@ -3095,9 +3095,8 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'nb_bie,nb_baie',para_H%nb_bie,para_H%nb_baie
-    write(out_unitp,*) 'para_H%mat_done',para_H%mat_done
     CALL flush_perso(out_unitp)
-    CALL write_param_Op(para_H)
+    !CALL write_param_Op(para_H)
     write(out_unitp,*)
     write(out_unitp,*) 'PsiDia'
     CALL ecri_psi(Psi=Psi)
@@ -3110,10 +3109,21 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
   ELSE
     GridDone = allocated(Psi%RvecG)
   END IF
+  IF (debug) THEN
+    write(out_unitp,*) 'GridDone',GridDone
+    write(out_unitp,*) 'allo RvecG',allocated(Psi%RvecG)
+    write(out_unitp,*) 'allo CvecG',allocated(Psi%CvecG)
+  END IF
 
   IF (para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done .AND. GridDone) THEN
 
-    iterm = para_H%derive_term_TO_iterm(0,0)
+    iterm = para_H%derive_term_TO_iterm(0,0) ! The potential term index
+
+    IF (debug) THEN
+      write(out_unitp,*) 'iterm    ',iterm
+      write(out_unitp,*) 'grid_zero',para_H%OpGrid(iterm)%grid_zero
+      write(out_unitp,*) 'grid_cte ',para_H%OpGrid(iterm)%grid_cte
+    END IF
 
     IF (para_H%OpGrid(iterm)%grid_zero) THEN
       CONTINUE ! wp_adia = wp_dia (nothing to be done)
@@ -3147,8 +3157,7 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
 
           V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
 
-          CALL diagonalization(V,                               &
-                     EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+          CALL diagonalization(V,EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
 
           Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
           Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
@@ -3159,8 +3168,7 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
         DO iq=1,Psi%nb_qa
 
           V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
-          CALL diagonalization(V,                               &
-                     EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
+          CALL diagonalization(V,EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
 
           Rpsi_iq(:) = Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa)
           Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
