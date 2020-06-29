@@ -139,6 +139,7 @@
           integer                        :: nqc                    = 0        !  nb of grid points after contraction
           logical                        :: make_cubature          = .FALSE.
           logical                        :: Restart_make_cubature  = .FALSE.
+          logical                        :: read_para_cubature     = .FALSE.
           logical                        :: read_contrac_file      = .FALSE.  ! .T. if the basis set is contracted
           TYPE(param_file)               :: file_contrac                      ! file for read contraction coef
           real (kind=Rkind), allocatable :: Rvec(:,:)                     ! real eigenvectors for the contraction
@@ -756,14 +757,14 @@
 
          integer :: err_mem,memory
          character (len=*), parameter :: name_sub='dealloc_basis'
-         
+
 !         character(14) :: name_subp='dealloc_basis'
 !         character(2)  :: name_int
 !         character(16) :: name_all
 !         i=MPI_id
 !         write(name_int, '(I2)') i
 !         name_all=name_subp//name_int
-         
+
          Basis_FOR_SG_loc = .FALSE.
          IF (present(Basis_FOR_SG)) Basis_FOR_SG_loc = Basis_FOR_SG
 
@@ -1619,6 +1620,7 @@
         basis_set1%max_ene_contrac        = basis_set2%max_ene_contrac
         basis_set1%make_cubature          = basis_set2%make_cubature
         basis_set1%Restart_make_cubature  = basis_set2%Restart_make_cubature
+        basis_set1%read_para_cubature     = basis_set2%read_para_cubature
 
         basis_set1%max_nbc                = basis_set2%max_nbc
         basis_set1%min_nbc                = basis_set2%min_nbc

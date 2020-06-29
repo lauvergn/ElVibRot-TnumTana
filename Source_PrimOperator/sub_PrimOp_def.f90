@@ -44,6 +44,7 @@
    USE mod_system
    USE mod_OTF_def, only: param_OTF, dealloc_OTF
    use mod_nDFit,   only: param_nDFit, dealloc_nDFit
+   use mod_CAP
    IMPLICIT NONE
    PRIVATE
 
@@ -66,10 +67,15 @@
         real (kind=Rkind) :: stepOp               = ONETENTH**2
         integer           :: pot_itQtransfo       = -1      ! for new Qtransfo (default nb_QTransfo, dyn. coordinates)
         integer           :: nb_scalar_Op         = 0       ! nb of Operator
+        integer           :: nb_CAP               = 0       ! nb of CAP Operator
+
         integer           :: Type_HamilOp         = 1       ! 1:  F2.d^2 + F1.d^1 + V
                                                             ! 10: d^1 G d^1 + V
         logical           :: direct_KEO           = .FALSE. ! IF true, the metric tensor is recomputed
         logical           :: direct_ScalOp        = .FALSE. ! IF true, the scalar op is recomputed
+
+        ! For CAP: complex absorbing potential (when nb_CAP > 0)
+        TYPE (CAP_t), allocatable     :: tab_CAP(:)
 
         ! For on-the-fly calculations
         logical                       :: OnTheFly             = .FALSE. ! On-the-fly calculation of PES and dipole
@@ -133,6 +139,13 @@
 
       write(out_unitp,*) 'PrimOp%calc_scalar_Op',PrimOp%calc_scalar_Op
       write(out_unitp,*) 'PrimOp%nb_scalar_Op',PrimOp%nb_scalar_Op
+      write(out_unitp,*) 'PrimOp%nb_CAP',PrimOp%nb_CAP
+
+      IF (allocated(PrimOp%tab_CAP)) then
+        DO i=1,size(PrimOp%tab_CAP)
+          CALL Write_CAP(PrimOp%tab_CAP(i))
+        END DO
+      END IF
 
       write(out_unitp,*) 'PrimOp%deriv_WITH_FiniteDiff',PrimOp%deriv_WITH_FiniteDiff
       write(out_unitp,*) 'PrimOp%nDfit_Op',PrimOp%nDfit_Op
@@ -219,6 +232,15 @@
         END DO
       END IF
 
+      PrimOp1%nb_CAP              = PrimOp2%nb_CAP
+      IF (allocated(PrimOp1%tab_CAP)) STOP 'PrimOp2_TO_PrimOp1: tab_CAP is allocated' 
+      IF (allocated(PrimOp2%tab_CAP)) THEN
+        allocate(PrimOp1%tab_CAP(size(PrimOp2%tab_CAP)))
+        DO i=1,size(PrimOp2%tab_CAP)
+          PrimOp1%tab_CAP(i) = PrimOp2%tab_CAP(i)
+        END DO
+      END IF
+
      !write(out_unitp,*) ' END PrimOp2_TO_PrimOp1'
      !CALL flush_perso(out_unitp)
   END SUBROUTINE PrimOp2_TO_PrimOp1
@@ -244,9 +266,17 @@
       PrimOp%stepOp                = ONETENTH**2
       PrimOp%pot_itQtransfo        = -1
       PrimOp%nb_scalar_Op          = 0
+      PrimOp%nb_CAP                = 0
       PrimOp%Type_HamilOp          = 1
       PrimOp%direct_KEO            = .FALSE.
       PrimOp%direct_ScalOp         = .FALSE.
+
+      IF (allocated(PrimOp%tab_CAP)) then
+        DO i=1,size(PrimOp%tab_CAP)
+          CALL dealloc_CAP(PrimOp%tab_CAP(i))
+        END DO
+        deallocate(PrimOp%tab_CAP)
+      END IF
 
       CALL dealloc_OTF(PrimOp%para_OTF)
       CALL dealloc_OTF(PrimOp%para_OTF_Dip)
@@ -298,6 +328,8 @@
         PrimOp%OnTheFly              = para_PES_FromTnum%OnTheFly
         PrimOp%pot_itQtransfo        = para_PES_FromTnum%pot_itQtransfo
         PrimOp%nb_scalar_Op          = para_PES_FromTnum%nb_scalar_Op
+        PrimOp%nb_CAP                = para_PES_FromTnum%nb_CAP
+
         PrimOp%deriv_WITH_FiniteDiff = para_PES_FromTnum%deriv_WITH_FiniteDiff
         PrimOp%nDfit_Op              = para_PES_FromTnum%nDfit_Op
 
@@ -309,6 +341,9 @@
           PrimOp%nb_scalar_Op          = 3
         END IF
 
+        IF (PrimOp%nb_CAP > 0) then
+          allocate(PrimOp%tab_CAP(PrimOp%nb_CAP))
+        END IF
 
         CALL init_OTF(PrimOp%para_OTF)
         CALL init_OTF(PrimOp%para_OTF_DIP)
@@ -418,4 +453,3 @@
   END SUBROUTINE Sub_PES_FromTnum_TO_PrimOp
 
   END MODULE mod_PrimOp_def
-

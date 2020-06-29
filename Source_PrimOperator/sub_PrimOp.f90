@@ -95,7 +95,7 @@
    CONTAINS
 
 !===============================================================================
-! Sub_init_dnOp: 
+! Sub_init_dnOp:
 ! Init_d0MatOp, get_d0MatOp_AT_Qact
 !===============================================================================
       SUBROUTINE Sub_init_dnOp(mole,para_Tnum,PrimOp)
@@ -151,7 +151,11 @@
         IF (debug) write(out_unitp,*) 'Initialization with Quantum Model Lib'
 
 #if __QML == 1
-        CALL sub_Init_Qmodel(mole%nb_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
+        IF (PrimOp%pot_itQtransfo == 0) THEN ! Cartesian coordinates
+          CALL sub_Init_Qmodel_Cart(mole%ncart_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
+        ELSE
+          CALL sub_Init_Qmodel(mole%nb_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
+        END IF
         IF (print_level > 0 .OR. debug) CALL sub_Write_Qmodel(out_unitp)
 #else
         write(out_unitp,*) 'ERROR in ',name_sub
@@ -164,18 +168,23 @@
         IF (allocated(PrimOp%Qit_TO_QQMLib)) THEN
           CALL dealloc_NParray(PrimOp%Qit_TO_QQMLib,'Qit_TO_QQMLib',name_sub)
         END IF
-        CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,(/ mole%nb_act /),'Qit_TO_QQMLib',name_sub)
-        PrimOp%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%nb_act) /)
+        IF (PrimOp%pot_itQtransfo == 0) THEN ! Cartesian coordinates
+          CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,(/ mole%ncart_act /),'Qit_TO_QQMLib',name_sub)
+          PrimOp%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%ncart_act) /)
+        ELSE
+          CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,(/ mole%nb_act /),'Qit_TO_QQMLib',name_sub)
+          PrimOp%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%nb_act) /)
 
-        IF (PrimOp%pot_itQtransfo == mole%nb_Qtransfo-1) THEN ! Qdyn Coord
-          read(in_unitp,*,IOSTAT=err_io) name_dum,PrimOp%Qit_TO_QQMLib
-          IF (err_io /= 0) THEN
-            write(out_unitp,*) ' ERROR in ',name_sub
-            write(out_unitp,*) '  while reading "Qit_TO_QQMLib"'
-            write(out_unitp,*) ' end of file or end of record'
-            write(out_unitp,*) ' Probably, you have forgotten the list of integers ...'
-            write(out_unitp,*) ' Check your data !!'
-            STOP
+          IF (PrimOp%pot_itQtransfo == mole%nb_Qtransfo-1) THEN ! Qdyn Coord
+            read(in_unitp,*,IOSTAT=err_io) name_dum,PrimOp%Qit_TO_QQMLib
+            IF (err_io /= 0) THEN
+              write(out_unitp,*) ' ERROR in ',name_sub
+              write(out_unitp,*) '  while reading "Qit_TO_QQMLib"'
+              write(out_unitp,*) ' end of file or end of record'
+              write(out_unitp,*) ' Probably, you have forgotten the list of integers ...'
+              write(out_unitp,*) ' Check your data !!'
+              STOP
+            END IF
           END IF
         END IF
         !write(out_unitp,*) '  PrimOp%pot_itQtransfo',PrimOp%pot_itQtransfo
@@ -191,6 +200,7 @@
 
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
       END IF
 
       END SUBROUTINE Sub_init_dnOp
@@ -337,6 +347,7 @@
       USE mod_Coord_KEO
       USE mod_SimpleOp
       USE mod_PrimOp_def
+      USE mod_CAP
       USE mod_OTF
       IMPLICIT NONE
 
@@ -368,7 +379,8 @@
 
       logical             :: Gcenter,Cart_transfo
 
-      integer             :: i,i1,i2,ie,je,io,iOpE,itermE,iOpS,iOpScal,itermS,iOp,iterm
+      integer             :: iOpE,itermE,iOpS,iOpScal,itermS,iOpCAP,iOp,iterm
+      integer             :: i,i1,i2,ie,je,io
 
 !     - for the conversion gCC -> gzmt=d1pot -----------
       TYPE(Type_dnS), allocatable :: MatdnECC(:,:)
@@ -379,7 +391,7 @@
       real (kind=Rkind) :: mat_ScalOp(PrimOp%nb_elec,PrimOp%nb_elec,PrimOp%nb_scalar_Op)
 
       ! for HarD
-      real (kind=Rkind) :: Vinact
+      real (kind=Rkind) :: Vinact,CAP_val
       real (kind=Rkind), allocatable :: Qact1(:)
       real (kind=Rkind), allocatable :: Qinact21(:)
       real (kind=Rkind), allocatable :: Qit(:)
@@ -427,6 +439,7 @@
       nderivE = 0
       iOpS    = iOpE
       iOpScal = iOpE
+      iOpCAP  = 2+PrimOp%nb_scalar_Op
 
       !------------ The Overlap -------------------------------------
       IF (nb_Op >= 2) THEN
@@ -510,7 +523,11 @@
             END IF
 
 #if __QML == 1
-            CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(:,:,itermE),Qit(PrimOp%Qit_TO_QQMLib))
+            IF (PrimOp%pot_itQtransfo == 0) THEN
+              CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(:,:,itermE),Qit)
+            ELSE
+              CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(:,:,itermE),Qit(PrimOp%Qit_TO_QQMLib))
+            END IF
 #else
             write(out_unitp,*) 'ERROR in ',name_sub
             write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
@@ -519,7 +536,7 @@
 #endif
             !----------------------------------------------------------------
             DO ie=1,PrimOp%nb_elec
-             d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                        &
+             d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                                &
                        d0MatOp(iOpE)%ReVal(ie,ie,itermE) - PrimOp%pot0
             END DO
             !----------------------------------------------------------------
@@ -567,6 +584,19 @@
                        d0MatOp(iOpE)%ReVal(ie,ie,itermE) - PrimOp%pot0
             END DO
             !----------------------------------------------------------------
+          END IF
+
+            ! CAP Op
+          IF (PrimOp%nb_CAP > 0) THEN
+            DO i=1,PrimOp%nb_CAP
+              iterm = d0MatOp(iOpCAP+i)%derive_term_TO_iterm(0,0)
+              CAP_val = calc_CAP(PrimOp%tab_CAP(i),Qact)
+              DO ie=1,PrimOp%nb_elec
+                d0MatOp(iOpCAP+i)%ReVal(ie,ie,iterm) = CAP_val
+              END DO
+              IF (debug) write(out_unitp,*) 'Qact,CAP',i,Qact,CAP_val
+            END DO
+            !STOP 'CAP'
           END IF
 
           IF (PrimOp%HarD .AND. associated(mole%RPHTransfo) .AND. PrimOp%nb_elec == 1) THEN
@@ -781,6 +811,9 @@
       real (kind=Rkind) :: mat_imV(PrimOp%nb_elec,PrimOp%nb_elec)
       real (kind=Rkind) :: mat_ScalOp(PrimOp%nb_elec,PrimOp%nb_elec,PrimOp%nb_scalar_Op)
 
+      real (kind=Rkind), allocatable :: mat_g(:,:,:)
+      real (kind=Rkind), allocatable :: mat_h(:,:,:,:)
+
       ! for HarD
       real (kind=Rkind) :: Vinact
       real (kind=Rkind), allocatable :: Qact1(:)
@@ -904,6 +937,42 @@
         END IF
         !----------------------------------------------------------------
 
+        !----------------------------------------------------------------
+        DO ie=1,PrimOp%nb_elec
+          Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 =              &
+                       Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 - &
+                                                          PrimOp%pot0
+        END DO
+        !----------------------------------------------------------------
+
+      ELSE IF (PrimOp%QMLib .AND.                                               &
+               (nderivE == 0 .OR. .NOT. PrimOp%deriv_WITH_FiniteDiff)) THEN
+        IF (debug) THEN
+           write(out_unitp,*) 'With Quantum Model Lib'
+           write(out_unitp,*) 'QQMLib',Qit(PrimOp%Qit_TO_QQMLib)
+        END IF
+
+#if __QML == 1
+        SELECT CASE (nderivE)
+        CASE (0)
+          CALL sub_Qmodel_V(mat_V,Qit(PrimOp%Qit_TO_QQMLib))
+          Tab_dnMatOp(iOpE)%tab_dnMatOp(:,:,itermE)%d0 = mat_V
+        CASE (1)
+          STOP 'ERROR in get_dnMatOp_AT_Qact: nderivE=1 not yet'
+        CASE (2)
+          STOP 'ERROR in get_dnMatOp_AT_Qact: nderivE=2 not yet'
+        CASE Default
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' WRONG nderivE value.',nderivE
+          write(out_unitp,*) '  Possible values: 0,1,2'
+          STOP 'ERROR in get_dnMatOp_AT_Qact: WRONG nderivE value'
+        END SELECT
+#else
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
+          write(out_unitp,*) 'Use another potential/model'
+          STOP 'ERROR in get_dnMatOp_AT_Qact: QML is not present'
+#endif
         !----------------------------------------------------------------
         DO ie=1,PrimOp%nb_elec
           Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 =              &
@@ -3645,8 +3714,8 @@
     CALL alloc_NPArray(GGdef,(/ mole%nb_act,mole%nb_act /),'GGdef',name_sub)
     IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
 
-    IF (PrimOp%QMLib) THEN
-
+    IF (PrimOp%QMLib .AND. PrimOp%pot_itQtransfo /= 0) THEN
+    ! when Qcart is used the size of G form QML is [ncart_cat,ncart_act]
 #if __QML == 1
       CALL get_Qmodel_GGdef(GGdef)
 #else
@@ -3734,4 +3803,3 @@
       END SUBROUTINE Finalize_TnumTana_Coord_PrimOp_CoordType
 
    END MODULE mod_PrimOp
-

@@ -90,7 +90,7 @@
         write(out_unitp,*) '---------------------------------------'
         write(out_unitp,*)
       ENDIF
-     
+
       ! parameter for BasisnD
       BasisnD_loc%type           = 1
       BasisnD_loc%name           = 'direct_prod'
@@ -217,7 +217,7 @@
         write(out_unitp,*) 'BasisnD%opt_param',BasisnD%opt_param
         write(out_unitp,*)
       ENDIF
-    
+
       CALL dealloc_basis(BasisnD_loc)
       !CALL RecWriteMini_basis(BasisnD)
 
@@ -367,8 +367,8 @@
       integer            :: ndim,nb_basis
 
       logical            :: packed,dnBBRep,contrac,contrac_analysis,read_contrac_file
-      logical            :: auto_basis,auto_contrac,POGridRep,POGridRep_polyortho,make_cubature
-      logical            :: restart_make_cubature
+      logical            :: auto_basis,auto_contrac,POGridRep,POGridRep_polyortho
+      logical            :: restart_make_cubature,make_cubature,read_para_cubature
       TYPE (REAL_WU)     :: max_ene_contrac
       integer            :: max_nbc,min_nbc,nqPLUSnbc_TO_nqc
       integer            :: auto_contrac_type1_TO,auto_contrac_type21_TO
@@ -415,7 +415,7 @@
                          MaxCoupling_OF_nDindB,nDinit_OF_nDindB,contrac_WITH_nDindB,   &
                          packed,dnBBRep,                                &
                          name_contrac_file,auto_contrac,                &
-                         make_cubature,restart_make_cubature,           &
+                         make_cubature,restart_make_cubature,read_para_cubature,&
                          POGridRep_polyortho,POGridRep,nb_basis,        &
                       max_ene_contrac,max_nbc,min_nbc,nqPLUSnbc_TO_nqc, &
                          auto_contrac_type1_TO,auto_contrac_type21_TO
@@ -441,6 +441,7 @@
       contrac_analysis         = .FALSE.
       make_cubature            = .FALSE.
       restart_make_cubature    = .FALSE.
+      read_para_cubature       = .FALSE.
       auto_contrac             = .FALSE.
       POGridRep                = .FALSE.
       POGridRep_polyortho      = .FALSE.
@@ -798,6 +799,7 @@
       basis_temp%auto_contrac             = auto_contrac
       basis_temp%make_cubature            = make_cubature
       basis_temp%restart_make_cubature    = restart_make_cubature
+      basis_temp%read_para_cubature       = read_para_cubature
       basis_temp%max_ene_contrac          = convRWU_TO_R_WITH_WorkingUnit(max_ene_contrac)
       basis_temp%max_nbc                  = max_nbc
       basis_temp%min_nbc                  = min_nbc

@@ -3060,8 +3060,12 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
 
 SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
   USE mod_system
-  USE mod_psi,      ONLY : param_psi,ecri_psi
+  USE mod_psi,      ONLY : param_psi,ecri_psi,                                  &
+                           get_CVec_OF_psi_AT_ind_a,get_RVec_OF_psi_AT_ind_a,   &
+                           set_CVec_OF_psi_AT_ind_a,set_RVec_OF_psi_AT_ind_a
+
   USE mod_SetOp,    ONLY : param_Op,write_param_Op
+  USE mod_param_SGType2
   IMPLICIT NONE
 
   !----- variables pour la namelist minimum ------------------------
@@ -3085,6 +3089,7 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
   real (kind=Rkind)    :: Rpsi_iq(para_H%nb_bie)
   complex (kind=Rkind) :: Cpsi_iq(para_H%nb_bie)
   logical              :: GridDone
+  TYPE (OldParam)      :: OldPara
 
   !----- for debuging ----------------------------------------------
   integer :: err_mem,memory
@@ -3135,16 +3140,16 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
       IF (Psi%cplx) THEN
 
         DO iq=1,Psi%nb_qa
-          Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          CALL get_CVec_OF_psi_AT_ind_a(Cpsi_iq,Psi,iq,OldPara=OldPara)
           Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
-          Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
+          CALL set_CVec_OF_psi_AT_ind_a(Cpsi_iq,Psi,iq,OldPara=OldPara)
         END DO
       ELSE
 
         DO iq=1,Psi%nb_qa
-          Rpsi_iq(:) = Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          CALL get_RVec_OF_psi_AT_ind_a(Rpsi_iq,Psi,iq,OldPara=OldPara)
           Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
-          Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Rpsi_iq(:)
+          CALL set_RVec_OF_psi_AT_ind_a(Rpsi_iq,Psi,iq,OldPara=OldPara)
         END DO
 
       END IF
@@ -3159,9 +3164,9 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
 
           CALL diagonalization(V,EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
 
-          Cpsi_iq(:) = Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          CALL get_CVec_OF_psi_AT_ind_a(Cpsi_iq,Psi,iq,OldPara=OldPara)
           Cpsi_iq(:) = matmul(transpose(EigenVec),Cpsi_iq)
-          Psi%CvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Cpsi_iq(:)
+          CALL set_CVec_OF_psi_AT_ind_a(Cpsi_iq,Psi,iq,OldPara=OldPara)
         END DO
       ELSE
 
@@ -3170,9 +3175,9 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
           V(:,:) = para_H%OpGrid(iterm)%Grid(iq,:,:)
           CALL diagonalization(V,EigenVal,EigenVec,para_H%nb_bie,2,1,.TRUE.)
 
-          Rpsi_iq(:) = Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa)
+          CALL get_RVec_OF_psi_AT_ind_a(Rpsi_iq,Psi,iq,OldPara=OldPara)
           Rpsi_iq(:) = matmul(transpose(EigenVec),Rpsi_iq)
-          Psi%RvecG(iq:Psi%nb_qaie:Psi%nb_qa) = Rpsi_iq(:)
+          CALL set_RVec_OF_psi_AT_ind_a(Rpsi_iq,Psi,iq,OldPara=OldPara)
         END DO
 
       END IF

@@ -72,6 +72,7 @@ MODULE mod_Tnum
           logical           :: HarD                 = .TRUE.  ! Harmonic Domain for the PES
           integer           :: pot_itQtransfo       = -1      ! for new Qtransfo (default nb_QTransfo, dyn. coordinates)
           integer           :: nb_scalar_Op         = 0       ! nb of Operator
+          integer           :: nb_CAP               = 0       ! nb of Operator
 
           ! parameters for on-the-fly calculations
           logical           :: OnTheFly             = .FALSE. ! On-the-fly calculation f PES and dipole
@@ -1580,7 +1581,7 @@ MODULE mod_Tnum
            write(out_unitp,*) '========================='
          END DO
       END IF
-      
+
       IF(MPI_id==0) THEN
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*) '================================================='
@@ -2606,4 +2607,3 @@ MODULE mod_Tnum
 
   END SUBROUTINE Set_OptimizationPara_FROM_CoordType
 END MODULE mod_Tnum
-

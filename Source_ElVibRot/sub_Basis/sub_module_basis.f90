@@ -1675,7 +1675,7 @@ MODULE mod_basis
 !---------------------------------------------------------------------
       integer           :: i,j,nq,nb
       real(kind=Rkind), allocatable :: d0bxd0bT(:,:)      ! (qb,nq)
-      real(kind=Rkind), allocatable :: vecp(:,:),valp(:)      ! (nq,nq)
+      real(kind=Rkind), allocatable :: vecp(:,:),valp(:)  ! (nq,nq)
 
       real(kind=Rkind), allocatable :: d0bxd0bT_inv(:,:)  ! (qb,nq)
       real(kind=Rkind), allocatable :: d0b_pseudoInv(:,:) ! (nb,nq)

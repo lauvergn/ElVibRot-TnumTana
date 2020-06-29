@@ -1,5 +1,5 @@
-#=================================================================================
-#=================================================================================
+#===============================================================================
+#===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 #F90 = mpifort
   F90 = gfortran
@@ -12,12 +12,12 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 #
-## force the default integer (without kind) during the compillation. 
+## force the default integer (without kind) during the compillation.
 ## default 4: , INT=8 (for kind=8)
 INT = 4
 #
@@ -41,13 +41,13 @@ INVHYP  = 1
 ## Operating system, OS? automatic using uname:
 OS=$(shell uname)
 #
-#=================================================================================
+#===============================================================================
 # turn off ARPACK when using pgf90
 ifeq ($(F90),pgf90)
   ARPACK = 0
 endif
 
-# setup for mpifort 
+# setup for mpifort
 ifeq ($(F90),mpifort)
   ## MPI compiled with: gfortran or ifort
   MPICORE = $(shell ompi_info | grep 'Fort compiler:' | sed 's/Fort compiler://g' | sed 's/ //g')
@@ -57,9 +57,9 @@ ifeq ($(F90),mpifort)
   endif
 endif
 
-## turn off ARPACK 
-#=================================================================================
-# External pot for the library: libpot.a, 
+## turn off ARPACK
+#===============================================================================
+# External pot for the library: libpot.a,
 # with epxort variable (POTDIRextern) or with explicit name
 ExternalDIR := $(POTDIRextern)
 # Example pot Bowman (new lib)
@@ -74,9 +74,9 @@ ifeq  ($(strip $(ExternalDIR)),)
   PESLIB =
   DIRLIB =
 endif
-#=================================================================================
+#===============================================================================
 #
-#=================================================================================
+#===============================================================================
 # Quantum Model Lib (ECAM)
 QMLibDIR := /Users/lauvergn/git/QuantumModelLib
 ifneq "$(wildcard $(QMLibDIR) )" ""
@@ -89,11 +89,11 @@ else
 endif
 
 ifeq  ($(strip $(QML)),)
-  QMLIB := 
+  QMLIB :=
   QMLibDIR_full :=
 else
   ifeq ($(QML),0)
-    QMLIB := 
+    QMLIB :=
     QMLibDIR_full :=
   else
     DIRLIB += -L$(QMLibDIR)
@@ -102,27 +102,27 @@ else
   endif
 endif
 
-#=================================================================================
+#===============================================================================
 #
-#=================================================================================
+#===============================================================================
 # If EXTFextern is empty, extf must be empty
 ifeq  ($(strip $(EXTFextern)),)
   extf = f
 endif
-#=================================================================================
+#===============================================================================
 
-#=================================================================================
+#===============================================================================
 # We cannot use ARPACK without lapack
 ifeq ($(LAPACK),0)
   ARPACK = 0
 endif
-#=================================================================================
+#===============================================================================
 #
 CompC=gcc
 
-#=================================================================================
+#===============================================================================
 # nag compillation (nagfor)
-#=================================================================================
+#===============================================================================
 ifeq ($(F90),nagfor)
    # for c++ preprocessing
    ifeq ($(OMP),1)
@@ -130,7 +130,7 @@ ifeq ($(F90),nagfor)
    else
      CPPpre  = -fpp
    endif
-   
+
    # omp management
    ifeq ($(OMP),0)
       OMPFLAG =
@@ -150,21 +150,21 @@ ifeq ($(F90),nagfor)
         ifeq ($(LAPACK),0)
           F90FLAGS = -O0            -g -gline -kind=byte -C -C=alias -C=intovf -C=undefined
         else
-          F90FLAGS = -O0 $(OMPFLAG) -g -gline -kind=byte -C -C=alias -C=intovf 
+          F90FLAGS = -O0 $(OMPFLAG) -g -gline -kind=byte -C -C=alias -C=intovf
         endif
       else
-          F90FLAGS = -O0 $(OMPFLAG) -g        -kind=byte -C -C=alias -C=intovf 
+          F90FLAGS = -O0 $(OMPFLAG) -g        -kind=byte -C -C=alias -C=intovf
       endif
    endif
 
    ifeq ($(LAPACK),1)
      F90LIB = -framework Accelerate
    else
-     F90LIB = 
+     F90LIB =
    endif
-  
+
    ifeq ($(INT),8)
-     F90FLAGS := $(F90FLAGS) -i8 
+     F90FLAGS := $(F90FLAGS) -i8
    endif
 
    F90_VER = $(shell $(F90) -V 3>&1 1>&2 2>&3 | head -1 )
@@ -181,7 +181,7 @@ ifeq ($(F90),ifort)
    else
      CPPpre  = -cpp
    endif
-   
+
    # omp management
    ifeq ($(OMP),0)
       OMPFLAG =
@@ -200,9 +200,9 @@ ifeq ($(F90),ifort)
    else
      F90LIB = -lpthread
    endif
-  
+
    ifeq ($(INT),8)
-     F90FLAGS := $(F90FLAGS) -i8 
+     F90FLAGS := $(F90FLAGS) -i8
    endif
 
    F90_VER = $(shell $(F90) --version | head -1 )
@@ -238,20 +238,20 @@ ifeq ($(F90),pgf90)
    ifeq ($(LAPACK),1)
      F90LIB += -lblas -llapack
    else
-     F90LIB += 
+     F90LIB +=
    endif
 
    F90_VER = $(shell $(F90) --version | head -2 | tail -1 )
 
 
 endif
-#=================================================================================
+#===============================================================================
 
-#=================================================================================
+#===============================================================================
 # gfortran (osx and linux)
 #ifeq ($(F90),gfortran)
-#=================================================================================
-ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))  
+#===============================================================================
+ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
    # for c++ preprocessing
    ifeq ($(OMP),1)
      CPPpre  = -cpp -Drun_openMP=1
@@ -298,7 +298,7 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
    endif
    # integer kind management
    ifeq ($(INT),8)
-      F90FLAGS := $(F90FLAGS) -fdefault-integer-8 
+      F90FLAGS := $(F90FLAGS) -fdefault-integer-8
    endif
 
    F90_VER = $(shell $(F90) --version | head -1 )
@@ -311,7 +311,7 @@ endif
 # ifeq ($(F90),mpifort)
 # for gfortran core
 #=================================================================================
-ifeq ($(F90),mpifort)  
+ifeq ($(F90),mpifort)
    # for c++ preprocessing
    CPPpre = -cpp -Drun_MPI=1
 
@@ -346,7 +346,7 @@ ifeq ($(F90),mpifort)
          F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
         #F90FLAGS = -O0 -fbounds-check -Wuninitialized
      endif
-   else 
+   else
      ifeq ($(OPT),1)
        F90FLAGS =  -O5 -g #-check all -fpe0 -warn -traceback -debug extended
      else
@@ -356,7 +356,7 @@ ifeq ($(F90),mpifort)
    # integer kind management
    ifeq ($(INT),8)
       ifeq ($(MPICORE),gfortran)
-         F90FLAGS += -fdefault-integer-8 
+         F90FLAGS += -fdefault-integer-8
       else
          F90FLAGS += -i8
       endif
@@ -365,9 +365,9 @@ endif
 F90FLAGS := $(F90FLAGS)   $(EXTMOD)
 F90_VER = $(shell ompi_info | grep 'Open MPI:' | sed 's/ //g' )
 
-#=================================================================================
-#=================================================================================
-$(info ***********************************************************************)
+#===============================================================================
+#===============================================================================
+$(info ************************************************************************)
 $(info ***********OS:               $(OS))
 $(info ***********COMPILER:         $(F90))
 $(info ***********OPTIMIZATION:     $(OPT))
@@ -386,14 +386,14 @@ $(info ***********subsystem file:   sub_system.$(extf))
 $(info ***********DIR of potlib.a:  $(ExternalDIR))
 $(info ***********potLib:           $(PESLIB))
 $(info ***********INVHYP:           $(INVHYP))
-$(info ***********************************************************************)
+$(info ************************************************************************)
 
 F90_FLAGS = $(F90) $(F90FLAGS)
 LYNK90 = $(F90_FLAGS)
 
-#=================================================================================
+#===============================================================================
 # Arpack library
-#=================================================================================
+#===============================================================================
 ifeq ($(ARPACK),1)
   # Arpack management with the OS
   ifeq ($(OS),Darwin)    # OSX
@@ -414,7 +414,7 @@ ifeq ($(ARPACK),1)
     #ARPACKLIB=/usr/lib64/libarpack.a
   endif
 else
-  ARPACKLIB = 
+  ARPACKLIB =
 endif
 #=================================================================================
 #=================================================================================
@@ -550,7 +550,7 @@ Obj_Primlib  = \
   $(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_memory_NotPointer.o \
   $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/mod_Frac.o \
   $(OBJ)/sub_module_system.o \
-  $(OBJ)/sub_module_MPI_Aid.o 
+  $(OBJ)/sub_module_MPI_Aid.o
 
 Obj_math =\
    $(OBJ)/sub_diago.o $(OBJ)/sub_trans_mat.o $(OBJ)/sub_math_util.o $(OBJ)/sub_integration.o \
@@ -639,7 +639,8 @@ Obj_Coord_KEO = $(Obj_TanaPrim) $(Obj_Coord) $(Obj_Tnum) $(Obj_Tana) $(Obj_TnumT
 #============================================================================
 #Primitive Operators, Minimize Only list: OK
 Obj_PrimOperator = \
-   $(OBJ)/sub_module_SimpleOp.o $(OBJ)/sub_module_OnTheFly_def.o $(OBJ)/sub_PrimOp_def.o \
+   $(OBJ)/sub_module_SimpleOp.o $(OBJ)/sub_module_OnTheFly_def.o $(OBJ)/mod_CAP.o \
+	 $(OBJ)/sub_PrimOp_def.o \
    $(OBJ)/sub_onthefly.o $(OBJ)/sub_PrimOp_RPH.o $(OBJ)/sub_PrimOp.o \
    $(OBJ)/sub_system.o $(OBJ)/read_para.o
 #============================================================================
@@ -658,10 +659,10 @@ Obj_KEO_PrimOp= \
 Obj_main   =  $(OBJ)/vib.o $(OBJ)/versionEVR-T.o $(OBJ)/cart.o \
   $(OBJ)/sub_main_Optimization.o $(OBJ)/sub_main_nDfit.o
 
-Obj_EVR-Mod =  $(OBJ)/EVR-Module.o $(OBJ)/versionEVR-T.o 
+Obj_EVR-Mod =  $(OBJ)/EVR-Module.o $(OBJ)/versionEVR-T.o
 
 #Minimize Only list: sub_module_RotBasis, sub_module_basis_Grid_Param, sub_SymAbelian
-#... sub_module_Basis_LTO_n, 
+#... sub_module_Basis_LTO_n,
 Obj_module =  \
  $(OBJ)/sub_module_RotBasis.o $(OBJ)/sub_module_basis_Grid_Param.o $(OBJ)/sub_module_Basis_LTO_n.o \
  $(OBJ)/sub_SymAbelian.o \
@@ -727,7 +728,7 @@ Obj_analysis = \
 
 
 Obj_Optimization = \
-  $(OBJ)/sub_module_SimulatedAnnealing.o $(OBJ)/sub_module_BFGS.o $(OBJ)/sub_module_Optimization.o 
+  $(OBJ)/sub_module_SimulatedAnnealing.o $(OBJ)/sub_module_BFGS.o $(OBJ)/sub_module_Optimization.o
 
 Obj_ini = \
  $(OBJ)/ini_data.o $(OBJ)/sub_namelist.o $(OBJ)/nb_harm.o
@@ -788,7 +789,7 @@ Tnum_MidasCpp Midas midas: obj $(TNUM_MiddasCppEXE)
 #
 .PHONY: Tana_test
 Tana_test: Tana_test.exe
-Tana_test.exe: obj $(Obj_lib) $(OBJ)/libTnum.a $(OBJ)/Tana_test.o 
+Tana_test.exe: obj $(Obj_lib) $(OBJ)/libTnum.a $(OBJ)/Tana_test.o
 	$(LYNK90)   -o Tana_test.exe $(OBJ)/Tana_test.o $(OBJ)/libTnum.a $(LYNKFLAGS)
 $(OBJ)/Tana_test.o: $(DirTNUM)/sub_main/Tana_test.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_main/Tana_test.f90
@@ -863,22 +864,25 @@ obj:
 	mkdir -p obj
 
 # vib script
-vib: 
+vib:
 	echo "make vib script"
 	./scripts/make_vib.sh $(DIR_EVRT) $(F90)
 	chmod a+x vib
 
 # clean
+#	@cd sub_pot ; cp sub_system_save.f sub_system.f
+#	@cd sub_pot ; cp sub_system_save.f90 sub_system.f90
+#	@cd Source_TnumTana_Coord/sub_operator_T ; cp calc_f2_f1Q_save.f90      calc_f2_f1Q.f90
+#	@cd Source_TnumTana_Coord/sub_operator_T ; cp Calc_Tab_dnQflex_save.f90 Calc_Tab_dnQflex.f90
+#	@cd Source_TnumTana_Coord/sub_operator_T ; cp Sub_X_TO_Q_ana_save.f90   Sub_X_TO_Q_ana.f90
 .PHONY: clean
-clean: 
+clean:
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib
 	rm -rf *.dSYM
 	rm -f .DS_Store */.DS_Store */*/.DS_Store */*/*/.DS_Store
-	@cd sub_pot ; cp sub_system_save.f sub_system.f
-	@cd sub_pot ; cp sub_system_save.f90 sub_system.f90
-	@cd Source_TnumTana_Coord/sub_operator_T ; cp calc_f2_f1Q_save.f90    calc_f2_f1Q.f90
-	@cd Source_TnumTana_Coord/sub_operator_T ; cp Sub_X_TO_Q_ana_save.f90 Sub_X_TO_Q_ana.f90
-
+	@cd sub_pot                              ; rm -f sub_system.f sub_system.f90
+	@cd Source_TnumTana_Coord/sub_operator_T ; rm -f calc_f2_f1Q.f90 Calc_Tab_dnQflex.f90 Sub_X_TO_Q_ana.f90
+	@echo "  done remove the system dependent files (sub_system.f, calc_f2_f1Q.f90 ...) "
 	@cd Examples/exa_hcn-dist ; ./clean
 	@cd Examples/exa_TnumDriver ; ./clean
 	@cd Examples/exa_direct-dist ; ./clean
@@ -891,7 +895,6 @@ clean:
 	@cd Working_tests/examples_Tana ; ./clean
 	@cd Working_tests/exa_hcn-test ; ./clean
 	@echo "  done cleaning up the example directories"
-  #@cd doc/reference/ && rm -f *
 	@cd doc_ElVibRot-TnumTana && ./clean
 	@rm -f doc/reference/index.store
 	@echo "  done cleaning up the documentation"
@@ -1059,7 +1062,7 @@ $(OBJ)/sub_freq.o:$(DirTNUM)/Qtransfo/sub_freq.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/sub_freq.f90
 $(OBJ)/Calc_Tab_dnQflex.o:$(DirTNUM)/sub_operator_T/Calc_Tab_dnQflex.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_operator_T/Calc_Tab_dnQflex.f90
-# 
+#
 $(OBJ)/sub_module_Tnum.o:$(DirTNUM)/sub_module_Tnum.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirTNUM)/sub_module_Tnum.f90
 $(OBJ)/sub_module_paramQ.o:$(DirTNUM)/sub_module_paramQ.f90
@@ -1077,6 +1080,16 @@ $(OBJ)/calc_f2_f1Q.o:$(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
 $(OBJ)/Sub_X_TO_Q_ana.o:$(DirTNUM)/sub_operator_T/Sub_X_TO_Q_ana.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_operator_T/Sub_X_TO_Q_ana.f90
+#
+# copy Sub_X_TO_Q_ana_save.f90, Calc_Tab_dnQflex_save.f90 and calc_f2_f1Q_save.f90
+# to Sub_X_TO_Q_ana.f90, Calc_Tab_dnQflex.f90 and calc_f2_f1Q.f90 when they are not present
+#
+$(DirTNUM)/sub_operator_T/Sub_X_TO_Q_ana.f90:
+	cp $(DirTNUM)/sub_operator_T/Sub_X_TO_Q_ana_save.f90 $(DirTNUM)/sub_operator_T/Sub_X_TO_Q_ana.f90
+$(DirTNUM)/sub_operator_T/Calc_Tab_dnQflex.f90:
+	cp $(DirTNUM)/sub_operator_T/Calc_Tab_dnQflex_save.f90 $(DirTNUM)/sub_operator_T/Calc_Tab_dnQflex.f90
+$(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90:
+	cp $(DirTNUM)/sub_operator_T/calc_f2_f1Q_save.f90 $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
 #
 $(OBJ)/calc_f2_f1Q_num.o:$(DirTNUM)/Tnum/calc_f2_f1Q_num.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Tnum/calc_f2_f1Q_num.f90
@@ -1111,6 +1124,8 @@ $(OBJ)/sub_PrimOp_def.o:$(DIRPrimOp)/sub_PrimOp_def.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_PrimOp_def.f90
 $(OBJ)/sub_module_OnTheFly_def.o:$(DIRPrimOp)/sub_module_OnTheFly_def.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_module_OnTheFly_def.f90
+$(OBJ)/mod_CAP.o:$(DIRPrimOp)/mod_CAP.f90
+	cd $(OBJ) ; $(F90_FLAGS)  -c $(DIRPrimOp)/mod_CAP.f90
 $(OBJ)/sub_PrimOp_RPH.o:$(DIRPrimOp)/sub_PrimOp_RPH.f90
 	cd $(OBJ) ; $(F90_FLAGS)  -c $(DIRPrimOp)/sub_PrimOp_RPH.f90
 $(OBJ)/sub_PrimOp.o:$(DIRPrimOp)/sub_PrimOp.f90
@@ -1121,7 +1136,7 @@ $(OBJ)/Module_ForTnumTana_Driver.o:$(DirTNUM)/Module_ForTnumTana_Driver.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Module_ForTnumTana_Driver.f90
 $(OBJ)/TnumTana_Lib.o:$(DirTNUM)/TnumTana_Lib.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/TnumTana_Lib.f90
-# 
+#
 #===================================================================================
 # mains TnumTana_PrimOp
 $(OBJ)/$(TNUMMAIN).o:$(DirTNUM)/$(TNUMMAIN).f90
@@ -1140,7 +1155,7 @@ $(OBJ)/Main_TnumTana_FDriver.o:$(DirTNUM)/Main_TnumTana_FDriver.f90
 $(OBJ)/Main_TnumTana_cDriver.o:$(DirTNUM)/Main_TnumTana_cDriver.c
 	cd $(OBJ) ; $(CompC) $(CFLAGS)  -c $(DirTNUM)/Main_TnumTana_cDriver.c
 #
-#===================================================================================
+#===============================================================================
 # module
 $(OBJ)/sub_module_poly.o:$(DirMod)/sub_module_poly.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMod)/sub_module_poly.f90
@@ -1149,8 +1164,8 @@ $(OBJ)/sub_module_GWP.o:$(DirMod)/sub_module_GWP.f90
 $(OBJ)/sub_module_cart.o:$(DirMod)/sub_module_cart.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMod)/sub_module_cart.f90
 #
-#===================================================================================
-# sub_Basis : 
+#===============================================================================
+# sub_Basis :
 $(OBJ)/sub_module_RotBasis.o:$(DIRba)/sub_module_RotBasis.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_module_RotBasis.f90
 $(OBJ)/sub_module_basis_Grid_Param.o:$(DIRba)/sub_module_basis_Grid_Param.f90
@@ -1210,7 +1225,7 @@ $(OBJ)/sub_quadra_SparseBasis2n.o:$(DIRba)/sub_quadra_SparseBasis2n.f90
 $(OBJ)/sub_SymAbelian_OF_Basis.o:$(DIRba)/sub_SymAbelian_OF_Basis.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_SymAbelian_OF_Basis.f90
 #
-#===================================================================================
+#===============================================================================
 # sub_WP
 $(OBJ)/sub_module_type_ana_psi.o:$(DIRWP)/sub_module_type_ana_psi.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_module_type_ana_psi.f90
@@ -1231,7 +1246,7 @@ $(OBJ)/mod_psi.o:$(DIRWP)/mod_psi.f90
 $(OBJ)/sub_ana_psi.o:$(DIRWP)/sub_ana_psi.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRWP)/sub_ana_psi.f90
 #
-#===================================================================================
+#===============================================================================
 # sub_propagation sub_module_ExactFact
 $(OBJ)/sub_module_field.o:$(DIRpropa)/sub_module_field.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_module_field.f90
@@ -1258,15 +1273,15 @@ $(OBJ)/sub_control.o:$(DIRpropa)/sub_control.f90
 $(OBJ)/sub_TF_autocorr.o:$(DIRpropa)/sub_TF_autocorr.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRpropa)/sub_TF_autocorr.f90
 #
-#===================================================================================
-# sub_CRP: 
+#===============================================================================
+# sub_CRP:
 $(OBJ)/sub_CRP.o:$(DIRCRP)/sub_CRP.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_CERFACS) -c $(DIRCRP)/sub_CRP.f90
 $(OBJ)/CERFACS_lib.o:$(DIRCRP)/CERFACS_lib.f
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/CERFACS_lib.f
 $(OBJ)/QMRPACK_lib.o:$(DIRCRP)/QMRPACK_lib.f
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/QMRPACK_lib.f
-#===================================================================================
+#===============================================================================
 #Operator ....
 $(OBJ)/sub_module_OpGrid.o:$(DIROp)/sub_module_OpGrid.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIROp)/sub_module_OpGrid.f90
@@ -1308,7 +1323,7 @@ $(OBJ)/sub_lib_Op.o:$(DIROp)/sub_lib_Op.f90
 $(OBJ)/sub_module_Op.o:$(DIROp)/sub_module_Op.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROp)/sub_module_Op.f90
 #
-#===================================================================================
+#===============================================================================
 # sub_analysis
 $(OBJ)/sub_module_analysis.o:$(DIRana)/sub_module_analysis.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRana)/sub_module_analysis.f90
@@ -1320,7 +1335,7 @@ $(OBJ)/sub_VibRot.o:$(DIRana)/sub_VibRot.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_VibRot.f90
 $(OBJ)/sub_intensity.o:$(DIRana)/sub_intensity.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRana)/sub_intensity.f90
-#===================================================================================
+#===============================================================================
 # sub_Optimization
 $(OBJ)/sub_main_Optimization.o:$(DIROpt)/sub_main_Optimization.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROpt)/sub_main_Optimization.f90
@@ -1331,7 +1346,7 @@ $(OBJ)/sub_module_BFGS.o:$(DIROpt)/sub_module_BFGS.f90
 $(OBJ)/sub_module_Optimization.o:$(DIROpt)/sub_module_Optimization.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIROpt)/sub_module_Optimization.f90
 #
-#===================================================================================
+#===============================================================================
 # sub_data_initialisation
 $(OBJ)/ini_data.o:$(DIR1)/ini_data.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIR1)/ini_data.f90
@@ -1340,7 +1355,7 @@ $(OBJ)/sub_namelist.o:$(DIR1)/sub_namelist.f90
 $(OBJ)/nb_harm.o:$(DIR1)/nb_harm.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIR1)/nb_harm.f90
 #
-#===================================================================================
+#===============================================================================
 # mains
 $(OBJ)/$(VIBMAIN).o:$(DIRvib)/$(VIBMAIN).f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRvib)/$(VIBMAIN).f90
@@ -1364,7 +1379,7 @@ $(OBJ)/cart.o:$(DIRvib)/cart.f90
 $(OBJ)/sub_main_nDfit.o:$(DIRvib)/sub_main_nDfit.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRvib)/sub_main_nDfit.f90
 #
-#===================================================================================
+#===============================================================================
 # sub_Smolyak_test
 $(OBJ)/sub_Smolyak_DInd.o:$(DIRSmolyak)/sub_Smolyak_DInd.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRSmolyak)/sub_Smolyak_DInd.f90
@@ -1377,11 +1392,11 @@ $(OBJ)/sub_Smolyak_module.o:$(DIRSmolyak)/sub_Smolyak_module.f90
 $(OBJ)/sub_Smolyak_test.o:$(DIRSmolyak)/sub_Smolyak_test.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRSmolyak)/sub_Smolyak_test.f90
 #
-#========================================================================================
+#===============================================================================
 #
-#===================================================================================
+#===============================================================================
 # potentiel et fonctions dependant du systeme
-# sub_system.o 
+# sub_system.o
 $(OBJ)/sub_system.o:$(DirPot)/sub_system.$(extf)
 	sed "s/zmatrix/CoordType/" $(DirPot)/sub_system.$(extf) > $(DirPot)/sub_system.i
 	echo Warning the sub_system.$(extf) file has been modified.
@@ -1390,8 +1405,14 @@ $(OBJ)/sub_system.o:$(DirPot)/sub_system.$(extf)
 $(OBJ)/read_para.o:$(DirPot)/read_para.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirPot)/read_para.f90
 #
+# when the file sub_system.f or sub_system.f90 are not present, ...
+#  ... we need the copies from sub_system_save.f or sub_system_save.f90.
+$(DirPot)/sub_system.f:
+	cp $(DirPot)/sub_system_save.f $(DirPot)/sub_system.f
+$(DirPot)/sub_system.f90:
+	cp $(DirPot)/sub_system_save.f90 $(DirPot)/sub_system.f90
 #
-#===================================================================================
+#===============================================================================
 $(OBJ)/sub_diago.o:$(DirMath)/sub_diago.f90
 	cd $(OBJ) ; $(F90_FLAGS)  $(CPPpre) $(CPPSHELL_DIAGO)  -c $(DirMath)/sub_diago.f90
 $(OBJ)/sub_trans_mat.o:$(DirMath)/sub_trans_mat.f90
@@ -1447,7 +1468,7 @@ $(lib_dep_mod_MPI):$(OBJ)/sub_module_MPI.o
 #mod_memory
 lib_dep_mod_memory=$(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_string.o       \
                    $(OBJ)/sub_module_memory_NotPointer.o                               \
-                   $(OBJ)/sub_module_memory_Pointer.o 
+                   $(OBJ)/sub_module_memory_Pointer.o
 $(lib_dep_mod_memory):$(OBJ)/sub_module_memory.o
 
 # mod_system
@@ -1501,7 +1522,7 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_math_util.o $(OBJ)/Calc_Tab_dnQflex.o
 $(lib_dep_mod_system):$(OBJ)/sub_module_system.o
 
-#mod_EVR 
+#mod_EVR
 lib_dep_mod_EVR=$(OBJ)/EVR_driver.o
 $(lib_dep_mod_EVR):$(OBJ)/EVR_Module.o
 
@@ -1554,7 +1575,7 @@ $(lib_dep_mod_dnM):$(OBJ)/sub_module_dnM.o
 lib_dep_mod_module_DInd=$(OBJ)/sub_module_nDindex.o
 $(lib_dep_mod_module_DInd):$(OBJ)/sub_module_DInd.o
 
-#mod_nDindex   
+#mod_nDindex
 lib_dep_mod_nDindex=$(OBJ)/sub_module_nDfit.o $(OBJ)/sub_module_RotBasis.o             \
                     $(OBJ)/sub_module_param_SGType2.o $(OBJ)/sub_module_param_RD.o     \
                     $(OBJ)/nb_harm.o $(OBJ)/sub_main_Optimization.o                    \
@@ -1579,18 +1600,18 @@ lib_dep_mod_Lib_QTransfo=$(OBJ)/CartesianTransfo.o $(OBJ)/ZmatTransfo.o         
                          $(OBJ)/BunchPolyTransfo.o
 $(lib_dep_mod_Lib_QTransfo):$(OBJ)/Lib_QTransfo.o
 
-#mod_nDFit 
+#mod_nDFit
 lib_dep_mod_nDFit=$(OBJ)/sub_module_Tnum.o $(OBJ)/sub_PrimOp_def.o                     \
                   $(OBJ)/sub_PrimOp_RPH.o
 $(lib_dep_mod_nDFit):$(OBJ)/sub_module_nDfit.o
 
-#mod_Tnum 
+#mod_Tnum
 lib_dep_mod_Tnum=$(OBJ)/calc_f2_f1Q.o $(OBJ)/sub_module_paramQ.o $(OBJ)/sub_dnRho.o    \
                  $(OBJ)/sub_export_KEO.o $(OBJ)/sub_system.o                           \
                  $(OBJ)/sub_module_Tana_NumKEO.o $(OBJ)/sub_module_paramQ.o
 $(lib_dep_mod_Tnum):$(OBJ)/sub_module_Tnum.o
 
-#mod_paramQ 
+#mod_paramQ
 lib_dep_mod_paramQ=$(OBJ)/calc_dng_dnGG.o $(OBJ)/sub_module_Tana_Export_KEO.o          \
                    $(OBJ)/sub_system.o
 $(lib_dep_mod_paramQ):$(OBJ)/sub_module_paramQ.o
@@ -1660,12 +1681,12 @@ lib_dep_mod_basis=$(OBJ)/sub_module_BasisMakeGrid.o $(OBJ)/sub_read_data.o      
                   $(OBJ)/sub_changement_de_var.o $(OBJ)/sub_quadra_SparseBasis2n.o     \
                   $(OBJ)/sub_inactive_harmo.o $(OBJ)/sub_paraRPH.o $(OBJ)/nb_harm.o
 $(lib_dep_mod_basis):$(OBJ)/sub_module_basis.o
- 
+
 #mod_poly
 lib_dep_mod_poly=$(OBJ)/sub_module_GWP.o
 $(lib_dep_mod_poly):$(OBJ)/sub_module_poly.o
 
-#mod_basis_BtoG_GtoB_SGType4 
+#mod_basis_BtoG_GtoB_SGType4
 lib_dep_mod_basis_BtoG_GtoB_SGType4=$(OBJ)/sub_module_ComOp.o                          \
                                     $(OBJ)/sub_module_OpGrid.o                         \
                                     $(OBJ)/sub_module_basis_BtoG_GtoB.o
@@ -1694,7 +1715,7 @@ $(lib_dep_mod_psi_Op):$(OBJ)/sub_module_psi_Op.o
 lib_dep_mod_OpGrid=$(OBJ)/sub_module_ReadOp.o $(OBJ)/sub_module_SetOp.o
 $(lib_dep_mod_OpGrid):$(OBJ)/sub_module_OpGrid.o
 
-#mod_SetOp  
+#mod_SetOp
 lib_dep_mod_SetOp=$(OBJ)/sub_OpPsi_SG4.o $(OBJ)/sub_MatOp.o $(OBJ)/sub_module_Op.o     \
                   $(OBJ)/sub_lib_Op.o
 $(lib_dep_mod_SetOp):$(OBJ)/sub_module_SetOp.o
@@ -1703,7 +1724,7 @@ $(lib_dep_mod_SetOp):$(OBJ)/sub_module_SetOp.o
 lib_dep_mod_OpPsi_SG4=$(OBJ)/sub_OpPsi.o
 $(lib_dep_mod_OpPsi_SG4):$(OBJ)/sub_OpPsi_SG4.o
 
-#mod_Op     
+#mod_Op
 lib_dep_mod_Op=$(OBJ)/sub_HST_harm.o $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_harm.o   \
                $(OBJ)/sub_lib_act.o $(OBJ)/sub_module_ExactFact.o                      \
                $(OBJ)/sub_module_Davidson.o $(OBJ)/sub_module_Filter.o                 \
@@ -1716,7 +1737,7 @@ lib_dep_mod_Op=$(OBJ)/sub_HST_harm.o $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_ha
                $(OBJ)/QMRPACK_lib.o
 $(lib_dep_mod_Op):$(OBJ)/sub_module_Op.o
 
-#mod_psi_io 
+#mod_psi_io
 lib_dep_mod_psi_io=$(OBJ)/sub_analyse.o $(OBJ)/mod_psi.o
 $(lib_dep_mod_psi_io):$(OBJ)/sub_module_psi_io.o
 
@@ -1748,13 +1769,13 @@ $(lib_dep_mod_march):$(OBJ)/sub_module_propa_march.o
 lib_dep_mod_FullPropa=$(OBJ)/sub_control.o $(OBJ)/sub_Hmax.o $(OBJ)/EVR_driver.o
 $(lib_dep_mod_FullPropa):$(OBJ)/sub_propagation.o
 
-#mod_Smolyak_DInd 
+#mod_Smolyak_DInd
 lib_dep_mod_Smolyak_DInd=$(OBJ)/sub_Smolyak_module.o $(OBJ)/sub_Smolyak_ba.o
 $(lib_dep_mod_Smolyak_DInd):$(OBJ)/sub_Smolyak_DInd.o
 
 #mod_Atom
 lib_dep_mod_Atom=$(OBJ)/sub_module_constant.o
-$(lib_dep_mod_Atom):$(OBJ)/sub_module_Atom.o 
+$(lib_dep_mod_Atom):$(OBJ)/sub_module_Atom.o
 
 #mod_Tana_OpEl
 lib_dep_mod_Tana_OpEl=$(OBJ)/sub_module_Tana_OpnD.o $(OBJ)/sub_module_Tana_Op1D.o      \
@@ -1765,23 +1786,23 @@ $(lib_dep_mod_Tana_OpEl):$(OBJ)/sub_module_Tana_OpEl.o
 lib_dep_mod_dnV=$(OBJ)/sub_module_dnM.o
 $(lib_dep_mod_dnV):$(OBJ)/sub_module_dnV.o
 
-#mod_Tana_sum_opnd 
+#mod_Tana_sum_opnd
 lib_dep_mod_Tana_sum_opnd=$(OBJ)/sub_module_Tana_VecSumOpnD.o                          \
                           $(OBJ)/sub_module_Tana_PiEulerRot.o
 $(lib_dep_mod_Tana_sum_opnd):$(OBJ)/sub_module_Tana_SumOpnD.o
 
-#mod_Tana_OpnD 
+#mod_Tana_OpnD
 lib_dep_mod_Tana_OpnD=$(OBJ)/sub_module_Tana_vec_operations.o                          \
                       $(OBJ)/sub_module_Tana_SumOpnD.o                                 \
-                      $(OBJ)/sub_module_Tana_PiEulerRot.o $(OBJ)/sub_module_Tana_op.o  
+                      $(OBJ)/sub_module_Tana_PiEulerRot.o $(OBJ)/sub_module_Tana_op.o
 $(lib_dep_mod_Tana_OpnD):$(OBJ)/sub_module_Tana_OpnD.o
 
-#mod_Tana_VecSumOpnD 
+#mod_Tana_VecSumOpnD
 lib_dep_mod_Tana_VecSumOpnD=$(OBJ)/BunchPolyTransfo.o                                  \
                             $(OBJ)/sub_module_Tana_PiEulerRot.o
 $(lib_dep_mod_Tana_VecSumOpnD):$(OBJ)/sub_module_Tana_VecSumOpnD.o
 
-#mod_BunchPolyTransfo 
+#mod_BunchPolyTransfo
 lib_dep_mod_BunchPolyTransfo=$(OBJ)/Qtransfo.o $(OBJ)/sub_module_Tana_vec_operations.o
 $(lib_dep_mod_BunchPolyTransfo):$(OBJ)/BunchPolyTransfo.o
 
@@ -1823,7 +1844,7 @@ $(lib_dep_mod_FullControl):$(OBJ)/sub_control.o
 #mod_Smolyak_ba
 lib_dep_mod_Smolyak_ba=$(OBJ)/sub_Smolyak_RDP.o
 $(lib_dep_mod_Smolyak_ba):$(OBJ)/sub_Smolyak_ba.o
- 
+
 #mod_Smolyak_RDP
 lib_dep_mod_Smolyak_RDP=$(OBJ)/sub_Smolyak_module.o
 $(lib_dep_mod_Smolyak_RDP):$(OBJ)/sub_Smolyak_RDP.o
@@ -1922,26 +1943,26 @@ $(info ***********************************************************************)
 ifeq ($(OMP),1)
   parall=openMP
   parall_name=_openMP
-else 
+else
   parall=NaN
   parall_name=_noparall
 endif
 
-test: 
+test:
 
-ifeq ($(F90),mpifort) 
+ifeq ($(F90),mpifort)
 	@echo "test for MPI > MPI_test.log"
   # Davidson test
   # 6D
 	@echo "test for Davidson 6D, result in ./Working_tests/MPI_tests/6D_Davidson/result/"
 	@echo "> test for Davidson 6D" > MPI_test.log
-	@cd ./Working_tests/MPI_tests/6D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
+	@cd ./Working_tests/MPI_tests/6D_Davidson ; ./run_jobs >> ../../../MPI_test.log
   # 21D
 	@echo "test for Davidson 21D, result in ./Working_tests/MPI_tests/21D_Davidson/result/"
 	@echo "> test for Davidson 21D" >> MPI_test.log
-	@cd ./Working_tests/MPI_tests/21D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
+	@cd ./Working_tests/MPI_tests/21D_Davidson ; ./run_jobs >> ../../../MPI_test.log
   # Arpack test
-  ifeq ($(ARPACK),1) 
+  ifeq ($(ARPACK),1)
 	  @echo "test for Arpack 6D, result in ./Working_tests/MPI_tests/6D_arpack/result/"
 	  @echo "> test for Arpack" >> MPI_test.log
 	  @cd ./Working_tests/MPI_tests/6D_arpack   ; ./run_jobs >> ../../../MPI_test.log
@@ -1953,8 +1974,8 @@ ifeq ($(F90),mpifort)
 	@echo " "
 	@echo "to clean test result: make cleantest"
 endif
-	
-ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))  
+
+ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
 	@echo "test for" $(F90)$(parall_name) ">" $(F90)$(parall_name)"_test.log"
   # Davidson test
   # 6D
@@ -1974,7 +1995,7 @@ ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
 	    mv shell_runp shell_run; chmod 777 *; \
 	    ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
   # Arpack test
-  ifeq ($(ARPACK),1) 
+  ifeq ($(ARPACK),1)
 	  @echo "test for Arpack, result in ./Working_tests/MPI_tests/6D_arpack"$(parall_name)"/result/"
 	  @echo "> test for Arpack 6D" >> $(F90)$(parall_name)_test.log
 	  @cp -rf ./Working_tests/MPI_tests/6D_arpack ./Working_tests/MPI_tests/6D_arpack$(parall_name)
@@ -1983,7 +2004,7 @@ ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
 	      mv shell_runp shell_run; chmod 777 *; \
 	      ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
   endif
-  # propagation test 
+  # propagation test
 	@echo "test for propagation, result in ./Working_tests/MPI_tests/12D_propagation"$(parall_name)"/result/"
 	@echo "> test for propagation 12D" >> $(F90)$(parall_name)_test.log
 	@cp -rf ./Working_tests/MPI_tests/12D_propagation ./Working_tests/MPI_tests/12D_propagation$(parall_name)
@@ -1994,7 +2015,7 @@ ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
 	@echo "test done"
 	@echo " "
 	@echo "to clean test result: make cleantest"
-endif 
+endif
 
 # clean test results
 cleantest:

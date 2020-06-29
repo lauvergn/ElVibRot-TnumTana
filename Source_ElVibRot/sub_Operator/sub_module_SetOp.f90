@@ -87,9 +87,9 @@ MODULE mod_SetOp
           integer :: nb_baie=0,nb_qaie=0         ! number of total active basis functions
           integer :: nb_bRot=0                   ! number of total rotational basis functions
           integer :: nb_tot=0                    ! real size of the hamiltonian
-                                                 ! can be smaller than nb_baie (HADA or spectral contracion)
+                                                 ! can be smaller than nb_baie (HADA or spectral contraction)
           integer :: nb_tot_ini=0                ! size of the hamiltonian
-                                                 ! can be smaller than nb_baie (HADA or spectral contracion)
+                                                 ! can be smaller than nb_baie (HADA or spectral contraction)
                                                  ! usefull before the spectral transformation (for another operator)
 
           real (kind=Rkind),    pointer :: Rmat(:,:)   => null()        ! Rmat(nb_tot ,nb_tot )
@@ -105,7 +105,7 @@ MODULE mod_SetOp
                                                  ! no pack, if the packed ratio is larger
 
           ! Parameters for the diagonalization and the spectral representation
-          logical                       :: spectral      = .FALSE.        ! if T, calculation of the sepctral representation
+          logical                       :: spectral      = .FALSE.        ! if T, calculation of the spectral representation
           logical                       :: spectral_done = .FALSE.        ! if T, The spect Rep is done
           integer                       :: spectral_Op   =  0             ! type of operator usually H (=>0)
           logical                       :: diago         = .FALSE.        ! if T, allocate the memory for diagonalization
@@ -1471,4 +1471,3 @@ MODULE mod_SetOp
 !=======================================================================================
 
 END MODULE mod_SetOp
-

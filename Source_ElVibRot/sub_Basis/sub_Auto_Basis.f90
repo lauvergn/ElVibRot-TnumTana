@@ -675,6 +675,7 @@
       para_ReadOp_loc                 = para_ReadOp
 
       para_ReadOp_loc%nb_scalar_Op    = 0
+      para_ReadOp_loc%nb_CAP          = 0
       para_ReadOp_loc%calc_scalar_Op  = .FALSE.
       para_ReadOp_loc%type_HamilOp    = 1
       para_ReadOp_loc%direct_KEO      = .FALSE.
@@ -693,7 +694,7 @@
       ! make Operators: H and S
       ! allocation of tab_Op
       para_AllOp_loc%nb_Op = 2 ! just H and S
-      CALL alloc_array(para_AllOp_loc%tab_Op,(/ para_AllOp_loc%nb_Op /),&
+      CALL alloc_array(para_AllOp_loc%tab_Op,[para_AllOp_loc%nb_Op],            &
                       'para_AllOp_loc%tab_Op',name_sub)
 
       !i=1 => for H
@@ -1816,7 +1817,6 @@
       para_H%nb_tot        = para_H%nb_baie * para_H%nb_bRot
       para_H%nb_tot_ini    = para_H%nb_baie * para_H%nb_bRot
 
-      para_H%para_ReadOp   = para_ReadOp
       para_H%Make_Mat      = para_ReadOp%Make_Mat
       para_H%pack_Op       = para_ReadOp%pack_Op
       para_H%read_Op       = para_ReadOp%read_Op
@@ -2180,4 +2180,3 @@
 !=======================================================================================
 
       END MODULE mod_Auto_Basis
-

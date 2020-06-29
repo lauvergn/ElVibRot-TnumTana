@@ -143,7 +143,7 @@
 
       SGtype4    = SGtype4 .AND. (para_H%BasisnD%SparseGrid_type == 4)
 
-      ! para_propa%type_WPpropa 1 
+      ! para_propa%type_WPpropa 1
       ! SGtype4 F
       SELECT CASE (para_propa%type_WPpropa)
 
@@ -3610,12 +3610,12 @@
 #if(run_MPI)
 !=======================================================================================
 !> @brief MPI version of march_SIL
-!> according to Smolyak rep. 
+!> according to Smolyak rep.
 !> Note, this works for massive cluster with big memmory
 !
 ! require a new action subroutine, SR vector ready in V
 ! rewrite the atcion function to make it easier for callimng from different subroutines
-!=======================================================================================  
+!=======================================================================================
   SUBROUTINE march_SIL_MPI(TT,no,psi,psi0,para_H,para_propa)
     USE mod_system
     USE mod_Op,                     ONLY:param_Op,sub_OpPsi
@@ -3623,7 +3623,7 @@
     USE mod_psi_set_alloc,          ONLY:param_psi,psi_times_SR_MPI
     USE mod_psi_Op,                 ONLY:norm2_psi_SR_MPI,Overlap_psi1_psi2_SRB_MPI
     USE mod_psi,                    ONLY:norm2_psi
-    USE mod_propa,                  ONLY:Calc_AutoCorr_SR_MPI 
+    USE mod_propa,                  ONLY:Calc_AutoCorr_SR_MPI
     USE mod_OpPsi_SG4,              ONLY:ini_iGs_MPI
     USE mod_basis_BtoG_GtoB_SGType4,ONLY:TypeRVec
     IMPLICIT NONE
@@ -3637,7 +3637,7 @@
     TYPE(param_psi),                intent(inout) :: psi
     Real(kind=Rkind),               intent(in)    :: TT
     Integer,                        intent(in)    :: no
-    
+
     TYPE(param_psi),allocatable                   :: tab_KrylovSpace(:)
     TYPE(param_psi)                               :: w1
     Complex(kind=Rkind)      :: H(para_propa%para_poly%npoly,para_propa%para_poly%npoly)
@@ -3652,24 +3652,24 @@
     Real(kind=Rkind)                              :: micro_deltaT
     Real(kind=Rkind)                              :: micro_T
     Real(kind=Rkind)                              :: micro_phase
-    Integer                                       :: n 
+    Integer                                       :: n
     Integer                                       :: k
 
     Character(len=*),parameter                    :: name_sub='march_SIL_MPI'
 
 
     !> for Krylov Space
-    allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1)) ! param_psi 
-    
+    allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1)) ! param_psi
+
     !> initialize iGs_MPI
     IF(para_H%BasisnD%para_SGType2%once_action) CALL ini_iGs_MPI(para_H,.TRUE.)
-    
+
     !> Extract compact psi to each threads and transfer to gird rep.
     CALL SmolyakR_distribute_SRB_MPI(psi ,para_Op=para_H)
     IF(para_propa%nb_micro>1) CALL SmolyakR_distribute_SRB_MPI(psi0,para_Op=para_H)
-    
+
     !> set first Krylov Space
-    tab_KrylovSpace(1)=psi 
+    tab_KrylovSpace(1)=psi
     IF(para_propa%nb_micro>1) psi0_psiKrylovSpace(:)=CZERO
 
     E0=para_H%E0
@@ -3683,22 +3683,22 @@
 
       ! |w1>=H|v_k>
       CALL sub_OpPsi(Psi=tab_KrylovSpace(k),OpPsi=w1,para_Op=para_H)
-      
-      ! Warning:require this two line to get same result as normal case. 
+
+      ! Warning:require this two line to get same result as normal case.
       ! waiting for new idea
       !CALL SmolyakR_to_packedB_SRB_MPI(w1,para_Op=para_H)
       !CALL SmolyakR_distribute_SRB_MPI(w1 ,para_Op=para_H)
 
       ! case k=1, alpha_1=<v_1|H|v_1>
-      IF(k==1) THEN 
-        !> Energy shift, E0, calculation for the first iteration. E0=<psi |H| psi> 
+      IF(k==1) THEN
+        !> Energy shift, E0, calculation for the first iteration. E0=<psi |H| psi>
         !> This shift is important to improve the stapility
         !> Note phase need to be taking into account at the end of the iterations
         CALL Overlap_psi1_psi2_SRB_MPI(Overlap,tab_KrylovSpace(1),w1)
         !CALL MPI_Reduce_sum_Bcast(Overlap) ! reduce sum and boardcast
         E0=real(Overlap,kind=Rkind)
       ENDIF
-      ! scaling with E0 
+      ! scaling with E0
       CALL sub_scaledOpPsi_SR_MPI(Psi=tab_KrylovSpace(k),OpPsi=w1,E0=E0,Esc=ONE)
 
       ! v_{k}=w_{k-1}/||w_{k-1}||=w_{k-1}/beta_{k-1}
@@ -3735,14 +3735,14 @@
       CALL w1_minus_Cv_SR_MPI(w1,Overlap,tab_KrylovSpace(k))
 
       !> beta_{k}=||w_k||=sqrt(<w_k|w_k>)
-      CALL norm2_psi_SR_MPI(w1,2) !< 2: just calculate the normalization constant 
+      CALL norm2_psi_SR_MPI(w1,2) !< 2: just calculate the normalization constant
       !CALL MPI_Reduce_sum_Bcast(w1%norm2)
       H(k+1,k)=sqrt(w1%norm2)
       H(k,k+1)=conjg(H(k+1,k))
 
       !> assign v_{k+1}=w_k/beta_k
       CALL norm2_psi_SR_MPI(w1,3) !< 3: normalize SR_B with existing norm. constant
-      tab_KrylovSpace(k+1)=w1    
+      tab_KrylovSpace(k+1)=w1
     ENDDO ! for k=1,para_propa%para_poly%npoly
     !CALL SRB_to_packB_write(w1,call_from='endofSILloop')
 
@@ -3754,7 +3754,7 @@
     END DO
 
     !> check normalization
-    CALL norm2_psi_SR_MPI(psi,2) !< 2: just calculate the normalization constant 
+    CALL norm2_psi_SR_MPI(psi,2) !< 2: just calculate the normalization constant
     !CALL norm2_psi(psi)
 
     IF(psi%norm2 > para_propa%max_norm2) THEN
@@ -3766,10 +3766,10 @@
     ENDIF
 
     ! Phase Shift
-    phase=E0*para_propa%WPdeltaT  
+    phase=E0*para_propa%WPdeltaT
     !psi=psi*exp(-EYE*phase)
     CALL psi_times_SR_MPI(psi,exp(-EYE*phase))
-    
+
     ! transfer back to packed basis, valid on master only
     CALL SmolyakR_to_packedB_SRB_MPI(psi,para_Op=para_H)
 
@@ -3777,20 +3777,20 @@
     IF(para_propa%nb_micro>1) THEN
       micro_deltaT=para_propa%WPdeltaT/real(para_propa%nb_micro,kind=Rkind)
       micro_phase =phase/real(para_propa%nb_micro,kind=Rkind)
-    
+
       phase =ZERO
       micro_T=ZERO
-      
+
       DO k=1,para_propa%nb_micro
         micro_T=micro_T+micro_deltaT
         phase=phase+micro_phase
-        
+
         CALL UPsi_spec(UPsiOnKrylov,H,Vec,Eig,micro_T,n,With_diago=.FALSE.)
         ! sum(a_k <v0|v_k'>)
         cdot=sum(UPsiOnKrylov(1:n)*psi0_psiKrylovSpace(1:n)) ! we cannot use dot_product
         cdot=cdot*exp(-EYE*phase)
         IF(MPI_id==0) CALL Write_AutoCorr(no,TT+micro_T,cdot)
-      ENDDO 
+      ENDDO
       CALL flush_perso(no)
     ELSE
       !cdot=Calc_AutoCorr_SR_MPI(psi0,psi,para_propa,TT,Write_AC=.FALSE.)
@@ -3803,8 +3803,8 @@
 
     ! transfer back to packed basis, valid on master only
     !CALL SmolyakR_to_packedB_SRB_MPI(psi,para_Op=para_H)
-    
-    ! deallocation  
+
+    ! deallocation
     DO k=1,size(tab_KrylovSpace)
        CALL dealloc_psi(tab_KrylovSpace(k)) ! deallocation of SR_B included
     ENDDO
@@ -3834,7 +3834,7 @@
 
     TYPE(param_psi),                intent(inout) :: psi
     Character(len=*),               intent(in)    :: call_from
-    
+
     Complex(kind=Rkind)                           :: Overlap
     Real(kind=Rkind),allocatable                  :: SRB(:)
     Real(kind=Rkind),allocatable                  :: CvecR(:)
@@ -3849,16 +3849,16 @@
       d1=psi%SR_B_index(iG)
       d2=psi%SR_B_index(iG+1)-1
       CALL allocate_array(SRB,1,d2-d1+1)
-      SRB=psi%SR_B(d1:d2,1) 
+      SRB=psi%SR_B(d1:d2,1)
       CALL tabR_AT_iG_TO_tabPackedBasis(CvecR,SRB,iG,psi%BasisnD%para_SGType2,         &
-                                        psi%BasisnD%WeightSG(iG)) 
+                                        psi%BasisnD%WeightSG(iG))
       SRB=psi%SR_B(d1:d2,2)
       CALL tabR_AT_iG_TO_tabPackedBasis(CvecC,SRB,iG,psi%BasisnD%para_SGType2,         &
-                                        psi%BasisnD%WeightSG(iG)) 
+                                        psi%BasisnD%WeightSG(iG))
     ENDDO
-    
+
     CALL Overlap_psi1_psi2_SRB_MPI(Overlap,psi,psi)
-    
+
     write(*,*) call_from, ' Real part: ',CvecR
     write(*,*) call_from, ' imag part: ',CvecC
     write(*,*) call_from, ' overlap  : ',Overlap
@@ -3869,19 +3869,19 @@
 #if(run_MPI)
 !=======================================================================================
 !> @brief MPI version of march_SIL
-!> according to Smolyak rep. 
+!> according to Smolyak rep.
 !> Note, this works for massive cluster with big memmory
 !
 ! require a new action subroutine, SR vector ready in V
 ! rewrite the atcion function to make it easier for callimng from different subroutines
-!=======================================================================================  
+!=======================================================================================
   SUBROUTINE march_SIL_MPI_old(TT,no,psi,psi0,para_H,para_propa)
     USE mod_system
     USE mod_Op,                     ONLY:param_Op,sub_OpPsi
     USE mod_OpPsi,                  ONLY:sub_scaledOpPsi_SR_MPI
     USE mod_psi_set_alloc,          ONLY:param_psi,psi_times_SR_MPI
     USE mod_psi_Op,                 ONLY:norm2_psi_SR_MPI,Overlap_psi1_psi2_SRG_MPI
-    USE mod_propa,                  ONLY:Calc_AutoCorr_SR_MPI 
+    USE mod_propa,                  ONLY:Calc_AutoCorr_SR_MPI
     USE mod_OpPsi_SG4,              ONLY:ini_iGs_MPI
     USE mod_basis_BtoG_GtoB_SGType4,ONLY:TypeRVec
     IMPLICIT NONE
@@ -3895,7 +3895,7 @@
     TYPE(param_psi),                intent(inout) :: psi
     Real(kind=Rkind),               intent(in)    :: TT
     Integer,                        intent(in)    :: no
-    
+
     TYPE(param_psi),allocatable                   :: tab_KrylovSpace(:)
     TYPE(param_psi)                               :: w1
     Complex(kind=Rkind)      :: H(para_propa%para_poly%npoly,para_propa%para_poly%npoly)
@@ -3910,29 +3910,29 @@
     Real(kind=Rkind)                              :: micro_deltaT
     Real(kind=Rkind)                              :: micro_T
     Real(kind=Rkind)                              :: micro_phase
-    Integer                                       :: n 
+    Integer                                       :: n
     Integer                                       :: k
 
     Character(len=*),parameter                    :: name_sub='march_SIL_MPI'
 
     !> for Krylov Space
-    allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1)) ! param_psi 
-    
+    allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1)) ! param_psi
+
     !> initialize iGs_MPI
     IF(para_H%BasisnD%para_SGType2%once_action) CALL ini_iGs_MPI(para_H,.TRUE.)
-    
+
     !> Extract compact psi to each threads and transfer to gird rep.
     CALL SmolyakR_distribute_SRG_MPI(psi ,para_Op=para_H)
     CALL SmolyakR_distribute_SRG_MPI(psi0,para_Op=para_H)
-    
+
     !> set first Krylov Space
-    tab_KrylovSpace(1)=psi 
+    tab_KrylovSpace(1)=psi
     IF(para_propa%nb_micro>1) psi0_psiKrylovSpace(:)=CZERO
-    
+
     E0=para_H%E0
     H(:,:)=CZERO ! initialize H
     DO k=1,para_propa%para_poly%npoly
-    
+
       IF(para_propa%nb_micro>1) THEN
         ! <psi(t)|v_k'> ~ <v_0|v_k'>
         psi0_psiKrylovSpace(k)=Calc_AutoCorr_SR_MPI(psi0,tab_KrylovSpace(k),           &
@@ -3943,8 +3943,8 @@
       CALL sub_OpPsi(Psi=tab_KrylovSpace(k),OpPsi=w1,para_Op=para_H)
 
       ! case k=1, alpha_1=<v_1|H|v_1>
-      IF(k==1) THEN 
-        !> Energy shift, E0, calculation for the first iteration. E0=<psi |H| psi> 
+      IF(k==1) THEN
+        !> Energy shift, E0, calculation for the first iteration. E0=<psi |H| psi>
         !> This shift is important to improve the stapility
         !> Note phase need to be taking into account at the end of the iterations
         CALL Overlap_psi1_psi2_SRG_MPI(Overlap,tab_KrylovSpace(1),w1)
@@ -3952,9 +3952,9 @@
         E0=real(Overlap,kind=Rkind)
       ENDIF
 
-      ! scaling with E0 
+      ! scaling with E0
       CALL sub_scaledOpPsi_SR_MPI(Psi=tab_KrylovSpace(k),OpPsi=w1,E0=E0,Esc=ONE)
-      
+
       ! v_{k}=w_{k-1}/||w_{k-1}||=w_{k-1}/beta_{k-1}
       ! k=1: w_{k}=H|v_{k}>-alpha_k|v_{k}>
       ! k>1: w_{k}=H|v_{k}>-alpha_k|v_{k}>-beta_{k-1}|v_{k-1}>
@@ -3989,14 +3989,14 @@
       CALL w1_minus_Cv_SR_MPI(w1,Overlap,tab_KrylovSpace(k))
 
       !> beta_{k}=||w_k||=sqrt(<w_k|w_k>)
-      CALL norm2_psi_SR_MPI(w1,2) !< 2: just calculate the normalization constant 
+      CALL norm2_psi_SR_MPI(w1,2) !< 2: just calculate the normalization constant
       !CALL MPI_Reduce_sum_Bcast(w1%norm2)
       H(k+1,k)=sqrt(w1%norm2)
       H(k,k+1)=H(k+1,k)
 
       !> assign v_{k+1}=w_k/beta_k
       CALL norm2_psi_SR_MPI(w1,3) !< 3: normalize SR_G with existing norm. constant
-      tab_KrylovSpace(k+1)=w1    
+      tab_KrylovSpace(k+1)=w1
     ENDDO ! for k=1,para_propa%para_poly%npoly
     write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n)), 'from ',MPI_id
 
@@ -4008,7 +4008,7 @@
     END DO
 
     !> check normalization
-    CALL norm2_psi_SR_MPI(psi,2) !< 2: just calculate the normalization constant 
+    CALL norm2_psi_SR_MPI(psi,2) !< 2: just calculate the normalization constant
     IF(psi%norm2 > para_propa%max_norm2) THEN
       write(out_unitp,*) ' ERROR in ',name_sub
       write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norm2
@@ -4018,7 +4018,7 @@
     ENDIF
 
     ! Phase Shift
-    phase=E0*para_propa%WPdeltaT  
+    phase=E0*para_propa%WPdeltaT
     ! psi=psi*exp(-EYE*phase)
     CALL psi_times_SR_MPI(psi,exp(-EYE*phase))
 
@@ -4026,20 +4026,20 @@
     IF(para_propa%nb_micro>1) THEN
       micro_deltaT=para_propa%WPdeltaT/real(para_propa%nb_micro,kind=Rkind)
       micro_phase =phase/real(para_propa%nb_micro,kind=Rkind)
-    
+
       phase =ZERO
       micro_T=ZERO
-      
+
       DO k=1,para_propa%nb_micro
         micro_T=micro_T+micro_deltaT
         phase=phase+micro_phase
-        
+
         CALL UPsi_spec(UPsiOnKrylov,H,Vec,Eig,micro_T,n,With_diago=.FALSE.)
         ! sum(a_k <v0|v_k'>)
         cdot=sum(UPsiOnKrylov(1:n)*psi0_psiKrylovSpace(1:n)) ! we cannot use dot_product
         cdot=cdot*exp(-EYE*phase)
         CALL Write_AutoCorr(no,TT+micro_T,cdot)
-      ENDDO 
+      ENDDO
       CALL flush_perso(no)
     ELSE
       cdot=Calc_AutoCorr_SR_MPI(psi0,psi,para_propa,TT,Write_AC=.FALSE.)
@@ -4047,7 +4047,7 @@
       CALL flush_perso(no)
     ENDIF
 
-    ! deallocation  
+    ! deallocation
     DO k=1,size(tab_KrylovSpace)
        CALL dealloc_psi(tab_KrylovSpace(k)) ! deallocation of SR_G included
     ENDDO
@@ -4058,7 +4058,7 @@
     IF(allocated(UPsiOnKrylov)) CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
     CALL dealloc_psi(w1)
 
-    ! update 
+    ! update
     CALL SmolyakR_to_packedB_SRG_MPI(psi,para_Op=para_H)
 
   END SUBROUTINE march_SIL_MPI_old
@@ -4068,9 +4068,9 @@
 #if(run_MPI)
 !=======================================================================================
 !> @brief distribute Smolyak terms to threads
-!> Only the real part of the packed basis are converged to Smolyak rep. 
+!> Only the real part of the packed basis are converged to Smolyak rep.
 !> 1. transfer from packed basis to basis in Smolyak rep.
-!> 2. transfer from basis Re. to grid rep. 
+!> 2. transfer from basis Re. to grid rep.
 !> 3. grid Smolyak rep. are reserved for the current time step
 !
 !> if psi%clpx, the final SR_B will be (:,2) dim matrix, with real and imag. part resp.
@@ -4088,10 +4088,10 @@
                                          getbis_tab_nq,getbis_tab_nb
     USE mod_MPI_Aid
     IMPLICIT NONE
-    
+
     TYPE(param_psi),                intent(inout) :: psi
     TYPE(param_Op),                 intent(in)    :: para_Op
-    
+
     TYPE(param_SGType2),pointer                   :: SGType2
     Real(kind=Rkind),allocatable                  :: SR_B0(:,:)
     Integer,pointer                               :: tab_l(:,:)
@@ -4100,9 +4100,9 @@
     Integer                                       :: iG
     Integer                                       :: nb0
     Integer                                       :: dim
-    
+
     Character(len=*),parameter             :: name_sub='SmolyakR_distribute_SR_MPI'
-    
+
     psi%SRB_MPI=.TRUE.
 
     SGType2 => para_Op%BasisnD%para_SGType2
@@ -4130,21 +4130,21 @@
     !> allocate SR_B for each threads
     IF(psi%cplx) THEN
       CALL allocate_array(psi%SR_B,1,psi%SR_B_length(MPI_id),1,2)
-    ELSE 
+    ELSE
       CALL allocate_array(psi%SR_B,1,psi%SR_B_length(MPI_id),1,1)
     ENDIF
 
     !> distribute SR on Basis to each threads
     IF(MPI_id==0) THEN
       DO i_MPI=1,MPI_np-1
-      
+
         !> allocate temprary array for sending
         IF(psi%cplx) THEN
           CALL allocate_array(SR_B0,1,psi%SR_B_length(i_MPI),1,2)
         ELSE
           CALL allocate_array(SR_B0,1,psi%SR_B_length(i_MPI),1,1)
         ENDIF
-        
+
         !> loop to send SR_B
         DO iG=iGs_MPI(1,i_MPI),iGs_MPI(2,i_MPI)
           IF(psi%cplx) THEN
@@ -4159,7 +4159,7 @@
                                             psi%SR_B_index,para_Op)
           ENDIF
         ENDDO
-      
+
         ! send SR_B
         IF(psi%cplx) THEN
           CALL MPI_Send(SR_B0(1:psi%SR_B_length(i_MPI),1),psi%SR_B_length(i_MPI),      &
@@ -4171,7 +4171,7 @@
                               MPI_real_fortran,root_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
         ENDIF
       ENDDO
-      
+
       ! Smolyak rep. on MPI_id=0
       DO iG=iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)
         IF(psi%cplx) THEN
@@ -4187,7 +4187,7 @@
         ENDIF
       ENDDO
     ENDIF ! for MPI_id==0
-    
+
     !> receive SR_B at each threads
     IF(MPI_id/=0) THEN
       IF(psi%cplx) THEN
@@ -4211,9 +4211,9 @@
 #if(run_MPI)
 !=======================================================================================
 !> @brief distribute Smolyak terms to threads
-!> Only the real part of the packed basis are converged to Smolyak rep. 
+!> Only the real part of the packed basis are converged to Smolyak rep.
 !> 1. transfer from packed basis to basis in Smolyak rep.
-!> 2. transfer from basis Re. to grid rep. 
+!> 2. transfer from basis Re. to grid rep.
 !> 3. grid Smolyak rep. are reserved for the current time step
 !
 !> if psi%clpx, the final SR_G will be (:,2) dim matrix, with real and imag. part resp.
@@ -4231,10 +4231,10 @@
                                          getbis_tab_nq,getbis_tab_nb
     USE mod_MPI_Aid
     IMPLICIT NONE
-    
+
     TYPE(param_psi),                intent(inout) :: psi
     TYPE(param_Op),                 intent(in)    :: para_Op
-    
+
     TYPE(param_SGType2),pointer                   :: SGType2
     Real(kind=Rkind),allocatable                  :: SR_G0(:,:)
     Integer,pointer                               :: tab_l(:,:)
@@ -4243,14 +4243,14 @@
     Integer                                       :: iG
     Integer                                       :: nb0
     Integer                                       :: dim
-    
+
     Character(len=*),parameter             :: name_sub='SmolyakR_distribute_SR_MPI'
-    
+
     psi%SRG_MPI=.TRUE.
 
     SGType2 => para_Op%BasisnD%para_SGType2
     tab_l   => SGType2%nDind_SmolyakRep%Tab_nDval(:,:)
-    
+
     dim=size(tab_l,1)
     CALL alloc_NParray(tab_nb,(/dim/),'tab_nb',name_sub)
     CALL alloc_NParray(tab_nq,(/dim/),'tab_nq',name_sub)
@@ -4261,9 +4261,9 @@
     CALL allocate_array(psi%SR_G_length,0,MPI_np-1)
     CALL allocate_array(psi%SR_G_index,iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)+1)
     psi%SR_G_index(iGs_MPI(1,MPI_id))=1
-    
+
     !IF(MPI_id==0) CALL allocate_array(psi%SR_G_index0,1,SGType2%nb_SG)
-    
+
     DO i_MPI=0,MPI_np-1
       psi%SR_G_length(i_MPI)=0
       !IF(MPI_id==0) psi%SR_G_index0(iGs_MPI(1,i_MPI))=1
@@ -4274,29 +4274,29 @@
         IF(i_MPI==MPI_id) psi%SR_G_index(iG+1)=psi%SR_G_length(MPI_id)+1 ! for each threads
       ENDDO
     ENDDO
-    
+
 !    DO iG=iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)+1
 !      write(*,*) 'iGs_MPI check: iG=',iG,psi%SR_G_index(iG),iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)+1
 !    ENDDO
-    
+
     !> allocate SR_G for each threads
     IF(psi%cplx) THEN
       CALL allocate_array(psi%SR_G,1,psi%SR_G_length(MPI_id),1,2)
-    ELSE 
+    ELSE
       CALL allocate_array(psi%SR_G,1,psi%SR_G_length(MPI_id),1,1)
     ENDIF
 
     !> distribute SR on grid to each threads
     IF(MPI_id==0) THEN
       DO i_MPI=1,MPI_np-1
-      
+
         !> allocate temprary array for sending
         IF(psi%cplx) THEN
           CALL allocate_array(SR_G0,1,psi%SR_G_length(i_MPI),1,2)
         ELSE
           CALL allocate_array(SR_G0,1,psi%SR_G_length(i_MPI),1,1)
         ENDIF
-        
+
         !> loop to send SR_G
         DO iG=iGs_MPI(1,i_MPI),iGs_MPI(2,i_MPI)
           tab_nq(:)=getbis_tab_nq(tab_l(:,iG),para_Op%BasisnD%tab_basisPrimSG)
@@ -4314,7 +4314,7 @@
 !            IF(size(psi%SR_B)-(psi%SR_G_index(iG+1)-psi%SR_G_index(iG))/=0)            &
 !                              STOP 'error in SmolyakR_distribute_MPI, check psi%SR_B size'
 !            SR_G0(psi%SR_G_index(iG):psi%SR_G_index(iG+1)-1,1)=psi%SR_B
-!            
+!
 !            !-Imaginary part------------------------------------------------------------
 !            CALL tabPackedBasis_TO_tabR_AT_iG(psi%SR_B,aimag(psi%CvecB),iG,            &
 !                                              SGType2%tab_nb_OF_SRep(iG)*nb0)
@@ -4342,7 +4342,7 @@
                                        psi%SR_G_index,tab_nq,tab_nb,tab_l(:,iG),para_Op)
           ENDIF
         ENDDO
-      
+
         ! send SR_G
         IF(psi%cplx) THEN
           CALL MPI_Send(SR_G0(1:psi%SR_G_length(i_MPI),1),psi%SR_G_length(i_MPI),      &
@@ -4354,12 +4354,12 @@
                               MPI_real_fortran,root_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
         ENDIF
       ENDDO
-      
+
       ! Smolyak rep. on MPI_id=0
       DO iG=iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)
         tab_nq(:)=getbis_tab_nq(tab_l(:,iG),para_Op%BasisnD%tab_basisPrimSG)
         tab_nb(:)=getbis_tab_nb(tab_l(:,iG),para_Op%BasisnD%tab_basisPrimSG)
-        
+
         IF(psi%cplx) THEN
           ! Real part
           CALL pack_Basis_to_SR_grid_MPI(iG,Real(psi%CvecB,kind=Rkind),psi%SR_G(:,1),  &
@@ -4373,7 +4373,7 @@
         ENDIF
       ENDDO
     ENDIF ! for MPI_id==0
-    
+
     !> receive SR_G at each threads
     IF(MPI_id/=0) THEN
       IF(psi%cplx) THEN
@@ -4412,10 +4412,10 @@
                                          GDP_TO_BDP_OF_SmolyakRep
     USE mod_MPI_Aid
     IMPLICIT NONE
-    
+
     TYPE(param_psi),                intent(inout) :: psi
     TYPE(param_Op),                 intent(in)    :: para_Op
-    
+
     TYPE(param_SGType2),pointer                   :: SGType2
     Real(kind=Rkind),allocatable                  :: SR_B0(:)
     Real(kind=Rkind),allocatable                  :: Rvec(:,:)
@@ -4429,7 +4429,7 @@
     SGType2 => para_Op%BasisnD%para_SGType2
     nb0=SGType2%nb0
 
-    ! send 
+    ! send
     IF(MPI_id/=0) THEN
       IF(psi%cplx) THEN
         CALL MPI_Send(psi%SR_B(1:psi%SR_B_length(MPI_id),1),psi%SR_B_length(MPI_id),   &
@@ -4471,7 +4471,7 @@
             CALL SR_Basis_to_pack_Basis_MPI(iG,Rvec(:,1),SR_B0,psi%SR_B_index,          &
                                             para_Op)
           ENDDO
-          
+
           CALL MPI_Recv(SR_B0(1:psi%SR_B_length(i_MPI)),psi%SR_B_length(i_MPI),      &
                         MPI_real_fortran,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
           DO iG=iGs_MPI(1,i_MPI),iGs_MPI(2,i_MPI)
@@ -4496,7 +4496,7 @@
     IF(allocated(Rvec))      deallocate(Rvec)
     IF(allocated(SR_B0))     deallocate(SR_B0)
     IF(allocated(psi%SR_B))  deallocate(psi%SR_B)
-    
+
     psi%SRB_MPI=.FALSE.
 
   ENDSUBROUTINE SmolyakR_to_packedB_SRB_MPI
@@ -4521,10 +4521,10 @@
                                          getbis_tab_nq,getbis_tab_nb
     USE mod_MPI_Aid
     IMPLICIT NONE
-    
+
     TYPE(param_psi),                intent(inout) :: psi
     TYPE(param_Op),                 intent(in)    :: para_Op
-    
+
     TYPE(param_SGType2),pointer                   :: SGType2
     Real(kind=Rkind),allocatable                  :: SR_G0(:)
     Real(kind=Rkind),allocatable                  :: Rvec(:,:)
@@ -4542,12 +4542,12 @@
     SGType2 => para_Op%BasisnD%para_SGType2
     tab_l   => SGType2%nDind_SmolyakRep%Tab_nDval(:,:)
     nb0=SGType2%nb0
-    
+
     dim=size(tab_l,1)
     CALL alloc_NParray(tab_nb,(/dim/),'tab_nb',name_sub)
     CALL alloc_NParray(tab_nq,(/dim/),'tab_nq',name_sub)
 
-    ! send 
+    ! send
     IF(MPI_id/=0) THEN
       IF(psi%cplx) THEN
         CALL MPI_Send(psi%SR_G(1:psi%SR_G_length(MPI_id),1),psi%SR_G_length(MPI_id),   &
@@ -4609,7 +4609,7 @@
             CALL SR_grid_to_pack_Basis_MPI(iG,Rvec(:,1),SR_G0,psi%SR_G_index,          &
                                            tab_nq,tab_nb,tab_l(:,iG),para_Op)
           ENDDO
-          
+
           CALL MPI_Recv(SR_G0(1:psi%SR_G_length(i_MPI)),psi%SR_G_length(i_MPI),      &
                         MPI_real_fortran,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
           DO iG=iGs_MPI(1,i_MPI),iGs_MPI(2,i_MPI)
@@ -4700,7 +4700,7 @@
     TYPE(param_SGType2),pointer                   :: SGType2
 
     SGType2 => para_Op%BasisnD%para_SGType2
-  
+
     CALL tabPackedBasis_TO_tabR_AT_iG(SR_B,packB,iG,SGType2)
     ! transfer to SR on grid
     CALL BDP_TO_GDP_OF_SmolyakRep(SR_B,para_Op%BasisnD%tab_basisPrimSG,                &
@@ -4726,14 +4726,14 @@
     USE mod_Op,                     ONLY:param_Op
     USE mod_MPI_Aid
     IMPLICIT NONE
-    
-    
+
+
     TYPE(param_Op),                 intent(in)    :: para_Op
     Real(kind=Rkind),               intent(in)    :: SR_B(:)
     Real(kind=Rkind),               intent(inout) :: packB(:)
     Integer,                        intent(in)    :: SR_B_index(:)
     Integer,                        intent(in)    :: iG
-    
+
     Real(kind=Rkind),allocatable                  :: SRB(:)
     Integer                                       :: nb0
 
@@ -4744,7 +4744,7 @@
     CALL allocate_array(SRB,1,SR_B_index(iG+1)-SR_B_index(iG))
     SRB=SR_B(SR_B_index(iG):SR_B_index(iG+1)-1)
 
-    ! now SR_B stores the basis rep. 
+    ! now SR_B stores the basis rep.
     CALL tabR_AT_iG_TO_tabPackedBasis(packB,SRB,iG,para_Op%BasisnD%para_SGType2,       &
                                       para_Op%BasisnD%WeightSG(iG))
     IF(allocated(SRB)) deallocate(SRB)
@@ -4767,8 +4767,8 @@
     USE mod_Op,                     ONLY:param_Op
     USE mod_MPI_Aid
     IMPLICIT NONE
-    
-    
+
+
     TYPE(param_Op),                 intent(in)    :: para_Op
     Real(kind=Rkind),               intent(in)    :: SR_G(:)
     Real(kind=Rkind),               intent(inout) :: packB(:)
@@ -4777,20 +4777,20 @@
     Integer,allocatable,            intent(in)    :: tab_nb(:)
     Integer,                        intent(in)    :: tab_l(:)
     Integer,                        intent(in)    :: iG
-    
+
     Real(kind=Rkind),allocatable                  :: SR_temp(:)
     Integer                                       :: nb0
 
-    
+
     nb0=para_Op%BasisnD%para_SGType2%nb0
-    
+
     ! the SR_G at iG is stored in SR_B
     CALL allocate_array(SR_temp,1,SR_G_index(iG+1)-SR_G_index(iG))
     SR_temp=SR_G(SR_G_index(iG):SR_G_index(iG+1)-1)
-    
+
     CALL GDP_TO_BDP_OF_SmolyakRep(SR_temp,para_Op%BasisnD%tab_basisPrimSG,             &
                                   tab_l,tab_nq,tab_nb,nb0)
-    ! now SR_B stores the basis rep. 
+    ! now SR_B stores the basis rep.
     CALL tabR_AT_iG_TO_tabPackedBasis(packB,SR_temp,iG,para_Op%BasisnD%para_SGType2,   &
                                       para_Op%BasisnD%WeightSG(iG))
     IF(allocated(SR_temp)) deallocate(SR_temp)
@@ -4807,11 +4807,11 @@
    SUBROUTINE w1_minus_Cv_SR_MPI(psi1,Cplx,psi2)
      USE mod_psi_set_alloc,          ONLY:param_psi
      IMPLICIT NONE
-     
+
      TYPE(param_psi),                intent(inout) :: psi1
      TYPE(param_psi),                intent(in)    :: psi2
      Complex(kind=Rkind),            intent(in)    :: Cplx
-     
+
      Real(kind=Rkind)                              :: R
      Real(kind=Rkind)                              :: C
 
@@ -4834,7 +4834,7 @@
          psi1%symab=-1
        ENDIF
      ENDIF
-     
+
    ENDSUBROUTINE w1_minus_Cv_SR_MPI
 !=======================================================================================
 #endif
@@ -4907,7 +4907,7 @@
           CALL sub_OpPsi(w1,w2,para_H) ! calculate once for Hmax
           CALL sub_Hmax(para_propa,para_H)
           para_propa%once_Hmin=.FALSE.
-                
+
           para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
           para_propa%para_poly%Hmin = para_propa%Hmin
           para_propa%para_poly%Hmax = para_propa%Hmax
@@ -4915,7 +4915,7 @@
           CALL initialisation1_poly(para_propa%para_poly,                                &
                                     para_propa%WPdeltaT,                                 &
                                     para_propa%type_WPpropa)
-          
+
           para_H%scaled = .TRUE.
           para_H%E0     = para_propa%para_poly%E0
           para_H%Esc    = para_propa%para_poly%Esc
@@ -4981,7 +4981,7 @@
           w2  = w2 * rt
           psi = psi + w2 * para_propa%para_poly%coef_poly(2)
         ENDIF
-        
+
         psi0Hkpsi0(2) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
 
 !     - The higher terms of the expansion ----------------
@@ -4991,7 +4991,7 @@
           CALL sub_OpPsi(w2,w3,para_H)
           CALL sub_scaledOpPsi(w2,w3,para_H%E0,para_H%Esc)
           IF (mod(jt,100) == 0) write(out_unitp,'(a)',advance='no') '.'
-          
+
           IF(MPI_id==0) THEN
 !           Recurrence relations of the Chebychev expansion:
             w3 = w1 + w3 * rt2
@@ -5115,7 +5115,7 @@
 !-----------------------------------------------------------
 
       END SUBROUTINE march_cheby
-!=======================================================================================      
+!=======================================================================================
 
       SUBROUTINE march_cheby_old(T,no,psi,psi0,para_H,para_propa)
       USE mod_system
@@ -5361,9 +5361,11 @@
       signDT = -ONE
       IF (para_propa%type_WPpropa < 0) signDT = ONE
 
+        write(out_unitp,'(a)',advance='no') 'nOD_im rec:'
 
       w1 = psi
       DO j=1,para_propa%para_poly%max_poly
+        IF (mod(j,10) == 0) write(out_unitp,'(a)',advance='no') '.'
 
         rtj =  signDT*para_propa%WPdeltaT/real(j,kind=Rkind)
 
@@ -5379,6 +5381,8 @@
         IF (w1%norm2/psi%norm2 < para_propa%para_poly%poly_tol) EXIT
 
       END DO
+      write(out_unitp,*) 'jt_exit,rap norm',j,w1%norm2/psi%norm2
+
       IF (para_propa%write_iter .OR. debug)                             &
                   write(out_unitp,*) 'j,wi%n/psi%n',j,w1%norm2/psi%norm2
 
@@ -6470,4 +6474,3 @@
       END SUBROUTINE cof_nOD
 
       END MODULE mod_march
-

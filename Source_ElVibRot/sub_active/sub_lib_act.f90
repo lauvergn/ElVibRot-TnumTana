@@ -1097,4 +1097,3 @@
       IF(MPI_id==0) write(out_unitp,*) 'check_HADA: last grid point, iqf=',iqf
 
       end subroutine check_HADA
-

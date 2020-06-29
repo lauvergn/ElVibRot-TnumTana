@@ -391,7 +391,7 @@ CONTAINS
           E1 = E0
           CALL sub_PsiOpPsi(E0,psi(1),w1,para_H)
           DeltaE = abs(E1-E0)
-          !FOD = (DeltaE > ONETENTH**6)  ! about 3 cm-1
+          FOD = (DeltaE > ONETENTH**6)  ! about 3 cm-1
         ELSE
           IF (para_propa%write_iter .OR. debug) write(out_unitp,*) 'march nOD'
           para_H%E0     = para_propa%para_poly%E0
@@ -436,7 +436,7 @@ CONTAINS
         CALL file_open(para_propa%file_WP,nioWP)
         CALL Write_Psi_nDBasis(psi(1),nioWP,iPsi=1,epsi=ZERO,lformated=para_propa%file_WP%formatted,version=0)
         close(nioWP)
-      
+
         write(out_unitp,*) 'WP (BasisRep) at T=',T
         CALL Write_Psi_nDBasis(psi(1),6,iPsi=1,epsi=ONETENTH,lformated=.TRUE.,version=0)
       ENDIF
@@ -890,7 +890,7 @@ CONTAINS
            IF(MPI_id==0) THEN
              para_propa%ana_psi%Write_psi2_Grid = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi2
              para_propa%ana_psi%Write_psi_Grid  = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi
-           ENDIF 
+           ENDIF
            CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
          ELSE
            CALL sub_analyze_mini_WP_OpWP(T,psi,1,para_H)
@@ -1235,7 +1235,7 @@ CONTAINS
         write(out_unitp,*) 'file_WP0: ',para_propa%para_WP0%file_WP0%name
         CALL sub_save_psi(WP,nb_WP,para_propa%para_WP0%file_WP0)
       ENDIF
-      
+
       RETURN
       !=================================================
 

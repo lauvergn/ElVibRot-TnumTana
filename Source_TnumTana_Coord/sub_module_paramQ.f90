@@ -115,8 +115,10 @@ CONTAINS
       TYPE(Type_dnVec)  :: dnx
 
       integer           :: pot_itQtransfo
-      real (kind=Rkind) :: pot0
-      integer           :: nb_elec,nb_scalar_Op
+      !real (kind=Rkind) :: pot0
+      TYPE (REAL_WU)    :: pot0
+
+      integer           :: nb_elec,nb_scalar_Op,nb_CAP
 
       logical                  :: deriv_WITH_FiniteDiff  = .FALSE.
       logical                  :: nDfit_Op               = .FALSE.
@@ -135,7 +137,7 @@ CONTAINS
       NAMELIST /minimum/ read_itQ0transfo,read_Qsym0,read_Qdyn0,read_xyz0, &
                          read_nameQ,unit,read_xyz0_with_dummy,read_Qact0,  &
                          pot0,pot_act,pot_cart,pot_itQtransfo,pot_cplx,    &
-                         HarD,nb_elec,nb_scalar_Op,                        &
+                         HarD,nb_elec,nb_scalar_Op,nb_CAP,                 &
                          OnTheFly,nDfit_Op,QMLib,BaseName_nDfit_file,      &
                          deriv_WITH_FiniteDiff,                            &
                          opt
@@ -177,6 +179,7 @@ CONTAINS
 
 
       nb_scalar_Op = 0
+      nb_CAP       = 0
       pot_cplx     = .FALSE.
       nb_elec      = 1
 
@@ -188,15 +191,15 @@ CONTAINS
       ELSE
         HarD               = .TRUE.
       END IF
-      pot0                 = ZERO
+      pot0                 = REAL_WU(ZERO,'au','E')
 
       nDfit_Op             = .FALSE.
       BaseName_nDfit_file  = ""
       OnTheFly             = .FALSE.
       QMLib                = .FALSE.
 
-      deriv_WITH_FiniteDiff  = .FALSE.
-      opt          = .FALSE.
+      deriv_WITH_FiniteDiff = .FALSE.
+      opt                   = .FALSE.
 
       read(in_unitp,minimum,IOSTAT=err_io)
       IF (err_io < 0) THEN
@@ -285,13 +288,14 @@ CONTAINS
 
       IF (nb_elec < 1) nb_elec = 1
       para_Tnum%para_PES_FromTnum%opt            = opt
-      para_Tnum%para_PES_FromTnum%pot0           = pot0
+      para_Tnum%para_PES_FromTnum%pot0           = convRWU_TO_R_WITH_WorkingUnit(pot0)
       para_Tnum%para_PES_FromTnum%HarD           = HarD
       para_Tnum%para_PES_FromTnum%nb_elec        = nb_elec
       para_Tnum%para_PES_FromTnum%pot_cplx       = pot_cplx
       para_Tnum%para_PES_FromTnum%OnTheFly       = OnTheFly
       para_Tnum%para_PES_FromTnum%pot_itQtransfo = pot_itQtransfo
       para_Tnum%para_PES_FromTnum%nb_scalar_Op   = nb_scalar_Op
+      para_Tnum%para_PES_FromTnum%nb_CAP         = nb_CAP
 
       para_Tnum%para_PES_FromTnum%deriv_WITH_FiniteDiff  = deriv_WITH_FiniteDiff
 
@@ -321,6 +325,7 @@ CONTAINS
 
       IF(MPI_id==0) THEN
         write(out_unitp,*) 'nb_scalar_Op',nb_scalar_Op
+        write(out_unitp,*) 'nb_CAP',nb_CAP
         write(out_unitp,*) 'pot_itQtransfo',pot_itQtransfo
 
         IF (para_Tnum%para_PES_FromTnum%pot_itQtransfo == 0) THEN
@@ -599,7 +604,7 @@ CONTAINS
             write(out_unitp,*) '===================================='
         write(out_unitp,*) 'END ',name_sub
       ENDIF
-      
+
       CALL dealloc_NParray(QRead,"QRead",name_sub)
 
       END SUBROUTINE read_RefGeom_CoordType
@@ -1990,7 +1995,7 @@ CONTAINS
 
       END SUBROUTINE Write_d0Q
 
-!=======================================================================================      
+!=======================================================================================
       SUBROUTINE Write_Q_WU(Q,name_Q,type_Q,info)
       USE mod_system
       USE mod_MPI
@@ -2052,7 +2057,7 @@ CONTAINS
       !-----------------------------------------------------------------
 
       END SUBROUTINE Write_Q_WU
-!=======================================================================================      
+!=======================================================================================
 
       SUBROUTINE Get_Qread(Q,name_Q,type_Q,read_nameQ,unit,read_xyz0,info)
       USE mod_system

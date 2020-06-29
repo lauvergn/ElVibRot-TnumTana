@@ -1,24 +1,24 @@
 C**********************************************************************
-C     
+C
 C     Copyright (C) 1992  Roland W. Freund and Noel M. Nachtigal
 C     All rights reserved.
-C     
+C
 C     This code is part of a copyrighted package.  For details, see the
 C     file `cpyrit.doc' in the top-level directory.
-C     
+C
 C     *****************************************************************
 C     ANY USE OF  THIS CODE CONSTITUTES ACCEPTANCE OF  THE TERMS OF THE
 C     COPYRIGHT NOTICE
 C     *****************************************************************
-C     
+C
 C**********************************************************************
-C     
+C
 C     This  file  contains  the  routines  for  the  QMR algorithm  for
 C     symmetric matrices, using the coupled two-term recurrence variant
 C     of the Lanczos algorithm without look-ahead.
-C     
+C
 C**********************************************************************
-C     
+C
       SUBROUTINE ZSCPX (NDIM,NLEN,NLIM,VECS,TOL,INFO)
       use mod_system, only : Rkind
 
@@ -29,7 +29,7 @@ C     linear systems.  It runs the algorithm to convergence  or until a
 C     user-specified limit on the number of  iterations is reached.  It
 C     is  set up  to solve  symmetric  systems  starting with identical
 C     starting vectors.
-C     
+C
 C     The  code is  set up  to solve  the system  A x = b  with initial
 C     guess x_0 = 0.  Here  A x = b  denotes the preconditioned system,
 C     and  it  is  connected with the  original system as follows.  Let
@@ -38,21 +38,21 @@ C     let y_0 be an arbitrary initial guess for its solution.  Then:
 C     A x = b, where  A = M_1^{-1} B M_2^{-1},
 C     x = M_2 (y - y_0), b = M_1^{-1} (c - B y_0).
 C     Here M = M_1 M_2 is the preconditioner.
-C     
+C
 C     To recover the final iterate y_n for  the original system B y = c
 C     from the final iterate x_n for the preconditioned system A x = b,
 C     set
 C     y_n = y_0 + M_2^{-1} x_n.
-C     
+C
 C     The algorithm  was first described  in the RIACS Technical Report
 C     92.15, "An Implementation of the QMR Method Based on Coupled Two-
 C     Term Recurrences",  June 1992.  This implementation does not have
 C     look-ahead, so it is less robust than the full version.
-C     
+C
 C     Parameters:
 C     For a description of  the parameters, see the file `zscpx.doc' in
 C     the current directory.
-C     
+C
 C     External routines used:
 C     double precision dlamch(ch)
 C     LAPACK routine, computes machine-related constants.
@@ -69,30 +69,30 @@ C     BLAS-1 routine, computes the Givens rotation which rotates the
 C     vector [a; b] into [ sqrt(a**2 + b**2); 0 ].
 C     double precision zscpxo(n)
 C     User-supplied routine, specifies the QMR scaling factors.
-C     
+C
 C     Noel M. Nachtigal
 C     March 30, 1993
-C     
+C
 C**********************************************************************
-C     
+C
       !INTRINSIC CDABS, DABS, DBLE, DCMPLX, DCONJG, DMAX1, DSQRT, MAX0
       EXTERNAL DLAMCH, DZNRM2, ZAXPBY, ZDOTU, ZRANDN, ZROTG, ZSCPXO
       DOUBLE COMPLEX ZDOTU
       DOUBLE PRECISION DLAMCH, DZNRM2, ZSCPXO
-C     
+C
       INTEGER INFO(4), NDIM, NLEN, NLIM
       DOUBLE COMPLEX VECS(NDIM,6)
       DOUBLE PRECISION TOL
-C     
+C
 C     Miscellaneous parameters.
-C     
+C
       DOUBLE COMPLEX ZONE, ZZERO
       PARAMETER (ZONE = (1.0D0,0.0D0),ZZERO = (0.0D0,0.0D0))
       DOUBLE PRECISION DHUN, DONE, DTEN, DZERO
       PARAMETER (DHUN = 1.0D2,DONE = 1.0D0,DTEN = 1.0D1,DZERO = 0.0D0)
-C     
+C
 C     Local variables, permanent.
-C     
+C
       INTEGER IERR, N, RETLBL, TF, TRES, VF
       SAVE    IERR, N, RETLBL, TF, TRES, VF
       DOUBLE COMPLEX DNN, ENN, SCS, SINN, RHSN
@@ -101,24 +101,24 @@ C
       SAVE             COSN, GAMN, LNP1N, MAXOMG, OMG, R0, SCPN, SCQN
       DOUBLE PRECISION SCV, RESN, TMAX, TMIN, TNRM, UCHK, UNRM
       SAVE             SCV, RESN, TMAX, TMIN, TNRM, UCHK, UNRM
-C     
+C
 C     Local variables, transient.
-C     
+C
       INTEGER INIT, REVCOM
       DOUBLE COMPLEX LNN, RHN, RHNM1, RHNP1, RHSNP1, UNM1N, ZTMP
       DOUBLE PRECISION GAMNM1, SCW
-C     
+C
 C     Initialize some of the permanent variables.
-C     
+C
       DATA RETLBL /0/
-C     
+C
 C     Check the reverse communication flag to see where to branch.
 C     REVCOM   RETLBL      Comment
 C     0        0    first call, go to label 10
 C     1       30    returning from AXB, go to label 30
 C     1       50    returning from AXB, go to label 50
 C     2       40    returning from ATXB, go to label 40
-C     
+C
       REVCOM  = INFO(2)
       INFO(2) = 0
       IF (REVCOM.EQ.0) THEN
@@ -135,19 +135,19 @@ C
       END IF
       IERR = 1
       GO TO 70
-C     
+C
 C     Check whether the inputs are valid.
-C     
+C
  10   IERR = 0
       IF (NDIM.LT.1)        IERR = 2
       IF (NLEN.LT.1)        IERR = 2
       IF (NLIM.LT.1)        IERR = 2
       IF (NLEN.GT.NDIM)     IERR = 2
       IF (IERR.NE.0) GO TO 70
-C     
+C
 C     Extract from INFO the output units TF and VF, the true residual
 C     flag TRES, and the left starting vector flag INIT.
-C     
+C
       VF   = MAX0(INFO(1),0)
       INIT = VF / 100000
       VF   = VF - INIT * 100000
@@ -155,32 +155,32 @@ C
       VF   = VF - TRES * 10000
       TF   = VF / 100
       VF   = VF - TF * 100
-C     
+C
 C     Extract and check the various tolerances.
-C     
+C
       TNRM = DLAMCH('E') * DTEN
       TMIN = DSQRT(DSQRT(DLAMCH('S')))
       TMAX = DONE / TMIN
       IF (TOL.LE.DZERO) TOL = DSQRT(DLAMCH('E'))
-C     
+C
 C     Start the trace messages and convergence history.
-C     
+C
       IF (VF.NE.0) WRITE (VF,'(I8,2E11.4)') 0, DONE, DONE
       IF (TF.NE.0) WRITE (TF,'(I8,2E11.4)') 0, DONE, DONE
-C     
+C
 C     Set x_0 = 0 and compute the norm of the initial residual.
-C     
-      CALL ZAXPBY (NLEN,VECS(1,3),ZONE,VECS(1,2),ZZERO,VECS(1,3)) 
+C
+      CALL ZAXPBY (NLEN,VECS(1,3),ZONE,VECS(1,2),ZZERO,VECS(1,3))
       CALL ZAXPBY (NLEN,VECS(1,1),ZZERO,VECS(1,1),ZZERO,VECS(1,1))
       R0 = DZNRM2(NLEN,VECS(1,3),1)
       IF ((TOL.GE.DONE).OR.(R0.EQ.DZERO)) GO TO 70
-C     
+C
 C     Check whether the auxiliary vector must be supplied.
-C     
+C
 C     SYM  IF (INIT.EQ.0) CALL ZRANDN (NLEN,VECS(1,3),1)
-C     
+C
 C     Initialize the variables.
-C     
+C
       N      = 1
       SCV    = R0
       ENN    = ZONE
@@ -195,18 +195,18 @@ C
       OMG    = ZSCPXO(N)
       RHSN   = OMG * R0
       MAXOMG = DONE / OMG
-C     
+C
 C     This is one step of the coupled two-term Lanczos algorithm.
 C     Check whether E_n is nonsingular.
-C     
+C
  20   IF (abs(ENN).EQ.DZERO) THEN
          IERR = 8
          GO TO 70
       END IF
-C     
+C
 C     Compute scale factor for the vector w_{n}.
 C     Check for invariant subspaces, and scale the vectors if needed.
-C     
+C
       IERR = 0
 C     SYM  SCW  = DZNRM2(NLEN,VECS(1,3),1)
       SCW  = SCV
@@ -228,9 +228,9 @@ C     SYM     CALL ZAXPBY (NLEN,VECS(1,3),ZTMP,VECS(1,3),ZZERO,VECS(1,3))
       END IF
       SCV = DONE / SCV
       SCW = DONE / SCW
-C     
+C
 C     Build the vectors p_n and q_n.
-C     
+C
       UNM1N = DNN * LNP1N * GAMNM1 / ( GAMN * ENN )
       ZTMP  = UNM1N * SCPN / SCV
       CALL ZAXPBY (NLEN,VECS(1,4),ZONE,VECS(1,3),-ZTMP,VECS(1,4))
@@ -238,81 +238,81 @@ C
 C     SYM  CALL ZAXPBY (NLEN,VECS(1,4),ZONE,VECS(1,3),-ZTMP,VECS(1,4))
       SCPN  = SCV
       SCQN  = SCW
-C     
+C
 C     Check whether D_n is nonsingular.
-C     
+C
       IF (abs(DNN).EQ.DZERO) THEN
          IERR = 8
          GO TO 70
       END IF
-C     
+C
 C     Have the caller carry out AXB, then return here.
 C     CALL AXB (VECS(1,4),VECS(1,6))
-C     
+C
       INFO(2) = 1
       INFO(3) = 4
       INFO(4) = 6
       RETLBL  = 30
       RETURN
-C     
+C
 C     Compute q_n^T A p_n.
-C     
+C
  30   ENN = SCPN * SCQN * ZDOTU(NLEN,VECS(1,4),1,VECS(1,6),1)
-C     
+C
 C     Build the vector v_{n+1}.
-C     
+C
       LNN = ENN / DNN
       CALL ZAXPBY (NLEN,VECS(1,3),ZONE,VECS(1,6),-LNN,VECS(1,3))
-C     
+C
 C     Have the caller carry out ATXB, then return here.
 C     CALL ATXB (VECS(1,4),VECS(1,6))
-C     
+C
       INFO(2) = 2
       INFO(3) = 8
       INFO(4) = 6
       RETLBL  = 40
 C     SYM  RETURN
-C     
+C
 C     Build the vector w_{n+1}.
-C     
+C
  40   LNN = ENN / DNN
 C     SYM  CALL ZAXPBY (NLEN,VECS(1,3),ZONE,VECS(1,6),-LNN,VECS(1,3))
-C     
+C
 C     Compute scale factor for the vector v_{n+1}.
-C     
+C
       SCV    = DZNRM2(NLEN,VECS(1,3),1)
       LNP1N  = SCPN * SCV
-C     
+C
 C     The QMR code starts here.
 C     Multiply the new column by the previous omega's.
 C     Get the next scaling factor omega(i) and update MAXOMG.
-C     
+C
       RHN    = OMG * LNN
       OMG    = ZSCPXO(N+1)
       RHNP1  = OMG * LNP1N
       MAXOMG = DMAX1(MAXOMG,DONE/OMG)
-C     
+C
 C     Apply the previous rotation.
-C     
+C
       RHNM1 = SINN * RHN
       RHN   = COSN * RHN
-C     
+C
 C     Compute the rotation for the last element (this also applies it).
-C     
+C
       CALL ZROTG (RHN,RHNP1,COSN,SINN)
-C     
+C
 C     Apply the new rotation to the right-hand side vector.
-C     
+C
       RHSNP1 = -conjg(SINN) * RHSN
       RHSN   =  COSN * RHSN
-C     
+C
 C     Compute the next search direction s_i.
-C     
+C
       ZTMP = RHNM1 * SCS / SCPN
       CALL ZAXPBY (NLEN,VECS(1,5),ZONE,VECS(1,4),-ZTMP,VECS(1,5))
-C     
+C
 C     Compute the new QMR iterate, then scale the search direction.
-C     
+C
       SCS  = SCPN / RHN
       ZTMP = SCS * RHSN
       CALL ZAXPBY (NLEN,VECS(1,1),ZONE,VECS(1,1),ZTMP,VECS(1,5))
@@ -320,19 +320,19 @@ C
          CALL ZAXPBY (NLEN,VECS(1,5),SCS,VECS(1,5),ZZERO,VECS(1,5))
          SCS = ZONE
       END IF
-C     
+C
 C     Compute the residual norm upper bound.
 C     If the scaled upper bound is within one order of magnitude of the
 C     target convergence norm, compute the true residual norm.
-C     
+C
       RHSN = RHSNP1
       UNRM = DSQRT(DBLE(N+1)) * MAXOMG * abs(RHSNP1) / R0
       UCHK = UNRM
       IF ((TRES.EQ.0).AND.(UNRM/TOL.GT.DTEN).AND.(N.LT.NLIM)) GO TO 60
-C     
+C
 C     Have the caller carry out AXB, then return here.
 C     CALL AXB (VECS(1,1),VECS(1,6))
-C     
+C
       INFO(2) = 1
       INFO(3) = 1
       INFO(4) = 6
@@ -341,19 +341,19 @@ C
  50   CALL ZAXPBY (NLEN,VECS(1,6),ZONE,VECS(1,2),-ZONE,VECS(1,6))
       RESN = DZNRM2(NLEN,VECS(1,6),1) / R0
       UCHK = RESN
-C     
+C
 C     Output the convergence history.
-C     
+C
  60   IF (VF.NE.0) WRITE (VF,'(I8,2E11.4)') N, UNRM, RESN
       IF (TF.NE.0) WRITE (TF,'(I8,2E11.4)') N, UNRM, RESN
-C     
+C
 C     Check for convergence or termination.  Stop if:
 C     1. algorithm converged;
 C     2. there is an error condition;
 C     3. the residual norm upper bound is smaller than the computed
 C     residual norm by a factor of at least 100;
 C     4. algorithm exceeded the iterations limit.
-C     
+C
       IF (RESN.LE.TOL) THEN
          IERR = 0
          GO TO 70
@@ -366,18 +366,18 @@ C
          IERR = 4
          GO TO 70
       END IF
-C     
+C
 C     Update the running counter.
-C     
+C
       N = N + 1
       GO TO 20
-C     
+C
 C     That's all.
-C     
+C
  70   NLIM    = N
       RETLBL  = 0
       INFO(1) = IERR
-C     
+C
       RETURN
       END
 C
@@ -405,24 +405,24 @@ C
 C
 C**********************************************************************
       DOUBLE PRECISION FUNCTION DLAMCH( CMACH )
-*     
+*
 *     -- LAPACK auxiliary routine (version 1.1) --
 *     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
 *     Courant Institute, Argonne National Lab, and Rice University
 *     October 31, 1992
-*     
+*
 *     .. Scalar Arguments ..
       CHARACTER          CMACH
 *     ..
-*     
+*
 *     Purpose
 *     =======
-*     
+*
 *     DLAMCH determines double precision machine parameters.
-*     
+*
 *     Arguments
 *     =========
-*     
+*
 *     CMACH   (input) CHARACTER*1
 *     Specifies the value to be returned by DLAMCH:
 *     = 'E' or 'e',   DLAMCH := eps
@@ -435,9 +435,9 @@ C**********************************************************************
 *     = 'U' or 'u',   DLAMCH := rmin
 *     = 'L' or 'l',   DLAMCH := emax
 *     = 'O' or 'o',   DLAMCH := rmax
-*     
+*
 *     where
-*     
+*
 *     eps   = relative machine precision
 *     sfmin = safe minimum, such that 1/sfmin does not overflow
 *     base  = base of the machine
@@ -448,9 +448,9 @@ C**********************************************************************
 *     rmin  = underflow threshold - base**(emin-1)
 *     emax  = largest exponent before overflow
 *     rmax  = overflow threshold  - (base**emax)*(1-eps)
-*     
+*
 *     =====================================================================
-*     
+*
 *     .. Parameters ..
       DOUBLE PRECISION   ONE, ZERO
       PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
@@ -476,7 +476,7 @@ C**********************************************************************
       DATA               FIRST / .TRUE. /
 *     ..
 *     .. Executable Statements ..
-*     
+*
       IF( FIRST ) THEN
          FIRST = .FALSE.
          CALL DLAMC2( BETA, IT, LRND, EPS, IMIN, RMIN, IMAX, RMAX )
@@ -495,14 +495,14 @@ C**********************************************************************
          SFMIN = RMIN
          SMALL = ONE / RMAX
          IF( SMALL.GE.SFMIN ) THEN
-*     
+*
 *     Use SMALL plus a bit, to avoid the possibility of rounding
 *     causing overflow when computing  1/sfmin.
-*     
+*
             SFMIN = SMALL*( ONE+EPS )
          END IF
       END IF
-*     
+*
       IF( LSAME( CMACH, 'E' ) ) THEN
          RMACH = EPS
       ELSE IF( LSAME( CMACH, 'S' ) ) THEN
@@ -524,12 +524,12 @@ C**********************************************************************
       ELSE IF( LSAME( CMACH, 'O' ) ) THEN
          RMACH = RMAX
       END IF
-*     
+*
       DLAMCH = RMACH
       RETURN
-*     
+*
 *     End of DLAMCH
-*     
+*
       END
 *
 ************************************************************************
@@ -1487,24 +1487,24 @@ c
 *
       END
 **********************************************************************
-C     
+C
 C     Copyright (C) 1992  Roland W. Freund and Noel M. Nachtigal
 C     All rights reserved.
-C     
+C
 C     This code is part of a copyrighted package.  For details, see the
 C     file `cpyrit.doc' in the top-level directory.
-C     
+C
 C     *****************************************************************
 C     ANY USE OF  THIS CODE CONSTITUTES ACCEPTANCE OF  THE TERMS OF THE
 C     COPYRIGHT NOTICE
 C     *****************************************************************
-C     
+C
 C**********************************************************************
-C     
+C
       SUBROUTINE ZAXPBY (N,ZZ,ZA,ZX,ZB,ZY)
       use mod_system, only : Rkind
 
-C     
+C
 C     Purpose:
 C     This subroutine computes ZZ = ZA * ZX + ZB * ZY.  Several special
 C     cases are handled separately:
@@ -1525,7 +1525,7 @@ C     ZA =   ZA, ZB =  1.0 => ZZ = ZA * ZX + ZY  (this is AXPY)
 C     ZA =   ZA, ZB = -1.0 => ZZ = ZA * ZX - ZY
 C     ZA =   ZA, ZB =   ZB => ZZ = ZA * ZX + ZB * ZY
 C     ZZ may be the same as ZX or ZY.
-C     
+C
 C     Parameters:
 C     N  = the dimension of the vectors (input).
 C     ZZ = the vector result (output).
@@ -1533,24 +1533,24 @@ C     ZA = scalar multiplier for ZX (input).
 C     ZX = one of the vectors (input).
 C     ZB = scalar multiplier for ZY (input).
 C     ZY = the other vector (input).
-C     
+C
 C     Noel M. Nachtigal
 C     March 23, 1993
-C     
+C
 C**********************************************************************
-C     
+C
       !INTRINSIC DIMAG, DREAL
-C     
+C
       INTEGER N
       DOUBLE COMPLEX ZA, ZB, ZX(N), ZY(N), ZZ(N)
-C     
+C
 C     Local variables.
-C     
+C
       INTEGER I
       DOUBLE PRECISION DAI, DAR, DBI, DBR
-C     
+C
       IF (N.LE.0) RETURN
-C     
+C
       DAI = aimag(ZA)
       DAR = real(ZA,kind=Rkind)
       DBI = aimag(ZB)
@@ -1644,7 +1644,7 @@ C     ZA = ZA, ZB = ZB => ZZ = ZA * ZX + ZB * ZY.
  160        CONTINUE
          END IF
       END IF
-C     
+C
       RETURN
       END
 C
@@ -1685,46 +1685,46 @@ c
       return
       end
 C**********************************************************************
-C     
+C
       SUBROUTINE ZRANDN (N,ZX,SEED)
       use mod_system, only : Rkind
 
-C     
+C
 C     Purpose:
 C     Fills the vector ZX with random numbers  between 0 and 1.  If the
 C     SEED is given, it should be odd and positive.  The generator is a
 C     fairly unsophisticated one, from Pearson's  "Numerical methods in
 C     engineering and science" book.
-C     
+C
 C     Parameters:
 C     N    = the dimension of the vector (input).
 C     ZX   = the vector to fill with random numbers (output).
 C     SEED = the seed for the generator (input).
-C     
+C
 C     Noel M. Nachtigal
 C     April 23, 1993
-C     
+C
 C**********************************************************************
-C     
+C
       !INTRINSIC DBLE, DCMPLX, IABS, MOD
-C     
+C
       INTEGER N, SEED
       DOUBLE COMPLEX ZX(N)
-C     
+C
 C     Local variables.
-C     
+C
       INTEGER I, J
       DOUBLE PRECISION IMAGX, REALX
-C     
+C
 C     Local variables that are saved from one call to the next.
-C     
+C
       DOUBLE PRECISION DMAX
       INTEGER IM, IMAX, IS
       SAVE DMAX, IM, IMAX, IS
       DATA IM/0/
-C     
+C
 C     Initialize the generator data.
-C     
+C
       IF (IM.EQ.0) THEN
          J  = 0
          IM = 1
@@ -1742,13 +1742,13 @@ C
          IM = IM + 5
          IS = IABS(MOD(IM*30107,IMAX))
       END IF
-C     
+C
 C     Check whether there is a new seed.
-C     
+C
       IF (SEED.GT.0) IS = (SEED / 2) * 2 + 1
-C     
+C
 C     Here goes the rest.
-C     
+C
       DO 40 I = 1, N
          REALX = DBLE(IS) / DMAX
          IS    = IABS(MOD(IM*IS,IMAX))
@@ -1756,7 +1756,7 @@ C
          IS    = IABS(MOD(IM*IS,IMAX))
          ZX(I) = cmplx(REALX,IMAGX,kind=Rkind)
  40   CONTINUE
-C     
+C
       RETURN
       END
 C
@@ -1784,36 +1784,36 @@ C**********************************************************************
       return
       end
 C**********************************************************************
-C     
+C
 C     Copyright (C) 1992  Roland W. Freund and Noel M. Nachtigal
 C     All rights reserved.
-C     
+C
 C     This code is part of a copyrighted package.  For details, see the
 C     file `cpyrit.doc' in the top-level directory.
-C     
+C
 C     *****************************************************************
 C     ANY USE OF  THIS CODE CONSTITUTES ACCEPTANCE OF  THE TERMS OF THE
 C     COPYRIGHT NOTICE
 C     *****************************************************************
-C     
+C
 C**********************************************************************
-C     
+C
 C     This  file  contains  the  routine  for  the  QMR  algorithm  for
 C     symmetric matrices,  using the  three-term recurrence  variant of
 C     the Lanczos algorithm without look-ahead.
-C     
+C
 C**********************************************************************
-C     
+C
       SUBROUTINE ZSQMX (NDIM,NLEN,NLIM,VECS,TOL,INFO)
       use mod_system, only : Rkind
 
-C     
+C
 C     Purpose:
 C     This subroutine uses  the QMR algorithm to solve  linear systems.
 C     It runs  the algorithm  to convergence or until  a user-specified
 C     limit on the number of  iterations is reached.  It is set  up  to
 C     solve symmetric systems starting with identical starting vectors.
-C     
+C
 C     The  code is  set up  to solve  the system  A x = b  with initial
 C     guess x_0 = 0.  Here  A x = b  denotes the preconditioned system,
 C     and  it  is  connected with the  original system as follows.  Let
@@ -1822,19 +1822,19 @@ C     let y_0 be an arbitrary initial guess for its solution.  Then:
 C     A x = b, where  A = M_1^{-1} B M_2^{-1},
 C     x = M_2 (y - y_0), b = M_1^{-1} (c - B y_0).
 C     Here M = M_1 M_2 is the preconditioner.
-C     
+C
 C     To recover the final iterate y_n for  the original system B y = c
 C     from the final iterate x_n for the preconditioned system A x = b,
 C     set
 C     y_n = y_0 + M_2^{-1} x_n.
-C     
+C
 C     The implementation does not have look-ahead, so it is less robust
 C     than the full version.
-C     
+C
 C     Parameters:
 C     For a description of  the parameters, see the file `zsqmx.doc' in
 C     the current directory.
-C     
+C
 C     External routines used:
 C     double precision dlamch(ch)
 C     LAPACK routine, computes machine-related constants.
@@ -1851,31 +1851,31 @@ C     Library routine, fills x with random numbers.
 C     subroutine zrotg(a,b,cos,sin)
 C     BLAS-1 routine, computes the Givens rotation which rotates the
 C     vector [a; b] into [ sqrt(a**2 + b**2); 0 ].
-C     
+C
 C     Noel M. Nachtigal
 C     May 25, 1993
-C     
+C
 C**********************************************************************
-C     
+C
       !INTRINSIC CDABS, DABS, DBLE, DCMPLX, DCONJG, DMAX1, DSQRT, MAX0
       !INTRINSIC MOD
       EXTERNAL DLAMCH, DZNRM2, ZAXPBY, ZDOTU, ZRANDN, ZROTG, ZSQMXO
       DOUBLE COMPLEX ZDOTU
       DOUBLE PRECISION DLAMCH, DZNRM2, ZSQMXO
-C     
+C
       INTEGER INFO(4), NDIM, NLEN, NLIM
       DOUBLE COMPLEX VECS(NDIM,7)
       DOUBLE PRECISION TOL
-C     
+C
 C     Miscellaneous parameters.
-C     
+C
       DOUBLE COMPLEX ZONE, ZZERO
       PARAMETER (ZONE = (1.0D0,0.0D0),ZZERO = (0.0D0,0.0D0))
       DOUBLE PRECISION DHUN, DONE, DTEN, DZERO
       PARAMETER (DHUN = 1.0D2,DONE = 1.0D0,DTEN = 1.0D1,DZERO = 0.0D0)
-C     
+C
 C     Local variables, permanent.
-C     
+C
       INTEGER IERR, ISN, ISNM1, ISNM2, IVN, IVNM1, IVNP1, IWN, IWNM1
       SAVE    IERR, ISN, ISNM1, ISNM2, IVN, IVNM1, IVNP1, IWN, IWNM1
       INTEGER IWNP1, N, RETLBL, TF, TRES, VF
@@ -1888,24 +1888,24 @@ C
       SAVE             OMGNP1, R0, RESN, RHON, RHONP1, SCVN, SCVNP1
       DOUBLE PRECISION SCWN, SCWNP1, TMAX, TMIN, TNRM, UCHK, UNRM
       SAVE             SCWN, SCWNP1, TMAX, TMIN, TNRM, UCHK, UNRM
-C     
+C
 C     Local variables, transient.
-C     
+C
       INTEGER INIT, REVCOM
       DOUBLE COMPLEX RHN, RHNM1, RHNM2, RHNP1, RHSNP1, ZTMP
       DOUBLE PRECISION DTMP, SCVNM1, SCWNM1
-C     
+C
 C     Initialize some of the permanent variables.
-C     
+C
       DATA RETLBL /0/
-C     
+C
 C     Check the reverse communication flag to see where to branch.
 C     REVCOM   RETLBL      Comment
 C     0        0    first call, go to label 10
 C     1       30    returning from AXB, go to label 30
 C     1       60    returning from AXB, go to label 60
 C     2       40    returning from ATXB, go to label 40
-C     
+C
       REVCOM  = INFO(2)
       INFO(2) = 0
       IF (REVCOM.EQ.0) THEN
@@ -1922,19 +1922,19 @@ C
       END IF
       IERR = 1
       GO TO 80
-C     
+C
 C     Check whether the inputs are valid.
-C     
+C
  10   IERR = 0
       IF (NDIM.LT.1)        IERR = 2
       IF (NLEN.LT.1)        IERR = 2
       IF (NLIM.LT.1)        IERR = 2
       IF (NLEN.GT.NDIM)     IERR = 2
       IF (IERR.NE.0) GO TO 80
-C     
+C
 C     Extract from INFO the output units TF and VF, the true residual
 C     flag TRES, and the left starting vector flag INIT.
-C     
+C
       VF   = MAX0(INFO(1),0)
       INIT = VF / 100000
       VF   = VF - INIT * 100000
@@ -1942,41 +1942,41 @@ C
       VF   = VF - TRES * 10000
       TF   = VF / 100
       VF   = VF - TF * 100
-C     
+C
 C     Extract and check the various tolerances.
-C     
+C
       TNRM = DLAMCH('E') * DTEN
       TMIN = DSQRT(DSQRT(DLAMCH('S')))
       TMAX = DONE / TMIN
       IF (TOL.LE.DZERO) TOL = DSQRT(DLAMCH('E'))
-C     
+C
 C     Start the trace messages and convergence history.
-C     
+C
       IF (VF.NE.0) WRITE (VF,'(I8,2E11.4)') 0, DONE, DONE
       IF (TF.NE.0) WRITE (TF,'(I8,2E11.4)') 0, DONE, DONE
-C     
+C
 C     Initialize the wrapped indices.
-C     
+C
       ISNM1 = 5
       ISN   = ISNM1
       IVN   = 3
       IVNP1 = IVN
       IWN   = 3
       IWNP1 = IWN
-C     
+C
 C     Set x_0 = 0 and compute the norm of the initial residual.
-C     
+C
       CALL ZAXPBY (NLEN,VECS(1,IVN),ZONE,VECS(1,2),ZZERO,VECS(1,IVN))
       CALL ZAXPBY (NLEN,VECS(1,1),ZZERO,VECS(1,1),ZZERO,VECS(1,1))
       R0 = DZNRM2(NLEN,VECS(1,IVN),1)
       IF ((TOL.GE.DONE).OR.(R0.EQ.DZERO)) GO TO 80
-C     
+C
 C     Check whether the auxiliary vector must be supplied.
-C     
+C
 C     SYM  IF (INIT.EQ.0) CALL ZRANDN (NLEN,VECS(1,IWN),1)
-C     
+C
 C     Compute scale factors and check for invariant subspaces.
-C     
+C
       SCVNP1 = R0
 C     SYM  SCWNP1 = DZNRM2(NLEN,VECS(1,IWN),1)
       SCWNP1 = SCVNP1
@@ -2000,9 +2000,9 @@ C     SYM     CALL ZAXPBY (NLEN,VECS(1,IWN),ZTMP,VECS(1,IWN),ZZERO,VECS(1,IWN))
       CSINP1 = SCWNP1
       SCVNP1 = DONE / SCVNP1
       SCWNP1 = DONE / SCWNP1
-C     
+C
 C     Initialize the variables.
-C     
+C
       N      = 1
       DN     = ZONE
       COSN   = DONE
@@ -2018,71 +2018,71 @@ C
       OMGNP1 = ZSQMXO(N)
       RHSN   = OMGNP1 * R0
       MAXOMG = DONE / OMGNP1
-C     
+C
 C     This is one step of the classical Lanczos algorithm.
-C     
+C
  20   IVNM1 = IVN
       IVN   = IVNP1
       IVNP1 = MOD(N,2) + 3
       IWNM1 = IWN
       IWN   = IWNP1
       IWNP1 = MOD(N,2) + 3
-C     
+C
 C     Check whether D_n is nonsingular.
-C     
+C
       DNM1 = DN
       DN   = DNP1
       IF (abs(DN).EQ.DZERO) THEN
          IERR = 8
          GO TO 80
       END IF
-C     
+C
 C     Have the caller carry out AXB, then return here.
 C     CALL AXB (VECS(1,IVN),VECS(1,7))
-C     
+C
       INFO(2) = 1
       INFO(3) = IVN
       INFO(4) = 7
       RETLBL  = 30
       RETURN
  30   RETLBL = 0
-C     
+C
 C     Compute H_{n-1,n} and build part of the vector v_{n+1}.
-C     
+C
       SCVNM1 = SCVN
       CSIN   = CSINP1
       SCVN   = SCVNP1
       ZTMP   = CSIN * DN / DNM1 * SCVNM1 / SCVN
       CALL ZAXPBY (NLEN,VECS(1,IVNP1),ZONE,VECS(1,7),-ZTMP,VECS(1,IVNM1)
      $   )
-C     
+C
 C     Have the caller carry out ATXB, then return here.
 C     CALL ATXB (VECS(1,IWN),VECS(1,7))
-C     
+C
       INFO(2) = 2
       INFO(3) = IWN
       INFO(4) = 7
       RETLBL  = 40
 C     SYM  RETURN
  40   RETLBL = 0
-C     
+C
 C     Build part of the vector w_{n+1}.
-C     
+C
       SCWNM1 = SCWN
       RHON   = RHONP1
       SCWN   = SCWNP1
       ZTMP   = RHON * DN / DNM1 * SCWNM1 / SCWN
 C     SYM  CALL ZAXPBY (NLEN,VECS(1,IWNP1),ZONE,VECS(1,7),-ZTMP,VECS(1,IWNM1))
-C     
+C
 C     Compute H_{nn} and finish the new vectors.
-C     
+C
       RHN = SCVN * SCWN * ZDOTU(NLEN,VECS(1,IWN),1,VECS(1,IVNP1),1) / DN
       CALL ZAXPBY (NLEN,VECS(1,IVNP1),ZONE,VECS(1,IVNP1),-RHN,VECS(1,IVN
      $   ))
 C     SYM CALL ZAXPBY (NLEN,VECS(1,IWNP1),ZONE,VECS(1,IWNP1),-RHN,VECS(1,IWN))
-C     
+C
 C     Compute scale factors and check for invariant subspaces.
-C     
+C
       IERR   = 0
       SCVNP1 = DZNRM2(NLEN,VECS(1,IVNP1),1)
 C     SYM  SCWNP1 = DZNRM2(NLEN,VECS(1,IWNP1),1)
@@ -2093,7 +2093,7 @@ C     SYM  SCWNP1 = DZNRM2(NLEN,VECS(1,IWNP1),1)
       IF (SCVNP1.LT.TNRM) IERR = IERR + 16
       IF (SCWNP1.LT.TNRM) IERR = IERR + 32
       IF (IERR.NE.0) GO TO 50
-      DNP1   = ZDOTU(NLEN,VECS(1,IWNP1),1,VECS(1,IVNP1),1) / ( SCVNP1 * 
+      DNP1   = ZDOTU(NLEN,VECS(1,IWNP1),1,VECS(1,IVNP1),1) / ( SCVNP1 *
      $   SCWNP1 )
       IF ((SCVNP1.GE.TMAX).OR.(SCVNP1.LE.TMIN)) THEN
          ZTMP = cmplx(DONE / SCVNP1,DZERO,kind=Rkind)
@@ -2103,25 +2103,25 @@ C     SYM  SCWNP1 = DZNRM2(NLEN,VECS(1,IWNP1),1)
       END IF
       IF ((SCWNP1.GE.TMAX).OR.(SCWNP1.LE.TMIN)) THEN
          ZTMP = cmplx(DONE / SCWNP1,DZERO,kind=Rkind)
-C     
+C
          SCWNP1 = DONE
       END IF
       SCVNP1 = DONE / SCVNP1
       SCWNP1 = DONE / SCWNP1
-C     
+C
 C     The QMR code starts here.
 C     Multiply the new column by the previous omega's.
 C     Get the next scaling factor omega(i) and update MAXOMG.
-C     
+C
  50   RHNM1  = CSIN * DN * OMGN / DNM1
       OMGN   = OMGNP1
       RHN    = OMGN * RHN
       OMGNP1 = ZSQMXO(N+1)
       RHNP1  = OMGNP1 * RHNP1
       MAXOMG = DMAX1(MAXOMG,DONE/OMGN)
-C     
+C
 C     Apply the previous rotations.
-C     
+C
       RHNM2  = SINNM1 * RHNM1
       RHNM1  = COSNM1 * RHNM1
       COSNM1 = COSN
@@ -2129,18 +2129,18 @@ C
       ZTMP   = RHNM1
       RHNM1  =  COSNM1 * ZTMP + SINNM1 * RHN
       RHN    = -conjg(SINNM1) * ZTMP + COSNM1 * RHN
-C     
+C
 C     Compute the rotation for the last element (this also applies it).
-C     
+C
       CALL ZROTG (RHN,RHNP1,COSN,SINN)
-C     
+C
 C     Apply the new rotation to the right-hand side vector.
-C     
+C
       RHSNP1 = -conjg(SINN) * RHSN
       RHSN   =  COSN * RHSN
-C     
+C
 C     Compute the next search direction s_n.
-C     
+C
       ISNM2  = ISNM1
       ISNM1  = ISN
       ISN    = MOD(N-1,2) + 5
@@ -2152,9 +2152,9 @@ C
       CALL ZAXPBY (NLEN,VECS(1,ISN),ZONE,VECS(1,ISN),-ZTMP,VECS(1,ISNM1)
      $   )
       SCSN   = SCVN / RHN
-C     
+C
 C     Compute the new QMR iterate, then scale the search direction.
-C     
+C
       ZTMP = SCSN * RHSN
       CALL ZAXPBY (NLEN,VECS(1,1),ZONE,VECS(1,1),ZTMP,VECS(1,ISN))
       DTMP = abs(SCSN)
@@ -2163,19 +2163,19 @@ C
      $      ))
          SCSN = ZONE
       END IF
-C     
+C
 C     Compute the residual norm upper bound.
 C     If the scaled upper bound is within one order of magnitude of the
 C     target convergence norm, compute the true residual norm.
-C     
+C
       RHSN = RHSNP1
       UNRM = DSQRT(DBLE(N+1)) * MAXOMG * abs(RHSNP1) / R0
       UCHK = UNRM
       IF ((TRES.EQ.0).AND.(UNRM/TOL.GT.DTEN).AND.(N.LT.NLIM)) GO TO 70
-C     
+C
 C     Have the caller carry out AXB, then return here.
 C     CALL AXB (VECS(1,1),VECS(1,7))
-C     
+C
       INFO(2) = 1
       INFO(3) = 1
       INFO(4) = 7
@@ -2185,19 +2185,19 @@ C
       CALL ZAXPBY (NLEN,VECS(1,7),ZONE,VECS(1,2),-ZONE,VECS(1,7))
       RESN = DZNRM2(NLEN,VECS(1,7),1) / R0
       UCHK = RESN
-C     
+C
 C     Output the trace messages and convergence history.
-C     
+C
  70   IF (VF.NE.0) WRITE (VF,'(I8,2E11.4)') N, UNRM, RESN
       IF (TF.NE.0) WRITE (TF,'(I8,2E11.4)') N, UNRM, RESN
-C     
+C
 C     Check for convergence or termination.  Stop if:
 C     1. algorithm converged;
 C     2. there is an error condition;
 C     3. the residual norm upper bound is smaller than the computed
 C     residual norm by a factor of at least 100;
 C     4. algorithm exceeded the iterations limit.
-C     
+C
       IF (RESN.LE.TOL) THEN
          IERR = 0
          GO TO 80
@@ -2210,18 +2210,18 @@ C
          IERR = 4
          GO TO 80
       END IF
-C     
+C
 C     Update the running counter.
-C     
+C
       N = N + 1
       GO TO 20
-C     
+C
 C     That's all.
-C     
+C
  80   NLIM    = N
       RETLBL  = 0
       INFO(1) = IERR
-C     
+C
       RETURN
       END
 C
@@ -2561,7 +2561,7 @@ C
       IF (SCVNP1.LT.TNRM) IERR = IERR + 16
       IF (SCWNP1.LT.TNRM) IERR = IERR + 32
       IF (IERR.NE.0) GO TO 50
-      DNP1   = ZDOTU(NLEN,VECS(1,IWNP1),1,VECS(1,IVNP1),1) / ( SCVNP1 * 
+      DNP1   = ZDOTU(NLEN,VECS(1,IWNP1),1,VECS(1,IVNP1),1) / ( SCVNP1 *
      $SCWNP1 )
       IF ((SCVNP1.GE.TMAX).OR.(SCVNP1.LE.TMIN)) THEN
          ZTMP = cmplx(DONE / SCVNP1,DZERO,kind=Rkind)
@@ -2717,7 +2717,8 @@ C
       END
 C
 C**********************************************************************
-      subroutine p_multiplyQMR(Vin,Vut,tab_Op,nb_Op,Ene,N,M,eps_in)
+      subroutine p_multiplyQMR(Vin,Vut,tab_Op,nb_Op,Ene,N,M,eps_in,
+     *                         iOp_CAP_Reactif,iOp_CAP_Product)
       use mod_system
       USE mod_Op
       USE mod_CRP
@@ -2731,7 +2732,7 @@ C**********************************************************************
       parameter ( name_sub ='p_multiplyQMR' )
       logical precon_flag
 !----- Operator variables ----------------------------------------------
-      integer           :: nb_Op
+      integer           :: nb_Op,iOp_CAP_Reactif,iOp_CAP_Product
       TYPE (param_Op)   :: tab_Op(nb_Op)
       real (kind=Rkind) :: Ene
 
@@ -2743,7 +2744,7 @@ c     ------------------------------------------
 c     |b>=e_r*|0>
 
       b(:)=Vin(:)
-      call OpOnVec(b,tab_Op(4),'NOC')
+      call OpOnVec(b,tab_Op(iOp_CAP_Product),'NOC')
 
 c     |x>=1/(H-E-ie)*|b>
 
@@ -2761,7 +2762,7 @@ c     |b>=e_p*|x>
 
 
       b(:)=x(:)
-      call OpOnVec(b,tab_Op(3),'NOC')
+      call OpOnVec(b,tab_Op(iOp_CAP_Reactif),'NOC')
 
 
 
@@ -2856,7 +2857,7 @@ c
       USE mod_CRP
       implicit NONE
 
-      integer i,N,nlim,info(4),revcom,colx,colb
+      integer i,N,nlim,info(4),revcom,colx,colb,it
       real(kind=Rkind)  eps_in,tol
       complex(kind=Rkind) vecs(N,7),x(N),x2(N),y(N)
       character (len=3) cjg
@@ -2875,6 +2876,7 @@ c     x is given right-hand side (= b)
       vecs(:,2)=M(:)*(x(:))  ! vecs(:,2)=M*(x-A*y)
 
 
+      it = 0
 
 c     -------------------------------------------------------
       nlim=10*N
@@ -2883,13 +2885,22 @@ c     -------------------------------------------------------
       info(2)=0
       info(3)=0
       info(4)=0
+      write(out_unitp,'(a)',advance='no') 'QMR it:'
+
 c
 c      write(*,*) 'nlim = ', nlim, ' info(1) = ', info(1), ' N =', N
 c      write(*,*) 'tol = ', tol, ' maxDVRpoints = ', maxDVRpoints
  10   call zscpx(N,N,nlim,vecs,tol,info)
 c      write(*,*) 'nlim = ', nlim, ' info(1) = ', info(1), ' N =',N
 c      write(*,*) 'tol = ', tol, ' maxDVRpoints = ', maxDVRpoints
-c
+       it = it + 1
+       !write(*,*) 'QMR it',it
+       IF (mod(it,10) == 0 .AND. mod(it,100) /= 0) THEN
+          write(out_unitp,'(a)',advance='no') '.'
+       END IF
+       IF (mod(it,100) == 0) write(out_unitp,'(i0)',advance='no') it
+
+
       revcom = info(2)
       colx   = info(3)
       colb   = info(4)

@@ -95,7 +95,6 @@
       mole       => para_AllOp%tab_Op(1)%mole
       para_Tnum  => para_AllOp%tab_Op(1)%para_Tnum
 
-
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'nb_Op',para_AllOp%nb_Op,shape(para_AllOp%tab_Op)
@@ -125,7 +124,6 @@
 
       END IF
       !-----------------------------------------------------------
-         ! write(6,*) 'coucou before Qact' ; flush(6)
 
       !-----------------------------------------------------------
       !----- New nD-Grid points ----------------------------------
@@ -142,7 +140,6 @@
       END IF
       !-----------------------------------------------------------
       !-----------------------------------------------------------
-          !write(6,*) 'coucou after Qact' ; flush(6)
 
       !-----------------------------------------------------------
       !------ special case if nb_inact2n=0 -----------------------
@@ -159,21 +156,17 @@
           mole%WriteCC     = .TRUE.
         END IF
 
-        allocate(d0MatOp(para_AllOp%tab_Op(1)%para_ReadOp%nb_scalar_Op+2))
+        allocate(d0MatOp(size(para_AllOp%tab_Op)))
         DO iOp=1,size(d0MatOp)
           CALL Init_d0MatOp(d0MatOp(iOp),para_AllOp%tab_Op(iOp)%param_TypeOp,&
                             para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec)
         END DO
-        !write(6,*) 'coucou after Init_d0MatOp' ; flush(6)
 
 #if(run_MPI)
         IF(Grid_allco)  THEN
 #endif
-          !write(6,*) 'coucou before get_d0MatOp_AT_Qact' ; flush(6)
           CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,         &
                                    para_AllOp%tab_Op(1)%para_ReadOp%PrimOp_t)
-          !write(6,*) 'coucou after get_d0MatOp_AT_Qact' ; flush(6)
-
 #if(run_MPI)
         ENDIF
 #endif
@@ -914,4 +907,3 @@
 
 
      END SUBROUTINE sub_HST7_bhe
-

@@ -48,13 +48,13 @@
 !
 ! >const_phys: type constant contains all the physical constants
 !              *Note: may not safe with this name
-!              setup with calling 'sub_constantes', 
-!              *Note: a namelist 'constants' is required in input file for this 
+!              setup with calling 'sub_constantes',
+!              *Note: a namelist 'constants' is required in input file for this
 !                     subroutine if call with sub_constantes(const_phys,.TRUE.)
 ! >para_OTF: type param_OTF
 ! >para_Tnum: type Tnum, which contains type param_PES_FromTnum and sum_opnd
 ! >mole: type CoordType
-! >para_AllBasis: type param_AllBasis, contians four Basis pointers 
+! >para_AllBasis: type param_AllBasis, contians four Basis pointers
 !                 BasisnD,Basis2n,BasisElec,BasisRot
 !                 setup with calling alloc_AllBasis(para_AllBasis)
 ! >para_AllOp: type param_AllOp, for the construction of H
@@ -72,6 +72,7 @@
                                 Finalize_tnumtana_coord_primop,         &
                                 derive_termqact_to_derive_termqdyn,     &
                                 param_otf, PrimOp_t, write_PrimOp
+      USE mod_CAP,       only : Read_CAP
       USE mod_basis
       USE mod_Set_paraRPH
       USE mod_Op
@@ -142,7 +143,7 @@
         write(out_unitp,*) "=== COORDINATES (TNUM) ====================================="
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
-      ENDIF 
+      ENDIF
       CALL flush_perso(out_unitp)
 
 !---------------------------------------------------------------------
@@ -176,7 +177,7 @@
 !     and calculations of the basis (d0b) and their dervivatives (d1b d2b)
 !     on the grid points.
 !     ----------------------------------------------------------------
-      IF(MPI_id==0) THEN 
+      IF(MPI_id==0) THEN
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "=== BASIS =================================================="
@@ -243,7 +244,7 @@
 !---------------------------------------------------------------------
 
 !---------------------------------------------------------------------
-      IF(MPI_id==0) THEN 
+      IF(MPI_id==0) THEN
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "=== END BASIS =============================================="
@@ -253,6 +254,12 @@
       ENDIF
 
       CALL read_active(para_Tnum,mole,para_ReadOp)
+
+      IF (para_ReadOp%PrimOp_t%nb_CAP > 0) THEN
+        DO i=1,size(para_ReadOp%PrimOp_t%tab_CAP)
+          CALL Read_CAP(para_ReadOp%PrimOp_t%tab_CAP(i))
+        END DO
+      END IF
 
 !---------------------------------------------------------------------
 !------- read the parameter to analyze wave functions ----------------
@@ -367,16 +374,36 @@
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 !     -- Some parameters for the operators ----------------------------
-      para_ReadOp%calc_scalar_Op = para_propa%with_field .OR.           &
+      para_ReadOp%calc_scalar_Op = para_propa%with_field .OR.                   &
                                    para_ana%intensity .OR. para_ana%NLO
 
       IF (para_ReadOp%nb_scalar_Op > 0) para_ReadOp%calc_scalar_Op = .TRUE.
 
-      IF ((para_propa%with_field .OR. para_ana%intensity) .AND.         &
+      IF ((para_propa%with_field .OR. para_ana%intensity) .AND.                 &
              para_ReadOp%nb_scalar_Op == 0) para_ReadOp%nb_scalar_Op = 3
 
-      IF (.NOT. para_ana%davidson .AND. .NOT. para_ana%arpack .AND.     &
-          .NOT. para_ana%filter   .AND. para_ana%CRP <= 0 .AND.         &
+      IF (para_ReadOp%PrimOp_t%nb_CAP > 0) THEN
+        DO i=1,size(para_ReadOp%PrimOp_t%tab_CAP)
+          para_ReadOp%PrimOp_t%tab_CAP(i)%iOp = para_ReadOp%nb_scalar_Op + i
+        END DO
+        IF (para_ana%CRP > 0 .AND. para_ReadOp%PrimOp_t%nb_CAP >= 2) then
+          para_ana%para_CRP%iOp_CAP_Reactif = 2 + para_ReadOp%nb_scalar_Op + 1
+          para_ana%para_CRP%iOp_CAP_Product = 2 + para_ReadOp%nb_scalar_Op + 2
+        ELSE IF (para_ana%CRP > 0 .AND. para_ReadOp%PrimOp_t%nb_CAP < 2) then
+          STOP 'ERROR: for CRP calculation nb_CAP MUST be >= 2'
+        END IF
+      END IF
+      IF (para_ana%CRP > 0 .AND. para_ReadOp%PrimOp_t%nb_CAP <= 0 .AND.         &
+          para_ReadOp%nb_scalar_Op == 2) then
+        para_ana%para_CRP%iOp_CAP_Reactif = 3
+        para_ana%para_CRP%iOp_CAP_Product = 4
+      ELSE IF (para_ana%CRP > 0 .AND. para_ReadOp%PrimOp_t%nb_CAP <= 0 .AND.    &
+          para_ReadOp%nb_scalar_Op /= 2) then
+        STOP 'ERROR: for CRP calculation nb_scalar_Op MUST be = 2'
+      END IF
+
+      IF (.NOT. para_ana%davidson .AND. .NOT. para_ana%arpack .AND.             &
+          .NOT. para_ana%filter   .AND. para_ana%CRP <= 0 .AND.                 &
           .NOT. para_ana%propa)             para_ReadOp%make_Mat = .TRUE.
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
@@ -464,7 +491,8 @@
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "====== List of Operators ==================================="
         write(out_unitp,*)
-        write(out_unitp,*) 'para_ReadOp%nb_scalar_Op : ',para_ReadOp%nb_scalar_Op
+        write(out_unitp,*) 'para_ReadOp%nb_scalar_Op:    ',para_ReadOp%nb_scalar_Op
+        write(out_unitp,*) 'para_ReadOp%PrimOp_t%nb_CAP: ',para_ReadOp%PrimOp_t%nb_CAP
       ENDIF
 
       IF (para_ReadOp%nb_scalar_Op > 27) THEN
@@ -485,7 +513,8 @@
       END IF
       para_ReadOp%calc_scalar_Op = (para_ReadOp%nb_scalar_Op > 0)
 
-      para_AllOp%nb_Op = para_ReadOp%nb_scalar_Op + 2  ! for H and S
+      ! We add 2 for H and S operators
+      para_AllOp%nb_Op = 2 + para_ReadOp%nb_scalar_Op + para_ReadOp%PrimOp_t%nb_CAP
 
       IF (debug) write(out_unitp,*) 'para_AllOp%nb_Op        : ',para_AllOp%nb_Op
 
@@ -498,7 +527,6 @@
         para_AllOp%tab_Op(iOp)%ZPE     = para_ana%Ezpe
       END IF
       IF (para_ana%VibRot) Para_Tnum%JJ = para_ana%JJmax
-
       CALL All_param_TO_para_H(para_Tnum,mole,para_AllBasis,            &
                                para_ReadOp,para_AllOp%tab_Op(iOp))
 
@@ -553,6 +581,29 @@
         para_AllOp%tab_Op(iOp)%spectral = para_ana%Spectral_ScalOp
       END DO
 
+      DO i=1,para_ReadOp%PrimOp_t%nb_CAP  ! for CAP operators
+        iOp = iOp + 1
+        CALL param_Op1TOparam_Op2(para_AllOp%tab_Op(2),                 &
+                                  para_AllOp%tab_Op(iOp))
+        para_AllOp%tab_Op(iOp)%n_Op    = para_ReadOp%nb_scalar_Op+i
+        para_AllOp%tab_Op(iOp)%name_Op = 'CAP' // int_TO_char(i) // '_' // int_TO_char(iOp)
+
+        CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,           &
+                         type_Op=0,nb_Qact=mole%nb_act1,cplx=.FALSE.,   &
+                         JRot=Para_Tnum%JJ,                             &
+                         direct_KEO=.FALSE.,direct_ScalOp=para_ReadOp%direct_ScalOp)
+        CALL derive_termQact_TO_derive_termQdyn(                        &
+                              para_AllOp%tab_Op(iOp)%derive_termQdyn,   &
+                              para_AllOp%tab_Op(iOp)%derive_termQact,   &
+                              mole%ActiveTransfo%list_QactTOQdyn)
+
+        para_AllOp%tab_Op(iOp)%symab    = -1  ! the symmetry is not used
+        para_AllOp%tab_Op(iOp)%spectral = para_ana%Spectral_ScalOp
+
+        CALL Write_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,With_list=.TRUE.)
+
+      END DO
+
       IF (para_ReadOp%nb_scalar_Op == 3) THEN ! dipole moment operators
         para_AllOp%tab_Op(3)%name_Op = 'Dipx'
         para_AllOp%tab_Op(4)%name_Op = 'Dipy'
@@ -578,7 +629,6 @@
       IF (associated(mole%RPHTransfo)) THEN
         CALL Set_paraPRH(mole,para_Tnum,para_AllBasis%BasisnD)
       END IF
-
       IF (para_propa%para_Davidson%NewVec_type == 4 .OR. para_ana%CRP > 0) THEN
         CALL RecSet_EneH0(para_Tnum,mole,para_AllBasis%BasisnD,para_ReadOp)
       END IF
@@ -595,7 +645,6 @@
         write(out_unitp,*) 'nb_Op',para_AllOp%nb_Op
         DO i=1,para_AllOp%nb_Op
           CALL write_param_Op(para_AllOp%tab_Op(i))
-
         END DO
         DO i=1,para_AllBasis%BasisnD%nb_basis
           write(out_unitp,*) 'basis',i
