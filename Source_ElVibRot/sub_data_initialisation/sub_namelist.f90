@@ -302,6 +302,8 @@
       USE mod_nDindex
       USE mod_Constant, only : REAL_WU,convRWU_TO_R_WITH_WorkingUnit
       USE mod_PrimOp
+      USE mod_CAP
+      USE mod_HStep
       USE mod_Op
       USE mod_MPI
       IMPLICIT NONE
@@ -323,6 +325,7 @@
 
       integer       :: num_grid_i,num_grid_f
       integer       :: JJ,Type_HamilOp
+      integer       :: nb_CAP,nb_FluxOp
 
       logical       :: pot_only,T_only,pack_Op,read_Op,make_MatOp,direct_KEO,direct_ScalOp
 
@@ -356,7 +359,7 @@
                         name_Grid,formatted_Grid,                       &
                         JJ,Type_HamilOp,direct_KEO,direct_ScalOp,       &
                         direct,make_MatOp,pack_Op,tol_pack,tol_nopack,  &
-                        Op_Transfo,E0_Transfo
+                        Op_Transfo,E0_Transfo,nb_CAP,nb_FluxOp
 
 
 !------- test on max_HADA and n_h ---------------------------------
@@ -378,6 +381,8 @@
       Type_HamilOp    = 1
       direct_KEO      = .FALSE.
       direct_ScalOp   = .FALSE.
+      nb_CAP          = 0
+      nb_FluxOp       = 0
 
       direct          = 0
       Type_FileGrid   = 0
@@ -558,6 +563,25 @@
         !write(out_unitp,*) 'l u bounds',ubound(para_ReadOp%Poly_Transfo),lbound(para_ReadOp%Poly_Transfo)
 
       END IF
+
+      para_ReadOp%nb_CAP  = nb_CAP
+
+      IF (para_ReadOp%nb_CAP > 0) THEN
+        allocate(para_ReadOp%tab_CAP(para_ReadOp%nb_CAP))
+        DO i=1,size(para_ReadOp%tab_CAP)
+          CALL Read_CAP(para_ReadOp%tab_CAP(i))
+        END DO
+      END IF
+
+      para_ReadOp%nb_FluxOp  = nb_FluxOp
+
+      IF (para_ReadOp%nb_FluxOp > 0) THEN
+        allocate(para_ReadOp%tab_HStep(para_ReadOp%nb_FluxOp))
+        DO i=1,size(para_ReadOp%tab_HStep)
+          CALL Read_HStep(para_ReadOp%tab_HStep(i))
+        END DO
+      END IF
+
 
       IF (JJ > -1) THEN
         para_ReadOp%nb_bRot         = 2*JJ+1

@@ -348,6 +348,7 @@
       USE mod_SimpleOp
       USE mod_PrimOp_def
       USE mod_CAP
+      USE mod_HStep
       USE mod_OTF
       IMPLICIT NONE
 
@@ -379,7 +380,7 @@
 
       logical             :: Gcenter,Cart_transfo
 
-      integer             :: iOpE,itermE,iOpS,iOpScal,itermS,iOpCAP,iOp,iterm
+      integer             :: iOpE,itermE,iOpS,iOpScal,itermS,iOpCAP,iOp,iOpFluxOp,iterm
       integer             :: i,i1,i2,ie,je,io
 
 !     - for the conversion gCC -> gzmt=d1pot -----------
@@ -391,7 +392,7 @@
       real (kind=Rkind) :: mat_ScalOp(PrimOp%nb_elec,PrimOp%nb_elec,PrimOp%nb_scalar_Op)
 
       ! for HarD
-      real (kind=Rkind) :: Vinact,CAP_val
+      real (kind=Rkind) :: Vinact,CAP_val,HStep_val
       real (kind=Rkind), allocatable :: Qact1(:)
       real (kind=Rkind), allocatable :: Qinact21(:)
       real (kind=Rkind), allocatable :: Qit(:)
@@ -434,12 +435,13 @@
       !----------------------------------------------------------------
 
 !     ----------------------------------------------------------------
-      iOpE    = 1
-      itermE  = d0MatOp(iOpE)%derive_term_TO_iterm(0,0)
-      nderivE = 0
-      iOpS    = iOpE
-      iOpScal = iOpE
-      iOpCAP  = 2+PrimOp%nb_scalar_Op
+      iOpE      = 1
+      itermE    = d0MatOp(iOpE)%derive_term_TO_iterm(0,0)
+      nderivE   = 0
+      iOpS      = iOpE
+      iOpScal   = iOpE
+      iOpCAP    = 2+PrimOp%nb_scalar_Op
+      iOpFluxOp = iOpCAP + PrimOp%nb_CAP
 
       !------------ The Overlap -------------------------------------
       IF (nb_Op >= 2) THEN
@@ -598,6 +600,20 @@
             END DO
             !STOP 'CAP'
           END IF
+
+            ! flux Op
+          IF (PrimOp%nb_FluxOp > 0) THEN
+            DO i=1,PrimOp%nb_FluxOp
+              iterm = d0MatOp(iOpFluxOp+i)%derive_term_TO_iterm(0,0)
+              HStep_val = calc_HStep(PrimOp%tab_HStep(i),Qact)
+              DO ie=1,PrimOp%nb_elec
+                d0MatOp(iOpFluxOp+i)%ReVal(ie,ie,iterm) = HStep_val
+              END DO
+              IF (debug) write(out_unitp,*) 'Qact,HStep_val',i,Qact,HStep_val
+            END DO
+            !STOP 'CAP'
+          END IF
+
 
           IF (PrimOp%HarD .AND. associated(mole%RPHTransfo) .AND. PrimOp%nb_elec == 1) THEN
 

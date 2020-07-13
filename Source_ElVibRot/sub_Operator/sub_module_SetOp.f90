@@ -1049,7 +1049,6 @@ MODULE mod_SetOp
       para_Op2%nb_Term_Vib   = para_Op1%nb_Term_Vib
       para_Op2%nb_Term_Rot   = para_Op1%nb_Term_Rot
 
-
       nullify(para_Op2%OpGrid)
       nullify(para_Op2%imOpGrid)
 

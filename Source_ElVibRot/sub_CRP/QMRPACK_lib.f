@@ -2728,13 +2728,25 @@ C**********************************************************************
       real(kind=Rkind) eps_in
       complex(kind=Rkind) Vin(N),Vut(N),b(N)
       complex(kind=Rkind) x(N),y(N), M(N)
-      character (len=*) name_sub
-      parameter ( name_sub ='p_multiplyQMR' )
       logical precon_flag
-!----- Operator variables ----------------------------------------------
+c----- Operator variables ----------------------------------------------
       integer           :: nb_Op,iOp_CAP_Reactif,iOp_CAP_Product
       TYPE (param_Op)   :: tab_Op(nb_Op)
       real (kind=Rkind) :: Ene
+
+c----- for debuging --------------------------------------------------
+      integer   :: err
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub ='p_multiplyQMR'
+c-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'Vin',Vin(:)
+        write(out_unitp,*)
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
 
 c     ------------------------------------------
       !M = ONE ! DML
@@ -2742,36 +2754,37 @@ c     ------------------------------------------
 
 
 c     |b>=e_r*|0>
-
       b(:)=Vin(:)
-      call OpOnVec(b,tab_Op(iOp_CAP_Product),'NOC')
+      call OpOnVec(b,tab_Op(iOp_CAP_Reactif),'NOC')
+      IF (debug) write(out_unitp,*) 'e_r |Vin>',b(:)
 
 c     |x>=1/(H-E-ie)*|b>
 
       write(6,*) '# here before QMR 1 '
 
 c      if ( precon_flag ) then
-      call qm_precon(N,b,x,M,tab_Op,nb_Op,Ene,eps_in,'CJG')
+      call qm_precon(N,b,x,M,tab_Op,nb_Op,Ene,eps_in,'CJG',
+     *               iOp_CAP_Reactif,iOp_CAP_Product)
+
 c      else
 c      call qm(N,b,x,tab_Op,eps_in)
 c      end if
 c      x(:)=b(:)
+      IF (debug) write(out_unitp,*) '1/(H-E-ie)|b>',x(:)
 
 
 c     |b>=e_p*|x>
-
-
       b(:)=x(:)
-      call OpOnVec(b,tab_Op(iOp_CAP_Reactif),'NOC')
+      call OpOnVec(b,tab_Op(iOp_CAP_Product),'NOC')
+      IF (debug) write(out_unitp,*) 'e_p |b>',b(:)
 
 
 
 c     |x>=1/(H-E+ie)*|b>
-
       write(6,*) '# here before QMR 2 '
-
 c      if ( precon_flag ) then
-      call qm_precon(N,b,x,M,tab_Op,nb_Op,Ene,eps_in,'NOC')
+      call qm_precon(N,b,x,M,tab_Op,nb_Op,Ene,eps_in,'NOC',
+     *               iOp_CAP_Reactif,iOp_CAP_Product)
 
 c      else
 c         call qm(N,b,x,tab_Op,eps_in)
@@ -2779,8 +2792,19 @@ c      end if
 
       Vut(:)=x(:)
 
+
+c-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'Vut',Vut(:)
+        write(out_unitp,*)
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+c-----------------------------------------------------------
+
       End
       subroutine qm(N,x,y,eps_in)
+
       use mod_system
       implicit NONE
 c
@@ -2851,7 +2875,9 @@ c
       end
 
 
-      subroutine qm_precon(N,x,y,M,tab_Op,nb_Op,Ene,eps_in,cjg)
+      subroutine qm_precon(N,x,y,M,tab_Op,nb_Op,Ene,eps_in,cjg,
+     *                         iOp_CAP_Reactif,iOp_CAP_Product)
+
       use mod_system
       USE mod_Op
       USE mod_CRP
@@ -2864,6 +2890,7 @@ c
 !----- Operator variables ----------------------------------------------
       integer           :: nb_Op
       TYPE (param_Op)   :: tab_Op(nb_Op)
+      integer           :: iOp_CAP_Reactif,iOp_CAP_Product
 
 
 ! Matrices de préconditionnement ( diagonale donc stockable comme un vecteur)
@@ -2910,7 +2937,8 @@ c       Right preconditioner
         x(:)=M(:)*vecs(:,colx)
 
 c       Matrix-vector mult.
-        call Gpsi(x,tab_Op,nb_Op,Ene,cjg)
+        call Gpsi(x,tab_Op,nb_Op,Ene,
+     *            iOp_CAP_Reactif,iOp_CAP_Product,cjg)
 
         vecs(:,colb)=x(:)
 

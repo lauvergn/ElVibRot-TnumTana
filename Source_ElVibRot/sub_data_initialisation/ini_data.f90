@@ -255,12 +255,6 @@
 
       CALL read_active(para_Tnum,mole,para_ReadOp)
 
-      IF (para_ReadOp%PrimOp_t%nb_CAP > 0) THEN
-        DO i=1,size(para_ReadOp%PrimOp_t%tab_CAP)
-          CALL Read_CAP(para_ReadOp%PrimOp_t%tab_CAP(i))
-        END DO
-      END IF
-
 !---------------------------------------------------------------------
 !------- read the parameter to analyze wave functions ----------------
       CALL alloc_NParray(Qana,(/ mole%nb_var /),"Qana",name_sub)
@@ -382,24 +376,28 @@
       IF ((para_propa%with_field .OR. para_ana%intensity) .AND.                 &
              para_ReadOp%nb_scalar_Op == 0) para_ReadOp%nb_scalar_Op = 3
 
-      IF (para_ReadOp%PrimOp_t%nb_CAP > 0) THEN
-        DO i=1,size(para_ReadOp%PrimOp_t%tab_CAP)
-          para_ReadOp%PrimOp_t%tab_CAP(i)%iOp = para_ReadOp%nb_scalar_Op + i
+      IF (para_ReadOp%nb_CAP > 0) THEN
+        DO i=1,size(para_ReadOp%tab_CAP)
+          para_ReadOp%tab_CAP(i)%iOp = para_ReadOp%nb_scalar_Op + i
         END DO
-        IF (para_ana%CRP > 0 .AND. para_ReadOp%PrimOp_t%nb_CAP >= 2) then
+        IF (para_ana%CRP > 0 .AND. para_ReadOp%nb_CAP >= 2) then
           para_ana%para_CRP%iOp_CAP_Reactif = 2 + para_ReadOp%nb_scalar_Op + 1
           para_ana%para_CRP%iOp_CAP_Product = 2 + para_ReadOp%nb_scalar_Op + 2
         ELSE IF (para_ana%CRP > 0 .AND. para_ReadOp%PrimOp_t%nb_CAP < 2) then
           STOP 'ERROR: for CRP calculation nb_CAP MUST be >= 2'
         END IF
       END IF
-      IF (para_ana%CRP > 0 .AND. para_ReadOp%PrimOp_t%nb_CAP <= 0 .AND.         &
+      IF (para_ana%CRP > 0 .AND. para_ReadOp%nb_CAP <= 0 .AND.         &
           para_ReadOp%nb_scalar_Op == 2) then
         para_ana%para_CRP%iOp_CAP_Reactif = 3
         para_ana%para_CRP%iOp_CAP_Product = 4
       ELSE IF (para_ana%CRP > 0 .AND. para_ReadOp%PrimOp_t%nb_CAP <= 0 .AND.    &
           para_ReadOp%nb_scalar_Op /= 2) then
         STOP 'ERROR: for CRP calculation nb_scalar_Op MUST be = 2'
+      END IF
+      IF (para_ana%CRP > 0 .AND. para_ReadOp%PrimOp_t%nb_CAP <= 0) THEN
+        para_ana%para_CRP%iOp_Flux_Reactif = 5
+        para_ana%para_CRP%iOp_Flux_Product = 6
       END IF
 
       IF (.NOT. para_ana%davidson .AND. .NOT. para_ana%arpack .AND.             &
@@ -514,7 +512,8 @@
       para_ReadOp%calc_scalar_Op = (para_ReadOp%nb_scalar_Op > 0)
 
       ! We add 2 for H and S operators
-      para_AllOp%nb_Op = 2 + para_ReadOp%nb_scalar_Op + para_ReadOp%PrimOp_t%nb_CAP
+      para_AllOp%nb_Op = 2 + para_ReadOp%nb_scalar_Op +                         &
+                             para_ReadOp%nb_CAP + para_ReadOp%nb_FluxOp
 
       IF (debug) write(out_unitp,*) 'para_AllOp%nb_Op        : ',para_AllOp%nb_Op
 
@@ -600,9 +599,40 @@
         para_AllOp%tab_Op(iOp)%symab    = -1  ! the symmetry is not used
         para_AllOp%tab_Op(iOp)%spectral = para_ana%Spectral_ScalOp
 
+        IF (debug) CALL Write_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,With_list=.TRUE.)
+
+      END DO
+
+      DO i=1,para_ReadOp%PrimOp_t%nb_FluxOp  ! for flux operators
+        iOp = iOp + 1
+        CALL param_Op1TOparam_Op2(para_AllOp%tab_Op(1),para_AllOp%tab_Op(iOp))
+        para_AllOp%tab_Op(iOp)%n_Op    = para_ReadOp%nb_scalar_Op+i
+        para_AllOp%tab_Op(iOp)%name_Op = 'FluxOp' // int_TO_char(i) // '_'      &
+                                          // int_TO_char(iOp)
+
+        CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,           &
+                         type_Op=0,nb_Qact=mole%nb_act1,cplx=.FALSE.,   &
+                         JRot=Para_Tnum%JJ,                             &
+                         direct_KEO=.FALSE.,direct_ScalOp=para_ReadOp%direct_ScalOp)
+
+        ! CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,           &
+        !                  type_Op=para_ReadOp%type_HamilOp,              &
+        !                  nb_Qact=mole%nb_act1,cplx=.FALSE.,             &
+        !                  JRot=Para_Tnum%JJ,                             &
+        !                  direct_KEO=para_ReadOp%direct_KEO,             &
+        !                  direct_ScalOp=para_ReadOp%direct_ScalOp)
+        CALL derive_termQact_TO_derive_termQdyn(                        &
+                              para_AllOp%tab_Op(iOp)%derive_termQdyn,   &
+                              para_AllOp%tab_Op(iOp)%derive_termQact,   &
+                              mole%ActiveTransfo%list_QactTOQdyn)
+
+        para_AllOp%tab_Op(iOp)%symab    = -1  ! the symmetry is not used
+        para_AllOp%tab_Op(iOp)%spectral = para_ana%Spectral_ScalOp
+
         CALL Write_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,With_list=.TRUE.)
 
       END DO
+
 
       IF (para_ReadOp%nb_scalar_Op == 3) THEN ! dipole moment operators
         para_AllOp%tab_Op(3)%name_Op = 'Dipx'

@@ -45,6 +45,7 @@
    USE mod_OTF_def, only: param_OTF, dealloc_OTF
    use mod_nDFit,   only: param_nDFit, dealloc_nDFit
    use mod_CAP
+   use mod_HStep
    IMPLICIT NONE
    PRIVATE
 
@@ -66,8 +67,9 @@
         logical           :: deriv_WITH_FiniteDiff= .FALSE. ! IF true, force to use finite difference scheme
         real (kind=Rkind) :: stepOp               = ONETENTH**2
         integer           :: pot_itQtransfo       = -1      ! for new Qtransfo (default nb_QTransfo, dyn. coordinates)
-        integer           :: nb_scalar_Op         = 0       ! nb of Operator
-        integer           :: nb_CAP               = 0       ! nb of CAP Operator
+        integer           :: nb_scalar_Op         = 0       ! nb of Operators
+        integer           :: nb_CAP               = 0       ! nb of CAP Operators
+        integer           :: nb_FluxOp            = 0       ! nb of flux Operators
 
         integer           :: Type_HamilOp         = 1       ! 1:  F2.d^2 + F1.d^1 + V
                                                             ! 10: d^1 G d^1 + V
@@ -76,6 +78,8 @@
 
         ! For CAP: complex absorbing potential (when nb_CAP > 0)
         TYPE (CAP_t), allocatable     :: tab_CAP(:)
+        ! For HStep: Heaviside step function (when nb_FluxOp > 0)
+        TYPE (HStep_t), allocatable     :: tab_HStep(:)
 
         ! For on-the-fly calculations
         logical                       :: OnTheFly             = .FALSE. ! On-the-fly calculation of PES and dipole
@@ -139,11 +143,18 @@
 
       write(out_unitp,*) 'PrimOp%calc_scalar_Op',PrimOp%calc_scalar_Op
       write(out_unitp,*) 'PrimOp%nb_scalar_Op',PrimOp%nb_scalar_Op
-      write(out_unitp,*) 'PrimOp%nb_CAP',PrimOp%nb_CAP
 
+      write(out_unitp,*) 'PrimOp%nb_CAP',PrimOp%nb_CAP
       IF (allocated(PrimOp%tab_CAP)) then
         DO i=1,size(PrimOp%tab_CAP)
           CALL Write_CAP(PrimOp%tab_CAP(i))
+        END DO
+      END IF
+
+      write(out_unitp,*) 'PrimOp%nb_FluxOp',PrimOp%nb_FluxOp
+      IF (allocated(PrimOp%tab_HStep)) then
+        DO i=1,size(PrimOp%tab_HStep)
+          CALL Write_HStep(PrimOp%tab_HStep(i))
         END DO
       END IF
 
@@ -233,11 +244,20 @@
       END IF
 
       PrimOp1%nb_CAP              = PrimOp2%nb_CAP
-      IF (allocated(PrimOp1%tab_CAP)) STOP 'PrimOp2_TO_PrimOp1: tab_CAP is allocated' 
+      IF (allocated(PrimOp1%tab_CAP)) STOP 'PrimOp2_TO_PrimOp1: tab_CAP is allocated'
       IF (allocated(PrimOp2%tab_CAP)) THEN
         allocate(PrimOp1%tab_CAP(size(PrimOp2%tab_CAP)))
         DO i=1,size(PrimOp2%tab_CAP)
           PrimOp1%tab_CAP(i) = PrimOp2%tab_CAP(i)
+        END DO
+      END IF
+
+      PrimOp1%nb_FluxOp           = PrimOp2%nb_FluxOp
+      IF (allocated(PrimOp1%tab_HStep)) STOP 'PrimOp2_TO_PrimOp1: tab_HStep is allocated'
+      IF (allocated(PrimOp2%tab_HStep)) THEN
+        allocate(PrimOp1%tab_HStep(size(PrimOp2%tab_HStep)))
+        DO i=1,size(PrimOp2%tab_HStep)
+          PrimOp1%tab_HStep(i) = PrimOp2%tab_HStep(i)
         END DO
       END IF
 
@@ -267,6 +287,7 @@
       PrimOp%pot_itQtransfo        = -1
       PrimOp%nb_scalar_Op          = 0
       PrimOp%nb_CAP                = 0
+      PrimOp%nb_FluxOp             = 0
       PrimOp%Type_HamilOp          = 1
       PrimOp%direct_KEO            = .FALSE.
       PrimOp%direct_ScalOp         = .FALSE.
@@ -276,6 +297,13 @@
           CALL dealloc_CAP(PrimOp%tab_CAP(i))
         END DO
         deallocate(PrimOp%tab_CAP)
+      END IF
+
+      IF (allocated(PrimOp%tab_HStep)) then
+        DO i=1,size(PrimOp%tab_HStep)
+          CALL dealloc_HStep(PrimOp%tab_HStep(i))
+        END DO
+        deallocate(PrimOp%tab_HStep)
       END IF
 
       CALL dealloc_OTF(PrimOp%para_OTF)
@@ -339,10 +367,6 @@
         PrimOp%para_OTF%multiplicity = para_PES_FromTnum%multiplicity
         IF (PrimOp%OnTheFly) THEN
           PrimOp%nb_scalar_Op          = 3
-        END IF
-
-        IF (PrimOp%nb_CAP > 0) then
-          allocate(PrimOp%tab_CAP(PrimOp%nb_CAP))
         END IF
 
         CALL init_OTF(PrimOp%para_OTF)

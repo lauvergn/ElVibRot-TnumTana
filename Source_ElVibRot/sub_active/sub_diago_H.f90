@@ -65,8 +65,8 @@
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='sub_diago_H'
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
@@ -104,7 +104,7 @@
       IF (abs(A) < abs(B)) Vec(:,i) = -Vec(:,i)
     END DO
   ENDIF
-  
+
   IF(MPI_id==0) THEN
     IF (residual) THEN
       DO i=1,n

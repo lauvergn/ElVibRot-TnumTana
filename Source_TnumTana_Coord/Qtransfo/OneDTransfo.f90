@@ -264,7 +264,7 @@
             write(out_unitp,*) ' Qin  = ( Qold - cte(2) ) / cte(1)'
             write(out_unitp,*) ' 10**-4 < abs(cte(1)) < 10**4'
             write(out_unitp,*) ' Check your data !!'
-          STOP
+            STOP
           END IF
           IF (inTOout) THEN
             oneDTransfo(i)%type_oneD = 100
@@ -486,4 +486,3 @@
       END SUBROUTINE calc_oneDTransfo
 
       END MODULE mod_OneDTransfo
-

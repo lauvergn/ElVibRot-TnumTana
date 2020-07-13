@@ -676,6 +676,7 @@
 
       para_ReadOp_loc%nb_scalar_Op    = 0
       para_ReadOp_loc%nb_CAP          = 0
+      para_ReadOp_loc%nb_FluxOp       = 0
       para_ReadOp_loc%calc_scalar_Op  = .FALSE.
       para_ReadOp_loc%type_HamilOp    = 1
       para_ReadOp_loc%direct_KEO      = .FALSE.
@@ -1320,6 +1321,8 @@
 
       para_ReadOp_loc                 = para_ReadOp
       para_ReadOp_loc%nb_scalar_Op    = 0
+      para_ReadOp_loc%nb_CAP          = 0
+      para_ReadOp_loc%nb_FluxOp       = 0
       para_ReadOp_loc%calc_scalar_Op  = .FALSE.
       para_ReadOp_loc%type_HamilOp    = 1
       para_ReadOp_loc%direct_KEO      = .FALSE.
@@ -1486,6 +1489,8 @@
 
       para_ReadOp_loc                 = para_ReadOp
       para_ReadOp_loc%nb_scalar_Op    = 0
+      para_ReadOp_loc%nb_CAP          = 0
+      para_ReadOp_loc%nb_FluxOp       = 0
       para_ReadOp_loc%calc_scalar_Op  = .FALSE.
       para_ReadOp_loc%type_HamilOp    = 1
       para_ReadOp_loc%direct_KEO      = .FALSE.

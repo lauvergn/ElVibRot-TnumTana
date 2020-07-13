@@ -759,17 +759,6 @@
         IF (SparseGrid_type == 2) basis_temp%With_L = .TRUE.
         IF (SparseGrid_type == 4) basis_temp%With_L = .TRUE.
 
-        ! Be carefull we can deal with only one type of Sparse Grid in the same calculation
-!        IF ( SGtype > 0 .AND. SparseGrid_type > 0) THEN
-!        IF ( (SparseGrid_type-SGtype) /= 0) THEN
-!          write(out_unitp,*) ' ERROR in ',name_sub
-!          write(out_unitp,*) ' There are two Smolyak types',SGtype,SparseGrid_type
-!          write(out_unitp,*) ' ... in the same calculation'
-!          write(out_unitp,*) ' You can use only one type!'
-!          write(out_unitp,*) ' Check your data !'
-!          STOP
-!        END IF
-!        END IF
         IF (SparseGrid_type == 1 .OR. SparseGrid_type == 2 .OR. SparseGrid_type == 4) SGtype = SparseGrid_type
 
 

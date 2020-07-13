@@ -12,7 +12,7 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -24,7 +24,7 @@ INT = 4
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
 ARPACK = 0
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
-CERFACS = 0
+CERFACS = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
@@ -639,7 +639,8 @@ Obj_Coord_KEO = $(Obj_TanaPrim) $(Obj_Coord) $(Obj_Tnum) $(Obj_Tana) $(Obj_TnumT
 #============================================================================
 #Primitive Operators, Minimize Only list: OK
 Obj_PrimOperator = \
-   $(OBJ)/sub_module_SimpleOp.o $(OBJ)/sub_module_OnTheFly_def.o $(OBJ)/mod_CAP.o \
+   $(OBJ)/sub_module_SimpleOp.o $(OBJ)/sub_module_OnTheFly_def.o \
+	 $(OBJ)/mod_CAP.o $(OBJ)/mod_HStep.o\
 	 $(OBJ)/sub_PrimOp_def.o \
    $(OBJ)/sub_onthefly.o $(OBJ)/sub_PrimOp_RPH.o $(OBJ)/sub_PrimOp.o \
    $(OBJ)/sub_system.o $(OBJ)/read_para.o
@@ -1126,6 +1127,8 @@ $(OBJ)/sub_module_OnTheFly_def.o:$(DIRPrimOp)/sub_module_OnTheFly_def.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRPrimOp)/sub_module_OnTheFly_def.f90
 $(OBJ)/mod_CAP.o:$(DIRPrimOp)/mod_CAP.f90
 	cd $(OBJ) ; $(F90_FLAGS)  -c $(DIRPrimOp)/mod_CAP.f90
+$(OBJ)/mod_HStep.o:$(DIRPrimOp)/mod_HStep.f90
+	cd $(OBJ) ; $(F90_FLAGS)  -c $(DIRPrimOp)/mod_HStep.f90
 $(OBJ)/sub_PrimOp_RPH.o:$(DIRPrimOp)/sub_PrimOp_RPH.f90
 	cd $(OBJ) ; $(F90_FLAGS)  -c $(DIRPrimOp)/sub_PrimOp_RPH.f90
 $(OBJ)/sub_PrimOp.o:$(DIRPrimOp)/sub_PrimOp.f90

@@ -29,20 +29,20 @@
 MODULE mod_Tnum
       USE mod_system
       USE mod_nDFit,            only: param_nDFit
-      use mod_QTransfo,         only: type_qtransfo, write_qtransfo,    &
+      USE mod_QTransfo,         only: type_qtransfo, write_qtransfo,    &
                                       dealloc_qtransfo, dealloc_array,  &
                                       alloc_array, read_qtransfo,       &
                                       sub_type_name_of_qin,             &
                                       sub_check_lineartransfo,          &
                                       qtransfo1toqtransfo2
-      use mod_LinearNMTransfo,  only: type_nmtransfo, dealloc_array,    &
+      USE mod_LinearNMTransfo,  only: type_nmtransfo, dealloc_array,    &
                                       alloc_array, read_lineartransfo,  &
                                       read_nmtransfo, alloc_lineartransfo
-      use mod_RPHTransfo,       only: type_rphtransfo, write_rphtransfo,&
+      USE mod_RPHTransfo,       only: type_rphtransfo, write_rphtransfo,&
                                       dealloc_array, alloc_array,       &
                                       rphtransfo1torphtransfo2,         &
                                       set_rphtransfo, dealloc_rphtransfo
-      use CurviRPH_mod,         only: curvirph_type, dealloc_curvirph,  &
+      USE CurviRPH_mod,         only: curvirph_type, dealloc_curvirph,  &
                                       curvirph1_to_curvirph2, get_CurviRPH
       USE mod_ActiveTransfo
       USE mod_CartesianTransfo
