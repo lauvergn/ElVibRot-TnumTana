@@ -218,6 +218,7 @@ END SUBROUTINE read_CRP
       SUBROUTINE sub_CRP_BasisRep_WithMat(tab_Op,nb_Op,print_Op,para_CRP)
 
       USE mod_system
+      USE mod_Constant
       USE mod_Coord_KEO
       USE mod_basis
       USE mod_Op
@@ -248,6 +249,7 @@ END SUBROUTINE read_CRP
       complex (kind=Rkind), allocatable :: gGgG(:,:)
       complex :: CRP
       real (kind=Rkind) :: Ene
+      TYPE(REAL_WU)     :: RWU_E
 
 
 
@@ -326,7 +328,11 @@ END SUBROUTINE read_CRP
           CRP = CRP + gGgG(i,i)
         END DO
 
-        write(out_unitp,*) 'CRP at E (ua)',Ene,real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene)
+        RWU_E  = REAL_WU(Ene,'au','E')
+
+        write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                            real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene)
+        !write(out_unitp,*) 'CRP at E (ua)',Ene,real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene)
         !write(out_unitp,*) 'CRP at E (ua)',Ene,CRP
       END DO
 
@@ -345,6 +351,7 @@ END SUBROUTINE sub_CRP_BasisRep_WithMat
 SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
 
       USE mod_system
+      USE mod_Constant
       USE mod_Coord_KEO
       USE mod_basis
       USE mod_Op
@@ -373,6 +380,7 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
       complex (kind=Rkind), allocatable :: gGgG(:,:)
       complex :: CRP
       real (kind=Rkind) :: Ene
+      TYPE(REAL_WU)     :: RWU_E
 
       real (kind=Rkind), allocatable :: mEYE_FluxOpReactif_mat(:,:)
       real (kind=Rkind), allocatable :: mEYE_FluxOpProduct_mat(:,:)
@@ -450,8 +458,11 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
           CRP = CRP + gGgG(i,i)
         END DO
 
-        write(out_unitp,*) 'CRP at E (ua)',Ene,real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene)
-        !write(out_unitp,*) 'CRP at E (ua)',Ene,CRP
+        RWU_E  = REAL_WU(Ene,'au','E')
+        write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                            CRP,CRP_Eckart(Ene)
+
+        !write(out_unitp,*) 'CRP at E (ua)',Ene,real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene)
 
         Ene = Ene + para_CRP%DEne
 
@@ -475,6 +486,8 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
 
 END SUBROUTINE sub_CRP_BasisRep_WithMat_flux
 SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
+
+      USE mod_Constant
       USE mod_Op
       implicit none
 
@@ -486,6 +499,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
       real(kind=Rkind),   intent(in)      :: Ene
 
 !----- working variables -----------------------------
+      TYPE(REAL_WU)     :: RWU_E
 
       ! Calculate the inverse matrix explicitly? For debuging. It is equivalent to sub_CRP_BasisRep_WithMat
       logical, parameter :: Inv = .FALSE.
@@ -718,7 +732,12 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
       IF (nks > para_CRP%KS_max_it .OR. DeltaCRP >= para_CRP%KS_accuracy) THEN
          write(out_unitp,*) 'WARNING: Lanczos did not converge'
       END IF
-      write(out_unitp,*) 'CRP at E (ua)', Ene,crp,CRP_Eckart(Ene)
+
+      RWU_E  = REAL_WU(Ene,'au','E')
+      write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                            CRP,CRP_Eckart(Ene)
+
+      !write(out_unitp,*) 'CRP at E (ua)', Ene,crp,CRP_Eckart(Ene)
     end if
 
     IF (allocated(gGgG))           CALL dealloc_NParray(gGgG,'gGgG',name_sub)

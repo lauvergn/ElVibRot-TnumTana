@@ -115,9 +115,15 @@ MODULE mod_Tnum
           logical            :: num_x = .FALSE.
 
 
-          integer :: nb_act=0,nb_var=0,ndimG=0
-          integer :: ncart=0,ncart_act=0
-          integer :: nat0=0,nat=0,nat_act=0
+          integer :: nb_act           = 0
+          integer :: nb_var           = 0         ! nb_var= 3*nat-6 + nb_extra_Coord
+          integer :: ndimG            = 0
+          integer :: nb_extra_Coord   = 0
+          integer :: ncart            = 0
+          integer :: ncart_act        = 0
+          integer :: nat0             = 0
+          integer :: nat              = 0
+          integer :: nat_act          = 0
 
           ! for the ab initio calculation
           integer                          :: charge       = 0
@@ -385,7 +391,7 @@ MODULE mod_Tnum
         write(out_unitp,*) '--- Number of variables ------------------'
         write(out_unitp,*)
         write(out_unitp,*) 'nb_act,nb_var',mole%nb_act,mole%nb_var
-        write(out_unitp,*)
+        write(out_unitp,*) 'nb_extra_Coord',mole%nb_extra_Coord
         write(out_unitp,*) 'Number of variables of type...'
         write(out_unitp,*) 'type  1: active                       (nb_act1):',  &
                     mole%nb_act1
@@ -522,6 +528,8 @@ MODULE mod_Tnum
 
         mole%nb_act       = 0
         mole%nb_var       = 0
+        mole%nb_extra_Coord = 0
+
         mole%ndimG        = 0
         mole%ncart        = 0
         mole%ncart_act    = 0
@@ -667,7 +675,7 @@ MODULE mod_Tnum
 !     - for the CoordType --------------------------------
       logical :: zmat,bunch,cart,cos_th
 
-      integer :: nb_act
+      integer :: nb_act,nb_extra_Coord
       integer :: nat,nb_var
 
 !     - for Q_transfo ----------------------------------
@@ -727,7 +735,7 @@ MODULE mod_Tnum
       NAMELIST /variables/nat,zmat,bunch,cos_th,                        &
                      Without_Rot,Centered_ON_CoM,JJ,                    &
                      New_Orient,vAt1,vAt2,vAt3,With_VecCOM,             &
-                     nb_var,nb_act,With_Tab_dnQflex,                    &
+                     nb_var,nb_act,With_Tab_dnQflex,nb_extra_Coord,     &
                      Old_Qtransfo,nb_Qtransfo,Cart_transfo,             &
                      Rot_Dip_with_EC,sym,check_sym,                     &
                      NM,NM_TO_sym,hessian_old,purify_hess,k_Half,       &
@@ -822,6 +830,7 @@ MODULE mod_Tnum
       nat                  = 0
       nb_var               = 0
       nb_act               = 0
+      nb_extra_Coord       = 0
       sym                  = .FALSE.
       check_sym            = .TRUE.
       charge               = 0
@@ -941,6 +950,7 @@ MODULE mod_Tnum
       mole%Centered_ON_CoM = Centered_ON_CoM
       mole%With_VecCOM     = With_VecCOM
 
+      mole%nb_extra_Coord  = nb_extra_Coord
 
 !=======================================================================
 !===== New Coordinates transformation ==================================
@@ -954,8 +964,8 @@ MODULE mod_Tnum
         ENDIF
         CALL alloc_array(mole%tab_Qtransfo,(/mole%nb_Qtransfo/),        &
                         "mole%tab_Qtransfo",name_sub)
-        nb_Qin = 0
-        mole%opt_param = 0
+        nb_Qin          = 0
+        mole%opt_param  = 0
         DO it=1,nb_Qtransfo
           IF (debug) write(out_unitp,*) 'New Qtransfo',it
 
@@ -979,7 +989,8 @@ MODULE mod_Tnum
           CALL flush_perso(out_unitp)
           IF (debug) write(out_unitp,*) 'read Qtransfo',it
 
-          CALL read_Qtransfo(mole%tab_Qtransfo(it),nb_Qin,const_phys%mendeleev)
+          CALL read_Qtransfo(mole%tab_Qtransfo(it),nb_Qin,mole%nb_extra_Coord,  &
+                             const_phys%mendeleev)
           mole%tab_Qtransfo(it)%BeforeActive = (it == nb_Qtransfo-1)
 
           mole%opt_param = mole%opt_param + mole%tab_Qtransfo(it)%opt_param
@@ -1440,7 +1451,7 @@ MODULE mod_Tnum
                         "mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm",name_sub)
         mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm = mole%d0sm(1:mole%ncart_act)
 
-        CALL alloc_array(mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at,&
+        CALL alloc_array(mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at,   &
                                                     (/ mole%nat_act /), &
                         "mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at",name_sub)
         mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at(:) = mole%masses(1:mole%ncart_act:3)
@@ -1448,7 +1459,8 @@ MODULE mod_Tnum
 
 
         mole%tab_Cart_transfo(1)%num_transfo = 1
-        CALL read_Qtransfo(mole%tab_Cart_transfo(1),mole%ncart_act,const_phys%mendeleev)
+        CALL read_Qtransfo(mole%tab_Cart_transfo(1),mole%ncart_act,             &
+                           mole%nb_extra_Coord,const_phys%mendeleev)
 
         IF (print_level > 1) CALL Write_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
 
@@ -1631,8 +1643,10 @@ MODULE mod_Tnum
       mole2%num_x        = mole1%num_x
 
 
-      mole2%nb_act       = mole1%nb_act
-      mole2%nb_var       = mole1%nb_var
+      mole2%nb_act          = mole1%nb_act
+      mole2%nb_var          = mole1%nb_var
+      mole2%nb_extra_Coord  = mole1%nb_extra_Coord
+
       mole2%ndimG        = mole1%ndimG
       mole2%ncart        = mole1%ncart
       mole2%ncart_act    = mole1%ncart_act
@@ -1824,8 +1838,10 @@ MODULE mod_Tnum
       mole1%num_x        = mole2%num_x
 
 
-      mole1%nb_act       = mole2%nb_act
-      mole1%nb_var       = mole2%nb_var
+      mole1%nb_act          = mole2%nb_act
+      mole1%nb_var          = mole2%nb_var
+      mole1%nb_extra_Coord  = mole2%nb_extra_Coord
+
       mole1%ndimG        = mole2%ndimG
       mole1%ncart        = mole2%ncart
       mole1%ncart_act    = mole2%ncart_act

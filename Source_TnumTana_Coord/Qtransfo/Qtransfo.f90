@@ -112,11 +112,11 @@
 
       !!@description: TODO
       !!@param: TODO
-      SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,mendeleev)
+      SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,nb_extra_Coord,mendeleev)
         USE mod_MPI
 
         TYPE (Type_Qtransfo), intent(inout)    :: Qtransfo
-        integer,              intent(inout)    :: nb_Qin
+        integer,              intent(inout)    :: nb_Qin,nb_extra_Coord
         TYPE (table_atom),    intent(in)       :: mendeleev
 
         character (len=Name_len) :: name_transfo,name_dum
@@ -454,9 +454,9 @@
           Qtransfo%ZmatTransfo%cos_th = cos_th
           Qtransfo%ZmatTransfo%nat0   = nat
           Qtransfo%ZmatTransfo%nat    = nat + 1
-          Qtransfo%ZmatTransfo%nb_var = max(1,3*nat-6)
+          Qtransfo%ZmatTransfo%nb_var = max(1,3*nat-6)+nb_extra_Coord
           Qtransfo%ZmatTransfo%ncart  = 3*(nat+1)
-          Qtransfo%nb_Qin             = max(1,3*nat-6)
+          Qtransfo%nb_Qin             = max(1,3*nat-6)+nb_extra_Coord
           Qtransfo%nb_Qout            = 3*(nat+1)
           IF (debug) write(out_unitp,*) 'nat0,nat,nb_var,ncart',        &
                      Qtransfo%ZmatTransfo%nat0,Qtransfo%ZmatTransfo%nat,&
@@ -495,7 +495,7 @@
             Qtransfo%BunchTransfo%nb_X   = nb_X
             Qtransfo%BunchTransfo%nat0   = nat
             Qtransfo%BunchTransfo%nat    = nat + 1
-            Qtransfo%BunchTransfo%nb_var = max(1,3*nb_vect-3)
+            Qtransfo%BunchTransfo%nb_var = max(1,3*nb_vect-3)+nb_extra_Coord
             Qtransfo%BunchTransfo%ncart  = 3*(nat+1)
             Qtransfo%nb_Qin              = 3*nb_vect ! or 3*nat !!
             Qtransfo%nb_Qout             = 3*(nat+1)
@@ -587,7 +587,7 @@
 
         CASE ('qtox_ana')
           Qtransfo%Primitive_Coord    = .TRUE.
-          Qtransfo%nb_Qin             = max(1,3*nat-6)
+          Qtransfo%nb_Qin             = max(1,3*nat-6)+nb_extra_Coord
           Qtransfo%nb_Qout            = 3*nat+3
           CALL alloc_array(Qtransfo%type_Qin,(/Qtransfo%nb_Qin/),       &
                           "Qtransfo%type_Qin",name_sub)
@@ -601,7 +601,7 @@
           Qtransfo%QTOXanaTransfo%nat0      = nat
           Qtransfo%QTOXanaTransfo%nat       = nat + 1
           Qtransfo%QTOXanaTransfo%nat_act   = nat
-          Qtransfo%QTOXanaTransfo%nb_var    = max(1,3*nat-6)
+          Qtransfo%QTOXanaTransfo%nb_var    = max(1,3*nat-6)+nb_extra_Coord
           Qtransfo%QTOXanaTransfo%ncart     = 3*(nat+1)
           Qtransfo%QTOXanaTransfo%ncart_act = 3*nat
 
@@ -1308,7 +1308,7 @@
 !===============================================================================
       SUBROUTINE Write_Qtransfo(Qtransfo,force_print)
         USE mod_MPI
-        
+
         TYPE (Type_Qtransfo) :: Qtransfo
         logical, optional    :: force_print
 

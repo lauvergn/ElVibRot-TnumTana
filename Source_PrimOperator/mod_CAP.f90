@@ -84,7 +84,7 @@
         write(out_unitp,*) ' |                   /'
         write(out_unitp,*) ' |                  /'
         write(out_unitp,*) ' |                 /'
-        write(out_unitp,*) ' |----------------/..................> Q'
+        write(out_unitp,*) ' |----------------/..........> Q'
         write(out_unitp,*) '                 Q0'
         write(out_unitp,*) ' CAP(Q)=0 when Q<= Q0'
       ELSE
@@ -94,7 +94,7 @@
         write(out_unitp,*) ' |             \'
         write(out_unitp,*) ' |              \'
         write(out_unitp,*) ' |               \'
-        write(out_unitp,*) ' |................\-----------------> Q'
+        write(out_unitp,*) ' |................\----------> Q'
         write(out_unitp,*) '                  Q0'
         write(out_unitp,*) ' CAP(Q)=0 when Q>= Q0'
       END IF
@@ -108,7 +108,6 @@
       write(out_unitp,*) 'LQ      ',CAP%LQ
 
       write(out_unitp,*) 'iOp     ',CAP%iOp
-
 
     write(out_unitp,*) ' END write_CAP'
     CALL flush_perso(out_unitp)
