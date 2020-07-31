@@ -1,0 +1,73 @@
+ SYSTEM=sub_system_murrell.f
+ test=f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+ x1=0.538516066
+ x2=0.461483933
+
+nb=10
+nq=15
+
+ sQ2=5.155710250688
+ sQ3=11.066007468148
+
+nice $DIR_vib/vib << ** > res
+ &system PGrid_omp=0 /
+ &constantes /
+ &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 
+/
+ &Coord_transfo name_transfo='zmat' nat=4 /
+C
+X     1
+N     2  1
+H     2 -1 3
+
+ &Coord_transfo name_transfo='linear' /
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ &Coord_transfo name_transfo='InfRange' not_all=t /
+F T T F F F
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1    0 0 0
+
+ &minimum pot0=-0.499465823200 read_itQ0transfo=2 pot_itQtransfo=2 /
+cosa .9
+R 3.187
+r 2.179
+x 0.
+pi 3.14159265358979323844d0
+dh 0.0
+
+ &basis_nD iQdyn(1)=1 name="Pl0" nb=51 nq=80 contrac=t nbc=20 name_contrac_file="ONE_MODE/cc1_51_80" weight_OF_nDindB=0.2 /
+ &basis_nD iQdyn(1)=2 name="Hm" nb=$nb nq=$nq Q0=2.87 scaleQ=$sQ2 /
+ &basis_nD iQdyn(1)=3 name="Hm" nb=$nb nq=$nq Q0=1.72 scaleQ=$sQ3 /
+ &inactives /
+
+ &actives test=$test direct=2 /
+ &analyse max_ana=40 max_ene=50000.d0 print=f print_psi=50 davidson=f /
+ &davidson nb_WP=2 max_it=100 max_WP=300 num_resetH=100
+           lower_states=t project_WP0=f one_residue=f
+           read_WP=f read_listWP=f
+/
+ 1 1 1    1 1   1.0
+end wp0
+ 1 1 2    1 1   1.0
+end wp0
+**

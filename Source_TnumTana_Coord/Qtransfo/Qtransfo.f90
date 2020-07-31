@@ -400,6 +400,23 @@
           CALL sub_Type_Name_OF_Qin(Qtransfo,"QoneD")
           Qtransfo%type_Qin(:) = 0
 
+        CASE ('infrange','infiniterange') ! it uses the OneD transfo automatically
+          ! for inTOout=t (Qact -> Qcart direction)
+          ! x E ]-inf,inf[ => R E [0,inf[ ->  : "xTOR" or 111 =>
+          ! x E ]-inf,inf[ => theta E ]0,Pi[ ->  : "xTOtheta" or 71
+          ! x E ]-inf,inf[ => u E ]-1,1[ ->  : "xTOu" or 74 (with R0=1)
+          ! x E ]-inf,inf[ => phi E ]-pi,pi[ ->  : "xTOu" or 74 (with R0=Pi)
+
+          Qtransfo%nb_Qin  = nb_Qin
+
+          CALL alloc_oneDTransfo(Qtransfo%oneDTransfo,nb_Qin)
+          Qtransfo%nb_transfo = nb_Qin
+
+          CALL Read_InfiniteRange(Qtransfo%oneDTransfo,Qtransfo%type_Qout,not_all)
+
+          CALL sub_Type_Name_OF_Qin(Qtransfo,"InfiniteRange")
+          Qtransfo%type_Qin(:) = 0
+
         CASE ('threed')
           Qtransfo%nb_Qin  = nb_Qin
 
@@ -685,6 +702,7 @@
         write(nio,*) '"gene"'
         write(nio,*) '"order"'
         write(nio,*) '"oneD"'
+        write(nio,*) '"InfRange" or "InfiniteRange"'
         write(nio,*) '"ThreeD"'
         write(nio,*) '"Rot2Coord"'
 
@@ -995,7 +1013,7 @@
         Qtransfo2%HyperSpheTransfo%list_HyperSphe =                     &
                               Qtransfo1%HyperSpheTransfo%list_HyperSphe
 
-      CASE ('oned')
+      CASE ('oned','infrange','infiniterange')
         IF (Qtransfo2%nb_transfo < 1) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) '  Wrong number of transformation:',       &
@@ -1192,7 +1210,7 @@
         CALL calc_HyperSpheTransfo(dnQin,dnQout,Qtransfo%HyperSpheTransfo,&
                                    nderiv,inTOout_loc)
 
-      CASE ('oned')
+      CASE ('oned','infrange','infiniterange')
         CALL calc_oneDTransfo(dnQin,dnQout,Qtransfo%oneDTransfo,        &
                               nderiv,inTOout_loc)
 
@@ -1418,8 +1436,8 @@
           write(out_unitp,*) 'list_HyperSphe: ',                        &
                  Qtransfo%HyperSpheTransfo%list_HyperSphe(:)
 
-        CASE ('oned')
-          write(out_unitp,*) 'oneD transfo'
+        CASE ('oned','infrange','infiniterange')
+          write(out_unitp,*) 'oneD transfo or InfiniteRange'
           IF (Qtransfo%nb_transfo < 1) THEN
               write(out_unitp,*) ' ERROR in ',name_sub
               write(out_unitp,*) '  Wrong number of transformation:',   &

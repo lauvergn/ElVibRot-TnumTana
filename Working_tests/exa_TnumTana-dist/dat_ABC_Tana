@@ -1,0 +1,29 @@
+
+here=`pwd`
+DIR_EVRT=$here/../..
+
+cd $DIR_EVRT
+ make Tnum_MCTDH
+cd $here
+
+$DIR_EVRT/Tnum90_MCTDH.exe << ** > res
+ &variables
+         Tana=t MidasCppForm=t
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+         nrho=2
+ /
+ &Coord_transfo name_transfo='bunch_poly' nb_vect=2  inTOout=f/
+1. 10. 2.
+
+ &Coord_transfo name_transfo='poly' cos_th=f /
+     &vector nb_vect=1 Frame=t iAtA=2 iAtB=1 / #R4
+          &vector iAtA=2 iAtB=3 /       #R1
+
+ &Coord_transfo name_transfo='active' /
+1  1 1 
+ &minimum read_nameQ=t /
+R4    2.
+R1    3.
+th1   0.5
+**
