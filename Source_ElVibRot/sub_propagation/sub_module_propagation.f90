@@ -191,7 +191,7 @@ PUBLIC :: MPI_Bcast_param_Davidson,Calc_AutoCorr_SR_MPI
 
         real (kind=Rkind)   ::  Hmax              = ZERO
         real (kind=Rkind)   ::  Hmin              = ZERO
-        logical             ::  once_Hmin         =.TRUE.!< control the calculation of 
+        logical             ::  once_Hmin         =.TRUE.!< control the calculation of
                                                          !< Hmin once at the first action
         logical             ::  auto_Hmax         = .FALSE.    !  .TRUE. => Hmax is obtained with a propagation
                                               !            with imaginary time (type_WPpropa=-3)
@@ -546,7 +546,7 @@ PUBLIC :: MPI_Bcast_param_Davidson,Calc_AutoCorr_SR_MPI
 
 #if(run_MPI)
 !=======================================================================================
-!< calculate auto-correcetion function on Smolyak rep. 
+!< calculate auto-correcetion function on Smolyak rep.
 !=======================================================================================
       FUNCTION Calc_AutoCorr_SR_MPI(psi0,psi,para_propa,TT,Write_AC)
         USE mod_system
@@ -1179,19 +1179,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
         IF (print_level > 0) write(out_unitp,propa)
 
-
-        para_propa%WPTmax                 = convRWU_TO_R_WITH_WorkingUnit(WPTmax)
-        para_propa%WPdeltaT               = convRWU_TO_R_WITH_WorkingUnit(WPdeltaT)
-        para_propa%nb_micro               = nb_micro
-        para_propa%One_Iteration          = One_Iteration
-        para_propa%para_poly%max_poly     = max_poly
-        para_propa%para_poly%npoly        = npoly
-
-        CALL alloc_param_poly(para_propa%para_poly)
-
-        para_propa%spectral      = spectral
-        nb_vp_spec_out           = nb_vp_spec
         para_propa%with_field    = .FALSE.
+
 
   IF (type_WPpropa > 0 .AND. name_WPpropa /= '') THEN
     write(out_unitp,*) 'ERROR in ',name_sub
@@ -1225,8 +1214,19 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
          type_WPpropa = 52
        CASE ('tdh-rk4')
          type_WPpropa = 54
+
        CASE ('rk4')
          type_WPpropa = 5
+         npoly = 4
+       CASE ('rk2')
+         type_WPpropa = 5
+         npoly = 2
+       CASE ('rk1','euker')
+         type_WPpropa = 5
+         npoly = 1
+       CASE ('rkn')
+         type_WPpropa = 5
+         IF (npoly /= 4 .AND. npoly /= 2 .AND. npoly /= 1) npoly = 4
 
        CASE ('modmidpoint')
          type_WPpropa = 6
@@ -1258,7 +1258,10 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
   CASE (5) !         RK4 without a time dependant pulse in Hamiltonian (W(t))
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
-          name_WPpropa  = 'RK4'
+          IF (npoly /= 4 .AND. npoly /= 2 .AND. npoly /= 1) npoly = 4
+          IF (npoly == 4) name_WPpropa  = 'RK4'
+          IF (npoly == 2) name_WPpropa  = 'RK2'
+          IF (npoly == 1) name_WPpropa  = 'RK1'
           para_propa%with_field    = .FALSE.
 
   CASE (6) !         ModMidPoint without a time dependant pulse in Hamiltonian (W(t))
@@ -1332,6 +1335,18 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
            STOP
   END SELECT
 
+
+        para_propa%WPTmax                 = convRWU_TO_R_WITH_WorkingUnit(WPTmax)
+        para_propa%WPdeltaT               = convRWU_TO_R_WITH_WorkingUnit(WPdeltaT)
+        para_propa%nb_micro               = nb_micro
+        para_propa%One_Iteration          = One_Iteration
+        para_propa%para_poly%max_poly     = max_poly
+        para_propa%para_poly%npoly        = npoly
+
+        CALL alloc_param_poly(para_propa%para_poly)
+
+        para_propa%spectral      = spectral
+        nb_vp_spec_out           = nb_vp_spec
 
         para_propa%para_poly%poly_tol     = poly_tol
         para_propa%para_poly%DHmax        = DHmax
@@ -1876,15 +1891,15 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
 #if(run_MPI)
 !=======================================================================================
-!> for boardcast derived types: param_Davidson   
+!> for boardcast derived types: param_Davidson
 !=======================================================================================
       SUBROUTINE MPI_Bcast_param_Davidson(param_DS)
         USE mod_MPI
         USE mod_MPI_Aid
         IMPLICIT NONE
-        
+
         TYPE(param_Davidson),intent(in)             :: param_DS
-        
+
         TYPE(MPI_Datatype)                    :: type_MPI(47)
         TYPE(MPI_Datatype)                    :: param_Davidson_MPI
         Integer(KIND=MPI_ADDRESS_KIND)        :: disp(47)
@@ -1893,83 +1908,83 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         Integer                               :: n_count(3)
         Integer                               :: ii
 
-        CAll MPI_GET_ADDRESS(param_DS%num_resetH,            disp(1),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%num_checkS,            disp(2),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%residual_max_nb,       disp(3),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%max_it,                disp(4),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%nb_WP,                 disp(5),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%max_WP,                disp(6),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%num_LowestWP,          disp(7),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%nb_WP0,                disp(8),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%nb_readWP,             disp(9),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%nb_readWP_OF_List,     disp(10),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%save_interal,          disp(11),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%save_max_nb,           disp(12),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%symab,                 disp(13),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%conv_hermitian,        disp(14),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%NewVec_type,           disp(15),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%L_filter,              disp(16),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%Lmax_filter,           disp(17),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%M_filter,              disp(18),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%DeltaM_filter,         disp(19),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%Mmax_filter,           disp(20),MPI_err) 
-        
-        CAll MPI_GET_ADDRESS(param_DS%one_by_one,            disp(21),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%read_WP,               disp(22),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%read_listWP,           disp(23),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%precond,               disp(24),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%formatted_file_readWP, disp(25),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%save_all,              disp(26),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%formatted_file_WP,     disp(27),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%all_lower_states,      disp(28),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%lower_states,          disp(29),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%project_WP0,           disp(30),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%Hmin_propa,            disp(31),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%Hmax_propa,            disp(32),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%With_Grid,             disp(33),MPI_err) 
+        CAll MPI_GET_ADDRESS(param_DS%num_resetH,            disp(1),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%num_checkS,            disp(2),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%residual_max_nb,       disp(3),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%max_it,                disp(4),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%nb_WP,                 disp(5),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%max_WP,                disp(6),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%num_LowestWP,          disp(7),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%nb_WP0,                disp(8),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%nb_readWP,             disp(9),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%nb_readWP_OF_List,     disp(10),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%save_interal,          disp(11),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%save_max_nb,           disp(12),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%symab,                 disp(13),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%conv_hermitian,        disp(14),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%NewVec_type,           disp(15),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%L_filter,              disp(16),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%Lmax_filter,           disp(17),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%M_filter,              disp(18),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%DeltaM_filter,         disp(19),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%Mmax_filter,           disp(20),MPI_err)
 
-        CAll MPI_GET_ADDRESS(param_DS%precond_tol,           disp(34),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%save_max_ene,          disp(35),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%scaled_max_ene,        disp(36),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%thresh_project,        disp(37),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%Max_ene,               disp(38),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%RMS_ene,               disp(39),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%conv_ene,              disp(40),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%RMS_resi,              disp(41),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%conv_resi,             disp(42),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%E0_filter,             disp(43),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%W_filter,              disp(44),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%LambdaMin,             disp(45),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%conv_resi,             disp(46),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%LambdaMax,             disp(47),MPI_err) 
-        
+        CAll MPI_GET_ADDRESS(param_DS%one_by_one,            disp(21),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%read_WP,               disp(22),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%read_listWP,           disp(23),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%precond,               disp(24),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%formatted_file_readWP, disp(25),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%save_all,              disp(26),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%formatted_file_WP,     disp(27),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%all_lower_states,      disp(28),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%lower_states,          disp(29),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%project_WP0,           disp(30),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%Hmin_propa,            disp(31),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%Hmax_propa,            disp(32),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%With_Grid,             disp(33),MPI_err)
+
+        CAll MPI_GET_ADDRESS(param_DS%precond_tol,           disp(34),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%save_max_ene,          disp(35),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%scaled_max_ene,        disp(36),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%thresh_project,        disp(37),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%Max_ene,               disp(38),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%RMS_ene,               disp(39),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%conv_ene,              disp(40),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%RMS_resi,              disp(41),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%conv_resi,             disp(42),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%E0_filter,             disp(43),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%W_filter,              disp(44),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%LambdaMin,             disp(45),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%conv_resi,             disp(46),MPI_err)
+        CAll MPI_GET_ADDRESS(param_DS%LambdaMax,             disp(47),MPI_err)
+
         n_count(1)=20
         n_count(2)=33
         n_count(3)=47
-        
+
         base=disp(1)
         DO ii=1,n_count(3)
           disp(ii)=disp(ii)-base
           block_length(ii)=1
-        ENDDO 
-        
+        ENDDO
+
         DO ii=1,n_count(1)
-          type_MPI(ii)=MPI_int_fortran 
+          type_MPI(ii)=MPI_int_fortran
         ENDDO
 
         DO ii=n_count(1)+1,n_count(2)
           type_MPI(ii)=MPI_Logical
         ENDDO
-        
+
         DO ii=n_count(2)+1,n_count(3)
           type_MPI(ii)=MPI_real_fortran
         ENDDO
-        
+
         CALL MPI_TYPE_CREATE_STRUCT(n_count(3),block_length,disp,type_MPI,             &
-                                    param_Davidson_MPI,MPI_err) 
-        CALL MPI_TYPE_COMMIT(param_Davidson_MPI,MPI_err) 
+                                    param_Davidson_MPI,MPI_err)
+        CALL MPI_TYPE_COMMIT(param_Davidson_MPI,MPI_err)
         CALL MPI_Bcast(param_DS,size1_MPI,param_Davidson_MPI,root_MPI,                 &
-                       MPI_COMM_WORLD,MPI_err) 
+                       MPI_COMM_WORLD,MPI_err)
 
       ENDSUBROUTINE MPI_Bcast_param_Davidson
 !=======================================================================================

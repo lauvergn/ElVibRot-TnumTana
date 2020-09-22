@@ -420,8 +420,21 @@
         write(out_unitp,*) "============================================================"
         CALL flush_perso(out_unitp)
       ENDIF
+      write(out_unitp,*) "BuildBasis_done? ",para_AllBasis%BasisnD%BuildBasis_done
 
       CALL Auto_basis(para_Tnum,mole,para_AllBasis,para_ReadOp)
+
+      write(out_unitp,*) "BuildBasis_done? ",para_AllBasis%BasisnD%BuildBasis_done
+
+ !      !CALL Set_TDParam_FROM_basis(para_AllBasis%BasisnD,[3.0_Rkind,5.0_Rkind,2.0_Rkind,12.0_Rkind])
+ !      CALL Set_TDParam_FROM_basis(para_AllBasis%BasisnD,[3.0_Rkind,5.0_Rkind,2.0_Rkind])
+ !      write(out_unitp,*) "BuildBasis_done? ",para_AllBasis%BasisnD%BuildBasis_done
+ !      write(out_unitp,*) "coucou"
+ !
+ !       CALL Auto_basis(para_Tnum,mole,para_AllBasis,para_ReadOp)
+ !       write(out_unitp,*) "BuildBasis_done? ",para_AllBasis%BasisnD%BuildBasis_done
+ !       !CALL RecWriteMini_basis(para_AllBasis%BasisnD)
+ ! stop
 
       IF (para_AllBasis%BasisnD%SparseGrid_type == 4) THEN
         para_AllBasis%BasisnD%para_SGType2%nb0 = para_ReadOp%nb_elec ! to be changed

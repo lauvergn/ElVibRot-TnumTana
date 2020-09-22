@@ -86,6 +86,8 @@
       integer :: Grid_omp_save
       integer :: nqa,nb_bi
       logical :: With_BGG
+      real(kind=Rkind), allocatable :: TDParam(:)
+      integer :: nb_TDParam
 
 !-------------------------------------------------------------------------
 
@@ -151,6 +153,16 @@
          IF (allocated(para_AllBasis%BasisnD%nDindG%nDsize))             &
            write(out_unitp,*) 'nDindG%nDsize',para_AllBasis%BasisnD%nDindG%nDsize
          !CALL Write_nDindex(para_AllBasis%BasisnD%nDindG,"BasisnD%nDinG ")
+      END IF
+
+      nb_TDParam = get_nb_TDParam_FROM_basis(para_AllBasis%BasisnD)
+      IF (nb_TDParam > 0) then
+        CALL alloc_NParray(TDParam,[nb_TDParam],'nb_TDParam',name_sub)
+        CALL Get_TDParam_FROM_basis(para_AllBasis%BasisnD,TDParam)
+        write(out_unitp,*) 'TDParam ',TDParam(:)
+        CALL dealloc_NParray(TDParam,'nb_TDParam',name_sub)
+      ELSE
+        write(out_unitp,*) 'no TDParam'
       END IF
 
       IF (debug) THEN
@@ -226,7 +238,7 @@
         CALL flush_perso(out_unitp)
       END IF
 
-      IF (BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done) THEN
+      IF (BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done .AND. .NOT. BasisnD%BuildBasis_done) THEN
 
         IF (BasisnD%SparseGrid_type == 1) THEN
           ! For Sparse Grid
@@ -237,10 +249,12 @@
 
           CALL clean_basis(BasisnD)
 
+
           IF (Print_basis) write(out_unitp,*) 'Sparse Grid type1 done. Layer: ',rec
 
         ELSE IF (BasisnD%SparseGrid_type == 2) THEN
           CALL RecSparseGrid_ForDP_type2(BasisnD,para_Tnum,mole,para_ReadOp)
+
           !- d1b => dnBGG%d1 and  d2b => dnBGG%d2 ------------
           CALL sub_dnGB_TO_dnGG(BasisnD)
 
@@ -266,7 +280,8 @@
           IF (Print_basis) write(out_unitp,*) 'direct_product%...%nb:         ',  &
                   (BasisnD%tab_Pbasis(i)%Pbasis%nb,i=1,BasisnD%nb_basis)
 
-          IF (.NOT. BasisnD%tab_basis_done) THEN
+
+          IF (.NOT. BasisnD%tab_basis_done .OR. .NOT. BasisnD%BuildBasis_done) THEN
             DO ibasis=1,BasisnD%nb_basis
 
 
@@ -353,7 +368,7 @@
       END IF
 
       ! Now the contraction .....
-      IF (BasisnD%contrac) THEN
+      IF (BasisnD%contrac .AND. .NOT. BasisnD%BuildBasis_done) THEN
         IF (BasisnD%auto_contrac) THEN
 
           !POGridRep
@@ -422,6 +437,7 @@
         !- check the overlap matrix -----------------------------
         CALL check_ortho_basis(BasisnD)
       END IF
+      BasisnD%BuildBasis_done = .TRUE.
 
       IF (Print_basis .AND. MPI_id==0) write(out_unitp,*) 'Auto_basis done. Layer:        ',rec
 

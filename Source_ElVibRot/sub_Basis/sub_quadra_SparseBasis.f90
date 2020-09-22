@@ -232,7 +232,7 @@
               write(out_unitp,*) ' ERROR you must set the "nq_max_Nested" parameter'
               STOP
             END IF
-            
+
             CALL basis2TObasis1(basis_SG%tab_basisPrimSG(ib,L),         &
                                 basis_DPsave%tab_Pbasis(ib)%Pbasis)
 

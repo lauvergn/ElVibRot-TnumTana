@@ -22,7 +22,7 @@ nq=$(($nb+2))
 
 
 nice $DIR_vib/vib << ** >res
- &system POpPsi_omp=1 /
+ &system POpPsi_omp=1 printlevel=2 /
  &constantes /
  &variables 
          zmat=T

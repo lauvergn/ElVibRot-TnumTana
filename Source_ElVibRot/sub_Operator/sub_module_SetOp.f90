@@ -1439,28 +1439,27 @@ MODULE mod_SetOp
       END IF
 !-----------------------------------------------------------
 
+      psi%init          = .TRUE.
+      psi%cplx          = cplx
 
-      psi%init         = .TRUE.
-      psi%cplx         = cplx
+      psi%nb_tot        = para_H%nb_tot
+      psi%nb_baie       = para_H%nb_baie
+      psi%nb_ba         = para_H%nb_ba
+      psi%nb_bi         = para_H%nb_bi
+      psi%nb_be         = para_H%nb_be
+      psi%nb_bRot       = para_H%nb_bRot
 
-      psi%nb_tot       = para_H%nb_tot
-      psi%nb_baie      = para_H%nb_baie
-      psi%nb_ba        = para_H%nb_ba
-      psi%nb_bi        = para_H%nb_bi
-      psi%nb_be        = para_H%nb_be
-      psi%nb_bRot      = para_H%nb_bRot
+      psi%nb_qa         = para_H%nb_qa
+      psi%nb_qaie       = para_H%nb_qaie
 
-      psi%nb_qa        = para_H%nb_qa
-      psi%nb_qaie      = para_H%nb_qaie
+      psi%nb_act1       = para_H%mole%nb_act1
+      psi%nb_act        = para_H%mole%nb_act
 
+      psi%nb_basis_act1 = max(1,psi%BasisnD%nb_basis)
+      psi%nb_basis      = psi%nb_basis_act1 + psi%Basis2n%nb_basis
+      psi%max_dim       = maxval( psi%BasisnD%nDindB%nDsize(:) )
 
-      psi%nb_act1      = para_H%mole%nb_act1
-      psi%nb_act       = para_H%mole%nb_act
-
-      psi%nb_basis_act1= max(1,psi%BasisnD%nb_basis)
-      psi%nb_basis     = psi%nb_basis_act1 + psi%Basis2n%nb_basis
-      psi%max_dim      = maxval( psi%BasisnD%nDindB%nDsize(:) )
-
+      psi%nb_TDParam    = get_nb_TDParam_FROM_basis(psi%BasisnD)
 
       IF (debug) THEN
         CALL ecri_init_psi(psi)

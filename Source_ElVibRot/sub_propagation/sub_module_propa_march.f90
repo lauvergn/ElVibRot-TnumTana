@@ -160,7 +160,11 @@
         END IF
 
       CASE (5) ! 4th-Order Runge-Kunta
-        CALL march_RK4(T,no,WP(1),WP0(1),para_H,para_propa)
+        IF (para_propa%para_poly%npoly == 2) THEN
+          CALL march_RK2(T,no,WP(1),WP0(1),para_H,para_propa)
+        else
+          CALL march_RK4(T,no,WP(1),WP0(1),para_H,para_propa)
+        END IF
 
       CASE (6) !
         CALL march_ModMidPoint(T,no,WP(1),WP0(1),para_H,para_propa)
@@ -542,6 +546,219 @@
 !----------------------------------------------------------
 
       END SUBROUTINE march_RK4_field
+      SUBROUTINE march_Euler(T,no,WP,WP0,para_H,para_propa)
+      USE mod_system
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)   :: para_H
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+
+      TYPE (param_psi) :: WP,WP0
+
+      integer :: no
+!----- for printing --------------------------------------------------
+      logical ::print_Op
+
+
+
+!------ working parameters --------------------------------
+      TYPE (param_psi)     :: w1,w2,w6
+      complex (kind=Rkind) :: cdot
+      integer              :: i,ip
+      real (kind=Rkind)    :: T      ! time
+      real (kind=Rkind)    :: T_DT
+      real (kind=Rkind)    :: phase
+
+      integer  ::   nioWP
+
+!----- for the field --------------------------------------------------
+      real (kind=Rkind)    :: dnE(3)
+      real (kind=Rkind)    :: ww(3)
+      logical :: make_field
+!----- for the field --------------------------------------------------
+
+
+!----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+!     logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='march_Euler'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
+        write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
+                                para_propa%para_poly%Hmax
+        write(out_unitp,*)
+        write(out_unitp,*) 'nb_ba,nb_qa',WP%nb_ba,WP%nb_qa
+        write(out_unitp,*) 'nb_bi',WP%nb_bi
+        write(out_unitp,*)
+
+          CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
+          write(out_unitp,*) 'norm WP',i,WP%norm2
+
+          write(out_unitp,*) 'WP BasisRep'
+          CALL ecri_psi(T=ZERO,psi=WP,                               &
+                        ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
+          write(out_unitp,*) 'WP GridRep'
+          CALL ecri_psi(T=ZERO,psi=WP,                               &
+                        ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
+
+      END IF
+!-----------------------------------------------------------
+
+       !-----------------------------------------------------------
+       !w1 = WPdeltaT * fcn(WP,T)
+
+       CALL fcn(WP,w1,para_H)
+       w1 = w1 * para_propa%WPdeltaT
+       WP = WP + w1
+
+       !- Phase Shift -----------------
+       phase = para_H%E0*para_propa%WPdeltaT
+       WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
+
+      !- check norm ------------------
+      CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF ( WP%norm2 > para_propa%max_norm2) THEN
+        T  = T + para_propa%WPdeltaT
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' STOP propagation: norm2 > max_norm2',WP%norm2
+        para_propa%march_error   = .TRUE.
+        para_propa%test_max_norm = .TRUE.
+        STOP
+      END IF
+
+      cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
+      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+      CALL flush_perso(no)
+
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+      CALL dealloc_psi(w6)
+!----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!----------------------------------------------------------
+
+END SUBROUTINE march_Euler
+      SUBROUTINE march_RK2(T,no,WP,WP0,para_H,para_propa)
+      USE mod_system
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)   :: para_H
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+
+      TYPE (param_psi) :: WP,WP0
+
+      integer :: no
+!----- for printing --------------------------------------------------
+      logical ::print_Op
+
+
+
+!------ working parameters --------------------------------
+      TYPE (param_psi)     :: w1,w2,w6
+      complex (kind=Rkind) :: cdot
+      integer              :: i,ip
+      real (kind=Rkind)    :: T      ! time
+      real (kind=Rkind)    :: T_DT
+      real (kind=Rkind)    :: phase
+
+      integer  ::   nioWP
+
+!----- for the field --------------------------------------------------
+      real (kind=Rkind)    :: dnE(3)
+      real (kind=Rkind)    :: ww(3)
+      logical :: make_field
+!----- for the field --------------------------------------------------
+
+
+!----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+!     logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='march_RK2'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
+        write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
+                                para_propa%para_poly%Hmax
+        write(out_unitp,*)
+        write(out_unitp,*) 'nb_ba,nb_qa',WP%nb_ba,WP%nb_qa
+        write(out_unitp,*) 'nb_bi',WP%nb_bi
+        write(out_unitp,*)
+
+          CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
+          write(out_unitp,*) 'norm WP',i,WP%norm2
+
+          write(out_unitp,*) 'WP BasisRep'
+          CALL ecri_psi(T=ZERO,psi=WP,                               &
+                        ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
+          write(out_unitp,*) 'WP GridRep'
+          CALL ecri_psi(T=ZERO,psi=WP,                               &
+                        ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
+
+      END IF
+!-----------------------------------------------------------
+
+       !-----------------------------------------------------------
+       !w1 = WPdeltaT * fcn(WP,T)
+
+       CALL fcn(WP,w1,para_H)
+       w1 = w1 * para_propa%WPdeltaT
+
+      !-----------------------------------------------------------
+      !w6 = WP + w1
+      !w2 = WPdeltaT * fcn(WP+w1,T+DT)
+       T_DT = T + para_propa%WPdeltaT
+       w6 = WP + w1
+
+       CALL fcn(w6,w2,para_H)
+       w2 = w2 * para_propa%WPdeltaT
+
+       w6     = w1+w2
+       WP     = WP + w6*HALF
+
+       !- Phase Shift -----------------
+       phase = para_H%E0*para_propa%WPdeltaT
+       WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
+
+      !- check norm ------------------
+      CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF ( WP%norm2 > para_propa%max_norm2) THEN
+        T  = T + para_propa%WPdeltaT
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' STOP propagation: norm2 > max_norm2',WP%norm2
+        para_propa%march_error   = .TRUE.
+        para_propa%test_max_norm = .TRUE.
+        STOP
+      END IF
+
+      cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
+      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+      CALL flush_perso(no)
+
+      CALL dealloc_psi(w1)
+      CALL dealloc_psi(w2)
+      CALL dealloc_psi(w6)
+!----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!----------------------------------------------------------
+
+END SUBROUTINE march_RK2
       SUBROUTINE march_RK4(T,no,WP,WP0,para_H,para_propa)
       USE mod_system
       USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
@@ -1079,6 +1296,7 @@
       END SUBROUTINE fcn_field
       SUBROUTINE fcn(WP,dWP,para_H)
       USE mod_system
+      USE mod_basis, ONLY : get_nb_TDParam_FROM_basis
 
       USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
       USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
@@ -1095,6 +1313,7 @@
 
 
       integer  ::   nioWP
+      integer  ::   nb_TDParam
 
 
 !----- for debuging --------------------------------------------------
@@ -1116,6 +1335,9 @@
        END IF
 !-----------------------------------------------------------
 
+       !nb_TDParam = get_nb_TDParam_FROM_basis(WP%BasisnD)
+       write(out_unitp,*) 'In fcn: nb_TDParam',WP%nb_TDParam
+
 !-----------------------------------------------------------
 !      dWP = -i.H.WP
 
@@ -1132,6 +1354,54 @@
 
 
       END SUBROUTINE fcn
+      SUBROUTINE Make_SMatrix_WITH_TDParam(S,WP,para_H)
+      USE mod_system
+      USE mod_basis, ONLY : get_nb_TDParam_FROM_basis
+
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op, sub_OpPsi,sub_scaledOpPsi
+      IMPLICIT NONE
+
+      complex(kind=Rkind),  INTENT(INOUT) :: S(:,:)
+      TYPE (param_Op),      intent(in)    :: para_H
+      TYPE (param_psi),     intent(in)    :: WP
+
+
+      integer  ::   nb_TDParam,dim_S
+
+
+!----- for debuging --------------------------------------------------
+      logical, parameter :: debug=.FALSE.
+!     logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='Make_SMatrix_WITH_TDParam'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nb_tot',WP%nb_tot
+        write(out_unitp,*) 'nb_TDParam',WP%nb_TDParam
+        write(out_unitp,*)
+        !write(out_unitp,*) 'WP'
+        !CALL ecri_psi(T=ZERO,psi=WP)
+       END IF
+!-----------------------------------------------------------
+
+       dim_S = WP%nb_tot+WP%nb_TDParam
+       IF (dim_S /= size(S(:,1))) STOP 'ERROR in Make_SMatrix_WITH_TDParam: wrong size.'
+
+!-----------------------------------------------------------
+       CALL Cplx_mat_id(S, WP%nb_tot,dim_S)
+
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'S with TDParam'
+        CALL Write_CMat(S,out_unitp,6)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!----------------------------------------------------------
+
+END SUBROUTINE Make_SMatrix_WITH_TDParam
+
 !================================================================
 !
 !    march nOD propagation with

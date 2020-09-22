@@ -60,7 +60,6 @@ MODULE mod_basis
       USE mod_system
       IMPLICIT NONE
 
-
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (basis)          :: basis_set
       integer, intent(in)   :: Set_Val
@@ -189,6 +188,203 @@ MODULE mod_basis
 
       END SUBROUTINE Set_basis_para_FOR_optimization
 
+      RECURSIVE FUNCTION get_nb_TDParam_FROM_basis(basis_set) RESULT (nb_TDParam)
+      USE mod_system
+      IMPLICIT NONE
+
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (basis)    , intent(in) :: basis_set
+      integer                      :: nb_TDParam
+
+      integer :: ib,nopt,i_Opt
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub = 'get_nb_TDParam_FROM_basis'
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+      END IF
+!---------------------------------------------------------------------
+
+      nb_TDParam = 0
+      IF (basis_set%contrac) RETURN
+
+      IF (basis_set%nb_basis == 0) THEN
+
+        nb_TDParam = count(basis_set%TD_Q0) + count(basis_set%TD_scaleQ)
+
+      ELSE
+        DO ib=1,size(basis_set%tab_Pbasis)
+          nb_TDParam = nb_TDParam +                                             &
+                  get_nb_TDParam_FROM_basis(basis_set%tab_Pbasis(ib)%Pbasis)
+        END DO
+      END IF
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+
+    END FUNCTION get_nb_TDParam_FROM_basis
+
+      RECURSIVE SUBROUTINE Set_TDParam_FROM_basis(basis_set,TDParam)
+      USE mod_system
+      IMPLICIT NONE
+
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (basis)    , intent(inout) :: basis_set
+      real(kind=Rkind), intent(in)    :: TDParam(:)
+
+      integer :: ib,nopt,i_Opt
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub = 'Set_TDParam_FROM_basis'
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+      END IF
+!---------------------------------------------------------------------
+
+      IF (basis_set%contrac) RETURN
+
+      IF (basis_set%nb_basis == 0) THEN
+
+        nopt = count(basis_set%TD_Q0) + count(basis_set%TD_scaleQ)
+
+        IF (size(TDParam) < nopt) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' The size of TDParam is smaller than the number of parameters to be optimized!'
+          write(out_unitp,*) ' size(TDParam)',size(TDParam)
+          write(out_unitp,*) ' nopt',nopt
+          write(out_unitp,*) ' TD_Q0,TD_scaleQ',count(basis_set%TD_Q0),         &
+                                                count(basis_set%TD_scaleQ)
+          STOP
+        END IF
+
+        IF (nopt > 0) basis_set%BuildBasis_done = .FALSE.
+
+        i_Opt = 0
+
+        ! for basis_set%Q0
+        nopt = count(basis_set%TD_Q0)
+        IF (debug) write(out_unitp,*) 'nopt TD_Q0',nopt
+        IF (nopt > 0) THEN
+          basis_set%Q0(1:nopt) = TDParam(i_Opt+1:i_Opt+nopt)
+          i_Opt = i_Opt + nopt
+        END IF
+
+        ! for basis_set%scaleQ
+        nopt = count(basis_set%TD_scaleQ)
+        IF (debug) write(out_unitp,*) 'nopt TD_scaleQ',nopt
+        IF (nopt > 0) THEN
+          basis_set%scaleQ(1:nopt) = TDParam(i_Opt+1:i_Opt+nopt)
+          i_Opt = i_Opt + nopt
+        END IF
+
+      ELSE
+        i_Opt = 0
+        DO ib=1,size(basis_set%tab_Pbasis)
+          nopt = count(basis_set%tab_Pbasis(ib)%Pbasis%TD_Q0) +                 &
+                 count(basis_set%tab_Pbasis(ib)%Pbasis%TD_scaleQ)
+
+          IF (nopt == 0) CYCLE
+
+          CALL Set_TDParam_FROM_basis(basis_set%tab_Pbasis(ib)%Pbasis,          &
+                                         TDParam(i_Opt+1:size(TDParam)))
+
+          IF (.NOT. basis_set%tab_Pbasis(ib)%Pbasis%BuildBasis_done)            &
+                                            basis_set%BuildBasis_done = .FALSE.
+
+          i_Opt = i_Opt + nopt
+        END DO
+      END IF
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+
+    END SUBROUTINE Set_TDParam_FROM_basis
+    RECURSIVE SUBROUTINE Get_TDParam_FROM_basis(basis_set,TDParam)
+      USE mod_system
+      IMPLICIT NONE
+
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (basis)    , intent(in)    :: basis_set
+      real(kind=Rkind), intent(inout) :: TDParam(:)
+
+      integer :: ib,nopt,i_Opt
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub = 'Get_TDParam_FROM_basis'
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+      END IF
+!---------------------------------------------------------------------
+
+      IF (basis_set%contrac) RETURN
+
+      IF (basis_set%nb_basis == 0) THEN
+
+        nopt = count(basis_set%TD_Q0) + count(basis_set%TD_scaleQ)
+        IF (size(TDParam) < nopt) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' The size of TDParam is smaller than the number of parameters to be optimized!'
+          write(out_unitp,*) ' size(TDParam)',size(TDParam)
+          write(out_unitp,*) ' nopt',nopt
+          write(out_unitp,*) ' TD_Q0,TD_scaleQ',count(basis_set%TD_Q0),         &
+                                                count(basis_set%TD_scaleQ)
+          STOP
+        END IF
+
+        i_Opt = 0
+
+        ! for basis_set%Q0
+        nopt = count(basis_set%TD_Q0)
+        IF (debug) write(out_unitp,*) 'nopt Q0',nopt
+        IF (nopt > 0) THEN
+          TDParam(i_Opt+1:i_Opt+nopt) = basis_set%Q0(1:nopt)
+          i_Opt = i_Opt + nopt
+        END IF
+
+        ! for basis_set%scaleQ
+        nopt = count(basis_set%TD_scaleQ)
+        IF (debug) write(out_unitp,*) 'nopt scaleQ',nopt
+        IF (nopt > 0) THEN
+          TDParam(i_Opt+1:i_Opt+nopt) = basis_set%scaleQ(1:nopt)
+          i_Opt = i_Opt + nopt
+        END IF
+
+      ELSE
+        i_Opt = 0
+        DO ib=1,size(basis_set%tab_Pbasis)
+          nopt = count(basis_set%tab_Pbasis(ib)%Pbasis%TD_Q0) +                 &
+                 count(basis_set%tab_Pbasis(ib)%Pbasis%TD_scaleQ)
+
+          IF (nopt == 0) CYCLE
+
+          CALL Get_TDParam_FROM_basis(basis_set%tab_Pbasis(ib)%Pbasis,          &
+                                         TDParam(i_Opt+1:size(TDParam)))
+          i_Opt = i_Opt + nopt
+        END DO
+      END IF
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+
+    END SUBROUTINE Get_TDParam_FROM_basis
 !================================================================
 ! ++    Construct a primitive basis set
 !================================================================
@@ -226,7 +422,15 @@ MODULE mod_basis
 
       !write(out_unitp,*) 'scaleQ,QO',basis_primi%scaleQ,basis_primi%Q0
 
-      IF (.NOT. basis_primi%active) RETURN
+      write(out_unitp,*) 'BuildBasis_done ? for ',basis_primi%name,basis_primi%BuildBasis_done
+      IF (.NOT. basis_primi%active .OR. basis_primi%BuildBasis_done) then
+        write(out_unitp,*) 'No construct for ',basis_primi%name
+        IF (debug) write(out_unitp,*) 'No basis set construct'
+        IF (debug) write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+        RETURN
+      END IF
+      write(out_unitp,*) 'Construct for ',basis_primi%name
 
 
 !     - analyze the name -------------------------------
@@ -510,8 +714,8 @@ MODULE mod_basis
     !- symmetry of the basis ---------------------------------
     IF (basis_primi%type == 60 .OR. basis_primi%type == 600 .OR. basis_primi%type == 601) THEN
       CONTINUE ! Ylm: already done
-      ELSE IF (basis_primi%type == 2) THEN
-        CONTINUE ! El basis set: already done
+    ELSE IF (basis_primi%type == 2) THEN
+      CONTINUE ! El basis set: already done
     ELSE
       CALL Set_tab_SymAbelian(basis_primi%P_SymAbelian,basis_primi%nb)
     END IF
@@ -530,6 +734,10 @@ MODULE mod_basis
 
       !- d0b => transpose(d0b) ... transpose(d0bwrho) ---
       CALL sub_dnGB_TO_dnBG(basis_primi)
+
+      !- for Time-Dependent Parameters ---
+      CALL sub_dnGB_TO_dnPara_OF_GB(basis_primi)
+      CALL sub_dnPara_OF_dnGB_TO_dnPara_OF_BB(basis_primi)
 
 !     - check the overlap matrix -----------------------------
       CALL check_ortho_basis(basis_primi)
@@ -1334,13 +1542,11 @@ MODULE mod_basis
       END IF
 !---------------------------------------------------------------------
 
-
       not_scaled = (basis_sc%type == 1 .OR. basis_sc%ndim == 0) ! direct_product
       DO i=1,basis_sc%ndim
         not_scaled  =  not_scaled .AND. basis_sc%Q0(i)     == ZERO
         not_scaled  =  not_scaled .AND. basis_sc%scaleQ(i) == ONE
       END DO
-
 
       IF ( .NOT. not_scaled ) THEN
 
@@ -1352,7 +1558,7 @@ MODULE mod_basis
 
         scaleQ = product(basis_sc%scaleQ)
 
-        scale_inv = ONE / scaleQ
+        scale_inv    = ONE / scaleQ
         scale_d0b    = sqrt(scaleQ)
         DO i=1,basis_sc%ndim
           scale_d1b(i) = sqrt(scaleQ) * basis_sc%scaleQ(i)
@@ -1396,8 +1602,6 @@ MODULE mod_basis
         END IF
 
       END IF
-
-
 
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -1531,6 +1735,309 @@ MODULE mod_basis
 !-----------------------------------------------------------
       END SUBROUTINE sub_dnGB_TO_dnBB
 
+  !-----------------------------------------------------------
+  ! subroutine to compute db_i/dQ0 and db_i/dscaleQ projected on b_j
+  ! d1Para_OF_BB contains: db_i/dA(1) to db_i/dA(2ndim):
+  !                         db_i/dQ0(1), db_i/d(ndim) then
+  !                        db_i/dscaleQ(1), db_i/dscaleQ(ndim)
+  ! d2Para_OF_BB contains: d2b_i/dA(k)dA(l) with k,l in [1,2ndim]
+  ! d0b_i is the identity matrix
+  SUBROUTINE sub_dnGB_TO_dnPara_OF_GB(basis_set)
+      use mod_dnSVM
+      IMPLICIT NONE
+
+      TYPE (basis)  :: basis_set
+!---------------------------------------------------------------------
+!---------------------------------------------------------------------
+
+!---------------------------------------------------------------------
+      integer           :: i,j,iq,ib,jb,nq,idim,jdim,nb_TD,i_TD,j_TD
+      logical           :: TP_param(2*basis_set%ndim)
+
+      real (kind=Rkind) :: Q0i,Q0j,scaleQi,scaleQj
+      real (kind=Rkind), allocatable :: xi(:),xj(:)
+
+!---------------------------------------------------------------------
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='sub_dnGB_TO_dnPara_OF_GB'
+!-----------------------------------------------------------
+      IF (basis_set%ndim == 0) RETURN
+      IF (.NOT. basis_set%packed_done) RETURN
+
+      nb_TD = count(basis_set%TD_Q0) + count(basis_set%TD_scaleQ)
+      IF (nb_TD == 0) RETURN
+
+      nq = get_nq_FROM_basis(basis_set)
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nb,nq',basis_set%nb,nq
+        write(out_unitp,*) 'nb_TD',nb_TD
+      END IF
+!-----------------------------------------------------------
+      TP_param(1:basis_set%ndim) = basis_set%TD_Q0
+      TP_param(1+basis_set%ndim:2*basis_set%ndim) = basis_set%TD_scaleQ
+
+      IF (basis_set%ndim /= 1) THEN
+        STOP 'sub_dnGB_TO_dnPara_OF_GB: ndim > 1 not yet'
+      END IF
+
+      IF (basis_set%cplx) THEN
+        STOP 'sub_dnGB_TO_dnPara_OF_GB: cplx not yet'
+      ELSE
+        CALL alloc_dnMat(basis_set%dnPara_OF_RGB,nq,basis_set%nb,               &
+                         nb_var_deriv=nb_TD,nderiv=2)
+
+        CALL alloc_NParray(xi,[nq],'x',name_sub)
+        CALL alloc_NParray(xj,[nq],'x',name_sub)
+
+        basis_set%dnPara_OF_RGB%d0(:,:)     = basis_set%dnRGB%d0(:,:)
+
+        i_TD = 0
+        DO i=1,2*basis_set%ndim
+          IF (.NOT. TP_param(i)) CYCLE
+          i_TD = i_TD + 1
+          IF (i <= basis_set%ndim) then
+            idim = i
+            basis_set%dnPara_OF_RGB%d1(:,:,i_TD) = -basis_set%dnRGB%d1(:,:,idim)
+          ELSE
+            idim    = i - basis_set%ndim
+            scaleQi = basis_set%scaleQ(idim)
+            Q0i     = basis_set%Q0(idim)
+
+            xi(:) = (RESHAPE(basis_set%x,shape=[nq]) - Q0i)/scaleQi
+
+            DO ib=1,basis_set%nb
+              basis_set%dnPara_OF_RGB%d1(:,ib,i_TD) =                           &
+                  basis_set%dnRGB%d0(:,ib)/(TWO*scaleQi) +                      &
+                  basis_set%dnRGB%d1(:,ib,idim)*xi(:)
+            END DO
+
+          END IF
+        END DO
+
+        i_TD = 0
+        DO i=1,2*basis_set%ndim
+          IF (.NOT. TP_param(i)) CYCLE
+          i_TD = i_TD + 1
+          j_TD = 0
+          DO j=1,2*basis_set%ndim
+            IF (.NOT. TP_param(j)) CYCLE
+            j_TD = j_TD + 1
+            IF (i <= basis_set%ndim .AND. j <= basis_set%ndim) then
+              idim = i
+              jdim = i
+
+              basis_set%dnPara_OF_RGB%d2(:,:,j_TD,i_TD) = basis_set%dnRGB%d2(:,:,jdim,idim)
+
+            ELSE IF (i <= basis_set%ndim .AND. j > basis_set%ndim) then ! qOi and sj
+              idim    = i
+              jdim    = j - basis_set%ndim
+
+              scaleQi = basis_set%scaleQ(idim)
+              Q0i     = basis_set%Q0(idim)
+              xi(:) = (RESHAPE(basis_set%x,shape=[nq]) - Q0i)/scaleQi
+
+              scaleQj = basis_set%scaleQ(jdim)
+              Q0j     = basis_set%Q0(jdim)
+              xj(:) = (RESHAPE(basis_set%x,shape=[nq]) - Q0j)/scaleQj
+
+              IF (idim == jdim) then
+                DO ib=1,basis_set%nb
+                  basis_set%dnPara_OF_RGB%d2(:,ib,j_TD,i_TD) =                  &
+                      -basis_set%dnRGB%d1(:,ib,jdim)      * THREE/(TWO*scaleQi) - &
+                       basis_set%dnRGB%d2(:,ib,jdim,idim) * xj(:)
+                END DO
+              else
+                DO ib=1,basis_set%nb
+                  basis_set%dnPara_OF_RGB%d2(:,ib,j_TD,i_TD) =                  &
+                      -basis_set%dnRGB%d1(:,ib,idim)      * ONE/(TWO*scaleQj) - &
+                       basis_set%dnRGB%d2(:,ib,jdim,idim) * xj(:)
+                END DO
+              end if
+
+
+
+            ELSE IF (i > basis_set%ndim .AND. j <= basis_set%ndim) then ! qOj and si
+              idim    = i - basis_set%ndim
+              jdim    = j
+
+              scaleQi = basis_set%scaleQ(idim)
+              Q0i     = basis_set%Q0(idim)
+              xi(:) = (RESHAPE(basis_set%x,shape=[nq]) - Q0i)/scaleQi
+
+              scaleQj = basis_set%scaleQ(jdim)
+              Q0j     = basis_set%Q0(jdim)
+              xj(:) = (RESHAPE(basis_set%x,shape=[nq]) - Q0j)/scaleQj
+
+              IF (idim == jdim) then
+                DO ib=1,basis_set%nb
+                  basis_set%dnPara_OF_RGB%d2(:,ib,j_TD,i_TD) =                  &
+                      -basis_set%dnRGB%d1(:,ib,jdim)      * THREE/(TWO*scaleQi) - &
+                       basis_set%dnRGB%d2(:,ib,jdim,idim) * xj(:)
+                END DO
+              else
+                DO ib=1,basis_set%nb
+                  basis_set%dnPara_OF_RGB%d2(:,ib,j_TD,i_TD) =                  &
+                      -basis_set%dnRGB%d1(:,ib,jdim)      * ONE/(TWO*scaleQi) - &
+                       basis_set%dnRGB%d2(:,ib,jdim,idim) * xi(:)
+                END DO
+              end if
+
+            ELSE ! i and j > ndim => si and sj
+              idim    = i - basis_set%ndim
+              jdim    = j - basis_set%ndim
+
+              scaleQi = basis_set%scaleQ(idim)
+              Q0i     = basis_set%Q0(idim)
+              xi(:) = (RESHAPE(basis_set%x,shape=[nq]) - Q0i)/scaleQi
+
+              scaleQj = basis_set%scaleQ(jdim)
+              Q0j     = basis_set%Q0(jdim)
+              xj(:) = (RESHAPE(basis_set%x,shape=[nq]) - Q0j)/scaleQj
+
+              IF (idim == jdim) then
+                DO ib=1,basis_set%nb
+                  basis_set%dnPara_OF_RGB%d2(:,ib,j_TD,i_TD) =                  &
+                    -basis_set%dnRGB%d0(:,ib)           / FOUR        +         &
+                     basis_set%dnRGB%d1(:,ib,idim)      * xi(:)       +         &
+                     basis_set%dnRGB%d2(:,ib,idim,idim) * xi(:)**2
+                END DO
+              else
+                DO ib=1,basis_set%nb
+                  basis_set%dnPara_OF_RGB%d2(:,ib,j_TD,i_TD) =                  &
+                     basis_set%dnRGB%d0(:,ib)           / FOUR        +         &
+                     basis_set%dnRGB%d1(:,ib,idim)      / TWO * xi(:) +         &
+                     basis_set%dnRGB%d1(:,ib,jdim)      / TWO * xj(:) +         &
+                     basis_set%dnRGB%d2(:,ib,idim,jdim) * xi(:)*xj
+                END DO
+              END if
+
+              basis_set%dnPara_OF_RGB%d2(:,:,j_TD,i_TD) =                       &
+                  basis_set%dnPara_OF_RGB%d2(:,:,j_TD,i_TD) / (scaleQi*scaleQj)
+
+            END IF
+          END DO
+        END DO
+
+        CALL dealloc_NParray(xi,'xi',name_sub)
+        CALL dealloc_NParray(xj,'xj',name_sub)
+
+      END IF
+
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        IF (basis_set%cplx) THEN
+          STOP 'sub_dnGB_TO_dnPara_OF_GB: cplx not yet'
+        ELSE
+          CALL Write_dnMat(basis_set%dnPara_OF_RGB)
+        END IF
+        !CALL RecWrite_basis(basis_set)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+  END SUBROUTINE sub_dnGB_TO_dnPara_OF_GB
+  SUBROUTINE sub_dnPara_OF_dnGB_TO_dnPara_OF_BB(basis_set)
+      use mod_dnSVM
+      IMPLICIT NONE
+
+      TYPE (basis)  :: basis_set
+!---------------------------------------------------------------------
+!---------------------------------------------------------------------
+
+!---------------------------------------------------------------------
+      integer           :: i,j,iq,ib,jb,nq,nb_TD
+      real(kind=Rkind)  :: wrho
+      real (kind=Rkind) :: d0
+      real (kind=Rkind), allocatable :: d1(:),d2(:,:)
+      real(kind=Rkind), allocatable :: d0bwrho(:,:)
+
+
+!---------------------------------------------------------------------
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='sub_dnPara_OF_dnGB_TO_dnPara_OF_BB'
+!-----------------------------------------------------------
+      IF (basis_set%ndim == 0) RETURN
+      IF (.NOT. basis_set%packed_done) RETURN
+
+      nb_TD = count(basis_set%TD_Q0) + count(basis_set%TD_scaleQ)
+      IF (nb_TD == 0) RETURN
+
+      nq = get_nq_FROM_basis(basis_set)
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nb,nq',basis_set%nb,nq
+        write(out_unitp,*) 'nb_TD',nb_TD
+      END IF
+!-----------------------------------------------------------
+
+
+      IF (basis_set%cplx) THEN
+        STOP 'sub_dnPara_OF_dnGB_TO_dnPara_OF_BB: cplx not yet'
+      ELSE
+        CALL alloc_dnMat(basis_set%dnPara_OF_RBB,basis_set%nb,basis_set%nb,     &
+                         nb_var_deriv=nb_TD,nderiv=2)
+
+        CALL alloc_NParray(d0bwrho,[nq,basis_set%nb],'d0bwrho',name_sub)
+
+
+        DO iq=1,nq
+          wrho = Rec_WrhonD(basis_set,iq)
+          DO ib=1,basis_set%nb
+            d0bwrho(iq,ib) = Rec_d0bnD(basis_set,iq,ib) * wrho
+          END DO
+        END DO
+
+        basis_set%dnPara_OF_RBB%d1(:,:,:)   = ZERO
+        basis_set%dnPara_OF_RBB%d2(:,:,:,:) = ZERO
+
+        CALL alloc_NParray(d1,[nb_TD],'d1',name_sub)
+        CALL alloc_NParray(d2,[nb_TD,nb_TD],'d2',name_sub)
+
+        DO ib=1,basis_set%nb
+        DO iq=1,nq
+
+          d1(:)   = basis_set%dnPara_OF_RGB%d1(iq,ib,:)
+          d2(:,:) = basis_set%dnPara_OF_RGB%d2(iq,ib,:,:)
+
+          DO jb=1,basis_set%nb
+
+            basis_set%dnPara_OF_RBB%d1(jb,ib,:)   =                             &
+                basis_set%dnPara_OF_RBB%d1(jb,ib,:)   + d0bwrho(iq,jb) * d1(:)
+            basis_set%dnPara_OF_RBB%d2(jb,ib,:,:) =                             &
+                basis_set%dnPara_OF_RBB%d2(jb,ib,:,:) + d0bwrho(iq,jb) * d2(:,:)
+
+          END DO
+        END DO
+        END DO
+        CALL dealloc_NParray(d0bwrho,'d0bwrho',name_sub)
+        CALL dealloc_NParray(d1,'d1',name_sub)
+        CALL dealloc_NParray(d2,'d2',name_sub)
+
+      END IF
+
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        IF (basis_set%cplx) THEN
+          STOP 'sub_dnPara_OF_dnGB_TO_dnPara_OF_BB: cplx not yet'
+        ELSE
+          CALL Write_dnMat(basis_set%dnPara_OF_RBB)
+        END IF
+        !CALL RecWrite_basis(basis_set)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+  END SUBROUTINE sub_dnPara_OF_dnGB_TO_dnPara_OF_BB
+
       SUBROUTINE sub_dnGB_TO_dnBG(basis_set)
       use mod_dnSVM
       IMPLICIT NONE
@@ -1634,7 +2141,7 @@ MODULE mod_basis
       RECURSIVE SUBROUTINE Set_dnGGRep(basis_set,With_GG)
 
       TYPE (basis), intent(inout)  :: basis_set
-      logical, intent(in)          :: With_GG
+      logical,      intent(in)     :: With_GG
       !---------------------------------------------------------------------
 
       integer           :: ib

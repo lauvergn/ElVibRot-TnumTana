@@ -84,7 +84,9 @@
 
         real (kind=Rkind),    allocatable :: RvecB(:) ! RvecB(nb_tot)
         complex (kind=Rkind), allocatable :: CvecB(:) ! CvecB(nb_tot)
-        real (kind=Rkind),    allocatable :: ExtraParam(:) ! Non linear parameters (basis-set)
+
+        real (kind=Rkind),    allocatable :: TDParam(:) ! Non linear parameters (basis-set)
+        integer                           :: nb_TDParam =0    ! number of extra Parameters
 
 
         real (kind=Rkind),    allocatable :: RvecG(:) ! RvecG(nb_qaie)
@@ -316,6 +318,10 @@
         END IF
       END IF
 
+      if ( psi%nb_TDParam > 0 .AND. .NOT. allocated(psi%TDParam)) then
+        CALL alloc_NParray(psi%TDParam,[psi%nb_TDParam],'psi%TDParam','alloc_psi')
+      end if
+
 #if(run_MPI)
       IF(psi%SRG_MPI) THEN
         IF(.NOT. allocated(psi%SR_G_length)) THEN
@@ -377,11 +383,12 @@
   TYPE (param_psi), intent(in) :: psi
 
 
-  print_alloc_psi = String_TO_String(                                   &
-          'RvecB:' // logical_TO_char(allocated(psi%RvecB)) //          &
-         ',RvecG:' // logical_TO_char(allocated(psi%RvecG)) //          &
-         ',CvecB:' // logical_TO_char(allocated(psi%CvecB)) //          &
-         ',CvecG:' // logical_TO_char(allocated(psi%CvecG)) )
+  print_alloc_psi = String_TO_String(                                           &
+          'RvecB:' // logical_TO_char(allocated(psi%RvecB)) //                  &
+         ',RvecG:' // logical_TO_char(allocated(psi%RvecG)) //                  &
+         ',CvecB:' // logical_TO_char(allocated(psi%CvecB)) //                  &
+         ',CvecG:' // logical_TO_char(allocated(psi%CvecG)) //                  &
+         ',TDParam:' // logical_TO_char(allocated(psi%TDParam))   )
 
  END FUNCTION print_alloc_psi
 
@@ -536,6 +543,10 @@
           CALL flush_perso(out_unitp)
         END IF
       END IF
+
+      if (allocated(psi%TDParam)) then
+        CALL dealloc_NParray(psi%TDParam,'psi%TDParam',name_sub)
+      end if
 
       IF(allocated(psi%SR_G)) THEN
         CALL dealloc_NParray(psi%SR_G,'psi%SR_G',name_sub)
@@ -897,6 +908,9 @@
 
       psi1%max_dim       = psi2%max_dim
 
+      psi1%nb_TDParam    = psi2%nb_TDParam
+
+
       IF (psi1%nb_tot <= 0) THEN
         write(out_unitp,*) ' ERROR in psi2TOpsi1'
         write(out_unitp,*) 'nb_tot = 0',psi1%nb_tot
@@ -918,6 +932,9 @@
         IF (allocated(psi2%CvecG)) psi1%CvecG(:) = psi2%CvecG(:)
         IF (allocated(psi2%RvecG)) psi1%RvecG(:) = psi2%RvecG(:)
       END IF
+
+      IF (allocated(psi2%TDParam)) psi1%TDParam(:) = psi2%TDParam(:)
+
       IF(psi1%SRG_MPI) THEN
         IF(allocated(psi2%SR_G))        psi1%SR_G=psi2%SR_G
         IF(allocated(psi2%SR_G_length)) psi1%SR_G_length=psi2%SR_G_length
@@ -1032,6 +1049,9 @@
 
       psi1%max_dim       = psi2%max_dim
 
+      psi1%nb_TDParam    = psi2%nb_TDParam
+
+
       IF (psi1%nb_tot <= 0) THEN
         write(out_unitp,*) ' ERROR in copy_psi2TOpsi1'
         write(out_unitp,*) 'nb_tot = 0',psi1%nb_tot
@@ -1045,6 +1065,8 @@
 
       IF (loc_alloc) THEN
         CALL alloc_psi(psi1)
+
+        IF (allocated(psi2%TDParam)) psi1%TDParam(:) = psi2%TDParam(:)
 
         IF (psi1%BasisRep) THEN
 
@@ -2656,7 +2678,6 @@
               END IF
             END IF
 
-
             IF (psi1%symab == psi2%symab) THEN
                psi1_minus_psi2%symab = psi1%symab
             ELSE IF (psi1%symab == -2) THEN
@@ -3425,11 +3446,15 @@
       write(out_unitp,*) 'max_dim',psi%max_dim
       write(out_unitp,*)
 
+      write(out_unitp,*) 'nb_TDParam',psi%nb_TDParam
+      write(out_unitp,*)
+
 
       write(out_unitp,*) 'RvecB_alloc',allocated(psi%RvecB)
       write(out_unitp,*) 'CvecB_alloc',allocated(psi%CvecB)
       write(out_unitp,*) 'RvecG_alloc',allocated(psi%RvecG)
       write(out_unitp,*) 'CvecG_alloc',allocated(psi%CvecG)
+      write(out_unitp,*) 'TDParam_alloc',allocated(psi%TDParam)
 
       write(out_unitp,*) 'IndAvOp,CAvOp,convAvOp',psi%IndAvOp,psi%CAvOp,psi%convAvOp
 

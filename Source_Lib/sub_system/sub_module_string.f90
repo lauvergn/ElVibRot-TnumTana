@@ -329,8 +329,8 @@ MODULE mod_string
     Read_name = ''
     first     = .TRUE.
     ic        = 0
-    err_io    = 0
     DO
+      err_io    = 0
       read(nio,'(a1)',IOSTAT=err_io,advance='no') chara
 
       IF (err_io /= 0)   EXIT
@@ -502,4 +502,3 @@ MODULE mod_string
   END SUBROUTINE dealloc_array_OF_Stringdim1
 
 END MODULE mod_string
-

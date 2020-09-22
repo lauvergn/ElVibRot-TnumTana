@@ -345,7 +345,7 @@
       IMPLICIT NONE
 
 !----- for the active basis set ---------------------------------------
-      integer              :: nb,nq,nbc,nqc
+      integer              :: nb,nq,nq_extra,nbc,nqc
       integer              :: Nested,nq_max_Nested
       integer              :: SparseGrid_type
       logical              :: SparseGrid,With_L
@@ -387,6 +387,7 @@
 
       real (kind=Rkind)  :: cte(20,max_dim),A(max_dim),B(max_dim),Q0(max_dim),scaleQ(max_dim)
       integer :: opt_A(max_dim),opt_B(max_dim),opt_Q0(max_dim),opt_scaleQ(max_dim)
+      logical :: TD_Q0(max_dim),TD_scaleQ(max_dim)
 
 
       TYPE (basis)       :: basis_temp
@@ -397,8 +398,10 @@
       integer       :: i
 
       NAMELIST /basis_nD/iQact,iQsym,iQdyn,name,                        &
-                        nb,nq,nbc,nqc,contrac,contrac_analysis,cte,cplx,&
+                        nb,nq,nq_extra,                                 &
+                        nbc,nqc,contrac,contrac_analysis,cte,cplx,      &
                  auto_basis,A,B,Q0,scaleQ,opt_A,opt_B,opt_Q0,opt_scaleQ,&
+                         TD_Q0,TD_scaleQ,                               &
                          symab,index_symab,                             &
                          L_TO_n_type,                                   &
                          L_SparseGrid,L_TO_nq_A,L_TO_nq_B,L_TO_nq_C,    &
@@ -464,11 +467,15 @@
       opt_scaleQ(:)            = 0
       auto_basis               = .FALSE.
 
+      TD_Q0(:)                 = .FALSE.
+      TD_scaleQ(:)             = .FALSE.
+
       iQact(:)                 = 0
       iQsym(:)                 = 0
       iQdyn(:)                 = 0
       nb                       = 0
       nq                       = 0
+      nq_extra                 = 0
       Nested                   = 0
       nq_max_Nested            = -1
       nbc                      = -1
@@ -876,6 +883,8 @@
             basis_temp%Q0(i)     = ZERO
             basis_temp%scaleQ(i) = ONE
           END IF
+          basis_temp%TD_Q0(i)     = TD_Q0(i)
+          basis_temp%TD_scaleQ(i) = TD_scaleQ(i)
         END DO
 
         basis_temp%auto_basis = (auto_basis .AND. ndim == 1)
@@ -914,6 +923,16 @@
 
       END IF
 
+
+      basis_temp%nq_extra = nq_extra
+      IF (basis_temp%nq_extra > 0 .AND. ndim > 0) THEN
+        write(out_unitp,*) 'Read nq_extra (',basis_temp%nq_extra,') grid points'
+        CALL alloc_NParray(basis_temp%x_extra,[ndim,basis_temp%nq_extra],      &
+                          'basis_temp%x_extra',name_sub)
+        DO i=1,basis_temp%nq_extra
+          read(in_unitp,*)  dummy_name,basis_temp%x_extra(:,i)
+        END DO
+      END IF
 
 !---------------------------------------------------------------------
       IF (debug) THEN
