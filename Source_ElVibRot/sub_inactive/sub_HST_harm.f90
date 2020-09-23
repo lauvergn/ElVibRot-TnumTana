@@ -166,17 +166,17 @@
         END DO
         !write(6,*) 'coucou after Init_d0MatOp' ; flush(6)
 
-#if(run_MPI)
-        IF(Grid_allco)  THEN
-#endif
+!#if(run_MPI)
+!        IF(Grid_allco)  THEN
+!#endif
           !write(6,*) 'coucou before get_d0MatOp_AT_Qact' ; flush(6)
           CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,         &
                                    para_AllOp%tab_Op(1)%para_ReadOp%PrimOp_t)
           !write(6,*) 'coucou after get_d0MatOp_AT_Qact' ; flush(6)
 
-#if(run_MPI)
-        ENDIF
-#endif
+!#if(run_MPI)
+!        ENDIF
+!#endif
 
         IF (.NOT. pot) THEN ! remove the potential part
           d0MatOp(1)%ReVal(:,:,1) = ZERO
@@ -731,14 +731,14 @@
 !       ---here only nb_inact2n variables have been modified --------
         CALL Qinact2n_TO_Qact_FROM_ActiveTransfo(Qinact,Qact,mole%ActiveTransfo)
 
-#if(run_MPI)
-        IF(Grid_allco) THEN
-#endif
+!#if(run_MPI)
+!        IF(Grid_allco) THEN
+!#endif
         CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,           &
                                  para_AllOp%tab_Op(1)%para_ReadOp%PrimOp_t)
-#if(run_MPI)
-        ENDIF
-#endif
+!#if(run_MPI)
+!        ENDIF
+!#endif
 
         IF (.NOT. pot) THEN ! remove the potential part
           d0MatOp(1)%ReVal(:,:,1) = ZERO

@@ -51,7 +51,6 @@ CONTAINS
       USE mod_system
       USE mod_Constant
       USE mod_SetOp
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -118,12 +117,11 @@ CONTAINS
             !CALL sub_MatOp_V_SG4(para_Op)
             STOP
           END IF
-#if(run_MPI)          
+
           IF(openmpi) THEN
             ! add MPI for sub_MatOp_direct1 later
             CALL sub_MatOp_direct1(para_Op)
           ELSE
-#endif
             IF (MatOp_omp == 2) THEN
               CALL sub_MatOp_direct2(para_Op) ! for openmp
             ELSE IF (MatOp_omp == 1) THEN
@@ -131,9 +129,8 @@ CONTAINS
             ELSE ! no openmp (nb_thread=1)
               CALL sub_MatOp_direct1(para_Op)
             END IF
-#if(run_MPI)             
           ENDIF
-#endif
+
         END IF
       END IF
       para_Op%Make_mat = .TRUE.
@@ -2365,7 +2362,6 @@ CONTAINS
 
       USE mod_SetOp
       USE mod_ana_psi
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2524,7 +2520,7 @@ CONTAINS
           DO i=1,n
             ib = ib + 1
             IF (ib > para_Op%nb_tot) EXIT
-            IF(MPI_id==0) THEN
+            IF(keep_MPI) THEN
               psi(i)%CvecB(:) = CZERO
               psi(i)%CvecB(ib) = CONE
               CALL Set_symab_OF_psiBasisRep(psi(i))
@@ -2539,7 +2535,7 @@ CONTAINS
             IF (ib > para_Op%nb_tot) EXIT
 
             !> Cmat assigned here
-            IF(MPI_id==0) para_Op%Cmat(:,ib)  = Hpsi(i)%CvecB(:)
+            IF(keep_MPI) para_Op%Cmat(:,ib)  = Hpsi(i)%CvecB(:)
 
             IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1      &
                 .AND. MPI_id==0) THEN
@@ -2553,7 +2549,7 @@ CONTAINS
             ib = ib + 1
             IF (ib > para_Op%nb_tot) EXIT
 
-            IF(MPI_id==0) THEN
+            IF(keep_MPI) THEN
               psi(i)%RvecB(:) = ZERO
               psi(i)%RvecB(ib) = ONE
               CALL Set_symab_OF_psiBasisRep(psi(i))
@@ -2568,10 +2564,9 @@ CONTAINS
             IF (ib > para_Op%nb_tot) EXIT
 
             !> Rmat assigned here
-            IF(MPI_id==0) para_Op%Rmat(:,ib)  = Hpsi(i)%RvecB(:)
+            IF(keep_MPI) para_Op%Rmat(:,ib)  = Hpsi(i)%RvecB(:)
 
-            IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1      &
-                .AND. MPI_id==0) THEN
+            IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1) THEN
               write(out_unitp,'(a)',ADVANCE='no') '---'
               CALL flush_perso(out_unitp)
             END IF
@@ -2594,7 +2589,7 @@ CONTAINS
       END IF
 
 !---- deallocation -------------------------------------
-      IF(MPI_id==0) THEN
+      IF(keep_MPI) THEN
         CALL dealloc_NParray(psi ,"psi", name_sub)
         CALL dealloc_NParray(Hpsi,"Hpsi",name_sub)
       ENDIF
@@ -2602,9 +2597,9 @@ CONTAINS
       para_Op%Make_mat = .TRUE.
 
 !----------------------------------------------------------
-       IF (debug) THEN
+       !IF (debug) THEN
          write(out_unitp,*) 'END ',name_sub
-       END IF
+       !END IF
 !----------------------------------------------------------
       END SUBROUTINE sub_MatOp_direct1
 !=======================================================================================
@@ -2618,7 +2613,6 @@ CONTAINS
 
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -3391,7 +3385,6 @@ CONTAINS
       USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,dealloc_psi
       USE mod_SetOp
       USE mod_OpPsi
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------

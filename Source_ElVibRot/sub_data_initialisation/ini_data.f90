@@ -78,7 +78,6 @@
       USE mod_analysis
       USE mod_propa
       USE mod_Auto_Basis
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- physical and mathematical constants ----------------------------
@@ -583,11 +582,9 @@
         CALL RecSet_EneH0(para_Tnum,mole,para_AllBasis%BasisnD,para_ReadOp)
       END IF
 
-      IF(MPI_id==0) THEN
-        write(out_unitp,*)
-        write(out_unitp,*) "============================================================"
-        write(out_unitp,*) "============================================================"
-      ENDIF
+      write(out_unitp,*)
+      write(out_unitp,*) "============================================================"
+      write(out_unitp,*) "============================================================"
 
 !=====================================================================
 !---------------------------------------------------------------------
@@ -610,7 +607,7 @@
 !===============================================================================
 SUBROUTINE MemoryEstimation(nb,nq,nb_Q,nb_channels,nb_psi)
 USE mod_system
-USE mod_MPI_Aid
+USE mod_MPI_aux
 IMPLICIT NONE
 
 integer,  intent(in)  :: nb,nq,nb_Q,nb_channels,nb_psi

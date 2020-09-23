@@ -75,7 +75,6 @@
 
  USE mod_Op,              ONLY : param_Op,write_param_Op
  USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
- USE mod_MPI
  IMPLICIT NONE
 
 
@@ -392,7 +391,6 @@ END SUBROUTINE march_noD_ONE_DP_SG4
  USE mod_Op,              ONLY : param_Op,write_param_Op
  USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
 
- USE mod_MPI
  IMPLICIT NONE
 
 
@@ -685,7 +683,6 @@ nb_thread = 1
 
  USE mod_Op,              ONLY : param_Op,write_param_Op
  USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
- USE mod_MPI
  IMPLICIT NONE
 
 

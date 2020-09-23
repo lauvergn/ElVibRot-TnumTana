@@ -58,7 +58,6 @@
       USE mod_ana_psi
       USE mod_psi_Op
       USE mod_param_WP0
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -211,7 +210,7 @@
           CALL lect_psiBasisRepnotall_nD(psi0(i),in_unitp,cplx,.TRUE.)
           write(out_unitp,*) ' write in',out_unitp,i
           CALL flush_perso(out_unitp)
-          IF(MPI_id==0) CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ONETENTH**4,.TRUE.,i)
+          IF(keep_MPI) CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ONETENTH**4,.TRUE.,i)
           IF (debug) write(out_unitp,*) ' read with lect_psiBasisRepnotall_nD ' // &
                               '(Version_File=0, option=1 ???): done'
         END DO
@@ -339,7 +338,7 @@
       ELSE
         DO j=1,nb_save
           IF (psi(j)%BasisRep) THEN
-            IF(MPI_id==0) CALL ecri_psiBasisRepnotall_nD(psi(j),nioWP,ZERO,file_WP%formatted,j)
+            IF(keep_MPI) CALL ecri_psiBasisRepnotall_nD(psi(j),nioWP,ZERO,file_WP%formatted,j)
           ELSE IF (psi(j)%GridRep) THEN
             IF (psi(j)%cplx) THEN
               write(nioWP,*) psi(j)%CvecG
@@ -710,7 +709,7 @@
 
             i_bhe = i_b + ( (i_h-1)+ (i_e-1)*WP0%nb_bi ) * WP0%nb_ba
             IF (debug) write(out_unitp,*) 'i_bhe,indnD,a,b',i_bhe,ind_ndim(:),a,b
-            IF(MPI_id==0) THEN
+            IF(keep_MPI) THEN
               IF (WP0%cplx) THEN
                 WP0%CvecB(i_bhe) = cmplx(a,b,kind=Rkind)
               ELSE

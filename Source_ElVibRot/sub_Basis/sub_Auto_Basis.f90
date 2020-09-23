@@ -143,7 +143,7 @@
         write(out_unitp,*) ' nb_qa',nqa
         STOP
       END IF
-      IF(MPI_id==0) THEN
+      IF(keep_MPI) THEN
         IF (allocated(para_AllBasis%BasisnD%nDindB%nDsize))             &
           write(out_unitp,*) 'nDindB%nDsize',para_AllBasis%BasisnD%nDindB%nDsize
         !CALL Write_nDindex(para_AllBasis%BasisnD%nDindB,"BasisnD%nDinB ")

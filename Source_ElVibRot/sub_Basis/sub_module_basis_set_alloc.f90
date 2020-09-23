@@ -2238,7 +2238,6 @@
       !!@param: TODO
       RECURSIVE SUBROUTINE RecWrite_basis(basis_set,write_all)
       USE mod_system
-      USE mod_MPI
       IMPLICIT NONE
 
        TYPE (basis) :: basis_set

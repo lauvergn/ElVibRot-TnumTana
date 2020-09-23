@@ -751,11 +751,9 @@ MODULE mod_Tnum
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       !IF (debug) THEN
-      IF(MPI_id==0) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '================================================='
         write(out_unitp,*) 'BEGINNING ',name_sub
-      ENDIF
       !END IF
 
 !-------------------------------------------------------
@@ -1581,11 +1579,10 @@ MODULE mod_Tnum
          END DO
       END IF
       
-      IF(MPI_id==0) THEN
-        write(out_unitp,*) 'END ',name_sub
-        write(out_unitp,*) '================================================='
-        write(out_unitp,*) '================================================='
-      ENDIF
+      write(out_unitp,*) 'END ',name_sub
+      write(out_unitp,*) '================================================='
+      write(out_unitp,*) '================================================='
+
       CALL flush_perso(out_unitp)
       END SUBROUTINE Read_CoordType
 !===============================================================================

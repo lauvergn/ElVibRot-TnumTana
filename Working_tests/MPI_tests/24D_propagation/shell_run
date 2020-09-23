@@ -89,7 +89,7 @@ fi
 ##==============================================================
 ##==============================================================
 cat > namelist << EOF
- &system EVR=t OpPsi_test=f printlevel=0 /
+ &system EVR=t OpPsi_test=f printlevel=0 MPI_scheme=1/
  &constantes ene_unit='eV' /
  &variables
          nrho=2 Without_Rot=t Centered_ON_CoM=f Gcte=t
@@ -170,11 +170,10 @@ X 1 2
    &basis_nD iQdyn=27        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
  
  &inactives /
- &actives test=$test direct=2 Make_MatOp=f /
-
+ &actives test=$test direct=4 direct_KEO=f Save_MemGrid=t /
  &analyse max_ene=50. 'au' print=f print_psi=0 propa=t /
  &propa
-        WPTmax=150. 'fs' WPdeltaT=10. 'fs' nb_micro=100
+        WPTmax=6. 'fs' WPdeltaT=2. 'fs' nb_micro=100
         n_WPecri=0 WPpsi2 =f WPpsi=f
         type_WPpropa=1 max_poly=10000 npoly=300 poly_tol=1.d-10
         DHmax=0.0d0 auto_Hmax=f

@@ -55,9 +55,6 @@ PUBLIC :: read_propagation,read_davidson
 PUBLIC :: dealloc_param_propa,sub_analyze_WP_OpWP,sub_analyze_mini_WP_OpWP
 PUBLIC :: Read_AutoCorr,Write_AutoCorr,Calc_AutoCorr
 PUBLIC :: SaveWP_restart,ReadWP_restart
-#if(run_MPI)
-PUBLIC :: MPI_Bcast_param_Davidson,Calc_AutoCorr_SR_MPI
-#endif
 
       !!@description: TODO
       !!@param: TODO
@@ -410,7 +407,7 @@ PUBLIC :: MPI_Bcast_param_Davidson,Calc_AutoCorr_SR_MPI
       CALL file_open(file_restart,no_restart)
 
       write(no_restart,*) T,size(WP),size(WP(1)%CvecB)
-      IF(MPI_id==0) THEN
+      IF(keep_MPI) THEN
         DO i=1,size(WP)
           write(no_restart,*) WP(i)%CvecB
         END DO
@@ -499,7 +496,6 @@ PUBLIC :: MPI_Bcast_param_Davidson,Calc_AutoCorr_SR_MPI
       USE mod_system
       USE mod_psi,    ONLY : param_psi,ecri_psi,Overlap_psi1_psi2,      &
                              sub_PsiBasisRep_TO_GridRep
-      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -537,55 +533,12 @@ PUBLIC :: MPI_Bcast_param_Davidson,Calc_AutoCorr_SR_MPI
       END IF
 
       IF (Write_AC_loc) THEN
-        CALL Write_AutoCorr(para_propa%file_autocorr%unit,T,cdot)
+        IF(MPI_id==0) CALL Write_AutoCorr(para_propa%file_autocorr%unit,T,cdot)
       END IF
 
       Calc_AutoCorr = cdot
 
       END FUNCTION Calc_AutoCorr
-
-#if(run_MPI)
-!=======================================================================================
-!< calculate auto-correcetion function on Smolyak rep. 
-!=======================================================================================
-      FUNCTION Calc_AutoCorr_SR_MPI(psi0,psi,para_propa,TT,Write_AC)
-        USE mod_system
-        USE mod_Op,           ONLY:param_Op
-        USE mod_psi_set_alloc,ONLY:param_psi
-        USE mod_psi_Op,       ONLY:Overlap_psi1_psi2_SRB_MPI,Overlap_psi1_psi2_SRG_MPI
-        IMPLICIT NONE
-
-        Complex(kind=Rkind)                           :: Calc_AutoCorr_SR_MPI
-        TYPE(param_psi),                intent(in)    :: psi0
-        TYPE(param_psi),                intent(in)    :: psi
-        TYPE(param_propa),              intent(in)    :: para_propa
-        Real(kind=Rkind),               intent(in)    :: TT
-        Logical,optional,               intent(in)    :: Write_AC
-
-        Complex(kind=Rkind)                           :: cdot
-        Logical                                       :: Write_AC_loc
-
-
-        IF(present(Write_AC)) THEN
-          Write_AC_loc=Write_AC
-        ELSE
-          Write_AC_loc=.FALSE.
-        END IF
-
-        IF(psi%SRG_MPI) THEN
-          CALL Overlap_psi1_psi2_SRG_MPI(cdot,psi0,psi)
-        ELSE IF(psi%SRB_MPI) THEN
-          CALL Overlap_psi1_psi2_SRB_MPI(cdot,psi0,psi)
-        ENDIF
-
-        IF (Write_AC_loc) THEN
-          CALL Write_AutoCorr(para_propa%file_autocorr%unit,TT,cdot)
-        END IF
-
-        Calc_AutoCorr_SR_MPI=cdot
-      ENDFUNCTION Calc_AutoCorr_SR_MPI
-!=======================================================================================
-#endif
 
 !==============================================================
 !
@@ -636,7 +589,6 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_psi, ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,         &
                       sub_analyze_psi,norm2_psi,alloc_psi,modif_ana_psi,&
                       sub_PsiBasisRep_TO_GridRep,Write_ana_psi
-  USE mod_MPI
   IMPLICIT NONE
 
   real (kind=Rkind) :: T      ! time
@@ -652,8 +604,8 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   integer            :: nb_WP
   TYPE (param_psi)   :: WP(:)
 
-  !logical            :: ana_mini = .TRUE.
-  logical            :: ana_mini = .FALSE.
+  logical            :: ana_mini = .TRUE.  ! turn off further analysis
+!  logical            :: ana_mini = .FALSE.
   logical            :: G,G2,B,B2,With_field
 
 !-- working parameters --------------------------------
@@ -716,7 +668,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   Write_psi2_Grid = para_propa%ana_psi%Write_psi2_Grid
   Write_psi_Grid  = para_propa%ana_psi%Write_psi_Grid
 
-  IF(MPI_id==0) THEN
+  IF(keep_MPI) THEN
     BasisRep = WP(1)%BasisRep
     GridRep  = WP(1)%GridRep
   ENDIF
@@ -734,7 +686,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 !  IF (.NOT. para_propa%ana_psi%GridDone) THEN
 !    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep ini')
 !    DO i=1,nb_WP
-!      IF(MPI_id==0) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
+!      IF(keep_MPI) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
 !    END DO
 !    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep end')
 !  END IF
@@ -752,14 +704,14 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 
   !-----------------------------------------------------------
   w2 = WP(1) ! just for the initialization
-  IF(MPI_id==0) CALL alloc_psi(w2,GridRep=.TRUE.)
+  IF(keep_MPI) CALL alloc_psi(w2,GridRep=.TRUE.)
 
   DO i=1,nb_WP
     !-----------------------------------------------------------
     ! => Analysis for diabatic potential (always done)
 
     ! =>first the energy
-    IF(MPI_id==0) THEN
+    IF(keep_MPI) THEN
       w1 = WP(i)
       CALL norm2_psi(w1,GridRep=.FALSE.,BasisRep=.TRUE.)
     ENDIF
@@ -775,10 +727,10 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       END IF
     END IF
 
-    IF(MPI_id==0) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
+    IF(keep_MPI) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
 
 
-    IF(MPI_id==0) THEN
+    IF(keep_MPI) THEN
       WP(i)%CAvOp = ET/w1%norm2
 
       G  = (para_propa%WPpsi  .AND.para_propa%write_GridRep)
@@ -823,7 +775,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       CALL flush_perso(out_unitp)
 
       CALL alloc_psi(WP(i),BasisRep=BasisRep,GridRep=GridRep)
-    ENDIF ! for MPI_id==0
+    ENDIF ! for keep_MPI
 
     IF (para_H%spectral_done) THEN
       WP(i) = w2 ! restore Spectral rep
@@ -852,7 +804,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
   USE mod_psi,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,       &
                       sub_analyze_psi,norm2_psi,alloc_psi,modif_ana_psi,&
                       Channel_weight,sub_PsiBasisRep_TO_GridRep
-  USE mod_MPI
+  USE mod_MPI_aux
   IMPLICIT NONE
 
   real (kind=Rkind) :: T      ! time
@@ -892,7 +844,6 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
   logical, parameter :: debug=.FALSE.
 ! logical, parameter :: debug=.TRUE.
 !-------------------------------------------------------
-  IF (MPI_id /=0 ) RETURN
 
   IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
@@ -925,8 +876,9 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
     !-----------------------------------------------------------
     ! => Analysis for diabatic potential (always done)
 
-    CALL Channel_weight(tab_WeightChannels,w1,GridRep=.FALSE.,BasisRep=.TRUE.)
+    IF(keep_MPI) CALL Channel_weight(tab_WeightChannels,w1,GridRep=.FALSE.,BasisRep=.TRUE.)
     Psi_norm2 = sum(tab_WeightChannels)
+    IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(Psi_norm2,size1_MPI,root_MPI)
 
     ! add the psi number + the time
     psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat='f12.2')
@@ -934,6 +886,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
     IF (With_ENE) THEN
       ! =>first the energy
       CALL sub_PsiOpPsi(ET,w1,w2,para_H)
+      IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(ET,size1_MPI,root_MPI)
       w1%CAvOp = ET/Psi_norm2
 
       RWU_E  = REAL_WU(real(w1%CAvOp,kind=Rkind),'au','E')
@@ -1003,7 +956,6 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       SUBROUTINE read_propagation(para_propa,nb_act1,nb_vp_spec_out)
       USE mod_system
       USE mod_psi,     ONLY : alloc_param_WP0
-      USE mod_MPI
       IMPLICIT NONE
 
 !------ parameter for the propagation ---------------------
@@ -1100,7 +1052,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 !     logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
 
-      IF(MPI_id==0) write(out_unitp,*) ' PROPAGATION PARAMETERS: propa, defWP0, control'
+      write(out_unitp,*) ' PROPAGATION PARAMETERS: propa, defWP0, control'
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
 !--------- memory allocation -----------------------------
@@ -1616,7 +1568,6 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 !=======================================================
       SUBROUTINE read_davidson(para_Davidson,para_propa)
       USE mod_system
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -1682,7 +1633,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       logical, parameter :: debug =.FALSE.
 !      logical, parameter :: debug =.TRUE.
 !-----------------------------------------------------------
-      IF(MPI_id==0) write(out_unitp,*) ' DAVIDSON PARAMETERS'
+      write(out_unitp,*) ' DAVIDSON PARAMETERS'
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
       END IF
@@ -1851,6 +1802,13 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       para_Davidson%scaled_max_ene    = scaled_max_ene
       para_Davidson%save_max_nb       = save_max_nb
       para_Davidson%name_file_saveWP  = make_FileName(name_file_saveWP)
+
+      IF(nb_WP/=0) THEN
+        MPI_nb_WP=nb_WP
+      ELSE 
+        MPI_nb_WP=100
+      ENDIF
+
       IF (err_file_name(para_Davidson%name_file_saveWP,name_sub='read_davidson') /= 0) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) '  the name_file_saveWP file name is empty'
@@ -1872,108 +1830,4 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 !-----------------------------------------------------------
 
       END SUBROUTINE read_davidson
-
-
-#if(run_MPI)
-!=======================================================================================
-!> for boardcast derived types: param_Davidson   
-!=======================================================================================
-      SUBROUTINE MPI_Bcast_param_Davidson(param_DS)
-        USE mod_MPI
-        USE mod_MPI_Aid
-        IMPLICIT NONE
-        
-        TYPE(param_Davidson),intent(in)             :: param_DS
-        
-        TYPE(MPI_Datatype)                    :: type_MPI(47)
-        TYPE(MPI_Datatype)                    :: param_Davidson_MPI
-        Integer(KIND=MPI_ADDRESS_KIND)        :: disp(47)
-        Integer(KIND=MPI_INTEGER_KIND)        :: block_length(47)
-        Integer(KIND=MPI_ADDRESS_KIND)        :: base
-        Integer                               :: n_count(3)
-        Integer                               :: ii
-
-        CAll MPI_GET_ADDRESS(param_DS%num_resetH,            disp(1),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%num_checkS,            disp(2),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%residual_max_nb,       disp(3),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%max_it,                disp(4),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%nb_WP,                 disp(5),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%max_WP,                disp(6),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%num_LowestWP,          disp(7),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%nb_WP0,                disp(8),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%nb_readWP,             disp(9),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%nb_readWP_OF_List,     disp(10),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%save_interal,          disp(11),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%save_max_nb,           disp(12),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%symab,                 disp(13),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%conv_hermitian,        disp(14),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%NewVec_type,           disp(15),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%L_filter,              disp(16),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%Lmax_filter,           disp(17),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%M_filter,              disp(18),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%DeltaM_filter,         disp(19),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%Mmax_filter,           disp(20),MPI_err) 
-        
-        CAll MPI_GET_ADDRESS(param_DS%one_by_one,            disp(21),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%read_WP,               disp(22),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%read_listWP,           disp(23),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%precond,               disp(24),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%formatted_file_readWP, disp(25),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%save_all,              disp(26),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%formatted_file_WP,     disp(27),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%all_lower_states,      disp(28),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%lower_states,          disp(29),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%project_WP0,           disp(30),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%Hmin_propa,            disp(31),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%Hmax_propa,            disp(32),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%With_Grid,             disp(33),MPI_err) 
-
-        CAll MPI_GET_ADDRESS(param_DS%precond_tol,           disp(34),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%save_max_ene,          disp(35),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%scaled_max_ene,        disp(36),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%thresh_project,        disp(37),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%Max_ene,               disp(38),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%RMS_ene,               disp(39),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%conv_ene,              disp(40),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%RMS_resi,              disp(41),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%conv_resi,             disp(42),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%E0_filter,             disp(43),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%W_filter,              disp(44),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%LambdaMin,             disp(45),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%conv_resi,             disp(46),MPI_err) 
-        CAll MPI_GET_ADDRESS(param_DS%LambdaMax,             disp(47),MPI_err) 
-        
-        n_count(1)=20
-        n_count(2)=33
-        n_count(3)=47
-        
-        base=disp(1)
-        DO ii=1,n_count(3)
-          disp(ii)=disp(ii)-base
-          block_length(ii)=1
-        ENDDO 
-        
-        DO ii=1,n_count(1)
-          type_MPI(ii)=MPI_int_fortran 
-        ENDDO
-
-        DO ii=n_count(1)+1,n_count(2)
-          type_MPI(ii)=MPI_Logical
-        ENDDO
-        
-        DO ii=n_count(2)+1,n_count(3)
-          type_MPI(ii)=MPI_real_fortran
-        ENDDO
-        
-        CALL MPI_TYPE_CREATE_STRUCT(n_count(3),block_length,disp,type_MPI,             &
-                                    param_Davidson_MPI,MPI_err) 
-        CALL MPI_TYPE_COMMIT(param_Davidson_MPI,MPI_err) 
-        CALL MPI_Bcast(param_DS,size1_MPI,param_Davidson_MPI,root_MPI,                 &
-                       MPI_COMM_WORLD,MPI_err) 
-
-      ENDSUBROUTINE MPI_Bcast_param_Davidson
-!=======================================================================================
-#endif
-
-
       END MODULE mod_propa

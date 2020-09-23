@@ -7,6 +7,53 @@ MPI Vm2.0
 ----------------------------------------------------------------------------------------
 @ log
 
+> MPI_Vm2.1
+
+  - isolate all MPI subroutine & move cpp to individual files
+    new files:
+    sub_module_basis_BtoG_GtoB_SG4_MPI.f90
+    sub_OpPsi_MPI.f90
+    sub_OpPsi_SG4_MPI.f90
+    sub_module_ana_psi_MPI.f90
+    sub_module_psi_Op_MPI.f90
+    sub_Hmax_MPI.f90
+    sub_module_Davidson_MPI.f90
+    sub_module_propa_march_MPI.f90
+    sub_module_propagation_MPI.f90
+
+  - new subruutines 
+    Set_scheme_MPI
+    MPI_action_scheme2
+    INTERFACE MPI_send_
+    INTERFACE MPI_Bcast_
+    INTERFACE MPI_Reduce_max_Bcast*
+    extend INTERFACE MPI_Reduce_sum_Bcast
+    Mapping_table_MPI
+    MakeResidual_Davidson_MPI4
+    
+    * shoule be combined with MPI_Reduce_sum_Bcast later
+
+  - add MPI_action_scheme1: keep compact basis on all threads for best parallelization 
+
+  - add MPI_action_scheme3: 2level distributor and auto balance of Smolyak terms 
+
+  - add MPI for analyse
+
+  - add MPI for ini_data
+
+  - bug fix
+    march_cheby_old
+    sub_propagation_Davidson
+    sub_analyze_psi
+    auto_iGs_MPI
+
+  - bug fix for long integer
+
+  - rename mod_MPI_Aid -> mod_MPI_aux
+
+  - issue:
+    memory problem in subroutine sub_PsiBasisRep_TO_GridRep
+
 > MPI_Vm2.0 
   - Full Smolyak rep. midway 
     march_SIL_MPI

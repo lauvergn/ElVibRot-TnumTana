@@ -573,7 +573,6 @@
       USE mod_basis
       USE mod_Op
       USE mod_Auto_Basis
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------
@@ -1260,6 +1259,7 @@
 
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set para_SGType2%nDind_DPG and para_SGType2%nDind_DPB'
+        write(out_unitp,*) 'nb_SG:',basis_SG%nb_SG
         CALL flush_perso(out_unitp)
       END IF
       ! for the number grid points --------------------------------------
@@ -1328,7 +1328,7 @@
 
       CALL Set_nDval_init_FOR_SG4(basis_SG%para_SGType2,version=1)
 
-      ! save mapping table on master only
+      ! save mapping table on certain threads only
       CALL Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
       !CALL unpack_nDindex(basis_SG%nDindB)
 

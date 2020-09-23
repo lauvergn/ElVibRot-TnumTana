@@ -148,7 +148,7 @@ CONTAINS
       !-----------------------------------------------------------------
 
 
-      IF(MPI_id==0) write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) 'BEGINNING ',name_sub
 
 !------- allocation of Q... -----------------------------------------
 
@@ -1505,7 +1505,6 @@ CONTAINS
       USE mod_system
       USE mod_dnSVM
       USE mod_Tnum
-      USE mod_MPI
       IMPLICIT NONE
 
       real (kind=Rkind), intent(in)           :: Qact(:)
@@ -1538,7 +1537,6 @@ CONTAINS
       USE mod_system
       USE mod_dnSVM
       USE mod_Tnum
-      USE mod_MPI
       IMPLICIT NONE
 
       real (kind=Rkind), intent(in)           :: Qact(:)
@@ -1948,7 +1946,6 @@ CONTAINS
 
       SUBROUTINE Write_d0Q(it,name_info,d0Q,iblock)
       USE mod_system
-      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -1971,7 +1968,7 @@ CONTAINS
       END IF
       !-----------------------------------------------------------------
 
-      IF(MPI_id==0) THEN
+      IF(keep_MPI) THEN
         write(out_unitp,*) '-----------------------------------------'
         DO i=1,size(d0Q),iblock
           iend = min(size(d0Q),i+iblock-1)
@@ -1993,7 +1990,6 @@ CONTAINS
 !=======================================================================================      
       SUBROUTINE Write_Q_WU(Q,name_Q,type_Q,info)
       USE mod_system
-      USE mod_MPI
       IMPLICIT NONE
 
       real (kind=Rkind), intent(in)           :: Q(:)
@@ -2056,7 +2052,6 @@ CONTAINS
 
       SUBROUTINE Get_Qread(Q,name_Q,type_Q,read_nameQ,unit,read_xyz0,info)
       USE mod_system
-      USE mod_MPI
       IMPLICIT NONE
 
 

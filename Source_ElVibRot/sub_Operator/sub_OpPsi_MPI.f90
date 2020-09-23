@@ -40,51 +40,41 @@
 !
 !===========================================================================
 !===========================================================================
-MODULE mod_EVR
- USE mod_system
-!$ USE omp_lib, only : omp_get_max_threads
- USE mod_Constant
- USE mod_Coord_KEO
- USE mod_PrimOp
- USE mod_basis
 
- USE mod_psi
+MODULE mod_OpPsi_MPI
+  PUBLIC :: sub_scaledOpPsi_SR_MPI
 
- USE mod_propa
- USE mod_Op
- USE mod_analysis
- IMPLICIT NONE
+  CONTAINS
+!=======================================================================================
+!> OpPsi = (OpPsi - E0*Psi) / Esc, for working on full Smolyak rep.
+!=======================================================================================
+    SUBROUTINE sub_scaledOpPsi_SR_MPI(Psi,OpPsi,E0,Esc)
+      USE mod_system
+      USE mod_psi,ONLY:param_psi,ecri_psi
+      IMPLICIT NONE
 
- TYPE param_EVRT
+      TYPE(param_psi)                          :: OpPsi
+      TYPE(param_psi)                          :: Psi
+      Real(kind=Rkind)                         :: E0
+      Real(kind=Rkind)                         :: Esc
 
-   !----- physical and mathematical constants ---------------------------
-   TYPE (constant) :: const_phys
+      IF(Psi%SRG_MPI .AND. OpPsi%SRG_MPI) THEN
+        OpPsi%SR_G(:,:)=(OpPsi%SR_G(:,:)-E0*Psi%SR_G(:,:))/Esc
+      ELSE IF(Psi%SRB_MPI .AND. OpPsi%SRB_MPI) THEN
+        OpPsi%SR_B(:,:)=(OpPsi%SR_B(:,:)-E0*Psi%SR_B(:,:))/Esc
+      ELSE
+        STOP 'error in sub_scaledOpPsi_SR_MPI'
+      ENDIF
+      
+      IF(OpPsi%symab/=Psi%symab) THEN
+        IF(OpPsi%symab==-2) THEN
+          OpPsi%symab=Psi%symab
+        ELSE
+          OpPsi%symab=-1
+        ENDIF
+      ENDIF
 
-   !----- for the CoordType and Tnum --------------------------------------
-   TYPE (CoordType) :: mole
-   TYPE (Tnum)      :: para_Tnum
+    ENDSUBROUTINE sub_scaledOpPsi_SR_MPI
+!=======================================================================================
 
-   !----- for the basis set ----------------------------------------------
-   TYPE (param_AllBasis) :: para_AllBasis
-
-   !----- variables for the construction of H ----------------------------
-   TYPE (param_AllOp)  :: para_AllOp
-
-
-   !----- variables pour la namelist analyse ----------------------------
-   TYPE (param_ana)           :: para_ana
-   TYPE (param_intensity)     :: para_intensity
-   logical                    :: intensity_only
-   integer                    :: nio_res_int
-
-   !----- variables for the WP propagation ----------------------------
-   TYPE (param_propa) :: para_propa
-   TYPE (param_psi)   :: WP0
- END TYPE param_EVRT
-
- TYPE (param_EVRT)              :: para_EVRT
- TYPE (param_EVRT), allocatable :: tab_EVRT(:) ! for the openmp
-
-
-END MODULE mod_EVR
-
+END MODULE mod_OpPsi_MPI

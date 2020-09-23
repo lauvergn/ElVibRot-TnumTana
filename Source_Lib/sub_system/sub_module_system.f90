@@ -177,7 +177,7 @@ MODULE mod_system
 
 
         CALL date_and_time(values=tab_time)
-        IF(MPI_id==0) write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
+        write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
  21     format('     Time and date in ',a,' : ',i2,'h:',                &
                i2,'m:',i2,'.',i3,'s, the ',i2,'/',i2,'/',i4)
 
@@ -193,13 +193,14 @@ MODULE mod_system
         days    = hours/24
         hours   = mod(hours,24)
 
-#if(run_MPI)
-        write(out_unitp,31) dt_real,name,MPI_id
-31      format('        real (s): ',f18.3,' in ',a, ' from MPI id ',i4)
-#else
-        write(out_unitp,31) dt_real,name
-31      format('        real (s): ',f18.3,' in ',a)
-#endif
+        IF(openmpi) THEN
+          write(out_unitp,30) dt_real,name,MPI_id
+30        format('        real (s): ',f18.3,' in ',a, ' from MPI id ',i4)
+        ELSE
+          write(out_unitp,31) dt_real,name
+31        format('        real (s): ',f18.3,' in ',a)
+        ENDIF
+
         write(out_unitp,32) days,hours,minutes,seconds,name
 32      format('        real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s in ',a)
 
@@ -217,13 +218,14 @@ MODULE mod_system
         days    = hours/24
         hours   = mod(hours,24)
 
-#if(run_MPI)
-        write(out_unitp,41) t_real,MPI_id
-41      format('  Total real (s): ',f18.3,' from MPI id ',i4)
-#else
-        write(out_unitp,41) t_real
-41      format('  Total real (s): ',f18.3)
-#endif
+        IF(openmpi) THEN
+          write(out_unitp,40) t_real,MPI_id
+40        format('  Total real (s): ',f18.3,' from MPI id ',i4)
+        ELSE
+          write(out_unitp,41) t_real
+41        format('  Total real (s): ',f18.3)
+        ENDIF
+
         write(out_unitp,42) days,hours,minutes,seconds
 42      format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
         write(out_unitp,43) t_cpu
@@ -237,6 +239,7 @@ MODULE mod_system
 !===============================================================================
 
       SUBROUTINE time_perso_v0(name)
+      USE mod_MPI
       IMPLICIT NONE
 
         character (len=*) :: name
@@ -310,13 +313,15 @@ MODULE mod_system
         hours   = mod(hours,24)
 
         t_real = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
-#if(run_MPI)
-        write(out_unitp,41) t_real,MPI_id
-41      format('  Total real (s): ',f18.3,' from MPI id ',i4)
-#else
-        write(out_unitp,41) t_real
-41      format('  Total real (s): ',f18.3)
-#endif
+
+        IF(openmpi) THEN
+          write(out_unitp,40) t_real,MPI_id
+40        format('  Total real (s): ',f18.3,' from MPI id ',i4)
+        ELSE
+          write(out_unitp,41) t_real
+41        format('  Total real (s): ',f18.3)
+        ENDIF
+
         write(out_unitp,42) days,hours,minutes,seconds
 42      format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
         write(out_unitp,43) t_cpu-t_cpu_ini
@@ -596,5 +601,28 @@ MODULE mod_system
         END SELECT
 
       END SUBROUTINE dihedral_range
+      
+!=======================================================================================
+!> @brief subroutine for recording time 
+!> @param time_sum should be initialized before calling this function
+!=======================================================================================
+      SUBROUTINE time_record(time_sum,time1,time2,point)
+        USE mod_MPI
+        IMPLICIT NONE
+
+        Integer,                        intent(inout) :: time_sum
+        Integer,                        intent(inout) :: time1
+        Integer,                        intent(inout) :: time2
+        Integer,                           intent(in) :: point
+
+        IF(point==1) THEN
+          CALL system_clock(time1,time_rate,time_max)
+        ELSEIF(point==2) THEN
+          CALL system_clock(time2,time_rate,time_max)
+          time_sum=time_sum+merge(time2-time1,time2-time1+time_max,time2>=time1)
+        ELSE
+          STOP 'error when calling time_record'
+        ENDIF
+      ENDSUBROUTINE
 END MODULE mod_system
 

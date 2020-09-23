@@ -641,7 +641,7 @@ END SUBROUTINE sub_ReadNMLconstantes
 
   character (len=*), parameter :: version='CODATA 2014'
   !---------------------------------------------------------------------
-  IF(MPI_id==0) write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
+  write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
   !---------------------------------------------------------------------
 
   !------ Physical constant of CODATA2014 ---------------------------
@@ -704,7 +704,7 @@ END SUBROUTINE sub_ReadNMLconstantes
 
   character (len=*), parameter :: version='CODATA 2006'
   !---------------------------------------------------------------------
-  IF(MPI_id==0) write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
+  write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
   !---------------------------------------------------------------------
 
   !------ Physical constant of CODATA2006 ---------------------------
@@ -752,7 +752,7 @@ END SUBROUTINE sub_ReadNMLconstantes
 
   character (len=*), parameter :: version='HandBook70ed'
   !---------------------------------------------------------------------
-  IF(MPI_id==0) write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
+  write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
   !---------------------------------------------------------------------
 
   !------ affectation des constantes avec ---------------------------
@@ -806,7 +806,7 @@ END SUBROUTINE sub_ReadNMLconstantes
 
   character (len=*), parameter :: version='constantes_HandBook70ed_2001'
   !---------------------------------------------------------------------
-  IF(MPI_id==0)  write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
+  write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
   !---------------------------------------------------------------------
 
   !------ affectation des constantes avec ---------------------------

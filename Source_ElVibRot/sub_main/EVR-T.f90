@@ -71,7 +71,6 @@
       character(len=:), allocatable  :: input_filename
 
       ! parameters for system setup
-      ! make sure to be prepared in file      
       namelist /system/ max_mem,mem_debug,test,printlevel,              &
 
                           Popenmp,Popenmpi,                             &
@@ -90,28 +89,21 @@
                           main_test,                                    &
 
                           EVRT_path,File_path,base_FileName,            &
-                          Srep_MPI, MPI_scheme
+                          Srep_MPI,MPI_scheme,MPI_mc,iGs_auto
 
-        !> initialize MPI
-        !> id=0 to be the master
-        !---------------------------------------------------------------------------------
+
+        !-------------------------------------------------------------------------------
+        ! set parallelization 
 #if(run_MPI)
-        CALL MPI_initialization(Rkind)
-        Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
-        Popenmp            = .FALSE. 
-#else 
-        MPI_id=0
-        Popenmpi           = .FALSE. 
+        Popenmpi           = .TRUE.  !< True to run with MPI
+        Popenmp            = .FALSE.
+#endif
 
-        ! set openMP accodring to make file
 #if(run_openMP)
-        Popenmp            = .TRUE.   !< True to run openMP
-#else
-        Popenmp            = .FALSE. 
+        Popenmp            = .TRUE.  !< True to run openMP
+        Popenmpi           = .FALSE.
 #endif
 
-#endif
- 
         intensity_only     = .FALSE.
         analysis_only      = .FALSE.
         test               = .FALSE.
@@ -149,19 +141,12 @@
         RMatFormat       = "f18.10"
         CMatFormat       = "f15.7"
 
-        IF(MPI_id==0) THEN 
-          ! version and copyright statement
-          CALL versionEVRT(.TRUE.)
-          write(out_unitp,*)
-#if(run_MPI)
+        ! version and copyright statement
+        CALL versionEVRT(.TRUE.)
+        write(out_unitp,*)
+        IF(Popenmpi) THEN
+          CALL ini_MPI()
           CALL time_perso('MPI start, initial time')
-          write(out_unitp,*) ' Initiaize MPI with ', MPI_np, 'cores.'
-          write(out_unitp,*)
-          write(out_unitp,*) 'Integer type of default Fortran Compiler:',              &
-                             sizeof(integer_MPI),', MPI: ',MPI_INTEGER_KIND
-          write(out_unitp,*) 'NOTE: MPI in progress. If get memory error, check if     &
-                                    the variables are just allocated on root threads.'
-#endif
         ENDIF
 
         !read the file name for the command arguments
@@ -236,8 +221,8 @@
                     ",' +i'," // trim(adjustl(CMatFormat)) // ",')'"
 
 
-        openmp              = (Popenmp .AND. maxth > 1) ! openmp is in mod_system.mod
-        openmpi             = Popenmpi
+        openmp                = (Popenmp .AND. maxth > 1)
+        openmpi               = Popenmpi
 
         IF (.NOT. openmp) THEN
            MatOp_omp          = 0
@@ -297,7 +282,7 @@
 
         END IF
 
-        IF(MPI_id==0 .AND. .NOT. openmpi) THEN
+        IF(openmp) THEN
           write(out_unitp,*) '========================================='
           write(out_unitp,*) 'OpenMP parameters:'
           write(out_unitp,*) 'Max number of threads:           ',maxth
@@ -314,10 +299,8 @@
         ENDIF ! for MPI_id=0
         
         para_mem%max_mem    = max_mem/Rkind
-        IF(MPI_id==0) THEN
-          write(out_unitp,*) '========================================='
-          write(out_unitp,*) '========================================='
-        ENDIF ! for MPI_id=0
+        write(out_unitp,*) '========================================='
+        write(out_unitp,*) '========================================='
 
         IF (para_EVRT_calc%optimization /= 0) THEN
           IF(MPI_id==0) write(out_unitp,*) ' Optimization calculation'
@@ -365,25 +348,15 @@
           CALL vib(max_mem,test,intensity_only)
         END IF
 
-        IF(MPI_id==0) THEN
-          write(out_unitp,*) '========================================='
-          write(out_unitp,*) '========================================='
-        ENDIF ! for MPI_id=0
+        write(out_unitp,*) '========================================='
+        write(out_unitp,*) '========================================='
 
-#if(run_MPI)
-        IF(MPI_id==0) THEN
-          write(out_unitp,*) 'time check for action: ',                                &
-                    real(time_MPI_action,Rkind)/real(time_rate,Rkind),' from ',MPI_id
-          write(out_unitp,*) 'time MPI comm check: ',                                  &
-                    real(time_comm,Rkind)/real(time_rate,Rkind),' from ', MPI_id
+        close(in_unitp)
+        IF(openmpi) THEN
+          CALL time_perso('MPI closed')
+          CALL end_MPI()
         ENDIF
-        !> end MPI
-        CALL time_perso('MPI closed, final time')
-        CALL MPI_Finalize(MPI_err);
-        close(in_unitp)
-#else
-        close(in_unitp)
-#endif        
+
       END PROGRAM ElVibRot
 SUBROUTINE read_arg(input_filename)
   USE mod_system

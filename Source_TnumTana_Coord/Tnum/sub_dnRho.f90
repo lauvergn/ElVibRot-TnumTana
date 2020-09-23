@@ -414,7 +414,6 @@ MODULE mod_dnRho
   SUBROUTINE Write_rho(mole)
   USE mod_system
   USE mod_Tnum
-  USE mod_MPI
   IMPLICIT NONE
 
       TYPE (CoordType), intent(in)  :: mole
@@ -473,11 +472,11 @@ MODULE mod_dnRho
            ELSE
              name_rho = '1.'
            END IF
-           IF(MPI_id==0) write(out_unitp,'(i6,8x,i6,a,a)') iQact,iQact_transfo,' : ',name_rho
+           write(out_unitp,'(i6,8x,i6,a,a)') iQact,iQact_transfo,' : ',name_rho
 
          END DO
-         IF(MPI_id==0) write(out_unitp,*) '----------------------------------------------'
-         IF(MPI_id==0) write(out_unitp,*)
+         write(out_unitp,*) '----------------------------------------------'
+         write(out_unitp,*)
 
        END IF
   end subroutine Write_rho

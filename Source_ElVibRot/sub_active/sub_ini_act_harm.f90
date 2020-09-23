@@ -157,7 +157,7 @@
             Grid_cte(:) = .TRUE.  ! KEO, Coriolis
           END IF
 
-          !grid will be allocated in the action part
+          ! grid will be allocated in the action part
           CALL alloc_para_Op(para_AllOp%tab_Op(iOp),Grid=.TRUE.,Mat=.FALSE.,Grid_cte=Grid_cte)
 
           CALL dealloc_NParray(Grid_cte,"Grid_cte",name_sub)
@@ -204,7 +204,7 @@
       END IF
 
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid) THEN
-        IF(MPI_id==0) write(out_unitp,*) ' TEST:  Operators at Qdyn0'
+        write(out_unitp,*) ' TEST:  Operators at Qdyn0'
       ELSE
         IF (print_level > 0) write(out_unitp,*) 'Grid qact Veff T1 T2'
       END IF
@@ -401,7 +401,8 @@
       END IF
       !-------------------------------------------------------------------
 
-      IF (.NOT. para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Read_FileGrid) THEN
+      IF ((.NOT. para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Read_FileGrid) .AND.   &
+          (.NOT. para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid==4)) THEN
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint <       &
           para_AllOp%tab_Op(1)%nb_qa .OR.                                       &
           para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint > 1) THEN
@@ -424,7 +425,6 @@
   USE mod_system
   USE mod_Op
   USE mod_PrimOp
-  USE mod_MPI
   IMPLICIT NONE
 
 !----- variables for the construction of H ---------------------------
