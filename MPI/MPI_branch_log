@@ -37,7 +37,7 @@ MPI Vm2.0
 
   - add MPI_action_scheme3: 2level distributor and auto balance of Smolyak terms 
 
-  - add MPI for analyse
+  - add MPI for analyse for scheme 1
 
   - add MPI for ini_data
 
@@ -50,6 +50,14 @@ MPI Vm2.0
   - bug fix for long integer
 
   - rename mod_MPI_Aid -> mod_MPI_aux
+
+  - note the parallelization in following functions for MPI scheme 1, 
+    it is a bit dangerous for further using these function in MPI scheme 1.
+    BSmolyakRep_TO_GSmolyakRep
+    dot_product_SmolyakRep_Basis
+    tabPackedBasis_TO_SmolyakRepBasis
+    SmolyakRepBasis_TO_tabPackedBasis
+    dealloc_SmolyakRep
 
   - issue:
     memory problem in subroutine sub_PsiBasisRep_TO_GridRep
