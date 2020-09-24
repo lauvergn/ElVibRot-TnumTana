@@ -42,7 +42,6 @@
 !===========================================================================
       SUBROUTINE versionEVRT(write_version)
       USE mod_system
-      USE mod_MPI
       IMPLICIT NONE
 
       logical :: write_version

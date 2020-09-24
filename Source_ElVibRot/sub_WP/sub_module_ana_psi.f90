@@ -49,11 +49,9 @@ MODULE mod_ana_psi
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: sub_analyze_tab_psi,sub_analyze_psi,Channel_weight
+  PUBLIC :: sub_analyze_tab_psi,sub_analyze_psi
+  PUBLIC :: Channel_weight,Channel_weight_contracHADA
   PUBLIC :: norm2_psi,renorm_psi_With_norm2,renorm_psi
-#if(run_MPI)
-  PUBLIC :: norm_psi_MPI
-#endif
 
 CONTAINS
 
@@ -1627,7 +1625,6 @@ END SUBROUTINE sub_analyze_psi
     USE mod_psi_set_alloc
     USE mod_type_ana_psi
     USE mod_param_RD
-    USE mod_MPI
     IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -1985,113 +1982,6 @@ END SUBROUTINE sub_analyze_psi
       END SUBROUTINE norm2_psi
 !=======================================================================================
 
-#if(run_MPI)
-!=======================================================================================
-!> MPI norm^2 of psi (BasisRep or GridRep)
-!> NOTE: ReNorm controls if nromalizing the the vector or
-!> just keep the nromalization constrant
-!=======================================================================================
-SUBROUTINE norm_psi_MPI(psi,ReNorm,GridRep,BasisRep)
-  USE mod_system
-  USE mod_psi_set_alloc
-  IMPLICIT NONE
-
-  TYPE(param_psi),intent(inout)           :: psi
-  Integer,intent(in)                      :: ReNorm
-  Logical,optional,intent(in)             :: GridRep
-  Logical,optional,intent(in)             :: BasisRep
-
-  Real(kind=Rkind),allocatable            :: tab_WeightChannels(:,:)
-  Real(kind=Rkind)                        :: WrhonD
-  Real(kind=Rkind)                        :: temp
-  Integer                                 :: i_qa
-  Integer                                 :: i_qaie
-  Integer                                 :: i_be
-  Integer                                 :: i_bi
-  Integer                                 :: i_ba
-  Integer                                 :: i_baie
-  Integer                                 :: ii_baie
-  Integer                                 :: if_baie
-  Integer                                 :: i_max_w
-  Logical                                 :: norm2GridRep
-  Logical                                 :: norm2BasisRep
-
-  IF(present(GridRep)) THEN
-    IF(present(BasisRep)) THEN
-      norm2GridRep =GridRep
-      norm2BasisRep=BasisRep
-    ELSE
-      norm2GridRep =GridRep
-      norm2BasisRep=.FALSE.
-    ENDIF
-  ELSE
-    IF(present(BasisRep)) THEN
-      norm2BasisRep = BasisRep
-      norm2GridRep  = .FALSE.
-    ELSE
-      IF(psi%BasisRep .AND. psi%GridRep) THEN
-        norm2BasisRep = .TRUE.
-        norm2GridRep  = .FALSE.
-      ELSE
-        norm2BasisRep = psi%BasisRep
-        norm2GridRep  = psi%GridRep
-      ENDIF
-    ENDIF
-  ENDIF
-
-  IF (norm2GridRep .AND. norm2BasisRep) THEN
-    write(out_unitp,*) ' ERROR in norm2_psi'
-    write(out_unitp,*) ' norm2GridRep=t and norm2BasisRep=t !'
-    write(out_unitp,*) ' BasisRep,GridRep',psi%BasisRep,psi%GridRep
-    STOP
-  ENDIF
-
-  IF(ReNorm==1 .OR. ReNorm==3) THEN
-    ! NOTE: tab_WeightChannels obtained correctly only on master
-    CALL Channel_weight_MPI(tab_WeightChannels,psi,norm2GridRep,norm2BasisRep)
-
-    IF(MPI_id==0) psi%norm2=sum(tab_WeightChannels)
-    CALL MPI_Bcast(psi%norm2,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
-
-    IF (allocated(tab_WeightChannels)) THEN
-      CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","Channel_weight")
-    END IF
-  ENDIF
-
-  IF(ReNorm==2 .OR. ReNorm==3) THEN
-    IF (psi%norm2 .EQ. ZERO ) THEN
-      write(out_unitp,*) ' ERROR in norm2_psi'
-      write(out_unitp,*) ' the norm2 is zero !',psi%norm2
-      STOP
-    END IF
-
-    temp=sqrt(ONE/psi%norm2)
-
-    !-normalization---------------------------------------------------------------------
-    IF(norm2GridRep) THEN
-      IF(psi%cplx) THEN
-        psi%CvecG=psi%CvecG*cmplx(temp,ZERO,kind=Rkind)
-      ELSE
-        psi%RvecG=psi%RvecG*temp
-      ENDIF
-    ELSE
-      IF(psi%cplx) THEN
-        psi%CvecB=psi%CvecB*cmplx(temp,ZERO,kind=Rkind)
-      ELSE
-        psi%RvecB=psi%RvecB*temp
-      ENDIF
-    ENDIF
-    psi%norm2=ONE
-  ENDIF
-
-  IF(.NOT. (ReNorm==1 .OR. ReNorm==2 .OR. ReNorm==3)) THEN
-    STOP 'error in norm_psi_MPI, ReNorm not provided '
-  ENDIF ! for ReNorm
-
-END SUBROUTINE norm_psi_MPI
-!=======================================================================================
-#endif
-
 !=======================================================================================
       SUBROUTINE renorm_psi(psi,GridRep,BasisRep)
       USE mod_system
@@ -2299,7 +2189,6 @@ END SUBROUTINE norm_psi_MPI
                             GridRep,BasisRep,Dominant_Channel)
   USE mod_system
   USE mod_psi_set_alloc
-  USE mod_MPI
   IMPLICIT NONE
 
 !- variables for the WP ----------------------------------------
@@ -2466,167 +2355,6 @@ END IF
 !------------------------------------------------------
 
   END SUBROUTINE Channel_weight
-
-#if(run_MPI)
-!=======================================================================================
-!> calculate weight with MPI
-!> be careful with the way the vector distributed
-!=======================================================================================
-  SUBROUTINE Channel_weight_MPI(tab_WeightChannels,psi,                                &
-                                GridRep,BasisRep,Dominant_Channel)
-  USE mod_system
-  USE mod_psi_set_alloc
-  USE mod_MPI
-  USE mod_MPI_Aid
-  IMPLICIT NONE
-
-  TYPE(param_psi), intent(in)                   :: psi
-  Real(kind=Rkind),intent(inout),allocatable    :: tab_WeightChannels(:,:)
-  Integer,optional,intent(inout)                :: Dominant_Channel(2)
-  Logical,         intent(in)                   :: GridRep,BasisRep
-
-  TYPE(OldParam)                                :: OldPara
-  Real(kind=Rkind)                              :: WeightSG
-  Real(kind=Rkind)                              :: WrhonD
-  Real(kind=Rkind)                              :: max_w
-  Real(kind=Rkind)                              :: temp
-  Integer                                       :: i_qa
-  Integer                                       :: i_qaie
-  Integer                                       :: i_be
-  Integer                                       :: i_bi
-  Integer                                       :: i_ba
-  Integer                                       :: i_baie
-  Integer                                       :: ii_baie
-  Integer                                       :: if_baie
-  Integer                                       :: nb_be
-  Integer                                       :: nb_bi
-  Integer                                       :: iSG
-  Integer                                       :: iqSG
-
-
-  nb_be=get_nb_be_FROM_psi(psi)
-  nb_bi=get_nb_bi_FROM_psi(psi)
-
-  IF(GridRep .AND. BasisRep) THEN
-    write(out_unitp,*) ' ERROR in Channel_weight'
-    write(out_unitp,*) ' GridRep=t and BasisRep=t !'
-    STOP
-  END IF
-
-  IF(.NOT. allocated(tab_WeightChannels) .AND. nb_bi > 0 .AND. nb_be > 0) THEN
-    CALL alloc_NParray(tab_WeightChannels,(/nb_bi,nb_be/),                             &
-                      "tab_WeightChannels","Channel_weight")
-    tab_WeightChannels(:,:) = ZERO
-  END IF
-
-  IF(psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
-    IF(MPI_id==0) CALL Channel_weight_contracHADA(tab_WeightChannels(:,1),psi)
-  ELSE IF (psi%nb_baie==psi%nb_tot) THEN
-    IF(BasisRep .AND. (allocated(psi%CvecB) .OR. allocated(psi%RvecB)) ) THEN
-      nb_per_MPI=psi%nb_tot/MPI_np
-      nb_rem_MPI=mod(psi%nb_tot,MPI_np)
-      bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
-      bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)                          &
-                                      +merge(1,0,nb_rem_MPI>MPI_id)
-
-      DO i_be=1,psi%nb_be
-      DO i_bi=1,psi%nb_bi
-        ii_baie=1+((i_bi-1)+(i_be-1)*psi%nb_bi) * psi%nb_ba
-        if_baie=ii_baie-1+psi%nb_ba
-
-        IF(bound2_MPI>ii_baie .AND. bound1_MPI<if_baie) THEN
-          if_baie=MIN(if_baie,bound2_MPI)
-          ii_baie=MAX(ii_baie,bound1_MPI)
-          IF(psi%cplx) THEN
-            tab_WeightChannels(i_bi,i_be)=real(dot_product(psi%CvecB(ii_baie:if_baie), &
-                                               psi%CvecB(ii_baie:if_baie)),kind=Rkind)
-          ELSE
-            tab_WeightChannels(i_bi,i_be)=dot_product(psi%RvecB(ii_baie:if_baie),      &
-                                                      psi%RvecB(ii_baie:if_baie))
-          ENDIF
-        ENDIF
-      END DO
-      END DO
-
-      CALL MPI_Reduce_sum_matrix(tab_WeightChannels,1,nb_bi,1,nb_be,root_MPI)
-
-    ELSE IF(GridRep .AND. (allocated(psi%CvecG) .OR. allocated(psi%RvecG))) THEN
-      tab_WeightChannels(:,:) = ZERO
-
-      nb_per_MPI=psi%nb_baie/MPI_np
-      nb_rem_MPI=mod(psi%nb_baie,MPI_np)
-      bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
-      bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)                          &
-                                      +merge(1,0,nb_rem_MPI>MPI_id)
-
-      DO i_qa=1,psi%nb_qa
-        WrhonD=Rec_WrhonD(psi%BasisnD,i_qa)
-        DO i_be=1,nb_be
-        DO i_bi=1,nb_bi
-          i_qaie=i_qa+((i_bi-1)+(i_be-1)*nb_bi )*psi%nb_qa
-
-          IF(bound2_MPI>i_qaie .AND. bound1_MPI<i_qaie) THEN
-            IF(psi%cplx) THEN
-              temp=abs(psi%CvecG(i_qaie))
-            ELSE
-              temp=psi%RvecG(i_qaie)
-            END IF
-            tab_WeightChannels(i_bi,i_be)=tab_WeightChannels(i_bi,i_be)+WrhonD*temp**2
-          ENDIF
-        ENDDO
-        ENDDO
-      ENDDO
-
-      CALL MPI_Reduce_sum_matrix(tab_WeightChannels,1,nb_bi,1,nb_be,root_MPI)
-
-    ELSE
-      write(out_unitp,*) ' ERROR in Channel_weight',' from ',MPI_id
-      IF (GridRep)  write(out_unitp,*) ' impossible to calculate the weights with the Grid'
-      IF (BasisRep) write(out_unitp,*) ' impossible to calculate the weights with the Basis'
-      STOP
-    END IF
-  ELSE
-    !-To deal with a spectral representation--------------------------------------------
-    tab_WeightChannels(:,:)=ZERO
-
-    nb_per_MPI=psi%nb_tot/MPI_np
-    nb_rem_MPI=mod(psi%nb_tot,MPI_np)
-    bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
-    bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
-
-    IF(psi%cplx) THEN
-      temp_cplx=dot_product(psi%CvecB(bound1_MPI:bound2_MPI),                          &
-                            psi%CvecB(bound1_MPI:bound2_MPI))
-      CALL MPI_Reduce(temp_cplx,temp_cplx1,size1_MPI,MPI_Complex8,MPI_SUM,root_MPI,    &
-                      MPI_COMM_WORLD,MPI_err)
-      tab_WeightChannels(1,1)=real(temp_real1)
-      !tab_WeightChannels(1,1)=real(dot_product(psi%CvecB,psi%CvecB),kind=Rkind)
-    ELSE
-      temp_real=dot_product(psi%RvecB(bound1_MPI:bound2_MPI),                          &
-                            psi%RvecB(bound1_MPI:bound2_MPI))
-      CALL MPI_Reduce(temp_real,temp_real1,size1_MPI,MPI_Real8,MPI_SUM,root_MPI,       &
-                      MPI_COMM_WORLD,MPI_err)
-      tab_WeightChannels(1,1)=temp_real1
-      !tab_WeightChannels(1,1)=dot_product(psi%RvecB,psi%RvecB)
-    ENDIF
-  ENDIF
-
-  IF(present(Dominant_Channel)) THEN
-    Dominant_Channel(:)=1
-    max_w              =ZERO
-    DO i_be=1,nb_be
-    DO i_bi=1,nb_bi
-      IF(tab_WeightChannels(i_bi,i_be)>max_w) THEN
-        max_w=tab_WeightChannels(i_bi,i_be)
-        Dominant_Channel(:)=(/ i_be,i_bi /)
-      END IF
-    END DO
-    END DO
-  END IF
-
-END SUBROUTINE Channel_weight_MPI
-!=======================================================================================
-#endif
 
   SUBROUTINE Channel_weight_SG4_grid(tab_WeightChannels,psi)
   USE mod_system
@@ -2902,7 +2630,6 @@ END SUBROUTINE Channel_weight_SG4_basis
 !SUBROUTINE Channel_weight_contracADA_MPI(w_harm,psi)
 !  USE mod_system
 !  USE mod_psi_set_alloc
-!  USE mod_MPI
 !  IMPLICIT NONE
 !
 !  TYPE(param_psi)                                       :: psi

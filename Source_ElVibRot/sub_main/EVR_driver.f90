@@ -79,20 +79,14 @@ SUBROUTINE init_EVR_new()
         !> id=0 to be the master
         !---------------------------------------------------------------------------------
 #if(run_MPI)
-        CALL MPI_initialization(Rkind)
-        Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
-        Popenmp            = .FALSE.  !< True to run openMP
-#else
-        MPI_id=0
-        Popenmpi           = .FALSE.  !< True to run MPI, set here or in namelist system
-
-        ! set openMP accodring to make file
-#if(run_openMP)
-        Popenmp            = .TRUE.   !< True to run openMP
-#else
+        CALL ini_MPI()
+        Popenmpi           = .TRUE.  !< True to run with MPI
         Popenmp            = .FALSE.
 #endif
 
+#if(run_openMP)
+        Popenmp            = .TRUE.  !< True to run openMP
+        Popenmpi           = .FALSE.
 #endif
 
         intensity_only     = .FALSE.
@@ -130,19 +124,12 @@ SUBROUTINE init_EVR_new()
         RMatFormat       = "f18.10"
         CMatFormat       = "f15.7"
 
-        IF(MPI_id==0) THEN
-          ! version and copyright statement
-          CALL versionEVRT(.TRUE.)
-          write(out_unitp,*)
-#if(run_MPI)
+        ! version and copyright statement
+        CALL versionEVRT(.TRUE.)
+        write(out_unitp,*)
+        IF(Popenmpi) THEN
           CALL time_perso('MPI start, initial time')
-          write(out_unitp,*) ' Initialize MPI with ', MPI_np, 'cores.'
-          write(out_unitp,*)
-          write(out_unitp,*) 'Integer type of default Fortran Compiler:',              &
-                             sizeof(integer_MPI),', MPI: ',MPI_INTEGER_KIND
-          write(out_unitp,*) 'NOTE: MPI in progress. If get memory error, check if     &
-                                    the variables are just allocated on root threads.'
-#endif
+          CALL MPI_ini_messaage()
         ENDIF
 
         !> automatically decide the reading of namelist, from file or shell
@@ -473,7 +460,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
       USE mod_fullanalysis
       USE mod_Auto_Basis
       USE mod_psi
-      USE mod_MPI_Aid
+      USE mod_MPI_aux
       IMPLICIT NONE
 
       integer,           intent(in)    :: nb,nq             ! numbers of basis functions and grid points
@@ -525,9 +512,9 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
 !---------------------------------------------------------------------------------------
       !> turn off the allocation of grid, to be done in action
       !> sub_qa_bhe should be refined later
-#if(run_MPI)
-      Grid_allco=.FALSE.
-#endif
+!#if(run_MPI)
+!      Grid_allco=.FALSE.
+!#endif
       IF(MPI_id==0 .AND. print_level > -1) THEN
         write(out_unitp,*)
         write(out_unitp,*) '================================================='
@@ -569,9 +556,9 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         write(out_unitp,*)
       ENDIF
 
-#if(run_MPI)
-      Grid_allco=.True.
-#endif
+!#if(run_MPI)
+!      Grid_allco=.True.
+!#endif
 !---------------------------------------------------------------------------------------
 !      contraction of the active basis set with HADA basis
 !---------------------------------------------------------------------------------------
@@ -671,11 +658,8 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
             write(out_unitp,*)
           ENDIF
 
-#if(run_MPI)
-          !CALL sub_Hmax(tab_EVRT(ith)%para_propa,para_H)
-#else
-          CALL sub_Hmax(tab_EVRT(ith)%para_propa,para_H)
-#endif
+        IF(.NOT. openmpi) CALL sub_Hmax(tab_EVRT(ith)%para_propa,para_H)
+
           IF(MPI_id==0 .AND. print_level > -1) THEN
             write(out_unitp,*)
             write(out_unitp,*)
@@ -715,10 +699,11 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           tab_EVRT(ith)%para_propa%para_Davidson%max_WP = max_diago
 
           nb_diago = min(tab_EVRT(ith)%para_propa%para_Davidson%nb_WP,para_H%nb_tot,max_diago)
-#if(run_MPI)
-          CALL MPI_Bcast(nb_diago,size1_MPI,MPI_Int_fortran,root_MPI,                  &
-                         MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)
+!          CALL MPI_Bcast(nb_diago,size1_MPI,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+          IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(nb_diago,size1_MPI,root_MPI)
+
           CALL alloc_NParray(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
           CALL alloc_NParray(Ene0,(/max_diago/),"Ene0","vib")
 
@@ -771,18 +756,18 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           nb_diago  = para_H%nb_tot
           max_diago = para_H%nb_tot
 
-          IF(MPI_id==0) CALL alloc_NParray(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
+          IF(keep_MPI) CALL alloc_NParray(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
 
-          IF(MPI_id==0) THEN
+          IF(keep_MPI) THEN
             DO i=1,max_diago
               CALL init_psi(Tab_psi(i),para_H,para_H%cplx)
             END DO
           ENDIF
 
           para_H%diago = .TRUE.
-          IF(MPI_id==0) CALL alloc_para_Op(para_H,Grid=.FALSE.,Mat=.TRUE.)
+          IF(keep_MPI) CALL alloc_para_Op(para_H,Grid=.FALSE.,Mat=.TRUE.)
           IF (para_H%cplx) THEN
-            IF(MPI_id==0) THEN
+            IF(keep_MPI) THEN
               CALL sub_diago_CH(para_H%Cmat,para_H%Cdiag,para_H%Cvp,      &
                                 para_H%nb_tot)
 
@@ -800,7 +785,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
               para_H%para_AllBasis%basis_ext%Cvp_spec    => para_H%Cvp
             ENDIF
           ELSE
-            IF(MPI_id==0) THEN
+            IF(keep_MPI) THEN
               CALL sub_diago_H(para_H%Rmat,para_H%Rdiag,para_H%Rvp,       &
                                para_H%nb_tot,para_H%sym_Hamil)
 
@@ -844,7 +829,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           END IF
           tab_EVRT(ith)%para_ana%max_ana = nb_diago
 
-          IF(MPI_id==0 .AND. print_level > -1) THEN
+          IF(print_level > -1) THEN
             write(out_unitp,*)
             write(out_unitp,*)
             CALL time_perso('sub_diago_H')
@@ -895,7 +880,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           write(out_unitp,*)
         ENDIF
 
-        IF(MPI_id==0) CALL sub_analyse(Tab_Psi,nb_diago,para_H,         &
+        IF(keep_MPI) CALL sub_analyse(Tab_Psi,nb_diago,para_H,         &
                            tab_EVRT(ith)%para_ana,tab_EVRT(ith)%para_intensity, &
                                tab_EVRT(ith)%para_AllOp,tab_EVRT(ith)%const_phys)
         CALL flush_perso(out_unitp)
@@ -942,7 +927,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         !===============================================================
         ! Deallocation of Tab_Psi
         !===============================================================
-        IF(MPI_id==0) THEN
+        IF(keep_MPI) THEN
           DO i=1,size(Tab_Psi)
             CALL dealloc_psi(Tab_Psi(i))
           END DO
@@ -983,7 +968,6 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
             STOP
           END IF
 
-          !@chen ??
           IF (tab_EVRT(ith)%intensity_only) THEN
             write(out_unitp,*)
             Q =  part_func(para_H%Rdiag,size(para_H%Rdiag),tab_EVRT(ith)%para_ana%Temp,tab_EVRT(ith)%const_phys)
@@ -1119,11 +1103,11 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         write(out_unitp,*) 'mem_tot,max_mem_used',para_mem%mem_tot,para_mem%max_mem_used
         write(out_unitp,*) 'nb_alloc,nb_dealloc',para_mem%nb_alloc,para_mem%nb_dealloc
         write(out_unitp,*) '================================================'
-#if(run_MPI)
-        write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!', ' from ', MPI_id
-#else
-        write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!'
-#endif
+        IF(openmpi) THEN
+          write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!', ' from ', MPI_id
+        ELSE
+          write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!'
+        ENDIF
         write(out_unitp,*) '================================================'
       END IF
 
@@ -1169,20 +1153,14 @@ SUBROUTINE init_EVR()
         !> id=0 to be the master
         !---------------------------------------------------------------------------------
 #if(run_MPI)
-        CALL MPI_initialization(Rkind)
-        Popenmpi           = .TRUE.  !< True to run MPI, set here or in namelist system
-        Popenmp            = .FALSE.  !< True to run openMP
-#else
-        MPI_id=0
-        Popenmpi           = .FALSE.  !< True to run MPI, set here or in namelist system
-
-        ! set openMP accodring to make file
-#if(run_openMP)
-        Popenmp            = .TRUE.   !< True to run openMP
-#else
+        CALL ini_MPI()
+        Popenmpi           = .TRUE.  !< True to run with MPI
         Popenmp            = .FALSE.
 #endif
 
+#if(run_openMP)
+        Popenmp            = .TRUE.  !< True to run openMP
+        Popenmpi           = .FALSE.
 #endif
 
         intensity_only     = .FALSE.
@@ -1220,19 +1198,12 @@ SUBROUTINE init_EVR()
         RMatFormat       = "f18.10"
         CMatFormat       = "f15.7"
 
-        IF(MPI_id==0) THEN
-          ! version and copyright statement
-          CALL versionEVRT(.TRUE.)
-          write(out_unitp,*)
-#if(run_MPI)
+        ! version and copyright statement
+        CALL versionEVRT(.TRUE.)
+        write(out_unitp,*)
+        IF(Popenmpi) THEN
           CALL time_perso('MPI start, initial time')
-          write(out_unitp,*) ' Initialize MPI with ', MPI_np, 'cores.'
-          write(out_unitp,*)
-          write(out_unitp,*) 'Integer type of default Fortran Compiler:',              &
-                              sizeof(integer_MPI),', MPI: ',MPI_INTEGER_KIND
-          write(out_unitp,*) 'NOTE: MPI in progress. If get memory error, check if     &
-                                    the variables are just allocated on root threads.'
-#endif
+          CALL MPI_ini_messaage()
         ENDIF
 
         !> automatically decide the reading of namelist, from file or shell
@@ -1319,8 +1290,8 @@ SUBROUTINE init_EVR()
                     ",' +i'," // trim(adjustl(CMatFormat)) // ",')'"
 
 
-        openmp              = Popenmp ! openmp is in mod_system.mod
-        openmpi             = Popenmpi
+        openmp                = Popenmp 
+        openmpi               = Popenmpi
 
         IF (.NOT. openmp) THEN
            MatOp_omp          = 0
@@ -1524,7 +1495,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
       USE mod_fullanalysis
       USE mod_Auto_Basis
       USE mod_psi
-      USE mod_MPI_Aid
+      USE mod_MPI_aux
       IMPLICIT NONE
 
       integer,           intent(in)    :: nb,nq             ! numbers of basis functions and grid points
@@ -1576,9 +1547,9 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
 !---------------------------------------------------------------------------------------
       !> turn off the allocation of grid, to be done in action
       !> sub_qa_bhe should be refined later
-#if(run_MPI)
-      Grid_allco=.FALSE.
-#endif
+!#if(run_MPI)
+!      Grid_allco=.FALSE.
+!#endif
       IF(MPI_id==0 .AND. print_level > -1) THEN
         write(out_unitp,*)
         write(out_unitp,*) '================================================='
@@ -1620,9 +1591,9 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         write(out_unitp,*)
       ENDIF
 
-#if(run_MPI)
-      Grid_allco=.True.
-#endif
+!#if(run_MPI)
+!      Grid_allco=.True.
+!#endif
 !---------------------------------------------------------------------------------------
 !      contraction of the active basis set with HADA basis
 !---------------------------------------------------------------------------------------
@@ -1722,11 +1693,8 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
             write(out_unitp,*)
           ENDIF
 
-#if(run_MPI)
-          !CALL sub_Hmax(para_EVRT%para_propa,para_H)
-#else
-          CALL sub_Hmax(para_EVRT%para_propa,para_H)
-#endif
+          IF(.NOT. openmpi) CALL sub_Hmax(para_EVRT%para_propa,para_H)
+
           IF(MPI_id==0 .AND. print_level > -1) THEN
             write(out_unitp,*)
             write(out_unitp,*)
@@ -1766,10 +1734,11 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           para_EVRT%para_propa%para_Davidson%max_WP = max_diago
 
           nb_diago = min(para_EVRT%para_propa%para_Davidson%nb_WP,para_H%nb_tot,max_diago)
-#if(run_MPI)
-          CALL MPI_Bcast(nb_diago,size1_MPI,MPI_Int_fortran,root_MPI,                  &
-                         MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)
+!          CALL MPI_Bcast(nb_diago,size1_MPI,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+          IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(nb_diago,size1_MPI,root_MPI)
+
           nullify(Tab_Psi)
           CALL alloc_array(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
           CALL alloc_NParray(Ene0,(/max_diago/),"Ene0","vib")
@@ -1824,18 +1793,18 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           max_diago = para_H%nb_tot
 
           nullify(Tab_Psi)
-          IF(MPI_id==0) CALL alloc_array(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
+          IF(keep_MPI) CALL alloc_array(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
 
-          IF(MPI_id==0) THEN
+          IF(keep_MPI) THEN
             DO i=1,max_diago
               CALL init_psi(Tab_psi(i),para_H,para_H%cplx)
             END DO
           ENDIF
 
           para_H%diago = .TRUE.
-          IF(MPI_id==0) CALL alloc_para_Op(para_H,Grid=.FALSE.,Mat=.TRUE.)
+          IF(keep_MPI) CALL alloc_para_Op(para_H,Grid=.FALSE.,Mat=.TRUE.)
           IF (para_H%cplx) THEN
-            IF(MPI_id==0) THEN
+            IF(keep_MPI) THEN
               CALL sub_diago_CH(para_H%Cmat,para_H%Cdiag,para_H%Cvp,      &
                                 para_H%nb_tot)
 
@@ -1853,7 +1822,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
               para_H%para_AllBasis%basis_ext%Cvp_spec    => para_H%Cvp
             ENDIF
           ELSE
-            IF(MPI_id==0) THEN
+            IF(keep_MPI) THEN
               CALL sub_diago_H(para_H%Rmat,para_H%Rdiag,para_H%Rvp,       &
                                para_H%nb_tot,para_H%sym_Hamil)
 
@@ -1876,7 +1845,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                 CALL Set_symab_OF_psiBasisRep(Tab_psi(i))
               END DO
               para_H%para_AllBasis%basis_ext%Rvp_spec    => para_H%Rvp
-            ENDIF ! for MPI_id=0
+            ENDIF ! for keep_MPI
           END IF ! for para_H%cplx
           para_H%para_AllBasis%basis_ext%nb_vp_spec  = nb_diago
 
@@ -1948,7 +1917,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           write(out_unitp,*)
         ENDIF
 
-        IF(MPI_id==0) CALL sub_analyse(Tab_Psi,nb_diago,para_H,         &
+        IF(keep_MPI) CALL sub_analyse(Tab_Psi,nb_diago,para_H,         &
                            para_EVRT%para_ana,para_EVRT%para_intensity, &
                                para_EVRT%para_AllOp,para_EVRT%const_phys)
         CALL flush_perso(out_unitp)
@@ -1995,7 +1964,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         !===============================================================
         ! Deallocation of Tab_Psi
         !===============================================================
-        IF(MPI_id==0) THEN
+        IF(keep_MPI) THEN
           DO i=1,size(Tab_Psi)
             CALL dealloc_psi(Tab_Psi(i))
           END DO
@@ -2038,7 +2007,6 @@ write(out_unitp,*) 'intensity',para_EVRT%para_ana%intensity ; flush(out_unitp)
             STOP
           END IF
 
-          !@chen ??
           IF (para_EVRT_calc%intensity_only) THEN
             write(out_unitp,*)
             Q =  part_func(para_H%Rdiag,size(para_H%Rdiag),para_EVRT%para_ana%Temp,para_EVRT%const_phys)
@@ -2173,11 +2141,11 @@ RETURN
         write(out_unitp,*) 'mem_tot,max_mem_used',para_mem%mem_tot,para_mem%max_mem_used
         write(out_unitp,*) 'nb_alloc,nb_dealloc',para_mem%nb_alloc,para_mem%nb_dealloc
         write(out_unitp,*) '================================================'
-#if(run_MPI)
-        write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!', ' from ', MPI_id
-#else
-        write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!'
-#endif
+        IF(openmpi) THEN
+          write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!', ' from ', MPI_id
+        ELSE
+          write(out_unitp,*) ' ElVibRot-Tnum AU REVOIR!!!'
+        ENDIF
         write(out_unitp,*) '================================================'
       END IF
 
@@ -2202,18 +2170,11 @@ SUBROUTINE Finalize_EVR()
       CALL dealloc_psi(para_EVRT%WP0)
       CALL dealloc_AllBasis(para_EVRT%para_AllBasis)
 
+      IF(openmpi) THEN
+        CALL end_MPI()
+        CALL time_perso('MPI closed')
+      ENDIF
+      close(in_unitp)
 
-#if(run_MPI)
-        IF(MPI_id==0) THEN
-          write(out_unitp,*) 'time check for action: ',                                &
-                    real(time_MPI_action,Rkind)/real(time_rate,Rkind),' from ',MPI_id
-          write(out_unitp,*) 'time MPI comm check: ',                                  &
-                    real(time_comm,Rkind)/real(time_rate,Rkind),' from ', MPI_id
-        ENDIF
-        !> end MPI
-        CALL time_perso('MPI closed, final time')
-        CALL MPI_Finalize(MPI_err)
-        close(in_unitp)
-#endif
 END SUBROUTINE Finalize_EVR
 

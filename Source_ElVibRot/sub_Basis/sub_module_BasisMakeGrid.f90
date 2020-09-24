@@ -1798,7 +1798,6 @@ STOP
       USE mod_system
       USE mt19937_64
       USE mod_basis
-      USE mod_MPI
       IMPLICIT NONE
 !---------------------------------------------------------------------
 !---------- variables passees en argument ----------------------------

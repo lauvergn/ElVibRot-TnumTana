@@ -46,8 +46,7 @@ use mod_nDindex, only: type_nDindex, dealloc_nDindex,Write_nDindex,     &
                        alloc_nparray, init_ndval_of_nDindex,            &
                        add_one_to_nDindex, calc_ndi, calc_nDindex,      &
                        dealloc_nparray
-USE mod_MPI
-USE mod_MPI_Aid
+USE mod_MPI_aux
 IMPLICIT NONE
 
   PRIVATE
@@ -83,20 +82,20 @@ IMPLICIT NONE
     integer, allocatable          :: nDval_init(:,:)   ! nDval_init(ndim,nb_threads) table the individual indexes
     integer, allocatable          :: iG_th(:),fG_th(:) ! iG indexes associated to the OpenMP threads
 
-#if(run_MPI)    
-    TYPE (multi_array4),allocatable :: nDI_index_master(:) !< for MPI in action, scheme1 
+    TYPE (multi_array4),allocatable :: nDI_index_master(:) !< for MPI in action, scheme3 
     Integer(kind=MPI_INTEGER_KIND),allocatable :: reduce_Vlength_master(:) 
-    Integer(kind=MPI_INTEGER_KIND),allocatable :: size_PsiR_V(:) 
-    Integer(kind=MPI_INTEGER_KIND)             :: Psi_size_MPI0  !< length of Psi on master
+    Integer(kind=MPI_INTEGER_KIND),allocatable :: size_ST(:) 
+    Integer(kind=MPI_INTEGER_KIND),allocatable :: size_ST_mc(:,:)
+    Integer(kind=MPI_INTEGER_KIND)             :: size_psi
     Integer(kind=MPI_INTEGER_KIND)             :: reduce_Vlength !< reduced size of V 
     Integer                                    :: Max_nDI_ib0
-    Integer*4,allocatable                      :: nDI_index(:)
-    Integer*4,allocatable                      :: nDI_index_list(:) 
+    Integer(kind=Ikind),allocatable            :: nDI_index(:)
+    Integer(kind=Ikind),allocatable            :: nDI_index_list(:) 
     Integer                                    :: num_nDI_index
     Integer                                    :: V_allcount
     Integer                                    :: V_allcount2
     Logical                                    :: once_action=.TRUE.
-#endif    
+
   CONTAINS
     PROCEDURE, PRIVATE, PASS(SGType2_1) :: SGType2_2TOSGType2_1
     GENERIC,   PUBLIC  :: assignment(=) => SGType2_2TOSGType2_1

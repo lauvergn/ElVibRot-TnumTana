@@ -49,8 +49,8 @@
       USE mod_propa
       USE mod_FullPropa
       USE mod_Davidson
-      USE mod_MPI
-      USE mod_MPI_Aid
+      USE mod_Hmax_MPI
+      USE mod_MPI_aux
       IMPLICIT NONE
 
 !----- Operator variables --------------------------------------------
@@ -86,7 +86,7 @@
       integer                    :: nb_diago,max_diago
       TYPE (param_psi),pointer   :: Tab_Psi(:) => null()
       real (kind=Rkind),allocatable  :: Ene0(:)
-
+      integer                    :: ii,temp_Hmin
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub = 'sub_Hmax'
@@ -105,38 +105,31 @@
 !     --------------------------------------------------------
 !     -  Hmin ------------------------------------------------
 !     --------------------------------------------------------
-      IF (para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
-#if(run_MPI)
-        ! get iG boundary of each threads
-        nb_per_MPI=para_H%BasisnD%nb_SG/MPI_np
-        !If(mod(para_H%BasisnD%nb_SG,MPI_np)/=0) nb_per_MPI=nb_per_MPI+1
-        !temp_int1=MPI_id*nb_per_MPI+1
-        !temp_int2=MIN((MPI_id+1)*nb_per_MPI,para_H%BasisnD%nb_SG)
-        nb_rem_MPI=mod(para_H%BasisnD%nb_SG,MPI_np)
-        temp_int1=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
-        temp_int2=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)+merge(1,0,nb_rem_MPI>MPI_id)
-        para_H%Hmin=1.0e10;
-        DO i1_loop=temp_int1,temp_int2
+      !IF (para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
+      IF(para_H%OpGrid(1)%para_FileGrid%Save_MemGrid_done) THEN
+!       IF(openmpi) THEN
+!         CALL get_Hmin_MPI(para_H)
+        IF(para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4) THEN
+          IF(openmpi) THEN
+            CALL get_Hmin_MPI(para_H)
+          ELSE
+            para_H%Hmin=1.0e10
+            DO ii=1,para_H%BasisnD%para_SGType2%nb_SG
+              temp_Hmin=minval(para_H%OpGrid(1)%SRep%SmolyakRep(ii)%V)
+              IF(temp_Hmin<para_H%Hmin) para_H%Hmin=temp_Hmin
+            ENDDO
+          ENDIF
+        ELSE
           ! Minimal value of Veff
-          temp_real=minval(para_H%OpGrid(1)%SRep%SmolyakRep(i1_loop)%V)
-          IF(temp_real<para_H%Hmin) para_H%Hmin=temp_real
-        ENDDO
-        IF(MPI_np>1) THEN
-          CALL MPI_Reduce(para_H%Hmin,temp_real,size1_MPI,MPI_Real8,MPI_MIN,           &
-                          root_MPI,MPI_COMM_WORLD,MPI_err)
-          IF(MPI_id==0) para_H%Hmin=temp_real
-          CALL MPI_Bcast(para_H%Hmin,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
-        ENDIF
-#else
-        ! Minimal value of Veff
-        para_H%Hmin = para_H%OpGrid(1)%Op_min
+          para_H%Hmin = para_H%OpGrid(1)%Op_min
 !
-!        IF (associated(para_H%OpGrid(1)%Grid)) THEN
-!          para_H%Hmin = minval(para_H%OpGrid(1)%Grid(:,:,:))
-!        ELSE ! it means the Grid is cte => deallocated
-!          para_H%Hmin = para_H%OpGrid(1)%Op_min
-!        END IF
-#endif
+!          IF (associated(para_H%OpGrid(1)%Grid)) THEN
+!            para_H%Hmin = minval(para_H%OpGrid(1)%Grid(:,:,:))
+!          ELSE ! it means the Grid is cte => deallocated
+!            para_H%Hmin = para_H%OpGrid(1)%Op_min
+!          END IF
+        ENDIF ! para_H%BasisnD%SparseGrid_type==4
+
       ELSE ! the grids are on a file
 
 !       -  Hmin ------------------------------------------------
@@ -214,19 +207,21 @@
       CALL alloc_psi(psi,BasisRep =.TRUE.)
 
       psi = ZERO
-      IF(MPI_id==0) CALL Set_psi_With_index(psi,R=ONE,ind_aie=psi%nb_tot)
+      IF(keep_MPI) CALL Set_psi_With_index(psi,R=ONE,ind_aie=psi%nb_tot)
       psi%symab = -1
 
-      IF(MPI_id==0) CALL renorm_psi(psi,BasisRep=.TRUE.)
+      IF(keep_MPI) CALL renorm_psi(psi,BasisRep=.TRUE.)
       IF (debug) write(out_unitp,*) 'psi%symab',psi%symab
 
-      IF(MPI_id==0) Hpsi = psi
+      IF(keep_MPI) Hpsi = psi
 
       CALL sub_PsiOpPsi(Emax,psi,Hpsi,para_H)
       para_H%Hmax = Real(Emax,kind=Rkind)
-#if(run_MPI)     
-      CALL MPI_Bcast(para_H%Hmax,size1_MPI,MPI_Real8,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)     
+!      CALL MPI_Bcast(para_H%Hmax,size1_MPI,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+      IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(para_H%Hmax,size1_MPI,root_MPI)
+
       IF (debug) write(out_unitp,*) 'Hmax: ',para_H%Hmax
       CALL flush_perso(out_unitp)
 

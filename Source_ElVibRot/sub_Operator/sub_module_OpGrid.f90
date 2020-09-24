@@ -97,6 +97,7 @@
           logical                    :: cplx               =  .FALSE.! TRUE if it the imaginary part of the complex grid
           logical                    :: alloc_Grid         =  .FALSE.
           logical                    :: Grid_done          =  .FALSE.
+          logical                    :: Grid_save_ac       =  .True. ! control grid saving in action 
 
           integer                    :: iq_min             =  0
           integer                    :: iq_max             =  0
@@ -293,7 +294,7 @@
 
 !=======================================================================================
       SUBROUTINE alloc_OpGrid(OpGrid,nb_qa,nb_bie,                      &
-                          derive_termQact,derive_termQdyn,SmolyakRep,nb_SG,info)
+                   derive_termQact,derive_termQdyn,SmolyakRep,Type_FileGrid4,nb_SG,info)
       USE mod_MPI
 
       TYPE (param_OpGrid), intent(inout) :: OpGrid
@@ -301,6 +302,7 @@
       integer,             intent(in)    :: derive_termQact(2)
       integer,             intent(in)    :: derive_termQdyn(2)
       logical,             intent(in)    :: SmolyakRep
+      logical,             intent(in)    :: Type_FileGrid4
       integer,             intent(in)    :: nb_SG
       character (len=*),   intent(in)    :: info
 
@@ -346,15 +348,20 @@
        IF (debug) write(out_unitp,*) info2,'Mat_cte(:,:)',size(OpGrid%Mat_cte)
 
        IF (.NOT. OpGrid%grid_cte .AND. OpGrid%para_FileGrid%Save_MemGrid) THEN
-#if(run_MPI)
-         IF(Grid_allco) THEN
-#endif
+
+!#if(run_MPI)
+!         IF(Grid_allco) THEN
+!#endif
+         !IF(.NOT. openmpi .OR. .NOT. SmolyakRep) THEN
+         IF(.NOT. Type_FileGrid4) THEN
            CALL alloc_array(OpGrid%Grid,(/nb_qa,nb_bie,nb_bie/),"OpGrid%Grid",info2)
            OpGrid%Grid(:,:,:) = ZERO
-#if(run_MPI)   
+
+           IF(print_level>-1 .AND. MPI_id==0) write(out_unitp,*) info2,size(OpGrid%Grid)
          ENDIF
-#endif
-         IF(print_level>-1 .AND. MPI_id==0) write(out_unitp,*) info2,size(OpGrid%Grid)
+!#if(run_MPI)
+!         ENDIF
+!#endif
 
          IF (SmolyakRep) THEN
            IF (print_level>-1 .AND. MPI_id==0)                                         &

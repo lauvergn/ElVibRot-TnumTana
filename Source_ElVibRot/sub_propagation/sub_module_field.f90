@@ -538,7 +538,7 @@
 !     cos, cos*exp, cos*env(sin), grid
 !
 !===============================================
-      SUBROUTINE  sub_dnE(dnE,n,t,para_field)
+      SUBROUTINE sub_dnE(dnE,n,t,para_field)
       implicit none
 
       type (param_field) :: para_field

@@ -88,7 +88,9 @@ cat > namelist << EOF
 &system 
 EVR=t 
 OpPsi_test=f 
-printlevel=0 
+printlevel=2
+MPI_scheme=2
+MPI_mc=1
 /
 
 &constantes ene_unit='au' /
@@ -134,10 +136,10 @@ X 1 2
 &inactives /
 &actives 
 test=$test 
-direct=2 
+direct=4
 Make_MatOp=f 
-direct_KEO=f 
-Save_MemGrid=t 
+direct_KEO=t 
+Save_MemGrid=t
 direct_ScalOp=t 
 /
 

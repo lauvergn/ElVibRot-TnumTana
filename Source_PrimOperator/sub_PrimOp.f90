@@ -3631,10 +3631,8 @@
       !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
       !IF (debug) THEN
-      IF(MPI_id==0) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         CALL flush_perso(out_unitp)
-      ENDIF
       !END IF
 !-----------------------------------------------------------
 
@@ -3793,26 +3791,22 @@
         Qref = Qref .AND. associated(mole%RPHTransfo%tab_RPHpara_AT_Qact1)
       END IF
       IF (Qref) THEN
-        IF(MPI_id==0) THEN
-          write(out_unitp,*) '================================================='
-          write(out_unitp,*) '=== Reference geometry (not recenter) ==========='
-          CALL flush_perso(out_unitp)
-        ENDIF
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*) '=== Reference geometry (not recenter) ==========='
+        CALL flush_perso(out_unitp)
         CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
 
         CALL get_Qact0(Qact,mole%ActiveTransfo)
         CALL sub_QactTOdnx(Qact,dnx,mole,nderiv=0,Gcenter=.FALSE.,WriteCC=.TRUE.)
 
         CALL dealloc_dnSVM(dnx)
-        IF(MPI_id==0) write(out_unitp,*) '================================================='
+        write(out_unitp,*) '================================================='
       END IF
 
 !-----------------------------------------------------------
       !IF (debug) THEN
-      IF(MPI_id==0) THEN
         write(out_unitp,*) 'END ',name_sub
         CALL flush_perso(out_unitp)
-      ENDIF
       !END IF
 !-----------------------------------------------------------
 

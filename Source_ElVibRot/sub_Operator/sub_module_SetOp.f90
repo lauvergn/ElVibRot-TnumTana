@@ -187,6 +187,7 @@ MODULE mod_SetOp
       logical, optional, intent(in) :: Grid_cte(para_Op%nb_term)
 
       logical :: SmolyakRep,lo_Mat,lo_Grid,lo_Grid_cte(para_Op%nb_term)
+      logical :: Type_FileGrid4
       integer :: nb_tot,nb_SG
       integer :: nb_term,nb_bie
 
@@ -224,8 +225,9 @@ MODULE mod_SetOp
         STOP
       END IF
 
-      SmolyakRep = ( para_Op%BasisnD%SparseGrid_type == 4)
-      nb_SG      = para_Op%BasisnD%nb_SG
+      SmolyakRep     = ( para_Op%BasisnD%SparseGrid_type == 4)
+      Type_FileGrid4 = (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid==4)
+      nb_SG          = para_Op%BasisnD%nb_SG
 
       IF (present(Mat)) THEN
         lo_Mat = Mat
@@ -335,7 +337,7 @@ MODULE mod_SetOp
                               para_Op%nb_qa,nb_bie,                   &
                               para_Op%derive_termQact(:,k_term),      &
                               para_Op%derive_termQdyn(:,k_term),      &
-                              SmolyakRep,nb_SG,info)
+                              SmolyakRep,Type_FileGrid4,nb_SG,info)
 
             deallocate(info)
           END DO
@@ -356,7 +358,7 @@ MODULE mod_SetOp
 
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
                             para_Op%nb_qa,nb_bie,                     &
-                            (/ 0,0 /),(/ 0,0 /),SmolyakRep,nb_SG,info)
+                            (/ 0,0 /),(/ 0,0 /),SmolyakRep,Type_FileGrid4,nb_SG,info)
 
           para_Op%imOpGrid(1)%cplx = .TRUE.
 

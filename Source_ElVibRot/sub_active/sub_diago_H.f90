@@ -78,7 +78,7 @@
 !---------------------------------------------------------------------------------------
   auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
-  IF(MPI_id==0) THEN
+  IF(keep_MPI) THEN
     IF (residual) THEN
       CALL alloc_NParray(Hsave,(/ n,n /),'Hsave',name_sub)
       CALL alloc_NParray(r,(/ n /),'r',name_sub)
@@ -87,9 +87,9 @@
   ENDIF
 
   IF (.NOT. sym) THEN
-    IF(MPI_id==0) CALL diagonalization(H,E,Vec,n,4,1,.TRUE.)
+    IF(keep_MPI) CALL diagonalization(H,E,Vec,n,4,1,.TRUE.)
   ELSE
-    IF(MPI_id==0) CALL diagonalization(H,E,Vec,n,3,1,.TRUE.)
+    IF(keep_MPI) CALL diagonalization(H,E,Vec,n,3,1,.TRUE.)
   END IF
 
   IF (debug) THEN
@@ -97,15 +97,15 @@
     write(out_unitp,*) 'OpMin,OpMax (cm-1): ',minval(E)*auTOcm_inv,maxval(E)*auTOcm_inv
   END IF
 
-  IF(MPI_id==0) THEN
+  IF(keep_MPI) THEN
     DO i=1,n
       A = maxval(Vec(:,i))
       B = minval(Vec(:,i))
       IF (abs(A) < abs(B)) Vec(:,i) = -Vec(:,i)
     END DO
   ENDIF
-
-  IF(MPI_id==0) THEN
+  
+  IF(keep_MPI) THEN
     IF (residual) THEN
       DO i=1,n
         r(:) = matmul(Hsave,Vec(:,i))-E(i)*Vec(:,i)
@@ -119,7 +119,7 @@
       CALL dealloc_NParray(Hsave,'Hsave',name_sub)
       CALL dealloc_NParray(r,'r',name_sub)
     END IF
-  END IF !for MPI_id==0!
+  END IF !for keep_MPI!
 
 !------------------------------------------------------
   IF (debug) THEN
@@ -184,7 +184,7 @@ END SUBROUTINE sub_diago_H
 
       CALL cTred2(n,n,CH,CE,trav,CVec)
       CALL cTql2(n,n,CE,trav,CVec,ierr)
-      IF(MPI_id==0) write(out_unitp,*)'ierr=',ierr
+      write(out_unitp,*)'ierr=',ierr
 
 !=====================================================================
 !

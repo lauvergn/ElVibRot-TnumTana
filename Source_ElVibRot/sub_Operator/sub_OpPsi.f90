@@ -42,16 +42,14 @@
 !===========================================================================
 MODULE mod_OpPsi
 USE mod_OpPsi_SG4
+USE mod_OpPsi_SG4_MPI
+
 PRIVATE
 PUBLIC :: sub_PsiOpPsi,sub_OpPsi,sub_scaledOpPsi,sub_OpiPsi,sub_TabOpPsi
 PUBLIC :: sub_PsiDia_TO_PsiAdia_WITH_MemGrid
-PUBLIC :: sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
-PUBLIC :: sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
+!PUBLIC :: sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
+!PUBLIC :: sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
 PUBLIC :: sub_psiHitermPsi
-
-#if(run_MPI)
-PUBLIC :: sub_scaledOpPsi_SR_MPI
-#endif
 
 CONTAINS
 !======================================================
@@ -170,6 +168,7 @@ CONTAINS
       USE mod_system
       USE mod_psi,             ONLY : param_psi,ecri_psi,dealloc_psi
       USE mod_SetOp,           ONLY : param_Op,write_param_Op
+      USE mod_MPI_aux
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -222,12 +221,13 @@ CONTAINS
         With_Grid_loc = .FALSE.
       END IF
 
-      IF(MPI_id==0) THEN
+      IF(keep_MPI) THEN
         IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
       ENDIF
-#if(run_MPI)
-      CALL MPI_BCAST(With_Grid_loc,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)
+!      CALL MPI_BCAST(With_Grid_loc,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+      IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(With_Grid_loc,size1_MPI,root_MPI)
 
       IF (present(TransfoOp)) THEN
         TransfoOp_loc = TransfoOp
@@ -269,9 +269,8 @@ CONTAINS
                                      Set_symab_OF_psiBasisRep,          &
                                      sub_PsiGridRep_TO_BasisRep
       USE mod_SetOp,          ONLY : param_Op,write_param_Op,read_OpGrid_OF_Op
-#if(run_MPI)
-      USE mod_OpPsi_SG4,      ONLY : sub_TabOpPsi_FOR_SGtype4_SRB_MPI
-#endif
+      USE mod_OpPsi_SG4_MPI,  ONLY : sub_TabOpPsi_FOR_SGtype4_SRB_MPI
+      USE mod_MPI_aux
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -330,12 +329,14 @@ CONTAINS
         With_Grid_loc = .FALSE.
       END IF
 
-      IF(MPI_id==0) THEN
+      IF(keep_MPI) THEN
         IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
       ENDIF
-#if(run_MPI)
-      CALL MPI_BCAST(With_Grid_loc,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+
+!#if(run_MPI)
+!      CALL MPI_BCAST(With_Grid_loc,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+      IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(With_Grid_loc,size1_MPI,root_MPI)
 
       IF (present(pot_only)) THEN
         pot_only_loc = pot_only .AND. (para_Op%n_Op ==0) ! para_Op has to be H
@@ -377,26 +378,36 @@ CONTAINS
 
       IF (SGtype4) THEN
         IF(Psi%SRB_MPI) THEN
-#if(run_MPI)
+
+        IF(openmpi) THEN
           CALL sub_TabOpPsi_FOR_SGtype4_SRB_MPI((/Psi/),RROpPsi,para_Op)
           OpPsi=RROpPsi(1)  ! find a way to avoid it
-#endif
+        ENDIF
+
         ELSE IF (Psi%cplx) THEN
-          IF(MPI_id==0) RCPsi = Psi
-          CALL sub_TabOpPsi_FOR_SGtype4(RCPsi,RCOpPsi,para_Op)
-          IF(MPI_id==0) OpPsi = RCOpPsi
+          IF(keep_MPI) RCPsi = Psi
+          IF(openmpi) THEN
+            CALL sub_TabOpPsi_FOR_SGtype4_MPI(RCPsi,RCOpPsi,para_Op)
+          ELSE
+            CALL sub_TabOpPsi_FOR_SGtype4(RCPsi,RCOpPsi,para_Op)
+          ENDIF
+          IF(keep_MPI) OpPsi = RCOpPsi
           CALL dealloc_psi(RCPsi(1),  delete_all=.TRUE.)
           CALL dealloc_psi(RCPsi(2),  delete_all=.TRUE.)
           CALL dealloc_psi(RCOpPsi(1),delete_all=.TRUE.)
           CALL dealloc_psi(RCOpPsi(2),delete_all=.TRUE.)
         ELSE
-          CALL sub_TabOpPsi_FOR_SGtype4( (/Psi/) ,RROpPsi,para_Op)
-          IF(MPI_id==0) OpPsi = RROpPsi(1)
+          IF(openmpi) THEN
+            CALL sub_TabOpPsi_FOR_SGtype4_MPI( (/Psi/) ,RROpPsi,para_Op)
+          ELSE
+            CALL sub_TabOpPsi_FOR_SGtype4( (/Psi/) ,RROpPsi,para_Op)
+          ENDIF
+          IF(keep_MPI) OpPsi = RROpPsi(1)
           CALL dealloc_psi(RROpPsi(1),delete_all=.TRUE.)
         END IF
       ELSE
 
-        IF(MPI_id==0) THEN
+        IF(keep_MPI) THEN
           OpPsi = Psi    ! For the allocation of OpPsi
 
           IF (para_Op%mat_done) THEN
@@ -531,7 +542,7 @@ CONTAINS
 
             END IF ! for With_Grid_loc
           END IF ! for para_Op%mat_done
-        ENDIF ! for MPI_id=0
+        ENDIF ! for keep_MPI
       END IF
 
 !=====================================================================
@@ -541,7 +552,7 @@ CONTAINS
 !=====================================================================
       IF (debug) write(out_unitp,*) 'para_Op,psi symab ',para_Op%symab,psi%symab
 
-      IF(MPI_id==0) THEN
+      IF(keep_MPI) THEN
         OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,psi%symab)
         CALL Set_symab_OF_psiBasisRep(OpPsi,OpPsi_symab)
       ENDIF
@@ -568,7 +579,6 @@ CONTAINS
       USE mod_system
       USE mod_psi,        ONLY : param_psi,ecri_psi,dealloc_psi
       USE mod_SetOp,      ONLY : param_Op,write_param_Op
-      USE mod_MPI
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -668,7 +678,7 @@ CONTAINS
                                     ecri_psi,Set_symab_OF_psiBasisRep,  &
                                     sub_PsiGridRep_TO_BasisRep
       USE mod_SetOp,         ONLY : param_Op,read_OpGrid_OF_Op,Write_FileGrid
-      USE mod_MPI
+      USE mod_MPI_aux
       IMPLICIT NONE
 
       !----- variables pour la namelist minimum ------------------------
@@ -692,10 +702,11 @@ CONTAINS
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
       !-----------------------------------------------------------------
-      If(MPI_id==0) size_TabPsi=size(TabPsi)
-#if(run_MPI)
-      CALL MPI_BCAST(size_TabPsi,size1_MPI,MPI_int_def,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+      If(keep_MPI) size_TabPsi=size(TabPsi) 
+!#if(run_MPI)
+!      CALL MPI_BCAST(size_TabPsi,size1_MPI,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+      IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(size_TabPsi,size1_MPI,root_MPI)
 
       n = para_Op%nb_tot
       IF (debug) THEN
@@ -740,7 +751,11 @@ CONTAINS
 
       IF (SGtype4) THEN
         ! para_Op%BasisnD%SparseGrid_type=4
-        CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)
+        IF(openmpi) THEN
+          CALL sub_TabOpPsi_FOR_SGtype4_MPI(TabPsi,TabOpPsi,para_Op)
+        ELSE
+          CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)
+        ENDIF
         !para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
         para_Op%nb_OpPsi=para_Op%nb_OpPsi+size_TabPsi
         RETURN
@@ -757,7 +772,11 @@ CONTAINS
         END IF
 
         IF (SGtype4) THEN
-          CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)
+          IF(openmpi) THEN
+            CALL sub_TabOpPsi_FOR_SGtype4_MPI(TabPsi,TabOpPsi,para_Op)
+          ELSE
+            CALL sub_TabOpPsi_FOR_SGtype4(TabPsi,TabOpPsi,para_Op)
+          ENDIF
           ! para_Op%nb_OpPsi = para_Op%nb_OpPsi + size(TabPsi)
           para_Op%nb_OpPsi = para_Op%nb_OpPsi+size_TabPsi
         ELSE
@@ -2688,7 +2707,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
         CALL ecri_psi(Psi=OpPsi)
       END IF
 
-      IF(MPI_id==0) THEN
+      IF(keep_MPI) THEN
         IF (Psi%cplx) THEN
           OpPsi%CvecB(:) = (OpPsi%CvecB(:) - E0*Psi%CvecB(:))/Esc
         ELSE
@@ -2706,38 +2725,6 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_scaledOpPsi
-!=======================================================================================
-
-!=======================================================================================
-!> OpPsi = (OpPsi - E0*Psi) / Esc, for working on full Smolyak rep.
-!=======================================================================================
-      SUBROUTINE sub_scaledOpPsi_SR_MPI(Psi,OpPsi,E0,Esc)
-        USE mod_system
-        USE mod_psi,ONLY:param_psi,ecri_psi
-        IMPLICIT NONE
-
-        TYPE(param_psi)                          :: OpPsi
-        TYPE(param_psi)                          :: Psi
-        Real(kind=Rkind)                         :: E0
-        Real(kind=Rkind)                         :: Esc
-
-        IF(Psi%SRG_MPI .AND. OpPsi%SRG_MPI) THEN
-          OpPsi%SR_G(:,:)=(OpPsi%SR_G(:,:)-E0*Psi%SR_G(:,:))/Esc
-        ELSE IF(Psi%SRB_MPI .AND. OpPsi%SRB_MPI) THEN
-          OpPsi%SR_B(:,:)=(OpPsi%SR_B(:,:)-E0*Psi%SR_B(:,:))/Esc
-        ELSE
-          STOP 'error in sub_scaledOpPsi_SR_MPI'
-        ENDIF
-
-        IF(OpPsi%symab/=Psi%symab) THEN
-          IF(OpPsi%symab==-2) THEN
-            OpPsi%symab=Psi%symab
-          ELSE
-            OpPsi%symab=-1
-          ENDIF
-        ENDIF
-
-      END SUBROUTINE sub_scaledOpPsi_SR_MPI
 !=======================================================================================
 
 !=======================================================================================

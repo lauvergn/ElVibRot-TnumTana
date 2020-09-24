@@ -61,12 +61,6 @@ cd $work
 name_WP=$work/temp
 name_WPR=$work/temp
 
-name_WP=$work/temp/
-mkdir -p $work/temp/
-
-name_WPR=$work/tempR/
-mkdir -p $name_WPR
-
 ##--------------------------------------------------------------
 ## set openMP environment
 
@@ -94,7 +88,9 @@ fi
 ##==============================================================
 ##==============================================================
 cat > namelist << EOF
-&system EVR=t OpPsi_test=f printlevel=0 /
+&system EVR=t OpPsi_test=f printlevel=0 
+MPI_Scheme=2
+/
 
 &constantes ene_unit='eV' /
 
@@ -153,7 +149,7 @@ X 1 2
  
 &inactives /
 
-&actives test=$test direct=2 Make_MatOp=f /
+&actives test=$test direct=4 Make_MatOp=f Save_MemGrid=t/
 
 &analyse max_ene=50. 'au' print=f print_psi=0 propa=t /
 

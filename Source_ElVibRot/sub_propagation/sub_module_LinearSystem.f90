@@ -60,7 +60,6 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
       USE mod_psi,    ONLY : param_psi
       USE mod_propa,  ONLY : param_propa,param_Davidson
       USE mod_Op
-      USE mod_MPI
       IMPLICIT NONE
 
       !----- psi ---------------------------------------------
@@ -105,7 +104,6 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
                             sub_LCpsi_TO_psi,sub_save_psi
       USE mod_Op
       USE mod_propa, ONLY : param_propa,param_Davidson
-      USE mod_MPI
       IMPLICIT NONE
 
       !----- psi ---------------------------------------------
