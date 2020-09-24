@@ -40,51 +40,37 @@
 !
 !===========================================================================
 !===========================================================================
-MODULE mod_EVR
- USE mod_system
-!$ USE omp_lib, only : omp_get_max_threads
- USE mod_Constant
- USE mod_Coord_KEO
- USE mod_PrimOp
- USE mod_basis
+Module mod_Hmax_MPI
 
- USE mod_psi
+Private 
+Public get_Hmin_MPI
 
- USE mod_propa
- USE mod_Op
- USE mod_analysis
- IMPLICIT NONE
+CONTAINS
+  SUBROUTINE get_Hmin_MPI(para_H)
+    USE mod_system
+    USE mod_SetOp
+    USE mod_MPI_aux
+    IMPLICIT NONE
 
- TYPE param_EVRT
+    TYPE(param_Op),                   intent(inout) :: para_H
 
-   !----- physical and mathematical constants ---------------------------
-   TYPE (constant) :: const_phys
+#if(run_MPI) 
 
-   !----- for the CoordType and Tnum --------------------------------------
-   TYPE (CoordType) :: mole
-   TYPE (Tnum)      :: para_Tnum
+    para_H%Hmin=1.0e10
+    DO i1_loop=iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)
+      ! Minimal value of Veff
+      temp_real=minval(para_H%OpGrid(1)%SRep%SmolyakRep(i1_loop)%V)
+      IF(temp_real<para_H%Hmin) para_H%Hmin=temp_real
+    ENDDO
 
-   !----- for the basis set ----------------------------------------------
-   TYPE (param_AllBasis) :: para_AllBasis
+    IF(MPI_np>1) THEN
+      CALL MPI_Reduce(para_H%Hmin,temp_real,size1_MPI,Real_MPI,MPI_MIN,                &
+                      root_MPI,MPI_COMM_WORLD,MPI_err)
+      IF(MPI_id==0) para_H%Hmin=temp_real
+      CALL MPI_Bcast(para_H%Hmin,size1_MPI,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+    ENDIF
 
-   !----- variables for the construction of H ----------------------------
-   TYPE (param_AllOp)  :: para_AllOp
+#endif
+  ENDSUBROUTINE
 
-
-   !----- variables pour la namelist analyse ----------------------------
-   TYPE (param_ana)           :: para_ana
-   TYPE (param_intensity)     :: para_intensity
-   logical                    :: intensity_only
-   integer                    :: nio_res_int
-
-   !----- variables for the WP propagation ----------------------------
-   TYPE (param_propa) :: para_propa
-   TYPE (param_psi)   :: WP0
- END TYPE param_EVRT
-
- TYPE (param_EVRT)              :: para_EVRT
- TYPE (param_EVRT), allocatable :: tab_EVRT(:) ! for the openmp
-
-
-END MODULE mod_EVR
-
+ENDMODULE  mod_Hmax_MPI

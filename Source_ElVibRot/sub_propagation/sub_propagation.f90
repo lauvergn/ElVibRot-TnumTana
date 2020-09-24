@@ -126,16 +126,21 @@ CONTAINS
       END IF
 !-----------------------------------------------------------
       para_propa%ana_psi%propa     = .TRUE.
-#if(run_MPI)
-      !para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
-      !para_propa%para_poly%Hmin = para_propa%Hmin
-      !para_propa%para_poly%Hmax = para_propa%Hmax
-#else
-      para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
-      para_propa%para_poly%Hmin = para_propa%Hmin
-      para_propa%para_poly%Hmax = para_propa%Hmax
-#endif
 
+!#if(run_MPI)
+!      !para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
+!      !para_propa%para_poly%Hmin = para_propa%Hmin
+!      !para_propa%para_poly%Hmax = para_propa%Hmax
+!#else
+!      para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
+!      para_propa%para_poly%Hmin = para_propa%Hmin
+!      para_propa%para_poly%Hmax = para_propa%Hmax
+!#endif
+      IF(.NOT. para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4) THEN
+        para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
+        para_propa%para_poly%Hmin = para_propa%Hmin
+        para_propa%para_poly%Hmax = para_propa%Hmax
+      ENDIF
 
       write(out_unitp,*) 'Tmax,DeltaT (ua)=> ',                         &
              para_propa%WPTmax,para_propa%WPdeltaT
@@ -175,7 +180,7 @@ CONTAINS
           CALL sub_propagation11(WP0,WP,1,para_H,para_propa)
         END IF
 
-        IF(MPI_id==0) CALL TF_autocorr(para_propa)
+        IF(keep_MPI) CALL TF_autocorr(para_propa)
 
       CASE (-3,3)
 
@@ -788,7 +793,6 @@ CONTAINS
       USE mod_psi,    ONLY : param_psi,ecri_psi
       USE mod_propa
       USE mod_march
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -820,13 +824,8 @@ CONTAINS
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING sub_propagation11'
         write(out_unitp,*) 'Tmax,DeltaT',para_propa%WPTmax,para_propa%WPdeltaT
-#if(run_MPI)
-        !write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
-        !                        para_propa%para_poly%Hmax
-#else
-        write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
-                                para_propa%para_poly%Hmax
-#endif
+        IF(.NOT. openmpi) write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,    &
+                                                         para_propa%para_poly%Hmax
         write(out_unitp,*)
         write(out_unitp,*) 'nb_ba,nb_qa',psi(1)%nb_ba,psi(1)%nb_qa
         write(out_unitp,*) 'nb_bi',psi(1)%nb_bi
@@ -847,36 +846,47 @@ CONTAINS
       CALL flush_perso(out_unitp)
 
 !     - parameters for poly (cheby and nOD) ... ------------
-#if(run_MPI)
-      !CALL initialisation1_poly(para_propa%para_poly,                   &
-      !                          para_propa%WPdeltaT,                    &
-      !                          para_propa%type_WPpropa)
+!#if(run_MPI)
+!      !CALL initialisation1_poly(para_propa%para_poly,                   &
+!      !                          para_propa%WPdeltaT,                    &
+!      !                          para_propa%type_WPpropa)
+!
+!!     - scaling of H ---------------------------------------
+!      !para_H%scaled = .TRUE.
+!      !para_H%E0     = para_propa%para_poly%E0
+!      !para_H%Esc    = para_propa%para_poly%Esc
+!!-----------------------------------------------------------
+!#else
+!      CALL initialisation1_poly(para_propa%para_poly,                   &
+!                                para_propa%WPdeltaT,                    &
+!                                para_propa%type_WPpropa)
+!!     - scaling of H ---------------------------------------
+!      para_H%scaled = .TRUE.
+!      para_H%E0     = para_propa%para_poly%E0
+!      para_H%Esc    = para_propa%para_poly%Esc
+!!-----------------------------------------------------------
+!#endif
 
-!     - scaling of H ---------------------------------------
-      !para_H%scaled = .TRUE.
-      !para_H%E0     = para_propa%para_poly%E0
-      !para_H%Esc    = para_propa%para_poly%Esc
-!-----------------------------------------------------------
-#else
-      CALL initialisation1_poly(para_propa%para_poly,                   &
-                                para_propa%WPdeltaT,                    &
-                                para_propa%type_WPpropa)
-!     - scaling of H ---------------------------------------
-      para_H%scaled = .TRUE.
-      para_H%E0     = para_propa%para_poly%E0
-      para_H%Esc    = para_propa%para_poly%Esc
-!-----------------------------------------------------------
-#endif
+      !IF(.NOT. openmpi) THEN
+      IF(.NOT. (para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4)) THEN
+        CALL initialisation1_poly(para_propa%para_poly,                   &
+                                  para_propa%WPdeltaT,                    &
+                                  para_propa%type_WPpropa)
+  !     - scaling of H ---------------------------------------
+        para_H%scaled = .TRUE.
+        para_H%E0     = para_propa%para_poly%E0
+        para_H%Esc    = para_propa%para_poly%Esc
+      ENDIF
 
 !------- propagation loop ---------------------------------
       T = ZERO
       IF (para_propa%restart) THEN
         CALL ReadWP_restart(T,psi,para_propa%file_WP_restart)
 
-        CALL file_open(para_propa%file_autocorr,no,append=.TRUE.)
+        IF(MPI_id==0) CALL file_open(para_propa%file_autocorr,no,append=.TRUE.)
 
       ELSE
-        CALL file_open(para_propa%file_autocorr,no)
+        IF(MPI_id==0) CALL file_open(para_propa%file_autocorr,no)
         cdot = Calc_AutoCorr(psi0(1),psi(1),para_propa,T,Write_AC=.TRUE.)
       END IF
 

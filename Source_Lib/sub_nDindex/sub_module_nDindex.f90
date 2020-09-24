@@ -2582,7 +2582,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
   END SUBROUTINE ADD_ONE_TO_nDval_p1
 
   SUBROUTINE calc_nDI(nDI,nDval,nDindex,err_sub)
-    TYPE (Type_nDindex)    :: nDindex
+    TYPE (Type_nDindex),intent(in) :: nDindex
     integer, intent(in)    :: nDval(:)
     integer, intent(inout) :: nDI
     integer,             intent(inout), optional     :: err_sub
@@ -3180,9 +3180,9 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
       FUNCTION calc_L_OF_nDval(nDval,nDindex,err_sub)
 
         integer :: calc_L_OF_nDval
-        TYPE (Type_nDindex)        :: nDindex
-        integer                    :: nDval(:)
-        integer,             intent(inout), optional     :: err_sub
+        TYPE (Type_nDindex),intent(in) :: nDindex
+        integer                        :: nDval(:)
+        integer,            intent(inout), optional     :: err_sub
 
         real(kind=Rkind)           :: Norm
         integer                    :: i,iNorm

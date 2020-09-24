@@ -62,8 +62,7 @@ CONTAINS
       USE mod_param_WP0
       USE mod_ana_psi
       USE mod_psi_io
-      USE mod_MPI
-      USE mod_MPI_Aid
+      USE mod_MPI_aux
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
@@ -100,7 +99,7 @@ CONTAINS
 
 !-----------------------------------------------------------
       IF (para_WP0%New_Read_WP0) THEN
-        IF(MPI_id==0) CALL sub_read_psi0(WP0,para_WP0,max_WP=1)
+        IF(keep_MPI) CALL sub_read_psi0(WP0,para_WP0,max_WP=1)
       ELSE
         ecri_numi = para_WP0%WP0n_h
         ecri_nume = para_WP0%WP0nb_elec
@@ -132,10 +131,10 @@ CONTAINS
           END IF
 
           CALL norm2_psi(WP0(1),GridRep=.TRUE.)
-          IF(MPI_id==0) write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
+          IF(keep_MPI) write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
           CALL flush_perso(out_unitp)
           CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
-          IF(MPI_id==0) write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
+          IF(keep_MPI) write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
           CALL flush_perso(out_unitp)
 
           IF (debug) THEN
@@ -200,8 +199,8 @@ CONTAINS
 
       END IF ! for para_WP0%New_Read_WP0
 
-      IF(MPI_id==0) CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
-      IF(MPI_id==0) write(out_unitp,*) 'norm2WP BasisRep',WP0(1)%norm2
+      IF(keep_MPI) CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
+      IF(keep_MPI) write(out_unitp,*) 'norm2WP BasisRep',WP0(1)%norm2
 
       !- clear WP0%...GridRep, if not need ------------------
       IF (para_WP0%WP0BasisRep) THEN

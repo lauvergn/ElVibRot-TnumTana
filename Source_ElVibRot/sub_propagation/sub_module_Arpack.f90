@@ -57,7 +57,7 @@ CONTAINS
                              param_WP0
       USE mod_Op
       USE mod_propa
-      USE mod_MPI
+      USE mod_MPI_aux
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -164,9 +164,10 @@ CONTAINS
       ELSE
         n = int(para_H%nb_tot,kind=4)
       END IF
-#if(run_MPI)
-      CALL MPI_Bcast(n,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)
+!      CALL MPI_Bcast(n,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+      IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(n,size1_MPI,root_MPI)
 
       IF (nb_diago == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -221,12 +222,12 @@ CONTAINS
 
       info   = 1
       IF (info /= 0) THEN
-        IF(MPI_id==0) CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                  &
-                                          para_propa%para_Davidson,para_H%cplx)
+        IF(keep_MPI) CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                   &
+                                            para_propa%para_Davidson,para_H%cplx)
         IF (para_propa%para_Davidson%With_Grid) THEN
-          IF(MPI_id==0) resid(:) = psi_loc%RvecG(:)
+          IF(keep_MPI) resid(:) = psi_loc%RvecG(:)
         ELSE
-          IF(MPI_id==0) resid(:) = psi_loc%RvecB(:)
+          IF(keep_MPI) resid(:) = psi_loc%RvecB(:)
         END IF
       END IF
 
@@ -269,13 +270,17 @@ CONTAINS
 !       | has been exceeded.                          |
 !       %---------------------------------------------%
 #if __ARPACK == 1
-        IF(MPI_id==0) call dnaupd(ido, bmat, n, which, nev, tol, resid,                &
+        IF(keep_MPI) call dnaupd(ido, bmat, n, which, nev, tol, resid,                 &
                                   ncv, v, ldv, iparam, ipntr, workd, workl, lworkl,    &
                                   info)
-#if(run_MPI)
-        CALL MPI_Bcast(info,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-        CALL MPI_Bcast(ido, size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)
+!        CALL MPI_Bcast(info,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+!        CALL MPI_Bcast(ido, size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+       IF(openmpi .AND. MPI_scheme/=1) THEN
+         CALL MPI_Bcast_(info,size1_MPI,root_MPI)
+         CALL MPI_Bcast_(ido ,size1_MPI,root_MPI)
+       ENDIF
 
 #else
         write(out_unitp,*) 'ERROR in ',name_sub
@@ -348,13 +353,14 @@ CONTAINS
 
 #if __ARPACK == 1
         ! consider p-arpark 
-        IF(MPI_id==0) call dneupd(rvec, 'A', select, d, d(1,2), v, ldv,               &
-                                  sigmar, sigmai, workev, bmat, n, which, nev, tol,   &
-                                  resid, ncv, v, ldv, iparam, ipntr, workd, workl,    &
+        IF(keep_MPI) call dneupd(rvec, 'A', select, d, d(1,2), v, ldv,                 &
+                                  sigmar, sigmai, workev, bmat, n, which, nev, tol,    &
+                                  resid, ncv, v, ldv, iparam, ipntr, workd, workl,     &
                                   lworkl, ierr )
-#if(run_MPI)
-        CALL MPI_Bcast(ierr,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)
+!        CALL MPI_Bcast(ierr,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+       IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(ierr,size1_MPI,root_MPI)
 #else
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) ' The ARPACK library is not present!'
@@ -389,9 +395,10 @@ CONTAINS
 
           first  = .true.
           nconv  = iparam(5)
-#if(run_MPI)
-          CALL MPI_Bcast(nconv,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)
+!          CALL MPI_Bcast(nconv,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+          IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(nconv,size1_MPI,root_MPI)
           do j=1, nconv
 
 !           %---------------------------%
@@ -407,20 +414,25 @@ CONTAINS
 !           | tolerance)                |
 !           %---------------------------%
 
-#if(run_MPI)
-            IF(MPI_id==0) THEN
-              IF(d(j,2)==zero) THEN
-                if_deq0=.TRUE.
-              ELSE
-                if_deq0=.FALSE.
+            IF(openmpi .AND. MPI_scheme/=1) THEN
+              IF(MPI_id==0) THEN
+                IF(d(j,2)==zero) THEN
+                  if_deq0=.TRUE.
+                ELSE
+                  if_deq0=.FALSE.
+                ENDIF
               ENDIF
+              !CALL MPI_Bcast(if_deq0,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
+              CALL MPI_Bcast_(if_deq0,size1_MPI,root_MPI)
             ENDIF
-            CALL MPI_Bcast(if_deq0,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
-            !if (d(j,2) == zero)  then
-            if (if_deq0)  then
-#else            
-            if (d(j,2) == zero)  then
-#endif
+            
+            temp_logi=.FALSE.
+            IF(openmpi .AND. MPI_scheme/=1) THEN
+              if(if_deq0) temp_logi=.TRUE.
+            ELSE
+              IF(d(j,2) == zero) temp_logi=.TRUE.
+            ENDIF
+            IF(temp_logi) THEN
 
 !             %--------------------%
 !             | Ritz value is real |
@@ -555,7 +567,7 @@ CONTAINS
 
       nb_diago = nconv
 
-      IF(MPI_id==0) CALL trie_psi(psi,Ene,nb_diago)
+      IF(keep_MPI) CALL trie_psi(psi,Ene,nb_diago)
 
       if(allocated(v)) deallocate(v)
       deallocate(workl)
@@ -596,7 +608,6 @@ CONTAINS
       USE mod_Op
       USE mod_psi,    ONLY : param_psi,Overlap_psi1_psi2,Set_symab_OF_psiBasisRep
       USE mod_propa
-      USE mod_MPI
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -636,9 +647,9 @@ CONTAINS
 
 
       IF (With_Grid) THEN
-        IF(MPI_id==0) psi1%RvecG(:) = V1(:)/sqrt(para_H%BasisnD%wrho(:))
+        IF(keep_MPI) psi1%RvecG(:) = V1(:)/sqrt(para_H%BasisnD%wrho(:))
       ELSE
-        IF(MPI_id==0) psi1%RvecB(:) = V1(:)
+        IF(keep_MPI) psi1%RvecB(:) = V1(:)
       END IF
 
       CALL sub_OpPsi(psi1,psi2,para_H,With_Grid=With_Grid)
@@ -652,9 +663,9 @@ CONTAINS
       END IF
 
       IF (With_Grid) THEN
-        IF(MPI_id==0) V2(:) = psi2%RvecG(:)*sqrt(para_H%BasisnD%wrho(:))
+        IF(keep_MPI) V2(:) = psi2%RvecG(:)*sqrt(para_H%BasisnD%wrho(:))
       ELSE
-        IF(MPI_id==0) V2(:) = psi2%RvecB(:)
+        IF(keep_MPI) V2(:) = psi2%RvecB(:)
       END IF
 
 !----------------------------------------------------------
@@ -673,7 +684,7 @@ CONTAINS
 
       USE mod_Op
       USE mod_propa
-      USE mod_MPI
+      USE mod_MPI_aux
       IMPLICIT NONE
 
       !----- Operator: Hamiltonian ----------------------------
@@ -773,9 +784,11 @@ CONTAINS
       IF(MPI_id==0) CALL file_open(Log_file,iunit)
 
       n = para_H%nb_tot
-#if(run_MPI)
-      CALL MPI_Bcast(n,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)
+!      CALL MPI_Bcast(n,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+      IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(n,size1_MPI,root_MPI)
+
       IF (nb_diago == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' nb_diago=0 is not possible with ARPACK'
@@ -824,12 +837,12 @@ CONTAINS
       info   = 0
       info   = 1
       IF (info /= 0) THEN
-        IF(MPI_id==0) CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                  &
+        IF(keep_MPI) CALL ReadWP0_Arpack(psi_loc,nb_diago,max_diago,                   &
                                           para_propa%para_Davidson,para_H%cplx)
         IF (para_propa%para_Davidson%With_Grid) THEN
-          IF(MPI_id==0) resid(:) = psi_loc%RvecG(:)
+          IF(keep_MPI) resid(:) = psi_loc%RvecG(:)
         ELSE
-          IF(MPI_id==0) resid(:) = psi_loc%RvecB(:)
+          IF(keep_MPI) resid(:) = psi_loc%RvecB(:)
         END IF
       END IF
 
@@ -872,14 +885,19 @@ CONTAINS
 !       | has been exceeded.                          |
 !       %---------------------------------------------%
 #if __ARPACK == 1
-        IF(MPI_id==0) call dsaupd(ido, bmat, n, which, nev, tol, resid,            &
+        IF(keep_MPI) call dsaupd(ido, bmat, n, which, nev, tol, resid,             &
                                   ncv, v, ldv, iparam, ipntr, workd, workl,        &
                                   lworkl, info )
-#if(run_MPI)
-        CALL MPI_Bcast(info,size1_MPI, MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-        CALL MPI_Bcast(ido, size1_MPI, MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-        CALL MPI_Bcast(ipntr,INT(11,4),MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)
+!        CALL MPI_Bcast(info,size1_MPI, MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+!        CALL MPI_Bcast(ido, size1_MPI, MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+!        CALL MPI_Bcast(ipntr,INT(11,Ikind),MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+        IF(openmpi .AND. MPI_scheme/=1) THEN
+          CALL MPI_Bcast_(info,size1_MPI,root_MPI)
+          CALL MPI_Bcast_(ido ,size1_MPI,root_MPI)
+          CALL MPI_Bcast_(ipntr,INT(11,kind=MPI_INTEGER_KIND),root_MPI)
+        ENDIF
 
 #else
           write(out_unitp,*) 'ERROR in ',name_sub
@@ -908,9 +926,9 @@ CONTAINS
          !CALL sub_OpPsi(psi_loc,Hpsi_loc,para_H)
          !workd(ipntr(2):ipntr(2)-1+n) = Hpsi_loc%RvecB(:)
          
-        !IF(MPI_id==0) psi_loc%RvecB(:) = workd(ipntr(1):ipntr(1)-1+n)
+        !IF(keep_MPI) psi_loc%RvecB(:) = workd(ipntr(1):ipntr(1)-1+n)
         !CALL sub_OpPsi(psi_loc,Hpsi_loc,para_H)
-        !IF(MPI_id==0) THEN
+        !IF(keep_MPI) THEN
         !  workd(ipntr(2):ipntr(2)-1+n) = Hpsi_loc%RvecB(:)
         
         IF(MPI_id==0) THEN  
@@ -960,12 +978,13 @@ CONTAINS
         rvec = .true.
 
 #if __ARPACK == 1
-        IF(MPI_id==0) call dseupd(rvec, 'All', select, d, v, ldv, sigma,                &
-                                  bmat, n, which, nev, tol, resid, ncv, v, ldv,         &
+        IF(keep_MPI) call dseupd(rvec, 'All', select, d, v, ldv, sigma,                &
+                                  bmat, n, which, nev, tol, resid, ncv, v, ldv,        &
                                   iparam, ipntr, workd, workl, lworkl, ierr )
-#if(run_MPI)
-        CALL MPI_Bcast(ierr,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)
+!        CALL MPI_Bcast(ierr,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+        IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(ierr,size1_MPI,root_MPI)
 
 #endif
 !       %----------------------------------------------%
@@ -995,9 +1014,11 @@ CONTAINS
         else
 
           nconv =  iparam(5)
-#if(run_MPI)
-          CALL MPI_Bcast(nconv,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
-#endif
+!#if(run_MPI)
+!          CALL MPI_Bcast(nconv,size1_MPI,MPI_Integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+!#endif
+          IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(nconv,size1_MPI,root_MPI)
+
           DO j=1, nconv
 
 !           %---------------------------%
@@ -1021,18 +1042,18 @@ CONTAINS
             !CALL sub_OpPsi(psi(j),Hpsi_loc,para_H)
             !ax(:) = Hpsi_loc%RvecB(:)
             
-            !IF(MPI_id==0) psi(j)%RvecB(:) = v(:,j)
+            !IF(keep_MPI) psi(j)%RvecB(:) = v(:,j)
             !CALL sub_OpPsi(psi(j),Hpsi_loc,para_H)
-            !IF(MPI_id==0) ax(:) = Hpsi_loc%RvecB(:)
+            !IF(keep_MPI) ax(:) = Hpsi_loc%RvecB(:)
 
 #if __ARPACK == 1
-            IF(MPI_id==0) THEN
+            IF(keep_MPI) THEN
               call daxpy(n, -d(j,1), v(:,j), 1, ax, 1)
               d(j,2) = dnrm2(n, ax, 1)
               d(j,2) = d(j,2) / abs(d(j,1))
             END IF
 #endif
-            IF(MPI_id==0) THEN
+            IF(keep_MPI) THEN
               IF (debug) write(out_unitp,*) 'j,ene ?',j,              &
                              d(j,1) * get_Conv_au_TO_unit('E','cm-1')
 
@@ -1040,7 +1061,7 @@ CONTAINS
               psi(j)%CAvOp    = Ene(j)
               psi(j)%IndAvOp  = para_H%n_Op  ! it should be 0
               psi(j)%convAvOp = .TRUE.
-            ENDIF ! for MPI_id==0
+            ENDIF ! for keep_MPI
           END DO
 
 !         %-------------------------------%
@@ -1048,7 +1069,7 @@ CONTAINS
 !         %-------------------------------%
 #if __ARPACK == 1
           ! bug here for some compiler, diable the output currently
-!          IF(MPI_id==0) call dmout(6, nconv, 2, d, maxncv, -6,                     &
+!          IF(keep_MPI) call dmout(6, nconv, 2, d, maxncv, -6,                         &
 !                        'Ritz values and relative residuals')
 #endif
         end if
@@ -1177,7 +1198,7 @@ CONTAINS
    para_WP0%file_WP0%name       = para_Davidson%name_file_readWP
    para_WP0%file_WP0%formatted  = para_Davidson%formatted_file_readWP
 
-   IF(MPI_id==0) CALL sub_read_psi0(psi0,para_WP0,max_diago,                           &
+   IF(keep_MPI) CALL sub_read_psi0(psi0,para_WP0,max_diago,                            &
                                     symab=para_Davidson%symab,ortho=.TRUE.)
 
    nb_diago = para_WP0%nb_WP0

@@ -88,6 +88,8 @@ cat > namelist << EOF
  &system 
   EVR=t 
   printlevel=0 
+  MPI_Scheme=2
+  MPI_mc=1
 /
  &constantes ene_unit='au' /
  &variables
@@ -160,7 +162,7 @@ X 1 2
    &basis_nD iQdyn=23        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
    &basis_nD iQdyn=24        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
  &inactives /
- &actives test=$test direct=2 Make_MatOp=f /
+ &actives test=$test direct=4 Make_MatOp=f Save_MemGrid=t/
 
  &analyse max_ana=$nb_ana max_ene=5.0 'au'
           print=f print_psi=0 Psi_ScalOp=f intensity=f arpack=$arpack davidson=$dav

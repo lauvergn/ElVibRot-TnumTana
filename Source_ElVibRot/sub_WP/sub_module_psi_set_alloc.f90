@@ -220,7 +220,7 @@
       !!@param: TODO
       !!@param: TODO
       SUBROUTINE alloc_psi(psi,BasisRep,GridRep)
-      USE mod_MPI_Aid
+      USE mod_MPI_aux
 
       TYPE (param_psi), intent(inout) :: psi
       logical, optional, intent(in)   :: BasisRep,GridRep
@@ -254,9 +254,9 @@
       IF (psi%BasisRep) THEN ! allocate psi%BasisRep
         IF (psi%cplx) THEN
           IF ( .NOT. allocated(psi%CvecB) ) THEN
-            IF(MPI_id==0) CALL alloc_NParray(psi%CvecB,(/psi%nb_tot/),'psi%CvecB','alloc_psi')
+            IF(keep_MPI) CALL alloc_NParray(psi%CvecB,(/psi%nb_tot/),'psi%CvecB','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: CvecB'
-            IF(MPI_id==0) psi%CvecB(:) = CZERO
+            IF(keep_MPI) psi%CvecB(:) = CZERO
           END IF
           IF ( allocated(psi%RvecB) ) THEN
             CALL dealloc_NParray(psi%RvecB,'psi%RvecB','alloc_psi')
@@ -264,9 +264,9 @@
           END IF
         ELSE
           IF ( .NOT. allocated(psi%RvecB) ) THEN
-            IF(MPI_id==0) CALL alloc_NParray(psi%RvecB,(/psi%nb_tot/),'psi%RvecB','alloc_psi')
+            IF(keep_MPI) CALL alloc_NParray(psi%RvecB,(/psi%nb_tot/),'psi%RvecB','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: RvecB'
-            IF(MPI_id==0) psi%RvecB(:) = ZERO
+            IF(keep_MPI) psi%RvecB(:) = ZERO
           END IF
           IF ( allocated(psi%CvecB) ) THEN
             CALL dealloc_NParray(psi%CvecB,'psi%CvecB','alloc_psi')
@@ -288,9 +288,9 @@
       IF (psi%GridRep) THEN ! allocate psi%GridRep
         IF (psi%cplx) THEN
           IF ( .NOT. allocated(psi%CvecG) ) THEN
-            IF(MPI_id==0) CALL alloc_NParray(psi%CvecG,(/psi%nb_qaie/),'psi%CvecG','alloc_psi')
+            IF(keep_MPI) CALL alloc_NParray(psi%CvecG,(/psi%nb_qaie/),'psi%CvecG','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: CvecG'
-            IF(MPI_id==0) psi%CvecG(:) = CZERO
+            IF(keep_MPI) psi%CvecG(:) = CZERO
           END IF
           IF ( allocated(psi%RvecG) ) THEN
             CALL dealloc_NParray(psi%RvecG,'psi%RvecG','alloc_psi')
@@ -298,9 +298,9 @@
           END IF
         ELSE
           IF ( .NOT. allocated(psi%RvecG) ) THEN
-            IF(MPI_id==0) CALL alloc_NParray(psi%RvecG,(/psi%nb_qaie/),'psi%RvecG','alloc_psi')
+            IF(keep_MPI) CALL alloc_NParray(psi%RvecG,(/psi%nb_qaie/),'psi%RvecG','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: RvecG'
-            IF(MPI_id==0) psi%RvecG(:) = ZERO
+            IF(keep_MPI) psi%RvecG(:) = ZERO
           END IF
           IF ( allocated(psi%CvecG) ) THEN
             CALL dealloc_NParray(psi%CvecG,'psi%CvecG','alloc_psi')
@@ -309,11 +309,11 @@
         END IF
       ELSE ! deallocate psi%GridRep
         IF ( allocated(psi%RvecG) ) THEN
-          IF(MPI_id==0) CALL dealloc_NParray(psi%RvecG,'psi%RvecG','alloc_psi')
+          IF(keep_MPI) CALL dealloc_NParray(psi%RvecG,'psi%RvecG','alloc_psi')
           IF (debug) write(out_unitp,*) 'dealloc: RvecG'
         END IF
         IF ( allocated(psi%CvecG) ) THEN
-          IF(MPI_id==0) CALL dealloc_NParray(psi%CvecG,'psi%CvecG','alloc_psi')
+          IF(keep_MPI) CALL dealloc_NParray(psi%CvecG,'psi%CvecG','alloc_psi')
           IF (debug) write(out_unitp,*) 'dealloc: CvecG'
         END IF
       END IF
@@ -322,7 +322,6 @@
         CALL alloc_NParray(psi%TDParam,[psi%nb_TDParam],'psi%TDParam','alloc_psi')
       end if
 
-#if(run_MPI)
       IF(psi%SRG_MPI) THEN
         IF(.NOT. allocated(psi%SR_G_length)) THEN
           CALL allocate_array(psi%SR_G_length,0,MPI_np-1)
@@ -362,7 +361,6 @@
         ENDIF
         ! consider deallocate RvecB,RvecG ...
       ENDIF
-#endif
 
       IF (debug) write(out_unitp,*) ' 2 test_alloc_psi'
 !-----------------------------------------------------------
@@ -2954,17 +2952,17 @@
 
             IF (psi%GridRep) THEN
               IF (psi%cplx) THEN
-                IF(MPI_id==0) psi_time_R%CvecG = psi%CvecG * cmplx(R,kind=Rkind)
+                IF(keep_MPI) psi_time_R%CvecG = psi%CvecG * cmplx(R,kind=Rkind)
               ELSE
-                IF(MPI_id==0) psi_time_R%RvecG = psi%RvecG * R
+                IF(keep_MPI) psi_time_R%RvecG = psi%RvecG * R
               END IF
             END IF
 
             IF (psi%BasisRep) THEN
               IF (psi%cplx) THEN
-                IF(MPI_id==0) psi_time_R%CvecB = psi%CvecB * cmplx(R,kind=Rkind)
+                IF(keep_MPI) psi_time_R%CvecB = psi%CvecB * cmplx(R,kind=Rkind)
               ELSE
-                IF(MPI_id==0) psi_time_R%RvecB = psi%RvecB * R
+                IF(keep_MPI) psi_time_R%RvecB = psi%RvecB * R
               END IF
             END IF
 
@@ -3047,7 +3045,7 @@
 
             IF (psi%BasisRep) THEN
               IF (psi%cplx) THEN
-                IF(MPI_id==0) psi_time_C%CvecB(:) = psi%CvecB * C
+                IF(keep_MPI) psi_time_C%CvecB(:) = psi%CvecB * C
               ELSE
                 write(out_unitp,*) ' ERROR : in psi_time_C'
                 write(out_unitp,*) ' I cannot multiply a real psi and a complex'
@@ -3058,7 +3056,7 @@
 
             IF (psi%GridRep) THEN
               IF (psi%cplx) THEN
-                IF(MPI_id==0) psi_time_C%CvecG(:) = psi%CvecG * C
+                IF(keep_MPI) psi_time_C%CvecG(:) = psi%CvecG * C
               ELSE
                 write(out_unitp,*) ' ERROR : in psi_time_C'
                 write(out_unitp,*) ' I cannot multiply a real psi and a complex'
@@ -3091,17 +3089,17 @@
 
             IF (psi%GridRep) THEN
               IF (psi%cplx) THEN
-                IF(MPI_id==0) psi_over_R%CvecG = psi%CvecG / cmplx(R,kind=Rkind)
+                IF(keep_MPI) psi_over_R%CvecG = psi%CvecG / cmplx(R,kind=Rkind)
               ELSE
-                IF(MPI_id==0) psi_over_R%RvecG = psi%RvecG / R
+                IF(keep_MPI) psi_over_R%RvecG = psi%RvecG / R
               END IF
             END IF
 
             IF (psi%BasisRep) THEN
               IF (psi%cplx) THEN
-                IF(MPI_id==0) psi_over_R%CvecB = psi%CvecB / cmplx(R,kind=Rkind)
+                IF(keep_MPI) psi_over_R%CvecB = psi%CvecB / cmplx(R,kind=Rkind)
               ELSE
-                IF(MPI_id==0) psi_over_R%RvecB = psi%RvecB / R
+                IF(keep_MPI) psi_over_R%RvecB = psi%RvecB / R
               END IF
             END IF
 
@@ -3127,7 +3125,7 @@
 
             IF (psi%BasisRep) THEN
               IF (psi%cplx) THEN
-                IF(MPI_id==0) psi_over_C%CvecB(:) = psi%CvecB / C
+                IF(keep_MPI) psi_over_C%CvecB(:) = psi%CvecB / C
               ELSE
                 write(out_unitp,*) ' ERROR : in psi_over_C'
                 write(out_unitp,*) ' I cannot divide a real psi by a complex'
@@ -3138,7 +3136,7 @@
 
             IF (psi%GridRep) THEN
               IF (psi%cplx) THEN
-                IF(MPI_id==0) psi_over_C%CvecG(:) = psi%CvecG / C
+                IF(keep_MPI) psi_over_C%CvecG(:) = psi%CvecG / C
               ELSE
                 write(out_unitp,*) ' ERROR : in psi_over_C'
                 write(out_unitp,*) ' I cannot divide a real psi by a complex'

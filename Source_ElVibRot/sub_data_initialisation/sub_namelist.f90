@@ -108,7 +108,7 @@
       logical, parameter :: debug=.FALSE.
       character (len=*), parameter :: name_sub='read_inactive'
 !      -----------------------------------------------------------------
-      IF(MPI_id==0) write(out_unitp,*) 'INACTIVES PARAMETERS'
+      write(out_unitp,*) 'INACTIVES PARAMETERS'
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
       END IF
@@ -305,7 +305,6 @@
       USE mod_CAP
       USE mod_HStep
       USE mod_Op
-      USE mod_MPI
       IMPLICIT NONE
 
 !----- for the CoordType and Tnum --------------------------------------
@@ -363,7 +362,7 @@
 
 
 !------- test on max_HADA and n_h ---------------------------------
-      IF(MPI_id==0) write(out_unitp,*) ' ACTIVES PARAMETERS'
+      write(out_unitp,*) ' ACTIVES PARAMETERS'
 
       IF (print_level > 0) write(out_unitp,*) 'BEGINNING read_active'
       IF (print_level > 0) write(out_unitp,*) 'nb_act1',mole%nb_act1
@@ -589,5 +588,8 @@
         para_ReadOp%nb_bRot         = 1
       END IF
       IF(MPI_id==0) write(out_unitp,*) 'The number of rotational basis is:',para_ReadOp%nb_bRot
+
+      IF(openmpi .AND. direct/=4)                                                      &
+         STOP 'use direct=4 for namelist "actives" when running with MPI'
 
       END SUBROUTINE read_active

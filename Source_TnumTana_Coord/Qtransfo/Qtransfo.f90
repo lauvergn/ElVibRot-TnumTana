@@ -206,7 +206,7 @@
           write(out_unitp,*) ' Check your data !!'
           STOP
         END IF
-        IF(MPI_id==0) write(out_unitp,*) '=========================================='
+        write(out_unitp,*) '=========================================='
 
         IF (debug) write(out_unitp,Coord_transfo)
 
@@ -670,7 +670,7 @@
 
 
         IF (debug) CALL Write_QTransfo(Qtransfo)
-        IF(MPI_id==0) write(out_unitp,*) '=========================================='
+        write(out_unitp,*) '=========================================='
 
       END SUBROUTINE read_Qtransfo
 
@@ -1345,7 +1345,7 @@
         END IF
 
         IF (Qtransfo%print_done .AND. .NOT. force_print_loc) RETURN
-        IF(MPI_id==0) write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'BEGINNING ',name_sub
 
         Qtransfo%print_done = .TRUE.
 
@@ -1490,7 +1490,7 @@
           write(out_unitp,*) ' Check the source!'
           STOP
         END SELECT
-        IF(MPI_id==0) write(out_unitp,*) 'END ',name_sub
+        write(out_unitp,*) 'END ',name_sub
 
         CALL flush_perso(out_unitp)
       END SUBROUTINE Write_Qtransfo

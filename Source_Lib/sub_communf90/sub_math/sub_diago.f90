@@ -7,7 +7,6 @@
       SUBROUTINE diagonalization(Mat,REig,Vec,n,type_diag,sort,phase)
       USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64,int32
       USE mod_system
-      USE mod_MPI
       IMPLICIT NONE
 
 
@@ -221,7 +220,6 @@
       SUBROUTINE diagonalization_HerCplx(Mat,Eig,Vec,n,type_diag,sort,phase)
       USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64,int32
       USE mod_system
-      USE mod_MPI
       IMPLICIT NONE
 
       integer             :: n
