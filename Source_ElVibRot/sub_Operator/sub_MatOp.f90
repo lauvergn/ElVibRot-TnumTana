@@ -2965,6 +2965,7 @@ CONTAINS
 
 
       END SUBROUTINE sub_MatOp_Grid
+      ! warning, if running with MPI, it needs modification, currrently not used
       SUBROUTINE sub_MatOp_Overlap_SG4(para_Op)
       USE mod_system
       USE mod_basis_BtoG_GtoB_SGType4

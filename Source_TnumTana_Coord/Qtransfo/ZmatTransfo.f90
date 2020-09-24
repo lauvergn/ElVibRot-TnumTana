@@ -327,12 +327,12 @@
             END IF
 
             IF (at > ZERO) THEN
-              ZmatTransfo%nat_act          = ZmatTransfo%nat_act + 1
-              symbole(ZmatTransfo%nat_act) = name_at
-              Z(ZmatTransfo%nat_act)       = ZZ
-              icf                          = func_ic(ZmatTransfo%nat_act)
+              ZmatTransfo%nat_act           = ZmatTransfo%nat_act + 1
+              symbole(ZmatTransfo%nat_act)  = name_at
+              Z(ZmatTransfo%nat_act)        = ZZ
+              icf                           = func_ic(ZmatTransfo%nat_act)
             ELSE
-              nat_dum          = nat_dum - 1
+              nat_dum                       = nat_dum - 1
               symbole(nat_dum) = name_at
               Z(nat_dum)       = ZZ
               icf              = func_ic(nat_dum)
@@ -390,7 +390,7 @@
                 icf              = func_ic(nat_dum)
               END IF
               ic1 = ZmatTransfo%ind_zmat(1,n1)
-              iz = iz+1
+              iz  = iz+1
               IF (n2 == 0) THEN
                 ic2 = 0
                 IF (ZmatTransfo%cos_th) THEN
@@ -1270,4 +1270,3 @@
       END SUBROUTINE Write_ZmatTransfo
 
       END MODULE mod_ZmatTransfo
-

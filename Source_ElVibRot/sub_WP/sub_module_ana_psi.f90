@@ -58,8 +58,8 @@ CONTAINS
 !================================================================
 !
 !     sub_analyze_psi :
-!       ....
-!       Rho1D, Rho2D
+!      ....
+!     Rho1D, Rho2D
 !
 !================================================================
 SUBROUTINE sub_analyze_tab_Psi(tab_psi,ana_psi,adia)
@@ -105,6 +105,7 @@ END SUBROUTINE sub_analyze_tab_Psi
 SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   USE mod_system
   USE mod_psi_set_alloc
+  USE mod_psi_B_TO_G
   IMPLICIT NONE
 
   !----- variables for the WP -------------------------------
@@ -165,7 +166,6 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
     pop = exp(-(ana_psi%Ene-ana_psi%ZPE)/Etemp) / ana_psi%Part_func
   END IF
 
-
   !----------------------------------------------------------------------
   ! tab_WeightChannels
   IF (ana_psi%propa) THEN
@@ -180,6 +180,9 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
     ELSE
       CALL Channel_weight(tab_WeightChannels,psi,                       &
                                         GridRep=.FALSE.,BasisRep=.TRUE.)
+      !IF (.NOT. ana_psi%GridDone) CALL sub_PsiBasisRep_TO_GridRep(psi)
+      !CALL Channel_weight(tab_WeightChannels,psi,                       &
+      !                                  GridRep=.TRUE.,BasisRep=.FALSE.)
       info = '#WP ' // int_TO_char(ana_psi%num_psi)
     END IF
     Psi_norm2 = sum(tab_WeightChannels)
@@ -404,8 +407,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
           !CALL calc_nDTk(WP(i),T)
 
   IF (allocated(tab_WeightChannels)) THEN
-    CALL dealloc_NParray(tab_WeightChannels,                    &
-                        "tab_WeightChannels",name_sub)
+    CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels",name_sub)
   END IF
   IF (allocated(info))     deallocate(info)
   IF (allocated(psi_line)) deallocate(psi_line)
@@ -433,11 +435,11 @@ END SUBROUTINE sub_analyze_psi
       USE mod_psi_B_TO_G
       IMPLICIT NONE
 
-      TYPE (param_psi)   :: Psi
-      TYPE (param_ana_psi), intent(inout) :: ana_psi
+      TYPE (param_psi),     intent(inout)   :: Psi
+      TYPE (param_ana_psi), intent(inout)   :: ana_psi
 
 !------ means value ---------------------------------------
-      real (kind=Rkind)  ::    moy_Qba(2*Psi%nb_act1)
+      real (kind=Rkind),    intent(inout)   :: moy_Qba(2*Psi%nb_act1)
 
 
 !------ working variables ---------------------------------
@@ -528,12 +530,14 @@ END SUBROUTINE sub_analyze_psi
       TYPE (param_ana_psi), intent(inout) :: ana_psi
 
 !------ value ---------------------------------------
-      real (kind=Rkind)  :: Mij(2,Psi%nb_bi*Psi%nb_be,Psi%nb_bi*Psi%nb_be)
+      real (kind=Rkind),    intent(inout) :: Mij(2,Psi%nb_bi*Psi%nb_be,Psi%nb_bi*Psi%nb_be)
 
 
 !------ working variables ---------------------------------
-      integer            :: i,j,i_q,i_ie,j_ie,iqie
-      real (kind=Rkind)  :: x,Rho,Rho_i(Psi%nb_bi*Psi%nb_be)
+      TYPE(OldParam)       :: OldPara
+      integer              :: i,j,i_q,i_ie,j_ie,iqie
+      real (kind=Rkind)    :: WrhonD,Rho,Rho_i(Psi%nb_bi*Psi%nb_be)
+      complex (kind=Rkind) :: CVec_bie(psi%nb_bi*psi%nb_be)
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub = 'sub_Rhoi_Rhoj_Over_Rho'
@@ -550,36 +554,32 @@ END SUBROUTINE sub_analyze_psi
 
       Mij(:,:,:)  = ZERO
 
+
       DO i_q=1,Psi%nb_qa
-        Rho_i(:) = ZERO
-        DO i_ie=1,Psi%nb_bi*Psi%nb_be
 
-          iqie = (i_ie-1)*Psi%nb_qa + i_q
+        WrhonD =  Rec_WrhonD(Psi%BasisnD,i_q,OldPara=OldPara)
 
-          IF (Psi%cplx) THEN
-            Rho_i(i_ie) = Rho_i(i_ie) + abs(Psi%CvecG(iqie))**2
-          ELSE
-            Rho_i(i_ie) = Rho_i(i_ie) + abs(Psi%RvecG(iqie))**2
-          END IF
-        END DO
-
+        IF (psi%cplx) THEN
+          CALL get_CVec_OF_psi_AT_ind_a(CVec_bie,psi,i_q,OldPara=OldPara)
+          Rho_i(:) = conjg(CVec_bie(:))*CVec_bie(:) * WrhonD
+        ELSE
+          CALL get_RVec_OF_psi_AT_ind_a(Rho_i,psi,i_q,OldPara=OldPara)
+          Rho_i(:) = Rho_i(:)**2 * WrhonD
+        END IF
 
         !- calculation of total density, Rho ----------------------------
         Rho = sum(Rho_i)
-
-        x =  Rec_WrhonD(Psi%BasisnD,i_q)
 
         DO i_ie=1,Psi%nb_bi*Psi%nb_be
         DO j_ie=1,Psi%nb_bi*Psi%nb_be
 
           IF (Rho > ana_psi%coherence_epsi)                             &
-             Mij(1,i_ie,j_ie) = Mij(1,i_ie,j_ie) + Rho_i(i_ie)*Rho_i(j_ie) * x/Rho
+             Mij(1,i_ie,j_ie) = Mij(1,i_ie,j_ie) + Rho_i(i_ie)*Rho_i(j_ie) / Rho
 
-          Mij(2,i_ie,j_ie) = Mij(2,i_ie,j_ie) + Rho_i(i_ie)*Rho_i(j_ie) * x
+          Mij(2,i_ie,j_ie) = Mij(2,i_ie,j_ie) + Rho_i(i_ie)*Rho_i(j_ie)
 
         END DO
         END DO
-
 
       END DO
 
@@ -627,12 +627,13 @@ END SUBROUTINE sub_analyze_psi
       real (kind=Rkind) :: Qmean_ie(psi%nb_act1,psi%nb_bi,psi%nb_be)
       real (kind=Rkind) :: x(Psi%BasisnD%ndim)
       integer           :: i_qa,i_qaie
-      integer           :: i_be,i_bi,i_ba,i_baie
+      integer           :: i_be,i_bi,i_ba,i_baie,i_bie
       integer           :: ii_baie,if_baie
       integer           :: i
-      real (kind=Rkind) :: WrhonD,temp
+      real (kind=Rkind) :: WrhonD
       logical           :: psiN,norm2GridRep,norm2BasisRep
-
+      real (kind=Rkind)    :: RVec_bie(psi%nb_bi*psi%nb_be)
+      complex (kind=Rkind) :: CVec_bie(psi%nb_bi*psi%nb_be)
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub = 'psi_Qba_ie_psi'
       logical,parameter :: debug = .FALSE.
@@ -669,19 +670,21 @@ END SUBROUTINE sub_analyze_psi
         !- calculation of x -------------------------------
         CALL Rec_x(x,psi%BasisnD,i_qa,OldPara)
 
+        IF (psi%cplx) THEN
+          CALL get_CVec_OF_psi_AT_ind_a(CVec_bie,psi,i_qa,OldPara=OldPara)
+          RVec_bie(:) = conjg(CVec_bie(:))*CVec_bie(:) * WrhonD
+        ELSE
+          CALL get_RVec_OF_psi_AT_ind_a(RVec_bie,psi,i_qa,OldPara=OldPara)
+          RVec_bie(:) = RVec_bie(:)**2 * WrhonD
+        END IF
+
+
         DO i_be=1,psi%nb_be
         DO i_bi=1,psi%nb_bi
-          i_qaie = i_qa + ( (i_bi-1)+(i_be-1)*psi%nb_bi ) * psi%nb_qa
+          i_bie = (i_bi-1)+(i_be-1)*psi%nb_bi + 1
 
-          IF (psi%cplx) THEN
-            temp = abs( psi%CvecG(i_qaie) )
-          ELSE
-            temp = psi%RvecG(i_qaie)
-          END IF
-          temp = WrhonD * temp**2
-
-          Qmean(:) = Qmean(:) + x(:) * temp
-          Qmean_ie(:,i_bi,i_be) = Qmean_ie(:,i_bi,i_be) + x(:) * temp
+          Qmean(:)              = Qmean(:)              + x(:) * RVec_bie(i_bie)
+          Qmean_ie(:,i_bi,i_be) = Qmean_ie(:,i_bi,i_be) + x(:) * RVec_bie(i_bie)
 
         END DO
         END DO
@@ -1037,12 +1040,15 @@ END SUBROUTINE sub_analyze_psi
       real (kind=Rkind), allocatable :: rho1D(:,:,:)
 
 
+      TYPE(OldParam)        :: OldPara
       integer               :: i_qa,i_qaie
-      integer               :: i_be,i_bi,i_ba
+      integer               :: i_be,i_bi,i_ba,i_bie
       integer               :: i_baie,f_baie
       real (kind=Rkind)     :: WrhonD,Weight
       complex (kind=Rkind)  :: temp
       real (kind=Rkind)     :: Rtemp,Qix
+      real (kind=Rkind)     :: RVec_bie(psi%nb_bi*psi%nb_be)
+      complex (kind=Rkind)  :: CVec_bie(psi%nb_bi*psi%nb_be)
 
       integer :: iq_act1,jq_act1,i,j,iq,ix,ix_TO_iQdyn
       integer :: nDval(psi%BasisnD%nDindG%ndim)
@@ -1130,18 +1136,20 @@ END SUBROUTINE sub_analyze_psi
                 END IF
               END DO
 
+              IF (psi%cplx) THEN
+                CALL get_CVec_OF_psi_AT_ind_a(CVec_bie,psi,i_qa,OldPara=OldPara)
+                RVec_bie(:) = conjg(CVec_bie(:))*CVec_bie(:) * WrhonD
+              ELSE
+                CALL get_RVec_OF_psi_AT_ind_a(RVec_bie,psi,i_qa,OldPara=OldPara)
+                RVec_bie(:) = RVec_bie(:)**2 * WrhonD
+              END IF
+
               DO i_be=1,psi%nb_be
               DO i_bi=1,psi%nb_bi
-                i_qaie=i_qa + ( (i_bi-1)+(i_be-1)*psi%nb_bi ) * psi%nb_qa
-
-                IF (psi%cplx) THEN
-                  temp = conjg(psi%CvecG(i_qaie))*psi%CvecG(i_qaie)
-                ELSE
-                  temp = cmplx(psi%RvecG(i_qaie)*psi%RvecG(i_qaie),ZERO,kind=Rkind)
-                END IF
-
+                i_bie = (i_bi-1)+(i_be-1)*psi%nb_bi + 1
                 iq_act1 = nDval(i_basis_act1)
-                rho1D(iq_act1,i_bi,i_be) = rho1D(iq_act1,i_bi,i_be) + WrhonD * real(temp,kind=Rkind)
+
+                rho1D(iq_act1,i_bi,i_be) = rho1D(iq_act1,i_bi,i_be) + RVec_bie(i_bie)
               END DO
               END DO
             END DO
@@ -1233,20 +1241,22 @@ END SUBROUTINE sub_analyze_psi
                 END IF
               END DO
 
+              IF (psi%cplx) THEN
+                CALL get_CVec_OF_psi_AT_ind_a(CVec_bie,psi,i_qa,OldPara=OldPara)
+                RVec_bie(:) = conjg(CVec_bie(:))*CVec_bie(:) * WrhonD
+              ELSE
+                CALL get_RVec_OF_psi_AT_ind_a(RVec_bie,psi,i_qa,OldPara=OldPara)
+                RVec_bie(:) = RVec_bie(:)**2 * WrhonD
+              END IF
+
               DO i_be=1,psi%nb_be
               DO i_bi=1,psi%nb_bi
-                i_qaie=i_qa + ( (i_bi-1)+(i_be-1)*psi%nb_bi ) * psi%nb_qa
-
-                IF (psi%cplx) THEN
-                  temp = conjg(psi%CvecG(i_qaie))*psi%CvecG(i_qaie)
-                ELSE
-                  temp = cmplx(psi%RvecG(i_qaie)*psi%RvecG(i_qaie),ZERO,kind=Rkind)
-                END IF
+                i_bie = (i_bi-1)+(i_be-1)*psi%nb_bi + 1
 
                 iq_act1 = nDval(i_basis_act1)
                 jq_act1 = nDval(j_basis_act1)
-                rho2D(iq_act1,jq_act1,i_bi,i_be) = rho2D(iq_act1,jq_act1,i_bi,i_be) +       &
-                                       WrhonD * real(temp,kind=Rkind)
+                rho2D(iq_act1,jq_act1,i_bi,i_be) = rho2D(iq_act1,jq_act1,i_bi,i_be) + &
+                                                                 RVec_bie(i_bie)
               END DO
               END DO
             END DO
@@ -1628,7 +1638,7 @@ END SUBROUTINE sub_analyze_psi
     character (len=*)    :: info
     logical          :: print_w
 
-    integer          :: i,ie,ii,ib,ibie,iq,ibiq,n
+    integer          :: i,ie,ii,ib,ibie,iq,ibiq,n,ii_baie,if_baie
     integer          :: max_dim,max_1D
     integer          :: max_indGr(psi%BasisnD%nDindB%ndim)
     integer          :: ndim_AT_ib(psi%BasisnD%nDindB%ndim)
@@ -1637,7 +1647,11 @@ END SUBROUTINE sub_analyze_psi
     character (len=:), allocatable :: state_name
 
     real (kind=Rkind)              :: r2
-    real (kind=Rkind), allocatable :: DiagRDcontrac(:) ! diagonal reduced density matrix with the contracted basis set (nbc,nbc)
+    real (kind=Rkind),    allocatable :: RDcontrac(:,:)   ! reduced density matrix with the contracted basis set (nbc,nbc)
+    real (kind=Rkind),    allocatable :: RD(:,:)          ! reduced density matrix (nb,nb)
+    complex (kind=Rkind), allocatable :: CRDcontrac(:,:)  ! reduced density matrix with the contracted basis set (nbc,nbc)
+    complex (kind=Rkind), allocatable :: CRD(:,:)         ! reduced density matrix (nb,nb)
+
     TYPE (param_RD),   allocatable :: para_RD(:) ! it is allocated only for BasisnD. The size is nb_basis
 
 !----- for debuging --------------------------------------------------
@@ -1668,10 +1682,11 @@ END SUBROUTINE sub_analyze_psi
     IF (psi%BasisnD%nb_basis > 1) THEN
       allocate(para_RD(psi%BasisnD%nb_basis))
 
-      para_RD(:)%RD_analysis = .FALSE.
       DO ib=1,size(para_RD)
         para_RD(ib)%RD_analysis =                                       &
                       psi%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_analysis
+
+        !para_RD(ib)%RD_analysis = .TRUE.
 
         para_RD(ib)%basis_index = ib
         IF (allocated(psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)) THEN
@@ -1740,42 +1755,54 @@ END SUBROUTINE sub_analyze_psi
           CALL flush_perso(out_unitp)
 
           !---- RD analysis --------------------------------------------
-          ! initialization for RD analysis
-!          IF (psi%BasisnD%nb_basis > 1) THEN
-!            allocate(para_RD(psi%BasisnD%nb_basis))
-!
-!            para_RD(:)%RD_analysis = .FALSE.
-!            DO ib=1,size(para_RD)
-!              para_RD(ib)%RD_analysis =                                 &
-!                      psi%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_analysis
-!
-!              para_RD(ib)%basis_index = ib
-!              IF (allocated(psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)) THEN
-!                CALL init_RD(para_RD(ib),psi%BasisnD%nDindB,            &
-!                             psi%BasisnD%tab_Pbasis(ib)%Pbasis%Rvec)
-!              ELSE
-!                CALL init_RD(para_RD(ib),psi%BasisnD%nDindB)
-!              END IF
-!
-!            END DO
-!          END IF
-
-          !---- RD analysis --------------------------------------------
           ! RD analysis
           IF (allocated(para_RD)) THEN
           IF (para_RD(iq)%RD_analysis) THEN
 
-            CALL calc_RD(para_RD(iq),psi%RvecB,DiagRDcontrac=DiagRDcontrac)
-            n = min(ndim_AT_ib(iq),size(DiagRDcontrac))
-            weight1Dact(iq,1:n) = DiagRDcontrac(1:n)
-            write(out_unitp,21) state_name // 'c',trim(info),iq,T,      &
-                           weight1Dact(iq,1:min(max_1D,n))
-            CALL flush_perso(out_unitp)
+            ii_baie = 1 + ( (ii-1)+ (ie-1)*psi%nb_bi ) * psi%nb_ba
+            if_baie = ii_baie -1 + psi%nb_ba
 
-            !write(out_unitp,*) 'Diag RD contracted',iq,DiagRDcontrac
-            IF (allocated(DiagRDcontrac)) THEN
-              CALL dealloc_NParray(DiagRDcontrac,'DiagRDcontrac',name_sub)
+            IF (psi%cplx) THEN
+              CALL calc_CRD(para_RD(iq),psi%CvecB(ii_baie:if_baie),     &
+                                           CRD=CRD,CRDcontrac=CRDcontrac)
+
+              IF (allocated(CRD)) THEN
+                n = min(ndim_AT_ib(iq),size(CRD,dim=1))
+                write(out_unitp,21) state_name // 'new',trim(info),iq,T,  &
+                            real([(CRD(i,i),i=1,min(max_1D,n))],kind=Rkind)
+                CALL flush_perso(out_unitp)
+                CALL dealloc_NParray(CRD,'CRD',name_sub)
+              END IF
+
+              IF (allocated(CRDcontrac)) THEN
+                n = min(ndim_AT_ib(iq),size(CRDcontrac,dim=1))
+                weight1Dact(iq,1:n) = real([(CRDcontrac(i,i),i=1,n)],kind=Rkind)
+                write(out_unitp,21) state_name // 'c',trim(info),iq,T,  &
+                           weight1Dact(iq,1:min(max_1D,n))
+                CALL flush_perso(out_unitp)
+                CALL dealloc_NParray(CRDcontrac,'CRDcontrac',name_sub)
+              END IF
+            ELSE
+              CALL calc_RD(para_RD(iq),psi%RvecB(ii_baie:if_baie),RD=RD,RDcontrac=RDcontrac)
+
+              IF (allocated(RD)) THEN
+                !n = min(ndim_AT_ib(iq),size(RD,dim=1))
+                !write(out_unitp,21) state_name // 'new',trim(info),iq,T,  &
+                !                      [(RD(i,i),i=1,min(max_1D,n))]
+                !CALL flush_perso(out_unitp)
+                CALL dealloc_NParray(RD,'RD',name_sub)
+              END IF
+
+              IF (allocated(RDcontrac)) THEN
+                n = min(ndim_AT_ib(iq),size(RDcontrac,dim=1))
+                weight1Dact(iq,1:n) = [(RDcontrac(i,i),i=1,n)]
+                write(out_unitp,21) state_name // 'c',trim(info),iq,T,  &
+                           weight1Dact(iq,1:min(max_1D,n))
+                CALL flush_perso(out_unitp)
+                CALL dealloc_NParray(RDcontrac,'RDcontrac',name_sub)
+              END IF
             END IF
+
           END IF
           END IF
           !---- END RD analysis ----------------------------------------
@@ -1824,9 +1851,9 @@ END SUBROUTINE sub_analyze_psi
     END SUBROUTINE calc_1Dweight_act1
 
 
-!=======================================================================================      
+!=======================================================================================
 !     norm^2 of psi (BasisRep or GridRep)
-!=======================================================================================      
+!=======================================================================================
       SUBROUTINE norm2_psi(psi,GridRep,BasisRep,ReNorm)
       USE mod_system
       USE mod_psi_set_alloc
@@ -2061,9 +2088,9 @@ END SUBROUTINE sub_analyze_psi
 !----------------------------------------------------------
 
       END SUBROUTINE renorm_psi
-!=======================================================================================      
+!=======================================================================================
 
-!=======================================================================================      
+!=======================================================================================
       SUBROUTINE renorm_psi_With_norm2(psi,GridRep,BasisRep)
       USE mod_system
       USE mod_psi_set_alloc
@@ -2177,18 +2204,18 @@ END SUBROUTINE sub_analyze_psi
   real (kind=Rkind) :: WrhonD,temp,max_w
   integer           :: nb_be,nb_bi
   integer           :: iSG,iqSG,err_sub ! for SG4
-  logical           :: SG4 = .TRUE.
   TYPE (OldParam)   :: OldPara
   real (kind=Rkind) :: WeightSG
 
 
 
 !- for debuging --------------------------------------------------
+  character(len=*), parameter :: name_sub='Channel_weight'
   logical,parameter :: debug = .FALSE.
   !logical,parameter :: debug = .TRUE.
 !-------------------------------------------------------
   IF (debug) THEN
-    write(out_unitp,*) 'BEGINNING Channel_weight'
+    write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'GridRep',GridRep
     write(out_unitp,*) 'BasisRep',BasisRep
     write(out_unitp,*) 'alloc tab_WeightChannels',allocated(tab_WeightChannels)
@@ -2202,27 +2229,30 @@ END SUBROUTINE sub_analyze_psi
   nb_bi = get_nb_bi_FROM_psi(psi)
 
   IF (GridRep .AND. BasisRep) THEN
-    write(out_unitp,*) ' ERROR in Channel_weight'
+    write(out_unitp,*) ' ERROR in ',name_sub
     write(out_unitp,*) ' GridRep=t and BasisRep=t !'
     STOP
   END IF
-
+  IF (.NOT. GridRep .AND. .NOT. BasisRep) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' GridRep=f and BasisRep=f !'
+    STOP
+  END IF
   IF (.NOT. allocated(tab_WeightChannels) .AND. nb_bi > 0 .AND. nb_be > 0) THEN
-    CALL alloc_NParray(tab_WeightChannels,(/nb_bi,nb_be/),              &
-                      "tab_WeightChannels","Channel_weight")
+    CALL alloc_NParray(tab_WeightChannels,[nb_bi,nb_be],                        &
+                      "tab_WeightChannels",name_sub)
     tab_WeightChannels(:,:) = ZERO
   END IF
 
   IF (debug) THEN
     write(out_unitp,*) 'nb_bi,nb_be',nb_bi,nb_be
     write(out_unitp,*) 'shape tab_WeightChannels',shape(tab_WeightChannels)
+    write(out_unitp,*) 'SG4',(psi%BasisnD%SparseGrid_type == 4)
   END IF
 
-SG4 = (SGtype == 4)
-SG4 = .FALSE.
-
-IF (SG4) THEN
-    CALL Channel_weight_SG4(tab_WeightChannels,psi,GridRep,BasisRep)
+IF (psi%BasisnD%SparseGrid_type == 4) THEN
+  IF (GridRep)  CALL Channel_weight_SG4_grid(tab_WeightChannels,psi)
+  IF (BasisRep) CALL Channel_weight_SG4_basis(tab_WeightChannels,psi)
 ELSE
   IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
 
@@ -2261,12 +2291,6 @@ ELSE
         !- calculation of WrhonD ------------------------------
         WrhonD = Rec_WrhonD(psi%BasisnD,i_qa,OldPara)
 
-!        IF (SG4) THEN
-!          CALL get_iqSG_iSG_FROM_iq(iSG,iqSG,i_qa,psi%BasisnD%para_SGType2,OldPara,err_sub)
-!          WrhonD = WrhonD * psi%BasisnD%WeightSG(iSG)
-!          !write(out_unitp,*) 'i_qa,iSG',i_qa,iSG,psi%BasisnD%WeightSG(iSG)
-!        END IF
-
         DO i_be=1,nb_be
         DO i_bi=1,nb_bi
           i_qaie = i_qa + ( (i_bi-1)+(i_be-1)*nb_bi ) * psi%nb_qa
@@ -2285,9 +2309,15 @@ ELSE
 
     ELSE
 
-      write(out_unitp,*) ' ERROR in Channel_weight',' from ',MPI_id
+      write(out_unitp,*) ' ERROR in ',name_sub,' from ',MPI_id
       IF (GridRep)  write(out_unitp,*) ' impossible to calculate the weights with the Grid'
       IF (BasisRep) write(out_unitp,*) ' impossible to calculate the weights with the Basis'
+      write(out_unitp,*) 'GridRep',GridRep
+      write(out_unitp,*) 'BasisRep',BasisRep
+      write(out_unitp,*)  'allo CvecG',allocated(psi%CvecG)
+      write(out_unitp,*)  'allo RvecG',allocated(psi%RvecG)
+      write(out_unitp,*)  'allo CvecB',allocated(psi%CvecB)
+      write(out_unitp,*)  'allo RvecB',allocated(psi%RvecB)
       STOP
     END IF
 
@@ -2320,13 +2350,13 @@ END IF
 !------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
-    write(out_unitp,*) 'END Channel_weight'
+    write(out_unitp,*) 'END ',name_sub
   END IF
 !------------------------------------------------------
 
   END SUBROUTINE Channel_weight
 
-  SUBROUTINE Channel_weight_SG4(tab_WeightChannels,psi,GridRep,BasisRep)
+  SUBROUTINE Channel_weight_SG4_grid(tab_WeightChannels,psi)
   USE mod_system
   USE mod_psi_set_alloc
   USE mod_basis_BtoG_GtoB_SGType4
@@ -2335,129 +2365,220 @@ END IF
 !- variables for the WP ----------------------------------------
   real (kind=Rkind), intent(inout), allocatable :: tab_WeightChannels(:,:)
   TYPE (param_psi),  intent(inout)              :: psi
-  logical,           intent(in)                 :: GridRep,BasisRep
 
 !-- working variables ---------------------------------
+  TYPE(Type_SmolyakRep)             :: WSRep ! smolyak rep for SparseGrid_type=4
 
-  TYPE (param_psi)          :: RCPsi(2)
-  TYPE(Type_SmolyakRep)     :: SRep,WSRep ! smolyak rep for SparseGrid_type=4
+  integer                           :: ib0,nb0,i_be,nb_be,i_bi,nb_bi
+  integer                           :: iG,iq,nq_AT_iG
+  complex (kind=Rkind), allocatable :: CVecG(:,:)
+  real (kind=Rkind),    allocatable :: RVecG(:,:)
 
-  integer           :: i_qa,i_qaie
-  integer           :: i_be,i_bi,i_ba,i_baie,ib0
-  integer           :: ii_baie,if_baie
-  real (kind=Rkind) :: WrhonD,temp,max_w
-  integer           :: nb_be,nb_bi
-  integer           :: iSG,iqSG,err_sub ! for SG4
-  TYPE (OldParam)   :: OldPara
-  real (kind=Rkind) :: WeightSG,Norm2
-
-
-
-!- for debuging --------------------------------------------------
-  !logical,parameter :: debug = .FALSE.
-  logical,parameter :: debug = .TRUE.
-!-------------------------------------------------------
+  !- for debuging --------------------------------------------------
+  character(len=*), parameter :: name_sub='Channel_weight_SG4_grid'
+  logical,parameter :: debug = .FALSE.
+  !logical,parameter :: debug = .TRUE.
+  !-------------------------------------------------------
   IF (debug) THEN
-    write(out_unitp,*) 'BEGINNING Channel_weight_SG4'
-    write(out_unitp,*) 'GridRep',GridRep
-    write(out_unitp,*) 'BasisRep',BasisRep
-    !write(out_unitp,*) 'psi'
-    !CALL ecri_psi(psi=psi)
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'psi'
+    CALL ecri_psi(psi=psi)
   END IF
 !-------------------------------------------------------
+  IF (.NOT. psi%GridRep) THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) '  This subroutine needs psi with a grid representation'
+    write(out_unitp,*) '  but,  GridRep',psi%GridRep
+    write(out_unitp,*) '  and  BasisRep',psi%BasisRep
+    write(out_unitp,*) '  => use Channel_weight_SG4_v0basis'
+    STOP 'ERROR in Channel_weight_SG4_grid: psi%GridRep=F'
+  END IF
+
+   WSRep = Set_weight_TO_SmolyakRep(                                   &
+                 psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
+                 psi%BasisnD%tab_basisPrimSG)
+   !write(out_unitp,*) 'Weight'
+   !CALL Write_SmolyakRep(WSRep)
 
   nb_be = get_nb_be_FROM_psi(psi)
   nb_bi = get_nb_bi_FROM_psi(psi)
 
   IF (psi%cplx) THEN
-    RCPsi = Psi
-    !CALL CplxPsi_TO_RCpsi(RCPsi,Psi)
+    ! psi almost in the right Smolyak representation.
+    iq = 0
+    DO iG=lbound(WSRep%SmolyakRep,dim=1),ubound(WSRep%SmolyakRep,dim=1)
+      nq_AT_iG = psi%BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+      nb0      = psi%BasisnD%para_SGType2%nb0
+!write(6,*) 'iG ',iG
+!write(6,*) 'size Psi%CvecG(iq+1:iq+nb0*nq_AT_iG) ',size(Psi%CvecG(iq+1:iq+nb0*nq_AT_iG))
+!write(6,*) 'nq_AT_iG,nb0 ',nq_AT_iG,psi%BasisnD%para_SGType2%nb0
+!write(6,*) 'nq_AT_iG*nb0 ',nq_AT_iG*psi%BasisnD%para_SGType2%nb0
+!flush(6)
 
-    !For the real part
+      CVecG = reshape(Psi%CvecG(iq+1:iq+nb0*nq_AT_iG),shape=[nq_AT_iG,psi%BasisnD%para_SGType2%nb0])
 
-    CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(1)%RVecB,        &
-                      psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
-                      psi%BasisnD%para_SGType2)
-    ib0 = 0
-    DO i_be=1,nb_be
-    DO i_bi=1,nb_bi
-      ib0 = ib0 + 1
-      tab_WeightChannels(i_bi,i_be) =                                   &
-        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+      ib0 = 0
+      DO i_be=1,nb_be
+      DO i_bi=1,nb_bi
+        ib0 = ib0 + 1
+        tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) +        &
+                          Psi%BasisnD%WeightSG(iG) * dot_product(CVecG(:,ib0), &
+                                        WSRep%SmolyakRep(iG)%V * CVecG(:,ib0))
+      END DO
+      END DO
+      iq = iq + nb0*nq_AT_iG
+      IF (allocated(CVecG)) deallocate(CVecG)
+
     END DO
-    END DO
-    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
-
-    !Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
-    !write(6,*) 'Norm2',Norm2
-
-    CALL BSmolyakRep_TO_GSmolyakRep(SRep,                               &
-                  psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
-                  psi%BasisnD%tab_basisPrimSG,psi%BasisnD%para_SGType2%nb0)
-    WSRep = Set_weight_TO_SmolyakRep(                                   &
-                  psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
-                  psi%BasisnD%tab_basisPrimSG)
-
-    ib0 = 0
-    DO i_be=1,nb_be
-    DO i_bi=1,nb_bi
-      ib0 = ib0 + 1
-      tab_WeightChannels(i_bi,i_be) =                                   &
-        dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG,ib0)
-    END DO
-    END DO
-    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
-
-!    Norm2 = dot_product_SmolyakRep_Grid(SRep,SRep,WSRep,psi%BasisnD%WeightSG)
-    !CALL Write_SmolyakRep(SRep)
-    !write(6,*) 'Norm2',Norm2
-
-    !For the imaginary part
-    CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(2)%RVecB,        &
-                      psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
-                      psi%BasisnD%para_SGType2)
-
-    ib0 = 0
-    DO i_be=1,nb_be
-    DO i_bi=1,nb_bi
-      ib0 = ib0 + 1
-      tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) +   &
-        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
-    END DO
-    END DO
-    !Norm2 = Norm2 + dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
-    !CALL Write_SmolyakRep(SRep)
 
    ELSE
-    CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,Psi%RVecB,              &
-                      psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,   &
-                      psi%BasisnD%para_SGType2)
-    ib0 = 0
-    DO i_be=1,nb_be
-    DO i_bi=1,nb_bi
-      ib0 = ib0 + 1
-      tab_WeightChannels(i_bi,i_be) =                                   &
-        dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
-    END DO
-    END DO
-    !CALL Write_SmolyakRep(SRep)
-    !Norm2 = dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG)
+     ! psi almost in the right Smolyak representation.
+     iq = 0
+     DO iG=lbound(WSRep%SmolyakRep,dim=1),ubound(WSRep%SmolyakRep,dim=1)
+       nq_AT_iG = psi%BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+
+       RVecG = reshape(Psi%RvecG(iq+1:iq+nq_AT_iG),shape=[nq_AT_iG,psi%BasisnD%para_SGType2%nb0])
+
+       ib0 = 0
+       DO i_be=1,nb_be
+       DO i_bi=1,nb_bi
+         ib0 = ib0 + 1
+         tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) +        &
+                           Psi%BasisnD%WeightSG(iG) * dot_product(RVecG(:,ib0), &
+                                         WSRep%SmolyakRep(iG)%V * RVecG(:,ib0))
+       END DO
+       END DO
+       iq = iq + nq_AT_iG
+       IF (allocated(RVecG)) deallocate(RVecG)
+
+     END DO
   END IF
 
-  !write(out_unitp,*) 'Norm2_SG4',Norm2
-
-  CALL dealloc_psi(RCPsi(1))
-  CALL dealloc_psi(RCPsi(2))
-
-  CALL dealloc_SmolyakRep(SRep)
+  CALL dealloc_SmolyakRep(WSRep)
 !------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
-    write(out_unitp,*) 'END Channel_weight_SG4'
+    write(out_unitp,*) 'END ',name_sub
   END IF
 !------------------------------------------------------
 
-  END SUBROUTINE Channel_weight_SG4
+END SUBROUTINE Channel_weight_SG4_grid
+SUBROUTINE Channel_weight_SG4_basis(tab_WeightChannels,psi)
+USE mod_system
+USE mod_psi_set_alloc
+USE mod_basis_BtoG_GtoB_SGType4
+IMPLICIT NONE
+
+!- variables for the WP ----------------------------------------
+real (kind=Rkind), intent(inout), allocatable :: tab_WeightChannels(:,:)
+TYPE (param_psi),  intent(inout)              :: psi
+
+!-- working variables ---------------------------------
+
+TYPE (param_psi)          :: RCPsi(2)
+TYPE(Type_SmolyakRep)     :: SRep ! smolyak rep for SparseGrid_type=4
+
+integer           :: i_qa,i_qaie
+integer           :: i_be,i_bi,i_ba,i_baie,ib0
+integer           :: ii_baie,if_baie
+real (kind=Rkind) :: WrhonD,temp,max_w
+integer           :: nb_be,nb_bi
+integer           :: iSG,iqSG,err_sub ! for SG4
+TYPE (OldParam)   :: OldPara
+real (kind=Rkind) :: WeightSG,Norm2
+
+
+
+!- for debuging --------------------------------------------------
+character(len=*), parameter :: name_sub='Channel_weight_SG4_basis'
+logical,parameter :: debug = .FALSE.
+!logical,parameter :: debug = .TRUE.
+!-------------------------------------------------------
+IF (debug) THEN
+  write(out_unitp,*) 'BEGINNING ',name_sub
+  !write(out_unitp,*) 'psi'
+  !CALL ecri_psi(psi=psi)
+END IF
+!-------------------------------------------------------
+
+IF (.NOT. psi%BasisRep) THEN
+  write(out_unitp,*) 'ERROR in ',name_sub
+  write(out_unitp,*) '  This subroutine needs psi with a basis representation'
+  write(out_unitp,*) '  but, BasisRep',psi%BasisRep
+  write(out_unitp,*) '  and   GridRep',psi%GridRep
+  write(out_unitp,*) '  => use Channel_weight_SG4_v0grid'
+  STOP 'ERROR in Channel_weight_SG4_basis: psi%BasisRep=F'
+END IF
+
+nb_be = get_nb_be_FROM_psi(psi)
+nb_bi = get_nb_bi_FROM_psi(psi)
+
+IF (psi%cplx) THEN
+  RCPsi = Psi
+
+  !For the real part
+  CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(1)%RVecB,        &
+                    psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
+                    psi%BasisnD%para_SGType2)
+  !write(out_unitp,*) 'Real Part (Basis)'
+  !CALL Write_SmolyakRep(SRep)
+
+  ib0 = 0
+  DO i_be=1,nb_be
+  DO i_bi=1,nb_bi
+    ib0 = ib0 + 1
+    tab_WeightChannels(i_bi,i_be) =                                   &
+      dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+  END DO
+  END DO
+  !write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+
+  !For the imaginary part
+  CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RCPsi(2)%RVecB,        &
+                    psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,  &
+                    psi%BasisnD%para_SGType2)
+  !write(out_unitp,*) 'Imaginary Part (Basis)'
+  !CALL Write_SmolyakRep(SRep)
+
+  ib0 = 0
+  DO i_be=1,nb_be
+  DO i_bi=1,nb_bi
+    ib0 = ib0 + 1
+    tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) +   &
+      dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+  END DO
+  END DO
+  !CALL Write_SmolyakRep(SRep)
+
+ ELSE
+  CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,Psi%RVecB,              &
+                    psi%BasisnD%tab_basisPrimSG,psi%BasisnD%nDindB,   &
+                    psi%BasisnD%para_SGType2)
+  ib0 = 0
+  DO i_be=1,nb_be
+  DO i_bi=1,nb_bi
+    ib0 = ib0 + 1
+    tab_WeightChannels(i_bi,i_be) =                                   &
+      dot_product_SmolyakRep_Basis(SRep,SRep,psi%BasisnD%WeightSG,ib0)
+  END DO
+  END DO
+  !CALL Write_SmolyakRep(SRep)
+END IF
+
+!write(out_unitp,*) 'Norm2_SG4',Norm2
+
+CALL dealloc_psi(RCPsi(1))
+CALL dealloc_psi(RCPsi(2))
+
+CALL dealloc_SmolyakRep(SRep)
+!------------------------------------------------------
+IF (debug) THEN
+  write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+  write(out_unitp,*) 'END ',name_sub
+END IF
+!------------------------------------------------------
+
+END SUBROUTINE Channel_weight_SG4_basis
       SUBROUTINE Channel_weight_contracHADA(w_harm,psi)
       USE mod_system
       USE mod_psi_set_alloc
@@ -2736,4 +2857,3 @@ END IF
       END SUBROUTINE calc_nDTk
 
 END MODULE mod_ana_psi
-

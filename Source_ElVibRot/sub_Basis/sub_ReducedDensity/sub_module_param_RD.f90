@@ -63,7 +63,7 @@ IMPLICIT NONE
     GENERIC,   PUBLIC  :: assignment(=) => RD2_TO_RD1
   END TYPE param_RD
 
-PUBLIC :: param_RD,dealloc_RD,init_RD,calc_RD,dealloc_tab_RD
+PUBLIC :: param_RD,dealloc_RD,init_RD,calc_RD,calc_CRD,dealloc_tab_RD
 
 CONTAINS
 
@@ -127,8 +127,8 @@ END SUBROUTINE RD2_TO_RD1
 SUBROUTINE init_RD(para_RD,nDindB,Rvec)
 
 TYPE (param_RD),                  intent(inout)        :: para_RD
-TYPE (Type_nDindex),              intent(in)           :: nDindB   ! multidimensional index for the full basis set
-real (kind=Rkind),   allocatable, intent(in), optional :: Rvec(:,:)                     ! real eigenvectors for the contraction
+TYPE (Type_nDindex),              intent(in)           :: nDindB    ! multidimensional index for the full basis set
+real (kind=Rkind),   allocatable, intent(in), optional :: Rvec(:,:) ! real eigenvectors for the contraction
 
 integer :: i,ibasis,IBb,IB,nbc
 integer :: nDval(nDindB%ndim)
@@ -151,12 +151,22 @@ character (len=*), parameter :: name_sub='init_RD'
   !para_RD%nb = maxval(nDindB%Tab_nDval(ibasis,:))
   para_RD%nb = nDindB%nDsize(ibasis)
 
-  write(out_unitp,*) 'para_RD%nb: ',para_RD%nb
+  IF (debug) write(out_unitp,*) 'para_RD%basis_index: ',para_RD%basis_index
+  IF (debug) write(out_unitp,*) 'para_RD%nb:          ',para_RD%nb
 
   para_RD%nDindex_ComplBasis = nDindB
 
   para_RD%nDindex_ComplBasis%nDsize(ibasis) = 1
   para_RD%nDindex_ComplBasis%nDend(ibasis)  = 1
+
+  IF (para_RD%nDindex_ComplBasis%packed) THEN
+    CALL dealloc_NParray(para_RD%nDindex_ComplBasis%Tab_nDval,          &
+                        "para_RD%nDindex_ComplBasis%Tab_nDval",name_sub)
+    CALL dealloc_NParray(para_RD%nDindex_ComplBasis%Tab_Norm,           &
+                        "para_RD%nDindex_ComplBasis%Tab_Norm",name_sub)
+    CALL dealloc_NParray(para_RD%nDindex_ComplBasis%Tab_L,              &
+                        "para_RD%nDindex_ComplBasis%Tab_L",name_sub)
+  END IF
 
   CALL init_nDindexPrim(para_RD%nDindex_ComplBasis,                     &
      para_RD%nDindex_ComplBasis%ndim,para_RD%nDindex_ComplBasis%nDsize, &
@@ -174,7 +184,6 @@ character (len=*), parameter :: name_sub='init_RD'
                     'para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB',name_sub)
 
   para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB(:,:) = 0
-
 
   DO iBb=1,nDindB%Max_nDI
     CALL calc_nDindex(nDindB,iBb,nDval)
@@ -218,17 +227,19 @@ character (len=*), parameter :: name_sub='init_RD'
   !-----------------------------------------------------------
 
 END SUBROUTINE init_RD
-SUBROUTINE calc_RD(para_RD,RvecB,printRD,DiagRDcontrac)
+SUBROUTINE calc_RD(para_RD,RvecB,printRD,RD,RDcontrac)
 
 TYPE (param_RD),                  intent(in)              :: para_RD
-real (kind=Rkind),   allocatable, intent(in)              :: RvecB(:) ! RvecB(nb_tot)
+real (kind=Rkind),                intent(in)              :: RvecB(:) ! RvecB(nb_tot)
 logical,                          intent(in),    optional :: printRD
-real (kind=Rkind),   allocatable, intent(inout), optional :: DiagRDcontrac(:) ! diagonal reduced density matrix with the contracted basis set (nbc,nbc)
+real (kind=Rkind),   allocatable, intent(inout), optional :: RD(:,:) ! reduced density matrix with the contracted basis set (nbc,nbc)
+real (kind=Rkind),   allocatable, intent(inout), optional :: RDcontrac(:,:) ! reduced density matrix with the contracted basis set (nbc,nbc)
 
 integer :: i,j,ibasis,IBb,JBb,IB,nbc
 
-real (kind=Rkind),  allocatable    :: RD(:,:) ! reduced density matrix (nb,nb)
-real (kind=Rkind),  allocatable    :: RDcontrac(:,:) ! reduced density matrix with the contracted basis set (nbc,nbc)
+real (kind=Rkind),  allocatable    :: RDcontrac_loc(:,:) ! reduced density matrix with the contracted basis set (nbc,nbc)
+real (kind=Rkind),  allocatable    :: RD_loc(:,:) ! reduced density matrix with the contracted basis set (nbc,nbc)
+
 logical :: printRD_loc
 
 
@@ -244,60 +255,62 @@ character (len=*), parameter :: name_sub='calc_RD'
   END IF
   !-----------------------------------------------------------
 
-  IF (.NOT. allocated(RvecB)) THEN
+  IF (size(RvecB) /= maxval(para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB)) THEN
     write(out_unitp,*) 'ERROR in ',name_sub
-    write(out_unitp,*) 'RvecB is not allocated!!'
+    write(out_unitp,*) 'the size of RvecB is not consistent with tab_OF_iBComplBasis_AND_ib_TO_iB'
+    write(out_unitp,*) 'size(RvecB):',size(RvecB)
+    write(out_unitp,*) 'maxval(tab_OF_iBComplBasis_AND_ib_TO_iB):',     &
+                        maxval(para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB)
     write(out_unitp,*) ' Check the fortran.'
-    STOP ' ERROR RvecB(:) is not allocated'
+    STOP ' ERROR calc_RD: inconsistent parameters'
   END IF
 
   printRD_loc = .FALSE.
   IF (present(printRD)) printRD_loc = printRD
   printRD_loc = printRD_loc .OR. debug
 
-  CALL alloc_NParray(RD,[para_RD%nb,para_RD%nb],'RD',name_sub)
-  RD(:,:) = ZERO
+  CALL alloc_NParray(RD_loc,[para_RD%nb,para_RD%nb],'RD',name_sub)
+  RD_loc(:,:) = ZERO
   DO iB=1,para_RD%nbb_ComplBasis
     DO i=1,para_RD%nb
     DO j=1,para_RD%nb
       iBb = para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB(i,iB)
       jBb = para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB(j,iB)
-      IF (iBb > 0 .AND. jBb > 0 ) RD(i,j) = RD(i,j) + RvecB(iBb)*RvecB(jBb)
+      IF (iBb > 0 .AND. jBb > 0 ) RD_loc(i,j) = RD_loc(i,j) + RvecB(iBb)*RvecB(jBb)
 
     END DO
     END DO
   END DO
 
   IF (debug) THEN
-    write(out_unitp,*) 'RD(:,:)'
-    CALL Write_Mat(RD,out_unitp,5)
+    write(out_unitp,*) 'RD_loc(:,:)'
+    CALL Write_Mat(RD_loc,out_unitp,5)
   END IF
 
-  IF (printRD_loc) write(out_unitp,*) 'Diag RD           ',para_RD%basis_index,(RD(i,i),i=1,para_RD%nb)
+  IF (printRD_loc) write(out_unitp,*) 'Diag RD           ',para_RD%basis_index,(RD_loc(i,i),i=1,para_RD%nb)
 
   IF (allocated(para_RD%cbb)) THEN
 
     nbc = size(para_RD%cbb,dim=2)
-    CALL alloc_NParray(RDcontrac,[nbc,nbc],'RDcontrac',name_sub)
-    RDcontrac(:,:) = matmul(transpose(para_RD%cbb),matmul(RD,para_RD%cbb))
+    CALL alloc_NParray(RDcontrac_loc,[nbc,nbc],'RDcontrac',name_sub)
+    RDcontrac_loc(:,:) = matmul(transpose(para_RD%cbb),matmul(RD_loc,para_RD%cbb))
 
-    IF (printRD_loc) write(out_unitp,*) 'Diag RD contracted',para_RD%basis_index,(RDcontrac(i,i),i=1,nbc)
-
-    IF (present(DiagRDcontrac)) THEN
-      IF (allocated(DiagRDcontrac)) CALL dealloc_NParray(DiagRDcontrac,'DiagRDcontrac',name_sub)
-      CALL alloc_NParray(DiagRDcontrac,[nbc],'DiagRDcontrac',name_sub)
-      DiagRDcontrac(:) = [(RDcontrac(i,i),i=1,nbc)]
-    END IF
+    IF (printRD_loc) write(out_unitp,*) 'Diag RD contracted',para_RD%basis_index,(RDcontrac_loc(i,i),i=1,nbc)
 
     IF (debug) THEN
-      write(out_unitp,*) 'RDcontrac(:,:)'
-      CALL Write_Mat(RDcontrac,out_unitp,5)
+      write(out_unitp,*) 'RDcontrac_loc(:,:)'
+      CALL Write_Mat(RDcontrac_loc,out_unitp,5)
     END IF
+
+    IF (present(RDcontrac)) CALL MOVE_ALLOC( TO=RDcontrac, FROM=RDcontrac_loc )
+
 
   END IF
 
-  IF (allocated(RD))        CALL dealloc_NParray(RD,       'RD',       name_sub)
-  IF (allocated(RDcontrac)) CALL dealloc_NParray(RDcontrac,'RDcontrac',name_sub)
+  IF (present(RD)) CALL MOVE_ALLOC( TO=RD, FROM=RD_loc )
+
+  IF (allocated(RD_loc))        CALL dealloc_NParray(RD_loc,       'RD',       name_sub)
+  IF (allocated(RDcontrac_loc)) CALL dealloc_NParray(RDcontrac_loc,'RDcontrac',name_sub)
 
   !-----------------------------------------------------------
   IF (debug) THEN
@@ -306,7 +319,98 @@ character (len=*), parameter :: name_sub='calc_RD'
   !-----------------------------------------------------------
 
 END SUBROUTINE calc_RD
+SUBROUTINE calc_CRD(para_RD,CvecB,printRD,CRD,CRDcontrac)
 
+TYPE (param_RD),                   intent(in)              :: para_RD
+complex (kind=Rkind),              intent(in)              :: CvecB(:) ! CvecB(nb_tot)
+logical,                           intent(in),    optional :: printRD
+complex (kind=Rkind), allocatable, intent(inout), optional :: CRD(:,:) ! reduced density matrix with the contracted basis set (nbc,nbc)
+complex (kind=Rkind), allocatable, intent(inout), optional :: CRDcontrac(:,:) ! reduced density matrix with the contracted basis set (nbc,nbc)
+
+integer :: i,j,ibasis,IBb,JBb,IB,nbc
+
+complex (kind=Rkind),  allocatable    :: CRDcontrac_loc(:,:) ! reduced density matrix with the contracted basis set (nbc,nbc)
+complex (kind=Rkind),  allocatable    :: CRD_loc(:,:) ! reduced density matrix with the contracted basis set (nbc,nbc)
+
+logical :: printRD_loc
+
+
+logical,parameter :: debug=.FALSE.
+!logical,parameter :: debug=.TRUE.
+character (len=*), parameter :: name_sub='calc_CRD'
+
+  IF (.NOT. para_RD%RD_analysis) RETURN
+
+  !-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+  END IF
+  !-----------------------------------------------------------
+
+  IF (size(CvecB) /= maxval(para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB)) THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) 'the size of CvecB is not consistent with tab_OF_iBComplBasis_AND_ib_TO_iB'
+    write(out_unitp,*) 'size(CvecB):',size(CvecB)
+    write(out_unitp,*) 'maxval(tab_OF_iBComplBasis_AND_ib_TO_iB):',     &
+                        maxval(para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB)
+    write(out_unitp,*) ' Check the fortran.'
+    STOP ' ERROR calc_CRD: inconsistent parameters'
+  END IF
+
+  printRD_loc = .FALSE.
+  IF (present(printRD)) printRD_loc = printRD
+  printRD_loc = printRD_loc .OR. debug
+
+  CALL alloc_NParray(CRD_loc,[para_RD%nb,para_RD%nb],'CRD',name_sub)
+  CRD_loc(:,:) = CZERO
+  DO iB=1,para_RD%nbb_ComplBasis
+    DO i=1,para_RD%nb
+    DO j=1,para_RD%nb
+      iBb = para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB(i,iB)
+      jBb = para_RD%tab_OF_iBComplBasis_AND_ib_TO_iB(j,iB)
+      IF (iBb > 0 .AND. jBb > 0 ) CRD_loc(i,j) = CRD_loc(i,j) + conjg(CvecB(iBb))*CvecB(jBb)
+
+    END DO
+    END DO
+  END DO
+
+  IF (debug) THEN
+    write(out_unitp,*) 'CRD_loc(:,:)'
+    CALL Write_Mat(CRD_loc,out_unitp,5)
+  END IF
+
+  IF (printRD_loc) write(out_unitp,*) 'Diag CRD           ',para_RD%basis_index,(CRD_loc(i,i),i=1,para_RD%nb)
+
+  IF (allocated(para_RD%cbb)) THEN
+
+    nbc = size(para_RD%cbb,dim=2)
+    CALL alloc_NParray(CRDcontrac_loc,[nbc,nbc],'CRDcontrac',name_sub)
+    CRDcontrac_loc(:,:) = matmul(transpose(para_RD%cbb),matmul(CRD_loc,para_RD%cbb))
+
+    IF (printRD_loc) write(out_unitp,*) 'Diag CRD contracted',para_RD%basis_index,(CRDcontrac_loc(i,i),i=1,nbc)
+
+    IF (debug) THEN
+      write(out_unitp,*) 'CRDcontrac_loc(:,:)'
+      CALL Write_Mat(CRDcontrac_loc,out_unitp,5)
+    END IF
+
+    IF (present(CRDcontrac)) CALL MOVE_ALLOC( TO=CRDcontrac, FROM=CRDcontrac_loc )
+
+
+  END IF
+
+  IF (present(CRD)) CALL MOVE_ALLOC( TO=CRD, FROM=CRD_loc )
+
+  IF (allocated(CRD_loc))        CALL dealloc_NParray(CRD_loc,       'CRD',       name_sub)
+  IF (allocated(CRDcontrac_loc)) CALL dealloc_NParray(CRDcontrac_loc,'CRDcontrac',name_sub)
+
+  !-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'END ',name_sub
+  END IF
+  !-----------------------------------------------------------
+
+END SUBROUTINE calc_CRD
 SUBROUTINE dealloc_tab_RD(para_RD)
 
   TYPE (param_RD),     intent(inout), allocatable :: para_RD(:)

@@ -48,8 +48,7 @@ x 0.
 pi 3.141592653589793238462643383279d0
 dh 0.0
 
- &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80
-           contrac=t nbc=20 name_contrac_file="ONE_MODE/cc1_51_80" /
+ &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 contrac=t nbc=20 name_contrac_file="ONE_MODE/cc1_51_80" /
  &basis_nD nb_basis=2 name="direct_prod" L_SparseBasis=7 L_SparseGrid=8 SparseGrid_type=2 /
     &basis_nD iQact(1)=2 name="Hm" nb=8 Q0=3.2 scaleQ=5.1  Nested=2 nq_max_Nested=9 /
     &basis_nD iQact(1)=3 name="Hm" nb=8 Q0=2.2 scaleQ=11.0 Nested=2 nq_max_Nested=9 /

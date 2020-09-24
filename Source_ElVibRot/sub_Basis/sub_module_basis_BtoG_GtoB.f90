@@ -886,8 +886,8 @@
         complex (kind=Rkind), allocatable   :: Cvec(:)
         complex (kind=Rkind), allocatable   :: Cvec_temp(:)
 
-        real (kind=Rkind), allocatable :: RVecG(:)
-        real (kind=Rkind), allocatable :: RVecB(:)
+        real (kind=Rkind), allocatable      :: RVecG(:)
+        real (kind=Rkind), allocatable      :: RVecB(:)
 
         integer                             :: nbb,ibb1,ibb2
         integer                             :: nnb,nb2,ib,ib2,newnb2
@@ -921,14 +921,6 @@
           write(out_unitp,*) ' the vector is real !!'
           STOP
         END IF
-
-
-        !IF (BasisTOGrid_omp == 0) THEN
-        !  nb_thread = 1
-        !ELSE
-        !  nb_thread = BasisTOGrid_maxth
-        !END IF
-        !write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
 
         IF (basis_set%cplx .AND. basis_set%packed_done) THEN
 
@@ -1136,10 +1128,11 @@
 
           CASE (4) ! Sparse basis (Smolyak 4th implementation)
             CALL alloc_NParray(RVecB,shape(CVecB),'RVecB',name_sub)
-            !CALL alloc_NParray(RVecG,shape(CVecG),'RVecG',name_sub)
 
             RVecB(:) = real(CVecB,kind=Rkind)
-            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
+            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,                 &
+              basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
+            !write(6,*) 'real(CVecB)' ; CALL Write_SmolyakRep(SRep)
 
             IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
               CALL BSmolyakRep_TO_GSmolyakRep(SRep,                         &
@@ -1149,6 +1142,7 @@
               CALL BSmolyakRep_TO3_GSmolyakRep(SRep,basis_set%para_SGType2, &
                                                basis_set%tab_basisPrimSG)
             END IF
+            !write(6,*) 'real(CVecG)' ; CALL Write_SmolyakRep(SRep)
 
             IF(openmpi .AND. MPI_scheme==1) THEN
               itabR=0
@@ -1183,10 +1177,12 @@
               END DO
             ENDIF
             CALL dealloc_SmolyakRep(SRep)
-
+            !write(6,*) 'real(CVecG)?',CVecG
 
             RVecB(:) = aimag(CVecB)
-            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
+            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,              &
+              basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
+            !write(6,*) 'im(CVecB)' ; CALL Write_SmolyakRep(SRep)
 
             IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
               CALL BSmolyakRep_TO_GSmolyakRep(SRep,                         &
@@ -1196,6 +1192,7 @@
               CALL BSmolyakRep_TO3_GSmolyakRep(SRep,basis_set%para_SGType2, &
                                                basis_set%tab_basisPrimSG)
             END IF
+            !write(6,*) 'im(CVecG)' ; CALL Write_SmolyakRep(SRep)
 
             IF(openmpi .AND. MPI_scheme==1) THEN
               itabR=0
@@ -1234,9 +1231,9 @@
               END DO
             ENDIF
             CALL dealloc_SmolyakRep(SRep)
+            !write(6,*) 'CVecG?',CVecG
 
             CALL dealloc_NParray(RVecB,'RVecB',name_sub)
-            !CALL dealloc_NParray(RVecG,'RVecG',name_sub)
 
           CASE DEFAULT
             write(out_unitp,*) ' ERROR in ',name_sub
@@ -1245,12 +1242,6 @@
             STOP
           END SELECT
 
-
-          IF (basis_set%nb_SG > 0) THEN ! for Sparse Grid
-
-          ELSE ! for direct-product grid
-
-          END IF
         END IF
 
       END SUBROUTINE RecCVecB_TO_CVecG
@@ -1733,5 +1724,242 @@
        END IF
 
       END SUBROUTINE DerivOp_TO_CVecG
+
+      RECURSIVE SUBROUTINE DerivOp_TO_CVecB(CVecBin,CVecBout,nb,basis_set,tab_der)
+        USE mod_basis_BtoG_GtoB_SGType4
+        IMPLICIT NONE
+        TYPE (basis),         intent(in)              :: basis_set
+        integer,              intent(in)              :: nb
+        complex (kind=Rkind), intent(inout)           :: CVecBout(:)
+        complex (kind=Rkind), intent(in)              :: CVecBin(:)
+        integer,              intent(in),   optional  :: tab_der(2)
+
+        integer :: tab_der_loc(2),dnba_ind(2),iQact_ba,k
+        complex (kind=Rkind), allocatable   :: CTempG(:,:,:)
+        complex (kind=Rkind), allocatable   :: CTempB(:,:)
+        TYPE(Type_SmolyakRep)               :: SRep ! smolyak rep for SparseGrid_type=4
+
+        complex (kind=Rkind), allocatable   :: CG(:)
+        complex (kind=Rkind), allocatable   :: CB(:)
+        real (kind=Rkind), allocatable      :: dnb(:,:)
+        complex (kind=Rkind), allocatable   :: dncb(:,:)
+
+        real (kind=Rkind),    allocatable   :: OpRBB(:,:)
+        complex (kind=Rkind), allocatable   :: OpCBB(:,:)
+
+
+        real (kind=Rkind), allocatable      :: RVecG(:)
+        real (kind=Rkind), allocatable      :: RVecB(:)
+
+        integer                             :: nbb,ibb1,ibb2
+        integer                             :: nnb,nb2,ib,ib2,newnb2
+        integer                             :: nnq,nq2,iq,iq2
+        integer                             :: ibasis
+        integer                             :: i_SG,iq0_SG,iq1_SG,nq_SG
+
+        integer                             :: itabR,iG,nR
+
+        integer                             :: nb_thread
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='DerivOp_TO_CVecB'
+      logical, parameter :: debug=.FALSE.
+!     logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+
+        IF (present(tab_der)) THEN
+          tab_der_loc(:) = tab_der(:)
+        ELSE
+          tab_der_loc(:) = 0
+        END IF
+        WHERE (tab_der_loc < 0) tab_der_loc = 0
+
+        IF (basis_set%cplx) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' the basis is complex but the'
+          write(out_unitp,*) ' the vector is real !!'
+          STOP
+        END IF
+
+        IF (basis_set%cplx .AND. basis_set%packed_done) THEN
+          STOP ' in : DerivOp_TO_CVecB cplx basis not yet'
+          dnba_ind(:) = basis_set%Tabder_Qdyn_TO_Qbasis(tab_der_loc(:))
+
+          IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN ! dnba_ind(:)=0 => no derivative
+            CVecBout(:) = CVecBin
+          ELSE
+            !CALL Get2_MatdnCBB(basis_set,OpCBB,dnba_ind)
+            CVecBout(1:nb) = matmul(OpCBB(1:nb,1:nb),CVecBin(1:nb))
+            deallocate(OpCBB)
+          END IF
+
+        ELSE IF (.NOT. basis_set%cplx .AND. basis_set%packed_done) THEN
+
+          dnba_ind(:) = basis_set%Tabder_Qdyn_TO_Qbasis(tab_der_loc(:))
+
+          IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN ! dnba_ind(:)=0 => no derivative
+            CVecBout(:) = CVecBin
+          ELSE
+            CALL Get2_MatdnRBB(basis_set,OpRBB,dnba_ind)
+            CVecBout(1:nb) = matmul(OpRBB(1:nb,1:nb),CVecBin(1:nb))
+            deallocate(OpRBB)
+          END IF
+
+        ELSE ! basis_set%nb_basis MUST BE > 0
+          IF (basis_set%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+
+          SELECT CASE (basis_set%SparseGrid_type)
+          CASE (0) ! Direct product
+STOP 'SparseGrid_type=0'
+!             nnb3 = nb
+!             nb2  = 1
+!             nnb1 = 1
+!
+!             CALL alloc_NParray(CTempB,[nnb1,nb2,nnb3],"CTempG",name_sub)
+!             CTempB(:,:,:) = reshape(CVecBin,shape=(CTempB))
+!
+!             DO ibasis=basis_set%nb_basis,1,-1
+!
+!               nb2 = basis_set%tab_Pbasis(ibasis)%Pbasis%nb
+!               nnb = basis_set%Tab_OF_Tabnb2(ibasis)%nb_var_vec
+!
+! !             write(out_unitp,*) 'B=>G ibasis,Tab_OF_Tabnb2',ibasis,              &
+! !                                        basis_set%Tab_OF_Tabnb2(ibasis)%vec
+!
+!               CALL alloc_NParray(CTempB,(/ nnq,nbb /),"CTempB",name_sub)
+!
+!               CTempB(:,:) = reshape(CTempG,shape=(/ nnq,nbb /))
+!               CALL dealloc_NParray(CTempG,"CTempG",name_sub)
+!               CALL alloc_NParray(CTempG,(/ nnq,nq2,nnb /),"CTempG",name_sub)
+!
+!                 ibb1 = 1
+!                 ibb2 = 0
+!                 DO ib=1,nnb
+!                   newnb2 = basis_set%Tab_OF_Tabnb2(ibasis)%vec(ib)
+!                   ibb2 = ibb2 + newnb2
+!                   DO ib1=1,nnb1
+!                     CALL RecCVecB_TO_CVecG(CTempB(ib1,ibb1:ibb2),        &
+!                                            CTempG(ib1,:,ib),newnb2,nq2,  &
+!                                    basis_set%tab_Pbasis(ibasis)%Pbasis, &
+!                                                              tab_der_loc)
+!                   END DO
+!                   ibb1 = ibb1 + newnb2
+!                 END DO
+!
+!               nbb = nnb
+!               nnb1 = nnq * nb2
+!               CALL dealloc_NParray(CTempB,'CTempB',name_sub)
+!             END DO
+!
+!             CVecBout(:) = reshape(CTempG, shape=(/ nnq*nnb /) )
+!             CALL dealloc_NParray(CTempG,"CTempG",name_sub)
+
+          CASE (1) ! Sparse basis (Smolyak 1st implementation)
+            iq0_SG = 1
+            iq1_SG = 0
+            DO i_SG=1,basis_set%nb_SG
+               nq_SG  = get_nq_FROM_basis(basis_set%tab_PbasisSG(i_SG)%Pbasis)
+               iq1_SG = iq1_SG + nq_SG
+               CALL RecCVecB_TO_CVecG(CVecBin,CVecBout(iq0_SG:iq1_SG),       &
+                                      nb,nq_SG,                         &
+                                   basis_set%tab_PbasisSG(i_SG)%Pbasis, &
+                                      tab_der_loc)
+               iq0_SG = iq0_SG + nq_SG
+            END DO
+
+          CASE (2) ! Sparse basis (Smolyak 2d  implementation)
+            CALL alloc_NParray(RVecB,shape(CVecBin),'RVecB',name_sub)
+            CALL alloc_NParray(RVecG,shape(CVecBout),'RVecG',name_sub)
+
+            RVecB(:) = real(CVecBin,kind=Rkind)
+            CALL sub_B_TO_G(RVecB,RVecG,                                &
+                    basis_set%para_SGType2%nDind_SmolyakRep%Tab_DInd, &
+                                     basis_set%nDindB%Tab_DInd,         &
+                                     basis_set%tab_basisPrimSG,         &
+                                     D=basis_set%nb_basis,              &
+                                     LG=basis_set%L_SparseGrid,         &
+                                     LB=basis_set%L_SparseBasis)
+            CVecBout(:) = cmplx(RVecG,kind=Rkind)
+
+            RVecB(:) = aimag(CVecBin)
+            CALL sub_B_TO_G(RVecB,RVecG,                                &
+                    basis_set%para_SGType2%nDind_SmolyakRep%Tab_DInd, &
+                                     basis_set%nDindB%Tab_DInd,         &
+                                     basis_set%tab_basisPrimSG,         &
+                                     D=basis_set%nb_basis,              &
+                                     LG=basis_set%L_SparseGrid,         &
+                                     LB=basis_set%L_SparseBasis)
+            CVecBout(:) = CVecBout + EYE*cmplx(RVecG,kind=Rkind)
+
+            CALL dealloc_NParray(RVecB,'RVecB',name_sub)
+            CALL dealloc_NParray(RVecG,'RVecG',name_sub)
+            !write(out_unitp,*) ' ERROR in ',name_sub
+            !STOP 'SparseGrid_type=2'
+
+          CASE (4) ! Sparse basis (Smolyak 4th implementation)
+            CALL alloc_NParray(RVecB,shape(CVecBin),'RVecB',name_sub)
+
+            RVecB(:) = real(CVecBin,kind=Rkind)
+            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,                 &
+              basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
+            !write(6,*) 'real(CVecBin)' ; CALL Write_SmolyakRep(SRep)
+
+            IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
+              CALL BSmolyakRep_TO_GSmolyakRep(SRep,                         &
+                 basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval,         &
+                 basis_set%tab_basisPrimSG,basis_set%para_SGType2%nb0)
+            ELSE
+              CALL BSmolyakRep_TO3_GSmolyakRep(SRep,basis_set%para_SGType2, &
+                                               basis_set%tab_basisPrimSG)
+            END IF
+            !write(6,*) 'real(CVecBout)' ; CALL Write_SmolyakRep(SRep)
+
+            itabR = 0
+            DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
+              nR = size(SRep%SmolyakRep(iG)%V)
+              CVecBout(itabR+1:itabR+nR) = cmplx(SRep%SmolyakRep(iG)%V,kind=Rkind)
+              itabR = itabR + nR
+            END DO
+            CALL dealloc_SmolyakRep(SRep)
+            !write(6,*) 'real(CVecBout)?',CVecBout
+
+            RVecB(:) = aimag(CVecBin)
+            CALL tabPackedBasis_TO_SmolyakRepBasis(SRep,RVecB,              &
+              basis_set%tab_basisPrimSG,basis_set%nDindB,basis_set%para_SGType2)
+            !write(6,*) 'im(CVecBin)' ; CALL Write_SmolyakRep(SRep)
+
+            IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
+              CALL BSmolyakRep_TO_GSmolyakRep(SRep,                         &
+                 basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval,         &
+                 basis_set%tab_basisPrimSG,basis_set%para_SGType2%nb0)
+            ELSE
+              CALL BSmolyakRep_TO3_GSmolyakRep(SRep,basis_set%para_SGType2, &
+                                               basis_set%tab_basisPrimSG)
+            END IF
+            !write(6,*) 'im(CVecBout)' ; CALL Write_SmolyakRep(SRep)
+
+            itabR = 0
+            DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
+              nR = size(SRep%SmolyakRep(iG)%V)
+              CVecBout(itabR+1:itabR+nR) = CVecBout(itabR+1:itabR+nR) +       &
+                             EYE*cmplx(SRep%SmolyakRep(iG)%V,kind=Rkind)
+              itabR = itabR + nR
+            END DO
+            CALL dealloc_SmolyakRep(SRep)
+            !write(6,*) 'CVecBout?',CVecBout
+
+            CALL dealloc_NParray(RVecB,'RVecB',name_sub)
+
+          CASE DEFAULT
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' WRONG SparseGrid_type',basis_set%SparseGrid_type
+            write(out_unitp,*) ' The possibilities are: 0, 1, 2, 4'
+            STOP
+          END SELECT
+
+        END IF
+
+      END SUBROUTINE DerivOp_TO_CVecB
 
       END MODULE mod_basis_BtoG_GtoB

@@ -65,8 +65,8 @@
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='sub_diago_H'
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
@@ -91,7 +91,6 @@
   ELSE
     IF(keep_MPI) CALL diagonalization(H,E,Vec,n,3,1,.TRUE.)
   END IF
-
 
   IF (debug) THEN
     write(out_unitp,*) 'OpMin,OpMax (ua)  : ',minval(E),maxval(E)

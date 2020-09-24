@@ -87,9 +87,9 @@ MODULE mod_SetOp
           integer :: nb_baie=0,nb_qaie=0         ! number of total active basis functions
           integer :: nb_bRot=0                   ! number of total rotational basis functions
           integer :: nb_tot=0                    ! real size of the hamiltonian
-                                                 ! can be smaller than nb_baie (HADA or spectral contracion)
+                                                 ! can be smaller than nb_baie (HADA or spectral contraction)
           integer :: nb_tot_ini=0                ! size of the hamiltonian
-                                                 ! can be smaller than nb_baie (HADA or spectral contracion)
+                                                 ! can be smaller than nb_baie (HADA or spectral contraction)
                                                  ! usefull before the spectral transformation (for another operator)
 
           real (kind=Rkind),    pointer :: Rmat(:,:)   => null()        ! Rmat(nb_tot ,nb_tot )
@@ -105,7 +105,7 @@ MODULE mod_SetOp
                                                  ! no pack, if the packed ratio is larger
 
           ! Parameters for the diagonalization and the spectral representation
-          logical                       :: spectral      = .FALSE.        ! if T, calculation of the sepctral representation
+          logical                       :: spectral      = .FALSE.        ! if T, calculation of the spectral representation
           logical                       :: spectral_done = .FALSE.        ! if T, The spect Rep is done
           integer                       :: spectral_Op   =  0             ! type of operator usually H (=>0)
           logical                       :: diago         = .FALSE.        ! if T, allocate the memory for diagonalization
@@ -1051,7 +1051,6 @@ MODULE mod_SetOp
       para_Op2%nb_Term_Vib   = para_Op1%nb_Term_Vib
       para_Op2%nb_Term_Rot   = para_Op1%nb_Term_Rot
 
-
       nullify(para_Op2%OpGrid)
       nullify(para_Op2%imOpGrid)
 
@@ -1442,28 +1441,27 @@ MODULE mod_SetOp
       END IF
 !-----------------------------------------------------------
 
+      psi%init          = .TRUE.
+      psi%cplx          = cplx
 
-      psi%init         = .TRUE.
-      psi%cplx         = cplx
+      psi%nb_tot        = para_H%nb_tot
+      psi%nb_baie       = para_H%nb_baie
+      psi%nb_ba         = para_H%nb_ba
+      psi%nb_bi         = para_H%nb_bi
+      psi%nb_be         = para_H%nb_be
+      psi%nb_bRot       = para_H%nb_bRot
 
-      psi%nb_tot       = para_H%nb_tot
-      psi%nb_baie      = para_H%nb_baie
-      psi%nb_ba        = para_H%nb_ba
-      psi%nb_bi        = para_H%nb_bi
-      psi%nb_be        = para_H%nb_be
-      psi%nb_bRot      = para_H%nb_bRot
+      psi%nb_qa         = para_H%nb_qa
+      psi%nb_qaie       = para_H%nb_qaie
 
-      psi%nb_qa        = para_H%nb_qa
-      psi%nb_qaie      = para_H%nb_qaie
+      psi%nb_act1       = para_H%mole%nb_act1
+      psi%nb_act        = para_H%mole%nb_act
 
+      psi%nb_basis_act1 = max(1,psi%BasisnD%nb_basis)
+      psi%nb_basis      = psi%nb_basis_act1 + psi%Basis2n%nb_basis
+      psi%max_dim       = maxval( psi%BasisnD%nDindB%nDsize(:) )
 
-      psi%nb_act1      = para_H%mole%nb_act1
-      psi%nb_act       = para_H%mole%nb_act
-
-      psi%nb_basis_act1= max(1,psi%BasisnD%nb_basis)
-      psi%nb_basis     = psi%nb_basis_act1 + psi%Basis2n%nb_basis
-      psi%max_dim      = maxval( psi%BasisnD%nDindB%nDsize(:) )
-
+      psi%nb_TDParam    = get_nb_TDParam_FROM_basis(psi%BasisnD)
 
       IF (debug) THEN
         CALL ecri_init_psi(psi)
@@ -1473,4 +1471,3 @@ MODULE mod_SetOp
 !=======================================================================================
 
 END MODULE mod_SetOp
-

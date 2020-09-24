@@ -89,7 +89,7 @@ fi
 ##==============================================================
 cat > namelist << EOF
 &system EVR=t OpPsi_test=f printlevel=0 
-MPI_Scheme=1
+MPI_Scheme=2
 /
 
 &constantes ene_unit='eV' /

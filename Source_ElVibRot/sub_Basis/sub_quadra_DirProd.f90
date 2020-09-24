@@ -305,7 +305,7 @@
 
       ! set-up Tab_OF_Tabnb2(:) for SparseBasis and type_OF_nDindex=0
       IF (.NOT. associated(basis_DP%Tab_OF_Tabnb2) ) THEN
-        CALL alloc_array(basis_DP%Tab_OF_Tabnb2,(/ nb_basis /),         &
+        CALL alloc_array(basis_DP%Tab_OF_Tabnb2,[nb_basis],                     &
                         "basis_DP%Tab_OF_Tabnb2",name_sub)
       END IF
 

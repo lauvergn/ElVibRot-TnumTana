@@ -78,6 +78,7 @@
           integer                        :: nb = 0                            !  nb of basis functions
           integer                        :: nb_init = 0                       !  nb of basis functions (before contraction)
           TYPE (Basis_Grid_Param)        :: Basis_Grid_Para
+          integer                        :: nq_extra = 0                      ! add extra points on the grid (usefull for the flux with SG), the weight are null.
 
           real (kind=Rkind), allocatable :: EneH0(:)     ! EeneH0(nb) : EeneH0(ib)=<d0b(:,ib) I H0 I d0b(:,ib)>
 
@@ -93,8 +94,8 @@
           logical                        :: dnBBRep      = .FALSE. ! (F) If we calculate the BasisRep representation
           logical                        :: dnBBRep_done = .FALSE. ! (F) If we calculate the BasisRep representation
 
-          TYPE (Type_dnMat)              :: dnRBB ! matrices which enables to tranform d./dQ d2./dQ2 on the basis
-          TYPE (Type_dnCplxMat)          :: dnCBB ! matrices which enables to tranform d./dQ d2./dQ2 on the basis
+          TYPE (Type_dnMat)              :: dnRBB         ! matrices which enables to tranform d./dQ d2./dQ2 on the basis
+          TYPE (Type_dnCplxMat)          :: dnCBB         ! matrices which enables to tranform d./dQ d2./dQ2 on the basis
 
           logical                        :: dnGGRep      = .FALSE. ! (T) If we calculate the dnRGG
           logical                        :: dnGGRep_done = .FALSE. ! (F) If we calculate the dnRGG
@@ -102,10 +103,17 @@
 
           logical                        :: cplx = .FALSE. !  .T. if the basis set is complex (def .F.)
 
+          TYPE (Type_dnMat)              :: dnPara_OF_RGB ! derivatives with respect to the Basis set parameters (Q0, scaleQ)
+          TYPE (Type_dnMat)              :: dnPara_OF_RBB ! derivatives with respect to the Basis set parameters (Q0, scaleQ)
+          logical, allocatable           :: TD_Q0(:)      ! TD_Q0(ndim):      flags to define time-dependent Q0
+          logical, allocatable           :: TD_scaleQ(:)  ! TD_scaleQ(ndim):  flags to define time-dependent scaleQ
+
           integer                        :: nq_max_Nested = -1        ! Value to calculate Nested grid point (with Nested=1)
                                                                      ! With the value -1, the value is automatically defined
           integer                        :: Nested        =  0        ! When value > 0, we use Nested Grid
           real (kind=Rkind), allocatable :: x(:,:)  !  grid points x(ndim,nq)
+          real (kind=Rkind), allocatable :: x_extra(:,:)  !  extra grid points x(ndim,nq_extra)
+
           real (kind=Rkind), allocatable :: w(:)    !  weight w(nq)
           real (kind=Rkind), allocatable :: rho(:)  !  rho : wrho(nq)
           real (kind=Rkind), allocatable :: wrho(:) ! weight * rho : wrho(nq)
@@ -118,8 +126,9 @@
                                                                           ! Remark: A nD-contracted basis is allways packed
 
           logical                        :: primitive              = .FALSE.  ! IF True, the basis set is a primitive basis
-          logical                        :: primitive_done         = .FALSE.  ! This parameter is used to check if primitive basis-sets or set-up
+          logical                        :: primitive_done         = .FALSE.  ! This parameter is used to check if primitive basis-sets is set-up
                                                                               ! for direct-product basis-set
+          LOGICAL                        :: BuildBasis_done        = .FALSE. ! when T, it's mean the basis has been build
 
           logical                        :: auto_basis             = .FALSE.  ! it is done automatically
 
@@ -139,6 +148,7 @@
           integer                        :: nqc                    = 0        !  nb of grid points after contraction
           logical                        :: make_cubature          = .FALSE.
           logical                        :: Restart_make_cubature  = .FALSE.
+          logical                        :: read_para_cubature     = .FALSE.
           logical                        :: read_contrac_file      = .FALSE.  ! .T. if the basis set is contracted
           TYPE(param_file)               :: file_contrac                      ! file for read contraction coef
           real (kind=Rkind), allocatable :: Rvec(:,:)                     ! real eigenvectors for the contraction
@@ -278,9 +288,11 @@
       PUBLIC  get_rho_OF_basis, get_rho_AT_iq_OF_basis
       PUBLIC  get_w_OF_basis, get_w_AT_iq_OF_basis
       PUBLIC  get_wrho_OF_basis, get_wrho_AT_iq_OF_basis
-      PUBLIC  Get_MatdnRGG, Get_MatdnRGB, Get_MatdnRBB
+      PUBLIC  Get_MatdnRGG, Get_MatdnRGB
+      PUBLIC  Get_MatdnRBB, Get2_MatdnRBB
       PUBLIC  Get_MatdnCGB, Get_MatdnCBB
       PUBLIC  Get2_MatdnRGB, Get2_MatdnRBG
+      PUBLIC  Get_MATdnPara_OF_RGB,Get_MATdnPara_OF_RBB,Get2_MATdnPara_OF_RBB
       PUBLIC  Set_nq_OF_basis, get_nq_FROM_basis, get_nqa_FROM_basis, get_nb_FROM_basis
       PUBLIC  get_tab_nq_OF_Qact, get_nb_bi_FROM_AllBasis
       PUBLIC  get_nb_be_FROM_basis
@@ -375,6 +387,20 @@
                            "basis_set%opt_scaleQ",name_sub)
            basis_set%opt_scaleQ(:) = 0
          END IF
+
+
+
+         IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%TD_Q0) ) THEN
+           CALL alloc_NParray(basis_set%TD_Q0,[basis_set%ndim],      &
+                             "basis_set%TD_Q0",name_sub)
+           basis_set%TD_Q0(:) = .FALSE.
+         END IF
+         IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%TD_scaleQ) ) THEN
+           CALL alloc_NParray(basis_set%TD_scaleQ,[basis_set%ndim],  &
+                             "basis_set%TD_scaleQ",name_sub)
+           basis_set%TD_scaleQ(:) = .FALSE.
+         END IF
+
 
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%nrho) ) THEN
            CALL alloc_NParray(basis_set%nrho,(/ basis_set%ndim /),        &
@@ -756,14 +782,14 @@
 
          integer :: err_mem,memory
          character (len=*), parameter :: name_sub='dealloc_basis'
-         
+
 !         character(14) :: name_subp='dealloc_basis'
 !         character(2)  :: name_int
 !         character(16) :: name_all
 !         i=MPI_id
 !         write(name_int, '(I2)') i
 !         name_all=name_subp//name_int
-         
+
          Basis_FOR_SG_loc = .FALSE.
          IF (present(Basis_FOR_SG)) Basis_FOR_SG_loc = Basis_FOR_SG
 
@@ -801,6 +827,7 @@
          basis_set%packed_done            = .FALSE.
          basis_set%primitive              = .FALSE.
          basis_set%primitive_done         = .FALSE.
+         basis_set%BuildBasis_done     = .FALSE.
 
          IF (.NOT. keep_Rvec_loc) THEN
            basis_set%auto_basis             = .FALSE.
@@ -824,6 +851,12 @@
            END IF
            CALL file_dealloc(basis_set%file_contrac)
          END IF
+         basis_set%nq_extra                  = 0
+         IF (allocated(basis_set%x_extra))    THEN
+           CALL dealloc_NParray(basis_set%x_extra,                        &
+                               "basis_set%x_extra",name_sub)
+         END IF
+
 
          basis_set%type  = 0
          basis_set%name  = "0"
@@ -850,6 +883,15 @@
          basis_set%dnBBRep_done = .FALSE.
          CALL dealloc_dnMat(basis_set%dnRBB)
          CALL dealloc_dnCplxMat(basis_set%dnCBB)
+
+         CALL dealloc_dnMat(basis_set%dnPara_OF_RGB)
+         CALL dealloc_dnMat(basis_set%dnPara_OF_RBB)
+         IF (allocated(basis_set%TD_Q0))        THEN
+           CALL dealloc_NParray(basis_set%TD_Q0,"basis_set%TD_Q0",name_sub)
+         END IF
+         IF (allocated(basis_set%TD_scaleQ))    THEN
+           CALL dealloc_NParray(basis_set%TD_scaleQ,"basis_set%TD_scaleQ",name_sub)
+         END IF
 
          basis_set%cplx  = .FALSE.
 
@@ -888,7 +930,6 @@
          IF (allocated(basis_set%opt_scaleQ) ) THEN
            CALL dealloc_NParray(basis_set%opt_scaleQ,"basis_set%opt_scaleQ",name_sub)
          END IF
-
 
          CALL dealloc_Basis_L_TO_n(basis_set%L_TO_nb)
          CALL dealloc_Basis_L_TO_n(basis_set%L_TO_nq)
@@ -1593,6 +1634,11 @@
           basis_set1%Basis_Grid_Para = basis_set2%Basis_Grid_Para
 
         END IF
+        basis_set1%nq_extra          = basis_set2%nq_extra
+        IF (allocated(basis_set2%x_extra)) THEN
+          basis_set1%x_extra     = basis_set2%x_extra
+        END IF
+
         basis_set1%nb_init           = basis_set2%nb_init
 
         basis_set1%nq_max_Nested     = basis_set2%nq_max_Nested
@@ -1606,9 +1652,11 @@
         IF (init_only_loc) THEN
           basis_set1%primitive_done       = .FALSE.
           basis_set1%packed_done          = .FALSE.
+          basis_set1%BuildBasis_done      = .FALSE.
         ELSE
           basis_set1%primitive_done       = basis_set2%primitive_done
           basis_set1%packed_done          = basis_set2%packed_done
+          basis_set1%BuildBasis_done      = basis_set2%BuildBasis_done
         END IF
 
         basis_set1%auto_basis             = basis_set2%auto_basis
@@ -1619,24 +1667,25 @@
         basis_set1%max_ene_contrac        = basis_set2%max_ene_contrac
         basis_set1%make_cubature          = basis_set2%make_cubature
         basis_set1%Restart_make_cubature  = basis_set2%Restart_make_cubature
+        basis_set1%read_para_cubature     = basis_set2%read_para_cubature
 
         basis_set1%max_nbc                = basis_set2%max_nbc
         basis_set1%min_nbc                = basis_set2%min_nbc
         basis_set1%auto_contrac_type1_TO  = basis_set2%auto_contrac_type1_TO
         basis_set1%auto_contrac_type21_TO = basis_set2%auto_contrac_type21_TO
 
-        basis_set1%POGridRep             = basis_set2%POGridRep
-        basis_set1%POGridRep_polyortho   = basis_set2%POGridRep_polyortho
-        basis_set1%xPOGridRep_done       = basis_set2%xPOGridRep_done
-        basis_set1%nbc               = basis_set2%nbc
-        basis_set1%nqc               = basis_set2%nqc
-        basis_set1%read_contrac_file = basis_set2%read_contrac_file
-        basis_set1%file_contrac      = basis_set2%file_contrac
+        basis_set1%POGridRep              = basis_set2%POGridRep
+        basis_set1%POGridRep_polyortho    = basis_set2%POGridRep_polyortho
+        basis_set1%xPOGridRep_done        = basis_set2%xPOGridRep_done
+        basis_set1%nbc                    = basis_set2%nbc
+        basis_set1%nqc                    = basis_set2%nqc
+        basis_set1%read_contrac_file      = basis_set2%read_contrac_file
+        basis_set1%file_contrac           = basis_set2%file_contrac
 
-        basis_set1%type              = basis_set2%type
-        basis_set1%name              = basis_set2%name
+        basis_set1%type                   = basis_set2%type
+        basis_set1%name                   = basis_set2%name
 
-        basis_set1%nb_basis          = basis_set2%nb_basis
+        basis_set1%nb_basis               = basis_set2%nb_basis
 
         IF (allocated(basis_set2%iQdyn)) THEN
            basis_set1%iQdyn = basis_set2%iQdyn
@@ -1695,7 +1744,6 @@
           basis_set1%opt_scaleQ  = basis_set2%opt_scaleQ
         END IF
 
-
         IF (allocated(basis_set2%Tabder_Qdyn_TO_Qbasis)) THEN
           n1 = ubound(basis_set2%Tabder_Qdyn_TO_Qbasis,dim=1)
           CALL alloc_NParray(basis_set1%Tabder_Qdyn_TO_Qbasis,(/ n1 /),   &
@@ -1734,11 +1782,11 @@
             END IF
           END IF
           IF (associated(basis_set2%Tab_OF_Tabnb2)) THEN
-            CALL alloc_array(basis_set1%Tab_OF_Tabnb2,                  &
-                                              (/ basis_set2%nb_basis /),&
+            CALL alloc_array(basis_set1%Tab_OF_Tabnb2,                          &
+                                              (/ basis_set2%nb_basis /),        &
                             'basis_set1%Tab_OF_Tabnb2',name_sub)
             DO i=1,basis_set2%nb_basis
-              CALL sub_IntVec1_TO_IntVec2(basis_set2%Tab_OF_Tabnb2(i),  &
+              CALL sub_IntVec1_TO_IntVec2(basis_set2%Tab_OF_Tabnb2(i),          &
                                           basis_set1%Tab_OF_Tabnb2(i))
             END DO
           END IF
@@ -1754,7 +1802,7 @@
           END IF
           basis_set1%nDindB = basis_set2%nDindB
           IF (associated(basis_set2%nDindB_uncontracted)) THEN
-            CALL alloc_array(basis_set1%nDindB_uncontracted,            &
+            CALL alloc_array(basis_set1%nDindB_uncontracted,                    &
                             'basis_set1%nDindB_uncontracted',name_sub)
             basis_set1%nDindB_uncontracted = basis_set2%nDindB_uncontracted
           END IF
@@ -1775,8 +1823,8 @@
         IF (.NOT. init_only_loc) THEN
 
           IF (allocated(basis_set2%Rvec)) THEN
-            CALL alloc_NParray(basis_set1%Rvec,shape(basis_set2%Rvec),    &
-                            "basis_set1%Rvec",name_sub)
+            CALL alloc_NParray(basis_set1%Rvec,shape(basis_set2%Rvec),          &
+                              "basis_set1%Rvec",name_sub)
             basis_set1%Rvec  = basis_set2%Rvec
           END IF
 
@@ -1797,12 +1845,29 @@
           IF (basis_set2%dnRBGwrho%alloc) basis_set1%dnRBGwrho = basis_set2%dnRBGwrho
           IF (basis_set2%dnCBGwrho%alloc) basis_set1%dnCBGwrho = basis_set2%dnCBGwrho
 
+          if ( allocated(basis_set2%TD_Q0) ) then
+            !CALL alloc_NParray(basis_set1%TD_Q0,shape(basis_set2%TD_Q0),        &
+            !                  "basis_set1%TD_Q0",name_sub)
+            basis_set1%TD_Q0(:) = basis_set2%TD_Q0
+          end if
+          if ( allocated(basis_set2%TD_scaleQ) ) then
+            !CALL alloc_NParray(basis_set1%TD_scaleQ,shape(basis_set2%TD_scaleQ),&
+            !                  "basis_set1%TD_scaleQ",name_sub)
+            basis_set1%TD_scaleQ = basis_set2%TD_scaleQ
+          end if
+          IF (basis_set2%dnPara_OF_RGB%alloc) THEN
+            basis_set1%dnPara_OF_RGB = basis_set2%dnPara_OF_RGB
+          END IF
+          IF (basis_set2%dnPara_OF_RBB%alloc) THEN
+            basis_set1%dnPara_OF_RBB = basis_set2%dnPara_OF_RBB
+          END IF
+
          IF (allocated(basis_set1%EneH0))    THEN
-           CALL dealloc_NParray(basis_set1%EneH0,                       &
+           CALL dealloc_NParray(basis_set1%EneH0,                               &
                                "basis_set1%EneH0",name_sub)
          END IF
          IF (allocated(basis_set2%EneH0))    THEN
-           CALL alloc_NParray(basis_set1%EneH0,shape(basis_set2%EneH0), &
+           CALL alloc_NParray(basis_set1%EneH0,shape(basis_set2%EneH0),         &
                              "basis_se1t%EneH0",name_sub)
            basis_set1%EneH0(:) = basis_set2%EneH0(:)
          END IF
@@ -1810,22 +1875,22 @@
 
 
           IF (allocated(basis_set2%x)) THEN
-            CALL alloc_NParray(basis_set1%x,shape(basis_set2%x),          &
+            CALL alloc_NParray(basis_set1%x,shape(basis_set2%x),                &
                             "basis_set1%x",name_sub)
             basis_set1%x      = basis_set2%x
           END IF
           IF (allocated(basis_set2%w)) THEN
-            CALL alloc_NParray(basis_set1%w,shape(basis_set2%w),          &
+            CALL alloc_NParray(basis_set1%w,shape(basis_set2%w),                &
                             "basis_set1%w",name_sub)
             basis_set1%w      = basis_set2%w
           END IF
           IF (allocated(basis_set2%wrho)) THEN
-            CALL alloc_NParray(basis_set1%wrho,shape(basis_set2%wrho),    &
+            CALL alloc_NParray(basis_set1%wrho,shape(basis_set2%wrho),          &
                             "basis_set1%wrho",name_sub)
             basis_set1%wrho      = basis_set2%wrho
           END IF
           IF (allocated(basis_set2%rho)) THEN
-            CALL alloc_NParray(basis_set1%rho,shape(basis_set2%rho),      &
+            CALL alloc_NParray(basis_set1%rho,shape(basis_set2%rho),            &
                             "basis_set1%rho",name_sub)
             basis_set1%rho      = basis_set2%rho
           END IF
@@ -2177,6 +2242,214 @@
       END IF
 !-----------------------------------------------------------
       END SUBROUTINE Get_MatdnRBB
+  SUBROUTINE Get2_MatdnRBB(basis_set,MatRBB,dnba_ind)
+      USE mod_system
+      IMPLICIT NONE
+
+      TYPE (basis),                   intent(in)    :: basis_set
+      real(kind=Rkind), allocatable,  intent(inout) :: MatRBB(:,:)
+      integer,                        intent(in)    :: dnba_ind(2)
+
+      integer :: nb
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='Get2_MatdnRBB'
+!-----------------------------------------------------------
+      IF (.NOT. basis_set%packed) RETURN
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nb',basis_set%nb
+        write(out_unitp,*) 'shape(MatRBB)',shape(MatRBB)
+        write(out_unitp,*) 'alloc dnRBB',basis_set%dnRBB%alloc
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+
+      IF (.NOT. basis_set%dnRBB%alloc) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) 'basis_set%dnRBB is not allocated!!'
+        write(out_unitp,*) 'CHECK the fortran source'
+        STOP
+      END IF
+
+      IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
+        allocate(MatRBB(basis_set%nb,basis_set%nb))
+        CALL mat_id(MatRBB(:,:),basis_set%nb,basis_set%nb)
+      ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
+        MatRBB = basis_set%dnRBB%d1(:,:,dnba_ind(2))
+      ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
+        MatRBB = basis_set%dnRBB%d1(:,:,dnba_ind(1))
+      ELSE ! 2d derivative
+        MatRBB = basis_set%dnRBB%d2(:,:,dnba_ind(1),dnba_ind(2))
+      END IF
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'MatRBB',dnba_ind
+        CALL write_Mat(MatRBB,out_unitp,5)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+  END SUBROUTINE Get2_MatdnRBB
+  SUBROUTINE Get_MATdnPara_OF_RGB(basis_set,MatRGB,dnba_ind)
+      USE mod_system
+      IMPLICIT NONE
+
+      TYPE (basis),intent(in)        :: basis_set
+      real(kind=Rkind),intent(inout) :: MatRGB(:,:)
+      integer, intent(in)            :: dnba_ind(2)
+
+      integer :: nb
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='Get_MATdnPara_OF_RGB'
+!-----------------------------------------------------------
+      IF (.NOT. basis_set%packed) RETURN
+      nb = basis_set%nb
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nb',nb
+        write(out_unitp,*) 'shape(MatRGB)',shape(MatRGB)
+        write(out_unitp,*) 'alloc dnPara_OF_RGB',basis_set%dnPara_OF_RGB%alloc
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+
+      IF (.NOT. basis_set%dnPara_OF_RGB%alloc) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) 'basis_set%dnPara_OF_RGB is not allocated!!'
+        write(out_unitp,*) 'CHECK the fortran source'
+        STOP
+      END IF
+
+      IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
+        MatRGB(:,:) = basis_set%dnPara_OF_RGB%d0(:,:) ! id dnGB(:,:)
+      ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
+        MatRGB(:,:) = basis_set%dnPara_OF_RGB%d1(:,:,dnba_ind(2))
+      ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
+        MatRGB(:,:) = basis_set%dnPara_OF_RGB%d1(:,:,dnba_ind(1))
+      ELSE ! 2d derivative
+        MatRGB(:,:) = basis_set%dnPara_OF_RGB%d2(:,:,dnba_ind(1),dnba_ind(2))
+      END IF
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'MatRGB',dnba_ind
+        CALL write_Mat(MatRGB,out_unitp,5)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+  END SUBROUTINE Get_MATdnPara_OF_RGB
+  SUBROUTINE Get_MATdnPara_OF_RBB(basis_set,MatRBB,dnba_ind)
+      USE mod_system
+      IMPLICIT NONE
+
+      TYPE (basis),intent(in)        :: basis_set
+      real(kind=Rkind),intent(inout) :: MatRBB(:,:)
+      integer, intent(in)            :: dnba_ind(2)
+
+      integer :: nb
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='Get_MATdnPara_OF_RBB'
+!-----------------------------------------------------------
+      IF (.NOT. basis_set%packed) RETURN
+      nb = basis_set%nb
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nb',nb
+        write(out_unitp,*) 'shape(MatRBB)',shape(MatRBB)
+        write(out_unitp,*) 'alloc dnPara_OF_RBB',basis_set%dnPara_OF_RBB%alloc
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+
+      IF (.NOT. basis_set%dnPara_OF_RBB%alloc) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) 'basis_set%dnPara_OF_RBB is not allocated!!'
+        write(out_unitp,*) 'CHECK the fortran source'
+        STOP
+      END IF
+
+      IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
+        CALL mat_id(MatRBB(:,:),nb,nb)
+      ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
+        MatRBB(:,:) = basis_set%dnPara_OF_RBB%d1(:,:,dnba_ind(2))
+      ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
+        MatRBB(:,:) = basis_set%dnPara_OF_RBB%d1(:,:,dnba_ind(1))
+      ELSE ! 2d derivative
+        MatRBB(:,:) = basis_set%dnPara_OF_RBB%d2(:,:,dnba_ind(1),dnba_ind(2))
+      END IF
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'MatRBB',dnba_ind
+        CALL write_Mat(MatRBB,out_unitp,5)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+END SUBROUTINE Get_MATdnPara_OF_RBB
+SUBROUTINE Get2_MATdnPara_OF_RBB(basis_set,MatRBB,dnba_ind)
+      USE mod_system
+      IMPLICIT NONE
+
+      TYPE (basis),                   intent(in)    :: basis_set
+      real(kind=Rkind), allocatable,  intent(inout) :: MatRBB(:,:)
+      integer,                        intent(in)    :: dnba_ind(2)
+
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='Get_MATdnPara_OF_RBB'
+!-----------------------------------------------------------
+      IF (.NOT. basis_set%packed) RETURN
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nb',basis_set%nb
+        write(out_unitp,*) 'shape(MatRBB)',shape(MatRBB)
+        write(out_unitp,*) 'alloc dnPara_OF_RBB',basis_set%dnPara_OF_RBB%alloc
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+
+      IF (.NOT. basis_set%dnPara_OF_RBB%alloc) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) 'basis_set%dnPara_OF_RBB is not allocated!!'
+        write(out_unitp,*) 'CHECK the fortran source'
+        STOP
+      END IF
+
+      IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
+        allocate(MatRBB(basis_set%nb,basis_set%nb))
+        CALL mat_id(MatRBB(:,:),basis_set%nb,basis_set%nb)
+      ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
+        MatRBB = basis_set%dnPara_OF_RBB%d1(:,:,dnba_ind(2))
+      ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
+        MatRBB = basis_set%dnPara_OF_RBB%d1(:,:,dnba_ind(1))
+      ELSE ! 2d derivative
+        MatRBB = basis_set%dnPara_OF_RBB%d2(:,:,dnba_ind(1),dnba_ind(2))
+      END IF
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'MatRBB',dnba_ind
+        CALL write_Mat(MatRBB,out_unitp,5)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+END SUBROUTINE Get2_MATdnPara_OF_RBB
+
       SUBROUTINE Get_MatdnCBB(basis_set,MatCBB,dnba_ind)
       USE mod_system
       IMPLICIT NONE
@@ -2274,6 +2547,8 @@
                                             get_nq_FROM_basis(basis_set)
        write(out_unitp,*) Rec_line,'nb_init,nq_init (before contraction)',&
                      basis_set%nb_init,get_nq_FROM_basis(basis_set,init=.TRUE.)
+       write(out_unitp,*) Rec_line,'nq_extra',basis_set%nq_extra
+       write(out_unitp,*) Rec_line,'allo x_extra?',allocated(basis_set%x_extra)
 
        write(out_unitp,*) Rec_line,'Nested,nq_max_Nested',basis_set%Nested,basis_set%nq_max_Nested
 
@@ -2290,6 +2565,7 @@
        write(out_unitp,*) Rec_line,'packed,packed_done',basis_set%packed,basis_set%packed_done
        write(out_unitp,*) Rec_line,'primitive',basis_set%primitive
        write(out_unitp,*) Rec_line,'primitive_done',basis_set%primitive_done
+       write(out_unitp,*) Rec_line,'BuildBasis_done',basis_set%BuildBasis_done
 
        write(out_unitp,*) Rec_line,'contrac',basis_set%contrac
        write(out_unitp,*) Rec_line,'auto_contrac',basis_set%auto_contrac
@@ -2356,7 +2632,7 @@
 
        write(out_unitp,*) Rec_line,'tab_basis_done',basis_set%tab_basis_done
        write(out_unitp,*) Rec_line,' tab_basis_linked',basis_set%tab_basis_linked
-       IF (basis_set%nb_basis > 0 .AND. .NOT. basis_set%packed) THEN
+       IF (basis_set%nb_basis > 0 .AND. .NOT. basis_set%packed .AND. associated(basis_set%tab_Pbasis)) THEN
          write(out_unitp,*) Rec_line,'------------------------------------------------'
          write(out_unitp,*) Rec_line,'- tab_Pbasis for direct_product or SparseBasis -'
          write(out_unitp,*) Rec_line,'------------------------------------------------'
@@ -2369,7 +2645,7 @@
            END IF
          END DO
          write(out_unitp,*) Rec_line,'------------------------------------------------'
-         write(out_unitp,*) Rec_line,'- END tab_Pbasis --------------------------------'
+         write(out_unitp,*) Rec_line,'- END tab_Pbasis -------------------------------'
          write(out_unitp,*) Rec_line,'------------------------------------------------'
 
          write(out_unitp,*) Rec_line,'------------------------------------------------'
@@ -2466,8 +2742,16 @@
            write(out_unitp,*) Rec_line,'opt_scaleQ',basis_set%opt_scaleQ
          END IF
        END IF
-       IF(MPI_id==0) write(out_unitp,*) 'Parameter(s) to be optimized?: ',basis_set%opt_param
+       write(out_unitp,*) Rec_line,'Parameter(s) to be optimized?: ',basis_set%opt_param
 
+
+       IF ( allocated(basis_set%x_extra) .AND. write_all_loc) THEN
+        write(out_unitp,*) Rec_line,'-------------------------------------------'
+        write(out_unitp,*) Rec_line,'x_extra'
+        CALL Write_Mat(basis_set%x_extra,out_unitp,8,name_info=Rec_line)
+        write(out_unitp,*) Rec_line,'-------------------------------------------'
+        write(out_unitp,*)
+       END IF
 
        nq = get_nq_FROM_basis(basis_set)
        IF (nq > 0 .AND.  basis_set%ndim > 0  .AND. write_all_loc) THEN
@@ -2517,6 +2801,24 @@
          write(out_unitp,*) Rec_line,'dnCBB'
          CALL Write_dnCplxMat(basis_set%dnCBB)
 
+         write(out_unitp,*) Rec_line,'------------------------------------------------'
+         write(out_unitp,*) Rec_line,'- for Time-Dependent parameters ----------------'
+         write(out_unitp,*) Rec_line,'------------------------------------------------'
+         write(out_unitp,*) Rec_line,'alloc TD_Q0,TD_scaleQ',                    &
+                      allocated(basis_set%TD_Q0),allocated(basis_set%TD_scaleQ)
+         if ( allocated(basis_set%TD_Q0) ) then
+           write(out_unitp,*) Rec_line,'TD_Q0',basis_set%TD_Q0
+         end if
+         if ( allocated(basis_set%TD_scaleQ) ) then
+           write(out_unitp,*) Rec_line,'TD_scaleQ',basis_set%TD_scaleQ
+         end if
+
+         write(out_unitp,*) Rec_line,'alloc dnPara_OF_RGB',basis_set%dnPara_OF_RGB%alloc
+         CALL Write_dnMat(basis_set%dnPara_OF_RGB)
+         write(out_unitp,*) Rec_line,'alloc dnPara_OF_RBB',basis_set%dnPara_OF_RBB%alloc
+         CALL Write_dnMat(basis_set%dnPara_OF_RBB)
+         write(out_unitp,*) Rec_line,'------------------------------------------------'
+
        END IF
 
 
@@ -2563,6 +2865,8 @@
        write(out_unitp,*) Rec_line,'ndim',basis_set%ndim
        write(out_unitp,*) Rec_line,'nb,nq',basis_set%nb,nq
        write(out_unitp,*) Rec_line,'nb,nq (before contraction)',basis_set%nb_init,nq_init
+       write(out_unitp,*) Rec_line,'nq_extra',basis_set%nq_extra
+       write(out_unitp,*) Rec_line,'allo x_extra?',allocated(basis_set%x_extra)
 
        write(out_unitp,*) Rec_line,'Nested,nq_max_Nested',basis_set%Nested,basis_set%nq_max_Nested
        CALL Write_Basis_Grid_Param(basis_set%Basis_Grid_Para,Rec_line)
@@ -2582,6 +2886,7 @@
        write(out_unitp,*) Rec_line,'packed,packed_done',basis_set%packed,basis_set%packed_done
        write(out_unitp,*) Rec_line,'primitive',basis_set%primitive
        write(out_unitp,*) Rec_line,'primitive_done',basis_set%primitive_done
+       write(out_unitp,*) Rec_line,'BuildBasis_done',basis_set%BuildBasis_done
 
        write(out_unitp,*) Rec_line,'contrac',basis_set%contrac
        write(out_unitp,*) Rec_line,'auto_contrac',basis_set%auto_contrac
@@ -2602,6 +2907,12 @@
        write(out_unitp,*)
        write(out_unitp,*) Rec_line,'cplx ',basis_set%cplx
        write(out_unitp,*) Rec_line,'dnBBRep,dnBBRep_done',basis_set%dnBBRep,basis_set%dnBBRep_done
+       write(out_unitp,*)
+
+       write(out_unitp,*) Rec_line,'alloc dnPara_OF_RGB',basis_set%dnPara_OF_RGB%alloc
+       write(out_unitp,*) Rec_line,'alloc dnPara_OF_RBB',basis_set%dnPara_OF_RBB%alloc
+       write(out_unitp,*) Rec_line,'alloc TD_Q0,TD_scaleQ',                     &
+                      allocated(basis_set%TD_Q0),allocated(basis_set%TD_scaleQ)
 
        write(out_unitp,*)
        write(out_unitp,*) Rec_line,'alloc iQdyn',allocated(basis_set%iQdyn)

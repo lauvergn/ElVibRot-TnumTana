@@ -998,6 +998,8 @@ END DO
 
 END SUBROUTINE SmolyakRepBasis_TO_tabPackedBasis
 
+! warning, for MPI scheme 1, the "SRep" are MPI calculated on different processor
+! thus not shared by all processor. Be careful with this.
 SUBROUTINE tabPackedBasis_TO_SmolyakRepBasis(SRep,tabR,tab_ba,nDindB,SGType2)
 USE mod_system
 USE mod_basis_set_alloc
@@ -1120,12 +1122,12 @@ END DO
 END SUBROUTINE tabPackedBasis_TO2_tabR_AT_iG
 
 !=======================================================================================
-!> in sub_TabOpPsi_FOR_SGtype4: 
+!> in sub_TabOpPsi_FOR_SGtype4:
 !>  CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,iG,BasisnD%para_SGType2)
-!>  PsiR(itab)%V     --> tabR_iG        
-!>  psi(itab)%RvecB  --> tabR      
-!                     
-!> tabR_iG is assigned in the subroutine according to iG using the informtation in tabR  
+!>  PsiR(itab)%V     --> tabR_iG
+!>  psi(itab)%RvecB  --> tabR
+!
+!> tabR_iG is assigned in the subroutine according to iG using the informtation in tabR
 !=======================================================================================
 SUBROUTINE tabPackedBasis_TO_tabR_AT_iG(tabR_iG,tabR,iG,SGType2)
 USE mod_system
@@ -1678,10 +1680,10 @@ integer,                         intent(in), optional  :: ib0
 
 integer               :: iG,nb_BG,nq_AT_iG,i1,i2
 
-   write(out_unitp,*) 'dot_product_SmolyakRep_Grid: size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),Size_SmolyakRep(SRep_w)
-   write(out_unitp,*) 'nb DP terms',size(SRep1%SmolyakRep),size(SRep2%SmolyakRep),size(WSRep),size(WSRep)
+!write(out_unitp,*) 'dot_product_SmolyakRep_Grid: size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),Size_SmolyakRep(SRep_w)
+!write(out_unitp,*) 'nb DP terms',size(SRep1%SmolyakRep),size(SRep2%SmolyakRep),size(WSRep),size(WSRep)
 
-   flush(out_unitp)
+!flush(out_unitp)
 
 nb_BG = Size_SmolyakRep(SRep1)
 IF (nb_BG /= Size_SmolyakRep(SRep2) .OR. size(SRep1%SmolyakRep) /= size(WSRep) .OR. size(SRep2%SmolyakRep) /= size(WSRep)) THEN
@@ -1712,8 +1714,11 @@ END IF
 
 END FUNCTION dot_product_SmolyakRep_Grid
 
+! warning, in MPI scheme 1, this function can only be used for SRep1=SRep2
+! further improvement required
 FUNCTION dot_product_SmolyakRep_Basis(SRep1,SRep2,WSRep,ib0) RESULT(R)
 USE mod_system
+USE mod_MPI_aux
 IMPLICIT NONE
 
 real(kind=Rkind)  :: R
@@ -1723,6 +1728,7 @@ integer,                         intent(in), optional  :: ib0
 
 
 integer               :: iG,nb_BG,nb_AT_iG,i1,i2
+integer               :: d1,d2
 
 nb_BG = Size_SmolyakRep(SRep1)
 IF (nb_BG /= Size_SmolyakRep(SRep2) .OR. size(SRep1%SmolyakRep) /= size(WSRep) .OR. size(SRep2%SmolyakRep) /= size(WSRep)) THEN
@@ -1732,25 +1738,38 @@ IF (nb_BG /= Size_SmolyakRep(SRep2) .OR. size(SRep1%SmolyakRep) /= size(WSRep) .
   STOP
 END IF
 
-   write(out_unitp,*) 'dot_product_SmolyakRep_Basis: size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),size(WSRep)
-   flush(out_unitp)
+!write(out_unitp,*) 'dot_product_SmolyakRep_Basis: size',Size_SmolyakRep(SRep1),Size_SmolyakRep(SRep2),size(WSRep)
+!flush(out_unitp)
+
+d1=lbound(SRep1%SmolyakRep,dim=1)
+d2=ubound(SRep1%SmolyakRep,dim=1)
+IF(openmpi .AND. MPI_scheme==1) THEN
+  d1=iGs_MPI(1,MPI_id)
+  d2=iGs_MPI(2,MPI_id)
+ENDIF
 
 R = ZERO
 IF (nb_BG > 0) THEN
   IF (present(ib0)) THEN
-    DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
+    !DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
+    DO iG=d1,d2
       nb_AT_iG = size(SRep1%SmolyakRep(iG)%V) / SRep1%nb0
       i1 = 1+(ib0-1)*nb_AT_iG
       i2 = ib0*nb_AT_iG
       R = R + WSRep(iG) * dot_product(SRep1%SmolyakRep(iG)%V(i1:i2),SRep2%SmolyakRep(iG)%V(i1:i2))
     END DO
   ELSE
-    DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
+    !DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
+    DO iG=d1,d2
       R = R + WSRep(iG) * dot_product(SRep1%SmolyakRep(iG)%V,SRep2%SmolyakRep(iG)%V)
     END DO
   END IF
 
 END IF
+
+IF(openmpi .AND. MPI_scheme==1) THEN
+  CALL MPI_Reduce_sum_Bcast(R)
+ENDIF
 
 END FUNCTION dot_product_SmolyakRep_Basis
 
@@ -2358,10 +2377,6 @@ nb_mult_BTOG = 0
 
 !to be sure to have the correct number of threads
 nb_thread = SGType2%nb_threads
-!!$OMP   SHARED(nb_mult_BTOG,D,SRep,tab_ba,SGType2,nb_thread) &
-!!$OMP   PRIVATE(iG,tab_nb,tab_nq,i,ib,iq,nnb,nnq,nb2,nq2,RTempG,RTempB) &
-!!$OMP   PRIVATE(tab_l,ith,err_sub) &
-
 
 !$OMP   PARALLEL DEFAULT(NONE) &
 !$OMP   SHARED(D,SRep,tab_ba,SGType2,nb_thread) &
@@ -2398,43 +2413,7 @@ DO iG=d1,d2
 
   CALL BDP_TO_GDP_OF_SmolyakRep(SRep%SmolyakRep(iG)%V,tab_ba,           &
                                 tab_l,tab_nq,tab_nb,nb0=SGType2%nb0)
-!
-!  nnb = product(tab_nb)
-!  nnq = 1
-!  nb2 = 1
-!  nq2 = 1
-!
-!  RTempG = reshape(SRep%SmolyakRep(iG)%V,shape=(/ nnq,nq2,nnb /))
-!! B order : b1 * b2 * b3 * ... bD
-!! G order : g1 * g2 * g3 * ... gD
-!
-!  DO i=1,D
-!    nb2 = tab_nb(i)
-!    nq2 = tab_nq(i)
-!    nnb = nnb / nb2
-!
-!    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
-!
-!    deallocate(RTempG)
-!    allocate(RTempG(nnq,nq2,nnb))
-!
-!    DO ib=1,nnb
-!    DO iq=1,nnq
-!       RTempG(iq,:,ib) = matmul(tab_ba(tab_l(i),i)%dnRGB%d0,RTempB(iq,:,ib))
-!
-!      !$OMP ATOMIC
-!      nb_mult_BTOG = nb_mult_BTOG + int(nq2,kind=ILkind)*int(nb2,kind=ILkind)
-!
-!    END DO
-!    END DO
-!
-!    nnq = nnq * nq2
-!    deallocate(RTempB)
-!
-!  END DO
-!
-!  SRep%SmolyakRep(iG)%V = reshape(RTempG, shape=(/ nnq /) )
-!  deallocate(RTempG)
+
 END DO
 
 IF (allocated(tab_l)) deallocate(tab_l)

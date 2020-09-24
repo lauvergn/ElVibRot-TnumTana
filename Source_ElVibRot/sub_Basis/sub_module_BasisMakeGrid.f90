@@ -75,11 +75,11 @@ IMPLICIT NONE
   END TYPE param_SimulatedAnnealing
   TYPE param_Grid_FOR_SA
 
-  integer           :: type_weight           =  0
+  integer           :: type_weight         =  0
 
   integer           :: type_grid           =  0
-  logical           :: ReOriented_grid           = .TRUE.
-  logical           :: ReCentered_grid           = .TRUE.
+  logical           :: ReOriented_grid     = .TRUE.
+  logical           :: ReCentered_grid     = .TRUE.
 
 
   integer           :: nb_mc_partial       =  100
@@ -1666,6 +1666,12 @@ STOP
         write(out_unitp,*)
       END IF
 !---------------------------------------------------------------------
+      if ( basis_cuba%read_para_cubature ) then
+        write(out_unitp,*) ' READ SA parameters'
+        CALL Read_param_SimulatedAnnealing(SA_para)
+        CALL Write_param_SimulatedAnnealing(SA_para)
+        STOP
+      end if
       CALL init_genrand64(0_ILkind)
 
 
@@ -1709,6 +1715,7 @@ STOP
         SA_para%TempScheduling_type =  2 ! 1: linear, 2: geometrical (exp cooling) ...
         SA_para%ExpCoolParam        =  0.995_Rkind
         SA_para%ExpCoolParam        =  0.999_Rkind
+        !SA_para%ExpCoolParam        =  0.99_Rkind
 
         SA_para%ResetTemp           = .TRUE.
         SA_para%ResetTempScal       =  ONE/THREE

@@ -36,12 +36,13 @@
       !!@description: TODO
       !!@param: TODO
       TYPE Type_oneDTransfo
-        integer                    :: iQin        = 0
-        integer                    :: type_oneD   = 0     ! identity
-        logical                    :: inTOout     =.TRUE. ! T => no inversion (inTOout), F => inversion (outTOin)
-        character (len=Name_len)   :: name_oneD   = "identity"
-        real (kind=Rkind), pointer :: cte(:)      => null()
-        integer, pointer           :: opt_cte(:)  => null()
+        integer                    :: iQin         = 0
+        integer                    :: type_oneD    = 0     ! identity
+        logical                    :: skip_transfo = .FALSE.
+        logical                    :: inTOout      =.TRUE. ! T => no inversion (inTOout), F => inversion (outTOin)
+        character (len=Name_len)   :: name_oneD    = "identity"
+        real (kind=Rkind), pointer :: cte(:)       => null()
+        integer, pointer           :: opt_cte(:)   => null()
       END TYPE Type_oneDTransfo
 
       INTERFACE alloc_array
@@ -51,8 +52,9 @@
         MODULE PROCEDURE dealloc_array_OF_OneDTransfodim1
       END INTERFACE
 
-      PUBLIC :: Type_oneDTransfo, alloc_oneDTransfo, dealloc_oneDTransfo, &
-                Read_oneDTransfo, Write_oneDTransfo, calc_oneDTransfo,    &
+      PUBLIC :: Type_oneDTransfo, alloc_oneDTransfo, dealloc_oneDTransfo,       &
+                Read_oneDTransfo, Read_InfiniteRange,                           &
+                Write_oneDTransfo, calc_oneDTransfo,                            &
                 oneDTransfo1TOoneDTransfo2, alloc_array, dealloc_array
 
       CONTAINS
@@ -182,6 +184,7 @@
 
         oneDTransfo2(it)%iQin         = oneDTransfo1(it)%iQin
         oneDTransfo2(it)%type_oneD    = oneDTransfo1(it)%type_oneD
+        oneDTransfo2(it)%skip_transfo = oneDTransfo1(it)%skip_transfo
         oneDTransfo2(it)%inTOout      = oneDTransfo1(it)%inTOout
         oneDTransfo2(it)%name_oneD    = oneDTransfo1(it)%name_oneD
         oneDTransfo2(it)%cte          = oneDTransfo1(it)%cte
@@ -190,35 +193,125 @@
       END DO
 
       END SUBROUTINE oneDTransfo1TOoneDTransfo2
+!=============================================================================
+  ! it uses the OneD transfo automatically
+  ! for inTOout=t (Qact -> Qcart direction)
+  ! x E ]-inf,inf[ => R E [0,inf[ ->  : "xTOR" or 111 =>
+  ! x E ]-inf,inf[ => theta E ]0,Pi[ ->  : "xTOtheta" or 71
+  ! x E ]-inf,inf[ => u E ]-1,1[ ->  : "xTOu" or 74 (with R0=1)
+  ! x E ]-inf,inf[ => phi E ]-pi,pi[ ->  : "xTOu" or 74 (with R0=Pi)
+  SUBROUTINE Read_InfiniteRange(oneDTransfo,type_Qout,not_all)
 
+    TYPE (Type_oneDTransfo), pointer, intent(inout) :: oneDTransfo(:)
+    integer,                          intent(in)    :: type_Qout(:) ! coordinate type (distance, angles ...)
+    logical,                          intent(in)    :: not_all ! if true, we can specify which coordinate will be tranformed
+
+    ! local variables
+    integer :: i
+
+!----- for debuging ------------------------------------------
+    integer :: err_mem,memory,err_io
+    character (len=*), parameter :: name_sub='Read_InfiniteRange'
+    logical, parameter :: debug=.FALSE.
+    !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+
+    IF (.NOT. associated(oneDTransfo)) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) '  oneDTransfo(:) is not associated !!'
+      write(out_unitp,*) ' Check the the FORTRAN !!'
+      STOP
+    END IF
+    IF (associated(oneDTransfo) .AND. size(oneDTransfo) < 1) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) '  the size of oneDTransfo(:) is < 1 !!'
+      write(out_unitp,*) '    size of oneDTransfo(:)',size(oneDTransfo)
+      write(out_unitp,*) ' Check the the FORTRAN !!'
+      STOP
+    END IF
+
+    oneDTransfo(:)%skip_transfo = .TRUE.
+
+    IF (not_all) THEN
+      read(in_unitp,*,IOSTAT=err_io) oneDTransfo(:)%skip_transfo
+      IF (err_io /= 0) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) '  while reading "oneDTransfo(:)%skip_transfo"'
+        write(out_unitp,*) '  end of file or end of record'
+        write(out_unitp,*) '  for "InfRange" or "InfiniteRange" transformation'
+        write(out_unitp,*) ' Check your data !!'
+        STOP
+      END IF
+      oneDTransfo(:)%skip_transfo = .NOT. oneDTransfo(:)%skip_transfo
+    ELSE
+      oneDTransfo(:)%skip_transfo = .FALSE.
+    END IF
+    IF (debug) write(out_unitp,*) 'type_Qout',type_Qout(:)
+    IF (debug) write(out_unitp,*) 'skip_transfo',oneDTransfo(:)%skip_transfo
+
+
+    DO i=1,size(oneDTransfo)
+      IF (oneDTransfo(i)%skip_transfo) CYCLE
+
+      oneDTransfo(i)%cte(:)       = ZERO
+      oneDTransfo(i)%cte(1)       = ONE
+      oneDTransfo(i)%inTOout      = .TRUE. ! T => no inversion (inTOout), F => inversion (outTOin)
+      oneDTransfo(i)%name_oneD    = "identity"
+      oneDTransfo(i)%type_oneD    = 0 ! identity
+      oneDTransfo(i)%iQin         = i
+      oneDTransfo(i)%opt_cte      = 0
+
+      SELECT CASE (type_Qout(i))
+      CASE (2) ! a distance
+        oneDTransfo(i)%name_oneD    = "xTOR"
+        oneDTransfo(i)%type_oneD    = 111
+      CASE (3) ! a valence angle
+        oneDTransfo(i)%name_oneD    = "xTOtheta"
+        oneDTransfo(i)%type_oneD    = 71
+      CASE (-3) ! cos of a valence angle
+        oneDTransfo(i)%name_oneD    = "xTOu"
+        oneDTransfo(i)%type_oneD    = 74
+      CASE (4) ! a dihedral angle
+        oneDTransfo(i)%name_oneD    = "xTOconstX"
+        oneDTransfo(i)%type_oneD    = 74
+        oneDTransfo(i)%cte(1)       = Pi
+      CASE Default
+        oneDTransfo(i)%skip_transfo = .TRUE.
+      END SELECT
+      IF (debug)  write(out_unitp,*) i,'Transfo: "',trim(oneDTransfo(i)%name_oneD),'"'
+    END DO
+
+  END SUBROUTINE Read_InfiniteRange
+!=============================================================================
 
       SUBROUTINE Read_oneDTransfo(oneDTransfo,nb_transfo,nb_Qin)
 
       TYPE (Type_oneDTransfo), pointer, intent(inout) :: oneDTransfo(:)
-      integer, intent(in) :: nb_Qin,nb_transfo
+      integer,                          intent(in)    :: nb_Qin,nb_transfo
 
       integer :: i,it,nb_flex_act,err,nbcol
 
-      logical                    :: inTOout
+      logical                    :: inTOout,skip_transfo
       integer                    :: iQin,type_oneD
       character (len=Name_len)   :: name_oneD
       real (kind=Rkind)          :: cte(20)
       integer                    :: opt_cte(20) = 0
 
-       NAMELIST /oneD / iQin,inTOout,name_oneD,cte,opt_cte
+       NAMELIST /oneD / iQin,inTOout,name_oneD,cte,opt_cte,skip_transfo
 
       character (len=*), parameter :: name_sub='Read_oneDTransfo'
 
       CALL alloc_oneDTransfo(oneDTransfo,nb_transfo)
 
       DO i=1,nb_transfo
-        cte(:)    = ZERO
-        cte(1)    = ONE
-        inTOout   = .TRUE. ! T => no inversion (inTOout), F => inversion (outTOin)
-        name_oneD = "identity"
-        type_oneD = 0 ! identity
-        iQin      = 0
-        opt_cte   = 0
+        cte(:)       = ZERO
+        cte(1)       = ONE
+        inTOout      = .TRUE. ! T => no inversion (inTOout), F => inversion (outTOin)
+        name_oneD    = "identity"
+        type_oneD    = 0 ! identity
+        iQin         = 0
+        skip_transfo = .FALSE.
+        opt_cte      = 0
 
         read(in_unitp,oneD,IOSTAT=err)
         IF (err /= 0) THEN
@@ -238,11 +331,12 @@
           write(out_unitp,*) ' Check your data !!'
           STOP
         END IF
-        oneDTransfo(i)%iQin      = iQin
-        oneDTransfo(i)%cte       = cte
-        oneDTransfo(i)%opt_cte   = opt_cte
-        oneDTransfo(i)%inTOout   = inTOout
-        oneDTransfo(i)%name_oneD = name_oneD
+        oneDTransfo(i)%iQin         = iQin
+        oneDTransfo(i)%cte          = cte
+        oneDTransfo(i)%opt_cte      = opt_cte
+        oneDTransfo(i)%inTOout      = inTOout
+        oneDTransfo(i)%name_oneD    = name_oneD
+        oneDTransfo(i)%skip_transfo = skip_transfo
 
         !special test when the name is not defined (just the number):
         read(name_oneD,*,IOSTAT=err) type_oneD
@@ -264,7 +358,7 @@
             write(out_unitp,*) ' Qin  = ( Qold - cte(2) ) / cte(1)'
             write(out_unitp,*) ' 10**-4 < abs(cte(1)) < 10**4'
             write(out_unitp,*) ' Check your data !!'
-          STOP
+            STOP
           END IF
           IF (inTOout) THEN
             oneDTransfo(i)%type_oneD = 100
@@ -363,7 +457,7 @@
         END IF
       END DO
 
-      END SUBROUTINE Read_oneDTransfo
+    END SUBROUTINE Read_oneDTransfo
 
       SUBROUTINE Write_oneDTransfo(oneDTransfo)
 
@@ -376,12 +470,13 @@
 
       write(out_unitp,*) 'BEGINNING Write_oneDTransfo ',size(oneDTransfo)
       DO it=1,size(oneDTransfo)
-        write(out_unitp,*) 'it,iQin       ',it,oneDTransfo(it)%iQin
-        write(out_unitp,*) 'it,type_oneD  ',it,oneDTransfo(it)%type_oneD
-        write(out_unitp,*) 'it,inTOout    ',it,oneDTransfo(it)%inTOout
-        write(out_unitp,*) 'it,name_oneD  ',it,trim(adjustl(oneDTransfo(it)%name_oneD))
-        write(out_unitp,*) 'it,cte(:)     ',it,oneDTransfo(it)%cte(:)
-        write(out_unitp,*) 'it,opt_cte(:) ',it,oneDTransfo(it)%opt_cte(:)
+        write(out_unitp,*) 'it,iQin         ',it,oneDTransfo(it)%iQin
+        write(out_unitp,*) 'it,type_oneD    ',it,oneDTransfo(it)%type_oneD
+        write(out_unitp,*) 'it,skip_transfo ',it,oneDTransfo(it)%skip_transfo
+        write(out_unitp,*) 'it,inTOout      ',it,oneDTransfo(it)%inTOout
+        write(out_unitp,*) 'it,name_oneD    ',it,trim(adjustl(oneDTransfo(it)%name_oneD))
+        write(out_unitp,*) 'it,cte(:)       ',it,oneDTransfo(it)%cte(:)
+        write(out_unitp,*) 'it,opt_cte(:)   ',it,oneDTransfo(it)%opt_cte(:)
       END DO
       write(out_unitp,*) 'END Write_oneDTransfo '
 
@@ -434,6 +529,8 @@
         CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv=nderiv)
 
         DO i=1,size(oneDTransfo)
+          IF (oneDTransfo(i)%skip_transfo) CYCLE
+
           iQin   = oneDTransfo(i)%iQin
           name_oneD = oneDTransfo(i)%name_oneD
           type_oneD = oneDTransfo(i)%type_oneD
@@ -456,6 +553,8 @@
       ELSE  ! => Qin=oneT^-1(Qout)
         CALL sub_dnVec1_TO_dnVec2(dnQout,dnQin,nderiv=nderiv)
         DO i=1,size(oneDTransfo)
+          IF (oneDTransfo(i)%skip_transfo) CYCLE
+
           iQin   = oneDTransfo(i)%iQin
           name_oneD = oneDTransfo(i)%name_oneD
           type_oneD = -oneDTransfo(i)%type_oneD ! the invers
@@ -486,4 +585,3 @@
       END SUBROUTINE calc_oneDTransfo
 
       END MODULE mod_OneDTransfo
-

@@ -112,11 +112,11 @@
 
       !!@description: TODO
       !!@param: TODO
-      SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,mendeleev)
+      SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,nb_extra_Coord,mendeleev)
         USE mod_MPI
 
         TYPE (Type_Qtransfo), intent(inout)    :: Qtransfo
-        integer,              intent(inout)    :: nb_Qin
+        integer,              intent(inout)    :: nb_Qin,nb_extra_Coord
         TYPE (table_atom),    intent(in)       :: mendeleev
 
         character (len=Name_len) :: name_transfo,name_dum
@@ -400,6 +400,23 @@
           CALL sub_Type_Name_OF_Qin(Qtransfo,"QoneD")
           Qtransfo%type_Qin(:) = 0
 
+        CASE ('infrange','infiniterange') ! it uses the OneD transfo automatically
+          ! for inTOout=t (Qact -> Qcart direction)
+          ! x E ]-inf,inf[ => R E [0,inf[ ->  : "xTOR" or 111 =>
+          ! x E ]-inf,inf[ => theta E ]0,Pi[ ->  : "xTOtheta" or 71
+          ! x E ]-inf,inf[ => u E ]-1,1[ ->  : "xTOu" or 74 (with R0=1)
+          ! x E ]-inf,inf[ => phi E ]-pi,pi[ ->  : "xTOu" or 74 (with R0=Pi)
+
+          Qtransfo%nb_Qin  = nb_Qin
+
+          CALL alloc_oneDTransfo(Qtransfo%oneDTransfo,nb_Qin)
+          Qtransfo%nb_transfo = nb_Qin
+
+          CALL Read_InfiniteRange(Qtransfo%oneDTransfo,Qtransfo%type_Qout,not_all)
+
+          CALL sub_Type_Name_OF_Qin(Qtransfo,"InfiniteRange")
+          Qtransfo%type_Qin(:) = 0
+
         CASE ('threed')
           Qtransfo%nb_Qin  = nb_Qin
 
@@ -454,9 +471,9 @@
           Qtransfo%ZmatTransfo%cos_th = cos_th
           Qtransfo%ZmatTransfo%nat0   = nat
           Qtransfo%ZmatTransfo%nat    = nat + 1
-          Qtransfo%ZmatTransfo%nb_var = max(1,3*nat-6)
+          Qtransfo%ZmatTransfo%nb_var = max(1,3*nat-6)+nb_extra_Coord
           Qtransfo%ZmatTransfo%ncart  = 3*(nat+1)
-          Qtransfo%nb_Qin             = max(1,3*nat-6)
+          Qtransfo%nb_Qin             = max(1,3*nat-6)+nb_extra_Coord
           Qtransfo%nb_Qout            = 3*(nat+1)
           IF (debug) write(out_unitp,*) 'nat0,nat,nb_var,ncart',        &
                      Qtransfo%ZmatTransfo%nat0,Qtransfo%ZmatTransfo%nat,&
@@ -495,7 +512,7 @@
             Qtransfo%BunchTransfo%nb_X   = nb_X
             Qtransfo%BunchTransfo%nat0   = nat
             Qtransfo%BunchTransfo%nat    = nat + 1
-            Qtransfo%BunchTransfo%nb_var = max(1,3*nb_vect-3)
+            Qtransfo%BunchTransfo%nb_var = max(1,3*nb_vect-3)+nb_extra_Coord
             Qtransfo%BunchTransfo%ncart  = 3*(nat+1)
             Qtransfo%nb_Qin              = 3*nb_vect ! or 3*nat !!
             Qtransfo%nb_Qout             = 3*(nat+1)
@@ -587,7 +604,7 @@
 
         CASE ('qtox_ana')
           Qtransfo%Primitive_Coord    = .TRUE.
-          Qtransfo%nb_Qin             = max(1,3*nat-6)
+          Qtransfo%nb_Qin             = max(1,3*nat-6)+nb_extra_Coord
           Qtransfo%nb_Qout            = 3*nat+3
           CALL alloc_array(Qtransfo%type_Qin,(/Qtransfo%nb_Qin/),       &
                           "Qtransfo%type_Qin",name_sub)
@@ -601,7 +618,7 @@
           Qtransfo%QTOXanaTransfo%nat0      = nat
           Qtransfo%QTOXanaTransfo%nat       = nat + 1
           Qtransfo%QTOXanaTransfo%nat_act   = nat
-          Qtransfo%QTOXanaTransfo%nb_var    = max(1,3*nat-6)
+          Qtransfo%QTOXanaTransfo%nb_var    = max(1,3*nat-6)+nb_extra_Coord
           Qtransfo%QTOXanaTransfo%ncart     = 3*(nat+1)
           Qtransfo%QTOXanaTransfo%ncart_act = 3*nat
 
@@ -685,6 +702,7 @@
         write(nio,*) '"gene"'
         write(nio,*) '"order"'
         write(nio,*) '"oneD"'
+        write(nio,*) '"InfRange" or "InfiniteRange"'
         write(nio,*) '"ThreeD"'
         write(nio,*) '"Rot2Coord"'
 
@@ -995,7 +1013,7 @@
         Qtransfo2%HyperSpheTransfo%list_HyperSphe =                     &
                               Qtransfo1%HyperSpheTransfo%list_HyperSphe
 
-      CASE ('oned')
+      CASE ('oned','infrange','infiniterange')
         IF (Qtransfo2%nb_transfo < 1) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) '  Wrong number of transformation:',       &
@@ -1192,7 +1210,7 @@
         CALL calc_HyperSpheTransfo(dnQin,dnQout,Qtransfo%HyperSpheTransfo,&
                                    nderiv,inTOout_loc)
 
-      CASE ('oned')
+      CASE ('oned','infrange','infiniterange')
         CALL calc_oneDTransfo(dnQin,dnQout,Qtransfo%oneDTransfo,        &
                               nderiv,inTOout_loc)
 
@@ -1308,7 +1326,7 @@
 !===============================================================================
       SUBROUTINE Write_Qtransfo(Qtransfo,force_print)
         USE mod_MPI
-        
+
         TYPE (Type_Qtransfo) :: Qtransfo
         logical, optional    :: force_print
 
@@ -1418,8 +1436,8 @@
           write(out_unitp,*) 'list_HyperSphe: ',                        &
                  Qtransfo%HyperSpheTransfo%list_HyperSphe(:)
 
-        CASE ('oned')
-          write(out_unitp,*) 'oneD transfo'
+        CASE ('oned','infrange','infiniterange')
+          write(out_unitp,*) 'oneD transfo or InfiniteRange'
           IF (Qtransfo%nb_transfo < 1) THEN
               write(out_unitp,*) ' ERROR in ',name_sub
               write(out_unitp,*) '  Wrong number of transformation:',   &

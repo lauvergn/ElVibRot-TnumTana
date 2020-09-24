@@ -61,6 +61,7 @@ MODULE mod_ActiveTransfo
           integer,           pointer  :: list_act_OF_Qdyn(:) => null()  ! "active" transfo
           integer,           pointer  :: list_QactTOQdyn(:)  => null() ! "active" transfo
           integer,           pointer  :: list_QdynTOQact(:)  => null() ! "active" transfo
+
       END TYPE Type_ActiveTransfo
 
       INTERFACE alloc_array
@@ -98,8 +99,8 @@ MODULE mod_ActiveTransfo
       !!@param: TODO
       SUBROUTINE alloc_ActiveTransfo(ActiveTransfo,nb_var)
 
-      TYPE (Type_ActiveTransfo), intent(inout) :: ActiveTransfo
-      integer, intent(in) :: nb_var
+      TYPE (Type_ActiveTransfo),  intent(inout) :: ActiveTransfo
+      integer,                    intent(in)    :: nb_var
 
       character (len=*), parameter :: name_sub='alloc_ActiveTransfo'
 
@@ -229,8 +230,8 @@ MODULE mod_ActiveTransfo
       SUBROUTINE Read_ActiveTransfo(ActiveTransfo,nb_Qin)
       USE mod_MPI
 
-      TYPE (Type_ActiveTransfo), intent(inout) :: ActiveTransfo
-      integer, intent(in) :: nb_Qin
+      TYPE (Type_ActiveTransfo),  intent(inout) :: ActiveTransfo
+      integer,                    intent(in)    :: nb_Qin
 
       integer :: err
       character (len=*), parameter :: name_sub='Read_ActiveTransfo'

@@ -1,0 +1,74 @@
+ SYSTEM=sub_system_murrell_extraCoord.f
+ test=f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+ x1=0.538516066
+ x2=0.461483933
+
+#export OMP_NUM_THREADS=4
+
+nice $DIR_vib/vib << ** >res
+ &system /
+ &constantes /
+ &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 nb_extra_Coord=1
+/
+ &Coord_transfo name_transfo='zmat' nat=4 /
+C
+X     1
+N     2  1
+H     2 -1 3
+
+ &Coord_transfo name_transfo='linear' /
+sym  cos(a)      R     r    x    pi   dh  extra
+7
+1      0.        0.  $x1    1.   0.   0.  0.
+2      0.        0.  $x2   -1.   0.   0.  0.
+3      0.        0.  0.     0.   1.   0.  0.
+4      0.        1.  0.     0.   0.   0.  0.
+5      1.        0.  0.     0.   0.   0.  0.
+6      0.        0.  0.     0.   0.   1.  0.
+7      0.        0.  0.     0.   0.   0.  1.
+
+ &Coord_transfo name_transfo='flexible' /
+ 20 20 20 0 0 0 1
+
+ &Coord_transfo name_transfo='active' /
+ 0 1 1    0 0 0 1
+
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2 /
+.0d0
+0.2
+0.1
+0.
+3.1415926535d0
+0.0
+0.75
+
+ &basis_nD iQdyn(1)=7 name="Pl0" nb=51 nq=80 /
+ &basis_nD iQdyn(1)=2 name="Hm" nb=10 nq=15 Q0=0. scaleQ=5.1 /
+ &basis_nD iQdyn(1)=3 name="Hm" nb=10 nq=15 Q0=0. scaleQ=11.0 /
+ &inactives /
+ &actives test=$test direct=2 Save_FileGrid=t Seq_FileGrid=t /
+ &analyse max_ana=40 max_ene=50000.d0 print=f print_psi=0 davidson=t /
+ &davidson nb_WP=3 max_it=100 max_WP=300 num_resetH=100
+           lower_states=t project_WP0=f one_residue=f all_lower_states=t max_Ene=4000.
+           read_WP=f read_listWP=f
+/
+ 1 1 1    1 1   1.0
+end wp0
+ 2 1 1    1 1   1.0
+end wp0
+ 3 1 1    1 1   1.0
+end wp0
+
+**
+

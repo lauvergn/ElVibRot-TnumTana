@@ -88,8 +88,8 @@ cat > namelist << EOF
  &system 
   EVR=t 
   printlevel=0 
-  MPI_Scheme=1
-  MPI_mc=3
+  MPI_Scheme=2
+  MPI_mc=1
 /
  &constantes ene_unit='au' /
  &variables

@@ -188,7 +188,7 @@ PUBLIC :: SaveWP_restart,ReadWP_restart
 
         real (kind=Rkind)   ::  Hmax              = ZERO
         real (kind=Rkind)   ::  Hmin              = ZERO
-        logical             ::  once_Hmin         =.TRUE.!< control the calculation of 
+        logical             ::  once_Hmin         =.TRUE.!< control the calculation of
                                                          !< Hmin once at the first action
         logical             ::  auto_Hmax         = .FALSE.    !  .TRUE. => Hmax is obtained with a propagation
                                               !            with imaginary time (type_WPpropa=-3)
@@ -876,8 +876,10 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
     !-----------------------------------------------------------
     ! => Analysis for diabatic potential (always done)
 
-    IF(keep_MPI) CALL Channel_weight(tab_WeightChannels,w1,GridRep=.FALSE.,BasisRep=.TRUE.)
-    Psi_norm2 = sum(tab_WeightChannels)
+    IF(keep_MPI) THEN
+      CALL Channel_weight(tab_WeightChannels,w1,GridRep=.FALSE.,BasisRep=.TRUE.)
+      Psi_norm2 = sum(tab_WeightChannels)
+    ENDIF
     IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(Psi_norm2,size1_MPI,root_MPI)
 
     ! add the psi number + the time
@@ -911,11 +913,11 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
     psi_line = psi_line // ' ' // real_TO_char(Psi_norm2,Rformat='f10.7')
     DO i_be=1,WP(i)%nb_be
     DO i_bi=1,WP(i)%nb_bi
-      psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
+      IF(keep_MPI) psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
     END DO
     END DO
 
-    write(out_unitp,*) psi_line
+    IF(keep_MPI) write(out_unitp,*) psi_line
 
 
   END DO
@@ -1131,19 +1133,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
         IF (print_level > 0) write(out_unitp,propa)
 
-
-        para_propa%WPTmax                 = convRWU_TO_R_WITH_WorkingUnit(WPTmax)
-        para_propa%WPdeltaT               = convRWU_TO_R_WITH_WorkingUnit(WPdeltaT)
-        para_propa%nb_micro               = nb_micro
-        para_propa%One_Iteration          = One_Iteration
-        para_propa%para_poly%max_poly     = max_poly
-        para_propa%para_poly%npoly        = npoly
-
-        CALL alloc_param_poly(para_propa%para_poly)
-
-        para_propa%spectral      = spectral
-        nb_vp_spec_out           = nb_vp_spec
         para_propa%with_field    = .FALSE.
+
 
   IF (type_WPpropa > 0 .AND. name_WPpropa /= '') THEN
     write(out_unitp,*) 'ERROR in ',name_sub
@@ -1177,8 +1168,19 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
          type_WPpropa = 52
        CASE ('tdh-rk4')
          type_WPpropa = 54
+
        CASE ('rk4')
          type_WPpropa = 5
+         npoly = 4
+       CASE ('rk2')
+         type_WPpropa = 5
+         npoly = 2
+       CASE ('rk1','euker')
+         type_WPpropa = 5
+         npoly = 1
+       CASE ('rkn')
+         type_WPpropa = 5
+         IF (npoly /= 4 .AND. npoly /= 2 .AND. npoly /= 1) npoly = 4
 
        CASE ('modmidpoint')
          type_WPpropa = 6
@@ -1210,7 +1212,10 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
   CASE (5) !         RK4 without a time dependant pulse in Hamiltonian (W(t))
           IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
           IF (DHmax .EQ. -TEN) DHmax = ZERO
-          name_WPpropa  = 'RK4'
+          IF (npoly /= 4 .AND. npoly /= 2 .AND. npoly /= 1) npoly = 4
+          IF (npoly == 4) name_WPpropa  = 'RK4'
+          IF (npoly == 2) name_WPpropa  = 'RK2'
+          IF (npoly == 1) name_WPpropa  = 'RK1'
           para_propa%with_field    = .FALSE.
 
   CASE (6) !         ModMidPoint without a time dependant pulse in Hamiltonian (W(t))
@@ -1284,6 +1289,18 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
            STOP
   END SELECT
 
+
+        para_propa%WPTmax                 = convRWU_TO_R_WITH_WorkingUnit(WPTmax)
+        para_propa%WPdeltaT               = convRWU_TO_R_WITH_WorkingUnit(WPdeltaT)
+        para_propa%nb_micro               = nb_micro
+        para_propa%One_Iteration          = One_Iteration
+        para_propa%para_poly%max_poly     = max_poly
+        para_propa%para_poly%npoly        = npoly
+
+        CALL alloc_param_poly(para_propa%para_poly)
+
+        para_propa%spectral      = spectral
+        nb_vp_spec_out           = nb_vp_spec
 
         para_propa%para_poly%poly_tol     = poly_tol
         para_propa%para_poly%DHmax        = DHmax

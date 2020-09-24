@@ -42,7 +42,7 @@
 !===========================================================================
 MODULE mod_Davidson
 USE mod_Constant
-USE mod_MPI 
+USE mod_MPI
 IMPLICIT NONE
 
 PRIVATE
@@ -159,7 +159,7 @@ CONTAINS
         write(out_unitp,*) 'project_WP0     ',para_Davidson%project_WP0
         write(out_unitp,*) 'NewVec_type     ',para_Davidson%NewVec_type
       ENDIF
-     
+
       IF (para_Davidson%Op_Transfo .AND. para_H%para_ReadOp%Op_Transfo) THEN
 
         DE = para_Davidson%max_ene
@@ -169,7 +169,7 @@ CONTAINS
           write(out_unitp,*) 'alloc Poly_Transfo:   ',allocated(para_H%para_ReadOp%Poly_Transfo)
           write(out_unitp,*) 'Poly_Transfo:   ',para_H%para_ReadOp%Poly_Transfo
         ENDIF
-        
+
         para_Davidson%max_ene = para_H%para_ReadOp%Poly_Transfo(0)
         DO i=1,para_H%para_ReadOp%degree_Transfo
           para_Davidson%max_ene = para_Davidson%max_ene + &
@@ -266,7 +266,7 @@ CONTAINS
 
       !--------------------------------------------------------------------------------
       ! loop for davidson with maximum iter number para_Davidson%max_it
-      !--------------------------------------------------------------------------------      
+      !--------------------------------------------------------------------------------
       DO it=0,para_Davidson%max_it
 
         IF(MPI_id==0) THEN
@@ -349,7 +349,7 @@ CONTAINS
           ! CALL diagonalization(H,Ene(1:ndim),Vec,ndim,4,1,.FALSE.)
           CALL diagonalization(H,Ene(1:ndim),Vec,ndim,4,1,.True.)
         END IF
- 
+
         IF (it == 0 .OR. (it > 1 .AND.                                    &
               mod(it-1,para_Davidson%num_resetH) == 0) ) THEN
           EneRef(:) = Ene(:)
@@ -461,7 +461,7 @@ CONTAINS
 42        format(a,i3,100(1x,l9))
 
           !CALL time_perso('residual done')
-          
+
           IF (debug) write(out_unitp,*) 'residual',it,ndim,ndim0
           IF (debug) CALL flush_perso(out_unitp)
           !- residual vector and convergence ------------------------
@@ -609,7 +609,7 @@ CONTAINS
             write(out_unitp,'(a,i0,a,i0)') 'At Davidson iteration: ',it,', Delta Real time (s): ',int(RealTime)
           END IF
           CALL flush_perso(out_unitp)
-        
+
         IF (conv) EXIT
 
 !#if(run_MPI)
@@ -672,7 +672,7 @@ CONTAINS
         psi(j)%IndAvOp  = para_H%n_Op  ! it should be 0
         psi(j)%convAvOp = convergeEne(j) .AND. convergeResi(j)
       END DO
-      
+
       IF(MPI_id==0) THEN
         write(out_unitp,*)
         write(out_unitp,*) 'Number of Hamiltonian operations (H I psi >)',para_H%nb_OpPsi
@@ -696,7 +696,7 @@ CONTAINS
       write(out_unitp,*) '==========================================='
       write(out_unitp,*) '==========================================='
       CALL flush_perso(out_unitp)
-      
+
       !----------------------------------------------------------
       IF (allocated(Vec))  THEN
         CALL dealloc_NParray(Vec,"Vec",name_sub)
@@ -976,7 +976,7 @@ CONTAINS
      CALL Overlap_psi1_psi2(Overlap,psi(i),Hpsi(i),With_Grid=With_Grid)
      Ene(i) = real(Overlap,kind=Rkind)
    ENDIF
-   
+
    IF (debug) write(out_unitp,*) 'Davidson Hpsi done',i,                &
                     Ene(i)*auTOene,(Ene(i)-Ene(1))*auTOene
    IF(MPI_id==0) THEN
@@ -1028,8 +1028,8 @@ CONTAINS
 
  !----- WP ... -----------------------------------
  TYPE (param_Davidson),    intent(in)     :: para_Davidson
- TYPE (param_psi),         intent(in)     :: psi(:)  
- TYPE (param_psi),         intent(in)     :: Hpsi(:) 
+ TYPE (param_psi),         intent(in)     :: psi(:)
+ TYPE (param_psi),         intent(in)     :: Hpsi(:)
 
  !----- Operator: Hamiltonian ----------------------------
  real (kind=Rkind), allocatable, intent(inout) :: H(:,:)
@@ -1114,7 +1114,7 @@ CONTAINS
    H(j,i) = real(Overlap,kind=Rkind)
  END DO
  END DO
- 
+
  !blocks: 1,2 ndim0*(ndim0-ndim) + 2,2: (ndim0-ndim)*(ndim0-ndim)
  DO i=ndim0+1,ndim
  DO j=1,ndim
@@ -1178,14 +1178,14 @@ IF(openmpi) THEN
   CALL flush_perso(out_unitp)
 ELSE
  CALL alloc_NParray(S,(/ndim,ndim/),"S",name_sub)
- 
+
  DO j=1,ndim
  DO i=1,ndim
    CALL Overlap_psi1_psi2(Overlap,psi(i),psi(j),With_Grid)
    S(i,j) = real(Overlap,kind=Rkind)
  END DO
  END DO
- 
+
  CALL sub_ana_S(S,ndim,max_Sii,max_Sij,.TRUE.)
  IF (Print_Mat) CALL Write_Mat(S,out_unitp,5)
  CALL flush_perso(out_unitp)
@@ -1526,7 +1526,6 @@ END SUBROUTINE MakeResidual_Davidson
        IF (psi(ndim+1)%norm2 < ONETENTH**10) CYCLE ! otherwise dependent vector
        
        !write(out_unitp,*) ' symab: psi(isym), new vec ortho',psi(isym)%symab,psi(ndim+1)%symab
-
 
        IF (debug) THEN
           write(out_unitp,*) '  symab new vectors',psi(ndim+1)%symab

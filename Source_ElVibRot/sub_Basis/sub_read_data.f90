@@ -89,7 +89,7 @@
         write(out_unitp,*) '---------------------------------------'
         write(out_unitp,*)
       ENDIF
-     
+
       ! parameter for BasisnD
       BasisnD_loc%type           = 1
       BasisnD_loc%name           = 'direct_prod'
@@ -216,7 +216,7 @@
         write(out_unitp,*) 'BasisnD%opt_param',BasisnD%opt_param
         write(out_unitp,*)
       ENDIF
-    
+
       CALL dealloc_basis(BasisnD_loc)
       !CALL RecWriteMini_basis(BasisnD)
 
@@ -343,7 +343,7 @@
       IMPLICIT NONE
 
 !----- for the active basis set ---------------------------------------
-      integer              :: nb,nq,nbc,nqc
+      integer              :: nb,nq,nq_extra,nbc,nqc
       integer              :: Nested,nq_max_Nested
       integer              :: SparseGrid_type
       logical              :: SparseGrid,With_L
@@ -365,8 +365,8 @@
       integer            :: ndim,nb_basis
 
       logical            :: packed,dnBBRep,contrac,contrac_analysis,read_contrac_file
-      logical            :: auto_basis,auto_contrac,POGridRep,POGridRep_polyortho,make_cubature
-      logical            :: restart_make_cubature
+      logical            :: auto_basis,auto_contrac,POGridRep,POGridRep_polyortho
+      logical            :: restart_make_cubature,make_cubature,read_para_cubature
       TYPE (REAL_WU)     :: max_ene_contrac
       integer            :: max_nbc,min_nbc,nqPLUSnbc_TO_nqc
       integer            :: auto_contrac_type1_TO,auto_contrac_type21_TO
@@ -385,6 +385,7 @@
 
       real (kind=Rkind)  :: cte(20,max_dim),A(max_dim),B(max_dim),Q0(max_dim),scaleQ(max_dim)
       integer :: opt_A(max_dim),opt_B(max_dim),opt_Q0(max_dim),opt_scaleQ(max_dim)
+      logical :: TD_Q0(max_dim),TD_scaleQ(max_dim)
 
 
       TYPE (basis)       :: basis_temp
@@ -395,8 +396,10 @@
       integer       :: i
 
       NAMELIST /basis_nD/iQact,iQsym,iQdyn,name,                        &
-                        nb,nq,nbc,nqc,contrac,contrac_analysis,cte,cplx,&
+                        nb,nq,nq_extra,                                 &
+                        nbc,nqc,contrac,contrac_analysis,cte,cplx,      &
                  auto_basis,A,B,Q0,scaleQ,opt_A,opt_B,opt_Q0,opt_scaleQ,&
+                         TD_Q0,TD_scaleQ,                               &
                          symab,index_symab,                             &
                          L_TO_n_type,                                   &
                          L_SparseGrid,L_TO_nq_A,L_TO_nq_B,L_TO_nq_C,    &
@@ -413,7 +416,7 @@
                          MaxCoupling_OF_nDindB,nDinit_OF_nDindB,contrac_WITH_nDindB,   &
                          packed,dnBBRep,                                &
                          name_contrac_file,auto_contrac,                &
-                         make_cubature,restart_make_cubature,           &
+                         make_cubature,restart_make_cubature,read_para_cubature,&
                          POGridRep_polyortho,POGridRep,nb_basis,        &
                       max_ene_contrac,max_nbc,min_nbc,nqPLUSnbc_TO_nqc, &
                          auto_contrac_type1_TO,auto_contrac_type21_TO
@@ -439,6 +442,7 @@
       contrac_analysis         = .FALSE.
       make_cubature            = .FALSE.
       restart_make_cubature    = .FALSE.
+      read_para_cubature       = .FALSE.
       auto_contrac             = .FALSE.
       POGridRep                = .FALSE.
       POGridRep_polyortho      = .FALSE.
@@ -461,11 +465,15 @@
       opt_scaleQ(:)            = 0
       auto_basis               = .FALSE.
 
+      TD_Q0(:)                 = .FALSE.
+      TD_scaleQ(:)             = .FALSE.
+
       iQact(:)                 = 0
       iQsym(:)                 = 0
       iQdyn(:)                 = 0
       nb                       = 0
       nq                       = 0
+      nq_extra                 = 0
       Nested                   = 0
       nq_max_Nested            = -1
       nbc                      = -1
@@ -756,17 +764,6 @@
         IF (SparseGrid_type == 2) basis_temp%With_L = .TRUE.
         IF (SparseGrid_type == 4) basis_temp%With_L = .TRUE.
 
-        ! Be carefull we can deal with only one type of Sparse Grid in the same calculation
-!        IF ( SGtype > 0 .AND. SparseGrid_type > 0) THEN
-!        IF ( (SparseGrid_type-SGtype) /= 0) THEN
-!          write(out_unitp,*) ' ERROR in ',name_sub
-!          write(out_unitp,*) ' There are two Smolyak types',SGtype,SparseGrid_type
-!          write(out_unitp,*) ' ... in the same calculation'
-!          write(out_unitp,*) ' You can use only one type!'
-!          write(out_unitp,*) ' Check your data !'
-!          STOP
-!        END IF
-!        END IF
         IF (SparseGrid_type == 1 .OR. SparseGrid_type == 2 .OR. SparseGrid_type == 4) SGtype = SparseGrid_type
 
 
@@ -796,6 +793,7 @@
       basis_temp%auto_contrac             = auto_contrac
       basis_temp%make_cubature            = make_cubature
       basis_temp%restart_make_cubature    = restart_make_cubature
+      basis_temp%read_para_cubature       = read_para_cubature
       basis_temp%max_ene_contrac          = convRWU_TO_R_WITH_WorkingUnit(max_ene_contrac)
       basis_temp%max_nbc                  = max_nbc
       basis_temp%min_nbc                  = min_nbc
@@ -883,6 +881,8 @@
             basis_temp%Q0(i)     = ZERO
             basis_temp%scaleQ(i) = ONE
           END IF
+          basis_temp%TD_Q0(i)     = TD_Q0(i)
+          basis_temp%TD_scaleQ(i) = TD_scaleQ(i)
         END DO
 
         basis_temp%auto_basis = (auto_basis .AND. ndim == 1)
@@ -921,6 +921,16 @@
 
       END IF
 
+
+      basis_temp%nq_extra = nq_extra
+      IF (basis_temp%nq_extra > 0 .AND. ndim > 0) THEN
+        write(out_unitp,*) 'Read nq_extra (',basis_temp%nq_extra,') grid points'
+        CALL alloc_NParray(basis_temp%x_extra,[ndim,basis_temp%nq_extra],      &
+                          'basis_temp%x_extra',name_sub)
+        DO i=1,basis_temp%nq_extra
+          read(in_unitp,*)  dummy_name,basis_temp%x_extra(:,i)
+        END DO
+      END IF
 
 !---------------------------------------------------------------------
       IF (debug) THEN
