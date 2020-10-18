@@ -44,6 +44,12 @@ MODULE mod_CRP
   USE mod_system
   IMPLICIT NONE
 
+  TYPE CRP_Eckart_t
+    real (kind=Rkind) :: V0 = 0.0156_Rkind   ! Baloitcha values
+    real (kind=Rkind) :: L  = ONE            !  //
+    real (kind=Rkind) :: m  = 1060._Rkind    !  //
+  END TYPE CRP_Eckart_t
+
   TYPE param_CRP
     real (kind=Rkind) :: Ene    = ZERO            ! Total energy for CRP
     real (kind=Rkind) :: DEne   = ZERO            ! Energy increment for the CRP
@@ -63,6 +69,9 @@ MODULE mod_CRP
     real (kind=Rkind)        :: LinSolv_accuracy    = ONETENTH**7
     character (len=Name_len) :: Preconditioner_Type = 'Identity'
     logical                  :: FluxOp_test         = .FALSE.
+
+    logical                  :: With_Eckart         = .FALSE.
+    TYPE (CRP_Eckart_t)      :: Eckart
 
   END TYPE param_CRP
 
@@ -87,6 +96,11 @@ IMPLICIT NONE
   real (kind=Rkind)        :: LinSolv_accuracy    = ONETENTH**7
   character (len=Name_len) :: Preconditioner_Type = 'Identity'
   logical                  :: FluxOp_test         = .FALSE.
+
+    TYPE (CRP_Eckart_t)    :: Eckart ! to be able to compar with Eckart CRP
+    logical                :: With_Eckart
+
+
   !----- for debuging --------------------------------------------------
   integer :: err_mem,memory
   character (len=*), parameter :: name_sub = "read_CRP"
@@ -97,7 +111,8 @@ IMPLICIT NONE
   NAMELIST /CRP/Ene,DEne,nb_Ene,CRP_Type,                               &
                 KS_max_it,KS_accuracy,                                  &
                 LinSolv_Type,LinSolv_max_it,LinSolv_accuracy,           &
-                Preconditioner_Type,FluxOp_test
+                Preconditioner_Type,FluxOp_test,                        &
+                Eckart,With_Eckart
 
   Ene                 = REAL_WU(ZERO,'cm-1','E')
   DEne                = REAL_WU(ZERO,'cm-1','E')
@@ -111,9 +126,14 @@ IMPLICIT NONE
   LinSolv_accuracy    = ONETENTH**7
   Preconditioner_Type = 'Diag'
   FluxOp_test         = .FALSE.
+  With_Eckart         = .FALSE.
+  Eckart              = CRP_Eckart_t(V0=0.0156_Rkind,L=ONE,m=1060._Rkind)
 
   read(in_unitp,CRP)
   write(out_unitp,CRP)
+
+  para_CRP%With_Eckart = With_Eckart
+  IF (With_Eckart) para_CRP%Eckart = Eckart
 
   CALL string_uppercase_TO_lowercase(CRP_Type)
   CALL string_uppercase_TO_lowercase(LinSolv_Type)
@@ -330,10 +350,14 @@ END SUBROUTINE read_CRP
 
         RWU_E  = REAL_WU(Ene,'au','E')
 
-        write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
-                            real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene)
-        !write(out_unitp,*) 'CRP at E (ua)',Ene,real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene)
-        !write(out_unitp,*) 'CRP at E (ua)',Ene,CRP
+        if (para_CRP%With_Eckart) then
+          write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                            real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene,para_CRP%Eckart)
+        else
+          write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                            real(CRP,kind=Rkind),aimag(CRP)
+        end if
+
       END DO
 
 
@@ -459,10 +483,14 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
         END DO
 
         RWU_E  = REAL_WU(Ene,'au','E')
-        write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
-                            CRP,CRP_Eckart(Ene)
 
-        !write(out_unitp,*) 'CRP at E (ua)',Ene,real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene)
+        if (para_CRP%With_Eckart) then
+          write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                            real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene,para_CRP%Eckart)
+        else
+          write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                            real(CRP,kind=Rkind),aimag(CRP)
+        end if
 
         Ene = Ene + para_CRP%DEne
 
@@ -734,10 +762,13 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
       END IF
 
       RWU_E  = REAL_WU(Ene,'au','E')
-      write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
-                            CRP,CRP_Eckart(Ene)
-
-      !write(out_unitp,*) 'CRP at E (ua)', Ene,crp,CRP_Eckart(Ene)
+      if (para_CRP%With_Eckart) then
+        write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                          CRP,CRP_Eckart(Ene,para_CRP%Eckart)
+      else
+        write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                          CRP
+      end if
     end if
 
     IF (allocated(gGgG))           CALL dealloc_NParray(gGgG,'gGgG',name_sub)
@@ -991,18 +1022,20 @@ SUBROUTINE ReNorm_CplxVec(Vect)
       Vect(:) = Vect(:)/sqrt(dot_product(Vect,Vect))
 
 END SUBROUTINE ReNorm_CplxVec
-FUNCTION CRP_Eckart(E)
-      USE mod_system
-      IMPLICIT NONE
-      real (kind=Rkind) :: CRP_Eckart
-      real (kind=Rkind) :: E
+FUNCTION CRP_Eckart(E,Eckart)
+  USE mod_system
+  IMPLICIT NONE
+  real (kind=Rkind)                 :: CRP_Eckart
+  real (kind=Rkind),    intent(in)  :: E
+  TYPE (CRP_Eckart_t),  intent(in)  :: Eckart
+
 
       real (kind=Rkind) :: b,c
-      real (kind=Rkind), parameter :: V0=0.0156_Rkind,m=1060._Rkind,a=ONE
-      !real (kind=Rkind), parameter :: V0=0.015625_Rkind,m=1061._Rkind,a=ONE
+      !real (kind=Rkind), parameter :: V0=0.0156_Rkind,m=1060._Rkind,L=ONE
+      !real (kind=Rkind), parameter :: V0=0.015625_Rkind,m=1061._Rkind,L=ONE
 
-       b = a * Pi * sqrt(TWO*m*E)
-       c = (Pi/TWO) * sqrt(EIGHT * V0*m*a**2 - 1)
+       b = Eckart%L * Pi * sqrt(TWO*Eckart%m*E)
+       c = (Pi/TWO) * sqrt(EIGHT * Eckart%V0*Eckart%m*Eckart%L**2 - ONE)
 
        CRP_Eckart = ONE / (ONE + (cosh(c)/sinh(b))**2)
 

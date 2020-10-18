@@ -12,7 +12,7 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -424,7 +424,7 @@ endif
 
 #=================================================================================
 #=================================================================================
-DIR_EVRT=$(shell pwd)
+DIR_EVRT:=$(shell pwd)
 OBJ = $(DIR_EVRT)/obj
 
 TNUM_ver=$(shell awk '/Tnum/ {print $$3}' $(DIR_EVRT)/version-EVR-T)

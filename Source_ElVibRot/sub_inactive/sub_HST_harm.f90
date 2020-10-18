@@ -318,6 +318,11 @@
           END IF
  111      format('Grid: ',i6,50(1x,f18.10))
 
+          DO iOp=3,size(d0MatOp)
+            write(out_unitp,121) iOp,iq,Qact(1:mole%nb_act1),d0MatOp(iOp)%ReVal(1,1,:)
+          END DO
+ 121      format('Grid_Op',i0,': ',i6,50(1x,f18.10))
+
         ELSE
           IF (mod(iq,max(1,int(para_AllOp%tab_Op(1)%nb_qa/10))) == 0 .AND. MPI_id==0)  &
             write(out_unitp,'(a)',ADVANCE='no') '---'

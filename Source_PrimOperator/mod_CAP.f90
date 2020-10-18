@@ -47,18 +47,20 @@
 
      TYPE CAP_t
 
-        integer           :: Type_CAP             = 1   ! 1:  A*B * x**n_exp
-                                                        ! 2: Woods-Saxon: 2*A/(1+Exp(-x))
-        integer           :: n_exp                = 2
-        real (kind=Rkind) :: A                    = ONE
-        real (kind=Rkind) :: B                    = ONE
+        integer                       :: Type_CAP             = 1   ! 1:  A*B * x**n_exp
+                                                                    ! 2: Woods-Saxon: 2*A/(1+Exp(-x))
+        character (len=Name_longlen)  :: Name_Cap             = ""  ! 1 => "x^n" or "xn"
+                                                                    ! 2 => "Woods-Saxon" or "WS"
+        integer                       :: n_exp                = 2
+        real (kind=Rkind)             :: A                    = ONE
+        real (kind=Rkind)             :: B                    = ONE
 
-                                                       ! x = (Q-Q0)/LQ
-        real (kind=Rkind) :: Q0                   = ZERO
-        real (kind=Rkind) :: LQ                   = ONE
-        integer           :: ind_Q                = 1       ! index of the coordinate
+                                                              ! x = (Q-Q0)/LQ
+        real (kind=Rkind)             :: Q0                   = ZERO
+        real (kind=Rkind)             :: LQ                   = ONE
+        integer                       :: ind_Q                = 1       ! index of the coordinate (active order)
 
-        integer           :: iOp                  = 0       ! index of the Operator
+        integer                       :: iOp                  = 0       ! index of the Operator
 
       CONTAINS
         PROCEDURE, PRIVATE, PASS(CAP1) :: CAP2_TO_CAP1
@@ -87,6 +89,7 @@
         write(out_unitp,*) ' |----------------/..........> Q'
         write(out_unitp,*) '                 Q0'
         write(out_unitp,*) ' CAP(Q)=0 when Q<= Q0'
+        write(out_unitp,*) ' x=+(Q-0)'
       ELSE
         write(out_unitp,*) 'Type_CAP < 0'
         write(out_unitp,*) 'CAP(Q)'
@@ -97,13 +100,34 @@
         write(out_unitp,*) ' |................\----------> Q'
         write(out_unitp,*) '                  Q0'
         write(out_unitp,*) ' CAP(Q)=0 when Q>= Q0'
+        write(out_unitp,*) ' x=-(Q-0)'
+
       END IF
+
+      write(out_unitp,*) 'Name_CAP',CAP%Name_CAP
       write(out_unitp,*) 'Type_CAP',CAP%Type_CAP
+      SELECT CASE (CAP%Type_CAP)
+      CASE(1,-1)
+        write(out_unitp,*) 'CAP(Q)=A * B*x^',int_TO_char(CAP%n_exp)
+        write(out_unitp,*) '   with B=(',int_TO_char(CAP%n_exp),'+1)/2'
+        write(out_unitp,*) ' ref: A. Vibok and G. G. Balint-Kurti, J. Phys. Chem. (1992) 96, 8712-8719'
+      CASE(2,-2)
+        write(out_unitp,*) 'CAP(Q)=A * 2/(1-exp(-x))'
+        write(out_unitp,*) ' ref: T. Seideman and W. H. Miller, J. Chem. Phys. (1992) 96, 4412'
+        write(out_unitp,*) ' ref: R. D. Woods and D. S. Saxon, Phys. Rev. (1954) 95, 577'
+      CASE(3,-3)
+        write(out_unitp,*) 'CAP(Q)=A * B*exp(-2/x)'
+        write(out_unitp,*) '   with B=13.22'
+        write(out_unitp,*) ' ref: A. Vibok and G. G. Balint-Kurti, J. Phys. Chem. (1992), 96, 8712-8719'
+      CASE default
+        STOP 'ERROR in write_CAP: no default'
+      END SELECT
+
       write(out_unitp,*) 'n_exp   ',CAP%n_exp
       write(out_unitp,*) 'A       ',CAP%A
       write(out_unitp,*) 'B       ',CAP%B
 
-      write(out_unitp,*) 'ind_Q   ',CAP%ind_Q
+      write(out_unitp,*) 'ind_Q (active order)   ',CAP%ind_Q
       write(out_unitp,*) 'Q0      ',CAP%Q0
       write(out_unitp,*) 'LQ      ',CAP%LQ
 
@@ -120,6 +144,7 @@
       !write(out_unitp,*) ' BEGINNING CAP2_TO_CAP1'
 
       CAP1%Type_CAP            = CAP2%Type_CAP
+      CAP1%Name_CAP            = CAP2%Name_CAP
       CAP1%n_exp               = CAP2%n_exp
       CAP1%A                   = CAP2%A
       CAP1%B                   = CAP2%B
@@ -137,14 +162,15 @@
   IMPLICIT NONE
       CLASS (CAP_t),    intent(inout) :: CAP_in
 
-
+      character (len=Name_longlen)  :: Name_Cap
       integer             :: Type_CAP,n_exp,ind_Q
       real(kind=Rkind)    :: A,Q0,LQ
       integer             :: err_read
 
-      namelist / CAP / Type_CAP,n_exp,A,Q0,LQ,ind_Q
+      namelist / CAP / Type_CAP,Name_CAP,n_exp,A,Q0,LQ,ind_Q
 
-      Type_CAP             = 1       ! 1:  A*B*x**n_exp
+      Type_CAP             = 0
+      Name_Cap             = ""
       n_exp                = 2
       A                    = ONE
       Q0                   = ZERO
@@ -168,30 +194,57 @@
       END IF
       IF (print_level > 1) write(out_unitp,CAP)
 
-      CALL Init_CAP(CAP_in,Type_CAP,n_exp,A,Q0,LQ,ind_Q)
+      CALL Init_CAP(CAP_in,Type_CAP,Name_Cap,n_exp,A,Q0,LQ,ind_Q)
 
       CALL Write_CAP(CAP_in)
 
   END SUBROUTINE Read_CAP
-  SUBROUTINE Init_CAP(CAP,Type_CAP,n_exp,A,Q0,LQ,ind_Q)
+  SUBROUTINE Init_CAP(CAP,Type_CAP,Name_Cap,n_exp,A,Q0,LQ,ind_Q)
   IMPLICIT NONE
-      CLASS (CAP_t),    intent(inout) :: CAP
-      integer,          intent(in)    :: Type_CAP,n_exp,ind_Q
-      real(kind=Rkind), intent(in)    :: A,Q0,LQ
+      CLASS (CAP_t),                intent(inout) :: CAP
+      character (len=Name_longlen), intent(in)    :: Name_Cap
+      integer,                      intent(in)    :: Type_CAP,n_exp,ind_Q
+      real(kind=Rkind),             intent(in)    :: A,Q0,LQ
 
+      if ( len(adjustl(trim(Name_Cap))) == 0 .AND. Type_CAP == 0 ) then
+        CAP%Type_CAP = 1
+      else if ( Type_CAP == 0 ) then
+        CAP%Name_Cap = Name_Cap
+        CALL string_uppercase_TO_lowercase(CAP%Name_Cap)
+        SELECT CASE (CAP%Name_Cap)
+        CASE("xn","x^n","-xn","-x^n","+xn","+x^n")
+          CAP%Type_CAP = 1
+        CASE("ws","woods-saxon","-ws","-woods-saxon","+ws","+woods-saxon")
+          CAP%Type_CAP = 2
+        CASE("exp","-exp","+exp")
+          CAP%Type_CAP = 3
+        CASE default
+          STOP 'ERROR in Init_CAP: no Name_Cap default'
+        END SELECT
+        if (CAP%Name_Cap(1:1) == "-") CAP%Type_CAP = -CAP%Type_CAP
+      end if
 
       CAP = CAP_t(Type_CAP=Type_CAP,n_exp=n_exp,A=A,Q0=Q0,LQ=LQ,ind_Q=ind_Q)
 
       SELECT CASE (CAP%Type_CAP)
       CASE(-1,1) ! as function of n_exp, B= 1 3/2 2 5/2 ...
         CAP%B = ONE + (n_exp-1)*HALF
+        CAP%Name_Cap = "x^n"
       CASE(-2,2)
         CAP%B = ZERO
+        CAP%Name_Cap = "Woods-Saxon"
+      CASE(-3,3)
+        CAP%B = 13.22_Rkind
+        CAP%Name_Cap = "exp"
       CASE default
-        STOP 'ERROR in Init_CAP: no default'
+        STOP 'ERROR in Init_CAP: no Type_CAP default'
       END SELECT
 
-
+      if ( CAP%Type_CAP > 0 ) then
+        CAP%Name_Cap = '+' // trim(CAP%Name_Cap)
+      else
+        CAP%Name_Cap = '-' // trim(CAP%Name_Cap)
+      end if
 
       !CALL Write_CAP(CAP)
 
@@ -203,6 +256,7 @@
       !write(out_unitp,*) ' BEGINNING dealloc_CAP'
 
         CAP%Type_CAP             = 1       ! 1:  A*(B*x)**n_exp
+        CAP%Name_Cap             = "x^n"   ! 1:  A*(B*x)**n_exp
         CAP%n_exp                = 2
         CAP%A                    = ONE
         CAP%B                    = THREE/TWO
@@ -227,23 +281,35 @@
 
       calc_CAP = ZERO
 
-      IF ((Q(CAP%ind_Q) <= CAP%Q0 .AND. CAP%Type_CAP > 0) .OR.                             &
-          (Q(CAP%ind_Q) >= CAP%Q0 .AND. CAP%Type_CAP < 0) ) RETURN
-
       SELECT CASE (CAP%Type_CAP)
-      CASE(1)
-        x = (Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
-        calc_CAP = CAP%A * CAP%B * x**CAP%n_exp
-      CASE(-1)
-        x = -(Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
-        calc_CAP = CAP%A * CAP%B * x**CAP%n_exp
+      CASE(1) ! x^n
+        IF ( Q(CAP%ind_Q) > CAP%Q0 ) THEN
+          x = (Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
+          calc_CAP = CAP%A * CAP%B * x**CAP%n_exp
+        END IF
+      CASE(-1) ! x^n
+        IF ( Q(CAP%ind_Q) < CAP%Q0 ) THEN
+          x = -(Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
+          calc_CAP = CAP%A * CAP%B * x**CAP%n_exp
+        END IF
 
-      CASE(2)
+      CASE(2) ! WS
         x = (Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
         calc_CAP = TWO*CAP%A/(ONE+Exp(-x))
-      CASE(-2)
+      CASE(-2)  ! WS
         x = -(Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
         calc_CAP = TWO*CAP%A/(ONE+Exp(-x))
+
+      CASE(3)  ! exp
+        IF ( Q(CAP%ind_Q) > CAP%Q0 ) THEN
+          x = (Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
+          calc_CAP = CAP%A * CAP%B*exp(-TWO/x)
+        END IF
+      CASE(-3) ! exp
+        IF ( Q(CAP%ind_Q) < CAP%Q0 ) THEN
+          x = -(Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
+          calc_CAP = CAP%A * CAP%B*exp(-TWO/x)
+        END IF
 
       CASE default
         STOP 'ERROR in calc_CAP: no default'

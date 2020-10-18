@@ -351,7 +351,7 @@
 #endif
            CALL alloc_array(OpGrid%Grid,(/nb_qa,nb_bie,nb_bie/),"OpGrid%Grid",info2)
            OpGrid%Grid(:,:,:) = ZERO
-#if(run_MPI)   
+#if(run_MPI)
          ENDIF
 #endif
          IF(print_level>-1 .AND. MPI_id==0) write(out_unitp,*) info2,size(OpGrid%Grid)
@@ -1006,6 +1006,7 @@
         END IF
 
       END DO
+
       IF (print_level>-1 .AND. MPI_id==0) THEN
         write(out_unitp,*)'--------------------------------------------------------------'
         CALL flush_perso(out_unitp)
@@ -1015,4 +1016,3 @@
 
 
       END MODULE mod_OpGrid
-
