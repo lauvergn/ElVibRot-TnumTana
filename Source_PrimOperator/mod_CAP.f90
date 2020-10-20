@@ -301,15 +301,11 @@
         calc_CAP = TWO*CAP%A/(ONE+Exp(-x))
 
       CASE(3)  ! exp
-        IF ( Q(CAP%ind_Q) > CAP%Q0 ) THEN
           x = (Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
           calc_CAP = CAP%A * CAP%B*exp(-TWO/x)
-        END IF
       CASE(-3) ! exp
-        IF ( Q(CAP%ind_Q) < CAP%Q0 ) THEN
           x = -(Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
           calc_CAP = CAP%A * CAP%B*exp(-TWO/x)
-        END IF
 
       CASE default
         STOP 'ERROR in calc_CAP: no default'
