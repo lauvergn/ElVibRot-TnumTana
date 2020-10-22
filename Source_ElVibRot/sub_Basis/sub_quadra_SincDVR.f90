@@ -42,10 +42,10 @@
 !===========================================================================
 !=============================================================
 !
-!      Particule-in-a-box basis set
+!      SincDVR basis set (related to the paticle-in-a-box)
 !
 !=============================================================
-      SUBROUTINE sub_quadra_box(base,nosym)
+      SUBROUTINE sub_quadra_SincDVR(base)
       USE mod_system
       USE mod_basis
       IMPLICIT NONE
@@ -53,7 +53,6 @@
 !---------------------------------------------------------------------
 !---------- variables passees en argument ----------------------------
       TYPE (basis)      :: base
-      logical           :: nosym
 
 
       integer           :: ib
@@ -62,7 +61,7 @@
 
 !---------------------------------------------------------------------
       logical            :: deriv
-      real (kind=Rkind)  :: d0,d1,d2,d3
+      real (kind=Rkind)  :: dx,d0,d1,d2,d3
       integer            :: i,ii,k,nq
 !---------------------------------------------------------------------
 
@@ -79,6 +78,7 @@
 !-----------------------------------------------------------
 
        IF (base%nb <= 0) STOP 'ERROR nb<=0'
+       IF (nq /= base%nb) STOP 'ERROR: nb MUST be equal to nq for the SincDVR'
 
 !----------------------------------------------------------------------------
 !----------------------------------------------------------------------------
@@ -90,7 +90,7 @@
 
       IF (base%check_nq_OF_basis) THEN
         write(out_unitp,*) '    Basis: ',name_sub
-        write(out_unitp,*) '      nb_box',base%nb
+        write(out_unitp,*) '      nb_SincDVR',base%nb
       END IF
 
       IF (.NOT. base%xPOGridRep_done) THEN
@@ -102,11 +102,13 @@
         CALL Set_nq_OF_basis(base,nq)
         CALL alloc_xw_OF_basis(base)
 
-        IF (nosym) THEN
-          CALL gauss_box_nosym(base%x(1,:),base%w,nq)
-        ELSE
-          CALL gauss_box(base%x(1,:),base%w,nq)
-        END IF
+        dx = Pi/real(nq+1,kind=Rkind)
+        !write(out_unitp,*) '      dx',dx
+
+        DO i=1,nq
+          base%x(1,i) = dx * real(i,kind=Rkind)
+        END DO
+        base%w(:) = dx
 
         base%wrho(:) = base%w(:)
         base%rho(:)  = ONE
@@ -119,21 +121,18 @@
 
       DO ib=1,base%nb
         base%tab_ndim_index(1,ib) = ib
-        IF (debug) write(out_unitp,*) 'basis, particle in a box[0,Pi]:',ib
+        IF (debug) write(out_unitp,*) 'basis, particle in a SincDVR[0,Pi]:',ib
+        base%dnRGB%d0(ib,ib)      = ONE/sqrt(dx)
+        base%dnRGB%d1(ib,ib,1)    = ZERO
+        base%dnRGB%d2(ib,ib,1,1)  = -pi**2/(THREE*dx**2)
         DO k=1,nq
-          CALL d0d1d2d3box(base%x(1,k),d0,d1,d2,d3,ib)
-          base%dnRGB%d0(k,ib)     = d0
-          base%dnRGB%d1(k,ib,1)   = d1
-          base%dnRGB%d2(k,ib,1,1) = d2
-         !write(out_unitp,*) ib,k,d0,d1,d2
+          IF (k == ib) cycle
+          base%dnRGB%d1(k,ib,1)   = (-ONE)**(k-ib) / (dx*(k-ib))
+          base%dnRGB%d2(k,ib,1,1) = -TWO*(-ONE)**(k-ib) / (dx*(k-ib))**2
         END DO
     END DO
-
-    IF (base%nb == nq) THEN
-        base%dnRGB%d0(:,nq) = base%dnRGB%d0(:,nq) / sqrt(TWO)
-        base%dnRGB%d1(:,nq,:) = base%dnRGB%d1(:,nq,:) / sqrt(TWO)
-        base%dnRGB%d2(:,nq,:,:) = base%dnRGB%d2(:,nq,:,:) / sqrt(TWO)
-    END IF
+    base%dnRGB%d1(:,:,1)   = base%dnRGB%d1(:,:,1) / sqrt(dx)
+    base%dnRGB%d2(:,:,1,1) = base%dnRGB%d2(:,:,1,1) / sqrt(dx)
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -142,4 +141,4 @@
       END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE sub_quadra_box
+      END SUBROUTINE sub_quadra_SincDVR

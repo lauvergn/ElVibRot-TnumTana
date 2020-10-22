@@ -118,7 +118,7 @@ CONTAINS
             !CALL sub_MatOp_V_SG4(para_Op)
             STOP
           END IF
-#if(run_MPI)          
+#if(run_MPI)
           IF(openmpi) THEN
             ! add MPI for sub_MatOp_direct1 later
             CALL sub_MatOp_direct1(para_Op)
@@ -131,7 +131,7 @@ CONTAINS
             ELSE ! no openmp (nb_thread=1)
               CALL sub_MatOp_direct1(para_Op)
             END IF
-#if(run_MPI)             
+#if(run_MPI)
           ENDIF
 #endif
         END IF
@@ -2413,7 +2413,7 @@ CONTAINS
           write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
           CALL flush_perso(out_unitp)
         END IF
-        
+
         !$OMP parallel do default(none)                    &
         !$OMP shared(para_Op,print_level,out_unitp,MPI_id) &
         !$OMP private(i)                                   &
@@ -2455,7 +2455,7 @@ CONTAINS
 !----------------------------------------------------------
 
       END SUBROUTINE sub_MatOp_direct2
-      
+
       SUBROUTINE sub_MatOp_direct1(para_Op)
       USE mod_system
       USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,alloc_NParray,dealloc_NParray
@@ -2500,7 +2500,7 @@ CONTAINS
 
       CALL alloc_NParray(psi, (/n/),"psi", name_sub)
       CALL alloc_NParray(Hpsi,(/n/),"Hpsi",name_sub)
-      
+
       DO i=1,n
         CALL init_psi(psi(i),para_Op,para_Op%cplx)
         CALL init_psi(Hpsi(i),para_Op,para_Op%cplx)
@@ -3384,8 +3384,8 @@ CONTAINS
 !----------------------------------------------------------
 
       END SUBROUTINE sub_MatOp_OpExact_SG4
-      
-!===============================================================================     
+
+!===============================================================================
       SUBROUTINE sub_OpBasisFi(para_Op,i)
       USE mod_system
       USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,dealloc_psi
@@ -3452,6 +3452,6 @@ CONTAINS
 !----------------------------------------------------------
 
       END SUBROUTINE sub_OpBasisFi
-!===============================================================================     
+!===============================================================================
 
 END MODULE Mod_MatOp

@@ -28,7 +28,7 @@ CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 0
+QML = 1
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -682,7 +682,7 @@ Obj_Basis = \
  $(OBJ)/sub_quadra_inact.o \
  $(OBJ)/sub_basis_El.o \
  $(OBJ)/sub_quadra_herm.o $(OBJ)/sub_quadra_laguerre.o $(OBJ)/sub_quadra_legendre.o \
- $(OBJ)/sub_quadra_fourier.o $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_ft.o \
+ $(OBJ)/sub_quadra_fourier.o $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_SincDVR.o $(OBJ)/sub_quadra_ft.o \
  $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_DirProd.o \
  $(OBJ)/sub_quadra_SparseBasis2n.o \
  $(OBJ)/sub_SymAbelian_OF_Basis.o
@@ -1213,6 +1213,8 @@ $(OBJ)/sub_quadra_fourier.o:$(DIRba)/sub_quadra_fourier.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_fourier.f90
 $(OBJ)/sub_quadra_box.o:$(DIRba)/sub_quadra_box.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_box.f90
+$(OBJ)/sub_quadra_SincDVR.o:$(DIRba)/sub_quadra_SincDVR.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_SincDVR.f90
 $(OBJ)/sub_quadra_ft.o:$(DIRba)/sub_quadra_ft.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_ft.f90
 $(OBJ)/sub_quadra_Ylm.o:$(DIRba)/sub_quadra_Ylm.f90
@@ -1502,7 +1504,7 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_module_Basis_LTO_n.o $(OBJ)/sub_SymAbelian.o             \
                    $(OBJ)/sub_module_param_SGType2.o $(OBJ)/sub_module_param_RD.o      \
                    $(OBJ)/sub_module_basis_RCVec_SG4.o $(OBJ)/sub_module_poly.o        \
-                   $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_ft.o                      \
+                   $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_SincDVR.o $(OBJ)/sub_quadra_ft.o                      \
                    $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_DirProd.o                 \
                    $(OBJ)/sub_quadra_SparseBasis2n.o                                   \
                    $(OBJ)/sub_SymAbelian_OF_Basis.o $(OBJ)/sub_module_type_ana_psi.o   \
@@ -1678,7 +1680,7 @@ lib_dep_mod_basis=$(OBJ)/sub_module_BasisMakeGrid.o $(OBJ)/sub_read_data.o      
                   $(OBJ)/sub_quadra_inact.o $(OBJ)/sub_basis_El.o                      \
                   $(OBJ)/sub_quadra_legendre.o $(OBJ)/sub_quadra_laguerre.o            \
                   $(OBJ)/sub_quadra_herm.o $(OBJ)/sub_quadra_fourier.o                 \
-                  $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_ft.o                       \
+                  $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_SincDVR.o $(OBJ)/sub_quadra_ft.o                       \
                   $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_DirProd.o                  \
                   $(OBJ)/sub_SymAbelian_OF_Basis.o $(OBJ)/sub_module_psi_set_alloc.o   \
                   $(OBJ)/sub_changement_de_var.o $(OBJ)/sub_quadra_SparseBasis2n.o     \
