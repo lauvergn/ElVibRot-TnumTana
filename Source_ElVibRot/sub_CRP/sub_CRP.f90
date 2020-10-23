@@ -643,28 +643,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
        CALL dealloc_NParray(Ginv,'Ginv',name_sub)
        CALL dealloc_NParray(G,   'G',   name_sub)
      ELSE IF (para_CRP%LinSolv_type == 'matlinsolv') THEN
-       !CALL sub_MatOp(tab_Op(1),print_Op=.FALSE.) ! H
-
-       ! DML 20/10/2020
-       ! modif for the test: DVR vs ElVibRot
-       write(6,*) 'sym_Hamil',tab_Op(1)%sym_Hamil
-       CALL sub_MatOp(tab_Op(1),print_Op=.TRUE.) ! H
-       tab_Op(1)%diago = .TRUE.
-       CALL alloc_para_Op(tab_Op(1),Grid=.FALSE.,Mat=.TRUE.)
-
-       lwork = 3*tab_Op(1)%nb_tot-1
-       allocate(work(lwork))
-       tab_Op(1)%Rvp(:,:) = tab_Op(1)%Rmat
-
-       CALL DSYEV('V','U',tab_Op(1)%nb_tot,tab_Op(1)%Rvp,tab_Op(1)%nb_tot,      &
-                  tab_Op(1)%Rdiag,work,lwork,ierr)
-
-       !CALL sub_diago_H(tab_Op(1)%Rmat,tab_Op(1)%Rdiag,tab_Op(1)%Rvp,       &
-        !                       tab_Op(1)%nb_tot,tab_Op(1)%sym_Hamil)
-       DO i=1,tab_Op(1)%nb_tot
-         write(out_unitp,*) i,tab_Op(1)%Rdiag(i)
-       END DO
-       STOP 'test: DVR vs ElVibRot'
+       CALL sub_MatOp(tab_Op(1),print_Op=.FALSE.) ! H
        DO i=3,nb_Op ! for the CAP
          IF (i == para_CRP%iOp_CAP_Reactif .OR. i == para_CRP%iOp_CAP_Product) &
             CALL sub_MatOp(tab_Op(i),print_Op=.FALSE.)
