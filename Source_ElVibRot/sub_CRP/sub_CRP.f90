@@ -260,7 +260,7 @@ END SUBROUTINE read_CRP
 
 
 !----- working variables -----------------------------
-      integer       ::    i,k,ie
+      integer       ::    i,j,k,ie
       real (kind=Rkind), allocatable :: EneH(:),Vec(:,:) ! for debuging
 
 
@@ -333,6 +333,13 @@ END SUBROUTINE read_CRP
         END DO
         Ene = Ene + para_CRP%DEne
 
+! write(6,*) 'Ginv'
+!        DO i=1,tab_Op(1)%nb_tot
+!        DO j=1,tab_Op(1)%nb_tot
+!           write(6,*) i,j,Ginv(j,i)
+!        END DO
+!        END DO
+
         CALL inv_m1_TO_m2_cplx(Ginv,G,tab_Op(1)%nb_tot,0,ZERO)
         !Ginv = matmul(Ginv,G)
         !DO i=1,tab_Op(1)%nb_tot
@@ -340,8 +347,23 @@ END SUBROUTINE read_CRP
         !END DO
         !write(out_unitp,*) 'id diff ?',maxval(abs(Ginv))
 
+! write(6,*) 'G'
+!        DO i=1,tab_Op(1)%nb_tot
+!        DO j=1,tab_Op(1)%nb_tot
+!           write(6,*) i,j,G(j,i)
+!        END DO
+!        END DO
+
         gGgG(:,:) = matmul(tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat,               &
            matmul(G,matmul(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,conjg(G))))
+
+! write(6,*) 'gammaR.G.gammaP.G*'
+!        DO i=1,tab_Op(1)%nb_tot
+!        DO j=1,tab_Op(1)%nb_tot
+!           write(6,*) i,j,gGgG(j,i)
+!        END DO
+!        END DO
+!STOP
 
         CRP = ZERO
         DO i=1,tab_Op(1)%nb_tot

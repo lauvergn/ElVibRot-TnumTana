@@ -65,8 +65,8 @@
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='sub_diago_H'
-      !logical, parameter :: debug = .FALSE.
-      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
@@ -167,8 +167,8 @@ END SUBROUTINE sub_diago_H
 
 
 !----- for debuging --------------------------------------------------
-!     logical, parameter :: debug=.FALSE.
-      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING sub_diago_CH'

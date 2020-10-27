@@ -57,6 +57,7 @@
 
                                                               ! x = (Q-Q0)/LQ
         real (kind=Rkind)             :: Q0                   = ZERO
+        real (kind=Rkind)             :: Qmax                 = -ONE
         real (kind=Rkind)             :: LQ                   = ONE
         integer                       :: ind_Q                = 1       ! index of the coordinate (active order)
 
@@ -129,6 +130,7 @@
 
       write(out_unitp,*) 'ind_Q (active order)   ',CAP%ind_Q
       write(out_unitp,*) 'Q0      ',CAP%Q0
+      write(out_unitp,*) 'Qmax    ',CAP%Qmax
       write(out_unitp,*) 'LQ      ',CAP%LQ
 
       write(out_unitp,*) 'iOp     ',CAP%iOp
@@ -150,6 +152,7 @@
       CAP1%B                   = CAP2%B
 
       CAP1%Q0                  = CAP2%Q0
+      CAP1%Qmax                = CAP2%Qmax
       CAP1%LQ                  = CAP2%LQ
       CAP1%ind_Q               = CAP2%ind_Q
 
@@ -164,16 +167,17 @@
 
       character (len=Name_longlen)  :: Name_Cap
       integer             :: Type_CAP,n_exp,ind_Q
-      real(kind=Rkind)    :: A,Q0,LQ
+      real(kind=Rkind)    :: A,Q0,LQ,Qmax
       integer             :: err_read
 
-      namelist / CAP / Type_CAP,Name_CAP,n_exp,A,Q0,LQ,ind_Q
+      namelist / CAP / Type_CAP,Name_CAP,n_exp,A,Q0,Qmax,LQ,ind_Q
 
       Type_CAP             = 0
       Name_Cap             = ""
       n_exp                = 2
       A                    = ONE
       Q0                   = ZERO
+      Qmax                 = -ONE
       LQ                   = ONE
       ind_Q                = -1
       read(in_unitp,CAP,IOSTAT=err_read)
@@ -194,17 +198,17 @@
       END IF
       IF (print_level > 1) write(out_unitp,CAP)
 
-      CALL Init_CAP(CAP_in,Type_CAP,Name_Cap,n_exp,A,Q0,LQ,ind_Q)
+      CALL Init_CAP(CAP_in,Type_CAP,Name_Cap,n_exp,A,Q0,Qmax,LQ,ind_Q)
 
       CALL Write_CAP(CAP_in)
 
   END SUBROUTINE Read_CAP
-  SUBROUTINE Init_CAP(CAP,Type_CAP,Name_Cap,n_exp,A,Q0,LQ,ind_Q)
+  SUBROUTINE Init_CAP(CAP,Type_CAP,Name_Cap,n_exp,A,Q0,Qmax,LQ,ind_Q)
   IMPLICIT NONE
       CLASS (CAP_t),                intent(inout) :: CAP
       character (len=Name_longlen), intent(in)    :: Name_Cap
       integer,                      intent(in)    :: Type_CAP,n_exp,ind_Q
-      real(kind=Rkind),             intent(in)    :: A,Q0,LQ
+      real(kind=Rkind),             intent(in)    :: A,Q0,LQ,Qmax
 
       if ( len(adjustl(trim(Name_Cap))) == 0 .AND. Type_CAP == 0 ) then
         CAP%Type_CAP = 1
@@ -224,7 +228,7 @@
         if (CAP%Name_Cap(1:1) == "-") CAP%Type_CAP = -CAP%Type_CAP
       end if
 
-      CAP = CAP_t(Type_CAP=Type_CAP,n_exp=n_exp,A=A,Q0=Q0,LQ=LQ,ind_Q=ind_Q)
+      CAP = CAP_t(Type_CAP=Type_CAP,n_exp=n_exp,A=A,Q0=Q0,Qmax=Qmax,LQ=LQ,ind_Q=ind_Q)
 
       SELECT CASE (CAP%Type_CAP)
       CASE(-1,1) ! as function of n_exp, B= 1 3/2 2 5/2 ...
@@ -263,6 +267,7 @@
 
                                            ! x = (Q-Q0)/LQ
         CAP%Q0                   = ZERO
+        CAP%Qmax                 = -ONE
         CAP%LQ                   = ONE
         CAP%ind_Q                = 1
 
@@ -294,11 +299,15 @@
         END IF
 
       CASE(2) ! WS
-        x = (Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
-        calc_CAP = TWO*CAP%A/(ONE+Exp(-x))
+        IF ( Q(CAP%ind_Q) > CAP%Q0 ) THEN
+          x = (Q(CAP%ind_Q)-CAP%Qmax)/CAP%LQ
+          calc_CAP = TWO*CAP%A/(ONE+Exp(-x))
+        END IF
       CASE(-2)  ! WS
-        x = -(Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
-        calc_CAP = TWO*CAP%A/(ONE+Exp(-x))
+        IF ( Q(CAP%ind_Q) < CAP%Q0 ) THEN
+          x = -(Q(CAP%ind_Q)-CAP%Qmax)/CAP%LQ
+          calc_CAP = TWO*CAP%A/(ONE+Exp(-x))
+        END IF
 
       CASE(3)  ! exp
           x = (Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
