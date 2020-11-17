@@ -560,6 +560,8 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
       integer :: nks, mks, i, j
       ! Vectors for Pmult
       complex(kind=Rkind), dimension(:,:), allocatable:: Krylov_vectors,h
+      real (kind=Rkind),    allocatable :: Eigvals(:)
+      complex(kind=Rkind),  allocatable :: EVec(:,:)
 
       complex(kind=Rkind) y, len
       real(kind=Rkind) ranr, rani
@@ -583,7 +585,12 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
        integer :: lwork,ierr
        real (kind=Rkind), ALLOCATABLE :: work(:)
 
+!----- for debuging --------------------------------------------------
+      integer   :: err
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub = 'calc_crp_p_lanczos'
+!-----------------------------------------------------------
 
 
       ncooked   = tab_Op(1)%nb_tot
@@ -629,7 +636,8 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
       CALL alloc_NParray(Krylov_vectors,[tab_Op(1)%nb_tot,para_CRP%KS_max_it], &
                         'Krylov_vectors',name_sub,tab_lb=[1,0])
 
-      CALL alloc_NParray(h,[para_CRP%KS_max_it,para_CRP%KS_max_it],'h',name_sub)
+      CALL alloc_NParray(h,      [para_CRP%KS_max_it,para_CRP%KS_max_it],'h',name_sub)
+      CALL alloc_NParray(Eigvals,[para_CRP%KS_max_it],                   'Eigvals',name_sub)
 
       ! Generate first Krylov vector randomly
       do i =1,tab_Op(1)%nb_tot
@@ -753,6 +761,8 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
             h(mks+1, nks) = dot_product(Krylov_vectors(:,mks),Krylov_vectors(:,nks))
             h(nks, mks+1) = conjg(h(mks+1,nks))
          end do
+         IF (debug) write(out_unitp,*) '# in KS iterations, h'
+         IF (debug) CALL Write_Mat(h(1:nks,1:nks),out_unitp,5)
 
          ! Orthogonalize vectors
          do mks = 0, nks-1
@@ -763,6 +773,14 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
          CALL ReNorm_CplxVec(Krylov_vectors(:,nks))
 
          if (nks > 1) then
+
+            Eigvals(:) = ZERO
+            CALL alloc_NParray(EVec,[nks,nks],'EVec',name_sub)
+            CALL diagonalization_HerCplx(h(1:nks,1:nks),Eigvals,EVec,nks,3,.FALSE.,.FALSE.)
+            IF (debug) write(out_unitp,*) '# in KS iterations, Eigvals',Eigvals(1:nks)
+            write(out_unitp,*) '# in KS iterations, Eigvals',Eigvals(1:nks)
+            CALL dealloc_NParray(EVec,'EVec',name_sub)
+
             crp = ZERO
             do i=1,nks
               crp = crp + h(i,i)
@@ -780,6 +798,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
 
       !actual_iterations = nks
       write(out_unitp,*) '# in KS iterations, n=',nks
+      write(out_unitp,*) 'CRP diago, minval: ',sum(Eigvals(1:nks)),minval(abs(Eigvals(1:nks)))
       write(out_unitp,*) 'accuracy: ',DeltaCRP
       IF (nks > para_CRP%KS_max_it .OR. DeltaCRP >= para_CRP%KS_accuracy) THEN
          write(out_unitp,*) 'WARNING: Lanczos did not converge'
@@ -793,6 +812,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
         write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
                           CRP
       end if
+
     end if
 
     IF (allocated(gGgG))           CALL dealloc_NParray(gGgG,'gGgG',name_sub)
@@ -800,6 +820,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
     IF (allocated(M1))             CALL dealloc_NParray(M1,'M1',name_sub)
     IF (allocated(Krylov_vectors)) CALL dealloc_NParray(Krylov_vectors,'Krylov_vectors',name_sub)
     IF (allocated(h))              CALL dealloc_NParray(h,'h',name_sub)
+    IF (allocated(Eigvals))        CALL dealloc_NParray(Eigvals,'Eigvals',name_sub)
 
     IF (allocated(indx))           CALL dealloc_NParray(indx,'indx',name_sub)
     IF (allocated(Ginv))           CALL dealloc_NParray(Ginv,'Ginv',name_sub)
