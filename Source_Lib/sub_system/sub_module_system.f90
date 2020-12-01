@@ -103,9 +103,12 @@ MODULE mod_system
 
 
       logical :: openmp = .FALSE.
-      logical :: openmpi= .FALSE. 
+      logical :: openmpi= .FALSE.
       integer :: MatOp_omp,OpPsi_omp,BasisTOGrid_omp,Grid_omp,SG4_omp
       integer :: MatOp_maxth,OpPsi_maxth,BasisTOGrid_maxth,Grid_maxth,SG4_maxth
+
+      integer :: CRP_omp,CRP_maxth
+
       logical :: Tune_SG4_omp  = .FALSE.
       logical :: Tune_Grid_omp = .FALSE.
 
@@ -353,7 +356,7 @@ MODULE mod_system
         END IF
 
       END SUBROUTINE DeltaTime
-      
+
       SUBROUTINE DeltaTime_withParam_time(dt_real,t_real,dt_cpu,t_cpu,LocalTime)
       IMPLICIT NONE
 
@@ -597,4 +600,3 @@ MODULE mod_system
 
       END SUBROUTINE dihedral_range
 END MODULE mod_system
-

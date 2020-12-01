@@ -12,7 +12,7 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -22,7 +22,7 @@ OMP = 1
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 0
+ARPACK = 1
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -397,8 +397,8 @@ LYNK90 = $(F90_FLAGS)
 ifeq ($(ARPACK),1)
   # Arpack management with the OS
   ifeq ($(OS),Darwin)    # OSX
-    ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
-    #ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
+    #ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
+    ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
   else                   # Linux
     ifeq ($(F90), mpifort)
       ifeq ($(MPICORE), gfortran)

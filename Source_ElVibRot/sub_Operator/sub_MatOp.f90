@@ -66,6 +66,9 @@ CONTAINS
       integer  :: n,ib,jb,iq
       !logical  :: test = .TRUE.
       logical  :: test = .FALSE.
+      TYPE (param_time) :: MatOp_Time
+      real(kind=Rkind)  :: RealTime
+
 
 !----- for debuging --------------------------------------------------
       logical,parameter :: debug=.FALSE.
@@ -88,6 +91,8 @@ CONTAINS
 !        IF (associated(para_Op%Rmat)) CALL Write_Mat(para_Op%Rmat,out_unitp,5)
       END IF
 !-----------------------------------------------------------
+
+      RealTime = Delta_RealTime(MatOp_Time)
 
       para_Op%Make_mat = .FALSE.
 
@@ -196,6 +201,12 @@ CONTAINS
         ELSE
           CALL Write_Mat(para_Op%Rmat,out_unitp,5)
         END IF
+      END IF
+
+      RealTime = Delta_RealTime(MatOp_Time)
+      IF (debug .OR. print_Op .OR. print_level > 0) Then
+          write(out_unitp,*) 'Building MatOp: Delta Real Time',RealTime
+          CALL flush_perso(out_unitp)
       END IF
 
 !-----------------------------------------------------------

@@ -222,6 +222,8 @@
           CAP%Type_CAP = 2
         CASE("exp","-exp","+exp")
           CAP%Type_CAP = 3
+        CASE("inv","-inv","+inv")
+          CAP%Type_CAP = 4
         CASE default
           STOP 'ERROR in Init_CAP: no Name_Cap default'
         END SELECT
@@ -240,6 +242,9 @@
       CASE(-3,3)
         CAP%B = 13.22_Rkind
         CAP%Name_Cap = "exp"
+      CASE(-4,4)
+        CAP%B = ZERO
+        CAP%Name_Cap = "inv"
       CASE default
         STOP 'ERROR in Init_CAP: no Type_CAP default'
       END SELECT
@@ -315,6 +320,20 @@
       CASE(-3) ! exp
           x = -(Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
           calc_CAP = CAP%A * CAP%B*exp(-TWO/x)
+
+      CASE(4)  ! inv
+        IF ( Q(CAP%ind_Q) > CAP%Q0 ) THEN
+          c = 2.62206_Rkind
+          x = (Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
+          calc_CAP = FOUR * CAP%A * ( ONE/(x+c)**2 + ONE/(x-c)**2 - TWO/c**2 )
+        END IF
+      CASE(-4) ! inv
+        IF ( Q(CAP%ind_Q) < CAP%Q0 ) THEN
+          c = 2.62206_Rkind
+          x = - (Q(CAP%ind_Q)-CAP%Q0)/CAP%LQ
+          calc_CAP = FOUR * CAP%A * ( ONE/(x+c)**2 + ONE/(x-c)**2 - TWO/c**2 )
+        END IF
+
 
       CASE default
         STOP 'ERROR in calc_CAP: no default'
