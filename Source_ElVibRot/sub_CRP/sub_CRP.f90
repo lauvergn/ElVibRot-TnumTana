@@ -1147,9 +1147,17 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
 !        | has been exceeded.                          |
 !        %---------------------------------------------%
 !
+#if __ARPACK == 1
      CALL znaupd  ( ido, bmat, n, which, nev, tol, resid, ncv,&
           &        v, ldv, iparam, ipntr, workd, workl, lworkl,&
           &        rwork,info )
+#else
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) ' The ARPACK library is not present!'
+        write(out_unitp,*) "Use CRP_Type='lanczos' instead of CRP_Type='lanczos_Arpack'"
+        write(out_unitp,*) '  or recompile ElVibRot with ARPACK = 1 (makefile)'
+        STOP 'ARPACK has been removed'
+#endif
 !
      IF (ido .EQ. -1 .OR. ido .EQ. 1) THEN
 !
@@ -1235,13 +1243,18 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
 !
            rvec = .FALSE.
 !
-
-
+#if __ARPACK == 1
            CALL zneupd  (rvec, 'A', SELECT, d, v, ldv, sigma, &
                 &        workev, bmat, n, which, nev, tol, resid, ncv, &
                 &        v, ldv, iparam, ipntr, workd, workl, lworkl, &
                 &        rwork, ierr)
-
+#else
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) ' The ARPACK library is not present!'
+        write(out_unitp,*) "Use CRP_Type='lanczos' instead of CRP_Type='lanczos_Arpack'"
+        write(out_unitp,*) '  or recompile ElVibRot with ARPACK = 1 (makefile)'
+        STOP 'ARPACK has been removed'
+#endif
 
 !
 !        %----------------------------------------------%
@@ -1333,10 +1346,16 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
 !            | Display computed residuals. |
 !            %-----------------------------%
 !
-
-
+#if __ARPACK == 1
               CALL dmout (6, nconv, 3, rd, ncv, -6, &
                    &            'Ritz values (Real, Imag) and relative residuals')
+#else
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) ' The ARPACK library is not present!'
+        write(out_unitp,*) "Use CRP_Type='lanczos' instead of CRP_Type='lanczos_Arpack'"
+        write(out_unitp,*) '  or recompile ElVibRot with ARPACK = 1 (makefile)'
+        STOP 'ARPACK has been removed'
+#endif
            END IF
 !
 !        %-------------------------------------------%

@@ -287,7 +287,7 @@
       CLASS (CAP_t),    intent(in)    :: CAP
       real(kind=Rkind), intent(in)    :: Q(:)
 
-      real(kind=Rkind)    :: x
+      real(kind=Rkind)    :: x,c
 
       calc_CAP = ZERO
 
