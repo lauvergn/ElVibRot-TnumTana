@@ -3852,9 +3852,9 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
         CALL dealloc_NParray(PsiOnSpectral, 'PsiOnSpectral', name_sub)
         CALL dealloc_NParray(HPsiOnSpectral,'HPsiOnSpectral',name_sub)
-      cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
-      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
+        cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+        CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+        CALL flush_perso(no)
       END IF
 
 

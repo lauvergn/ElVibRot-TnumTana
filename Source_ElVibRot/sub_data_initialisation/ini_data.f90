@@ -722,11 +722,9 @@ KEO_type1_Mem  = PotMem   * real((nb_Q+1)*(nb_Q+2)/2, kind=Rkind) ! F2+F1+vep
 KEO_type10_Mem = GridMem  * real((nb_Q**2 + 2),       kind=Rkind) ! size of G + jac+rho
               ! We suppose, the KEO are the same on each channel !! Pb...
 
-IF(MPI_id==0) THEN
-  write(out_unitp,*) "============================================================"
-  write(out_unitp,*) "============================================================"
-  write(out_unitp,*) "====== Memory psi and H ===================================="
-ENDIF
+write(out_unitp,*) "============================================================"
+write(out_unitp,*) "============================================================"
+write(out_unitp,*) "====== Memory psi and H ===================================="
 
 IF(MPI_id==0) write(out_unitp,*) "------------------------------------------------------------"
 Mem = psi_Mem

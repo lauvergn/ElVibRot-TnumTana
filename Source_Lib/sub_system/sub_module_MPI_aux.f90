@@ -1444,16 +1444,18 @@ MODULE mod_MPI_aux
     ENDSUBROUTINE MPI_Recv_matrix_complex
 
 !---------------------------------------------------------------------------------------
-!< interface: MPI_combine_array_real
+!< interface: MPI_combine_array
+! test effeiciency if use MPI_Gather
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_combine_array_real(array,bcast)
+    SUBROUTINE MPI_combine_array_real(array,MS)
       IMPLICIT NONE
       
-      Real(kind=Rkind),allocatable,   intent(inout) :: array(:)
-      Logical,optional,               intent(in)    :: bcast
+      Real(kind=Rkind),allocatable,intent(inout) :: array(:)
+      Integer,optional,            intent(in)    :: MS
 
-      Integer                                       :: d1
-      Integer                                       :: d2
+      Integer                                    :: d1
+      Integer                                    :: d2
+      Integer                                    :: ii
 
 #if(run_MPI)
 
@@ -1473,24 +1475,39 @@ MODULE mod_MPI_aux
         ENDDO
       ENDIF
 
-      IF(present(bcast) .AND. bcast) THEN
+      IF(present(MS)) THEN
         d1=bounds_MPI(1,0)
         d2=bounds_MPI(2,MPI_np-1)
-        CALL MPI_Bcast(array(d1:d2),d2-d1+1,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+        IF(MS==1) THEN
+          CALL MPI_Bcast(array(d1:d2),d2-d1+1,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+        ELSE IF(MS==3) THEN
+          IF(MPI_id==0) THEN
+            DO ii=1,MPI_nodes_num-1
+              CALL MPI_send(array(d1:d2),d2-d1+1,Real_MPI,MPI_nodes_p00(ii),           &
+                            MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
+            ENDDO
+          ELSEIF(MPI_nodes_p0) THEN
+            CALL MPI_Recv(array(d1:d2),d2-d1+1,Real_MPI,root_MPI,MPI_id,               &
+                          MPI_COMM_WORLD,MPI_stat,MPI_err)
+          ENDIF
+        ELSE
+          ! nothing
+        ENDIF
       ENDIF
 
 #endif
     ENDSUBROUTINE MPI_combine_array_real
 
     !-----------------------------------------------------------------------------------
-    SUBROUTINE MPI_combine_array_int4(array,bcast)
+    SUBROUTINE MPI_combine_array_int4(array,MS)
       IMPLICIT NONE
 
-      Integer(kind=Ikind),allocatable, intent(inout) :: array(:)
-      Logical,optional,                intent(in)    :: bcast
+      Integer(kind=Ikind),allocatable,intent(inout) :: array(:)
+      Integer,optional,            intent(in)    :: MS
 
-      Integer                                        :: d1
-      Integer                                        :: d2
+      Integer                                    :: d1
+      Integer                                    :: d2
+      Integer                                    :: ii
 
 #if(run_MPI)
 
@@ -1512,24 +1529,46 @@ MODULE mod_MPI_aux
         ENDDO
       ENDIF
 
-      IF(present(bcast) .AND. bcast) THEN
+      ! IF(present(bcast) .AND. bcast) THEN
+      !   d1=bounds_MPI(1,0)
+      !   d2=bounds_MPI(2,MPI_np-1)
+      !   CALL MPI_Bcast(array(d1:d2),d2-d1+1,MPI_integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+      ! ENDIF
+
+      IF(present(MS)) THEN
         d1=bounds_MPI(1,0)
         d2=bounds_MPI(2,MPI_np-1)
-        CALL MPI_Bcast(array(d1:d2),d2-d1+1,MPI_integer4,root_MPI,MPI_COMM_WORLD,MPI_err)
+        IF(MS==1) THEN
+          CALL MPI_Bcast(array(d1:d2),d2-d1+1,MPI_integer4,root_MPI,                   &
+                         MPI_COMM_WORLD,MPI_err)
+        ELSE IF(MS==3) THEN
+          IF(MPI_id==0) THEN
+            DO ii=1,MPI_nodes_num-1
+              CALL MPI_send(array(d1:d2),d2-d1+1,MPI_integer4,MPI_nodes_p00(ii),       &
+                            MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
+            ENDDO
+          ELSEIF(MPI_nodes_p0) THEN
+            CALL MPI_Recv(array(d1:d2),d2-d1+1,MPI_integer4,root_MPI,MPI_id,           &
+                          MPI_COMM_WORLD,MPI_stat,MPI_err)
+          ENDIF
+        ELSE
+          ! nothing
+        ENDIF
       ENDIF
 
 #endif
     ENDSUBROUTINE MPI_combine_array_int4
 
     !-----------------------------------------------------------------------------------
-    SUBROUTINE MPI_combine_array_int8(array,bcast)
+    SUBROUTINE MPI_combine_array_int8(array,MS)
       IMPLICIT NONE
       
       Integer(kind=ILkind),allocatable,intent(inout) :: array(:)
-      Logical,optional,                intent(in)    :: bcast
+      Integer,optional,            intent(in)    :: MS
 
-      Integer                                        :: d1
-      Integer                                        :: d2
+      Integer                                    :: d1
+      Integer                                    :: d2
+      Integer                                    :: ii
 
 #if(run_MPI)
 
@@ -1549,24 +1588,46 @@ MODULE mod_MPI_aux
         ENDDO
       ENDIF
 
-      IF(present(bcast) .AND. bcast) THEN
+      ! IF(present(bcast) .AND. bcast) THEN
+      !   d1=bounds_MPI(1,0)
+      !   d2=bounds_MPI(2,MPI_np-1)
+      !   CALL MPI_Bcast(array(d1:d2),d2-d1+1,MPI_integer8,root_MPI,MPI_COMM_WORLD,MPI_err)
+      ! ENDIF
+
+      IF(present(MS)) THEN
         d1=bounds_MPI(1,0)
         d2=bounds_MPI(2,MPI_np-1)
-        CALL MPI_Bcast(array(d1:d2),d2-d1+1,MPI_integer8,root_MPI,MPI_COMM_WORLD,MPI_err)
+        IF(MS==1) THEN
+          CALL MPI_Bcast(array(d1:d2),d2-d1+1,MPI_integer8,root_MPI,                   &
+                         MPI_COMM_WORLD,MPI_err)
+        ELSE IF(MS==3) THEN
+          IF(MPI_id==0) THEN
+            DO ii=1,MPI_nodes_num-1
+              CALL MPI_send(array(d1:d2),d2-d1+1,MPI_integer8,MPI_nodes_p00(ii),       &
+                            MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
+            ENDDO
+          ELSEIF(MPI_nodes_p0) THEN
+            CALL MPI_Recv(array(d1:d2),d2-d1+1,MPI_integer8,root_MPI,MPI_id,           &
+                          MPI_COMM_WORLD,MPI_stat,MPI_err)
+          ENDIF
+        ELSE
+          ! nothing
+        ENDIF
       ENDIF
 
 #endif
     ENDSUBROUTINE MPI_combine_array_int8
 
     !-----------------------------------------------------------------------------------
-    SUBROUTINE MPI_combine_array_cplx(array,bcast)
+    SUBROUTINE MPI_combine_array_cplx(array,MS)
       IMPLICIT NONE
 
       Complex(kind=Rkind),allocatable,intent(inout)  :: array(:)
-      Logical,optional,                intent(in)    :: bcast
+      Integer,optional,            intent(in)    :: MS
 
-      Integer                                        :: d1
-      Integer                                        :: d2
+      Integer                                    :: d1
+      Integer                                    :: d2
+      Integer                                    :: ii
 
 #if(run_MPI)
 
@@ -1586,25 +1647,49 @@ MODULE mod_MPI_aux
         ENDDO
       ENDIF
 
-      IF(present(bcast) .AND. bcast) THEN
+      ! IF(present(bcast) .AND. bcast) THEN
+      !   d1=bounds_MPI(1,0)
+      !   d2=bounds_MPI(2,MPI_np-1)
+      !   CALL MPI_Bcast(array(d1:d2),d2-d1+1,Cplx_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+      ! ENDIF
+
+      IF(present(MS)) THEN
         d1=bounds_MPI(1,0)
         d2=bounds_MPI(2,MPI_np-1)
-        CALL MPI_Bcast(array(d1:d2),d2-d1+1,Cplx_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+        IF(MS==1) THEN
+          CALL MPI_Bcast(array(d1:d2),d2-d1+1,Cplx_MPI,root_MPI,                       &
+                         MPI_COMM_WORLD,MPI_err)
+        ELSE IF(MS==3) THEN
+          IF(MPI_id==0) THEN
+            DO ii=1,MPI_nodes_num-1
+              CALL MPI_send(array(d1:d2),d2-d1+1,Cplx_MPI,MPI_nodes_p00(ii),           &
+                            MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
+            ENDDO
+          ELSEIF(MPI_nodes_p0) THEN
+            CALL MPI_Recv(array(d1:d2),d2-d1+1,Cplx_MPI,root_MPI,MPI_id,               &
+                          MPI_COMM_WORLD,MPI_stat,MPI_err)
+          ENDIF
+        ELSE
+          ! nothing
+        ENDIF
       ENDIF
 
 #endif
     ENDSUBROUTINE MPI_combine_array_cplx
 
     !-----------------------------------------------------------------------------------
+    ! dependents on the length array comtain the length on each threads 
+    ! consider MPI_Gether
+    ! combine with previous ones later
     SUBROUTINE MPI_combine_array_general_cplx(array_all,array,lengths)
       IMPLICIT NONE
 
-      Complex(kind=Rkind),intent(inout)              :: array_all(:)
-      Complex(kind=Rkind),intent(inout)              :: array(:)
-      Integer,                         intent(in)    :: lengths(0:MPI_np-1)
+      Complex(kind=Rkind),         intent(inout) :: array_all(:)
+      Complex(kind=Rkind),         intent(inout) :: array(:)
+      Integer,                     intent(in)    :: lengths(0:MPI_np-1)
 
-      Integer                                        :: d1
-      Integer                                        :: d2
+      Integer                                    :: d1
+      Integer                                    :: d2
 
 #if(run_MPI)
 
@@ -1688,23 +1773,6 @@ MODULE mod_MPI_aux
 
 #endif
     ENDSUBROUTINE MPI_collect_info_real
-
-!#else
-!  USE mod_system
-!  IMPLICIT NONE
-!
-!  Complex(kind=Rkind)            :: temp_cplx        !< temparay Complex
-!  Complex(kind=Rkind)            :: temp_cplx1
-!  Complex(kind=Rkind)            :: temp_cplx2
-!  Real(kind=Rkind)               :: temp_real        !< temparay real
-!  Real(kind=Rkind)               :: temp_real1
-!  Real(kind=Rkind)               :: temp_real2
-!  Integer                        :: temp_int         !< temparay integer 
-!  Integer                        :: temp_int1
-!  Integer                        :: temp_int2
-!  Logical                        :: temp_logi
-!#endif
-
 END MODULE mod_MPI_aux
 
 

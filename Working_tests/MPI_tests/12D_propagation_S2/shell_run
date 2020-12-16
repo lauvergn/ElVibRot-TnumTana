@@ -1,0 +1,211 @@
+#!/bin/bash
+
+
+###> parameters
+##==============================================================
+
+parall=MPI      ## MPI or openMP or NaN
+MPI_output0=1   ## just print output form process 0 in MPI, 0 for debug
+num_cores=$1
+
+L=$2
+LB=$L
+LG=$L
+B1=3
+B2=3
+B3=2
+B4=2
+B=2
+
+dav=f
+test=f
+
+##==============================================================
+###< parameters
+
+
+###> setup environment
+##==============================================================
+
+##--------------------------------------------------------------
+## set code dir
+
+here=`pwd`
+
+work=$here/result/
+DIR_vib=$here/../../..
+DIR_pot=$DIR_vib/sub_pot
+VIBEXE=vib.exe
+
+cp sub_system_pyrazine.f $DIR_pot/sub_system.f
+cp calc_f2_f1Q.f90       $DIR_vib/Source_TnumTana_Coord/sub_operator_T
+
+cd $DIR_vib
+make
+
+mkdir -p $work
+cd $work
+
+##--------------------------------------------------------------
+## set working dir 
+
+name_WP=$work/file_WPspectral
+name_WPR=$work/file_WPspectral
+
+##--------------------------------------------------------------
+## set openMP environment
+
+if   [ $parall == 'openMP' ] ; then
+  echo 'run with openMP'
+  export OMP_NUM_THREADS=$num_cores    ## number of openMP cores
+
+## set MPI environment
+
+elif [ $parall == 'MPI'    ] ; then
+  MPI_cores=$num_cores                  ## number of MPI cores 
+  echo 'run MPI with '$MPI_cores' cores'
+##  else
+else
+  echo 'run without openMP or MPI'
+fi
+##--------------------------------------------------------------
+
+##==============================================================
+###< environment
+
+
+###> create file 'namelist' for parameters 
+##==============================================================
+##==============================================================
+##==============================================================
+cat > namelist << EOF
+&system EVR=t OpPsi_test=f printlevel=0 
+MPI_Scheme=2
+MPI_mc=1
+/
+
+&constantes ene_unit='eV' /
+
+&variables
+nrho=2 
+Without_Rot=t 
+Centered_ON_CoM=f 
+Gcte=t
+f2f1_ana=t
+Old_Qtransfo=f
+nb_Qtransfo=2
+ /
+
+&Coord_transfo name_transfo='zmat' nat=7 /
+X
+X 1
+X 1 2
+1. 0 0 0   ! cart1
+1. 0 0 0   ! cart2
+1. 0 0 0   ! cart3
+1. 0 0 0   ! cart4
+
+&Coord_transfo name_transfo='active' /
+0 0 0    1 1 1   1 1 1   1 1 1   1 1 1
+
+&minimum pot0=0.d0  nb_elec=2 nb_scalar_Op=0 pot_act=f read_Qsym0=t pot_cart=f unit='bohr' /
+ 1.
+ 1.
+ 90. °
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+
+ &basis_nD nb_basis=12 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=4 /
+   &basis_nD iQdyn=4         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B1 /
+   &basis_nD iQdyn=5         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B2 /
+   &basis_nD iQdyn=6         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B3 /
+   &basis_nD iQdyn=7         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B4 /
+   &basis_nD iQdyn=8         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=9         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=10        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=11        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=12        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=13        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=14        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+   &basis_nD iQdyn=15        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1  L_TO_nq_B=$B /
+ 
+&inactives /
+
+&actives test=$test direct=4 Make_MatOp=f Save_MemGrid=t/
+
+&analyse max_ene=50. 'au' print=f print_psi=0 propa=t /
+
+&propa
+WPTmax=6. 'fs' 
+WPdeltaT=2. 'fs' 
+nb_micro=20
+n_WPecri=1 
+WPpsi2 =f 
+WPpsi=f
+type_WPpropa=1 
+max_poly=10000 
+npoly=300 
+poly_tol=1.d-10
+DHmax=0.0d0 
+auto_Hmax=f
+New_Read_WP0=t
+
+TFnexp2=24
+TFmaxE=5.0 'eV' 
+TFminE=-3245.98 'cm-1'
+/
+ 1 1 1   1 1 1   1 1 1   1 1 1   1 2   1.0 0.
+
+EOF
+##==============================================================
+##==============================================================
+##==============================================================
+###< parameter file
+
+
+
+
+###> run
+##==============================================================
+
+output_file_name="res_pyrazine_12Dprop_SGtype4_LB"$LB"_B"$B"_LG"$LG
+
+##-openMP-------------------------------------------------------
+if   [ $parall == 'openMP' ] ; then
+  $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"openMpcores"
+
+##-MPI----------------------------------------------------------
+elif [ $parall == 'MPI'    ] ; then
+
+  if [ -z $MPI_cores ]; then
+    echo 'short of MPI core number, check shell input'
+    exit 1
+  fi
+
+##-if just output process 0-------------------------------------
+
+  if [ $MPI_output0 == 1 ] ; then
+    mpirun -np $MPI_cores  $here/MPI_output_control $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
+  else
+    mpirun -np $MPI_cores  $DIR_vib/$VIBEXE                    > $work/$output_file_name"_"$num_cores"MPIcores"
+  fi
+
+##-no parallel--------------------------------------------------
+else 
+  $DIR_vib/$VIBEXE > $work/$output_file_name
+fi
+##==============================================================
+###< run
+
+
+echo 'script finished'

@@ -323,7 +323,7 @@ MODULE mod_Davidson_MPI
 
 #if(run_MPI)
 
-    IF(MPI_id==0 .OR. MPI_scheme==1) THEN
+    IF(keep_MPI) THEN
       IF(allocated(g%RvecB)) THEN   
         case_vec=1 
         size_vec=size(g%RvecB)
@@ -359,7 +359,8 @@ MODULE mod_Davidson_MPI
     d1=bounds_MPI(1,MPI_id)
     d2=bounds_MPI(2,MPI_id)
 
-    IF(MPI_id/=0 .AND. MPI_scheme/=1) THEN
+    ! IF(MPI_id/=0 .AND. MPI_scheme/=1) THEN
+    IF(.NOT. keep_MPI) THEN
       SELECT CASE (case_vec)
       CASE(1)
         CALL allocate_array(g%RvecB,d1,d2)
@@ -401,7 +402,8 @@ MODULE mod_Davidson_MPI
     conv=all(converge(1:nb_diago))
     !-----------------------------------------------------------------------------------
 
-    IF(MPI_id/=0 .AND. MPI_scheme/=1) THEN
+    ! IF(MPI_id/=0 .AND. MPI_scheme/=1) THEN
+    IF(.NOT. keep_MPI) THEN
       SELECT CASE (case_vec)
       CASE(1)
         deallocate(g%RvecB)
@@ -445,7 +447,8 @@ MODULE mod_Davidson_MPI
 
 #if(run_MPI)
 
-    IF(MPI_id==0 .OR. MPI_scheme==1) THEN
+    ! IF(MPI_id==0 .OR. MPI_scheme==1) THEN
+    IF(keep_MPI) THEN
       IF(allocated(g%RvecB)) THEN   
         case_vec=1 
         size_vec=size(g%RvecB)
@@ -475,7 +478,8 @@ MODULE mod_Davidson_MPI
     d2=bounds_MPI(2,MPI_id)
 
     !> allocate g%RvecB for slave threads 
-    IF(MPI_id/=0 .AND. MPI_scheme/=1 ) THEN
+    ! IF(MPI_id/=0 .AND. MPI_scheme/=1 ) THEN
+    IF(.NOT. keep_MPI) THEN
       SELECT CASE (case_vec)
       CASE(1)
         CALL allocate_array(g%RvecB,d1,d2)
@@ -496,7 +500,8 @@ MODULE mod_Davidson_MPI
     CALL Set_symab_OF_psiBasisRep_MPI(g,symab=psi(isym)%symab)
 
     !> deallocate g%RvecB
-    IF(MPI_id/=0 .AND. MPI_scheme/=1) THEN
+    ! IF(MPI_id/=0 .AND. MPI_scheme/=1) THEN
+    IF(.NOT. keep_MPI) THEN
       SELECT CASE (case_vec)
       CASE(1)
         deallocate(g%RvecB)
@@ -648,7 +653,7 @@ MODULE mod_Davidson_MPI
                                       -psi(ii)%RvecB(d1:d2)*(Ene(jj)*Vec(ii,jj))
       ENDDO
       ! MPI_Gatherv or MPI_Reduce alternate, avoid creaction of extra memory
-      CALL MPI_combine_array(g%RvecB,(MPI_scheme==1))
+      CALL MPI_combine_array(g%RvecB,MS=MPI_scheme)
 
     CASE(2)
       g%CvecB=ZERO
@@ -656,7 +661,7 @@ MODULE mod_Davidson_MPI
         g%CvecB(d1:d2)=g%CvecB(d1:d2)+Hpsi(ii)%CvecB(d1:d2)*Vec(ii,jj)                 &
                                       -psi(ii)%CvecB(d1:d2)*(Ene(jj)*Vec(ii,jj))
       ENDDO
-      CALL MPI_combine_array(g%CvecB,(MPI_scheme==1))
+      CALL MPI_combine_array(g%CvecB,MS=MPI_scheme)
 
     CASE(3)
       g%RvecG=ZERO
@@ -664,14 +669,14 @@ MODULE mod_Davidson_MPI
         g%RvecG(d1:d2)=g%RvecG(d1:d2)+Hpsi(ii)%RvecG(d1:d2)*Vec(ii,jj)                 &
                                       -psi(ii)%RvecG(d1:d2)*(Ene(jj)*Vec(ii,jj))
       ENDDO
-      CALL MPI_combine_array(g%RvecG,(MPI_scheme==1))
+      CALL MPI_combine_array(g%RvecG,MS=MPI_scheme)
     CASE(4)
       g%CvecG=ZERO
       DO ii=1,ndim
         g%CvecG(d1:d2)=g%CvecG(d1:d2)+Hpsi(ii)%CvecG(d1:d2)*Vec(ii,jj)                 &
                                       -psi(ii)%CvecG(d1:d2)*(Ene(jj)*Vec(ii,jj))
       ENDDO
-      CALL MPI_combine_array(g%CvecG,(MPI_scheme==1))
+      CALL MPI_combine_array(g%CvecG,MS=MPI_scheme)
 
     END SELECT  
 

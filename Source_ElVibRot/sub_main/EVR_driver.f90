@@ -1920,6 +1920,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         IF(keep_MPI) CALL sub_analyse(Tab_Psi,nb_diago,para_H,         &
                            para_EVRT%para_ana,para_EVRT%para_intensity, &
                                para_EVRT%para_AllOp,para_EVRT%const_phys)
+
         CALL flush_perso(out_unitp)
 
         IF (.NOT. para_H%cplx .AND. para_EVRT%para_ana%VibRot) THEN

@@ -36,5 +36,5 @@ then
   echo "NO ERROR in HCN-EVR UT"
 else
   echo $nb_err " ERROR(S) in HCN-EVR UT"
-  echo  " check the output files in UnitTests/HCN_UT."
+  echo  " check the output files in UnitTests/HCN-WP_UT."
 fi

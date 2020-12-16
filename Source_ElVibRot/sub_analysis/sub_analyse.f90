@@ -160,11 +160,11 @@ CONTAINS
        Q =  part_func(ene,nb_psi_in,para_ana%Temp)
 
       file_WPspectral%name = make_FileName(para_ana%name_file_spectralWP)
-      CALL file_open(file_WPspectral,nioWP,lformatted=para_ana%formatted_file_WP)
+      IF(MPI_id==0) CALL file_open(file_WPspectral,nioWP,lformatted=para_ana%formatted_file_WP)
 
       ! For the header of the file
       nb_psi        = count((ene(:)-para_H%ZPE) <= para_ana%max_ene)
-      CALL Write_header_saveFile_psi(tab_Psi,nb_psi,file_WPspectral)
+      IF(MPI_id==0) CALL Write_header_saveFile_psi(tab_Psi,nb_psi,file_WPspectral)
 
       ! write the energy level + save the psi
       write(out_unitp,*) 'population at T, Q',para_ana%Temp,Q
@@ -188,10 +188,10 @@ CONTAINS
 
         write(out_unitp,lformat) i,0,tab_Psi(i)%convAvOp,E,DE
 
-        CALL Write_Psi_nDBasis(tab_Psi(i),nioWP,i,ZERO,file_WPspectral%formatted,FilePsiVersion)
+        IF(MPI_id==0) CALL Write_Psi_nDBasis(tab_Psi(i),nioWP,i,ZERO,file_WPspectral%formatted,FilePsiVersion)
 
       END DO
-      close(nioWP)
+      IF(MPI_id==0) close(nioWP)
 
       para_ana%ana_psi%ZPE        = para_H%ZPE
       para_ana%ana_psi%Part_Func  = Q

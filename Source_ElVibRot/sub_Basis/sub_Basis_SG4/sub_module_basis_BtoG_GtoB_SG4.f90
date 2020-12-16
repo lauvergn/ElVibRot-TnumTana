@@ -1714,8 +1714,6 @@ END IF
 
 END FUNCTION dot_product_SmolyakRep_Grid
 
-! warning, in MPI scheme 1, this function can only be used for SRep1=SRep2
-! further improvement required
 FUNCTION dot_product_SmolyakRep_Basis(SRep1,SRep2,WSRep,ib0) RESULT(R)
 USE mod_system
 USE mod_MPI_aux

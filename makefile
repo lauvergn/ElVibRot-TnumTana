@@ -1,15 +1,15 @@
 #===============================================================================
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-# F90 = mpifort
- F90 = gfortran
+ F90 = mpifort
+# F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
 
 ## parallel_make=1 to enable parallel make
 ## parallel_make=0 for fast debug make, no parallel
-parallel_make=0
+parallel_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 1
@@ -349,7 +349,7 @@ ifeq ($(F90),mpifort)
      else
         #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wconversion -Wconversion-extra
         #F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized -Wunused
-         F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fbounds-check -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
+         F90FLAGS = -O0 -g -fbacktrace $(OMPFLAG) -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
         #F90FLAGS = -O0 -fbounds-check -Wuninitialized
      endif
    else
@@ -435,12 +435,12 @@ endif
 
 #=================================================================================
 #=================================================================================
-DIR_EVRT=$(shell pwd)
+DIR_EVRT:=$(shell pwd)
 OBJ = $(DIR_EVRT)/$(obj_dir)
 
-TNUM_ver=$(shell awk '/Tnum/ {print $$3}' $(DIR_EVRT)/version-EVR-T)
-TANA_ver=$(shell awk '/Tana/ {print $$3}' $(DIR_EVRT)/version-EVR-T)
-EVR_ver=$(shell awk '/EVR/ {print $$3}' $(DIR_EVRT)/version-EVR-T)
+TNUM_ver:=$(shell awk '/Tnum/ {print $$3}' $(DIR_EVRT)/version-EVR-T)
+TANA_ver:=$(shell awk '/Tana/ {print $$3}' $(DIR_EVRT)/version-EVR-T)
+EVR_ver:=$(shell awk '/EVR/ {print $$3}' $(DIR_EVRT)/version-EVR-T)
 $(info ***********************************************************************)
 $(info ***************** TNUM_ver: $(TNUM_ver))
 $(info ***************** TANA_ver: $(TANA_ver))
@@ -1507,10 +1507,13 @@ endif
 
 #=======================================================================================
 #=======================================================================================
+ifeq ($(F90),mpifort)
 $(info ***********************************************************************)
-$(info *********** to test code: make test)
-$(info *********** to clean test: make cleantest)
+$(info *********** to test code MPI: make test)
+$(info *********** to clean MPI test: make cleantest)
 $(info ***********************************************************************)
+endif
+
 # test
 
 ifeq ($(OMP),1)
@@ -1523,84 +1526,10 @@ endif
 
 .PHONY: test
 test: 
-
 ifeq ($(F90),mpifort)
-	@echo "test for MPI > MPI_test.log"
-  # Davidson test
-  # 6D
-	@echo "test for Davidson 6D, result in ./Working_tests/MPI_tests/6D_Davidson/result/"
-	@echo "> test for Davidson 6D" > MPI_test.log
-	@cd ./Working_tests/MPI_tests/6D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
-	@grep 'lev0' ./Working_tests/MPI_tests/6D_Davidson/result/res_HenonHeiles_6D_SGtype4_LB3_*
-  # 21D
-	@echo "test for Davidson 21D, result in ./Working_tests/MPI_tests/21D_Davidson/result/"
-	@echo "> test for Davidson 21D" >> MPI_test.log
-	@cd ./Working_tests/MPI_tests/21D_Davidson ; ./run_jobs >> ../../../MPI_test.log
-	@grep 'lev0' ./Working_tests/MPI_tests/21D_Davidson/result/res_HenonHeiles_21D_SGtype4_LB1_B3_*
-  # Arpack test
-  ifeq ($(ARPACK),1)
-	  @echo "test for Arpack 6D, result in ./Working_tests/MPI_tests/6D_arpack/result/"
-	  @echo "> test for Arpack" >> MPI_test.log
-	  @cd ./Working_tests/MPI_tests/6D_arpack   ; ./run_jobs >> ../../../MPI_test.log
-	  @grep 'lev0' ./Working_tests/MPI_tests/6D_arpack/result/res_HenonHeiles_6D_SGtype4_LB3_*
-  endif
-	@echo "test for propagation, result in ./Working_tests/MPI_tests/12D_propagation/result/"
-	@echo "> test for propagation 12D" >> MPI_test.log
-	@cd ./Working_tests/MPI_tests/12D_propagation  ; ./run_jobs >> ../../../MPI_test.log
-	@head ./Working_tests/MPI_tests/12D_propagation/result/file_auto
-	@echo "test done"
-	@echo " "
-	@echo "to clean test result: make cleantest"
-endif
-
-ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
-	@echo "test for" $(F90)$(parall_name) ">" $(F90)$(parall_name)"_test.log"
-  # Davidson test
-  # 6D
-	@echo "test for Davidson 6D, result in ./Working_tests/MPI_tests/6D_Davidson"$(parall_name)"/result/"
-	@echo "> test for Davidson 6D" > $(F90)$(parall_name)_test.log
-	@rm -rf ./Working_tests/MPI_tests/6D_Davidson$(parall_name)
-	@cp -rf ./Working_tests/MPI_tests/6D_Davidson ./Working_tests/MPI_tests/6D_Davidson$(parall_name)
-	@cd ./Working_tests/MPI_tests/6D_Davidson$(parall_name); \
-	    sed -e "s/parall=MPI/parall=${parall}/g" shell_run  > shell_runp ; \
-	    mv shell_runp shell_run; chmod 777 *; \
-	    ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
-	@grep 'lev0' ./Working_tests/MPI_tests/6D_Davidson"$(parall_name)"/result/res_HenonHeiles_6D_SGtype4_LB3_*
-  # 21D
-	@echo "test for Davidson 21D, result in ./Working_tests/MPI_tests/21D_Davidson"$(parall_name)"/result/"
-	@echo "> test for Davidson 21D" >> $(F90)$(parall_name)_test.log
-	@rm -rf ./Working_tests/MPI_tests/21D_Davidson$(parall_name)
-	@cp -rf ./Working_tests/MPI_tests/21D_Davidson ./Working_tests/MPI_tests/21D_Davidson$(parall_name)
-	@cd ./Working_tests/MPI_tests/21D_Davidson$(parall_name); \
-	    sed -e "s/parall=MPI/parall=${parall}/g" shell_run  > shell_runp ; \
-	    mv shell_runp shell_run; chmod 777 *; \
-	    ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
-	@grep 'lev0' ./Working_tests/MPI_tests/21D_Davidson"$(parall_name)"/result/res_HenonHeiles_21D_SGtype4_LB1_B3_*
-  # Arpack test
-  ifeq ($(ARPACK),1)
-	  @echo "test for Arpack, result in ./Working_tests/MPI_tests/6D_arpack"$(parall_name)"/result/"
-	  @echo "> test for Arpack 6D" >> $(F90)$(parall_name)_test.log
-	  @rm -rf ./Working_tests/MPI_tests/6D_arpack$(parall_name)
-	  @cp -rf ./Working_tests/MPI_tests/6D_arpack ./Working_tests/MPI_tests/6D_arpack$(parall_name)
-	  @cd ./Working_tests/MPI_tests/6D_arpack$(parall_name); \
-	      sed -e "s/parall=MPI/parall=${parall}/g"  shell_run  > shell_runp ; \
-	      mv shell_runp shell_run; chmod 777 *; \
-	      ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
-	  @grep 'lev0' ./Working_tests/MPI_tests/6D_arpack"$(parall_name)"/result/res_HenonHeiles_6D_SGtype4_LB3_*
-  endif
-  # propagation test
-	@echo "test for propagation, result in ./Working_tests/MPI_tests/12D_propagation"$(parall_name)"/result/"
-	@echo "> test for propagation 12D" >> $(F90)$(parall_name)_test.log
-	@rm -rf  ./Working_tests/MPI_tests/12D_propagation$(parall_name)
-	@cp -rf ./Working_tests/MPI_tests/12D_propagation ./Working_tests/MPI_tests/12D_propagation$(parall_name)
-	@cd ./Working_tests/MPI_tests/12D_propagation$(parall_name); \
-	    sed -e "s/parall=MPI/parall=${parall}/g"  shell_run  > shell_runp ; \
-	    mv shell_runp shell_run; chmod 777 *; \
-	    ./run_jobs >> ../../../$(F90)$(parall_name)_test.log
-	@head ./Working_tests/MPI_tests/12D_propagation"$(parall_name)"/result/file_auto
-	@echo "test done"
-	@echo " "
-	@echo "to clean test result: make cleantest"
+	@cd ./Working_tests/MPI_tests ; ./MPI_test.sh
+else
+	@cd ./Working_tests/MPI_tests ; ./openMP_test.sh
 endif
 
 # clean test results
@@ -1610,11 +1539,11 @@ cleantest:
 	@rm -rf ./Working_tests/MPI_tests/*/result
 	@echo "removed ./Working_tests/MPI_tests/*/result"
 ifeq ($(F90),mpifort)
-	@rm -rf MPI_test.log
-	@echo "removed MPI_test.log"
+	@rm -rf ./Working_tests/MPI_tests/*/MPI_test.log
+	@echo "removed ./Working_tests/MPI_tests/*/MPI_test.log"
 endif
 ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
-	@rm -rf $(F90)$(parall_name)_test.log
-	@echo "removed "$(F90)$(parall_name)"_test.log"
+	@rm -rf ./Working_tests/MPI_tests/$(F90)$(parall_name)_test.log
+	@echo "removed ./Working_tests/MPI_tests/"$(F90)$(parall_name)"_test.log"
 endif
 	@echo "clean test file done"

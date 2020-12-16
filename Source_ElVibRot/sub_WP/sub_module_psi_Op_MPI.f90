@@ -1062,14 +1062,18 @@ MODULE mod_psi_Op_MPI
           nb_rem_MPI=mod(psi(i)%nb_qaie,MPI_np) 
         ENDIF
         bound1_MPI=i_MPI*nb_per_MPI+1+MIN(i_MPI,nb_rem_MPI)
-        bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)+merge(1,0,nb_rem_MPI>i_MPI)
+        bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)                          &
+                   +merge(1,0,nb_rem_MPI>i_MPI)
 
         length(i_MPI)=length(i_MPI)+(bound2_MPI-bound1_MPI+1)
       ENDDO
     ENDDO
 
-    IF(MPI_id==0) THEN
-      DO i_MPI=1,MPI_np-1
+    ! IF(MPI_id==0) THEN
+    !   DO i_MPI=1,MPI_np-1
+    IF(MPI_id==0 .OR. MPI_nodes_p0) THEN ! for S2 & S3
+      DO i_MPI=MPI_sub_id(1),MPI_sub_id(2)
+
         IF(psi(1)%cplx) THEN
           allocate(Cvec(length(i_MPI)))
         ELSE
@@ -1086,7 +1090,7 @@ MODULE mod_psi_Op_MPI
             nb_rem_MPI=mod(psi(i)%nb_qaie,MPI_np) !remainder jobs
           ENDIF
           bound1_MPI=i_MPI*nb_per_MPI+1+MIN(i_MPI,nb_rem_MPI)
-          bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)                          &
+          bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)                        &
                                          +merge(1,0,nb_rem_MPI>i_MPI)
 
           ! pack array
@@ -1115,19 +1119,24 @@ MODULE mod_psi_Op_MPI
           CALL MPI_Send(Rvec,count-1,MPI_Real8,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
           deallocate(Rvec)
         ENDIF
-      ENDDO ! for i_MPI=1,MPI_np-1
-    ENDIF ! for MPI_id==0
+      ENDDO ! for i_MPI
+    ENDIF ! for MPI_id==0 .OR. MPI_nodes_p0
     
-    ! MPI/=0------------------------------------------------------------------------------
-    IF(MPI_id/=0) THEN
+    !-----------------------------------------------------------------------------------
+    ! IF(MPI_id/=0) THEN
+    IF(.NOT.(MPI_id==0 .OR. MPI_nodes_p0)) THEN ! for S2 & S3
       ! receive array
       IF(psi(1)%cplx) THEN
         allocate(Cvec(length(MPI_id)))
-        CALL MPI_Recv(Cvec,length(MPI_id),MPI_Complex8,root_MPI,MPI_id,                  &
+        ! CALL MPI_Recv(Cvec,length(MPI_id),MPI_Complex8,root_MPI,MPI_id,                &
+        !               MPI_COMM_WORLD,MPI_stat,MPI_err)
+        CALL MPI_Recv(Cvec,length(MPI_id),MPI_Complex8,MPI_node_p0_id,MPI_id,          &
                       MPI_COMM_WORLD,MPI_stat,MPI_err)
       ELSE
         allocate(Rvec(length(MPI_id)))
-        CALL MPI_Recv(Rvec,length(MPI_id),MPI_Real8,root_MPI,MPI_id,                     &
+        ! CALL MPI_Recv(Rvec,length(MPI_id),MPI_Real8,root_MPI,MPI_id,                   &
+        !               MPI_COMM_WORLD,MPI_stat,MPI_err)
+        CALL MPI_Recv(Rvec,length(MPI_id),MPI_Real8,MPI_node_p0_id,MPI_id,             &
                       MPI_COMM_WORLD,MPI_stat,MPI_err)
       ENDIF
 
@@ -1141,27 +1150,27 @@ MODULE mod_psi_Op_MPI
           nb_rem_MPI=mod(psi(i)%nb_qaie,MPI_np) !remainder jobs
         ENDIF
         bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
-        bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)                          &
+        bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)                        &
                                         +merge(1,0,nb_rem_MPI>MPI_id)
 
         ! unpack
         IF (.NOT. With_Grid_loc) THEN
           IF (psi(i)%cplx) THEN
-            IF(.NOT. allocated(psi(i)%CvecB))                                            &
+            IF(.NOT. allocated(psi(i)%CvecB))                                          &
                       allocate(psi(i)%CvecB(bound1_MPI:bound2_MPI))
             psi(i)%CvecB(bound1_MPI:bound2_MPI)=Cvec(count:count+bound2_MPI-bound1_MPI)
           ELSE
-            IF(.NOT. allocated(psi(i)%RvecB))                                            &
+            IF(.NOT. allocated(psi(i)%RvecB))                                          &
                       allocate(psi(i)%RvecB(bound1_MPI:bound2_MPI))
             psi(i)%RvecB(bound1_MPI:bound2_MPI)=Rvec(count:count+bound2_MPI-bound1_MPI)
           ENDIF
         ELSE
           IF (psi(i)%cplx) THEN
-            IF(.NOT. allocated(psi(i)%CvecG))                                            &
+            IF(.NOT. allocated(psi(i)%CvecG))                                          &
                       allocate(psi(i)%CvecG(bound1_MPI:bound2_MPI))
             psi(i)%CvecG(bound1_MPI:bound2_MPI)=Cvec(count:count+bound2_MPI-bound1_MPI)
           ELSE
-            IF(.NOT. allocated(psi(i)%RvecG))                                            &
+            IF(.NOT. allocated(psi(i)%RvecG))                                          &
                       allocate(psi(i)%RvecG(bound1_MPI:bound2_MPI))
             psi(i)%RvecG(bound1_MPI:bound2_MPI)=Rvec(count:count+bound2_MPI-bound1_MPI)
           ENDIF
@@ -1174,7 +1183,7 @@ MODULE mod_psi_Op_MPI
       ELSE
         deallocate(Rvec)
       ENDIF
-    ENDIF ! for MPI_id/=0  
+    ENDIF ! for .NOT.(MPI_id==0 .OR. MPI_nodes_p0)
 
 #endif
   END SUBROUTINE distribute_psi_pack_MPI
@@ -2517,7 +2526,7 @@ MODULE mod_psi_Op_MPI
         IF(allocated(PsiRk)) deallocate(PsiRk)
 
         DO ii=1,ndim
-          CALL MPI_combine_array(psi(ii)%RvecB,(MPI_scheme==1))
+          CALL MPI_combine_array(psi(ii)%RvecB,MS=MPI_scheme)
         ENDDO
 
         DO ii=1,ndim
@@ -2544,7 +2553,7 @@ MODULE mod_psi_Op_MPI
         IF(allocated(PsiRk)) deallocate(PsiRk)
 
         DO ii=1,ndim
-          CALL MPI_combine_array(psi(ii)%RvecG,(MPI_scheme==1))
+          CALL MPI_combine_array(psi(ii)%RvecG,MS=MPI_scheme)
         ENDDO
 
       ENDIF ! for psi(1)%BasisRep

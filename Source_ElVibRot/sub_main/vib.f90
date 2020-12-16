@@ -823,8 +823,9 @@
         CALL time_perso('sub_analyse ini')
         write(out_unitp,*)
 
-        IF(keep_MPI) CALL sub_analyse(Tab_Psi,nb_diago,para_H,                        &
+        IF(keep_MPI) CALL sub_analyse(Tab_Psi,nb_diago,para_H,                         &
                                        para_ana,para_intensity,para_AllOp,const_phys)
+
         CALL flush_perso(out_unitp)
 
         IF (.NOT. para_H%cplx .AND. para_ana%VibRot) THEN
@@ -854,14 +855,12 @@
           END DO
         END IF
 
-        IF(MPI_id==0) THEN
-          write(out_unitp,*)
-          write(out_unitp,*)
-          CALL time_perso('sub_analyse end')
-          write(out_unitp,*) ' VIB: END WAVE FUNCTION ANALYSIS'
-          write(out_unitp,*) '================================================='
-          write(out_unitp,*)
-        ENDIF
+        write(out_unitp,*)
+        write(out_unitp,*)
+        CALL time_perso('sub_analyse end')
+        write(out_unitp,*) ' VIB: END WAVE FUNCTION ANALYSIS'
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*)
 
         !===============================================================
         !===============================================================
@@ -890,15 +889,15 @@
 !=====================================================================
 100   CONTINUE
       IF (.NOT. para_H%cplx .AND. para_ana%intensity) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) '================================================'
+        write(out_unitp,*) ' VIB: BEGINNING sub_intensity',para_H%nb_tot,para_ana%max_ana
+        CALL time_perso('sub_intensity')
+        write(out_unitp,*)
+        write(out_unitp,*)
+
+        !         ----- file for restart or for changed the temprature --------------
         IF(MPI_id==0) THEN
-          write(out_unitp,*)
-          write(out_unitp,*) '================================================'
-          write(out_unitp,*) ' VIB: BEGINNING sub_intensity',para_H%nb_tot,para_ana%max_ana
-          CALL time_perso('sub_intensity')
-          write(out_unitp,*)
-          write(out_unitp,*)
-        ENDIF
-!         ----- file for restart or for changed the temprature --------------
         CALL file_open(para_intensity%file_resart_int,nio_res_int)
 
         IF (intensity_only) THEN
@@ -958,70 +957,68 @@
         CALL sub_intensity(para_Dip,                                  &
                            para_ana%print,para_H,para_ana%max_ana,    &
                            para_intensity,const_phys,intensity_only,nio_res_int)
+        ENDIF ! MPI_id==0
 
-        IF(MPI_id==0) THEN
-          write(out_unitp,*)
-          write(out_unitp,*)
-          CALL time_perso('sub_intensity')
-          write(out_unitp,*) ' VIB: END sub_intensity'
-          write(out_unitp,*) '================================================'
-          write(out_unitp,*)
-        ENDIF
-        close(nio_res_int)
+        write(out_unitp,*)
+        write(out_unitp,*)
+        CALL time_perso('sub_intensity')
+        write(out_unitp,*) ' VIB: END sub_intensity'
+        write(out_unitp,*) '================================================'
+        write(out_unitp,*)
+
+        IF(MPI_id==0) close(nio_res_int)
         nullify(para_Dip)
       END IF !for .NOT. para_H%cplx .AND. para_ana%intensity
       CALL flush_perso(out_unitp)
 
       IF (.NOT. para_H%cplx .AND. para_ana%Psi_ScalOp) THEN
-        IF(MPI_id==0) THEN
-          write(out_unitp,*)
-          write(out_unitp,*) '================================================'
-          write(out_unitp,*) ' VIB: BEGINNING sub_AnalysePsy_ScalOp',para_H%nb_tot,para_ana%max_ana
-          CALL time_perso('sub_AnalysePsy_ScalOp')
-          write(out_unitp,*)
-          write(out_unitp,*) 'nb_scalar_Op',para_H%para_ReadOp%nb_scalar_Op
-        ENDIF
+        write(out_unitp,*)
+        write(out_unitp,*) '================================================'
+        write(out_unitp,*) ' VIB: BEGINNING sub_AnalysePsy_ScalOp',para_H%nb_tot,para_ana%max_ana
+        CALL time_perso('sub_AnalysePsy_ScalOp')
+        write(out_unitp,*)
+        write(out_unitp,*) 'nb_scalar_Op',para_H%para_ReadOp%nb_scalar_Op
         
-        iOp = 2
-        nb_ScalOp = para_H%para_ReadOp%nb_scalar_Op
-        para_Dip => para_AllOp%tab_Op(iOp+1:iOp+nb_ScalOp)
-        CALL sub_AnalysePsy_ScalOp(para_Dip,nb_ScalOp,para_H,para_ana%max_ana)
-
         IF(MPI_id==0) THEN
-          write(out_unitp,*)
-          write(out_unitp,*)
-          CALL time_perso('sub_AnalysePsy_ScalOp')
-          write(out_unitp,*) ' VIB: END sub_AnalysePsy_ScalOp'
-          write(out_unitp,*) '================================================'
-          write(out_unitp,*)
+          iOp = 2
+          nb_ScalOp = para_H%para_ReadOp%nb_scalar_Op
+          para_Dip => para_AllOp%tab_Op(iOp+1:iOp+nb_ScalOp)
+          CALL sub_AnalysePsy_ScalOp(para_Dip,nb_ScalOp,para_H,para_ana%max_ana)
         ENDIF
+
+        write(out_unitp,*)
+        write(out_unitp,*)
+        CALL time_perso('sub_AnalysePsy_ScalOp')
+        write(out_unitp,*) ' VIB: END sub_AnalysePsy_ScalOp'
+        write(out_unitp,*) '================================================'
+        write(out_unitp,*)
+
         nullify(para_Dip)
       END IF
       CALL flush_perso(out_unitp)
 
       IF (.NOT. para_H%cplx .AND. para_ana%NLO) THEN
-        IF(MPI_id==0) THEN
-          write(out_unitp,*)
-          write(out_unitp,*) '================================================'
-          write(out_unitp,*) ' VIB: BEGINNING sub_NLO',para_H%nb_tot,para_ana%max_ana
-          CALL time_perso('sub_NLO')
-          write(out_unitp,*)
-          write(out_unitp,*)
-        ENDIF
-      
-        iOp = 2
-        para_Dip => para_AllOp%tab_Op(iOp+1:iOp+3)
-        CALL sub_NLO(para_Dip,para_ana%print,para_H,para_ana%max_ana, &
-                     para_intensity)
+        write(out_unitp,*)
+        write(out_unitp,*) '================================================'
+        write(out_unitp,*) ' VIB: BEGINNING sub_NLO',para_H%nb_tot,para_ana%max_ana
+        CALL time_perso('sub_NLO')
+        write(out_unitp,*)
+        write(out_unitp,*)
 
         IF(MPI_id==0) THEN
-          write(out_unitp,*)
-          write(out_unitp,*)
-          CALL time_perso('sub_NLO')
-          write(out_unitp,*) ' VIB: END sub_NLO'
-          write(out_unitp,*) '================================================'
-          write(out_unitp,*)
+          iOp = 2
+          para_Dip => para_AllOp%tab_Op(iOp+1:iOp+3)
+          CALL sub_NLO(para_Dip,para_ana%print,para_H,para_ana%max_ana, &
+                      para_intensity)
         ENDIF
+
+        write(out_unitp,*)
+        write(out_unitp,*)
+        CALL time_perso('sub_NLO')
+        write(out_unitp,*) ' VIB: END sub_NLO'
+        write(out_unitp,*) '================================================'
+        write(out_unitp,*)
+
         nullify(para_Dip)
       END IF
       CALL flush_perso(out_unitp)
@@ -1599,7 +1596,6 @@ IMPLICIT NONE
  !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
 
-!@chen  why return here?
 IF(openmpi) RETURN
 
 IF (.NOT. Tune_SG4_omp) RETURN
