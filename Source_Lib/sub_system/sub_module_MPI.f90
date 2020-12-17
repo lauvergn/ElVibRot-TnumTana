@@ -66,7 +66,7 @@ MODULE mod_MPI
   Integer                                        :: Num_L2=6                  !<1/Num_L2 threads used for level2 distributor
   Integer                                        :: n_level2                  !< number of level2 distributor 
 
-  Integer                                        :: MPI_nb_WP=1               ! nb of levels to converge
+  ! use type later to collect these parameters
   Integer                                        :: MPI_mc=1                  !< increase to reduce memory used in action
   Integer,allocatable                            :: MPI_nodes_np(:)           !< available np on each nodes
   Integer                                        :: MPI_nodes_num=0
@@ -79,6 +79,17 @@ MODULE mod_MPI
   Integer                                        :: MPI_sub_id(2)             !< processors affiliated
   Integer                                        :: MPI_fake_nodes=0          !< fake nodes for S3
   Logical                                        :: iGs_auto=.FALSE.          !< if auto-adjust the distribution of Smolyak terms
+  Integer                                        :: MPI_mem_node=0            !< in unit of GB
+
+  TYPE MPI_S_type 
+    Logical                                      :: davidson=.FALSE.
+    Logical                                      :: prop=.FALSE.
+    Integer                                      :: num_resetH=1
+    Integer                                      :: nb_channels=1
+    Integer                                      :: nb_psi=1                  ! nb of levels to converge
+  END TYPE 
+  TYPE(MPI_S_type)                               :: MPI_S
+
   !-------------------------------------------------------------------------------------
   !> varilables for recording time usage
   Integer                                        :: time_MPI_action=0         !< total time used in action 
@@ -259,7 +270,8 @@ MODULE mod_MPI
         ENDDO ! i_MPI
 
         MPI_nodes_num=ii+1
-        IF(.NOT. ALL(MPI_nodes_np>=2)) write(out_unitp,*) 'warning, only one core in node'
+        IF(.NOT. ALL(MPI_nodes_np(0:MPI_nodes_num-1)>=2))                              &
+                                     write(out_unitp,*) 'warning, only one core in node'
 
         write(out_unitp,*) 'MPI working on',MPI_nodes_num,'nodes:'
         DO ii=0,MPI_nodes_num-1
@@ -301,28 +313,37 @@ MODULE mod_MPI
 
 #else
   !< fake variables, for convenience
-  Integer                        :: MPI_err=0
-  Integer                        :: MPI_id=0
-  Integer                        :: MPI_np=1
+  Integer                                        :: MPI_err=0
+  Integer                                        :: MPI_id=0
+  Integer                                        :: MPI_np=1
   
-  Integer,parameter              :: MPI_INTEGER_KIND=4
-  Integer,parameter              :: MPI_ADDRESS_KIND=4
-  Integer                        :: MPI_scheme=0
-  Integer                        :: MPI_nb_WP=2
-  Integer                        :: iG1_MPI      
-  Integer                        :: iG2_MPI  
-  Integer(kind=MPI_INTEGER_KIND) :: root_MPI=0      
-  Integer(kind=MPI_INTEGER_KIND) :: size1_MPI=1
-  Integer(kind=MPI_INTEGER_KIND) :: i_MPI    
-  Logical                        :: Srep_MPI=.FALSE.  
-  Integer,allocatable            :: iGs_MPI(:,:)  
-  Integer,allocatable            :: bounds_MPI(:,:) 
-  Integer                        :: Num_L2
-  Integer                        :: n_level2
-  Integer                        :: MPI_mc=1
-  Integer                        :: MPI_fake_nodes=0
-  Logical                        :: iGs_auto=.True.
-  Logical                        :: keep_MPI=.True.
+  Integer,parameter                              :: MPI_INTEGER_KIND=4
+  Integer,parameter                              :: MPI_ADDRESS_KIND=4
+  Integer                                        :: MPI_scheme=0
+  Integer                                        :: iG1_MPI      
+  Integer                                        :: iG2_MPI  
+  Integer(kind=MPI_INTEGER_KIND)                 :: root_MPI=0      
+  Integer(kind=MPI_INTEGER_KIND)                 :: size1_MPI=1
+  Integer(kind=MPI_INTEGER_KIND)                 :: i_MPI    
+  Logical                                        :: Srep_MPI=.FALSE.  
+  Integer,allocatable                            :: iGs_MPI(:,:)  
+  Integer,allocatable                            :: bounds_MPI(:,:) 
+  Integer                                        :: Num_L2
+  Integer                                        :: n_level2
+  Integer                                        :: MPI_mc=1
+  Integer                                        :: MPI_fake_nodes=0
+  Logical                                        :: iGs_auto=.True.
+  Logical                                        :: keep_MPI=.True.
+  Integer                                        :: MPI_mem_node=0
+
+  TYPE MPI_S_type 
+    Logical                                      :: davidson=.FALSE.
+    Logical                                      :: prop=.FALSE.
+    Integer                                      :: num_resetH=1
+    Integer                                      :: nb_channels=1
+    Integer                                      :: nb_psi=1                  ! nb of levels to converge
+  END TYPE 
+  TYPE(MPI_S_type)                               :: MPI_S
 
 
   Integer                        :: time_rate       !< for function system_clock()

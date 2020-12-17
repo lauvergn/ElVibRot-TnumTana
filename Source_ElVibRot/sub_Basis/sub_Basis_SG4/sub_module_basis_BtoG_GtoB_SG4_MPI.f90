@@ -509,6 +509,7 @@ SUBROUTINE Set_scheme_MPI(basis_SG,lMax_Srep)
   Integer(kind=ILkind),            intent(in)    :: lMax_Srep
 
   Integer                                        :: ave_iGs
+  Real(kind=Rkind)                               :: mem_S1
 
 #if(run_MPI)
 
@@ -517,14 +518,31 @@ SUBROUTINE Set_scheme_MPI(basis_SG,lMax_Srep)
 
   ! auto select MPI scheme
   IF(MPI_scheme==0) THEN
-    ! if have big enough memory, set MPI_scheme=1
-    IF(basis_SG%nDindB%Max_nDI*MPI_nb_WP<lMax_Srep*1.2) THEN
-      MPI_scheme=1
-    ELSE
-      IF(MPI_nodes_num==1) THEN
-        MPI_scheme=2
+    ! check mem availabe
+    IF(MPI_mem_node/=0) THEN
+      ! compact basis*Rkind*MPI_np*2 (from complex)
+      ! mapping table*Ikind
+      mem_S1=get_mem_S1_MPI(basis_SG,lMax_Srep)
+      IF(mem_S1*1.2<MPI_mem_node) THEN
+        MPI_scheme=1
       ELSE
-        MPI_scheme=3
+        IF(MPI_nodes_num==1) THEN
+          MPI_scheme=2
+        ELSE
+          MPI_scheme=3
+        ENDIF
+      ENDIF
+    ELSE ! no information of mem, just an estimation depends on balance of mem and eff.
+      ! Max_nDI:   compact basis
+      ! lMax_Srep: Smolyak basis
+      IF(basis_SG%nDindB%Max_nDI*MPI_np<lMax_Srep*1.2) THEN
+        MPI_scheme=1
+      ELSE
+        IF(MPI_nodes_num==1) THEN
+          MPI_scheme=2
+        ELSE
+          MPI_scheme=3
+        ENDIF
       ENDIF
     ENDIF
   ENDIF
@@ -551,6 +569,8 @@ SUBROUTINE Set_scheme_MPI(basis_SG,lMax_Srep)
 
   ! initialize iGs distribution
   CALL ini_iGs_MPI(basis_SG,.FALSE.)
+
+  write(out_unitp,*) 'MPI scheme ',MPI_scheme,' used for parallelization'
 
 #endif
 END SUBROUTINE Set_scheme_MPI
@@ -648,5 +668,43 @@ SUBROUTINE set_iGs_MPI_mc(BasisnD,initialize)
 #endif
 ENDSUBROUTINE set_iGs_MPI_mc 
 !=======================================================================================
+
+FUNCTION get_mem_S1_MPI(basis_SG,lMax_Srep) RESULT(mem_S1)
+  IMPLICIT NONE
+
+  TYPE(basis),                     intent(inout) :: basis_SG
+  Integer(kind=ILkind),            intent(in)    :: lMax_Srep
+
+  Real(kind=Rkind)                               :: mem_S1
+  Real(kind=Rkind)                               :: mem_MT
+  Real(kind=Rkind)                               :: mem_CB
+  Integer                                        :: nb_bi
+
+#if(run_MPI)
+
+  ! compact basis*Rkind*MPI_np*2 (from complex)
+  ! mapping table*Ikind
+  nb_bi=get_nb_FROM_basis(basis_SG)
+  ! nb_e=para_H%nb_bi*para_ReadOp%nb_elec  ! note, this one is not accounted
+
+  mem_MT=lMax_Srep*Ikind ! mapping table
+  ! compact basis
+  IF(MPI_S%nb_psi>0) THEN
+    mem_CB=basis_SG%nDindB%Max_nDI*MPI_S%nb_psi*MPI_S%nb_channels*Rkind
+  ELSE
+    mem_CB=basis_SG%nDindB%Max_nDI*MPI_S%nb_channels*Rkind
+  ENDIF
+  IF(MPI_S%davidson) THEN
+    mem_CB=mem_CB*4*MPI_S%num_resetH
+  ELSEIF(MPI_S%prop) THEN
+    mem_CB=mem_CB*2
+  ENDIF
+  mem_CB=mem_CB*MPI_np ! duplication on each processor
+  mem_S1=(mem_CB+mem_MT)/1024_Rkind**3 ! in unit GB
+
+  write(out_unitp,*) 'memory estimated for MPI scheme 1: ',mem_S1,' GB'
+
+#endif
+ENDFUNCTION
 
 END MODULE mod_basis_BtoG_GtoB_SGType4_MPI

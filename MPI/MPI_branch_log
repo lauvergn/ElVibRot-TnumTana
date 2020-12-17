@@ -16,6 +16,7 @@ MPI Vm2.0
 
   - new subroutine
     get_nodes_info_MPI for MPI scheme3
+    get_mem_S1_MPI     for memory estimation to choose MPI scheme
 
   - subroutine modified 
     Set_scheme_MPI

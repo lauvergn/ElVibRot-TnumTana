@@ -722,11 +722,14 @@ KEO_type1_Mem  = PotMem   * real((nb_Q+1)*(nb_Q+2)/2, kind=Rkind) ! F2+F1+vep
 KEO_type10_Mem = GridMem  * real((nb_Q**2 + 2),       kind=Rkind) ! size of G + jac+rho
               ! We suppose, the KEO are the same on each channel !! Pb...
 
+MPI_S%nb_channels=nb_channels
+MPI_S%nb_psi=nb_psi_loc
+
 write(out_unitp,*) "============================================================"
 write(out_unitp,*) "============================================================"
 write(out_unitp,*) "====== Memory psi and H ===================================="
 
-IF(MPI_id==0) write(out_unitp,*) "------------------------------------------------------------"
+write(out_unitp,*) "------------------------------------------------------------"
 Mem = psi_Mem
 CALL convertMem(Mem,MemUnit)
 IF(MPI_id==0) write(out_unitp,'(a,f10.0,1x,a)') "One psi: ",Mem,MemUnit
@@ -773,9 +776,7 @@ Mem = MappingSG4Meme+PotMem+KEO_type10_Mem
 CALL convertMem(Mem,MemUnit)
 IF(MPI_id==0) write(out_unitp,'(a,f10.0,1x,a)') "H memory (mapping+V+KEO): ",Mem,MemUnit
 
-IF(MPI_id==0) THEN
-  write(out_unitp,*) "============================================================"
-  write(out_unitp,*) "============================================================"
-ENDIF
+write(out_unitp,*) "============================================================"
+write(out_unitp,*) "============================================================"
 
 END SUBROUTINE MemoryEstimation

@@ -89,7 +89,8 @@
                           main_test,                                    &
 
                           EVRT_path,File_path,base_FileName,            &
-                          Srep_MPI,MPI_scheme,MPI_mc,iGs_auto,MPI_fake_nodes
+                          Srep_MPI,MPI_scheme,MPI_mc,iGs_auto,          &
+                          MPI_fake_nodes,MPI_mem_node
 
 
         !-------------------------------------------------------------------------------
