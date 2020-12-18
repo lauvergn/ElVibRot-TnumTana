@@ -40,7 +40,7 @@
    PUBLIC :: write_keo_MCTDH_Form,read_keo_mctdh_form
    PUBLIC :: write_keo_MidasCppForm,write_mol_MidasCppForm
 
-   CONTAINS 
+   CONTAINS
    !! @description: Write the deformation part of the total KEO in a MidasCpp format,
    !! @param:       mole          The generalized variable.
    !! @param:       TWOxKEO       The 2*KEO operator
@@ -759,12 +759,12 @@
      integer                                    :: ndim_sum, idf
      integer                                    :: ndim_nd
      integer                                    :: ndim_1d
-     integer                                    :: i_qsym, alfa 
+     integer                                    :: i_qsym, alfa
      real(kind=Rkind)                           :: coeff
-     character (len = Name_longlen)             :: op_name_1d 
-     character (len = Name_longlen)             :: op_name_tmp 
-     character (len = Name_longlen)             :: op_name_J 
-     character (len = 10), allocatable          :: C(:) 
+     character (len = Name_longlen)             :: op_name_1d
+     character (len = Name_longlen)             :: op_name_tmp
+     character (len = Name_longlen)             :: op_name_J
+     character (len = 10), allocatable          :: C(:)
      logical, allocatable                       :: l_op_out(:)
      logical, allocatable                       :: l_JJ(:)
      logical, allocatable                       :: l_qJ(:)
@@ -774,8 +774,8 @@
      logical                                    :: l_qact
      logical                                    :: op_JiJj
 
-     !logical, parameter :: debug = .FALSE.
-     logical, parameter :: debug = .TRUE.
+     logical, parameter :: debug = .FALSE.
+     !logical, parameter :: debug = .TRUE.
      character (len = Name_longlen) :: routine_name='write_keo_mctdh_form'
 
      IF (debug) THEN
@@ -856,15 +856,15 @@
          end do
        end do
      end if
-     
+
      n = 0
      do i = 1, ndim_sum
        if(L_op_out(i)) n = n+1
-     end do 
+     end do
      allocate(C(n))
      n = 0
      do i = 1, ndim_sum
-       if(L_op_out(i)) then 
+       if(L_op_out(i)) then
          n = n+1
          C(n) = 'C_' // int_TO_char(n)
        !  write(i_out, '(2x, A,1x,A 3x,(F20.14))') (C(n)),"=", -TWOxKEO_MCTDH%Cn(n)*CHALF
@@ -877,9 +877,9 @@
      write(i_out, '(A)')  "HAMILTONIAN-SECTION"
      write(i_out,'(A)',advance='no') &
      '--------------------------------------------------------------------'
-     write(i_out,'(A)',advance='yes') & 
+     write(i_out,'(A)',advance='yes') &
      '--------------------------------------------------------------------'
-     write(i_out,'(A)',advance='no') 'modes  '  
+     write(i_out,'(A)',advance='no') 'modes  '
      do i=1,mole%nb_act
          write(i_out,'(2A)',advance='no') ' | ', trim(tab_Qname(i))
      end do
@@ -889,7 +889,7 @@
      write(i_out,'(a)',advance='yes')
      write(i_out,'(A)',advance='no') &
      '--------------------------------------------------------------------'
-     write(i_out,'(A)',advance='yes') & 
+     write(i_out,'(A)',advance='yes') &
      '--------------------------------------------------------------------'
      write(i_out,'(a)',advance='yes')
       n = 0
@@ -1266,10 +1266,10 @@
    END SUBROUTINE write_keo_mctdh_form_old
 
 
-   !! @description: Export local name of an elementary operator to 
+   !! @description: Export local name of an elementary operator to
    !!               corresponding operator name in MCTDH,
-   !! @param:       opname        The defined local name 
-   !! @param:       alfa          The power of the operator 
+   !! @param:       opname        The defined local name
+   !! @param:       alfa          The power of the operator
    SUBROUTINE export_mctdh_name(opname, alfa, l_qJ)
    IMPLICIT NONE
 

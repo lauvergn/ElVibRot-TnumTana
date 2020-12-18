@@ -155,7 +155,6 @@
           d0MatOpd0bWrho(k,ib)%ReVal(:,:,i_Op) =                        &
                                 d0MatOpd0bWrho(k,ib)%ReVal(:,:,i_Op) +  &
                                        dnbnD * d0MatOp%ReVal(:,:,i_term)
-
         END DO
 
         IF (d0MatOp%cplx) THEN
@@ -182,6 +181,3 @@
       END IF
 
       END SUBROUTINE calc_td0b_OpRVd0bW
-
-
-

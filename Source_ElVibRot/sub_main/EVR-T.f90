@@ -57,6 +57,7 @@
 
       integer  :: PMatOp_omp,POpPsi_omp,PBasisTOGrid_omp,PGrid_omp,optimization
       integer  :: maxth,PMatOp_maxth,POpPsi_maxth,PBasisTOGrid_maxth,PGrid_maxth
+      integer  :: PCRP_omp,PCRP_maxth
       logical  :: PTune_SG4_omp,PTune_Grid_omp
       integer  :: PSG4_omp,PSG4_maxth
       integer (kind=ILkind)  :: max_mem
@@ -79,6 +80,7 @@
                           POpPsi_omp,POpPsi_maxth,                      &
                           PBasisTOGrid_omp,PBasisTOGrid_maxth,          &
                           PGrid_omp,PGrid_maxth,                        &
+                          PCRP_omp,PCRP_maxth,                          &
                           PTune_SG4_omp,PTune_Grid_omp,                 &
 
                           RMatFormat,CMatFormat,EneFormat,              &
@@ -93,7 +95,7 @@
 
 
         !-------------------------------------------------------------------------------
-        ! set parallelization 
+        ! set parallelization
 #if(run_MPI)
         Popenmpi           = .TRUE.  !< True to run with MPI
         Popenmp            = .FALSE.
@@ -127,6 +129,8 @@
         PBasisTOGrid_maxth = maxth
         PGrid_omp          = 1
         PGrid_maxth        = maxth
+        PCRP_omp           = 1
+        PCRP_maxth         = maxth
         PTune_SG4_omp      = .FALSE.
         PTune_Grid_omp     = .FALSE.
 
@@ -229,12 +233,14 @@
            OpPsi_omp          = 0
            BasisTOGrid_omp    = 0
            Grid_omp           = 0
+           CRP_omp            = 0
            SG4_omp            = 0
 
            MatOp_maxth        = 1
            OpPsi_maxth        = 1
            BasisTOGrid_maxth  = 1
            Grid_maxth         = 1
+           CRP_maxth          = 1
            SG4_maxth          = 1
 
            Tune_SG4_omp       = .FALSE.
@@ -244,6 +250,7 @@
            OpPsi_omp          = POpPsi_omp
            BasisTOGrid_omp    = PBasisTOGrid_omp
            Grid_omp           = PGrid_omp
+           CRP_omp            = PCRP_omp
            SG4_omp            = PSG4_omp
 
            IF (MatOp_omp > 0) THEN
@@ -272,6 +279,12 @@
              Tune_Grid_omp      = .FALSE.
            END IF
 
+           IF (CRP_omp > 0) THEN
+             CRP_maxth          = min(PGrid_maxth,maxth)
+           ELSE
+             CRP_maxth         = 1
+           END IF
+
            IF (SG4_omp > 0) THEN
              SG4_maxth         = PSG4_maxth
              Tune_SG4_omp      = PTune_SG4_omp
@@ -290,14 +303,15 @@
           write(out_unitp,*) 'OpPsi_omp,      OpPsi_maxth      ',OpPsi_omp,OpPsi_maxth
           write(out_unitp,*) 'BasisTOGrid_omp,BasisTOGrid_maxth',BasisTOGrid_omp,BasisTOGrid_maxth
           write(out_unitp,*) 'Grid_omp,       Grid_maxth       ',Grid_omp,Grid_maxth
+          write(out_unitp,*) 'CRP_omp,        CRP_maxth        ',CRP_omp,CRP_maxth
           write(out_unitp,*) 'SG4_omp,        SG4_maxth        ',SG4_omp,SG4_maxth
           write(out_unitp,*) '========================================='
-          
+
           write(out_unitp,*) '========================================='
           write(out_unitp,*) 'File_path: ',trim(adjustl(File_path))
           write(out_unitp,*) '========================================='
         ENDIF ! for MPI_id=0
-        
+
         para_mem%max_mem    = max_mem/Rkind
         write(out_unitp,*) '========================================='
         write(out_unitp,*) '========================================='

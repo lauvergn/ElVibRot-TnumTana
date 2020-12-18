@@ -450,7 +450,6 @@ CONTAINS
                          mole%tab_Qtransfo(1)%name_Qout,              &
                          mole%tab_Qtransfo(1)%type_Qout,              &
                          read_nameQ,unit,read_xyz0,info=info_Qread)
-
         END IF
 
       ELSE

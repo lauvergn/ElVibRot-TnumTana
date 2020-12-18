@@ -592,7 +592,15 @@ MODULE mod_basis
           write(out_unitp,*) 'A,B,Q0,scaleQ',basis_temp%A,basis_temp%B,         &
                                      basis_temp%Q0,basis_temp%scaleQ
         END IF
-
+      CASE ("sincdvr")
+        basis_temp%type = 50
+        CALL sub_quadra_SincDVR(basis_temp)
+        IF (.NOT. basis_temp%xPOGridRep_done) THEN ! because the scaling factors are already calculated
+          basis_temp%Q0     = basis_temp%A
+          basis_temp%scaleQ = pi/(basis_temp%B-basis_temp%A)
+          write(out_unitp,*) 'A,B,Q0,scaleQ',basis_temp%A,basis_temp%B,         &
+                                     basis_temp%Q0,basis_temp%scaleQ
+        END IF
 
       CASE ("ylm")
         basis_temp%type = 60
@@ -642,6 +650,7 @@ MODULE mod_basis
         write(out_unitp,*) ' 60 : Fourier Transform [A B]             : FT'
         write(out_unitp,*) ' 50 : Particle-in-a-box[A B]              : boxAB'
         write(out_unitp,*) ' 50 : Particle-in-a-box[A B]              : boxABnosym'
+        write(out_unitp,*) ' 50 : Sinc DVR in [A B]                   : SincDVR'
         write(out_unitp,*)
 
         write(out_unitp,*) ' 60 : Ylm                                 : Ylm'
@@ -759,6 +768,7 @@ MODULE mod_basis
         CALL flush_perso(out_unitp)
       END IF
 !---------------------------------------------------------------------
+
       END SUBROUTINE construct_primitive_basis
 
       FUNCTION d0b_OF_primitive_basis_AT_Q(basis_temp,ib,Qbasis) result(d0b)

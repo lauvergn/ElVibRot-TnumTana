@@ -97,7 +97,7 @@
           logical                    :: cplx               =  .FALSE.! TRUE if it the imaginary part of the complex grid
           logical                    :: alloc_Grid         =  .FALSE.
           logical                    :: Grid_done          =  .FALSE.
-          logical                    :: Grid_save_ac       =  .True. ! control grid saving in action 
+          logical                    :: Grid_save_ac       =  .True. ! control grid saving in action
 
           integer                    :: iq_min             =  0
           integer                    :: iq_max             =  0
@@ -1013,6 +1013,7 @@
         END IF
 
       END DO
+
       IF (print_level>-1 .AND. MPI_id==0) THEN
         write(out_unitp,*)'--------------------------------------------------------------'
         CALL flush_perso(out_unitp)
@@ -1022,4 +1023,3 @@
 
 
       END MODULE mod_OpGrid
-

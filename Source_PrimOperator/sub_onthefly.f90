@@ -112,16 +112,22 @@ MODULE mod_OTF
       !----------------------------------------------------------------
       SELECT CASE (PrimOp%para_OTF%ab_initio_prog)
       CASE ('g03','g09')
-          IF (PrimOp%nb_elec /= 1) STOP 'Yet we connot use gaussian whit nb_elec>1'
+          IF (PrimOp%nb_elec /= 1) STOP 'Yet we connot use gaussian with nb_elec>1'
           IF (debug) write(out_unitp,*) 'With pot_mu_onthefly_gauss'
           CALL pot_mu_onthefly_gauss(Qxyz,MatdnECC(1,1),nderivE,        &
                                      MatdnMuCC(1,1,:),nderivMu,         &
                                      mole,PrimOp,err_calc)
           IF (err_calc /= 0) MatdnECC(1,1)%d0 = PrimOp%pot0 + ONE
       CASE ('gamess','gamess2014')
-          IF (PrimOp%nb_elec /= 1) STOP 'Yet we connot use gamess whit nb_elec>1'
+          IF (PrimOp%nb_elec /= 1) STOP 'Yet we connot use gamess with nb_elec>1'
           IF (debug) write(out_unitp,*) 'With pot_mu_onthefly_gamess'
           CALL pot_mu_onthefly_gamess(Qxyz,MatdnECC(1,1),nderivE,       &
+                                      MatdnMuCC(1,1,:),nderivMu,        &
+                                      mole,PrimOp)
+      CASE ('molpro')
+          IF (PrimOp%nb_elec /= 1) STOP 'Yet we connot use molpro with nb_elec>1'
+          IF (debug) write(out_unitp,*) 'With pot_mu_onthefly_molpro'
+          CALL pot_mu_onthefly_molpro(Qxyz,MatdnECC(1,1),nderivE,       &
                                       MatdnMuCC(1,1,:),nderivMu,        &
                                       mole,PrimOp)
       CASE ('generic')
@@ -1214,7 +1220,7 @@ END IF
 
 !================================================================
 !    subroutine enables to calculate the energy, gradient and hessian
-!    directly with gaussian
+!    directly with molpro
 !
 !    input : coordinates Qdyn (used in the dynamics) unit (bohr, radian)
 !            nderiv = 0 (pot only : d0pot)
@@ -1223,7 +1229,288 @@ END IF
 !
 !    ouput : d0pot, d1pot, d2pot
 !================================================================
-      SUBROUTINE Read_GradHess_Molpro(dnFCC,outm_name,nderiv,ncart_act)
+      SUBROUTINE pot_mu_onthefly_molpro(Qxyz,dnECC,nderivE,dnMuCC,nderivMu, &
+                                         mole,PrimOp)
+
+      USE mod_system
+      USE mod_dnSVM
+      USE mod_Coord_KEO,  only: CoordType
+      USE mod_PrimOp_def
+      IMPLICIT NONE
+
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
+
+!----- for Qdyn Qact ... ---------------------------------------------
+      real (kind=Rkind) :: Qxyz(mole%ncart_act)
+      TYPE (PrimOp_t)  :: PrimOp
+
+!----- input output variables ----------------------------------------
+      integer        :: nderivE,nderivMu
+      TYPE(Type_dnS) :: dnECC,dnMuCC(3)
+
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='pot_mu_onthefly_gamess'
+      logical, parameter :: debug=.FALSE.
+!      logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING',name_sub
+        write(out_unitp,*) 'Qxyz',Qxyz
+        write(out_unitp,*) 'nderivE,nderivMu',nderivE,nderivMu
+        write(out_unitp,*)
+      END IF
+!-----------------------------------------------------------
+
+      IF (.NOT. PrimOp%Read_OnTheFly_only) THEN
+
+        CALL Calc_EneDip_WITH_molpro(Qxyz,nderivE,nderivMu,             &
+                                        mole,PrimOp,PrimOp%para_OTF)
+
+      END IF
+
+
+
+      !-----------------------------------------------------------------
+      !- read the energy from the file energy, gradient, hessian
+      CALL Read_dnECC_Gamess(dnECC,PrimOp%para_OTF%file_log%name,     &
+                 PrimOp%para_OTF%file_pun%name,nderivE,mole%ncart_act)
+
+      !-----------------------------------------------------------------
+      !- read the Dipole Moment from the file xx.pun
+      IF (nderivMu > -1) THEN
+        STOP 'Dipole moment with molpro: not yet!'
+        !CALL Read_dnDipCC_Molpro(dnMuCC,PrimOp%para_OTF%file_pun%name,&
+        !                         nderivMu,mole%ncart_act)
+
+      END IF
+      !-----------------------------------------------------------------
+
+
+!-----------------------------------------------------------
+      IF (debug) THEN
+         write(out_unitp,*) 'dnECC'
+         CALL Write_dnSVM(dnECC)
+         IF (nderivMu > -1) THEN
+           write(out_unitp,*) 'dnMuCC(1): DipX'
+           CALL Write_dnSVM(dnMuCC(1))
+           write(out_unitp,*) 'dnMuCC(2): DipY'
+           CALL Write_dnSVM(dnMuCC(2))
+           write(out_unitp,*) 'dnMuCC(:): DipZ'
+           CALL Write_dnSVM(dnMuCC(3))
+         END IF
+         write(out_unitp,*) 'END ',name_sub
+      END IF
+!-----------------------------------------------------------
+
+
+END SUBROUTINE pot_mu_onthefly_molpro
+SUBROUTINE Calc_EneDip_WITH_Molpro(Qxyz,nderivE,nderivDip,mole,PrimOp,para_OTF)
+
+      USE mod_system
+      USE mod_Coord_KEO,  only: CoordType
+      USE mod_PrimOp_def
+      IMPLICIT NONE
+
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType)    :: mole
+
+!----- for Qdyn Qact ... ---------------------------------------------
+      real (kind=Rkind) :: Qxyz(mole%ncart_act)
+      TYPE (PrimOp_t)  :: PrimOp
+      TYPE (param_OTF)  :: para_OTF
+
+!----- for the files -------------------------------------------------
+      integer :: nio,nio_header,nio_footer
+
+!----- input output variables ----------------------------------------
+      integer        :: nderivE,nderivDip
+
+!----- working variables ----------------------------------------
+      integer       :: err
+      integer                       :: i,iq,Z
+
+      character (len=Name_longlen)  :: ab_level
+      character (len=Name_longlen)  :: labelR
+      logical                       :: located
+      character (len=Line_len)      :: line
+
+!----- function -------------------------------------------------
+!----------------------------------------------------------------
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='Calc_EneDip_WITH_Molpro'
+      logical, parameter :: debug=.FALSE.
+!      logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING',name_sub
+        write(out_unitp,*) 'Qxyz',Qxyz(:)
+        write(out_unitp,*) 'nderivE,nderivDip',nderivE,nderivDip
+        write(out_unitp,*)
+      END IF
+      !----------------------------------------------------------------
+
+      !- gamess input file ------------------------------------------
+      ! write(out_unitp,*) 'file_data gamess ',para_OTF%file_data
+
+      CALL file_open(para_OTF%file_data,nio)
+
+      write(nio,*) '***, EVRT-inp'
+
+      IF (para_OTF%header) THEN
+        CALL file_open(para_OTF%file_header,nio_header)
+
+        DO
+          read(nio_header,21,end=998) line
+ 21       format(132A)
+          write(nio,*) trim(adjustl(line))
+        END DO
+ 998    close(nio_header)
+      END IF
+
+      write(nio,*)
+      IF (len_trim(para_OTF%ab_initio_basis) > 0 ) THEN
+        write(nio,*) 'BASIS=',para_OTF%ab_initio_basis
+        write(nio,*)
+      END IF
+
+      write(nio,*) 'geomtyp=xyz'
+      write(nio,*) 'geometry={'
+      write(nio,*) mole%nat_act
+      write(nio,*)
+
+      !write(out_unitp,*) 'Z',mole%Z(:)
+      iq=0
+      DO i=1,mole%nat_act
+        IF (mole%Z(i) > 0) write(nio,*) mole%symbole(i),Qxyz(iq+1:iq+3)
+        iq = iq+3
+      END DO
+      write(nio,*) '}'
+
+      IF (len_trim(para_OTF%ab_initio_meth) > 0 ) THEN
+        write(nio,*) para_OTF%ab_initio_meth
+        write(nio,*)
+      END IF
+
+      IF (para_OTF%footer) THEN
+        CALL file_open(para_OTF%file_footer,nio_footer)
+
+        DO
+          read(nio_footer,22,end=997) line
+ 22       format(132A)
+          write(nio,*) trim(adjustl(line))
+        END DO
+ 997    close(nio_footer)
+      END IF
+
+      write(nio,*)
+      write(nio,*) 'show,energy'
+
+
+      close(nio)
+      !---------------------------------------------------------------
+
+!       - molpro execution -------------------------------------------
+
+        CALL EXECUTE_COMMAND_LINE(para_OTF%commande_unix)
+
+
+        located = .FALSE.
+        CALL file_open(para_OTF%file_log,nio)
+        CALL Find_Label(nio,' Variable memory released',located)
+        close(nio)
+
+ 999    IF (.NOT. located) THEN
+          write(out_unitp,*) 'ERROR in the molpro execution'
+          write(out_unitp,*) 'no line: " Variable memory released"'
+          write(out_unitp,*) 'last line: ',labelR
+          write(out_unitp,*) 'unix command:',para_OTF%commande_unix
+          STOP
+        END IF
+
+
+      IF (debug) THEN
+        write(out_unitp,*) 'END',name_sub
+      END IF
+
+END SUBROUTINE Calc_EneDip_WITH_Molpro
+SUBROUTINE Read_dnECC_Molpro(dnECC,outm_name,nderiv,ncart_act)
+
+      USE mod_system
+      USE mod_dnSVM
+      implicit none
+
+!----- input output variables ----------------------------------------
+      integer                  :: nderiv,ncart_act
+      character (len=Line_len) :: outm_name
+      TYPE (param_file)        :: file_outm
+      TYPE(Type_dnS)           :: dnECC
+
+!----- for the files -------------------------------------------------
+      integer :: nio
+
+      integer                   :: i,j,k,iq,idum,jdum,nbligne,nbreste
+      real (kind=Rkind)         :: RZ
+      character (len=Name_len)  :: name1_i
+      logical                   :: located
+      integer                   :: err
+
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter :: name_sub='Read_dnECC_Molpro'
+      logical, parameter :: debug=.FALSE.
+!     logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING',name_sub
+        write(out_unitp,*) 'nderiv',nderiv
+        write(out_unitp,*) 'outm_name: ',outm_name
+        write(out_unitp,*)
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+
+      CALL alloc_dnSVM(dnECC,ncart_act,nderiv)
+      CALL Set_ZERO_TO_dnSVM(dnECC,nderiv)
+
+
+      !----------------------------------------------------------------
+      !- read the energy from the file energy
+      file_outm%name = outm_name
+      CALL file_open(file_outm,nio)
+
+      CALL Find_Label(nio,' ENERGY           =',located)
+      IF (located) THEN
+        read(nio,*,iostat=err) dnECC%d0
+      ELSE
+        err = -1
+      END IF
+!     write(out_unitp,*) 'located,err',located,err
+
+      IF (.NOT. located .OR. err /=0) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) 'I cannot find the energy in :',outm_name
+        write(out_unitp,*) 'located,err',located,err
+        STOP
+      END IF
+      close(nio)
+      !----------------------------------------------------------------
+
+      CALL Read_GradHess_Molpro(dnECC,outm_name,nderiv,ncart_act)
+
+      IF (debug) THEN
+        write(out_unitp,*) 'dnECC'
+        CALL Write_dnS(dnECC,nderiv)
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+
+
+END SUBROUTINE Read_dnECC_Molpro
+SUBROUTINE Read_GradHess_Molpro(dnFCC,outm_name,nderiv,ncart_act)
 
       USE mod_system
       USE mod_dnSVM
@@ -1254,7 +1541,7 @@ END IF
 
 
 !----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub='Read_hess_Molpro'
+      character (len=*), parameter :: name_sub='Read_GradHess_Molpro'
       logical, parameter :: debug=.FALSE.
 !      logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
@@ -1368,7 +1655,7 @@ END IF
 !-----------------------------------------------------------
 
 
-      END SUBROUTINE Read_GradHess_Molpro
+END SUBROUTINE Read_GradHess_Molpro
       SUBROUTINE onthefly_generic(Qxyz,MatdnECC,nderivE,MatdnMuCC,nderivMu, &
                                   mole,PrimOp)
 

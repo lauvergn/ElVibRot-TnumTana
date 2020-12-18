@@ -63,9 +63,9 @@ ifeq ($(F90),mpifort)
 else
   obj_dir = obj/obj_$(F90)
 endif
-## turn off ARPACK 
+## turn off ARPACK
 #=================================================================================
-# External pot for the library: libpot.a, 
+# External pot for the library: libpot.a,
 # with epxort variable (POTDIRextern) or with explicit name
 ExternalDIR := $(POTDIRextern)
 # Example pot Bowman (new lib)
@@ -368,9 +368,9 @@ ifeq ($(F90),mpifort)
       endif
    endif
 endif
-F90FLAGS := $(F90FLAGS)   $(EXTMOD) 
+F90FLAGS := $(F90FLAGS)   $(EXTMOD)
 
-ifeq ($(F90),mpifort) 
+ifeq ($(F90),mpifort)
   F90_VER = $(shell ompi_info | grep 'Open MPI:' | sed 's/ //g' )
 else
   F90_VER = $(shell $(F90) --version | head -1 )
@@ -408,8 +408,8 @@ LYNK90 = $(F90_FLAGS)
 ifeq ($(ARPACK),1)
   # Arpack management with the OS
   ifeq ($(OS),Darwin)    # OSX
-    ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
-    #ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
+    #ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
+    ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
   else                   # Linux
     ifeq ($(F90), mpifort)
       ifeq ($(MPICORE), gfortran)
@@ -560,7 +560,7 @@ Obj_Primlib  = \
   $(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_memory_NotPointer.o \
   $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/mod_Frac.o \
   $(OBJ)/sub_module_system.o \
-  $(OBJ)/sub_module_MPI_aux.o 
+  $(OBJ)/sub_module_MPI_aux.o
 
 Obj_math =\
    $(OBJ)/sub_diago.o $(OBJ)/sub_trans_mat.o $(OBJ)/sub_math_util.o $(OBJ)/sub_integration.o \
@@ -693,7 +693,7 @@ Obj_Basis = \
  $(OBJ)/sub_quadra_inact.o \
  $(OBJ)/sub_basis_El.o \
  $(OBJ)/sub_quadra_herm.o $(OBJ)/sub_quadra_laguerre.o $(OBJ)/sub_quadra_legendre.o \
- $(OBJ)/sub_quadra_fourier.o $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_ft.o \
+ $(OBJ)/sub_quadra_fourier.o $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_SincDVR.o $(OBJ)/sub_quadra_ft.o \
  $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_DirProd.o \
  $(OBJ)/sub_quadra_SparseBasis2n.o \
  $(OBJ)/sub_SymAbelian_OF_Basis.o
@@ -887,7 +887,7 @@ obj:
 
 # vib script
 .PHONY: vib
-vib: 
+vib:
 	@echo "make vib script"
 	./scripts/make_vib.sh $(DIR_EVRT) $(F90)
 	chmod a+x vib
@@ -1237,6 +1237,8 @@ $(OBJ)/sub_quadra_fourier.o:$(DIRba)/sub_quadra_fourier.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_fourier.f90
 $(OBJ)/sub_quadra_box.o:$(DIRba)/sub_quadra_box.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_box.f90
+$(OBJ)/sub_quadra_SincDVR.o:$(DIRba)/sub_quadra_SincDVR.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_SincDVR.f90
 $(OBJ)/sub_quadra_ft.o:$(DIRba)/sub_quadra_ft.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_ft.f90
 $(OBJ)/sub_quadra_Ylm.o:$(DIRba)/sub_quadra_Ylm.f90
@@ -1522,7 +1524,7 @@ else
 endif
 
 .PHONY: test
-test: 
+test:
 
 ifeq ($(F90),mpifort)
 	@echo "test for MPI > MPI_test.log"
@@ -1530,7 +1532,7 @@ ifeq ($(F90),mpifort)
   # 6D
 	@echo "test for Davidson 6D, result in ./Working_tests/MPI_tests/6D_Davidson/result/"
 	@echo "> test for Davidson 6D" > MPI_test.log
-	@cd ./Working_tests/MPI_tests/6D_Davidson ; ./run_jobs >> ../../../MPI_test.log 
+	@cd ./Working_tests/MPI_tests/6D_Davidson ; ./run_jobs >> ../../../MPI_test.log
 	@grep 'lev0' ./Working_tests/MPI_tests/6D_Davidson/result/res_HenonHeiles_6D_SGtype4_LB3_*
   # 21D
 	@echo "test for Davidson 21D, result in ./Working_tests/MPI_tests/21D_Davidson/result/"

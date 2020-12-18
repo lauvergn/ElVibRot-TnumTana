@@ -33,8 +33,8 @@ fi
 nb_err=`grep -c "ERROR" run_tests.log`
 if [ $nb_err -eq 0 ]
 then
-  echo "NO ERROR in HCN-EVR UT"
+  echo "NO ERROR in HCN-WP-EVR UT"
 else
-  echo $nb_err " ERROR(S) in HCN-EVR UT"
-  echo  " check the output files in UnitTests/HCN_UT."
+  echo $nb_err " ERROR(S) in HCN-WP-EVR UT"
+  echo  " check the output files in UnitTests/HCN-WP_UT."
 fi
