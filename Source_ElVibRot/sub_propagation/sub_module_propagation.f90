@@ -604,8 +604,8 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   integer            :: nb_WP
   TYPE (param_psi)   :: WP(:)
 
-  logical            :: ana_mini = .TRUE.  ! turn off further analysis
-!  logical            :: ana_mini = .FALSE.
+!  logical            :: ana_mini = .TRUE.  ! turn off further analysis
+  logical            :: ana_mini = .FALSE.
   logical            :: G,G2,B,B2,With_field
 
 !-- working parameters --------------------------------

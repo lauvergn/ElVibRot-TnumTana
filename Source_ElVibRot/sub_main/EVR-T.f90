@@ -71,7 +71,7 @@
 
       character(len=:), allocatable  :: input_filename
 
-      ! make sure to be prepared in file
+      ! parameters for system setup
       namelist /system/ max_mem,mem_debug,test,printlevel,              &
 
                           Popenmp,Popenmpi,                             &
@@ -96,7 +96,7 @@
 
 
         !-------------------------------------------------------------------------------
-        ! set parallelization 
+        ! set parallelization
 #if(run_MPI)
         Popenmpi           = .TRUE.  !< True to run with MPI
         Popenmp            = .FALSE.

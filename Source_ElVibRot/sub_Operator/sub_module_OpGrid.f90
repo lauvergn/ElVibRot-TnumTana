@@ -97,7 +97,7 @@
           logical                    :: cplx               =  .FALSE.! TRUE if it the imaginary part of the complex grid
           logical                    :: alloc_Grid         =  .FALSE.
           logical                    :: Grid_done          =  .FALSE.
-          logical                    :: Grid_save_ac       =  .True. ! control grid saving in action 
+          logical                    :: Grid_save_ac       =  .True. ! control grid saving in action
 
           integer                    :: iq_min             =  0
           integer                    :: iq_max             =  0
@@ -353,6 +353,8 @@
          IF(.NOT. Type_FileGrid4) THEN
            CALL alloc_array(OpGrid%Grid,(/nb_qa,nb_bie,nb_bie/),"OpGrid%Grid",info2)
            OpGrid%Grid(:,:,:) = ZERO
+
+           IF(print_level>-1 .AND. MPI_id==0) write(out_unitp,*) info2,size(OpGrid%Grid)
          ENDIF
 
          IF (SmolyakRep) THEN

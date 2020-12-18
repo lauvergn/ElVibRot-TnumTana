@@ -9,7 +9,7 @@
 
 ## parallel_make=1 to enable parallel make
 ## parallel_make=0 for fast debug make, no parallel
-parallel_make=1
+parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 1
@@ -63,9 +63,9 @@ ifeq ($(F90),mpifort)
 else
   obj_dir = obj/obj_$(F90)
 endif
-## turn off ARPACK 
+## turn off ARPACK
 #=================================================================================
-# External pot for the library: libpot.a, 
+# External pot for the library: libpot.a,
 # with epxort variable (POTDIRextern) or with explicit name
 ExternalDIR := $(POTDIRextern)
 # Example pot Bowman (new lib)
@@ -368,9 +368,9 @@ ifeq ($(F90),mpifort)
       endif
    endif
 endif
-F90FLAGS := $(F90FLAGS)   $(EXTMOD) 
+F90FLAGS := $(F90FLAGS)   $(EXTMOD)
 
-ifeq ($(F90),mpifort) 
+ifeq ($(F90),mpifort)
   F90_VER = $(shell ompi_info | grep 'Open MPI:' | sed 's/ //g' )
 else
   F90_VER = $(shell $(F90) --version | head -1 )
@@ -560,7 +560,7 @@ Obj_Primlib  = \
   $(OBJ)/sub_module_memory_Pointer.o $(OBJ)/sub_module_memory_NotPointer.o \
   $(OBJ)/sub_module_file.o $(OBJ)/sub_module_RW_MatVec.o $(OBJ)/mod_Frac.o \
   $(OBJ)/sub_module_system.o \
-  $(OBJ)/sub_module_MPI_aux.o 
+  $(OBJ)/sub_module_MPI_aux.o
 
 Obj_math =\
    $(OBJ)/sub_diago.o $(OBJ)/sub_trans_mat.o $(OBJ)/sub_math_util.o $(OBJ)/sub_integration.o \
@@ -887,7 +887,7 @@ obj:
 
 # vib script
 .PHONY: vib
-vib: 
+vib:
 	@echo "make vib script"
 	./scripts/make_vib.sh $(DIR_EVRT) $(F90)
 	chmod a+x vib
