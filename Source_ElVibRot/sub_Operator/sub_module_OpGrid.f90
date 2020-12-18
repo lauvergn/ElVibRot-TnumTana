@@ -349,9 +349,6 @@
 
        IF (.NOT. OpGrid%grid_cte .AND. OpGrid%para_FileGrid%Save_MemGrid) THEN
 
-!#if(run_MPI)
-!         IF(Grid_allco) THEN
-!#endif
          !IF(.NOT. openmpi .OR. .NOT. SmolyakRep) THEN
          IF(.NOT. Type_FileGrid4) THEN
            CALL alloc_array(OpGrid%Grid,(/nb_qa,nb_bie,nb_bie/),"OpGrid%Grid",info2)
@@ -359,9 +356,6 @@
 
            IF(print_level>-1 .AND. MPI_id==0) write(out_unitp,*) info2,size(OpGrid%Grid)
          ENDIF
-!#if(run_MPI)
-!         ENDIF
-!#endif
 
          IF (SmolyakRep) THEN
            IF (print_level>-1 .AND. MPI_id==0)                                         &

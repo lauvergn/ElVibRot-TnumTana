@@ -272,12 +272,13 @@ CONTAINS
         CALL alloc_NParray(RMatOp,(/nb_WP,nb_WP/),'RmatOp',name_sub)
       END IF
       DO i=1,nb_WP
-        CALL copy_psi2TOpsi1(OpWP(i),WP(i),alloc=.FALSE.)
+        IF(keep_MPI) CALL copy_psi2TOpsi1(OpWP(i),WP(i),alloc=.FALSE.)
         !@chen was CALL init_psi(OpWP(i),para_Op,para_Op%cplx)
       END DO
 
 !     - calculation of the matrix ----
       CALL sub_TabOpPsi(WP,OpWP,para_Op)
+      IF(keep_MPI) THEN
       DO i=1,nb_WP
         CALL sub_scaledOpPsi(WP(i),OpWP(i),para_Op%E0,ONE)
         DO j=1,nb_WP
@@ -341,7 +342,7 @@ CONTAINS
         END IF
         CALL flush_perso(out_unitp)
       END IF
-
+      ENDIF ! keep_MPI
 
 !     - Save the matrix for a spectral representation
       para_Op%spectral    = .TRUE.

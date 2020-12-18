@@ -289,6 +289,8 @@
       para_ana%name_file_spectralWP = name_file_spectralWP
       para_ana%formatted_file_WP    = formatted_file_WP
 
+      MPI_S%prop                    = propa       ! for MPI
+      MPI_S%davidson                = davidson
 
       IF (len_trim(name_file_spectralWP) == 0 .AND. MPI_id == 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub

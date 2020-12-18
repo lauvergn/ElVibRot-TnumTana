@@ -1,0 +1,211 @@
+#!/bin/bash
+
+
+###> parameters
+##==============================================================
+
+parall=MPI      ## MPI or openMP or BLANK
+MPI_output0=1   ## just print output form process 0 in MPI, 0 for debug
+num_cores=$1
+
+L=$2
+LB=$L
+LG=$L
+B=$3
+
+nb_ana=22
+dav=$4
+test=f
+arpack=f
+
+
+##==============================================================
+###< parameters
+
+
+###> setup environment
+##==============================================================
+
+##--------------------------------------------------------------
+## set code dir
+
+here=`pwd`
+
+work=$here/result/
+DIR_vib=$here/../../..
+DIR_pot=$DIR_vib/sub_pot
+VIBEXE=vib.exe
+
+cp sub_system_HenonHeiles.f $DIR_pot/sub_system.f
+cd $DIR_vib
+make
+
+mkdir -p $work
+cd $work
+
+##--------------------------------------------------------------
+## set working dir 
+ 
+name_WP=$work/file_WPspectral
+name_WPR=$work/file_WPspectral
+
+##--------------------------------------------------------------
+## set openMP environment
+
+if   [ $parall == 'openMP' ] ; then
+  echo 'run with openMP'
+  export OMP_NUM_THREADS=$num_cores    ## number of openMP cores
+
+## set MPI environment
+
+elif [ $parall == 'MPI'    ] ; then
+  echo 'run with MPI'
+  MPI_cores=$num_cores                  ## number of MPI cores 
+
+##  else
+else
+  echo 'run without openMP or MPI'
+fi
+##--------------------------------------------------------------
+
+##==============================================================
+###< environment
+
+
+###> create file 'namelist' for parameters 
+##==============================================================
+##==============================================================
+##==============================================================
+cat > namelist << EOF
+ &system 
+  EVR=t 
+  printlevel=0 
+  MPI_Scheme=3
+  MPI_fake_nodes=2
+/
+ &constantes ene_unit='au' /
+ &variables
+         Without_Rot=t Centered_ON_CoM=f Gcte=t
+         nrho=2
+         Old_Qtransfo=f nb_Qtransfo=2
+ /
+
+ &Coord_transfo name_transfo='zmat' nat=10 /
+X
+X 1
+X 1 2
+1. 0 0 0   ! cart4
+1. 0 0 0   ! cart5
+1. 0 0 0   ! cart6
+1. 0 0 0   ! cart7
+1. 0 0 0   ! cart8
+1. 0 0 0   ! cart9
+1. 0 0 0   ! cart10
+
+ &Coord_transfo name_transfo='active' /
+0 0 0    1 1 1   1 1 1   1 1 1   1 1 1   1 1 1   1 1 1   1 1 1
+
+ &minimum pot0=0.d0  nb_scalar_Op=0 pot_act=f read_Qsym0=t unit='bohr' /
+ 1.
+ 1.
+ 1.57
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+
+ &basis_nD nb_basis=21 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=4 /
+   &basis_nD iQdyn=4         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=5         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=6         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=7         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=8         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=9         name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=10        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=11        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=12        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=13        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=14        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=15        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=16        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=17        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=18        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=19        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=20        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=21        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=22        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=23        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+   &basis_nD iQdyn=24        name="Hm" Q0=0.0 scaleQ=1. L_TO_nq_A=1 L_TO_nq_B=$B /
+ &inactives /
+ &actives test=$test direct=4 Make_MatOp=f Save_MemGrid=t/
+
+ &analyse max_ana=$nb_ana max_ene=5.0 'au'
+          print=f print_psi=0 Psi_ScalOp=f intensity=f arpack=$arpack davidson=$dav
+          name_file_spectralWP='$name_WP' formatted_file_WP=t FilePsiVersion=1 /
+
+ &davidson nb_WP=$nb_ana max_it=200 max_WP=500 num_resetH=10 NewVec_type=4
+           lower_states=t conv_resi=0.0005 'au' conv_ene=0.00010 'au'
+           read_WP=t read_listWP=f name_file_readWP='$name_WPR' formatted_file_readWP=t
+/
+
+
+EOF
+##==============================================================
+##==============================================================
+##==============================================================
+###< parameter file
+
+
+
+
+###> run
+##==============================================================
+
+output_file_name="res_HenonHeiles_21D_SGtype4_LB"$LB"_B"$B"_LG"$LG
+
+##-openMP-------------------------------------------------------
+if   [ $parall == 'openMP' ] ; then
+  $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"openMpcores"
+
+##-MPI----------------------------------------------------------
+elif [ $parall == 'MPI'    ] ; then
+
+  if [ -z $MPI_cores ]; then
+    echo 'short of MPI core number, check shell input'
+    exit 1
+  fi
+
+##-if just output process 0-------------------------------------
+
+  if [ $MPI_output0 == 1 ] ; then
+    mpirun -np $MPI_cores $here/MPI_output_control $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
+  else
+    mpirun -np $MPI_cores $DIR_vib/$VIBEXE > $work/$output_file_name"_"$num_cores"MPIcores"
+  fi
+
+##-no parallel--------------------------------------------------
+else 
+  $DIR_vib/$VIBEXE > $work/$output_file_name
+fi
+##==============================================================
+###< run
+
+
+echo 'script finished'

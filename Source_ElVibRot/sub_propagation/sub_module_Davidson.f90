@@ -213,7 +213,7 @@ CONTAINS
                               para_Davidson,para_H%cplx)
 
         ! save the nb_diago wp
-        CALL sub_save_psi(psi,nb_diago,para_propa%file_WP)
+        IF(MPI_id==0) CALL sub_save_psi(psi,nb_diago,para_propa%file_WP)
       ENDIF ! for keep_MPI
       write(out_unitp,*) '  sub_save_psi: psi done'
       RealTime = Delta_RealTime(DavidsonTime)
@@ -369,14 +369,14 @@ CONTAINS
         CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,min_Ene,  &
                                  para_H%para_ReadOp%min_pot,            &
                                  psi,psi0,Vec,Vec0,para_Davidson,it,.TRUE.)
-          !CALL time_perso('projec done')
+        !CALL time_perso('projec done')
 
-          IF (para_H%para_ReadOp%Op_Transfo) THEN
-            CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
-          ELSE
-            CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
-          END IF
-          ZPE = para_H%ZPE
+        IF (para_H%para_ReadOp%Op_Transfo) THEN
+          CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),forced=.TRUE.)
+        ELSE
+          CALL Set_ZPE_OF_Op(para_H,Ene(1:count(VecToBeIncluded)),Ene_min=min_Ene,forced=.TRUE.)
+        END IF
+        ZPE = para_H%ZPE
 
           IF (debug) write(out_unitp,*) 'selec',it,ndim,ndim0
           IF (debug) CALL flush_perso(out_unitp)

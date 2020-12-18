@@ -55,7 +55,6 @@ PUBLIC  tabPackedBasis_TO_tabR_MPI,tabR_TO_tabPackedBasis_MPI
 PUBLIC  Mapping_table_allocate_MPI,Mapping_table_MPI
 PUBLIC  ini_iGs_MPI,set_iGs_MPI_mc,Set_scheme_MPI
 
-
 CONTAINS
 !=======================================================================================
 !> @breif allocate mapping table for different MPI scheme
@@ -66,22 +65,49 @@ SUBROUTINE Mapping_table_allocate_MPI(basis_SG,Max_Srep)
   USE mod_MPI_aux
   IMPLICIT NONE
 
-  TYPE(basis),                       intent(inout) :: basis_SG
-  Integer,                           intent(in)    :: Max_Srep
+  TYPE(basis),                     intent(inout) :: basis_SG
+  Integer,                         intent(in)    :: Max_Srep
 
 #if(run_MPI)
 
-  IF(MPI_id==0) THEN
-    IF(MPI_scheme/=1) THEN
+  ! scheme 1
+  IF(MPI_scheme==1) THEN
+    CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                    &
+                        bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
+  ENDIF
+
+  ! scheme 2
+  IF(MPI_scheme==2) THEN
+    ! IF(MPI_id==0 .OR. mod(MPI_id,n_level2)==0) THEN
+    IF(MPI_id==0) THEN
+      CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,1,Max_Srep)
+    ELSE
+      CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                  &
+                          bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
+    ENDIF 
+  ENDIF
+
+  ! scheme3
+  IF(MPI_scheme==3) THEN
+    IF(MPI_id==0 .OR. MPI_nodes_p0) THEN
       CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,1,Max_Srep)
     ELSE
       CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                  &
                           bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
     ENDIF
-  ELSE
-    CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                    &
-                        bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
   ENDIF
+
+  ! IF(MPI_id==0) THEN
+  !   IF(MPI_scheme/=1) THEN
+  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,1,Max_Srep)
+  !   ELSE
+  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                  &
+  !                         bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
+  !   ENDIF
+  ! ELSE
+  !   CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                    &
+  !                       bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
+  ! ENDIF
 
 #endif
 ENDSUBROUTINE Mapping_table_allocate_MPI
@@ -102,22 +128,25 @@ SUBROUTINE Mapping_table_MPI(basis_SG,Max_Srep)
   USE mod_MPI_aux
   IMPLICIT NONE
 
-  TYPE(basis),                       intent(inout) :: basis_SG
-  Integer,                           intent(in)    :: Max_Srep
+  TYPE(basis),                     intent(inout) :: basis_SG
+  Integer,                         intent(in)    :: Max_Srep
+
+  Integer                                        :: ii
 
 #if(run_MPI)
 
   ! note, no boartcast here
   IF(MPI_scheme/=1) CALL MPI_combine_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB)
 
-  ! for scheme=2
-  IF(MPI_id/=0 .AND. MPI_scheme/=1 .AND. MPI_scheme/=4) THEN
-    IF(allocated(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB))                          &
-      deallocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB)
-  ENDIF
+  ! scheme 1
+  ! nothing to do
 
-  ! for scheme=3
-  IF(MPI_scheme==3) THEN
+  ! scheme 2
+  IF(MPI_scheme==2) THEN
+    IF(MPI_id/=0) THEN
+      deallocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB)
+    ENDIF
+
     IF(MPI_id==0) THEN
       DO i_MPI=1,MPI_np-1
         IF(mod(i_MPI,n_level2)==0) THEN
@@ -129,8 +158,43 @@ SUBROUTINE Mapping_table_MPI(basis_SG,Max_Srep)
       CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,1,Max_Srep)
       CALL MPI_Recv(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,Max_Srep,MPI_Integer4,  &
                     root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
-    ENDIF ! MPI_id==0
-  ENDIF ! MPI_scheme==3
+    ENDIF ! MPI_id
+  ENDIF ! scheme 2
+
+  ! for scheme=3
+  ! IF(MPI_scheme==3) THEN
+  !   IF(MPI_id==0) THEN
+  !     DO i_MPI=1,MPI_np-1
+  !       IF(mod(i_MPI,n_level2)==0) THEN
+  !         CALL MPI_Send(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,Max_Srep,           &
+  !                       MPI_Integer4,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
+  !       ENDIF
+  !     ENDDO
+  !   ELSEIF(mod(MPI_id,n_level2)==0) THEN
+  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,1,Max_Srep)
+  !     CALL MPI_Recv(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,Max_Srep,MPI_Integer4,  &
+  !                   root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+  !   ENDIF ! MPI_id==0
+  ! ENDIF ! MPI_scheme==3
+
+  ! scheme 3
+  IF(MPI_scheme==3) THEN
+    IF(.NOT. (MPI_id==0 .OR. MPI_nodes_p0)) THEN
+      deallocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB)
+    ENDIF
+    
+    IF(MPI_id==0) THEN
+      DO ii=1,MPI_nodes_num-1
+        CALL MPI_Send(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,Max_Srep,MPI_Integer4,&
+                      MPI_nodes_p00(ii),Int(MPI_nodes_p00(ii),kind=MPI_INTEGER_KIND),  &
+                      MPI_COMM_WORLD,MPI_err)
+      ENDDO
+    ELSEIF(MPI_nodes_p0) THEN
+      CALL MPI_Recv(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,Max_Srep,MPI_Integer4,  &
+                    root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+    ENDIF
+
+  ENDIF ! scheme 3
 
 #endif
 END SUBROUTINE Mapping_table_MPI
@@ -149,22 +213,27 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
   USE mod_MPI_aux
   IMPLICIT NONE
 
-  TYPE (TypeRVec),allocatable,       intent(inout) :: PsiR(:)
-  TYPE (param_SGType2),              intent(inout) :: SGType2
-  Real(kind=Rkind),                     intent(in) :: all_RvecB_temp(:)
-  Integer(kind=Ikind),allocatable,      intent(in) :: nDI_index(:)
-  Integer(kind=Ikind),allocatable,   intent(inout) :: nDI_index_list(:)
-  integer(kind=MPI_INTEGER_KIND),       intent(in) :: size_psi
-  integer(kind=MPI_INTEGER_KIND),       intent(in) :: reduce_Vlength  
-  integer,                              intent(in) :: iG
-  integer,                              intent(in) :: Max_nDI_ib0
+  TYPE (TypeRVec),allocatable,     intent(inout) :: PsiR(:)
+  TYPE (param_SGType2),            intent(inout) :: SGType2
+  Real(kind=Rkind),                   intent(in) :: all_RvecB_temp(:)
+  Integer(kind=Ikind),allocatable,    intent(in) :: nDI_index(:)
+  Integer(kind=Ikind),allocatable, intent(inout) :: nDI_index_list(:)
+  Integer(kind=MPI_INTEGER_KIND),     intent(in) :: size_psi
+  Integer(kind=MPI_INTEGER_KIND),     intent(in) :: reduce_Vlength  
+  Integer,                            intent(in) :: iG
+  Integer,                            intent(in) :: Max_nDI_ib0
 
-  integer,allocatable                              :: temp_list(:)  
-  integer                                          :: temp_length 
+  Integer,allocatable                            :: temp_list(:)  
+  Integer                                        :: temp_length 
   
-  integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0,iBSRep,iB,nDI
-  integer :: index_find,ii,itab
-  Logical :: once1
+  Integer                                        :: ib0
+  Integer                                        :: iB_ib0
+  Integer                                        :: nDI_ib0
+  Integer                                        :: iBSRep
+  Integer                                        :: iB
+  Integer                                        :: nDI
+  Integer                                        :: index_find,ii,itab
+  Logical                                        :: once1
 
 #if(run_MPI)
 
@@ -205,7 +274,6 @@ SUBROUTINE tabPackedBasis_TO_tabR_MPI(PsiR,all_RvecB_temp,iG,SGType2,nDI_index, 
 
 #endif
 END SUBROUTINE tabPackedBasis_TO_tabR_MPI
-
 !=======================================================================================
 
 !=======================================================================================
@@ -226,17 +294,21 @@ SUBROUTINE PackedBasis_TO_tabR_index_MPI(iG,SGType2,reduce_index_mpi,nDI_index, 
   USE mod_MPI_aux
   IMPLICIT NONE
 
-  TYPE(param_SGType2),            intent(inout) :: SGType2
-  Integer,                           intent(in) :: iG
-  Integer,                           intent(in) :: Max_nDI_ib0
-  Integer(kind=MPI_INTEGER_KIND), intent(inout) :: reduce_index_mpi
-  Integer(kind=Ikind),allocatable,intent(inout) :: nDI_index(:)
-  Integer(kind=Ikind),allocatable,intent(inout) :: nDI_index_list(:)
+  TYPE(param_SGType2),             intent(inout) :: SGType2
+  Integer,                            intent(in) :: iG
+  Integer,                            intent(in) :: Max_nDI_ib0
+  Integer(kind=MPI_INTEGER_KIND),  intent(inout) :: reduce_index_mpi
+  Integer(kind=Ikind),allocatable, intent(inout) :: nDI_index(:)
+  Integer(kind=Ikind),allocatable, intent(inout) :: nDI_index_list(:)
   
-  Integer(kind=Ikind),allocatable               :: nDI_index_temp(:)
-  Integer                                       :: iBSRep,iB,nDI
-  Integer                                       :: ib0,nb_AT_iG,iB_ib0,nDI_ib0  
-  Integer                                       :: ii
+  Integer(kind=Ikind),allocatable                :: nDI_index_temp(:)
+  Integer                                        :: iBSRep
+  Integer                                        :: iB
+  Integer                                        :: nDI
+  Integer                                        :: ib0
+  Integer                                        :: iB_ib0
+  Integer                                        :: nDI_ib0  
+  Integer                                        :: ii
 
 #if(run_MPI)
 
@@ -293,14 +365,13 @@ END SUBROUTINE PackedBasis_TO_tabR_index_MPI
 !=======================================================================================
 ! pack the vectors to send to each threads (not currently used)
 !---------------------------------------------------------------------------------------
-
 SUBROUTINE tabPackedBasis_TO_tabRpacked_MPI(all_RvecB_temp,Psi_RvecB,nDI_index,length)
   IMPLICIT NONE
   
-  Real(kind=Rkind), allocatable,intent(inout) :: all_RvecB_temp(:)
-  Real(kind=Rkind),             intent(in)    :: Psi_RvecB(:)
-  Integer,allocatable,          intent(in)    :: nDI_index(:)
-  Integer,                      intent(in)    :: length
+  Real(kind=Rkind),allocatable,    intent(inout) :: all_RvecB_temp(:)
+  Real(kind=Rkind),                intent(in)    :: Psi_RvecB(:)
+  Integer,allocatable,             intent(in)    :: nDI_index(:)
+  Integer,                         intent(in)    :: length
   Integer ii  
 
 #if(run_MPI)
@@ -311,7 +382,6 @@ SUBROUTINE tabPackedBasis_TO_tabRpacked_MPI(all_RvecB_temp,Psi_RvecB,nDI_index,l
 
 #endif 
 END SUBROUTINE tabPackedBasis_TO_tabRpacked_MPI
-
 !=======================================================================================
 
 !=======================================================================================
@@ -326,24 +396,29 @@ SUBROUTINE tabR_TO_tabPackedBasis_MPI(all_RvecB_temp2,PsiR,iG,SGType2,WeightiG, 
   USE mod_MPI_aux
   IMPLICIT NONE
 
-  TYPE(TypeRVec),allocatable,         intent(inout) :: PsiR(:)
-  TYPE(param_SGType2),                intent(inout) :: SGType2
-  Real(kind=Rkind),                   intent(inout) :: all_RvecB_temp2(:)
-  Integer(kind=Ikind),allocatable,       intent(in) :: nDI_index(:)
-  Integer(kind=Ikind),allocatable,    intent(inout) :: nDI_index_list(:)
-  integer,                               intent(in) :: iG
-  integer(kind=MPI_INTEGER_KIND),        intent(in) :: size_psi
-  integer,                               intent(in) :: Max_nDI_ib0
-  integer(kind=MPI_INTEGER_KIND)        ,intent(in) :: reduce_Vlength  
-  real(kind=Rkind),                      intent(in) :: WeightiG
+  TYPE(TypeRVec),allocatable,      intent(inout) :: PsiR(:)
+  TYPE(param_SGType2),             intent(inout) :: SGType2
+  Real(kind=Rkind),                intent(inout) :: all_RvecB_temp2(:)
+  Integer(kind=Ikind),allocatable,    intent(in) :: nDI_index(:)
+  Integer(kind=Ikind),allocatable, intent(inout) :: nDI_index_list(:)
+  Integer,                            intent(in) :: iG
+  Integer(kind=MPI_INTEGER_KIND),     intent(in) :: size_psi
+  Integer,                            intent(in) :: Max_nDI_ib0
+  Integer(kind=MPI_INTEGER_KIND)     ,intent(in) :: reduce_Vlength  
+  Real(kind=Rkind),                   intent(in) :: WeightiG
 
-  integer,allocatable                               :: temp_list(:)  
-  integer                                           :: temp_length 
+  Integer,allocatable                            :: temp_list(:)  
+  Integer                                        :: temp_length 
    
-  integer :: ii,itab
-  integer :: iBSRep,iB,nDI
-  integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0
-  Logical :: once1
+  Integer                                        :: ii
+  Integer                                        :: itab
+  Integer                                        :: iBSRep
+  Integer                                        :: iB
+  Integer                                        :: nDI
+  Integer                                        :: ib0
+  Integer                                        :: iB_ib0
+  Integer                                        :: nDI_ib0
+  Logical                                        :: once1
 
 #if(run_MPI)
 
@@ -387,8 +462,8 @@ SUBROUTINE Set_scheme_MPI_old(basis_SG)
   USE mod_basis_set_alloc,ONLY:basis
   IMPLICIT NONE
 
-  TYPE(basis),                   intent(inout) :: basis_SG
-  Integer                                      :: ave_iGs
+  TYPE(basis),                     intent(inout) :: basis_SG
+  Integer                                        :: ave_iGs
 
 #if(run_MPI)
 
@@ -424,42 +499,78 @@ END SUBROUTINE Set_scheme_MPI_old
 !=======================================================================================
 
 !=======================================================================================
+!> @brief setup and initialize MPI scheme
+!---------------------------------------------------------------------------------------
 SUBROUTINE Set_scheme_MPI(basis_SG,lMax_Srep)
   USE mod_basis_set_alloc,ONLY:basis
   IMPLICIT NONE
 
-  TYPE(basis),                   intent(inout) :: basis_SG
-  Integer(kind=ILkind),          intent(in)    :: lMax_Srep
-  Integer                                      :: ave_iGs
+  TYPE(basis),                     intent(inout) :: basis_SG
+  Integer(kind=ILkind),            intent(in)    :: lMax_Srep
+
+  Integer                                        :: ave_iGs
+  Real(kind=Rkind)                               :: mem_S1
 
 #if(run_MPI)
 
+  ! get nodes information
+  CALL get_nodes_info_MPI()
+
+  ! auto select MPI scheme
   IF(MPI_scheme==0) THEN
-    ! do selection depend on the memory
-    ! if do have big enough memory, set MPI_scheme=1
-    IF(basis_SG%nDindB%Max_nDI*MPI_nb_WP<lMax_Srep/2) THEN
-      MPI_scheme=1
-    ELSE
-      IF(MPI_np<Num_L2) THEN
-        MPI_scheme=2
+    ! check mem availabe
+    IF(MPI_mem_node/=0) THEN
+      ! compact basis*Rkind*MPI_np*2 (from complex)
+      ! mapping table*Ikind
+      mem_S1=get_mem_S1_MPI(basis_SG,lMax_Srep)
+      IF(mem_S1*1.2<MPI_mem_node) THEN
+        MPI_scheme=1
       ELSE
-        MPI_scheme=3
+        IF(MPI_nodes_num==1) THEN
+          MPI_scheme=2
+        ELSE
+          MPI_scheme=3
+        ENDIF
+      ENDIF
+    ELSE ! no information of mem, just an estimation depends on balance of mem and eff.
+      ! Max_nDI:   compact basis
+      ! lMax_Srep: Smolyak basis
+      IF(basis_SG%nDindB%Max_nDI*MPI_np<lMax_Srep*1.2) THEN
+        MPI_scheme=1
+      ELSE
+        IF(MPI_nodes_num==1) THEN
+          MPI_scheme=2
+        ELSE
+          MPI_scheme=3
+        ENDIF
       ENDIF
     ENDIF
   ENDIF
 
-  ! initialize for MPI_scheme 3
-  IF(MPI_scheme==3) THEN
-    n_level2=MPI_np/(MPI_np/Num_L2+1)
-    IF(mod(MPI_np,MPI_np/Num_L2+1)/=0) n_level2=n_level2+1
-    ! write(out_unitp,*) 'MPI_scheme3 check: Num_L2=',Num_L2,'n_level2=',n_level2
+  ! keep almost everything on current threads
+  IF(MPI_id==0) keep_MPI=.TRUE.
+
+  ! scheme 1
+  IF(MPI_scheme==1) keep_MPI=.TRUE.
+
+  ! scheme 2
+  IF(MPI_scheme==2) THEN 
+    IF(MPI_S2_L2) THEN
+      n_level2=MPI_np/(MPI_np/Num_L2+1)
+      IF(mod(MPI_np,MPI_np/Num_L2+1)/=0) n_level2=n_level2+1
+      ! write(out_unitp,*) 'MPI_scheme3 check: Num_L2=',Num_L2,'n_level2=',n_level2
+    ELSE
+      n_level2=MPI_np+1 ! set n_level2>MPI_np
+    ENDIF
   ENDIF
+
+  ! Scheme3
+  IF(MPI_scheme==3 .AND. MPI_nodes_p0) keep_MPI=.TRUE.
 
   ! initialize iGs distribution
   CALL ini_iGs_MPI(basis_SG,.FALSE.)
 
-  ! if keeper compact vec on current thread
-  IF(MPI_id==0 .OR. MPI_scheme==1) keep_MPI=.TRUE.
+  write(out_unitp,*) 'MPI scheme ',MPI_scheme,' used for parallelization'
 
 #endif
 END SUBROUTINE Set_scheme_MPI
@@ -469,37 +580,37 @@ END SUBROUTINE Set_scheme_MPI
 !> initialize iGs_MPI for each threads
 !> note to .false. BasisnD%para_SGType2%once_action to perform once
 !=======================================================================================
-  SUBROUTINE ini_iGs_MPI(BasisnD,once)
-    USE mod_basis_set_alloc,ONLY:basis
-    USE mod_MPI_aux
-    IMPLICIT NONE
+SUBROUTINE ini_iGs_MPI(BasisnD,once)
+  USE mod_basis_set_alloc,ONLY:basis
+  USE mod_MPI_aux
+  IMPLICIT NONE
 
-    TYPE(basis),                    intent(inout) :: BasisnD
-    Logical,                           intent(in) :: once
+  TYPE(basis),                     intent(inout) :: BasisnD
+  Logical,                            intent(in) :: once
 
 #if(run_MPI)
 
-    nb_per_MPI=BasisnD%para_SGType2%nb_SG/MPI_np
-    nb_rem_MPI=mod(BasisnD%para_SGType2%nb_SG,MPI_np) 
+  nb_per_MPI=BasisnD%para_SGType2%nb_SG/MPI_np
+  nb_rem_MPI=mod(BasisnD%para_SGType2%nb_SG,MPI_np) 
 
-    CALL allocate_array(iGs_MPI,1,2,0,MPI_np-1)
-    CALL allocate_array(iGs_MPI0,1,2,0,MPI_np-1)
+  CALL allocate_array(iGs_MPI,1,2,0,MPI_np-1)
+  CALL allocate_array(iGs_MPI0,1,2,0,MPI_np-1)
 
-    DO i_MPI=0,MPI_np-1
-      bound1_MPI=i_MPI*nb_per_MPI+1+MIN(i_MPI,nb_rem_MPI)
-      bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)+merge(1,0,nb_rem_MPI>i_MPI)
-      iGs_MPI(1,i_MPI)=bound1_MPI
-      iGs_MPI(2,i_MPI)=bound2_MPI
-    ENDDO
+  DO i_MPI=0,MPI_np-1
+    bound1_MPI=i_MPI*nb_per_MPI+1+MIN(i_MPI,nb_rem_MPI)
+    bound2_MPI=(i_MPI+1)*nb_per_MPI+MIN(i_MPI,nb_rem_MPI)+merge(1,0,nb_rem_MPI>i_MPI)
+    iGs_MPI(1,i_MPI)=bound1_MPI
+    iGs_MPI(2,i_MPI)=bound2_MPI
+  ENDDO
 
-    iGs_MPI0=iGs_MPI
+  iGs_MPI0=iGs_MPI
 
-    CALL set_iGs_MPI_mc(BasisnD,initialize=.TRUE.)
+  CALL set_iGs_MPI_mc(BasisnD,initialize=.TRUE.)
 
-    IF(once) BasisnD%para_SGType2%once_action=.FALSE.
+  IF(once) BasisnD%para_SGType2%once_action=.FALSE.
 
 #endif
-  ENDSUBROUTINE ini_iGs_MPI  
+ENDSUBROUTINE ini_iGs_MPI  
 !=======================================================================================
 
 
@@ -518,14 +629,13 @@ SUBROUTINE set_iGs_MPI_mc(BasisnD,initialize)
   USE mod_MPI
   IMPLICIT NONE
 
-  TYPE(basis),                       intent(in) :: BasisnD
-  Logical,optional,                  intent(in) :: initialize
-!  Integer,                        intent(inout) :: iGs_MPI_mc(2,MPI_mc,0:MPI_np-1)
+  TYPE(basis),                        intent(in) :: BasisnD
+  Logical,optional,                   intent(in) :: initialize
 
-  Integer                                       :: ii
-  Integer                                       :: d1
-  Integer                                       :: d2
-  Integer                                       :: temp_int
+  Integer                                        :: ii
+  Integer                                        :: d1
+  Integer                                        :: d2
+  Integer                                        :: temp_int
 
 #if(run_MPI)
 
@@ -558,5 +668,43 @@ SUBROUTINE set_iGs_MPI_mc(BasisnD,initialize)
 #endif
 ENDSUBROUTINE set_iGs_MPI_mc 
 !=======================================================================================
+
+FUNCTION get_mem_S1_MPI(basis_SG,lMax_Srep) RESULT(mem_S1)
+  IMPLICIT NONE
+
+  TYPE(basis),                     intent(inout) :: basis_SG
+  Integer(kind=ILkind),            intent(in)    :: lMax_Srep
+
+  Real(kind=Rkind)                               :: mem_S1
+  Real(kind=Rkind)                               :: mem_MT
+  Real(kind=Rkind)                               :: mem_CB
+  Integer                                        :: nb_bi
+
+#if(run_MPI)
+
+  ! compact basis*Rkind*MPI_np*2 (from complex)
+  ! mapping table*Ikind
+  nb_bi=get_nb_FROM_basis(basis_SG)
+  ! nb_e=para_H%nb_bi*para_ReadOp%nb_elec  ! note, this one is not accounted
+
+  mem_MT=lMax_Srep*Ikind ! mapping table
+  ! compact basis
+  IF(MPI_S%nb_psi>0) THEN
+    mem_CB=basis_SG%nDindB%Max_nDI*MPI_S%nb_psi*MPI_S%nb_channels*Rkind
+  ELSE
+    mem_CB=basis_SG%nDindB%Max_nDI*MPI_S%nb_channels*Rkind
+  ENDIF
+  IF(MPI_S%davidson) THEN
+    mem_CB=mem_CB*4*MPI_S%num_resetH
+  ELSEIF(MPI_S%prop) THEN
+    mem_CB=mem_CB*2
+  ENDIF
+  mem_CB=mem_CB*MPI_np ! duplication on each processor
+  mem_S1=(mem_CB+mem_MT)/1024_Rkind**3 ! in unit GB
+
+  write(out_unitp,*) 'memory estimated for MPI scheme 1: ',mem_S1,' GB'
+
+#endif
+ENDFUNCTION
 
 END MODULE mod_basis_BtoG_GtoB_SGType4_MPI

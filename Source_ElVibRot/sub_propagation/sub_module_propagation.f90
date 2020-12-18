@@ -1785,6 +1785,9 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       para_Davidson%precond_tol           = precond_tol
       para_Davidson%name_file_readWP      = make_FileName(name_file_readWP)
       para_Davidson%formatted_file_readWP = formatted_file_readWP
+
+      MPI_S%num_resetH                    = num_resetH
+
       IF (read_WP .AND. .NOT. check_file_exist_WITH_file_name(para_Davidson%name_file_readWP)) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) '  the name_file_readWP does not exist or its file name is empty'
@@ -1819,12 +1822,6 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       para_Davidson%scaled_max_ene    = scaled_max_ene
       para_Davidson%save_max_nb       = save_max_nb
       para_Davidson%name_file_saveWP  = make_FileName(name_file_saveWP)
-
-      IF(nb_WP/=0) THEN
-        MPI_nb_WP=nb_WP
-      ELSE
-        MPI_nb_WP=100
-      ENDIF
 
       IF (err_file_name(para_Davidson%name_file_saveWP,name_sub='read_davidson') /= 0) THEN
         write(out_unitp,*) 'ERROR in ',name_sub

@@ -7,6 +7,31 @@ MPI Vm2.0
 ----------------------------------------------------------------------------------------
 @ log
 
+> MPI_Vm2.2
+  - Warning: there is an bug in Spectral propagation when using ana_mini
+
+  - comnbined MPI scheme 2 and 3
+
+  - new MPI schemme3 for massive cluster
+
+  - new subroutine
+    get_nodes_info_MPI for MPI scheme3
+    get_mem_S1_MPI     for memory estimation to choose MPI scheme
+
+  - subroutine modified 
+    Set_scheme_MPI
+    Mapping_table_allocate_MPI
+    Mapping_table_MPI
+
+  - bug fixed
+    sub_build_MatOp
+    vib
+
+  - update MPI test in makefile
+
+  - update openMP test in makefile
+
+
 > MPI_Vm2.1
 
   - isolate all MPI subroutine & move cpp to individual files
