@@ -30,7 +30,7 @@
  IMPLICIT NONE
 
   integer, parameter :: nt=10**4
-  integer, parameter :: nat=4
+  integer, parameter :: nat=5
   real (kind=8) :: Qact(3*nat-6),Qcart(3*nat)
   integer :: InputUnit,OutputUnit
 

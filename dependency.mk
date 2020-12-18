@@ -59,7 +59,8 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_math_util.o $(OBJ)/Calc_Tab_dnQflex.o                    \
                    $(OBJ)/sub_module_basis_BtoG_GtoB_SG4_MPI.o $(OBJ)/sub_OpPsi_MPI.o  \
                    $(OBJ)/sub_Hmax_MPI.o $(OBJ)/sub_module_propa_march_MPI.o           \
-                   $(OBJ)/sub_module_ana_psi_MPI.o $(OBJ)/mod_CAP.o $(OBJ)/mod_HStep.o
+                   $(OBJ)/sub_module_ana_psi_MPI.o $(OBJ)/mod_CAP.o $(OBJ)/mod_HStep.o \
+                   $(OBJ)/sub_quadra_SincDVR.o
 $(lib_dep_mod_system):$(OBJ)/sub_module_system.o
 
 #mod_EVR 
@@ -221,7 +222,7 @@ lib_dep_mod_basis=$(OBJ)/sub_module_BasisMakeGrid.o $(OBJ)/sub_read_data.o      
                   $(OBJ)/sub_SymAbelian_OF_Basis.o $(OBJ)/sub_module_psi_set_alloc.o   \
                   $(OBJ)/sub_changement_de_var.o $(OBJ)/sub_quadra_SparseBasis2n.o     \
                   $(OBJ)/sub_inactive_harmo.o $(OBJ)/sub_paraRPH.o $(OBJ)/nb_harm.o    \
-                  $(OBJ)/sub_module_psi_Op_MPI.o
+                  $(OBJ)/sub_module_psi_Op_MPI.o $(OBJ)/sub_quadra_SincDVR.o
 $(lib_dep_mod_basis):$(OBJ)/sub_module_basis.o
  
 #mod_poly

@@ -1,15 +1,15 @@
 #===============================================================================
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
- F90 = mpifort
-# F90 = gfortran
+# F90 = mpifort
+ F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
 
 ## parallel_make=1 to enable parallel make
 ## parallel_make=0 for fast debug make, no parallel
-parallel_make=0
+parallel_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 1
@@ -408,8 +408,8 @@ LYNK90 = $(F90_FLAGS)
 ifeq ($(ARPACK),1)
   # Arpack management with the OS
   ifeq ($(OS),Darwin)    # OSX
-    ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
-    #ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
+    #ARPACKLIB=/Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
+    ARPACKLIB=/Users/lauvergn/trav/ARPACK/libarpack_OSX.a
   else                   # Linux
     ifeq ($(F90), mpifort)
       ifeq ($(MPICORE), gfortran)
@@ -693,7 +693,7 @@ Obj_Basis = \
  $(OBJ)/sub_quadra_inact.o \
  $(OBJ)/sub_basis_El.o \
  $(OBJ)/sub_quadra_herm.o $(OBJ)/sub_quadra_laguerre.o $(OBJ)/sub_quadra_legendre.o \
- $(OBJ)/sub_quadra_fourier.o $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_ft.o \
+ $(OBJ)/sub_quadra_fourier.o $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_SincDVR.o $(OBJ)/sub_quadra_ft.o \
  $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_DirProd.o \
  $(OBJ)/sub_quadra_SparseBasis2n.o \
  $(OBJ)/sub_SymAbelian_OF_Basis.o
@@ -1237,6 +1237,8 @@ $(OBJ)/sub_quadra_fourier.o:$(DIRba)/sub_quadra_fourier.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_fourier.f90
 $(OBJ)/sub_quadra_box.o:$(DIRba)/sub_quadra_box.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_box.f90
+$(OBJ)/sub_quadra_SincDVR.o:$(DIRba)/sub_quadra_SincDVR.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_SincDVR.f90
 $(OBJ)/sub_quadra_ft.o:$(DIRba)/sub_quadra_ft.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_ft.f90
 $(OBJ)/sub_quadra_Ylm.o:$(DIRba)/sub_quadra_Ylm.f90
@@ -1543,7 +1545,7 @@ ifeq ($(F90),mpifort)
 	@echo "removed ./Working_tests/MPI_tests/*/MPI_test.log"
 endif
 ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
-	@rm -rf ./Working_tests/MPI_tests/$(F90)$(parall_name)_test.log
-	@echo "removed ./Working_tests/MPI_tests/"$(F90)$(parall_name)"_test.log"
+	@rm -rf ./Working_tests/MPI_tests/*/openMP_test.log
+	@echo "removed ./Working_tests/MPI_tests/*/openMP_test.log"
 endif
 	@echo "clean test file done"
