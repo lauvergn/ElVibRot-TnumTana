@@ -193,13 +193,14 @@
       write(out_unitp,*) 'RPHTransfo%option',mole%RPHTransfo%option
       CALL flush_perso(out_unitp)
     END IF
+
     !-----------------------------------------------------------
     IF (.NOT. associated(mole%RPHTransfo) .OR. mole%itRPH == -1) THEN
       write(out_unitp,*) ' ERROR in ',name_sub
       write(out_unitp,*) ' RPHTransfo is not associated or itRPH=-1'
       write(out_unitp,*) ' asso mole%RPHTransfo',associated(mole%RPHTransfo)
       write(out_unitp,*) ' itRPH',mole%itRPH
-      STOP ' ERROR in Set_RPHpara_AT_Qact1_opt01_v2: RPHTransfo is not associated'
+      STOP ' ERROR in Set_RPHpara_AT_Qact1: RPHTransfo is not associated'
     END IF
 
     IF (mole%RPHTransfo%option == 2) THEN
@@ -403,7 +404,7 @@
       write(out_unitp,*) ' RPHTransfo is not associated or itRPH=-1'
       write(out_unitp,*) ' asso mole%RPHTransfo',associated(mole%RPHTransfo)
       write(out_unitp,*) ' itRPH',mole%itRPH
-      STOP ' ERROR in Set_RPHpara_AT_Qact1_opt01_v2: RPHTransfo is not associated'
+      STOP ' ERROR in Set_RPHpara_AT_Qact1_opt01: RPHTransfo is not associated'
     END IF
 
     nderiv     = 3
@@ -481,6 +482,7 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
         CALL flush_perso(out_unitp)
       END IF
+
 !-----------------------------------------------------------
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
@@ -728,6 +730,7 @@
       USE mod_Constant, only : get_Conv_au_TO_unit
       USE mod_Coord_KEO
       USE CurviRPH_mod
+      USE mod_freq
       IMPLICIT NONE
 
       !----- for the CoordType and Tnum --------------------------------------
@@ -884,7 +887,7 @@
                         "d2hess",name_sub)
 
       CALL d0d1d2_h(d0hess,d1hess,d2hess,Qdyn,mole_loc,.FALSE.,.FALSE.,RPHTransfo%step)
-      !IF (debug) CALL Write_Mat(d0hess,out_unitp,4)
+      IF (debug) CALL Write_Mat(d0hess,out_unitp,4)
 
       RPHpara_AT_Qact1%dnHess%d0(:,:) = d0hess
 
@@ -923,6 +926,7 @@
 
       !-----------------------------------------------------------------
       !------ The kinetic part -------------------------------
+       IF (debug) write(out_unitp,*) 'Qact',Qact
       CALL alloc_NParray(d0k,(/nb_inact21,nb_inact21/),"d0k",name_sub)
 
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,0)
@@ -979,13 +983,14 @@
                              RPHTransfo%diabatic_freq,RPHTransfo%Qinact2n_sym)
 
       ELSE
-        CALL calc_freq(nb_inact21,d0h,d0k,                        &
+        CALL calc_freq_new(nb_inact21,d0h,d0k,                    &
                        RPHpara_AT_Qact1%dneHess%d0,               &
                        RPHpara_AT_Qact1%dnC%d0,                   &
                        RPHpara_AT_Qact1%dnC_inv%d0,               &
                        RPHpara_AT_Qact1%dnLnN%d0,                 &
                        RPHTransfo%C_ini,                          &
-                       RPHTransfo%diabatic_freq)
+                       RPHTransfo%diabatic_freq,                  &
+                       RPHTransfo%degenerate_freq)
 
       END IF
 
@@ -1007,4 +1012,3 @@
       END SUBROUTINE sub_freq_RPH
 
    END MODULE mod_PrimOp_RPH
-

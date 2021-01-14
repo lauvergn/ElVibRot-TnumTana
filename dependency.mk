@@ -26,7 +26,7 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/BunchPolyTransfo.o $(OBJ)/HyperSpheTransfo.o                 \
                    $(OBJ)/Rot2CoordTransfo.o $(OBJ)/GeneTransfo.o                      \
                    $(OBJ)/LinearNMTransfo.o $(OBJ)/RectilinearNM_Transfo.o             \
-                   $(OBJ)/RPHTransfo.o $(OBJ)/sub_freq.o $(OBJ)/ActiveTransfo.o        \
+                   $(OBJ)/sub_freq.o $(OBJ)/RPHTransfo.o $(OBJ)/ActiveTransfo.o        \
                    $(OBJ)/Qtransfo.o $(OBJ)/Sub_X_TO_Q_ana.o                           \
                    $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_module_Tana_vec_operations.o \
                    $(OBJ)/sub_module_Tana_op.o $(OBJ)/sub_module_Tana_NumKEO.o         \
@@ -63,7 +63,7 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_quadra_SincDVR.o
 $(lib_dep_mod_system):$(OBJ)/sub_module_system.o
 
-#mod_EVR 
+#mod_EVR
 lib_dep_mod_EVR=$(OBJ)/EVR_driver.o
 $(lib_dep_mod_EVR):$(OBJ)/EVR_Module.o
 
@@ -116,7 +116,7 @@ $(lib_dep_mod_dnM):$(OBJ)/sub_module_dnM.o
 lib_dep_mod_module_DInd=$(OBJ)/sub_module_nDindex.o
 $(lib_dep_mod_module_DInd):$(OBJ)/sub_module_DInd.o
 
-#mod_nDindex   
+#mod_nDindex
 lib_dep_mod_nDindex=$(OBJ)/sub_module_nDfit.o $(OBJ)/sub_module_RotBasis.o             \
                     $(OBJ)/sub_module_param_SGType2.o $(OBJ)/sub_module_param_RD.o     \
                     $(OBJ)/nb_harm.o $(OBJ)/sub_main_Optimization.o                    \
@@ -141,18 +141,18 @@ lib_dep_mod_Lib_QTransfo=$(OBJ)/CartesianTransfo.o $(OBJ)/ZmatTransfo.o         
                          $(OBJ)/BunchPolyTransfo.o
 $(lib_dep_mod_Lib_QTransfo):$(OBJ)/Lib_QTransfo.o
 
-#mod_nDFit 
+#mod_nDFit
 lib_dep_mod_nDFit=$(OBJ)/sub_module_Tnum.o $(OBJ)/sub_PrimOp_def.o                     \
                   $(OBJ)/sub_PrimOp_RPH.o
 $(lib_dep_mod_nDFit):$(OBJ)/sub_module_nDfit.o
 
-#mod_Tnum 
+#mod_Tnum
 lib_dep_mod_Tnum=$(OBJ)/calc_f2_f1Q.o $(OBJ)/sub_module_paramQ.o $(OBJ)/sub_dnRho.o    \
                  $(OBJ)/sub_export_KEO.o $(OBJ)/sub_system.o                           \
                  $(OBJ)/sub_module_Tana_NumKEO.o $(OBJ)/sub_module_paramQ.o
 $(lib_dep_mod_Tnum):$(OBJ)/sub_module_Tnum.o
 
-#mod_paramQ 
+#mod_paramQ
 lib_dep_mod_paramQ=$(OBJ)/calc_dng_dnGG.o $(OBJ)/sub_module_Tana_Export_KEO.o          \
                    $(OBJ)/sub_system.o
 $(lib_dep_mod_paramQ):$(OBJ)/sub_module_paramQ.o
@@ -224,12 +224,12 @@ lib_dep_mod_basis=$(OBJ)/sub_module_BasisMakeGrid.o $(OBJ)/sub_read_data.o      
                   $(OBJ)/sub_inactive_harmo.o $(OBJ)/sub_paraRPH.o $(OBJ)/nb_harm.o    \
                   $(OBJ)/sub_module_psi_Op_MPI.o $(OBJ)/sub_quadra_SincDVR.o
 $(lib_dep_mod_basis):$(OBJ)/sub_module_basis.o
- 
+
 #mod_poly
 lib_dep_mod_poly=$(OBJ)/sub_module_GWP.o
 $(lib_dep_mod_poly):$(OBJ)/sub_module_poly.o
 
-#mod_basis_BtoG_GtoB_SGType4 
+#mod_basis_BtoG_GtoB_SGType4
 lib_dep_mod_basis_BtoG_GtoB_SGType4=$(OBJ)/sub_module_ComOp.o                          \
                                     $(OBJ)/sub_module_OpGrid.o                         \
                                     $(OBJ)/sub_module_basis_BtoG_GtoB.o
@@ -240,7 +240,7 @@ lib_dep_mod_basis_BtoG_GtoB_SGType4_MPI=$(OBJ)/sub_OpPsi_SG4_MPI.o              
                                         $(OBJ)/sub_module_basis_BtoG_GtoB_SG4.o        \
                                         $(OBJ)/sub_module_ComOp.o                      \
                                         $(OBJ)/sub_module_OpGrid.o                     \
-                                        $(OBJ)/sub_module_basis_BtoG_GtoB.o 
+                                        $(OBJ)/sub_module_basis_BtoG_GtoB.o
 $(lib_dep_mod_basis_BtoG_GtoB_SGType4_MPI):$(OBJ)/sub_module_basis_BtoG_GtoB_SG4_MPI.o
 
 #BasisMakeGrid
@@ -277,7 +277,7 @@ $(lib_dep_mod_psi_Op_MPI):$(OBJ)/sub_module_psi_Op_MPI.o
 lib_dep_mod_OpGrid=$(OBJ)/sub_module_ReadOp.o $(OBJ)/sub_module_SetOp.o
 $(lib_dep_mod_OpGrid):$(OBJ)/sub_module_OpGrid.o
 
-#mod_SetOp  
+#mod_SetOp
 lib_dep_mod_SetOp=$(OBJ)/sub_OpPsi_SG4.o $(OBJ)/sub_OpPsi_SG4_MPI.o $(OBJ)/sub_MatOp.o \
                   $(OBJ)/sub_module_Op.o $(OBJ)/sub_lib_Op.o $(OBJ)/sub_Hmax_MPI.o
 $(lib_dep_mod_SetOp):$(OBJ)/sub_module_SetOp.o
@@ -299,7 +299,7 @@ $(lib_dep_mod_OpPsi_SG4):$(OBJ)/sub_OpPsi_SG4.o
 lib_dep_mod_OpPsi_SG4_MPI=$(OBJ)/sub_OpPsi.o
 $(lib_dep_mod_OpPsi_SG4_MPI):$(OBJ)/sub_OpPsi_SG4_MPI.o
 
-#mod_Op     
+#mod_Op
 lib_dep_mod_Op=$(OBJ)/sub_HST_harm.o $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_harm.o   \
                $(OBJ)/sub_lib_act.o $(OBJ)/sub_module_ExactFact.o                      \
                $(OBJ)/sub_module_Davidson.o $(OBJ)/sub_module_Filter.o                 \
@@ -312,7 +312,7 @@ lib_dep_mod_Op=$(OBJ)/sub_HST_harm.o $(OBJ)/sub_Grid_SG4.o $(OBJ)/sub_ini_act_ha
                $(OBJ)/QMRPACK_lib.o
 $(lib_dep_mod_Op):$(OBJ)/sub_module_Op.o
 
-#mod_psi_io 
+#mod_psi_io
 lib_dep_mod_psi_io=$(OBJ)/sub_analyse.o $(OBJ)/mod_psi.o
 $(lib_dep_mod_psi_io):$(OBJ)/sub_module_psi_io.o
 
@@ -327,7 +327,7 @@ lib_dep_mod_propa=$(OBJ)/sub_module_propa_march.o $(OBJ)/sub_module_propa_march_
                   $(OBJ)/sub_main_Optimization.o $(OBJ)/sub_module_Davidson.o          \
                   $(OBJ)/sub_module_Arpack.o $(OBJ)/ini_data.o $(OBJ)/EVR_Module.o     \
                   $(OBJ)/sub_module_propagation_MPI.o $(OBJ)/sub_module_Davidson_MPI.o \
-                  $(OBJ)/sub_module_propa_march_MPI.o 
+                  $(OBJ)/sub_module_propa_march_MPI.o
 $(lib_dep_mod_propa):$(OBJ)/sub_module_propagation.o
 
 #mod_propa_MPI
@@ -351,13 +351,13 @@ $(lib_dep_mod_march_MPI):$(OBJ)/sub_module_propa_march_MPI.o
 lib_dep_mod_FullPropa=$(OBJ)/sub_control.o $(OBJ)/sub_Hmax.o $(OBJ)/EVR_driver.o
 $(lib_dep_mod_FullPropa):$(OBJ)/sub_propagation.o
 
-#mod_Smolyak_DInd 
+#mod_Smolyak_DInd
 lib_dep_mod_Smolyak_DInd=$(OBJ)/sub_Smolyak_module.o $(OBJ)/sub_Smolyak_ba.o
 $(lib_dep_mod_Smolyak_DInd):$(OBJ)/sub_Smolyak_DInd.o
 
 #mod_Atom
 lib_dep_mod_Atom=$(OBJ)/sub_module_constant.o
-$(lib_dep_mod_Atom):$(OBJ)/sub_module_Atom.o 
+$(lib_dep_mod_Atom):$(OBJ)/sub_module_Atom.o
 
 #mod_Tana_OpEl
 lib_dep_mod_Tana_OpEl=$(OBJ)/sub_module_Tana_OpnD.o $(OBJ)/sub_module_Tana_Op1D.o      \
@@ -368,23 +368,23 @@ $(lib_dep_mod_Tana_OpEl):$(OBJ)/sub_module_Tana_OpEl.o
 lib_dep_mod_dnV=$(OBJ)/sub_module_dnM.o
 $(lib_dep_mod_dnV):$(OBJ)/sub_module_dnV.o
 
-#mod_Tana_sum_opnd 
+#mod_Tana_sum_opnd
 lib_dep_mod_Tana_sum_opnd=$(OBJ)/sub_module_Tana_VecSumOpnD.o                          \
                           $(OBJ)/sub_module_Tana_PiEulerRot.o
 $(lib_dep_mod_Tana_sum_opnd):$(OBJ)/sub_module_Tana_SumOpnD.o
 
-#mod_Tana_OpnD 
+#mod_Tana_OpnD
 lib_dep_mod_Tana_OpnD=$(OBJ)/sub_module_Tana_vec_operations.o                          \
                       $(OBJ)/sub_module_Tana_SumOpnD.o                                 \
-                      $(OBJ)/sub_module_Tana_PiEulerRot.o $(OBJ)/sub_module_Tana_op.o  
+                      $(OBJ)/sub_module_Tana_PiEulerRot.o $(OBJ)/sub_module_Tana_op.o
 $(lib_dep_mod_Tana_OpnD):$(OBJ)/sub_module_Tana_OpnD.o
 
-#mod_Tana_VecSumOpnD 
+#mod_Tana_VecSumOpnD
 lib_dep_mod_Tana_VecSumOpnD=$(OBJ)/BunchPolyTransfo.o                                  \
                             $(OBJ)/sub_module_Tana_PiEulerRot.o
 $(lib_dep_mod_Tana_VecSumOpnD):$(OBJ)/sub_module_Tana_VecSumOpnD.o
 
-#mod_BunchPolyTransfo 
+#mod_BunchPolyTransfo
 lib_dep_mod_BunchPolyTransfo=$(OBJ)/Qtransfo.o $(OBJ)/sub_module_Tana_vec_operations.o
 $(lib_dep_mod_BunchPolyTransfo):$(OBJ)/BunchPolyTransfo.o
 
@@ -426,7 +426,7 @@ $(lib_dep_mod_FullControl):$(OBJ)/sub_control.o
 #mod_Smolyak_ba
 lib_dep_mod_Smolyak_ba=$(OBJ)/sub_Smolyak_RDP.o
 $(lib_dep_mod_Smolyak_ba):$(OBJ)/sub_Smolyak_ba.o
- 
+
 #mod_Smolyak_RDP
 lib_dep_mod_Smolyak_RDP=$(OBJ)/sub_Smolyak_module.o
 $(lib_dep_mod_Smolyak_RDP):$(OBJ)/sub_Smolyak_RDP.o

@@ -1943,12 +1943,12 @@
             ui=ubound(basis_set2%tab_basisPrimSG,dim=1)
             lj=lbound(basis_set2%tab_basisPrimSG,dim=2)
             uj=ubound(basis_set2%tab_basisPrimSG,dim=2)
-            CALL alloc_array(basis_set1%tab_basisPrimSG,(/ ui,uj /),    &
-                            'basis_set1%tab_basisPrimSG',name_sub, (/ li,lj /))
+            CALL alloc_array(basis_set1%tab_basisPrimSG,[ui,uj],                &
+                            'basis_set1%tab_basisPrimSG',name_sub,[li,lj])
 
-            DO i=li,uj
+            DO i=li,ui
             DO j=lj,uj
-              CALL basis2TObasis1(basis_set1%tab_basisPrimSG(i,j),           &
+              CALL basis2TObasis1(basis_set1%tab_basisPrimSG(i,j),              &
                                   basis_set2%tab_basisPrimSG(i,j))
             END DO
             END DO

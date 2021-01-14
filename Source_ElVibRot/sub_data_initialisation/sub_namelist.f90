@@ -120,7 +120,7 @@
         nb_inact21 = mole%nb_inact2n
       END IF
 
-      IF (nb_inact21 <= 0) THEN
+      IF (mole%nb_inact2n <= 0) THEN
         read(in_unitp,inactives) ! for nagfor we must read the inactive namelist
         RETURN
       END IF

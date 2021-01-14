@@ -55,6 +55,8 @@
         TYPE (param_file)          :: file_hessian
         integer                    :: nb_NM            = 0      ! nb_act
 
+        integer                    :: NM_TO_sym_ver    = 4
+
         logical                    :: d0c_read         = .FALSE.
         logical                    :: hessian_read     = .FALSE.
         logical                    :: k_read           = .FALSE.
@@ -720,12 +722,14 @@
         CALL dealloc_array(NMTransfo%scaleQ_HObasis,"NMTransfo%scaleQ_HObasis",name_sub)
       END IF
 
-      NMTransfo%nb_NM       = 0
+      NMTransfo%nb_NM         = 0
 
-      NMTransfo%purify_hess = .FALSE.
-      NMTransfo%eq_hess     = .FALSE.
-      NMTransfo%k_Half      = .FALSE.
-      NMTransfo%nb_equi     = 0
+      NMTransfo%purify_hess   = .FALSE.
+      NMTransfo%eq_hess       = .FALSE.
+      NMTransfo%k_Half        = .FALSE.
+      NMTransfo%nb_equi       = 0
+
+      NMTransfo%NM_TO_sym_ver = 4
 
       END SUBROUTINE dealloc_NMTransfo
 
@@ -744,6 +748,10 @@
       !logical, parameter :: debug=.FALSE.
       integer            :: err_read
       character (len=*), parameter :: name_sub='Read_NMTransfo'
+
+
+      IF (NMTransfo%NM_TO_sym_ver == 0) NMTransfo%NM_TO_sym_ver = 4
+
 
       IF (NMTransfo%d0c_read) THEN
 
@@ -1009,6 +1017,7 @@
       character (len=*), parameter :: name_sub='Write_NMTransfo'
 
       write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) 'NM_TO_sym_ver',NMTransfo%NM_TO_sym_ver
 
       write(out_unitp,*) 'hessian_old,hessian_cart,hessian_onthefly',   &
                           NMTransfo%hessian_old,NMTransfo%hessian_cart, &
@@ -1112,6 +1121,8 @@
 
       CALL dealloc_NMTransfo(NMTransfo2)
 
+      NMTransfo2%NM_TO_sym_ver    = NMTransfo1%NM_TO_sym_ver
+
       NMTransfo2%hessian_old      = NMTransfo1%hessian_old
       NMTransfo2%hessian_cart     = NMTransfo1%hessian_cart
       NMTransfo2%hessian_onthefly = NMTransfo1%hessian_onthefly
@@ -1196,4 +1207,3 @@
 
 
       END MODULE mod_LinearNMTransfo
-

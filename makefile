@@ -2,7 +2,7 @@
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 # F90 = mpifort
- F90 = gfortran
+  F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
@@ -22,13 +22,13 @@ OMP = 1
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 0
+ARPACK = 1
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 0
+QML = 1
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -623,7 +623,7 @@ Obj_Coord = \
   $(OBJ)/OneDTransfo.o $(OBJ)/ThreeDTransfo.o $(OBJ)/Rot2CoordTransfo.o \
   $(OBJ)/FlexibleTransfo.o $(OBJ)/GeneTransfo.o \
   $(OBJ)/HyperSpheTransfo.o $(OBJ)/LinearNMTransfo.o $(OBJ)/RectilinearNM_Transfo.o \
-  $(OBJ)/RPHTransfo.o $(OBJ)/sub_freq.o \
+  $(OBJ)/sub_freq.o $(OBJ)/RPHTransfo.o \
   $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o \
   $(OBJ)/Calc_Tab_dnQflex.o
 
@@ -1317,7 +1317,7 @@ $(OBJ)/sub_TF_autocorr.o:$(DIRpropa)/sub_TF_autocorr.f90
 #===============================================================================
 # sub_CRP:
 $(OBJ)/sub_CRP.o:$(DIRCRP)/sub_CRP.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_CERFACS) -c $(DIRCRP)/sub_CRP.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_CERFACS) $(CPPSHELL_ARPACK) -c $(DIRCRP)/sub_CRP.f90
 $(OBJ)/CERFACS_lib.o:$(DIRCRP)/CERFACS_lib.f
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/CERFACS_lib.f
 $(OBJ)/QMRPACK_lib.o:$(DIRCRP)/QMRPACK_lib.f
@@ -1527,7 +1527,7 @@ else
 endif
 
 .PHONY: test
-test: 
+test:
 ifeq ($(F90),mpifort)
 	@cd ./Working_tests/MPI_tests ; ./MPI_test.sh
 else

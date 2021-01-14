@@ -49,7 +49,12 @@ MODULE mod_CRP
     real (kind=Rkind) :: L  = ONE            !  //
     real (kind=Rkind) :: m  = 1060._Rkind    !  //
   END TYPE CRP_Eckart_t
-
+  TYPE CRP_Channel_AT_TS_t
+    real (kind=Rkind)              :: EneTS = 0.0105_Rkind
+    real (kind=Rkind)              :: w1    = 0.015625_Rkind
+    real (kind=Rkind), allocatable :: w(:)
+    integer                        :: option = 1
+  END TYPE CRP_Channel_AT_TS_t
   TYPE param_CRP
     real (kind=Rkind) :: Ene    = ZERO            ! Total energy for CRP
     real (kind=Rkind) :: DEne   = ZERO            ! Energy increment for the CRP
@@ -71,19 +76,26 @@ MODULE mod_CRP
     logical                  :: FluxOp_test         = .FALSE.
 
     logical                  :: With_Eckart         = .FALSE.
-    TYPE (CRP_Eckart_t)      :: Eckart
+    logical                  :: Read_Channel_AT_TS  = .FALSE.
+
+    logical                  :: Build_MatOp         = .FALSE.
+
+
+    TYPE (CRP_Eckart_t)        :: Eckart
+    TYPE (CRP_Channel_AT_TS_t) :: Channel_AT_TS
 
   END TYPE param_CRP
 
 CONTAINS
 
-SUBROUTINE read_CRP(para_CRP)
+SUBROUTINE read_CRP(para_CRP,ny)
 USE mod_system
 USE mod_Constant
 IMPLICIT NONE
 
   !----- variables pour la namelist analyse ----------------------------
   TYPE (param_CRP),     intent(inout)  :: para_CRP
+  integer,              intent(in)     :: ny
 
 
   TYPE (REAL_WU) :: Ene,DEne
@@ -101,6 +113,7 @@ IMPLICIT NONE
     TYPE (CRP_Eckart_t)    :: Eckart ! to be able to compar with Eckart CRP
     logical                :: With_Eckart
 
+    logical                :: Read_Channel
 
   !----- for debuging --------------------------------------------------
   integer :: err_mem,memory
@@ -113,7 +126,7 @@ IMPLICIT NONE
                 KS_max_it,KS_accuracy,                                  &
                 LinSolv_Type,LinSolv_max_it,LinSolv_accuracy,           &
                 Preconditioner_Type,FluxOp_test,                        &
-                Eckart,With_Eckart
+                Eckart,With_Eckart,Read_Channel
 
   Ene                 = REAL_WU(ZERO,'cm-1','E')
   DEne                = REAL_WU(ZERO,'cm-1','E')
@@ -129,6 +142,7 @@ IMPLICIT NONE
   FluxOp_test         = .FALSE.
   With_Eckart         = .FALSE.
   Eckart              = CRP_Eckart_t(V0=0.0156_Rkind,L=ONE,m=1060._Rkind)
+  Read_Channel        = .FALSE.
 
   read(in_unitp,CRP)
   write(out_unitp,CRP)
@@ -155,7 +169,18 @@ IMPLICIT NONE
   para_CRP%Preconditioner_Type  = Preconditioner_Type
   para_CRP%FluxOp_test          = FluxOp_test
 
+  para_CRP%Build_MatOp          = (CRP_type == 'withmat')                  .OR. &
+                                  (CRP_type == 'withmat_flux')             .OR. &
+                                  (CRP_type == 'withmatspectral')          .OR. &
+         (CRP_type == 'lanczos'        .AND. LinSolv_Type == 'matinv')     .OR. &
+         (CRP_type == 'lanczos'        .AND. LinSolv_Type == 'matlinsolv') .OR. &
+         (CRP_type == 'lanczos_arpack' .AND. LinSolv_Type == 'matinv')     .OR. &
+         (CRP_type == 'lanczos_arpack' .AND. LinSolv_Type == 'matlinsolv')
+
   IF (debug) write(out_unitp,*) 'E,DE,nb_E   : ',para_CRP%Ene,para_CRP%DEne,para_CRP%nb_Ene
+
+  IF (Read_Channel) CALL Read_Channel_AT_TS(para_CRP%Channel_AT_TS,ny)
+
   write(out_unitp,*)
   CALL flush_perso(out_unitp)
 
@@ -179,8 +204,9 @@ END SUBROUTINE read_CRP
       TYPE (param_CRP),  intent(in)    :: para_CRP
 
 
-      integer              :: i
-      real (kind=Rkind)    :: Ene
+      integer                           :: i
+      real (kind=Rkind)                 :: Ene
+      complex(kind=Rkind), allocatable  :: GuessVec(:)
 
 !----- for debuging --------------------------------------------------
       integer   :: err
@@ -215,6 +241,15 @@ END SUBROUTINE read_CRP
         STOP ' ERROR in sub_CRP: wrong operator number'
       END IF
 
+      IF (para_CRP%Build_MatOp) THEN
+        CALL sub_MatOp(tab_Op(1),print_Op) ! H
+        DO i=3,nb_Op ! for the CAP
+          IF (i == para_CRP%iOp_CAP_Reactif .OR. i == para_CRP%iOp_CAP_Product)   &
+              CALL sub_MatOp(tab_Op(i),print_Op)
+        END DO
+      END IF
+
+
       SELECT CASE (para_CRP%CRP_type)
       CASE ('withmat') ! old one
         CALL sub_CRP_BasisRep_WithMat(tab_Op,nb_Op,print_Op,para_CRP)
@@ -222,21 +257,32 @@ END SUBROUTINE read_CRP
       CASE ('withmat_flux')
         CALL sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
 
+      CASE ('withmatspectral') ! old one
+        CALL sub_CRP_BasisRep_WithMatSpectral(tab_Op,nb_Op,print_Op,para_CRP)
+        !CALL sub_CRP_BasisRep_WithMatSpectral_old(tab_Op,nb_Op,print_Op,para_CRP)
+
       CASE ('lanczos') ! lanczos (Lucien Dupuy)
 
 !$OMP   PARALLEL &
 !$OMP   DEFAULT(NONE) &
 !$OMP   SHARED(para_CRP,tab_Op,nb_Op) &
-!$OMP   PRIVATE(i,Ene) &
+!$OMP   PRIVATE(i,Ene,GuessVec) &
 !$OMP   NUM_THREADS(CRP_maxth)
+
+        CALL alloc_NParray(GuessVec, [tab_Op(1)%nb_tot], 'GuessVec', name_sub)
+        GuessVec(:) = ZERO
+
 !$OMP   DO SCHEDULE(STATIC)
 
         DO i = 0, para_CRP%nb_Ene-1
           Ene = para_CRP%Ene+real(i,kind=Rkind)*para_CRP%DEne
-          CALL calc_crp_P_lanczos(tab_Op, nb_Op,para_CRP,Ene)
+          CALL calc_crp_P_lanczos(tab_Op, nb_Op,para_CRP,Ene,GuessVec)
         END DO
 
 !$OMP   END DO
+
+        CALL dealloc_NParray(GuessVec, 'GuessVec', name_sub)
+
 !$OMP   END PARALLEL
 
       CASE ('lanczos_arpack') ! lanczos (Lucien Dupuy)
@@ -288,7 +334,7 @@ END SUBROUTINE read_CRP
       complex (kind=Rkind), allocatable :: G(:,:)
       complex (kind=Rkind), allocatable :: Ginv(:,:)
       complex (kind=Rkind), allocatable :: gGgG(:,:)
-      complex :: CRP
+      complex (kind=Rkind) :: CRP
       real (kind=Rkind) :: Ene
       TYPE(REAL_WU)     :: RWU_E
 
@@ -313,12 +359,6 @@ END SUBROUTINE read_CRP
 
       write(out_unitp,*) 'nb_tot of H',tab_Op(1)%nb_tot
       CALL flush_perso(out_unitp)
-
-      CALL sub_MatOp(tab_Op(1),print_Op) ! H
-      DO i=3,nb_Op ! for the CAP
-        IF (i == para_CRP%iOp_CAP_Reactif .OR. i == para_CRP%iOp_CAP_Product)   &
-           CALL sub_MatOp(tab_Op(i),print_Op)
-      END DO
 
       IF (debug) THEN
         write(out_unitp,*) 'shape H',shape(tab_Op(1)%Rmat)
@@ -395,11 +435,13 @@ END SUBROUTINE read_CRP
 
         if (para_CRP%With_Eckart) then
           write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
-                            real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene,para_CRP%Eckart)
+                            real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene,para_CRP%Eckart),&
+                            real(CRP,kind=Rkind)-CRP_Eckart(Ene,para_CRP%Eckart)
         else
           write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
                             real(CRP,kind=Rkind),aimag(CRP)
         end if
+        CALL flush_perso(out_unitp)
 
       END DO
 
@@ -415,6 +457,321 @@ END SUBROUTINE read_CRP
 !----------------------------------------------------------
 
 END SUBROUTINE sub_CRP_BasisRep_WithMat
+SUBROUTINE sub_CRP_BasisRep_WithMatSpectral(tab_Op,nb_Op,print_Op,para_CRP)
+
+      USE mod_system
+      USE mod_Constant
+      USE mod_Coord_KEO
+      USE mod_basis
+      USE mod_Op
+      IMPLICIT NONE
+
+
+!----- Operator variables ----------------------------------------------
+      integer,            intent(in)      :: nb_Op
+      TYPE (param_Op)                     :: tab_Op(nb_Op)
+      logical,            intent(in)      :: print_Op
+      TYPE (param_CRP),   intent(in)      :: para_CRP
+
+      !real (kind=Rkind) :: CRP_Ene,CRP_DEne
+      !integer           :: nb_CRP_Ene
+
+!---- variable for the Z-matrix ----------------------------------------
+      TYPE (CoordType), pointer  :: mole
+      TYPE (Tnum), pointer       :: para_Tnum
+
+
+!----- working variables -----------------------------
+      integer       ::    i,j,k,ie
+
+      complex (kind=Rkind), allocatable :: G(:,:)
+      complex (kind=Rkind), allocatable :: Ginv(:,:)
+      complex (kind=Rkind), allocatable :: VecPGinv(:,:)
+      complex (kind=Rkind), allocatable :: ValPGinv(:)
+      complex (kind=Rkind), allocatable :: ValPG(:)
+      complex (kind=Rkind), allocatable :: Vec1(:)
+      complex (kind=Rkind) :: CRP
+      real (kind=Rkind) :: Ene
+      TYPE(REAL_WU)     :: RWU_E
+
+
+
+!----- for debuging --------------------------------------------------
+      integer   :: err
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub = 'sub_CRP_BasisRep_WithMatSpectral'
+!-----------------------------------------------------------
+      mole       => tab_Op(1)%mole
+      para_Tnum  => tab_Op(1)%para_Tnum
+
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      IF (debug) THEN
+        write(out_unitp,*) 'shape tab_op',shape(tab_Op)
+        CALL flush_perso(out_unitp)
+        write(out_unitp,*)
+      END IF
+!-----------------------------------------------------------
+
+      write(out_unitp,*) 'nb_tot of H',tab_Op(1)%nb_tot
+      CALL flush_perso(out_unitp)
+
+      CALL alloc_NParray(Ginv,    shape(tab_Op(1)%Rmat),'Ginv',    name_sub)
+      CALL alloc_NParray(VecPGinv,shape(tab_Op(1)%Rmat),'VecPGinv',name_sub)
+      CALL alloc_NParray(ValPGinv,[tab_Op(1)%nb_tot],   'ValPGinv',name_sub)
+      CALL alloc_NParray(ValPG,   [tab_Op(1)%nb_tot],   'ValPG',   name_sub)
+
+      write(out_unitp,*) 'Ginv calc' ; CALL flush_perso(out_unitp)
+      Ginv(:,:) = -tab_Op(1)%Rmat + EYE*HALF * (tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat+ &
+                                                tab_Op(para_CRP%iOp_CAP_Product)%Rmat)
+
+      write(out_unitp,*) 'Ginv diago' ; CALL flush_perso(out_unitp)
+      CALL sub_diago_CH(Ginv,ValPGinv,VecPGinv,tab_Op(1)%nb_tot)
+      write(out_unitp,*) 'Ginv diago: done' ; CALL flush_perso(out_unitp)
+
+      CALL dealloc_NParray(Ginv,'Ginv',name_sub)
+
+
+      CALL alloc_NParray(Vec1,[tab_Op(1)%nb_tot],'Vec1',name_sub)
+
+
+      Ene = para_CRP%Ene-para_CRP%DEne
+
+      DO ie=1,para_CRP%nb_Ene
+
+        Ene = Ene + para_CRP%DEne
+
+        ValPG(:) = ONE/(ValPGinv+Ene)
+
+        CRP = ZERO
+        DO i=1,tab_Op(1)%nb_tot
+
+          Vec1 = conjg(matmul(VecPGinv,ValPG * VecPGinv(i,:)))
+
+          Vec1 = matmul(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,Vec1)
+          Vec1 = matmul(Vec1,VecPGinv) ! equvivalent to matmul(transpose(VecPGinv),Vec1)
+
+          Vec1 = matmul(VecPGinv,ValPG * Vec1)
+          CRP = CRP + sum(tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat(i,:)*Vec1) ! Cannot use dot_product because of conjg of CAP_Reactif
+
+        END DO
+
+        RWU_E  = REAL_WU(Ene,'au','E')
+
+        if (para_CRP%With_Eckart) then
+          write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                            real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene,para_CRP%Eckart),&
+                            real(CRP,kind=Rkind)-CRP_Eckart(Ene,para_CRP%Eckart)
+        else
+          write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                            real(CRP,kind=Rkind),aimag(CRP)
+        end if
+        CALL flush_perso(out_unitp)
+
+      END DO
+
+      CALL dealloc_NParray(VecPGinv,'VecPGinv',name_sub)
+      CALL dealloc_NParray(ValPGinv,'ValPGinv',name_sub)
+      CALL dealloc_NParray(ValPG,   'ValPG',   name_sub)
+      CALL dealloc_NParray(Vec1,   'Vec1',   name_sub)
+
+!----------------------------------------------------------
+      IF (debug) THEN
+      END IF
+      write(out_unitp,*) 'END ',name_sub
+      CALL flush_perso(out_unitp)
+!----------------------------------------------------------
+
+END SUBROUTINE sub_CRP_BasisRep_WithMatSpectral
+SUBROUTINE sub_CRP_BasisRep_WithMatSpectral_old(tab_Op,nb_Op,print_Op,para_CRP)
+
+      USE mod_system
+      USE mod_Constant
+      USE mod_Coord_KEO
+      USE mod_basis
+      USE mod_Op
+      IMPLICIT NONE
+
+
+!----- Operator variables ----------------------------------------------
+      integer,            intent(in)      :: nb_Op
+      TYPE (param_Op)                     :: tab_Op(nb_Op)
+      logical,            intent(in)      :: print_Op
+      TYPE (param_CRP),   intent(in)      :: para_CRP
+
+      !real (kind=Rkind) :: CRP_Ene,CRP_DEne
+      !integer           :: nb_CRP_Ene
+
+!---- variable for the Z-matrix ----------------------------------------
+      TYPE (CoordType), pointer  :: mole
+      TYPE (Tnum), pointer       :: para_Tnum
+
+
+!----- working variables -----------------------------
+      integer       ::    i,j,k,ie
+
+      complex (kind=Rkind), allocatable :: G(:,:)
+      complex (kind=Rkind), allocatable :: Ginv(:,:)
+      complex (kind=Rkind), allocatable :: VecPGinv(:,:)
+      complex (kind=Rkind), allocatable :: ValPGinv(:)
+      complex (kind=Rkind), allocatable :: ValPG(:)
+      complex (kind=Rkind), allocatable :: Vec1(:),Vec2(:)
+      complex (kind=Rkind), allocatable :: Mat1(:,:),Mat2(:,:)
+
+      complex (kind=Rkind), allocatable :: CAP_reactif(:,:),CAP_product(:,:)
+
+
+      complex (kind=Rkind), allocatable :: gGgG(:,:)
+      complex (kind=Rkind) :: CRP
+      real (kind=Rkind) :: Ene
+      TYPE(REAL_WU)     :: RWU_E
+
+
+
+!----- for debuging --------------------------------------------------
+      integer   :: err
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub = 'sub_CRP_BasisRep_WithMatSpectral_old'
+!-----------------------------------------------------------
+      mole       => tab_Op(1)%mole
+      para_Tnum  => tab_Op(1)%para_Tnum
+
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      IF (debug) THEN
+        write(out_unitp,*) 'shape tab_op',shape(tab_Op)
+        CALL flush_perso(out_unitp)
+        write(out_unitp,*)
+      END IF
+!-----------------------------------------------------------
+
+      write(out_unitp,*) 'nb_tot of H',tab_Op(1)%nb_tot
+      CALL flush_perso(out_unitp)
+
+      CALL alloc_NParray(Ginv,    shape(tab_Op(1)%Rmat),'Ginv',    name_sub)
+      CALL alloc_NParray(VecPGinv,shape(tab_Op(1)%Rmat),'VecPGinv',name_sub)
+      CALL alloc_NParray(ValPGinv,[tab_Op(1)%nb_tot],   'ValPGinv',name_sub)
+      CALL alloc_NParray(ValPG,   [tab_Op(1)%nb_tot],   'ValPG',   name_sub)
+
+
+      CALL alloc_NParray(gGgG,shape(tab_Op(1)%Rmat),'gGgG',name_sub)
+
+
+      write(out_unitp,*) 'Ginv calc' ; CALL flush_perso(out_unitp)
+      Ginv(:,:) = -tab_Op(1)%Rmat + EYE*HALF * (tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat+ &
+                                                tab_Op(para_CRP%iOp_CAP_Product)%Rmat)
+
+      write(out_unitp,*) 'Ginv diago' ; CALL flush_perso(out_unitp)
+      CALL sub_diago_CH(Ginv,ValPGinv,VecPGinv,tab_Op(1)%nb_tot)
+      write(out_unitp,*) 'Ginv diago: done' ; CALL flush_perso(out_unitp)
+
+!tesy diago
+      Ginv(:,:) = -tab_Op(1)%Rmat + EYE*HALF * (tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat+ &
+                                                 tab_Op(para_CRP%iOp_CAP_Product)%Rmat)
+      Ginv = matmul(transpose(VecPGinv),matmul(Ginv,VecPGinv))
+      !CALL Write_Mat(Ginv,6,7)
+      DO i=1,tab_Op(1)%nb_tot
+           Ginv(i,i) = Ginv(i,i)-ValPGinv(i)
+      END DO
+      write(6,*) 'diago?',maxval(abs(Ginv))
+
+      Ginv = ZERO
+      DO i=1,tab_Op(1)%nb_tot
+           Ginv(i,i) = ValPGinv(i)
+      END DO
+      Ginv = matmul(VecPGinv,matmul(Ginv,transpose(VecPGinv)))
+      Ginv(:,:) = Ginv - (-tab_Op(1)%Rmat + EYE*HALF * (tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat+ &
+                                          tab_Op(para_CRP%iOp_CAP_Product)%Rmat))
+      write(6,*) 'diago?',maxval(abs(Ginv))
+      stop
+
+      CALL dealloc_NParray(Ginv,'Ginv',name_sub)
+
+      CALL alloc_NParray(CAP_Reactif,shape(tab_Op(1)%Rmat),'CAP_Reactif',name_sub)
+      CAP_Reactif = matmul(transpose(VecPGinv),matmul(tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat,VecPGinv))
+      !write(out_unitp,*) 'CAP_Reactif'
+      !CALL Write_Mat(CAP_Reactif,6,5)
+
+      CALL alloc_NParray(CAP_Product,shape(tab_Op(1)%Rmat),'CAP_Product',name_sub)
+      CAP_Product = matmul(transpose(VecPGinv),matmul(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,VecPGinv))
+      !write(out_unitp,*) 'CAP_Product'
+      !CALL Write_Mat(CAP_Product,6,5)
+
+      CALL alloc_NParray(Mat1,shape(tab_Op(1)%Rmat),'Mat1',name_sub)
+      CALL alloc_NParray(Mat2,shape(tab_Op(1)%Rmat),'Mat2',name_sub)
+
+      !CAP_Reactif = matmul(VecPGinv,matmul(CAP_Reactif,transpose(VecPGinv))) ! v1
+      CAP_Reactif = matmul(VecPGinv,CAP_Reactif) ! v2
+
+      CAP_Product = matmul(VecPGinv,matmul(CAP_Product,transpose(VecPGinv))) !v1,v2
+
+
+      ValPGinv(:) = ValPGinv(:) + para_CRP%Ene-para_CRP%DEne
+      Ene = para_CRP%Ene-para_CRP%DEne
+
+      DO ie=1,para_CRP%nb_Ene
+
+
+        ValPGinv(:) = ValPGinv(:) + para_CRP%DEne
+        Ene = Ene + para_CRP%DEne
+
+        ValPG(:) = ONE/ValPGinv
+
+        Mat1 = CZERO
+        Mat2 = CZERO
+        DO i=1,tab_Op(1)%nb_tot
+          Mat1(i,i) = conjg(ValPG(i))
+          Mat2(i,i) = ValPG(i)
+        END DO
+
+        Mat1 = matmul(conjg(VecPGinv),matmul(Mat1,transpose(conjg(VecPGinv)))) ! v1,v2
+        !Mat2 = matmul(VecPGinv,matmul(Mat2,transpose(VecPGinv)))                !v1
+        Mat2 = matmul(Mat2,transpose(VecPGinv))                !v2
+
+
+
+        gGgG(:,:) = matmul(matmul(CAP_Reactif,Mat2),matmul(CAP_Product,Mat1))
+
+        !gGgG(:,:) = matmul(tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat,               &
+        !   matmul(G,matmul(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,conjg(G))))
+
+
+        CRP = ZERO
+        DO i=1,tab_Op(1)%nb_tot
+!           Vec1 = ValPG(:) * CAP_Product(:,i) * conjg(ValPG(i))
+! CRP = CRP + dot_product(CAP_Reactif(:,i),Vec1)
+          CRP = CRP + gGgG(i,i)
+        END DO
+
+        RWU_E  = REAL_WU(Ene,'au','E')
+
+        if (para_CRP%With_Eckart) then
+          write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                            real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene,para_CRP%Eckart),&
+                            real(CRP,kind=Rkind)-CRP_Eckart(Ene,para_CRP%Eckart)
+        else
+          write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
+                            real(CRP,kind=Rkind),aimag(CRP)
+        end if
+        CALL flush_perso(out_unitp)
+
+      END DO
+
+      CALL dealloc_NParray(CAP_Reactif,'CAP_Reactif',name_sub)
+      CALL dealloc_NParray(CAP_Product,'CAP_Product',name_sub)
+      CALL dealloc_NParray(VecPGinv,'VecPGinv',name_sub)
+      CALL dealloc_NParray(ValPGinv,'ValPGinv',name_sub)
+      CALL dealloc_NParray(ValPG,   'ValPG',   name_sub)
+
+      CALL dealloc_NParray(gGgG,'gGgG',name_sub)
+!----------------------------------------------------------
+      IF (debug) THEN
+      END IF
+      write(out_unitp,*) 'END ',name_sub
+      CALL flush_perso(out_unitp)
+!----------------------------------------------------------
+
+END SUBROUTINE sub_CRP_BasisRep_WithMatSpectral_old
 SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
 
       USE mod_system
@@ -445,7 +802,7 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
 
       complex (kind=Rkind), allocatable :: G(:,:)
       complex (kind=Rkind), allocatable :: gGgG(:,:)
-      complex :: CRP
+      complex (kind=Rkind) :: CRP
       real (kind=Rkind) :: Ene
       TYPE(REAL_WU)     :: RWU_E
 
@@ -473,10 +830,6 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
 
       write(out_unitp,*) 'nb_tot of H',tab_Op(1)%nb_tot
 
-      write(out_unitp,*) 'Op name: ',tab_Op(1)%name_Op
-      CALL sub_MatOp(tab_Op(1),print_Op) ! H
-
-      CALL flush_perso(out_unitp)
 
       CALL alloc_NParray(G,shape(tab_Op(1)%Rmat),'G',name_sub)
       CALL alloc_NParray(gGgG,shape(tab_Op(1)%Rmat),'gGgG',name_sub)
@@ -486,25 +839,19 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
       CALL alloc_NParray(mEYE_FluxOpReactif_mat,shape(tab_Op(1)%Rmat), &
                         'mEYE_FluxOpReactif_mat',name_sub)
 
-
       DO i=3,nb_Op ! for the flux and the cap
         ! Here,  we don't calculate the flux operator, but -i.FluxOp = [H,HStep]
         ! Because the corresponding matrix is real.
         IF (i == para_CRP%iOp_Flux_Reactif) Then
           write(out_unitp,*) 'Op name: ',tab_Op(i)%name_Op
           CALL sub_MatOp(tab_Op(i),print_Op)
-          CALL FluxOp_Mat(tab_Op(1),tab_Op(i),mEYE_FluxOpReactif_mat)
+          CALL FluxOp_Mat_v0(tab_Op(1),tab_Op(i),mEYE_FluxOpReactif_mat)
+          STOP
         END IF
         IF (i == para_CRP%iOp_Flux_Product) Then
           write(out_unitp,*) 'Op name: ',tab_Op(i)%name_Op
           CALL sub_MatOp(tab_Op(i),print_Op)
           CALL FluxOp_Mat(tab_Op(1),tab_Op(i),mEYE_FluxOpProduct_mat)
-        END IF
-
-        ! here the CAP
-        IF (i == para_CRP%iOp_CAP_Reactif .OR. i == para_CRP%iOp_CAP_Product) THEN
-          write(out_unitp,*) 'Op name: ',tab_Op(i)%name_Op
-          CALL sub_MatOp(tab_Op(i),print_Op)
         END IF
 
       END DO
@@ -514,8 +861,6 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
 
         CALL G_Mat(tab_Op(1),tab_Op(para_CRP%iOp_CAP_Reactif),                  &
                              tab_Op(para_CRP%iOp_CAP_Product),Ene,G)
-
-
 
         gGgG(:,:) = matmul(mEYE_FluxOpReactif_mat,                              &
                     matmul(G,matmul(mEYE_FluxOpProduct_mat,conjg(G))))
@@ -529,11 +874,14 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
 
         if (para_CRP%With_Eckart) then
           write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
-                            real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene,para_CRP%Eckart)
+                            real(CRP,kind=Rkind),aimag(CRP),CRP_Eckart(Ene,para_CRP%Eckart),&
+                            real(CRP,kind=Rkind)-CRP_Eckart(Ene,para_CRP%Eckart)
+
         else
           write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
                             real(CRP,kind=Rkind),aimag(CRP)
         end if
+        CALL flush_perso(out_unitp)
 
         Ene = Ene + para_CRP%DEne
 
@@ -556,18 +904,19 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
 !----------------------------------------------------------
 
 END SUBROUTINE sub_CRP_BasisRep_WithMat_flux
-SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
+SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene,GuessVec)
 
       USE mod_Constant
       USE mod_Op
       implicit none
 
 !----- Operator variables ----------------------------------------------
-      integer,            intent(in)      :: nb_Op
-      TYPE (param_Op),    intent(inout)   :: tab_Op(nb_Op)
+      integer,             intent(in)      :: nb_Op
+      TYPE (param_Op),     intent(inout)   :: tab_Op(nb_Op)
 
-      TYPE (param_CRP),   intent(in)      :: para_CRP
-      real(kind=Rkind),   intent(in)      :: Ene
+      TYPE (param_CRP),    intent(in)      :: para_CRP
+      real(kind=Rkind),    intent(in)      :: Ene
+      complex(kind=Rkind), intent(inout)   :: GuessVec(:)
 
 !----- working variables -----------------------------
       TYPE(REAL_WU)     :: RWU_E
@@ -580,7 +929,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
       ! Loop integers
       integer :: nks, mks, i, j
       ! Vectors for Pmult
-      complex(kind=Rkind), dimension(:,:), allocatable:: Krylov_vectors,h
+      complex(kind=Rkind),  allocatable :: Krylov_vectors(:,:),h(:,:)
       real (kind=Rkind),    allocatable :: Eigvals(:)
       complex(kind=Rkind),  allocatable :: EVec(:,:)
 
@@ -605,6 +954,9 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
 
        integer :: lwork,ierr
        real (kind=Rkind), ALLOCATABLE :: work(:)
+
+       TYPE (param_time) :: CRP_Time
+       real(kind=Rkind)  :: RealTime
 
 !----- for debuging --------------------------------------------------
       integer   :: err
@@ -655,6 +1007,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
 
       write(out_unitp,*) 'CRP at E (ua)', Ene, crp,'CRP with explicit inversion =', crp2
     ELSE
+      RealTime = Delta_RealTime(CRP_Time)
 
       CALL alloc_NParray(Krylov_vectors,[tab_Op(1)%nb_tot,para_CRP%KS_max_it], &
                         'Krylov_vectors',name_sub,tab_lb=[1,0])
@@ -662,18 +1015,22 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
       CALL alloc_NParray(h,      [para_CRP%KS_max_it,para_CRP%KS_max_it],'h',name_sub)
       CALL alloc_NParray(Eigvals,[para_CRP%KS_max_it],                   'Eigvals',name_sub)
 
-      ! Generate first Krylov vector randomly
-      CALL Random_CplxVec(Krylov_vectors(:,0))
+      ! Generate first Krylov vector randomly or from a guess (previous energy iteration)
+      IF (size(GuessVec) /= tab_Op(1)%nb_tot) THEN
+       write(out_unitp,*) ' ERROR in',name_sub
+       write(out_unitp,*) '  The GuessVec size is wrong: ',size(GuessVec)
+       write(out_unitp,*) '  H%nb_tot:                   ',tab_Op(1)%nb_tot
+       write(out_unitp,*) ' CHECK the fortran source !'
+       STOP ' ERROR in calc_crp_p_lanczos: The GuessVec size is wrong.'
+      END IF
+      IF (sqrt(dot_product(GuessVec,GuessVec)) == 0) THEN
+        write(out_unitp,*) '  Random vector'
+        CALL Random_CplxVec(GuessVec)
+      END IF
+      Krylov_vectors(:,0) = GuessVec
 
 
       IF (para_CRP%LinSolv_type == 'matinv') THEN
-!$OMP SINGLE
-        CALL sub_MatOp(tab_Op(1),print_Op=.FALSE.) ! H
-        DO i=3,nb_Op ! for the CAP
-          IF (i == para_CRP%iOp_CAP_Reactif .OR. i == para_CRP%iOp_CAP_Product) &
-             CALL sub_MatOp(tab_Op(i),print_Op=.FALSE.)
-        END DO
-!$OMP END SINGLE
 
         CALL alloc_NParray(Ginv,shape(tab_Op(1)%Rmat),'Ginv',name_sub)
         CALL alloc_NParray(G,   shape(tab_Op(1)%Rmat),'G',   name_sub)
@@ -694,13 +1051,6 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
        CALL dealloc_NParray(Ginv,'Ginv',name_sub)
        CALL dealloc_NParray(G,   'G',   name_sub)
      ELSE IF (para_CRP%LinSolv_type == 'matlinsolv') THEN
-!$OMP SINGLE
-       CALL sub_MatOp(tab_Op(1),print_Op=.FALSE.) ! H
-       DO i=3,nb_Op ! for the CAP
-         IF (i == para_CRP%iOp_CAP_Reactif .OR. i == para_CRP%iOp_CAP_Product) &
-            CALL sub_MatOp(tab_Op(i),print_Op=.FALSE.)
-       END DO
-!$OMP END SINGLE
 
        CALL alloc_NParray(Ginv,shape(tab_Op(1)%Rmat),'Ginv',name_sub)
        CALL alloc_NParray(trav,[tab_Op(1)%nb_tot],'trav',name_sub)
@@ -778,8 +1128,10 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
            write(out_unitp,*) '  You have to choose between: "MatInv" or "QMR".'
            STOP ' ERROR No Default for LinSolv_type'
          END SELECT
+         call flush_perso(out_unitp)
 
          ! Calculate matrix
+         IF (debug) write(out_unitp,*) '# in KS iterations, buiding h'
          do mks = 0, nks-1
             h(mks+1, nks) = dot_product(Krylov_vectors(:,mks),Krylov_vectors(:,nks))
             h(nks, mks+1) = conjg(h(mks+1,nks))
@@ -788,6 +1140,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
          IF (debug) CALL Write_Mat(h(1:nks,1:nks),out_unitp,5)
 
          ! Orthogonalize vectors
+         IF (debug) write(out_unitp,*) '# in KS iterations: Orthogonalize the vectors'
          do mks = 0, nks-1
             y = dot_product(Krylov_vectors(:,mks),Krylov_vectors(:,nks))
             Krylov_vectors(:,nks) = Krylov_vectors(:,nks) - y * Krylov_vectors(:,mks)
@@ -798,11 +1151,11 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
          if (nks > 1) then
 
             Eigvals(:) = ZERO
+            IF (allocated(EVec)) CALL dealloc_NParray(EVec,'EVec',name_sub)
             CALL alloc_NParray(EVec,[nks,nks],'EVec',name_sub)
             CALL diagonalization_HerCplx(h(1:nks,1:nks),Eigvals,EVec,nks,3,.FALSE.,.FALSE.)
             IF (debug) write(out_unitp,*) '# in KS iterations, Eigvals',Eigvals(1:nks)
             !write(out_unitp,*) '# in KS iterations, Eigvals',Eigvals(1:nks)
-            CALL dealloc_NParray(EVec,'EVec',name_sub)
 
             crp = ZERO
             do i=1,nks
@@ -825,7 +1178,8 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
       IF (nks > para_CRP%KS_max_it .OR. DeltaCRP >= para_CRP%KS_accuracy) THEN
         write(out_unitp,*) 'CRP diago, minval: ',sum(Eigvals(1:para_CRP%KS_max_it)),&
                                          minval(abs(Eigvals(1:para_CRP%KS_max_it)))
-        write(out_unitp,*) 'WARNING: Lanczos did not converge'
+        write(out_unitp,*) 'WARNING: Lanczos did not converged'
+        nks = para_CRP%KS_max_it
       ELSE
         write(out_unitp,*) 'CRP diago, minval: ',sum(Eigvals(1:nks)),minval(abs(Eigvals(1:nks)))
       END IF
@@ -833,11 +1187,27 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene)
       RWU_E  = REAL_WU(Ene,'au','E')
       if (para_CRP%With_Eckart) then
         write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
-                          CRP,CRP_Eckart(Ene,para_CRP%Eckart)
+                                     CRP,CRP_Eckart(Ene,para_CRP%Eckart),       &
+                                     CRP-CRP_Eckart(Ene,para_CRP%Eckart)
+
       else
         write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
                           CRP
       end if
+      RealTime = Delta_RealTime(CRP_Time)
+      IF (debug .OR. print_Op .OR. print_level > 0) Then
+        write(out_unitp,*) 'CRP Energy iteration: Delta Real Time',RealTime
+      END IF
+      CALL flush_perso(out_unitp)
+
+      !CALL Random_CplxVec(GuessVec)
+      GuessVec(:) = ZERO
+      do mks = 0, nks-1
+        GuessVec(:) = GuessVec(:) + Krylov_vectors(:,mks)* sum(EVec(mks+1,:))
+      end do
+      CALL ReNorm_CplxVec(GuessVec)
+      IF (allocated(EVec)) CALL dealloc_NParray(EVec,'EVec',name_sub)
+
 
     end if
 
@@ -937,26 +1307,23 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
   INTEGER :: lwork
   REAL (kind=Rkind), ALLOCATABLE :: work(:)
 
+  TYPE (param_time) :: CRP_Time
+  real(kind=Rkind)  :: RealTime
+
 !----- for debuging --------------------------------------------------
   INTEGER   :: err
   LOGICAL, PARAMETER :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
-  CHARACTER (len=*), PARAMETER :: name_sub = 'calc_crp_p_lanczos'
+  CHARACTER (len=*), PARAMETER :: name_sub = 'calc_crp_IRL'
 !-----------------------------------------------------------
+
+  RealTime = Delta_RealTime(CRP_Time)
 
 !======================= END OF HEADER ==========================!
 
   ncooked   = tab_Op(1)%nb_tot
 
   IF (para_CRP%LinSolv_type == 'matinv') THEN
-
-!$OMP SINGLE
-     CALL sub_MatOp(tab_Op(1),print_Op=.FALSE.) ! H
-     DO i=3,nb_Op ! for the CAP
-        IF (i == para_CRP%iOp_CAP_Reactif .OR. i == para_CRP%iOp_CAP_Product) &
-             CALL sub_MatOp(tab_Op(i),print_Op=.FALSE.)
-     END DO
-!$OMP END SINGLE
 
      CALL alloc_NParray(Ginv,SHAPE(tab_Op(1)%Rmat),'Ginv',name_sub)
      CALL alloc_NParray(G,   SHAPE(tab_Op(1)%Rmat),'G',   name_sub)
@@ -1000,13 +1367,7 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
 
 
   ELSE IF (para_CRP%LinSolv_type == 'matlinsolv') THEN
-!$OMP SINGLE
-     CALL sub_MatOp(tab_Op(1),print_Op=.FALSE.) ! H
-     DO i=3,nb_Op ! for the CAP
-        IF (i == para_CRP%iOp_CAP_Reactif .OR. i == para_CRP%iOp_CAP_Product) &
-             CALL sub_MatOp(tab_Op(i),print_Op=.FALSE.)
-     END DO
-!$OMP END SINGLE
+
 
      CALL alloc_NParray(Ginv,SHAPE(tab_Op(1)%Rmat),'Ginv',name_sub)
      CALL alloc_NParray(trav,[tab_Op(1)%nb_tot],'trav',name_sub)
@@ -1024,6 +1385,7 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
 
 
      CALL dealloc_NParray(trav,'trav',name_sub)
+
   ELSE IF (para_CRP%LinSolv_type == 'qmr' .OR. para_CRP%LinSolv_type == 'gmres') THEN
      CALL alloc_NParray(M1,[tab_Op(1)%nb_tot],'M1',name_sub)
 
@@ -1035,6 +1397,7 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
         WRITE(out_unitp,*) 'precon = 1. DML'
      END IF
   END IF
+  CALL flush_perso(out_unitp)
 
 !     %--------------------------------------------------%
 !     | The number N(=NX*NX) is the dimension of the     |
@@ -1052,30 +1415,11 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
 
   n = ncooked
   ldv = n
+
       ! As we know the number of opened channels at a given energy,
-      ! we know how many eigenvalues we want
+      ! we know how many eigenvalues we want ???
 
-
-  ny=(tab_Op(1)%mole%nb_act-1)
-
-  wy =0.015625
-
-  zpe=0.5*ny*wy
-
-!  nv = INT ( (Ene-zpe)/wy )
-  ! ATTENTION SYSTEME DEPENDANT
-  nv = INT ( (Ene-zpe-0.0105)/wy )
-
-  nev=1
-
-  IF ( nv > 0 ) THEN
-
-     DO i=1,nv
-        nev = nev + combination(i,ny)
-     END DO
-
-  END IF
-
+  nev = ChannelNumber_AT_TS(Ene,para_CRP,tab_Op(1))
 
   ncv   = 2*nev ! recommended in manual
 
@@ -1415,11 +1759,18 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
 
   IF (para_CRP%With_Eckart) THEN
      WRITE(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
-          CRP,CRP_Eckart(Ene,para_CRP%Eckart)
+                                     CRP,CRP_Eckart(Ene,para_CRP%Eckart),       &
+                                     CRP-CRP_Eckart(Ene,para_CRP%Eckart)
+
   ELSE
      WRITE(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
           CRP
   END IF
+  RealTime = Delta_RealTime(CRP_Time)
+  IF (debug .OR. print_Op .OR. print_level > 0) Then
+    write(out_unitp,*) 'CRP Energy iteration: Delta Real Time',RealTime
+  END IF
+  CALL flush_perso(out_unitp)
 
   DEALLOCATE ( ax, d, &
        &     v, workd, &
@@ -1907,20 +2258,112 @@ SUBROUTINE FluxOp_Mat(H,HStep_Op,FluxOp)
 
 
 
-      real(kind=Rkind)        :: Rdiag(H%nb_tot),Rvp(H%nb_tot,H%nb_tot)
+      complex(kind=Rkind)        :: Rvp(H%nb_tot,H%nb_tot)
+      real(kind=Rkind)           :: Rdiag(H%nb_tot)
+
+      integer :: i,nb_col
 
 
-      FluxOp = matmul(H%Rmat,HStep_Op%Rmat) - matmul(HStep_Op%Rmat,H%Rmat)
-
-      !FluxOp = ONE - HStep_Op%Rmat
-      !FluxOp = HStep_Op%Rmat
+      FluxOp = EYE*(matmul(H%Rmat,HStep_Op%Rmat) - matmul(HStep_Op%Rmat,H%Rmat))
 
 
-      CALL  diagonalization(FluxOp,Rdiag,Rvp,H%nb_tot,4,1,.TRUE.)
+      CALL diagonalization_HerCplx(FluxOp,Rdiag,Rvp,H%nb_tot,3,2,.TRUE.)
+
+      write(out_unitp,*) 'Eigenvalues'
+      DO i=1,H%nb_tot
+        write(out_unitp,*) i,Rdiag(i)
+      END DO
+
+      nb_col = 5
+      write(out_unitp,*) 'Flux eigenvectors in column'
+      write(out_unitp,*) nb_col,H%nb_tot,H%nb_tot
+      CALL Write_Mat(Rvp,out_unitp,nb_col)
+
+
+      write(out_unitp,*) 'Ortho ?'
+      Rvp = matmul(transpose(Rvp),Rvp)
+      CALL Write_Mat(Rvp,out_unitp,nb_col)
+
+
       !write(out_unitp,*) 'Diag',Rdiag
 
 END SUBROUTINE FluxOp_Mat
+SUBROUTINE FluxOp_Mat_old(H,HStep_Op,FluxOp)
+      use mod_system
+      USE mod_Op
+      implicit none
 
+      TYPE (param_Op)                           :: H,HStep_Op
+      real(kind=Rkind),    intent(inout)        :: FluxOp(H%nb_tot,H%nb_tot)
+
+
+
+      real(kind=Rkind)        :: Rdiag(H%nb_tot),Rvp(H%nb_tot,H%nb_tot)
+      integer :: i,nb_col
+
+
+      FluxOp = matmul(H%Rmat,HStep_Op%Rmat) - matmul(HStep_Op%Rmat,H%Rmat)
+      !CALL  diagonalization(FluxOp,Rdiag,Rvp,H%nb_tot,4,1,.TRUE.)
+
+      FluxOp = matmul(FluxOp,FluxOp)
+      CALL  diagonalization(FluxOp,Rdiag,Rvp,H%nb_tot,3,1,.TRUE.)
+
+      write(out_unitp,*) 'Eigenvalues'
+      DO i=1,H%nb_tot
+        write(out_unitp,*) i,Rdiag(i)
+      END DO
+
+      nb_col = 5
+      write(out_unitp,*) 'Flux eigenvectors in column'
+      write(out_unitp,*) nb_col,H%nb_tot,H%nb_tot
+      CALL Write_Mat(Rvp,out_unitp,nb_col)
+
+
+      !write(out_unitp,*) 'Ortho ?'
+      !Rvp = matmul(transpose(Rvp),Rvp)
+      !CALL Write_Mat(Rvp,out_unitp,nb_col)
+
+
+      !write(out_unitp,*) 'Diag',Rdiag
+
+END SUBROUTINE FluxOp_Mat_old
+SUBROUTINE FluxOp_Mat_v0(H,HStep_Op,FluxOp)
+      use mod_system
+      USE mod_Op
+      implicit none
+
+      TYPE (param_Op)                           :: H,HStep_Op
+      real(kind=Rkind),    intent(inout)        :: FluxOp(H%nb_tot,H%nb_tot)
+
+
+
+      real(kind=Rkind)        :: Rdiag(H%nb_tot),Rvp(H%nb_tot,H%nb_tot)
+      integer :: i,nb_col
+
+
+      FluxOp = matmul(H%Rmat,HStep_Op%Rmat) - matmul(HStep_Op%Rmat,H%Rmat)
+      CALL  diagonalization(FluxOp,Rdiag,Rvp,H%nb_tot,4,1,.TRUE.)
+
+      ! WARNNING: since FluxOp is a skew matrix, they are pairs of  eigenvalues (i*wk, -iwk) ...
+      ! and the eigenvectors are V(:,k) + i*V(:,k+1) and V(:,k) - i*V(:,k+1)
+      ! its means the V(:,k) and V(:,k+1) are not normalized to one
+      DO i=1,H%nb_tot
+        Rvp(:,i) = Rvp(:,i)/sqrt(dot_product(Rvp(:,i),Rvp(:,i)))
+      end do
+      nb_col = 5
+      write(out_unitp,*) 'Flux eigenvectors in column'
+      write(out_unitp,*) nb_col,H%nb_tot,H%nb_tot
+      CALL Write_Mat(Rvp,out_unitp,nb_col)
+
+
+      !write(out_unitp,*) 'Ortho ?'
+      !Rvp = matmul(transpose(Rvp),Rvp)
+      !CALL Write_Mat(Rvp,out_unitp,nb_col)
+
+
+      !write(out_unitp,*) 'Diag',Rdiag
+
+END SUBROUTINE FluxOp_Mat_v0
 SUBROUTINE OpOnVec(Vect,tab_Op,l_conjg)
       use mod_system
       USE mod_psi,     ONLY : param_psi,alloc_psi,dealloc_psi
@@ -2042,4 +2485,290 @@ FUNCTION combination(nv,ny)
   END DO
 
 END FUNCTION combination
+
+SUBROUTINE Read_Channel_AT_TS(Channel_AT_TS_var,ny)
+USE mod_system
+USE mod_RealWithUnit
+USE mod_dnSVM
+USE mod_nDindex
+USE mod_Op
+IMPLICIT NONE
+
+  TYPE (CRP_Channel_AT_TS_t),     intent(inout)      :: Channel_AT_TS_var
+  integer,                        intent(in)         :: ny
+
+  integer                         :: option,err_unit
+  TYPE (REAL_WU)                  :: w1,EneTS
+  character (len=Name_len)        :: w_unit = 'cm-1'
+  real (kind=Rkind)               :: conv
+
+  NAMELIST / Channel_AT_TS / option,w1,EneTS,w_unit
+
+
+!----- for debuging --------------------------------------------------
+      integer   :: err
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub = 'Read_Channel_AT_TS'
+!-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'ny',ny
+    CALL flush_perso(out_unitp)
+  END IF
+!-----------------------------------------------------------
+
+
+  w_unit              = 'cm-1'
+  EneTS               = REAL_WU(0.0105_Rkind,'au','E')
+  w1                  = REAL_WU(0.015625_Rkind,'au','E')
+  option              = 1
+
+  read(in_unitp,Channel_AT_TS)
+  write(out_unitp,Channel_AT_TS)
+
+  Channel_AT_TS_var%EneTS   = convRWU_TO_RWU(EneTS)
+  Channel_AT_TS_var%w1      = convRWU_TO_RWU(w1)
+  Channel_AT_TS_var%option  = option
+
+  IF (option == 2) Then
+    conv = get_Conv_au_TO_unit(quantity='E',Unit=w_unit,err_unit=err_unit)
+    IF (err_unit /= 0) STOP 'in Read_Channel_AT_TS: Wrong w_unit !'
+    write(out_unitp,*) 'For w_unit= "',trim(w_unit),'", conv=',conv
+
+    allocate(Channel_AT_TS_var%w(ny))
+    read(in_unitp,*) Channel_AT_TS_var%w(:)
+    Channel_AT_TS_var%w(:) = Channel_AT_TS_var%w(:)/conv
+  END IF
+
+
+  IF (debug) THEN
+    CALL Write_Channel_AT_TS(Channel_AT_TS_var)
+    write(out_unitp,*)
+    write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
+  END IF
+
+
+END SUBROUTINE Read_Channel_AT_TS
+SUBROUTINE Write_Channel_AT_TS(Channel_AT_TS)
+USE mod_system
+USE mod_Constant
+USE mod_dnSVM
+USE mod_nDindex
+USE mod_Op
+IMPLICIT NONE
+
+  TYPE (CRP_Channel_AT_TS_t),     intent(in)      :: Channel_AT_TS
+
+!----- for debuging --------------------------------------------------
+      integer   :: err
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub = 'Write_Channel_AT_TS'
+!-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    CALL flush_perso(out_unitp)
+  END IF
+!-----------------------------------------------------------
+
+    write(out_unitp,*) 'option      ',Channel_AT_TS%option
+    write(out_unitp,*) 'EneTS (au)  ',Channel_AT_TS%EneTS
+    SELECT CASE (Channel_AT_TS%option)
+    CASE(1)
+      write(out_unitp,*) 'w1 (au) ',Channel_AT_TS%w1
+    CASE(2)
+      IF (allocated(Channel_AT_TS%w)) THEN
+        write(out_unitp,*) 'w(:) (au) ',Channel_AT_TS%w
+      ELSE
+        write(out_unitp,*) 'w(:) is not allocated !'
+      END IF
+    END SELECT
+
+  IF (debug) THEN
+    write(out_unitp,*)
+    write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
+  END IF
+
+
+END SUBROUTINE Write_Channel_AT_TS
+FUNCTION ChannelNumber_AT_TS(Ene,para_CRP,para_H) RESULT(nb_channels)
+USE mod_system
+USE mod_dnSVM
+USE mod_nDindex
+USE mod_Op
+IMPLICIT NONE
+
+  INTEGER                               :: nb_channels
+  TYPE (param_CRP),     intent(in)      :: para_CRP
+  real (kind=Rkind),    intent(in)      :: Ene
+  TYPE (param_Op),      intent(in)      :: para_H
+
+
+  integer :: option = 2 ! 1: Lucien Dupuy, one degenerate frequency
+                        ! 2: ny frequencies at TS
+                        ! 3: general, Energy levels calculation at the TS
+
+  ! parameters for option=1 (Lucien)
+  integer             :: i,ny,nv
+  real (kind=Rkind)   :: wy,zpe,EneTS
+
+  ! more general parameters for option=2
+  TYPE (Type_nDindex)             :: nDindB_Channels
+  TYPE (Type_IntVec), allocatable :: tab_i_TO_l(:)
+  integer,            allocatable :: nbSize(:),tab_ib(:)
+  integer                         :: LB,ib,nb,n
+  real (kind=Rkind),  allocatable :: w(:)
+  real (kind=Rkind)               :: EneChannel
+
+  ! more general parameters for option=3
+  TYPE (basis),        pointer    :: basisnD
+  integer,            allocatable :: nDval(:)
+  real (kind=Rkind)               :: E0_func_of_s
+
+
+!----- for debuging --------------------------------------------------
+      integer   :: err
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub = 'ChannelNumber_AT_TS'
+!-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'Ene',Ene
+    write(out_unitp,*) 'EneTS',para_CRP%Channel_AT_TS%EneTS
+    write(out_unitp,*)
+    CALL flush_perso(out_unitp)
+  END IF
+!-----------------------------------------------------------
+
+  basisnD => para_H%para_AllBasis%BasisnD
+
+  ny = para_H%mole%nb_act-1
+
+  SELECT CASE (para_CRP%Channel_AT_TS%option)
+  CASE (1) ! Lucien Dupuy, one degenerate frequency
+    wy    = para_CRP%Channel_AT_TS%w1
+    zpe   = HALF*ny*wy
+    EneTS = para_CRP%Channel_AT_TS%EneTS
+    nv    = int( (Ene-zpe-EneTS)/wy )
+
+    nb_channels = 1
+    IF ( nv > 0 ) THEN
+      DO i=1,nv
+        nb_channels = nb_channels + combination(i,ny)
+      END DO
+    END IF
+
+  CASE (2) ! ny frequencies at TS with basis set (SG4)
+    allocate(nbSize(para_H%para_AllBasis%BasisnD%nb_basis-1))
+    allocate(tab_ib(para_H%para_AllBasis%BasisnD%nb_basis-1))
+    EneTS = para_CRP%Channel_AT_TS%EneTS
+
+    LB = para_H%para_AllBasis%BasisnD%L_SparseBasis
+
+    DO ib=2,para_H%para_AllBasis%BasisnD%nb_basis
+      nbSize(ib-1) = para_H%para_AllBasis%BasisnD%tab_basisPrimSG(LB,ib)%nb
+    END DO
+
+
+    allocate(tab_i_TO_l(para_H%para_AllBasis%BasisnD%nb_basis-1))
+    DO ib=2,para_H%para_AllBasis%BasisnD%nb_basis
+      nb = para_H%para_AllBasis%BasisnD%tab_basisPrimSG(LB,ib)%nb
+      CALL alloc_dnSVM(tab_i_TO_l(ib-1),nb)
+      IF (para_H%para_AllBasis%BasisnD%tab_basisPrimSG(LB,ib)%nb_basis < 1) THEN
+        tab_i_TO_l(ib-1)%vec(:) = para_H%para_AllBasis%BasisnD%tab_basisPrimSG(LB,ib)%nDindB%Tab_L(:)
+      ELSE
+        DO i=1,nb
+          n = para_H%para_AllBasis%BasisnD%tab_basisPrimSG(LB,ib)%nDindB%Tab_L(i)
+          tab_i_TO_l(ib-1)%vec(i) = get_L_FROM_Basis_L_TO_n(para_H%para_AllBasis%BasisnD%tab_basisPrimSG(LB,ib)%L_TO_nb,n)
+        END DO
+      END IF
+    END DO
+
+
+    nDindB_Channels%packed = .TRUE. ! with false the mapping is too long !!
+    CALL init_nDindexPrim(nDindB_Channels,ny,nbSize,                            &
+                          type_OF_nDindex=5,Lmax=LB,tab_i_TO_l=tab_i_TO_l)
+
+
+    nb_channels = 1
+    CALL init_nDval_OF_nDindex(nDindB_Channels,tab_ib)
+    DO ib=1,nDindB_Channels%Max_nDI
+      CALL ADD_ONE_TO_nDindex(nDindB_Channels,tab_ib,iG=ib)
+      tab_ib(:) = tab_ib(:)-1
+      EneChannel = sum(tab_ib(:)*para_CRP%Channel_AT_TS%w(:)) +                 &
+                  HALF*sum(para_CRP%Channel_AT_TS%w)
+      IF (debug) write(out_unitp,*) 'ib,tab_ib(:)-1',ib,tab_ib,' :',            &
+                                    EneChannel,EneTS + EneChannel
+      IF (Ene >= EneTS + EneChannel) nb_channels = nb_channels + 1
+    END DO
+
+
+    DO ib=1,size(tab_i_TO_l)
+      CALL dealloc_dnSVM(tab_i_TO_l(ib))
+    END DO
+    deallocate(tab_i_TO_l)
+
+    CALL dealloc_nDindex(nDindB_Channels)
+
+    deallocate(nbSize)
+    deallocate(tab_ib)
+
+  CASE (3) ! With the energy of the "inactive" basis functions
+
+    !write(out_unitp,*) 'size BasisnD%EneH0',size(BasisnD%EneH0)
+    !write(out_unitp,*) 'BasisnD%EneH0',BasisnD%EneH0(:)
+
+
+    ! first the energy of BasisnD%tab
+    SELECT CASE (BasisnD%SparseGrid_type)
+    CASE (0) ! Direct product
+      E0_func_of_s = BasisnD%tab_Pbasis(1)%Pbasis%EneH0(1)
+      ! IF (debug) Then
+      !   write(out_unitp,*) 'BasisnD%tab_Pbasis(1)%Pbasis%EneH0',BasisnD%tab_Pbasis(1)%Pbasis%EneH0
+      !   write(out_unitp,*) 'BasisnD%tab_Pbasis(2)%Pbasis%EneH0',BasisnD%tab_Pbasis(2)%Pbasis%EneH0
+      ! END IF
+
+    CASE (1,2,4) ! Sparse basis
+      E0_func_of_s = BasisnD%tab_basisPrimSG(BasisnD%L_SparseBasis,1)%EneH0(1)
+    END SELECT
+    IF (debug) write(out_unitp,*) 'E0_func_of_s',E0_func_of_s
+
+    allocate(nDval(BasisnD%nb_basis))
+
+    EneTS = para_CRP%Channel_AT_TS%EneTS
+
+    nb_channels = 1
+    CALL init_nDval_OF_nDindex(BasisnD%nDindB,nDval)
+    DO ib=1,BasisnD%nb
+      CALL ADD_ONE_TO_nDindex(BasisnD%nDindB,nDval)
+      IF (nDval(1) == 1) Then
+        EneChannel = BasisnD%EneH0(ib) - E0_func_of_s
+        IF (debug) THEN
+          write(out_unitp,*) ib,'nDval',nDval
+          write(out_unitp,*) ib,'EneChannel',EneChannel
+        END IF
+        write(out_unitp,*) 'Ene       ',Ene
+        write(out_unitp,*) 'EneChannel',EneChannel
+
+        IF (Ene >= EneChannel) nb_channels = nb_channels + 1
+      END IF
+    END DO
+    deallocate(nDval)
+
+  END SELECT
+
+  IF (print_level > 1 .OR. debug)  write(out_unitp,*) 'nb_channels',nb_channels
+  IF (debug) THEN
+    write(out_unitp,*)
+    write(out_unitp,*) 'END ',name_sub
+    CALL flush_perso(out_unitp)
+  END IF
+
+END FUNCTION ChannelNumber_AT_TS
+
+
 END MODULE mod_CRP

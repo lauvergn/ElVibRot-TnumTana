@@ -111,7 +111,7 @@
 !----- Parameters to set the operators --------------------------------
       TYPE (param_ReadOp)            :: para_ReadOp
 
-      integer                        :: i,j,rk,rl,i_term,iOp,it
+      integer                        :: i,j,rk,rl,i_term,iOp,it,ib
       integer                        :: nq,nb_ba,nb_bi,nb_be,nb_bie
       logical                        :: spectral_H
       real (kind=Rkind), allocatable :: Qana(:),Qact(:)
@@ -259,7 +259,7 @@
       CALL alloc_NParray(Qana,(/ mole%nb_var /),"Qana",name_sub)
       CALL get_Qact0(Qana,mole%ActiveTransfo)
 
-      CALL read_analyse(para_ana,Qana)
+      CALL read_analyse(para_ana,Qana,mole)
 
       CALL dealloc_NParray(Qana,"Qana",name_sub)
 
@@ -671,8 +671,11 @@
       IF (associated(mole%RPHTransfo)) THEN
         CALL Set_paraPRH(mole,para_Tnum,para_AllBasis%BasisnD)
       END IF
+
       IF (para_propa%para_Davidson%NewVec_type == 4 .OR. para_ana%CRP > 0) THEN
         CALL RecSet_EneH0(para_Tnum,mole,para_AllBasis%BasisnD,para_ReadOp)
+        !pot_Qref is added here, because it has been removed in the RecSet_EneH0 caclulations
+        para_AllBasis%BasisnD%EneH0 = para_AllBasis%BasisnD%EneH0 + para_ReadOp%pot_Qref
       END IF
 
       write(out_unitp,*)

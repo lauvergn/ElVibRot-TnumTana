@@ -109,7 +109,7 @@
       TYPE (param_AllBasis) :: para_AllBasis
 
       integer :: Get_nbPERsym_FROM_SymAbelianOFAllBasis ! function
-      
+
 !----- variables divers ----------------------------------------------------------------
       integer           :: i,ip,i_baie,f_baie,id,nb_ScalOp
       integer           :: nb_baie_sym,nb_bi,nb_be,nb_ba,nb_bie
@@ -134,13 +134,13 @@
 
       write(out_unitp,*) ' END VIB: initialization of variables'
       write(out_unitp,*) '================================================='
-    
+
       write(out_unitp,*)
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' VIB: BEGINNING ini_data'
       CALL time_perso('ini_data ini')
       write(out_unitp,*)
-  
+
       !CALL system_mem_usage(memory_RSS,'before ini_data')
 
       CALL     ini_data(const_phys,para_Tnum,mole,                      &
@@ -168,7 +168,7 @@
       !> sub_qa_bhe should be refined later
       !para_AllOp%tab_Op(1)%Grid_save_ac
 !#if(run_MPI)
-!      Grid_allco=.FALSE.  
+!      Grid_allco=.FALSE.
 !#endif
       write(out_unitp,*)
       write(out_unitp,*) '================================================='
@@ -211,7 +211,7 @@
 !      Grid_allco=.True.
 !#endif
 !---------------------------------------------------------------------------------------
-!      contraction of the active basis set with HADA basis 
+!      contraction of the active basis set with HADA basis
 !---------------------------------------------------------------------------------------
       IF (para_H%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC .AND. para_H%nb_bi>1) THEN
         IF(MPI_id==0) THEN
@@ -250,10 +250,10 @@
 !       => Time-dependent calculation
 !---------------------------------------------------------------------------------------
         write(out_unitp,*) 'Propogation start'
-        
+
         CALL init_psi(WP0(1),para_H,cplx=.TRUE.)
         write(out_unitp,*) 'Propogation initialized'
-  
+
         ! building of WP0 for WP propagation ------------------------------------------
         IF (.NOT. para_ana%control .AND. para_propa%type_WPpropa /=100) THEN
           IF(MPI_id==0) THEN
@@ -263,7 +263,7 @@
             CALL time_perso('psi0 ini')
             write(out_unitp,*)
           ENDIF
-          
+
           IF ( .NOT. abs(para_propa%type_WPpropa) == 33 .AND.           &
                .NOT. abs(para_propa%type_WPpropa) == 34) THEN
 
@@ -335,7 +335,7 @@
 
           END IF ! for .NOT. abs(para_propa%type_WPpropa) == 33
 
-          IF(MPI_id==0) THEN 
+          IF(MPI_id==0) THEN
             write(out_unitp,*)
             CALL time_perso('psi0 end')
             write(out_unitp,*) ' VIB: END Generate Psi0'
@@ -397,7 +397,7 @@
             CALL time_perso('Spectral: All Op')
             write(out_unitp,*)
           ENDIF
-  
+
           DO i=1,size(para_AllOp%tab_Op)
             IF (i == 2) CYCLE
             CALL sub_MatOp(para_AllOp%tab_Op(i),para_ana%print)
@@ -435,9 +435,9 @@
             write(out_unitp,*) '================================================='
             write(out_unitp,*)
           ENDIF
-        END IF ! IF (para_H%Make_Mat .AND. .NOT. para_H%spectral) 
+        END IF ! IF (para_H%Make_Mat .AND. .NOT. para_H%spectral)
         !================================================================
-        !================================================================ 
+        !================================================================
 
         !================================================================
         !===== Hmax calculation
@@ -469,7 +469,7 @@
         write(out_unitp,*)
         !================================================================
         !================================================================
- 
+
         !================================================================
         !==== propagation or control
         !================================================================
@@ -574,7 +574,7 @@
             write(out_unitp,*) '================================================='
             write(out_unitp,*)
           ENDIF
-        END IF ! for para_H%Make_Mat   
+        END IF ! for para_H%Make_Mat
         !================================================================
         !================================================================
 
@@ -628,8 +628,6 @@
             write(out_unitp,*) '================================================'
             write(out_unitp,*)
           ENDIF
-          nullify(para_Dip)
-          STOP 'CRP'
         END IF ! for .NOT. para_H%cplx .AND. para_ana%CRP > 0
         CALL flush_perso(out_unitp)
 
@@ -713,8 +711,8 @@
             write(out_unitp,*) '================================================='
             write(out_unitp,*)
           ENDIF
-  
-        ELSE ! for para_ana%davidson .OR. para_ana%arpack .OR. para_ana%filter
+
+        ELSE IF (para_ana%CRP == 0) THEN ! for para_ana%davidson .OR. para_ana%arpack .OR. para_ana%filter
           IF(MPI_id==0) THEN
             write(out_unitp,*)
             write(out_unitp,*) '================================================='
@@ -723,13 +721,13 @@
             write(out_unitp,*)
             write(out_unitp,*)
           ENDIF
-   
+
           nb_diago  = para_H%nb_tot
           max_diago = para_H%nb_tot
 
           nullify(Tab_Psi)
           IF(keep_MPI) CALL alloc_array(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
-         
+
           IF(keep_MPI) THEN
             DO i=1,max_diago
               CALL init_psi(Tab_psi(i),para_H,para_H%cplx)
@@ -801,7 +799,7 @@
             nullify(para_H%Cmat)
           END IF
           para_ana%max_ana = nb_diago
-          
+
           IF(MPI_id==0) THEN
             write(out_unitp,*)
             write(out_unitp,*)
@@ -815,53 +813,55 @@
         !===============================================================
         !===============================================================
 
+
         !===============================================================
         !===============================================================
-        write(out_unitp,*)
-        write(out_unitp,*) '================================================='
-        write(out_unitp,*) ' VIB: BEGINNING WAVE FUNCTION ANALYSIS'
-        CALL time_perso('sub_analyse ini')
-        write(out_unitp,*)
+        IF (para_ana%CRP == 0) THEN
+          write(out_unitp,*)
+          write(out_unitp,*) '================================================='
+          write(out_unitp,*) ' VIB: BEGINNING WAVE FUNCTION ANALYSIS'
+          CALL time_perso('sub_analyse ini')
+          write(out_unitp,*)
 
-        IF(keep_MPI) CALL sub_analyse(Tab_Psi,nb_diago,para_H,                         &
-                                       para_ana,para_intensity,para_AllOp,const_phys)
+          IF(keep_MPI) CALL sub_analyse(Tab_Psi,nb_diago,para_H,                         &
+                                         para_ana,para_intensity,para_AllOp,const_phys)
 
-        CALL flush_perso(out_unitp)
+          CALL flush_perso(out_unitp)
 
-        IF (.NOT. para_H%cplx .AND. para_ana%VibRot) THEN
-          CALL sub_VibRot(Tab_Psi,para_ana%max_ana,para_H,para_ana)
+          IF (.NOT. para_H%cplx .AND. para_ana%VibRot) THEN
+            CALL sub_VibRot(Tab_Psi,para_ana%max_ana,para_H,para_ana)
+          END IF
+          CALL flush_perso(out_unitp)
+
+          !===============================================================
+          ! Spectral representation of operator
+          !===============================================================
+          print_mat = (para_ana%MaxWP_TO_Write_MatOp >= nb_diago)
+          IF (para_ana%Spectral_ScalOp) THEN
+            DO iOp=1,size(para_AllOp%tab_Op)
+
+              IF (para_AllOp%tab_Op(iOp)%n_Op == -1) CYCLE ! S
+              IF (para_AllOp%tab_Op(iOp)%spectral) THEN
+                write(out_unitp,*) '==========================================='
+                write(out_unitp,*) ' Spectral representation of: ',        &
+                                   trim(para_AllOp%tab_Op(iOp)%name_Op)
+
+                CALL sub_build_MatOp(Tab_Psi,nb_diago,                     &
+                                     para_AllOp%tab_Op(iOp),.TRUE.,print_mat)
+
+                write(out_unitp,*) '==========================================='
+                CALL flush_perso(out_unitp)
+              END IF
+            END DO
+          END IF
+
+          write(out_unitp,*)
+          write(out_unitp,*)
+          CALL time_perso('sub_analyse end')
+          write(out_unitp,*) ' VIB: END WAVE FUNCTION ANALYSIS'
+          write(out_unitp,*) '================================================='
+          write(out_unitp,*)
         END IF
-        CALL flush_perso(out_unitp)
-
-        !===============================================================
-        ! Spectral representation of operator
-        !===============================================================
-        print_mat = (para_ana%MaxWP_TO_Write_MatOp >= nb_diago)
-        IF (para_ana%Spectral_ScalOp) THEN
-          DO iOp=1,size(para_AllOp%tab_Op)
-
-            IF (para_AllOp%tab_Op(iOp)%n_Op == -1) CYCLE ! S
-            IF (para_AllOp%tab_Op(iOp)%spectral) THEN
-              write(out_unitp,*) '==========================================='
-              write(out_unitp,*) ' Spectral representation of: ',        &
-                                 trim(para_AllOp%tab_Op(iOp)%name_Op)
-
-              CALL sub_build_MatOp(Tab_Psi,nb_diago,                     &
-                                   para_AllOp%tab_Op(iOp),.TRUE.,print_mat)
-
-              write(out_unitp,*) '==========================================='
-              CALL flush_perso(out_unitp)
-            END IF
-          END DO
-        END IF
-
-        write(out_unitp,*)
-        write(out_unitp,*)
-        CALL time_perso('sub_analyse end')
-        write(out_unitp,*) ' VIB: END WAVE FUNCTION ANALYSIS'
-        write(out_unitp,*) '================================================='
-        write(out_unitp,*)
-
         !===============================================================
         !===============================================================
 
@@ -869,10 +869,12 @@
         ! Deallocation of Tab_Psi
         !===============================================================
         IF(keep_MPI) THEN
+        IF (associated(Tab_Psi)) THEN
           DO i=1,size(Tab_Psi)
             CALL dealloc_psi(Tab_Psi(i))
           END DO
           CALL dealloc_array(Tab_Psi,"Tab_Psi","vib")
+        END IF
         ENDIF
         !===============================================================
         !===============================================================
@@ -978,7 +980,7 @@
         CALL time_perso('sub_AnalysePsy_ScalOp')
         write(out_unitp,*)
         write(out_unitp,*) 'nb_scalar_Op',para_H%para_ReadOp%nb_scalar_Op
-        
+
         IF(MPI_id==0) THEN
           iOp = 2
           nb_ScalOp = para_H%para_ReadOp%nb_scalar_Op
@@ -1025,7 +1027,6 @@
 
 !=====================================================================
 !=====================================================================
-
 !=====================================================================
 !       deallocated memories
 !=====================================================================
@@ -1062,10 +1063,10 @@
       write(out_unitp,*) '================================================'
 
       END SUBROUTINE vib
-!======================================================================================= 
-!======================================================================================= 
-!=======================================================================================       
-      
+!=======================================================================================
+!=======================================================================================
+!=======================================================================================
+
       SUBROUTINE sub_GridTOBasis_test(max_mem)
       USE mod_system
       USE mod_Constant
@@ -1375,7 +1376,7 @@ para_mem%mem_debug = .FALSE.
            para_Tnum%With_Cart_Transfo = (para_Tnum%JJ>0) .AND. mole%Cart_transfo
         END IF
       END IF
-      
+
       IF(MPI_id==0) THEN
         write(out_unitp,*)
         write(out_unitp,*)

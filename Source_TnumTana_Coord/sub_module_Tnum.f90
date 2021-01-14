@@ -951,13 +951,13 @@ MODULE mod_Tnum
       mole%nb_extra_Coord  = nb_extra_Coord
 
 !=======================================================================
-!===== New Coordinates transformation ==================================
+!===== New Coordinate transformations ==================================
 !=======================================================================
       IF (mole%nb_Qtransfo > 1) THEN
         IF(MPI_id==0) THEN
           write(out_unitp,*) '================================================='
           write(out_unitp,*) '================================================='
-          write(out_unitp,*) 'New Coordinates transformation',mole%nb_Qtransfo
+          write(out_unitp,*) 'New Coordinate transformations',mole%nb_Qtransfo
           write(out_unitp,*) '================================================='
         ENDIF
         CALL alloc_array(mole%tab_Qtransfo,(/mole%nb_Qtransfo/),        &

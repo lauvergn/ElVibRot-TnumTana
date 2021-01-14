@@ -50,7 +50,8 @@
    PRIVATE
 
      TYPE PrimOp_t
-        real (kind=Rkind) :: pot0                 = ZERO       ! reference energy (minimum) of the PES
+        real (kind=Rkind) :: pot0                 = ZERO       ! reference energy of the PES (given)
+        real (kind=Rkind) :: pot_Qref             = ZERO       ! Energy at the reference geometry (calculated)
         real (kind=Rkind) :: min_pot              =  HUGE(ONE) ! minimum of the PES
         real (kind=Rkind) :: max_pot              = -HUGE(ONE) ! minimum of the PES
 
@@ -133,6 +134,7 @@
       write(out_unitp,*) 'PrimOp%opt',PrimOp%opt
 
       write(out_unitp,*) 'PrimOp%pot0',PrimOp%pot0
+      write(out_unitp,*) 'PrimOp%pot_Qref',PrimOp%pot_Qref
       write(out_unitp,*) 'PrimOp%min_pot',PrimOp%min_pot
       write(out_unitp,*) 'PrimOp%max_pot',PrimOp%max_pot
       write(out_unitp,*) 'PrimOp%HarD',PrimOp%HarD
@@ -208,6 +210,7 @@
       !write(out_unitp,*) ' BEGINNING PrimOp2_TO_PrimOp1'
 
       PrimOp1%pot0                  = PrimOp2%pot0
+      PrimOp1%pot_Qref              = PrimOp2%pot_Qref
       PrimOp1%min_pot               = PrimOp2%min_pot
       PrimOp1%max_pot               = PrimOp2%max_pot
       PrimOp1%nb_elec               = PrimOp2%nb_elec
@@ -273,6 +276,7 @@
       !write(out_unitp,*) ' BEGINNING dealloc_PrimOp'
 
       PrimOp%pot0                  = ZERO
+      PrimOp%pot_Qref              = ZERO
       PrimOp%min_pot               = HUGE(ONE)
       PrimOp%max_pot               = -HUGE(ONE)
       PrimOp%nb_elec               = 1

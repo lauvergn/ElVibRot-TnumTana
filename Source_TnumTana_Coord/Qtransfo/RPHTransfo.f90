@@ -29,6 +29,7 @@
       MODULE mod_RPHTransfo
       use mod_system
       USE mod_dnSVM
+      USE mod_freq
       IMPLICIT NONE
 
       PRIVATE
@@ -93,7 +94,6 @@
         integer          :: nb_Qa       = 0 ! number of active grid points
         real(kind=Rkind), pointer :: C_ini(:,:) => null() ! Calculation dnC... at Qact1
 
-        !TYPE (Tab_RPHpara_AT_Qact1_t), allocatable :: Tab2_RPHpara_AT_Qact1(:) ! for Smolyak grids
         TYPE (Type_RPHpara_AT_Qact1),  pointer     :: tab_RPHpara_AT_Qact1(:) => null()
 
 
@@ -109,6 +109,9 @@
 
         logical                    :: purify_hess      = .FALSE. ! if .TRUE., we use a H0 symmetrized (default : .FALSE.)
         logical                    :: eq_hess          = .FALSE. ! if .TRUE., we use a H0 symmetrized (default : .FALSE.)
+
+        TYPE (degenerate_freq_t)   :: degenerate_freq
+
 
         integer, pointer           :: Qinact2n_sym(:)  => null() ! Qinact2n_sym(nb_inact2n)  : for the symmetrized H0
         integer, pointer           :: Qinact2n_eq(:,:) => null() ! Qinact2n_eq(nb_inact2n,nb_inact2n) : for the symmetrized H0
@@ -177,7 +180,8 @@
 
       character (len=Name_len) :: name0
 
-      logical            :: gradTOpot0,H0_sym,diabatic_freq,purify_hess,eq_hess
+      logical            :: gradTOpot0,H0_sym,diabatic_freq,purify_hess,eq_hess,&
+                            read_degen_freq
       real (kind=Rkind)  :: step             = ONETENTH**4 ! step for numerical derivatives
       integer            :: nb_Ref,Switch_Type
 
@@ -185,18 +189,19 @@
       character (len=*), parameter :: name_sub='Read_RPHTransfo'
 
        NAMELIST /RPH/ gradTOpot0,H0_sym,diabatic_freq,purify_hess,eq_hess,step, &
-                      nb_Ref,Switch_Type
+                      nb_Ref,Switch_Type,read_degen_freq
 
-       RPHTransfo%option = option
+       RPHTransfo%option    = option
 
-       step          = ONETENTH**5
-       diabatic_freq = .FALSE.
-       gradTOpot0    = .FALSE.
-       H0_sym        = .FALSE.
-       purify_hess   = .FALSE.
-       eq_hess       = .FALSE.
-       nb_Ref        = 0
-       Switch_Type   = 0
+       step                 = ONETENTH**5
+       diabatic_freq        = .FALSE.
+       gradTOpot0           = .FALSE.
+       H0_sym               = .FALSE.
+       purify_hess          = .FALSE.
+       eq_hess              = .FALSE.
+       read_degen_freq      = .FALSE.
+       nb_Ref               = 0
+       Switch_Type          = 0
 
        read(in_unitp,RPH,IOSTAT=err_read)
        IF (err_read /= 0) THEN
@@ -269,6 +274,11 @@
        ELSE
          CALL Set_RPHTransfo(RPHTransfo,list_act_OF_Qdyn,               &
                        gradTOpot0,diabatic_freq,step,purify_hess,eq_hess)
+       END IF
+       IF (read_degen_freq) then
+         CALL Read_degenerate_freq(RPHTransfo%degenerate_freq,nb_inact21)
+       ELSE
+         CALL Init_degenerate_freq(RPHTransfo%degenerate_freq,nb_inact21)
        END IF
 
        IF (option == 2) THEN
@@ -578,6 +588,8 @@
                         "RPHTransfo%tab_equi",name_sub)
       END IF
 
+      CALL dealloc_degenerate_freq(RPHTransfo%degenerate_freq)
+
       CALL dealloc_RPHpara2(RPHTransfo%RPHpara2)
 
       IF (debug) THEN
@@ -795,9 +807,12 @@
         END DO
       END IF
 
-      write(out_unitp,*) 'step:        ',RPHTransfo%step
-      write(out_unitp,*) 'purify_hess: ',RPHTransfo%purify_hess
-      write(out_unitp,*) 'eq_hess:     ',RPHTransfo%eq_hess
+      write(out_unitp,*) 'step:           ',RPHTransfo%step
+      write(out_unitp,*) 'purify_hess:    ',RPHTransfo%purify_hess
+      write(out_unitp,*) 'eq_hess:        ',RPHTransfo%eq_hess
+      write(out_unitp,*) 'diabatic_freq:  ',RPHTransfo%diabatic_freq
+
+
 
       IF (RPHTransfo%purify_hess) THEN
 
@@ -823,6 +838,8 @@
         write(out_unitp,*) "========================================"
         write(out_unitp,*)
       END IF
+
+      CALL Write_degenerate_freq(RPHTransfo%degenerate_freq)
 
       IF (RPHTransfo%option == 2) THEN
         CALL Write_RPHpara2(RPHTransfo%RPHpara2)
@@ -910,11 +927,11 @@
         END DO
       END IF
 
-      RPHTransfo2%step          = RPHTransfo1%step
-      RPHTransfo2%diabatic_freq = RPHTransfo1%diabatic_freq
-      RPHTransfo2%gradTOpot0    = RPHTransfo1%gradTOpot0
-      RPHTransfo2%purify_hess   = RPHTransfo1%purify_hess
-      RPHTransfo2%eq_hess       = RPHTransfo1%eq_hess
+      RPHTransfo2%step            = RPHTransfo1%step
+      RPHTransfo2%diabatic_freq   = RPHTransfo1%diabatic_freq
+      RPHTransfo2%gradTOpot0      = RPHTransfo1%gradTOpot0
+      RPHTransfo2%purify_hess     = RPHTransfo1%purify_hess
+      RPHTransfo2%eq_hess         = RPHTransfo1%eq_hess
 
       IF (associated(RPHTransfo1%Qinact2n_sym)) THEN
         CALL alloc_array(RPHTransfo2%Qinact2n_sym,(/nb_inact21/),       &
@@ -936,6 +953,8 @@
                         "RPHTransfo2%tab_equi",name_sub)
         RPHTransfo2%tab_equi = RPHTransfo1%tab_equi
       END IF
+
+      RPHTransfo2%degenerate_freq = RPHTransfo1%degenerate_freq
 
       IF (RPHTransfo2%option == 2) THEN
         CALL RPHpara2_1TORPHpara2_2(RPHTransfo1%RPHpara2,RPHTransfo2%RPHpara2)
@@ -1505,6 +1524,7 @@
        END IF
 
        IF (inTOout) THEN
+
          !-----------------------------------------------
          ! 1): find RPHpara_AT_Qact1 in the tables
          ! 1a) Qact1

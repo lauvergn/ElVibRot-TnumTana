@@ -1247,7 +1247,7 @@ MODULE mod_dnGG_dng
       real (kind=Rkind), allocatable :: At(:,:)
 
 !----- for debuging --------------------------------------------------
-      
+
       logical, parameter :: debug = .FALSE.
 !     logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub = 'sub3_dnA_num'
@@ -1422,7 +1422,7 @@ MODULE mod_dnGG_dng
        real (kind=Rkind) :: A(ndimA,ndimA),Mtot
        real (kind=Rkind) :: d0x(ncart)
        real (kind=Rkind) :: d1x(ncart,nb_act)
-       
+
 
        real (kind=Rkind) :: Ixx,Iyy,Izz,Ixy,Ixz,Iyz
 
@@ -1581,7 +1581,7 @@ MODULE mod_dnGG_dng
        real (kind=Rkind) :: d0x(ncart)
        real (kind=Rkind) :: d1x(ncart,nb_act)
        real (kind=Rkind) :: d2x(ncart,nb_act,nb_act)
-       
+
 
        real (kind=Rkind) :: Ixx,Iyy,Izz,Ixy,Ixz,Iyz
 

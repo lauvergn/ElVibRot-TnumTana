@@ -331,6 +331,8 @@
 
           CALL alloc_array(Qtransfo%NMTransfo,'Qtransfo%NMTransfo',name_sub)
 
+          Qtransfo%NMTransfo%NM_TO_sym_ver    = opt_transfo
+
           Qtransfo%NMTransfo%purify_hess      = purify_hess
           Qtransfo%NMTransfo%eq_hess          = eq_hess
           Qtransfo%NMTransfo%k_Half           = k_Half
@@ -1344,7 +1346,12 @@
           force_print_loc = .FALSE.
         END IF
 
-        IF (Qtransfo%print_done .AND. .NOT. force_print_loc) RETURN
+        IF (Qtransfo%print_done .AND. .NOT. force_print_loc) THEN
+          write(out_unitp,*) 'name_transfo,num_transfo: ',     &
+                         trim(Qtransfo%name_transfo),Qtransfo%num_transfo
+          write(out_unitp,*) ' Writing already done.'
+          RETURN
+        END IF
         write(out_unitp,*) 'BEGINNING ',name_sub
 
         Qtransfo%print_done = .TRUE.

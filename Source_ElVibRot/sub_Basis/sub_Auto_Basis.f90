@@ -494,6 +494,15 @@
       IF (debug) THEN
         write(out_unitp,*)
         write(out_unitp,*) 'BEGINNING ',name_sub,rec
+        IF (allocated(BasisnD%EneH0)) write(out_unitp,*) 'BasisnD%EneH0',BasisnD%EneH0
+        DO ib=1,BasisnD%nb_basis
+          IF (allocated(BasisnD%tab_Pbasis(ib)%Pbasis%EneH0)) THEN
+            write(out_unitp,*) ib,'tab_Pbasis(i)....%EneH0',BasisnD%tab_Pbasis(ib)%Pbasis%EneH0
+          ELSE
+            write(out_unitp,*) ib,'tab_Pbasis(i)....%EneH0: not allocated'
+          END IF
+        END DO
+
       END IF
 !---------------------------------------------------------------------
 
@@ -508,12 +517,12 @@
         CALL flush_perso(out_unitp)
       END IF
 
-      IF (allocated(BasisnD%EneH0))    THEN
-        CALL dealloc_NParray(BasisnD%EneH0,"BasisnD%EneH0",name_sub)
-      END IF
-      CALL alloc_NParray(BasisnD%EneH0,(/ BasisnD%nb /),"BasisnD%EneH0",name_sub)
-
       IF (BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done) THEN
+
+        IF (allocated(BasisnD%EneH0))    THEN
+          CALL dealloc_NParray(BasisnD%EneH0,"BasisnD%EneH0",name_sub)
+        END IF
+        CALL alloc_NParray(BasisnD%EneH0,(/ BasisnD%nb /),"BasisnD%EneH0",name_sub)
 
         SELECT CASE (BasisnD%SparseGrid_type)
         CASE (0) ! Direct product
@@ -607,9 +616,19 @@
         END IF
 
       ELSE ! packed basis
+        IF (debug) write(out_unitp,*) 'RecSet_EneH0: packed basis'
 
         IF (.NOT. BasisnD%auto_contrac) THEN ! Because, it is done with an auto_contracted basis
           CALL Set_EneH0_OF_PackedBasis(BasisnD,para_Tnum,mole,para_ReadOp)
+        ELSE
+          IF (debug) THEN
+            write(out_unitp,*) 'auto_contrac basis <d0b(:,ib) I H0 I d0b(:,ib)>'
+            DO i=1,BasisnD%nb
+              RWU_E  = REAL_WU(BasisnD%EneH0(i),'au','E')
+              write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
+            END DO
+            CALL flush_perso(out_unitp)
+          END IF
         END IF
       END IF ! for BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done
 
@@ -656,8 +675,10 @@
       TYPE (CoordType)      :: mole_loc
       TYPE (Tnum)           :: para_Tnum_loc
 
-      integer       :: i,iact,isym
-      TYPE(REAL_WU) :: RWU_E
+
+      integer           :: i,iact,isym,iterm00
+      real (kind=Rkind) :: Vmin
+      TYPE(REAL_WU)     :: RWU_E
 
 
 !-------------------------------------------------------------------------
@@ -675,6 +696,11 @@
         !CALL RecWrite_basis(basis_Set,write_all=.TRUE.)
       END IF
 !---------------------------------------------------------------------
+      IF (allocated(basis_Set%EneH0))    THEN
+        CALL dealloc_NParray(basis_Set%EneH0,"basis_Set%EneH0",name_sub)
+      END IF
+      CALL alloc_NParray(basis_Set%EneH0,[basis_Set%nb],"basis_Set%EneH0",name_sub)
+
       ! modification of mole => mole_loc and para_Tnum => para_Tnum_loc
       para_Tnum_loc                  = para_Tnum
       para_Tnum_loc%JJ               = 0
@@ -744,6 +770,10 @@
       ! make the Grid
       CALL sub_qa_bhe(para_AllOp_loc)
 
+      !iterm00 = para_AllOp_loc%tab_Op(1)%derive_term_TO_iterm(0,0)
+      !Vmin    = para_AllOp_loc%tab_Op(1)%OpGrid(iterm00)%Op_min
+      !write(6,*) 'Vmin',Vmin
+
       !---------------------------------------------------------------
       ! make the matrix of H
       CALL sub_MatOp(para_AllOp_loc%tab_Op(1),debug)
@@ -765,8 +795,11 @@
                         "basis_set%EneH0",name_sub)
 
       !----- diagonal elements of Rmat ---------------------------------
+      ! Warning (DML 12/01/2021), pot0 remove from EneH0, otherwise ...
+      ! ... %pot_Qref is present several times in the mutidimentional basis (DP, Smolyak)
       DO i=1,basis_set%nb
-        basis_set%EneH0(i) = para_AllOp_loc%tab_Op(1)%Rmat(i,i)
+        basis_set%EneH0(i) = para_AllOp_loc%tab_Op(1)%Rmat(i,i) -               &
+            para_AllOp_loc%tab_Op(1)%para_ReadOp%pot_Qref
       END DO
 
       IF (print_level > -1 .OR. debug) THEN
@@ -1460,6 +1493,9 @@
       integer          :: nbc
       real(kind=Rkind) :: ene0,auTOcm_inv
       TYPE(REAL_WU)    :: RWU_E,RWU_DE
+
+      integer           :: iterm00
+      real (kind=Rkind) :: Vmin
 !-------------------------------------------------------------------------
 
 !----- for debuging --------------------------------------------------
@@ -1562,6 +1598,10 @@
       !CALL read_OpGrid_OF_Op(para_AllOp_loc%tab_Op(1)) ! with direct=1
       !para_AllOp_loc%tab_Op(1)%OpGrid(1)%Grid(:,1,1) = ZERO ! test for pl0, fourier
 
+      !iterm00 = para_AllOp_loc%tab_Op(1)%derive_term_TO_iterm(0,0)
+      !Vmin    = para_AllOp_loc%tab_Op(1)%OpGrid(iterm00)%Op_min
+      !write(6,*) 'Vmin',Vmin
+
       !---------------------------------------------------------------
       ! make the matrix of H
       CALL sub_MatOp(para_AllOp_loc%tab_Op(1),debug)
@@ -1623,9 +1663,10 @@
       IF (allocated(basis_AutoContract%EneH0))    THEN
         CALL dealloc_NParray(basis_AutoContract%EneH0,"basis_set%EneH0",name_sub)
       END IF
-      CALL alloc_NParray(basis_AutoContract%EneH0,(/ nbc /),                     &
+      CALL alloc_NParray(basis_AutoContract%EneH0,(/ nbc /),                    &
                         "basis_AutoContract%EneH0",name_sub)
-      basis_AutoContract%EneH0(:) = para_AllOp_loc%tab_Op(1)%Rdiag(1:nbc)
+      basis_AutoContract%EneH0(:) = para_AllOp_loc%tab_Op(1)%Rdiag(1:nbc)  -    &
+          para_AllOp_loc%tab_Op(1)%para_ReadOp%pot_Qref
 
       !---------------------------------------------------------------
       ! contraction => nb=nbc
@@ -1656,6 +1697,7 @@
         END DO
         CALL flush_perso(out_unitp)
       END IF
+
 
       !-----------------------------------------------------------------
       ! deallocation ....

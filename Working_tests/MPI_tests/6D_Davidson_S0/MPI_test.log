@@ -1,0 +1,70 @@
+QMLibDIR variable exists
+************************************************************************
+***********OS:               Darwin
+***********COMPILER:         mpifort
+***********OPTIMIZATION:     0
+***********COMPILER VERSION: 
+***********COMPILED with:    
+***********OpenMP:           
+***********Arpack:           0
+***********CERFACS:          0
+***********Lapack:           1
+***********QMLib:            
+***********F90FLAGS:         -O0 -g    
+***********F90LIB:           -framework Accelerate
+***********subsystem file:   sub_system.f
+***********DIR of potlib.a:  
+***********potLib:           
+***********INVHYP:           1
+************************************************************************
+***********************************************************************
+***************** TNUM_ver: 41.5
+***************** TANA_ver: 11.5
+****************** EVR_ver: 182.12
+***********************************************************************
+***********************************************************************
+*********** to test code MPI: make test
+*********** to clean MPI test: make cleantest
+***********************************************************************
+=> obj directory: obj/obj_mpifort_
+make vib script
+./scripts/make_vib.sh /Users/lauvergn/git/ElVibRot mpifort
+chmod a+x vib
+cd /Users/lauvergn/git/ElVibRot/obj/obj_mpifort_ ; mpifort -O0 -g       -c /Users/lauvergn/git/ElVibRot/Source_Lib/sub_system/sub_module_NumParameters.f90
+run with MPI
+script finished
+QMLibDIR variable exists
+************************************************************************
+***********OS:               Darwin
+***********COMPILER:         mpifort
+***********OPTIMIZATION:     0
+***********COMPILER VERSION: 
+***********COMPILED with:    
+***********OpenMP:           
+***********Arpack:           0
+***********CERFACS:          0
+***********Lapack:           1
+***********QMLib:            
+***********F90FLAGS:         -O0 -g    
+***********F90LIB:           -framework Accelerate
+***********subsystem file:   sub_system.f
+***********DIR of potlib.a:  
+***********potLib:           
+***********INVHYP:           1
+************************************************************************
+***********************************************************************
+***************** TNUM_ver: 41.5
+***************** TANA_ver: 11.5
+****************** EVR_ver: 182.12
+***********************************************************************
+***********************************************************************
+*********** to test code MPI: make test
+*********** to clean MPI test: make cleantest
+***********************************************************************
+=> obj directory: obj/obj_mpifort_
+make vib script
+./scripts/make_vib.sh /Users/lauvergn/git/ElVibRot mpifort
+chmod a+x vib
+cd /Users/lauvergn/git/ElVibRot/obj/obj_mpifort_ ; mpifort -O0 -g       -c /Users/lauvergn/git/ElVibRot/Source_Lib/sub_system/sub_module_NumParameters.f90
+run with MPI
+script finished
