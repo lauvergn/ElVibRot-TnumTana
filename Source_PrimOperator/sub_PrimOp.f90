@@ -120,6 +120,9 @@
       real (kind=Rkind)                 :: Qact(mole%nb_var)
       integer                           :: err_io
       character (len=Name_longlen)      :: name_dum
+      integer                           :: get_Qmodel_ndim ! function
+      integer                           :: ndim
+      integer                           :: print_level_EVRT
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='Sub_init_dnOp'
@@ -131,6 +134,7 @@
          write(out_unitp,*) 'PrimOp%nb_scalar_Op ',PrimOp%nb_scalar_Op
          CALL flush_perso(out_unitp)
        END IF
+       print_level_EVRT = print_level
 !-----------------------------------------------------------
 !     allocate(d0MatOp(PrimOp%nb_scalar_Op+2))
 !
@@ -151,12 +155,26 @@
         IF (debug) write(out_unitp,*) 'Initialization with Quantum Model Lib'
 
 #if __QML == 1
+        ! those subroutines modify print_level (from EVRT), because another variable
+        ! with the same name is also present in QML
         IF (PrimOp%pot_itQtransfo == 0) THEN ! Cartesian coordinates
           CALL sub_Init_Qmodel_Cart(mole%ncart_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
         ELSE
           CALL sub_Init_Qmodel(mole%nb_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
         END IF
+        print_level = print_level_EVRT
+
         IF (print_level > 0 .OR. debug) CALL sub_Write_Qmodel(out_unitp)
+        IF (debug) CALL set_Qmodel_Print_level(min(1,print_level))
+
+        ndim = get_Qmodel_ndim()
+        IF (ndim > mole%nb_var) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) ' ndim from  Qmodel ("Quantum Model Lib") is ...'
+          write(out_unitp,*) '  larger than mole%nb_var!'
+          write(out_unitp,*) '  ndim,mole%nb_var',ndim,mole%nb_var
+          STOP 'ndim from QML is too large'
+        END IF
 #else
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
@@ -172,8 +190,8 @@
           CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,(/ mole%ncart_act /),'Qit_TO_QQMLib',name_sub)
           PrimOp%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%ncart_act) /)
         ELSE
-          CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,(/ mole%nb_act /),'Qit_TO_QQMLib',name_sub)
-          PrimOp%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%nb_act) /)
+          CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,[ndim],'Qit_TO_QQMLib',name_sub)
+          PrimOp%Qit_TO_QQMLib(:) = [ (k,k=1,ndim) ]
 
           IF (PrimOp%pot_itQtransfo == mole%nb_Qtransfo-1) THEN ! Qdyn Coord
             read(in_unitp,*,IOSTAT=err_io) name_dum,PrimOp%Qit_TO_QQMLib
@@ -185,6 +203,8 @@
               write(out_unitp,*) ' Check your data !!'
               STOP
             END IF
+          ELSE
+          write(out_unitp,*) ' WARNING:  "Qit_TO_QQMLib" is not read!'
           END IF
         END IF
         !write(out_unitp,*) '  PrimOp%pot_itQtransfo',PrimOp%pot_itQtransfo
@@ -529,9 +549,10 @@
           IF (PrimOp%QMLib) THEN
             IF (debug) THEN
                write(out_unitp,*) 'With Quantum Model Lib'
+               write(out_unitp,*) 'Qit_TO_QQMLib',PrimOp%Qit_TO_QQMLib
+               write(out_unitp,*) 'size(Qit),Qit',size(Qit),Qit
                write(out_unitp,*) 'QQMLib',Qit(PrimOp%Qit_TO_QQMLib)
             END IF
-
 #if __QML == 1
             IF (PrimOp%pot_itQtransfo == 0) THEN
               CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(:,:,itermE),Qit)
@@ -3610,7 +3631,7 @@ stop
       END FUNCTION pot2
 
 
-      SUBROUTINE Finalize_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole,PrimOp,Tana)
+      SUBROUTINE Finalize_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole,PrimOp,Tana,KEO_only)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
@@ -3624,22 +3645,31 @@ stop
       TYPE (Tnum)        :: para_Tnum
       TYPE (CoordType)   :: mole
       TYPE (PrimOp_t)    :: PrimOp
-      logical, optional  :: Tana
+      logical, optional  :: Tana,KEO_only
 
 
 !-------------------------------------------------------------------------
 !-------------------------------------------------------------------------
-      real (kind=Rkind) :: Qact(mole%nb_var)
-      TYPE (Type_dnVec) :: dnx
+      real (kind=Rkind)                 :: Qact(mole%nb_var)
+      TYPE (Type_dnVec)                 :: dnx
 
-      real (kind=Rkind), allocatable :: hCC(:,:),GGdef(:,:)
-      logical :: Gref,Qref,tab_skip_transfo(mole%nb_Qtransfo),Tana_loc
-      integer :: iQa,nb_act1_RPH,nb_inact21_RPH,it,nderiv
-      real (kind=Rkind) :: auTOcm_inv
+      real (kind=Rkind), allocatable    :: hCC(:,:),GGdef(:,:)
+      logical                           :: Gref,Qref
+      logical                           :: tab_skip_transfo(mole%nb_Qtransfo)
+      logical                           :: Tana_loc,KEO_only_loc
+
+      integer                           :: iQa,nb_act1_RPH,nb_inact21_RPH
+      integer                           :: it,nderiv
+
+      real (kind=Rkind)                 :: auTOcm_inv
 
       real (kind=Rkind)                 :: freq(mole%nb_act)
       TYPE (param_d0MatOp), allocatable :: d0MatOp(:)
       integer                           :: iOp,nb_Op
+
+      integer                           :: get_Qmodel_ndim ! function
+      integer                           :: i,j,iact,jact,ndim
+      real (kind=Rkind), allocatable    :: GGdef_Qmodel(:,:)
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
@@ -3647,10 +3677,10 @@ stop
       !logical, parameter :: debug = .FALSE.
       logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
-      !IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL flush_perso(out_unitp)
-      !END IF
+  !IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    CALL flush_perso(out_unitp)
+  !END IF
 !-----------------------------------------------------------
 
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
@@ -3659,6 +3689,12 @@ stop
         Tana_loc = Tana
       ELSE
         Tana_loc = .TRUE.
+      END IF
+
+      IF (present(KEO_only)) THEN
+        KEO_only_loc = KEO_only
+      ELSE
+        KEO_only_loc = .FALSE.
       END IF
 
 !-----------------------------------------------------------------------
@@ -3751,14 +3787,32 @@ stop
   END IF
   !Gref = .FALSE.
   IF (Gref) THEN
+    CALL alloc_NPArray(GGdef,[mole%nb_act,mole%nb_act],'GGdef',name_sub)
+    GGdef(:,:) = ZERO
     CALL get_Qact0(Qact,mole%ActiveTransfo)
-    CALL alloc_NPArray(GGdef,(/ mole%nb_act,mole%nb_act /),'GGdef',name_sub)
     IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
+    flush(out_unitp)
 
     IF (PrimOp%QMLib .AND. PrimOp%pot_itQtransfo /= 0) THEN
     ! when Qcart is used the size of G form QML is [ncart_cat,ncart_act]
 #if __QML == 1
-      CALL get_Qmodel_GGdef(GGdef)
+      ndim = get_Qmodel_ndim()
+      CALL alloc_NPArray(GGdef_Qmodel,[ndim,ndim],'GGdef_Qmodel',name_sub)
+      CALL get_Qmodel_GGdef(GGdef_Qmodel)
+      IF (print_level > 1) THEN
+        write(out_unitp,*) ' GGdef_Qmodel'
+        CALL Write_Mat(GGdef_Qmodel,out_unitp,5)
+      END IF
+      DO i=1,ndim
+      DO j=1,ndim
+        iact = mole%liste_QdynTOQact(PrimOp%Qit_TO_QQMLib(i))
+        jact = mole%liste_QdynTOQact(PrimOp%Qit_TO_QQMLib(j))
+        IF (iact <= mole%nb_act .AND. jact <= mole%nb_act) THEN
+          GGdef(jact,iact) = GGdef_Qmodel(j,i)
+        END IF
+      END DO
+      END DO
+      CALL dealloc_NPArray(GGdef_Qmodel,'GGdef_Qmodel',name_sub)
 #else
       write(out_unitp,*) 'ERROR in ',name_sub
       write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
@@ -3830,32 +3884,33 @@ stop
         write(out_unitp,*) '================================================='
       END IF
 
-      write(out_unitp,*) '================================================='
-      CALL get_Qact0(Qact,mole%ActiveTransfo)
+      IF (.NOT. KEO_only_loc) THEN
+        write(out_unitp,*) '================================================='
+        CALL get_Qact0(Qact,mole%ActiveTransfo)
 
-      nb_Op = 2 + PrimOp%nb_scalar_Op + PrimOp%nb_CAP + PrimOp%nb_FluxOp
-      allocate(d0MatOp(nb_Op))
+        nb_Op = 2 + PrimOp%nb_scalar_Op + PrimOp%nb_CAP + PrimOp%nb_FluxOp
+        allocate(d0MatOp(nb_Op))
 
-      CALL Init_d0MatOp(d0MatOp(1),type_Op=0,nb_Qact=mole%nb_act1,              &
-                        nb_ie=PrimOp%nb_elec)
-      DO iOp=2,size(d0MatOp) ! for the scalar operators
-        CALL Init_d0MatOp(d0MatOp(iOp),type_Op=0,nb_Qact=mole%nb_act1,          &
+        CALL Init_d0MatOp(d0MatOp(1),type_Op=0,nb_Qact=mole%nb_act1,              &
                           nb_ie=PrimOp%nb_elec)
-      END DO
+        DO iOp=2,size(d0MatOp) ! for the scalar operators
+          CALL Init_d0MatOp(d0MatOp(iOp),type_Op=0,nb_Qact=mole%nb_act1,          &
+                            nb_ie=PrimOp%nb_elec)
+        END DO
 
-      CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,PrimOp)
+        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,PrimOp)
 
-      PrimOp%pot_Qref = PrimOp%min_pot
+        PrimOp%pot_Qref = PrimOp%min_pot
 
-      write(out_unitp,*) ' Energy at the reference geometry, pot_Qref:',PrimOp%pot_Qref
+        write(out_unitp,*) ' Energy at the reference geometry, pot_Qref:',PrimOp%pot_Qref
 
-      DO iOp=1,size(d0MatOp)
-        CALL dealloc_d0MatOp(d0MatOp(iOp))
-      END DO
-      deallocate(d0MatOp)
+        DO iOp=1,size(d0MatOp)
+          CALL dealloc_d0MatOp(d0MatOp(iOp))
+        END DO
+        deallocate(d0MatOp)
 
-      write(out_unitp,*) '================================================='
-
+        write(out_unitp,*) '================================================='
+      END IF
 
 !-----------------------------------------------------------
       !IF (debug) THEN

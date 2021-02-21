@@ -35,7 +35,7 @@
 
       TYPE Type_Rot2CoordTransfo
         integer                  :: num_Rot
-        integer                  :: list_2Coord(2) = (/ 0,0 /)
+        integer                  :: list_2Coord(2) = [0,0]
       END TYPE Type_Rot2CoordTransfo
 
       PUBLIC :: Type_Rot2CoordTransfo, alloc_Rot2CoordTransfo, dealloc_Rot2CoordTransfo

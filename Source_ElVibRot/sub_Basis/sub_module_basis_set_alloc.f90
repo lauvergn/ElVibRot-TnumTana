@@ -135,6 +135,8 @@
           logical                        :: contrac                = .FALSE.  !  .T. if the basis set is contracted
           logical                        :: auto_contrac           = .FALSE.  ! it is done automatically
           logical                        :: contrac_analysis       = .FALSE.  ! perform contraction, but only for the analysis (RD)
+          logical                        :: contrac_Rvec_only      = .FALSE.  !  .T. if the vecors are calculated, but the basis set is not contracted
+
           real (kind=Rkind)              :: max_ene_contrac        = ONETENTH ! maximal energy to select nbc (in ua)
           integer                        :: max_nbc                = 0
           integer                        :: min_nbc                = 0
@@ -834,6 +836,7 @@
            basis_set%contrac                = .FALSE.
            basis_set%auto_contrac           = .FALSE.
            basis_set%contrac_analysis       = .FALSE.
+           basis_set%contrac_Rvec_only      = .FALSE.
            basis_set%max_ene_contrac        = ONETENTH
            basis_set%POGridRep              = .FALSE.
            basis_set%POGridRep_polyortho    = .FALSE.
@@ -1664,6 +1667,8 @@
         basis_set1%contrac                = basis_set2%contrac
         basis_set1%auto_contrac           = basis_set2%auto_contrac
         basis_set1%contrac_analysis       = basis_set2%contrac_analysis
+        basis_set1%contrac_Rvec_only      = basis_set2%contrac_Rvec_only
+
         basis_set1%max_ene_contrac        = basis_set2%max_ene_contrac
         basis_set1%make_cubature          = basis_set2%make_cubature
         basis_set1%Restart_make_cubature  = basis_set2%Restart_make_cubature
@@ -2570,6 +2575,8 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
        write(out_unitp,*) Rec_line,'contrac',basis_set%contrac
        write(out_unitp,*) Rec_line,'auto_contrac',basis_set%auto_contrac
        write(out_unitp,*) Rec_line,'contrac_analysis',basis_set%contrac_analysis
+       write(out_unitp,*) Rec_line,'contrac_RVec_Only',basis_set%contrac_RVec_Only
+
        write(out_unitp,*) Rec_line,'POGridRep,POGridRep_polyortho',basis_set%POGridRep,basis_set%POGridRep_polyortho
        write(out_unitp,*) Rec_line,'nqPLUSnbc_TO_nqc',basis_set%nqPLUSnbc_TO_nqc
        write(out_unitp,*) Rec_line,'max_ene_contrac',basis_set%max_ene_contrac
@@ -2891,6 +2898,8 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
        write(out_unitp,*) Rec_line,'contrac',basis_set%contrac
        write(out_unitp,*) Rec_line,'auto_contrac',basis_set%auto_contrac
        write(out_unitp,*) Rec_line,'contrac_analysis',basis_set%contrac_analysis
+       write(out_unitp,*) Rec_line,'contrac_RVec_Only',basis_set%contrac_RVec_Only
+
        write(out_unitp,*) Rec_line,'POGridRep,POGridRep_polyortho',basis_set%POGridRep,basis_set%POGridRep_polyortho
        write(out_unitp,*) Rec_line,'nqPLUSnbc_TO_nqc',basis_set%nqPLUSnbc_TO_nqc
        write(out_unitp,*) Rec_line,'max_ene_contrac',basis_set%max_ene_contrac

@@ -181,7 +181,7 @@ CONTAINS
       nb_scalar_Op = 0
       nb_CAP       = 0
       pot_cplx     = .FALSE.
-      nb_elec      = 1
+      nb_elec      = 0
 
       pot_act              = .FALSE.
       pot_cart             = .FALSE.
@@ -286,7 +286,7 @@ CONTAINS
         STOP
       END IF
 
-      IF (nb_elec < 1) nb_elec = 1
+      IF (nb_elec < 1 .AND. .NOT. QMLib) nb_elec = 1
       para_Tnum%para_PES_FromTnum%opt            = opt
       para_Tnum%para_PES_FromTnum%pot0           = convRWU_TO_R_WITH_WorkingUnit(pot0)
       para_Tnum%para_PES_FromTnum%HarD           = HarD

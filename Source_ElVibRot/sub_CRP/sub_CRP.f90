@@ -54,6 +54,7 @@ MODULE mod_CRP
     real (kind=Rkind)              :: w1    = 0.015625_Rkind
     real (kind=Rkind), allocatable :: w(:)
     integer                        :: option = 1
+    integer                        :: nb_channels_added = 1
   END TYPE CRP_Channel_AT_TS_t
   TYPE param_CRP
     real (kind=Rkind) :: Ene    = ZERO            ! Total energy for CRP
@@ -1714,6 +1715,7 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
                  PRINT *, REAL(D(i))
               END DO
               PRINT *, ' '
+              nconv = 0 ! DML 18/01/2021
            ELSE IF ( info .EQ. 3) THEN
               PRINT *, ' '
               PRINT *, ' No shifts could be applied during implicit', &
@@ -2501,8 +2503,9 @@ IMPLICIT NONE
   TYPE (REAL_WU)                  :: w1,EneTS
   character (len=Name_len)        :: w_unit = 'cm-1'
   real (kind=Rkind)               :: conv
+  integer                         :: nb_channels_added
 
-  NAMELIST / Channel_AT_TS / option,w1,EneTS,w_unit
+  NAMELIST / Channel_AT_TS / option,w1,EneTS,w_unit,nb_channels_added
 
 
 !----- for debuging --------------------------------------------------
@@ -2523,13 +2526,15 @@ IMPLICIT NONE
   EneTS               = REAL_WU(0.0105_Rkind,'au','E')
   w1                  = REAL_WU(0.015625_Rkind,'au','E')
   option              = 1
+  nb_channels_added   = 1
 
   read(in_unitp,Channel_AT_TS)
   write(out_unitp,Channel_AT_TS)
 
-  Channel_AT_TS_var%EneTS   = convRWU_TO_RWU(EneTS)
-  Channel_AT_TS_var%w1      = convRWU_TO_RWU(w1)
-  Channel_AT_TS_var%option  = option
+  Channel_AT_TS_var%EneTS             = convRWU_TO_RWU(EneTS)
+  Channel_AT_TS_var%w1                = convRWU_TO_RWU(w1)
+  Channel_AT_TS_var%option            = option
+  Channel_AT_TS_var%nb_channels_added = nb_channels_added
 
   IF (option == 2) Then
     conv = get_Conv_au_TO_unit(quantity='E',Unit=w_unit,err_unit=err_unit)
@@ -2573,8 +2578,9 @@ IMPLICIT NONE
   END IF
 !-----------------------------------------------------------
 
-    write(out_unitp,*) 'option      ',Channel_AT_TS%option
-    write(out_unitp,*) 'EneTS (au)  ',Channel_AT_TS%EneTS
+    write(out_unitp,*) 'option            ',Channel_AT_TS%option
+    write(out_unitp,*) 'EneTS (au)        ',Channel_AT_TS%EneTS
+    write(out_unitp,*) 'nb_channels_added ',Channel_AT_TS%nb_channels_added
     SELECT CASE (Channel_AT_TS%option)
     CASE(1)
       write(out_unitp,*) 'w1 (au) ',Channel_AT_TS%w1
@@ -2693,8 +2699,8 @@ IMPLICIT NONE
     CALL init_nDindexPrim(nDindB_Channels,ny,nbSize,                            &
                           type_OF_nDindex=5,Lmax=LB,tab_i_TO_l=tab_i_TO_l)
 
+    nb_channels = para_CRP%Channel_AT_TS%nb_channels_added
 
-    nb_channels = 1
     CALL init_nDval_OF_nDindex(nDindB_Channels,tab_ib)
     DO ib=1,nDindB_Channels%Max_nDI
       CALL ADD_ONE_TO_nDindex(nDindB_Channels,tab_ib,iG=ib)
@@ -2741,7 +2747,8 @@ IMPLICIT NONE
 
     EneTS = para_CRP%Channel_AT_TS%EneTS
 
-    nb_channels = 1
+    nb_channels = para_CRP%Channel_AT_TS%nb_channels_added
+
     CALL init_nDval_OF_nDindex(BasisnD%nDindB,nDval)
     DO ib=1,BasisnD%nb
       CALL ADD_ONE_TO_nDindex(BasisnD%nDindB,nDval)

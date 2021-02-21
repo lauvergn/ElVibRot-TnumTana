@@ -12,7 +12,8 @@ $(lib_dep_mod_memory):$(OBJ)/sub_module_memory.o
 lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o                \
                    $(OBJ)/sub_io.o $(OBJ)/sub_derive.o $(OBJ)/sub_function.o           \
                    $(OBJ)/sub_polyortho.o $(OBJ)/sub_integration.o                     \
-                   $(OBJ)/sub_trans_mat.o $(OBJ)/sub_diago.o $(OBJ)/ThreeDTransfo.o    \
+                   $(OBJ)/sub_trans_mat.o $(OBJ)/sub_diago.o                           \
+                   $(OBJ)/ThreeDTransfo.o $(OBJ)/TwoDTransfo.o                         \
                    $(OBJ)/OneDTransfo.o $(OBJ)/QTOXanaTransfo.o $(OBJ)/ZmatTransfo.o   \
                    $(OBJ)/CartesianTransfo.o $(OBJ)/Lib_QTransfo.o                     \
                    $(OBJ)/sub_module_Tana_OpnD.o $(OBJ)/sub_module_Tana_OpEl.o         \
@@ -98,7 +99,7 @@ $(lib_dep_mod_Tana_Op1D):$(OBJ)/sub_module_Tana_Op1D.o
 #mod_dnSVM
 lib_dep_mod_dnSVM=$(OBJ)/Lib_QTransfo.o $(OBJ)/sub_module_DInd.o                       \
                   $(OBJ)/BunchPolyTransfo.o $(OBJ)/QTOXanaTransfo.o                    \
-                  $(OBJ)/OneDTransfo.o $(OBJ)/ThreeDTransfo.o                          \
+                  $(OBJ)/OneDTransfo.o $(OBJ)/ThreeDTransfo.o $(OBJ)/TwoDTransfo.o     \
                   $(OBJ)/Rot2CoordTransfo.o $(OBJ)/FlexibleTransfo.o                   \
                   $(OBJ)/GeneTransfo.o $(OBJ)/HyperSpheTransfo.o                       \
                   $(OBJ)/RectilinearNM_Transfo.o $(OBJ)/LinearNMTransfo.o              \

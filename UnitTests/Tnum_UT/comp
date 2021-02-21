@@ -1,0 +1,5 @@
+
+DIR_EVRT=../..
+
+cd $DIR_EVRT
+ make tnum-dist

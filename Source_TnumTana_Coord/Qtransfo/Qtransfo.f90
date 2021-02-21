@@ -38,6 +38,7 @@
       USE mod_RectilinearNM_Transfo
       USE mod_OneDTransfo
       USE mod_ThreeDTransfo
+      USE mod_TwoDTransfo
       USE mod_Rot2CoordTransfo
       USE mod_FlexibleTransfo
       USE mod_GeneTransfo
@@ -78,6 +79,7 @@
 
           TYPE (Type_oneDTransfo),      pointer :: oneDTransfo(:)      => null()
           TYPE (Type_ThreeDTransfo),    pointer :: ThreeDTransfo       => null()
+          TYPE (Type_TwoDTransfo),      pointer :: TwoDTransfo(:)      => null()
           TYPE (Type_Rot2CoordTransfo), pointer :: Rot2CoordTransfo(:) => null()
           TYPE (Type_HyperSpheTransfo)          :: HyperSpheTransfo
           integer,                      pointer :: list_Qin_TO_Qout(:) => null() ! "order" transfo
@@ -427,6 +429,14 @@
           CALL sub_Type_Name_OF_Qin(Qtransfo,"Q3D")
           Qtransfo%type_Qin(:) =0
 
+        CASE ('twod')
+          Qtransfo%nb_Qin  = nb_Qin
+
+          CALL Read_TwoDTransfo(Qtransfo%TwoDTransfo,nb_transfo,nb_Qin)
+
+          CALL sub_Type_Name_OF_Qin(Qtransfo,"Q2D")
+          Qtransfo%type_Qin(:) =0
+
         CASE ('rot2coord')
           Qtransfo%nb_Qin  = nb_Qin
 
@@ -434,7 +444,6 @@
 
           CALL sub_Type_Name_OF_Qin(Qtransfo,"Qrot2Coord")
           Qtransfo%type_Qin(:) = 0
-
 
         CASE ('flexible')
           Qtransfo%nb_Qin  = nb_Qin
@@ -706,6 +715,7 @@
         write(nio,*) '"oneD"'
         write(nio,*) '"InfRange" or "InfiniteRange"'
         write(nio,*) '"ThreeD"'
+        write(nio,*) '"TwoD"'
         write(nio,*) '"Rot2Coord"'
 
         write(nio,*)
@@ -783,7 +793,8 @@
 
         ! ==== ThreeDTransfo ========================
         CALL dealloc_ThreeDTransfo(Qtransfo%ThreeDTransfo)
-
+        ! ==== TwoDTransfo ========================
+        CALL dealloc_TwoDTransfo(Qtransfo%TwoDTransfo)
         ! ==== Rot2CoordTransfo ========================
         CALL dealloc_Rot2CoordTransfo(Qtransfo%Rot2CoordTransfo)
 
@@ -1032,6 +1043,10 @@
         CALL ThreeDTransfo1TOThreeDTransfo2(Qtransfo1%ThreeDTransfo,    &
                                             Qtransfo2%ThreeDTransfo)
 
+      CASE ('twod')
+        CALL TwoDTransfo1TOTwoDTransfo2(Qtransfo1%TwoDTransfo,    &
+                                        Qtransfo2%TwoDTransfo)
+
       CASE ('rot2coord')
         CALL Rot2CoordTransfo1TORot2CoordTransfo2(                      &
                   Qtransfo1%Rot2CoordTransfo,Qtransfo2%Rot2CoordTransfo)
@@ -1219,6 +1234,10 @@
       CASE ('threed')
         CALL calc_ThreeDTransfo(dnQin,dnQout,Qtransfo%ThreeDTransfo,    &
                                 nderiv,inTOout_loc)
+
+      CASE ('twod')
+        CALL calc_TwoDTransfo(dnQin,dnQout,Qtransfo%TwoDTransfo,    &
+                              nderiv,inTOout_loc)
 
       CASE ('rot2coord')
         CALL calc_Rot2CoordTransfo(dnQin,dnQout,                        &
@@ -1457,6 +1476,9 @@
 
         CASE ('threed')
           CALL Write_ThreeDTransfo(Qtransfo%ThreeDTransfo)
+
+        CASE ('twod')
+          CALL Write_TwoDTransfo(Qtransfo%TwoDTransfo)
 
         CASE ('rot2coord')
           CALL Write_Rot2CoordTransfo(Qtransfo%Rot2CoordTransfo)

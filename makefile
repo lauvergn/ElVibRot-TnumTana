@@ -12,7 +12,7 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -620,7 +620,7 @@ Obj_TanaPrim = $(OBJ)/sub_module_Tana_OpEl.o \
 Obj_Coord = \
   $(OBJ)/Lib_QTransfo.o \
   $(OBJ)/BunchPolyTransfo.o $(OBJ)/ZmatTransfo.o $(OBJ)/QTOXanaTransfo.o $(OBJ)/CartesianTransfo.o \
-  $(OBJ)/OneDTransfo.o $(OBJ)/ThreeDTransfo.o $(OBJ)/Rot2CoordTransfo.o \
+  $(OBJ)/OneDTransfo.o $(OBJ)/ThreeDTransfo.o $(OBJ)/TwoDTransfo.o $(OBJ)/Rot2CoordTransfo.o \
   $(OBJ)/FlexibleTransfo.o $(OBJ)/GeneTransfo.o \
   $(OBJ)/HyperSpheTransfo.o $(OBJ)/LinearNMTransfo.o $(OBJ)/RectilinearNM_Transfo.o \
   $(OBJ)/sub_freq.o $(OBJ)/RPHTransfo.o \
@@ -1063,6 +1063,8 @@ $(OBJ)/OneDTransfo.o:$(DirTNUM)/Qtransfo/OneDTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/OneDTransfo.f90
 $(OBJ)/ThreeDTransfo.o:$(DirTNUM)/Qtransfo/ThreeDTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/ThreeDTransfo.f90
+$(OBJ)/TwoDTransfo.o:$(DirTNUM)/Qtransfo/TwoDTransfo.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/TwoDTransfo.f90
 $(OBJ)/Rot2CoordTransfo.o:$(DirTNUM)/Qtransfo/Rot2CoordTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/Rot2CoordTransfo.f90
 $(OBJ)/FlexibleTransfo.o:$(DirTNUM)/Qtransfo/FlexibleTransfo.f90
