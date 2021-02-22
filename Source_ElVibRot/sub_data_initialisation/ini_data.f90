@@ -157,7 +157,8 @@
 !-----------------------------------------------------------------------
 !--------------------- TO finalize the coordinates (NM) and the KEO ----
 !     If needed, Tana must be done after auto_basis, otherwise nrho(:) could be wrong
-      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_ReadOp%PrimOp_t,Tana=.FALSE.)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_ReadOp%PrimOp_t,  &
+                                          Tana=.FALSE.,KEO_only=.FALSE.)
 !-----------------------------------------------------------------------
 
       IF(MPI_id==0) THEN

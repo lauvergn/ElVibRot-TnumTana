@@ -3694,7 +3694,7 @@ stop
       IF (present(KEO_only)) THEN
         KEO_only_loc = KEO_only
       ELSE
-        KEO_only_loc = .FALSE.
+        KEO_only_loc = .TRUE.
       END IF
 
 !-----------------------------------------------------------------------

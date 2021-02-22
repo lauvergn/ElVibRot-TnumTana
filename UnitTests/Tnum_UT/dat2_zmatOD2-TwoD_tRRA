@@ -9,7 +9,7 @@ $DIR_EVRT/Tnum90.exe << ** > res
 1000. 1
 1000. 1 2
 
- &Coord_transfo name_transfo='TwoD' nb_transfo=1 /
+ &Coord_transfo name_transfo='TwoD' /
    &TwoD Type_2D=2 list_TwoD_coord=1,2 d0=1. / #tQ1=Q1/(Q2-2*d0) ; tQ2=Q2
 
  &Coord_transfo name_transfo='active' /
