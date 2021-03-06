@@ -43,10 +43,9 @@
      MODULE mod_Auto_Basis
      IMPLICIT NONE
 
-     !PRIVATE
-     !PUBLIC Auto_basis, sub_MatOp_HADA
-
-     PRIVATE AutoParam_basis_Q0,AutoParam_basis_scaleQ,check_OutOfRange,Set_InitRange
+     PRIVATE
+     PUBLIC :: Auto_basis, RecAuto_basis, RecSet_EneH0, AutoParam_basis
+     PUBLIC :: basis_TO_AllBasis, All_param_TO_para_H, sub_MatOp_HADA
 
      CONTAINS
 
@@ -58,6 +57,7 @@
       SUBROUTINE Auto_basis(para_Tnum,mole,para_AllBasis,para_ReadOp)
       use mod_Coord_KEO
       use mod_PrimOp
+      USE mod_nDindex
       use mod_basis, only: param_allbasis, sgtype, get_nq_from_basis,  &
                            get_nqa_from_basis,                         &
                            get_nb_bi_from_allbasis, recwrite_basis,    &
@@ -72,20 +72,20 @@
 
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType), target :: mole,mole_loc
-      TYPE (Tnum), target    :: para_Tnum
+      TYPE (Tnum),      target :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
       TYPE (param_AllBasis), target :: para_AllBasis
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ReadOp) :: para_ReadOp
+      TYPE (param_ReadOp), intent(in) :: para_ReadOp
 
 
 !----- local variables
-      integer :: nb_elec_save,nb_bi_save,max_nb_ba_ON_HAC_save,JJ_save
-      integer :: Grid_omp_save
+      integer :: ib
+      integer, allocatable :: tab_nbc(:)
       integer :: nqa,nb_bi
-      logical :: With_BGG
+      logical :: With_BGG,contrac_RVecOnly
       real(kind=Rkind), allocatable :: TDParam(:)
       integer :: nb_TDParam
 
@@ -109,23 +109,47 @@
 
       mole_loc = mole
 
-      max_nb_ba_ON_HAC_save            = para_AllBasis%basis_ext2n%max_nb_ba_ON_HAC
-
-      nb_elec_save                     = para_ReadOp%nb_elec
-      para_ReadOp%nb_elec              = 1
-      nb_bi_save                       = get_nb_FROM_basis(para_AllBasis%Basis2n)
-      JJ_save                          = para_Tnum%JJ
-      para_Tnum%JJ                     = 0
-
       !> primary memory here
       CALL RecAuto_basis(para_Tnum,mole_loc,para_AllBasis%BasisnD,para_ReadOp)
+
+      contrac_RVecOnly = .FALSE.
+      IF (para_AllBasis%BasisnD%SparseGrid_type == 0) THEN ! not sparse basis
+        DO ib=1,para_AllBasis%BasisnD%nb_basis
+          contrac_RVecOnly = contrac_RVecOnly .OR. para_AllBasis%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_RVecOnly
+        END DO
+      END IF
+      IF (contrac_RVecOnly) THEN
+        write(out_unitp,*) 'Special traitment when contrac_RVecOnly=t'
+        IF (allocated(para_AllBasis%BasisnD%nDindB_contracted)) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) 'nDindB_contracted is allocated'
+          STOP 'ERROR in Auto_basis: nDindB_contracted is allocated'
+        END IF
+        CALL alloc_NParray(para_AllBasis%BasisnD%nDindB_contracted,'nDindB_contracted',name_sub)
+
+        CALL alloc_NParray(tab_nbc,[para_AllBasis%BasisnD%nb_basis],'tab_nbc',name_sub)
+        DO ib=1,para_AllBasis%BasisnD%nb_basis
+          IF (para_AllBasis%BasisnD%tab_Pbasis(ib)%Pbasis%contrac_RVecOnly) THEN
+            tab_nbc(ib) = para_AllBasis%BasisnD%tab_Pbasis(ib)%Pbasis%nbc
+          ELSE
+            tab_nbc(ib) = get_nb_FROM_basis(para_AllBasis%BasisnD%tab_Pbasis(ib)%Pbasis)
+          END IF
+        END DO
+        write(out_unitp,*) 'tab_nbc(:)',tab_nbc
+        IF (product(tab_nbc) <= 0) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) 'Wrong values in tab_nbc(:)',tab_nbc
+          STOP 'ERROR in Auto_basis: Wrong values in tab_nbc(:)'
+        END IF
+        CALL init_nDindexPrim(para_AllBasis%BasisnD%nDindB_contracted,          &
+                              para_AllBasis%BasisnD%nb_basis,tab_nbc,           &
+                              type_OF_nDindex=1) ! standard direct-product
+        CALL dealloc_NParray(tab_nbc,'tab_nbc',name_sub)
+        !CALL Write_nDindex(para_AllBasis%BasisnD%nDindB_contracted)
+      END IF
+
       CALL dealloc_CoordType(mole_loc)
       !CALL Write_SymAbelian(para_AllBasis%BasisnD%P_SymAbelian)
-
-      para_ReadOp%nb_elec                  = nb_elec_save
-      para_Tnum%JJ                         = JJ_save
-      !write(out_unitp,*) 'nb_bi ?',get_nb_bi_FROM_AllBasis(para_AllBasis)
-      !write(out_unitp,*) 'nb_bi ?',nb_bi_save ; STOP
 
       nqa = get_nqa_FROM_basis(para_AllBasis%BasisnD)
 
@@ -143,7 +167,7 @@
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) 'The number of grid points is < 1'
         write(out_unitp,*) ' nb_qa',nqa
-        STOP
+        STOP 'ERROR in Auto_basis: The number of grid points is < 1'
       END IF
       IF(keep_MPI) THEN
         IF (allocated(para_AllBasis%BasisnD%nDindB%nDsize))             &
@@ -197,14 +221,14 @@
       TYPE (basis) :: basisnD
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ReadOp) :: para_ReadOp
+      TYPE (param_ReadOp), intent(in) :: para_ReadOp
 
 
 !----- local variables
       TYPE (basis) :: basisnD_contrac
       logical :: Rec_call
       integer :: i,j,iact,isym,ibasis,jbasis,nb_ba,nb0,nbc0
-      integer :: nb_elec_save,n_h_save,max_nb_ba_ON_HAC_save
+      integer :: nb_elec_save,n_h_save
       real(kind=Rkind) :: ene0,Effi
 
       integer :: ib,ibi,val,ii,nq,i_SG,nb_SG
@@ -334,7 +358,6 @@
 
           ! direct product construction
           CALL sub_DirProd_basis(BasisnD)
-
           IF (Print_basis) write(out_unitp,*) 'direct_product done. Layer:',rec
         END IF
       ELSE ! primitive basis
@@ -371,7 +394,7 @@
       IF (BasisnD%contrac .AND. .NOT. BasisnD%BuildBasis_done) THEN
         IF (BasisnD%auto_contrac) THEN
 
-          !POGridRep
+          !PODVR
           IF (BasisnD%ndim == 1 .AND. BasisnD%POGridRep) THEN
             nb0  = BasisnD%nb  ! save the value before the contraction
             nbc0 = BasisnD%nbc ! save the value before the contraction
@@ -399,12 +422,15 @@
 
           BasisnD%POGridRep_polyortho = .FALSE.
 
-          IF (BasisnD%contrac_analysis) THEN
+          IF (BasisnD%contrac_RVecOnly .OR. BasisnD%contrac_analysis) THEN
             CALL basis2TObasis1(BasisnD_contrac,BasisnD)
             CALL Autocontract_basis(BasisnD_contrac,para_Tnum,mole,para_ReadOp)
-            CALL alloc_NParray(BasisnD%Rvec,shape(BasisnD_contrac%Rvec),&
-                              'BasisnD%Rvec',name_sub)
-            BasisnD%Rvec(:,:) = BasisnD_contrac%Rvec
+            !CALL alloc_NParray(BasisnD%Rvec,shape(BasisnD_contrac%Rvec),&
+            !                  'BasisnD%Rvec',name_sub)
+            !BasisnD%Rvec(:,:) = BasisnD_contrac%Rvec
+            CALL move_alloc(FROM=BasisnD_contrac%Rvec,TO=BasisnD%Rvec)
+            BasisnD%nbc       = BasisnD_contrac%nbc
+            CALL move_alloc(FROM=BasisnD_contrac%EneH0, TO=BasisnD%EneH0)
             CALL dealloc_basis(BasisnD_contrac)
           ELSE
             CALL Autocontract_basis(BasisnD,para_Tnum,mole,para_ReadOp)
@@ -415,12 +441,14 @@
 
         ELSE ! just contraction (not the automatic procedure)
 
-          IF (BasisnD%contrac_analysis) THEN
+          IF (BasisnD%contrac_RVecOnly .OR. BasisnD%contrac_analysis) THEN
             CALL basis2TObasis1(BasisnD_contrac,BasisnD)
             CALL sub_contraction_basis(BasisnD_contrac,.FALSE.)
-            CALL alloc_NParray(BasisnD%Rvec,shape(BasisnD_contrac%Rvec),&
-                              'BasisnD%Rvec',name_sub)
-            BasisnD%Rvec(:,:) = BasisnD_contrac%Rvec
+            !CALL alloc_NParray(BasisnD%Rvec,shape(BasisnD_contrac%Rvec),        &
+            !                  'BasisnD%Rvec',name_sub)
+            !BasisnD%Rvec(:,:) = BasisnD_contrac%Rvec
+            CALL move_alloc(FROM=BasisnD_contrac%Rvec,TO=BasisnD%Rvec)
+            BasisnD%nbc       = BasisnD_contrac%nbc
             CALL dealloc_basis(BasisnD_contrac)
           ELSE
             CALL sub_contraction_basis(BasisnD,.FALSE.)
@@ -429,7 +457,6 @@
           IF (Print_basis) write(out_unitp,*) 'Contract_basis done. Layer:    ',rec
 
         END IF
-
         !- d1b => d1BasisRep and  d2b => d2BasisRep ------------
         CALL sub_dnGB_TO_dnBB(BasisnD)
 
@@ -468,17 +495,14 @@
 
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType),    intent(in)    :: mole
-      TYPE (Tnum)                        :: para_Tnum
-
+      TYPE (Tnum),         intent(in)    :: para_Tnum
 !----- for the basis set ----------------------------------------------
       TYPE (basis),        intent(inout) :: basisnD
-
-
 !----- variables for the construction of H ---------------------------
       TYPE (param_ReadOp), intent(in)    :: para_ReadOp
 
 !----- local variables
-      integer             :: i,ib,L
+      integer             :: i,ib,L,nb
       integer             :: nDval(basisnD%nb_basis)
       TYPE(REAL_WU)       :: RWU_E
 
@@ -486,8 +510,8 @@
 !-------------------------------------------------------------------------
 
 !----- for debuging --------------------------------------------------
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub = 'RecSet_EneH0'
 !---------------------------------------------------------------------
       rec = rec + 1
@@ -519,96 +543,121 @@
 
       IF (BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done) THEN
 
-        IF (allocated(BasisnD%EneH0))    THEN
-          CALL dealloc_NParray(BasisnD%EneH0,"BasisnD%EneH0",name_sub)
+        IF (BasisnD%contrac_RVecOnly) THEN
+          IF (.NOT. BasisnD%auto_contrac) THEN
+            CALL Set_EneH0_OF_ContracBasis(BasisnD,para_Tnum,mole,para_ReadOp)
+          END IF
+        ELSE
+
+          IF (allocated(BasisnD%EneH0))    THEN
+            CALL dealloc_NParray(BasisnD%EneH0,"BasisnD%EneH0",name_sub)
+          END IF
+          CALL alloc_NParray(BasisnD%EneH0,[BasisnD%nb],"BasisnD%EneH0",name_sub)
+
+          SELECT CASE (BasisnD%SparseGrid_type)
+          CASE (0) ! Direct product
+
+            nb = 1
+            DO i=1,BasisnD%nb_basis
+              CALL RecSet_EneH0(para_Tnum,mole,                           &
+                                BasisnD%tab_Pbasis(i)%Pbasis,para_ReadOp)
+              nb = nb * size(BasisnD%tab_Pbasis(i)%Pbasis%EneH0)
+            END DO
+
+            IF (allocated(BasisnD%nDindB_contracted)) THEN
+
+              IF (nb /= BasisnD%nDindB_contracted%Max_nDI) STOP 'ERROR wrong EneH0 size'
+              CALL dealloc_NParray(BasisnD%EneH0,"BasisnD%EneH0",name_sub)
+              CALL alloc_NParray(BasisnD%EneH0,[BasisnD%nDindB_contracted%Max_nDI],"BasisnD%EneH0",name_sub)
+
+              DO ib=1,BasisnD%nDindB_contracted%Max_nDI
+                CALL calc_nDindex(BasisnD%nDindB_contracted,ib,nDval)
+                BasisnD%EneH0(ib) = ZERO
+                DO i=1,BasisnD%nb_basis
+                  BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                       &
+                                BasisnD%tab_Pbasis(i)%Pbasis%EneH0(nDval(i))
+                END DO
+              END DO
+            ELSE
+              DO ib=1,BasisnD%nb
+                CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
+                BasisnD%EneH0(ib) = ZERO
+                DO i=1,BasisnD%nb_basis
+                  BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                       &
+                                BasisnD%tab_Pbasis(i)%Pbasis%EneH0(nDval(i))
+                END DO
+              END DO
+            END IF
+
+          CASE (1) ! Sparse basis (Smolyak 1st implementation)
+
+            L = BasisnD%L_SparseBasis
+
+            DO i=1,BasisnD%nb_basis
+              CALL RecSet_EneH0(para_Tnum,mole,                           &
+                                BasisnD%tab_basisPrimSG(i,L),para_ReadOp)
+            END DO
+
+            DO ib=1,BasisnD%nb
+              CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
+
+              BasisnD%EneH0(ib) = ZERO
+              DO i=1,BasisnD%nb_basis
+                BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
+                              BasisnD%tab_basisPrimSG(i,L)%EneH0(nDval(i))
+              END DO
+            END DO
+
+          CASE (2) ! Sparse basis (Smolyak 2d implementation)
+
+            L = BasisnD%L_SparseBasis
+            DO i=1,BasisnD%nb_basis
+              CALL RecSet_EneH0(para_Tnum,mole,                           &
+                                BasisnD%tab_basisPrimSG(L,i),para_ReadOp)
+            END DO
+
+            DO ib=1,BasisnD%nb
+              CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
+
+              BasisnD%EneH0(ib) = ZERO
+              DO i=1,BasisnD%nb_basis
+                BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
+                              BasisnD%tab_basisPrimSG(L,i)%EneH0(nDval(i))
+              END DO
+            END DO
+
+
+          CASE (4) ! Sparse basis (Smolyak 4th implementation)
+
+            L = BasisnD%L_SparseBasis
+            DO i=1,BasisnD%nb_basis
+              CALL RecSet_EneH0(para_Tnum,mole,                           &
+                                BasisnD%tab_basisPrimSG(L,i),para_ReadOp)
+            END DO
+
+            CALL init_nDval_OF_nDindex(BasisnD%nDindB,nDval)
+            DO ib=1,BasisnD%nb
+              CALL ADD_ONE_TO_nDindex(BasisnD%nDindB,nDval)
+              !CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
+
+              BasisnD%EneH0(ib) = ZERO
+              DO i=1,BasisnD%nb_basis
+                BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
+                              BasisnD%tab_basisPrimSG(L,i)%EneH0(nDval(i))
+              END DO
+            END DO
+
+          CASE DEFAULT
+            write(out_unitp,*) ' ERROR in',name_sub
+            write(out_unitp,*) ' WRONG SparseGrid_type',BasisnD%SparseGrid_type
+            write(out_unitp,*) ' The possibilities are: 0, 1, 2, 4'
+            STOP
+          END SELECT
         END IF
-        CALL alloc_NParray(BasisnD%EneH0,(/ BasisnD%nb /),"BasisnD%EneH0",name_sub)
-
-        SELECT CASE (BasisnD%SparseGrid_type)
-        CASE (0) ! Direct product
-
-          DO i=1,BasisnD%nb_basis
-            CALL RecSet_EneH0(para_Tnum,mole,                           &
-                              BasisnD%tab_Pbasis(i)%Pbasis,para_ReadOp)
-          END DO
-
-          DO ib=1,BasisnD%nb
-            CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
-            BasisnD%EneH0(ib) = ZERO
-            DO i=1,BasisnD%nb_basis
-              BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
-                            BasisnD%tab_Pbasis(i)%Pbasis%EneH0(nDval(i))
-            END DO
-          END DO
-
-        CASE (1) ! Sparse basis (Smolyak 1st implementation)
-
-          L = BasisnD%L_SparseBasis
-
-          DO i=1,BasisnD%nb_basis
-            CALL RecSet_EneH0(para_Tnum,mole,                           &
-                              BasisnD%tab_basisPrimSG(i,L),para_ReadOp)
-          END DO
-
-          DO ib=1,BasisnD%nb
-            CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
-
-            BasisnD%EneH0(ib) = ZERO
-            DO i=1,BasisnD%nb_basis
-              BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
-                            BasisnD%tab_basisPrimSG(i,L)%EneH0(nDval(i))
-            END DO
-          END DO
-
-        CASE (2) ! Sparse basis (Smolyak 2d implementation)
-
-          L = BasisnD%L_SparseBasis
-          DO i=1,BasisnD%nb_basis
-            CALL RecSet_EneH0(para_Tnum,mole,                           &
-                              BasisnD%tab_basisPrimSG(L,i),para_ReadOp)
-          END DO
-
-          DO ib=1,BasisnD%nb
-            CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
-
-            BasisnD%EneH0(ib) = ZERO
-            DO i=1,BasisnD%nb_basis
-              BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
-                            BasisnD%tab_basisPrimSG(L,i)%EneH0(nDval(i))
-            END DO
-          END DO
-
-
-        CASE (4) ! Sparse basis (Smolyak 4th implementation)
-
-          L = BasisnD%L_SparseBasis
-          DO i=1,BasisnD%nb_basis
-            CALL RecSet_EneH0(para_Tnum,mole,                           &
-                              BasisnD%tab_basisPrimSG(L,i),para_ReadOp)
-          END DO
-
-          CALL init_nDval_OF_nDindex(BasisnD%nDindB,nDval)
-          DO ib=1,BasisnD%nb
-            CALL ADD_ONE_TO_nDindex(BasisnD%nDindB,nDval)
-            !CALL calc_nDindex(BasisnD%nDindB,ib,nDval)
-
-            BasisnD%EneH0(ib) = ZERO
-            DO i=1,BasisnD%nb_basis
-              BasisnD%EneH0(ib) = BasisnD%EneH0(ib) +                 &
-                            BasisnD%tab_basisPrimSG(L,i)%EneH0(nDval(i))
-            END DO
-          END DO
-
-        CASE DEFAULT
-          write(out_unitp,*) ' ERROR in',name_sub
-          write(out_unitp,*) ' WRONG SparseGrid_type',BasisnD%SparseGrid_type
-          write(out_unitp,*) ' The possibilities are: 0, 1, 2, 4'
-          STOP
-        END SELECT
 
         IF (debug) THEN
           write(out_unitp,*) '<d0b(:,ib) I H0 I d0b(:,ib)>'
-          DO i=1,BasisnD%nb
+          DO i=1,size(BasisnD%EneH0)
             RWU_E  = REAL_WU(BasisnD%EneH0(i),'au','E')
             write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
           END DO
@@ -623,7 +672,7 @@
         ELSE
           IF (debug) THEN
             write(out_unitp,*) 'auto_contrac basis <d0b(:,ib) I H0 I d0b(:,ib)>'
-            DO i=1,BasisnD%nb
+            DO i=1,size(BasisnD%EneH0)
               RWU_E  = REAL_WU(BasisnD%EneH0(i),'au','E')
               write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
             END DO
@@ -664,29 +713,17 @@
       !----- variables for the construction of H ---------------------------
       TYPE (param_ReadOp), intent(in)    :: para_ReadOp
 
-
-      !----- local variables -----------------------------------------------
-      !----- Operators and para_ReadOp ---------------------------
-      TYPE (param_AllOp)    :: para_AllOp_loc
-      TYPE (param_ReadOp)   :: para_ReadOp_loc
-      !----- for the basis set ----------------------------------------------
-      TYPE (param_AllBasis) :: para_AllBasis_loc
-!----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType)      :: mole_loc
-      TYPE (Tnum)           :: para_Tnum_loc
-
-
-      integer           :: i,iact,isym,iterm00
-      real (kind=Rkind) :: Vmin
-      TYPE(REAL_WU)     :: RWU_E
-
-
+!----- local variables -----------------------------------------------
+      real(kind=Rkind), allocatable :: Hmat(:,:)
+      real (kind=Rkind)             :: pot_Qref
+      integer                       :: i
+      TYPE(REAL_WU)                 :: RWU_E
 !-------------------------------------------------------------------------
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub = 'Set_EneH0_OF_PackedBasis'
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -701,110 +738,20 @@
       END IF
       CALL alloc_NParray(basis_Set%EneH0,[basis_Set%nb],"basis_Set%EneH0",name_sub)
 
-      ! modification of mole => mole_loc and para_Tnum => para_Tnum_loc
-      para_Tnum_loc                  = para_Tnum
-      para_Tnum_loc%JJ               = 0
-      para_Tnum_loc%NonGcteRange(:)  = 0
-
-      mole_loc                       = mole
-      mole_loc%Cart_transfo          = .FALSE.
-      ! If needed, change RPH transfo in flexible transfo
-      CALL CoordTypeRPH_TO_CoordTypeFlex(mole_loc)
-
-      CALL basis_TO_Allbasis(basis_Set,para_AllBasis_loc,mole_loc)
-
-      ! Read_Op parameters
-      para_ReadOp_loc                 = para_ReadOp
-
-      para_ReadOp_loc%nb_scalar_Op    = 0
-      para_ReadOp_loc%nb_CAP          = 0
-      para_ReadOp_loc%nb_FluxOp       = 0
-      para_ReadOp_loc%calc_scalar_Op  = .FALSE.
-      para_ReadOp_loc%type_HamilOp    = 1
-      para_ReadOp_loc%direct_KEO      = .FALSE.
-      para_ReadOp_loc%nb_bRot         = 1
-      para_ReadOp_loc%comput_S        = .FALSE.
-      para_ReadOp_loc%para_FileGrid%Save_FileGrid   = .FALSE.
-      para_ReadOp_loc%para_FileGrid%First_GridPoint = 1
-      para_ReadOp_loc%para_FileGrid%Last_GridPoint  = get_nq_FROM_basis(para_AllBasis_loc%BasisnD)
-      para_ReadOp_loc%para_FileGrid%Restart_Grid    = .FALSE.
-      para_ReadOp_loc%para_FileGrid%Test_Grid       = .FALSE.
-      para_ReadOp_loc%para_FileGrid%Read_FileGrid   = .FALSE.
-      para_ReadOp_loc%para_FileGrid%Type_FileGrid   = 0
 
 
-      !---------------------------------------------------------------
-      ! make Operators: H and S
-      ! allocation of tab_Op
-      para_AllOp_loc%nb_Op = 2 ! just H and S
-      CALL alloc_array(para_AllOp_loc%tab_Op,[para_AllOp_loc%nb_Op],            &
-                      'para_AllOp_loc%tab_Op',name_sub)
-
-      !i=1 => for H
-      CALL All_param_TO_para_H(para_Tnum_loc,mole_loc,para_AllBasis_loc,&
-                               para_ReadOp_loc,para_AllOp_loc%tab_Op(1))
-
-      ! old direct=2 with a matrix
-      para_AllOp_loc%tab_Op(1)%make_Mat                                = .TRUE.
-      para_AllOp_loc%tab_Op(1)%para_ReadOp%para_FileGrid%Save_MemGrid  = .TRUE.
-      para_AllOp_loc%tab_Op(1)%para_ReadOp%para_FileGrid%Save_FileGrid = .FALSE.
-
-      !i=2 => for S
-      i=2
-      CALL param_Op1TOparam_Op2(para_AllOp_loc%tab_Op(1),               &
-                                para_AllOp_loc%tab_Op(i))
-      para_AllOp_loc%tab_Op(i)%name_Op = 'S'
-      para_AllOp_loc%tab_Op(i)%n_Op    = -1
-
-      CALL Init_TypeOp(para_AllOp_loc%tab_Op(i)%param_TypeOp,           &
-                       type_Op=0,nb_Qact=mole_loc%nb_act1,cplx=.FALSE., &
-                       JRot=para_Tnum_loc%JJ,direct_KEO=.FALSE.,        &
-                       direct_ScalOp=.FALSE.)
-
-      CALL derive_termQact_TO_derive_termQdyn(                          &
-                            para_AllOp_loc%tab_Op(i)%derive_termQdyn,   &
-                            para_AllOp_loc%tab_Op(i)%derive_termQact,   &
-                              mole_loc%ActiveTransfo%list_QactTOQdyn)
-
-      !---------------------------------------------------------------
-      ! make the Grid
-      CALL sub_qa_bhe(para_AllOp_loc)
-
-      !iterm00 = para_AllOp_loc%tab_Op(1)%derive_term_TO_iterm(0,0)
-      !Vmin    = para_AllOp_loc%tab_Op(1)%OpGrid(iterm00)%Op_min
-      !write(6,*) 'Vmin',Vmin
-
-      !---------------------------------------------------------------
-      ! make the matrix of H
-      CALL sub_MatOp(para_AllOp_loc%tab_Op(1),debug)
-
-      ! for checking !!!
-      para_AllOp_loc%tab_Op(1)%diago = .TRUE.
-      CALL alloc_para_Op(para_AllOp_loc%tab_Op(1),Grid=.FALSE.,Mat=.TRUE.)
-      CALL sub_diago_H(para_AllOp_loc%tab_Op(1)%Rmat,                   &
-                       para_AllOp_loc%tab_Op(1)%Rdiag,                  &
-                       para_AllOp_loc%tab_Op(1)%Rvp,                    &
-                       para_AllOp_loc%tab_Op(1)%nb_tot,                 &
-                       para_AllOp_loc%tab_Op(1)%sym_Hamil)
-
-      !---------------------------------------------------------------
-      IF (allocated(basis_set%EneH0))    THEN
-        CALL dealloc_NParray(basis_set%EneH0,"basis_set%EneH0",name_sub)
-      END IF
-      CALL alloc_NParray(basis_set%EneH0,(/ basis_set%nb /),            &
-                        "basis_set%EneH0",name_sub)
+      CALL Get_Hmat_FROM_basis(Hmat,basis_Set,para_Tnum,mole,para_ReadOp,pot_Qref)
 
       !----- diagonal elements of Rmat ---------------------------------
       ! Warning (DML 12/01/2021), pot0 remove from EneH0, otherwise ...
       ! ... %pot_Qref is present several times in the mutidimentional basis (DP, Smolyak)
-      DO i=1,basis_set%nb
-        basis_set%EneH0(i) = para_AllOp_loc%tab_Op(1)%Rmat(i,i) -               &
-            para_AllOp_loc%tab_Op(1)%para_ReadOp%pot_Qref
+      DO i=1,size(basis_set%EneH0)
+        basis_set%EneH0(i) = Hmat(i,i) - pot_Qref
       END DO
 
       IF (print_level > -1 .OR. debug) THEN
         IF(MPI_id==0) write(out_unitp,*) '<d0b(:,ib) I H0 I d0b(:,ib)>'
-        DO i=1,basis_set%nb
+        DO i=1,size(basis_set%EneH0)
           RWU_E  = REAL_WU(basis_set%EneH0(i),'au','E')
           IF(MPI_id==0) write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
         END DO
@@ -813,12 +760,8 @@
 
       !-----------------------------------------------------------------
       ! deallocation ....
-      CALL dealloc_AllBasis(para_AllBasis_loc)
-      CALL dealloc_para_AllOp(para_AllOp_loc)
-      CALL dealloc_CoordType(mole_loc)
-      CALL dealloc_Tnum(para_Tnum_loc)
-      CALL dealloc_ReadOp(para_ReadOp_loc)
-
+      IF (allocated(Hmat))  CALL dealloc_NParray(Hmat, 'Hmat', name_sub)
+      !-----------------------------------------------------------------
       !-----------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*)
@@ -828,11 +771,95 @@
       END IF
       CALL flush_perso(out_unitp)
 
-      END SUBROUTINE Set_EneH0_OF_PackedBasis
-!=======================================================================================
+  END SUBROUTINE Set_EneH0_OF_PackedBasis
+  SUBROUTINE Set_EneH0_OF_ContracBasis(basis_Set,para_Tnum,mole,para_ReadOp)
 
-      ! basis parameters: for HO basis set (scaleQ)
-      SUBROUTINE AutoParam_basis(basis_Set,para_Tnum,mole,para_ReadOp)
+      USE mod_system
+      USE mod_Constant
+      USE mod_Coord_KEO
+      USE mod_PrimOp
+      USE mod_basis
+      USE mod_Op
+      IMPLICIT NONE
+
+      !----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType),    intent(in)    :: mole
+      TYPE (Tnum),         intent(in)    :: para_Tnum
+      !----- for the basis set ----------------------------------------------
+      TYPE (basis),        intent(inout) :: basis_Set
+      !----- variables for the construction of H ---------------------------
+      TYPE (param_ReadOp), intent(in)    :: para_ReadOp
+
+!----- local variables -----------------------------------------------
+      real(kind=Rkind), allocatable :: Hmat(:,:)
+      real (kind=Rkind)             :: pot_Qref
+      integer                       :: i
+      TYPE(REAL_WU)                 :: RWU_E
+!-------------------------------------------------------------------------
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub = 'Set_EneH0_OF_ContracBasis'
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        !CALL RecWrite_basis(basis_Set,write_all=.TRUE.)
+      END IF
+!---------------------------------------------------------------------
+
+
+      CALL Get_Hmat_FROM_basis(Hmat,basis_Set,para_Tnum,mole,para_ReadOp,pot_Qref)
+
+      IF (.NOT. allocated(basis_set%Rvec)) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' basis_set%Rvec is not allocated!'
+        write(out_unitp,*) ' CHECK the source!!'
+        STOP
+      END IF
+
+      IF (allocated(basis_Set%EneH0))    THEN
+        CALL dealloc_NParray(basis_Set%EneH0,"basis_Set%EneH0",name_sub)
+      END IF
+      CALL alloc_NParray(basis_Set%EneH0,[basis_Set%nbc],"basis_Set%EneH0",name_sub)
+
+      !----- diagonal elements of Rmat ---------------------------------
+      ! Warning (DML 12/01/2021), pot0 remove from EneH0, otherwise ...
+      ! ... %pot_Qref is present several times in the mutidimentional basis (DP, Smolyak)
+      DO i=1,size(basis_set%EneH0)
+        basis_set%EneH0(i) = dot_product(basis_set%Rvec(:,i),                   &
+                                    matmul(Hmat,basis_set%Rvec(:,i))) - pot_Qref
+      END DO
+
+      IF (print_level > -1 .OR. debug) THEN
+        IF(MPI_id==0) write(out_unitp,*) '<d0b(:,ib) I H0 I d0b(:,ib)>'
+        DO i=1,size(basis_set%EneH0)
+          RWU_E  = REAL_WU(basis_set%EneH0(i),'au','E')
+          IF(MPI_id==0) write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
+        END DO
+        CALL flush_perso(out_unitp)
+      END IF
+
+      !-----------------------------------------------------------------
+      ! deallocation ....
+      IF (allocated(Hmat))  CALL dealloc_NParray(Hmat, 'Hmat', name_sub)
+      !-----------------------------------------------------------------
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        !CALL RecWrite_basis(basis_Set,write_all=.TRUE.)
+        write(out_unitp,*)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+      CALL flush_perso(out_unitp)
+
+  END SUBROUTINE Set_EneH0_OF_ContracBasis
+
+  ! basis parameters: for HO basis set (scaleQ)
+  SUBROUTINE AutoParam_basis(basis_Set,para_Tnum,mole,para_ReadOp)
 
       USE mod_system
       USE mod_Constant
@@ -843,13 +870,13 @@
 
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType), intent(in) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum),      intent(in) :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
       TYPE (basis)          :: basis_Set
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ReadOp)         :: para_ReadOp
+      TYPE (param_ReadOp), intent(in)         :: para_ReadOp
 
 
 
@@ -932,7 +959,7 @@
 
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType), intent(in) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum),      intent(in) :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
       TYPE (basis)          :: basis_temp
@@ -942,7 +969,7 @@
       logical :: calc_scalar_Op,direct_KEO
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ReadOp)         :: para_ReadOp
+      TYPE (param_ReadOp), intent(in)         :: para_ReadOp
 
 
        integer       :: i
@@ -1104,7 +1131,7 @@
 
 !----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType), intent(in) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (Tnum),      intent(in) :: para_Tnum
 
 !----- for the basis set ----------------------------------------------
       TYPE (basis)          :: basis_temp
@@ -1114,7 +1141,7 @@
       logical :: calc_scalar_Op,direct_KEO
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ReadOp)         :: para_ReadOp
+      TYPE (param_ReadOp), intent(in)         :: para_ReadOp
 
 
       integer           :: i,type_Q
@@ -1302,7 +1329,7 @@
       IF ( type_Q == 2 .AND. Q <= ZERO) Q = HALF
 
       END SUBROUTINE Set_InitRange
-      FUNCTION Ene_FROM_basis(basis_Set,para_Tnum,mole,para_ReadOp)
+  FUNCTION Ene_FROM_basis(basis_Set,para_Tnum,mole,para_ReadOp)
 
       USE mod_system
       USE mod_Constant
@@ -1323,22 +1350,8 @@
 !----- variables for the construction of H ---------------------------
       TYPE (param_ReadOp), intent(in)  :: para_ReadOp
 
-
 !----- local variables -----------------------------------------------
-!----- Operators and para_ReadOp ----------------
-      TYPE (param_ReadOp)         :: para_ReadOp_loc
-      TYPE (param_AllOp)          :: para_AllOp_loc
-!----- for the basis set ----------------------------------------------
-      TYPE (param_AllBasis)       :: para_AllBasis_loc
-!----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType)            :: mole_loc
-      TYPE (Tnum)                 :: para_Tnum_loc
-
-      integer       :: i,iact,isym
-      TYPE(REAL_WU) :: RWU_E
-
-
-
+      real(kind=Rkind), allocatable :: Hmat(:,:),Rdiag(:),Rvp(:,:)
 !-------------------------------------------------------------------------
 
 !----- for debuging --------------------------------------------------
@@ -1346,6 +1359,86 @@
       logical, parameter :: debug = .FALSE.
       !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub = 'Ene_FROM_basis'
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        !CALL RecWrite_basis(basis_Set,write_all=.FALSE.)
+      END IF
+!---------------------------------------------------------------------
+
+      CALL Get_Hmat_FROM_basis(Hmat,basis_Set,para_Tnum,mole,para_ReadOp)
+
+      !---------------------------------------------------------------
+      ! digonalization of Hmat
+      CALL alloc_NParray(Rdiag,[basis_Set%nb],'Rdiag',name_sub)
+      CALL alloc_NParray(Rvp,shape(Hmat),'Rvp',name_sub)
+
+      CALL sub_diago_H(Hmat,Rdiag,Rvp,basis_Set%nb,.TRUE.)
+
+      Ene_FROM_basis = Rdiag(1)
+
+      !-----------------------------------------------------------------
+      ! deallocation ....
+      IF (allocated(Rvp))   CALL dealloc_NParray(Rvp,  'Rvp',  name_sub)
+      IF (allocated(Rdiag)) CALL dealloc_NParray(Rdiag,'Rdiag',name_sub)
+      IF (allocated(Hmat))  CALL dealloc_NParray(Hmat, 'Hmat', name_sub)
+      !-----------------------------------------------------------------
+
+      !-----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        !CALL RecWrite_basis(basis_Set,write_all=.TRUE.)
+        write(out_unitp,*)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+      CALL flush_perso(out_unitp)
+
+  END FUNCTION Ene_FROM_basis
+
+  SUBROUTINE Get_Hmat_FROM_basis(Hmat,basis_Set,para_Tnum,mole,para_ReadOp,pot_Qref)
+
+      USE mod_system
+      USE mod_Constant
+      USE mod_PrimOp
+      USE mod_basis
+      USE mod_Op
+      IMPLICIT NONE
+
+!----- Hamiltonian matrix -----------------------------------------------
+      real(kind=Rkind), allocatable,  intent(inout)           :: Hmat(:,:)
+      real(kind=Rkind),               intent(inout), optional :: pot_Qref
+
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType),               intent(in)  :: mole
+      TYPE (Tnum),                    intent(in)  :: para_Tnum
+
+!----- for the basis set ----------------------------------------------
+      TYPE (basis),                   intent(in)  :: basis_Set
+
+!----- variables for the construction of H ---------------------------
+      TYPE (param_ReadOp),            intent(in)  :: para_ReadOp
+
+
+!----- local variables -----------------------------------------------
+!----- Operators and para_ReadOp ----------------
+      TYPE (param_ReadOp)         :: ReadOp_AutoBasis
+      TYPE (param_AllOp)          :: para_AllOp_loc
+!----- for the basis set ----------------------------------------------
+      TYPE (param_AllBasis)       :: para_AllBasis_loc
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType)            :: mole_loc
+      TYPE (Tnum)                 :: para_Tnum_loc
+
+      integer                     :: i,nq
+!-------------------------------------------------------------------------
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub = 'Get_Hmat_FROM_basis'
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*)
@@ -1368,72 +1461,51 @@
       CALL basis_TO_Allbasis(basis_Set,para_AllBasis_loc,mole_loc)
       !CALL RecWrite_basis(para_AllBasis_loc%BasisnD,write_all=.FALSE.)
 
-      para_ReadOp_loc                 = para_ReadOp
-      para_ReadOp_loc%nb_scalar_Op    = 0
-      para_ReadOp_loc%nb_CAP          = 0
-      para_ReadOp_loc%nb_FluxOp       = 0
-      para_ReadOp_loc%calc_scalar_Op  = .FALSE.
-      para_ReadOp_loc%type_HamilOp    = 1
-      para_ReadOp_loc%direct_KEO      = .FALSE.
-      para_ReadOp_loc%nb_bRot         = 1
-      para_ReadOp_loc%comput_S        = .FALSE.
-
-      para_ReadOp_loc%para_FileGrid%Save_FileGrid   = .FALSE.
-      para_ReadOp_loc%para_FileGrid%First_GridPoint = 1
-      para_ReadOp_loc%para_FileGrid%Last_GridPoint  = get_nq_FROM_basis(para_AllBasis_loc%BasisnD)
-      para_ReadOp_loc%para_FileGrid%Restart_Grid    = .FALSE.
-      para_ReadOp_loc%para_FileGrid%Test_Grid       = .FALSE.
-      para_ReadOp_loc%para_FileGrid%Read_FileGrid   = .FALSE.
-      para_ReadOp_loc%para_FileGrid%Type_FileGrid   = 0
+      nq = get_nq_FROM_basis(para_AllBasis_loc%BasisnD)
+      CALL ReadOp2_TO_ReadOp1_FOR_AutoBasis(ReadOp_AutoBasis,para_ReadOp,nq)
 
       !---------------------------------------------------------------
       ! make Operators: H and S
       ! allocation of tab_Op
       para_AllOp_loc%nb_Op = 2 ! just H and S
-      CALL alloc_array(para_AllOp_loc%tab_Op,(/ para_AllOp_loc%nb_Op /),&
+      CALL alloc_array(para_AllOp_loc%tab_Op,[para_AllOp_loc%nb_Op],            &
                       'para_AllOp_loc%tab_Op',name_sub)
       !i=1 => for H
-      CALL All_param_TO_para_H(para_Tnum_loc,mole_loc,para_AllBasis_loc,&
-                               para_ReadOp_loc,para_AllOp_loc%tab_Op(1))
+      CALL All_param_TO_para_H(para_Tnum_loc,mole_loc,para_AllBasis_loc,        &
+                               ReadOp_AutoBasis,para_AllOp_loc%tab_Op(1))
 
 
       ! old direct=2 with a matrix
-      para_AllOp_loc%tab_Op(1)%make_Mat                    = .TRUE.
+      para_AllOp_loc%tab_Op(1)%make_Mat                                = .TRUE.
       para_AllOp_loc%tab_Op(1)%para_ReadOp%para_FileGrid%Save_MemGrid  = .TRUE.
       para_AllOp_loc%tab_Op(1)%para_ReadOp%para_FileGrid%Save_FileGrid = .FALSE.
 
       !i=2 => for S
       i=2
-      CALL param_Op1TOparam_Op2(para_AllOp_loc%tab_Op(1),               &
+      CALL param_Op1TOparam_Op2(para_AllOp_loc%tab_Op(1),                       &
                                 para_AllOp_loc%tab_Op(i))
       para_AllOp_loc%tab_Op(i)%name_Op = 'S'
       para_AllOp_loc%tab_Op(i)%n_Op    = -1
 
-      CALL Init_TypeOp(para_AllOp_loc%tab_Op(i)%param_TypeOp,           &
-                       type_Op=0,nb_Qact=mole_loc%nb_act1,cplx=.FALSE., &
+      CALL Init_TypeOp(para_AllOp_loc%tab_Op(i)%param_TypeOp,                   &
+                       type_Op=0,nb_Qact=mole_loc%nb_act1,cplx=.FALSE.,         &
                        JRot=para_Tnum_loc%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
-      CALL derive_termQact_TO_derive_termQdyn(                          &
-                            para_AllOp_loc%tab_Op(i)%derive_termQdyn,   &
-                            para_AllOp_loc%tab_Op(i)%derive_termQact,   &
+      CALL derive_termQact_TO_derive_termQdyn(                                  &
+                            para_AllOp_loc%tab_Op(i)%derive_termQdyn,           &
+                            para_AllOp_loc%tab_Op(i)%derive_termQact,           &
                               mole_loc%ActiveTransfo%list_QactTOQdyn)
 
       !---------------------------------------------------------------
       ! make the Grid
       CALL sub_qa_bhe(para_AllOp_loc)
 
+      IF (present(pot_Qref)) pot_Qref = para_AllOp_loc%tab_Op(1)%para_ReadOp%pot_Qref
+
       !---------------------------------------------------------------
       ! make the matrix of H
       CALL sub_MatOp(para_AllOp_loc%tab_Op(1),debug)
 
-      para_AllOp_loc%tab_Op(1)%diago = .TRUE.
-      CALL alloc_para_Op(para_AllOp_loc%tab_Op(1),Grid=.FALSE.,Mat=.TRUE.)
-      CALL sub_diago_H(para_AllOp_loc%tab_Op(1)%Rmat,                   &
-                       para_AllOp_loc%tab_Op(1)%Rdiag,                  &
-                       para_AllOp_loc%tab_Op(1)%Rvp,                    &
-                       para_AllOp_loc%tab_Op(1)%nb_tot,                 &
-                       para_AllOp_loc%tab_Op(1)%sym_Hamil)
-
-      Ene_FROM_basis = para_AllOp_loc%tab_Op(1)%Rdiag(1)
+      CALL move_alloc(FROM=para_AllOp_loc%tab_Op(1)%Rmat,TO=Hmat)
 
       !-----------------------------------------------------------------
       ! deallocation ....
@@ -1441,7 +1513,7 @@
       CALL dealloc_para_AllOp(para_AllOp_loc)
       CALL dealloc_CoordType(mole_loc)
       CALL dealloc_Tnum(para_Tnum_loc)
-      CALL dealloc_ReadOp(para_ReadOp_loc)
+      CALL dealloc_ReadOp(ReadOp_AutoBasis)
 
 
       !-----------------------------------------------------------------
@@ -1453,11 +1525,9 @@
       END IF
       CALL flush_perso(out_unitp)
 
-      END FUNCTION Ene_FROM_basis
+  END SUBROUTINE Get_Hmat_FROM_basis
 
-      ! In this subroutine the variable (derived type) can be modified : mole
-      SUBROUTINE Autocontract_basis(basis_AutoContract,para_Tnum,mole,  &
-                                    para_ReadOp)
+  SUBROUTINE Autocontract_basis(basis_AutoContract,para_Tnum,mole,para_ReadOp)
 
       USE mod_system
       USE mod_Constant
@@ -1479,23 +1549,10 @@
 
 
 !----- local variables -----------------------------------------------
-!----- variables for the construction of H ---------------------------
-      TYPE (param_AllOp)          :: para_AllOp_loc
-      TYPE (param_ReadOp)         :: para_ReadOp_loc
-      TYPE (CoordType)            :: mole_loc
-      TYPE (Tnum)                 :: para_Tnum_loc
-
-!----- for the basis set ----------------------------------------------
-      TYPE (param_AllBasis)       :: para_AllBasis_loc
-
-      integer          :: i
-      logical          :: nosym
-      integer          :: nbc
-      real(kind=Rkind) :: ene0,auTOcm_inv
-      TYPE(REAL_WU)    :: RWU_E,RWU_DE
-
-      integer           :: iterm00
-      real (kind=Rkind) :: Vmin
+      real(kind=Rkind), allocatable :: Hmat(:,:),Rdiag(:),Rvp(:,:)
+      integer                       :: i,nbc
+      real(kind=Rkind)              :: pot_Qref,ene0
+      TYPE(REAL_WU)                 :: RWU_E,RWU_DE
 !-------------------------------------------------------------------------
 
 !----- for debuging --------------------------------------------------
@@ -1526,115 +1583,29 @@
                                     basis_AutoContract%max_ene_contrac
       END IF
 
-      ! modification of mole => mole_loc and Tnum => Tnum_loc
-      para_Tnum_loc                   = para_Tnum
-      para_Tnum_loc%JJ                = 0
-      para_Tnum_loc%NonGcteRange(:)   = 0
-
-      mole_loc                        = mole
-      mole_loc%Cart_transfo           = .FALSE.
-      ! If needed, change RPH transfo in flexible transfo
-      CALL CoordTypeRPH_TO_CoordTypeFlex(mole_loc)
-
-
-      CALL basis_TO_Allbasis(basis_AutoContract,para_AllBasis_loc,mole_loc)
-
-      para_ReadOp_loc                 = para_ReadOp
-      para_ReadOp_loc%nb_scalar_Op    = 0
-      para_ReadOp_loc%nb_CAP          = 0
-      para_ReadOp_loc%nb_FluxOp       = 0
-      para_ReadOp_loc%calc_scalar_Op  = .FALSE.
-      para_ReadOp_loc%type_HamilOp    = 1
-      para_ReadOp_loc%direct_KEO      = .FALSE.
-      para_ReadOp_loc%nb_bRot         = 1
-      para_ReadOp_loc%comput_S        = .FALSE.
-
-      para_ReadOp_loc%para_FileGrid%Save_FileGrid   = .FALSE.
-      para_ReadOp_loc%para_FileGrid%First_GridPoint = 1
-      para_ReadOp_loc%para_FileGrid%Last_GridPoint  = get_nq_FROM_basis(para_AllBasis_loc%BasisnD)
-      para_ReadOp_loc%para_FileGrid%Restart_Grid    = .FALSE.
-      para_ReadOp_loc%para_FileGrid%Test_Grid       = .FALSE.
-      para_ReadOp_loc%para_FileGrid%Read_FileGrid   = .FALSE.
+      CALL Get_Hmat_FROM_basis(Hmat,basis_AutoContract,para_Tnum,mole,para_ReadOp,pot_Qref)
 
       !---------------------------------------------------------------
-      ! make Operators: H and S
-      ! allocation of tab_Op
-      para_AllOp_loc%nb_Op = 2 ! just H and S
-      CALL alloc_array(para_AllOp_loc%tab_Op,(/ para_AllOp_loc%nb_Op /),&
-                      'para_AllOp_loc%tab_Op',name_sub)
-      !i=1 => for H
-      CALL All_param_TO_para_H(para_Tnum_loc,mole_loc,para_AllBasis_loc,&
-                               para_ReadOp_loc,para_AllOp_loc%tab_Op(1))
-      ! old direct=2 with a matrix
-      para_AllOp_loc%tab_Op(1)%make_Mat                                = .TRUE.
-      para_AllOp_loc%tab_Op(1)%para_ReadOp%para_FileGrid%Save_MemGrid  = .TRUE.
-      para_AllOp_loc%tab_Op(1)%para_ReadOp%para_FileGrid%Save_FileGrid = .FALSE.
+      ! digonalization of Hmat
+      CALL alloc_NParray(Rdiag,[basis_AutoContract%nb],'Rdiag',name_sub)
+      CALL alloc_NParray(Rvp,shape(Hmat),'Rvp',name_sub)
 
-      !i=2 => for S
-      i=2
-      CALL param_Op1TOparam_Op2(para_AllOp_loc%tab_Op(1),               &
-                                para_AllOp_loc%tab_Op(i))
-      para_AllOp_loc%tab_Op(i)%name_Op = 'S'
-      para_AllOp_loc%tab_Op(i)%n_Op    = -1
-
-      CALL Init_TypeOp(para_AllOp_loc%tab_Op(i)%param_TypeOp,           &
-                       type_Op=0,nb_Qact=mole_loc%nb_act1,cplx=.FALSE., &
-                       JRot=para_Tnum_loc%JJ,direct_KEO=.FALSE.,        &
-                       direct_ScalOp=.FALSE.)
-      CALL derive_termQact_TO_derive_termQdyn(                          &
-                            para_AllOp_loc%tab_Op(i)%derive_termQdyn,   &
-                            para_AllOp_loc%tab_Op(i)%derive_termQact,   &
-                              mole_loc%ActiveTransfo%list_QactTOQdyn)
-
-      IF (debug) THEN
-        DO i=1,para_AllOp_loc%nb_Op
-          CALL write_param_Op(para_AllOp_loc%tab_Op(i))
-        END DO
-      END IF
-
-      !---------------------------------------------------------------
-      ! make the Grid
-      CALL sub_qa_bhe(para_AllOp_loc)
-      !CALL read_OpGrid_OF_Op(para_AllOp_loc%tab_Op(1)) ! with direct=1
-      !para_AllOp_loc%tab_Op(1)%OpGrid(1)%Grid(:,1,1) = ZERO ! test for pl0, fourier
-
-      !iterm00 = para_AllOp_loc%tab_Op(1)%derive_term_TO_iterm(0,0)
-      !Vmin    = para_AllOp_loc%tab_Op(1)%OpGrid(iterm00)%Op_min
-      !write(6,*) 'Vmin',Vmin
-
-      !---------------------------------------------------------------
-      ! make the matrix of H
-      CALL sub_MatOp(para_AllOp_loc%tab_Op(1),debug)
-
-      !---------------------------------------------------------------
-      ! digonalization of H
-      para_AllOp_loc%tab_Op(1)%diago = .TRUE.
-      CALL alloc_para_Op(para_AllOp_loc%tab_Op(1),Grid=.FALSE.,Mat=.TRUE.)
-      CALL sub_diago_H(para_AllOp_loc%tab_Op(1)%Rmat,                   &
-                       para_AllOp_loc%tab_Op(1)%Rdiag,                  &
-                       para_AllOp_loc%tab_Op(1)%Rvp,                    &
-                       para_AllOp_loc%tab_Op(1)%nb_tot,                 &
-                       para_AllOp_loc%tab_Op(1)%sym_Hamil)
+      CALL sub_diago_H(Hmat,Rdiag,Rvp, basis_AutoContract%nb,.TRUE.)
 
       IF (debug) THEN
         write(out_unitp,*) 'Eigenvalues for the contraction'
-        CALL Write_VecMat(para_AllOp_loc%tab_Op(1)%Rdiag,out_unitp,5)
+        CALL Write_VecMat(Rdiag,out_unitp,5)
         write(out_unitp,*) 'Eigenvectors for the contraction'
-        CALL Write_Mat(para_AllOp_loc%tab_Op(1)%Rvp,out_unitp,5)
+        CALL Write_Mat(Rvp,out_unitp,5)
       END IF
       !---------------------------------------------------------------
       ! Energy levels + the new nbc
-      ene0 = para_AllOp_loc%tab_Op(1)%Rdiag(1)
-      !auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
-      !write(out_unitp,*) 'Eigenvalues'
-      !write(out_unitp,*) (para_AllOp_loc%tab_Op(1)%Rdiag(:)-ene0)*auTOcm_inv
-
+      ene0 = Rdiag(1)
 
       IF (basis_AutoContract%nbc > 0) THEN
         nbc = basis_AutoContract%nbc
       ELSE
-        nbc = count(para_AllOp_loc%tab_Op(1)%Rdiag(:) <=                &
-                  basis_AutoContract%max_ene_contrac+ene0)
+        nbc = count(Rdiag(:) <= basis_AutoContract%max_ene_contrac+ene0)
         IF (nbc < basis_AutoContract%min_nbc)                           &
                                         nbc = basis_AutoContract%min_nbc
         IF (nbc > basis_AutoContract%max_nbc)                           &
@@ -1650,8 +1621,8 @@
 
         write(out_unitp,*) 'levels: '
         DO i=1,nbc
-          RWU_E  = REAL_WU(para_AllOp_loc%tab_Op(1)%Rdiag(i),     'au','E')
-          RWU_DE = REAL_WU(para_AllOp_loc%tab_Op(1)%Rdiag(i)-ene0,'au','E')
+          RWU_E  = REAL_WU(Rdiag(i),     'au','E')
+          RWU_DE = REAL_WU(Rdiag(i)-ene0,'au','E')
           write(out_unitp,*) i,RWU_Write(RWU_E ,WithUnit=.FALSE.,WorkingUnit=.FALSE.),&
                            " ",RWU_Write(RWU_DE,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
         END DO
@@ -1663,31 +1634,26 @@
       IF (allocated(basis_AutoContract%EneH0))    THEN
         CALL dealloc_NParray(basis_AutoContract%EneH0,"basis_set%EneH0",name_sub)
       END IF
-      CALL alloc_NParray(basis_AutoContract%EneH0,(/ nbc /),                    &
+      CALL alloc_NParray(basis_AutoContract%EneH0,[nbc],                    &
                         "basis_AutoContract%EneH0",name_sub)
-      basis_AutoContract%EneH0(:) = para_AllOp_loc%tab_Op(1)%Rdiag(1:nbc)  -    &
-          para_AllOp_loc%tab_Op(1)%para_ReadOp%pot_Qref
+      basis_AutoContract%EneH0(:) = Rdiag(1:nbc) - pot_Qref
 
       !---------------------------------------------------------------
       ! contraction => nb=nbc
       IF (print_level > -1) write(out_unitp,*) 'alloc Rvec',allocated(basis_AutoContract%Rvec)
       IF (allocated(basis_AutoContract%Rvec))  THEN
         CALL dealloc_NParray(basis_AutoContract%Rvec,                     &
-                                     "basis_AutoContract%Rvec",name_sub)
+                            "basis_AutoContract%Rvec",name_sub)
       END IF
       CALL alloc_NParray(basis_AutoContract%Rvec,                         &
-                     (/ basis_AutoContract%nb,basis_AutoContract%nb /), &
+                     [basis_AutoContract%nb,basis_AutoContract%nb], &
                                      "basis_AutoContract%Rvec",name_sub)
 
       IF (basis_AutoContract%POGridRep_polyortho .AND. basis_AutoContract%ndim == 1) THEN
-!       CALL make_MatContract(basis_AutoContract,                       &
-!                            basis_AutoContract%Rvec,                   &
-!                            para_AllOp_loc%tab_Op(1)%Rvp)
-        CALL sub_make_polyorthobasis(basis_AutoContract,                &
-                                     para_AllOp_loc%tab_Op(1)%Rvp)
+        CALL sub_make_polyorthobasis(basis_AutoContract,Rvp)
       ELSE
-          basis_AutoContract%Rvec = para_AllOp_loc%tab_Op(1)%Rvp
-          CALL sub_contraction_basis(basis_AutoContract,.TRUE.)
+        basis_AutoContract%Rvec = Rvp
+        CALL sub_contraction_basis(basis_AutoContract,.TRUE.)
       END IF
       !basis_AutoContract%POGridRep_polyortho = .FALSE.
       IF (debug) THEN
@@ -1698,14 +1664,12 @@
         CALL flush_perso(out_unitp)
       END IF
 
-
       !-----------------------------------------------------------------
       ! deallocation ....
-      CALL dealloc_AllBasis(para_AllBasis_loc)
-      CALL dealloc_para_AllOp(para_AllOp_loc)
-      CALL dealloc_CoordType(mole_loc)
-      CALL dealloc_ReadOp(para_ReadOp_loc)
-      CALL dealloc_Tnum(para_Tnum_loc)
+      IF (allocated(Rvp))   CALL dealloc_NParray(Rvp,  'Rvp',  name_sub)
+      IF (allocated(Rdiag)) CALL dealloc_NParray(Rdiag,'Rdiag',name_sub)
+      IF (allocated(Hmat))  CALL dealloc_NParray(Hmat, 'Hmat', name_sub)
+      !-----------------------------------------------------------------
 
       !-----------------------------------------------------------------
       IF (debug) THEN
@@ -1718,8 +1682,8 @@
       IF (print_level > -1) write(out_unitp,*) 'END ',name_sub
       CALL flush_perso(out_unitp)
 
-      END SUBROUTINE Autocontract_basis
-      SUBROUTINE basis_TO_AllBasis(basis_temp,Allbasis,mole)
+  END SUBROUTINE Autocontract_basis
+  SUBROUTINE basis_TO_AllBasis(basis_temp,Allbasis,mole)
       USE mod_basis
       USE mod_Op
       IMPLICIT NONE
@@ -1795,10 +1759,9 @@
       END IF
 !---------------------------------------------------------------------
 
-      END SUBROUTINE basis_TO_AllBasis
+  END SUBROUTINE basis_TO_AllBasis
 
-      SUBROUTINE All_param_TO_para_H(para_Tnum,mole,para_AllBasis,      &
-                                     para_ReadOp,para_H)
+  SUBROUTINE All_param_TO_para_H(para_Tnum,mole,para_AllBasis,para_ReadOp,para_H)
 
       USE mod_system
       USE mod_PrimOp
@@ -1817,7 +1780,7 @@
 
 !----- variables for the construction of H ---------------------------
       TYPE (param_Op)     :: para_H
-      TYPE (param_ReadOp) :: para_ReadOp
+      TYPE (param_ReadOp), intent(in) :: para_ReadOp
 
 
 !----- working variables ---------------------------------------------
@@ -1857,7 +1820,12 @@
 
       para_H%nb_OpPsi      = 0
 
-      para_H%nb_ba         = para_AllBasis%BasisnD%nDindB%max_nDI
+      para_H%nb_ba         = get_nb_FROM_basis(para_AllBasis%BasisnD)
+      IF (para_ReadOp%Op_WithContracRVec) THEN
+        para_H%nbc_ba      = para_AllBasis%BasisnD%nDindB_contracted%Max_nDI
+      ELSE
+        para_H%nbc_ba      = para_H%nb_ba
+      END IF
       para_H%nb_qa         = get_nqa_FROM_basis(para_AllBasis%BasisnD)
 
       IF (mole%nb_inact2n == 0) THEN
@@ -1866,6 +1834,8 @@
         para_H%nb_bi       = get_nb_bi_FROM_AllBasis(para_AllBasis)
       END IF
       para_H%nb_be         = para_ReadOp%nb_elec
+
+
       para_H%nb_bie        = para_H%nb_bi * para_H%nb_be
 
       para_H%nb_bai        = para_H%nb_ba * para_H%nb_bi
@@ -1877,7 +1847,7 @@
 
       para_H%nb_bRot       = para_ReadOp%nb_bRot
 
-      para_H%nb_tot        = para_H%nb_baie * para_H%nb_bRot
+      para_H%nb_tot        = para_H%nbc_ba * para_H%nb_bie * para_H%nb_bRot
       para_H%nb_tot_ini    = para_H%nb_baie * para_H%nb_bRot
 
       para_H%Make_Mat      = para_ReadOp%Make_Mat
@@ -1917,12 +1887,12 @@
         write(out_unitp,*) 'END BEGINNING ',name_sub
       END IF
 
-      END SUBROUTINE All_param_TO_para_H
+  END SUBROUTINE All_param_TO_para_H
 
 !=======================================================================================
 !     adiabatic contraction
 !=======================================================================================
-      SUBROUTINE sub_MatOp_HADA(para_H,para_ana,para_intensity,para_AllOp,const_phys)
+  SUBROUTINE sub_MatOp_HADA(para_H,para_ana,para_intensity,para_AllOp,const_phys)
       USE mod_system
       USE mod_nDindex
       USE mod_Op
@@ -2026,7 +1996,7 @@
       END IF
 
       memory = nb_ba**2 * nb_bie
-      CALL alloc_NParray(H_HADA, (/ nb_ba,nb_ba,nb_bie /),'H_HADA',name_sub)
+      CALL alloc_NParray(H_HADA, [nb_ba,nb_ba,nb_bie],'H_HADA',name_sub)
       H_HADA(:,:,:) = ZERO
 
 !-------------------------------------------------------------
@@ -2175,7 +2145,7 @@
       CALL Set_ZPE_OF_Op(para_H_HADA,ZPE=ZPE,forced=.TRUE.)
 
       ! Analysis of the HADA channels
-      CALL alloc_NParray(Tab_Psi,(/ nb_ba /),'Tab_Psi',name_sub)
+      CALL alloc_NParray(Tab_Psi,[nb_ba],'Tab_Psi',name_sub)
       DO i=1,nb_ba
         CALL init_psi(Tab_psi(i),para_H_HADA,para_H_HADA%cplx)
         CALL alloc_psi(Tab_Psi(i))
@@ -2239,7 +2209,7 @@
        END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE sub_MatOp_HADA
+  END SUBROUTINE sub_MatOp_HADA
 !=======================================================================================
 
-      END MODULE mod_Auto_Basis
+END MODULE mod_Auto_Basis

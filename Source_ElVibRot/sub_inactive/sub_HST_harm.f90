@@ -78,13 +78,13 @@
 !----- variables to store the operators of a single grid point ----------------
       TYPE (param_d0MatOp), allocatable :: d0MatOp(:)
 
-      integer                           :: iOp,k_term
+      integer                           :: iOp,k_term,iOpE
       logical                           :: JacSave,sqRhoOVERJacSave
 
       real (kind=Rkind), allocatable    :: Qact(:),Qdyn(:)
       real (kind=Rkind), save           :: Q1
 
-      integer                           :: i_SG,iq_SG,err_sub
+      integer                           :: ie,i_SG,iq_SG,err_sub
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub = 'sub_HSOp_inact'
@@ -145,11 +145,11 @@
       !------ special case if nb_inact2n=0 -----------------------
       !-----------------------------------------------------------
       IF (mole%nb_inact2n == 0) THEN
-        pot = .TRUE.
-        KEO = .TRUE.
-        iOp=1 ! H
-        IF (para_AllOp%tab_Op(iOp)%pot_only) KEO = .FALSE.
-        IF (para_AllOp%tab_Op(iOp)%T_only)   pot = .FALSE.
+        pot   = .TRUE.
+        KEO   = .TRUE.
+        iOpE = 1 ! H
+        IF (para_AllOp%tab_Op(iOpE)%pot_only) KEO = .FALSE.
+        IF (para_AllOp%tab_Op(iOpE)%T_only)   pot = .FALSE.
 
         IF (test) THEN
           para_Tnum%WriteT = .TRUE.
@@ -161,6 +161,7 @@
           CALL Init_d0MatOp(d0MatOp(iOp),para_AllOp%tab_Op(iOp)%param_TypeOp,&
                             para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec)
         END DO
+
 
 !#if(run_MPI)
 !        IF(Grid_allco)  THEN
@@ -175,7 +176,7 @@
 !#endif
 
         IF (.NOT. pot) THEN ! remove the potential part
-          d0MatOp(1)%ReVal(:,:,1) = ZERO
+          d0MatOp(iOpE)%ReVal(:,:,1) = ZERO
         END IF
 
         JacSave = (para_Tnum%nrho == 0) .AND.                           &
@@ -190,9 +191,10 @@
                                      (para_AllOp%tab_Op(1)%type_Op == 1)
 
         KEO_bis = (JacSave .OR. sqRhoOVERJacSave) .OR.                  &
-             (d0MatOp(1)%type_Op /= 10) .OR. .NOT. d0MatOp(1)%direct_KEO
+             (d0MatOp(iOpE)%type_Op /= 10) .OR. .NOT. d0MatOp(iOpE)%direct_KEO
 
-        IF (.NOT. para_AllOp%tab_Op(1)%para_Tnum%Gcte .AND. KEO .AND. KEO_bis) THEN
+        IF (.NOT. para_AllOp%tab_Op(1)%para_Tnum%Gcte .AND.                     &
+            KEO .AND. KEO_bis .AND. .NOT. d0MatOp(iOpE)%param_TypeOp%QML_Vib_adia) THEN
           CALL TnumKEO_TO_tab_d0H(Qact,d0MatOp(1),mole,para_Tnum)
         END IF
 
@@ -212,7 +214,7 @@
             END IF
             !$OMP  END CRITICAL (sub_HSOp_inact1_CRIT)
 
-             para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac(iq) =              &
+             para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac(iq) =    &
                                      sqrt(d0MatOp(1)%rho/d0MatOp(1)%Jac)
         END IF
 
@@ -314,15 +316,18 @@
         IF (para_AllOp%tab_Op(1)%nb_qa <= max_nb_G_FOR_print) THEN
           IF (freq_only) write(out_unitp,*) 'freq_only,iq',iq
 
+          iOp = 1
           IF (JacSave) THEN
             write(out_unitp,111) iq,Qact(1:mole%nb_act1),d0MatOp(1)%ReVal(1,1,:),d0MatOp(1)%Jac,d0MatOp(1)%rho
           ELSE
-            write(out_unitp,111) iq,Qact(1:mole%nb_act1),d0MatOp(1)%ReVal(1,1,:)
+            write(out_unitp,111) iq,Qact(1:mole%nb_act1),                       &
+                (d0MatOp(iOp)%ReVal(ie,ie,:),ie=1,para_AllOp%tab_Op(iOp)%nb_bie)
           END IF
  111      format('Grid: ',i6,50(1x,f18.10))
 
           DO iOp=3,size(d0MatOp)
-            write(out_unitp,121) iOp,iq,Qact(1:mole%nb_act1),d0MatOp(iOp)%ReVal(1,1,:)
+            write(out_unitp,121) iOp,iq,Qact(1:mole%nb_act1),                   &
+                  (d0MatOp(iOp)%ReVal(ie,ie,:),ie=1,para_AllOp%tab_Op(1)%nb_bie)
           END DO
  121      format('Grid_Op',i0,': ',i6,50(1x,f18.10))
 

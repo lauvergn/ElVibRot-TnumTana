@@ -60,7 +60,7 @@
       TYPE (basis), intent(inout) :: basis_SG
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ReadOp) :: para_ReadOp
+      TYPE (param_ReadOp), intent(in) :: para_ReadOp
 
 
 !---------------------------------------------------------------------
@@ -583,7 +583,7 @@
       TYPE (basis), intent(inout) :: basis_SG
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ReadOp) :: para_ReadOp
+      TYPE (param_ReadOp), intent(in) :: para_ReadOp
 
 
 
@@ -944,7 +944,7 @@
       TYPE (basis), intent(inout) :: basis_SG
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ReadOp) :: para_ReadOp
+      TYPE (param_ReadOp), intent(in) :: para_ReadOp
 
       integer             :: LB,L,Lmin,Lmax,i_SG,DeltaL,nq_iSG,nq_SG,ib,nb,i
       integer             :: iq,nq,nqq,ndim,nbb

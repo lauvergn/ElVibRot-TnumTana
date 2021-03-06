@@ -86,8 +86,8 @@ CONTAINS
         write(out_unitp,*) 'nb_tot',para_Op%nb_tot
         write(out_unitp,*)
         CALL write_param_Op(para_Op)
-!        IF (associated(para_Op%Cmat)) CALL Write_Mat(para_Op%Cmat,out_unitp,3)
-!        IF (associated(para_Op%Rmat)) CALL Write_Mat(para_Op%Rmat,out_unitp,5)
+!        IF (allocated(para_Op%Cmat)) CALL Write_Mat(para_Op%Cmat,out_unitp,3)
+!        IF (allocated(para_Op%Rmat)) CALL Write_Mat(para_Op%Rmat,out_unitp,5)
       END IF
 !-----------------------------------------------------------
 
@@ -353,16 +353,16 @@ CONTAINS
       CALL flush_perso(out_unitp)
 
       IF (para_Op%cplx) THEN
-        IF (associated(para_Op%Cmat))  THEN
-          CALL dealloc_array(para_Op%Cmat,"para_Op%Cmat",name_sub)
+        IF (allocated(para_Op%Cmat))  THEN
+          CALL dealloc_NParray(para_Op%Cmat,"para_Op%Cmat",name_sub)
         END IF
-        CALL alloc_array(para_Op%Cmat,(/nb_WP,nb_WP/),'para_Op%Cmat',name_sub)
+        CALL alloc_NParray(para_Op%Cmat,(/nb_WP,nb_WP/),'para_Op%Cmat',name_sub)
         para_Op%Cmat(:,:) = CMatOp(:,:)
       ELSE
-        IF (associated(para_Op%Rmat))  THEN
-          CALL dealloc_array(para_Op%Rmat,"para_Op%Rmat",name_sub)
+        IF (allocated(para_Op%Rmat))  THEN
+          CALL dealloc_NParray(para_Op%Rmat,"para_Op%Rmat",name_sub)
         END IF
-        CALL alloc_array(para_Op%Rmat,(/nb_WP,nb_WP/),'para_Op%Rmat',name_sub)
+        CALL alloc_NParray(para_Op%Rmat,(/nb_WP,nb_WP/),'para_Op%Rmat',name_sub)
         para_Op%Rmat(:,:) = RMatOp(:,:)
       END IF
 
@@ -527,8 +527,8 @@ CONTAINS
         write(out_unitp,*) 'nb_tot',para_Op%nb_tot
         write(out_unitp,*)
         CALL write_param_Op(para_Op)
-!       IF (associated(para_Op%Cmat)) CALL Write_Mat(para_Op%Cmat,out_unitp,3)
-!       IF (associated(para_Op%Rmat)) CALL Write_Mat(para_Op%Rmat,out_unitp,5)
+!       IF (allocated(para_Op%Cmat)) CALL Write_Mat(para_Op%Cmat,out_unitp,3)
+!       IF (allocated(para_Op%Rmat)) CALL Write_Mat(para_Op%Rmat,out_unitp,5)
       END IF
 !-----------------------------------------------------------
 
@@ -556,11 +556,11 @@ CONTAINS
                                                          para_Op%nb_baie)
 
           para_Op%nb_tot = para_Op%para_AllBasis%basis_ext%nb_vp_spec
-          IF (associated(para_Op%Cmat)) THEN
-            CALL dealloc_array(para_Op%Cmat,"para_Op%Cmat",name_sub)
+          IF (allocated(para_Op%Cmat)) THEN
+            CALL dealloc_NParray(para_Op%Cmat,"para_Op%Cmat",name_sub)
           END IF
-          CALL alloc_array(para_Op%Cmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
-                          "para_Op%Cmat",name_sub)
+          CALL alloc_NParray(para_Op%Cmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
+                            "para_Op%Cmat",name_sub)
           para_Op%Cmat(:,:) = CZERO
 
           IF (allocated(para_Op%para_AllBasis%basis_ext%liste_spec)) THEN
@@ -584,11 +584,11 @@ CONTAINS
                                                         para_Op%nb_baie)
 
           para_Op%nb_tot = para_Op%para_AllBasis%basis_ext%nb_vp_spec
-          IF (associated(para_Op%Rmat)) THEN
-            CALL dealloc_array(para_Op%Rmat,"para_Op%Rmat",name_sub)
+          IF (allocated(para_Op%Rmat)) THEN
+            CALL dealloc_NParray(para_Op%Rmat,"para_Op%Rmat",name_sub)
           END IF
-          CALL alloc_array(para_Op%Rmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
-                          "para_Op%Rmat",name_sub)
+          CALL alloc_NParray(para_Op%Rmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
+                            "para_Op%Rmat",name_sub)
           para_Op%Rmat(:,:) = ZERO
 
 
@@ -615,18 +615,18 @@ CONTAINS
         IF (para_Op%cplx) THEN
 
           CALL alloc_NParray(Cmat1,(/para_Op%nb_tot,para_Op%nb_tot/),     &
-                          'Cmat1','sub_Spectral_Op')
+                            'Cmat1','sub_Spectral_Op')
           CALL alloc_NParray(Cmat2,(/para_Op%nb_tot,para_Op%nb_tot/),     &
-                          'Cmat2','sub_Spectral_Op')
+                            'Cmat2','sub_Spectral_Op')
 
           Cmat1(:,:) = matmul(para_Op%Cmat,para_Op%para_AllBasis%basis_ext%Cvp_spec)
           Cmat2(:,:) = transpose(para_Op%para_AllBasis%basis_ext%Cvp_spec)
           para_Op%Cmat(:,:) = matmul(Cmat2,Cmat1)
           Cmat1(:,:) = para_Op%Cmat(:,:)
           para_Op%nb_tot = para_Op%para_AllBasis%basis_ext%nb_vp_spec
-          CALL dealloc_array(para_Op%Cmat,'para_Op%Cmat',name_sub)
-          CALL alloc_array(para_Op%Cmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
-                          'para_Op%Cmat',name_sub)
+          CALL dealloc_NParray(para_Op%Cmat,'para_Op%Cmat',name_sub)
+          CALL alloc_NParray(para_Op%Cmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
+                            'para_Op%Cmat',name_sub)
 
           para_Op%Cmat(:,:) =                                           &
                     Cmat1(para_Op%para_AllBasis%basis_ext%liste_spec,   &
@@ -636,18 +636,18 @@ CONTAINS
           CALL dealloc_NParray(Cmat2,'Cmat2',name_sub)
         ELSE
           CALL alloc_NParray(Rmat1,(/para_Op%nb_tot,para_Op%nb_tot/),     &
-                          'Rmat1',name_sub)
+                            'Rmat1',name_sub)
           CALL alloc_NParray(Rmat2,(/para_Op%nb_tot,para_Op%nb_tot/),     &
-                          'Rmat2',name_sub)
+                            'Rmat2',name_sub)
 
           Rmat1(:,:) = matmul(para_Op%Rmat,para_Op%para_AllBasis%basis_ext%Rvp_spec)
           Rmat2(:,:) = transpose(para_Op%para_AllBasis%basis_ext%Rvp_spec)
           para_Op%Rmat(:,:) = matmul(Rmat2,Rmat1)
           Rmat1(:,:) = para_Op%Rmat(:,:)
           para_Op%nb_tot = para_Op%para_AllBasis%basis_ext%nb_vp_spec
-          CALL dealloc_array(para_Op%Rmat,'para_Op%Rmat',name_sub)
-          CALL alloc_array(para_Op%Rmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
-                          'para_Op%Rmat',name_sub)
+          CALL dealloc_NParray(para_Op%Rmat,'para_Op%Rmat',name_sub)
+          CALL alloc_NParray(para_Op%Rmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
+                            'para_Op%Rmat',name_sub)
 
           para_Op%Rmat(:,:) =                                           &
                       Rmat1(para_Op%para_AllBasis%basis_ext%liste_spec, &
@@ -2386,7 +2386,7 @@ CONTAINS
 !----- for debuging --------------------------------------------------
       character (len=*), parameter ::name_sub='sub_MatOp_direct2'
       logical, parameter :: debug=.FALSE.
-!      logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -2395,7 +2395,7 @@ CONTAINS
         CALL flush_perso(out_unitp)
       END IF
 
-      IF (.NOT. para_Op%alloc_mat)                                      &
+      IF (.NOT. para_Op%alloc_mat)                                              &
                      CALL alloc_para_Op(para_Op,Mat=.TRUE.,Grid=.FALSE.)
       IF (para_Op%mat_done) RETURN
 
@@ -2428,7 +2428,11 @@ CONTAINS
         !$OMP num_threads(nb_thread)
         DO i=1,para_Op%nb_tot
           !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
-          CALL sub_OpBasisFi(para_Op,i)
+          IF (para_Op%para_ReadOp%Op_WithContracRVec) THEN
+            CALL sub_OpBasisCFi(para_Op,i)
+          ELSE
+            CALL sub_OpBasisFi(para_Op,i)
+          END IF
 
           IF (mod(i,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1         &
               .AND. MPI_id==0) THEN
@@ -2463,7 +2467,6 @@ CONTAINS
 !----------------------------------------------------------
 
       END SUBROUTINE sub_MatOp_direct2
-
       SUBROUTINE sub_MatOp_direct1(para_Op)
       USE mod_system
       USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,alloc_NParray,dealloc_NParray
@@ -3458,6 +3461,92 @@ CONTAINS
 !----------------------------------------------------------
 
       END SUBROUTINE sub_OpBasisFi
+      SUBROUTINE sub_OpBasisCFi(para_Op,i)
+      USE mod_system
+      USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,alloc_psi,     &
+                              dealloc_psi
+      USE mod_SetOp
+      USE mod_OpPsi
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op),  intent(inout) :: para_Op
+      integer,          intent(in)    :: i
+
+!------ working parameters --------------------------------
+      TYPE (param_psi)   :: psi,Hpsi
+
+      integer :: nb,nbc
+      real (kind=Rkind),    allocatable :: RBC(:)
+      complex (kind=Rkind), allocatable :: CBC(:)
+      complex (kind=Rkind) :: E
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter ::name_sub='sub_OpBasisCFi'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        write(out_unitp,*) 'Build Op(:,i) ',para_Op%nb_tot
+        CALL flush_perso(out_unitp)
+      END IF
+      IF (.NOT. para_Op%alloc_mat) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' The matrix of Op HAS to be allocated'
+        write(out_unitp,*) ' CHECK the fortran source!'
+        STOP
+      END IF
+
+      !write(out_unitp,*) 'in total memory: ',para_mem%mem_tot
+!------ initialization -------------------------------------
+      CALL init_psi(psi,para_Op,para_Op%cplx)
+      !psi%nb_tot = para_Op%nb_tot_ini
+      CALL alloc_psi(psi,BasisRep_contrac=.FALSE.)
+      CALL init_psi(Hpsi,para_Op,para_Op%cplx)
+      Hpsi%nb_tot = para_Op%nb_tot_ini
+
+      nbc = para_Op%nb_tot
+      nb  = psi%nb_tot
+
+      IF (para_Op%cplx) THEN
+        CALL alloc_NParray(CBC,[NBC], 'CBC', name_sub)
+        CBC(i) = CONE
+        CALL CVecBC_TO_CvecB(CBC,psi%CvecB,nbc,nb,psi%BasisnD)
+
+        CALL Set_symab_OF_psiBasisRep(psi)
+        CALL sub_OpPsi(psi,Hpsi,para_Op)
+
+        CALL CVecB_TO_CvecBC(Hpsi%CvecB,para_Op%Cmat(:,i),nb,nbc,psi%BasisnD)
+
+        CALL dealloc_NParray(CBC, 'CBC', name_sub)
+
+      ELSE
+        CALL alloc_NParray(RBC,[NBC], 'RBC', name_sub)
+        RBC(i) = ONE
+        CALL RVecBC_TO_RvecB(RBC,psi%RvecB,nbc,nb,psi%BasisnD)
+
+        CALL Set_symab_OF_psiBasisRep(psi)
+        CALL sub_OpPsi(psi,Hpsi,para_Op)
+
+        CALL RVecB_TO_RvecBC(Hpsi%RvecB,para_Op%Rmat(:,i),nb,nbc,psi%BasisnD)
+
+        CALL dealloc_NParray(RBC, 'RBC', name_sub)
+
+      END IF
+
+      CALL dealloc_psi(Hpsi)
+      CALL dealloc_psi(psi)
+!     ----------------------------------------------------------
+       !write(out_unitp,*) 'out total memory: ',para_mem%mem_tot
+!----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'END ',name_sub
+       END IF
+!----------------------------------------------------------
+
+END SUBROUTINE sub_OpBasisCFi
 !===============================================================================
 
 END MODULE Mod_MatOp

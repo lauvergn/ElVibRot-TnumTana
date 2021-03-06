@@ -1030,7 +1030,6 @@ MODULE mod_basis
           STOP
         END IF
       END IF
-
       !-------------------------------------------------
       !- first the symmetry because Rvec can be modified
       CALL alloc_NParray(tab_contract_symab,(/ basis_set%nbc /),          &
@@ -1081,6 +1080,7 @@ MODULE mod_basis
         basis_set%Rvec(:,i) = basis_set%Rvec(:,i)/sqrt(norm)
       END DO
 
+      IF (basis_set%contrac_RVecOnly) RETURN
 
       CALL Set_tab_symabOFSymAbelian_WITH_tab(basis_set%P_SymAbelian,     &
                                               tab_contract_symab)
@@ -1093,38 +1093,42 @@ MODULE mod_basis
       !write(out_unitp,*) ' matmul contra'
       nq = get_nq_FROM_basis(basis_set)
 
-      nderiv = 0
-      IF (associated(basis_set%dnRGB%d1)) nderiv = 1
-      IF (associated(basis_set%dnRGB%d2)) nderiv = 2
+      IF (basis_set%dnRGB%alloc) THEN
+        nderiv = 0
+        IF (associated(basis_set%dnRGB%d1)) nderiv = 1
+        IF (associated(basis_set%dnRGB%d2)) nderiv = 2
 
-      dnRGBuncontract = basis_set%dnRGB
-      CALL dealloc_dnMat(basis_set%dnRGB)
+        dnRGBuncontract = basis_set%dnRGB
 
 
-      CALL alloc_dnMat(basis_set%dnRGB,nq,basis_set%nbc,basis_set%ndim,nderiv)
 
-      basis_set%dnRGB%d0(:,:) =  matmul(dnRGBuncontract%d0(:,:),        &
+        CALL dealloc_dnMat(basis_set%dnRGB)
+
+        CALL alloc_dnMat(basis_set%dnRGB,nq,basis_set%nbc,basis_set%ndim,nderiv)
+
+        basis_set%dnRGB%d0(:,:) =  matmul(dnRGBuncontract%d0(:,:),        &
                                              basis_set%Rvec(:,1:nb_bc))
 
-      IF (nderiv > 0) THEN
-        DO i=1,basis_set%ndim
-          basis_set%dnRGB%d1(:,:,i) =                             &
-                                matmul(dnRGBuncontract%d1(:,:,i), &
-                                             basis_set%Rvec(:,1:nb_bc))
-        END DO
+        IF (nderiv > 0) THEN
+          DO i=1,basis_set%ndim
+            basis_set%dnRGB%d1(:,:,i) =                             &
+                                  matmul(dnRGBuncontract%d1(:,:,i), &
+                                               basis_set%Rvec(:,1:nb_bc))
+          END DO
+        END IF
+
+        IF (nderiv > 1) THEN
+          DO i=1,basis_set%ndim
+          DO j=1,basis_set%ndim
+            basis_set%dnRGB%d2(:,:,i,j) =                           &
+                                matmul(dnRGBuncontract%d2(:,:,i,j), &
+                                               basis_set%Rvec(:,1:nb_bc))
+          END DO
+          END DO
+        END IF
+
+        CALL dealloc_dnMat(dnRGBuncontract)
       END IF
-
-      IF (nderiv > 1) THEN
-        DO i=1,basis_set%ndim
-        DO j=1,basis_set%ndim
-          basis_set%dnRGB%d2(:,:,i,j) =                           &
-                              matmul(dnRGBuncontract%d2(:,:,i,j), &
-                                             basis_set%Rvec(:,1:nb_bc))
-        END DO
-        END DO
-      END IF
-
-      CALL dealloc_dnMat(dnRGBuncontract)
 
 
       IF (basis_set%dnBBRep_done) THEN
@@ -1241,7 +1245,6 @@ MODULE mod_basis
         write(out_unitp,*) 'Tab_Norm(:) of Contracted basis',           &
                                             basis_set%nDindB%Tab_Norm(:)
       END IF
-
       !-------------------------------------------------
       !- d1b => dnGG%d1 and  d2b => dnGG%d2 ----------
       CALL sub_dnGB_TO_dnGG(basis_set)

@@ -355,22 +355,27 @@
       integer              :: L1_SparseGrid,L2_SparseGrid,Num_OF_Lmax
       integer              :: Type_OF_nDindB,MaxCoupling_OF_nDindB,nDinit_OF_nDindB
       integer              :: nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB
-      logical              :: contrac_WITH_nDindB
       real (kind=Rkind)    :: Norm_OF_nDindB,weight_OF_nDindB
       integer              :: L_SparseBasis,L_TO_nb_A,L_TO_nb_B,Lexpo_TO_nb
       integer              :: L1_SparseBasis,L2_SparseBasis
       integer, allocatable :: Tab_L_TO_n(:)
       logical              :: read_L_TO_n
+      logical              :: dnBBRep
+      integer              :: ndim,nb_basis
 
-      integer            :: ndim,nb_basis
+      logical              :: packed
 
-      logical            :: packed,dnBBRep,contrac,contrac_analysis,read_contrac_file
-      logical            :: auto_basis,auto_contrac,POGridRep,POGridRep_polyortho
-      logical            :: restart_make_cubature,make_cubature,read_para_cubature
-      TYPE (REAL_WU)     :: max_ene_contrac
-      integer            :: max_nbc,min_nbc,nqPLUSnbc_TO_nqc
-      integer            :: auto_contrac_type1_TO,auto_contrac_type21_TO
+      logical              :: contrac,contrac_analysis,contrac_RVecOnly
+      logical              :: read_contrac_file
+      logical              :: contrac_WITH_nDindB
+      logical              :: auto_basis,auto_contrac,POGridRep,POGridRep_polyortho
+      TYPE (REAL_WU)       :: max_ene_contrac
+      integer              :: max_nbc,min_nbc,nqPLUSnbc_TO_nqc
+      integer              :: auto_contrac_type1_TO,auto_contrac_type21_TO
       character (len=Line_len) :: name_contrac_file
+
+      logical              :: restart_make_cubature,make_cubature,read_para_cubature
+
 
       logical            :: cplx,BasisEl
 
@@ -395,30 +400,31 @@
 
       integer       :: i
 
-      NAMELIST /basis_nD/iQact,iQsym,iQdyn,name,                        &
-                        nb,nq,nq_extra,                                 &
-                        nbc,nqc,contrac,contrac_analysis,cte,cplx,      &
-                 auto_basis,A,B,Q0,scaleQ,opt_A,opt_B,opt_Q0,opt_scaleQ,&
-                         TD_Q0,TD_scaleQ,                               &
-                         symab,index_symab,                             &
-                         L_TO_n_type,                                   &
-                         L_SparseGrid,L_TO_nq_A,L_TO_nq_B,L_TO_nq_C,    &
-                         L1_SparseGrid,L2_SparseGrid,Num_OF_Lmax,       &
-                         Lexpo_TO_nq,Lexpo_TO_nb,max_nb,max_nq,         &
-                         L_SparseBasis,L_TO_nb_A,L_TO_nb_B,read_L_TO_n, &
-                         L1_SparseBasis,L2_SparseBasis,                 &
-                         SparseGrid,SparseGrid_type,With_L,             &
-                         SparseGrid_With_Cuba,SparseGrid_With_Smolyak,  &
-                         SparseGrid_With_DP,                            &
-                         Nested,nq_max_Nested,                          &
-                         Type_OF_nDindB,Norm_OF_nDindB,weight_OF_nDindB,&
-                       nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB,&
+      NAMELIST /basis_nD/iQact,iQsym,iQdyn,name,                                &
+                         nb,nq,nq_extra,                                        &
+                         nbc,nqc,contrac,contrac_analysis,contrac_RVecOnly,     &
+                         cte,cplx,                                              &
+                         auto_basis,A,B,Q0,scaleQ,opt_A,opt_B,opt_Q0,opt_scaleQ,&
+                         TD_Q0,TD_scaleQ,                                       &
+                         symab,index_symab,                                     &
+                         L_TO_n_type,                                           &
+                         L_SparseGrid,L_TO_nq_A,L_TO_nq_B,L_TO_nq_C,            &
+                         L1_SparseGrid,L2_SparseGrid,Num_OF_Lmax,               &
+                         Lexpo_TO_nq,Lexpo_TO_nb,max_nb,max_nq,                 &
+                         L_SparseBasis,L_TO_nb_A,L_TO_nb_B,read_L_TO_n,         &
+                         L1_SparseBasis,L2_SparseBasis,                         &
+                         SparseGrid,SparseGrid_type,With_L,                     &
+                         SparseGrid_With_Cuba,SparseGrid_With_Smolyak,          &
+                         SparseGrid_With_DP,                                    &
+                         Nested,nq_max_Nested,                                  &
+                         Type_OF_nDindB,Norm_OF_nDindB,weight_OF_nDindB,        &
+                         nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB,      &
                          MaxCoupling_OF_nDindB,nDinit_OF_nDindB,contrac_WITH_nDindB,   &
-                         packed,dnBBRep,                                &
-                         name_contrac_file,auto_contrac,                &
+                         packed,dnBBRep,                                        &
+                         name_contrac_file,auto_contrac,                        &
                          make_cubature,restart_make_cubature,read_para_cubature,&
-                         POGridRep_polyortho,POGridRep,nb_basis,        &
-                      max_ene_contrac,max_nbc,min_nbc,nqPLUSnbc_TO_nqc, &
+                         POGridRep_polyortho,POGridRep,nb_basis,                &
+                         max_ene_contrac,max_nbc,min_nbc,nqPLUSnbc_TO_nqc,      &
                          auto_contrac_type1_TO,auto_contrac_type21_TO
 
 !----- for debuging --------------------------------------------------
@@ -438,8 +444,11 @@
       name                     = "0"
       packed                   = .FALSE.
       dnBBRep                  = .FALSE.
+
       contrac                  = .FALSE.
       contrac_analysis         = .FALSE.
+      contrac_RVecOnly         = .FALSE.
+
       make_cubature            = .FALSE.
       restart_make_cubature    = .FALSE.
       read_para_cubature       = .FALSE.
@@ -551,7 +560,8 @@
         write(out_unitp,*) ' CHECK your data'
         STOP
       END IF
-      packed  = basis_temp%packed .OR. packed .OR. contrac .OR. auto_contrac .OR. (nb_basis < 1)
+      packed = packed .OR. basis_temp%packed .OR. (nb_basis < 1)
+      packed = packed .OR. ((contrac .OR. auto_contrac) .AND. .NOT. (contrac_RVecOnly .OR. contrac_analysis))
 
       ! Here only iQact(:) will be set-up, although iQdyn are read from the data
       IF ( count(iQsym(:) > 0) > 0 ) THEN
@@ -788,8 +798,9 @@
 
       basis_temp%dnBBRep                  = dnBBRep
       basis_temp%packed                   = packed
-      basis_temp%contrac                  = contrac .OR. auto_contrac .OR. contrac_analysis
+      basis_temp%contrac                  = contrac .OR. auto_contrac .OR. contrac_analysis .OR. contrac_RVecOnly
       basis_temp%contrac_analysis         = contrac_analysis
+      basis_temp%contrac_RVecOnly         = contrac_RVecOnly
       basis_temp%auto_contrac             = auto_contrac
       basis_temp%make_cubature            = make_cubature
       basis_temp%restart_make_cubature    = restart_make_cubature

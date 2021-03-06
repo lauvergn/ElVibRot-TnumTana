@@ -791,12 +791,11 @@
           !    CALL sub_VibRot(Tab_Psi,para_ana%max_ana,para_H,para_ana)
           !  END IF
 
-          IF (associated(para_H%Rmat)) THEN
-            CALL dealloc_array(para_H%Rmat,"para_H%Rmat","vib")
+          IF (allocated(para_H%Rmat)) THEN
+            CALL dealloc_NParray(para_H%Rmat,"para_H%Rmat","vib")
           END IF
-          IF (associated(para_H%Cmat)) THEN
-            CALL dealloc_array(para_H%Cmat,"para_H%Cmat","vib")
-            nullify(para_H%Cmat)
+          IF (allocated(para_H%Cmat)) THEN
+            CALL dealloc_NParray(para_H%Cmat,"para_H%Cmat","vib")
           END IF
           para_ana%max_ana = nb_diago
 

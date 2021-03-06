@@ -55,32 +55,35 @@
         TYPE (Basis),          pointer       :: Basis2n       => null()   ! .TRUE. pointer
         integer                              :: symab         = -1
 
-        logical       :: init       = .FALSE.            ! (F) all constantes are initialized
-        logical       :: cplx       = .FALSE.            ! (T) if T => psi is complex (use of Cvec)
-                                                         ! otherwise psi is real (use of Rvec)
-        logical       :: BasisRep   = .TRUE.             ! (T) BasisRep
-        logical       :: GridRep    = .FALSE.            ! (F) GridRep psi
+        logical       :: init             = .FALSE.   ! (F) all constantes are initialized
+        logical       :: cplx             = .FALSE.   ! (T) if T => psi is complex (use of Cvec)
+                                                      ! otherwise psi is real (use of Rvec)
+        logical       :: BasisRep         = .TRUE.    ! (T) BasisRep
+        logical       :: GridRep          = .FALSE.   ! (F) GridRep psi
+        logical       :: BasisRep_contrac = .FALSE.    ! (T) BasisRep
 
-        Logical       :: SRG_MPI    = .FALSE.      ! (F) Smolyak rep. on grids with MPI
-        Logical       :: SRB_MPI    = .FALSE.      ! (F) Smolyak rep. on Basis with MPI
+        Logical       :: SRG_MPI          = .FALSE.    ! (F) Smolyak rep. on grids with MPI
+        Logical       :: SRB_MPI          = .FALSE.    ! (F) Smolyak rep. on Basis with MPI
 
-        integer       :: nb_ba      =0
-        integer       :: nb_bi      =0
-        integer       :: nb_be      =0
-        integer       :: nb_bRot    =0
-        integer       :: nb_baie    =0
-        integer       :: nb_tot     =0
+        integer       :: nb_ba            =0
+        integer       :: nb_bi            =0
+        integer       :: nb_be            =0
+        integer       :: nb_bRot          =0
+        integer       :: nb_baie          =0
+        integer       :: nb_tot           =0
+        integer       :: nb_tot_contrac   =0
+        integer       :: nb_tot_uncontrac =0
 
-        integer       :: nb_qa      =0
-        integer       :: nb_qaie    =0
-        integer       :: nb_paie    =0
+        integer       :: nb_qa            =0
+        integer       :: nb_qaie          =0
+        integer       :: nb_paie          =0
 
-        integer       :: nb_act1    =0
-        integer       :: nb_act     =0
+        integer       :: nb_act1          =0
+        integer       :: nb_act           =0
 
-        integer       :: nb_basis_act1 =0
-        integer       :: nb_basis      =0
-        integer       :: max_dim       =0
+        integer       :: nb_basis_act1    =0
+        integer       :: nb_basis         =0
+        integer       :: max_dim          =0
 
         real (kind=Rkind),    allocatable :: RvecB(:) ! RvecB(nb_tot)
         complex (kind=Rkind), allocatable :: CvecB(:) ! CvecB(nb_tot)
@@ -219,11 +222,11 @@
       !!@param: TODO
       !!@param: TODO
       !!@param: TODO
-      SUBROUTINE alloc_psi(psi,BasisRep,GridRep)
+      SUBROUTINE alloc_psi(psi,BasisRep,GridRep,BasisRep_contrac)
       USE mod_MPI_aux
 
-      TYPE (param_psi), intent(inout) :: psi
-      logical, optional, intent(in)   :: BasisRep,GridRep
+      TYPE (param_psi),  intent(inout) :: psi
+      logical, optional, intent(in)    :: BasisRep,GridRep,BasisRep_contrac
 
       integer :: i,ib
 
@@ -237,8 +240,18 @@
         write(out_unitp,*) 'BasisRep,GridRep',psi%BasisRep,psi%GridRep
       END IF
 !-----------------------------------------------------------
-      IF (present(BasisRep)) psi%BasisRep = BasisRep
-      IF (present(GridRep))  psi%GridRep  = GridRep
+      IF (present(BasisRep))          psi%BasisRep          = BasisRep
+      IF (present(GridRep))           psi%GridRep           = GridRep
+
+
+      IF (present(BasisRep_contrac)) THEN
+        psi%BasisRep_contrac  = BasisRep_contrac
+        IF (BasisRep_contrac) THEN
+          psi%nb_tot = psi%nb_tot_contrac
+        ELSE
+          psi%nb_tot = psi%nb_tot_uncontrac
+        END IF
+      END IF
 
       IF (psi%BasisRep .AND. psi%nb_tot < 1) THEN
         write(out_unitp,*) ' ERROR in alloc_psi'
@@ -577,25 +590,30 @@
         !psi%BasisRep        = .TRUE.
         !psi%GridRep         = .FALSE.
 
-        psi%nb_tot          = 0
-        psi%nb_paie         = 0
-        psi%nb_baie         = 0
-        psi%nb_ba           = 0
-        psi%nb_bi           = 0
-        psi%nb_be           = 0
-        psi%nb_bRot         = 0
-        psi%nb_qa           = 0
-        psi%nb_qaie         = 0
+        psi%BasisRep_contrac = .FALSE.
 
-        psi%nb_act1         = 0
-        psi%nb_act          = 0
-        psi%nb_basis_act1   = 0
-        psi%nb_basis        = 0
-        psi%max_dim         = 0
+        psi%nb_tot           = 0
+        psi%nb_tot_contrac   = 0
+        psi%nb_tot_uncontrac = 0
 
-        psi%IndAvOp         = -1
-        psi%CAvOp           = (ZERO,ZERO)
-        psi%convAvOp        = .FALSE.
+        psi%nb_paie          = 0
+        psi%nb_baie          = 0
+        psi%nb_ba            = 0
+        psi%nb_bi            = 0
+        psi%nb_be            = 0
+        psi%nb_bRot          = 0
+        psi%nb_qa            = 0
+        psi%nb_qaie          = 0
+
+        psi%nb_act1          = 0
+        psi%nb_act           = 0
+        psi%nb_basis_act1    = 0
+        psi%nb_basis         = 0
+        psi%max_dim          = 0
+
+        psi%IndAvOp          = -1
+        psi%CAvOp            = (ZERO,ZERO)
+        psi%convAvOp         = .FALSE.
 
         IF (debug) write(out_unitp,*) 'end dealloc: init param'
         CALL flush_perso(out_unitp)
@@ -879,34 +897,39 @@
          STOP
       END IF
 
-      psi1%init = psi2%init
-      psi1%cplx = psi2%cplx
+      psi1%init             = psi2%init
+      psi1%cplx             = psi2%cplx
 
-      psi1%BasisRep  = psi2%BasisRep
-      psi1%GridRep   = psi2%GridRep
-      psi1%SRG_MPI   = psi2%SRG_MPI      !< if working on full smolyak rep. on grid
-      psi1%SRB_MPI   = psi2%SRB_MPI     !< if working on full smolyak rep. on Basis
+      psi1%BasisRep         = psi2%BasisRep
+      psi1%GridRep          = psi2%GridRep
+      psi1%BasisRep_contrac = psi2%BasisRep_contrac
 
-      psi1%symab = psi2%symab
+      psi1%SRG_MPI          = psi2%SRG_MPI      !< if working on full smolyak rep. on grid
+      psi1%SRB_MPI          = psi2%SRB_MPI     !< if working on full smolyak rep. on Basis
 
-      psi1%nb_tot  = psi2%nb_tot
-      psi1%nb_baie = psi2%nb_baie
-      psi1%nb_ba   = psi2%nb_ba
-      psi1%nb_bi   = psi2%nb_bi
-      psi1%nb_be   = psi2%nb_be
-      psi1%nb_bRot = psi2%nb_bRot
+      psi1%symab            = psi2%symab
 
-      psi1%nb_qa   = psi2%nb_qa
-      psi1%nb_qaie = psi2%nb_qaie
+      psi1%nb_tot           = psi2%nb_tot
+      psi1%nb_tot_contrac   = psi2%nb_tot_contrac
+      psi1%nb_tot_uncontrac = psi2%nb_tot_uncontrac
 
-      psi1%nb_act1       = psi2%nb_act1
-      psi1%nb_act        = psi2%nb_act
-      psi1%nb_basis_act1 = psi2%nb_basis_act1
-      psi1%nb_basis      = psi2%nb_basis
+      psi1%nb_baie          = psi2%nb_baie
+      psi1%nb_ba            = psi2%nb_ba
+      psi1%nb_bi            = psi2%nb_bi
+      psi1%nb_be            = psi2%nb_be
+      psi1%nb_bRot          = psi2%nb_bRot
 
-      psi1%max_dim       = psi2%max_dim
+      psi1%nb_qa            = psi2%nb_qa
+      psi1%nb_qaie          = psi2%nb_qaie
 
-      psi1%nb_TDParam    = psi2%nb_TDParam
+      psi1%nb_act1          = psi2%nb_act1
+      psi1%nb_act           = psi2%nb_act
+      psi1%nb_basis_act1    = psi2%nb_basis_act1
+      psi1%nb_basis         = psi2%nb_basis
+
+      psi1%max_dim          = psi2%max_dim
+
+      psi1%nb_TDParam       = psi2%nb_TDParam
 
 
       IF (psi1%nb_tot <= 0) THEN
@@ -961,11 +984,11 @@
       SUBROUTINE copy_psi2TOpsi1(psi1,psi2,BasisRep,GridRep,alloc)
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_psi),intent(inout) :: psi1
-      TYPE (param_psi), intent(in)   :: psi2
-      logical, intent(in), optional  :: BasisRep
-      logical, intent(in), optional  :: GridRep
-      logical, intent(in), optional  :: alloc
+      TYPE (param_psi),   intent(inout)         :: psi1
+      TYPE (param_psi),   intent(in)            :: psi2
+      logical,            intent(in), optional  :: BasisRep
+      logical,            intent(in), optional  :: GridRep
+      logical,            intent(in), optional  :: alloc
 
 
       logical  :: loc_alloc
@@ -1025,13 +1048,20 @@
       ELSE
         psi1%GridRep  = psi2%GridRep
       END IF
+
+      psi1%BasisRep_contrac = psi2%BasisRep_contrac
+
+
       psi1%SRG_MPI=psi2%SRG_MPI
       psi1%SRB_MPI=psi2%SRB_MPI
 
       psi1%symab = psi2%symab
 
 
-      psi1%nb_tot  = psi2%nb_tot
+      psi1%nb_tot           = psi2%nb_tot
+      psi1%nb_tot_contrac   = psi2%nb_tot_contrac
+      psi1%nb_tot_uncontrac = psi2%nb_tot_uncontrac
+
       psi1%nb_baie = psi2%nb_baie
       psi1%nb_ba   = psi2%nb_ba
       psi1%nb_bi   = psi2%nb_bi
@@ -3433,7 +3463,11 @@
       write(out_unitp,*) 'init,cplx',psi%init,psi%cplx
 
       write(out_unitp,*)
-      write(out_unitp,*) 'nb_tot',psi%nb_tot
+      write(out_unitp,*) 'nb_tot          ',psi%nb_tot
+      write(out_unitp,*) 'nb_tot_contrac  ',psi%nb_tot_contrac
+      write(out_unitp,*) 'nb_tot_uncontrac',psi%nb_tot_uncontrac
+      write(out_unitp,*) 'BasisRep_contrac',psi%BasisRep_contrac
+
       write(out_unitp,*)
       write(out_unitp,*) 'nb_ba,nb_bi,nb_be,nb_bRot',psi%nb_ba,psi%nb_bi,psi%nb_be,psi%nb_bRot
       write(out_unitp,*) 'nb_qa',psi%nb_qa

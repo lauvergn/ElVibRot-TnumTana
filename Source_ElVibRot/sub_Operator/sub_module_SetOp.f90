@@ -82,18 +82,18 @@ MODULE mod_SetOp
           integer :: nb_bie=0                    ! number of active basis functions and grid points
           integer :: nb_bi=0,nb_be=0             ! number of active basis functions and grid points
           integer :: nb_ba=0,nb_qa=0             ! number of active basis functions and grid points
+          integer :: nbc_ba=0                    ! number of active contracged basis
 
           integer :: nb_bai=0,nb_qai=0           ! number of total active basis functions with HADA basis
           integer :: nb_baie=0,nb_qaie=0         ! number of total active basis functions
           integer :: nb_bRot=0                   ! number of total rotational basis functions
           integer :: nb_tot=0                    ! real size of the hamiltonian
                                                  ! can be smaller than nb_baie (HADA or spectral contraction)
-          integer :: nb_tot_ini=0                ! size of the hamiltonian
-                                                 ! can be smaller than nb_baie (HADA or spectral contraction)
+          integer :: nb_tot_ini=0                ! size of the hamiltonian (before contraction)
                                                  ! usefull before the spectral transformation (for another operator)
 
-          real (kind=Rkind),    pointer :: Rmat(:,:)   => null()        ! Rmat(nb_tot ,nb_tot )
-          complex (kind=Rkind), pointer :: Cmat(:,:)   => null()        ! Cmat(nb_tot ,nb_tot )
+          real (kind=Rkind),    allocatable :: Rmat(:,:)        ! Rmat(nb_tot ,nb_tot )
+          complex (kind=Rkind), allocatable :: Cmat(:,:)        ! Cmat(nb_tot ,nb_tot )
 
           ! Parameters, when the matrix is packed
           integer, pointer              :: ind_Op(:,:) => null()        ! ind_Op(nb_tot,nb_tot)
@@ -269,15 +269,15 @@ MODULE mod_SetOp
       IF (lo_mat) THEN
         para_Op%alloc_mat = .TRUE.
         IF (para_Op%cplx) THEN
-          IF (.NOT. associated(para_Op%Cmat) ) THEN
-             CALL alloc_array(para_Op%Cmat,(/ nb_tot,nb_tot /),         &
-                             'para_Op%Cmat',name_sub)
+          IF (.NOT. allocated(para_Op%Cmat) ) THEN
+             CALL alloc_NParray(para_Op%Cmat,(/ nb_tot,nb_tot /),         &
+                               'para_Op%Cmat',name_sub)
           END IF
 
         ELSE
-          IF (.NOT. associated(para_Op%Rmat) ) THEN
-             CALL alloc_array(para_Op%Rmat,(/ nb_tot,nb_tot /),         &
-                             'para_Op%Rmat',name_sub)
+          IF (.NOT. allocated(para_Op%Rmat) ) THEN
+             CALL alloc_NParray(para_Op%Rmat,(/ nb_tot,nb_tot /),         &
+                               'para_Op%Rmat',name_sub)
           END IF
         END IF
         IF (para_Op%pack_Op) THEN
@@ -397,11 +397,11 @@ MODULE mod_SetOp
       keep_init_loc = .FALSE.
       IF (present(keep_init)) keep_init_loc = keep_init
 
-      IF (associated(para_Op%Rmat))    THEN
-        CALL dealloc_array(para_Op%Rmat,'para_Op%Rmat',name_sub)
+      IF (allocated(para_Op%Rmat))    THEN
+        CALL dealloc_NParray(para_Op%Rmat,'para_Op%Rmat',name_sub)
       END IF
-      IF (associated(para_Op%Cmat))    THEN
-        CALL dealloc_array(para_Op%Cmat,'para_Op%Cmat',name_sub)
+      IF (allocated(para_Op%Cmat))    THEN
+        CALL dealloc_NParray(para_Op%Cmat,'para_Op%Cmat',name_sub)
       END IF
       IF (associated(para_Op%ind_Op))  THEN
         CALL dealloc_array(para_Op%ind_Op,'para_Op%ind_Op',name_sub)
@@ -483,6 +483,7 @@ MODULE mod_SetOp
         para_Op%nb_be       = 0
         para_Op%nb_bie      = 0
         para_Op%nb_ba       = 0
+        para_Op%nbc_ba      = 0
         para_Op%nb_qa       = 0
         para_Op%nb_bai      = 0
         para_Op%nb_qai      = 0
@@ -566,13 +567,14 @@ MODULE mod_SetOp
                                       WriteTOstring_symab(para_Op%symab)
 
       write(out_unitp,*) 'nb_ba,nb_qa',para_Op%nb_ba,para_Op%nb_qa
+      write(out_unitp,*) 'nbc_ba',para_Op%nbc_ba
       write(out_unitp,*) 'nb_bi,nb_be',para_Op%nb_bi,para_Op%nb_be
       write(out_unitp,*) 'nb_bai,nb_qai',para_Op%nb_bai,para_Op%nb_qai
       write(out_unitp,*) 'nb_baie,nb_qaie',para_Op%nb_baie,para_Op%nb_qaie
-      write(out_unitp,*) 'asso Rmat',associated(para_Op%Rmat)
-      IF (associated(para_Op%Rmat)) write(out_unitp,*) shape(para_Op%Rmat)
-      write(out_unitp,*) 'asso Cmat',associated(para_Op%Cmat)
-      IF (associated(para_Op%Cmat)) write(out_unitp,*) shape(para_Op%Cmat)
+      write(out_unitp,*) 'allo Rmat',allocated(para_Op%Rmat)
+      IF (allocated(para_Op%Rmat)) write(out_unitp,*) shape(para_Op%Rmat)
+      write(out_unitp,*) 'allo Cmat',allocated(para_Op%Cmat)
+      IF (allocated(para_Op%Cmat)) write(out_unitp,*) shape(para_Op%Cmat)
       write(out_unitp,*) 'pack_Op,tol_pack',para_Op%pack_Op,para_Op%tol_pack
       write(out_unitp,*) 'tol_nopack',para_Op%tol_nopack
       write(out_unitp,*) 'ratio_pack',para_Op%ratio_pack
@@ -856,6 +858,7 @@ MODULE mod_SetOp
       para_H_HADA%nb_be         = 1
       para_H_HADA%nb_bie        = 1
       para_H_HADA%nb_ba         = para_H%nb_ba
+      para_H_HADA%nbc_ba        = para_H%nbc_ba
       para_H_HADA%nb_qa         = para_H%nb_qa
       para_H_HADA%nb_bai        = para_H%nb_ba
       para_H_HADA%nb_qai        = para_H%nb_qa
@@ -865,8 +868,6 @@ MODULE mod_SetOp
       para_H_HADA%nb_tot        = para_H%nb_ba
       para_H_HADA%nb_tot_ini    = para_H%nb_ba
       para_H_HADA%nb_qaie       = para_H%nb_qa
-      nullify(para_H_HADA%Rmat)
-      nullify(para_H_HADA%Cmat)
       nullify(para_H_HADA%ind_Op)
       nullify(para_H_HADA%dim_Op)
       para_H_HADA%pack_Op         = para_H%pack_Op
@@ -1014,6 +1015,7 @@ MODULE mod_SetOp
       para_Op2%nb_bi         = para_Op1%nb_bi
       para_Op2%nb_be         = para_Op1%nb_be
       para_Op2%nb_ba         = para_Op1%nb_ba
+      para_Op2%nbc_ba        = para_Op1%nbc_ba
       para_Op2%nb_bie        = para_Op1%nb_bie
       para_Op2%nb_qa         = para_Op1%nb_qa
       para_Op2%nb_bai        = para_Op1%nb_bai
@@ -1028,8 +1030,6 @@ MODULE mod_SetOp
       ELSE
         para_Op2%nb_tot        = para_Op1%nb_tot
       END IF
-      nullify(para_Op2%Rmat)
-      nullify(para_Op2%Cmat)
       nullify(para_Op2%ind_Op)
       nullify(para_Op2%dim_Op)
       para_Op2%pack_Op         = para_Op1%pack_Op
@@ -1444,7 +1444,11 @@ MODULE mod_SetOp
       psi%init          = .TRUE.
       psi%cplx          = cplx
 
-      psi%nb_tot        = para_H%nb_tot
+      psi%nb_tot           = para_H%nb_tot
+      psi%nb_tot_contrac   = para_H%nb_tot
+      psi%nb_tot_uncontrac = para_H%nb_tot_ini
+
+
       psi%nb_baie       = para_H%nb_baie
       psi%nb_ba         = para_H%nb_ba
       psi%nb_bi         = para_H%nb_bi

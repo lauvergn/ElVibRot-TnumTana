@@ -128,14 +128,14 @@
           logical                        :: primitive              = .FALSE.  ! IF True, the basis set is a primitive basis
           logical                        :: primitive_done         = .FALSE.  ! This parameter is used to check if primitive basis-sets is set-up
                                                                               ! for direct-product basis-set
-          LOGICAL                        :: BuildBasis_done        = .FALSE. ! when T, it's mean the basis has been build
+          logical                        :: BuildBasis_done        = .FALSE. ! when T, it's mean the basis has been build
 
           logical                        :: auto_basis             = .FALSE.  ! it is done automatically
 
           logical                        :: contrac                = .FALSE.  !  .T. if the basis set is contracted
           logical                        :: auto_contrac           = .FALSE.  ! it is done automatically
           logical                        :: contrac_analysis       = .FALSE.  ! perform contraction, but only for the analysis (RD)
-          logical                        :: contrac_Rvec_only      = .FALSE.  !  .T. if the vecors are calculated, but the basis set is not contracted
+          logical                        :: contrac_RVecOnly       = .FALSE.  !  .T. if the vecors are calculated, but the basis set is not contracted
 
           real (kind=Rkind)              :: max_ene_contrac        = ONETENTH ! maximal energy to select nbc (in ua)
           integer                        :: max_nbc                = 0
@@ -179,6 +179,7 @@
           TYPE (Type_IntVec), pointer    :: Tab_OF_Tabnb2(:)         => null() ! Tab_OF_Tabnb2(nb_basis), for SparseBasis or Pruned basis
           TYPE (Type_nDindex)            :: nDindG                             ! enable to use multidimensional index for the grid
           TYPE (Type_nDindex), pointer   :: nDindB                   => null() ! enable to use multidimensional index for the basis functions
+          TYPE (Type_nDindex), allocatable :: nDindB_contracted                ! enable to use multidimensional index for the basis functions
           TYPE (Type_nDindex), pointer   :: nDindB_uncontracted      => null() ! enable to use multidimensional index for the uncontracted basis functions
           integer                        :: Type_OF_nDindB           = 1       ! enable to chose the initialization of nDindB
           integer                        :: nDinit_OF_nDindB         = 1       ! enable to chose nDinit of nDindB
@@ -189,33 +190,26 @@
           integer                        :: Div_nb_TO_Norm_OF_nDindB = 1
           logical                        :: contrac_WITH_nDindB      = .FALSE.
 
+
           integer                        :: SparseGrid_type          = 0 ! 0 no sparse grid
                                                                          ! 1 old several nD-grids
                                                                          ! 2 new sparse grid with ONE nD-grids
-
           logical                        :: SparseGrid_With_Cuba    = .TRUE. ! When 2 or more are true, the program choses the optimal one
           logical                        :: SparseGrid_With_Smolyak = .TRUE. ! When only one is true, the program tries to use only one
           logical                        :: SparseGrid_With_DP      = .TRUE. ! Remark: when only SparseGrid_With_Cuba=T, and the grid does not exit the program stops
-
-          TYPE (Basis_L_TO_n)         :: L_TO_nq
-          TYPE (Basis_L_TO_n)         :: L_TO_nb
-
-          integer                     :: L_SparseGrid             = -1      ! parameter for the number of points of SparseGrid
-
-          logical                     :: nqSG_SMALLER_nqDP        = .TRUE.
-
-          integer                     :: L_SparseBasis            = -1      ! parameter for the number of points of SparseGrid
-
-          logical                     :: With_L                   = .FALSE.
-
-          integer                     :: nb_SG                    = 0       ! number of direct-product grids (SparseGrid)
+          TYPE (Basis_L_TO_n)            :: L_TO_nq
+          TYPE (Basis_L_TO_n)            :: L_TO_nb
+          integer                        :: L_SparseGrid             = -1      ! parameter for the number of points of SparseGrid
+          logical                        :: nqSG_SMALLER_nqDP        = .TRUE.
+          integer                        :: L_SparseBasis            = -1      ! parameter for the number of points of SparseGrid
+          logical                        :: With_L                   = .FALSE.
+          integer                        :: nb_SG                    = 0       ! number of direct-product grids (SparseGrid)
           real (kind=Rkind), allocatable :: WeightSG(:)                     ! WeightSG(nb_SG)
           TYPE (P_basis),    pointer     :: tab_PbasisSG(:)          => null() ! tab_PbasisSG(nb_SG) fort SGtype=1
           TYPE (basis),      pointer     :: tab_basisPrimSG(:,:)     => null() ! tab_basis(nb_basis,0:Lmax)
+          TYPE (param_SGType2)           :: para_SGType2
 
-          TYPE (param_SGType2)        :: para_SGType2
-
-          TYPE (RotBasis_Param)       :: RotBasis
+          TYPE (RotBasis_Param)          :: RotBasis
 
 
         END TYPE basis
@@ -390,8 +384,6 @@
            basis_set%opt_scaleQ(:) = 0
          END IF
 
-
-
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%TD_Q0) ) THEN
            CALL alloc_NParray(basis_set%TD_Q0,[basis_set%ndim],      &
                              "basis_set%TD_Q0",name_sub)
@@ -403,14 +395,12 @@
            basis_set%TD_scaleQ(:) = .FALSE.
          END IF
 
-
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%nrho) ) THEN
            CALL alloc_NParray(basis_set%nrho,(/ basis_set%ndim /),        &
                            "basis_set%nrho",name_sub)
            basis_set%nrho(:) = 1 ! with nrho(i)=1, the voume element is dT = dQi
          END IF
        END IF
-
 
        END SUBROUTINE alloc_init_basis
 
@@ -829,14 +819,14 @@
          basis_set%packed_done            = .FALSE.
          basis_set%primitive              = .FALSE.
          basis_set%primitive_done         = .FALSE.
-         basis_set%BuildBasis_done     = .FALSE.
+         basis_set%BuildBasis_done        = .FALSE.
 
          IF (.NOT. keep_Rvec_loc) THEN
            basis_set%auto_basis             = .FALSE.
            basis_set%contrac                = .FALSE.
            basis_set%auto_contrac           = .FALSE.
            basis_set%contrac_analysis       = .FALSE.
-           basis_set%contrac_Rvec_only      = .FALSE.
+           basis_set%contrac_RVecOnly       = .FALSE.
            basis_set%max_ene_contrac        = ONETENTH
            basis_set%POGridRep              = .FALSE.
            basis_set%POGridRep_polyortho    = .FALSE.
@@ -1031,6 +1021,11 @@
 
          CALL dealloc_SGType2(basis_set%para_SGType2)
          CALL dealloc_RotBasis_Param(basis_set%RotBasis)
+
+         IF (allocated(basis_set%nDindB_contracted)) Then
+           CALL dealloc_NParray(basis_set%nDindB_contracted,            &
+                               'basis_set%nDindB_contracted',name_sub)
+         END IF
 
        END SUBROUTINE dealloc_basis
 
@@ -1667,7 +1662,7 @@
         basis_set1%contrac                = basis_set2%contrac
         basis_set1%auto_contrac           = basis_set2%auto_contrac
         basis_set1%contrac_analysis       = basis_set2%contrac_analysis
-        basis_set1%contrac_Rvec_only      = basis_set2%contrac_Rvec_only
+        basis_set1%contrac_RVecOnly      = basis_set2%contrac_RVecOnly
 
         basis_set1%max_ene_contrac        = basis_set2%max_ene_contrac
         basis_set1%make_cubature          = basis_set2%make_cubature
@@ -1811,6 +1806,12 @@
                             'basis_set1%nDindB_uncontracted',name_sub)
             basis_set1%nDindB_uncontracted = basis_set2%nDindB_uncontracted
           END IF
+        END IF
+
+        IF (allocated(basis_set2%nDindB_contracted)) THEN
+          CALL alloc_NParray(basis_set1%nDindB_contracted,                    &
+                            'basis_set1%nDindB_contracted',name_sub)
+          basis_set1%nDindB_contracted = basis_set2%nDindB_contracted
         END IF
 
         basis_set1%Type_OF_nDindB          = basis_set2%Type_OF_nDindB
@@ -2575,7 +2576,7 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
        write(out_unitp,*) Rec_line,'contrac',basis_set%contrac
        write(out_unitp,*) Rec_line,'auto_contrac',basis_set%auto_contrac
        write(out_unitp,*) Rec_line,'contrac_analysis',basis_set%contrac_analysis
-       write(out_unitp,*) Rec_line,'contrac_RVec_Only',basis_set%contrac_RVec_Only
+       write(out_unitp,*) Rec_line,'contrac_RVecOnly',basis_set%contrac_RVecOnly
 
        write(out_unitp,*) Rec_line,'POGridRep,POGridRep_polyortho',basis_set%POGridRep,basis_set%POGridRep_polyortho
        write(out_unitp,*) Rec_line,'nqPLUSnbc_TO_nqc',basis_set%nqPLUSnbc_TO_nqc
@@ -2898,7 +2899,7 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
        write(out_unitp,*) Rec_line,'contrac',basis_set%contrac
        write(out_unitp,*) Rec_line,'auto_contrac',basis_set%auto_contrac
        write(out_unitp,*) Rec_line,'contrac_analysis',basis_set%contrac_analysis
-       write(out_unitp,*) Rec_line,'contrac_RVec_Only',basis_set%contrac_RVec_Only
+       write(out_unitp,*) Rec_line,'contrac_RVecOnly',basis_set%contrac_RVecOnly
 
        write(out_unitp,*) Rec_line,'POGridRep,POGridRep_polyortho',basis_set%POGridRep,basis_set%POGridRep_polyortho
        write(out_unitp,*) Rec_line,'nqPLUSnbc_TO_nqc',basis_set%nqPLUSnbc_TO_nqc

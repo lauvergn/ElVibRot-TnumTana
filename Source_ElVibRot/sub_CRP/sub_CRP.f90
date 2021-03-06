@@ -2641,16 +2641,21 @@ IMPLICIT NONE
       logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub = 'ChannelNumber_AT_TS'
 !-----------------------------------------------------------
+  basisnD => para_H%para_AllBasis%BasisnD
+
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'Ene',Ene
     write(out_unitp,*) 'EneTS',para_CRP%Channel_AT_TS%EneTS
     write(out_unitp,*)
+    IF (allocated(BasisnD%EneH0)) THEN
+      write(out_unitp,*) 'size BasisnD%EneH0',size(BasisnD%EneH0)
+      write(out_unitp,*) 'BasisnD%EneH0',BasisnD%EneH0
+    END IF
     CALL flush_perso(out_unitp)
   END IF
 !-----------------------------------------------------------
 
-  basisnD => para_H%para_AllBasis%BasisnD
 
   ny = para_H%mole%nb_act-1
 
@@ -2727,6 +2732,8 @@ IMPLICIT NONE
 
     !write(out_unitp,*) 'size BasisnD%EneH0',size(BasisnD%EneH0)
     !write(out_unitp,*) 'BasisnD%EneH0',BasisnD%EneH0(:)
+    IF (.NOT. allocated(BasisnD%EneH0))                                         &
+        STOP 'ERROR in ChannelNumber_AT_TS: EneH0 is not allocated'
 
 
     ! first the energy of BasisnD%tab
@@ -2737,8 +2744,9 @@ IMPLICIT NONE
       !   write(out_unitp,*) 'BasisnD%tab_Pbasis(1)%Pbasis%EneH0',BasisnD%tab_Pbasis(1)%Pbasis%EneH0
       !   write(out_unitp,*) 'BasisnD%tab_Pbasis(2)%Pbasis%EneH0',BasisnD%tab_Pbasis(2)%Pbasis%EneH0
       ! END IF
-
-    CASE (1,2,4) ! Sparse basis
+    CASE (1) ! Sparse basis
+      E0_func_of_s = BasisnD%tab_basisPrimSG(1,BasisnD%L_SparseBasis)%EneH0(1)
+    CASE (2,4) ! Sparse basis
       E0_func_of_s = BasisnD%tab_basisPrimSG(BasisnD%L_SparseBasis,1)%EneH0(1)
     END SELECT
     IF (debug) write(out_unitp,*) 'E0_func_of_s',E0_func_of_s
@@ -2749,21 +2757,41 @@ IMPLICIT NONE
 
     nb_channels = para_CRP%Channel_AT_TS%nb_channels_added
 
-    CALL init_nDval_OF_nDindex(BasisnD%nDindB,nDval)
-    DO ib=1,BasisnD%nb
-      CALL ADD_ONE_TO_nDindex(BasisnD%nDindB,nDval)
-      IF (nDval(1) == 1) Then
-        EneChannel = BasisnD%EneH0(ib) - E0_func_of_s
-        IF (debug) THEN
-          write(out_unitp,*) ib,'nDval',nDval
-          write(out_unitp,*) ib,'EneChannel',EneChannel
-        END IF
-        write(out_unitp,*) 'Ene       ',Ene
-        write(out_unitp,*) 'EneChannel',EneChannel
+    IF (allocated(BasisnD%nDindB_contracted)) THEN
+      CALL init_nDval_OF_nDindex(BasisnD%nDindB_contracted,nDval)
+      DO ib=1,BasisnD%nDindB_contracted%Max_nDI
+        CALL ADD_ONE_TO_nDindex(BasisnD%nDindB_contracted,nDval)
+        IF (nDval(1) == 1) Then
+          EneChannel = BasisnD%EneH0(ib) - E0_func_of_s
+          IF (debug) THEN
+            write(out_unitp,*) ib,'nDval',nDval
+            write(out_unitp,*) ib,'EneChannel',EneChannel
+          END IF
+          write(out_unitp,*) 'Ene       ',Ene
+          write(out_unitp,*) 'EneChannel',EneChannel
 
-        IF (Ene >= EneChannel) nb_channels = nb_channels + 1
-      END IF
-    END DO
+          IF (Ene >= EneChannel) nb_channels = nb_channels + 1
+        END IF
+      END DO
+      nb_channels = min(nb_channels,BasisnD%nDindB_contracted%Max_nDI)
+    ELSE
+      CALL init_nDval_OF_nDindex(BasisnD%nDindB,nDval)
+      DO ib=1,BasisnD%nDindB%Max_nDI
+        CALL ADD_ONE_TO_nDindex(BasisnD%nDindB,nDval)
+        IF (nDval(1) == 1) Then
+          EneChannel = BasisnD%EneH0(ib) - E0_func_of_s
+          IF (debug) THEN
+            write(out_unitp,*) ib,'nDval',nDval
+            write(out_unitp,*) ib,'EneChannel',EneChannel
+          END IF
+          write(out_unitp,*) 'Ene       ',Ene
+          write(out_unitp,*) 'EneChannel',EneChannel
+
+          IF (Ene >= EneChannel) nb_channels = nb_channels + 1
+        END IF
+      END DO
+      nb_channels = min(nb_channels,BasisnD%nDindB%Max_nDI)
+    END IF
     deallocate(nDval)
 
   END SELECT

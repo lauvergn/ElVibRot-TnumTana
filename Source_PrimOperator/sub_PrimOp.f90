@@ -155,15 +155,15 @@
         IF (debug) write(out_unitp,*) 'Initialization with Quantum Model Lib'
 
 #if __QML == 1
-        ! those subroutines modify print_level (from EVRT), because another variable
-        ! with the same name is also present in QML
+        ! those subroutines modify in_unitp and out_unitp in QML to have the EVRT values
+
+        CALL set_Qmodel_in_unitp(in_unitp)
+        CALL set_Qmodel_out_unitp(out_unitp)
         IF (PrimOp%pot_itQtransfo == 0) THEN ! Cartesian coordinates
           CALL sub_Init_Qmodel_Cart(mole%ncart_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
         ELSE
           CALL sub_Init_Qmodel(mole%nb_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
         END IF
-        print_level = print_level_EVRT
-
         IF (print_level > 0 .OR. debug) CALL sub_Write_Qmodel(out_unitp)
         IF (debug) CALL set_Qmodel_Print_level(min(1,print_level))
 
@@ -421,6 +421,7 @@
       integer :: ith,iQa,iQ,iQact1,iQinact21
       integer, allocatable, save :: tab_iQa(:)
       logical :: Find_iQa
+      logical :: get_Qmodel_Vib_Adia ! function in qml
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
@@ -554,11 +555,20 @@
                write(out_unitp,*) 'QQMLib',Qit(PrimOp%Qit_TO_QQMLib)
             END IF
 #if __QML == 1
+          IF (get_Qmodel_Vib_Adia()) THEN
+            d0MatOp(iOpE)%param_TypeOp%QML_Vib_adia = .TRUE.
+            CALL sub_Qmodel_tab_HMatVibAdia(d0MatOp(iOpE)%ReVal,  &
+                      Qit(PrimOp%Qit_TO_QQMLib),size(d0MatOp(iOpE)%ReVal,dim=3))
+            !write(out_unitp,*) 'QQML',Qit(PrimOp%Qit_TO_QQMLib)
+            !CALL Write_d0MatOp(d0MatOp(iOpE))
+            !STOP 'Vib_Adia'
+          ELSE
             IF (PrimOp%pot_itQtransfo == 0) THEN
               CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(:,:,itermE),Qit)
             ELSE
               CALL sub_Qmodel_V(d0MatOp(iOpE)%ReVal(:,:,itermE),Qit(PrimOp%Qit_TO_QQMLib))
             END IF
+          END IF
 #else
             write(out_unitp,*) 'ERROR in ',name_sub
             write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
@@ -3891,10 +3901,10 @@ stop
         nb_Op = 2 + PrimOp%nb_scalar_Op + PrimOp%nb_CAP + PrimOp%nb_FluxOp
         allocate(d0MatOp(nb_Op))
 
-        CALL Init_d0MatOp(d0MatOp(1),type_Op=0,nb_Qact=mole%nb_act1,              &
+        CALL Init_d0MatOp(d0MatOp(1),type_Op=1,nb_Qact=mole%nb_act1,            &
                           nb_ie=PrimOp%nb_elec)
         DO iOp=2,size(d0MatOp) ! for the scalar operators
-          CALL Init_d0MatOp(d0MatOp(iOp),type_Op=0,nb_Qact=mole%nb_act1,          &
+          CALL Init_d0MatOp(d0MatOp(iOp),type_Op=0,nb_Qact=mole%nb_act1,        &
                             nb_ie=PrimOp%nb_elec)
         END DO
 

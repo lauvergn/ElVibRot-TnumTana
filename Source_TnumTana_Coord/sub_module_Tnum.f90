@@ -988,7 +988,7 @@ MODULE mod_Tnum
           IF (debug) write(out_unitp,*) 'read Qtransfo',it
 
           CALL read_Qtransfo(mole%tab_Qtransfo(it),nb_Qin,mole%nb_extra_Coord,  &
-                             const_phys%mendeleev)
+                             With_Tab_dnQflex,const_phys%mendeleev)
           mole%tab_Qtransfo(it)%BeforeActive = (it == nb_Qtransfo-1)
 
           mole%opt_param = mole%opt_param + mole%tab_Qtransfo(it)%opt_param
@@ -1051,9 +1051,6 @@ MODULE mod_Tnum
             ELSE
               mole%ActiveTransfo => mole%tab_Qtransfo(it)%ActiveTransfo
             END IF
-
-            mole%ActiveTransfo%With_Tab_dnQflex = With_Tab_dnQflex
-
 
           CASE default
             CONTINUE
@@ -1458,7 +1455,8 @@ MODULE mod_Tnum
 
         mole%tab_Cart_transfo(1)%num_transfo = 1
         CALL read_Qtransfo(mole%tab_Cart_transfo(1),mole%ncart_act,             &
-                           mole%nb_extra_Coord,const_phys%mendeleev)
+                           mole%nb_extra_Coord,With_Tab_dnQflex,                &
+                           const_phys%mendeleev)
 
         IF (print_level > 1) CALL Write_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
 

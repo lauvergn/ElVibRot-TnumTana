@@ -114,12 +114,14 @@
 
       !!@description: TODO
       !!@param: TODO
-      SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,nb_extra_Coord,mendeleev)
+      SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,nb_extra_Coord,With_Tab_dnQflex, &
+                               mendeleev)
         USE mod_MPI
 
         TYPE (Type_Qtransfo), intent(inout)    :: Qtransfo
         integer,              intent(inout)    :: nb_Qin,nb_extra_Coord
         TYPE (table_atom),    intent(in)       :: mendeleev
+        logical,              intent(in)       :: With_Tab_dnQflex
 
         character (len=Name_len) :: name_transfo,name_dum
         integer :: nat,nb_vect,nbcol,nb_flex_act,nb_transfo,nb_G,nb_X
@@ -225,7 +227,6 @@
           write(out_unitp,'(a)'   )  '------------------------------------------'
         ENDIF
         CALL flush_perso(out_unitp)
-
 
         name_transfo = Qtransfo%name_transfo
         CALL string_uppercase_TO_lowercase(name_transfo)
@@ -449,6 +450,8 @@
           Qtransfo%nb_Qin  = nb_Qin
           !CALL Read_FlexibleTransfo(Qtransfo%FlexibleTransfo,nb_Qin)
           CALL Qtransfo%FlexibleTransfo%QtransfoRead(nb_Qin)
+          Qtransfo%FlexibleTransfo%With_Tab_dnQflex = With_Tab_dnQflex
+          write(out_unitp,*) 'With_Tab_dnQflex: ',Qtransfo%FlexibleTransfo%With_Tab_dnQflex
 
           CALL sub_Type_Name_OF_Qin(Qtransfo,"Qflex")
           Qtransfo%type_Qin(:) = Qtransfo%type_Qout(:)
@@ -469,6 +472,7 @@
             CALL Read_ActiveTransfo(Qtransfo%ActiveTransfo,nb_Qin)
           END IF
           ! the set of type_Qin and name_Qin are done in type_var_analysis
+          Qtransfo%ActiveTransfo%With_Tab_dnQflex = With_Tab_dnQflex
 
         CASE ('zmat') ! It should be one of the first transfo read
           IF (nat < 2) THEN

@@ -550,8 +550,9 @@
       para_AllOp%tab_Op(iOp)%symab      = 0 ! totally symmetric
       IF (para_ana%VibRot) Para_Tnum%JJ = 0
       IF(MPI_id==0) THEN
-        write(out_unitp,*) 'para_ReadOp%Make_Mat',para_ReadOp%Make_Mat
-        write(out_unitp,*) 'para_H%Make_Mat',para_AllOp%tab_Op(iOp)%Make_Mat
+        write(out_unitp,*) 'para_H%...%Make_Mat           ',para_AllOp%tab_Op(iOp)%para_ReadOp%Make_Mat
+        write(out_unitp,*) 'para_H%Make_Mat               ',para_AllOp%tab_Op(iOp)%Make_Mat
+        write(out_unitp,*) 'para_H%...%Op_WithContracRVec ',para_AllOp%tab_Op(iOp)%para_ReadOp%Op_WithContracRVec
       ENDIF
 
       IF (debug) CALL Write_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp)
@@ -627,13 +628,6 @@
                          type_Op=0,nb_Qact=mole%nb_act1,cplx=.FALSE.,   &
                          JRot=Para_Tnum%JJ,                             &
                          direct_KEO=.FALSE.,direct_ScalOp=para_ReadOp%direct_ScalOp)
-
-        ! CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,           &
-        !                  type_Op=para_ReadOp%type_HamilOp,              &
-        !                  nb_Qact=mole%nb_act1,cplx=.FALSE.,             &
-        !                  JRot=Para_Tnum%JJ,                             &
-        !                  direct_KEO=para_ReadOp%direct_KEO,             &
-        !                  direct_ScalOp=para_ReadOp%direct_ScalOp)
         CALL derive_termQact_TO_derive_termQdyn(                        &
                               para_AllOp%tab_Op(iOp)%derive_termQdyn,   &
                               para_AllOp%tab_Op(iOp)%derive_termQact,   &

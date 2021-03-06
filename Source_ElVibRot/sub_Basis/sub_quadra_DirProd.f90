@@ -97,6 +97,8 @@
         IF (basis_DP%cplx) EXIT
      END DO
 
+
+
       IF (basis_DP%cplx) THEN
         write(out_unitp,*) ' STOP the basis is complex!!'
         STOP
@@ -111,6 +113,9 @@
         END IF
       END DO
       basis_DP%primitive_done = .TRUE.
+
+      !write(out_unitp,*) 'basis_DP%tab_Pbasis(:) packed?',(basis_DP%tab_Pbasis(i)%Pbasis%packed,i=1,nb_basis)
+
 
       basis_DP%opt_A(:)      = 0
       basis_DP%opt_B(:)      = 0
