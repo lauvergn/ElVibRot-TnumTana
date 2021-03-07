@@ -4,8 +4,19 @@ here=`pwd`
 DIR_vib=$here/../..
 
 cd $DIR_vib
-# make PhysConst
+  make PhysConst &> $here/comp.log
 cd $here
+compOK=`tail -1 comp.log | grep -c OK `
+
+if [ $compOK = '1' ]
+then
+ echo " PhysConst.exe compilation: OK"
+else
+ echo " PhysConst.exe compilation: ERROR"
+ exit
+fi
+
+
 PCEXE=$DIR_vib/PhysConst.exe
 
 OldTestsDir=output_28nov2018

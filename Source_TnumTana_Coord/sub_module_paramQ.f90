@@ -2165,14 +2165,53 @@ CONTAINS
            ENDIF
 
            IF (len_trim(Read_name) > 0) THEN
-             SELECT CASE (type_Q(i))
-             CASE (3,4)
+             IF (trim(adjustl(Read_name)) == '°' .OR.                           &
+                 trim(adjustl(Read_name)) == 'rad') THEN
                QWU = REAL_WU(Q(i),trim(adjustl(Read_name)),'angle')
-             CASE (1,2)
+               IF (type_Q(i) /= 3 .AND. type_Q(i) /= 4 .AND. type_Q(i) /= 0) THEN
+                 write(out_unitp,*) ' ERROR in ',name_sub
+                 write(out_unitp,*) '  The unit and type_Q(i) are incompatible.'
+                 write(out_unitp,*) '    unit     ',trim(adjustl(Read_name))
+                 write(out_unitp,*) '    type_Q(i)',type_Q(i)
+                 write(out_unitp,*) ' The compatible values are:'
+                 write(out_unitp,*) '  angs or bohr => type_Q(i)=1,2 or 0'
+                 write(out_unitp,*) '  ° or rad     => type_Q(i)=3,4 or 0'
+                 write(out_unitp,*) ' Check your data !!'
+                 STOP 'ERROR in Get_Qread: Wrong unit'
+               END IF
+             ELSE IF (trim(adjustl(Read_name)) == 'Angs' .OR.                   &
+                      trim(adjustl(Read_name)) == 'angs' .OR.                   &
+                      trim(adjustl(Read_name)) == 'bohr') THEN
                QWU = REAL_WU(Q(i),trim(adjustl(Read_name)),'L')
-             CASE default
-               QWU = REAL_WU(Q(i),trim(adjustl(Read_name)),'no_dim')
-             END SELECT
+               IF (type_Q(i) /= 1 .AND. type_Q(i) /= 2 .AND. type_Q(i) /= 0) THEN
+                 write(out_unitp,*) ' ERROR in ',name_sub
+                 write(out_unitp,*) '  The unit and type_Q(i) are incompatible.'
+                 write(out_unitp,*) '    unit     ',trim(adjustl(Read_name))
+                 write(out_unitp,*) '    type_Q(i)',type_Q(i)
+                 write(out_unitp,*) ' The compatible values are:'
+                 write(out_unitp,*) '  angs or bohr => type_Q(i)=1,2 or 0'
+                 write(out_unitp,*) '  ° or rad     => type_Q(i)=3,4 or 0'
+                 write(out_unitp,*) ' Check your data !!'
+                 STOP 'ERROR in Get_Qread: Wrong unit'
+               END IF
+             ELSE
+               write(out_unitp,*) ' ERROR in ',name_sub
+               write(out_unitp,*) '  The unit is wrong: ',trim(adjustl(Read_name))
+               write(out_unitp,*) ' The possible values are:'
+               write(out_unitp,*) '  angs or bohr'
+               write(out_unitp,*) '  ° or rad'
+               write(out_unitp,*) ' Check your data !!'
+               STOP 'ERROR in Get_Qread: Wrong unit'
+             END IF
+             ! write(6,*) 'read with unit:'
+             ! SELECT CASE (type_Q(i))
+             ! CASE (3,4)
+             !   QWU = REAL_WU(Q(i),trim(adjustl(Read_name)),'angle')
+             ! CASE (1,2)
+             !   QWU = REAL_WU(Q(i),trim(adjustl(Read_name)),'L')
+             ! CASE default
+             !   QWU = REAL_WU(Q(i),trim(adjustl(Read_name)),'no_dim')
+             ! END SELECT
 
            ELSE IF (unit == 'angs' ) THEN ! angs + degree
              SELECT CASE (type_Q(i))

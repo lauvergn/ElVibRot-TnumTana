@@ -1,1 +1,1 @@
-rm -f res* comp.log
+rm -f res* comp.log err_Tnum

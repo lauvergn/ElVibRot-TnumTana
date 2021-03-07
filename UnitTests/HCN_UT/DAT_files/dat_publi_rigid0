@@ -18,6 +18,7 @@ cd $DIR_vib
  make &> $here/comp.log
 cd $here
 
+
  MH=1837.10882307318116
  MD=3671.297316
  MN=25525.4342723654045
@@ -68,5 +69,7 @@ $pi
  &actives test=f comput_S=t /
  &analyse max_ana=40 print=f /
 **
+
+echo $RES
 
 egrep 'lev0:    1 |lev0:    2 |lev0:    3 |lev0:    5 '  $RES | awk '{print $5}' > lev_$RES

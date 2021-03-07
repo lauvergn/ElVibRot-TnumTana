@@ -12,7 +12,7 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -777,9 +777,9 @@ Obj_EVRT =\
 #make all : EVR
 .PHONY: all evr EVR libEVR libevr
 evr EVR all :obj vib $(VIBEXE)
-	@echo "EVR"
+	@echo "EVR OK"
 libEVR libevr: obj $(OBJ)/libEVR.a
-	@echo "libEVR.a"
+	@echo "libEVR.a OK"
 
 #============================================================================
 # All tnum/Tana ...
@@ -787,25 +787,25 @@ libEVR libevr: obj $(OBJ)/libEVR.a
 .PHONY: tnum Tnum tnum-dist Tnum-dist Tnum_MCTDH Tnum_MidasCpp Midas midas
 
 Tnum_FDriver: obj $(Main_TnumTana_FDriverEXE)
-	echo "Main_TnumTana_FDriver"
+	echo "Main_TnumTana_FDriver OK"
 Tnum_cDriver: obj $(Main_TnumTana_cDriverEXE)
-	echo "Main_TnumTana_cDriver"
+	echo "Main_TnumTana_cDriver OK"
 #
 libTnum libTnum.a: obj $(OBJ)/libTnum.a
-	echo "libTnum.a"
+	echo "libTnum.a OK"
 #
 keotest: obj $(KEOTESTEXE)
-	echo "TEST_TnumTana"
+	echo "TEST_TnumTana OK"
 
 tnum Tnum tnum-dist Tnum-dist: obj $(TNUMEXE)
-	echo "Tnum"
+	echo "Tnum OK"
 #
 Tnum_MCTDH: obj $(TNUMMCTDHEXE)
-	echo "Tnum_MCTDH"
+	echo "Tnum_MCTDH OK"
 #
 #TNUM_MiddasCppEXE
 Tnum_MidasCpp Midas midas: obj $(TNUM_MiddasCppEXE)
-	echo "Tnum_MidasCpp"
+	echo "Tnum_MidasCpp OK"
 #
 .PHONY: Tana_test
 Tana_test: Tana_test.exe
@@ -817,19 +817,19 @@ $(OBJ)/Tana_test.o: $(DirTNUM)/sub_main/Tana_test.f90
 # Some all programs
 .PHONY: gauss GWP work
 gauss GWP: obj $(GWPEXE)
-	echo "GWP"
+	echo "GWP OK"
 #
 work:obj $(WORKEXE)
-	echo "work"
+	echo "work OK"
 #============================================================================
 # Physical Constants
 .PHONY: PhysConst
 PhysConst: obj $(PhysConstEXE)
-	echo "Physical Constants"
+	echo "Physical Constants OK"
 #============================================================================
 # Unitary tests
 .PHONY: ut UT UnitTests
-ut UT UnitTests: UT_Frac UT_PhysConst UT_HNO3 UT_HCN UT_HCN-WP
+ut UT UnitTests: UT_Frac UT_PhysConst UT_Tnum UT_HNO3 UT_HCN UT_HCN-WP
 #
 .PHONY: UT_Frac ut_frac
 UT_Frac ut_frac : UnitTests_Frac.exe
@@ -847,6 +847,13 @@ UT_PhysConst ut_physconst: PhysConst
 	@echo "---------------------------------------"
 	@echo "Unitary tests for the PhysConst module"
 	@cd Examples/exa_PhysicalConstants ; ./run_tests > $(DIRUT)/res_UT_PhysConst ; $(DIRUT)/PhysConst.sh $(DIRUT)/res_UT_PhysConst
+	@echo "---------------------------------------"
+#
+.PHONY: UT_Tnum ut_Tnum UT_tnum ut_tnum
+UT_Tnum ut_Tnum UT_tnum ut_tnum: Tnum
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the Tnum"
+	@cd UnitTests/Tnum_UT ; ./run_tests
 	@echo "---------------------------------------"
 #
 .PHONY: UT_HNO3 ut_hno3

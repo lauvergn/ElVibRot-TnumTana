@@ -45,24 +45,20 @@ cd $here
 
 if [ $test_size = 'medium' ]
 then
- # this is too long, we use the Davidsonversion
- #./dat_HNO3_ccsdt-cHAC 3 5
  ./DAT_files/dat_HNO3_ccsdt-RPH 1 3 t
  ./DAT_files/dat_HNO3_ccsdt-RPH 2 4 t
  ./DAT_files/dat_HNO3_ccsdt-RPH 3 5 t
- ./CompareLevel res_HNO3_RPH_LB3-L5 Table4_PCCP2010-1+8D.txt 4
+ ./CompareLevel res_HNO3_RPH_LB3-LG5 Table4_PCCP2010-1+8D.txt 4
 fi
 
 if [ $test_size = 'big' ]
 then
- # this is too long, we use the Davidsonversion
- #./dat_HNO3_ccsdt-cHAC 3 5
  ./DAT_files/dat_HNO3_ccsdt-RPH 1 3 t
  ./DAT_files/dat_HNO3_ccsdt-RPH 2 4 t
  ./DAT_files/dat_HNO3_ccsdt-RPH 3 5 t
- ./CompareLevel res_HNO3_RPH_LB3-L5 Table4_PCCP2010-1+8D.txt 4
+ ./CompareLevel res_HNO3_RPH_LB3-LG5 Table4_PCCP2010-1+8D.txt 4
 
  ./DAT_files/dat_HNO3_ccsdt-RPH 6 7 t
- ./CompareLevel res_HNO3_RPH_LB6-L7 Table4_PCCP2010-1+8D.txt 5
+ ./CompareLevel res_HNO3_RPH_LB6-LG7 Table4_PCCP2010-1+8D.txt 5
 fi
 

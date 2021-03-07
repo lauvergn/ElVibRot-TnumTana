@@ -1,5 +1,7 @@
+#!/bin/bash
 
+here=`pwd`
 DIR_EVRT=../..
 
 cd $DIR_EVRT
- make tnum-dist
+ make tnum-dist &> $here/comp.log

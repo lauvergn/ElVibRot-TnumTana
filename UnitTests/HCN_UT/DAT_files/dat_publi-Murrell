@@ -80,5 +80,7 @@ sym  cos(a)      R     r    x    pi   dh
 /
 **
 
+ echo $RES
+
  egrep 'lev0:    1 |lev0:    1 |lev0:    2 |lev0:    4 |lev0:    8 '  $RES | awk '{print $6}' > lev_$RES
  awk '/lev0:/ {print $5}' $RES | head -20 > lev20_$RES

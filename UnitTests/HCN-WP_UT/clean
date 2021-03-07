@@ -1,2 +1,2 @@
-rm -f SH_HADA* file_* res* namelist* Davidson.log comp.log run_tests.log lev*_res*
+rm -f SH_HADA* file_* res* namelist* Davidson.log comp.log run_tests.log lev*_res* exe.log
 rm -f Temp*
