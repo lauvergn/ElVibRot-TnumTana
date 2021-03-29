@@ -716,8 +716,6 @@
           write(out_unitp,'(2a,11(1x,i0))') 'dummy_name ',dummy_name,Tab_L_TO_n
           CALL Set_Basis_L_TO_n(basis_temp%L_TO_nb,max_n=max_nb,Tab_L_TO_n=Tab_L_TO_n)
 
-
-
           read(in_unitp,*,IOSTAT=err_io) dummy_name,Tab_L_TO_n
           IF (err_io /= 0) THEN
             write(out_unitp,basis_nD)

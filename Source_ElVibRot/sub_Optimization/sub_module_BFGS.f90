@@ -494,6 +494,9 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,PrimOp,para_Tnum,para_BFGS,    &
  end do             ! and go back for another iteration.
  deallocate (g,hdg,pnew,dg,xi,hessin)
  write(out_unitp,*) 'Too many iterations in dfpmin'
+ write(out_unitp,*) ' energy: ',fret
+ write(out_unitp,*) ' Geometry: '
+ write(out_unitp,*) ' p = ', p
  stop
  return
  end subroutine dfpmin_new

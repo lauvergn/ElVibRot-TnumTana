@@ -1904,8 +1904,8 @@
         END IF
 
         ! for sparse basis and grid -----------------------
-        basis_set1%L_TO_nb     = basis_set2%L_TO_nb
-        basis_set1%L_TO_nq     = basis_set2%L_TO_nq
+        basis_set1%L_TO_nb                  = basis_set2%L_TO_nb
+        basis_set1%L_TO_nq                  = basis_set2%L_TO_nq
 
         basis_set1%With_L                   = basis_set2%With_L
         basis_set1%L_SparseBasis            = basis_set2%L_SparseBasis

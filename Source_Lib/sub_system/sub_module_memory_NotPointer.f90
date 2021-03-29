@@ -106,7 +106,7 @@ MODULE mod_memory_NotPointer
        CALL error_memo_allo(err_mem,memory,name_var,name_sub,'logical')
 
       END SUBROUTINE alloc_array_OF_Ldim1
-      
+
       SUBROUTINE dealloc_array_OF_Ldim1(tab,name_var,name_sub)
       IMPLICIT NONE
 
@@ -127,17 +127,17 @@ MODULE mod_memory_NotPointer
 
        memory = size(tab,kind=ILkind)
        deallocate(tab,stat=err_mem)
-       
+
        CALL error_lmemo_allo(err_mem,-memory,name_var,name_sub,'logical')
 
       END SUBROUTINE dealloc_array_OF_Ldim1
-      
+
       SUBROUTINE alloc_array_OF_Ldim2(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
 
-      logical, allocatable, intent(inout) :: tab(:,:)
-      integer, intent(in) :: tab_ub(:)
-      integer, intent(in), optional :: tab_lb(:)
+      logical, allocatable, intent(inout)        :: tab(:,:)
+      integer,              intent(in)           :: tab_ub(:)
+      integer,              intent(in), optional :: tab_lb(:)
 
       character (len=*), intent(in) :: name_var,name_sub
 
@@ -304,7 +304,7 @@ MODULE mod_memory_NotPointer
        tab = 0
 
       END SUBROUTINE alloc_array_OF_I4dim1
-      
+
       SUBROUTINE dealloc_array_OF_I4dim1(tab,name_var,name_sub)
       USE mod_MPI
       IMPLICIT NONE
@@ -372,8 +372,8 @@ MODULE mod_memory_NotPointer
        tab = 0
 
       END SUBROUTINE alloc_array_OF_Idim2
-      
-!=======================================================================================      
+
+!=======================================================================================
       SUBROUTINE dealloc_array_OF_Idim2(tab,name_var,name_sub)
       IMPLICIT NONE
 
@@ -399,7 +399,7 @@ MODULE mod_memory_NotPointer
 
 
       END SUBROUTINE dealloc_array_OF_Idim2
-!=======================================================================================      
+!=======================================================================================
 
       SUBROUTINE alloc_array_OF_Idim3(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
@@ -1363,4 +1363,3 @@ MODULE mod_memory_NotPointer
       END SUBROUTINE dealloc_array_OF_Cdim5
 
 END MODULE mod_memory_NotPointer
-

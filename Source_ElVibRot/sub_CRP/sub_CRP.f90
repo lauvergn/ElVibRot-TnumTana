@@ -2637,8 +2637,8 @@ IMPLICIT NONE
 
 !----- for debuging --------------------------------------------------
       integer   :: err
-      !logical, parameter :: debug=.FALSE.
-      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub = 'ChannelNumber_AT_TS'
 !-----------------------------------------------------------
   basisnD => para_H%para_AllBasis%BasisnD

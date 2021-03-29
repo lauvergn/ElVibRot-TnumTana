@@ -1657,6 +1657,8 @@ END DO
 
 SG4_maxth = opt_PSG4_maxth
 write(out_unitp,*) 'Optimal threads: ',SG4_maxth,' Delta Real Time',RealTime(SG4_maxth)
+write(out_unitp,*) '    => Speed-up: ',RealTime(1)/RealTime(SG4_maxth)
+
 write(out_unitp,*) '============================================'
 
 para_H%Make_Mat = Make_Mat_save
