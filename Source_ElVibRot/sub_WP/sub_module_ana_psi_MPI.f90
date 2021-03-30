@@ -55,7 +55,8 @@ CONTAINS
 !!         2 normalize with existing normlization constant
 !!         3 calculate and normalize
 !
-! note: the relevant part of RvecB should be pre-ready on the each threads
+! Warning: the relevant part of RvecB should be pre-ready on the each threads
+!          so this is not a normlization subroutine for general case
 !=======================================================================================      
   SUBROUTINE norm_psi_MPI(psi,ReNorm,GridRep,BasisRep)
     USE mod_system

@@ -626,6 +626,8 @@ MODULE mod_MPI_aux
       Integer(kind=ILkind),               intent(in) :: d2_1
       Integer(kind=ILkind),               intent(in) :: d2_2
 
+      IF(allocated(array_in)) deallocate(array_in)
+
       allocate(array_in(d1_1:d1_2,d2_1:d2_2))
       array_in=0.
 
@@ -1705,7 +1707,7 @@ MODULE mod_MPI_aux
 
         d1=lengths(0)+1
         DO i_MPI=1,MPI_np-1
-          d2=d1+lengths(i_MPI)
+          d2=d1+lengths(i_MPI)-1
           CALL MPI_Recv(array_all(d1:d2),Int(d2-d1+1,kind=MPI_INTEGER_KIND),           &
                         Cplx_MPI,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
           d1=d2+1

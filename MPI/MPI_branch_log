@@ -7,12 +7,34 @@ MPI Vm2.0
 ----------------------------------------------------------------------------------------
 @ log
 
+> MPI_Vm2.3
+  - parallelization 
+    march_noD_SG4
+    march_RK4
+    march_ModMidPoint
+    march_BS
+    march_SIL
+
+  - new subroutine
+    exit_Davidson_external_MPI: to exit Davidson iteration by external control
+    (creat a file called "Davidson_exit" in the running directory, once done, the name will be changed to exit_done)
+    write_basis_biqi: to write basis b(Q)
+
+  - bug fix 
+    for long intger
+    MPI_scheme=3, multi-nodes
+    MPI_scheme=3, MPI_mc>1
+
+  - warning
+    a bug when there is no lapack: STOP 'too many iterations'
+    warning: para_H%Rdiag does not exist when "direct=4" in subroutine "march_Spectral"
+
 > MPI_Vm2.2
-  - Warning: there is an bug in Spectral propagation when using ana_mini
+  - Warning: there is a bug in Spectral propagation when using ana_mini
 
-  - comnbined MPI scheme 2 and 3
+  - combined MPI scheme 2 and 3
 
-  - new MPI schemme3 for massive cluster
+  - new MPI scheme3 for massive cluster
 
   - new subroutine
     get_nodes_info_MPI for MPI scheme3

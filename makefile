@@ -1,8 +1,8 @@
 #===============================================================================
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-# F90 = mpifort
- F90 = gfortran
+ F90 = mpifort
+# F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
@@ -899,7 +899,7 @@ vib:
 #	@cd Source_TnumTana_Coord/sub_operator_T ; cp Calc_Tab_dnQflex_save.f90 Calc_Tab_dnQflex.f90
 #	@cd Source_TnumTana_Coord/sub_operator_T ; cp Sub_X_TO_Q_ana_save.f90   Sub_X_TO_Q_ana.f90
 .PHONY: clean
-clean:
+clean: cleantest
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib
 	rm -rf *.dSYM
 	rm -f .DS_Store */.DS_Store */*/.DS_Store */*/*/.DS_Store

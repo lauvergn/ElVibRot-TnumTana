@@ -41,6 +41,13 @@
 !===========================================================================
 !===========================================================================
 
+
+!=======================================================================================
+! subroutine not used anymore:
+! Overlap_psi_Hpsi_matrix_MPI
+! Overlap_psi_Hpsi_matrix_MPI2
+!=======================================================================================
+
 MODULE mod_psi_Op_MPI
   USE mod_basis
   IMPLICIT NONE
@@ -54,92 +61,6 @@ MODULE mod_psi_Op_MPI
   PUBLIC :: norm2_psi_SR_MPI,sub_LCpsi_TO_psi_MPI
 
   CONTAINS
-!!=======================================================================================
-!!> @brief MPI version, Symmetrization (with abelian group) of psi in BasisRep
-!---------------------------------------------------------------------------------------
-!  SUBROUTINE Set_symab_OF_psiBasisRep_MPI_old(psi,symab,changes)
-!    USE mod_system
-!    USE mod_psi_set_alloc
-!    USE mod_MPI_aux
-!    IMPLICIT NONE
-!
-!    TYPE(param_psi), intent(inout)      :: psi
-!    Integer,optional,intent(in)         :: symab
-!    Logical,optional,intent(inout)      :: changes
-!
-!    Integer                             :: loc_symab
-!    Integer                             :: ib
-!    Integer                             :: Get_symabOFSymAbelianOFBasis_AT_ib ! function
-!    Logical                             :: broadcast
-!
-!#if(run_MPI)
-!
-!    broadcast=.FALSE.
-!    changes=.FALSE.
-!    
-!    IF(psi%BasisRep) THEN
-!      IF(psi%nb_bi==1 .AND. psi%nb_be==1) THEN
-!        IF(present(symab)) THEN
-!          loc_symab=symab
-!        ELSE
-!          broadcast=.TRUE.
-!          ! find the symmtry (symab of the largest coef)
-!          IF(MPI_id==0) THEN
-!            IF(psi%cplx) THEN
-!              ib=maxloc(abs(psi%CvecB),dim=1)
-!            ELSE
-!              ib=maxloc(abs(psi%RvecB),dim=1)
-!            ENDIF
-!            loc_symab=Get_symabOFSymAbelianOFBasis_AT_ib(psi%BasisnD,ib)
-!          ENDIF ! for MPI_id==0
-!        ENDIF
-!      ELSE
-!        loc_symab=-1
-!      ENDIF
-!      psi%symab=loc_symab
-!    ELSE
-!      psi%symab=-1
-!    ENDIF
-!
-!    IF(broadcast) CALL MPI_Bcast(psi%symab,size1_MPI,Int_MPI,root_MPI,                 &
-!                                 MPI_COMM_WORLD,MPI_err)
-!
-!    IF(psi%symab >= 0 .AND. psi%symab <= 7) THEN
-!      nb_per_MPI=psi%nb_tot/MPI_np
-!      nb_rem_MPI=mod(psi%nb_tot,MPI_np) 
-!      bound1_MPI=MPI_id*nb_per_MPI+1+MIN(MPI_id,nb_rem_MPI)
-!      bound2_MPI=(MPI_id+1)*nb_per_MPI+MIN(MPI_id,nb_rem_MPI)                          &
-!                                      +merge(1,0,nb_rem_MPI>MPI_id)
-!      IF(MPI_id==0) THEN
-!        bound1_MPI=1
-!        bound2_MPI=psi%nb_tot
-!      ENDIF
-!      IF(psi%cplx .AND. allocated(psi%CvecB)) THEN      
-!        DO ib=bound1_MPI,bound2_MPI
-!          IF(psi%symab/=Get_symabOFSymAbelianOFBasis_AT_ib(psi%BasisnD,ib)) THEN
-!            IF(ABS(psi%CvecB(ib))>1.0E-20) changes=.TRUE.
-!            psi%CvecB(ib)=CZERO
-!          ENDIF
-!        ENDDO
-!      ELSE IF(.NOT. psi%cplx .AND. allocated(psi%RvecB)) THEN
-!        DO ib=bound1_MPI,bound2_MPI
-!          IF(psi%symab/=Get_symabOFSymAbelianOFBasis_AT_ib(psi%BasisnD,ib)) THEN
-!            IF(ABS(psi%RvecB(ib))>1.0E-20) changes=.TRUE.
-!            psi%RvecB(ib)=ZERO
-!          ENDIF
-!        ENDDO
-!      ENDIF
-!    ENDIF
-!
-!    ! share information of changes
-!    CALL MPI_Reduce(changes,temp_logi,size1_MPI,MPI_LOGICAL,MPI_LOR,                   &
-!                    root_MPI,MPI_COMM_WORLD,MPI_err)
-!    IF(MPI_id==0) changes=temp_logi
-!    CALL MPI_BCAST(changes,size1_MPI,MPI_LOGICAL,root_MPI,MPI_COMM_WORLD,MPI_err)
-!
-!#endif
-!  END SUBROUTINE Set_symab_OF_psiBasisRep_MPI_old
-!=======================================================================================
 
 !=======================================================================================
 !> @brief MPI of Set_symab_OF_psiBasisRep when each threads contain part of vec
@@ -512,7 +433,7 @@ MODULE mod_psi_Op_MPI
     Real(kind=Rkind),allocatable,intent(inout)  :: H_overlap(:,:)
     Real(kind=Rkind),allocatable,intent(inout)  :: S_overlap(:,:)
 
-    Character(len=*),parameter                  :: name_sub='Overlap_psi_Hpsi_matrix_MPI'
+    Character(len=*),parameter                  :: name_sub='Overlap_psi_Hpsi_matrix_MPI2'
     Complex(kind=Rkind)                         :: Overlap
     Integer                                     :: ii
     Integer                                     :: jj
@@ -582,7 +503,7 @@ MODULE mod_psi_Op_MPI
     Real(kind=Rkind),allocatable                :: H_overlapp(:,:)
     Real(kind=Rkind),allocatable                :: S_overlapp(:,:)
 
-    Character(len=*),parameter                  :: name_sub='Overlap_psi_Hpsi_matrix_MPI'
+    Character(len=*),parameter                  :: name_sub='Overlap_HS_matrix_MPI3'
     Complex(kind=Rkind)                         :: Overlap
     Integer                                     :: ii
     Integer                                     :: jj

@@ -61,7 +61,8 @@ CONTAINS
       USE mod_propa,       ONLY:param_propa,param_Davidson
       USE mod_propa_MPI,   ONLY:MPI_Bcast_param_Davidson
       USE mod_Davidson_MPI,ONLY:MakeResidual_Davidson_MPI4,             &
-                                MakeResidual_Davidson_j_MPI3
+                                MakeResidual_Davidson_j_MPI3,           &
+                                exit_Davidson_external_MPI
       USE mod_psi_Op_MPI,  ONLY:sub_LCpsi_TO_psi_MPI
       USE mod_MPI_aux
       IMPLICIT NONE
@@ -129,6 +130,7 @@ CONTAINS
       integer, pointer  :: list_readWP(:)
 
       logical           :: With_Grid,With_Basis,Hmin_OR_Hmax
+      logical           :: exit_Davidson
 
       !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
@@ -248,6 +250,7 @@ CONTAINS
       ndim0   = 0
       iresidu = 0
       conv    = .FALSE.
+      exit_Davidson=.FALSE.
 
       CALL alloc_NParray(vec,(/ndim,ndim/),"vec",name_sub)
       IF (MatOp_omp /= 2) THEN
@@ -492,10 +495,12 @@ CONTAINS
           save_WP = (ndim == max_diago) .OR. conv .OR.                  &
                      it == para_Davidson%max_it .OR.                    &
                      (it > 0 .AND. mod(it,para_Davidson%num_resetH) == 0)
-           Save_WP = Save_WP .AND. .NOT. Hmin_OR_Hmax
-           !- new vectors --------------------------------------------
-           !----------------------------------------------------------
+          Save_WP = Save_WP .AND. .NOT. Hmin_OR_Hmax
+          !- new vectors --------------------------------------------
+          !----------------------------------------------------------
 
+          CALL exit_Davidson_external_MPI(exit_Davidson,save_WP,it)
+ 
           write(out_unitp,*) 'ndim,max_diago',ndim,max_diago
           write(out_unitp,*) 'save_WP,conv',save_WP,conv
           IF (debug) THEN
@@ -611,6 +616,9 @@ CONTAINS
           CALL flush_perso(out_unitp)
 
         IF (conv) EXIT
+
+        !IF(openmpi .AND. exit_Davidson) EXIT
+        IF(exit_Davidson) EXIT
 
 !#if(run_MPI)
 !        ! boardcast new ndim value
