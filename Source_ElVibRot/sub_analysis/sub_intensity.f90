@@ -187,7 +187,7 @@
         DO k=1,3
           IF (para_intensity%pola_xyz(k)) THEN
             write(out_unitp,*) ' sub_intensity: ',trim(para_Dip(k)%name_Op),'+ <psi|dip|psi>'
-            write(out_unitp,*) ' alloc Rmat: ',trim(para_Dip(k)%name_Op),' ',associated(para_Dip(k)%Rmat)
+            write(out_unitp,*) ' alloc Rmat: ',trim(para_Dip(k)%name_Op),' ',allocated(para_Dip(k)%Rmat)
 
             IF (.NOT. para_Dip(k)%spectral .OR. .NOT. para_Dip(k)%mat_done) THEN
               write(out_unitp,*) ' ERROR in sub_intensity'
@@ -1176,4 +1176,3 @@
       func_lorentzian = ONE/(a*pi) * ONE/(ONE+((x-x0)/a)**2)
 
       end function func_lorentzian
-

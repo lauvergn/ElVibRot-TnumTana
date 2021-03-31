@@ -60,7 +60,7 @@
       TYPE (basis), intent(inout) :: basis_SG
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ReadOp) :: para_ReadOp
+      TYPE (param_ReadOp), intent(in) :: para_ReadOp
 
 
 !---------------------------------------------------------------------
@@ -583,7 +583,7 @@
       TYPE (basis), intent(inout) :: basis_SG
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ReadOp) :: para_ReadOp
+      TYPE (param_ReadOp), intent(in) :: para_ReadOp
 
 
 
@@ -944,7 +944,7 @@
       TYPE (basis), intent(inout) :: basis_SG
 
 !----- variables for the construction of H ---------------------------
-      TYPE (param_ReadOp) :: para_ReadOp
+      TYPE (param_ReadOp), intent(in) :: para_ReadOp
 
       integer             :: LB,L,Lmin,Lmax,i_SG,DeltaL,nq_iSG,nq_SG,ib,nb,i
       integer             :: iq,nq,nqq,ndim,nbb
@@ -956,7 +956,7 @@
 
       TYPE (Type_IntVec), allocatable :: tab_i_TO_l(:)
       real (kind=Rkind),  allocatable :: wrho(:)
-
+      logical,            allocatable :: skip_deltaL(:,:)
       integer       :: tab_l(basis_SG%nb_basis)
       integer       :: tab_nb(basis_SG%nb_basis)
       integer       :: tab_ib(basis_SG%nb_basis)
@@ -966,8 +966,8 @@
       integer       :: L1maxB,L2maxB,L1maxG,L2maxG
 
 
-      logical       :: Print_basis
-      TYPE (basis)  :: basis_temp
+      logical               :: Print_basis
+      TYPE (basis)          :: basis_temp
 
       character (len=:), allocatable :: fformat
 !----- for debuging --------------------------------------------------
@@ -1044,7 +1044,7 @@
             write(out_unitp,*) '===L,ib: ',L,ib,'==============='
           END IF
 
-          CALL basis2TObasis1(basis_SG%tab_basisPrimSG(L,ib),           &
+          CALL basis2TObasis1(basis_SG%tab_basisPrimSG(L,ib),                   &
                                        basis_SG%tab_Pbasis(ib)%Pbasis)
 
           IF (L < Lmax) THEN
@@ -1056,7 +1056,11 @@
           ! change nb, nq (function of L)
           IF (basis_SG%tab_basisPrimSG(L,ib)%nb_basis < 1) THEN
             LG_L = L ! old
+            CALL init_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nq,Lmax=LG_L)
+
             LB_L = min(L,LB) !old
+            CALL init_Basis_L_TO_n(basis_SG%tab_basisPrimSG(L,ib)%L_TO_nb,Lmax=LB_L)
+
             IF (debug) write(out_unitp,*) 'primitive basis'
           ELSE
             basis_SG%tab_basisPrimSG(L,ib)%L_TO_nq%A = 0
@@ -1218,27 +1222,42 @@
         CALL flush_perso(out_unitp)
       END IF
 
-      IF (count(nDNum_OF_Lmax == 0) == basis_SG%nb_basis .AND.          &
-          basis_SG%MaxCoupling_OF_nDindB >= basis_SG%nb_basis) THEN
+      ! nDsize can be wrong
+      nDsize(:) = Lmax+1
+
+      ! get skip_deltaL
+      CALL alloc_NParray(skip_deltaL,[Lmax,basis_SG%nb_basis],                  &
+                        'skip_deltaL',name_sub,tab_lb=[0,1])
+      skip_deltaL(:,:) = .FALSE.
+      DO ib=1,basis_SG%nb_basis
+        skip_deltaL(:,ib) = basis_SG%tab_basisPrimSG(Lmax,ib)%L_TO_nq%skip_deltaL(:)
+      END DO
+
+      IF (count(nDNum_OF_Lmax == 0) == basis_SG%nb_basis      .AND.             &
+          basis_SG%MaxCoupling_OF_nDindB >= basis_SG%nb_basis .AND.             &
+          all(.NOT. skip_deltaL) ) THEN
 
         !basis_SG%para_SGType2%nDind_SmolyakRep%packed = .FALSE.
         basis_SG%para_SGType2%nDind_SmolyakRep%packed = .TRUE.
-        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep,   &
-                            basis_SG%nb_basis,nDsize,type_OF_nDindex=-5,&
-                            Lmin=Lmin,Lmax=Lmax,                        &
-                            MaxCoupling=basis_SG%MaxCoupling_OF_nDindB, &
-                            nDinit=(/ (0,i=1,basis_SG%nb_basis) /) )
+        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep,           &
+                              basis_SG%nb_basis,nDsize,type_OF_nDindex=-5,      &
+                              Lmin=Lmin,Lmax=Lmax,                              &
+                              MaxCoupling=basis_SG%MaxCoupling_OF_nDindB,       &
+                              nDinit=[ (0,i=1,basis_SG%nb_basis) ] )
       ELSE
         IF (MPI_id==0) write(out_unitp,*) 'L1maxG, L2maxG (grid)',L1maxG,L2maxG
 
         basis_SG%para_SGType2%nDind_SmolyakRep%packed = .TRUE.
-        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep,   &
-                           basis_SG%nb_basis,nDsize,type_OF_nDindex=-5, &
-                           Lmin=0,Lmax=Lmax,nDNum_OF_Lmax=nDNum_OF_Lmax,&
-                           L1max=L1maxG,L2max=L2maxG,                   &
-                           MaxCoupling=basis_SG%MaxCoupling_OF_nDindB,  &
-                           nDinit=(/ (0,i=1,basis_SG%nb_basis) /) )
+        CALL init_nDindexPrim(basis_SG%para_SGType2%nDind_SmolyakRep,           &
+                              basis_SG%nb_basis,nDsize,type_OF_nDindex=-5,      &
+                              Lmin=0,Lmax=Lmax,nDNum_OF_Lmax=nDNum_OF_Lmax,     &
+                              L1max=L1maxG,L2max=L2maxG,                        &
+                              MaxCoupling=basis_SG%MaxCoupling_OF_nDindB,       &
+                              !skip_li=skip_deltaL,                              &
+                              nDinit=[ (0,i=1,basis_SG%nb_basis) ] )
+
       END IF
+
 
       IF (debug) CALL Write_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
 
@@ -1252,11 +1271,13 @@
       CALL calc_Weight_OF_SRep(basis_SG%WeightSG,basis_SG%para_SGType2%nDind_SmolyakRep)
       !CALL unpack_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
 
+      CALL dealloc_NParray(skip_deltaL,'skip_deltaL',name_sub)
+
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set nDind_SmolyakRep: done'
         CALL flush_perso(out_unitp)
       END IF
-
+!STOP
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set para_SGType2%nDind_DPG and para_SGType2%nDind_DPB'
         write(out_unitp,*) 'nb_SG:',basis_SG%nb_SG

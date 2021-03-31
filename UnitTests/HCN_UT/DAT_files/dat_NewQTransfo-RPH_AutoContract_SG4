@@ -16,7 +16,6 @@ DIR_pot=$DIR_vib/sub_pot
 cd $DIR_vib
  make &> $here/comp.log
 cd $here
-
 #LB=11
 #LG=16
 #B=1
@@ -135,5 +134,6 @@ end wp0
  5 3 1    1 1   1.0
 end wp0
 **
+echo $RES
 
 awk '/lev0:/ {print $5}' $RES | head -20 > lev20_$RES

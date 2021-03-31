@@ -28,7 +28,7 @@ fi
 
 ./calc_1D >> run_tests.log
 
- ./calc_1+8D $test_size >> run_tests.log
+./calc_1+8D $test_size >> run_tests.log
 
 
 
@@ -38,5 +38,5 @@ then
   echo "NO ERROR in HNO3-EVR UT"
 else
   echo $nb_err " ERROR(S) in HNO3-EVR UT"
-  echo  " check the output files in UnitTests/HNO3_UT."
+  echo  " check the output or the run_tests.log files in UnitTests/HNO3_UT."
 fi

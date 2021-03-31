@@ -9,7 +9,7 @@
 
 ## parallel_make=1 to enable parallel make
 ## parallel_make=0 for fast debug make, no parallel
-parallel_make=0
+parallel_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 1
@@ -28,7 +28,7 @@ CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 0
+QML = 1
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -620,10 +620,10 @@ Obj_TanaPrim = $(OBJ)/sub_module_Tana_OpEl.o \
 Obj_Coord = \
   $(OBJ)/Lib_QTransfo.o \
   $(OBJ)/BunchPolyTransfo.o $(OBJ)/ZmatTransfo.o $(OBJ)/QTOXanaTransfo.o $(OBJ)/CartesianTransfo.o \
-  $(OBJ)/OneDTransfo.o $(OBJ)/ThreeDTransfo.o $(OBJ)/Rot2CoordTransfo.o \
+  $(OBJ)/OneDTransfo.o $(OBJ)/ThreeDTransfo.o $(OBJ)/TwoDTransfo.o $(OBJ)/Rot2CoordTransfo.o \
   $(OBJ)/FlexibleTransfo.o $(OBJ)/GeneTransfo.o \
   $(OBJ)/HyperSpheTransfo.o $(OBJ)/LinearNMTransfo.o $(OBJ)/RectilinearNM_Transfo.o \
-  $(OBJ)/RPHTransfo.o $(OBJ)/sub_freq.o \
+  $(OBJ)/sub_freq.o $(OBJ)/RPHTransfo.o \
   $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o \
   $(OBJ)/Calc_Tab_dnQflex.o
 
@@ -777,9 +777,9 @@ Obj_EVRT =\
 #make all : EVR
 .PHONY: all evr EVR libEVR libevr
 evr EVR all :obj vib $(VIBEXE)
-	@echo "EVR"
+	@echo "EVR OK"
 libEVR libevr: obj $(OBJ)/libEVR.a
-	@echo "libEVR.a"
+	@echo "libEVR.a OK"
 
 #============================================================================
 # All tnum/Tana ...
@@ -787,25 +787,25 @@ libEVR libevr: obj $(OBJ)/libEVR.a
 .PHONY: tnum Tnum tnum-dist Tnum-dist Tnum_MCTDH Tnum_MidasCpp Midas midas
 
 Tnum_FDriver: obj $(Main_TnumTana_FDriverEXE)
-	echo "Main_TnumTana_FDriver"
+	echo "Main_TnumTana_FDriver OK"
 Tnum_cDriver: obj $(Main_TnumTana_cDriverEXE)
-	echo "Main_TnumTana_cDriver"
+	echo "Main_TnumTana_cDriver OK"
 #
 libTnum libTnum.a: obj $(OBJ)/libTnum.a
-	echo "libTnum.a"
+	echo "libTnum.a OK"
 #
 keotest: obj $(KEOTESTEXE)
-	echo "TEST_TnumTana"
+	echo "TEST_TnumTana OK"
 
 tnum Tnum tnum-dist Tnum-dist: obj $(TNUMEXE)
-	echo "Tnum"
+	echo "Tnum OK"
 #
 Tnum_MCTDH: obj $(TNUMMCTDHEXE)
-	echo "Tnum_MCTDH"
+	echo "Tnum_MCTDH OK"
 #
 #TNUM_MiddasCppEXE
 Tnum_MidasCpp Midas midas: obj $(TNUM_MiddasCppEXE)
-	echo "Tnum_MidasCpp"
+	echo "Tnum_MidasCpp OK"
 #
 .PHONY: Tana_test
 Tana_test: Tana_test.exe
@@ -817,19 +817,19 @@ $(OBJ)/Tana_test.o: $(DirTNUM)/sub_main/Tana_test.f90
 # Some all programs
 .PHONY: gauss GWP work
 gauss GWP: obj $(GWPEXE)
-	echo "GWP"
+	echo "GWP OK"
 #
 work:obj $(WORKEXE)
-	echo "work"
+	echo "work OK"
 #============================================================================
 # Physical Constants
 .PHONY: PhysConst
 PhysConst: obj $(PhysConstEXE)
-	echo "Physical Constants"
+	echo "Physical Constants OK"
 #============================================================================
 # Unitary tests
 .PHONY: ut UT UnitTests
-ut UT UnitTests: UT_Frac UT_PhysConst UT_HNO3 UT_HCN UT_HCN-WP
+ut UT UnitTests: UT_Frac UT_PhysConst UT_Tnum UT_HNO3 UT_HCN UT_HCN-WP
 #
 .PHONY: UT_Frac ut_frac
 UT_Frac ut_frac : UnitTests_Frac.exe
@@ -847,6 +847,13 @@ UT_PhysConst ut_physconst: PhysConst
 	@echo "---------------------------------------"
 	@echo "Unitary tests for the PhysConst module"
 	@cd Examples/exa_PhysicalConstants ; ./run_tests > $(DIRUT)/res_UT_PhysConst ; $(DIRUT)/PhysConst.sh $(DIRUT)/res_UT_PhysConst
+	@echo "---------------------------------------"
+#
+.PHONY: UT_Tnum ut_Tnum UT_tnum ut_tnum
+UT_Tnum ut_Tnum UT_tnum ut_tnum: Tnum
+	@echo "---------------------------------------"
+	@echo "Unitary tests for the Tnum"
+	@cd UnitTests/Tnum_UT ; ./run_tests
 	@echo "---------------------------------------"
 #
 .PHONY: UT_HNO3 ut_hno3
@@ -1063,6 +1070,8 @@ $(OBJ)/OneDTransfo.o:$(DirTNUM)/Qtransfo/OneDTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/OneDTransfo.f90
 $(OBJ)/ThreeDTransfo.o:$(DirTNUM)/Qtransfo/ThreeDTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/ThreeDTransfo.f90
+$(OBJ)/TwoDTransfo.o:$(DirTNUM)/Qtransfo/TwoDTransfo.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/TwoDTransfo.f90
 $(OBJ)/Rot2CoordTransfo.o:$(DirTNUM)/Qtransfo/Rot2CoordTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/Rot2CoordTransfo.f90
 $(OBJ)/FlexibleTransfo.o:$(DirTNUM)/Qtransfo/FlexibleTransfo.f90
@@ -1317,7 +1326,7 @@ $(OBJ)/sub_TF_autocorr.o:$(DIRpropa)/sub_TF_autocorr.f90
 #===============================================================================
 # sub_CRP:
 $(OBJ)/sub_CRP.o:$(DIRCRP)/sub_CRP.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_CERFACS) -c $(DIRCRP)/sub_CRP.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_CERFACS) $(CPPSHELL_ARPACK) -c $(DIRCRP)/sub_CRP.f90
 $(OBJ)/CERFACS_lib.o:$(DIRCRP)/CERFACS_lib.f
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRCRP)/CERFACS_lib.f
 $(OBJ)/QMRPACK_lib.o:$(DIRCRP)/QMRPACK_lib.f
@@ -1527,7 +1536,7 @@ else
 endif
 
 .PHONY: test
-test: 
+test:
 ifeq ($(F90),mpifort)
 	@cd ./Working_tests/MPI_tests ; ./MPI_test.sh
 else

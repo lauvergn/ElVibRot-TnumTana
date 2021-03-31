@@ -120,7 +120,7 @@
         nb_inact21 = mole%nb_inact2n
       END IF
 
-      IF (nb_inact21 <= 0) THEN
+      IF (mole%nb_inact2n <= 0) THEN
         read(in_unitp,inactives) ! for nagfor we must read the inactive namelist
         RETURN
       END IF
@@ -326,7 +326,9 @@
       integer       :: JJ,Type_HamilOp
       integer       :: nb_CAP,nb_FluxOp
 
-      logical       :: pot_only,T_only,pack_Op,read_Op,make_MatOp,direct_KEO,direct_ScalOp
+      logical       :: pot_only,T_only,pack_Op,read_Op,make_MatOp
+      logical       :: direct_KEO,direct_ScalOp
+      logical       :: Op_WithContracRVec
 
       character (len=Name_len) :: name0
 
@@ -358,7 +360,8 @@
                         name_Grid,formatted_Grid,                       &
                         JJ,Type_HamilOp,direct_KEO,direct_ScalOp,       &
                         direct,make_MatOp,pack_Op,tol_pack,tol_nopack,  &
-                        Op_Transfo,E0_Transfo,nb_CAP,nb_FluxOp
+                        Op_Transfo,E0_Transfo,nb_CAP,nb_FluxOp,         &
+                        Op_WithContracRVec
 
 
 !------- test on max_HADA and n_h ---------------------------------
@@ -370,45 +373,46 @@
 
 !------- read the active namelist ----------------------------
 
-      make_MatOp      = .FALSE.
-      tol_pack        = ONETENTH**7
-      tol_nopack      = NINE/TEN
-      pack_Op         = .FALSE.
-      read_Op         = .FALSE.
-      test            = .TRUE.
-      comput_S        = .FALSE.
-      Type_HamilOp    = 1
-      direct_KEO      = .FALSE.
-      direct_ScalOp   = .FALSE.
-      nb_CAP          = 0
-      nb_FluxOp       = 0
+      make_MatOp          = .FALSE.
+      tol_pack             = ONETENTH**7
+      tol_nopack           = NINE/TEN
+      pack_Op              = .FALSE.
+      read_Op              = .FALSE.
+      test                 = .TRUE.
+      comput_S             = .FALSE.
+      Type_HamilOp         = 1
+      direct_KEO           = .FALSE.
+      direct_ScalOp        = .FALSE.
+      Op_WithContracRVec  = .FALSE.
+      nb_CAP              = 0
+      nb_FluxOp           = 0
 
-      direct          = 0
-      Type_FileGrid   = 0
-      Read_Grid       = .FALSE.
-      Save_FileGrid   = .FALSE.
-      Save_MemGrid    = .FALSE.
-      Keep_FileGrid   = .FALSE.
-      Seq_FileGrid    = .FALSE.
-      lect            = .FALSE.
-      Restart_Grid    = .FALSE.
-      restart         = .FALSE.
-      num_grid_i      = 0
-      num_grid_f      = 0
+      direct              = 0
+      Type_FileGrid       = 0
+      Read_Grid           = .FALSE.
+      Save_FileGrid       = .FALSE.
+      Save_MemGrid        = .FALSE.
+      Keep_FileGrid       = .FALSE.
+      Seq_FileGrid        = .FALSE.
+      lect                = .FALSE.
+      Restart_Grid        = .FALSE.
+      restart             = .FALSE.
+      num_grid_i          = 0
+      num_grid_f          = 0
 
-      JJ              = -1
+      JJ                  = -1
 
-      name_HADA     = 'SH_HADA'
-      formatted_HADA= .TRUE.
-      name_Grid     = 'SH_HADA'
-      formatted_Grid= .TRUE.
+      name_HADA           = 'SH_HADA'
+      formatted_HADA      = .TRUE.
+      name_Grid           = 'SH_HADA'
+      formatted_Grid      = .TRUE.
 
 
-      pot_only      = .FALSE.
-      T_only        = .FALSE.
+      pot_only            = .FALSE.
+      T_only              = .FALSE.
 
-      Op_Transfo    = .FALSE.
-      E0_Transfo    = REAL_WU(ZERO,   'cm-1','E') !ZERO with cm-1 as default unit
+      Op_Transfo          = .FALSE.
+      E0_Transfo          = REAL_WU(ZERO,   'cm-1','E') !ZERO with cm-1 as default unit
 
       read(in_unitp,actives)
       IF (direct == 0 .OR. read_Op) make_MatOp = .TRUE.
@@ -438,10 +442,10 @@
         para_Tnum%With_Cart_Transfo = (JJ>0) .AND. mole%Cart_transfo
       END IF
 
-      para_ReadOp%Type_HamilOp  = Type_HamilOp
-      para_ReadOp%direct_KEO    = direct_KEO
-      para_ReadOp%direct_ScalOp = direct_ScalOp
-
+      para_ReadOp%Type_HamilOp       = Type_HamilOp
+      para_ReadOp%direct_KEO         = direct_KEO
+      para_ReadOp%direct_ScalOp      = direct_ScalOp
+      para_ReadOp%Op_WithContracRVec = Op_WithContracRVec
 
 
       IF (print_level > 0) write(out_unitp,*) ' END read_active'

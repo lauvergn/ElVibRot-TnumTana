@@ -1,14 +1,34 @@
 #!/bin/bash
 
-epsi=$4
+
+compOK=`tail -1 comp.log | grep -c OK `
+if [ $compOK = '1' ]
+then
+ echo " ElVibRot compilation: OK"
+else
+ echo " ElVibRot compilation: ERROR"
+ exit
+fi
+
+
+epsi=$5
 if [ -z $epsi ]
 then
   epsi=0.1
 fi
 
-file=$1
-Oldfile=$2
-col=$3
+res_file=$1
+file=$2
+Oldfile=$3
+col=$4
+
+
+EVROK=`grep -c "ElVibRot-Tnum AU REVOIR!!!" $res_file `
+if [ $EVROK -ne "1" ]
+then
+ echo "ElVibRot execution: ERROR"
+ exit
+fi
 
 fNew=TempNew
 fOld=TempOld

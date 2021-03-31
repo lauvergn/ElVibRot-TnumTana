@@ -130,7 +130,7 @@
         PBasisTOGrid_maxth = maxth
         PGrid_omp          = 1
         PGrid_maxth        = maxth
-        PCRP_omp           = 1
+        PCRP_omp           = 0
         PCRP_maxth         = maxth
         PTune_SG4_omp      = .FALSE.
         PTune_Grid_omp     = .FALSE.

@@ -82,15 +82,15 @@ IMPLICIT NONE
     integer, allocatable          :: nDval_init(:,:)   ! nDval_init(ndim,nb_threads) table the individual indexes
     integer, allocatable          :: iG_th(:),fG_th(:) ! iG indexes associated to the OpenMP threads
 
-    TYPE (multi_array4),allocatable :: nDI_index_master(:) !< for MPI in action, scheme3 
-    Integer(kind=MPI_INTEGER_KIND),allocatable :: reduce_Vlength_master(:) 
-    Integer(kind=MPI_INTEGER_KIND),allocatable :: size_ST(:) 
+    TYPE (multi_array4),allocatable :: nDI_index_master(:) !< for MPI in action, scheme3
+    Integer(kind=MPI_INTEGER_KIND),allocatable :: reduce_Vlength_master(:)
+    Integer(kind=MPI_INTEGER_KIND),allocatable :: size_ST(:)
     Integer(kind=MPI_INTEGER_KIND),allocatable :: size_ST_mc(:,:)
     Integer(kind=MPI_INTEGER_KIND)             :: size_psi
-    Integer(kind=MPI_INTEGER_KIND)             :: reduce_Vlength !< reduced size of V 
+    Integer(kind=MPI_INTEGER_KIND)             :: reduce_Vlength !< reduced size of V
     Integer                                    :: Max_nDI_ib0
     Integer(kind=Ikind),allocatable            :: nDI_index(:)
-    Integer(kind=Ikind),allocatable            :: nDI_index_list(:) 
+    Integer(kind=Ikind),allocatable            :: nDI_index_list(:)
     Integer                                    :: num_nDI_index
     Integer                                    :: V_allcount
     Integer                                    :: V_allcount2
@@ -761,7 +761,6 @@ END SUBROUTINE SGType2_2TOSGType2_1
       integer             :: tab_l(nDind_SmolyakRep%ndim)
       integer             :: tab_lm(nDind_SmolyakRep%ndim)
 
-      logical             :: old = .TRUE.
       real (kind=Rkind)   :: WeightSG_tmp(nDind_SmolyakRep%Max_nDI)
 
 
@@ -777,7 +776,8 @@ END SUBROUTINE SGType2_2TOSGType2_1
 !-----------------------------------------------------------
 
     IF (count(nDind_SmolyakRep%nDNum_OF_Lmax == 0) == nDind_SmolyakRep%ndim .AND. &
-        nDind_SmolyakRep%MaxCoupling >= nDind_SmolyakRep%ndim) THEN
+        nDind_SmolyakRep%MaxCoupling >= nDind_SmolyakRep%ndim .AND. &
+        all(.NOT. nDind_SmolyakRep%skip_li)) THEN
       ! it works only when L1max or L2max are not used and
       !     when the max number of coupling terms is >= than ndim
       CALL init_nDval_OF_nDindex(nDind_SmolyakRep,tab_l)

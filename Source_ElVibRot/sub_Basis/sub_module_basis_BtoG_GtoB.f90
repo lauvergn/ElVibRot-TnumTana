@@ -1204,7 +1204,7 @@
               ENDDO
               Cvec_length(MPI_id)=itabR
               CALL MPI_collect_info(Cvec_length,bcast=.True.)
-              
+
               CALL allocate_array(Cvec,1,Cvec_length(MPI_id))
               itabR=0
               DO iG=d1,d2
@@ -1962,4 +1962,413 @@ STOP 'SparseGrid_type=0'
 
       END SUBROUTINE DerivOp_TO_CVecB
 
-      END MODULE mod_basis_BtoG_GtoB
+SUBROUTINE RVecBC_TO_RvecB(RVecBC,RvecB,nbc,nb,basis_set)
+  IMPLICIT NONE
+
+
+  TYPE (basis),       intent(in)    :: basis_set
+  integer,            intent(in)    :: nbc,nb
+  real (kind=Rkind),  intent(in)    :: RVecBC(:)
+  real (kind=Rkind),  intent(inout) :: RvecB(:)
+
+  real (kind=Rkind), allocatable   :: RB(:,:,:)
+  real (kind=Rkind), allocatable   :: RBC(:,:,:)
+  integer :: i,i1,i2,i3,N1,NC3,n2,nc2
+  integer, allocatable :: tab_nb(:),tab_nbc(:)
+
+!----- for debuging --------------------------------------------------
+  integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='RVecBC_TO_RvecB'
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'size RVecBC(:)',size(RVecBC)
+  END IF
+  IF (basis_set%cplx) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' the basis is complex but the'
+    write(out_unitp,*) ' the vector is real !!'
+    STOP
+  END IF
+
+
+  IF (basis_set%packed_done) THEN
+
+    RvecB(:) = matmul(basis_set%Rvec(:,1:nbc),RVecBC)
+    !RvecB(:) = ZERO
+    !DO ibc=1,nbc
+    !  RvecB(:) = RvecB(:) + basis_set%Rvec(:,ibc)*RVecBC(ibc)
+    !END DO
+
+  ELSE ! basis_set%nb_basis MUST BE > 0
+    IF (basis_set%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+    IF (basis_set%SparseGrid_type /= 0) STOP 'ERROR SparseGrid_type must be 0'
+
+    ! tab_nb and tab_nbc calculations
+    CALL alloc_NParray(tab_nb, [basis_set%nb_basis], 'tab_nb',  name_sub)
+    CALL alloc_NParray(tab_nbc,[basis_set%nb_basis], 'tab_nbc', name_sub)
+    DO i=1,basis_set%nb_basis
+      tab_nb(i)  = get_nb_FROM_basis(basis_set%tab_Pbasis(i)%Pbasis)
+      IF (basis_set%tab_Pbasis(i)%Pbasis%contrac_RVecOnly) THEN
+        tab_nbc(i) = basis_set%tab_Pbasis(i)%Pbasis%nbc
+      ELSE
+        tab_nbc(i) = tab_nb(i)
+      END IF
+    END DO
+
+    NC3 = product(tab_nbc)
+    N1  = 1
+    n2  = 1
+    nc2 = 1
+
+    CALL alloc_NParray(RB,[N1,n2,NC3],'RC',name_sub)
+    RB(:,:,:) = reshape(RVecBC,shape=[N1,n2,NC3])
+
+    DO i=basis_set%nb_basis,1,-1
+      n2  = tab_nb(i)
+      nc2 = tab_nbc(i)
+      NC3 = NC3 / nc2
+      IF (basis_set%tab_Pbasis(i)%Pbasis%contrac_RVecOnly) THEN
+        CALL alloc_NParray(RBC,[N1,nc2,NC3],'RBC',name_sub)
+        RBC(:,:,:) = reshape(RB,shape=[N1,nc2,NC3])
+
+        CALL dealloc_NParray(RB,'RB',name_sub)
+        CALL alloc_NParray(RB,[N1,n2,NC3],'RC',name_sub)
+
+        DO i3=1,NC3
+        DO i1=1,N1
+          RB(i1,:,i3) = matmul(basis_set%tab_Pbasis(i)%Pbasis%Rvec(:,1:nc2),RBC(i1,:,i3))
+        END DO
+        END DO
+
+        CALL dealloc_NParray(RBC,'RBC',name_sub)
+      END IF
+
+      N1 = N1 * n2
+
+    END DO
+
+    RvecB(:) = reshape(RB, shape=[N1])
+    CALL dealloc_NParray(RB,"RB",name_sub)
+
+    CALL dealloc_NParray(tab_nb, 'tab_nb',  name_sub)
+    CALL dealloc_NParray(tab_nbc,'tab_nbc', name_sub)
+
+  END IF
+
+  IF (debug) THEN
+    write(out_unitp,*) 'RvecB(:)',RvecB(:)
+    write(out_unitp,*) 'END ',name_sub
+  END IF
+END SUBROUTINE RVecBC_TO_RvecB
+SUBROUTINE RVecB_TO_RvecBC(RvecB,RVecBC,nb,nbc,basis_set)
+  IMPLICIT NONE
+
+
+  TYPE (basis),       intent(in)    :: basis_set
+  integer,            intent(in)    :: nbc,nb
+  real (kind=Rkind),  intent(inout) :: RVecBC(:)
+  real (kind=Rkind),  intent(in)    :: RvecB(:)
+
+  real (kind=Rkind), allocatable   :: RB(:,:,:)
+  real (kind=Rkind), allocatable   :: RBC(:,:,:)
+  integer :: i,i1,i2,i3,NC1,N3,n2,nc2
+  integer, allocatable :: tab_nb(:),tab_nbc(:)
+
+!----- for debuging --------------------------------------------------
+  integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='RVecB_TO_RvecBC'
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'size RVecB(:)',size(RVecB)
+  END IF
+  IF (basis_set%cplx) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' the basis is complex but the'
+    write(out_unitp,*) ' the vector is real !!'
+    STOP
+  END IF
+
+
+  IF (basis_set%packed_done) THEN
+
+    RvecBC(:) = matmul(transpose(basis_set%Rvec(:,1:nbc)),RVecB)
+    !RvecB(:) = ZERO
+    !DO ibc=1,nbc
+    !  RvecB(:) = RvecB(:) + basis_set%Rvec(:,ibc)*RVecBC(ibc)
+    !END DO
+
+  ELSE ! basis_set%nb_basis MUST BE > 0
+    IF (basis_set%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+    IF (basis_set%SparseGrid_type /= 0) STOP 'ERROR SparseGrid_type must be 0'
+
+    ! tab_nb and tab_nbc calculations
+    CALL alloc_NParray(tab_nb, [basis_set%nb_basis], 'tab_nb',  name_sub)
+    CALL alloc_NParray(tab_nbc,[basis_set%nb_basis], 'tab_nbc', name_sub)
+    DO i=1,basis_set%nb_basis
+      tab_nb(i)  = get_nb_FROM_basis(basis_set%tab_Pbasis(i)%Pbasis)
+      IF (basis_set%tab_Pbasis(i)%Pbasis%contrac_RVecOnly) THEN
+        tab_nbc(i) = basis_set%tab_Pbasis(i)%Pbasis%nbc
+      ELSE
+        tab_nbc(i) = tab_nb(i)
+      END IF
+    END DO
+
+    N3  = product(tab_nb)
+    NC1 = 1
+    n2  = 1
+    nc2 = 1
+
+    CALL alloc_NParray(RBC,[NC1,n2,N3],'RC',name_sub)
+    RBC(:,:,:) = reshape(RVecB,shape=[NC1,n2,N3])
+
+    DO i=basis_set%nb_basis,1,-1
+
+      n2  = tab_nb(i)
+      nc2 = tab_nbc(i)
+      N3  = N3 / n2
+      IF (basis_set%tab_Pbasis(i)%Pbasis%contrac_RVecOnly) THEN
+        CALL alloc_NParray(RB,[NC1,n2,N3],'RB',name_sub)
+        RB(:,:,:) = reshape(RBC,shape=[NC1,n2,N3])
+
+        CALL dealloc_NParray(RBC,'RBC',name_sub)
+        CALL alloc_NParray(RBC,[NC1,nc2,N3],'RBC',name_sub)
+
+        DO i3=1,N3
+        DO i1=1,NC1
+          RBC(i1,:,i3) = matmul(transpose(basis_set%tab_Pbasis(i)%Pbasis%Rvec(:,1:nc2)),RB(i1,:,i3))
+        END DO
+        END DO
+
+        CALL dealloc_NParray(RB,'RB',name_sub)
+      END IF
+
+      NC1 = NC1 * nc2
+
+    END DO
+
+    RvecBC(:) = reshape(RBC, shape=[NC1])
+    CALL dealloc_NParray(RBC,"RBC",name_sub)
+
+    CALL dealloc_NParray(tab_nb, 'tab_nb',  name_sub)
+    CALL dealloc_NParray(tab_nbc,'tab_nbc', name_sub)
+
+  END IF
+
+  IF (debug) THEN
+    write(out_unitp,*) 'RvecBC(:)',RvecBC(:)
+    write(out_unitp,*) 'END ',name_sub
+  END IF
+END SUBROUTINE RVecB_TO_RvecBC
+
+
+SUBROUTINE CVecBC_TO_CvecB(CVecBC,CvecB,nbc,nb,basis_set)
+  IMPLICIT NONE
+
+
+  TYPE (basis),       intent(in)        :: basis_set
+  integer,            intent(in)        :: nbc,nb
+  complex (kind=Rkind),  intent(in)     :: CvecBC(:)
+  complex (kind=Rkind),  intent(inout)  :: CvecB(:)
+
+  complex (kind=Rkind), allocatable   :: CB(:,:,:)
+  complex (kind=Rkind), allocatable   :: CBC(:,:,:)
+  integer :: i,i1,i2,i3,N1,NC3,n2,nc2
+  integer, allocatable :: tab_nb(:),tab_nbc(:)
+
+!----- for debuging --------------------------------------------------
+  integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='CVecBC_TO_CvecB'
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'size CvecBC(:)',size(CvecBC)
+  END IF
+  IF (basis_set%cplx) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' the basis is complex but the'
+    write(out_unitp,*) ' the vector is real !!'
+    STOP
+  END IF
+
+
+  IF (basis_set%packed_done) THEN
+
+    CvecB(:) = matmul(basis_set%Rvec(:,1:nbc),CvecBC)
+    !CvecB(:) = ZERO
+    !DO ibc=1,nbc
+    !  CvecB(:) = CvecB(:) + basis_set%Rvec(:,ibc)*CvecBC(ibc)
+    !END DO
+
+  ELSE ! basis_set%nb_basis MUST BE > 0
+    IF (basis_set%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+    IF (basis_set%SparseGrid_type /= 0) STOP 'ERROR SparseGrid_type must be 0'
+
+    ! tab_nb and tab_nbc calculations
+    CALL alloc_NParray(tab_nb, [basis_set%nb_basis], 'tab_nb',  name_sub)
+    CALL alloc_NParray(tab_nbc,[basis_set%nb_basis], 'tab_nbc', name_sub)
+    DO i=1,basis_set%nb_basis
+      tab_nb(i)  = get_nb_FROM_basis(basis_set%tab_Pbasis(i)%Pbasis)
+      IF (basis_set%tab_Pbasis(i)%Pbasis%contrac_RVecOnly) THEN
+        tab_nbc(i) = basis_set%tab_Pbasis(i)%Pbasis%nbc
+      ELSE
+        tab_nbc(i) = tab_nb(i)
+      END IF
+    END DO
+
+    NC3 = product(tab_nbc)
+    N1  = 1
+    n2  = 1
+    nc2 = 1
+
+    CALL alloc_NParray(CB,[N1,n2,NC3],'RC',name_sub)
+    CB(:,:,:) = reshape(CvecBC,shape=[N1,n2,NC3])
+
+    DO i=basis_set%nb_basis,1,-1
+      n2  = tab_nb(i)
+      nc2 = tab_nbc(i)
+      NC3 = NC3 / nc2
+      IF (basis_set%tab_Pbasis(i)%Pbasis%contrac_RVecOnly) THEN
+        CALL alloc_NParray(CBC,[N1,nc2,NC3],'CBC',name_sub)
+        CBC(:,:,:) = reshape(CB,shape=[N1,nc2,NC3])
+
+        CALL dealloc_NParray(CB,'CB',name_sub)
+        CALL alloc_NParray(CB,[N1,n2,NC3],'RC',name_sub)
+
+        DO i3=1,NC3
+        DO i1=1,N1
+          CB(i1,:,i3) = matmul(basis_set%tab_Pbasis(i)%Pbasis%Rvec(:,1:nc2),CBC(i1,:,i3))
+        END DO
+        END DO
+
+        CALL dealloc_NParray(CBC,'CBC',name_sub)
+      END IF
+
+      N1 = N1 * n2
+
+    END DO
+
+    CvecB(:) = reshape(CB, shape=[N1])
+    CALL dealloc_NParray(CB,"CB",name_sub)
+
+    CALL dealloc_NParray(tab_nb, 'tab_nb',  name_sub)
+    CALL dealloc_NParray(tab_nbc,'tab_nbc', name_sub)
+
+  END IF
+
+  IF (debug) THEN
+    write(out_unitp,*) 'CvecB(:)',CvecB(:)
+    write(out_unitp,*) 'END ',name_sub
+  END IF
+END SUBROUTINE CVecBC_TO_CvecB
+SUBROUTINE CVecB_TO_CvecBC(CvecB,CvecBC,nb,nbc,basis_set)
+  IMPLICIT NONE
+
+
+  TYPE (basis),       intent(in)    :: basis_set
+  integer,            intent(in)    :: nbc,nb
+  complex (kind=Rkind),  intent(inout) :: CvecBC(:)
+  complex (kind=Rkind),  intent(in)    :: CvecB(:)
+
+  complex (kind=Rkind), allocatable   :: CB(:,:,:)
+  complex (kind=Rkind), allocatable   :: CBC(:,:,:)
+  integer :: i,i1,i2,i3,NC1,N3,n2,nc2
+  integer, allocatable :: tab_nb(:),tab_nbc(:)
+
+!----- for debuging --------------------------------------------------
+  integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='CVecB_TO_CvecBC'
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'size CvecB(:)',size(CvecB)
+  END IF
+  IF (basis_set%cplx) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' the basis is complex but the'
+    write(out_unitp,*) ' the vector is real !!'
+    STOP
+  END IF
+
+
+  IF (basis_set%packed_done) THEN
+
+    CvecBC(:) = matmul(transpose(basis_set%Rvec(:,1:nbc)),CvecB)
+    !CvecB(:) = ZERO
+    !DO ibc=1,nbc
+    !  CvecB(:) = CvecB(:) + basis_set%Rvec(:,ibc)*CvecBC(ibc)
+    !END DO
+
+  ELSE ! basis_set%nb_basis MUST BE > 0
+    IF (basis_set%nb_basis == 0 ) STOP ' ERROR with packed!!!'
+    IF (basis_set%SparseGrid_type /= 0) STOP 'ERROR SparseGrid_type must be 0'
+
+    ! tab_nb and tab_nbc calculations
+    CALL alloc_NParray(tab_nb, [basis_set%nb_basis], 'tab_nb',  name_sub)
+    CALL alloc_NParray(tab_nbc,[basis_set%nb_basis], 'tab_nbc', name_sub)
+    DO i=1,basis_set%nb_basis
+      tab_nb(i)  = get_nb_FROM_basis(basis_set%tab_Pbasis(i)%Pbasis)
+      IF (basis_set%tab_Pbasis(i)%Pbasis%contrac_RVecOnly) THEN
+        tab_nbc(i) = basis_set%tab_Pbasis(i)%Pbasis%nbc
+      ELSE
+        tab_nbc(i) = tab_nb(i)
+      END IF
+    END DO
+
+    N3  = product(tab_nb)
+    NC1 = 1
+    n2  = 1
+    nc2 = 1
+
+    CALL alloc_NParray(CBC,[NC1,n2,N3],'RC',name_sub)
+    CBC(:,:,:) = reshape(CvecB,shape=[NC1,n2,N3])
+
+    DO i=basis_set%nb_basis,1,-1
+
+      n2  = tab_nb(i)
+      nc2 = tab_nbc(i)
+      N3  = N3 / n2
+      IF (basis_set%tab_Pbasis(i)%Pbasis%contrac_RVecOnly) THEN
+        CALL alloc_NParray(CB,[NC1,n2,N3],'CB',name_sub)
+        CB(:,:,:) = reshape(CBC,shape=[NC1,n2,N3])
+
+        CALL dealloc_NParray(CBC,'CBC',name_sub)
+        CALL alloc_NParray(CBC,[NC1,nc2,N3],'CBC',name_sub)
+
+        DO i3=1,N3
+        DO i1=1,NC1
+          CBC(i1,:,i3) = matmul(transpose(basis_set%tab_Pbasis(i)%Pbasis%Rvec(:,1:nc2)),CB(i1,:,i3))
+        END DO
+        END DO
+
+        CALL dealloc_NParray(CB,'CB',name_sub)
+      END IF
+
+      NC1 = NC1 * nc2
+
+    END DO
+
+    CvecBC(:) = reshape(CBC, shape=[NC1])
+    CALL dealloc_NParray(CBC,"CBC",name_sub)
+
+    CALL dealloc_NParray(tab_nb, 'tab_nb',  name_sub)
+    CALL dealloc_NParray(tab_nbc,'tab_nbc', name_sub)
+
+  END IF
+
+  IF (debug) THEN
+    write(out_unitp,*) 'CvecBC(:)',CvecBC(:)
+    write(out_unitp,*) 'END ',name_sub
+  END IF
+END SUBROUTINE CVecB_TO_CvecBC
+
+END MODULE mod_basis_BtoG_GtoB

@@ -60,6 +60,8 @@
           integer                     :: max_n            = huge(1) ! value such n(L)<= max_n
           integer, allocatable        :: Tab_L_TO_n(:)
           integer, allocatable        :: Tab_n_TO_L(:)
+          logical, allocatable        :: skip_deltaL(:)
+
         CONTAINS
           PROCEDURE, PRIVATE, PASS(L_TO_n_para1) :: L_TO_n_para2_TO_L_TO_n_para1
           GENERIC,   PUBLIC  :: assignment(=) => L_TO_n_para2_TO_L_TO_n_para1
@@ -67,7 +69,7 @@
 
         PUBLIC :: Basis_L_TO_n, init_Basis_L_TO_n,                      &
                   Write_Basis_L_TO_n, Set_Basis_L_TO_n,                 &
-                  alloc_Basis_L_TO_n, dealloc_Basis_L_TO_n,             &
+                  dealloc_Basis_L_TO_n,                                 &
                   Get_n_FROM_Basis_L_TO_n, Get_L_FROM_Basis_L_TO_n,     &
                   check_Basis_L_TO_n
 
@@ -105,6 +107,9 @@
 
       CALL alloc_NParray(L_TO_n_para%tab_L_TO_n,(/Lmax/),               &
                         "L_TO_n_para%tab_L_TO_n",name_sub,(/0/) )
+
+      CALL alloc_NParray(L_TO_n_para%skip_deltaL,(/Lmax/),               &
+                        "L_TO_n_para%skip_deltaL",name_sub,(/0/) )
 
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -157,6 +162,10 @@
                             "L_TO_n_para%tab_n_TO_L",name_sub)
       END IF
 
+      IF (allocated(L_TO_n_para%skip_deltaL)) THEN
+        CALL dealloc_NParray(L_TO_n_para%skip_deltaL,                    &
+                            "L_TO_n_para%skip_deltaL",name_sub)
+      END IF
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*)
@@ -201,17 +210,20 @@
         write(out_unitp,*) trim(Rec_line),'max_n           ',L_TO_n_para%max_n
 
         write(out_unitp,*) trim(Rec_line),'alloc tab_L_TO_n',allocated(L_TO_n_para%tab_L_TO_n)
-
         IF (allocated(L_TO_n_para%tab_L_TO_n)) THEN
           write(out_unitp,*) trim(Rec_line),'tab_L_TO_n'
           write(out_unitp,*) trim(Rec_line),':  ',L_TO_n_para%tab_L_TO_n
         END IF
 
         write(out_unitp,*) trim(Rec_line),'alloc tab_n_TO_L',allocated(L_TO_n_para%tab_n_TO_L)
-
         IF (allocated(L_TO_n_para%tab_n_TO_L)) THEN
           write(out_unitp,*) trim(Rec_line),'tab_n_TO_L'
           write(out_unitp,*) trim(Rec_line),':  ',L_TO_n_para%tab_n_TO_L
+        END IF
+
+        write(out_unitp,*) trim(Rec_line),'alloc skip_deltaL',allocated(L_TO_n_para%skip_deltaL)
+        IF (allocated(L_TO_n_para%skip_deltaL)) THEN
+          write(out_unitp,*) trim(Rec_line),'skip_deltaL',L_TO_n_para%skip_deltaL
         END IF
 
       ELSE
@@ -222,18 +234,22 @@
         write(out_unitp,*) 'C               ',L_TO_n_para%C
         write(out_unitp,*) 'expo            ',L_TO_n_para%expo
         write(out_unitp,*) 'max_n           ',L_TO_n_para%max_n
-        write(out_unitp,*) 'alloc tab_L_TO_n',allocated(L_TO_n_para%tab_L_TO_n)
 
+        write(out_unitp,*) 'alloc tab_L_TO_n',allocated(L_TO_n_para%tab_L_TO_n)
         IF (allocated(L_TO_n_para%tab_L_TO_n)) THEN
           write(out_unitp,*) 'tab_L_TO_n'
           write(out_unitp,*) '   ',L_TO_n_para%tab_L_TO_n
         END IF
 
         write(out_unitp,*) 'alloc tab_n_TO_L',allocated(L_TO_n_para%tab_n_TO_L)
-
         IF (allocated(L_TO_n_para%tab_n_TO_L)) THEN
           write(out_unitp,*) 'tab_n_TO_L'
           write(out_unitp,*) '   ',L_TO_n_para%tab_n_TO_L
+        END IF
+
+        write(out_unitp,*) 'alloc skip_deltaL',allocated(L_TO_n_para%skip_deltaL)
+        IF (allocated(L_TO_n_para%skip_deltaL)) THEN
+          write(out_unitp,*) 'skip_deltaL',L_TO_n_para%skip_deltaL
         END IF
 
       END IF
@@ -245,8 +261,6 @@
       END IF
 !---------------------------------------------------------------------
 
-
-!---------------------------------------------------------------------
 
       END SUBROUTINE Write_Basis_L_TO_n
 
@@ -274,6 +288,7 @@
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 
+    L_TO_n_para%Lmax = Lmax
     IF (L_TO_n_para%L_TO_n_type /=2) THEN
       IF (allocated(L_TO_n_para%tab_L_TO_n))                            &
            CALL dealloc_NParray(L_TO_n_para%tab_L_TO_n,"L_TO_n_para%tab_L_TO_n",name_sub)
@@ -339,6 +354,15 @@
       nmax = get_n_FROM_Basis_L_TO_n(L_TO_n_para,Lmax)
       nmin = get_L_FROM_Basis_L_TO_n(L_TO_n_para,nmax) ! to set up the table
 
+      ! set skip_deltaL(:)
+      !write(out_unitp,*) 'init skip_deltaL'
+      CALL alloc_NParray(L_TO_n_para%skip_deltaL,(/Lmax/),                      &
+                        "L_TO_n_para%skip_deltaL",name_sub,(/0/) )
+      L_TO_n_para%skip_deltaL(:) = .FALSE.
+      DO L=1,Lmax ! start at L=1, because L-1 is used
+        L_TO_n_para%skip_deltaL(L)= (L_TO_n_para%tab_L_TO_n(L) == L_TO_n_para%tab_L_TO_n(L-1))
+      END DO
+
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*)
@@ -387,7 +411,7 @@
       write(out_unitp,*) 'L2?',present(L2)
       IF (present(L2)) write(out_unitp,*) 'L2',L2
       CALL Write_Basis_L_TO_n(L_TO_n_para)
-      write(out_unitp,*) '  L < 0',L
+      write(out_unitp,*) ' ERROR:  L < 0',L
       STOP
     END IF
 
@@ -400,7 +424,7 @@
       write(out_unitp,*) 'L2?',present(L2)
       IF (present(L2)) write(out_unitp,*) 'L2',L2
       CALL Write_Basis_L_TO_n(L_TO_n_para)
-      write(out_unitp,*) '  L2 < 0',L2_loc
+      write(out_unitp,*) ' ERROR:  L2 < 0',L2_loc
       STOP
     END IF
 
@@ -674,8 +698,9 @@
       L_TO_n_para1%expo        = L_TO_n_para2%expo
       L_TO_n_para1%max_n       = L_TO_n_para2%max_n
 
-      IF (allocated(L_TO_n_para2%tab_L_TO_n)) L_TO_n_para1%tab_L_TO_n  = L_TO_n_para2%tab_L_TO_n
-      IF (allocated(L_TO_n_para2%tab_n_TO_L)) L_TO_n_para1%tab_n_TO_L  = L_TO_n_para2%tab_n_TO_L
+      IF (allocated(L_TO_n_para2%tab_L_TO_n))  L_TO_n_para1%tab_L_TO_n   = L_TO_n_para2%tab_L_TO_n
+      IF (allocated(L_TO_n_para2%tab_n_TO_L))  L_TO_n_para1%tab_n_TO_L   = L_TO_n_para2%tab_n_TO_L
+      IF (allocated(L_TO_n_para2%skip_deltaL)) L_TO_n_para1%skip_deltaL  = L_TO_n_para2%skip_deltaL
 
 !---------------------------------------------------------------------
       IF (debug) THEN

@@ -122,14 +122,17 @@
       CONTAINS
 
 !===============================================================================
-      SUBROUTINE read_analyse(para_ana,Qana)
+      SUBROUTINE read_analyse(para_ana,Qana,mole)
       USE mod_system
-      USE mod_psi,      ONLY : param_ana_psi,init_ana_psi,Write_ana_psi
+      USE mod_Coord_KEO,  only : CoordType
+      USE mod_psi,        ONLY : param_ana_psi,init_ana_psi,Write_ana_psi
       IMPLICIT NONE
 
 !----- variables pour la namelist analyse ----------------------------
       TYPE (param_ana),     intent(inout)  :: para_ana
       real (kind=Rkind)                    :: Qana(:)
+      TYPE (CoordType),     intent(in)     :: mole
+
 
 
       integer       :: nb_harm_ana,max_ana,print_psi,MaxWP_TO_Write_MatOp,JJmax
@@ -374,7 +377,7 @@
 
       !-- reading parameters for CRP ----------------------------
       IF (para_ana%CRP > 0) THEN
-        CALL read_CRP(para_ana%para_CRP)
+        CALL read_CRP(para_ana%para_CRP,mole%nb_act-1)
       END IF
 
       END SUBROUTINE read_analyse
@@ -506,4 +509,3 @@
       END SUBROUTINE read_intensity
 
       END MODULE mod_analysis
-

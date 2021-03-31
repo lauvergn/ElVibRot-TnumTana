@@ -6,6 +6,7 @@ DIR_vib=$here/../..
 DIR_pot=$DIR_vib/sub_pot
 
  cp $SYSTEM $DIR_pot/sub_system.f
+ cp Calc_Tab_dnQflex.f90 $DIR_vib/Source_TnumTana_Coord/sub_operator_T/Calc_Tab_dnQflex.f90
 
 cd $DIR_vib
  make
@@ -19,7 +20,7 @@ cd $here
 nice $DIR_vib/vib << ** >res
  &system /
  &constantes /
- &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 
+ &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 With_Tab_dnQflex=t
 /
  &Coord_transfo name_transfo='zmat' nat=4 /
 C

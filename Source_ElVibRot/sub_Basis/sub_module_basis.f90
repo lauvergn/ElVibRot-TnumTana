@@ -1030,7 +1030,6 @@ MODULE mod_basis
           STOP
         END IF
       END IF
-
       !-------------------------------------------------
       !- first the symmetry because Rvec can be modified
       CALL alloc_NParray(tab_contract_symab,(/ basis_set%nbc /),          &
@@ -1081,6 +1080,7 @@ MODULE mod_basis
         basis_set%Rvec(:,i) = basis_set%Rvec(:,i)/sqrt(norm)
       END DO
 
+      IF (basis_set%contrac_RVecOnly) RETURN
 
       CALL Set_tab_symabOFSymAbelian_WITH_tab(basis_set%P_SymAbelian,     &
                                               tab_contract_symab)
@@ -1093,38 +1093,42 @@ MODULE mod_basis
       !write(out_unitp,*) ' matmul contra'
       nq = get_nq_FROM_basis(basis_set)
 
-      nderiv = 0
-      IF (associated(basis_set%dnRGB%d1)) nderiv = 1
-      IF (associated(basis_set%dnRGB%d2)) nderiv = 2
+      IF (basis_set%dnRGB%alloc) THEN
+        nderiv = 0
+        IF (associated(basis_set%dnRGB%d1)) nderiv = 1
+        IF (associated(basis_set%dnRGB%d2)) nderiv = 2
 
-      dnRGBuncontract = basis_set%dnRGB
-      CALL dealloc_dnMat(basis_set%dnRGB)
+        dnRGBuncontract = basis_set%dnRGB
 
 
-      CALL alloc_dnMat(basis_set%dnRGB,nq,basis_set%nbc,basis_set%ndim,nderiv)
 
-      basis_set%dnRGB%d0(:,:) =  matmul(dnRGBuncontract%d0(:,:),        &
+        CALL dealloc_dnMat(basis_set%dnRGB)
+
+        CALL alloc_dnMat(basis_set%dnRGB,nq,basis_set%nbc,basis_set%ndim,nderiv)
+
+        basis_set%dnRGB%d0(:,:) =  matmul(dnRGBuncontract%d0(:,:),        &
                                              basis_set%Rvec(:,1:nb_bc))
 
-      IF (nderiv > 0) THEN
-        DO i=1,basis_set%ndim
-          basis_set%dnRGB%d1(:,:,i) =                             &
-                                matmul(dnRGBuncontract%d1(:,:,i), &
-                                             basis_set%Rvec(:,1:nb_bc))
-        END DO
+        IF (nderiv > 0) THEN
+          DO i=1,basis_set%ndim
+            basis_set%dnRGB%d1(:,:,i) =                             &
+                                  matmul(dnRGBuncontract%d1(:,:,i), &
+                                               basis_set%Rvec(:,1:nb_bc))
+          END DO
+        END IF
+
+        IF (nderiv > 1) THEN
+          DO i=1,basis_set%ndim
+          DO j=1,basis_set%ndim
+            basis_set%dnRGB%d2(:,:,i,j) =                           &
+                                matmul(dnRGBuncontract%d2(:,:,i,j), &
+                                               basis_set%Rvec(:,1:nb_bc))
+          END DO
+          END DO
+        END IF
+
+        CALL dealloc_dnMat(dnRGBuncontract)
       END IF
-
-      IF (nderiv > 1) THEN
-        DO i=1,basis_set%ndim
-        DO j=1,basis_set%ndim
-          basis_set%dnRGB%d2(:,:,i,j) =                           &
-                              matmul(dnRGBuncontract%d2(:,:,i,j), &
-                                             basis_set%Rvec(:,1:nb_bc))
-        END DO
-        END DO
-      END IF
-
-      CALL dealloc_dnMat(dnRGBuncontract)
 
 
       IF (basis_set%dnBBRep_done) THEN
@@ -1241,7 +1245,6 @@ MODULE mod_basis
         write(out_unitp,*) 'Tab_Norm(:) of Contracted basis',           &
                                             basis_set%nDindB%Tab_Norm(:)
       END IF
-
       !-------------------------------------------------
       !- d1b => dnGG%d1 and  d2b => dnGG%d2 ----------
       CALL sub_dnGB_TO_dnGG(basis_set)
@@ -2468,9 +2471,131 @@ MODULE mod_basis
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
-      character (len=*), parameter :: name_sub='pack_basis'
+      character (len=*), parameter :: name_sub='pack_basis_new'
       logical,parameter :: debug=.FALSE.
       !logical,parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (basis_set%ndim == 0 .OR. .NOT. basis_set%packed .OR. basis_set%packed_done) RETURN
+
+      nqo = get_nq_FROM_basis(basis_set)
+      !write(out_unitp,*) 'BEGINNING ',name_sub
+      !write(out_unitp,*) 'nb,nq',basis_set%nb,nqo
+
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) '--------------------------'
+        CALL RecWrite_basis(basis_set,write_all=.TRUE.)
+        write(out_unitp,*) '--------------------------'
+
+        write(out_unitp,*) 'unpacked Grid: ',nqo
+        DO iq=1,nqo
+          CALL Rec_x(X,basis_set,iq)
+          write(out_unitp,*) 'iq,x',iq,X(:)
+        END DO
+        !STOP
+      END IF
+!-----------------------------------------------------------------------
+
+  sortX_loc = .FALSE.
+  IF (present(sortX)) sortX_loc = sortX
+  IF (basis_set%SparseGrid_type == 2) sortX_loc = .FALSE.
+
+  !firt pack on unsortX
+  CALL Set_nq_OF_basis(basis_set,nqo)
+
+  ! first the basis without sortX
+  CALL alloc_xw_OF_basis(basis_set)
+  CALL alloc_dnb_OF_basis(basis_set)
+  CALL alloc_NParray(RvecB,(/basis_set%nb/),'RvecB',name_sub)
+
+  DO ib=1,basis_set%nb
+     RvecB = ZERO
+     RvecB(ib) = ONE
+     CALL RecRvecB_TO_RVecG(RvecB,basis_set%dnRGB%d0(:,ib),basis_set%nb,nqo,basis_set)
+     DO i=1,basis_set%ndim
+       basis_set%dnRGB%d1(:,ib,i) = basis_set%dnRGB%d0(:,ib)
+       CALL DerivOp_TO_RVecG(basis_set%dnRGB%d1(:,ib,i),nqo,basis_set,(/basis_set%iQdyn(i),0/))
+     END DO
+
+     DO i=1,basis_set%ndim
+     DO j=1,basis_set%ndim
+       basis_set%dnRGB%d2(:,ib,i,j) = basis_set%dnRGB%d0(:,ib)
+       CALL DerivOp_TO_RVecG(basis_set%dnRGB%d2(:,ib,i,j),nqo,basis_set, &
+         (/basis_set%iQdyn(i),basis_set%iQdyn(j)/))
+     END DO
+     END DO
+
+  END DO
+
+  CALL dealloc_NParray(RvecB,'RvecB',name_sub)
+
+  DO iq=1,nqo
+     CALL Rec_x(basis_set%x(:,iq),basis_set,iq)
+     basis_set%rho(iq)  = Rec_rhonD(basis_set,iq)
+     basis_set%wrho(iq) = Rec_WrhonD(basis_set,iq)
+     basis_set%w(iq)    = Rec_WnD(basis_set,iq)
+  END DO
+
+  !IF (sortX_loc) THEN
+  !  STOP 'pack not yet with sortX !!!'
+  !END IF
+
+   DO ib=1,basis_set%nb
+     CALL Rec_ndim_index(basis_set,basis_set%tab_ndim_index(:,ib),ib)
+     IF (debug) write(out_unitp,*) 'ib,ndim_index',ib,basis_set%tab_ndim_index(:,ib)
+   END DO
+
+   IF (associated(basis_set%tab_PbasisSG)) THEN
+     CALL dealloc_array(basis_set%tab_PbasisSG,                    &
+                       'basis_set%tab_PbasisSG',name_sub)
+     basis_set%nb_SG = 0
+     !basis_set%SparseGrid = .FALSE.
+   END IF
+
+  basis_set%packed_done = .TRUE.
+
+  CALL check_ortho_basis(basis_set)
+
+  !-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'pack done '
+    CALL RecWrite_basis(basis_set,write_all=.TRUE.)
+
+    nqo = get_nq_FROM_basis(basis_set)
+    write(out_unitp,*) 'packed Grid: ',nqo
+    DO iq=1,nqo
+      write(out_unitp,*) 'iq,x',iq,basis_set%x(:,iq)
+    END DO
+
+    write(out_unitp,*) 'END ',name_sub
+
+
+  END IF
+  !-----------------------------------------------------------
+END SUBROUTINE pack_basis
+SUBROUTINE pack_basis_old(basis_set,sortX)
+
+      TYPE (basis), intent(inout) :: basis_set
+      logical, optional :: sortX
+
+      integer              :: ib,iq,iq1,iq0,i,j,nq,i_SG,ndimi,iib,idim1,idim2
+      integer              :: nqo
+      integer              :: nDvalB(basis_set%nDindB%ndim)
+      logical              :: sortX_loc
+      integer, allocatable :: tab_iqXmin(:)
+      real (kind=Rkind)    :: Xmin(basis_set%ndim)
+      real (kind=Rkind)    :: X(basis_set%ndim)
+      TYPE (basis)         :: basis_loc
+      real (kind=Rkind), allocatable    :: RvecB(:),RvecG(:)
+
+
+      logical :: inferior ! function
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='pack_basis_old'
+      !logical,parameter :: debug=.FALSE.
+      logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (basis_set%ndim == 0) RETURN
       IF (.NOT. basis_set%packed) RETURN
@@ -2658,6 +2783,7 @@ STOP 'pack and SG2 does not work!!!'
    ELSE
 
      IF (sortX_loc) THEN
+write(6,*) 'coucou0 sort' ; flush(6)
 
        CALL alloc_NParray(tab_iqXmin,(/ nqo /),'tab_iqXmin',name_sub)
        tab_iqXmin(:) = (/ (i,i=1,nqo) /)
@@ -2696,6 +2822,9 @@ STOP 'pack and SG2 does not work!!!'
          END IF
 
        END DO
+       DO iq=1,nqo
+         write(out_unitp,*) iq,'tab_iqXmin',tab_iqXmin(iq)
+       END DO
        IF (print_level > -1) write(out_unitp,*) 'old/new nq',nqo,nq
 
        ! set up the basis set with the right number of points
@@ -2703,9 +2832,13 @@ STOP 'pack and SG2 does not work!!!'
 
        CALL alloc_xw_OF_basis(basis_set)
        CALL alloc_dnb_OF_basis(basis_set)
+write(6,*) 'coucou1 sort' ; flush(6)
+write(6,*) 'coucou1 packed',basis_set%packed ; flush(6)
+write(6,*) 'coucou1 packed_done',basis_set%packed_done ; flush(6)
 
        iq0 = 0
        DO iq=1,nqo ! old nq
+write(6,*) 'coucou1 sort',iq ; flush(6)
 
          IF (tab_iqXmin(iq) > 0) THEN
            iq1 = tab_iqXmin(iq)
@@ -2715,6 +2848,7 @@ STOP 'pack and SG2 does not work!!!'
            basis_set%rho(iq0)  = Rec_rhonD(basis_set,iq1)
            basis_set%wrho(iq0) = Rec_WrhonD(basis_set,iq1)
            basis_set%w(iq0)    = Rec_WnD(basis_set,iq1)
+write(6,*) 'coucou2 sort,iq,iq0,iq1',iq,iq0,iq1 ; flush(6)
 
            DO ib=1,basis_set%nb
 
@@ -2795,8 +2929,7 @@ STOP 'pack and SG2 does not work!!!'
 
   END IF
   !-----------------------------------------------------------
-
-END SUBROUTINE pack_basis
+END SUBROUTINE pack_basis_old
 !=============================================================
 !
 !      check the overlap matrix of a basis
@@ -3523,6 +3656,7 @@ END SUBROUTINE pack_basis
 
       RECURSIVE FUNCTION Rec_WnD(BasisnD,iq) result(WnD)
       USE mod_system
+      USE mod_basis_BtoG_GtoB_SGType4, ONLY : getbis_tab_nq
       implicit none
 
 !----- variables for the Basis and quadrature points -----------------
@@ -3535,6 +3669,10 @@ END SUBROUTINE pack_basis
       integer           :: nDval(BasisnD%nDindG%ndim)
       integer           :: nDval_SG2(BasisnD%nb_basis)
       integer           :: nDl_SG2(BasisnD%nb_basis)
+
+      integer             :: tab_nq(BasisnD%nb_basis)
+      integer             :: tab_l(BasisnD%nb_basis)
+      integer             :: tab_iq(BasisnD%nb_basis)
 
       integer           :: i_SG
       integer           :: err_sub
@@ -3592,15 +3730,18 @@ END SUBROUTINE pack_basis
 
          CASE (4) ! Sparse basis (Smolyak 2d and 4th implementation)
 
-           CALL get_Tabiq_Tabil_FROM_iq(nDval_SG2,nDl_SG2,            &
+           CALL get_Tabiq_Tabil_FROM_iq(tab_iq,tab_l,                           &
                       i_SG,iq_SG,iq,BasisnD%para_SGType2,err_sub=err_sub)
            IF (err_sub /= 0) STOP 'Rec_WnD'
 
+           tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
+           CALL calc_nDval_m1(tab_iq,iq_SG,tab_nq,BasisnD%nb_basis)
+
+
            WnD = BasisnD%WeightSG(i_SG)
+
            DO ib=1,BasisnD%nb_basis
-             L     = nDl_SG2(ib)
-             iq_ib = nDval_SG2(ib)
-             WnD = WnD * Rec_WnD(BasisnD%tab_basisPrimSG(L,ib),iq_ib)
+             WnD = WnD * Rec_WnD(BasisnD%tab_basisPrimSG(tab_l(ib),ib),tab_iq(ib))
            END DO
 
          CASE DEFAULT
@@ -4346,8 +4487,8 @@ END SUBROUTINE pack_basis
       !!@param: TODO
       !!@param: TODO
       RECURSIVE SUBROUTINE Rec_d0d1d2bnD(d0b,d1b,d2b,BasisnD,iq,ib)
-
       USE mod_system
+      USE mod_basis_BtoG_GtoB_SGType4, ONLY : getbis_tab_nq
       implicit none
 
 !----- variables for the Basis and quadrature points -----------------
@@ -4370,6 +4511,11 @@ END SUBROUTINE pack_basis
 
       integer           :: nDval_SG2(BasisnD%nb_basis)
       integer           :: nDl_SG2(BasisnD%nb_basis)
+
+      integer             :: tab_nq(BasisnD%nb_basis)
+      integer             :: tab_l(BasisnD%nb_basis)
+      integer             :: tab_iq(BasisnD%nb_basis)
+
 
       integer           :: i_SG
       integer           :: i_SG2 = 0
@@ -4394,7 +4540,7 @@ END SUBROUTINE pack_basis
          write(out_unitp,*) ' ERROR in',name_sub
          write(out_unitp,*) ' Wrong range of ib',ib
          write(out_unitp,*) ' nb',BasisnD%nb
-         STOP
+         STOP ' ERROR in Rec_d0d1d2bnD: Wrong range of ib'
        END IF
 
        IF (BasisnD%packed_done) THEN
@@ -4480,7 +4626,7 @@ END SUBROUTINE pack_basis
            CALL calc_nDindex(BasisnD%nDindB,ib,nDvalB)
            write(out_unitp,*) 'ib,nDvalB',ib,':',nDvalB
 
-           CALL get_Tabiq_Tabil_FROM_iq_old(nDval_SG2,nDl_SG2,          &
+           CALL get_Tabiq_Tabil_FROM_iq_old(nDval_SG2,tab_l,          &
                                      i_SG2,iq_SG,iq,BasisnD%para_SGType2)
 
            write(out_unitp,*) 'iq,i_SG2',iq,i_SG2
@@ -4543,8 +4689,80 @@ END SUBROUTINE pack_basis
            !STOP 'Rec_d0d1d2bnD: SparseGrid_type=2'
 
          CASE (4) ! Sparse basis (Smolyak 4th implementation)
-           write(out_unitp,*) ' ERROR in',name_sub
-           STOP 'Rec_d0d1d2bnD: SparseGrid_type=4'
+           CALL calc_nDindex(BasisnD%nDindB,ib,nDvalB)
+           write(out_unitp,*) 'ib,nDvalB',ib,':',nDvalB
+
+           CALL get_Tabiq_Tabil_FROM_iq(tab_iq,tab_l,i_SG,iq_SG,iq,BasisnD%para_SGType2,err_sub=err_sub)
+
+           IF (err_sub /= 0) STOP 'Error in get_Tabiq_Tabil_FROM_iq in Rec_d0d1d2bnD'
+
+           tab_nq(:) = getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
+
+           CALL calc_nDval_m1(tab_iq,iq_SG,tab_nq,BasisnD%nb_basis)
+
+           write(out_unitp,*) 'iq,i_SG',iq,i_SG
+           write(out_unitp,*) 'tab_l',tab_l
+           write(out_unitp,*) 'tab_iq',tab_iq
+
+           d0b      = ONE
+           d1b(:)   = ONE
+           d2b(:,:) = ONE
+           i0 = 0
+           ndim = BasisnD%ndim
+           DO i=1,BasisnD%nb_basis
+             L     = tab_l(i)
+             iqi   = tab_iq(i)
+             ibi   = nDvalB(i)
+
+             write(out_unitp,*) 'ibasis,L,iqi,ibi',i,L,iqi,ibi
+             write(out_unitp,*) 'ibasis,ibi,nb',i,ibi,BasisnD%tab_basisPrimSG(L,i)%nb
+
+
+             IF (ibi > BasisnD%tab_basisPrimSG(L,i)%nb) STOP 'Wrong ibi'
+
+             write(out_unitp,*) 'ibasis,L,iqi,ibi',i,L,iqi,ibi
+
+             ndimi = BasisnD%tab_basisPrimSG(L,i)%ndim
+             i1    = i0 + ndimi
+
+             CALL alloc_NParray(d1bi,(/ ndimi /),      'd1bi',name_sub)
+             CALL alloc_NParray(d2bi,(/ ndimi,ndimi /),'d2bi',name_sub)
+
+             CALL Rec_d0d1d2bnD(d0bi,d1bi,d2bi,BasisnD%tab_basisPrimSG(L,i),iqi,ibi)
+
+             ! no derivative
+             d0b = d0b * d0bi
+             ! first derivatives
+             d1b(1:i0)      = d1b(1:i0)      * d0bi
+             d1b(i0+1:i1)   = d1b(i0+1:i1)   * d1bi(:)
+             d1b(i1+1:ndim) = d1b(i1+1:ndim) * d0bi
+             ! second derivatives
+             d2b(1:i0,1:i0)      = d2b(1:i0,1:i0)      * d0bi
+             d2b(1:i0,i1+1:ndim) = d2b(1:i0,i1+1:ndim) * d0bi
+             DO j=1,i0
+               d2b(j,i0+1:i1)    = d2b(j,i0+1:i1) * d1bi(:)
+             END DO
+
+             DO j=1,ndimi
+               d2b(i0+j,1:i0)      = d2b(i0+j,1:i0)      * d1bi(j)
+               d2b(i0+j,i1+1:ndim) = d2b(i0+j,i1+1:ndim) * d1bi(j)
+             END DO
+             d2b(i0+1:i1,i0+1:i1)  = d2b(i0+1:i1,i0+1:i1) * d2bi(:,:)
+
+             d2b(i1+1:ndim,1:i0)      = d2b(i1+1:ndim,1:i0) * d0bi
+             DO j=i1+1,ndim
+               d2b(j,i0+1:i1)         = d2b(j,i0+1:i1) * d1bi(:)
+             END DO
+             d2b(i1+1:ndim,i1+1:ndim) = d2b(i1+1:ndim,i1+1:ndim) * d0bi
+
+             CALL dealloc_NParray(d1bi,'d1bi',name_sub)
+             CALL dealloc_NParray(d2bi,'d2bi',name_sub)
+
+             i0 = i1
+           END DO
+
+           !write(out_unitp,*) ' ERROR in',name_sub
+           !STOP 'Rec_d0d1d2bnD: SparseGrid_type=4'
 
          CASE DEFAULT
            write(out_unitp,*) ' ERROR in',name_sub

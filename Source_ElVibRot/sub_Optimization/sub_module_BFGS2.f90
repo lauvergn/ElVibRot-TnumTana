@@ -231,7 +231,7 @@
 
         !---------JMLend-------------------------------------
         !--------------------------------------------------
-        
+
         !--------------------------------------------------
         ! this subroutine print the  matrix of derived type.
         CALL Write_MatOFdnS(dnMatOp(1)%tab_dnMatOp(:,:,1))
@@ -420,6 +420,9 @@ SUBROUTINE dfpmin_new(Qact,MatdnE,mole,PrimOp,para_Tnum,para_BFGS,    &
  end do             ! and go back for another iteration.
  deallocate (g,hdg,pnew,dg,xi,hessin)
  write(out_unitp,*) 'Too many iterations in dfpmin'
+ write(out_unitp,*) ' energy: ',fret
+ write(out_unitp,*) ' Geometry: '
+ write(out_unitp,*) ' p = ', p
  stop
  return
  end subroutine dfpmin_new
@@ -428,14 +431,14 @@ SUBROUTINE dfpmin_new(Qact,MatdnE,mole,PrimOp,para_Tnum,para_BFGS,    &
   subroutine lnsrch(n,xold,fold,g,p,x,f,stpmax,check,MatdnE,mole,PrimOp,para_Tnum)
 !---------------------------------------------------------------------
 !
- USE mod_system 
+ USE mod_system
  USE mod_Coord_KEO
  USE mod_PrimOp
  USE mod_basis
  USE mod_Op
- USE mod_Auto_Basis 
+ USE mod_Auto_Basis
 !
- implicit none 
+ implicit none
  LOGICAL :: check
  integer :: n,i
  real (kind=Rkind) :: g(n),p(n),x(n),xold(n)
@@ -460,7 +463,7 @@ SUBROUTINE dfpmin_new(Qact,MatdnE,mole,PrimOp,para_Tnum,para_BFGS,    &
    p(i)=p(i)*(stpmax/sum)
   end do
  endif
- call proescvec(g,p,slope,n) 
+ call proescvec(g,p,slope,n)
  test=ZERO
  do i=1,n
   temp=abs(p(i))/max(abs(xold(i)),ONE)
@@ -468,7 +471,7 @@ SUBROUTINE dfpmin_new(Qact,MatdnE,mole,PrimOp,para_Tnum,para_BFGS,    &
  end do
  alamin=TOLX/test
  alam=ONE
-1 continue    
+1 continue
  do  i=1,n
   x(i)=xold(i)+alam*p(i)
  end do
@@ -567,7 +570,7 @@ SUBROUTINE dfpmin_new(Qact,MatdnE,mole,PrimOp,para_Tnum,para_BFGS,    &
 !  Remark, the allocation of MatdnE have to be done with "nderiv_alloc" larger than "nderiv_dnE"
 !     With nderiv_alloc=2 and nderiv_dnE=1, you can calculate the energy and the gradient
 !     and update the hessian in MatdnE(1,1)%d2(:,:), if you want.
- 
+
 !  write(out_unitp,*) ' MatdnE(1,1)%d0 = ', MatdnE(1,1)%d0
 !  write(out_unitp,*) ' MatdnE(1,1)%d1 = ', MatdnE(1,1)%d1
 !
@@ -603,4 +606,3 @@ SUBROUTINE dfpmin_new(Qact,MatdnE,mole,PrimOp,para_Tnum,para_BFGS,    &
 !
 
 END MODULE mod_BFGS
-

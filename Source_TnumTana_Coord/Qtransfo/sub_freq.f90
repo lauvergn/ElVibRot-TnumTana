@@ -33,17 +33,416 @@ MODULE mod_freq
 
       PRIVATE
 
-      PUBLIC :: calc_freq, calc_freq_block, calc_freq_WITH_d0c, calc_freqNM, calc_freq_width
+      PUBLIC :: calc_freq, calc_freq_new, calc_freq_block, calc_freq_WITH_d0c,  &
+                calc_freqNM, calc_freq_width
       PUBLIC :: H0_symmetrization, sort_with_Tab, gaussian_width
+      PUBLIC :: degenerate_freq_t,Write_degenerate_freq,Read_degenerate_freq,   &
+                Init_degenerate_freq,dealloc_degenerate_freq
+
+      TYPE degenerate_freq_t
+        integer                      :: option = 0 ! 0 old one, 1 new one
+        logical, allocatable         :: list_k_check(:)
+        real (kind=Rkind)            :: epsi = ONETENTH**8
+      END TYPE degenerate_freq_t
+
 
       CONTAINS
-!
+
+      SUBROUTINE Write_degenerate_freq(degenerate_freq)
+      IMPLICIT NONE
+      TYPE (degenerate_freq_t), INTENT(IN) :: degenerate_freq
+
+        write(out_unitp,*) 'BEGINNING Write_degenerate_freq'
+
+        write(out_unitp,*) 'option',degenerate_freq%option
+        write(out_unitp,*) 'epsi',degenerate_freq%epsi
+        IF (allocated(degenerate_freq%list_k_check)) THEN
+          write(out_unitp,*) 'list_k_check(:)',degenerate_freq%list_k_check
+        END IF
+
+        write(out_unitp,*) 'END Write_degenerate_freq'
+        CALL flush_perso(out_unitp)
+
+      END SUBROUTINE Write_degenerate_freq
+      SUBROUTINE Read_degenerate_freq(degene_freq,n)
+      IMPLICIT NONE
+      TYPE (degenerate_freq_t), INTENT(inout) :: degene_freq
+      integer,                  INTENT(in)    :: n
+
+      integer                      :: option,err_read
+      real (kind=Rkind)            :: epsi
+
+      NAMELIST /degenerate_freq/ option,epsi
+      character(len=*), PARAMETER :: name_sub = 'Read_degenerate_freq'
+
+        write(out_unitp,*) 'BEGINNING ',name_sub
+
+        CALL alloc_NParray(degene_freq%list_k_check,[n],'list_k_check',name_sub)
+
+        epsi   = ONETENTH**8
+        option = 0
+       read(in_unitp,degenerate_freq,IOSTAT=err_read)
+       IF (err_read /= 0) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) '  while reading the "degenerate_freq" namelist'
+          write(out_unitp,*) ' end of file or end of record'
+          write(out_unitp,*) ' Check your data !!'
+          STOP
+       END IF
+       write(out_unitp,degenerate_freq)
+
+       degene_freq%option = option
+       degene_freq%epsi   = epsi
+       IF (option == 1) THEN
+         read(in_unitp,*,IOSTAT=err_read) degene_freq%list_k_check(:)
+         !write(out_unitp,*) 'list_k_check',degene_freq%list_k_check
+         IF (err_read /= 0) THEN
+           write(out_unitp,*) ' ERROR in ',name_sub
+           write(out_unitp,*) '  while reading "list_k_check"'
+           write(out_unitp,*) ' end of file or end of record'
+           write(out_unitp,*) ' Check your data !!'
+           STOP
+         END IF
+       END IF
+       CALL flush_perso(out_unitp)
+
+       CALL Write_degenerate_freq(degene_freq)
+
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+
+      END SUBROUTINE Read_degenerate_freq
+      SUBROUTINE Init_degenerate_freq(degene_freq,n)
+      IMPLICIT NONE
+      TYPE (degenerate_freq_t), INTENT(inout) :: degene_freq
+      integer,                  INTENT(in)    :: n
+
+
+        write(out_unitp,*) 'BEGINNING Init_degenerate_freq'
+
+        CALL alloc_NParray(degene_freq%list_k_check,[n],'list_k_check','Init_degenerate_freq')
+        degene_freq%list_k_check(:) = .TRUE.
+        degene_freq%epsi   = ONETENTH**8
+        degene_freq%option = 0
+
+        write(out_unitp,*) 'END Init_degenerate_freq'
+        CALL flush_perso(out_unitp)
+
+      END SUBROUTINE Init_degenerate_freq
+      SUBROUTINE dealloc_degenerate_freq(degene_freq)
+      IMPLICIT NONE
+      TYPE (degenerate_freq_t), INTENT(inout) :: degene_freq
+
+        IF (allocated(degene_freq%list_k_check)) THEN
+          CALL dealloc_NParray(degene_freq%list_k_check,'list_k_check','dealloc_degenerate_freq')
+        END IF
+        degene_freq%option = 0
+        degene_freq%epsi   = ONETENTH**8
+
+      END SUBROUTINE dealloc_degenerate_freq
 !=====================================================================
 !
 ! ++   calcule les frequences et les modes normaux
 !
 !=====================================================================
+      SUBROUTINE calc_freq_new(nb_var,d0h,d0k,d0eh,                         &
+                           d0c,d0c_inv,norme,d0c_ini,diab_freq,degenerate_freq)
+      IMPLICIT NONE
+
+      integer :: nb_var
+      logical :: diab_freq
+
+      real (kind=Rkind) :: d0h(nb_var,nb_var)
+      real (kind=Rkind) :: d0k(nb_var,nb_var)
+
+      real (kind=Rkind) :: d0eh(nb_var)
+      real (kind=Rkind) :: d0ek(nb_var)
+
+      real (kind=Rkind) :: d0ch(nb_var,nb_var)
+
+      real (kind=Rkind) :: d0ck(nb_var,nb_var)
+
+      real (kind=Rkind) :: d0c(nb_var,nb_var)
+      real (kind=Rkind) :: d0c_inv(nb_var,nb_var)
+      real (kind=Rkind) :: d0c_ini(nb_var,nb_var)
+      TYPE (degenerate_freq_t), INTENT(IN) :: degenerate_freq
+
+      real (kind=Rkind) :: mat1(nb_var,nb_var)
+      real (kind=Rkind) :: mat2(nb_var,nb_var)
+
+      real (kind=Rkind) :: val,val1
+      !real (kind=Rkind),parameter :: epsi_freq = ONETENTH**7
+      real (kind=Rkind),parameter :: epsi_freq = ONETENTH**10
+
+      !----- pour le determinant de d0c
+      real (kind=Rkind) ::    d,norme,max_err
+      real (kind=Rkind) ::    dh,dk
+
+
+      integer :: i,j,k,l
+      integer :: ierr
+
+      !-----------------------------------------------------------
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      !-----------------------------------------------------------
+      IF (debug) THEN
+         write(out_unitp,*) 'BEGINNING calc_freq_new'
+         write(out_unitp,*) 'd0h',nb_var
+         CALL Write_Mat(d0h,out_unitp,5)
+         write(out_unitp,*) 'd0k',nb_var
+         CALL Write_Mat(d0k,out_unitp,5)
+         write(out_unitp,*) 'd0c_ini',nb_var
+         CALL Write_Mat(d0c_ini,out_unitp,5)
+         CALL flush_perso(out_unitp)
+      END IF
+
+      !-----------------------------------------------------------
+
+!      pour le cas 3 du calcul de det(d0c)
+!      - cas 3 --------------------------------
+!      trav2 est utilise pour index ...
+!      CALL copy_mat(d0ck,d0k,nb_var,nb_var)
+!      CALL ludcmp(d0ck,nb_var,trav1,trav2,dk)
+!      CALL copy_mat(d0ch,d0h,nb_var,nb_var)
+!      CALL ludcmp(d0ch,nb_var,trav1,trav2,dh)
+!      d = dh/dk
+!      DO i=1,nb_var
+!       d = d * d0ch(i,i)/d0ck(i,i)
+!      END DO
+!      write(out_unitp,*) 'det d0c',sqrt(sqrt(d))
+!      ----------------------------------------
+
+
+!-----------------------------------------------------------
+!----- orthonormalisation de Lowdin ------------------------
+!-----------------------------------------------------------
+!      de la partie cinetique d0k
+!      passage de la base b0 (coordonnees initiales)
+!      a b1 (coordonnees tq d0k soit diagonale)
+       CALL diagonalization(d0k,d0ek,d0ck,nb_var,2,1,.TRUE.)
+       CALL rota_denerated(d0ek,d0ck,nb_var)
+       CALL mat_epsiTOzero(d0ck,nb_var,epsi_freq,nb_var)
+
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'vp de d0k'
+         write(out_unitp,*) (d0ek(i),i=1,nb_var)
+         CALL flush_perso(out_unitp)
+       END IF
+!-----------------------------------------------------------
+       DO i=1,nb_var
+         IF (d0ek(i) >= ZERO) THEN
+           d0ek(i) =  sqrt(d0ek(i))
+         ELSE
+           d0ek(i) = -sqrt(-d0ek(i))
+           write(out_unitp,*) 'ERROR: d0k has one negative eigenvalue !'
+           !STOP
+         END IF
+       END DO
+
+!----- vecteurs normalises par sqrt(d0ek(i)) ---------------
+       DO i=1,nb_var
+         d0ck(:,i) = d0ck(:,i)*d0ek(i)
+       END DO
+
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*)
+         write(out_unitp,*) 'd0ck(:,i)*sqrt(d0ek(i))'
+         CALL Write_Mat(d0ck,out_unitp,5)
+         CALL flush_perso(out_unitp)
+       END IF
+!-----------------------------------------------------------
+
+
+
+!-----------------------------------------------------------
+!----- calcul du hessien dans la nouvelle base -------------
+!      et diagonalisation obtention des modes normaux (base b2)
+!      exprimes dans la base b1
+!      -- problem with gfortran ---
+!      d0k = matmul( transpose(d0ck) , matmul(d0h,d0ck) )
+!      the line is split ---
+       mat1 = matmul(d0h,d0ck)
+       mat2 = transpose(d0ck)
+       d0k = matmul(mat2,mat1)
+!      -- problem with gfortran ---
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*)
+         write(out_unitp,*) 'd0h dans la nouvelle base'
+         CALL Write_Mat(d0k,out_unitp,5)
+         CALL flush_perso(out_unitp)
+       END IF
+!-----------------------------------------------------------
+
+       CALL diagonalization(d0k,d0eh,d0ch,nb_var,2,1,.TRUE.)
+       CALL rota_denerated(d0eh,d0ch,nb_var)
+       CALL mat_epsiTOzero(d0ch,nb_var,epsi_freq,nb_var)
+
+
+       DO i=1,nb_var
+         IF (d0eh(i) >= ZERO) THEN
+           d0eh(i) =  sqrt(d0eh(i))
+         ELSE
+           d0eh(i) =  sqrt(-d0eh(i))
+           write(out_unitp,*) ' ERROR : one imaginary frequency',               &
+                                    d0eh(i)*get_Conv_au_TO_unit('E','cm-1')
+!          STOP
+         END IF
+
+       END DO
+
+      !CALL order_ini4(d0ch,d0c_inv,d0eh,d0c_ini,nb_var,diab_freq)
+
+
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'ZPE (cm-1): ',HALF*sum(d0eh(:))*get_Conv_au_TO_unit('E','cm-1')
+         !write(out_unitp,*) 'ZPE   (eV): ',HALF*sum(d0eh(:))*get_Conv_au_TO_unit('E','eV')
+         write(out_unitp,*) 'ZPE   (au): ',HALF*sum(d0eh(:))
+
+         write(out_unitp,*) 'frequencies (cm-1): ',d0eh(:)*get_Conv_au_TO_unit('E','cm-1')
+         write(out_unitp,*)
+         write(out_unitp,*) 'modes normaux: d0ch'
+         CALL Write_Mat(d0ch,out_unitp,5)
+         CALL flush_perso(out_unitp)
+       END IF
+!-----------------------------------------------------------
+
+
+!-----------------------------------------------------------
+!----- calcul de la matrice qui passe des modes normaux ----
+!      exprimes en fonction des coordonnees
+!      passage de la base b2 a b0
+!-----------------------------------------------------------
+
+
+
+! ca marche si d0k n est pas diagonale
+       mat1 = matmul(d0ck,d0ch)
+       d0c_inv = transpose( mat1 )
+
+
+       DO k=1,nb_var
+         val = ONE/(d0ek(k)*d0ek(k))
+         d0ck(:,k) = d0ck(:,k) * val
+       END DO
+       d0c = matmul(d0ck,d0ch)
+
+       DO i=1,nb_var
+         d0c(:,i)     = d0c(:,i)     * sqrt(d0eh(i))
+         d0c_inv(i,:) = d0c_inv(i,:) / sqrt(d0eh(i))
+       END DO
+
+       !write(out_unitp,*) 'rota_denerated on d0c and d0c_inv'
+
+       CALL rota_degenerate_opt1(d0eh,d0c,nb_var,degenerate_freq)
+       !write(out_unitp,*) 'd0c'
+       !CALL Write_Mat(d0c,out_unitp,5)
+
+       CALL inv_m1_TO_m2(d0c,d0c_inv,nb_var,0,ZERO)
+       !write(out_unitp,*) 'transpose(d0c_inv)'
+       !CALL Write_Mat(transpose(d0c_inv),out_unitp,5)
+
+!     on reordonne d0c, d0c_inv et d0eh
+      !CALL order_ini4(d0c,d0c_inv,d0eh,d0c_ini,nb_var,diab_freq)
+      CALL order_ini5(d0c,d0c_inv,d0eh,d0c_ini,nb_var,diab_freq)
+
+
+! ca marche si d0k n est pas diagonale
+!      DO i=1,nb_var
+!        val = sqrt(d0eh(i))
+!        DO l=1,nb_var
+!          d0c(l,i) = ONE
+!          d0c_inv(i,l) = ZERO
+!          DO k=1,nb_var
+!            d0c(l,i) = d0c(l,i) +
+!    *          d0ch(k,i)*d0ck(l,k)*val/(d0ek(k)*d0ek(k))
+!            d0c_inv(i,l) = d0c_inv(i,l) + d0ch(k,i)*d0ck(l,k)/val
+!          END DO
+!        END DO
+!      END DO
+
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'matrice de passage de b2 a b0'
+         CALL Write_Mat(d0c,out_unitp,5)
+         write(out_unitp,*) 'matrice de passage de b0 a b2'
+         CALL Write_Mat(d0c_inv,out_unitp,5)
+
+!        test inversion ------------------------------------
+         mat1 = matmul(d0c,d0c_inv)
+         write(out_unitp,*) 'test inversion de d0c'
+         CALL Write_Mat(mat1,out_unitp,5)
+         max_err = ZERO
+         DO i=1,nb_var
+         DO j=1,nb_var
+            IF (i /= j) max_err = max(max_err,abs(mat1(i,j)))
+            IF (i == j) max_err = max(max_err,abs(mat1(i,j)-ONE))
+         END DO
+         END DO
+         write(out_unitp,*) ' max_err: ',max_err
+         CALL flush_perso(out_unitp)
+       END IF
+!-----------------------------------------------------------
+
+!-----------------------------------------------------------
+!-----------------------------------------------------------
+!      calcul le determinant de d0c :
 !
+!      3 facons :
+!
+!      1)  on calcule directement d=det(d0c)
+!      2)  on utilise les valeurs propres d0eh et d0ek
+!      3)  d = [det(d0h)/det(d0k)]^1/4
+!-----------------------------------------------------------
+!-----------------------------------------------------------
+
+!
+!      - cas 1 --------------------------------
+!      CALL copy_mat(d0ch,d0c,nb_var,nb_var)
+!      trav2 est utilise pour index
+!      CALL ludcmp(d0ch,nb_var,trav1,trav2,d)
+!      DO i=1,nb_var
+!       d = d * d0ch(i,i)
+!      END DO
+!      write(out_unitp,*) 'det d0c',d
+!      ----------------------------------------
+
+
+!      - cas 2 --------------------------------
+!      utilise le fait que det(d0ch) et det(d0k) =1
+       d = ONE
+       DO i=1,nb_var
+        d = d * sqrt(d0eh(i)) / d0ek(i)
+       END DO
+!      write(out_unitp,*) 'det d0c',d
+!      ----------------------------------------
+!
+!      - cas 3 --------------------------------
+!      il est fait au debut
+!      ----------------------------------------
+
+
+!-----------------------------------------------------------
+!-----------------------------------------------------------
+
+!      norme = ONE/sqrt(d)
+       norme = sqrt(d)
+
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'determinants :',norme
+         write(out_unitp,*) 'END calc_freq_new'
+         CALL flush_perso(out_unitp)
+       END IF
+!-----------------------------------------------------------
+!stop
+
+end subroutine calc_freq_new
+
       SUBROUTINE calc_freq(nb_var,d0h,d0k,d0eh,                         &
                            d0c,d0c_inv,norme,d0c_ini,diab_freq)
       IMPLICIT NONE
@@ -64,6 +463,7 @@ MODULE mod_freq
       real (kind=Rkind) :: d0c(nb_var,nb_var)
       real (kind=Rkind) :: d0c_inv(nb_var,nb_var)
       real (kind=Rkind) :: d0c_ini(nb_var,nb_var)
+      logical           :: list_k_check(nb_var)
 
       real (kind=Rkind) :: mat1(nb_var,nb_var)
       real (kind=Rkind) :: mat2(nb_var,nb_var)
@@ -232,7 +632,6 @@ MODULE mod_freq
          d0c(:,i)     = d0c(:,i)     * sqrt(d0eh(i))
          d0c_inv(i,:) = d0c_inv(i,:) / sqrt(d0eh(i))
        END DO
-
 
 !     on reordonne d0c, d0c_inv et d0eh
       !CALL order_ini4(d0c,d0c_inv,d0eh,d0c_ini,nb_var,diab_freq)
@@ -995,11 +1394,11 @@ MODULE mod_freq
       integer       :: i,j,k,ind_maxi,ind_maxj
       real (kind=Rkind) :: max_ci,max_cj,norme,ai,aj,cc,ss
 
-      real (kind=Rkind), parameter :: epsi = ONETENTH**10
+      real (kind=Rkind), parameter :: epsi = ONETENTH**8
 
 !---------------------------------------------------------------------
       logical, parameter :: debug = .FALSE.
-!     logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
       IF (debug) THEN
       write(out_unitp,*) 'BEGINNING rota_denerated'
@@ -1089,7 +1488,117 @@ MODULE mod_freq
 
       RETURN
       end subroutine rota_denerated
-!
+      SUBROUTINE rota_degenerate_opt1(v,c,n,degenerate_freq)
+      IMPLICIT NONE
+
+      integer           :: n
+      real (kind=Rkind) :: v(n)
+      real (kind=Rkind) :: c(n,n)
+      TYPE (degenerate_freq_t), INTENT(IN) :: degenerate_freq
+
+      integer           :: i,j,k,ind_maxi,ind_maxj
+      real (kind=Rkind) :: max_ci,max_cj,norme,ai,aj,cc,ss
+
+
+!---------------------------------------------------------------------
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+!---------------------------------------------------------------------
+      IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING rota_degenerate_opt1'
+      write(out_unitp,*) 'v',v
+      write(out_unitp,*) 'c'
+      CALL Write_Mat(c,out_unitp,5)
+      END IF
+!---------------------------------------------------------------------
+
+      DO i=1,n
+        !swap sign of c(.,i) such max_ci is positive
+        max_ci = ZERO
+        DO k=1,n
+          IF ( abs(c(k,i)) > max_ci ) THEN
+            max_ci = abs(c(k,i))
+            ind_maxi = k
+          END IF
+        END DO
+        IF (c(ind_maxi,i) < ZERO) c(:,i) = -c(:,i)
+      END DO
+
+      DO i=1,n-1
+
+        IF ( abs(v(i)-v(i+1)) < degenerate_freq%epsi) THEN
+
+          j = i+1
+          !determination of max_ci and max_cj
+          max_ci   = ZERO
+          ind_maxi = 0
+          DO k=1,n
+            IF (.NOT. degenerate_freq%list_k_check(k)) CYCLE
+            IF ( abs(c(k,i)) > max_ci ) THEN
+              max_ci   = abs(c(k,i))
+              ind_maxi = k
+            END IF
+          END DO
+          max_cj   = ZERO
+          ind_maxj = 0
+          DO k=1,n
+            IF (.NOT. degenerate_freq%list_k_check(k)) CYCLE
+            IF ( abs(c(k,j)) > max_cj .AND. k /= ind_maxi) THEN
+              max_cj   = abs(c(k,j))
+              ind_maxj = k
+            END IF
+          END DO
+
+          IF (ind_maxj > 0 .AND. ind_maxi > 0) THEN
+            !rotation of c(.i) and c(.,j)
+            norme = sqrt(max_ci*max_ci + c(ind_maxj,i)*c(ind_maxj,i))
+            cc =  max_ci/norme
+            ss = -c(ind_maxj,i)/norme
+            IF (debug) then
+              write(out_unitp,*) 'i et i+1 dege',i,i+1
+              write(out_unitp,*) 'ind_maxi ind_maxj',ind_maxi,ind_maxj
+              write(out_unitp,*) 'cos et sin',cc,ss,norme
+            END IF
+
+            DO k=1,n
+              ai = c(k,i)
+              aj = c(k,j)
+
+              c(k,i) =  cc * ai + ss * aj
+              c(k,j) = -ss * ai + cc * aj
+
+            END DO
+          END IF
+
+        END IF
+      END DO
+
+
+
+      DO i=1,n
+        !swap sign of c(.,i) such max_ci is positive
+        max_ci = ZERO
+        DO k=1,n
+          IF ( abs(c(k,i)) > max_ci ) THEN
+            max_ci = abs(c(k,i))
+            ind_maxi = k
+          END IF
+        END DO
+        IF (c(ind_maxi,i) < ZERO) c(:,i) = -c(:,i)
+
+
+      END DO
+
+
+!---------------------------------------------------------------------
+      IF (debug) THEN
+      write(out_unitp,*) 'new c'
+      CALL Write_Mat(c,out_unitp,5)
+      write(out_unitp,*) 'END rota_degenerate_opt1'
+      END IF
+!---------------------------------------------------------------------
+
+    end subroutine rota_degenerate_opt1
 !=====================================================================
 !
 ! ++   order the vectors cf(.,i) such that cf(.,i) is "closed" to ci(.,i)
@@ -1325,9 +1834,6 @@ MODULE mod_freq
 
           IF (debug) write(out_unitp,*) ' Overlapp between c(:,i) and c_ini(:,i)'
           DO i=1,n
-
-
-            max_Si = ZERO
             DO j=1,n
               !  calculation of Sij
               Sij = dot_product(c_ini(:,i) , c(:,j))
@@ -1339,10 +1845,13 @@ MODULE mod_freq
             END DO
             !write(out_unitp,'(a,i0,50(xf5.2))') 'Error on Sji: ',i,tab_Sji
             tab_Sji(i) = tab_Sji(i) - ONE
+            IF (debug) write(out_unitp,'(3a,i0,2(1x,f5.2))') 'In ',name_sub,               &
+               'Sji(i) and Error on Sji: ',i,tab_Sji(i)+ONE,maxval(abs(tab_Sji))
 
-            IF (debug) &
-              write(out_unitp,'(a,i0,50(1x,f5.2))') 'Sji and Error on Sji: ',i,tab_Sji(i)+ONE,maxval(abs(tab_Sji))
-
+            IF (debug) THEN
+              tab_Sji(i) = tab_Sji(i) + ONE
+              write(out_unitp,'(a,i0,50(1x,f5.2))') 'Sji(:): ',i,tab_Sji(:)
+            END IF
           END DO
         END IF
 

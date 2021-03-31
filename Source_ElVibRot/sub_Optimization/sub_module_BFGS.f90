@@ -58,6 +58,9 @@
       logical           :: calc_hessian        = .FALSE.
       logical           :: read_hessian        = .FALSE.
 
+      integer           :: max_Q_ForPrinting   = 11
+
+
       real (kind=Rkind), pointer :: hessian_inv_init(:,:) => null()
 
 
@@ -68,7 +71,7 @@
       SUBROUTINE Read_param_BFGS(para_BFGS)
       TYPE (param_BFGS), intent(inout) :: para_BFGS
 
-      integer           :: max_iteration
+      integer           :: max_iteration,max_Q_ForPrinting
 
       real (kind=Rkind) :: max_grad
       real (kind=Rkind) :: RMS_grad
@@ -79,7 +82,8 @@
 
 
       integer :: err_io
-      NAMELIST /BFGS/ max_iteration,max_grad,RMS_grad,max_step,RMS_step,calc_hessian,read_hessian
+      NAMELIST /BFGS/ max_iteration,max_grad,RMS_grad,max_step,RMS_step,        &
+                      calc_hessian,read_hessian,max_Q_ForPrinting
 
         max_iteration       = 10
 
@@ -90,6 +94,7 @@
         RMS_step            = 0.000040_Rkind
         calc_hessian        = .FALSE.
         read_hessian        = .FALSE.
+        max_Q_ForPrinting   = 11
 
         read(in_unitp,BFGS,IOSTAT=err_io)
         IF (err_io /= 0) THEN
@@ -265,7 +270,7 @@
         END IF
 
         IF (allocated(hessian)) THEN
-          IF (print_level > 1 .OR. nb_Opt <= 10) THEN
+          IF (print_level > 1 .OR. nb_Opt <= para_BFGS%max_Q_ForPrinting) THEN
             write(out_unitp,*) 'hessian'
             CALL Write_Mat(hessian,out_unitp,5)
           ELSE
@@ -274,7 +279,7 @@
 
           CALL inv_m1_TO_m2(hessian,para_BFGS%hessian_inv_init,nb_Opt,0,ZERO)
 
-          IF (print_level > 1 .OR. nb_Opt <= 10) THEN
+          IF (print_level > 1 .OR. nb_Opt <= para_BFGS%max_Q_ForPrinting) THEN
             write(out_unitp,*) 'hessian inverse'
             CALL Write_Mat(para_BFGS%hessian_inv_init,out_unitp,5)
           ELSE
@@ -298,7 +303,7 @@
 
         !---------JMLend-------------------------------------
         !--------------------------------------------------
-        
+
         !--------------------------------------------------
         ! this subroutine print the  matrix of derived type.
         CALL Write_MatOFdnS(dnMatOp(1)%tab_dnMatOp(:,:,1))
@@ -489,6 +494,9 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,PrimOp,para_Tnum,para_BFGS,    &
  end do             ! and go back for another iteration.
  deallocate (g,hdg,pnew,dg,xi,hessin)
  write(out_unitp,*) 'Too many iterations in dfpmin'
+ write(out_unitp,*) ' energy: ',fret
+ write(out_unitp,*) ' Geometry: '
+ write(out_unitp,*) ' p = ', p
  stop
  return
  end subroutine dfpmin_new
@@ -497,14 +505,14 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,PrimOp,para_Tnum,para_BFGS,    &
   subroutine lnsrch(n,xold,fold,g,p,x,f,stpmax,check,dnMatOp,mole,PrimOp,para_Tnum)
 !---------------------------------------------------------------------
 !
- USE mod_system 
+ USE mod_system
  USE mod_Coord_KEO, only: CoordType, tnum, alloc_array, dealloc_array
  USE mod_PrimOp
  USE mod_basis
  USE mod_Op
- USE mod_Auto_Basis 
+ USE mod_Auto_Basis
 !
- implicit none 
+ implicit none
  LOGICAL :: check
  integer :: n,i
  real (kind=Rkind) :: g(n),p(n),x(n),xold(n)
@@ -529,7 +537,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,PrimOp,para_Tnum,para_BFGS,    &
    p(i)=p(i)*(stpmax/sum)
   end do
  endif
- call proescvec(g,p,slope,n) 
+ call proescvec(g,p,slope,n)
  test=ZERO
  do i=1,n
   temp=abs(p(i))/max(abs(xold(i)),ONE)
@@ -537,7 +545,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,PrimOp,para_Tnum,para_BFGS,    &
  end do
  alamin=TOLX/test
  alam=ONE
-1 continue    
+1 continue
  do  i=1,n
   x(i)=xold(i)+alam*p(i)
  end do
@@ -646,7 +654,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,PrimOp,para_Tnum,para_BFGS,    &
 !  Remark, the allocation of MatdnE have to be done with "nderiv_alloc" larger than "nderiv_dnE"
 !     With nderiv_alloc=2 and nderiv_dnE=1, you can calculate the energy and the gradient
 !     and update the hessian in MatdnE(1,1)%d2(:,:), if you want.
- 
+
 !  write(out_unitp,*) ' MatdnE(1,1)%d0 = ', MatdnE(1,1)%d0
 !  write(out_unitp,*) ' MatdnE(1,1)%d1 = ', MatdnE(1,1)%d1
 !
@@ -683,4 +691,3 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,PrimOp,para_Tnum,para_BFGS,    &
 !
 
 END MODULE mod_BFGS
-

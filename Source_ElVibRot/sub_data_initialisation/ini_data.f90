@@ -111,7 +111,7 @@
 !----- Parameters to set the operators --------------------------------
       TYPE (param_ReadOp)            :: para_ReadOp
 
-      integer                        :: i,j,rk,rl,i_term,iOp,it
+      integer                        :: i,j,rk,rl,i_term,iOp,it,ib
       integer                        :: nq,nb_ba,nb_bi,nb_be,nb_bie
       logical                        :: spectral_H
       real (kind=Rkind), allocatable :: Qana(:),Qact(:)
@@ -157,7 +157,8 @@
 !-----------------------------------------------------------------------
 !--------------------- TO finalize the coordinates (NM) and the KEO ----
 !     If needed, Tana must be done after auto_basis, otherwise nrho(:) could be wrong
-      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_ReadOp%PrimOp_t,Tana=.FALSE.)
+      CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,para_ReadOp%PrimOp_t,  &
+                                          Tana=.FALSE.,KEO_only=.FALSE.)
 !-----------------------------------------------------------------------
 
       IF(MPI_id==0) THEN
@@ -259,7 +260,7 @@
       CALL alloc_NParray(Qana,(/ mole%nb_var /),"Qana",name_sub)
       CALL get_Qact0(Qana,mole%ActiveTransfo)
 
-      CALL read_analyse(para_ana,Qana)
+      CALL read_analyse(para_ana,Qana,mole)
 
       CALL dealloc_NParray(Qana,"Qana",name_sub)
 
@@ -549,8 +550,9 @@
       para_AllOp%tab_Op(iOp)%symab      = 0 ! totally symmetric
       IF (para_ana%VibRot) Para_Tnum%JJ = 0
       IF(MPI_id==0) THEN
-        write(out_unitp,*) 'para_ReadOp%Make_Mat',para_ReadOp%Make_Mat
-        write(out_unitp,*) 'para_H%Make_Mat',para_AllOp%tab_Op(iOp)%Make_Mat
+        write(out_unitp,*) 'para_H%...%Make_Mat           ',para_AllOp%tab_Op(iOp)%para_ReadOp%Make_Mat
+        write(out_unitp,*) 'para_H%Make_Mat               ',para_AllOp%tab_Op(iOp)%Make_Mat
+        write(out_unitp,*) 'para_H%...%Op_WithContracRVec ',para_AllOp%tab_Op(iOp)%para_ReadOp%Op_WithContracRVec
       ENDIF
 
       IF (debug) CALL Write_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp)
@@ -626,13 +628,6 @@
                          type_Op=0,nb_Qact=mole%nb_act1,cplx=.FALSE.,   &
                          JRot=Para_Tnum%JJ,                             &
                          direct_KEO=.FALSE.,direct_ScalOp=para_ReadOp%direct_ScalOp)
-
-        ! CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,           &
-        !                  type_Op=para_ReadOp%type_HamilOp,              &
-        !                  nb_Qact=mole%nb_act1,cplx=.FALSE.,             &
-        !                  JRot=Para_Tnum%JJ,                             &
-        !                  direct_KEO=para_ReadOp%direct_KEO,             &
-        !                  direct_ScalOp=para_ReadOp%direct_ScalOp)
         CALL derive_termQact_TO_derive_termQdyn(                        &
                               para_AllOp%tab_Op(iOp)%derive_termQdyn,   &
                               para_AllOp%tab_Op(iOp)%derive_termQact,   &
@@ -671,8 +666,11 @@
       IF (associated(mole%RPHTransfo)) THEN
         CALL Set_paraPRH(mole,para_Tnum,para_AllBasis%BasisnD)
       END IF
+
       IF (para_propa%para_Davidson%NewVec_type == 4 .OR. para_ana%CRP > 0) THEN
         CALL RecSet_EneH0(para_Tnum,mole,para_AllBasis%BasisnD,para_ReadOp)
+        !pot_Qref is added here, because it has been removed in the RecSet_EneH0 caclulations
+        para_AllBasis%BasisnD%EneH0 = para_AllBasis%BasisnD%EneH0 + para_ReadOp%pot_Qref
       END IF
 
       write(out_unitp,*)

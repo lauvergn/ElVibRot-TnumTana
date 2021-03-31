@@ -38,6 +38,7 @@
       USE mod_RectilinearNM_Transfo
       USE mod_OneDTransfo
       USE mod_ThreeDTransfo
+      USE mod_TwoDTransfo
       USE mod_Rot2CoordTransfo
       USE mod_FlexibleTransfo
       USE mod_GeneTransfo
@@ -78,6 +79,7 @@
 
           TYPE (Type_oneDTransfo),      pointer :: oneDTransfo(:)      => null()
           TYPE (Type_ThreeDTransfo),    pointer :: ThreeDTransfo       => null()
+          TYPE (Type_TwoDTransfo),      pointer :: TwoDTransfo(:)      => null()
           TYPE (Type_Rot2CoordTransfo), pointer :: Rot2CoordTransfo(:) => null()
           TYPE (Type_HyperSpheTransfo)          :: HyperSpheTransfo
           integer,                      pointer :: list_Qin_TO_Qout(:) => null() ! "order" transfo
@@ -112,12 +114,14 @@
 
       !!@description: TODO
       !!@param: TODO
-      SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,nb_extra_Coord,mendeleev)
+      SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,nb_extra_Coord,With_Tab_dnQflex, &
+                               mendeleev)
         USE mod_MPI
 
         TYPE (Type_Qtransfo), intent(inout)    :: Qtransfo
         integer,              intent(inout)    :: nb_Qin,nb_extra_Coord
         TYPE (table_atom),    intent(in)       :: mendeleev
+        logical,              intent(in)       :: With_Tab_dnQflex
 
         character (len=Name_len) :: name_transfo,name_dum
         integer :: nat,nb_vect,nbcol,nb_flex_act,nb_transfo,nb_G,nb_X
@@ -223,7 +227,6 @@
           write(out_unitp,'(a)'   )  '------------------------------------------'
         ENDIF
         CALL flush_perso(out_unitp)
-
 
         name_transfo = Qtransfo%name_transfo
         CALL string_uppercase_TO_lowercase(name_transfo)
@@ -331,6 +334,8 @@
 
           CALL alloc_array(Qtransfo%NMTransfo,'Qtransfo%NMTransfo',name_sub)
 
+          Qtransfo%NMTransfo%NM_TO_sym_ver    = opt_transfo
+
           Qtransfo%NMTransfo%purify_hess      = purify_hess
           Qtransfo%NMTransfo%eq_hess          = eq_hess
           Qtransfo%NMTransfo%k_Half           = k_Half
@@ -425,6 +430,14 @@
           CALL sub_Type_Name_OF_Qin(Qtransfo,"Q3D")
           Qtransfo%type_Qin(:) =0
 
+        CASE ('twod')
+          Qtransfo%nb_Qin  = nb_Qin
+
+          CALL Read_TwoDTransfo(Qtransfo%TwoDTransfo,nb_transfo,nb_Qin)
+
+          CALL sub_Type_Name_OF_Qin(Qtransfo,"Q2D")
+          Qtransfo%type_Qin(:) =0
+
         CASE ('rot2coord')
           Qtransfo%nb_Qin  = nb_Qin
 
@@ -433,11 +446,12 @@
           CALL sub_Type_Name_OF_Qin(Qtransfo,"Qrot2Coord")
           Qtransfo%type_Qin(:) = 0
 
-
         CASE ('flexible')
           Qtransfo%nb_Qin  = nb_Qin
           !CALL Read_FlexibleTransfo(Qtransfo%FlexibleTransfo,nb_Qin)
           CALL Qtransfo%FlexibleTransfo%QtransfoRead(nb_Qin)
+          Qtransfo%FlexibleTransfo%With_Tab_dnQflex = With_Tab_dnQflex
+          write(out_unitp,*) 'With_Tab_dnQflex: ',Qtransfo%FlexibleTransfo%With_Tab_dnQflex
 
           CALL sub_Type_Name_OF_Qin(Qtransfo,"Qflex")
           Qtransfo%type_Qin(:) = Qtransfo%type_Qout(:)
@@ -458,6 +472,7 @@
             CALL Read_ActiveTransfo(Qtransfo%ActiveTransfo,nb_Qin)
           END IF
           ! the set of type_Qin and name_Qin are done in type_var_analysis
+          Qtransfo%ActiveTransfo%With_Tab_dnQflex = With_Tab_dnQflex
 
         CASE ('zmat') ! It should be one of the first transfo read
           IF (nat < 2) THEN
@@ -704,6 +719,7 @@
         write(nio,*) '"oneD"'
         write(nio,*) '"InfRange" or "InfiniteRange"'
         write(nio,*) '"ThreeD"'
+        write(nio,*) '"TwoD"'
         write(nio,*) '"Rot2Coord"'
 
         write(nio,*)
@@ -781,7 +797,8 @@
 
         ! ==== ThreeDTransfo ========================
         CALL dealloc_ThreeDTransfo(Qtransfo%ThreeDTransfo)
-
+        ! ==== TwoDTransfo ========================
+        CALL dealloc_TwoDTransfo(Qtransfo%TwoDTransfo)
         ! ==== Rot2CoordTransfo ========================
         CALL dealloc_Rot2CoordTransfo(Qtransfo%Rot2CoordTransfo)
 
@@ -1030,6 +1047,10 @@
         CALL ThreeDTransfo1TOThreeDTransfo2(Qtransfo1%ThreeDTransfo,    &
                                             Qtransfo2%ThreeDTransfo)
 
+      CASE ('twod')
+        CALL TwoDTransfo1TOTwoDTransfo2(Qtransfo1%TwoDTransfo,    &
+                                        Qtransfo2%TwoDTransfo)
+
       CASE ('rot2coord')
         CALL Rot2CoordTransfo1TORot2CoordTransfo2(                      &
                   Qtransfo1%Rot2CoordTransfo,Qtransfo2%Rot2CoordTransfo)
@@ -1218,6 +1239,10 @@
         CALL calc_ThreeDTransfo(dnQin,dnQout,Qtransfo%ThreeDTransfo,    &
                                 nderiv,inTOout_loc)
 
+      CASE ('twod')
+        CALL calc_TwoDTransfo(dnQin,dnQout,Qtransfo%TwoDTransfo,    &
+                              nderiv,inTOout_loc)
+
       CASE ('rot2coord')
         CALL calc_Rot2CoordTransfo(dnQin,dnQout,                        &
                                              Qtransfo%Rot2CoordTransfo, &
@@ -1344,7 +1369,12 @@
           force_print_loc = .FALSE.
         END IF
 
-        IF (Qtransfo%print_done .AND. .NOT. force_print_loc) RETURN
+        IF (Qtransfo%print_done .AND. .NOT. force_print_loc) THEN
+          write(out_unitp,*) 'name_transfo,num_transfo: ',     &
+                         trim(Qtransfo%name_transfo),Qtransfo%num_transfo
+          write(out_unitp,*) ' Writing already done.'
+          RETURN
+        END IF
         write(out_unitp,*) 'BEGINNING ',name_sub
 
         Qtransfo%print_done = .TRUE.
@@ -1450,6 +1480,9 @@
 
         CASE ('threed')
           CALL Write_ThreeDTransfo(Qtransfo%ThreeDTransfo)
+
+        CASE ('twod')
+          CALL Write_TwoDTransfo(Qtransfo%TwoDTransfo)
 
         CASE ('rot2coord')
           CALL Write_Rot2CoordTransfo(Qtransfo%Rot2CoordTransfo)

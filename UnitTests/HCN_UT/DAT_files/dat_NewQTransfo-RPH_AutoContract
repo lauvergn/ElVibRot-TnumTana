@@ -132,4 +132,6 @@ end wp0
 end wp0
 **
 
+echo $RES
+
 awk '/lev0:/ {print $5}' $RES | head -20 > lev20_$RES

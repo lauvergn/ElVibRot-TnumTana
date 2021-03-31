@@ -61,20 +61,22 @@
                                                  ! 1,2,3 => Dipole moment (x,y,z)
           character (len=Name_len) :: name_Op = 'H'
 
-          logical                  :: direct_KEO    = .FALSE. ! to be used with type_Op=10
-          logical                  :: direct_ScalOp = .FALSE. ! scalar Operotor and potential
+          logical                  :: direct_KEO         = .FALSE. ! to be used with type_Op=10
+          logical                  :: direct_ScalOp      = .FALSE. ! scalar Operotor and potential
+          !logical                  :: Op_WithContracRVec = .FALSE. ! use ContracRVec to make the operator
 
+          logical                  :: QML_Vib_adia  = .FALSE. ! Vibrational adiabatic separation with QML
 
-          integer              :: nb_term     = 0
-          integer              :: nb_Term_Vib = 0
-          integer              :: nb_Term_Rot = 0
-          integer              :: nb_Qact     = 0
-          integer              :: Jrot        = 0
+          integer                  :: nb_term     = 0
+          integer                  :: nb_Term_Vib = 0
+          integer                  :: nb_Term_Rot = 0
+          integer                  :: nb_Qact     = 0
+          integer                  :: Jrot        = 0
 
-          integer, allocatable :: derive_termQact(:,:)      ! derive_termQact(2,nb_term)
-          integer, allocatable :: derive_term_TO_iterm(:,:) ! ...(-3:nb_Qact,-3:nb_Qact)
+          integer, allocatable     :: derive_termQact(:,:)      ! derive_termQact(2,nb_term)
+          integer, allocatable     :: derive_term_TO_iterm(:,:) ! ...(-3:nb_Qact,-3:nb_Qact)
 
-          logical              :: cplx      = .FALSE.
+          logical                  :: cplx      = .FALSE.
         CONTAINS
           PROCEDURE, PRIVATE, PASS(para_TypeOp1) :: TypeOp2_TO_TypeOp1
           GENERIC,   PUBLIC  :: assignment(=) => TypeOp2_TO_TypeOp1
@@ -122,12 +124,16 @@
 
    CONTAINS
 
-   SUBROUTINE Init_TypeOp(para_TypeOp,type_Op,nb_Qact,cplx,JRot,        &
-                                             direct_KEO,direct_ScalOp)
-    TYPE (param_TypeOp), intent(inout) :: para_TypeOp
-    integer, intent(in) :: type_Op,nb_Qact
-    logical, intent(in), optional :: cplx,direct_KEO,direct_ScalOp
-    integer, intent(in), optional :: JRot
+   SUBROUTINE Init_TypeOp(para_TypeOp,type_Op,nb_Qact,cplx,JRot,                &
+                          direct_KEO,direct_ScalOp,QML_Vib_adia)
+
+    TYPE (param_TypeOp),  intent(inout)         :: para_TypeOp
+    integer,              intent(in)            :: type_Op,nb_Qact
+    logical,              intent(in), optional  :: cplx,direct_KEO,direct_ScalOp
+    logical,              intent(in), optional  :: QML_Vib_adia
+
+    integer,              intent(in), optional  :: JRot
+
 
     integer :: iterm,i,j,nb_term,nb_term_Vib,nb_term_Rot
     logical :: cplx_loc
@@ -173,6 +179,17 @@
         para_TypeOp%direct_ScalOp = .FALSE.
       END IF
 
+      IF (present(QML_Vib_adia)) THEN
+        para_TypeOp%QML_Vib_adia = QML_Vib_adia
+      ELSE
+        para_TypeOp%QML_Vib_adia = .FALSE.
+      END IF
+
+      ! IF (present(Op_WithContracRVec)) THEN
+      !   para_TypeOp%Op_WithContracRVec = Op_WithContracRVec
+      ! ELSE
+      !   para_TypeOp%Op_WithContracRVec = .FALSE.
+      ! END IF
 
       para_TypeOp%nb_Qact = nb_Qact
 
@@ -377,15 +394,20 @@
                             "para_TypeOp%derive_term_TO_iterm",name_sub)
       END IF
 
-      para_TypeOp%nb_term     = 0
-      para_TypeOp%nb_term_Vib = 0
-      para_TypeOp%nb_term_Rot = 0
+      para_TypeOp%direct_KEO          = .FALSE. ! to be used with type_Op=10
+      para_TypeOp%direct_ScalOp       = .FALSE. ! scalar Operotor and potential
+      para_TypeOp%QML_Vib_adia        = .FALSE.
+      !para_TypeOp%Op_WithContracRVec  = .FALSE.
 
-      para_TypeOp%nb_Qact     = 0
-      para_TypeOp%Jrot        = 0
+      para_TypeOp%nb_term             = 0
+      para_TypeOp%nb_term_Vib         = 0
+      para_TypeOp%nb_term_Rot         = 0
 
-      para_TypeOp%cplx        = .FALSE.
-      para_TypeOp%type_Op     = -1
+      para_TypeOp%nb_Qact             = 0
+      para_TypeOp%Jrot                = 0
+
+      para_TypeOp%cplx                = .FALSE.
+      para_TypeOp%type_Op             = -1
 
    END SUBROUTINE dealloc_TypeOp
    SUBROUTINE Write_TypeOp(para_TypeOp,With_list)
@@ -405,13 +427,17 @@
       END IF
 
       write(out_unitp,*) ' BEGINNING: ',name_sub
-      write(out_unitp,*) ' Type_Op:       ',para_TypeOp%Type_Op
-      write(out_unitp,*) ' direct_KEO:    ',para_TypeOp%direct_KEO
-      write(out_unitp,*) ' direct_ScalOp: ',para_TypeOp%direct_ScalOp
+      write(out_unitp,*) ' Type_Op:                 ',para_TypeOp%Type_Op
+      write(out_unitp,*) ' direct_KEO:              ',para_TypeOp%direct_KEO
+      write(out_unitp,*) ' direct_ScalOp:           ',para_TypeOp%direct_ScalOp
+      write(out_unitp,*) ' QML_Vib_adia:            ',para_TypeOp%QML_Vib_adia
+      !write(out_unitp,*) ' Op_WithContracRVec:      ',para_TypeOp%Op_WithContracRVec
 
-      write(out_unitp,*) ' nb_term:    ',para_TypeOp%nb_term
-      write(out_unitp,*) ' nb_Qact:    ',para_TypeOp%nb_Qact
-
+      write(out_unitp,*) ' nb_term:                 ',para_TypeOp%nb_term
+      write(out_unitp,*) ' nb_Term_Vib:             ',para_TypeOp%nb_Term_Vib
+      write(out_unitp,*) ' nb_Term_Rot:             ',para_TypeOp%nb_Term_Rot
+      write(out_unitp,*) ' nb_Qact:                 ',para_TypeOp%nb_Qact
+      write(out_unitp,*) ' Jrot:                    ',para_TypeOp%Jrot
       write(out_unitp,*) ' alloc ? derive_termQact: ',allocated(para_TypeOp%derive_termQact)
       IF (allocated(para_TypeOp%derive_termQact)) THEN
         DO iterm=1,para_TypeOp%nb_term
@@ -452,7 +478,8 @@
 
       CALL Init_TypeOp(para_TypeOp1,para_TypeOp2%type_Op,               &
                para_TypeOp2%nb_Qact,para_TypeOp2%cplx,para_TypeOp2%JRot,&
-               para_TypeOp2%direct_KEO,para_TypeOp2%direct_ScalOp)
+               para_TypeOp2%direct_KEO,para_TypeOp2%direct_ScalOp,      &
+               para_TypeOp2%QML_Vib_adia)
       IF (debug) THEN
         CALL Write_TypeOp(para_TypeOp1)
         write(out_unitp,*) ' END: ',name_sub
@@ -1657,4 +1684,3 @@
    END SUBROUTINE WeightDer_dnMatOp
 
   END MODULE mod_SimpleOp
-

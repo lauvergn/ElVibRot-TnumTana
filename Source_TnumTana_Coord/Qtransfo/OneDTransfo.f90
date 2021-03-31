@@ -65,7 +65,7 @@
       SUBROUTINE alloc_oneDTransfo(oneDTransfo,nb_transfo)
 
       TYPE (Type_oneDTransfo), pointer, intent(inout) :: oneDTransfo(:)
-      integer, intent(in) :: nb_transfo
+      integer,                          intent(in)    :: nb_transfo
 
       integer :: it
       character (len=*), parameter :: name_sub='alloc_oneDTransfo'

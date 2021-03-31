@@ -820,12 +820,11 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                                              [nb_diago],"basis_ext%liste_spec","vib")
           tab_EVRT(ith)%para_AllBasis%basis_ext%liste_spec(:) = (/ (i,i=1,nb_diago) /)
 
-          IF (associated(para_H%Rmat)) THEN
-            CALL dealloc_array(para_H%Rmat,"para_H%Rmat","vib")
+          IF (allocated(para_H%Rmat)) THEN
+            CALL dealloc_NParray(para_H%Rmat,"para_H%Rmat","vib")
           END IF
-          IF (associated(para_H%Cmat)) THEN
-            CALL dealloc_array(para_H%Cmat,"para_H%Cmat","vib")
-            nullify(para_H%Cmat)
+          IF (allocated(para_H%Cmat)) THEN
+            CALL dealloc_NParray(para_H%Cmat,"para_H%Cmat","vib")
           END IF
           tab_EVRT(ith)%para_ana%max_ana = nb_diago
 
@@ -1290,7 +1289,7 @@ SUBROUTINE init_EVR()
                     ",' +i'," // trim(adjustl(CMatFormat)) // ",')'"
 
 
-        openmp                = Popenmp 
+        openmp                = Popenmp
         openmpi               = Popenmpi
 
         IF (.NOT. openmp) THEN
@@ -1857,12 +1856,11 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           para_AllBasis%basis_ext%liste_spec(:) = (/ (i,i=1,nb_diago) /)
 
 
-          IF (associated(para_H%Rmat)) THEN
-            CALL dealloc_array(para_H%Rmat,"para_H%Rmat","vib")
+          IF (allocated(para_H%Rmat)) THEN
+            CALL dealloc_NParray(para_H%Rmat,"para_H%Rmat","vib")
           END IF
-          IF (associated(para_H%Cmat)) THEN
-            CALL dealloc_array(para_H%Cmat,"para_H%Cmat","vib")
-            nullify(para_H%Cmat)
+          IF (allocated(para_H%Cmat)) THEN
+            CALL dealloc_NParray(para_H%Cmat,"para_H%Cmat","vib")
           END IF
           para_EVRT%para_ana%max_ana = nb_diago
 
@@ -2178,4 +2176,3 @@ SUBROUTINE Finalize_EVR()
       close(in_unitp)
 
 END SUBROUTINE Finalize_EVR
-

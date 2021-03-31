@@ -256,6 +256,8 @@
     CALL constantes_CODATA2006(c,mhu0,G,h,e,me,mp,Na,R)
   CASE ('CODATA2014')
     CALL constantes_CODATA2014(c,mhu0,G,h,e,me,mp,Na,R)
+  CASE ('CODATA2018')
+    CALL constantes_CODATA2018(c,mhu0,G,h,e,me,mp,Na,R)
   CASE ('HANDBOOK70ED','HANDBOOK')
     CALL constantes_HandBook70ed(c,mhu0,G,h,e,me,mp,Na,R)
   CASE ('PUBLI2001')
@@ -617,6 +619,67 @@
 END SUBROUTINE sub_ReadNMLconstantes
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
+!> @brief fundamental physical constants:
+!!
+!! The CODATA 2014 one in 2018. They can be download from
+!! the <a href="http://physics.nist.gov/constants">NIST</a>
+  SUBROUTINE constantes_CODATA2018(c,mhu0,G,h,e,me,mp,Na,R)
+  USE mod_MPI
+  IMPLICIT NONE
+
+  !----- physical constants ---------------------------
+  real (kind=Rkind) :: c      !< speed of light in vacuum (exact) (in m s-1)
+  real (kind=Rkind) :: mhu0   !< Magnetic Constant (exact) (in N A-2)
+  real (kind=Rkind) :: G      !< Newtonian constant of gravitation (in m^3 kg-1 s-2)
+  real (kind=Rkind) :: h      !< Planck Constant (h et hb) (in J s)
+  real (kind=Rkind) :: e      !< Atomic unit of charge (in C)
+  real (kind=Rkind) :: me     !< Atomic unit of mass (in kg) (Electron mass)
+  real (kind=Rkind) :: mp     !< Proton mass (in kg)
+  real (kind=Rkind) :: Na     !< Avogadro constant (in mol-1)
+  real (kind=Rkind) :: R      !< Molar gas constant (in J mol−1 K−1)
+  real (kind=Rkind) :: k      !< Boltzmann constant (in J K^-1)
+
+  character (len=*), parameter :: version='CODATA 2018'
+  !---------------------------------------------------------------------
+  write(out_unitp,*) 'PHYSICAL CONSTANTS, version: ',version
+  !---------------------------------------------------------------------
+
+  !------ Physical constant of CODATA2018 ---------------------------
+  ! http://physics.nist.gov/constants
+  ! in 2021: https://physics.nist.gov/cuu/Constants/Table/allascii.txt
+  ! in 2021: https://physics.nist.gov/cuu/pdf/wall_2018.pdf
+
+  ! Speed of light in vacuum (exact) (in m s-1)
+  ! speed of light in vacuum                                    299792458              (exact)                  m s^-1
+  c = 299792458._Rkind
+  ! Magnetic Constant (exact) (in N A-2)
+  mhu0 = pi*4.e-7_Rkind
+  ! Newtonian constant of gravitation (in m^3 kg-1 s-2)
+  ! Newtonian constant of gravitation                           6.67430 e-11            0.000 15 e-11            m^3 kg^-1 s^-2
+  G = 6.67430e-11_Rkind
+  ! Planck Constant (exact) (h et hb) (in J s)
+  !Planck constant                                             6.62607015 e-34        (exact)                  J Hz^-1
+  h = 6.62607015e-34_Rkind
+  ! Elementary Charge -electron- (en C) (exact)
+  ! atomic unit of charge                                       1.602176634 e-19       (exact)                  C
+  e = 1.602176634e-19_Rkind
+  ! Electron mass (en kg)
+  ! atomic unit of mass                                         9.1093837015 e-31      0.000 000 0028 e-31      kg
+  me = 9.1093837015e-31_Rkind
+  ! Proton mass (en kg)
+  ! proton mass                                                 1.67262192369 e-27    0.000 000 000 51 e-27    kg
+  mp = 1.67262192369e-27_Rkind
+  ! Avogadro constant (mol-1) (exact)
+  ! Avogadro constant                                           6.02214076 e23         (exact)                  mol^-1
+  Na = 6.02214076e23_Rkind
+  ! Boltzmann constant                                          1.380649 e-23           (exact)                  J K^-1
+  k = 1.380649e-23_Rkind
+  ! Molar gas constant R (J mol-1 K-1): R=k*Na
+  R = k * Na
+
+END SUBROUTINE constantes_CODATA2018
+!---------------------------------------------------------------------
+!---------------------------------------------------------------------
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 !> @brief fundamental physical constants:
@@ -733,8 +796,8 @@ END SUBROUTINE sub_ReadNMLconstantes
   R = 8.314472_Rkind
 
   END SUBROUTINE constantes_CODATA2006
-  
-  
+
+
   SUBROUTINE constantes_HandBook70ed(c,mhu0,G,h,e,me,mp,Na,R)
   USE mod_MPI
   IMPLICIT NONE
@@ -787,8 +850,8 @@ END SUBROUTINE sub_ReadNMLconstantes
   write(out_unitp,*) 'R = ',R
 
   END SUBROUTINE constantes_HandBook70ed
-  
-  
+
+
   SUBROUTINE constantes_HandBook70ed_2001(c,mhu0,G,h,e,me,mp,Na,R)
   USE mod_MPI
   IMPLICIT NONE
@@ -847,4 +910,3 @@ END SUBROUTINE sub_ReadNMLconstantes
 
  END SUBROUTINE constantes_HandBook70ed_2001
  END MODULE mod_constant
-

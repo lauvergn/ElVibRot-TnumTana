@@ -274,7 +274,7 @@ CONTAINS
           iqLoop_end = (iq > nq)
         CASE (1) ! First Smolyak
            STOP ' SG1 not yet'
-        CASE (2,4) ! First Smolyak
+        CASE (2,4) ! Second and fourth Smolyak
 
           Qact1_fromBasisnD = BasisnD%tab_basisPrimSG(L,ib)%x(:,iq)
           iq = iq + 1
@@ -378,6 +378,8 @@ CONTAINS
 
           CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo) ! add rigid, flexible coordinates
           write(out_unitp,*) 'new RPH point',iq_list
+          !write(out_unitp,*) 'new RPH point',Qact(:)
+
           CALL flush_perso(out_unitp)
 
           CALL Set_RPHpara_AT_Qact1(                                    &

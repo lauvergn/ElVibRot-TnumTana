@@ -45,18 +45,20 @@ cd $here
 
 if [ $test_size = 'medium' ]
 then
- # this is too long, we use the Davidsonversion
- #./dat_HNO3_ccsdt-cHAC 3 5
- ./DAT_files/dat_HNO3_ccsdt-cHAC_DavRead 3 5
- ./CompareLevel res_HNO3_cHAC_Norm3-L5 Table4_PCCP2010-1+8D.txt 4
+ # this is too long, we use the Davidson version, but with larger epsi=0.1
+ #./DAT_files/dat_HNO3_ccsdt-cHAC 3 5
+ #./CompareLevel res_HNO3_cHAC_Norm3-L5 Table4_PCCP2010-1+8D.txt 4
+  ./DAT_files/dat_HNO3_ccsdt-cHAC_DavRead 3 5
+  ./CompareLevel res_HNO3_cHAC_Norm3-L5 Table4_PCCP2010-1+8D.txt 4 0.1
 fi
 
 if [ $test_size = 'big' ]
 then
  # this is too long, we use the Davidsonversion
- #./dat_HNO3_ccsdt-cHAC 3 5
+ #./DAT_files/dat_HNO3_ccsdt-cHAC 3 5
+ #./CompareLevel res_HNO3_cHAC_Norm3-L5 Table4_PCCP2010-1+8D.txt 4
  ./DAT_files/dat_HNO3_ccsdt-cHAC_DavRead 3 5
- ./CompareLevel res_HNO3_cHAC_Norm3-L5 Table4_PCCP2010-1+8D.txt 4
+ ./CompareLevel res_HNO3_cHAC_Norm3-L5 Table4_PCCP2010-1+8D.txt 4 0.1
 
  ./DAT_files/dat_HNO3_ccsdt-cHAC_DavRead 6 7
  ./CompareLevel res_HNO3_cHAC_Norm6-L7 Table4_PCCP2010-1+8D.txt 5

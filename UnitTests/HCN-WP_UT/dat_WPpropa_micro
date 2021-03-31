@@ -18,7 +18,9 @@ typepropa=$1
  x1=0.538516066
  x2=0.461483933
 
-nice $DIR_vib/vib << ** >"res_TypePropa"$typepropa
+RES="res_TypePropa"$typepropa
+
+nice $DIR_vib/vib << ** >$RES
  &system /
  &constantes ene_unit='eV' /
  &variables 
@@ -77,3 +79,5 @@ sym  cos(a)      R     r    x    pi   dh
  /
  &defWP0 sigma=0.6,Qeq=0.9,imp_k=0.0 /
 **
+
+echo $RES

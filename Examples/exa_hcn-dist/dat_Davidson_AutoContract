@@ -49,11 +49,12 @@ pi 3.141592653589793238462643383279d0
 dh 0.0
 
  &basis_nD iQdyn(1)=1 name="Pl0" nb=81 nq=100 
-           POGridRep=f min_nbc=20 auto_contrac=t max_ene_contrac=20000. "cm-1" auto_contrac_type1_TO=100 /
- &basis_nD iQdyn(1)=2 name="boxAB" nb=100 nq=128 A=2.2 B=5.2
-           POGridRep=t min_nbc=8 nqPLUSnbc_TO_nqc=0 auto_contrac=t max_ene_contrac=20000. "cm-1" /
- &basis_nD iQdyn(1)=3 name="boxAB" nb=100 nq=128 A=1.2 B=4.2
-           POGridRep=t min_nbc=8 auto_contrac=t max_ene_contrac=20000. "cm-1" /
+           min_nbc=20 auto_contrac=t max_ene_contrac=20000. "cm-1" auto_contrac_type1_TO=100 /
+ &basis_nD iQdyn(1)=2 name="Hm"  nb=10 nq=15 Q0=3.2 scaleQ=5.1  
+           min_nbc=8 auto_contrac=t max_ene_contrac=20000. "cm-1" /
+ &basis_nD iQdyn(1)=3 name="Hm"  nb=10 nq=15 Q0=2.2 scaleQ=11.0 
+           min_nbc=8 auto_contrac=t max_ene_contrac=20000. "cm-1" /
+
  &inactives /
  &actives test=f direct=2 /
  &analyse max_ana=40 max_ene=50000. "cm-1" print=f print_psi=0 davidson=t /

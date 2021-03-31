@@ -81,4 +81,6 @@ $pi
  &analyse max_ana=40 print=f /
 **
 
+echo $RES
+
 egrep 'lev0:    1 |lev0:    2 |lev0:    3 |lev0:    5 '  $RES | awk '{print $5}' > lev_$RES
