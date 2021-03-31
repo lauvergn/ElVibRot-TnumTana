@@ -49,6 +49,7 @@ MODULE mod_Davidson_MPI
   PUBLIC :: Schmidt_process_MPI
   PUBLIC :: MakeResidual_Davidson_MPI3,MakeResidual_Davidson_MPI4
   PUBLIC :: MakeResidual_Davidson_j_MPI3
+  PUBLIC :: exit_Davidson_external_MPI
 
   CONTAINS
 
@@ -844,20 +845,20 @@ MODULE mod_Davidson_MPI
     USE mod_propa,   ONLY : param_Davidson
     IMPLICIT NONE
     
-    TYPE(param_psi), intent(inout)              :: g
-    TYPE(param_psi), intent(in)                 :: psi(:)
-    TYPE(param_psi), intent(in)                 :: Hpsi(:)
-    Real(kind=Rkind),intent(in)                 :: Ene(:)
-    Real(kind=Rkind),intent(in)                 :: Vec(:,:)
+    TYPE(param_psi), intent(inout)               :: g
+    TYPE(param_psi), intent(in)                  :: psi(:)
+    TYPE(param_psi), intent(in)                  :: Hpsi(:)
+    Real(kind=Rkind),intent(in)                  :: Ene(:)
+    Real(kind=Rkind),intent(in)                  :: Vec(:,:)
 
-    Real(kind=Rkind),allocatable                :: Rvec(:)
-    Complex(kind=Rkind),allocatable             :: Cvec(:)
-    Integer                                     :: case_vec
-    Integer                                     :: size_vec
-    Integer                                     :: isym
-    Integer                                     :: ndim
-    Integer                                     :: ii
-    Integer                                     :: jj
+    Real(kind=Rkind),allocatable                 :: Rvec(:)
+    Complex(kind=Rkind),allocatable              :: Cvec(:)
+    Integer                                      :: case_vec
+    Integer                                      :: size_vec
+    Integer                                      :: isym
+    Integer                                      :: ndim
+    Integer                                      :: ii
+    Integer                                      :: jj
 
 #if(run_MPI)
 
@@ -945,6 +946,32 @@ MODULE mod_Davidson_MPI
 
 #endif
   END SUBROUTINE MakeResidual_Davidson_j_MPI
+!=======================================================================================
+
+
+!=======================================================================================
+! make save_WP=.true. with external control
+!=======================================================================================
+  SUBROUTINE exit_Davidson_external_MPI(exit_Davidson,save_WP,it)
+    Logical,                       intent(inout) :: exit_Davidson
+    Logical,                       intent(inout) :: save_WP
+    Integer,                       intent(in)    :: it
+    Logical                                      :: exist
+    Integer                                      :: stat
+
+!!#if(run_MPI)
+
+    IF(it>2) THEN
+      INQUIRE(FILE='Davidson_exit',EXIST=exist) 
+      IF(exist) THEN
+        save_WP=.TRUE.
+        exit_Davidson=.TRUE.
+        CALL RENAME('Davidson_exit','done_exit')
+      ENDIF
+    ENDIF
+
+!!#endif
+  END SUBROUTINE exit_Davidson_external_MPI
 !=======================================================================================
 
 ENDMODULE mod_Davidson_MPI

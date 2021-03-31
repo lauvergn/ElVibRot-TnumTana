@@ -170,8 +170,8 @@
         CALL march_BS(T,no,WP(1),WP0(1),para_H,para_propa)
 
       CASE (8) ! Short Iterative Lanczos
-        IF(openmpi) THEN 
-          IF(SRep_MPI) CALL march_SIL_MPI(T,no,WP(1),WP0(1),para_H,para_propa)
+        IF(openmpi .AND. SRep_MPI) THEN 
+          CALL march_SIL_MPI(T,no,WP(1),WP0(1),para_H,para_propa)
         ELSE
           CALL march_SIL(T,no,WP(1),WP0(1),para_H,para_propa)
         ENDIF
@@ -645,6 +645,7 @@ END SUBROUTINE march_Euler
       USE mod_system
       USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
       USE mod_Op,    ONLY : param_Op
+      USE mod_MPI_aux
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -706,30 +707,34 @@ END SUBROUTINE march_Euler
       END IF
 !-----------------------------------------------------------
 
-       !-----------------------------------------------------------
+      !-----------------------------------------------------------
        !w1 = WPdeltaT * fcn(WP,T)
 
-       CALL fcn(WP,w1,para_H)
-       w1 = w1 * para_propa%WPdeltaT
+      CALL fcn(WP,w1,para_H)
+      IF(keep_MPI) w1 = w1 * para_propa%WPdeltaT
 
       !-----------------------------------------------------------
       !w6 = WP + w1
       !w2 = WPdeltaT * fcn(WP+w1,T+DT)
-       T_DT = T + para_propa%WPdeltaT
-       w6 = WP + w1
+      T_DT = T + para_propa%WPdeltaT
+      IF(keep_MPI) w6 = WP + w1
+      CALL fcn(w6,w2,para_H)
 
-       CALL fcn(w6,w2,para_H)
-       w2 = w2 * para_propa%WPdeltaT
+      IF(keep_MPI) w2 = w2 * para_propa%WPdeltaT
 
-       w6     = w1+w2
-       WP     = WP + w6*HALF
+      IF(keep_MPI) THEN
+        w6     = w1+w2
+        WP     = WP + w6*HALF
 
-       !- Phase Shift -----------------
-       phase = para_H%E0*para_propa%WPdeltaT
-       WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
+        !- Phase Shift -----------------
+        phase = para_H%E0*para_propa%WPdeltaT
+        WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
+      ENDIF
 
       !- check norm ------------------
-      CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF(keep_MPI) CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF(openmpi)  CALL MPI_Bcast_(WP%norm2,size1_MPI,root_MPI)
+
       IF ( WP%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -739,13 +744,17 @@ END SUBROUTINE march_Euler
         STOP
       END IF
 
-      cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
-      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
+      IF(MPI_id==0) THEN
+        cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
+        CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+        CALL flush_perso(no)
+      ENDIF
 
-      CALL dealloc_psi(w1)
-      CALL dealloc_psi(w2)
-      CALL dealloc_psi(w6)
+      IF(keep_MPI) THEN
+        CALL dealloc_psi(w1)
+        CALL dealloc_psi(w2)
+        CALL dealloc_psi(w6)
+      ENDIF
 !----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
@@ -757,6 +766,7 @@ END SUBROUTINE march_RK2
       USE mod_system
       USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
       USE mod_Op,    ONLY : param_Op
+      USE mod_MPI_aux
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -831,40 +841,43 @@ END SUBROUTINE march_RK2
       CALL fcn(WP,w1,para_H)
 
       !w2 = WP + w1 * (DT/2)
-      w2 = WP + w1 * DTo2
+      IF(keep_MPI) w2 = WP + w1 * DTo2
 
       !w3 = -iH*w2
       CALL fcn(w2,w3,para_H)
 
 
       !w2 = WP + w3 * (DT/2)
-      w2 = WP + w3 * DTo2
+      IF(keep_MPI) w2 = WP + w3 * DTo2
 
       !w4 = -iH*w2
       CALL fcn(w2,w4,para_H)
 
       !w2 = WP + w4 * DT
-      w2 = WP + w4 * DT
+      IF(keep_MPI) w2 = WP + w4 * DT
 
       !w4 = w3 + w4
-      w4 = w3 + w4
+      IF(keep_MPI) w4 = w3 + w4
 
       !w3 = -iH(T)*w2
       CALL fcn(w2,w3,para_H)
 
 
       !WP = WP + (DT/6)*(w1+w3+2.D0*w4)
-      w5 = w1 + w3
-      w5 = w5 + w4*TWO
-      WP = WP + w5*DTo6
-
+      IF(keep_MPI) THEN
+        w5 = w1 + w3
+        w5 = w5 + w4*TWO
+        WP = WP + w5*DTo6
+      ENDIF
 
       !- Phase Shift -----------------
       phase = para_H%E0*para_propa%WPdeltaT
-      WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
+      IF(keep_MPI) WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
 
       !- check norm ------------------
-      CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF(keep_MPI) CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF(openmpi)  CALL MPI_Bcast_(WP%norm2,size1_MPI,root_MPI)
+
       IF ( WP%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -874,16 +887,20 @@ END SUBROUTINE march_RK2
         STOP
       END IF
 
-      cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
-      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
+      IF(MPI_id==0) THEN
+        cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
+        CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+        CALL flush_perso(no)
+      ENDIF
 
-      CALL dealloc_psi(w1)
-      CALL dealloc_psi(w2)
-      CALL dealloc_psi(w3)
-      CALL dealloc_psi(w4)
-      CALL dealloc_psi(w5)
-      CALL dealloc_psi(w6)
+      IF(keep_MPI) THEN
+        CALL dealloc_psi(w1)
+        CALL dealloc_psi(w2)
+        CALL dealloc_psi(w3)
+        CALL dealloc_psi(w4)
+        CALL dealloc_psi(w5)
+        CALL dealloc_psi(w6)
+      ENDIF
 !----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
@@ -895,6 +912,7 @@ END SUBROUTINE march_RK2
       USE mod_system
       USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,dealloc_psi
       USE mod_Op,    ONLY : param_Op
+      USE mod_MPI_aux
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -970,12 +988,14 @@ END SUBROUTINE march_RK2
 
   DT        = para_propa%WPdeltaT
 
-  yerr = WP
-  yerr = ZERO
+  IF(keep_MPI) THEN
+    yerr = WP
+    yerr = ZERO
+  ENDIF
 
   allocate(yt0(0:0))
   m = 2
-  yt0(0) = WP
+  IF(keep_MPI) yt0(0) = WP
 
   CALL march_ModMidPoint(T,no,yt0(0),WP0,para_H,para_propa,m)
   err0 = huge(ONE)
@@ -983,29 +1003,31 @@ END SUBROUTINE march_RK2
   DO j=1,order
     allocate(yt1(0:j))
     m = 2*j+2
-    yt1(0) = WP
+    IF(keep_MPI) yt1(0) = WP
     CALL march_ModMidPoint(T,no,yt1(0),WP0,para_H,para_propa,m)
 
     !extrapolation
     DO i=1,j
       x = real(2*j+2,kind=Rkind)/real(2*(j-i)+2,kind=Rkind)
       x = ONE/(x**2-ONE)
-      yerr = yt1(i-1)-yt0(i-1)
-      yt1(i) = yt1(i-1) + yerr*x
+      IF(keep_MPI) yerr = yt1(i-1)-yt0(i-1)
+      IF(keep_MPI) yt1(i) = yt1(i-1) + yerr*x
     END DO
 
-    yerr = yt1(j) - yt0(j-1)
-    CALL norm2_psi(yerr)
+    IF(keep_MPI) yerr = yt1(j) - yt0(j-1)
+    IF(keep_MPI) CALL norm2_psi(yerr)
+    IF(openmpi) CALL MPI_Bcast_(yerr%norm2,size1_MPI,root_MPI)
     err1 = sqrt(yerr%norm2)
 
     DO i=lbound(yt0,dim=1),ubound(yt0,dim=1)
-      CALL dealloc_psi(yt0(i),delete_all=.TRUE.)
+      IF(keep_MPI) CALL dealloc_psi(yt0(i),delete_all=.TRUE.)
     END DO
+  
     deallocate(yt0)
     allocate(yt0(0:j))
     DO i=lbound(yt1,dim=1),ubound(yt1,dim=1)
-      yt0(i) = yt1(i)
-      CALL dealloc_psi(yt1(i),delete_all=.TRUE.)
+      IF(keep_MPI) yt0(i) = yt1(i)
+      IF(keep_MPI) CALL dealloc_psi(yt1(i),delete_all=.TRUE.)
     END DO
     deallocate(yt1)
     !write(out_unitp,*) 'march_bs',j,err1
@@ -1017,20 +1039,20 @@ END SUBROUTINE march_RK2
   END DO
   write(out_unitp,*) 'end march_bs',min(j,order),err1
 
-  WP = yt0(min(j,order))
+  IF(keep_MPI) WP = yt0(min(j,order))
   DO i=lbound(yt0,dim=1),ubound(yt0,dim=1)
-    CALL dealloc_psi(yt0(i),delete_all=.TRUE.)
+    IF(keep_MPI) CALL dealloc_psi(yt0(i),delete_all=.TRUE.)
   END DO
   deallocate(yt0)
-  CALL dealloc_psi(yerr,delete_all=.TRUE.)
-
+  IF(keep_MPI) CALL dealloc_psi(yerr,delete_all=.TRUE.)
 
       !- Phase Shift -----------------
       phase = para_H%E0*para_propa%WPdeltaT
-      WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
+      IF(keep_MPI) WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
 
       !- check norm ------------------
-      CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF(keep_MPI) CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF(openmpi) CALL MPI_Bcast_(WP%norm2,size1_MPI,root_MPI)
       IF ( WP%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -1040,10 +1062,11 @@ END SUBROUTINE march_RK2
         STOP
       END IF
 
-      cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
-      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
-
+      IF(MPI_id==0) THEN
+        cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
+        CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+        CALL flush_perso(no)
+      ENDIF
 
 !----------------------------------------------------------
       IF (debug) THEN
@@ -1056,6 +1079,7 @@ END SUBROUTINE march_RK2
       USE mod_system
       USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,dealloc_psi
       USE mod_Op,    ONLY : param_Op
+      USE mod_MPI_aux
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1137,42 +1161,48 @@ END SUBROUTINE march_RK2
 !write(out_unitp,*) 'order_loc',order_loc
       DTT        = para_propa%WPdeltaT / real(order_loc,kind=Rkind)
 
-      zkm = WP
+      IF(keep_MPI) zkm = WP
       CALL fcn(WP,dWP,para_H)
-      zk  = WP + dWP * DTT
+      IF(keep_MPI) zk  = WP + dWP * DTT
 
 
       DO k=1,order_loc-1
 
         CALL fcn(zk,dWP,para_H)
-        zkp = zkm + TWO*DTT * dWP
-        zkm = zk
-        zk  = zkp
-
+        IF(keep_MPI) THEN
+          zkp = zkm + TWO*DTT * dWP
+          zkm = zk
+          zk  = zkp
+        ENDIF
       END DO
 
       CALL fcn(zk,zkp,para_H)
-      dWP = DTT * zkp
+      IF(keep_MPI) THEN
+        dWP = DTT * zkp
 
-      zkp = zk + zkm
+        zkp = zk + zkm
 
-      zk =  zkp + dWP
-      WP = HALF * zk
+        zk =  zkp + dWP
+        WP = HALF * zk
+      ENDIF
 
-
-      CALL dealloc_psi(dWP,delete_all=.TRUE.)
-      CALL dealloc_psi(zkm,delete_all=.TRUE.)
-      CALL dealloc_psi(zk ,delete_all=.TRUE.)
-      CALL dealloc_psi(zkp,delete_all=.TRUE.)
+      IF(keep_MPI) THEN
+        CALL dealloc_psi(dWP,delete_all=.TRUE.)
+        CALL dealloc_psi(zkm,delete_all=.TRUE.)
+        CALL dealloc_psi(zk ,delete_all=.TRUE.)
+        CALL dealloc_psi(zkp,delete_all=.TRUE.)
+      ENDIF
 
       IF (present(order)) RETURN
 
       !- Phase Shift -----------------
       phase = para_H%E0*para_propa%WPdeltaT
-      WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
+      IF(keep_MPI) WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
 
       !- check norm ------------------
-      CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF(keep_MPI) CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF(openmpi)  CALL MPI_Bcast_(WP%norm2,size1_MPI,root_MPI)
+
       IF ( WP%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -1182,10 +1212,11 @@ END SUBROUTINE march_RK2
         STOP
       END IF
 
-      cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
-      CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
-
+      IF(MPI_id==0) THEN
+        cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
+        CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+        CALL flush_perso(no)
+      ENDIF
 
 !----------------------------------------------------------
       IF (debug) THEN
@@ -1330,16 +1361,16 @@ END SUBROUTINE march_RK2
 !-----------------------------------------------------------
 
        !nb_TDParam = get_nb_TDParam_FROM_basis(WP%BasisnD)
-       write(out_unitp,*) 'In fcn: nb_TDParam',WP%nb_TDParam
+       IF(keep_MPI) write(out_unitp,*) 'In fcn: nb_TDParam',WP%nb_TDParam
 
 !-----------------------------------------------------------
 !      dWP = -i.H.WP
 
        CALL sub_OpPsi(WP,dWP,para_H)
        CALL sub_scaledOpPsi(WP,dWP,para_H%E0,ONE)
-       dWP = dWP * (-EYE)
+       IF(keep_MPI) dWP = dWP * (-EYE)
 
-      IF (debug) THEN
+       IF (debug) THEN
         write(out_unitp,*) 'dWP'
         CALL ecri_psi(T=ZERO,psi=dWP)
         write(out_unitp,*) 'END ',name_sub
@@ -2657,7 +2688,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       USE mod_Op,    ONLY : param_Op, sub_PsiOpPsi, sub_OpPsi,sub_scaledOpPsi
       USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,renorm_psi,    &
                             renorm_psi_With_norm2,Overlap_psi1_psi2
-
+      USE mod_MPI_aux
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -2687,6 +2718,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
 
       integer              :: k,it
+      Logical              :: MPI_exit=.FALSE.
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug=.FALSE.
@@ -2701,24 +2733,25 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       END IF
 !-----------------------------------------------------------
 
+      MPI_exit=.FALSE.
 
       allocate(tab_KrylovSpace(para_propa%para_poly%npoly+1))
 
-      tab_KrylovSpace(1) = psi
+      IF(keep_MPI) tab_KrylovSpace(1) = psi
 
       IF (para_propa%nb_micro > 1) THEN
-        psi0_psiKrylovSpace(:) = CZERO
-        psi0_psiKrylovSpace(1) = Calc_AutoCorr(psi0,tab_KrylovSpace(1), &
+        IF(keep_MPI) psi0_psiKrylovSpace(:) = CZERO
+        IF(keep_MPI) psi0_psiKrylovSpace(1) = Calc_AutoCorr(psi0,tab_KrylovSpace(1), &
                                          para_propa,T,Write_AC=.FALSE.)
       END IF
 
       E0 = para_H%E0
-      H(:,:) = CZERO
+      IF(keep_MPI) H(:,:) = CZERO
       DO k=1,para_propa%para_poly%npoly
         IF (debug) write(out_unitp,*) 'in ',name_sub,' it:',k
 
         IF (para_propa%nb_micro > 1) THEN
-          psi0_psiKrylovSpace(k) = Calc_AutoCorr(psi0,tab_KrylovSpace(k),&
+          IF(keep_MPI) psi0_psiKrylovSpace(k) = Calc_AutoCorr(psi0,tab_KrylovSpace(k),&
                                           para_propa,T,Write_AC=.FALSE.)
         END IF
 
@@ -2730,7 +2763,8 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
           ! ..  <tab_KrylovSpace(1) | w1>
           ! This shift is important to improve the stapility.
           ! => But the phase need to be taking into account at the end of the iterations.
-          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(1),w1)
+          IF(keep_MPI) CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(1),w1)
+          CALL MPI_Bcast_(Overlap,size1_MPI,root_MPI)
           E0 = real(Overlap,kind=Rkind)
         END IF
         CALL sub_scaledOpPsi(Psi=tab_KrylovSpace(k),OpPsi=w1,E0=E0,Esc=ONE)
@@ -2740,48 +2774,57 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         IF (k == 1) THEN
           ! w1 = w1
         ELSE
-          w1 = w1 - H(k,k-1) * tab_KrylovSpace(k-1)
+          IF(keep_MPI) w1 = w1 - H(k,k-1) * tab_KrylovSpace(k-1)
         END IF
 
         ! alpha_k = <w_k | tab_KrylovSpace(k)> = <w1 | tab_KrylovSpace(k)>
-        CALL Overlap_psi1_psi2(Overlap,w1,tab_KrylovSpace(k))
-        H(k,k) = Overlap
+        IF(keep_MPI) THEN
+          CALL Overlap_psi1_psi2(Overlap,w1,tab_KrylovSpace(k))
+          H(k,k) = Overlap
 
-        !diagonalization then exit when:
-        !  (i) k reaches npoly (ii) the scheme converges
-        CALL UPsi_spec(UPsiOnKrylov,H(1:k,1:k),Vec,Eig,                 &
-                                para_propa%WPdeltaT,k,With_diago=.TRUE.)
-        !write(out_unitp,*) k,'abs(UPsiOnKrylov(k)',abs(UPsiOnKrylov(k))
-        IF (abs(UPsiOnKrylov(k)) < para_propa%para_poly%poly_tol .OR. &
+          !diagonalization then exit when:
+          !  (i) k reaches npoly (ii) the scheme converges
+          CALL UPsi_spec(UPsiOnKrylov,H(1:k,1:k),Vec,Eig,                 &
+                                  para_propa%WPdeltaT,k,With_diago=.TRUE.)
+          !write(out_unitp,*) k,'abs(UPsiOnKrylov(k)',abs(UPsiOnKrylov(k))
+          IF (abs(UPsiOnKrylov(k)) < para_propa%para_poly%poly_tol .OR. &
             k == para_propa%para_poly%npoly) THEN
-          n = k
-          write(out_unitp,*) n,'abs(UPsiOnKrylov(n)',abs(UPsiOnKrylov(n))
-          EXIT
-        END IF
+            n = k
+            write(out_unitp,*) n,'abs(UPsiOnKrylov(n)',abs(UPsiOnKrylov(n))
+            !EXIT
+            MPI_exit=.TRUE.
+          END IF
+        ENDIF
+
+        IF(openmpi) CALL MPI_Bcast_(MPI_exit,size1_MPI,root_MPI)
+        IF(MPI_exit) EXIT
 
         ! orthogonalisation: |v_k> = |w_k> - alpha_k * |tab_KrylovSpace(k)>
         !                     |w1> = |w1>  - Overlap * |tab_KrylovSpace(k)>
-        w1 = w1 - Overlap*tab_KrylovSpace(k)
+        IF(keep_MPI) w1 = w1 - Overlap*tab_KrylovSpace(k)
 
         !beta_k = <v_k | v_k> = <w1 | w1>
         !       => beta_k = sqrt(norm2)
-        CALL norm2_psi(w1)
-        H(k+1,k) = sqrt(w1%norm2)
-        H(k,k+1) = H(k+1,k)
-        CALL renorm_psi_With_norm2(w1)
-        tab_KrylovSpace(k+1) = w1
+        IF(keep_MPI) THEN
+          CALL norm2_psi(w1)
+          H(k+1,k) = sqrt(w1%norm2)
+          H(k,k+1) = H(k+1,k)
+          CALL renorm_psi_With_norm2(w1)
+          tab_KrylovSpace(k+1) = w1
+        ENDIF
 
       END DO
 
       IF (debug) write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n))
 
-      Psi = ZERO
+      IF(keep_MPI) Psi = ZERO
       DO k=1,n
-        Psi = Psi + UPsiOnKrylov(k)*tab_KrylovSpace(k)
+        IF(keep_MPI) Psi = Psi + UPsiOnKrylov(k)*tab_KrylovSpace(k)
       END DO
 
       !- check norm ------------------
-      CALL norm2_psi(psi)
+      IF(keep_MPI) CALL norm2_psi(psi)
+      IF(openmpi)  CALL MPI_Bcast_(psi%norm2,size1_MPI,root_MPI)
       IF ( psi%norm2 > para_propa%max_norm2) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' STOP propagation: norm > max_norm',                &
@@ -2793,9 +2836,10 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
       !- Phase Shift -----------------
       phase = E0*para_propa%WPdeltaT
-      psi   = psi * exp(-EYE*phase)
+      IF(keep_MPI) psi   = psi * exp(-EYE*phase)
 
       !- autocorelation -----------------
+      IF(MPI_id==0) THEN
       IF (para_propa%nb_micro > 1) THEN
         microdeltaT = para_propa%WPdeltaT/real(para_propa%nb_micro,kind=Rkind)
         microphase  = phase/real(para_propa%nb_micro,kind=Rkind)
@@ -2819,17 +2863,17 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
         CALL flush_perso(no)
       END IF
-
+      ENDIF
 
       ! deallocation
       DO k=1,size(tab_KrylovSpace)
-         CALL dealloc_psi(tab_KrylovSpace(k))
+        IF(keep_MPI) CALL dealloc_psi(tab_KrylovSpace(k))
       END DO
       deallocate(tab_KrylovSpace)
       IF (allocated(Vec))          CALL dealloc_NParray(Vec,'Vec',name_sub)
       IF (allocated(Eig))          CALL dealloc_NParray(Eig,'Eig',name_sub)
       IF (allocated(UPsiOnKrylov)) CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
-      CALL dealloc_psi(w1)
+      IF(keep_MPI) CALL dealloc_psi(w1)
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL norm2_psi(psi)
@@ -3816,6 +3860,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
             Psi%CvecB   = exp(-EYE*para_H%Cdiag*microdeltaT)*Psi%CvecB
           ELSE
             ! 2d: propagation with spectral representation
+            ! warning: para_H%Rdiag does not exist when "direct=4"
             Psi%CvecB   = exp(-EYE*para_H%Rdiag*microdeltaT)*Psi%CvecB
           END IF
 

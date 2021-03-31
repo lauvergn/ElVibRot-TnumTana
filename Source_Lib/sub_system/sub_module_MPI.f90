@@ -200,6 +200,7 @@ MODULE mod_MPI
     allocate(MPI_nodes_np(0:MPI_np-1))
     IF(MPI_id==0) allocate(MPI_nodes_p00(0:MPI_np-1))
     MPI_nodes_np=0
+    MPI_nodes_name=''
 
     IF(MPI_fake_nodes>0) THEN
       !-working with fake nodes---------------------------------------------------------
@@ -248,11 +249,13 @@ MODULE mod_MPI
           CALL MPI_Recv(MPI_node_name,MPI_MAX_PROCESSOR_NAME,MPI_Character,i_MPI,      &
                         i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
           
+          MPI_nodes_p0=.FALSE.
+
           ! check match
           match=.FALSE.
           DO jj=0,ii
-            IF(MPI_node_name==MPI_nodes_name(ii)) THEN
-              MPI_nodes_np(ii)=MPI_nodes_np(ii)+1
+            IF(MPI_node_name==MPI_nodes_name(jj)) THEN
+              MPI_nodes_np(jj)=MPI_nodes_np(jj)+1
               match=.TRUE.
             ENDIF
           ENDDO
@@ -283,7 +286,8 @@ MODULE mod_MPI
         MPI_nodes_p0=.FALSE.
       ENDIF ! MPI_id
 
-      CALL MPI_Bcast(MPI_nodes_np(0:MPI_np-1),MPI_np,Int_MPI,root_MPI,                   &
+      CALL MPI_Bcast(MPI_nodes_num,size1_MPI,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+      CALL MPI_Bcast(MPI_nodes_np(0:MPI_np-1),MPI_np,Int_MPI,root_MPI,                 &
                     MPI_COMM_WORLD,MPI_err)
 
       ! record node info

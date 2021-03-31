@@ -73,8 +73,9 @@
                           dealloc_psi,ecri_psi,Overlap_psi1_psi2,&
                           norm2_psi,ReNorm_psi
 
- USE mod_Op,              ONLY : param_Op,write_param_Op
+ USE mod_Op,              ONLY : param_Op,write_param_Op,sub_OpPsi
  USE mod_OpPsi_SG4,       ONLY : sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
+ USE mod_MPI_aux
  IMPLICIT NONE
 
 
@@ -97,7 +98,7 @@
  TYPE (basis),   pointer :: BasisnD
 
  TYPE (TypeRVec)    :: PsiRVec,PsiIVec,Psi0Rvec,Psi0Ivec
- TYPE (param_psi)   :: Rpsi,IPsi,Rpsi0,IPsi0,MarchRpsi,MarchIpsi
+ TYPE (param_psi)   :: Rpsi,IPsi,Rpsi0,IPsi0,MarchRpsi,MarchIpsi,Oppsi
 
  integer :: ib,i,iG,nb_thread,itab,nq,nb,D,ith,err_sub
 
@@ -122,6 +123,10 @@
 
   D = BasisnD%nb_basis
 
+  IF(openmpi) THEN
+    CALL sub_OpPsi(psi,Oppsi,para_H)
+    psi=Oppsi
+  ELSE
 
   CALL copy_psi2TOpsi1(RPsi,Psi,alloc=.FALSE.)
   RPsi%cplx = .FALSE.
@@ -210,6 +215,7 @@
  CALL dealloc_psi(MarchRPsi)
  CALL dealloc_psi(MarchIPsi)
 
+  ENDIF ! for if(openmpi)
 
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**5) THEN
    IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
@@ -217,7 +223,9 @@
  CALL flush_perso(out_unitp)
 
  !- check norm ------------------
- CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
+ IF(keep_MPI) CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
+ IF(openmpi)  CALL MPI_Bcast_(psi%norm2,size1_MPI,root_MPI)
+
  IF (debug) write(out_unitp,*) 'norm^2',psi%norm2
 
  IF ( psi%norm2 > para_propa%max_norm2) THEN
@@ -228,10 +236,13 @@
    para_propa%test_max_norm = .TRUE.
    STOP
  END IF
- CALL Renorm_psi(psi)
+ IF(keep_MPI) CALL Renorm_psi(psi)
+ IF(openmpi)  CALL MPI_Bcast_(psi%norm2,size1_MPI,root_MPI)
 
- CALL Overlap_psi1_psi2(cdot,psi0,psi)
- CALL Write_AutoCorr(no,T+para_propa%WPdeltaT,cdot)
+ IF(MPI_id==0) THEN
+   CALL Overlap_psi1_psi2(cdot,psi0,psi)
+   CALL Write_AutoCorr(no,T+para_propa%WPdeltaT,cdot)
+ ENDIF
 
 !-----------------------------------------------------------
  IF (debug) THEN

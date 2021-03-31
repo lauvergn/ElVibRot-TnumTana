@@ -87,7 +87,8 @@ lib_dep_mod_Constant=$(OBJ)/sub_analyse.o $(OBJ)/sub_freq.o $(OBJ)/sub_diago_H.o
 $(lib_dep_mod_Constant):$(OBJ)/sub_module_constant.o
 
 #mod_NumParameters
-lib_dep_mod_NumParameters=$(OBJ)/sub_module_memory.o $(OBJ)/sub_module_MPI.o
+lib_dep_mod_NumParameters=$(OBJ)/sub_module_memory.o $(OBJ)/sub_module_MPI.o           \
+                          $(OBJ)/sub_module_RealWithUnit.o
 $(lib_dep_mod_NumParameters):$(OBJ)/sub_module_NumParameters.o
 
 #mod_Tana_Op1D

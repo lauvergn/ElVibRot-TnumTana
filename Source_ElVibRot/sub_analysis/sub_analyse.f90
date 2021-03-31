@@ -295,6 +295,9 @@ CONTAINS
       END IF
 !----------------------------------------------------------
 
+      ! write basis 
+      CALL write_basis_biqi(tab_Psi(1))
+
       IF (allocated(ene))     CALL dealloc_NParray(ene,'ene',name_sub)
       IF (allocated(Mat_psi)) CALL dealloc_NParray(Mat_psi,'Mat_psi',name_sub)
       IF (allocated(AllPsi_max_RedDensity))                              &
@@ -818,5 +821,51 @@ CONTAINS
 
 
       end subroutine write_cube
+
+      ! write basis b^n(Q)
+      SUBROUTINE write_basis_biqi(psi)
+        USE mod_system
+        USE mod_nDindex
+        USE mod_psi,                         ONLY: param_psi
+        IMPLICIT NONE
+
+        TYPE(param_psi),              intent(in) :: psi
+        Integer                                  :: nDval(psi%BasisnD%nDindB%ndim)
+        Integer                                  :: ndim_AT_ib(psi%BasisnD%nDindB%ndim) 
+
+        Integer                                  :: ib,nD
+        Integer                                  :: iQ,nQ
+        Integer                                  :: ibiq
+        Integer                                  :: LG
+
+
+        ! write first 3 basis b_ib(Q)
+        LG=psi%BasisnD%L_SparseGrid
+
+        ndim_AT_ib=0
+        DO ib=1,psi%nb_ba
+          CALL calc_nDindex(psi%BasisnD%nDindB,ib,nDval)
+          DO nD=1,psi%BasisnD%nDindB%ndim
+            ibiq=nDval(nD)
+            ndim_AT_ib(nD)=max(ibiq,ndim_AT_ib(nD))
+          ENDDO
+        ENDDO
+
+        DO nD=1,3 ! psi%BasisnD%nDindB%ndim in total
+          nQ=size(Psi%BasisnD%tab_basisPrimSG(LG,nD)%dnRGB%d0,1)
+          write(out_unitp,*) "b(Q): ",nD,ndim_AT_ib(nD),nQ,LG ! dimension: b*Q
+          ! tab_basisPrimSG(0 ~ L_SparseGrid,nD)
+          DO iQ=1,nQ
+            write(out_unitp,51) psi%BasisnD%tab_basisPrimSG(LG,nD)&
+                                   %dnRGB%d0(iQ,1:ndim_AT_ib(nD))
+          ENDDO
+    
+          DO iQ=1,nQ
+            write(out_unitp,51) Psi%BasisnD%tab_basisPrimSG(LG,nD)%x(:,iQ)
+          ENDDO
+        ENDDO
+
+51      format(100(e16.6))
+      ENDSUBROUTINE
 
 END MODULE mod_fullanalysis

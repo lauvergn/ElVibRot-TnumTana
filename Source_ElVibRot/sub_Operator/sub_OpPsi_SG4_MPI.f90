@@ -571,253 +571,16 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
   END SUBROUTINE Action_MPI_S1
 !======================================================================================= 
 
-! !=======================================================================================  
-! !> @brief action with MPI: scheme 2
-! !> @note imcrease MPI_mc to reduce memory usage
-! !> require the preloading of mapping table for certain threads  
-! !> 
-! !> @param Psi [in] |\psi>
-! !> @param OpPsi [inout] O|\psi>
-! !> @param BasisnD [in] base infortmation
-! !> @param para_Op [in] Operator
-! !======================================================================================= 
-!   SUBROUTINE Action_MPI_S2(Psi,OpPsi,BasisnD,para_Op)
-!     USE mod_system
-!     USE mod_nDindex
-!     USE mod_psi,                        ONLY:param_psi
-!     USE mod_SetOp,                      ONLY:param_Op
-!     USE mod_Coord_KEO,                  ONLY:CoordType
-!     USE mod_basis_set_alloc,            ONLY:basis
-!     USE mod_OpPsi_SG4,                  ONLY:sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
-!     USE mod_basis_BtoG_GtoB_SGType4,    ONLY:tabPackedBasis_TO_tabR_AT_iG,             &
-!                                              tabR_AT_iG_TO_tabPackedBasis,             &
-!                                              TypeRVec,dealloc_TypeRVec
-!     USE mod_basis_BtoG_GtoB_SGType4_MPI,ONLY:set_iGs_MPI_mc
-!     USE mod_MPI_aux
-!     IMPLICIT NONE
-
-!     TYPE(param_psi),                       intent(in)    :: Psi(:)
-!     TYPE(param_psi),                       intent(inout) :: OpPsi(:)
-!     TYPE(basis),pointer,                   intent(inout) :: BasisnD
-!     TYPE(param_Op),                        intent(inout) :: para_Op
-
-!     TYPE(TypeRVec),allocatable                           :: PsiR(:)
-!     Real(kind=Rkind),allocatable                         :: Psi_ST(:) 
-!     Integer(kind=MPI_INTEGER_KIND)                       :: Psi_ST_length(0:MPI_np-1)
-!     Integer(kind=MPI_INTEGER_KIND),pointer               :: size_ST(:) 
-!     Integer(kind=MPI_INTEGER_KIND),pointer               :: size_ST_mc(:,:) 
-!     Integer(kind=MPI_INTEGER_KIND),pointer               :: size_psi
-!     Integer                                              :: length_ST_mc
-!     Integer                                              :: ST_index1
-!     Integer                                              :: ST_index2
-!     Integer                                              :: ST_index_iG
-!     Integer                                              :: size_ST_iG
-!     Integer                                              :: iG
-!     Integer                                              :: itab
-!     Integer                                              :: time_auto1
-!     Integer                                              :: time_auto2
-!     Integer                                              :: d1
-!     Integer                                              :: d2
-!     Integer                                              :: ii
-!     Integer                                              :: i_mc
-!     Logical,pointer                                      :: once_action
-!     Logical                                      :: iGs_change
-
-
-! #if(run_MPI)
-
-!     size_ST     => BasisnD%para_SGType2%size_ST
-!     size_ST_mc  => BasisnD%para_SGType2%size_ST_mc
-!     size_psi    => BasisnD%para_SGType2%size_psi
-!     once_action => BasisnD%para_SGType2%once_action
-
-!     IF(once_action) THEN 
-!       write(out_unitp,*) 'action with MPI: Scheme 2'
-!       write(out_unitp,*) '------------------------------------------------'
-!       write(out_unitp,*) 'iGs_MPI at current step: ',iGs_MPI
-!       write(out_unitp,*) '------------------------------------------------'
-!     ELSE
-!       ! auto distribute Smolyak terms to different threads 
-!       write(out_unitp,*) '------------------------------------------------'
-
-!       IF(iGs_auto .AND. MPI_np>1) CALL auto_iGs_MPI(para_Op,iGs_change)
-!       write(out_unitp,*) 'iGs_MPI at current step: ',iGs_MPI
-!       write(out_unitp,*) '------------------------------------------------'
-      
-!       ! get new size_ST according to new iGs_MPI
-!       IF(iGs_auto) THEN
-!         CALL set_iGs_MPI_mc(BasisnD)
-!         CALL get_size_ST(BasisnD,size_ST,size_ST_mc)
-!       ENDIF
-!     ENDIF ! once_action
-
-!     time_MPI_local=0
-!     time_MPI_calcu=0
-
-!     If(MPI_id==0) size_psi=INT(size(Psi),MPI_INTEGER_KIND) ! for itab
-!     CALL MPI_BCAST(size_psi,size1_MPI,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
-!     IF(allocated(PsiR)) deallocate(PsiR)
-!     allocate(PsiR(size_psi))
-
-!     !-----------------------------------------------------------------------------------
-!     IF(MPI_id==0) THEN
-!       !-prepare PsiR(itab)%V to be send to other threads--------------------------------
-!       DO i_mc=1,MPI_mc
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
-!         DO i_MPI=1,MPI_np-1
-!           length_ST_mc=size_psi*size_ST_mc(i_mc,i_MPI)
-!           CALL allocate_array(Psi_ST,1,length_ST_mc)
-!           ST_index1=0
-!           DO iG=iGs_MPI_mc(1,i_mc,i_MPI),iGs_MPI_mc(2,i_mc,i_MPI)
-!             DO itab=1,size_psi
-!               CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,iG,       &
-!                                                 BasisnD%para_SGType2)
-!               ST_index2=ST_index1+size(PsiR(itab)%V)
-!               Psi_ST(ST_index1+1:ST_index2)=PsiR(itab)%V
-!               ST_index1=ST_index2
-!             ENDDO
-!           ENDDO ! for iG
-!           Psi_ST_length(i_MPI)=ST_index1
-
-!           IF(once_action .AND. i_mc==1) THEN
-!             write(out_unitp,*) 'length check:',i_MPI,size_psi,size(psi(1)%RvecB),      &
-!                                 size_ST(i_MPI),size_ST_mc(i_mc,i_MPI),sum(size_ST),    &
-!                                 sum(BasisnD%para_SGType2%tab_nb_OF_SRep(:))
-!           ENDIF
-
-!           ! double check
-!           IF(Abs(length_ST_mc-Psi_ST_length(i_MPI))>0) THEN
-!             write(out_unitp,*) 'ST length check:',length_ST_mc,Psi_ST_length(i_MPI)
-!             STOP 'error in MPI action part,check length'
-!           ENDIF
-
-!           CALL time_record(time_comm,time_temp1,time_temp2,1)
-!           CALL MPI_Send(Psi_ST,length_ST_mc,Real_MPI,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
-!           CALL time_record(time_comm,time_temp1,time_temp2,2)
-!         ENDDO ! i_MPI=1,MPI_np-1
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
-
-!         IF(allocated(Psi_ST)) deallocate(Psi_ST)
-
-!         !-calculations on MPI_id=0------------------------------------------------------
-!         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,1)
-!         DO iG=iGs_MPI_mc(1,i_mc,MPI_id),iGs_MPI_mc(2,i_mc,MPI_id)
-!           !-transfore to SRep-----------------------------------------------------------
-!           DO itab=1,size_psi
-!             CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,iG,         &
-!                                               BasisnD%para_SGType2)
-!           ENDDO
-
-!           !-main calculation------------------------------------------------------------
-!           CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,                              &
-!                           BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),para_Op)  
-
-!           !-back to compact form--------------------------------------------------------
-!           DO itab=1,size_psi
-!             CALL tabR_AT_iG_TO_tabPackedBasis(OpPsi(itab)%RvecB,PsiR(itab)%V,iG,       &
-!                                               BasisnD%para_SGType2,BasisnD%WeightSG(iG))
-!           ENDDO
-!         ENDDO ! main loop of iG for calcuation on master
-!         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,2)
-
-!         !-receive results from other threads--------------------------------------------
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
-!         DO i_MPI=1,MPI_np-1
-!           length_ST_mc=size_psi*size_ST_mc(i_mc,i_MPI)
-!           CALL allocate_array(Psi_ST,1,length_ST_mc)
-
-!           CALL time_record(time_comm,time_temp1,time_temp2,1)
-!           CALL MPI_Recv(Psi_ST,length_ST_mc,Real_MPI,i_MPI,i_MPI,                      &
-!                         MPI_COMM_WORLD,MPI_stat,MPI_err)
-!           CALL time_record(time_comm,time_temp1,time_temp2,2)
-
-!           ST_index1=0
-!           DO iG=iGs_MPI_mc(1,i_mc,i_MPI),iGs_MPI_mc(2,i_mc,i_MPI)
-!             size_ST_iG=BasisnD%para_SGType2%tab_nb_OF_SRep(iG)*BasisnD%para_SGType2%nb0
-!             DO itab=1,size_psi
-!               d1=ST_index1+1
-!               d2=ST_index1+size_ST_iG
-!               CALL tabR_AT_iG_TO_tabPackedBasis(OpPsi(itab)%RvecB,Psi_ST(d1:d2),iG,    &
-!                                               BasisnD%para_SGType2,BasisnD%WeightSG(iG))
-!               ST_index1=d2
-!             ENDDO
-!           ENDDO
-!         ENDDO  ! for i_MPI=1,MPI_np-1  
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
-!       ENDDO ! i_mc=1,MPI_mc
-!     ENDIF ! for MPI_id==0
-
-!     !-calculation on other threads------------------------------------------------------
-!     IF(MPI_id/=0) THEN
-!       DO i_mc=1,MPI_mc
-!         ! get PsiR(itab)%V form root thread
-!         length_ST_mc=size_psi*size_ST_mc(i_mc,MPI_id)
-!         CALL allocate_array(Psi_ST,1,length_ST_mc)
-
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
-!         CALL MPI_Recv(Psi_ST,length_ST_mc,Real_MPI,root_MPI,MPI_id,                    &
-!                       MPI_COMM_WORLD,MPI_stat,MPI_err)
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
-
-!         !-loop for main calculation-----------------------------------------------------
-!         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,1)
-!         ST_index1=0
-!         ST_index_iG=0
-!         DO iG=iGs_MPI_mc(1,i_mc,MPI_id),iGs_MPI_mc(2,i_mc,MPI_id)
-!           size_ST_iG=BasisnD%para_SGType2%tab_nb_OF_SRep(iG)*BasisnD%para_SGType2%nb0
-
-!           !-extract SRep from Psi_ST----------------------------------------------------
-!           DO itab=1,size_psi
-!             CALL allocate_array(PsiR(itab)%V,1,size_ST_iG)
-!             ST_index2=ST_index1+size_ST_iG
-!             PsiR(itab)%V=Psi_ST(ST_index1+1:ST_index2)
-!             ST_index1=ST_index2
-!           ENDDO
-
-!           !-main calculation------------------------------------------------------------
-!           CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,                              &
-!                           BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),para_Op)
-
-!           !-pack PsiR(itab)%V-----------------------------------------------------------
-!           Do itab=1,size_psi
-!             d1=ST_index_iG+1
-!             d2=ST_index_iG+size(PsiR(itab)%V)
-!             Psi_ST(d1:d2)=PsiR(itab)%V
-!             ST_index_iG=d2
-!           ENDDO
-!         ENDDO ! for iG
-!         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,2)
-
-!         !-send back PsiR(itab)%V--------------------------------------------------------
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
-!         CALL MPI_Send(Psi_ST,length_ST_mc,Real_MPI,root_MPI,MPI_id,                    &
-!                       MPI_COMM_WORLD,MPI_err)
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
-
-!       ENDDO ! for i_mc 
-!     ENDIF ! for MPI_id/=0
-!     !-----------------------------------------------------------------------------------
-
-!     If(allocated(Psi_ST)) deallocate(Psi_ST)
-!     DO itab=1,size_psi
-!       CALL dealloc_TypeRVec(PsiR(itab))
-!     END DO
-
-! #endif
-!   END SUBROUTINE Action_MPI_S2
-! !======================================================================================= 
-
 !=======================================================================================  
 !> @brief action with MPI: scheme 2
 !> @note imcrease MPI_mc to reduce memory usage  
 !> @note set MPI_S2_L2=t to use more than one thread to distribute smolyak terms. 
-!> require the preloading of mapping table for certain thread
+!> require the preloading of mapping table for certain threads
 
 !> @param Psi [in] |\psi>
 !> @param OpPsi [inout] O|\psi>
 !> @param BasisnD [in] base infortmation
 !> @param para_Op [in] Operator
-! merge with  MPI: scheme 2 later
 !======================================================================================= 
   SUBROUTINE Action_MPI_S2(Psi,OpPsi,BasisnD,para_Op)
     USE mod_system
@@ -1145,7 +908,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
             CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,                            &
                           BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),para_Op)
 
-            !-pack and PsiR(itab)%V-------------------------------------------------------
+            !-pack and PsiR(itab)%V-----------------------------------------------------
             Do itab=1,size_psi
               d1=ST_index_iG+1
               d2=ST_index_iG+size(PsiR(itab)%V)
@@ -1175,352 +938,18 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
   END SUBROUTINE Action_MPI_S2
 !======================================================================================= 
 
-! !=======================================================================================  
-! !> @brief action with MPI: scheme 3
-! !> use more than one thread to distribute smolyak terms. 
-! !> require the preloading of mapping table for certain threads
-! !> @note imcrease MPI_mc to reduce memory usage  
-! !
-! !> @param Psi [in] |\psi>
-! !> @param OpPsi [inout] O|\psi>
-! !> @param BasisnD [in] base infortmation
-! !> @param para_Op [in] Operator
-! ! merge with  MPI: scheme 2 later
-! !======================================================================================= 
-!   SUBROUTINE Action_MPI_S3(Psi,OpPsi,BasisnD,para_Op)
-!     USE mod_system
-!     USE mod_nDindex
-!     USE mod_Coord_KEO,                  ONLY:CoordType
-!     USE mod_basis_set_alloc,            ONLY:basis
-!     USE mod_OpPsi_SG4,                  ONLY:sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
-!     USE mod_basis_BtoG_GtoB_SGType4,    ONLY:tabPackedBasis_TO_tabR_AT_iG,             &
-!                                              tabR_AT_iG_TO_tabPackedBasis,             &
-!                                              TypeRVec,dealloc_TypeRVec
-!     USE mod_basis_BtoG_GtoB_SGType4_MPI,ONLY:set_iGs_MPI_mc
-!     USE mod_psi,                        ONLY:param_psi
-!     USE mod_SetOp,                      ONLY:param_Op
-!     USE mod_MPI_aux
-!     IMPLICIT NONE
-    
-!     TYPE(param_psi),                       intent(in)    :: Psi(:)
-!     TYPE(param_psi),                       intent(inout) :: OpPsi(:)
-!     TYPE(basis),pointer,                   intent(inout) :: BasisnD
-!     TYPE(param_Op),                        intent(inout) :: para_Op
-    
-!     TYPE(TypeRVec),allocatable                           :: PsiR(:)
-!     Real(kind=Rkind),allocatable                         :: Psi_ST(:)
-!     Real(kind=Rkind),allocatable                         :: RvecB_all(:)
-!     Integer(kind=MPI_INTEGER_KIND)                       :: Psi_ST_length(0:MPI_np-1)
-!     Integer(kind=MPI_INTEGER_KIND),pointer               :: size_ST(:) 
-!     Integer(kind=MPI_INTEGER_KIND),pointer               :: size_ST_mc(:,:) 
-!     Integer(kind=MPI_INTEGER_KIND),pointer               :: size_psi
-!     Integer                                              :: size_RvecB
-!     Integer                                              :: length_ST_mc
-!     Integer                                              :: ST_index1
-!     Integer                                              :: ST_index2
-!     Integer                                              :: ST_index_iG
-!     Integer                                              :: size_ST_iG
-!     Integer                                              :: iG
-!     Integer                                              :: itab
-!     Integer                                              :: time_auto1
-!     Integer                                              :: time_auto2
-!     Integer                                              :: d1
-!     Integer                                              :: d2
-!     Integer                                              :: ii
-!     Integer                                              :: i_mc
-!     Logical,pointer                                      :: once_action
-    
-!     Real(kind=Rkind),allocatable                         :: Vec(:)
-
-! #if(run_MPI)
-
-!     size_ST     => BasisnD%para_SGType2%size_ST
-!     size_ST_mc  => BasisnD%para_SGType2%size_ST_mc
-!     size_psi    => BasisnD%para_SGType2%size_psi
-!     once_action => BasisnD%para_SGType2%once_action
-
-!     IF(once_action) THEN
-!       IF(MPI_np<Num_L2) write(out_unitp,*) 'Warning: Scheme 3 requires more cores'
-!       write(out_unitp,*) 'action with MPI: Scheme 3'
-!       write(out_unitp,*) '------------------------------------------------'
-!       write(out_unitp,*) 'iGs_MPI at current step: ',iGs_MPI
-!       write(out_unitp,*) '------------------------------------------------'
-!     ELSE
-!       ! auto distribute Smolyak terms to different threads 
-!       write(out_unitp,*) '------------------------------------------------'
-
-!       IF(iGs_auto .AND. MPI_np>1) CALL auto_iGs_MPI(para_Op)
-!       write(out_unitp,*) 'iGs_MPI at current step: ',iGs_MPI
-!       write(out_unitp,*) '------------------------------------------------'
-
-!       ! get new size_ST according to new iGs_MPI
-!       IF(iGs_auto) THEN
-!         CALL set_iGs_MPI_mc(BasisnD)
-!         CALL get_size_ST(BasisnD,size_ST,size_ST_mc)
-!       ENDIF
-!     ENDIF
-
-!     time_MPI_local=0
-!     time_MPI_calcu=0
-
-!     If(MPI_id==0) THEN
-!       size_psi=INT(size(Psi),MPI_INTEGER_KIND) ! for itab
-!       size_RvecB=size(psi(1)%RvecB)
-!     ENDIF
-!     CALL MPI_BCAST(size_psi,  size1_MPI,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
-!     CALL MPI_BCAST(size_RvecB,size1_MPI,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
-    
-!     IF(allocated(PsiR)) deallocate(PsiR)
-!     allocate(PsiR(size_psi))
-
-!     !-----------------------------------------------------------------------------------
-!     IF(MPI_id==0) THEN
-!       !-1/Num_L2 cores will be used as second level distributor-------------------------
-!       CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
-!       DO i_MPI=0,MPI_np-1,n_level2
-!         IF(i_MPI>0) THEN
-!           CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
-!           DO itab=1,size_psi
-!             d1=size_RvecB*(itab-1)+1
-!             d2=size_RvecB* itab
-!             RvecB_all(d1:d2)=psi(itab)%RvecB
-!           ENDDO
-          
-!           CALL time_record(time_comm,time_temp1,time_temp2,1)
-!           CALL MPI_Send(RvecB_all,size_RvecB*size_psi,Real_MPI,i_MPI,                  &
-!                         i_MPI,MPI_COMM_WORLD,MPI_err)
-!           CALL time_record(time_comm,time_temp1,time_temp2,2)
-!         ENDIF
-!       ENDDO ! i_MPI=1,n_level2
-!       IF(allocated(RvecB_all)) deallocate(RvecB_all)
-
-!       !-distributing smolyak terms from root threads------------------------------------
-!       DO i_MPI=1,MIN(MPI_np-1,n_level2-1)
-!         length_ST_mc=size_psi*size_ST(i_MPI)
-!         CALL allocate_array(Psi_ST,1,length_ST_mc)
-!         ST_index1=0
-!         DO iG=iGs_MPI(1,i_MPI),iGs_MPI(2,i_MPI)
-!           DO itab=1,size_psi
-!             CALL tabPackedBasis_TO_tabR_AT_iG(vec,psi(itab)%RvecB,iG,         &
-!                                               BasisnD%para_SGType2)
-!             ST_index2=ST_index1+size(vec)
-!             Psi_ST(ST_index1+1:ST_index2)=vec
-!             ST_index1=ST_index2
-!           ENDDO
-!         ENDDO ! for iG
-!         Psi_ST_length(i_MPI)=ST_index1
-!         IF(once_action) THEN 
-!           write(out_unitp,*) 'length check:',i_MPI,size_psi,size(psi(1)%RvecB),      &
-!                               size_ST(i_MPI),size_ST_mc(i_mc,i_MPI),sum(size_ST),    &
-!                               sum(BasisnD%para_SGType2%tab_nb_OF_SRep(:))
-!         ENDIF
-
-!         ! double check
-!         IF(Abs(length_ST_mc-Psi_ST_length(i_MPI))>0) THEN
-!           write(out_unitp,*) 'ST length check:',length_ST_mc,Psi_ST_length(i_MPI)
-!           STOP 'error in MPI action part,check length'
-!         ENDIF
-
-!         CALL time_record(time_comm,time_temp1,time_temp2,1)
-!         CALL MPI_Send(Psi_ST,length_ST_mc,Real_MPI,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
-!         CALL time_record(time_comm,time_temp1,time_temp2,2)
-!       ENDDO ! i_MPI=1,MIN(MPI_np-1,n_level2-1)
-!       CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
-!       IF(allocated(Psi_ST)) deallocate(Psi_ST)
-
-!       !-calculations on MPI_id=0--------------------------------------------------------
-!       CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,1)
-!       DO iG=iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)
-!         !-transfore to SRep-------------------------------------------------------------
-!         DO itab=1,size_psi
-!           CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,iG,           &
-!                                             BasisnD%para_SGType2)
-!         ENDDO
-
-!         !-main calculation--------------------------------------------------------------
-!         CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,                                &
-!                           BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),para_Op)  
-
-!         !-back to compact form----------------------------------------------------------
-!         DO itab=1,size_psi
-!           CALL tabR_AT_iG_TO_tabPackedBasis(OpPsi(itab)%RvecB,PsiR(itab)%V,iG,         &
-!                                             BasisnD%para_SGType2,BasisnD%WeightSG(iG))
-!         ENDDO
-!       ENDDO ! main loop of iG for calcuation on root
-!       CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,2)
-
-!       !-receive results from other threads----------------------------------------------
-!       CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
-!       DO i_MPI=1,MPI_np-1
-!         IF(mod(i_MPI,n_level2)==0) THEN !-level2 threads--------------------------------
-!           CALL allocate_array(Vec,1,size_RvecB*size_psi)
-!           CALL time_record(time_comm,time_temp1,time_temp2,1)
-!           CALL MPI_Recv(Vec,size_RvecB*size_psi,Real_MPI,i_MPI,                        &
-!                         i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
-!           CALL time_record(time_comm,time_temp1,time_temp2,2)
-
-!           DO itab=1,size_psi
-!             d1=size_RvecB*(itab-1)+1
-!             d2=size_RvecB* itab
-!             OpPsi(itab)%RvecB=OpPsi(itab)%RvecB+Vec(d1:d2)
-!           ENDDO
-!           IF(allocated(Vec)) deallocate(Vec)
-!         ELSE !-normal threads-----------------------------------------------------------
-!           length_ST_mc=size_psi*size_ST(i_MPI)
-!           CALL allocate_array(Psi_ST,1,length_ST_mc)
-
-!           CALL time_record(time_comm,time_temp1,time_temp2,1)
-!           CALL MPI_Recv(Psi_ST,length_ST_mc,Real_MPI,i_MPI,i_MPI,                      &
-!                         MPI_COMM_WORLD,MPI_stat,MPI_err)
-!           CALL time_record(time_comm,time_temp1,time_temp2,2)
-!           ST_index1=0
-!           DO iG=iGs_MPI(1,i_MPI),iGs_MPI(2,i_MPI)
-!             size_ST_iG=BasisnD%para_SGType2%tab_nb_OF_SRep(iG)                         &
-!                           *BasisnD%para_SGType2%nb0
-!             DO itab=1,size_psi
-!               d1=ST_index1+1
-!               d2=ST_index1+size_ST_iG
-!               CALL tabR_AT_iG_TO_tabPackedBasis(OpPsi(itab)%RvecB,Psi_ST(d1:d2),iG,    &
-!                                               BasisnD%para_SGType2,BasisnD%WeightSG(iG))
-!               ST_index1=d2
-!             ENDDO
-!           ENDDO ! iG=iGs_MPI(1,i_MPI),iGs_MPI(2,i_MPI)
-!           IF(allocated(Psi_ST)) deallocate(Psi_ST)
-!         ENDIF ! mod(i_MPI,n_level2)==0
-!       ENDDO  ! for i_MPI=1,MPI_np-1  
-!       CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
-!     ENDIF ! for MPI_id==0
-
-!     !-----------------------------------------------------------------------------------
-!     IF(MPI_id/=0) THEN
-!       !-level 2 threads-----------------------------------------------------------------
-!       time_MPI_local(MPI_id)=0
-!       IF(mod(MPI_id,n_level2)==0) THEN
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
-!         ! receive psi(itab)%RvecB from root threads
-!         CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
-!         CALL MPI_Recv(RvecB_all,size_RvecB*size_psi,Real_MPI,root_MPI,                 &
-!                       MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
-
-!         !-send to other threads---------------------------------------------------------
-!         DO i_MPI=MPI_id+1,MIN(MPI_np-1,MPI_id+n_level2-1)
-!           CALL allocate_array(Psi_ST,1,size_psi*size_ST(i_MPI))
-!           ST_index1=0
-!           DO iG=iGs_MPI(1,i_MPI),iGs_MPI(2,i_MPI)
-!             DO itab=1,size_psi
-!               d1=size_RvecB*(itab-1)+1
-!               d2=size_RvecB* itab
-!               CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,RvecB_all(d1:d2),iG,      &
-!                                                 BasisnD%para_SGType2)
-!               ST_index2=ST_index1+size(PsiR(itab)%V)
-!               Psi_ST(ST_index1+1:ST_index2)=PsiR(itab)%V
-!               ST_index1=ST_index2
-!             ENDDO
-!           ENDDO ! iG=iGs_MPI(1,i_MPI),iGs_MPI(2,i_MPI)
-!           Psi_ST_length(i_MPI)=ST_index1
-
-!           ! double check
-!           IF(Abs(size_psi*size_ST(i_MPI)-Psi_ST_length(i_MPI))>0) THEN
-!             write(out_unitp,*) 'error in MPI action part,check Psi_ST_length'
-!             STOP
-!           ENDIF
-
-!           CALL time_record(time_comm,time_temp1,time_temp2,1)
-!           CALL MPI_Send(Psi_ST,size_psi*size_ST(i_MPI),Real_MPI,i_MPI,i_MPI,           &
-!                         MPI_COMM_WORLD,MPI_err)
-!           CALL time_record(time_comm,time_temp1,time_temp2,2)
-!         ENDDO ! i_MPI=MPI_id+1,MIN(MPI_np-1,MPI_id+n_level2-1)
-!         IF(allocated(Psi_ST)) deallocate(Psi_ST)
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
-
-!         !-calculation-------------------------------------------------------------------
-!         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,1)
-!         CALL allocate_array(Vec,1,size_RvecB*size_psi)
-!         DO iG=iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)
-!           DO itab=1,size_psi
-!             d1=size_RvecB*(itab-1)+1
-!             d2=size_RvecB* itab
-!             CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,RvecB_all(d1:d2),iG,        &
-!                                               BasisnD%para_SGType2)
-!           ENDDO
-
-!           CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,                              &
-!                           BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),para_Op)  
-
-!           DO itab=1,size_psi
-!             d1=size_RvecB*(itab-1)+1
-!             d2=size_RvecB* itab
-!             CALL tabR_AT_iG_TO_tabPackedBasis(Vec(d1:d2),PsiR(itab)%V,iG,              &
-!                                               BasisnD%para_SGType2,BasisnD%WeightSG(iG))
-!           ENDDO
-!         ENDDO
-!         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,2)
-
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
-!         CALL MPI_Send(Vec,size_RvecB*size_psi,Real_MPI,root_MPI,                       &
-!                       MPI_id,MPI_COMM_WORLD,MPI_err)
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
-!         IF(allocated(RvecB_all)) deallocate(RvecB_all)
-        
-!       ELSE !-other threads--------------------------------------------------------------
-
-!         !-get PsiR(itab)%V from root or second level threads----------------------------
-!         length_ST_mc=size_psi*size_ST(MPI_id)
-!         CALL allocate_array(Psi_ST,1,length_ST_mc)
-
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
-!         CALL MPI_Recv(Psi_ST,length_ST_mc,Real_MPI,                                    &
-!                       MPI_id/n_level2*n_level2,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
-        
-!         !-loop for main calculation-----------------------------------------------------
-!         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,1)
-!         ST_index1=0
-!         ST_index_iG=0
-!         DO iG=iGs_MPI(1,MPI_id),iGs_MPI(2,MPI_id)
-!           size_ST_iG=BasisnD%para_SGType2%tab_nb_OF_SRep(iG)*BasisnD%para_SGType2%nb0
-
-!           !-extract SRep from PsiR_temp-------------------------------------------------
-!           DO itab=1,size_psi
-!             CALL allocate_array(PsiR(itab)%V,1,size_ST_iG)
-!             ST_index2=ST_index1+size_ST_iG
-!             PsiR(itab)%V=Psi_ST(ST_index1+1:ST_index2)
-!             ST_index1=ST_index2
-!           ENDDO
-
-!           !-main calculation------------------------------------------------------------
-!           CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4(PsiR,iG,                              &
-!                           BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,iG),para_Op)  
-
-!           !-pack and PsiR(itab)%V-------------------------------------------------------
-!           Do itab=1,size_psi
-!             d1=ST_index_iG+1
-!             d2=ST_index_iG+size(PsiR(itab)%V)
-!             Psi_ST(d1:d2)=PsiR(itab)%V
-!             ST_index_iG=d2
-!           ENDDO
-!         ENDDO ! for iG
-!         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,2)
-
-!         !-send back PsiR(itab)%V--------------------------------------------------------
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
-!         CALL MPI_Send(Psi_ST,length_ST_mc,Real_MPI,root_MPI,MPI_id,                   &
-!                       MPI_COMM_WORLD,MPI_err)
-!         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
-!       ENDIF
-!     ENDIF ! for MPI_id/=0
-
-!     IF(allocated(Vec)) deallocate(Vec)
-!     IF(allocated(Psi_ST)) deallocate(Psi_ST)
-!     IF(allocated(RvecB_all)) deallocate(RvecB_all)
-!     DO itab=1,size_psi
-!       CALL dealloc_TypeRVec(PsiR(itab))
-!     END DO
-
-! #endif
-!   END SUBROUTINE Action_MPI_S3
-! !======================================================================================= 
-
+!=======================================================================================  
+!> @brief action with MPI: scheme 3
+!> @note works on more than one nodes.
+!> @note imcrease MPI_mc to reduce memory usage  
+!> require the preloading of mapping table for certain threads
+!
+!> @param Psi [in] |\psi>
+!> @param OpPsi [inout] O|\psi>
+!> @param BasisnD [in] base infortmation
+!> @param para_Op [in] Operator
+! consider to merge with scheme 2
+!======================================================================================= 
   SUBROUTINE Action_MPI_S3(Psi,OpPsi,BasisnD,para_Op)
     USE mod_system
     USE mod_nDindex
@@ -1694,56 +1123,56 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           ENDDO ! iG
           IF(allocated(Psi_ST)) deallocate(Psi_ST)
         ENDDO ! i_MPI
-
-        ! collect result from each node-------------------------------------------------
-        IF(MPI_id==0) THEN
-          CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
-          DO ii=1,MPI_nodes_num-1
-            CALL MPI_Recv(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
-                          ii,MPI_COMM_WORLD,MPI_stat,MPI_err)
-
-            DO itab=1,size_psi
-              d1=size_RvecB*(itab-1)+1
-              d2=size_RvecB* itab
-              OpPsi(itab)%RvecB=OpPsi(itab)%RvecB+RvecB_all(d1:d2)
-            ENDDO
-          ENDDO
-
-          ! share result with node_p0
-          DO itab=1,size_psi
-            d1=size_RvecB*(itab-1)+1
-            d2=size_RvecB* itab
-            RvecB_all(d1:d2)=OpPsi(itab)%RvecB
-          ENDDO
-
-          DO ii=1,MPI_nodes_num-1
-            CALL MPI_Send(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
-                          MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
-          ENDDO
-
-        ELSEIF(MPI_nodes_p0) THEN
-
-          CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
-          DO itab=1,size_psi
-            d1=size_RvecB*(itab-1)+1
-            d2=size_RvecB* itab
-            RvecB_all(d1:d2)=OpPsi(itab)%RvecB
-          ENDDO
-
-          CALL MPI_Send(RvecB_all,size_RvecB*size_psi,Real_MPI,root_MPI,MPI_node_id,   &
-                        MPI_COMM_WORLD,MPI_err)
-          CALL MPI_Recv(RvecB_all,size_RvecB*size_psi,Real_MPI,root_MPI,MPI_id,        &
-                        MPI_COMM_WORLD,MPI_stat,MPI_err)
-          DO itab=1,size_psi
-            d1=size_RvecB*(itab-1)+1
-            d2=size_RvecB* itab
-            OpPsi(itab)%RvecB=RvecB_all(d1:d2)
-          ENDDO
-
-          IF(allocated(RvecB_all)) deallocate(RvecB_all)
-        ENDIF
-        CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
       ENDDO ! i_mc
+
+      ! collect result from each node-------------------------------------------------
+      IF(MPI_id==0) THEN
+        CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
+        DO ii=1,MPI_nodes_num-1
+          CALL MPI_Recv(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
+                        ii,MPI_COMM_WORLD,MPI_stat,MPI_err)
+
+          DO itab=1,size_psi
+            d1=size_RvecB*(itab-1)+1
+            d2=size_RvecB* itab
+            OpPsi(itab)%RvecB=OpPsi(itab)%RvecB+RvecB_all(d1:d2)
+          ENDDO
+        ENDDO
+
+        ! share result with node_p0
+        DO itab=1,size_psi
+          d1=size_RvecB*(itab-1)+1
+          d2=size_RvecB* itab
+          RvecB_all(d1:d2)=OpPsi(itab)%RvecB
+        ENDDO
+
+        DO ii=1,MPI_nodes_num-1
+          CALL MPI_Send(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
+                        MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
+        ENDDO
+
+      ELSEIF(MPI_nodes_p0) THEN
+
+        CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
+        DO itab=1,size_psi
+          d1=size_RvecB*(itab-1)+1
+          d2=size_RvecB* itab
+          RvecB_all(d1:d2)=OpPsi(itab)%RvecB
+        ENDDO
+
+        CALL MPI_Send(RvecB_all,size_RvecB*size_psi,Real_MPI,root_MPI,MPI_node_id,   &
+                      MPI_COMM_WORLD,MPI_err)
+        CALL MPI_Recv(RvecB_all,size_RvecB*size_psi,Real_MPI,root_MPI,MPI_id,        &
+                      MPI_COMM_WORLD,MPI_stat,MPI_err)
+        DO itab=1,size_psi
+          d1=size_RvecB*(itab-1)+1
+          d2=size_RvecB* itab
+          OpPsi(itab)%RvecB=RvecB_all(d1:d2)
+        ENDDO
+
+        IF(allocated(RvecB_all)) deallocate(RvecB_all)
+      ENDIF
+      CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
     ENDIF ! MPI_id==0 .OR. MPI_nodes_p0
 
     !-----------------------------------------------------------------------------------
@@ -1797,8 +1226,11 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
 
 #endif
   END SUBROUTINE Action_MPI_S3
+
 !=======================================================================================  
-!> action with MPI: scheme 4
+!> @brief action with MPI: scheme 4
+!> compress the terms to be send. 
+!> not very effeicient, consider to remove it later
 !=======================================================================================  
   SUBROUTINE Action_MPI_S4(Psi,OpPsi,BasisnD,para_Op)
     USE mod_system
