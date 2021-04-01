@@ -295,8 +295,8 @@ CONTAINS
       END IF
 !----------------------------------------------------------
 
-      ! write basis 
-      CALL write_basis_biqi(tab_Psi(1))
+      ! write basis
+      !CALL write_basis_biqi(tab_Psi(1))
 
       IF (allocated(ene))     CALL dealloc_NParray(ene,'ene',name_sub)
       IF (allocated(Mat_psi)) CALL dealloc_NParray(Mat_psi,'Mat_psi',name_sub)
@@ -831,7 +831,7 @@ CONTAINS
 
         TYPE(param_psi),              intent(in) :: psi
         Integer                                  :: nDval(psi%BasisnD%nDindB%ndim)
-        Integer                                  :: ndim_AT_ib(psi%BasisnD%nDindB%ndim) 
+        Integer                                  :: ndim_AT_ib(psi%BasisnD%nDindB%ndim)
 
         Integer                                  :: ib,nD
         Integer                                  :: iQ,nQ
@@ -859,7 +859,7 @@ CONTAINS
             write(out_unitp,51) psi%BasisnD%tab_basisPrimSG(LG,nD)&
                                    %dnRGB%d0(iQ,1:ndim_AT_ib(nD))
           ENDDO
-    
+
           DO iQ=1,nQ
             write(out_unitp,51) Psi%BasisnD%tab_basisPrimSG(LG,nD)%x(:,iQ)
           ENDDO
