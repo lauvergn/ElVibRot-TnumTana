@@ -63,6 +63,7 @@ MODULE mod_file
       PUBLIC :: file_close, file_delete, file_dealloc, file_write, make_FileName
       PUBLIC :: err_file_name,check_file_exist_WITH_file_name
       PUBLIC :: flush_perso,join_path
+      PUBLIC :: exit_Davidson_external
 
       CONTAINS
 
@@ -681,5 +682,34 @@ MODULE mod_file
 
       end function join_path
 
+!=======================================================================================
+!@brief set save_WP=.true. with external control
+!
+! create a file with name "Davidson_exit", the program wil exit 
+! and change the file name to "done_Davidson_exit".
+!=======================================================================================
+  SUBROUTINE exit_Davidson_external(exit_Davidson,save_WP,it)
+    IMPLICIT NONE
+
+    Logical,                       intent(inout) :: exit_Davidson
+    Logical,                       intent(inout) :: save_WP
+    Integer,                       intent(in)    :: it
+    Logical                                      :: exist
+    Integer                                      :: stat
+
+    IF(it>2) THEN
+      INQUIRE(FILE='Davidson_exit',EXIST=exist) 
+      IF(exist) THEN
+        save_WP=.TRUE.
+        exit_Davidson=.TRUE.
+        !CALL RENAME('Davidson_exit','done_Davidson_exit')
+        open(unit=111, FILE='Davidson_exit')
+        close(111, status='delete')
+        open(unit=112, FILE='done_Davidson_exit')
+        close(112)
+      ENDIF
+    ENDIF
+  END SUBROUTINE exit_Davidson_external
+!=======================================================================================
 END MODULE mod_file
 

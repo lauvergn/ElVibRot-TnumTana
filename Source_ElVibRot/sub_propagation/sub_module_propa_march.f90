@@ -1653,6 +1653,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       USE mod_system
       USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
       USE mod_Op,    ONLY : param_Op,sub_PsiOpPsi,sub_OpPsi,sub_scaledOpPsi
+      USE mod_MPI_aux
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -1686,16 +1687,17 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       END IF
 !-----------------------------------------------------------
 
-      w2 = psi
+      IF(keep_MPI) w2 = psi
       CALL sub_PsiOpPsi(E,psi,w2,para_H)
+      IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(E,size1_MPI,root_MPI)
 !     para_H%E0 = real(E,kind=Rkind)
 !     write(out_unitp,*) 'E0,Esc',para_H%E0,para_H%Esc
 
       psi0Hkpsi0(:) = cmplx(ZERO,ZERO,kind=Rkind)
 
-      psi0Hkpsi0(0) = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
+      IF(keep_MPI) psi0Hkpsi0(0) = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
 
-      w1 = psi
+      IF(keep_MPI) w1 = psi
       rtj = cmplx(ONE,ZERO,kind=Rkind)
 
  21 format(a,100(x,e12.5))
@@ -1717,25 +1719,26 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         !write(out_unitp,21) 'Rw2',Real(w2%CvecB,kind=Rkind)
         !write(out_unitp,21) 'Iw2',AImag(w2%CvecB)
 
-        w1 = w2
+        IF(keep_MPI) w1 = w2
 
-        psi0Hkpsi0(j) = Calc_AutoCorr(psi0,w1,para_propa,T,Write_AC=.FALSE.)
+        IF(keep_MPI) psi0Hkpsi0(j) = Calc_AutoCorr(psi0,w1,para_propa,T,Write_AC=.FALSE.)
 
         !CALL Overlap_psi1_psi2(psi0Hkpsi0(j),psi0,w1)
 
         rtj = rtj *                                                     &
           cmplx(ZERO,-para_propa%WPdeltaT/real(j,kind=Rkind),kind=Rkind)
-        w2 = w1 * rtj
+        IF(keep_MPI) w2 = w1 * rtj
 
         !write(out_unitp,21) 'Rw2*rtj',Real(w2%CvecB,kind=Rkind)
         !write(out_unitp,21) 'Iw2*rtj',AImag(w2%CvecB)
 
-        psi = psi + w2
+        IF(keep_MPI) psi = psi + w2
 
         !write(out_unitp,21) 'Rpsi',Real(psi%CvecB,kind=Rkind)
         !write(out_unitp,21) 'Ipsi',AImag(psi%CvecB)
 
-        CALL norm2_psi(w2)
+        IF(keep_MPI) CALL norm2_psi(w2)
+        IF(openmpi .AND. MPI_scheme/=1)  CALL MPI_Bcast_(w2%norm2,size1_MPI,root_MPI)
 
         IF (debug) write(out_unitp,*) 'j,norm2 w2',j,w2%norm2
 
@@ -1772,7 +1775,9 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
  !CALL ecri_psi(psi=psi)
 
 !    - check norm ------------------
-      CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF(keep_MPI) CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF(openmpi .AND. MPI_scheme/=1)  CALL MPI_Bcast_(psi%norm2,size1_MPI,root_MPI)
+
       IF ( psi%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -1793,6 +1798,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       phase = ZERO
       microT = ZERO
 
+      IF(MPI_id==0) THEN
       DO it=1,para_propa%nb_micro
 
         microT = microT + microdeltaT
@@ -1809,10 +1815,12 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         cdot = cdot * cmplx( cos(phase),-sin(phase),kind=Rkind)
         CALL Write_AutoCorr(no,T+microT,cdot)
       END DO
+      ENDIF
 
-      CALL dealloc_psi(w1)
-      CALL dealloc_psi(w2)
-
+      IF(keep_MPI) THEN
+        CALL dealloc_psi(w1)
+        CALL dealloc_psi(w2)
+      ENDIF
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL norm2_psi(psi)

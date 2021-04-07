@@ -860,21 +860,33 @@ UT_Tnum ut_Tnum UT_tnum ut_tnum: Tnum
 UT_HNO3 ut_hno3: EVR
 	@echo "---------------------------------------"
 	@echo "Unitary tests for the HNO3 ElVibRot calculations"
+ifeq ($(F90),mpifort)
+else
 	@cd UnitTests/HNO3_UT ; ./run_tests small
+endif
 	@echo "---------------------------------------"
 #
 .PHONY: UT_HCN ut_hcn
 UT_HCN ut_hcn: EVR
 	@echo "---------------------------------------"
 	@echo "Unitary tests for the HCN (diago) ElVibRot calculations"
+ifeq ($(F90),mpifort)
+	@cd UnitTests/HCN_UT_MPI ; ./run_tests small
+else
 	@cd UnitTests/HCN_UT ; ./run_tests small
+endif
 	@echo "---------------------------------------"
 #
 .PHONY: UT_HCN-WP ut_hcn-wp
 UT_HCN-WP ut_hcn-wp: EVR
 	@echo "---------------------------------------"
+ifeq ($(F90),mpifort)
+	@echo "Unitary tests for the pyrazine (propagation) ElVibRot calculations"
+	@cd UnitTests/PYR-WP_UT_MPI ; ./run_tests small
+else
 	@echo "Unitary tests for the HCN (propagation) ElVibRot calculations"
 	@cd UnitTests/HCN-WP_UT ; ./run_tests small
+endif
 	@echo "---------------------------------------"
 #===============================================
 #===============================================
@@ -1520,8 +1532,9 @@ endif
 #=======================================================================================
 ifeq ($(F90),mpifort)
 $(info ***********************************************************************)
-$(info *********** to test code MPI: make test)
-$(info *********** to clean MPI test: make cleantest)
+$(info *********** to run UnitTests: make UT)
+$(info *********** to run MPI example: make example)
+$(info *********** to clean MPI test: make clean_example)
 $(info ***********************************************************************)
 endif
 
@@ -1535,8 +1548,8 @@ else
   parall_name=_noparall
 endif
 
-.PHONY: test
-test:
+.PHONY: example
+example:
 ifeq ($(F90),mpifort)
 	@cd ./Working_tests/MPI_tests ; ./MPI_test.sh
 else
@@ -1544,8 +1557,8 @@ else
 endif
 
 # clean test results
-.PHONY: cleantest
-cleantest:
+.PHONY: clean_example
+clean_example:
 	@echo "clean test file"
 	@rm -rf ./Working_tests/MPI_tests/*/result
 	@echo "removed ./Working_tests/MPI_tests/*/result"

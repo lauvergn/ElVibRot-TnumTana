@@ -296,7 +296,7 @@ CONTAINS
 !----------------------------------------------------------
 
       ! write basis 
-      CALL write_basis_biqi(tab_Psi(1))
+      if(para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4) CALL write_basis_biqi(tab_Psi(1))
 
       IF (allocated(ene))     CALL dealloc_NParray(ene,'ene',name_sub)
       IF (allocated(Mat_psi)) CALL dealloc_NParray(Mat_psi,'Mat_psi',name_sub)

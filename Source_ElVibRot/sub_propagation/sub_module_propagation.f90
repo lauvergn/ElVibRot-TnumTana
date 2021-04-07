@@ -716,6 +716,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
       CALL norm2_psi(w1,GridRep=.FALSE.,BasisRep=.TRUE.)
     ENDIF
     CALL sub_PsiOpPsi(ET,w1,w2,para_H)
+    IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(ET,size1_MPI,root_MPI)
 
     IF (para_H%spectral_done) THEN
       w2 = WP(i) ! save Spectral rep

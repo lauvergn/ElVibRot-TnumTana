@@ -7,13 +7,24 @@ MPI Vm2.0
 ----------------------------------------------------------------------------------------
 @ log
 
+
+> MPI_Vm2.4
+
+  - parallelization 
+    march_noD
+
+  - add Unit test for MPI
+
+  - bug fix 
+
+
 > MPI_Vm2.3
   - parallelization 
     march_noD_SG4
     march_RK4
     march_ModMidPoint
     march_BS
-    march_SIL
+     
 
   - new subroutine
     exit_Davidson_external_MPI: to exit Davidson iteration by external control

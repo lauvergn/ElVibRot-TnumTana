@@ -114,6 +114,7 @@ CONTAINS
       USE mod_system
       USE mod_psi,             ONLY : param_psi,ecri_psi,Overlap_psi1_psi2
       USE mod_SetOp,           ONLY : param_Op,write_param_Op
+      USE mod_MPI
       IMPLICIT NONE
 
 !----- variables pour la namelist minimum ----------------------------
@@ -152,7 +153,7 @@ CONTAINS
         CALL sub_OpPsi(Psi,OpPsi,para_Op)
       END IF
 
-      CALL Overlap_psi1_psi2(E,Psi,OpPsi)
+      IF(keep_MPI) CALL Overlap_psi1_psi2(E,Psi,OpPsi)
 
 !-----------------------------------------------------------
        IF (debug) THEN

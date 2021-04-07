@@ -2051,7 +2051,7 @@
       CALL mat_id(RMatdnb,basis_set%nb,basis_set%nb)
     ELSE
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
-        RMatdnb(:,:) = basis_set%dnRGB%d0(:,:)    !!!!!
+        RMatdnb(:,:) = basis_set%dnRGB%d0(:,:)
       ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
         RMatdnb(:,:) = basis_set%dnRGB%d1(:,:,dnba_ind(2))
       ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
