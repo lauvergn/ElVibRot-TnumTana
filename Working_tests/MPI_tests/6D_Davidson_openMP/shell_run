@@ -89,7 +89,6 @@ cat > namelist << EOF
 EVR=t 
 OpPsi_test=f 
 printlevel=2
-PMatOp_omp=2
 /
 
 &constantes ene_unit='au' /

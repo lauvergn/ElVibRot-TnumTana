@@ -224,7 +224,7 @@
 
  !- check norm ------------------
  IF(keep_MPI) CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
- IF(openmpi)  CALL MPI_Bcast_(psi%norm2,size1_MPI,root_MPI)
+ IF(openmpi .AND. MPI_scheme/=1)  CALL MPI_Bcast_(psi%norm2,size1_MPI,root_MPI)
 
  IF (debug) write(out_unitp,*) 'norm^2',psi%norm2
 
@@ -237,7 +237,7 @@
    STOP
  END IF
  IF(keep_MPI) CALL Renorm_psi(psi)
- IF(openmpi)  CALL MPI_Bcast_(psi%norm2,size1_MPI,root_MPI)
+ IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(psi%norm2,size1_MPI,root_MPI)
 
  IF(MPI_id==0) THEN
    CALL Overlap_psi1_psi2(cdot,psi0,psi)

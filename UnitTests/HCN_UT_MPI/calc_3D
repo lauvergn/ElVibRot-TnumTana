@@ -1,0 +1,21 @@
+#!/bin/bash
+
+test_size=$1
+
+if [ -z $test_size ]
+then
+  test_size=small
+fi
+
+
+if [ $test_size = 'small' ]
+then
+ echo " Small tests"
+## ./DAT_files/dat_NewQTransfo-RPH_AutoContract
+## ./CompareLevel res_RPH_AutoContract_Davidson lev20_res_RPH_AutoContract_Davidson Table_CV-1+2D.txt 5 0.1
+
+  #for the guess
+ ./DAT_files/dat_NewQTransfo-RPH_AutoContract_SG4 f 4
+ ./DAT_files/dat_NewQTransfo-RPH_AutoContract_SG4 t 6
+ ./CompareLevel res_RPH_AutoContract_Davidson_SG4 lev20_res_RPH_AutoContract_Davidson_SG4 Table_CV-1+2D.txt 5 0.1
+fi

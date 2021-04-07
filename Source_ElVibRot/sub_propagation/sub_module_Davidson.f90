@@ -61,8 +61,7 @@ CONTAINS
       USE mod_propa,       ONLY:param_propa,param_Davidson
       USE mod_propa_MPI,   ONLY:MPI_Bcast_param_Davidson
       USE mod_Davidson_MPI,ONLY:MakeResidual_Davidson_MPI4,             &
-                                MakeResidual_Davidson_j_MPI3,           &
-                                exit_Davidson_external_MPI
+                                MakeResidual_Davidson_j_MPI3
       USE mod_psi_Op_MPI,  ONLY:sub_LCpsi_TO_psi_MPI
       USE mod_MPI_aux
       IMPLICIT NONE
@@ -499,8 +498,12 @@ CONTAINS
           !- new vectors --------------------------------------------
           !----------------------------------------------------------
 
-          CALL exit_Davidson_external_MPI(exit_Davidson,save_WP,it)
- 
+          IF(MPI_id==0) CALL exit_Davidson_external(exit_Davidson,save_WP,it)
+          IF(openmpi) THEN
+            CALL MPI_BCAST_(exit_Davidson,size1_MPI,root_MPI)
+            CALL MPI_BCAST_(save_WP,size1_MPI,root_MPI)
+          ENDIF 
+
           write(out_unitp,*) 'ndim,max_diago',ndim,max_diago
           write(out_unitp,*) 'save_WP,conv',save_WP,conv
           IF (debug) THEN
@@ -1405,10 +1408,10 @@ END SUBROUTINE MakeResidual_Davidson
          IF (abs(a) > ONETENTH**10) THEN
            !write(out_unitp,*) ' symab: psi(i)',i,psi(i)%symab
 
-           psiTemp = Hpsi(i) - psi(i) * Ene(j)
+           IF(keep_MPI) psiTemp = Hpsi(i) - psi(i) * Ene(j)
            !write(out_unitp,*) ' symab: psiTemp',psi(i)%symab
 
-           psi(ndim+1) = psi(ndim+1) + psiTemp * a
+           IF(keep_MPI) psi(ndim+1) = psi(ndim+1) + psiTemp * a
          END IF
        END DO
 
@@ -1424,8 +1427,8 @@ END SUBROUTINE MakeResidual_Davidson
          END IF
          !write(out_unitp,*) 'i,j',i,j,a
          IF (abs(a) > ONETENTH**10) THEN
-           psiTemp = Hpsi(i) - psi(i) * Ene(j)
-           psi(ndim+1) = psi(ndim+1) + psiTemp * a
+          IF(keep_MPI) psiTemp = Hpsi(i) - psi(i) * Ene(j)
+          IF(keep_MPI) psi(ndim+1) = psi(ndim+1) + psiTemp * a
          END IF
        END DO
 
