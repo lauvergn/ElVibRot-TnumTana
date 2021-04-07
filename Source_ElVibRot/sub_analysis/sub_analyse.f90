@@ -27,7 +27,7 @@
 ![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 ![4]: Maison de la Simulation USR 3441, CEA Saclay, France
 ![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
-!         Université de Montpellier, France
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -296,7 +296,7 @@ CONTAINS
 !----------------------------------------------------------
 
       ! write basis 
-      if(para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4) CALL write_basis_biqi(tab_Psi(1))
+      !if(para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4) CALL write_basis_biqi(tab_Psi(1))
 
       IF (allocated(ene))     CALL dealloc_NParray(ene,'ene',name_sub)
       IF (allocated(Mat_psi)) CALL dealloc_NParray(Mat_psi,'Mat_psi',name_sub)
