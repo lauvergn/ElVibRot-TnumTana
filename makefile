@@ -1532,9 +1532,9 @@ endif
 #=======================================================================================
 ifeq ($(F90),mpifort)
 $(info ***********************************************************************)
-$(info *********** to run UnitTests: make UT)
+$(info *********** to run UnitTests  : make UT)
 $(info *********** to run MPI example: make example)
-$(info *********** to clean MPI test: make clean_example)
+$(info *********** to clean MPI test : make clean_example)
 $(info ***********************************************************************)
 endif
 
