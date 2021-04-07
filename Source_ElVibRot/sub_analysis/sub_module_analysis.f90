@@ -51,7 +51,6 @@
         TYPE param_ana
           integer              :: max_ana     = -1        ! nb of level to be analyzed. If max_ana=-1, all level are analyzed.
           real (kind=Rkind)    :: max_ene     = TEN**4    ! (cm-1)
-          logical              :: ana         = .TRUE.    ! analysis will be done
           integer              :: ana_level   = 2         ! 2: full analysis, 0: no-analysis, 1: minimal analysis
 
           integer :: print_psi                     ! nb of level write on the grid
@@ -226,9 +225,9 @@
       formatted_file_WP    = .TRUE.
       FilePsiVersion       = 0
 
-      ana             = .TRUE.
-      ana_level       = 2 ! default (2: full analysis, 0: no-analysis, 1: minimal analysis
-      IF (openmpi) ana_level       = 1 ! eq to ana_mini=t in sub_analyze_WP_OpWP
+      ana             = .FALSE.
+      ana_level       = -1 ! default (2: full analysis, 0: no-analysis, 1: minimal analysis
+      !IF (openmpi) ana_level       = 1 ! eq to ana_mini=t in sub_analyze_WP_OpWP
       print_psi       = 0
       nb_harm_ana     = 1
       max_ana         = -1
@@ -238,9 +237,28 @@
       max_ene         = REAL_WU(TEN**4,   'cm-1','E') ! 10 000 cm-1
 
       read(in_unitp,analyse)
-
       IF (print_level > 0) write(out_unitp,analyse)
       write(out_unitp,*)
+
+      IF (ana) THEN
+        write(out_unitp,*) ' WARNING in ',name_sub
+        write(out_unitp,*) ' ana=t'
+        write(out_unitp,*) ' Defined only ana_level instead: ana_level=2'
+      END IF
+      IF (ana_level < -1) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' ana_level must be >> 0'
+        write(out_unitp,*) ' ana_level',ana_level
+        STOP 'ERROR in read_analyse: ana_level < -1'
+      END IF
+      IF (ana .AND. ana_level >=0 .OR. ana_level < -1) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' ana=t and ana_level is initialized'
+        write(out_unitp,*) ' ana,ana_level',ana,ana_level
+        write(out_unitp,*) ' Defined only ana_level'
+        STOP 'ERROR in read_analyse: ana=t and ana_level is initialized.'
+      END IF
+      IF (ana .AND. ana_level == -1) ana_level = 2
 
 
       It_diag = 0
@@ -253,8 +271,9 @@
         write(out_unitp,*) ' davidson,arpack,filter',davidson,arpack,filter
 
         write(out_unitp,*) ' You HAVE to select only one!'
-        STOP 'ERROR: Two or more Iterative Diagonalization Procedures.'
+        STOP 'ERROR in read_analyse: Two or more Iterative Diagonalization Procedures.'
       END IF
+
       IF (.NOT. formatted_file_WP) FilePsiVersion = 1
       IF(MPI_id==0) write(out_unitp,*) 'name_file_spectralWP,formatted_file_WP: ', &
                                         name_file_spectralWP,formatted_file_WP
@@ -303,14 +322,13 @@
         write(out_unitp,*) 'name_file_spectralWP,formatted_file_WP: ',  &
                                   name_file_spectralWP,formatted_file_WP
         write(out_unitp,*) '  Check your data!!'
-        STOP 'ERROR: Empty file name.'
+        STOP 'ERROR in read_analyse: Empty file name.'
       END IF
 
       para_ana%max_ene         = convRWU_TO_R_WITH_WorkingUnit(max_ene)
       IF (para_ana%max_ene <= ZERO) para_ana%max_ene = huge(ONE)
       para_ana%max_ana         = max_ana
 
-      para_ana%ana             = ana
       para_ana%ana_level       = ana_level
 
       para_ana%psi2            = psi2
@@ -333,7 +351,7 @@
       IF (debug)  write(out_unitp,*) 'max_ene: ',RWU_Write(max_ene,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
 
       IF (propa) THEN
-        CALL init_ana_psi(para_ana%ana_psi,ana_level=ana_level,ana=.TRUE.,      &
+        CALL init_ana_psi(para_ana%ana_psi,ana_level=ana_level,                 &
                           num_psi=0,propa=propa,T=ZERO,                         &
                           Boltzmann_pop=.FALSE.,                                &
                           adia=psi_adia,                                        &
@@ -352,7 +370,7 @@
 !                        Write_psi_Grid=(print_psi > 0 .AND. .NOT. psi2),&
 !                       Write_psi_Basis=(print_psi > 0 .AND. .NOT. psi2),&
 
-        CALL init_ana_psi(para_ana%ana_psi,ana_level=ana_level,ana=.TRUE.,      &
+        CALL init_ana_psi(para_ana%ana_psi,ana_level=ana_level,                 &
                           num_psi=0,propa=propa,T=ZERO,                         &
                           Boltzmann_pop=.TRUE.,Temp=Temp,                       &
                           adia=psi_adia,                                        &

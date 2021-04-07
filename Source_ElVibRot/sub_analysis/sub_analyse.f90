@@ -116,7 +116,7 @@ CONTAINS
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
-      IF (.NOT. para_ana%ana) RETURN
+      IF (para_ana%ana_level == 0) RETURN
 
       mole       => para_H%mole
       para_Tnum  => para_H%para_Tnum

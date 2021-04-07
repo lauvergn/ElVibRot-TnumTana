@@ -1063,11 +1063,10 @@ END SUBROUTINE sub_analyze_psi
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'psi'
         CALL ecri_psi(psi=psi)
-        write(out_unitp,*) 'ana_psi%ana,ana_psi%Rho1D,ana_psi%Rho2D',   &
-                            ana_psi%ana,ana_psi%Rho1D,ana_psi%Rho2D
+        write(out_unitp,*) 'ana_psi%Rho1D,ana_psi%Rho2D',ana_psi%Rho1D,ana_psi%Rho2D
       END IF
 !-----------------------------------------------------------
-      IF (ana_psi%ana .AND. (ana_psi%Rho1D .OR. ana_psi%Rho2D)) THEN
+      IF (ana_psi%ana_level > 0 .AND. (ana_psi%Rho1D .OR. ana_psi%Rho2D)) THEN
         IF (.NOT. ana_psi%GridDone) CALL sub_PsiBasisRep_TO_GridRep(psi)
 
         IF (ana_psi%Rho1D) THEN
