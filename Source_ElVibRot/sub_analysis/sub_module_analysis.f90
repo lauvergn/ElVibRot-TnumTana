@@ -52,6 +52,7 @@
           integer              :: max_ana     = -1        ! nb of level to be analyzed. If max_ana=-1, all level are analyzed.
           real (kind=Rkind)    :: max_ene     = TEN**4    ! (cm-1)
           logical              :: ana         = .TRUE.    ! analysis will be done
+          integer              :: ana_level   = 2         ! 2: full analysis, 0: no-analysis, 1: minimal analysis
 
           integer :: print_psi                     ! nb of level write on the grid
           logical :: psi2                          ! print psi^2 instead of psi
@@ -133,9 +134,8 @@
       real (kind=Rkind)                    :: Qana(:)
       TYPE (CoordType),     intent(in)     :: mole
 
-
-
       integer       :: nb_harm_ana,max_ana,print_psi,MaxWP_TO_Write_MatOp,JJmax
+      integer       :: ana_level
       logical       :: ana,print,propa,intensity,Psi_ScalOp
       logical       :: control,davidson,arpack,filter,NLO,VibRot
       integer       :: CRP,nb_CRP_Ene
@@ -170,7 +170,7 @@
 !      logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
 
-      NAMELIST /analyse/ana,print,nb_harm_ana,max_ana,max_ene,          &
+      NAMELIST /analyse/ana,ana_level,print,nb_harm_ana,max_ana,max_ene,        &
                         propa,                                          &
                         print_psi,psi2,psi1D_Q0,psi2D_Q0,QTransfo,      &
                         Rho1D,Rho2D,Wheight_rho,Rho_type,psi_adia,      &
@@ -227,6 +227,8 @@
       FilePsiVersion       = 0
 
       ana             = .TRUE.
+      ana_level       = 2 ! default (2: full analysis, 0: no-analysis, 1: minimal analysis
+      IF (openmpi) ana_level       = 1 ! eq to ana_mini=t in sub_analyze_WP_OpWP
       print_psi       = 0
       nb_harm_ana     = 1
       max_ana         = -1
@@ -309,6 +311,8 @@
       para_ana%max_ana         = max_ana
 
       para_ana%ana             = ana
+      para_ana%ana_level       = ana_level
+
       para_ana%psi2            = psi2
 
       para_ana%print_psi       = print_psi
@@ -329,18 +333,18 @@
       IF (debug)  write(out_unitp,*) 'max_ene: ',RWU_Write(max_ene,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
 
       IF (propa) THEN
-        CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
-                          propa=propa,T=ZERO,                           &
-                          Boltzmann_pop=.FALSE.,                        &
-                          adia=psi_adia,                                &
-                          AvScalOp=AvScalOp,AvHiterm=AvHiterm,          &
-                          Write_psi2_Grid=psi2,Write_psi2_Basis=psi2,   &
-                          Write_psi_Grid=(.NOT. psi2),                  &
-                          Write_psi_Basis=(.NOT. psi2),                 &
-                     Coherence=Coherence,Coherence_epsi=Coherence_epsi, &
-                          ExactFact=ExactFact,                          &
-                          rho1D=rho1D,rho2D=rho2D,Rho_type=Rho_type,    &
-                          Weight_Rho=Weight_Rho,Qana_Weight=Qana_Weight,&
+        CALL init_ana_psi(para_ana%ana_psi,ana_level=ana_level,ana=.TRUE.,      &
+                          num_psi=0,propa=propa,T=ZERO,                         &
+                          Boltzmann_pop=.FALSE.,                                &
+                          adia=psi_adia,                                        &
+                          AvScalOp=AvScalOp,AvHiterm=AvHiterm,                  &
+                          Write_psi2_Grid=psi2,Write_psi2_Basis=psi2,           &
+                          Write_psi_Grid=(.NOT. psi2),                          &
+                          Write_psi_Basis=(.NOT. psi2),                         &
+                          Coherence=Coherence,Coherence_epsi=Coherence_epsi,    &
+                          ExactFact=ExactFact,                                  &
+                          rho1D=rho1D,rho2D=rho2D,Rho_type=Rho_type,            &
+                          Weight_Rho=Weight_Rho,Qana_Weight=Qana_Weight,        &
                           psi1D_Q0=psi1D_Q0,psi2D_Q0=psi2D_Q0,Qana=Qana_cut)
       ELSE
 !                          Write_psi2_Grid=(print_psi > 0 .AND. psi2),   &
@@ -348,17 +352,17 @@
 !                        Write_psi_Grid=(print_psi > 0 .AND. .NOT. psi2),&
 !                       Write_psi_Basis=(print_psi > 0 .AND. .NOT. psi2),&
 
-        CALL init_ana_psi(para_ana%ana_psi,ana=.TRUE.,num_psi=0,        &
-                          propa=propa,T=ZERO,                           &
-                          Boltzmann_pop=.TRUE.,Temp=Temp,               &
-                          adia=psi_adia,                                &
-                          AvScalOp=AvScalOp,AvHiterm=AvHiterm,          &
-                          Write_psi2_Grid=.FALSE.,                      &
-                          Write_psi2_Basis=.FALSE.,                     &
-                          Write_psi_Grid=.FALSE.,                       &
-                          Write_psi_Basis=.FALSE.,                      &
-                          rho1D=rho1D,rho2D=rho2D,Rho_type=Rho_type,    &
-                          Weight_Rho=Weight_Rho,Qana_Weight=Qana_Weight,&
+        CALL init_ana_psi(para_ana%ana_psi,ana_level=ana_level,ana=.TRUE.,      &
+                          num_psi=0,propa=propa,T=ZERO,                         &
+                          Boltzmann_pop=.TRUE.,Temp=Temp,                       &
+                          adia=psi_adia,                                        &
+                          AvScalOp=AvScalOp,AvHiterm=AvHiterm,                  &
+                          Write_psi2_Grid=.FALSE.,                              &
+                          Write_psi2_Basis=.FALSE.,                             &
+                          Write_psi_Grid=.FALSE.,                               &
+                          Write_psi_Basis=.FALSE.,                              &
+                          rho1D=rho1D,rho2D=rho2D,Rho_type=Rho_type,            &
+                          Weight_Rho=Weight_Rho,Qana_Weight=Qana_Weight,        &
                           psi1D_Q0=psi1D_Q0,psi2D_Q0=psi2D_Q0,Qana=Qana_cut)
       END IF
 

@@ -589,6 +589,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   USE mod_psi, ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,         &
                       sub_analyze_psi,norm2_psi,alloc_psi,modif_ana_psi,&
                       sub_PsiBasisRep_TO_GridRep,Write_ana_psi
+  USE mod_MPI_aux
   IMPLICIT NONE
 
   real (kind=Rkind) :: T      ! time
@@ -604,8 +605,6 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   integer            :: nb_WP
   TYPE (param_psi)   :: WP(:)
 
-  logical            :: ana_mini = .TRUE.  ! turn off further analysis
-!  logical            :: ana_mini = .FALSE.
   logical            :: G,G2,B,B2,With_field
 
 !-- working parameters --------------------------------
@@ -648,7 +647,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   END IF
 !-----------------------------------------------------------
 
-  IF (ana_mini) THEN
+  IF (para_propa%ana_psi%ana_level == 1) THEN ! ana_mini
     IF (present(adia)) THEN
       IF (present(para_field)) THEN
         CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia=adia,para_field=para_field)

@@ -49,6 +49,7 @@
     TYPE param_ana_psi
 
       logical                        :: ana           = .TRUE.  ! analyze Psi
+      integer                        :: ana_level     = 2       ! 2: full analysis, 0: no-analysis, 1: minimal analysis
       integer                        :: num_psi       = 0       ! The numbering of psi (or wp)
       logical                        :: GridDone      = .FALSE. ! flag for the WP on the grid
 
@@ -129,7 +130,7 @@
 
   CONTAINS
 
-    SUBROUTINE init_ana_psi(ana_psi,ana,num_psi,adia,           &
+    SUBROUTINE init_ana_psi(ana_psi,ana_level,ana,num_psi,adia, &
                             Write_psi2_Grid,Write_psi2_Basis,   &
                             Write_psi_Grid,Write_psi_Basis,     &
                             Write_psi,                          &
@@ -146,6 +147,8 @@
 
 !--- variables for the WP propagation ----------------------------
     TYPE (param_ana_psi), intent(inout)      :: ana_psi
+
+    integer,                        optional :: ana_level
     logical,                        optional :: ana
     integer,                        optional :: num_psi
     logical,                        optional :: adia
@@ -187,6 +190,8 @@
 
 
     !------------------------------------------------------------
+    ana_psi%ana_level     = 2 ! full analysis
+    IF (present(ana_level))   ana_psi%ana_level   = ana_level
     ana_psi%ana           = .TRUE. ! analyze Psi
     IF (present(ana))         ana_psi%ana         = ana
     ana_psi%num_psi       = 0      ! The numbering of psi (or wp)
@@ -330,7 +335,7 @@
 
     END SUBROUTINE init_ana_psi
 
-    SUBROUTINE modif_ana_psi(ana_psi,ana,num_psi,adia,          &
+    SUBROUTINE modif_ana_psi(ana_psi,ana_level,ana,num_psi,adia,&
                             Write_psi2_Grid,Write_psi2_Basis,   &
                             Write_psi_Grid,Write_psi_Basis,     &
                             Write_psi,                          &
@@ -347,6 +352,7 @@
 
 !--- variables for the WP propagation ----------------------------
     TYPE (param_ana_psi), intent(inout)      :: ana_psi
+    integer,                        optional :: ana_level
     logical,                        optional :: ana
     integer,                        optional :: num_psi
     logical,                        optional :: adia
@@ -385,9 +391,8 @@
 
     character (len=*), parameter :: name_sub='modif_ana_psi'
 
-
-
     !------------------------------------------------------------
+    IF (present(ana_level))   ana_psi%ana_level   = ana_level
     IF (present(ana))         ana_psi%ana         = ana
     IF (present(num_psi))     ana_psi%num_psi     = num_psi
     !------------------------------------------------------------
@@ -557,6 +562,7 @@
     CLASS (param_ana_psi), intent(inout) :: ana_psi1
     TYPE (param_ana_psi),  intent(in)    :: ana_psi2
 
+    ana_psi1%ana_level     = ana_psi2%ana_level
     ana_psi1%ana           = ana_psi2%ana
     ana_psi1%num_psi       = ana_psi2%num_psi
     ana_psi1%GridDone      = ana_psi2%GridDone
@@ -656,6 +662,7 @@
 
     write(out_unitp,*) 'BEGINNING ',name_sub
 
+    write(out_unitp,*) 'ana_level',ana_psi%ana_level
     write(out_unitp,*) 'ana',ana_psi%ana
     write(out_unitp,*) 'num_psi',ana_psi%num_psi
     write(out_unitp,*) 'GridDone',ana_psi%GridDone
@@ -739,4 +746,3 @@
     END SUBROUTINE Write_ana_psi
 
   END MODULE mod_type_ana_psi
-
