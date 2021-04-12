@@ -185,7 +185,7 @@
       TYPE (param_BFGS) :: para_BFGS
       integer, intent(in) :: nb_Opt
       real (kind=Rkind), intent(inout) :: xOpt_min(nb_Opt),SQ(nb_Opt)
-      real (kind=Rkind), allocatable :: hessian(:,:)
+      real (kind=Rkind), allocatable :: grad(:),hessian(:,:)
 
 !---------- working variables ----------------------------------------
   TYPE (param_dnMatOp) :: dnMatOp(1)
@@ -218,16 +218,30 @@
           write(out_unitp,*) ' The initial hessian is calculated'
           !-------- allocation -----------------------------------------------
           CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_Opt,PrimOp%nb_elec,nderiv=2)
-          CALL alloc_array(para_BFGS%hessian_inv_init,(/ nb_Opt,nb_Opt /),  &
+          CALL alloc_array(para_BFGS%hessian_inv_init,[nb_Opt,nb_Opt],  &
                           'para_BFGS%hessian_inv_init',name_sub)
+
           IF (allocated(hessian)) THEN
             CALL dealloc_NParray(hessian,'hessian',name_sub)
           END IF
-          CALL alloc_NParray(hessian,(/ nb_Opt,nb_Opt /),'hessian',name_sub)
+          CALL alloc_NParray(hessian,[nb_Opt,nb_Opt],'hessian',name_sub)
+
+          IF (allocated(grad)) THEN
+            CALL dealloc_NParray(grad,'grad',name_sub)
+          END IF
+          CALL alloc_NParray(grad,[nb_Opt],'grad',name_sub)
+
           !-------- end allocation --------------------------------------------
 
-          !----- Hessian ------------------------------------
+          !----- Hessian and gradient ------------------------------------
           CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp)
+
+          write(out_unitp,*) 'Energy',Get_Scal_FROM_Tab_OF_dnMatOp(dnMatOp)
+
+          CALL Get_Grad_FROM_Tab_OF_dnMatOp(grad,dnMatOp)
+          write(out_unitp,*) 'grad'
+          CALL Write_Vec(grad,out_unitp,5)
+          CALL dealloc_NParray(grad,'grad',name_sub)
 
           CALL Get_Hess_FROM_Tab_OF_dnMatOp(hessian,dnMatOp) ! for the ground state
           !----- End Hessian ------------------------------------
@@ -292,6 +306,7 @@
 
         END IF
 
+        IF (para_BFGS%max_iteration < 1) STOP 'STOP in Sub_BFGS: max_iteration < 1'
         !-------- allocation -----------------------------------------------
         CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_Opt,PrimOp%nb_elec,nderiv=1)
         !-------- end allocation --------------------------------------------

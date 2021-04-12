@@ -1,5 +1,5 @@
 rm -f res*
-for dir in *UT
+for dir in *UT *UT_MPI
 do
   cd  $dir
   ./clean
