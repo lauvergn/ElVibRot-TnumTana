@@ -5,7 +5,6 @@
 !
 !=======================================================================================
       SUBROUTINE diagonalization(Mat,REig,Vec,n,type_diag,sort,phase)
-      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64,int32
       USE mod_system
       IMPLICIT NONE
 
@@ -26,7 +25,7 @@
     !for lapack
     integer              :: i
     integer              ::    lwork ,lda ,ldvr ,ierr
-    integer(kind=int32)  :: n4,lwork4,lda4,ldvr4,ierr4
+    integer(kind=I4kind)  :: n4,lwork4,lda4,ldvr4,ierr4
     real(kind=Rkind), allocatable :: work(:)
     real(kind=Rkind), allocatable :: IEig_loc(:)
 
@@ -46,7 +45,7 @@
     type_diag_loc = type_diag
 
     !when lapack is used and Rkind /= real64 (not a double)
-    IF (Rkind /= real64 .AND. type_diag_loc == 3) type_diag_loc = type_diag_default
+    IF (Rkind /= R8kind .AND. type_diag_loc == 3) type_diag_loc = type_diag_default
 
 #if __LAPACK != 1
     IF (count([3,377,395] == type_diag_loc) == 1) type_diag_loc = type_diag_default
@@ -114,14 +113,14 @@
 
       ! lapack subroutines need integer (kind=4 or int32), therefore, we add a conversion, otherwise
       ! it fails when integers (kind=8 or int64) are used (at the compilation).
-      n4     = int(n,kind=int32)
-      lwork4 = int(lwork,kind=int32)
+      n4     = int(n,kind=I4kind)
+      lwork4 = int(lwork,kind=I4kind)
       CALL DSYEV('V','U',n4,Vec,n4,REig,work,lwork4,ierr4)
 
       IF (debug) write(out_unitp,*) 'ierr=',ierr4
       flush(out_unitp)
 
-      IF (ierr4 /= 0_int32) THEN
+      IF (ierr4 /= 0_I4kind) THEN
          write(out_unitp,*) ' ERROR in ',name_sub
          write(out_unitp,*) ' DSYEV lapack subroutine has FAILED!'
          STOP
@@ -158,17 +157,17 @@
       allocate(work(lwork))
 
 
-      n4     = int(n,kind=int32)
-      lwork4 = int(lwork,kind=int32)
-      lda4   = int(lda,kind=int32)
-      ldvr4  = int(ldvr,kind=int32)
+      n4     = int(n,kind=I4kind)
+      lwork4 = int(lwork,kind=I4kind)
+      lda4   = int(lda,kind=I4kind)
+      ldvr4  = int(ldvr,kind=I4kind)
 
         allocate(IEig_loc(n))
 
         CALL DGEEV('N','V',n4,Mat_save,lda4,REig,IEig_loc,dummy,        &
-                   int(1,kind=int32),Vec,ldvr4,work,lwork4,ierr4)
+                   int(1,kind=I4kind),Vec,ldvr4,work,lwork4,ierr4)
         IF (debug) write(out_unitp,*)'ierr=',ierr4
-        IF (ierr4 /= 0_int32) THEN
+        IF (ierr4 /= 0_I4kind) THEN
            write(out_unitp,*) ' ERROR in ',name_sub
            write(out_unitp,*) ' DGEEV lapack subroutine has FAILED!'
            STOP
@@ -218,7 +217,6 @@
   END SUBROUTINE diagonalization
 
       SUBROUTINE diagonalization_HerCplx(Mat,Eig,Vec,n,type_diag,sort,phase)
-      USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64,int32
       USE mod_system
       IMPLICIT NONE
 
@@ -237,7 +235,7 @@
       complex(kind=Rkind), allocatable :: work(:),saveMat(:,:)
       real(kind=Rkind),    allocatable :: rwork(:)
 
-      integer(kind=int32)  :: n4,lwork4,ierr4
+      integer(kind=I4kind)  :: n4,lwork4,ierr4
 
 
 !----- for debuging --------------------------------------------------
@@ -266,12 +264,12 @@
 
         ! lapack subroutines need integer (kind=int32 or 4), therefore, we add a conversion, otherwise
         ! it fails when integers (kind=int64 or 8) are used (at the compilation).
-        n4     = int(n,kind=int32)
-        lwork4 = int(lwork,kind=int32)
+        n4     = int(n,kind=I4kind)
+        lwork4 = int(lwork,kind=I4kind)
         CALL ZHEEV('V','U',n4,Vec,n4,Eig, work,lwork4, rwork, ierr4)
 
         IF (debug) write(out_unitp,*)'ierr=',ierr4
-        IF (ierr4 /= 0_int32) THEN
+        IF (ierr4 /= 0_I4kind) THEN
            write(out_unitp,*) ' ERROR in ',name_sub,' from ', MPI_id
            write(out_unitp,*) ' ZHEEV lapack subroutine has FAILED!'
            STOP

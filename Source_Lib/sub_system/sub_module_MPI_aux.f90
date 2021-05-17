@@ -157,7 +157,7 @@ MODULE mod_MPI_aux
     !> check total memory used at certain point
     SUBROUTINE system_mem_usage(memory_RSS,name)
       USE mod_NumParameters
-      ! USE ifport ! if on intel compiler
+      !USE ifport ! if on intel compiler
       IMPLICIT NONE
       Integer, intent(out) :: memory_RSS
       Character(len=200):: filename=' '

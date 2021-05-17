@@ -50,7 +50,7 @@ dh 0.0
    &basis_nD iQdyn(1)=3 name="Hm" nb=10 nq=15 Q0=2.2 scaleQ=11.0 /
 
  &inactives /
- &actives test=$test comput_S=f direct=2 make_MatOp=t Op_WithContracRVec=t /
+ &actives test=$test comput_S=f direct=2 make_MatOp=t Op_WithContracRVec=t save_MatOp=t restart_MatOp=t /
  &analyse max_ana=40 max_ene=50000.d0 davidson=f /
  &davidson nb_WP=3 max_it=30 max_WP=300 num_resetH=10
            lower_states=t project_WP0=f one_residue=f

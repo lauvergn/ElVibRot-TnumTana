@@ -88,6 +88,7 @@
 !     logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
        IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 4) RETURN
+       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 5) RETURN
 
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
@@ -414,7 +415,7 @@
          END IF
       END DO
 
-        DO iOp=1,para_AllOp%nb_Op
+      DO iOp=1,para_AllOp%nb_Op
 
           IF (para_AllOp%tab_Op(iOp)%n_Op == -1) THEN !S=tab_Op(2), NO STORAGE: useless
             para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_MemGrid      = .FALSE.

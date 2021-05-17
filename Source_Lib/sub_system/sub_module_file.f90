@@ -444,12 +444,16 @@ MODULE mod_file
 
       TYPE(param_file)  :: ffile
 
-      integer                  :: ith
+      integer                   :: ith
+      logical                   :: op
 
-      close(ffile%unit)
+      inquire(unit=ffile%unit,OPENED=op)
+      IF (op) close(ffile%unit)
+
       IF (ffile%nb_thread > 1) THEN
         DO ith=0,ffile%nb_thread-1
-          close(ffile%tab_unit(ith))
+          inquire(unit=ffile%tab_unit(ith),OPENED=op)
+          IF (op)  close(ffile%tab_unit(ith))
         END DO
       END IF
       ffile%init = .FALSE.
@@ -685,7 +689,7 @@ MODULE mod_file
 !=======================================================================================
 !@brief set save_WP=.true. with external control
 !
-! create a file with name "Davidson_exit", the program wil exit 
+! create a file with name "Davidson_exit", the program wil exit
 ! and change the file name to "done_Davidson_exit".
 !=======================================================================================
   SUBROUTINE exit_Davidson_external(exit_Davidson,save_WP,it)
@@ -698,7 +702,7 @@ MODULE mod_file
     Integer                                      :: stat
 
     IF(it>2) THEN
-      INQUIRE(FILE='Davidson_exit',EXIST=exist) 
+      INQUIRE(FILE='Davidson_exit',EXIST=exist)
       IF(exist) THEN
         save_WP=.TRUE.
         exit_Davidson=.TRUE.
@@ -712,4 +716,3 @@ MODULE mod_file
   END SUBROUTINE exit_Davidson_external
 !=======================================================================================
 END MODULE mod_file
-

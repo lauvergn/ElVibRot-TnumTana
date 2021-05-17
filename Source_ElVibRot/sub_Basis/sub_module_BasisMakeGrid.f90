@@ -1625,7 +1625,6 @@ STOP
       END SUBROUTINE ConstantWeight_OF_grid_basis
       SUBROUTINE Make_grid_basis(basis_cuba)
       USE mod_system
-      USE mt19937_64
       USE mod_basis
       IMPLICIT NONE
 !---------------------------------------------------------------------
@@ -1672,8 +1671,6 @@ STOP
         CALL Write_param_SimulatedAnnealing(SA_para)
         STOP
       end if
-      CALL init_genrand64(0_ILkind)
-
 
       nq = basis_cuba%nqc
       ! Save the old grid in basis_temp
@@ -1796,7 +1793,6 @@ STOP
       END SUBROUTINE Make_grid_basis
       SUBROUTINE Make_grid_basis_SimulatedAnnealing(basis_cuba,type_weight,SA_para,restart)
       USE mod_system
-      USE mt19937_64
       USE mod_basis
       IMPLICIT NONE
 !---------------------------------------------------------------------
@@ -2244,7 +2240,6 @@ STOP
       END SUBROUTINE ReOriented_grid
       SUBROUTINE Random_grid(x,x0,SQ,QA,QB,ndim,nqc,option)
       USE mod_system
-      USE mt19937_64
       USE mod_basis
       IMPLICIT NONE
 
@@ -2281,7 +2276,6 @@ STOP
     DO i=1,ndim
       DO k=1,1000
         CALL random_number(xi)
-        !xi = genrand64_real1()
         xi = TWO*xi-ONE
         !S=minval( (/ QB(i)-x0(i,iq),x0(i,iq)-QA(i),SQ(i) /) )
         S=SQ(i)

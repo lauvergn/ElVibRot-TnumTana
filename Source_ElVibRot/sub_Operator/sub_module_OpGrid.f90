@@ -210,6 +210,9 @@
                                                   ! 1 unformatted sequential acces
                                                   ! 2 unformatted direct acces
                                                   ! 4 unformatted sequential acces (for SG4)
+                                                  ! 5 unformatted sequential acces
+                                                  !   saving at the end with only one record
+
       END IF
       IF (para_FileGrid%Type_FileGrid /= 0) THEN
         para_FileGrid%Formatted_FileGrid    = .FALSE.
@@ -554,7 +557,7 @@
           ! formatted is already defined
           STOP
 
-        CASE (1) ! sequential
+        CASE (1,5) ! sequential
           OpGrid(iterm)%file_Grid%seq       = .TRUE.
           OpGrid(iterm)%file_Grid%formatted = .FALSE.
           OpGrid(iterm)%file_Grid%init      = .TRUE.
@@ -598,7 +601,10 @@
           END IF
 
         CASE default ! normal SH_HADA file
-          STOP
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  Wrong Type_FileGrid value: ',OpGrid(iterm)%para_fileGrid%Type_FileGrid
+          write(out_unitp,*) '  The possible values are [0,1,2,4,5]'
+          STOP 'ERROR in Set_file_OF_OpGrid: no default'
         END SELECT
 
       END DO
@@ -635,7 +641,7 @@
           file_Grid%init      = .TRUE.
           file_Grid%name = trim(adjustl(para_fileGrid%Base_FileName_Grid))
 
-        CASE (1) ! sequential
+        CASE (1,5) ! sequential
           file_Grid%seq       = .TRUE.
           file_Grid%formatted = .FALSE.
           file_Grid%init      = .TRUE.
@@ -681,7 +687,7 @@
         CASE default ! normal SH_HADA file
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) '  Wrong Type_FileGrid value: ',para_fileGrid%Type_FileGrid
-          write(out_unitp,*) '  The possible values are [0,1,2,4]'
+          write(out_unitp,*) '  The possible values are [0,1,2,4,5]'
           STOP 'ERROR in Set_file_Grid: no default'
         END SELECT
 
@@ -839,7 +845,7 @@
       IMPLICIT NONE
 
       real (kind=Rkind), intent(inout) :: Grid(:,:,:) ! grid when Save_Grid_iterm=t
-      TYPE (param_OpGrid) :: OpGrid
+      TYPE (param_OpGrid)              :: OpGrid
 
 
       integer :: i_qa,lrecl_Grid_iterm,nio,error,nb_qa
@@ -1015,5 +1021,99 @@
 
       END SUBROUTINE Analysis_OpGrid
 
+      SUBROUTINE SaveFile_OpGrid(OpGrid,n_Op)
+      USE mod_MPI
+      TYPE (param_OpGrid), pointer, intent(inout) :: OpGrid(:)
+      integer,                      intent(in)    :: n_Op
+
+      integer           :: k,k_term,iq
+      real (kind=Rkind) :: Op_temp
+
+
+      character (len=*), parameter :: name_sub='SaveFile_OpGrid'
+
+      IF (.NOT. associated(OpGrid) ) RETURN
+      IF (size(OpGrid) < 1 ) RETURN
+
+      IF (print_level>-1 .AND. MPI_id==0) THEN
+        write(out_unitp,*)'--------------------------------------------------------------'
+        write(out_unitp,*)'n_Op,k_term,derive_term,cte,zero,    minval,    maxval,dealloc'
+        CALL flush_perso(out_unitp)
+      END IF
+
+      DO k_term=1,size(OpGrid)
+
+        IF (associated(OpGrid(k_term)%Grid) .AND. OpGrid(k_term)%Grid_done) THEN
+          IF (.NOT. OpGrid(k_term)%grid_cte) THEN
+            OpGrid(k_term)%Mat_cte(:,:) = OpGrid(k_term)%Grid(1,:,:)
+            OpGrid(k_term)%grid_cte = .TRUE.
+            DO iq=1,OpGrid(k_term)%nb_qa
+              OpGrid(k_term)%grid_cte =                                 &
+                 OpGrid(k_term)%grid_cte .AND.                          &
+                 (sum(abs(OpGrid(k_term)%Grid(iq,:,:) -                 &
+                    OpGrid(k_term)%Grid(1,:,:))) < ONETENTH**12)
+              IF (.NOT. OpGrid(k_term)%grid_cte) EXIT
+            END DO
+
+            OpGrid(k_term)%Op_min = huge(ONE)
+            OpGrid(k_term)%Op_max = -huge(ONE)
+            OpGrid(k_term)%iq_min = 0
+            OpGrid(k_term)%iq_max = 0
+            DO iq=1,OpGrid(k_term)%nb_qa
+
+              DO k=1,OpGrid(k_term)%nb_bie
+                Op_temp = OpGrid(k_term)%Grid(iq,k,k)
+
+                IF (Op_temp < OpGrid(k_term)%Op_min) THEN
+                  OpGrid(k_term)%Op_min = Op_temp
+                  OpGrid(k_term)%iq_min = iq
+                END IF
+                IF (Op_temp > OpGrid(k_term)%Op_max) THEN
+                  OpGrid(k_term)%Op_max = Op_temp
+                  OpGrid(k_term)%iq_max = iq
+                END IF
+              END DO
+            END DO
+
+          END IF
+
+          OpGrid(k_term)%grid_zero = (sum(abs(                          &
+            OpGrid(k_term)%Mat_cte(:,:))) < ONETENTH**12) .AND.         &
+            OpGrid(k_term)%grid_cte
+
+          IF (OpGrid(k_term)%grid_cte .AND. associated(OpGrid(k_term)%Grid)) THEN
+            CALL dealloc_array(OpGrid(k_term)%Grid,"OpGrid%Grid",name_sub)
+          END IF
+
+          IF (print_level>-1 .AND. MPI_id==0) THEN
+            write(out_unitp,'(i5,1x,i6,2x,2i5,l3,1x,l4,1x,2e11.2,1x,l3)')   &
+                   n_Op,k_term,OpGrid(k_term)%derive_termQact(:),       &
+                   OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
+                   OpGrid(k_term)%Op_min,OpGrid(k_term)%Op_max,         &
+                   (.NOT. associated(OpGrid(k_term)%Grid))
+          END IF
+
+        ELSE
+
+          OpGrid(k_term)%grid_zero = OpGrid(k_term)%grid_cte .AND.      &
+                 (sum(abs(OpGrid(k_term)%Mat_cte(:,:))) < ONETENTH**12)
+
+          IF (print_level>-1 .AND. MPI_id==0) THEN
+            write(out_unitp,'(i5,1x,i6,2x,2i5,l3,1x,l4,24x,l3)') n_Op,k_term,    &
+                   OpGrid(k_term)%derive_termQact(:),                   &
+                   OpGrid(k_term)%grid_cte,OpGrid(k_term)%grid_zero,    &
+                   (.NOT. associated(OpGrid(k_term)%Grid))
+
+          END IF
+        END IF
+
+      END DO
+
+      IF (print_level>-1 .AND. MPI_id==0) THEN
+        write(out_unitp,*)'--------------------------------------------------------------'
+        CALL flush_perso(out_unitp)
+      END IF
+
+    END SUBROUTINE SaveFile_OpGrid
 
       END MODULE mod_OpGrid

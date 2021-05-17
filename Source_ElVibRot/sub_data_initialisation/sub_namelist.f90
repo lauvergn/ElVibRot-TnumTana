@@ -326,7 +326,8 @@
       integer       :: JJ,Type_HamilOp
       integer       :: nb_CAP,nb_FluxOp
 
-      logical       :: pot_only,T_only,pack_Op,read_Op,make_MatOp
+      logical       :: pot_only,T_only,pack_Op
+      logical       :: read_Op,make_MatOp,save_MatOp,restart_MatOp
       logical       :: direct_KEO,direct_ScalOp
       logical       :: Op_WithContracRVec
 
@@ -348,6 +349,8 @@
        logical                  :: formatted_HADA
        character (len=Line_len) :: name_Grid
        logical                  :: formatted_Grid
+       character (len=Line_len) :: name_Mat
+       logical                  :: formatted_Mat
 !-------------------------------------------------------------------------
 
       NAMELIST /actives/comput_S,test,                                  &
@@ -358,8 +361,10 @@
                         pot_only,T_only,read_Op,                        &
                         name_HADA,formatted_HADA,                       &
                         name_Grid,formatted_Grid,                       &
+                        name_Mat,formatted_Mat,                         &
                         JJ,Type_HamilOp,direct_KEO,direct_ScalOp,       &
-                        direct,make_MatOp,pack_Op,tol_pack,tol_nopack,  &
+                        direct,make_MatOp,save_MatOp,restart_MatOp,     &
+                        pack_Op,tol_pack,tol_nopack,                    &
                         Op_Transfo,E0_Transfo,nb_CAP,nb_FluxOp,         &
                         Op_WithContracRVec
 
@@ -373,11 +378,16 @@
 
 !------- read the active namelist ----------------------------
 
-      make_MatOp          = .FALSE.
+      make_MatOp           = .FALSE.
+      save_MatOp           = .FALSE.
+      restart_MatOp        = .FALSE.
+      formatted_Mat        = .TRUE.
+      name_Mat             = 'MatOp'
       tol_pack             = ONETENTH**7
       tol_nopack           = NINE/TEN
       pack_Op              = .FALSE.
       read_Op              = .FALSE.
+
       test                 = .TRUE.
       comput_S             = .FALSE.
       Type_HamilOp         = 1
@@ -406,7 +416,6 @@
       formatted_HADA      = .TRUE.
       name_Grid           = 'SH_HADA'
       formatted_Grid      = .TRUE.
-
 
       pot_only            = .FALSE.
       T_only              = .FALSE.
@@ -532,22 +541,50 @@
                            First_GridPoint=num_grid_i,                  &
                            Last_GridPoint=num_grid_f,                   &
                            Base_FileName_Grid=name_Grid)
+      CASE (5) ! The grid is save in memory, then it save on disk
+        para_ReadOp%Make_Mat = .FALSE.
+        CALL init_FileGrid(para_ReadOp%para_FileGrid,                   &
+                           Type_FileGrid=5,Save_FileGrid=.TRUE.,        &
+                           Formatted_FileGrid=.FALSE.,                  &
+                           Keep_FileGrid=.TRUE.,                        &
+                           Save_MemGrid=.TRUE.,                         &
+                           Read_FileGrid=Read_Grid,                     &
+                           Restart_Grid=Restart_Grid,test_Grid=test,    &
+                           First_GridPoint=num_grid_i,                  &
+                           Last_GridPoint=num_grid_f,                   &
+                           Base_FileName_Grid=name_Grid)
       END SELECT
 
       !CALL Write_FileGrid(para_ReadOp%para_FileGrid)
 
-      IF (make_MatOp) para_ReadOp%Make_Mat = .TRUE.
+      IF (make_MatOp) THEN
+        save_MatOp = save_MatOp .OR. restart_MatOp ! when restart=t, the matrix is always saved
+        para_ReadOp%Make_Mat        = .TRUE.
+        para_ReadOp%save_MatOp      = save_MatOp
+        para_ReadOp%restart_MatOp   = restart_MatOp
+        para_ReadOp%formatted_Mat   = formatted_Mat
+        para_ReadOp%name_Mat        = name_Mat
 
-      IF (direct < 2) THEN
-        para_ReadOp%comput_S = comput_S
+        para_ReadOp%comput_S        = comput_S .AND. (direct < 2)
+
+        para_ReadOp%pack_Op         = pack_Op .AND. para_ReadOp%Make_Mat
+        para_ReadOp%read_Op         = read_Op
+        para_ReadOp%tol_pack        = tol_pack
+        para_ReadOp%tol_nopack      = tol_nopack
       ELSE
-        para_ReadOp%comput_S = .FALSE.
-      END IF
+        para_ReadOp%Make_Mat        = .FALSE.
+        para_ReadOp%save_MatOp      = .FALSE.
+        para_ReadOp%restart_MatOp   = .FALSE.
+        para_ReadOp%formatted_Mat   = .TRUE.
+        para_ReadOp%name_Mat        = name_Mat
 
-      para_ReadOp%pack_Op         = pack_Op .AND. para_ReadOp%Make_Mat
-      para_ReadOp%read_Op         = read_Op
-      para_ReadOp%tol_pack        = tol_pack
-      para_ReadOp%tol_nopack      = tol_nopack
+        para_ReadOp%comput_S        = .FALSE.
+
+        para_ReadOp%pack_Op         = .FALSE.
+        para_ReadOp%read_Op         = .FALSE.
+        para_ReadOp%tol_pack        = ONETENTH**7
+        para_ReadOp%tol_nopack      = NINE/TEN
+      END IF
 
       para_ReadOp%pot_only        = pot_only
       para_ReadOp%T_only          = T_only

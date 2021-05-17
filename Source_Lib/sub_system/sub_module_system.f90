@@ -143,6 +143,7 @@ MODULE mod_system
         logical :: EVR              = .TRUE.   ! ElVibRot (default)
         logical :: analysis_only    = .FALSE.
         logical :: intensity_only   = .FALSE.
+        logical :: Grid_only        = .FALSE.
         logical :: cart             = .FALSE.
         logical :: GridTOBasis_test = .FALSE.
         logical :: OpPsi_test       = .FALSE.
@@ -604,9 +605,9 @@ MODULE mod_system
         END SELECT
 
       END SUBROUTINE dihedral_range
-      
+
 !=======================================================================================
-!> @brief subroutine for recording time 
+!> @brief subroutine for recording time
 !> @param time_sum should be initialized before calling this function
 !=======================================================================================
       SUBROUTINE time_record(time_sum,time1,time2,point)

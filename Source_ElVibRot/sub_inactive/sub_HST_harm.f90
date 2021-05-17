@@ -343,7 +343,7 @@
       !-----------------------------------------------------------
       !-----------------------------------------------------------
       IF ( .NOT. freq_only .AND. iq > 0 .AND. .NOT. test) THEN
-        CALL alloc_NParray(Qdyn,(/mole%nb_var/),'Qdyn',name_sub)
+        CALL alloc_NParray(Qdyn,[mole%nb_var],'Qdyn',name_sub)
 
         CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
 

@@ -92,6 +92,7 @@ MODULE mod_SetOp
           integer :: nb_tot_ini=0                ! size of the hamiltonian (before contraction)
                                                  ! usefull before the spectral transformation (for another operator)
 
+          integer,              allocatable :: List_Mat_i_todo(:)
           real (kind=Rkind),    allocatable :: Rmat(:,:)        ! Rmat(nb_tot ,nb_tot )
           complex (kind=Rkind), allocatable :: Cmat(:,:)        ! Cmat(nb_tot ,nb_tot )
 
@@ -125,8 +126,8 @@ MODULE mod_SetOp
           logical                      :: alloc_Grid           = .FALSE.
           logical                      :: Grid_done            = .FALSE.
           TYPE (param_file)            :: file_Grid                    ! file of the grid
-          TYPE (param_ReadOp)          :: para_ReadOp
 
+          TYPE (param_ReadOp)          :: para_ReadOp
 
           ! for H Operator n_Op = 0
           logical           :: scaled   = .FALSE.     ! if T scaled H
@@ -169,7 +170,6 @@ MODULE mod_SetOp
 
 
       CONTAINS
-
 
 !=======================================================================================
 !
@@ -410,6 +410,9 @@ MODULE mod_SetOp
         CALL dealloc_array(para_Op%dim_Op,'para_Op%dim_Op',name_sub)
       END IF
 
+      IF (allocated(para_Op%List_Mat_i_todo))    THEN
+        CALL dealloc_NParray(para_Op%List_Mat_i_todo,'para_Op%List_Mat_i_todo',name_sub)
+      END IF
 
       IF (associated(para_Op%Rdiag))  THEN
         CALL dealloc_array(para_Op%Rdiag,'para_Op%Rdiag',name_sub)
@@ -571,6 +574,9 @@ MODULE mod_SetOp
       write(out_unitp,*) 'nb_bi,nb_be',para_Op%nb_bi,para_Op%nb_be
       write(out_unitp,*) 'nb_bai,nb_qai',para_Op%nb_bai,para_Op%nb_qai
       write(out_unitp,*) 'nb_baie,nb_qaie',para_Op%nb_baie,para_Op%nb_qaie
+
+      write(out_unitp,*) 'allo List_Mat_i_todo',allocated(para_Op%List_Mat_i_todo)
+      IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) shape(para_Op%List_Mat_i_todo)
       write(out_unitp,*) 'allo Rmat',allocated(para_Op%Rmat)
       IF (allocated(para_Op%Rmat)) write(out_unitp,*) shape(para_Op%Rmat)
       write(out_unitp,*) 'allo Cmat',allocated(para_Op%Cmat)
@@ -1170,7 +1176,7 @@ MODULE mod_SetOp
 
       integer       :: i_qa
       integer       :: k_term
-      integer       :: nio
+      integer       :: nio,ioerr
 
       real (kind=Rkind) :: WnD
       real (kind=Rkind) :: Qact(para_Op%mole%nb_var)
@@ -1185,8 +1191,8 @@ MODULE mod_SetOp
       IF (.NOT. para_Op%alloc_Grid)                                     &
                      CALL alloc_para_Op(para_Op,Grid=.TRUE.,Mat=.FALSE.)
 
-
-      IF (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid == 0) THEN
+      SELECT CASE (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid)
+      CASE (0)
 
         type_Op = para_Op%type_Op
         IF (type_Op /= 1 .AND. type_Op /= 0) THEN
@@ -1231,28 +1237,135 @@ MODULE mod_SetOp
         write(out_unitp,'(a)',ADVANCE='yes') ' - End'
         CALL flush_perso(out_unitp)
         CALL dealloc_d0MatOp(d0MatOp)
-        !- loop OpGrid -------------------------------------
-      ELSE
+
+      CASE (1) ! sequential acces file
         DO k_term=1,para_Op%nb_term
           IF (para_Op%OpGrid(k_term)%grid_zero .AND. para_Op%OpGrid(k_term)%grid_cte) CYCLE
 
-          !$OMP critical(CRIT_read_OpGrid_OF_Op)
-          IF (para_Op%OpGrid(k_term)%file_Grid%seq) THEN   ! sequential acces file
-            CALL sub_ReadSeq_Grid_iterm(para_Op%OpGrid(k_term)%Grid,para_Op%OpGrid(k_term))
-          ELSE  ! direct acces file
-            CALL sub_ReadDir_Grid_iterm(para_Op%OpGrid(k_term)%Grid,para_Op%OpGrid(k_term))
-          END IF
-          !$OMP end critical(CRIT_read_OpGrid_OF_Op)
+          CALL sub_ReadSeq_Grid_iterm(para_Op%OpGrid(k_term)%Grid,para_Op%OpGrid(k_term))
 
         END DO
-      END IF
+      CASE (2) ! direct acces file
+        DO k_term=1,para_Op%nb_term
+          IF (para_Op%OpGrid(k_term)%grid_zero .AND. para_Op%OpGrid(k_term)%grid_cte) CYCLE
+
+          CALL sub_ReadDir_Grid_iterm(para_Op%OpGrid(k_term)%Grid,para_Op%OpGrid(k_term))
+
+        END DO
+      CASE (4) ! sequential acces file for SG4
+        STOP 'sequential acces file for SG4'
+        DO k_term=1,para_Op%nb_term
+          IF (para_Op%OpGrid(k_term)%grid_zero .AND. para_Op%OpGrid(k_term)%grid_cte) CYCLE
+
+          CALL sub_ReadSeq_Grid_iterm(para_Op%OpGrid(k_term)%Grid,para_Op%OpGrid(k_term))
+
+        END DO
+      CASE (5) ! sequential acces file with one record
+        DO k_term=1,size(para_Op%OpGrid)
+
+          write(out_unitp,*) 'Read OpGrid',k_term,'file: ',para_Op%OpGrid(k_term)%file_Grid%name
+          CALL file_open(para_Op%OpGrid(k_term)%file_Grid,nio,lformatted=.FALSE.)
+
+          read(nio,IOSTAT=ioerr) para_Op%OpGrid(k_term)%Grid(:,:,:)
+          IF (ioerr /= 0) THEN ! error or the grid is constant or zero
+            CALL file_close(para_Op%OpGrid(k_term)%file_Grid)
+            CALL file_open(para_Op%OpGrid(k_term)%file_Grid,nio,lformatted=.FALSE.)
+
+            read(nio,IOSTAT=ioerr) para_Op%OpGrid(k_term)%Mat_cte(:,:)
+            IF (ioerr /= 0) STOP 'ERROR while reading the grid (Type_FileGrid=5)'
+          END IF
+
+          CALL file_close(para_Op%OpGrid(k_term)%file_Grid)
+
+        END DO
+
+        IF (associated(para_Op%imOpGrid)) THEN
+          DO k_term=1,size(para_Op%imOpGrid)
+            write(out_unitp,*) 'Read imOpGrid',k_term,'file: ',para_Op%imOpGrid(k_term)%file_Grid%name
+            CALL file_open(para_Op%imOpGrid(k_term)%file_Grid,nio,lformatted=.FALSE.)
+
+            read(nio,IOSTAT=ioerr) para_Op%imOpGrid(k_term)%Grid(:,:,:)
+            IF (ioerr /= 0) THEN ! error or the grid is constant or zero
+              CALL file_close(para_Op%imOpGrid(k_term)%file_Grid)
+              CALL file_open(para_Op%imOpGrid(k_term)%file_Grid,nio,lformatted=.FALSE.)
+
+              read(nio,IOSTAT=ioerr) para_Op%imOpGrid(k_term)%Mat_cte(:,:)
+              IF (ioerr /= 0) STOP 'ERROR while reading the grid (Type_FileGrid=5)'
+            END IF
+
+            CALL file_close(para_Op%imOpGrid(k_term)%file_Grid)
+          END DO
+        END IF
+
+      END SELECT
 
       para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done  = .TRUE.
 
       CALL Analysis_OpGrid_OF_Op(para_Op)
 
       END SUBROUTINE read_OpGrid_OF_Op
+      SUBROUTINE Save_OpGrid_OF_Op(para_Op)
+      TYPE (param_Op), intent(inout) :: para_Op
 
+
+      integer :: nio,k_term
+
+      character (len=*), parameter :: name_sub='Save_OpGrid_OF_Op'
+
+      IF (para_Op%n_Op == -1) RETURN  ! for S
+
+write(out_unitp,*) 'BEGINNING ',name_sub
+
+write(out_unitp,*) 'Save_FileGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done
+write(out_unitp,*) 'Save_MemGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
+write(out_unitp,*) 'Type_FileGrid',para_Op%para_ReadOp%para_FileGrid%Type_FileGrid
+
+      IF (para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done) RETURN
+      IF (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid /= 5) RETURN
+
+      IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) '    The grid is not save in memory'
+        write(out_unitp,*) '    CHECK the fortran!!'
+        STOP
+      END IF
+
+      DO k_term=1,size(para_Op%OpGrid)
+        write(out_unitp,*) 'Save OpGrid',k_term,'file: ',para_Op%OpGrid(k_term)%file_Grid%name
+        CALL file_open(para_Op%OpGrid(k_term)%file_Grid,nio,lformatted=.FALSE.)
+
+        IF (para_Op%OpGrid(k_term)%grid_zero .OR. para_Op%OpGrid(k_term)%grid_cte) THEN
+          write(nio) para_Op%OpGrid(k_term)%Mat_cte(:,:)
+        ELSE
+          write(nio) para_Op%OpGrid(k_term)%Grid(:,:,:)
+        END IF
+
+        CALL file_close(para_Op%OpGrid(k_term)%file_Grid)
+
+      END DO
+
+      IF (associated(para_Op%imOpGrid)) THEN
+      DO k_term=1,size(para_Op%imOpGrid)
+        write(out_unitp,*) 'Save imOpGrid',k_term,'file: ',para_Op%imOpGrid(k_term)%file_Grid%name
+        CALL file_open(para_Op%imOpGrid(k_term)%file_Grid,nio,lformatted=.FALSE.)
+
+        IF (para_Op%imOpGrid(k_term)%grid_zero .OR. para_Op%imOpGrid(k_term)%grid_cte) THEN
+          write(nio) para_Op%imOpGrid(k_term)%Mat_cte(:,:)
+        ELSE
+          write(nio) para_Op%imOpGrid(k_term)%Grid(:,:,:)
+        END IF
+
+        CALL file_close(para_Op%imOpGrid(k_term)%file_Grid)
+
+      END DO
+      END IF
+      para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done  = .TRUE.
+
+write(out_unitp,*) 'Save_FileGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done
+write(out_unitp,*) 'END ',name_sub
+
+
+    END SUBROUTINE Save_OpGrid_OF_Op
 !================================================================
 !     Analysis of the grid (zero or constant terms)
 !================================================================

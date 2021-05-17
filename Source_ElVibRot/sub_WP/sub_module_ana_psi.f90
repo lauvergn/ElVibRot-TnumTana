@@ -709,7 +709,7 @@ END SUBROUTINE sub_analyze_psi
           write(out_unitp,11) 'T iQbasis Qmean_ie ',info,T,i,Qmean_ie(i,:,:)
           write(out_unitp,11) 'T iQbasis Qmean    ',info,T,i,Qmean(i)
       END DO
- 11   format(2a,' ',f12.4,' ',i4,' ',100(' ',f6.3))
+ 11   format(2a,' ',f0.4,' ',i0,' ',100(' ',f0.3))
       CALL flush_perso(out_unitp)
 
       CALL dealloc_OldParam(OldPara)

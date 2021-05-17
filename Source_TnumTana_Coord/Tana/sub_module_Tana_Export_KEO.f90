@@ -659,7 +659,6 @@
 
    !SUBROUTINE read_keo_mctdh_form(mole, keo,io)
    SUBROUTINE read_keo_mctdh_form(nb_act, keo,io)
-   USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : IOSTAT_END,IOSTAT_EOR
    IMPLICIT NONE
 
      !type (CoordType),          intent(in)                :: mole

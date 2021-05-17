@@ -1,8 +1,8 @@
 #===============================================================================
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-#F90 = mpifort
- F90 = gfortran
+# F90 = mpifort
+  F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
@@ -15,14 +15,14 @@ parallel_make=0
 OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 1
+OMP = 0
 #
 ## force the default integer (without kind) during the compillation.
 ## default 4: , INT=8 (for kind=8)
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 0
+ARPACK = 1
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -202,7 +202,8 @@ ifeq ($(F90),ifort)
    endif
 
    ifeq ($(LAPACK),1)
-     F90LIB = -mkl -lpthread
+     #F90LIB = -mkl -lpthread
+     F90LIB = $(MKLROOT)/lib/libmkl_lapack95_ilp64.a $(MKLROOT)/lib/libmkl_core.a $(MKLROOT)/lib/libmkl_blas95_ilp64.a -lpthread
    else
      F90LIB = -lpthread
    endif
@@ -964,7 +965,7 @@ $(Main_TnumTana_cDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_cDriver.o
 	$(CompC) -o $(Main_TnumTana_cDriverEXE) $(CFLAGS) $(OBJ)/Main_TnumTana_cDriver.o $(OBJ)/libTnumForcDriver.a $(LYNKFLAGS) -lgfortran -lm
 #
 $(TNUMEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMAIN).o
-	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS)
+	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(QMLibDIR_full) $(LYNKFLAGS)
 #
 $(TNUMMCTDHEXE): obj $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMCTDHMAIN).o
 	$(LYNK90)   -o $(TNUMMCTDHEXE) $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMCTDHMAIN).o  $(LYNKFLAGS)
