@@ -866,7 +866,7 @@ CONTAINS
 !      para_H%Esc    = para_propa%para_poly%Esc
 !!-----------------------------------------------------------
 !#endif
-
+write(*,*) 'checkcheckss-1',MPI_id
       !IF(.NOT. openmpi) THEN
       IF(.NOT. (para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4)) THEN
         CALL initialisation1_poly(para_propa%para_poly,                   &
@@ -877,6 +877,7 @@ CONTAINS
         para_H%E0     = para_propa%para_poly%E0
         para_H%Esc    = para_propa%para_poly%Esc
       ENDIF
+write(*,*) 'checkcheckss-2',MPI_id
 
 !------- propagation loop ---------------------------------
       T = ZERO
@@ -889,30 +890,43 @@ CONTAINS
         IF(MPI_id==0) CALL file_open(para_propa%file_autocorr,no)
         cdot = Calc_AutoCorr(psi0(1),psi(1),para_propa,T,Write_AC=.TRUE.)
       END IF
+write(*,*) 'checkcheckss-3',MPI_id
 
       it            = 0
       itmax         = (para_propa%WPTmax-T)/para_propa%WPdeltaT
 
       DO WHILE ( (T - (para_propa%WPTmax-para_propa%WPdeltaT) <         &
                  para_propa%WPdeltaT/TEN**5) .AND. psi(1)%norm2 < para_propa%max_norm2)
+write(*,*) 'checkcheckss-3.1',MPI_id
 
          IF (mod(it,para_propa%n_WPecri) == 0) THEN
            IF(MPI_id==0) THEN
              para_propa%ana_psi%Write_psi2_Grid = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi2
              para_propa%ana_psi%Write_psi_Grid  = (mod(it,para_propa%n_WPecri) == 0) .AND. para_propa%WPpsi
            ENDIF
+write(*,*) 'checkcheckss-3.11',MPI_id
+
            CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
+write(*,*) 'checkcheckss-3.12',MPI_id
+
          ELSE
+write(*,*) 'checkcheckss-3.13',MPI_id
+
            CALL sub_analyze_mini_WP_OpWP(T,psi,1,para_H)
+write(*,*) 'checkcheckss-3.14',MPI_id
+
          END IF
+write(*,*) 'checkcheckss-3.2',MPI_id
 
          ! propgation for given fixed t
          CALL march_gene(T,psi(1:1),psi0(1:1),1,.FALSE.,para_H,para_propa)
+write(*,*) 'checkcheckss-3.3',MPI_id
 
          it = it + 1
          T  = T + para_propa%WPdeltaT
 
       END DO
+write(*,*) 'checkcheckss-4',MPI_id
 
 !----------------------------------------------------------
       IF (debug) write(out_unitp,*) 'WP (BasisRep) at T=',T
@@ -931,6 +945,7 @@ CONTAINS
         write(out_unitp,*) 'END sub_propagation11'
       END IF
 !----------------------------------------------------------
+write(*,*) 'checkcheckss-5',MPI_id
 
       end subroutine sub_propagation11
 !=======================================================================================

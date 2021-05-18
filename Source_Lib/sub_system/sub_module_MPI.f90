@@ -29,16 +29,26 @@ MODULE mod_MPI
   Integer(kind=MPI_INTEGER_KIND)                 :: Real_MPI                  !< real type for fortran (Rkind)
   Integer(kind=MPI_INTEGER_KIND)                 :: Cplx_MPI                  !< complex type for fortran (Rkind)
   Integer(kind=MPI_INTEGER_KIND)                 :: Int_fortran               !< integer type of default fortran
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_NODE_0_WORLD
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_NODE_0_GROUP
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_NODE_0_COMM           !< communcator for masters on each nodes
   !-USE MPI_F08-------------------------------------------------------------------------
 !  TYPE(MPI_Status)                              :: MPI_stat                  !< status of MPI process
 !  TYPE(MPI_Datatype)                            :: Int_MPI                   !< integer type of default MPI
 !  TYPE(MPI_Datatype)                            :: Real_MPI                  !< real type for fortran (Rkind)
 !  TYPE(MPI_Datatype)                            :: Cplx_MPI                  !< complex type for fortran (Rkind)
 !  TYPE(MPI_Datatype)                            :: Int_fortran               !< integer type of default fortran
+!  TYPE(MPI_Group)                               :: MPI_NODE_0_WORLD
+!  TYPE(MPI_Group)                               :: MPI_NODE_0_GROUP
+!  TYPE(MPI_Comm)                                :: MPI_NODE_0_COMM           !< communcator for masters on each nodes
   !-------------------------------------------------------------------------------------
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_NODE_0_ERR
+
   Integer(kind=MPI_INTEGER_KIND)                 :: MPI_err                   !< error flag for MPI
   Integer(kind=MPI_INTEGER_KIND)                 :: MPI_id                    !< rocess ID, 0~MPI_np-1
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_id_node               !< rocess ID in node comm
   Integer(kind=MPI_INTEGER_KIND)                 :: MPI_np                    !< total number of MPI threads
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_np_node               !< total number of MPI threads
   Integer(kind=MPI_INTEGER_KIND)                 :: MPI_tag1                  !< tag for MPI send and receive
   Integer(kind=MPI_INTEGER_KIND)                 :: MPI_tag2                  !< tag for MPI send and receive
   
@@ -78,7 +88,7 @@ MODULE mod_MPI
   Integer                                        :: MPI_node_p0_id            !< quasi-master id
   Integer                                        :: MPI_sub_id(2)             !< processors affiliated
   Integer                                        :: MPI_fake_nodes=0          !< fake nodes for S3
-  Logical                                        :: iGs_auto=.FALSE.          !< if auto-adjust the distribution of Smolyak terms
+  Logical                                        :: MPI_iGs_auto=.FALSE.      !< if auto-adjust the distribution of Smolyak terms
   Integer                                        :: MPI_mem_node=0            !< in unit of GB
 
   TYPE MPI_S_type 
@@ -236,6 +246,7 @@ MODULE mod_MPI
         MPI_nodes_name(0)=MPI_node_name
         MPI_nodes_np(0)=MPI_nodes_np(0)+1
         MPI_node_id=0
+        MPI_nodes_p00(0)=0
       ENDIF
 
       ii=0
@@ -307,7 +318,7 @@ MODULE mod_MPI
 
     IF(MPI_id==0 .OR. MPI_nodes_p0) THEN
       MPI_sub_id(1)=MPI_id+1
-      MPI_sub_id(2)=MPI_sub_id(1)+MPI_nodes_np(MPI_node_id)-2
+      MPI_sub_id(2)=MPI_id+MPI_nodes_np(MPI_node_id)-1
       write(out_unitp,*) 'MPI_nodes_id check:',MPI_id,MPI_node_id,MPI_node_p0_id,MPI_sub_id(1),MPI_sub_id(2)
     ENDIF
 
@@ -320,9 +331,14 @@ MODULE mod_MPI
   Integer                                        :: MPI_err=0
   Integer                                        :: MPI_id=0
   Integer                                        :: MPI_np=1
-  
+
+#if(int8)
+  Integer,parameter                              :: MPI_INTEGER_KIND=8
+  Integer,parameter                              :: MPI_ADDRESS_KIND=8
+#else
   Integer,parameter                              :: MPI_INTEGER_KIND=4
   Integer,parameter                              :: MPI_ADDRESS_KIND=4
+#endif
   Integer                                        :: MPI_scheme=0
   Integer                                        :: iG1_MPI      
   Integer                                        :: iG2_MPI  
@@ -336,7 +352,7 @@ MODULE mod_MPI
   Integer                                        :: n_level2
   Integer                                        :: MPI_mc=1
   Integer                                        :: MPI_fake_nodes=0
-  Logical                                        :: iGs_auto=.True.
+  Logical                                        :: MPI_iGs_auto=.True.
   Logical                                        :: keep_MPI=.True.
   Integer                                        :: MPI_mem_node=0
 

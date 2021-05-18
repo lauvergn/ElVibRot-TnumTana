@@ -139,15 +139,16 @@
       no = para_propa%file_autocorr%unit
 
       SGtype4    = SGtype4 .AND. (para_H%BasisnD%SparseGrid_type == 4)
-
+write(*,*) 'checkcheckss-3.2-1',MPI_id
       ! para_propa%type_WPpropa 1
       ! SGtype4 F
       SELECT CASE (para_propa%type_WPpropa)
 
       CASE (1) ! Chebyshev
         !CALL march_cheby_old(T,no,WP(1),WP0(1),para_H,para_propa)
+write(*,*) 'checkcheckss-3.2-2',MPI_id
         CALL march_cheby(T,no,WP(1),WP0(1),para_H,para_propa)
-
+write(*,*) 'checkcheckss-3.2-3',MPI_id
       CASE (2) ! n-Order Taylor expansion
         !IF (SGtype4 .AND. direct_KEO) THEN
         IF (SGtype4) THEN
@@ -3986,15 +3987,21 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       Type_FileGrid4=(para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4)
 
       psi_save = psi
-
+write(*,*) 'checkcheckss-3.2-2-00',MPI_id
       DO icheb=1,max_cheby
 
         !IF(openmpi) THEN
         IF(Type_FileGrid4) THEN
           w1  = psi
           IF(para_propa%once_Hmin) THEN
+write(*,*) 'checkcheckss-3.2-2-001',MPI_id
+
             CALL sub_OpPsi(w1,w2,para_H) ! calculate once for Hmax
+write(*,*) 'checkcheckss-3.2-2-002',MPI_id
+
             CALL sub_Hmax(para_propa,para_H)
+write(*,*) 'checkcheckss-3.2-2-003',MPI_id
+
             para_propa%once_Hmin=.FALSE.
 
             para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
@@ -4004,14 +4011,17 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
             CALL initialisation1_poly(para_propa%para_poly,                            &
                                       para_propa%WPdeltaT,                             &
                                       para_propa%type_WPpropa)
-            
+write(*,*) 'checkcheckss-3.2-2-004',MPI_id
+
             para_H%scaled = .TRUE.
             para_H%E0     = para_propa%para_poly%E0
             para_H%Esc    = para_propa%para_poly%Esc
+write(*,*) 'checkcheckss-3.2-2-005',MPI_id
+
             !write(out_unitp,*) 'Hmin,Hmax check:', para_propa%Hmin,para_propa%Hmax
           ENDIF
         ENDIF
-
+write(*,*) 'checkcheckss-3.2-2-01',MPI_id
         para_propa%march_error      = .FALSE.
         para_propa%para_poly%deltaE = para_propa%para_poly%Hmax -          &
                                                   para_propa%para_poly%Hmin
@@ -4033,13 +4043,13 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         END IF
 
         psi0Hkpsi0(:) = CZERO
-
+write(*,*) 'checkcheckss-3.2-2-02',MPI_id
         ! calculate cofficients for Chebychev in para_propa%para_poly%coef_poly
         !r = max(ONE,HALF * para_propa%para_poly%deltaE * para_propa%WPdeltaT)
         ! When R=ONE the calculation is wrong, because deltaE should changed
         r = HALF * para_propa%para_poly%deltaE * para_propa%WPdeltaT
         CALL cof(r,para_propa%para_poly%npoly,para_propa%para_poly%coef_poly)
-
+write(*,*) 'checkcheckss-3.2-2-03',MPI_id
         IF (debug) THEN
           write(out_unitp,*) 'r,deltaE,WPdeltaT',r,para_propa%para_poly%deltaE,para_propa%WPdeltaT
           write(out_unitp,*) 'npoly',para_propa%para_poly%npoly
@@ -4049,7 +4059,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         psi0Hkpsi0(0) = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
 
         IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(psi0Hkpsi0(0),size1_MPI,root_MPI)
-
+write(*,*) 'checkcheckss-3.2-2-04',MPI_id
         rt  = cmplx(ZERO,-ONE,kind=Rkind)
         rt2 = cmplx(ZERO,-TWO,kind=Rkind)
 
@@ -4060,7 +4070,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         psi = psi * para_propa%para_poly%coef_poly(1)
 
         psi0Hkpsi0(1) =  psi0Hkpsi0(0)
-
+write(*,*) 'checkcheckss-3.2-2-05',MPI_id
 !     - The second term of the expansion -----------------
         write(out_unitp,'(a)',advance='no') 'cheby rec:'
 
@@ -4074,14 +4084,14 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
           CALL sub_OpPsi(w1,w2,para_H)
         ENDIF
         CALL sub_scaledOpPsi(w1,w2,para_H%E0,para_H%Esc) ! limited to MPI_id==0 in subroutine
-
+write(*,*) 'checkcheckss-3.2-2-0',MPI_id
         IF(keep_MPI) THEN
           w2  = w2 * rt
           psi = psi + w2 * para_propa%para_poly%coef_poly(2)
 
           psi0Hkpsi0(2) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
         ENDIF
-
+write(*,*) 'checkcheckss-3.2-2-1',MPI_id
 !     - The higher terms of the expansion ----------------
 
         DO jt=3,para_propa%para_poly%npoly
@@ -4096,15 +4106,13 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
             w1 = w2
             w2 = w3
             psi = psi + w2 * para_propa%para_poly%coef_poly(jt)
-
+          ENDIF
+write(*,*) 'checkcheckss-3.2-2-2',MPI_id
+          IF(MPI_id==0 .OR. MPI_scheme==1) THEN
             CALL norm2_psi(w2)
-
             norm_exit = abs(w2%norm2*para_propa%para_poly%coef_poly(jt))
           ENDIF
-!#if(run_MPI)
-!          CALL MPI_Bcast(norm_exit,size1_MPI,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
-!#endif
-          IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(norm_exit,size1_MPI,root_MPI)
+          IF(openmpi) CALL MPI_Bcast_(norm_exit,size1_MPI,root_MPI)
 
           jt_exit = jt
           IF (debug) write(out_unitp,*) 'jt,norms',jt,norm_exit
@@ -4135,7 +4143,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
           IF(exitall) EXIT
 
         END DO ! for jt=3,para_propa%para_poly%npoly
-
+write(*,*) 'checkcheckss-3.2-2-3',MPI_id
         write(out_unitp,*) 'jt_exit,norms',jt_exit,abs(w2%norm2),norm_exit
         para_propa%para_poly%npoly_Opt = jt_exit
 
@@ -4161,7 +4169,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         END IF
 
       END DO ! for max_cheby
-
+write(*,*) 'checkcheckss-3.2-2-4',MPI_id
       IF (para_propa%march_error) THEN
         write(out_unitp,*) ' ERROR in march_cheby'
         write(out_unitp,*) ' It cannot converge ...'
@@ -4213,7 +4221,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       END DO
       IF(MPI_id==0) CALL flush_perso(no)
       ENDIF ! keep_MPI
-
+write(*,*) 'checkcheckss-3.2-2-5',MPI_id
 !-----------------------------------------------------------
       IF (debug) THEN
         !write(out_unitp,*) 'psi'

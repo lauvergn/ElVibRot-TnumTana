@@ -49,6 +49,7 @@ MODULE mod_Davidson_MPI
   PUBLIC :: Schmidt_process_MPI
   PUBLIC :: MakeResidual_Davidson_MPI3,MakeResidual_Davidson_MPI4
   PUBLIC :: MakeResidual_Davidson_j_MPI3
+  PUBLIC :: share_psi_nodes_MPI
 
   CONTAINS
 
@@ -121,11 +122,18 @@ MODULE mod_Davidson_MPI
         CALL calculate_overlap1D_MPI(psi,ndim+1,With_Grid=With_Grid_loc,               &
                                      S_overlap1D=S_overlap1D)
 
+write(*,*) 'checkcheckppp',ndim,size(psi),MPI_id
+
         DO ii=1,ndim
           RS=S_overlap1D(ii)
           IF(RS==ZERO) CYCLE
+write(*,*) 'checkcheckppp2',ndim+1,ii,size(psi),size(psi(ii)%RvecB),size(psi(ndim+1)%RvecB),MPI_id
           ! be careful on the difference of vec on different threads
-          psi(ndim+1)%RvecB=psi(ndim+1)%RvecB-psi(ii)%RvecB*RS
+          IF(keep_MPI) THEN
+            psi(ndim+1)%RvecB=psi(ndim+1)%RvecB-psi(ii)%RvecB*RS
+          ELSE
+            psi(ndim+1)%RvecB(d1:d2)=psi(ndim+1)%RvecB(d1:d2)-psi(ii)%RvecB(d1:d2)*RS
+          ENDIF
         ENDDO ! ii=1,ndim
       ENDIF
     ENDDO ! do Schmidt process twice
@@ -945,6 +953,93 @@ MODULE mod_Davidson_MPI
 
 #endif
   END SUBROUTINE MakeResidual_Davidson_j_MPI
+!=======================================================================================
+
+!=======================================================================================
+! share psi%RvecB with the other processors in MPI scheme 3
+!=======================================================================================
+  SUBROUTINE share_psi_nodes_MPI(psi,size_psi)
+    USE mod_system
+    USE mod_psi,     ONLY : param_psi
+    USE mod_MPI_aux
+
+    TYPE(param_psi),               intent(inout) :: psi(:)
+
+    Real(kind=Rkind),allocatable                 :: RvecB_all(:)
+    Integer                                      :: size_psi
+    Integer                                      :: size_RvecB
+    Integer                                      :: d1,d2
+    Integer                                      :: ii
+
+#if(run_MPI)
+
+    If(MPI_id==0) size_RvecB=size(psi(1)%RvecB)
+    CALL MPI_Bcast_(size_psi,  size1_MPI,root_MPI)
+    CALL MPI_Bcast_(size_RvecB,size1_MPI,root_MPI)
+
+    ! IF(MPI_id==0) THEN
+    !   CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
+    !   DO ii=1,size_psi
+    !     d1=size_RvecB*(ii-1)+1
+    !     d2=size_RvecB* ii
+    !     RvecB_all(d1:d2)=psi(ii)%RvecB
+    !   ENDDO
+
+    !   DO ii=1,MPI_nodes_num-1
+    !     CALL MPI_Send(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),        &
+    !                   MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
+    !   ENDDO
+
+    ! ELSEIF(MPI_nodes_p0) THEN !---------------------------------------------------------
+    !   CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
+
+    !   CALL MPI_Recv(RvecB_all,size_RvecB*size_psi,Real_MPI,root_MPI,MPI_id,            &
+    !                 MPI_COMM_WORLD,MPI_stat,MPI_err)
+
+    !   DO ii=1,size_psi
+    !     allocate(psi(ii)%RvecB(size_RvecB))
+    !     d1=size_RvecB*(ii-1)+1
+    !     d2=size_RvecB* ii
+    !     psi(ii)%RvecB=RvecB_all(d1:d2)
+    !   ENDDO
+
+    ! ENDIF
+    ! IF(allocated(RvecB_all)) deallocate(RvecB_all)
+
+    CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
+    IF(MPI_id==0) THEN
+      DO ii=1,size_psi
+        d1=size_RvecB*(ii-1)+1
+        d2=size_RvecB* ii
+        RvecB_all(d1:d2)=psi(ii)%RvecB
+      ENDDO
+    ENDIF
+
+    IF(MPI_nodes_p0) THEN
+      CALL MPI_BCAST(RvecB_all,size_RvecB*size_psi,Real_MPI,root_MPI,                  &
+                     MPI_NODE_0_COMM,MPI_err)
+    ENDIF
+
+    IF(MPI_id/=0) THEN
+      DO ii=1,size_psi
+        allocate(psi(ii)%RvecB(size_RvecB))
+        d1=size_RvecB*(ii-1)+1
+        d2=size_RvecB* ii
+        psi(ii)%RvecB=RvecB_all(d1:d2)
+      ENDDO
+    ENDIF
+
+    IF(allocated(RvecB_all)) deallocate(RvecB_all)
+
+    DO ii=1,size_psi
+      IF(MPI_nodes_p0) THEN
+        CALL MPI_BCAST(psi(ii)%norm2,size1_MPI,Int_MPI,root_MPI,MPI_NODE_0_COMM,MPI_err)
+        CALL MPI_BCAST(psi(ii)%symab,size1_MPI,Int_MPI,root_MPI,MPI_NODE_0_COMM,MPI_err)
+      ENDIF
+    ENDDO
+
+#endif
+  END SUBROUTINE share_psi_nodes_MPI
 !=======================================================================================
 
 ENDMODULE mod_Davidson_MPI

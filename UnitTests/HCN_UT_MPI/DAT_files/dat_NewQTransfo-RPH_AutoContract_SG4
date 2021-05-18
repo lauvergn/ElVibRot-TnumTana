@@ -17,7 +17,7 @@ VIBEXE=vib.exe
  cp $SYSTEM $DIR_pot/sub_system.f
 
 cd $DIR_vib
- make &> $here/comp.log
+ make --no-print-directory &> $here/comp.log
 cd $here
 #LB=11
 #LG=16

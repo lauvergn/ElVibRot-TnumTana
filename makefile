@@ -1,8 +1,8 @@
 #===============================================================================
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-# F90 = mpifort
- F90 = gfortran
+ F90 = mpifort
+# F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
@@ -59,9 +59,9 @@ endif
 
 # obj directory
 ifeq ($(F90),mpifort)
-  obj_dir = obj/obj_$(F90)_$(MPICORE)
+  obj_dir = obj/obj_$(F90)_$(MPICORE)_$(INT)
 else
-  obj_dir = obj/obj_$(F90)
+  obj_dir = obj/obj_$(F90)_$(INT)
 endif
 ## turn off ARPACK
 #=================================================================================
@@ -170,7 +170,7 @@ ifeq ($(F90),nagfor)
    endif
 
    ifeq ($(INT),8)
-     F90FLAGS := $(F90FLAGS) -i8
+     F90FLAGS := $(F90FLAGS) -i8 -Dint8=1
    endif
 
    F90_VER = $(shell $(F90) -V 3>&1 1>&2 2>&3 | head -1 )
@@ -208,7 +208,7 @@ ifeq ($(F90),ifort)
    endif
 
    ifeq ($(INT),8)
-     F90FLAGS := $(F90FLAGS) -i8
+     F90FLAGS := $(F90FLAGS) -i8 -Dint8=1
    endif
 
    F90_VER = $(shell $(F90) --version | head -1 )
@@ -304,7 +304,7 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
    endif
    # integer kind management
    ifeq ($(INT),8)
-      F90FLAGS := $(F90FLAGS) -fdefault-integer-8
+      F90FLAGS := $(F90FLAGS) -fdefault-integer-8 -Dint8=1
    endif
 
    F90_VER = $(shell $(F90) --version | head -1 )
@@ -344,6 +344,7 @@ ifeq ($(F90),mpifort)
    #
    # opt management
    ifeq ($(MPICORE), gfortran)
+     CPPpre += -Drun_MPI_gfortran=1
      ifeq ($(OPT),1)
         F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
      else
@@ -353,6 +354,7 @@ ifeq ($(F90),mpifort)
         #F90FLAGS = -O0 -fbounds-check -Wuninitialized
      endif
    else
+     CPPpre += -Drun_MPI_ifort=1
      ifeq ($(OPT),1)
        F90FLAGS =  -O5 -g #-check all -fpe0 -warn -traceback -debug extended
      else
@@ -835,7 +837,7 @@ ut UT UnitTests: UT_Frac UT_PhysConst UT_Tnum UT_HNO3 UT_HCN UT_HCN-WP
 UT_Frac ut_frac : UnitTests_Frac.exe
 	@echo "---------------------------------------"
 	@echo "Unitary tests for the Frac module"
-	@UnitTests_Frac.exe > $(DIRUT)/res_UT_Frac ; awk -f $(DIRUT)/frac.awk $(DIRUT)/res_UT_Frac
+	@./UnitTests_Frac.exe > $(DIRUT)/res_UT_Frac ; awk -f $(DIRUT)/frac.awk $(DIRUT)/res_UT_Frac
 	@echo "---------------------------------------"
 UnitTests_Frac.exe: obj $(Obj_lib) $(OBJ)/UnitTests_Frac.o
 	$(LYNK90)   -o UnitTests_Frac.exe $(OBJ)/UnitTests_Frac.o $(Obj_lib) $(LYNKFLAGS)
@@ -920,6 +922,7 @@ vib:
 .PHONY: clean
 clean: clean_example
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib
+	rm -f *.lst $(DIR_EVRT)/obj/*/*.o $(DIR_EVRT)/obj/*/*.mod $(DIR_EVRT)/obj/*/*.MOD $(EXE) *.exe $(DIR_EVRT)/obj/*/*.a vib
 	rm -rf *.dSYM
 	rm -f .DS_Store */.DS_Store */*/.DS_Store */*/*/.DS_Store
 	@cd sub_pot                              ; rm -f sub_system.f sub_system.f90

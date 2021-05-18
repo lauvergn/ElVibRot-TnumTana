@@ -284,12 +284,12 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
 !      write(out_unitp,*) '------------------------------------------------'
 !      write(out_unitp,*) 'iGs_MPI at current step: ',iGs_MPI
 !
-!      IF(iGs_auto .AND. MPI_np>1) CALL auto_iGs_MPI(para_Op)
+!      IF(MPI_iGs_auto .AND. MPI_np>1) CALL auto_iGs_MPI(para_Op)
 !      write(out_unitp,*) 'iGs_MPI at new step    : ',iGs_MPI
 !      write(out_unitp,*) '------------------------------------------------'
 !      
 !      ! get new size_ST according to new iGs_MPI
-!      IF(iGs_auto) THEN
+!      IF(MPI_iGs_auto) THEN
 !        Do i_MPI=0,MPI_np-1
 !          size_ST(i_MPI)=0;
 !          DO iG=iGs_MPI(1,i_MPI),iGs_MPI(2,i_MPI)
@@ -644,7 +644,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
       write(out_unitp,*) 'iGs_MPI initial: ',iGs_MPI
       write(out_unitp,*) '------------------------------------------------'
     ELSE
-      IF(iGs_auto) THEN
+      IF(MPI_iGs_auto) THEN
         iGs_change=.FALSE.
         ! auto balance Smolyak terms assigned to different threads
         IF(MPI_np>1) CALL auto_iGs_MPI(para_Op,iGs_change)
@@ -658,7 +658,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           CALL set_iGs_MPI_mc(BasisnD)
           CALL get_size_ST(BasisnD,size_ST,size_ST_mc)
         ENDIF
-      ENDIF ! iGs_auto
+      ENDIF ! MPI_iGs_auto
     ENDIF
 
     ! initialize time count
@@ -1008,7 +1008,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
       write(out_unitp,*) 'iGs_MPI initial: ',iGs_MPI
       write(out_unitp,*) '------------------------------------------------'
     ELSE
-      IF(iGs_auto) THEN
+      IF(MPI_iGs_auto) THEN
         iGs_change=.FALSE.
         ! auto balance Smolyak terms assigned to different threads
         IF(MPI_np>1) CALL auto_iGs_MPI(para_Op,iGs_change)
@@ -1022,7 +1022,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           CALL set_iGs_MPI_mc(BasisnD)
           CALL get_size_ST(BasisnD,size_ST,size_ST_mc)
         ENDIF
-      ENDIF ! iGs_auto
+      ENDIF ! MPI_iGs_auto
     ENDIF
 
     ! initialize time count
@@ -1069,13 +1069,14 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
             write(out_unitp,*) 'ST length check:',length_ST_mc,Psi_ST_length(i_MPI)
             STOP 'error in MPI action part,check length'
           ENDIF
-
+write(*,*) 'checkcheckqqq-1',MPI_id
           CALL time_record(time_comm,time_temp1,time_temp2,1)
           CALL MPI_Send(Psi_ST,length_ST_mc,Real_MPI,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
           CALL time_record(time_comm,time_temp1,time_temp2,2)
         ENDDO ! i_MPI
         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
         IF(allocated(Psi_ST)) deallocate(Psi_ST)
+write(*,*) 'checkcheckqqq-2',MPI_id
 
         !-calculations on MPI_node_p0---------------------------------------------------
         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,1)
@@ -1097,6 +1098,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           ENDDO
         ENDDO ! main loop of iG for calcuation on root
         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,2)
+write(*,*) 'checkcheckqqq-3',MPI_id
 
         !-receive results from other threads--------------------------------------------
         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
@@ -1124,32 +1126,37 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           IF(allocated(Psi_ST)) deallocate(Psi_ST)
         ENDDO ! i_MPI
       ENDDO ! i_mc
+write(*,*) 'checkcheckqqq-4',MPI_id
 
       ! collect result from each node-------------------------------------------------
       IF(MPI_id==0) THEN
-        CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
-        DO ii=1,MPI_nodes_num-1
-          CALL MPI_Recv(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
-                        ii,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        IF(MPI_nodes_num>1) THEN
+          CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
+          DO ii=1,MPI_nodes_num-1
+            CALL MPI_Recv(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
+                          ii,MPI_COMM_WORLD,MPI_stat,MPI_err)
 
+            DO itab=1,size_psi
+              d1=size_RvecB*(itab-1)+1
+              d2=size_RvecB* itab
+              OpPsi(itab)%RvecB=OpPsi(itab)%RvecB+RvecB_all(d1:d2)
+            ENDDO
+          ENDDO
+  write(*,*) 'checkcheckqqq-5',MPI_id
+
+          ! share result with node_p0
           DO itab=1,size_psi
             d1=size_RvecB*(itab-1)+1
             d2=size_RvecB* itab
-            OpPsi(itab)%RvecB=OpPsi(itab)%RvecB+RvecB_all(d1:d2)
+            RvecB_all(d1:d2)=OpPsi(itab)%RvecB
           ENDDO
-        ENDDO
 
-        ! share result with node_p0
-        DO itab=1,size_psi
-          d1=size_RvecB*(itab-1)+1
-          d2=size_RvecB* itab
-          RvecB_all(d1:d2)=OpPsi(itab)%RvecB
-        ENDDO
-
-        DO ii=1,MPI_nodes_num-1
-          CALL MPI_Send(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
-                        MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
-        ENDDO
+          DO ii=1,MPI_nodes_num-1
+            CALL MPI_Send(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
+                          MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
+          ENDDO
+        ENDIF
+write(*,*) 'checkcheckqqq-6',MPI_id
 
       ELSEIF(MPI_nodes_p0) THEN
 
@@ -1169,11 +1176,13 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           d2=size_RvecB* itab
           OpPsi(itab)%RvecB=RvecB_all(d1:d2)
         ENDDO
+write(*,*) 'checkcheckqqq-7',MPI_id
 
         IF(allocated(RvecB_all)) deallocate(RvecB_all)
       ENDIF
       CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
     ENDIF ! MPI_id==0 .OR. MPI_nodes_p0
+write(*,*) 'checkcheckqqq-8',MPI_id
 
     !-----------------------------------------------------------------------------------
     !-----------------------------------------------------------------------------------

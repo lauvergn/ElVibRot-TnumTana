@@ -198,15 +198,16 @@ CONTAINS
 !     END IF
 
       END IF ! for para_WP0%New_Read_WP0
-
+write(*,*) 'checkcheck1',MPI_id
       IF(keep_MPI) CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
       IF(keep_MPI) write(out_unitp,*) 'norm2WP BasisRep',WP0(1)%norm2
-
+write(*,*) 'checkcheck2',MPI_id
       !- clear WP0%...GridRep, if not need ------------------
       IF (para_WP0%WP0BasisRep) THEN
         WP0(1)%GridRep = .FALSE.
         CALL alloc_psi(WP0(1)) ! deallocate the grid representation
       END IF
+write(*,*) 'checkcheck3',MPI_id
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -221,6 +222,7 @@ CONTAINS
         CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
+write(*,*) 'checkcheck5',MPI_id
 
       END SUBROUTINE init_psi0
 !==============================================================

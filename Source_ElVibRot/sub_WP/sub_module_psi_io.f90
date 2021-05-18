@@ -44,6 +44,7 @@
       USE mod_system
       USE mod_nDindex
       USE mod_basis
+      USE mod_ana_psi_MPI, ONLY: renorm_psi_MPI
       IMPLICIT NONE
 
       PRIVATE
@@ -249,7 +250,7 @@
       IF (ortho_loc) CALL sub_Schmidt(psi0,para_WP0%nb_WP0)
 
       write(out_unitp,*) 'Number of read vector(s):',para_WP0%nb_WP0
-
+write(*,*) 'checkcheck-0',MPI_id
       IF (debug) THEN
         write(out_unitp,*) ' ',para_WP0%nb_WP0,' read WP0s'
         DO i=1,para_WP0%nb_WP0

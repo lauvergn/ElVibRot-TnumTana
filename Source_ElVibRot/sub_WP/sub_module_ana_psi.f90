@@ -1915,8 +1915,8 @@ END SUBROUTINE sub_analyze_psi
             norm2BasisRep = psi%BasisRep
             norm2GridRep  = psi%GridRep
           END IF
-       END IF
-     END IF
+        END IF
+      END IF
 
       IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep,psiN',norm2GridRep,norm2BasisRep,psiN
       IF (norm2GridRep .AND. norm2BasisRep) THEN
@@ -1926,13 +1926,13 @@ END SUBROUTINE sub_analyze_psi
         STOP
       END IF
 
-
+write(*,*) 'checkcheck8.0-1',MPI_id
       CALL Channel_weight(tab_WeightChannels,psi,norm2GridRep,norm2BasisRep)
-
+write(*,*) 'checkcheck8.0-2',MPI_id
       IF (debug)  write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
 
       psi%norm2 = sum(tab_WeightChannels)
-
+write(*,*) 'checkcheck8.0-3',MPI_id
       IF (debug) THEN
         write(out_unitp,*) 'norm2 : ',psi%norm2,tab_WeightChannels
       END IF
@@ -1967,11 +1967,11 @@ END SUBROUTINE sub_analyze_psi
         END IF
         psi%norm2 = ONE
       END IF
-
+write(*,*) 'checkcheck8.0-4',MPI_id
       IF (allocated(tab_WeightChannels)) THEN
         CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","norm2_psi (alloc from Channel_weight)")
       END IF
-
+write(*,*) 'checkcheck8.0-5',MPI_id
 !----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'norm2 : ',psi%norm2,tab_WeightChannels

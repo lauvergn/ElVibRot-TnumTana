@@ -154,10 +154,14 @@ MODULE mod_MPI_aux
   Contains
 
 !---------------------------------------------------------------------------------------
+! we need a better realtime memory check subroutine.
+!---------------------------------------------------------------------------------------
     !> check total memory used at certain point
     SUBROUTINE system_mem_usage(memory_RSS,name)
       USE mod_NumParameters
-      ! USE ifport ! if on intel compiler
+#if(run_MPI_ifort)
+      USE ifport ! if on intel compiler
+#endif
       IMPLICIT NONE
       Integer, intent(out) :: memory_RSS
       Character(len=200):: filename=' '
@@ -166,6 +170,8 @@ MODULE mod_MPI_aux
       Integer :: pid
       Logical :: ifxst
       Character (len=*), intent(in) :: name
+
+#if(run_MPI)
 
       memory_RSS=-1 ! return negative number if not found
 
@@ -193,6 +199,8 @@ MODULE mod_MPI_aux
         write(out_unitp,121) name,memory_RSS,MPI_id    ! kB
 121     format('memory check at ',a,': ',i4,' from ',i4)
       ENDIF
+
+#endif
     ENDSUBROUTINE system_mem_usage
 
 !---------------------------------------------------------------------------------------

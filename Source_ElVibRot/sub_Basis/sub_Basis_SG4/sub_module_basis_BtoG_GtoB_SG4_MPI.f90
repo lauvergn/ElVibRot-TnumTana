@@ -96,6 +96,17 @@ SUBROUTINE Mapping_table_allocate_MPI(basis_SG,Max_Srep)
                           bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
     ENDIF
   ENDIF
+  ! IF(MPI_scheme==3) THEN
+  !   IF(MPI_id==0) THEN
+  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,1,Max_Srep)
+  !   ELSEIF(MPI_nodes_p0) THEN
+  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                  &
+  !                         bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_sub_id(2)))
+  !   ELSE
+  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                  &
+  !                         bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
+  !   ENDIF
+  ! ENDIF
 
   ! IF(MPI_id==0) THEN
   !   IF(MPI_scheme/=1) THEN
@@ -132,6 +143,7 @@ SUBROUTINE Mapping_table_MPI(basis_SG,Max_Srep)
   Integer,                         intent(in)    :: Max_Srep
 
   Integer                                        :: ii
+  Integer                                        :: d1,d2
 
 #if(run_MPI)
 
@@ -162,6 +174,7 @@ SUBROUTINE Mapping_table_MPI(basis_SG,Max_Srep)
   ENDIF ! scheme 2
 
   ! for scheme=3
+  ! need to remove the mapping tables on the other masters
   ! IF(MPI_scheme==3) THEN
   !   IF(MPI_id==0) THEN
   !     DO i_MPI=1,MPI_np-1
@@ -193,6 +206,26 @@ SUBROUTINE Mapping_table_MPI(basis_SG,Max_Srep)
       CALL MPI_Recv(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,Max_Srep,MPI_Integer4,  &
                     root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
     ENDIF
+
+    ! IF(.NOT. (MPI_id==0 .OR. MPI_nodes_p0)) THEN
+    !   deallocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB)
+    ! ENDIF
+
+    ! IF(MPI_id==0) THEN
+    !   DO ii=1,MPI_nodes_num-1
+    !     d1=bounds_MPI(1,MPI_nodes_p00(ii))
+    !     d2=bounds_MPI(2,MPI_nodes_p00(ii)+MPI_nodes_np(ii)-1)
+    !     CALL MPI_Send(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(d1:d2),d2-d1+1,       &
+    !                   MPI_Integer4,MPI_nodes_p00(ii),                                  &
+    !                   Int(MPI_nodes_p00(ii),kind=MPI_INTEGER_KIND),                    &
+    !                   MPI_COMM_WORLD,MPI_err)
+    !   ENDDO
+    ! ELSEIF(MPI_nodes_p0) THEN
+    !   d1=bounds_MPI(1,MPI_id)
+    !   d2=bounds_MPI(2,MPI_id+MPI_nodes_np(MPI_node_id)-1)
+    !   CALL MPI_Recv(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(d1:d2),d2-d1+1,         &
+    !                 MPI_Integer4,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+    ! ENDIF
 
   ENDIF ! scheme 3
 
@@ -503,6 +536,7 @@ END SUBROUTINE Set_scheme_MPI_old
 !---------------------------------------------------------------------------------------
 SUBROUTINE Set_scheme_MPI(basis_SG,lMax_Srep)
   USE mod_basis_set_alloc,ONLY:basis
+  USE mod_MPI_aux
   IMPLICIT NONE
 
   TYPE(basis),                     intent(inout) :: basis_SG
@@ -510,6 +544,8 @@ SUBROUTINE Set_scheme_MPI(basis_SG,lMax_Srep)
 
   Integer                                        :: ave_iGs
   Real(kind=Rkind)                               :: mem_S1
+  Integer                                        :: i_node
+  Integer,allocatable                            :: processor_nodes_0(:)
 
 #if(run_MPI)
 
@@ -547,7 +583,7 @@ SUBROUTINE Set_scheme_MPI(basis_SG,lMax_Srep)
     ENDIF
   ENDIF
 
-  ! keep almost everything on current threads
+  ! keep almost everything on master
   IF(MPI_id==0) keep_MPI=.TRUE.
 
   ! scheme 1
@@ -572,6 +608,20 @@ SUBROUTINE Set_scheme_MPI(basis_SG,lMax_Srep)
 
   write(out_unitp,*) 'MPI scheme ',MPI_scheme,' used for parallelization'
 
+  ! build communicator for node*-0 processors
+  IF(MPI_scheme==3) THEN
+    i_node=1
+    CALL allocate_array(processor_nodes_0,0,MPI_nodes_num-1)
+    IF(MPI_id==0) processor_nodes_0(0:MPI_nodes_num-1)=MPI_nodes_p00(0:MPI_nodes_num-1)
+    CALL MPI_Bcast_(processor_nodes_0(0:MPI_nodes_num-1),MPI_nodes_num,root_MPI)
+
+    CALL MPI_Comm_group(MPI_COMM_WORLD,MPI_NODE_0_WORLD,MPI_err)
+    CALL MPI_Group_incl(MPI_NODE_0_WORLD,MPI_nodes_num,processor_nodes_0,              &
+                        MPI_NODE_0_GROUP,MPI_err)
+    CALL MPI_Comm_create(MPI_COMM_WORLD,MPI_NODE_0_GROUP,MPI_NODE_0_COMM,MPI_err)
+
+    !IF(MPI_nodes_p0) CALL MPI_BCAST(i_node,size1_MPI,MPI_Integer,0,MPI_NODE_0_COMM,MPI_err)
+  ENDIF
 #endif
 END SUBROUTINE Set_scheme_MPI
 !=======================================================================================

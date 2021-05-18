@@ -646,23 +646,33 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
    END DO
   END IF
 !-----------------------------------------------------------
+write(*,*) 'checkcheckss-3.111',MPI_id
 
   IF (para_propa%ana_psi%ana_level == 1) THEN ! ana_mini
     IF (present(adia)) THEN
       IF (present(para_field)) THEN
+write(*,*) 'checkcheckss-3.1111',MPI_id
         CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia=adia,para_field=para_field)
+write(*,*) 'checkcheckss-3.1112',MPI_id
       ELSE
+write(*,*) 'checkcheckss-3.1113',MPI_id
         CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia=adia)
+write(*,*) 'checkcheckss-3.1114',MPI_id
       END IF
     ELSE
       IF (present(para_field)) THEN
+write(*,*) 'checkcheckss-3.1115',MPI_id
         CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_field=para_field)
+write(*,*) 'checkcheckss-3.1116',MPI_id
       ELSE
+write(*,*) 'checkcheckss-3.1117',MPI_id
         CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H)
+write(*,*) 'checkcheckss-3.1118',MPI_id
       END IF
     END IF
     RETURN
   END IF
+write(*,*) 'checkcheckss-3.112',MPI_id
 
   Write_psi2_Grid = para_propa%ana_psi%Write_psi2_Grid
   Write_psi_Grid  = para_propa%ana_psi%Write_psi_Grid
@@ -876,11 +886,11 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
     !-----------------------------------------------------------
     ! => Analysis for diabatic potential (always done)
 
-    IF(keep_MPI) THEN
+    IF(MPI_id==0 .OR. MPI_scheme==1) THEN
       CALL Channel_weight(tab_WeightChannels,w1,GridRep=.FALSE.,BasisRep=.TRUE.)
       Psi_norm2 = sum(tab_WeightChannels)
     ENDIF
-    IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(Psi_norm2,size1_MPI,root_MPI)
+    IF(openmpi) CALL MPI_Bcast_(Psi_norm2,size1_MPI,root_MPI)
 
     ! add the psi number + the time
     psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat='f12.2')
@@ -913,11 +923,11 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
     psi_line = psi_line // ' ' // real_TO_char(Psi_norm2,Rformat='f10.7')
     DO i_be=1,WP(i)%nb_be
     DO i_bi=1,WP(i)%nb_bi
-      IF(keep_MPI) psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
+      IF(MPI_id==0) psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
     END DO
     END DO
 
-    IF(keep_MPI) write(out_unitp,*) psi_line
+    IF(MPI_id==0) write(out_unitp,*) psi_line
 
 
   END DO

@@ -15,7 +15,7 @@ cp sub_system_pyrazine.f $DIR_pot/sub_system.f
 cp calc_f2_f1Q.f90       $DIR_vib/Source_TnumTana_Coord/sub_operator_T
 
 cd $DIR_vib
- make &> $here/comp.log
+ make --no-print-directory &> $here/comp.log
 cd $here
 compOK=`tail -1 comp.log | grep -c OK `
 if [ $compOK = '1' ]

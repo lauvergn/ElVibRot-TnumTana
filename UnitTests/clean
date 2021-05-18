@@ -5,3 +5,10 @@ do
   ./clean
   cd ..
 done
+
+for dir in *MPI
+do
+  cd  $dir
+  ./clean
+  cd ..
+done

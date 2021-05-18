@@ -7,6 +7,13 @@ MPI Vm2.0
 ----------------------------------------------------------------------------------------
 @ log
 
+> MPI_Vm2.5
+  - improve MPI scheme3
+
+  - bug fix
+    system_mem_usage
+    openMP with int=8
+
 
 > MPI_Vm2.4
 

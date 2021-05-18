@@ -44,7 +44,7 @@ MODULE mod_ana_psi_MPI
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: norm_psi_MPI
+  PUBLIC :: norm_psi_MPI,renorm_psi_MPI
 
 CONTAINS
 !=======================================================================================      
@@ -325,6 +325,122 @@ CONTAINS
 
   END SUBROUTINE Channel_weight_MPI
 !=======================================================================================  
+
+
+!=======================================================================================
+! general normalization, not actually optimised for MPI
+!=======================================================================================
+  SUBROUTINE renorm_psi_MPI(psi,GridRep,BasisRep)
+    USE mod_system
+    USE mod_psi_set_alloc
+    USE mod_ana_psi,ONLY:Channel_weight
+    USE mod_MPI_aux
+    IMPLICIT NONE
+
+!----- variables for the WP ----------------------------------------
+    TYPE (param_psi), intent(inout)          :: psi
+    logical,          intent(in),   optional :: GridRep,BasisRep
+
+!------ working variables ---------------------------------
+    logical                        :: norm2GridRep,norm2BasisRep
+    real (kind=Rkind)              :: temp
+    real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)
+
+
+!----- for debuging --------------------------------------------------
+    logical,parameter :: debug = .FALSE.
+    !logical,parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING renorm_psi'
+      IF (present(GridRep)) write(out_unitp,*) 'norm2GridRep',GridRep
+      IF (present(BasisRep)) write(out_unitp,*) 'norm2BasisRep',BasisRep
+      write(out_unitp,*) 'psi'
+      CALL ecri_psi(psi=psi)
+    END IF
+!-----------------------------------------------------------
+
+    IF (present(GridRep)) THEN
+      IF (present(BasisRep)) THEN
+        norm2GridRep  = GridRep
+        norm2BasisRep = BasisRep
+      ELSE
+        norm2GridRep  = GridRep
+        norm2BasisRep = .FALSE.
+      END IF
+    ELSE
+      IF (present(BasisRep)) THEN
+        norm2BasisRep = BasisRep
+        norm2GridRep  = .FALSE.
+      ELSE
+        IF (psi%BasisRep .AND. psi%GridRep) THEN
+          norm2BasisRep = .TRUE.
+          norm2GridRep  = .FALSE.
+        ELSE
+          norm2BasisRep = psi%BasisRep
+          norm2GridRep  = psi%GridRep
+        END IF
+     END IF
+   END IF
+
+   IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep',norm2GridRep,norm2BasisRep
+    IF (norm2GridRep .AND. norm2BasisRep) THEN
+      write(out_unitp,*) ' ERROR in renorm_psi'
+      write(out_unitp,*) ' norm2GridRep=t and norm2BasisRep=t !'
+      write(out_unitp,*) ' BasisRep,GridRep',psi%BasisRep,psi%GridRep
+      STOP
+    END IF
+
+    IF(MPI_id==0 .OR. MPI_scheme==1) THEN
+      CALL Channel_weight(tab_WeightChannels,psi,norm2GridRep,norm2BasisRep)
+      IF (debug)  write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
+      psi%norm2 = sum(tab_WeightChannels)
+    ENDIF
+    CALL MPI_Bcast_(psi%norm2,size1_MPI,root_MPI)
+
+    IF (debug) THEN
+      write(out_unitp,*) 'norm2 : ',psi%norm2,tab_WeightChannels
+    END IF
+
+    IF (psi%norm2 .EQ. ZERO ) THEN
+      write(out_unitp,*) ' ERROR in renorm_psi'
+      write(out_unitp,*) ' the norm2 is zero !',psi%norm2
+      STOP
+    END IF
+    temp = sqrt(ONE/psi%norm2)
+
+    IF(keep_MPI) THEN
+      IF (norm2GridRep) THEN
+        !- normalization of psiGridRep -------------------------
+        IF (psi%cplx) THEN
+          psi%CvecG(:) = psi%CvecG(:) *cmplx(temp,ZERO,kind=Rkind)
+        ELSE
+          psi%RvecG(:) = psi%RvecG(:) * temp
+        END IF
+      ELSE
+        !- normalization of psiBasisRep -------------------------
+        IF (psi%cplx) THEN
+          psi%CvecB(:) = psi%CvecB(:) *cmplx(temp,ZERO,kind=Rkind)
+        ELSE
+          psi%RvecB(:) = psi%RvecB(:) * temp
+        END IF
+      END IF
+    ENDIF
+    psi%norm2 = ONE
+
+    IF (allocated(tab_WeightChannels)) THEN
+      CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","renorm_psi (alloc from Channel_weight)")
+    END IF
+
+!----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'norm2 : ',psi%norm2
+      write(out_unitp,*) 'END renorm_psi_MPI'
+    END IF
+!----------------------------------------------------------
+
+    END SUBROUTINE renorm_psi_MPI
+!=======================================================================================
 
 END MODULE mod_ana_psi_MPI
 
