@@ -50,13 +50,19 @@
 
         TYPE, EXTENDS(PrimOp_t) :: param_ReadOp ! used for transfert info from read_active to para_Op
 
-           logical               :: OpPsi_WithGrid      = .FALSE.
+           logical                  :: OpPsi_WithGrid      = .FALSE.
 
-           logical               :: pack_Op             = .FALSE.
-           real (kind=Rkind)     :: tol_pack            = ONETENTH**7
-           real (kind=Rkind)     :: tol_nopack          = NINE*ONETENTH
-           logical               :: read_Op             = .FALSE.
-           logical               :: make_Mat            = .FALSE.
+           logical                  :: pack_Op             = .FALSE.
+           real (kind=Rkind)        :: tol_pack            = ONETENTH**7
+           real (kind=Rkind)        :: tol_nopack          = NINE*ONETENTH
+           logical                  :: read_Op             = .FALSE.
+
+           logical                  :: make_Mat            = .FALSE.
+           logical                  :: save_MatOp          = .FALSE.
+           logical                  :: restart_MatOp       = .FALSE.
+           logical                  :: formatted_Mat       = .TRUE.
+           character (len=Line_len) :: name_Mat            = 'MatOp'
+
            logical               :: spectral            = .FALSE.       ! IF T, spectral represention
            integer               :: spectral_Op         = 0             ! IF sepctral, we use the H (nOp=0)
            logical               :: Op_WithContracRVec  = .FALSE.
@@ -65,6 +71,7 @@
            integer               :: nb_bRot             = 0
 
            TYPE (param_FileGrid) :: para_FileGrid                       ! parameters to tranfer to OpGrid%...
+           TYPE (param_file)     :: FileMat                             ! file Operator Matrix
 
            logical               :: comput_S            = .FALSE.       ! calculation of the active overlap matrix
 
@@ -91,6 +98,11 @@
       para_ReadOp%tol_nopack          = NINE*ONETENTH
       para_ReadOp%read_Op             = .FALSE.
       para_ReadOp%make_Mat            = .FALSE.
+      para_ReadOp%save_MatOp          = .FALSE.
+      para_ReadOp%restart_MatOp       = .FALSE.
+      para_ReadOp%formatted_Mat       = .TRUE.
+      para_ReadOp%name_Mat            = 'MatOp'
+
       para_ReadOp%spectral            = .FALSE.
       para_ReadOp%Op_WithContracRVec  = .FALSE.
 
@@ -102,6 +114,7 @@
       para_ReadOp%comput_S            = .FALSE.   ! calculation of the active overlap matrix
 
       CALL init_FileGrid(para_ReadOp%para_FileGrid)
+      CALL file_dealloc(para_ReadOp%FileMat)
 
       para_ReadOp%Op_Transfo          = .FALSE.   ! true => we are using Transfo(Op) instead of Op
       para_ReadOp%E0_Transfo          = ZERO      ! ScaledOp = Op - E0_transfo * I
@@ -122,6 +135,12 @@
       para_ReadOp1%tol_nopack         = para_ReadOp2%tol_nopack
       para_ReadOp1%read_Op            = para_ReadOp2%read_Op
       para_ReadOp1%make_Mat           = para_ReadOp2%make_Mat
+      para_ReadOp1%save_MatOp         = para_ReadOp2%save_MatOp
+      para_ReadOp1%restart_MatOp      = para_ReadOp2%restart_MatOp
+      para_ReadOp1%formatted_Mat      = para_ReadOp2%formatted_Mat
+      para_ReadOp1%name_Mat           = para_ReadOp2%name_Mat
+      para_ReadOp1%FileMat            = para_ReadOp2%FileMat
+
       para_ReadOp1%spectral           = para_ReadOp2%spectral
       para_ReadOp1%spectral_Op        = para_ReadOp2%spectral_Op
       para_ReadOp1%Op_WithContracRVec = para_ReadOp2%Op_WithContracRVec
@@ -162,6 +181,12 @@
       para_ReadOp1%pack_Op            = .FALSE.
       para_ReadOp1%read_Op            = .FALSE.
       para_ReadOp1%make_Mat           = .TRUE.
+      para_ReadOp1%save_MatOp         = .FALSE.
+      para_ReadOp1%restart_MatOp      = .FALSE.
+      para_ReadOp1%formatted_Mat      = .TRUE.
+      para_ReadOp1%name_Mat           = 'MatOp'
+      CALL file_dealloc(para_ReadOp1%FileMat)
+
       para_ReadOp1%spectral           = .FALSE.
       para_ReadOp1%Op_WithContracRVec = .FALSE.
 
@@ -198,6 +223,11 @@
       para_ReadOp%tol_nopack          = 0.9_Rkind
       para_ReadOp%read_Op             = .FALSE.
       para_ReadOp%make_Mat            = .FALSE.
+      para_ReadOp%save_MatOp          = .FALSE.
+      para_ReadOp%restart_MatOp       = .FALSE.
+      para_ReadOp%formatted_Mat       = .TRUE.
+      para_ReadOp%name_Mat            = 'MatOp'
+      CALL file_dealloc(para_ReadOp%FileMat)
       para_ReadOp%spectral            = .FALSE.
       para_ReadOp%spectral_Op         = 0
       para_ReadOp%Op_WithContracRVec  = .FALSE.

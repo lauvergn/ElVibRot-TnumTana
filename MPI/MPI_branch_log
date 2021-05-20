@@ -10,10 +10,20 @@ MPI Vm2.0
 > MPI_Vm2.5
   - improve MPI scheme3
 
+  - bulit sub-communicator for all the masters in each node for MPI scheme3
+
   - bug fix
     system_mem_usage
     openMP with int=8
+    Unittest
 
+  - makefile 
+    add @ for some command
+    add "clean_UT" for only clean unittest result
+    add printing of information for Unittest
+
+  - ongoing
+    new quick manual
 
 > MPI_Vm2.4
 

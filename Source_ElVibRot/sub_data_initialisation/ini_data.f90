@@ -75,6 +75,7 @@
       USE mod_CAP,       only : Read_CAP
       USE mod_basis
       USE mod_Set_paraRPH
+      USE mod_ReadOp
       USE mod_Op
       USE mod_analysis
       USE mod_propa
@@ -516,7 +517,7 @@
         para_ReadOp%nb_scalar_Op = 3
         write(out_unitp,*) ' WARNING in ',name_sub
         write(out_unitp,*) 'calc_scalar_Op=t and nb_scalar_Op < 1'
-        write(out_unitp,*) ' You MUST set nb_scalar_Op in the namelis "minimun"'
+        write(out_unitp,*) ' You MUST set nb_scalar_Op in the namelist "minimun"'
       END IF
       IF (para_ReadOp%calc_scalar_Op .AND. para_ReadOp%nb_scalar_Op < 3) THEN
         write(out_unitp,*) ' WARNING in ',name_sub
@@ -647,9 +648,27 @@
         para_AllOp%tab_Op(5)%name_Op = 'Dipz'
       END IF
 
+      DO i=1,para_AllOp%nb_Op ! to define the restart MatOp files
+        IF (para_AllOp%tab_Op(i)%para_ReadOp%save_MatOp .OR.                    &
+            para_AllOp%tab_Op(i)%para_ReadOp%restart_MatOp) THEN
+          para_AllOp%tab_Op(i)%para_ReadOp%FileMat%name      =                  &
+            make_FileName(trim(adjustl(para_AllOp%tab_Op(i)%para_ReadOp%name_Mat)) // &
+              '_' // trim(adjustl(para_AllOp%tab_Op(i)%name_Op)) )
+          para_AllOp%tab_Op(i)%para_ReadOp%FileMat%formatted =                  &
+            para_AllOp%tab_Op(i)%para_ReadOp%formatted_Mat
+        END IF
+      END DO
+
+
+
       IF(MPI_id==0) THEN
         DO i=1,para_AllOp%nb_Op
           write(out_unitp,*) i,'Operator name: ',trim(para_AllOp%tab_Op(i)%name_Op)
+          IF (para_AllOp%tab_Op(i)%para_ReadOp%save_MatOp .OR.                  &
+            para_AllOp%tab_Op(i)%para_ReadOp%restart_MatOp) THEN
+            write(out_unitp,*) '    restart MatOp file: ',                      &
+                para_AllOp%tab_Op(i)%para_ReadOp%FileMat%name
+          END IF
         END DO
 
         write(out_unitp,*)

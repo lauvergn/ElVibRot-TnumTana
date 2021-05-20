@@ -559,6 +559,9 @@ END SUBROUTINE SGType2_2TOSGType2_1
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'ndim (nb_basis)',SGType2%nDind_SmolyakRep%ndim
+        write(out_unitp,*) 'nb_threads',nb_threads
+        write(out_unitp,*) 'SGType2%nb_SG',SGType2%nb_SG
+        write(out_unitp,*) 'SGType2%nDind_SmolyakRep%Max_nDI',SGType2%nDind_SmolyakRep%Max_nDI
         CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
@@ -583,6 +586,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
 
         nqq_Th      = sum(SGType2%tab_nq_OF_SRep(:)) / SGType2%nb_tasks
+        IF (debug) write(out_unitp,*) 'nqq_Th',nqq_Th
         nqq         = 0
 
         ith = 1
@@ -630,13 +634,14 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
       !err /= 0 means nb_threads is too large => table are deallocated
       IF (err_sub /= 0) THEN
-        CALL dealloc_NParray(SGType2%nDval_init,'SGType2%nDval_init',name_sub)
-        CALL dealloc_NParray(SGType2%iG_th,'SGType2%iG_th',name_sub)
-        CALL dealloc_NParray(SGType2%fG_th,'SGType2%fG_th',name_sub)
+        IF (allocated(SGType2%nDval_init)) CALL dealloc_NParray(SGType2%nDval_init,'SGType2%nDval_init',name_sub)
+        IF (allocated(SGType2%iG_th))      CALL dealloc_NParray(SGType2%iG_th,'SGType2%iG_th',name_sub)
+        IF (allocated(SGType2%fG_th))      CALL dealloc_NParray(SGType2%fG_th,'SGType2%fG_th',name_sub)
       END IF
 
 !-----------------------------------------------------------
       IF (debug) THEN
+        write(out_unitp,*) 'err_sub ',err_sub
         write(out_unitp,*) 'END ',name_sub
         CALL flush_perso(out_unitp)
       END IF

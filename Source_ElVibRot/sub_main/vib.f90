@@ -207,6 +207,7 @@
       write(out_unitp,*) '================================================='
       write(out_unitp,*)
 
+      IF (para_EVRT_calc%Grid_only) STOP 'EVRT stop: Grid_only=.TRUE.'
 !#if(run_MPI)
 !      Grid_allco=.True.
 !#endif

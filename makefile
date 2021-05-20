@@ -1,21 +1,21 @@
 #===============================================================================
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
- F90 = mpifort
-# F90 = gfortran
+# F90 = mpifort
+ F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
 
 ## parallel_make=1 to enable parallel make
 ## parallel_make=0 for fast debug make, no parallel
-parallel_make=1
+parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 1
+OMP = 0
 #
 ## force the default integer (without kind) during the compillation.
 ## default 4: , INT=8 (for kind=8)
@@ -202,7 +202,8 @@ ifeq ($(F90),ifort)
    endif
 
    ifeq ($(LAPACK),1)
-     F90LIB = -mkl -lpthread
+     #F90LIB = -mkl -lpthread
+     F90LIB = $(MKLROOT)/lib/libmkl_lapack95_ilp64.a $(MKLROOT)/lib/libmkl_core.a $(MKLROOT)/lib/libmkl_blas95_ilp64.a -lpthread
    else
      F90LIB = -lpthread
    endif
@@ -447,6 +448,10 @@ $(info ***********************************************************************)
 $(info ***************** TNUM_ver: $(TNUM_ver))
 $(info ***************** TANA_ver: $(TANA_ver))
 $(info ****************** EVR_ver: $(EVR_ver))
+$(info ***********************************************************************)
+$(info ***********************************************************************)
+$(info ************ run UnitTests: make UT)
+$(info ********** clean UnitTests: make clean_UT)
 $(info ***********************************************************************)
 #
 #
@@ -789,25 +794,25 @@ libEVR libevr: obj $(OBJ)/libEVR.a
 .PHONY: tnum Tnum tnum-dist Tnum-dist Tnum_MCTDH Tnum_MidasCpp Midas midas
 
 Tnum_FDriver: obj $(Main_TnumTana_FDriverEXE)
-	echo "Main_TnumTana_FDriver OK"
+	@echo "Main_TnumTana_FDriver OK"
 Tnum_cDriver: obj $(Main_TnumTana_cDriverEXE)
-	echo "Main_TnumTana_cDriver OK"
+	@echo "Main_TnumTana_cDriver OK"
 #
 libTnum libTnum.a: obj $(OBJ)/libTnum.a
-	echo "libTnum.a OK"
+	@echo "libTnum.a OK"
 #
 keotest: obj $(KEOTESTEXE)
-	echo "TEST_TnumTana OK"
+	@echo "TEST_TnumTana OK"
 
 tnum Tnum tnum-dist Tnum-dist: obj $(TNUMEXE)
-	echo "Tnum OK"
+	@echo "Tnum OK"
 #
 Tnum_MCTDH: obj $(TNUMMCTDHEXE)
-	echo "Tnum_MCTDH OK"
+	@echo "Tnum_MCTDH OK"
 #
 #TNUM_MiddasCppEXE
 Tnum_MidasCpp Midas midas: obj $(TNUM_MiddasCppEXE)
-	echo "Tnum_MidasCpp OK"
+	@echo "Tnum_MidasCpp OK"
 #
 .PHONY: Tana_test
 Tana_test: Tana_test.exe
@@ -819,15 +824,15 @@ $(OBJ)/Tana_test.o: $(DirTNUM)/sub_main/Tana_test.f90
 # Some all programs
 .PHONY: gauss GWP work
 gauss GWP: obj $(GWPEXE)
-	echo "GWP OK"
+	@echo "GWP OK"
 #
 work:obj $(WORKEXE)
-	echo "work OK"
+	@echo "work OK"
 #============================================================================
 # Physical Constants
 .PHONY: PhysConst
 PhysConst: obj $(PhysConstEXE)
-	echo "Physical Constants OK"
+	@echo "Physical Constants OK"
 #============================================================================
 # Unitary tests
 .PHONY: ut UT UnitTests
@@ -896,7 +901,7 @@ endif
 # QML
 .PHONY: qml QML
 qml QML: $(QMLibDIR_full)
-	echo "make qml library"
+	@echo "make qml library"
 $(QMLibDIR_full):
 	cd $(QMLibDIR) ; make
 
@@ -912,6 +917,11 @@ vib:
 	@echo "make vib script"
 	./scripts/make_vib.sh $(DIR_EVRT) $(F90)
 	chmod a+x vib
+
+.PHONY: clean_UT
+clean_UT:
+	@cd UnitTests ; ./clean
+	@echo "UnitTests cleaned"
 
 # clean
 #	@cd sub_pot ; cp sub_system_save.f sub_system.f
@@ -947,7 +957,7 @@ clean: clean_example
 #===============================================
 #
 $(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(QMLibDIR_full)
-	echo EVR-T
+	@echo EVR-T
 	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(LYNKFLAGS)
 #	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
 #===============================================
@@ -967,7 +977,7 @@ $(Main_TnumTana_cDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_cDriver.o
 	$(CompC) -o $(Main_TnumTana_cDriverEXE) $(CFLAGS) $(OBJ)/Main_TnumTana_cDriver.o $(OBJ)/libTnumForcDriver.a $(LYNKFLAGS) -lgfortran -lm
 #
 $(TNUMEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMAIN).o
-	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS)
+	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(QMLibDIR_full) $(LYNKFLAGS)
 #
 $(TNUMMCTDHEXE): obj $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMCTDHMAIN).o
 	$(LYNK90)   -o $(TNUMMCTDHEXE) $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMCTDHMAIN).o  $(LYNKFLAGS)
@@ -1122,7 +1132,7 @@ $(OBJ)/sub_module_Coord_KEO.o:$(DirTNUM)/sub_module_Coord_KEO.f90
 $(OBJ)/calc_f2_f1Q.o:$(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
 	sed "s/zmatrix/CoordType/" $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90 > $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i
 	sed "s/Write_mole/Write_CoordType/" $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i > $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
-	echo Warning the calc_f2_f1Q.f90 file has been modified.
+	@echo Warning the calc_f2_f1Q.f90 file has been modified.
 	rm $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
 $(OBJ)/Sub_X_TO_Q_ana.o:$(DirTNUM)/sub_operator_T/Sub_X_TO_Q_ana.f90
@@ -1468,7 +1478,7 @@ $(OBJ)/sub_Smolyak_test.o:$(DIRSmolyak)/sub_Smolyak_test.f90
 # sub_system.o
 $(OBJ)/sub_system.o:$(DirPot)/sub_system.$(extf)
 	sed "s/zmatrix/CoordType/" $(DirPot)/sub_system.$(extf) > $(DirPot)/sub_system.i
-	echo Warning the sub_system.$(extf) file has been modified.
+	@echo Warning the sub_system.$(extf) file has been modified.
 	mv $(DirPot)/sub_system.i $(DirPot)/sub_system.$(extf)
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirPot)/sub_system.$(extf)
 $(OBJ)/read_para.o:$(DirPot)/read_para.f90
@@ -1535,9 +1545,8 @@ endif
 #=======================================================================================
 ifeq ($(F90),mpifort)
 $(info ***********************************************************************)
-$(info *********** to run UnitTests  : make UT)
-$(info *********** to run MPI example: make example)
-$(info *********** to clean MPI test : make clean_example)
+$(info ********** run MPI example: make example)
+$(info ******** clean MPI example: make clean_example)
 $(info ***********************************************************************)
 endif
 
@@ -1562,7 +1571,7 @@ endif
 # clean test results
 .PHONY: clean_example
 clean_example:
-	@echo "clean test file"
+	@echo "clean MPI examples"
 	@rm -rf ./Working_tests/MPI_tests/*/result
 	@echo "removed ./Working_tests/MPI_tests/*/result"
 ifeq ($(F90),mpifort)
@@ -1573,4 +1582,4 @@ ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
 	@rm -rf ./Working_tests/MPI_tests/*/openMP_test.log
 	@echo "removed ./Working_tests/MPI_tests/*/openMP_test.log"
 endif
-	@echo "clean test file done"
+	@echo "MPI examples cleaned"

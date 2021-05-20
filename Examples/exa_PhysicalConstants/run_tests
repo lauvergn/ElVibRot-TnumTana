@@ -4,9 +4,10 @@ here=`pwd`
 DIR_vib=$here/../..
 
 cd $DIR_vib
-  make --no-print-directory  PhysConst &> $here/comp.log
+  make PhysConst &> $here/comp.log
 cd $here
-compOK=`tail -1 comp.log | grep -c OK `
+##compOK=`tail -1 comp.log | grep -c OK `
+compOK=`grep -c 'OK' comp.log `
 
 if [ $compOK = '1' ]
 then

@@ -27,7 +27,7 @@
 ![3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark
 ![4]: Maison de la Simulation USR 3441, CEA Saclay, France
 ![5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,
-!         Université de Montpellier, France
+!         Université de Montpellier, France
 !
 !    ElVibRot includes:
 !        - Tnum-Tana under the GNU LGPL3 license
@@ -116,7 +116,7 @@ CONTAINS
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
-      IF (.NOT. para_ana%ana) RETURN
+      IF (para_ana%ana_level == 0) RETURN
 
       mole       => para_H%mole
       para_Tnum  => para_H%para_Tnum

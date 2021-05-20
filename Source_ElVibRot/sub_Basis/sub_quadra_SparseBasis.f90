@@ -946,12 +946,13 @@
 !----- variables for the construction of H ---------------------------
       TYPE (param_ReadOp), intent(in) :: para_ReadOp
 
-      integer             :: LB,L,Lmin,Lmax,i_SG,DeltaL,nq_iSG,nq_SG,ib,nb,i
-      integer             :: iq,nq,nqq,ndim,nbb
-      integer             :: A,B,LG_L,LB_L,n
-      integer             :: nDsize(basis_SG%nb_basis)
-      logical             :: with_L2max
-      real(kind=Rkind)    :: SG4_Mat_size,Mat_size
+      integer               :: LB,L,Lmin,Lmax,i_SG,DeltaL,nq_iSG,nq_SG,ib,nb,i
+      integer               :: iq,nq,nqq,ndim,nbb
+      integer(kind=ILkind)  :: nqq_ILkind
+      integer               :: A,B,LG_L,LB_L,n
+      integer               :: nDsize(basis_SG%nb_basis)
+      logical               :: with_L2max
+      real(kind=Rkind)      :: SG4_Mat_size,Mat_size
 
 
       TYPE (Type_IntVec), allocatable :: tab_i_TO_l(:)
@@ -1305,6 +1306,7 @@
 
       nbb         = 0
       nqq         = 0
+      nqq_ILkind  = 0
       SG4_Mat_size = ZERO
       Mat_size     = real(basis_SG%nb,kind=Rkind)**2
 
@@ -1317,6 +1319,7 @@
 
         nq          = product(tab_nq)
         nqq         = nqq         + nq
+        nqq_ILkind  = nqq_ILkind  + nq
 
         basis_SG%para_SGType2%tab_Sum_nq_OF_SRep(i_SG) = nqq
         basis_SG%para_SGType2%tab_nq_OF_SRep(i_SG)     = nq
@@ -1344,9 +1347,15 @@
                                          maxval(basis_SG%para_SGType2%tab_nb_OF_SRep)
         CALL flush_perso(out_unitp)
       ENDIF
+      IF (nqq /= nqq_ILkind) THEN
+        write(out_unitp,*) 'ERROR in ',name_sub
+        write(out_unitp,*) ' nqq_int32,  nqq_int64:',nqq,nqq_ILkind
+        write(out_unitp,*) ' nqq is too large for int32'
+        write(out_unitp,*) ' Recompile ElVibRot with int64 default'
+        STOP 'nqq is too large for int32'
+      END IF
 
       CALL Set_nq_OF_basis(basis_SG,nqq)
-
       CALL Set_nDval_init_FOR_SG4(basis_SG%para_SGType2,version=1)
 
       ! save mapping table on certain threads only

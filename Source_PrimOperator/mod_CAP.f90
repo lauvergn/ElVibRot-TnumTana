@@ -120,6 +120,15 @@
         write(out_unitp,*) 'CAP(Q)=A * B*exp(-2/x)'
         write(out_unitp,*) '   with B=13.22'
         write(out_unitp,*) ' ref: A. Vibok and G. G. Balint-Kurti, J. Phys. Chem. (1992), 96, 8712-8719'
+      CASE(4,-4)
+        write(out_unitp,*) 'CAP(Q)= A [ 4/(c-x)² + 4/(c+x)² - 8/c² ]    '
+        write(out_unitp,*) '   WITH x = c ( Q -Q0 ) / LQ   and   c = 2.62206  '
+        write(out_unitp,*) '  You must take A=Emin, the minimal collisional energy for which N(E) is computed '
+        write(out_unitp,*) '  and LQ=2 pi / Kmin, the corresponding wavelength  '
+        write(out_unitp,*) '  warning: Qmax= Q0 + c * LQ '
+        write(out_unitp,*) ' ref: Tomas Gonzalez-Lezana, Edward J. Rackham, and David E. Manolopoulos ...'
+        write(out_unitp,*) '   ... J. Chem. Phys. 120, 2247 (2004); https://doi.org/10.1063/1.1637584'
+        write(out_unitp,*) ' See also:  D. E. Manolopoulos J. Chem. Phys. 117, 9552 (2002)'
       CASE default
         STOP 'ERROR in write_CAP: no default'
       END SELECT
@@ -187,14 +196,14 @@
         write(out_unitp,*) ' The namelist "CAP" is probably absent'
         write(out_unitp,*) ' check your data!'
         write(out_unitp,*) ' ERROR in Read_CAP'
-        STOP ' ERROR in Read_CAP'
+        STOP ' ERROR in Read_CAP: End-of-file or End-of-record'
       ELSE IF (err_read > 0) THEN
         write(out_unitp,*) ' ERROR in Read_CAP'
-        write(out_unitp,*) ' Some parameter name of the namelist "CAP" are probaly wrong'
+        write(out_unitp,*) ' Some parameter name of the namelist "CAP" are probably wrong'
         write(out_unitp,*) ' check your data!'
         write(out_unitp,CAP)
         write(out_unitp,*) ' ERROR in Read_CAP'
-        STOP ' ERROR in Read_CAP'
+        STOP ' ERROR in Read_CAP: probably wrong parameter(s)'
       END IF
       IF (print_level > 1) write(out_unitp,CAP)
 
@@ -210,9 +219,13 @@
       integer,                      intent(in)    :: Type_CAP,n_exp,ind_Q
       real(kind=Rkind),             intent(in)    :: A,Q0,LQ,Qmax
 
-      if ( len(adjustl(trim(Name_Cap))) == 0 .AND. Type_CAP == 0 ) then
+write(6,*) 'Type_CAP,Name_Cap',Type_CAP,' ',Name_Cap
+write(6,*) 'len(adjustl(trim(Name_Cap)))',len(adjustl(trim(Name_Cap)))
+
+      IF ( len(adjustl(trim(Name_Cap))) == 0 .AND. Type_CAP == 0 ) THEN
         CAP%Type_CAP = 1
-      else if ( Type_CAP == 0 ) then
+      ELSE IF ( Type_CAP == 0 ) THEN
+        write(6,*) 'coucou,Type_CAP,Name_Cap',Type_CAP,' ',Name_Cap
         CAP%Name_Cap = Name_Cap
         CALL string_uppercase_TO_lowercase(CAP%Name_Cap)
         SELECT CASE (CAP%Name_Cap)
@@ -228,9 +241,11 @@
           STOP 'ERROR in Init_CAP: no Name_Cap default'
         END SELECT
         if (CAP%Name_Cap(1:1) == "-") CAP%Type_CAP = -CAP%Type_CAP
-      end if
+      ELSE ! Type_CAP /= 0
+        CAP%Type_CAP = Type_CAP
+      END IF
 
-      CAP = CAP_t(Type_CAP=Type_CAP,n_exp=n_exp,A=A,Q0=Q0,Qmax=Qmax,LQ=LQ,ind_Q=ind_Q)
+      CAP = CAP_t(Type_CAP=CAP%Type_CAP,n_exp=n_exp,A=A,Q0=Q0,Qmax=Qmax,LQ=LQ,ind_Q=ind_Q)
 
       SELECT CASE (CAP%Type_CAP)
       CASE(-1,1) ! as function of n_exp, B= 1 3/2 2 5/2 ...

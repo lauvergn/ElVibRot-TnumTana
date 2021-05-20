@@ -365,7 +365,9 @@
       !-------------------------------------------------------------------
       !- Analysis of the grid (zero or constant terms)
       DO iOp=1,para_AllOp%nb_Op
+write(6,*) iOp,'Save_MemGrid_done',para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_MemGrid_done
         CALL Analysis_OpGrid_OF_Op(para_AllOp%tab_Op(iOp))
+        CALL Save_OpGrid_OF_Op(para_AllOp%tab_Op(iOp))
       END DO
       !-------------------------------------------------------------------
 

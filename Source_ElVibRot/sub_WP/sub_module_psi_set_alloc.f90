@@ -3731,15 +3731,10 @@
             CALL Rec_x(x,psi%BasisnD,i_qa)
 
 !- write psi2 ----------------------------------------
-            ! IF (i_qa == psi%nb_qa) THEN
-            !   fformat = '(' // int_TO_char(ni) // Rformat // '/)'
-            ! ELSE
-            !   fformat = '(' // int_TO_char(ni) // Rformat //  ')'
-            ! END IF
             IF (i_qa == psi%nb_qa) THEN
-              fformat = '(' // int_TO_char(ni) // 'f8.3/)'
+               fformat = '(' // int_TO_char(ni) // Rformat // '/)'
             ELSE
-              fformat = '(' // int_TO_char(ni) // 'f8.3)'
+               fformat = '(' // int_TO_char(ni) // Rformat //  ')'
             END IF
 
             IF (psi%BasisnD%ndim > 1) THEN

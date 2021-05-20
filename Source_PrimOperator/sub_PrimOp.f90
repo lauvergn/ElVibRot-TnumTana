@@ -3814,6 +3814,9 @@ stop
         CALL Write_Mat(GGdef_Qmodel,out_unitp,5)
       END IF
       DO i=1,ndim
+        write(6,*) 'iQML,iact',i,mole%liste_QdynTOQact(PrimOp%Qit_TO_QQMLib(i))
+        write(6,*) 'iQML,iact Qit_TO_QQMLib(i)',i,PrimOp%Qit_TO_QQMLib(i)
+
       DO j=1,ndim
         iact = mole%liste_QdynTOQact(PrimOp%Qit_TO_QQMLib(i))
         jact = mole%liste_QdynTOQact(PrimOp%Qit_TO_QQMLib(j))

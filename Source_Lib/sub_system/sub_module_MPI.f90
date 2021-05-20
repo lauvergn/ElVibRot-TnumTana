@@ -366,8 +366,8 @@ MODULE mod_MPI
   TYPE(MPI_S_type)                               :: MPI_S
 
 
-  Integer                        :: time_rate       !< for function system_clock()
-  Integer                        :: time_max        !< for function system_clock()
+  Integer                                        :: time_rate       !< for function system_clock()
+  Integer                                        :: time_max        !< for function system_clock()
 
   Contains
   SUBROUTINE ini_MPI()

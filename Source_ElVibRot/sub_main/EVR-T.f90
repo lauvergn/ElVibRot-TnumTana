@@ -53,7 +53,8 @@
         END SUBROUTINE read_arg
       END INTERFACE
 
-      logical  :: intensity_only,analysis_only,Popenmp,Popenmpi
+      logical  :: intensity_only,analysis_only,Grid_only
+      logical  :: Popenmp,Popenmpi
 
       integer  :: PMatOp_omp,POpPsi_omp,PBasisTOGrid_omp,PGrid_omp,optimization
       integer  :: maxth,PMatOp_maxth,POpPsi_maxth,PBasisTOGrid_maxth,PGrid_maxth
@@ -85,7 +86,8 @@
 
                           RMatFormat,CMatFormat,EneFormat,              &
 
-                          intensity_only,analysis_only,EVR,cart,        &
+                          intensity_only,analysis_only,Grid_only,EVR,   &
+                          cart,                                         &
                           GridTOBasis_test,OpPsi_test,                  &
                           optimization,nDfit,nDGrid,                    &
                           main_test,                                    &
@@ -109,6 +111,7 @@
 
         intensity_only     = .FALSE.
         analysis_only      = .FALSE.
+        Grid_only          = .FALSE.
         test               = .FALSE.
         cart               = .FALSE.
         GridTOBasis_test   = .FALSE.
@@ -210,6 +213,8 @@
         para_EVRT_calc%EVR              = EVR
         para_EVRT_calc%analysis_only    = analysis_only
         para_EVRT_calc%intensity_only   = intensity_only
+        para_EVRT_calc%Grid_only        = Grid_only
+
         para_EVRT_calc%cart             = cart
         para_EVRT_calc%GridTOBasis_test = GridTOBasis_test
         para_EVRT_calc%OpPsi_test       = OpPsi_test
