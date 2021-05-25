@@ -2,7 +2,7 @@
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 # F90 = mpifort
- F90 = gfortran
+  F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
