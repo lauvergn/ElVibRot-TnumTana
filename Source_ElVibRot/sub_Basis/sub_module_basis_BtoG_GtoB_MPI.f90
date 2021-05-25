@@ -47,7 +47,7 @@ MODULE mod_basis_BtoG_GtoB_MPI
   IMPLICIT NONE
 
   CONTAINS
-  !===========================================================================
+!=======================================================================================
   SUBROUTINE CVecB_TO_CVecG_R_MPI(SRep,CVecG)
     IMPLICIT NONE
 
@@ -88,7 +88,8 @@ MODULE mod_basis_BtoG_GtoB_MPI
 
       CALL MPI_collect_info(Cvec_length,bcast=.True.,MS=MPI_scheme)
 
-      IF(MPI_scheme==1 .OR. (MPI_scheme==3 .AND. MPI_nodes_p0)) THEN
+      ! IF(MPI_scheme==1 .OR. (MPI_scheme==3 .AND. MPI_nodes_p0)) THEN
+      IF(keep_MPI) THEN
         CALL allocate_array(Cvec_temp,1,Cvec_length(MPI_id))
         itabR=0
         DO iG=d1,d2
@@ -111,9 +112,9 @@ MODULE mod_basis_BtoG_GtoB_MPI
 
 #endif
   ENDSUBROUTINE CVecB_TO_CVecG_R_MPI
-  !===========================================================================
-  
-  !===========================================================================
+!=======================================================================================
+
+!=======================================================================================
   SUBROUTINE CVecB_TO_CVecG_C_MPI(SRep,CVecG)
     IMPLICIT NONE
 
@@ -158,7 +159,8 @@ MODULE mod_basis_BtoG_GtoB_MPI
 
       CALL MPI_collect_info(Cvec_length,bcast=.True.,MS=MPI_scheme)
 
-      IF(MPI_scheme==1 .OR. (MPI_scheme==3 .AND. MPI_nodes_p0)) THEN
+      ! IF(MPI_scheme==1 .OR. (MPI_scheme==3 .AND. MPI_nodes_p0)) THEN
+      IF(keep_MPI) THEN
         CALL allocate_array(Cvec_temp1,1,Cvec_length(MPI_id))
         itabR=0
         DO iG=d1,d2
@@ -169,9 +171,11 @@ MODULE mod_basis_BtoG_GtoB_MPI
       ENDIF
 
       d1=Sum(Cvec_length(0:MPI_np-1))
-      IF(keep_MPI) CALL allocate_array(Cvec_temp2,1,d1)
-      CALL MPI_combine_array(Cvec_temp2,Cvec_temp1,lengths=Cvec_length,MS=MPI_scheme)
-      IF(allocated(Cvec_temp1)) deallocate(Cvec_temp1)
+      IF(keep_MPI) THEN
+        CALL allocate_array(Cvec_temp2,1,d1)
+        CALL MPI_combine_array(Cvec_temp2,Cvec_temp1,lengths=Cvec_length,MS=MPI_scheme)
+        IF(allocated(Cvec_temp1)) deallocate(Cvec_temp1)
+      ENDIF
 
       IF(MPI_scheme==1) THEN
         CALL MPI_Bcast_(Cvec_temp2,d1,root_MPI)
@@ -179,12 +183,14 @@ MODULE mod_basis_BtoG_GtoB_MPI
         CALL MPI_Bcast(Cvec_temp2,d1,Cplx_MPI,root_MPI,MPI_NODE_0_COMM,MPI_err)
       ENDIF
 
-      IF(keep_MPI) CVecG(1:d1)=CVecG(1:d1)+Cvec_temp2(1:d1)
-      IF(allocated(Cvec_temp2)) deallocate(Cvec_temp2)
+      IF(keep_MPI) THEN
+        CVecG(1:d1)=CVecG(1:d1)+Cvec_temp2(1:d1)
+        IF(allocated(Cvec_temp2)) deallocate(Cvec_temp2)
+      ENDIF
     ENDIF
 
 #endif
   ENDSUBROUTINE CVecB_TO_CVecG_C_MPI
-  !===========================================================================
+!=======================================================================================
 
 END MODULE mod_basis_BtoG_GtoB_MPI
