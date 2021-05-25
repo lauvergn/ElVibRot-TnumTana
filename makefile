@@ -2,7 +2,7 @@
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 # F90 = mpifort
-  F90 = gfortran
+ F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
@@ -12,17 +12,17 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
 #
 ## force the default integer (without kind) during the compillation.
 ## default 4: , INT=8 (for kind=8)
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 1
+ARPACK = 0
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -59,9 +59,9 @@ endif
 
 # obj directory
 ifeq ($(F90),mpifort)
-  obj_dir = obj/obj_$(F90)_$(MPICORE)
+  obj_dir = obj/obj_$(F90)_$(MPICORE)_$(INT)
 else
-  obj_dir = obj/obj_$(F90)
+  obj_dir = obj/obj_$(F90)_$(INT)
 endif
 ## turn off ARPACK
 #=================================================================================
@@ -170,7 +170,7 @@ ifeq ($(F90),nagfor)
    endif
 
    ifeq ($(INT),8)
-     F90FLAGS := $(F90FLAGS) -i8
+     F90FLAGS := $(F90FLAGS) -i8 -Dint8=1
    endif
 
    F90_VER = $(shell $(F90) -V 3>&1 1>&2 2>&3 | head -1 )
@@ -209,7 +209,7 @@ ifeq ($(F90),ifort)
    endif
 
    ifeq ($(INT),8)
-     F90FLAGS := $(F90FLAGS) -i8
+     F90FLAGS := $(F90FLAGS) -i8 -Dint8=1
    endif
 
    F90_VER = $(shell $(F90) --version | head -1 )
@@ -305,7 +305,7 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
    endif
    # integer kind management
    ifeq ($(INT),8)
-      F90FLAGS := $(F90FLAGS) -fdefault-integer-8
+      F90FLAGS := $(F90FLAGS) -fdefault-integer-8 -Dint8=1
    endif
 
    F90_VER = $(shell $(F90) --version | head -1 )
@@ -345,6 +345,7 @@ ifeq ($(F90),mpifort)
    #
    # opt management
    ifeq ($(MPICORE), gfortran)
+     CPPpre += -Drun_MPI_gfortran=1
      ifeq ($(OPT),1)
         F90FLAGS = -O5 -g -fbacktrace $(OMPFLAG) -funroll-loops -ftree-vectorize -falign-loops=16
      else
@@ -354,6 +355,7 @@ ifeq ($(F90),mpifort)
         #F90FLAGS = -O0 -fbounds-check -Wuninitialized
      endif
    else
+     CPPpre += -Drun_MPI_ifort=1
      ifeq ($(OPT),1)
        F90FLAGS =  -O5 -g #-check all -fpe0 -warn -traceback -debug extended
      else
@@ -446,6 +448,10 @@ $(info ***********************************************************************)
 $(info ***************** TNUM_ver: $(TNUM_ver))
 $(info ***************** TANA_ver: $(TANA_ver))
 $(info ****************** EVR_ver: $(EVR_ver))
+$(info ***********************************************************************)
+$(info ***********************************************************************)
+$(info ************ run UnitTests: make UT)
+$(info ********** clean UnitTests: make clean_UT)
 $(info ***********************************************************************)
 #
 #
@@ -682,7 +688,8 @@ Obj_module =  \
  $(OBJ)/sub_module_basis_set_alloc.o \
  $(OBJ)/sub_module_basis_RCVec_SG4.o \
  $(OBJ)/sub_module_basis_BtoG_GtoB_SG4_MPI.o $(OBJ)/sub_module_basis_BtoG_GtoB_SG4.o\
- $(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o $(OBJ)/sub_module_basis_BtoG_GtoB.o \
+ $(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o \
+ $(OBJ)/sub_module_basis_BtoG_GtoB_MPI.o $(OBJ)/sub_module_basis_BtoG_GtoB.o \
  $(OBJ)/sub_module_basis.o \
  $(OBJ)/sub_module_BasisMakeGrid.o \
  $(OBJ)/sub_module_poly.o $(OBJ)/sub_module_GWP.o \
@@ -788,25 +795,25 @@ libEVR libevr: obj $(OBJ)/libEVR.a
 .PHONY: tnum Tnum tnum-dist Tnum-dist Tnum_MCTDH Tnum_MidasCpp Midas midas
 
 Tnum_FDriver: obj $(Main_TnumTana_FDriverEXE)
-	echo "Main_TnumTana_FDriver OK"
+	@echo "Main_TnumTana_FDriver OK"
 Tnum_cDriver: obj $(Main_TnumTana_cDriverEXE)
-	echo "Main_TnumTana_cDriver OK"
+	@echo "Main_TnumTana_cDriver OK"
 #
 libTnum libTnum.a: obj $(OBJ)/libTnum.a
-	echo "libTnum.a OK"
+	@echo "libTnum.a OK"
 #
 keotest: obj $(KEOTESTEXE)
-	echo "TEST_TnumTana OK"
+	@echo "TEST_TnumTana OK"
 
 tnum Tnum tnum-dist Tnum-dist: obj $(TNUMEXE)
-	echo "Tnum OK"
+	@echo "Tnum OK"
 #
 Tnum_MCTDH: obj $(TNUMMCTDHEXE)
-	echo "Tnum_MCTDH OK"
+	@echo "Tnum_MCTDH OK"
 #
 #TNUM_MiddasCppEXE
 Tnum_MidasCpp Midas midas: obj $(TNUM_MiddasCppEXE)
-	echo "Tnum_MidasCpp OK"
+	@echo "Tnum_MidasCpp OK"
 #
 .PHONY: Tana_test
 Tana_test: Tana_test.exe
@@ -818,15 +825,15 @@ $(OBJ)/Tana_test.o: $(DirTNUM)/sub_main/Tana_test.f90
 # Some all programs
 .PHONY: gauss GWP work
 gauss GWP: obj $(GWPEXE)
-	echo "GWP OK"
+	@echo "GWP OK"
 #
 work:obj $(WORKEXE)
-	echo "work OK"
+	@echo "work OK"
 #============================================================================
 # Physical Constants
 .PHONY: PhysConst
 PhysConst: obj $(PhysConstEXE)
-	echo "Physical Constants OK"
+	@echo "Physical Constants OK"
 #============================================================================
 # Unitary tests
 .PHONY: ut UT UnitTests
@@ -836,7 +843,7 @@ ut UT UnitTests: UT_Frac UT_PhysConst UT_Tnum UT_HNO3 UT_HCN UT_HCN-WP
 UT_Frac ut_frac : UnitTests_Frac.exe
 	@echo "---------------------------------------"
 	@echo "Unitary tests for the Frac module"
-	@UnitTests_Frac.exe > $(DIRUT)/res_UT_Frac ; awk -f $(DIRUT)/frac.awk $(DIRUT)/res_UT_Frac
+	@./UnitTests_Frac.exe > $(DIRUT)/res_UT_Frac ; awk -f $(DIRUT)/frac.awk $(DIRUT)/res_UT_Frac
 	@echo "---------------------------------------"
 UnitTests_Frac.exe: obj $(Obj_lib) $(OBJ)/UnitTests_Frac.o
 	$(LYNK90)   -o UnitTests_Frac.exe $(OBJ)/UnitTests_Frac.o $(Obj_lib) $(LYNKFLAGS)
@@ -895,7 +902,7 @@ endif
 # QML
 .PHONY: qml QML
 qml QML: $(QMLibDIR_full)
-	echo "make qml library"
+	@echo "make qml library"
 $(QMLibDIR_full):
 	cd $(QMLibDIR) ; make
 
@@ -912,6 +919,11 @@ vib:
 	./scripts/make_vib.sh $(DIR_EVRT) $(F90)
 	chmod a+x vib
 
+.PHONY: clean_UT
+clean_UT:
+	@cd UnitTests ; ./clean
+	@echo "UnitTests cleaned"
+
 # clean
 #	@cd sub_pot ; cp sub_system_save.f sub_system.f
 #	@cd sub_pot ; cp sub_system_save.f90 sub_system.f90
@@ -921,6 +933,7 @@ vib:
 .PHONY: clean
 clean: clean_example
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib
+	rm -f *.lst $(DIR_EVRT)/obj/*/*.o $(DIR_EVRT)/obj/*/*.mod $(DIR_EVRT)/obj/*/*.MOD $(EXE) *.exe $(DIR_EVRT)/obj/*/*.a vib
 	rm -rf *.dSYM
 	rm -f .DS_Store */.DS_Store */*/.DS_Store */*/*/.DS_Store
 	@cd sub_pot                              ; rm -f sub_system.f sub_system.f90
@@ -945,7 +958,7 @@ clean: clean_example
 #===============================================
 #
 $(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(QMLibDIR_full)
-	echo EVR-T
+	@echo EVR-T
 	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(LYNKFLAGS)
 #	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
 #===============================================
@@ -1120,7 +1133,7 @@ $(OBJ)/sub_module_Coord_KEO.o:$(DirTNUM)/sub_module_Coord_KEO.f90
 $(OBJ)/calc_f2_f1Q.o:$(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
 	sed "s/zmatrix/CoordType/" $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90 > $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i
 	sed "s/Write_mole/Write_CoordType/" $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i > $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
-	echo Warning the calc_f2_f1Q.f90 file has been modified.
+	@echo Warning the calc_f2_f1Q.f90 file has been modified.
 	rm $(DirTNUM)/sub_operator_T/calc_f2_f1Q.i
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_operator_T/calc_f2_f1Q.f90
 $(OBJ)/Sub_X_TO_Q_ana.o:$(DirTNUM)/sub_operator_T/Sub_X_TO_Q_ana.f90
@@ -1237,6 +1250,8 @@ $(OBJ)/sub_module_basis_BtoG_GtoB_SG4_MPI.o:$(DIRbaSG4)/sub_module_basis_BtoG_Gt
 
 $(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o:$(DIRba)/sub_module_basis_BtoG_GtoB_SGType2.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_module_basis_BtoG_GtoB_SGType2.f90
+$(OBJ)/sub_module_basis_BtoG_GtoB_MPI.o:$(DIRba)/sub_module_basis_BtoG_GtoB_MPI.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRba)/sub_module_basis_BtoG_GtoB_MPI.f90
 $(OBJ)/sub_module_basis_BtoG_GtoB.o:$(DIRba)/sub_module_basis_BtoG_GtoB.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_module_basis_BtoG_GtoB.f90
 $(OBJ)/sub_module_basis.o:$(DIRba)/sub_module_basis.f90
@@ -1466,7 +1481,7 @@ $(OBJ)/sub_Smolyak_test.o:$(DIRSmolyak)/sub_Smolyak_test.f90
 # sub_system.o
 $(OBJ)/sub_system.o:$(DirPot)/sub_system.$(extf)
 	sed "s/zmatrix/CoordType/" $(DirPot)/sub_system.$(extf) > $(DirPot)/sub_system.i
-	echo Warning the sub_system.$(extf) file has been modified.
+	@echo Warning the sub_system.$(extf) file has been modified.
 	mv $(DirPot)/sub_system.i $(DirPot)/sub_system.$(extf)
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirPot)/sub_system.$(extf)
 $(OBJ)/read_para.o:$(DirPot)/read_para.f90
@@ -1533,9 +1548,8 @@ endif
 #=======================================================================================
 ifeq ($(F90),mpifort)
 $(info ***********************************************************************)
-$(info *********** to run UnitTests  : make UT)
-$(info *********** to run MPI example: make example)
-$(info *********** to clean MPI test : make clean_example)
+$(info ********** run MPI example: make example)
+$(info ******** clean MPI example: make clean_example)
 $(info ***********************************************************************)
 endif
 
@@ -1560,7 +1574,7 @@ endif
 # clean test results
 .PHONY: clean_example
 clean_example:
-	@echo "clean test file"
+	@echo "clean MPI examples"
 	@rm -rf ./Working_tests/MPI_tests/*/result
 	@echo "removed ./Working_tests/MPI_tests/*/result"
 ifeq ($(F90),mpifort)
@@ -1571,4 +1585,4 @@ ifeq ($(F90),$(filter $(F90), gfortran ifort pgf90))
 	@rm -rf ./Working_tests/MPI_tests/*/openMP_test.log
 	@echo "removed ./Working_tests/MPI_tests/*/openMP_test.log"
 endif
-	@echo "clean test file done"
+	@echo "MPI examples cleaned"

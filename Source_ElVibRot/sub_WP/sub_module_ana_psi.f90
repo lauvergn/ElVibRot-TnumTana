@@ -318,15 +318,15 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
       IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
 
       IF (ana_psi%propa .AND. ana_psi%T == ZERO) THEN
-        CALL file_open2(name_filePsi,nioPsi)
+        IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi)
       ELSE
-        CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
+        IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
       END IF
 
-      CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,                   &
-                    ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,          &
-                    ecri_psi2=.TRUE.)
-      close(nioPsi)
+      IF(MPI_id==0) CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,     &
+                         ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,     &
+                         ecri_psi2=.TRUE.)
+      IF(MPI_id==0) close(nioPsi)
     END IF
 
     IF (.NOT. adia .AND. ana_psi%Write_psi_Grid) THEN
@@ -334,15 +334,15 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
       IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
 
       IF (ana_psi%propa .AND. ana_psi%T == ZERO) THEN
-        CALL file_open2(name_filePsi,nioPsi)
+        IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi)
       ELSE
-        CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
+        IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
       END IF
 
-      CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,                   &
-                    ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,          &
-                    ecri_psi2=.FALSE.)
-      close(nioPsi)
+      IF(MPI_id==0) CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,     &
+                         ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.,     &
+                         ecri_psi2=.FALSE.)
+      IF(MPI_id==0) close(nioPsi)
     END IF
     !---------------------------------------------------------------------------
 
@@ -352,24 +352,24 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
       IF (ana_psi%propa) THEN
         IF (ana_psi%T == ZERO) THEN
-          CALL file_open2(name_filePsi,nioPsi)
+          IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi)
         ELSE
-          CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
+          IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
         END IF
-        CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,            &
-                      ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
-                      ecri_psi2=.FALSE.)
+        IF(MPI_id==0) CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,   &
+                           ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
+                           ecri_psi2=.FALSE.)
       ELSE
         IF (ana_psi%num_psi == 1) THEN
-          CALL file_open2(name_filePsi,nioPsi)
+          IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi)
         ELSE
-          CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
+          IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
         END IF
-        CALL ecri_psi(psi=psi,nioWP=nioPsi,                        &
-                      ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
-                      ecri_psi2=.FALSE.)
+        IF(MPI_id==0) CALL ecri_psi(psi=psi,nioWP=nioPsi,               &
+                           ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
+                           ecri_psi2=.FALSE.)
       END IF
-      close(nioPsi)
+      IF(MPI_id==0) close(nioPsi)
     END IF
 
     IF (.NOT. adia .AND. ana_psi%Write_psi_Basis) THEN
@@ -378,25 +378,24 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
       IF (ana_psi%propa) THEN
         IF (ana_psi%T == ZERO) THEN
-          CALL file_open2(name_filePsi,nioPsi)
+          IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi)
         ELSE
-          CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
+          IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
         END IF
-        CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,            &
-                      ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
-                      ecri_psi2=.FALSE.)
+        IF(MPI_id==0) CALL ecri_psi(T=ana_psi%T,psi=psi,nioWP=nioPsi,   &
+                           ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
+                           ecri_psi2=.FALSE.)
       ELSE
         IF (ana_psi%num_psi == 1) THEN
-          CALL file_open2(name_filePsi,nioPsi)
+          IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi)
         ELSE
-          CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
+          IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi,append=.TRUE.)
         END IF
-        CALL ecri_psi(psi=psi,nioWP=nioPsi,                        &
-                      ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
-                      ecri_psi2=.FALSE.)
+        IF(MPI_id==0) CALL ecri_psi(psi=psi,nioWP=nioPsi,               &
+                           ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.,   &
+                           ecri_psi2=.FALSE.)
       END IF
-      close(nioPsi)
-
+      IF(MPI_id==0) close(nioPsi)
     END IF
   END IF
 
@@ -1914,8 +1913,8 @@ END SUBROUTINE sub_analyze_psi
             norm2BasisRep = psi%BasisRep
             norm2GridRep  = psi%GridRep
           END IF
-       END IF
-     END IF
+        END IF
+      END IF
 
       IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep,psiN',norm2GridRep,norm2BasisRep,psiN
       IF (norm2GridRep .AND. norm2BasisRep) THEN
@@ -1924,7 +1923,6 @@ END SUBROUTINE sub_analyze_psi
         write(out_unitp,*) ' BasisRep,GridRep',psi%BasisRep,psi%GridRep
         STOP
       END IF
-
 
       CALL Channel_weight(tab_WeightChannels,psi,norm2GridRep,norm2BasisRep)
 
@@ -1935,7 +1933,6 @@ END SUBROUTINE sub_analyze_psi
       IF (debug) THEN
         write(out_unitp,*) 'norm2 : ',psi%norm2,tab_WeightChannels
       END IF
-
 
 
       IF (psiN) THEN

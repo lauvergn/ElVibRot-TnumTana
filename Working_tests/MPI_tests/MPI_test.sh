@@ -19,7 +19,7 @@ fi
 echo 'test log in MPI_test.log'
 
 ## -------------------------------------------------------------------------------------
-echo 'Davidson test:'
+echo 'Davidson example:'
 ## -------------------------------------------------------------------------------------
 
 ## Davidson test: 6D
@@ -127,7 +127,7 @@ fi
 
 
 ## -------------------------------------------------------------------------------------
-echo 'Propagation test:'
+echo 'Propagation example:'
 ## -------------------------------------------------------------------------------------
 
 ## Propagation test: 12D
@@ -135,7 +135,7 @@ echo 'Propagation test:'
 # 12D: scheme 0-2
 for ii in {0..2}
 do
-  echo "> 12D, MPI scheme $ii: result in $here/12D_Davidson_S$ii/result"
+  echo "> 12D, MPI scheme $ii: result in $here/12D_propagation_S$ii/result"
   cd 12D_propagation_S$ii
 
   ./run_jobs >> MPI_test.log
@@ -157,7 +157,7 @@ done
 
 # 12D: scheme 3
 if [ $num_cores -gt  2 ]; then
-  echo "> 12D, MPI quasi-scheme 3: result in $here/12D_Davidson_S3/result"
+  echo "> 12D, MPI quasi-scheme 3: result in $here/12D_propagation_S3/result"
   cd 12D_propagation_S3
 
   ./run_jobs >> MPI_test.log
@@ -235,7 +235,7 @@ fi
 
 ## ----------------------------------------------------------------------------------
 ## scheme 3
-echo "To test MPI scheme 3, set MPI_fake_nodes>0 and submit jobs to more than one node"
+echo "To test MPI scheme 3, set MPI_fake_nodes>0 with more processores or submit jobs to more than one node"
 
 
 

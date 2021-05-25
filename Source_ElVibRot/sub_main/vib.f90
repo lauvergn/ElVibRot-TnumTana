@@ -308,8 +308,10 @@
               END DO
             END IF ! for para_propa%para_WP0%WP0_nb_CleanChannel > 0
 
+            IF(keep_MPI) CALL norm2_psi(WP0(1))
+            CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
+
             IF(keep_MPI) THEN
-              CALL norm2_psi(WP0(1))
               write(out_unitp,*) ' Norm^2 of |WP0>',WP0(1)%norm2
               CALL renorm_psi_With_norm2(WP0(1))
               write(out_unitp,*) ' Analysis of |WP0> or Mu|WP0>'
@@ -320,11 +322,12 @@
               ana_WP0               = para_propa%ana_psi
               CALL modif_ana_psi(ana_WP0,                               &
                                  Ene=ZERO,T=ZERO,ZPE=ZERO,Write_Psi=.FALSE.)
+
               ana_WP0%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
+
               CALL sub_analyze_tab_psi(WP0(:),ana_WP0,adia=.FALSE.)
               CALL dealloc_ana_psi(ana_WP0)
             END IF
-
             ! spectral tranformation cannot be done here,
             !   because the matrix representation is not done yet
 
@@ -823,8 +826,10 @@
           CALL time_perso('sub_analyse ini')
           write(out_unitp,*)
 
-          IF(keep_MPI) CALL sub_analyse(Tab_Psi,nb_diago,para_H,                         &
-                                         para_ana,para_intensity,para_AllOp,const_phys)
+          IF(keep_MPI) THEN
+             CALL sub_analyse(Tab_Psi,nb_diago,para_H,                                 &
+                              para_ana,para_intensity,para_AllOp,const_phys)
+          ENDIF
 
           CALL flush_perso(out_unitp)
 

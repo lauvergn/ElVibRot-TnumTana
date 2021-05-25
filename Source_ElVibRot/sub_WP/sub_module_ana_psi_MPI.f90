@@ -44,7 +44,7 @@ MODULE mod_ana_psi_MPI
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: norm_psi_MPI
+  PUBLIC :: norm_psi_MPI,share_psi_nodes_MPI
 
 CONTAINS
 !=======================================================================================      
@@ -325,6 +325,126 @@ CONTAINS
 
   END SUBROUTINE Channel_weight_MPI
 !=======================================================================================  
+
+!=======================================================================================
+! share psi%RvecB with the other processors in MPI scheme 3
+!=======================================================================================
+  SUBROUTINE share_psi_nodes_MPI(psi,psi_size)
+    USE mod_system
+    USE mod_psi_set_alloc
+    USE mod_MPI_aux
+
+    TYPE(param_psi),               intent(inout) :: psi(:)
+    Integer,                       intent(in)    :: psi_size
+
+    Real(kind=Rkind),allocatable                 :: RvecB_all(:)
+    Complex(kind=Rkind),allocatable              :: CvecB_all(:)
+    Integer                                      :: size_vecB
+    Integer                                      :: size_psi
+    Integer                                      :: d1,d2
+    Integer                                      :: ii
+
+#if(run_MPI)
+
+    If(MPI_id==0) THEN
+      IF(psi(1)%cplx) THEN
+        size_vecB=size(psi(1)%CvecB)
+      ELSE
+        size_vecB=size(psi(1)%RvecB)
+      ENDIF
+      size_psi=psi_size
+    ENDIF
+    CALL MPI_Bcast_(size_psi,  size1_MPI,root_MPI)
+    CALL MPI_Bcast_(size_vecB,size1_MPI,root_MPI)
+
+    ! IF(MPI_id==0) THEN
+    !   CALL allocate_array(RvecB_all,1,size_vecB*size_psi)
+    !   DO ii=1,size_psi
+    !     d1=size_vecB*(ii-1)+1
+    !     d2=size_vecB* ii
+    !     RvecB_all(d1:d2)=psi(ii)%RvecB
+    !   ENDDO
+
+    !   DO ii=1,MPI_nodes_num-1
+    !     CALL MPI_Send(RvecB_all,size_vecB*size_psi,Real_MPI,MPI_nodes_p00(ii),        &
+    !                   MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
+    !   ENDDO
+
+    ! ELSEIF(MPI_nodes_p0) THEN !---------------------------------------------------------
+    !   CALL allocate_array(RvecB_all,1,size_vecB*size_psi)
+
+    !   CALL MPI_Recv(RvecB_all,size_vecB*size_psi,Real_MPI,root_MPI,MPI_id,            &
+    !                 MPI_COMM_WORLD,MPI_stat,MPI_err)
+
+    !   DO ii=1,size_psi
+    !     allocate(psi(ii)%RvecB(size_vecB))
+    !     d1=size_vecB*(ii-1)+1
+    !     d2=size_vecB* ii
+    !     psi(ii)%RvecB=RvecB_all(d1:d2)
+    !   ENDDO
+
+    ! ENDIF
+    ! IF(allocated(RvecB_all)) deallocate(RvecB_all)
+
+    IF(psi(1)%cplx) THEN
+      CALL allocate_array(CvecB_all,1,size_vecB*size_psi)
+    ELSE
+      CALL allocate_array(RvecB_all,1,size_vecB*size_psi)
+    ENDIF
+    IF(MPI_id==0) THEN
+      DO ii=1,size_psi
+        d1=size_vecB*(ii-1)+1
+        d2=size_vecB* ii
+        IF(psi(1)%cplx) THEN
+          CvecB_all(d1:d2)=psi(ii)%CvecB
+        ELSE
+          RvecB_all(d1:d2)=psi(ii)%RvecB
+        ENDIF
+      ENDDO
+    ENDIF
+
+    IF(MPI_nodes_p0) THEN
+      IF(psi(1)%cplx) THEN
+        CALL MPI_BCAST(CvecB_all,size_vecB*size_psi,Cplx_MPI,root_MPI,                &
+                       MPI_NODE_0_COMM,MPI_err)
+      ELSE
+        CALL MPI_BCAST(RvecB_all,size_vecB*size_psi,Real_MPI,root_MPI,                &
+                       MPI_NODE_0_COMM,MPI_err)
+      ENDIF
+    ENDIF
+
+    IF(MPI_id/=0) THEN
+      DO ii=1,size_psi
+        IF(psi(1)%cplx) THEN
+          allocate(psi(ii)%CvecB(size_vecB))
+        ELSE
+          allocate(psi(ii)%RvecB(size_vecB))
+        ENDIF
+
+        d1=size_vecB*(ii-1)+1
+        d2=size_vecB* ii
+
+        IF(psi(1)%cplx) THEN
+          psi(ii)%RvecB=CvecB_all(d1:d2)
+        ELSE
+          psi(ii)%RvecB=RvecB_all(d1:d2)
+        ENDIF
+      ENDDO
+    ENDIF
+
+    IF(allocated(RvecB_all)) deallocate(RvecB_all)
+    IF(allocated(CvecB_all)) deallocate(CvecB_all)
+
+    DO ii=1,size_psi
+      IF(MPI_nodes_p0) THEN
+        CALL MPI_BCAST(psi(ii)%norm2,size1_MPI,Real_MPI,root_MPI,MPI_NODE_0_COMM,MPI_err)
+        CALL MPI_BCAST(psi(ii)%symab,size1_MPI,Int_MPI,root_MPI,MPI_NODE_0_COMM,MPI_err)
+      ENDIF
+    ENDDO
+
+#endif
+  END SUBROUTINE share_psi_nodes_MPI
+!=======================================================================================
 
 END MODULE mod_ana_psi_MPI
 

@@ -2027,7 +2027,6 @@ MODULE mod_psi_Op_MPI
 
 !=======================================================================================
 !> subroutine calculating overlap of psi1 and psi2 with MPI
-!>  NOTE: work with Overlap_psi1_psi2_MPI3
 !>  be careful with the way distributing array, 
 !>  which is ready in Overlap_psi1_psi2_MPI3
 !---------------------------------------------------------------------------------------

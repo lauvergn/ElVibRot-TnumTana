@@ -62,6 +62,7 @@ CONTAINS
       USE mod_propa_MPI,   ONLY:MPI_Bcast_param_Davidson
       USE mod_Davidson_MPI,ONLY:MakeResidual_Davidson_MPI4,             &
                                 MakeResidual_Davidson_j_MPI3
+      USE mod_ana_psi_MPI, ONLY:share_psi_nodes_MPI
       USE mod_psi_Op_MPI,  ONLY:sub_LCpsi_TO_psi_MPI
       USE mod_MPI_aux
       IMPLICIT NONE
@@ -208,22 +209,18 @@ CONTAINS
 
       CALL init_psi(g,para_H,para_H%cplx)
       CALL alloc_psi(g,      BasisRep=With_Basis,GridRep=With_Grid)
+
       IF(keep_MPI) THEN
         ! read guess on master
         CALL ReadWP0_Davidson(psi,psi0,Vec0,nb_diago,max_diago,   &
                               para_Davidson,para_H%cplx)
-
-        ! save the nb_diago wp
-        IF(MPI_id==0) CALL sub_save_psi(psi,nb_diago,para_propa%file_WP)
-      ENDIF ! for keep_MPI
+      ENDIF
+      ! save the nb_diago wp
+      IF(MPI_id==0) CALL sub_save_psi(psi,nb_diago,para_propa%file_WP)
       write(out_unitp,*) '  sub_save_psi: psi done'
       RealTime = Delta_RealTime(DavidsonTime)
-      CALL flush_perso(out_unitp)
 
-!#if(run_MPI)
-!      CALL MPI_Bcast(nb_diago,size1_MPI,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
-!      CALL MPI_Bcast_param_Davidson(para_Davidson)
-!#endif
+      CALL flush_perso(out_unitp)
       IF(openmpi .AND. MPI_scheme/=1) THEN
         CALL MPI_Bcast_(nb_diago,size1_MPI,root_MPI)
         CALL MPI_Bcast_param_Davidson(para_Davidson)

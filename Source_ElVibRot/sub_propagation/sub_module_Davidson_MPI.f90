@@ -125,7 +125,11 @@ MODULE mod_Davidson_MPI
           RS=S_overlap1D(ii)
           IF(RS==ZERO) CYCLE
           ! be careful on the difference of vec on different threads
-          psi(ndim+1)%RvecB=psi(ndim+1)%RvecB-psi(ii)%RvecB*RS
+          IF(keep_MPI) THEN
+            psi(ndim+1)%RvecB=psi(ndim+1)%RvecB-psi(ii)%RvecB*RS
+          ELSE
+            psi(ndim+1)%RvecB(d1:d2)=psi(ndim+1)%RvecB(d1:d2)-psi(ii)%RvecB(d1:d2)*RS
+          ENDIF
         ENDDO ! ii=1,ndim
       ENDIF
     ENDDO ! do Schmidt process twice
@@ -238,7 +242,7 @@ MODULE mod_Davidson_MPI
         
         CALL Residual_Davidson_sum_MPI(g,Hpsi,psi,Vec,Ene,ndim,case_vec,size_vec,jj)
 
-        IF(MPI_id==0) THEN
+        IF(keep_MPI) THEN
           CALL Set_symab_OF_psiBasisRep(g,symab=psi(isym)%symab)
           CALL norm2_psi(g)
           tab_norm2g(jj) = sqrt(g%norm2)
@@ -799,7 +803,7 @@ MODULE mod_Davidson_MPI
                           MPI_COMM_WORLD,MPI_err)
         END SELECT
         
-        IF(MPI_id==0) THEN
+        IF(keep_MPI) THEN
           CALL Set_symab_OF_psiBasisRep(g,symab=psi(isym)%symab)
           CALL norm2_psi(g)
           tab_norm2g(jj) = sqrt(g%norm2)

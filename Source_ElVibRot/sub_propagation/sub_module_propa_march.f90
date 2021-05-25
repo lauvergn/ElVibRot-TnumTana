@@ -1769,7 +1769,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
  !CALL ecri_psi(psi=psi)
 !     - Phase Shift -----------------------------------
       phase = para_H%E0*para_propa%WPdeltaT
-      psi   = psi * exp(-cmplx(ZERO,phase,kind=Rkind))
+      IF(keep_MPI) psi   = psi * exp(-cmplx(ZERO,phase,kind=Rkind))
 
  !write(out_unitp,*) ' Psi after phase shift '
  !CALL ecri_psi(psi=psi)
@@ -3985,18 +3985,18 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       exitall=.FALSE. !< MPI: for controling the exit of all threads
       Type_FileGrid4=(para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4)
 
-      psi_save = psi
+      IF(keep_MPI) psi_save = psi
 
       DO icheb=1,max_cheby
 
         !IF(openmpi) THEN
         IF(Type_FileGrid4) THEN
-          w1  = psi
+          IF(keep_MPI) w1  = psi
           IF(para_propa%once_Hmin) THEN
             CALL sub_OpPsi(w1,w2,para_H) ! calculate once for Hmax
             CALL sub_Hmax(para_propa,para_H)
-            para_propa%once_Hmin=.FALSE.
 
+            para_propa%once_Hmin=.FALSE.
             para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
             para_propa%para_poly%Hmin = para_propa%Hmin
             para_propa%para_poly%Hmax = para_propa%Hmax
@@ -4004,10 +4004,11 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
             CALL initialisation1_poly(para_propa%para_poly,                            &
                                       para_propa%WPdeltaT,                             &
                                       para_propa%type_WPpropa)
-            
+
             para_H%scaled = .TRUE.
             para_H%E0     = para_propa%para_poly%E0
             para_H%Esc    = para_propa%para_poly%Esc
+
             !write(out_unitp,*) 'Hmin,Hmax check:', para_propa%Hmin,para_propa%Hmax
           ENDIF
         ENDIF
@@ -4047,7 +4048,6 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         END IF
 
         psi0Hkpsi0(0) = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
-
         IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(psi0Hkpsi0(0),size1_MPI,root_MPI)
 
         rt  = cmplx(ZERO,-ONE,kind=Rkind)
@@ -4056,8 +4056,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 !     - The first term of the expansion ------------------
         ! IF(.NOT. openmpi) w1  = psi
         IF(.NOT. Type_FileGrid4) w1  = psi
-
-        psi = psi * para_propa%para_poly%coef_poly(1)
+        IF(keep_MPI) psi = psi * para_propa%para_poly%coef_poly(1)
 
         psi0Hkpsi0(1) =  psi0Hkpsi0(0)
 
@@ -4096,15 +4095,13 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
             w1 = w2
             w2 = w3
             psi = psi + w2 * para_propa%para_poly%coef_poly(jt)
+          ENDIF
 
+          IF(keep_MPI) THEN
             CALL norm2_psi(w2)
-
             norm_exit = abs(w2%norm2*para_propa%para_poly%coef_poly(jt))
           ENDIF
-!#if(run_MPI)
-!          CALL MPI_Bcast(norm_exit,size1_MPI,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
-!#endif
-          IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(norm_exit,size1_MPI,root_MPI)
+          IF(openmpi) CALL MPI_Bcast_(norm_exit,size1_MPI,root_MPI)
 
           jt_exit = jt
           IF (debug) write(out_unitp,*) 'jt,norms',jt,norm_exit

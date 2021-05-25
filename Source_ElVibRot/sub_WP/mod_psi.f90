@@ -48,6 +48,7 @@ MODULE mod_psi
   USE mod_psi_io
   USE mod_psi_B_TO_G
   USE mod_psi_Op
+  USE mod_ana_psi_MPI, ONLY:share_psi_nodes_MPI
   IMPLICIT NONE
 
   PRIVATE :: psi0_gaussGridRep
@@ -200,6 +201,8 @@ CONTAINS
       END IF ! for para_WP0%New_Read_WP0
 
       IF(keep_MPI) CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
+      ! ENDIF
+
       IF(keep_MPI) write(out_unitp,*) 'norm2WP BasisRep',WP0(1)%norm2
 
       !- clear WP0%...GridRep, if not need ------------------

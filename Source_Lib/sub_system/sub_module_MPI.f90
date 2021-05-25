@@ -29,16 +29,29 @@ MODULE mod_MPI
   Integer(kind=MPI_INTEGER_KIND)                 :: Real_MPI                  !< real type for fortran (Rkind)
   Integer(kind=MPI_INTEGER_KIND)                 :: Cplx_MPI                  !< complex type for fortran (Rkind)
   Integer(kind=MPI_INTEGER_KIND)                 :: Int_fortran               !< integer type of default fortran
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_NODE_0_WORLD
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_NODE_0_GROUP
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_NODE_0_COMM           !< communcator for masters on each nodes
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_COMM_current
   !-USE MPI_F08-------------------------------------------------------------------------
 !  TYPE(MPI_Status)                              :: MPI_stat                  !< status of MPI process
 !  TYPE(MPI_Datatype)                            :: Int_MPI                   !< integer type of default MPI
 !  TYPE(MPI_Datatype)                            :: Real_MPI                  !< real type for fortran (Rkind)
 !  TYPE(MPI_Datatype)                            :: Cplx_MPI                  !< complex type for fortran (Rkind)
 !  TYPE(MPI_Datatype)                            :: Int_fortran               !< integer type of default fortran
+!  TYPE(MPI_Group)                               :: MPI_NODE_0_WORLD
+!  TYPE(MPI_Group)                               :: MPI_NODE_0_GROUP
+!  TYPE(MPI_Comm)                                :: MPI_NODE_0_COMM           !< communcator for masters on each nodes
+!  TYPE(MPI_Comm)                                :: MPI_COMM_current
+
   !-------------------------------------------------------------------------------------
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_NODE_0_ERR
+
   Integer(kind=MPI_INTEGER_KIND)                 :: MPI_err                   !< error flag for MPI
   Integer(kind=MPI_INTEGER_KIND)                 :: MPI_id                    !< rocess ID, 0~MPI_np-1
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_id_node=-1            !< rocess ID in node comm
   Integer(kind=MPI_INTEGER_KIND)                 :: MPI_np                    !< total number of MPI threads
+  Integer(kind=MPI_INTEGER_KIND)                 :: MPI_np_node=-1            !< total number of MPI threads
   Integer(kind=MPI_INTEGER_KIND)                 :: MPI_tag1                  !< tag for MPI send and receive
   Integer(kind=MPI_INTEGER_KIND)                 :: MPI_tag2                  !< tag for MPI send and receive
   
@@ -74,11 +87,12 @@ MODULE mod_MPI
   Character(LEN=MPI_MAX_PROCESSOR_NAME)          :: MPI_node_name
   Logical                                        :: MPI_nodes_p0=.FALSE.      !< the qusei-master p on each node
   Integer,allocatable                            :: MPI_nodes_p00(:)          !< information of MPI_nodes_p0 on master
+  Logical,allocatable                            :: MPI_nodes_00(:)           !< if processor 0 on each node, known by MPI_id 0
   Integer                                        :: MPI_node_id               !< nodes rank
   Integer                                        :: MPI_node_p0_id            !< quasi-master id
   Integer                                        :: MPI_sub_id(2)             !< processors affiliated
   Integer                                        :: MPI_fake_nodes=0          !< fake nodes for S3
-  Logical                                        :: iGs_auto=.FALSE.          !< if auto-adjust the distribution of Smolyak terms
+  Logical                                        :: MPI_iGs_auto=.FALSE.      !< if auto-adjust the distribution of Smolyak terms
   Integer                                        :: MPI_mem_node=0            !< in unit of GB
 
   TYPE MPI_S_type 
@@ -190,6 +204,7 @@ MODULE mod_MPI
     Integer                                      :: ii
     Integer                                      :: jj
     Logical                                      :: match
+    Logical                                      :: nodes_p0_temp
 
     Integer                                      :: nb_per_node
     Integer                                      :: nb_rem_node
@@ -198,7 +213,11 @@ MODULE mod_MPI
 
     allocate(MPI_nodes_name(0:MPI_np-1))
     allocate(MPI_nodes_np(0:MPI_np-1))
-    IF(MPI_id==0) allocate(MPI_nodes_p00(0:MPI_np-1))
+    IF(MPI_id==0) THEN
+      allocate(MPI_nodes_p00(0:MPI_np-1))
+      allocate(MPI_nodes_00(0:MPI_np-1))
+      MPI_nodes_00=.FALSE.
+    ENDIF
     MPI_nodes_np=0
     MPI_nodes_name=''
 
@@ -222,7 +241,10 @@ MODULE mod_MPI
           MPI_node_p0_id=node_d1(ii)-1
         ENDIF
         IF(MPI_id==node_d1(ii)-1) MPI_nodes_p0=.TRUE.
-        IF(MPI_id==0) MPI_nodes_p00(ii)=node_d1(ii)-1
+        IF(MPI_id==0) THEN
+          MPI_nodes_p00(ii)=node_d1(ii)-1
+          MPI_nodes_00(node_d1(ii)-1)=.TRUE.
+        ENDIF
       ENDDO
 
       deallocate(node_d1)
@@ -236,6 +258,9 @@ MODULE mod_MPI
         MPI_nodes_name(0)=MPI_node_name
         MPI_nodes_np(0)=MPI_nodes_np(0)+1
         MPI_node_id=0
+        MPI_nodes_p00(0)=0
+        MPI_nodes_p0=.TRUE.
+        MPI_nodes_00(MPI_id)=.TRUE.
       ENDIF
 
       ii=0
@@ -249,7 +274,7 @@ MODULE mod_MPI
           CALL MPI_Recv(MPI_node_name,MPI_MAX_PROCESSOR_NAME,MPI_Character,i_MPI,      &
                         i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
           
-          MPI_nodes_p0=.FALSE.
+          nodes_p0_temp=.FALSE.
 
           ! check match
           match=.FALSE.
@@ -264,11 +289,12 @@ MODULE mod_MPI
             ii=ii+1
             MPI_nodes_name(ii)=MPI_node_name
             MPI_nodes_np(ii)=MPI_nodes_np(ii)+1
-            MPI_nodes_p0=.TRUE.
+            nodes_p0_temp=.TRUE.
             MPI_nodes_p00(ii)=i_MPI
+            MPI_nodes_00(i_MPI)=.TRUE.
           ENDIF
 
-          CALL MPI_send(MPI_nodes_p0,size1_MPI,MPI_Logical,i_MPI,                      &
+          CALL MPI_send(nodes_p0_temp,size1_MPI,MPI_Logical,i_MPI,                      &
                         i_MPI,MPI_COMM_WORLD,MPI_err)
         ENDDO ! i_MPI
 
@@ -283,7 +309,6 @@ MODULE mod_MPI
         write(out_unitp,*) ' '
 11      format('   ',a10,' ',i3,' cores')
 
-        MPI_nodes_p0=.FALSE.
       ENDIF ! MPI_id
 
       CALL MPI_Bcast(MPI_nodes_num,size1_MPI,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
@@ -307,8 +332,8 @@ MODULE mod_MPI
 
     IF(MPI_id==0 .OR. MPI_nodes_p0) THEN
       MPI_sub_id(1)=MPI_id+1
-      MPI_sub_id(2)=MPI_sub_id(1)+MPI_nodes_np(MPI_node_id)-2
-      write(out_unitp,*) 'MPI_nodes_id check:',MPI_id,MPI_node_id,MPI_node_p0_id,MPI_sub_id(1),MPI_sub_id(2)
+      MPI_sub_id(2)=MPI_id+MPI_nodes_np(MPI_node_id)-1
+      write(out_unitp,*) 'MPI_nodes_id check:',MPI_id,MPI_node_id,MPI_node_p0_id,MPI_sub_id(1),MPI_sub_id(2),MPI_nodes_p0
     ENDIF
 
   ENDSUBROUTINE get_nodes_info_MPI
@@ -320,9 +345,16 @@ MODULE mod_MPI
   Integer                                        :: MPI_err=0
   Integer                                        :: MPI_id=0
   Integer                                        :: MPI_np=1
-  
+  Integer                                        :: MPI_id_node=0
+  Integer                                        :: MPI_np_node=1
+
+#if(int8)
+  Integer,parameter                              :: MPI_INTEGER_KIND=8
+  Integer,parameter                              :: MPI_ADDRESS_KIND=8
+#else
   Integer,parameter                              :: MPI_INTEGER_KIND=4
   Integer,parameter                              :: MPI_ADDRESS_KIND=4
+#endif
   Integer                                        :: MPI_scheme=0
   Integer                                        :: iG1_MPI      
   Integer                                        :: iG2_MPI  
@@ -336,9 +368,12 @@ MODULE mod_MPI
   Integer                                        :: n_level2
   Integer                                        :: MPI_mc=1
   Integer                                        :: MPI_fake_nodes=0
-  Logical                                        :: iGs_auto=.True.
+  Logical                                        :: MPI_iGs_auto=.True.
   Logical                                        :: keep_MPI=.True.
   Integer                                        :: MPI_mem_node=0
+  Logical                                        :: MPI_nodes_p0=.TRUE.
+  Integer                                        :: MPI_sub_id(2)
+
 
   TYPE MPI_S_type 
     Logical                                      :: davidson=.FALSE.
@@ -350,8 +385,8 @@ MODULE mod_MPI
   TYPE(MPI_S_type)                               :: MPI_S
 
 
-  Integer                        :: time_rate       !< for function system_clock()
-  Integer                        :: time_max        !< for function system_clock()
+  Integer                                        :: time_rate       !< for function system_clock()
+  Integer                                        :: time_max        !< for function system_clock()
 
   Contains
   SUBROUTINE ini_MPI()

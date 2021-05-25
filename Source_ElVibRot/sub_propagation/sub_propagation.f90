@@ -162,7 +162,7 @@ CONTAINS
       SGtype4    = SGtype4 .AND. (para_H%BasisnD%SparseGrid_type == 4)
 
       IF (abs(para_propa%type_WPpropa) /= 33 .AND. abs(para_propa%type_WPpropa) /= 34) THEN
-        WP(1) = WP0(1)
+        IF(keep_MPI) WP(1) = WP0(1)
       END IF
 
       IF (para_propa%n_WPecri < 1) THEN !nothing written
@@ -908,7 +908,6 @@ CONTAINS
 
          ! propgation for given fixed t
          CALL march_gene(T,psi(1:1),psi0(1:1),1,.FALSE.,para_H,para_propa)
-
          it = it + 1
          T  = T + para_propa%WPdeltaT
 
@@ -923,7 +922,7 @@ CONTAINS
       CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
 !----------------------------------------------------------
 
-      CALL file_close(para_propa%file_autocorr)
+      IF(MPI_id==0) CALL file_close(para_propa%file_autocorr)
       IF (psi(1)%norm2 >= para_propa%max_norm2) STOP
 
 !----------------------------------------------------------

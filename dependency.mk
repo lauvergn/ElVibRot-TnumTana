@@ -61,7 +61,9 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_module_basis_BtoG_GtoB_SG4_MPI.o $(OBJ)/sub_OpPsi_MPI.o  \
                    $(OBJ)/sub_Hmax_MPI.o $(OBJ)/sub_module_propa_march_MPI.o           \
                    $(OBJ)/sub_module_ana_psi_MPI.o $(OBJ)/mod_CAP.o $(OBJ)/mod_HStep.o \
-                   $(OBJ)/sub_quadra_SincDVR.o
+                   $(OBJ)/sub_quadra_SincDVR.o $(OBJ)/$(PhysConstMAIN).o               \
+                   $(OBJ)/Module_ForTnumTana_Driver.o $(OBJ)/TnumTana_Lib.o            \
+                   $(OBJ)/$(TNUMMAIN).o $(OBJ)/sub_module_basis_BtoG_GtoB_MPI.o
 $(lib_dep_mod_system):$(OBJ)/sub_module_system.o
 
 #mod_EVR
@@ -77,19 +79,25 @@ $(lib_dep_mod_CRP):$(OBJ)/sub_CRP.o
 lib_dep_mod_Coord_KEO=$(OBJ)/sub_Auto_Basis.o $(OBJ)/sub_PrimOp_def.o                  \
                       $(OBJ)/sub_module_basis.o $(OBJ)/sub_quadra_SparseBasis2n.o      \
                       $(OBJ)/cart.o $(OBJ)/nb_harm.o $(OBJ)/sub_main_Optimization.o    \
-                      $(OBJ)/sub_main_nDfit.o $(OBJ)/EVR_Module.o
+                      $(OBJ)/sub_main_nDfit.o $(OBJ)/EVR_Module.o                      \
+                      $(OBJ)/Module_ForTnumTana_Driver.o $(OBJ)/$(TNUMMAIN).o
 $(lib_dep_mod_Coord_KEO):$(OBJ)/sub_module_Coord_KEO.o
 
 #mod_Constant
 lib_dep_mod_Constant=$(OBJ)/sub_analyse.o $(OBJ)/sub_freq.o $(OBJ)/sub_diago_H.o       \
                      $(OBJ)/sub_module_analysis.o $(OBJ)/EVR_Module.o                  \
-                     $(OBJ)/sub_CRP.o $(OBJ)/sub_module_Davidson_MPI.o
+                     $(OBJ)/sub_CRP.o $(OBJ)/sub_module_Davidson_MPI.o                 \
+                     $(OBJ)/$(PhysConstMAIN).o
 $(lib_dep_mod_Constant):$(OBJ)/sub_module_constant.o
 
 #mod_NumParameters
 lib_dep_mod_NumParameters=$(OBJ)/sub_module_memory.o $(OBJ)/sub_module_MPI.o           \
-                          $(OBJ)/sub_module_RealWithUnit.o
+                          $(OBJ)/sub_module_RealWithUnit.o $(OBJ)/UnitTests_Frac.o
 $(lib_dep_mod_NumParameters):$(OBJ)/sub_module_NumParameters.o
+
+#mod_Tana_op
+lib_dep_mod_Tana_op=$(OBJ)/sub_module_Tana_Tnum.o
+$(lib_dep_mod_Tana_op):$(OBJ)/sub_module_Tana_op.o
 
 #mod_Tana_Op1D
 lib_dep_mod_Tana_Op1D=$(OBJ)/sub_module_Tana_OpnD.o $(OBJ)/sub_module_Tana_OpnD.o      \
@@ -107,7 +115,8 @@ lib_dep_mod_dnSVM=$(OBJ)/Lib_QTransfo.o $(OBJ)/sub_module_DInd.o                
                   $(OBJ)/RPHTransfo.o $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o         \
                   $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_module_SimpleOp.o             \
                   $(OBJ)/sub_module_cart.o $(OBJ)/sub_math_util.o                      \
-                  $(OBJ)/mod_FiniteDiff.o $(OBJ)/Calc_Tab_dnQflex.o
+                  $(OBJ)/mod_FiniteDiff.o $(OBJ)/Calc_Tab_dnQflex.o                    \
+                  $(OBJ)/$(TNUMMAIN).o 
 $(lib_dep_mod_dnSVM):$(OBJ)/sub_module_dnSVM.o
 
 #mod_dnM
@@ -210,6 +219,10 @@ $(lib_dep_mod_basis_set_alloc):$(OBJ)/sub_module_basis_set_alloc.o
 lib_dep_mod_basis_BtoG_GtoB=$(OBJ)/sub_module_basis.o
 $(lib_dep_mod_basis_BtoG_GtoB):$(OBJ)/sub_module_basis_BtoG_GtoB.o
 
+#mod_basis_BtoG_GtoB_MPI
+lib_dep_mod_basis_BtoG_GtoB_MPI=$(OBJ)/sub_module_basis_BtoG_GtoB.o
+$(lib_dep_mod_basis_BtoG_GtoB_MPI):$(OBJ)/sub_module_basis_BtoG_GtoB_MPI.o
+
 #mod_basis_BtoG_GtoB_SGType2
 lib_dep_mod_basis_BtoG_GtoB_SGType2=$(OBJ)/sub_module_basis_BtoG_GtoB.o
 $(lib_dep_mod_basis_BtoG_GtoB_SGType2):$(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o
@@ -234,7 +247,8 @@ $(lib_dep_mod_poly):$(OBJ)/sub_module_poly.o
 #mod_basis_BtoG_GtoB_SGType4
 lib_dep_mod_basis_BtoG_GtoB_SGType4=$(OBJ)/sub_module_ComOp.o                          \
                                     $(OBJ)/sub_module_OpGrid.o                         \
-                                    $(OBJ)/sub_module_basis_BtoG_GtoB.o
+                                    $(OBJ)/sub_module_basis_BtoG_GtoB.o                \
+                                    $(OBJ)/sub_module_basis_BtoG_GtoB_MPI.o
 $(lib_dep_mod_basis_BtoG_GtoB_SGType4):$(OBJ)/sub_module_basis_BtoG_GtoB_SG4.o
 
 #mod_basis_BtoG_GtoB_SGType4_MPI
@@ -262,7 +276,8 @@ lib_dep_mod_ana_psi=$(OBJ)/sub_module_psi_io.o $(OBJ)/sub_module_psi_Op.o       
 $(lib_dep_mod_ana_psi):$(OBJ)/sub_module_ana_psi.o
 
 #mod_ana_psi_MPI
-lib_dep_mod_ana_psi_MPI=$(OBJ)/sub_module_Davidson.o $(OBJ)/sub_module_Davidson_MPI.o
+lib_dep_mod_ana_psi_MPI=$(OBJ)/sub_module_Davidson.o $(OBJ)/sub_module_Davidson_MPI.o  \
+                        $(OBJ)/sub_module_psi_io.o
 $(lib_dep_mod_ana_psi_MPI):$(OBJ)/sub_module_ana_psi_MPI.o
 
 #mod_psi_Op
@@ -403,7 +418,7 @@ lib_dep_mod_dnRho=$(OBJ)/sub_module_Tana_NumKEO.o $(OBJ)/calc_dng_dnGG.o
 $(lib_dep_mod_dnRho):$(OBJ)/sub_dnRho.o
 
 #mod_Tana_write_mctdh
-lib_dep_mod_Tana_write_mctdh=$(OBJ)/sub_module_Tana_keo.o
+lib_dep_mod_Tana_write_mctdh=$(OBJ)/sub_module_Tana_keo.o $(OBJ)/sub_module_Tana_Tnum.o
 $(lib_dep_mod_Tana_write_mctdh):$(OBJ)/sub_module_Tana_Export_KEO.o
 
 #mod_PrimOp
@@ -506,7 +521,7 @@ lib_dep_mod_dnS=$(OBJ)/sub_module_VecOFdnS.o $(OBJ)/sub_module_dnV.o
 $(lib_dep_mod_dnS):$(OBJ)/sub_module_dnS.o
 
 #mod_param_WP0
-lib_dep_mod_param_WP0=$(OBJ)/mod_psi.o
+lib_dep_mod_param_WP0=$(OBJ)/mod_psi.o $(OBJ)/sub_module_psi_io.o
 $(lib_dep_mod_param_WP0):$(OBJ)/sub_module_param_WP0.o
 
 #mod_MatOFdnS
@@ -525,3 +540,123 @@ $(lib_dep_mod_PrimOp_RPH):$(OBJ)/sub_PrimOp_RPH.o
 #mod_IntVM
 lib_dep_mod_IntVM=$(OBJ)/sub_module_dnSVM.o
 $(lib_dep_mod_IntVM):$(OBJ)/sub_module_IntVM.o
+
+#mod_QTOXanaTransfo
+lib_dep_mod_QTOXanaTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_QTOXanaTransfo):$(OBJ)/QTOXanaTransfo.o
+
+#mod_ZmatTransfo
+lib_dep_mod_ZmatTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_ZmatTransfo):$(OBJ)/ZmatTransfo.o
+
+#mod_RectilinearNM_Transfo
+lib_dep_mod_RectilinearNM_Transfo=$(OBJ)/Lib_QTransfo.o
+$(lib_dep_mod_RectilinearNM_Transfo):$(OBJ)/RectilinearNM_Transfo.o
+
+#mod_OneDTransfo
+lib_dep_mod_OneDTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_OneDTransfo):$(OBJ)/OneDTransfo.o
+
+#mod_ThreeDTransfo
+lib_dep_mod_ThreeDTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_ThreeDTransfo):$(OBJ)/ThreeDTransfo.o
+
+#mod_TwoDTransfo
+lib_dep_mod_TwoDTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_TwoDTransfo):$(OBJ)/TwoDTransfo.o
+
+#mod_Rot2CoordTransfo
+lib_dep_mod_Rot2CoordTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_Rot2CoordTransfo):$(OBJ)/Rot2CoordTransfo.o
+
+#mod_FlexibleTransfo
+lib_dep_mod_FlexibleTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_FlexibleTransfo):$(OBJ)/FlexibleTransfo.o
+
+#mod_GeneTransfo
+lib_dep_mod_GeneTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_GeneTransfo):$(OBJ)/GeneTransfo.o
+
+#mod_HyperSpheTransfo
+lib_dep_mod_HyperSpheTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_HyperSpheTransfo):$(OBJ)/HyperSpheTransfo.o
+
+#mod_LinearNMTransfo
+lib_dep_mod_LinearNMTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_LinearNMTransfo):$(OBJ)/LinearNMTransfo.o
+
+#mod_RPHTransfo
+lib_dep_mod_RPHTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_RPHTransfo):$(OBJ)/RPHTransfo.o
+
+#mod_ActiveTransfo
+lib_dep_mod_ActiveTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_ActiveTransfo):$(OBJ)/ActiveTransfo.o
+
+#mod_freq
+lib_dep_mod_freq=$(OBJ)/RPHTransfo.o
+$(lib_dep_mod_freq):$(OBJ)/sub_freq.o
+
+#mod_dnDetGG_dnDetg
+lib_dep_mod_dnDetGG_dnDetg=$(OBJ)/calc_dng_dnGG.o
+$(lib_dep_mod_dnDetGG_dnDetg):$(OBJ)/sub_dnDetGG_dnDetg.o
+
+#mod_Tana_PiEulerRot
+lib_dep_mod_Tana_PiEulerRot=$(OBJ)/sub_module_Tana_Tnum.o $(OBJ)/sub_module_Tana_op.o
+$(lib_dep_mod_Tana_PiEulerRot):$(OBJ)/sub_module_Tana_PiEulerRot.o
+
+#mod_Tana_keo
+lib_dep_mod_Tana_keo=$(OBJ)/sub_module_Coord_KEO.o
+$(lib_dep_mod_Tana_keo):$(OBJ)/sub_module_Tana_keo.o
+
+#mod_RotBasis_Param
+lib_dep_mod_RotBasis_Param=$(OBJ)/sub_module_basis_set_alloc.o
+$(lib_dep_mod_RotBasis_Param):$(OBJ)/sub_module_RotBasis.o
+
+#mod_Basis_Grid_Param
+lib_dep_mod_Basis_Grid_Param=$(OBJ)/sub_module_basis_set_alloc.o
+$(lib_dep_mod_Basis_Grid_Param):$(OBJ)/sub_module_basis_Grid_Param.o
+
+#mod_SymAbelian
+lib_dep_mod_SymAbelian=$(OBJ)/sub_module_basis_set_alloc.o
+$(lib_dep_mod_SymAbelian):$(OBJ)/sub_SymAbelian.o
+
+#mod_Basis_L_TO_n
+lib_dep_mod_Basis_L_TO_n=$(OBJ)/sub_module_basis_set_alloc.o
+$(lib_dep_mod_Basis_L_TO_n):$(OBJ)/sub_module_Basis_LTO_n.o
+
+#mod_basis_RCVec_SGType4
+lib_dep_mod_basis_RCVec_SGType4=$(OBJ)/sub_module_basis_BtoG_GtoB_SG4_MPI.o
+$(lib_dep_mod_basis_RCVec_SGType4):$(OBJ)/sub_module_basis_RCVec_SG4.o
+
+#mod_type_ana_psi
+lib_dep_mod_type_ana_psi=$(OBJ)/sub_module_psi_set_alloc.o
+$(lib_dep_mod_type_ana_psi):$(OBJ)/sub_module_type_ana_psi.o
+
+#mod_CAP
+lib_dep_mod_CAP=$(OBJ)/sub_PrimOp_def.o
+$(lib_dep_mod_CAP):$(OBJ)/mod_CAP.o
+
+#mod_HStep
+lib_dep_mod_HStep=$(OBJ)/sub_PrimOp_def.o
+$(lib_dep_mod_HStep):$(OBJ)/mod_HStep.o
+
+#mod_SimpleOp
+lib_dep_mod_SimpleOp=$(OBJ)/sub_PrimOp_RPH.o
+$(lib_dep_mod_SimpleOp):$(OBJ)/sub_module_SimpleOp.o
+
+#mod_ReadOp
+lib_dep_mod_ReadOp=$(OBJ)/sub_module_SetOp.o
+$(lib_dep_mod_ReadOp):$(OBJ)/sub_module_ReadOp.o
+
+#mod_field
+lib_dep_mod_field=$(OBJ)/sub_module_ExactFact.o
+$(lib_dep_mod_field):$(OBJ)/sub_module_field.o
+
+#Module_ForTnumTana_Driver
+lib_dep_Module_ForTnumTana_Driver=$(OBJ)/TnumTana_Lib.o
+$(lib_dep_Module_ForTnumTana_Driver):$(OBJ)/Module_ForTnumTana_Driver.o
+
+#mod_Frac
+lib_dep_mod_Frac=$(OBJ)/UnitTests_Frac.o
+$(lib_dep_mod_Frac):$(OBJ)/mod_Frac.o

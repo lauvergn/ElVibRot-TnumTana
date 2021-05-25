@@ -46,6 +46,7 @@
       USE mod_psi,      ONLY : param_psi,Set_psi_With_index,renorm_psi, &
                        alloc_psi,dealloc_psi,alloc_array,dealloc_array, &
                        Write_ana_psi
+      USE mod_ana_psi_MPI
       USE mod_propa
       USE mod_FullPropa
       USE mod_Davidson
@@ -206,11 +207,12 @@
       IF (debug) write(out_unitp,*) 'nb_tot',psi%nb_tot
       CALL alloc_psi(psi,BasisRep =.TRUE.)
 
-      psi = ZERO
+      IF(keep_MPI) psi = ZERO
       IF(keep_MPI) CALL Set_psi_With_index(psi,R=ONE,ind_aie=psi%nb_tot)
       psi%symab = -1
 
       IF(keep_MPI) CALL renorm_psi(psi,BasisRep=.TRUE.)
+
       IF (debug) write(out_unitp,*) 'psi%symab',psi%symab
 
       IF(keep_MPI) Hpsi = psi

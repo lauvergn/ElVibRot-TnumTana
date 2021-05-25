@@ -284,12 +284,12 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
 !      write(out_unitp,*) '------------------------------------------------'
 !      write(out_unitp,*) 'iGs_MPI at current step: ',iGs_MPI
 !
-!      IF(iGs_auto .AND. MPI_np>1) CALL auto_iGs_MPI(para_Op)
+!      IF(MPI_iGs_auto .AND. MPI_np>1) CALL auto_iGs_MPI(para_Op)
 !      write(out_unitp,*) 'iGs_MPI at new step    : ',iGs_MPI
 !      write(out_unitp,*) '------------------------------------------------'
 !      
 !      ! get new size_ST according to new iGs_MPI
-!      IF(iGs_auto) THEN
+!      IF(MPI_iGs_auto) THEN
 !        Do i_MPI=0,MPI_np-1
 !          size_ST(i_MPI)=0;
 !          DO iG=iGs_MPI(1,i_MPI),iGs_MPI(2,i_MPI)
@@ -644,7 +644,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
       write(out_unitp,*) 'iGs_MPI initial: ',iGs_MPI
       write(out_unitp,*) '------------------------------------------------'
     ELSE
-      IF(iGs_auto) THEN
+      IF(MPI_iGs_auto) THEN
         iGs_change=.FALSE.
         ! auto balance Smolyak terms assigned to different threads
         IF(MPI_np>1) CALL auto_iGs_MPI(para_Op,iGs_change)
@@ -658,7 +658,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           CALL set_iGs_MPI_mc(BasisnD)
           CALL get_size_ST(BasisnD,size_ST,size_ST_mc)
         ENDIF
-      ENDIF ! iGs_auto
+      ENDIF ! MPI_iGs_auto
     ENDIF
 
     ! initialize time count
@@ -1008,7 +1008,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
       write(out_unitp,*) 'iGs_MPI initial: ',iGs_MPI
       write(out_unitp,*) '------------------------------------------------'
     ELSE
-      IF(iGs_auto) THEN
+      IF(MPI_iGs_auto) THEN
         iGs_change=.FALSE.
         ! auto balance Smolyak terms assigned to different threads
         IF(MPI_np>1) CALL auto_iGs_MPI(para_Op,iGs_change)
@@ -1022,7 +1022,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           CALL set_iGs_MPI_mc(BasisnD)
           CALL get_size_ST(BasisnD,size_ST,size_ST_mc)
         ENDIF
-      ENDIF ! iGs_auto
+      ENDIF ! MPI_iGs_auto
     ENDIF
 
     ! initialize time count
@@ -1127,29 +1127,31 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
 
       ! collect result from each node-------------------------------------------------
       IF(MPI_id==0) THEN
-        CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
-        DO ii=1,MPI_nodes_num-1
-          CALL MPI_Recv(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
-                        ii,MPI_COMM_WORLD,MPI_stat,MPI_err)
+        IF(MPI_nodes_num>1) THEN
+          CALL allocate_array(RvecB_all,1,size_RvecB*size_psi)
+          DO ii=1,MPI_nodes_num-1
+            CALL MPI_Recv(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
+                          ii,MPI_COMM_WORLD,MPI_stat,MPI_err)
 
+            DO itab=1,size_psi
+              d1=size_RvecB*(itab-1)+1
+              d2=size_RvecB* itab
+              OpPsi(itab)%RvecB=OpPsi(itab)%RvecB+RvecB_all(d1:d2)
+            ENDDO
+          ENDDO
+
+          ! share result with node_p0
           DO itab=1,size_psi
             d1=size_RvecB*(itab-1)+1
             d2=size_RvecB* itab
-            OpPsi(itab)%RvecB=OpPsi(itab)%RvecB+RvecB_all(d1:d2)
+            RvecB_all(d1:d2)=OpPsi(itab)%RvecB
           ENDDO
-        ENDDO
 
-        ! share result with node_p0
-        DO itab=1,size_psi
-          d1=size_RvecB*(itab-1)+1
-          d2=size_RvecB* itab
-          RvecB_all(d1:d2)=OpPsi(itab)%RvecB
-        ENDDO
-
-        DO ii=1,MPI_nodes_num-1
-          CALL MPI_Send(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
-                        MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
-        ENDDO
+          DO ii=1,MPI_nodes_num-1
+            CALL MPI_Send(RvecB_all,size_RvecB*size_psi,Real_MPI,MPI_nodes_p00(ii),    &
+                          MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
+          ENDDO
+        ENDIF
 
       ELSEIF(MPI_nodes_p0) THEN
 

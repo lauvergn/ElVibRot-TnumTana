@@ -4,7 +4,8 @@
 
 ./comp
 
-compOK=`tail -1 comp.log | grep -c OK `
+##compOK=`tail -1 comp.log | grep -c OK `
+compOK=`grep -c 'OK' comp.log `
 
 if [ $compOK = '1' ]
 then

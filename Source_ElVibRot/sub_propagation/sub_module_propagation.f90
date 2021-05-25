@@ -702,8 +702,10 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   !-----------------------------------------------------------
 
   !-----------------------------------------------------------
-  w2 = WP(1) ! just for the initialization
-  IF(keep_MPI) CALL alloc_psi(w2,GridRep=.TRUE.)
+  IF(keep_MPI) THEN
+    w2 = WP(1) ! just for the initialization
+    CALL alloc_psi(w2,GridRep=.TRUE.)
+  ENDIF
 
   DO i=1,nb_WP
     !-----------------------------------------------------------
@@ -712,8 +714,11 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
     ! =>first the energy
     IF(keep_MPI) THEN
       w1 = WP(i)
-      CALL norm2_psi(w1,GridRep=.FALSE.,BasisRep=.TRUE.)
     ENDIF
+
+    IF(keep_MPI) CALL norm2_psi(w1,GridRep=.FALSE.,BasisRep=.TRUE.)
+    IF(openmpi)  CALL MPI_Bcast_(w1%norm2,size1_MPI,root_MPI)
+
     CALL sub_PsiOpPsi(ET,w1,w2,para_H)
     IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(ET,size1_MPI,root_MPI)
 
@@ -867,12 +872,14 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
 !-----------------------------------------------------------
 
   !-----------------------------------------------------------
-  w2 = WP(1) ! just for the initialization
-  CALL alloc_psi(w2)
+  IF(keep_MPI) THEN
+    w2 = WP(1) ! just for the initialization
+    CALL alloc_psi(w2)
+  ENDIF
 
   DO i=1,nb_WP
 
-    w1 = WP(i)
+    IF(keep_MPI) w1 = WP(i)
     !-----------------------------------------------------------
     ! => Analysis for diabatic potential (always done)
 
@@ -880,7 +887,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
       CALL Channel_weight(tab_WeightChannels,w1,GridRep=.FALSE.,BasisRep=.TRUE.)
       Psi_norm2 = sum(tab_WeightChannels)
     ENDIF
-    IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(Psi_norm2,size1_MPI,root_MPI)
+    IF(openmpi) CALL MPI_Bcast_(Psi_norm2,size1_MPI,root_MPI)
 
     ! add the psi number + the time
     psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat='f12.2')
@@ -913,11 +920,11 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
     psi_line = psi_line // ' ' // real_TO_char(Psi_norm2,Rformat='f10.7')
     DO i_be=1,WP(i)%nb_be
     DO i_bi=1,WP(i)%nb_bi
-      IF(keep_MPI) psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
+      IF(MPI_id==0) psi_line = psi_line // ' ' // real_TO_char(tab_WeightChannels(i_bi,i_be),Rformat='f10.7')
     END DO
     END DO
 
-    IF(keep_MPI) write(out_unitp,*) psi_line
+    IF(MPI_id==0) write(out_unitp,*) psi_line
 
 
   END DO

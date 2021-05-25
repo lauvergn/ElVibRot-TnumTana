@@ -154,10 +154,14 @@ MODULE mod_MPI_aux
   Contains
 
 !---------------------------------------------------------------------------------------
+! we need a better realtime memory check subroutine.
+!---------------------------------------------------------------------------------------
     !> check total memory used at certain point
     SUBROUTINE system_mem_usage(memory_RSS,name)
       USE mod_NumParameters
-      !USE ifport ! if on intel compiler
+#if(run_MPI_ifort)
+      USE ifport ! if on intel compiler
+#endif
       IMPLICIT NONE
       Integer, intent(out) :: memory_RSS
       Character(len=200):: filename=' '
@@ -166,6 +170,8 @@ MODULE mod_MPI_aux
       Integer :: pid
       Logical :: ifxst
       Character (len=*), intent(in) :: name
+
+#if(run_MPI)
 
       memory_RSS=-1 ! return negative number if not found
 
@@ -193,6 +199,8 @@ MODULE mod_MPI_aux
         write(out_unitp,121) name,memory_RSS,MPI_id    ! kB
 121     format('memory check at ',a,': ',i4,' from ',i4)
       ENDIF
+
+#endif
     ENDSUBROUTINE system_mem_usage
 
 !---------------------------------------------------------------------------------------
@@ -1076,92 +1084,125 @@ MODULE mod_MPI_aux
 !---------------------------------------------------------------------------------------
 !< interface: MPI_Reduce_sum_Bcast
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_Reduce_sum_Bcast_real(value)
+    SUBROUTINE MPI_Reduce_sum_Bcast_real(value,MS)
       IMPLICIT NONE
 
-      Real(kind=Rkind),     intent(inout) :: value
-      Real(kind=Rkind)                    :: value_temp
+      Real(kind=Rkind),            intent(inout) :: value
+      Integer,optional,               intent(in) :: MS
+      Real(kind=Rkind)                           :: value_temp
 
 #if(run_MPI)
 
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) MPI_COMM_current=MPI_NODE_0_COMM
+      ENDIF
+
       CALL MPI_Reduce(value,value_temp,size1_MPI,Real_MPI,MPI_SUM,root_MPI,            &
-                      MPI_COMM_WORLD,MPI_err)
+                      MPI_COMM_current,MPI_err)
+
       IF(MPI_id==0) value=value_temp
-      CALL MPI_Bcast(value,size1_MPI,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+      CALL MPI_Bcast(value,size1_MPI,Real_MPI,root_MPI,MPI_COMM_current,MPI_err)
 
 #endif
     ENDSUBROUTINE MPI_Reduce_sum_Bcast_real
 
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_Reduce_sum_Bcast_complex(value)
+    SUBROUTINE MPI_Reduce_sum_Bcast_complex(value,MS)
       IMPLICIT NONE
 
-      Complex(kind=Rkind),  intent(inout) :: value
-      Complex(kind=Rkind)                 :: value_temp
+      Complex(kind=Rkind),         intent(inout) :: value
+      Integer,optional,               intent(in) :: MS
+      Complex(kind=Rkind)                        :: value_temp
 
 #if(run_MPI)
 
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) MPI_COMM_current=MPI_NODE_0_COMM
+      ENDIF
+      
       CALL MPI_Reduce(value,value_temp,size1_MPI,Cplx_MPI,MPI_SUM,root_MPI,            &
-                      MPI_COMM_WORLD,MPI_err)
+                      MPI_COMM_current,MPI_err)
       IF(MPI_id==0) value=value_temp
-      CALL MPI_Bcast(value,size1_MPI,Cplx_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+      CALL MPI_Bcast(value,size1_MPI,Cplx_MPI,root_MPI,MPI_COMM_current,MPI_err)
 
 #endif
     ENDSUBROUTINE MPI_Reduce_sum_Bcast_complex
 
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_Reduce_sum_Bcast_int(value)
+    SUBROUTINE MPI_Reduce_sum_Bcast_int(value,MS)
       IMPLICIT NONE
 
-      Integer,              intent(inout) :: value
-      Integer                             :: value_temp
+      Integer,                     intent(inout) :: value
+      Integer,optional,               intent(in) :: MS
+      Integer                                    :: value_temp
 
 #if(run_MPI)
 
-      CALL MPI_Reduce(value,value_temp,size1_MPI,Int_MPI,MPI_SUM,root_MPI,             &
-                      MPI_COMM_WORLD,MPI_err)
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) MPI_COMM_current=MPI_NODE_0_COMM
+      ENDIF
+
+      CALL MPI_Reduce(value,value_temp,size1_MPI,Int_MPI,MPI_SUM,root_MPI,           &
+                      MPI_COMM_current,MPI_err)
       IF(MPI_id==0) value=value_temp
-      CALL MPI_Bcast(value,size1_MPI,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+      CALL MPI_Bcast(value,size1_MPI,Int_MPI,root_MPI,MPI_COMM_current,MPI_err)
 
 #endif
     ENDSUBROUTINE MPI_Reduce_sum_Bcast_int
 
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_Reduce_sum_Bcast_array_int(array,length)
+    SUBROUTINE MPI_Reduce_sum_Bcast_array_int(array,length,MS)
       IMPLICIT NONE
 
-      Integer,              intent(inout) :: array(length)
-      Integer,                 intent(in) :: length 
-      Integer                             :: array_temp(length)
+      Integer,                     intent(inout) :: array(length)
+      Integer,                        intent(in) :: length 
+      Integer,optional,               intent(in) :: MS
+      Integer                                    :: array_temp(length)
 
 #if(run_MPI)
 
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) MPI_COMM_current=MPI_NODE_0_COMM
+      ENDIF
+
       array_temp=0
+
       CALL MPI_Reduce(array,array_temp,length,Int_MPI,MPI_SUM,root_MPI,                &
-                      MPI_COMM_WORLD,MPI_err)
+                      MPI_COMM_current,MPI_err)
       IF(MPI_id==0) array=array_temp
 
-      CALL MPI_Bcast(array,length,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+      CALL MPI_Bcast(array,length,Int_MPI,root_MPI,MPI_COMM_current,MPI_err)
 
 #endif
     ENDSUBROUTINE MPI_Reduce_sum_Bcast_array_int
 
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_Reduce_sum_Bcast_array_real(array,length)
+    SUBROUTINE MPI_Reduce_sum_Bcast_array_real(array,length,MS)
       IMPLICIT NONE
 
-      Real(kind=Rkind),     intent(inout) :: array(length)
-      Integer,                 intent(in) :: length 
-      Real(kind=Rkind)                    :: array_temp(length)
+      Real(kind=Rkind),            intent(inout) :: array(length)
+      Integer,                        intent(in) :: length 
+      Integer,optional,               intent(in) :: MS
+      Real(kind=Rkind)                           :: array_temp(length)
 
 #if(run_MPI)
 
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) MPI_COMM_current=MPI_NODE_0_COMM
+      ENDIF
+
       array_temp=0
+
       CALL MPI_Reduce(array,array_temp,length,Real_MPI,MPI_SUM,root_MPI,               &
-                      MPI_COMM_WORLD,MPI_err)
+                      MPI_COMM_current,MPI_err)
       IF(MPI_id==0) array=array_temp
 
-      CALL MPI_Bcast(array,length,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+      CALL MPI_Bcast(array,length,Real_MPI,root_MPI,MPI_COMM_current,MPI_err)
 
 #endif
     ENDSUBROUTINE MPI_Reduce_sum_Bcast_array_real
@@ -1683,12 +1724,14 @@ MODULE mod_MPI_aux
     ! dependents on the length array comtain the length on each threads 
     ! consider MPI_Gether
     ! combine with previous ones later
-    SUBROUTINE MPI_combine_array_general_cplx(array_all,array,lengths)
+    ! add for the other scheme later
+    SUBROUTINE MPI_combine_array_general_cplx(array_all,array,lengths,MS)
       IMPLICIT NONE
 
       Complex(kind=Rkind),         intent(inout) :: array_all(:)
       Complex(kind=Rkind),         intent(inout) :: array(:)
-      Integer,                     intent(in)    :: lengths(0:MPI_np-1)
+      Integer,                        intent(in) :: lengths(0:MPI_np-1)
+      Integer,optional,               intent(in) :: MS
 
       Integer                                    :: d1
       Integer                                    :: d2
@@ -1696,10 +1739,19 @@ MODULE mod_MPI_aux
 #if(run_MPI)
 
       IF(MPI_id/=0) THEN
-        d1=1
-        d2=lengths(MPI_id)
-        CALL MPI_Send(array(d1:d2),Int(d2-d1+1,kind=MPI_INTEGER_KIND),                 &
-                      Cplx_MPI,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_err)
+        IF(present(MS)) THEN
+          IF(MS/=3 .OR. MS==3 .AND. MPI_nodes_p0) THEN
+            d1=1
+            d2=lengths(MPI_id)
+            CALL MPI_Send(array(d1:d2),Int(d2-d1+1,kind=MPI_INTEGER_KIND),             &
+                          Cplx_MPI,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_err)
+          ENDIF
+        ELSE
+          d1=1
+          d2=lengths(MPI_id)
+          CALL MPI_Send(array(d1:d2),Int(d2-d1+1,kind=MPI_INTEGER_KIND),               &
+                        Cplx_MPI,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_err)
+        ENDIF
       ENDIF
 
       IF(MPI_id==0) THEN
@@ -1707,10 +1759,19 @@ MODULE mod_MPI_aux
 
         d1=lengths(0)+1
         DO i_MPI=1,MPI_np-1
-          d2=d1+lengths(i_MPI)-1
-          CALL MPI_Recv(array_all(d1:d2),Int(d2-d1+1,kind=MPI_INTEGER_KIND),           &
-                        Cplx_MPI,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
-          d1=d2+1
+          IF(present(MS)) THEN
+            IF(MS/=3 .OR. MS==3 .AND. MPI_nodes_00(i_MPI)) THEN
+              d2=d1+lengths(i_MPI)-1
+              CALL MPI_Recv(array_all(d1:d2),Int(d2-d1+1,kind=MPI_INTEGER_KIND),       &
+                            Cplx_MPI,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
+              d1=d2+1
+            ENDIF
+          ELSE
+            d2=d1+lengths(i_MPI)-1
+            CALL MPI_Recv(array_all(d1:d2),Int(d2-d1+1,kind=MPI_INTEGER_KIND),         &
+                          Cplx_MPI,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
+            d1=d2+1
+          ENDIF
         ENDDO
       ENDIF
 
@@ -1721,56 +1782,96 @@ MODULE mod_MPI_aux
 !---------------------------------------------------------------------------------------
 !< interface: MPI_collect_info_int
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_collect_info_int(array,bcast)
+    SUBROUTINE MPI_collect_info_int(array,bcast,MS)
       IMPLICIT NONE
 
-      Integer,                        intent(inout) :: array(0:MPI_np-1)
-      Logical,optional,               intent(in)    :: bcast
+      Integer,                     intent(inout) :: array(0:MPI_np-1)
+      Logical,optional,               intent(in) :: bcast
+      Integer,optional,               intent(in) :: MS
 
 #if(run_MPI)
 
       IF(MPI_id/=0) THEN
-        CALL MPI_Send(array(MPI_id),size1_MPI,Int_MPI,root_MPI,MPI_id,                 &
-                      MPI_COMM_WORLD,MPI_err)
+        IF(present(MS)) THEN
+          IF(MS/=3 .OR. (MS==3 .AND. MPI_nodes_p0)) THEN
+            CALL MPI_Send(array(MPI_id),size1_MPI,Int_MPI,root_MPI,MPI_id,             &
+                          MPI_COMM_WORLD,MPI_err)
+          ENDIF
+        ELSE
+          CALL MPI_Send(array(MPI_id),size1_MPI,Int_MPI,root_MPI,MPI_id,               &
+                        MPI_COMM_WORLD,MPI_err)
+        ENDIF
       ENDIF
 
       IF(MPI_id==0) THEN
         DO i_MPI=1,MPI_np-1
-          CALL MPI_Recv(array(i_MPI),size1_MPI,Int_MPI,i_MPI,i_MPI,                    &
-                        MPI_COMM_WORLD,MPI_stat,MPI_err)
+          IF(present(MS)) THEN
+            IF(MS/=3 .OR. (MS==3 .AND. MPI_nodes_00(i_MPI))) THEN
+              CALL MPI_Recv(array(i_MPI),size1_MPI,Int_MPI,i_MPI,i_MPI,                &
+                            MPI_COMM_WORLD,MPI_stat,MPI_err)
+            ENDIF
+          ELSE
+            CALL MPI_Recv(array(i_MPI),size1_MPI,Int_MPI,i_MPI,i_MPI,                  &
+                          MPI_COMM_WORLD,MPI_stat,MPI_err)
+          ENDIF
         ENDDO
       ENDIF
 
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) MPI_COMM_current=MPI_NODE_0_COMM
+      ENDIF
+
       IF(present(bcast) .AND. bcast) THEN
-        CALL MPI_Bcast(array(0:MPI_np-1),MPI_np,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+        CALL MPI_Bcast(array(0:MPI_np-1),MPI_np,Int_MPI,root_MPI,MPI_COMM_current,MPI_err)
       ENDIF
 
 #endif
     ENDSUBROUTINE MPI_collect_info_int
     
     !-----------------------------------------------------------------------------------
-    SUBROUTINE MPI_collect_info_real(array,bcast)
+    SUBROUTINE MPI_collect_info_real(array,bcast,MS)
       IMPLICIT NONE
 
-      Real(kind=Rkind),               intent(inout) :: array(0:MPI_np-1)
-      Logical,optional,               intent(in)    :: bcast
+      Real(kind=Rkind),            intent(inout) :: array(0:MPI_np-1)
+      Logical,optional,               intent(in) :: bcast
+      Integer,optional,               intent(in) :: MS
 
 #if(run_MPI)
 
       IF(MPI_id/=0) THEN
-        CALL MPI_Send(array(MPI_id),size1_MPI,Real_MPI,root_MPI,MPI_id,                &
-                      MPI_COMM_WORLD,MPI_err)
+        IF(present(MS)) THEN
+          IF(MS/=3 .OR. (MS==3 .AND. MPI_nodes_p0)) THEN
+            CALL MPI_Send(array(MPI_id),size1_MPI,Real_MPI,root_MPI,MPI_id,            &
+                          MPI_COMM_WORLD,MPI_err)
+          ENDIF
+        ELSE
+          CALL MPI_Send(array(MPI_id),size1_MPI,Real_MPI,root_MPI,MPI_id,              &
+                        MPI_COMM_WORLD,MPI_err)
+        ENDIF
       ENDIF
 
       IF(MPI_id==0) THEN
         DO i_MPI=1,MPI_np-1
-          CALL MPI_Recv(array(i_MPI),size1_MPI,Real_MPI,i_MPI,i_MPI,                   &
-                        MPI_COMM_WORLD,MPI_stat,MPI_err)
+          IF(present(MS)) THEN
+            IF(MS/=3 .OR. (MS==3 .AND. MPI_nodes_00(i_MPI))) THEN
+              CALL MPI_Recv(array(i_MPI),size1_MPI,Real_MPI,i_MPI,i_MPI,               &
+                            MPI_COMM_WORLD,MPI_stat,MPI_err)
+            ENDIF
+          ELSE
+            CALL MPI_Recv(array(i_MPI),size1_MPI,Real_MPI,i_MPI,i_MPI,                 &
+                          MPI_COMM_WORLD,MPI_stat,MPI_err)
+          ENDIF
         ENDDO
       ENDIF
 
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) MPI_COMM_current=MPI_NODE_0_COMM
+      ENDIF
+
       IF(present(bcast) .AND. bcast) THEN
-        CALL MPI_Bcast(array(0:MPI_np-1),MPI_np,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
+        CALL MPI_Bcast(array(0:MPI_np-1),MPI_np,Real_MPI,root_MPI,MPI_COMM_current,MPI_err)
       ENDIF
 
 #endif
