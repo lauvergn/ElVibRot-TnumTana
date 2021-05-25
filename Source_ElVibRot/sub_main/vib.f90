@@ -273,7 +273,6 @@
             !WP0(1)%CvecB(WP0(1)%nb_ba+1) = CONE
 
             CALL init_psi0(WP0,para_propa%para_WP0,mole)
-write(*,*) 'checkcheck6',MPI_id
 
             ip = para_propa%para_WP0%WP0_dip
             IF (ip > 0 .AND. ip <4) THEN
@@ -294,7 +293,6 @@ write(*,*) 'checkcheck6',MPI_id
               CALL dealloc_psi(WP0tmp)
 
             END IF ! for ip > 0 .AND. ip <4
-write(*,*) 'checkcheck7',MPI_id
 
             IF (para_propa%para_WP0%WP0_nb_CleanChannel > 0) THEN
               write(out_unitp,*) ' clean channel of |WP0>'
@@ -309,39 +307,27 @@ write(*,*) 'checkcheck7',MPI_id
                 END IF
               END DO
             END IF ! for para_propa%para_WP0%WP0_nb_CleanChannel > 0
-write(*,*) 'checkcheck8',MPI_id
 
-            IF(MPI_id==0 .OR. MPI_scheme==1) CALL norm2_psi(WP0(1))
-write(*,*) 'checkcheck8.1',MPI_id
+            IF(keep_MPI) CALL norm2_psi(WP0(1))
             CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
- write(*,*) 'checkcheck8.2',MPI_id
+
             IF(keep_MPI) THEN
-write(*,*) 'checkcheck8.3',MPI_id
               write(out_unitp,*) ' Norm^2 of |WP0>',WP0(1)%norm2
-write(*,*) 'checkcheck8.4',MPI_id
               CALL renorm_psi_With_norm2(WP0(1))
-write(*,*) 'checkcheck8.5',MPI_id
               write(out_unitp,*) ' Analysis of |WP0> or Mu|WP0>'
               write(out_unitp,*)
-write(*,*) 'checkcheck8.6',MPI_id
             ENDIF
-write(*,*) 'checkcheck9',MPI_id
 
-            IF(MPI_id==0 .OR. MPI_scheme==1) THEN
+            IF(keep_MPI) THEN
               ana_WP0               = para_propa%ana_psi
-write(*,*) 'checkcheck9.0',MPI_id
               CALL modif_ana_psi(ana_WP0,                               &
                                  Ene=ZERO,T=ZERO,ZPE=ZERO,Write_Psi=.FALSE.)
-write(*,*) 'checkcheck9.1',MPI_id
 
               ana_WP0%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
-              CALL sub_analyze_tab_psi(WP0(:),ana_WP0,adia=.FALSE.)
-write(*,*) 'checkcheck9.2',MPI_id
-              CALL dealloc_ana_psi(ana_WP0)
-write(*,*) 'checkcheck9.3',MPI_id
-            END IF
-write(*,*) 'checkcheck10',MPI_id
 
+              CALL sub_analyze_tab_psi(WP0(:),ana_WP0,adia=.FALSE.)
+              CALL dealloc_ana_psi(ana_WP0)
+            END IF
             ! spectral tranformation cannot be done here,
             !   because the matrix representation is not done yet
 
@@ -840,8 +826,10 @@ write(*,*) 'checkcheck10',MPI_id
           CALL time_perso('sub_analyse ini')
           write(out_unitp,*)
 
-          IF(MPI_id==0 .OR. MPI_scheme==1) CALL sub_analyse(Tab_Psi,nb_diago,para_H,   &
-                                         para_ana,para_intensity,para_AllOp,const_phys)
+          IF(keep_MPI) THEN
+             CALL sub_analyse(Tab_Psi,nb_diago,para_H,                                 &
+                              para_ana,para_intensity,para_AllOp,const_phys)
+          ENDIF
 
           CALL flush_perso(out_unitp)
 

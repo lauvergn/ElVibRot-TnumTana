@@ -448,9 +448,23 @@ SUBROUTINE dealloc_SmolyakRep(SRep)
 
     d1=lbound(SRep%SmolyakRep,dim=1)
     d2=ubound(SRep%SmolyakRep,dim=1)
-    IF(openmpi .AND. MPI_scheme==1) THEN
-      d1=iGs_MPI(1,MPI_id)
-      d2=iGs_MPI(2,MPI_id)
+    ! IF(openmpi .AND. MPI_scheme==1) THEN
+    !   d1=iGs_MPI(1,MPI_id)
+    !   d2=iGs_MPI(2,MPI_id)
+    ! ENDIF
+    IF(openmpi) THEN
+      IF(MPI_scheme==1) THEN
+        d1=iGs_MPI(1,MPI_id)
+        d2=iGs_MPI(2,MPI_id)
+      ELSEIF(MPI_scheme==3) THEN
+        IF(MPI_nodes_p0) THEN
+          d1=iGs_MPI(1,MPI_id)
+          d2=iGs_MPI(2,MPI_sub_id(2))
+        ELSE
+          d1=0
+          d2=-1
+        ENDIF
+      ENDIF
     ENDIF
 
     !DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
@@ -962,9 +976,23 @@ tabR(:) = ZERO
 
 d1=lbound(SRep%SmolyakRep,dim=1)
 d2=ubound(SRep%SmolyakRep,dim=1)
-IF(openmpi .AND. MPI_scheme==1) THEN
-  d1=iGs_MPI(1,MPI_id)
-  d2=iGs_MPI(2,MPI_id)
+! IF(openmpi .AND. MPI_scheme==1) THEN
+!   d1=iGs_MPI(1,MPI_id)
+!   d2=iGs_MPI(2,MPI_id)
+! ENDIF
+IF(openmpi) THEN
+  IF(MPI_scheme==1) THEN
+    d1=iGs_MPI(1,MPI_id)
+    d2=iGs_MPI(2,MPI_id)
+  ELSEIF(MPI_scheme==3) THEN
+    IF(MPI_nodes_p0) THEN
+      d1=iGs_MPI(1,MPI_id)
+      d2=iGs_MPI(2,MPI_sub_id(2))
+    ELSE
+      d1=0
+      d2=-1
+    ENDIF
+  ENDIF
 ENDIF
 
 DO ib0=1,SRep%nb0
@@ -1026,9 +1054,24 @@ SRep = ZERO
 
 d1=lbound(SRep%SmolyakRep,dim=1)
 d2=ubound(SRep%SmolyakRep,dim=1)
-IF(openmpi .AND. MPI_scheme==1) THEN
-  d1=iGs_MPI(1,MPI_id)
-  d2=iGs_MPI(2,MPI_id)
+! IF(openmpi .AND. MPI_scheme==1) THEN
+!   d1=iGs_MPI(1,MPI_id)
+!   d2=iGs_MPI(2,MPI_id)
+! ENDIF
+
+IF(openmpi) THEN
+  IF(MPI_scheme==1) THEN
+    d1=iGs_MPI(1,MPI_id)
+    d2=iGs_MPI(2,MPI_id)
+  ELSEIF(MPI_scheme==3) THEN
+    IF(MPI_nodes_p0) THEN
+      d1=iGs_MPI(1,MPI_id)
+      d2=iGs_MPI(2,MPI_sub_id(2))
+    ELSE
+      d1=0
+      d2=-1
+    ENDIF
+  ENDIF
 ENDIF
 
 DO ib0=1,SRep%nb0
@@ -1741,9 +1784,23 @@ END IF
 
 d1=lbound(SRep1%SmolyakRep,dim=1)
 d2=ubound(SRep1%SmolyakRep,dim=1)
-IF(openmpi .AND. MPI_scheme==1) THEN
-  d1=iGs_MPI(1,MPI_id)
-  d2=iGs_MPI(2,MPI_id)
+! IF(openmpi .AND. MPI_scheme==1) THEN
+!   d1=iGs_MPI(1,MPI_id)
+!   d2=iGs_MPI(2,MPI_id)
+! ENDIF
+IF(openmpi) THEN
+  IF(MPI_scheme==1) THEN
+    d1=iGs_MPI(1,MPI_id)
+    d2=iGs_MPI(2,MPI_id)
+  ELSEIF(MPI_scheme==3) THEN
+    IF(MPI_nodes_p0) THEN
+      d1=iGs_MPI(1,MPI_id)
+      d2=iGs_MPI(2,MPI_sub_id(2))
+    ELSE
+      d1=0
+      d2=-1
+    ENDIF
+  ENDIF
 ENDIF
 
 R = ZERO
@@ -1765,8 +1822,9 @@ IF (nb_BG > 0) THEN
 
 END IF
 
-IF(openmpi .AND. MPI_scheme==1) THEN
-  CALL MPI_Reduce_sum_Bcast(R)
+IF(openmpi) THEN
+  IF(MPI_scheme==1) CALL MPI_Reduce_sum_Bcast(R)
+  IF(MPI_scheme==3) CALL MPI_Reduce_sum_Bcast(R,3)
 ENDIF
 
 END FUNCTION dot_product_SmolyakRep_Basis
@@ -2268,9 +2326,23 @@ IF (SRep%Grid) STOP 'Grid is not possible in BSmolyakRep_TO_GSmolyakRep'
 
 d1=lbound(SRep%SmolyakRep,dim=1)
 d2=ubound(SRep%SmolyakRep,dim=1)
-IF(openmpi .AND. MPI_scheme==1) THEN
-  d1=iGs_MPI(1,MPI_id)
-  d2=iGs_MPI(2,MPI_id)
+! IF(openmpi .AND. MPI_scheme==1) THEN
+!   d1=iGs_MPI(1,MPI_id)
+!   d2=iGs_MPI(2,MPI_id)
+! ENDIF
+IF(openmpi) THEN
+  IF(MPI_scheme==1) THEN
+    d1=iGs_MPI(1,MPI_id)
+    d2=iGs_MPI(2,MPI_id)
+  ELSEIF(MPI_scheme==3) THEN
+    IF(MPI_nodes_p0) THEN
+      d1=iGs_MPI(1,MPI_id)
+      d2=iGs_MPI(2,MPI_sub_id(2))
+    ELSE
+      d1=0
+      d2=-1
+    ENDIF
+  ENDIF
 ENDIF
 
 !!!$OMP   SHARED(nb_mult_BTOG,D,SRep,tab_ind,tab_ba) &

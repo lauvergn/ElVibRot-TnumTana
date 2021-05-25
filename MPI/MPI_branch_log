@@ -12,14 +12,22 @@ MPI Vm2.0
 
   - bulit sub-communicator for all the masters in each node for MPI scheme3
 
+  - new file
+    sub_module_basis_BtoG_GtoB_MPI.f90
+
+  - new subroutines
+    share_psi_nodes_MPI
+    CVecB_TO_CVecG_R_MPI
+    CVecB_TO_CVecG_C_MPI
+
   - bug fix
     system_mem_usage
     openMP with int=8
-    Unittest
+    unittest
 
   - makefile 
-    add @ for some command
-    add "clean_UT" for only clean unittest result
+    add @ for some commands
+    add "clean_UT" for only cleaning unittest result
     add printing of information for Unittest
 
   - ongoing

@@ -66,8 +66,10 @@
       integer :: err_mem,memory
 
       CALL file_open(para_propa%file_autocorr,ni)
-      CALL file_open(para_propa%file_spectrum,no)
-      write(out_unitp,*) 'ni,no',ni,no
+      IF(MPI_id==0) THEN
+        CALL file_open(para_propa%file_spectrum,no)
+        write(out_unitp,*) 'ni,no',ni,no
+      ENDIF
 
       microDeltaT = para_propa%WPdeltaT/para_propa%nb_micro
       auTOcm_inv  = get_Conv_au_TO_unit('E','cm-1')
@@ -109,13 +111,17 @@
       CALL FFT(NPT2,1,microDeltaT,para_propa%TFnexp2,W,C)
 
       E = para_propa%TFminE*auTOcm_inv
+
       max_iE = min(NPT2,int(para_propa%TFmaxE * auTOcm_inv/DE))
+
       IF (max_iE == 0) max_iE = NPT2
+
       DO i=1,max_iE
-        write(no,*) E,real(C(i),kind=Rkind),aimag(C(i)),abs(C(i))
+        IF(MPI_id==0) write(no,*) E,real(C(i),kind=Rkind),aimag(C(i)),abs(C(i))
         E = E + DE
       END DO
-      close(no)
+
+      IF(MPI_id==0) close(no)
 
   33  FORMAT(5(E13.6,' '))
 

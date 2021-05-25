@@ -1069,14 +1069,13 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
             write(out_unitp,*) 'ST length check:',length_ST_mc,Psi_ST_length(i_MPI)
             STOP 'error in MPI action part,check length'
           ENDIF
-write(*,*) 'checkcheckqqq-1',MPI_id
+
           CALL time_record(time_comm,time_temp1,time_temp2,1)
           CALL MPI_Send(Psi_ST,length_ST_mc,Real_MPI,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_err)
           CALL time_record(time_comm,time_temp1,time_temp2,2)
         ENDDO ! i_MPI
         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
         IF(allocated(Psi_ST)) deallocate(Psi_ST)
-write(*,*) 'checkcheckqqq-2',MPI_id
 
         !-calculations on MPI_node_p0---------------------------------------------------
         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,1)
@@ -1098,7 +1097,6 @@ write(*,*) 'checkcheckqqq-2',MPI_id
           ENDDO
         ENDDO ! main loop of iG for calcuation on root
         CALL time_record(time_MPI_calcu(MPI_id),time_auto1,time_auto2,2)
-write(*,*) 'checkcheckqqq-3',MPI_id
 
         !-receive results from other threads--------------------------------------------
         CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,1)
@@ -1126,7 +1124,6 @@ write(*,*) 'checkcheckqqq-3',MPI_id
           IF(allocated(Psi_ST)) deallocate(Psi_ST)
         ENDDO ! i_MPI
       ENDDO ! i_mc
-write(*,*) 'checkcheckqqq-4',MPI_id
 
       ! collect result from each node-------------------------------------------------
       IF(MPI_id==0) THEN
@@ -1142,7 +1139,6 @@ write(*,*) 'checkcheckqqq-4',MPI_id
               OpPsi(itab)%RvecB=OpPsi(itab)%RvecB+RvecB_all(d1:d2)
             ENDDO
           ENDDO
-  write(*,*) 'checkcheckqqq-5',MPI_id
 
           ! share result with node_p0
           DO itab=1,size_psi
@@ -1156,7 +1152,6 @@ write(*,*) 'checkcheckqqq-4',MPI_id
                           MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
           ENDDO
         ENDIF
-write(*,*) 'checkcheckqqq-6',MPI_id
 
       ELSEIF(MPI_nodes_p0) THEN
 
@@ -1176,13 +1171,11 @@ write(*,*) 'checkcheckqqq-6',MPI_id
           d2=size_RvecB* itab
           OpPsi(itab)%RvecB=RvecB_all(d1:d2)
         ENDDO
-write(*,*) 'checkcheckqqq-7',MPI_id
 
         IF(allocated(RvecB_all)) deallocate(RvecB_all)
       ENDIF
       CALL time_record(time_MPI_local(MPI_id),time_auto1,time_auto2,2)
     ENDIF ! MPI_id==0 .OR. MPI_nodes_p0
-write(*,*) 'checkcheckqqq-8',MPI_id
 
     !-----------------------------------------------------------------------------------
     !-----------------------------------------------------------------------------------

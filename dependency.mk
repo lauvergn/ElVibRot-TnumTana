@@ -63,7 +63,7 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/sub_module_ana_psi_MPI.o $(OBJ)/mod_CAP.o $(OBJ)/mod_HStep.o \
                    $(OBJ)/sub_quadra_SincDVR.o $(OBJ)/$(PhysConstMAIN).o               \
                    $(OBJ)/Module_ForTnumTana_Driver.o $(OBJ)/TnumTana_Lib.o            \
-                   $(OBJ)/$(TNUMMAIN).o 
+                   $(OBJ)/$(TNUMMAIN).o $(OBJ)/sub_module_basis_BtoG_GtoB_MPI.o
 $(lib_dep_mod_system):$(OBJ)/sub_module_system.o
 
 #mod_EVR
@@ -219,6 +219,10 @@ $(lib_dep_mod_basis_set_alloc):$(OBJ)/sub_module_basis_set_alloc.o
 lib_dep_mod_basis_BtoG_GtoB=$(OBJ)/sub_module_basis.o
 $(lib_dep_mod_basis_BtoG_GtoB):$(OBJ)/sub_module_basis_BtoG_GtoB.o
 
+#mod_basis_BtoG_GtoB_MPI
+lib_dep_mod_basis_BtoG_GtoB_MPI=$(OBJ)/sub_module_basis_BtoG_GtoB.o
+$(lib_dep_mod_basis_BtoG_GtoB_MPI):$(OBJ)/sub_module_basis_BtoG_GtoB_MPI.o
+
 #mod_basis_BtoG_GtoB_SGType2
 lib_dep_mod_basis_BtoG_GtoB_SGType2=$(OBJ)/sub_module_basis_BtoG_GtoB.o
 $(lib_dep_mod_basis_BtoG_GtoB_SGType2):$(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o
@@ -243,7 +247,8 @@ $(lib_dep_mod_poly):$(OBJ)/sub_module_poly.o
 #mod_basis_BtoG_GtoB_SGType4
 lib_dep_mod_basis_BtoG_GtoB_SGType4=$(OBJ)/sub_module_ComOp.o                          \
                                     $(OBJ)/sub_module_OpGrid.o                         \
-                                    $(OBJ)/sub_module_basis_BtoG_GtoB.o
+                                    $(OBJ)/sub_module_basis_BtoG_GtoB.o                \
+                                    $(OBJ)/sub_module_basis_BtoG_GtoB_MPI.o
 $(lib_dep_mod_basis_BtoG_GtoB_SGType4):$(OBJ)/sub_module_basis_BtoG_GtoB_SG4.o
 
 #mod_basis_BtoG_GtoB_SGType4_MPI

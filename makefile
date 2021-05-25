@@ -1,21 +1,21 @@
 #===============================================================================
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-# F90 = mpifort
- F90 = gfortran
+ F90 = mpifort
+# F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
 
 ## parallel_make=1 to enable parallel make
 ## parallel_make=0 for fast debug make, no parallel
-parallel_make=0
+parallel_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
-OMP = 0
+OMP = 1
 #
 ## force the default integer (without kind) during the compillation.
 ## default 4: , INT=8 (for kind=8)
@@ -688,7 +688,8 @@ Obj_module =  \
  $(OBJ)/sub_module_basis_set_alloc.o \
  $(OBJ)/sub_module_basis_RCVec_SG4.o \
  $(OBJ)/sub_module_basis_BtoG_GtoB_SG4_MPI.o $(OBJ)/sub_module_basis_BtoG_GtoB_SG4.o\
- $(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o $(OBJ)/sub_module_basis_BtoG_GtoB.o \
+ $(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o \
+ $(OBJ)/sub_module_basis_BtoG_GtoB_MPI.o $(OBJ)/sub_module_basis_BtoG_GtoB.o \
  $(OBJ)/sub_module_basis.o \
  $(OBJ)/sub_module_BasisMakeGrid.o \
  $(OBJ)/sub_module_poly.o $(OBJ)/sub_module_GWP.o \
@@ -1249,6 +1250,8 @@ $(OBJ)/sub_module_basis_BtoG_GtoB_SG4_MPI.o:$(DIRbaSG4)/sub_module_basis_BtoG_Gt
 
 $(OBJ)/sub_module_basis_BtoG_GtoB_SGType2.o:$(DIRba)/sub_module_basis_BtoG_GtoB_SGType2.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_module_basis_BtoG_GtoB_SGType2.f90
+$(OBJ)/sub_module_basis_BtoG_GtoB_MPI.o:$(DIRba)/sub_module_basis_BtoG_GtoB_MPI.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DIRba)/sub_module_basis_BtoG_GtoB_MPI.f90
 $(OBJ)/sub_module_basis_BtoG_GtoB.o:$(DIRba)/sub_module_basis_BtoG_GtoB.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_module_basis_BtoG_GtoB.f90
 $(OBJ)/sub_module_basis.o:$(DIRba)/sub_module_basis.f90

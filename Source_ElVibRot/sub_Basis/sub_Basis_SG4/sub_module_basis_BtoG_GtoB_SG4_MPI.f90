@@ -88,37 +88,25 @@ SUBROUTINE Mapping_table_allocate_MPI(basis_SG,Max_Srep)
   ENDIF
 
   ! scheme3
+  ! IF(MPI_scheme==3) THEN
+  !   IF(MPI_id==0 .OR. MPI_nodes_p0) THEN
+  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,1,Max_Srep)
+  !   ELSE
+  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                  &
+  !                         bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
+  !   ENDIF
+  ! ENDIF
   IF(MPI_scheme==3) THEN
-    IF(MPI_id==0 .OR. MPI_nodes_p0) THEN
+    IF(MPI_id==0) THEN
       CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,1,Max_Srep)
+    ELSEIF(MPI_nodes_p0) THEN
+      CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                  &
+                          bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_sub_id(2)))
     ELSE
       CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                  &
                           bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
     ENDIF
   ENDIF
-  ! IF(MPI_scheme==3) THEN
-  !   IF(MPI_id==0) THEN
-  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,1,Max_Srep)
-  !   ELSEIF(MPI_nodes_p0) THEN
-  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                  &
-  !                         bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_sub_id(2)))
-  !   ELSE
-  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                  &
-  !                         bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
-  !   ENDIF
-  ! ENDIF
-
-  ! IF(MPI_id==0) THEN
-  !   IF(MPI_scheme/=1) THEN
-  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,1,Max_Srep)
-  !   ELSE
-  !     CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                  &
-  !                         bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
-  !   ENDIF
-  ! ELSE
-  !   CALL allocate_array(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,                    &
-  !                       bounds_MPI(1,MPI_id),bounds_MPI(2,MPI_id))
-  ! ENDIF
 
 #endif
 ENDSUBROUTINE Mapping_table_allocate_MPI
@@ -192,40 +180,40 @@ SUBROUTINE Mapping_table_MPI(basis_SG,Max_Srep)
 
   ! scheme 3
   IF(MPI_scheme==3) THEN
-    IF(.NOT. (MPI_id==0 .OR. MPI_nodes_p0)) THEN
-      deallocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB)
-    ENDIF
-    
-    IF(MPI_id==0) THEN
-      DO ii=1,MPI_nodes_num-1
-        CALL MPI_Send(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,Max_Srep,MPI_Integer4,&
-                      MPI_nodes_p00(ii),Int(MPI_nodes_p00(ii),kind=MPI_INTEGER_KIND),  &
-                      MPI_COMM_WORLD,MPI_err)
-      ENDDO
-    ELSEIF(MPI_nodes_p0) THEN
-      CALL MPI_Recv(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,Max_Srep,MPI_Integer4,  &
-                    root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
-    ENDIF
-
     ! IF(.NOT. (MPI_id==0 .OR. MPI_nodes_p0)) THEN
     !   deallocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB)
     ! ENDIF
-
+    
     ! IF(MPI_id==0) THEN
     !   DO ii=1,MPI_nodes_num-1
-    !     d1=bounds_MPI(1,MPI_nodes_p00(ii))
-    !     d2=bounds_MPI(2,MPI_nodes_p00(ii)+MPI_nodes_np(ii)-1)
-    !     CALL MPI_Send(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(d1:d2),d2-d1+1,       &
-    !                   MPI_Integer4,MPI_nodes_p00(ii),                                  &
-    !                   Int(MPI_nodes_p00(ii),kind=MPI_INTEGER_KIND),                    &
+    !     CALL MPI_Send(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,Max_Srep,MPI_Integer4,&
+    !                   MPI_nodes_p00(ii),Int(MPI_nodes_p00(ii),kind=MPI_INTEGER_KIND),  &
     !                   MPI_COMM_WORLD,MPI_err)
     !   ENDDO
     ! ELSEIF(MPI_nodes_p0) THEN
-    !   d1=bounds_MPI(1,MPI_id)
-    !   d2=bounds_MPI(2,MPI_id+MPI_nodes_np(MPI_node_id)-1)
-    !   CALL MPI_Recv(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(d1:d2),d2-d1+1,         &
-    !                 MPI_Integer4,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+    !   CALL MPI_Recv(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,Max_Srep,MPI_Integer4,  &
+    !                 root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
     ! ENDIF
+
+    IF(.NOT. (MPI_id==0 .OR. MPI_nodes_p0)) THEN
+      deallocate(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB)
+    ENDIF
+
+    IF(MPI_id==0) THEN
+      DO ii=1,MPI_nodes_num-1
+        d1=bounds_MPI(1,MPI_nodes_p00(ii))
+        d2=bounds_MPI(2,MPI_nodes_p00(ii)+MPI_nodes_np(ii)-1)
+        CALL MPI_Send(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(d1:d2),d2-d1+1,       &
+                      MPI_Integer4,MPI_nodes_p00(ii),                                  &
+                      Int(MPI_nodes_p00(ii),kind=MPI_INTEGER_KIND),                    &
+                      MPI_COMM_WORLD,MPI_err)
+      ENDDO
+    ELSEIF(MPI_nodes_p0) THEN
+      d1=bounds_MPI(1,MPI_id)
+      d2=bounds_MPI(2,MPI_id+MPI_nodes_np(MPI_node_id)-1)
+      CALL MPI_Recv(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(d1:d2),d2-d1+1,         &
+                    MPI_Integer4,root_MPI,MPI_id,MPI_COMM_WORLD,MPI_stat,MPI_err)
+    ENDIF
 
   ENDIF ! scheme 3
 
@@ -619,6 +607,15 @@ SUBROUTINE Set_scheme_MPI(basis_SG,lMax_Srep)
     CALL MPI_Group_incl(MPI_NODE_0_WORLD,MPI_nodes_num,processor_nodes_0,              &
                         MPI_NODE_0_GROUP,MPI_err)
     CALL MPI_Comm_create(MPI_COMM_WORLD,MPI_NODE_0_GROUP,MPI_NODE_0_COMM,MPI_err)
+
+    IF(keep_MPI) THEN
+      CALL MPI_Comm_rank(MPI_NODE_0_COMM,MPI_id_node,MPI_err)
+      CALL MPI_Comm_size(MPI_NODE_0_COMM,MPI_np_node,MPI_err)
+    ENDIF
+
+    write(out_unitp,*) 'Communicator for MPI scheme 3 initialized:'
+    write(out_unitp,*) '  MPI_id MPI_id_node:',MPI_id,MPI_id_node
+    write(out_unitp,*) '  MPI_np MPI_np_node:',MPI_np,MPI_np_node
 
     !IF(MPI_nodes_p0) CALL MPI_BCAST(i_node,size1_MPI,MPI_Integer,0,MPI_NODE_0_COMM,MPI_err)
   ENDIF

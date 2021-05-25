@@ -44,7 +44,7 @@ MODULE mod_ana_psi_MPI
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: norm_psi_MPI,renorm_psi_MPI
+  PUBLIC :: norm_psi_MPI,share_psi_nodes_MPI
 
 CONTAINS
 !=======================================================================================      
@@ -326,120 +326,124 @@ CONTAINS
   END SUBROUTINE Channel_weight_MPI
 !=======================================================================================  
 
-
 !=======================================================================================
-! general normalization, not actually optimised for MPI
+! share psi%RvecB with the other processors in MPI scheme 3
 !=======================================================================================
-  SUBROUTINE renorm_psi_MPI(psi,GridRep,BasisRep)
+  SUBROUTINE share_psi_nodes_MPI(psi,psi_size)
     USE mod_system
     USE mod_psi_set_alloc
-    USE mod_ana_psi,ONLY:Channel_weight
     USE mod_MPI_aux
-    IMPLICIT NONE
 
-!----- variables for the WP ----------------------------------------
-    TYPE (param_psi), intent(inout)          :: psi
-    logical,          intent(in),   optional :: GridRep,BasisRep
+    TYPE(param_psi),               intent(inout) :: psi(:)
+    Integer,                       intent(in)    :: psi_size
 
-!------ working variables ---------------------------------
-    logical                        :: norm2GridRep,norm2BasisRep
-    real (kind=Rkind)              :: temp
-    real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)
+    Real(kind=Rkind),allocatable                 :: RvecB_all(:)
+    Complex(kind=Rkind),allocatable              :: CvecB_all(:)
+    Integer                                      :: size_vecB
+    Integer                                      :: size_psi
+    Integer                                      :: d1,d2
+    Integer                                      :: ii
 
+#if(run_MPI)
 
-!----- for debuging --------------------------------------------------
-    logical,parameter :: debug = .FALSE.
-    !logical,parameter :: debug = .TRUE.
-!-----------------------------------------------------------
-    IF (debug) THEN
-      write(out_unitp,*) 'BEGINNING renorm_psi'
-      IF (present(GridRep)) write(out_unitp,*) 'norm2GridRep',GridRep
-      IF (present(BasisRep)) write(out_unitp,*) 'norm2BasisRep',BasisRep
-      write(out_unitp,*) 'psi'
-      CALL ecri_psi(psi=psi)
-    END IF
-!-----------------------------------------------------------
-
-    IF (present(GridRep)) THEN
-      IF (present(BasisRep)) THEN
-        norm2GridRep  = GridRep
-        norm2BasisRep = BasisRep
+    If(MPI_id==0) THEN
+      IF(psi(1)%cplx) THEN
+        size_vecB=size(psi(1)%CvecB)
       ELSE
-        norm2GridRep  = GridRep
-        norm2BasisRep = .FALSE.
-      END IF
+        size_vecB=size(psi(1)%RvecB)
+      ENDIF
+      size_psi=psi_size
+    ENDIF
+    CALL MPI_Bcast_(size_psi,  size1_MPI,root_MPI)
+    CALL MPI_Bcast_(size_vecB,size1_MPI,root_MPI)
+
+    ! IF(MPI_id==0) THEN
+    !   CALL allocate_array(RvecB_all,1,size_vecB*size_psi)
+    !   DO ii=1,size_psi
+    !     d1=size_vecB*(ii-1)+1
+    !     d2=size_vecB* ii
+    !     RvecB_all(d1:d2)=psi(ii)%RvecB
+    !   ENDDO
+
+    !   DO ii=1,MPI_nodes_num-1
+    !     CALL MPI_Send(RvecB_all,size_vecB*size_psi,Real_MPI,MPI_nodes_p00(ii),        &
+    !                   MPI_nodes_p00(ii),MPI_COMM_WORLD,MPI_err)
+    !   ENDDO
+
+    ! ELSEIF(MPI_nodes_p0) THEN !---------------------------------------------------------
+    !   CALL allocate_array(RvecB_all,1,size_vecB*size_psi)
+
+    !   CALL MPI_Recv(RvecB_all,size_vecB*size_psi,Real_MPI,root_MPI,MPI_id,            &
+    !                 MPI_COMM_WORLD,MPI_stat,MPI_err)
+
+    !   DO ii=1,size_psi
+    !     allocate(psi(ii)%RvecB(size_vecB))
+    !     d1=size_vecB*(ii-1)+1
+    !     d2=size_vecB* ii
+    !     psi(ii)%RvecB=RvecB_all(d1:d2)
+    !   ENDDO
+
+    ! ENDIF
+    ! IF(allocated(RvecB_all)) deallocate(RvecB_all)
+
+    IF(psi(1)%cplx) THEN
+      CALL allocate_array(CvecB_all,1,size_vecB*size_psi)
     ELSE
-      IF (present(BasisRep)) THEN
-        norm2BasisRep = BasisRep
-        norm2GridRep  = .FALSE.
-      ELSE
-        IF (psi%BasisRep .AND. psi%GridRep) THEN
-          norm2BasisRep = .TRUE.
-          norm2GridRep  = .FALSE.
-        ELSE
-          norm2BasisRep = psi%BasisRep
-          norm2GridRep  = psi%GridRep
-        END IF
-     END IF
-   END IF
-
-   IF (debug) write(out_unitp,*) 'nGridRep,nBasisRep',norm2GridRep,norm2BasisRep
-    IF (norm2GridRep .AND. norm2BasisRep) THEN
-      write(out_unitp,*) ' ERROR in renorm_psi'
-      write(out_unitp,*) ' norm2GridRep=t and norm2BasisRep=t !'
-      write(out_unitp,*) ' BasisRep,GridRep',psi%BasisRep,psi%GridRep
-      STOP
-    END IF
-
-    IF(MPI_id==0 .OR. MPI_scheme==1) THEN
-      CALL Channel_weight(tab_WeightChannels,psi,norm2GridRep,norm2BasisRep)
-      IF (debug)  write(out_unitp,*) 'tab_WeightChannels : ',tab_WeightChannels
-      psi%norm2 = sum(tab_WeightChannels)
+      CALL allocate_array(RvecB_all,1,size_vecB*size_psi)
     ENDIF
-    CALL MPI_Bcast_(psi%norm2,size1_MPI,root_MPI)
-
-    IF (debug) THEN
-      write(out_unitp,*) 'norm2 : ',psi%norm2,tab_WeightChannels
-    END IF
-
-    IF (psi%norm2 .EQ. ZERO ) THEN
-      write(out_unitp,*) ' ERROR in renorm_psi'
-      write(out_unitp,*) ' the norm2 is zero !',psi%norm2
-      STOP
-    END IF
-    temp = sqrt(ONE/psi%norm2)
-
-    IF(keep_MPI) THEN
-      IF (norm2GridRep) THEN
-        !- normalization of psiGridRep -------------------------
-        IF (psi%cplx) THEN
-          psi%CvecG(:) = psi%CvecG(:) *cmplx(temp,ZERO,kind=Rkind)
+    IF(MPI_id==0) THEN
+      DO ii=1,size_psi
+        d1=size_vecB*(ii-1)+1
+        d2=size_vecB* ii
+        IF(psi(1)%cplx) THEN
+          CvecB_all(d1:d2)=psi(ii)%CvecB
         ELSE
-          psi%RvecG(:) = psi%RvecG(:) * temp
-        END IF
-      ELSE
-        !- normalization of psiBasisRep -------------------------
-        IF (psi%cplx) THEN
-          psi%CvecB(:) = psi%CvecB(:) *cmplx(temp,ZERO,kind=Rkind)
-        ELSE
-          psi%RvecB(:) = psi%RvecB(:) * temp
-        END IF
-      END IF
+          RvecB_all(d1:d2)=psi(ii)%RvecB
+        ENDIF
+      ENDDO
     ENDIF
-    psi%norm2 = ONE
 
-    IF (allocated(tab_WeightChannels)) THEN
-      CALL dealloc_NParray(tab_WeightChannels,"tab_WeightChannels","renorm_psi (alloc from Channel_weight)")
-    END IF
+    IF(MPI_nodes_p0) THEN
+      IF(psi(1)%cplx) THEN
+        CALL MPI_BCAST(CvecB_all,size_vecB*size_psi,Cplx_MPI,root_MPI,                &
+                       MPI_NODE_0_COMM,MPI_err)
+      ELSE
+        CALL MPI_BCAST(RvecB_all,size_vecB*size_psi,Real_MPI,root_MPI,                &
+                       MPI_NODE_0_COMM,MPI_err)
+      ENDIF
+    ENDIF
 
-!----------------------------------------------------------
-    IF (debug) THEN
-      write(out_unitp,*) 'norm2 : ',psi%norm2
-      write(out_unitp,*) 'END renorm_psi_MPI'
-    END IF
-!----------------------------------------------------------
+    IF(MPI_id/=0) THEN
+      DO ii=1,size_psi
+        IF(psi(1)%cplx) THEN
+          allocate(psi(ii)%CvecB(size_vecB))
+        ELSE
+          allocate(psi(ii)%RvecB(size_vecB))
+        ENDIF
 
-    END SUBROUTINE renorm_psi_MPI
+        d1=size_vecB*(ii-1)+1
+        d2=size_vecB* ii
+
+        IF(psi(1)%cplx) THEN
+          psi(ii)%RvecB=CvecB_all(d1:d2)
+        ELSE
+          psi(ii)%RvecB=RvecB_all(d1:d2)
+        ENDIF
+      ENDDO
+    ENDIF
+
+    IF(allocated(RvecB_all)) deallocate(RvecB_all)
+    IF(allocated(CvecB_all)) deallocate(CvecB_all)
+
+    DO ii=1,size_psi
+      IF(MPI_nodes_p0) THEN
+        CALL MPI_BCAST(psi(ii)%norm2,size1_MPI,Real_MPI,root_MPI,MPI_NODE_0_COMM,MPI_err)
+        CALL MPI_BCAST(psi(ii)%symab,size1_MPI,Int_MPI,root_MPI,MPI_NODE_0_COMM,MPI_err)
+      ENDIF
+    ENDDO
+
+#endif
+  END SUBROUTINE share_psi_nodes_MPI
 !=======================================================================================
 
 END MODULE mod_ana_psi_MPI

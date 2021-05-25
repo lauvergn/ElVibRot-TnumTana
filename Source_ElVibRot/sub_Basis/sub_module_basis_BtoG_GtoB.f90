@@ -45,6 +45,7 @@
       USE mod_basis_set_alloc
       USE mod_basis_BtoG_GtoB_SGType2
       USE mod_param_SGType2
+      USE mod_basis_BtoG_GtoB_MPI,ONLY:CVecB_TO_CVecG_R_MPI,CVecB_TO_CVecG_C_MPI
       IMPLICIT NONE
 
       CONTAINS
@@ -1144,30 +1145,8 @@
             END IF
             !write(6,*) 'real(CVecG)' ; CALL Write_SmolyakRep(SRep)
 
-            IF(openmpi .AND. MPI_scheme==1) THEN
-              itabR=0
-              d1=iGs_MPI(1,MPI_id)
-              d2=iGs_MPI(2,MPI_id)
-              DO iG=d1,d2
-                nR=size(SRep%SmolyakRep(iG)%V)
-                itabR=itabR+nR
-              ENDDO
-              Cvec_length(MPI_id)=itabR
-              CALL MPI_collect_info(Cvec_length,bcast=.True.)
-
-              CALL allocate_array(Cvec,1,Cvec_length(MPI_id))
-              itabR=0
-              DO iG=d1,d2
-                nR=size(SRep%SmolyakRep(iG)%V)
-                Cvec(itabR+1:itabR+nR)=cmplx(SRep%SmolyakRep(iG)%V,kind=Rkind)
-                itabR=itabR+nR
-              ENDDO
-
-              CALL MPI_combine_array(CVecG,Cvec,lengths=Cvec_length)
-              IF(allocated(Cvec)) deallocate(Cvec)
-
-              d1=Sum(Cvec_length(0:MPI_np-1))
-              CALL MPI_Bcast_(CVecG,d1,root_MPI)
+            IF(openmpi) THEN
+              CALL CVecB_TO_CVecG_R_MPI(SRep,CVecG)
             ELSE
               itabR = 0
               DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
@@ -1194,33 +1173,8 @@
             END IF
             !write(6,*) 'im(CVecG)' ; CALL Write_SmolyakRep(SRep)
 
-            IF(openmpi .AND. MPI_scheme==1) THEN
-              itabR=0
-              d1=iGs_MPI(1,MPI_id)
-              d2=iGs_MPI(2,MPI_id)
-              DO iG=d1,d2
-                nR=size(SRep%SmolyakRep(iG)%V)
-                itabR=itabR+nR
-              ENDDO
-              Cvec_length(MPI_id)=itabR
-              CALL MPI_collect_info(Cvec_length,bcast=.True.)
-
-              CALL allocate_array(Cvec,1,Cvec_length(MPI_id))
-              itabR=0
-              DO iG=d1,d2
-                nR=size(SRep%SmolyakRep(iG)%V)
-                Cvec(itabR+1:itabR+nR)=EYE*cmplx(SRep%SmolyakRep(iG)%V,kind=Rkind)
-                itabR=itabR+nR
-              ENDDO
-
-              d1=Sum(Cvec_length(0:MPI_np-1))
-              CALL allocate_array(Cvec_temp,1,d1)
-              CALL MPI_combine_array(Cvec_temp,Cvec,lengths=Cvec_length)
-              IF(allocated(Cvec)) deallocate(Cvec)
-
-              CALL MPI_Bcast_(Cvec_temp,d1,root_MPI)
-              CVecG(1:d1)=CVecG(1:d1)+Cvec_temp(1:d1)
-              IF(allocated(Cvec_temp)) deallocate(Cvec_temp)
+            IF(openmpi) THEN
+              CALL CVecB_TO_CVecG_C_MPI(SRep,CVecG)
             ELSE
               itabR = 0
               DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)

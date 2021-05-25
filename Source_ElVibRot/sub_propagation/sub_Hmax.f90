@@ -207,15 +207,12 @@
       IF (debug) write(out_unitp,*) 'nb_tot',psi%nb_tot
       CALL alloc_psi(psi,BasisRep =.TRUE.)
 
-      psi = ZERO
+      IF(keep_MPI) psi = ZERO
       IF(keep_MPI) CALL Set_psi_With_index(psi,R=ONE,ind_aie=psi%nb_tot)
       psi%symab = -1
 
-      IF(openmpi) THEN
-        CALL renorm_psi_MPI(psi,BasisRep=.TRUE.)
-      ELSE
-        CALL renorm_psi(psi,BasisRep=.TRUE.)
-      ENDIF
+      IF(keep_MPI) CALL renorm_psi(psi,BasisRep=.TRUE.)
+
       IF (debug) write(out_unitp,*) 'psi%symab',psi%symab
 
       IF(keep_MPI) Hpsi = psi
