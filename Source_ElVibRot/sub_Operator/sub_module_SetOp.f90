@@ -200,8 +200,8 @@ MODULE mod_SetOp
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='alloc_para_Op'
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -210,8 +210,9 @@ MODULE mod_SetOp
         IF (present(Grid))     write(out_unitp,*) 'alloc Grid?',Grid
         IF (present(Grid_cte)) write(out_unitp,*) 'Grid_cte?',Grid_cte
 
+        write(out_unitp,*) 'nb_tot',para_Op%nb_tot
         write(out_unitp,*) 'nb_term',para_Op%nb_term
-
+        write(out_unitp,*) 'nb_bie',get_nb_be_FROM_Op(para_Op) * para_Op%nb_bi
         !CALL write_param_Op(para_Op)
         write(out_unitp,*)
       END IF
@@ -338,7 +339,7 @@ MODULE mod_SetOp
                               para_Op%derive_termQact(:,k_term),      &
                               para_Op%derive_termQdyn(:,k_term),      &
                               SmolyakRep,Type_FileGrid4,nb_SG,info)
-
+            IF (debug) write(out_unitp,*) 'shape ...Grid',k_term,shape(para_Op%OpGrid(k_term)%Grid)
             deallocate(info)
           END DO
         END IF
@@ -359,6 +360,8 @@ MODULE mod_SetOp
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
                             para_Op%nb_qa,nb_bie,                     &
                             (/ 0,0 /),(/ 0,0 /),SmolyakRep,Type_FileGrid4,nb_SG,info)
+
+            IF (debug) write(out_unitp,*) 'shape ...ImGrid',shape(para_Op%imOpGrid(1)%Grid)
 
           para_Op%imOpGrid(1)%cplx = .TRUE.
 
@@ -1097,10 +1100,10 @@ MODULE mod_SetOp
         DO iOp=1,size(tab_Op)
           tab_Op(iOp)%para_ReadOp%para_fileGrid = para_fileGrid
         END DO
-      ELSE
-        DO iOp=1,size(tab_Op)
-          tab_Op(iOp)%para_ReadOp%para_fileGrid = tab_Op(1)%para_ReadOp%para_fileGrid
-        END DO
+      ! ELSE
+      !   DO iOp=1,size(tab_Op)
+      !     tab_Op(iOp)%para_ReadOp%para_fileGrid = tab_Op(1)%para_ReadOp%para_fileGrid
+      !   END DO
       END IF
 
 
@@ -1187,9 +1190,16 @@ MODULE mod_SetOp
 
       character (len=*), parameter :: name_sub='read_OpGrid_OF_Op'
 
-      IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done) RETURN
+      write(6,*) 'In ',name_sub,' Type_FileGrid ',para_Op%para_ReadOp%para_FileGrid%Type_FileGrid
+      write(6,*) 'In ',name_sub,' Read_FileGrid ',para_Op%para_ReadOp%para_FileGrid%Read_FileGrid
+      write(6,*) 'In ',name_sub,' para_Op%alloc_Grid ',para_Op%alloc_Grid
+
+      IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Read_FileGrid) RETURN
+
       IF (.NOT. para_Op%alloc_Grid)                                     &
                      CALL alloc_para_Op(para_Op,Grid=.TRUE.,Mat=.FALSE.)
+
+      IF (para_Op%name_Op == 'S') RETURN
 
       SELECT CASE (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid)
       CASE (0)
@@ -1219,6 +1229,12 @@ MODULE mod_SetOp
             id1 = para_Op%OpGrid(k_term)%derive_termQact(1)
             id2 = para_Op%OpGrid(k_term)%derive_termQact(2)
             iterm_Op = d0MatOp%derive_term_TO_iterm(id1,id2)
+            write(6,*) 'k_term,nb_term',k_term,para_Op%nb_term
+            write(6,*) 'id1,id1,iterm_Op',id1,id1,iterm_Op
+            write(6,*) 'shape ...Grid',shape(para_Op%OpGrid(k_term)%Grid)
+            write(6,*) 'shape ...d0MatOp%ReVal',shape(d0MatOp%ReVal)
+
+            flush(6)
 
             para_Op%OpGrid(k_term)%Grid(i_qa,:,:) = d0MatOp%ReVal(:,:,iterm_Op)
 
@@ -1312,16 +1328,15 @@ MODULE mod_SetOp
 
       character (len=*), parameter :: name_sub='Save_OpGrid_OF_Op'
 
-      IF (para_Op%n_Op == -1) RETURN  ! for S
+      IF (para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done) RETURN
+      IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_FileGrid) RETURN
 
 write(out_unitp,*) 'BEGINNING ',name_sub
 
+write(out_unitp,*) 'Save_FileGrid',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid
 write(out_unitp,*) 'Save_FileGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done
 write(out_unitp,*) 'Save_MemGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
 write(out_unitp,*) 'Type_FileGrid',para_Op%para_ReadOp%para_FileGrid%Type_FileGrid
-
-      IF (para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done) RETURN
-      IF (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid /= 5) RETURN
 
       IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
         write(out_unitp,*) ' ERROR in ',name_sub

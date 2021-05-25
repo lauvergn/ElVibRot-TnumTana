@@ -195,7 +195,7 @@
       ELSE
         para_FileGrid%Save_FileGrid    = .TRUE.   ! in SH_HADA file
       END IF
-      para_FileGrid%Save_FileGrid_done = .FALSE.  ! in SH_HADA file
+      para_FileGrid%Save_FileGrid_done = .FALSE.
 
       IF (present(Formatted_FileGrid)) THEN
         para_FileGrid%Formatted_FileGrid    = Formatted_FileGrid
@@ -314,12 +314,12 @@
       integer :: err_mem,memory
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='alloc_OpGrid'
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        write(out_unitp,*) 'nb_qa,nb_bie',nb_qa,nb_bie,nb_SG
+        write(out_unitp,*) 'nb_qa,nb_bie,nb_SG',nb_qa,nb_bie,nb_SG
         write(out_unitp,*) 'derive_termQact(:)',derive_termQact(:)
         write(out_unitp,*) 'derive_termQdyn(:)',derive_termQdyn(:)
         write(out_unitp,*) 'grid_cte',OpGrid%grid_cte
@@ -357,6 +357,7 @@
            CALL alloc_array(OpGrid%Grid,(/nb_qa,nb_bie,nb_bie/),"OpGrid%Grid",info2)
            OpGrid%Grid(:,:,:) = ZERO
 
+write(out_unitp,*) info2,size(OpGrid%Grid)
            IF(print_level>-1 .AND. MPI_id==0) write(out_unitp,*) info2,size(OpGrid%Grid)
          ENDIF
 

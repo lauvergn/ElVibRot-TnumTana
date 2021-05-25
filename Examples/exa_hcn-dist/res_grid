@@ -1,9 +1,9 @@
  ===============================================
  ===============================================
  Working with ElVibRot182.24-Tnum41.8-Tana11.5
- Compiled on "kruck" the Sam 15 mai 2021 - 09:01:59
+ Compiled on "kruck" the Mer 19 mai 2021 - 14:51:56
  Compiler version: GNU Fortran (Homebrew GCC 9.3.0) 9.3.0
- Compiler options: -O0 -g -fbacktrace -fopenmp -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
+ Compiler options: -O0 -g -fbacktrace  -fcheck=all -fwhole-file -fcheck=pointer -Wuninitialized
  Compiler libs: -framework Accelerate
  EVRT_path: /Users/lauvergn/git/ElVibRot
  -----------------------------------------------
@@ -38,20 +38,20 @@
  MEM_DEBUG=F,
  TEST=F,
  PRINTLEVEL=2          ,
- POPENMP=T,
+ POPENMP=F,
  POPENMPI=F,
  PSG4_OMP=1          ,
- PSG4_MAXTH=4          ,
+ PSG4_MAXTH=1          ,
  PMATOP_OMP=0          ,
- PMATOP_MAXTH=4          ,
+ PMATOP_MAXTH=1          ,
  POPPSI_OMP=0          ,
- POPPSI_MAXTH=4          ,
+ POPPSI_MAXTH=1          ,
  PBASISTOGRID_OMP=0          ,
- PBASISTOGRID_MAXTH=4          ,
+ PBASISTOGRID_MAXTH=1          ,
  PGRID_OMP=0          ,
- PGRID_MAXTH=4          ,
+ PGRID_MAXTH=1          ,
  PCRP_OMP=0          ,
- PCRP_MAXTH=4          ,
+ PCRP_MAXTH=1          ,
  PTUNE_SG4_OMP=F,
  PTUNE_GRID_OMP=F,
  RMATFORMAT="f18.10                                            ",
@@ -79,19 +79,6 @@
  MPI_MEM_NODE=0          ,
  /
  =========================================
- OpenMP parameters:
- Max number of threads:                      4
- MatOp_omp,      MatOp_maxth                 0           1
- OpPsi_omp,      OpPsi_maxth                 0           1
- BasisTOGrid_omp,BasisTOGrid_maxth           0           1
- Grid_omp,       Grid_maxth                  0           1
- CRP_omp,        CRP_maxth                   0           1
- SG4_omp,        SG4_maxth                   1           4
- =========================================
- =========================================
- File_path: 
- =========================================
- =========================================
  =========================================
   ElVibRot calculation
  =========================================
@@ -102,7 +89,7 @@
 
  =================================================
   VIB: BEGINNING ini_data
-     Time and date in ini_data ini : 17h:31m:50.906s, the 15/ 5/2021
+     Time and date in ini_data ini : 17h:34m:25.320s, the 20/ 5/2021
         real (s):              0.000 in ini_data ini
         real    :   0d  0h  0m  0s in ini_data ini
         cpu (s):              0.000 in ini_data ini
@@ -1010,11 +997,11 @@ Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
  LECT=F,
  RESTART_GRID=F,
  RESTART=F,
- SAVE_FILEGRID=F,
- KEEP_FILEGRID=F,
+ SAVE_FILEGRID=T,
+ KEEP_FILEGRID=T,
  SAVE_MEMGRID=F,
  SEQ_FILEGRID=F,
- TYPE_FILEGRID=0          ,
+ TYPE_FILEGRID=5          ,
  NUM_GRID_I=0          ,
  NUM_GRID_F=0          ,
  POT_ONLY=F,
@@ -1046,6 +1033,7 @@ Qxyz,it_Qtransfo: 1  .0000 .0000 .0000
  OP_WITHCONTRACRVEC=F,
  /
   END read_active
+ coucou direct           5
  para_ReadOp%Op_Transfo F
  The number of rotational basis is:           1
   ANALYSIS PARAMETERS
@@ -1198,13 +1186,13 @@ H memory (mapping+V+KEO):        20. kO
  ============================================================
  ============================================================
 
-     Time and date in ini_data end : 17h:31m:50.946s, the 15/ 5/2021
-        real (s):              0.039 in ini_data end
+     Time and date in ini_data end : 17h:34m:25.363s, the 20/ 5/2021
+        real (s):              0.042 in ini_data end
         real    :   0d  0h  0m  0s in ini_data end
-        cpu (s):              0.035 in ini_data end
-  Total real (s):              0.039
+        cpu (s):              0.036 in ini_data end
+  Total real (s):              0.042
   Total real    :   0d  0h  0m  0s
-  Total cpu (s):              0.027
+  Total cpu (s):              0.028
 
   VIB: END ini_data
  =================================================
@@ -1212,13 +1200,13 @@ H memory (mapping+V+KEO):        20. kO
 
  =================================================
   VIB: BEGINNING sub_qa_bhe
-     Time and date in sub_qa_bhe ini : 17h:31m:50.946s, the 15/ 5/2021
+     Time and date in sub_qa_bhe ini : 17h:34m:25.363s, the 20/ 5/2021
         real (s):              0.000 in sub_qa_bhe ini
         real    :   0d  0h  0m  0s in sub_qa_bhe ini
-        cpu (s):              0.009 in sub_qa_bhe ini
-  Total real (s):              0.039
+        cpu (s):              0.008 in sub_qa_bhe ini
+  Total real (s):              0.042
   Total real    :   0d  0h  0m  0s
-  Total cpu (s):              0.027
+  Total cpu (s):              0.028
 
 
  ----------------------------------------------
@@ -1229,11 +1217,18 @@ H memory (mapping+V+KEO):        20. kO
      1             1 : 1.                                                
  ----------------------------------------------
 
+ 109: all Read_FileGrid F F
+ 109: all Save_FileGrid T F
  alloc_OpGrid of   k_term( 1 ) of H                        2000
  alloc_OpGrid of   k_term( 2 ) of H                        2000
  alloc_OpGrid of   k_term( 3 ) of H                        2000
- alloc_OpGrid of   k_term( 1 ) of S                        2000
+ 169: all Read_FileGrid F F
+ 169: all Save_FileGrid T F
  Grid qact Veff T1 T2
+ 216: all Read_FileGrid F F
+ 216: all Save_FileGrid T F
+ 220: all Read_FileGrid F F
+ 220: all Save_FileGrid T F
  num_grid           1          80
  num_grid iqf           0
  nb_thread in sub_qa_bhe :            1
@@ -1557,7 +1552,9 @@ Grid:     79       0.9976498644       0.0078777216      -0.0000001737       0.00
 Qeq   0.999554   3.186514 
 pot0_corgrad   0.999554   0.000000 
 Grid:     80       0.9995538227       0.0075936192      -0.0000000330       0.0000738669       0.0227013410      -0.0000000332       0.0000744947       0.0378090745      -0.0000000335       0.0000751343       0.0529168193      -0.0000000338       0.0000757861       0.0680245776      -0.0000000341       0.0000764503
-           1 Save_MemGrid_done T
+ 371:           1 Read_FileGrid F
+ In read_OpGrid_OF_Op Type_FileGrid            5
+ In read_OpGrid_OF_Op Read_FileGrid  F
  --------------------------------------------------------------
  n_Op,k_term,derive_term,cte,zero,    minval,    maxval,dealloc
     0      1      0    0  F    F    0.76E-02   0.12E+00   F
@@ -1568,6 +1565,7 @@ Grid:     80       0.9995538227       0.0075936192      -0.0000000330       0.00
  iq_max,Op_max,Qact          50  0.12067406064641291       0.36230475349948732     
  Analysis of the imaginary Op grid F
  BEGINNING Save_OpGrid_OF_Op
+ Save_FileGrid T
  Save_FileGrid_done F
  Save_MemGrid_done T
  Type_FileGrid           5
@@ -1576,22 +1574,22 @@ Grid:     80       0.9995538227       0.0075936192      -0.0000000330       0.00
  Save OpGrid           3 file: SH_HADA_H3                                                                                                                                                                                                                                                     
  Save_FileGrid_done T
  END Save_OpGrid_OF_Op
-           2 Save_MemGrid_done F
+ 371:           2 Read_FileGrid F
+ In read_OpGrid_OF_Op Type_FileGrid            5
+ In read_OpGrid_OF_Op Read_FileGrid  F
  --------------------------------------------------------------
  n_Op,k_term,derive_term,cte,zero,    minval,    maxval,dealloc
-   -1      1      0    0  T    T    0.00E+00   0.00E+00   T
+   -1      1      0    0  F    F                          T
  --------------------------------------------------------------
- iq_min,Op_min,Qact           1   0.0000000000000000      -0.99955382265163062     
- iq_max,Op_max,Qact           1   0.0000000000000000      -0.99955382265163062     
  Analysis of the imaginary Op grid F
 
-     Time and date in sub_qa_bhe end : 17h:31m:51.155s, the 15/ 5/2021
-        real (s):              0.209 in sub_qa_bhe end
+     Time and date in sub_qa_bhe end : 17h:34m:25.573s, the 20/ 5/2021
+        real (s):              0.210 in sub_qa_bhe end
         real    :   0d  0h  0m  0s in sub_qa_bhe end
-        cpu (s):              0.214 in sub_qa_bhe end
-  Total real (s):              0.248
+        cpu (s):              0.218 in sub_qa_bhe end
+  Total real (s):              0.252
   Total real    :   0d  0h  0m  0s
-  Total cpu (s):              0.232
+  Total cpu (s):              0.237
   VIB: END sub_qa_bhe
  =================================================
 

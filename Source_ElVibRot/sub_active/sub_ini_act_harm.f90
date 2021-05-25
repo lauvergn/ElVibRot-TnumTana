@@ -105,6 +105,10 @@
       para_AllOp%tab_Op(1)%para_ReadOp%min_pot =  huge(ONE)
       para_AllOp%tab_Op(1)%para_ReadOp%max_pot = -huge(ONE)
 
+write(6,*) '109: all Read_FileGrid',para_AllOp%tab_Op(:)%para_ReadOp%para_FileGrid%Read_FileGrid
+write(6,*) '109: all Save_FileGrid',para_AllOp%tab_Op(:)%para_ReadOp%para_FileGrid%Save_FileGrid
+write(6,*) '109: all para_Op%alloc_Grid ',para_AllOp%tab_Op(:)%alloc_Grid
+
       DO iOp=1,para_AllOp%nb_Op
         IF (para_AllOp%tab_Op(iOp)%n_op == -1 .AND.                     &
                 para_AllOp%tab_Op(1)%BasisnD%SparseGrid_type == 4) CYCLE ! for S
@@ -163,6 +167,9 @@
           CALL dealloc_NParray(Grid_cte,"Grid_cte",name_sub)
         END IF
       END DO
+write(6,*) '169: all Read_FileGrid',para_AllOp%tab_Op(:)%para_ReadOp%para_FileGrid%Read_FileGrid
+write(6,*) '169: all Save_FileGrid',para_AllOp%tab_Op(:)%para_ReadOp%para_FileGrid%Save_FileGrid
+write(6,*) '169: all para_Op%alloc_Grid ',para_AllOp%tab_Op(:)%alloc_Grid
 
       !----- Transfert the constant KEO to Mate_cte -----------------
       IF (para_AllOp%tab_Op(1)%para_Tnum%Gcte) THEN
@@ -209,11 +216,19 @@
         IF (print_level > 0) write(out_unitp,*) 'Grid qact Veff T1 T2'
       END IF
 
+write(6,*) '216: all Read_FileGrid',para_AllOp%tab_Op(:)%para_ReadOp%para_FileGrid%Read_FileGrid
+write(6,*) '216: all Save_FileGrid',para_AllOp%tab_Op(:)%para_ReadOp%para_FileGrid%Save_FileGrid
+write(6,*) '216: all para_Op%alloc_Grid ',para_AllOp%tab_Op(:)%alloc_Grid
+
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid /= 0) THEN
         CALL Set_File_OF_tab_Op(para_AllOp%tab_Op)
       ELSE
         CALL Set_File_OF_tab_Op(para_AllOp%tab_Op)
       END IF
+
+write(6,*) '228: all Read_FileGrid',para_AllOp%tab_Op(:)%para_ReadOp%para_FileGrid%Read_FileGrid
+write(6,*) '228: all Save_FileGrid',para_AllOp%tab_Op(:)%para_ReadOp%para_FileGrid%Save_FileGrid
+write(6,*) '228: all para_Op%alloc_Grid ',para_AllOp%tab_Op(:)%alloc_Grid
 
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Type_FileGrid == 4 .OR. &
           para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Read_FileGrid) GOTO 999
@@ -365,7 +380,8 @@
       !-------------------------------------------------------------------
       !- Analysis of the grid (zero or constant terms)
       DO iOp=1,para_AllOp%nb_Op
-write(6,*) iOp,'Save_MemGrid_done',para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_MemGrid_done
+write(6,*) '371:',iOp,'Read_FileGrid',para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Read_FileGrid
+        CALL read_OpGrid_OF_Op(para_AllOp%tab_Op(iOp))
         CALL Analysis_OpGrid_OF_Op(para_AllOp%tab_Op(iOp))
         CALL Save_OpGrid_OF_Op(para_AllOp%tab_Op(iOp))
       END DO
