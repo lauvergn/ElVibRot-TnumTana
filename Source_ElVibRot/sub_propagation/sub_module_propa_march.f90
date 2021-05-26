@@ -2825,10 +2825,12 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
       IF (debug) write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov(1:n))
 
-      IF(keep_MPI) Psi = ZERO
-      DO k=1,n
-        IF(keep_MPI) Psi = Psi + UPsiOnKrylov(k)*tab_KrylovSpace(k)
-      END DO
+      IF(keep_MPI) THEN
+        Psi = ZERO
+        DO k=1,n
+          Psi = Psi + UPsiOnKrylov(k)*tab_KrylovSpace(k)
+        END DO
+      ENDIF
 
       !- check norm ------------------
       IF(keep_MPI) CALL norm2_psi(psi)
