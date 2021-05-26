@@ -63,9 +63,10 @@ MODULE mod_basis_BtoG_GtoB_MPI
 
 #if(run_MPI)
 
+    Cvec_length=0
+
     IF(MPI_scheme==1 .OR. MPI_scheme==3) THEN
       itabR=0
-      Cvec_length=0
       IF(MPI_scheme==1) THEN
         d1=iGs_MPI(1,MPI_id)
         d2=iGs_MPI(2,MPI_id)
@@ -132,6 +133,8 @@ MODULE mod_basis_BtoG_GtoB_MPI
 
 #if(run_MPI)
 
+    Cvec_length=0
+
     IF(MPI_scheme==1 .OR. MPI_scheme==3) THEN
       IF(MPI_scheme==1) THEN
         itabR=0
@@ -179,7 +182,7 @@ MODULE mod_basis_BtoG_GtoB_MPI
 
       IF(MPI_scheme==1) THEN
         CALL MPI_Bcast_(Cvec_temp2,d1,root_MPI)
-      ELSEIF(MPI_scheme==3) THEN
+      ELSEIF(MPI_scheme==3 .AND. MPI_nodes_p0) THEN
         CALL MPI_Bcast(Cvec_temp2,d1,Cplx_MPI,root_MPI,MPI_NODE_0_COMM,MPI_err)
       ENDIF
 

@@ -1740,7 +1740,7 @@ MODULE mod_MPI_aux
 
       IF(MPI_id/=0) THEN
         IF(present(MS)) THEN
-          IF(MS/=3 .OR. MS==3 .AND. MPI_nodes_p0) THEN
+          IF(MS/=3 .OR. (MS==3 .AND. MPI_nodes_p0)) THEN
             d1=1
             d2=lengths(MPI_id)
             CALL MPI_Send(array(d1:d2),Int(d2-d1+1,kind=MPI_INTEGER_KIND),             &
@@ -1760,7 +1760,7 @@ MODULE mod_MPI_aux
         d1=lengths(0)+1
         DO i_MPI=1,MPI_np-1
           IF(present(MS)) THEN
-            IF(MS/=3 .OR. MS==3 .AND. MPI_nodes_00(i_MPI)) THEN
+            IF(MS/=3 .OR. (MS==3 .AND. MPI_nodes_00(i_MPI))) THEN
               d2=d1+lengths(i_MPI)-1
               CALL MPI_Recv(array_all(d1:d2),Int(d2-d1+1,kind=MPI_INTEGER_KIND),       &
                             Cplx_MPI,i_MPI,i_MPI,MPI_COMM_WORLD,MPI_stat,MPI_err)
