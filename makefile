@@ -12,7 +12,7 @@
 parallel_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -379,10 +379,13 @@ else
   F90_VER = $(shell $(F90) --version | head -1 )
 endif
 
+GIT_Branch = $(shell git status | grep "On branch")
+
 #===============================================================================
 #===============================================================================
 $(info ************************************************************************)
 $(info ***********OS:               $(OS))
+$(info ***********git:              $(GIT_Branch))
 $(info ***********COMPILER:         $(F90))
 $(info ***********OPTIMIZATION:     $(OPT))
 $(info ***********COMPILER VERSION: $(F90_VER))
@@ -470,6 +473,8 @@ CPPSHELL_CERFACS = -D__CERFACS="$(CERFACS)"
 CPPSHELL_INVHYP  = -D__INVHYP="$(INVHYP)"
 CPPSHELL_DIAGO   = -D__LAPACK="$(LAPACK)"
 CPPSHELL_QML     = -D__QML="$(QML)"
+#CPPSHELL_GIT     = -D__GIT="'master'"
+CPPSHELL_GIT     = -D__GIT="'$(GIT_Branch)'"
 #==========================================
 # the different programs
 #  vib:  make or make EVR
@@ -1020,7 +1025,7 @@ $(OBJ)/sub_module_string.o:$(DirSys)/sub_module_string.f90
 $(OBJ)/sub_module_RW_MatVec.o:$(DirSys)/sub_module_RW_MatVec.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPSHELL)  -c $(DirSys)/sub_module_RW_MatVec.f90
 $(OBJ)/sub_module_system.o:$(DirSys)/sub_module_system.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL)  -c $(DirSys)/sub_module_system.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL) $(CPPSHELL_GIT) -c $(DirSys)/sub_module_system.f90
 $(OBJ)/sub_module_MPI_aux.o:$(DirSys)/sub_module_MPI_aux.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirSys)/sub_module_MPI_aux.f90
 ###

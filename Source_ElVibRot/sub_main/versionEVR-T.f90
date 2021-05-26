@@ -66,6 +66,7 @@
         write(out_unitp,*) 'Compiler libs: ',trim(compiler_libs)
 
         write(out_unitp,*) 'EVRT_path: ',trim(EVRT_path)
+        write(out_unitp,*) 'git ',trim(git_branch)
 
         write(out_unitp,*) '-----------------------------------------------'
 
@@ -96,4 +97,3 @@
         write(out_unitp,*) '==============================================='
       END IF
       END SUBROUTINE versionEVRT
-
