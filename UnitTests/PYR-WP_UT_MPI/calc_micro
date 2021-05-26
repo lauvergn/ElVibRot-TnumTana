@@ -37,6 +37,8 @@ for propa in $list_propa
 do
   RES=res_TypePropa$propa
 
+  echo $RES  : EVROK $EVROK
+
   EVROK=`grep -c "ElVibRot-Tnum AU REVOIR!!!" $RES `
   if [ $EVROK -ne "1" ]
   then
