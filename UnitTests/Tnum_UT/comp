@@ -4,4 +4,4 @@ here=`pwd`
 DIR_EVRT=../..
 
 cd $DIR_EVRT
- make --no-print-directory tnum-dist &> $here/comp.log
+ make tnum-dist &> $here/comp.log

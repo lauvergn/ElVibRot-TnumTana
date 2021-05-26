@@ -1,15 +1,15 @@
 #===============================================================================
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
-# F90 = mpifort
- F90 = gfortran
+ F90 = mpifort
+# F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
 
 ## parallel_make=1 to enable parallel make
 ## parallel_make=0 for fast debug make, no parallel
-parallel_make=0
+parallel_make=1
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 1
@@ -19,7 +19,7 @@ OMP = 1
 #
 ## force the default integer (without kind) during the compillation.
 ## default 4: , INT=8 (for kind=8)
-INT = 8
+INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
 ARPACK = 0
