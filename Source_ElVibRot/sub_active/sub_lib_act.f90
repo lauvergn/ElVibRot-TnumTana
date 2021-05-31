@@ -400,6 +400,7 @@
       !whitout saving on memory
       !---------------------------------------------------------
       DO iOp=1,para_AllOp%nb_Op
+        IF (.NOT. para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_MemGrid) CYCLE
         IF (para_AllOp%tab_Op(iOp)%n_Op == -1) CYCLE  ! for S
 
         !--- alloc OpGrid ------------------------------------
