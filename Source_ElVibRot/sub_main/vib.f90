@@ -636,6 +636,7 @@
         !===== Diagonalisation ==========================================
         !================================================================
         IF (para_ana%davidson .OR. para_ana%arpack .OR. para_ana%filter) THEN
+          IF (para_H%Partial_MatOp) STOP 'STOP the Matrix is incomplete'
           IF(MPI_id==0) THEN
             write(out_unitp,*)
             write(out_unitp,*) '================================================='
@@ -714,6 +715,7 @@
           ENDIF
 
         ELSE IF (para_ana%CRP == 0) THEN ! for para_ana%davidson .OR. para_ana%arpack .OR. para_ana%filter
+          IF (para_H%Partial_MatOp) STOP 'STOP the Matrix is incomplete'
           IF(MPI_id==0) THEN
             write(out_unitp,*)
             write(out_unitp,*) '================================================='

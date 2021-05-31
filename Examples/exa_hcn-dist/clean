@@ -1,4 +1,4 @@
-rm -f res res_all res_for_guess res_dum* res_partial
+rm -f res res_all res_for_guess res_dum* res_partial res_grid
 rm -f SH_HADA* file_OpBuilding restart.int spectrum file* fort.* Davidson.log Arpack.log
 rm -f EF*
 rm -f file_WP*

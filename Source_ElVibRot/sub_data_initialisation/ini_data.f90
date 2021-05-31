@@ -562,13 +562,6 @@
       CALL param_Op1TOparam_Op2(para_AllOp%tab_Op(1),para_AllOp%tab_Op(iOp))
       para_AllOp%tab_Op(iOp)%name_Op     = 'S'
       para_AllOp%tab_Op(iOp)%n_Op        = -1
-      IF (para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Type_FileGrid /= 0) THEN
-        para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Read_FileGrid = .FALSE.
-        para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_FileGrid = .FALSE.
-        para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_MemGrid  = .FALSE.
-
-      END IF
-
       CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,             &
                        type_Op=0,nb_Qact=mole%nb_act1,cplx=.FALSE.,     &
                        JRot=Para_Tnum%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
@@ -576,7 +569,6 @@
                               para_AllOp%tab_Op(iOp)%derive_termQdyn,   &
                               para_AllOp%tab_Op(iOp)%derive_termQact,   &
                               mole%ActiveTransfo%list_QactTOQdyn)
-
       para_AllOp%tab_Op(iOp)%symab    = 0 ! totally symmetric
       para_AllOp%tab_Op(iOp)%spectral = para_ana%Spectral_ScalOp
 
@@ -646,6 +638,16 @@
         CALL Write_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,With_list=.TRUE.)
 
       END DO
+
+      ! modify some parameters for the overlap operator. ...
+      ! ... It has to be done after all the other operators
+      iOp = 2 ! for S
+      IF (para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Type_FileGrid /= 0) THEN
+        para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Read_FileGrid = .FALSE.
+        para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_FileGrid = .FALSE.
+        para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_MemGrid  = .FALSE.
+
+      END IF
 
 
       IF (para_ReadOp%nb_scalar_Op == 3) THEN ! dipole moment operators

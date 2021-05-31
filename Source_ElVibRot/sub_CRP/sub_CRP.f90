@@ -249,6 +249,7 @@ END SUBROUTINE read_CRP
               CALL sub_MatOp(tab_Op(i),print_Op)
         END DO
       END IF
+      IF (tab_Op(1)%Partial_MatOp) STOP 'STOP the Matrices are incomplete'
 
 
       SELECT CASE (para_CRP%CRP_type)

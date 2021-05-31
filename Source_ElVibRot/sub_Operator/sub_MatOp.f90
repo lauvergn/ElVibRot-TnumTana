@@ -153,6 +153,8 @@ CONTAINS
       END IF
       para_Op%Make_mat = .TRUE.
       para_Op%mat_done = .TRUE.
+      !para_Op%mat_done = (para_Op%para_ReadOp%Partial_MatOp_f -                 &
+      !                    para_Op%para_ReadOp%Partial_MatOp_i + 1 == para_Op%nb_tot)
 
       IF (para_Op%para_ReadOp%save_MatOp) THEN
         CALL file_close(para_Op%para_ReadOp%FileMat)
@@ -168,31 +170,55 @@ CONTAINS
         END IF
       END IF
 
-!     - For the Hamiltonian (n_Op=0) -------------------------
-      IF (para_Op%n_Op == 0 ) THEN
-        !IF (print_level>-1 .AND. MPI_id==0)                                            &
-        !                    write(out_unitp,*) 'Hmin and Hmax',para_Op%Hmin,para_Op%Hmax
-        IF (para_Op%cplx) THEN
-          CALL sub_hermitic_cplxH(para_Op%Cmat,para_Op%nb_tot,          &
-                                  non_hermitic,para_Op%sym_Hamil)
-        ELSE
-          CALL sub_hermitic_H(para_Op%Rmat,para_Op%nb_tot,non_hermitic,para_Op%sym_Hamil)
+      IF (.NOT. para_Op%Partial_MatOp) THEN
+        !- For the Hamiltonian (n_Op=0) -------------------------
+        IF (para_Op%n_Op == 0 ) THEN
+          !IF (print_level>-1 .AND. MPI_id==0)                                            &
+          !                    write(out_unitp,*) 'Hmin and Hmax',para_Op%Hmin,para_Op%Hmax
+          IF (para_Op%cplx) THEN
+            CALL sub_hermitic_cplxH(para_Op%Cmat,para_Op%nb_tot,          &
+                                    non_hermitic,para_Op%sym_Hamil)
+          ELSE
+            CALL sub_hermitic_H(para_Op%Rmat,para_Op%nb_tot,non_hermitic,para_Op%sym_Hamil)
+          END IF
+
+          auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
+          IF (non_hermitic >= FOUR/TEN**4) THEN
+            If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
+            If(MPI_id==0) write(out_unitp,31) non_hermitic
+ 31         format(' Hamiltonien: ',f16.12,' au')
+          ELSE
+            IF (print_level>-1) write(out_unitp,21) non_hermitic*auTOcm_inv
+ 21         format(' Hamiltonien: ',f16.12,' cm-1')
+          END IF
+
         END IF
 
-        auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
-        IF (non_hermitic >= FOUR/TEN**4) THEN
-          If(MPI_id==0) write(out_unitp,*) 'WARNING: non_hermitic is BIG'
-          If(MPI_id==0) write(out_unitp,31) non_hermitic
- 31       format(' Hamiltonien: ',f16.12,' au')
-        ELSE
-          IF (print_level>-1) write(out_unitp,21) non_hermitic*auTOcm_inv
- 21       format(' Hamiltonien: ',f16.12,' cm-1')
+        IF ((print_Op .OR. debug) .AND. MPI_id==0) THEN
+          write(out_unitp,*) para_Op%name_Op,' symmetrized'
+          IF (para_Op%cplx) THEN
+            CALL Write_Mat(para_Op%Cmat,out_unitp,3)
+          ELSE
+            CALL Write_Mat(para_Op%Rmat,out_unitp,5)
+          END IF
         END IF
-
+      ELSE
+        write(out_unitp,*) 'The full matrix is restored from the restart file'
+        CALL flush_perso(out_unitp)
       END IF
 
-      IF ((print_Op .OR. debug) .AND. MPI_id==0) THEN
-        write(out_unitp,*) para_Op%name_Op,' symmetrized'
+      !   --------------------------------------------------------
+      !   - for sthe spectral representation -------------------
+      IF (para_Op%spectral) CALL sub_Spectral_Op(para_Op)
+      !   --------------------------------------------------------
+
+      !   - pack the operator ------------------------------------
+      IF (para_Op%pack_Op) CALL pack_MatOp(para_Op)
+      !   --------------------------------------------------------
+
+
+      IF (para_Op%spectral .AND. (print_Op .OR. debug)) THEN
+        IF(MPI_id==0) write(out_unitp,*) para_Op%name_Op,' spectral'
         IF (para_Op%cplx) THEN
           CALL Write_Mat(para_Op%Cmat,out_unitp,3)
         ELSE
@@ -200,29 +226,10 @@ CONTAINS
         END IF
       END IF
     ELSE
-      write(out_unitp,*) 'The full matrix is restored from the restart file'
-      CALL flush_perso(out_unitp)
+      write(out_unitp,*) 'The matrix is incomplete.'
+      write(out_unitp,*) '   Therefore the symmetrization ... '
+      write(out_unitp,*) '  ... the spectral representation are done.'
     END IF
-
-!   --------------------------------------------------------
-!   - for sthe spectral representation -------------------
-    IF (para_Op%spectral) CALL sub_Spectral_Op(para_Op)
-!   --------------------------------------------------------
-
-!   - pack the operator ------------------------------------
-    IF (para_Op%pack_Op) CALL pack_MatOp(para_Op)
-!   --------------------------------------------------------
-
-
-    IF (para_Op%spectral .AND. (print_Op .OR. debug)) THEN
-      IF(MPI_id==0) write(out_unitp,*) para_Op%name_Op,' spectral'
-      IF (para_Op%cplx) THEN
-        CALL Write_Mat(para_Op%Cmat,out_unitp,3)
-      ELSE
-        CALL Write_Mat(para_Op%Rmat,out_unitp,5)
-      END IF
-    END IF
-
     RealTime = Delta_RealTime(MatOp_Time)
     IF (debug .OR. print_Op .OR. print_level > 0) Then
         write(out_unitp,*) 'Building MatOp: Delta Real Time',RealTime
@@ -3771,8 +3778,8 @@ SUBROUTINE check_Restart_MatOp(para_Op)
 
 !----- for debuging --------------------------------------------------
   character (len=*), parameter ::name_sub='check_Restart_MatOp'
-  !logical, parameter :: debug=.FALSE.
-  logical, parameter :: debug=.TRUE.
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
@@ -3854,12 +3861,19 @@ SUBROUTINE check_Restart_MatOp(para_Op)
       IF (allocated(CV)) CALL dealloc_NParray(CV, 'CV', name_sub)
       IF (allocated(RV)) CALL dealloc_NParray(RV, 'RV', name_sub)
     ELSE
-      nb_todo = nb
-      CALL alloc_NParray(para_Op%List_Mat_i_todo,[nb], 'List_Mat_i_todo', name_sub)
-      para_Op%List_Mat_i_todo(:) = [(i,i=1,nb)]
-    END IF
+      para_Op%para_ReadOp%Partial_MatOp_i = max(para_Op%para_ReadOp%Partial_MatOp_i,1)
+      para_Op%para_ReadOp%Partial_MatOp_f = min(para_Op%para_ReadOp%Partial_MatOp_f,nb)
 
+      nb_todo = para_Op%para_ReadOp%Partial_MatOp_f - para_Op%para_ReadOp%Partial_MatOp_i + 1
+
+      para_Op%Partial_MatOp = (nb_todo /= nb)
+
+      CALL alloc_NParray(para_Op%List_Mat_i_todo,[nb_todo], 'List_Mat_i_todo', name_sub)
+      para_Op%List_Mat_i_todo(:) = [(i,i=para_Op%para_ReadOp%Partial_MatOp_i,para_Op%para_ReadOp%Partial_MatOp_f)]
+
+    END IF
     write(out_unitp,*) 'Matrix columns to do: ',nb_todo
+    write(out_unitp,*) 'Partial_MatOp: ',para_Op%Partial_MatOp
 
 !----------------------------------------------------------
     IF (debug) THEN

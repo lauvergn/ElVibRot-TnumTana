@@ -82,7 +82,7 @@ MODULE mod_SetOp
           integer :: nb_bie=0                    ! number of active basis functions and grid points
           integer :: nb_bi=0,nb_be=0             ! number of active basis functions and grid points
           integer :: nb_ba=0,nb_qa=0             ! number of active basis functions and grid points
-          integer :: nbc_ba=0                    ! number of active contracged basis
+          integer :: nbc_ba=0                    ! number of active contracted basis
 
           integer :: nb_bai=0,nb_qai=0           ! number of total active basis functions with HADA basis
           integer :: nb_baie=0,nb_qaie=0         ! number of total active basis functions
@@ -93,6 +93,7 @@ MODULE mod_SetOp
                                                  ! usefull before the spectral transformation (for another operator)
 
           integer,              allocatable :: List_Mat_i_todo(:)
+          logical                       :: Partial_MatOp = .FALSE.
           real (kind=Rkind),    allocatable :: Rmat(:,:)        ! Rmat(nb_tot ,nb_tot )
           complex (kind=Rkind), allocatable :: Cmat(:,:)        ! Cmat(nb_tot ,nb_tot )
 
@@ -200,8 +201,8 @@ MODULE mod_SetOp
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
-      !logical, parameter :: debug = .FALSE.
-      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='alloc_para_Op'
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -580,6 +581,7 @@ MODULE mod_SetOp
 
       write(out_unitp,*) 'allo List_Mat_i_todo',allocated(para_Op%List_Mat_i_todo)
       IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) shape(para_Op%List_Mat_i_todo)
+      write(out_unitp,*) 'Partial_MatOp',para_Op%Partial_MatOp
       write(out_unitp,*) 'allo Rmat',allocated(para_Op%Rmat)
       IF (allocated(para_Op%Rmat)) write(out_unitp,*) shape(para_Op%Rmat)
       write(out_unitp,*) 'allo Cmat',allocated(para_Op%Cmat)
@@ -858,6 +860,7 @@ MODULE mod_SetOp
       para_H_HADA%n_Op            = para_H%n_Op
       para_H_HADA%name_Op         = para_H%name_Op
       para_H_HADA%Make_Mat        = para_H%Make_Mat
+      para_H_HADA%Partial_MatOp   = .FALSE.
       para_H_HADA%file_Grid       = para_H%file_Grid
       para_H_HADA%sym_Hamil       = para_H%sym_Hamil
 
@@ -1014,6 +1017,7 @@ MODULE mod_SetOp
       para_Op2%n_Op            = para_Op1%n_Op
       para_Op2%name_Op         = para_Op1%name_Op
       para_Op2%Make_Mat        = para_Op1%Make_Mat
+      para_Op2%Partial_MatOp   = para_Op1%Partial_MatOp
       para_Op2%para_ReadOp     = para_Op1%para_ReadOp
       para_Op2%file_Grid       = para_Op1%file_Grid
       para_Op2%read_Op         = para_Op1%read_Op
@@ -1100,10 +1104,6 @@ MODULE mod_SetOp
         DO iOp=1,size(tab_Op)
           tab_Op(iOp)%para_ReadOp%para_fileGrid = para_fileGrid
         END DO
-      ! ELSE
-      !   DO iOp=1,size(tab_Op)
-      !     tab_Op(iOp)%para_ReadOp%para_fileGrid = tab_Op(1)%para_ReadOp%para_fileGrid
-      !   END DO
       END IF
 
 
@@ -1146,9 +1146,7 @@ MODULE mod_SetOp
 
       DO iOp=1,size(tab_Op)
         CALL Open_file_OF_OpGrid(tab_Op(iOp)%OpGrid,nio)
-
         CALL Open_file_OF_OpGrid(tab_Op(iOp)%ImOpGrid,nio)
-
       END DO
 
       END SUBROUTINE Open_File_OF_tab_Op
@@ -1167,7 +1165,6 @@ MODULE mod_SetOp
 
       DO iOp=1,size(tab_Op)
         CALL Close_file_OF_OpGrid(tab_Op(iOp)%OpGrid)
-
         CALL Close_file_OF_OpGrid(tab_Op(iOp)%ImOpGrid)
       END DO
 
@@ -1190,16 +1187,16 @@ MODULE mod_SetOp
 
       character (len=*), parameter :: name_sub='read_OpGrid_OF_Op'
 
-      write(6,*) 'In ',name_sub,' Type_FileGrid ',para_Op%para_ReadOp%para_FileGrid%Type_FileGrid
-      write(6,*) 'In ',name_sub,' Read_FileGrid ',para_Op%para_ReadOp%para_FileGrid%Read_FileGrid
-      write(6,*) 'In ',name_sub,' para_Op%alloc_Grid ',para_Op%alloc_Grid
+      !write(6,*) 'In ',name_sub,' Type_FileGrid ',para_Op%para_ReadOp%para_FileGrid%Type_FileGrid
+      !write(6,*) 'In ',name_sub,' Read_FileGrid ',para_Op%para_ReadOp%para_FileGrid%Read_FileGrid
+      !write(6,*) 'In ',name_sub,' para_Op%alloc_Grid ',para_Op%alloc_Grid
 
-      IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Read_FileGrid) RETURN
+      IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Read_FileGrid .OR. &
+          .NOT. para_Op%para_ReadOp%para_FileGrid%Save_MemGrid  .OR. &
+                para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done) RETURN
 
       IF (.NOT. para_Op%alloc_Grid)                                     &
                      CALL alloc_para_Op(para_Op,Grid=.TRUE.,Mat=.FALSE.)
-
-      IF (para_Op%name_Op == 'S') RETURN
 
       SELECT CASE (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid)
       CASE (0)
@@ -1229,12 +1226,11 @@ MODULE mod_SetOp
             id1 = para_Op%OpGrid(k_term)%derive_termQact(1)
             id2 = para_Op%OpGrid(k_term)%derive_termQact(2)
             iterm_Op = d0MatOp%derive_term_TO_iterm(id1,id2)
-            write(6,*) 'k_term,nb_term',k_term,para_Op%nb_term
-            write(6,*) 'id1,id1,iterm_Op',id1,id1,iterm_Op
-            write(6,*) 'shape ...Grid',shape(para_Op%OpGrid(k_term)%Grid)
-            write(6,*) 'shape ...d0MatOp%ReVal',shape(d0MatOp%ReVal)
-
-            flush(6)
+            !write(6,*) 'k_term,nb_term',k_term,para_Op%nb_term
+            !write(6,*) 'id1,id1,iterm_Op',id1,id1,iterm_Op
+            !write(6,*) 'shape ...Grid',shape(para_Op%OpGrid(k_term)%Grid)
+            !write(6,*) 'shape ...d0MatOp%ReVal',shape(d0MatOp%ReVal)
+            !flush(6)
 
             para_Op%OpGrid(k_term)%Grid(i_qa,:,:) = d0MatOp%ReVal(:,:,iterm_Op)
 
@@ -1328,15 +1324,14 @@ MODULE mod_SetOp
 
       character (len=*), parameter :: name_sub='Save_OpGrid_OF_Op'
 
-      IF (para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done) RETURN
-      IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_FileGrid) RETURN
+      IF (      para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done .OR.       &
+          .NOT. para_Op%para_ReadOp%para_FileGrid%Save_FileGrid) RETURN
 
-write(out_unitp,*) 'BEGINNING ',name_sub
-
-write(out_unitp,*) 'Save_FileGrid',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid
-write(out_unitp,*) 'Save_FileGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done
-write(out_unitp,*) 'Save_MemGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
-write(out_unitp,*) 'Type_FileGrid',para_Op%para_ReadOp%para_FileGrid%Type_FileGrid
+!write(out_unitp,*) 'BEGINNING ',name_sub
+!write(out_unitp,*) 'Save_FileGrid',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid
+!write(out_unitp,*) 'Save_FileGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done
+!write(out_unitp,*) 'Save_MemGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
+!write(out_unitp,*) 'Type_FileGrid',para_Op%para_ReadOp%para_FileGrid%Type_FileGrid
 
       IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -1376,8 +1371,8 @@ write(out_unitp,*) 'Type_FileGrid',para_Op%para_ReadOp%para_FileGrid%Type_FileGr
       END IF
       para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done  = .TRUE.
 
-write(out_unitp,*) 'Save_FileGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done
-write(out_unitp,*) 'END ',name_sub
+!write(out_unitp,*) 'Save_FileGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done
+!write(out_unitp,*) 'END ',name_sub
 
 
     END SUBROUTINE Save_OpGrid_OF_Op

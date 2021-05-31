@@ -314,8 +314,8 @@
       integer :: err_mem,memory
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='alloc_OpGrid'
-      !logical, parameter :: debug = .FALSE.
-      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -558,7 +558,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
           ! formatted is already defined
           STOP
 
-        CASE (1,5) ! sequential
+        CASE (1) ! sequential
           OpGrid(iterm)%file_Grid%seq       = .TRUE.
           OpGrid(iterm)%file_Grid%formatted = .FALSE.
           OpGrid(iterm)%file_Grid%init      = .TRUE.
@@ -570,6 +570,21 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
             OpGrid(iterm)%file_Grid%name = trim(adjustl(Base_FileName_Grid)) // &
                      "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
           END IF
+
+        CASE (5) ! sequential with nb_thread=1
+          OpGrid(iterm)%file_Grid%seq       = .TRUE.
+          OpGrid(iterm)%file_Grid%formatted = .FALSE.
+          OpGrid(iterm)%file_Grid%init      = .TRUE.
+          OpGrid(iterm)%file_Grid%nb_thread = 1
+
+          IF (OpGrid(iterm)%cplx) THEN
+            OpGrid(iterm)%file_Grid%name = trim(adjustl(Base_FileName_Grid)) // &
+                                               "_im" // trim(adjustl(name_Op))
+          ELSE
+            OpGrid(iterm)%file_Grid%name = trim(adjustl(Base_FileName_Grid)) // &
+                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+          END IF
+
 
         CASE (2) ! direct
           OpGrid(iterm)%file_Grid%seq       = .FALSE.

@@ -328,6 +328,7 @@
 
       logical       :: pot_only,T_only,pack_Op
       logical       :: read_Op,make_MatOp,save_MatOp,restart_MatOp
+      integer       :: Partial_MatOp_i,Partial_MatOp_f
       logical       :: direct_KEO,direct_ScalOp
       logical       :: Op_WithContracRVec
 
@@ -364,6 +365,7 @@
                         name_Mat,formatted_Mat,                         &
                         JJ,Type_HamilOp,direct_KEO,direct_ScalOp,       &
                         direct,make_MatOp,save_MatOp,restart_MatOp,     &
+                        Partial_MatOp_i,Partial_MatOp_f,                &
                         pack_Op,tol_pack,tol_nopack,                    &
                         Op_Transfo,E0_Transfo,nb_CAP,nb_FluxOp,         &
                         Op_WithContracRVec
@@ -381,7 +383,7 @@
       make_MatOp           = .FALSE.
       save_MatOp           = .FALSE.
       restart_MatOp        = .FALSE.
-      formatted_Mat        = .TRUE.
+      formatted_Mat        = .FALSE.
       name_Mat             = 'MatOp'
       tol_pack             = ONETENTH**7
       tol_nopack           = NINE/TEN
@@ -465,6 +467,7 @@
       !         direct=1    => Make_Mat=F, SaveFile_Grid=T, SaveMem_Grid=T
       !         direct=2    => Make_Mat=F, SaveFile_Grid=F, SaveMem_Grid=T
       !         direct=3    => Make_Mat=F, SaveFile_Grid=T, SaveMem_Grid=F (for huge grid, like cHAC)
+      !         direct=5    => Make_Mat=F, SaveFile_Grid=T, SaveMem_Grid=T (grid save at the end)
       CASE Default ! id case(0)
         para_ReadOp%Make_Mat = .TRUE.
         CALL init_FileGrid(para_ReadOp%para_FileGrid,                   &
@@ -564,6 +567,8 @@
         para_ReadOp%Make_Mat        = .TRUE.
         para_ReadOp%save_MatOp      = save_MatOp
         para_ReadOp%restart_MatOp   = restart_MatOp
+        para_ReadOp%Partial_MatOp_i = Partial_MatOp_i
+        para_ReadOp%Partial_MatOp_f = Partial_MatOp_f
         para_ReadOp%formatted_Mat   = formatted_Mat
         para_ReadOp%name_Mat        = name_Mat
 
@@ -577,6 +582,8 @@
         para_ReadOp%Make_Mat        = .FALSE.
         para_ReadOp%save_MatOp      = .FALSE.
         para_ReadOp%restart_MatOp   = .FALSE.
+        para_ReadOp%Partial_MatOp_i = 0
+        para_ReadOp%Partial_MatOp_f = huge(1)
         para_ReadOp%formatted_Mat   = .TRUE.
         para_ReadOp%name_Mat        = name_Mat
 
