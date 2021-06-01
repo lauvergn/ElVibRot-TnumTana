@@ -529,6 +529,51 @@ MODULE mod_SetOp
 
       END SUBROUTINE dealloc_para_Op
 
+      SUBROUTINE dealloc_para_MatOp(para_Op)
+      USE mod_MPI
+      TYPE (param_Op),          intent(inout) :: para_Op
+
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='dealloc_para_MatOp'
+
+
+      IF (allocated(para_Op%Rmat))    THEN
+        CALL dealloc_NParray(para_Op%Rmat,'para_Op%Rmat',name_sub)
+      END IF
+      IF (allocated(para_Op%Cmat))    THEN
+        CALL dealloc_NParray(para_Op%Cmat,'para_Op%Cmat',name_sub)
+      END IF
+
+      IF (associated(para_Op%ind_Op))  THEN
+        CALL dealloc_array(para_Op%ind_Op,'para_Op%ind_Op',name_sub)
+      END IF
+      IF (associated(para_Op%dim_Op))  THEN
+        CALL dealloc_array(para_Op%dim_Op,'para_Op%dim_Op',name_sub)
+      END IF
+
+      IF (allocated(para_Op%List_Mat_i_todo))    THEN
+        CALL dealloc_NParray(para_Op%List_Mat_i_todo,'para_Op%List_Mat_i_todo',name_sub)
+      END IF
+
+      IF (associated(para_Op%Rdiag))  THEN
+        CALL dealloc_array(para_Op%Rdiag,'para_Op%Rdiag',name_sub)
+      END IF
+      IF (associated(para_Op%Cdiag))  THEN
+        CALL dealloc_array(para_Op%Cdiag,'para_Op%Cdiag',name_sub)
+
+      END IF
+      IF (associated(para_Op%Rvp))    THEN
+        CALL dealloc_array(para_Op%Rvp,'para_Op%Rvp',name_sub)
+      END IF
+      IF (associated(para_Op%Cvp))    THEN
+        CALL dealloc_array(para_Op%Cvp,'para_Op%Cvp',name_sub)
+      END IF
+
+      para_Op%alloc_mat  = .FALSE.
+      para_Op%mat_done   = .FALSE.
+
+    END SUBROUTINE dealloc_para_MatOp
+
 !===============================================================================
 ! ++    write the type param_Op
 !===============================================================================

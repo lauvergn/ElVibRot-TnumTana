@@ -232,6 +232,12 @@ CONTAINS
         END IF
       END IF
     END IF
+
+    IF (para_Op%Partial_MatOp) THEN
+      write(out_unitp,*) 'Deallocate MatOp'
+      CALL dealloc_para_MatOp(para_Op)
+    END IF
+
     RealTime = Delta_RealTime(MatOp_Time)
     IF (debug .OR. print_Op .OR. print_level > 0) Then
         write(out_unitp,*) 'Building MatOp: Delta Real Time',RealTime
