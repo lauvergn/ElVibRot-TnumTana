@@ -203,10 +203,16 @@ CONTAINS
           END IF
         END IF
       ELSE
-        write(out_unitp,*) 'The full matrix is restored from the restart file'
-        CALL flush_perso(out_unitp)
+        write(out_unitp,*) 'The matrix is incomplete.'
+        write(out_unitp,*) '   Therefore the symmetrization ... '
+        write(out_unitp,*) '  ... the spectral representation are not done.'
       END IF
+    ELSE
+      write(out_unitp,*) 'The full matrix is restored from the restart file'
+      CALL flush_perso(out_unitp)
+    END IF
 
+    IF (.NOT. para_Op%Partial_MatOp) THEN
       !   --------------------------------------------------------
       !   - for sthe spectral representation -------------------
       IF (para_Op%spectral) CALL sub_Spectral_Op(para_Op)
@@ -225,10 +231,6 @@ CONTAINS
           CALL Write_Mat(para_Op%Rmat,out_unitp,5)
         END IF
       END IF
-    ELSE
-      write(out_unitp,*) 'The matrix is incomplete.'
-      write(out_unitp,*) '   Therefore the symmetrization ... '
-      write(out_unitp,*) '  ... the spectral representation are done.'
     END IF
     RealTime = Delta_RealTime(MatOp_Time)
     IF (debug .OR. print_Op .OR. print_level > 0) Then
@@ -3860,6 +3862,9 @@ SUBROUTINE check_Restart_MatOp(para_Op)
       CALL dealloc_NParray(list_done, 'list_done', name_sub)
       IF (allocated(CV)) CALL dealloc_NParray(CV, 'CV', name_sub)
       IF (allocated(RV)) CALL dealloc_NParray(RV, 'RV', name_sub)
+
+      para_Op%Partial_MatOp = .FALSE.
+
     ELSE
       para_Op%para_ReadOp%Partial_MatOp_i = max(para_Op%para_ReadOp%Partial_MatOp_i,1)
       para_Op%para_ReadOp%Partial_MatOp_f = min(para_Op%para_ReadOp%Partial_MatOp_f,nb)

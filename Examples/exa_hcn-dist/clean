@@ -1,5 +1,5 @@
 rm -f res res_all res_for_guess res_dum* res_partial res_grid
-rm -f SH_HADA* file_OpBuilding restart.int spectrum file* fort.* Davidson.log Arpack.log
+rm -f SH_HADA* file_OpBuilding restart.int spectrum file* fort.* Davidson.log Arpack.log MatOp*
 rm -f EF*
 rm -f file_WP*
 rm -f Rho* psi* 
@@ -7,3 +7,4 @@ rm -f Eq_KEO.tex mat_f2ij keo.op
 rm -f *confli*
 rm -f namelist*
 rm -f Arpack.log_sym
+rm -f err Err
