@@ -3802,7 +3802,7 @@ SUBROUTINE check_Restart_MatOp(para_Op)
     IF (para_Op%para_ReadOp%restart_MatOp) THEN
 
       CALL file_open(para_Op%para_ReadOp%FileMat,UnitMat,                       &
-                    lformatted=para_Op%para_ReadOp%formatted_Mat)
+                     lformatted=para_Op%para_ReadOp%formatted_Mat)
 
       IF (debug) THEN
         write(out_unitp,*) 'Restart file: '
@@ -3846,6 +3846,7 @@ SUBROUTINE check_Restart_MatOp(para_Op)
           STOP 'ERROR in check_Restart_MatOp: index i is out-of-bound.'
         END IF
 
+        IF (debug) write(out_unitp,*) 'Read column, i',i
         IF (i >= para_Op%para_ReadOp%Partial_MatOp_i .AND.                      &
             i <= para_Op%para_ReadOp%Partial_MatOp_f) THEN
 

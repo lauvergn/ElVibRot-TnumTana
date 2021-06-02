@@ -102,6 +102,8 @@
       para_ReadOp%make_Mat            = .FALSE.
       para_ReadOp%save_MatOp          = .FALSE.
       para_ReadOp%restart_MatOp       = .FALSE.
+      para_ReadOp%Partial_MatOp_i     = 0
+      para_ReadOp%Partial_MatOp_f     = huge(1)
       para_ReadOp%formatted_Mat       = .TRUE.
       para_ReadOp%name_Mat            = 'MatOp'
 
