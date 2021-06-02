@@ -114,7 +114,7 @@
 
       integer                        :: i,j,rk,rl,i_term,iOp,it,ib
       integer                        :: nq,nb_ba,nb_bi,nb_be,nb_bie
-      logical                        :: spectral_H
+      logical                        :: EneH0,spectral_H
       real (kind=Rkind), allocatable :: Qana(:),Qact(:)
 
 !----- for debuging --------------------------------------------------
@@ -694,11 +694,18 @@
         CALL Set_paraPRH(mole,para_Tnum,para_AllBasis%BasisnD)
       END IF
 
-      IF (para_propa%para_Davidson%NewVec_type == 4 .OR. para_ana%CRP > 0) THEN
+      EneH0 = (para_ana%davidson .AND. para_propa%para_Davidson%NewVec_type == 4)
+      EneH0 = EneH0 .OR. (para_ana%CRP > 0 .AND.                                &
+                            (para_ana%para_CRP%LinSolv_type == 'qmr'   .OR.     &
+                             para_ana%para_CRP%LinSolv_type == 'gmres' .OR.     &
+                             para_ana%para_CRP%Read_Channel_AT_TS) )
+
+      IF (EneH0) THEN
         CALL RecSet_EneH0(para_Tnum,mole,para_AllBasis%BasisnD,para_ReadOp)
         !pot_Qref is added here, because it has been removed in the RecSet_EneH0 caclulations
         para_AllBasis%BasisnD%EneH0 = para_AllBasis%BasisnD%EneH0 + para_ReadOp%pot_Qref
       END IF
+
 
       write(out_unitp,*)
       write(out_unitp,*) "============================================================"

@@ -169,6 +169,7 @@ IMPLICIT NONE
   para_CRP%LinSolv_accuracy     = LinSolv_accuracy
   para_CRP%Preconditioner_Type  = Preconditioner_Type
   para_CRP%FluxOp_test          = FluxOp_test
+  para_CRP%Read_Channel_AT_TS   = Read_Channel
 
   para_CRP%Build_MatOp          = (CRP_type == 'withmat')                  .OR. &
                                   (CRP_type == 'withmat_flux')             .OR. &
