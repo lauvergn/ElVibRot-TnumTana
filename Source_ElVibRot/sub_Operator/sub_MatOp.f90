@@ -73,7 +73,7 @@ CONTAINS
       logical,parameter :: debug=.FALSE.
       !logical,parameter :: debug=.TRUE.
 !-----------------------------------------------------------
-      IF (para_Op%mat_done) RETURN
+      IF (para_Op%mat_done .OR. para_Op%Partial_MatOp) RETURN
       IF (.NOT. para_Op%alloc_mat)                                      &
              CALL alloc_para_Op(para_Op,Mat=.TRUE.,Grid=.FALSE.)
 
