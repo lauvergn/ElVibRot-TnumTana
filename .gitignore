@@ -12,3 +12,12 @@ comp.log
 vib.exe
 PhysConst.exe
 UnitTests_Frac.exe
+Examples/exa_PhysicalConstants/res*
+Examples/exa_PhysicalConstants/comp.log
+UnitTests/*/*log
+UnitTests/*/file*
+UnitTests/*/lev*
+UnitTests/*/res*
+UnitTests/*/SH_HADA*
+UnitTests/*/err*
+UnitTests/*/namelist*

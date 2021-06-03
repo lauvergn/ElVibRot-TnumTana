@@ -383,7 +383,7 @@
       make_MatOp           = .FALSE.
       save_MatOp           = .FALSE.
       restart_MatOp        = .FALSE.
-      Partial_MatOp_f      = 0
+      Partial_MatOp_i      = 0
       Partial_MatOp_f      = huge(1)
       formatted_Mat        = .FALSE.
       name_Mat             = 'MatOp'

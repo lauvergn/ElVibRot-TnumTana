@@ -216,8 +216,8 @@
 
         END SELECT
 
-        CALL Write_TwoDTransfo(TwoDTransfo(i:i))
       END DO
+      CALL Write_TwoDTransfo(TwoDTransfo)
 
       END SUBROUTINE Read_TwoDTransfo
 

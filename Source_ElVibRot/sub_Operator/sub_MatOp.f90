@@ -3792,12 +3792,22 @@ SUBROUTINE check_Restart_MatOp(para_Op)
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) 'para_Op%nb_tot',para_Op%nb_tot
+      write(out_unitp,*) 'Partial_MatOp_i,Partial_MatOp_f',                     &
+        para_Op%para_ReadOp%Partial_MatOp_i,para_Op%para_ReadOp%Partial_MatOp_f
       CALL flush_perso(out_unitp)
     END IF
     nb = para_Op%nb_tot
 
     para_Op%para_ReadOp%Partial_MatOp_i = max(para_Op%para_ReadOp%Partial_MatOp_i,1)
     para_Op%para_ReadOp%Partial_MatOp_f = min(para_Op%para_ReadOp%Partial_MatOp_f,nb)
+
+    IF (debug) THEN
+      write(out_unitp,*) 'Partial_MatOp_i,Partial_MatOp_f',                     &
+         para_Op%para_ReadOp%Partial_MatOp_i,para_Op%para_ReadOp%Partial_MatOp_f
+      write(out_unitp,*) 'nb_todo (before restart)',nb_todo
+      write(out_unitp,*) 'Partial_MatOp',para_Op%Partial_MatOp
+      CALL flush_perso(out_unitp)
+    END IF
 
     IF (para_Op%para_ReadOp%restart_MatOp) THEN
 
@@ -3898,9 +3908,10 @@ SUBROUTINE check_Restart_MatOp(para_Op)
 
 !----------------------------------------------------------
     IF (debug) THEN
-     IF (nb_todo > 0) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
-     write(out_unitp,*) 'END ',name_sub
-     CALL flush_perso(out_unitp)
+      IF (allocated(para_Op%List_Mat_i_todo))                                   &
+                write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
+      write(out_unitp,*) 'END ',name_sub
+      CALL flush_perso(out_unitp)
     END IF
 !----------------------------------------------------------
 

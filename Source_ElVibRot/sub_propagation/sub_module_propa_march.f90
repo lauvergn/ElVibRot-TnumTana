@@ -170,7 +170,7 @@
         CALL march_BS(T,no,WP(1),WP0(1),para_H,para_propa)
 
       CASE (8) ! Short Iterative Lanczos
-        IF(openmpi .AND. SRep_MPI) THEN 
+        IF(openmpi .AND. SRep_MPI) THEN
           CALL march_SIL_MPI(T,no,WP(1),WP0(1),para_H,para_propa)
         ELSE
           CALL march_SIL(T,no,WP(1),WP0(1),para_H,para_propa)
@@ -1022,7 +1022,7 @@ END SUBROUTINE march_RK2
     DO i=lbound(yt0,dim=1),ubound(yt0,dim=1)
       IF(keep_MPI) CALL dealloc_psi(yt0(i),delete_all=.TRUE.)
     END DO
-  
+
     deallocate(yt0)
     allocate(yt0(0:j))
     DO i=lbound(yt1,dim=1),ubound(yt1,dim=1)
@@ -1420,7 +1420,7 @@ END SUBROUTINE march_RK2
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'S with TDParam'
-        CALL Write_CMat(S,out_unitp,6)
+        CALL Write_Mat(S,out_unitp,6)
         write(out_unitp,*) 'END ',name_sub
       END IF
 !----------------------------------------------------------
@@ -4282,7 +4282,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
           CALL sub_OpPsi(w1,w2,para_H)
           CALL sub_Hmax(para_propa,para_H)
           para_propa%once_Hmin=.FALSE.
-                
+
           para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
           para_propa%para_poly%Hmin = para_propa%Hmin
           para_propa%para_poly%Hmax = para_propa%Hmax
@@ -4290,7 +4290,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
           CALL initialisation1_poly(para_propa%para_poly,                              &
                                     para_propa%WPdeltaT,                               &
                                     para_propa%type_WPpropa)
-          
+
           para_H%scaled = .TRUE.
           para_H%E0     = para_propa%para_poly%E0
           para_H%Esc    = para_propa%para_poly%Esc

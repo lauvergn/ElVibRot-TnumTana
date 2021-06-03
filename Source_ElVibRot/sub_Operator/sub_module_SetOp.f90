@@ -1063,6 +1063,12 @@ MODULE mod_SetOp
       para_Op2%name_Op         = para_Op1%name_Op
       para_Op2%Make_Mat        = para_Op1%Make_Mat
       para_Op2%Partial_MatOp   = para_Op1%Partial_MatOp
+
+      IF (allocated(para_Op1%List_Mat_i_todo))    THEN
+        CALL alloc_NParray(para_Op2%List_Mat_i_todo,shape(para_Op1%Partial_MatOp),&
+                          'para_Op2%List_Mat_i_todo','param_Op1TOparam_Op2')
+      END IF
+
       para_Op2%para_ReadOp     = para_Op1%para_ReadOp
       para_Op2%file_Grid       = para_Op1%file_Grid
       para_Op2%read_Op         = para_Op1%read_Op
