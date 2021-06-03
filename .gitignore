@@ -9,9 +9,7 @@ obj/*
 makefile_CRP
 vib
 comp.log
-vib.exe
-PhysConst.exe
-UnitTests_Frac.exe
+*.exe
 Examples/exa_PhysicalConstants/res*
 Examples/exa_PhysicalConstants/comp.log
 UnitTests/*/*log
