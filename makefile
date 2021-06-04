@@ -85,6 +85,7 @@ endif
 #===============================================================================
 # Quantum Model Lib (ECAM)
 QMLibDIR := /Users/lauvergn/git/QuantumModelLib
+#QMLibDIR := /userTMP/lauvergn/QModLib/QModLib-v6.10
 ifneq "$(wildcard $(QMLibDIR) )" ""
   # QMLibDIR exists:
   $(info QMLibDIR variable exists)
@@ -429,6 +430,7 @@ ifeq ($(ARPACK),1)
       ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_ifort.a
     endif
     #ARPACKLIB=/usr/lib64/libarpack.a
+    ARPACKLIB=/userTMP/lauvergn/EVR/ARPACK_DML/libarpack_Linux.a
   endif
 else
   ARPACKLIB =
