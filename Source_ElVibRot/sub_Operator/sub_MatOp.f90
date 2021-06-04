@@ -153,8 +153,6 @@ CONTAINS
       END IF
       para_Op%Make_mat = .TRUE.
       para_Op%mat_done = .TRUE.
-      !para_Op%mat_done = (para_Op%para_ReadOp%Partial_MatOp_f -                 &
-      !                    para_Op%para_ReadOp%Partial_MatOp_i + 1 == para_Op%nb_tot)
 
       IF (para_Op%para_ReadOp%save_MatOp) THEN
         CALL file_close(para_Op%para_ReadOp%FileMat)
@@ -208,6 +206,8 @@ CONTAINS
         write(out_unitp,*) '  ... the spectral representation are not done.'
       END IF
     ELSE
+      para_Op%Make_mat = .TRUE.
+      para_Op%mat_done = .TRUE.
       write(out_unitp,*) 'The full matrix is restored from the restart file'
       CALL flush_perso(out_unitp)
     END IF
@@ -2800,7 +2800,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
-      character (len=*), parameter ::name_sub='sub_MatOp_direct1'
+      character (len=*), parameter ::name_sub='sub_MatOp_direct1_old'
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------

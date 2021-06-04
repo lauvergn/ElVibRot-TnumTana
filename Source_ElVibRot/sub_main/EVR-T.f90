@@ -235,7 +235,7 @@
         openmpi               = Popenmpi
 
         IF (.NOT. openmp) THEN
-           MatOp_omp          = 0
+           MatOp_omp          = PMatOp_omp
            OpPsi_omp          = 0
            BasisTOGrid_omp    = 0
            Grid_omp           = 0
@@ -301,22 +301,20 @@
 
         END IF
 
-        IF(openmp) THEN
-          write(out_unitp,*) '========================================='
-          write(out_unitp,*) 'OpenMP parameters:'
-          write(out_unitp,*) 'Max number of threads:           ',maxth
-          write(out_unitp,*) 'MatOp_omp,      MatOp_maxth      ',MatOp_omp,MatOp_maxth
-          write(out_unitp,*) 'OpPsi_omp,      OpPsi_maxth      ',OpPsi_omp,OpPsi_maxth
-          write(out_unitp,*) 'BasisTOGrid_omp,BasisTOGrid_maxth',BasisTOGrid_omp,BasisTOGrid_maxth
-          write(out_unitp,*) 'Grid_omp,       Grid_maxth       ',Grid_omp,Grid_maxth
-          write(out_unitp,*) 'CRP_omp,        CRP_maxth        ',CRP_omp,CRP_maxth
-          write(out_unitp,*) 'SG4_omp,        SG4_maxth        ',SG4_omp,SG4_maxth
-          write(out_unitp,*) '========================================='
+        write(out_unitp,*) '========================================='
+        write(out_unitp,*) 'OpenMP parameters:',openmp
+        write(out_unitp,*) 'Max number of threads:           ',maxth
+        write(out_unitp,*) 'MatOp_omp,      MatOp_maxth      ',MatOp_omp,MatOp_maxth
+        write(out_unitp,*) 'OpPsi_omp,      OpPsi_maxth      ',OpPsi_omp,OpPsi_maxth
+        write(out_unitp,*) 'BasisTOGrid_omp,BasisTOGrid_maxth',BasisTOGrid_omp,BasisTOGrid_maxth
+        write(out_unitp,*) 'Grid_omp,       Grid_maxth       ',Grid_omp,Grid_maxth
+        write(out_unitp,*) 'CRP_omp,        CRP_maxth        ',CRP_omp,CRP_maxth
+        write(out_unitp,*) 'SG4_omp,        SG4_maxth        ',SG4_omp,SG4_maxth
+        write(out_unitp,*) '========================================='
 
-          write(out_unitp,*) '========================================='
-          write(out_unitp,*) 'File_path: ',trim(adjustl(File_path))
-          write(out_unitp,*) '========================================='
-        ENDIF ! for MPI_id=0
+        write(out_unitp,*) '========================================='
+        write(out_unitp,*) 'File_path: ',trim(adjustl(File_path))
+        write(out_unitp,*) '========================================='
 
         para_mem%max_mem    = max_mem/Rkind
         write(out_unitp,*) '========================================='
