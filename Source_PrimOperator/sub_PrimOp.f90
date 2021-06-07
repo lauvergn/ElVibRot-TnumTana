@@ -162,7 +162,20 @@
         IF (PrimOp%pot_itQtransfo == 0) THEN ! Cartesian coordinates
           CALL sub_Init_Qmodel_Cart(mole%ncart_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
         ELSE
-          CALL sub_Init_Qmodel(mole%nb_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
+          ndim = mole%nb_act
+          CALL sub_Init_Qmodel(ndim,PrimOp%nb_elec,'read_model',.FALSE.,0)
+          write(out_unitp,*) ' ndim from  Qmodel ("Quantum Model Lib") is ...'
+          IF (ndim == mole%nb_act) THEN
+            write(out_unitp,*) ' equal to mole%nb_act.'
+          ELSE IF (ndim > mole%nb_act) THEN
+            write(out_unitp,*) ' larger than mole%nb_act.'
+            write(out_unitp,*) ' You MUST use type 100 and 1 coordinates.'
+          ELSE ! ndim < mole%nb_act
+            write(out_unitp,*) ' smaller than mole%nb_act.'
+            write(out_unitp,*) ' ERROR: it is not possible.'
+            STOP 'ndim from QML is too small'
+          END IF
+
         END IF
         IF (print_level > 0 .OR. debug) CALL sub_Write_Qmodel(out_unitp)
         IF (debug) CALL set_Qmodel_Print_level(min(1,print_level))
@@ -3706,6 +3719,7 @@ stop
       ELSE
         KEO_only_loc = .TRUE.
       END IF
+    write(out_unitp,*) '0 nb_act,nb_rigid100',mole%nb_act,mole%nb_rigid100
 
 !-----------------------------------------------------------------------
 !--------------------- TO finalize the coordinates (NM) and the KEO ----
@@ -3797,16 +3811,18 @@ stop
   END IF
   !Gref = .FALSE.
   IF (Gref) THEN
+    write(out_unitp,*) 'nb_act,nb_rigid100',mole%nb_act,mole%nb_rigid100
     CALL alloc_NPArray(GGdef,[mole%nb_act,mole%nb_act],'GGdef',name_sub)
     GGdef(:,:) = ZERO
     CALL get_Qact0(Qact,mole%ActiveTransfo)
-    IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
+    IF (print_level > 1) write(out_unitp,*) ' Gref',shape(GGdef)
     flush(out_unitp)
 
     IF (PrimOp%QMLib .AND. PrimOp%pot_itQtransfo /= 0) THEN
     ! when Qcart is used the size of G form QML is [ncart_cat,ncart_act]
 #if __QML == 1
       ndim = get_Qmodel_ndim()
+      write(6,*) 'ndim QML',ndim
       CALL alloc_NPArray(GGdef_Qmodel,[ndim,ndim],'GGdef_Qmodel',name_sub)
       CALL get_Qmodel_GGdef(GGdef_Qmodel)
       IF (print_level > 1) THEN
