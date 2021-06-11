@@ -310,7 +310,11 @@
       IF (para_ana%propa) THEN
         para_propa%control = para_ana%control !< for controling the calcutation of Hmin
         para_propa%max_ana = para_ana%max_ana
-        CALL read_propagation(para_propa,mole%nb_act1,nb_vp_specWP)
+        nb_bi = get_nb_bi_FROM_AllBasis(para_AllBasis)
+        CALL read_propagation(para_propa,mole,nb_bi,                            &
+                              para_ReadOp%nb_elec,nb_vp_specWP)
+        !CALL read_propagation_old(para_propa,mole%nb_act1,nb_bi,                &
+        !                      para_ReadOp%nb_elec,nb_vp_specWP)
         spectral_H = (para_propa%type_WPpropa == 10)
 
         IF (para_propa%spectral) THEN

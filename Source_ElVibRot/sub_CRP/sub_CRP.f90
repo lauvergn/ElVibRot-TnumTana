@@ -1371,7 +1371,6 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
 
   ELSE IF (para_CRP%LinSolv_type == 'matlinsolv') THEN
 
-
      CALL alloc_NParray(Ginv,SHAPE(tab_Op(1)%Rmat),'Ginv',name_sub)
      CALL alloc_NParray(trav,[tab_Op(1)%nb_tot],'trav',name_sub)
      CALL alloc_NParray(indx,[tab_Op(1)%nb_tot],'indx',name_sub)

@@ -232,7 +232,7 @@
         DO i=1,para_WP0%nb_WP0
           IF (psi0(i)%symab == symab_loc) THEN
             nb_WP0 = nb_WP0 + 1
-            ! copi the psi0 only if nb_WP0 /= i
+            ! copy the psi0 only if nb_WP0 /= i
             IF (nb_WP0 /= i) psi0(nb_WP0) = psi0(i)
           END IF
         END DO

@@ -135,7 +135,7 @@
         DO 11 j=1,n
           IF (abs(a(i,j)) .GT. abs(aamax)) aamax=abs(a(i,j))
  11     CONTINUE
-        IF (abs(aamax) .EQ. tiny) STOP"matrice singuliere"
+        IF (abs(aamax) .EQ. tiny) STOP "matrice singuliere"
         vv(i)=1/aamax
  12    CONTINUE
 
@@ -188,4 +188,3 @@
 
        RETURN
        end subroutine ludcmp_cplx
-

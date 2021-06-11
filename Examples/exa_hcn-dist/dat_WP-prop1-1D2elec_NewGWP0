@@ -15,7 +15,7 @@ cd $here
 
 
 nice $DIR_vib/vib << ** >res
- &system printlevel=1 File_path='/utmp/lauvergn' /
+ &system printlevel=1 /
  &constantes ene_unit='au' /
  &variables
          nrho=2
@@ -67,10 +67,13 @@ dh 0.0
 
         type_WPpropa=1 poly_tol=1.d-12 auto_Hmax=f
 
-        WP0n_h=1 WP0nb_elec=2 lect_WP0FBR=f
+        new_GWP0=t nb_WP0=2 lect_WP0FBR=f
 
         TFnexp2=16 TFmaxE=20000.
  /
- &defWP0 sigma=0.3,Qeq=0.9 imp_k=0.0 /
+ &defGWP I_ElecChannel=2 I_HAChannel=1 Coef=(0.,0.) /
+   &defWP0 sigma=0.3 Qeq=0.9 imp_k=0.0 /
+ &defGWP I_ElecChannel=1 I_HAChannel=1 Coef=(-1.,0.) /
+   &defWP0 sigma=0.3 Qeq=0. imp_k=0.0 /
 **
 

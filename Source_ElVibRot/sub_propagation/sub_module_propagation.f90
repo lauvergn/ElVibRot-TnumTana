@@ -962,14 +962,19 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 !       for each variable Qi : exp[-((Q-Qeq)/sigma)2+i*imp_k*(Q-Qeq)]
 !
 !================================================================
-      SUBROUTINE read_propagation(para_propa,nb_act1,nb_vp_spec_out)
+      SUBROUTINE read_propagation(para_propa,mole,nb_bi,nb_elec,nb_vp_spec_out)
       USE mod_system
-      USE mod_psi,     ONLY : alloc_param_WP0
+      USE mod_psi,     ONLY : alloc_param_WP0,Read_tab_GWP
+      USE mod_Coord_KEO
       IMPLICIT NONE
 
 !------ parameter for the propagation ---------------------
-      TYPE (param_propa) :: para_propa
-      integer            :: nb_act1,nb_vp_spec_out
+      TYPE (param_propa), intent(inout) :: para_propa
+      integer,            intent(inout) :: nb_vp_spec_out
+      integer,            intent(in)    :: nb_bi,nb_elec
+
+      TYPE (CoordType),   intent(in)    :: mole
+
 
 !----- physical and mathematical constants ---------------------------
       real (kind=Rkind) :: auTOcm_inv
@@ -1007,7 +1012,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       logical         ::       restart         !  restart the propagation
 
 
-      logical      :: New_Read_WP0,read_listWP0,read_file
+      logical      :: new_GWP0,New_Read_WP0,read_listWP0,read_file
       logical      :: WP0restart,WP0cplx
       logical      :: lect_WP0DVR ,lect_WP0FBR,lect_WP0FBRall,WP0FBR
       integer      :: WP0n_h,WP0nb_elec,WP0_DIP,WP0nrho,nb_WP0
@@ -1042,7 +1047,8 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
                       WP0n_h,WP0nb_elec,WP0_DIP,th_WP0,WP0nrho,         &
                       WP0_nb_CleanChannel,                              &
                       WP0restart,file_WP0,WP0cplx,                      &
-                      nb_WP0,New_Read_WP0,read_listWP0,read_file,       &
+                      nb_WP0,read_listWP0,read_file,                    &
+                      New_Read_WP0,new_GWP0,                            &
                       DHmax,auto_Hmax,                                  &
                       max_poly,poly_tol,npoly,                          &
                       type_corr,Op_corr,i_qa_corr,channel_ie_corr,      &
@@ -1063,13 +1069,6 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
       write(out_unitp,*) ' PROPAGATION PARAMETERS: propa, defWP0, control'
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
-
-!--------- memory allocation -----------------------------
-        IF (nb_act1 < 0) THEN
-          write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) ' nb_act1 is < 1 !!',nb_act1
-          STOP
-        END IF
 
 !------- read the namelist -----------------------------
 
@@ -1104,6 +1103,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         file_WP             = 'file_WP'
         file_restart        = 'file_WP_restart'
 
+        new_GWP0            = .FALSE.
         nb_WP0              = 1
         read_file           = .FALSE.
         New_Read_WP0        = .FALSE.
@@ -1358,22 +1358,23 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
           STOP
         END IF
 
-        para_propa%para_WP0%nb_WP0        = nb_WP0
-        para_propa%para_WP0%New_Read_WP0  = New_Read_WP0
-        para_propa%para_WP0%read_file     = read_file
-        para_propa%para_WP0%read_listWP0  = read_listWP0
-        para_propa%para_WP0%lect_WP0GridRep   = lect_WP0DVR
-        para_propa%para_WP0%lect_WP0BasisRep   = lect_WP0FBR
-        para_propa%para_WP0%lect_WP0BasisRepall= lect_WP0FBRall
-        para_propa%para_WP0%WP0BasisRep        = WP0FBR
-        para_propa%para_WP0%WP0n_h        = WP0n_h
-        para_propa%para_WP0%WP0nb_elec    = WP0nb_elec
-        para_propa%para_WP0%WP0_DIP       = WP0_DIP
-        para_propa%para_WP0%th_WP0        = th_WP0
-        para_propa%para_WP0%WP0nrho       = WP0nrho
-        para_propa%para_WP0%WP0restart    = WP0restart
-        para_propa%para_WP0%WP0cplx       = WP0cplx
-        para_propa%para_WP0%file_WP0%name = make_FileName(file_WP0)
+        para_propa%para_WP0%new_GWP0            = new_GWP0
+        para_propa%para_WP0%nb_WP0              = nb_WP0
+        para_propa%para_WP0%New_Read_WP0        = New_Read_WP0
+        para_propa%para_WP0%read_file           = read_file
+        para_propa%para_WP0%read_listWP0        = read_listWP0
+        para_propa%para_WP0%lect_WP0GridRep     = lect_WP0DVR
+        para_propa%para_WP0%lect_WP0BasisRep    = lect_WP0FBR
+        para_propa%para_WP0%lect_WP0BasisRepall = lect_WP0FBRall
+        para_propa%para_WP0%WP0BasisRep         = WP0FBR
+        para_propa%para_WP0%WP0n_h              = WP0n_h
+        para_propa%para_WP0%WP0nb_elec          = WP0nb_elec
+        para_propa%para_WP0%WP0_DIP             = WP0_DIP
+        para_propa%para_WP0%th_WP0              = th_WP0
+        para_propa%para_WP0%WP0nrho             = WP0nrho
+        para_propa%para_WP0%WP0restart          = WP0restart
+        para_propa%para_WP0%WP0cplx             = WP0cplx
+        para_propa%para_WP0%file_WP0%name       = make_FileName(file_WP0)
         IF (read_file .AND. .NOT.                                       &
             check_file_exist_WITH_file_name(para_propa%para_WP0%file_WP0%name)) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
@@ -1556,12 +1557,649 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
             write(out_unitp,*) ' read the WP0 in BasisRep (old way)'
           ELSE IF (New_Read_WP0) THEN
             write(out_unitp,*) ' read the WP0 in BasisRep (new way)'
+          ELSE IF (new_GWP0) THEN
+            write(out_unitp,*) ' sum of Gaussian WPs (new way)'
+            CALL Read_tab_GWP(para_propa%para_WP0%tab_GWP0,                     &
+                              para_propa%para_WP0%nb_WP0,mole,nb_bi,nb_elec)
           ELSE
+            write(out_unitp,*) ' One Gaussian WP (old way)'
+
+            para_propa%para_WP0%nb_act1 = mole%nb_act1
+
+            CALL alloc_param_WP0(para_propa%para_WP0,                           &
+                                 WP0Grid_Gaussian=.TRUE.,WP0_CleanChannel=.FALSE.)
+
+            write(out_unitp,*)
+            IF (print_level > 0)                                        &
+             write(out_unitp,*) 'WP0(Q)=exp[-((Q-Qeq)/sigma)^2+i*imp_k*(Q-Qeq)+i*phase]'
+            IF (print_level > 0) write(out_unitp,*) 'WP0sigma WP0Qeq WP0imp_k WP0phase'
+            DO i=1,mole%nb_act1
+              sigma    = ONETENTH
+              Qeq      = ZERO
+              imp_k    = ZERO
+              phase    = ZERO
+              read(in_unitp,defWP0)
+              para_propa%para_WP0%WP0sigma(i) = sigma
+              para_propa%para_WP0%WP0Qeq(i)   = Qeq
+              para_propa%para_WP0%WP0imp_k(i) = imp_k
+              para_propa%para_WP0%WP0phase(i) = phase
+
+              IF (print_level > 0) write(out_unitp,*) i,sigma,Qeq,imp_k,phase
+            END DO
+
+          END IF
+        END IF
+
+      END SUBROUTINE read_propagation
+      SUBROUTINE read_propagation_old(para_propa,nb_act1,nb_bi,nb_elec,nb_vp_spec_out)
+      USE mod_system
+      USE mod_psi,     ONLY : alloc_param_WP0,Read_tab_GWP_v0
+      IMPLICIT NONE
+
+!------ parameter for the propagation ---------------------
+      TYPE (param_propa), intent(inout) :: para_propa
+      integer,            intent(inout) :: nb_vp_spec_out
+      integer,            intent(in)    :: nb_act1,nb_bi,nb_elec
+
+!----- physical and mathematical constants ---------------------------
+      real (kind=Rkind) :: auTOcm_inv
+
+
+!----- time parameters -----------------------------------------------
+      TYPE (REAL_WU)    :: WPTmax ,WPdeltaT
+
+      integer           :: nb_micro
+
+
+!     - for propagation with polynomials -------------------
+      logical           :: auto_Hmax
+      real (kind=Rkind) :: DHmax
+      integer           :: max_poly,npoly
+      real (kind=Rkind) :: poly_tol
+
+
+      logical                  :: spectral
+      integer                  :: nb_vp_spec
+      integer                  :: type_WPpropa
+      character (len=Name_len) :: name_WPpropa
+
+      integer            :: n_WPecri
+      logical            :: WPpsi2 ,WPpsi,write_DVR,write_FBR,write_iter,write_WPAdia
+      character (len=Line_len) :: file_autocorr,file_WP,file_spectrum,file_restart
+
+
+      integer         ::       type_corr       !  kind of correlation function
+                                               !  default 0 => <psi0(T)|psi(T)>
+                                               !  1 =>  psi(T,i_qa_corr,...) (for a grid point)
+      integer         ::       i_qa_corr       !  grid point for type_corr = 1
+      integer         ::       channel_ie_corr !  Channel for type_corr = 1
+      integer         ::       Op_corr         !  Op used with type_corr=2
+      logical         ::       restart         !  restart the propagation
+
+
+      logical      :: new_GWP0,New_Read_WP0,read_listWP0,read_file
+      logical      :: WP0restart,WP0cplx
+      logical      :: lect_WP0DVR ,lect_WP0FBR,lect_WP0FBRall,WP0FBR
+      integer      :: WP0n_h,WP0nb_elec,WP0_DIP,WP0nrho,nb_WP0
+      integer      :: WP0_nb_CleanChannel
+      character (len=Line_len) :: file_WP0
+      real (kind=Rkind) :: th_WP0
+      integer           :: TFnexp2
+      TYPE (REAL_WU)    :: TFmaxE,TFminE
+
+!------ initial WP definition -----------------------------
+!     for each variable Qi : exp[-((Q-Qeq)/sigma)2+i*imp_k*(Q-Qeq)+i*phase]
+      real (kind=Rkind) :: sigma,imp_k,Qeq,phase
+
+!------ initial WP for the control -----------------------
+      integer       :: nb_WP,nb_WPba,max_iter
+      real (kind=Rkind) :: conv,alpha,Max_alpha,gamma,Tenvelopp
+      logical       :: post_control,gate,cplx_gate,One_Iteration
+      logical       :: Krotov,Turinici,envelopp,Obj_TO_alpha
+      real (kind=Rkind),pointer    :: MRgate(:,:)
+      complex (kind=Rkind),pointer :: MCgate(:,:)
+      integer       :: err
+!------ working variables ---------------------------------
+      integer   :: i
+
+      NAMELIST /propa/WPTmax,WPdeltaT,nb_micro,restart,                 &
+                      name_WPpropa,type_WPpropa,spectral,nb_vp_spec,    &
+                      One_Iteration,                                    &
+                      write_iter,n_WPecri,                              &
+                  WPpsi2,WPpsi,file_WP,write_DVR,write_FBR,write_WPAdia,&
+                      lect_WP0DVR,lect_WP0FBR,lect_WP0FBRall,           &
+                      WP0FBR,                                           &
+                      WP0n_h,WP0nb_elec,WP0_DIP,th_WP0,WP0nrho,         &
+                      WP0_nb_CleanChannel,                              &
+                      WP0restart,file_WP0,WP0cplx,                      &
+                      nb_WP0,read_listWP0,read_file,                    &
+                      New_Read_WP0,new_GWP0,                            &
+                      DHmax,auto_Hmax,                                  &
+                      max_poly,poly_tol,npoly,                          &
+                      type_corr,Op_corr,i_qa_corr,channel_ie_corr,      &
+                      file_autocorr,file_spectrum,file_restart,         &
+                      TFnexp2,TFmaxE,TFminE
+
+      NAMELIST /defWP0/sigma,Qeq,imp_k,phase
+      NAMELIST /control/nb_WP,nb_WPba,max_iter,conv,alpha,Max_alpha,    &
+                        gamma,                                          &
+                        Krotov,Turinici,envelopp,Tenvelopp,Obj_TO_alpha,&
+                        post_control,gate,cplx_gate
+
+!----- for debuging ----------------------------------------
+      character (len=*), parameter :: name_sub='read_propagation'
+      logical, parameter :: debug = .FALSE.
+!     logical, parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+
+      write(out_unitp,*) ' PROPAGATION PARAMETERS: propa, defWP0, control'
+      auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
+
+!--------- memory allocation -----------------------------
+        IF (nb_act1 < 0) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' nb_act1 is < 1 !!',nb_act1
+          STOP
+        END IF
+
+!------- read the namelist -----------------------------
+
+        WPdeltaT            = REAL_WU(TEN,'au','t')  ! 10 ua (time)
+        WPTmax              = REAL_WU(HUNDRED,'au','t')  ! 100 ua (time)
+
+
+        nb_micro            = 1
+        restart             = .FALSE.
+        One_Iteration       = .FALSE.
+
+        DHmax               = -TEN
+        auto_Hmax           = .FALSE.
+        max_poly            = 5000
+        npoly               = 0
+        poly_tol            = ZERO
+
+        type_WPpropa        = 0
+        name_WPpropa        = ''
+        spectral            = .FALSE.
+        nb_vp_spec          = 0
+
+        write_iter          = .TRUE.
+        n_WPecri            = 1
+        WPpsi2              = .FALSE.
+        WPpsi               = .FALSE.
+        write_DVR           = .TRUE.
+        write_FBR           = .FALSE.
+        write_WPAdia        = .FALSE.
+        file_autocorr       = 'file_auto'
+        file_spectrum       = 'file_spectrum'
+        file_WP             = 'file_WP'
+        file_restart        = 'file_WP_restart'
+
+        new_GWP0            = .FALSE.
+        nb_WP0              = 1
+        read_file           = .FALSE.
+        New_Read_WP0        = .FALSE.
+        read_listWP0        = .FALSE.
+        WP0restart          = .FALSE.
+        WP0cplx             = .TRUE.
+        file_WP0            = 'file_WP0'
+        lect_WP0DVR         = .FALSE.
+        lect_WP0FBR         = .FALSE.
+        lect_WP0FBRall      = .TRUE.
+        WP0FBR              = .TRUE.
+        WP0n_h              = 1
+        WP0nb_elec          = 1
+        WP0_DIP             = 0
+        th_WP0              = ZERO
+        WP0_nb_CleanChannel = 0
+        WP0nrho             = -1
+
+        TFnexp2             = 15
+        TFminE              = REAL_WU(0,'cm-1','E')  ! 0 cm-1
+        TFmaxE              = REAL_WU(TEN**4,'cm-1','E')  ! 10000 cm-1
+        type_corr           = 0
+        i_qa_corr           = 0
+        Op_corr             = 0
+        channel_ie_corr     = 0
+
+        read(in_unitp,propa)
+
+        IF (n_WPecri < 0) THEN
+          write(out_unitp,*) ' WARNING: n_WPecri should be > 0'
+          write(out_unitp,*) '   => n_WPecri=1'
+          n_WPecri      = 1
+        END IF
+
+        IF (print_level > 0) write(out_unitp,propa)
+
+        para_propa%with_field    = .FALSE.
+
+
+  IF (type_WPpropa > 0 .AND. name_WPpropa /= '') THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) '  type_WPpropa and name_WPpropa are defined.'
+    write(out_unitp,*) '  type_WPpropa: ',type_WPpropa
+    write(out_unitp,*) '  name_WPpropa: ',trim(name_WPpropa)
+    write(out_unitp,*) '  You have to chose only one.'
+    write(out_unitp,*) '  => check your data!!'
+    STOP
+  END IF
+  IF (type_WPpropa == 0) THEN
+     CALL string_uppercase_TO_lowercase(name_WPpropa)
+     SELECT CASE (name_WPpropa)
+       CASE ('cheby','chebychev')
+         type_WPpropa = 1
+       CASE ('nod','taylor')
+         type_WPpropa = 2
+       CASE ('emin','emin-relax','relax')
+         type_WPpropa = 3
+       CASE ('emax')
+         type_WPpropa = -3
+       CASE ('davidson','emin-davidson')
+         type_WPpropa = 33
+       CASE ('emax-davidson')
+         type_WPpropa = -33
+       CASE ('cg','conjugated gradient')
+         type_WPpropa = 34
+       CASE ('tdh-nod','tdh-taylor')
+         type_WPpropa = 22
+       CASE ('tdh-rk2')
+         type_WPpropa = 52
+       CASE ('tdh-rk4')
+         type_WPpropa = 54
+
+       CASE ('rk4')
+         type_WPpropa = 5
+         npoly = 4
+       CASE ('rk2')
+         type_WPpropa = 5
+         npoly = 2
+       CASE ('rk1','euker')
+         type_WPpropa = 5
+         npoly = 1
+       CASE ('rkn')
+         type_WPpropa = 5
+         IF (npoly /= 4 .AND. npoly /= 2 .AND. npoly /= 1) npoly = 4
+
+       CASE ('modmidpoint')
+         type_WPpropa = 6
+       CASE ('bulirsch-stoer')
+         type_WPpropa = 7
+       CASE ('sil')
+         type_WPpropa = 8
+       CASE ('sip')
+         type_WPpropa = 9
+       CASE ('spectral')
+         type_WPpropa = 10
+
+       CASE ('control','opt-control')
+         type_WPpropa = 24
+       CASE ('test')
+         type_WPpropa = 100
+       END SELECT
+  END IF
+  SELECT CASE (type_WPpropa)
+  CASE (1) !         Chebychev
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**12
+          IF (DHmax .EQ. -TEN) DHmax = HALF
+          name_WPpropa  = 'cheby'
+  CASE (2)!         Taylor
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'nOD'
+
+  CASE (5) !         RK4 without a time dependant pulse in Hamiltonian (W(t))
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          IF (npoly /= 4 .AND. npoly /= 2 .AND. npoly /= 1) npoly = 4
+          IF (npoly == 4) name_WPpropa  = 'RK4'
+          IF (npoly == 2) name_WPpropa  = 'RK2'
+          IF (npoly == 1) name_WPpropa  = 'RK1'
+          para_propa%with_field    = .FALSE.
+
+  CASE (6) !         ModMidPoint without a time dependant pulse in Hamiltonian (W(t))
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'ModMidPoint'
+          para_propa%with_field    = .FALSE.
+
+  CASE (7) !         Bulirsch-Stoer without a time dependant pulse in Hamiltonian (W(t))
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'Bulirsch-Stoer'
+          para_propa%with_field    = .FALSE.
+
+  CASE (8)!         Short Interative Propagation (Lanczos/Davidson)
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'SIL'
+          para_propa%with_field    = .FALSE.
+
+  CASE (9)!         Short Interative Propagation (Lanczos/Davidson)
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'SIP'
+          para_propa%with_field    = .FALSE.
+
+  CASE (10)!         Spectral representation Propagation
+          poly_tol                 = ZERO
+          DHmax                    = ZERO
+          name_WPpropa             = 'Spectral'
+          para_propa%with_field    = .FALSE.
+
+
+  CASE (3,-3) !         im Relax
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**5
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          IF (type_WPpropa ==  3) name_WPpropa  = 'Emin'
+          IF (type_WPpropa == -3) name_WPpropa  = 'Emax'
+  CASE (33,-33) !         Davidson
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**5
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'Davidson'
+  CASE (34) ! Conjugated Gradient
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**5
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'Conjugated Gradient'
+
+
+  CASE (22,221,222,223,24,241,242,243) !         nOD with a time dependant pulse in Hamiltonian (W(t))
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'TDH-nOD'
+          para_propa%with_field    = .TRUE.
+  CASE (50,54,52) !         RK4 with a time dependant pulse in Hamiltonian (W(t))
+          poly_tol                 = ZERO
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'TDH_RK4'
+          IF (type_WPpropa==52) name_WPpropa  = 'TDH_RK2'
+          para_propa%with_field    = .TRUE.
+
+
+  CASE (100) !         test
+          IF (poly_tol .EQ. ZERO) poly_tol = ONETENTH**20
+          IF (DHmax .EQ. -TEN) DHmax = ZERO
+          name_WPpropa  = 'test'
+          para_propa%with_field    = .TRUE.
+  CASE Default
+           write(out_unitp,*) 'ERROR in ',name_sub
+           write(out_unitp,*) ' type of propagation(',type_WPpropa,')'
+           write(out_unitp,*) ' is not possible'
+           STOP
+  END SELECT
+
+
+        para_propa%WPTmax                 = convRWU_TO_R_WITH_WorkingUnit(WPTmax)
+        para_propa%WPdeltaT               = convRWU_TO_R_WITH_WorkingUnit(WPdeltaT)
+        para_propa%nb_micro               = nb_micro
+        para_propa%One_Iteration          = One_Iteration
+        para_propa%para_poly%max_poly     = max_poly
+        para_propa%para_poly%npoly        = npoly
+
+        CALL alloc_param_poly(para_propa%para_poly)
+
+        para_propa%spectral      = spectral
+        nb_vp_spec_out           = nb_vp_spec
+
+        para_propa%para_poly%poly_tol     = poly_tol
+        para_propa%para_poly%DHmax        = DHmax
+        para_propa%auto_Hmax              = auto_Hmax
+
+
+        para_propa%type_WPpropa = type_WPpropa
+        para_propa%name_WPpropa = name_WPpropa
+
+        para_propa%write_iter         = write_iter
+        para_propa%n_WPecri           = n_WPecri
+        para_propa%WPpsi2             = WPpsi2
+        para_propa%WPpsi              = WPpsi
+        para_propa%write_GridRep      = write_DVR
+        para_propa%write_BasisRep     = write_FBR
+        para_propa%write_WPAdia       = write_WPAdia
+
+        para_propa%file_autocorr%name    = make_FileName(file_autocorr)
+        IF (err_file_name(para_propa%file_autocorr%name,name_sub='read_propagation') /= 0) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  the file_autocorr file name is empty'
+          write(out_unitp,*) '  => check your data!!'
+          STOP
+        END IF
+
+        para_propa%file_spectrum%name    = make_FileName(file_spectrum)
+        IF (err_file_name(para_propa%file_spectrum%name,name_sub='read_propagation') /= 0) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  the file_spectrum file name is empty'
+          write(out_unitp,*) '  => check your data!!'
+          STOP
+        END IF
+
+        para_propa%file_WP%name          = make_FileName(file_WP)
+        IF (err_file_name(para_propa%file_WP%name,name_sub='read_propagation') /= 0) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  the file_WP file name is empty'
+          write(out_unitp,*) '  => check your data!!'
+          STOP
+        END IF
+
+        para_propa%file_WP_restart%name  = make_FileName(file_restart)
+        IF (restart .AND. .NOT. check_file_exist_WITH_file_name(para_propa%file_WP_restart%name)) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  the restart file does not exist or its file name is empty'
+          write(out_unitp,*) '  file_restart: ',file_restart
+          write(out_unitp,*) '  => check your data!!'
+          STOP
+        END IF
+
+        para_propa%para_WP0%new_GWP0            = new_GWP0
+        para_propa%para_WP0%nb_WP0              = nb_WP0
+        para_propa%para_WP0%New_Read_WP0        = New_Read_WP0
+        para_propa%para_WP0%read_file           = read_file
+        para_propa%para_WP0%read_listWP0        = read_listWP0
+        para_propa%para_WP0%lect_WP0GridRep     = lect_WP0DVR
+        para_propa%para_WP0%lect_WP0BasisRep    = lect_WP0FBR
+        para_propa%para_WP0%lect_WP0BasisRepall = lect_WP0FBRall
+        para_propa%para_WP0%WP0BasisRep         = WP0FBR
+        para_propa%para_WP0%WP0n_h              = WP0n_h
+        para_propa%para_WP0%WP0nb_elec          = WP0nb_elec
+        para_propa%para_WP0%WP0_DIP             = WP0_DIP
+        para_propa%para_WP0%th_WP0              = th_WP0
+        para_propa%para_WP0%WP0nrho             = WP0nrho
+        para_propa%para_WP0%WP0restart          = WP0restart
+        para_propa%para_WP0%WP0cplx             = WP0cplx
+        para_propa%para_WP0%file_WP0%name       = make_FileName(file_WP0)
+        IF (read_file .AND. .NOT.                                       &
+            check_file_exist_WITH_file_name(para_propa%para_WP0%file_WP0%name)) THEN
+          write(out_unitp,*) 'ERROR in ',name_sub
+          write(out_unitp,*) '  the file_WP0 file does not exist or its file name is empty'
+          write(out_unitp,*) '  file_WP0: ',file_WP0
+          write(out_unitp,*) '  => check your data!!'
+          STOP
+        END IF
+        para_propa%para_WP0%WP0_nb_CleanChannel = WP0_nb_CleanChannel
+        IF (WP0_nb_CleanChannel > 0) THEN
+          write(out_unitp,*)
+          write(out_unitp,*) "===================================="
+          write(out_unitp,*) "== WP0_CleanChannel ================"
+          CALL alloc_param_WP0(para_propa%para_WP0,                     &
+                        WP0Grid_Gaussian=.FALSE.,WP0_CleanChannel=.TRUE.)
+          read(in_unitp,*) para_propa%para_WP0%WP0_CleanChannellist
+          write(out_unitp,*) " list: ",para_propa%para_WP0%WP0_CleanChannellist
+          write(out_unitp,*)
+          write(out_unitp,*) "===================================="
+        END IF
+
+        IF (type_corr < 0 .AND. type_corr > 2) THEN
+          write(out_unitp,*) ' ERROR in read_propa'
+          write(out_unitp,*) ' type_corr < 0 and type_corr >2'
+          STOP
+        END IF
+        IF (type_corr == 1 .AND. (i_qa_corr <1 .OR. channel_ie_corr<1)) THEN
+          write(out_unitp,*) ' ERROR in read_propa'
+          write(out_unitp,*) ' type_corr == 1 and ',                             &
+                      'wrong i_qa_corr or channel_ie_corr'
+          write(out_unitp,*) 'type_corr,i_qa_corr,channel_ie_corr',             &
+                      type_corr,i_qa_corr,channel_ie_corr
+          STOP
+        END IF
+        para_propa%type_corr       = type_corr
+        para_propa%Op_corr         = Op_corr
+        para_propa%i_qa_corr       = i_qa_corr
+        para_propa%channel_ie_corr = channel_ie_corr
+        para_propa%restart         = restart
+
+
+        para_propa%TFnexp2        = TFnexp2
+
+
+        para_propa%TFmaxE       = convRWU_TO_R_WITH_WorkingUnit(TFmaxE)
+        para_propa%TFminE       = convRWU_TO_R_WITH_WorkingUnit(TFminE)
+
+        IF (para_propa%control) THEN
+          para_propa%with_field    = .TRUE.
+          nb_WP        = 1
+          nb_WPba      = 0
+          max_iter     = 0
+          conv         = ONE - ONETENTH**3
+          alpha        = ONE
+          Max_alpha    = TEN**3
+          gamma        = ONETENTH
+          Krotov       = .TRUE.
+          Turinici     = .FALSE.
+          envelopp     = .TRUE.
+          Tenvelopp    = ZERO
+          Obj_TO_alpha = .FALSE.
+          post_control = .TRUE.
+          gate         = .FALSE.
+          cplx_gate    = .FALSE.
+          read(in_unitp,control)
+
+          IF (Tenvelopp == ZERO) Tenvelopp = convRWU_TO_R_WITH_WorkingUnit(WPTmax)
+          IF (print_level > 0) write(out_unitp,control)
+
+          IF (nb_WP < 1) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) ' nb_WP < 1 !!!',nb_WP
+            STOP
+          END IF
+          IF (nb_WPba < 1) nb_WPba = nb_WP
+
+          para_propa%para_control%nb_WP           = nb_WP
+          para_propa%para_control%nb_WPba         = nb_WPba
+          para_propa%para_control%max_iter        = max_iter
+          para_propa%para_control%conv            = conv
+          para_propa%para_control%alpha           = alpha
+          para_propa%para_control%Max_alpha       = Max_alpha
+          para_propa%para_control%gamma           = gamma
+
+          para_propa%para_control%Krotov          = Krotov
+          para_propa%para_control%Turinici        = Turinici
+          para_propa%para_control%envelopp        = envelopp
+          para_propa%para_control%Tenvelopp       = Tenvelopp
+          para_propa%para_control%Obj_TO_alpha    = Obj_TO_alpha
+
+          para_propa%para_control%post_control    = post_control
+          para_propa%para_control%gate            = gate
+          para_propa%para_control%cplx_gate       = cplx_gate
+          IF (gate) THEN
+            CALL alloc_array(para_propa%para_control%tab_WP0,           &
+                                                         (/nb_WPba/),   &
+                            "para_propa%para_control%tab_WP0",name_sub)
+            CALL alloc_array(para_propa%para_control%Mgate0,            &
+                                                   (/nb_WP,nb_WPba/),   &
+                            "para_propa%para_control%Mgate0",name_sub)
+            CALL alloc_array(para_propa%para_control%Mgatet,            &
+                                                   (/nb_WP,nb_WPba/),   &
+                            "para_propa%para_control%Mgatet",name_sub)
+            read(in_unitp,*) para_propa%para_control%tab_WP0
+            write(out_unitp,*) 'tab_WP0',para_propa%para_control%tab_WP0
+
+            IF (cplx_gate) THEN
+              nullify(MCgate)
+              CALL alloc_array(MCgate,(/nb_WP,nb_WPba/),"MCgate",name_sub)
+
+              CALL Read_Mat(MCgate,in_unitp,nb_WPba,err)
+              IF (err /= 0) THEN
+                write(out_unitp,*) 'ERROR in ',name_sub
+                write(out_unitp,*) ' reading the matrix "Mgate0"'
+                STOP
+              END IF
+              para_propa%para_control%Mgate0(:,:) = MCgate(:,:)
+
+              CALL Read_Mat(MCgate,in_unitp,nb_WPba,err)
+              IF (err /= 0) THEN
+                write(out_unitp,*) 'ERROR in ',name_sub
+                write(out_unitp,*) ' reading the matrix "Mgatet"'
+                STOP
+              END IF
+              para_propa%para_control%Mgatet(:,:) = MCgate(:,:)
+
+              CALL dealloc_array(MCgate,"MCgate",name_sub)
+            ELSE
+              nullify(MRgate)
+              CALL alloc_array(MRgate,(/nb_WP,nb_WPba/),"MRgate",name_sub)
+
+              CALL Read_Mat(MRgate,in_unitp,nb_WPba,err)
+              IF (err /= 0) THEN
+                write(out_unitp,*) 'ERROR in ',name_sub
+                write(out_unitp,*) ' reading the matrix "Mgate0"'
+                STOP
+              END IF
+              para_propa%para_control%Mgate0(:,:) = MRgate(:,:)
+
+              CALL Read_Mat(MRgate,in_unitp,nb_WPba,err)
+              IF (err /= 0) THEN
+                write(out_unitp,*) 'ERROR in ',name_sub
+                write(out_unitp,*) ' reading the matrix "Mgatet"'
+                STOP
+              END IF
+              para_propa%para_control%Mgatet(:,:) = MRgate(:,:)
+
+              CALL dealloc_array(MRgate,"MRgate",name_sub)
+            END IF
+
+            IF (debug) THEN
+              write(out_unitp,*) 'Gate Matrix (WP0)',nb_WP
+              CALL Write_Mat(para_propa%para_control%Mgate0,out_unitp,4)
+              write(out_unitp,*) 'Gate Matrix (WPt)',nb_WP
+              CALL Write_Mat(para_propa%para_control%Mgatet,out_unitp,4)
+            END IF
+
+            DO i=1,nb_WP
+              CALL Write_Vec(para_propa%para_control%Mgate0(i,:),       &
+                             out_unitp,4,name_info="#WP0 " // int_TO_char(i) )
+              CALL Write_Vec(para_propa%para_control%Mgatet(i,:),       &
+                             out_unitp,4,name_info="#WPt " // int_TO_char(i))
+            END DO
+          ELSE
+            CALL alloc_array(para_propa%para_control%tab_WP0,(/nb_WP/), &
+                            "para_propa%para_control%tab_WP0",name_sub)
+            CALL alloc_array(para_propa%para_control%tab_WPt,(/nb_WP/), &
+                            "para_propa%para_control%tab_WPt",name_sub)
+
+            read(in_unitp,*) para_propa%para_control%tab_WP0
+            read(in_unitp,*) para_propa%para_control%tab_WPt
+            write(out_unitp,*) 'tab_WP0',para_propa%para_control%tab_WP0
+            write(out_unitp,*) 'tab_WPt',para_propa%para_control%tab_WPt
+          END IF
+
+        ELSE
+          IF (lect_WP0DVR) THEN
+            write(out_unitp,*) ' read the WP0 in GridRep'
+          ELSE IF (lect_WP0FBR) THEN
+            write(out_unitp,*) ' read the WP0 in BasisRep (old way)'
+          ELSE IF (New_Read_WP0) THEN
+            write(out_unitp,*) ' read the WP0 in BasisRep (new way)'
+          ELSE IF (new_GWP0) THEN
+            write(out_unitp,*) ' sum of Gaussian WPs (new way)'
+            CALL Read_tab_GWP_v0(para_propa%para_WP0%tab_GWP0,                 &
+                              para_propa%para_WP0%nb_WP0,nb_act1,nb_bi,nb_elec)
+          ELSE
+            write(out_unitp,*) ' One Gaussian WP (old way)'
 
             para_propa%para_WP0%nb_act1 = nb_act1
 
-            CALL alloc_param_WP0(para_propa%para_WP0,                   &
-                       WP0Grid_Gaussian=.TRUE.,WP0_CleanChannel=.FALSE.)
+            CALL alloc_param_WP0(para_propa%para_WP0,                           &
+                                 WP0Grid_Gaussian=.TRUE.,WP0_CleanChannel=.FALSE.)
 
             write(out_unitp,*)
             IF (print_level > 0)                                        &
@@ -1584,7 +2222,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
           END IF
         END IF
 
-      END SUBROUTINE read_propagation
+      END SUBROUTINE read_propagation_old
 !=======================================================
 !
 !     read parameters for the Davidson
