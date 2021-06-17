@@ -85,6 +85,8 @@ CONTAINS
         write(out_unitp,*) 'BEGINNING init_psi0'
         write(out_unitp,*) 'WP0n_h,WP0nb_elec',para_WP0%WP0n_h,para_WP0%WP0nb_elec
         write(out_unitp,*)
+        write(out_unitp,*) 'WP0(:)%symab',WP0(:)%symab
+
         CALL ecri_init_psi(WP0(1))
 
         write(out_unitp,*)
@@ -190,7 +192,7 @@ CONTAINS
           CALL lect_psiBasisRepnotall(WP0(1),para_WP0%WP0cplx)
         ELSE
           write(out_unitp,*) ' ERROR in psi0'
-          write(out_unitp,*) ' I do not what to do!!!'
+          write(out_unitp,*) ' I do not know what to do!!!'
           STOP
         END IF ! for .NOT. para_WP0%lect_WP0BasisRep
 
@@ -216,6 +218,7 @@ CONTAINS
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*)
+        write(out_unitp,*) 'WP0(:)%symab',WP0(:)%symab
         write(out_unitp,*) 'WP0BasisRep',WP0(1)%norm2
         IF (para_WP0%WP0BasisRep) THEN
           CALL ecri_psi(ZERO,WP0(1),out_unitp,.FALSE.,.TRUE.)
@@ -388,9 +391,12 @@ CONTAINS
       END IF
 !-----------------------------------------------------------
 
+      IF (WP0%cplx) THEN
+        WP0%CvecG(:) = CZERO
+      ELSE
+        WP0%RvecG(:) = ZERO
+      END IF
 
-
-      WP0 = ZERO
 
       DO i_qa=1,WP0%nb_qa
 

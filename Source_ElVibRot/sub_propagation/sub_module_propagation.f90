@@ -632,16 +632,18 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
    write(out_unitp,*) 'nb_bi',WP(1)%nb_bi
    write(out_unitp,*)
    CALL Write_ana_psi(para_propa%ana_psi)
+   write(out_unitp,*) 'symab of para_H ',para_H%symab
 
    DO i=1,nb_WP
      CALL norm2_psi(WP(i),.FALSE.,.TRUE.,.FALSE.)
-     write(out_unitp,*) 'norm2psi0 BasisRep',i,WP(1)%norm2
+     write(out_unitp,*) 'norm2psi0 BasisRep',i,WP(i)%norm2
 
      write(out_unitp,*) 'WP(i)%BasisRep',i
-     CALL ecri_psi(T=ZERO,psi=WP(1),                               &
+     write(out_unitp,*) 'WP(i)%BasisRep',i,'symab',WP(i)%symab
+     CALL ecri_psi(T=ZERO,psi=WP(i),                               &
                    ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
      write(out_unitp,*) 'WP(i)%GridRep',i
-     CALL ecri_psi(T=ZERO,psi=WP(1),                               &
+     CALL ecri_psi(T=ZERO,psi=WP(i),                               &
                    ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
    END DO
   END IF

@@ -135,6 +135,7 @@ CONTAINS
                                para_Op%nb_ba,para_Op%nb_bi,para_Op%nb_be
         write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
         write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
+        write(out_unitp,*) 'symab of para_Op,psi ',para_Op%symab,psi%symab
         IF (present(iOp)) write(out_unitp,*) 'iOp',iOp
         write(out_unitp,*)
         CALL write_param_Op(para_Op)
@@ -151,6 +152,11 @@ CONTAINS
         CALL sub_OpiPsi(Psi,OpPsi,para_Op,iOp)
       ELSE
         CALL sub_OpPsi(Psi,OpPsi,para_Op)
+      END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'Op.PsiBasisRep'
+        CALL ecri_psi(Psi=OpPsi)
       END IF
 
       IF(keep_MPI) CALL Overlap_psi1_psi2(E,Psi,OpPsi)
@@ -199,6 +205,7 @@ CONTAINS
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub,' ',n
         write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
+        write(out_unitp,*) 'symab of para_Op,psi ',para_Op%symab,psi%symab
         write(out_unitp,*) 'para_Op%mat_done',para_Op%mat_done
         CALL flush_perso(out_unitp)
         CALL write_param_Op(para_Op)
@@ -304,6 +311,7 @@ CONTAINS
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub,' ',n
         write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
+        write(out_unitp,*) 'symab of para_Op,psi ',para_Op%symab,psi%symab
         write(out_unitp,*) 'para_Op%mat_done',para_Op%mat_done
         write(out_unitp,*) 'para_Op%... %Save_MemGrid_done',            &
                     para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
@@ -551,7 +559,7 @@ CONTAINS
 !      Symmetrization of  Op.Psi (if psi is on the basis)
 !
 !=====================================================================
-      IF (debug) write(out_unitp,*) 'para_Op,psi symab ',para_Op%symab,psi%symab
+      IF (debug) write(out_unitp,*) 'symab of para_Op,psi ',para_Op%symab,psi%symab
 
       IF(keep_MPI) THEN
         OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,psi%symab)

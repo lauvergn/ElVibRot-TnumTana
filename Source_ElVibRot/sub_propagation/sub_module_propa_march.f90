@@ -156,7 +156,7 @@
           CALL  march_noD(T,no,WP(1),WP0(1),para_H,para_propa)
         END IF
 
-      CASE (5) ! 4th-Order Runge-Kunta
+      CASE (5) ! Runge-Kunta
         IF (para_propa%para_poly%npoly == 2) THEN
           CALL march_RK2(T,no,WP(1),WP0(1),para_H,para_propa)
         else
@@ -1828,7 +1828,6 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         write(out_unitp,*) 'END ',name_sub
       END IF
 !-----------------------------------------------------------
-!STOP
 
  END SUBROUTINE march_noD
 !================================================================
