@@ -269,29 +269,7 @@ MODULE mod_SetOp
       END IF
 
       IF (lo_mat) THEN
-        para_Op%alloc_mat = .TRUE.
-        IF (para_Op%cplx) THEN
-          IF (.NOT. allocated(para_Op%Cmat) ) THEN
-             CALL alloc_NParray(para_Op%Cmat,(/ nb_tot,nb_tot /),         &
-                               'para_Op%Cmat',name_sub)
-          END IF
-
-        ELSE
-          IF (.NOT. allocated(para_Op%Rmat) ) THEN
-             CALL alloc_NParray(para_Op%Rmat,(/ nb_tot,nb_tot /),         &
-                               'para_Op%Rmat',name_sub)
-          END IF
-        END IF
-        IF (para_Op%pack_Op) THEN
-          IF (.NOT. associated(para_Op%ind_Op) ) THEN
-             CALL alloc_array(para_Op%ind_Op,(/ nb_tot,nb_tot /),       &
-                             'para_Op%ind_Op',name_sub)
-          END IF
-          IF (.NOT. associated(para_Op%dim_Op) ) THEN
-             CALL alloc_array(para_Op%dim_Op,(/ nb_tot /),              &
-                             'para_Op%dim_Op',name_sub)
-          END IF
-        END IF
+        CALL alloc_MatOp(para_Op)
       END IF
 
       IF (lo_mat .AND. para_Op%diago) THEN
@@ -379,6 +357,88 @@ MODULE mod_SetOp
 !---------------------------------------------------------------------
 
       END SUBROUTINE alloc_para_Op
+      SUBROUTINE alloc_MatOp(para_Op)
+      USE mod_MPI
+      TYPE (param_Op), intent(inout) :: para_Op
+
+      logical :: Type_FileGrid4
+      integer :: nb_tot
+
+      integer :: err
+
+
+      character(len=:), allocatable     :: info
+      integer :: i,f
+
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub='alloc_MatOp'
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+
+        write(out_unitp,*) 'nb_tot',para_Op%nb_tot
+        write(out_unitp,*)
+      END IF
+!---------------------------------------------------------------------
+
+      IF (.NOT. para_Op%init_var) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' para_Op has NOT been initiated: init_var=F'
+        write(out_unitp,*) ' CHECK the source!!!!!'
+        CALL write_param_Op(para_Op)
+        STOP
+      END IF
+
+
+      nb_tot  = para_Op%nb_tot
+      IF (nb_tot < 1) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' nb_tot is <1',nb_tot
+        CALL write_param_Op(para_Op)
+        STOP
+      END IF
+
+      i = max(para_Op%para_ReadOp%Partial_MatOp_i,1)
+      f = min(para_Op%para_ReadOp%Partial_MatOp_f,nb_tot)
+      para_Op%para_ReadOp%Partial_MatOp_i = i
+      para_Op%para_ReadOp%Partial_MatOp_f = f
+
+      IF (para_Op%cplx) THEN
+        IF (.NOT. allocated(para_Op%Cmat) ) THEN
+           CALL alloc_NParray(para_Op%Cmat,[nb_tot,f],                          &
+                             'para_Op%Cmat',name_sub,tab_lb=[1,i])
+        END IF
+      ELSE
+        IF (.NOT. allocated(para_Op%Rmat) ) THEN
+           CALL alloc_NParray(para_Op%Rmat,[nb_tot,f],                          &
+                             'para_Op%Rmat',name_sub,tab_lb=[1,i])
+        END IF
+      END IF
+      IF (para_Op%pack_Op) THEN
+        IF (.NOT. associated(para_Op%ind_Op) ) THEN
+           CALL alloc_array(para_Op%ind_Op,[nb_tot,nb_tot],                     &
+                           'para_Op%ind_Op',name_sub)
+        END IF
+        IF (.NOT. associated(para_Op%dim_Op) ) THEN
+           CALL alloc_array(para_Op%dim_Op,[nb_tot],                            &
+                           'para_Op%dim_Op',name_sub)
+        END IF
+      END IF
+
+      para_Op%alloc_mat = .TRUE.
+
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        CALL write_param_Op(para_Op)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!---------------------------------------------------------------------
+
+END SUBROUTINE alloc_MatOp
 !=======================================================================================
 
       !!@description: TODO
