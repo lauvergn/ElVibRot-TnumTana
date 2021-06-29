@@ -57,6 +57,8 @@ dh 0.0
  &analyse max_ana=40 max_ene=20000.d0 print=f print_psi=0 propa=f /
 **
 
+cp MatOp_H MatOp_H_temp
+cat MatOp_H_temp >> MatOp_H
 
 nice $DIR_vib/vib << ** >res
  &system printlevel=2 /

@@ -3779,13 +3779,178 @@ SUBROUTINE check_Restart_MatOp(para_Op)
   TYPE (param_Op), intent(inout) :: para_Op
 
 !------ working parameters --------------------------------
+  integer                           :: UnitMat,nb,i,nb_todo,i_todo,io_err
+  integer,             allocatable  :: list_done(:)
+  complex(kind=Rkind), allocatable  :: CV(:)
+  real(kind=Rkind),    allocatable  :: RV(:)
+  real(kind=Rkind)                  :: maxdiff
+
+!----- for debuging --------------------------------------------------
+  character (len=*), parameter ::name_sub='check_Restart_MatOp'
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) 'para_Op%nb_tot',para_Op%nb_tot
+      write(out_unitp,*) 'Partial_MatOp_i,Partial_MatOp_f',                     &
+        para_Op%para_ReadOp%Partial_MatOp_i,para_Op%para_ReadOp%Partial_MatOp_f
+      CALL flush_perso(out_unitp)
+    END IF
+    nb = para_Op%nb_tot
+
+    para_Op%para_ReadOp%Partial_MatOp_i = max(para_Op%para_ReadOp%Partial_MatOp_i,1)
+    para_Op%para_ReadOp%Partial_MatOp_f = min(para_Op%para_ReadOp%Partial_MatOp_f,nb)
+
+    IF (debug) THEN
+      write(out_unitp,*) 'Partial_MatOp_i,Partial_MatOp_f',                     &
+         para_Op%para_ReadOp%Partial_MatOp_i,para_Op%para_ReadOp%Partial_MatOp_f
+      write(out_unitp,*) 'nb_todo (before restart)',nb_todo
+      write(out_unitp,*) 'Partial_MatOp',para_Op%Partial_MatOp
+      CALL flush_perso(out_unitp)
+    END IF
+
+    IF (para_Op%para_ReadOp%restart_MatOp) THEN
+
+      CALL file_open(para_Op%para_ReadOp%FileMat,UnitMat,                       &
+                     lformatted=para_Op%para_ReadOp%formatted_Mat)
+
+      IF (debug) THEN
+        write(out_unitp,*) 'Restart file: '
+        write(out_unitp,*) ' name:      ',para_Op%para_ReadOp%FileMat%name
+        write(out_unitp,*) ' unit:      ',para_Op%para_ReadOp%FileMat%unit
+        write(out_unitp,*) ' formatted: ',para_Op%para_ReadOp%FileMat%formatted
+        CALL flush_perso(out_unitp)
+      END IF
+
+      CALL alloc_NParray(list_done,[para_Op%para_ReadOp%Partial_MatOp_f],       &
+                        'list_done', name_sub,                                  &
+                                   [para_Op%para_ReadOp%Partial_MatOp_i])
+      list_done(:) = 0
+
+      IF (para_Op%cplx) THEN
+        CALL alloc_NParray(CV,[nb], 'CV', name_sub)
+      ELSE
+        CALL alloc_NParray(RV,[nb], 'RV', name_sub)
+      END IF
+
+      DO
+        IF (para_Op%para_ReadOp%FileMat%formatted) THEN
+          IF (para_Op%cplx) THEN
+            read(UnitMat,*,IOSTAT=io_err) i,CV(:)
+          ELSE
+            read(UnitMat,*,IOSTAT=io_err) i,RV(:)
+          END IF
+        ELSE
+          IF (para_Op%cplx) THEN
+            read(UnitMat,IOSTAT=io_err) i,CV(:)
+          ELSE
+            read(UnitMat,IOSTAT=io_err) i,RV(:)
+          END IF
+        END IF
+        IF (io_err /= 0) EXIT
+        IF (i < 1 .OR. i > nb) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) ' the index i in the restart file is out-of-bounds'
+          write(out_unitp,*) ' CHECK your data!'
+          STOP 'ERROR in check_Restart_MatOp: index i is out-of-bound.'
+        END IF
+
+        IF (debug) write(out_unitp,*) 'Read column, i',i
+        IF (i >= para_Op%para_ReadOp%Partial_MatOp_i .AND.                      &
+            i <= para_Op%para_ReadOp%Partial_MatOp_f) THEN
+
+          list_done(i) = list_done(i) + 1
+
+          IF (list_done(i) > 1) THEN
+            IF (para_Op%cplx) THEN
+              maxdiff = maxval(abs(CV-para_Op%Cmat(:,i)))
+            ELSE
+              maxdiff = maxval(abs(RV-para_Op%Rmat(:,i)))
+            END IF
+            IF (maxdiff > ONETENTH**10) THEN
+              write(out_unitp,*) ' ERROR in ',name_sub
+              write(out_unitp,*) ' The matrix column,',i,'is calculated several times'
+              write(out_unitp,*) '  and the largest difference is too large (>1e-10)',maxdiff
+              STOP 'ERROR in check_Restart_MatOp: a matrix column is calculated several times.'
+            ELSE
+              write(out_unitp,*) ' WARNING in ',name_sub
+              write(out_unitp,*) ' The matrix column,',i,'is calculated several times'
+              write(out_unitp,*) '  and the largest difference is (<=1e-10)',maxdiff
+            END IF
+          ELSE
+            IF (para_Op%cplx) THEN
+              para_Op%Cmat(:,i) = CV(:)
+            ELSE
+              para_Op%Rmat(:,i) = RV(:)
+            END IF
+          END IF
+        END IF
+
+      END DO
+
+      nb_todo = count(list_done == 0)
+      write(out_unitp,*) 'Matrix columns to do: ',nb_todo
+
+      IF (nb_todo > 0) THEN
+        CALL alloc_NParray(para_Op%List_Mat_i_todo,[nb_todo], 'List_Mat_i_todo', name_sub)
+        i = 0
+        DO i_todo=para_Op%para_ReadOp%Partial_MatOp_i,para_Op%para_ReadOp%Partial_MatOp_f
+          IF (list_done(i_todo) == 0) THEN
+            i = i + 1
+            para_Op%List_Mat_i_todo(i) = i_todo
+          END IF
+        END DO
+      END IF
+
+      CALL file_close(para_Op%para_ReadOp%FileMat)
+
+      CALL dealloc_NParray(list_done, 'list_done', name_sub)
+      IF (allocated(CV)) CALL dealloc_NParray(CV, 'CV', name_sub)
+      IF (allocated(RV)) CALL dealloc_NParray(RV, 'RV', name_sub)
+
+      nb_todo = para_Op%para_ReadOp%Partial_MatOp_f - para_Op%para_ReadOp%Partial_MatOp_i + 1
+      para_Op%Partial_MatOp = (nb_todo /= nb)
+
+    ELSE
+      nb_todo = para_Op%para_ReadOp%Partial_MatOp_f - para_Op%para_ReadOp%Partial_MatOp_i + 1
+
+      para_Op%Partial_MatOp = (nb_todo /= nb)
+
+      CALL alloc_NParray(para_Op%List_Mat_i_todo,[nb_todo], 'List_Mat_i_todo', name_sub)
+      para_Op%List_Mat_i_todo(:) = [(i,i=para_Op%para_ReadOp%Partial_MatOp_i,para_Op%para_ReadOp%Partial_MatOp_f)]
+      write(out_unitp,*) 'Matrix columns to do: ',nb_todo
+
+    END IF
+    write(out_unitp,*) 'Partial_MatOp: ',para_Op%Partial_MatOp
+
+!----------------------------------------------------------
+    IF (debug) THEN
+      IF (allocated(para_Op%List_Mat_i_todo))                                   &
+                write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
+      write(out_unitp,*) 'END ',name_sub
+      CALL flush_perso(out_unitp)
+    END IF
+!----------------------------------------------------------
+
+END SUBROUTINE check_Restart_MatOp
+
+SUBROUTINE check_Restart_MatOp_v1(para_Op)
+  USE mod_system
+  USE mod_SetOp
+  IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+  TYPE (param_Op), intent(inout) :: para_Op
+
+!------ working parameters --------------------------------
   integer               :: UnitMat,nb,i,nb_todo,i_todo,io_err
   integer, allocatable  :: list_done(:)
   complex(kind=Rkind), allocatable  :: CV(:)
   real(kind=Rkind),    allocatable  :: RV(:)
 
 !----- for debuging --------------------------------------------------
-  character (len=*), parameter ::name_sub='check_Restart_MatOp'
+  character (len=*), parameter ::name_sub='check_Restart_MatOp_v1'
   logical, parameter :: debug=.FALSE.
   !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
@@ -3853,7 +4018,7 @@ SUBROUTINE check_Restart_MatOp(para_Op)
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' the index i in the restart file is out-of-bounds'
           write(out_unitp,*) ' CHECK your data!'
-          STOP 'ERROR in check_Restart_MatOp: index i is out-of-bound.'
+          STOP 'ERROR in check_Restart_MatOp_v1: index i is out-of-bound.'
         END IF
 
         IF (debug) write(out_unitp,*) 'Read column, i',i
@@ -3915,7 +4080,7 @@ SUBROUTINE check_Restart_MatOp(para_Op)
     END IF
 !----------------------------------------------------------
 
-END SUBROUTINE check_Restart_MatOp
+END SUBROUTINE check_Restart_MatOp_v1
 
 SUBROUTINE check_Restart_MatOp_v0(para_Op)
   USE mod_system
