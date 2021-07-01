@@ -106,7 +106,7 @@
        ! nothing, just to keep the name
       END TYPE param_PES
 
-    !PUBLIC :: param_PES, write_param_PES
+    PUBLIC :: param_PES, write_param_PES ! for PVSCF
     PUBLIC :: PrimOp_t, write_PrimOp, dealloc_PrimOp, Sub_PES_FromTnum_TO_PrimOp
 
   CONTAINS

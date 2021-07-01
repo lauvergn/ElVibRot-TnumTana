@@ -70,6 +70,7 @@
    PUBLIC :: Finalize_TnumTana_Coord_PrimOp, get_dnMatOp_AT_Qact,       &
              get_d0MatOp_AT_Qact,TnumKEO_TO_tab_d0H,sub_freq_AT_Qact,   &
              pot2
+   PUBLIC :: calc3_NM_TO_sym ! for PVSCF
 
    ! Public things from other modules
    PUBLIC :: Set_RPHpara_AT_Qact1,sub_dnfreq
@@ -2016,7 +2017,7 @@
 !      -----------------------------------------------------------------
       integer :: err_mem,memory
       logical, parameter :: debug=.FALSE.
-!      logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub = 'calc3_NM_TO_sym'
 !      -----------------------------------------------------------------
        IF (debug) THEN
@@ -2315,6 +2316,13 @@
         mat_inv(i_sym,k_sym) = d0c(k_act,i_act)
       END DO
       END DO
+
+      IF (debug) THEN
+        write(out_unitp,*) 'mat'
+        CALL Write_Mat(mat,out_unitp,5)
+        write(out_unitp,*) 'mat_inv'
+        CALL Write_Mat(mat_inv,out_unitp,5)
+      END IF
 
       IF (print_level > 0) THEN
         write(out_unitp,*) '========================================='
@@ -3697,13 +3705,16 @@ stop
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub = 'Finalize_TnumTana_Coord_PrimOp'
-      !logical, parameter :: debug = .FALSE.
-      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
-  !IF (debug) THEN
+  IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'asso  NMTransfo',associated(mole%NMTransfo)
+    IF (associated(mole%NMTransfo)) &
+      write(out_unitp,*) 'skip_transfo  NMTransfo',mole%tab_Qtransfo(mole%itNM)%skip_transfo
     CALL flush_perso(out_unitp)
-  !END IF
+  END IF
 !-----------------------------------------------------------
 
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
@@ -3719,7 +3730,6 @@ stop
       ELSE
         KEO_only_loc = .TRUE.
       END IF
-    write(out_unitp,*) '0 nb_act,nb_rigid100',mole%nb_act,mole%nb_rigid100
 
 !-----------------------------------------------------------------------
 !--------------------- TO finalize the coordinates (NM) and the KEO ----
@@ -3734,7 +3744,6 @@ stop
 
       !CALL get_Qact0(Qact,mole%ActiveTransfo)
       !CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,PrimOp,print_freq=.TRUE.)
-
       !----- calc and transfert NM to LinearTransfo%mat if needed ---------------
       IF (associated(mole%NMTransfo)) THEN
         IF (.NOT. mole%tab_Qtransfo(mole%itNM)%skip_transfo) THEN
