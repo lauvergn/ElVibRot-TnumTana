@@ -87,7 +87,7 @@ $(lib_dep_mod_Coord_KEO):$(OBJ)/sub_module_Coord_KEO.o
 lib_dep_mod_Constant=$(OBJ)/sub_analyse.o $(OBJ)/sub_freq.o $(OBJ)/sub_diago_H.o       \
                      $(OBJ)/sub_module_analysis.o $(OBJ)/EVR_Module.o                  \
                      $(OBJ)/sub_CRP.o $(OBJ)/sub_module_Davidson_MPI.o                 \
-                     $(OBJ)/$(PhysConstMAIN).o
+                     $(OBJ)/$(PhysConstMAIN).o $(OBJ)/RectilinearNM_Transfo.o
 $(lib_dep_mod_Constant):$(OBJ)/sub_module_constant.o
 
 #mod_NumParameters

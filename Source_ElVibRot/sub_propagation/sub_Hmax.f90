@@ -220,9 +220,7 @@
       CALL sub_PsiOpPsi(Emax,psi,Hpsi,para_H)
       IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(Emax,size1_MPI,root_MPI)
       para_H%Hmax = Real(Emax,kind=Rkind)
-!#if(run_MPI)     
-!      CALL MPI_Bcast(para_H%Hmax,size1_MPI,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
-!#endif
+
       IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(para_H%Hmax,size1_MPI,root_MPI)
 
       IF (debug) write(out_unitp,*) 'Hmax: ',para_H%Hmax

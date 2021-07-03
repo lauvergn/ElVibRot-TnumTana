@@ -35,7 +35,7 @@ This namelist can be used without parameter. The default values should work for 
 
 * **EVR** (default **T**): The value **T** enables to use **ElVibRot**. The value **F** disables the **ElVibRot** calculation.
 * **intensity_only** (default **F**): The value **T** enables to calculate only the intensities with ElVibRot (for time independent calculation) with the restart file (*restart.int*). It is useful, when one want to change temperature.
-* **analysis_only** (default **F**): The value **T** enables to analyse the wave functions from the "file_spectralWP" file obtained from a previous ElVibRot calculation with the same bassis set.
+* **analysis_only** (default **F**): The value **T** enables to analyse the wave functions from the "file_spectralWP" file obtained from a previous ElVibRot calculation with the same basis set.
 * **optimization** (default **0**):  The value **0** disables the optimization. The value **1** enables the optimization (geometry or other ElVibRot parameters).
 * **nDGrid** (default **F**): The value **T** enables to generate a multidimensional grid (for the nDFit) using a set of curvilinear coordinates
 * **nDFit** (default **F**): The value **T** enables to fit the multidimensional grid to an analytical form. Then it can be used with ElVibRot.
@@ -61,7 +61,7 @@ This namelist can be used without parameter. The default values should work for 
 * **POpPsi_omp** (default **0**): The value **1** enables the parallelization of the action of an operator on a wave function. The value **0** disables this parallelization. Do not use, it is not efficient.
 * **POpPsi_maxth** (default **$OMP_NUM_THREADS value**): The maximum number of threads when **POpPsi_omp** > 0.
 
-* **PBasisTOGrid_omp** (default **0**): The value**1** enables the parallelization of the grid <-> basis transformation. The value **0** disables this parallelization. Do not use, it is not efficient.
+* **PBasisTOGrid_omp** (default **0**): The value **1** enables the parallelization of the grid <-> basis transformation. The value **0** disables this parallelization. Do not use, it is not efficient.
 * **PBasisTOGrid_maxth** (default **$OMP_NUM_THREADS value**): The maximum number of threads when **POpPsi_omp** > 0.
 
 
@@ -110,7 +110,10 @@ The following parameters can be use to modify some physical constants (to reprod
 This namelist is part of **Tnum** (or **Tana**) and it enables to define the curvilinear coordinates used in the dynamics. It enables to set reduced dimensionality models (rigid or flexible constraints, some part of adiabatic approximation...). 
 See the **Tnum** manual.
 
-### 2.4) &minimun namelist (Tnum)
+### 2.4) &coord_transfo namelist (Tnum)
+This namelist is part of **Tnum** (or **Tana**) and it enables to define the coordinates transformation. Several coordinates transformations can be link together. The number is defined with **nb_transfo** in the namelist &variables. See the **Tnum** manual.
+
+### 2.5) &minimun namelist (Tnum)
 
 The parameters of this namelist define two mains features: 
 
@@ -139,7 +142,7 @@ The relevant parameters are the following:
 * **pot0** (default **0.**): This value is the energy reference of the PES. This value is not automatically defined from the PES grid, therefore it has to be set-up. Otherwise, the printed energy with respect to the **pot0** value might be not printable. Nevertheless, the quantum dynamics calculation will be correct.
 * **nb_scalar_Op** (default **0**): This parameter defines the number of scalar operators (without the PES) such as the dipole memoment. It is used when intensities are calculated. Remark, when  **nb_scalar_Op=0** and when **intensity=t** is set up in the **&analysis** namelist, the **nb_scalar_Op** is modified to **3**. All these operators are defined as matrices (nb_elec x nb_elec x nb_scalar_Op).
 
-By default, the operators (PES and the scalar ones) are obtained in *calcN_op* fortran subroutine from the *sub_system.f* or *sub_system.f90* files (default *sub_system.f*. This default can be changed in the *makfile*). However, they are several other posibilities:
+By default, the operators (PES and the scalar ones) are obtained in *calcN_op* fortran subroutine from the *sub_system.f* or *sub_system.f90* files (default *sub_system.f*. This default can be changed in the *makfile*). However, they are several other possibilities:
 
 * **OnTheFly** (default **F**): When the value is **T**, the scalar operators and the potential energy surfaces are obtained "on-the-fly" with quantum chemistry codes (only Gaussian and Gamess-US are defined). Only the 3 components of the dipole moment can be calculated (**nb_scalar_Op=3**).
 * **QMLib**  (default **F**): When the value is **T**, the potential energy surfaces are obtained from the Quantum Model library (https://github.com/lauvergn/QuantumModelLib). When the metric tensor, **G**, is assumed to be constant (**Gcte=t** in &variables namelist), the metric tensor is used also from the **QMLib**.
