@@ -39,6 +39,21 @@ MODULE Module_ForTnumTana_Driver
   TYPE (Tnum)      :: para_Tnum
   TYPE (PrimOp_t)  :: PrimOp
 
-  integer          :: Init = 0 ! Initialization is not done
+  integer          :: Init    =  0  ! Initialization is not done
+  integer          :: skip_NM =  0  ! if 0 => calc the NM, if 1 no NM calculation
+  integer          :: k_Half  = -1  ! if -1, k_Half is not modified.
+                                    ! 1 => k_Half is set to T, 0 => k_Half is set to F
+CONTAINS
+SUBROUTINE Check_TnumInit(name_sub)
+  IMPLICIT NONE
 
+  character(len=*), intent(in) :: name_sub
+
+
+  IF (Init == 0) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Tnum is not initialized!'
+    STOP 'ERROR:  Tnum is not initialized!'
+  END IF
+END SUBROUTINE Check_TnumInit
 END MODULE Module_ForTnumTana_Driver

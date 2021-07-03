@@ -9,7 +9,7 @@
 
 ## parallel_make=1 to enable parallel make
 ## parallel_make=0 for fast debug make, no parallel
-parallel_make=1
+parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 1
@@ -85,6 +85,7 @@ endif
 #===============================================================================
 # Quantum Model Lib (ECAM)
 QMLibDIR := /Users/lauvergn/git/QuantumModelLib
+#QMLibDIR := /userTMP/lauvergn/QModLib/QModLib-v6.10
 ifneq "$(wildcard $(QMLibDIR) )" ""
   # QMLibDIR exists:
   $(info QMLibDIR variable exists)
@@ -202,8 +203,8 @@ ifeq ($(F90),ifort)
    endif
 
    ifeq ($(LAPACK),1)
-     #F90LIB = -mkl -lpthread
-     F90LIB = $(MKLROOT)/lib/libmkl_lapack95_ilp64.a $(MKLROOT)/lib/libmkl_core.a $(MKLROOT)/lib/libmkl_blas95_ilp64.a -lpthread
+     F90LIB = -mkl -lpthread
+     #F90LIB = $(MKLROOT)/lib/libmkl_lapack95_ilp64.a $(MKLROOT)/lib/libmkl_core.a $(MKLROOT)/lib/libmkl_blas95_ilp64.a -lpthread
    else
      F90LIB = -lpthread
    endif
@@ -379,10 +380,13 @@ else
   F90_VER = $(shell $(F90) --version | head -1 )
 endif
 
+GIT_Branch = $(shell git status | grep "On branch")
+
 #===============================================================================
 #===============================================================================
 $(info ************************************************************************)
 $(info ***********OS:               $(OS))
+$(info ***********git:              $(GIT_Branch))
 $(info ***********COMPILER:         $(F90))
 $(info ***********OPTIMIZATION:     $(OPT))
 $(info ***********COMPILER VERSION: $(F90_VER))
@@ -426,6 +430,7 @@ ifeq ($(ARPACK),1)
       ARPACKLIB=/u/achen/Software/ARPACK/libarpack_Linux_ifort.a
     endif
     #ARPACKLIB=/usr/lib64/libarpack.a
+    ARPACKLIB=/userTMP/lauvergn/EVR/ARPACK_DML/libarpack_Linux.a
   endif
 else
   ARPACKLIB =
@@ -470,6 +475,8 @@ CPPSHELL_CERFACS = -D__CERFACS="$(CERFACS)"
 CPPSHELL_INVHYP  = -D__INVHYP="$(INVHYP)"
 CPPSHELL_DIAGO   = -D__LAPACK="$(LAPACK)"
 CPPSHELL_QML     = -D__QML="$(QML)"
+#CPPSHELL_GIT     = -D__GIT="'master'"
+CPPSHELL_GIT     = -D__GIT="'$(GIT_Branch)'"
 #==========================================
 # the different programs
 #  vib:  make or make EVR
@@ -1020,7 +1027,7 @@ $(OBJ)/sub_module_string.o:$(DirSys)/sub_module_string.f90
 $(OBJ)/sub_module_RW_MatVec.o:$(DirSys)/sub_module_RW_MatVec.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPSHELL)  -c $(DirSys)/sub_module_RW_MatVec.f90
 $(OBJ)/sub_module_system.o:$(DirSys)/sub_module_system.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL)  -c $(DirSys)/sub_module_system.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL) $(CPPSHELL_GIT) -c $(DirSys)/sub_module_system.f90
 $(OBJ)/sub_module_MPI_aux.o:$(DirSys)/sub_module_MPI_aux.f90
 	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) -c $(DirSys)/sub_module_MPI_aux.f90
 ###

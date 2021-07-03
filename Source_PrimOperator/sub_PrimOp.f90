@@ -70,6 +70,7 @@
    PUBLIC :: Finalize_TnumTana_Coord_PrimOp, get_dnMatOp_AT_Qact,       &
              get_d0MatOp_AT_Qact,TnumKEO_TO_tab_d0H,sub_freq_AT_Qact,   &
              pot2
+   PUBLIC :: calc3_NM_TO_sym ! for PVSCF
 
    ! Public things from other modules
    PUBLIC :: Set_RPHpara_AT_Qact1,sub_dnfreq
@@ -162,7 +163,20 @@
         IF (PrimOp%pot_itQtransfo == 0) THEN ! Cartesian coordinates
           CALL sub_Init_Qmodel_Cart(mole%ncart_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
         ELSE
-          CALL sub_Init_Qmodel(mole%nb_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
+          ndim = mole%nb_act
+          CALL sub_Init_Qmodel(ndim,PrimOp%nb_elec,'read_model',.FALSE.,0)
+          write(out_unitp,*) ' ndim from  Qmodel ("Quantum Model Lib") is ...'
+          IF (ndim == mole%nb_act) THEN
+            write(out_unitp,*) ' equal to mole%nb_act.'
+          ELSE IF (ndim > mole%nb_act) THEN
+            write(out_unitp,*) ' larger than mole%nb_act.'
+            write(out_unitp,*) ' You MUST use type 100 and 1 coordinates.'
+          ELSE ! ndim < mole%nb_act
+            write(out_unitp,*) ' smaller than mole%nb_act.'
+            write(out_unitp,*) ' ERROR: it is not possible.'
+            STOP 'ndim from QML is too small'
+          END IF
+
         END IF
         IF (print_level > 0 .OR. debug) CALL sub_Write_Qmodel(out_unitp)
         IF (debug) CALL set_Qmodel_Print_level(min(1,print_level))
@@ -2003,7 +2017,7 @@
 !      -----------------------------------------------------------------
       integer :: err_mem,memory
       logical, parameter :: debug=.FALSE.
-!      logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub = 'calc3_NM_TO_sym'
 !      -----------------------------------------------------------------
        IF (debug) THEN
@@ -2302,6 +2316,13 @@
         mat_inv(i_sym,k_sym) = d0c(k_act,i_act)
       END DO
       END DO
+
+      IF (debug) THEN
+        write(out_unitp,*) 'mat'
+        CALL Write_Mat(mat,out_unitp,5)
+        write(out_unitp,*) 'mat_inv'
+        CALL Write_Mat(mat_inv,out_unitp,5)
+      END IF
 
       IF (print_level > 0) THEN
         write(out_unitp,*) '========================================='
@@ -3684,13 +3705,16 @@ stop
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub = 'Finalize_TnumTana_Coord_PrimOp'
-      !logical, parameter :: debug = .FALSE.
-      logical, parameter :: debug = .TRUE.
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
-  !IF (debug) THEN
+  IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'asso  NMTransfo',associated(mole%NMTransfo)
+    IF (associated(mole%NMTransfo)) &
+      write(out_unitp,*) 'skip_transfo  NMTransfo',mole%tab_Qtransfo(mole%itNM)%skip_transfo
     CALL flush_perso(out_unitp)
-  !END IF
+  END IF
 !-----------------------------------------------------------
 
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
@@ -3720,7 +3744,6 @@ stop
 
       !CALL get_Qact0(Qact,mole%ActiveTransfo)
       !CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,PrimOp,print_freq=.TRUE.)
-
       !----- calc and transfert NM to LinearTransfo%mat if needed ---------------
       IF (associated(mole%NMTransfo)) THEN
         IF (.NOT. mole%tab_Qtransfo(mole%itNM)%skip_transfo) THEN
@@ -3797,16 +3820,18 @@ stop
   END IF
   !Gref = .FALSE.
   IF (Gref) THEN
+    write(out_unitp,*) 'nb_act,nb_rigid100',mole%nb_act,mole%nb_rigid100
     CALL alloc_NPArray(GGdef,[mole%nb_act,mole%nb_act],'GGdef',name_sub)
     GGdef(:,:) = ZERO
     CALL get_Qact0(Qact,mole%ActiveTransfo)
-    IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Gcte'
+    IF (print_level > 1) write(out_unitp,*) ' Gref',shape(GGdef)
     flush(out_unitp)
 
     IF (PrimOp%QMLib .AND. PrimOp%pot_itQtransfo /= 0) THEN
     ! when Qcart is used the size of G form QML is [ncart_cat,ncart_act]
 #if __QML == 1
       ndim = get_Qmodel_ndim()
+      write(6,*) 'ndim QML',ndim
       CALL alloc_NPArray(GGdef_Qmodel,[ndim,ndim],'GGdef_Qmodel',name_sub)
       CALL get_Qmodel_GGdef(GGdef_Qmodel)
       IF (print_level > 1) THEN

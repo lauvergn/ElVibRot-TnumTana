@@ -105,6 +105,7 @@
       para_AllOp%tab_Op(1)%para_ReadOp%min_pot =  huge(ONE)
       para_AllOp%tab_Op(1)%para_ReadOp%max_pot = -huge(ONE)
 
+
       DO iOp=1,para_AllOp%nb_Op
         IF (para_AllOp%tab_Op(iOp)%n_op == -1 .AND.                     &
                 para_AllOp%tab_Op(1)%BasisnD%SparseGrid_type == 4) CYCLE ! for S
@@ -365,7 +366,7 @@
       !-------------------------------------------------------------------
       !- Analysis of the grid (zero or constant terms)
       DO iOp=1,para_AllOp%nb_Op
-write(6,*) iOp,'Save_MemGrid_done',para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_MemGrid_done
+        CALL read_OpGrid_OF_Op(para_AllOp%tab_Op(iOp))
         CALL Analysis_OpGrid_OF_Op(para_AllOp%tab_Op(iOp))
         CALL Save_OpGrid_OF_Op(para_AllOp%tab_Op(iOp))
       END DO
@@ -408,7 +409,7 @@ write(6,*) iOp,'Save_MemGrid_done',para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileG
       IF (para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint <       &
           para_AllOp%tab_Op(1)%nb_qa .OR.                                       &
           para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint > 1) THEN
-        write(out_unitp,*) 'WARNING : the grid is not completed'
+        write(out_unitp,*) 'WARNING : the grid is incomplete'
         write(out_unitp,*) para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%First_GridPoint, &
                            para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Last_GridPoint
         write(out_unitp,*)

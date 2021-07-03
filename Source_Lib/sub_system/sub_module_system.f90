@@ -100,6 +100,11 @@ MODULE mod_system
 #else
       character (len=Line_len) :: compiler_libs = "unknown: -D__COMPILER_LIBS=?"
 #endif
+#if defined(__GIT)
+      character (len=Line_len) :: git_branch = __GIT
+#else
+      character (len=Line_len) :: git_branch = "unknown: -D__GIT=?"
+#endif
 
 
       logical :: openmp = .FALSE.

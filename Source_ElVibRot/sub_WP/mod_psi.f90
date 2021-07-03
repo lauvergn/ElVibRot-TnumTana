@@ -85,6 +85,8 @@ CONTAINS
         write(out_unitp,*) 'BEGINNING init_psi0'
         write(out_unitp,*) 'WP0n_h,WP0nb_elec',para_WP0%WP0n_h,para_WP0%WP0nb_elec
         write(out_unitp,*)
+        write(out_unitp,*) 'WP0(:)%symab',WP0(:)%symab
+
         CALL ecri_init_psi(WP0(1))
 
         write(out_unitp,*)
@@ -121,6 +123,8 @@ CONTAINS
             CALL lect_psiBasisRep(WP0(1)%CvecG,para_WP0%WP0cplx,          &
                              WP0(1)%nb_qa,WP0(1)%nb_bi,WP0(1)%nb_be,      &
                              para_WP0%WP0n_h,para_WP0%WP0nb_elec)
+          ELSE IF (para_WP0%new_GWP0) THEN
+            CALL New_WP0_GridRep(WP0(1),para_WP0,mole)
           ELSE
             !- initialisation with a gaussian WP ---------------
             CALL psi0_gaussGridRep(WP0(1),para_WP0,mole)
@@ -188,7 +192,7 @@ CONTAINS
           CALL lect_psiBasisRepnotall(WP0(1),para_WP0%WP0cplx)
         ELSE
           write(out_unitp,*) ' ERROR in psi0'
-          write(out_unitp,*) ' I do not what to do!!!'
+          write(out_unitp,*) ' I do not know what to do!!!'
           STOP
         END IF ! for .NOT. para_WP0%lect_WP0BasisRep
 
@@ -214,6 +218,7 @@ CONTAINS
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*)
+        write(out_unitp,*) 'WP0(:)%symab',WP0(:)%symab
         write(out_unitp,*) 'WP0BasisRep',WP0(1)%norm2
         IF (para_WP0%WP0BasisRep) THEN
           CALL ecri_psi(ZERO,WP0(1),out_unitp,.FALSE.,.TRUE.)
@@ -347,5 +352,82 @@ CONTAINS
 
 
       END SUBROUTINE psi0_gaussGridRep
-END MODULE mod_psi
+      SUBROUTINE New_WP0_GridRep(WP0,para_WP0,mole)
+      USE mod_system
+      USE mod_Coord_KEO
+      USE mod_basis
+      USE mod_psi_set_alloc
+      USE mod_param_WP0
+      IMPLICIT NONE
 
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_WP0), intent(in)      :: para_WP0
+      TYPE (param_psi), intent(inout)   :: WP0
+
+
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType), intent(in)      :: mole
+
+      ! local variable
+      real (kind=Rkind)      :: Qact(WP0%nb_act1)
+
+      complex (kind=Rkind)   :: WP0_at_Q
+      integer                :: iGWP,iQdyn,i
+      integer                :: i_qa,i_qaie
+      TYPE (OldParam)        :: OldPara
+!------ dipole moment ----------------------------------------------------
+      real (kind=Rkind)      :: rhonD
+
+!----- for debuging --------------------------------------------------
+      logical,parameter :: debug = .FALSE.
+      !logical,parameter :: debug = .TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING New_WP0_GridRep'
+        write(out_unitp,*)
+        CALL Write_Tab_GWP(para_WP0%tab_GWP0)
+        CALL flush_perso(out_unitp)
+      END IF
+!-----------------------------------------------------------
+
+      IF (WP0%cplx) THEN
+        WP0%CvecG(:) = CZERO
+      ELSE
+        WP0%RvecG(:) = ZERO
+      END IF
+
+
+      DO i_qa=1,WP0%nb_qa
+
+        !- calculation of Qact -------------------------------
+        CALL Rec_Qact(Qact,WP0%BasisnD,i_qa,mole,OldPara)
+        !- calculation of WrhonD ------------------------------
+        rhonD = Rec_rhonD(WP0%BasisnD,i_qa,OldPara)
+
+        DO iGWP=1,size(para_WP0%tab_GWP0)
+          WP0_at_Q = calc_GWP(para_WP0%tab_GWP0(iGWP),Qact)
+          IF (para_WP0%WP0nrho == 1) WP0_at_Q = WP0_at_Q /sqrt(rhonD)
+
+          i_qaie = i_qa + ( (para_WP0%tab_GWP0(iGWP)%I_HAChannel -1) +          &
+               (para_WP0%tab_GWP0(iGWP)%I_ElecChannel-1)*WP0%nb_bi ) * WP0%nb_qa
+
+          IF (WP0%cplx) THEN
+            WP0%CvecG(i_qaie) = WP0%CvecG(i_qaie) + WP0_at_Q
+          ELSE
+            WP0%RvecG(i_qaie) = WP0%RvecG(i_qaie) + real(WP0_at_Q,kind=Rkind)
+          END IF
+        END DO
+
+      END DO
+
+!-----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'END New_WP0_GridRep'
+         CALL flush_perso(out_unitp)
+       END IF
+!-----------------------------------------------------------
+
+
+END SUBROUTINE New_WP0_GridRep
+END MODULE mod_psi

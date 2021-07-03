@@ -1,6 +1,6 @@
 # ElVibRot-TnumTana
 
-General quantum dynamics code using curvilinear coordinates: 
+General quantum dynamics code using curvilinear coordinates:
 1. Vibrational levels, intensities for floppy molecular systems
 2. Wave-packet propagation with or without time dependant Hamiltonian
 3. Quantum gate and optimal control.
@@ -65,14 +65,14 @@ This namelist can be used without parameter. The default values should work for 
 * **PBasisTOGrid_maxth** (default **$OMP_NUM_THREADS value**): The maximum number of threads when **POpPsi_omp** > 0.
 
 
-* **EVRT_path** (default **directory of compilation**): it enables to read the isotopic masses from an internal file (this parameter can be change also in the namelist "&constantes") and other files used in ElVibRot (Hermite cubature and Lebedev grids). 
+* **EVRT_path** (default **directory of compilation**): it enables to read the isotopic masses from an internal file (this parameter can be change also in the namelist "&constantes") and other files used in ElVibRot (Hermite cubature and Lebedev grids).
 
 * **File_path**: it enables to define the path were most of the files will be save.
 
 
 ### 2.2) &constantes namelist (physical constants and units)
 
-This namelist can be used without parameter, it enables to change energy unit and selects different version of physical constants or to redefine some of them. 
+This namelist can be used without parameter, it enables to change energy unit and selects different version of physical constants or to redefine some of them.
 
 In ElVibRot, most of the quantities (energy, time, length, angle...) can be read with an unit. Then, they are converted to the working unit (atomic unit).
 
@@ -107,7 +107,7 @@ The following parameters can be use to modify some physical constants (to reprod
 
 ### 2.3) &variables namelist (Tnum)
 
-This namelist is part of **Tnum** (or **Tana**) and it enables to define the curvilinear coordinates used in the dynamics. It enables to set reduced dimensionality models (rigid or flexible constraints, some part of adiabatic approximation...). 
+This namelist is part of **Tnum** (or **Tana**) and it enables to define the curvilinear coordinates used in the dynamics. It enables to set reduced dimensionality models (rigid or flexible constraints, some part of adiabatic approximation...).
 See the **Tnum** manual.
 
 ### 2.4) &coord_transfo namelist (Tnum)
@@ -115,9 +115,9 @@ This namelist is part of **Tnum** (or **Tana**) and it enables to define the coo
 
 ### 2.5) &minimun namelist (Tnum)
 
-The parameters of this namelist define two mains features: 
+The parameters of this namelist define two mains features:
 
-#### a) The reference geometry (Tnum). 
+#### a) The reference geometry (Tnum).
 
 This geometry is used to define the rigid constraints in **Tnum**. The relevant parameters are the following:
 
@@ -133,14 +133,14 @@ Old parameters (not used anymore)
 * **read_nameQ** (default **F**): When the value is **T**, the coordinate names are read.
 * **read_Qsym0**: see **read_Qdyn0**
 
-#### b) Options for the scalar operators (part of **ElVibRot**). 
+#### b) Options for the scalar operators (part of **ElVibRot**).
 
 The relevant parameters are the following:
 
 * **nb_elec** (default **1**): This parameter defines the number of diabatic electronic surface used in the dynamic. The potential PES) is defined as a matrix (nb_elec x nb_elec).
 * **pot_cplx** (default **F**): When the value is **T**, the PES are complex and the imaginary part is defined as a matrix (nb_elec x nb_elec).
 * **pot0** (default **0.**): This value is the energy reference of the PES. This value is not automatically defined from the PES grid, therefore it has to be set-up. Otherwise, the printed energy with respect to the **pot0** value might be not printable. Nevertheless, the quantum dynamics calculation will be correct.
-* **nb_scalar_Op** (default **0**): This parameter defines the number of scalar operators (without the PES) such as the dipole memoment. It is used when intensities are calculated. Remark, when  **nb_scalar_Op=0** and when **intensity=t** is set up in the **&analysis** namelist, the **nb_scalar_Op** is modified to **3**. All these operators are defined as matrices (nb_elec x nb_elec x nb_scalar_Op).
+* **nb_scalar_Op** (default **0**): This parameter defines the number of scalar operators (without the PES) such as the dipole moment. It is used when intensities are calculated. Remark, when  **nb_scalar_Op=0** and when **intensity=t** is set up in the **&analysis** namelist, the **nb_scalar_Op** is modified to **3**. All these operators are defined as matrices (nb_elec x nb_elec x nb_scalar_Op).
 
 By default, the operators (PES and the scalar ones) are obtained in *calcN_op* fortran subroutine from the *sub_system.f* or *sub_system.f90* files (default *sub_system.f*. This default can be changed in the *makfile*). However, they are several other possibilities:
 
@@ -174,8 +174,8 @@ However, the program uses some fortran 2003 features. Therefore, the compilers g
 You have to select or define your compiler in the "makefile" (the default is gfortran).
 Then, you have to compile the program with the unix command "make".
 
-Currently, the program can be compiled on: 
-* linux platform with 
+Currently, the program can be compiled on:
+* linux platform with
 -   gfortran (version= 6.3, 8.3, 9.1)
 -   ifort    (version= 18.0.3) Pb with 17.0.1
 -   pgf90    (version= 17.10-0) Pb with 16.4-0
@@ -192,6 +192,5 @@ There are severals options with can be modified in the makefile:
 * QML: Quantum Model Lib.  0 => without QML (default), 1 => with QML.
 * extf: it enables to change the "sub_system" file extention. Possible values: f or f90. Alternativaly, one can use an external unix variable: EXTFextern.
 
-To check that the program has be compile correctly, you can run some tests from the directory: **exa_hcn-dist**. Each input data starts with dat.... 
+To check that the program has be compile correctly, you can run some tests from the directory: **exa_hcn-dist**. Each input data starts with dat....
 To run the **dat_Davidson** example, just the type the **dat_Davidson** command. The output will be in the **res** file.
-

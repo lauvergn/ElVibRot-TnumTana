@@ -125,7 +125,7 @@
       IF (debug) THEN
         write(out_unitp,*)
         write(out_unitp,*) 'symab psi BasisRep',psi%symab
-        !CALL ecri_psi(ZERO,psi)
+        CALL ecri_psi(ZERO,psi)
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
       END IF
@@ -617,4 +617,3 @@
 
 
       END MODULE mod_psi_Op
-

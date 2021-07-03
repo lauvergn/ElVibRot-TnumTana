@@ -60,6 +60,8 @@
            logical                  :: make_Mat            = .FALSE.
            logical                  :: save_MatOp          = .FALSE.
            logical                  :: restart_MatOp       = .FALSE.
+           integer                  :: Partial_MatOp_i     = 0
+           integer                  :: Partial_MatOp_f     = huge(1)
            logical                  :: formatted_Mat       = .TRUE.
            character (len=Line_len) :: name_Mat            = 'MatOp'
 
@@ -100,6 +102,8 @@
       para_ReadOp%make_Mat            = .FALSE.
       para_ReadOp%save_MatOp          = .FALSE.
       para_ReadOp%restart_MatOp       = .FALSE.
+      para_ReadOp%Partial_MatOp_i     = 0
+      para_ReadOp%Partial_MatOp_f     = huge(1)
       para_ReadOp%formatted_Mat       = .TRUE.
       para_ReadOp%name_Mat            = 'MatOp'
 
@@ -138,6 +142,8 @@
       para_ReadOp1%save_MatOp         = para_ReadOp2%save_MatOp
       para_ReadOp1%restart_MatOp      = para_ReadOp2%restart_MatOp
       para_ReadOp1%formatted_Mat      = para_ReadOp2%formatted_Mat
+      para_ReadOp1%Partial_MatOp_i    = para_ReadOp2%Partial_MatOp_i
+      para_ReadOp1%Partial_MatOp_f    = para_ReadOp2%Partial_MatOp_f
       para_ReadOp1%name_Mat           = para_ReadOp2%name_Mat
       para_ReadOp1%FileMat            = para_ReadOp2%FileMat
 
@@ -185,6 +191,8 @@
       para_ReadOp1%restart_MatOp      = .FALSE.
       para_ReadOp1%formatted_Mat      = .TRUE.
       para_ReadOp1%name_Mat           = 'MatOp'
+      para_ReadOp1%Partial_MatOp_i    = 0
+      para_ReadOp1%Partial_MatOp_f    = huge(1)
       CALL file_dealloc(para_ReadOp1%FileMat)
 
       para_ReadOp1%spectral           = .FALSE.
@@ -226,6 +234,8 @@
       para_ReadOp%save_MatOp          = .FALSE.
       para_ReadOp%restart_MatOp       = .FALSE.
       para_ReadOp%formatted_Mat       = .TRUE.
+      para_ReadOp%Partial_MatOp_i     = 0
+      para_ReadOp%Partial_MatOp_f     = huge(1)
       para_ReadOp%name_Mat            = 'MatOp'
       CALL file_dealloc(para_ReadOp%FileMat)
       para_ReadOp%spectral            = .FALSE.

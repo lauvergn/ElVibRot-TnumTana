@@ -430,11 +430,13 @@
 
     IF (allocated(L_TO_n_para%tab_L_TO_n)) THEN
       u = ubound(L_TO_n_para%Tab_L_TO_n,dim=1)
+
       IF (L <= u) THEN
         n = L_TO_n_para%tab_L_TO_n(L)
       ELSE
-        n = L_TO_n_para%Tab_L_TO_n(u) +                                 &
-           (l-u)*(L_TO_n_para%Tab_L_TO_n(u)-L_TO_n_para%Tab_L_TO_n(u-1))
+        n = L_TO_n_para%Tab_L_TO_n(u)
+        IF (u > 0) n = n +                                                      &
+                   (l-u)*(L_TO_n_para%Tab_L_TO_n(u)-L_TO_n_para%Tab_L_TO_n(u-1))
       END IF
     ELSE
 
@@ -479,6 +481,17 @@
 
     n = min(n,L_TO_n_para%max_n)
 
+
+    IF (n < 1) THEN
+     write(out_unitp,*) 'ERROR in ',name_sub
+     write(out_unitp,*) '  n < 1, n:',n
+     write(out_unitp,*) 'L',L
+     write(out_unitp,*) 'L2?',present(L2)
+     IF (present(L2)) write(out_unitp,*) 'L2',L2
+     CALL Write_Basis_L_TO_n(L_TO_n_para)
+     write(out_unitp,*)
+     STOP 'ERROR in Get_n_FROM_Basis_L_TO_n: n<1'
+    END IF
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*)

@@ -117,6 +117,7 @@ CONTAINS
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'n',WP0(1)%nb_tot
         write(out_unitp,*)
+        write(out_unitp,*) 'WP0(:)%symab',WP0(:)%symab
         write(out_unitp,*) 'WP0 BasisRep'
         CALL ecri_psi(psi=WP0(1))
         write(out_unitp,*)
@@ -830,6 +831,7 @@ CONTAINS
         write(out_unitp,*) 'nb_ba,nb_qa',psi(1)%nb_ba,psi(1)%nb_qa
         write(out_unitp,*) 'nb_bi',psi(1)%nb_bi
         write(out_unitp,*)
+        write(out_unitp,*) 'psi(:)%symab',psi(:)%symab
 
         write(out_unitp,*) 'psiBasisRep'
         CALL ecri_psi(T=ZERO,psi=psi(1),ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)

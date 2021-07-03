@@ -1579,12 +1579,14 @@ CONTAINS
       END IF
 !     -----------------------------------------------------------------
 
-      IF (size(Qact) /= mole%nb_var) THEN
+      IF (size(Qact) /= mole%nb_var .AND. size(Qact) /= mole%nb_act) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
-        write(out_unitp,*) ' the size of Qact(:) is not mole%nb_var!'
+        write(out_unitp,*) ' the size of Qact(:) is not mole%nb_var or '
+        write(out_unitp,*) ' the size of Qact(:) is not mole%nb_act!'
         write(out_unitp,*) ' the size of Qact(:): ',size(Qact)
         write(out_unitp,*) ' mole%nb_var:         ',mole%nb_var
-        write(out_unitp,*) ' Check the Frantran source!!'
+        write(out_unitp,*) ' mole%nb_act:         ',mole%nb_act
+        write(out_unitp,*) ' Check the Fortran source!!'
         STOP
       END IF
 
@@ -1691,7 +1693,7 @@ CONTAINS
         END IF
 
         CALL alloc_dnSVM(dnQin,mole%tab_Qtransfo(it)%nb_Qout,nb_act,nderiv)
-        dnQin%d0(:) = Qact(:)
+        dnQin%d0(1:size(Qact)) = Qact(:)
         IF (WriteCC_loc .OR. debug) CALL Write_d0Q(it,'Qin (Qact)',dnQin%d0,6)
 
         DO it=mole%nb_Qtransfo,1,-1

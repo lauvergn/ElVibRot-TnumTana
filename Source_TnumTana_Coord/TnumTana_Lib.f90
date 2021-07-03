@@ -29,12 +29,15 @@
 SUBROUTINE Qact_TO_cart(Qact,nb_act,Qcart,nb_cart)
   USE mod_system
   USE Module_ForTnumTana_Driver
+  USE mod_ActiveTransfo
   IMPLICIT NONE
 
   integer,           intent(in)     :: nb_act,nb_cart
 
   real (kind=Rkind), intent(in)     :: Qact(nb_act)
   real (kind=Rkind), intent(inout)  :: Qcart(nb_cart)
+
+  real (kind=Rkind), allocatable     :: Qact_loc(:)
 
 
   character (len=*), parameter :: name_sub='Qact_TO_cart'
@@ -81,7 +84,21 @@ SUBROUTINE Qact_TO_cart(Qact,nb_act,Qcart,nb_cart)
 !===========================================================
 !===========================================================
 
-  CALL sub_QactTOd0x(Qcart,Qact,mole,Gcenter=.FALSE.)
+  IF (nb_act == mole%nb_var) THEN
+    CALL sub_QactTOd0x(Qcart,Qact,mole,Gcenter=.FALSE.)
+  ELSE IF (nb_act < mole%nb_var) THEN
+    allocate(Qact_loc(mole%nb_var))
+    CALL get_Qact0(Qact_loc,mole%ActiveTransfo)
+    Qact_loc(1:nb_act) = Qact
+    CALL sub_QactTOd0x(Qcart,Qact_loc,mole,Gcenter=.FALSE.)
+    deallocate(Qact_loc)
+  ELSE
+    write(out_unitp,*) ' ERROR in ', name_sub
+    write(out_unitp,*) ' nb_act is larger than mole%nb_var'
+    write(out_unitp,*) ' nb_act     ',nb_act
+    write(out_unitp,*) ' mole%nb_var',mole%nb_var
+    STOP 'ERROR in Qact_TO_cart: nb_act is larger than mole%nb_var'
+  END IF
 
 
 END SUBROUTINE Qact_TO_cart
@@ -173,6 +190,266 @@ SUBROUTINE Init_OutputUnit_Driver(OutputUnit)
   !$OMP   END CRITICAL (Init_OutputUnit_Driver_CRIT)
 
 END SUBROUTINE Init_OutputUnit_Driver
+SUBROUTINE Tnum_Check_NMTransfo(Check)
+  USE mod_system
+  USE Module_ForTnumTana_Driver
+  IMPLICIT NONE
+
+  logical,           intent(inout)     :: Check
+
+  character (len=*), parameter :: name_sub='Tnum_Check_NMTransfo'
+
+
+  !$OMP    CRITICAL (Tnum_Check_NMTransfo_CRIT)
+  Check = associated(mole%NMTransfo)
+  !$OMP   END CRITICAL (Tnum_Check_NMTransfo_CRIT)
+
+END SUBROUTINE Tnum_Check_NMTransfo
+SUBROUTINE Tnum_Set_skip_NM(skip_NM_sub)
+  USE mod_system
+  USE Module_ForTnumTana_Driver
+  IMPLICIT NONE
+
+  integer,           intent(in)     :: skip_NM_sub
+
+  character (len=*), parameter :: name_sub='Tnum_Set_skip_NM'
+
+
+  !$OMP    CRITICAL (Tnum_Set_skip_NM_CRIT)
+  IF (skip_NM_sub == 0 .OR. skip_NM_sub == 1) THEN
+    skip_NM = skip_NM_sub
+    IF (associated(mole%NMTransfo)) THEN
+      mole%tab_Qtransfo(mole%itNM)%skip_transfo = (skip_NM == 1)
+    END IF
+
+  ELSE
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Wrong skip_NM value. Possible values: 0 or 1'
+    write(out_unitp,*) ' skip_NM',skip_NM_sub
+    STOP 'ERROR in Tnum_Set_skip_NM: wrong skip_NM value!'
+  END IF
+  !$OMP   END CRITICAL (Tnum_Set_skip_NM_CRIT)
+
+END SUBROUTINE Tnum_Set_skip_NM
+SUBROUTINE Tnum_Set_k_Half(k_Half_sub)
+  USE mod_system
+  USE Module_ForTnumTana_Driver
+  IMPLICIT NONE
+
+  integer,           intent(in)     :: k_Half_sub
+
+  character (len=*), parameter :: name_sub='Tnum_Set_k_Half'
+
+
+  !$OMP    CRITICAL (Tnum_Set_k_Half_CRIT)
+  IF (k_Half_sub == 0 .OR. k_Half_sub == 1) THEN
+    k_Half = k_Half_sub
+  ELSE
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Wrong k_Half value. Possible values: 0 or 1'
+    write(out_unitp,*) ' k_Half',k_Half_sub
+    STOP 'ERROR in Tnum_Set_skip_NM: wrong k_Half value!'
+  END IF
+  !$OMP   END CRITICAL (Tnum_Set_k_Half_CRIT)
+
+END SUBROUTINE Tnum_Set_k_Half
+SUBROUTINE Tnum_Set_active_masses(active_masses,ncart_act)
+  USE mod_system
+  USE Module_ForTnumTana_Driver
+  IMPLICIT NONE
+
+  integer,           intent(in)        :: ncart_act
+  integer,           intent(in)        :: active_masses(ncart_act)
+
+  character (len=*), parameter :: name_sub='Tnum_Set_active_masses'
+
+  CALL Check_TnumInit(name_sub)
+
+  IF (ncart_act == mole%ncart_act) THEN
+    mole%active_masses(:) = active_masses
+  ELSE
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Wrong ncart_act value. It MUST be: ',mole%ncart_act
+    write(out_unitp,*) ' ncart_act',ncart_act
+    STOP 'ERROR in Tnum_Set_active_masses: Wrong ncart_act value!'
+  END IF
+
+END SUBROUTINE Tnum_Set_active_masses
+SUBROUTINE Tnum_get_ndimG(ndimG)
+  USE mod_system
+  USE Module_ForTnumTana_Driver
+  IMPLICIT NONE
+
+  integer,           intent(inout)     :: ndimG
+
+  character (len=*), parameter :: name_sub='Tnum_get_ndimG'
+
+  CALL Check_TnumInit(name_sub)
+
+  ndimG = mole%ndimG
+
+END SUBROUTINE Tnum_get_ndimG
+SUBROUTINE Tnum_get_Z(Z,nb_at)
+  USE mod_system
+  USE Module_ForTnumTana_Driver
+  IMPLICIT NONE
+
+  integer,           intent(in)        :: nb_at
+  integer,           intent(inout)     :: Z(nb_at)
+
+  character (len=*), parameter :: name_sub='Tnum_get_Z'
+
+  CALL Check_TnumInit(name_sub)
+
+  IF (nb_at <= mole%nat .AND. nb_at >= 1) THEN
+    Z(:) = mole%Z(1:nb_at)
+  ELSE
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Wrong nb_at value. It has to be in the range: [1:',mole%nat,']'
+    write(out_unitp,*) ' nb_at',nb_at
+    STOP 'ERROR in Tnum_get_Z: Wrong nb_at value!'
+  END IF
+
+END SUBROUTINE Tnum_get_Z
+SUBROUTINE Tnum_get_Qact0(Qact0,nb_act)
+  USE mod_system
+  USE Module_ForTnumTana_Driver
+  USE mod_ActiveTransfo
+  IMPLICIT NONE
+
+  integer,           intent(in)        :: nb_act
+  real (kind=Rkind), intent(inout)     :: Qact0(nb_act)
+
+  character (len=*), parameter :: name_sub='Tnum_get_Qact0'
+
+  CALL Check_TnumInit(name_sub)
+
+  IF (nb_act == mole%nb_act) THEN
+    CALL get_Qact0(Qact0,mole%ActiveTransfo)
+  ELSE
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Wrong nb_act value. It must be equal to: ',mole%nb_act
+    write(out_unitp,*) ' nb_act',nb_act
+    STOP 'ERROR in Tnum_get_Qact0:  Wrong nb_act value!'
+  END IF
+
+END SUBROUTINE Tnum_get_Qact0
+SUBROUTINE Tnum_get_EigNM_ForPVSCF(EigNM,nb_NM)
+  USE mod_system
+  USE mod_Constant
+  USE Module_ForTnumTana_Driver
+  IMPLICIT NONE
+
+  integer,           intent(in)        :: nb_NM
+  real (kind=Rkind), intent(inout)     :: EigNM(nb_NM)
+
+  character (len=*), parameter :: name_sub='Tnum_get_EigNM_ForPVSCF'
+
+  CALL Check_TnumInit(name_sub)
+
+  IF (nb_NM /= mole%nb_act) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Wrong nb_NM value. It must be equal to: ',mole%nb_act
+    write(out_unitp,*) ' nb_NM',nb_NM
+    STOP 'ERROR in Tnum_get_EigNM_ForPVSCF:  Wrong nb_NM value!'
+  END IF
+  IF (.NOT. associated(mole%NMTransfo%d0eh)) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' mole%NMTransfo%d0eh(:) is NOT associated!'
+    write(out_unitp,*) ' => You MUST call InitTnum3_NM_TO_LinearTransfo'
+    STOP 'ERROR in Tnum_get_EigNM_ForPVSCF: d0eh is not associated!'
+  END IF
+
+  EigNM(:) = mole%NMTransfo%d0eh(:)**2 * const_phys%inv_Name/TEN**3
+
+END SUBROUTINE Tnum_get_EigNM_ForPVSCF
+SUBROUTINE Tnum_get_GG(Qact,nb_act,GG,ndimG,def)
+  USE mod_system
+  USE Module_ForTnumTana_Driver
+  USE mod_ActiveTransfo
+  USE mod_dnGG_dng
+  IMPLICIT NONE
+
+  integer,           intent(in)        :: ndimG,nb_act
+  logical,           intent(in)        :: def
+  real (kind=Rkind), intent(in)        :: Qact(nb_act)
+  real (kind=Rkind), intent(inout)     :: GG(ndimG,ndimG)
+
+  real (kind=Rkind), allocatable       :: Qact_loc(:)
+
+  character (len=*), parameter :: name_sub='Tnum_get_GG'
+
+  CALL Check_TnumInit(name_sub)
+
+  IF (nb_act /= mole%nb_act) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Wrong nb_act value. It must be equal to: ',mole%nb_act
+    write(out_unitp,*) ' nb_act',nb_act
+    STOP 'ERROR in Tnum_get_GG:  Wrong nb_act value!'
+  END IF
+
+  IF (ndimG /= mole%ndimG) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' Wrong ndimG value. It must be equal to: ',mole%ndimG
+    write(out_unitp,*) ' ndimG',ndimG
+    STOP 'ERROR in Tnum_get_GG:  Wrong ndimG value!'
+  END IF
+
+  IF (nb_act <= mole%nb_var) THEN
+    allocate(Qact_loc(mole%nb_var))
+    CALL get_Qact0(Qact_loc,mole%ActiveTransfo)
+    Qact_loc(1:nb_act) = Qact
+  ELSE
+    write(out_unitp,*) ' ERROR in ', name_sub
+    write(out_unitp,*) ' nb_act is larger than mole%nb_var'
+    write(out_unitp,*) ' nb_act     ',nb_act
+    write(out_unitp,*) ' mole%nb_var',mole%nb_var
+    STOP 'ERROR in Tnum_get_GG: nb_act is larger than mole%nb_var'
+  END IF
+
+  CALL get_d0GG(Qact_loc,para_Tnum,mole,GG,def=def)
+
+  deallocate(Qact_loc)
+
+END SUBROUTINE Tnum_get_GG
+SUBROUTINE InitTnum3_NM_TO_LinearTransfo(Qact,nb_act,Hess,nb_cart)
+  USE Module_ForTnumTana_Driver
+  USE mod_ActiveTransfo
+  USE mod_PrimOp
+  IMPLICIT NONE
+
+  integer,           intent(in)     :: nb_act,nb_cart
+
+  real (kind=Rkind)                 :: Qact(nb_act),Hess(nb_cart,nb_cart)
+
+  real (kind=Rkind), allocatable    :: Qact_loc(:)
+
+  character (len=*), parameter :: name_sub='InitTnum3_NM_TO_LinearTransfo'
+
+
+    CALL Check_TnumInit(name_sub)
+
+    CALL Tnum_Set_skip_NM(0) ! To be able to initialize the Normal Modes
+    print_level=0
+
+    IF (nb_act <= mole%nb_var) THEN
+      allocate(Qact_loc(mole%nb_var))
+      CALL get_Qact0(Qact_loc,mole%ActiveTransfo)
+      Qact_loc(1:nb_act) = Qact
+    ELSE
+      write(out_unitp,*) ' ERROR in ', name_sub
+      write(out_unitp,*) ' nb_act is larger than mole%nb_var'
+      write(out_unitp,*) ' nb_act     ',nb_act
+      write(out_unitp,*) ' mole%nb_var',mole%nb_var
+      STOP 'ERROR in InitTnum3_NM_TO_LinearTransfo: nb_act is larger than mole%nb_var'
+    END IF
+
+    CALL calc3_NM_TO_sym(Qact_loc,mole,para_Tnum,PrimOp,Hess,.TRUE.)
+
+    deallocate(Qact_loc)
+
+END SUBROUTINE InitTnum3_NM_TO_LinearTransfo
+
 SUBROUTINE Init_TnumTana_FOR_Driver(nb_act,nb_cart,init_sub)
   USE Module_ForTnumTana_Driver
   IMPLICIT NONE
@@ -209,6 +486,10 @@ SUBROUTINE Init_TnumTana_FOR_Driver(nb_act,nb_cart,init_sub)
     !-----------------------------------------------------------------
     !     ---- TO finalize the coordinates (NM) and the KEO ----------
     !     ------------------------------------------------------------
+    IF (associated(mole%NMTransfo)) THEN
+      mole%tab_Qtransfo(mole%itNM)%skip_transfo = (skip_NM == 1) ! the NM are not calculated
+      IF (k_Half == 0 .OR. k_Half == 1) mole%NMTransfo%k_Half = (k_Half == 1)
+    END IF
     CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
 
   END IF

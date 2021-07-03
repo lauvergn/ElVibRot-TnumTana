@@ -82,7 +82,7 @@ MODULE mod_SetOp
           integer :: nb_bie=0                    ! number of active basis functions and grid points
           integer :: nb_bi=0,nb_be=0             ! number of active basis functions and grid points
           integer :: nb_ba=0,nb_qa=0             ! number of active basis functions and grid points
-          integer :: nbc_ba=0                    ! number of active contracged basis
+          integer :: nbc_ba=0                    ! number of active contracted basis
 
           integer :: nb_bai=0,nb_qai=0           ! number of total active basis functions with HADA basis
           integer :: nb_baie=0,nb_qaie=0         ! number of total active basis functions
@@ -93,6 +93,7 @@ MODULE mod_SetOp
                                                  ! usefull before the spectral transformation (for another operator)
 
           integer,              allocatable :: List_Mat_i_todo(:)
+          logical                       :: Partial_MatOp = .FALSE.
           real (kind=Rkind),    allocatable :: Rmat(:,:)        ! Rmat(nb_tot ,nb_tot )
           complex (kind=Rkind), allocatable :: Cmat(:,:)        ! Cmat(nb_tot ,nb_tot )
 
@@ -210,8 +211,9 @@ MODULE mod_SetOp
         IF (present(Grid))     write(out_unitp,*) 'alloc Grid?',Grid
         IF (present(Grid_cte)) write(out_unitp,*) 'Grid_cte?',Grid_cte
 
+        write(out_unitp,*) 'nb_tot',para_Op%nb_tot
         write(out_unitp,*) 'nb_term',para_Op%nb_term
-
+        write(out_unitp,*) 'nb_bie',get_nb_be_FROM_Op(para_Op) * para_Op%nb_bi
         !CALL write_param_Op(para_Op)
         write(out_unitp,*)
       END IF
@@ -267,29 +269,7 @@ MODULE mod_SetOp
       END IF
 
       IF (lo_mat) THEN
-        para_Op%alloc_mat = .TRUE.
-        IF (para_Op%cplx) THEN
-          IF (.NOT. allocated(para_Op%Cmat) ) THEN
-             CALL alloc_NParray(para_Op%Cmat,(/ nb_tot,nb_tot /),         &
-                               'para_Op%Cmat',name_sub)
-          END IF
-
-        ELSE
-          IF (.NOT. allocated(para_Op%Rmat) ) THEN
-             CALL alloc_NParray(para_Op%Rmat,(/ nb_tot,nb_tot /),         &
-                               'para_Op%Rmat',name_sub)
-          END IF
-        END IF
-        IF (para_Op%pack_Op) THEN
-          IF (.NOT. associated(para_Op%ind_Op) ) THEN
-             CALL alloc_array(para_Op%ind_Op,(/ nb_tot,nb_tot /),       &
-                             'para_Op%ind_Op',name_sub)
-          END IF
-          IF (.NOT. associated(para_Op%dim_Op) ) THEN
-             CALL alloc_array(para_Op%dim_Op,(/ nb_tot /),              &
-                             'para_Op%dim_Op',name_sub)
-          END IF
-        END IF
+        CALL alloc_MatOp(para_Op)
       END IF
 
       IF (lo_mat .AND. para_Op%diago) THEN
@@ -338,7 +318,7 @@ MODULE mod_SetOp
                               para_Op%derive_termQact(:,k_term),      &
                               para_Op%derive_termQdyn(:,k_term),      &
                               SmolyakRep,Type_FileGrid4,nb_SG,info)
-
+            IF (debug) write(out_unitp,*) 'shape ...Grid',k_term,shape(para_Op%OpGrid(k_term)%Grid)
             deallocate(info)
           END DO
         END IF
@@ -360,6 +340,8 @@ MODULE mod_SetOp
                             para_Op%nb_qa,nb_bie,                     &
                             (/ 0,0 /),(/ 0,0 /),SmolyakRep,Type_FileGrid4,nb_SG,info)
 
+            IF (debug) write(out_unitp,*) 'shape ...ImGrid',shape(para_Op%imOpGrid(1)%Grid)
+
           para_Op%imOpGrid(1)%cplx = .TRUE.
 
           deallocate(info)
@@ -375,6 +357,88 @@ MODULE mod_SetOp
 !---------------------------------------------------------------------
 
       END SUBROUTINE alloc_para_Op
+      SUBROUTINE alloc_MatOp(para_Op)
+      USE mod_MPI
+      TYPE (param_Op), intent(inout) :: para_Op
+
+      logical :: Type_FileGrid4
+      integer :: nb_tot
+
+      integer :: err
+
+
+      character(len=:), allocatable     :: info
+      integer :: i,f
+
+
+!----- for debuging --------------------------------------------------
+      integer :: err_mem,memory
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub='alloc_MatOp'
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+
+        write(out_unitp,*) 'nb_tot',para_Op%nb_tot
+        write(out_unitp,*)
+      END IF
+!---------------------------------------------------------------------
+
+      IF (.NOT. para_Op%init_var) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' para_Op has NOT been initiated: init_var=F'
+        write(out_unitp,*) ' CHECK the source!!!!!'
+        CALL write_param_Op(para_Op)
+        STOP
+      END IF
+
+
+      nb_tot  = para_Op%nb_tot
+      IF (nb_tot < 1) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' nb_tot is <1',nb_tot
+        CALL write_param_Op(para_Op)
+        STOP
+      END IF
+
+      i = max(para_Op%para_ReadOp%Partial_MatOp_i,1)
+      f = min(para_Op%para_ReadOp%Partial_MatOp_f,nb_tot)
+      para_Op%para_ReadOp%Partial_MatOp_i = i
+      para_Op%para_ReadOp%Partial_MatOp_f = f
+
+      IF (para_Op%cplx) THEN
+        IF (.NOT. allocated(para_Op%Cmat) ) THEN
+           CALL alloc_NParray(para_Op%Cmat,[nb_tot,f],                          &
+                             'para_Op%Cmat',name_sub,tab_lb=[1,i])
+        END IF
+      ELSE
+        IF (.NOT. allocated(para_Op%Rmat) ) THEN
+           CALL alloc_NParray(para_Op%Rmat,[nb_tot,f],                          &
+                             'para_Op%Rmat',name_sub,tab_lb=[1,i])
+        END IF
+      END IF
+      IF (para_Op%pack_Op) THEN
+        IF (.NOT. associated(para_Op%ind_Op) ) THEN
+           CALL alloc_array(para_Op%ind_Op,[nb_tot,nb_tot],                     &
+                           'para_Op%ind_Op',name_sub)
+        END IF
+        IF (.NOT. associated(para_Op%dim_Op) ) THEN
+           CALL alloc_array(para_Op%dim_Op,[nb_tot],                            &
+                           'para_Op%dim_Op',name_sub)
+        END IF
+      END IF
+
+      para_Op%alloc_mat = .TRUE.
+
+!---------------------------------------------------------------------
+      IF (debug) THEN
+        CALL write_param_Op(para_Op)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!---------------------------------------------------------------------
+
+END SUBROUTINE alloc_MatOp
 !=======================================================================================
 
       !!@description: TODO
@@ -525,6 +589,51 @@ MODULE mod_SetOp
 
       END SUBROUTINE dealloc_para_Op
 
+      SUBROUTINE dealloc_para_MatOp(para_Op)
+      USE mod_MPI
+      TYPE (param_Op),          intent(inout) :: para_Op
+
+      integer :: err_mem,memory
+      character (len=*), parameter :: name_sub='dealloc_para_MatOp'
+
+
+      IF (allocated(para_Op%Rmat))    THEN
+        CALL dealloc_NParray(para_Op%Rmat,'para_Op%Rmat',name_sub)
+      END IF
+      IF (allocated(para_Op%Cmat))    THEN
+        CALL dealloc_NParray(para_Op%Cmat,'para_Op%Cmat',name_sub)
+      END IF
+
+      IF (associated(para_Op%ind_Op))  THEN
+        CALL dealloc_array(para_Op%ind_Op,'para_Op%ind_Op',name_sub)
+      END IF
+      IF (associated(para_Op%dim_Op))  THEN
+        CALL dealloc_array(para_Op%dim_Op,'para_Op%dim_Op',name_sub)
+      END IF
+
+      IF (allocated(para_Op%List_Mat_i_todo))    THEN
+        CALL dealloc_NParray(para_Op%List_Mat_i_todo,'para_Op%List_Mat_i_todo',name_sub)
+      END IF
+
+      IF (associated(para_Op%Rdiag))  THEN
+        CALL dealloc_array(para_Op%Rdiag,'para_Op%Rdiag',name_sub)
+      END IF
+      IF (associated(para_Op%Cdiag))  THEN
+        CALL dealloc_array(para_Op%Cdiag,'para_Op%Cdiag',name_sub)
+
+      END IF
+      IF (associated(para_Op%Rvp))    THEN
+        CALL dealloc_array(para_Op%Rvp,'para_Op%Rvp',name_sub)
+      END IF
+      IF (associated(para_Op%Cvp))    THEN
+        CALL dealloc_array(para_Op%Cvp,'para_Op%Cvp',name_sub)
+      END IF
+
+      para_Op%alloc_mat  = .FALSE.
+      para_Op%mat_done   = .FALSE.
+
+    END SUBROUTINE dealloc_para_MatOp
+
 !===============================================================================
 ! ++    write the type param_Op
 !===============================================================================
@@ -577,6 +686,7 @@ MODULE mod_SetOp
 
       write(out_unitp,*) 'allo List_Mat_i_todo',allocated(para_Op%List_Mat_i_todo)
       IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) shape(para_Op%List_Mat_i_todo)
+      write(out_unitp,*) 'Partial_MatOp',para_Op%Partial_MatOp
       write(out_unitp,*) 'allo Rmat',allocated(para_Op%Rmat)
       IF (allocated(para_Op%Rmat)) write(out_unitp,*) shape(para_Op%Rmat)
       write(out_unitp,*) 'allo Cmat',allocated(para_Op%Cmat)
@@ -855,6 +965,7 @@ MODULE mod_SetOp
       para_H_HADA%n_Op            = para_H%n_Op
       para_H_HADA%name_Op         = para_H%name_Op
       para_H_HADA%Make_Mat        = para_H%Make_Mat
+      para_H_HADA%Partial_MatOp   = .FALSE.
       para_H_HADA%file_Grid       = para_H%file_Grid
       para_H_HADA%sym_Hamil       = para_H%sym_Hamil
 
@@ -1011,6 +1122,13 @@ MODULE mod_SetOp
       para_Op2%n_Op            = para_Op1%n_Op
       para_Op2%name_Op         = para_Op1%name_Op
       para_Op2%Make_Mat        = para_Op1%Make_Mat
+      para_Op2%Partial_MatOp   = para_Op1%Partial_MatOp
+
+      IF (allocated(para_Op1%List_Mat_i_todo))    THEN
+        CALL alloc_NParray(para_Op2%List_Mat_i_todo,shape(para_Op1%Partial_MatOp),&
+                          'para_Op2%List_Mat_i_todo','param_Op1TOparam_Op2')
+      END IF
+
       para_Op2%para_ReadOp     = para_Op1%para_ReadOp
       para_Op2%file_Grid       = para_Op1%file_Grid
       para_Op2%read_Op         = para_Op1%read_Op
@@ -1097,10 +1215,6 @@ MODULE mod_SetOp
         DO iOp=1,size(tab_Op)
           tab_Op(iOp)%para_ReadOp%para_fileGrid = para_fileGrid
         END DO
-      ELSE
-        DO iOp=1,size(tab_Op)
-          tab_Op(iOp)%para_ReadOp%para_fileGrid = tab_Op(1)%para_ReadOp%para_fileGrid
-        END DO
       END IF
 
 
@@ -1143,9 +1257,7 @@ MODULE mod_SetOp
 
       DO iOp=1,size(tab_Op)
         CALL Open_file_OF_OpGrid(tab_Op(iOp)%OpGrid,nio)
-
         CALL Open_file_OF_OpGrid(tab_Op(iOp)%ImOpGrid,nio)
-
       END DO
 
       END SUBROUTINE Open_File_OF_tab_Op
@@ -1164,7 +1276,6 @@ MODULE mod_SetOp
 
       DO iOp=1,size(tab_Op)
         CALL Close_file_OF_OpGrid(tab_Op(iOp)%OpGrid)
-
         CALL Close_file_OF_OpGrid(tab_Op(iOp)%ImOpGrid)
       END DO
 
@@ -1187,7 +1298,14 @@ MODULE mod_SetOp
 
       character (len=*), parameter :: name_sub='read_OpGrid_OF_Op'
 
-      IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done) RETURN
+      !write(6,*) 'In ',name_sub,' Type_FileGrid ',para_Op%para_ReadOp%para_FileGrid%Type_FileGrid
+      !write(6,*) 'In ',name_sub,' Read_FileGrid ',para_Op%para_ReadOp%para_FileGrid%Read_FileGrid
+      !write(6,*) 'In ',name_sub,' para_Op%alloc_Grid ',para_Op%alloc_Grid
+
+      IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Read_FileGrid .OR. &
+          .NOT. para_Op%para_ReadOp%para_FileGrid%Save_MemGrid  .OR. &
+                para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done) RETURN
+
       IF (.NOT. para_Op%alloc_Grid)                                     &
                      CALL alloc_para_Op(para_Op,Grid=.TRUE.,Mat=.FALSE.)
 
@@ -1219,6 +1337,11 @@ MODULE mod_SetOp
             id1 = para_Op%OpGrid(k_term)%derive_termQact(1)
             id2 = para_Op%OpGrid(k_term)%derive_termQact(2)
             iterm_Op = d0MatOp%derive_term_TO_iterm(id1,id2)
+            !write(6,*) 'k_term,nb_term',k_term,para_Op%nb_term
+            !write(6,*) 'id1,id1,iterm_Op',id1,id1,iterm_Op
+            !write(6,*) 'shape ...Grid',shape(para_Op%OpGrid(k_term)%Grid)
+            !write(6,*) 'shape ...d0MatOp%ReVal',shape(d0MatOp%ReVal)
+            !flush(6)
 
             para_Op%OpGrid(k_term)%Grid(i_qa,:,:) = d0MatOp%ReVal(:,:,iterm_Op)
 
@@ -1312,16 +1435,14 @@ MODULE mod_SetOp
 
       character (len=*), parameter :: name_sub='Save_OpGrid_OF_Op'
 
-      IF (para_Op%n_Op == -1) RETURN  ! for S
+      IF (      para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done .OR.       &
+          .NOT. para_Op%para_ReadOp%para_FileGrid%Save_FileGrid) RETURN
 
-write(out_unitp,*) 'BEGINNING ',name_sub
-
-write(out_unitp,*) 'Save_FileGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done
-write(out_unitp,*) 'Save_MemGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
-write(out_unitp,*) 'Type_FileGrid',para_Op%para_ReadOp%para_FileGrid%Type_FileGrid
-
-      IF (para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done) RETURN
-      IF (para_Op%para_ReadOp%para_FileGrid%Type_FileGrid /= 5) RETURN
+!write(out_unitp,*) 'BEGINNING ',name_sub
+!write(out_unitp,*) 'Save_FileGrid',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid
+!write(out_unitp,*) 'Save_FileGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done
+!write(out_unitp,*) 'Save_MemGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
+!write(out_unitp,*) 'Type_FileGrid',para_Op%para_ReadOp%para_FileGrid%Type_FileGrid
 
       IF (.NOT. para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -1361,8 +1482,8 @@ write(out_unitp,*) 'Type_FileGrid',para_Op%para_ReadOp%para_FileGrid%Type_FileGr
       END IF
       para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done  = .TRUE.
 
-write(out_unitp,*) 'Save_FileGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done
-write(out_unitp,*) 'END ',name_sub
+!write(out_unitp,*) 'Save_FileGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done
+!write(out_unitp,*) 'END ',name_sub
 
 
     END SUBROUTINE Save_OpGrid_OF_Op

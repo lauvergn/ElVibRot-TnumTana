@@ -114,7 +114,7 @@
 
       integer                        :: i,j,rk,rl,i_term,iOp,it,ib
       integer                        :: nq,nb_ba,nb_bi,nb_be,nb_bie
-      logical                        :: spectral_H
+      logical                        :: EneH0,spectral_H
       real (kind=Rkind), allocatable :: Qana(:),Qact(:)
 
 !----- for debuging --------------------------------------------------
@@ -310,7 +310,11 @@
       IF (para_ana%propa) THEN
         para_propa%control = para_ana%control !< for controling the calcutation of Hmin
         para_propa%max_ana = para_ana%max_ana
-        CALL read_propagation(para_propa,mole%nb_act1,nb_vp_specWP)
+        nb_bi = get_nb_bi_FROM_AllBasis(para_AllBasis)
+        CALL read_propagation(para_propa,mole,nb_bi,                            &
+                              para_ReadOp%nb_elec,nb_vp_specWP)
+        !CALL read_propagation_old(para_propa,mole%nb_act1,nb_bi,                &
+        !                      para_ReadOp%nb_elec,nb_vp_specWP)
         spectral_H = (para_propa%type_WPpropa == 10)
 
         IF (para_propa%spectral) THEN
@@ -562,7 +566,6 @@
       CALL param_Op1TOparam_Op2(para_AllOp%tab_Op(1),para_AllOp%tab_Op(iOp))
       para_AllOp%tab_Op(iOp)%name_Op     = 'S'
       para_AllOp%tab_Op(iOp)%n_Op        = -1
-
       CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,             &
                        type_Op=0,nb_Qact=mole%nb_act1,cplx=.FALSE.,     &
                        JRot=Para_Tnum%JJ,direct_KEO=.FALSE.,direct_ScalOp=.FALSE.)
@@ -570,7 +573,6 @@
                               para_AllOp%tab_Op(iOp)%derive_termQdyn,   &
                               para_AllOp%tab_Op(iOp)%derive_termQact,   &
                               mole%ActiveTransfo%list_QactTOQdyn)
-
       para_AllOp%tab_Op(iOp)%symab    = 0 ! totally symmetric
       para_AllOp%tab_Op(iOp)%spectral = para_ana%Spectral_ScalOp
 
@@ -641,6 +643,16 @@
 
       END DO
 
+      ! modify some parameters for the overlap operator. ...
+      ! ... It has to be done after all the other operators
+      iOp = 2 ! for S
+      IF (para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Type_FileGrid /= 0) THEN
+        para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Read_FileGrid = .FALSE.
+        para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_FileGrid = .FALSE.
+        para_AllOp%tab_Op(iOp)%para_ReadOp%para_FileGrid%Save_MemGrid  = .FALSE.
+
+      END IF
+
 
       IF (para_ReadOp%nb_scalar_Op == 3) THEN ! dipole moment operators
         para_AllOp%tab_Op(3)%name_Op = 'Dipx'
@@ -686,11 +698,18 @@
         CALL Set_paraPRH(mole,para_Tnum,para_AllBasis%BasisnD)
       END IF
 
-      IF (para_propa%para_Davidson%NewVec_type == 4 .OR. para_ana%CRP > 0) THEN
+      EneH0 = (para_ana%davidson .AND. para_propa%para_Davidson%NewVec_type == 4)
+      EneH0 = EneH0 .OR. (para_ana%CRP > 0 .AND.                                &
+                            (para_ana%para_CRP%LinSolv_type == 'qmr'   .OR.     &
+                             para_ana%para_CRP%LinSolv_type == 'gmres' .OR.     &
+                             para_ana%para_CRP%Read_Channel_AT_TS) )
+
+      IF (EneH0) THEN
         CALL RecSet_EneH0(para_Tnum,mole,para_AllBasis%BasisnD,para_ReadOp)
         !pot_Qref is added here, because it has been removed in the RecSet_EneH0 caclulations
         para_AllBasis%BasisnD%EneH0 = para_AllBasis%BasisnD%EneH0 + para_ReadOp%pot_Qref
       END IF
+
 
       write(out_unitp,*)
       write(out_unitp,*) "============================================================"
