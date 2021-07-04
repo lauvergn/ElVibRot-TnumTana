@@ -22,13 +22,13 @@ OMP = 1
 INT = 4
 #
 ## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 0
+ARPACK = 1
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
-QML = 0
+QML = 1
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
@@ -473,7 +473,7 @@ CPPSHELL = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
 CPPSHELL_ARPACK  = -D__ARPACK="$(ARPACK)"
 CPPSHELL_CERFACS = -D__CERFACS="$(CERFACS)"
 CPPSHELL_INVHYP  = -D__INVHYP="$(INVHYP)"
-CPPSHELL_DIAGO   = -D__LAPACK="$(LAPACK)"
+CPPSHELL_LAPACK  = -D__LAPACK="$(LAPACK)"
 CPPSHELL_QML     = -D__QML="$(QML)"
 #CPPSHELL_GIT     = -D__GIT="'master'"
 CPPSHELL_GIT     = -D__GIT="'$(GIT_Branch)'"
@@ -1036,8 +1036,8 @@ $(OBJ)/sub_module_DInd.o:$(DirnDind)/sub_module_DInd.f90
 $(OBJ)/sub_module_nDindex.o:$(DirnDind)/sub_module_nDindex.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirnDind)/sub_module_nDindex.f90
 ###
-$(OBJ)/mod_dnS.o:$(DirdnSVM)/mod_dnS.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DirdnSVM)/mod_dnS.f90
+#$(OBJ)/mod_dnS.o:$(DirdnSVM)/mod_dnS.f90
+#	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DirdnSVM)/mod_dnS.f90
 $(OBJ)/sub_module_dnS.o:$(DirdnSVM)/sub_module_dnS.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnS.f90
 $(OBJ)/sub_module_VecOFdnS.o:$(DirdnSVM)/sub_module_VecOFdnS.f90
@@ -1503,9 +1503,9 @@ $(DirPot)/sub_system.f90:
 #
 #===============================================================================
 $(OBJ)/sub_diago.o:$(DirMath)/sub_diago.f90
-	cd $(OBJ) ; $(F90_FLAGS)  $(CPPpre) $(CPPSHELL_DIAGO)  -c $(DirMath)/sub_diago.f90
+	cd $(OBJ) ; $(F90_FLAGS)  $(CPPpre) $(CPPSHELL_LAPACK) -c $(DirMath)/sub_diago.f90
 $(OBJ)/sub_trans_mat.o:$(DirMath)/sub_trans_mat.f90
-	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMath)/sub_trans_mat.f90
+	cd $(OBJ) ; $(F90_FLAGS)  $(CPPpre) $(CPPSHELL_LAPACK) -c $(DirMath)/sub_trans_mat.f90
 $(OBJ)/sub_math_util.o:$(DirMath)/sub_math_util.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirMath)/sub_math_util.f90
 $(OBJ)/sub_integration.o:$(DirMath)/sub_integration.f90

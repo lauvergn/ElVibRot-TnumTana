@@ -44,6 +44,9 @@ MODULE mod_CRP
   USE mod_system
   IMPLICIT NONE
 
+  !integer, private :: type_LU = 3 ! LU decomposition with LAPACK
+  integer, private :: type_LU = 1 ! LU decomposition without LAPACK
+
   TYPE CRP_Eckart_t
     real (kind=Rkind) :: V0 = 0.0156_Rkind   ! Baloitcha values
     real (kind=Rkind) :: L  = ONE            !  //
@@ -1379,7 +1382,10 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene,GuessVec)
           Ginv(i,i) = Ginv(i,i) + Ene
        END DO
 
-       CALL ludcmp_cplx(Ginv,tab_Op(1)%nb_tot,trav,indx,d)
+       CALL Driver_LU_decomp_cplx(Ginv,tab_Op(1)%nb_tot,indx,d,type_LU) ! lapack
+       !CALL ludcmp_cplx(Ginv,tab_Op(1)%nb_tot,trav,indx,d)
+       !CALL ZGETRF(tab_Op(1)%nb_tot,tab_Op(1)%nb_tot,Ginv,tab_Op(1)%nb_tot,indx,ierr)
+       !IF (ierr /= 0) STOP 'LU decomposition'
        !now in Ginv we have its LU decomposition
 
        CALL dealloc_NParray(trav,'trav',name_sub)
@@ -1625,6 +1631,8 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
 
   TYPE (param_time) :: CRP_Time
   real(kind=Rkind)  :: RealTime
+  TYPE (param_time) :: LU_Time
+  real(kind=Rkind)  :: RealTime_LU
 
 !----- for debuging --------------------------------------------------
   INTEGER   :: err
@@ -1695,9 +1703,17 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
         Ginv(i,i) = Ginv(i,i) + Ene
      END DO
 
-     CALL ludcmp_cplx(Ginv,tab_Op(1)%nb_tot,trav,indx,dLU)
-         !now in Ginv we have its LU decomposition
+     RealTime_LU = Delta_RealTime(LU_Time)
 
+     CALL Driver_LU_decomp_cplx(Ginv,tab_Op(1)%nb_tot,indx,dLU,type_LU) ! lapack
+     !CALL ludcmp_cplx(Ginv,tab_Op(1)%nb_tot,trav,indx,dLU)
+     !CALL ZGETRF(tab_Op(1)%nb_tot,tab_Op(1)%nb_tot,Ginv,tab_Op(1)%nb_tot,indx,ierr)
+     !IF (ierr /= 0) STOP 'LU decomposition'
+     !now in Ginv we have its LU decomposition
+
+     RealTime_LU = Delta_RealTime(LU_Time)
+     write(out_unitp,*) 'Real Time in LU:',RealTime_LU
+     write(out_unitp,*) 'LU of Ginv: done' ; flush(out_unitp)
 
      CALL dealloc_NParray(trav,'trav',name_sub)
 
@@ -1861,7 +1877,8 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
         CASE Default
            WRITE(out_unitp,*) ' ERROR in',name_sub
            WRITE(out_unitp,*) '  No Default for LinSolv_type:',para_CRP%LinSolv_type
-           WRITE(out_unitp,*) '  You have to choose between: "MatInv" or "QMR".'
+           WRITE(out_unitp,*) '  You have to choose between: '
+           WRITE(out_unitp,*) '   "MatInv" or "QMR" or "MatLinSolv".'
            STOP ' ERROR No Default for LinSolv_type'
         END SELECT
 !
@@ -2258,7 +2275,8 @@ SUBROUTINE calc_crp_p_lanczos_old(tab_Op,nb_Op,para_CRP,Ene)
           Ginv(i,i) = Ginv(i,i) + Ene
        END DO
 
-       CALL ludcmp_cplx(Ginv,tab_Op(1)%nb_tot,trav,indx,d)
+       CALL Driver_LU_decomp_cplx(Ginv,tab_Op(1)%nb_tot,indx,d,type_LU) ! lapack
+       !CALL ludcmp_cplx(Ginv,tab_Op(1)%nb_tot,trav,indx,d)
        !now in Ginv we have its LU decomposition
 
        CALL dealloc_NParray(trav,'trav',name_sub)
@@ -2438,7 +2456,11 @@ SUBROUTINE p_multiplyLU(Vin,Vut,tab_Op,nb_Op,Ene,N,Ginv_LU,indx,                
 !     |b>=1/(H-E-ie)|b>
       IF (print_level > 1) write(out_unitp,*) '# here before LU 1 '
       b(:) = conjg(b)
-      CALL lubksb_cplx(Ginv_LU,N,indx,b)
+      !CALL lubksb_cplx(Ginv_LU,N,indx,b)
+      !CALL ZGETRS('No transpose',N,1,Ginv_LU,N,indx,B,N,err)
+      CALL Driver_LU_solve_cplx(Ginv_LU,N,indx,b,type_LU) ! here lapack
+
+
       b(:) = conjg(b)
       IF (debug) write(out_unitp,*) '1/(H-E-ie)|b>',b(:)
 
@@ -2448,7 +2470,9 @@ SUBROUTINE p_multiplyLU(Vin,Vut,tab_Op,nb_Op,Ene,N,Ginv_LU,indx,                
 
 !     |b>=1/(H-E+ie)|b>
       IF (print_level > 1) write(out_unitp,*) '# here before LU 2 '
-      CALL lubksb_cplx(Ginv_LU,N,indx,b)
+      !CALL lubksb_cplx(Ginv_LU,N,indx,b)
+      !CALL ZGETRS('No transpose',N,1,Ginv_LU,N,indx,B,N,err)
+      CALL Driver_LU_solve_cplx(Ginv_LU,N,indx,b,type_LU) ! here lapack
 
       Vut(:)=b(:)
 
