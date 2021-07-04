@@ -674,7 +674,7 @@ END IF
 !=======================================================================================
 !> OpPsi is assigned in this routine with OpPsi%Vec=0 initially
 !> after this subroutine, OpPsi will be ready
-!======================================================================================= 
+!=======================================================================================
 SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   USE mod_system
   !$ USE omp_lib, only : OMP_GET_THREAD_NUM
@@ -703,8 +703,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   TYPE (basis),   pointer :: BasisnD
 
   TYPE (TypeRVec),   allocatable       :: PsiR(:)
-  
-  Real (kind=Rkind), allocatable       :: PsiR_temp(:) 
+
+  Real (kind=Rkind), allocatable       :: PsiR_temp(:)
   integer                              :: ib,i,iG,iiG,nb_thread
   integer                              :: itab,ith,iterm00,packet_size,OpPsi_symab
   integer, allocatable                 :: tab_l(:)
@@ -876,7 +876,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       !$OMP   END PARALLEL DO
     ELSE
       !to be sure to have the correct number of threads, we use
-      !   BasisnD%para_SGType2%nb_threads 
+      !   BasisnD%para_SGType2%nb_threads
 
       !$OMP parallel                                                &
       !$OMP default(none)                                           &
@@ -947,14 +947,14 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                       para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid
     para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid_done =                 &
                       para_Op%OpGrid(iterm00)%para_FileGrid%Save_FileGrid
-    para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done=.True. 
+    para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done=.True.
   END IF
 
   IF(MPI_id==0) THEN
     DO i=1,size(OpPsi)
       OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,Psi(i)%symab)
       CALL Set_symab_OF_psiBasisRep(OpPsi(i),OpPsi_symab)
- 
+
       !write(out_unitp,*) 'para_Op,psi symab ',i,para_Op%symab,Psi(i)%symab
       !write(out_unitp,*) 'OpPsi_symab',i,OpPsi(i)%symab
     END DO
@@ -1686,7 +1686,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   TYPE(param_psi),                intent(inout) :: OpPsi(:)
   Integer,                        intent(in)    :: iG
   Integer,                        intent(in)    :: tab_l(:)
-  
+
   TYPE(CoordType),pointer                       :: mole
   TYPE(basis),pointer                           :: BasisnD
   Real(kind=Rkind),allocatable                  :: Op_Psi(:,:) ! size(nq,nb0)
@@ -1710,12 +1710,12 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   Integer                                       :: nb0
   Integer                                       :: ib0
   Integer                                       :: jb0
-  
+
   Integer                                       :: iqi
   Integer                                       :: iqf
   Integer                                       :: jqi
   Integer                                       :: jqf
-  
+
   Integer                                       :: d1
   Integer                                       :: d2
   Integer                                       :: num
@@ -1724,13 +1724,13 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   Integer                                       :: j
   Integer                                       :: itab
   Integer                                       :: iterm
-  
+
   Character(len=*),parameter             :: name_sub='sub_TabOpPsi_OF_ONEDP_FOR_SGtype4'
 
 
   num=1
   IF(psi(1)%cplx) num=2
-  
+
   mole    => para_Op%mole
   BasisnD => para_Op%BasisnD
 
@@ -1741,10 +1741,10 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   Dim=size(tab_l)
   CALL alloc_NParray(tab_nb,(/Dim/),'tab_nb',name_sub)
   CALL alloc_NParray(tab_nq,(/Dim/),'tab_nq',name_sub)
-  
+
   tab_nq(:)=getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
   tab_nb(:)=getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
-  
+
   nb =BasisnD%para_SGType2%tab_nb_OF_SRep(iG)
   nq =BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
   nb0=BasisnD%para_SGType2%nb0
@@ -1755,7 +1755,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
 
     CALL get_OpGrid_type0_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V)
     CALL alloc_NParray(Op_Psi,(/nq,nb0/),'Op_Psi',name_sub)
-    
+
     DO itab=1,size(psi)
       DO ii=1,num
         PsiR=psi(itab)%SR_B(d1:d2,ii)
@@ -1775,7 +1775,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
             jqf=jqf+nq
           END DO
         END DO
-        
+
         PsiR=reshape(Op_Psi,shape=(/nq*nb0/))
         CALL GDP_TO_BDP_OF_SmolyakRep(PsiR,BasisnD%tab_basisPrimSG,&
                                       tab_l,tab_nq,tab_nb,nb0)
@@ -1850,13 +1850,13 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
             jqf=jqf+nq
           ENDDO
         ENDDO
-        
+
         iqi=1
         iqf=nq
         DO ib0=1,nb0
           ! multiplication by sqRhoOVERJac
           PsiR(jqi:jqf)=PsiR(jqi:jqf)*sqRhoOVERJac(:)
-          
+
           ! derivative with respect to Qj
           DO j=1,mole%nb_act1
             derive_termQdyn(:)=(/mole%liste_QactTOQdyn(j),0/)
@@ -1865,7 +1865,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
             CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG,      &
                                               tab_l,tab_nq,derive_termQdyn)
           ENDDO ! for j=1,mole%nb_act1
-          
+
           OpPsiR(:)=ZERO
           DO i=1,mole%nb_act1
             PsiRi(:)=ZERO
@@ -1880,14 +1880,14 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                                               tab_l,tab_nq,derive_termQdyn)
             OpPsiR(:)=OpPsiR(:)+PsiRi(:)
           ENDDO ! for i=1,mole%nb_act1
-          
+
           OpPsiR(:)=-HALF*OpPsiR(:)/(Jac(:)*sqRhoOVERJac(:))+VPsi(:,ib0)
           PsiR(jqi:jqf)=OpPsiR(:)
-          
+
           iqi=iqf+1
           iqf=iqf+nq
         ENDDO ! for ib0=1,nb0
-        
+
         CALL GDP_TO_BDP_OF_SmolyakRep(PsiR,BasisnD%tab_basisPrimSG,&
                                     tab_l,tab_nq,tab_nb,nb0)
         OpPsi(itab)%SR_B(d1:d2,ii)=PsiR
@@ -1934,7 +1934,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRB_MPI
   TYPE(param_psi),                intent(inout) :: OpPsi(:)
   Integer,                        intent(in)    :: iG
   Integer,                        intent(in)    :: tab_l(:)
-  
+
   TYPE(CoordType),pointer                       :: mole
   TYPE(basis),pointer                           :: BasisnD
   Real(kind=Rkind),allocatable                  :: Op_Psi(:,:) ! size(nq,nb0)
@@ -1958,12 +1958,12 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRB_MPI
   Integer                                       :: nb0
   Integer                                       :: ib0
   Integer                                       :: jb0
-  
+
   Integer                                       :: iqi
   Integer                                       :: iqf
   Integer                                       :: jqi
   Integer                                       :: jqf
-  
+
   Integer                                       :: d1
   Integer                                       :: d2
   Integer                                       :: num
@@ -1972,13 +1972,13 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRB_MPI
   Integer                                       :: j
   Integer                                       :: itab
   Integer                                       :: iterm
-  
+
   Character(len=*),parameter             :: name_sub='sub_TabOpPsi_OF_ONEDP_FOR_SGtype4'
 
 
   num=1
   IF(psi(1)%cplx) num=2
-  
+
   mole    => para_Op%mole
   BasisnD => para_Op%BasisnD
 
@@ -1989,10 +1989,10 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRB_MPI
   Dim=size(tab_l)
   CALL alloc_NParray(tab_nb,(/Dim/),'tab_nb',name_sub)
   CALL alloc_NParray(tab_nq,(/Dim/),'tab_nq',name_sub)
-  
+
   tab_nq(:)=getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
   tab_nb(:)=getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
-  
+
   nb =BasisnD%para_SGType2%tab_nb_OF_SRep(iG)
   nq =BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
   nb0=BasisnD%para_SGType2%nb0
@@ -2004,11 +2004,11 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRB_MPI
 
     !CALL allocate_array(Op_Psi,1,nq,1,nb0)
     CALL alloc_NParray(Op_Psi,(/nq,nb0/),'Op_Psi',name_sub)
-    
+
     DO itab=1,size(psi)
       DO ii=1,num
         Op_Psi(:,:)=ZERO
-      
+
         ! partial B to G
         !CALL BDP_TO_GDP_OF_SmolyakRep(PsiR(itab)%V,BasisnD%tab_basisPrimSG,&
         !                              tab_l,tab_nq,tab_nb,nb0)
@@ -2089,13 +2089,13 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRB_MPI
             jqf=jqf+nq
           ENDDO
         ENDDO
-        
+
         iqi=1
         iqf=nq
         DO ib0=1,nb0
           ! multiplication by sqRhoOVERJac
           PsiR(jqi:jqf)=PsiR(jqi:jqf)*sqRhoOVERJac(:)
-          
+
           ! derivative with respect to Qj
           DO j=1,mole%nb_act1
             derive_termQdyn(:)=(/mole%liste_QactTOQdyn(j),0/)
@@ -2104,7 +2104,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRB_MPI
             CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG,      &
                                               tab_l,tab_nq,derive_termQdyn)
           ENDDO ! for j=1,mole%nb_act1
-          
+
           OpPsiR(:)=ZERO
           DO i=1,mole%nb_act1
             PsiRi(:)=ZERO
@@ -2119,10 +2119,10 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRB_MPI
                                               tab_l,tab_nq,derive_termQdyn)
             OpPsiR(:)=OpPsiR(:)+PsiRi(:)
           ENDDO ! for i=1,mole%nb_act1
-          
+
           OpPsiR(:)=-HALF*OpPsiR(:)/(Jac(:)*sqRhoOVERJac(:))+VPsi(:,ib0)
           PsiR(jqi:jqf)=OpPsiR(:)
-          
+
           iqi=iqf+1
           iqf=iqf+nq
         ENDDO ! for ib0=1,nb0
@@ -2575,7 +2575,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
   logical :: lformatted=.TRUE.
 
   TYPE (param_d0MatOp), allocatable :: d0MatOp(:)
-  character (len=Line_len) :: FileName_RV
+  character (len=Line_len)          :: FileName_RV
 
 
   !----- for debuging ----------------------------------------------
@@ -2693,7 +2693,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
    ELSE IF (.NOT. para_Op%OpGrid(iterm00)%para_FileGrid%Save_MemGrid_done) THEN
      CALL alloc_NParray(V,(/ nq,nb0,nb0 /),'V',name_sub)
      allocate(d0MatOp(para_Op%para_ReadOp%nb_scalar_Op+2))
-     DO i=1,size(d0MatOp) 
+     DO i=1,size(d0MatOp)
        CALL Init_d0MatOp(d0MatOp(i),para_Op%param_TypeOp,para_Op%para_ReadOp%nb_elec)
      END DO
      !was
@@ -3038,7 +3038,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
   END SUBROUTINE get_OpGrid_type1_OF_ONEDP_FOR_SG4_new
 
 !=======================================================================================
-! new2 get_OpGrid_type1_OF_ONEDP_FOR_SG4 added SmolyakRep part  
+! new2 get_OpGrid_type1_OF_ONEDP_FOR_SG4 added SmolyakRep part
   SUBROUTINE get_OpGrid_type1_OF_ONEDP_FOR_SG4_new2(iG,tab_l,para_Op,GridOp)
   USE mod_system
   USE mod_nDindex
@@ -3255,7 +3255,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
            write(out_unitp,*) 'iG,nq,GridOp: save mem Grid',iG,nq,para_Op%OpGrid(iterm)%SRep%SmolyakRep(iG)%V
            CALL flush_perso(out_unitp)
          END IF
-         
+
        ELSE IF (associated(para_Op%OpGrid(iterm)%Grid)) THEN
          itabR = BasisnD%para_SGType2%tab_Sum_nq_OF_SRep(iG)
          nR    = BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
@@ -3710,4 +3710,3 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
   END SUBROUTINE get_OpGrid_type0_OF_ONEDP_FOR_SG4
 
 END MODULE mod_OpPsi_SG4
-
