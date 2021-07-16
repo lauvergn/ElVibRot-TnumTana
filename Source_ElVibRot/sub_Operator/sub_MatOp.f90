@@ -140,7 +140,10 @@ CONTAINS
             ! add MPI for sub_MatOp_direct1 later
             CALL sub_MatOp_direct1(para_Op)
           ELSE
-            IF (MatOp_omp == 2) THEN
+            ! IF (MatOp_omp == 3) THEN
+            !   CALL sub_MatOp_direct3(para_Op) ! for openmp
+            ! ELSE 
+              IF (MatOp_omp == 2) THEN
               CALL sub_MatOp_direct2(para_Op) ! for openmp
             ELSE IF (MatOp_omp == 1) THEN
               CALL sub_MatOp_direct1_old(para_Op)  ! for openmp but more memory

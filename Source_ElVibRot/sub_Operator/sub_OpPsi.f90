@@ -50,6 +50,7 @@ PUBLIC :: sub_PsiDia_TO_PsiAdia_WITH_MemGrid
 !PUBLIC :: sub_TabOpPsi_OF_ONEDP_FOR_SGtype4
 !PUBLIC :: sub_TabOpPsi_OF_ONEGDP_WithOp_FOR_SGtype4
 PUBLIC :: sub_psiHitermPsi
+PUBLIC :: sub_OpBasis_OneBF,sub_OpBasis_OneCBF
 
 CONTAINS
 !======================================================
@@ -579,6 +580,119 @@ CONTAINS
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_PrimOpPsi
+
+      SUBROUTINE sub_OpBasis_OneBF(Psi,OpPsi,para_Op,i)
+      USE mod_system
+      USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep
+      USE mod_SetOp
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_psi), intent(inout) :: Psi,OpPsi
+      TYPE (param_Op),  intent(in)    :: para_Op
+      integer,          intent(in)    :: i        ! index of the basis function
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter ::name_sub='sub_OpBasis_OneBF'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        write(out_unitp,*) 'Build Op(:,i) ',para_Op%nb_tot
+        CALL flush_perso(out_unitp)
+      END IF
+
+      psi = ZERO
+      IF (psi%cplx) THEN
+        psi%CvecB(i) = CONE
+      ELSE
+        psi%RvecB(i) = ONE
+      END IF
+
+      CALL Set_symab_OF_psiBasisRep(psi)
+      CALL sub_OpPsi(psi,OpPsi,para_Op)
+
+!----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'END ',name_sub
+       END IF
+!----------------------------------------------------------
+
+      END SUBROUTINE sub_OpBasis_OneBF
+      SUBROUTINE sub_OpBasis_OneCBF(Psi,OpPsi,para_Op,i)
+      USE mod_system
+      USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,dealloc_psi
+      USE mod_SetOp
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_psi), intent(inout) :: Psi,OpPsi
+      TYPE (param_Op),  intent(in)    :: para_Op
+      integer,          intent(in)    :: i        ! index of the basis function
+
+!------ working parameters --------------------------------
+      integer :: nb,nbc
+      real (kind=Rkind),    allocatable :: RBC(:)
+      complex (kind=Rkind), allocatable :: CBC(:)
+      TYPE (param_psi)                  :: Temp_OpPsi
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter ::name_sub='sub_OpBasis_OneCBF'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        write(out_unitp,*) 'Build Op(:,i) ',para_Op%nb_tot
+        CALL flush_perso(out_unitp)
+      END IF
+
+      CALL init_psi(Temp_OpPsi,para_Op,para_Op%cplx)
+      Temp_OpPsi%nb_tot = para_Op%nb_tot_ini
+
+      nbc = para_Op%nb_tot
+      nb  = psi%nb_tot
+
+      IF (para_Op%cplx) THEN
+        CALL alloc_NParray(CBC,[NBC], 'CBC', name_sub)
+        CBC(i) = CONE
+        CALL CVecBC_TO_CvecB(CBC,psi%CvecB,nbc,nb,psi%BasisnD)
+
+        CALL Set_symab_OF_psiBasisRep(psi)
+        CALL sub_OpPsi(psi,Temp_OpPsi,para_Op)
+
+        CALL CVecB_TO_CvecBC(Temp_OpPsi%CvecB,OpPsi%CvecB,nb,nbc,psi%BasisnD)
+
+        CALL dealloc_NParray(CBC, 'CBC', name_sub)
+
+      ELSE
+        CALL alloc_NParray(RBC,[NBC], 'RBC', name_sub)
+        RBC(i) = ONE
+        CALL RVecBC_TO_RvecB(RBC,psi%RvecB,nbc,nb,psi%BasisnD)
+
+        CALL Set_symab_OF_psiBasisRep(psi)
+        CALL sub_OpPsi(psi,Temp_OpPsi,para_Op)
+
+        CALL RVecB_TO_RvecBC(Temp_OpPsi%RvecB,OpPsi%RvecB,nb,nbc,psi%BasisnD)
+
+        CALL dealloc_NParray(RBC, 'RBC', name_sub)
+
+      END IF
+
+      CALL dealloc_psi(Temp_OpPsi)
+!     ----------------------------------------------------------
+       !write(out_unitp,*) 'out total memory: ',para_mem%mem_tot
+!----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'END ',name_sub
+       END IF
+!----------------------------------------------------------
+
+END SUBROUTINE sub_OpBasis_OneCBF
+
 !=======================================================================================
 
 !=======================================================================================
