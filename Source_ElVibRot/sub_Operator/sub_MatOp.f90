@@ -142,6 +142,7 @@ CONTAINS
           ELSE
             IF (MatOp_omp == 3) THEN
               CALL sub_MatOp_direct3(para_Op) ! for openmp
+              !CALL sub_MatOp_direct3_v1(para_Op) ! for openmp
             ELSE IF (MatOp_omp == 2) THEN
               CALL sub_MatOp_direct2(para_Op) ! for openmp
             ELSE IF (MatOp_omp == 1) THEN
@@ -2414,6 +2415,338 @@ CONTAINS
 
       USE mod_SetOp
       USE mod_ana_psi
+      USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,dealloc_psi,alloc_psi
+      USE mod_OpPsi
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op), intent(inout) :: para_Op
+
+!------ working parameters --------------------------------
+      integer       :: i,ith,i1,i2,nb_thread,nb_todo,nb_todo_th,nb_done,i_mat
+
+      real    (kind=Rkind), allocatable :: RMat_th(:,:)
+      complex (kind=Rkind), allocatable :: CMat_th(:,:)
+      TYPE (param_psi)                  :: psi
+      TYPE (param_psi),     allocatable :: OpPsi(:)
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter ::name_sub='sub_MatOp_direct3'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
+        !IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
+        CALL flush_perso(out_unitp)
+      END IF
+
+      IF (.NOT. para_Op%alloc_mat)                                              &
+                     CALL alloc_para_Op(para_Op,Mat=.TRUE.,Grid=.FALSE.)
+      IF (para_Op%mat_done) RETURN
+
+      para_Op%Make_mat = .FALSE.
+
+      IF (allocated(para_Op%List_Mat_i_todo)) THEN
+        nb_todo = size(para_Op%List_Mat_i_todo)
+      ELSE
+        write(out_unitp,*) 'List_Mat_i_todo is not allocated '
+        STOP
+      END IF
+
+!     - scaling of Op ---------------------------------------
+      para_Op%E0     = ZERO
+      para_Op%Esc    = ONE
+      para_Op%scaled = .FALSE.
+!-----------------------------------------------------------
+      IF (MatOp_omp /= 3) THEN
+        nb_thread = 1
+      ELSE
+        nb_thread = MatOp_maxth
+      END IF
+      IF (print_level>-1) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
+
+
+!       ----------------------------------------------------------
+!       - build H and H0
+
+
+        nb_todo_th = nb_todo/nb_thread
+        IF (mod(nb_todo,nb_thread) /= 0) nb_todo_th = nb_todo_th + 1
+
+        nb_done = 0
+
+        !$OMP parallel default(none)                                            &
+        !$OMP shared(para_Op,print_level,out_unitp,MPI_id)                      &
+        !$OMP shared(nb_todo,nb_todo_th,nb_done)                                &
+        !$OMP firstprivate(psi,OpPsi)                                           &
+        !$OMP private(i,ith,i1,i2,i_mat)                                        &
+        !$OMP num_threads(nb_thread)
+
+        ith = 0
+        !$ ith = omp_get_thread_num()
+        i1 = ith*nb_todo_th + 1
+        i2 = min((ith+1)*nb_todo_th,nb_todo)
+        write(out_unitp,*) 'ith,i1,i2',ith,i1,i2
+
+        IF (print_level > -1 .AND. ith == 0) THEN
+          write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
+          write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
+          CALL flush_perso(out_unitp)
+        END IF
+
+        CALL init_psi(psi,para_Op,para_Op%cplx)
+        IF (para_Op%para_ReadOp%Op_WithContracRVec) THEN
+          CALL alloc_psi(psi,BasisRep_contrac=.FALSE.)
+        ELSE
+          CALL alloc_psi(psi)
+        END IF
+
+        allocate(OpPsi(i1:i2))
+        DO i=i1,i2
+          CALL init_psi(OpPsi(i),para_Op,para_Op%cplx) ! here OpPsi is the contracted one is needed
+          CALL alloc_psi(OpPsi(i))
+        END DO
+
+        DO i=i1,i2
+          i_mat = para_Op%List_Mat_i_todo(i)
+          !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
+
+
+          IF (para_Op%para_ReadOp%Op_WithContracRVec) THEN
+            CALL sub_OpBasis_OneCBF(Psi,OpPsi(i),para_Op,i_mat)
+          ELSE
+            CALL sub_OpBasis_OneBF(Psi,OpPsi(i),para_Op,i_mat)
+          END IF
+
+          !$OMP ATOMIC
+          nb_done = nb_done + 1
+
+          IF (para_Op%para_ReadOp%save_MatOp) THEN
+            CALL save_Psi_FOR_MatOp_i(OpPsi(i),i_mat,para_Op)
+          END IF
+
+          IF (mod(nb_done,max(1,int(nb_todo/10))) == 0 .AND. print_level > -1 &
+              .AND. MPI_id==0) THEN
+            write(out_unitp,'(a)',ADVANCE='no') '---'
+            CALL flush_perso(out_unitp)
+          END IF
+
+        END DO
+
+        IF (para_Op%cplx) THEN
+          DO i=i1,i2
+            i_mat = para_Op%List_Mat_i_todo(i)
+            para_Op%Cmat(:,i_mat) = OpPsi(i)%CvecB(:)
+            CALL dealloc_psi(OpPsi(i))
+          END DO
+        ELSE
+          DO i=i1,i2
+            i_mat = para_Op%List_Mat_i_todo(i)
+            para_Op%Rmat(:,i_mat) = OpPsi(i)%RvecB(:)
+            CALL dealloc_psi(OpPsi(i))
+          END DO
+        END IF
+
+        deallocate(OpPsi)
+        CALL dealloc_psi(psi)
+        !$OMP end parallel
+
+        IF (print_level > -1 .AND. MPI_id==0) THEN
+          write(out_unitp,'(a)',ADVANCE='yes') '----]'
+          CALL flush_perso(out_unitp)
+        END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) para_Op%name_Op,' non-symmetrized'
+        IF (para_Op%cplx) THEN
+          CALL Write_Mat(para_Op%Cmat,out_unitp,3)
+        ELSE
+          CALL Write_Mat(para_Op%Rmat,out_unitp,5)
+        END IF
+      END IF
+
+!     ----------------------------------------------------------
+      para_Op%Make_mat = .TRUE.
+
+!----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'END ',name_sub
+       END IF
+!----------------------------------------------------------
+
+      END SUBROUTINE sub_MatOp_direct3
+      SUBROUTINE sub_MatOp_direct3_v2(para_Op)
+      USE mod_system
+!$    USE omp_lib, only : OMP_GET_THREAD_NUM
+
+      USE mod_SetOp
+      USE mod_ana_psi
+      USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,dealloc_psi
+      USE mod_OpPsi
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op), intent(inout) :: para_Op
+
+!------ working parameters --------------------------------
+      integer       :: i,ith,i1,i2,nb_thread,nb_todo,nb_todo_th,nb_done,i_mat
+
+      real    (kind=Rkind), allocatable :: RMat_th(:,:)
+      complex (kind=Rkind), allocatable :: CMat_th(:,:)
+      TYPE (param_psi)   :: psi,OpPsi
+
+!----- for debuging --------------------------------------------------
+      character (len=*), parameter ::name_sub='sub_MatOp_direct3_v2'
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*)
+        write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
+        !IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
+        CALL flush_perso(out_unitp)
+      END IF
+
+      IF (.NOT. para_Op%alloc_mat)                                              &
+                     CALL alloc_para_Op(para_Op,Mat=.TRUE.,Grid=.FALSE.)
+      IF (para_Op%mat_done) RETURN
+
+      para_Op%Make_mat = .FALSE.
+
+      IF (allocated(para_Op%List_Mat_i_todo)) THEN
+        nb_todo = size(para_Op%List_Mat_i_todo)
+      ELSE
+        write(out_unitp,*) 'List_Mat_i_todo is not allocated '
+        STOP
+      END IF
+
+!     - scaling of Op ---------------------------------------
+      para_Op%E0     = ZERO
+      para_Op%Esc    = ONE
+      para_Op%scaled = .FALSE.
+!-----------------------------------------------------------
+      IF (MatOp_omp /= 3) THEN
+        nb_thread = 1
+      ELSE
+        nb_thread = MatOp_maxth
+      END IF
+      IF (print_level>-1) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
+
+
+!       ----------------------------------------------------------
+!       - build H and H0
+        IF (print_level > -1) THEN
+          write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
+          write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
+          CALL flush_perso(out_unitp)
+        END IF
+
+        nb_todo_th = nb_todo/nb_thread
+        IF (mod(nb_todo,nb_thread) /= 0) nb_todo_th = nb_todo_th + 1
+
+        nb_done = 0
+
+        !$OMP parallel default(none)                                            &
+        !$OMP shared(para_Op,print_level,out_unitp,MPI_id)              &
+        !$OMP shared(nb_todo,nb_todo_th,nb_done)                                &
+        !$OMP firstprivate(psi,OpPsi)                                            &
+        !$OMP private(i,ith,i1,i2,RMat_th,CMat_th,i_mat)                        &
+        !$OMP num_threads(nb_thread)
+
+        ith = 0
+        !$ ith = omp_get_thread_num()
+        i1 = ith*nb_todo_th + 1
+        i2 = min((ith+1)*nb_todo_th,nb_todo)
+        write(out_unitp,*) 'ith,i1,i2',ith,i1,i2
+
+        CALL init_psi(psi,para_Op,para_Op%cplx)
+        CALL init_psi(OpPsi,para_Op,para_Op%cplx)
+
+        IF (para_Op%cplx) THEN
+          allocate(CMat_th(para_Op%nb_tot,i1:i2))
+        ELSE
+          allocate(RMat_th(para_Op%nb_tot,i1:i2))
+        END IF
+
+        DO i=i1,i2
+          i_mat = para_Op%List_Mat_i_todo(i)
+          !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
+
+          CALL sub_OpBasis_OneBF(Psi,OpPsi,para_Op,i_mat)
+
+          IF (para_Op%cplx) THEN
+            CMat_th(:,i)  = OpPsi%CvecB(:) !< Rmat calculated
+          ELSE
+            RMat_th(:,i)  = OpPsi%RvecB(:) !< Rmat calculated
+          END IF
+
+          !$OMP ATOMIC
+          nb_done = nb_done + 1
+
+          IF (para_Op%para_ReadOp%save_MatOp) THEN
+            CALL save_Psi_FOR_MatOp_i(OpPsi,i_mat,para_Op)
+          END IF
+
+          IF (mod(nb_done,max(1,int(nb_todo/10))) == 0 .AND. print_level > -1 &
+              .AND. MPI_id==0) THEN
+            write(out_unitp,'(a)',ADVANCE='no') '---'
+            CALL flush_perso(out_unitp)
+          END IF
+
+        END DO
+
+        IF (para_Op%cplx) THEN
+          DO i=i1,i2
+            i_mat = para_Op%List_Mat_i_todo(i)
+            para_Op%Cmat(:,i_mat) = CMat_th(:,i)
+          END DO
+          deallocate(CMat_th)
+        ELSE
+          DO i=i1,i2
+            i_mat = para_Op%List_Mat_i_todo(i)
+            para_Op%Rmat(:,i_mat) = RMat_th(:,i)
+          END DO
+          deallocate(RMat_th)
+        END IF
+
+        CALL dealloc_psi(OpPsi)
+        CALL dealloc_psi(psi)
+        !$OMP end parallel
+
+        IF (print_level > -1 .AND. MPI_id==0) THEN
+          write(out_unitp,'(a)',ADVANCE='yes') '----]'
+          CALL flush_perso(out_unitp)
+        END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) para_Op%name_Op,' non-symmetrized'
+        IF (para_Op%cplx) THEN
+          CALL Write_Mat(para_Op%Cmat,out_unitp,3)
+        ELSE
+          CALL Write_Mat(para_Op%Rmat,out_unitp,5)
+        END IF
+      END IF
+
+!     ----------------------------------------------------------
+      para_Op%Make_mat = .TRUE.
+
+!----------------------------------------------------------
+       IF (debug) THEN
+         write(out_unitp,*) 'END ',name_sub
+       END IF
+!----------------------------------------------------------
+
+END SUBROUTINE sub_MatOp_direct3_v2
+      SUBROUTINE sub_MatOp_direct3_v1(para_Op)
+      USE mod_system
+!$    USE omp_lib, only : OMP_GET_THREAD_NUM
+
+      USE mod_SetOp
+      USE mod_ana_psi
       USE mod_psi,     ONLY : param_psi,Set_symab_OF_psiBasisRep,dealloc_psi
       USE mod_OpPsi
       IMPLICIT NONE
@@ -2430,7 +2763,7 @@ CONTAINS
       TYPE (param_psi)   :: psi,Hpsi
 
 !----- for debuging --------------------------------------------------
-      character (len=*), parameter ::name_sub='sub_MatOp_direct3'
+      character (len=*), parameter ::name_sub='sub_MatOp_direct3_v1'
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
@@ -2508,10 +2841,7 @@ CONTAINS
             i_mat = para_Op%List_Mat_i_todo(i)
             !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
 
-            psi = ZERO
-            psi%CvecB(i_mat) = ONE
-            CALL Set_symab_OF_psiBasisRep(psi)
-            CALL sub_OpPsi(psi,Hpsi,para_Op)
+            CALL sub_OpBasis_OneBF(Psi,Hpsi,para_Op,i_mat)
             CMat_th(:,i)  = Hpsi%CvecB(:) !< Rmat calculated
 
             !$OMP ATOMIC
@@ -2550,10 +2880,8 @@ CONTAINS
             i_mat = para_Op%List_Mat_i_todo(i)
             !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
 
-            psi = ZERO
-            psi%RvecB(i_mat) = ONE
-            CALL Set_symab_OF_psiBasisRep(psi)
-            CALL sub_OpPsi(psi,Hpsi,para_Op)
+            CALL sub_OpBasis_OneBF(Psi,Hpsi,para_Op,i_mat)
+
             RMat_th(:,i)  = Hpsi%RvecB(:) !< Rmat calculated
 
             !$OMP ATOMIC
@@ -2614,8 +2942,8 @@ CONTAINS
        END IF
 !----------------------------------------------------------
 
-      END SUBROUTINE sub_MatOp_direct3
-      SUBROUTINE sub_MatOp_direct3_old(para_Op)
+END SUBROUTINE sub_MatOp_direct3_v1
+      SUBROUTINE sub_MatOp_direct3_v0(para_Op)
       USE mod_system
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
 
@@ -2637,7 +2965,7 @@ CONTAINS
       TYPE (param_psi)   :: psi,Hpsi
 
 !----- for debuging --------------------------------------------------
-      character (len=*), parameter ::name_sub='sub_MatOp_direct3_old'
+      character (len=*), parameter ::name_sub='sub_MatOp_direct3_v0'
       logical, parameter :: debug=.FALSE.
       !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
@@ -2814,7 +3142,7 @@ CONTAINS
        END IF
 !----------------------------------------------------------
 
-END SUBROUTINE sub_MatOp_direct3_old
+END SUBROUTINE sub_MatOp_direct3_v0
 
       SUBROUTINE sub_MatOp_direct2(para_Op)
       USE mod_system
@@ -4179,6 +4507,61 @@ SUBROUTINE save_MatOp_i(para_Op,i)
 !----------------------------------------------------------
 
 END SUBROUTINE save_MatOp_i
+
+SUBROUTINE save_Psi_FOR_MatOp_i(psi,i,para_Op)
+  USE mod_system
+  USE mod_psi,     ONLY : param_psi
+  USE mod_SetOp
+  IMPLICIT NONE
+
+  TYPE (param_psi), intent(in)    :: psi
+  integer,          intent(in)    :: i
+  TYPE (param_Op),  intent(in)    :: para_Op
+
+  !------ working parameters --------------------------------
+  integer    :: UnitMat
+
+  !----- for debuging --------------------------------------------------
+  character (len=*), parameter ::name_sub='save_Psi_FOR_MatOp_i'
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
+  !---------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'i',i
+    CALL flush_perso(out_unitp)
+  END IF
+  !----------------------------------------------------------
+
+  UnitMat = para_Op%para_ReadOp%FileMat%unit
+  IF (debug) write(out_unitp,*) 'Save MatOp, unit',UnitMat
+
+!$OMP CRITICAL (save_Psi_FOR_MatOp_i_CRIT)
+
+  IF (para_Op%para_ReadOp%FileMat%formatted) THEN
+    IF (para_Op%cplx) THEN
+      write(UnitMat,*) i,psi%CvecB(:)
+    ELSE
+      write(UnitMat,*) i,psi%RvecB(:)
+    END IF
+  ELSE
+    IF (para_Op%cplx) THEN
+      write(UnitMat) i,psi%CvecB(:)
+    ELSE
+      write(UnitMat) i,psi%RvecB(:)
+    END IF
+  END IF
+  CALL flush_perso(UnitMat)
+
+!$OMP END CRITICAL (save_Psi_FOR_MatOp_i_CRIT)
+
+  !----------------------------------------------------------
+  IF (debug) THEN
+   write(out_unitp,*) 'The column',i,' is saved on unit',UnitMat
+   write(out_unitp,*) 'END ',name_sub
+  END IF
+
+END SUBROUTINE save_Psi_FOR_MatOp_i
 
 SUBROUTINE check_Restart_MatOp(para_Op)
   USE mod_system
