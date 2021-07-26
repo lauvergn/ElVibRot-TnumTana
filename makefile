@@ -1,8 +1,8 @@
 #===============================================================================
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
- F90 = mpifort
-# F90 = gfortran
+# F90 = mpifort
+ F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
@@ -380,7 +380,7 @@ else
   F90_VER = $(shell $(F90) --version | head -1 )
 endif
 
-GIT_Branch = $(shell git status | grep "On branch")
+GIT_Branch := $(shell git status | grep "On branch")
 
 #===============================================================================
 #===============================================================================

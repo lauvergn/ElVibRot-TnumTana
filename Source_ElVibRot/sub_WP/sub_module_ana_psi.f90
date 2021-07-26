@@ -2158,16 +2158,16 @@ END SUBROUTINE sub_analyze_psi
       IF (norm2GridRep) THEN
         !- normalization of psiGridRep -------------------------
         IF (psi%cplx) THEN
-          psi%CvecG(:) = psi%CvecG(:) *cmplx(temp,ZERO,kind=Rkind)
+          IF(keep_MPI) psi%CvecG(:) = psi%CvecG(:) *cmplx(temp,ZERO,kind=Rkind)
         ELSE
-          psi%RvecG(:) = psi%RvecG(:) * temp
+          IF(keep_MPI) psi%RvecG(:) = psi%RvecG(:) * temp
         END IF
       ELSE
         !- normalization of psiBasisRep -------------------------
         IF (psi%cplx) THEN
-          psi%CvecB(:) = psi%CvecB(:) *cmplx(temp,ZERO,kind=Rkind)
+          IF(keep_MPI) psi%CvecB(:) = psi%CvecB(:) *cmplx(temp,ZERO,kind=Rkind)
         ELSE
-          psi%RvecB(:) = psi%RvecB(:) * temp
+          IF(keep_MPI) psi%RvecB(:) = psi%RvecB(:) * temp
         END IF
       END IF
       psi%norm2 = ONE
@@ -2356,6 +2356,7 @@ END IF
   USE mod_system
   USE mod_psi_set_alloc
   USE mod_basis_BtoG_GtoB_SGType4
+  USE mod_MPI_aux
   IMPLICIT NONE
 
 !- variables for the WP ----------------------------------------
@@ -2369,6 +2370,7 @@ END IF
   integer                           :: iG,iq,nq_AT_iG
   complex (kind=Rkind), allocatable :: CVecG(:,:)
   real (kind=Rkind),    allocatable :: RVecG(:,:)
+  Integer                           :: d1,d2
 
   !- for debuging --------------------------------------------------
   character(len=*), parameter :: name_sub='Channel_weight_SG4_grid'
@@ -2399,10 +2401,29 @@ END IF
   nb_be = get_nb_be_FROM_psi(psi)
   nb_bi = get_nb_bi_FROM_psi(psi)
 
+  d1=lbound(WSRep%SmolyakRep,dim=1)
+  d2=ubound(WSRep%SmolyakRep,dim=1)
+
+  IF(openmpi) THEN
+    IF(MPI_scheme==1) THEN
+      d1=iGs_MPI(1,MPI_id)
+      d2=iGs_MPI(2,MPI_id)
+    ELSEIF(MPI_scheme==3) THEN
+      IF(MPI_nodes_p0) THEN
+        d1=iGs_MPI(1,MPI_id)
+        d2=iGs_MPI(2,MPI_sub_id(2))
+      ELSE
+        d1=0
+        d2=-1
+      ENDIF
+    ENDIF
+  ENDIF
+
   IF (psi%cplx) THEN
     ! psi almost in the right Smolyak representation.
     iq = 0
-    DO iG=lbound(WSRep%SmolyakRep,dim=1),ubound(WSRep%SmolyakRep,dim=1)
+    ! DO iG=lbound(WSRep%SmolyakRep,dim=1),ubound(WSRep%SmolyakRep,dim=1)
+    DO iG=d1,d2
       nq_AT_iG = psi%BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
       nb0      = psi%BasisnD%para_SGType2%nb0
 !write(6,*) 'iG ',iG
@@ -2430,7 +2451,8 @@ END IF
    ELSE
      ! psi almost in the right Smolyak representation.
      iq = 0
-     DO iG=lbound(WSRep%SmolyakRep,dim=1),ubound(WSRep%SmolyakRep,dim=1)
+     ! DO iG=lbound(WSRep%SmolyakRep,dim=1),ubound(WSRep%SmolyakRep,dim=1)
+     DO iG=d1,d2
        nq_AT_iG = psi%BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
 
        RVecG = reshape(Psi%RvecG(iq+1:iq+nq_AT_iG),shape=[nq_AT_iG,psi%BasisnD%para_SGType2%nb0])
@@ -2450,6 +2472,11 @@ END IF
      END DO
   END IF
 
+  IF(openmpi .AND. keep_MPI .AND. MPI_scheme/=2) THEN
+    CALL MPI_Reduce_sum_matrix(tab_WeightChannels,1,nb_bi,1,nb_be,root_MPI,MS=MPI_scheme)
+    CALL MPI_Bcast_matrix(tab_WeightChannels,1,nb_bi,1,nb_be,root_MPI,MS=MPI_scheme)
+  ENDIF
+
   CALL dealloc_SmolyakRep(WSRep)
 !------------------------------------------------------
   IF (debug) THEN
@@ -2463,6 +2490,7 @@ SUBROUTINE Channel_weight_SG4_basis(tab_WeightChannels,psi)
 USE mod_system
 USE mod_psi_set_alloc
 USE mod_basis_BtoG_GtoB_SGType4
+USE mod_MPI_aux
 IMPLICIT NONE
 
 !- variables for the WP ----------------------------------------

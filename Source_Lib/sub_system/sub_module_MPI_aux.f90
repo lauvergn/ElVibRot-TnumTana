@@ -712,29 +712,38 @@ MODULE mod_MPI_aux
 !---------------------------------------------------------------------------------------
 !< interface: MPI_Bcast_matrix
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_Bcast_matrix_real(matrix,d1_1,d1_2,d2_1,d2_2,source,shift1,shift2)
+    SUBROUTINE MPI_Bcast_matrix_real(matrix,d1_1,d1_2,d2_1,d2_2,source,shift1,shift2,MS)
       IMPLICIT NONE
       
-      Real(kind=Rkind),intent(inout)      :: matrix(:,:)
-      Integer,                 intent(in) :: d1_1
-      Integer,                 intent(in) :: d1_2
-      Integer,                 intent(in) :: d2_1
-      Integer,                 intent(in) :: d2_2
-      Integer,                 intent(in) :: source
-      Integer,Optional,        intent(in) :: shift1
-      Integer,Optional,        intent(in) :: shift2
-      
-      Real(kind=Rkind),allocatable        :: array(:)
-      Integer                             :: length
-      Integer                             :: d1_l
-      Integer                             :: d1_u
-      Integer                             :: d2_l
-      Integer                             :: d2_u
-      Integer                             :: ii
-      Integer                             :: jj
-      Integer                             :: kk
+      Real(kind=Rkind),            intent(inout) :: matrix(:,:)
+      Integer,                        intent(in) :: d1_1
+      Integer,                        intent(in) :: d1_2
+      Integer,                        intent(in) :: d2_1
+      Integer,                        intent(in) :: d2_2
+      Integer,                        intent(in) :: source
+      Integer,Optional,               intent(in) :: shift1
+      Integer,Optional,               intent(in) :: shift2
+      Integer,optional,               intent(in) :: MS
+
+      Real(kind=Rkind),allocatable               :: array(:)
+      Integer                                    :: length
+      Integer                                    :: d1_l
+      Integer                                    :: d1_u
+      Integer                                    :: d2_l
+      Integer                                    :: d2_u
+      Integer                                    :: ii
+      Integer                                    :: jj
+      Integer                                    :: kk
       
 #if(run_MPI)
+
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) THEN
+          IF(MPI_np_node<=1) Return
+          MPI_COMM_current=MPI_NODE_0_COMM
+        ENDIF
+      ENDIF
 
       d1_l=d1_1
       d1_u=d1_2
@@ -764,7 +773,7 @@ MODULE mod_MPI_aux
       ENDIF
 
       CALL MPI_Bcast(array,Int(length,kind=MPI_INTEGER_KIND),Real_MPI,                 &
-                           Int(source,kind=MPI_INTEGER_KIND),MPI_COMM_WORLD,MPI_err)
+                           Int(source,kind=MPI_INTEGER_KIND),MPI_COMM_current,MPI_err)
 
       IF(MPI_id/=source) THEN
         kk=0
@@ -782,29 +791,38 @@ MODULE mod_MPI_aux
     ENDSUBROUTINE MPI_Bcast_matrix_real
 
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_Bcast_matrix_int(matrix,d1_1,d1_2,d2_1,d2_2,source,shift1,shift2)
+    SUBROUTINE MPI_Bcast_matrix_int(matrix,d1_1,d1_2,d2_1,d2_2,source,shift1,shift2,MS)
       IMPLICIT NONE
       
-      Integer,intent(inout)               :: matrix(:,:)
-      Integer,                 intent(in) :: d1_1
-      Integer,                 intent(in) :: d1_2
-      Integer,                 intent(in) :: d2_1
-      Integer,                 intent(in) :: d2_2
-      Integer,                 intent(in) :: source
-      Integer,Optional,        intent(in) :: shift1
-      Integer,Optional,        intent(in) :: shift2
-      
-      Integer,allocatable                 :: array(:)
-      Integer                             :: length
-      Integer                             :: d1_l
-      Integer                             :: d1_u
-      Integer                             :: d2_l
-      Integer                             :: d2_u
-      Integer                             :: ii
-      Integer                             :: jj
-      Integer                             :: kk
+      Integer,                      intent(inout):: matrix(:,:)
+      Integer,                        intent(in) :: d1_1
+      Integer,                        intent(in) :: d1_2
+      Integer,                        intent(in) :: d2_1
+      Integer,                        intent(in) :: d2_2
+      Integer,                        intent(in) :: source
+      Integer,Optional,               intent(in) :: shift1
+      Integer,Optional,               intent(in) :: shift2
+      Integer,optional,               intent(in) :: MS
+
+      Integer,allocatable                        :: array(:)
+      Integer                                    :: length
+      Integer                                    :: d1_l
+      Integer                                    :: d1_u
+      Integer                                    :: d2_l
+      Integer                                    :: d2_u
+      Integer                                    :: ii
+      Integer                                    :: jj
+      Integer                                    :: kk
 
 #if(run_MPI)
+
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) THEN
+          IF(MPI_np_node<=1) Return
+          MPI_COMM_current=MPI_NODE_0_COMM
+        ENDIF
+      ENDIF
 
       d1_l=d1_1
       d1_u=d1_2
@@ -834,7 +852,7 @@ MODULE mod_MPI_aux
       ENDIF
 
       CALL MPI_Bcast(array,Int(length,kind=MPI_INTEGER_KIND),Int_MPI,                  &
-                           Int(source,kind=MPI_INTEGER_KIND),MPI_COMM_WORLD,MPI_err)
+                           Int(source,kind=MPI_INTEGER_KIND),MPI_COMM_current,MPI_err)
 
       IF(MPI_id/=source) THEN
         kk=0
@@ -845,36 +863,45 @@ MODULE mod_MPI_aux
           ENDDO 
         ENDDO
       ENDIF
-      
+
       deallocate(array)
 
 #endif
     ENDSUBROUTINE MPI_Bcast_matrix_int
     
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_Bcast_matrix_complex(matrix,d1_1,d1_2,d2_1,d2_2,source,shift1,shift2)
+    SUBROUTINE MPI_Bcast_matrix_complex(matrix,d1_1,d1_2,d2_1,d2_2,source,shift1,shift2,MS)
       IMPLICIT NONE
       
-      Complex(kind=Rkind),  intent(inout) :: matrix(:,:)
-      Integer,                 intent(in) :: d1_1
-      Integer,                 intent(in) :: d1_2
-      Integer,                 intent(in) :: d2_1
-      Integer,                 intent(in) :: d2_2
-      Integer,                 intent(in) :: source
-      Integer,Optional,        intent(in) :: shift1
-      Integer,Optional,        intent(in) :: shift2
+      Complex(kind=Rkind),         intent(inout) :: matrix(:,:)
+      Integer,                        intent(in) :: d1_1
+      Integer,                        intent(in) :: d1_2
+      Integer,                        intent(in) :: d2_1
+      Integer,                        intent(in) :: d2_2
+      Integer,                        intent(in) :: source
+      Integer,Optional,               intent(in) :: shift1
+      Integer,Optional,               intent(in) :: shift2
+      Integer,optional,               intent(in) :: MS
 
-      Complex(kind=Rkind),allocatable     :: array(:)
-      Integer                             :: length
-      Integer                             :: d1_l
-      Integer                             :: d1_u
-      Integer                             :: d2_l
-      Integer                             :: d2_u
-      Integer                             :: ii
-      Integer                             :: jj
-      Integer                             :: kk
+      Complex(kind=Rkind),allocatable            :: array(:)
+      Integer                                    :: length
+      Integer                                    :: d1_l
+      Integer                                    :: d1_u
+      Integer                                    :: d2_l
+      Integer                                    :: d2_u
+      Integer                                    :: ii
+      Integer                                    :: jj
+      Integer                                    :: kk
 
 #if(run_MPI)
+
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) THEN
+          IF(MPI_np_node<=1) Return
+          MPI_COMM_current=MPI_NODE_0_COMM
+        ENDIF
+      ENDIF
 
       d1_l=d1_1
       d1_u=d1_2
@@ -904,7 +931,7 @@ MODULE mod_MPI_aux
       ENDIF
 
       CALL MPI_Bcast(array,Int(length,kind=MPI_INTEGER_KIND),Cplx_MPI,                 &
-                           Int(source,kind=MPI_INTEGER_KIND),MPI_COMM_WORLD,MPI_err)
+                           Int(source,kind=MPI_INTEGER_KIND),MPI_COMM_current,MPI_err)
 
       IF(MPI_id/=source) THEN
         kk=0
@@ -925,7 +952,7 @@ MODULE mod_MPI_aux
 !---------------------------------------------------------------------------------------
 ! interface: MPI_Reduce_sum_matrix
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_Reduce_sum_matrix_complex(matrix,d1_l,d1_u,d2_l,d2_u,destination)
+    SUBROUTINE MPI_Reduce_sum_matrix_complex(matrix,d1_l,d1_u,d2_l,d2_u,destination,MS)
       IMPLICIT NONE
       
       Complex(kind=Rkind),intent(inout)         :: matrix(:,:)
@@ -934,6 +961,7 @@ MODULE mod_MPI_aux
       Integer,intent(in)                        :: d2_l
       Integer,intent(in)                        :: d2_u
       Integer(kind=MPI_INTEGER_KIND),intent(in) :: destination
+      Integer,optional,              intent(in) :: MS
       
       Complex(kind=Rkind),allocatable           :: array(:)
       Complex(kind=Rkind),allocatable           :: array_des(:)
@@ -943,6 +971,16 @@ MODULE mod_MPI_aux
       Integer                                   :: kk
 
 #if(run_MPI)
+
+     IF(MPI_np==1) Return
+
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) THEN
+          IF(MPI_np_node<=1) Return
+          MPI_COMM_current=MPI_NODE_0_COMM
+        ENDIF
+      ENDIF
 
       length=(d1_u-d1_l+1)*(d2_u-d2_l+1)
       allocate(array(length))
@@ -956,9 +994,9 @@ MODULE mod_MPI_aux
       ENDDO
 
       IF(length>huge(0_4)) Stop 'MPI_Reduce_sum_matrix_real: length > 32-bit integer'
-      
+
       CALL MPI_Reduce(array,array_des,Int(length,kind=MPI_INTEGER_KIND),               &
-                      Cplx_MPI,MPI_SUM,destination,MPI_COMM_WORLD,MPI_err)
+                      Cplx_MPI,MPI_SUM,destination,MPI_COMM_current,MPI_err)
 
       IF(MPI_id==destination) THEN
         kk=0
@@ -977,7 +1015,7 @@ MODULE mod_MPI_aux
     ENDSUBROUTINE MPI_Reduce_sum_matrix_complex
     
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_Reduce_sum_matrix_real(matrix,d1_l,d1_u,d2_l,d2_u,destination)
+    SUBROUTINE MPI_Reduce_sum_matrix_real(matrix,d1_l,d1_u,d2_l,d2_u,destination,MS)
       IMPLICIT NONE
       
       Real(kind=Rkind),intent(inout)            :: matrix(:,:)
@@ -986,7 +1024,8 @@ MODULE mod_MPI_aux
       Integer,intent(in)                        :: d2_l
       Integer,intent(in)                        :: d2_u
       Integer(kind=MPI_INTEGER_KIND),intent(in) :: destination
-      
+      Integer,optional,              intent(in) :: MS
+
       Real(kind=Rkind),allocatable              :: array(:)
       Real(kind=Rkind),allocatable              :: array_des(:)
       Integer                                   :: length
@@ -995,6 +1034,16 @@ MODULE mod_MPI_aux
       Integer                                   :: kk
 
 #if(run_MPI)
+
+      IF(MPI_np==1) Return
+
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) THEN
+          IF(MPI_np_node<=1) Return
+          MPI_COMM_current=MPI_NODE_0_COMM
+        ENDIF
+      ENDIF
 
       length=(d1_u-d1_l+1)*(d2_u-d2_l+1)
       allocate(array(length))
@@ -1008,9 +1057,9 @@ MODULE mod_MPI_aux
       ENDDO
 
       IF(length>huge(0_4)) Stop 'MPI_Reduce_sum_matrix_real: length > 32-bit integer'
-      
+
       CALL MPI_Reduce(array,array_des,Int(length,kind=MPI_INTEGER_KIND),               &
-                      Real_MPI,MPI_SUM,destination,MPI_COMM_WORLD,MPI_err)
+                      Real_MPI,MPI_SUM,destination,MPI_COMM_current,MPI_err)
 
       IF(MPI_id==destination) THEN
         kk=0
@@ -1029,7 +1078,7 @@ MODULE mod_MPI_aux
     ENDSUBROUTINE MPI_Reduce_sum_matrix_real
 
 !---------------------------------------------------------------------------------------
-    SUBROUTINE MPI_Reduce_sum_matrix_int(matrix,d1_l,d1_u,d2_l,d2_u,destination)
+    SUBROUTINE MPI_Reduce_sum_matrix_int(matrix,d1_l,d1_u,d2_l,d2_u,destination,MS)
       IMPLICIT NONE
       
       Integer,intent(inout)                     :: matrix(:,:)
@@ -1038,7 +1087,8 @@ MODULE mod_MPI_aux
       Integer,intent(in)                        :: d2_l
       Integer,intent(in)                        :: d2_u
       Integer(kind=MPI_INTEGER_KIND),intent(in) :: destination
-      
+      Integer,optional,              intent(in) :: MS
+
       Integer,allocatable                       :: array(:)
       Integer,allocatable                       :: array_des(:)
       Integer                                   :: length
@@ -1047,6 +1097,16 @@ MODULE mod_MPI_aux
       Integer                                   :: kk
 
 #if(run_MPI)
+
+      IF(MPI_np==1) Return
+
+      MPI_COMM_current=MPI_COMM_WORLD
+      IF(present(MS)) THEN
+        IF(MS==3) THEN
+          IF(MPI_np_node<=1) Return
+          MPI_COMM_current=MPI_NODE_0_COMM
+        ENDIF
+      ENDIF
 
       length=(d1_u-d1_l+1)*(d2_u-d2_l+1)
       allocate(array(length))
@@ -1062,8 +1122,8 @@ MODULE mod_MPI_aux
       IF(length>huge(0_4)) Stop 'MPI_Reduce_sum_matrix_real: length > 32-bit integer'
 
       CALL MPI_Reduce(array,array_des,Int(length,kind=MPI_INTEGER_KIND),               &
-                      Int_MPI,MPI_SUM,destination,MPI_COMM_WORLD,MPI_err)
-      
+                        Int_MPI,MPI_SUM,destination,MPI_COMM_current,MPI_err)
+ 
       IF(MPI_id==destination) THEN
         kk=0
         DO ii=d2_l,d2_u

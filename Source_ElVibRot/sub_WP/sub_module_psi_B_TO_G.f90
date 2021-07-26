@@ -218,12 +218,12 @@ CONTAINS
       CALL alloc_psi(psi,BasisRep=.TRUE.)
 !---- end initisalisation -------------------------------
       IF (psi%cplx) THEN
-        IF ( .NOT. allocated(psi%CvecG) ) THEN
+        IF ( .NOT. allocated(psi%CvecG) .AND. keep_MPI) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' psi%CvecG MUST be allocated !!'
           STOP
         END IF
-        psi%CvecB(:) = CZERO
+        IF(keep_MPI)psi%CvecB(:) = CZERO
         IF (NewBasisEl) THEN
           CALL RecCvecG_TO_CvecB(psi%CvecG,psi%CvecB,psi%nb_qaie,psi%nb_baie,psi%BasisnD)
         ELSE IF (psi%BasisnD%SparseGrid_type == 4) THEN ! special case with SG4
@@ -245,7 +245,7 @@ CONTAINS
         END IF
 
       ELSE
-        IF ( .NOT. allocated(psi%RvecG) ) THEN
+        IF ( .NOT. allocated(psi%RvecG) .AND. keep_MPI) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' psi%RvecG MUST be allocated !!'
           STOP
