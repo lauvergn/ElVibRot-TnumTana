@@ -11,13 +11,15 @@ cd $DIR_vib
  make
 cd $here
 
-#export OMP_NUM_THREADS=1
+#export OMP_NUM_THREADS=2
+
+rm MatOp_H
 
  x1=0.538516066
  x2=0.461483933
 
 nice $DIR_vib/vib << ** >res
- &system PMatOp_omp=2 PMatOp_maxth=1 printlevel=2 /
+ &system PMatOp_omp=3 printlevel=2 /
  &constantes /
  &variables zmat=T nat=4 sym=T nrho=2 /
 C
@@ -51,15 +53,5 @@ dh 0.0
 
  &inactives /
  &actives test=$test comput_S=f direct=2 make_MatOp=t Op_WithContracRVec=t save_MatOp=t restart_MatOp=t /
- &analyse max_ana=40 max_ene=50000.d0 davidson=f /
- &davidson nb_WP=3 max_it=30 max_WP=300 num_resetH=10
-           lower_states=t project_WP0=f one_residue=f
-           read_WP=f read_listWP=f
-/
- 1 1     1 1   1.0
-end wp0
- 2 1     1 1   1.0
-end wp0
- 1 2     1 1   1.0
-end wp0
+ &analyse max_ana=40 max_ene=50000.d0 /
 **

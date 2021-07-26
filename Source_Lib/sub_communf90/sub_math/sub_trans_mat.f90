@@ -665,12 +665,104 @@
 
        RETURN
        end subroutine inversion_cplx
-!
 !================================================================
 !    resolution de a*x=b apres la procedure ludcmp
-!
 !================================================================
+  SUBROUTINE Driver_LU_solve_cplx(a,n,LU_index,b,type_lu)
+  USE mod_system
+  IMPLICIT NONE
 
+  integer,             intent(in)    :: n,type_lu
+  complex(kind=Rkind), intent(inout) :: a(n,n),b(n)
+  integer,             intent(in)    :: LU_index(n)
+
+  integer               :: err,type_lu_loc
+  integer, parameter    :: type_lu_default = 1
+  integer(kind=I4kind)  :: n4,ierr4
+
+
+
+    type_lu_loc = type_lu
+
+    !when lapack is used and Rkind /= real64 (not a double)
+    IF (Rkind /= R8kind .AND. type_lu_loc == 3) type_lu_loc = type_lu_default
+
+#if __LAPACK != 1
+    IF ( type_diag_loc == 3) type_lu_loc = type_lu_default
+#endif
+
+    SELECT CASE (type_lu)
+    CASE(1) ! ori
+      CALL lubksb_cplx(a,n,LU_index,b)
+    CASE(3) ! lapack
+#if __LAPACK == 1
+      n4     = int(n,kind=I4kind)
+      CALL ZGETRS('No transpose',n4,1,a,n4,LU_index,b,n4,ierr4)
+      err = int(ierr4)
+      IF (err /= 0) STOP 'LU Driver_LU_solve_cplx'
+#else
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makfile).'
+      write(out_unitp,*) '  The program should not reach the LAPACK case.'
+      write(out_unitp,*) '  => Probabely, wrong type_diag_default.'
+      write(out_unitp,*) '  => CHECK the fortran!!'
+      STOP 'ERROR in Driver_LU_solve_cplx: LAPACK case impossible'
+#endif
+    CASE Default
+      CALL lubksb_cplx(a,n,LU_index,b)
+    END SELECT
+
+  END SUBROUTINE Driver_LU_solve_cplx
+  SUBROUTINE Driver_LU_decomp_cplx(a,n,LU_index,d,type_lu)
+  USE mod_system
+  IMPLICIT NONE
+
+  integer,             intent(in)    :: n,type_lu
+  complex(kind=Rkind), intent(inout) :: d,a(n,n)
+  integer,             intent(in)    :: LU_index(n)
+
+  integer               :: err,type_lu_loc
+  integer, parameter    :: type_lu_default = 1
+  integer(kind=I4kind)  :: n4,ierr4
+  complex(kind=Rkind), allocatable :: work(:)
+
+
+
+    type_lu_loc = type_lu
+
+    !when lapack is used and Rkind /= real64 (not a double)
+    IF (Rkind /= R8kind .AND. type_lu_loc == 3) type_lu_loc = type_lu_default
+
+#if __LAPACK != 1
+    IF ( type_diag_loc == 3) type_lu_loc = type_lu_default
+#endif
+
+    SELECT CASE (type_lu)
+    CASE(1) ! ori
+      allocate(work(n))
+      CALL ludcmp_cplx(a,n,work,LU_index,d)
+      deallocate(work)
+    CASE(3) ! lapack
+#if __LAPACK == 1
+      n4     = int(n,kind=I4kind)
+      CALL ZGETRF(n4,n4,a,n4,LU_index,ierr4)
+      err = int(ierr4)
+      IF (err /= 0) STOP 'Driver_LU_decomp_cplx'
+#else
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makfile).'
+      write(out_unitp,*) '  The program should not reach the LAPACK case.'
+      write(out_unitp,*) '  => Probabely, wrong type_diag_default.'
+      write(out_unitp,*) '  => CHECK the fortran!!'
+      STOP 'ERROR in Driver_LU_decomp_cplx: LAPACK case impossible'
+#endif
+    CASE Default
+      allocate(work(n))
+      CALL ludcmp_cplx(a,n,work,LU_index,d)
+      deallocate(work)
+    END SELECT
+
+  END SUBROUTINE Driver_LU_decomp_cplx
       SUBROUTINE lubksb_cplx(a,n,index,b)
       USE mod_system
       IMPLICIT NONE
@@ -1677,4 +1769,3 @@
         tcmc2_ij = val
 
        end function tcmc2_ij
-

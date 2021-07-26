@@ -1422,6 +1422,8 @@ END SUBROUTINE alloc_MatOp
 
       END SELECT
 
+      para_Op%OpGrid(:)%para_FileGrid%Save_MemGrid_done    = .TRUE.
+      IF (associated(para_Op%imOpGrid)) para_Op%imOpGrid(:)%para_FileGrid%Save_MemGrid_done  = .TRUE.
       para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done  = .TRUE.
 
       CALL Analysis_OpGrid_OF_Op(para_Op)
@@ -1464,21 +1466,23 @@ END SUBROUTINE alloc_MatOp
         CALL file_close(para_Op%OpGrid(k_term)%file_Grid)
 
       END DO
+      para_Op%OpGrid(:)%para_FileGrid%Save_MemGrid_done    = .TRUE.
 
       IF (associated(para_Op%imOpGrid)) THEN
-      DO k_term=1,size(para_Op%imOpGrid)
-        write(out_unitp,*) 'Save imOpGrid',k_term,'file: ',para_Op%imOpGrid(k_term)%file_Grid%name
-        CALL file_open(para_Op%imOpGrid(k_term)%file_Grid,nio,lformatted=.FALSE.)
+        DO k_term=1,size(para_Op%imOpGrid)
+          write(out_unitp,*) 'Save imOpGrid',k_term,'file: ',para_Op%imOpGrid(k_term)%file_Grid%name
+          CALL file_open(para_Op%imOpGrid(k_term)%file_Grid,nio,lformatted=.FALSE.)
 
-        IF (para_Op%imOpGrid(k_term)%grid_zero .OR. para_Op%imOpGrid(k_term)%grid_cte) THEN
-          write(nio) para_Op%imOpGrid(k_term)%Mat_cte(:,:)
-        ELSE
-          write(nio) para_Op%imOpGrid(k_term)%Grid(:,:,:)
-        END IF
+          IF (para_Op%imOpGrid(k_term)%grid_zero .OR. para_Op%imOpGrid(k_term)%grid_cte) THEN
+            write(nio) para_Op%imOpGrid(k_term)%Mat_cte(:,:)
+          ELSE
+            write(nio) para_Op%imOpGrid(k_term)%Grid(:,:,:)
+          END IF
 
-        CALL file_close(para_Op%imOpGrid(k_term)%file_Grid)
+          CALL file_close(para_Op%imOpGrid(k_term)%file_Grid)
 
-      END DO
+        END DO
+        para_Op%imOpGrid(:)%para_FileGrid%Save_MemGrid_done  = .TRUE.
       END IF
       para_Op%para_ReadOp%para_FileGrid%Save_FileGrid_done  = .TRUE.
 

@@ -42,10 +42,12 @@ MODULE mod_RW_MatVec
   INTERFACE Read_Vec
     MODULE PROCEDURE Read_RVec,Read_CVec
   END INTERFACE
-
+  INTERFACE BlockAna_Mat
+    MODULE PROCEDURE BlockAna_RMat,BlockAna_CMat
+  END INTERFACE
   !PRIVATE sub_Format_OF_Line
    PUBLIC :: Write_VecMat, Write_Mat, Write_Vec, Read_Mat, Read_Vec
-   PUBLIC :: sub_ReadRV, sub_WriteRV
+   PUBLIC :: sub_ReadRV, sub_WriteRV, BlockAna_Mat
 
   CONTAINS
 
@@ -137,7 +139,7 @@ MODULE mod_RW_MatVec
       !!@param: TODO
       SUBROUTINE Write_RMat(f,nio,nbcol1,Rformat,name_info)
         USE mod_MPI
-        
+
         character (len=*), optional :: Rformat
         character (len=*), optional :: name_info
 
@@ -187,11 +189,95 @@ MODULE mod_RW_MatVec
 
       END SUBROUTINE Write_RMat
 
+      SUBROUTINE BlockAna_RMat(f,list_block,name_info)
+        USE mod_MPI
+
+        character (len=*), optional :: name_info
+
+        integer,          intent(in) :: list_block(:)
+        real(kind=Rkind), intent(in) :: f(:,:)
+
+        integer           :: i,j,ib1,ib2,jb1,jb2
+        real(kind=Rkind)  :: valmax
+
+        IF (present(name_info)) THEN
+          write(out_unitp,*) 'Block analysis, ',name_info
+        ELSE
+          write(out_unitp,*) 'Block analysis'
+        END IF
+
+        IF (size(list_block) > 1) THEN
+          DO i=1,size(list_block)
+          DO j=1,size(list_block)
+
+            ib1 = 1
+            IF (i > 1) ib1 = list_block(i-1)
+            ib2 = list_block(i)
+
+            jb1 = 1
+            IF (j > 1) jb1 = list_block(j-1)
+            jb2 = list_block(j)
+
+            valmax = maxval(abs(f(ib1:ib2,jb1:jb2)))
+            write(out_unitp,*) 'block',i,j,valmax
+
+          END DO
+          END DO
+        ELSE
+          valmax = maxval(abs(f))
+          i=1
+          j=1
+          write(out_unitp,*) 'block',i,j,valmax
+        END IF
+
+      END SUBROUTINE BlockAna_RMat
+      SUBROUTINE BlockAna_CMat(f,list_block,name_info)
+        USE mod_MPI
+
+        character (len=*), optional :: name_info
+
+        integer,          intent(in) :: list_block(:)
+        complex(kind=Rkind), intent(in) :: f(:,:)
+
+        integer           :: i,j,ib1,ib2,jb1,jb2
+        real(kind=Rkind)  :: valmax
+
+        IF (present(name_info)) THEN
+          write(out_unitp,*) 'Block analysis, ',name_info
+        ELSE
+          write(out_unitp,*) 'Block analysis'
+        END IF
+
+        IF (size(list_block) > 1) THEN
+          DO i=1,size(list_block)
+          DO j=1,size(list_block)
+
+            ib1 = 1
+            IF (i > 1) ib1 = list_block(i-1)
+            ib2 = list_block(i)
+
+            jb1 = 1
+            IF (j > 1) jb1 = list_block(j-1)
+            jb2 = list_block(j)
+
+            valmax = maxval(abs(f(ib1:ib2,jb1:jb2)))
+            write(out_unitp,*) 'block',i,j,valmax
+
+          END DO
+          END DO
+        ELSE
+          valmax = maxval(abs(f))
+          i=1
+          j=1
+          write(out_unitp,*) 'block',i,j,valmax
+        END IF
+
+      END SUBROUTINE BlockAna_CMat
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE Write_CMat(f,nio,nbcol1,Rformat,name_info)
         USE mod_MPI
-        
+
         character (len=*), optional     :: Rformat
         character (len=*), optional     :: name_info
 
@@ -202,7 +288,7 @@ MODULE mod_RW_MatVec
         integer i,j,nb,nbblocs,nfin,nbcol
         character (len=:), allocatable  :: wformat
 
-        IF(MPI_id==0) THEN 
+        IF(MPI_id==0) THEN
           nl = size(f,dim=1)
           nc = size(f,dim=2)
           !write(out_unitp,*) 'nl,nc,nbcol',nl,nc,nbcol
@@ -236,10 +322,10 @@ MODULE mod_RW_MatVec
             nfin=nc-nbcol*nbblocs
             write(nio,wformat) j,(f(j,i+nbcol*nbblocs),i=1,nfin)
           END DO
- 
+
           deallocate(wformat)
-        ENDIF ! for MPI_id==0  
-          
+        ENDIF ! for MPI_id==0
+
       END SUBROUTINE Write_CMat
 
       !!@description: TODO
@@ -658,4 +744,3 @@ SUBROUTINE sub_WriteRV(RV,FileName_RV,lformatted,err_sub)
 END SUBROUTINE sub_WriteRV
 
 END MODULE mod_RW_MatVec
-

@@ -2912,7 +2912,7 @@
       END IF
 
 !     -----------------------------------------------------------------
-stop
+
       END SUBROUTINE calc4_NM_TO_sym
       SUBROUTINE calc5_NM_TO_sym(Qact,mole,para_Tnum,PrimOp,hCC,l_hCC)
       USE mod_system
