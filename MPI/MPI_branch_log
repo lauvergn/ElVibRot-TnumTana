@@ -9,7 +9,15 @@ MPI Vm2.0
 
 > MPI_Vm2.6
 
-  - warning
+  - bug fix for propagation with quadratic potential
+
+  - improvement of parallel make
+
+  - code clean
+
+  - readme file
+
+  - current warning
     a bug when there is no lapack: STOP 'too many iterations'
     para_H%Rdiag does not exist when "direct=4" in subroutine "march_Spectral"
     there is a bug in Spectral propagation when using ana_mini

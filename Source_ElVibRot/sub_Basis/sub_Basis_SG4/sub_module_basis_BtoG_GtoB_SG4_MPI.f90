@@ -618,14 +618,14 @@ SUBROUTINE Set_scheme_MPI(basis_SG,lMax_Srep)
     write(out_unitp,*) '  MPI_np MPI_np_node:',MPI_np,MPI_np_node
 
     ! test Communicator MPI_NODE_0_COMM
-    IF(MPI_nodes_p0) THEN
-      IF(MPI_id==0) temp_int=1
-      IF(MPI_id==0) temp_int2=0
-      write(*,*) 'MPI_NODE_0_COMM check',temp_int,temp_int2,MPI_id
-      CALL MPI_BCAST(temp_int,size1_MPI,MPI_Integer,root_MPI,MPI_NODE_0_COMM,MPI_err)
-      CALL MPI_Reduce(temp_int,temp_int2,size1_MPI,MPI_Integer,MPI_SUM,root_MPI,MPI_NODE_0_COMM,MPI_err)
-      write(*,*) 'MPI_NODE_0_COMM check',temp_int,temp_int2,MPI_id
-    ENDIF
+    ! IF(MPI_nodes_p0) THEN
+    !   IF(MPI_id==0) temp_int=1
+    !   IF(MPI_id==0) temp_int2=0
+    !   write(*,*) 'MPI_NODE_0_COMM check',temp_int,temp_int2,MPI_id
+    !   CALL MPI_BCAST(temp_int,size1_MPI,MPI_Integer,root_MPI,MPI_NODE_0_COMM,MPI_err)
+    !   CALL MPI_Reduce(temp_int,temp_int2,size1_MPI,MPI_Integer,MPI_SUM,root_MPI,MPI_NODE_0_COMM,MPI_err)
+    !   write(*,*) 'MPI_NODE_0_COMM check',temp_int,temp_int2,MPI_id
+    ! ENDIF
 
   ENDIF
 #endif
