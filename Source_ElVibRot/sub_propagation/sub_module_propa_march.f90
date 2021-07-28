@@ -4129,7 +4129,10 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
           !> MPI: the other threads are waiting for master here
           ! CALL MPI_Bcast(exitall,size1_MPI,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
-          IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(exitall,size1_MPI,root_MPI)
+          IF(openmpi .AND. MPI_scheme/=1) THEN
+            CALL MPI_Bcast_(exitall,size1_MPI,root_MPI)
+            CALL MPI_Bcast_(w2%norm2,size1_MPI,root_MPI)
+          ENDIF
           IF(exitall) EXIT
 
         END DO ! for jt=3,para_propa%para_poly%npoly
@@ -4153,7 +4156,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
           write(out_unitp,*) ' New Hmin,Hmax',para_propa%para_poly%Hmin,para_propa%para_poly%Hmax
 
-          psi = psi_save
+          IF(keep_MPI) psi = psi_save
         ELSE
           EXIT
         END IF
@@ -4378,9 +4381,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
          END IF
          psi0Hkpsi0(jt) = Calc_AutoCorr(psi0,w2,para_propa,T,Write_AC=.FALSE.)
         ENDIF ! for keep_MPI
-!#if(run_MPI)
-!        CALL MPI_Bcast(norm_exit,size1_MPI,Real_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
-!#endif
+
         IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(norm_exit,size1_MPI,root_MPI)
 
         IF (norm_exit < para_propa%para_poly%poly_tol) EXIT

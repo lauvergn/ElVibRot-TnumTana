@@ -136,10 +136,12 @@ CONTAINS
           END IF
 
           CALL norm2_psi(WP0(1),GridRep=.TRUE.)
-          IF(keep_MPI) write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
+          IF(openmpi) CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
+          write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
           CALL flush_perso(out_unitp)
           CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
-          IF(keep_MPI) write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
+          IF(openmpi) CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
+          write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
           CALL flush_perso(out_unitp)
 
           IF (debug) THEN
@@ -151,9 +153,8 @@ CONTAINS
           IF (para_WP0%WP0BasisRep) THEN
 
             CALL sub_PsiGridRep_TO_BasisRep(WP0(1))
-
-            CALL norm2_psi(WP0(1),BasisRep=.TRUE.)
-
+            IF(keep_MPI) CALL norm2_psi(WP0(1),BasisRep=.TRUE.)
+            IF(openmpi) CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
             write(out_unitp,*) 'norm2WP BasisRep',WP0(1)%norm2
 
             IF (abs(ONE-WP0(1)%norm2) >= ONETENTH**5) THEN
@@ -163,8 +164,7 @@ CONTAINS
               !CALL ecri_psi(psi=WP0(1),                                      &
               !              ecri_BasisRep=.TRUE.,ecri_GridRep=.TRUE.)
             END IF
-            CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
-
+            IF(keep_MPI) CALL renorm_psi(WP0(1),BasisRep=.TRUE.)
           END IF
 
         ELSE IF (para_WP0%WP0restart ) THEN
@@ -392,9 +392,9 @@ CONTAINS
 !-----------------------------------------------------------
 
       IF (WP0%cplx) THEN
-        WP0%CvecG(:) = CZERO
+        IF(keep_MPI) WP0%CvecG(:) = CZERO
       ELSE
-        WP0%RvecG(:) = ZERO
+        IF(keep_MPI) WP0%RvecG(:) = ZERO
       END IF
 
 
@@ -413,9 +413,9 @@ CONTAINS
                (para_WP0%tab_GWP0(iGWP)%I_ElecChannel-1)*WP0%nb_bi ) * WP0%nb_qa
 
           IF (WP0%cplx) THEN
-            WP0%CvecG(i_qaie) = WP0%CvecG(i_qaie) + WP0_at_Q
+            IF(keep_MPI) WP0%CvecG(i_qaie) = WP0%CvecG(i_qaie) + WP0_at_Q
           ELSE
-            WP0%RvecG(i_qaie) = WP0%RvecG(i_qaie) + real(WP0_at_Q,kind=Rkind)
+            IF(keep_MPI) WP0%RvecG(i_qaie) = WP0%RvecG(i_qaie) + real(WP0_at_Q,kind=Rkind)
           END IF
         END DO
 

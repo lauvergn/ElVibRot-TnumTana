@@ -166,6 +166,11 @@ MODULE mod_MPI
       STOP 'integer neither 4 or 8 in default MPI'
     ENDIF
 
+    IF(sizeof(integer_MPI)/=MPI_INTEGER_KIND) THEN
+      write(out_unitp,*) 'Please check the Integer type of Compiler and MPI used,'
+      STOP 'Integer type of default Fortran Compiler and MPI not agree.'
+    ENDIF
+
     write(out_unitp,*) 'Initiaize MPI with ', MPI_np, 'cores.'
     write(out_unitp,*) 'NOTE: MPI in progress. If get memory error, check if           &
                                       the variables are just allocated on root threads.'

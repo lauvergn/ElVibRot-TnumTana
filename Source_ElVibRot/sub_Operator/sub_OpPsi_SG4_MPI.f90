@@ -224,7 +224,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
     IF(BasisnD%para_SGType2%once_action) CALL time_perso('MPI loop in action end') 
     BasisnD%para_SGType2%once_action=.FALSE.
 
-    IF(MPI_id==0) write(out_unitp,*) 'time used in action:',                           &    
+    write(out_unitp,*) 'time used in action on processor :', MPI_id,                   &    
                     real(time_MPI_act_all(MPI_id),kind=Rkind)/real(time_rate,kind=Rkind)
 #endif
   END SUBROUTINE Action_MPI

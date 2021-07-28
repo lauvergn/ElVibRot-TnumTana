@@ -80,14 +80,15 @@ lib_dep_mod_Coord_KEO=$(OBJ)/sub_Auto_Basis.o $(OBJ)/sub_PrimOp_def.o           
                       $(OBJ)/sub_module_basis.o $(OBJ)/sub_quadra_SparseBasis2n.o      \
                       $(OBJ)/cart.o $(OBJ)/nb_harm.o $(OBJ)/sub_main_Optimization.o    \
                       $(OBJ)/sub_main_nDfit.o $(OBJ)/EVR_Module.o                      \
-                      $(OBJ)/Module_ForTnumTana_Driver.o $(OBJ)/$(TNUMMAIN).o
+                      $(OBJ)/Module_ForTnumTana_Driver.o $(OBJ)/$(TNUMMAIN).o          \
+                      $(OBJ)/sub_module_param_WP0.o
 $(lib_dep_mod_Coord_KEO):$(OBJ)/sub_module_Coord_KEO.o
 
 #mod_Constant
 lib_dep_mod_Constant=$(OBJ)/sub_analyse.o $(OBJ)/sub_freq.o $(OBJ)/sub_diago_H.o       \
                      $(OBJ)/sub_module_analysis.o $(OBJ)/EVR_Module.o                  \
                      $(OBJ)/sub_CRP.o $(OBJ)/sub_module_Davidson_MPI.o                 \
-                     $(OBJ)/$(PhysConstMAIN).o
+                     $(OBJ)/$(PhysConstMAIN).o $(OBJ)/RectilinearNM_Transfo.o
 $(lib_dep_mod_Constant):$(OBJ)/sub_module_constant.o
 
 #mod_NumParameters

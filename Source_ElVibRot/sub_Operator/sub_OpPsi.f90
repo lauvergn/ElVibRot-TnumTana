@@ -233,9 +233,7 @@ CONTAINS
       IF(keep_MPI) THEN
         IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
       ENDIF
-!#if(run_MPI)
-!      CALL MPI_BCAST(With_Grid_loc,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
-!#endif
+
       IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(With_Grid_loc,size1_MPI,root_MPI)
 
       IF (present(TransfoOp)) THEN
@@ -343,9 +341,6 @@ CONTAINS
         IF (.NOT. psi%BasisnD%dnGGRep) With_Grid_loc = .FALSE.
       ENDIF
 
-!#if(run_MPI)
-!      CALL MPI_BCAST(With_Grid_loc,size1_MPI,MPI_logical,root_MPI,MPI_COMM_WORLD,MPI_err)
-!#endif
       IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(With_Grid_loc,size1_MPI,root_MPI)
 
       IF (present(pot_only)) THEN
@@ -826,9 +821,7 @@ END SUBROUTINE sub_OpBasis_OneCBF
       !logical, parameter :: debug = .TRUE.
       !-----------------------------------------------------------------
       If(keep_MPI) size_TabPsi=size(TabPsi)
-!#if(run_MPI)
-!      CALL MPI_BCAST(size_TabPsi,size1_MPI,Int_MPI,root_MPI,MPI_COMM_WORLD,MPI_err)
-!#endif
+
       IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(size_TabPsi,size1_MPI,root_MPI)
 
       n = para_Op%nb_tot
