@@ -2202,6 +2202,7 @@ END SUBROUTINE sub_analyze_psi
   integer           :: iSG,iqSG,err_sub ! for SG4
   TYPE (OldParam)   :: OldPara
   real (kind=Rkind) :: WeightSG
+  real (kind=Rkind) :: DSG
 
 
 
@@ -2237,8 +2238,8 @@ END SUBROUTINE sub_analyze_psi
   IF (.NOT. allocated(tab_WeightChannels) .AND. nb_bi > 0 .AND. nb_be > 0) THEN
     CALL alloc_NParray(tab_WeightChannels,[nb_bi,nb_be],                        &
                       "tab_WeightChannels",name_sub)
-    tab_WeightChannels(:,:) = ZERO
   END IF
+  tab_WeightChannels(:,:) = ZERO
 
   IF (debug) THEN
     write(out_unitp,*) 'nb_bi,nb_be',nb_bi,nb_be
@@ -2247,7 +2248,8 @@ END SUBROUTINE sub_analyze_psi
   END IF
 
 IF (psi%BasisnD%SparseGrid_type == 4) THEN
-  IF (GridRep)  CALL Channel_weight_SG4_grid(tab_WeightChannels,psi)
+  !IF (GridRep)  CALL Channel_weight_SG4_grid(tab_WeightChannels,psi)
+  IF (GridRep)  CALL Channel_weight_SG4_grid_old(tab_WeightChannels,psi)
   IF (BasisRep) CALL Channel_weight_SG4_basis(tab_WeightChannels,psi)
 ELSE
   IF (psi%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
@@ -2286,6 +2288,8 @@ ELSE
 
         !- calculation of WrhonD ------------------------------
         WrhonD = Rec_WrhonD(psi%BasisnD,i_qa,OldPara)
+
+        !write(6,*) 'i_qa,wrho*D',i_qa,WrhonD
 
         DO i_be=1,nb_be
         DO i_bi=1,nb_bi
@@ -2364,9 +2368,9 @@ END IF
   TYPE (param_psi),  intent(inout)              :: psi
 
 !-- working variables ---------------------------------
-  TYPE(Type_SmolyakRep)             :: WSRep ! smolyak rep for SparseGrid_type=4
+  real (kind=Rkind),    allocatable :: wrho(:)
 
-  integer                           :: ib0,nb0,i_be,nb_be,i_bi,nb_bi
+  integer                           :: i,ib0,nb0,i_be,nb_be,i_bi,nb_bi
   integer                           :: iG,iq,nq_AT_iG
   complex (kind=Rkind), allocatable :: CVecG(:,:)
   real (kind=Rkind),    allocatable :: RVecG(:,:)
@@ -2388,7 +2392,144 @@ END IF
     write(out_unitp,*) '  This subroutine needs psi with a grid representation'
     write(out_unitp,*) '  but,  GridRep',psi%GridRep
     write(out_unitp,*) '  and  BasisRep',psi%BasisRep
-    write(out_unitp,*) '  => use Channel_weight_SG4_v0basis'
+    write(out_unitp,*) '  => use Channel_weight_SG4_basis'
+    STOP 'ERROR in Channel_weight_SG4_grid: psi%GridRep=F'
+  END IF
+
+  nb_be = get_nb_be_FROM_psi(psi)
+  nb_bi = get_nb_bi_FROM_psi(psi)
+
+  d1=lbound(psi%BasisnD%para_SGType2%tab_nq_OF_SRep,dim=1)
+  d2=ubound(psi%BasisnD%para_SGType2%tab_nq_OF_SRep,dim=1)
+
+  IF(openmpi) THEN
+    IF(MPI_scheme==1) THEN
+      d1=iGs_MPI(1,MPI_id)
+      d2=iGs_MPI(2,MPI_id)
+    ELSEIF(MPI_scheme==3) THEN
+      IF(MPI_nodes_p0) THEN
+        d1=iGs_MPI(1,MPI_id)
+        d2=iGs_MPI(2,MPI_sub_id(2))
+      ELSE
+        d1=0
+        d2=-1
+      ENDIF
+    ENDIF
+  ENDIF
+
+  IF (psi%cplx) THEN
+    ! psi almost in the right Smolyak representation.
+    iq = 0
+    DO iG=d1,d2
+      nq_AT_iG = psi%BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+      nb0      = psi%BasisnD%para_SGType2%nb0
+!write(6,*) 'iG ',iG
+!write(6,*) 'size Psi%CvecG(iq+1:iq+nb0*nq_AT_iG) ',size(Psi%CvecG(iq+1:iq+nb0*nq_AT_iG))
+!write(6,*) 'nq_AT_iG,nb0 ',nq_AT_iG,psi%BasisnD%para_SGType2%nb0
+!write(6,*) 'nq_AT_iG*nb0 ',nq_AT_iG*psi%BasisnD%para_SGType2%nb0
+!flush(6)
+
+      CVecG = reshape(Psi%CvecG(iq+1:iq+nb0*nq_AT_iG),shape=[nq_AT_iG,psi%BasisnD%para_SGType2%nb0])
+
+      CALL Get_weight_FROM_OneDP(wrho,iG,                                   &
+                    psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
+                    psi%BasisnD%tab_basisPrimSG)
+
+      !DO i=1,nq_AT_iG
+      !  write(6,*) 'iq_a,wrho',iq+i,wrho(i),wrho(i)*Psi%BasisnD%WeightSG(iG)
+      !END DO
+
+      ib0 = 0
+      DO i_be=1,nb_be
+      DO i_bi=1,nb_bi
+        ib0 = ib0 + 1
+        tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) +        &
+                          Psi%BasisnD%WeightSG(iG) * dot_product(CVecG(:,ib0), &
+                                                            wrho * CVecG(:,ib0))
+      END DO
+      END DO
+      iq = iq + nb0*nq_AT_iG
+      IF (allocated(CVecG)) deallocate(CVecG)
+
+    END DO
+
+   ELSE
+     ! psi almost in the right Smolyak representation.
+     iq = 0
+     DO iG=d1,d2
+       nq_AT_iG = psi%BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
+
+       CALL Get_weight_FROM_OneDP(wrho,iG,                                   &
+                    psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
+                    psi%BasisnD%tab_basisPrimSG)
+
+       RVecG = reshape(Psi%RvecG(iq+1:iq+nq_AT_iG),shape=[nq_AT_iG,psi%BasisnD%para_SGType2%nb0])
+
+       ib0 = 0
+       DO i_be=1,nb_be
+       DO i_bi=1,nb_bi
+         ib0 = ib0 + 1
+         tab_WeightChannels(i_bi,i_be) = tab_WeightChannels(i_bi,i_be) +        &
+                           Psi%BasisnD%WeightSG(iG) * dot_product(RVecG(:,ib0), &
+                                                            wrho * RVecG(:,ib0))
+       END DO
+       END DO
+       iq = iq + nq_AT_iG
+       IF (allocated(RVecG)) deallocate(RVecG)
+
+     END DO
+  END IF
+
+  IF(openmpi .AND. keep_MPI .AND. MPI_scheme/=2) THEN
+    CALL MPI_Reduce_sum_matrix(tab_WeightChannels,1,nb_bi,1,nb_be,root_MPI,MS=MPI_scheme)
+    CALL MPI_Bcast_matrix(tab_WeightChannels,1,nb_bi,1,nb_be,root_MPI,MS=MPI_scheme)
+  ENDIF
+  CALL dealloc_NParray(wrho,'wrho',name_sub)
+!------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
+    write(out_unitp,*) 'END ',name_sub
+  END IF
+!------------------------------------------------------
+
+END SUBROUTINE Channel_weight_SG4_grid
+  SUBROUTINE Channel_weight_SG4_grid_old(tab_WeightChannels,psi)
+  USE mod_system
+  USE mod_psi_set_alloc
+  USE mod_basis_BtoG_GtoB_SGType4
+  USE mod_MPI_aux
+  IMPLICIT NONE
+
+!- variables for the WP ----------------------------------------
+  real (kind=Rkind), intent(inout), allocatable :: tab_WeightChannels(:,:)
+  TYPE (param_psi),  intent(inout)              :: psi
+
+!-- working variables ---------------------------------
+  TYPE(Type_SmolyakRep)             :: WSRep ! smolyak rep for SparseGrid_type=4
+
+  integer                           :: ib0,nb0,i_be,nb_be,i_bi,nb_bi
+  integer                           :: iG,iq,nq_AT_iG
+  complex (kind=Rkind), allocatable :: CVecG(:,:)
+  real (kind=Rkind),    allocatable :: RVecG(:,:)
+  Integer                           :: d1,d2
+
+  !- for debuging --------------------------------------------------
+  character(len=*), parameter :: name_sub='Channel_weight_SG4_grid_old'
+  logical,parameter :: debug = .FALSE.
+  !logical,parameter :: debug = .TRUE.
+  !-------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'psi'
+    CALL ecri_psi(psi=psi)
+  END IF
+!-------------------------------------------------------
+  IF (.NOT. psi%GridRep) THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) '  This subroutine needs psi with a grid representation'
+    write(out_unitp,*) '  but,  GridRep',psi%GridRep
+    write(out_unitp,*) '  and  BasisRep',psi%BasisRep
+    write(out_unitp,*) '  => use Channel_weight_SG4_basis'
     STOP 'ERROR in Channel_weight_SG4_grid: psi%GridRep=F'
   END IF
 
@@ -2485,7 +2626,7 @@ END IF
   END IF
 !------------------------------------------------------
 
-END SUBROUTINE Channel_weight_SG4_grid
+END SUBROUTINE Channel_weight_SG4_grid_old
 SUBROUTINE Channel_weight_SG4_basis(tab_WeightChannels,psi)
 USE mod_system
 USE mod_psi_set_alloc

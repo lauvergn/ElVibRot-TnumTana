@@ -403,7 +403,7 @@ CONTAINS
         !- calculation of Qact -------------------------------
         CALL Rec_Qact(Qact,WP0%BasisnD,i_qa,mole,OldPara)
         !- calculation of WrhonD ------------------------------
-        rhonD = Rec_rhonD(WP0%BasisnD,i_qa,OldPara)
+        IF (para_WP0%WP0nrho == 1) rhonD = Rec_rhonD(WP0%BasisnD,i_qa,OldPara)
 
         DO iGWP=1,size(para_WP0%tab_GWP0)
           WP0_at_Q = calc_GWP(para_WP0%tab_GWP0(iGWP),Qact)

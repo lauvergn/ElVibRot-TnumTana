@@ -28,6 +28,7 @@ CERFACS = 0
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
 LAPACK = 1
 ## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
+## Always QML=1
 QML = 1
 #
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
@@ -40,6 +41,11 @@ INVHYP  = 1
 #
 ## Operating system, OS? automatic using uname:
 OS=$(shell uname)
+#
+#===============================================================================
+# External Libraries directory (QML ...)
+ExternalLibDIR=Ext_Lib
+#===============================================================================
 #
 #===============================================================================
 # turn off ARPACK when using pgf90
@@ -84,31 +90,11 @@ endif
 #
 #===============================================================================
 # Quantum Model Lib (ECAM)
-QMLibDIR := /Users/lauvergn/git/QuantumModelLib
-#QMLibDIR := /userTMP/lauvergn/QModLib/QModLib-v6.10
-ifneq "$(wildcard $(QMLibDIR) )" ""
-  # QMLibDIR exists:
-  $(info QMLibDIR variable exists)
-else
-  # QMLibDIR does not exist:
-  $(info QMLibDIR does not exist)
-  QML=0
-endif
-
-ifeq  ($(strip $(QML)),)
-  QMLIB :=
-  QMLibDIR_full :=
-else
-  ifeq ($(QML),0)
-    QMLIB :=
-    QMLibDIR_full :=
-  else
-    DIRLIB += -L$(QMLibDIR)
-    QMLIB := -lQMLib
-    QMLibDIR_full := $(QMLibDIR)/libQMLib.a
-  endif
-endif
-
+#QMLibDIR := /Users/lauvergn/git/QuantumModelLib
+QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
+DIRLIB += -L$(QMLibDIR)
+QMLIB := -lQMLib
+QMLibDIR_full := $(QMLibDIR)/libQMLib.a
 #===============================================================================
 #
 #===============================================================================
@@ -398,6 +384,7 @@ $(info ***********Arpack:           $(ARPACK))
 $(info ***********CERFACS:          $(CERFACS))
 $(info ***********Lapack:           $(LAPACK))
 $(info ***********QMLib:            $(QMLIB))
+$(info ***********DIR of QMLib:     $(QMLibDIR))
 $(info ***********F90FLAGS:         $(F90FLAGS))
 $(info ***********F90LIB:           $(F90LIB))
 $(info ***********subsystem file:   sub_system.$(extf))
@@ -908,11 +895,13 @@ endif
 #
 # QML
 .PHONY: qml QML
-qml QML: $(QMLibDIR_full)
+qml QML: $(QMLibDIR) $(QMLibDIR_full)
 	@echo "make qml library"
-$(QMLibDIR_full):
+$(QMLibDIR_full): $(QMLibDIR)
 	cd $(QMLibDIR) ; make
-
+$(QMLibDIR):
+	cd $(ExternalLibDIR) ; ./get_QML.sh
+#
 # obj directory
 .PHONY: obj
 obj:
@@ -946,6 +935,8 @@ clean: clean_example
 	@cd sub_pot                              ; rm -f sub_system.f sub_system.f90
 	@cd Source_TnumTana_Coord/sub_operator_T ; rm -f calc_f2_f1Q.f90 Calc_Tab_dnQflex.f90 Sub_X_TO_Q_ana.f90
 	@echo "  done remove the system dependent files (sub_system.f, calc_f2_f1Q.f90 ...) "
+	@cd Ext_Lib/QuantumModelLib             ; make clean
+	@echo "  done cleaning up the QML directories"
 	@cd Examples/exa_hcn-dist ; ./clean
 	@cd Examples/exa_TnumDriver ; ./clean
 	@cd Examples/exa_direct-dist ; ./clean

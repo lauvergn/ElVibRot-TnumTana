@@ -1706,7 +1706,7 @@
 
         !CALL alloc_NParray(mat_temp,shape(dnMat%d0),'mat_temp',name_sub)
 
-        IF (present(dnMat_inv)) THEN
+        IF (present(dnMat_inv)) THEN ! using Jacobi's formula: (detA)' = tr(Adj(A).A') = detA.tr(A_inv.A') 
           CALL Det_OF_m1(dnMat%d0,dnS%d0,dnMat%nb_var_Matl)
 
           IF (nderiv_loc >= 1) THEN
@@ -1888,4 +1888,3 @@
 
       END SUBROUTINE sub_ZERO_TO_dnCplxMat
       END MODULE mod_dnM
-

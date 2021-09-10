@@ -19,3 +19,5 @@ UnitTests/*/res*
 UnitTests/*/SH_HADA*
 UnitTests/*/err*
 UnitTests/*/namelist*
+
+Ext_Lib/QuantumModelLib*

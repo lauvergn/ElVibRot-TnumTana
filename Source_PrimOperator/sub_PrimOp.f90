@@ -157,7 +157,6 @@
 
 #if __QML == 1
         ! those subroutines modify in_unitp and out_unitp in QML to have the EVRT values
-
         CALL set_Qmodel_in_unitp(in_unitp)
         CALL set_Qmodel_out_unitp(out_unitp)
         IF (PrimOp%pot_itQtransfo == 0) THEN ! Cartesian coordinates
@@ -3766,10 +3765,16 @@
             CALL calc4_NM_TO_sym(Qact,mole,para_Tnum,PrimOp)
 
           END SELECT
-          IF (print_level > 1) CALL sub_QplusDQ_TO_Cart(Qact,mole)
+          !IF (print_level > 1) CALL sub_QplusDQ_TO_Cart(Qact,mole)
 
         END IF
       END IF
+
+      IF (print_level > 1) THEN
+        CALL get_Qact0(Qact,mole%ActiveTransfo)
+        CALL sub_QplusDQ_TO_Cart(Qact,mole)
+      END IF
+
 
       !----- set RPH transfo of Qref -----------------------------------
       IF (associated(mole%RPHTransfo)) THEN
@@ -3867,7 +3872,14 @@
                       'para_Tnum%Gref',name_sub)
 
       para_Tnum%Gref(:,:) = ZERO
-      para_Tnum%Gref(1:mole%nb_act,1:mole%nb_act) = GGdef
+      IF (para_Tnum%Gdiago) THEN
+        DO iact=1,mole%nb_act
+          para_Tnum%Gref(iact,iact) = GGdef(iact,iact)
+        END DO
+      ELSE
+        para_Tnum%Gref(1:mole%nb_act,1:mole%nb_act) = GGdef
+      END IF
+
     END IF
 
     CALL get_d0GG(Qact,para_Tnum,mole,GGdef,def=.TRUE.)

@@ -1423,7 +1423,11 @@ END SUBROUTINE alloc_MatOp
       END SELECT
 
       para_Op%OpGrid(:)%para_FileGrid%Save_MemGrid_done    = .TRUE.
-      IF (associated(para_Op%imOpGrid)) para_Op%imOpGrid(:)%para_FileGrid%Save_MemGrid_done  = .TRUE.
+      para_Op%OpGrid(:)%Grid_done = .TRUE.
+      IF (associated(para_Op%imOpGrid)) THEN
+        para_Op%imOpGrid(:)%para_FileGrid%Save_MemGrid_done  = .TRUE.
+        para_Op%imOpGrid(:)%Grid_done = .TRUE.
+      END IF
       para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done  = .TRUE.
 
       CALL Analysis_OpGrid_OF_Op(para_Op)

@@ -114,7 +114,7 @@
           IF(openmpi) THEN
             CALL get_Hmin_MPI(para_H)
           ELSE
-            para_H%Hmin=1.0e10
+            para_H%Hmin = HUGE(ONE)
             DO ii=1,para_H%BasisnD%para_SGType2%nb_SG
               temp_Hmin=minval(para_H%OpGrid(1)%SRep%SmolyakRep(ii)%V)
               IF(temp_Hmin<para_H%Hmin) para_H%Hmin=temp_Hmin
@@ -123,12 +123,7 @@
         ELSE
           ! Minimal value of Veff
           para_H%Hmin = para_H%OpGrid(1)%Op_min
-!
-!          IF (associated(para_H%OpGrid(1)%Grid)) THEN
-!            para_H%Hmin = minval(para_H%OpGrid(1)%Grid(:,:,:))
-!          ELSE ! it means the Grid is cte => deallocated
-!            para_H%Hmin = para_H%OpGrid(1)%Op_min
-!          END IF
+
         ENDIF ! para_H%BasisnD%SparseGrid_type==4
 
       ELSE ! the grids are on a file
@@ -328,9 +323,9 @@ relax = .TRUE.
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_Hmax
-!=======================================================================================      
+!=======================================================================================
 
-!=======================================================================================            
+!=======================================================================================
       SUBROUTINE sub_Auto_HmaxHmin_relax(para_propa,para_H)
       USE mod_system
       USE mod_psi,      ONLY : param_psi,renorm_psi,alloc_psi,dealloc_psi,&
@@ -453,7 +448,7 @@ relax = .TRUE.
 
       END SUBROUTINE sub_Auto_HmaxHmin_relax
 
-!=======================================================================================      
+!=======================================================================================
       ! we are using the fact that chebychev propagation is very sensitive to the spectral range
       SUBROUTINE sub_Auto_Hmax_cheby(para_propa,para_H)
       USE mod_system
@@ -614,4 +609,3 @@ relax = .TRUE.
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_Auto_Hmax_cheby
-

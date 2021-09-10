@@ -247,7 +247,7 @@
       END IF
       IF (ana_level < -1) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' ana_level must be >> 0'
+        write(out_unitp,*) ' ana_level must be >= 0'
         write(out_unitp,*) ' ana_level',ana_level
         STOP 'ERROR in read_analyse: ana_level < -1'
       END IF

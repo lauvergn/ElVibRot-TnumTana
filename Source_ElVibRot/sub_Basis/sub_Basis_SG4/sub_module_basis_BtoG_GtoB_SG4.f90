@@ -97,7 +97,8 @@ PUBLIC  tabR2bis_TO_SmolyakRep1
 PUBLIC  tabR2grid_TO_tabR1_AT_iG, tabR2gridbis_TO_tabR1_AT_iG
 PUBLIC  BDP_TO_GDP_OF_SmolyakRep, GDP_TO_BDP_OF_SmolyakRep
 PUBLIC  DerivOp_TO_RDP_OF_SmolaykRep
-PUBLIC  Set_weight_TO_SmolyakRep, dot_product_SmolyakRep_Grid, dot_product_SmolyakRep_Basis
+PUBLIC  Set_weight_TO_SmolyakRep, Get_weight_FROM_OneDP, &
+        dot_product_SmolyakRep_Grid, dot_product_SmolyakRep_Basis
 PUBLIC  GSmolyakRep_TO3_BSmolyakRep, BSmolyakRep_TO3_GSmolyakRep
 PUBLIC  GSmolyakRep_TO_BSmolyakRep,  BSmolyakRep_TO_GSmolyakRep
 PUBLIC  Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis
@@ -3057,7 +3058,7 @@ real(kind=Rkind), allocatable      :: RTempG(:,:,:)
     CALL alloc_NParray(RTempG,(/ nnq,1,1 /),'RTempG',name_sub)
     RTempG(:,:,:) = reshape(SRep%SmolyakRep(iG)%V,shape=(/ nnq,1,1 /))
 
-    DO i=1,size(tab_ind(:,iG))
+    DO i=size(tab_ind(:,iG)),1,-1
       nq2  = tab_n(i)
       nnq1 = nnq1/nq2
 
@@ -3085,6 +3086,69 @@ real(kind=Rkind), allocatable      :: RTempG(:,:,:)
   !CALL Write_SmolyakRep(Srep)
 
 END FUNCTION Set_weight_TO_SmolyakRep
+
+SUBROUTINE Get_weight_FROM_OneDP(wrho,iG,tab_ind,tab_ba)
+USE mod_system
+USE mod_basis_set_alloc
+IMPLICIT NONE
+
+real(kind=Rkind), allocatable,   intent(inout)     :: wrho(:)
+integer,                         intent(in)        :: iG
+integer,          allocatable,   intent(in)        :: tab_ind(:,:) ! tab_ind(D,MaxnD)
+TYPE(basis),                     intent(in)        :: tab_ba(0:,:) ! tab_ba(0:L,D)
+
+integer               :: i,D,nb_BG
+
+integer                            :: nnq,nnq1,nq2,nnq3,iq1,iq3
+integer, allocatable               :: tab_n(:)
+real(kind=Rkind), allocatable      :: RTempG(:,:,:)
+
+  character (len=*), parameter :: name_sub='Get_weight_FROM_OneDP'
+
+
+!write(6,*) 'Get_weight_FROM_OneDP: shape tab_ba',shape(tab_ba) ; flush(6)
+
+  CALL alloc_NParray(tab_n,shape(tab_ind(:,1)),'tab_n','alloc_SmolyakRep')
+
+  tab_n = getbis_tab_nq(tab_ind(:,iG),tab_ba)
+
+  nnq = product(tab_n)
+
+  nnq1 = nnq
+  nq2  = 1
+  nnq3 = 1
+
+  IF (allocated(wrho)) CALL dealloc_NParray(wrho,'wrho',name_sub)
+  CALL alloc_NParray(wrho,[nnq],'wrho',name_sub)
+  wrho(:) = ONE
+
+
+  CALL alloc_NParray(RTempG,[nnq,1,1],'RTempG',name_sub)
+  RTempG(:,:,:) = reshape(wrho,shape=[nnq,1,1])
+
+  DO i=size(tab_ind(:,iG)),1,-1
+    nq2  = tab_n(i)
+    nnq1 = nnq1/nq2
+
+    RTempG = reshape(RTempG,shape=[nnq1,nq2,nnq3])
+
+    DO iq3=1,nnq3
+    DO iq1=1,nnq1
+      RTempG(iq1,:,iq3) = tab_ba(tab_ind(i,iG),i)%wrho(1:nq2) * RTempG(iq1,1:nq2,iq3)
+    END DO
+    END DO
+
+    nnq3 = nnq3 * nq2
+
+  END DO
+
+  wrho(:) = reshape(RTempG, shape=[nnq] )
+
+  CALL dealloc_NParray(RTempG,'RTempG',name_sub)
+
+  IF (allocated(tab_n)) CALL dealloc_NParray(tab_n,'tab_n',name_sub)
+
+END SUBROUTINE Get_weight_FROM_OneDP
 
 FUNCTION get_tab_nq(tab_l,tab_ba) RESULT (tab_nq)
 USE mod_basis_set_alloc
