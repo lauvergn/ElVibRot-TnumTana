@@ -12,11 +12,7 @@ unzip OOP_branch.zip
 rm -f OOP_branch.zip
 
 QMLDIR=`ls -d QuantumModelLib*`
-echo $QMLDIR
+#echo $QMLDIR
 
 ln -s $QMLDIR QuantumModelLib
-
-cd $QMLDIR
-#make
-cd ..
 

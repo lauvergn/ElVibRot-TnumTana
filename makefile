@@ -901,6 +901,7 @@ $(QMLibDIR_full): $(QMLibDIR)
 	cd $(QMLibDIR) ; make
 $(QMLibDIR):
 	cd $(ExternalLibDIR) ; ./get_QML.sh
+	test -d $(QMLibDIR) || exit 1
 #
 # obj directory
 .PHONY: obj
