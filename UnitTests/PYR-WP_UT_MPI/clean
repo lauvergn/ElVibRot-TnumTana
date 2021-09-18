@@ -1,2 +1,2 @@
 rm -f SH_HADA* file_* res* namelist* Davidson.log comp.log run_tests.log lev*_res* exe.log fort.0
-rm -f Temp*
+rm -f Temp* freq.xyz

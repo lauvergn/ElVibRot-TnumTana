@@ -13,7 +13,7 @@ nq=81
 nice $DIR_vib/vib << ** >"res_HNO3_cHAC_Norm"$Norm"-L"$L
  &system printlevel=2 /
  &constantes version='HandBook70ed' mass_version='HandBook70ed' /
- &variables Old_Qtransfo=f nb_Qtransfo=3 nrho=1 vep_type=1 /
+ &variables Old_Qtransfo=f nb_Qtransfo=3 nrho=1 vep_type=1 Write_QMotions=f /
  &Coord_transfo name_transfo='zmat' nat=6 /
  N
  O    1

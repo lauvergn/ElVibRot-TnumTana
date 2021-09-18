@@ -3770,7 +3770,7 @@
         END IF
       END IF
 
-      IF (print_level > 1) THEN
+      IF (para_Tnum%Write_QMotions) THEN
         CALL get_Qact0(Qact,mole%ActiveTransfo)
         CALL sub_QplusDQ_TO_Cart(Qact,mole)
       END IF

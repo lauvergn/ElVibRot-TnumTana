@@ -18,6 +18,9 @@ UnitTests/*/lev*
 UnitTests/*/res*
 UnitTests/*/SH_HADA*
 UnitTests/*/err*
+UnitTests/*/freq.xyz
 UnitTests/*/namelist*
+UnitTests/res_UT_Frac
+UnitTests/res_UT_PhysConst
 
 Ext_Lib/QuantumModelLib*

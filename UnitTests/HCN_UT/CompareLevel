@@ -2,7 +2,7 @@
 
 
 ##compOK=`tail -1 comp.log | grep -c OK `
-compOK=`grep -c 'OK' comp.log `
+compOK=`grep -c 'EVR OK' comp.log `
 if [ $compOK = '1' ]
 then
  echo " ElVibRot compilation: OK"

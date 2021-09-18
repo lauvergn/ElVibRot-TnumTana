@@ -224,6 +224,8 @@ MODULE mod_Tnum
           integer                    :: JJ                = 0
           logical                    :: WriteT            = .FALSE.
           logical                    :: With_Cart_Transfo = .TRUE.
+          logical                    :: Write_QMotions     = .FALSE. ! write coordinate motions
+                                                ! as 2 Cartesian geometries (like for the frequencies)
 
           logical                    :: Tana              = .FALSE.
           logical                    :: MidasCppForm      = .FALSE.
@@ -721,7 +723,7 @@ MODULE mod_Tnum
 
 !     - for Tnum or Tana ----------------------------------------------
       integer           :: nrho,vep_type,NonGcteRange(2)
-      logical           :: num_GG,num_g,num_x,Gdiago,Gcte,With_VecCOM
+      logical           :: num_GG,num_g,num_x,Gdiago,Gcte,With_VecCOM,Write_QMotions
       logical           :: With_Tab_dnQflex
       logical           :: Tana,MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,f2f1_ana
       real (kind=Rkind) :: stepT,stepOp
@@ -750,7 +752,7 @@ MODULE mod_Tnum
                      ab_initio_meth,ab_initio_basis,                    &
                      ab_initio_methEne,ab_initio_basisEne,              &
                      ab_initio_methDip,ab_initio_basisDip,              &
-                     WriteCC,WriteT
+                     WriteCC,WriteT,Write_QMotions
 
 !----- for debuging --------------------------------------------------
       integer :: err_read
@@ -824,7 +826,7 @@ MODULE mod_Tnum
 
       WriteCC              = .FALSE.
       WriteT               = .FALSE.
-
+      Write_QMotions       = (print_level >= 2) ! true for print_level>2
       nat                  = 0
       nb_var               = 0
       nb_act               = 0
@@ -870,6 +872,7 @@ MODULE mod_Tnum
 
       para_Tnum%JJ                   = JJ
       para_Tnum%With_Cart_Transfo    = (JJ>0) .AND. Cart_transfo
+      para_Tnum%Write_QMotions       = Write_QMotions
 
       para_Tnum%stepT                = stepT
       para_Tnum%num_x                = num_x
@@ -2001,6 +2004,8 @@ MODULE mod_Tnum
   Tnum1%JJ                   = Tnum2%JJ
   Tnum1%WriteT               = Tnum2%WriteT
   Tnum1%With_Cart_Transfo    = Tnum2%With_Cart_Transfo
+  Tnum1%Write_QMotions        = Tnum2%Write_QMotions
+
 
   Tnum1%Tana                 = Tnum2%Tana
   Tnum1%MidasCppForm         = Tnum2%MidasCppForm
@@ -2040,6 +2045,7 @@ MODULE mod_Tnum
   para_Tnum%JJ                = 0
   para_Tnum%WriteT            = .FALSE.
   para_Tnum%With_Cart_Transfo = .TRUE.
+  para_Tnum%Write_QMotions     = .FALSE.
 
   para_Tnum%Tana              = .FALSE.
   para_Tnum%MidasCppForm      = .FALSE.

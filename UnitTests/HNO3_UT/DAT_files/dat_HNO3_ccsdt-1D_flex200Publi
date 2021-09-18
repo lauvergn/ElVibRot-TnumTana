@@ -8,7 +8,7 @@ DIR_vib=../..
 nice $DIR_vib/vib << ** > res_HNO3_flex200Publi
  &system printlevel=2 /
  &constantes version='HandBook70ed' mass_version='HandBook70ed' /
- &variables Old_Qtransfo=f nb_Qtransfo=3 nrho=1 vep_type=0 /
+ &variables Old_Qtransfo=f nb_Qtransfo=3 nrho=1 vep_type=0 Write_QMotions=f /
  &Coord_transfo name_transfo='zmat' nat=6 /
  N
  O    1

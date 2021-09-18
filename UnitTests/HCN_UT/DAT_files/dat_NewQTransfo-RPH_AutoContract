@@ -36,7 +36,7 @@ RES=res_RPH_AutoContract_Davidson
 nice $DIR_vib/vib << ** > $RES
  &system printlevel=0 /
  &constantes mass_version='HANDBOOK70ED' version='PUBLI2001' /
- &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 /
+ &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 Write_QMotions=f /
  &Coord_transfo name_transfo='zmat' nat=4 /
 $MC
 X     1

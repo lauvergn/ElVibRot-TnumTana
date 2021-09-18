@@ -33,7 +33,7 @@ cat > namelist << EOF
 
 &constantes ene_unit='eV' /
 
-&variables nrho=2 Without_Rot=t Centered_ON_CoM=f Gcte=t f2f1_ana=t Old_Qtransfo=f nb_Qtransfo=2 /
+&variables nrho=2 Without_Rot=t Centered_ON_CoM=f Gcte=t f2f1_ana=t Old_Qtransfo=f nb_Qtransfo=2 Write_QMotions=f /
 
 &Coord_transfo name_transfo='zmat' nat=7 /
 X
