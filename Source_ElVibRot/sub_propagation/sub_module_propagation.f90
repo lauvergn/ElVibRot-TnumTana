@@ -1184,7 +1184,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
        CASE ('rk2')
          type_WPpropa = 5
          npoly = 2
-       CASE ('rk1','euker')
+       CASE ('rk1','euler')
          type_WPpropa = 5
          npoly = 1
        CASE ('rkn')

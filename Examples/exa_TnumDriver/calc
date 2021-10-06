@@ -1,13 +1,13 @@
 
 here=`pwd`
 cd ../..
-  make Tnum_cDriver
+# make Tnum_cDriver
   make Tnum_FDriver
 cd $here
 
 #test c_driver: it needs to read/write from/to the standard input/output.
 
-../../Main_TnumTana_cDriver.exe < dat_driver > res_cdriver
+#../../Main_TnumTana_cDriver.exe < dat_driver > res_cdriver
 
 
 

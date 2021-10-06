@@ -917,6 +917,9 @@ END SUBROUTINE sub_OpBasis_OneCBF
             OpPsi_symab = Calc_symab1_EOR_symab2(para_Op%symab,TabPsi(i)%symab)
             CALL Set_symab_OF_psiBasisRep(TabOpPsi(i),OpPsi_symab)
 
+            !write(out_unitp,*) 'para_Op,psi symab ',para_Op%symab,TabPsi(i)%symab
+            !write(out_unitp,*) 'OpPsi_symab',TabOpPsi(i)%symab
+
           END DO
         END IF
 

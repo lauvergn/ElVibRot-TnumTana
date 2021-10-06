@@ -334,6 +334,37 @@ SUBROUTINE Tnum_get_Qact0(Qact0,nb_act)
   END IF
 
 END SUBROUTINE Tnum_get_Qact0
+SUBROUTINE Tnum_get_mass(mass,Z,A,name)
+  USE mod_system
+  USE Module_ForTnumTana_Driver
+  IMPLICIT NONE
+
+  integer,            intent(inout)     :: Z,A
+  real (kind=Rkind),  intent(inout)     :: mass
+  character (len=10), intent(in)        :: name
+
+
+  integer     :: err_mass
+
+
+  character (len=*), parameter :: name_sub='Tnum_get_mass'
+
+  CALL Check_TnumInit(name_sub)
+
+  IF (len_trim(adjustl(name)) == 0) THEN
+    mass = get_mass_Tnum(const_phys%mendeleev,Z,A,err_mass=err_mass)
+  ELSE
+    mass = get_mass_Tnum(const_phys%mendeleev,Z,A,name,err_mass)
+  END IF
+
+  IF (err_mass /= 0) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) ' The mass cannot be find!'
+    write(out_unitp,*) ' Z,A,name',Z,A,trim(name)
+    STOP 'ERROR in Tnum_get_mass: The mass cannot be find!'
+  END IF
+
+END SUBROUTINE Tnum_get_mass
 SUBROUTINE Tnum_get_EigNM_ForPVSCF(EigNM,nb_NM)
   USE mod_system
   USE mod_Constant

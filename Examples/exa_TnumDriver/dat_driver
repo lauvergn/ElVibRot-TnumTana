@@ -2,6 +2,7 @@
          Old_Qtransfo=f
          nb_Qtransfo=3
          nrho=2
+         Tana=t
  /
  &Coord_transfo name_transfo='bunch' nb_vect=3 inTOout=f /
 O O H H

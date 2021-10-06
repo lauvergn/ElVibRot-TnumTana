@@ -3902,13 +3902,26 @@
         !IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Tana'
         CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
         IF (debug) CALL write_op(para_Tnum%TWOxKEO,header=.TRUE.)
+        CALL flush_perso(out_unitp)
 
-        write(out_unitp,*) '--- First comparison with internal analytical KEO'
-        CALL comparison_G_FROM_Tnum_Tana(para_Tnum%ExpandTWOxKEO,mole,para_Tnum,Qact)
+        IF (para_Tnum%Compa_TanaTnum > 0) THEN
+          write(out_unitp,*) '--- First comparison with internal analytical KEO'
+          CALL comparison_G_FROM_Tnum_Tana(para_Tnum%ExpandTWOxKEO,mole,para_Tnum,Qact)
+          CALL flush_perso(out_unitp)
+        ELSE
+          write(out_unitp,*) 'WARNING:'
+          write(out_unitp,*) 'NO COMPARISON with internal analytical KEO'
+        END IF
 
-        ! second comparison with the reading of the KEO in MCTDH format
-        write(out_unitp,*) '--- Second comparison with MCTDH read KEO'
-        CALL comparison_G_FROM_Tnum_ReadKEO(mole,para_Tnum,Qact)
+        IF (para_Tnum%Compa_TanaTnum > 1) THEN
+          ! second comparison with the reading of the KEO in MCTDH format
+          write(out_unitp,*) '--- Second comparison with MCTDH read KEO'
+          CALL comparison_G_FROM_Tnum_ReadKEO(mole,para_Tnum,Qact)
+          CALL flush_perso(out_unitp)
+        ELSE
+          write(out_unitp,*) 'WARNING:'
+          write(out_unitp,*) 'NO COMPARISON with MCTDH read KEO'
+        END IF
 
         write(out_unitp,*)
         CALL time_perso('Tana')

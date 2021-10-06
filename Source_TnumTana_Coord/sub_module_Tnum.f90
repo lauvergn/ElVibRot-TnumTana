@@ -228,6 +228,7 @@ MODULE mod_Tnum
                                                 ! as 2 Cartesian geometries (like for the frequencies)
 
           logical                    :: Tana              = .FALSE.
+          integer                    :: Compa_TanaTnum    = 1
           logical                    :: MidasCppForm      = .FALSE.
           logical                    :: MCTDHForm         = .FALSE.
           logical                    :: LaTeXForm         = .FALSE.
@@ -726,6 +727,8 @@ MODULE mod_Tnum
       logical           :: num_GG,num_g,num_x,Gdiago,Gcte,With_VecCOM,Write_QMotions
       logical           :: With_Tab_dnQflex
       logical           :: Tana,MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,f2f1_ana
+      integer           :: Compa_TanaTnum
+
       real (kind=Rkind) :: stepT,stepOp
       integer           :: KEO_TalyorOFQinact2n ! taylor epxansion along coordinate 2n (21) types
 !     - end for the CoordType ----------------------------
@@ -742,7 +745,8 @@ MODULE mod_Tnum
                      Rot_Dip_with_EC,sym,check_sym,                     &
                      NM,NM_TO_sym,hessian_old,purify_hess,k_Half,       &
                      hessian_cart,hessian_onthefly,file_hessian,stepOp, &
-                     stepT,num_GG,num_g,num_x,nrho,Tana,vep_type,       &
+                     stepT,num_GG,num_g,num_x,nrho,vep_type,            &
+                     Tana,Compa_TanaTnum,                               &
                      Gdiago,Gcte,NonGcteRange,                          &
                      MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,         &
                      KEO_TalyorOFQinact2n,f2f1_ana,                     &
@@ -784,6 +788,7 @@ MODULE mod_Tnum
       Gcte                 = .FALSE.
       NonGcteRange(:)      = 0
       Tana                 = .FALSE.
+      Compa_TanaTnum       = 1
       MidasCppForm         = .FALSE.
       MCTDHForm            = .FALSE.
       LaTeXForm            = .FALSE.
@@ -930,6 +935,8 @@ MODULE mod_Tnum
       END IF
 
       para_Tnum%Tana                 = Tana
+      IF (Compa_TanaTnum < 0) Compa_TanaTnum = 0
+      para_Tnum%Compa_TanaTnum       = Compa_TanaTnum
 
       para_Tnum%LaTeXForm            = (Tana .AND. LaTeXForm)
       para_Tnum%MCTDHForm            = (Tana .AND. MCTDHForm)
@@ -2008,6 +2015,7 @@ MODULE mod_Tnum
 
 
   Tnum1%Tana                 = Tnum2%Tana
+  Tnum1%Compa_TanaTnum       = Tnum2%Compa_TanaTnum
   Tnum1%MidasCppForm         = Tnum2%MidasCppForm
   Tnum1%MCTDHForm            = Tnum2%MCTDHForm
   Tnum1%LaTeXForm            = Tnum2%LaTeXForm
@@ -2048,6 +2056,7 @@ MODULE mod_Tnum
   para_Tnum%Write_QMotions     = .FALSE.
 
   para_Tnum%Tana              = .FALSE.
+  para_Tnum%Compa_TanaTnum    = 1
   para_Tnum%MidasCppForm      = .FALSE.
   para_Tnum%MCTDHForm         = .FALSE.
   para_Tnum%LaTeXForm         = .FALSE.

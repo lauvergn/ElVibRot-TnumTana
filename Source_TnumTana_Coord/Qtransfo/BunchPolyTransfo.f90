@@ -3699,6 +3699,7 @@
 
       ! for the M-matrix, we use mass-weighted A matrix
       DO iv=1,BunchTransfo%nb_vect+1
+        
         A(iv,:) = A(iv,:) / sqrt(BunchTransfo%masses_OF_At(1:BunchTransfo%nat_act))
       END DO
 
@@ -3973,4 +3974,3 @@
    END SUBROUTINE get_unit_vector_Ei
 
       END MODULE mod_BunchPolyTransfo
-

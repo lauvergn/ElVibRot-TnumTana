@@ -30,9 +30,13 @@
  IMPLICIT NONE
 
   integer, parameter :: nt=10**4
-  integer, parameter :: nat=5
-  real (kind=8) :: Qact(3*nat-6),Qcart(3*nat)
-  integer :: InputUnit,OutputUnit
+
+  integer            :: nb_act,nb_cart,init_sub
+  real (kind=8), allocatable :: Qact(:),Qcart(:)
+  real (kind=8)      :: mass
+  integer            :: Z,A
+  character (len=10) :: Atomic_Symbol
+  integer            :: InputUnit,OutputUnit
 
 
   integer :: i
@@ -45,6 +49,45 @@
   CALL Init_OutputUnit_Driver(OutputUnit)
   write(6,*) 'InputUnit',InputUnit
   write(6,*) 'OutputUnit',OutputUnit
+
+  CALL Init_TnumTana_FOR_Driver(nb_act,nb_cart,init_sub)
+  write(6,*) 'nb_act,nb_cart,init_sub',nb_act,nb_cart,init_sub
+
+  !=================================
+  ! to get isotopic masses
+  Z = -1
+  A = -1
+  Atomic_Symbol = 'C'
+  CALL Tnum_get_mass(mass,Z,A,Atomic_Symbol)
+  write(6,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
+  flush(6)
+
+  Z = -1
+  A = -1
+  Atomic_Symbol = '6_13'
+  CALL Tnum_get_mass(mass,Z,A,Atomic_Symbol)
+  write(6,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
+  flush(6)
+
+  Z = 8
+  A = 17
+  Atomic_Symbol = ''
+  CALL Tnum_get_mass(mass,Z,A,Atomic_Symbol)
+  write(6,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
+  flush(6)
+
+  Z = 8
+  A = -1
+  Atomic_Symbol = ''
+  CALL Tnum_get_mass(mass,Z,A,Atomic_Symbol)
+  write(6,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
+  flush(6)
+  !=================================
+
+
+
+  allocate(Qact(nb_act))
+  allocate(Qcart(nb_cart))
 
 
   Qact(:) = 0.5d0
@@ -69,7 +112,7 @@
   write(6,*)
   write(6,*) 'END loop'
 
-  DO i=1,3*nat,3
+  DO i=1,nb_cart,3
     write(6,*) (i-1)/3+1,Qcart(i:i+2)
   END DO
 

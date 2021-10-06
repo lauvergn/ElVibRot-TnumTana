@@ -412,7 +412,7 @@
       IF (present(L2)) write(out_unitp,*) 'L2',L2
       CALL Write_Basis_L_TO_n(L_TO_n_para)
       write(out_unitp,*) ' ERROR:  L < 0',L
-      STOP
+      STOP 'ERROR in Get_n_FROM_Basis_L_TO_n: L < 0'
     END IF
 
     L2_loc = L
@@ -425,7 +425,7 @@
       IF (present(L2)) write(out_unitp,*) 'L2',L2
       CALL Write_Basis_L_TO_n(L_TO_n_para)
       write(out_unitp,*) ' ERROR:  L2 < 0',L2_loc
-      STOP
+      STOP 'ERROR in Get_n_FROM_Basis_L_TO_n: L2 < 0'
     END IF
 
     IF (allocated(L_TO_n_para%tab_L_TO_n)) THEN
@@ -459,7 +459,7 @@
       CASE (2) ! read tab_L_TO_n
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) '   L_TO_n_type=2 and tab_L_TO_n is not allocated !'
-        STOP
+        STOP 'ERROR in Get_n_FROM_Basis_L_TO_n: L_TO_n_type=2 and tab_L_TO_n is not allocated'
 
       CASE (3)
         n = L_TO_n_para%A
@@ -474,23 +474,27 @@
       CASE Default
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) '  WRONG L_TO_n_type',L_TO_n_para%L_TO_n_type
-        STOP
+        STOP 'ERROR in Get_n_FROM_Basis_L_TO_n: WRONG L_TO_n_type'
       END SELECT
 
     END IF
 
     n = min(n,L_TO_n_para%max_n)
 
-
-    IF (n < 1) THEN
+    IF (n < 0) THEN
      write(out_unitp,*) 'ERROR in ',name_sub
-     write(out_unitp,*) '  n < 1, n:',n
+     write(out_unitp,*) '  n < 0, n:',n
      write(out_unitp,*) 'L',L
      write(out_unitp,*) 'L2?',present(L2)
      IF (present(L2)) write(out_unitp,*) 'L2',L2
      CALL Write_Basis_L_TO_n(L_TO_n_para)
      write(out_unitp,*)
-     STOP 'ERROR in Get_n_FROM_Basis_L_TO_n: n<1'
+     STOP 'ERROR in Get_n_FROM_Basis_L_TO_n: n<0'
+    END IF
+
+    IF (n == 0) THEN
+     write(out_unitp,*) 'WARNING in ',name_sub, '  n == 0'
+     CALL flush_perso(out_unitp)
     END IF
 !---------------------------------------------------------------------
       IF (debug) THEN

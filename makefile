@@ -980,7 +980,7 @@ $(TNUMEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMAIN).o
 	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(QMLibDIR_full) $(LYNKFLAGS)
 #
 $(TNUMMCTDHEXE): obj $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMCTDHMAIN).o
-	$(LYNK90)   -o $(TNUMMCTDHEXE) $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMCTDHMAIN).o  $(LYNKFLAGS)
+	$(LYNK90)   -o $(TNUMMCTDHEXE) $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMCTDHMAIN).o $(QMLibDIR_full) $(LYNKFLAGS)
 # TNUM_MiddasCppEXE  = Tnum90_MidasCpp.exe
 # TNUM_MiddasCppMAIN = Tnum90_MidasCpp
 $(TNUM_MiddasCppEXE): obj $(Obj_KEO_PrimOp) $(OBJ)/$(TNUM_MiddasCppMAIN).o
