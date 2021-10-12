@@ -1,0 +1,52 @@
+ SYSTEM=sub_system_murrell.f
+
+here=`pwd`
+DIR_vib=$here/../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make
+cd $here
+
+ x1=0.538516066
+ x2=0.461483933
+
+nice $DIR_vib/vib << ** >res
+ &system printlevel=2 /
+ &constantes /
+ &variables 
+         zmat=T
+         nat=4
+         sym=T
+         nrho=2
+ /
+C
+0.0     1
+N     2  1
+H     2 -1 3
+sym  cos(a)      R     r    x    pi   dh
+6
+1      0.        0.  $x1    1.   0.   0.
+2      0.        0.  $x2   -1.   0.   0.
+3      0.        0.  0.     0.   1.   0.
+4      0.        1.  0.     0.   0.   0.
+5      1.        0.  0.     0.   0.   0.
+6      0.        0.  0.     0.   0.   1.
+
+ 100 1 100    0 0 0
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2 read_Qsym0=t unit='bohr' /
+cosa .999d0
+R 3.187
+r 2.179
+x 0.
+pi 3.141592653589793238462643383279d0
+dh 0.0
+
+ &basis_nD iQact(1)=1 name="HO+" nb=10 nq=20 Q0=0. scaleQ=5. /
+ &inactives /
+
+ &actives test=f direct=2 /
+ &analyse max_ana=40 max_ene=5000.d0 print=t print_psi=0 /
+**

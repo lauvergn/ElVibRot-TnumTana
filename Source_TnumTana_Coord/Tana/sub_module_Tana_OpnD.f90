@@ -75,12 +75,12 @@
     module procedure delete_opnd
   end interface
 
-  !!@description: Generic routine that initializes a variable of operator type to zero 
+  !!@description: Generic routine that initializes a variable of operator type to zero
   interface init_to_opzero
     module procedure init_opzero_opnd
   end interface
- 
-  !!@description: Generic routine that allocate variables of operator type  
+
+  !!@description: Generic routine that allocate variables of operator type
   interface allocate_op
     module procedure allocate_opnd
   end interface
@@ -225,8 +225,8 @@ subroutine check_allocate_opnd(F_nd)
 
  end subroutine check_allocate_opnd
 
- !! @description: Deallocated a nd operator 
- !! @param:    F_nd    The 1d operator (type: opnd). 
+ !! @description: Deallocated a nd operator
+ !! @param:    F_nd    The 1d operator (type: opnd).
  subroutine delete_opnd(F_nd)
 
    type(opnd),           intent(inout)    :: F_nd
@@ -239,9 +239,9 @@ subroutine check_allocate_opnd(F_nd)
 
  end subroutine delete_opnd
 
- !! @description: Allocated a nd operator 
- !! @param:    F_nd    The nd operator (type: opnd). 
- !! @param:       ndim     Size of F_nd%prod_op1d. 
+ !! @description: Allocated a nd operator
+ !! @param:    F_nd    The nd operator (type: opnd).
+ !! @param:       ndim     Size of F_nd%prod_op1d.
  subroutine allocate_opnd(F_nd, ndim)
 
    type(opnd),           intent(inout)    :: F_nd
@@ -256,7 +256,7 @@ subroutine check_allocate_opnd(F_nd)
  end subroutine allocate_opnd
 
  !! @description: Initialized a nd operator to zero
- !! @param:       F_nd    The nd operator (type: opnd). 
+ !! @param:       F_nd    The nd operator (type: opnd).
  subroutine init_opzero_opnd(F_nd)
 
    type(opnd),           intent(inout)    :: F_nd
@@ -951,10 +951,10 @@ subroutine check_allocate_opnd(F_nd)
 
    END SUBROUTINE write_opnd
 
- !! @description: Copy a opnd operator F1_nd to 
+ !! @description: Copy a opnd operator F1_nd to
  !!               another sum_opnd operator F2_nd
- !! @param:     F1_nd    The operator which will be copied 
- !! @param:    F2_nd    The operator in which F1_sum_nd will be copied 
+ !! @param:     F1_nd    The operator which will be copied
+ !! @param:    F2_nd    The operator in which F1_sum_nd will be copied
  subroutine copy_F1_nd_into_F2_nd(F1_nd, F2_nd)
 
    type(opnd),           intent(in)    :: F1_nd
@@ -988,10 +988,10 @@ subroutine check_allocate_opnd(F_nd)
 
  end subroutine OpnD2_TO_OpnD1
 
- !! @description: Copy a 1d operator F1_1d to 
+ !! @description: Copy a 1d operator F1_1d to
  !!               another a 1d operator F2_nd
- !! @param:     F1_1d    The operator which will be copied 
- !! @param:    F2_nd    The operator in which F1_1d will be copied 
+ !! @param:     F1_1d    The operator which will be copied
+ !! @param:    F2_nd    The operator in which F1_1d will be copied
  subroutine copy_F1_1d_into_F2_nd(F1_1d, F2_nd)
 
    type(op1d),           intent(in)    :: F1_1d
@@ -1016,10 +1016,10 @@ subroutine check_allocate_opnd(F_nd)
 
  end subroutine Op1D2_TO_OpnD1
 
- !! @description: Copy an elementary operator F1_el to 
+ !! @description: Copy an elementary operator F1_el to
  !!               another a nd operator F2_nd
- !! @param:     F1_el    The operator which will be copied 
- !! @param:    F2_nd    The operator in which F1_el will be copied 
+ !! @param:     F1_el    The operator which will be copied
+ !! @param:    F2_nd    The operator in which F1_el will be copied
  subroutine copy_F1_el_into_F2_nd(F1_el, F2_nd)
 
    type(opel),           intent(in)    :: F1_el

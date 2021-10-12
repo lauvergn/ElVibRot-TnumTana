@@ -1267,33 +1267,132 @@
        END DO
 
        end subroutine d0d1d2poly_Hermite_exp_noexp_G
+! Laguerre polynomials (generalized): L(x,n,a)
+!  x.L"(x,n,a)+(a+1-x)L'(x,n,a)+n.L(x,n,a)=0
+!  x.L'(x,n,a) - n.L(x,n,a) + (n+a).L(x,n-1,a)=0
+!
+!  (n+1)L(x,n+1,a)-(2n+1-x+a)L(x,n,a)+(n+a).L(x,n-1,a) = 0
+!     with L(x,0,a)=1 and L(x,1,a)=(1+a)-x
+
+! Normalization:
+!  Int[0,+inf] L(x,n,a)L(x,m,a).Exp(-x).x^a.dx = delta(n,m)gamma(n+1+a)/n!
+FUNCTION poly_laguerre(x,n,a)
+  USE mod_system
+  IMPLICIT NONE
+  real(kind=Rkind) :: poly_laguerre
+
+       integer,         intent (in) :: n,a
+       real(kind=Rkind),intent(in)  :: x
+
+       real(kind=Rkind) :: Pp,P0,Pm
+
+       integer :: i
 
 
-      FUNCTION poly_laguerre(xx,nnn,alpha)
-      USE mod_system
-      IMPLICIT NONE
-      real(kind=Rkind) :: poly_laguerre
-
-       integer, intent (in) :: nnn,alpha
-
-       real(kind=Rkind),intent(in) :: xx
-
-       real(kind=Rkind) :: x,pmm,somx2,fact,pmmp1,pll,poly,norme2
-
-       integer :: n
-
-       n = nnn
-       x = xx
-
-       IF (x < ZERO) THEN
-         STOP 'x < 0 in poly_laguerre'
+       IF (n < 0 .OR. a < 0) THEN
+         STOP 'n < 0 or a (alpha) < 0 in poly_laguerre'
        END IF
 
-STOP 'laguerre'
+       IF (n == 0) THEN
+         poly_laguerre = ONE
+       ELSE IF (n == 1) THEN
+         poly_laguerre = -x + (1+a)
+       ELSE
+         Pm = 1
+         P0 = -x + (1+a)
+         DO i=1,n-1
+           Pp = ( (2*i+1+a-x)*P0 - (i+a)*Pm)/(i+1)
+           Pm = P0
+           P0 = Pp
+         END DO
+         poly_laguerre = Pp
+       END IF
 
-       END FUNCTION poly_laguerre
+END FUNCTION poly_laguerre
+
+SUBROUTINE d0d1d2poly_laguerre(x,d0l,d1l,d2l,n,a)
+  USE mod_system
+  IMPLICIT NONE
+  real(kind=Rkind) :: d0l,d1l,d2l
+
+       integer,         intent (in) :: n,a
+       real(kind=Rkind),intent(in)  :: x
+
+       real(kind=Rkind) :: Pp,P0,Pm,dx
+       real(kind=Rkind) :: poly_laguerre ! function
+
+       integer :: i
 
 
+       !  x.L"(x,n,a)+(a+1-x)L'(x,n,a)+n.L(x,n,a)=0
+       !  x.L'(x,n,a) - n.L(x,n,a) + (n+a).L(x,n-1,a)=0
+
+       IF (n < 0 .OR. a < 0) THEN
+         STOP 'n < 0 or a (alpha) < 0 in poly_laguerre'
+       END IF
+
+       IF (n == 0) THEN
+         d0l = ONE
+         d1l = ZERO
+         d2l = ZERO
+       ELSE IF (n == 1) THEN
+         d0l = -x + (1+a)
+         d1l = -ONE
+         d2l =  ZERO
+       ELSE
+         Pm = 1
+         P0 = -x + (1+a)
+         DO i=1,n-1
+           Pp = ( (2*i+1+a-x)*P0 - (i+a)*Pm)/(i+1)
+           Pm = P0
+           P0 = Pp
+         END DO
+         d0l = Pp
+         d1l = (n*Pp -(n+a)*Pm)/x
+         d2l = (-(a+1-x)*d1l-(n+a)*d0l)/x
+       END IF
+
+       !num
+       ! dx=0.00001_Rkind
+       ! P0=d0l
+       ! Pp=poly_laguerre(x+dx,n,a)
+       ! Pm=poly_laguerre(x-dx,n,a)
+       ! Write(6,*) 'err d1l',n,x,d1l - (Pp-Pm)/(dx+dx)
+       ! Write(6,*) 'err d2l',n,x,d2l - (Pp+Pm-2*P0)/dx**2
+
+
+END SUBROUTINE d0d1d2poly_laguerre
+SUBROUTINE d0d1d2poly_laguerre_weight(x,d0l,d1l,d2l,n,a)
+  USE mod_system
+  IMPLICIT NONE
+       real(kind=Rkind), intent(inout) :: d0l,d1l,d2l
+       integer,          intent(in)    :: n,a
+       real(kind=Rkind), intent(in)    :: x
+
+       real(kind=Rkind) :: d0x,d1x,d2x,ra
+       real(kind=Rkind) :: d0e,d1e,d2e
+       real(kind=Rkind) :: d0w,d1w,d2w
+
+
+       CALL d0d1d2poly_laguerre(x,d0l,d1l,d2l,n,a)
+
+       IF (a == 0) THEN ! w(x) = exp(-x/2)
+         d0w = exp(-x/2) ; d1w = -HALF*d0e ; d2w = QUARTER*d0e
+       ELSE  ! w(x) = exp(-x/2) x^(a/2)
+         ra  = real(a,kind=Rkind)/2
+         d0x = x**ra     ; d1x = ra * x**(ra-1) ; d2x = ra*(ra-1) * x**(ra-2)
+         d0e = exp(-x/2) ; d1e = -HALF*d0e ; d2e = QUARTER*d0e
+
+         d0w = d0x*d0e
+         d1w = d1x*d0e +   d0x*d1e
+         d2w = d2x*d0e + 2*d1x*d1e + d0x*d2e
+       END IF
+
+       d2l = d2w*d0l + 2*d1w*d1l + d0w*d2l
+       d1l = d1w*d0l +   d0w*d1l
+       d0l = d0w*d0l
+
+END SUBROUTINE d0d1d2poly_laguerre_weight
 !=============================================================
 !
 !      determination des tous les Ln(xi)=serie_fourier(n,i)

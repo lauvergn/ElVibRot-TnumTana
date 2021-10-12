@@ -42,9 +42,12 @@
 !===========================================================================
 
 !=============================================================
+!  x.L"(x,n)+(1-x)L'(x,n)+n.L(x,n)=0
+!  x.L'(x,n)-n.L(x,n)+n.L(x,n-1)=0
 !
-!      determination des tous les Hn(xi)=poly_h(n,i)
-!      + les derivees 1er et 2d.
+!  (n+1)L(x,n+1)+(x-2n-1)L(x,n)+n.L(x,n-1) = 0
+!     with L(x,0)=1 and L(x,1)=1-x
+! Normalization: Int[0,+inf] L(x,n)L(x,m).Exp(-x)dx = delta(n,m)
 !
 !=============================================================
       SUBROUTINE sub_quadra_laguerre(base)
@@ -58,10 +61,8 @@
 
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
-      integer  :: i,nq
-
-      integer  :: nb_Laguerre
-
+      integer  :: iq,ib,nq
+      real (kind=Rkind) :: B
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='sub_quadra_laguerre'
 !      logical, parameter :: debug = .TRUE.
@@ -101,27 +102,32 @@
 
         CALL alloc_xw_OF_basis(base)
 
-        !CALL hercom(nq,base%x(1,:),base%w)
+        CALL laguerre_compute (nq,base%x(1,:),base%w,ZERO)
+        !write(6,*) 'x_Laguerre',base%x(1,:)
+        base%w(:) = base%w * exp(base%x(1,:))
+        !B=30._Rkind
+        !DO iq=1,nq
+        !  base%x(1,iq) = B/nq*(iq-HALF)
+        !  base%w(iq)   = B/nq
+        !END DO
         base%wrho(:) = base%w(:)
         !base%xPOGridRep_done = .TRUE.
       END IF
       base%rho(:)  = ONE
-STOP 'laguerre'
 
-!     calcul des valeurs des polynomes de nb_Laguerre et des derivees en chaque
-!     point de la quadrature.
       CALL alloc_dnb_OF_basis(base)
 
-      IF (base%print_info_OF_basisDP .AND. print_level > -1)            &
-                        write(out_unitp,*) '      All Laguerre polynomia'
-        base%tab_ndim_index(1,:) = (/ (i,i=1,base%nb) /)
-        !CALL d0d1d2poly_Laguerre_exp_grille(                            &
-        !                     base%x(1,:),                               &
-        !                     base%dnRGB%d0(:,:),                             &
-        !                     base%dnRGB%d1(:,:,1),                           &
-        !                     base%dnRGB%d2(:,:,1,1),                         &
-        !                     base%nb,nq)
-
+      IF (base%print_info_OF_basisDP .AND. print_level > -1)                    &
+                        write(out_unitp,*) '      All Laguerre polynomials'
+        base%tab_ndim_index(1,:) = [(ib,ib=1,base%nb)]
+        DO ib=1,base%nb
+        DO iq=1,nq
+          CALL d0d1d2poly_laguerre_weight(base%x(1,iq),                         &
+                                          base%dnRGB%d0(iq,ib),                 &
+                                          base%dnRGB%d1(iq,ib,1),               &
+                                          base%dnRGB%d2(iq,ib,1,1),ib-1,0)
+        END DO
+        END DO
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL RecWrite_basis(base)

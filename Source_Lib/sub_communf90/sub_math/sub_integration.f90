@@ -1156,6 +1156,323 @@
       return
       end subroutine herset
 
+      subroutine laguerre_compute ( order, xtab, weight, alpha )
+
+      !*****************************************************************************80
+      !
+      !! laguerre_compute() computes a Gauss-Laguerre quadrature rule.
+      !
+      !  Discussion:
+      !
+      !    In the simplest case, ALPHA is 0, and we are approximating the
+      !    integral from 0 to +oo of EXP(-X) * F(X).  When this is so,
+      !    it is easy to modify the rule to approximate the integral from
+      !    A to +oo as well.
+      !
+      !    If ALPHA is nonzero, then there is no simple way to extend the
+      !    rule to approximate the integral from A to +oo.  The simplest
+      !    procedures would be to approximate the integral from 0 to A.
+      !
+      !    The integration interval is [ A, +oo ) or [ 0, +oo ).
+      !
+      !    The weight function is w(x) = exp ( -x ) or exp ( -x ) * x^alpha.
+      !
+      !    If the integral to approximate is:
+      !
+      !        Integral ( A <= X < +oo ) exp ( - X ) * F(X) dX
+      !      or
+      !        Integral ( 0 <= X < +oo ) exp ( - X ) * X^ALPHA * F(X) dX
+      !
+      !    then the quadrature rule is:
+      !
+      !      exp ( - A ) * Sum ( 1 <= I <= ORDER ) WEIGHT(I) * F ( A+XTAB(I) )
+      !    or
+      !      Sum ( 1 <= I <= ORDER ) WEIGHT(I) * F ( XTAB(I) )
+      !
+      !
+      !    If the integral to approximate is:
+      !
+      !        Integral ( A <= X < +oo ) F(X) dX
+      !      or
+      !        Integral ( 0 <= X < +oo ) X^ALPHA * F(X) dX
+      !
+      !    then the quadrature rule is:
+      !
+      !      exp ( - A ) * Sum ( 1 <= I <= ORDER )
+      !        WEIGHT(I) * EXP(A+XTAB(I)) * F ( A+XTAB(I) )
+      !    or
+      !      Sum ( 1 <= I <= ORDER ) WEIGHT(I) * EXP(XTAB(I)) * F ( XTAB(I) )
+      !
+      !  Licensing:
+      !
+      !    This code is distributed under the GNU LGPL license.
+      !
+      !  Modified:
+      !
+      !    15 March 2000
+      !
+      !  Author:
+      !
+      !    Original FORTRAN77 version by Arthur Stroud, Don Secrest.
+      !    FORTRAN90 version by John Burkardt.
+      !
+      !  Reference:
+      !
+      !    Arthur Stroud, Don Secrest,
+      !    Gaussian Quadrature Formulas,
+      !    Prentice Hall, 1966,
+      !    LC: QA299.4G3S7.
+      !
+      !  Parameters:
+      !
+      !    Input, integer ( kind = 4 ) ORDER, the order of the quadrature rule
+      !    to be computed.  ORDER must be at least 1.
+      !
+      !    Output, real ( kind = rk ) XTAB(ORDER), the abscissas.
+      !
+      !    Output, real ( kind = rk ) WEIGHT(ORDER), the weights.
+      !
+      !    Input, real ( kind = rk ) ALPHA, the exponent of the X factor.
+      !    Set ALPHA = 0.0D+00 for the simplest rule.
+      !    ALPHA must be nonnegative.
+      !
+        implicit none
+
+        integer, parameter :: rk = kind ( 1.0D+00 )
+
+        integer ( kind = 4 ) order
+
+        real ( kind = rk ) alpha
+        real ( kind = rk ) b(order)
+        real ( kind = rk ) c(order)
+        real ( kind = rk ) cc
+        real ( kind = rk ) dp2
+        integer ( kind = 4 ) i
+        real ( kind = rk ) p1
+        real ( kind = rk ) r1
+        real ( kind = rk ) r2
+        real ( kind = rk ) ratio
+        real ( kind = rk ) weight(order)
+        real ( kind = rk ) x
+        real ( kind = rk ) xtab(order)
+      !
+      !  Set the recursion coefficients.
+      !
+        do i = 1, order
+          b(i) = ( alpha + real ( 2 * i - 1, kind = rk ) )
+        end do
+
+        do i = 1, order
+          c(i) = real ( i - 1, kind = rk ) * ( alpha + real ( i - 1, kind = rk ) )
+        end do
+
+        cc = gamma ( alpha + 1.0D+00 ) * product ( c(2:order) )
+
+        do i = 1, order
+      !
+      !  Compute an estimate for the root.
+      !
+          if ( i == 1 ) then
+
+            x = ( 1.0D+00 + alpha ) * ( 3.0D+00+ 0.92 * alpha ) / &
+              ( 1.0D+00 + 2.4D+00 * real ( order, kind = rk ) + 1.8D+00 * alpha )
+
+          else if ( i == 2 ) then
+
+            x = x + ( 15.0D+00 + 6.25D+00 * alpha ) / &
+              ( 1.0D+00 + 0.9D+00 * alpha + 2.5D+00 * real ( order, kind = rk ) )
+
+          else
+
+            r1 = ( 1.0D+00 + 2.55D+00 * real ( i - 2, kind = rk ) ) &
+              / ( 1.9D+00 * real ( i - 2, kind = rk ) )
+
+            r2 = 1.26D+00 * real ( i - 2, kind = rk ) * alpha / &
+              ( 1.0D+00 + 3.5D+00 * real ( i - 2, kind = rk ) )
+
+            ratio = ( r1 + r2 ) / ( 1.0D+00 + 0.3D+00 * alpha )
+
+            x = x + ratio * ( x - xtab(i-2) )
+
+          end if
+      !
+      !  Use iteration to find the root.
+      !
+          call laguerre_root ( x, order, alpha, dp2, p1, b, c )
+      !
+      !  Set the abscissa and weight.
+      !
+          xtab(i) = x
+          weight(i) = ( cc / dp2 ) / p1
+
+        end do
+
+        return
+      end
+      subroutine laguerre_recur ( p2, dp2, p1, x, order, alpha, b, c )
+
+      !*****************************************************************************80
+      !
+      !! LAGUERRE_RECUR finds the value and derivative of a Laguerre polynomial.
+      !
+      !  Licensing:
+      !
+      !    This code is distributed under the GNU LGPL license.
+      !
+      !  Modified:
+      !
+      !    19 September 1998
+      !
+      !  Author:
+      !
+      !    Original FORTRAN77 version by Arthur Stroud, Don Secrest.
+      !    FORTRAN90 version by John Burkardt.
+      !
+      !  Reference:
+      !
+      !    Arthur Stroud, Don Secrest,
+      !    Gaussian Quadrature Formulas,
+      !    Prentice Hall, 1966,
+      !    LC: QA299.4G3S7.
+      !
+      !  Parameters:
+      !
+      !    Output, real ( kind = rk ) P2, the value of L(ORDER)(X).
+      !
+      !    Output, real ( kind = rk ) DP2, the value of L'(ORDER)(X).
+      !
+      !    Output, real ( kind = rk ) P1, the value of L(ORDER-1)(X).
+      !
+      !    Input, real ( kind = rk ) X, the point at which polynomials are evaluated.
+      !
+      !    Input, integer ( kind = 4 ) ORDER, the order of the polynomial
+      !    to be computed.
+      !
+      !    Input, real ( kind = rk ) ALPHA, the exponent of the X factor in the
+      !    integrand.
+      !
+      !    Input, real ( kind = rk ) B(ORDER), C(ORDER), the recursion
+      !    coefficients.
+      !
+        implicit none
+
+        integer, parameter :: rk = kind ( 1.0D+00 )
+
+        integer ( kind = 4 ) order
+
+        real ( kind = rk ) alpha
+        real ( kind = rk ) b(order)
+        real ( kind = rk ) c(order)
+        real ( kind = rk ) dp0
+        real ( kind = rk ) dp1
+        real ( kind = rk ) dp2
+        integer ( kind = 4 ) i
+        real ( kind = rk ) p0
+        real ( kind = rk ) p1
+        real ( kind = rk ) p2
+        real ( kind = rk ) x
+
+        p1 = 1.0D+00
+        dp1 = 0.0D+00
+
+        p2 = x - alpha - 1.0D+00
+        dp2 = 1.0D+00
+
+        do i = 2, order
+
+          p0 = p1
+          dp0 = dp1
+
+          p1 = p2
+          dp1 = dp2
+
+          p2 = ( x - b(i) ) * p1 - c(i) * p0
+          dp2 = ( x - b(i) ) * dp1 + p1 - c(i) * dp0
+
+        end do
+
+        return
+      end
+      subroutine laguerre_root ( x, order, alpha, dp2, p1, b, c )
+
+      !*****************************************************************************80
+      !
+      !! LAGUERRE_ROOT improves an approximate root of a Laguerre polynomial.
+      !
+      !  Licensing:
+      !
+      !    This code is distributed under the GNU LGPL license.
+      !
+      !  Modified:
+      !
+      !    09 December 2000
+      !
+      !  Author:
+      !
+      !    Original FORTRAN77 version by Arthur Stroud, Don Secrest.
+      !    FORTRAN90 version by John Burkardt.
+      !
+      !  Reference:
+      !
+      !    Arthur Stroud, Don Secrest,
+      !    Gaussian Quadrature Formulas,
+      !    Prentice Hall, 1966,
+      !    LC: QA299.4G3S7.
+      !
+      !  Parameters:
+      !
+      !    Input/output, real ( kind = rk ) X, the approximate root, which
+      !    should be improved on output.
+      !
+      !    Input, integer ( kind = 4 ) ORDER, the order of the polynomial
+      !    to be computed.
+      !
+      !    Input, real ( kind = rk ) ALPHA, the exponent of the X factor.
+      !
+      !    Output, real ( kind = rk ) DP2, the value of L'(ORDER)(X).
+      !
+      !    Output, real ( kind = rk ) P1, the value of L(ORDER-1)(X).
+      !
+      !    Input, real ( kind = rk ) B(ORDER), C(ORDER), the recursion coefficients.
+      !
+        implicit none
+
+        integer, parameter :: rk = kind ( 1.0D+00 )
+
+        integer ( kind = 4 ) order
+
+        real ( kind = rk ) alpha
+        real ( kind = rk ) b(order)
+        real ( kind = rk ) c(order)
+        real ( kind = rk ) d
+        real ( kind = rk ) dp2
+        real ( kind = rk ) eps
+        real ( kind = rk ) p1
+        real ( kind = rk ) p2
+        integer ( kind = 4 ) step
+        integer ( kind = 4 ), parameter :: step_max = 10
+        real ( kind = rk ) x
+
+        eps = epsilon ( x )
+
+        do step = 1, step_max
+
+          call laguerre_recur ( p2, dp2, p1, x, order, alpha, b, c )
+
+          d = p2 / dp2
+          x = x - d
+
+          if ( abs ( d ) <= eps * ( abs ( x ) + 1.0D+00 ) ) then
+            return
+          end if
+
+        end do
+
+        return
+      end
+
+
+
 ! cubature from Burkardt
 subroutine en_r2_01_1 ( n, o, x, w )
 

@@ -550,6 +550,10 @@ MODULE mod_basis
         CALL sub_quadra_hermite_cuba_DML(basis_temp,err_grid)
         IF (err_grid) CALL sub_quadra_hermite_cuba(basis_temp)
 
+      CASE ("ho+","hm+")
+        basis_temp%type = 80
+        CALL sub_quadra_hermite_half(basis_temp,0)
+
       CASE ("lm","laguerre")
         basis_temp%type = 90
         CALL sub_quadra_laguerre(basis_temp)
@@ -639,6 +643,9 @@ MODULE mod_basis
         write(out_unitp,*) ' 201: Hermite Poly. (odd)                 : HO_1 or Hm_1'
         write(out_unitp,*) ' 21 : PHermite Poly. + points from boxAB  : HObox or Hmbox'
         write(out_unitp,*) ' 2000:Hermite Poly. + cubature (nD)       : cuba_HO or cuba_Hm or cuba_hermite'
+
+        write(out_unitp,*)
+        write(out_unitp,*) ' 80 : Hermite Poly. ([0,+inf])            : HO+ or Hm+'
 
         write(out_unitp,*)
         write(out_unitp,*) ' 90 : Laguerre Poly.                      : Lm or Laguerre'
@@ -731,6 +738,7 @@ MODULE mod_basis
 
       !- scaling of the basis ---------------------------------
       CALL sub_scale_basis(basis_primi)
+      !write(out_unitp,*) 'x (grid points)',basis_primi%x
 
       IF (basis_primi%xPOGridRep_done) RETURN
       CALL flush_perso(out_unitp)
