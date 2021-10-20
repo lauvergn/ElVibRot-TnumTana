@@ -882,8 +882,8 @@ subroutine check_allocate_opnd(F_nd)
 
    character (len = *), parameter :: routine_name = 'Export_VSCF_Opnd'
 
-
-   !CALL write_op(Fnd)
+   write(6,*) 'Export_VSCF_Opnd'
+   CALL write_op(Fnd)
    FndName_loc = String_TO_String('')
 
    IF (size(Fnd%prod_op1d) > 0) THEN
@@ -892,6 +892,7 @@ subroutine check_allocate_opnd(F_nd)
        qname = String_TO_String('Q' // int_TO_char(m) )
 
        CALL Export_VSCF_Op1D(Fnd%prod_op1d(j),qname,F1dName)
+       write(6,*) 'F1d',j,' ',qname,' ',F1dName
        FndName_loc = String_TO_String( FndName_loc // mult // F1dName)
      END DO
      IF (allocated(F1dName)) deallocate(F1dName)

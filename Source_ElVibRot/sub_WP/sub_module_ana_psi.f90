@@ -293,9 +293,13 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
 
   IF (ana_psi%propa) CALL psi_Qba_ie_psi(ana_psi%T,psi,ana_psi,tab_WeightChannels,info)
 
-  CALL Rho1D_Rho2D_psi(psi,ana_psi,adia)
+  IF (allocated(psi%BasisnD%nDindG%nDsize)) THEN
+    CALL Rho1D_Rho2D_psi(psi,ana_psi,adia)
 
-  CALL write1D2D_psi(psi,ana_psi,adia)
+    CALL write1D2D_psi(psi,ana_psi,adia)
+  ELSE
+    write(out_unitp,*) ' WARNING Rho1D or Rho2D or 1Dcut or 2Dcut are not possible!'
+  END IF
 
   !---------------------------------------------------------------------------
   IF (ana_psi%Write_psi) THEN

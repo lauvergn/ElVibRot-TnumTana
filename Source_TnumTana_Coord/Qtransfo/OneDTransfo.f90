@@ -341,7 +341,9 @@
         !special test when the name is not defined (just the number):
         read(name_oneD,*,IOSTAT=err) type_oneD
         IF (err == 0) THEN
-          write(out_unitp,*) ' name_oneD is a number',name_oneD
+          write(out_unitp,*) ' name_oneD is a number: ',name_oneD
+          write(out_unitp,*) ' type_oneD ',type_oneD
+
           oneDTransfo(i)%type_oneD = type_oneD
         ELSE
 
@@ -377,7 +379,7 @@
           ELSE
             oneDTransfo(i)%type_oneD = 2
           END IF
-        CASE ('thetaTOx')
+        CASE ('thetaTOx','thetatox')
           IF ( cte(1) > ONE .OR. cte(1) < ZERO) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) '  For this transformation: ',trim(name_oneD)
@@ -394,7 +396,7 @@
             ! t(x) = Pi/2 + c1*Atan(x) x E ]-inf,inf[
             oneDTransfo(i)%type_oneD = 71
           END IF
-        CASE ('xTOtheta')
+        CASE ('xTOtheta','xtotheta')
           IF ( cte(1) > ONE .OR. cte(1) < ZERO) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) '  For this transformation: ',trim(name_oneD)
@@ -409,7 +411,22 @@
           ELSE
             oneDTransfo(i)%type_oneD = -71  ! theta => x
           END IF
-        CASE ('xTOR')
+        CASE ('xTOAB','xtoab')
+          IF ( cte(1) == cte(2)) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) '  For this transformation: ',trim(name_oneD)
+            write(out_unitp,*) '    wrong value of cte(1) and/or cte(2):',cte(1:2)
+            write(out_unitp,*) '    They MUST be different'
+            write(out_unitp,*) ' Check your data !!'
+            STOP
+          END IF
+
+          IF (inTOout) THEN
+            oneDTransfo(i)%type_oneD = 76   ! x => Q and ]-inf,inf[  x E and Q E ]A,B[
+          ELSE
+            oneDTransfo(i)%type_oneD = -76  ! Q => x
+          END IF
+        CASE ('xTOR','xtor')
          !  transfo R ]0,inf[ => x ]-inf,inf[
          ! 111      =>    (-a + x^2)/x = x-a/x x E ]0,inf[
          !-111      =>    1/2(x+sqrt(4a+x^2)) x E ]-inf,inf[
@@ -429,7 +446,7 @@
             oneDTransfo(i)%type_oneD = -111  ! R => x
           END IF
 
-        CASE ('xTOconstX','xTOu')
+        CASE ('xTOconstX','xTOu','xtou','xtoconstx')
          ! invers of R0.tanh(x/R0) x E ]-inf,inf[  (invers)
          ! t(x) = R0 atanh(x/R0) R0=cte(1)
           IF ( cte(1) == ZERO) THEN
@@ -447,12 +464,20 @@
             oneDTransfo(i)%type_oneD = -74  ! R => x
           END IF
 
+        CASE ('OneOverX','oneoverx','x_inv','R_inv','r_inv')
+         ! R=1/x   x E ]0,inf[
+         ! x=1/R   R E ]0,inf[
+          IF (inTOout) THEN
+            oneDTransfo(i)%type_oneD =  90  ! x => R
+          ELSE
+            oneDTransfo(i)%type_oneD = -90  ! R => x
+          END IF
         CASE default ! ERROR: wrong transformation !
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' The oneD transformation is UNKNOWN: ',     &
                                                     trim(name_oneD)
           write(out_unitp,*) ' Check your data !!'
-          STOP
+          STOP 'ERROR in Read_oneDTransfo: The oneD transformation is UNKNOWN.'
         END SELECT
         END IF
       END DO
@@ -508,7 +533,7 @@
 !----- for debuging ----------------------------------
        character (len=*),parameter :: name_sub='calc_oneDTransfo'
        logical, parameter :: debug=.FALSE.
-!       logical, parameter :: debug=.TRUE.
+       !logical, parameter :: debug=.TRUE.
 !----- for debuging ----------------------------------
 
 
@@ -552,7 +577,7 @@
         END DO
       ELSE  ! => Qin=oneT^-1(Qout)
         CALL sub_dnVec1_TO_dnVec2(dnQout,dnQin,nderiv=nderiv)
-        DO i=1,size(oneDTransfo)
+        DO i=size(oneDTransfo),1,-1 ! It has to be done in the reverse order.
           IF (oneDTransfo(i)%skip_transfo) CYCLE
 
           iQin   = oneDTransfo(i)%iQin

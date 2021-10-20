@@ -1109,7 +1109,7 @@ MODULE mod_dnS
        integer :: i,j,k
 
 !      -----------------------------------------------------------------
-!      logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
       logical, parameter :: debug=.FALSE.
       character (len=*), parameter :: name_sub = 'sub_dnS1_TO_dntR2'
 !      -----------------------------------------------------------------
@@ -1255,7 +1255,7 @@ MODULE mod_dnS
 
 !     -----------------------------------------------------------------
       logical, parameter :: debug = .FALSE.
-!      logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='sub_dntf'
 !     -----------------------------------------------------------------
       IF (debug) THEN
@@ -1474,6 +1474,65 @@ MODULE mod_dnS
          dntf%d1 = ONE/(ONE-xx2)
          dntf%d2 = TWO/cte(1) * dntf%d1(1)**2 * xx
          dntf%d3 = cte(1)*( ONE/(cte(1)-x)**3 + ONE/(cte(1)+x)**3 )
+
+       CASE (75)
+         ! t(x) =  A + B*(1+tanh(x))/2) x E ]-inf,inf[ and y E ]A,B[
+         A = cte(1)
+         B = cte(2)
+
+         c = cosh(x)
+         c2 = c*c
+         s = sinh(x)
+         s2 = s*s
+         t = s/c
+         dntf%d0 = A+B*(ONE+t)/TWO
+         dntf%d1 = B*HALF/c2
+         dntf%d2 = -B*TWO * dntf%d1(1) * t
+         dntf%d3 = B*(TWO*s2-1)/c2**2
+
+       CASE (-75)
+        ! inverse y=t(x) =  A + B*(1+tanh(x))/2) x E ]-inf,inf[ and y E ]A,B[
+        !A = cte(1)
+        !B = cte(2)
+        ! x = atanh(2(y-A)/B-1) = atanh( 2/B*y + (-2A/B-1)) = atanh( a*y + b)
+        a = TWO/cte(2)
+        B = -TWO*cte(1)/cte(2) - ONE
+
+
+         c  = a*x+b
+         c2 = c*c
+
+         dntf%d0 = atanh(c)
+         dntf%d1 = a/(ONE-c2)
+               t = dntf%d1(1)*dntf%d1(1)
+         dntf%d2 = t * TWO*c
+         dntf%d3 = TWO*a*t + EIGHT*c2 * t*dntf%d1(1)
+
+       CASE (76)
+         ! t(x) =  A + (B-A)*(1/2+atan(x)/pi) x E ]-inf,inf[ and y E ]A,B[
+         A = cte(1)
+         B = cte(2)-A
+
+         t = ONE/(ONE+x*x)
+         dntf%d0 = A+B*(HALF+atan(x)/pi)
+         dntf%d1 = B/pi * t
+         dntf%d2 = -TWO*x*B/pi * t*t
+         dntf%d3 = EIGHT*B/pi*x*x * t**3 - TWO*B/pi * t*t
+
+       CASE (-76)
+         ! inverse t(x) =  A + (B-A)*(1/2+atan(x)/pi) x E ]-inf,inf[ and y E ]A,B[
+         !A = cte(1)
+         !B = cte(2)-cte(1)
+         ! x = tan(pi((y-A)/B-1/2)) = tan( pi/B*y -pi(A/B+1/2) = atanh( a*y + b)
+         a =  pi/(cte(2)-cte(1))
+         b = -pi*(cte(1)/(cte(2)-cte(1)) + HALF)
+
+         c  = a*x+b
+
+         dntf%d0 = tan(c)
+         dntf%d1 = a*(ONE + dntf%d0*dntf%d0)
+         dntf%d2 = TWO*a* (dntf%d0*dntf%d1(1))
+         dntf%d3 = TWO*a* (dntf%d0*dntf%d2(1,1) + dntf%d1(1)*dntf%d1(1))
 
        CASE (80)
          !80       =>    exp(cte(1)*x); xE ]-inf,inf[
@@ -2028,4 +2087,3 @@ MODULE mod_dnS
       END SUBROUTINE sub_WeightDer_dnS
 
 END MODULE mod_dnS
-
