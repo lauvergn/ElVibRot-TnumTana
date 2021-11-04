@@ -3638,8 +3638,8 @@
 
       !--------------------------------------------------------
       character (len=*), parameter :: name_sub='M_Tana_FROM_Bunch2Transfo'
-      logical, parameter :: debug=.FALSE.
-      !logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
       !--------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
@@ -3692,14 +3692,19 @@
         BunchTransfo%A_inv(i_at,:) = BB(i_at,:)
       END DO
       IF (debug) THEN
-        write(out_unitp,*) 'A_inv'
+        write(out_unitp,*) 'A_inv:'
+        write(out_unitp,*) 'Each line corresponds to a linear combinaison of the vectors to form an atomic position'
+
+        DO iv=1,size(BB,dim=1)
+          write(out_unitp,*) iv,BB(iv,:)
+        END DO
         CALL Write_Mat(BB,out_unitp,5)
       END IF
 
 
       ! for the M-matrix, we use mass-weighted A matrix
       DO iv=1,BunchTransfo%nb_vect+1
-        
+
         A(iv,:) = A(iv,:) / sqrt(BunchTransfo%masses_OF_At(1:BunchTransfo%nat_act))
       END DO
 

@@ -1066,13 +1066,16 @@ END SUBROUTINE sub_analyze_psi
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'psi'
         CALL ecri_psi(psi=psi)
+        write(out_unitp,*) 'ana_psi%ana_level',ana_psi%ana_level
         write(out_unitp,*) 'ana_psi%Rho1D,ana_psi%Rho2D',ana_psi%Rho1D,ana_psi%Rho2D
+
       END IF
 !-----------------------------------------------------------
       IF (ana_psi%ana_level > 0 .AND. (ana_psi%Rho1D .OR. ana_psi%Rho2D)) THEN
         IF (.NOT. ana_psi%GridDone) CALL sub_PsiBasisRep_TO_GridRep(psi)
 
         IF (ana_psi%Rho1D) THEN
+
           !- loop on coordinates ----------------------------------
           DO i_basis_act1=1,psi%BasisnD%nb_basis
 
@@ -1083,7 +1086,6 @@ END SUBROUTINE sub_analyze_psi
             END IF
             file_Rho%name = state_name // int_TO_char(ana_psi%num_psi) // &
                                     '-' // int_TO_char(i_basis_act1)
-
             IF (ana_psi%propa .AND. ana_psi%T > ZERO) THEN
               CALL file_open(file_Rho,nioRho,append=.TRUE.)
             ELSE

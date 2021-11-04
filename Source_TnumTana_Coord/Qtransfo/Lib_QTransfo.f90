@@ -547,9 +547,9 @@ MODULE mod_Lib_QTransfo
       integer :: nderiv
 
 !     -----------------------------------------------------------------
-!     logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
       logical, parameter :: debug = .FALSE.
-      integer, parameter :: nderiv_debug = 3
+      integer, parameter :: nderiv_debug = 0
       character (len=*), parameter :: name_sub = 'sub3_dnx_AT4_poly'
 !     -----------------------------------------------------------------
       IF (debug) THEN
@@ -612,6 +612,9 @@ MODULE mod_Lib_QTransfo
       CALL sub_dnS_TO_dnVec(dnf2,dnv1,2,nderiv)
       CALL sub_dnS_TO_dnVec(dnf3,dnv1,3,nderiv)
 !     -----------------------------------------------------------------
+      IF (debug) write(out_unitp,*) 'ic1,dnx',ic1,dnx%d0(ic1:ic1+2)
+      IF (debug) write(out_unitp,*) 'dnv1'
+      IF (debug) CALL Write_dnSVM(dnv1)
 
 !     ---------------------------------------------------------
 !     d0x(icf) = d0x(ic1) + (d0f1,d0f2,d0f3)
@@ -987,6 +990,9 @@ MODULE mod_Lib_QTransfo
       integer           :: ndim
       real (kind=Rkind) :: x(ndim),v(3),norm
 
+      !write(out_unitp,*) 'X1',nc1,x(nc1+0:nc1+2)
+      !write(out_unitp,*) 'X2',nc2,x(nc2+0:nc2+2)
+
       v(:) = x(nc2+0:nc2+2) - x(nc1+0:nc1+2)
 
       norm = sqrt( dot_product(v,v))
@@ -1220,4 +1226,3 @@ MODULE mod_Lib_QTransfo
       end function func_iat
 
 END MODULE mod_Lib_QTransfo
-

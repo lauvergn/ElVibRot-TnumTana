@@ -251,14 +251,14 @@
         write(out_unitp,*) ' ana_level',ana_level
         STOP 'ERROR in read_analyse: ana_level < -1'
       END IF
-      IF (ana .AND. ana_level >=0 .OR. ana_level < -1) THEN
+      IF (ana .AND. ana_level /= -1) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' ana=t and ana_level is initialized'
         write(out_unitp,*) ' ana,ana_level',ana,ana_level
         write(out_unitp,*) ' Defined only ana_level'
         STOP 'ERROR in read_analyse: ana=t and ana_level is initialized.'
       END IF
-      IF (ana .AND. ana_level == -1) ana_level = 2
+      IF (ana_level == -1) ana_level = 2
 
 
       It_diag = 0

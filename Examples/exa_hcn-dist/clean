@@ -8,3 +8,4 @@ rm -f *confli*
 rm -f namelist*
 rm -f Arpack.log_sym
 rm -f err Err
+rm -f freq.xyz

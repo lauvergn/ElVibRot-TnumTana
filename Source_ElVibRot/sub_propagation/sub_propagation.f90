@@ -170,6 +170,9 @@ CONTAINS
         para_propa%n_WPecri = 2 * int(para_propa%WPTmax/para_propa%WPdeltaT)
       END IF
 
+
+      CALL Write_ana_psi(para_propa%ana_psi)
+
       SELECT CASE (para_propa%type_WPpropa)
 
       CASE (1,2,5,6,7,8,9,10)

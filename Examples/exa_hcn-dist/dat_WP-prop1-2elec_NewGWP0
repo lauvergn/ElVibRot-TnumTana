@@ -13,11 +13,8 @@ cd $here
  x1=0.538516066
  x2=0.461483933
 
-rm /utmp/lauvergn/*
-
-
 nice $DIR_vib/vib << ** >res
- &system File_path='/utmp/lauvergn' /
+ &system /
  &constantes ene_unit='au' /
  &variables
          nrho=2
@@ -77,4 +74,3 @@ dh 0.0
    &defWP0 iQdyn=3 sigma=0.2 Qeq=2.2 imp_k=0.0 /
 **
 
-ls /utmp/lauvergn

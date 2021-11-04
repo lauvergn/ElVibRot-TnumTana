@@ -1092,11 +1092,18 @@
             IF (debug) write(out_unitp,*) ' nc1,nc2,nc3,x,y,z',         &
                                         nc1,nc2,nc3,dnQzmat%d0(iqz-2:iqz),sqrt(dnQzmat%d0(iqz-2:iqz)**2)
           ELSE IF (nc2/=0 .AND. nc3==0 .AND. nc4==0) THEN
-            CALL calc_vector2(v1,norm1,nc1,nc2,dnx%d0,ncart0)
+            !CALL calc_vector2(v1,norm1,nc1,nc2,dnx%d0,ncart0)
+            CALL calc_vector2(v1,norm1,nc2,nc1,dnx%d0,ncart0)
+
+            IF (debug) write(out_unitp,*) ' v1,norm1',v1(:),norm1
+
             iqz = iqz + 1
             dnQzmat%d0(iqz) = norm1
 
             CALL calc_angle(angle_v,ez,norm2,v1,norm1)
+            IF (debug) write(out_unitp,*) ' ez,norm2',ez,norm2
+            IF (debug) write(out_unitp,*) ' angle_v',angle_v
+
             IF ( abs(sin(angle_v)) < ONETENTH**5 ) THEN
               write(out_unitp,*) ' WARNNING in ',name_sub
               write(out_unitp,*) ' 3 atoms are aligned!',nc1,nc2,nc3
@@ -1108,6 +1115,8 @@
               END DO
             END IF
             iqz = iqz + 1
+            IF (debug) write(out_unitp,*) ' ZmatTransfo%cos_th',ZmatTransfo%cos_th
+
             IF (ZmatTransfo%cos_th) THEN
               dnQzmat%d0(iqz) = cos(angle_v)
             ELSE
