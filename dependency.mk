@@ -117,7 +117,7 @@ lib_dep_mod_dnSVM=$(OBJ)/Lib_QTransfo.o $(OBJ)/sub_module_DInd.o                
                   $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_module_SimpleOp.o             \
                   $(OBJ)/sub_module_cart.o $(OBJ)/sub_math_util.o                      \
                   $(OBJ)/mod_FiniteDiff.o $(OBJ)/Calc_Tab_dnQflex.o                    \
-                  $(OBJ)/$(TNUMMAIN).o 
+                  $(OBJ)/$(TNUMMAIN).o
 $(lib_dep_mod_dnSVM):$(OBJ)/sub_module_dnSVM.o
 
 #mod_dnM

@@ -55,16 +55,13 @@
     MODULE PROCEDURE Finalize_TnumTana_Coord_PrimOp_CoordType
   END INTERFACE
   INTERFACE get_dnMatOp_AT_Qact
-    MODULE PROCEDURE get_dnMatOp_AT_Qact_zmatrix,            &
-                     get_dnMatOp_AT_Qact_CoordType
+    MODULE PROCEDURE get_dnMatOp_AT_Qact_zmatrix,get_dnMatOp_AT_Qact_CoordType
   END INTERFACE
   INTERFACE get_d0MatOp_AT_Qact
-    MODULE PROCEDURE get_d0MatOp_AT_Qact_zmatrix,            &
-                     get_d0MatOp_AT_Qact_CoordType
+    MODULE PROCEDURE get_d0MatOp_AT_Qact_zmatrix,get_d0MatOp_AT_Qact_CoordType
   END INTERFACE
   INTERFACE TnumKEO_TO_tab_d0H
-    MODULE PROCEDURE TnumKEO_TO_tab_d0H_zmatrix,            &
-                     TnumKEO_TO_tab_d0H_CoordType
+    MODULE PROCEDURE TnumKEO_TO_tab_d0H_zmatrix,TnumKEO_TO_tab_d0H_CoordType
   END INTERFACE
 
    PUBLIC :: Finalize_TnumTana_Coord_PrimOp, get_dnMatOp_AT_Qact,       &
@@ -644,7 +641,18 @@
           IF (PrimOp%nb_CAP > 0) THEN
             DO i=1,PrimOp%nb_CAP
               iterm = d0MatOp(iOpCAP+i)%derive_term_TO_iterm(0,0)
-              CAP_val = calc_CAP(PrimOp%tab_CAP(i),Qact)
+
+              IF (PrimOp%tab_CAP(i)%itQtransfo /= PrimOp%tab_CAP(i)%nb_Qtransfo) THEN
+                IF (debug) write(out_unitp,*) 'coucou CAP Qit',PrimOp%tab_CAP(i)%itQtransfo
+write(out_unitp,*) 'coucou CAP Qit',PrimOp%tab_CAP(i)%itQtransfo
+                CALL sub_QactTOQit(Qact,Qit,PrimOp%tab_CAP(i)%itQtransfo,mole,.FALSE.)
+                CAP_val = calc_CAP(PrimOp%tab_CAP(i),Qit)
+              ELSE
+                IF (debug) write(out_unitp,*) 'coucou CAP Qact'
+write(out_unitp,*) 'coucou CAP Qact'
+                CAP_val = calc_CAP(PrimOp%tab_CAP(i),Qact)
+              END IF
+
               DO ie=1,PrimOp%nb_elec
                 d0MatOp(iOpCAP+i)%ReVal(ie,ie,iterm) = CAP_val
               END DO

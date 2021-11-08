@@ -37,7 +37,9 @@
         integer                  :: Type_2D ! 0: cart: identity; 1: polar; 2: spherical, 3: R, x,z
         character (len=Name_len) :: name_Transfo_2D = ''
         integer                  :: list_TwoD_coord(2) = [0,0]
-        real (kind=Rkind)        :: Twod0 ! for the zundel 2d tranformation
+        real (kind=Rkind)        :: Twod0 ! for the zundel 2d transformation
+        real (kind=Rkind)        :: theta,phi ! for the spherical transformation
+
       END TYPE Type_TwoDTransfo
 
       INTERFACE alloc_array
@@ -149,10 +151,10 @@
       integer,                          intent(in)    :: nb_transfo,nb_Qin
 
       integer           :: nb_coord,Type_2D,list_TwoD_coord(2)
-      real (kind=Rkind) :: d0
+      real (kind=Rkind) :: d0,theta,phi
       logical           :: multiple
 
-       NAMELIST / TwoD / Type_2D,list_TwoD_coord,d0
+       NAMELIST / TwoD / Type_2D,list_TwoD_coord,d0,theta,phi
 
 
       integer :: i,err_io,err_mem,memory
@@ -165,6 +167,9 @@
         Type_2D            = 0
         list_TwoD_coord(:) = 0
         d0                 = 1.5d0 ! in bohr
+        ! spherical angle
+        theta              = PI/TWO
+        phi                = 0
         read(in_unitp,TwoD,IOSTAT=err_io)
         IF (err_io /= 0) THEN
            write(out_unitp,*) ' ERROR in ',name_sub
@@ -176,6 +181,8 @@
         TwoDTransfo(i)%Type_2D         = Type_2D
         TwoDTransfo(i)%list_TwoD_coord = list_TwoD_coord
         TwoDTransfo(i)%Twod0           = d0+d0
+        TwoDTransfo(i)%theta           = theta
+        TwoDTransfo(i)%phi             = phi
 
         nb_coord = count(list_TwoD_coord /= 0)
 
@@ -204,13 +211,20 @@
           TwoDTransfo(i)%name_Transfo_2D = 'Polar: R,theta'
         CASE (2) ! special Zundel
           TwoDTransfo(i)%name_Transfo_2D = 'Zundel: z,R'
+        CASE (3) ! spherical
+          TwoDTransfo(i)%name_Transfo_2D = 'Spherical'
+        CASE (-3) ! spherical
+          TwoDTransfo(i)%name_Transfo_2D = 'Spherical'
         CASE default ! ERROR: wrong transformation !
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' The type of TwoD transformation is UNKNOWN: ',Type_2D
           write(out_unitp,*) ' The possible values are:'
-          write(out_unitp,*) '    0: identity: x,y,z'
+          write(out_unitp,*) '    0: identity: x,y'
           write(out_unitp,*) '    1: Polar: R,theta'
           write(out_unitp,*) '    2: Zundel: z,R'
+          write(out_unitp,*) '    3: Spherical: rotation of the spherical angles (theta,phi)'
+          write(out_unitp,*) '   -3: Spherical: rotation of the spherical angles (u,phi)'
+
           write(out_unitp,*) ' Check your data !!'
           STOP
 
@@ -239,15 +253,16 @@
         write(out_unitp,*) 'list_TwoD_coord:   ',TwoDTransfo(i)%list_TwoD_coord
         write(out_unitp,*) 'Twod0:             ',TwoDTransfo(i)%Twod0
         write(out_unitp,*) ' => d0:            ',TwoDTransfo(i)%Twod0*HALF
+        write(out_unitp,*) 'theta,phi:         ',TwoDTransfo(i)%theta,TwoDTransfo(i)%phi
+
       END DO
       END IF
       write(out_unitp,*) 'END ',name_sub
 
       END SUBROUTINE Write_TwoDTransfo
 
-      SUBROUTINE calc_TwoDTransfo(dnQin,dnQout,TwoDTransfo,   &
-                                    nderiv,inTOout)
-
+      SUBROUTINE calc_TwoDTransfo(dnQin,dnQout,TwoDTransfo,nderiv,inTOout)
+        USE mod_QML_dnS
         TYPE (Type_dnVec), intent(inout)              :: dnQin,dnQout
         TYPE (Type_TwoDTransfo),pointer, intent(in)   :: TwoDTransfo(:)
         integer, intent(in)                           :: nderiv
@@ -255,6 +270,8 @@
 
 
         TYPE (Type_dnS) :: dnR,dnZ,dnZp,dntR
+        TYPE (dnS_t)    :: dntho,dnctho,dnphio,  dnthn,dncthn,dnphin
+        TYPE (dnS_t)    :: dnXo,dnYo,dnZo,dnXn,dnYn,dnZn
 
         real(kind=Rkind) :: cte(20)
 
@@ -320,6 +337,73 @@
             CALL dealloc_dnSVM(dnZ)
             CALL dealloc_dnSVM(dnZp)
 
+          CASE (3) ! spherical
+            i1 = TwoDTransfo(i)%list_TwoD_coord(1)
+            i2 = TwoDTransfo(i)%list_TwoD_coord(2)
+
+            !write(out_unitp,*) 'i1,i2',i1,i2
+            CALL sub_dnVec_TO_dnSt(dnQin,dnthn, i1)
+            CALL sub_dnVec_TO_dnSt(dnQin,dnphin,i2)
+
+            dnXn = cos(dnphin) * sin(dnthn)
+            dnYn = sin(dnphin) * sin(dnthn)
+            dnZn = cos(dnthn)
+
+            dnXo = cos(TwoDTransfo(i)%theta) * dnXn - sin(TwoDTransfo(i)%theta) * dnZn
+            dnYo = dnYn
+            dnZo = sin(TwoDTransfo(i)%theta) * dnXn + cos(TwoDTransfo(i)%theta) * dnZn
+
+            dntho  = acos(dnZo)
+            dnphio = atan2(dnYo,dnXo)
+
+           ! transfert in dnQout
+           CALL sub_dnSt_TO_dnVec(dntho,dnQout,i1)
+           CALL sub_dnSt_TO_dnVec(dnphio,dnQout,i2)
+
+           CALL QML_dealloc_dnS(dnthn)
+           CALL QML_dealloc_dnS(dnphin)
+           CALL QML_dealloc_dnS(dnXn)
+           CALL QML_dealloc_dnS(dnYn)
+           CALL QML_dealloc_dnS(dnZn)
+           CALL QML_dealloc_dnS(dntho)
+           CALL QML_dealloc_dnS(dnphio)
+           CALL QML_dealloc_dnS(dnXo)
+           CALL QML_dealloc_dnS(dnYo)
+           CALL QML_dealloc_dnS(dnZo)
+         CASE (-3) ! spherical
+            i1 = TwoDTransfo(i)%list_TwoD_coord(1)
+            i2 = TwoDTransfo(i)%list_TwoD_coord(2)
+
+            !write(out_unitp,*) 'i1,i2',i1,i2
+            CALL sub_dnVec_TO_dnSt(dnQin,dncthn, i1)
+            CALL sub_dnVec_TO_dnSt(dnQin,dnphin,i2)
+
+            dnXn = cos(dnphin) * sqrt(ONE-dncthn*dncthn)
+            dnYn = sin(dnphin) * sqrt(ONE-dncthn*dncthn)
+            dnZn = dncthn
+
+            dnXo = cos(TwoDTransfo(i)%theta) * dnXn - sin(TwoDTransfo(i)%theta) * dnZn
+            dnYo = dnYn
+            dnZo = sin(TwoDTransfo(i)%theta) * dnXn + cos(TwoDTransfo(i)%theta) * dnZn
+
+            dntho  = dnZo
+            dnphio = atan2(dnYo,dnXo)
+
+           ! transfert in dnQout
+           CALL sub_dnSt_TO_dnVec(dntho,dnQout,i1)
+           CALL sub_dnSt_TO_dnVec(dnphio,dnQout,i2)
+
+           CALL QML_dealloc_dnS(dncthn)
+           CALL QML_dealloc_dnS(dnphin)
+           CALL QML_dealloc_dnS(dnXn)
+           CALL QML_dealloc_dnS(dnYn)
+           CALL QML_dealloc_dnS(dnZn)
+           CALL QML_dealloc_dnS(dnctho)
+           CALL QML_dealloc_dnS(dnphio)
+           CALL QML_dealloc_dnS(dnXo)
+           CALL QML_dealloc_dnS(dnYo)
+           CALL QML_dealloc_dnS(dnZo)
+
           CASE default ! ERROR: wrong transformation !
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) ' The type of TwoD transformation is UNKNOWN: ',TwoDTransfo%Type_2D
@@ -327,6 +411,7 @@
             write(out_unitp,*) '    0: identity: x,y'
             write(out_unitp,*) '    1: Polar: R,theta'
             write(out_unitp,*) '    2: Zundel: z,R'
+            write(out_unitp,*) '    3: Spherical: rotation of the spherical angles'
             write(out_unitp,*) ' Check your data !!'
             STOP
 
@@ -368,6 +453,72 @@
             CALL dealloc_dnSVM(dnZ)
             CALL dealloc_dnSVM(dnZp)
 
+          CASE (3) ! spherical
+            i1 = TwoDTransfo(i)%list_TwoD_coord(1)
+            i2 = TwoDTransfo(i)%list_TwoD_coord(2)
+
+            !write(out_unitp,*) 'i1,i2',i1,i2
+            CALL sub_dnVec_TO_dnSt(dnQout,dntho, i1)
+            CALL sub_dnVec_TO_dnSt(dnQout,dnphio,i2)
+
+            dnXo = cos(dnphio) * sin(dntho)
+            dnYo = sin(dnphio) * sin(dntho)
+            dnZo = cos(dntho)
+
+            dnXn = cos(-TwoDTransfo(i)%theta) * dnXo - sin(-TwoDTransfo(i)%theta) * dnZo
+            dnYn = dnYo
+            dnZn = sin(-TwoDTransfo(i)%theta) * dnXo + cos(-TwoDTransfo(i)%theta) * dnZo
+
+            dnthn  = acos(dnZn)
+            dnphin = atan2(dnYn,dnXn)
+
+           ! transfert in dnQout
+           CALL sub_dnSt_TO_dnVec(dnthn,dnQin,i1)
+           CALL sub_dnSt_TO_dnVec(dnphin,dnQin,i2)
+
+           CALL QML_dealloc_dnS(dnthn)
+           CALL QML_dealloc_dnS(dnphin)
+           CALL QML_dealloc_dnS(dnXn)
+           CALL QML_dealloc_dnS(dnYn)
+           CALL QML_dealloc_dnS(dnZn)
+           CALL QML_dealloc_dnS(dntho)
+           CALL QML_dealloc_dnS(dnphio)
+           CALL QML_dealloc_dnS(dnXo)
+           CALL QML_dealloc_dnS(dnYo)
+           CALL QML_dealloc_dnS(dnZo)
+         CASE (-3) ! spherical
+            i1 = TwoDTransfo(i)%list_TwoD_coord(1)
+            i2 = TwoDTransfo(i)%list_TwoD_coord(2)
+
+            !write(out_unitp,*) 'i1,i2',i1,i2
+            CALL sub_dnVec_TO_dnSt(dnQout,dnctho, i1)
+            CALL sub_dnVec_TO_dnSt(dnQout,dnphio,i2)
+
+            dnXo = cos(dnphio) * sqrt(ONE-dnctho*dnctho)
+            dnYo = sin(dnphio) * sqrt(ONE-dnctho*dnctho)
+            dnZo = dnctho
+
+            dnXn = cos(-TwoDTransfo(i)%theta) * dnXo - sin(-TwoDTransfo(i)%theta) * dnZo
+            dnYn = dnYo
+            dnZn = sin(-TwoDTransfo(i)%theta) * dnXo + cos(-TwoDTransfo(i)%theta) * dnZo
+
+            dnthn  = dnZn
+            dnphin = atan2(dnYn,dnXn)
+
+           ! transfert in dnQout
+           CALL sub_dnSt_TO_dnVec(dnthn,dnQin,i1)
+           CALL sub_dnSt_TO_dnVec(dnphin,dnQin,i2)
+
+           CALL QML_dealloc_dnS(dncthn)
+           CALL QML_dealloc_dnS(dnphin)
+           CALL QML_dealloc_dnS(dnXn)
+           CALL QML_dealloc_dnS(dnYn)
+           CALL QML_dealloc_dnS(dnZn)
+           CALL QML_dealloc_dnS(dnctho)
+           CALL QML_dealloc_dnS(dnphio)
+           CALL QML_dealloc_dnS(dnXo)
+           CALL QML_dealloc_dnS(dnYo)
+           CALL QML_dealloc_dnS(dnZo)
           CASE default ! ERROR: wrong transformation !
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) ' The type of TwoD transformation is UNKNOWN: ',TwoDTransfo%Type_2D
@@ -375,6 +526,7 @@
             write(out_unitp,*) '    0: identity: x,y'
             write(out_unitp,*) '    1: Polar: R,theta'
             write(out_unitp,*) '    2: Zundel: z,R'
+            write(out_unitp,*) '    3: Spherical: rotation of the spherical angles'
             write(out_unitp,*) ' Check your data !!'
             STOP
 
@@ -404,6 +556,9 @@
           TwoDTransfo2(i)%name_Transfo_2D    = TwoDTransfo1(i)%name_Transfo_2D
           TwoDTransfo2(i)%list_TwoD_coord(:) = TwoDTransfo1(i)%list_TwoD_coord(:)
           TwoDTransfo2(i)%Twod0              = TwoDTransfo1(i)%Twod0
+          TwoDTransfo2(i)%theta              = TwoDTransfo1(i)%theta
+          TwoDTransfo2(i)%phi                = TwoDTransfo1(i)%phi
+
         END DO
 
       END SUBROUTINE TwoDTransfo1TOTwoDTransfo2

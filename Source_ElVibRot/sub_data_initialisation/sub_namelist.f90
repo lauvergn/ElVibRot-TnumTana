@@ -620,7 +620,7 @@
       IF (para_ReadOp%nb_CAP > 0) THEN
         allocate(para_ReadOp%tab_CAP(para_ReadOp%nb_CAP))
         DO i=1,size(para_ReadOp%tab_CAP)
-          CALL Read_CAP(para_ReadOp%tab_CAP(i))
+          CALL Read_CAP(para_ReadOp%tab_CAP(i),mole%nb_Qtransfo)
         END DO
       END IF
 

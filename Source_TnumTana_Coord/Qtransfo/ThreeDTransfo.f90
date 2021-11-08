@@ -36,7 +36,7 @@
       TYPE Type_ThreeDTransfo
         integer                  :: Type_3D ! 0: cart: identity; 1: polar; 2: spherical, 3: R, x,z
         character (len=Name_len) :: name_Transfo_3D = ''
-        integer                  :: list_ThreeD_coord(3) = (/ 0,0,0 /)
+        integer                  :: list_ThreeD_coord(3) = [0,0,0]
       END TYPE Type_ThreeDTransfo
 
       PUBLIC :: Type_ThreeDTransfo, alloc_ThreeDTransfo, dealloc_ThreeDTransfo
@@ -74,8 +74,8 @@
       TYPE (Type_ThreeDTransfo), pointer, intent(inout) :: ThreeDTransfo
       integer, intent(in) :: nb_Qin
 
-      integer :: nb_coord,Type_3D,list_ThreeD_coord(3)
-      logical :: multiple
+      integer          :: nb_coord,Type_3D,list_ThreeD_coord(3)
+      logical          :: multiple
 
        NAMELIST / ThreeD / Type_3D,list_ThreeD_coord
 

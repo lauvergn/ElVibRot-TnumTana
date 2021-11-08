@@ -60,6 +60,11 @@
         real (kind=Rkind)             :: Qmax                 = -ONE
         real (kind=Rkind)             :: LQ                   = ONE
         integer                       :: ind_Q                = 1       ! index of the coordinate (active order)
+        integer                       :: itQtransfo           = -1      ! index of the coordinate transformation
+                                                                        ! 0: cart, 1: primitive coord. ...
+                                                                        ! defaut (itQtransfo=nb_Qtransfo, active coordinates)
+        integer                       :: nb_Qtransfo          = -1      ! number of coordinate transformations
+
 
         integer                       :: iOp                  = 0       ! index of the Operator
 
@@ -137,7 +142,19 @@
       write(out_unitp,*) 'A       ',CAP%A
       write(out_unitp,*) 'B       ',CAP%B
 
-      write(out_unitp,*) 'ind_Q (active order)   ',CAP%ind_Q
+      write(out_unitp,*) 'itQtransfo,nb_Qtransfo',CAP%itQtransfo,CAP%nb_Qtransfo
+      IF (CAP%itQtransfo == 0) THEN
+        write(out_unitp,*) 'ind_Q (Cartesian coord. order)   ',CAP%ind_Q
+      ELSE IF (CAP%itQtransfo == 1) THEN
+        write(out_unitp,*) 'ind_Q (Primitive coord. order)   ',CAP%ind_Q
+      ELSE IF (CAP%itQtransfo == CAP%nb_Qtransfo-1) THEN
+        write(out_unitp,*) 'ind_Q (dynamical coord. order)   ',CAP%ind_Q
+      ELSE IF (CAP%itQtransfo == CAP%nb_Qtransfo) THEN
+        write(out_unitp,*) 'ind_Q (active coord. order)   ',CAP%ind_Q
+      ELSE
+        write(out_unitp,*) 'ind_Q (order from itQtranfo)   ',CAP%ind_Q
+      END IF
+
       write(out_unitp,*) 'Q0      ',CAP%Q0
       write(out_unitp,*) 'Qmax    ',CAP%Qmax
       write(out_unitp,*) 'LQ      ',CAP%LQ
@@ -164,22 +181,25 @@
       CAP1%Qmax                = CAP2%Qmax
       CAP1%LQ                  = CAP2%LQ
       CAP1%ind_Q               = CAP2%ind_Q
+      CAP1%itQtransfo          = CAP2%itQtransfo
+      CAP1%nb_Qtransfo         = CAP2%nb_Qtransfo
 
       CAP1%iOp                 = CAP2%iOp
 
      !write(out_unitp,*) ' END CAP2_TO_CAP1'
      !CALL flush_perso(out_unitp)
   END SUBROUTINE CAP2_TO_CAP1
-  SUBROUTINE Read_CAP(CAP_in)
+  SUBROUTINE Read_CAP(CAP_in,nb_Qtransfo)
   IMPLICIT NONE
       CLASS (CAP_t),    intent(inout) :: CAP_in
+      integer,          intent(in)    :: nb_Qtransfo
 
-      character (len=Name_longlen)  :: Name_Cap
-      integer             :: Type_CAP,n_exp,ind_Q
-      real(kind=Rkind)    :: A,Q0,LQ,Qmax
-      integer             :: err_read
+      character (len=Name_longlen)    :: Name_Cap
+      integer                         :: Type_CAP,n_exp,ind_Q,itQtransfo
+      real(kind=Rkind)                :: A,Q0,LQ,Qmax
+      integer                         :: err_read
 
-      namelist / CAP / Type_CAP,Name_CAP,n_exp,A,Q0,Qmax,LQ,ind_Q
+      namelist / CAP / Type_CAP,Name_CAP,n_exp,A,Q0,Qmax,LQ,ind_Q,itQtransfo
 
       Type_CAP             = 0
       Name_Cap             = ""
@@ -189,6 +209,7 @@
       Qmax                 = -ONE
       LQ                   = ONE
       ind_Q                = -1
+      itQtransfo           = -1
       read(in_unitp,CAP,IOSTAT=err_read)
       IF (err_read < 0) THEN
         write(out_unitp,*) ' ERROR in Read_CAP'
@@ -207,16 +228,16 @@
       END IF
       IF (print_level > 1) write(out_unitp,CAP)
 
-      CALL Init_CAP(CAP_in,Type_CAP,Name_Cap,n_exp,A,Q0,Qmax,LQ,ind_Q)
+      CALL Init_CAP(CAP_in,Type_CAP,Name_Cap,n_exp,A,Q0,Qmax,LQ,ind_Q,itQtransfo,nb_Qtransfo)
 
       CALL Write_CAP(CAP_in)
 
   END SUBROUTINE Read_CAP
-  SUBROUTINE Init_CAP(CAP,Type_CAP,Name_Cap,n_exp,A,Q0,Qmax,LQ,ind_Q)
+  SUBROUTINE Init_CAP(CAP,Type_CAP,Name_Cap,n_exp,A,Q0,Qmax,LQ,ind_Q,itQtransfo,nb_Qtransfo)
   IMPLICIT NONE
       CLASS (CAP_t),                intent(inout) :: CAP
       character (len=Name_longlen), intent(in)    :: Name_Cap
-      integer,                      intent(in)    :: Type_CAP,n_exp,ind_Q
+      integer,                      intent(in)    :: Type_CAP,n_exp,ind_Q,itQtransfo,nb_Qtransfo
       real(kind=Rkind),             intent(in)    :: A,Q0,LQ,Qmax
 
 write(6,*) 'Type_CAP,Name_Cap',Type_CAP,' ',Name_Cap
@@ -245,7 +266,13 @@ write(6,*) 'len(adjustl(trim(Name_Cap)))',len(adjustl(trim(Name_Cap)))
         CAP%Type_CAP = Type_CAP
       END IF
 
-      CAP = CAP_t(Type_CAP=CAP%Type_CAP,n_exp=n_exp,A=A,Q0=Q0,Qmax=Qmax,LQ=LQ,ind_Q=ind_Q)
+      IF (itQtransfo < 0 .OR. itQtransfo > nb_Qtransfo) THEN
+        ! we keep itQtransfo= -1 and nb_Qtransfo = -1
+        CAP = CAP_t(Type_CAP=CAP%Type_CAP,n_exp=n_exp,A=A,Q0=Q0,Qmax=Qmax,LQ=LQ,ind_Q=ind_Q)
+      ELSE
+        CAP = CAP_t(Type_CAP=CAP%Type_CAP,n_exp=n_exp,A=A,Q0=Q0,Qmax=Qmax,LQ=LQ,&
+                    ind_Q=ind_Q,itQtransfo=itQtransfo,nb_Qtransfo=nb_Qtransfo)
+      END IF
 
       SELECT CASE (CAP%Type_CAP)
       CASE(-1,1) ! as function of n_exp, B= 1 3/2 2 5/2 ...
@@ -290,6 +317,8 @@ write(6,*) 'len(adjustl(trim(Name_Cap)))',len(adjustl(trim(Name_Cap)))
         CAP%Qmax                 = -ONE
         CAP%LQ                   = ONE
         CAP%ind_Q                = 1
+        CAP%itQtransfo           = -1
+        CAP%nb_Qtransfo          = -1
 
         CAP%iOp                  = 0
      !write(out_unitp,*) ' END dealloc_CAP'

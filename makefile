@@ -12,7 +12,7 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -575,6 +575,7 @@ Obj_io = $(OBJ)/sub_io.o
 # USE mod_dnSVM
 # mod_dnS is a new version developped for QML
 Obj_dnSVM = \
+  $(OBJ)/mod_dnS.o \
   $(OBJ)/sub_module_dnS.o $(OBJ)/sub_module_VecOFdnS.o $(OBJ)/sub_module_MatOFdnS.o \
   $(OBJ)/sub_module_dnV.o $(OBJ)/sub_module_dnM.o $(OBJ)/sub_module_IntVM.o \
   $(OBJ)/sub_module_dnSVM.o
@@ -1028,8 +1029,8 @@ $(OBJ)/sub_module_DInd.o:$(DirnDind)/sub_module_DInd.f90
 $(OBJ)/sub_module_nDindex.o:$(DirnDind)/sub_module_nDindex.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirnDind)/sub_module_nDindex.f90
 ###
-#$(OBJ)/mod_dnS.o:$(DirdnSVM)/mod_dnS.f90
-#	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DirdnSVM)/mod_dnS.f90
+$(OBJ)/mod_dnS.o:$(DirdnSVM)/mod_dnS.f90
+	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DirdnSVM)/mod_dnS.f90
 $(OBJ)/sub_module_dnS.o:$(DirdnSVM)/sub_module_dnS.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnS.f90
 $(OBJ)/sub_module_VecOFdnS.o:$(DirdnSVM)/sub_module_VecOFdnS.f90
