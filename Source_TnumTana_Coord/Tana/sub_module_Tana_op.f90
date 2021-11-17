@@ -40,9 +40,9 @@
    PRIVATE
    PUBLIC ::  get_opLi, get_opL1, get_opL2, get_keo_for_Qactiv,         &
               get_opKEO, get_opKEO_subsyst, add_Vextr, add_Vextr_new,   &
-              Get_F2_F1_FROM_TWOxKEO
+              Get_F2_F1_FROM_TWOxKEO,Get_Gana_FROM_TWOxKEO
 
-   CONTAINS 
+   CONTAINS
 
    !> @description: Defines the total angular momentum in terms of
    !!               derivative operator of the Euler's angles in the SF frame
@@ -50,11 +50,11 @@
    !!               which is defined with only two Euler's angles (beta, gamma).
    !!               Eq A10 of Ndong et al J. Chem. Phys. 136,034107 (2012).
    !> @param:       opJ    The  vector (type: vec_sum_opnd)
-   !> @param:       F1_sum Sum of elementary op 
+   !> @param:       F1_sum Sum of elementary op
    !> @param:       fbeta   an elementary op  which contains the needed
    !!                      information on \beta or ub coordinate
    !> @param:       fgamma   an elementary op  which contains the needed
-   !!                      information on \gamma 
+   !!                      information on \gamma
    !> @param:       dag   Logical, if present and = true, the adjoint of Li will be obtained
    !!                        by  vector transpose time a matrix
    SUBROUTINE get_opJ_projected_into_ref_frameEq170(opJ, F1_sum, fbeta, fgamma, dag)
@@ -87,7 +87,7 @@
        write(out_unitp,*) ' ERROR in',routine_name
        write(out_unitp,*) "The elementary operators should be the Id"
        STOP
-     end if 
+     end if
 
      call allocate_op(opJ, 3)
      call allocate_op(V, 3)
@@ -347,7 +347,7 @@
    !! @param:       F2el   an elementary op  which contains the needed
    !!                      information on \beta or ub coordinate
    !! @param:       F3el   an elementary op  which contains the needed
-   !!                      information on \gamma 
+   !!                      information on \gamma
    !! @param:       dag   Logical, if present and = true, the adjoint of Li will be obtained
    !!                        by  vector transpose time a matrix
    SUBROUTINE get_opJ_projected_into_BF(opJ, F1el, F2el, F3el, dag)
@@ -377,26 +377,26 @@
        write(out_unitp,*) ' ERROR in',routine_name
        write(out_unitp,*) "Data structure of idq in F1el or in F2el is not correct"
        STOP
-     end if        
+     end if
      if(present(F3el)) then
        if(F3el%idq /= 8 ) then
          write(out_unitp,*) ' ERROR in',routine_name
          write(out_unitp,*) "Data structure of idq in F3el is not correct"
          STOP
        end if
-     end if        
+     end if
      if(F1el%idf /= 1 .or. F2el%idf /= 1) then
        write(out_unitp,*) ' ERROR in',routine_name
        write(out_unitp,*) "The elementary operators should be the Id"
        STOP
-     end if 
+     end if
      if(present(F3el)) then
        if(F3el%idf /= 1 ) then
          write(out_unitp,*) ' ERROR in',routine_name
          write(out_unitp,*) "The elementary operators should be the Id"
          STOP
        end if
-     end if 
+     end if
 
      if(present(F3el)) then
        call allocate_op(opJ, 3)
@@ -475,11 +475,11 @@
    !!               Eq A9 (A6) from Ndong et al. J. Chem. Phys. 136,034107 (2012)
    !!               Remark: wrong minus sign if thev(1,3) matrix element
    !! @param:       J      The  vector (type: vec_sum_opnd)
-   !! @param:       F1_sum Sum of elementary op 
+   !! @param:       F1_sum Sum of elementary op
    !! @param:       fbeta   an elementary op  which contains the needed
    !!                      information on \beta or ub coordinate
    !! @param:       fgamma   an elementary op  which contains the needed
-   !!                      information on \gamma 
+   !!                      information on \gamma
    !! @param:       dag   Logical, if present and = true, the adjoint of Li will be obtained
    !!                        by  vector transpose time a matrix
    SUBROUTINE get_opJ_projected_into_BFEq171(opJ, F1_sum, fbeta, fgamma, dag)
@@ -507,12 +507,12 @@
        write(out_unitp,*) ' ERROR in',routine_name
        write(out_unitp,*) "TData structure of idq of fbeta or fgamma is not correct"
        STOP
-     end if        
+     end if
      if(fgamma%idf /= 1 .or. fbeta%idf /= 1) then
        write(out_unitp,*) ' ERROR in',routine_name
        write(out_unitp,*) "The elementary operators should be the Id"
        STOP
-     end if 
+     end if
 
      call allocate_op(opJ, 3)
      call allocate_op(V, 3)
@@ -625,7 +625,7 @@
        write(out_unitp,*) ' ERROR in',routine_name
        write(out_unitp,*) "The elementary operators should be the Id"
        STOP
-     end if 
+     end if
      if(index_L < 3) then
        write(out_unitp,*) ' ERROR in',routine_name
        write(out_unitp,*) "The routine evaluates only L_i, i = 3, Ndim_L-1"
@@ -742,7 +742,7 @@
    !! @param:       L      The  vector (type: vec_sum_opnd)
    !! @param:       Fel   an elementary op  which contains the needed
    !!                      information on \theta or u coordinate
-   !! @param:       Jz     The z component of the  total angular 
+   !! @param:       Jz     The z component of the  total angular
    !!               momentum (type: sum_opnd)
    !! @param:       L_all  All L from 2 to ndim_sytem-1
    !! @param:       index_L  Integer corresponding to the index of L
@@ -778,7 +778,7 @@
        write(out_unitp,*) ' ERROR in ',routine_name
        write(out_unitp,*) "The elementary operators should be the Id"
        STOP
-     end if 
+     end if
 
      call allocate_op(L, 3)
 
@@ -832,7 +832,7 @@
    !! @param:       L1    The  vector (type: vec_sum_opnd)
    !! @param:       beta  an elementary op  which contains the needed
    !!                      information on \theta (u) or \beta (ub) coordinate
-   !! @param:       J_a   The z component of the  total angular 
+   !! @param:       J_a   The z component of the  total angular
    !!               momentum (type: sum_opnd)
    SUBROUTINE get_opL1_beta(L1, beta, J_a, dag)
      type(vec_sum_opnd),      intent(inout)      :: L1
@@ -855,7 +855,7 @@
        write(out_unitp,*) ' ERROR in',routine_name
        write(out_unitp,*) "The elementary operators should be the Id"
        STOP
-     end if 
+     end if
 
      call allocate_op(L1, 3)
 
@@ -893,7 +893,7 @@
    END SUBROUTINE get_opL1_beta
 
    !! @description: Defines the conjugate momentum operator
-   !! @param:       P          The output  The input function  
+   !! @param:       P          The output  The input function
    !! @param:       FRel       an elementary op  which contains the needed
    !!                          information on R coordinate
    !! @param:       L          Partial angular momentum
@@ -905,9 +905,9 @@
      type(vec_sum_opnd),      intent(in)         :: E
      type(opel),              intent(in)         :: FRel
 
-     type(vec_sum_opnd)                  :: PRi_Ei 
-     type(vec_sum_opnd)                  :: Ei_cross_Li 
-     type(vec_sum_opnd)                  :: V_tmp 
+     type(vec_sum_opnd)                  :: PRi_Ei
+     type(vec_sum_opnd)                  :: Ei_cross_Li
+     type(vec_sum_opnd)                  :: V_tmp
      type(sum_opnd)                      :: F_sum_nd
 
      !logical, parameter           :: debug=.TRUE.
@@ -936,7 +936,7 @@
        write(out_unitp,*) ' ERROR in ',routine_name
        write(out_unitp,*) "The elementary operators should be the Id"
        STOP
-     end if 
+     end if
 
      F_sum_nd = get_Pq(FRel)   ! PqR
 
@@ -968,7 +968,7 @@
    END SUBROUTINE get_opPi
 
    !! @description: Defines the adjoint conjugate momentum operator
-   !! @param:       P_dag          The output  The input function  
+   !! @param:       P_dag          The output  The input function
    !! @param:       FRel       an elementary op  which contains the needed
    !!                          information on R coordinate
    !! @param:       L          Partial angular momentum
@@ -980,10 +980,10 @@
      type(vec_sum_opnd),      intent(in)         :: E
      type(opel),              intent(in)         :: FRel
 
-     type(vec_sum_opnd)                  :: PRi_Ei 
-     type(vec_sum_opnd)                  :: Li_cross_Ei 
-     type(vec_sum_opnd)                  :: V_tmp 
-     type(sum_opnd)                      :: F_sum_nd 
+     type(vec_sum_opnd)                  :: PRi_Ei
+     type(vec_sum_opnd)                  :: Li_cross_Ei
+     type(vec_sum_opnd)                  :: V_tmp
+     type(sum_opnd)                      :: F_sum_nd
 
      character (len=*), parameter :: routine_name='get_opPi_dagger'
 
@@ -1129,7 +1129,7 @@
 
    END SUBROUTINE project_Pi
 
-   
+
 
    !! @description: Determines the Euler matrix rotation in a given frame
    !! @param:       F_system   The  data structure of the subsystem (type: TYpe_BFtransfo)
@@ -1209,7 +1209,7 @@
 
      Mat_RTranspo = Transpose_Mat_OF_sum_opnd(Mat_R)
 
-     
+
    END SUBROUTINE get_Euler_MatRot
    FUNCTION get_MatRotz(angle) result(mat_R)
      type(opel), intent(in)                       :: angle
@@ -1266,7 +1266,7 @@
    !! @param:     F_system       The  data structure of the system (type: TYpe_BFtransfo)
    !! @param:     P_Euler        The  data structure of the conjugate momenta
    !! @param:     Pi_BF          Array of conjugate momenta of the subsystem (type: vec_sum_opnd)
-   !! @param:     Pi_dag_BF      Array of the  adjoint of Pi_BF      (type: vec_sum_opnd)  
+   !! @param:     Pi_dag_BF      Array of the  adjoint of Pi_BF      (type: vec_sum_opnd)
    !! @param:     zero_Pi_BF     Logical array to check if Pi_BF is set to zero or not
    RECURSIVE SUBROUTINE get_Pi_subsyst(F_system, P_Euler, Pi_BF, Pi_dag_BF,&
                                        zero_Pi_BF)
@@ -1294,10 +1294,10 @@
      if (compare_tab(F_system%euler, (/.false., .false., .false./))) then
        true_BF = .true.
      else
-       true_BF = .false. 
+       true_BF = .false.
      end if
 
-     if(.not.true_BF) then !project onto the frame of the container 
+     if(.not.true_BF) then !project onto the frame of the container
        do i = 1, nvec
          call copy_F1_into_F2(P_Euler(F_system%listVFr(i))%Pi, &
          &                           Pi_BF(F_system%listVFr(i)))
@@ -1312,7 +1312,7 @@
          call get_Pi_subsyst(F_system%tab_BFTransfo(i), P_Euler, Pi_BF, &
          &                                             Pi_dag_BF, zero_Pi_BF)
        end if
-     end do 
+     end do
 
    END SUBROUTINE get_Pi_subsyst
 
@@ -1321,7 +1321,7 @@
    !! @param:     mat_R          The  matrix (type: sum_opnd)
    !! @param:     mat_RTranspo   The  transpose of Mat_R (type: sum_opnd)
    !! @param:     Pi             The  conjugate momenta of the subsystem (type: vec_sum_opnd)
-   !! @param:     Pi_dag         The  adjoint of Pi      (type: vec_sum_opnd)  
+   !! @param:     Pi_dag         The  adjoint of Pi      (type: vec_sum_opnd)
    RECURSIVE SUBROUTINE Mat_Rot_times_Pi_subsyst(F_system, Mat_R, Mat_RTranspo, &
    &                                             P_Euler)
      USE mod_BunchPolyTransfo, only : Type_BFTransfo
@@ -1349,10 +1349,10 @@
      if (compare_tab(F_system%euler, (/.false., .false., .false./))) then
        true_BF = .true.
      else
-       true_BF = .false. 
+       true_BF = .false.
      end if
 
-     if(.not.true_BF) then !project onto the frame of the container 
+     if(.not.true_BF) then !project onto the frame of the container
        do i = 1, nvec
          call M_opnd_times_V_in_Vres(Mat_R, P_Euler(F_system%listVFr(i))%Pi, Pi_BF)
          call copy_F1_into_F2(Pi_BF, P_Euler(F_system%listVFr(i))%Pi)
@@ -1369,7 +1369,7 @@
          call Mat_Rot_times_Pi_subsyst(F_system%tab_BFTransfo(i), Mat_R, Mat_RTranspo, &
          &                                             P_Euler)
        end if
-     end do 
+     end do
 
    END SUBROUTINE Mat_Rot_times_Pi_subsyst
 
@@ -1518,7 +1518,7 @@
    END SUBROUTINE get_opKEO
 
 
-   !! @param:       KOE          The output 
+   !! @param:       KOE          The output
    !! @param:       nvec    Integer corresponding to the size of the system
    !! @param:       M_mass  The mass matrix
    !RECURSIVE SUBROUTINE get_opKEO_subsyst(F_system, P_Euler, M_mass_out, scalar_PiPj, &
@@ -2231,7 +2231,7 @@
 
    END SUBROUTINE get_opKEO_subsyst_nvectot1
 
-   !! @param:       KOE          The output 
+   !! @param:       KOE          The output
    !! @param:       nvec    Integer corresponding to the size of the system
    !! @param:       M_mass  The mass matrix
    RECURSIVE SUBROUTINE get_opKEO_subsyst_2euler(F_system, &
@@ -2240,9 +2240,9 @@
      USE mod_BunchPolyTransfo, only : Type_BFTransfo
 
      type(Type_BFtransfo),         intent(inout)      :: F_system
-     type(Type_PiEulerRot),        intent(inout)      :: P_Euler(:) 
-     type(sum_opnd),               intent(in)         :: M_mass_out(:,:) 
-     logical,                      intent(inout)      :: scalar_PiPj(:,:) 
+     type(Type_PiEulerRot),        intent(inout)      :: P_Euler(:)
+     type(sum_opnd),               intent(in)         :: M_mass_out(:,:)
+     logical,                      intent(inout)      :: scalar_PiPj(:,:)
      type(Type_BFtransfo),         intent(in)         :: F_system_parent
 
      type(vec_sum_opnd), allocatable :: L(:)
@@ -2256,16 +2256,16 @@
      type(sum_opnd)                  :: RR_inv,MPRPR,PRPR,PiPi,MPiPi
      type(sum_opnd)                  :: LiLi,JLi,LiJ,JJ,L1L1
 
-     type(vec_sum_opnd)                  :: V1_tmp 
-     type(vec_sum_opnd)                  :: V2_tmp 
-     type(vec_sum_opnd)                  :: V_sum_Li 
-     type(vec_sum_opnd)                  :: V_sum_Lidag 
-     type(vec_sum_opnd)                  :: V_sum_J 
-     type(vec_sum_opnd)                  :: V_sum_Jdag 
+     type(vec_sum_opnd)                  :: V1_tmp
+     type(vec_sum_opnd)                  :: V2_tmp
+     type(vec_sum_opnd)                  :: V_sum_Li
+     type(vec_sum_opnd)                  :: V_sum_Lidag
+     type(vec_sum_opnd)                  :: V_sum_J
+     type(vec_sum_opnd)                  :: V_sum_Jdag
 
      type(sum_opnd)                      :: Ja_sum ,Ja_sum_dag
-     type(sum_opnd)                      :: Ja_sum_subsyst 
-     type(sum_opnd)                      :: Jdag_J_sub 
+     type(sum_opnd)                      :: Ja_sum_subsyst
+     type(sum_opnd)                      :: Jdag_J_sub
 
 
      integer                         :: i, j, n, k, iv, index_L
@@ -2312,7 +2312,7 @@
      parent_true_BF = .true.
      do i = 1, size(F_system_parent%euler)
        if(F_system_parent%euler(i)) then
-         parent_true_BF = .false. 
+         parent_true_BF = .false.
          exit
        end if
      end do
@@ -2330,8 +2330,8 @@
      CALL alloc_NParray(zero_Pi_BF,shape(P_Euler),'zero_Pi_BF',routine_name)
 
      !Computation the elementary operators
-     write(out_unitp,*) 'get elementaries op. S_(',F_system%tab_num_frame,')' 
-     write(out_unitp,*) 'with euler(1) = false' 
+     write(out_unitp,*) 'get elementaries op. S_(',F_system%tab_num_frame,')'
+     write(out_unitp,*) 'with euler(1) = false'
      CALL flush_perso(out_unitp)
      iv = 1
 
@@ -2358,8 +2358,8 @@
        write(out_unitp,*) 'Case not possible'
        stop
      end if
-    ! write(out_unitp,*) 'euler parent', F_system_parent%euler 
-    ! write(out_unitp,*) 'euler parent', F_system_parent%tab_num_frame 
+    ! write(out_unitp,*) 'euler parent', F_system_parent%euler
+    ! write(out_unitp,*) 'euler parent', F_system_parent%tab_num_frame
 
      do i =  F_system_parent%nb_vect, 2, -1
        if(F_system_parent%tab_BFTransfo(i)%frame) then
@@ -2401,8 +2401,8 @@
        Lz(i) = czero
      end do
      if(nvec>=3) then
-       write(out_unitp,*) 'computation of Pi, i>=3 for S_(',F_system%tab_num_frame,')' 
-       write(out_unitp,*) 'with euler(1) = false' 
+       write(out_unitp,*) 'computation of Pi, i>=3 for S_(',F_system%tab_num_frame,')'
+       write(out_unitp,*) 'with euler(1) = false'
      end if
 
      ! Initiliation of the Li (i>2) operators
@@ -2477,8 +2477,8 @@
 
      if(F_system%nb_vect >0) then
        if(.not.F_system%tab_BFTransfo(1)%frame) then
-         write(out_unitp,*) 'computation of P2, for S_(',F_system%tab_num_frame,')' 
-         write(out_unitp,*) 'with euler(1) = false' 
+         write(out_unitp,*) 'computation of P2, for S_(',F_system%tab_num_frame,')'
+         write(out_unitp,*) 'with euler(1) = false'
 
          call get_opL2(L = L(2),     Fel = F_system%tab_BFTransfo(1)%Qvec(2), &
                        Jz = F_system%J%vec_sum(3), Lz_all = Lz, index_L = 2)
@@ -2633,7 +2633,7 @@
 
      zero_Pi_Bf(F_system%listVFr(1)) = .false.
 
-     do i = 1, F_system%nb_vect  
+     do i = 1, F_system%nb_vect
        if(F_system%tab_BFTransfo(i)%frame) then
          call get_Pi_subsyst(F_system%tab_BFTransfo(i), P_Euler, Pi_BF, &
          &                   Pi_dag_BF, zero_Pi_BF)
@@ -2671,8 +2671,8 @@
          call V_times_M_opnd_in_Vres(Pi_dag_BF(F_system%listVFr(i)), &
        &                             Mat_RTranspo, P_Euler(F_system%listVFr(i))%Pidag)
        end do
-    
-       do i = 1, F_system%nb_vect  
+
+       do i = 1, F_system%nb_vect
          if(F_system%tab_BFTransfo(i)%frame) then
            call Mat_Rot_times_Pi_subsyst(F_system%tab_BFTransfo(i), &
            &                   Mat_R, Mat_RTranspo, P_Euler)
@@ -2722,7 +2722,7 @@
 
 
      !!! off diagonal terms
-     !Compute sum1 
+     !Compute sum1
 
      do i = 1, nvec
      do j = 1, nvec
@@ -2773,7 +2773,7 @@
    END SUBROUTINE get_opKEO_subsyst_2euler
 
  !! @description:  Extract the terms of the KEO for active coordinates
- !! @param.in:     F_sum_nd   Kinetic operator energy (type: sum_opnd). 
+ !! @param.in:     F_sum_nd   Kinetic operator energy (type: sum_opnd).
  !! @param.in:     list_QdyntoQact New list of the coordinate. The active
  !!                coordinates are classified before the non active coordinates
   subroutine get_KEO_for_Qactiv(TWOxKEO, constraint, Qval,tabQpoly_Qel,tabQact_Qel, &
@@ -3361,4 +3361,122 @@
 
 
    END SUBROUTINE add_Vextr
+
+   SUBROUTINE Get_Gana_FROM_TWOxKEO(F_system,TWOxKEO,Gana,tabQact_Qel,nb_act,nb_var,nrho)
+     USE mod_BunchPolyTransfo, only : Type_BFTransfo
+
+     type(Type_BFtransfo), intent(in)                  :: F_system
+     integer,              intent(in)                  :: nb_act,nb_var,nrho
+     type(sum_opnd),       intent(in)                  :: TWOxKEO
+     TYPE(opel),           intent(in)                  :: tabQact_Qel(nb_var)
+     type(sum_opnd),       intent(inout), allocatable  :: Gana(:,:)
+
+
+     type(sum_opnd)                     :: Gij
+     integer :: i,indexQ
+     integer                    :: pq(2),JJ(2),LL(2),iG,jG
+
+
+     !logical, parameter :: debug = .TRUE.
+     logical, parameter :: debug = .FALSE.
+     character (len=*), parameter  :: routine_name='Get_Gana_FROM_TWOxKEO'
+
+     IF (debug) THEN
+       write(out_unitp,*) ' BEGINNING ',routine_name
+       CALL write_op(TWOxKEO,header=.TRUE.)
+
+       DO i=1,size(tabQact_Qel)
+         CALL write_op(tabQact_Qel(i))
+       END DO
+       CALL flush_perso(out_unitp)
+     END IF
+
+     ! first extract G(ij)
+     CALL alloc_NParray(Gana,[nb_act+3,nb_act+3],'Gana',routine_name)
+     CALL C_TO_Mat_OF_sum_opnd(Gana,CZERO)
+
+     DO i = 1, size(TWOxKEO%sum_prod_op1d)
+
+       CALL get_pqJL_OF_OpnD(pq,JJ,LL,TWOxKEO%sum_prod_op1d(i))
+
+       iG = 0
+       jG = 0
+       !write(out_unitp,*) 'term:',i
+       IF (pq(1) > 0 .AND. pq(2) > 0) THEN ! def
+         !write(out_unitp,*) 'def'
+         iG = pq(1)
+         jG = pq(2)
+       ELSE IF (pq(1) > 0 .AND. JJ(1) > 0) THEN ! cor
+         !write(out_unitp,*) 'cor'
+         iG = pq(1)
+         jG = JJ(1) -(nb_var-nb_act)
+       ELSE IF (JJ(1) > 0 .AND. JJ(2) > 0) THEN ! rot
+         !write(out_unitp,*) 'rot'
+         iG = JJ(1) -(nb_var-nb_act)
+         jG = JJ(2) -(nb_var-nb_act)
+       ELSE IF (JJ(1) == 0 .AND. pq(1) > 0) THEN ! rot
+         !write(out_unitp,*) 'pq^1'
+         !CALL write_op(TWOxKEO%sum_prod_op1d(i),header=.TRUE.)
+         iG = pq(1)
+         jG = 0
+       ELSE IF(JJ(1) > 0 .AND. pq(1) == 0) THEN ! rot
+         !write(out_unitp,*) 'J^1'
+         !CALL write_op(TWOxKEO%sum_prod_op1d(i),header=.TRUE.)
+         iG = JJ(1) -(nb_var-nb_act)
+         jG = 0
+       END IF
+
+       !write(out_unitp,*) i,'pq,JJ',pq,JJ
+       !write(out_unitp,*) i,'iG,jG',iG,jG
+
+       IF (iG > nb_act+3 .OR. jG > nb_act+3 .OR. iG < 0 .OR. jG < 0) THEN
+         write(out_unitp,*) ' ERROR in ',routine_name
+         write(out_unitp,*) ' iG or jG have a wrong range'
+         write(out_unitp,*) ' iG, jG',iG,jG
+         write(out_unitp,*) 'range: [1:',nb_act+3,'] or '
+         write(out_unitp,*) 'iG = 0 and iG = 0 for the vep'
+         write(out_unitp,*) 'CHECK the FORTRAN'
+         STOP
+       END IF
+
+       IF (iG > 0 .AND. jG > 0) THEN
+
+         Gij       = TWOxKEO%sum_prod_op1d(i)
+         Gij%Cn(1) = TWOxKEO%Cn(i)
+         !CALL write_op(Gij)
+
+         CALL Change_PQ_OF_OpnD_TO_Id_OF_OnD(Gij%sum_prod_op1d(1))
+         !CALL write_op(Gij)
+
+         IF (iG == jG) THEN
+           CALL F1_sum_nd_PLUS_TO_Fres_sum_nd(Gij,Gana(iG,jG)) !  adds Gij to Gana(iG,jG)
+         ELSE  ! because we get both (iG,jG) and (jG,iG) elements in TWOxKEO
+           Gij%Cn(1) = Gij%Cn(1) * CHALF
+
+           CALL F1_sum_nd_PLUS_TO_Fres_sum_nd(Gij,Gana(iG,jG)) !  adds Gij to Gana(iG,jG)
+
+           CALL F1_sum_nd_PLUS_TO_Fres_sum_nd(Gij,Gana(jG,iG)) !  adds Gij to Gana(jG,iG)
+
+         END IF
+
+       END IF
+       !write(out_unitp,*) 'i,iG, jG',i,iG,jG
+     END DO
+
+     call delete_op(Gij)
+
+     IF (debug) THEN
+       DO iG=1,nb_act+3
+       DO jG=1,nb_act+3
+         write(out_unitp,*) 'Gana,iG, jG',iG,jG
+         CALL write_op(Gana(iG,jG))
+       END DO
+       END DO
+       write(out_unitp,*) ' END ',routine_name
+       CALL flush_perso(out_unitp)
+     END IF
+
+   END SUBROUTINE Get_Gana_FROM_TWOxKEO
+
+
  END MODULE mod_Tana_op

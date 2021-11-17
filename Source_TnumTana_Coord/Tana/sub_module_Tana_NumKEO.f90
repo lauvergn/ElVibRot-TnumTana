@@ -44,10 +44,10 @@
  CONTAINS
 
  !! @description: Write the KEO in a certain order
- !! @param:     F_sum_nd   Kinetic operator energy (type: sum_opnd). 
- !! @param:     nvec       Number of vector in. 
- !! @param:     index_q1   Index of the vecor which is 
- !!                parallel to the BF-z frame. 
+ !! @param:     F_sum_nd   Kinetic operator energy (type: sum_opnd).
+ !! @param:     nvec       Number of vector in.
+ !! @param:     index_q1   Index of the vecor which is
+ !!                parallel to the BF-z frame.
   subroutine get_NumG_WITH_AnaKEO(TWOxKEO,Qval,mole,Gana,vep)
 
    type(sum_opnd),             intent(inout)             :: TWOxKEO
@@ -86,11 +86,16 @@
    vep       = ZERO
 
    DO i = 1, size(TWOxKEO%sum_prod_op1d)
-
-     CALL set_indexQ_OF_OpnD(TWOxKEO%sum_prod_op1d(i))
+     IF (debug) write(out_unitp,*)
+     IF (debug) write(out_unitp,*) "==========================================="
+     IF (debug) write(out_unitp,*) "============== term",i,"========================"
 
      CALL get_NumVal_OpnD(opval,Qval,TWOxKEO%sum_prod_op1d(i))
      opval = opval * TWOxKEO%Cn(i)
+
+     IF (debug) write(out_unitp,*) 'term:',i,' TWOxKEO%Cn(i):',TWOxKEO%Cn(i)
+     IF (debug) write(out_unitp,*) 'term:',i,' opval:',opval
+
 
      CALL get_pqJL_OF_OpnD(pq,JJ,LL,TWOxKEO%sum_prod_op1d(i))
 
@@ -142,6 +147,8 @@
        IF (iG /= jG) opval = opval * CHALF ! because we get both (iG,jG) and (jG,iG) elements
        Gana(iG,jG) = Gana(iG,jG) + real(opval,kind=Rkind)
        Gana(jG,iG) = Gana(iG,jG)
+
+       IF (debug) write(out_unitp,*) 'i,iG, jG',i,iG,jG,Gana(iG,jG)
 
        !IF (iG /= jG .AND. iG <=nb_act .AND. jG <= nb_act) THEN
        !  write(out_unitp,*) ' G(iG,jG)',iG,jG,TWOxKEO%Cn(i)
@@ -207,8 +214,6 @@
    vep     = ZERO
 
    DO i = 1, size(TWOxKEO%sum_prod_op1d)
-
-     CALL set_indexQ_OF_OpnD(TWOxKEO%sum_prod_op1d(i))
 
      CALL get_NumVal_OpnD(opval,Qval,TWOxKEO%sum_prod_op1d(i))
      opval = opval * TWOxKEO%Cn(i)

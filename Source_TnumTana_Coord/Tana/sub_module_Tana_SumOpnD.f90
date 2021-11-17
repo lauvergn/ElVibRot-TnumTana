@@ -95,7 +95,7 @@ module mod_Tana_Sum_OpnD
   end interface
 
    INTERFACE write_op
-     module procedure  write_sum_opnd
+     module procedure  write_sum_opnd,write_sum_Mat_OF_opnd
    END INTERFACE
 
   !!@description: Generic routine that copy a operator F1 to another operator F2
@@ -135,7 +135,7 @@ module mod_Tana_Sum_OpnD
    PUBLIC :: C_TO_Mat_OF_sum_opnd, remove_opzero_in_F_sum_nd
 
 
-   CONTAINS 
+   CONTAINS
 
       SUBROUTINE alloc_NParray_OF_Sum_OpnDdim1(tab,tab_ub,name_var,name_sub,tab_lb)
       IMPLICIT NONE
@@ -865,11 +865,11 @@ module mod_Tana_Sum_OpnD
 
    !! @description: Does the sum of two nd operators.,
    !!               and save the result in Fres_sum_nd.
-   !! @param:  F1_nd        First  operator (type: opnd). 
-   !! @param:  F2_nd        second operator (type: opnd). 
+   !! @param:  F1_nd        First  operator (type: opnd).
+   !! @param:  F2_nd        second operator (type: opnd).
    !! @param:  Fres_sum_nd  the result (type: sum_opnd).
    !! @param:  minus        Optional, if present, subtration operation
-   !!                       if not present, addition operation. 
+   !!                       if not present, addition operation.
    subroutine get_F1_nd_plus_F2_nd_to_Fres_sum_nd(F1_nd, F2_nd, Fres_sum_nd, minus)
      type(opnd),       intent(in)       :: F1_nd
      type(opnd),       intent(in)       :: F2_nd
@@ -971,11 +971,11 @@ module mod_Tana_Sum_OpnD
 
    end subroutine F1_sum_nd_MINUS_TO_Fres_sum_nd
 
-   !! @description: Does the sum of an operator of type sum_opnd with 
-   !!               another one of type opnd  
+   !! @description: Does the sum of an operator of type sum_opnd with
+   !!               another one of type opnd
    !!               and save the result in Fres_sum_nd.
-   !! @param:  F1_sum_nd    The first  operator (type: sum_opnd). 
-   !! @param:  F2_nd        The econd  operator (type: opnd). 
+   !! @param:  F1_sum_nd    The first  operator (type: sum_opnd).
+   !! @param:  F2_nd        The econd  operator (type: opnd).
    !! @param:  Fres_sum_nd  The result (type: sum_opnd).
    !! @param:  minus        Optional, if present and true, subtration operation
    !!                       if not present or false, addition operation.
@@ -987,7 +987,7 @@ module mod_Tana_Sum_OpnD
      type(opnd),                    intent(in)       :: F2_nd
      type(sum_opnd),                intent(inout)    :: Fres_sum_nd
      logical, optional,             intent(in)       :: minus
-  
+
      integer                    :: i
      logical                    :: minus_loc
 
@@ -1017,14 +1017,14 @@ module mod_Tana_Sum_OpnD
 
    end subroutine get_F1_sum_nd_plus_F2_nd_to_Fres_sum_nd
 
-   !! @description: Does the sum of an operator of type opnd with 
-   !!               another one of type sum_opnd  
+   !! @description: Does the sum of an operator of type opnd with
+   !!               another one of type sum_opnd
    !!               and save the result in Fres_sum_nd.
-   !! @param:    F1_nd First  operator (type: opnd). 
-   !! @param:    F2_sum_nd second  operator (type: sum_opnd). 
+   !! @param:    F1_nd First  operator (type: opnd).
+   !! @param:    F2_sum_nd second  operator (type: sum_opnd).
    !! @param:   Fres_sum_nd the result (type: sum_opnd).
    !! @param:    minus        Optional, if present and minus=t, subtraction operation
-   !!                            if not present, addition operation. 
+   !!                            if not present, addition operation.
    subroutine get_F1_nd_plus_F2_sum_nd_to_Fres_sum_nd(F1_nd, F2_sum_nd, Fres_sum_nd,&
                                                      & minus)
 
@@ -1032,7 +1032,7 @@ module mod_Tana_Sum_OpnD
      type(sum_opnd),                intent(in)       :: F2_sum_nd
      type(sum_opnd),                intent(inout)    :: Fres_sum_nd
      logical, optional,             intent(in)       :: minus
-  
+
      type(opel)                 :: op_zero
      integer                    :: i, j, k, m
      integer                    :: ndim1, ndim2
@@ -1069,21 +1069,21 @@ module mod_Tana_Sum_OpnD
    end subroutine get_F1_nd_plus_F2_sum_nd_to_Fres_sum_nd
 
 
-   !! @description: Does the sum of an operator of type sum_opnd with 
-   !!               another one of type sum_opnd  
+   !! @description: Does the sum of an operator of type sum_opnd with
+   !!               another one of type sum_opnd
    !!               and save the result in Fres_sum_nd.
-   !! @param:    F1_sum_nd First  operator (type: sum_opnd). 
-   !! @param:    F2_sum_nd second  operator (type: sum_opnd). 
+   !! @param:    F1_sum_nd First  operator (type: sum_opnd).
+   !! @param:    F2_sum_nd second  operator (type: sum_opnd).
    !! @param:   Fres_sum_nd the result (type: sum_opnd).
    !! @param:    minus        Optional, if present, subtration operation
-   !!                            if not present, addition operation. 
+   !!                            if not present, addition operation.
    subroutine get_F1_sum_nd_plus_F2_sum_nd_to_Fres_sum_nd(F1_sum_nd, F2_sum_nd, &
                                                          &Fres_sum_nd, minus)
      type(sum_opnd),       intent(in)       :: F1_sum_nd
      type(sum_opnd),       intent(in)       :: F2_sum_nd
      type(sum_opnd),       intent(inout)    :: Fres_sum_nd
      logical, optional,    intent(in)       :: minus
-  
+
      integer                    :: i, n1
      logical                    :: minus_loc
 

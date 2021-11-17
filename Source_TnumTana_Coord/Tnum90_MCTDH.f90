@@ -67,9 +67,8 @@
       !     - read the coordinate transformations :
       !     -   zmatrix, polysperical, bunch...
       !     ------------------------------------------------------------
-      para_Tnum%LaTeXForm = .TRUE.
-      CALL Read_CoordType(mole,para_Tnum,const_phys)
       para_Tnum%MCTDHForm = .TRUE.
+      CALL Read_CoordType(mole,para_Tnum,const_phys)
       !     ------------------------------------------------------------
       !-----------------------------------------------------------------
 

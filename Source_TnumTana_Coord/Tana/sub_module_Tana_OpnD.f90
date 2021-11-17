@@ -2015,7 +2015,10 @@ subroutine Expand_OpnD_TO_SumOpnD(FOpnD,SumOpnD)
          CALL get_NumVal_Op1D(ValOp1D,Qval(iQval),F_nd%prod_op1d(i))
          ValOp = ValOp * ValOp1D
        END IF
+       !write(out_unitp,*) 'get_NumVal_OpnD,ValOp1D',i,ValOp1D
      END DO
+    !write(out_unitp,*) 'get_NumVal_OpnD,ValOp',ValOp
+
    END SUBROUTINE get_NumVal_OpnD
 
  end module mod_Tana_OpnD

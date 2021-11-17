@@ -1,2 +1,6 @@
-/run_all.log
+run_all.log
 freq.xyz
+dat*
+res*
+keo.op
+mod_rec_vec.mod

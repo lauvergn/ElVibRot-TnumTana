@@ -46,7 +46,7 @@ MODULE mod_Tana_keo
 
    SUBROUTINE compute_analytical_KEO(TWOxKEO,mole, para_Tnum, Qact)
       USE mod_Tana_OpEl , ONLY : opel
-      USE mod_Tana_op,    ONLY : add_Vextr_new, Get_F2_F1_FROM_TWOxKEO
+      USE mod_Tana_op,    ONLY : add_Vextr_new, Get_F2_F1_FROM_TWOxKEO, Get_Gana_FROM_TWOxKEO
       IMPLICIT NONE
 
       TYPE(sum_opnd),        intent(inout)        :: TWOxKEO
@@ -56,6 +56,9 @@ MODULE mod_Tana_keo
 
       type(Type_PiEulerRot), pointer    :: P_euler(:)
       TYPE(sum_opnd), pointer           :: M_mass_out(:,:)
+
+      TYPE(sum_opnd), allocatable       :: Gana(:,:)
+
 
       integer, pointer                  :: list_Qactiv(:)
       integer, pointer                  :: list_QpolytoQact(:)
@@ -68,8 +71,10 @@ MODULE mod_Tana_keo
       logical                           :: constraint
       logical, pointer                  :: scalar_PiPj(:,:)
       real (kind=Rkind)                 :: Qdyn(mole%nb_var)
+
       logical :: new = .FALSE.
       logical :: With_Li
+      logical :: get_Gana = .FALSE.
 
 !     - working parameters ------------------------------------------
       integer :: iQpoly,iQprim,iQact,Qpoly_type
@@ -296,6 +301,19 @@ MODULE mod_Tana_keo
       END IF
       !para_Tnum%TWOxKEO = TWOxKEO ! usefull ?
 
+      IF (get_Gana) THEN
+          write(out_unitp,*) '================================================='
+          write(out_unitp,*) ' Get Gana'
+          CALL flush_perso(out_unitp)
+          CALL  Get_Gana_FROM_TWOxKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,   &
+                                       TWOxKEO,Gana,                            &
+                                       tabQact_Qel,mole%nb_act,mole%nb_var,     &
+                                       para_Tnum%nrho)
+          CALL write_op(Gana,header=.TRUE.)
+          CALL dealloc_NParray(Gana,'Gana',routine_name)
+          write(out_unitp,*) '================================================='
+      END IF
+
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' output of the analytical  KEO'
       write(out_unitp,*) ' MCTDH    Form: ',para_Tnum%MCTDHForm
@@ -307,12 +325,13 @@ MODULE mod_Tana_keo
 
       tab_Qname(:) = tab_Qname(list_QactTOQpoly(:)) ! to change the order due to the "constraints"
 
-      CALL file_open2(name_file='keo.op',iunit=io_mctdh)
-      CALL write_keo_mctdh_form(mole,TWOxKEO,io_mctdh,       &
-                                tab_Qname, para_Tnum%JJ)
-      close(io_mctdh)
-
       IF (para_Tnum%MCTDHForm) THEN
+
+        CALL file_open2(name_file='keo.op',iunit=io_mctdh)
+        CALL write_keo_mctdh_form(mole,TWOxKEO,io_mctdh,       &
+                              tab_Qname, para_Tnum%JJ)
+        close(io_mctdh)
+
         write(out_unitp,*) '================================================='
         write(out_unitp,*) "output MCTDH format"
         write(out_unitp,*) '-------------------------------------------------'
@@ -696,29 +715,29 @@ MODULE mod_Tana_keo
 
      type(Type_BFTransfo),         intent(inout)      :: F_system
      integer,                      intent(inout)      :: i_var
-  
+
      integer                            :: i, j, iv, ivF
-     integer                            :: nvec, nsub_syst 
+     integer                            :: nvec, nsub_syst
      character (len=*), parameter       :: routine_name='iv_system_to_iv_BF'
-  
+
        nsub_syst = 0
        do i=1, F_system%nb_vect
          if(F_system%tab_BFTransfo(i)%frame) nsub_syst = nsub_syst+1
        end do
-       nvec = F_system%nb_vect-nsub_syst+1     
+       nvec = F_system%nb_vect-nsub_syst+1
        CALL alloc_array(F_system%listVFr,(/nvec/),'F_system%listVFr',routine_name)
-       ivF = 1         
+       ivF = 1
        F_system%listVFr(ivF) = i_var
        i_var = i_var+1
        ivF = ivF+1
        do iv = 1, F_system%nb_vect
          if(F_system%tab_BFTransfo(iv)%frame) then
            call iv_system_to_iv_BF(F_system%tab_BFTransfo(iv), i_var)
-         else  
+         else
            F_system%listVFr(ivF) = i_var
            i_var = i_var+1
            ivF = ivF+1
-         end if    
+         end if
        end do
    end subroutine iv_system_to_iv_BF
 
@@ -734,9 +753,9 @@ MODULE mod_Tana_keo
 
      type(Type_BFTransfo),         intent(inout)      :: F_system
      type(Type_PiEulerRot), intent(inout)             :: P_euler(:)
-  
-     integer                            :: i, j, iv 
-     integer                            :: nvec, nsub_syst 
+
+     integer                            :: i, j, iv
+     integer                            :: nvec, nsub_syst
      integer                            :: n_size
      character (len=*), parameter       :: routine_name='init_tab_num_frame_Peuler'
 
@@ -744,7 +763,7 @@ MODULE mod_Tana_keo
        do i=1, F_system%nb_vect
          if(F_system%tab_BFTransfo(i)%frame) nsub_syst = nsub_syst+1
        end do
-       nvec = F_system%nb_vect-nsub_syst+1     
+       nvec = F_system%nb_vect-nsub_syst+1
        n_size = size(F_system%tab_num_Frame)
        do i = 1, nvec
          CALL alloc_array(P_Euler(F_system%listVFr(i))%Tab_num_Frame,(/n_size/),&
@@ -757,10 +776,10 @@ MODULE mod_Tana_keo
          if(F_system%tab_BFTransfo(iv)%frame) then
            call init_tab_num_frame_Peuler(F_system%tab_BFTransfo(iv), &
            &     P_Euler)
-         end if    
+         end if
        end do
    end subroutine init_tab_num_frame_Peuler
-   
+
 
 
    !! @description: Relation between the indices of the variable in
@@ -774,15 +793,15 @@ MODULE mod_Tana_keo
      type(Type_BFTransfo),         intent(inout)      :: F_system
      integer,                      intent(inout)      :: tab_iv(:)
      integer,                      intent(inout)      :: i_var
-  
+
      integer                            :: i,  iv, ivF
-     integer                            :: nvec, nsub_syst 
+     integer                            :: nvec, nsub_syst
      character (len=*), parameter       :: routine_name='iv_system_to_iv_BF'
-  
+
       ! if(.not.allocated(tab_v)) then
       !   write(out_unitp,*) ' ERROR in',routine_name
       !   write(out_unitp,*) "you should allocate tab_v before calling this subroutine"
-      ! end if   
+      ! end if
        ivF = 1
        tab_iv(i_var) = ivF
        i_var = i_var+1
@@ -790,11 +809,11 @@ MODULE mod_Tana_keo
        do iv = 1, F_system%nb_vect
          if(F_system%tab_BFTransfo(iv)%frame) then
            call iv_BF_to_iv_subsystem(F_system%tab_BFTransfo(iv), tab_iv, i_var)
-         else  
+         else
            tab_iv(i_var) = ivF
            i_var = i_var+1
            ivF = ivF+1
-         end if    
+         end if
        end do
    end subroutine iv_BF_to_iv_subsystem
 
@@ -826,7 +845,7 @@ MODULE mod_Tana_keo
       do i=1, F_system%nb_vect
         if(F_system%tab_BFTransfo(i)%frame) nsub_syst = nsub_syst+1
       end do
-      nvec = F_system%nb_vect-nsub_syst+1     
+      nvec = F_system%nb_vect-nsub_syst+1
       nb_var = max(1,3*nvec-3)
       write(out_unitp,*) '************************************'
       write(out_unitp,*) 'begin sub_system', F_system%tab_num_frame
@@ -834,7 +853,7 @@ MODULE mod_Tana_keo
       write(out_unitp,*) 'nsub_syt=', nsub_syst
       do i = 1, size(F_system%euler)
         if(F_system%euler(i)) nb_var = nb_var + 1
-      end do        
+      end do
      ! if(F_system%nb_vect > 0) then
      !   if(F_system%tab_BFTransfo(1)%frame)  nb_var = nb_var + 1
      ! end if
@@ -850,7 +869,7 @@ MODULE mod_Tana_keo
        end if
      end if
 
-     ivF = 1         
+     ivF = 1
      i_len = len(trim(F_system%name_frame))
      tab_Qel(i_var) = F_system%Qvec(1)
 
@@ -863,9 +882,9 @@ MODULE mod_Tana_keo
         if(F_system%tab_BFTransfo(iv)%frame) then
           call extract_qval_F_system(F_system%tab_BFTransfo(iv), tab_Q, tab_Qactiv, &
           & tab_Qname, tab_Qel, i_var ,with_Li)
-        else 
+        else
          with_Li = with_Li .OR. F_system%tab_BFTransfo(iv)%Li
-         iq = iq+1 
+         iq = iq+1
          call write_int_in_char(iq, ci)
           if(iv == 1) then
             tab_Qel(i_var) = F_system%tab_BFTransfo(iv)%Qvec(1)
@@ -968,7 +987,7 @@ MODULE mod_Tana_keo
      integer                         :: iv
      integer                         :: i_BF, j_BF
      character (len=*), parameter    :: routine_name='extract_bloc_matrix'
-     
+
      if(associated(F_system%M_mass)) then
        do iv=1, F_system%nb_vect
          IF (associated(F_system%tab_BFTransfo(iv)%M_mass)) THEN
@@ -988,7 +1007,7 @@ MODULE mod_Tana_keo
         nb_var = max(1,3*nvec-3)
         do i = 1, size(F_system%euler)
           if(F_system%euler(i)) nb_var = nb_var + 1
-        end do        
+        end do
 
         CALL alloc_array(F_system%M_mass,(/nvec, nvec/),'F_system%M_mass',routine_name)
 
@@ -1001,8 +1020,8 @@ MODULE mod_Tana_keo
            else
              F_system%M_mass(i,j) = CZERO
            end if
-         end do  
-       end do  
+         end do
+       end do
      end if
      do iv = 1, F_system%nb_vect
        if(F_system%tab_BFTransfo(iv)%frame) then
@@ -1041,8 +1060,8 @@ MODULE mod_Tana_keo
          M_mass_out(i,j) = CZERO
        end if
      end do
-     end do  
-     
+     end do
+
    end subroutine transform_M_mass_to_M_mass_opnd
 
 END MODULE mod_Tana_keo

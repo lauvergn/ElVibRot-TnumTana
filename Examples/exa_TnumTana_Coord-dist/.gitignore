@@ -1,4 +1,6 @@
-/keo.op
-/res_old
-/MidasCpp_KEO.mop
-/Molecule.mmol
+keo.op
+res_old
+MidasCpp_KEO.mop
+Molecule.mmol
+freq.xyz
+res*

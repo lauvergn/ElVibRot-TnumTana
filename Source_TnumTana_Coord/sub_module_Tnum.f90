@@ -788,11 +788,11 @@ MODULE mod_Tnum
       Gcte                 = .FALSE.
       NonGcteRange(:)      = 0
       Tana                 = .FALSE.
-      Compa_TanaTnum       = 1
-      MidasCppForm         = .FALSE.
-      MCTDHForm            = .FALSE.
-      LaTeXForm            = .FALSE.
-      VSCFForm             = .FALSE.
+      Compa_TanaTnum       = para_Tnum%Compa_TanaTnum ! so that it is possible to change the default
+      MidasCppForm         = para_Tnum%MidasCppForm   ! so that it is possible to change the default
+      MCTDHForm            = para_Tnum%MCTDHForm      ! so that it is possible to change the default
+      LaTeXForm            = para_Tnum%LaTeXForm      ! so that it is possible to change the default
+      VSCFForm             = para_Tnum%VSCFForm       ! so that it is possible to change the default
 
       nrho                 = 1
       vep_type             = -1
