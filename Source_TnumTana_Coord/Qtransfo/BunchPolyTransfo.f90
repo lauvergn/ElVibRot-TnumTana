@@ -106,6 +106,7 @@
 
 
           logical                  :: cart                   = .FALSE.
+          character (len=6)        :: Spherical_convention   = 'zxy'
           logical                  :: Li                     = .FALSE.
           logical                  :: Euler(3)               = (/ .FALSE., .FALSE., .FALSE. /)
                               ! F,F,F => for the true BF or F1
@@ -846,7 +847,7 @@
       integer, save :: num_Frame_in_BF        = 0
       integer, save :: num_vect_in_BF         = 0
       integer, save :: iv_tot                 = 0
-
+      character (len=6) :: Spherical_convention
       integer, pointer :: tab_num_Frame(:)
 
       integer, parameter :: max_vect = 100
@@ -857,11 +858,12 @@
       real (kind=Rkind) :: Coef_OF_Vect2(max_vect)
       character (len=3) :: Type_Vect
 
-      NAMELIST /vector/ nb_vect,Frame,Frame_type,name_Frame,            &
-                        zmat_order,                                     &
-                        cos_th,name_d,name_th,name_u,name_dih,          &
-                        cart,Li,name_x,name_y,name_z,                   &
-                        name_alpha,name_beta,name_gamma,                &
+      NAMELIST /vector/ nb_vect,Frame,Frame_type,name_Frame,                    &
+                        zmat_order,                                             &
+                        cos_th,name_d,name_th,name_u,name_dih,                  &
+                        Spherical_convention,cart,Li,                           &
+                        name_x,name_y,name_z,                                   &
+                        name_alpha,name_beta,name_gamma,                        &
                         iAtA,iAtB
 
       NAMELIST /Vect_FOR_AxisFrame / Coef_OF_Vect1,Coef_OF_Vect2,       &
@@ -904,6 +906,7 @@
       Frame_type    = 0
       cos_th        = BFTransfo%Def_cos_th
       cart          = .FALSE.
+      Spherical_convention = 'zxy'
       Li            = .FALSE.
       zmat_order    = .FALSE.
       name_x        = "x"
@@ -1006,6 +1009,19 @@
 
       BFTransfo%cart              = cart
       BFTransfo%Li                = Li
+      CALL string_uppercase_TO_lowercase(Spherical_convention)
+      BFTransfo%Spherical_convention = Spherical_convention
+      SELECT CASE(Spherical_convention)
+      CASE ("zxy","x-zy")
+        CONTINUE
+      CASE default
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' Wrong "Spherical_convention": ',Spherical_convention
+        write(out_unitp,*) ' The possibilities are "zxy", "x-zy"'
+        write(out_unitp,*) ' Check your data !!'
+        STOP
+      END SELECT
+
       BFTransfo%nb_vect           = nb_vect
       num_vect_in_BF              = num_vect_in_BF + 1
       BFTransfo%num_vect_in_BF    = num_vect_in_BF
@@ -1437,6 +1453,7 @@
 
       write(out_unitp,*) 'Cart',BFTransfo%cart
       write(out_unitp,*) 'Li',BFTransfo%Li
+      write(out_unitp,*) 'Spherical_convention',BFTransfo%Spherical_convention
 
       write(out_unitp,*) 'Def_cos_th,cos_th',BFTransfo%Def_cos_th,BFTransfo%cos_th
       write(out_unitp,*) ' Elementary operators for Tana:'
@@ -1782,9 +1799,22 @@
             !-----------------------------------------------------------
           END IF
 
-          CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(1),1,nderiv) !x
-          CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(1),2,nderiv) !y
-          CALL sub_dnS_TO_dnVec(dnf3,tab_dnXVect(1),3,nderiv) !z
+          SELECT CASE(BFTransfo%Spherical_convention)
+          CASE ('zxy')
+            CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(1),1,nderiv) !x
+            CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(1),2,nderiv) !y
+            CALL sub_dnS_TO_dnVec(dnf3,tab_dnXVect(1),3,nderiv) !z
+          CASE ('x-zy')
+            CALL sub_dnS_TO_dnVec(dnf3,tab_dnXVect(1),1,nderiv) !z
+            CALL sub_dnS_TO_dnVec(dnf2,tab_dnXVect(1),2,nderiv) !y
+            CALL sub_Weight_dnS(dnf1,-ONE,nderiv)
+            CALL sub_dnS_TO_dnVec(dnf1,tab_dnXVect(1),3,nderiv) !-x
+          CASE Default
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) '  No default Spherical_convention'
+            write(out_unitp,*) '  Check the fortran'
+            STOP
+          END SELECT
 
         ELSE
           write(out_unitp,*) ' ERROR in ',name_sub
@@ -1869,7 +1899,7 @@
         CALL RecWrite_BFTransfo(BFTransfo,.FALSE.)
       END IF
 !      -----------------------------------------------------------------
-
+write(6,*) 'coucou ',name_sub
       IF (nderiv /= 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) '  This subroutine cannot be use with nderiv > 0',nderiv
@@ -2310,7 +2340,7 @@
 !      -----------------------------------------------------------------
       integer :: err_mem,memory
       logical, parameter :: debug = .FALSE.
-!      logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='RecGet_Vec_Fi_For_poly'
 !      -----------------------------------------------------------------
 
@@ -2355,10 +2385,6 @@
         END IF
 
         ! Riv = sqrt(dot_product(tab_Vect_Fi(iv_tot)%d0,tab_Vect_Fi(iv_tot)%d0)) !already calculated
-
-        pz = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(3)%d0)
-        px = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(1)%d0)
-        py = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(2)%d0)
 
         ubetaiv = pz / Riv  ! cos(beta)
         betaiv = acos(ubetaiv)
@@ -2494,12 +2520,24 @@
             ! norm of the vector (distance)
             Riv = sqrt(dot_product(tab_Vect_Fi(iv_tot)%d0,tab_Vect_Fi(iv_tot)%d0))
 
-            pz = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(3)%d0)
+            SELECT CASE(BFTransfo%Spherical_convention)
+            CASE ('zxy')
+              pz = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(3)%d0)
+              px = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(1)%d0)
+              py = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(2)%d0)
+            CASE ('x-zy')
+              pz = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(1)%d0)
+              px = -dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(3)%d0)
+              py = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(2)%d0)
+            CASE Default
+              write(out_unitp,*) ' ERROR in ',name_sub
+              write(out_unitp,*) '  No default Spherical_convention'
+              write(out_unitp,*) '  Check the fortran'
+              STOP
+            END SELECT
+
             uiv = pz / Riv  ! cos(thi)
             thiv = acos(uiv)
-
-            px = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(1)%d0)
-            py = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(2)%d0)
             phiv = atan2(py,px)
             CALL dihedral_range(phiv,2) ! [0:2pi]
 
@@ -2573,6 +2611,7 @@
       CALL FrameType1TOBFrameType2(BFTransfo1,BFTransfo2)
 
       BFTransfo2%cart                   = BFTransfo1%cart
+      BFTransfo2%Spherical_convention   = BFTransfo1%Spherical_convention
       BFTransfo2%Li                     = BFTransfo1%Li
       BFTransfo2%cos_th                 = BFTransfo1%cos_th
       BFTransfo2%Def_cos_th             = BFTransfo1%Def_cos_th
