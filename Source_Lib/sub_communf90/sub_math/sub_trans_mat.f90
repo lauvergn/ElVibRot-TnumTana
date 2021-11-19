@@ -688,7 +688,7 @@
     IF (Rkind /= R8kind .AND. type_lu_loc == 3) type_lu_loc = type_lu_default
 
 #if __LAPACK != 1
-    IF ( type_diag_loc == 3) type_lu_loc = type_lu_default
+    IF ( type_lu_loc == 3) type_lu_loc = type_lu_default
 #endif
 
     SELECT CASE (type_lu)
@@ -701,8 +701,8 @@
       err = int(ierr4)
       IF (err /= 0) STOP 'LU Driver_LU_solve_cplx'
 #else
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makfile).'
+      write(out_unitp,*) ' ERROR in Driver_LU_solve_cplx'
+      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makefile).'
       write(out_unitp,*) '  The program should not reach the LAPACK case.'
       write(out_unitp,*) '  => Probabely, wrong type_diag_default.'
       write(out_unitp,*) '  => CHECK the fortran!!'
@@ -734,7 +734,7 @@
     IF (Rkind /= R8kind .AND. type_lu_loc == 3) type_lu_loc = type_lu_default
 
 #if __LAPACK != 1
-    IF ( type_diag_loc == 3) type_lu_loc = type_lu_default
+    IF ( type_lu_loc == 3) type_lu_loc = type_lu_default
 #endif
 
     SELECT CASE (type_lu)
@@ -749,8 +749,8 @@
       err = int(ierr4)
       IF (err /= 0) STOP 'Driver_LU_decomp_cplx'
 #else
-      write(out_unitp,*) ' ERROR in ',name_sub
-      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makfile).'
+      write(out_unitp,*) ' ERROR in Driver_LU_decomp_cplx'
+      write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makefile).'
       write(out_unitp,*) '  The program should not reach the LAPACK case.'
       write(out_unitp,*) '  => Probabely, wrong type_diag_default.'
       write(out_unitp,*) '  => CHECK the fortran!!'

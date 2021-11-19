@@ -579,18 +579,24 @@
    !! @param:       index_L  Integer corresponding to the index of L
    !! @param:       dag   Logical, if present and = true, the adjoint of Li will be obtained
    !!                        by  vector transpose time a matrix
-   SUBROUTINE get_opLi(L, theta, phi, index_L, dag, Li)
-     type(vec_sum_opnd),      intent(inout)      :: L
-     type(opel),              intent(in)         :: theta
-     type(opel),              intent(in)         :: phi
-     integer,                 intent(in)         :: index_L
-     logical, optional,       intent(in)         :: dag,Li
+   !! @param:       Li   Logical, if present and = true, leave Li as 3 conponents [Lix,Liy,Liz]
+   !! @param:       Spherical_convention   string, if present it enables one to select other spherical convention
+   SUBROUTINE get_opLi(L, theta, phi, index_L, dag, Li, Spherical_convention)
+     type(vec_sum_opnd),           intent(inout)      :: L
+     type(opel),                   intent(in)         :: theta
+     type(opel),                   intent(in)         :: phi
+     integer,                      intent(in)         :: index_L
+     logical,           optional,  intent(in)         :: dag,Li
+     character (len=6), optional,  intent(in)         :: Spherical_convention
+
 
      type(sum_opnd), allocatable     :: M_opnd(:,:)
      type(sum_opnd), allocatable     :: M_opnd_tr(:,:)
      type(vec_sum_opnd)              :: V
 
      logical                         :: dag_loc,Li_loc
+     character (len=6)               :: Spherical_convention_loc
+
      integer                         :: error
      character (len=*), parameter    :: routine_name='get_opLi'
 
@@ -600,13 +606,19 @@
        dag_loc = .FALSE.
      END IF
 
+     IF (present(Spherical_convention)) THEN
+       Spherical_convention_loc = Spherical_convention
+     ELSE
+       Spherical_convention_loc = 'zxy'
+     END IF
+
      IF (present(Li)) THEN
        Li_loc = Li
      ELSE
        Li_loc = .FALSE.
      END IF
 
-     IF (Li_loc) THEN
+     IF (Li_loc) THEN ! do we have to change the spherical convention ????????
        call allocate_op(L,3)
        L%vec_sum(1) = get_Lx(theta)
        L%vec_sum(2) = get_Ly(theta)
@@ -643,39 +655,81 @@
        V%vec_sum(2) = get_Pq(phi)
      end if
 
-     CALL alloc_NParray(M_opnd,(/3,2/),'M_opnd',routine_name)
+     CALL alloc_NParray(M_opnd,[3,2],'M_opnd',routine_name)
 
-     if(theta%idq == 3 .or. theta%idq == 7) then
+     SELECT CASE(Spherical_convention_loc)
+     CASE ('zxy')
 
-       M_opnd(1,1) = get_sin(phi)
-       M_opnd(1,1)%Cn(1) = -CONE
-       M_opnd(1,2) = get_cos(phi) * get_cot(theta)
-       M_opnd(1,2)%Cn(1) = -CONE
+       IF (theta%idq == 3 .or. theta%idq == 7) THEN
 
-       M_opnd(2,1) = get_cos(phi)
-       M_opnd(2,2) = get_sin(phi) * get_cot(theta)
-       M_opnd(2,2)%Cn(1) = -CONE
+         M_opnd(1,1) = get_sin(phi)
+         M_opnd(1,1)%Cn(1) = -CONE
+         M_opnd(1,2) = get_cos(phi) * get_cot(theta)
+         M_opnd(1,2)%Cn(1) = -CONE
 
-       M_opnd(3,1) = czero
-       M_opnd(3,2) = cone
+         M_opnd(2,1) = get_cos(phi)
+         M_opnd(2,2) = get_sin(phi) * get_cot(theta)
+         M_opnd(2,2)%Cn(1) = -CONE
 
-     else
+         M_opnd(3,1) = czero
+         M_opnd(3,2) = cone
 
-       M_opnd(1,1) = get_sin(phi) * get_sin(theta)
-       M_opnd(1,1)%Cn(1) =  CONE
-       M_opnd(1,2) = get_cos(phi) * get_cot(theta)
-       M_opnd(1,2)%Cn(1) = -CONE
+       ELSE
 
+         M_opnd(1,1) = get_sin(phi) * get_sin(theta)
+         M_opnd(1,1)%Cn(1) =  CONE
+         M_opnd(1,2) = get_cos(phi) * get_cot(theta)
+         M_opnd(1,2)%Cn(1) = -CONE
 
-       M_opnd(2,1) = get_cos(phi) * get_sin(theta)
-       M_opnd(2,1)%Cn(1) = -CONE
-       M_opnd(2,2) = get_sin(phi) * get_cot(theta)
-       M_opnd(2,2)%Cn(1) = -CONE
+         M_opnd(2,1) = get_cos(phi) * get_sin(theta)
+         M_opnd(2,1)%Cn(1) = -CONE
+         M_opnd(2,2) = get_sin(phi) * get_cot(theta)
+         M_opnd(2,2)%Cn(1) = -CONE
 
-       M_opnd(3,1) = czero
-       M_opnd(3,2) = cone
+         M_opnd(3,1) = czero
+         M_opnd(3,2) = cone
 
-     end if
+       END IF
+
+     CASE ('x-zy')
+
+       IF (theta%idq == 3 .or. theta%idq == 7) THEN
+
+         M_opnd(3,1) = get_sin(phi)
+         M_opnd(3,1)%Cn(1) = CONE
+         M_opnd(3,2) = get_cos(phi) * get_cot(theta)
+         M_opnd(3,2)%Cn(1) = CONE
+
+         M_opnd(2,1) = get_cos(phi)
+         M_opnd(2,2) = get_sin(phi) * get_cot(theta)
+         M_opnd(2,2)%Cn(1) = -CONE
+
+         M_opnd(1,1) = czero
+         M_opnd(1,2) = cone
+
+       ELSE
+
+         M_opnd(3,1) = get_sin(phi) * get_sin(theta)
+         M_opnd(3,1)%Cn(1) = -CONE
+         M_opnd(3,2) = get_cos(phi) * get_cot(theta)
+         M_opnd(3,2)%Cn(1) = CONE
+
+         M_opnd(2,1) = get_cos(phi) * get_sin(theta)
+         M_opnd(2,1)%Cn(1) = -CONE
+         M_opnd(2,2) = get_sin(phi) * get_cot(theta)
+         M_opnd(2,2)%Cn(1) = -CONE
+
+         M_opnd(1,1) = czero
+         M_opnd(1,2) = cone
+
+       END IF
+
+     CASE Default
+       write(out_unitp,*) ' ERROR in ',routine_name
+       write(out_unitp,*) '  No default Spherical_convention'
+       write(out_unitp,*) '  Check the fortran'
+       STOP
+     END SELECT
 
      if(dag_loc) then
        M_opnd_tr = Transpose_Mat_OF_sum_opnd(M_opnd)
@@ -1714,11 +1768,13 @@
 
              call get_opLi(L = L(iv),     theta = F_system%tab_BFTransfo(i)%Qvec(2), &
                                           phi   = F_system%tab_BFTransfo(i)%Qvec(3), &
-                                  index_L = index_L, Li=F_system%tab_BFTransfo(i)%Li)
+                                  index_L = index_L, Li=F_system%tab_BFTransfo(i)%Li,&
+                  Spherical_convention=F_system%tab_BFTransfo(i)%Spherical_convention)
 
              call get_opLi(L = L_dag(iv), theta = F_system%tab_BFTransfo(i)%Qvec(2), &
                                           phi   = F_system%tab_BFTransfo(i)%Qvec(3), &
-                     index_L = index_L, dag = .true., Li=F_system%tab_BFTransfo(i)%Li)
+                    index_L = index_L, dag = .true., Li=F_system%tab_BFTransfo(i)%Li,&
+                  Spherical_convention=F_system%tab_BFTransfo(i)%Spherical_convention)
 
              call get_opPi(       Pi_BF(F_system%listVFr(iv)),                       &
                            FRel=F_system%tab_BFTransfo(i)%Qvec(1), L=L(iv),          &
@@ -2445,11 +2501,13 @@
 
              call get_opLi(L = L(iv),     theta = F_system%tab_BFTransfo(i)%Qvec(2), &
                                           phi   = F_system%tab_BFTransfo(i)%Qvec(3), &
-                                  index_L = index_L, Li=F_system%tab_BFTransfo(i)%Li)
+                                  index_L = index_L, Li=F_system%tab_BFTransfo(i)%Li,&
+                  Spherical_convention=F_system%tab_BFTransfo(i)%Spherical_convention)
 
              call get_opLi(L = L_dag(iv), theta = F_system%tab_BFTransfo(i)%Qvec(2), &
                                           phi   = F_system%tab_BFTransfo(i)%Qvec(3), &
-                    index_L = index_L, dag = .true., Li=F_system%tab_BFTransfo(i)%Li)
+                    index_L = index_L, dag = .true., Li=F_system%tab_BFTransfo(i)%Li,&
+                  Spherical_convention=F_system%tab_BFTransfo(i)%Spherical_convention)
 
              call get_opPi(       Pi_BF(F_system%listVFr(iv)),                       &
                            FRel=F_system%tab_BFTransfo(i)%Qvec(1), L=L(iv),          &
