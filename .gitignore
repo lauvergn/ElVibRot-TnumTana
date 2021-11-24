@@ -12,6 +12,9 @@ comp.log
 *.exe
 Examples/exa_PhysicalConstants/res*
 Examples/exa_PhysicalConstants/comp.log
+Examples/exa_TanaCheck/*log
+Examples/exa_TanaCheck/save_dat_error
+
 UnitTests/*/*log
 UnitTests/*/file*
 UnitTests/*/lev*

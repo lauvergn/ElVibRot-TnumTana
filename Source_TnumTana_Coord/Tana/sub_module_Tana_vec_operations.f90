@@ -39,7 +39,7 @@ MODULE mod_Tana_vec_operations
    PUBLIC :: Jdag_scalarJ_subsystem, Li_scalar_Li_from_Eq75,     &
              Jdag_scalar_J_from_Eq122, Jdag_scalar_J_from_Eq171
 
-   CONTAINS 
+   CONTAINS
 
 
    !! @description: Calculates the scalar product of Jdag and J depending
@@ -117,7 +117,7 @@ MODULE mod_Tana_vec_operations
 
    END SUBROUTINE Jdag_scalarJ_subsystem
 
-   !! @description: Calculates the resulting scalar product 
+   !! @description: Calculates the resulting scalar product
    !!               of J_dag.J, where J
    !!               is  given by Eq. 122, ref (Phys Review)
    !! @param:       F1_sum     sum of elementary op which contains the needed
@@ -139,6 +139,9 @@ MODULE mod_Tana_vec_operations
      integer                         :: error,i,j
      character (len = *), parameter  :: routine_name='Jdag_scalar_J_from_Eq171'
 
+
+     !write(6,*) 'Beg: ',routine_name
+
      nullify(M_opnd)
 
      if(fbeta%idf /= 1 .or. (fbeta%idq /= 7 .and. fbeta%idq /= -7)) then
@@ -155,7 +158,7 @@ MODULE mod_Tana_vec_operations
        write(out_unitp,*) "  The elementary operators should be the Id and idq = 8"
        STOP
      end if
-     CALL alloc_array(M_opnd,(/3,3/),'M_opnd',routine_name)
+     CALL alloc_array(M_opnd,[3,3],'M_opnd',routine_name)
      call allocate_op(Pabg, 3)
      call allocate_op(Pabg_dag, 3)
 
@@ -208,7 +211,7 @@ MODULE mod_Tana_vec_operations
 
    END SUBROUTINE Jdag_scalar_J_from_Eq171
 
-   !! @description: Calculates the resulting scalar product 
+   !! @description: Calculates the resulting scalar product
    !!               of J_dag.J, where J is  given by
    !!               Eq. 122, Gatti & Iung Phys repport, V484, pp1, 2009 (with cot g => cos g)
    !!        or     Eq A6, from Ndong et al. J. Chem. Phys. V136, pp034107, 2012
@@ -231,6 +234,8 @@ MODULE mod_Tana_vec_operations
      type(vec_sum_opnd)              :: V_tmp
      integer                         :: error
      character (len = *), parameter :: routine_name='Jdag_scalar_J_from_Eq122'
+
+     !write(6,*) 'Beg: ',routine_name
 
      !CALL Jdag_scalar_J_from_Eq122_old(falpha, fbeta, fgamma, JJ)
      !RETURN
@@ -303,7 +308,7 @@ MODULE mod_Tana_vec_operations
 
    END SUBROUTINE Jdag_scalar_J_from_Eq122
 
-   !! @description: Calculates the resulting scalar product 
+   !! @description: Calculates the resulting scalar product
    !!               of Li_dag.Li, for i>=3, where is given
    !!               by Eq. 75 or 123, Gatti & Iung Phys repport, V484, pp1, 2009
    !!        or     Eq A2, from Ndong et al. J. Chem. Phys. V136, pp034107, 2012
@@ -327,7 +332,7 @@ MODULE mod_Tana_vec_operations
      integer                         :: error
      character (len = *), parameter :: routine_name='Li_scalar_Li_from_Eq75'
 
-     !STOP 'Li_scalar_Li_from_Eq75'
+     !write(6,*) 'Beg: ',routine_name
      !CALL Li_scalar_Li_from_Eq75_old(theta, phi, LiLi)
      !RETURN
 

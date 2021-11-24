@@ -1,23 +1,24 @@
  MODULE mod_rec_vec
  IMPLICIT NONE
 
- integer :: type_vec   = 0  ! 0: in star, all coupled, 1: in line, 2: jacobi
- integer :: max_layer  = 4
- integer :: max_v      = 2 
- integer :: max_b      = 2
- integer :: nrho       = 2
- logical :: cart       = .FALSE.
- logical :: cos_th     = .TRUE.
- logical :: frame0vec  = .FALSE. ! possibility to use a frame with 0 vector (nb_vect=0)
- logical :: type100    = .FALSE. ! possibility to use constraints
- logical :: zmat_order = .TRUE.  ! possibility to use zmat_order
+ integer :: type_vec     = 0  ! 0: in star, all coupled, 1: in line, 2: jacobi
+ integer :: max_layer    = 4
+ integer :: max_v        = 2
+ integer :: max_b        = 2
+ integer :: nrho         = 2
+ logical :: cart         = .FALSE.
+ logical :: SpheConv_xzy = .FALSE.
+ logical :: cos_th       = .TRUE.
+ logical :: frame0vec    = .FALSE. ! possibility to use a frame with 0 vector (nb_vect=0)
+ logical :: type100      = .FALSE. ! possibility to use constraints
+ logical :: zmat_order   = .TRUE.  ! possibility to use zmat_order
 
  integer,parameter :: Line_len=256
 
  character(len=*), parameter :: vec_name_poly  = " &vector /"
  character(len=*), parameter :: vec_name_cart  = " &vector cart=t /"
+ character(len=*), parameter :: vec_name_xzy   = " &vector Spherical_convention='x-zy' /"
  character(len=*), parameter :: vec_name_frame = " &vector frame=t nb_vect=0 /"
-
 
  TYPE recBF
    character(len=:), allocatable :: vec_name
@@ -26,7 +27,7 @@
  END TYPE recBF
 
 CONTAINS
- 
+
 RECURSIVE SUBROUTINE dealloc_recBF(BF)
   IMPLICIT NONE
   TYPE(recBF), intent(inout) :: BF
@@ -109,7 +110,7 @@ RECURSIVE FUNCTION get_layer_OF_recBF(BF) RESULT(layer)
   integer, allocatable :: tab_layer(:)
   integer :: i
 
-   
+
 
    IF (associated(BF%tab_BF)) THEN
      allocate(tab_layer(size(BF%tab_BF)))
@@ -197,7 +198,7 @@ SUBROUTINE get_next_tab_v(tab_v,nv,nb,end_tab)
      DO i=1,nb-1
        tab_v(i)  = tab_v(i) + 1
        tab_v(nb) = nv - sum(tab_v(1:nb-1))
- 
+
        IF (tab_v(nb) > 0) EXIT ! it means that the table values are OK.
 
        tab_v(i) = 1
@@ -251,6 +252,7 @@ RECURSIVE SUBROUTINE Split_blocks_new(nv)
   TYPE(recBF) :: BF_vec_poly
   TYPE(recBF) :: BF_vec_cart
   TYPE(recBF) :: BF_vec_frame
+  TYPE(recBF) :: BF_vec_xzy
 
   TYPE(recBF) :: BF_vec(nv)
 
@@ -274,6 +276,8 @@ RECURSIVE SUBROUTINE Split_blocks_new(nv)
   BF_vec_poly%layer     = 1
   BF_vec_cart%vec_name  = vec_name_cart
   BF_vec_cart%layer     = 1
+  BF_vec_xzy%vec_name   = vec_name_xzy
+  BF_vec_xzy%layer      = 1
   BF_vec_frame%vec_name = vec_name_frame
   BF_vec_frame%layer    = 1
 
@@ -348,6 +352,9 @@ RECURSIVE SUBROUTINE Split_blocks_new(nv)
             IF (cart .AND. i > 1) THEN
               CALL recBF2_TO_recBF1(BF_vec(iv)%tab_BF(i_BF)%tab_BF(i), &
                                     BF_vec_cart)
+            ELSE IF (SpheConv_xzy .AND. i > 1) THEN
+              CALL recBF2_TO_recBF1(BF_vec(iv)%tab_BF(i_BF)%tab_BF(i), &
+                                    BF_vec_xzy)
             ELSE IF (frame0vec) THEN
               CALL recBF2_TO_recBF1(BF_vec(iv)%tab_BF(i_BF)%tab_BF(i), &
                                     BF_vec_frame)
@@ -419,11 +426,11 @@ SUBROUTINE write_header(nv,nio,type_vec)
   CALL random_number(mass)
   mass = 1.d0+mass
 
-  
+
   write(nio,*) "&variables"
   write(nio,*) "    ", 'nrho=',nrho
   write(nio,*) "    ", 'Old_Qtransfo=f'
-  write(nio,*) "    ", 'Tana=t VSCFform=t LaTeXForm=f '
+  write(nio,*) "    ", 'Tana=t Tana_Init_Only=t VSCFform=t LaTeXForm=f '
   write(nio,*) "    ", 'nb_Qtransfo=3'
   write(nio,*) '/'
   write(nio,*) " &Coord_transfo name_transfo='bunch' nb_vect=",nv," nb_X=",nb_X," inTOout=f /"
@@ -500,7 +507,8 @@ SUBROUTINE read_arg()
   character(len=:), allocatable :: arg,arg2
   integer :: long,i,err_read
 
-  namelist / rec_vec / type_vec,max_layer,max_v,max_b,nrho,cart,cos_th,frame0vec,type100,zmat_order
+  namelist / rec_vec / type_vec,max_layer,max_v,max_b,nrho,cart,   &
+                       cos_th,frame0vec,type100,zmat_order,SpheConv_xzy
 
 
   DO i=1, COMMAND_ARGUMENT_COUNT(),2
@@ -529,6 +537,8 @@ SUBROUTINE read_arg()
       read(arg2,*) frame0vec
     CASE("-nrho")
       read(arg2,*) nrho
+    CASE("-SpheConv_xzy","-SCxzy")
+      read(arg2,*) SpheConv_xzy
     END SELECT
 
     print *,"Argument de rang ", i, " ==> ", arg , ' arg_val: ',arg2
@@ -548,7 +558,7 @@ SUBROUTINE read_arg()
   write(6,*) 'max_v     ',max_v
   write(6,*) 'max_b     ',max_b
   write(6,*) 'max_layer ',max_layer
-  write(6,*) 'cart,cos_th,frame0vec ',cart,cos_th,frame0vec
+  write(6,*) 'cart,cos_th,frame0vec,SpheConv_xzy ',cart,cos_th,frame0vec,SpheConv_xzy
   write(6,*) 'nrho      ',nrho
 
 
@@ -576,7 +586,7 @@ PROGRAM test
   write(6,*) 'AUTOMATIC GENERATION of Tana data'
   write(6,*) '=================================='
   write(6,*) 'Code written by David Lauvergnat [1]'
-  write(6,*) '[1]: Laboratoire de Chimie Physique, UMR 8000, CNRS-Université Paris-Sud, France'
+  write(6,*) '[1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
   write(6,*) '=================================='
 
   CALL read_arg()

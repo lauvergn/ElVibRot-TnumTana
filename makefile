@@ -90,8 +90,8 @@ endif
 #
 #===============================================================================
 # Quantum Model Lib (ECAM)
-QMLibDIR := /Users/lauvergn/git/QuantumModelLib
-#QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
+#QMLibDIR := /Users/lauvergn/git/QuantumModelLib
+QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
 DIRLIB += -L$(QMLibDIR)
 QMLIB := -lQMLib
 QMLibDIR_full := $(QMLibDIR)/libQMLib.a
@@ -264,7 +264,7 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
      ifeq ($(OS),Darwin)    # OSX
         # OSX libs (included lapack+blas)
         F90LIB = -framework Accelerate
-        CompC  = gcc-9
+        CompC  = gcc
      else                   # Linux
         # linux libs
         F90LIB = -llapack -lblas
@@ -963,14 +963,15 @@ $(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(QMLibDIR_full)
 #	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
 #===============================================
 #
-$(OBJ)/libTnum.a: obj $(Obj_KEO_PrimOp)
+$(OBJ)/libTnum.a: obj $(Obj_KEO_PrimOp) $(QMLibDIR_full)
 	ar cr $(OBJ)/libTnum.a   $(Obj_KEO_PrimOp)
 $(OBJ)/libEVR.a:obj $(Obj_EVRT) $(OBJ)/EVR_Module.o $(OBJ)/EVR_driver.o $(QMLibDIR_full)
 	ar cr $(OBJ)/libEVR.a $(Obj_EVRT)  $(OBJ)/EVR_Module.o $(OBJ)/EVR_driver.o
 $(KEOTESTEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(KEOTEST).o
 	$(LYNK90)   -o $(KEOTESTEXE) $(OBJ)/$(KEOTEST).o $(OBJ)/libTnum.a $(LYNKFLAGS)
+
 #Main_TnumTana_FDriver
-$(Main_TnumTana_FDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_FDriver.o
+$(Main_TnumTana_FDriverEXE): obj $(OBJ)/libTnum.a  $(OBJ)/Main_TnumTana_FDriver.o
 	$(LYNK90)   -o $(Main_TnumTana_FDriverEXE) $(OBJ)/Main_TnumTana_FDriver.o $(OBJ)/libTnum.a $(LYNKFLAGS)
 $(Main_TnumTana_cDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_cDriver.o
 	cp $(OBJ)/libTnum.a $(OBJ)/libTnumForcDriver.a
@@ -978,14 +979,14 @@ $(Main_TnumTana_cDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_cDriver.o
 	$(CompC) -o $(Main_TnumTana_cDriverEXE) $(CFLAGS) $(OBJ)/Main_TnumTana_cDriver.o $(OBJ)/libTnumForcDriver.a $(LYNKFLAGS) -lgfortran -lm
 #
 $(TNUMEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMAIN).o
-	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(QMLibDIR_full) $(LYNKFLAGS)
+	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS)
 #
-$(TNUMMCTDHEXE): obj $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMCTDHMAIN).o
-	$(LYNK90)   -o $(TNUMMCTDHEXE) $(Obj_KEO_PrimOp) $(OBJ)/$(TNUMMCTDHMAIN).o $(QMLibDIR_full) $(LYNKFLAGS)
+$(TNUMMCTDHEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMCTDHMAIN).o
+	$(LYNK90)   -o $(TNUMMCTDHEXE) $(OBJ)/$(TNUMMCTDHMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS)
 # TNUM_MiddasCppEXE  = Tnum90_MidasCpp.exe
 # TNUM_MiddasCppMAIN = Tnum90_MidasCpp
-$(TNUM_MiddasCppEXE): obj $(Obj_KEO_PrimOp) $(OBJ)/$(TNUM_MiddasCppMAIN).o
-	$(LYNK90)   -o $(TNUM_MiddasCppEXE) $(Obj_KEO_PrimOp) $(OBJ)/$(TNUM_MiddasCppMAIN).o  $(LYNKFLAGS)
+$(TNUM_MiddasCppEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUM_MiddasCppMAIN).o
+	$(LYNK90)   -o $(TNUM_MiddasCppEXE) $(OBJ)/$(TNUM_MiddasCppMAIN).o  $(OBJ)/libTnum.a $(LYNKFLAGS)
 #
 $(GWPEXE): obj $(Obj_All) $(OBJ)/$(GWPMAIN).o
 	$(LYNK90)   -o $(GWPEXE) $(Obj_All) $(OBJ)/$(GWPMAIN).o  $(LYNKFLAGS)

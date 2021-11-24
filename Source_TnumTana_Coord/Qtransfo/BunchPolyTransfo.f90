@@ -1116,7 +1116,8 @@
         i_Qpoly = i_Qpoly + 1
 
         BFTransfo%Qvec(1) = set_opel(idf=1, idq=2, alfa=1, indexq=i_Qpoly, coeff=CONE) !R
-        CALL get_unit_vector_Ei(BFTransfo%Unit_Vector, BFTransfo%Qvec, index_v=1, cart=cart)
+        CALL get_unit_vector_Ei(BFTransfo%Unit_Vector,BFTransfo%Qvec,index_v=1, &
+                          cart=cart, Spherical_convention=Spherical_convention)
 
         IF (zmat_order_save) THEN
           IF (iv_tot == 1) THEN
@@ -1386,8 +1387,9 @@
             BFTransfo%name_Qin(i_Qprim) = trim(adjustl(name_dih)) // trim(adjustl(name_v))
           END IF
         END IF
-        CALL get_unit_vector_Ei(BFTransfo%Unit_Vector, BFTransfo%Qvec,  &
-                     index_v = BFTransfo%num_vect_in_Frame, cart = cart)
+        CALL get_unit_vector_Ei(BFTransfo%Unit_Vector, BFTransfo%Qvec,          &
+                                index_v = BFTransfo%num_vect_in_Frame,          &
+                                cart = cart, Spherical_convention=Spherical_convention)
 
       IF (allocated(name_v)) deallocate(name_v)
 
@@ -1899,7 +1901,6 @@
         CALL RecWrite_BFTransfo(BFTransfo,.FALSE.)
       END IF
 !      -----------------------------------------------------------------
-write(6,*) 'coucou ',name_sub
       IF (nderiv /= 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) '  This subroutine cannot be use with nderiv > 0',nderiv
@@ -3677,8 +3678,8 @@ write(6,*) 'coucou ',name_sub
 
       !--------------------------------------------------------
       character (len=*), parameter :: name_sub='M_Tana_FROM_Bunch2Transfo'
-      !logical, parameter :: debug=.FALSE.
-      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
       !--------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
@@ -3980,11 +3981,12 @@ write(6,*) 'coucou ',name_sub
    !!                          information on \theta or u coordinate
    !! @param:       phi       an elementary op  which contains the needed
    !!                          information on \phi  coordinate
-   SUBROUTINE get_unit_vector_Ei(V, Qvec, index_v, cart)
+   SUBROUTINE get_unit_vector_Ei(V, Qvec, index_v, cart, Spherical_convention)
      type(vec_sum_opnd),      intent(inout)      :: V
      type(opel),              intent(in)         :: Qvec(3) ! R,th,phi
      integer,                 intent(in)         :: index_v
      logical,                 intent(in)         :: cart
+     character (len=6),       intent(in)         :: Spherical_convention
 
      character (len = *), parameter :: routine_name='get_unit_vector_Ei'
 
@@ -4008,9 +4010,27 @@ write(6,*) 'coucou ',name_sub
          V%vec_sum(2) = czero
          V%vec_sum(3) = czero
        ELSE
-         V%vec_sum(1) =  get_sin(Qvec(2)) * get_cos(Qvec(3))
-         V%vec_sum(2) =  get_sin(Qvec(2)) * get_sin(Qvec(3))
-         V%vec_sum(3) =  get_cos(Qvec(2))
+         SELECT CASE(Spherical_convention)
+         CASE ('zxy')
+
+           V%vec_sum(1) =  get_sin(Qvec(2)) * get_cos(Qvec(3))
+           V%vec_sum(2) =  get_sin(Qvec(2)) * get_sin(Qvec(3))
+           V%vec_sum(3) =  get_cos(Qvec(2))
+
+         CASE ('x-zy')
+
+           V%vec_sum(3)    =  get_sin(Qvec(2)) * get_cos(Qvec(3))
+           V%vec_sum(3)%Cn = -CONE
+           V%vec_sum(2)    =  get_sin(Qvec(2)) * get_sin(Qvec(3))
+           V%vec_sum(1)    =  get_cos(Qvec(2))
+
+         CASE Default
+           write(out_unitp,*) ' ERROR in ',routine_name
+           write(out_unitp,*) '  No default Spherical_convention'
+           write(out_unitp,*) '  Check the fortran'
+           STOP
+         END SELECT
+
        END IF
 
      end if

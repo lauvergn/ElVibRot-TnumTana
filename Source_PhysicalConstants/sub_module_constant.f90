@@ -339,7 +339,6 @@
 !--------------------------------------------------------------
 
 
-
   !------------------------------------------------------------------
   !     atomic mass of isotopes
   IF (mass_unit .EQ. "au") THEN
@@ -372,7 +371,6 @@
   END SELECT
 
   !------------------------------------------------------------------
-
 
   ! for the automatic energy (E) conversion
   CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','E'),Work_unit=.TRUE.)
@@ -536,7 +534,6 @@
     write(out_unitp,*) 'END ',name_sub
   END IF
 !-----------------------------------------------------------------
-
   END SUBROUTINE sub_constantes
   SUBROUTINE sub_ReadNMLconstantes(auTOcm_inv1,ene_unit1,auTOenergy1,   &
                                    inv_Name1,mass_unit1,auTOmass1,      &
