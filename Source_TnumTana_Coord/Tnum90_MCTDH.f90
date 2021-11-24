@@ -67,6 +67,7 @@
       !     - read the coordinate transformations :
       !     -   zmatrix, polysperical, bunch...
       !     ------------------------------------------------------------
+
       para_Tnum%MCTDHForm = .TRUE.
       CALL Read_CoordType(mole,para_Tnum,const_phys)
       !     ------------------------------------------------------------
@@ -86,6 +87,11 @@
       CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
       CALL time_perso('Tnum90_MCTDH')
 
+      IF (para_Tnum%Tana_Init_Only) THEN
+        write(out_unitp,*) ' Initialization only'
+        write(out_unitp,*) 'END Tnum'
+        STOP 'END Tnum'
+      END IF
       !-----------------------------------------------------------------
       n=10! (several) evaluations (for cpu time)
 !===========================================================

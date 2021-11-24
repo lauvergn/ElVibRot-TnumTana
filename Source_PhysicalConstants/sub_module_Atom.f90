@@ -179,12 +179,14 @@ PRIVATE
     IF (at%Z == 1 .AND. at%A == 2) at%isotope='D'
     IF (at%Z == 1 .AND. at%A == 3) at%isotope='T'
 
-    IF (at%A > 0 .AND. abs(real(at%A,kind=Rkind)/at%mass-ONE) > TEN**(-2)) THEN
+    IF (at%A > 0) THEN
+    IF (abs(real(at%A,kind=Rkind)/at%mass-ONE) > TEN**(-2)) THEN
       write(out_unitp,*) '  WARNNING in Read_atom'
       write(out_unitp,*) '  The atomic mass in g/mol is probably too different from A (> 1%)'
       write(out_unitp,*) '  mass, A: ',at%mass,at%A
       write(out_unitp,*) '  atom: ',at
       !STOP
+    END IF
     END IF
 
     !write(out_unitp,*) 'at: ',at
@@ -208,13 +210,16 @@ PRIVATE
     IF (at%Z == 1 .AND. at%A == 2) at%isotope='D'
     IF (at%Z == 1 .AND. at%A == 3) at%isotope='T'
 
-    IF (at%Z > 0 .AND. abs(real(at%A,kind=Rkind)/at%mass-ONE) > TEN**(-2)) THEN
+    IF (at%Z > 0) THEN
+    IF (abs(real(at%A,kind=Rkind)/at%mass-ONE) > TEN**(-2)) THEN
       write(out_unitp,*) '  WARNNING in Read_atom'
       write(out_unitp,*) '  The atomic mass in g/mol is probably too different from A (> 1%)'
       write(out_unitp,*) '  mass, A: ',at%mass,at%A
       write(out_unitp,*) '  atom: ',at
       !STOP
     END IF
+    END IF
+
     IF (at%abundance > ONE .AND. at%abundance < ZERO) THEN
       write(out_unitp,*) '  ERROR in Read_atom'
       write(out_unitp,*) '  The abundance is greater than ONE or lower than ZERO!!'
@@ -334,7 +339,6 @@ PRIVATE
         END DO
         IF (A_OF_Max_abundance /= -1) mendeleev%at(Z,A_OF_Max_abundance)%MainIsotope = .TRUE.
       END DO
-
 
       IF (debug .OR. print_level > 1) CALL List_OF_table_at(mendeleev)
     END IF

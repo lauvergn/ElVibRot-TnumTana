@@ -1,0 +1,77 @@
+#!/bin/bash
+
+here=`pwd`
+EVRT=../..
+
+cd $EVRT
+  make Tnum_MCTDH
+cd $here
+
+v=$1
+if test -z "$1"
+then
+  v=4
+fi
+
+./clean
+
+gfortran -o split_block.exe split_block.f90
+
+type100=f
+
+zmat_order=f
+nrho=0
+type_vec=0
+
+# new tests
+cos_th=f
+cart=f
+frame0vec=f
+SpheConv_xzy=t
+./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order $SpheConv_xzy
+
+
+exit
+
+cos_th=t
+cart=f
+frame0vec=f
+SpheConv_xzy=t
+./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order $SpheConv_xzy
+
+ cos_th=t
+ cart=f
+ frame0vec=t
+ SpheConv_xzy=f
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order $SpheConv_xzy
+
+ cos_th=f
+ cart=f
+ frame0vec=f
+ SpheConv_xzy=f
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order $SpheConv_xzy
+
+ cos_th=t
+ cart=t
+ frame0vec=f
+ SpheConv_xzy=f
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order $SpheConv_xzy
+
+ cos_th=f
+ cart=t
+ frame0vec=t
+ SpheConv_xzy=f
+ ./run_Tnum_Tana.job $v $cos_th $cart $frame0vec $type_vec $nrho $type100 $zmat_order $SpheConv_xzy
+
+
+err=`LANG=C awk '/max error:/ {if ($4 > 1.e-10) print $0}' res_all`
+
+
+echo "number of vectors: "$v
+echo "  number of calculations: " `grep -c dat res_all`
+if test -z "$err"
+then
+     echo "No error!"
+else
+     echo "Error(s) detected!!"
+fi

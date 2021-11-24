@@ -1,0 +1,14 @@
+TO BE DONE in Tnum / Tana:
+
+A) Tana
+
+- change the MCTDH variable names for polyshperical coord (Tana and Tnum)
+
+- change the Get_F2_F1_FROM_TWOxKEO:
+    => make the expansion of the KEO (whatever its form is)
+
+- Correct the bug with subsystem and new spherical convention
+
+- Implement the overloading operators for the sum_OpnD
+
+B) Tnum

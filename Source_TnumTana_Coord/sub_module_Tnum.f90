@@ -228,6 +228,7 @@ MODULE mod_Tnum
                                                 ! as 2 Cartesian geometries (like for the frequencies)
 
           logical                    :: Tana              = .FALSE.
+          logical                    :: Tana_Init_Only    = .FALSE.
           integer                    :: Compa_TanaTnum    = 1
           logical                    :: MidasCppForm      = .FALSE.
           logical                    :: MCTDHForm         = .FALSE.
@@ -725,8 +726,10 @@ MODULE mod_Tnum
 !     - for Tnum or Tana ----------------------------------------------
       integer           :: nrho,vep_type,NonGcteRange(2)
       logical           :: num_GG,num_g,num_x,Gdiago,Gcte,With_VecCOM,Write_QMotions
-      logical           :: With_Tab_dnQflex
-      logical           :: Tana,MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,f2f1_ana
+      logical           :: With_Tab_dnQflex,f2f1_ana
+
+      logical           :: Tana,Tana_Init_Only
+      logical           :: MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm
       integer           :: Compa_TanaTnum
 
       real (kind=Rkind) :: stepT,stepOp
@@ -746,7 +749,7 @@ MODULE mod_Tnum
                      NM,NM_TO_sym,hessian_old,purify_hess,k_Half,       &
                      hessian_cart,hessian_onthefly,file_hessian,stepOp, &
                      stepT,num_GG,num_g,num_x,nrho,vep_type,            &
-                     Tana,Compa_TanaTnum,                               &
+                     Tana,Compa_TanaTnum,Tana_Init_Only,                &
                      Gdiago,Gcte,NonGcteRange,                          &
                      MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,         &
                      KEO_TalyorOFQinact2n,f2f1_ana,                     &
@@ -778,7 +781,6 @@ MODULE mod_Tnum
         CALL sub_constantes(const_phys,Read_Namelist=.FALSE.)
       END IF
 
-
       stepOp               = ZERO
       stepT                = ONETENTH**4
       num_GG                = .FALSE.
@@ -788,6 +790,7 @@ MODULE mod_Tnum
       Gcte                 = .FALSE.
       NonGcteRange(:)      = 0
       Tana                 = .FALSE.
+      Tana_Init_Only       = .FALSE.
       Compa_TanaTnum       = para_Tnum%Compa_TanaTnum ! so that it is possible to change the default
       MidasCppForm         = para_Tnum%MidasCppForm   ! so that it is possible to change the default
       MCTDHForm            = para_Tnum%MCTDHForm      ! so that it is possible to change the default
@@ -854,6 +857,7 @@ MODULE mod_Tnum
       commande_unix        = 'g03.run xx >err'
 
       read(in_unitp,variables,IOSTAT=err_read)
+
       IF (err_read < 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' End-of-file or End-of-record'
@@ -935,6 +939,7 @@ MODULE mod_Tnum
       END IF
 
       para_Tnum%Tana                 = Tana
+      para_Tnum%Tana_Init_Only       = Tana_Init_Only
       IF (Compa_TanaTnum < 0) Compa_TanaTnum = 0
       para_Tnum%Compa_TanaTnum       = Compa_TanaTnum
 
@@ -2015,6 +2020,7 @@ MODULE mod_Tnum
 
 
   Tnum1%Tana                 = Tnum2%Tana
+  Tnum1%Tana_Init_Only       = Tnum2%Tana_Init_Only
   Tnum1%Compa_TanaTnum       = Tnum2%Compa_TanaTnum
   Tnum1%MidasCppForm         = Tnum2%MidasCppForm
   Tnum1%MCTDHForm            = Tnum2%MCTDHForm
@@ -2056,6 +2062,7 @@ MODULE mod_Tnum
   para_Tnum%Write_QMotions     = .FALSE.
 
   para_Tnum%Tana              = .FALSE.
+  para_Tnum%Tana_Init_Only    = .FALSE.
   para_Tnum%Compa_TanaTnum    = 1
   para_Tnum%MidasCppForm      = .FALSE.
   para_Tnum%MCTDHForm         = .FALSE.

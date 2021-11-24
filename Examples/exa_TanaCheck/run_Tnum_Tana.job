@@ -8,6 +8,10 @@ tv=$5
 nrho=$6
 type100=$7
 zmat_order=$8
+SpheConv_xzy=$9
+
+
+ echo max_vec: $max_v nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$tv type100=$type100 zmat_order=$zmat_order SpheConv_xzy=$SpheConv_xzy
 
 
 here=`pwd`
@@ -30,6 +34,7 @@ EVRT=../..
   cos_th=$cos_th
   type100=$type100
   zmat_order=$zmat_order
+  SpheConv_xzy=$SpheConv_xzy
  /
 **
 
@@ -37,10 +42,10 @@ EVRT=../..
  do
     echo "================================== ">> res_all
     echo $dat_name >> res_all
-    echo nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$tv type100=$type100 zmat_order=$zmat_order >> res_all
+    echo nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$tv type100=$type100 zmat_order=$zmat_order SpheConv_xzy=$SpheConv_xzy >> res_all
 
 
-    res_name="res_cos_th-"$cos_th"_cart-"$cart"_"$dat_name
+    res_name="res_cos_th-"$cos_th"_cart-"$cart"_frame0vec-"$frame0vec"_type_vec-"$tv"_type100-"$type100"_zmat_order-"$zmat_order"_SpheConv_xzy-"$SpheConv_xzy"_"$dat_name
 
     $EVRT/Tnum90_MCTDH.exe < $dat_name > $res_name
 
@@ -49,20 +54,24 @@ EVRT=../..
     echo nrho=$nrho cos_th=$cos_th cart=$cart frame0vec=$frame0vec type_vec=$tv type100=$type100 zmat_order=$zmat_order >> res_all_full
     cat $res_name >> res_all_full
 
+    endTnum=`grep -c "END Tnum" $res_name`
+
     err=`grep -a "max error" $res_name`
     echo $dat_name $err >> res_all
+    echo $endTnum >> res_all
 
     #Large_err=`echo $err | LANG=C awk '{if ($3 > 1.e-10) print $0}'`
     # version with two tests
     Large_err=`echo $err | LANG=C awk '{ if ($3 > 1.e-10) print $1" "$2" "$3; if ($6 > 1.e-10) print $4" "$5" "$6}'`
     #echo Large_err=$Large_err
 
-    if test -z "$Large_err"
+    if test -z "$Large_err" -a $endTnum -eq 0
     then
       continue
     else
       e1=`echo $err | awk '{print $1" "$2" "$3}'`
       e2=`echo $err | awk '{print $4" "$5" "$6}'`
+      echo $dat_name endTnum $endTnum
       echo $dat_name $e1
       echo $dat_name $e2
 

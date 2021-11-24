@@ -1077,35 +1077,54 @@
    !!                          information on \theta or u coordinate
    !! @param:       phi       an elementary op  which contains the needed
    !!                          information on \phi  coordinate
-   SUBROUTINE get_unit_vector_Ei(V, theta, phi, index_v)
+   !! @param:       Spherical_convention   string, if present it enables one to select other spherical convention
+   SUBROUTINE get_unit_vector_Ei(V, theta, phi, index_v, Spherical_convention)
      type(vec_sum_opnd),      intent(inout)      :: V
      type(opel),              intent(in)         :: theta
      type(opel),              intent(in)         :: phi
      integer,                 intent(in)         :: index_v
+     character (len=6),       intent(in)         :: Spherical_convention
 
      character (len = *), parameter :: routine_name='get_unit_vector_Ei'
 
      call allocate_op(V, 3)
 
-     if (index_v == 1) then
+     IF (index_v == 1) THEN
 
        V%vec_sum(1) = czero
        V%vec_sum(2) = czero
        V%vec_sum(3) = cone
 
-     else if (index_v == 2) then ! it deals automatically idq=3 or -3
+     ELSE IF (index_v == 2) THEN ! it deals automatically idq=3 or -3
 
        V%vec_sum(1) = get_sin(theta)
        V%vec_sum(2) = get_zero(theta)
        V%vec_sum(3) = get_cos(theta)
 
-     else
+     ELSE
 
-       V%vec_sum(1) =  get_sin(theta) * get_cos(phi)
-       V%vec_sum(2) =  get_sin(theta) * get_sin(phi)
-       V%vec_sum(3) =  get_cos(theta)
+       SELECT CASE(Spherical_convention)
+       CASE ('zxy')
 
-     end if
+         V%vec_sum(1) =  get_sin(theta) * get_cos(phi)
+         V%vec_sum(2) =  get_sin(theta) * get_sin(phi)
+         V%vec_sum(3) =  get_cos(theta)
+
+       CASE ('x-zy')
+
+         V%vec_sum(3)   =  get_sin(theta) * get_cos(phi)
+        V%vec_sum(3)%Cn = -CONE
+         V%vec_sum(2)   =  get_sin(theta) * get_sin(phi)
+         V%vec_sum(1)   =  get_cos(theta)
+
+       CASE Default
+         write(out_unitp,*) ' ERROR in ',routine_name
+         write(out_unitp,*) '  No default Spherical_convention'
+         write(out_unitp,*) '  Check the fortran'
+         STOP
+       END SELECT
+
+     END IF
 
    END SUBROUTINE get_unit_vector_Ei
 
@@ -1210,7 +1229,7 @@
 
 
      ! TTF
-     if (compare_tab(F_system%euler, (/.true., .true., .false./))) then
+     if (compare_tab(F_system%euler,[.true., .true., .false.])) then
 
        falpha = F_system%QEuler(1)
        fbeta  = F_system%QEuler(2)
@@ -1218,11 +1237,11 @@
        D_a = get_MatRotz(falpha) ! alpha
        D_b = get_MatRoty(fbeta) ! beta
 
-       CALL alloc_NParray(Mat_R,(/3,3/),'Mat_R',routine_name)
+       CALL alloc_NParray(Mat_R,[3,3],'Mat_R',routine_name)
        CALL M1_times_M2_in_Mres(D_a, D_b, Mat_R)
 
      ! FTT
-     else if (compare_tab(F_system%euler, (/.false., .true., .true./))) then
+   else if (compare_tab(F_system%euler,[.false., .true., .true.])) then
 
        fbeta  = F_system%QEuler(2)
        fgamma = F_system%QEuler(3)
@@ -1230,12 +1249,12 @@
        D_b = get_MatRoty(fbeta) ! beta
        D_g = get_MatRotz(fgamma) ! gamma
 
-       CALL alloc_NParray(Mat_R,(/3,3/),'Mat_R',routine_name)
+       CALL alloc_NParray(Mat_R,[3,3],'Mat_R',routine_name)
 
        call M1_times_M2_in_Mres(D_b, D_g, Mat_R)
 
      !TTT
-     else if (compare_tab(F_system%euler, (/.true., .true., .true./))) then
+   else if (compare_tab(F_system%euler, [.true., .true., .true.])) then
 
        falpha = F_system%QEuler(1)
        fbeta  = F_system%QEuler(2)
@@ -1246,10 +1265,10 @@
        D_g = get_MatRotz(fgamma) ! gamma
 
 
-       CALL alloc_NParray(M_opnd,(/3,3/),'M_opnd',routine_name)
+       CALL alloc_NParray(M_opnd,[3,3],'M_opnd',routine_name)
        call M1_times_M2_in_Mres(D_b, D_g, M_opnd)
 
-       CALL alloc_NParray(Mat_R,(/3,3/),'Mat_R',routine_name)
+       CALL alloc_NParray(Mat_R,[3,3],'Mat_R',routine_name)
        call M1_times_M2_in_Mres(D_a, M_opnd, Mat_R)
 
      end if
@@ -1474,7 +1493,7 @@
    !! @description: Defines the KEO
    !! @param:       TWOxKEO The output
    !! @param:       nvec    Integer corresponding to the size of the system
-   RECURSIVE SUBROUTINE get_opKEO(F_system, TWOxKEO, P_Euler, M_mass_out, &
+   RECURSIVE SUBROUTINE get_opKEO(F_system, TWOxKEO, P_Euler, M_mass_out,       &
                                   scalar_PiPj, F_system_parent)
      USE mod_BunchPolyTransfo, only : Type_BFTransfo
 
@@ -1487,7 +1506,6 @@
 
      integer                         :: i, j
      integer                         :: i_syst, j_syst
-     integer                         :: nsub_syst
      integer                         :: index_tmp, i_v1_ref
 
 
@@ -1498,28 +1516,28 @@
 
      IF (debug) THEN
        write(out_unitp,*) 'BEGINNING ',routine_name
+       write(out_unitp,*) 'F_system%frame',F_system%frame
+       write(out_unitp,*) 'nsub_syst (in F_system)',count(F_system%tab_BFTransfo(:)%frame)
+
      END IF
 
      write(out_unitp,*) 'entree S_(', F_system%tab_num_frame,')'
      CALL flush_perso(out_unitp)
-     nsub_syst = 0
-     do i=1, F_system%nb_vect
-       if(F_system%tab_BFTransfo(i)%frame) nsub_syst = nsub_syst+1
-     end do
 
-     do i_syst = F_system%nb_vect, 1, -1
-       if(F_system%tab_BFTransfo(i_syst)%frame) then
-         call get_opKEO(F_system%tab_BFTransfo(i_syst), TWOxKEO, P_Euler,   &
+     DO i_syst = F_system%nb_vect, 1, -1
+       IF (F_system%tab_BFTransfo(i_syst)%frame) THEN
+
+         CALL get_opKEO(F_system%tab_BFTransfo(i_syst), TWOxKEO, P_Euler,       &
                         M_mass_out, scalar_PiPj, F_system)
-       end if
-     end do
+       END IF
+     END DO
 
      write(out_unitp,*) 'sub_system S_(', F_system%tab_num_frame,')'
      CALL flush_perso(out_unitp)
 
-     if(F_system%frame) then
+     IF (F_system%frame) THEN
 
-       if (compare_tab(F_system%euler, (/.false., .true., .true./))) then
+       IF (compare_tab(F_system%euler,[.false., .true., .true.])) THEN
 
          IF (present(F_system_parent)) THEN
            call get_opKEO_subsyst_2euler(F_system, P_Euler, M_mass_out,   &
@@ -1541,13 +1559,6 @@
 
          ELSE
            CALL get_opKEO_subsyst(F_system, P_Euler,M_mass_out,scalar_PiPj)
-!           IF (present(F_system_parent)) THEN
-!             CALL get_opKEO_subsyst(F_system, P_Euler,M_mass_out,       &
-!                                    scalar_PiPj,F_system_parent)
-!           ELSE
-!             STOP 'ERROR in get_opKEO: F_system_parent is absent'
-!           END IF
-
          END IF
        END IF
 
@@ -1561,7 +1572,7 @@
        CALL flush_perso(out_unitp)
        CALL F1_sum_nd_PLUS_TO_Fres_sum_nd(F_system%KEO,TWOxKEO)
 
-     end if
+     END IF
      !call Simplify_Sum_OpnD(TWOxKEO,Expand_Sin2=.TRUE.)
 
      IF (debug) THEN
@@ -1632,6 +1643,7 @@
      logical, parameter           :: debug=.FALSE.
      character (len = *), parameter :: routine_name= 'get_opKEO_subsyst'
 
+
      IF (debug) THEN
        write(out_unitp,*) 'BEGINNING ',routine_name
      END IF
@@ -1645,17 +1657,18 @@
 
      nullify(zero_Pi_BF)
 
-     nsub_syst = 0
-     do i=1, F_system%nb_vect
-       if(F_system%tab_BFTransfo(i)%frame) nsub_syst = nsub_syst+1
-     end do
-     nvec = F_system%nb_vect-nsub_syst+1
-     nvec_tot = F_system%nb_vect_tot
+     nsub_syst = count(F_system%tab_BFTransfo(:)%frame)
+     nvec      = F_system%nb_vect-nsub_syst+1
+     nvec_tot  = F_system%nb_vect_tot
+
      if (compare_tab(F_system%euler, (/.false., .false., .false./))) then
        true_BF = .true.
      else
        true_BF = .false.
      end if
+
+     IF (debug) write(out_unitp,*) 'nsub_syst,nvec,nvec_tot',nsub_syst,nvec,nvec_tot
+     IF (debug) write(out_unitp,*) 'true_BF',true_BF
 
      do i = 1, nvec
        if(.not.associated(P_Euler(F_system%listVFr(i))%Tab_num_Frame)) then
@@ -1667,19 +1680,19 @@
      end do
 
      !!allocation
-     CALL alloc_array(L,    (/nvec/),'L',routine_name)
-     CALL alloc_array(L_dag,(/nvec/),'L_dag',routine_name)
+     CALL alloc_array(L,    [nvec],'L',routine_name)
+     CALL alloc_array(L_dag,[nvec],'L_dag',routine_name)
      if(nsub_syst > 0) then
        if(.not.F_system%tab_BFTransfo(1)%frame) then
-         CALL alloc_array(Lz,(/nvec+nsub_syst/),'Lz',routine_name)
+         CALL alloc_array(Lz,[nvec+nsub_syst],'Lz',routine_name)
        else
-         CALL alloc_array(Lz,(/nvec/),'Lz',routine_name)
+         CALL alloc_array(Lz,[nvec],'Lz',routine_name)
        end if
      else
-       CALL alloc_array(Lz,(/nvec/),'Lz',routine_name)
+       CALL alloc_array(Lz,[nvec],'Lz',routine_name)
      end if
-     CALL alloc_array(Pi_BF,    shape(P_Euler),'Pi_BF',routine_name)
-     CALL alloc_array(Pi_dag_BF,shape(P_Euler),'Pi_dag_BF',routine_name)
+     CALL alloc_array(Pi_BF,     shape(P_Euler),'Pi_BF',routine_name)
+     CALL alloc_array(Pi_dag_BF, shape(P_Euler),'Pi_dag_BF',routine_name)
      CALL alloc_array(zero_Pi_BF,shape(P_Euler),'zero_Pi_BF',routine_name)
 
      ! Initiliation of the elementary operators, J and Jdag
@@ -1728,10 +1741,10 @@
 
      ! Initiliation of the Li (i>2) operators
      !computation of the Pi, i>2 in their local frame
-     call allocate_op(V1_tmp, 3)
+     CALL allocate_op(V1_tmp, 3)
      CALL zero_TO_vec_sum_opnd(V1_tmp)
 
-     call allocate_op(V2_tmp, 3)
+     CALL allocate_op(V2_tmp, 3)
      CALL zero_TO_vec_sum_opnd(V2_tmp)
 
 
@@ -1839,7 +1852,7 @@
      if(nsub_syst > 0) then
        do i = 1, F_system%nb_vect
          if(F_system%tab_BFTransfo(i)%frame) then
-           CALL V1_PLUS_TO_Vres(F_system%tab_BFTransfo(i)%J, V_sum_J)
+           CALL V1_PLUS_TO_Vres(F_system%tab_BFTransfo(i)%J,    V_sum_J)
            CALL V1_PLUS_TO_Vres(F_system%tab_BFTransfo(i)%Jdag, V_sum_Jdag)
          end if
        end do
@@ -1849,16 +1862,16 @@
 
      end if
 
-     call get_opPi(       Pi_BF(F_system%listVFr(1)),     F_system%Qvec(1), L1_bis,   &
-                          E=F_system%Unit_Vector)
-     call get_opPi_dagger(Pi_dag_BF(F_system%listVFr(1)), F_system%Qvec(1), L1dag_bis,&
-                          E=F_system%Unit_Vector)
+     call get_opPi(       Pi_BF(F_system%listVFr(1)),     F_system%Qvec(1),     &
+                          L1_bis,    E=F_system%Unit_Vector)
+     call get_opPi_dagger(Pi_dag_BF(F_system%listVFr(1)), F_system%Qvec(1),     &
+                          L1dag_bis, E=F_system%Unit_Vector)
 
      zero_Pi_BF(F_system%listVFr(1)) = .false.
      do i = 1, F_system%nb_vect
        if(F_system%tab_BFTransfo(i)%frame) then
-         call get_Pi_subsyst(F_system%tab_BFTransfo(i), P_Euler, Pi_BF, &
-         &                   Pi_dag_BF, zero_Pi_BF)
+         call get_Pi_subsyst(F_system%tab_BFTransfo(i), P_Euler, Pi_BF,         &
+                             Pi_dag_BF, zero_Pi_BF)
        end if
      end do
 
@@ -1866,6 +1879,7 @@
      keo_Pi = czero
      do i = 1, size(Pi_BF)
      do j = 1, size(Pi_BF)
+
          if(i/=j  .and. abs(M_mass_out(i,j)%Cn(1)) >1.0e-13_Rkind &
            &      .and. .not.zero_Pi_BF(i) &
            &      .and. .not.zero_Pi_BF(j)) then
@@ -1884,25 +1898,26 @@
          end if
      end do
      end do
+
      if(.not.true_BF) then !project onto the frame of the container
        do i = 1, nvec
-         call M_opnd_times_V_in_Vres(Mat_R, Pi_BF(F_system%listVFr(i)), &
-         & P_Euler(F_system%listVFr(i))%Pi)
-         call V_times_M_opnd_in_Vres(Pi_dag_BF(F_system%listVFr(i)), &
-         &                Mat_RTranspo, P_Euler(F_system%listVFr(i))%Pidag)
+         call M_opnd_times_V_in_Vres(Mat_R, Pi_BF(F_system%listVFr(i)),         &
+                                     P_Euler(F_system%listVFr(i))%Pi)
+         call V_times_M_opnd_in_Vres(Pi_dag_BF(F_system%listVFr(i)),            &
+                                     Mat_RTranspo, P_Euler(F_system%listVFr(i))%Pidag)
        end do
        do i = 1, F_system%nb_vect
          if(F_system%tab_BFTransfo(i)%frame) then
-           call Mat_Rot_times_Pi_subsyst(F_system%tab_BFTransfo(i), &
-           &                   Mat_R, Mat_RTranspo, P_Euler)
+           call Mat_Rot_times_Pi_subsyst(F_system%tab_BFTransfo(i),             &
+                                         Mat_R, Mat_RTranspo, P_Euler)
          end if
        end do
      else
        do i = 1, nvec
-         call copy_F1_into_F2(Pi_BF(F_system%listVFr(i)), &
-         &  P_Euler(F_system%listVFr(i))%Pi)
-         call copy_F1_into_F2(Pi_dag_BF(F_system%listVFr(i)), &
-         &  P_Euler(F_system%listVFr(i))%Pidag)
+         call copy_F1_into_F2(Pi_BF(F_system%listVFr(i)),                       &
+                              P_Euler(F_system%listVFr(i))%Pi)
+         call copy_F1_into_F2(Pi_dag_BF(F_system%listVFr(i)),                   &
+                              P_Euler(F_system%listVFr(i))%Pidag)
        end do
      end if
 
@@ -1936,9 +1951,13 @@
 
            else
 
-             call Li_scalar_Li_from_Eq75(theta = F_system%tab_BFTransfo(i)%Qvec(2), &
-             &                           phi   = F_system%tab_BFTransfo(i)%Qvec(3), &
-             &                           LiLi  =  LiLi)
+             !call Li_scalar_Li_from_Eq75(theta = F_system%tab_BFTransfo(i)%Qvec(2), &
+             !&                           phi   = F_system%tab_BFTransfo(i)%Qvec(3), &
+             !&                           LiLi  =  LiLi)
+
+             CALL  V1_scalar_V2_in_F_sum_nd(L_dag(iv),L(iv), LiLi)
+
+
              CALL F1_sum_nd_PLUS_TO_Fres_sum_nd(LiLi,L1L1)
 
 
@@ -2085,7 +2104,7 @@
      do i = 1, nvec
      do j = 1, nvec
          if(i/=j  .and. abs(F_system%M_mass(i,j)%Cn(1)) >1.0e-13_Rkind) then
-           call V1_scalar_V2_in_F_sum_nd(Pi_dag_BF(F_system%listVFr(i)),&
+           call V1_scalar_V2_in_F_sum_nd(Pi_dag_BF(F_system%listVFr(i)),        &
            &                             Pi_BF(F_system%listVFr(j)),PiPi)
 
            MPiPi = F_system%M_mass(i,j) * PiPi
@@ -2198,7 +2217,8 @@
          call copy_F1_into_F2(F_system%J,    L(1))
          call copy_F1_into_F2(F_system%Jdag, L_dag(1))
 
-         call get_unit_vector_Ei(E(1), F_system%QEuler(2), F_system%QEuler(1), 3) ! the F_system%Unit_vector cannot be used
+         call get_unit_vector_Ei(E(1),F_system%QEuler(2),F_system%QEuler(1),3,&
+                                 F_system%Spherical_convention) ! the F_system%Unit_vector cannot be used
 
          call get_opPi(       P_Euler(F_system%listVFr(1))%Pi,    F_system%Qvec(1),&
                               L(1),E(1))
@@ -2257,7 +2277,8 @@
          call copy_F1_into_F2(L(1),     F_system%J)
          call copy_F1_into_F2(L_dag(1), F_system%Jdag)
 
-         call get_unit_vector_Ei(E(1), F_system%QEuler(2), F_system%QEuler(1), 2) ! the second angle is not used
+         call get_unit_vector_Ei(E(1),F_system%QEuler(2),F_system%QEuler(1),2,  &
+                                 F_system%Spherical_convention) ! the second angle is not used
 
 
          call get_opPi(       P_Euler(F_system%listVFr(1))%Pi,    F_system%Qvec(1), L(1),     E(1))

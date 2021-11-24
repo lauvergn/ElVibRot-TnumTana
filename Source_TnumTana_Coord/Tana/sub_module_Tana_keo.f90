@@ -188,7 +188,7 @@ MODULE mod_Tana_keo
       !-----------------------------------------------------------------
 
       write(out_unitp,*) '================================================='
-      write(out_unitp,*) 'vectors indices in their subsystem to the indice in th BF'
+      write(out_unitp,*) 'vectors indices in their subsystem to the indices in the BF'
       CALL flush_perso(out_unitp)
       i_var = 1
       call  iv_system_to_iv_BF(mole%tab_Qtransfo(i_transfo)%BFTransfo,i_var)
@@ -199,8 +199,9 @@ MODULE mod_Tana_keo
       CALL flush_perso(out_unitp)
       i_var = 1
       With_Li = .FALSE.
-      call extract_qval_F_system(mole%tab_Qtransfo(i_transfo)%BFTransfo, &
-      &                     tab_Q, list_Qactiv, tab_Qname, tabQpoly_Qel, i_var , With_Li)
+      call extract_qval_F_system(mole%tab_Qtransfo(i_transfo)%BFTransfo,        &
+                                 tab_Q, list_Qactiv, tab_Qname, tabQpoly_Qel,   &
+                                 i_var , With_Li)
 
       DO i_var=1,mole%nb_var
         write(out_unitp,*) tab_Qname(i_var)
@@ -219,17 +220,17 @@ MODULE mod_Tana_keo
       end do
 
 
-      call extract_bloc_matrix(mole%tab_Qtransfo(i_transfo)%BFTransfo, &
-      &               mole%tab_Qtransfo(1)%BunchTransfo%M_Tana)
-      call transform_M_mass_to_M_mass_opnd(mole%tab_Qtransfo(1)%BunchTransfo%M_Tana, &
-      & M_mass_out)
+      call extract_bloc_matrix(mole%tab_Qtransfo(i_transfo)%BFTransfo,          &
+                               mole%tab_Qtransfo(1)%BunchTransfo%M_Tana)
+      call transform_M_mass_to_M_mass_opnd(                                     &
+                            mole%tab_Qtransfo(1)%BunchTransfo%M_Tana,M_mass_out)
 
       TWOxKEO = CZERO
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' Computation of the 2xKEO (in full dimension)'
       CALL flush_perso(out_unitp)
 
-      call get_opKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,  TWOxKEO,  &
+      call get_opKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,  TWOxKEO,          &
                      P_Euler, M_mass_out, scalar_PiPj)
 
       nb_terms_KEO_withoutVep = size(TWOxKEO%sum_prod_op1d)
