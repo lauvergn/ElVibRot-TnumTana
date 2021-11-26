@@ -91,7 +91,7 @@ endif
 #===============================================================================
 # Quantum Model Lib (ECAM)
 #QMLibDIR := /Users/lauvergn/git/QuantumModelLib
-QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
+ QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
 DIRLIB += -L$(QMLibDIR)
 QMLIB := -lQMLib
 QMLibDIR_full := $(QMLibDIR)/libQMLib.a
@@ -903,6 +903,9 @@ $(QMLibDIR_full): $(QMLibDIR)
 $(QMLibDIR):
 	cd $(ExternalLibDIR) ; ./get_QML.sh
 	test -d $(QMLibDIR) || exit 1
+.PHONY: clean_qml clean_QML
+clean_qml clean_QML:
+	cd $(ExternalLibDIR) ; rm -rf QuantumModelLib*
 #
 # obj directory
 .PHONY: obj
