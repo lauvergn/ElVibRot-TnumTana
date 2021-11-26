@@ -3712,8 +3712,8 @@ write(out_unitp,*) 'coucou CAP Qact'
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub = 'Finalize_TnumTana_Coord_PrimOp'
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
@@ -3778,14 +3778,9 @@ write(out_unitp,*) 'coucou CAP Qact'
         END IF
       END IF
 
-      IF (para_Tnum%Write_QMotions) THEN
-        CALL get_Qact0(Qact,mole%ActiveTransfo)
-        CALL sub_QplusDQ_TO_Cart(Qact,mole)
-      END IF
-
-
       !----- set RPH transfo of Qref -----------------------------------
       IF (associated(mole%RPHTransfo)) THEN
+
       IF (.NOT. mole%tab_Qtransfo(mole%itRPH)%skip_transfo) THEN
 
           CALL get_Qact0(Qact,mole%ActiveTransfo)
@@ -3798,7 +3793,6 @@ write(out_unitp,*) 'coucou CAP Qact'
                             'mole%RPHTransfo%tab_RPHpara_AT_Qact1',     &
                                                          name_sub,[0])
           END IF
-
           CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0),&
                                     Qact,para_Tnum,mole)
           mole%RPHTransfo%init_Qref = .TRUE.
@@ -3824,6 +3818,11 @@ write(out_unitp,*) 'coucou CAP Qact'
           IF (debug) CALL Write_RPHTransfo(mole%RPHTransfo)
 
       END IF
+      END IF
+
+      IF (para_Tnum%Write_QMotions .AND. .NOT. associated(mole%RPHTransfo)) THEN
+        CALL get_Qact0(Qact,mole%ActiveTransfo)
+        CALL sub_QplusDQ_TO_Cart(Qact,mole)
       END IF
 
   !----- Gcte if needed --------------------------------------------
