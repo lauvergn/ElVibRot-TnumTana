@@ -3,9 +3,9 @@ rm -f QuantumModelLib #always remove the link
 
 #latest release
 #version=https://github.com/lauvergn/QuantumModelLib/archive/refs/tags/v7.3.zip
- version=https://github.com/lauvergn/QuantumModelLib/archive/refs/tags/v7.6.zip
+#version=https://github.com/lauvergn/QuantumModelLib/archive/refs/tags/v7.6.zip
 #latest HEAD version
-#version=https://github.com/lauvergn/QuantumModelLib/archive/refs/heads/OOP_branch.zip
+ version=https://github.com/lauvergn/QuantumModelLib/archive/refs/heads/OOP_branch.zip
 
 
 curl -LJ $version --output OOP_branch.zip
