@@ -965,6 +965,8 @@
 
       integer       :: nDNum_OF_Lmax(basis_SG%nb_basis)
       integer       :: L1maxB,L2maxB,L1maxG,L2maxG
+      !integer, parameter       :: max_bf_print = huge(1)
+      integer, parameter       :: max_bf_print = 100
 
 
       logical               :: Print_basis
@@ -1145,6 +1147,7 @@
       END DO
       IF(MPI_id==0) THEN
         write(out_unitp,*) 'L1maxB, L2maxB (basis)',L1maxB,L2maxB
+        write(out_unitp,*) 'L1maxG, L2maxG (Grid)',L1maxG,L2maxG
         write(out_unitp,*) 'nDNum_OF_Lmax',nDNum_OF_Lmax
       END IF
 
@@ -1196,18 +1199,18 @@
 
       ELSE IF (Print_basis) THEN
         IF (allocated(basis_SG%nDindB%Tab_nDval)) THEN
-          DO i=1,min(100,basis_SG%nDindB%Max_nDI)
+          DO i=1,min(max_bf_print,basis_SG%nDindB%Max_nDI)
             IF(MPI_id==0) write(out_unitp,*) 'ib,tab_L',i,basis_SG%nDindB%Tab_nDval(:,i)
           END DO
         ELSE
           CALL init_nDval_OF_nDindex(basis_SG%nDindB,tab_ib)
-          DO i=1,min(100,basis_SG%nDindB%Max_nDI)
+          DO i=1,min(max_bf_print,basis_SG%nDindB%Max_nDI)
             CALL ADD_ONE_TO_nDindex(basis_SG%nDindB,tab_ib,iG=i)
             IF(MPI_id==0) write(out_unitp,*) 'ib,tab_L',i,tab_ib
           END DO
         END IF
 
-        IF (basis_SG%nDindB%Max_nDI > 100) THEN
+        IF (basis_SG%nDindB%Max_nDI > max_bf_print) THEN
           IF(MPI_id==0) write(out_unitp,*) 'ib,tab_L .....'
         END IF
         CALL flush_perso(out_unitp)

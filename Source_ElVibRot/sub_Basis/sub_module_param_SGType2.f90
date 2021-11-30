@@ -767,7 +767,8 @@ END SUBROUTINE SGType2_2TOSGType2_1
       integer             :: tab_lm(nDind_SmolyakRep%ndim)
 
       real (kind=Rkind)   :: WeightSG_tmp(nDind_SmolyakRep%Max_nDI)
-
+      !integer, parameter       :: max_terms_print = huge(1)
+      integer, parameter      :: max_terms_print =100
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
@@ -834,7 +835,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
 !-----------------------------------------------------------
     IF (debug .OR. print_level > 1) THEN
       max_print = nDind_SmolyakRep%Max_nDI
-      IF (.NOT. debug) max_print = min(100,max_print)
+      IF (.NOT. debug) max_print = min(max_terms_print,max_print)
 
       CALL init_nDval_OF_nDindex(nDind_SmolyakRep,tab_l)
       DO i_SG=1,max_print

@@ -217,8 +217,7 @@
 
   END SUBROUTINE Set_RPHpara_AT_Qact1
 
-  SUBROUTINE Set_RPHpara_AT_Qact1_opt2(RPHpara_AT_Qact1,            &
-                                       Qact_in,para_Tnum,mole)
+  SUBROUTINE Set_RPHpara_AT_Qact1_opt2(RPHpara_AT_Qact1,Qact_in,para_Tnum,mole)
     USE mod_system
     USE mod_dnSVM
     USE mod_Constant, only : get_Conv_au_TO_unit
@@ -366,8 +365,7 @@
 
   END SUBROUTINE Set_RPHpara_AT_Qact1_opt2
 
-  SUBROUTINE Set_RPHpara_AT_Qact1_opt01(RPHpara_AT_Qact1,Qact,      &
-                                                         para_Tnum,mole)
+  SUBROUTINE Set_RPHpara_AT_Qact1_opt01(RPHpara_AT_Qact1,Qact,para_Tnum,mole)
      USE mod_system
      USE mod_dnSVM
      USE mod_Constant, only : get_Conv_au_TO_unit
@@ -439,7 +437,7 @@
 !     numerical derivative frequency calculations
 !
 !=============================================================
-      SUBROUTINE sub_dnfreq(RPHpara_AT_Qact1,pot0_corgrad,              &
+      SUBROUTINE sub_dnfreq(RPHpara_AT_Qact1,pot0_corgrad,                      &
                             para_Tnum,mole,RPHTransfo,nderiv,test,cHAC)
       USE mod_system
       USE mod_dnSVM

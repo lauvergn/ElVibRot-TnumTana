@@ -3696,7 +3696,7 @@ write(out_unitp,*) 'coucou CAP Qact'
       logical                           :: tab_skip_transfo(mole%nb_Qtransfo)
       logical                           :: Tana_loc,KEO_only_loc
 
-      integer                           :: iQa,nb_act1_RPH,nb_inact21_RPH
+      integer                           :: iQa,nb_act1_RPH,nb_inact21_RPH,nb_pts
       integer                           :: it,nderiv
 
       real (kind=Rkind)                 :: auTOcm_inv
@@ -3789,10 +3789,12 @@ write(out_unitp,*) 'coucou CAP Qact'
           IF (.NOT. associated(mole%RPHTransfo%tab_RPHpara_AT_Qact1)) THEN
             nb_act1_RPH    = mole%RPHTransfo%nb_act1
             nb_inact21_RPH = mole%RPHTransfo%nb_inact21
-            CALL alloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,[0],  &
-                            'mole%RPHTransfo%tab_RPHpara_AT_Qact1',     &
-                                                         name_sub,[0])
+            nb_pts         = nb_act1_RPH ! to be able to deal with displacment along Qact1
+            CALL alloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,[0],          &
+                            'mole%RPHTransfo%tab_RPHpara_AT_Qact1',             &
+                                                         name_sub,[-nb_pts])
           END IF
+
           CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0),&
                                     Qact,para_Tnum,mole)
           mole%RPHTransfo%init_Qref = .TRUE.
@@ -3814,13 +3816,19 @@ write(out_unitp,*) 'coucou CAP Qact'
           write(out_unitp,*) 'dnC_inv'
           CALL Write_dnMat(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnC_inv,nderiv=0)
           CALL flush_perso(out_unitp)
-
           IF (debug) CALL Write_RPHTransfo(mole%RPHTransfo)
 
+          DO iact=1,nb_act1_RPH
+            CALL get_Qact0(Qact,mole%ActiveTransfo)
+            Qact(iact) = Qact(iact) + ONETENTH
+            CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%tab_RPHpara_AT_Qact1(-iact), &
+                                      Qact,para_Tnum,mole)
+          END DO
+
       END IF
       END IF
 
-      IF (para_Tnum%Write_QMotions .AND. .NOT. associated(mole%RPHTransfo)) THEN
+      IF (para_Tnum%Write_QMotions) THEN
         CALL get_Qact0(Qact,mole%ActiveTransfo)
         CALL sub_QplusDQ_TO_Cart(Qact,mole)
       END IF

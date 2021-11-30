@@ -664,8 +664,12 @@
       character (len=*), parameter :: name_sub_alloc = 'alloc_array_OF_RPHpara_AT_Qact1dim1'
       integer :: err_mem,memory
       logical,parameter :: debug=.FALSE.
-!      logical,parameter :: debug=.TRUE.
+      !logical,parameter :: debug=.TRUE.
 !----- for debuging --------------------------------------------------
+
+       !write(out_unitp,*) 'BEGINNING ',name_sub_alloc
+       !IF (present(tab_lb)) write(out_unitp,*) 'tab_lb',tab_lb
+       !write(out_unitp,*) 'tab_ub',tab_ub
 
 
        IF (associated(tab))                                             &
@@ -857,7 +861,7 @@
        TYPE (Type_RPHTransfo), intent(in)    :: RPHTransfo1
        TYPE (Type_RPHTransfo), intent(inout) :: RPHTransfo2
 
-      integer :: iQa,nb_inact21,nb_var
+      integer :: iQa,nb_inact21,nb_var,ub,lb
 
 !----- for debuging ----------------------------------
       integer :: err_mem,memory
@@ -915,12 +919,12 @@
       RPHTransfo2%nb_Qa       = RPHTransfo1%nb_Qa
 
       IF (associated(RPHTransfo1%tab_RPHpara_AT_Qact1)) THEN
-        CALL alloc_array(RPHTransfo2%tab_RPHpara_AT_Qact1,              &
-                                                   [RPHTransfo2%nb_Qa], &
-                        'RPHTransfo2%tab_RPHpara_AT_Qact1',name_sub,tab_lb=[0])
+        lb = lbound(RPHTransfo1%tab_RPHpara_AT_Qact1,dim=1)
+        ub = ubound(RPHTransfo1%tab_RPHpara_AT_Qact1,dim=1)
+        CALL alloc_array(RPHTransfo2%tab_RPHpara_AT_Qact1,[ub],                 &
+                        'RPHTransfo2%tab_RPHpara_AT_Qact1',name_sub,tab_lb=[lb])
 
-        DO iQa=lbound(RPHTransfo1%tab_RPHpara_AT_Qact1,dim=1),          &
-               ubound(RPHTransfo1%tab_RPHpara_AT_Qact1,dim=1)
+        DO iQa=lb,ub
           CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(                  &
                                   RPHTransfo1%tab_RPHpara_AT_Qact1(iQa),&
                                   RPHTransfo2%tab_RPHpara_AT_Qact1(iQa))
