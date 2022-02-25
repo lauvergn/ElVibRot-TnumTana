@@ -3798,7 +3798,7 @@ write(out_unitp,*) 'coucou CAP Qact'
           CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0),&
                                     Qact,para_Tnum,mole)
           mole%RPHTransfo%init_Qref = .TRUE.
-
+write(6,*) 'coucou1'
           CALL Qdyn_TO_Qact_FROM_ActiveTransfo(mole%ActiveTransfo%Qdyn0,  &
                                                mole%ActiveTransfo%Qact0,  &
                                                mole%ActiveTransfo)
@@ -3820,7 +3820,6 @@ write(out_unitp,*) 'coucou CAP Qact'
 
           DO iact=1,nb_act1_RPH
             CALL get_Qact0(Qact,mole%ActiveTransfo)
-            Qact(iact) = Qact(iact) + ONETENTH
             CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%tab_RPHpara_AT_Qact1(-iact), &
                                       Qact,para_Tnum,mole)
           END DO
