@@ -1455,8 +1455,10 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
   LOGICAL           rvec
 
      ! BLAS & LAPACK routines used by IRL !
-  REAL (kind=Rkind)  dznrm2 , dlapy2
-  EXTERNAL          dznrm2 , zaxpy , dlapy2
+#if __LAPACK == 1
+  REAL (kind=Rkind)  :: dznrm2 , dlapy2
+  EXTERNAL           :: dznrm2 , zaxpy , dlapy2
+#endif
 
       ! Operator variables ----------------------------------------------
   LOGICAL           :: print_Op
@@ -1858,11 +1860,18 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
                     STOP ' ERROR No Default for LinSolv_type'
                  END SELECT
 
+#if __LAPACK == 1
                  CALL zaxpy (n, -d(j), v(1,j), 1, ax, 1)
                  rd(j,1) = real(d(j))
                  rd(j,2) = aimag (d(j))
                  rd(j,3) = dznrm2 (n, ax, 1)
                  rd(j,3) = rd(j,3) / dlapy2 (rd(j,1),rd(j,2))
+#else
+                 write(out_unitp,*) ' ERROR in ',name_sub
+                 write(out_unitp,*) '  LAPACK is not linked (LAPACK=0 in the makfile).'
+                 write(out_unitp,*) "Use CRP_Type='lanczos' instead of CRP_Type='lanczos_Arpack'"
+                 STOP 'ERROR in calc_crp_IRL: is not linked'
+#endif
               END DO
 !
 !            %-----------------------------%

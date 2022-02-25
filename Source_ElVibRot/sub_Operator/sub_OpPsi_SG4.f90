@@ -858,7 +858,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
       END DO
       !$OMP   END DO
-      deallocate(PsiR)
+      deallocate(PsiR) ! with ifx it has to be removed !!
       !$OMP   END PARALLEL
 
     ELSE IF (BasisnD%para_SGType2%nb_tasks /= BasisnD%para_SGType2%nb_threads) THEN ! version 2
