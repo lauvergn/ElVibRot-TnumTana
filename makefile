@@ -625,7 +625,7 @@ Obj_Coord = \
   $(OBJ)/OneDTransfo.o $(OBJ)/ThreeDTransfo.o $(OBJ)/TwoDTransfo.o $(OBJ)/Rot2CoordTransfo.o \
   $(OBJ)/FlexibleTransfo.o $(OBJ)/GeneTransfo.o \
   $(OBJ)/HyperSpheTransfo.o $(OBJ)/LinearNMTransfo.o $(OBJ)/RectilinearNM_Transfo.o \
-  $(OBJ)/sub_freq.o $(OBJ)/RPHTransfo.o \
+  $(OBJ)/sub_freq.o $(OBJ)/RPHTransfo.o $(OBJ)/ProjectTransfo.o \
   $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o \
   $(OBJ)/Calc_Tab_dnQflex.o
 
@@ -1112,6 +1112,8 @@ $(OBJ)/HyperSpheTransfo.o:$(DirTNUM)/Qtransfo/HyperSpheTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/HyperSpheTransfo.f90
 $(OBJ)/LinearNMTransfo.o:$(DirTNUM)/Qtransfo/LinearNMTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/LinearNMTransfo.f90
+$(OBJ)/ProjectTransfo.o:$(DirTNUM)/Qtransfo/ProjectTransfo.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/ProjectTransfo.f90
 $(OBJ)/RectilinearNM_Transfo.o:$(DirTNUM)/Qtransfo/RectilinearNM_Transfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/RectilinearNM_Transfo.f90
 $(OBJ)/RPHTransfo.o:$(DirTNUM)/Qtransfo/RPHTransfo.f90

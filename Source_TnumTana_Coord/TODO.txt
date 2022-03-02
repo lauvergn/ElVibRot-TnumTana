@@ -12,3 +12,5 @@ A) Tana
 - Implement the overloading operators for the sum_OpnD
 
 B) Tnum
+IRC: project s on the other coordinates.
+=> use dX/dq^i ???

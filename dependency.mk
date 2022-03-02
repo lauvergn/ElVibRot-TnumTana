@@ -27,6 +27,7 @@ lib_dep_mod_system=$(OBJ)/Wigner3j.o $(OBJ)/sub_fft.o $(OBJ)/sub_pert.o         
                    $(OBJ)/BunchPolyTransfo.o $(OBJ)/HyperSpheTransfo.o                 \
                    $(OBJ)/Rot2CoordTransfo.o $(OBJ)/GeneTransfo.o                      \
                    $(OBJ)/LinearNMTransfo.o $(OBJ)/RectilinearNM_Transfo.o             \
+                   $(OBJ)/ProjectTransfo.o                                                 \
                    $(OBJ)/sub_freq.o $(OBJ)/RPHTransfo.o $(OBJ)/ActiveTransfo.o        \
                    $(OBJ)/Qtransfo.o $(OBJ)/Sub_X_TO_Q_ana.o                           \
                    $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_module_Tana_vec_operations.o \
@@ -113,6 +114,7 @@ lib_dep_mod_dnSVM=$(OBJ)/Lib_QTransfo.o $(OBJ)/sub_module_DInd.o                
                   $(OBJ)/Rot2CoordTransfo.o $(OBJ)/FlexibleTransfo.o                   \
                   $(OBJ)/GeneTransfo.o $(OBJ)/HyperSpheTransfo.o                       \
                   $(OBJ)/RectilinearNM_Transfo.o $(OBJ)/LinearNMTransfo.o              \
+                  $(OBJ)/ProjectTransfo.o                                                  \
                   $(OBJ)/RPHTransfo.o $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o         \
                   $(OBJ)/sub_dnDetGG_dnDetg.o $(OBJ)/sub_module_SimpleOp.o             \
                   $(OBJ)/sub_module_cart.o $(OBJ)/sub_math_util.o                      \
@@ -585,6 +587,10 @@ $(lib_dep_mod_HyperSpheTransfo):$(OBJ)/HyperSpheTransfo.o
 #mod_LinearNMTransfo
 lib_dep_mod_LinearNMTransfo=$(OBJ)/Qtransfo.o
 $(lib_dep_mod_LinearNMTransfo):$(OBJ)/LinearNMTransfo.o
+
+#mod_ProjectTransfo
+lib_dep_mod_ProjectTransfo=$(OBJ)/Qtransfo.o
+$(lib_dep_mod_ProjectTransfo):$(OBJ)/ProjectTransfo.o
 
 #mod_RPHTransfo
 lib_dep_mod_RPHTransfo=$(OBJ)/Qtransfo.o
