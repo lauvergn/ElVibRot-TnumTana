@@ -41,14 +41,10 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_ExactFact
-  !USE mod_system
-  !USE mod_Constant
-  !USE mod_basis
   IMPLICIT NONE
 
   PRIVATE
   PUBLIC :: sub_ExactFact_analysis
-
 
 CONTAINS
 
@@ -133,7 +129,7 @@ SUBROUTINE sub_ExactFact_analysis(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
     write(out_unitp,*) '  The option for the Exact Factorization are: 1 or 2'
     write(out_unitp,*) '  The option value (ExactFact) is',ana_psi%ExactFact
     write(out_unitp,*) '  => Check the ExactFact value in the &analyse'
-    STOP 'EF : no default'
+    STOP 'ERROR in sub_ExactFact_analysis: no default'
   END SELECT
 
 !----------------------------------------------------------
@@ -175,7 +171,6 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
   complex (kind=Rkind) :: d1psi(psi%nb_qa,psi%nb_be,psi%nb_act1)
   complex (kind=Rkind) :: dtpsi(psi%nb_qa,psi%nb_be)
   complex (kind=Rkind) :: d1dtpsi(psi%nb_qa,psi%nb_be,psi%nb_act1)
-  complex (kind=Rkind) :: d1dtpsi_2(psi%nb_qa,psi%nb_be,psi%nb_act1)
 
   complex (kind=Rkind) :: d0psi2(psi%nb_qa,psi%nb_be)
 
@@ -363,15 +358,14 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
 !-- working parameters --------------------------------
   integer              :: ie,je,iqe,jqe,iq,iterm_pot
 
-  !real (kind=Rkind)    :: Wrho(psi%nb_qa)
   real (kind=Rkind)    :: grid(psi%nb_act1)
 
-  integer              :: iact1,idyn,nio
+  integer              :: iQder(2),iact1,iact2,idyn1,idyn2,i12,nio
   complex (kind=Rkind) :: d0psi(psi%nb_qa,psi%nb_be)
   complex (kind=Rkind) :: d1psi(psi%nb_qa,psi%nb_be,psi%nb_act1)
+  complex (kind=Rkind) :: d2psi(psi%nb_qa,psi%nb_be,psi%nb_act1*(psi%nb_act1+1)/2)
   complex (kind=Rkind) :: dtpsi(psi%nb_qa,psi%nb_be)
   complex (kind=Rkind) :: d1dtpsi(psi%nb_qa,psi%nb_be,psi%nb_act1)
-  complex (kind=Rkind) :: d1dtpsi_2(psi%nb_qa,psi%nb_be,psi%nb_act1)
 
   TYPE (param_psi)     :: dpsi
   character (len=:), allocatable  :: name_file
@@ -399,37 +393,50 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
   deallocate(name_file)
 
   ! no derivative
-  d0psi(:,:) = reshape(psi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+  d0psi(:,:) = reshape(psi%CvecG,shape=[psi%nb_qa,psi%nb_be])
 
   ! time derivative
   CALL sub_OpPsi(psi,dpsi,para_H) ! H.psi
   CALL sub_PsiBasisRep_TO_GridRep(dpsi) ! put H.psi on the grid
-  dtpsi(:,:) = reshape(dpsi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+  dtpsi(:,:) = reshape(dpsi%CvecG,shape=[psi%nb_qa,psi%nb_be])
   dtpsi(:,:) = -EYE*dtpsi(:,:) ! -i H.psi
 
   ! Q derivatives
   DO iact1=1,psi%nb_act1
     dpsi = psi
-    idyn = para_H%mole%liste_QactTOQdyn(iact1)
-    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=(/ idyn,0 /) ) ! put d./dQ psi on the grid
-    d1psi(:,:,iact1) = reshape(dpsi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+    idyn1 = para_H%mole%liste_QactTOQdyn(iact1)
+    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=[idyn1,0]) ! put d./dQ psi on the grid
+    d1psi(:,:,iact1) = reshape(dpsi%CvecG,shape=[psi%nb_qa,psi%nb_be])
+  END DO
+
+  ! Q1 Q2 derivatives
+  i12 = 0
+  DO iact1=1,psi%nb_act1
+  DO iact2=iact1,psi%nb_act1
+    dpsi  = psi
+    iQder = para_H%mole%liste_QactTOQdyn([iact2,iact1])
+    i12   = i12 + 1
+    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=iQder) ! put d2./dQ1dQ2 psi on the grid
+    d2psi(:,:,i12) = reshape(dpsi%CvecG,shape=[psi%nb_qa,psi%nb_be])
+  END DO
   END DO
 
   ! cross Q-time derivatives (we use the time derivative, dtpsi(:,:))
   DO iact1=1,psi%nb_act1
-    dpsi%CvecG = reshape(dtpsi,shape=(/ psi%nb_qa*psi%nb_be /))
+    dpsi%CvecG = reshape(dtpsi,shape=[psi%nb_qa*psi%nb_be])
     CALL sub_PsiGridRep_TO_BasisRep(dpsi) ! put dtpsi on the basis
 
-    idyn = para_H%mole%liste_QactTOQdyn(iact1)
-    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=(/ idyn,0 /) ) ! put d./dQ psi on the grid
-    d1dtpsi(:,:,iact1) = reshape(dpsi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+    idyn1 = para_H%mole%liste_QactTOQdyn(iact1)
+    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=[idyn1,0] ) ! put d./dQ psi on the grid
+    d1dtpsi(:,:,iact1) = reshape(dpsi%CvecG,shape=[psi%nb_qa,psi%nb_be])
   END DO
 
 
   ! print the informations
   DO iq=1,psi%nb_qa
     CALL Rec_Qact(Grid,psi%BasisnD,iq,para_H%mole)
-    write(nio,*) T,iq,Grid(:),d0psi(iq,:),dtpsi(iq,:),d1psi(iq,:,:),d1dtpsi(iq,:,:)
+    write(nio,*) T,iq,Grid(:),d0psi(iq,:),dtpsi(iq,:),d1psi(iq,:,:),            &
+                 d1dtpsi(iq,:,:),d2psi(iq,:,:)
   END DO
   write(nio,*)
 
@@ -483,7 +490,6 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
   complex (kind=Rkind) :: d1psi(psi%nb_qa,psi%nb_be,psi%nb_act1)
   complex (kind=Rkind) :: dtpsi(psi%nb_qa,psi%nb_be)
   complex (kind=Rkind) :: d1dtpsi(psi%nb_qa,psi%nb_be,psi%nb_act1)
-  complex (kind=Rkind) :: d1dtpsi_2(psi%nb_qa,psi%nb_be,psi%nb_act1)
 
   TYPE (param_psi)     :: dpsi,ddpsi
   character (len=:), allocatable  :: name_file
@@ -758,4 +764,3 @@ END SUBROUTINE sub_ExactFact_analysis_v0
 
 
 END MODULE mod_ExactFact
-
