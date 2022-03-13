@@ -64,7 +64,7 @@ SUBROUTINE sub_ExactFact_analysis(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
   IMPLICIT NONE
 
 
-  real (kind=Rkind),    intent(in)           :: T       ! time
+  real (kind=Rkind),    intent(in)           :: T           ! time
   real (kind=Rkind),    intent(in)           :: Tmax,deltaT ! Tmax, deltaT: Time step
   TYPE (param_psi),     intent(inout)        :: psi
 
