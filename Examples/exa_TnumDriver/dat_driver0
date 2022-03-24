@@ -1,0 +1,28 @@
+ &variables
+         Old_Qtransfo=f
+         nb_Qtransfo=3
+         nrho=2
+         Tana=t
+ /
+ &Coord_transfo name_transfo='bunch' nb_vect=3 inTOout=f /
+O O H H
+1 2   R1: O1->O2 (zBF)
+1 3   R2: O1->H3
+4 2   R3: H4->O2
+
+ &Coord_transfo name_transfo='poly' cos_th=f /
+     &vector nb_vect=2 Frame=t /
+       &vector Frame=f /
+       &vector Frame=f /
+
+ &Coord_transfo name_transfo='active' /
+ 1 1 1    1 1 1
+
+ &minimum read_itQ0transfo=2 unit='angs' /
+ ROO 1.4
+ RH1 1.0
+ A1  100.
+ RH2 1.0
+ A2  100.
+ D    60.
+

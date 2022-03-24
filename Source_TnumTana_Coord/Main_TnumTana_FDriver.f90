@@ -26,32 +26,36 @@
 !
 !===========================================================================
 !===========================================================================
- PROGRAM Main_TnumTana_FDriver
- IMPLICIT NONE
+PROGRAM Main_TnumTana_FDriver
+  USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : INPUT_UNIT,OUTPUT_UNIT,real64,real128,int32,int64
+  IMPLICIT NONE
 
-  integer, parameter :: nt=10**4
+  integer, parameter :: Rk  = real64 ! 8
+  integer, parameter :: nt  = 10**4
 
-  integer            :: nb_act,nb_cart,init_sub
-  real (kind=8), allocatable :: Qact(:),Qcart(:)
-  real (kind=8)      :: mass
-  integer            :: Z,A
-  character (len=10) :: Atomic_Symbol
-  integer            :: InputUnit,OutputUnit
+  integer                     :: nb_act,nb_cart,init_sub
+  real (kind=Rk), allocatable :: Qact(:),Qcart(:)
+  real (kind=Rk)              :: mass
+  real (kind=Rk)              :: EckartRot(3,3)
+  integer                     :: Z,A
+  character (len=10)          :: Atomic_Symbol
+  integer                     :: InputUnit,ResUnit
+  character (len=10)          :: time
 
 
   integer :: i
   character (len=*), parameter :: name_sub='Main_TnumTana'
 
-  open(newunit=OutputUnit,file='res_driver')
+  open(newunit=ResUnit,file='res_driver')
   open(newunit=InputUnit,file='dat_driver')
 
   CALL Init_InputUnit_Driver(InputUnit)
-  CALL Init_OutputUnit_Driver(OutputUnit)
-  write(6,*) 'InputUnit',InputUnit
-  write(6,*) 'OutputUnit',OutputUnit
+  CALL Init_OutputUnit_Driver(ResUnit)
+  write(OUTPUT_UNIT,*) 'InputUnit',InputUnit
+  write(OUTPUT_UNIT,*) 'ResUnit',ResUnit
 
   CALL Init_TnumTana_FOR_Driver(nb_act,nb_cart,init_sub)
-  write(6,*) 'nb_act,nb_cart,init_sub',nb_act,nb_cart,init_sub
+  write(OUTPUT_UNIT,*) 'nb_act,nb_cart,init_sub',nb_act,nb_cart,init_sub
 
   !=================================
   ! to get isotopic masses
@@ -59,29 +63,29 @@
   A = -1
   Atomic_Symbol = 'C'
   CALL Tnum_get_mass(mass,Z,A,Atomic_Symbol)
-  write(6,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
-  flush(6)
+  write(OUTPUT_UNIT,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
+  flush(OUTPUT_UNIT)
 
   Z = -1
   A = -1
   Atomic_Symbol = '6_13'
   CALL Tnum_get_mass(mass,Z,A,Atomic_Symbol)
-  write(6,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
-  flush(6)
+  write(OUTPUT_UNIT,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
+  flush(OUTPUT_UNIT)
 
   Z = 8
   A = 17
   Atomic_Symbol = ''
   CALL Tnum_get_mass(mass,Z,A,Atomic_Symbol)
-  write(6,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
-  flush(6)
+  write(OUTPUT_UNIT,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
+  flush(OUTPUT_UNIT)
 
   Z = 8
   A = -1
   Atomic_Symbol = ''
   CALL Tnum_get_mass(mass,Z,A,Atomic_Symbol)
-  write(6,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
-  flush(6)
+  write(OUTPUT_UNIT,*) 'Z,A,Atomic_Symbol,mass',Z,A,' ',trim(Atomic_Symbol),' ',mass
+  flush(OUTPUT_UNIT)
   !=================================
 
 
@@ -89,33 +93,64 @@
   allocate(Qact(nb_act))
   allocate(Qcart(nb_cart))
 
-
-  Qact(:) = 0.5d0
-  write(6,*) 'Qact (initial values)',Qact
+  Qact(:) = 0.5_Rk
+  write(OUTPUT_UNIT,*) 'Qact (initial values)',Qact
   CALL Qact_TO_cart(Qact,size(Qact),Qcart,size(Qcart))
   CALL cart_TO_Qact(Qact,size(Qact),Qcart,size(Qcart))
-  write(6,*) 'Qact (from cart_TO_Qact)',Qact
+  write(OUTPUT_UNIT,*) 'Qact (from cart_TO_Qact)',Qact
 
-  write(6,*) 'Beginning loop:',nt
+  Qact(:) = 0.5_Rk
+  Qact(1) = 0.5_Rk + nt*0.001_Rk
+  write(OUTPUT_UNIT,*) 'Qact (final values)',Qact
+  CALL Qact_TO_cart(Qact,size(Qact),Qcart,size(Qcart))
+  write(OUTPUT_UNIT,*) 'Qcart (not recenter / COM)'
+  DO i=1,nb_cart,3
+    write(OUTPUT_UNIT,*) (i-1)/3+1,Qcart(i:i+2)
+  END DO
+
+  CALL Qact_TO_cartCOM(Qact,size(Qact),Qcart,size(Qcart))
+  write(OUTPUT_UNIT,*) 'Qcart (recenter / COM)'
+  DO i=1,nb_cart,3
+    write(OUTPUT_UNIT,*) (i-1)/3+1,Qcart(i:i+2)
+  END DO
+
+  CALL Tnum_get_EckartRot(Qact,size(Qact),EckartRot)
+  write(OUTPUT_UNIT,*) 'Eckart Rotation matrix'
+  write(OUTPUT_UNIT,*) '1 ',EckartRot(:,1)
+  write(OUTPUT_UNIT,*) '2 ',EckartRot(:,2)
+  write(OUTPUT_UNIT,*) '3 ',EckartRot(:,3)
+
+  deallocate(Qact)
+  deallocate(Qcart)
+
+  CALL date_and_time(TIME=time)
+  write(OUTPUT_UNIT,*) 'Beginning time:',time
+  write(OUTPUT_UNIT,*) 'Beginning loop:',nt
  !$OMP   PARALLEL &
  !$OMP   DEFAULT(NONE) &
- !$OMP   PRIVATE(i,Qact,Qcart)
+ !$OMP   SHARED (nb_act,nb_cart) &
+ !$OMP   PRIVATE(i,Qact,Qcart,EckartRot)
+
+  allocate(Qact(nb_act))
+  Qact(:) = 0.5_Rk
+  allocate(Qcart(nb_cart))
 
  !$OMP   DO SCHEDULE(STATIC)
   DO i=1,nt
-    IF (mod(i,100) == 0) write(6,'(".")',advance='no')
-    Qact(1) = 0.5d0 + real(i,kind=8)*0.001d0
-    CALL Qact_TO_cart(Qact,size(Qact),Qcart,size(Qcart))
+    IF (mod(i,100) == 0) write(OUTPUT_UNIT,'(".")',advance='no')
+    Qact(1) = 0.5_Rk + i*0.001_Rk
+    CALL Qact_TO_cart(Qact,nb_act,Qcart,nb_cart)
+    CALL Tnum_get_EckartRot(Qact,nb_act,EckartRot)
   END DO
  !$OMP   END DO
+
+  deallocate(Qact)
+  deallocate(Qcart)
+
  !$OMP   END PARALLEL
-  write(6,*)
-  write(6,*) 'END loop'
-
-  DO i=1,nb_cart,3
-    write(6,*) (i-1)/3+1,Qcart(i:i+2)
-  END DO
-
-
+  write(OUTPUT_UNIT,*)
+  write(OUTPUT_UNIT,*) 'END loop'
+  CALL date_and_time(TIME=time)
+  write(OUTPUT_UNIT,*) 'End time:',time
 
  END PROGRAM Main_TnumTana_FDriver

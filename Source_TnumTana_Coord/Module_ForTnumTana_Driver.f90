@@ -29,8 +29,9 @@
 MODULE Module_ForTnumTana_Driver
   USE mod_system
   USE mod_Constant
-  USE mod_Coord_KEO,             ONLY: CoordType,Tnum,Read_CoordType,  &
-                                       read_RefGeom,sub_QactTOd0x,sub_d0xTOQact
+  USE mod_Coord_KEO,             ONLY: CoordType,Tnum,Read_CoordType,           &
+                                       read_RefGeom,sub_QactTOd0x,sub_d0xTOQact,&
+                                       sub_QactTOdnx
   USE mod_PrimOp,                ONLY: PrimOp_t,Finalize_TnumTana_Coord_PrimOp
   IMPLICIT NONE
 
@@ -43,6 +44,7 @@ MODULE Module_ForTnumTana_Driver
   integer          :: skip_NM =  0  ! if 0 => calc the NM, if 1 no NM calculation
   integer          :: k_Half  = -1  ! if -1, k_Half is not modified.
                                     ! 1 => k_Half is set to T, 0 => k_Half is set to F
+
 CONTAINS
 SUBROUTINE Check_TnumInit(name_sub)
   IMPLICIT NONE

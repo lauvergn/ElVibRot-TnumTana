@@ -102,6 +102,82 @@ SUBROUTINE Qact_TO_cart(Qact,nb_act,Qcart,nb_cart)
 
 
 END SUBROUTINE Qact_TO_cart
+SUBROUTINE Qact_TO_cartCOM(Qact,nb_act,Qcart,nb_cart)
+  USE mod_system
+  USE Module_ForTnumTana_Driver
+  USE mod_ActiveTransfo
+  IMPLICIT NONE
+
+  integer,           intent(in)     :: nb_act,nb_cart
+
+  real (kind=Rkind), intent(in)     :: Qact(nb_act)
+  real (kind=Rkind), intent(inout)  :: Qcart(nb_cart)
+
+  real (kind=Rkind), allocatable     :: Qact_loc(:)
+
+
+  character (len=*), parameter :: name_sub='Qact_TO_cartCOM'
+
+!===========================================================
+!===========================================================
+  !$OMP    CRITICAL (Qact_TO_cartCOM_CRIT)
+  IF (Init == 0) THEN
+    Init = 1
+    CALL versionEVRT(.TRUE.)
+    print_level=-1
+    !-----------------------------------------------------------------
+    !     - read the coordinate transformations :
+    !     -   zmatrix, polysperical, bunch...
+    !     ------------------------------------------------------------
+    CALL Read_CoordType(mole,para_Tnum,const_phys)
+    !     ------------------------------------------------------------
+    !-----------------------------------------------------------------
+
+    !-----------------------------------------------------------------
+    !     - read coordinate values -----------------------------------
+    !     ------------------------------------------------------------
+    CALL read_RefGeom(mole,para_Tnum)
+    !     ------------------------------------------------------------
+    !-----------------------------------------------------------------
+
+    !-----------------------------------------------------------------
+    !     ---- TO finalize the coordinates (NM) and the KEO ----------
+    !     ------------------------------------------------------------
+    para_Tnum%Tana=.FALSE.
+    CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
+
+    IF (nb_act /= mole%nb_act .OR. nb_cart /= mole%ncart_act) THEN
+       write(out_unitp,*) ' ERROR in ', name_sub
+       write(out_unitp,*) ' nb_act is different from the Tnum one ',nb_act,mole%nb_act
+       write(out_unitp,*) '    or '
+       write(out_unitp,*) ' nb_cart is different from the Tnum one ',nb_cart,mole%ncart_act
+       STOP
+    END IF
+
+  END IF
+  !$OMP   END CRITICAL (Qact_TO_cartCOM_CRIT)
+
+!===========================================================
+!===========================================================
+
+  IF (nb_act == mole%nb_var) THEN
+    CALL sub_QactTOd0x(Qcart,Qact,mole,Gcenter=.TRUE.)
+  ELSE IF (nb_act < mole%nb_var) THEN
+    allocate(Qact_loc(mole%nb_var))
+    CALL get_Qact0(Qact_loc,mole%ActiveTransfo)
+    Qact_loc(1:nb_act) = Qact
+    CALL sub_QactTOd0x(Qcart,Qact_loc,mole,Gcenter=.TRUE.)
+    deallocate(Qact_loc)
+  ELSE
+    write(out_unitp,*) ' ERROR in ', name_sub
+    write(out_unitp,*) ' nb_act is larger than mole%nb_var'
+    write(out_unitp,*) ' nb_act     ',nb_act
+    write(out_unitp,*) ' mole%nb_var',mole%nb_var
+    STOP 'ERROR in Qact_TO_cart: nb_act is larger than mole%nb_var'
+  END IF
+
+
+END SUBROUTINE Qact_TO_cartCOM
 SUBROUTINE cart_TO_Qact(Qact,nb_act,Qcart,nb_cart)
   USE mod_system
   USE Module_ForTnumTana_Driver
@@ -443,6 +519,53 @@ SUBROUTINE Tnum_get_GG(Qact,nb_act,GG,ndimG,def)
   deallocate(Qact_loc)
 
 END SUBROUTINE Tnum_get_GG
+
+SUBROUTINE Tnum_get_EckartRot(Qact,nb_act,EckartRot)
+  USE mod_system
+  USE mod_dnSVM
+  USE Module_ForTnumTana_Driver
+  USE mod_CartesianTransfo
+  IMPLICIT NONE
+
+
+  integer,           intent(in)     :: nb_act
+  real (kind=Rkind), intent(in)     :: Qact(nb_act)
+  real (kind=Rkind), intent(inout)  :: EckartRot(3,3)
+
+  ! local variables
+  TYPE(Type_dnVec)    :: dnXin
+  logical             :: Eckart
+
+  character (len=*), parameter :: name_sub='Tnum_get_EckartRot'
+
+  CALL Check_TnumInit(name_sub)
+
+  Eckart  = .FALSE.
+  IF (associated(mole%tab_Cart_transfo)) THEN
+    Eckart =  (mole%tab_Cart_transfo(1)%CartesianTransfo%Eckart .OR.            &
+               mole%tab_Cart_transfo(1)%CartesianTransfo%MultiRefEckart)
+  END IF
+
+  IF (Eckart) THEN
+    CALL alloc_dnSVM(dnXin,mole%ncart,mole%nb_act,nderiv=0)
+
+    CALL sub_QactTOdnx(Qact,dnXin,mole,nderiv=0,                                  &
+                       Gcenter=.TRUE.,Cart_transfo=.FALSE.)
+
+    ! Eckart rotation of the dipole moment
+    CALL calc_EckartRot(dnXin,EckartRot,                                          &
+                        mole%tab_Cart_transfo(1)%CartesianTransfo,Qact)
+
+    CALL dealloc_dnSVM(dnXin)
+  ELSE
+    EckartRot(:,:) = ZERO
+    EckartRot(1,1) = ONE
+    EckartRot(2,2) = ONE
+    EckartRot(3,3) = ONE
+  END IF
+
+END SUBROUTINE Tnum_get_EckartRot
+
 SUBROUTINE InitTnum3_NM_TO_LinearTransfo(Qact,nb_act,Hess,nb_cart)
   USE Module_ForTnumTana_Driver
   USE mod_ActiveTransfo
@@ -522,9 +645,7 @@ SUBROUTINE Init_TnumTana_FOR_Driver(nb_act,nb_cart,init_sub)
       IF (k_Half == 0 .OR. k_Half == 1) mole%NMTransfo%k_Half = (k_Half == 1)
     END IF
     CALL Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp)
-
   END IF
-
   nb_act  = mole%nb_act
   nb_cart = mole%ncart_act
   !$OMP   END CRITICAL (Init_TnumTana_FOR_Driver_CRIT)

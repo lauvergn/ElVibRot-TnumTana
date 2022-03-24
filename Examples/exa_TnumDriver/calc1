@@ -14,8 +14,5 @@ cd $here
 #test F_driver: it reads the dat_driver file and the output is in res_driver
 # The main program (Main_TnumTana_FDriver.f90) writes to the standard output.
 
-cp dat_driver0 dat_driver
-../../Main_TnumTana_FDriver.exe > res_Fdriver0
-
 cp dat_driver1 dat_driver
 ../../Main_TnumTana_FDriver.exe > res_Fdriver1

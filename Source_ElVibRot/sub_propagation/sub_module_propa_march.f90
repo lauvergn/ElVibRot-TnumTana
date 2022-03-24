@@ -1781,8 +1781,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       IF ( psi%norm2 > para_propa%max_norm2) THEN
         T  = T + para_propa%WPdeltaT
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' STOP propagation: norm > max_norm',                &
-                         psi%norm2
+        write(out_unitp,*) ' STOP propagation: norm > max_norm',psi%norm2
         para_propa%march_error   = .TRUE.
         para_propa%test_max_norm = .TRUE.
         STOP
