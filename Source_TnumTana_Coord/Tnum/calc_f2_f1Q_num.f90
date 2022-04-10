@@ -217,10 +217,11 @@ MODULE mod_f2f2Vep
       CALL alloc_dnSVM(dng,mole%ndimG,mole%ndimG,mole%nb_act,nderiv)
 
       CALL get_dng_dnGG(Qact,para_Tnum,mole,dng,dnGG,vep=vep,nderiv=nderiv)
-      !write(out_unitp,*) 'dng'
-      !CALL write_dnSVM(dng)
-      !write(out_unitp,*) 'dnGG'
-      !CALL write_dnSVM(dnGG)
+      ! write(out_unitp,*) 'dng'
+      ! CALL write_dnSVM(dng)
+      ! write(out_unitp,*) 'dnGG'
+      ! CALL write_dnSVM(dnGG)
+      ! write(out_unitp,*) 'vep',vep
 
       !----- For dnrho -------------------------------------------
       nderiv = 1

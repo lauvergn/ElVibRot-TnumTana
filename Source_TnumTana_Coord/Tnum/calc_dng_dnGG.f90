@@ -336,7 +336,6 @@ MODULE mod_dnGG_dng
     END IF
     !-----------------------------------------------------------------
 
-
     IF (present(vep)) THEN
       IF (vep_done) THEN
         vep = vep_loc
@@ -1261,6 +1260,8 @@ MODULE mod_dnGG_dng
          write(out_unitp,*) 'ndimA',dnA%nb_var_Matl
          write(out_unitp,*) 'ndimA',dnA%nb_var_Matc
          write(out_unitp,*) 'nderivA',nderivA
+         write(out_unitp,*) 'num_x,nrho',para_Tnum%num_x,para_Tnum%nrho
+         write(out_unitp,*) 'step',para_Tnum%stepT
          write(out_unitp,*) 'Qact',Qact
          write(out_unitp,*)
          CALL Write_CoordType(mole)
@@ -1268,8 +1269,7 @@ MODULE mod_dnGG_dng
        END IF
 !-----------------------------------------------------------
 
-        write(out_unitp,*) 'num_x,nrho',para_Tnum%num_x,para_Tnum%nrho
-        write(out_unitp,*) 'step',para_Tnum%stepT
+
 !----- some step ----------------------------------------------------
       Gcenter = .TRUE.
       IF (para_Tnum%stepT == ZERO) THEN
@@ -1308,6 +1308,7 @@ MODULE mod_dnGG_dng
 
       IF (nderivA >=1) THEN
         DO i=1,mole%nb_act
+          Qact_loc(:) = Qact(:)
 
           Qact_loc(i) = Qact(i) + para_Tnum%stepT
           CALL sub_QactTOdnMWx(Qact_loc,dnMWx,mole,1,Gcenter,            &
@@ -1345,6 +1346,7 @@ MODULE mod_dnGG_dng
       IF (nderivA ==2) THEN
         DO i=1,mole%nb_act
         DO j=i+1,mole%nb_act
+          Qact_loc(:) = Qact(:)
 
           Qact_loc(i) = Qact(i) + para_Tnum%stepT
           Qact_loc(j) = Qact(j) + para_Tnum%stepT
