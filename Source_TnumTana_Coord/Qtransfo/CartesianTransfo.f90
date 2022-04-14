@@ -1346,6 +1346,8 @@ MODULE mod_CartesianTransfo
         CALL check_alloc_dnVec(dnMWXout,'dnMWXout',name_sub)
         CALL check_alloc_MatOFdnS(dnT,'dnT',name_sub)
 
+        write(out_unitp,*) 'Eckart rotational matrix, T'
+        CALL Write_MatOFdnS(dnT,nderiv=0)
 
         !Check the rotational Eckart condition
         RMS2 = sum((dnMWXout%d0(:)-reshape(dnMWXref(:,:)%d0, (/ CartesianTransfo%ncart_act /)) )**2)
@@ -2622,4 +2624,3 @@ MODULE mod_CartesianTransfo
 
 
       END MODULE mod_CartesianTransfo
-

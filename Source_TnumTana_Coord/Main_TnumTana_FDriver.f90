@@ -31,23 +31,28 @@ PROGRAM Main_TnumTana_FDriver
   IMPLICIT NONE
 
   integer, parameter :: Rk  = real64 ! 8
-  integer, parameter :: nt  = 10**4
 
-  integer                     :: nb_act,nb_cart,init_sub
-  real (kind=Rk), allocatable :: Qact(:),Qcart(:)
-  real (kind=Rk)              :: mass
-  real (kind=Rk)              :: EckartRot(3,3)
-  integer                     :: Z,A
-  character (len=10)          :: Atomic_Symbol
-  integer                     :: InputUnit,ResUnit
-  character (len=10)          :: time
+  integer                         :: nb_act,nb_cart,init_sub
+  real (kind=Rk), allocatable     :: Qact(:),Qcart(:)
+  real (kind=Rk)                  :: mass
+  real (kind=Rk)                  :: EckartRot(3,3)
+  integer                         :: Z,A
+  character (len=10)              :: Atomic_Symbol
+  integer                         :: InputUnit,ResUnit
+  character (len=:), allocatable  :: InputName,OutputName
+  logical                         :: X2Q
+  integer                         :: nb_eval
+  character (len=10)              :: time0,time1
+  INTEGER                         :: Time_val0(8),Time_val1(8)
 
 
   integer :: i
   character (len=*), parameter :: name_sub='Main_TnumTana'
 
-  open(newunit=ResUnit,file='res_driver')
-  open(newunit=InputUnit,file='dat_driver')
+  CALL ReadArguments(InputName,OutputName,X2Q,nb_eval)
+
+  open(newunit=ResUnit,file=OutputName)
+  open(newunit=InputUnit,file=InputName)
 
   CALL Init_InputUnit_Driver(InputUnit)
   CALL Init_OutputUnit_Driver(ResUnit)
@@ -93,14 +98,16 @@ PROGRAM Main_TnumTana_FDriver
   allocate(Qact(nb_act))
   allocate(Qcart(nb_cart))
 
-  Qact(:) = 0.5_Rk
-  write(OUTPUT_UNIT,*) 'Qact (initial values)',Qact
-  CALL Qact_TO_cart(Qact,size(Qact),Qcart,size(Qcart))
-  CALL cart_TO_Qact(Qact,size(Qact),Qcart,size(Qcart))
-  write(OUTPUT_UNIT,*) 'Qact (from cart_TO_Qact)',Qact
+  IF (X2Q) THEN
+    Qact(:) = 0.5_Rk
+    write(OUTPUT_UNIT,*) 'Qact (initial values)',Qact
+    CALL Qact_TO_cart(Qact,size(Qact),Qcart,size(Qcart))
+    CALL cart_TO_Qact(Qact,size(Qact),Qcart,size(Qcart))
+    write(OUTPUT_UNIT,*) 'Qact (from cart_TO_Qact)',Qact
+  END IF
 
   Qact(:) = 0.5_Rk
-  Qact(1) = 0.5_Rk + nt*0.001_Rk
+  Qact(1) = 0.5_Rk + nb_eval*0.001_Rk
   write(OUTPUT_UNIT,*) 'Qact (final values)',Qact
   CALL Qact_TO_cart(Qact,size(Qact),Qcart,size(Qcart))
   write(OUTPUT_UNIT,*) 'Qcart (not recenter / COM)'
@@ -123,12 +130,12 @@ PROGRAM Main_TnumTana_FDriver
   deallocate(Qact)
   deallocate(Qcart)
 
-  CALL date_and_time(TIME=time)
-  write(OUTPUT_UNIT,*) 'Beginning time:',time
-  write(OUTPUT_UNIT,*) 'Beginning loop:',nt
+  CALL date_and_time(TIME=time0,VALUES=Time_val0)
+  write(OUTPUT_UNIT,*) 'Beginning time:',time0
+  write(OUTPUT_UNIT,*) 'Beginning loop:',nb_eval
  !$OMP   PARALLEL &
  !$OMP   DEFAULT(NONE) &
- !$OMP   SHARED (nb_act,nb_cart) &
+ !$OMP   SHARED (nb_act,nb_cart,nb_eval) &
  !$OMP   PRIVATE(i,Qact,Qcart,EckartRot)
 
   allocate(Qact(nb_act))
@@ -136,9 +143,9 @@ PROGRAM Main_TnumTana_FDriver
   allocate(Qcart(nb_cart))
 
  !$OMP   DO SCHEDULE(STATIC)
-  DO i=1,nt
+  DO i=1,nb_eval
     IF (mod(i,100) == 0) write(OUTPUT_UNIT,'(".")',advance='no')
-    Qact(1) = 0.5_Rk + i*0.001_Rk
+    Qact(1) = 0.5_Rk + i*0.5_Rk/nb_eval
     CALL Qact_TO_cart(Qact,nb_act,Qcart,nb_cart)
     CALL Tnum_get_EckartRot(Qact,nb_act,EckartRot)
   END DO
@@ -150,7 +157,69 @@ PROGRAM Main_TnumTana_FDriver
  !$OMP   END PARALLEL
   write(OUTPUT_UNIT,*)
   write(OUTPUT_UNIT,*) 'END loop'
-  CALL date_and_time(TIME=time)
-  write(OUTPUT_UNIT,*) 'End time:',time
+  CALL date_and_time(TIME=time1,VALUES=Time_val1)
 
- END PROGRAM Main_TnumTana_FDriver
+  write(OUTPUT_UNIT,*) 'End time:',time1
+  Time_val1 = Time_val1 - Time_val0
+  !write(OUTPUT_UNIT,*) 'Delta time:',Time_val1
+  write(OUTPUT_UNIT,*) 'Delta time:',Time_val1(5)*3600._Rk+Time_val1(6)*60._Rk+Time_val1(7)+Time_val1(7)/1000._Rk
+
+CONTAINS
+  SUBROUTINE ReadArguments(InputName,OutputName,X2Q,nb_eval)
+    USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : INPUT_UNIT,OUTPUT_UNIT
+    IMPLICIT NONE
+
+    character (len=:), allocatable, intent(inout)  :: InputName,OutputName
+    logical,                        intent(inout)  :: X2Q
+    integer,                        intent(inout)  :: nb_eval
+
+    character(len=:), allocatable :: arg,arg2
+    integer :: long , i,n
+
+    IF (mod(COMMAND_ARGUMENT_COUNT(),2) == 1) THEN
+      write(OUTPUT_UNIT,*) 'Wrong number of arguments: ',COMMAND_ARGUMENT_COUNT()
+      write(OUTPUT_UNIT,*) ' It MUST be an even number.'
+
+      STOP 'ERROR in ReadArguments: Wrong number of arguments'
+    END IF
+
+    X2Q     = .TRUE.
+    nb_eval = 10**4
+
+    DO i=1,COMMAND_ARGUMENT_COUNT(),2
+      CALL GET_COMMAND_ARGUMENT( NUMBER=i, LENGTH=long )
+      allocate( character(len=long) :: arg )
+      CALL GET_COMMAND_ARGUMENT( NUMBER=i, VALUE=arg )
+
+      CALL GET_COMMAND_ARGUMENT( NUMBER=i+1, LENGTH=long )
+      allocate( character(len=long) :: arg2 )
+      CALL GET_COMMAND_ARGUMENT( NUMBER=i+1, VALUE=arg2 )
+
+      SELECT CASE(arg)
+      CASE("-o","-output")
+        OutputName = arg2
+      CASE("-i","-input")
+        InputName = arg2
+      CASE("-x2q","-X2Q")
+        read(arg2,*) X2Q
+      CASE("-nb_eval")
+        read(arg2,*) nb_eval
+      CASE Default
+        write(OUTPUT_UNIT,*) 'Number of argument(s): ',COMMAND_ARGUMENT_COUNT()
+        STOP 'ERROR in ReadArguments: no default argument'
+      END SELECT
+
+      deallocate(arg)
+      deallocate(arg2)
+
+    END DO
+    IF (.NOT. allocated(OutputName)) OutputName = 'res_driver'
+    IF (.NOT. allocated(InputName))  InputName  = 'dat_driver'
+
+    write(OUTPUT_UNIT,*) 'OutputName:       ',OutputName
+    write(OUTPUT_UNIT,*) 'InputName:        ',InputName
+    write(OUTPUT_UNIT,*) 'X2Q (Cart_TO_Q):  ',X2Q
+    write(OUTPUT_UNIT,*) 'nb_eval:          ',nb_eval
+
+  END SUBROUTINE ReadArguments
+END PROGRAM Main_TnumTana_FDriver
