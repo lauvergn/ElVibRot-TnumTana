@@ -698,7 +698,7 @@ Obj_Basis = \
  $(OBJ)/sub_basis_El.o \
  $(OBJ)/sub_quadra_herm.o $(OBJ)/sub_quadra_laguerre.o $(OBJ)/sub_quadra_legendre.o \
  $(OBJ)/sub_quadra_fourier.o $(OBJ)/sub_quadra_box.o $(OBJ)/sub_quadra_SincDVR.o $(OBJ)/sub_quadra_ft.o \
- $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_DirProd.o \
+ $(OBJ)/sub_quadra_Ylm.o $(OBJ)/sub_quadra_Wigner.o $(OBJ)/sub_quadra_DirProd.o \
  $(OBJ)/sub_quadra_SparseBasis2n.o \
  $(OBJ)/sub_SymAbelian_OF_Basis.o
 
@@ -1287,6 +1287,8 @@ $(OBJ)/sub_quadra_ft.o:$(DIRba)/sub_quadra_ft.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_ft.f90
 $(OBJ)/sub_quadra_Ylm.o:$(DIRba)/sub_quadra_Ylm.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_Ylm.f90
+$(OBJ)/sub_quadra_Wigner.o:$(DIRba)/sub_quadra_Wigner.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_Wigner.f90
 $(OBJ)/sub_quadra_DirProd.o:$(DIRba)/sub_quadra_DirProd.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DIRba)/sub_quadra_DirProd.f90
 $(OBJ)/sub_quadra_SparseBasis.o:$(DIRba)/sub_quadra_SparseBasis.f90
