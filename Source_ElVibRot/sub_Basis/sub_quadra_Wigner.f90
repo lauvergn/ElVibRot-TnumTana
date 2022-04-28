@@ -55,27 +55,26 @@
 
 !---------------------------------------------------------------------
 !---------- variables passees en argument ----------------------------
-      TYPE (basis), intent(in)      :: base
+      TYPE (basis), intent(inout)      :: base
 
 
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------
 
 !---------------------------------------------------------------------
-      integer       :: nb,ib,ibb,iq,iqm,iql,nbl,ibl,ibm
-      integer       :: symab,symab_l,symab_mfourier,m,Read_symab
-
       real (kind=Rkind), allocatable :: xm(:)
       real (kind=Rkind), allocatable :: wm(:)
-      real (kind=Rkind), allocatable :: xl(:)
-      real (kind=Rkind), allocatable :: wl(:)
+      real (kind=Rkind), allocatable :: xk(:)
+      real (kind=Rkind), allocatable :: wk(:)
+      real (kind=Rkind), allocatable :: xj(:)
+      real (kind=Rkind), allocatable :: wj(:)
 
-      integer           :: max_l,max_m,max_ql,max_qm,nq,ibbl
-      real (kind=Rkind) :: xq(2)
-      real (kind=Rkind) :: d0,d1(2),d2(2,2)
-      real (kind=Rkind) :: s,c
+      integer           :: max_j,max_k,max_m,max_qj,max_qm,max_qk
+      integer           :: j,k,m
+      integer           :: ib,iq,nb,nq
+      real (kind=Rkind) :: xq(3)
+      real (kind=Rkind) :: d0,d1(3),d2(3,3)
 
-      character (len=3) :: name_i
       integer           :: nio
 
 
@@ -104,7 +103,7 @@
 !----------------------------------------------------------------------------
 !----------------------------------------------------------------------------
 !----------------------------------------------------------------------------
-!      test sur nb_fourier et nb_quadra
+!      nb and nq
 !----------------------------------------------------------------------------
       nb = base%nb
       write(out_unitp,*) '    Basis: Wigner (3D-rotation)'
@@ -118,86 +117,77 @@
       END IF
 
       IF (nb > 0) THEN
-        max_l = int(sqrt(real(nb,kind=Rkind)))-1
-        IF ( (max_l+1)**2 .NE. nb ) max_l = max_l+1
-        nb = (max_l+1)**2
+        max_j = int(sqrt(real(nb,kind=Rkind)))-1
+        IF ( (max_j+1)**2 .NE. nb ) max_j = max_j+1
+        nb = (max_j+1)**2
       ELSE
-        max_l = Get_nb_FROM_l_OF_PrimBasis(base%L_SparseBasis,base)-1
-        nb = (max_l+1)**2
+        max_j = Get_nb_FROM_l_OF_PrimBasis(base%L_SparseBasis,base)-1
+        nb = (max_j+1)**2
       END IF
-      max_m = 2*max_l+1
+      max_m = 2*max_j+1
+      max_k = 2*max_j+1
 
       write(out_unitp,*) '      new nb_Wigner (without symmetry): ',nb
-      write(out_unitp,*) '      max_l, max_m',max_l,max_m
+      write(out_unitp,*) '      max_j,max_k,max_m',max_j,max_k,max_m
 
       IF (base%L_SparseGrid > -1) THEN
-         max_ql = Get_nq_FROM_l_OF_PrimBasis(base%L_SparseGrid,base)-1
-         max_ql = max(max_ql,max_l)
+         max_qj = Get_nq_FROM_l_OF_PrimBasis(base%L_SparseGrid,base)-1
+         max_qj = max(max_qj,max_j)
       ELSE
-         max_ql = -1
-         max_ql = max_l
+         max_qj = -1
+         max_qj = max_j
       END IF
-      write(out_unitp,*) 'max_ql',max_ql
+      write(out_unitp,*) 'max_qj',max_qj
 
 
-      IF (lebedev < 0) THEN
-        write(out_unitp,*) '      old nb_quadra',nq
-        write(out_unitp,*) '  not lebedev',lebedev
+      write(out_unitp,*) '      old nb_quadra',nq
 
-        max_ql = int(sqrt(real(nq,kind=Rkind)))
-        IF (max_ql <= max_l) max_ql = max_l+1
-        max_qm = 2*max_ql+1
-        IF (mod(max_qm,2) .EQ. 1) max_qm = max_qm + 1
-        nq = max_ql*max_qm
+      max_qj = int(sqrt(real(nq,kind=Rkind)))
+      IF (max_qj <= max_j) max_qj = max_j+1
+      max_qm = 2*max_qj+1
+      max_qk = max_qm
 
-        write(out_unitp,*) '      new nb_quadra',nq
-        write(out_unitp,*) '      max_ql, max_qm',max_ql,max_qm
-      END IF
+      nq = max_qj*max_qm*max_qk
+
+      write(out_unitp,*) '      new nb_quadra',nq
+      write(out_unitp,*) '      max_qj,max_qk,max_qm',max_qj,max_qk,max_qm
 
       CALL Set_nq_OF_basis(base,nq)
-
-      ! calculation of base%nb  without symmetry
-        base%nb = 0
-        DO ibl = 0,max_l
-        DO ibm = 1,2*ibl+1
-          base%nb = base%nb + 1
-        END DO
-        END DO
-      write(out_unitp,*) '      new nb_Ylm (with symmetry): ',base%nb
 
 !----------------------------------------------------------------------------
 
       CALL alloc_xw_OF_basis(base)
 
-        CALL alloc_NParray(xm,(/ max_qm /),'xm',name_sub)
-        CALL alloc_NParray(wm,(/ max_qm /),'wm',name_sub)
-        CALL alloc_NParray(xl,(/ max_qm /),'xl',name_sub)
-        CALL alloc_NParray(wl,(/ max_qm /),'wl',name_sub)
+      CALL alloc_NParray(xm,[max_qm],'xm',name_sub)
+      CALL alloc_NParray(wm,[max_qm],'wm',name_sub)
+      CALL alloc_NParray(xk,[max_qk],'xk',name_sub)
+      CALL alloc_NParray(wk,[max_qk],'wk',name_sub)
+      CALL alloc_NParray(xj,[max_qj],'xj',name_sub)
+      CALL alloc_NParray(wj,[max_qj],'wj',name_sub)
+      !--------------------------------------------------------------
+      !----- grid and weight calculation ----------------------------
+      CALL gauss_fourier(xk,wk,max_qk)
+      CALL gauss_fourier(xm,wm,max_qm)
+      CALL gauleg(-ONE,ONE,xj,wj,max_qj)
 
-        !--------------------------------------------------------------
-        !----- grid and weight calculation ----------------------------
-        CALL gauss_fourier(xm,wm,max_qm)
-        CALL gauleg(-ONE,ONE,xl,wl,max_ql)
+      !- tranformation of cos(th) in th --------------------------------
+      wj(:) = wj(:)/sqrt(ONE-xj**2)
+      xj(:) = acos(xj)
 
-        !- tranformation cos(th) => th --------------------------------
-        DO iql=1,max_ql
-          c  = xl(iql)
-          s = sqrt(ONE-c*c)
-          xl(iql) = acos(c)
-          wl(iql) = wl(iql)/s
-        END DO
-
-        iq = 0
-        DO iql=1,max_ql
-        DO iqm=1,max_qm
+      iq = 0
+      DO j=1,max_qj
+      DO k=1,max_qk
+      DO m=1,max_qm
           iq = iq + 1
-          base%x(1,iq)  = xl(iql)
-          base%x(2,iq)  = xm(iqm)
-          base%w(iq)    = wl(iql)*wm(iqm)
-          base%rho(iq)  = sin(xl(iql))
+          base%x(1,iq)  = xj(j)
+          base%x(2,iq)  = xk(k)
+          base%x(3,iq)  = xm(m)
+          base%w(iq)    = wj(j)*wm(k)*wm(m)
+          base%rho(iq)  = sin(xj(j))
           base%wrho(iq) = base%w(iq) * base%rho(iq)
-        END DO
-        END DO
+      END DO
+      END DO
+      END DO
 
       IF (debug) THEN
         write(out_unitp,*) 'grid for the Ylm. nq:',nq
@@ -211,107 +201,50 @@
       base%nrho(1) = 2  ! we are working with theta, rho(theta)=sin(theta) instead of one
 
       !----------------------------------------------------------------
-      CALL alloc_SymAbelian(base%P_SymAbelian,base%nb)
-      Read_symab = Get_Read_symabOFSymAbelian(base%P_SymAbelian)
-      CALL Set_ReadsymabOFSymAbelian(base%P_SymAbelian,Read_symab)
-
       CALL alloc_dnb_OF_basis(base)
 
       CALL dealloc_nDindex(base%nDindB)
       base%nDindB%packed = .TRUE.
 
       IF (base%With_L) THEN
-          CALL init_nDindexPrim(base%nDindB,1,(/ base%nb /))
-          base%nDindB%With_L      = .TRUE.
-          base%nDindB%Tab_L(:)    = -1
-          base%nDindB%Tab_Norm(:) = -ONE
-
-          ibb  = 0
-          ibbl = -1
-          DO ibl = 0,max_l
-            IF (isyml >= 0 .AND. mod(ibl,2) /= isyml) CYCLE
-            IF (ibl+1 <= base%L_TO_nb%A) THEN
-              ibbl = 0
-            ELSE
-              IF (mod(ibl- base%L_TO_nb%A,base%L_TO_nb%B) == 0) THEN
-                ibbl = ibbl + 1
-              END IF
-          END IF
-          DO ibm = 1,2*ibl+1
-            ibb = ibb + 1
-            base%nDindB%Tab_L(ibb)    = ibbl
-            base%nDindB%Tab_Norm(ibb) = real(ibbl,kind=Rkind)
-          END DO
-          END DO
-          !write(out_unitp,*) 'base%nDindB%Tab_L',base%nDindB%Tab_L
-          !STOP 'With_L'
+        STOP 'With_L not yet!'
       ELSE
-        CALL init_nDindexPrim(base%nDindB,ndim=1,nDsize=(/ base%nb /),  &
-                              nDweight=(/ base%weight_OF_nDindB /)     )
+        CALL init_nDindexPrim(base%nDindB,ndim=1,nDsize=[base%nb],  &
+                              nDweight=[base%weight_OF_nDindB]     )
       END IF
 
       ib  = 0
-      ibb = 0
-      DO ibl = 0,max_l
-      DO ibm = 1,2*ibl+1
-        ibb = ibb + 1
-        IF (isyml >= 0 .AND. mod(ibl,2) /= isyml) CYCLE
-        ib = ib + 1  ! for the symmetry
-        base%tab_ndim_index(:,ib) = (/ ibl,ibm /)
-
-        ! for symab (test)
-        !m              = ibm/2
-        !symab_l        = 0
-        !symab_mfourier = 0
-        !IF (mod(ibl-m,2) == 1) symab_l        = 2 ! odd, Plm
-        !IF (mod(ibm,2) == 0)   symab_mfourier = 1 ! odd, m (the true m)
-        !symab = Calc_symab1_EOR_symab2(symab_l,symab_mfourier)
-        !CALL Set_symabOFSymAbelian_AT_ib(base%P_SymAbelian,ib,symab)
-        !write(out_unitp,*) 'ib,symab_l,symab_mfourier',ib,symab_l,symab_mfourier
-        !write(out_unitp,*) 'ib,symab',ib,symab
-
-        SELECT CASE (Read_symab)
-        CASE (-1)
-          CALL Set_symabOFSymAbelian_AT_ib(base%P_SymAbelian,ib,-1)
-        CASE (0,1,2,3,4,5,6,7)
-          IF (mod(ibl,2) == 0) THEN
-            CALL Set_symabOFSymAbelian_AT_ib(base%P_SymAbelian,ib,0)
-          ELSE
-            CALL Set_symabOFSymAbelian_AT_ib(base%P_SymAbelian,ib,Read_symab)
-          END IF
-        CASE DEFAULT
-          write(out_unitp,*) ' ERROR in ',name_sub
-          write(out_unitp,*) '  it should never append. The error should come from'
-          write(out_unitp,*) ' "Set_ReadsymabOFSymAbelian" subroutine'
-          write(out_unitp,*) ' CHECK the fortran!!'
-          STOP
-        END SELECT
+      DO j = 0,max_j
+      DO k = 1,2*j+1
+      DO m = 1,2*j+1
+        ! here a test on j,k,m !!!!
+        ib = ib + 1
+        base%tab_ndim_index(:,ib) = [j,k,m]
+        CALL Set_symabOFSymAbelian_AT_ib(base%P_SymAbelian,ib,-1)
 
         ! for nDindB
-        base%nDindB%Tab_Norm(ib) = real(ibl,kind=Rkind)*base%weight_OF_nDindB
+        base%nDindB%Tab_Norm(ib) = j*base%weight_OF_nDindB
 
         DO iq=1,nq
           xq(:) = base%x(:,iq)
-          CALL d0d1d2Ylm(d0,d1,d2,xq,ibb,num,step)
+          d0 = ZERO ; d1 = ZERO ; d2 = ZERO
+          !CALL d0d1d2Ylm(d0,d1,d2,xq,ibb,num,step)
           base%dnRGB%d0(iq,ib)     = d0
           base%dnRGB%d1(iq,ib,:)   = d1(:)
           base%dnRGB%d2(iq,ib,:,:) = d2(:,:)
         END DO
       END DO
       END DO
-
-      CALL Set_nbPERsym_FROM_SymAbelian(base%P_SymAbelian)
-
-      IF (debug) CALL Write_SymAbelian(base%P_SymAbelian)
+      END DO
 
       IF (ib /= base%nb) STOP 'ib /= nb : ERROR in sub_quadra_Wigner'
 
-      IF (lebedev < 0) THEN
-        CALL dealloc_NParray(xm,'xm',name_sub)
-        CALL dealloc_NParray(wm,'wm',name_sub)
-        CALL dealloc_NParray(xl,'xl',name_sub)
-        CALL dealloc_NParray(wl,'wl',name_sub)
-      END IF
+      CALL dealloc_NParray(xm,'xm',name_sub)
+      CALL dealloc_NParray(wm,'wm',name_sub)
+      CALL dealloc_NParray(xk,'xk',name_sub)
+      CALL dealloc_NParray(wk,'wk',name_sub)
+      CALL dealloc_NParray(xj,'xj',name_sub)
+      CALL dealloc_NParray(wj,'wj',name_sub)
 !-----------------------------------------------------------
       IF (debug) THEN
         CALL RecWrite_basis(base)
