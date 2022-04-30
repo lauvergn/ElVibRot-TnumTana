@@ -10,6 +10,7 @@ rm -f QuantumModelLib #always remove the link
 
 
 curl -LJ $version --output OOP_branch.zip
+test -e OOP_branch.zip && echo OOP_branch.zip file exist || cp OOP_branch_save8.1.zip OOP_branch.zip
 unzip OOP_branch.zip
 rm -f OOP_branch.zip
 
