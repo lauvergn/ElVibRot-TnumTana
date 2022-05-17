@@ -96,7 +96,8 @@ MODULE mod_Tnum
           character (len=Name_len)      :: file_name_fchk     = ' '
 
           ! parameters for the Quantum Model Lib (ECAM), KEO+PES
-          logical                       :: QMLib = .FALSE.
+          logical                       :: QMLib   = .FALSE.
+          logical                       :: QMLib_G = .FALSE.
 
           ! parameters for the PES obtained from internal fit program
           logical                               :: nDfit_Op            = .FALSE.
@@ -726,6 +727,7 @@ MODULE mod_Tnum
 !     - for Tnum or Tana ----------------------------------------------
       integer           :: nrho,vep_type,NonGcteRange(2)
       logical           :: num_GG,num_g,num_x,Gdiago,Gcte,With_VecCOM,Write_QMotions
+      logical           :: QMLib_G
       logical           :: With_Tab_dnQflex,f2f1_ana
 
       logical           :: Tana,Tana_Init_Only
@@ -750,7 +752,7 @@ MODULE mod_Tnum
                      hessian_cart,hessian_onthefly,file_hessian,stepOp, &
                      stepT,num_GG,num_g,num_x,nrho,vep_type,            &
                      Tana,Compa_TanaTnum,Tana_Init_Only,                &
-                     Gdiago,Gcte,NonGcteRange,                          &
+                     Gdiago,Gcte,NonGcteRange,QMLib_G,                  &
                      MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,         &
                      KEO_TalyorOFQinact2n,f2f1_ana,                     &
                      charge,multiplicity,                               &
@@ -788,6 +790,7 @@ MODULE mod_Tnum
       num_x                = .FALSE.
       Gdiago               = .FALSE.
       Gcte                 = .FALSE.
+      QMLib_G              = .TRUE.
       NonGcteRange(:)      = 0
       Tana                 = .FALSE.
       Tana_Init_Only       = .FALSE.
@@ -891,6 +894,7 @@ MODULE mod_Tnum
       para_Tnum%WriteT               = WriteT
       para_Tnum%Gdiago               = Gdiago
       para_Tnum%Gcte                 = Gcte
+      para_Tnum%para_PES_FromTnum%QMLib_G = QMLib_G
 
       IF ((nrho == 20 .OR. nrho == 10) .AND. vep_type /= -1 .AND. vep_type /= 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub

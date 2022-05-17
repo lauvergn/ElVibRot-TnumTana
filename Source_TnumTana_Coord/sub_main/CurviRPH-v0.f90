@@ -62,8 +62,8 @@ implicit NONE
   real(kind=Rkind), allocatable  :: d3Func(:,:,:,:)
   real(kind=Rkind), allocatable  :: V(:,:),G(:,:,:),H(:,:,:,:),Q_QML(:)
 
-  !logical, parameter :: debug=.FALSE.
-  logical, parameter :: debug=.TRUE.
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
 
   !===========================================================================
   !===========================================================================
@@ -176,8 +176,6 @@ implicit NONE
 
   CALL make_JacON(JacON,alphaON,d1Qop)
 
-  CALL make_d1JacON(d1JacON,d1alphaON,d2Qop)
-STOP
   !===========================================================================
 
   !===========================================================================
@@ -329,11 +327,11 @@ CONTAINS
       IF (debug) write(out_unitp,*) i,alphaON(:,i)
     END DO
 
-    !IF (debug) THEN
+    IF (debug) THEN
       DO i=1,n
         write(out_unitp,*) 'alphaON(:,i)',i,alphaON(:,i)
       END DO
-    !END IF
+    END IF
 
   END SUBROUTINE make_alphaON
 

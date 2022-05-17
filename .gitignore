@@ -27,3 +27,5 @@ UnitTests/res_UT_Frac
 UnitTests/res_UT_PhysConst
 
 Ext_Lib/QuantumModelLib*
+Ext_Lib/AD_dnSVM*
+Ext_Lib/dnSVMLib

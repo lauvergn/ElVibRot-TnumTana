@@ -89,7 +89,8 @@
         logical                       :: levelEne_EQ_levelDip = .TRUE.
 
         ! parameters for the Quantum Model Lib (ECAM), KEO+PES
-        logical                       :: QMLib = .FALSE.
+        logical                       :: QMLib   = .FALSE.
+        logical                       :: QMLib_G = .FALSE.
         integer, allocatable          :: Qit_TO_QQMLib(:)
 
 
@@ -366,6 +367,7 @@
         PrimOp%nDfit_Op              = para_PES_FromTnum%nDfit_Op
 
         PrimOp%QMLib                  = para_PES_FromTnum%QMLib
+        PrimOp%QMLib_G                = para_PES_FromTnum%QMLib_G
 
         PrimOp%para_OTF%charge       = para_PES_FromTnum%charge
         PrimOp%para_OTF%multiplicity = para_PES_FromTnum%multiplicity

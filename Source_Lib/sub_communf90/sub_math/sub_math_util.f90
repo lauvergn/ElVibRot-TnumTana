@@ -1,20 +1,19 @@
-      FUNCTION gamma_perso(n)
-      USE mod_system
-      IMPLICIT NONE
-      real(kind=Rkind) :: gamma_perso
-
-         real(kind=Rkind) a
-         integer i,n
-         IF (n .LT. 0) THEN
-           write(out_unitp,*) 'ERROR: gamma( n<=0)',n
-           STOP
-         END IF
-         a = ONE
-         DO i=1,n-1
-           a = a * real(i,kind=Rkind)
-         END DO
-         gamma_perso = a
-      end function gamma_perso
+FUNCTION gamma_perso(n)
+USE mod_system
+IMPLICIT NONE
+  real(kind=Rkind) :: gamma_perso
+  real(kind=Rkind) a
+  integer i,n
+  IF (n < 0) THEN
+   write(out_unitp,*) 'ERROR: gamma( n<=0)',n
+   STOP
+  END IF
+  a = ONE
+  DO i=1,n-1
+   a = a * i
+  END DO
+  gamma_perso = a
+end function gamma_perso
       FUNCTION factor(n)
       USE mod_system
       IMPLICIT NONE

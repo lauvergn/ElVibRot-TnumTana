@@ -92,9 +92,14 @@ endif
 # Quantum Model Lib (ECAM)
 #QMLibDIR := /Users/lauvergn/git/QuantumModelLib
  QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
-DIRLIB += -L$(QMLibDIR)
-QMLIB := -lQMLib
+#DIRLIB +=
+QMLIB := -L$(QMLibDIR) -lQMLib
 QMLibDIR_full := $(QMLibDIR)/libQMLib.a
+
+# dnSVM Lib
+dnSVMLibDIR := $(ExternalLibDIR)/dnSVMLib
+dnSVMLIB := -L$(dnSVMLibDIR) -lAD_dnSVM
+dnSVMLibDIR_full := $(dnSVMLibDIR)/libAD_dnSVM.a
 #===============================================================================
 #
 #===============================================================================
@@ -424,8 +429,8 @@ else
 endif
 #=================================================================================
 #=================================================================================
-
- LIBS := $(DIRLIB) $(QMLIB) $(PESLIB) $(ARPACKLIB) $(F90LIB)
+LIBS := $(DIRLIB) $(QMLIB) $(PESLIB) $(ARPACKLIB) $(F90LIB)
+#LIBS := $(DIRLIB) $(QMLIB) $(dnSVMLIB) $(PESLIB) $(ARPACKLIB) $(F90LIB)
  LYNKFLAGS = $(LIBS)
 
 #=================================================================================
@@ -908,6 +913,29 @@ $(QMLibDIR):
 clean_qml clean_QML:
 	cd $(ExternalLibDIR) ; rm -rf QuantumModelLib*
 #
+# dnS libraries
+#
+#dnSMODFILE= $(dnSVMLibDIR)/OBJ/addnsvm_m.mod $(dnSVMLibDIR)/OBJ/addnsvm_dns_m.mod \
+#            $(dnSVMLibDIR)/OBJ/addnsvm_dnmat_m.mod $(dnSVMLibDIR)/OBJ/addnsvm_dnpoly_m.mod
+dnSMODFILE= OBJ/addnsvm_m.mod OBJ/addnsvm_dns_m.mod \
+            OBJ/addnsvm_dnmat_m.mod OBJ/addnsvm_dnpoly_m.mod
+.PHONY: dns dnS
+dns dnS: $(dnSVMLibDIR) $(dnSVMLibDIR_full)
+	@echo "make dnS library"
+$(dnSVMLibDIR_full): $(dnSVMLibDIR)
+	@echo "make dnS library"
+	cd $(dnSVMLibDIR) ; make lib ; cp $(dnSMODFILE) $(OBJ)
+$(dnSVMLibDIR):
+	cd $(ExternalLibDIR) ; ./get_dnSVM.sh
+	test -d $(dnSVMLibDIR) || exit 1
+
+.PHONY: clean_dns clean_dnS
+clean_dns clean_dnS:
+	cd $(ExternalLibDIR) ; rm -rf AD_dnSVM* dnSVMLib
+#
+##################################################################################
+
+
 # obj directory
 .PHONY: obj
 obj:
@@ -933,7 +961,7 @@ clean_UT:
 #	@cd Source_TnumTana_Coord/sub_operator_T ; cp Calc_Tab_dnQflex_save.f90 Calc_Tab_dnQflex.f90
 #	@cd Source_TnumTana_Coord/sub_operator_T ; cp Sub_X_TO_Q_ana_save.f90   Sub_X_TO_Q_ana.f90
 .PHONY: clean
-clean: clean_example
+clean: clean_example clean_dnS
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib
 	rm -f *.lst $(DIR_EVRT)/obj/*/*.o $(DIR_EVRT)/obj/*/*.mod $(DIR_EVRT)/obj/*/*.MOD $(EXE) *.exe $(DIR_EVRT)/obj/*/*.a vib
 	rm -rf *.dSYM

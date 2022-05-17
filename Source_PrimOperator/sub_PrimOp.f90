@@ -3846,7 +3846,7 @@ write(6,*) 'coucou1'
     IF (print_level > 1) write(out_unitp,*) ' Gref',shape(GGdef)
     flush(out_unitp)
 
-    IF (PrimOp%QMLib .AND. PrimOp%pot_itQtransfo /= 0) THEN
+    IF (PrimOp%QMLib .AND. PrimOp%QMLib_G .AND. PrimOp%pot_itQtransfo /= 0) THEN
     ! when Qcart is used the size of G form QML is [ncart_cat,ncart_act]
 #if __QML == 1
       ndim = get_Qmodel_ndim()
@@ -3857,18 +3857,30 @@ write(6,*) 'coucou1'
         write(out_unitp,*) ' GGdef_Qmodel'
         CALL Write_Mat(GGdef_Qmodel,out_unitp,5)
       END IF
-      DO i=1,ndim
-        write(6,*) 'iQML,iact',i,mole%liste_QdynTOQact(PrimOp%Qit_TO_QQMLib(i))
-        write(6,*) 'iQML,iact Qit_TO_QQMLib(i)',i,PrimOp%Qit_TO_QQMLib(i)
-
-      DO j=1,ndim
-        iact = mole%liste_QdynTOQact(PrimOp%Qit_TO_QQMLib(i))
-        jact = mole%liste_QdynTOQact(PrimOp%Qit_TO_QQMLib(j))
-        IF (iact <= mole%nb_act .AND. jact <= mole%nb_act) THEN
-          GGdef(jact,iact) = GGdef_Qmodel(j,i)
-        END IF
-      END DO
-      END DO
+      IF (PrimOp%pot_itQtransfo == mole%nb_Qtransfo) THEN ! Qact
+        DO i=1,ndim
+          write(6,*) 'iQML,iact',i,PrimOp%Qit_TO_QQMLib(i)
+        DO j=1,ndim
+          iact = PrimOp%Qit_TO_QQMLib(i)
+          jact = PrimOp%Qit_TO_QQMLib(j)
+          IF (iact <= mole%nb_act .AND. jact <= mole%nb_act) THEN
+            GGdef(jact,iact) = GGdef_Qmodel(j,i)
+          END IF
+        END DO
+        END DO
+      END IF
+      IF (PrimOp%pot_itQtransfo == mole%nb_Qtransfo-1) THEN ! Qdyn
+        DO i=1,ndim
+          write(6,*) 'iQML,iact',i,mole%liste_QdynTOQact(PrimOp%Qit_TO_QQMLib(i))
+          DO j=1,ndim
+            iact = mole%liste_QdynTOQact(PrimOp%Qit_TO_QQMLib(i))
+            jact = mole%liste_QdynTOQact(PrimOp%Qit_TO_QQMLib(j))
+            IF (iact <= mole%nb_act .AND. jact <= mole%nb_act) THEN
+              GGdef(jact,iact) = GGdef_Qmodel(j,i)
+            END IF
+          END DO
+        END DO
+      END IF
       CALL dealloc_NPArray(GGdef_Qmodel,'GGdef_Qmodel',name_sub)
 #else
       write(out_unitp,*) 'ERROR in ',name_sub
