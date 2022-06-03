@@ -822,7 +822,7 @@ CONTAINS
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug=.FALSE.
-!     logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (nb_WP > 1) STOP
       IF (debug) THEN
@@ -847,7 +847,7 @@ CONTAINS
       BasisRep = psi0(1)%BasisRep
       GridRep  = psi0(1)%GridRep
 
-      write(out_unitp,*) ' vib : propagation',para_propa%name_WPpropa
+      write(out_unitp,*) ' vib : propagation: ',para_propa%name_WPpropa
       CALL flush_perso(out_unitp)
 
 !     - parameters for poly (cheby and nOD) ... ------------
@@ -882,7 +882,7 @@ CONTAINS
         para_H%E0     = para_propa%para_poly%E0
         para_H%Esc    = para_propa%para_poly%Esc
       ENDIF
-
+      write(out_unitp,*) 'npoly',para_propa%para_poly%npoly
 !------- propagation loop ---------------------------------
       T = ZERO
       IF (para_propa%restart) THEN

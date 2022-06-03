@@ -57,12 +57,12 @@
         MODULE PROCEDURE dealloc_NParray_OF_Vec_Sum_OpnDdim1
       END INTERFACE
 
-  !!@description: Generic routine that deletes an array of operator types 
+  !!@description: Generic routine that deletes an array of operator types
   interface delete_op
     module procedure delete_vec_sum_opnd
   end interface
 
-  !!@description: Generic routine that allocate variables of operator type  
+  !!@description: Generic routine that allocate variables of operator type
   interface allocate_op
     module procedure allocate_vec_sum_opnd
   end interface
@@ -216,8 +216,8 @@
 
       END SUBROUTINE dealloc_NParray_OF_Vec_Sum_OpnDdim1
 
- !! @description: Deallocated a nd operator 
- !! @param:    F_vec    The nd operator (type: vec_sum_opnd). 
+ !! @description: Deallocated a nd operator
+ !! @param:    F_vec    The nd operator (type: vec_sum_opnd).
  subroutine delete_vec_sum_opnd(F_vec)
 
    type(vec_sum_opnd),           intent(inout)    :: F_vec
@@ -229,8 +229,8 @@
  end subroutine delete_vec_sum_opnd
 
  !! @description: Allocated vect_opnd operator
- !! @param:    F_vec_nd    The nd operator (type: vec_sum_opnd). 
- !! @param:       ndim     Size of F_vec%vec_sum. 
+ !! @param:    F_vec_nd    The nd operator (type: vec_sum_opnd).
+ !! @param:       ndim     Size of F_vec%vec_sum.
  subroutine allocate_vec_sum_opnd(F_vec, ndim)
 
    type(vec_sum_opnd),           intent(inout)    :: F_vec
@@ -277,6 +277,8 @@
 
    character (len=*), parameter :: routine_name='write_vec_sum_opnd'
 
+     IF ( .NOT. allocated(V_sum_nd%vec_sum) ) RETURN
+
      if(present(i_file)) then
        i_open = i_file
      else
@@ -310,10 +312,10 @@
      end do
    END SUBROUTINE write_vec_sum_opnd
 
- !! @description: Copy a vector of operator sum_opnd into 
- !!               another vector of operators sum_opnd 
- !! @param:     V1_sum_nd    The operator which will be copied 
- !! @param:    V2_sum_nd    The operator in which F1_sum_nd will be copied 
+ !! @description: Copy a vector of operator sum_opnd into
+ !!               another vector of operators sum_opnd
+ !! @param:     V1_sum_nd    The operator which will be copied
+ !! @param:    V2_sum_nd    The operator in which F1_sum_nd will be copied
  subroutine copy_V1_sum_nd_into_V2_sum_nd(V1_sum_nd, V2_sum_nd)
 
    type(vec_sum_opnd),           intent(in)    :: V1_sum_nd

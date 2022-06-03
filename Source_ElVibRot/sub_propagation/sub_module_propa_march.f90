@@ -1890,7 +1890,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
       IF (para_propa%nb_micro > 1) THEN
         psi0_psiKrylovSpace(:) = CZERO
-        psi0_psiKrylovSpace(1) = Calc_AutoCorr(psi0,tab_KrylovSpace(1), &
+        psi0_psiKrylovSpace(1) = Calc_AutoCorr(psi0,tab_KrylovSpace(1),         &
                                          para_propa,T,Write_AC=.FALSE.)
       END IF
 
@@ -1899,13 +1899,13 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       ! loop for H|psi>, H^2|psi>, H^3|psi>...
       DO j=2,para_propa%para_poly%npoly+1
         IF (debug) write(out_unitp,*) 'in ',name_sub,' it:',j-1
-        CALL sub_OpPsi(Psi  =tab_KrylovSpace(j-1),                      &
+        CALL sub_OpPsi(Psi  =tab_KrylovSpace(j-1),                              &
                        OpPsi=tab_KrylovSpace(j),para_Op=para_H)
         IF (j == 2) THEN
           ! Energy shift, E0, calculation for the first iteration.
           ! since E0=<psi |H| psi> = <tab_KrylovSpace(1) |H|tab_KrylovSpace(1)> =
           ! ..  <tab_KrylovSpace(1) | tab_KrylovSpace(2)>
-          ! This shift is important to improve the stapility.
+          ! This shift is important to improve the stability.
           ! => But the phase need to be taking into account at the end of the iterations.
           CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(1),tab_KrylovSpace(2))
           E0 = real(Overlap,kind=Rkind)
@@ -1926,11 +1926,11 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         ! n=j-1
         CALL UPsi_spec(UPsiOnKrylov,H(1:j-1,1:j-1),Vec,Eig,             &
                               para_propa%WPdeltaT,j-1,With_diago=.TRUE.)
-        !write(out_unitp,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
+        IF (debug) write(out_unitp,*) j-1,'abs(UPsiOnKrylov(j-1)',abs(UPsiOnKrylov(j-1))
         IF (abs(UPsiOnKrylov(j-1)) < para_propa%para_poly%poly_tol .OR. &
             j == para_propa%para_poly%npoly+1) THEN
           n = j-1
-          write(out_unitp,*) n,'abs(UPsiOnKrylov(n)',abs(UPsiOnKrylov(n))
+          write(out_unitp,*) n,'abs(UPsiOnKrylov(n)',abs(UPsiOnKrylov(j-1))
           EXIT
         END IF
 
@@ -1943,6 +1943,13 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
           tab_KrylovSpace(j) = tab_KrylovSpace(j) - tab_KrylovSpace(i) * Overlap
           CALL renorm_psi(tab_KrylovSpace(j))
         END DO
+        DO i=1,j-1
+          CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(i),tab_KrylovSpace(j))
+          IF (abs(Overlap) == ZERO) CYCLE
+          tab_KrylovSpace(j) = tab_KrylovSpace(j) - tab_KrylovSpace(i) * Overlap
+          CALL renorm_psi(tab_KrylovSpace(j))
+        END DO
+
 
         IF (para_propa%nb_micro > 1) THEN
           psi0_psiKrylovSpace(j) = Calc_AutoCorr(psi0,tab_KrylovSpace(j),&
@@ -1951,9 +1958,10 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
       END DO
 
+
       IF (abs(UPsiOnKrylov(n)) > para_propa%para_poly%poly_tol) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' The last vector, UPsiOnKrylov(n), coeficient is TOO large'
+        write(out_unitp,*) ' The last vector, UPsiOnKrylov(n), coefficient is TOO large'
         write(out_unitp,*) '    abs(UPsiOnKrylov(n)',abs(UPsiOnKrylov(n))
         write(out_unitp,*) '    poly_tol: ',para_propa%para_poly%poly_tol
         write(out_unitp,*) ' => npoly is TOO small',para_propa%para_poly%npoly
@@ -2136,7 +2144,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
       IF (abs(UPspectral_n) > para_propa%para_poly%poly_tol) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' The last vector, UPsiOnKrylov(n), coeficient is TOO large'
+        write(out_unitp,*) ' The last vector, UPsiOnKrylov(n), coefficient is TOO large'
         write(out_unitp,*) '    abs(UPspectral_n)',abs(UPspectral_n)
         write(out_unitp,*) '    poly_tol: ',para_propa%para_poly%poly_tol
         write(out_unitp,*) ' => npoly is TOO small',para_propa%para_poly%npoly
@@ -2342,7 +2350,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
       IF (abs(UPspectral_n) > para_propa%para_poly%poly_tol) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' The last vector, UPsiOnKrylov(n), coeficient is TOO large'
+        write(out_unitp,*) ' The last vector, UPsiOnKrylov(n), coefficient is TOO large'
         write(out_unitp,*) '    abs(UPspectral_n)',abs(UPspectral_n)
         write(out_unitp,*) '    poly_tol: ',para_propa%para_poly%poly_tol
         write(out_unitp,*) ' => npoly is TOO small',para_propa%para_poly%npoly
@@ -2606,7 +2614,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
       IF (abs(UPspectral_n) > para_propa%para_poly%poly_tol) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
-        write(out_unitp,*) ' The last vector, UPsiOnKrylov(n), coeficient is TOO large'
+        write(out_unitp,*) ' The last vector, UPsiOnKrylov(n), coefficient is TOO large'
         write(out_unitp,*) '    abs(UPspectral_n)',abs(UPspectral_n)
         write(out_unitp,*) '    poly_tol: ',para_propa%para_poly%poly_tol
         write(out_unitp,*) ' => npoly is TOO small',para_propa%para_poly%npoly
@@ -2954,7 +2962,8 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'abs(UPsiOnKrylov)',abs(UPsiOnKrylov)
+        write(out_unitp,*) 'abs(UPsiOnKrylov(:))',abs(UPsiOnKrylov)
+        write(out_unitp,*) 'minval(abs(UPsiOnKrylov(:)))',minval(abs(UPsiOnKrylov))
         write(out_unitp,*) 'norm2 UPsiOnKrylov',dot_product(UPsiOnKrylov,UPsiOnKrylov)
         write(out_unitp,*) 'END ',name_sub
       END IF
@@ -3831,8 +3840,8 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       integer              :: it,i,j
 
 !----- for debuging --------------------------------------------------
-      !logical, parameter :: debug=.FALSE.
-      logical, parameter :: debug=.TRUE.
+      logical, parameter :: debug=.FALSE.
+      !logical, parameter :: debug=.TRUE.
       character (len=*), parameter :: name_sub='march_Spectral'
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -5389,7 +5398,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
 !     ------------------------------------------------------
       IF (type_propa == 1) THEN
-!       - Chebychev coeficients calculation ------------------
+!       - Chebychev coefficients calculation ------------------
         CALL cofcheb(para_poly%alpha,npoly_cheby,                       &
                      para_poly%coef_poly,                               &
                      para_poly%max_poly,para_poly%poly_tol)
@@ -5418,7 +5427,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
 !==============================================================
 !
-!     Chebychev coeficients calculation
+!     Chebychev coefficients calculation
 !     the number of polynomia ncheb is optimized
 !
 !==============================================================
@@ -5465,7 +5474,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
 !     -----------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'Chebychev coeficients',ncheb
+        write(out_unitp,*) 'Chebychev coefficients',ncheb
         write(out_unitp,2009) (i,cf(i),i=1,ncheb)
         CALL flush_perso(out_unitp)
       END IF
@@ -5505,7 +5514,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'Chebychev coeficients',ncheb
+        write(out_unitp,*) 'Chebychev coefficients',ncheb
         write(out_unitp,2009) (i,cf(i),i=1,ncheb)
  2009   format(3(i6,e16.5))
         write(out_unitp,*) 'END cofcheb'
@@ -5516,7 +5525,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       END SUBROUTINE cofcheb
 !==============================================================
 !
-!     Chebychev coeficients calculation
+!     Chebychev coefficients calculation
 !
 !==============================================================
       !!@description: Chebychev coefficients calculation
@@ -5548,10 +5557,10 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
 !==============================================================
 !
-!     Taylor coeficients calculation (nOD)
+!     Taylor coefficients calculation (nOD)
 !
 !==============================================================
-      !!@description: Taylor coeficients calculation (nOD)
+      !!@description: Taylor coefficients calculation (nOD)
       !!@param: TODO
       !!@param: TODO
       !!@param: TODO

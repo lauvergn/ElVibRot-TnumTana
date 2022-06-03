@@ -287,7 +287,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
     write(out_unitp,lformat) (tab_WeightChannels(i_bi,1)*TEN**2,i_bi=1,psi%nb_bi)
   END IF
 
-  CALL calc_1Dweight(psi,ana_psi,tab_WeightChannels,20,real(ana_psi%num_psi,kind=Rkind),info,.TRUE.)
+  IF (.NOT. adia) CALL calc_1Dweight(psi,ana_psi,tab_WeightChannels,20,real(ana_psi%num_psi,kind=Rkind),info,.TRUE.)
 
   IF (.NOT. adia .AND. .NOT. ana_psi%propa) CALL calc_MaxCoef_psi(psi,ana_psi%T,info)
 
@@ -1403,7 +1403,7 @@ END SUBROUTINE sub_analyze_psi
         CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
-      IF (ana_psi%adia) RETURN
+      !IF (ana_psi%adia) RETURN
 
       IF (.NOT. allocated(tab_WeightChannels)) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
@@ -1650,7 +1650,7 @@ END SUBROUTINE sub_analyze_psi
 
     character (len=:), allocatable :: state_name
 
-    real (kind=Rkind)              :: r2
+    real (kind=Rkind)                 :: r2
     real (kind=Rkind),    allocatable :: RDcontrac(:,:)   ! reduced density matrix with the contracted basis set (nbc,nbc)
     real (kind=Rkind),    allocatable :: RD(:,:)          ! reduced density matrix (nb,nb)
     complex (kind=Rkind), allocatable :: CRDcontrac(:,:)  ! reduced density matrix with the contracted basis set (nbc,nbc)
@@ -1661,17 +1661,18 @@ END SUBROUTINE sub_analyze_psi
 !----- for debuging --------------------------------------------------
     character (len=*), parameter :: name_sub='calc_1Dweight_act1'
     logical, parameter :: debug =.FALSE.
-!   logical, parameter :: debug =.TRUE.
+    !logical, parameter :: debug =.TRUE.
 !---------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) 'nb_inact2n',psi%Basis2n%nb_basis
       write(out_unitp,*) 'nb_bi,nb_be',psi%nb_bi,psi%nb_be
+      write(out_unitp,*) 'nb_baie,nb_tot',psi%nb_baie,psi%nb_tot
     END IF
 !---------------------------------------------------------
     CALL flush_perso(out_unitp)
     IF (psi%nb_baie /= psi%nb_tot) RETURN
-    IF (ana_psi%adia) RETURN
+    !IF (ana_psi%adia) RETURN
 
     IF (allocated(Psi%BasisnD%nDindB%Tab_nDval)) THEN
       max_dim = maxval(Psi%BasisnD%nDindB%Tab_nDval)

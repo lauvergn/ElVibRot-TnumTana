@@ -453,7 +453,12 @@ MODULE mod_Tnum
 
 !       -------------------------------------------------------
         write(out_unitp,*) 'ActiveTransfo from mole'
-        CALL Write_ActiveTransfo(mole%ActiveTransfo)
+        write(out_unitp,*) 'asso mole%ActiveTransfo:',associated(mole%ActiveTransfo)
+        IF (associated(mole%ActiveTransfo)) THEN
+          CALL Write_ActiveTransfo(mole%ActiveTransfo)
+        ELSE
+          write(out_unitp,*) 'WARNING: mole%ActiveTransfo is NOT associated!!'
+        END IF
 
         write(out_unitp,*) 'nrho_OF_Qdyn',mole%nrho_OF_Qdyn
         write(out_unitp,*) 'nrho_OF_Qact',mole%nrho_OF_Qact
@@ -498,6 +503,7 @@ MODULE mod_Tnum
 !       -------------------------------------------------------
 
         write(out_unitp,*) 'END Write_CoordType'
+        CALL flush_perso(out_unitp)
 
 
   END SUBROUTINE Write_CoordType

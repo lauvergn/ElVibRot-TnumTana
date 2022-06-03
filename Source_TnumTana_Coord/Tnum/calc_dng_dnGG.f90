@@ -524,6 +524,7 @@ MODULE mod_dnGG_dng
     END IF
     vep      = ZERO
     vep_done = .FALSE.
+
     !---------------------------------------------------------------
     IF (mole%nb_rigid100 > 0) THEN
 
@@ -550,13 +551,9 @@ MODULE mod_dnGG_dng
           write(out_unitp,*) 'mole%nb_rigid100 > 0',mole%nb_rigid100
           write(out_unitp,*)
           CALL Write_CoordType(mole100)
-          write(out_unitp,*)
         END IF
 
-        CALL alloc_dnSVM(dnGG100,                                     &
-                         mole100%ndimG,mole100%ndimG,mole100%nb_act,  &
-                         dnGG%nderiv)
-
+        CALL alloc_dnSVM(dnGG100,mole100%ndimG,mole100%ndimG,mole100%nb_act,nderiv)
         CALL get_dnGG(Qact,dnGG100,nderiv,para_Tnum,mole100)
 
         IF (para_Tnum%vep_type == 100 .AND. dnGG100%nderiv == 2) THEN
@@ -583,6 +580,7 @@ MODULE mod_dnGG_dng
           CALL INV_dnMat1_TO_dnMat2(dnGG,dng,nderiv)
         ELSE
           !- transfo G100 => G
+          CALL alloc_dnSVM(dnGG_temp,mole%ndimG,mole%ndimG,mole%nb_act,nderiv)
           CALL dngG100_TO_dngG(dnGG100,dnGG_temp,mole100,mole)
           CALL INV_dnMat1_TO_dnMat2(dnGG_temp,dng)
           CALL dealloc_dnSVM(dnGG_temp)
@@ -667,10 +665,10 @@ MODULE mod_dnGG_dng
 
         CALL alloc_dnSVM(dnGG100,                                     &
                          mole100%ndimG,mole100%ndimG,mole100%nb_act,  &
-                         dnGG%nderiv)
+                         nderiv)
         CALL alloc_dnSVM(dng100,                                      &
                          mole100%ndimG,mole100%ndimG,mole100%nb_act,  &
-                         dnGG%nderiv)
+                         nderiv)
 
         CALL get_dng(Qact,dng100,nderiv,para_Tnum,mole100)
         CALL INV_dnMat1_TO_dnMat2(dng100,dnGG100,nderiv)

@@ -12,7 +12,7 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -91,8 +91,7 @@ endif
 #===============================================================================
 # Quantum Model Lib (ECAM)
 #QMLibDIR := /Users/lauvergn/git/QuantumModelLib
- QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
-#DIRLIB +=
+QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
 QMLIB := -L$(QMLibDIR) -lQMLib
 QMLibDIR_full := $(QMLibDIR)/libQMLib.a
 
@@ -1024,7 +1023,7 @@ $(GWPEXE): obj $(Obj_All) $(OBJ)/$(GWPMAIN).o
 	$(LYNK90)   -o $(GWPEXE) $(Obj_All) $(OBJ)/$(GWPMAIN).o  $(LYNKFLAGS)
 #
 $(WORKEXE): obj $(Obj_KEO_PrimOp) $(OBJ)/$(WORKMAIN).o
-	$(LYNK90)   -o $(WORKEXE) $(Obj_KEO_PrimOp) $(OBJ)/$(WORKMAIN).o  $(LYNKFLAGS)
+	$(LYNK90)   -o $(WORKEXE) $(Obj_KEO_PrimOp) $(OBJ)/$(WORKMAIN).o  $(LYNKFLAGS) $(dnSVMLIB)
 #$(Obj_Primlib)
 #===============================================PhysConst:obj $(PhysConstEXE)
 #$(PhysConstEXE): obj $(Obj_lib) $(Obj_PhyCte) $(OBJ)/$(PhysConstMAIN).o
