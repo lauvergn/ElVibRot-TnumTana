@@ -139,14 +139,21 @@ CONTAINS
           IF(openmpi) CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
           write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
           CALL flush_perso(out_unitp)
-          CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
-          IF(openmpi) CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
-          write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
-          CALL flush_perso(out_unitp)
 
-          IF (debug) THEN
-            write(out_unitp,*) 'psiGridRep normalized'
-            CALL ecri_psi(ZERO,WP0(1),out_unitp,.TRUE.,.FALSE.)
+          IF (WP0(1)%norm2 < ZERO) THEN
+            write(out_unitp,*) 'WARNING norm2WP < 0',WP0(1)%norm2
+            write(out_unitp,*) ' ... Bug in the Smolyak implementation!'
+            write(out_unitp,*) ' The renormalization is not performed'
+          ELSE
+            CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
+            IF(openmpi) CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
+            write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
+            CALL flush_perso(out_unitp)
+
+            IF (debug) THEN
+              write(out_unitp,*) 'psiGridRep normalized'
+              CALL ecri_psi(ZERO,WP0(1),out_unitp,.TRUE.,.FALSE.)
+            END IF
           END IF
 
           !- GridRep=>BasisRep -------------------------------------------------
@@ -387,6 +394,7 @@ CONTAINS
         write(out_unitp,*) 'BEGINNING New_WP0_GridRep'
         write(out_unitp,*)
         CALL Write_Tab_GWP(para_WP0%tab_GWP0)
+        write(out_unitp,*) 'WP0nrho',para_WP0%WP0nrho
         CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
@@ -418,6 +426,14 @@ CONTAINS
             IF(keep_MPI) WP0%RvecG(i_qaie) = WP0%RvecG(i_qaie) + real(WP0_at_Q,kind=Rkind)
           END IF
         END DO
+
+        IF (debug) THEN
+          IF (WP0%cplx) THEN
+            write(out_unitp,*) 'i_qa,i_qaie,Qact',i_qa,i_qaie,Qact,WP0%CvecG(i_qaie)
+          ELSE
+            write(out_unitp,*) 'i_qa,i_qaie,Qact',i_qa,i_qaie,Qact,WP0%RvecG(i_qaie)
+          END IF
+        END If
 
       END DO
 
