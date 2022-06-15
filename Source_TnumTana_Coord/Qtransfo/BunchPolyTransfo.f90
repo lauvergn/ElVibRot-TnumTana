@@ -1888,8 +1888,8 @@
 !      -----------------------------------------------------------------
       integer :: nderiv_debug = 0
       integer :: err_mem,memory
-      logical, parameter :: debug = .FALSE.
-!      logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .FALSE.
+      logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub='calc_PolyTransfo_outTOin'
 !      -----------------------------------------------------------------
       IF (debug) THEN
@@ -2387,6 +2387,10 @@
 
         ! Riv = sqrt(dot_product(tab_Vect_Fi(iv_tot)%d0,tab_Vect_Fi(iv_tot)%d0)) !already calculated
 
+        pz = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(3)%d0)
+        px = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(1)%d0)
+        py = dot_product(tab_Vect_Fi(iv_tot)%d0,UnitVect_Fi(2)%d0)
+
         ubetaiv = pz / Riv  ! cos(beta)
         betaiv = acos(ubetaiv)
         alphaiv = atan2(py,px)
@@ -2419,7 +2423,7 @@
             ELSE
               dnQpoly%d0(i_Qprim) = betaiv
             END IF
-            IF (debug) write(out_unitp,*) 'beta (u): ',iv_Fi,':',betaiv*radTOdeg,ubetaiv
+            IF (debug) write(out_unitp,*) 'coucou beta (u): ',iv_Fi,':',betaiv*radTOdeg,ubetaiv
           END IF
         ELSE ! iv_Fi /= 2
           iQpoly  = iQpoly + 1
