@@ -388,7 +388,8 @@
       character (len=Name_len) :: name
       character (len=Name_longlen) :: dummy_name
 
-      real (kind=Rkind)  :: cte(20,max_dim),A(max_dim),B(max_dim),Q0(max_dim),scaleQ(max_dim)
+      real (kind=Rkind)  :: cte(20,max_dim),A(max_dim),B(max_dim)
+      real (kind=Rkind)  :: Q0(max_dim),scaleQ(max_dim),k_HO(max_dim),m_HO(max_dim),G_HO(max_dim)
       integer :: opt_A(max_dim),opt_B(max_dim),opt_Q0(max_dim),opt_scaleQ(max_dim)
       logical :: TD_Q0(max_dim),TD_scaleQ(max_dim)
 
@@ -404,7 +405,8 @@
                          nb,nq,nq_extra,                                        &
                          nbc,nqc,contrac,contrac_analysis,contrac_RVecOnly,     &
                          cte,cplx,                                              &
-                         auto_basis,A,B,Q0,scaleQ,opt_A,opt_B,opt_Q0,opt_scaleQ,&
+                         auto_basis,A,B,opt_A,opt_B,                            &
+                         Q0,scaleQ,opt_Q0,opt_scaleQ,k_HO,m_HO,G_HO,            &
                          TD_Q0,TD_scaleQ,                                       &
                          symab,index_symab,                                     &
                          L_TO_n_type,                                           &
@@ -468,6 +470,10 @@
       B(:)                     = ZERO
       Q0(:)                    = ZERO
       scaleQ(:)                = ZERO
+      k_HO(:)                  = ZERO
+      m_HO(:)                  = ZERO
+      G_HO(:)                  = ZERO
+
       opt_A(:)                 = 0
       opt_B(:)                 = 0
       opt_Q0(:)                = 0
@@ -848,6 +854,13 @@
         basis_temp%scaleQ(:) = ONE
 
         DO i=1,ndim
+          IF (scaleQ(i) == ZERO .AND. k_HO(i) > ZERO .AND. &
+              (m_HO(i) > ZERO .OR. G_HO(i) > ZERO)) THEN
+            IF (m_HO(i) > ZERO) scaleQ(i) = sqrt(sqrt(k_HO(i)*m_HO(i)))
+            IF (G_HO(i) > ZERO) scaleQ(i) = sqrt(sqrt(k_HO(i)/G_HO(i)))
+            write(out_unitp,*) ' scaleQ(i)',i,scaleQ(i)
+          END IF
+
           IF (A(i) /= B(i) .AND. scaleQ(i) > ZERO) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) ' You give the range ("A" and "B"):',A(i),B(i)
