@@ -1002,7 +1002,6 @@
         write(out_unitp,*) "======================================"
         write(out_unitp,*) "======================================"
 
-
         IF (para_nDFit%Analysis .AND.                                   &
             (para_nDFit%nDFitAna%Grid1D .OR.                       &
              para_nDFit%nDFitAna%Grid2D) ) THEN

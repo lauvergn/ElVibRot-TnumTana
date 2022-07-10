@@ -268,6 +268,7 @@ MODULE mod_nDGridFit
         IF (Analysis) THEN
           CALL Read_Analysis(para_nDFit%nDFitAna,Q0)
           CALL Analysis_nDFitW(para_nDFit,auTOenergy)
+          !CALL Analysis_nDFit(para_nDFit,auTOenergy)
         END IF
 
         IF (PrimOp%nDfit_Op) THEN
@@ -349,7 +350,7 @@ MODULE mod_nDGridFit
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub = 'sub_nDGrid'
       logical, parameter :: debug=.FALSE.
-!      logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       CALL alloc_array(para_nDGrid%Q0,(/mole%nb_act/),                  &
                      'para_nDGrid%Q0',name_sub)
@@ -466,7 +467,7 @@ MODULE mod_nDGridFit
         write(out_unitp,*) "nb_G",iGPtot
         write(out_unitp,*) "======================================"
 
-        IF (nb_Gonly) CYCLE
+        !IF (nb_Gonly) CYCLE
 
         write(out_unitp,*) "======================================"
         write(out_unitp,*) "======================================"
@@ -480,7 +481,7 @@ MODULE mod_nDGridFit
             Qact(1:mole%nb_act) = para_nDGrid%Q0(:)
 
             CALL Set_ZERO_TO_Tab_OF_dnMatOp(dnMatOp)
-            CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp,nderiv=0)
+            IF (.NOT. nb_Gonly) CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp,nderiv=0)
 
             iGPtot = iGPtot +1
             isign = 0
@@ -517,7 +518,7 @@ MODULE mod_nDGridFit
                        real(nDinit(:),kind=Rkind) * para_nDGrid%stepQ(:)
 
               CALL Set_ZERO_TO_Tab_OF_dnMatOp(dnMatOp)
-              CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp,nderiv=0)
+              IF (.NOT. nb_Gonly) CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp,nderiv=0)
 
               IF (debug) THEN
                 write(out_unitp,"(a,3i7,a,10i3)") 'iGPtot,iGp,isign,Qact',&
@@ -864,6 +865,7 @@ MODULE mod_nDGridFit
           read(nioGrid2,*) name_dum,idum,Q(:),val(:)
 
           CALL sub_nDFunc_FROM_nDFit(val_fit,Q,para_nDFit)
+          IF (iGP == 1) write(out_unitp,*) 'Q (1st point),val_fit,val',Q,val_fit,val
 
 
           IF (abs(val(para_nDFit%ind_val)-val_fit) > FIVE*ONETENTH**4) THEN

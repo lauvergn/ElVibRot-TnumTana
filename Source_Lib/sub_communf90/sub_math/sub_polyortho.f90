@@ -11,6 +11,8 @@
        SELECT CASE (ntyp)
        CASE (15) ! poly
          Funct_1D = x**(i-first_i)
+       CASE (16) ! poly
+         Funct_1D = x**(2*i-2*first_i)
        CASE (6) ! Huffaker
          STOP 'funct v6'
        CASE (7) ! BO
@@ -29,6 +31,8 @@
          Funct_1D = poly_Hermite_exp(x,i-first_i)
        CASE (132) !Hermite
          Funct_1D = poly_Hermite(x,i-first_i)
+       CASE (133) !Hermite
+         Funct_1D = poly_Hermite(x,2*i-2*first_i)
 
        CASE default ! ERROR: wrong function !
          write(out_unitp,*) ' ERROR wrong function, ntyp',ntyp
