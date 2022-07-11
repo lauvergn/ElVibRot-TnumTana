@@ -628,11 +628,16 @@ END SUBROUTINE sub_analyze_psi
       TYPE(OldParam)    :: OldPara
       real (kind=Rkind) :: Qmean(psi%nb_act1)
       real (kind=Rkind) :: Qmean_ie(psi%nb_act1,psi%nb_bi,psi%nb_be)
+
+      real (kind=Rkind) :: Qmean2(psi%nb_act1,psi%nb_act1)
+      real (kind=Rkind) :: Qmean2_ie(psi%nb_act1,psi%nb_act1,psi%nb_bi,psi%nb_be)
+
       real (kind=Rkind) :: x(Psi%BasisnD%ndim)
-      integer           :: i_qa,i_qaie
-      integer           :: i_be,i_bi,i_ba,i_baie,i_bie
-      integer           :: ii_baie,if_baie
-      integer           :: i
+      real (kind=Rkind) :: xy(Psi%BasisnD%ndim,Psi%BasisnD%ndim)
+
+      integer           :: i_qa
+      integer           :: i_be,i_bi,i_ba,i_bie
+      integer           :: i,j
       real (kind=Rkind) :: WrhonD
       logical           :: psiN,norm2GridRep,norm2BasisRep
       real (kind=Rkind)    :: RVec_bie(psi%nb_bi*psi%nb_be)
@@ -659,8 +664,11 @@ END SUBROUTINE sub_analyze_psi
         STOP
       END IF
 
-      Qmean(:)        = ZERO
-      Qmean_ie(:,:,:) = ZERO
+      Qmean(:)           = ZERO
+      Qmean_ie(:,:,:)    = ZERO
+
+      Qmean2(:,:)        = ZERO
+      Qmean2_ie(:,:,:,:) = ZERO
 
       IF (.NOT. ana_psi%GridDone) CALL sub_PsiBasisRep_TO_GridRep(psi)
 
@@ -672,6 +680,12 @@ END SUBROUTINE sub_analyze_psi
 
         !- calculation of x -------------------------------
         CALL Rec_x(x,psi%BasisnD,i_qa,OldPara)
+        xy(:,:) = ZERO
+        DO i=1,size(x)
+        DO j=i,size(x)
+          xy(j,i) = x(i) * x(j)
+        END DO
+        END DO
 
         IF (psi%cplx) THEN
           CALL get_CVec_OF_psi_AT_ind_a(CVec_bie,psi,i_qa,OldPara=OldPara)
@@ -686,33 +700,49 @@ END SUBROUTINE sub_analyze_psi
         DO i_bi=1,psi%nb_bi
           i_bie = (i_bi-1)+(i_be-1)*psi%nb_bi + 1
 
-          Qmean(:)              = Qmean(:)              + x(:) * RVec_bie(i_bie)
-          Qmean_ie(:,i_bi,i_be) = Qmean_ie(:,i_bi,i_be) + x(:) * RVec_bie(i_bie)
+          Qmean(:)                 = Qmean(:)                 + x(:) * RVec_bie(i_bie)
+          Qmean_ie(:,i_bi,i_be)    = Qmean_ie(:,i_bi,i_be)    + x(:) * RVec_bie(i_bie)
+
+          Qmean2(:,:)              = Qmean2(:,:)              + xy(:,:) * RVec_bie(i_bie)
+          Qmean2_ie(:,:,i_bi,i_be) = Qmean2_ie(:,:,i_bi,i_be) + xy(:,:) * RVec_bie(i_bie)
 
         END DO
         END DO
 
       END DO
 
-      Qmean(:) = Qmean(:) / sum(tab_WeightChannels)
+      Qmean(:)    = Qmean(:)    / sum(tab_WeightChannels)
+      Qmean2(:,:) = Qmean2(:,:) / sum(tab_WeightChannels)
 
 
       DO i_be=1,psi%nb_be
       DO i_bi=1,psi%nb_bi
         IF (tab_WeightChannels(i_bi,i_be) > ONETENTH**7) THEN
-          Qmean_ie(:,i_bi,i_be) = Qmean_ie(:,i_bi,i_be) /               &
-                                  tab_WeightChannels(i_bi,i_be)
+          Qmean_ie(:,i_bi,i_be)    = Qmean_ie(:,i_bi,i_be) /                    &
+                                     tab_WeightChannels(i_bi,i_be)
+          Qmean2_ie(:,:,i_bi,i_be) = Qmean2_ie(:,:,i_bi,i_be) /                 &
+                                     tab_WeightChannels(i_bi,i_be)
         ELSE
-          Qmean_ie(:,i_bi,i_be) = ZERO
+          Qmean_ie(:,i_bi,i_be)    = ZERO
+          Qmean2_ie(:,:,i_bi,i_be) = ZERO
         END IF
       END DO
       END DO
 
       DO i=1,psi%nb_act1
-          write(out_unitp,11) 'T iQbasis Qmean_ie ',info,T,i,Qmean_ie(i,:,:)
-          write(out_unitp,11) 'T iQbasis Qmean    ',info,T,i,Qmean(i)
+        write(out_unitp,11) 'T iQbasis Qmean_ie ',info,T,i,Qmean_ie(i,:,:)
+        write(out_unitp,11) 'T iQbasis Qmean    ',info,T,i,Qmean(i)
+        write(out_unitp,11) 'T iQbasis <Qi>_ie ',info,T,i,Qmean_ie(i,:,:)
+        write(out_unitp,11) 'T iQbasis <Qi>    ',info,T,i,Qmean(i)
       END DO
  11   format(2a,' ',f0.4,' ',i0,' ',100(' ',f0.3))
+      DO i=1,psi%nb_act1
+      DO j=i,psi%nb_act1
+        write(out_unitp,21) 'T iQbasis <Qi*Qj>_ie ',info,T,j,i,Qmean2_ie(j,i,:,:)
+        write(out_unitp,21) 'T iQbasis <Qi*Qj>    ',info,T,j,i,Qmean2(j,i)
+      END DO
+      END DO
+ 21   format(2a,' ',f0.4,' ',2(i0,' '),100(' ',f0.3))
       CALL flush_perso(out_unitp)
 
       CALL dealloc_OldParam(OldPara)
@@ -722,6 +752,13 @@ END SUBROUTINE sub_analyze_psi
         write(out_unitp,*) 'Qmean',Qmean
         DO i=1,psi%nb_act1
           write(out_unitp,*) 'Qmean_ie',i,Qmean_ie(i,:,:)
+        END DO
+        write(out_unitp,*) '<Qi*Qj>',Qmean2(:,:)
+        DO i=1,psi%nb_act1
+        DO j=i,psi%nb_act1
+          write(out_unitp,21) 'T iQbasis <Qi*Qj>_ie ',info,T,j,i,Qmean2_ie(j,i,:,:)
+          write(out_unitp,21) 'T iQbasis <Qi*Qj>    ',info,T,j,i,Qmean2(j,i)
+        END DO
         END DO
         write(out_unitp,*) 'END ',name_sub
       END IF
