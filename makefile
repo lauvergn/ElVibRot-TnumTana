@@ -12,7 +12,7 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -428,8 +428,8 @@ else
 endif
 #=================================================================================
 #=================================================================================
-LIBS := $(DIRLIB) $(QMLIB) $(PESLIB) $(ARPACKLIB) $(F90LIB)
-#LIBS := $(DIRLIB) $(QMLIB) $(dnSVMLIB) $(PESLIB) $(ARPACKLIB) $(F90LIB)
+#LIBS := $(DIRLIB) $(QMLIB) $(PESLIB) $(ARPACKLIB) $(F90LIB)
+LIBS := $(DIRLIB) $(QMLIB) $(dnSVMLIB) $(PESLIB) $(ARPACKLIB) $(F90LIB)
  LYNKFLAGS = $(LIBS)
 
 #=================================================================================
@@ -988,7 +988,7 @@ clean: clean_example clean_dnS
 #===============================================
 #===============================================
 #
-$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(QMLibDIR_full)
+$(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(QMLibDIR_full) $(dnSVMLibDIR_full)
 	@echo EVR-T
 	$(LYNK90)   -o $(VIBEXE) $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(LYNKFLAGS)
 #	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
