@@ -415,6 +415,71 @@
 
        RETURN
        end function poly_legendre
+       FUNCTION UNpoly_legendre(xx,lll,mmm)
+       USE mod_system
+       IMPLICIT NONE
+       real(kind=Rkind) :: UNpoly_legendre
+
+        real(kind=Rkind) x,xx
+
+        real(kind=Rkind) pmm,somx2,fact,pmmp1,pll,poly
+
+        integer l,ll,lll,m,mmm,i
+
+        l=lll-1
+        m=mmm
+
+        x = xx
+
+        IF (x .GT. ONE) x = TWO-x
+        IF (x .LT. -ONE) x = -TWO-x
+
+
+        IF (m < 0 .OR. l < 0 .OR. abs(x) > ONE) THEN
+          write(out_unitp,*) 'mauvais arguments dans UNpoly_legendre :'
+          write(out_unitp,*) ' m l : ',m,l,' et x = ',x
+          STOP
+        END IF
+
+        IF (m > l) THEN
+          UNpoly_legendre = ZERO
+          RETURN
+        END IF
+
+        pmm = ONE
+
+        IF (m .GT. 0) THEN
+          somx2 = sqrt(ONE - x*x)
+          fact = ONE
+          DO i=1,m
+            pmm = -pmm*fact*somx2
+            fact = fact+TWO
+          END DO
+        END IF
+
+
+        IF ( m .EQ. l) THEN
+          poly = pmm
+        ELSE
+          pmmp1 = x*real(2*m+1,kind=Rkind)*pmm
+          IF (l .EQ. m+1) THEN
+            poly = pmmp1
+          ELSE
+            DO ll=m+2,l
+
+              pll = (x*real(2*ll-1,kind=Rkind)*pmmp1-real(ll+m-1,kind=Rkind)*pmm) / &
+                     real(ll-m,kind=Rkind)
+              pmm=pmmp1
+              pmmp1=pll
+            END DO
+            poly = pll
+          END IF
+        END IF
+
+        UNpoly_legendre = poly
+
+        RETURN
+      end function UNpoly_legendre
 !===================================================
 !
 !   calcule la derivee d'un polynome de Legendre l,m
