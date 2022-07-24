@@ -149,7 +149,8 @@
 
 !      SUBROUTINE calc_Rot2CoordTransfo_new(dnQin,dnQout,Rot2CoordTransfo,   &
 !                                       nderiv,inTOout)
-!      USE mod_QML_dnS
+!      USE ADdnSVM_m
+
 !
 !        TYPE (Type_dnVec), intent(inout)              :: dnQin,dnQout
 !        TYPE (Type_Rot2CoordTransfo),pointer, intent(in) :: Rot2CoordTransfo(:)

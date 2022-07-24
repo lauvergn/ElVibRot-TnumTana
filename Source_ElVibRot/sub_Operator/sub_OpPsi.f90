@@ -390,17 +390,22 @@ CONTAINS
         ENDIF
 
         ELSE IF (Psi%cplx) THEN
+
           IF(keep_MPI) RCPsi = Psi
+
           IF(openmpi) THEN
             CALL sub_TabOpPsi_FOR_SGtype4_MPI(RCPsi,RCOpPsi,para_Op)
           ELSE
             CALL sub_TabOpPsi_FOR_SGtype4(RCPsi,RCOpPsi,para_Op)
+
           ENDIF
           IF(keep_MPI) OpPsi = RCOpPsi
+
           CALL dealloc_psi(RCPsi(1),  delete_all=.TRUE.)
           CALL dealloc_psi(RCPsi(2),  delete_all=.TRUE.)
           CALL dealloc_psi(RCOpPsi(1),delete_all=.TRUE.)
           CALL dealloc_psi(RCOpPsi(2),delete_all=.TRUE.)
+
         ELSE
           IF(openmpi) THEN
             CALL sub_TabOpPsi_FOR_SGtype4_MPI( (/Psi/) ,RROpPsi,para_Op)

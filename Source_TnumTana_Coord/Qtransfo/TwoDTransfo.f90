@@ -262,7 +262,8 @@
       END SUBROUTINE Write_TwoDTransfo
 
       SUBROUTINE calc_TwoDTransfo(dnQin,dnQout,TwoDTransfo,nderiv,inTOout)
-        USE mod_QML_dnS
+        USE ADdnSVM_m
+
         TYPE (Type_dnVec), intent(inout)              :: dnQin,dnQout
         TYPE (Type_TwoDTransfo),pointer, intent(in)   :: TwoDTransfo(:)
         integer, intent(in)                           :: nderiv
@@ -323,7 +324,7 @@
             CALL sub_dnVec_TO_dnS(dnQin,dnR,i2,nderiv)
 
             ! 100 (affine) =>    cte(1) * x + cte(2): => tR=R-2d0
-            cte(:) = ZERO
+            cte(:)   = ZERO
             cte(1:2) = [ONE,-TwoDTransfo(i)%Twod0]
             CALL sub_dnS1_TO_dntR2(dnR,dntR,100,nderiv,cte,dnErr)
 
@@ -360,16 +361,16 @@
            CALL sub_dnSt_TO_dnVec(dntho,dnQout,i1)
            CALL sub_dnSt_TO_dnVec(dnphio,dnQout,i2)
 
-           CALL QML_dealloc_dnS(dnthn)
-           CALL QML_dealloc_dnS(dnphin)
-           CALL QML_dealloc_dnS(dnXn)
-           CALL QML_dealloc_dnS(dnYn)
-           CALL QML_dealloc_dnS(dnZn)
-           CALL QML_dealloc_dnS(dntho)
-           CALL QML_dealloc_dnS(dnphio)
-           CALL QML_dealloc_dnS(dnXo)
-           CALL QML_dealloc_dnS(dnYo)
-           CALL QML_dealloc_dnS(dnZo)
+           CALL dealloc_dnS(dnthn)
+           CALL dealloc_dnS(dnphin)
+           CALL dealloc_dnS(dnXn)
+           CALL dealloc_dnS(dnYn)
+           CALL dealloc_dnS(dnZn)
+           CALL dealloc_dnS(dntho)
+           CALL dealloc_dnS(dnphio)
+           CALL dealloc_dnS(dnXo)
+           CALL dealloc_dnS(dnYo)
+           CALL dealloc_dnS(dnZo)
          CASE (-3) ! spherical
             i1 = TwoDTransfo(i)%list_TwoD_coord(1)
             i2 = TwoDTransfo(i)%list_TwoD_coord(2)
@@ -393,16 +394,16 @@
            CALL sub_dnSt_TO_dnVec(dntho,dnQout,i1)
            CALL sub_dnSt_TO_dnVec(dnphio,dnQout,i2)
 
-           CALL QML_dealloc_dnS(dncthn)
-           CALL QML_dealloc_dnS(dnphin)
-           CALL QML_dealloc_dnS(dnXn)
-           CALL QML_dealloc_dnS(dnYn)
-           CALL QML_dealloc_dnS(dnZn)
-           CALL QML_dealloc_dnS(dnctho)
-           CALL QML_dealloc_dnS(dnphio)
-           CALL QML_dealloc_dnS(dnXo)
-           CALL QML_dealloc_dnS(dnYo)
-           CALL QML_dealloc_dnS(dnZo)
+           CALL dealloc_dnS(dncthn)
+           CALL dealloc_dnS(dnphin)
+           CALL dealloc_dnS(dnXn)
+           CALL dealloc_dnS(dnYn)
+           CALL dealloc_dnS(dnZn)
+           CALL dealloc_dnS(dnctho)
+           CALL dealloc_dnS(dnphio)
+           CALL dealloc_dnS(dnXo)
+           CALL dealloc_dnS(dnYo)
+           CALL dealloc_dnS(dnZo)
 
           CASE default ! ERROR: wrong transformation !
             write(out_unitp,*) ' ERROR in ',name_sub
@@ -476,16 +477,16 @@
            CALL sub_dnSt_TO_dnVec(dnthn,dnQin,i1)
            CALL sub_dnSt_TO_dnVec(dnphin,dnQin,i2)
 
-           CALL QML_dealloc_dnS(dnthn)
-           CALL QML_dealloc_dnS(dnphin)
-           CALL QML_dealloc_dnS(dnXn)
-           CALL QML_dealloc_dnS(dnYn)
-           CALL QML_dealloc_dnS(dnZn)
-           CALL QML_dealloc_dnS(dntho)
-           CALL QML_dealloc_dnS(dnphio)
-           CALL QML_dealloc_dnS(dnXo)
-           CALL QML_dealloc_dnS(dnYo)
-           CALL QML_dealloc_dnS(dnZo)
+           CALL dealloc_dnS(dnthn)
+           CALL dealloc_dnS(dnphin)
+           CALL dealloc_dnS(dnXn)
+           CALL dealloc_dnS(dnYn)
+           CALL dealloc_dnS(dnZn)
+           CALL dealloc_dnS(dntho)
+           CALL dealloc_dnS(dnphio)
+           CALL dealloc_dnS(dnXo)
+           CALL dealloc_dnS(dnYo)
+           CALL dealloc_dnS(dnZo)
          CASE (-3) ! spherical
             i1 = TwoDTransfo(i)%list_TwoD_coord(1)
             i2 = TwoDTransfo(i)%list_TwoD_coord(2)
@@ -509,16 +510,16 @@
            CALL sub_dnSt_TO_dnVec(dnthn,dnQin,i1)
            CALL sub_dnSt_TO_dnVec(dnphin,dnQin,i2)
 
-           CALL QML_dealloc_dnS(dncthn)
-           CALL QML_dealloc_dnS(dnphin)
-           CALL QML_dealloc_dnS(dnXn)
-           CALL QML_dealloc_dnS(dnYn)
-           CALL QML_dealloc_dnS(dnZn)
-           CALL QML_dealloc_dnS(dnctho)
-           CALL QML_dealloc_dnS(dnphio)
-           CALL QML_dealloc_dnS(dnXo)
-           CALL QML_dealloc_dnS(dnYo)
-           CALL QML_dealloc_dnS(dnZo)
+           CALL dealloc_dnS(dncthn)
+           CALL dealloc_dnS(dnphin)
+           CALL dealloc_dnS(dnXn)
+           CALL dealloc_dnS(dnYn)
+           CALL dealloc_dnS(dnZn)
+           CALL dealloc_dnS(dnctho)
+           CALL dealloc_dnS(dnphio)
+           CALL dealloc_dnS(dnXo)
+           CALL dealloc_dnS(dnYo)
+           CALL dealloc_dnS(dnZo)
           CASE default ! ERROR: wrong transformation !
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) ' The type of TwoD transformation is UNKNOWN: ',TwoDTransfo%Type_2D

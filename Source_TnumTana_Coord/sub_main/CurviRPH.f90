@@ -229,6 +229,7 @@ implicit NONE
 
   IF (debug)  CALL check_gnew(d0g,alphaON,betaO)
   CALL make_JacON(JacON,alphaON,d1Qop)
+  CALL Write_Mat(JacON,out_unitp,5,name_info='JacON')
 
   !===========================================================================
   ! get the metric tensors

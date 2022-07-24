@@ -101,6 +101,7 @@ CONTAINS
       END IF
 
 !-----------------------------------------------------------
+
       IF (para_WP0%New_Read_WP0) THEN
         IF(keep_MPI) CALL sub_read_psi0(WP0,para_WP0,max_WP=1)
       ELSE
@@ -130,6 +131,8 @@ CONTAINS
             CALL psi0_gaussGridRep(WP0(1),para_WP0,mole)
           END IF
 
+
+
           IF (debug) THEN
             write(out_unitp,*) 'psiGridRep ini'
             CALL ecri_psi(ZERO,WP0(1),out_unitp,.TRUE.,.FALSE.)
@@ -139,6 +142,7 @@ CONTAINS
           IF(openmpi) CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
           write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
           CALL flush_perso(out_unitp)
+
 
           IF (WP0(1)%norm2 < ZERO) THEN
             write(out_unitp,*) 'WARNING norm2WP < 0',WP0(1)%norm2
@@ -160,6 +164,7 @@ CONTAINS
           IF (para_WP0%WP0BasisRep) THEN
 
             CALL sub_PsiGridRep_TO_BasisRep(WP0(1))
+
             IF(keep_MPI) CALL norm2_psi(WP0(1),BasisRep=.TRUE.)
             IF(openmpi) CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
             write(out_unitp,*) 'norm2WP BasisRep',WP0(1)%norm2
@@ -404,7 +409,6 @@ CONTAINS
       ELSE
         IF(keep_MPI) WP0%RvecG(:) = ZERO
       END IF
-
 
       DO i_qa=1,WP0%nb_qa
 

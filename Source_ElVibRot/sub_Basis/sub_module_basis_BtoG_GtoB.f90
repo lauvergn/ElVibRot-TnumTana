@@ -531,20 +531,25 @@
             !STOP 'SparseGrid_type=2'
 
           CASE (4) ! Sparse basis (Smolyak 4th implementation)
+
             CALL alloc_NParray(RVecB,shape(CVecB),'RVecB',name_sub)
 
             !!  RVecG TO SRep
             CALL alloc2_SmolyakRep(SRep,basis_set%para_SGType2%nDind_SmolyakRep,&
                                    basis_set%tab_basisPrimSG,grid=.TRUE.,       &
                                    nb0=basis_set%para_SGType2%nb0)
+
             IF(keep_MPI) CALL tabR2bis_TO_SmolyakRep1(SRep,real(CVecG,kind=Rkind)) ! on the grid
+
             IF (allocated(basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
               CALL GSmolyakRep_TO_BSmolyakRep(SRep,                        &
                         basis_set%para_SGType2%nDind_SmolyakRep%Tab_nDval, &
                         basis_set%tab_basisPrimSG,basis_set%para_SGType2%nb0)
+
             ELSE
               CALL GSmolyakRep_TO3_BSmolyakRep(SRep,basis_set%para_SGType2,&
                                                basis_set%tab_basisPrimSG)
+
             END IF
 
             CALL SmolyakRepBasis_TO_tabPackedBasis(SRep,RVecB,          &

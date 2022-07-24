@@ -143,7 +143,7 @@ MODULE mod_RW_MatVec
         character (len=*), optional :: Rformat
         character (len=*), optional :: name_info
 
-        integer, intent(in)         :: nio,nbcol1
+        integer,          intent(in) :: nio,nbcol1
         real(kind=Rkind), intent(in) :: f(:,:)
 
         integer         :: nl,nc

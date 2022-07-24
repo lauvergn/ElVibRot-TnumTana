@@ -3942,7 +3942,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
 
 
         IF (Grid) THEN
-          Srep_w = Set_weight_TO_SmolyakRep(                            &
+          CALL Set_weight_TO_SmolyakRep(Srep_w,                       &
              para_Op%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval, &
              para_Op%BasisnD%tab_basisPrimSG)
         END IF
@@ -4094,12 +4094,10 @@ END SUBROUTINE sub_MatOp_direct2_v0
 
         CALL tabR2bis_TO_SmolyakRep1(SRep_V,para_Op%OpGrid(1)%Grid(:,1,1))
 
-        Srep_w = Set_weight_TO_SmolyakRep(                            &
+        CALL Set_weight_TO_SmolyakRep(Srep_w,                           &
              para_Op%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval, &
-             para_Op%BasisnD%tab_basisPrimSG) * SRep_V
-
-
-
+             para_Op%BasisnD%tab_basisPrimSG)
+        Srep_w = Srep_w * SRep_V
 
         DO i=1,para_Op%nb_tot
           psi%RvecB(:)   = ZERO

@@ -122,6 +122,7 @@
 
 !para_mem%mem_debug=.TRUE.
 
+
 !---------------------------------------------------------------------------------------
 !=====================================================================
       write(out_unitp,*) '================================================='
@@ -138,6 +139,7 @@
       write(out_unitp,*)
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' VIB: BEGINNING ini_data'
+      CALL write_mem_file('ini_data ini')
       CALL time_perso('ini_data ini')
       write(out_unitp,*)
 
@@ -153,6 +155,7 @@
 
       write(out_unitp,*)
       CALL time_perso('ini_data end')
+      CALL write_mem_file('ini_data end')
       write(out_unitp,*)
       write(out_unitp,*) ' VIB: END ini_data'
       write(out_unitp,*) '================================================='
@@ -173,6 +176,7 @@
       write(out_unitp,*)
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' VIB: BEGINNING sub_qa_bhe'
+      CALL write_mem_file('sub_qa_bhe ini')
       CALL time_perso('sub_qa_bhe ini')
       write(out_unitp,*)
 
@@ -203,6 +207,7 @@
 
       write(out_unitp,*)
       CALL time_perso('sub_qa_bhe end')
+      CALL write_mem_file('sub_qa_bhe end')
       write(out_unitp,*) ' VIB: END sub_qa_bhe'
       write(out_unitp,*) '================================================='
       write(out_unitp,*)
@@ -220,7 +225,8 @@
           write(out_unitp,*) '================================================='
           write(out_unitp,*) ' VIB: BEGINNING HADA contraction',          &
                                    para_AllBasis%BasisnD%nb
-          CALL time_perso('HADA contraction')
+          CALL write_mem_file('HADA contraction ini')
+          CALL time_perso('HADA contraction ini')
           write(out_unitp,*)
           write(out_unitp,*)
         ENDIF
@@ -231,7 +237,8 @@
         IF(MPI_id==0) THEN
           write(out_unitp,*)
           write(out_unitp,*)
-          CALL time_perso('HADA contraction')
+          CALL time_perso('HADA contraction end')
+          CALL write_mem_file('HADA contraction end')
           write(out_unitp,*) ' VIB: END HADA contraction'
           write(out_unitp,*) '================================================='
           write(out_unitp,*)
@@ -251,6 +258,7 @@
 !       => Time-dependent calculation
 !---------------------------------------------------------------------------------------
         write(out_unitp,*) 'Propogation start'
+        CALL write_mem_file('psi0 ini')
 
         CALL init_psi(WP0(1),para_H,cplx=.TRUE.)
         write(out_unitp,*) 'Propogation initialized'
@@ -342,6 +350,7 @@
           IF(MPI_id==0) THEN
             write(out_unitp,*)
             CALL time_perso('psi0 end')
+            CALL write_mem_file('psi0 end')
             write(out_unitp,*) ' VIB: END Generate Psi0'
             write(out_unitp,*) '================================================='
             write(out_unitp,*)
@@ -355,7 +364,9 @@
         !===== Tune the number of threads (for SG4) =====================
         !================================================================
         ! for only one WP (complex)
+        CALL write_mem_file('Tune_SG4threads_HPsi end')
         CALL Tune_SG4threads_HPsi(.TRUE.,1,para_H)
+        CALL write_mem_file('Tune_SG4threads_HPsi end')
 
         !================================================================
         !================================================================
@@ -367,7 +378,8 @@
           write(out_unitp,*)
           write(out_unitp,*) '================================================='
           write(out_unitp,*) ' VIB: BEGINNING sub_matOp',para_H%nb_tot
-          CALL time_perso('sub_matOp: H and S')
+          CALL write_mem_file('sub_matOp: H and S ini')
+          CALL time_perso('sub_matOp: H and S ini')
           write(out_unitp,*) 'para_S...%comput_S',para_AllOp%tab_Op(2)%para_ReadOp%comput_S
           write(out_unitp,*)
 
@@ -388,7 +400,8 @@
           IF(MPI_id==0) THEN
             write(out_unitp,*)
             write(out_unitp,*)
-            CALL time_perso('sub_matOp: H and S')
+            CALL time_perso('sub_matOp: H and S end')
+            CALL write_mem_file('sub_matOp: H and S end')
             write(out_unitp,*) ' VIB: END sub_matOp'
             write(out_unitp,*) '================================================='
             write(out_unitp,*)
@@ -398,7 +411,8 @@
             write(out_unitp,*)
             write(out_unitp,*) '================================================='
             write(out_unitp,*) ' VIB: BEGINNING Spectral Representation',para_H%nb_tot
-            CALL time_perso('Spectral: All Op')
+            CALL write_mem_file('Spectral: All Op ini')
+            CALL time_perso('Spectral: All Op ini')
             write(out_unitp,*)
           ENDIF
 
@@ -435,6 +449,7 @@
           IF(MPI_id==0) THEN
             write(out_unitp,*)
             CALL time_perso('Spectral: All Op')
+            CALL write_mem_file('Spectral: All Op end')
             write(out_unitp,*) ' VIB: END Spectral Representation'
             write(out_unitp,*) '================================================='
             write(out_unitp,*)
@@ -449,7 +464,9 @@
         write(out_unitp,*)
         write(out_unitp,*) '================================================'
         write(out_unitp,*) ' VIB: Hmax and Hmin calculation'
+        CALL write_mem_file('sub_Hmax ini')
         CALL time_perso('sub_Hmax ini')
+
         write(out_unitp,*)
         write(out_unitp,*)
 
@@ -468,6 +485,7 @@
 
         write(out_unitp,*)
         CALL time_perso('sub_Hmax end')
+        CALL write_mem_file('sub_Hmax end')
         write(out_unitp,*) ' VIB: END Hmax and Hmin calculation'
         write(out_unitp,*) '================================================'
         write(out_unitp,*)
@@ -484,7 +502,8 @@
             write(out_unitp,*) '================================================'
             write(out_unitp,*) ' VIB: control'
             write(out_unitp,*) ' VIB: propagation'
-            CALL time_perso('sub_control')
+            CALL write_mem_file('sub_control ini')
+            CALL time_perso('sub_control ini')
             write(out_unitp,*)
             write(out_unitp,*)
           ENDIF
@@ -495,7 +514,8 @@
           IF(MPI_id==0) THEN
             write(out_unitp,*)
             write(out_unitp,*)
-            CALL time_perso('sub_control')
+            CALL time_perso('sub_control end')
+            CALL write_mem_file('sub_control end')
             write(out_unitp,*) ' VIB: END control'
             write(out_unitp,*) '================================================'
             write(out_unitp,*)
@@ -506,6 +526,7 @@
             write(out_unitp,*)
             write(out_unitp,*) '================================================'
             write(out_unitp,*) ' VIB: propagation'
+            CALL write_mem_file('sub_propagation ini')
             CALL time_perso('sub_propagation ini')
             write(out_unitp,*)
             write(out_unitp,*)
@@ -517,6 +538,7 @@
             write(out_unitp,*)
             write(out_unitp,*)
             CALL time_perso('sub_propagation end')
+            CALL write_mem_file('sub_propagation end')
             write(out_unitp,*) ' VIB: END propagation'
             write(out_unitp,*) '================================================'
             write(out_unitp,*)
@@ -538,9 +560,11 @@
         !================================================================
         !===== Tune the number of threads (for SG4) =====================
         !================================================================
+        CALL write_mem_file('Tune_SG4threads_HPsi ini')
         max_diago = max(10,para_propa%para_Davidson%nb_WP,para_H%nb_tot/10)
         max_diago = min(max_diago,10,para_H%nb_tot)
         CALL Tune_SG4threads_HPsi(para_H%cplx,max_diago,para_H)
+        CALL write_mem_file('Tune_SG4threads_HPsi end')
 
         !================================================================
         !===== build S and/or H if necessary ============================
@@ -550,6 +574,7 @@
             write(out_unitp,*)
             write(out_unitp,*) '================================================='
             write(out_unitp,*) ' VIB: BEGINNING sub_matOp',para_H%nb_tot
+            CALL write_mem_file('sub_matOp: H and S ini')
             CALL time_perso('sub_matOp: H and S')
             write(out_unitp,*)
             write(out_unitp,*) 'para_S...%comput_S',para_AllOp%tab_Op(2)%para_ReadOp%comput_S
@@ -574,6 +599,7 @@
             write(out_unitp,*)
             write(out_unitp,*)
             CALL time_perso('sub_matOp: H and S')
+            CALL write_mem_file('sub_matOp: H and S end')
             write(out_unitp,*) ' VIB: END sub_matOp'
             write(out_unitp,*) '================================================='
             write(out_unitp,*)
@@ -590,6 +616,7 @@
             write(out_unitp,*)
             write(out_unitp,*) '================================================'
             write(out_unitp,*) ' VIB: Hmax and Hmin calculation'
+            CALL write_mem_file('sub_Hmax ini2')
             CALL time_perso('sub_Hmax ini2')
             write(out_unitp,*)
             write(out_unitp,*)
@@ -603,6 +630,7 @@
             write(out_unitp,*)
             write(out_unitp,*)
             CALL time_perso('sub_Hmax end2')
+            CALL write_mem_file('sub_Hmax end2')
             write(out_unitp,*) ' VIB: END Hmax and Hmin calculation'
             write(out_unitp,*) '================================================'
             write(out_unitp,*)

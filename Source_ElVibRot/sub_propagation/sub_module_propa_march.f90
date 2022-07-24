@@ -1888,6 +1888,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
       tab_KrylovSpace(1) = psi
 
+
       IF (para_propa%nb_micro > 1) THEN
         psi0_psiKrylovSpace(:) = CZERO
         psi0_psiKrylovSpace(1) = Calc_AutoCorr(psi0,tab_KrylovSpace(1),         &
@@ -1901,6 +1902,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         IF (debug) write(out_unitp,*) 'in ',name_sub,' it:',j-1
         CALL sub_OpPsi(Psi  =tab_KrylovSpace(j-1),                              &
                        OpPsi=tab_KrylovSpace(j),para_Op=para_H)
+
         IF (j == 2) THEN
           ! Energy shift, E0, calculation for the first iteration.
           ! since E0=<psi |H| psi> = <tab_KrylovSpace(1) |H|tab_KrylovSpace(1)> =
@@ -1909,6 +1911,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
           ! => But the phase need to be taking into account at the end of the iterations.
           CALL Overlap_psi1_psi2(Overlap,tab_KrylovSpace(1),tab_KrylovSpace(2))
           E0 = real(Overlap,kind=Rkind)
+
         END IF
         CALL sub_scaledOpPsi(Psi  =tab_KrylovSpace(j-1),                &
                              OpPsi=tab_KrylovSpace(j),E0=E0,Esc=ONE)
@@ -1994,6 +1997,8 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       phase = E0*para_propa%WPdeltaT
       psi   = psi * exp(-EYE*phase)
 
+
+
       !- autocorelation -----------------
       IF (para_propa%nb_micro > 1) THEN
         microdeltaT = para_propa%WPdeltaT/real(para_propa%nb_micro,kind=Rkind)
@@ -2028,6 +2033,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       IF (allocated(Vec))          CALL dealloc_NParray(Vec,'Vec',name_sub)
       IF (allocated(Eig))          CALL dealloc_NParray(Eig,'Eig',name_sub)
       IF (allocated(UPsiOnKrylov)) CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
+
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -2484,7 +2490,6 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       END IF
 !-----------------------------------------------------------
      BasisnD => psi%BasisnD
-
 
       RCPsi  = psi
       !RCPsi0 = psi0

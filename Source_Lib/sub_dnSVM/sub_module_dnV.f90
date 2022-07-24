@@ -509,7 +509,7 @@ MODULE mod_dnV
       !!@description: TODO
       !!@param: TODO
      SUBROUTINE sub_dnVec_TO_dnSt(dnVec,dnS,iVec)
-     USE mod_QML_dnS
+     USE ADdnSVM_m
 
        TYPE (Type_dnVec) :: dnVec
        TYPE (dnS_t)      :: dnS
@@ -528,24 +528,19 @@ MODULE mod_dnV
 
        SELECT CASE (dnVec%nderiv)
        CASE (0)
-         CALL QML_set_dnS(dnS,dnVec%d0(iVec))
+         CALL set_dnS(dnS,dnVec%d0(iVec))
        CASE (1)
-         CALL QML_set_dnS(dnS,dnVec%d0(iVec),     &
-                              dnVec%d1(iVec,:))
+         CALL set_dnS(dnS,dnVec%d0(iVec),dnVec%d1(iVec,:))
        CASE (2)
-         CALL QML_set_dnS(dnS,dnVec%d0(iVec),     &
-                              dnVec%d1(iVec,:),   &
-                              dnVec%d2(iVec,:,:))
+         CALL set_dnS(dnS,dnVec%d0(iVec),dnVec%d1(iVec,:),dnVec%d2(iVec,:,:))
        CASE (3)
-         CALL QML_set_dnS(dnS,dnVec%d0(iVec),     &
-                              dnVec%d1(iVec,:),   &
-                              dnVec%d2(iVec,:,:), &
-                              dnVec%d3(iVec,:,:,:))
+         CALL set_dnS(dnS,dnVec%d0(iVec),dnVec%d1(iVec,:),dnVec%d2(iVec,:,:),   &
+                      dnVec%d3(iVec,:,:,:))
        END SELECT
 
      END SUBROUTINE sub_dnVec_TO_dnSt
      SUBROUTINE sub_dnSt_TO_dnVec(dnS,dnVec,iVec)
-     USE mod_QML_dnS
+     USE ADdnSVM_m
 
        TYPE (Type_dnVec) :: dnVec
        TYPE (dnS_t)      :: dnS
@@ -554,8 +549,8 @@ MODULE mod_dnV
        integer           :: nderiv,nb_var_deriv
        character (len=*), parameter :: name_sub='sub_dnSt_TO_dnVec'
 
-       nb_var_deriv = QML_get_ndim_FROM_dnS(dnS)
-       nderiv       = QML_get_nderiv_FROM_dnS(dnS)
+       nb_var_deriv = get_nVar(dnS)
+       nderiv       = get_nderiv(dnS)
 
        CALL check_alloc_dnVec(dnVec,'dnVec',name_sub)
 
@@ -579,18 +574,13 @@ MODULE mod_dnV
 
        SELECT CASE (nderiv)
        CASE (0)
-         CALL QML_sub_get_dn_FROM_dnS(dnS,dnVec%d0(iVec))
+         CALL sub_get_dn(dnS,dnVec%d0(iVec))
        CASE (1)
-         CALL QML_sub_get_dn_FROM_dnS(dnS,dnVec%d0(iVec),     &
-                                          dnVec%d1(iVec,:))
+         CALL sub_get_dn(dnS,dnVec%d0(iVec),dnVec%d1(iVec,:))
        CASE (2)
-         CALL QML_sub_get_dn_FROM_dnS(dnS,dnVec%d0(iVec),     &
-                                          dnVec%d1(iVec,:),   &
-                                          dnVec%d2(iVec,:,:))
+         CALL sub_get_dn(dnS,dnVec%d0(iVec),dnVec%d1(iVec,:),dnVec%d2(iVec,:,:))
        CASE (3)
-         CALL QML_sub_get_dn_FROM_dnS(dnS,dnVec%d0(iVec),     &
-                                          dnVec%d1(iVec,:),   &
-                                          dnVec%d2(iVec,:,:), &
+         CALL sub_get_dn(dnS,dnVec%d0(iVec),dnVec%d1(iVec,:),dnVec%d2(iVec,:,:),&
                                           dnVec%d3(iVec,:,:,:))
        END SELECT
 

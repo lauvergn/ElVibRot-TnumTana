@@ -12,7 +12,7 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -96,6 +96,7 @@ QMLIB := -L$(QMLibDIR) -lQMLib
 QMLibDIR_full := $(QMLibDIR)/libQMLib.a
 
 # dnSVM Lib
+#dnSVMLibDIR := /Users/lauvergn/git/AD_dnSVM
 dnSVMLibDIR := $(ExternalLibDIR)/dnSVMLib
 dnSVMLIB := -L$(dnSVMLibDIR) -lAD_dnSVM
 dnSVMLibDIR_full := $(dnSVMLibDIR)/libAD_dnSVM.a
@@ -578,9 +579,7 @@ Obj_io = $(OBJ)/sub_io.o
 
 # dnSVM, Minimize Only list: OK
 # USE mod_dnSVM
-# mod_dnS is a new version developped for QML
 Obj_dnSVM = \
-  $(OBJ)/mod_dnS.o \
   $(OBJ)/sub_module_dnS.o $(OBJ)/sub_module_VecOFdnS.o $(OBJ)/sub_module_MatOFdnS.o \
   $(OBJ)/sub_module_dnV.o $(OBJ)/sub_module_dnM.o $(OBJ)/sub_module_IntVM.o \
   $(OBJ)/sub_module_dnSVM.o
@@ -630,7 +629,7 @@ Obj_Coord = \
   $(OBJ)/OneDTransfo.o $(OBJ)/ThreeDTransfo.o $(OBJ)/TwoDTransfo.o $(OBJ)/Rot2CoordTransfo.o \
   $(OBJ)/FlexibleTransfo.o $(OBJ)/GeneTransfo.o \
   $(OBJ)/HyperSpheTransfo.o $(OBJ)/LinearNMTransfo.o $(OBJ)/RectilinearNM_Transfo.o \
-  $(OBJ)/sub_freq.o $(OBJ)/RPHTransfo.o $(OBJ)/ProjectTransfo.o \
+  $(OBJ)/sub_freq.o $(OBJ)/RPHTransfo.o $(OBJ)/RPHQMLTransfo.o $(OBJ)/ProjectTransfo.o \
   $(OBJ)/ActiveTransfo.o $(OBJ)/Qtransfo.o \
   $(OBJ)/Calc_Tab_dnQflex.o
 
@@ -900,11 +899,13 @@ endif
 #===============================================
 #
 # QML
+QMLMODFILE= OBJ/adiachannels_basis_m.mod OBJ/irc_m.mod OBJ/opt_m.mod OBJ/model_m.mod
+
 .PHONY: qml QML
 qml QML: $(QMLibDIR) $(QMLibDIR_full)
 	@echo "make qml library"
 $(QMLibDIR_full): $(QMLibDIR)
-	cd $(QMLibDIR) ; make
+	cd $(QMLibDIR) ; make ; cp $(QMLMODFILE) $(OBJ)
 $(QMLibDIR):
 	cd $(ExternalLibDIR) ; ./get_QML.sh
 	test -d $(QMLibDIR) || exit 1
@@ -916,8 +917,8 @@ clean_qml clean_QML:
 #
 #dnSMODFILE= $(dnSVMLibDIR)/OBJ/addnsvm_m.mod $(dnSVMLibDIR)/OBJ/addnsvm_dns_m.mod \
 #            $(dnSVMLibDIR)/OBJ/addnsvm_dnmat_m.mod $(dnSVMLibDIR)/OBJ/addnsvm_dnpoly_m.mod
-dnSMODFILE= OBJ/addnsvm_m.mod OBJ/addnsvm_dns_m.mod \
-            OBJ/addnsvm_dnmat_m.mod OBJ/addnsvm_dnpoly_m.mod
+dnSMODFILE= OBJ/addnsvm_m.mod OBJ/addnsvm_dns_m.mod OBJ/addnsvm_dns_op_m.mod \
+            OBJ/addnsvm_dnmat_m.mod OBJ/addnsvm_dnpoly_m.mod OBJ/addnsvm_dnfunc_m.mod
 .PHONY: dns dnS
 dns dnS: $(dnSVMLibDIR) $(dnSVMLibDIR_full)
 	@echo "make dnS library"
@@ -994,30 +995,30 @@ $(VIBEXE): obj $(Obj_EVRT) $(OBJ)/$(VIBMAIN).o $(QMLibDIR_full) $(dnSVMLibDIR_fu
 #	if test $(F90) = "pgf90" ; then mv $(VIBEXE) $(VIBEXE)2 ; echo "export OMP_STACKSIZE=50M" > $(VIBEXE) ; echo $(DIR_EVRT)/$(VIBEXE)2 >> $(VIBEXE) ; chmod a+x $(VIBEXE) ; fi
 #===============================================
 #
-$(OBJ)/libTnum.a: obj $(Obj_KEO_PrimOp) $(QMLibDIR_full)
+$(OBJ)/libTnum.a: obj $(Obj_KEO_PrimOp) $(QMLibDIR_full) $(dnSVMLibDIR_full)
 	ar cr $(OBJ)/libTnum.a   $(Obj_KEO_PrimOp)
-$(OBJ)/libEVR.a:obj $(Obj_EVRT) $(OBJ)/EVR_Module.o $(OBJ)/EVR_driver.o $(QMLibDIR_full)
+$(OBJ)/libEVR.a:obj $(Obj_EVRT) $(OBJ)/EVR_Module.o $(OBJ)/EVR_driver.o $(QMLibDIR_full) $(dnSVMLibDIR_full)
 	ar cr $(OBJ)/libEVR.a $(Obj_EVRT)  $(OBJ)/EVR_Module.o $(OBJ)/EVR_driver.o
 $(KEOTESTEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(KEOTEST).o
 	$(LYNK90)   -o $(KEOTESTEXE) $(OBJ)/$(KEOTEST).o $(OBJ)/libTnum.a $(LYNKFLAGS)
 
 #Main_TnumTana_FDriver
 $(Main_TnumTana_FDriverEXE): obj $(OBJ)/libTnum.a  $(OBJ)/Main_TnumTana_FDriver.o
-	$(LYNK90)   -o $(Main_TnumTana_FDriverEXE) $(OBJ)/Main_TnumTana_FDriver.o $(OBJ)/libTnum.a $(LYNKFLAGS)
+	$(LYNK90)   -o $(Main_TnumTana_FDriverEXE) $(OBJ)/Main_TnumTana_FDriver.o $(OBJ)/libTnum.a $(LYNKFLAGS) $(dnSVMLIB)
 $(Main_TnumTana_cDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_cDriver.o
 	cp $(OBJ)/libTnum.a $(OBJ)/libTnumForcDriver.a
 	ar d $(OBJ)/libTnumForcDriver.a sub_integration.o
-	$(CompC) -o $(Main_TnumTana_cDriverEXE) $(CFLAGS) $(OBJ)/Main_TnumTana_cDriver.o $(OBJ)/libTnumForcDriver.a $(LYNKFLAGS) -lgfortran -lm
+	$(CompC) -o $(Main_TnumTana_cDriverEXE) $(CFLAGS) $(OBJ)/Main_TnumTana_cDriver.o $(OBJ)/libTnumForcDriver.a $(LYNKFLAGS) $(dnSVMLIB) -lgfortran -lm
 #
 $(TNUMEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMAIN).o
-	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS)
+	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS) $(dnSVMLIB)
 #
 $(TNUMMCTDHEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMCTDHMAIN).o
-	$(LYNK90)   -o $(TNUMMCTDHEXE) $(OBJ)/$(TNUMMCTDHMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS)
+	$(LYNK90)   -o $(TNUMMCTDHEXE) $(OBJ)/$(TNUMMCTDHMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS) $(dnSVMLIB)
 # TNUM_MiddasCppEXE  = Tnum90_MidasCpp.exe
 # TNUM_MiddasCppMAIN = Tnum90_MidasCpp
 $(TNUM_MiddasCppEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUM_MiddasCppMAIN).o
-	$(LYNK90)   -o $(TNUM_MiddasCppEXE) $(OBJ)/$(TNUM_MiddasCppMAIN).o  $(OBJ)/libTnum.a $(LYNKFLAGS)
+	$(LYNK90)   -o $(TNUM_MiddasCppEXE) $(OBJ)/$(TNUM_MiddasCppMAIN).o  $(OBJ)/libTnum.a $(LYNKFLAGS) $(dnSVMLIB)
 #
 $(GWPEXE): obj $(Obj_All) $(OBJ)/$(GWPMAIN).o
 	$(LYNK90)   -o $(GWPEXE) $(Obj_All) $(OBJ)/$(GWPMAIN).o  $(LYNKFLAGS)
@@ -1061,15 +1062,13 @@ $(OBJ)/sub_module_DInd.o:$(DirnDind)/sub_module_DInd.f90
 $(OBJ)/sub_module_nDindex.o:$(DirnDind)/sub_module_nDindex.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirnDind)/sub_module_nDindex.f90
 ###
-$(OBJ)/mod_dnS.o:$(DirdnSVM)/mod_dnS.f90
-	cd $(OBJ) ; $(F90_FLAGS) $(CPPpre) $(CPPSHELL_INVHYP)  -c $(DirdnSVM)/mod_dnS.f90
 $(OBJ)/sub_module_dnS.o:$(DirdnSVM)/sub_module_dnS.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnS.f90
 $(OBJ)/sub_module_VecOFdnS.o:$(DirdnSVM)/sub_module_VecOFdnS.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_VecOFdnS.f90
 $(OBJ)/sub_module_MatOFdnS.o:$(DirdnSVM)/sub_module_MatOFdnS.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_MatOFdnS.f90
-$(OBJ)/sub_module_dnV.o:$(DirdnSVM)/sub_module_dnV.f90
+$(OBJ)/sub_module_dnV.o:$(DirdnSVM)/sub_module_dnV.f90 $(dnSVMLibDIR_full)
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnV.f90
 $(OBJ)/sub_module_dnM.o:$(DirdnSVM)/sub_module_dnM.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirdnSVM)/sub_module_dnM.f90
@@ -1146,6 +1145,8 @@ $(OBJ)/RectilinearNM_Transfo.o:$(DirTNUM)/Qtransfo/RectilinearNM_Transfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/RectilinearNM_Transfo.f90
 $(OBJ)/RPHTransfo.o:$(DirTNUM)/Qtransfo/RPHTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/RPHTransfo.f90
+$(OBJ)/RPHQMLTransfo.o:$(DirTNUM)/Qtransfo/RPHQMLTransfo.f90
+	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/RPHQMLTransfo.f90
 $(OBJ)/ActiveTransfo.o:$(DirTNUM)/Qtransfo/ActiveTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/ActiveTransfo.f90
 $(OBJ)/Qtransfo.o:$(DirTNUM)/Qtransfo/Qtransfo.f90

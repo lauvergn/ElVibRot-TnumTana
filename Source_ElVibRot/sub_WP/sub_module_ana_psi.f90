@@ -2577,9 +2577,10 @@ END SUBROUTINE Channel_weight_SG4_grid
     STOP 'ERROR in Channel_weight_SG4_grid: psi%GridRep=F'
   END IF
 
-   WSRep = Set_weight_TO_SmolyakRep(                                   &
-                 psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
-                 psi%BasisnD%tab_basisPrimSG)
+  CALL Set_weight_TO_SmolyakRep(WSRep,                                          &
+                          psi%BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval,  &
+                          psi%BasisnD%tab_basisPrimSG)
+
    !write(out_unitp,*) 'Weight'
    !CALL Write_SmolyakRep(WSRep)
 
@@ -2636,7 +2637,6 @@ END SUBROUTINE Channel_weight_SG4_grid
    ELSE
      ! psi almost in the right Smolyak representation.
      iq = 0
-     ! DO iG=lbound(WSRep%SmolyakRep,dim=1),ubound(WSRep%SmolyakRep,dim=1)
      DO iG=d1,d2
        nq_AT_iG = psi%BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
 
@@ -2663,6 +2663,7 @@ END SUBROUTINE Channel_weight_SG4_grid
   ENDIF
 
   CALL dealloc_SmolyakRep(WSRep)
+
 !------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels

@@ -22,7 +22,6 @@
 !===========================================================================
 MODULE mod_dnS
       use mod_system
-      !USE mod_QML_dnS
       IMPLICIT NONE
 
       PRIVATE

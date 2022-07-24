@@ -2136,14 +2136,21 @@ CONTAINS
         DO i=1,size(Q)
            ! read the first word: it can be the variable name or its value
            CALL read_name_advNo(in_unitp,Read_name,err_io)
+           !write(6,*) i,'Read_name: ',Read_name
            ! try to read its value
            read(Read_name,*,IOSTAT=err_ioQ) Q(i)
+           !write(6,*) i,'Read_name: ',Read_name,'err_ioQ',err_ioQ
+
            IF (err_ioQ /= 0) THEN ! an error, it should be the variable name or a true error
              name_Q(i) = trim(adjustl(Read_name))
 
+             !write(6,*) i,'name_Q(i): ',name_Q(i)
+
              !now we read the value
              CALL read_name_advNo(in_unitp,Read_name,err_io)
+             !write(6,*) i,'Read_name: ',Read_name
              read(Read_name,*,IOSTAT=err_ioQ) Q(i)
+             !write(6,*) i,'Read_name: ',Read_name,'err_ioQ',err_ioQ ; flush(6)
              IF (err_ioQ /= 0) THEN
                write(out_unitp,*) ' ERROR in ',name_sub
                write(out_unitp,*) '  while reading the curvilinear reference geometry '

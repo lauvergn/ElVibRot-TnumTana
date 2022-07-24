@@ -171,6 +171,7 @@ CONTAINS
       END IF
 
 
+
       CALL Write_ana_psi(para_propa%ana_psi)
 
       SELECT CASE (para_propa%type_WPpropa)
@@ -272,6 +273,7 @@ CONTAINS
 
       CALL dealloc_psi(WP(1),delete_all=.TRUE.)
       nullify(para_H)
+
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -850,28 +852,6 @@ CONTAINS
       write(out_unitp,*) ' vib : propagation: ',para_propa%name_WPpropa
       CALL flush_perso(out_unitp)
 
-!     - parameters for poly (cheby and nOD) ... ------------
-!#if(run_MPI)
-!      !CALL initialisation1_poly(para_propa%para_poly,                   &
-!      !                          para_propa%WPdeltaT,                    &
-!      !                          para_propa%type_WPpropa)
-!
-!!     - scaling of H ---------------------------------------
-!      !para_H%scaled = .TRUE.
-!      !para_H%E0     = para_propa%para_poly%E0
-!      !para_H%Esc    = para_propa%para_poly%Esc
-!!-----------------------------------------------------------
-!#else
-!      CALL initialisation1_poly(para_propa%para_poly,                   &
-!                                para_propa%WPdeltaT,                    &
-!                                para_propa%type_WPpropa)
-!!     - scaling of H ---------------------------------------
-!      para_H%scaled = .TRUE.
-!      para_H%E0     = para_propa%para_poly%E0
-!      para_H%Esc    = para_propa%para_poly%Esc
-!!-----------------------------------------------------------
-!#endif
-
       !IF(.NOT. openmpi) THEN
       IF(.NOT. (para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4)) THEN
         CALL initialisation1_poly(para_propa%para_poly,                   &
@@ -884,6 +864,7 @@ CONTAINS
       ENDIF
       write(out_unitp,*) 'npoly',para_propa%para_poly%npoly
 !------- propagation loop ---------------------------------
+
       T = ZERO
       IF (para_propa%restart) THEN
         CALL ReadWP_restart(T,psi,para_propa%file_WP_restart)

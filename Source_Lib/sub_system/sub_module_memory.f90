@@ -27,24 +27,27 @@
       PRIVATE
 
       TYPE param_memory
-        integer (kind=ILkind)       :: max_mem      =  4000000000_ILkind/Rkind   ! (8GO) max_memory
+        integer (kind=ILkind)           :: max_mem      =  4000000000_ILkind/Rkind   ! (8GO) max_memory
 
-        integer (kind=ILkind)       :: max_mem_used =  0   ! the maximal memory used
-        integer (kind=ILkind)       :: mem_tot      =  0   ! memory used
-        integer (kind=ILkind)       :: memory       =  0   ! asked memory
+        integer (kind=ILkind)           :: max_mem_used =  0   ! the maximal memory used
+        integer (kind=ILkind)           :: mem_tot      =  0   ! memory used
+        integer (kind=ILkind)           :: memory       =  0   ! asked memory
 
-        integer                     :: nb_alloc     =  0   ! nb of allocations
-        integer                     :: nb_dealloc   =  0   ! nb of deallocations
+        integer                         :: nb_alloc     =  0   ! nb of allocations
+        integer                        :: nb_dealloc   =  0   ! nb of deallocations
 
-        logical                     :: mem_debug    = .FALSE.
-        logical                     :: mem_print    = .FALSE.
+        logical                         :: mem_debug    = .FALSE.
+        logical                         :: mem_print    = .FALSE.
+
+        integer                         :: mem_unit     = -1
+        character (len=:), allocatable  :: mem_file
 
       END TYPE param_memory
 
       TYPE (param_memory), save, public :: para_mem
 
       PUBLIC :: param_memory
-      PUBLIC :: Write_error_NOT_null, Write_error_null, Write_mem_tot
+      PUBLIC :: Write_error_NOT_null, Write_error_null, Write_mem_tot,Write_mem_file
       PUBLIC :: sub_test_tab_ub, sub_test_tab_lb, sub_test_Bigtab_ub, sub_test_Bigtab_lb
       PUBLIC :: Check_mem, UnCheck_mem
       PUBLIC :: error_memo_allo, error_lmemo_allo
@@ -250,17 +253,16 @@
       IF (.NOT. debug .AND. .NOT. para_mem%mem_debug) RETURN
 
 !$OMP CRITICAL (error_memo_allo_CRIT)
+      CALL open_mem_file()
+
       IF (present(var_type)) THEN
-        write(999,*) para_mem%mem_tot,para_mem%mem_tot+int(memory,kind=ILkind),&
+        write(para_mem%mem_unit,*) para_mem%mem_tot,para_mem%mem_tot+int(memory,kind=ILkind),&
                 memory,' var_type=',var_type,' name_var=',name_var,' ',name_sub
-        !write(out_unitp,*) para_mem%mem_tot,memory,' var_type=',var_type,&
-        !      ' name_var=',name_var,' ',name_sub
       ELSE
-        write(999,*) para_mem%mem_tot,para_mem%mem_tot+int(memory,kind=ILkind),&
+        write(para_mem%mem_unit,*) para_mem%mem_tot,para_mem%mem_tot+int(memory,kind=ILkind),&
                          memory,' no_var_type name_var=',name_var,' ',name_sub
-        !write(out_unitp,*) para_mem%mem_tot,memory,' no_var_type name_var=',  &
-        !        name_var,' ',name_sub
       END IF
+      flush(para_mem%mem_unit)
 
       IF (memory > 0) THEN
         memory_test = ( para_mem%mem_tot > huge(1_ILkind)-int(memory,kind=ILkind) )
@@ -353,13 +355,17 @@
       IF (.NOT. debug .AND. .NOT. para_mem%mem_debug) RETURN
 
 !$OMP CRITICAL (error_lmemo_allo_CRIT)
+
+      CALL open_mem_file()
+
       IF (present(var_type)) THEN
-        write(999,*) para_mem%mem_tot,para_mem%mem_tot+memory,memory,' var_type=',var_type,' name_var=',name_var,' ',name_sub
-        !write(out_unitp,*) para_mem%mem_tot,memory,' var_type=',var_type,' name_var=',name_var,' ',name_sub
+        write(para_mem%mem_unit,*) para_mem%mem_tot,para_mem%mem_tot+memory,memory,&
+                        ' var_type=',var_type,' name_var=',name_var,' ',name_sub
       ELSE
-        write(999,*) para_mem%mem_tot,para_mem%mem_tot+memory,memory,' no_var_type name_var=',name_var,' ',name_sub
-        !write(out_unitp,*) para_mem%mem_tot,memory,' no_var_type name_var=',name_var,' ',name_sub
+        write(para_mem%mem_unit,*) para_mem%mem_tot,para_mem%mem_tot+memory,memory,&
+                        ' no_var_type name_var=',name_var,' ',name_sub
       END IF
+      flush(para_mem%mem_unit)
 
       IF (memory > 0) THEN
         memory_test = ( para_mem%mem_tot > huge(1_ILkind)-memory )
@@ -442,6 +448,44 @@
 !$OMP END CRITICAL (Write_mem_tot_CRIT)
  END SUBROUTINE Write_mem_tot
 
+ SUBROUTINE Write_mem_file(info)
+ IMPLICIT NONE
+
+ character (len=*), intent(in) :: info
+
+ IF (.NOT. para_mem%mem_debug) RETURN
+
+ !$OMP CRITICAL (write_mem_file_CRIT)
+ CALL open_mem_file()
+
+ write(para_mem%mem_unit,*) "--------------------------------------------------"
+ write(para_mem%mem_unit,*) "--------------------------------------------------"
+ write(para_mem%mem_unit,*)
+ write(para_mem%mem_unit,*) "Memory analysis: ",info
+ write(para_mem%mem_unit,*)
+ write(para_mem%mem_unit,*) 'max_mem_used,mem_tot,nb_alloc,nb_dealloc',         &
+                            para_mem%max_mem_used,para_mem%mem_tot,             &
+                             para_mem%nb_alloc,para_mem%nb_dealloc
+ write(para_mem%mem_unit,*) "--------------------------------------------------"
+ write(para_mem%mem_unit,*) "--------------------------------------------------"
+
+ flush(para_mem%mem_unit)
+
+ !$OMP END CRITICAL (write_mem_file_CRIT)
+
+END SUBROUTINE Write_mem_file
+
+ SUBROUTINE open_mem_file()
+ IMPLICIT NONE
+
+ IF (para_mem%mem_unit == -1) THEN
+   open(newunit=para_mem%mem_unit,file='EVRT_mem.log')
+   write(out_unitp,*) 'Memory file: "EVRT_mem.log", unit:',para_mem%mem_unit
+   IF (para_mem%mem_unit == -1) STOP 'ERROR cannot open the file: "EVRT_mem.log"'
+ END IF
+
+ END SUBROUTINE open_mem_file
+
  SUBROUTINE convertMem(mem,MemUnit)
  real(kind=Rkind),   intent(inout) :: mem
  character (len=2),  intent(inout) :: MemUnit
@@ -460,4 +504,3 @@
    END IF
  END SUBROUTINE convertMem
 END MODULE mod_memory
-

@@ -6,7 +6,7 @@ rm -f dnSVMLib #always remove the link
  version=https://github.com/lauvergn/AD_dnSVM/archive/refs/heads/main.zip
 
 
-#curl -LJ $version --output dnSVM.zip
+curl -LJ $version --output dnSVM.zip
 test -e dnSVM.zip && echo dnSVM.zip file exist || cp Save_AD_dnSVM-1.0.0.zip dnSVM.zip
 unzip dnSVM.zip
 rm -f dnSVM.zip

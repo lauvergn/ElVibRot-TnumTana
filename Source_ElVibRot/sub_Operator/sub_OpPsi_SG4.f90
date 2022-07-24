@@ -766,6 +766,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     END DO
   ENDIF
 
+
   IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**4 ) THEN
     write(out_unitp,'(a)')              'OpPsi SG4 (%): [-10-20-30-40-50-60-70-80-90-100]'
     write(out_unitp,'(a)',ADVANCE='no') 'OpPsi SG4 (%): ['
@@ -814,6 +815,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         END IF
 
       END DO
+
     ELSE IF (allocated(BasisnD%para_SGType2%nDind_SmolyakRep%Tab_nDval)) THEN
 
       packet_size=max(1,BasisnD%para_SGType2%nb_SG/SG4_maxth/10)
@@ -825,6 +827,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       !$OMP   PRIVATE(iG,itab,PsiR)                               &
       !$OMP   NUM_THREADS(SG4_maxth)
       allocate(PsiR(size(Psi)))
+
       !!$OMP   DO SCHEDULE(DYNAMIC,packet_size)
       !!$OMP   DO SCHEDULE(GUIDED)
       !$OMP   DO SCHEDULE(STATIC)
@@ -874,6 +877,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
                BasisnD%para_SGType2%iG_th(i),BasisnD%para_SGType2%fG_th(i))
       END DO
       !$OMP   END PARALLEL DO
+
     ELSE
       !to be sure to have the correct number of threads, we use
       !   BasisnD%para_SGType2%nb_threads
@@ -933,6 +937,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
       END DO
       CALL dealloc_NParray(tab_l,'tabl_l',name_sub)
       !$OMP   END PARALLEL
+
     END IF
 !  ENDIF ! for openmpi
 

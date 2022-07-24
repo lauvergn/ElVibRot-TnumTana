@@ -119,8 +119,9 @@
       integer                           :: err_io
       character (len=Name_longlen)      :: name_dum
       integer                           :: get_Qmodel_ndim ! function
-      integer                           :: ndim
       integer                           :: print_level_EVRT
+
+      integer (kind=I4kind)             :: ndimI4,nsurfI4 ! for QML
 
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='Sub_init_dnOp'
@@ -154,35 +155,58 @@
 
 #if __QML == 1
         ! those subroutines modify in_unitp and out_unitp in QML to have the EVRT values
-        CALL set_Qmodel_in_unitp(in_unitp)
-        CALL set_Qmodel_out_unitp(out_unitp)
+        CALL set_Qmodel_in_unitp(int(in_unitp,kind=I4kind))
+        CALL set_Qmodel_out_unitp(int(out_unitp,kind=I4kind))
         IF (PrimOp%pot_itQtransfo == 0) THEN ! Cartesian coordinates
-          CALL sub_Init_Qmodel_Cart(mole%ncart_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
-        ELSE
-          ndim = mole%nb_act
-          CALL sub_Init_Qmodel(ndim,PrimOp%nb_elec,'read_model',.FALSE.,0)
+          ndimI4  = int(mole%ncart_act,kind=I4kind)
+          nsurfI4 = int(PrimOp%nb_elec,kind=I4kind)
+
+          CALL sub_Init_Qmodel_Cart(ndimI4,nsurfI4,'read_model',.FALSE.,int(0,kind=I4kind))
+          write(out_unitp,*) ' ncart_act        ',mole%ncart_act
+          write(out_unitp,*) ' ndim from  Qmodel',ndimI4
           write(out_unitp,*) ' ndim from  Qmodel ("Quantum Model Lib") is ...'
-          IF (ndim == mole%nb_act) THEN
+          IF (ndimI4 /= int(mole%ncart_act,kind=I4kind)) THEN
+            write(out_unitp,*) ' different from mole%ncart_act.'
+            write(out_unitp,*) ' It is not possible!'
+            write(out_unitp,*) 'ERROR in ',name_sub
+            STOP 'ERROR in Sub_init_dnOp: ndim from QML is too small'
+          END IF
+
+
+          PrimOp%nb_elec = nsurfI4
+
+        ELSE
+          ndimI4  = int(mole%nb_act,kind=I4kind)
+          nsurfI4 = int(PrimOp%nb_elec,kind=I4kind)
+
+          CALL sub_Init_Qmodel(ndimI4,nsurfI4,'read_model',.FALSE.,int(0,kind=I4kind))
+          write(out_unitp,*) ' nb_act           ',mole%nb_act
+          write(out_unitp,*) ' ndim from  Qmodel',ndimI4
+          write(out_unitp,*) ' ndim from  Qmodel ("Quantum Model Lib") is ...'
+          IF (ndimI4 == int(mole%nb_act,kind=I4kind)) THEN
             write(out_unitp,*) ' equal to mole%nb_act.'
-          ELSE IF (ndim > mole%nb_act) THEN
+          ELSE IF (ndimI4 > int(mole%nb_act,kind=I4kind)) THEN
             write(out_unitp,*) ' larger than mole%nb_act.'
             write(out_unitp,*) ' You MUST use type 100 and 1 coordinates.'
           ELSE ! ndim < mole%nb_act
             write(out_unitp,*) ' smaller than mole%nb_act.'
-            write(out_unitp,*) ' ERROR: it is not possible.'
-            STOP 'ndim from QML is too small'
+            write(out_unitp,*) ' It is not possible!'
+            write(out_unitp,*) 'ERROR in ',name_sub
+            STOP 'ERROR in Sub_init_dnOp: ndim from QML is too small'
           END IF
 
-        END IF
-        IF (print_level > 0 .OR. debug) CALL sub_Write_Qmodel(out_unitp)
-        IF (debug) CALL set_Qmodel_Print_level(min(1,print_level))
+          PrimOp%nb_elec = nsurfI4
 
-        ndim = get_Qmodel_ndim()
-        IF (ndim > mole%nb_var) THEN
+        END IF
+        IF (print_level > 0 .OR. debug) CALL sub_Write_Qmodel(int(out_unitp,kind=I4kind))
+        IF (debug) CALL set_Qmodel_Print_level(int(min(1,print_level),kind=I4kind))
+
+        ndimI4 = get_Qmodel_ndim()
+        IF (ndimI4 > int(mole%nb_var,kind=I4kind)) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' ndim from  Qmodel ("Quantum Model Lib") is ...'
           write(out_unitp,*) '  larger than mole%nb_var!'
-          write(out_unitp,*) '  ndim,mole%nb_var',ndim,mole%nb_var
+          write(out_unitp,*) '  ndim,mole%nb_var',ndimI4,mole%nb_var
           STOP 'ndim from QML is too large'
         END IF
 #else
@@ -200,8 +224,8 @@
           CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,(/ mole%ncart_act /),'Qit_TO_QQMLib',name_sub)
           PrimOp%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%ncart_act) /)
         ELSE
-          CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,[ndim],'Qit_TO_QQMLib',name_sub)
-          PrimOp%Qit_TO_QQMLib(:) = [ (k,k=1,ndim) ]
+          CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,[ndimI4],'Qit_TO_QQMLib',name_sub)
+          PrimOp%Qit_TO_QQMLib(:) = [ (k,k=1,ndimI4) ]
 
           IF (PrimOp%pot_itQtransfo == mole%nb_Qtransfo-1) THEN ! Qdyn Coord
             read(in_unitp,*,IOSTAT=err_io) name_dum,PrimOp%Qit_TO_QQMLib
@@ -643,13 +667,11 @@
               iterm = d0MatOp(iOpCAP+i)%derive_term_TO_iterm(0,0)
 
               IF (PrimOp%tab_CAP(i)%itQtransfo /= PrimOp%tab_CAP(i)%nb_Qtransfo) THEN
-                IF (debug) write(out_unitp,*) 'coucou CAP Qit',PrimOp%tab_CAP(i)%itQtransfo
-write(out_unitp,*) 'coucou CAP Qit',PrimOp%tab_CAP(i)%itQtransfo
+                IF (debug) write(out_unitp,*) 'CAP Qit',PrimOp%tab_CAP(i)%itQtransfo
                 CALL sub_QactTOQit(Qact,Qit,PrimOp%tab_CAP(i)%itQtransfo,mole,.FALSE.)
                 CAP_val = calc_CAP(PrimOp%tab_CAP(i),Qit)
               ELSE
-                IF (debug) write(out_unitp,*) 'coucou CAP Qact'
-write(out_unitp,*) 'coucou CAP Qact'
+                IF (debug) write(out_unitp,*) 'CAP Qact'
                 CAP_val = calc_CAP(PrimOp%tab_CAP(i),Qact)
               END IF
 
@@ -887,8 +909,8 @@ write(out_unitp,*) 'coucou CAP Qact'
       real (kind=Rkind) :: mat_imV(PrimOp%nb_elec,PrimOp%nb_elec)
       real (kind=Rkind) :: mat_ScalOp(PrimOp%nb_elec,PrimOp%nb_elec,PrimOp%nb_scalar_Op)
 
-      real (kind=Rkind), allocatable :: mat_g(:,:,:)
-      real (kind=Rkind), allocatable :: mat_h(:,:,:,:)
+      real (kind=Rkind) :: mat_g(PrimOp%nb_elec,PrimOp%nb_elec,mole%nb_act)
+      real (kind=Rkind) :: mat_h(PrimOp%nb_elec,PrimOp%nb_elec,mole%nb_act,mole%nb_act)
 
       ! for HarD
       real (kind=Rkind) :: Vinact
@@ -1042,9 +1064,24 @@ write(out_unitp,*) 'coucou CAP Qact'
           CALL sub_Qmodel_V(mat_V,Qit(PrimOp%Qit_TO_QQMLib))
           Tab_dnMatOp(iOpE)%tab_dnMatOp(:,:,itermE)%d0 = mat_V
         CASE (1)
-          STOP 'ERROR in get_dnMatOp_AT_Qact: nderivE=1 not yet'
+          CALL sub_Qmodel_VG(mat_V,mat_g,Qit(PrimOp%Qit_TO_QQMLib))
+          DO ie=1,PrimOp%nb_elec
+          DO je=1,PrimOp%nb_elec
+            Tab_dnMatOp(iOpE)%tab_dnMatOp(je,ie,itermE)%d0 = mat_V(je,ie)
+            Tab_dnMatOp(iOpE)%tab_dnMatOp(je,ie,itermE)%d1 = mat_g(je,ie,1:mole%nb_act)
+          END DO
+          END DO
+          !STOP 'ERROR in get_dnMatOp_AT_Qact: nderivE=1 not yet'
         CASE (2)
-          STOP 'ERROR in get_dnMatOp_AT_Qact: nderivE=2 not yet'
+          CALL sub_Qmodel_VGH(mat_V,mat_g,mat_h,Qit(PrimOp%Qit_TO_QQMLib))
+          DO ie=1,PrimOp%nb_elec
+          DO je=1,PrimOp%nb_elec
+            Tab_dnMatOp(iOpE)%tab_dnMatOp(je,ie,itermE)%d0 = mat_V(je,ie)
+            Tab_dnMatOp(iOpE)%tab_dnMatOp(je,ie,itermE)%d1 = mat_g(je,ie,1:mole%nb_act)
+            Tab_dnMatOp(iOpE)%tab_dnMatOp(je,ie,itermE)%d2 = mat_h(je,ie,1:mole%nb_act,1:mole%nb_act)
+          END DO
+          END DO
+          !STOP 'ERROR in get_dnMatOp_AT_Qact: nderivE=2 not yet'
         CASE Default
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' WRONG nderivE value.',nderivE
@@ -3798,7 +3835,6 @@ write(out_unitp,*) 'coucou CAP Qact'
           CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0),&
                                     Qact,para_Tnum,mole)
           mole%RPHTransfo%init_Qref = .TRUE.
-write(6,*) 'coucou1'
           CALL Qdyn_TO_Qact_FROM_ActiveTransfo(mole%ActiveTransfo%Qdyn0,  &
                                                mole%ActiveTransfo%Qact0,  &
                                                mole%ActiveTransfo)

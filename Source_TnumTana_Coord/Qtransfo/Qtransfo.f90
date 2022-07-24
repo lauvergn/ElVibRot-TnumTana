@@ -46,6 +46,7 @@
       USE mod_LinearNMTransfo
       USE mod_ProjectTransfo
       USE mod_RPHTransfo
+      USE mod_RPHQMLTransfo
       USE mod_ActiveTransfo
 
       IMPLICIT NONE
@@ -88,6 +89,7 @@
 
           TYPE (Type_NMTransfo),        pointer :: NMTransfo           => null()
           TYPE (Type_RPHTransfo),       pointer :: RPHTransfo          => null()
+          TYPE (Type_RPHQMLTransfo),    pointer :: RPHQMLTransfo       => null()
           TYPE (Type_ActiveTransfo),    pointer :: ActiveTransfo       => null()
 
           integer                               :: nb_Qin       = 0  ! size the input coordinates
@@ -371,6 +373,14 @@
           CALL Read_RPHTransfo(Qtransfo%RPHTransfo,nb_Qin,Qtransfo%opt_transfo)
 
           CALL sub_Type_Name_OF_Qin(Qtransfo,"QRPH")
+          Qtransfo%type_Qin(:) = 0
+
+        CASE ('rph_qml')
+          Qtransfo%nb_Qin  = nb_Qin
+          CALL alloc_array(Qtransfo%RPHQMLTransfo,'Qtransfo%RPHQMLTransfo',name_sub)
+          CALL Read_RPHQMLTransfo(Qtransfo%RPHQMLTransfo,nb_Qin,Qtransfo%opt_transfo)
+
+          CALL sub_Type_Name_OF_Qin(Qtransfo,"QRPHQML")
           Qtransfo%type_Qin(:) = 0
 
         CASE ('project')
@@ -734,6 +744,7 @@
         write(nio,*)
         write(nio,*) '"NM"'
         write(nio,*) '"RPH"'
+        write(nio,*) '"RPHQML"'
         write(nio,*) '"Project"'
         write(nio,*)
         write(nio,*) '"active"'
@@ -795,6 +806,12 @@
         IF (associated(Qtransfo%RPHTransfo)) THEN
           CALL dealloc_RPHTransfo(Qtransfo%RPHTransfo)
           CALL dealloc_array(Qtransfo%RPHTransfo,'Qtransfo%RPHTransfo',name_sub)
+        END IF
+
+        ! ==== RPHQMLTransfo ========================
+        IF (associated(Qtransfo%RPHQMLTransfo)) THEN
+          CALL dealloc_RPHQMLTransfo(Qtransfo%RPHQMLTransfo)
+          CALL dealloc_array(Qtransfo%RPHQMLTransfo,'Qtransfo%RPHQMLTransfo',name_sub)
         END IF
 
         ! ==== geneTransfo ========================
@@ -1035,6 +1052,14 @@
                                         Qtransfo2%RPHTransfo)
         END IF
 
+      CASE ('rph_qml')
+        IF (associated(Qtransfo1%RPHQMLTransfo)) THEN
+          CALL alloc_array(Qtransfo2%RPHQMLTransfo,                               &
+                          'Qtransfo2%RPHQMLTransfo',name_sub)
+          CALL RPHQMLTransfo1TORPHQMLTransfo2(Qtransfo1%RPHQMLTransfo,                &
+                                              Qtransfo2%RPHQMLTransfo)
+        END IF
+
       CASE ('project')
         IF (associated(Qtransfo1%ProjectTransfo)) THEN
           allocate(Qtransfo2%ProjectTransfo)
@@ -1241,6 +1266,17 @@
               CALL calc_RPHTransfo_gene(dnQin,dnQout,Qtransfo%RPHTransfo,&
                                                      nderiv,inTOout_loc)
             END IF
+        ELSE
+          IF (inTOout_loc) THEN
+            CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv)
+          ELSE
+            CALL sub_dnVec1_TO_dnVec2(dnQout,dnQin,nderiv)
+          END IF
+        END IF
+
+      CASE ('rph_qml')
+        IF (associated(Qtransfo%RPHQMLTransfo)) THEN
+          CALL calc_RPHQMLTransfo(dnQin,dnQout,Qtransfo%RPHQMLTransfo,nderiv,inTOout_loc)
         ELSE
           IF (inTOout_loc) THEN
             CALL sub_dnVec1_TO_dnVec2(dnQin,dnQout,nderiv)
@@ -1483,6 +1519,11 @@
         CASE ('rph')
           IF (associated(Qtransfo%RPHTransfo)) THEN
             CALL Write_RPHTransfo(Qtransfo%RPHTransfo)
+          END IF
+
+        CASE ('rph_qml')
+          IF (associated(Qtransfo%RPHQMLTransfo)) THEN
+            CALL Write_RPHQMLTransfo(Qtransfo%RPHQMLTransfo)
           END IF
 
         CASE ('project')
