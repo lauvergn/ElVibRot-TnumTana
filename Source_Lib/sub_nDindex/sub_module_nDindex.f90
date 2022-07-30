@@ -2359,7 +2359,7 @@ END SUBROUTINE init_nDindex_type5p
       CASE (-5)
         CALL ADD_ONE_TO_nDindex_type5m(nDval,nDindex,test)
       CASE DEFAULT
-        write(out_unitp,*) ' ERROR in calc_nDindex'
+        write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' Not yet type_OF_nDindex =',nDindex%type_OF_nDindex
         STOP
 
@@ -2369,7 +2369,7 @@ END SUBROUTINE init_nDindex_type5p
          IF (present(err_sub)) THEN
            err_sub = err_nDval
          ELSE
-           write(out_unitp,*) ' ERROR in calc_nDindex'
+           write(out_unitp,*) ' ERROR in ',name_sub
            write(out_unitp,*) '  Some nDval value are out of range!'
            write(out_unitp,*) '  nDval',nDval
            write(out_unitp,*) '  nDsize',nDindex%nDsize
@@ -2381,7 +2381,7 @@ END SUBROUTINE init_nDindex_type5p
 
     IF (debug) THEN
       write(out_unitp,*) ' out nDval',nDval
-      write(out_unitp,*) ' END ADD_ONE_TO_nDindex'
+      write(out_unitp,*) ' END ',name_sub
       CALL flush_perso(out_unitp)
     END IF
 
@@ -2425,6 +2425,8 @@ END SUBROUTINE init_nDindex_type5p
 
   integer :: i,nb_Coupling,L,L1,L2
 
+  logical :: InRange
+
 !-----------------------------------------------------------
       character (len=*), parameter :: name_sub='ADD_ONE_TO_nDindex_type5p'
       logical,parameter :: debug=.FALSE.
@@ -2438,8 +2440,9 @@ END SUBROUTINE init_nDindex_type5p
 
   DO
     nDval(nDindex%ndim) = nDval(nDindex%ndim) + 1
-    In_the_list = InList_nDindex_type5(nDval,nDindex,L)
-    IF (debug) write(out_unitp,*) 'nDval (temp)',nDval,In_the_list
+
+    CALL Analysis_nDval_nDindex_type5(nDval,nDindex,L,In_the_list,InRange)
+    IF (debug) write(out_unitp,*) 'nDval (temp)',nDval,In_the_list,InRange
 
 
     IF ( nDval(nDindex%ndim) > nDindex%nDend(nDindex%ndim) .OR. L > nDindex%Lmax) THEN
@@ -2448,15 +2451,20 @@ END SUBROUTINE init_nDindex_type5p
         nDval(i)   = nDindex%nDinit(i)
         nDval(i-1) = nDval(i-1) + 1
 
-        In_the_list = InList_nDindex_type5(nDval,nDindex,L)
-        IF (debug) write(out_unitp,*) 'nDval (temp)',nDval,In_the_list
+        CALL Analysis_nDval_nDindex_type5(nDval,nDindex,L,In_the_list,InRange)
+        IF (debug) write(out_unitp,*) 'nDval2 (temp)',nDval,In_the_list,InRange
 
         IF (In_the_list) EXIT
 
       END DO
     END IF
 
-    IF (In_the_list .OR. nDval(1) > nDindex%nDend(1) .OR. L > nDindex%Lmax) EXIT
+    IF (nDval(1) > nDindex%nDend(1) .OR. L > nDindex%Lmax) EXIT
+
+    nb_Coupling = count((nDval-nDindex%nDinit) > 0)
+    IF ( nb_Coupling < nDindex%MinCoupling) CYCLE
+
+    IF (In_the_list) EXIT
 
   END DO
 
@@ -2472,6 +2480,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
   logical,             intent(inout) :: In_the_list
 
   integer :: i,nb_Coupling,L,L1,L2
+  logical :: InRange
 
 !-----------------------------------------------------------
       character (len=*), parameter :: name_sub='ADD_ONE_TO_nDindex_type5m'
@@ -2486,8 +2495,8 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
 
   DO
     nDval(1) = nDval(1) + 1
-    In_the_list = InList_nDindex_type5(nDval,nDindex,L)
-    IF (debug) write(out_unitp,*) 'nDval (temp)',nDval,In_the_list
+    CALL Analysis_nDval_nDindex_type5(nDval,nDindex,L,In_the_list,InRange)
+    IF (debug) write(out_unitp,*) 'nDval (temp)',nDval,In_the_list,InRange
 
 
     IF ( nDval(1) > nDindex%nDend(1) .OR. L > nDindex%Lmax) THEN
@@ -2496,15 +2505,21 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
         nDval(i)   = nDindex%nDinit(i)
         nDval(i+1) = nDval(i+1) + 1
 
-        In_the_list = InList_nDindex_type5(nDval,nDindex,L)
-        IF (debug) write(out_unitp,*) 'nDval (temp)',nDval,In_the_list
+        CALL Analysis_nDval_nDindex_type5(nDval,nDindex,L,In_the_list,InRange)
+        IF (debug) write(out_unitp,*) 'nDval2 (temp)',nDval,In_the_list,InRange
 
         IF (In_the_list .OR. L < nDindex%Lmin) EXIT
 
       END DO
     END IF
 
-    IF (In_the_list .OR. nDval(nDindex%ndim) > nDindex%nDend(nDindex%ndim) .OR. L > nDindex%Lmax) EXIT
+
+    IF (nDval(nDindex%ndim) > nDindex%nDend(nDindex%ndim) .OR. L > nDindex%Lmax) EXIT
+
+    nb_Coupling = count((nDval-nDindex%nDinit) > 0)
+    IF ( nb_Coupling < nDindex%MinCoupling) CYCLE
+
+    IF (In_the_list) EXIT
 
   END DO
 
@@ -2556,12 +2571,12 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
 
   END SUBROUTINE calc_LL1L2_OF_nDindex_type5
 
-  FUNCTION InList_nDindex_type5(nDval,nDindex,L) RESULT(InList)
+  SUBROUTINE Analysis_nDval_nDindex_type5(nDval,nDindex,L,InList,InRange)
 
-  TYPE (Type_nDindex), intent(in)        :: nDindex
-  logical                                :: InList
   integer,             intent(in)        :: nDval(:)
+  TYPE (Type_nDindex), intent(in)        :: nDindex
   integer,             intent(inout)     :: L
+  logical,             intent(inout)     :: InList,InRange
 
 
   integer             :: i,L1,L2,nb_Coupling
@@ -2572,10 +2587,13 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
   CALL calc_LL1L2_OF_nDindex_type5(L,L1,L2,nDval,nDindex)
   nb_Coupling = count((nDval-nDindex%nDinit) > 0)
 
-  InList = L1 <= nDindex%L1max          .AND. L2 <= nDindex%L2max .AND.         &
-           L  <= nDindex%Lmax           .AND. L  >= nDindex%Lmin  .AND.         &
-           all(nDval <= nDindex%nDend)  .AND.                                   &
-           nb_Coupling <= nDindex%MaxCoupling .AND. nb_Coupling >= nDindex%MinCoupling
+  InRange = L1 <= nDindex%L1max          .AND. L2 <= nDindex%L2max .AND.        &
+            L  <= nDindex%Lmax           .AND. L  >= nDindex%Lmin  .AND.        &
+            all(nDval <= nDindex%nDend)
+
+  InList = InRange  .AND. nb_Coupling <= nDindex%MaxCoupling
+  !InList = InRange  .AND. nb_Coupling <= nDindex%MaxCoupling .AND.              &
+  !         nb_Coupling >= nDindex%MinCoupling
 
   ! it has to be this way because nDval(:) values can be larger than nDindex%nDend
   ! ... and therefore to the 1st dim range of skip_li(:,:)
@@ -2590,7 +2608,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
     write(out_unitp,*) '-----------------------------------------------------'
     write(out_unitp,*) 'nDend      ',nDindex%nDend
     write(out_unitp,*) 'nDinit     ',nDindex%nDinit
-    write(out_unitp,*) 'Lmax      ',nDindex%Lmax
+    write(out_unitp,*) 'Lmax       ',nDindex%Lmax
     write(out_unitp,*) 'nDval      ',nDval
     DO i=1,nDindex%ndim
       write(out_unitp,*) i,'skip_li(:,i))',nDindex%skip_li(:,i)
@@ -2600,7 +2618,8 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
     CALL flush_perso(out_unitp)
   END IF
 
-  END FUNCTION InList_nDindex_type5
+END SUBROUTINE Analysis_nDval_nDindex_type5
+
 
   SUBROUTINE ADD_ONE_TO_nDval_m1(nDval,nDsize)
   integer,             intent(inout) :: nDval(:)
