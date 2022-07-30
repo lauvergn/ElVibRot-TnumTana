@@ -53,6 +53,9 @@
       integer                        :: num_psi       = 0       ! The numbering of psi (or wp)
       logical                        :: GridDone      = .FALSE. ! flag for the WP on the grid
 
+      character (len=:), allocatable :: Tformat
+      character (len=:), allocatable :: Eformat
+
       ! Boltzman population analysis
       logical                        :: Boltzmann_pop  = .TRUE.       ! population analysis
       real (kind=Rkind)              :: Temp           = -ONE         ! temperature
@@ -131,6 +134,7 @@
   CONTAINS
 
     SUBROUTINE init_ana_psi(ana_psi,ana_level,num_psi,adia,     &
+                            Tformat,Eformat,                    &
                             Write_psi2_Grid,Write_psi2_Basis,   &
                             Write_psi_Grid,Write_psi_Basis,     &
                             Write_psi,                          &
@@ -151,6 +155,7 @@
     integer,                        optional :: ana_level
     integer,                        optional :: num_psi
     logical,                        optional :: adia
+    character(len=*),               optional :: Tformat,Eformat
 
     logical,                        optional :: Write_psi2_Grid,Write_psi2_Basis
     logical,                        optional :: Write_psi_Grid,Write_psi_Basis
@@ -194,6 +199,11 @@
     ana_psi%num_psi       = 0      ! The numbering of psi (or wp)
     IF (present(num_psi))     ana_psi%num_psi     = num_psi
     !------------------------------------------------------------
+
+    ana_psi%Eformat='f8.5'
+    IF (present(Eformat)) ana_psi%Eformat=Eformat
+    ana_psi%Tformat='f12.2'
+    IF (present(Tformat)) ana_psi%Tformat=Tformat
 
     !------------------------------------------------------------
     ! write the psi
@@ -333,6 +343,7 @@
     END SUBROUTINE init_ana_psi
 
     SUBROUTINE modif_ana_psi(ana_psi,ana_level,num_psi,adia,    &
+                            Tformat,Eformat,                    &
                             Write_psi2_Grid,Write_psi2_Basis,   &
                             Write_psi_Grid,Write_psi_Basis,     &
                             Write_psi,                          &
@@ -352,6 +363,7 @@
     integer,                        optional :: ana_level
     integer,                        optional :: num_psi
     logical,                        optional :: adia
+    character(len=*),               optional :: Tformat,Eformat
 
     logical,                        optional :: Write_psi2_Grid,Write_psi2_Basis
     logical,                        optional :: Write_psi_Grid,Write_psi_Basis
@@ -402,6 +414,9 @@
                         ana_psi%Write_psi_Grid  .OR. ana_psi%Write_psi_Basis
     IF (present(Write_psi))             ana_psi%Write_psi             = Write_psi
 
+
+    IF (present(Eformat)) ana_psi%Eformat=Eformat
+    IF (present(Tformat)) ana_psi%Tformat=Tformat
 
     !------------------------------------------------------------
     ! for the reduced denstity analysis
@@ -529,6 +544,9 @@
                           "ana_psi%max_RedDensity","dealloc_ana_psi")
     END IF
 
+    IF (allocated(ana_psi%Tformat)) deallocate(ana_psi%Tformat)
+    IF (allocated(ana_psi%Eformat)) deallocate(ana_psi%Eformat)
+
 !   IF (allocated(ana_psi%tab_WeightChannels)) THEN
 !      CALL dealloc_NParray(ana_psi%tab_WeightChannels,                &
 !                          "ana_psi%tab_WeightChannels","dealloc_ana_psi")
@@ -591,6 +609,9 @@
     ana_psi1%Psi_norm2     = ana_psi2%Psi_norm2
     ana_psi1%file_PsiRho   = ana_psi2%file_PsiRho
     ana_psi1%Rho_type      = ana_psi2%Rho_type
+
+    IF (allocated(ana_psi2%Tformat)) ana_psi1%Tformat = ana_psi2%Tformat
+    IF (allocated(ana_psi2%Eformat)) ana_psi1%Eformat = ana_psi2%Eformat
 
 !   IF (allocated(ana_psi2%tab_WeightChannels)) THEN
 !      CALL alloc_NParray(ana_psi1%tab_WeightChannels,                      &
@@ -659,6 +680,8 @@
 
     write(out_unitp,*) 'ana_level',ana_psi%ana_level
     write(out_unitp,*) 'num_psi',ana_psi%num_psi
+    write(out_unitp,*) 'Tformat: ',ana_psi%Tformat
+    write(out_unitp,*) 'Eformat: ',ana_psi%Eformat
     write(out_unitp,*) 'GridDone',ana_psi%GridDone
      write(out_unitp,*)
     write(out_unitp,*) 'Boltzmann population:'

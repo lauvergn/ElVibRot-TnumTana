@@ -652,15 +652,18 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   IF (para_propa%ana_psi%ana_level == 1) THEN ! ana_mini
     IF (present(adia)) THEN
       IF (present(para_field)) THEN
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia=adia,para_field=para_field)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa%ana_psi,     &
+                                                adia=adia,para_field=para_field)
       ELSE
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia=adia)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa%ana_psi,     &
+                                                                      adia=adia)
       END IF
     ELSE
       IF (present(para_field)) THEN
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_field=para_field)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa%ana_psi,     &
+                                                          para_field=para_field)
       ELSE
-        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H)
+        CALL sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,para_propa%ana_psi)
       END IF
     END IF
     RETURN
@@ -803,7 +806,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
 END SUBROUTINE sub_analyze_WP_OpWP
 !=======================================================================================
 
-SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
+SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,ana_psi,adia,para_field)
   USE mod_system
   USE mod_Op,    ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
   USE mod_field, ONLY : param_field,sub_dnE
@@ -811,6 +814,8 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
   USE mod_psi,   ONLY : param_psi,ecri_psi,alloc_psi,dealloc_psi,       &
                       sub_analyze_psi,norm2_psi,alloc_psi,modif_ana_psi,&
                       Channel_weight,sub_PsiBasisRep_TO_GridRep
+
+  USE mod_type_ana_psi
   USE mod_MPI_aux
   IMPLICIT NONE
 
@@ -819,6 +824,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
 !----- variables pour la namelist minimum ----------------------------
   TYPE (param_Op)   :: para_H
 
+  TYPE (param_ana_psi) :: ana_psi
 !- variables for the WP propagation ----------------------------
   TYPE (param_field), optional :: para_field
   logical,            optional :: adia
@@ -829,7 +835,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
 !-- working parameters --------------------------------
   TYPE (param_psi)   :: w1,w2
 
-  integer       :: i,i_bi,i_be
+  integer       :: iE,i,i_bi,i_be
 
   complex (kind=Rkind)              :: ET  ! energy
   real (kind=Rkind)                 :: E
@@ -851,7 +857,6 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
   logical, parameter :: debug=.FALSE.
 ! logical, parameter :: debug=.TRUE.
 !-------------------------------------------------------
-
   IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
    write(out_unitp,*)
@@ -892,7 +897,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
     IF(openmpi) CALL MPI_Bcast_(Psi_norm2,size1_MPI,root_MPI)
 
     ! add the psi number + the time
-    psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat='f12.2')
+    psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat=ana_psi%Tformat)
 
     IF (With_ENE) THEN
       ! =>first the energy
@@ -904,8 +909,13 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,adia,para_field)
       E      = convRWU_TO_R_WITH_WritingUnit(RWU_E)
 
       ! add the energy
-      psi_line = psi_line // ' ' // real_TO_char(E,Rformat='f8.5')
-
+      iE = int(log10(abs(E)+ONETENTH**8))  ! to avoid zero
+      IF (iE < 0 .AND. iE > -6) THEN
+        !write(6,*) E,iE,'EFormat: ','f' // int_TO_char(10-iE) // '.' // int_TO_char(7-iE)
+        CALL modif_ana_psi(ana_psi,                                  &
+                  EFormat='f' // int_TO_char(10-iE) // '.' // int_TO_char(7-iE) )
+      END IF
+      psi_line = psi_line // ' ' // real_TO_char(E,Rformat=ana_psi%Eformat)
     ELSE
       ! add the energy
       psi_line = psi_line // ' ' // 'xxxxxxxx'

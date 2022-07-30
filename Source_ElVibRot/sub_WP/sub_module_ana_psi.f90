@@ -114,7 +114,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   logical,              intent(in)            :: adia
 
 
-  integer                           :: i,j,i_be,i_bi
+  integer                           :: iE,i,j,i_be,i_bi
   real (kind=Rkind)                 :: pop,Etemp
   character(len=:), allocatable     :: lformat
   TYPE(REAL_WU)                     :: RWU_Temp,RWU_E,RWU_DE
@@ -188,10 +188,17 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
     Psi_norm2 = sum(tab_WeightChannels)
 
     ! add the psi number + the time
-    psi_line = 'norm^2-WP ' // info // ' ' // real_TO_char(ana_psi%T,Rformat='f12.2')
+    psi_line = 'norm^2-WP ' // info // ' ' // real_TO_char(ana_psi%T,Rformat=ana_psi%Tformat)
 
     ! add the energy
-    psi_line = psi_line // ' ' // real_TO_char(E,Rformat='f8.5')
+    iE = int(log10(abs(E)+ONETENTH**8)) ! to avoid zero
+    IF (iE < 0 .AND. iE > -6) THEN
+      !write(6,*) E,iE,'EFormat: ','f' // int_TO_char(10-iE) // '.' // int_TO_char(7-iE)
+      CALL modif_ana_psi(ana_psi,                                               &
+                  EFormat='f' // int_TO_char(10-iE) // '.' // int_TO_char(7-iE) )
+    END IF
+    !psi_line = psi_line // ' ' // real_TO_char(E,Rformat=ana_psi%Eformat)
+    psi_line = psi_line // ' ' // real_TO_char(E,Rformat='f30.20')
 
     ! add the field (if necessary)
     IF (ana_psi%With_field) THEN

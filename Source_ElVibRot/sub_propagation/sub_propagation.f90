@@ -73,8 +73,8 @@ CONTAINS
       USE mod_system
       USE mod_Op
       USE mod_propa
-      USE mod_psi,    ONLY : param_psi,ecri_psi,alloc_array,            &
-                             dealloc_array,dealloc_psi,Write_ana_psi
+      USE mod_psi,    ONLY : param_psi,ecri_psi,alloc_array,                    &
+                             dealloc_array,dealloc_psi,Write_ana_psi,modif_ana_psi
       USE mod_field
       IMPLICIT NONE
 
@@ -128,15 +128,12 @@ CONTAINS
 !-----------------------------------------------------------
       para_propa%ana_psi%propa     = .TRUE.
 
-!#if(run_MPI)
-!      !para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
-!      !para_propa%para_poly%Hmin = para_propa%Hmin
-!      !para_propa%para_poly%Hmax = para_propa%Hmax
-!#else
-!      para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
-!      para_propa%para_poly%Hmin = para_propa%Hmin
-!      para_propa%para_poly%Hmax = para_propa%Hmax
-!#endif
+      i = int(log10(abs(para_propa%WPdeltaT)+ONETENTH**8))  ! to avoid zero
+      IF (i < 0) THEN
+        CALL modif_ana_psi(para_propa%ana_psi,                                  &
+                  TFormat='f' // int_TO_char(12-i) // '.' // int_TO_char(2-i) )
+      END IF
+
       IF(.NOT. para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4) THEN
         para_propa%Hmax = para_propa%Hmax + para_propa%para_poly%DHmax
         para_propa%para_poly%Hmin = para_propa%Hmin
@@ -852,7 +849,6 @@ CONTAINS
       write(out_unitp,*) ' vib : propagation: ',para_propa%name_WPpropa
       CALL flush_perso(out_unitp)
 
-      !IF(.NOT. openmpi) THEN
       IF(.NOT. (para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4)) THEN
         CALL initialisation1_poly(para_propa%para_poly,                   &
                                   para_propa%WPdeltaT,                    &
@@ -889,7 +885,7 @@ CONTAINS
            ENDIF
            CALL sub_analyze_WP_OpWP(T,psi,1,para_H,para_propa)
          ELSE
-           CALL sub_analyze_mini_WP_OpWP(T,psi,1,para_H)
+           CALL sub_analyze_mini_WP_OpWP(T,psi,1,para_H,para_propa%ana_psi)
          END IF
 
          ! propgation for given fixed t
