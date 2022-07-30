@@ -132,8 +132,8 @@ MODULE mod_Tana_Tnum
       write(out_unitp,*) '   end calc f2, f1 with Tnum'
       CALL flush_perso(out_unitp)
       para_Tnum%Tana = .TRUE.
-      CALL get_Numf2f1vep_WITH_AnaKEO(TWOxKEO,Qact,mole,                &
-                                          f2_ana,f1_ana,vep_ana,rho_ana)
+      CALL get_Numf2f1vep_WITH_AnaKEO(TWOxKEO,Qact,mole,para_Tnum,              &
+                                      f2_ana,f1_ana,vep_ana,rho_ana)
       write(out_unitp,*) '   end calc f2, f1 with Tana'
       CALL flush_perso(out_unitp)
 
@@ -322,8 +322,8 @@ MODULE mod_Tana_Tnum
       CALL Expand_Sum_OpnD_TO_Sum_OpnD(TWOxKEO,ExpandTWOxKEO)
       write(out_unitp,*) '   end expand anlytical KEO in the f2, f1, vep form'
       CALL flush_perso(out_unitp)
-      CALL get_Numf2f1vep_WITH_AnaKEO(ExpandTWOxKEO,Qact,mole,          &
-                                          f2_ana,f1_ana,vep_ana,rho_ana)
+      CALL get_Numf2f1vep_WITH_AnaKEO(ExpandTWOxKEO,Qact,mole,para_Tnum,        &
+                                      f2_ana,f1_ana,vep_ana,rho_ana)
       write(out_unitp,*) '   end calc f2, f1 with Tana'
       CALL flush_perso(out_unitp)
       IF (vep < ONETENTH**6) THEN

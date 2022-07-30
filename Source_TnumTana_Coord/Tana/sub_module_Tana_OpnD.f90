@@ -121,7 +121,7 @@
 
    PUBLIC  :: Change_PQ_OF_OpnD_TO_Id_OF_OnD, Expand_OpnD_TO_SumOpnD
    PUBLIC  :: Export_Latex_Opnd, Export_Midas_Opnd
-   PUBLIC  :: Export_MCTDH_Opnd, Export_VSCF_Opnd
+   PUBLIC  :: Export_MCTDH_Opnd, Export_VSCF_Opnd, Export_Fortran_Opnd
    PUBLIC  :: get_NumVal_OpnD, get_pq_OF_OpnD, get_pqJL_OF_OpnD, set_indexQ_OF_OpnD
    PUBLIC  :: StringMCTDH_TO_Opnd
 
@@ -882,8 +882,8 @@ subroutine check_allocate_opnd(F_nd)
 
    character (len = *), parameter :: routine_name = 'Export_VSCF_Opnd'
 
-   write(6,*) 'Export_VSCF_Opnd'
-   CALL write_op(Fnd)
+   !write(6,*) 'Export_VSCF_Opnd'
+   !CALL write_op(Fnd)
    FndName_loc = String_TO_String('')
 
    IF (size(Fnd%prod_op1d) > 0) THEN
@@ -892,7 +892,7 @@ subroutine check_allocate_opnd(F_nd)
        qname = String_TO_String('Q' // int_TO_char(m) )
 
        CALL Export_VSCF_Op1D(Fnd%prod_op1d(j),qname,F1dName)
-       write(6,*) 'F1d',j,' ',qname,' ',F1dName
+       !write(6,*) 'F1d',j,' ',qname,' ',F1dName
        FndName_loc = String_TO_String( FndName_loc // mult // F1dName)
      END DO
      IF (allocated(F1dName)) deallocate(F1dName)
@@ -908,6 +908,53 @@ subroutine check_allocate_opnd(F_nd)
 
 
  end subroutine Export_VSCF_Opnd
+
+ subroutine Export_Fortran_Opnd(Fnd,tab_Qname,FndName)
+   type(opnd),                       intent(in)      :: Fnd
+   character (len = :), allocatable, intent(inout)   :: FndName
+   character(len=*),                 intent(in)      :: tab_Qname(:)
+
+
+   !local variables
+   character (len = :), allocatable     :: qname,FndName_loc
+   character (len = :), allocatable     :: F1dName
+   integer :: j,m
+   character (len = *), parameter       :: mult = ' * '
+   logical :: First
+
+   character (len = *), parameter :: routine_name = 'Export_Fortran_Opnd'
+
+   !write(6,*) 'Export_VSCF_Opnd'
+   !CALL write_op(Fnd)
+   FndName_loc = ''
+   First       = .TRUE.
+
+   IF (size(Fnd%prod_op1d) > 0) THEN
+     DO j=1,size(Fnd%prod_op1d)
+       m = get_indexQ_OF_Op1D( Fnd%prod_op1d(j) )
+       qname = 'Q(' // int_TO_char(m) // ')'
+
+       CALL Export_Fortran_Op1D(Fnd%prod_op1d(j),qname,F1dName)
+       IF (len_trim(F1dName) == 0) CYCLE
+
+       !write(6,*) 'F1d',j,' ',qname,' ',F1dName
+       IF (.NOT. First) FndName_loc = FndName_loc // mult
+       FndName_loc = FndName_loc // F1dName
+       First = .FALSE.
+     END DO
+     IF (allocated(F1dName)) deallocate(F1dName)
+
+   ELSE
+     FndName_loc = ''
+   END IF
+
+   FndName = trim(adjustl(FndName_loc))
+
+   IF (allocated(FndName_loc))   deallocate(FndName_loc)
+   IF (allocated(qname))         deallocate(qname)
+
+
+ end subroutine Export_Fortran_Opnd
 
    !! @description: Write an array of nd operators,
    !! @param:       F_nd      The operator (type: opnd).

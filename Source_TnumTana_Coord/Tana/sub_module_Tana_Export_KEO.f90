@@ -37,6 +37,7 @@
    PRIVATE
    PUBLIC :: write_keo_LatexForm
    PUBLIC :: write_keo_VSCFForm
+   PUBLIC :: write_keo_FortranForm
    PUBLIC :: write_keo_MCTDH_Form,read_keo_mctdh_form
    PUBLIC :: write_keo_MidasCppForm,write_mol_MidasCppForm
 
@@ -525,6 +526,125 @@
      IF (allocated(FnDname)) deallocate(FnDname)
 
    END SUBROUTINE write_keo_VSCFform
+
+   SUBROUTINE write_keo_Fortranform(mole, TWOxKEO, i_out, tab_Qname, param_JJ)
+   IMPLICIT NONE
+
+     type (CoordType),          intent(in)                :: mole
+     type(sum_opnd),            intent(in)                :: TWOxKEO
+     integer,                   intent(in)                :: i_out
+     character(len=*),          intent(in)                :: tab_Qname(:)
+     integer,                   intent(in)                :: param_JJ
+
+     character (len = :), allocatable           :: FnDname
+     character (len = :), allocatable           :: nb_act_name,FuncName,Coef_name
+     character (len = *), parameter             :: mult = ' * '
+
+     integer                                    :: i,ie,err
+     integer                                    :: pq1,pq2,nb_pq,nb_J,nb_L
+     complex(kind=Rkind)                        :: Cn_new
+     real(kind=Rkind)                           :: Cn
+
+     character (len = *), parameter :: routine_name='write_keo_Fortranform'
+
+     nb_act_name = int_TO_char(mole%nb_act)
+
+     write(i_out, '(A)')  "SUBROUTINE Tana_F2_F1_Vep(F2,F1,Vep,Q)"
+     write(i_out, '(A)')  "USE, intrinsic :: ISO_FORTRAN_ENV, ONLY : real64"
+     write(i_out, '(A)')  "IMPLICIT NONE"
+     write(i_out,*)
+     write(i_out,*)
+     write(i_out, '(A)')  "real(kind=real64), intent(in)    :: Q("  //          &
+                                                              nb_act_name // ")"
+     write(i_out, '(A)')  "real(kind=real64), intent(inout) :: F1(" //          &
+                                                              nb_act_name // ")"
+     write(i_out, '(A)')  "real(kind=real64), intent(inout) :: F2(" //          &
+                                        nb_act_name // "," // nb_act_name // ")"
+     write(i_out, '(A)')  "real(kind=real64), intent(inout) :: Vep"
+     write(i_out,*)
+     write(i_out, '(A)')  "integer :: i,j"
+
+     write(i_out,*)
+
+     write(i_out, '(A)')  ""
+     write(i_out, '(A)')  ""
+     write(i_out, '(A)')  "F2 = 0._real64"
+     write(i_out, '(A)')  "F1 = 0._real64"
+     write(i_out, '(A)')  ""
+
+     ! Deformation only (without the vep)
+     DO i = 1,size(TWOxKEO%sum_prod_op1d)
+
+       CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+
+
+       IF (nb_J /= 0 .OR. nb_pq == 0) CYCLE
+
+       ! divide by 2 because we have 2xKEO
+       Cn_new = TWOxKEO%Cn(i) * get_coeff_OF_OpnD(TWOxKEO%sum_prod_op1d(i)) * CHALF
+
+       CALL Export_Fortran_Opnd(TWOxKEO%sum_prod_op1d(i),tab_Qname,FnDname)
+
+       IF (nb_pq == 1) THEN
+         Cn_new = -Cn_new * EYE
+         FuncName = 'F1(' // int_TO_char(pq1) // ')   = F1(' // int_TO_char(pq1) // ')    '
+       ELSE IF (nb_pq == 2) THEN
+         Cn_new = -Cn_new
+         FuncName = 'F2(' // int_TO_char(pq1) // ',' // int_TO_char(pq2) // ') = ' // &
+                    'F2(' // int_TO_char(pq1) // ',' // int_TO_char(pq2) // ')  '
+
+       END IF
+       Coef_name = get_Coef_name(Cn_new,With_format=.TRUE.,fmt='f18.14',err=err) // '_real64'
+       IF (err /=0) write(i_out,*) ' WARNING Cn is complex!'
+
+       IF (len_trim(FnDname) == 0) THEN
+         write(i_out, '(A)')  FuncName // Coef_name
+       ELSE
+         write(i_out, '(A)')  FuncName // Coef_name // mult // FnDname
+       END IF
+
+     END DO
+     write(i_out, *)
+     write(i_out, '(A)') 'DO i=1,' // nb_act_name
+     write(i_out, '(A)') 'DO j=i+1,' // nb_act_name
+     write(i_out, '(A)') '  F2(j,i) = F2(i,j)'
+     write(i_out, '(A)')  'END DO'
+     write(i_out, '(A)')  'END DO'
+     write(i_out, *)
+
+     ! only the vep (no Pq and no J)
+     write(i_out, '(A)')  "Vep = 0._real64"
+     FuncName = "Vep = Vep "
+
+     DO i = 1,size(TWOxKEO%sum_prod_op1d)
+
+       CALL get_pq_OF_OpnD(pq1,pq2,nb_pq,nb_J,nb_L,mole%nb_var,TWOxKEO%sum_prod_op1d(i))
+       !write(out_unitp,*) 'pq1,pq2,nb_pq,nb_J,nb_L',pq1,pq2,nb_pq,nb_J,nb_L
+
+       IF (nb_J /= 0 .OR. nb_pq /= 0) CYCLE
+
+      ! divide by 2 because we have 2xKEO
+       Cn_new = TWOxKEO%Cn(i) * get_coeff_OF_OpnD(TWOxKEO%sum_prod_op1d(i)) * CHALF
+       Coef_name = get_Coef_name(Cn_new,With_format=.TRUE.,fmt='f18.14',err=err) // '_real64'
+       IF (err /=0) write(i_out,*) ' WARNING Cn is complex!'
+
+       CALL Export_Fortran_Opnd(TWOxKEO%sum_prod_op1d(i),tab_Qname,FnDname)
+
+       IF (len_trim(FnDname) == 0) THEN
+         write(i_out, '(A)')  FuncName // Coef_name
+       ELSE
+         write(i_out, '(A)')  FuncName // Coef_name // mult // FnDname
+       END IF
+
+     END DO
+
+     write(i_out, *)
+     write(i_out, '(A)')  "END SUBROUTINE Tana_F2_F1_Vep"
+
+     IF (allocated(FnDname)) deallocate(FnDname)
+
+   END SUBROUTINE write_keo_Fortranform
 
    !! @description: Write the deformation part of the total KEO in a latex format,
    !! @param:       mole          The generalized variable (type: CoordType).
@@ -1397,11 +1517,12 @@
      IF (error) opname = 'ERR: "' // trim(opname) // '"'
    END SUBROUTINE export_mctdh_name
 
-   FUNCTION get_Coef_name(Cn_new,MCTDH,With_format,err) RESULT (Coef_name)
+   FUNCTION get_Coef_name(Cn_new,MCTDH,With_format,fmt,err) RESULT (Coef_name)
    IMPLICIT NONE
 
      complex(kind=Rkind), intent(in)            :: Cn_new
      logical, optional,   intent(in)            :: MCTDH,With_format
+     character (len = *), optional, intent(in)  :: fmt
      integer, optional,   intent(inout)         :: err
 
      character (len = :), allocatable           :: Coef_name
@@ -1410,8 +1531,17 @@
      integer                                    :: ie,err_loc
      real(kind=Rkind)                           :: Cn
      logical                                    :: MCTDH_loc,With_format_loc
+     character (len = :), allocatable           :: fmt_loc
 
      character (len = *), parameter :: routine_name='get_Coef_name'
+
+
+     IF (present(fmt)) THEN
+       fmt_loc = fmt
+     ELSE
+       fmt_loc = 'f18.10'
+     END IF
+
 
      IF (present(MCTDH)) THEN
        MCTDH_loc = MCTDH
@@ -1429,14 +1559,14 @@
 
        Cn = real( Cn_new, kind=Rkind)
        IF (With_format_loc) THEN
-         Coef_name = String_TO_String( real_TO_char(Cn,RMatIO_format) )
+         Coef_name = String_TO_String( real_TO_char(Cn,fmt_loc) )
        ELSE
          Coef_name = String_TO_String( real_TO_char(Cn) )
        END IF
 
        Cn = aimag(Cn_new)
        IF (With_format_loc) THEN
-         Coef_name = String_TO_String( Coef_name // ' I*' // real_TO_char(Cn,RMatIO_format) )
+         Coef_name = String_TO_String( Coef_name // ' I*' // real_TO_char(Cn,fmt_loc) )
        ELSE
          Coef_name = String_TO_String( Coef_name // ' I*' // real_TO_char(Cn))
        END IF
@@ -1446,7 +1576,7 @@
 
        Cn = real( Cn_new, kind=Rkind)
        IF (With_format_loc) THEN
-         Coef_name = String_TO_String( real_TO_char(Cn,RMatIO_format) )
+         Coef_name = String_TO_String( real_TO_char(Cn,fmt_loc) )
        ELSE
          Coef_name = String_TO_String( real_TO_char(Cn) )
        END IF
@@ -1455,7 +1585,7 @@
 
        Cn = aimag(Cn_new)
        IF (With_format_loc) THEN
-         Coef_name = String_TO_String( real_TO_char(Cn,RMatIO_format) // '*I' )
+         Coef_name = String_TO_String( real_TO_char(Cn,fmt_loc) // '*I' )
        ELSE
          Coef_name = String_TO_String( real_TO_char(Cn) // '*I' )
        END IF

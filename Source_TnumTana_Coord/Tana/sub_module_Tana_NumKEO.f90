@@ -28,7 +28,7 @@
 !===========================================================================
  module mod_Tana_NumKEO
  use mod_system
- USE mod_Tnum,     only : CoordType
+ USE mod_Tnum,     only : CoordType,Tnum
  USE mod_dnRho ! all
 
  USE mod_Tana_OpEl
@@ -168,7 +168,7 @@
 
  end subroutine get_NumG_WITH_AnaKEO
 
-  subroutine get_Numf2f1vep_WITH_AnaKEO(TWOxKEO,Qval,mole,f2,f1,vep,rho)
+  subroutine get_Numf2f1vep_WITH_AnaKEO(TWOxKEO,Qval,mole,para_Tnum,f2,f1,vep,rho)
    USE mod_dnSVM
 
    type(sum_opnd),             intent(inout)             :: TWOxKEO
@@ -176,12 +176,15 @@
    real(kind=Rkind),           intent(inout)             :: f2(:,:),f1(:)
    real(kind=Rkind),           intent(inout)             :: vep,rho
    TYPE (CoordType),           intent(in)                :: mole
+   TYPE (Tnum),                intent(in)                :: para_Tnum
+
 
    complex(kind=Rkind)        :: opval
    integer                    :: i,nb_var,nb_act
    integer                    :: error
    integer                    :: pq(2),JJ(2),LL(2),iG,jG,nb_J
-    TYPE(Type_dnS)            :: dnrho
+   TYPE(Type_dnS)             :: dnrho,dnJac
+
 
    logical, parameter :: debug = .FALSE.
    !logical, parameter :: debug = .TRUE.
@@ -203,8 +206,9 @@
    nb_var = size(Qval)
 
    CALL alloc_dnS(dnrho, nb_var_deriv=nb_act, nderiv=0)
+   CALL alloc_dnS(dnJac, nb_var_deriv=nb_act, nderiv=0)
 
-   CALL sub3_dnrho_ana(dnrho,Qval,mole,0)
+   CALL sub3_dnrho(dnrho,dnjac,Qval,mole,0,para_Tnum%num_x,para_Tnum%stepT,para_Tnum%nrho)
    rho = dnrho%d0
 
    CALL dealloc_dnS(dnrho)

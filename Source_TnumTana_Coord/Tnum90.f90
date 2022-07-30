@@ -43,6 +43,7 @@
 
 !     - parameters for para_Tnum -----------------------
       TYPE (constant)  :: const_phys
+      logical          :: Read_PhysConst
       TYPE (CoordType) :: mole
       TYPE (Tnum)      :: para_Tnum
       TYPE (PrimOp_t)  :: PrimOp
@@ -106,7 +107,10 @@
       CALL versionEVRT(.TRUE.)
       print_level=2
 
-      !CALL sub_constantes(const_phys,Read_Namelist=.FALSE.)
+      CALL read_arg(Read_PhysConst)
+      IF (Read_PhysConst) THEN
+        CALL sub_constantes(const_phys,Read_Namelist=.TRUE.)
+      END IF
 
       !-----------------------------------------------------------------
       !     - read the coordinate transformations :
@@ -485,3 +489,71 @@
       write(out_unitp,*) 'END Tnum'
 
       END PROGRAM Tnum_f90
+      SUBROUTINE read_arg(Read_PhysConst)
+        USE mod_system
+        IMPLICIT NONE
+
+        logical, intent(inout) :: Read_PhysConst
+
+
+        character(len=:), allocatable :: arg,arg2
+        integer :: i,arg_len
+
+
+        Read_PhysConst = .FALSE.
+
+        IF (COMMAND_ARGUMENT_COUNT() /= 0 .AND. COMMAND_ARGUMENT_COUNT() /= 2) THEN
+          write(out_unitp,*) ' ERROR in read_arg'
+          write(out_unitp,*) ' Wrong ElVibRot argument number!'
+          write(out_unitp,*) 'argument number',COMMAND_ARGUMENT_COUNT()
+          write(out_unitp,*) ' You can have 0 or 2 arguments.'
+          STOP 'Wrong ElVibRot argument number'
+        END IF
+
+
+        DO i=1, COMMAND_ARGUMENT_COUNT(),2
+
+          CALL GET_COMMAND_ARGUMENT( NUMBER=i, LENGTH=arg_len )
+          allocate( character(len=arg_len) :: arg )
+          CALL GET_COMMAND_ARGUMENT( NUMBER=i, VALUE=arg )
+
+          CALL GET_COMMAND_ARGUMENT( NUMBER=i+1, LENGTH=arg_len )
+          allocate( character(len=arg_len) :: arg2 )
+          CALL GET_COMMAND_ARGUMENT( NUMBER=i+1, VALUE=arg2 )
+
+          SELECT CASE(arg)
+          CASE("-pc","--Read_PhysConst","--read_physconst","--PhysConst","--physconst")
+            CALL string_uppercase_TO_lowercase(arg2)
+            IF (arg2 == 't' .OR. arg2 == '.true.') THEN
+              Read_PhysConst = .TRUE.
+            ELSE IF (arg2 == 'f' .OR. arg2 == '.false.') THEN
+              Read_PhysConst = .FALSE.
+            ELSE
+              write(out_unitp,*) ' ERROR in read_arg'
+              write(out_unitp,*) ' Wrong Tnum argument!'
+              write(out_unitp,*) '   arg2: "',arg2,'"'
+              write(out_unitp,*) ' The possibilities are:'
+              write(out_unitp,*) '    T or .TRUE. or F or .FALSE.'
+              STOP 'Wrong Tnum argument'
+            END IF
+          CASE Default
+            write(out_unitp,*) ' ERROR in read_arg'
+            write(out_unitp,*) ' Wrong Tnum argument!'
+            write(out_unitp,*) '   arg: "',arg,'"'
+            write(out_unitp,*) ' The possibilities are:'
+            write(out_unitp,*) '    -pc or --PhysConst'
+            STOP 'Wrong Tnum argument'
+          END SELECT
+
+          write(out_unitp,*) 'Argument number: ',i,' ==> arg: "',arg,'", arg2: "',arg2,'"'
+
+          deallocate(arg)
+          deallocate(arg2)
+        END DO
+
+        IF (Read_PhysConst) write(out_unitp,*) ' Physical Constant namelist is read'
+
+        write(out_unitp,*) '=================================='
+        write(out_unitp,*) '=================================='
+
+      END SUBROUTINE read_arg

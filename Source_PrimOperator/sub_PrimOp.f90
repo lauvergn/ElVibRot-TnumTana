@@ -3966,12 +3966,10 @@
         write(out_unitp,*) '================================================='
         write(out_unitp,*) ' BEGINNING Tana'
         CALL time_perso('Tana')
-        write(out_unitp,*) 'nrho_OF_Qdyn(:)',mole%nrho_OF_Qdyn(:)
-        write(out_unitp,*) 'nrho_OF_Qact(:)',mole%nrho_OF_Qact(:)
 
         !IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Tana'
         CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
-        IF (debug) CALL write_op(para_Tnum%TWOxKEO,header=.TRUE.)
+        !IF (debug) CALL write_op(para_Tnum%TWOxKEO,header=.TRUE.)
         CALL flush_perso(out_unitp)
 
         IF (para_Tnum%Compa_TanaTnum > 0) THEN

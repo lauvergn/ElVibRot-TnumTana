@@ -235,6 +235,8 @@ MODULE mod_Tnum
           logical                    :: MCTDHForm         = .FALSE.
           logical                    :: LaTeXForm         = .FALSE.
           logical                    :: VSCFForm          = .FALSE.
+          logical                    :: FortranForm       = .FALSE.
+
 
           logical                    :: f2f1_ana          = .FALSE.
 
@@ -737,7 +739,7 @@ MODULE mod_Tnum
       logical           :: With_Tab_dnQflex,f2f1_ana
 
       logical           :: Tana,Tana_Init_Only
-      logical           :: MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm
+      logical           :: MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,FortranForm
       integer           :: Compa_TanaTnum
 
       real (kind=Rkind) :: stepT,stepOp
@@ -759,7 +761,8 @@ MODULE mod_Tnum
                      stepT,num_GG,num_g,num_x,nrho,vep_type,            &
                      Tana,Compa_TanaTnum,Tana_Init_Only,                &
                      Gdiago,Gcte,NonGcteRange,QMLib_G,                  &
-                     MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,         &
+                     MidasCppForm,MCTDHForm,LaTeXForm,                  &
+                     VSCFForm,FortranForm,                              &
                      KEO_TalyorOFQinact2n,f2f1_ana,                     &
                      charge,multiplicity,                               &
                      header,footer,file_name_OTF,file_name_fchk,        &
@@ -805,6 +808,7 @@ MODULE mod_Tnum
       MCTDHForm            = para_Tnum%MCTDHForm      ! so that it is possible to change the default
       LaTeXForm            = para_Tnum%LaTeXForm      ! so that it is possible to change the default
       VSCFForm             = para_Tnum%VSCFForm       ! so that it is possible to change the default
+      FortranForm          = para_Tnum%FortranForm
 
       nrho                 = 1
       vep_type             = -1
@@ -957,6 +961,7 @@ MODULE mod_Tnum
       para_Tnum%MCTDHForm            = (Tana .AND. MCTDHForm)
       para_Tnum%VSCFForm             = (Tana .AND. VSCFForm)
       para_Tnum%MidasCppForm         = (Tana .AND. MidasCppForm)
+      para_Tnum%FortranForm          = (Tana .AND. FortranForm)
 
       para_Tnum%KEO_TalyorOFQinact2n = KEO_TalyorOFQinact2n
       para_Tnum%f2f1_ana             = f2f1_ana
@@ -2036,6 +2041,8 @@ MODULE mod_Tnum
   Tnum1%MCTDHForm            = Tnum2%MCTDHForm
   Tnum1%LaTeXForm            = Tnum2%LaTeXForm
   Tnum1%VSCFForm             = Tnum2%VSCFForm
+  Tnum1%FortranForm          = Tnum2%FortranForm
+
   Tnum1%f2f1_ana             = Tnum2%f2f1_ana
   Tnum1%KEO_TalyorOFQinact2n = Tnum2%KEO_TalyorOFQinact2n
 
@@ -2078,6 +2085,7 @@ MODULE mod_Tnum
   para_Tnum%MCTDHForm         = .FALSE.
   para_Tnum%LaTeXForm         = .FALSE.
   para_Tnum%VSCFForm          = .FALSE.
+  para_Tnum%FortranForm       = .FALSE.
 
   para_Tnum%f2f1_ana          = .FALSE.
 

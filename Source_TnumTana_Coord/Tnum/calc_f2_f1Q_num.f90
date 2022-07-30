@@ -181,9 +181,8 @@ MODULE mod_f2f2Vep
 !-----------------------------------------------------------
       IF (para_Tnum%Tana) THEN
 
-        CALL get_Numf2f1vep_WITH_AnaKEO(para_Tnum%ExpandTWOxKEO,Qact,   &
-                                        mole,Tdef2,Tdef1,vep,rho)
-
+        CALL get_Numf2f1vep_WITH_AnaKEO(para_Tnum%ExpandTWOxKEO,Qact,           &
+                                        mole,para_Tnum,Tdef2,Tdef1,vep,rho)
         IF (debug .OR. para_Tnum%WriteT) THEN
           write(out_unitp,*) ' f2,f1,vep with Tana'
           CALL Write_f2f1vep(Tdef2,Tdef1,vep,rho,mole%nb_act)

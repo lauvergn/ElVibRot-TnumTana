@@ -39,11 +39,9 @@ MODULE mod_dnRho
 !      fi(i)    = ( drho/dQi) / rho
 !      Fij(i,j) = ( d2rho/dQidQj) / rho
 !
-! nrho = 0 : Normal condition : rho = sqrt(jac)
+! nrho = 0 : Normal condition : rho = jac
 ! nrho = 1 : Wilson condition : rho = 1
-! nrho = 10: Wilson condition : rho = 1 (but without vep)
 ! nrho = 2 : ana              : analitical derivation
-! nrho = 20: ana              : analitical derivation (but without vep)
 ! nrho = 3 : num              : numerical derivation
 !
 !=====================================================================
@@ -68,7 +66,7 @@ MODULE mod_dnRho
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug = .FALSE.
-!     logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
       character (len=*), parameter :: name_sub = 'sub3_dnrho'
 !-----------------------------------------------------------
        IF (debug) THEN
@@ -87,7 +85,6 @@ MODULE mod_dnRho
 
        ELSE IF (nrho == 1) THEN
          ! Wilson
-
          CALL Set_ZERO_TO_dnSVM(dnrho)
          dnrho%d0 = ONE
 

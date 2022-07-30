@@ -123,7 +123,6 @@ MODULE mod_Tana_keo
         STOP
       end if
 
-
       CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
 
       nullify(tab_Q)
@@ -321,6 +320,7 @@ MODULE mod_Tana_keo
       write(out_unitp,*) ' VSCF     Form: ',para_Tnum%VSCFForm
       write(out_unitp,*) ' MidasCpp Form: ',para_Tnum%MidasCppForm
       write(out_unitp,*) ' LaTex    Form: ',para_Tnum%LaTexForm
+      write(out_unitp,*) ' Fortran  Form: ',para_Tnum%FortranForm
       write(out_unitp,*) '================================================='
       CALL flush_perso(out_unitp)
 
@@ -374,10 +374,20 @@ MODULE mod_Tana_keo
 
       IF (para_Tnum%LaTexForm) THEN
         write(out_unitp,*) '================================================='
-        write(out_unitp,*) 'LaTex file'
+        write(out_unitp,*) 'LaTex file: Eq_KEO.tex'
         write(out_unitp,*) '-------------------------------------------------'
         CALL file_open2(name_file = 'Eq_KEO.tex', iunit = nio)
         CALL write_keo_Latexform(mole, para_Tnum%ExpandTWOxKEO, nio, tab_Qname, para_Tnum%JJ)
+        close(nio)
+      END IF
+
+
+      IF (para_Tnum%FortranForm) THEN
+        write(out_unitp,*) '================================================='
+        write(out_unitp,*) 'Fortran file: TanaF2F1Vep.f90'
+        write(out_unitp,*) '-------------------------------------------------'
+        CALL file_open2(name_file = 'TanaF2F1Vep.f90', iunit = nio)
+        CALL write_keo_Fortranform(mole, para_Tnum%ExpandTWOxKEO, nio, tab_Qname, para_Tnum%JJ)
         close(nio)
       END IF
 
@@ -401,7 +411,6 @@ MODULE mod_Tana_keo
         write(out_unitp,*) '================================================='
         CALL flush_perso(out_unitp)
       END IF
-
 
    END SUBROUTINE compute_analytical_KEO
    SUBROUTINE compute_analytical_KEO_old(TWOxKEO,mole, para_Tnum, Qact)

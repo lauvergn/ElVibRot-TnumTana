@@ -12,7 +12,7 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -793,30 +793,30 @@ libEVR libevr: obj $(OBJ)/libEVR.a
 .PHONY: Tnum_FDriver Tnum_cDriver libTnum libTnum.a keotest
 .PHONY: tnum Tnum tnum-dist Tnum-dist Tnum_MCTDH Tnum_MidasCpp Midas midas
 
-Tnum_FDriver: obj $(Main_TnumTana_FDriverEXE)
+Tnum_FDriver: obj qml $(Main_TnumTana_FDriverEXE)
 	@echo "Main_TnumTana_FDriver OK"
-Tnum_cDriver: obj $(Main_TnumTana_cDriverEXE)
+Tnum_cDriver: obj qml $(Main_TnumTana_cDriverEXE)
 	@echo "Main_TnumTana_cDriver OK"
 #
-libTnum libTnum.a: obj $(OBJ)/libTnum.a
+libTnum libTnum.a: obj qml $(OBJ)/libTnum.a
 	@echo "libTnum.a OK"
 #
-keotest: obj $(KEOTESTEXE)
+keotest: obj qml $(KEOTESTEXE)
 	@echo "TEST_TnumTana OK"
 
-tnum Tnum tnum-dist Tnum-dist: obj $(TNUMEXE)
+tnum Tnum tnum-dist Tnum-dist: obj qml $(TNUMEXE)
 	@echo "Tnum OK"
 #
-Tnum_MCTDH: obj $(TNUMMCTDHEXE)
+Tnum_MCTDH: obj qml $(TNUMMCTDHEXE)
 	@echo "Tnum_MCTDH OK"
 #
 #TNUM_MiddasCppEXE
-Tnum_MidasCpp Midas midas: obj $(TNUM_MiddasCppEXE)
+Tnum_MidasCpp Midas midas: obj qml $(TNUM_MiddasCppEXE)
 	@echo "Tnum_MidasCpp OK"
 #
 .PHONY: Tana_test
 Tana_test: Tana_test.exe
-Tana_test.exe: obj $(Obj_lib) $(OBJ)/libTnum.a $(OBJ)/Tana_test.o
+Tana_test.exe: obj qml $(Obj_lib) $(OBJ)/libTnum.a $(OBJ)/Tana_test.o
 	$(LYNK90)   -o Tana_test.exe $(OBJ)/Tana_test.o $(OBJ)/libTnum.a $(LYNKFLAGS)
 $(OBJ)/Tana_test.o: $(DirTNUM)/sub_main/Tana_test.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/sub_main/Tana_test.f90
@@ -1003,27 +1003,27 @@ $(KEOTESTEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(KEOTEST).o
 	$(LYNK90)   -o $(KEOTESTEXE) $(OBJ)/$(KEOTEST).o $(OBJ)/libTnum.a $(LYNKFLAGS)
 
 #Main_TnumTana_FDriver
-$(Main_TnumTana_FDriverEXE): obj $(OBJ)/libTnum.a  $(OBJ)/Main_TnumTana_FDriver.o
+$(Main_TnumTana_FDriverEXE): obj $(OBJ)/libTnum.a $(QMLibDIR_full) $(dnSVMLibDIR_full) $(OBJ)/Main_TnumTana_FDriver.o
 	$(LYNK90)   -o $(Main_TnumTana_FDriverEXE) $(OBJ)/Main_TnumTana_FDriver.o $(OBJ)/libTnum.a $(LYNKFLAGS) $(dnSVMLIB)
-$(Main_TnumTana_cDriverEXE): obj $(OBJ)/libTnum.a $(OBJ)/Main_TnumTana_cDriver.o
+$(Main_TnumTana_cDriverEXE): obj $(OBJ)/libTnum.a $(QMLibDIR_full) $(dnSVMLibDIR_full) $(OBJ)/Main_TnumTana_cDriver.o
 	cp $(OBJ)/libTnum.a $(OBJ)/libTnumForcDriver.a
 	ar d $(OBJ)/libTnumForcDriver.a sub_integration.o
 	$(CompC) -o $(Main_TnumTana_cDriverEXE) $(CFLAGS) $(OBJ)/Main_TnumTana_cDriver.o $(OBJ)/libTnumForcDriver.a $(LYNKFLAGS) $(dnSVMLIB) -lgfortran -lm
 #
-$(TNUMEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMAIN).o
+$(TNUMEXE): obj $(OBJ)/libTnum.a $(QMLibDIR_full) $(dnSVMLibDIR_full) $(OBJ)/$(TNUMMAIN).o
 	$(LYNK90)   -o $(TNUMEXE) $(OBJ)/$(TNUMMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS) $(dnSVMLIB)
 #
-$(TNUMMCTDHEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUMMCTDHMAIN).o
+$(TNUMMCTDHEXE): obj $(OBJ)/libTnum.a $(QMLibDIR_full) $(dnSVMLibDIR_full) $(OBJ)/$(TNUMMCTDHMAIN).o
 	$(LYNK90)   -o $(TNUMMCTDHEXE) $(OBJ)/$(TNUMMCTDHMAIN).o $(OBJ)/libTnum.a $(LYNKFLAGS) $(dnSVMLIB)
 # TNUM_MiddasCppEXE  = Tnum90_MidasCpp.exe
 # TNUM_MiddasCppMAIN = Tnum90_MidasCpp
-$(TNUM_MiddasCppEXE): obj $(OBJ)/libTnum.a $(OBJ)/$(TNUM_MiddasCppMAIN).o
+$(TNUM_MiddasCppEXE): obj $(OBJ)/libTnum.a $(QMLibDIR_full) $(dnSVMLibDIR_full) $(OBJ)/$(TNUM_MiddasCppMAIN).o
 	$(LYNK90)   -o $(TNUM_MiddasCppEXE) $(OBJ)/$(TNUM_MiddasCppMAIN).o  $(OBJ)/libTnum.a $(LYNKFLAGS) $(dnSVMLIB)
 #
 $(GWPEXE): obj $(Obj_All) $(OBJ)/$(GWPMAIN).o
 	$(LYNK90)   -o $(GWPEXE) $(Obj_All) $(OBJ)/$(GWPMAIN).o  $(LYNKFLAGS)
 #
-$(WORKEXE): obj $(Obj_KEO_PrimOp) $(OBJ)/$(WORKMAIN).o
+$(WORKEXE): obj $(Obj_KEO_PrimOp) $(QMLibDIR_full) $(dnSVMLibDIR_full) $(OBJ)/$(WORKMAIN).o
 	$(LYNK90)   -o $(WORKEXE) $(Obj_KEO_PrimOp) $(OBJ)/$(WORKMAIN).o  $(LYNKFLAGS) $(dnSVMLIB)
 #$(Obj_Primlib)
 #===============================================PhysConst:obj $(PhysConstEXE)
@@ -1145,7 +1145,7 @@ $(OBJ)/RectilinearNM_Transfo.o:$(DirTNUM)/Qtransfo/RectilinearNM_Transfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/RectilinearNM_Transfo.f90
 $(OBJ)/RPHTransfo.o:$(DirTNUM)/Qtransfo/RPHTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/RPHTransfo.f90
-$(OBJ)/RPHQMLTransfo.o:$(DirTNUM)/Qtransfo/RPHQMLTransfo.f90
+$(OBJ)/RPHQMLTransfo.o:$(DirTNUM)/Qtransfo/RPHQMLTransfo.f90 $(QMLibDIR_full) $(dnSVMLibDIR_full)
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/RPHQMLTransfo.f90
 $(OBJ)/ActiveTransfo.o:$(DirTNUM)/Qtransfo/ActiveTransfo.f90
 	cd $(OBJ) ; $(F90_FLAGS)   -c $(DirTNUM)/Qtransfo/ActiveTransfo.f90

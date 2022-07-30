@@ -87,18 +87,18 @@
     module procedure delete_op1d,delete_sum_OF_op1d
   end interface
 
-  !!@description: Generic routine that initializes a variable of operator type to zero 
+  !!@description: Generic routine that initializes a variable of operator type to zero
   interface init_to_opzero
     module procedure init_opzero_op1d
   end interface
- 
-  !!@description: Generic routine that allocate variables of operator type  
+
+  !!@description: Generic routine that allocate variables of operator type
   interface allocate_op
     module procedure allocate_op1d,allocate_sum_OF_op1d
   end interface
- 
+
   !!@description: Generic routine that compares the index of the coordinate on
-  !!              which depends two 1d-operators 
+  !!              which depends two 1d-operators
   interface compare_indexq
     module procedure compare_indexq_F1el_F2_1d,&
                      compare_indexq_F1_1d_F2el, compare_indexq_F1_1d_F2_1d
@@ -145,7 +145,7 @@
    PUBLIC :: Change_PQ_OF_Op1D_TO_Id_OF_Op1D, Expand_Op1D_TO_SumOp1D
    PUBLIC :: Expand_Sin2_IN_Op1D_TO_SumOp1D
    PUBLIC :: Export_Latex_Op1d, Export_Midas_Op1d
-   PUBLIC :: Export_MCTDH_Op1d, Export_VSCF_Op1d
+   PUBLIC :: Export_MCTDH_Op1d, Export_VSCF_Op1d, Export_Fortran_Op1d
    PUBLIC :: present_op_zero_in_F_1d
    PUBLIC :: remove_Idop_in_F_1d, Set_coeff_OF_Op1D_TO_ONE, set_pqORJORL
    PUBLIC :: Der2_OF_d0Op1D,Der1_OF_d0SumOp1D,simplify_Op1D,            &
@@ -239,11 +239,11 @@
       END SUBROUTINE dealloc_NParray_OF_Op1Ddim1
 
 
- !! @description:    Check if op_zero is a componant of F_1d 
- !! @param:   F_1d      The 1d operator (type: op1d). 
+ !! @description:    Check if op_zero is a componant of F_1d
+ !! @param:   F_1d      The 1d operator (type: op1d).
  !! @param:   i_opzero  The index of the componant which is equal to op_zero.
- !!                      If F_1d doesn't contain a zero, i_opzero 
- !!                      will be initialized to -1 
+ !!                      If F_1d doesn't contain a zero, i_opzero
+ !!                      will be initialized to -1
  !! @param:    string   String. It just helps to localize the problem.
  subroutine present_op_zero_in_F_1d(F_1d, i_opzero, string)
    type(op1d),          intent(in)       :: F_1d
@@ -264,8 +264,8 @@
    end do
  end subroutine present_op_zero_in_F_1d
 
- !! @description:  Check the consistency of idq in F_1d 
- !! @param:    F_1d      The 1d operator (type: op1d). 
+ !! @description:  Check the consistency of idq in F_1d
+ !! @param:    F_1d      The 1d operator (type: op1d).
  !! @param:    string    Message text. It just help to localize the problem.
  subroutine check_idq_in_F_1d(F_1d, string)
    type(op1d),           intent(in)       :: F_1d
@@ -386,7 +386,7 @@
 
  !! @description: Compares the indexq of 2 operators
  !! @param:    F1_1d     The 1d operator.
- !! @param:    F2_1d     The 1d operator. 
+ !! @param:    F2_1d     The 1d operator.
  logical FUNCTION compare_indexq_F1_1d_F2_1d(F1_1d, F2_1d)
    type(op1d),           intent(in)       :: F1_1d
    type(op1d),           intent(in)       :: F2_1d
@@ -445,8 +445,8 @@
 
  end subroutine check_allocate_op1d
 
- !! @description: Deallocated a 1d operator 
- !! @param:    F_1d    The 1d operator (type: op1d). 
+ !! @description: Deallocated a 1d operator
+ !! @param:    F_1d    The 1d operator (type: op1d).
  subroutine delete_op1d(F_1d)
 
    type(op1d),           intent(inout)    :: F_1d
@@ -459,9 +459,9 @@
 
  end subroutine delete_op1d
 
- !! @description: Allocated a 1d operator 
- !! @param:    F_1d    The 1d operator (type: op1d). 
- !! @param:       ndim     Size of F_1d%prod_opel. 
+ !! @description: Allocated a 1d operator
+ !! @param:    F_1d    The 1d operator (type: op1d).
+ !! @param:       ndim     Size of F_1d%prod_opel.
  subroutine allocate_op1d(F_1d, ndim)
 
    type(op1d),           intent(inout)    :: F_1d
@@ -499,7 +499,7 @@
 
  end subroutine delete_sum_of_op1d
  !! @description: Initialized a 1d operator to zero
- !! @param:       F_1d    The 1d operator (type: op1d). 
+ !! @param:       F_1d    The 1d operator (type: op1d).
  subroutine init_opzero_op1d(F_1d)
 
    type(op1d),           intent(inout)    :: F_1d
@@ -511,10 +511,10 @@
 
  end subroutine init_opzero_op1d
 
- !! @description: Copy a 1d operator F1_1d to 
+ !! @description: Copy a 1d operator F1_1d to
  !!               another 1d operator F2_1d
- !! @param:     F1_1d    The operator which will be copied 
- !! @param:    F2_1d    The operator in which F1_sum_nd will be copied 
+ !! @param:     F1_1d    The operator which will be copied
+ !! @param:    F2_1d    The operator in which F1_sum_nd will be copied
  subroutine copy_F1_1d_into_F2_1d(F1_1d, F2_1d)
 
    type(op1d),           intent(in)    :: F1_1d
@@ -533,10 +533,10 @@
 
  end subroutine copy_F1_1d_into_F2_1d
 
- !! @description: Copy an elementary operator F1_el to 
+ !! @description: Copy an elementary operator F1_el to
  !!               another a 1d operator F2_1d
- !! @param:     F1_el    The operator which will be copied 
- !! @param:    F2_1d    The operator in which F1_sum_nd will be copied 
+ !! @param:     F1_el    The operator which will be copied
+ !! @param:    F2_1d    The operator in which F1_sum_nd will be copied
  subroutine copy_F1_el_into_F2_1d(F1_el, F2_1d)
 
    type(opel),           intent(in)    :: F1_el
@@ -1854,7 +1854,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
  !! @param:    F_1d     The 1d operator (type: op1d). It will be
  !!                            overwritten it necessary.
  !! @param:   l_Id     Optional out parameter. If l_Id = .true., that
- !!                        means that Fin_1d = Id operator 
+ !!                        means that Fin_1d = Id operator
  subroutine remove_Idop_in_F_1d(F_1d, l_Id)
 
    type(op1d),           intent(inout)    :: F_1d
@@ -1896,7 +1896,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
        call allocate_op(F_1d, size(Ftmp_1d%prod_opel)-n_opId)
        j = 0
        do i = 1,size(Ftmp_1d%prod_opel)
-         if(Ftmp_1d%prod_opel(i)%idf == 1 .or. Ftmp_1d%prod_opel(i)%alfa == 0) cycle 
+         if(Ftmp_1d%prod_opel(i)%idf == 1 .or. Ftmp_1d%prod_opel(i)%alfa == 0) cycle
          j = j+1
          F_1d%prod_opel(j) = Ftmp_1d%prod_opel(i)
          !call copy_F1_into_F2(Ftmp_1d%prod_opel(i), F_1d%prod_opel(j))
@@ -2243,6 +2243,47 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
 
  end subroutine Export_VSCF_Op1d
 
+ subroutine Export_Fortran_Op1d(F1d,qname,F1dName)
+   type(op1d),                       intent(in)     :: F1d
+   character (len =*),               intent(in)     :: qname
+   character (len = :), allocatable, intent(inout)  :: F1dName
+
+
+   !local variable
+   character (len = :), allocatable     :: FelName,F1dName_loc
+   integer :: k
+   character (len = *), parameter :: mult = '*'
+   logical :: First,AddTerm
+
+   character (len = *), parameter :: routine_name = 'Export_Fortran_Op1d'
+
+
+   !CALL write_op(F1d)
+
+   F1dName_loc = ''
+   First       = .TRUE.
+
+   IF (size(F1d%prod_opel) > 0) THEN
+     DO k=1,size(F1d%prod_opel)
+       IF (F1d%prod_opel(k)%idf /=  4) THEN
+         CALL Export_Fortran_OpEl(F1d%prod_opel(k),qname,Felname)
+         IF (.NOT. first) F1dName_loc = F1dName_loc // mult
+         F1dName_loc = F1dName_loc // Felname
+         First = .FALSE.
+       END IF
+     END DO
+     IF (allocated(FelName)) deallocate(FelName)
+
+   ELSE
+     F1dName_loc = ''
+   END IF
+
+   F1dName = trim(adjustl(F1dName_loc))
+
+   IF (allocated(F1dName_loc)) deallocate(F1dName_loc)
+
+
+ end subroutine Export_Fortran_Op1d
 
    !! @description: Write an array of 1d operators,
    !! @param:       F_1d      The operator (type: op1d).

@@ -79,11 +79,11 @@
       END INTERFACE
 
   !!@description: Generic routine that compares the index of the coordinate on
-  !!              which depends two 1d-operators 
+  !!              which depends two 1d-operators
   interface compare_indexq
     module procedure compare_indexq_F1el_F2el
   end interface
- 
+
   !!@description: Generic routine that compares two 1d-operators
   interface compare_op
     module procedure compare_F1el_F2el
@@ -107,7 +107,10 @@
    PUBLIC :: compare_op, compare_indexq, copy_F1_into_F2, write_op
    PUBLIC :: set_opel
    PUBLIC :: operator (*)
-   PUBLIC :: Export_MCTDH_OpEl, Export_Latex_OpEl, Export_Midas_OpEl, Export_VSCF_OpEl
+
+   PUBLIC :: Export_MCTDH_OpEl, Export_Latex_OpEl
+   PUBLIC :: Export_Midas_OpEl, Export_VSCF_OpEl, Export_Fortran_OpEl
+
    PUBLIC :: Change_PQ_OF_OpEl_TO_Id_OF_OpEl, Der1_OF_d0OpEl_TO_d1OpEl
    PUBLIC :: get_NumVal_OpEl, get_pqJL_OF_OpEl
    PUBLIC :: Merge_TabOpEl, Sort_TabOpEl, Split_OpEl_TO_SplitOpEl
@@ -258,7 +261,7 @@
    Fel%idf =  2; Fel%opname = 'q^alfa'
    Fel%idf =  3; Fel%opname = 'qus^alfa' ! sqrt(1-q^2)^alfa
 
-   Fel%idf =  4; Fel%opname = 'Pq'   ! -I*hb * dq
+   Fel%idf =  4; Fel%opname = 'Pq'   ! -I*hb * d./dq
 
    Fel%idf =  5; Fel%opname = 'cosq^alfa'
    Fel%idf =  6; Fel%opname = 'sinq^alfa'
@@ -364,16 +367,16 @@
 
    err_el_loc = 0
    select case (Fel%idf)
-     case(0) 
+     case(0)
        Fel%opname   = 'op_zero'
        Fel%coeff    = zero
        Fel%alfa     = 1
 
-     case(1) 
+     case(1)
        Fel%opname   = 'Id'
        Fel%alfa     = 1
 
-     case(2) 
+     case(2)
        IF (idq /= 1 .AND. idq /= 2 .AND. idq /=  -3 .AND. idq /= -7 .AND. idq /= 0) THEN
          write(out_unitp,*) 'ERROR in ',routine_name
          write(out_unitp,*) 'idq=', idq
@@ -395,7 +398,7 @@
          Fel%opname = 'q'//calfa
        end if
 
-     case(3) 
+     case(3)
        if (idq == -3) then
          Fel%opname = 'qus'//calfa
        else if(idq == -7) then
@@ -411,7 +414,7 @@
          err_el_loc = 1
        end if
 
-     case(4) 
+     case(4)
        if(idq == 1) then
          Fel%opname = 'Pqcart' // calfa
        else if(idq == 2) then
@@ -441,7 +444,7 @@
        end if
 
       case(5)
-         if(idq == 3) then 
+         if(idq == 3) then
            Fel%opname = 'cosqt'//calfa
          else if(idq == 4) then
            Fel%opname = 'cosqf'//calfa
@@ -463,8 +466,8 @@
            err_el_loc = 1
          end if
 
-     case(6) 
-         if(idq == 3) then 
+     case(6)
+         if(idq == 3) then
            Fel%opname = 'sinqt'//calfa
          else if(idq == 4) then
            Fel%opname = 'sinqf'//calfa
@@ -487,7 +490,7 @@
            err_el_loc = 1
          end if
 
-     case(7) 
+     case(7)
          if(idq == 3) then
            Fel%opname = 'tanqt'//calfa
          else if(idq == 4) then
@@ -511,8 +514,8 @@
            err_el_loc = 1
          end if
 
-     case(8) 
-         if(idq == 3) then 
+     case(8)
+         if(idq == 3) then
            Fel%opname = 'cotqt'//calfa
          else if(idq == 4) then
            Fel%opname = 'cotqf'//calfa
@@ -535,18 +538,18 @@
            err_el_loc = 1
          end if
 
-     case(9) 
+     case(9)
        Fel%idq    = 5
        Fel%opname = 'J_x'//calfa
-     case(10) 
+     case(10)
        Fel%idq    = 5
        Fel%opname = 'J_y'//calfa
-     case(11) 
+     case(11)
        Fel%idq    = 5
        Fel%opname = 'J_z'//calfa
 
-     case(12) 
-       if(idq == 1) then 
+     case(12)
+       if(idq == 1) then
          Fel%opname = 'Pqcart_qcart'//calfa
         else if(idq == 2) then
          Fel%opname = 'Pqr_r'//calfa
@@ -564,8 +567,8 @@
          !STOP
        end if
 
-     case(13) 
-       if(idq == 1) then 
+     case(13)
+       if(idq == 1) then
          Fel%opname = 'qcart'//calfa//'_Pqcart'
         else if(idq == 2) then
          Fel%opname = 'r'//calfa//'_Pqr'
@@ -583,8 +586,8 @@
          !STOP
        end if
 
-     case(14) 
-       if(idq == 3) then 
+     case(14)
+       if(idq == 3) then
          Fel%opname = 'Pqt_cosqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_cosqf'//calfa
@@ -600,8 +603,8 @@
          !STOP
        end if
 
-     case(15) 
-       if(idq == 3) then 
+     case(15)
+       if(idq == 3) then
          Fel%opname = 'cosqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'cosqf'//calfa//'_Pqf'
@@ -617,8 +620,8 @@
          !STOP
        end if
 
-     case(16) 
-       if(idq == 3) then 
+     case(16)
+       if(idq == 3) then
          Fel%opname = 'Pqt_sinqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_sinqf'//calfa
@@ -634,8 +637,8 @@
          !STOP
        end if
 
-     case(17) 
-       if(idq == 3) then 
+     case(17)
+       if(idq == 3) then
          Fel%opname = 'sinqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'sinqf'//calfa//'_Pqf'
@@ -651,8 +654,8 @@
          !STOP
        end if
 
-     case(18) 
-       if(idq == 3) then 
+     case(18)
+       if(idq == 3) then
          Fel%opname = 'Pqt_tanqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_tanqf'//calfa
@@ -668,8 +671,8 @@
          !STOP
        end if
 
-     case(19) 
-       if(idq == 3) then 
+     case(19)
+       if(idq == 3) then
          Fel%opname = 'tanqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'tanqf'//calfa//'_Pqf'
@@ -685,8 +688,8 @@
          !STOP
        end if
 
-     case(20) 
-       if(idq == 3) then 
+     case(20)
+       if(idq == 3) then
          Fel%opname = 'Pqt_cotqt'//calfa
        else if(idq == 4) then
          Fel%opname = 'Pqf_cotqf'//calfa
@@ -702,8 +705,8 @@
          !STOP
        end if
 
-     case(21) 
-       if(idq == 3) then 
+     case(21)
+       if(idq == 3) then
          Fel%opname = 'cotqt'//calfa//'_Pqt'
        else if(idq == 4) then
          Fel%opname = 'cotqf'//calfa//'_Pqf'
@@ -719,7 +722,7 @@
          !STOP
        end if
 
-     case(22) 
+     case(22)
        if(idq == -3) then
          Fel%opname = 'Pqu_qus'//calfa
        else if(idq == 0) then
@@ -731,9 +734,9 @@
          write(out_unitp,*) "for idf = 22, idq should be: -3 (=u)"
          err_el_loc = 1
          !STOP
-       end if 
+       end if
 
-     case(23) 
+     case(23)
        if(idq == -3) then
          Fel%opname = 'qus'//calfa//'_Pqu'
        else if(idq == 0) then
@@ -744,15 +747,15 @@
          write(out_unitp,*) 'idf=', idf
          write(out_unitp,*) "for idf = 23, idq should be: -3 (=u)"
          err_el_loc = 1
-       end if 
+       end if
 
-     case(24) 
+     case(24)
        Fel%idq    = -5
        Fel%opname = 'L_x'//calfa
-     case(25) 
+     case(25)
        Fel%idq    = -5
        Fel%opname = 'L_y'//calfa
-     case(26) 
+     case(26)
        Fel%idq    = -5
        Fel%opname = 'L_z'//calfa
 
@@ -1869,9 +1872,183 @@ END FUNCTION Qnamealfa_Latex
 
 
  end subroutine Export_VSCF_OpEl
- !! @description: Compares the idq of two elementary operators 
- !! @param:    F1_el     The first elementary operator. 
- !! @param:    F2_el     The second elementary operator. 
+
+ subroutine Export_Fortran_OpEl(Fel,qname,FelName)
+   type(opel),                       intent(in)    :: Fel
+   character (len =*),               intent(in)    :: qname
+   character (len = :), allocatable, intent(inout) :: FelName
+
+   ! local variable
+   character (len = :), allocatable     :: PName,SQName,FuncQName,FelName_loc
+   character (len = :), allocatable     :: calfa
+
+   character (len = *), parameter :: routine_name = 'Export_Fortran_OpEl'
+
+   IF (allocated(FelName)) deallocate(FelName)
+
+
+   FelName_loc = ''
+   !CALL write_op(Fel)
+
+   calfa        = '**(' // frac_TO_string(Fel%alfa) // ')'
+   PName        = 'P_' // qname
+   FuncQName    = '(' // qname // ')'
+   SQName       = 'v' // qname(2:len_trim(qname))
+
+   select case (Fel%idf)
+     case(0) ! 0
+       FelName_loc = '0'
+     case(1) ! Id
+       FelName_loc = '1'
+
+     case(2) ! q^alfa
+       IF (Fel%alfa /= 1) THEN
+         FelName_loc = QName // calfa
+       ELSE
+         FelName_loc = QName
+       END IF
+
+     case(3) ! sqrt(1-Q^2)^alfa
+       FelName_loc = 'sqrt(1-' // QName // '**2)'
+       IF (Fel%alfa /= 1) FelName_loc = FelName_loc // calfa
+
+     case(4) ! PQ^alfa
+       FelName_loc = PName
+       IF (Fel%alfa /= 1) FelName_loc = FelName_loc // calfa
+
+     case(5) ! cos(Q)^alfa
+       FelName_loc = 'cos' // FuncQName
+       IF (Fel%alfa /= 1) FelName_loc = FelName_loc // calfa
+
+     case(6) ! sin(Q)^alfa
+       FelName_loc = 'sin' // FuncQName
+       IF (Fel%alfa /= 1) FelName_loc = FelName_loc // calfa
+
+     case(7) ! tan(Q)^alfa
+       FelName_loc = 'tan' // FuncQName
+       IF (Fel%alfa /= 1) FelName_loc = FelName_loc // calfa
+
+     case(8) ! cot(Q)^alfa
+       FelName_loc = 'cot' // FuncQName
+       IF (Fel%alfa /= 1) FelName_loc = FelName_loc // calfa
+
+     case(9) ! Jx
+       FelName_loc = 'Jx'
+       IF (Fel%alfa /= 1) FelName_loc = FelName_loc // calfa
+
+     case(10) ! Jy
+       FelName_loc = 'Jy'
+       IF (Fel%alfa /= 1) FelName_loc = FelName_loc // calfa
+     case(11) ! Jz
+       FelName_loc = 'Jz'
+       IF (Fel%alfa /= 1) FelName_loc = FelName_loc // calfa
+
+     case(12) ! PQ Q^alfa
+       IF (Fel%alfa /= 1) THEN
+         FelName_loc = PName // FuncQName // calfa
+       ELSE
+         FelName_loc = PName // QName
+       END IF
+
+     case(13) ! Q^alfa PQ
+       IF (Fel%alfa /= 1) THEN
+         FelName_loc = FuncQName // calfa // PName
+       ELSE
+         FelName_loc = QName // PName
+       END IF
+
+     case(14) ! PQ cos(Q)^alfa
+       FelName_loc = PName // 'cos' // FuncQName
+       IF (Fel%alfa /= 1) FelName_loc = FelName_loc // calfa
+
+     case(15) ! cos(Q)^alfa PQ
+       FelName_loc = 'cos' // FuncQName
+       IF (Fel%alfa /= 1) FelName_loc = FelName_loc // calfa
+       FelName_loc = FelName_loc // PName
+
+     case(16)  ! PQ sin(Q)^alfa
+       FelName_loc = String_TO_String(PName // 'sin')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
+
+     case(17) ! sin(Q)^alfa PQ
+       FelName_loc = String_TO_String('sin')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName // PName)
+
+     case(18)   ! PQ tan(Q)^alfa
+       FelName_loc = String_TO_String(PName // 'tan')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
+
+     case(19) ! tan(Q)^alfa PQ
+       FelName_loc = String_TO_String('tan')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName // PName)
+
+     case(20)   ! PQ cot(Q)^alfa
+       FelName_loc = String_TO_String(PName // 'cot')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName)
+
+     case(21)  ! cot(Q)^alfa PQ
+       FelName_loc = String_TO_String('cot')
+       IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       FelName_loc = String_TO_String(FelName_loc // FuncQName // PName)
+
+     case(22)   ! PQ sqrt(1-Q^2)^alfa
+       !FelName_loc = String_TO_String(PName // 'sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+
+       FelName_loc = String_TO_String(PName)
+       IF (Fel%alfa /= 1) THEN
+         FelName_loc = String_TO_String(FelName_loc // '(' // SQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // calfa)
+       ELSE
+         FelName_loc = String_TO_String(FelName_loc // SQName)
+       END IF
+
+     case(23) ! sqrt(1-Q^2)^alfa PQ
+       !FelName_loc = String_TO_String('sqrt(1-' // FuncQName // '^2)' )
+       !IF (Fel%alfa /= 1) FelName_loc = String_TO_String(FelName_loc // calfa)
+       !FelName_loc = String_TO_String(FelName_loc // PName)
+
+       IF (Fel%alfa /= 1) THEN
+         FelName_loc = String_TO_String('(' // SQName // ')')
+         FelName_loc = String_TO_String(FelName_loc // calfa)
+       ELSE
+         FelName_loc = String_TO_String(SQName)
+       END IF
+       FelName_loc = String_TO_String(FelName_loc // PName)
+
+     case(24) ! Lx
+       FelName_loc = 'Lx'
+     case(25) ! Ly
+       FelName_loc = 'Ly'
+     case(26) ! Lz
+       FelName_loc = 'Lz'
+
+     case default
+           write(out_unitp,*) 'ERROR in ',routine_name
+           write(out_unitp,*) 'idf=', Fel%idf
+           write(out_unitp,*) "This idf is not registered for an elementary operator"
+           write(out_unitp,*) "   illegal value of idf . (Internal Bug)"
+           STOP
+     end select
+     FelName = FelName_loc
+
+     IF (allocated(FelName_loc))  deallocate(FelName_loc)
+     IF (allocated(calfa))        deallocate(calfa)
+     IF (allocated(PName))        deallocate(PName)
+     IF (allocated(SQName))       deallocate(SQName)
+     IF (allocated(FuncQName))    deallocate(FuncQName)
+
+
+ end subroutine Export_Fortran_OpEl
+
+ !! @description: Compares the idq of two elementary operators
+ !! @param:    F1_el     The first elementary operator.
+ !! @param:    F2_el     The second elementary operator.
  logical FUNCTION compare_indexq_F1el_F2el(F1_el, F2_el)
 
    type(opel),           intent(in)       :: F1_el
@@ -1898,10 +2075,10 @@ END FUNCTION Qnamealfa_Latex
 
  END FUNCTION compare_F1el_F2el
 
- !! @description: Copy a elementary operator F1_el to 
+ !! @description: Copy a elementary operator F1_el to
  !!               another elementary operator F2_el
- !! @param:     F1_el    The operator which will be copied 
- !! @param:     F2_el    The operator in which F1_el will be copied 
+ !! @param:     F1_el    The operator which will be copied
+ !! @param:     F2_el    The operator in which F1_el will be copied
  !! @param:     idf      The new id of the operation, optional
  !! @param:     idq      The new id of the coordinate, optional
  !! @param:     alfa     The new power of the operator, optional
