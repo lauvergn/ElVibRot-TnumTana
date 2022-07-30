@@ -149,7 +149,7 @@ MODULE mod_Tana_keo
 
       !-----------------------------------------------------------------
       !      DML 9/12/2012
-      !      modification to use a different ordering than the polysperical one
+      !      modification to use a different ordering than the polyspherical one
       !      Lists have been used in "BFTransfo":list_Qpoly_TO_Qprim and list_Qprim_TO_Qpoly
       !      Now:
       !      - the order of "Qdyn" is "Qprim"

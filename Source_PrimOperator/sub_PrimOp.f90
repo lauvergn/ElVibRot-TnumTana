@@ -383,7 +383,9 @@
       TYPE (zmatrix)   :: mole
 
 !----- for Qact ... ---------------------------------------------
-      real (kind=Rkind), intent(inout) :: Qact(:)
+      !real (kind=Rkind), intent(inout) :: Qact(:)
+      real (kind=Rkind), intent(in) :: Qact(:)
+
       TYPE (PrimOp_t) :: PrimOp
 
 !----- input output variables ----------------------------------------
@@ -411,7 +413,9 @@
       TYPE (CoordType) :: mole
 
 !----- for Qact ... ---------------------------------------------
-      real (kind=Rkind), intent(inout) :: Qact(:)
+      !real (kind=Rkind), intent(inout) :: Qact(:)
+      real (kind=Rkind), intent(in) :: Qact(:)
+
       TYPE (PrimOp_t) :: PrimOp
 
 !----- input output variables ----------------------------------------
@@ -842,7 +846,9 @@
       TYPE (zmatrix) :: mole
 
 !----- for Qact ... ---------------------------------------------
-      real (kind=Rkind), intent(inout) :: Qact(:)
+      !real (kind=Rkind), intent(inout) :: Qact(:)
+      real (kind=Rkind), intent(in) :: Qact(:)
+
       TYPE (PrimOp_t)                 :: PrimOp
 
 !----- input output variables ----------------------------------------
@@ -873,7 +879,9 @@
       TYPE (CoordType) :: mole
 
 !----- for Qact ... ---------------------------------------------
-      real (kind=Rkind), intent(inout) :: Qact(:)
+      !real (kind=Rkind), intent(inout) :: Qact(:)
+      real (kind=Rkind), intent(in) :: Qact(:)
+
       TYPE (PrimOp_t) :: PrimOp
 
 !----- input output variables ----------------------------------------
@@ -1012,8 +1020,6 @@
                                 MatdnScalCC,nderivScal,                 &
                                 mole,PrimOp)
 
-
-        !write(77,*) Qact(1:mole%nb_act),MatdnECC%d0,MatdnScalCC%d0
 
         !----------------------------------------------------------------
         !- then conversion: CC=>Q
@@ -1343,7 +1349,9 @@
       TYPE (CoordType)   :: mole
       TYPE (Tnum)      :: para_Tnum
 
-      real (kind=Rkind), intent(inout) :: Qact(:)
+      !real (kind=Rkind), intent(inout) :: Qact(:)
+      real (kind=Rkind), intent(in) :: Qact(:)
+
       TYPE (PrimOp_t) :: PrimOp
 
       TYPE (param_dnMatOp), intent(inout) :: Tab_dnMatOp(:)
