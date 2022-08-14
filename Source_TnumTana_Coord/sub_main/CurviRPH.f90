@@ -156,7 +156,6 @@ implicit NONE
   flush(out_unitp)
 
 
-  !Q_QML(:) = [ZERO,ZERO,-d0Func(2),  ZERO,ZERO,ZERO,  ZERO,ZERO,d0Func(3)] ! in Cartesian
   Q_QML(:) = [d0Qop(1:2),sum(d0Qop(1:2))]
   CALL sub_Qmodel_VGH(V,G,H,Q_QML)
 

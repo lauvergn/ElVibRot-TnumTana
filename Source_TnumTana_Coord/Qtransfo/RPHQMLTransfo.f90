@@ -331,12 +331,11 @@ SUBROUTINE calc_RPHQMLTransfo(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
 
   TYPE (Type_dnVec),         intent(inout)  :: dnQin,dnQout
   TYPE (Type_RPHQMLTransfo), intent(in)     :: RPHQMLTransfo
-  integer, intent(in)                       :: nderiv
-  logical                                   :: inTOout
+  integer,                   intent(in)     :: nderiv
+  logical,                   intent(in)     :: inTOout
 
 
   TYPE (dnS_t), allocatable :: dnQact1_in(:),dnQinact21_in(:)
-  TYPE (dnS_t), allocatable :: dnQact1_RedDer_in(:)
 
   TYPE (dnS_t), allocatable :: dnQinact21_out(:),dnQinact21_optout(:)
   TYPE (dnS_t), allocatable :: dnAlphaON(:,:)
@@ -354,14 +353,15 @@ SUBROUTINE calc_RPHQMLTransfo(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
 !----- for debuging ----------------------------------
   character (len=*),parameter :: name_sub='calc_RPHQMLTransfo'
   integer :: nderiv_debug=1
-  !logical, parameter :: debug=.FALSE.
-  logical, parameter :: debug=.TRUE.
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
 !----- for debuging ----------------------------------
 
 !---------------------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'inTOout',inTOout
+    write(out_unitp,*) 'nderiv',nderiv
     CALL Write_RPHQMLTransfo(RPHQMLTransfo)
 
     write(out_unitp,*) 'Qact1',dnQin%d0(1:RPHQMLTransfo%nb_act1_in)
@@ -380,15 +380,12 @@ SUBROUTINE calc_RPHQMLTransfo(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
     ! here, it assumes that the RPH_QML transfo is just after the active one
     ! => the nb_act1 Qact1 variables are the first ones
     allocate(dnQact1_in(RPHQMLTransfo%nb_act1_in))
-    allocate(dnQact1_RedDer_in(RPHQMLTransfo%nb_act1_in))
     allocate(list_act1(RPHQMLTransfo%nb_act1_in))
     list_act1(:) = [(i,i=1,RPHQMLTransfo%nb_act1_in)]
 
     DO i=1,RPHQMLTransfo%nb_act1_in
       CALL sub_dnVec_TO_dnSt(dnQin,dnQact1_in(i), i)
-      IF (debug) CALL Write_dnS(dnQact1_in(i),       info='dnQact1_in('        // int_TO_char(i) // ')')
-      !CALL ReduceDerivatives_dnS2_TO_dnS1(dnQact1_RedDer_in(i),dnQact1_in(i),list_act=list_act1)
-      !IF (debug) CALL Write_dnS(dnQact1_RedDer_in(i),info='dnQact1_RedDer_in(' // int_TO_char(i) // ')')
+      IF (debug) CALL Write_dnS(dnQact1_in(i),info='dnQact1_in(' // int_TO_char(i) // ')')
     END DO
 
     ! => the nb_inact21 Qinact21 variables are the next ones
@@ -429,7 +426,7 @@ SUBROUTINE calc_RPHQMLTransfo(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
     END DO
     END DO
 
-    !3) get dnQinact21_optout(:) and the dnAlphaON(:,:) from the QMLib
+    !3) get dnQinact21_out(:)
     allocate(dnQinact21_out(RPHQMLTransfo%nb_inact21_out))
 
     dnQinact21_out = dnQinact21_optout + matmul(dnAlphaON,dnQinact21_in)
@@ -492,7 +489,6 @@ SUBROUTINE calc_RPHQMLTransfo_v0(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
 
 
   TYPE (dnS_t), allocatable :: dnQact1_in(:),dnQinact21_in(:)
-  TYPE (dnS_t), allocatable :: dnQact1_RedDer_in(:)
 
   TYPE (dnS_t), allocatable :: dnQinact21_out(:),dnQinact21_optout(:)
   TYPE (dnS_t), allocatable :: dnAlphaON(:,:)
@@ -535,15 +531,12 @@ SUBROUTINE calc_RPHQMLTransfo_v0(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
     ! here, it assumes that the RPH_QML transfo is just after the active one
     ! => the nb_act1 Qact1 variables are the first ones
     allocate(dnQact1_in(RPHQMLTransfo%nb_act1_in))
-    allocate(dnQact1_RedDer_in(RPHQMLTransfo%nb_act1_in))
     allocate(list_act1(RPHQMLTransfo%nb_act1_in))
     list_act1(:) = [(i,i=1,RPHQMLTransfo%nb_act1_in)]
 
     DO i=1,RPHQMLTransfo%nb_act1_in
       CALL sub_dnVec_TO_dnSt(dnQin,dnQact1_in(i), i)
       IF (debug) CALL Write_dnS(dnQact1_in(i),       info='dnQact1_in('        // int_TO_char(i) // ')')
-      !CALL ReduceDerivatives_dnS2_TO_dnS1(dnQact1_RedDer_in(i),dnQact1_in(i),list_act=list_act1)
-      !IF (debug) CALL Write_dnS(dnQact1_RedDer_in(i),info='dnQact1_RedDer_in(' // int_TO_char(i) // ')')
     END DO
 
     ! => the nb_inact21 Qinact21 variables are the next ones
