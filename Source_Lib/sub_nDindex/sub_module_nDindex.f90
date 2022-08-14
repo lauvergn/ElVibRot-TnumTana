@@ -229,7 +229,7 @@
         END IF
 
         IF (present(tab_i_TO_l)) THEN
-          CALL alloc_array(nDindex%Tab_i_TO_L,(/nDindex%ndim/),       &
+          CALL alloc_array(nDindex%Tab_i_TO_L,[nDindex%ndim],       &
                           "nDindex%Tab_i_TO_L",name_sub)
           DO i=1,nDindex%ndim
             CALL alloc_dnSVM(nDindex%Tab_i_TO_L(i),Tab_i_TO_L(i)%nb_var_vec)
@@ -2435,6 +2435,10 @@ END SUBROUTINE init_nDindex_type5p
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) '  nDval (in) ',nDval
+        write(out_unitp,*) '  nDend  ',nDindex%nDend
+        write(out_unitp,*) '  nDinit ',nDindex%nDinit
+        write(out_unitp,*) '  nDindex%Lmax',nDindex%Lmax
+
       END IF
 !-----------------------------------------------------------
 
@@ -2442,7 +2446,10 @@ END SUBROUTINE init_nDindex_type5p
     nDval(nDindex%ndim) = nDval(nDindex%ndim) + 1
 
     CALL Analysis_nDval_nDindex_type5(nDval,nDindex,L,In_the_list,InRange)
-    IF (debug) write(out_unitp,*) 'nDval (temp)',nDval,In_the_list,InRange
+    IF (debug) THEN
+      write(out_unitp,*) 'nDval (temp),L',nDval,':',L
+      write(out_unitp,*) 'nDval (temp)',nDval,':',In_the_list,InRange
+    END IF
 
 
     IF ( nDval(nDindex%ndim) > nDindex%nDend(nDindex%ndim) .OR. L > nDindex%Lmax) THEN
@@ -2452,7 +2459,11 @@ END SUBROUTINE init_nDindex_type5p
         nDval(i-1) = nDval(i-1) + 1
 
         CALL Analysis_nDval_nDindex_type5(nDval,nDindex,L,In_the_list,InRange)
-        IF (debug) write(out_unitp,*) 'nDval2 (temp)',nDval,In_the_list,InRange
+
+        IF (debug) THEN
+          write(out_unitp,*) 'nDval2 (temp),L',nDval,':',L
+          write(out_unitp,*) 'nDval2 (temp)',nDval,':',In_the_list,InRange
+        END IF
 
         IF (In_the_list) EXIT
 
@@ -2535,7 +2546,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
   integer,             intent(inout)     :: L,L1,L2
   integer,             intent(in)        :: nDval(:)
 
-  integer         :: i
+  integer         :: i,vali
 
     IF (associated(nDindex%Tab_i_TO_l)) THEN
       L1 = 0
@@ -2543,7 +2554,10 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
       L  = 0
 
       DO i=1,nDindex%ndim
-        IF (nDval(i) > ubound(nDindex%Tab_i_TO_l(i)%vec,dim=1)) THEN
+        vali = nDval(i)
+        IF (nDindex%nDinit(i) == 0) vali = vali + 1
+
+        IF (vali > ubound(nDindex%Tab_i_TO_l(i)%vec,dim=1)) THEN
           IF (nDindex%nDNum_OF_Lmax(i) == 1) THEN
             L1 = L1 + nDindex%L1max+1
           ELSE IF (nDindex%nDNum_OF_Lmax(i) == 2) THEN
@@ -2553,11 +2567,11 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
           END IF
         ELSE
           IF (nDindex%nDNum_OF_Lmax(i) == 1) THEN
-            L1 = L1 + nDindex%Tab_i_TO_l(i)%vec(nDval(i))
+            L1 = L1 + nDindex%Tab_i_TO_l(i)%vec(vali)
           ELSE IF (nDindex%nDNum_OF_Lmax(i) == 2) THEN
-            L2 = L2 + nDindex%Tab_i_TO_l(i)%vec(nDval(i))
+            L2 = L2 + nDindex%Tab_i_TO_l(i)%vec(vali)
           ELSE
-            L  = L + nDindex%Tab_i_TO_l(i)%vec(nDval(i))
+            L  = L + nDindex%Tab_i_TO_l(i)%vec(vali)
           END IF
         END IF
       END DO
@@ -2657,10 +2671,10 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
   END SUBROUTINE ADD_ONE_TO_nDval_p1
 
   SUBROUTINE calc_nDI(nDI,nDval,nDindex,err_sub)
-    TYPE (Type_nDindex),intent(in) :: nDindex
-    integer, intent(in)    :: nDval(:)
-    integer, intent(inout) :: nDI
-    integer,             intent(inout), optional     :: err_sub
+    TYPE (Type_nDindex), intent(in)               :: nDindex
+    integer,             intent(in)               :: nDval(:)
+    integer,             intent(inout)            :: nDI
+    integer,             intent(inout), optional  :: err_sub
 
     integer :: i,ib,ibm,ibp,nDval_tmp(nDindex%ndim)
     logical :: not_out_of_range,found
@@ -3455,9 +3469,9 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
         nDindex%Max_nDI     = 0
 
         CALL init_nDval_OF_nDindex(nDindex,nDval)
-
         DO
           CALL ADD_ONE_TO_nDindex_type5p(nDval,nDindex,In_the_list)
+
           IF (.NOT. In_the_list) EXIT
           nDindex%Max_nDI     = nDindex%Max_nDI + 1
           !write(out_unitp,*) 'nDI,nDval',nDindex%Max_nDI,nDval
@@ -3532,6 +3546,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE Write_nDindex(nDindex,name_info)
+        USE mod_dnSVM
         IMPLICIT NONE
         TYPE (Type_nDindex) :: nDindex
         character (len=*), optional  :: name_info
@@ -3585,6 +3600,13 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
         IF (allocated(nDindex%skip_li)) THEN
           DO i=1,nDindex%ndim
              write(out_unitp,*) i,'skip_li(:,i)',nDindex%skip_li(:,i)
+          END DO
+        END IF
+
+        write(out_unitp,*) trim(name_info_loc),'Tab_i_TO_l'
+        IF (associated(nDindex%Tab_i_TO_l)) THEN
+          DO i=1,nDindex%ndim
+             CALL Write_dnSVM(nDindex%Tab_i_TO_l(i))
           END DO
         END IF
 
