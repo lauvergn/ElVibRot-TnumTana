@@ -413,10 +413,10 @@
       USE mod_system
       IMPLICIT NONE
 
-      real (kind=Rkind), intent(in)     :: Q0(:)
+      real (kind=Rkind),  intent(in)    :: Q0(:)
       TYPE (param_nDFit), intent(inout) :: para_nDFit
 
-      integer           :: nb_act
+      integer           :: i,nb_act
 
 
 !----- For the namelist ----------------------------------------------

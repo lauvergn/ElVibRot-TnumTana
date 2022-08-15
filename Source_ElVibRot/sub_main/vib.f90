@@ -283,7 +283,7 @@
             CALL init_psi0(WP0,para_propa%para_WP0,mole)
 
             ip = para_propa%para_WP0%WP0_dip
-            IF (ip > 0 .AND. ip <4) THEN
+            IF (ip > 0 .AND. ip < 4) THEN
               iOp = 2
               para_Dip => para_AllOp%tab_Op(iOp+1:iOp+3)
 
@@ -329,7 +329,7 @@
             IF(keep_MPI) THEN
               ana_WP0               = para_propa%ana_psi
               CALL modif_ana_psi(ana_WP0,                               &
-                                 Ene=ZERO,T=ZERO,ZPE=ZERO,Write_Psi=.FALSE.)
+                                 Ene=ZERO,T=ZERO,ZPE=ZERO)
 
               ana_WP0%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
 

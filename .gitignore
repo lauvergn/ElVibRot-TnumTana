@@ -6,7 +6,7 @@ Source_TnumTana_Coord/sub_operator_T/Sub_X_TO_Q_ana.f90
 sub_pot/sub_system.f
 sub_pot/sub_system.f90
 obj/*
-makefile_CRP
+makefile_CRP makefile_old
 vib
 comp.log
 *.exe
