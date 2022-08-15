@@ -404,6 +404,12 @@
           PrimOp%para_OTF%file_header%name=trim(para_PES_FromTnum%file_name_OTF) // '.header'
           PrimOp%para_OTF%file_footer%name=trim(para_PES_FromTnum%file_name_OTF) // '.footer'
           PrimOp%para_OTF%file_pun%name=trim(para_PES_FromTnum%file_name_OTF)    // '.pun'
+        CASE ('molpro')
+          PrimOp%para_OTF%file_data%name=trim(para_PES_FromTnum%file_name_OTF)   // '.inp'
+          PrimOp%para_OTF%file_log%name=trim(para_PES_FromTnum%file_name_OTF)    // '.outm'
+          PrimOp%para_OTF%file_header%name=trim(para_PES_FromTnum%file_name_OTF) // '.header'
+          PrimOp%para_OTF%file_footer%name=trim(para_PES_FromTnum%file_name_OTF) // '.footer'
+          PrimOp%para_OTF%file_pun%name=trim(para_PES_FromTnum%file_name_OTF)    // '.log'
         CASE ('generic')
           PrimOp%para_OTF%file_data%name=trim(para_PES_FromTnum%file_name_OTF)   // '.evrti'
           PrimOp%para_OTF%file_log%name=trim(para_PES_FromTnum%file_name_OTF)    // '.evrto'

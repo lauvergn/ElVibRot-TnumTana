@@ -1251,7 +1251,7 @@ END IF
 
 
 !----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub='pot_mu_onthefly_gamess'
+      character (len=*), parameter :: name_sub='pot_mu_onthefly_molpro'
       logical, parameter :: debug=.FALSE.
 !      logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
@@ -1271,11 +1271,10 @@ END IF
       END IF
 
 
-
       !-----------------------------------------------------------------
       !- read the energy from the file energy, gradient, hessian
-      CALL Read_dnECC_Gamess(dnECC,PrimOp%para_OTF%file_log%name,     &
-                 PrimOp%para_OTF%file_pun%name,nderivE,mole%ncart_act)
+      CALL Read_dnECC_Molpro(dnECC,PrimOp%para_OTF%file_log%name,     &
+                             nderivE,mole%ncart_act)
 
       !-----------------------------------------------------------------
       !- read the Dipole Moment from the file xx.pun
@@ -1306,6 +1305,7 @@ END IF
 
 
 END SUBROUTINE pot_mu_onthefly_molpro
+
 SUBROUTINE Calc_EneDip_WITH_Molpro(Qxyz,nderivE,nderivDip,mole,PrimOp,para_OTF)
 
       USE mod_system
