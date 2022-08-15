@@ -3565,7 +3565,7 @@
             ! It is added in place of iX (the canonical point for the Radau)
             CALL Add_DummyG(Mat_At_TO_centers,COM,iX,masses_OF_At,MtotG,&
                             tab_At_TO_X(2:nb_At_FOR_G+1))
-            ! .... then it is transfered in Mat_At_TO_G
+            ! .... then it is transferred in Mat_At_TO_G
             Mat_At_TO_G(:) = Mat_At_TO_centers(:,iX)
             IF (debug) write(out_unitp,*) 'MtotG,Mat_At_TO_G(:)',MtotG,Mat_At_TO_G(:)
 

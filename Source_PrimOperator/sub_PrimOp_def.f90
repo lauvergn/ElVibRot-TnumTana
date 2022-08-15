@@ -353,6 +353,11 @@
 !-----------------------------------------------------------
 
         PrimOp%stepOp                = para_PES_FromTnum%stepOp
+        IF (PrimOp%stepOp == ZERO) THEN
+          PrimOp%stepOp = ONETENTH**4
+          IF (para_PES_FromTnum%OnTheFly) PrimOp%stepOp = ONETENTH**2
+        END IF
+
         PrimOp%opt                   = para_PES_FromTnum%opt
         PrimOp%pot0                  = para_PES_FromTnum%pot0
         PrimOp%HarD                  = para_PES_FromTnum%HarD

@@ -889,7 +889,7 @@ MODULE mod_Tnum
       IF (print_level > 1) write(out_unitp,variables)
 
       IF (stepT  == ZERO)  stepT  = ONETENTH**4
-      IF (stepOp == ZERO)  stepOp = stepT
+      !IF (stepOp == ZERO)  stepOp = stepT
       IF (Rot_Dip_with_EC) Cart_transfo = .TRUE.
 
       para_Tnum%JJ                   = JJ

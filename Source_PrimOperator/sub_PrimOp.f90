@@ -1406,6 +1406,7 @@
       ELSE
         nb_thread = Grid_maxth
       END IF
+      IF (PrimOp%OnTheFly) nb_thread = 1
       IF (print_level > 1) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
       CALL flush_perso(out_unitp)
 

@@ -331,7 +331,7 @@ SUBROUTINE dfpmin_new(Qact,MatdnE,mole,PrimOp,para_Tnum,para_BFGS,    &
  call flush(out_unitp)
 
  IF (associated(para_BFGS%hessian_inv_init)) THEN
-   write(out_unitp,*) ' The initial hessian is transfered'
+   write(out_unitp,*) ' The initial hessian is transferred'
    hessin(:,:) = para_BFGS%hessian_inv_init(:,:)
  ELSE
    hessin(:,:) = ZERO

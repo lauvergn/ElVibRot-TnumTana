@@ -1279,7 +1279,14 @@ END IF
       !-----------------------------------------------------------------
       !- read the Dipole Moment from the file xx.pun
       IF (nderivMu > -1) THEN
-        STOP 'Dipole moment with molpro: not yet!'
+        CALL alloc_dnSVM(dnMuCC(1),mole%ncart_act,nderivMu)
+        CALL Set_ZERO_TO_dnSVM(dnMuCC(1),nderivMu)
+        CALL alloc_dnSVM(dnMuCC(2),mole%ncart_act,nderivMu)
+        CALL Set_ZERO_TO_dnSVM(dnMuCC(2),nderivMu)
+        CALL alloc_dnSVM(dnMuCC(3),mole%ncart_act,nderivMu)
+        CALL Set_ZERO_TO_dnSVM(dnMuCC(3),nderivMu)
+
+        write(out_unitp,*) 'Warning : Dipole moment with molpro: not yet!'
         !CALL Read_dnDipCC_Molpro(dnMuCC,PrimOp%para_OTF%file_pun%name,&
         !                         nderivMu,mole%ncart_act)
 
@@ -1377,6 +1384,7 @@ SUBROUTINE Calc_EneDip_WITH_Molpro(Qxyz,nderivE,nderivDip,mole,PrimOp,para_OTF)
       END IF
 
       write(nio,*) 'geomtyp=xyz'
+      write(nio,*) 'bohr'
       write(nio,*) 'geometry={'
       write(nio,*) mole%nat_act
       write(nio,*)

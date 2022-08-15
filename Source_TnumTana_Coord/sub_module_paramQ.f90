@@ -751,7 +751,7 @@ CONTAINS
 
         END DO
 
-        ! Here we have to use dnQin, because dnQout is transfered in dnQin and then it is deallocated.
+        ! Here we have to use dnQin, because dnQout is transferred in dnQin and then it is deallocated.
         CALL alloc_NParray(Qit,(/dnQin%nb_var_vec/),'Qit',name_sub)
         Qit(:) = dnQin%d0(:)
 
