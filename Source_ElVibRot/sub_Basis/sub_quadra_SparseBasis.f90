@@ -198,14 +198,13 @@
 
       ! Calculation of the number and the index of the sum of SG basis-sets
 !                            MaxCoupling=basis_SG%MaxCoupling_OF_nDindB, &
-      nDindL%NormWithInit = .FALSE.
       CALL init_nDindexPrim(nDindL,ndim=basis_SG%nb_basis,              &
                             nDsize=(/ (Lmax+1,i=1,basis_SG%nb_basis) /),&
                             nDinit=(/ (0,i=1,basis_SG%nb_basis) /),     &
                             type_OF_nDindex=0,                          &
                             MinNorm=real(Lmin,kind=Rkind),              &
                             MaxNorm=real(Lmax,kind=Rkind))
-      !CALL Write_nDindex(nDindL)
+      !CALL Write_nDindex(nDindL) ; stop
       !IF (debug) CALL Write_nDindex(nDindL)
       basis_SG%nb_SG = nDindL%Max_nDI
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1 .AND. MPI_id==0) THEN

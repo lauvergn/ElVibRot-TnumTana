@@ -186,8 +186,6 @@
           real (kind=Rkind)              :: Norm_OF_nDindB           = huge(1) ! Norm for the initialization of nDindB
           real (kind=Rkind)              :: weight_OF_nDindB         = ONE     ! weight for the initialization of nDindB
           integer                        :: MaxCoupling_OF_nDindB    = -1      ! number of coupling modes (default all)
-          integer                        :: nb_OF_MinNorm_OF_nDindB  = 1
-          integer                        :: Div_nb_TO_Norm_OF_nDindB = 1
           logical                        :: contrac_WITH_nDindB      = .FALSE.
 
 
@@ -1819,8 +1817,6 @@
         basis_set1%weight_OF_nDindB        = basis_set2%weight_OF_nDindB
         basis_set1%nDinit_OF_nDindB        = basis_set2%nDinit_OF_nDindB
         basis_set1%MaxCoupling_OF_nDindB   = basis_set2%MaxCoupling_OF_nDindB
-        basis_set1%nb_OF_MinNorm_OF_nDindB = basis_set2%nb_OF_MinNorm_OF_nDindB
-        basis_set1%Div_nb_TO_Norm_OF_nDindB= basis_set2%Div_nb_TO_Norm_OF_nDindB
         basis_set1%contrac_WITH_nDindB     = basis_set2%contrac_WITH_nDindB
 
         basis_set1%dnBBRep                 = basis_set2%dnBBRep
@@ -2630,8 +2626,6 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
        write(out_unitp,*) Rec_line,'weight_OF_nDindB',basis_set%weight_OF_nDindB
        write(out_unitp,*) Rec_line,'nDinit_OF_nDindB',basis_set%nDinit_OF_nDindB
        write(out_unitp,*) Rec_line,'MaxCoupling_OF_nDindB',basis_set%MaxCoupling_OF_nDindB
-       write(out_unitp,*) Rec_line,'nb_OF_MinNorm_OF_nDindB',basis_set%nb_OF_MinNorm_OF_nDindB
-       write(out_unitp,*) Rec_line,'Div_nb_TO_Norm_OF_nDindB',basis_set%Div_nb_TO_Norm_OF_nDindB
        write(out_unitp,*) Rec_line,'contrac_WITH_nDindB',basis_set%contrac_WITH_nDindB
        write(out_unitp,*) Rec_line,'asso nDindB',associated(basis_set%nDindB)
 
@@ -2981,8 +2975,6 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
        write(out_unitp,*) Rec_line,'weight_OF_nDindB',basis_set%weight_OF_nDindB
        write(out_unitp,*) Rec_line,'nDinit_OF_nDindB',basis_set%nDinit_OF_nDindB
        write(out_unitp,*) Rec_line,'MaxCoupling_OF_nDindB',basis_set%MaxCoupling_OF_nDindB
-       write(out_unitp,*) Rec_line,'nb_OF_MinNorm_OF_nDindB',basis_set%nb_OF_MinNorm_OF_nDindB
-       write(out_unitp,*) Rec_line,'Div_nb_TO_Norm_OF_nDindB',basis_set%Div_nb_TO_Norm_OF_nDindB
        write(out_unitp,*) Rec_line,'contrac_WITH_nDindB',basis_set%contrac_WITH_nDindB
        CALL Write_nDindex(basis_set%nDindB,name_info=Rec_line)
 

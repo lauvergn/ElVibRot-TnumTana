@@ -9,3 +9,5 @@ spectrum
 file_*
 res*
 MatOp*
+.*.swp
+freq.xyz

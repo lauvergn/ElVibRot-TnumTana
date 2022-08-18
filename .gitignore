@@ -1,5 +1,6 @@
 .project
 .settings
+.*.swp */.*.swp */*/.*.swp */*/*/.*.swp
 Source_TnumTana_Coord/sub_operator_T/calc_f2_f1Q.f90
 Source_TnumTana_Coord/sub_operator_T/Calc_Tab_dnQflex.f90
 Source_TnumTana_Coord/sub_operator_T/Sub_X_TO_Q_ana.f90

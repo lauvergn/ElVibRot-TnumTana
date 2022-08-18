@@ -40,7 +40,7 @@ sym  cos(a)      R     r    x    pi   dh
  1 1 1    0 0 0
  &minimum pot0=-0.499465823200 pot_itQtransfo=2
           read_Qsym0=t unit='bohr' /
-cosa .999d0
+cosa .9d0
 R 3.187
 r 2.179
 x 0.

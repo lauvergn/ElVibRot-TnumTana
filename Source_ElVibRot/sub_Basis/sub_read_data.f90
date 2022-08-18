@@ -354,7 +354,6 @@
       integer              :: L_SparseGrid,L_TO_nq_A,L_TO_nq_B,L_TO_nq_C,Lexpo_TO_nq
       integer              :: L1_SparseGrid,L2_SparseGrid,Num_OF_Lmax
       integer              :: Type_OF_nDindB,MaxCoupling_OF_nDindB,nDinit_OF_nDindB
-      integer              :: nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB
       real (kind=Rkind)    :: Norm_OF_nDindB,weight_OF_nDindB
       integer              :: L_SparseBasis,L_TO_nb_A,L_TO_nb_B,Lexpo_TO_nb
       integer              :: L1_SparseBasis,L2_SparseBasis
@@ -420,7 +419,6 @@
                          SparseGrid_With_DP,                                    &
                          Nested,nq_max_Nested,                                  &
                          Type_OF_nDindB,Norm_OF_nDindB,weight_OF_nDindB,        &
-                         nb_OF_MinNorm_OF_nDindB,Div_nb_TO_Norm_OF_nDindB,      &
                          MaxCoupling_OF_nDindB,nDinit_OF_nDindB,contrac_WITH_nDindB,   &
                          packed,dnBBRep,                                        &
                          name_contrac_file,auto_contrac,                        &
@@ -530,8 +528,6 @@
       weight_OF_nDindB         = ONE
       nDinit_OF_nDindB         = 1
       MaxCoupling_OF_nDindB    = -1
-      nb_OF_MinNorm_OF_nDindB  = 1
-      Div_nb_TO_Norm_OF_nDindB = 1
       contrac_WITH_nDindB      = .FALSE.
 
       read(in_unitp,basis_nD,IOSTAT=err_io)
@@ -793,8 +789,6 @@
       basis_temp%Norm_OF_nDindB           = Norm_OF_nDindB
       basis_temp%weight_OF_nDindB         = weight_OF_nDindB
       basis_temp%nDinit_OF_nDindB         = nDinit_OF_nDindB
-      basis_temp%nb_OF_MinNorm_OF_nDindB  = nb_OF_MinNorm_OF_nDindB
-      basis_temp%Div_nb_TO_Norm_OF_nDindB = Div_nb_TO_Norm_OF_nDindB
       basis_temp%contrac_WITH_nDindB      = contrac_WITH_nDindB
       IF (nb_basis == 0) MaxCoupling_OF_nDindB = 1
       IF (nb_basis > 0 .AND. MaxCoupling_OF_nDindB < 1) MaxCoupling_OF_nDindB = nb_basis

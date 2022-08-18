@@ -78,8 +78,6 @@
         integer                       :: MinCoupling     = 0
         real(kind=Rkind)              :: MaxNorm         = -ONE
         real(kind=Rkind)              :: MinNorm         = ZERO
-        integer                       :: nb_OF_MinNorm   = 1
-        integer                       :: Div_nb_TO_Norm  = 1
         integer                       :: Lmax            = -1
         integer                       :: L1max           = huge(1)
         integer                       :: L2max           = huge(1)
@@ -87,8 +85,6 @@
 
         integer                       :: Lmin            = 0
         logical                       :: With_L          = .FALSE. ! IF T, it uses L instead of the Norm
-
-        logical                       :: NormWithInit    = .TRUE.    ! (T) norm calculation with nDinit
 
         TYPE (Type_dnVec), pointer    :: Tab_nDNorm(:)   => null() ! Tab_nDindex(ndim) (for recursive used)
         TYPE (Type_IntVec), pointer   :: Tab_i_TO_l(:)   => null() ! equivalent to Tab_nDNorm
@@ -130,7 +126,6 @@
       SUBROUTINE init_nDindexPrim(nDindex,ndim,nDsize,nDinit,                   &
                                   nDweight,type_OF_nDindex,                     &
                                   MinNorm,MaxNorm,MaxCoupling,MinCoupling,      &
-                                  nb_OF_MinNorm,Div_nb_TO_Norm,                 &
                                   Lmin,Lmax,L1max,L2max,nDNum_OF_Lmax,          &
                                   skip_li,                                      &
                                   tab_i_TO_l,With_init,With_nDindex,err_sub)
@@ -144,7 +139,6 @@
         integer,             intent(in),    optional :: nDinit(:),nDNum_OF_Lmax(:)
         real(kind=Rkind),    intent(in),    optional :: nDweight(:)
         real(kind=Rkind),    intent(in),    optional :: MaxNorm,MinNorm
-        integer,             intent(in),    optional :: nb_OF_MinNorm,Div_nb_TO_Norm
         TYPE (Type_IntVec),  intent(in),    optional, allocatable :: tab_i_TO_l(:)
         integer,             intent(in),    optional :: Lmin,Lmax,L1max,L2max
         logical,             intent(in),    optional :: With_init,With_nDindex
@@ -257,18 +251,6 @@
          IF (nDindex%type_OF_nDindex == -1) THEN
            nDindex%type_OF_nDindex = 1
          END IF
-       END IF
-
-       IF (present(nb_OF_MinNorm)) THEN
-         nDindex%nb_OF_MinNorm = nb_OF_MinNorm
-       ELSE
-         nDindex%nb_OF_MinNorm = 1
-       END IF
-
-       IF (present(Div_nb_TO_Norm)) THEN
-         nDindex%Div_nb_TO_Norm = Div_nb_TO_Norm
-       ELSE
-         nDindex%Div_nb_TO_Norm = 1
        END IF
 
         IF (present(MaxCoupling)) THEN
@@ -1442,7 +1424,6 @@ END SUBROUTINE init_nDindex_type5p
         nDindex%alloc        = .FALSE. ! IF F, tables haven't been allocated
         nDindex%init         = .FALSE. ! IF F, tables haven't been initialized
         nDindex%Write_Tab    = .FALSE.
-        nDindex%NormWithInit = .TRUE.
 
         nDindex%ndim         = 0   ! number of index: dimension of table nDind, nDdim
 
@@ -1915,9 +1896,6 @@ END SUBROUTINE init_nDindex_type5p
         nDindex1%MaxCoupling     = nDindex2%MaxCoupling
         nDindex1%MinCoupling     = nDindex2%MinCoupling
 
-        nDindex1%nb_OF_MinNorm   = nDindex2%nb_OF_MinNorm
-        nDindex1%Div_nb_TO_Norm  = nDindex2%Div_nb_TO_Norm
-
         nDindex1%Lmax            = nDindex2%Lmax
         nDindex1%Lmin            = nDindex2%Lmin
         nDindex1%With_L          = nDindex2%With_L
@@ -2022,9 +2000,6 @@ END SUBROUTINE init_nDindex_type5p
         nDindex1%MinNorm         = nDindex2%MinNorm
         nDindex1%MaxCoupling     = nDindex2%MaxCoupling
         nDindex1%MinCoupling     = nDindex2%MinCoupling
-
-        nDindex1%nb_OF_MinNorm   = nDindex2%nb_OF_MinNorm
-        nDindex1%Div_nb_TO_Norm  = nDindex2%Div_nb_TO_Norm
 
         nDindex1%Lmax            = nDindex2%Lmax
         nDindex1%Lmin            = nDindex2%Lmin
@@ -3131,8 +3106,6 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
 
         integer                    :: nDval(nDindex%ndim)
 
-
-
         IF (nDindex%packed_done) THEN
           Norm = nDindex%Tab_Norm(nDI)
         ELSE
@@ -3238,30 +3211,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
           END DO
           calc_Norm_OF_nDval = real(iNorm,kind=Rkind)
         ELSE
-          IF (nDindex%NormWithInit) THEN
-            Norm = ZERO
-            DO i=1,nDindex%ndim
-              iNorm = (max(nDval(i)-nDindex%nb_OF_MinNorm,0)+nDindex%Div_nb_TO_Norm-1)/nDindex%Div_nb_TO_Norm
-
-
-              Norm = Norm + real(iNorm,kind=Rkind) * nDindex%nDweight(i)
-
-!              IF (nDval(i) >= nDindex%nb_OF_MinNorm) THEN
-!                Norm = Norm + real(nDval(i)-nDindex%nb_OF_MinNorm,kind=Rkind) * &
-!                                                        nDindex%nDweight(i)
-!              END IF
-
-!              IF (nDval(i) > nDindex%nb_OF_MinNorm) THEN
-!                Norm = Norm + real(nDval(i)-nDindex%nDinit(i),kind=Rkind) * &
-!                                                        nDindex%nDweight(i)
-!              END IF
-            END DO
-            calc_Norm_OF_nDval = Norm
-            !write(out_unitp,*) 'nDval,Norm',nDval,Norm
-            !calc_Norm_OF_nDval = sum(real(nDval-nDindex%nDinit,kind=Rkind)*nDindex%nDweight)
-          ELSE
-            calc_Norm_OF_nDval = sum(real(nDval,kind=Rkind)*nDindex%nDweight)
-          END IF
+          calc_Norm_OF_nDval = sum(real(nDval-nDindex%nDinit,kind=Rkind)*nDindex%nDweight)
         END IF
 
       END FUNCTION calc_Norm_OF_nDval
@@ -3343,30 +3293,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
           END DO
           calc_L_OF_nDval = iNorm
         ELSE
-          IF (nDindex%NormWithInit) THEN
-            Norm = ZERO
-            DO i=1,nDindex%ndim
-              iNorm = (max(nDval(i)-nDindex%nb_OF_MinNorm,0)+nDindex%Div_nb_TO_Norm-1)/nDindex%Div_nb_TO_Norm
-
-
-              Norm = Norm + real(iNorm,kind=Rkind) * nDindex%nDweight(i)
-
-!              IF (nDval(i) >= nDindex%nb_OF_MinNorm) THEN
-!                Norm = Norm + real(nDval(i)-nDindex%nb_OF_MinNorm,kind=Rkind) * &
-!                                                        nDindex%nDweight(i)
-!              END IF
-
-!              IF (nDval(i) > nDindex%nb_OF_MinNorm) THEN
-!                Norm = Norm + real(nDval(i)-nDindex%nDinit(i),kind=Rkind) * &
-!                                                        nDindex%nDweight(i)
-!              END IF
-            END DO
-            calc_L_OF_nDval = int(Norm)
-            !write(out_unitp,*) 'nDval,Norm',nDval,Norm
-            !calc_Norm_OF_nDval = sum(real(nDval-nDindex%nDinit,kind=Rkind)*nDindex%nDweight)
-          ELSE
-            calc_L_OF_nDval = int(sum(real(nDval,kind=Rkind)*nDindex%nDweight))
-          END IF
+          calc_L_OF_nDval = int(sum(real(nDval-nDindex%nDinit,kind=Rkind)*nDindex%nDweight))
         END IF
 
       END FUNCTION calc_L_OF_nDval
@@ -3532,7 +3459,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
                   nb_Coupling >= nDindex%MinCoupling) THEN
                 nDindex%Max_nDI = nDindex%Max_nDI + 1
                 !write(out_unitp,*) 'nDI,nDval,Norm',nDindex%Max_nDI,nDval,Norm
-                !CALL flush_perso(out_unitp)
+                CALL flush_perso(out_unitp)
               END IF
               EXIT
             END IF
@@ -3566,14 +3493,11 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
 
         write(out_unitp,*) trim(name_info_loc),'alloc',nDindex%alloc
         write(out_unitp,*) trim(name_info_loc),'init',nDindex%init
-        write(out_unitp,*) trim(name_info_loc),'NormWithInit',nDindex%NormWithInit
         write(out_unitp,*) trim(name_info_loc),'Write_Tab',nDindex%Write_Tab
         write(out_unitp,*) trim(name_info_loc),'type_OF_nDindex',nDindex%type_OF_nDindex
         write(out_unitp,*) trim(name_info_loc),'MaxCoupling',nDindex%MaxCoupling
         write(out_unitp,*) trim(name_info_loc),'MinCoupling',nDindex%MinCoupling
 
-        write(out_unitp,*) trim(name_info_loc),'nb_OF_MinNorm',nDindex%nb_OF_MinNorm
-        write(out_unitp,*) trim(name_info_loc),'Div_nb_TO_Norm',nDindex%Div_nb_TO_Norm
         write(out_unitp,*) trim(name_info_loc),'MaxNorm',nDindex%MaxNorm
         write(out_unitp,*) trim(name_info_loc),'MinNorm',nDindex%MinNorm
 

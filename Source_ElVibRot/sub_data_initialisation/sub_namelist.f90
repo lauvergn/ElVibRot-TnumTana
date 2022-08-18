@@ -195,12 +195,12 @@
                         'para_AllBasis%Basis2n%nDindB',name_sub)
         IF (isort == 1) THEN ! sort with energy
           CALL init_nDindexPrim(para_AllBasis%Basis2n%nDindB,nb_inact21, &
-              tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
+              tab_nb(1:nb_inact21),nDinit(1:nb_inact21),                 &
                       MaxNorm=convRWU_TO_R_WITH_WorkingUnit(max_ene_h),  &
                       type_OF_nDindex=0,With_nDindex=.FALSE.)
         ELSE IF (isort == 2) THEN ! sort with excitation
           CALL init_nDindexPrim(para_AllBasis%Basis2n%nDindB,nb_inact21, &
-              tab_nb(1:nb_inact21),nDinit(1:nb_inact21),nb_OF_MinNorm=0, &
+              tab_nb(1:nb_inact21),nDinit(1:nb_inact21),                 &
                                        Lmax=max_excit,type_OF_nDindex=0, &
                                        With_nDindex=.FALSE.)
         ELSE

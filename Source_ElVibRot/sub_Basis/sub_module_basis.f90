@@ -714,8 +714,6 @@ MODULE mod_basis
           CALL init_nDindexPrim(basis_primi%nDindB,ndim=1,               &
                             Type_OF_nDindex=basis_primi%Type_OF_nDindB,  &
                             MaxNorm=basis_primi%Norm_OF_nDindB,          &
-                       nb_OF_MinNorm=basis_primi%nb_OF_MinNorm_OF_nDindB,&
-                     Div_nb_TO_Norm=basis_primi%Div_nb_TO_Norm_OF_nDindB,&
                             nDinit=(/ basis_primi%nDinit_OF_nDindB /),   &
                             nDsize=(/ basis_primi%nb /),                 &
                             nDweight=(/ weight /)      )
@@ -1191,8 +1189,6 @@ MODULE mod_basis
         CALL init_nDindexPrim(basis_set%nDindB,ndim=1,                 &
                             Type_OF_nDindex=basis_set%Type_OF_nDindB,  &
                             MaxNorm=basis_set%Norm_OF_nDindB,          &
-                       nb_OF_MinNorm=basis_set%nb_OF_MinNorm_OF_nDindB,&
-                     Div_nb_TO_Norm=basis_set%Div_nb_TO_Norm_OF_nDindB,&
                             nDinit=(/ basis_set%nDinit_OF_nDindB /),   &
                             nDsize=(/ basis_set%nb /),                 &
                             nDweight=(/ basis_set%weight_OF_nDindB /) )

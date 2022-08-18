@@ -45,7 +45,7 @@ pi 3.141592653589793238462643383279d0
 dh 0.0
 
  &basis_nD nb_basis=2 name="direct_prod" Type_OF_nDindB=0 Norm_OF_nDindB=6. L_SparseGrid=7 /
-  &basis_nD iQdyn(1)=1 name="Pl0" nb=100 nb_OF_MinNorm_OF_nDindB=20 Div_nb_TO_Norm_OF_nDindB=1 L_TO_nq_A=21 L_TO_nq_B=1 /
+  &basis_nD iQdyn(1)=1 name="Pl0" nb=100 L_TO_nq_A=21 L_TO_nq_B=1 /
   &basis_nD nb_basis=2 name="direct_prod" SparseGrid=t Type_OF_nDindB=0 Norm_OF_nDindB=6. /
     &basis_nD iQact(1)=2 name="Hm" nb=8 L_TO_nq_A=1 L_TO_nq_B=2 Q0=3.2 scaleQ=5.1 Nested=0 nq_max_Nested=19 /
     &basis_nD iQact(1)=3 name="Hm" nb=8 L_TO_nq_A=1 L_TO_nq_B=2 Q0=2.2 scaleQ=11.0 Nested=0 nq_max_Nested=19 /
