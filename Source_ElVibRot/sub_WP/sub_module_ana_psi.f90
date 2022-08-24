@@ -197,8 +197,8 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
       CALL modif_ana_psi(ana_psi,                                               &
                   EFormat='f' // int_TO_char(10-iE) // '.' // int_TO_char(7-iE) )
     END IF
-    !psi_line = psi_line // ' ' // real_TO_char(E,Rformat=ana_psi%Eformat)
-    psi_line = psi_line // ' ' // real_TO_char(E,Rformat='f30.20')
+    psi_line = psi_line // ' ' // real_TO_char(E,Rformat=ana_psi%Eformat)
+    !psi_line = psi_line // ' ' // real_TO_char(E,Rformat='f30.20')
 
     ! add the field (if necessary)
     IF (ana_psi%With_field) THEN
