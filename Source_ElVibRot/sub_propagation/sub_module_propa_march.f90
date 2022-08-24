@@ -763,7 +763,174 @@ END SUBROUTINE march_Euler
 !----------------------------------------------------------
 
 END SUBROUTINE march_RK2
-      SUBROUTINE march_RK4(T,no,WP,WP0,para_H,para_propa)
+SUBROUTINE march_RK4(T,no,WP,WP0,para_H,para_propa)
+      USE mod_system
+      USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
+      USE mod_Op,    ONLY : param_Op
+      USE mod_MPI_aux
+      IMPLICIT NONE
+
+!----- variables pour la namelist minimum ----------------------------
+      TYPE (param_Op)   :: para_H
+
+!----- variables for the WP propagation ----------------------------
+      TYPE (param_propa) :: para_propa
+
+      TYPE (param_psi) :: WP,WP0
+
+      integer :: no
+!----- for printing --------------------------------------------------
+      logical ::print_Op
+
+
+
+!------ working parameters --------------------------------
+      TYPE (param_psi)     :: w1,w2,w3,w4,w
+      complex (kind=Rkind) :: cdot
+      integer              :: i,ip
+      real (kind=Rkind)    :: T      ! time
+      real (kind=Rkind)    :: T_DT,T_DT_HALF
+      real (kind=Rkind)    :: DT,DTo2,DTo6
+      real (kind=Rkind)    :: phase
+
+      integer  ::   nioWP
+
+!----- for the field --------------------------------------------------
+      real (kind=Rkind)    :: dnE(3)
+      real (kind=Rkind)    :: ww(3)
+      logical :: make_field
+!----- for the field --------------------------------------------------
+
+
+!----- for debuging --------------------------------------------------
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='march_RK4'
+!-----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'Tmax,deltaT',para_propa%WPTmax,para_propa%WPdeltaT
+        write(out_unitp,*) 'Hmin,Hmax',para_propa%para_poly%Hmin,               &
+                                para_propa%para_poly%Hmax
+        write(out_unitp,*)
+        write(out_unitp,*) 'nb_ba,nb_qa',WP%nb_ba,WP%nb_qa
+        write(out_unitp,*) 'nb_bi',WP%nb_bi
+        write(out_unitp,*)
+
+          CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
+          write(out_unitp,*) 'norm WP',i,WP%norm2
+
+          write(out_unitp,*) 'WP BasisRep',T
+          CALL ecri_psi(T=T,psi=WP,                               &
+                        ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
+          write(out_unitp,*) 'WP GridRep',T
+          CALL ecri_psi(T=T,psi=WP,                               &
+                        ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
+
+      END IF
+!-----------------------------------------------------------
+      T_DT      = T + para_propa%WPdeltaT
+      T_DT_HALF = T + para_propa%WPdeltaT*HALF
+      DT        = para_propa%WPdeltaT
+      DTo2      = para_propa%WPdeltaT/TWO
+      DTo6      = para_propa%WPdeltaT/SIX
+
+
+!-----------------------------------------------------------
+
+      !w1 = -i.H.WP
+      CALL fcn(WP,w1,para_H)
+
+      IF (debug) THEN
+        write(out_unitp,*) 'k1 BasisRep'
+        CALL ecri_psi(T=T,psi=w1)
+      END IF
+
+      !w = WP + w1 * (DT/2)
+      IF(keep_MPI) w = WP + w1 * DTo2
+
+      !w2 = -iH*w
+      CALL fcn(w,w2,para_H)
+      IF (debug) THEN
+        write(out_unitp,*) 'k2 BasisRep'
+        CALL ecri_psi(T=T,psi=w2)
+      END IF
+
+
+      !w = WP + w2 * (DT/2)
+      IF(keep_MPI) w = WP + w2 * DTo2
+
+      !w3 = -iH*w2
+      CALL fcn(w,w3,para_H)
+      IF (debug) THEN
+        write(out_unitp,*) 'k3 BasisRep'
+        CALL ecri_psi(T=T,psi=w3)
+      END IF
+
+
+
+      !w = WP + w3 * DT
+      IF(keep_MPI) w = WP + w3 * DT
+
+
+      !w4 = -iH(T)*w
+      CALL fcn(w,w4,para_H)
+      IF (debug) THEN
+        write(out_unitp,*) 'k4 BasisRep'
+        CALL ecri_psi(T=T,psi=w4)
+      END IF
+
+
+      !WP = WP + (DT/6)*(w1 + 2*w2 + 2*w3 + w4)
+      IF(keep_MPI) THEN
+        WP = WP + (w1+w4)*DTo6+(w2+w3)*(TWO*DTo6)
+      ENDIF
+
+      !- Phase Shift -----------------
+      phase = para_H%E0*para_propa%WPdeltaT
+      IF(keep_MPI) WP = WP * exp(-cmplx(ZERO,phase,kind=Rkind))
+
+      !- check norm ------------------
+      IF(keep_MPI) CALL norm2_psi(WP,GridRep=.FALSE.,BasisRep=.TRUE.)
+      IF(openmpi)  CALL MPI_Bcast_(WP%norm2,size1_MPI,root_MPI)
+
+      IF ( WP%norm2 > para_propa%max_norm2) THEN
+        T  = T + para_propa%WPdeltaT
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' STOP propagation: norm2 > max_norm2',WP%norm2
+        para_propa%march_error   = .TRUE.
+        para_propa%test_max_norm = .TRUE.
+        STOP
+      END IF
+
+      IF(MPI_id==0) THEN
+        cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
+        CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
+        CALL flush_perso(no)
+      ENDIF
+
+      IF(keep_MPI) THEN
+        CALL dealloc_psi(w1)
+        CALL dealloc_psi(w2)
+        CALL dealloc_psi(w3)
+        CALL dealloc_psi(w4)
+        CALL dealloc_psi(w)
+      ENDIF
+!----------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'WP BasisRep',T_DT
+        CALL ecri_psi(T=T_DT,psi=WP,                               &
+                      ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
+        write(out_unitp,*) 'WP GridRep',T_DT
+        CALL ecri_psi(T=T_DT,psi=WP,                               &
+                      ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
+
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+!----------------------------------------------------------
+
+END SUBROUTINE march_RK4
+SUBROUTINE march_RK4_old(T,no,WP,WP0,para_H,para_propa)
       USE mod_system
       USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi
       USE mod_Op,    ONLY : param_Op
@@ -803,9 +970,9 @@ END SUBROUTINE march_RK2
 
 
 !----- for debuging --------------------------------------------------
-      logical, parameter :: debug=.FALSE.
-!     logical, parameter :: debug=.TRUE.
-      character (len=*), parameter :: name_sub='march_RK4'
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      character (len=*), parameter :: name_sub='march_RK4_old'
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
@@ -820,11 +987,11 @@ END SUBROUTINE march_RK2
           CALL norm2_psi(WP,.FALSE.,.TRUE.,.FALSE.)
           write(out_unitp,*) 'norm WP',i,WP%norm2
 
-          write(out_unitp,*) 'WP BasisRep'
-          CALL ecri_psi(T=ZERO,psi=WP,                               &
+          write(out_unitp,*) 'WP BasisRep',T
+          CALL ecri_psi(T=T,psi=WP,                               &
                         ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
-          write(out_unitp,*) 'WP GridRep'
-          CALL ecri_psi(T=ZERO,psi=WP,                               &
+          write(out_unitp,*) 'WP GridRep',T
+          CALL ecri_psi(T=T,psi=WP,                               &
                         ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
 
       END IF
@@ -841,11 +1008,20 @@ END SUBROUTINE march_RK2
       !w1 = -i.H.WP
       CALL fcn(WP,w1,para_H)
 
+      IF (debug) THEN
+        write(out_unitp,*) 'k1 BasisRep'
+        CALL ecri_psi(T=T,psi=WP)
+      END IF
+
       !w2 = WP + w1 * (DT/2)
       IF(keep_MPI) w2 = WP + w1 * DTo2
 
       !w3 = -iH*w2
       CALL fcn(w2,w3,para_H)
+      IF (debug) THEN
+        write(out_unitp,*) 'k2 BasisRep'
+        CALL ecri_psi(T=T,psi=WP)
+      END IF
 
 
       !w2 = WP + w3 * (DT/2)
@@ -853,6 +1029,12 @@ END SUBROUTINE march_RK2
 
       !w4 = -iH*w2
       CALL fcn(w2,w4,para_H)
+      IF (debug) THEN
+        write(out_unitp,*) 'k3 BasisRep'
+        CALL ecri_psi(T=T,psi=WP)
+      END IF
+
+
 
       !w2 = WP + w4 * DT
       IF(keep_MPI) w2 = WP + w4 * DT
@@ -862,6 +1044,10 @@ END SUBROUTINE march_RK2
 
       !w3 = -iH(T)*w2
       CALL fcn(w2,w3,para_H)
+      IF (debug) THEN
+        write(out_unitp,*) 'k4 BasisRep'
+        CALL ecri_psi(T=T,psi=WP)
+      END IF
 
 
       !WP = WP + (DT/6)*(w1+w3+2.D0*w4)
@@ -904,11 +1090,18 @@ END SUBROUTINE march_RK2
       ENDIF
 !----------------------------------------------------------
       IF (debug) THEN
+        write(out_unitp,*) 'WP BasisRep',T_DT
+        CALL ecri_psi(T=T_DT,psi=WP,                               &
+                      ecri_GridRep=.FALSE.,ecri_BasisRep=.TRUE.)
+        write(out_unitp,*) 'WP GridRep',T_DT
+        CALL ecri_psi(T=T_DT,psi=WP,                               &
+                      ecri_GridRep=.TRUE.,ecri_BasisRep=.FALSE.)
+
         write(out_unitp,*) 'END ',name_sub
       END IF
 !----------------------------------------------------------
 
-      END SUBROUTINE march_RK4
+END SUBROUTINE march_RK4_old
       SUBROUTINE march_BS(T,no,WP,WP0,para_H,para_propa)
       USE mod_system
       USE mod_psi,   ONLY : param_psi,ecri_psi,norm2_psi,dealloc_psi
