@@ -1882,7 +1882,7 @@ END SUBROUTINE sub_analyze_psi
         END DO
       END DO
       !write(out_unitp,*) 'max_RedDensity ',ana_psi%max_RedDensity(:)
-      CALL Write_Vec(ana_psi%max_RedDensity,out_unitp,6,Rformat='e9.2',name_info='max_RedDensity of ' // state_name)
+      CALL Write_Vec(ana_psi%max_RedDensity,out_unitp,6,Rformat='e9.2',info='max_RedDensity of ' // state_name)
       CALL flush_perso(out_unitp)
 
     END DO

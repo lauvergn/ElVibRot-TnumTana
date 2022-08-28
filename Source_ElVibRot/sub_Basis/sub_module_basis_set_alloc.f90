@@ -2750,7 +2750,7 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
        IF ( allocated(basis_set%x_extra) .AND. write_all_loc) THEN
         write(out_unitp,*) Rec_line,'-------------------------------------------'
         write(out_unitp,*) Rec_line,'x_extra'
-        CALL Write_Mat(basis_set%x_extra,out_unitp,8,name_info=Rec_line)
+        CALL Write_Mat(basis_set%x_extra,out_unitp,8,info=Rec_line)
         write(out_unitp,*) Rec_line,'-------------------------------------------'
         write(out_unitp,*)
        END IF
@@ -2759,22 +2759,22 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
        IF (nq > 0 .AND.  basis_set%ndim > 0  .AND. write_all_loc) THEN
          IF ( allocated(basis_set%x) ) THEN
            write(out_unitp,*) Rec_line,'x'
-           CALL Write_Mat(basis_set%x,out_unitp,8,name_info=Rec_line)
+           CALL Write_Mat(basis_set%x,out_unitp,8,info=Rec_line)
            write(out_unitp,*)
          END IF
          IF ( allocated(basis_set%w) ) THEN
            write(out_unitp,*) Rec_line,'w'
-           CALL Write_Vec(basis_set%w,out_unitp,8,name_info=Rec_line)
+           CALL Write_Vec(basis_set%w,out_unitp,8,info=Rec_line)
            write(out_unitp,*)
          END IF
          IF ( allocated(basis_set%wrho) ) THEN
            write(out_unitp,*) Rec_line,'w*rho'
-           CALL Write_Vec(basis_set%wrho,out_unitp,8,name_info=Rec_line)
+           CALL Write_Vec(basis_set%wrho,out_unitp,8,info=Rec_line)
            write(out_unitp,*)
          END IF
          IF ( allocated(basis_set%rho) ) THEN
            write(out_unitp,*) Rec_line,'rho'
-           CALL Write_Vec(basis_set%rho,out_unitp,8,name_info=Rec_line)
+           CALL Write_Vec(basis_set%rho,out_unitp,8,info=Rec_line)
            write(out_unitp,*)
          END IF
 
@@ -2827,7 +2827,7 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
 
          IF (allocated(basis_set%EneH0)) THEN
            IF(MPI_id==0) write(out_unitp,*) Rec_line,'EneH0 = <d0b(:,ib) I H0 I d0b(:,ib)>'
-           CALL Write_Vec(basis_set%EneH0,out_unitp,8,name_info=Rec_line)
+           CALL Write_Vec(basis_set%EneH0,out_unitp,8,info=Rec_line)
          END IF
 
        write(out_unitp,*) Rec_line,'END RecWrite_basis'

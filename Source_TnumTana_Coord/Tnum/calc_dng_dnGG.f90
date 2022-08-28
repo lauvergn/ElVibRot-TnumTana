@@ -818,7 +818,7 @@ MODULE mod_dnGG_dng
 
     !-----------------------------------------------------------
     IF (debug) THEN
-      CALL Write_Mat(d0GG,out_unitp,5,name_info='d0GG')
+      CALL Write_Mat(d0GG,out_unitp,5,info='d0GG')
       write(out_unitp,*) 'END ',name_sub
     END IF
     !-----------------------------------------------------------
@@ -913,10 +913,10 @@ MODULE mod_dnGG_dng
     !-----------------------------------------------------------
     IF (debug) THEN
       IF (present(d0GG)) THEN
-        CALL Write_Mat(d0GG,out_unitp,5,name_info='d0GG')
+        CALL Write_Mat(d0GG,out_unitp,5,info='d0GG')
       END IF
       IF (present(d0g)) THEN
-        CALL Write_Mat(d0g,out_unitp,5,name_info='d0g')
+        CALL Write_Mat(d0g,out_unitp,5,info='d0g')
       END IF
       write(out_unitp,*) 'END ',name_sub
     END IF
@@ -2354,16 +2354,16 @@ RETURN
       allocate(Vec(n,n))
       allocate(vp(n))
 
-      CALL Write_Mat(g,out_unitp,5,name_info='g')
+      CALL Write_Mat(g,out_unitp,5,info='g')
       CALL diagonalization(g,vp,Vec,n,2,1,.FALSE.)
-      CALL Write_Mat(Vec,out_unitp,5,name_info='Vec')
-      CALL Write_Vec(vp,out_unitp,5,name_info='vp')
+      CALL Write_Mat(Vec,out_unitp,5,info='Vec')
+      CALL Write_Vec(vp,out_unitp,5,info='vp')
       write(out_unitp,*)
       CALL flush_perso(out_unitp)
 
       gij = g(1:n-1,1:n-1)
       gsi = g(1:n-1,n)
-      CALL Write_Vec(gsi,out_unitp,5,name_info='gsi')
+      CALL Write_Vec(gsi,out_unitp,5,info='gsi')
       write(out_unitp,*)
 
       allocate(d1f(n-1))
@@ -2371,7 +2371,7 @@ RETURN
       CALL Linear_Sys(gij,gsi,d1f,n-1)
       gnsi = gsi(:) - matmul(gij,d1f)
 
-      CALL Write_Vec(gnsi,out_unitp,5,name_info='gnsi')
+      CALL Write_Vec(gnsi,out_unitp,5,info='gnsi')
       write(out_unitp,*)
       CALL flush_perso(out_unitp)
 
@@ -2385,11 +2385,11 @@ RETURN
       END DO
       gn(n,1:n-1) = gsi(:) - matmul(gij,d1f) ! zero
       gn(1:n-1,n) = gn(n,1:n-1)               ! zero
-      CALL Write_Mat(gn,out_unitp,5,name_info='gn')
+      CALL Write_Mat(gn,out_unitp,5,info='gn')
 
       CALL diagonalization(gn,vp,Vec,n,2,1,.FALSE.)
-      CALL Write_Mat(Vec,out_unitp,5,name_info='Vec')
-      CALL Write_Vec(vp,out_unitp,5,name_info='vp')
+      CALL Write_Mat(Vec,out_unitp,5,info='Vec')
+      CALL Write_Vec(vp,out_unitp,5,info='vp')
       CALL flush_perso(out_unitp)
 
 

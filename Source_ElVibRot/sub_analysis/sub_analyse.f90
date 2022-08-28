@@ -247,7 +247,7 @@ CONTAINS
 
       IF (allocated(AllPsi_max_RedDensity)) THEN
 
-        CALL Write_Vec(AllPsi_max_RedDensity,out_unitp,6,Rformat='e10.3',name_info='For all psi max_RedDensity ')
+        CALL Write_Vec(AllPsi_max_RedDensity,out_unitp,6,Rformat='e10.3',info='For all psi max_RedDensity ')
         !write(out_unitp,*) 'For all psi max_RedDensity ',AllPsi_max_RedDensity(:)
         CALL dealloc_NParray(AllPsi_max_RedDensity,"AllPsi_max_RedDensity",name_sub)
       END IF
@@ -295,7 +295,7 @@ CONTAINS
       END IF
 !----------------------------------------------------------
 
-      ! write basis 
+      ! write basis
       !if(para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4) CALL write_basis_biqi(tab_Psi(1))
 
       IF (allocated(ene))     CALL dealloc_NParray(ene,'ene',name_sub)

@@ -1546,9 +1546,9 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
             DO i=1,nb_WP
               CALL Write_Vec(para_propa%para_control%Mgate0(i,:),       &
-                             out_unitp,4,name_info="#WP0 " // int_TO_char(i) )
+                             out_unitp,4,info="#WP0 " // int_TO_char(i) )
               CALL Write_Vec(para_propa%para_control%Mgatet(i,:),       &
-                             out_unitp,4,name_info="#WPt " // int_TO_char(i))
+                             out_unitp,4,info="#WPt " // int_TO_char(i))
             END DO
           ELSE
             CALL alloc_array(para_propa%para_control%tab_WP0,(/nb_WP/), &
@@ -2178,9 +2178,9 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
             DO i=1,nb_WP
               CALL Write_Vec(para_propa%para_control%Mgate0(i,:),       &
-                             out_unitp,4,name_info="#WP0 " // int_TO_char(i) )
+                             out_unitp,4,info="#WP0 " // int_TO_char(i) )
               CALL Write_Vec(para_propa%para_control%Mgatet(i,:),       &
-                             out_unitp,4,name_info="#WPt " // int_TO_char(i))
+                             out_unitp,4,info="#WPt " // int_TO_char(i))
             END DO
           ELSE
             CALL alloc_array(para_propa%para_control%tab_WP0,(/nb_WP/), &

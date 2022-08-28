@@ -400,9 +400,9 @@
         END IF
 
         write(out_unitp,*) 'nq:',nDFitAna%nq(:)
-        CALL Write_VecMat(nDFitAna%A,out_unitp,5,name_info='range A:')
-        CALL Write_VecMat(nDFitAna%B,out_unitp,5,name_info='range B:')
-        CALL Write_VecMat(nDFitAna%Step,out_unitp,5,name_info='Step:')
+        CALL Write_VecMat(nDFitAna%A,out_unitp,5,info='range A:')
+        CALL Write_VecMat(nDFitAna%B,out_unitp,5,info='range B:')
+        CALL Write_VecMat(nDFitAna%Step,out_unitp,5,info='Step:')
 
         CALL flush_perso(out_unitp)
 
@@ -1479,7 +1479,7 @@
       IF (debug) THEN
         write(out_unitp,*) " BEGINNING ",name_sub
         write(out_unitp,*) "Fit file name: ",trim(para_nDFit%Param_Fit_file%name)
-        CALL Write_VecMat(Q,out_unitp,5,name_info='Q:')
+        CALL Write_VecMat(Q,out_unitp,5,info='Q:')
       END IF
 
 
@@ -1511,7 +1511,7 @@
 
 
       IF (debug) THEN
-        CALL Write_VecMat(tQ,out_unitp,5,name_info='tQ:')
+        CALL Write_VecMat(tQ,out_unitp,5,info='tQ:')
         write(out_unitp,*) 'Norm tQ',sqrt(dot_product(tQ,tQ))
         write(out_unitp,*) 'val_nDfit',val_nDfit
         write(out_unitp,*) " END ",name_sub

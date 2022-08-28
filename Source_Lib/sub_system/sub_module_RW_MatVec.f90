@@ -54,7 +54,7 @@ MODULE mod_RW_MatVec
       !!@description: Defined a format to write a line of a matrix
       !!@param: TODO
       SUBROUTINE sub_Format_OF_Line(wformat,nb_line,max_col,cplx,       &
-                                    Rformat,name_info)
+                                    Rformat,info)
        USE mod_string
        USE mod_MPI
 
@@ -62,7 +62,7 @@ MODULE mod_RW_MatVec
        integer,                        intent(in)     :: nb_line,max_col
        logical,                        intent(in)     :: cplx
        character (len=*), optional,    intent(in)     :: Rformat
-       character (len=*), optional,    intent(in)     :: name_info
+       character (len=*), optional,    intent(in)     :: info
 
 
        ! local variables
@@ -73,8 +73,8 @@ MODULE mod_RW_MatVec
 
        IF (allocated(wformat)) deallocate(wformat)
 
-       IF (present(name_info)) THEN
-         wformat_loc = '(2x,"' // trim(adjustl(name_info)) // ' ",'
+       IF (present(info)) THEN
+         wformat_loc = '(2x,"' // trim(adjustl(info)) // ' ",'
        ELSE
          wformat_loc = '('
        END IF
@@ -137,11 +137,11 @@ MODULE mod_RW_MatVec
       !!@description:  write a rectangular real or complex matrix, f(nl,nc),
       !!   with a specific format selected with sub_LineOFmatFormat
       !!@param: TODO
-      SUBROUTINE Write_RMat(f,nio,nbcol1,Rformat,name_info)
+      SUBROUTINE Write_RMat(f,nio,nbcol1,Rformat,info)
         USE mod_MPI
 
         character (len=*), optional :: Rformat
-        character (len=*), optional :: name_info
+        character (len=*), optional :: info
 
         integer,          intent(in) :: nio,nbcol1
         real(kind=Rkind), intent(in) :: f(:,:)
@@ -160,14 +160,14 @@ MODULE mod_RW_MatVec
           IF (nbblocs*nbcol == nc) nbblocs=nbblocs-1
 
           IF (present(Rformat)) THEN
-            IF (present(name_info)) THEN
-              CALL sub_Format_OF_Line(wformat,nl,nbcol,.FALSE.,Rformat,name_info)
+            IF (present(info)) THEN
+              CALL sub_Format_OF_Line(wformat,nl,nbcol,.FALSE.,Rformat,info)
             ELSE
               CALL sub_Format_OF_Line(wformat,nl,nbcol,.FALSE.,Rformat=Rformat)
             END IF
           ELSE
-            IF (present(name_info)) THEN
-              CALL sub_Format_OF_Line(wformat,nl,nbcol,.FALSE.,name_info=name_info)
+            IF (present(info)) THEN
+              CALL sub_Format_OF_Line(wformat,nl,nbcol,.FALSE.,info=info)
             ELSE
               CALL sub_Format_OF_Line(wformat,nl,nbcol,.FALSE.)
             END IF
@@ -189,10 +189,10 @@ MODULE mod_RW_MatVec
 
       END SUBROUTINE Write_RMat
 
-      SUBROUTINE BlockAna_RMat(f,list_block,name_info)
+      SUBROUTINE BlockAna_RMat(f,list_block,info)
         USE mod_MPI
 
-        character (len=*), optional :: name_info
+        character (len=*), optional :: info
 
         integer,          intent(in) :: list_block(:)
         real(kind=Rkind), intent(in) :: f(:,:)
@@ -200,8 +200,8 @@ MODULE mod_RW_MatVec
         integer           :: i,j,ib1,ib2,jb1,jb2
         real(kind=Rkind)  :: valmax
 
-        IF (present(name_info)) THEN
-          write(out_unitp,*) 'Block analysis, ',name_info
+        IF (present(info)) THEN
+          write(out_unitp,*) 'Block analysis, ',info
         ELSE
           write(out_unitp,*) 'Block analysis'
         END IF
@@ -231,10 +231,10 @@ MODULE mod_RW_MatVec
         END IF
 
       END SUBROUTINE BlockAna_RMat
-      SUBROUTINE BlockAna_CMat(f,list_block,name_info)
+      SUBROUTINE BlockAna_CMat(f,list_block,info)
         USE mod_MPI
 
-        character (len=*), optional :: name_info
+        character (len=*), optional :: info
 
         integer,          intent(in) :: list_block(:)
         complex(kind=Rkind), intent(in) :: f(:,:)
@@ -242,8 +242,8 @@ MODULE mod_RW_MatVec
         integer           :: i,j,ib1,ib2,jb1,jb2
         real(kind=Rkind)  :: valmax
 
-        IF (present(name_info)) THEN
-          write(out_unitp,*) 'Block analysis, ',name_info
+        IF (present(info)) THEN
+          write(out_unitp,*) 'Block analysis, ',info
         ELSE
           write(out_unitp,*) 'Block analysis'
         END IF
@@ -275,11 +275,11 @@ MODULE mod_RW_MatVec
       END SUBROUTINE BlockAna_CMat
       !!@description: TODO
       !!@param: TODO
-      SUBROUTINE Write_CMat(f,nio,nbcol1,Rformat,name_info)
+      SUBROUTINE Write_CMat(f,nio,nbcol1,Rformat,info)
         USE mod_MPI
 
         character (len=*), optional     :: Rformat
-        character (len=*), optional     :: name_info
+        character (len=*), optional     :: info
 
         integer, intent(in)             :: nio,nbcol1
         complex(kind=Rkind), intent(in) :: f(:,:)
@@ -298,14 +298,14 @@ MODULE mod_RW_MatVec
           IF (nbblocs*nbcol == nc) nbblocs=nbblocs-1
 
           IF (present(Rformat)) THEN
-            IF (present(name_info)) THEN
-              CALL sub_Format_OF_Line(wformat,nl,nbcol,.TRUE.,Rformat,name_info)
+            IF (present(info)) THEN
+              CALL sub_Format_OF_Line(wformat,nl,nbcol,.TRUE.,Rformat,info)
             ELSE
               CALL sub_Format_OF_Line(wformat,nl,nbcol,.TRUE.,Rformat=Rformat)
             END IF
           ELSE
-            IF (present(name_info)) THEN
-              CALL sub_Format_OF_Line(wformat,nl,nbcol,.TRUE.,name_info=name_info)
+            IF (present(info)) THEN
+              CALL sub_Format_OF_Line(wformat,nl,nbcol,.TRUE.,info=info)
             ELSE
               CALL sub_Format_OF_Line(wformat,nl,nbcol,.TRUE.)
             END IF
@@ -330,11 +330,11 @@ MODULE mod_RW_MatVec
 
       !!@description: TODO
       !!@param: TODO
-      SUBROUTINE Write_RVec(l,nio,nbcol1,Rformat,name_info)
+      SUBROUTINE Write_RVec(l,nio,nbcol1,Rformat,info)
       	 USE mod_MPI
 
          character (len=*), optional  :: Rformat
-         character (len=*), optional  :: name_info
+         character (len=*), optional  :: info
 
          integer, intent(in)          :: nio,nbcol1
          real(kind=Rkind), intent(in) :: l(:)
@@ -352,14 +352,14 @@ MODULE mod_RW_MatVec
 
 
            IF (present(Rformat)) THEN
-             IF (present(name_info)) THEN
-               CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.,Rformat,name_info)
+             IF (present(info)) THEN
+               CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.,Rformat,info)
              ELSE
                CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.,Rformat=Rformat)
              END IF
            ELSE
-             IF (present(name_info)) THEN
-               CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.,name_info=name_info)
+             IF (present(info)) THEN
+               CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.,info=info)
              ELSE
                CALL sub_Format_OF_Line(wformat,0,nbcol,.FALSE.)
              END IF
@@ -377,11 +377,11 @@ MODULE mod_RW_MatVec
 
       !!@description: TODO
       !!@param: TODO
-      SUBROUTINE Write_CVec(l,nio,nbcol1,Rformat,name_info)
+      SUBROUTINE Write_CVec(l,nio,nbcol1,Rformat,info)
         USE mod_MPI
 
         character (len=*), optional     :: Rformat
-        character (len=*), optional     :: name_info
+        character (len=*), optional     :: info
 
         integer, intent(in)             :: nio,nbcol1
         complex(kind=Rkind), intent(in) :: l(:)
@@ -398,14 +398,14 @@ MODULE mod_RW_MatVec
           IF (nbblocs*nbcol == n) nbblocs=nbblocs-1
 
           IF (present(Rformat)) THEN
-            IF (present(name_info)) THEN
-              CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.,Rformat,name_info)
+            IF (present(info)) THEN
+              CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.,Rformat,info)
             ELSE
               CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.,Rformat=Rformat)
             END IF
           ELSE
-            IF (present(name_info)) THEN
-              CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.,name_info=name_info)
+            IF (present(info)) THEN
+              CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.,info=info)
             ELSE
               CALL sub_Format_OF_Line(wformat,0,nbcol,.TRUE.)
             END IF

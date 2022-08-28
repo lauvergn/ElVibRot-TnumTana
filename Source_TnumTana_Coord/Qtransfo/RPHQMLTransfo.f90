@@ -433,7 +433,7 @@ SUBROUTINE calc_RPHQMLTransfo(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
 
     IF (nderiv > 0 .AND. debug) THEN
       Jacobian = get_Jacobian(dnQinact21_out)
-      IF (allocated(Jacobian)) CALL Write_Mat(Jacobian,out_unitp,5,name_info='Jacobian')
+      IF (allocated(Jacobian)) CALL Write_Mat(Jacobian,out_unitp,5,info='Jacobian')
     END IF
 
     DO i=1,RPHQMLTransfo%nb_inact21_out

@@ -104,7 +104,7 @@ IMPLICIT NONE
   TYPE (TypeRVec), intent(in) :: Rvec
 
   IF (allocated(Rvec%V)) THEN
-    CALL Write_VecMat(Rvec%V,out_unitp,5,name_info='R:')
+    CALL Write_VecMat(Rvec%V,out_unitp,5,info='R:')
   END IF
 
 END SUBROUTINE Write_TypeRVec
@@ -281,7 +281,7 @@ IMPLICIT NONE
   TYPE (TypeCVec), intent(in) :: vec
 
   IF (allocated(vec%V)) THEN
-    CALL Write_VecMat(vec%V,out_unitp,5,name_info='R:')
+    CALL Write_VecMat(vec%V,out_unitp,5,info='R:')
   END IF
 
 END SUBROUTINE Write_TypeCVec

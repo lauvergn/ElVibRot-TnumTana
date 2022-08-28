@@ -564,9 +564,9 @@ END SUBROUTINE sub_CRP_BasisRep_WithMat
         write(out_unitp,*) 'Product CAP:'
         CALL Write_Mat(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,out_unitp,nb_col)
       END IF
-      CALL BlockAna_Mat(tab_Op(1)%Rmat,list_block,name_info='H')
-      CALL BlockAna_Mat(tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat,list_block,name_info='Reactif CAP')
-      CALL BlockAna_Mat(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,list_block,name_info='Product CAP')
+      CALL BlockAna_Mat(tab_Op(1)%Rmat,list_block,info='H')
+      CALL BlockAna_Mat(tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat,list_block,info='Reactif CAP')
+      CALL BlockAna_Mat(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,list_block,info='Product CAP')
 
       write(out_unitp,*) 'Ginv calc'
       Ginv(:,:) = -tab_Op(1)%Rmat + EYE*HALF * (tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat+ &
@@ -589,7 +589,7 @@ END SUBROUTINE sub_CRP_BasisRep_WithMat
           write(out_unitp,*) 'Ginv:'
           CALL Write_Mat(Ginv,out_unitp,nb_col)
         END IF
-        CALL BlockAna_Mat(Ginv,list_block,name_info='Ginv')
+        CALL BlockAna_Mat(Ginv,list_block,info='Ginv')
 
         CALL inv_m1_TO_m2_cplx(Ginv,G,tab_Op(1)%nb_tot,0,ZERO)
 
@@ -598,7 +598,7 @@ END SUBROUTINE sub_CRP_BasisRep_WithMat
           write(out_unitp,*) 'G:'
           CALL Write_Mat(Ginv,out_unitp,nb_col)
         END IF
-        CALL BlockAna_Mat(G,list_block,name_info='G')
+        CALL BlockAna_Mat(G,list_block,info='G')
 
         !Ginv = matmul(Ginv,G)
         !DO i=1,tab_Op(1)%nb_tot
@@ -614,7 +614,7 @@ END SUBROUTINE sub_CRP_BasisRep_WithMat
           write(out_unitp,*) 'gGgG:'
           CALL Write_Mat(gGgG,out_unitp,nb_col)
         END IF
-        CALL BlockAna_Mat(gGgG,list_block,name_info='gGgG')
+        CALL BlockAna_Mat(gGgG,list_block,info='gGgG')
 
         RWU_E  = REAL_WU(Ene,'au','E')
 
