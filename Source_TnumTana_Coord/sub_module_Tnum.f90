@@ -41,7 +41,7 @@ MODULE mod_Tnum
       USE mod_RPHTransfo,       only: type_rphtransfo, write_rphtransfo,&
                                       dealloc_array, alloc_array,       &
                                       rphtransfo1torphtransfo2,         &
-                                      set_rphtransfo, dealloc_rphtransfo
+                                      dealloc_rphtransfo
       USE CurviRPH_mod,         only: curvirph_type, dealloc_curvirph,  &
                                       curvirph1_to_curvirph2, get_CurviRPH
       USE mod_ActiveTransfo
@@ -736,7 +736,7 @@ MODULE mod_Tnum
       integer           :: nrho,vep_type,NonGcteRange(2)
       logical           :: num_GG,num_g,num_x,Gdiago,Gcte,With_VecCOM,Write_QMotions
       logical           :: QMLib_G
-      logical           :: With_Tab_dnQflex,f2f1_ana
+      logical           :: With_Tab_dnQflex,QMLib,f2f1_ana
 
       logical           :: Tana,Tana_Init_Only
       logical           :: MidasCppForm,MCTDHForm,LaTeXForm,VSCFForm,FortranForm
@@ -750,26 +750,26 @@ MODULE mod_Tnum
 !     - divers ------------------------------------------
       integer :: i,n,it,iat,i_Q,iQout,iQin
 
-      NAMELIST /variables/nat,zmat,bunch,cos_th,                        &
-                     Without_Rot,Centered_ON_CoM,JJ,                    &
-                     New_Orient,vAt1,vAt2,vAt3,With_VecCOM,             &
-                     nb_var,nb_act,With_Tab_dnQflex,nb_extra_Coord,     &
-                     Old_Qtransfo,nb_Qtransfo,Cart_transfo,             &
-                     Rot_Dip_with_EC,sym,check_sym,                     &
-                     NM,NM_TO_sym,hessian_old,purify_hess,k_Half,       &
-                     hessian_cart,hessian_onthefly,file_hessian,stepOp, &
-                     stepT,num_GG,num_g,num_x,nrho,vep_type,            &
-                     Tana,Compa_TanaTnum,Tana_Init_Only,                &
-                     Gdiago,Gcte,NonGcteRange,QMLib_G,                  &
-                     MidasCppForm,MCTDHForm,LaTeXForm,                  &
-                     VSCFForm,FortranForm,                              &
-                     KEO_TalyorOFQinact2n,f2f1_ana,                     &
-                     charge,multiplicity,                               &
-                     header,footer,file_name_OTF,file_name_fchk,        &
-                     commande_unix,ab_initio_prog,                      &
-                     ab_initio_meth,ab_initio_basis,                    &
-                     ab_initio_methEne,ab_initio_basisEne,              &
-                     ab_initio_methDip,ab_initio_basisDip,              &
+      NAMELIST /variables/nat,zmat,bunch,cos_th,                                &
+                     Without_Rot,Centered_ON_CoM,JJ,                            &
+                     New_Orient,vAt1,vAt2,vAt3,With_VecCOM,                     &
+                     nb_var,nb_act,With_Tab_dnQflex,QMLib,nb_extra_Coord,       &
+                     Old_Qtransfo,nb_Qtransfo,Cart_transfo,                     &
+                     Rot_Dip_with_EC,sym,check_sym,                             &
+                     NM,NM_TO_sym,hessian_old,purify_hess,k_Half,               &
+                     hessian_cart,hessian_onthefly,file_hessian,stepOp,         &
+                     stepT,num_GG,num_g,num_x,nrho,vep_type,                    &
+                     Tana,Compa_TanaTnum,Tana_Init_Only,                        &
+                     Gdiago,Gcte,NonGcteRange,QMLib_G,                          &
+                     MidasCppForm,MCTDHForm,LaTeXForm,                          &
+                     VSCFForm,FortranForm,                                      &
+                     KEO_TalyorOFQinact2n,f2f1_ana,                             &
+                     charge,multiplicity,                                       &
+                     header,footer,file_name_OTF,file_name_fchk,                &
+                     commande_unix,ab_initio_prog,                              &
+                     ab_initio_meth,ab_initio_basis,                            &
+                     ab_initio_methEne,ab_initio_basisEne,                      &
+                     ab_initio_methDip,ab_initio_basisDip,                      &
                      WriteCC,WriteT,Write_QMotions
 
 !----- for debuging --------------------------------------------------
@@ -835,6 +835,7 @@ MODULE mod_Tnum
       nb_Qtransfo          = -1
 
       With_Tab_dnQflex     = .FALSE.
+      QMLib                = .FALSE.
 
       NM                   = .FALSE.
       NM_TO_sym            = .FALSE.
@@ -1018,7 +1019,7 @@ MODULE mod_Tnum
           IF (debug) write(out_unitp,*) 'read Qtransfo',it
 
           CALL read_Qtransfo(mole%tab_Qtransfo(it),nb_Qin,mole%nb_extra_Coord,  &
-                             With_Tab_dnQflex,const_phys%mendeleev)
+                             With_Tab_dnQflex,QMLib,const_phys%mendeleev)
           mole%tab_Qtransfo(it)%BeforeActive = (it == nb_Qtransfo-1)
 
           mole%opt_param = mole%opt_param + mole%tab_Qtransfo(it)%opt_param
@@ -1374,6 +1375,7 @@ MODULE mod_Tnum
         mole%ActiveTransfo => mole%tab_Qtransfo(it)%ActiveTransfo
 
         mole%ActiveTransfo%With_Tab_dnQflex = With_Tab_dnQflex
+        mole%ActiveTransfo%QMLib            = QMLib
 
         mole%liste_QactTOQsym => mole%ActiveTransfo%list_QactTOQdyn
         mole%liste_QactTOQdyn => mole%ActiveTransfo%list_QactTOQdyn
@@ -1485,7 +1487,7 @@ MODULE mod_Tnum
 
         mole%tab_Cart_transfo(1)%num_transfo = 1
         CALL read_Qtransfo(mole%tab_Cart_transfo(1),mole%ncart_act,             &
-                           mole%nb_extra_Coord,With_Tab_dnQflex,                &
+                           mole%nb_extra_Coord,With_Tab_dnQflex,QMLib,          &
                            const_phys%mendeleev)
 
         IF (print_level > 1) CALL Write_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
@@ -1547,9 +1549,10 @@ MODULE mod_Tnum
 !=======================================================================
 !===== Ab initio parameters ============================================
 !=======================================================================
-      mole%charge          = charge
-      mole%multiplicity    = multiplicity
+     mole%charge          = charge
+     mole%multiplicity    = multiplicity
 
+     para_Tnum%para_PES_FromTnum%QMLib              = QMLib
 
      para_Tnum%para_PES_FromTnum%stepOp             = stepOp
      para_Tnum%para_PES_FromTnum%charge             = charge
@@ -2163,24 +2166,6 @@ MODULE mod_Tnum
                                      mole%ActiveTransfo%list_act_OF_Qdyn
       END IF
 
-!      ! first transfert list_act_OF_Qdyn to RPHtransfo
-!      IF (associated(mole%RPHTransfo)) THEN
-!      IF (mole%RPHTransfo%option == 0) THEN
-!
-!        ! This transformation is done only if option==0.
-!        !    For option=1, everything is already done
-!
-!        IF (.NOT. (mole%RPHTransfo%init_Qref .OR. mole%RPHTransfo%init)) THEN
-!          CALL Set_RPHTransfo(mole%RPHTransfo,mole%ActiveTransfo%list_act_OF_Qdyn)
-!        END IF
-!
-!        DO i=1,mole%nb_var
-!          IF (mole%ActiveTransfo%list_act_OF_Qdyn(i) == 21)             &
-!                              mole%ActiveTransfo%list_act_OF_Qdyn(i) = 1
-!        END DO
-!      END IF
-!      END IF
-
       mole%nb_act1    =                                                 &
        count(abs(mole%ActiveTransfo%list_act_OF_Qdyn(1:mole%nb_var))==1)
       mole%nb_inact20 = count(mole%ActiveTransfo%list_act_OF_Qdyn==20) +&
@@ -2350,7 +2335,7 @@ MODULE mod_Tnum
        write(out_unitp,11) vep,rho
  11    format(' vep rho = ',2f30.15)
        write(out_unitp,*)
-       CALL Write_Vec(f1i,out_unitp,10,name_info=' f1i = ')
+       CALL Write_Vec(f1i,out_unitp,10,info=' f1i = ')
        write(out_unitp,*)
        write(out_unitp,*) ' f2ij'
        CALL Write_Mat(f2ij,out_unitp,4)
@@ -2546,6 +2531,7 @@ MODULE mod_Tnum
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
+         write(out_unitp,*) 'RPHTransfo%QMLib',mole%RPHTransfo%QMLib
        END IF
 !-----------------------------------------------------------
 
@@ -2572,7 +2558,10 @@ MODULE mod_Tnum
       mole%tab_Qtransfo(mole%itRPH)%name_transfo = 'flexible'
 
       CALL Read_FlexibleTransfo(mole%tab_Qtransfo(mole%itRPH)%FlexibleTransfo,  &
-                                nb_Qin,list_flex)
+                                nb_Qin,.FALSE.,mole%RPHTransfo%QMLib,list_flex)
+
+      IF (debug) write(out_unitp,*) 'FlexibleTransfo%QMLib',mole%tab_Qtransfo(mole%itRPH)%FlexibleTransfo%QMLib
+
 
       CALL dealloc_NParray(list_flex,"list_flex",name_sub)
 

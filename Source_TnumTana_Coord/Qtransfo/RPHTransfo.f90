@@ -79,6 +79,7 @@
 
         logical          :: init        = .FALSE.
         logical          :: init_Qref   = .FALSE.
+        logical          :: QMLib       = .FALSE.
 
         integer          :: option      = 0         ! 0 normal RPH (default), old way: parameters with the inactive namelist
                                                     ! 1 normal RPH, new way: parameters with the RPH namelist
@@ -166,10 +167,11 @@
 !=======================================================================
 !     RPH transfo
 !=======================================================================
-      SUBROUTINE Read_RPHTransfo(RPHTransfo,nb_Qin,option)
+      SUBROUTINE Read_RPHTransfo(RPHTransfo,nb_Qin,option,QMLib)
       IMPLICIT NONE
       TYPE (Type_RPHTransfo), intent(inout) :: RPHTransfo
-      integer, intent(in) :: nb_Qin,option
+      integer,                intent(in)    :: nb_Qin,option
+      logical,                intent(in)    :: QMLib
 
       integer :: i,k,it,iQ,nb_inact21
       integer :: iv_act1,iv_inact21,iv_rest
@@ -264,16 +266,19 @@
            Qinact2n_eq(:,:) = 0
          END IF
 
-         CALL Set_RPHTransfo(RPHTransfo,list_act_OF_Qdyn,               &
-                                       gradTOpot0,diabatic_freq,step,   &
-                            purify_hess,eq_hess,Qinact2n_sym,Qinact2n_eq)
+         CALL Set_RPHTransfo(RPHTransfo,list_act_OF_Qdyn,                       &
+                             gradTOpot0,diabatic_freq,step,                     &
+                             purify_hess,eq_hess,Qinact2n_sym,Qinact2n_eq,      &
+                             QMLib=QMLib)
 
          CALL dealloc_NParray(Qinact2n_sym,'Qinact2n_sym',name_sub)
          CALL dealloc_NParray(Qinact2n_eq, 'Qinact2n_eq', name_sub)
 
        ELSE
-         CALL Set_RPHTransfo(RPHTransfo,list_act_OF_Qdyn,               &
-                       gradTOpot0,diabatic_freq,step,purify_hess,eq_hess)
+         CALL Set_RPHTransfo(RPHTransfo,list_act_OF_Qdyn,                       &
+                             gradTOpot0,diabatic_freq,step,purify_hess,eq_hess, &
+                             QMLib=QMLib)
+
        END IF
        IF (read_degen_freq) then
          CALL Read_degenerate_freq(RPHTransfo%degenerate_freq,nb_inact21)
@@ -288,21 +293,22 @@
 
       END SUBROUTINE Read_RPHTransfo
 
-      SUBROUTINE Set_RPHTransfo(RPHTransfo,list_act_OF_Qdyn,            &
-                                       gradTOpot0,diabatic_freq,step,   &
-                           purify_hess,eq_hess,Qinact2n_sym,Qinact2n_eq)
+      SUBROUTINE Set_RPHTransfo(RPHTransfo,list_act_OF_Qdyn,                    &
+                                gradTOpot0,diabatic_freq,step,                  &
+                           purify_hess,eq_hess,Qinact2n_sym,Qinact2n_eq,QMLib)
       IMPLICIT NONE
 
-      TYPE (Type_RPHTransfo), intent(inout)   :: RPHTransfo
-      integer, intent(in), optional           :: list_act_OF_Qdyn(:)
+      TYPE (Type_RPHTransfo), intent(inout)         :: RPHTransfo
+      integer,                intent(in), optional  :: list_act_OF_Qdyn(:)
 
-      logical, intent(in), optional           :: gradTOpot0,diabatic_freq
-      real (kind=Rkind), intent(in), optional :: step
+      logical,                intent(in), optional  :: gradTOpot0,diabatic_freq
+      logical,                intent(in), optional  :: QMLib
+      real (kind=Rkind),      intent(in), optional  :: step
 
-      logical, intent(in), optional           :: purify_hess,eq_hess
+      logical,                intent(in), optional  :: purify_hess,eq_hess
 
-      integer, intent(in), optional           :: Qinact2n_sym(:)
-      integer, intent(in), optional           :: Qinact2n_eq(:,:)
+      integer,                intent(in), optional  :: Qinact2n_sym(:)
+      integer,                intent(in), optional  :: Qinact2n_eq(:,:)
 
 
       integer                   :: nb_var,nb_act1,nb_inact21
@@ -502,6 +508,9 @@
       CALL alloc_array(RPHTransfo%C_ini,(/nb_inact21,nb_inact21/),      &
                      "RPHTransfo%C_ini",name_sub)
       RPHTransfo%C_ini(:,:)  = ZERO
+
+      RPHTransfo%QMLib = .FALSE.
+      IF (present(QMLib)) RPHTransfo%QMLib = QMLib
 
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -781,6 +790,7 @@
       write(out_unitp,*) 'init_Qref',RPHTransfo%init_Qref
 
       write(out_unitp,*) 'option',RPHTransfo%option
+      write(out_unitp,*) 'QMLib',RPHTransfo%QMLib
 
       write(out_unitp,*) 'nb_var',RPHTransfo%nb_var
 
@@ -883,6 +893,9 @@
 
       RPHTransfo2%init       = RPHTransfo1%init
       RPHTransfo2%init_Qref  = RPHTransfo1%init_Qref
+
+      RPHTransfo2%QMLib      = RPHTransfo1%QMLib
+
 
       RPHTransfo2%option     = RPHTransfo1%option
 
@@ -2087,11 +2100,11 @@
 
           IF (allocated(RPHpara2%QoutRef)) THEN
             write(out_unitp,*) 'QoutRef:     ',iref
-            CALL Write_VecMat(RPHpara2%QoutRef(:,iref),out_unitp,5,name_info='QoutRef')
+            CALL Write_VecMat(RPHpara2%QoutRef(:,iref),out_unitp,5,info='QoutRef')
           END IF
           IF (allocated(RPHpara2%CinvRef)) THEN
             write(out_unitp,*) 'CinvRef:     ',iref
-            CALL Write_VecMat(RPHpara2%CinvRef(:,:,iref),out_unitp,5,name_info='CinvRef')
+            CALL Write_VecMat(RPHpara2%CinvRef(:,:,iref),out_unitp,5,info='CinvRef')
           END IF
         END DO
         write(out_unitp,*)
@@ -2194,7 +2207,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
         VecNM = RPHpara2%CinvRef(iNM,:,iref)
         VecNM = VecNM / sqrt(dot_product(VecNM,VecNM))
         CALL Write_Vec(VecNM,out_unitp,nb_var,    &
-                       Rformat='f6.3',name_info=' NM ' // int_TO_char(iNM))
+                       Rformat='f6.3',info=' NM ' // int_TO_char(iNM))
       END DO
     END DO
   END IF
@@ -2336,7 +2349,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
         VecNM = RPHpara2%CinvRef(i,:,iref)
         VecNM = VecNM / sqrt(dot_product(VecNM,VecNM))
         CALL Write_Vec(VecNM,out_unitp,nb_var,    &
-                        Rformat='f6.3',name_info=' NM ' // int_TO_char(i))
+                        Rformat='f6.3',info=' NM ' // int_TO_char(i))
       END DO
     END DO
   END IF

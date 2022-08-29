@@ -415,8 +415,8 @@
     CALL CoordQact_TO_RPHQact1(Qact,RPHpara_AT_Qact1,mole)
 
     CALL sub_dnfreq(RPHpara_AT_Qact1,pot0_corgrad,                 &
-                          para_Tnum,mole,mole%RPHTransfo,nderiv,      &
-                          test=.FALSE.,cHAC=.FALSE.)
+                    para_Tnum,mole,mole%RPHTransfo,nderiv,      &
+                    test=.FALSE.,cHAC=.FALSE.)
 
     write(out_unitp,11) RPHpara_AT_Qact1%RPHQact1(:),                  &
                        RPHpara_AT_Qact1%dnEHess%d0(:)*auTOcm_inv
@@ -497,8 +497,7 @@
 !----- frequencies calculation at Qact1 --------------------------
 !            no derivative
 !-----------------------------------------------------------------
-    CALL sub_freq_RPH(RPHpara_AT_Qact1,pot0_corgrad,                    &
-                                          para_Tnum,mole,RPHTransfo,cHAC)
+    CALL sub_freq_RPH(RPHpara_AT_Qact1,pot0_corgrad,para_Tnum,mole,RPHTransfo,cHAC)
 
     ! save RPHpara_AT_Qact1 => RPHpara_AT_Qact1_save (for the numerical derivatives)
     CALL RPHpara1_AT_Qact1_TO_RPHpara2_AT_Qact1(RPHpara_AT_Qact1,       &
@@ -689,6 +688,7 @@
     CALL dealloc_NParray(Qact1,'Qact1',name_sub)
 
 !-----------------------------------------------------------
+
 !-----------------------------------------------------------
     IF (debug .OR. test) THEN
       write(out_unitp,11) RPHpara_AT_Qact1%RPHQact1(:),                 &
@@ -725,7 +725,8 @@
                               para_Tnum,mole,RPHTransfo,cHAC)
       USE mod_system
       USE mod_dnSVM
-      USE mod_Constant, only : get_Conv_au_TO_unit
+      USE mod_Constant,     ONLY : get_Conv_au_TO_unit
+      USE mod_Lib_QTransfo, ONLY : calc_Tab_dnQflex_gene,calc_Tab_dnGradHess_gene
       USE mod_Coord_KEO
       USE CurviRPH_mod
       USE mod_freq
@@ -739,13 +740,11 @@
       TYPE (Type_RPHTransfo),       intent(inout) :: RPHTransfo
       logical,                      intent(in)    :: cHAC
 
-
-
 !----- working variables ---------------------------------------------
       TYPE (CoordType)   :: mole_loc
       TYPE(Type_dnMat)   :: dnGG
 
-       real (kind=Rkind) :: d0hess(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
+      real (kind=Rkind) :: d0hess(RPHTransfo%nb_inact21,RPHTransfo%nb_inact21)
 
       logical       :: deriv,num
       integer       :: i,j,i_Qdyn,i_Qact,i_Q1,i_Q21,j_Q21,nderiv
@@ -767,6 +766,10 @@
         d0k(:,:),                                                       &
         d0hess_inv(:,:),trav1(:)
 
+     TYPE (Type_dnS), allocatable :: tab_dnQflex(:)
+     TYPE (Type_dnS), allocatable :: Tab_dnGrad(:)
+     TYPE (Type_dnS), allocatable :: Tab_dnHess(:)
+
 
 !----- for debuging --------------------------------------------------
        integer :: err_mem,memory
@@ -779,6 +782,7 @@
          CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
+
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
 
       nb_act1    = RPHTransfo%nb_act1
@@ -841,56 +845,72 @@
       nderiv = 0
       deriv  = .FALSE.
 
-      CALL alloc_NParray(d1req,(/ nb_act1 /),"d1req",name_sub)
-      CALL alloc_NParray(d2req,(/ nb_act1,nb_act1 /),"d2req",name_sub)
-      CALL alloc_NParray(d3req,(/ nb_act1,nb_act1,nb_act1 /),"d3req",name_sub)
+      allocate(tab_dnQflex(mole%nb_var))
+
+      CALL calc_Tab_dnQflex_gene(Tab_dnQflex,mole_loc%nb_var,Qact,nb_act1,nderiv,-1,     &
+                                 RPHTransfo%list_act_OF_Qdyn,RPHTransfo%QMlib,.FALSE.)
 
       i_Q21 = 0
       DO i_Qdyn=1,RPHTransfo%nb_var
         IF (RPHTransfo%list_act_OF_Qdyn(i_Qdyn) /= 21) CYCLE
 
-        CALL d0d1d2d3_Qeq(i_Qdyn,d0req,d1req,d2req,d3req,Qdyn,mole_loc,nderiv)
-
-        IF (debug) write(out_unitp,*) 'i_Qdyn,i,d0req',i_Qdyn,i,d0req
-        CALL flush_perso(out_unitp)
-        i_Q21 = i_Q21 + 1
+        i_Q21  = i_Q21 + 1
         i_Qact = RPHTransfo%list_QdynTOQact(i_Qdyn)
 
-        RPHpara_AT_Qact1%dnQopt%d0(i_Q21) = d0req
-        Qdyn(i_Qdyn)                      = d0req
-        Qact(i_Qact)                      = d0req
+        RPHpara_AT_Qact1%dnQopt%d0(i_Q21) = Tab_dnQflex(i_Qdyn)%d0
+        Qdyn(i_Qdyn)                      = Tab_dnQflex(i_Qdyn)%d0
+        Qact(i_Qact)                      = Tab_dnQflex(i_Qdyn)%d0
 
       END DO
+
+      DO i=1,size(tab_dnQflex)
+        CALL dealloc_dnSVM(tab_dnQflex(i))
+      END DO
+      deallocate(tab_dnQflex)
       RPHpara_AT_Qact1%init_done = 1 ! all dnQopt are done
 
-      CALL dealloc_NParray(d1req,"d1req",name_sub)
-      CALL dealloc_NParray(d2req,"d2req",name_sub)
-      CALL dealloc_NParray(d3req,"d3req",name_sub)
-
       !------ The gradient ----------------------------------
-      CALL alloc_NParray(d1g,(/ nb_inact21,nb_act1 /),"d1g",name_sub)
-      CALL alloc_NParray(d2g,(/ nb_inact21,nb_act1,nb_act1 /),"d2g",name_sub)
+      IF (RPHTransfo%QMlib) THEN
+        allocate(Tab_dnGrad(nb_inact21))
+        allocate(Tab_dnHess(nb_inact21**2))
 
-      CALL d0d1d2_g(d0g,d1g,d2g,Qdyn,mole_loc,.FALSE.,.FALSE.,RPHTransfo%step)
-      !IF (debug) CALL Write_Vec(d0g,out_unitp,4)
-      RPHpara_AT_Qact1%dnGrad%d0(:) = d0g
+        CALL calc_Tab_dnGradHess_gene(Tab_dnGrad,Tab_dnHess,nb_inact21,Qact,nb_act1,nderiv,RPHTransfo%QMlib)
+        RPHpara_AT_Qact1%dnGrad%d0(:)   = Tab_dnGrad(:)%d0
+        d0hess(:,:)                     = reshape(Tab_dnHess(:)%d0,shape=[nb_inact21,nb_inact21])
+        RPHpara_AT_Qact1%dnHess%d0(:,:) = d0hess
 
-      CALL dealloc_NParray(d1g,"d1g",name_sub)
-      CALL dealloc_NParray(d2g,"d2g",name_sub)
+        DO i=1,size(Tab_dnGrad)
+          CALL dealloc_dnSVM(Tab_dnGrad(i))
+        END DO
+        deallocate(Tab_dnGrad)
+        DO i=1,size(Tab_dnHess)
+          CALL dealloc_dnSVM(Tab_dnHess(i))
+        END DO
+        deallocate(Tab_dnHess)
+      ELSE
+        CALL alloc_NParray(d1g,(/ nb_inact21,nb_act1 /),"d1g",name_sub)
+        CALL alloc_NParray(d2g,(/ nb_inact21,nb_act1,nb_act1 /),"d2g",name_sub)
+        CALL d0d1d2_g(d0g,d1g,d2g,Qdyn,mole_loc,.FALSE.,.FALSE.,RPHTransfo%step)
+        IF (debug) CALL Write_Vec(d0g,out_unitp,4,info='d0grad')
+        RPHpara_AT_Qact1%dnGrad%d0(:) = d0g
 
-      !------ The hessian ----------------------------------
-      CALL alloc_NParray(d1hess,(/ nb_inact21,nb_inact21,nb_act1 /),    &
+        CALL dealloc_NParray(d1g,"d1g",name_sub)
+        CALL dealloc_NParray(d2g,"d2g",name_sub)
+
+        !------ The hessian ----------------------------------
+        CALL alloc_NParray(d1hess,(/ nb_inact21,nb_inact21,nb_act1 /),    &
                         "d1hess",name_sub)
-      CALL alloc_NParray(d2hess,(/nb_inact21,nb_inact21,nb_act1,nb_act1/),&
+        CALL alloc_NParray(d2hess,(/nb_inact21,nb_inact21,nb_act1,nb_act1/),&
                         "d2hess",name_sub)
 
-      CALL d0d1d2_h(d0hess,d1hess,d2hess,Qdyn,mole_loc,.FALSE.,.FALSE.,RPHTransfo%step)
-      IF (debug) CALL Write_Mat(d0hess,out_unitp,4)
+        CALL d0d1d2_h(d0hess,d1hess,d2hess,Qdyn,mole_loc,.FALSE.,.FALSE.,RPHTransfo%step)
+        IF (debug) CALL Write_Mat(d0hess,out_unitp,4,info='d0hess')
 
-      RPHpara_AT_Qact1%dnHess%d0(:,:) = d0hess
+        RPHpara_AT_Qact1%dnHess%d0(:,:) = d0hess
 
-      CALL dealloc_NParray(d1hess,"d1hess",name_sub)
-      CALL dealloc_NParray(d2hess,"d2hess",name_sub)
+        CALL dealloc_NParray(d1hess,"d1hess",name_sub)
+        CALL dealloc_NParray(d2hess,"d2hess",name_sub)
+      END IF
 
       IF (.NOT. mole%CurviRPH%init .AND. mole_loc%CurviRPH%init) THEN
         CALL CurviRPH1_TO_CurviRPH2(mole_loc%CurviRPH,mole%CurviRPH)
@@ -944,17 +964,15 @@
               dnGG%d0(mole%liste_QdynTOQact(i),mole%liste_QdynTOQact(j))
         END DO
       END DO
-      IF (debug) CALL Write_Mat(d0k,out_unitp,4)
+      IF (debug) CALL Write_Mat(d0k,out_unitp,4,info='d0k')
 
       CALL dealloc_dnSVM(dnGG)
 
 !-----------------------------------------------------------------
 !     --- frequencies and normal modes calculation ....
       IF (debug) THEN
-        write(out_unitp,*) 'd0hess,d0k'
-        CALL Write_Mat(d0hess,out_unitp,4)
-        CALL Write_Mat(d0k,out_unitp,4)
-        CALL flush_perso(out_unitp)
+        CALL Write_Mat(d0hess,out_unitp,4,info='d0hess')
+        CALL Write_Mat(d0k,out_unitp,4,info='d0k')
       END IF
 
       d0h(:,:) = d0hess(:,:)
@@ -967,11 +985,9 @@
                                RPHTransfo%Qinact2n_sym,               &
                                RPHTransfo%dim_equi,RPHTransfo%tab_equi)
         IF (debug) THEN
-          write(out_unitp,*) 'sym : d0hess,d0k'
-          CALL Write_Mat(d0h,out_unitp,4)
-          CALL Write_Mat(d0k,out_unitp,4)
+          CALL Write_Mat(d0h,out_unitp,4,info='d0hess symmetrized')
+          CALL Write_Mat(d0k,out_unitp,4,info='d0k symmetrized')
         END IF
-
         CALL calc_freq_block(nb_inact21,d0h,d0k,                        &
                              RPHpara_AT_Qact1%dneHess%d0,               &
                              RPHpara_AT_Qact1%dnC%d0,                   &
@@ -994,7 +1010,6 @@
 
       CALL dealloc_NParray(d0h,"d0h",name_sub)
       CALL dealloc_NParray(d0k,"d0k",name_sub)
-
 !-----------------------------------------------------------------
 
 !-----------------------------------------------------------

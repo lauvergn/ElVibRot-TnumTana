@@ -16,32 +16,32 @@ fi
 if [ $test_size = 'small' ]
 then
  echo " Small tests"
- ./DAT_files/dat_publi_HADA
+ ./DAT_files/dat_publi_HADA &> err.log
  ./CompareLevel res_HADA_HarD lev_res_HADA_HarD Table2_JCP2001-1+2D.txt 2
 
- ./DAT_files/dat_publi_cHAC 3
+ ./DAT_files/dat_publi_cHAC 3 &> err.log
  ./CompareLevel res_cHAC_HarD lev_res_cHAC_HarD Table2_JCP2001-1+2D.txt 4
 
- ./DAT_files/dat_publi-Murrell f 5
+ ./DAT_files/dat_publi-Murrell f 5 &> err.log
  ./CompareLevel res_cHAC_Exact lev_res_cHAC_Exact Table2_JCP2001-1+2D.txt 6 1.
 
- ./DAT_files/dat_publi-Murrell t 11
+ ./DAT_files/dat_publi-Murrell t 11 &> err.log
  ./CompareLevel res_cHAC_Exact lev20_res_cHAC_Exact Table_CV-1+2D.txt 5 0.1
 fi
 
 if [ $test_size = 'medium' ]
 then
  echo " Medium tests"
- ./DAT_files/dat_publi_HADA
+ ./DAT_files/dat_publi_HADA &> err.log
  ./CompareLevel res_HADA_HarD lev_res_HADA_HarD Table2_JCP2001-1+2D.txt 2
 
- ./DAT_files/dat_publi_cHAC 11
+ ./DAT_files/dat_publi_cHAC 11 &> err.log
  ./CompareLevel res_cHAC_HarD lev_res_cHAC_HarD Table2_JCP2001-1+2D.txt 4
 
- ./DAT_files/dat_publi-Murrell f 11
+ ./DAT_files/dat_publi-Murrell f 11 &> err.log
  ./CompareLevel res_cHAC_Exact lev_res_cHAC_Exact Table2_JCP2001-1+2D.txt 6 1.
  ./CompareLevel res_cHAC_Exact lev20_res_cHAC_Exact Table_CV-1+2D.txt 5 0.1
 
- ./DAT_files/dat_publi-Murrell t 16
+ ./DAT_files/dat_publi-Murrell t 16 &> err.log
  ./CompareLevel res_cHAC_Exact lev20_res_cHAC_Exact Table_CV-1+2D.txt 5 0.1
 fi

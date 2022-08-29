@@ -48,6 +48,7 @@ nice $DIR_vib/vib << ** >res
          nat=4
          sym=T
          nrho=2
+         Write_QMotions=f
  /
 $MC
 0.0     1

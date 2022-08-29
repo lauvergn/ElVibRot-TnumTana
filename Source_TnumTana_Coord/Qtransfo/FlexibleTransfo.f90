@@ -43,6 +43,7 @@
         integer, allocatable :: list_act(:)
 
         logical              :: With_Tab_dnQflex    = .FALSE.
+        logical              :: QMLib               = .FALSE.
 
         CONTAINS
             PROCEDURE :: Read_FlexibleTransfo
@@ -112,15 +113,18 @@
       FlexibleTransfo2%list_act         = FlexibleTransfo1%list_act
 
       FlexibleTransfo2%With_Tab_dnQflex = FlexibleTransfo1%With_Tab_dnQflex
+      FlexibleTransfo2%QMLib            = FlexibleTransfo1%QMLib
 
       END SUBROUTINE FlexibleTransfo1TOFlexibleTransfo2
 
-      SUBROUTINE Read_FlexibleTransfo(FlexibleTransfo,nb_Qin,list_flex)
+      SUBROUTINE Read_FlexibleTransfo(FlexibleTransfo,nb_Qin,                   &
+                                      With_Tab_dnQflex,QMLib,list_flex)
 
       !TYPE (Type_FlexibleTransfo), intent(inout) :: FlexibleTransfo
       CLASS (Type_FlexibleTransfo), intent(inout) :: FlexibleTransfo
 
       integer, intent(in)           :: nb_Qin
+      logical, intent(in)           :: With_Tab_dnQflex,QMLib
       integer, intent(in), optional :: list_flex(:)
 
 
@@ -173,16 +177,21 @@
                  FlexibleTransfo%list_act(1:nb_flex_act)
       write(out_unitp,*) 'list_flex: ',FlexibleTransfo%list_flex(:)
 
+      FlexibleTransfo%With_Tab_dnQflex = With_Tab_dnQflex
+      FlexibleTransfo%QMLib            = QMLib
+      write(out_unitp,*) 'With_Tab_dnQflex,QMLib: ',With_Tab_dnQflex,QMLib
+
       END SUBROUTINE Read_FlexibleTransfo
 
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE calc_FlexibleTransfo(dnQin,dnQout,FlexibleTransfo,nderiv,inTOout)
+        USE mod_Lib_QTransfo, ONLY : calc_Tab_dnQflex_gene
 
-        TYPE (Type_dnVec), intent(inout)        :: dnQin,dnQout
-        TYPE (Type_flexibleTransfo), intent(in) :: FlexibleTransfo
-        integer, intent(in)                     :: nderiv
-        logical                                 :: inTOout
+        TYPE (Type_dnVec),           intent(inout)  :: dnQin,dnQout
+        TYPE (Type_flexibleTransfo), intent(in)     :: FlexibleTransfo
+        integer,                     intent(in)     :: nderiv
+        logical                                     :: inTOout
 
         TYPE (Type_dnS)   :: dnQeq
         TYPE (Type_dnS), allocatable :: tab_dnQflex(:)
@@ -192,12 +201,12 @@
         integer           :: i,j,k,iact,jact,kact,id,jd,kd
         real (kind=Rkind) :: Qact_flex(FlexibleTransfo%nb_flex_act)
 
-        integer :: iQ,it=0
+        integer :: iQ,it=0,nderiv_loc,nb_flex
 
 !----- for debuging ----------------------------------
        character (len=*),parameter :: name_sub='calc_FlexibleTransfo'
        logical, parameter :: debug=.FALSE.
-!        logical, parameter :: debug=.TRUE.
+       !logical, parameter :: debug=.TRUE.
 !----- for debuging ----------------------------------
 
 !---------------------------------------------------------------------
@@ -211,44 +220,47 @@
         write(out_unitp,*) 'nb_flex_act',nb_flex_act
         write(out_unitp,*) 'list_act ',FlexibleTransfo%list_act
         write(out_unitp,*) 'list_flex',FlexibleTransfo%list_flex
-
+        write(out_unitp,*) 'QMLib',FlexibleTransfo%QMLib
+        write(out_unitp,*) 'With_Tab_dnQflex',FlexibleTransfo%With_Tab_dnQflex
         CALL flush_perso(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
+       IF (inTOout) THEN
+         nderiv_loc = nderiv
+       ELSE
+         nderiv_loc = 0
+       END IF
+
        CALL check_alloc_dnVec(dnQin,'dnQin',name_sub)
        CALL check_alloc_dnVec(dnQout,'dnQout',name_sub)
 
-       CALL alloc_dnSVM(dnQeq,nb_flex_act,nderiv)
+       CALL alloc_dnSVM(dnQeq,nb_flex_act,nderiv_loc)
 
        Qact_flex(:) = dnQin%d0(list_act)
 
-       IF (inTOout) THEN
+       nb_flex = count(FlexibleTransfo%list_flex == 20)
+       IF (nb_flex > 0) THEN
+         allocate(tab_dnQflex(dnQin%nb_var_vec))
 
-         IF (FlexibleTransfo%With_Tab_dnQflex .AND.                             &
-             count(FlexibleTransfo%list_flex == 20) > 1) THEN
-           allocate(tab_dnQflex(dnQin%nb_var_vec))
-           DO iQ=1,dnQin%nb_var_vec
-             CALL alloc_dnSVM(tab_dnQflex(iQ),nb_flex_act,nderiv)
-           END DO
-           CALL Calc_tab_dnQflex(tab_dnQflex,dnQin%nb_var_vec,                  &
-                                 Qact_flex,nb_flex_act,nderiv,-1)
-         END IF
+         CALL calc_Tab_dnQflex_gene(Tab_dnQflex,dnQin%nb_var_vec,               &
+                                    Qact_flex,nb_flex_act,nderiv_loc,-1,        &
+                                    FlexibleTransfo%list_flex,                  &
+                                    QMlib=FlexibleTransfo%QMLib,                &
+                                    With_Tab_dnQflex=FlexibleTransfo%With_Tab_dnQflex)
+       END IF
+
+       IF (inTOout) THEN
 
          !write(out_unitp,*) 'list_act,Qact_flex',list_act,Qact_flex
          DO iQ=1,dnQin%nb_var_vec
+
            CALL sub_dnVec1_TO_dnVec2_WithIvec(dnQin,dnQout,iQ,nderiv)
 
            IF (FlexibleTransfo%list_flex(iQ) == 20) THEN
 
-             IF (FlexibleTransfo%With_Tab_dnQflex) THEN
-               CALL sub_dnS1_TO_dnS2(tab_dnQflex(iQ),dnQeq)
-             ELSE
-               CALL calc_dnQflex(iQ,dnQeq,Qact_flex,nb_flex_act,nderiv,it)
-             END IF
-             !write(out_unitp,*) 'dnQout%d0(iQ)',iQ,dnQout%d0(iQ)
-             !write(out_unitp,*) 'dnQeq,iQ',iQ
-             !CALL Write_dnSVM(dnQeq,nderiv)
+             CALL sub_dnS1_TO_dnS2(tab_dnQflex(iQ),dnQeq)
+
 
              dnQout%d0(iQ) = dnQin%d0(iQ) + dnQeq%d0
 
@@ -342,30 +354,27 @@
            END IF
          END DO
 
-         IF (allocated(tab_dnQflex)) THEN
-           DO iQ=1,size(tab_dnQflex)
-             CALL dealloc_dnSVM(tab_dnQflex(iQ))
-           END DO
-           deallocate(tab_dnQflex)
-         END IF
-
        ELSE
          !write(out_unitp,*) 'list_act,Qact_flex',list_act,Qact_flex
          DO iQ=1,dnQin%nb_var_vec
            CALL sub_dnVec1_TO_dnVec2_WithIvec(dnQout,dnQin,iQ,nderiv)
 
            IF (FlexibleTransfo%list_flex(iQ) == 20) THEN
-
-             CALL calc_dnQflex(iQ,dnQeq,Qact_flex,nb_flex_act,nderiv,it)
-             !write(out_unitp,*) 'dnQeq,iQ',iQ
-             !CALL Write_dnSVM(dnQeq,nderiv)
-
+             CALL sub_dnS1_TO_dnS2(tab_dnQflex(iQ),dnQeq)
              dnQin%d0(iQ) = dnQout%d0(iQ) - dnQeq%d0
            END IF
 
          END DO
        END IF
+
        CALL dealloc_dnSVM(dnQeq)
+
+       IF (allocated(tab_dnQflex)) THEN
+         DO iQ=1,size(tab_dnQflex)
+           CALL dealloc_dnSVM(tab_dnQflex(iQ))
+         END DO
+         deallocate(tab_dnQflex)
+       END IF
 
 !---------------------------------------------------------------------
       IF (debug) THEN

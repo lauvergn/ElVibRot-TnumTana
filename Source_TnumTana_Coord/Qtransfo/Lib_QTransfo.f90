@@ -46,6 +46,7 @@ MODULE mod_Lib_QTransfo
       PUBLIC :: calc_vector, calc_vector2, calc_cross_product
       PUBLIC :: calc_angle, calc_angle_d, calc_OutOfPlane
       PUBLIC :: check_Valence, func_ic, func_iat
+      PUBLIC :: calc_Tab_dnQflex_gene,calc_Tab_dnGradHess_gene
 
       CONTAINS
 
@@ -1224,5 +1225,346 @@ MODULE mod_Lib_QTransfo
       END IF
 
       end function func_iat
+
+SUBROUTINE calc_Tab_dnQflex_gene(Tab_dnQflex,nb_var,Qact,nb_act1,nderiv,it,     &
+                                 list_Type_var,QMlib,With_Tab_dnQflex)
+  USE mod_system
+  USE mod_dnSVM
+  IMPLICIT NONE
+
+  TYPE (Type_dnS),    intent(inout)  :: Tab_dnQflex(:)
+
+  integer,            intent(in)     :: nb_var,nb_act1
+  real (kind=Rkind),  intent(in)     :: Qact(:)
+  integer,            intent(in)     :: nderiv,it
+  integer,            intent(in)     :: list_Type_var(:)
+  logical,            intent(in)     :: QMlib,With_Tab_dnQflex
+
+  integer :: i_Qdyn,type_var
+
+  ! for QML
+  integer :: ndim,nsurf,nb_Func,ndimFunc,ifunc
+  integer :: IndexFunc_Ene,IndexFunc_Qop,IndexFunc_Grad,IndexFunc_Hess
+  real(kind=Rkind), allocatable  :: d0Func(:)
+  real(kind=Rkind), allocatable  :: d1Func(:,:)
+  real(kind=Rkind), allocatable  :: d2Func(:,:,:)
+  real(kind=Rkind), allocatable  :: d3Func(:,:,:,:)
+
+  !----- for debuging ----------------------------------
+  character (len=*), parameter :: name_sub='calc_Tab_dnQflex_gene'
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
+  !----- for debuging ----------------------------------
+
+
+  !---------------------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'Qact',Qact
+    write(out_unitp,*) 'nb_var,nb_act1',nb_var,nb_act1
+    write(out_unitp,*) 'nderiv,it',nderiv,it
+    write(out_unitp,*) 'list_Type_var',list_Type_var
+    write(out_unitp,*) 'QMLib',QMLib
+    write(out_unitp,*) 'With_Tab_dnQflex',With_Tab_dnQflex
+    flush(out_unitp)
+  END IF
+  !---------------------------------------------------------------------
+
+  DO i_Qdyn=1,nb_var
+    type_var = list_Type_var(i_Qdyn)
+    IF (type_var == 20 .OR. type_var == 200 .OR. type_var == 21) THEN
+      CALL alloc_dnSVM(tab_dnQflex(i_Qdyn),nb_act1,nderiv)
+      IF (debug) write(out_unitp,*) 'i_Qdyn,type_var',i_Qdyn,type_var
+    END IF
+  END DO
+
+  IF (QMLib) THEN
+    IF (debug) write(out_unitp,*) 'in ',name_sub,' with QML'
+
+    CALL get_Qmodel_nb_Func_ndimFunc(nb_Func,ndimFunc)
+    CALL get_Qmodel_IndexesFunc(IndexFunc_Ene,IndexFunc_Qop,IndexFunc_Grad,IndexFunc_Hess)
+
+    SELECT CASE (nderiv)
+    CASE (0)
+      allocate(d0Func(nb_Func))
+      CALL get_Qmodel_d0Func(d0Func,Qact,nb_Func,ndimFunc)
+
+      DO i_Qdyn=1,nb_var
+        type_var = list_Type_var(i_Qdyn)
+        ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        IF (type_var == 20 .OR. type_var == 21) THEN
+          Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
+        ELSE IF (type_var == 200) THEN
+          Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
+        END IF
+      END DO
+
+      deallocate(d0Func)
+
+    CASE (1)
+      allocate(d0Func(nb_Func))
+      allocate(d1Func(ndimFunc,nb_Func))
+      CALL get_Qmodel_d0d1Func(d0Func,d1Func,Qact,nb_Func,ndimFunc)
+
+      DO i_Qdyn=1,nb_var
+        type_var = list_Type_var(i_Qdyn)
+          ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        IF (type_var == 20 .OR. type_var == 21) THEN
+          Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
+          Tab_dnQflex(i_Qdyn)%d1 = d1Func(:,ifunc)
+        ELSE IF (type_var == 200) THEN
+          Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
+        END IF
+      END DO
+
+      deallocate(d0Func)
+      deallocate(d1Func)
+
+    CASE (2)
+      allocate(d0Func(nb_Func))
+      allocate(d1Func(ndimFunc,nb_Func))
+      allocate(d2Func(ndimFunc,ndimFunc,nb_Func))
+      CALL get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Qact,nb_Func,ndimFunc)
+
+      DO i_Qdyn=1,nb_var
+        type_var = list_Type_var(i_Qdyn)
+        ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        IF (type_var == 20 .OR. type_var == 21) THEN
+          Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
+          Tab_dnQflex(i_Qdyn)%d1 = d1Func(:,ifunc)
+          Tab_dnQflex(i_Qdyn)%d2 = d2Func(:,:,ifunc)
+        ELSE IF (type_var == 200) THEN
+          Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
+        END IF
+      END DO
+
+      deallocate(d0Func)
+      deallocate(d1Func)
+      deallocate(d2Func)
+
+    CASE (3)
+      allocate(d0Func(nb_Func))
+      allocate(d1Func(ndimFunc,nb_Func))
+      allocate(d2Func(ndimFunc,ndimFunc,nb_Func))
+      allocate(d3Func(ndimFunc,ndimFunc,ndimFunc,nb_Func))
+      CALL get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Qact,nb_Func,ndimFunc)
+
+      DO i_Qdyn=1,nb_var
+        type_var = list_Type_var(i_Qdyn)
+        ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        IF (type_var == 20 .OR. type_var == 21) THEN
+          Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
+          Tab_dnQflex(i_Qdyn)%d1 = d1Func(:,ifunc)
+          Tab_dnQflex(i_Qdyn)%d2 = d2Func(:,:,ifunc)
+          Tab_dnQflex(i_Qdyn)%d3 = d3Func(:,:,:,ifunc)
+        ELSE IF (type_var == 200) THEN
+          Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
+        END IF
+      END DO
+
+      deallocate(d0Func)
+      deallocate(d1Func)
+      deallocate(d2Func)
+      deallocate(d3Func)
+
+    END SELECT
+
+  ELSE IF (With_Tab_dnQflex) THEN
+    IF (debug) write(out_unitp,*) 'in ',name_sub,' with Tab_dnQflex'
+    CALL Calc_tab_dnQflex(tab_dnQflex,nb_var,Qact,nb_act1,nderiv,it)
+  ELSE
+    IF (debug) write(out_unitp,*) 'in ',name_sub,' with dnQflex'
+
+    DO i_Qdyn=1,nb_var
+      type_var = list_Type_var(i_Qdyn)
+
+      IF (type_var == 20 .OR. type_var == 21) THEN
+        CALL calc_dnQflex(i_Qdyn,Tab_dnQflex(i_Qdyn),Qact,nb_act1,nderiv,it)
+      ELSE IF (type_var == 200) THEN
+        CALL calc_dnQflex(i_Qdyn,Tab_dnQflex(i_Qdyn),Qact,nb_act1,0,it)
+      END IF
+
+    END DO
+
+  END IF
+
+  !---------------------------------------------------------------------
+  IF (debug) THEN
+    DO i_Qdyn=1,nb_var
+      write(out_unitp,*) 'tab_dnQflex : ',i_Qdyn,Qact
+      IF (tab_dnQflex(i_Qdyn)%alloc) CALL write_dnS(tab_dnQflex(i_Qdyn),nderiv)
+    END DO
+    write(out_unitp,*) 'END ',name_sub
+    flush(out_unitp)
+  END IF
+  !---------------------------------------------------------------------
+
+END SUBROUTINE calc_Tab_dnQflex_gene
+
+SUBROUTINE calc_Tab_dnGradHess_gene(Tab_dnGrad,Tab_dnHess,nb_inact21,Qact,nb_act1,nderiv,QMlib)
+  USE mod_system
+  USE mod_dnSVM
+  IMPLICIT NONE
+
+  TYPE (Type_dnS),    intent(inout)  :: Tab_dnGrad(:),Tab_dnHess(:)
+
+  integer,            intent(in)     :: nb_inact21,nb_act1
+  real (kind=Rkind),  intent(in)     :: Qact(:)
+  integer,            intent(in)     :: nderiv
+  logical,            intent(in)     :: QMlib
+
+  logical :: Grad,Hess
+  integer :: i,iG,fG,iH,fH
+
+  ! for QML
+  integer :: ndim,nsurf,nb_Func,ndimFunc,ifunc
+  integer :: IndexFunc_Ene,IndexFunc_Qop,IndexFunc_Grad,IndexFunc_Hess
+  real(kind=Rkind), allocatable  :: d0Func(:)
+  real(kind=Rkind), allocatable  :: d1Func(:,:)
+  real(kind=Rkind), allocatable  :: d2Func(:,:,:)
+  real(kind=Rkind), allocatable  :: d3Func(:,:,:,:)
+
+  !----- for debuging ----------------------------------
+  character (len=*), parameter :: name_sub='calc_Tab_dnGradHess_gene'
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
+  !----- for debuging ----------------------------------
+
+
+  !---------------------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'BEGINNING ',name_sub
+    write(out_unitp,*) 'Qact',Qact
+    write(out_unitp,*) 'nb_inact21,nb_act1',nb_inact21,nb_act1
+    write(out_unitp,*) 'nderiv',nderiv
+    write(out_unitp,*) 'QMLib',QMLib
+    flush(out_unitp)
+  END IF
+  !---------------------------------------------------------------------
+  !write(out_unitp,*) 'in ',name_sub
+
+    CALL get_Qmodel_nb_Func_ndimFunc(nb_Func,ndimFunc)
+    CALL get_Qmodel_IndexesFunc(IndexFunc_Ene,IndexFunc_Qop,IndexFunc_Grad,IndexFunc_Hess)
+
+    iG = IndexFunc_Grad
+    fG = IndexFunc_Grad-1+nb_inact21
+    iH = IndexFunc_Hess
+    fH = IndexFunc_Hess-1+nb_inact21**2
+
+
+    Grad = (IndexFunc_Grad > 0 .AND. IndexFunc_Grad+nb_inact21 == IndexFunc_Hess)
+    Hess = (IndexFunc_Hess > 0 .AND. IndexFunc_Hess-1+nb_inact21**2 <= nb_Func)
+
+    SELECT CASE (nderiv)
+    CASE (0)
+      allocate(d0Func(nb_Func))
+      CALL get_Qmodel_d0Func(d0Func,Qact,nb_Func,ndimFunc)
+
+      IF (Grad) THEN
+        DO i=1,nb_inact21
+          Tab_dnGrad(i)%d0 = d0Func(iG-1+i)
+        END DO
+      END IF
+      IF (Hess) THEN
+        DO i=1,nb_inact21**2
+          Tab_dnHess(i)%d0 = d0Func(iH-1+i)
+        END DO
+      END IF
+
+      deallocate(d0Func)
+
+    CASE (1)
+      allocate(d0Func(nb_Func))
+      allocate(d1Func(ndimFunc,nb_Func))
+      CALL get_Qmodel_d0d1Func(d0Func,d1Func,Qact,nb_Func,ndimFunc)
+
+      IF (Grad) THEN
+        DO i=1,nb_inact21
+          Tab_dnGrad(i)%d0 = d0Func(iG-1+i)
+          Tab_dnGrad(i)%d1 = d1Func(:,iG-1+i)
+        END DO
+      END IF
+      IF (Hess) THEN
+        DO i=1,nb_inact21**2
+          Tab_dnHess(i)%d0 = d0Func(iH-1+i)
+          Tab_dnHess(i)%d1 = d1Func(:,iH-1+i)
+        END DO
+      END IF
+
+      deallocate(d0Func)
+      deallocate(d1Func)
+
+    CASE (2)
+      allocate(d0Func(nb_Func))
+      allocate(d1Func(ndimFunc,nb_Func))
+      allocate(d2Func(ndimFunc,ndimFunc,nb_Func))
+      CALL get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Qact,nb_Func,ndimFunc)
+
+      IF (Grad) THEN
+        DO i=1,nb_inact21
+          Tab_dnGrad(i)%d0 = d0Func(iG-1+i)
+          Tab_dnGrad(i)%d1 = d1Func(:,iG-1+i)
+          Tab_dnGrad(i)%d2 = d2Func(:,:,iG-1+i)
+        END DO
+      END IF
+      IF (Hess) THEN
+        DO i=1,nb_inact21**2
+          Tab_dnHess(i)%d0 = d0Func(iH-1+i)
+          Tab_dnHess(i)%d1 = d1Func(:,iH-1+i)
+          Tab_dnHess(i)%d2 = d2Func(:,:,iH-1+i)
+        END DO
+      END IF
+
+      deallocate(d0Func)
+      deallocate(d1Func)
+      deallocate(d2Func)
+
+    CASE (3)
+      allocate(d0Func(nb_Func))
+      allocate(d1Func(ndimFunc,nb_Func))
+      allocate(d2Func(ndimFunc,ndimFunc,nb_Func))
+      allocate(d3Func(ndimFunc,ndimFunc,ndimFunc,nb_Func))
+      CALL get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Qact,nb_Func,ndimFunc)
+
+      IF (Grad) THEN
+        DO i=1,nb_inact21
+          Tab_dnGrad(i)%d0 = d0Func(iG-1+i)
+          Tab_dnGrad(i)%d1 = d1Func(:,iG-1+i)
+          Tab_dnGrad(i)%d2 = d2Func(:,:,iG-1+i)
+          Tab_dnGrad(i)%d3 = d3Func(:,:,:,iG-1+i)
+        END DO
+      END IF
+      IF (Hess) THEN
+        DO i=1,nb_inact21**2
+          Tab_dnHess(i)%d0 = d0Func(iH-1+i)
+          Tab_dnHess(i)%d1 = d1Func(:,iH-1+i)
+          Tab_dnHess(i)%d2 = d2Func(:,:,iH-1+i)
+          Tab_dnHess(i)%d3 = d3Func(:,:,:,iH-1+i)
+        END DO
+      END IF
+
+      deallocate(d0Func)
+      deallocate(d1Func)
+      deallocate(d2Func)
+      deallocate(d3Func)
+
+    END SELECT
+
+  !---------------------------------------------------------------------
+  IF (debug) THEN
+    DO i=1,size(Tab_dnGrad)
+      write(out_unitp,*) 'Tab_dnGrad : ',i,Qact
+      IF (Tab_dnGrad(i)%alloc) CALL write_dnS(Tab_dnGrad(i),nderiv)
+    END DO
+    DO i=1,size(Tab_dnHess)
+      write(out_unitp,*) 'Tab_dnHess : ',i,Qact
+      IF (Tab_dnHess(i)%alloc) CALL write_dnS(Tab_dnHess(i),nderiv)
+    END DO
+    write(out_unitp,*) 'END ',name_sub
+    flush(out_unitp)
+  END IF
+  !---------------------------------------------------------------------
+
+END SUBROUTINE calc_Tab_dnGradHess_gene
 
 END MODULE mod_Lib_QTransfo

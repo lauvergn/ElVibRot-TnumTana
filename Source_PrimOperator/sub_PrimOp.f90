@@ -51,18 +51,6 @@
 
    PRIVATE
 
-  INTERFACE Finalize_TnumTana_Coord_PrimOp
-    MODULE PROCEDURE Finalize_TnumTana_Coord_PrimOp_CoordType
-  END INTERFACE
-  INTERFACE get_dnMatOp_AT_Qact
-    MODULE PROCEDURE get_dnMatOp_AT_Qact_zmatrix,get_dnMatOp_AT_Qact_CoordType
-  END INTERFACE
-  INTERFACE get_d0MatOp_AT_Qact
-    MODULE PROCEDURE get_d0MatOp_AT_Qact_zmatrix,get_d0MatOp_AT_Qact_CoordType
-  END INTERFACE
-  INTERFACE TnumKEO_TO_tab_d0H
-    MODULE PROCEDURE TnumKEO_TO_tab_d0H_zmatrix,TnumKEO_TO_tab_d0H_CoordType
-  END INTERFACE
 
    PUBLIC :: Finalize_TnumTana_Coord_PrimOp, get_dnMatOp_AT_Qact,       &
              get_d0MatOp_AT_Qact,TnumKEO_TO_tab_d0H,sub_freq_AT_Qact,   &
@@ -176,23 +164,44 @@
           PrimOp%nb_elec = nsurfI4
 
         ELSE
-          ndimI4  = int(mole%nb_act,kind=I4kind)
           nsurfI4 = int(PrimOp%nb_elec,kind=I4kind)
 
-          CALL sub_Init_Qmodel(ndimI4,nsurfI4,'read_model',.FALSE.,int(0,kind=I4kind))
-          write(out_unitp,*) ' nb_act           ',mole%nb_act
-          write(out_unitp,*) ' ndim from  Qmodel',ndimI4
-          write(out_unitp,*) ' ndim from  Qmodel ("Quantum Model Lib") is ...'
-          IF (ndimI4 == int(mole%nb_act,kind=I4kind)) THEN
-            write(out_unitp,*) ' equal to mole%nb_act.'
-          ELSE IF (ndimI4 > int(mole%nb_act,kind=I4kind)) THEN
-            write(out_unitp,*) ' larger than mole%nb_act.'
-            write(out_unitp,*) ' You MUST use type 100 and 1 coordinates.'
-          ELSE ! ndim < mole%nb_act
-            write(out_unitp,*) ' smaller than mole%nb_act.'
-            write(out_unitp,*) ' It is not possible!'
-            write(out_unitp,*) 'ERROR in ',name_sub
-            STOP 'ERROR in Sub_init_dnOp: ndim from QML is too small'
+          IF (PrimOp%Hard) THEN
+            ndimI4  = int(mole%nb_act1,kind=I4kind)
+            CALL sub_Init_Qmodel(ndimI4,nsurfI4,'read_model',.FALSE.,int(0,kind=I4kind))
+            write(out_unitp,*) ' nb_act1          ',mole%nb_act1
+            write(out_unitp,*) ' ndim from  Qmodel',ndimI4
+            write(out_unitp,*) ' ndim from  Qmodel ("Quantum Model Lib") is ...'
+
+            IF (ndimI4 == int(mole%nb_act1,kind=I4kind)) THEN
+              write(out_unitp,*) ' equal to mole%nb_act1.'
+            ELSE IF (ndimI4 > int(mole%nb_act1,kind=I4kind)) THEN
+              write(out_unitp,*) ' larger than mole%nb_act1.'
+              write(out_unitp,*) ' You MUST use type 100 and 1 coordinates.'
+            ELSE ! ndim < mole%nb_act1
+              write(out_unitp,*) ' smaller than mole%nb_act1.'
+              write(out_unitp,*) ' It is not possible!'
+              write(out_unitp,*) 'ERROR in ',name_sub
+              STOP 'ERROR in Sub_init_dnOp: ndim from QML is too small'
+            END IF
+          ELSE
+            ndimI4  = int(mole%nb_act,kind=I4kind)
+            CALL sub_Init_Qmodel(ndimI4,nsurfI4,'read_model',.FALSE.,int(0,kind=I4kind))
+            write(out_unitp,*) ' nb_act           ',mole%nb_act
+            write(out_unitp,*) ' ndim from  Qmodel',ndimI4
+            write(out_unitp,*) ' ndim from  Qmodel ("Quantum Model Lib") is ...'
+
+            IF (ndimI4 == int(mole%nb_act,kind=I4kind)) THEN
+              write(out_unitp,*) ' equal to mole%nb_act.'
+            ELSE IF (ndimI4 > int(mole%nb_act,kind=I4kind)) THEN
+              write(out_unitp,*) ' larger than mole%nb_act.'
+              write(out_unitp,*) ' You MUST use type 100 and 1 coordinates.'
+            ELSE ! ndim < mole%nb_act
+              write(out_unitp,*) ' smaller than mole%nb_act.'
+              write(out_unitp,*) ' It is not possible!'
+              write(out_unitp,*) 'ERROR in ',name_sub
+              STOP 'ERROR in Sub_init_dnOp: ndim from QML is too small'
+            END IF
           END IF
 
           PrimOp%nb_elec = nsurfI4
@@ -222,7 +231,7 @@
         END IF
         IF (PrimOp%pot_itQtransfo == 0) THEN ! Cartesian coordinates
           CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,(/ mole%ncart_act /),'Qit_TO_QQMLib',name_sub)
-          PrimOp%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%ncart_act) /)
+          PrimOp%Qit_TO_QQMLib(:) = [ (k,k=1,mole%ncart_act) ]
         ELSE
           CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,[ndimI4],'Qit_TO_QQMLib',name_sub)
           PrimOp%Qit_TO_QQMLib(:) = [ (k,k=1,ndimI4) ]
@@ -260,104 +269,6 @@
       END SUBROUTINE Sub_init_dnOp
 !===============================================================================
 
-      SUBROUTINE Sub_init_dnOp_old(mole,para_Tnum,PrimOp)
-      USE mod_system
-      USE mod_SimpleOp,   only : param_d0MatOp,Init_d0MatOp,dealloc_d0MatOp
-      USE mod_PrimOp_def, only : PrimOp_t
-      USE mod_Coord_KEO,  only : CoordType,Tnum
-      IMPLICIT NONE
-
-!----- for the CoordType and Tnum --------------------------------------
-      TYPE (CoordType)   :: mole
-      TYPE (Tnum)      :: para_Tnum
-
-
-      TYPE (PrimOp_t) :: PrimOp
-
-!-------------------------------------------------------------------------
-!-------------------------------------------------------------------------
-
-!----- working variables ----------------------------------------
-      TYPE (param_d0MatOp), allocatable :: d0MatOp(:)
-      integer                           :: k,nb_Op
-      real (kind=Rkind)                 :: Qact(mole%nb_var)
-      integer                           :: err_io
-      character (len=Name_longlen)      :: name_dum
-
-!----- for debuging --------------------------------------------------
-      character (len=*), parameter :: name_sub='Sub_init_dnOp_old'
-      logical, parameter :: debug = .FALSE.
-      !logical, parameter :: debug = .TRUE.
-!-----------------------------------------------------------
-       IF (debug) THEN
-         write(out_unitp,*) 'BEGINNING ',name_sub
-         write(out_unitp,*) 'PrimOp%nb_scalar_Op ',PrimOp%nb_scalar_Op
-         CALL flush_perso(out_unitp)
-       END IF
-!-----------------------------------------------------------
-     allocate(d0MatOp(PrimOp%nb_scalar_Op+2))
-
-      nb_Op = size(d0MatOp)
-
-      CALL Init_d0MatOp(d0MatOp(1),PrimOp%Type_HamilOp,mole%nb_act,   &
-                        PrimOp%nb_elec,JRot=para_Tnum%JJ,             &
-                        cplx=PrimOp%pot_cplx,direct_KEO=PrimOp%direct_KEO) ! H
-
-      DO k=2,nb_Op
-        CALL Init_d0MatOp(d0MatOp(k),0,mole%nb_act,PrimOp%nb_elec,    &
-                          JRot=para_Tnum%JJ,cplx=.FALSE.,direct_KEO=.FALSE.) ! Scalar Operator
-      END DO
-
-
-
-      Qact(:) = mole%ActiveTransfo%Qact0(:)
-
-      IF (PrimOp%QMLib) THEN
-        IF (debug) write(out_unitp,*) 'Initialization with Quantum Model Lib'
-
-#if __QML == 1
-        CALL sub_Init_Qmodel(mole%nb_act,PrimOp%nb_elec,'read_model',.FALSE.,0)
-#else
-        write(out_unitp,*) 'ERROR in ',name_sub
-        write(out_unitp,*) ' The "Quantum Model Lib" (QML) library is not present!'
-        write(out_unitp,*) '  Qmodel cannot be intialized!'
-        write(out_unitp,*) 'Use another potential/model'
-        STOP 'QML is not present'
-#endif
-
-        IF (allocated(PrimOp%Qit_TO_QQMLib)) THEN
-          CALL dealloc_NParray(PrimOp%Qit_TO_QQMLib,'Qit_TO_QQMLib',name_sub)
-        END IF
-        CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,(/ mole%nb_act /),'Qit_TO_QQMLib',name_sub)
-        PrimOp%Qit_TO_QQMLib(:) = (/ (k,k=1,mole%nb_act) /)
-
-        IF (PrimOp%pot_itQtransfo == mole%nb_Qtransfo-1) THEN ! Qdyn Coord
-          read(in_unitp,*,IOSTAT=err_io) name_dum,PrimOp%Qit_TO_QQMLib
-          IF (err_io /= 0) THEN
-            write(out_unitp,*) ' ERROR in ',name_sub
-            write(out_unitp,*) '  while reading "Qit_TO_QQMLib"'
-            write(out_unitp,*) ' end of file or end of record'
-            write(out_unitp,*) ' Probably, you have forgotten the list of integers ...'
-            write(out_unitp,*) ' Check your data !!'
-            STOP
-          END IF
-        END IF
-      ELSE
-        CALL get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,PrimOp)
-      END IF
-
-      DO k=1,nb_Op
-        CALL dealloc_d0MatOp(d0MatOp(k))
-      END DO
-      deallocate(d0MatOp)
-
-      IF (debug) THEN
-        write(out_unitp,*) 'END ',name_sub
-      END IF
-
-
-      END SUBROUTINE Sub_init_dnOp_old
-
 !================================================================
 !    subroutine enables to calculate the energy, gradient and hessian
 !     On-the-fly (with gaussian or gamess) or not
@@ -369,33 +280,7 @@
 !
 !    output : dnE%d..  dnMu(:)%d...
 !================================================================
-      SUBROUTINE get_d0MatOp_AT_Qact_zmatrix(Qact,d0MatOp,mole,para_Tnum,PrimOp)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Coord_KEO
-      USE mod_OTF_def
-      USE mod_PrimOp_def
-      USE mod_SimpleOp
-      IMPLICIT NONE
-
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (Tnum)      :: para_Tnum
-      TYPE (zmatrix)   :: mole
-
-!----- for Qact ... ---------------------------------------------
-      !real (kind=Rkind), intent(inout) :: Qact(:)
-      real (kind=Rkind), intent(in) :: Qact(:)
-
-      TYPE (PrimOp_t) :: PrimOp
-
-!----- input output variables ----------------------------------------
-      TYPE (param_d0MatOp), intent(inout) :: d0MatOp(:)
-
-      CALL get_d0MatOp_AT_Qact_CoordType(Qact,d0MatOp,mole%CoordType,para_Tnum,PrimOp)
-
-      END SUBROUTINE get_d0MatOp_AT_Qact_zmatrix
-
-      SUBROUTINE get_d0MatOp_AT_Qact_CoordType(Qact,d0MatOp,mole,para_Tnum,PrimOp)
+      SUBROUTINE get_d0MatOp_AT_Qact(Qact,d0MatOp,mole,para_Tnum,PrimOp)
       USE mod_system
 !$    USE omp_lib, only : OMP_GET_THREAD_NUM
       USE mod_dnSVM
@@ -413,7 +298,6 @@
       TYPE (CoordType) :: mole
 
 !----- for Qact ... ---------------------------------------------
-      !real (kind=Rkind), intent(inout) :: Qact(:)
       real (kind=Rkind), intent(in) :: Qact(:)
 
       TYPE (PrimOp_t) :: PrimOp
@@ -448,17 +332,11 @@
       real (kind=Rkind) :: mat_V(PrimOp%nb_elec,PrimOp%nb_elec)
       real (kind=Rkind) :: mat_imV(PrimOp%nb_elec,PrimOp%nb_elec)
       real (kind=Rkind) :: mat_ScalOp(PrimOp%nb_elec,PrimOp%nb_elec,PrimOp%nb_scalar_Op)
-
-      ! for HarD
-      real (kind=Rkind) :: Vinact,CAP_val,HStep_val
-      real (kind=Rkind), allocatable :: Qact1(:)
-      real (kind=Rkind), allocatable :: Qinact21(:)
+      real (kind=Rkind) :: CAP_val,HStep_val
       real (kind=Rkind), allocatable :: Qit(:)
-      real (kind=Rkind) :: Qdyn(mole%nb_var)
 
-      integer :: ith,iQa,iQ,iQact1,iQinact21
-      integer, allocatable, save :: tab_iQa(:)
-      logical :: Find_iQa
+      real (kind=Rkind) :: Vinact(PrimOp%nb_elec) ! for HarD model
+
       logical :: get_Qmodel_Vib_Adia ! function in qml
 
 !----- for debuging --------------------------------------------------
@@ -476,6 +354,7 @@
         write(out_unitp,*) 'calc_scalar_Op',PrimOp%calc_scalar_Op
         write(out_unitp,*) 'pot_cplx',PrimOp%pot_cplx
         write(out_unitp,*) 'pot_itQtransfo',PrimOp%pot_itQtransfo
+        write(out_unitp,*) 'PrimOp%QMLib',PrimOp%QMLib
         CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
@@ -584,7 +463,6 @@
         !----------------------------------------------------------------
 
       ELSE
-
           IF (PrimOp%QMLib) THEN
             IF (debug) THEN
                write(out_unitp,*) 'With Quantum Model Lib'
@@ -637,6 +515,7 @@
                              Qit,PrimOp%para_nDFit_Scalar_Op(i))
               END DO
             END IF
+
           ELSE
             IF (debug) THEN
               write(out_unitp,*) 'With calcN_op'
@@ -702,69 +581,11 @@
 
 
           IF (PrimOp%HarD .AND. associated(mole%RPHTransfo) .AND. PrimOp%nb_elec == 1) THEN
-
-            IF (.NOT. allocated(tab_iQa)) THEN
-              allocate(tab_iQa(0:Grid_maxth-1))
-              tab_iQa(:) = 1
-            END IF
-
-            !here it should be Qin of RPH (therefore Qdyn ?????)
-            CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
-            !write(out_unitp,*) 'test HARD without HAC'
-
-            ! transfert the dnQin coordinates: type21 in dnVecQin and ....
-            !   the other (active, rigid ..) in dnQout
-            iQinact21 = 0
-            iQact1    = 0
-
-            CALL alloc_NParray(Qact1,(/mole%RPHTransfo%nb_act1/),       &
-                              "Qact1",name_sub)
-
-            CALL alloc_NParray(Qinact21,(/mole%RPHTransfo%nb_inact21/), &
-                              "Qinact21",name_sub)
-
-            DO iQ=1,mole%nb_var
-              IF (mole%RPHTransfo%list_act_OF_Qdyn(iQ) == 21) THEN
-                iQinact21 = iQinact21 + 1
-                Qinact21(iQinact21) = Qdyn(iQ)
-              ELSE IF (mole%RPHTransfo%list_act_OF_Qdyn(iQ) == 1) THEN
-                iQact1 = iQact1 + 1
-                Qact1(iQact1) = Qdyn(iQ)
-              END IF
-            END DO
-            !write(out_unitp,*) 'Qact1',Qact1
-            !write(out_unitp,*) 'Qinact21',Qinact21
-
-            ! find the iQa from tab_RPHpara_AT_Qact1
-            ith = 0
-            !$ ith = omp_get_thread_num()
-            iQa = tab_iQa(ith)
-
-            ! find the iQa from tab_RPHpara_AT_Qact1
-            Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,mole%RPHTransfo%tab_RPHpara_AT_Qact1)
-
-            IF (.NOT. Find_iQa) THEN
-              write(out_unitp,*) 'ERROR in ',name_sub
-              STOP
-            ELSE
-              IF (debug) write(out_unitp,*) 'tab_RPHpara_AT_Qact1 point',iQa
-              tab_iQa(ith) = iQa
-            END IF
-            Vinact = HALF*sum(mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)*Qinact21(:)**2)
-
-            !write(out_unitp,*) 'iQa',iQa
-            !write(out_unitp,*) 'Qinact21',Qinact21(:)
-            !write(out_unitp,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
-            !write(out_unitp,*) 'Vinact',Vinact
-
+            CALL get_Vinact_AT_Qact_HarD(Qact,Vinact,mole,para_Tnum,PrimOp)
             DO ie=1,PrimOp%nb_elec
-              d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                       &
-                              d0MatOp(iOpE)%ReVal(ie,ie,itermE) + Vinact
+              d0MatOp(iOpE)%ReVal(ie,ie,itermE) =                               &
+                                  d0MatOp(iOpE)%ReVal(ie,ie,itermE) + Vinact(ie)
             END DO
-
-            CALL dealloc_NParray(Qact1,"Qact1",name_sub)
-            CALL dealloc_NParray(Qinact21,"Qinact21",name_sub)
-
           END IF
 
       END IF
@@ -831,40 +652,107 @@
       END IF
 !-----------------------------------------------------------
 
-     END SUBROUTINE get_d0MatOp_AT_Qact_CoordType
-     SUBROUTINE get_dnMatOp_AT_Qact_zmatrix(Qact,Tab_dnMatOp,mole,para_Tnum,PrimOp,nderiv)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Coord_KEO
-      USE mod_OTF_def
-      USE mod_PrimOp_def
-      USE mod_SimpleOp
-      IMPLICIT NONE
+END SUBROUTINE get_d0MatOp_AT_Qact
+SUBROUTINE get_Vinact_AT_Qact_HarD(Qact,Vinact,mole,para_Tnum,PrimOp)
+  USE mod_system
+!$    USE omp_lib, only : OMP_GET_THREAD_NUM
+  USE mod_Coord_KEO
+  USE mod_SimpleOp
+  USE mod_PrimOp_def
+  IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (Tnum)    :: para_Tnum
-      TYPE (zmatrix) :: mole
+  real (kind=Rkind),     intent(in)    :: Qact(:)
+  real (kind=Rkind),     intent(inout) :: Vinact(:)
 
-!----- for Qact ... ---------------------------------------------
-      !real (kind=Rkind), intent(inout) :: Qact(:)
-      real (kind=Rkind), intent(in) :: Qact(:)
+  TYPE (Tnum) ,          intent(in)    :: para_Tnum
+  TYPE (CoordType),      intent(in)    :: mole
+  TYPE (PrimOp_t),       intent(in)    :: PrimOp
 
-      TYPE (PrimOp_t)                 :: PrimOp
+  !----- local variables ----------------------------------------
+  real (kind=Rkind), allocatable :: Qact1(:)
+  real (kind=Rkind), allocatable :: Qinact21(:)
+  real (kind=Rkind) :: Qdyn(mole%nb_var)
+  integer :: ie,ith,iQa,iQ,iQact1,iQinact21
+  integer, allocatable, save :: tab_iQa(:)
+  logical :: Find_iQa
 
-!----- input output variables ----------------------------------------
-      TYPE (param_dnMatOp), intent(inout) :: Tab_dnMatOp(:)
-      integer, intent(in), optional       :: nderiv
+  !----- for debuging --------------------------------------------------
+  integer :: err_mem,memory
+  character (len=*), parameter :: name_sub='get_Vinact_AT_Qact_HarD'
+  logical, parameter :: debug=.FALSE.
+  !logical, parameter :: debug=.TRUE.
+  !-----------------------------------------------------------
+  IF (debug) THEN
+   write(out_unitp,*) 'BEGINNING ',name_sub
+   write(out_unitp,*) 'Qact',Qact
+   CALL flush_perso(out_unitp)
+  END IF
+  !-----------------------------------------------------------
 
-      IF (present(nderiv)) THEN
-        CALL get_dnMatOp_AT_Qact_CoordType(Qact,Tab_dnMatOp,mole%CoordType,&
-                                           para_Tnum,PrimOp,nderiv)
-      ELSE
-        CALL get_dnMatOp_AT_Qact_CoordType(Qact,Tab_dnMatOp,mole%CoordType,&
-                                           para_Tnum,PrimOp)
-      END IF
+  IF (.NOT. allocated(tab_iQa)) THEN
+   allocate(tab_iQa(0:Grid_maxth-1))
+   tab_iQa(:) = 1
+  END IF
 
-     END  SUBROUTINE get_dnMatOp_AT_Qact_zmatrix
-     SUBROUTINE get_dnMatOp_AT_Qact_CoordType(Qact,Tab_dnMatOp,mole,para_Tnum,PrimOp,nderiv)
+  !here it should be Qin of RPH (therefore Qdyn ?????)
+  CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
+  !write(out_unitp,*) 'test HARD without HAC'
+
+  ! transfert the dnQin coordinates: type21 in dnVecQin and ....
+  !   the other (active, rigid ..) in dnQout
+  CALL alloc_NParray(Qact1,(/mole%RPHTransfo%nb_act1/),"Qact1",name_sub)
+  CALL alloc_NParray(Qinact21,(/mole%RPHTransfo%nb_inact21/),"Qinact21",name_sub)
+
+  iQinact21 = 0
+  iQact1    = 0
+  DO iQ=1,mole%nb_var
+   IF (mole%RPHTransfo%list_act_OF_Qdyn(iQ) == 21) THEN
+     iQinact21 = iQinact21 + 1
+     Qinact21(iQinact21) = Qdyn(iQ)
+   ELSE IF (mole%RPHTransfo%list_act_OF_Qdyn(iQ) == 1) THEN
+     iQact1 = iQact1 + 1
+     Qact1(iQact1) = Qdyn(iQ)
+   END IF
+  END DO
+  !write(out_unitp,*) 'Qact1',Qact1
+  !write(out_unitp,*) 'Qinact21',Qinact21
+
+  ! find the iQa from tab_RPHpara_AT_Qact1
+  ith = 0
+  !$ ith = omp_get_thread_num()
+  iQa = tab_iQa(ith)
+
+  ! find the iQa from tab_RPHpara_AT_Qact1
+  Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,mole%RPHTransfo%tab_RPHpara_AT_Qact1)
+  IF (.NOT. Find_iQa) THEN
+   write(out_unitp,*) 'ERROR in ',name_sub
+   STOP
+  ELSE
+   IF (debug) write(out_unitp,*) 'tab_RPHpara_AT_Qact1 point',iQa
+   tab_iQa(ith) = iQa
+  END IF
+
+  Vinact(:) = HALF*sum(mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)*Qinact21(:)**2)
+
+  IF (debug) THEN
+    write(out_unitp,*) 'iQa',iQa
+    write(out_unitp,*) 'Qinact21',Qinact21(:)
+    write(out_unitp,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
+    write(out_unitp,*) 'Vinact',Vinact
+  END IF
+
+  CALL dealloc_NParray(Qact1,"Qact1",name_sub)
+  CALL dealloc_NParray(Qinact21,"Qinact21",name_sub)
+
+  !-----------------------------------------------------------
+  IF (debug) THEN
+    write(out_unitp,*) 'END ',name_sub
+  END IF
+  !-----------------------------------------------------------
+
+END SUBROUTINE get_Vinact_AT_Qact_HarD
+
+     SUBROUTINE get_dnMatOp_AT_Qact(Qact,Tab_dnMatOp,mole,para_Tnum,PrimOp,nderiv)
       USE mod_system
       USE mod_dnSVM
       use mod_nDFit, only: sub_ndfunc_from_ndfit
@@ -919,16 +807,10 @@
 
       real (kind=Rkind) :: mat_g(PrimOp%nb_elec,PrimOp%nb_elec,mole%nb_act)
       real (kind=Rkind) :: mat_h(PrimOp%nb_elec,PrimOp%nb_elec,mole%nb_act,mole%nb_act)
-
-      ! for HarD
-      real (kind=Rkind) :: Vinact
-      real (kind=Rkind), allocatable :: Qact1(:)
-      real (kind=Rkind), allocatable :: Qinact21(:)
       real (kind=Rkind), allocatable :: Qit(:)
-      real (kind=Rkind) :: Qdyn(mole%nb_var)
 
-      integer :: iQa,iQ,iQact1,iQinact21
-      logical :: Find_iQa
+
+      real (kind=Rkind) :: Vinact(PrimOp%nb_elec) ! for HarD
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
@@ -1158,58 +1040,11 @@
             !----------------------------------------------------------------
           END IF
           IF (PrimOp%HarD .AND. associated(mole%RPHTransfo) .AND. PrimOp%nb_elec == 1) THEN
-            !here it should be Qin of RPH (therefore Qdyn ?????)
-            CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
-            !write(out_unitp,*) 'test HARD without HAC'
-
-            ! transfert the dnQin coordinates: type21 in dnVecQin and ....
-            !   the other (active, rigid ..) in dnQout
-            iQinact21 = 0
-            iQact1    = 0
-
-            CALL alloc_NParray(Qact1,(/mole%RPHTransfo%nb_act1/),       &
-                              "Qact1",name_sub)
-
-            CALL alloc_NParray(Qinact21,(/mole%RPHTransfo%nb_inact21/), &
-                              "Qinact21",name_sub)
-
-            DO iQ=1,mole%nb_var
-              IF (mole%RPHTransfo%list_act_OF_Qdyn(iQ) == 21) THEN
-                iQinact21 = iQinact21 + 1
-                Qinact21(iQinact21) = Qdyn(iQ)
-              ELSE IF (mole%RPHTransfo%list_act_OF_Qdyn(iQ) == 1) THEN
-                iQact1 = iQact1 + 1
-                Qact1(iQact1) = Qdyn(iQ)
-              END IF
-            END DO
-            !write(out_unitp,*) 'Qact1',Qact1
-            !write(out_unitp,*) 'Qinact21',Qinact21
-
-            ! find the iQa from tab_RPHpara_AT_Qact1
-            iQa = 0
-            Find_iQa = Find_iQa_OF_RPHpara_AT_Qact1(iQa,Qact1,mole%RPHTransfo%tab_RPHpara_AT_Qact1)
-
-            IF (.NOT. Find_iQa) THEN
-              write(out_unitp,*) 'ERROR in ',name_sub
-              STOP
-            END IF
-            Vinact = HALF*sum(mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)*Qinact21(:)**2)
-
-
-            !write(out_unitp,*) 'iQa',iQa
-            !write(out_unitp,*) 'Qinact21',Qinact21(:)
-            !write(out_unitp,*) 'dnehess',mole%RPHTransfo%tab_RPHpara_AT_Qact1(iQa)%dnehess%d0(:)
-            !write(out_unitp,*) 'Vinact',Vinact
-
-
+            CALL get_Vinact_AT_Qact_HarD(Qact,Vinact,mole,para_Tnum,PrimOp)
             DO ie=1,PrimOp%nb_elec
-              Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 =          &
-                       Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 + Vinact
+              Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 =                  &
+                     Tab_dnMatOp(iOpE)%tab_dnMatOp(ie,ie,itermE)%d0 + Vinact(ie)
             END DO
-
-            CALL dealloc_NParray(Qact1,"Qact1",name_sub)
-            CALL dealloc_NParray(Qinact21,"Qinact21",name_sub)
-
           END IF
 
 
@@ -1331,8 +1166,7 @@
       END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE get_dnMatOp_AT_Qact_CoordType
-
+      END SUBROUTINE get_dnMatOp_AT_Qact
 
       SUBROUTINE dnOp_num_grid_v2(Qact,Tab_dnMatOp,                     &
                                   mole,para_Tnum,PrimOp,nderiv)
@@ -1349,7 +1183,6 @@
       TYPE (CoordType)   :: mole
       TYPE (Tnum)      :: para_Tnum
 
-      !real (kind=Rkind), intent(inout) :: Qact(:)
       real (kind=Rkind), intent(in) :: Qact(:)
 
       TYPE (PrimOp_t) :: PrimOp
@@ -1704,28 +1537,7 @@
 
       END SUBROUTINE TnumKEO_TO_tab_dnH
 
-      SUBROUTINE TnumKEO_TO_tab_d0H_zmatrix(Qact,d0MatH,mole,para_Tnum)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Coord_KEO, only : zmatrix,Tnum
-      USE mod_SimpleOp
-      IMPLICIT NONE
-
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (Tnum)    :: para_Tnum
-      TYPE (zmatrix) :: mole
-
-!----- for Qact ... ---------------------------------------------
-      real (kind=Rkind), intent(inout) :: Qact(:)
-
-!----- input output variables ----------------------------------------
-      TYPE (param_d0MatOp), intent(inout) :: d0MatH
-
-
-      CALL TnumKEO_TO_tab_d0H_CoordType(Qact,d0MatH,mole%CoordType,para_Tnum)
-
-      END SUBROUTINE TnumKEO_TO_tab_d0H_zmatrix
-      SUBROUTINE TnumKEO_TO_tab_d0H_CoordType(Qact,d0MatH,mole,para_Tnum)
+      SUBROUTINE TnumKEO_TO_tab_d0H(Qact,d0MatH,mole,para_Tnum)
       USE mod_system
       USE mod_dnSVM
       USE mod_Coord_KEO, only : CoordType,Tnum,get_dng_dnGG,            &
@@ -1767,11 +1579,11 @@
         write(out_unitp,*) 'Qact',Qact
       END IF
 !-----------------------------------------------------------
+
   IF (d0MatH%type_Op == 1) THEN
       !----------------------------------------------------------------
       CALL calc3_f2_f1Q_num(Qact,T2,T1,vep,rho,Tcor2,Tcor1,Trot, &
                             para_Tnum,mole)
-
       IF (para_Tnum%nrho == 0) THEN
         d0MatH%Jac = rho ! because in calc3_f2_f1Q_num and when nrho=0, rho=jac
 
@@ -1885,7 +1697,7 @@
       END IF
 !-----------------------------------------------------------
 !STOP 'TnumKEO_TO_tab_d0H'
-      END SUBROUTINE TnumKEO_TO_tab_d0H_CoordType
+      END SUBROUTINE TnumKEO_TO_tab_d0H
 
 !=============================================================
 !
@@ -3715,7 +3527,7 @@
       END FUNCTION pot2
 
 
-      SUBROUTINE Finalize_TnumTana_Coord_PrimOp_CoordType(para_Tnum,mole,PrimOp,Tana,KEO_only)
+SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
       USE mod_system
       USE mod_dnSVM
       USE mod_Constant, only : get_Conv_au_TO_unit
@@ -3840,10 +3652,12 @@
                             'mole%RPHTransfo%tab_RPHpara_AT_Qact1',             &
                                                          name_sub,[-nb_pts])
           END IF
+          write(out_unitp,*) 'in ',name_sub,' QMLib,',mole%RPHTransfo%QMlib
 
           CALL Set_RPHpara_AT_Qact1(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0),&
                                     Qact,para_Tnum,mole)
           mole%RPHTransfo%init_Qref = .TRUE.
+
           CALL Qdyn_TO_Qact_FROM_ActiveTransfo(mole%ActiveTransfo%Qdyn0,  &
                                                mole%ActiveTransfo%Qact0,  &
                                                mole%ActiveTransfo)
@@ -3872,10 +3686,10 @@
       END IF
       END IF
 
-      IF (para_Tnum%Write_QMotions) THEN
-        CALL get_Qact0(Qact,mole%ActiveTransfo)
-        CALL sub_QplusDQ_TO_Cart(Qact,mole)
-      END IF
+  IF (para_Tnum%Write_QMotions) THEN
+    CALL get_Qact0(Qact,mole%ActiveTransfo)
+    CALL sub_QplusDQ_TO_Cart(Qact,mole)
+  END IF
 
   !----- Gcte if needed --------------------------------------------
   Gref = .TRUE.
@@ -4051,6 +3865,6 @@
       !END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE Finalize_TnumTana_Coord_PrimOp_CoordType
+END SUBROUTINE Finalize_TnumTana_Coord_PrimOp
 
-   END MODULE mod_PrimOp
+END MODULE mod_PrimOp

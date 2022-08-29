@@ -88,8 +88,9 @@
       c_act = Qact(1)
 
       DO iQ=1,nb_var
-       CALL sub_ZERO_TO_dnS(tab_dnQflex(iQ))
        IF (iQ < 2 .OR. iQ > 3) CYCLE
+
+       CALL sub_ZERO_TO_dnS(tab_dnQflex(iQ))
 
        DO kl=1,nn(iQ)
          CALL d0d1d2d3poly_legendre(c_act,kl,dc0,dc1,dc2,dc3,nderiv)

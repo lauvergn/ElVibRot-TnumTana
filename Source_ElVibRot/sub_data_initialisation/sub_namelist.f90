@@ -53,7 +53,7 @@
 !
 !================================================================
 !
-      SUBROUTINE read_inactive(para_AllBasis,mole)
+      SUBROUTINE read_inactive(para_AllBasis,mole,QMLib_in)
       USE mod_system
       USE mod_nDindex
       USE mod_Constant,  only: REAL_WU, convRWU_TO_R_WITH_WorkingUnit
@@ -66,6 +66,7 @@
 !----- for the basis set ----------------------------------------------
       TYPE (param_AllBasis), intent(inout) :: para_AllBasis
       TYPE (CoordType),      intent(inout) :: mole
+      logical,               intent(in)    :: QMLib_in
 
 !-----------------------------------------------------------
 
@@ -92,6 +93,7 @@
 
       logical       :: non_adia,contrac_ba_ON_HAC
       integer       :: max_nb_ba_ON_HAC
+      logical       :: QMLib
 
       NAMELIST /inactives/nb_quadrature,max_excit,max_coupling,         &
                           isort,                                        &
@@ -99,7 +101,7 @@
                           ADA,tab_nq,tab_nb,                            &
                           SparseGrid,L_SparseGrid,                      &
                           H0_sym,diabatic_freq,Qinact2n_sym,Qinact2n_eq,&
-                          gradTOpot0,                                   &
+                          gradTOpot0,QMLib,                             &
                           non_adia,contrac_ba_ON_HAC,max_nb_ba_ON_HAC
 
 
@@ -111,6 +113,7 @@
       write(out_unitp,*) 'INACTIVES PARAMETERS'
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'QMLib_in',QMLib_in
       END IF
 
       ! get nb_inact21 from mole%nb_inact2n or mole%RPHTransfo%nb_inact21
@@ -156,6 +159,8 @@
 
       contrac_ba_ON_HAC = .FALSE.
       max_nb_ba_ON_HAC  = huge(1)
+
+      QMLib             = QMLib_in
 
       read(in_unitp,inactives)
 
@@ -263,7 +268,8 @@
                                 mole%ActiveTransfo%list_act_OF_Qdyn,    &
                                        gradTOpot0,diabatic_freq,step,   &
                              H0_sym,H0_sym,Qinact2n_sym(1:nb_inact21),  &
-                             Qinact2n_eq(1:nb_inact21,1:nb_inact21))
+                             Qinact2n_eq(1:nb_inact21,1:nb_inact21),    &
+                             QMLib=QMLib)
 
       ELSE IF (nb_inact21 > 0 .AND. associated(mole%RPHTransfo)) THEN
         IF (mole%RPHTransfo%option == 0) THEN
@@ -274,7 +280,8 @@
             gradTOpot0=gradTOpot0,diabatic_freq=diabatic_freq,step=step,&
                                     purify_hess=H0_sym,eq_hess=H0_sym,  &
                               Qinact2n_sym=Qinact2n_sym(1:nb_inact21),  &
-                     Qinact2n_eq=Qinact2n_eq(1:nb_inact21,1:nb_inact21))
+                     Qinact2n_eq=Qinact2n_eq(1:nb_inact21,1:nb_inact21),&
+                     QMLib=QMLib)
         END IF
       END IF
 

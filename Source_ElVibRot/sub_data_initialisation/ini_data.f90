@@ -212,7 +212,7 @@
         CALL flush_perso(out_unitp)
       ENDIF
 
-      CALL read_inactive(para_AllBasis,mole)
+      CALL read_inactive(para_AllBasis,mole,para_Tnum%para_PES_FromTnum%QMLib)
 
       IF (mole%nb_inact2n == 0) THEN
         CALL dealloc_basis(para_AllBasis%Basis2n)

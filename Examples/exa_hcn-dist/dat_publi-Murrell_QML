@@ -1,22 +1,16 @@
-#!/bin/bash
-
 #
-# You should get the E^h_exact results (column 4 of table II), Lauvergnat et al, JCP, v114 (2001) p6592
+# You should get values close of the E_exact results (column 5 of table II), Lauvergnat et al, JCP, v114 (2001) p6592
 #
 
-max_excit=$1
-if [ -z $max_excit ]
-then
-  max_excit=11
-fi
+ SYSTEM=sub_system_murrell.f
 
 here=`pwd`
 DIR_vib=$here/../..
 
-cd $DIR_vib
- make &> $here/comp.log
-cd $here
 
+cd $DIR_vib
+ make
+cd $here
 
  MH=1837.10882307318116
  MD=3671.297316
@@ -28,19 +22,14 @@ cd $here
 
 pi=3.14159265358979323846264338327950288419716939937511d0
 
-
-RES=res_cHAC_HarD
-
-
-nice $DIR_vib/vib << ** > $RES
- &system popenmp=f printlevel=2 /
+nice $DIR_vib/vib << ** >res
+ &system printlevel=1 PGrid_omp=0 /
  &constantes mass_version='HANDBOOK70ED' version='PUBLI2001' /
  &variables 
          zmat=T
          nat=4
          sym=T
          nrho=2
-         Write_QMotions=f
  /
 $MC
 0.0     1
@@ -56,28 +45,25 @@ sym  cos(a)      R     r    x    pi   dh
 6      0.        0.  0.     0.   0.   1.
 
  1 21  21    0 0 0
- &minimum pot0=-0.499465823200 HarD=t QMLib=t /
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2 HarD=f QMLib=t /
 .999d0
 3.187
 2.179
 0.
-$pi
+3.141592653589793238462643383279d0
 0.0
 
- &potential  pot_name='HCN_Murrell' option=21 /
- Qdyn_TO_QQMLib 1
+
+ &potential  pot_name='HCN_Murrell' option=11 /
+ Qdyn_TO_QQMLib 1 2 3
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
  &inactives
-           max_excit=$max_excit
+           max_excit=10
            tab_nq(1:2)=16,16
-           isort=2
-           step=0.0001
+           max_ene_h=60000. "cm-1"
+           contrac_ba_ON_HAC=t max_nb_ba_ON_HAC=20
 /
- &actives test=f comput_S=t /
- &analyse max_ana=40 print=f /
+ &actives test=f comput_S=f /
+ &analyse max_ana=40 max_ene=8000. "cm-1" print_psi=10 print=f /
 **
-
-echo $RES
-
- egrep 'lev0:    1 |lev0:    2 |lev0:    4 |lev0:    8 '  $RES  | awk '{print $6}' > lev_$RES

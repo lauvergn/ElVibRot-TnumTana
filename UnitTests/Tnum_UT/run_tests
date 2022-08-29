@@ -4,7 +4,6 @@
 
 ./comp
 
-##compOK=`tail -1 comp.log | grep -c OK `
 compOK=`grep -c 'Tnum OK' comp.log `
 
 if [ $compOK = '1' ]
@@ -24,6 +23,8 @@ do
   ./$dat | LANG=c awk -f err_ana.awk >> err_Tnum
   tail -1 err_Tnum
   i=$((i+1))
+
+  cat res >> res_all
 done
 
 nb_err=`grep -c "ERROR(s)" err_Tnum `

@@ -101,6 +101,7 @@ CONTAINS
       logical            :: read_nameQ
       integer            :: read_itQ0transfo,read_itQtransfo_OF_Qin0
       character (len=Name_len) :: name,unit
+      character (len=Name_len) :: name_transfo
 
 
 
@@ -196,7 +197,7 @@ CONTAINS
       nDfit_Op             = .FALSE.
       BaseName_nDfit_file  = ""
       OnTheFly             = .FALSE.
-      QMLib                = .FALSE.
+      QMLib                = para_Tnum%para_PES_FromTnum%QMLib
 
       deriv_WITH_FiniteDiff = .FALSE.
       opt                   = .FALSE.
@@ -321,7 +322,7 @@ CONTAINS
        END DO
       END IF
 
-      para_Tnum%para_PES_FromTnum%QMLib = QMLib
+      para_Tnum%para_PES_FromTnum%QMLib              = QMLib
 
       IF(MPI_id==0) THEN
         write(out_unitp,*) 'nb_scalar_Op',nb_scalar_Op

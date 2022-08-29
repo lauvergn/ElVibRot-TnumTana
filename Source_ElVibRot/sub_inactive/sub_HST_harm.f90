@@ -793,7 +793,7 @@
            Vinact = Vinact + d0MatOp(1)%ReVal(1,1,1)
            IF (para_AllOp%tab_Op(1)%para_ReadOp%HarD) THEN
              Vinact = Vinact + pot2(RPHpara_AT_Qact1%dnHess%d0,deltaQ,nb_inact2n)
-             Vinact = Vinact + pot_rest(Qact,deltaQ,nb_inact2n)
+             !Vinact = Vinact + pot_rest(Qact,deltaQ,nb_inact2n)
            END IF
 
          END IF

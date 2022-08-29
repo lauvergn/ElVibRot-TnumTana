@@ -5,13 +5,8 @@
 # and the HADA results (column 4 of table II),              Lauvergnat et al, JCP, v116 (2002) p8560
 #
 
- SYSTEM=sub_system_cos_hcn.f
-
 here=`pwd`
 DIR_vib=$here/../..
-DIR_pot=$DIR_vib/sub_pot
-
- cp $SYSTEM $DIR_pot/sub_system.f
 
 cd $DIR_vib
  make &> $here/comp.log
@@ -38,6 +33,7 @@ nice $DIR_vib/vib << ** > $RES
          sym=T
          nrho=2
          Write_QMotions=f
+         QMLib=t
  /
 $MC
 0.0     1
@@ -60,6 +56,9 @@ sym  cos(a)      R     r    x    pi   dh
 0.
 $pi
 0.0
+
+ &potential  pot_name='HCN_Murrell' option=21 /
+ Qdyn_TO_QQMLib 1
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
  &inactives

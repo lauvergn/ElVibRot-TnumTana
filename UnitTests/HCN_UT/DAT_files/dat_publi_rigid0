@@ -6,13 +6,8 @@
 #
 #
 
- SYSTEM=sub_system_cos_hcn.f
-
 here=`pwd`
 DIR_vib=$here/../..
-DIR_pot=$DIR_vib/sub_pot
-
- cp $SYSTEM $DIR_pot/sub_system.f
 
 cd $DIR_vib
  make &> $here/comp.log
@@ -56,13 +51,16 @@ sym  cos(a)      R     r    x    pi   dh
 6      0.        0.  0.     0.   0.   1.
 
  1  0   0    0 0 0
- &minimum pot0=-0.499465823200 HarD=t /
+ &minimum pot0=-0.499465823200 QMLib=t /
 .999d0
 3.187
 2.179
 0.
 $pi
 0.0
+
+ &potential  pot_name='HCN_Murrell' option=21 /
+ Qdyn_TO_QQMLib 1
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
  &inactives /

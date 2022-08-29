@@ -1,22 +1,16 @@
-#!/bin/bash
-
 #
 # You should get the E^h_exact results (column 4 of table II), Lauvergnat et al, JCP, v114 (2001) p6592
 #
 
-max_excit=$1
-if [ -z $max_excit ]
-then
-  max_excit=11
-fi
+ SYSTEM=sub_system_cos_hcn.f
 
 here=`pwd`
 DIR_vib=$here/../..
 
-cd $DIR_vib
- make &> $here/comp.log
-cd $here
 
+cd $DIR_vib
+ make
+cd $here
 
  MH=1837.10882307318116
  MD=3671.297316
@@ -28,11 +22,9 @@ cd $here
 
 pi=3.14159265358979323846264338327950288419716939937511d0
 
+#&minimum pot0=-0.499465823200 HarD=t /
 
-RES=res_cHAC_HarD
-
-
-nice $DIR_vib/vib << ** > $RES
+nice $DIR_vib/vib << ** >res
  &system popenmp=f printlevel=2 /
  &constantes mass_version='HANDBOOK70ED' version='PUBLI2001' /
  &variables 
@@ -64,20 +56,18 @@ sym  cos(a)      R     r    x    pi   dh
 $pi
 0.0
 
+
  &potential  pot_name='HCN_Murrell' option=21 /
  Qdyn_TO_QQMLib 1
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
  &inactives
-           max_excit=$max_excit
+           max_excit=10
            tab_nq(1:2)=16,16
-           isort=2
+           max_ene_h=29000. "cm-1"
            step=0.0001
 /
  &actives test=f comput_S=t /
  &analyse max_ana=40 print=f /
 **
 
-echo $RES
-
- egrep 'lev0:    1 |lev0:    2 |lev0:    4 |lev0:    8 '  $RES  | awk '{print $6}' > lev_$RES

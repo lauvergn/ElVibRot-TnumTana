@@ -1,5 +1,3 @@
-#!/bin/bash
-
 #
 # You should get:
 # the flexible results (column 3 of table II),              Lauvergnat et al, JCP, v116 (2002) p8560
@@ -10,8 +8,9 @@
 here=`pwd`
 DIR_vib=$here/../..
 
+
 cd $DIR_vib
- make &> $here/comp.log
+ make
 cd $here
 
 #MH=1837.10882307318116
@@ -36,18 +35,16 @@ pi=3.14159265358979323846264338327950288419716939937511d0
  x2=0.461538461
 ########################
 
-RES=res_flex20
 
-
-nice $DIR_vib/vib << ** > $RES
+nice $DIR_vib/vib << ** >res
  &system popenmp=f printlevel=2 /
- &constantes inv_Name=1836152.701  auTOcm_inv=219474.8877 /
+ &constantes inv_Name=1836152.701d0, auTOcm_inv=219474.8877d0 /
  &variables 
          zmat=T
          nat=4
          sym=T
          nrho=2
-         Write_QMotions=f
+         Write_QMotions = F
          QMLib=t
  /
 $MC
@@ -64,7 +61,7 @@ sym  cos(a)      R     r    x    pi   dh
 6      0.        0.  0.     0.   0.   1.
 
  1 20  20    0 0 0
- &minimum pot0=-0.499465823200 QMLib=t /
+ &minimum pot0=-0.499465823200 HarD=t QMLib=t /
 .999d0
 3.187
 2.179
@@ -73,14 +70,12 @@ $pi
 0.0
 
  &potential  pot_name='HCN_Murrell' option=21 /
- Qdyn_TO_QQMLib 1
+ Qdyn_TO_QQMLib 1 2 3
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
  &inactives /
+
  &actives test=f comput_S=t /
  &analyse max_ana=40 print=f /
 **
 
-echo $RES
-
-egrep 'lev0:    1 |lev0:    2 |lev0:    3 |lev0:    5 '  $RES | awk '{print $5}' > lev_$RES

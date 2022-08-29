@@ -11,13 +11,9 @@ then
 fi
 dav=$1
 
- SYSTEM=sub_system_murrell.f
 
 here=`pwd`
 DIR_vib=$here/../..
-DIR_pot=$DIR_vib/sub_pot
-
- cp $SYSTEM $DIR_pot/sub_system.f
 
 cd $DIR_vib
  make &> $here/comp.log
@@ -59,13 +55,16 @@ sym  cos(a)      R     r    x    pi   dh
 6      0.        0.  0.     0.   0.   1.
 
  1 21  21    0 0 0
- &minimum pot0=-0.499465823200 pot_itQtransfo=2 HarD=f /
+ &minimum pot0=-0.499465823200 pot_itQtransfo=2 HarD=f QMLib=t /
 .999d0
 3.187
 2.179
 0.
 3.141592653589793238462643383279d0
 0.0
+
+ &potential  pot_name='HCN_Murrell' option=11 /
+ Qdyn_TO_QQMLib 1 2 3
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 /
  &inactives

@@ -118,19 +118,19 @@
 
       !!@description: TODO
       !!@param: TODO
-      SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,nb_extra_Coord,With_Tab_dnQflex, &
-                               mendeleev)
+      SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,nb_extra_Coord,                  &
+                               With_Tab_dnQflex,QMLib_in,mendeleev)
         USE mod_MPI
 
         TYPE (Type_Qtransfo), intent(inout)    :: Qtransfo
         integer,              intent(inout)    :: nb_Qin,nb_extra_Coord
         TYPE (table_atom),    intent(in)       :: mendeleev
-        logical,              intent(in)       :: With_Tab_dnQflex
+        logical,              intent(in)       :: With_Tab_dnQflex,QMLib_in
 
         character (len=Name_len) :: name_transfo,name_dum
         integer :: nat,nb_vect,nbcol,nb_flex_act,nb_transfo,nb_G,nb_X
         integer :: opt_transfo
-        logical :: skip_transfo
+        logical :: skip_transfo,QMLib
         logical :: cos_th,purify_hess,eq_hess,k_Half,inTOout
         logical :: hessian_old,hessian_onthefly,hessian_cart,d0c_read
         character (len=line_len)      :: file_hessian
@@ -148,7 +148,8 @@
                                  nb_transfo,purify_hess,eq_hess,k_Half, &
                               hessian_old,hessian_onthefly,file_hessian,&
                                hessian_cart,hessian_read,k_read,nb_read,&
-                                 d0c_read,not_all,check_LinearTransfo
+                                 d0c_read,not_all,check_LinearTransfo,  &
+                                 QMLib
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory,err_io
       character (len=*), parameter :: name_sub = "read_Qtransfo"
@@ -161,7 +162,6 @@
 !-----------------------------------------------------------
        nullify(M_mass)
 
-        name_transfo = "identity"
         IF (Qtransfo%num_transfo > 1 .AND. nb_Qin < 1) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' nb_Qin < 1',nb_Qin
@@ -169,6 +169,9 @@
                  Qtransfo%num_transfo
           STOP
         END IF
+
+        name_transfo     = "identity"
+        QMLib            = QMLib_in
         it               = Qtransfo%num_transfo
         opt_transfo      = 0
         skip_transfo     = .FALSE.
@@ -370,7 +373,7 @@
         CASE ('rph')
           Qtransfo%nb_Qin  = nb_Qin
           CALL alloc_array(Qtransfo%RPHTransfo,'Qtransfo%RPHTransfo',name_sub)
-          CALL Read_RPHTransfo(Qtransfo%RPHTransfo,nb_Qin,Qtransfo%opt_transfo)
+          CALL Read_RPHTransfo(Qtransfo%RPHTransfo,nb_Qin,Qtransfo%opt_transfo,QMLib)
 
           CALL sub_Type_Name_OF_Qin(Qtransfo,"QRPH")
           Qtransfo%type_Qin(:) = 0
@@ -468,9 +471,7 @@
         CASE ('flexible')
           Qtransfo%nb_Qin  = nb_Qin
           !CALL Read_FlexibleTransfo(Qtransfo%FlexibleTransfo,nb_Qin)
-          CALL Qtransfo%FlexibleTransfo%QtransfoRead(nb_Qin)
-          Qtransfo%FlexibleTransfo%With_Tab_dnQflex = With_Tab_dnQflex
-          write(out_unitp,*) 'With_Tab_dnQflex: ',Qtransfo%FlexibleTransfo%With_Tab_dnQflex
+          CALL Qtransfo%FlexibleTransfo%QtransfoRead(nb_Qin,With_Tab_dnQflex,QMLib)
 
           CALL sub_Type_Name_OF_Qin(Qtransfo,"Qflex")
           Qtransfo%type_Qin(:) = Qtransfo%type_Qout(:)
@@ -492,6 +493,7 @@
           END IF
           ! the set of type_Qin and name_Qin are done in type_var_analysis
           Qtransfo%ActiveTransfo%With_Tab_dnQflex = With_Tab_dnQflex
+          Qtransfo%ActiveTransfo%QMLib            = QMLib
 
         CASE ('zmat') ! It should be one of the first transfo read
           IF (nat < 2) THEN

@@ -1,13 +1,9 @@
 #!/bin/bash
 
- SYSTEM=sub_system_murrell.f
  test=f
 
 here=`pwd`
 DIR_vib=$here/../..
-DIR_pot=$DIR_vib/sub_pot
-
- cp $SYSTEM $DIR_pot/sub_system.f
 
 cd $DIR_vib
  make &> $here/comp.log
@@ -36,7 +32,7 @@ RES=res_RPH_AutoContract_Davidson
 nice $DIR_vib/vib << ** > $RES
  &system printlevel=0 /
  &constantes mass_version='HANDBOOK70ED' version='PUBLI2001' /
- &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 Write_QMotions=f /
+ &variables nrho=2 Old_Qtransfo=f nb_Qtransfo=4 Write_QMotions=f QMLib=t /
  &Coord_transfo name_transfo='zmat' nat=4 /
 $MC
 X     1
@@ -67,6 +63,9 @@ sym  cos(a)      R     r    x    pi   dh
 0.
 3.14159265358d0
 0.0
+
+ &potential  pot_name='HCN_Murrell' option=11 /
+ Qdyn_TO_QQMLib 1 2 3
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80 nbc=20 auto_contrac=t /
  &basis_nD nb_basis=2 name="direct_prod" L_SparseBasis=$LB L_SparseGrid=$LG SparseGrid_type=4 /
