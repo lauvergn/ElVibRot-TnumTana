@@ -19,8 +19,8 @@
       USE mod_Constant
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
 
       real (kind=Rkind) ::  Qsym0(mole%nb_var)
@@ -517,4 +517,3 @@
         r=matmul(matmul(Cm,Bm),Am)
       END IF
       end subroutine eulerMatrix
-

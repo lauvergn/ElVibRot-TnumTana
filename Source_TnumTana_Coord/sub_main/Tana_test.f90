@@ -37,7 +37,7 @@
 
 !     - parameters for para_Tnum -----------------------
       TYPE (constant)  :: const_phys
-      TYPE (zmatrix)   :: mole
+      TYPE (CoordType) :: mole
       TYPE (Tnum)      :: para_Tnum
       TYPE (PrimOp_t)  :: PrimOp
 
@@ -107,7 +107,7 @@ CALL test_SumOp1D()
 !CALL test_Sum_OpnD()
 !-------------------------------------------------
 
-  CALL dealloc_zmat(mole)
+  CALL dealloc_CoordType(mole)
 
   write(out_unitp,*) 'END Tana_test'
 

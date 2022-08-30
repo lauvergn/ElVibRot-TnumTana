@@ -50,9 +50,8 @@ MODULE mod_Coord_KEO
                                   calc_eckartrot,dnmwx_multiref
   USE mod_export_KEO,      ONLY : export3_MCTDH_T
   USE mod_Tnum,            ONLY : Tnum,param_PES_FromTnum,dealloc_Tnum, &
-                                  CoordType,zmatrix,dealloc_coordtype,  &
+                                  CoordType,dealloc_coordtype,          &
                                   Read_CoordType,write_coordtype,       &
-                                  Read_mole,                            & ! for PVSCF
                                   sub_coordtype_to_pararph,             &
                                   sub_pararph_to_coordtype,             &
                                   type_var_analysis_of_coordtype,       &

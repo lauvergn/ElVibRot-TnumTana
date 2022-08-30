@@ -32,8 +32,8 @@
       IMPLICIT NONE
 
 !     - parameters for para_Tnum -----------------------
-      TYPE (zmatrix) :: mole
-      TYPE (Tnum)    :: para_Tnum
+      TYPE (CoordType) :: mole
+      TYPE (Tnum)      :: para_Tnum
 
       real (kind=Rkind) :: vep,rho
       real (kind=Rkind), pointer :: Tdef2(:,:),Tdef1(:)
@@ -220,7 +220,7 @@
 !       CALL Write_Mat(hessG36,out_unitp,5)
 
 
-      CALL dealloc_zmat(mole)
+      CALL dealloc_CoordType(mole)
       CALL dealloc_param_Q(para_Q)
 
 

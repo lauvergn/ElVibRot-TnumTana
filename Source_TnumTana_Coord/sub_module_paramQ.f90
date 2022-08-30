@@ -39,28 +39,27 @@ MODULE mod_paramQ
                      calc_cartesiantransfo_new, sub_dnxnomassweight,    &
                                               sub3_nodncentre_masse
   use mod_Qtransfo,         only: write_Qtransfo, calc_Qtransfo
-  use mod_Tnum,             only: tnum, zmatrix, write_mole,            &
-                                  CoordType, Write_CoordType
+  use mod_Tnum,             only: tnum, CoordType, Write_CoordType
 
   USE mod_Constant,         ONLY: real_wu,get_conv_au_to_unit,          &
                                   rwu_write,convRWU_TO_R_WITH_WorkingUnit
   IMPLICIT NONE
 
   INTERFACE sub_QactTOdnx
-    MODULE PROCEDURE sub_QactTOdnx_zmatrix,sub_QactTOdnx_CoordType
+    MODULE PROCEDURE sub_QactTOdnx_CoordType
   END INTERFACE
   INTERFACE sub_QactTOd0x
-    MODULE PROCEDURE sub_QactTOd0x_zmatrix,sub_QactTOd0x_CoordType
+    MODULE PROCEDURE sub_QactTOd0x_CoordType
   END INTERFACE
 
   INTERFACE Write_Cartg98
-    MODULE PROCEDURE Write_Cartg98_zmatrix,Write_Cartg98_CoordType
+    MODULE PROCEDURE Write_Cartg98_CoordType
   END INTERFACE
   INTERFACE analyze_dnx
-    MODULE PROCEDURE analyze_dnx_zmatrix,analyze_dnx_CoordType
+    MODULE PROCEDURE analyze_dnx_CoordType
   END INTERFACE
   INTERFACE read_RefGeom
-    MODULE PROCEDURE read_RefGeom_CoordType,read_RefGeom_zmatrix
+    MODULE PROCEDURE read_RefGeom_CoordType
   END INTERFACE
 
 
@@ -77,22 +76,11 @@ CONTAINS
 !=======================================================================================
 !      Read reference geometry
 !=======================================================================================
-      SUBROUTINE read_RefGeom_zmatrix(mole,para_Tnum)
-      USE mod_MPI
-      IMPLICIT NONE
-
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix)     :: mole
-      TYPE (Tnum)        :: para_Tnum
-
-      CALL read_RefGeom_CoordType(mole%CoordType,para_Tnum)
-
-      END SUBROUTINE read_RefGeom_zmatrix
       SUBROUTINE read_RefGeom_CoordType(mole,para_Tnum)
       USE mod_MPI
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
+!----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType)   :: mole
       TYPE (Tnum)        :: para_Tnum
 
@@ -1505,38 +1493,6 @@ CONTAINS
 !================================================================
 !       conversion d0Q (zmat,poly, bunch ...) => d0x (not mass weighted)
 !================================================================
-      SUBROUTINE sub_QactTOdnx_zmatrix(Qact,dnx,mole,                   &
-                                     nderiv,Gcenter,Cart_Transfo,WriteCC)
-      USE mod_system
-      USE mod_dnSVM
-      USE mod_Tnum
-      IMPLICIT NONE
-
-      real (kind=Rkind), intent(in)           :: Qact(:)
-      TYPE (zmatrix),    intent(in)           :: mole
-      TYPE (Type_dnVec), intent(inout)        :: dnx
-      integer,           intent(in)           :: nderiv
-      logical,           intent(in)           :: Gcenter
-      logical,           intent(in), optional :: Cart_Transfo,WriteCC
-
-      IF (present(Cart_Transfo)) THEN
-        IF (present(WriteCC)) THEN
-          CALL sub_QactTOdnx_CoordType(Qact,dnx,mole%CoordType,nderiv,Gcenter,&
-                               Cart_Transfo=Cart_Transfo,WriteCC=WriteCC)
-        ELSE
-          CALL sub_QactTOdnx_CoordType(Qact,dnx,mole%CoordType,nderiv,Gcenter,&
-                                              Cart_Transfo=Cart_Transfo)
-        END IF
-      ELSE
-        IF (present(WriteCC)) THEN
-          CALL sub_QactTOdnx_CoordType(Qact,dnx,mole%CoordType,nderiv,Gcenter,&
-                                                        WriteCC=WriteCC)
-        ELSE
-          CALL sub_QactTOdnx_CoordType(Qact,dnx,mole%CoordType,nderiv,Gcenter)
-        END IF
-      END IF
-
-      END SUBROUTINE sub_QactTOdnx_zmatrix
       RECURSIVE SUBROUTINE sub_QactTOdnx_CoordType(Qact,dnx,mole,       &
                                      nderiv,Gcenter,Cart_Transfo,WriteCC)
       USE mod_system
@@ -1787,19 +1743,7 @@ CONTAINS
 !=================================================
 
       END SUBROUTINE sub_QactTOdnx_CoordType
-      SUBROUTINE sub_QactTOd0x_zmatrix(Qxyz,Qact,mole,Gcenter)
-      USE mod_system
-      USE mod_dnSVM
-      IMPLICIT NONE
 
-      TYPE (zmatrix),     intent(in)     :: mole
-      real (kind=Rkind),  intent(in)     :: Qact(:)
-      real (kind=Rkind),  intent(inout)  :: Qxyz(mole%ncart_act)
-      logical,            intent(in)     :: Gcenter
-
-      CALL sub_QactTOd0x_CoordType(Qxyz,Qact,mole%CoordType,Gcenter)
-
-      END SUBROUTINE sub_QactTOd0x_zmatrix
       SUBROUTINE sub_QactTOd0x_CoordType(Qxyz,Qact,mole,Gcenter)
       USE mod_system
       USE mod_dnSVM
@@ -2269,17 +2213,6 @@ CONTAINS
 !================================================================
 !       Write Cartesian coordinates (for gaussian)
 !================================================================
-      SUBROUTINE Write_Cartg98_zmatrix(d0x,mole)
-      USE mod_system
-      IMPLICIT NONE
-
-      TYPE (zmatrix),    intent(in) :: mole
-      real (kind=Rkind), intent(in) :: d0x(:)
-
-        CALL Write_Cartg98_CoordType(d0x,mole%CoordType)
-
-      END SUBROUTINE Write_Cartg98_zmatrix
-
       SUBROUTINE Write_Cartg98_CoordType(d0x,mole)
       USE mod_system
       IMPLICIT NONE
@@ -2393,19 +2326,6 @@ CONTAINS
       write(io_unit_loc,*) '=============================================='
 
       END SUBROUTINE Write_XYZ
-
-      SUBROUTINE analyze_dnx_zmatrix(dnx,Qact,mole)
-      USE mod_system
-      USE mod_dnSVM
-      IMPLICIT NONE
-
-      TYPE (Type_dnVec) :: dnx
-      TYPE (zmatrix)    :: mole
-      real (kind=Rkind) :: Qact(:)
-
-      CALL analyze_dnx_CoordType(dnx,Qact,mole%CoordType)
-
-      END SUBROUTINE analyze_dnx_zmatrix
 
       SUBROUTINE analyze_dnx_CoordType(dnx,Qact,mole)
       USE mod_system

@@ -18,8 +18,8 @@
       USE mod_Tnum
       IMPLICIT NONE
 
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
       TYPE (Tnum)    :: para_Tnum
 
       real (kind=Rkind) ::  Qdyn0(mole%nb_var)

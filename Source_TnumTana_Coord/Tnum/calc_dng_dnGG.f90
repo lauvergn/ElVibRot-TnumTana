@@ -30,8 +30,7 @@ MODULE mod_dnGG_dng
   use mod_system
   use mod_dnSVM
   use mod_paramQ,  only: sub_QactTOdnMWx, Write_dnx, analyze_dnx
-  use mod_Tnum,    only: zmatrix, tnum, write_mole, mole1tomole2, dealloc_zmat,&
-                         CoordType,Write_CoordType,dealloc_CoordType
+  use mod_Tnum,    only: tnum, CoordType,Write_CoordType,dealloc_CoordType
   USE mod_dnRho ! all
 
   IMPLICIT NONE
@@ -41,10 +40,10 @@ MODULE mod_dnGG_dng
   logical, parameter :: new_vep = .FALSE.
 
   INTERFACE get_dng_dnGG
-    MODULE PROCEDURE get_dng_dnGG_zmatrix,get_dng_dnGG_CoordType
+    MODULE PROCEDURE get_dng_dnGG_CoordType
   END INTERFACE
   INTERFACE get_d0GG
-    MODULE PROCEDURE get_d0GG_zmatrix,get_d0GG_CoordType
+    MODULE PROCEDURE get_d0GG_CoordType
   END INTERFACE
 
   PUBLIC :: new_vep,sub_vep_new,sub_vep,Calc_vep_rho_from_dnGG
@@ -128,33 +127,6 @@ MODULE mod_dnGG_dng
 !      at Qdyn
 !
 !======================================================================
-  SUBROUTINE get_dng_dnGG_zmatrix(Qact,para_Tnum,mole,dng,dnGG,nderiv)
-  IMPLICIT NONE
-
-      real (kind=Rkind), intent(in)               :: Qact(:)
-      TYPE(Type_dnMat),  intent(inout), optional  :: dng,dnGG
-      integer,           intent(in)               :: nderiv
-
-      !----- for the CoordType and Tnum --------------------------------
-      TYPE (zmatrix),    intent(in)               :: mole
-      TYPE (Tnum),       intent(in)               :: para_Tnum
-
-      IF (present(dnGG)) THEN
-        IF (present(dng)) THEN
-          CALL get_dng_dnGG(Qact,para_Tnum,mole%CoordType,dng=dng,dnGG=dnGG,nderiv=nderiv)
-        ELSE
-          CALL get_dng_dnGG(Qact,para_Tnum,mole%CoordType,dnGG=dnGG,nderiv=nderiv)
-        END IF
-      ELSE
-        IF (present(dng)) THEN
-          CALL get_dng_dnGG(Qact,para_Tnum,mole%CoordType,dng=dng,nderiv=nderiv)
-        ELSE
-          ! nothing to do !!
-        END IF
-      END IF
-
-  END SUBROUTINE get_dng_dnGG_zmatrix
-
   SUBROUTINE get_dng_dnGG_CoordType(Qact,para_Tnum,mole,dng,dnGG,vep,nderiv)
   IMPLICIT NONE
 
@@ -420,7 +392,6 @@ MODULE mod_dnGG_dng
 
     !-----------------------------------------------------------------
     ! local variables
-    !TYPE (zmatrix)    :: mole_zmatrix
     real (kind=Rkind) :: Gref(mole%ndimG,mole%ndimG)
     real (kind=Rkind) :: Tdef2(mole%nb_act,mole%nb_act)
     real (kind=Rkind) :: Tdef1(mole%nb_act)
@@ -452,14 +423,6 @@ MODULE mod_dnGG_dng
     !-----------------------------------------------------------
     CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
 
-    ! we have to transfert mole to mole_zmatrix, ...
-    !  ... because calc_f2_f1Q_ana works only with zmatrix type
-    !mole_zmatrix%CoordType = mole
-    !CALL calc_f2_f1Q_ana(Qdyn,                                      &
-    !                     Tdef2,Tdef1,vep_loc,rho,                   &
-    !                     Tcor2,Tcor1,Trot,                          &
-    !                     para_Tnum,mole_zmatrix)
-    !CALL dealloc_zmat(mole_zmatrix)
     CALL calc_f2_f1Q_ana(Qdyn,                                      &
                          Tdef2,Tdef1,vep_loc,rho,                   &
                          Tcor2,Tcor1,Trot,                          &
@@ -715,35 +678,7 @@ MODULE mod_dnGG_dng
     !-----------------------------------------------------------
 
   END SUBROUTINE get_dng_dnGG_WITH_type100_bug_dng
-  SUBROUTINE get_d0GG_zmatrix(Qact,para_Tnum,mole,d0GG,def,Jac,Rho)
-  USE mod_dnDetGG_dnDetg, only : sub3_dndetGG
-  IMPLICIT NONE
 
-    real (kind=Rkind),           intent(in)     :: Qact(:)
-    real (kind=Rkind),           intent(inout)  :: d0GG(:,:)
-    logical,                     intent(in)     :: def
-    real (kind=Rkind), optional, intent(inout)  :: Jac,Rho
-    !----- for the zmatrix and Tnum --------------------------------
-    TYPE (zmatrix),              intent(in)     :: mole
-    TYPE (Tnum),                 intent(in)     :: para_Tnum
-    !-----------------------------------------------------------------
-
-
-    IF (present(Jac)) THEN
-      IF (present(Rho)) THEN
-        CALL get_d0GG_CoordType(Qact,para_Tnum,mole%CoordType,d0GG,def,Jac=Jac,Rho=Rho)
-      ELSE
-        CALL get_d0GG_CoordType(Qact,para_Tnum,mole%CoordType,d0GG,def,Jac=Jac)
-      END IF
-    ELSE
-      IF (present(Rho)) THEN
-        CALL get_d0GG_CoordType(Qact,para_Tnum,mole%CoordType,d0GG,def,Rho=Rho)
-      ELSE
-        CALL get_d0GG_CoordType(Qact,para_Tnum,mole%CoordType,d0GG,def)
-      END IF
-    END IF
-
-  END SUBROUTINE get_d0GG_zmatrix
   SUBROUTINE get_d0GG_CoordType(Qact,para_Tnum,mole,d0GG,def,Jac,Rho)
   USE mod_dnDetGG_dnDetg, only : sub3_dnDetGG
   IMPLICIT NONE
@@ -1419,6 +1354,7 @@ MODULE mod_dnGG_dng
       SUBROUTINE sub_d0A(A,d0x,d1x,                                     &
                          nb_act,nat_act,ncart,ncart_act,ndimA,          &
                          Without_Rot,With_VecCOM,Mtot)
+      USE mod_paramQ, ONLY : Write_d0Q
       IMPLICIT NONE
 
 
@@ -1444,6 +1380,7 @@ MODULE mod_dnGG_dng
          write(out_unitp,*) 'nb_act,nat_act,ncart,ncart_act,ndimA',             &
                      nb_act,nat_act,ncart,ncart_act,ndimA
          write(out_unitp,*) 'Without_Rot',Without_Rot
+         CALL Write_d0Q(0,'d0x',d0x,3)
          write(out_unitp,*)
        END IF
 !-----------------------------------------------------------
@@ -1562,7 +1499,7 @@ MODULE mod_dnGG_dng
 
 !-----------------------------------------------------------
        IF (debug) THEN
-         CALL Write_Mat(A,out_unitp,4)
+         CALL Write_Mat(A,out_unitp,4,Rformat='e30.20',info='d0A')
          write(out_unitp,*) 'END sub_d0A'
        END IF
 !-----------------------------------------------------------
@@ -1705,14 +1642,16 @@ MODULE mod_dnGG_dng
          d1A(nb_act+2,i,ii) = Cyq
          d1A(nb_act+3,i,ii) = Czq
        END DO
-!      ==========================================================
        END DO
-!================================================================
 
-!      DO ii=1,nb_act
-!        CALL Write_Mat(d1A(:,:,ii),out_unitp,5)
-!      END DO
-       END SUBROUTINE sub_d1A
+      IF (debug) THEN
+        DO ii=1,nb_act
+          CALL Write_Mat(d1A(:,:,ii),out_unitp,4,Rformat='e30.20',info='d1A')
+        END DO
+        write(out_unitp,*) 'END sub_d1A'
+      END IF
+
+END SUBROUTINE sub_d1A
 !
 !================================================================
 !
@@ -1896,13 +1835,15 @@ MODULE mod_dnGG_dng
        END DO
 !================================================================
 
-
-!      DO ii=1,nb_act
-!      DO jj=1,nb_act
-!        CALL Write_Mat(d2A(:,:,ii,jj),out_unitp,4)
-!      END DO
-!      END DO
-       END SUBROUTINE sub_d2A
+  IF (debug) THEN
+    DO ii=1,nb_act
+    DO jj=1,nb_act
+      CALL Write_Mat(d2A(:,:,ii,jj),out_unitp,4,Rformat='e30.20',info='d2A')
+    END DO
+    END DO
+    write(out_unitp,*) 'END sub_d2A'
+  END IF
+END SUBROUTINE sub_d2A
 
   SUBROUTINE Calc_vep_rho_from_dnGG(vep,rho,Qact,dnGG,mole,para_Tnum)
   USE mod_dnDetGG_dnDetg, only : sub3_dnDetGG

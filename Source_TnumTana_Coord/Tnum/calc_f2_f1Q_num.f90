@@ -37,7 +37,7 @@ MODULE mod_f2f2Vep
   IMPLICIT NONE
 
   INTERFACE calc3_f2_f1Q_num
-    MODULE PROCEDURE calc3_f2_f1Q_num_CoordType,calc3_f2_f1Q_num_zmatrix
+    MODULE PROCEDURE calc3_f2_f1Q_num_CoordType
   END INTERFACE
 
   PRIVATE
@@ -57,34 +57,6 @@ MODULE mod_f2f2Vep
 !
 !
 !======================================================================
-      SUBROUTINE calc3_f2_f1Q_num_zmatrix(Qact,Tdef2,Tdef1,vep,rho,      &
-                                          Tcor2,Tcor1,Trot,para_Tnum,mole)
-      USE mod_system
-      USE mod_dnSVM
-      use mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
-      USE mod_Tnum
-      USE mod_paramQ
-      USE mod_dnGG_dng
-      USE mod_dnRho ! all
-      USE mod_Tana_NumKEO
-      IMPLICIT NONE
-
-!----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
-      TYPE (Tnum)    :: para_Tnum
-
-      real (kind=Rkind), intent(inout) :: Qact(mole%nb_var)
-      real (kind=Rkind) :: Tdef2(mole%nb_act,mole%nb_act),Tdef1(mole%nb_act)
-      real (kind=Rkind) :: vep,rho
-      real (kind=Rkind) :: Tcor2(mole%nb_act,3),Tcor1(3),Trot(3,3)
-
-
-
-        CALL calc3_f2_f1Q_num_CoordType(Qact,Tdef2,Tdef1,vep,rho,       &
-                              Tcor2,Tcor1,Trot,para_Tnum,mole%CoordType)
-
-
-      END SUBROUTINE calc3_f2_f1Q_num_zmatrix
       SUBROUTINE calc3_f2_f1Q_num_CoordType(Qact,Tdef2,Tdef1,vep,rho,   &
                                         Tcor2,Tcor1,Trot,para_Tnum,mole)
       USE mod_system
@@ -149,7 +121,6 @@ MODULE mod_f2f2Vep
 
       TYPE(Type_dnMat) :: dng,dnGG
       integer          :: calc_g,calc_GG
-      !TYPE (zmatrix)   :: mole_zmatrix
 
 !     ----------------------------------------------------------
 

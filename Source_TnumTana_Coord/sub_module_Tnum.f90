@@ -193,13 +193,6 @@ MODULE mod_Tnum
 !-------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------
-!       The extended type is defined to be able to use the TYPE zmatrix,
-!       which is not a well-chosen name (it was for the first Tnum versions).
-!-------------------------------------------------------------------------------
-        TYPE, EXTENDS (CoordType) :: zmatrix
-        END TYPE zmatrix
-!-------------------------------------------------------------------------------
-!-------------------------------------------------------------------------------
         !!@description: TODO
         !!@param: TODO
 !-------------------------------------------------------------------------------
@@ -254,9 +247,6 @@ MODULE mod_Tnum
       PUBLIC :: param_PES_FromTnum, Tnum, dealloc_Tnum
 
       PUBLIC :: Write_f2f1vep, Write_TcorTrot
-
-      PUBLIC :: zmatrix
-      PUBLIC :: Write_mole, Read_mole, dealloc_zmat, mole1TOmole2
 
       PUBLIC :: CoordType
       PUBLIC :: Write_CoordType, Read_CoordType,                        &
@@ -352,21 +342,8 @@ MODULE mod_Tnum
   END SUBROUTINE Set_masses_Z_TO_CoordType
 
 !================================================================
-!       Write the "mole" (old with zmatrix type)
 !       Write the CoordType
 !================================================================
-  SUBROUTINE Write_mole(mole,print_mole)
-  TYPE (zmatrix), intent(in)            :: mole
-  logical,        intent(in), optional  :: print_mole
-
-  IF (present(print_mole)) THEN
-    CALL  Write_CoordType(mole%CoordType,print_mole)
-  ELSE
-    CALL  Write_CoordType(mole%CoordType)
-  END IF
-
-  END SUBROUTINE Write_mole
-
   SUBROUTINE Write_CoordType(mole,print_mole)
     TYPE (CoordType), intent(in)             :: mole
     logical,          intent(in), optional   :: print_mole
@@ -511,18 +488,6 @@ MODULE mod_Tnum
   END SUBROUTINE Write_CoordType
 
 
-!================================================================
-!
-!     dealloc zmatrix type or CoordType
-!
-!================================================================
-  SUBROUTINE dealloc_zmat(mole)
-  TYPE (zmatrix), intent(inout) :: mole
-
-    CALL dealloc_CoordType(mole%CoordType)
-
-  END SUBROUTINE dealloc_zmat
-
   SUBROUTINE dealloc_CoordType(mole)
   TYPE (CoordType), intent(inout) :: mole
 
@@ -645,21 +610,8 @@ MODULE mod_Tnum
 
   END SUBROUTINE dealloc_CoordType
 !===============================================================================
-!     read zmatrix type or CoordType parameters for Tnum
+!     read CoordType parameters for Tnum
 !===============================================================================
-  !!@description: read zmatrix type parameters for Tnum
-  SUBROUTINE Read_mole(mole,para_Tnum,const_phys)
-  USE mod_constant
-  IMPLICIT NONE
-
-  TYPE (zmatrix),   intent(inout)   :: mole
-  TYPE (Tnum),      intent(inout)   :: para_Tnum
-  TYPE (constant),  intent(inout)   :: const_phys
-
-    CALL Read_CoordType(mole%CoordType,para_Tnum,const_phys)
-
-  END SUBROUTINE Read_mole
-
   !!@description: read CoordType parameters for Tnum
   !!@param: TODO
   SUBROUTINE Read_CoordType(mole,para_Tnum,const_phys)
@@ -1632,7 +1584,7 @@ MODULE mod_Tnum
 !===============================================================================
 
 !================================================================
-!       Copy two zmatrix type variables or two CoordType variables
+!       Copy two CoordType variables
 !================================================================
   SUBROUTINE CoordType1TOCoordType2(mole1,mole2)
 
@@ -1820,13 +1772,6 @@ MODULE mod_Tnum
       END IF
 
   END SUBROUTINE CoordType1TOCoordType2
-  SUBROUTINE mole1TOmole2(mole1,mole2)
-  TYPE (zmatrix), intent(in)    :: mole1
-  TYPE (zmatrix), intent(inout) :: mole2
-
-    CALL CoordType1TOCoordType2(mole1%CoordType,mole2%CoordType)
-
-  END SUBROUTINE mole1TOmole2
   !!@description: Copy two CoordType variables
   !!@param: TODO
   SUBROUTINE CoordType2_TO_CoordType1(mole1,mole2)

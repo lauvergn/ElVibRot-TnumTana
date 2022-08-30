@@ -13,8 +13,8 @@
       USE mod_Tnum
       IMPLICIT NONE
 
-!c----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!c----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
 
       integer           :: nb_be,nb_ScalOp,nb_cart
       logical           :: calc_ScalOp,pot_cplx
@@ -103,8 +103,8 @@
       USE mod_Tnum
       IMPLICIT NONE
 
-!C----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!C----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
 
        integer nb_Q,nb_ScalOp
        parameter (nb_Q=3)
@@ -124,8 +124,8 @@
       USE mod_Tnum
       IMPLICIT NONE
 
-!C----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!C----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
 
       real (kind=Rkind) :: d0g(mole%nb_inact2n)
       real (kind=Rkind) :: d1g(mole%nb_inact2n,mole%nb_act1)
@@ -175,8 +175,8 @@
       USE mod_Tnum
       IMPLICIT NONE
 
-!c----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!c----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
 
 
        real (kind=Rkind) :: Qdyn(mole%nb_var)
@@ -289,8 +289,8 @@
       USE mod_Tnum
       IMPLICIT NONE
 
-!C----- for the zmatrix and Tnum --------------------------------------
-      TYPE (zmatrix) :: mole
+!C----- for the CoordType and Tnum --------------------------------------
+      TYPE (CoordType) :: mole
 
        integer :: i_Qdyn
        real (kind=Rkind) ::  Qdyn(mole%nb_var)

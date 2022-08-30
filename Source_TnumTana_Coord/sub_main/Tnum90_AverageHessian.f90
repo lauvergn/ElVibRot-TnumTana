@@ -34,7 +34,7 @@
 
 !     - parameters for para_Tnum -----------------------
       TYPE (constant)  :: const_phys
-      TYPE (zmatrix)   :: mole
+      TYPE (CoordType)   :: mole
       TYPE (Tnum)      :: para_Tnum
       TYPE (PrimOp_t)  :: PrimOp
 
@@ -252,7 +252,7 @@
 !-------------------------------------------------
 !-------------------------------------------------
 
-      CALL dealloc_zmat(mole)
+      CALL dealloc_CoordType(mole)
       CALL dealloc_NParray(Qact,'Qact',name_sub)
 
 
